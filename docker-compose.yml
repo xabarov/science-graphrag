@@ -29,7 +29,16 @@ services:
     volumes:
       - qdrant_data:/qdrant/storage
 
+  phoenix:
+    image: arizephoenix/phoenix:latest
+    ports:
+      - "16006:6006"
+      - "14317:4317"
+    volumes:
+      - phoenix_data:/mnt/data
+
 volumes:
   neo4j_data:
   pg_data:
   qdrant_data:
+  phoenix_data:

@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     use_vl_for_pdf: bool = Field(default=True)
     vl_api_key: str | None = Field(default=None)
     vl_base_url: str = Field(default="https://openrouter.ai/api/v1")
-    vl_model: str = Field(default="qwen/qwen2.5-vl-72b-instruct")
+    vl_model: str = Field(default="qwen/qwen3-vl-235b-a22b-instruct")
     vl_max_pages: int = Field(default=16)
     vl_dpi: int = Field(default=144)
     embedding_model: str | None = Field(
@@ -41,6 +41,38 @@ class Settings(BaseSettings):
     )
     chunk_size: int = Field(default=512)
     chunk_overlap: int = Field(default=64)
+    front_matter_max_chars: int = Field(
+        default=12_000,
+        description="Upper bound for metadata/authorships slice (front matter).",
+    )
+    references_scope_max_chars: int = Field(
+        default=90_000,
+        description="Upper bound for references/bibliography scope text.",
+    )
+    chunk_target_tokens: int = Field(
+        default=1200,
+        description="Target size in approximate tokens for retrieval chunks.",
+    )
+    chunk_overlap_tokens: int = Field(
+        default=140,
+        description="Overlap between adjacent chunks within the same section (~tokens).",
+    )
+
+    # Stage extraction LLM: markdown -> structured drafts (OpenAI-compatible API).
+    extraction_llm_enabled: bool = Field(
+        default=True,
+        description="LLM-first stage extraction; fallback to heuristics",
+    )
+    extraction_llm_api_key: str | None = Field(default=None)
+    extraction_llm_base_url: str = Field(default="https://openrouter.ai/api/v1")
+    extraction_llm_model: str = Field(
+        default="mistralai/mistral-small-3.2-24b-instruct",
+        description="Text LLM for structured extraction (not necessarily vision)",
+    )
+    extraction_llm_temperature: float = Field(default=0.0)
+    extraction_llm_max_tokens_metadata: int = Field(default=4096)
+    extraction_llm_max_tokens_references: int = Field(default=8192)
+    extraction_llm_timeout_seconds: float = Field(default=180.0)
 
     @model_validator(mode="before")
     @classmethod
@@ -65,13 +97,34 @@ class Settings(BaseSettings):
             if "vl" in main_model.lower() or "vision" in main_model.lower():
                 data["vl_model"] = main_model
 
-        if os.getenv("SCIENCE_GRAPHRAG_USE_VL_FOR_PDF") is None and os.getenv("USE_VL_FOR_PDF") is not None:
+        if (
+            os.getenv("SCIENCE_GRAPHRAG_USE_VL_FOR_PDF") is None
+            and os.getenv(
+                "USE_VL_FOR_PDF",
+            )
+            is not None
+        ):
             data["use_vl_for_pdf"] = os.getenv("USE_VL_FOR_PDF", "true").lower() in (
                 "1",
                 "true",
                 "yes",
                 "on",
             )
+
+        if not data.get("extraction_llm_api_key"):
+            ex_key = os.getenv("MAIN_LLM_API_KEY") or os.getenv("API_KEY")
+            if ex_key:
+                data["extraction_llm_api_key"] = ex_key
+
+        if os.getenv("SCIENCE_GRAPHRAG_EXTRACTION_LLM_BASE_URL") is None and os.getenv(
+            "MAIN_LLM_BASE_URL",
+        ):
+            data["extraction_llm_base_url"] = os.environ["MAIN_LLM_BASE_URL"].strip().rstrip("/")
+
+        if os.getenv("SCIENCE_GRAPHRAG_EXTRACTION_LLM_MODEL") is None and os.getenv(
+            "MAIN_LLM_MODEL",
+        ):
+            data["extraction_llm_model"] = os.environ["MAIN_LLM_MODEL"].strip()
 
         return data
 

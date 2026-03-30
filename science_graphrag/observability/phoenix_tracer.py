@@ -82,6 +82,13 @@ def _register_optional_openai_instrumentation() -> None:
         return
 
 
+def add_span_event(name: str, attributes: dict[str, Any] | None = None) -> None:
+    """Emit a timed event on the current span (Phoenix / OTLP)."""
+    span = trace_api.get_current_span()
+    if span.is_recording():
+        span.add_event(name, attributes=attributes or {})
+
+
 @lru_cache(maxsize=8)
 def get_tracer(name: str = "science-graphrag") -> Tracer:
     """OpenTelemetry tracer bound to Phoenix exporter."""

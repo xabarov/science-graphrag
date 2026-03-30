@@ -9,21 +9,32 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from science_graphrag.config import Settings, get_settings
-from science_graphrag.observability.phoenix_tracer import chain_span, init_tracer_provider
 from science_graphrag.domain.models import WorkDraft
+from science_graphrag.ingestion.chunking import (
+    chunk_document_for_retrieval,
+    dedupe_chunks_for_embedding,
+)
+from science_graphrag.ingestion.document_slices import (
+    build_references_scope_text,
+    front_matter_slice,
+    strip_repeated_boilerplate,
+)
 from science_graphrag.ingestion.embeddings import HashEmbeddingProvider, try_sentence_transformer
 from science_graphrag.ingestion.enrichment.openalex import draft_from_openalex, fetch_work_by_doi
-from science_graphrag.ingestion.normalize import chunk_text, normalize_text
+from science_graphrag.ingestion.llm.stage_extraction import extract_stages_llm_first
+from science_graphrag.ingestion.normalize import normalize_text
 from science_graphrag.ingestion.pdf import extract_text_from_pdf
-from science_graphrag.ingestion.stages.authorships import extract_authorships
-from science_graphrag.ingestion.stages.metadata import extract_metadata, merge_draft_prefer_enriched
-from science_graphrag.ingestion.stages.references import extract_references
+from science_graphrag.ingestion.stages.metadata import merge_draft_prefer_enriched
 from science_graphrag.ingestion.vl_pdf import VLPDFProcessor
+from science_graphrag.observability.phoenix_tracer import chain_span, init_tracer_provider
 from science_graphrag.storage.blobs import BlobStore
 from science_graphrag.storage.db import init_db
 from science_graphrag.storage.models_orm import DocumentRecord, IngestionRunRecord
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 from science_graphrag.storage.qdrant_store import QdrantChunkStore
+from science_graphrag.utils.project_logging import configure_logging, get_logger
+
+log = get_logger("ingestion.pipeline")
 
 
 def _slug(value: str) -> str:
@@ -44,8 +55,8 @@ def _markdown_from_path(path: Path, settings: Settings) -> tuple[str, str]:
             try:
                 markdown = VLPDFProcessor(settings).pdf_to_markdown(path)
                 return markdown, "vl"
-            except Exception:
-                pass
+            except Exception as exc:  # noqa: BLE001
+                log.warning("VL PDF failed for %s: %s; falling back to pypdf", path.name, exc)
 
         return extract_text_from_pdf(path), "pypdf-fallback"
 
@@ -101,6 +112,19 @@ def _write_markdown_artifact(
     return artifact_store.write_artifact(artifact_rel, header + markdown)
 
 
+def _write_extraction_diagnostics_json(
+    *,
+    settings: Settings,
+    document_id: str,
+    source_path: Path,
+    diagnostics_json: str,
+) -> Path:
+    artifact_store = BlobStore(settings.artifact_root)
+    slug = _slug(source_path.stem)
+    artifact_rel = Path("ingestion") / document_id / slug / "extraction_diagnostics.json"
+    return artifact_store.write_artifact(artifact_rel, diagnostics_json)
+
+
 def ingest_document(
     path: Path,
     *,
@@ -110,6 +134,7 @@ def ingest_document(
     """
     Ingest one PDF or text file. Returns (document_id, work_id).
     """
+    configure_logging()
     settings = settings or get_settings()
     doc_id = str(uuid.uuid4())
     blob_store = BlobStore(settings.blob_root)
@@ -123,13 +148,34 @@ def ingest_document(
             markdown=markdown_text,
             extraction_mode=extraction_mode,
         )
-        normalized = normalize_text(markdown_text)
+        normalized = strip_repeated_boilerplate(normalize_text(markdown_text))
         blob_store.write_text("extracted.txt", normalized)
 
+        front = front_matter_slice(
+            normalized,
+            max_chars=settings.front_matter_max_chars,
+        )
+        ref_scope = build_references_scope_text(
+            normalized,
+            max_chars=settings.references_scope_max_chars,
+        )
+
         with chain_span("metadata_and_references_extraction"):
-            draft = extract_metadata(normalized)
-            authorships = extract_authorships(normalized)
-            references = extract_references(normalized)
+            draft, authorships, references, ext_diag = extract_stages_llm_first(
+                normalized,
+                settings,
+                markdown_source=extraction_mode,
+                document_id=doc_id,
+                source_name=path.name,
+                front_matter_text=front.text,
+                references_scope_text=ref_scope,
+            )
+        _write_extraction_diagnostics_json(
+            settings=settings,
+            document_id=doc_id,
+            source_path=path,
+            diagnostics_json=ext_diag.to_json(),
+        )
 
         with chain_span("openalex_enrichment"):
             if draft.doi:
@@ -138,8 +184,8 @@ def ingest_document(
                     if oa:
                         enriched = draft_from_openalex(oa)
                         draft = merge_draft_prefer_enriched(draft, enriched)
-                except Exception:
-                    pass
+                except Exception as exc:  # noqa: BLE001
+                    log.warning("OpenAlex enrichment failed for doi=%s: %s", draft.doi, exc)
 
         neo = Neo4jGraphStore(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password)
         try:
@@ -162,7 +208,8 @@ def ingest_document(
                         continue
                     try:
                         oa = fetch_work_by_doi(ref.doi, settings.openalex_mailto)
-                    except Exception:
+                    except Exception as exc:  # noqa: BLE001
+                        log.warning("OpenAlex lookup failed for ref doi=%s: %s", ref.doi, exc)
                         oa = None
                     if oa:
                         cd = draft_from_openalex(oa)
@@ -189,13 +236,20 @@ def ingest_document(
                         )
                     neo.merge_cites(work_id, cid)
 
-            chunks = chunk_text(normalized, settings.chunk_size, settings.chunk_overlap)
+            doc_chunks = dedupe_chunks_for_embedding(
+                chunk_document_for_retrieval(
+                    normalized,
+                    target_tokens=settings.chunk_target_tokens,
+                    overlap_tokens=settings.chunk_overlap_tokens,
+                ),
+            )
             embedder = (
                 try_sentence_transformer(settings.embedding_model)
                 if settings.embedding_model
                 else HashEmbeddingProvider()
             )
-            vectors = embedder.embed(chunks)
+            chunk_texts = [c.text for c in doc_chunks]
+            vectors = embedder.embed(chunk_texts)
             q = QdrantChunkStore(
                 settings.qdrant_url,
                 settings.qdrant_collection,
@@ -203,12 +257,15 @@ def ingest_document(
             )
             with chain_span(
                 "qdrant_vector_upsert",
-                {"chunks": len(chunks), "embedding": settings.embedding_model or "hash"},
+                {
+                    "chunks": len(doc_chunks),
+                    "embedding": settings.embedding_model or "hash",
+                },
             ):
-                q.upsert_chunks(
+                q.upsert_document_chunks(
                     work_id=work_id,
                     document_id=doc_id,
-                    chunks=chunks,
+                    document_chunks=doc_chunks,
                     vectors=vectors,
                     embedding_model=settings.embedding_model or "hash-deterministic",
                 )
@@ -237,6 +294,7 @@ def ingest_document(
 
 
 def run_ingest_cli(path: Path) -> None:
+    configure_logging()
     init_tracer_provider()
     s = get_settings()
     engine = create_engine(s.database_url, pool_pre_ping=True)

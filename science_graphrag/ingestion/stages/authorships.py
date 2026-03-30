@@ -73,9 +73,7 @@ def split_front_matter(text: str) -> tuple[list[str], str | None, list[str]]:
 
 def _affiliation_map(affiliation_lines: list[str]) -> tuple[dict[str, str], list[str]]:
     joined = " ".join(
-        line
-        for line in affiliation_lines
-        if "http://" not in line and "https://" not in line
+        line for line in affiliation_lines if "http://" not in line and "https://" not in line
     )
     segments = [seg.strip() for seg in joined.split(",") if seg.strip()]
     marker_map: dict[str, str] = {}

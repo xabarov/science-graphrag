@@ -69,5 +69,3 @@ def draft_from_openalex(data: dict[str, Any]) -> WorkDraft:
         ingestion_confidence=0.9,
         source_metadata={"openalex": data.get("id")},
     )
-
-

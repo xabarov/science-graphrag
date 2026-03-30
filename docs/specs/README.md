@@ -7,6 +7,7 @@
 | [extraction/backbone-metadata.md](extraction/backbone-metadata.md) | Метаданные `Work` |
 | [extraction/backbone-authorships.md](extraction/backbone-authorships.md) | Авторы и аффилиации |
 | [extraction/backbone-references.md](extraction/backbone-references.md) | Список литературы / `CITES` |
+| [extraction/semantic-chunks.md](extraction/semantic-chunks.md) | Чанки retrieval / merge, provenance |
 
 ## Дальше (Phase 3+)
 

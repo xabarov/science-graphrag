@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, PointStruct, VectorParams
+
+if TYPE_CHECKING:
+    from science_graphrag.ingestion.chunking import DocumentChunk
 
 
 class QdrantChunkStore:
@@ -51,6 +54,49 @@ class QdrantChunkStore:
                     vector=vec.tolist(),
                     payload=payload,
                 )
+            )
+        if points:
+            self._client.upsert(collection_name=self._collection, points=points)
+
+    def upsert_document_chunks(
+        self,
+        *,
+        work_id: str,
+        document_id: str,
+        document_chunks: list[DocumentChunk],
+        vectors: np.ndarray,
+        embedding_model: str,
+    ) -> None:
+        """Upsert section-aware chunks with deterministic ids from chunk_fingerprint."""
+        if len(document_chunks) != len(vectors):
+            raise ValueError("document_chunks and vectors length mismatch")
+        points: list[PointStruct] = []
+        for ch, vec in zip(document_chunks, vectors, strict=True):
+            pid = str(
+                uuid.uuid5(
+                    uuid.NAMESPACE_URL,
+                    f"{document_id}:{ch.chunk_fingerprint}",
+                ),
+            )
+            payload: dict[str, Any] = {
+                "work_id": work_id,
+                "document_id": document_id,
+                "chunk_index": ch.chunk_index,
+                "chunk_fingerprint": ch.chunk_fingerprint,
+                "section_path": ch.section_path,
+                "overlap_prev": ch.overlap_prev,
+                "overlap_next": ch.overlap_next,
+                "start_offset": ch.start_offset,
+                "end_offset": ch.end_offset,
+                "text": ch.text[:8000],
+                "embedding_model": embedding_model,
+            }
+            points.append(
+                PointStruct(
+                    id=pid,
+                    vector=vec.tolist(),
+                    payload=payload,
+                ),
             )
         if points:
             self._client.upsert(collection_name=self._collection, points=points)

@@ -150,6 +150,8 @@ flowchart LR
 
 **Статус Phase 1:** реализован runnable MVP (2026-03-30): пакет `science_graphrag`, `docker-compose.yml`, CLI `science-graphrag ingest`, документы [architecture/phase-1-backbone.md](architecture/phase-1-backbone.md), [adr/001-phase1-stack.md](adr/001-phase1-stack.md), [adr/002-layer1-graph-model.md](adr/002-layer1-graph-model.md), [benchmarks/strategy-v1.md](benchmarks/strategy-v1.md).
 
+**Дополнение (2026-03-30):** после PDF→Markdown ingestion использует **task-aware document slices** (front matter / references scope) для Layer 1 LLM и **section-aware chunks** с детерминированными id для Qdrant; см. [architecture/chunking-strategy.md](architecture/chunking-strategy.md), [adr/003-chunking-and-dedup-strategy.md](adr/003-chunking-and-dedup-strategy.md).
+
 ---
 
 ### Phase 2 — Scientific ontology v1
@@ -317,6 +319,7 @@ flowchart TD
 
 | Версия | Дата | Изменения |
 |--------|------|-----------|
+| 0.4 | 2026-03-30 | Task-aware chunking, document slices, ADR 003, semantic-chunks spec, Qdrant chunk fingerprints |
 | 0.3 | 2026-03-30 | Phase 1: `science_graphrag`, Docker stack, Neo4j/Postgres/Qdrant ingest, ADR 001–002, benchmarks strategy v1 |
 | 0.2 | 2026-03-30 | Phase 0: корневой README (PRD), индекс `docs/`, ADR-000, каркас модулей `ingestion`…`eval` |
 | 0.1 | 2026-03-30 | Первоначальный roadmap по плану greenfield + фазы 0–7 |

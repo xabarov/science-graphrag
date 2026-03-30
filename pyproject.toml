@@ -12,6 +12,8 @@ license = { file = "LICENSE" }
 dependencies = [
     "arize-phoenix-otel>=0.6.1",
     "httpx>=0.27",
+    "instructor>=1.7.0",
+    "openai>=1.69.0",
     "neo4j>=5.26",
     "numpy>=1.26",
     "openinference-instrumentation-openai>=0.1.0",
@@ -32,6 +34,9 @@ embed = [
     "torch>=2.0",
 ]
 dev = [
+    "black>=24.0",
+    "isort>=5.13",
+    "pylint>=3.0",
     "pytest>=8.0",
     "ruff>=0.8",
 ]
@@ -41,6 +46,40 @@ science-graphrag = "science_graphrag.cli.main:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["science_graphrag"]
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.pylint.main]
+ignore = [".venv", "CVS"]
+
+[tool.pylint.messages_control]
+disable = [
+    "wrong-import-order",
+    "wrong-import-position",
+    "broad-exception-caught",
+]
+
+[tool.pylint.format]
+max-line-length = 100
 
 [tool.ruff]
 line-length = 100

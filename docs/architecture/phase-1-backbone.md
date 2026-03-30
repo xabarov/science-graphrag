@@ -31,7 +31,9 @@
 | Qdrant | Векторы чанков (текст + embedding id) |
 | Python 3.11+ | Пакет `science_graphrag`, CLI, HTTP-клиенты к реестрам |
 
-**PDF extraction (текущий код):** режим **VL-first**. При наличии `SCIENCE_GRAPHRAG_VL_API_KEY` используется vision-language PDF → Markdown; иначе pipeline сохраняет `pypdf` fallback в тот же `article.md`.
+**PDF extraction (текущий код):** режим **VL-first**. При наличии `SCIENCE_GRAPHRAG_VL_API_KEY` используется vision-language PDF → Markdown; иначе pipeline сохраняет `pypdf` fallback в тот же `article.md`. Дефолтная VL-модель: `qwen/qwen3-vl-235b-a22b-instruct` (см. `.env.example`).
+
+**Chunking (после Markdown):** нормализованный текст режется на слайсы **front matter** и **references scope** для стадий Layer 1; векторный индекс (Qdrant) — **section-aware chunks** с `chunk_fingerprint` и путём секции. Подробно: [chunking-strategy.md](chunking-strategy.md), ADR [003](../adr/003-chunking-and-dedup-strategy.md).
 
 **Обогащение (текущий код):** клиент **OpenAlex** для work по DOI и для cited works. **Crossref / ORCID / ROR** — следующие шаги (то же API-слой `httpx`, отдельные модули), без блокировки текущего ingest.
 
@@ -43,9 +45,11 @@
 flowchart LR
     PDF[Source_PDF_or_text] --> Md[ArticleMarkdownArtifact]
     Md --> Norm[NormalizeText]
-    Norm --> Meta[MetadataStage]
-    Norm --> Auth[AuthorsStage]
-    Norm --> Refs[ReferencesStage]
+    Norm --> Slice[DocumentSlices]
+    Slice --> Meta[MetadataStage]
+    Slice --> Auth[AuthorsStage]
+    Slice --> Refs[ReferencesStage]
+    Norm --> Chunks[SectionAwareChunks]
     Meta --> Enrich[RegistryEnrichment]
     Auth --> Enrich
     Refs --> Enrich
@@ -53,11 +57,13 @@ flowchart LR
     Dedup --> Blobs[BlobsStore]
     Dedup --> PG[Postgres_Metadata]
     Dedup --> Neo[Neo4j_Graph]
-    Dedup --> Vec[Qdrant_Chunks]
+    Chunks --> Vec[Qdrant_Chunks]
 ```
 
 ## Связанные документы
 
 - [source-of-truth-v1.md](source-of-truth-v1.md)
+- [chunking-strategy.md](chunking-strategy.md)
 - [adr/002-layer1-graph-model.md](../adr/002-layer1-graph-model.md)
+- [adr/003-chunking-and-dedup-strategy.md](../adr/003-chunking-and-dedup-strategy.md)
 - [specs/extraction/](../specs/extraction/)

@@ -7,7 +7,7 @@
 | Family | Метрики | Статус Phase 1 |
 |--------|---------|----------------|
 | KG extraction (layer 1) | Precision/Recall/F1 по полям `Work`, рёбрам `CITES`, списку авторов | Ручной gold-set + контрактные тесты на fixtures |
-| Retrieval | nDCG, hit@k | После стабилизации чанков (Phase 5) |
+| Retrieval | nDCG, hit@k | После стабилизации чанков (Phase 5); регрессии: стабильность `chunk_fingerprint`, дубликаты чанков |
 | Answer / synthesis | Цитаты, trace | Phase 5+ |
 
 ## Gold-set (in-house)
@@ -18,7 +18,7 @@
 
 ## Автоматические прогоны
 
-- **Unit:** dedup, normalize, эвристики стадий (`pytest tests/`).
+- **Unit:** dedup, normalize, document slices, section-aware chunking, эвристики стадий (`pytest tests/`).
 - **Integration (опционально):** `pytest -m integration` при поднятом `docker compose`; проверка ingest end-to-end.
 
 ## Регрессии промптов/моделей

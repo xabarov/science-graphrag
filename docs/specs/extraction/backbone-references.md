@@ -6,7 +6,8 @@
 
 ## Вход
 
-- `normalized_text: str`.
+- `normalized_text: str` — для эвристик и fallback.
+- Для LLM-стадии: **references scope** — объединение секций `References` / `Bibliography` по всему документу или усечённый хвост, если заголовок не найден (`build_references_scope_text`).
 
 ## Выход
 
@@ -32,3 +33,4 @@
 
 - Поиск секции `References` / `Bibliography` + разбиение по строкам/нумерации.
 - Regex DOI.
+- LLM-first: текст библиографии из references scope (не только последние N символов полного файла, если найдена секция).

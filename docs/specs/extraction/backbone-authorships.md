@@ -6,7 +6,8 @@
 
 ## Вход
 
-- `normalized_text: str`.
+- `normalized_text: str` — для эвристик и fallback.
+- Для LLM-стадии: **front matter slice** (тот же слайс, что и для metadata).
 
 ## Выход
 
@@ -27,4 +28,5 @@
 ## Реализация Phase 1
 
 - Эвристики: секция после title, паттерны «Author1, Author2», affiliation footnotes.
+- LLM-first: промпт по front matter slice (`document_slices` + `extract_stages_llm_first`).
 - ROR/OpenAlex institution match — в стадии enrichment, не в сыром extract.
