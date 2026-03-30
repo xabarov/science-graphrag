@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     qdrant_url: str = Field(default="http://localhost:16333")
     qdrant_collection: str = Field(default="chunks")
     openalex_mailto: str = Field(default="dev@localhost")
+    ror_lookup_enabled: bool = Field(
+        default=False,
+        description="If true, resolve Institution.ror_id via ROR API during ingest (HTTP).",
+    )
     use_vl_for_pdf: bool = Field(default=True)
     vl_api_key: str | None = Field(default=None)
     vl_base_url: str = Field(default="https://openrouter.ai/api/v1")

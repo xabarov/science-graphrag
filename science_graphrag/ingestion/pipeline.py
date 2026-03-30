@@ -4,6 +4,7 @@ import re
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -21,7 +22,12 @@ from science_graphrag.ingestion.document_slices import (
     strip_repeated_boilerplate,
 )
 from science_graphrag.ingestion.embeddings import HashEmbeddingProvider, try_sentence_transformer
-from science_graphrag.ingestion.enrichment.openalex import draft_from_openalex, fetch_work_by_doi
+from science_graphrag.ingestion.enrichment.openalex import (
+    arxiv_id_from_openalex_ids,
+    draft_from_openalex,
+    fetch_work_by_doi,
+)
+from science_graphrag.ingestion.enrichment.ror import lookup_ror_id_optional
 from science_graphrag.ingestion.llm.stage_extraction import extract_stages_llm_first
 from science_graphrag.ingestion.normalize import normalize_text
 from science_graphrag.ingestion.pdf import extract_text_from_pdf
@@ -36,6 +42,18 @@ from science_graphrag.storage.qdrant_store import QdrantChunkStore
 from science_graphrag.utils.project_logging import configure_logging, get_logger
 
 log = get_logger("ingestion.pipeline")
+
+CORPUS_SUPPORTED_SUFFIXES = frozenset({".pdf", ".md", ".txt"})
+
+
+def discover_corpus_files(directory: Path) -> list[Path]:
+    """Sorted list of ingestible files under directory (recursive)."""
+
+    found: list[Path] = []
+    for path in sorted(directory.rglob("*")):
+        if path.is_file() and path.suffix.lower() in CORPUS_SUPPORTED_SUFFIXES:
+            found.append(path)
+    return found
 
 
 def _slug(value: str) -> str:
@@ -231,6 +249,7 @@ def _venue_id(name: str | None) -> str | None:
 
 def _institution_nodes_from_authorships(
     authorships,
+    settings: Settings,
 ) -> list[tuple[str, str, str | None]]:
     nodes: list[tuple[str, str, str | None]] = []
     for authorship in authorships:
@@ -239,8 +258,50 @@ def _institution_nodes_from_authorships(
             continue
         clean = affiliation.strip()
         inst_id = str(uuid.uuid5(uuid.NAMESPACE_URL, "institution:" + clean.lower()))
-        nodes.append((inst_id, clean, None))
+        ror_id: str | None = None
+        if settings.ror_lookup_enabled:
+            ror_id = lookup_ror_id_optional(clean, settings.openalex_mailto)
+        nodes.append((inst_id, clean, ror_id))
     return nodes
+
+
+def _maybe_link_openalex_arxiv_version(
+    neo: Neo4jGraphStore,
+    work_id: str,
+    draft: WorkDraft,
+    oa_data: dict[str, Any] | None,
+) -> None:
+    """
+    When OpenAlex exposes an arXiv id alongside a non-arXiv DOI, link preprint :Work.
+
+    Edge: (journal Work)-[:RELATED_VERSION_OF]->(arXiv Work).
+    """
+
+    if not oa_data or not draft.doi:
+        return
+    doi_norm = normalize_doi(draft.doi)
+    if not doi_norm:
+        return
+    if "arxiv" in doi_norm.lower() or doi_norm.startswith("10.48550/"):
+        return
+    arxiv_oa = arxiv_id_from_openalex_ids(oa_data)
+    if not arxiv_oa:
+        return
+    existing = neo.find_work_id_by_arxiv(arxiv_oa)
+    if existing == work_id:
+        return
+    arxiv_work_id = existing or str(uuid.uuid4())
+    neo.upsert_minimal_work(
+        arxiv_work_id,
+        title=draft.normalized_title or draft.title,
+        publication_year=draft.publication_year,
+        doi=None,
+        arxiv_id=arxiv_oa,
+        fingerprint=None,
+        openalex_id=None,
+        ingestion_confidence=0.45,
+    )
+    neo.merge_related_version(work_id, arxiv_work_id)
 
 
 def _write_markdown_artifact(
@@ -326,11 +387,13 @@ def ingest_document(
             diagnostics_json=ext_diag.to_json(),
         )
 
+        oa_raw: dict[str, Any] | None = None
         with chain_span("openalex_enrichment"):
             if draft.doi:
                 try:
                     oa = fetch_work_by_doi(draft.doi, settings.openalex_mailto)
                     if oa:
+                        oa_raw = oa
                         enriched = draft_from_openalex(oa)
                         draft = merge_draft_prefer_enriched(draft, enriched)
                 except Exception as exc:  # noqa: BLE001
@@ -342,7 +405,7 @@ def ingest_document(
                 neo.ensure_schema()
                 work_id = _resolve_work_id(neo, draft)
                 vid = _venue_id(draft.venue_name)
-                inst_nodes = _institution_nodes_from_authorships(authorships)
+                inst_nodes = _institution_nodes_from_authorships(authorships, settings)
 
                 neo.upsert_work_layer1(
                     work_id,
@@ -363,6 +426,8 @@ def ingest_document(
                     ):
                         continue
                     _persist_reference_citation(neo, work_id, ref, settings)
+
+                _maybe_link_openalex_arxiv_version(neo, work_id, draft, oa_raw)
 
             doc_chunks = dedupe_chunks_for_embedding(
                 chunk_document_for_retrieval(
@@ -419,6 +484,77 @@ def ingest_document(
             )
 
         return doc_id, work_id
+
+
+def run_ingest_batch_cli(
+    directory: Path,
+    *,
+    continue_on_error: bool = False,
+) -> list[dict[str, Any]]:
+    """
+    Ingest every ``.pdf`` / ``.md`` / ``.txt`` under ``directory`` (recursive).
+
+    Prints a per-file summary and a post-hoc Neo4j :Work dedup audit
+    (duplicate clusters by DOI, OpenAlex id, fingerprint, arXiv id).
+    """
+
+    configure_logging()
+    init_tracer_provider()
+    s = get_settings()
+    engine = create_engine(s.database_url, pool_pre_ping=True)
+    init_db(engine)
+    factory = sessionmaker(bind=engine)
+    paths = discover_corpus_files(directory)
+    if not paths:
+        log.warning("No ingestible files under %s", directory)
+        print("No .pdf/.md/.txt files found.")
+        return []
+
+    rows: list[dict[str, Any]] = []
+    for path in paths:
+        try:
+            with factory() as db_session:
+                with db_session.begin():
+                    doc_id, work_id = ingest_document(path, settings=s, session=db_session)
+            rows.append(
+                {
+                    "path": str(path.resolve()),
+                    "document_id": doc_id,
+                    "work_id": work_id,
+                    "error": None,
+                },
+            )
+            print(f"OK path={path} document_id={doc_id} work_id={work_id}")
+        except Exception as exc:  # noqa: BLE001
+            log.exception("Ingest failed for %s", path)
+            rows.append(
+                {
+                    "path": str(path.resolve()),
+                    "document_id": None,
+                    "work_id": None,
+                    "error": str(exc),
+                },
+            )
+            print(f"FAIL path={path} error={exc}")
+            if not continue_on_error:
+                break
+
+    neo = Neo4jGraphStore(s.neo4j_uri, s.neo4j_user, s.neo4j_password)
+    try:
+        violations = neo.find_work_dedup_violations()
+    finally:
+        neo.close()
+
+    print("\n--- Work dedup audit (Neo4j) ---")
+    if not violations:
+        print("OK: no duplicate Work clusters by doi / openalex_id / fingerprint / arxiv_id")
+    else:
+        print(f"Found {len(violations)} duplicate cluster(s):")
+        for item in violations:
+            print(
+                f"  [{item['kind']}] key={item['dedup_key']!r} " f"work_ids={item['work_ids']}",
+            )
+    return rows
 
 
 def run_ingest_cli(path: Path) -> None:

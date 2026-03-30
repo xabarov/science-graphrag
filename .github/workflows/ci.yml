@@ -1,0 +1,28 @@
+# Merge gate: unit + smoke (no Docker services required).
+# Integration: pytest -m integration — см. docs/benchmarks/graph-level-eval-v1.md (nightly/manual).
+
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install package (dev)
+        run: pip install -e ".[dev]"
+
+      - name: Tests (exclude integration)
+        run: pytest tests -m "not integration" -q

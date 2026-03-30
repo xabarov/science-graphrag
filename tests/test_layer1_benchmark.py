@@ -13,7 +13,13 @@ from science_graphrag.config import Settings
 from science_graphrag.domain.models import AuthorshipDraft, ReferenceDraft, WorkDraft, WorkType
 from science_graphrag.ingestion.stages.references import extract_references
 
-FIXTURE_YOLO = Path(__file__).resolve().parent / "fixtures" / "benchmarks" / "layer1" / "yolov1"
+FIXTURE_ROOT = Path(__file__).resolve().parent / "fixtures" / "benchmarks" / "layer1"
+FIXTURE_YOLO = FIXTURE_ROOT / "yolov1"
+FIXTURE_DOI_HEAVY = FIXTURE_ROOT / "doi_refs_heavy"
+FIXTURE_ARXIV_HEAVY = FIXTURE_ROOT / "arxiv_refs_heavy"
+FIXTURE_NOISY = FIXTURE_ROOT / "noisy_layout_stub"
+FIXTURE_RETINANET_REAL = FIXTURE_ROOT / "retinanet_focal_realpdf"
+FIXTURE_FCOS_REAL = FIXTURE_ROOT / "fcos_realpdf"
 
 
 def test_layer1_gold_spec_loads() -> None:
@@ -53,6 +59,52 @@ def test_yolov1_fixture_reference_heuristic_count() -> None:
     text = (FIXTURE_YOLO / "article.md").read_text(encoding="utf-8")
     refs = extract_references(text)
     assert len(refs) >= 23
+
+
+def test_doi_heavy_fixture_reference_heuristic_count() -> None:
+    text = (FIXTURE_DOI_HEAVY / "article.md").read_text(encoding="utf-8")
+    refs = extract_references(text)
+    assert len(refs) >= 4
+
+
+def test_arxiv_heavy_fixture_reference_heuristic_count() -> None:
+    text = (FIXTURE_ARXIV_HEAVY / "article.md").read_text(encoding="utf-8")
+    refs = extract_references(text)
+    assert len(refs) >= 5
+
+
+def test_noisy_layout_fixture_reference_heuristic_count() -> None:
+    text = (FIXTURE_NOISY / "article.md").read_text(encoding="utf-8")
+    refs = extract_references(text)
+    assert len(refs) >= 2
+
+
+def test_retinanet_realpdf_fixture_reference_heuristic_count() -> None:
+    text = (FIXTURE_RETINANET_REAL / "article.md").read_text(encoding="utf-8")
+    refs = extract_references(text)
+    assert len(refs) >= 36
+
+
+def test_fcos_realpdf_fixture_reference_heuristic_count() -> None:
+    text = (FIXTURE_FCOS_REAL / "article.md").read_text(encoding="utf-8")
+    refs = extract_references(text)
+    assert len(refs) >= 26
+
+
+@pytest.mark.parametrize(
+    ("rel_dir", "minimum"),
+    [
+        ("detr_realpdf", 46),
+        ("ssd_realpdf", 22),
+        ("efficientdet_realpdf", 44),
+        ("yolov3_realpdf", 18),
+        ("centernet_realpdf", 40),
+    ],
+)
+def test_additional_realpdf_fixture_reference_heuristic_count(rel_dir: str, minimum: int) -> None:
+    text = (FIXTURE_ROOT / rel_dir / "article.md").read_text(encoding="utf-8")
+    refs = extract_references(text)
+    assert len(refs) >= minimum
 
 
 def test_run_case_smoke(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -36,12 +36,15 @@
 - `min_institutions`, `max_institutions`
 - `expected_cited_arxiv_ids[]`
 - `max_duplicate_work_fingerprints`
+- `max_work_dedup_violations` — лимит на нарушения `Neo4jGraphStore.find_work_dedup_violations()` (глобальный аудит дублей по `openalex_id` / `doi` / `arxiv_id`; `0` = строгое окно)
+- `min_related_version_edges`, `max_related_version_edges` — ожидаемое число рёбер `RELATED_VERSION_OF`, инцидентных к ingested `Work`
 
 Текущие метрики:
 
 - диапазоны по `CITES`, authorships, institutions
 - P/R/F1 по `expected_cited_arxiv_ids`
 - число дублирующихся `Work.fingerprint` в БД
+- глобальный счётчик `Work`-дедуп нарушений и локальный счётчик `RELATED_VERSION_OF` у целевого `Work`
 
 ## Что уже покрыто на `YOLOv1`
 
@@ -54,8 +57,18 @@
 - Phase 4: graph-level eval как шаг к exit criteria «регрессии ловятся автоматически».
 - См. [roadmap §4.3](../roadmap.md).
 
+## Merge gates vs nightly / manual
+
+| Прогон | Рекомендуемый состав |
+|--------|----------------------|
+| **Merge / PR** | `pytest` без `-m integration` (unit + smoke), при необходимости один быстрый layer-1 кейс с выключенным LLM. |
+| **Nightly / manual** | `pytest -m integration` (нужны Neo4j + Qdrant), полный `science-graphrag-layer1-benchmark tests/fixtures/benchmarks/layer1 --suite`, при необходимости `science-graphrag-graph-benchmark … --suite` с живым OpenAlex. |
+
+CI (ручной/еженедельный прогон на GitHub Actions): [.github/workflows/integration-nightly.yml](../../.github/workflows/integration-nightly.yml) — сервисы Neo4j и Qdrant в job, затем `pytest tests -m integration`.
+
+Интеграционный тест `tests/integration/test_full_ingest_integration.py` сам пропускается, если сервисы недоступны.
+
 ## Следующие шаги
 
-- Добавить `pytest -m integration` с живой Neo4j/Qdrant/Postgres.
-- Собирать multi-case отчёт по нескольким fixture.
-- Добавить проверки на дубликаты `Work` по DOI/OpenAlex id и на `RELATED_VERSION_OF`.
+- Расширить integration-покрытие (Postgres + `ingest-corpus` smoke).
+- Ужесточить graph suite при стабильном OpenAlex.

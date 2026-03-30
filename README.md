@@ -58,6 +58,7 @@ docker compose up -d   # Postgres :15432, Neo4j HTTP :17474 / Bolt :17687, Qdran
 python -m venv .venv && .venv/bin/pip install -e ".[dev]"
 .venv/bin/science-graphrag ingest path/to/file.pdf
 # или .txt с полным текстом статьи
+.venv/bin/science-graphrag ingest-corpus path/to/corpus_dir   # рекурсивно .pdf/.md/.txt + аудит дублей Work в Neo4j
 ```
 
 Архитектура и ADR: [docs/architecture/phase-1-backbone.md](docs/architecture/phase-1-backbone.md), [docs/adr/001-phase1-stack.md](docs/adr/001-phase1-stack.md).

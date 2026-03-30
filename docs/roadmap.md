@@ -147,17 +147,20 @@ flowchart LR
 | **Сделано** | Обогащение реестром: **OpenAlex** по DOI для основной работы и для цитируемых с DOI. |
 | **Сделано** | Хранилища: blobs, Postgres (`documents`, `ingestion_runs`), Neo4j, Qdrant; артефакты `article.md` + `extraction_diagnostics.json`. |
 | **Частично** | Canonical ID / **dedup для `Work`** (DOI, arXiv, fingerprint) — без полного merge-каталога между корпусами. |
-| **Частично** | **Author / Institution** в MVP: узлы создаются, но без канонического слияния одного автора между разными работами и без заполнения `ror_id` из ROR. |
-| **Отложено** | Интеграции **Crossref**, **ORCID**, **ROR** как отдельные клиенты; ребро **`RELATED_VERSION_OF`** в ingest (есть в ADR, логика не подключена). |
-| **Отложено** | Массовый **batch/corpus ingest** в CLI (сейчас один файл за вызов). |
+| **Частично** | **Author / Institution**: `:Author` с детерминированным id по нормализованному имени (одно написание → один узел между работами); `Institution.ror_id` — опционально через ROR API при `SCIENCE_GRAPHRAG_ROR_LOOKUP_ENABLED=true`. |
+| **Частично** | Ребро **`RELATED_VERSION_OF`**: журнальный DOI + arXiv в OpenAlex `ids` → связь опубликованной работы с preprint-узлом. |
+| **Сделано** | **Batch/corpus ingest**: `science-graphrag ingest-corpus <dir>` (рекурсивно `.pdf`/`.md`/`.txt`) и пост-аудит кластеров дублей `Work` по DOI / OpenAlex / fingerprint / arXiv в Neo4j. |
+| **Отложено** | Интеграции **Crossref**, **ORCID** как отдельные клиенты; полноценный ROR-каталог и merge институций между корпусами. |
 
 **Риски:** шум в entity resolution; слабые PDF. **Митигация:** метрики по слою 1 отдельно; ручная разметка малого gold-set.
 
-**Exit criteria:** подтверждён **надёжный single-document (и малый корпус вручную)** ingest: связный библиографический граф с осмысленными `CITES` там, где извлечение даёт DOI / arXiv / title+year. Цель «десятки работ без критического дублирования Work» — **следующий шаг** после batch-ingest и усиления dedup.
+**Exit criteria:** подтверждён **надёжный single-document (и малый корпус вручную)** ingest: связный библиографический граф с осмысленными `CITES` там, где извлечение даёт DOI / arXiv / title+year. **Сделано для корпуса:** CLI `ingest-corpus`, пост-аудит дублей `Work` в Neo4j, multi-case benchmark suite. Цель «десятки работ **без критического** дублирования Work» остаётся: сейчас есть **обнаружение** кластеров-дублей, без автоматического merge-каталога.
 
-**Статус Phase 1:** **runnable MVP** (2026-03-30, обновлено 2026-03-30): пакет `science_graphrag`, `docker-compose.yml`, CLI `science-graphrag ingest` (PDF / `.txt` / `.md`), документы [architecture/phase-1-backbone.md](architecture/phase-1-backbone.md), [adr/001-phase1-stack.md](adr/001-phase1-stack.md), [adr/002-layer1-graph-model.md](adr/002-layer1-graph-model.md), [benchmarks/strategy-v1.md](benchmarks/strategy-v1.md).
+**Статус Phase 1:** **runnable MVP** (2026-03-30, обновлено **2026-03-31**): пакет `science_graphrag`, `docker-compose.yml`, CLI `science-graphrag ingest` / **`ingest-corpus`**, документы [architecture/phase-1-backbone.md](architecture/phase-1-backbone.md), [adr/001-phase1-stack.md](adr/001-phase1-stack.md), [adr/002-layer1-graph-model.md](adr/002-layer1-graph-model.md), [benchmarks/strategy-v1.md](benchmarks/strategy-v1.md).
 
 **Дополнение (2026-03-30):** после PDF→Markdown ingestion использует **task-aware document slices** (front matter / references scope) для Layer 1 LLM и **section-aware chunks** с детерминированными id для Qdrant; см. [architecture/chunking-strategy.md](architecture/chunking-strategy.md), [adr/003-chunking-and-dedup-strategy.md](adr/003-chunking-and-dedup-strategy.md).
+
+**Дополнение (2026-03-31):** batch-ingest + Neo4j `find_work_dedup_violations`; канонический `:Author` по имени; опциональный ROR; `RELATED_VERSION_OF` при arXiv в OpenAlex для DOI-работы; реальные CV-pdf фикстуры (pypdf→MD) — см. Phase 4.
 
 ---
 
@@ -175,6 +178,8 @@ flowchart LR
 **Риски:** онтология «на все случаи жизни» без данных. **Митигация:** жёсткий MVP-поднабор сущностей и связей.
 
 **Exit criteria:** зафиксирован документ ontology v1 + policy изменений; согласовано с Phase 3 extraction.
+
+**Статус Phase 2 (2026-03-31):** **черновик** — [specs/ontology-v1-mvp.md](specs/ontology-v1-mvp.md) (anti-bloat, таблица целевых типов, указатель на будущий ADR); полная таксономия отношений и ADR scope — впереди.
 
 ---
 
@@ -228,22 +233,26 @@ flowchart LR
 
 **Exit criteria:** документ `docs/benchmarks/strategy-v1.md` (или раздел здесь) + минимальный автоматический прогон хотя бы для слоя 1 extraction; план merge vs nightly gates.
 
-**Статус Phase 4:** **в процессе** (2026-03-30).
+**Статус Phase 4:** **в процессе** (2026-03-30, углубление **2026-03-31**).
 
 **Уже есть:**
 
-- [docs/benchmarks/strategy-v1.md](benchmarks/strategy-v1.md) и [eval/README.md](../eval/README.md).
-- Первый gold-case **YOLOv1**: `tests/fixtures/benchmarks/layer1/yolov1/` (`article.md` + `gold.json`).
-- Раннер **draft-level** layer-1: `eval/layer1/` (`python -m eval.layer1`, CLI `science-graphrag-layer1-benchmark`), отчёты JSON в `eval/results/`.
-- Начальный **graph-level** eval после ingest: `eval/graph_v1/` (`python -m eval.graph_v1`, CLI `science-graphrag-graph-benchmark`), `graph_expectations` в `gold.json`, отчёты JSON/Markdown.
-- Минимальные **unit/smoke** тесты: `tests/test_layer1_benchmark.py`.
+- [docs/benchmarks/strategy-v1.md](benchmarks/strategy-v1.md), [benchmarks/README.md](benchmarks/README.md), [eval/README.md](../eval/README.md).
+- **Gold-set layer1** (каталог `tests/fixtures/benchmarks/layer1/<case_id>/`): YOLOv1; синтетические шаблоны (`doi_refs_heavy`, `arxiv_refs_heavy`, `noisy_layout_stub`); **реальные статьи** из pypdf→MD (`retinanet_focal_realpdf`, `fcos_realpdf`, скрипт `scripts/build_real_pdf_layer1_fixture.py`, см. `SOURCE.txt` в кейсе).
+- **Draft-level** раннер: `eval/layer1/`, CLI `science-graphrag-layer1-benchmark`; в отчёте **`run_metadata`** (модель + `layer1_prompt_fingerprint`).
+- **Suite:** один прогон по всем кейсам: `--suite` на корне фикстур (layer-1 и graph-v1).
+- **Graph-level** eval: `eval/graph_v1/`, CLI `science-graphrag-graph-benchmark`, `graph_expectations` в `gold.json`; опционально **`max_work_dedup_violations`**, **`min_related_version_edges` / `max_related_version_edges`** (см. [benchmarks/graph-level-eval-v1.md](benchmarks/graph-level-eval-v1.md)).
+- **Merge CI:** `.github/workflows/ci.yml` — `pytest -m "not integration"` на push/PR в `main`/`master`.
+- **Nightly / manual CI:** `.github/workflows/integration-nightly.yml` — контейнеры Neo4j + Qdrant, `pytest tests -m integration` (`workflow_dispatch` + еженедельный cron).
+- **Интеграция локально:** `pytest -m integration` — `tests/integration/test_full_ingest_integration.py` (Neo4j+Qdrant; skip при недоступности); политика merge vs nightly — [benchmarks/graph-level-eval-v1.md](benchmarks/graph-level-eval-v1.md).
+- Общие хелперы suite: `eval/bench_common.py`; тесты discovery/dedup/OpenAlex-хелперов.
 
-**Дальше (backlog Phase 4):**
+**Дальше (backlog Phase 4, приоритет):**
 
-- Несколько кейсов в одном прогоне + агрегированный отчёт.
-- Расширить **graph-level eval** после полного ingest: integration tests, multi-case runner, инварианты `RELATED_VERSION_OF`, дубликаты `Work` по DOI/OpenAlex id — см. [benchmarks/graph-level-eval-v1.md](benchmarks/graph-level-eval-v1.md).
-- Merge-blocking / nightly gates в CI.
-- Новые **families** и gold по мере появления сущностей Phase 2+ (см. [benchmarks/benchmark-expansion-v1.md](benchmarks/benchmark-expansion-v1.md)).
+1. **Nightly+:** при необходимости добавить в `integration-nightly.yml` прогон `science-graphrag-*-benchmark … --suite` с секретами LLM / полный graph suite с живым OpenAlex (сейчас только integration-тесты).
+2. **Graph suite в CI:** тяжёлый шаг; либо отдельный job на nightly, либо один лёгкий кейс без OpenAlex на merge.
+3. **Gold для real-pdf:** заполнить `authorships[]` и при необходимости ужесточить `graph_expectations` под прогон **с включённым LLM** (отдельный job).
+4. Новые **families** и gold по мере Phase 2+ — [benchmarks/benchmark-expansion-v1.md](benchmarks/benchmark-expansion-v1.md).
 
 ---
 
@@ -289,7 +298,7 @@ flowchart LR
 
 **Deliverables:**
 
-- CI: unit; integration; подмножество benchmarks на merge; при необходимости smoke с инфраструктурой (nightly/manual).
+- CI: unit; integration; подмножество benchmarks на merge; при необходимости smoke с инфраструктурой (nightly/manual). **Частично (2026-03-31):** merge-gate — `.github/workflows/ci.yml` (`pytest -m "not integration"`); integration — `.github/workflows/integration-nightly.yml` (сервисы Neo4j/Qdrant + `pytest -m integration`, ручной/еженедельный запуск). Полный benchmark suite в CI пока не обязателен.
 - Runbooks: деплой, бэкапы, ключи API внешних реестров.
 - Пилот: узкий научный домен, критерии успеха (время до ответа, доля ответов с корректными цитатами, субъективная полезность).
 
@@ -345,6 +354,8 @@ flowchart TD
 
 | Версия | Дата | Изменения |
 |--------|------|-----------|
+| 0.7 | 2026-03-31 | Phase 2: черновик [specs/ontology-v1-mvp.md](specs/ontology-v1-mvp.md); Phase 4: graph-v1 метрики `max_work_dedup_violations`, `RELATED_VERSION_OF` (через `graph_expectations`); GitHub Actions **integration-nightly** (Neo4j+Qdrant + `pytest -m integration`); roadmap: backlog 4.3 пересортирован после закрытия merge-gate / nightly-базиса / инвариантов графа |
+| 0.6 | 2026-03-31 | Phase 1: `ingest-corpus`, Neo4j dedup audit, canonical Author id, опциональный ROR, `RELATED_VERSION_OF` из OpenAlex; Phase 4: benchmark **suite** (`--suite`), `bench_common`, integration ingest test, расширенный gold-set (синтетика + real-pdf), документация merge/nightly; Phase 7: старт CI merge-gate |
 | 0.5 | 2026-03-30 | LLM-first layer-1 extraction; YOLOv1 layer-1 benchmark (`eval/layer1`); initial graph-level eval (`eval/graph_v1`); `CITES` без DOI (arxiv / title+year); Phase 1 deliverables разбиты на done/partial/deferred; Phase 4 статус in progress; план расширения benchmark |
 | 0.4 | 2026-03-30 | Task-aware chunking, document slices, ADR 003, semantic-chunks spec, Qdrant chunk fingerprints |
 | 0.3 | 2026-03-30 | Phase 1: `science_graphrag`, Docker stack, Neo4j/Postgres/Qdrant ingest, ADR 001–002, benchmarks strategy v1 |

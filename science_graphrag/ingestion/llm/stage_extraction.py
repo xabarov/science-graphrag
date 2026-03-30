@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from dataclasses import asdict, dataclass, field
@@ -41,6 +42,21 @@ SYSTEM_FENCE = (
     "Do not invent DOIs, arXiv ids, or titles. "
     "For references without DOI, still fill arxiv_id and year when printed."
 )
+
+
+def extraction_layer1_prompt_fingerprint() -> str:
+    """Short stable id for layer-1 SYSTEM/user prompt contract (for benchmark reports)."""
+
+    material = "|".join(
+        (
+            SYSTEM_FENCE,
+            f"MAX_META_CHARS={MAX_META_CHARS}",
+            f"MAX_REFS_PROMPT_CHARS={MAX_REFS_PROMPT_CHARS}",
+            "schemas=v1",
+        ),
+    )
+    digest = hashlib.sha256(material.encode("utf-8")).hexdigest()[:20]
+    return f"sha256-20:{digest}"
 
 
 def _truncate(s: str, max_len: int) -> str:

@@ -1,0 +1,38 @@
+{
+  "case_id": "efficientdet_realpdf",
+  "schema_version": 1,
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic.",
+  "work_metadata": {
+    "title": "EfficientDet: Scalable and Efficient Object Detection",
+    "publication_year": null,
+    "abstract_prefix": "Model efficiency has become increasingly important in computer vision. I",
+    "doi": null,
+    "arxiv_id": null,
+    "venue_name": null,
+    "work_type": null
+  },
+  "authorships": [],
+  "references": {
+    "expected_count": 52,
+    "min_count": 44,
+    "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
+    "sample_arxiv_ids": [
+      "1606.08415",
+      "1811.05588",
+      "1804.02767",
+      "1904.07850"
+    ],
+    "sample_dois": []
+  },
+  "graph_expectations": {
+    "min_cites": 0,
+    "max_cites": 62,
+    "expected_cited_arxiv_ids": [
+      "1606.08415",
+      "1811.05588",
+      "1804.02767",
+      "1904.07850"
+    ],
+    "max_duplicate_work_fingerprints": 8
+  }
+}

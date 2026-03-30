@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import tempfile
 import uuid
 from pathlib import Path
@@ -11,6 +10,11 @@ from typing import Any
 import typer
 from neo4j import GraphDatabase
 
+from eval.bench_common import (
+    discover_layer1_case_dirs,
+    run_single_case_json_outputs,
+    run_suite_cli_flow,
+)
 from eval.graph_v1.metrics import GraphSnapshot, score_graph_snapshot
 from eval.layer1.spec import Layer1GoldSpec
 from science_graphrag.config import Settings, get_settings
@@ -74,19 +78,36 @@ def _query_graph_snapshot(settings: Settings, work_id: str) -> GraphSnapshot:
                 WHERE n > 1
                 RETURN count(fp) AS duplicate_fingerprints
                 """).single()
-        return GraphSnapshot(
-            work_id=work_id,
-            work_title=work_row["title"] if work_row else None,
-            authorship_count=auth_count["n"] if auth_count else 0,
-            institution_count=inst_count["n"] if inst_count else 0,
-            cites_count=cites_row["n"] if cites_row else 0,
-            cited_arxiv_ids=sorted(
-                [value for value in (cites_row["arxiv_ids"] if cites_row else []) if value]
-            ),
-            duplicate_work_fingerprints=(dup_row["duplicate_fingerprints"] if dup_row else 0),
-        )
+            rel_row = session.run(
+                """
+                MATCH (w:Work {id: $work_id})-[r:RELATED_VERSION_OF]-()
+                RETURN count(r) AS n
+                """,
+                work_id=work_id,
+            ).single()
+            rel_n = int(rel_row["n"] if rel_row else 0)
     finally:
         driver.close()
+
+    audit = Neo4jGraphStore(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password)
+    try:
+        viol_n = len(audit.find_work_dedup_violations())
+    finally:
+        audit.close()
+
+    return GraphSnapshot(
+        work_id=work_id,
+        work_title=work_row["title"] if work_row else None,
+        authorship_count=auth_count["n"] if auth_count else 0,
+        institution_count=inst_count["n"] if inst_count else 0,
+        cites_count=cites_row["n"] if cites_row else 0,
+        cited_arxiv_ids=sorted(
+            [value for value in (cites_row["arxiv_ids"] if cites_row else []) if value]
+        ),
+        duplicate_work_fingerprints=(dup_row["duplicate_fingerprints"] if dup_row else 0),
+        related_version_edge_count=rel_n,
+        work_dedup_violation_count=viol_n,
+    )
 
 
 def run_case(
@@ -147,6 +168,8 @@ def _summarize(report: dict[str, Any]) -> str:
         f"- institution_count: {snapshot.get('institution_count')}",
         f"- cites_count: {snapshot.get('cites_count')}",
         f"- duplicate_work_fingerprints: {snapshot.get('duplicate_work_fingerprints')}",
+        f"- related_version_edge_count: {snapshot.get('related_version_edge_count')}",
+        f"- work_dedup_violation_count: {snapshot.get('work_dedup_violation_count')}",
         f"- cited_arxiv_ids: {snapshot.get('cited_arxiv_ids')}",
         "",
     ]
@@ -164,33 +187,57 @@ def _summarize(report: dict[str, Any]) -> str:
                     "- duplicate_work_fingerprints_ok: "
                     f"{metrics.get('duplicate_work_fingerprints_ok')}"
                 ),
+                f"- work_dedup_violations_ok: {metrics.get('work_dedup_violations_ok')}",
+                f"- related_version_edges_ok: {metrics.get('related_version_edges_ok')}",
             ]
         )
     return "\n".join(lines)
 
 
 def _cli(
-    fixture_dir: Path = typer.Argument(
+    path: Path = typer.Argument(
         ...,
         exists=True,
         file_okay=False,
         dir_okay=True,
-        help="Directory with article.md and gold.json",
+        help="Case directory, or suite root with --suite",
+    ),
+    suite: bool = typer.Option(
+        False,
+        "--suite",
+        "-s",
+        help="Run every benchmark case under path (one subdir per case)",
     ),
     json_out: Path | None = typer.Option(None, "--json-out", help="Write JSON report"),
     md_out: Path | None = typer.Option(None, "--md-out", help="Write Markdown summary"),
     no_wipe: bool = typer.Option(False, "--no-wipe", help="Do not wipe Neo4j before run"),
 ) -> None:
-    report = run_case(fixture_dir, wipe_neo4j=not no_wipe)
-    typer.echo(_summarize(report))
-    if json_out:
-        json_out.parent.mkdir(parents=True, exist_ok=True)
-        json_out.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
-        typer.echo(f"Wrote JSON report to {json_out}", err=True)
-    if md_out:
-        md_out.parent.mkdir(parents=True, exist_ok=True)
-        md_out.write_text(_summarize(report), encoding="utf-8")
-        typer.echo(f"Wrote Markdown summary to {md_out}", err=True)
+    settings = get_settings()
+    wipe = not no_wipe
+    if suite:
+        cases = discover_layer1_case_dirs(path)
+        if not cases:
+            typer.echo(f"No layer-1 benchmarks found under {path}", err=True)
+            raise typer.Exit(code=1)
+        run_suite_cli_flow(
+            title="Graph-level benchmark suite",
+            cases=cases,
+            settings=settings,
+            run_one=lambda c: run_case(c, settings=settings, wipe_neo4j=wipe),
+            summarize=_summarize,
+            json_out=json_out,
+            md_out=md_out,
+        )
+        return
+
+    report = run_case(path, settings=settings, wipe_neo4j=wipe)
+    run_single_case_json_outputs(
+        report=report,
+        settings=settings,
+        summarize=_summarize,
+        json_out=json_out,
+        md_out=md_out,
+    )
 
 
 def main() -> None:

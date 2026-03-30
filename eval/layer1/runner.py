@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
-import json
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
 import typer
 
+from eval.bench_common import (
+    discover_layer1_case_dirs,
+    run_single_case_json_outputs,
+    run_suite_cli_flow,
+)
 from eval.layer1.metrics import score_layer1
 from eval.layer1.spec import Layer1GoldSpec
 from science_graphrag.config import get_settings
@@ -92,12 +96,18 @@ def _summarize(report: dict[str, Any]) -> str:
 
 
 def _cli(
-    fixture_dir: Path = typer.Argument(
+    path: Path = typer.Argument(
         ...,
         exists=True,
         file_okay=False,
         dir_okay=True,
-        help="Directory with article.md and gold.json",
+        help="Case directory (article.md + gold.json), or suite root with --suite",
+    ),
+    suite: bool = typer.Option(
+        False,
+        "--suite",
+        "-s",
+        help="Run every benchmark case under path (one subdir per case)",
     ),
     json_out: Path | None = typer.Option(
         None,
@@ -110,16 +120,31 @@ def _cli(
         help="Write human-readable summary",
     ),
 ) -> None:
-    report = run_case(fixture_dir)
-    typer.echo(_summarize(report))
-    if json_out:
-        json_out.parent.mkdir(parents=True, exist_ok=True)
-        json_out.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
-        typer.echo(f"Wrote JSON report to {json_out}", err=True)
-    if md_out:
-        md_out.parent.mkdir(parents=True, exist_ok=True)
-        md_out.write_text(_summarize(report), encoding="utf-8")
-        typer.echo(f"Wrote Markdown summary to {md_out}", err=True)
+    settings = get_settings()
+    if suite:
+        cases = discover_layer1_case_dirs(path)
+        if not cases:
+            typer.echo(f"No layer-1 benchmarks found under {path}", err=True)
+            raise typer.Exit(code=1)
+        run_suite_cli_flow(
+            title="Layer-1 benchmark suite",
+            cases=cases,
+            settings=settings,
+            run_one=lambda c: run_case(c, settings=settings),
+            summarize=_summarize,
+            json_out=json_out,
+            md_out=md_out,
+        )
+        return
+
+    report = run_case(path, settings=settings)
+    run_single_case_json_outputs(
+        report=report,
+        settings=settings,
+        summarize=_summarize,
+        json_out=json_out,
+        md_out=md_out,
+    )
 
 
 def main() -> None:

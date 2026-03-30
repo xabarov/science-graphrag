@@ -64,6 +64,7 @@
       "1207.0580",
       "1506.06981"
     ],
-    "max_duplicate_work_fingerprints": 0
+    "max_duplicate_work_fingerprints": 0,
+    "max_work_dedup_violations": 0
   }
 }

@@ -4,6 +4,7 @@ from typing import Any
 
 from neo4j import Driver, GraphDatabase
 
+from science_graphrag.domain.authorship_ids import canonical_author_node_id
 from science_graphrag.domain.models import AuthorshipDraft, WorkDraft
 
 
@@ -73,7 +74,7 @@ class Neo4jGraphStore:
         institution_nodes: list[tuple[str, str, list[str]]],
     ) -> None:
         """
-        institution_nodes: tuples (institution_id, name, ror_id) per authorship index (MVP).
+        institution_nodes: tuples (institution_id, name, ror_id | None) aligned to authorship index.
         """
         props = {
             "id": work_id,
@@ -140,7 +141,7 @@ class Neo4jGraphStore:
         )
 
         for idx, ash in enumerate(authorships):
-            aid = work_props["id"] + f":auth:{ash.author_position}"
+            aid = canonical_author_node_id(ash.author_raw_name)
             asid = work_props["id"] + f":ash:{ash.author_position}"
             tx.run(
                 """
@@ -226,3 +227,65 @@ class Neo4jGraphStore:
         q = "MERGE (w:Work {id: $id}) SET w += $props"
         with self._driver.session() as session:
             session.run(q, id=work_id, props=props)
+
+    def find_work_dedup_violations(self) -> list[dict[str, Any]]:
+        """
+        Return clusters where multiple :Work nodes share the same dedup key.
+
+        Only non-empty property values are considered (DOI, OpenAlex id, fingerprint, arXiv id).
+        """
+
+        queries: list[tuple[str, str]] = [
+            (
+                "doi",
+                """
+                MATCH (w:Work)
+                WHERE w.doi IS NOT NULL AND trim(toString(w.doi)) <> ''
+                WITH w.doi AS k, collect(DISTINCT w.id) AS ids
+                WHERE size(ids) > 1
+                RETURN k AS dedup_key, ids
+                """,
+            ),
+            (
+                "openalex_id",
+                """
+                MATCH (w:Work)
+                WHERE w.openalex_id IS NOT NULL AND trim(toString(w.openalex_id)) <> ''
+                WITH w.openalex_id AS k, collect(DISTINCT w.id) AS ids
+                WHERE size(ids) > 1
+                RETURN k AS dedup_key, ids
+                """,
+            ),
+            (
+                "fingerprint",
+                """
+                MATCH (w:Work)
+                WHERE w.fingerprint IS NOT NULL AND trim(toString(w.fingerprint)) <> ''
+                WITH w.fingerprint AS k, collect(DISTINCT w.id) AS ids
+                WHERE size(ids) > 1
+                RETURN k AS dedup_key, ids
+                """,
+            ),
+            (
+                "arxiv_id",
+                """
+                MATCH (w:Work)
+                WHERE w.arxiv_id IS NOT NULL AND trim(toString(w.arxiv_id)) <> ''
+                WITH w.arxiv_id AS k, collect(DISTINCT w.id) AS ids
+                WHERE size(ids) > 1
+                RETURN k AS dedup_key, ids
+                """,
+            ),
+        ]
+        out: list[dict[str, Any]] = []
+        with self._driver.session() as session:
+            for kind, cypher in queries:
+                for rec in session.run(cypher):
+                    out.append(
+                        {
+                            "kind": kind,
+                            "dedup_key": rec["dedup_key"],
+                            "work_ids": list(rec["ids"]),
+                        },
+                    )
+        return out

@@ -8,6 +8,11 @@ import httpx
 from science_graphrag.domain.models import WorkDraft, WorkType
 from science_graphrag.ingestion.dedup import normalize_doi, title_fingerprint
 
+_ARXIV_IN_URL_RE = re.compile(
+    r"arxiv\.org/abs/(?P<id>\d{4}\.\d{4,5})(?:v\d+)?",
+    re.IGNORECASE,
+)
+
 
 def _map_oa_type(raw: str | None) -> WorkType | None:
     if not raw:
@@ -34,6 +39,21 @@ def fetch_work_by_doi(doi: str, mailto: str) -> dict[str, Any] | None:
             return None
         r.raise_for_status()
         return r.json()
+
+
+def arxiv_id_from_openalex_ids(data: dict[str, Any]) -> str | None:
+    """Best-effort arXiv id from OpenAlex `ids.arxiv` URL, if present."""
+
+    ids = data.get("ids")
+    if not isinstance(ids, dict):
+        return None
+    raw = ids.get("arxiv")
+    if not raw or not isinstance(raw, str):
+        return None
+    match = _ARXIV_IN_URL_RE.search(raw)
+    if match:
+        return match.group("id")
+    return None
 
 
 def draft_from_openalex(data: dict[str, Any]) -> WorkDraft:

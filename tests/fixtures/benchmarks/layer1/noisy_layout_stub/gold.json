@@ -1,0 +1,35 @@
+{
+  "case_id": "noisy_layout_stub",
+  "schema_version": 1,
+  "description": "Noisy PDF→MD style: extra whitespace, fenced wrapper, broken ref flow.",
+  "work_metadata": {
+    "title": "Noisy Markdown Wrapper Title Paper",
+    "publication_year": null,
+    "abstract_prefix": "This abstract has leading spaces",
+    "doi": null,
+    "arxiv_id": null,
+    "venue_name": null,
+    "work_type": null
+  },
+  "authorships": [
+    {
+      "name": "Author One",
+      "affiliations": []
+    },
+    {
+      "name": "Author Two",
+      "affiliations": []
+    }
+  ],
+  "references": {
+    "expected_count": 3,
+    "min_count": 2,
+    "notes": "Three [n] lines; [2] may still merge into [1] depending on parser version — min_count kept at 2.",
+    "sample_arxiv_ids": ["1705.03820"],
+    "sample_dois": ["10.1000/xyz"]
+  },
+  "graph_expectations": {
+    "min_authorships": 1,
+    "max_duplicate_work_fingerprints": 3
+  }
+}

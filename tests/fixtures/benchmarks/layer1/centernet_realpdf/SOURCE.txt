@@ -1,0 +1,2 @@
+Source PDF (local): /home/roman/Documents/ML/CV/object-detection/CenterNet.pdf
+Regenerate: .venv/bin/python scripts/build_real_pdf_layer1_fixture.py --pdf "<path>/CenterNet.pdf" --out tests/fixtures/benchmarks/layer1/centernet_realpdf --case-id centernet_realpdf

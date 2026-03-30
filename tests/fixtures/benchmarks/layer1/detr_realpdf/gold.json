@@ -1,0 +1,46 @@
+{
+  "case_id": "detr_realpdf",
+  "schema_version": 1,
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic.",
+  "work_metadata": {
+    "title": "End-to-End Object Detection with Transformers",
+    "publication_year": null,
+    "abstract_prefix": "We present a new method that views object detection as a direct set pred",
+    "doi": null,
+    "arxiv_id": null,
+    "venue_name": null,
+    "work_type": null
+  },
+  "authorships": [],
+  "references": {
+    "expected_count": 54,
+    "min_count": 46,
+    "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
+    "sample_arxiv_ids": [
+      "2002.08926",
+      "1904.09324",
+      "1905.03072",
+      "1711.10433",
+      "1511.06449",
+      "1904.05709",
+      "1805.00613",
+      "1712.00617",
+      "1911.08460",
+      "1912.02424",
+      "1904.07850"
+    ],
+    "sample_dois": []
+  },
+  "graph_expectations": {
+    "min_cites": 0,
+    "max_cites": 64,
+    "expected_cited_arxiv_ids": [
+      "2002.08926",
+      "1904.09324",
+      "1905.03072",
+      "1711.10433",
+      "1511.06449"
+    ],
+    "max_duplicate_work_fingerprints": 8
+  }
+}

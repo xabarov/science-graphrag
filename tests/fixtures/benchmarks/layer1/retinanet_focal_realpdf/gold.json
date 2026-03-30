@@ -1,0 +1,34 @@
+{
+  "case_id": "retinanet_focal_realpdf",
+  "schema_version": 1,
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD. Authorships omitted in gold: pypdf layout rarely matches heuristic author parsing; use LLM-on runs to score names separately.",
+  "work_metadata": {
+    "title": "Focal Loss for Dense Object Detection",
+    "publication_year": null,
+    "abstract_prefix": "the highest accuracy object detectors",
+    "doi": null,
+    "arxiv_id": null,
+    "venue_name": null,
+    "work_type": null
+  },
+  "authorships": [],
+  "references": {
+    "expected_count": 44,
+    "min_count": 36,
+    "notes": "Counts from heuristic extract_references on this MD; PDF hyphenation may shift totals.",
+    "sample_arxiv_ids": [
+      "1701.06659",
+      "1612.06851"
+    ],
+    "sample_dois": []
+  },
+  "graph_expectations": {
+    "min_cites": 0,
+    "max_cites": 54,
+    "expected_cited_arxiv_ids": [
+      "1701.06659",
+      "1612.06851"
+    ],
+    "max_duplicate_work_fingerprints": 8
+  }
+}

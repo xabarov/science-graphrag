@@ -20,6 +20,8 @@ class GraphSnapshot:
     cites_count: int
     cited_arxiv_ids: list[str] = field(default_factory=list)
     duplicate_work_fingerprints: int = 0
+    related_version_edge_count: int = 0
+    work_dedup_violation_count: int = 0
 
     def to_json_dict(self) -> dict[str, Any]:
         """Serialize snapshot for JSON reports."""
@@ -54,6 +56,18 @@ def score_graph_snapshot(snapshot: GraphSnapshot, gold: Layer1GoldSpec) -> dict[
     if exp.max_duplicate_work_fingerprints is not None:
         dup_ok = snapshot.duplicate_work_fingerprints <= exp.max_duplicate_work_fingerprints
 
+    dedup_ok = None
+    if exp.max_work_dedup_violations is not None:
+        dedup_ok = snapshot.work_dedup_violation_count <= exp.max_work_dedup_violations
+
+    rel_ok = None
+    if exp.min_related_version_edges is not None or exp.max_related_version_edges is not None:
+        rel_ok = _bounded(
+            snapshot.related_version_edge_count,
+            exp.min_related_version_edges,
+            exp.max_related_version_edges,
+        )
+
     return {
         "has_expectations": True,
         "snapshot": snapshot.to_json_dict(),
@@ -73,4 +87,6 @@ def score_graph_snapshot(snapshot: GraphSnapshot, gold: Layer1GoldSpec) -> dict[
         "cited_arxiv_f1": arxiv_f1,
         "cited_arxiv_tp_fp_fn": {"tp": tp, "fp": fp, "fn": fn},
         "duplicate_work_fingerprints_ok": dup_ok,
+        "work_dedup_violations_ok": dedup_ok,
+        "related_version_edges_ok": rel_ok,
     }

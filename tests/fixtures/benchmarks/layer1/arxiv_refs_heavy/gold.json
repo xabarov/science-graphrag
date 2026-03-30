@@ -1,0 +1,44 @@
+{
+  "case_id": "arxiv_refs_heavy",
+  "schema_version": 1,
+  "description": "References mostly use arXiv id patterns (abs/, arXiv:, bare id).",
+  "work_metadata": {
+    "title": "arXiv-Heavy Bibliography Case",
+    "publication_year": null,
+    "abstract_prefix": "We cite many arXiv preprints",
+    "doi": null,
+    "arxiv_id": null,
+    "venue_name": null,
+    "work_type": null
+  },
+  "authorships": [
+    {
+      "name": "A. Researcher",
+      "affiliations": []
+    },
+    {
+      "name": "B. Scientist",
+      "affiliations": []
+    }
+  ],
+  "references": {
+    "expected_count": 6,
+    "min_count": 5,
+    "sample_arxiv_ids": [
+      "1505.00110",
+      "1310.1531",
+      "1505.01749",
+      "1504.08083",
+      "1312.4400",
+      "1406.4729"
+    ],
+    "sample_dois": []
+  },
+  "graph_expectations": {
+    "min_authorships": 1,
+    "min_cites": 0,
+    "max_cites": 32,
+    "expected_cited_arxiv_ids": ["1505.00110", "1310.1531"],
+    "max_duplicate_work_fingerprints": 2
+  }
+}

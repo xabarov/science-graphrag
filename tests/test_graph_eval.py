@@ -19,6 +19,7 @@ def test_graph_expectations_load() -> None:
     assert spec.graph_expectations is not None
     assert spec.graph_expectations.min_cites == 23
     assert "1505.00110" in spec.graph_expectations.expected_cited_arxiv_ids
+    assert spec.graph_expectations.max_work_dedup_violations == 0
 
 
 def test_score_graph_snapshot() -> None:
@@ -34,6 +35,8 @@ def test_score_graph_snapshot() -> None:
         cites_count=23,
         cited_arxiv_ids=expected_arxiv_ids,
         duplicate_work_fingerprints=0,
+        related_version_edge_count=0,
+        work_dedup_violation_count=0,
     )
     metrics = score_graph_snapshot(snapshot, spec)
     assert metrics["cites_range_ok"] is True
@@ -41,6 +44,24 @@ def test_score_graph_snapshot() -> None:
     assert metrics["institutions_range_ok"] is True
     assert metrics["cited_arxiv_f1"] == 1.0
     assert metrics["duplicate_work_fingerprints_ok"] is True
+    assert metrics["work_dedup_violations_ok"] is True
+
+
+def test_work_dedup_violations_over_max_fails() -> None:
+    spec = Layer1GoldSpec.load(FIXTURE_YOLO / "gold.json")
+    expected_arxiv_ids = spec.graph_expectations.expected_cited_arxiv_ids  # type: ignore[union-attr]
+    snapshot = GraphSnapshot(
+        work_id="work-1",
+        work_title="You Only Look Once: Unified, Real-Time Object Detection",
+        authorship_count=4,
+        institution_count=2,
+        cites_count=23,
+        cited_arxiv_ids=expected_arxiv_ids,
+        duplicate_work_fingerprints=0,
+        work_dedup_violation_count=2,
+    )
+    metrics = score_graph_snapshot(snapshot, spec)
+    assert metrics["work_dedup_violations_ok"] is False
 
 
 def test_graph_run_case_smoke(monkeypatch) -> None:
@@ -69,6 +90,8 @@ def test_graph_run_case_smoke(monkeypatch) -> None:
             cites_count=23,
             cited_arxiv_ids=["1505.00110", "1310.1531"],
             duplicate_work_fingerprints=0,
+            related_version_edge_count=0,
+            work_dedup_violation_count=0,
         )
 
     class _FakeNeo:

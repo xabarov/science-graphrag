@@ -20,5 +20,7 @@
 
 ## Инфраструктура
 
-1. Регрессионный прогон: `science-graphrag-layer1-benchmark tests/fixtures/benchmarks/layer1/yolov1 --json-out eval/results/yolov1-latest.json`.
-2. Зафиксировать в отчёте модель и hash промпта (`SYSTEM_FENCE` + user blocks).
+1. Один кейс: `science-graphrag-layer1-benchmark tests/fixtures/benchmarks/layer1/yolov1 --json-out eval/results/yolov1-latest.json`.
+2. **Suite** по всем кейсам в каталоге: `science-graphrag-layer1-benchmark tests/fixtures/benchmarks/layer1 --suite --json-out eval/results/layer1-suite.json` (в JSON есть `run_metadata` с `extraction_llm_model` и `layer1_prompt_fingerprint`).
+3. Аналогично graph-level: `science-graphrag-graph-benchmark tests/fixtures/benchmarks/layer1 --suite`.
+4. Hash промпта для layer-1: функция `extraction_layer1_prompt_fingerprint()` в `science_graphrag/ingestion/llm/stage_extraction.py` (стабильный дайджест `SYSTEM_FENCE` + лимитов контекста).

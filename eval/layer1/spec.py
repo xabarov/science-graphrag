@@ -52,6 +52,18 @@ class GraphExpectations(BaseModel):
     max_institutions: int | None = None
     expected_cited_arxiv_ids: list[str] = Field(default_factory=list)
     max_duplicate_work_fingerprints: int | None = None
+    max_work_dedup_violations: int | None = Field(
+        default=None,
+        description="Max Neo4j clusters where multiple Work share same doi/openalex_id/fingerprint/arxiv_id.",
+    )
+    min_related_version_edges: int | None = Field(
+        default=None,
+        description="Min RELATED_VERSION_OF edges incident on the ingested work (undirected count).",
+    )
+    max_related_version_edges: int | None = Field(
+        default=None,
+        description="Max RELATED_VERSION_OF edges incident on the ingested work.",
+    )
 
 
 class Layer1GoldSpec(BaseModel):

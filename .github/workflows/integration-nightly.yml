@@ -1,0 +1,49 @@
+# Neo4j + Qdrant integration tests — не блокирует merge.
+# Запуск: вручную (workflow_dispatch) или по расписанию (cron на default branch репозитория).
+# См. docs/benchmarks/graph-level-eval-v1.md
+
+name: Integration
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * 1"
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    services:
+      neo4j:
+        image: neo4j:5-community
+        env:
+          NEO4J_AUTH: neo4j/sciencegraphrag
+        ports:
+          - 7687:7687
+      qdrant:
+        image: qdrant/qdrant:v1.12.4
+        ports:
+          - 6333:6333
+
+    env:
+      SCIENCE_GRAPHRAG_NEO4J_URI: bolt://neo4j:7687
+      SCIENCE_GRAPHRAG_NEO4J_USER: neo4j
+      SCIENCE_GRAPHRAG_NEO4J_PASSWORD: sciencegraphrag
+      SCIENCE_GRAPHRAG_QDRANT_URL: http://qdrant:6333
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install package (dev)
+        run: pip install -e ".[dev]"
+
+      - name: Wait for services
+        run: sleep 35
+
+      - name: Integration tests
+        run: pytest tests -m integration -q
