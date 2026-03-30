@@ -19,11 +19,14 @@
 | `doi` | str \| null | Если извлекается regex |
 | `title` | str \| null | Эвристика или null |
 | `year` | int \| null | Если есть |
+| `arxiv_id` | str \| null | `YYMM.NNNNN` при отсутствии DOI |
 
 ## Разрешение в граф
 
-- При наличии DOI: lookup OpenAlex/Crossref → merge с существующим `Work` или создание канонического `Work`.
-- Без DOI: создание минимального `Work` с `normalized_title` + year + fingerprint для dedup.
+- При наличии DOI: OpenAlex по DOI → `upsert_minimal_work` + ребро `CITES` (как раньше).
+- При отсутствии DOI, но с `arxiv_id`: поиск `Work` по `arxiv_id`, иначе новый id; `upsert_minimal_work` с `arxiv_id` и опциональным fingerprint из title+year; `CITES`.
+- Иначе при **title + year**: dedup по `title_fingerprint(title, year)`, минимальный `Work`, `CITES`.
+- Без DOI/arXiv и без пары title+year: ребро не создаётся (слишком шумно).
 
 ## Деградация
 

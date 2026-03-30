@@ -9,11 +9,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from science_graphrag.config import Settings, get_settings
-from science_graphrag.domain.models import WorkDraft
+from science_graphrag.domain.models import ReferenceDraft, WorkDraft
 from science_graphrag.ingestion.chunking import (
     chunk_document_for_retrieval,
     dedupe_chunks_for_embedding,
 )
+from science_graphrag.ingestion.dedup import normalize_doi, title_fingerprint
 from science_graphrag.ingestion.document_slices import (
     build_references_scope_text,
     front_matter_slice,
@@ -107,6 +108,103 @@ def _markdown_from_path(path: Path, settings: Settings) -> tuple[str, str]:
                 log.warning("VL PDF failed for %s: %s; falling back to pypdf", path.name, exc)
 
         return extract_text_from_pdf(path), "pypdf-fallback"
+
+
+_ARXIV_PREFIX_RE = re.compile(r"^arxiv:\s*", re.IGNORECASE)
+
+
+def _normalize_arxiv_id(raw: str | None) -> str | None:
+    if not raw or not str(raw).strip():
+        return None
+    s = _ARXIV_PREFIX_RE.sub("", str(raw).strip())
+    return s or None
+
+
+def _normalized_title_for_fingerprint(title: str | None) -> str | None:
+    if not title or not str(title).strip():
+        return None
+    return re.sub(r"\s+", " ", str(title).strip())
+
+
+def _persist_reference_citation(
+    neo: Neo4jGraphStore,
+    citing_work_id: str,
+    ref: ReferenceDraft,
+    settings: Settings,
+) -> None:
+    """
+    Create or merge a cited :Work and (:Work)-[:CITES]->(:Work) from a reference draft.
+    Uses DOI (OpenAlex when possible), else arXiv id, else title+year fingerprint.
+    """
+    doi = normalize_doi(ref.doi)
+    arxiv = _normalize_arxiv_id(ref.arxiv_id)
+
+    if doi:
+        try:
+            oa = fetch_work_by_doi(doi, settings.openalex_mailto)
+        except Exception as exc:  # noqa: BLE001
+            log.warning("OpenAlex lookup failed for ref doi=%s: %s", doi, exc)
+            oa = None
+        if oa:
+            cd = draft_from_openalex(oa)
+            cid = _resolve_work_id(neo, cd)
+            neo.upsert_minimal_work(
+                cid,
+                title=cd.title,
+                publication_year=cd.publication_year,
+                doi=cd.doi,
+                arxiv_id=_normalize_arxiv_id(cd.arxiv_id),
+                fingerprint=cd.fingerprint,
+                openalex_id=cd.openalex_id,
+                ingestion_confidence=cd.ingestion_confidence,
+            )
+        else:
+            cid = str(uuid.uuid4())
+            neo.upsert_minimal_work(
+                cid,
+                title=ref.title,
+                publication_year=ref.year,
+                doi=doi,
+                arxiv_id=arxiv,
+                fingerprint=None,
+                openalex_id=None,
+                ingestion_confidence=0.25,
+            )
+        neo.merge_cites(citing_work_id, cid)
+        return
+
+    if arxiv:
+        cid = neo.find_work_id_by_arxiv(arxiv) or str(uuid.uuid4())
+        norm_title = _normalized_title_for_fingerprint(ref.title)
+        fp = title_fingerprint(norm_title, ref.year) if norm_title else None
+        neo.upsert_minimal_work(
+            cid,
+            title=norm_title,
+            publication_year=ref.year,
+            doi=None,
+            arxiv_id=arxiv,
+            fingerprint=fp,
+            openalex_id=None,
+            ingestion_confidence=0.35,
+        )
+        neo.merge_cites(citing_work_id, cid)
+        return
+
+    norm_title = _normalized_title_for_fingerprint(ref.title)
+    if norm_title and ref.year is not None:
+        fp = title_fingerprint(norm_title, ref.year)
+        cid = neo.find_work_id_by_fingerprint(fp) or str(uuid.uuid4())
+        neo.upsert_minimal_work(
+            cid,
+            title=norm_title,
+            publication_year=ref.year,
+            doi=None,
+            arxiv_id=None,
+            fingerprint=fp,
+            openalex_id=None,
+            ingestion_confidence=0.3,
+        )
+        neo.merge_cites(citing_work_id, cid)
 
 
 def _resolve_work_id(neo: Neo4jGraphStore, draft: WorkDraft) -> str:
@@ -255,37 +353,16 @@ def ingest_document(
                 )
 
                 for ref in references:
-                    if not ref.doi:
+                    if not (
+                        normalize_doi(ref.doi)
+                        or _normalize_arxiv_id(ref.arxiv_id)
+                        or (
+                            _normalized_title_for_fingerprint(ref.title) is not None
+                            and ref.year is not None
+                        )
+                    ):
                         continue
-                    try:
-                        oa = fetch_work_by_doi(ref.doi, settings.openalex_mailto)
-                    except Exception as exc:  # noqa: BLE001
-                        log.warning("OpenAlex lookup failed for ref doi=%s: %s", ref.doi, exc)
-                        oa = None
-                    if oa:
-                        cd = draft_from_openalex(oa)
-                        cid = _resolve_work_id(neo, cd)
-                        neo.upsert_minimal_work(
-                            cid,
-                            title=cd.title,
-                            publication_year=cd.publication_year,
-                            doi=cd.doi,
-                            fingerprint=cd.fingerprint,
-                            openalex_id=cd.openalex_id,
-                            ingestion_confidence=cd.ingestion_confidence,
-                        )
-                    else:
-                        cid = str(uuid.uuid4())
-                        neo.upsert_minimal_work(
-                            cid,
-                            title=ref.title,
-                            publication_year=ref.year,
-                            doi=ref.doi,
-                            fingerprint=None,
-                            openalex_id=None,
-                            ingestion_confidence=0.25,
-                        )
-                    neo.merge_cites(work_id, cid)
+                    _persist_reference_citation(neo, work_id, ref, settings)
 
             doc_chunks = dedupe_chunks_for_embedding(
                 chunk_document_for_retrieval(

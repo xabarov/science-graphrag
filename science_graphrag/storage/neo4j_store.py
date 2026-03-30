@@ -202,6 +202,7 @@ class Neo4jGraphStore:
         title: str | None,
         publication_year: int | None,
         doi: str | None,
+        arxiv_id: str | None = None,
         fingerprint: str | None,
         openalex_id: str | None,
         ingestion_confidence: float,
@@ -216,6 +217,8 @@ class Neo4jGraphStore:
             props["publication_year"] = publication_year
         if doi:
             props["doi"] = doi
+        if arxiv_id:
+            props["arxiv_id"] = arxiv_id
         if fingerprint:
             props["fingerprint"] = fingerprint
         if openalex_id:
