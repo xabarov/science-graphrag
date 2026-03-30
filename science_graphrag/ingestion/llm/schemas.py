@@ -120,9 +120,7 @@ class ReferenceItemLLM(BaseModel):
     )
     arxiv_id: str | None = Field(
         default=None,
-        description=(
-            "`YYMM.NNNNN` parsed from `arXiv:…` or `abs/…` or `CoRR, abs/…` when no DOI."
-        ),
+        description=("`YYMM.NNNNN` parsed from `arXiv:…` or `abs/…` or `CoRR, abs/…` when no DOI."),
     )
     title: str | None = Field(
         default=None,

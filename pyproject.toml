@@ -44,6 +44,7 @@ dev = [
 [project.scripts]
 science-graphrag = "science_graphrag.cli.main:main"
 science-graphrag-layer1-benchmark = "eval.layer1.runner:main"
+science-graphrag-graph-benchmark = "eval.graph_v1.runner:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["science_graphrag", "eval"]

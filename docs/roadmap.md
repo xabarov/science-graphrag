@@ -235,12 +235,13 @@ flowchart LR
 - [docs/benchmarks/strategy-v1.md](benchmarks/strategy-v1.md) и [eval/README.md](../eval/README.md).
 - Первый gold-case **YOLOv1**: `tests/fixtures/benchmarks/layer1/yolov1/` (`article.md` + `gold.json`).
 - Раннер **draft-level** layer-1: `eval/layer1/` (`python -m eval.layer1`, CLI `science-graphrag-layer1-benchmark`), отчёты JSON в `eval/results/`.
+- Начальный **graph-level** eval после ingest: `eval/graph_v1/` (`python -m eval.graph_v1`, CLI `science-graphrag-graph-benchmark`), `graph_expectations` в `gold.json`, отчёты JSON/Markdown.
 - Минимальные **unit/smoke** тесты: `tests/test_layer1_benchmark.py`.
 
 **Дальше (backlog Phase 4):**
 
 - Несколько кейсов в одном прогоне + агрегированный отчёт.
-- **Graph-level eval** после полного ingest (Neo4j-инварианты, `CITES`, дубликаты `Work`) — план: [benchmarks/graph-level-eval-v1.md](benchmarks/graph-level-eval-v1.md).
+- Расширить **graph-level eval** после полного ingest: integration tests, multi-case runner, инварианты `RELATED_VERSION_OF`, дубликаты `Work` по DOI/OpenAlex id — см. [benchmarks/graph-level-eval-v1.md](benchmarks/graph-level-eval-v1.md).
 - Merge-blocking / nightly gates в CI.
 - Новые **families** и gold по мере появления сущностей Phase 2+ (см. [benchmarks/benchmark-expansion-v1.md](benchmarks/benchmark-expansion-v1.md)).
 
@@ -344,7 +345,7 @@ flowchart TD
 
 | Версия | Дата | Изменения |
 |--------|------|-----------|
-| 0.5 | 2026-03-30 | LLM-first layer-1 extraction; YOLOv1 layer-1 benchmark (`eval/layer1`); `CITES` без DOI (arxiv / title+year); Phase 1 deliverables разбиты на done/partial/deferred; Phase 4 статус in progress; планы graph-level eval и расширения benchmark |
+| 0.5 | 2026-03-30 | LLM-first layer-1 extraction; YOLOv1 layer-1 benchmark (`eval/layer1`); initial graph-level eval (`eval/graph_v1`); `CITES` без DOI (arxiv / title+year); Phase 1 deliverables разбиты на done/partial/deferred; Phase 4 статус in progress; план расширения benchmark |
 | 0.4 | 2026-03-30 | Task-aware chunking, document slices, ADR 003, semantic-chunks spec, Qdrant chunk fingerprints |
 | 0.3 | 2026-03-30 | Phase 1: `science_graphrag`, Docker stack, Neo4j/Postgres/Qdrant ingest, ADR 001–002, benchmarks strategy v1 |
 | 0.2 | 2026-03-30 | Phase 0: корневой README (PRD), индекс `docs/`, ADR-000, каркас модулей `ingestion`…`eval` |

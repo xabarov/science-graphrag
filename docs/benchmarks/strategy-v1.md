@@ -7,7 +7,7 @@
 | Family | Метрики | Статус Phase 1 |
 |--------|---------|----------------|
 | KG extraction (layer 1, **drafts**) | Precision/Recall/F1 по полям `Work`, авторам, references (в т.ч. arXiv subset) | Первый кейс YOLOv1: `eval/layer1/` + `tests/fixtures/benchmarks/layer1/yolov1/` |
-| KG persistence (**graph** после ingest) | Инварианты Neo4j: число `CITES`, arXiv на цитируемых `Work`, дубликаты | План: [graph-level-eval-v1.md](graph-level-eval-v1.md) |
+| KG persistence (**graph** после ingest) | Инварианты Neo4j: число `CITES`, arXiv на цитируемых `Work`, дубликаты | Реализован initial runner: `eval/graph_v1/`; scope и backlog: [graph-level-eval-v1.md](graph-level-eval-v1.md) |
 | Retrieval | nDCG, hit@k | После стабилизации чанков (Phase 5); регрессии: стабильность `chunk_fingerprint`, дубликаты чанков |
 | Answer / synthesis | Цитаты, trace | Phase 5+ |
 

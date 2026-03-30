@@ -48,5 +48,22 @@
       "1506.06981"
     ],
     "sample_dois": []
+  },
+  "graph_expectations": {
+    "min_cites": 23,
+    "max_cites": 24,
+    "min_authorships": 4,
+    "min_institutions": 2,
+    "expected_cited_arxiv_ids": [
+      "1505.00110",
+      "1310.1531",
+      "1505.01749",
+      "1504.08083",
+      "1312.4400",
+      "1406.4729",
+      "1207.0580",
+      "1506.06981"
+    ],
+    "max_duplicate_work_fingerprints": 0
   }
 }
