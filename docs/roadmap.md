@@ -136,19 +136,26 @@ flowchart LR
 
 **Цель:** рабочая вертикаль «документ → нормализация → метаданные/авторы/ссылки → обогащение → граф цитирования».
 
-**Deliverables:**
+**Deliverables (по факту реализации):**
 
-- Реализация или спецификация графа первого слоя согласно [idea.md §2–5](idea.md): `Work`, `Authorship`, `Author`, `Institution`, `Venue`, `CITES`, `RELATED_VERSION_OF`, `PUBLISHED_IN`.
-- Ingestion: PDF/full text → извлечение текста → каскад этапов (метаданные, авторы, references) — как в [idea.md §8–12](idea.md).
-- Политика canonical ID и dedup для Work/Author/Institution/Venue ([idea.md §6](idea.md)).
-- Интеграция обогащения: OpenAlex / Crossref / ORCID / ROR (минимум — то, без чего нельзя стабильно мержить дубликаты).
-- Хранилища: blobs + метаданные + граф + (при необходимости на этапе) вектор для чанков.
+| Статус | Что |
+|--------|-----|
+| **Сделано** | Граф первого слоя в Neo4j: `Work`, `Authorship`, `Author`, `Institution`, `Venue`, `CITES`, `PUBLISHED_IN`, `HAS_AUTHORSHIP`, `OF_AUTHOR`, `AFFILIATED_WITH` — см. [adr/002-layer1-graph-model.md](adr/002-layer1-graph-model.md). |
+| **Сделано** | Ingestion: PDF/text/markdown → `article.md` → нормализация → **LLM-first** извлечение `WorkDraft` / `AuthorshipDraft` / `ReferenceDraft` с эвристическим fallback (`science_graphrag/ingestion/llm/stage_extraction.py`). |
+| **Сделано** | Task-aware **document slices** (front matter, references scope) для промптов Layer 1; **section-aware chunks** + Qdrant; см. [architecture/chunking-strategy.md](architecture/chunking-strategy.md), [adr/003-chunking-and-dedup-strategy.md](adr/003-chunking-and-dedup-strategy.md). |
+| **Сделано** | Рёбра **`CITES`**: по DOI (OpenAlex при успехе), иначе по **`arxiv_id`**, иначе по паре **title + year** (`title_fingerprint`) — см. `science_graphrag/ingestion/pipeline.py`. |
+| **Сделано** | Обогащение реестром: **OpenAlex** по DOI для основной работы и для цитируемых с DOI. |
+| **Сделано** | Хранилища: blobs, Postgres (`documents`, `ingestion_runs`), Neo4j, Qdrant; артефакты `article.md` + `extraction_diagnostics.json`. |
+| **Частично** | Canonical ID / **dedup для `Work`** (DOI, arXiv, fingerprint) — без полного merge-каталога между корпусами. |
+| **Частично** | **Author / Institution** в MVP: узлы создаются, но без канонического слияния одного автора между разными работами и без заполнения `ror_id` из ROR. |
+| **Отложено** | Интеграции **Crossref**, **ORCID**, **ROR** как отдельные клиенты; ребро **`RELATED_VERSION_OF`** в ingest (есть в ADR, логика не подключена). |
+| **Отложено** | Массовый **batch/corpus ingest** в CLI (сейчас один файл за вызов). |
 
 **Риски:** шум в entity resolution; слабые PDF. **Митигация:** метрики по слою 1 отдельно; ручная разметка малого gold-set.
 
-**Exit criteria:** загрузка небольшого корпуса (десятки работ) даёт связный библиографический граф без критического дублирования Work.
+**Exit criteria:** подтверждён **надёжный single-document (и малый корпус вручную)** ingest: связный библиографический граф с осмысленными `CITES` там, где извлечение даёт DOI / arXiv / title+year. Цель «десятки работ без критического дублирования Work» — **следующий шаг** после batch-ingest и усиления dedup.
 
-**Статус Phase 1:** реализован runnable MVP (2026-03-30): пакет `science_graphrag`, `docker-compose.yml`, CLI `science-graphrag ingest`, документы [architecture/phase-1-backbone.md](architecture/phase-1-backbone.md), [adr/001-phase1-stack.md](adr/001-phase1-stack.md), [adr/002-layer1-graph-model.md](adr/002-layer1-graph-model.md), [benchmarks/strategy-v1.md](benchmarks/strategy-v1.md).
+**Статус Phase 1:** **runnable MVP** (2026-03-30, обновлено 2026-03-30): пакет `science_graphrag`, `docker-compose.yml`, CLI `science-graphrag ingest` (PDF / `.txt` / `.md`), документы [architecture/phase-1-backbone.md](architecture/phase-1-backbone.md), [adr/001-phase1-stack.md](adr/001-phase1-stack.md), [adr/002-layer1-graph-model.md](adr/002-layer1-graph-model.md), [benchmarks/strategy-v1.md](benchmarks/strategy-v1.md).
 
 **Дополнение (2026-03-30):** после PDF→Markdown ingestion использует **task-aware document slices** (front matter / references scope) для Layer 1 LLM и **section-aware chunks** с детерминированными id для Qdrant; см. [architecture/chunking-strategy.md](architecture/chunking-strategy.md), [adr/003-chunking-and-dedup-strategy.md](adr/003-chunking-and-dedup-strategy.md).
 
@@ -220,6 +227,22 @@ flowchart LR
 **Риски:** дорогая разметка; утечка train/test при итерациях промптов. **Митигация:** holdout; фиксация версий промптов и моделей в отчётах.
 
 **Exit criteria:** документ `docs/benchmarks/strategy-v1.md` (или раздел здесь) + минимальный автоматический прогон хотя бы для слоя 1 extraction; план merge vs nightly gates.
+
+**Статус Phase 4:** **в процессе** (2026-03-30).
+
+**Уже есть:**
+
+- [docs/benchmarks/strategy-v1.md](benchmarks/strategy-v1.md) и [eval/README.md](../eval/README.md).
+- Первый gold-case **YOLOv1**: `tests/fixtures/benchmarks/layer1/yolov1/` (`article.md` + `gold.json`).
+- Раннер **draft-level** layer-1: `eval/layer1/` (`python -m eval.layer1`, CLI `science-graphrag-layer1-benchmark`), отчёты JSON в `eval/results/`.
+- Минимальные **unit/smoke** тесты: `tests/test_layer1_benchmark.py`.
+
+**Дальше (backlog Phase 4):**
+
+- Несколько кейсов в одном прогоне + агрегированный отчёт.
+- **Graph-level eval** после полного ingest (Neo4j-инварианты, `CITES`, дубликаты `Work`) — план: [benchmarks/graph-level-eval-v1.md](benchmarks/graph-level-eval-v1.md).
+- Merge-blocking / nightly gates в CI.
+- Новые **families** и gold по мере появления сущностей Phase 2+ (см. [benchmarks/benchmark-expansion-v1.md](benchmarks/benchmark-expansion-v1.md)).
 
 ---
 
@@ -308,6 +331,8 @@ flowchart TD
 
 | Документ | Назначение |
 |----------|------------|
+| [benchmarks/graph-level-eval-v1.md](benchmarks/graph-level-eval-v1.md) | План graph-level benchmark после ingest |
+| [benchmarks/benchmark-expansion-v1.md](benchmarks/benchmark-expansion-v1.md) | Расширение корпуса и семейств бенчмарков |
 | [idea.md](idea.md) | Онтология по слоям, первый слой графа, нормализация, промпты, внешние источники |
 | Референс: `osint-gr/docs/README.md` | Образец индекса документации |
 | Референс: `osint-gr/docs/architecture/benchmark-families.md` | Идея семейств бенчмарков |
@@ -319,6 +344,7 @@ flowchart TD
 
 | Версия | Дата | Изменения |
 |--------|------|-----------|
+| 0.5 | 2026-03-30 | LLM-first layer-1 extraction; YOLOv1 layer-1 benchmark (`eval/layer1`); `CITES` без DOI (arxiv / title+year); Phase 1 deliverables разбиты на done/partial/deferred; Phase 4 статус in progress; планы graph-level eval и расширения benchmark |
 | 0.4 | 2026-03-30 | Task-aware chunking, document slices, ADR 003, semantic-chunks spec, Qdrant chunk fingerprints |
 | 0.3 | 2026-03-30 | Phase 1: `science_graphrag`, Docker stack, Neo4j/Postgres/Qdrant ingest, ADR 001–002, benchmarks strategy v1 |
 | 0.2 | 2026-03-30 | Phase 0: корневой README (PRD), индекс `docs/`, ADR-000, каркас модулей `ingestion`…`eval` |

@@ -17,14 +17,14 @@
 | `Author.orcid` | ORCID API при наличии | Иначе OpenAlex author id |
 | `Institution.ror_id` | ROR / OpenAlex institution | Сырой affiliation остаётся на `Authorship` |
 | `Venue` ISSN / OpenAlex source id | OpenAlex `Source` / Crossref | Иначе нормализованное имя |
-| `CITES` | Parsed references + разрешение к `Work` | Неразрешённые → stub `Work` с минимальными полями или только рёбра-кандидаты (политика MVP: создаём placeholder Work с `ingestion_confidence` низким) |
+| `CITES` | Parsed references + разрешение к `Work` | **MVP:** ребро создаётся, если есть DOI, или **`arxiv_id`**, или **title+year** для dedup; иначе ссылка не материализуется в граф (слишком шумно). Placeholder `Work` с низким `ingestion_confidence` для разрешённых ссылок без OpenAlex. |
 
 ## Хранилища
 
 | Хранилище | Что хранит |
 |-----------|------------|
 | Blobs | `sha256` → файл PDF, `document_id` → `extracted.txt` |
-| PostgreSQL | `documents`, `ingestion_runs`, сырой JSON стадий (опционально для отладки) |
+| PostgreSQL | `documents`, `ingestion_runs`; сырой JSON стадий в SQL — опционально (сейчас основной след: `extraction_diagnostics.json` в артефактах) |
 | Neo4j | Узлы и рёбра слоя 1 |
 | Qdrant | Чанки: `document_id`, `chunk_index`, `text`, vector |
 

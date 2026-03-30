@@ -37,6 +37,8 @@
 | [specs/extraction/](specs/extraction/) | Layer 1: metadata, authorships, references; semantic chunks |
 | [benchmarks/README.md](benchmarks/README.md) | Индекс бенчмарков и eval |
 | [benchmarks/strategy-v1.md](benchmarks/strategy-v1.md) | Стратегия eval v1 (layer 1+) |
+| [benchmarks/graph-level-eval-v1.md](benchmarks/graph-level-eval-v1.md) | План graph-level eval после ingest |
+| [benchmarks/benchmark-expansion-v1.md](benchmarks/benchmark-expansion-v1.md) | Расширение корпуса и families |
 
 ## Открытые вопросы
 

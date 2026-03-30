@@ -6,7 +6,8 @@
 
 | Family | Метрики | Статус Phase 1 |
 |--------|---------|----------------|
-| KG extraction (layer 1) | Precision/Recall/F1 по полям `Work`, рёбрам `CITES`, списку авторов | Ручной gold-set + контрактные тесты на fixtures |
+| KG extraction (layer 1, **drafts**) | Precision/Recall/F1 по полям `Work`, авторам, references (в т.ч. arXiv subset) | Первый кейс YOLOv1: `eval/layer1/` + `tests/fixtures/benchmarks/layer1/yolov1/` |
+| KG persistence (**graph** после ingest) | Инварианты Neo4j: число `CITES`, arXiv на цитируемых `Work`, дубликаты | План: [graph-level-eval-v1.md](graph-level-eval-v1.md) |
 | Retrieval | nDCG, hit@k | После стабилизации чанков (Phase 5); регрессии: стабильность `chunk_fingerprint`, дубликаты чанков |
 | Answer / synthesis | Цитаты, trace | Phase 5+ |
 
@@ -25,6 +26,10 @@
 ## Регрессии промптов/моделей
 
 После введения LLM-стадий: фиксировать версию промпта и модели в отчёте; holdout-набор не использовать для подбора промптов.
+
+## Расширение корпуса и families
+
+См. [benchmark-expansion-v1.md](benchmark-expansion-v1.md): новые статьи в `layer1/`, отдельные families по мере появления сущностей Phase 2+.
 
 ## Связь с roadmap
 

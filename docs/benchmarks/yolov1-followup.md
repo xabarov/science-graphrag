@@ -15,8 +15,8 @@
 
 ## Citation / graph (`CITES`)
 
-1. **Разрешение ссылок без DOI**: матч по `arxiv_id`, затем по `(title_fingerprint, year)` из `ReferenceDraft`.
-2. Связать метрики `sample_arxiv_recall` из benchmark с долей рёбер `CITES`, восстановленных без DOI (отдельный eval после ingest).
+1. **Разрешение ссылок без DOI**: матч по `arxiv_id`, затем по `(title_fingerprint, year)` из `ReferenceDraft` — реализовано в ingest; см. [graph-level-eval-v1.md](graph-level-eval-v1.md) для измерения в Neo4j.
+2. Связать метрики `sample_arxiv_recall` из benchmark с долей рёбер `CITES`, восстановленных без DOI — в scope **graph-level eval** (документ выше).
 
 ## Инфраструктура
 

@@ -13,7 +13,7 @@
 - Узлы: `Work`, `Authorship`, `Author`, `Institution`, `Venue`.
 - Рёбра: `HAS_AUTHORSHIP`, `OF_AUTHOR`, `AFFILIATED_WITH`, `PUBLISHED_IN`, `CITES`, `RELATED_VERSION_OF`.
 - Идентификаторы как **атрибуты** на сущностях (не отдельные узлы `Identifier` в MVP).
-- Каскад стадий ingestion: PDF/text → `article.md` → metadata → authorships → references → enrichment → dedup → запись в хранилища.
+- Каскад стадий ingestion: PDF/text/markdown → `article.md` → нормализация → **LLM-first** metadata / authorships / references (с эвристическим fallback) → enrichment → dedup → запись в хранилища.
 
 **Вне scope Phase 1**
 
@@ -35,7 +35,9 @@
 
 **Chunking (после Markdown):** нормализованный текст режется на слайсы **front matter** и **references scope** для стадий Layer 1; векторный индекс (Qdrant) — **section-aware chunks** с `chunk_fingerprint` и путём секции. Подробно: [chunking-strategy.md](chunking-strategy.md), ADR [003](../adr/003-chunking-and-dedup-strategy.md).
 
-**Обогащение (текущий код):** клиент **OpenAlex** для work по DOI и для cited works. **Crossref / ORCID / ROR** — следующие шаги (то же API-слой `httpx`, отдельные модули), без блокировки текущего ingest.
+**Обогащение (текущий код):** клиент **OpenAlex** для work по DOI и для цитируемых работ **с DOI**. **Crossref / ORCID / ROR** — следующие шаги (то же API-слой `httpx`, отдельные модули), без блокировки текущего ingest.
+
+**Цитирование в графе:** ребро `CITES` создаётся при наличии у ссылки **DOI** (с разрешением через OpenAlex), иначе при **`arxiv_id`**, иначе при паре **title + year** (`title_fingerprint`) — см. `science_graphrag/ingestion/pipeline.py` (`_persist_reference_citation`).
 
 Детали: [adr/001-phase1-stack.md](../adr/001-phase1-stack.md).
 
