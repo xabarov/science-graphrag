@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from neo4j import Driver, GraphDatabase
+from neo4j import Driver, GraphDatabase, NotificationClassification
 
 from science_graphrag.domain.authorship_ids import canonical_author_node_id
 from science_graphrag.domain.models import AuthorshipDraft, WorkDraft
@@ -10,7 +10,11 @@ from science_graphrag.domain.models import AuthorshipDraft, WorkDraft
 
 class Neo4jGraphStore:
     def __init__(self, uri: str, user: str, password: str) -> None:
-        self._driver: Driver = GraphDatabase.driver(uri, auth=(user, password))
+        self._driver: Driver = GraphDatabase.driver(
+            uri,
+            auth=(user, password),
+            notifications_disabled_classifications=[NotificationClassification.UNRECOGNIZED],
+        )
 
     def close(self) -> None:
         self._driver.close()

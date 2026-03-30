@@ -1,0 +1,18 @@
+{
+  "description": "Benchmark case tiers: merge_safe = deterministic, no live LLM/OpenAlex required for baseline checks; nightly_heavy = large real-PDF fixtures + optional external APIs.",
+  "merge_safe": [
+    "yolov1",
+    "doi_refs_heavy",
+    "arxiv_refs_heavy",
+    "noisy_layout_stub"
+  ],
+  "nightly_heavy": [
+    "retinanet_focal_realpdf",
+    "fcos_realpdf",
+    "centernet_realpdf",
+    "detr_realpdf",
+    "ssd_realpdf",
+    "efficientdet_realpdf",
+    "yolov3_realpdf"
+  ]
+}

@@ -177,17 +177,19 @@ def _persist_reference_citation(
                 ingestion_confidence=cd.ingestion_confidence,
             )
         else:
-            cid = str(uuid.uuid4())
-            neo.upsert_minimal_work(
-                cid,
-                title=ref.title,
-                publication_year=ref.year,
-                doi=doi,
-                arxiv_id=arxiv,
-                fingerprint=None,
-                openalex_id=None,
-                ingestion_confidence=0.25,
-            )
+            cid = neo.find_work_id_by_doi(doi)
+            if not cid:
+                cid = str(uuid.uuid4())
+                neo.upsert_minimal_work(
+                    cid,
+                    title=ref.title,
+                    publication_year=ref.year,
+                    doi=doi,
+                    arxiv_id=arxiv,
+                    fingerprint=None,
+                    openalex_id=None,
+                    ingestion_confidence=0.25,
+                )
         neo.merge_cites(citing_work_id, cid)
         return
 
@@ -349,7 +351,14 @@ def ingest_document(
     doc_id = str(uuid.uuid4())
     blob_store = BlobStore(settings.blob_root)
     sha, _stored = blob_store.store_file(path)
-    with chain_span("ingest_document", {"document_id": doc_id, "source": str(path.resolve())}):
+    with chain_span(
+        "ingest_document",
+        {
+            "document.id": doc_id,
+            "document.source_name": path.name,
+            "source": str(path.resolve()),
+        },
+    ):
         markdown_text, extraction_mode = _markdown_from_path(path, settings)
         _artifact_path = _write_markdown_artifact(
             settings=settings,
@@ -370,7 +379,13 @@ def ingest_document(
             max_chars=settings.references_scope_max_chars,
         )
 
-        with chain_span("metadata_and_references_extraction"):
+        with chain_span(
+            "metadata_and_references_extraction",
+            {
+                "document.id": doc_id,
+                "document.source_name": path.name,
+            },
+        ):
             draft, authorships, references, ext_diag = extract_stages_llm_first(
                 normalized,
                 settings,
@@ -490,6 +505,7 @@ def run_ingest_batch_cli(
     directory: Path,
     *,
     continue_on_error: bool = False,
+    settings: Settings | None = None,
 ) -> list[dict[str, Any]]:
     """
     Ingest every ``.pdf`` / ``.md`` / ``.txt`` under ``directory`` (recursive).
@@ -500,7 +516,7 @@ def run_ingest_batch_cli(
 
     configure_logging()
     init_tracer_provider()
-    s = get_settings()
+    s = settings or get_settings()
     engine = create_engine(s.database_url, pool_pre_ping=True)
     init_db(engine)
     factory = sessionmaker(bind=engine)

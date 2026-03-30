@@ -9,7 +9,16 @@
   - plain abstract vs `## Abstract`
   - DOI-heavy vs arXiv-only bibliographies
   - многоколоночный / шумный PDF→MD
-- **Раннер:** обход нескольких `case_id` и сводный отчёт (следующий шаг в `eval/layer1`).
+- **Раннер:** suite `--suite`; фильтр по устойчивости прогона — `--tier merge_safe|nightly_heavy` (см. [`case_tiers.json`](../../tests/fixtures/benchmarks/layer1/case_tiers.json)).
+
+## Тиры кейсов (merge vs nightly)
+
+| Тир | Назначение |
+|-----|------------|
+| `merge_safe` | Короткая синтетика + `yolov1`: быстрее и предсказуемее без обязательного LLM |
+| `nightly_heavy` | Большие real-pdf фикстуры (`*_realpdf`): для ночных / ручных прогонов |
+
+При добавлении `case_id` обновляйте `case_tiers.json`, если новый кейс входит в один из списков.
 
 ## Новые families (по мере готовности кода)
 

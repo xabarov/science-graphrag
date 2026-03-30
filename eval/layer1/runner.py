@@ -21,6 +21,7 @@ from science_graphrag.ingestion.document_slices import (
     front_matter_slice,
 )
 from science_graphrag.ingestion.llm.stage_extraction import extract_stages_llm_first
+from science_graphrag.observability.phoenix_tracer import chain_span, init_tracer_provider
 
 
 def run_case(
@@ -40,20 +41,29 @@ def run_case(
     if settings is None:
         settings = get_settings()
 
+    init_tracer_provider()
     fm = front_matter_slice(text, max_chars=settings.front_matter_max_chars)
     refs_scope = build_references_scope_text(
         text,
         max_chars=settings.references_scope_max_chars,
     )
-    work, authorships, references, diag = extract_stages_llm_first(
-        text,
-        settings,
-        markdown_source="benchmark",
-        document_id=gold.case_id,
-        source_name=gold.case_id,
-        front_matter_text=fm.text,
-        references_scope_text=refs_scope,
-    )
+    with chain_span(
+        "metadata_and_references_extraction",
+        {
+            "document.id": gold.case_id,
+            "document.source_name": gold.case_id,
+            "source": "layer1_benchmark",
+        },
+    ):
+        work, authorships, references, diag = extract_stages_llm_first(
+            text,
+            settings,
+            markdown_source="benchmark",
+            document_id=gold.case_id,
+            source_name=gold.case_id,
+            front_matter_text=fm.text,
+            references_scope_text=refs_scope,
+        )
     metrics = score_layer1(work, authorships, references, gold)
     return {
         "case_id": gold.case_id,
@@ -119,10 +129,15 @@ def _cli(
         "--md-out",
         help="Write human-readable summary",
     ),
+    tier: str | None = typer.Option(
+        None,
+        "--tier",
+        help='Filter suite to tier from case_tiers.json (e.g. "merge_safe", "nightly_heavy")',
+    ),
 ) -> None:
     settings = get_settings()
     if suite:
-        cases = discover_layer1_case_dirs(path)
+        cases = discover_layer1_case_dirs(path, tier=tier)
         if not cases:
             typer.echo(f"No layer-1 benchmarks found under {path}", err=True)
             raise typer.Exit(code=1)

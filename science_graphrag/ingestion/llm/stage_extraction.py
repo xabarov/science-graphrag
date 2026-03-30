@@ -122,7 +122,7 @@ def _work_acceptable(d: WorkDraft) -> bool:
 
 def _authorships_from_llm(parsed: AuthorshipsLLM) -> list[AuthorshipDraft]:
     out: list[AuthorshipDraft] = []
-    for idx, a in enumerate(parsed.authors, start=1):
+    for a in parsed.authors:
         name = (a.name or "").strip()
         if not name:
             continue
@@ -305,9 +305,9 @@ def extract_stages_llm_first(
     with llm_span(
         "llm.metadata_extraction",
         {
-            "llm.model": settings.extraction_llm_model,
-            "llm.base_url": settings.extraction_llm_base_url,
-            "document_id": document_id,
+            "document.id": document_id,
+            "document.source_name": source_name,
+            "extraction.stage": "metadata",
         },
     ):
         parsed, err = extractor.extract_maybe(
@@ -360,8 +360,9 @@ def extract_stages_llm_first(
     with llm_span(
         "llm.authorships_extraction",
         {
-            "llm.model": settings.extraction_llm_model,
-            "document_id": document_id,
+            "document.id": document_id,
+            "document.source_name": source_name,
+            "extraction.stage": "authorships",
         },
     ):
         aparsed, aerr = extractor.extract_maybe(
@@ -428,8 +429,9 @@ def extract_stages_llm_first(
     with llm_span(
         "llm.references_extraction",
         {
-            "llm.model": settings.extraction_llm_model,
-            "document_id": document_id,
+            "document.id": document_id,
+            "document.source_name": source_name,
+            "extraction.stage": "references",
         },
     ):
         rparsed, rerr = extractor_refs.extract_maybe(

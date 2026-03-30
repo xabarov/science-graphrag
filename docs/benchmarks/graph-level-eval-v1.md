@@ -64,11 +64,11 @@
 | **Merge / PR** | `pytest` без `-m integration` (unit + smoke), при необходимости один быстрый layer-1 кейс с выключенным LLM. |
 | **Nightly / manual** | `pytest -m integration` (нужны Neo4j + Qdrant), полный `science-graphrag-layer1-benchmark tests/fixtures/benchmarks/layer1 --suite`, при необходимости `science-graphrag-graph-benchmark … --suite` с живым OpenAlex. |
 
-CI (ручной/еженедельный прогон на GitHub Actions): [.github/workflows/integration-nightly.yml](../../.github/workflows/integration-nightly.yml) — сервисы Neo4j и Qdrant в job, затем `pytest tests -m integration`.
+CI (ручной/еженедельный прогон на GitHub Actions): [.github/workflows/integration-nightly.yml](../../.github/workflows/integration-nightly.yml) — сервисы **Postgres**, Neo4j и Qdrant в job, затем `pytest tests -m integration`, затем эвристический `science-graphrag-layer1-benchmark … --suite` и graph-бенчмарк на `yolov1` (без LLM).
 
-Интеграционный тест `tests/integration/test_full_ingest_integration.py` сам пропускается, если сервисы недоступны.
+Интеграционные тесты в `tests/integration/test_full_ingest_integration.py` сами пропускаются, если сервисы недоступны локально.
 
 ## Следующие шаги
 
-- Расширить integration-покрытие (Postgres + `ingest-corpus` smoke).
-- Ужесточить graph suite при стабильном OpenAlex.
+- Дозаполнять gold у real-pdf и наращивать graph expectations по мере стабильности OpenAlex.
+- При необходимости добавить отдельный nightly job с LLM-секретами (не в merge-gate).

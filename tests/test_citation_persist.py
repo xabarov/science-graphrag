@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
+from uuid import UUID
 
 import pytest
 
@@ -52,6 +53,7 @@ def test_persist_doi_without_openalex_still_cites(
     cfg: Settings,
 ) -> None:
     neo = MagicMock()
+    neo.find_work_id_by_doi.return_value = None
     ref = ReferenceDraft(
         raw_reference="[1] … 10.1000/xyz …",
         doi="10.1000/xyz",
@@ -62,3 +64,39 @@ def test_persist_doi_without_openalex_still_cites(
     neo.merge_cites.assert_called_once()
     neo.upsert_minimal_work.assert_called_once()
     assert neo.upsert_minimal_work.call_args.kwargs["doi"] == "10.1000/xyz"
+
+
+@patch("science_graphrag.ingestion.pipeline.fetch_work_by_doi", return_value=None)
+@patch(
+    "science_graphrag.ingestion.pipeline.uuid.uuid4",
+    return_value=UUID("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"),
+)
+def test_persist_same_doi_without_openalex_reuses_single_work(
+    _uuid4: MagicMock,
+    _mock_fetch: MagicMock,
+    cfg: Settings,
+) -> None:
+    """Multiple ref lines with the same DOI must not create duplicate :Work rows."""
+    shared = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+    neo = MagicMock()
+    neo.find_work_id_by_doi.side_effect = [None, shared]
+    ref_a = ReferenceDraft(
+        raw_reference="[1] … 10.1000/xyz …",
+        doi="10.1000/xyz",
+        title="T",
+        year=2019,
+    )
+    ref_b = ReferenceDraft(
+        raw_reference="[2] continuation same doi",
+        doi="10.1000/xyz",
+        title="T",
+        year=2019,
+    )
+    _persist_reference_citation(neo, "citing-work", ref_a, cfg)
+    _persist_reference_citation(neo, "citing-work", ref_b, cfg)
+    assert neo.upsert_minimal_work.call_count == 1
+    assert neo.find_work_id_by_doi.call_count == 2
+    assert neo.merge_cites.call_args_list == [
+        call("citing-work", shared),
+        call("citing-work", shared),
+    ]

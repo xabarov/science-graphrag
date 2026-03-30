@@ -1,7 +1,7 @@
 {
   "case_id": "yolov3_realpdf",
   "schema_version": 1,
-  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic.",
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD. Tier: nightly_heavy.",
   "work_metadata": {
     "title": "YOLOv3: An Incremental Improvement",
     "publication_year": null,
@@ -35,6 +35,7 @@
       "1506.01497",
       "1612.06851"
     ],
-    "max_duplicate_work_fingerprints": 8
+    "max_duplicate_work_fingerprints": 8,
+    "max_work_dedup_violations": 0
   }
 }

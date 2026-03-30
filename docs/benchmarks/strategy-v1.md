@@ -6,7 +6,7 @@
 
 | Family | Метрики | Статус Phase 1 |
 |--------|---------|----------------|
-| KG extraction (layer 1, **drafts**) | Precision/Recall/F1 по полям `Work`, авторам, references (в т.ч. arXiv subset) | Кейсы в `tests/fixtures/benchmarks/layer1/*/`; suite: `science-graphrag-layer1-benchmark <root> --suite`; отчёт с `run_metadata` (модель + fingerprint промпта) |
+| KG extraction (layer 1, **drafts**) | Precision/Recall/F1 по полям `Work`, авторам, references (в т.ч. arXiv subset) | Кейсы в `tests/fixtures/benchmarks/layer1/*/`; suite: `science-graphrag-layer1-benchmark <root> --suite` или `--suite --tier merge_safe`; отчёт с `run_metadata` (модель + fingerprint промпта). Тиры: `case_tiers.json`. |
 | KG persistence (**graph** после ingest) | Инварианты Neo4j: число `CITES`, arXiv на цитируемых `Work`, дубликаты | Реализован initial runner: `eval/graph_v1/`; scope и backlog: [graph-level-eval-v1.md](graph-level-eval-v1.md) |
 | Retrieval | nDCG, hit@k | После стабилизации чанков (Phase 5); регрессии: стабильность `chunk_fingerprint`, дубликаты чанков |
 | Answer / synthesis | Цитаты, trace | Phase 5+ |
@@ -21,7 +21,7 @@
 ## Автоматические прогоны
 
 - **Unit:** dedup, normalize, document slices, section-aware chunking, эвристики стадий (`pytest tests/`).
-- **Integration (опционально):** `pytest -m integration` при поднятом `docker compose` (Neo4j + Qdrant); `tests/integration/` — см. [graph-level-eval-v1.md](graph-level-eval-v1.md) (merge vs nightly).
+- **Integration (опционально):** `pytest -m integration` при поднятом стеке (Postgres + Neo4j + Qdrant, см. `docker-compose.yml` или GitHub `integration-nightly.yml`); `tests/integration/` — см. [graph-level-eval-v1.md](graph-level-eval-v1.md) (merge vs nightly).
 
 ## Регрессии промптов/моделей
 

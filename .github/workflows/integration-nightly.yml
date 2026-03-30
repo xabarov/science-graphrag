@@ -1,4 +1,4 @@
-# Neo4j + Qdrant integration tests — не блокирует merge.
+# Neo4j + Qdrant + Postgres integration + benchmarks — не блокирует merge.
 # Запуск: вручную (workflow_dispatch) или по расписанию (cron на default branch репозитория).
 # См. docs/benchmarks/graph-level-eval-v1.md
 
@@ -13,6 +13,14 @@ jobs:
   integration:
     runs-on: ubuntu-latest
     services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: science
+          POSTGRES_PASSWORD: science
+          POSTGRES_DB: science_graphrag
+        ports:
+          - 5432:5432
       neo4j:
         image: neo4j:5-community
         env:
@@ -25,6 +33,7 @@ jobs:
           - 6333:6333
 
     env:
+      SCIENCE_GRAPHRAG_DATABASE_URL: postgresql+psycopg://science:science@postgres:5432/science_graphrag
       SCIENCE_GRAPHRAG_NEO4J_URI: bolt://neo4j:7687
       SCIENCE_GRAPHRAG_NEO4J_USER: neo4j
       SCIENCE_GRAPHRAG_NEO4J_PASSWORD: sciencegraphrag
@@ -43,7 +52,23 @@ jobs:
         run: pip install -e ".[dev]"
 
       - name: Wait for services
-        run: sleep 35
+        run: sleep 40
 
-      - name: Integration tests
+      - name: Integration tests (Neo4j + Qdrant + Postgres)
         run: pytest tests -m integration -q
+
+      - name: Layer-1 benchmark suite (heuristic, no LLM)
+        env:
+          SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED: "false"
+          SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY: ""
+          API_KEY: ""
+          MAIN_LLM_API_KEY: ""
+        run: science-graphrag-layer1-benchmark tests/fixtures/benchmarks/layer1 --suite --json-out eval/results/ci-layer1-suite.json
+
+      - name: Graph benchmark — yolov1 (ingest + Neo4j snapshot)
+        env:
+          SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED: "false"
+          SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY: ""
+          API_KEY: ""
+          MAIN_LLM_API_KEY: ""
+        run: science-graphrag-graph-benchmark tests/fixtures/benchmarks/layer1/yolov1 --json-out eval/results/ci-graph-yolov1.json

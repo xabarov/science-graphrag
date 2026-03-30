@@ -17,5 +17,6 @@
 | [001](001-phase1-stack.md) | Стек Phase 1: Python, Neo4j, Postgres, Qdrant, blobs |
 | [002](002-layer1-graph-model.md) | Модель графа первого слоя в Neo4j |
 | [003](003-chunking-and-dedup-strategy.md) | Task-aware chunking, dedup между чанками, модели VL/LLM |
+| [004](004-ontology-v1-scope.md) | Scope ontology v1: Method, Dataset; SoT; anti-bloat |
 
 Новые ADR нумеровать по порядку (`001-...`, `002-...`); при отмене пометить как Superseded и сослаться на замену.

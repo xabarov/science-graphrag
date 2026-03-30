@@ -1,0 +1,1004 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:c5320748bf3712047f1f"
+  },
+  "summary": {
+    "case_count": 11,
+    "case_ids": [
+      "arxiv_refs_heavy",
+      "centernet_realpdf",
+      "detr_realpdf",
+      "doi_refs_heavy",
+      "efficientdet_realpdf",
+      "fcos_realpdf",
+      "noisy_layout_stub",
+      "retinanet_focal_realpdf",
+      "ssd_realpdf",
+      "yolov1",
+      "yolov3_realpdf"
+    ]
+  },
+  "cases": [
+    {
+      "case_id": "arxiv_refs_heavy",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/arxiv_refs_heavy",
+      "document_id": "6435db58-e905-42a8-8e16-e13e4dccb5ad",
+      "work_id": "5d65b50b-651e-4361-832a-c771b9e7ff9d",
+      "metrics": {
+        "has_expectations": true,
+        "snapshot": {
+          "work_id": "5d65b50b-651e-4361-832a-c771b9e7ff9d",
+          "work_title": "arXiv-Heavy Bibliography Case",
+          "authorship_count": 2,
+          "institution_count": 0,
+          "cites_count": 6,
+          "cited_arxiv_ids": [
+            "1310.1531",
+            "1312.4400",
+            "1406.4729",
+            "1504.08083",
+            "1505.00110",
+            "1505.01749"
+          ],
+          "duplicate_work_fingerprints": 0,
+          "related_version_edge_count": 0,
+          "work_dedup_violation_count": 0
+        },
+        "cites_range_ok": true,
+        "authorships_range_ok": true,
+        "institutions_range_ok": null,
+        "cited_arxiv_precision": 0.3333333333333333,
+        "cited_arxiv_recall": 1.0,
+        "cited_arxiv_f1": 0.5,
+        "cited_arxiv_tp_fp_fn": {
+          "tp": 2,
+          "fp": 4,
+          "fn": 0
+        },
+        "duplicate_work_fingerprints_ok": true,
+        "work_dedup_violations_ok": null,
+        "related_version_edges_ok": null
+      },
+      "gold": {
+        "case_id": "arxiv_refs_heavy",
+        "schema_version": 1,
+        "description": "References mostly use arXiv id patterns (abs/, arXiv:, bare id).",
+        "work_metadata": {
+          "title": "arXiv-Heavy Bibliography Case",
+          "publication_year": null,
+          "abstract_prefix": "We cite many arXiv preprints",
+          "doi": null,
+          "arxiv_id": null,
+          "venue_name": null,
+          "work_type": null
+        },
+        "authorships": [
+          {
+            "name": "A. Researcher",
+            "affiliations": []
+          },
+          {
+            "name": "B. Scientist",
+            "affiliations": []
+          }
+        ],
+        "references": {
+          "expected_count": 6,
+          "min_count": 5,
+          "notes": null,
+          "sample_arxiv_ids": [
+            "1505.00110",
+            "1310.1531",
+            "1505.01749",
+            "1504.08083",
+            "1312.4400",
+            "1406.4729"
+          ],
+          "sample_dois": []
+        },
+        "graph_expectations": {
+          "min_cites": 0,
+          "max_cites": 32,
+          "min_authorships": 1,
+          "max_authorships": null,
+          "min_institutions": null,
+          "max_institutions": null,
+          "expected_cited_arxiv_ids": [
+            "1505.00110",
+            "1310.1531"
+          ],
+          "max_duplicate_work_fingerprints": 2,
+          "max_work_dedup_violations": null,
+          "min_related_version_edges": null,
+          "max_related_version_edges": null
+        }
+      }
+    },
+    {
+      "case_id": "centernet_realpdf",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/centernet_realpdf",
+      "document_id": "4b5681c4-0b97-4129-974d-94a24d46bd70",
+      "work_id": "31b63670-e4a3-489a-b91a-7c2dde18a836",
+      "metrics": {
+        "has_expectations": true,
+        "snapshot": {
+          "work_id": "31b63670-e4a3-489a-b91a-7c2dde18a836",
+          "work_title": "CenterNet: Keypoint Triplets for Object Detection",
+          "authorship_count": 6,
+          "institution_count": 3,
+          "cites_count": 47,
+          "cited_arxiv_ids": [
+            "1612.06851",
+            "1701.06659",
+            "1704.01069",
+            "1705.09587",
+            "1712.00886",
+            "1901.01892"
+          ],
+          "duplicate_work_fingerprints": 0,
+          "related_version_edge_count": 0,
+          "work_dedup_violation_count": 0
+        },
+        "cites_range_ok": true,
+        "authorships_range_ok": null,
+        "institutions_range_ok": null,
+        "cited_arxiv_precision": 0.8333333333333334,
+        "cited_arxiv_recall": 1.0,
+        "cited_arxiv_f1": 0.9090909090909091,
+        "cited_arxiv_tp_fp_fn": {
+          "tp": 5,
+          "fp": 1,
+          "fn": 0
+        },
+        "duplicate_work_fingerprints_ok": true,
+        "work_dedup_violations_ok": null,
+        "related_version_edges_ok": null
+      },
+      "gold": {
+        "case_id": "centernet_realpdf",
+        "schema_version": 1,
+        "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic.",
+        "work_metadata": {
+          "title": "CenterNet: Keypoint Triplets for Object Detection",
+          "publication_year": null,
+          "abstract_prefix": "In object detection, keypoint-based approaches often suf- fer a large nu",
+          "doi": null,
+          "arxiv_id": null,
+          "venue_name": null,
+          "work_type": null
+        },
+        "authorships": [],
+        "references": {
+          "expected_count": 47,
+          "min_count": 39,
+          "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
+          "sample_arxiv_ids": [
+            "1701.06659",
+            "1705.09587",
+            "1704.01069",
+            "1901.01892",
+            "1712.00886",
+            "1612.06851"
+          ],
+          "sample_dois": []
+        },
+        "graph_expectations": {
+          "min_cites": 0,
+          "max_cites": 57,
+          "min_authorships": null,
+          "max_authorships": null,
+          "min_institutions": null,
+          "max_institutions": null,
+          "expected_cited_arxiv_ids": [
+            "1701.06659",
+            "1705.09587",
+            "1704.01069",
+            "1901.01892",
+            "1712.00886"
+          ],
+          "max_duplicate_work_fingerprints": 8,
+          "max_work_dedup_violations": null,
+          "min_related_version_edges": null,
+          "max_related_version_edges": null
+        }
+      }
+    },
+    {
+      "case_id": "detr_realpdf",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/detr_realpdf",
+      "document_id": "bc75f895-f4b1-42c8-9917-79211a2f7843",
+      "work_id": "dd65245e-45b3-47c9-8acc-f1856fd84cd4",
+      "metrics": {
+        "has_expectations": true,
+        "snapshot": {
+          "work_id": "dd65245e-45b3-47c9-8acc-f1856fd84cd4",
+          "work_title": "End-to-End Object Detection with Transformers",
+          "authorship_count": 6,
+          "institution_count": 1,
+          "cites_count": 11,
+          "cited_arxiv_ids": [
+            "1511.06449",
+            "1711.10433",
+            "1712.00617",
+            "1805.00613",
+            "1904.05709",
+            "1904.07850",
+            "1904.09324",
+            "1905.03072",
+            "1911.08460",
+            "1912.02424",
+            "2002.08926"
+          ],
+          "duplicate_work_fingerprints": 0,
+          "related_version_edge_count": 0,
+          "work_dedup_violation_count": 0
+        },
+        "cites_range_ok": true,
+        "authorships_range_ok": null,
+        "institutions_range_ok": null,
+        "cited_arxiv_precision": 0.45454545454545453,
+        "cited_arxiv_recall": 1.0,
+        "cited_arxiv_f1": 0.625,
+        "cited_arxiv_tp_fp_fn": {
+          "tp": 5,
+          "fp": 6,
+          "fn": 0
+        },
+        "duplicate_work_fingerprints_ok": true,
+        "work_dedup_violations_ok": null,
+        "related_version_edges_ok": null
+      },
+      "gold": {
+        "case_id": "detr_realpdf",
+        "schema_version": 1,
+        "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic.",
+        "work_metadata": {
+          "title": "End-to-End Object Detection with Transformers",
+          "publication_year": null,
+          "abstract_prefix": "We present a new method that views object detection as a direct set pred",
+          "doi": null,
+          "arxiv_id": null,
+          "venue_name": null,
+          "work_type": null
+        },
+        "authorships": [],
+        "references": {
+          "expected_count": 54,
+          "min_count": 46,
+          "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
+          "sample_arxiv_ids": [
+            "2002.08926",
+            "1904.09324",
+            "1905.03072",
+            "1711.10433",
+            "1511.06449",
+            "1904.05709",
+            "1805.00613",
+            "1712.00617",
+            "1911.08460",
+            "1912.02424",
+            "1904.07850"
+          ],
+          "sample_dois": []
+        },
+        "graph_expectations": {
+          "min_cites": 0,
+          "max_cites": 64,
+          "min_authorships": null,
+          "max_authorships": null,
+          "min_institutions": null,
+          "max_institutions": null,
+          "expected_cited_arxiv_ids": [
+            "2002.08926",
+            "1904.09324",
+            "1905.03072",
+            "1711.10433",
+            "1511.06449"
+          ],
+          "max_duplicate_work_fingerprints": 8,
+          "max_work_dedup_violations": null,
+          "min_related_version_edges": null,
+          "max_related_version_edges": null
+        }
+      }
+    },
+    {
+      "case_id": "doi_refs_heavy",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/doi_refs_heavy",
+      "document_id": "f5c3a1df-00f2-43bd-bb71-ff7d5868ed07",
+      "work_id": "543fa29c-46c0-4483-8d8e-e1b0699a1874",
+      "metrics": {
+        "has_expectations": true,
+        "snapshot": {
+          "work_id": "543fa29c-46c0-4483-8d8e-e1b0699a1874",
+          "work_title": "DOI-Heavy Reference Layout Demo",
+          "authorship_count": 1,
+          "institution_count": 0,
+          "cites_count": 5,
+          "cited_arxiv_ids": [],
+          "duplicate_work_fingerprints": 0,
+          "related_version_edge_count": 0,
+          "work_dedup_violation_count": 0
+        },
+        "cites_range_ok": null,
+        "authorships_range_ok": true,
+        "institutions_range_ok": null,
+        "cited_arxiv_precision": 1.0,
+        "cited_arxiv_recall": 1.0,
+        "cited_arxiv_f1": 1.0,
+        "cited_arxiv_tp_fp_fn": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0
+        },
+        "duplicate_work_fingerprints_ok": true,
+        "work_dedup_violations_ok": null,
+        "related_version_edges_ok": null
+      },
+      "gold": {
+        "case_id": "doi_refs_heavy",
+        "schema_version": 1,
+        "description": "Synthetic bibliography dominated by DOI tokens (no arXiv).",
+        "work_metadata": {
+          "title": "DOI-Heavy Reference Layout Demo",
+          "publication_year": null,
+          "abstract_prefix": "This fixture stresses bibliography lines",
+          "doi": null,
+          "arxiv_id": null,
+          "venue_name": null,
+          "work_type": null
+        },
+        "authorships": [
+          {
+            "name": "Jane Doe",
+            "affiliations": []
+          }
+        ],
+        "references": {
+          "expected_count": 5,
+          "min_count": 4,
+          "notes": "Heuristic reference parser should recover one entry per [n] line.",
+          "sample_arxiv_ids": [],
+          "sample_dois": [
+            "10.1000/182",
+            "10.1038/s41586-020-2649-2",
+            "10.1016/j.cell.2021.01.001"
+          ]
+        },
+        "graph_expectations": {
+          "min_cites": null,
+          "max_cites": null,
+          "min_authorships": 1,
+          "max_authorships": null,
+          "min_institutions": null,
+          "max_institutions": null,
+          "expected_cited_arxiv_ids": [],
+          "max_duplicate_work_fingerprints": 2,
+          "max_work_dedup_violations": null,
+          "min_related_version_edges": null,
+          "max_related_version_edges": null
+        }
+      }
+    },
+    {
+      "case_id": "efficientdet_realpdf",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/efficientdet_realpdf",
+      "document_id": "0e5639bc-2a4d-450d-8c8b-fffb2fbd1e7b",
+      "work_id": "7d18a201-aae6-471d-89e5-7b19691e2a9d",
+      "metrics": {
+        "has_expectations": true,
+        "snapshot": {
+          "work_id": "7d18a201-aae6-471d-89e5-7b19691e2a9d",
+          "work_title": "EfficientDet: Scalable and Efficient Object Detection",
+          "authorship_count": 3,
+          "institution_count": 1,
+          "cites_count": 4,
+          "cited_arxiv_ids": [
+            "1606.08415",
+            "1804.02767",
+            "1811.05588",
+            "1904.07850"
+          ],
+          "duplicate_work_fingerprints": 0,
+          "related_version_edge_count": 0,
+          "work_dedup_violation_count": 0
+        },
+        "cites_range_ok": true,
+        "authorships_range_ok": null,
+        "institutions_range_ok": null,
+        "cited_arxiv_precision": 1.0,
+        "cited_arxiv_recall": 1.0,
+        "cited_arxiv_f1": 1.0,
+        "cited_arxiv_tp_fp_fn": {
+          "tp": 4,
+          "fp": 0,
+          "fn": 0
+        },
+        "duplicate_work_fingerprints_ok": true,
+        "work_dedup_violations_ok": null,
+        "related_version_edges_ok": null
+      },
+      "gold": {
+        "case_id": "efficientdet_realpdf",
+        "schema_version": 1,
+        "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic.",
+        "work_metadata": {
+          "title": "EfficientDet: Scalable and Efficient Object Detection",
+          "publication_year": null,
+          "abstract_prefix": "Model efficiency has become increasingly important in computer vision. I",
+          "doi": null,
+          "arxiv_id": null,
+          "venue_name": null,
+          "work_type": null
+        },
+        "authorships": [],
+        "references": {
+          "expected_count": 52,
+          "min_count": 44,
+          "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
+          "sample_arxiv_ids": [
+            "1606.08415",
+            "1811.05588",
+            "1804.02767",
+            "1904.07850"
+          ],
+          "sample_dois": []
+        },
+        "graph_expectations": {
+          "min_cites": 0,
+          "max_cites": 62,
+          "min_authorships": null,
+          "max_authorships": null,
+          "min_institutions": null,
+          "max_institutions": null,
+          "expected_cited_arxiv_ids": [
+            "1606.08415",
+            "1811.05588",
+            "1804.02767",
+            "1904.07850"
+          ],
+          "max_duplicate_work_fingerprints": 8,
+          "max_work_dedup_violations": null,
+          "min_related_version_edges": null,
+          "max_related_version_edges": null
+        }
+      }
+    },
+    {
+      "case_id": "fcos_realpdf",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/fcos_realpdf",
+      "document_id": "d3db0944-7a39-4175-9ddc-fccc5e554cdc",
+      "work_id": "93463cbe-d3ef-4c72-b9e5-a3613f14f5d6",
+      "metrics": {
+        "has_expectations": true,
+        "snapshot": {
+          "work_id": "93463cbe-d3ef-4c72-b9e5-a3613f14f5d6",
+          "work_title": "FCOS: Fully Convolutional One-Stage Object Detection",
+          "authorship_count": 4,
+          "institution_count": 1,
+          "cites_count": 33,
+          "cited_arxiv_ids": [
+            "1509.04874",
+            "1701.06659",
+            "1804.02767"
+          ],
+          "duplicate_work_fingerprints": 0,
+          "related_version_edge_count": 0,
+          "work_dedup_violation_count": 0
+        },
+        "cites_range_ok": true,
+        "authorships_range_ok": null,
+        "institutions_range_ok": null,
+        "cited_arxiv_precision": 1.0,
+        "cited_arxiv_recall": 1.0,
+        "cited_arxiv_f1": 1.0,
+        "cited_arxiv_tp_fp_fn": {
+          "tp": 3,
+          "fp": 0,
+          "fn": 0
+        },
+        "duplicate_work_fingerprints_ok": true,
+        "work_dedup_violations_ok": null,
+        "related_version_edges_ok": null
+      },
+      "gold": {
+        "case_id": "fcos_realpdf",
+        "schema_version": 1,
+        "description": "Real CV paper: PDF→text (pypdf) → structured MD. Authorships omitted in gold; see retinanet_focal_realpdf description.",
+        "work_metadata": {
+          "title": "FCOS: Fully Convolutional One-Stage Object Detection",
+          "publication_year": null,
+          "abstract_prefix": "we propose a fully convolutional one-stage",
+          "doi": null,
+          "arxiv_id": null,
+          "venue_name": null,
+          "work_type": null
+        },
+        "authorships": [],
+        "references": {
+          "expected_count": 34,
+          "min_count": 26,
+          "notes": "Counts from heuristic extract_references on this MD; PDF hyphenation may shift totals.",
+          "sample_arxiv_ids": [
+            "1701.06659",
+            "1509.04874",
+            "1804.02767"
+          ],
+          "sample_dois": []
+        },
+        "graph_expectations": {
+          "min_cites": 0,
+          "max_cites": 44,
+          "min_authorships": null,
+          "max_authorships": null,
+          "min_institutions": null,
+          "max_institutions": null,
+          "expected_cited_arxiv_ids": [
+            "1701.06659",
+            "1509.04874",
+            "1804.02767"
+          ],
+          "max_duplicate_work_fingerprints": 8,
+          "max_work_dedup_violations": null,
+          "min_related_version_edges": null,
+          "max_related_version_edges": null
+        }
+      }
+    },
+    {
+      "case_id": "noisy_layout_stub",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/noisy_layout_stub",
+      "document_id": "5cf97d74-931a-420d-9628-36347aadb717",
+      "work_id": "c5e164b7-699f-4f57-9e24-92b7777b9efb",
+      "metrics": {
+        "has_expectations": true,
+        "snapshot": {
+          "work_id": "c5e164b7-699f-4f57-9e24-92b7777b9efb",
+          "work_title": "Paper",
+          "authorship_count": 2,
+          "institution_count": 2,
+          "cites_count": 3,
+          "cited_arxiv_ids": [
+            "1705.03820"
+          ],
+          "duplicate_work_fingerprints": 0,
+          "related_version_edge_count": 0,
+          "work_dedup_violation_count": 1
+        },
+        "cites_range_ok": null,
+        "authorships_range_ok": true,
+        "institutions_range_ok": null,
+        "cited_arxiv_precision": 0.0,
+        "cited_arxiv_recall": 0.0,
+        "cited_arxiv_f1": 0.0,
+        "cited_arxiv_tp_fp_fn": {
+          "tp": 0,
+          "fp": 1,
+          "fn": 0
+        },
+        "duplicate_work_fingerprints_ok": true,
+        "work_dedup_violations_ok": null,
+        "related_version_edges_ok": null
+      },
+      "gold": {
+        "case_id": "noisy_layout_stub",
+        "schema_version": 1,
+        "description": "Noisy PDF→MD style: extra whitespace, fenced wrapper, broken ref flow.",
+        "work_metadata": {
+          "title": "Noisy Markdown Wrapper Title Paper",
+          "publication_year": null,
+          "abstract_prefix": "This abstract has leading spaces",
+          "doi": null,
+          "arxiv_id": null,
+          "venue_name": null,
+          "work_type": null
+        },
+        "authorships": [
+          {
+            "name": "Author One",
+            "affiliations": []
+          },
+          {
+            "name": "Author Two",
+            "affiliations": []
+          }
+        ],
+        "references": {
+          "expected_count": 3,
+          "min_count": 2,
+          "notes": "Three [n] lines; [2] may still merge into [1] depending on parser version — min_count kept at 2.",
+          "sample_arxiv_ids": [
+            "1705.03820"
+          ],
+          "sample_dois": [
+            "10.1000/xyz"
+          ]
+        },
+        "graph_expectations": {
+          "min_cites": null,
+          "max_cites": null,
+          "min_authorships": 1,
+          "max_authorships": null,
+          "min_institutions": null,
+          "max_institutions": null,
+          "expected_cited_arxiv_ids": [],
+          "max_duplicate_work_fingerprints": 3,
+          "max_work_dedup_violations": null,
+          "min_related_version_edges": null,
+          "max_related_version_edges": null
+        }
+      }
+    },
+    {
+      "case_id": "retinanet_focal_realpdf",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/retinanet_focal_realpdf",
+      "document_id": "c7cde008-e67d-4741-9292-08cbd922bf81",
+      "work_id": "a0ca1ad2-4ad7-4e06-860d-c918cdef9b22",
+      "metrics": {
+        "has_expectations": true,
+        "snapshot": {
+          "work_id": "a0ca1ad2-4ad7-4e06-860d-c918cdef9b22",
+          "work_title": "Focal Loss for Dense Object Detection",
+          "authorship_count": 5,
+          "institution_count": 1,
+          "cites_count": 2,
+          "cited_arxiv_ids": [
+            "1612.06851",
+            "1701.06659"
+          ],
+          "duplicate_work_fingerprints": 0,
+          "related_version_edge_count": 0,
+          "work_dedup_violation_count": 0
+        },
+        "cites_range_ok": true,
+        "authorships_range_ok": null,
+        "institutions_range_ok": null,
+        "cited_arxiv_precision": 1.0,
+        "cited_arxiv_recall": 1.0,
+        "cited_arxiv_f1": 1.0,
+        "cited_arxiv_tp_fp_fn": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0
+        },
+        "duplicate_work_fingerprints_ok": true,
+        "work_dedup_violations_ok": null,
+        "related_version_edges_ok": null
+      },
+      "gold": {
+        "case_id": "retinanet_focal_realpdf",
+        "schema_version": 1,
+        "description": "Real CV paper: PDF→text (pypdf) → structured MD. Authorships omitted in gold: pypdf layout rarely matches heuristic author parsing; use LLM-on runs to score names separately.",
+        "work_metadata": {
+          "title": "Focal Loss for Dense Object Detection",
+          "publication_year": null,
+          "abstract_prefix": "the highest accuracy object detectors",
+          "doi": null,
+          "arxiv_id": null,
+          "venue_name": null,
+          "work_type": null
+        },
+        "authorships": [],
+        "references": {
+          "expected_count": 44,
+          "min_count": 36,
+          "notes": "Counts from heuristic extract_references on this MD; PDF hyphenation may shift totals.",
+          "sample_arxiv_ids": [
+            "1701.06659",
+            "1612.06851"
+          ],
+          "sample_dois": []
+        },
+        "graph_expectations": {
+          "min_cites": 0,
+          "max_cites": 54,
+          "min_authorships": null,
+          "max_authorships": null,
+          "min_institutions": null,
+          "max_institutions": null,
+          "expected_cited_arxiv_ids": [
+            "1701.06659",
+            "1612.06851"
+          ],
+          "max_duplicate_work_fingerprints": 8,
+          "max_work_dedup_violations": null,
+          "min_related_version_edges": null,
+          "max_related_version_edges": null
+        }
+      }
+    },
+    {
+      "case_id": "ssd_realpdf",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/ssd_realpdf",
+      "document_id": "513a743d-158a-41b1-8920-6ba50e78635a",
+      "work_id": "1212183e-a5b4-4a85-8cb9-dbb1d80656ea",
+      "metrics": {
+        "has_expectations": true,
+        "snapshot": {
+          "work_id": "1212183e-a5b4-4a85-8cb9-dbb1d80656ea",
+          "work_title": "SSD: Single Shot MultiBox Detector",
+          "authorship_count": 7,
+          "institution_count": 4,
+          "cites_count": 25,
+          "cited_arxiv_ids": [
+            "1312.5402",
+            "1412.1441"
+          ],
+          "duplicate_work_fingerprints": 0,
+          "related_version_edge_count": 0,
+          "work_dedup_violation_count": 0
+        },
+        "cites_range_ok": true,
+        "authorships_range_ok": null,
+        "institutions_range_ok": null,
+        "cited_arxiv_precision": 1.0,
+        "cited_arxiv_recall": 1.0,
+        "cited_arxiv_f1": 1.0,
+        "cited_arxiv_tp_fp_fn": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0
+        },
+        "duplicate_work_fingerprints_ok": true,
+        "work_dedup_violations_ok": null,
+        "related_version_edges_ok": null
+      },
+      "gold": {
+        "case_id": "ssd_realpdf",
+        "schema_version": 1,
+        "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic.",
+        "work_metadata": {
+          "title": "SSD: Single Shot MultiBox Detector",
+          "publication_year": null,
+          "abstract_prefix": "We present a method for detecting objects in images using a single deep ",
+          "doi": null,
+          "arxiv_id": null,
+          "venue_name": null,
+          "work_type": null
+        },
+        "authorships": [],
+        "references": {
+          "expected_count": 27,
+          "min_count": 19,
+          "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
+          "sample_arxiv_ids": [
+            "1412.1441",
+            "1312.5402"
+          ],
+          "sample_dois": []
+        },
+        "graph_expectations": {
+          "min_cites": 0,
+          "max_cites": 37,
+          "min_authorships": null,
+          "max_authorships": null,
+          "min_institutions": null,
+          "max_institutions": null,
+          "expected_cited_arxiv_ids": [
+            "1412.1441",
+            "1312.5402"
+          ],
+          "max_duplicate_work_fingerprints": 8,
+          "max_work_dedup_violations": null,
+          "min_related_version_edges": null,
+          "max_related_version_edges": null
+        }
+      }
+    },
+    {
+      "case_id": "yolov1",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/yolov1",
+      "document_id": "2d32af0f-76ab-4fea-8e66-07ab41e0e058",
+      "work_id": "ccf1f5cc-d0d7-410c-b98d-190425c63380",
+      "metrics": {
+        "has_expectations": true,
+        "snapshot": {
+          "work_id": "ccf1f5cc-d0d7-410c-b98d-190425c63380",
+          "work_title": "You Only Look Once: Unified, Real-Time Object Detection",
+          "authorship_count": 4,
+          "institution_count": 2,
+          "cites_count": 23,
+          "cited_arxiv_ids": [
+            "1207.0580",
+            "1310.1531",
+            "1312.4400",
+            "1406.4729",
+            "1504.08083",
+            "1505.00110",
+            "1505.01749",
+            "1506.06981"
+          ],
+          "duplicate_work_fingerprints": 0,
+          "related_version_edge_count": 0,
+          "work_dedup_violation_count": 0
+        },
+        "cites_range_ok": true,
+        "authorships_range_ok": true,
+        "institutions_range_ok": true,
+        "cited_arxiv_precision": 1.0,
+        "cited_arxiv_recall": 1.0,
+        "cited_arxiv_f1": 1.0,
+        "cited_arxiv_tp_fp_fn": {
+          "tp": 8,
+          "fp": 0,
+          "fn": 0
+        },
+        "duplicate_work_fingerprints_ok": true,
+        "work_dedup_violations_ok": true,
+        "related_version_edges_ok": null
+      },
+      "gold": {
+        "case_id": "yolov1",
+        "schema_version": 1,
+        "description": "YOLOv1 CVPR-style markdown from PDF→MD; front matter wrapped in fenced ```markdown; ## Abstract / ## References.",
+        "work_metadata": {
+          "title": "You Only Look Once: Unified, Real-Time Object Detection",
+          "publication_year": null,
+          "abstract_prefix": "We present YOLO, a new approach to object detection.",
+          "doi": null,
+          "arxiv_id": null,
+          "venue_name": null,
+          "work_type": null
+        },
+        "authorships": [
+          {
+            "name": "Joseph Redmon",
+            "affiliations": [
+              "University of Washington"
+            ]
+          },
+          {
+            "name": "Santosh Divvala",
+            "affiliations": [
+              "University of Washington",
+              "Allen Institute for AI"
+            ]
+          },
+          {
+            "name": "Ross Girshick",
+            "affiliations": [
+              "Allen Institute for AI",
+              "Facebook AI Research"
+            ]
+          },
+          {
+            "name": "Ali Farhadi",
+            "affiliations": [
+              "University of Washington",
+              "Allen Institute for AI",
+              "Facebook AI Research"
+            ]
+          }
+        ],
+        "references": {
+          "expected_count": 24,
+          "min_count": 23,
+          "notes": "Fixture ends mid [24]; parsers should still recover prior entries.",
+          "sample_arxiv_ids": [
+            "1505.00110",
+            "1310.1531",
+            "1505.01749",
+            "1504.08083",
+            "1312.4400",
+            "1406.4729",
+            "1207.0580",
+            "1506.06981"
+          ],
+          "sample_dois": []
+        },
+        "graph_expectations": {
+          "min_cites": 23,
+          "max_cites": 24,
+          "min_authorships": 4,
+          "max_authorships": null,
+          "min_institutions": 2,
+          "max_institutions": null,
+          "expected_cited_arxiv_ids": [
+            "1505.00110",
+            "1310.1531",
+            "1505.01749",
+            "1504.08083",
+            "1312.4400",
+            "1406.4729",
+            "1207.0580",
+            "1506.06981"
+          ],
+          "max_duplicate_work_fingerprints": 0,
+          "max_work_dedup_violations": 0,
+          "min_related_version_edges": null,
+          "max_related_version_edges": null
+        }
+      }
+    },
+    {
+      "case_id": "yolov3_realpdf",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/yolov3_realpdf",
+      "document_id": "04f2d3fd-5fa3-4a57-985d-eeccf128692f",
+      "work_id": "32ecd4b0-4686-4a05-9e2b-ff50692d6d51",
+      "metrics": {
+        "has_expectations": true,
+        "snapshot": {
+          "work_id": "32ecd4b0-4686-4a05-9e2b-ff50692d6d51",
+          "work_title": "YOLOv3: An Incremental Improvement",
+          "authorship_count": 2,
+          "institution_count": 1,
+          "cites_count": 5,
+          "cited_arxiv_ids": [
+            "1506.01497",
+            "1612.06851",
+            "1701.06659",
+            "1708.02002",
+            "1712.03316"
+          ],
+          "duplicate_work_fingerprints": 0,
+          "related_version_edge_count": 0,
+          "work_dedup_violation_count": 0
+        },
+        "cites_range_ok": true,
+        "authorships_range_ok": null,
+        "institutions_range_ok": null,
+        "cited_arxiv_precision": 1.0,
+        "cited_arxiv_recall": 1.0,
+        "cited_arxiv_f1": 1.0,
+        "cited_arxiv_tp_fp_fn": {
+          "tp": 5,
+          "fp": 0,
+          "fn": 0
+        },
+        "duplicate_work_fingerprints_ok": true,
+        "work_dedup_violations_ok": null,
+        "related_version_edges_ok": null
+      },
+      "gold": {
+        "case_id": "yolov3_realpdf",
+        "schema_version": 1,
+        "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic.",
+        "work_metadata": {
+          "title": "YOLOv3: An Incremental Improvement",
+          "publication_year": null,
+          "abstract_prefix": "We present some updates to YOLO! We made a bunch of little design change",
+          "doi": null,
+          "arxiv_id": null,
+          "venue_name": null,
+          "work_type": null
+        },
+        "authorships": [],
+        "references": {
+          "expected_count": 21,
+          "min_count": 13,
+          "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
+          "sample_arxiv_ids": [
+            "1701.06659",
+            "1712.03316",
+            "1708.02002",
+            "1506.01497",
+            "1612.06851"
+          ],
+          "sample_dois": []
+        },
+        "graph_expectations": {
+          "min_cites": 0,
+          "max_cites": 31,
+          "min_authorships": null,
+          "max_authorships": null,
+          "min_institutions": null,
+          "max_institutions": null,
+          "expected_cited_arxiv_ids": [
+            "1701.06659",
+            "1712.03316",
+            "1708.02002",
+            "1506.01497",
+            "1612.06851"
+          ],
+          "max_duplicate_work_fingerprints": 8,
+          "max_work_dedup_violations": null,
+          "min_related_version_edges": null,
+          "max_related_version_edges": null
+        }
+      }
+    }
+  ]
+}

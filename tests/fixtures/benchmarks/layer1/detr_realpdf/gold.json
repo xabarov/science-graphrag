@@ -1,7 +1,7 @@
 {
   "case_id": "detr_realpdf",
   "schema_version": 1,
-  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic.",
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD. Tier: nightly_heavy. authorships[] aligned with heuristic extract_authorships (first four comma-separated authors).",
   "work_metadata": {
     "title": "End-to-End Object Detection with Transformers",
     "publication_year": null,
@@ -11,7 +11,12 @@
     "venue_name": null,
     "work_type": null
   },
-  "authorships": [],
+  "authorships": [
+    { "name": "Nicolas Carion⋆", "affiliations": [] },
+    { "name": "Francisco Massa⋆", "affiliations": [] },
+    { "name": "Gabriel Synnaeve", "affiliations": [] },
+    { "name": "Nicolas Usunier", "affiliations": [] }
+  ],
   "references": {
     "expected_count": 54,
     "min_count": 46,
@@ -41,6 +46,7 @@
       "1711.10433",
       "1511.06449"
     ],
-    "max_duplicate_work_fingerprints": 8
+    "max_duplicate_work_fingerprints": 8,
+    "max_work_dedup_violations": 0
   }
 }

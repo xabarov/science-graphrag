@@ -1,7 +1,7 @@
 {
   "case_id": "centernet_realpdf",
   "schema_version": 1,
-  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic.",
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD. Tier: nightly_heavy.",
   "work_metadata": {
     "title": "CenterNet: Keypoint Triplets for Object Detection",
     "publication_year": null,
@@ -36,6 +36,7 @@
       "1901.01892",
       "1712.00886"
     ],
-    "max_duplicate_work_fingerprints": 8
+    "max_duplicate_work_fingerprints": 8,
+    "max_work_dedup_violations": 0
   }
 }

@@ -13,7 +13,24 @@ from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.llm.stage_extraction import extraction_layer1_prompt_fingerprint
 
 
-def discover_layer1_case_dirs(fixtures_root: Path) -> list[Path]:
+def _tier_case_ids(fixtures_root: Path, tier: str) -> set[str] | None:
+    """Return allowed ``case_id`` directory names for ``tier``, or None if no manifest."""
+
+    manifest = fixtures_root / "case_tiers.json"
+    if not manifest.is_file():
+        return None
+    data = json.loads(manifest.read_text(encoding="utf-8"))
+    ids = data.get(tier)
+    if ids is None:
+        return None
+    return {str(x) for x in ids}
+
+
+def discover_layer1_case_dirs(
+    fixtures_root: Path,
+    *,
+    tier: str | None = None,
+) -> list[Path]:
     """Subdirectories of ``fixtures_root`` that contain ``article.md`` and ``gold.json``."""
 
     if not fixtures_root.is_dir():
@@ -24,6 +41,10 @@ def discover_layer1_case_dirs(fixtures_root: Path) -> list[Path]:
             continue
         if (child / "article.md").is_file() and (child / "gold.json").is_file():
             found.append(child)
+    if tier:
+        allowed = _tier_case_ids(fixtures_root, tier)
+        if allowed is not None:
+            found = [p for p in found if p.name in allowed]
     return found
 
 

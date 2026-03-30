@@ -179,7 +179,7 @@ flowchart LR
 
 **Exit criteria:** зафиксирован документ ontology v1 + policy изменений; согласовано с Phase 3 extraction.
 
-**Статус Phase 2 (2026-03-31):** **черновик** — [specs/ontology-v1-mvp.md](specs/ontology-v1-mvp.md) (anti-bloat, таблица целевых типов, указатель на будущий ADR); полная таксономия отношений и ADR scope — впереди.
+**Статус Phase 2 (2026-03-31):** **черновик + scope ADR** — [specs/ontology-v1-mvp.md](specs/ontology-v1-mvp.md), принятый [adr/004-ontology-v1-scope.md](adr/004-ontology-v1-scope.md); контракт Phase 3 для первого semantic-stage: [specs/extraction/semantic-method-dataset-v1.md](specs/extraction/semantic-method-dataset-v1.md). Имплементация узлов/рёбер в Neo4j — следующая волна.
 
 ---
 
@@ -354,6 +354,7 @@ flowchart TD
 
 | Версия | Дата | Изменения |
 |--------|------|-----------|
+| 0.8 | 2026-03-31 | Phase 4/7: nightly CI Postgres + интеграции ingest/SQL/batch; layer1 + graph yolov1 бенчмарки без LLM; `case_tiers.json`, `--tier`; real-pdf gold: dedup graph, authorships для SSD/DETR. Phase 2/3: [adr/004-ontology-v1-scope.md](adr/004-ontology-v1-scope.md), [specs/extraction/semantic-method-dataset-v1.md](specs/extraction/semantic-method-dataset-v1.md) |
 | 0.7 | 2026-03-31 | Phase 2: черновик [specs/ontology-v1-mvp.md](specs/ontology-v1-mvp.md); Phase 4: graph-v1 метрики `max_work_dedup_violations`, `RELATED_VERSION_OF` (через `graph_expectations`); GitHub Actions **integration-nightly** (Neo4j+Qdrant + `pytest -m integration`); roadmap: backlog 4.3 пересортирован после закрытия merge-gate / nightly-базиса / инвариантов графа |
 | 0.6 | 2026-03-31 | Phase 1: `ingest-corpus`, Neo4j dedup audit, canonical Author id, опциональный ROR, `RELATED_VERSION_OF` из OpenAlex; Phase 4: benchmark **suite** (`--suite`), `bench_common`, integration ingest test, расширенный gold-set (синтетика + real-pdf), документация merge/nightly; Phase 7: старт CI merge-gate |
 | 0.5 | 2026-03-30 | LLM-first layer-1 extraction; YOLOv1 layer-1 benchmark (`eval/layer1`); initial graph-level eval (`eval/graph_v1`); `CITES` без DOI (arxiv / title+year); Phase 1 deliverables разбиты на done/partial/deferred; Phase 4 статус in progress; план расширения benchmark |

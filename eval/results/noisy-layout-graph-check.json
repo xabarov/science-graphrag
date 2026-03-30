@@ -1,0 +1,92 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:c5320748bf3712047f1f"
+  },
+  "case": {
+    "case_id": "noisy_layout_stub",
+    "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/noisy_layout_stub",
+    "document_id": "bcb1f63c-88fe-4a34-93df-4081e82d1ff4",
+    "work_id": "12263f2a-499f-4280-aaf2-826c49d7168d",
+    "metrics": {
+      "has_expectations": true,
+      "snapshot": {
+        "work_id": "12263f2a-499f-4280-aaf2-826c49d7168d",
+        "work_title": "Paper",
+        "authorship_count": 2,
+        "institution_count": 2,
+        "cites_count": 2,
+        "cited_arxiv_ids": [
+          "1705.03820"
+        ],
+        "duplicate_work_fingerprints": 0,
+        "related_version_edge_count": 0,
+        "work_dedup_violation_count": 0
+      },
+      "cites_range_ok": null,
+      "authorships_range_ok": true,
+      "institutions_range_ok": null,
+      "cited_arxiv_precision": 0.0,
+      "cited_arxiv_recall": 0.0,
+      "cited_arxiv_f1": 0.0,
+      "cited_arxiv_tp_fp_fn": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 0
+      },
+      "duplicate_work_fingerprints_ok": true,
+      "work_dedup_violations_ok": true,
+      "related_version_edges_ok": null
+    },
+    "gold": {
+      "case_id": "noisy_layout_stub",
+      "schema_version": 1,
+      "description": "Noisy PDF→MD style: extra whitespace, fenced wrapper, broken ref flow.",
+      "work_metadata": {
+        "title": "Noisy Markdown Wrapper Title Paper",
+        "publication_year": null,
+        "abstract_prefix": "This abstract has leading spaces",
+        "doi": null,
+        "arxiv_id": null,
+        "venue_name": null,
+        "work_type": null
+      },
+      "authorships": [
+        {
+          "name": "Author One",
+          "affiliations": []
+        },
+        {
+          "name": "Author Two",
+          "affiliations": []
+        }
+      ],
+      "references": {
+        "expected_count": 3,
+        "min_count": 2,
+        "notes": "Three [n] lines; [2] may still merge into [1] depending on parser version — min_count kept at 2.",
+        "sample_arxiv_ids": [
+          "1705.03820"
+        ],
+        "sample_dois": [
+          "10.1000/xyz"
+        ]
+      },
+      "graph_expectations": {
+        "min_cites": null,
+        "max_cites": null,
+        "min_authorships": 1,
+        "max_authorships": null,
+        "min_institutions": null,
+        "max_institutions": null,
+        "expected_cited_arxiv_ids": [],
+        "max_duplicate_work_fingerprints": 3,
+        "max_work_dedup_violations": 0,
+        "min_related_version_edges": null,
+        "max_related_version_edges": null
+      }
+    }
+  }
+}

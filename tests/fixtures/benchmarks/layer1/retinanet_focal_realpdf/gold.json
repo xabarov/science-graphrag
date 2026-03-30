@@ -1,7 +1,7 @@
 {
   "case_id": "retinanet_focal_realpdf",
   "schema_version": 1,
-  "description": "Real CV paper: PDF→text (pypdf) → structured MD. Authorships omitted in gold: pypdf layout rarely matches heuristic author parsing; use LLM-on runs to score names separately.",
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD. Tier: nightly_heavy (see case_tiers.json). Authorships omitted: author line has no commas → heuristic extract_authorships returns [].",
   "work_metadata": {
     "title": "Focal Loss for Dense Object Detection",
     "publication_year": null,
@@ -29,6 +29,7 @@
       "1701.06659",
       "1612.06851"
     ],
-    "max_duplicate_work_fingerprints": 8
+    "max_duplicate_work_fingerprints": 8,
+    "max_work_dedup_violations": 0
   }
 }

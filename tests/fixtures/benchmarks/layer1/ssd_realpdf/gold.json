@@ -1,7 +1,7 @@
 {
   "case_id": "ssd_realpdf",
   "schema_version": 1,
-  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic.",
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD. Tier: nightly_heavy. authorships[] aligned with heuristic extract_authorships (comma-separated author line); only first four names match current heuristic.",
   "work_metadata": {
     "title": "SSD: Single Shot MultiBox Detector",
     "publication_year": null,
@@ -11,7 +11,12 @@
     "venue_name": null,
     "work_type": null
   },
-  "authorships": [],
+  "authorships": [
+    { "name": "Wei Liu1", "affiliations": [] },
+    { "name": "Dragomir Anguelov2", "affiliations": [] },
+    { "name": "Dumitru Erhan3", "affiliations": [] },
+    { "name": "Christian Szegedy3", "affiliations": [] }
+  ],
   "references": {
     "expected_count": 27,
     "min_count": 19,
@@ -29,6 +34,7 @@
       "1412.1441",
       "1312.5402"
     ],
-    "max_duplicate_work_fingerprints": 8
+    "max_duplicate_work_fingerprints": 8,
+    "max_work_dedup_violations": 0
   }
 }

@@ -8,6 +8,8 @@
 | [graph-level-eval-v1.md](graph-level-eval-v1.md) | Graph-level eval после ingest (`eval/graph_v1/`) |
 | [benchmark-expansion-v1.md](benchmark-expansion-v1.md) | Как наращивать корпус и семейства бенчмарков |
 
+**Тиры кейсов:** [`tests/fixtures/benchmarks/layer1/case_tiers.json`](../../tests/fixtures/benchmarks/layer1/case_tiers.json) — `merge_safe` vs `nightly_heavy`; CLI `--tier …` у layer1/graph раннеров.
+
 **Реальные PDF (CV OD):** фикстуры `*_realpdf` собраны из pypdf-текста через `scripts/build_real_pdf_layer1_fixture.py` (путь к PDF на машине разработчика; см. `SOURCE.txt`). Скрипт понимает **отдельную строку `Abstract`** (CVPR) и **inline `Abstract.`** (Springer/arXiv), заголовки **`1. Introduction`** и **`1 Introduction`**, опционально **`Bibliography`** вместо `References`, отрезает блок по URL / `Keywords:`.
 
 Последний прогон suite без LLM (эвристики): `eval/results/layer1-suite-heuristic-latest.json` — в `summary`: `title_exact_rate`, `abstract_prefix_ok_when_gold_has_prefix`, `references_count_ok_rate`.

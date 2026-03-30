@@ -23,6 +23,17 @@ def test_discover_layer1_case_dirs_finds_known_cases() -> None:
     assert len(cases) >= 11
 
 
+def test_discover_layer1_merge_safe_tier() -> None:
+    cases = discover_layer1_case_dirs(FIXTURES_LAYER1, tier="merge_safe")
+    ids = {p.name for p in cases}
+    assert ids == {
+        "arxiv_refs_heavy",
+        "doi_refs_heavy",
+        "noisy_layout_stub",
+        "yolov1",
+    }
+
+
 def test_discover_corpus_files_finds_suffixes(tmp_path: Path) -> None:
     (tmp_path / "a.md").write_text("x", encoding="utf-8")
     (tmp_path / "sub").mkdir()

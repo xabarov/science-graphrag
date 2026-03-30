@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import typer
-from neo4j import GraphDatabase
+from neo4j import GraphDatabase, NotificationClassification
 
 from eval.bench_common import (
     discover_layer1_case_dirs,
@@ -36,9 +36,16 @@ def _graph_eval_settings(base: Settings, case_id: str, temp_root: Path) -> Setti
 def _query_graph_snapshot(settings: Settings, work_id: str) -> GraphSnapshot:
     """Read compact Neo4j snapshot for one work after ingest."""
 
+    work_row = None
+    auth_count = None
+    inst_count = None
+    cites_row = None
+    dup_row = None
+    rel_row = None
     driver = GraphDatabase.driver(
         settings.neo4j_uri,
         auth=(settings.neo4j_user, settings.neo4j_password),
+        notifications_disabled_classifications=[NotificationClassification.UNRECOGNIZED],
     )
     try:
         with driver.session() as session:
@@ -85,9 +92,10 @@ def _query_graph_snapshot(settings: Settings, work_id: str) -> GraphSnapshot:
                 """,
                 work_id=work_id,
             ).single()
-            rel_n = int(rel_row["n"] if rel_row else 0)
     finally:
         driver.close()
+
+    rel_n = int(rel_row["n"] if rel_row else 0)
 
     audit = Neo4jGraphStore(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password)
     try:
@@ -211,11 +219,16 @@ def _cli(
     json_out: Path | None = typer.Option(None, "--json-out", help="Write JSON report"),
     md_out: Path | None = typer.Option(None, "--md-out", help="Write Markdown summary"),
     no_wipe: bool = typer.Option(False, "--no-wipe", help="Do not wipe Neo4j before run"),
+    tier: str | None = typer.Option(
+        None,
+        "--tier",
+        help='Filter suite to tier from case_tiers.json (e.g. "merge_safe", "nightly_heavy")',
+    ),
 ) -> None:
     settings = get_settings()
     wipe = not no_wipe
     if suite:
-        cases = discover_layer1_case_dirs(path)
+        cases = discover_layer1_case_dirs(path, tier=tier)
         if not cases:
             typer.echo(f"No layer-1 benchmarks found under {path}", err=True)
             raise typer.Exit(code=1)
