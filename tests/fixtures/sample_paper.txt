@@ -1,0 +1,12 @@
+A programmable favipiravir-based route to a new class of drug candidates
+Jane Doe, John Smith
+
+Abstract
+We present a synthetic route (doi:10.1038/s41586-020-2649-2). Further details in follow-up work.
+
+Introduction
+This paper builds on prior art.
+
+References
+[1] J. Smith et al. Important study. Nature 2019. doi:10.1038/s41586-019-1275-2
+[2] Another ref without doi.
