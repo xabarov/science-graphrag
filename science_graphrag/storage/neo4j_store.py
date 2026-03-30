@@ -14,6 +14,11 @@ class Neo4jGraphStore:
     def close(self) -> None:
         self._driver.close()
 
+    def wipe_all(self) -> None:
+        """Delete all nodes and relationships (dev / benchmark reset)."""
+        with self._driver.session() as session:
+            session.run("MATCH (n) DETACH DELETE n")
+
     def ensure_schema(self) -> None:
         stmts = [
             (
@@ -53,6 +58,12 @@ class Neo4jGraphStore:
             rec = session.run(q, fp=fingerprint).single()
             return rec["id"] if rec else None
 
+    def find_work_id_by_arxiv(self, arxiv_id: str) -> str | None:
+        q = "MATCH (w:Work {arxiv_id: $arxiv_id}) RETURN w.id AS id LIMIT 1"
+        with self._driver.session() as session:
+            rec = session.run(q, arxiv_id=arxiv_id).single()
+            return rec["id"] if rec else None
+
     def upsert_work_layer1(
         self,
         work_id: str,
@@ -76,6 +87,7 @@ class Neo4jGraphStore:
             "venue_name": draft.venue_name,
             "work_type": draft.work_type.value if draft.work_type else None,
             "openalex_id": draft.openalex_id,
+            "fingerprint": draft.fingerprint,
             "ingestion_confidence": draft.ingestion_confidence,
         }
         props = {k: v for k, v in props.items() if v is not None}

@@ -34,3 +34,10 @@ class BlobStore:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
         return path
+
+    def write_artifact(self, relative_path: Path, text: str) -> Path:
+        """Store a deterministic artifact path under the project data root."""
+        path = self.root / relative_path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+        return path

@@ -10,7 +10,7 @@ from qdrant_client.models import Distance, PointStruct, VectorParams
 
 class QdrantChunkStore:
     def __init__(self, url: str, collection: str, vector_dim: int) -> None:
-        self._client = QdrantClient(url=url)
+        self._client = QdrantClient(url=url, check_compatibility=False)
         self._collection = collection
         self._vector_dim = vector_dim
         self._ensure_collection()

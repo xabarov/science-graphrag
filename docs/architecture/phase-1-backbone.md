@@ -2,7 +2,7 @@
 
 ## Цель
 
-Рабочая вертикаль: **документ → нормализация → метаданные / авторы / references → обогащение реестрами → граф цитирования** плюс минимальный **chunk vector** индекс для будущего retrieval.
+Рабочая вертикаль: **документ → Markdown artifact → метаданные / авторы / references → обогащение реестрами → граф цитирования** плюс минимальный **chunk vector** индекс для будущего retrieval.
 
 Соответствует [roadmap Phase 1](../roadmap.md) и первому слою в [idea.md](../idea.md).
 
@@ -13,7 +13,7 @@
 - Узлы: `Work`, `Authorship`, `Author`, `Institution`, `Venue`.
 - Рёбра: `HAS_AUTHORSHIP`, `OF_AUTHOR`, `AFFILIATED_WITH`, `PUBLISHED_IN`, `CITES`, `RELATED_VERSION_OF`.
 - Идентификаторы как **атрибуты** на сущностях (не отдельные узлы `Identifier` в MVP).
-- Каскад стадий ingestion: нормализация текста → metadata → authorships → references → enrichment → dedup → запись в хранилища.
+- Каскад стадий ingestion: PDF/text → `article.md` → metadata → authorships → references → enrichment → dedup → запись в хранилища.
 
 **Вне scope Phase 1**
 
@@ -31,6 +31,8 @@
 | Qdrant | Векторы чанков (текст + embedding id) |
 | Python 3.11+ | Пакет `science_graphrag`, CLI, HTTP-клиенты к реестрам |
 
+**PDF extraction (текущий код):** режим **VL-first**. При наличии `SCIENCE_GRAPHRAG_VL_API_KEY` используется vision-language PDF → Markdown; иначе pipeline сохраняет `pypdf` fallback в тот же `article.md`.
+
 **Обогащение (текущий код):** клиент **OpenAlex** для work по DOI и для cited works. **Crossref / ORCID / ROR** — следующие шаги (то же API-слой `httpx`, отдельные модули), без блокировки текущего ingest.
 
 Детали: [adr/001-phase1-stack.md](../adr/001-phase1-stack.md).
@@ -39,7 +41,8 @@
 
 ```mermaid
 flowchart LR
-    PDF[Source_PDF_or_text] --> Norm[NormalizeText]
+    PDF[Source_PDF_or_text] --> Md[ArticleMarkdownArtifact]
+    Md --> Norm[NormalizeText]
     Norm --> Meta[MetadataStage]
     Norm --> Auth[AuthorsStage]
     Norm --> Refs[ReferencesStage]

@@ -4,6 +4,7 @@ import re
 
 from science_graphrag.domain.models import WorkDraft, WorkType
 from science_graphrag.ingestion.dedup import find_doi_in_text, title_fingerprint
+from science_graphrag.ingestion.stages.authorships import split_front_matter
 
 _ARXIV_RE = re.compile(r"\b(?:arXiv:\s*)?(\d{4}\.\d{4,5})\b", re.IGNORECASE)
 _YEAR_RE = re.compile(r"\b(19|20)\d{2}\b")
@@ -14,7 +15,11 @@ def extract_metadata(text: str) -> WorkDraft:
     arxiv_m = _ARXIV_RE.search(text)
     arxiv_id = arxiv_m.group(1) if arxiv_m else None
     lines = [ln.strip() for ln in text.split("\n") if ln.strip()]
-    title = lines[0][:500] if lines else None
+    title_lines, _, _ = split_front_matter(text)
+    if title_lines:
+        title = " ".join(title_lines)[:500]
+    else:
+        title = lines[0][:500] if lines else None
     norm = re.sub(r"\s+", " ", title).strip() if title else None
     year = None
     ym = _YEAR_RE.search(text[:3000])

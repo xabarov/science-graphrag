@@ -46,9 +46,15 @@ GraphRAG-система для помощи исследователю при р
 
 Реализован runnable ingestion MVP: пакет `science_graphrag`, локальные **PostgreSQL**, **Neo4j**, **Qdrant**, blobs на диске.
 
+Для PDF pipeline теперь работает как **VL-first**:
+
+- если настроены `SCIENCE_GRAPHRAG_VL_*`, PDF сначала конвертируется в `Markdown` через vision-language model;
+- если VL недоступен или не настроен, применяется `pypdf` fallback;
+- extraction stages читают именно артефакт `article.md` из `data/artifacts/ingestion/<document_id>/<slug>/article.md`.
+
 ```bash
-cp .env.example .env   # при необходимости поправьте URL и mailto для OpenAlex
-docker compose up -d
+cp .env.example .env   # при необходимости поправьте URL, mailto и SCIENCE_GRAPHRAG_VL_* для VL
+docker compose up -d   # Postgres :15432, Neo4j HTTP :17474 / Bolt :17687, Qdrant :16333 (см. docker-compose.yml)
 python -m venv .venv && .venv/bin/pip install -e ".[dev]"
 .venv/bin/science-graphrag ingest path/to/file.pdf
 # или .txt с полным текстом статьи
