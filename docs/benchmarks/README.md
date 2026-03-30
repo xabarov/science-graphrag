@@ -5,6 +5,8 @@
 | Файл | Описание |
 |------|----------|
 | [strategy-v1.md](strategy-v1.md) | Стратегия eval v1 (layer 1 и далее) |
+| [yolov1-baseline.md](yolov1-baseline.md) | Layer-1 baseline (YOLOv1 fixture + отчёт) |
+| [yolov1-followup.md](yolov1-followup.md) | Follow-up по качеству и графу `CITES` |
 
 ## Ориентиры из roadmap
 

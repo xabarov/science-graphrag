@@ -35,6 +35,10 @@ class Settings(BaseSettings):
     vl_model: str = Field(default="qwen/qwen3-vl-235b-a22b-instruct")
     vl_max_pages: int = Field(default=16)
     vl_dpi: int = Field(default=144)
+    reuse_cached_markdown: bool = Field(
+        default=True,
+        description="Reuse cached article.md for repeated PDF ingests when available.",
+    )
     embedding_model: str | None = Field(
         default=None,
         description="If set, use sentence-transformers; else deterministic hash vectors.",

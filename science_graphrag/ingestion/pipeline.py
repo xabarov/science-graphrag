@@ -42,10 +42,58 @@ def _slug(value: str) -> str:
     return slug or "document"
 
 
+def _article_slug(path: Path) -> str:
+    return _slug(path.stem)
+
+
+def _canonical_article_rel(source_path: Path) -> Path:
+    return Path("articles") / _article_slug(source_path) / "article.md"
+
+
+def _canonical_diagnostics_rel(source_path: Path) -> Path:
+    return Path("articles") / _article_slug(source_path) / "extraction_diagnostics.json"
+
+
+def _strip_artifact_header(text: str) -> str:
+    lines = text.splitlines()
+    if lines and lines[0].startswith("<!-- ") and "extraction_mode=" in lines[0]:
+        lines = lines[2:] if len(lines) > 1 and lines[1] == "" else lines[1:]
+    return "\n".join(lines)
+
+
+def _read_cached_markdown(settings: Settings, source_path: Path) -> tuple[str, str] | None:
+    artifact_root = Path(settings.artifact_root)
+    canonical = artifact_root / _canonical_article_rel(source_path)
+    candidates = [canonical]
+    legacy = sorted(
+        (artifact_root / "ingestion").glob(f"*/{_article_slug(source_path)}/article.md"),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True,
+    )
+    candidates.extend(legacy)
+    for candidate in candidates:
+        if not candidate.exists():
+            continue
+        text = candidate.read_text(encoding="utf-8")
+        first_line = text.splitlines()[0] if text.splitlines() else ""
+        mode = "cached-markdown"
+        mode_match = re.search(r"extraction_mode=([a-zA-Z0-9\\-]+)", first_line)
+        if mode_match:
+            mode = mode_match.group(1)
+        log.info("Reusing cached article markdown for %s from %s", source_path.name, candidate)
+        return _strip_artifact_header(text), mode
+    return None
+
+
 def _markdown_from_path(path: Path, settings: Settings) -> tuple[str, str]:
     suf = path.suffix.lower()
     if suf != ".pdf":
         return path.read_text(encoding="utf-8", errors="replace"), "plain-text"
+
+    if settings.reuse_cached_markdown:
+        cached = _read_cached_markdown(settings, path)
+        if cached is not None:
+            return cached
 
     with chain_span(
         "pdf_to_markdown",
@@ -106,10 +154,12 @@ def _write_markdown_artifact(
     extraction_mode: str,
 ) -> Path:
     artifact_store = BlobStore(settings.artifact_root)
-    slug = _slug(source_path.stem)
+    slug = _article_slug(source_path)
     artifact_rel = Path("ingestion") / document_id / slug / "article.md"
     header = f"<!-- source={source_path.name} extraction_mode={extraction_mode} -->\n\n"
-    return artifact_store.write_artifact(artifact_rel, header + markdown)
+    body = header + markdown
+    artifact_store.write_artifact(_canonical_article_rel(source_path), body)
+    return artifact_store.write_artifact(artifact_rel, body)
 
 
 def _write_extraction_diagnostics_json(
@@ -120,8 +170,9 @@ def _write_extraction_diagnostics_json(
     diagnostics_json: str,
 ) -> Path:
     artifact_store = BlobStore(settings.artifact_root)
-    slug = _slug(source_path.stem)
+    slug = _article_slug(source_path)
     artifact_rel = Path("ingestion") / document_id / slug / "extraction_diagnostics.json"
+    artifact_store.write_artifact(_canonical_diagnostics_rel(source_path), diagnostics_json)
     return artifact_store.write_artifact(artifact_rel, diagnostics_json)
 
 

@@ -24,7 +24,12 @@ def _lines(text: str) -> list[str]:
 
 
 def _abstract_index(lines: list[str]) -> int | None:
-    return next((i for i, ln in enumerate(lines) if ln.lower().startswith("abstract")), None)
+    for i, ln in enumerate(lines):
+        if re.match(r"^#{0,3}\s*abstract\b", ln, re.IGNORECASE):
+            return i
+        if ln.lower().startswith("abstract") and not ln.lower().startswith("abstracts"):
+            return i
+    return None
 
 
 def _looks_like_author_line(line: str) -> bool:

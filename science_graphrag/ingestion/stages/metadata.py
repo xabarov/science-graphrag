@@ -17,7 +17,11 @@ def extract_metadata(text: str) -> WorkDraft:
     lines = [ln.strip() for ln in text.split("\n") if ln.strip()]
     title_lines, _, _ = split_front_matter(text)
     if title_lines:
-        title = " ".join(title_lines)[:500]
+        raw_title = " ".join(title_lines)
+        raw_title = re.sub(r"<!--.*?-->", "", raw_title)
+        raw_title = re.sub(r"```\w*", "", raw_title)
+        raw_title = re.sub(r"^[#*_`/\s]+", "", raw_title)
+        title = re.sub(r"\s+", " ", raw_title).strip()[:500]
     else:
         title = lines[0][:500] if lines else None
     norm = re.sub(r"\s+", " ", title).strip() if title else None
@@ -30,14 +34,20 @@ def extract_metadata(text: str) -> WorkDraft:
             year = None
     abs_start = None
     for i, ln in enumerate(lines):
-        if ln.lower().startswith("abstract"):
+        if re.match(r"^#{0,3}\s*abstract\b", ln, re.IGNORECASE):
+            abs_start = i
+            break
+        if ln.lower().startswith("abstract") and not ln.lower().startswith("abstracts"):
             abs_start = i
             break
     abstract = None
     if abs_start is not None:
         ab_lines: list[str] = []
         for ln in lines[abs_start + 1 : abs_start + 40]:
-            if ln.lower().startswith(("introduction", "keywords", "1.", "i.")):
+            low = ln.lower()
+            if low.startswith(
+                ("introduction", "keywords", "1.", "i."),
+            ) or re.match(r"^#{0,3}\s*(introduction|keywords|\d+\.)\b", ln, re.IGNORECASE):
                 break
             ab_lines.append(ln)
         abstract = " ".join(ab_lines).strip() or None

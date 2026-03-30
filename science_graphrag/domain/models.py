@@ -49,5 +49,9 @@ class AuthorshipDraft(BaseModel):
 class ReferenceDraft(BaseModel):
     raw_reference: str
     doi: str | None = None
+    arxiv_id: str | None = Field(
+        default=None,
+        description="arXiv id in canonical 1506.02640 form when cited without DOI",
+    )
     title: str | None = None
     year: int | None = None

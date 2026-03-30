@@ -1,0 +1,364 @@
+{
+  "case_id": "yolov1",
+  "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/yolov1",
+  "diagnostics": {
+    "document_id": "yolov1",
+    "source_name": "yolov1",
+    "markdown_source": "benchmark",
+    "metadata_source": "heuristic",
+    "authorships_source": "heuristic",
+    "references_source": "heuristic",
+    "extraction_llm_enabled": false,
+    "extraction_llm_model": null,
+    "fallback_reasons": [
+      {
+        "stage": "all",
+        "reason": "disabled",
+        "detail": "extraction_llm_enabled=false"
+      }
+    ]
+  },
+  "metrics": {
+    "metadata": {
+      "title_exact_normalized": true,
+      "year_exact": null,
+      "abstract_prefix_ok": true,
+      "doi_match_expected": null,
+      "arxiv_match_expected": null,
+      "work_type_match": null
+    },
+    "authorships": {
+      "names_precision": 1.0,
+      "names_recall": 1.0,
+      "names_f1": 1.0,
+      "names_tp_fp_fn": {
+        "tp": 4,
+        "fp": 0,
+        "fn": 0
+      },
+      "order_accuracy": 1.0,
+      "order_hits": 4,
+      "affiliation_jaccard_macro_on_matched_authors": 0.625,
+      "affiliations_precision": 1.0,
+      "affiliations_recall": 0.6666666666666666,
+      "affiliations_f1": 0.8,
+      "pred_count": 4,
+      "gold_count": 4
+    },
+    "references": {
+      "count": 24,
+      "expected_count": 24,
+      "min_count": 23,
+      "count_ok": true,
+      "count_delta": 0,
+      "sample_arxiv_precision": 1.0,
+      "sample_arxiv_recall": 1.0,
+      "sample_arxiv_f1": 1.0,
+      "sample_arxiv_tp_fp_fn": {
+        "tp": 8,
+        "fp": 0,
+        "fn": 0
+      },
+      "predicted_arxiv_ids": [
+        "1207.0580",
+        "1310.1531",
+        "1312.4400",
+        "1406.4729",
+        "1504.08083",
+        "1505.00110",
+        "1505.01749",
+        "1506.06981"
+      ],
+      "sample_doi_precision": 1.0,
+      "sample_doi_recall": 1.0,
+      "sample_doi_f1": 1.0
+    }
+  },
+  "predicted": {
+    "work_metadata": {
+      "title": "You Only Look Once: Unified, Real-Time Object Detection",
+      "normalized_title": "You Only Look Once: Unified, Real-Time Object Detection",
+      "abstract": "We present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance. Our unified architecture is extremely fast. Our base YOLO model processes images in real-time at 45 frames per second. A smaller version of the network, Fast YOLO, processes an astounding 155 frames per second while still achieving double the mAP of other real-time detectors. Compared to state-of-the-art detection systems, YOLO makes more localization errors but is less likely to predict false positives on background. Finally, YOLO learns very general representations of objects. It outperforms other detection methods, including DPM and R-CNN, when generalizing from natural images to other domains like artwork. ## 1. Introduction Humans glance at an image and instantly know what objects are in the image, where they are, and how they interact. The human visual system is fast and accurate, allowing us to perform complex tasks like driving with little conscious thought. Fast, accurate algorithms for object detection would allow computers to drive cars without specialized sensors, enable assistive devices to convey real-time scene information to human users, and unlock the potential for general purpose, responsive robotic systems. Current detection systems repurpose classifiers to perform detection. To detect an object, these systems take a classifier for that object and evaluate it at various locations and scales in a test image. Systems like deformable parts models (DPM) use a sliding window approach where the classifier is run at evenly spaced locations over the entire image [10]. More recent approaches like R-CNN use region proposal methods to first generate potential bounding boxes in an image and then run a classifier on these proposed boxes. After classification, post-processing is used to refine the bounding boxes, eliminate duplicate detections, and rescore the boxes based on other objects in the scene [13]. These complex pipelines are slow and hard to optimize because each individual component must be trained separately. We reframe object detection as a single regression problem, straight from image pixels to bounding box coordinates and class probabilities. Using our system, you only look once (YOLO) at an image to predict what objects are present and where they are. YOLO is refreshingly simple: see Figure 1. A single convolutional network simultaneously predicts multiple bounding boxes and class probabilities for those boxes. YOLO trains on full images and directly optimizes detection performance. This unified model has several benefits over traditional methods of object detection. First, YOLO is extremely fast. Since we frame detection as a regression problem we don’t need a complex pipeline. We simply run our neural network on a new image at test time to predict detections. Our base network runs at 45 frames per second with no batch processing on a Titan X GPU and a fast version runs at more than 150 fps. This means we can process streaming video in real-time with less than 25 milliseconds of latency. Furthermore, YOLO achieves more than twice the mean average precision of other real-time systems. For a demo of our system running in real-time on a webcam please see our project webpage: http://pjreddie.com/yolo/. Second, YOLO reasons globally about the image when Figure 1: The YOLO Detection System. Processing images with YOLO is simple and straightforward. Our system (1) resizes the input image to 448 × 448, (2) runs a single convolutional network on the image, and (3) thresholds the resulting detections by the model’s confidence. making predictions. Unlike sliding window and region proposal-based techniques, YOLO sees the entire image during training and test time so it implicitly encodes contextual information about classes as well as their appearance. Fast R-CNN, a top detection method [14], mistakes background patches in an image for objects because it can’t see the larger context. YOLO makes less than half the number of background errors compared to Fast R-CNN. Third, YOLO learns generalizable representations of objects. When trained on natural images and tested on artwork, YOLO outperforms top detection methods like DPM and R-CNN by a wide margin. Since YOLO is highly generalizable it is less likely to break down when applied to new domains or unexpected inputs. YOLO still lags behind state-of-the-art detection systems in accuracy. While it can quickly identify objects in images it struggles to precisely localize some objects, especially small ones. We examine these tradeoffs further in our experiments. All of our training and testing code is open source. A variety of pretrained models are also available to download. ## 2. Unified Detection We unify the separate components of object detection into a single neural network. Our network uses features from the entire image to predict each bounding box. It also predicts all bounding boxes across all classes for an image simultaneously. This means our network reasons globally about the full image and all the objects in the image. The YOLO design enables end-to-end training and real-time speeds while maintaining high average precision. Our system divides the input image into an $S \\times S$ grid. If the center of an object falls into a grid cell, that grid cell is responsible for detecting that object. Each grid cell predicts $B$ bounding boxes and confidence scores for those boxes. These confidence scores reflect how confident the model is that the box contains an object and also how accurate it thinks the box is that it predicts. Formally we define confidence as $\\text{Pr(Object)} \\times \\text{IOU}_{\\text{pred}}^{\\text{truth}}$. If no object exists in that cell, the confidence scores should be zero. Otherwise we want the confidence score to equal the intersection over union (IOU) between the predicted box and the ground truth. Each bounding box consists of 5 predictions: $x$, $y$, $w$, $h$, and confidence. The $(x, y)$ coordinates represent the center of the box relative to the bounds of the grid cell. The width and height are predicted relative to the whole image. Finally the confidence prediction represents the IOU between the predicted box and any ground truth box. Each grid cell also predicts $C$ conditional class probabilities, $\\text{Pr(Class}_i|\\text{Object})$. These probabilities are conditioned on the grid cell containing an object. We only predict one set of class probabilities per grid cell, regardless of the number of boxes $B$. At test time we multiply the conditional class probabilities and the individual box confidence predictions, $\\text{Pr(Class}_i|\\text{Object}) \\times \\text{Pr(Object)} \\times \\text{IOU}_{\\text{pred}}^{\\text{truth}} = \\text{Pr(Class}_i) \\times \\text{IOU}_{\\text{pred}}^{\\text{truth}} \\quad (1)$ which gives us class-specific confidence scores for each box. These scores encode both the probability of that class appearing in the box and how well the predicted box fits the object. Figure 2: The Model. Our system models detection as a regression problem. It divides the image into an $S \\times S$ grid and for each grid cell predicts $B$ bounding boxes, confidence for those boxes, and $C$ class probabilities. These predictions are encoded as an $S \\times S \\times (B * 5 + C)$ tensor. For evaluating YOLO on PASCAL VOC, we use $S = 7$, $B = 2$. PASCAL VOC has 20 labelled classes so $C = 20$. Our final prediction is a $7 \\times 7 \\times 30$ tensor.",
+      "publication_year": null,
+      "doi": null,
+      "arxiv_id": "1505.00110",
+      "language": null,
+      "venue_name": null,
+      "work_type": "unknown",
+      "openalex_id": null,
+      "fingerprint": "f508bc24aed9a4f4",
+      "ingestion_confidence": 0.4,
+      "source_metadata": {}
+    },
+    "authorships": [
+      {
+        "author_position": 1,
+        "author_raw_name": "Joseph Redmon",
+        "raw_affiliations": [
+          "University of Washington"
+        ],
+        "is_corresponding": null,
+        "email": null
+      },
+      {
+        "author_position": 2,
+        "author_raw_name": "Santosh Divvala",
+        "raw_affiliations": [
+          "University of Washington",
+          "Facebook AI Research"
+        ],
+        "is_corresponding": null,
+        "email": null
+      },
+      {
+        "author_position": 3,
+        "author_raw_name": "Ross Girshick",
+        "raw_affiliations": [
+          "Facebook AI Research"
+        ],
+        "is_corresponding": null,
+        "email": null
+      },
+      {
+        "author_position": 4,
+        "author_raw_name": "Ali Farhadi",
+        "raw_affiliations": [
+          "University of Washington",
+          "Facebook AI Research"
+        ],
+        "is_corresponding": null,
+        "email": null
+      }
+    ],
+    "references": [
+      {
+        "raw_reference": "M. B. Blaschko and C. H. Lampert. Learning to localize objects with structured output regression. In Computer Vision–ECCV 2008, pages 2–15. Springer, 2008. 4",
+        "doi": null,
+        "arxiv_id": null,
+        "title": null,
+        "year": 2008
+      },
+      {
+        "raw_reference": "L. Bourdev and J. Malik. Poselets: Body part detectors trained using 3d human pose annotations. In International Conference on Computer Vision (ICCV), 2009. 8",
+        "doi": null,
+        "arxiv_id": null,
+        "title": null,
+        "year": 2009
+      },
+      {
+        "raw_reference": "H. Cai, Q. Wu, T. Corradi, and P. Hall. The cross-depiction problem: Computer vision algorithms for recognising objects in artwork and in photographs. arXiv preprint arXiv:1505.00110, 2015. 7",
+        "doi": null,
+        "arxiv_id": "1505.00110",
+        "title": null,
+        "year": 2015
+      },
+      {
+        "raw_reference": "N. Dalal and B. Triggs. Histograms of oriented gradients for human detection. In Computer Vision and Pattern Recognition, 2005. CVPR 2005. IEEE Computer Society Conference on, volume 1, pages 886–893. IEEE, 2005. 4, 8",
+        "doi": null,
+        "arxiv_id": null,
+        "title": null,
+        "year": 2005
+      },
+      {
+        "raw_reference": "T. Dean, M. Ruzon, M. Segal, J. Shlens, S. Vijayanarasimhan, J. Yagnik, et al. Fast, accurate detection of 100,000 object classes on a single machine. In Computer Vision and Pattern Recognition (CVPR), 2013 IEEE Conference on, pages 1814–1821. IEEE, 2013. 5",
+        "doi": null,
+        "arxiv_id": null,
+        "title": null,
+        "year": 2013
+      },
+      {
+        "raw_reference": "J. Donahue, Y. Jia, O. Vinyals, J. Hoffman, N. Zhang, E. Tzeng, and T. Darrell. Decaf: A deep convolutional activation feature for generic visual recognition. arXiv preprint arXiv:1310.1531, 2013. 4",
+        "doi": null,
+        "arxiv_id": "1310.1531",
+        "title": null,
+        "year": 2013
+      },
+      {
+        "raw_reference": "J. Dong, Q. Chen, S. Yan, and A. Yuille. Towards unified object detection and semantic segmentation. In Computer Vision–ECCV 2014, pages 299–314. Springer, 2014. 7",
+        "doi": null,
+        "arxiv_id": null,
+        "title": null,
+        "year": 2014
+      },
+      {
+        "raw_reference": "D. Erhan, C. Szegedy, A. Toshev, and D. Anguelov. Scalable object detection using deep neural networks. In Computer Vision and Pattern Recognition (CVPR), 2014 IEEE Conference on, pages 2155–2162. IEEE, 2014. 5, 6",
+        "doi": null,
+        "arxiv_id": null,
+        "title": null,
+        "year": 2014
+      },
+      {
+        "raw_reference": "M. Everingham, S. M. A. Eslami, L. Van Gool, C. K. I. Williams, J. Winn, and A. Zisserman. The pascal visual object classes challenge: A retrospective. International Journal of Computer Vision, 111(1):98–136, Jan. 2015. 2",
+        "doi": null,
+        "arxiv_id": null,
+        "title": null,
+        "year": 2015
+      },
+      {
+        "raw_reference": "P. F. Felzenszwalb, R. B. Girshick, D. McAllester, and D. Ramanan. Object detection with discriminatively trained part based models. IEEE Transactions on Pattern Analysis and Machine Intelligence, 32(9):1627–1645, 2010. 1, 4",
+        "doi": null,
+        "arxiv_id": null,
+        "title": null,
+        "year": 2010
+      },
+      {
+        "raw_reference": "S. Gidaris and N. Komodakis. Object detection via a multi-region & semantic segmentation-aware CNN model. CoRR, abs/1505.01749, 2015. 7",
+        "doi": null,
+        "arxiv_id": "1505.01749",
+        "title": null,
+        "year": 2015
+      },
+      {
+        "raw_reference": "S. Ginosar, D. Haas, T. Brown, and J. Malik. Detecting people in cubist art. In Computer Vision-ECCV 2014 Workshops, pages 101–116. Springer, 2014. 7",
+        "doi": null,
+        "arxiv_id": null,
+        "title": null,
+        "year": 2014
+      },
+      {
+        "raw_reference": "R. Girshick, J. Donahue, T. Darrell, and J. Malik. Rich feature hierarchies for accurate object detection and semantic segmentation. In Computer Vision and Pattern Recognition (CVPR), 2014 IEEE Conference on, pages 580–587. IEEE, 2014. 1, 4, 7",
+        "doi": null,
+        "arxiv_id": null,
+        "title": null,
+        "year": 2014
+      },
+      {
+        "raw_reference": "R. B. Girshick. Fast R-CNN. CoRR, abs/1504.08083, 2015. 2, 5, 6, 7",
+        "doi": null,
+        "arxiv_id": "1504.08083",
+        "title": null,
+        "year": 2015
+      },
+      {
+        "raw_reference": "S. Gould, T. Gao, and D. Koller. Region-based segmentation and object detection. In Advances in neural information processing systems, pages 655–663, 2009. 4",
+        "doi": null,
+        "arxiv_id": null,
+        "title": null,
+        "year": 2009
+      },
+      {
+        "raw_reference": "B. Hariharan, P. Arbeláez, R. Girshick, and J. Malik. Simultaneous detection and segmentation. In Computer Vision–ECCV 2014, pages 297–312. Springer, 2014. 7",
+        "doi": null,
+        "arxiv_id": null,
+        "title": null,
+        "year": 2014
+      },
+      {
+        "raw_reference": "K. He, X. Zhang, S. Ren, and J. Sun. Spatial pyramid pooling in deep convolutional networks for visual recognition. arXiv preprint arXiv:1406.4729, 2014. 5",
+        "doi": null,
+        "arxiv_id": "1406.4729",
+        "title": null,
+        "year": 2014
+      },
+      {
+        "raw_reference": "G. E. Hinton, N. Srivastava, A. Krizhevsky, I. Sutskever, and R. R. Salakhutdinov. Improving neural networks by preventing co-adaptation of feature detectors. arXiv preprint arXiv:1207.0580, 2012. 4",
+        "doi": null,
+        "arxiv_id": "1207.0580",
+        "title": null,
+        "year": 2012
+      },
+      {
+        "raw_reference": "D. Hoiem, Y. Chodpathumwan, and Q. Dai. Diagnosing error in object detectors. In Computer Vision–ECCV 2012, pages 340–353. Springer, 2012. 6",
+        "doi": null,
+        "arxiv_id": null,
+        "title": null,
+        "year": 2012
+      },
+      {
+        "raw_reference": "K. Lenc and A. Vedaldi. R-cnn minus r. arXiv preprint arXiv:1506.06981, 2015. 5, 6",
+        "doi": null,
+        "arxiv_id": "1506.06981",
+        "title": null,
+        "year": 2015
+      },
+      {
+        "raw_reference": "R. Lienhart and J. Maydt. An extended set of haar-like features for rapid object detection. In Image Processing. 2002. Proceedings. 2002 International Conference on, volume 1, pages I–900. IEEE, 2002. 4",
+        "doi": null,
+        "arxiv_id": null,
+        "title": null,
+        "year": 2002
+      },
+      {
+        "raw_reference": "M. Lin, Q. Chen, and S. Yan. Network in network. CoRR, abs/1312.4400, 2013. 2",
+        "doi": null,
+        "arxiv_id": "1312.4400",
+        "title": null,
+        "year": 2013
+      },
+      {
+        "raw_reference": "D. G. Lowe. Object recognition from local scale-invariant features. In Computer vision, 1999. The proceedings of the seventh IEEE international conference on, volume 2, pages 1150–1157. Ieee, 1999. 4",
+        "doi": null,
+        "arxiv_id": null,
+        "title": null,
+        "year": 1999
+      },
+      {
+        "raw_reference": "D. Mishkin",
+        "doi": null,
+        "arxiv_id": null,
+        "title": null,
+        "year": null
+      }
+    ]
+  },
+  "gold": {
+    "case_id": "yolov1",
+    "schema_version": 1,
+    "description": "YOLOv1 CVPR-style markdown from PDF→MD; front matter wrapped in fenced ```markdown; ## Abstract / ## References.",
+    "work_metadata": {
+      "title": "You Only Look Once: Unified, Real-Time Object Detection",
+      "publication_year": null,
+      "abstract_prefix": "We present YOLO, a new approach to object detection.",
+      "doi": null,
+      "arxiv_id": null,
+      "venue_name": null,
+      "work_type": null
+    },
+    "authorships": [
+      {
+        "name": "Joseph Redmon",
+        "affiliations": [
+          "University of Washington"
+        ]
+      },
+      {
+        "name": "Santosh Divvala",
+        "affiliations": [
+          "University of Washington",
+          "Allen Institute for AI"
+        ]
+      },
+      {
+        "name": "Ross Girshick",
+        "affiliations": [
+          "Allen Institute for AI",
+          "Facebook AI Research"
+        ]
+      },
+      {
+        "name": "Ali Farhadi",
+        "affiliations": [
+          "University of Washington",
+          "Allen Institute for AI",
+          "Facebook AI Research"
+        ]
+      }
+    ],
+    "references": {
+      "expected_count": 24,
+      "min_count": 23,
+      "notes": "Fixture ends mid [24]; parsers should still recover prior entries.",
+      "sample_arxiv_ids": [
+        "1505.00110",
+        "1310.1531",
+        "1505.01749",
+        "1504.08083",
+        "1312.4400",
+        "1406.4729",
+        "1207.0580",
+        "1506.06981"
+      ],
+      "sample_dois": []
+    }
+  }
+}

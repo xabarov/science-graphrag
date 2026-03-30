@@ -13,6 +13,7 @@
 ## Gold-set (in-house)
 
 - **Размер:** 10–50 работ или фрагментов (Phase 4 roadmap); на старте — `tests/fixtures/` и расширяемый каталог.
+- **Первый кейс (layer-1 markdown):** `tests/fixtures/benchmarks/layer1/yolov1/` + раннер `eval/layer1/` — см. [yolov1-baseline.md](yolov1-baseline.md).
 - **Разметка:** DOI, title, year, список авторов (порядок), список DOI в references (где есть).
 - **Версионирование:** JSON рядом с фикстурами; изменения через PR + заметка в этом файле.
 

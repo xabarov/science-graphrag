@@ -34,7 +34,7 @@ def ingest_cmd(
         ...,
         exists=True,
         readable=True,
-        help="PDF or .txt file",
+        help="PDF, .txt, or .md (markdown read as article text)",
     ),
 ) -> None:
     """Run Phase 1 ingestion pipeline for one document."""
