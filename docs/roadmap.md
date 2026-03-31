@@ -256,6 +256,14 @@ flowchart LR
 3. **Gold для real-pdf:** заполнить `authorships[]` и при необходимости ужесточить `graph_expectations` под прогон **с включённым LLM** (отдельный job).
 4. Новые **families** и gold по мере Phase 2+ — [benchmarks/benchmark-expansion-v1.md](benchmarks/benchmark-expansion-v1.md).
 
+#### Execution policy (локальная разработка и автоматизация)
+
+- **Docker / Compose:** команды `docker` / `docker compose` выполняются **без `sudo`** (предполагается, что пользователь в группе `docker` на Linux или использует Docker Desktop).
+- **Прогоны benchmark и decision gate:** если по плану roadmap или runbook требуется прогон (suite, интеграция, агрегатор метрик), его можно выполнять **без дополнительного подтверждения** от владельца репозитория; перед прогоном при необходимости поднимают зависимости из `docker-compose.yml`.
+- **Пересборка API / образов:** при изменениях backend или для валидного e2e-прогона допустимы `docker compose up -d --build` и перезапуск `science-graphrag-api`, если это нужно получить согласованный результат теста.
+
+Подробнее по критериям GO/NO-GO: [runbooks/benchmark-decision-gate.md](runbooks/benchmark-decision-gate.md). Следующая волна работ (Wave A–D): [runbooks/roadmap-next-waves.md](runbooks/roadmap-next-waves.md).
+
 ---
 
 ### Phase 5 — Retrieval и GraphRAG backend
@@ -272,7 +280,7 @@ flowchart LR
 
 **Exit criteria:** end-to-end путь для **3–5** ключевых user journeys с воспроизводимым trace.
 
-**Статус Phase 5 (2026-03-31):** **MVP in progress** — реализован минимальный API-контур (`/health`, `POST /v1/query`) и прототип UI в `science_graphrag/api/static/index.html`; для полного UI-flow из Phase 6 ещё нужны отдельные UI-facing endpoints (`works`, `work detail`, `graph neighborhood`, `chunks/evidence`) и стабилизация контрактов.
+**Статус Phase 5 (2026-03-31):** **MVP in progress** — реализованы `GET /health`, `POST /v1/query`, UI-facing `GET /v1/works`, `GET /v1/works/{work_id}`, `GET /v1/works/{work_id}/graph`, `GET /v1/works/{work_id}/chunks` и прототип UI в `science_graphrag/api/static/index.html`; дальше — стабилизация контрактов, интеграционные тесты и (опционально) второй этап синтеза ответа.
 
 ---
 
@@ -369,6 +377,7 @@ flowchart TD
 
 | Версия | Дата | Изменения |
 |--------|------|-----------|
+| 1.2 | 2026-03-31 | Phase 4/7: зафиксирована **Execution policy** (Docker/compose без `sudo`, автономные прогоны benchmark/decision gate, допустимая пересборка API); добавлен [runbooks/roadmap-next-waves.md](runbooks/roadmap-next-waves.md) (Wave A–D). |
 | 1.1 | 2026-03-31 | Phase 5/6 bridge: реализованы `GET /v1/works` и связанные endpoints по [frontend-ui-api-contracts-v1.md](specs/frontend-ui-api-contracts-v1.md); UI-прототип показывает список works; layer-1 метрики: нормализация unicode-дефисов в `abstract_prefix`; semantic extraction: третья попытка (micro slice); Phase 7: pilot checklist + CI шаг `aggregate_benchmark_metrics.py`. После обновления gold перезапустите LLM suite и обновите `eval/results/current-*.json`. |
 | 1.0 | 2026-03-31 | Phase 5/6 bridge: зафиксирован параллельный frontend-трек (`shell + mocks + contract-first`), добавлены UI API contracts v1 и общий backlog для frontend shell + backend bridge endpoints; roadmap синхронизирован с фактическим статусом API MVP (`POST /v1/query`). |
 | 0.9 | 2026-03-31 | Phase 4: зафиксирована политика — ручные/репрезентативные бенчмарки с **LLM** как эталон качества; без LLM — только быстрые эвристики / merge CI. |

@@ -15,9 +15,15 @@
 
 ## Compose
 
-- Bring up dependencies with project `docker-compose.yml` (Neo4j bolt port, Postgres, Qdrant as configured locally).
+- Bring up dependencies with project `docker-compose.yml` (Neo4j bolt port, Postgres, Qdrant as configured locally). Use **`docker compose` without `sudo`** (Linux: user in `docker` group; or Docker Desktop).
 - Install package: `pip install -e ".[dev]"(embed optional for sentence-transformers)`.
 - Initialize SQL schema via first ingest or app that calls `init_db`.
+- Rebuild after backend changes when validating e2e: e.g. `docker compose up -d --build` (see roadmap **Execution policy**).
+
+## Benchmarks and decision gate
+
+- Full LLM benchmark runs and the metrics aggregator may be executed as part of roadmap validation **without extra confirmation**; ensure `.env` has LLM keys for tier `nightly_*` (see [eval/README.md](../../eval/README.md)).
+- After runs: `.venv/bin/python scripts/aggregate_benchmark_metrics.py` — see [benchmark-decision-gate.md](benchmark-decision-gate.md).
 
 ## Ingest
 
