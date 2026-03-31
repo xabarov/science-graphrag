@@ -23,6 +23,15 @@ def _norm_ws(s: str | None) -> str:
     return re.sub(r"\s+", " ", s.strip()).lower()
 
 
+def _norm_abstract_match(s: str | None) -> str:
+    """Normalize for abstract prefix checks (PDF/LLM unicode hyphen variants)."""
+
+    t = _norm_ws(s)
+    for ch in ("\u2010", "\u2011", "\u2012", "\u2013", "\u2014", "\u2212"):
+        t = t.replace(ch, "-")
+    return t
+
+
 def _norm_aff(s: str) -> str:
     return _norm_ws(s)
 
@@ -97,8 +106,8 @@ def _metadata_scores(work: WorkDraft, gold: Layer1GoldSpec) -> dict[str, Any]:
         year_match = work.publication_year == gm.publication_year
     abstract_ok = None
     if gm.abstract_prefix:
-        ab = _norm_ws(work.abstract)
-        abstract_ok = ab.startswith(_norm_ws(gm.abstract_prefix))
+        ab = _norm_abstract_match(work.abstract)
+        abstract_ok = ab.startswith(_norm_abstract_match(gm.abstract_prefix))
     doi_match = None
     if gm.doi is not None:
         doi_match = normalize_doi(work.doi) == normalize_doi(gm.doi)

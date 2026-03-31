@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import re
-from typing import Literal, cast
+from typing import Any, Literal, cast
 
 from science_graphrag.config import Settings
 from science_graphrag.domain.semantic_models import (
@@ -29,6 +29,7 @@ _SEM_REF_HEAD_RE = re.compile(
 
 MAX_SEMANTIC_BODY_CHARS = 12_000
 MAX_SEMANTIC_BODY_CHARS_RETRY = 6_000
+MAX_SEMANTIC_BODY_CHARS_MICRO = 4_000
 
 SYSTEM_SEMANTIC = (
     "Extract methods and datasets for this paper only. Output must stay small enough to "
@@ -63,6 +64,7 @@ def semantic_prompt_fingerprint() -> str:
             SYSTEM_SEMANTIC,
             SYSTEM_SEMANTIC_COMPACT,
             f"MAX_SEMANTIC_BODY_CHARS={MAX_SEMANTIC_BODY_CHARS}",
+            f"MAX_SEMANTIC_BODY_CHARS_MICRO={MAX_SEMANTIC_BODY_CHARS_MICRO}",
             "bundle_schema=v1",
         ),
     )
@@ -228,6 +230,27 @@ def _semantic_early_exit(
     return None
 
 
+def _semantic_compact_slice_attempt(
+    *,
+    call_extract: Any,
+    normalized_markdown: str,
+    max_chars: int,
+    max_tokens: int,
+    attempt_label: str,
+) -> tuple[SemanticMethodDatasetBundleLLM | None, str | None]:
+    """Run SYSTEM_SEMANTIC_COMPACT on a truncated body slice."""
+
+    body = semantic_body_slice(normalized_markdown, max_chars=max_chars)
+    if not body.strip():
+        return None, None
+    return call_extract(
+        system=SYSTEM_SEMANTIC_COMPACT,
+        slice_body=body,
+        max_tokens=max_tokens,
+        attempt_label=attempt_label,
+    )
+
+
 def _semantic_llm_bundle_attempts(
     api_key: str,
     settings: Settings,
@@ -279,24 +302,36 @@ def _semantic_llm_bundle_attempts(
     )
     if err or parsed is None:
         retry_tokens = min(settings.semantic_extraction_max_tokens + 8192, 32_768)
-        body_compact = semantic_body_slice(
-            normalized_markdown,
+        parsed_retry, err_retry = _semantic_compact_slice_attempt(
+            call_extract=_call_extract,
+            normalized_markdown=normalized_markdown,
             max_chars=MAX_SEMANTIC_BODY_CHARS_RETRY,
+            max_tokens=retry_tokens,
+            attempt_label="compact_retry",
         )
-        if body_compact.strip():
-            parsed_retry, err_retry = _call_extract(
-                system=SYSTEM_SEMANTIC_COMPACT,
-                slice_body=body_compact,
-                max_tokens=retry_tokens,
-                attempt_label="compact_retry",
-            )
-            if parsed_retry is not None and not err_retry:
-                parsed = parsed_retry
-                err = None
-            elif err_retry:
-                err = err_retry
-            elif parsed_retry is None:
-                err = err_retry or "llm_empty_result"
+        if parsed_retry is not None and not err_retry:
+            parsed = parsed_retry
+            err = None
+        elif err_retry:
+            err = err_retry
+        elif parsed_retry is None:
+            err = err_retry or "llm_empty_result"
+    if err or parsed is None:
+        micro_tokens = min(settings.semantic_extraction_max_tokens + 12_288, 32_768)
+        parsed_micro, err_micro = _semantic_compact_slice_attempt(
+            call_extract=_call_extract,
+            normalized_markdown=normalized_markdown,
+            max_chars=MAX_SEMANTIC_BODY_CHARS_MICRO,
+            max_tokens=micro_tokens,
+            attempt_label="micro_retry",
+        )
+        if parsed_micro is not None and not err_micro:
+            parsed = parsed_micro
+            err = None
+        elif err_micro:
+            err = err_micro
+        elif parsed_micro is None:
+            err = err_micro or "llm_empty_result"
     return parsed, err
 
 

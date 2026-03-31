@@ -146,3 +146,49 @@ class QdrantChunkStore:
                 },
             )
         return out
+
+    def count_chunks_for_work(self, *, work_id: str) -> int:
+        """Approximate count of points for a work (for pagination total)."""
+
+        flt = Filter(
+            must=[FieldCondition(key="work_id", match=MatchValue(value=work_id))],
+        )
+        res = self._client.count(
+            collection_name=self._collection,
+            count_filter=flt,
+            exact=True,
+        )
+        return int(res.count)
+
+    def scroll_chunks_for_work(
+        self,
+        *,
+        work_id: str,
+        limit: int = 50,
+        offset: int | str | None = None,
+    ) -> tuple[list[dict[str, Any]], int | str | None]:
+        """List chunk payloads for one work (ordered by scroll order)."""
+
+        flt = Filter(
+            must=[FieldCondition(key="work_id", match=MatchValue(value=work_id))],
+        )
+        records, next_offset = self._client.scroll(
+            collection_name=self._collection,
+            scroll_filter=flt,
+            limit=limit,
+            offset=offset,
+            with_payload=True,
+        )
+        out: list[dict[str, Any]] = []
+        for rec in records:
+            payload = rec.payload or {}
+            out.append(
+                {
+                    "document_id": payload.get("document_id"),
+                    "chunk_fingerprint": payload.get("chunk_fingerprint"),
+                    "section_path": payload.get("section_path"),
+                    "text": payload.get("text"),
+                    "chunk_index": payload.get("chunk_index"),
+                },
+            )
+        return out, next_offset

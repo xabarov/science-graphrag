@@ -5,11 +5,12 @@ from __future__ import annotations
 from pathlib import Path
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from science_graphrag.api import works as works_api
 from science_graphrag.api.retrieval import GroundedAnswer, answer_query
 from science_graphrag.config import get_settings
 
@@ -32,6 +33,11 @@ class QueryResponse(BaseModel):
     retrieval_trace: dict
 
 
+class WorksListResponse(BaseModel):
+    items: list[dict]
+    total: int
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -51,6 +57,52 @@ def post_query(body: QueryRequest) -> QueryResponse:
         graph_context=result.graph_context,
         retrieval_trace=result.retrieval_trace,
     )
+
+
+@app.get("/v1/works", response_model=WorksListResponse)
+def get_works_list(
+    q: str | None = Query(default=None),
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+) -> WorksListResponse:
+    items, total = works_api.list_works(
+        get_settings(),
+        q=q,
+        limit=limit,
+        offset=offset,
+    )
+    return WorksListResponse(items=items, total=total)
+
+
+@app.get("/v1/works/{work_id}")
+def get_work_by_id(work_id: str) -> dict:
+    detail = works_api.get_work_detail(get_settings(), work_id)
+    if not detail:
+        raise HTTPException(status_code=404, detail="work_not_found")
+    chunks = works_api.work_chunks(get_settings(), work_id, limit=1, offset=0)
+    if "error" not in chunks:
+        detail["ingestion"]["has_chunks"] = int(chunks.get("total", 0)) > 0
+    return detail
+
+
+@app.get("/v1/works/{work_id}/graph")
+def get_work_graph(work_id: str) -> dict:
+    g = works_api.work_graph_neighborhood(get_settings(), work_id)
+    if not g:
+        raise HTTPException(status_code=404, detail="work_not_found")
+    return g
+
+
+@app.get("/v1/works/{work_id}/chunks")
+def get_work_chunks(
+    work_id: str,
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+) -> dict:
+    exists = works_api.get_work_detail(get_settings(), work_id)
+    if not exists:
+        raise HTTPException(status_code=404, detail="work_not_found")
+    return works_api.work_chunks(get_settings(), work_id, limit=limit, offset=offset)
 
 
 @app.get("/", response_class=HTMLResponse, response_model=None)

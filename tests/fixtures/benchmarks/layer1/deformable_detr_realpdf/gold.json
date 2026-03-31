@@ -13,10 +13,15 @@
   },
   "authorships": [],
   "references": {
-    "expected_count": 0,
-    "min_count": 0,
-    "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
-    "sample_arxiv_ids": [],
+    "expected_count": 44,
+    "min_count": 35,
+    "notes": "LLM extraction yields ~44 refs on this MD; calibrated from nightly suite.",
+    "sample_arxiv_ids": [
+      "2004.08483",
+      "2004.05150",
+      "1904.10509",
+      "2006.03555"
+    ],
     "sample_dois": []
   },
   "graph_expectations": {

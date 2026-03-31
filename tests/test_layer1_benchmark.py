@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from eval.layer1.metrics import prf1_tp_fp_fn, score_layer1
+from eval.layer1.metrics import _norm_abstract_match, prf1_tp_fp_fn, score_layer1
 from eval.layer1.runner import run_case
 from eval.layer1.spec import Layer1GoldSpec
 from science_graphrag.config import Settings
@@ -27,6 +27,13 @@ def test_layer1_gold_spec_loads() -> None:
     assert spec.case_id == "yolov1"
     assert len(spec.authorships) == 4
     assert spec.references.expected_count == 44
+
+
+def test_norm_abstract_match_hyphen_variants() -> None:
+    assert _norm_abstract_match("a\u2011b") == _norm_abstract_match("a-b")
+    assert _norm_abstract_match("Keypoint\u2011based").startswith(
+        _norm_abstract_match("Keypoint-"),
+    )
 
 
 def test_prf1_sets() -> None:

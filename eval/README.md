@@ -10,6 +10,8 @@
 
 **Сводка метрик по всем lane:** после прогонов выполните `.venv/bin/python scripts/aggregate_benchmark_metrics.py` — см. `eval/results/benchmark-metrics-summary.md`.
 
+**API (Phase 5/6 bridge):** `GET /v1/works`, `GET /v1/works/{work_id}`, `GET /v1/works/{work_id}/graph`, `GET /v1/works/{work_id}/chunks` — см. [`docs/specs/frontend-ui-api-contracts-v1.md`](../docs/specs/frontend-ui-api-contracts-v1.md); UI-прототип подгружает список works на `/`.
+
 ## Установка
 
 Из корня репозитория:

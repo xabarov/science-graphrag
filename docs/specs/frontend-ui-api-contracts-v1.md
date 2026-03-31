@@ -7,7 +7,8 @@ This document defines the minimum backend contracts required to move frontend fr
 Status by endpoint:
 
 - `POST /v1/query`: implemented (source of truth in `science_graphrag/api/main.py`)
-- other endpoints below: planned for Phase 5/6 bridge backlog
+- `GET /v1/works`, `GET /v1/works/{work_id}`, `GET /v1/works/{work_id}/graph`, `GET /v1/works/{work_id}/chunks`: implemented (same module; Neo4j + Qdrant)
+- other niceties below: optional backlog (filters, richer graph projection)
 
 ## Contract principles
 

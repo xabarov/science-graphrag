@@ -369,6 +369,7 @@ flowchart TD
 
 | Версия | Дата | Изменения |
 |--------|------|-----------|
+| 1.1 | 2026-03-31 | Phase 5/6 bridge: реализованы `GET /v1/works` и связанные endpoints по [frontend-ui-api-contracts-v1.md](specs/frontend-ui-api-contracts-v1.md); UI-прототип показывает список works; layer-1 метрики: нормализация unicode-дефисов в `abstract_prefix`; semantic extraction: третья попытка (micro slice); Phase 7: pilot checklist + CI шаг `aggregate_benchmark_metrics.py`. После обновления gold перезапустите LLM suite и обновите `eval/results/current-*.json`. |
 | 1.0 | 2026-03-31 | Phase 5/6 bridge: зафиксирован параллельный frontend-трек (`shell + mocks + contract-first`), добавлены UI API contracts v1 и общий backlog для frontend shell + backend bridge endpoints; roadmap синхронизирован с фактическим статусом API MVP (`POST /v1/query`). |
 | 0.9 | 2026-03-31 | Phase 4: зафиксирована политика — ручные/репрезентативные бенчмарки с **LLM** как эталон качества; без LLM — только быстрые эвристики / merge CI. |
 | 0.8 | 2026-03-31 | Phase 4/7: nightly CI Postgres + интеграции ingest/SQL/batch; layer1 + graph yolov1 бенчмарки без LLM; `case_tiers.json`, `--tier`; real-pdf gold: dedup graph, authorships для SSD/DETR. Phase 2/3: [adr/004-ontology-v1-scope.md](adr/004-ontology-v1-scope.md), [specs/extraction/semantic-method-dataset-v1.md](specs/extraction/semantic-method-dataset-v1.md) |

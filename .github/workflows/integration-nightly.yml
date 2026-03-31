@@ -96,3 +96,6 @@ jobs:
           SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED: "true"
           MAIN_LLM_API_KEY: ${{ secrets.MAIN_LLM_API_KEY }}
         run: science-graphrag-layer2-benchmark tests/fixtures/benchmarks/layer2 --suite --tier nightly_semantic --json-out eval/results/ci-layer2-nightly-semantic.json
+
+      - name: Aggregate benchmark metrics summary
+        run: python scripts/aggregate_benchmark_metrics.py

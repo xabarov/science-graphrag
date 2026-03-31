@@ -98,7 +98,12 @@
       </div>
     </main>
     <aside>
-      <h1>Graph context</h1>
+      <h1>Corpus (works)</h1>
+      <div class="card" id="worksBox">
+        <div class="muted">GET /v1/works</div>
+        <pre id="worksOut" class="muted">Loading…</pre>
+      </div>
+      <h1 style="margin-top:20px;">Graph context</h1>
       <div id="graph" class="card" hidden>
         <div class="muted">Methods</div>
         <div id="methods"></div>
@@ -111,6 +116,22 @@
   </div>
   <script>
     const $ = (id) => document.getElementById(id);
+    (async () => {
+      try {
+        const r = await fetch("/v1/works?limit=8");
+        if (!r.ok) {
+          $("worksOut").textContent = "Works list unavailable (" + r.status + ").";
+          return;
+        }
+        const j = await r.json();
+        const lines = (j.items || []).map(
+          (x) => (x.title || x.work_id || "").slice(0, 120),
+        );
+        $("worksOut").textContent = lines.length ? lines.join("\n") : "(no works in Neo4j)";
+      } catch (e) {
+        $("worksOut").textContent = "Could not load works.";
+      }
+    })();
     $("go").onclick = async () => {
       const query = $("q").value.trim();
       if (!query) return;
