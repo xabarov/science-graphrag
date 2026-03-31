@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import json
+import re
+import uuid
 from typing import Any
 
 from neo4j import Driver, GraphDatabase, NotificationClassification
 
 from science_graphrag.domain.authorship_ids import canonical_author_node_id
 from science_graphrag.domain.models import AuthorshipDraft, WorkDraft
+from science_graphrag.domain.semantic_models import SemanticExtractionV1
 
 
 class Neo4jGraphStore:
@@ -45,6 +49,14 @@ class Neo4jGraphStore:
             (
                 "CREATE CONSTRAINT venue_id_unique IF NOT EXISTS "
                 "FOR (v:Venue) REQUIRE v.id IS UNIQUE"
+            ),
+            (
+                "CREATE CONSTRAINT method_id_unique IF NOT EXISTS "
+                "FOR (m:Method) REQUIRE m.id IS UNIQUE"
+            ),
+            (
+                "CREATE CONSTRAINT dataset_id_unique IF NOT EXISTS "
+                "FOR (d:Dataset) REQUIRE d.id IS UNIQUE"
             ),
         ]
         with self._driver.session() as session:
@@ -293,3 +305,269 @@ class Neo4jGraphStore:
                         },
                     )
         return out
+
+    @staticmethod
+    def _semantic_method_id(name: str) -> str:
+        key = "method:" + re.sub(r"\s+", " ", name.strip().lower())
+        return str(uuid.uuid5(uuid.NAMESPACE_URL, key))
+
+    @staticmethod
+    def _semantic_dataset_id(name: str) -> str:
+        key = "dataset:" + re.sub(r"\s+", " ", name.strip().lower())
+        return str(uuid.uuid5(uuid.NAMESPACE_URL, key))
+
+    @staticmethod
+    def _semantic_provenance_json(evidence: list[Any]) -> str:
+        if not evidence:
+            return "[]"
+        payload = []
+        for item in evidence[:8]:
+            if hasattr(item, "model_dump"):
+                payload.append(item.model_dump(mode="json"))
+            else:
+                payload.append(item)
+        return json.dumps(payload, ensure_ascii=False)
+
+    def sync_work_semantic_layer(
+        self,
+        work_id: str,
+        extraction: SemanticExtractionV1,
+        *,
+        confidence_threshold: float = 0.35,
+    ) -> None:
+        """Project ontology-v1 Method/Dataset nodes and ADR-004 edges for one :Work."""
+
+        with self._driver.session() as session:
+            session.execute_write(
+                self._sync_semantic_tx,
+                work_id,
+                extraction,
+                confidence_threshold,
+            )
+
+    @staticmethod
+    def _sync_semantic_tx(
+        tx,
+        work_id: str,
+        extraction: SemanticExtractionV1,
+        confidence_threshold: float,
+    ) -> None:
+        tx.run(
+            """
+            MATCH (w:Work {id: $wid})-[r:USES_METHOD]->()
+            DELETE r
+            """,
+            wid=work_id,
+        )
+        tx.run(
+            """
+            MATCH (w:Work {id: $wid})-[r:EVALUATED_ON]->()
+            DELETE r
+            """,
+            wid=work_id,
+        )
+        tx.run(
+            """
+            MATCH (:Method)-[r:TRAINED_OR_TESTED_ON {source_work_id: $wid}]->(:Dataset)
+            DELETE r
+            """,
+            wid=work_id,
+        )
+
+        for m in extraction.methods:
+            if m.confidence < confidence_threshold:
+                continue
+            name = (m.name or "").strip()
+            if not name:
+                continue
+            mid = Neo4jGraphStore._semantic_method_id(name)
+            prov = Neo4jGraphStore._semantic_provenance_json(m.evidence)
+            desc = (m.description_short or "").strip() or None
+            tx.run(
+                """
+                MATCH (w:Work {id: $wid})
+                MERGE (x:Method {id: $mid})
+                SET x.name = $name,
+                    x.description_short = coalesce($desc, x.description_short),
+                    x.schema_version = 1
+                MERGE (w)-[r:USES_METHOD]->(x)
+                SET r.confidence = $conf,
+                    r.provenance_json = $prov,
+                    r.source_work_id = $wid
+                """,
+                wid=work_id,
+                mid=mid,
+                name=name[:500],
+                desc=desc,
+                conf=float(m.confidence),
+                prov=prov,
+            )
+
+        for d in extraction.datasets:
+            if d.confidence < confidence_threshold:
+                continue
+            name = (d.name or "").strip()
+            if not name:
+                continue
+            did = Neo4jGraphStore._semantic_dataset_id(name)
+            prov = Neo4jGraphStore._semantic_provenance_json(d.evidence)
+            tx.run(
+                """
+                MATCH (w:Work {id: $wid})
+                MERGE (y:Dataset {id: $did})
+                SET y.name = $name,
+                    y.schema_version = 1
+                MERGE (w)-[r:EVALUATED_ON]->(y)
+                SET r.confidence = $conf,
+                    r.provenance_json = $prov,
+                    r.source_work_id = $wid
+                """,
+                wid=work_id,
+                did=did,
+                name=name[:500],
+                conf=float(d.confidence),
+                prov=prov,
+            )
+
+        for rel in extraction.relations:
+            if rel.confidence < confidence_threshold:
+                continue
+            if rel.type != "trained_or_tested_on":
+                continue
+            mname: str | None = None
+            dname: str | None = None
+            if rel.from_.kind == "method" and rel.from_.name:
+                mname = rel.from_.name.strip()
+            if rel.to.kind == "dataset" and rel.to.name:
+                dname = rel.to.name.strip()
+            if (
+                rel.from_.kind == "dataset"
+                and rel.to.kind == "method"
+                and rel.from_.name
+                and rel.to.name
+            ):
+                dname = rel.from_.name.strip()
+                mname = rel.to.name.strip()
+            if not mname or not dname:
+                continue
+            mid = Neo4jGraphStore._semantic_method_id(mname)
+            did = Neo4jGraphStore._semantic_dataset_id(dname)
+            prov = Neo4jGraphStore._semantic_provenance_json(rel.evidence)
+            tx.run(
+                """
+                MERGE (mm:Method {id: $mid})
+                SET mm.name = coalesce(mm.name, $mname)
+                MERGE (dd:Dataset {id: $did})
+                SET dd.name = coalesce(dd.name, $dname)
+                MERGE (mm)-[rr:TRAINED_OR_TESTED_ON]->(dd)
+                SET rr.confidence = $conf,
+                    rr.provenance_json = $prov,
+                    rr.source_work_id = $wid
+                """,
+                mid=mid,
+                did=did,
+                mname=mname[:500],
+                dname=dname[:500],
+                conf=float(rel.confidence),
+                prov=prov,
+                wid=work_id,
+            )
+
+    def merge_work_into_canonical(self, keep_id: str, drop_id: str) -> None:
+        """
+        Re-point :CITES / version / semantic edges from duplicate ``drop_id`` onto ``keep_id``.
+
+        Removes ``drop_id`` only when it has no outgoing ``HAS_AUTHORSHIP`` (minimal Phase 1 aid).
+        """
+
+        if keep_id == drop_id:
+            return
+        with self._driver.session() as session:
+            session.execute_write(self._merge_work_tx, keep_id, drop_id)
+
+    @staticmethod
+    def _merge_work_tx(tx, keep_id: str, drop_id: str) -> None:
+        tx.run(
+            """
+            MATCH (k:Work {id: $keep}), (d:Work {id: $drop})
+            MATCH (o:Work)-[r:CITES]->(d)
+            MERGE (o)-[r2:CITES]->(k)
+            DELETE r
+            """,
+            keep=keep_id,
+            drop=drop_id,
+        )
+        tx.run(
+            """
+            MATCH (k:Work {id: $keep}), (d:Work {id: $drop})
+            MATCH (d)-[r:CITES]->(t:Work)
+            MERGE (k)-[r2:CITES]->(t)
+            DELETE r
+            """,
+            keep=keep_id,
+            drop=drop_id,
+        )
+        tx.run(
+            """
+            MATCH (k:Work {id: $keep}), (d:Work {id: $drop})
+            MATCH (d)-[r:RELATED_VERSION_OF]->(x:Work)
+            WHERE x.id <> $drop
+            MERGE (k)-[r2:RELATED_VERSION_OF]->(x)
+            DELETE r
+            """,
+            keep=keep_id,
+            drop=drop_id,
+        )
+        tx.run(
+            """
+            MATCH (k:Work {id: $keep}), (d:Work {id: $drop})
+            MATCH (x:Work)-[r:RELATED_VERSION_OF]->(d)
+            WHERE x.id <> $drop
+            MERGE (x)-[r2:RELATED_VERSION_OF]->(k)
+            DELETE r
+            """,
+            keep=keep_id,
+            drop=drop_id,
+        )
+        tx.run(
+            """
+            MATCH (k:Work {id: $keep}), (d:Work {id: $drop})
+            MATCH (d)-[r:USES_METHOD]->(m:Method)
+            MERGE (k)-[r2:USES_METHOD]->(m)
+            SET r2.confidence = coalesce(r.confidence, r2.confidence),
+                r2.provenance_json = coalesce(r.provenance_json, r2.provenance_json),
+                r2.source_work_id = $keep
+            DELETE r
+            """,
+            keep=keep_id,
+            drop=drop_id,
+        )
+        tx.run(
+            """
+            MATCH (k:Work {id: $keep}), (d:Work {id: $drop})
+            MATCH (d)-[r:EVALUATED_ON]->(ds:Dataset)
+            MERGE (k)-[r2:EVALUATED_ON]->(ds)
+            SET r2.confidence = coalesce(r.confidence, r2.confidence),
+                r2.provenance_json = coalesce(r.provenance_json, r2.provenance_json),
+                r2.source_work_id = $keep
+            DELETE r
+            """,
+            keep=keep_id,
+            drop=drop_id,
+        )
+        auth_row = tx.run(
+            """
+            MATCH (d:Work {id: $drop})-[:HAS_AUTHORSHIP]->(:Authorship)
+            RETURN count(*) AS n
+            """,
+            drop=drop_id,
+        ).single()
+        if auth_row and int(auth_row["n"]) > 0:
+            return
+        tx.run(
+            """
+            MATCH (d:Work {id: $drop})
+            DETACH DELETE d
+            """,
+            drop=drop_id,
+        )

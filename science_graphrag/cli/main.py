@@ -41,6 +41,24 @@ def ingest_cmd(
     run_ingest_cli(path)
 
 
+@app.command("merge-work")
+def merge_work_cmd(
+    keep_id: str = typer.Argument(..., help="Canonical Work.id to keep"),
+    drop_id: str = typer.Argument(..., help="Duplicate Work.id to re-point and delete"),
+) -> None:
+    """Re-point citations / semantic edges onto keep_id; delete drop_id if it has no authorships."""
+
+    s = get_settings()
+    neo = Neo4jGraphStore(s.neo4j_uri, s.neo4j_user, s.neo4j_password)
+    try:
+        neo.merge_work_into_canonical(keep_id, drop_id)
+    finally:
+        neo.close()
+    typer.echo(
+        f"merge_work_into_canonical keep={keep_id} drop={drop_id} (see logs if authorship blocked)"
+    )
+
+
 @app.command("ingest-corpus")
 def ingest_corpus_cmd(
     directory: Path = typer.Argument(

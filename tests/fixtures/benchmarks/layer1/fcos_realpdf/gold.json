@@ -1,11 +1,11 @@
 {
   "case_id": "fcos_realpdf",
   "schema_version": 1,
-  "description": "Real CV paper: PDF→text (pypdf) → structured MD. Tier: nightly_heavy. Authorships omitted (no comma-separated author line for heuristic).",
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
   "work_metadata": {
     "title": "FCOS: Fully Convolutional One-Stage Object Detection",
     "publication_year": null,
-    "abstract_prefix": "we propose a fully convolutional one-stage",
+    "abstract_prefix": "We propose a fully convolutional one-stage object detec- tor (FCOS) to s",
     "doi": null,
     "arxiv_id": null,
     "venue_name": null,
@@ -15,7 +15,7 @@
   "references": {
     "expected_count": 34,
     "min_count": 26,
-    "notes": "Counts from heuristic extract_references on this MD; PDF hyphenation may shift totals.",
+    "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
     "sample_arxiv_ids": [
       "1701.06659",
       "1509.04874",
@@ -25,13 +25,17 @@
   },
   "graph_expectations": {
     "min_cites": 0,
-    "max_cites": 44,
+    "max_cites": 54,
     "expected_cited_arxiv_ids": [
       "1701.06659",
       "1509.04874",
       "1804.02767"
     ],
     "max_duplicate_work_fingerprints": 8,
+    "min_authorships": 0,
+    "max_authorships": 8,
+    "min_institutions": 0,
+    "max_institutions": 8,
     "max_work_dedup_violations": 0
   }
 }

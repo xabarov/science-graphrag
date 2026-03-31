@@ -1,0 +1,9 @@
+{
+  "case_id": "no_llm_smoke",
+  "schema_version": 1,
+  "description": "Merge-safe semantic case: passes when LLM is off (empty predictions allowed).",
+  "min_method_names": 0,
+  "expected_method_names_normalized": [],
+  "expected_dataset_names_normalized": [],
+  "allow_empty_when_no_llm": true
+}

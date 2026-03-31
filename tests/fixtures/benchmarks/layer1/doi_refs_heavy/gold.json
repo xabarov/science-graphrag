@@ -30,6 +30,11 @@
   },
   "graph_expectations": {
     "min_authorships": 1,
-    "max_duplicate_work_fingerprints": 2
+    "max_duplicate_work_fingerprints": 2,
+    "max_work_dedup_violations": 0
+  },
+  "quality_thresholds": {
+    "require_reference_count_ok": true,
+    "min_sample_doi_f1": 0.7
   }
 }

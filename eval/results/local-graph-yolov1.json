@@ -1,0 +1,135 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:c5320748bf3712047f1f",
+    "semantic_prompt_fingerprint": "sha256-20:741929d62eafa6cf4e77",
+    "semantic_extraction_enabled": true
+  },
+  "case": {
+    "case_id": "yolov1",
+    "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/yolov1",
+    "document_id": "9eab017b-167b-4993-8032-2f56a5a7a202",
+    "work_id": "de222f97-f4ce-4f25-a535-8e215d32467b",
+    "metrics": {
+      "has_expectations": true,
+      "snapshot": {
+        "work_id": "de222f97-f4ce-4f25-a535-8e215d32467b",
+        "work_title": "You Only Look Once: Unified, Real-Time Object Detection",
+        "authorship_count": 4,
+        "institution_count": 2,
+        "cites_count": 23,
+        "cited_arxiv_ids": [
+          "1207.0580",
+          "1310.1531",
+          "1312.4400",
+          "1406.4729",
+          "1504.08083",
+          "1505.00110",
+          "1505.01749",
+          "1506.06981"
+        ],
+        "duplicate_work_fingerprints": 0,
+        "related_version_edge_count": 0,
+        "work_dedup_violation_count": 0
+      },
+      "cites_range_ok": true,
+      "authorships_range_ok": true,
+      "institutions_range_ok": true,
+      "cited_arxiv_precision": 1.0,
+      "cited_arxiv_recall": 1.0,
+      "cited_arxiv_f1": 1.0,
+      "cited_arxiv_tp_fp_fn": {
+        "tp": 8,
+        "fp": 0,
+        "fn": 0
+      },
+      "duplicate_work_fingerprints_ok": true,
+      "work_dedup_violations_ok": true,
+      "related_version_edges_ok": null
+    },
+    "gold": {
+      "case_id": "yolov1",
+      "schema_version": 1,
+      "description": "YOLOv1 CVPR-style markdown from PDF→MD; front matter wrapped in fenced ```markdown; ## Abstract / ## References.",
+      "work_metadata": {
+        "title": "You Only Look Once: Unified, Real-Time Object Detection",
+        "publication_year": null,
+        "abstract_prefix": "We present YOLO, a new approach to object detection.",
+        "doi": null,
+        "arxiv_id": null,
+        "venue_name": null,
+        "work_type": null
+      },
+      "authorships": [
+        {
+          "name": "Joseph Redmon",
+          "affiliations": [
+            "University of Washington"
+          ]
+        },
+        {
+          "name": "Santosh Divvala",
+          "affiliations": [
+            "University of Washington",
+            "Allen Institute for AI"
+          ]
+        },
+        {
+          "name": "Ross Girshick",
+          "affiliations": [
+            "Allen Institute for AI",
+            "Facebook AI Research"
+          ]
+        },
+        {
+          "name": "Ali Farhadi",
+          "affiliations": [
+            "University of Washington",
+            "Allen Institute for AI",
+            "Facebook AI Research"
+          ]
+        }
+      ],
+      "references": {
+        "expected_count": 24,
+        "min_count": 23,
+        "notes": "Fixture ends mid [24]; parsers should still recover prior entries.",
+        "sample_arxiv_ids": [
+          "1505.00110",
+          "1310.1531",
+          "1505.01749",
+          "1504.08083",
+          "1312.4400",
+          "1406.4729",
+          "1207.0580",
+          "1506.06981"
+        ],
+        "sample_dois": []
+      },
+      "graph_expectations": {
+        "min_cites": 23,
+        "max_cites": 24,
+        "min_authorships": 4,
+        "max_authorships": null,
+        "min_institutions": 2,
+        "max_institutions": null,
+        "expected_cited_arxiv_ids": [
+          "1505.00110",
+          "1310.1531",
+          "1505.01749",
+          "1504.08083",
+          "1312.4400",
+          "1406.4729",
+          "1207.0580",
+          "1506.06981"
+        ],
+        "max_duplicate_work_fingerprints": 0,
+        "max_work_dedup_violations": 0,
+        "min_related_version_edges": null,
+        "max_related_version_edges": null
+      }
+    }
+  }
+}

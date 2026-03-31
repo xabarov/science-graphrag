@@ -197,6 +197,7 @@ def _summarize(report: dict[str, Any]) -> str:
                 ),
                 f"- work_dedup_violations_ok: {metrics.get('work_dedup_violations_ok')}",
                 f"- related_version_edges_ok: {metrics.get('related_version_edges_ok')}",
+                f"- contract_passed: {metrics.get('contract', {}).get('passed')}",
             ]
         )
     return "\n".join(lines)
@@ -227,12 +228,16 @@ def _cli(
 ) -> None:
     settings = get_settings()
     wipe = not no_wipe
+
+    def _is_passed(report: dict[str, Any]) -> bool:
+        return bool(report.get("metrics", {}).get("contract", {}).get("passed", True))
+
     if suite:
         cases = discover_layer1_case_dirs(path, tier=tier)
         if not cases:
             typer.echo(f"No layer-1 benchmarks found under {path}", err=True)
             raise typer.Exit(code=1)
-        run_suite_cli_flow(
+        payload = run_suite_cli_flow(
             title="Graph-level benchmark suite",
             cases=cases,
             settings=settings,
@@ -240,7 +245,12 @@ def _cli(
             summarize=_summarize,
             json_out=json_out,
             md_out=md_out,
+            summary_from_reports=lambda reports: {
+                "all_passed": all(_is_passed(report) for report in reports),
+            },
         )
+        if not bool(payload.get("summary", {}).get("all_passed", True)):
+            raise typer.Exit(code=1)
         return
 
     report = run_case(path, settings=settings, wipe_neo4j=wipe)
@@ -251,6 +261,8 @@ def _cli(
         json_out=json_out,
         md_out=md_out,
     )
+    if not _is_passed(report):
+        raise typer.Exit(code=1)
 
 
 def main() -> None:

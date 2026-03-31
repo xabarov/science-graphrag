@@ -1,0 +1,79 @@
+# Reference quality lane: mandatory LLM benchmark contract on YOLOv1.
+# This workflow fails fast when MAIN_LLM_API_KEY is not configured.
+name: Benchmark Reference
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 2"
+
+jobs:
+  reference-llm-yolov1:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: science
+          POSTGRES_PASSWORD: science
+          POSTGRES_DB: science_graphrag
+        ports:
+          - 5432:5432
+      neo4j:
+        image: neo4j:5-community
+        env:
+          NEO4J_AUTH: neo4j/sciencegraphrag
+        ports:
+          - 7687:7687
+      qdrant:
+        image: qdrant/qdrant:v1.12.4
+        ports:
+          - 6333:6333
+
+    env:
+      SCIENCE_GRAPHRAG_DATABASE_URL: postgresql+psycopg://science:science@postgres:5432/science_graphrag
+      SCIENCE_GRAPHRAG_NEO4J_URI: bolt://neo4j:7687
+      SCIENCE_GRAPHRAG_NEO4J_USER: neo4j
+      SCIENCE_GRAPHRAG_NEO4J_PASSWORD: sciencegraphrag
+      SCIENCE_GRAPHRAG_QDRANT_URL: http://qdrant:6333
+      SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED: "true"
+      MAIN_LLM_BASE_URL: https://openrouter.ai/api/v1
+      MAIN_LLM_MODEL: mistralai/mistral-small-3.2-24b-instruct
+      MAIN_LLM_API_KEY: ${{ secrets.MAIN_LLM_API_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Require MAIN_LLM_API_KEY secret
+        run: |
+          if [ -z "${MAIN_LLM_API_KEY}" ]; then
+            echo "MAIN_LLM_API_KEY is required for benchmark reference lane" >&2
+            exit 1
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install package (dev)
+        run: pip install -e ".[dev]"
+
+      - name: Wait for services
+        run: sleep 40
+
+      - name: Layer-1 reference benchmark (yolov1, LLM on)
+        run: science-graphrag-layer1-benchmark tests/fixtures/benchmarks/layer1/yolov1 --json-out eval/results/ci-reference-layer1-yolov1.json
+
+      - name: Graph reference benchmark (yolov1, LLM on)
+        run: science-graphrag-graph-benchmark tests/fixtures/benchmarks/layer1/yolov1 --json-out eval/results/ci-reference-graph-yolov1.json
+
+      - name: Layer-2 reference benchmark (yolov1_semantic, LLM on)
+        run: science-graphrag-layer2-benchmark tests/fixtures/benchmarks/layer2/yolov1_semantic --json-out eval/results/ci-reference-layer2-yolov1-semantic.json
+
+      - name: Upload reference artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-reference-yolov1
+          path: eval/results/ci-reference-*.json

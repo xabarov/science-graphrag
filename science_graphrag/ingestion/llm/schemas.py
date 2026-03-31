@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class WorkMetadataLLM(BaseModel):
@@ -137,4 +137,76 @@ class ReferencesLLM(BaseModel):
         default_factory=list,
         max_length=500,
         description="One item per numbered `[n]` line when the list is formatted that way.",
+    )
+
+
+class SemanticEvidenceLLM(BaseModel):
+    chunk_id: str | None = None
+    section_heading: str | None = None
+    quote: str | None = Field(default=None, description="Short verbatim, optional")
+
+
+class SemanticMethodLLM(BaseModel):
+    name: str = Field(..., description="Canonical surface form from text")
+    aliases: list[str] = Field(default_factory=list)
+    description_short: str | None = Field(default=None, description="One sentence max in v1")
+    confidence: float = Field(default=0.5, ge=0.0, le=1.0)
+    evidence: list[SemanticEvidenceLLM] = Field(default_factory=list)
+
+
+class SemanticDatasetLLM(BaseModel):
+    name: str = Field(..., description="Dataset or benchmark name, e.g. MS COCO, ImageNet")
+    aliases: list[str] = Field(default_factory=list)
+    confidence: float = Field(default=0.5, ge=0.0, le=1.0)
+    evidence: list[SemanticEvidenceLLM] = Field(default_factory=list)
+
+
+class SemanticRelationEndpointLLM(BaseModel):
+    kind: str = Field(
+        default="work",
+        description="work | method | dataset",
+    )
+    role: str | None = Field(default=None, description='e.g. "primary" for work')
+    name: str | None = Field(
+        default=None,
+        description="Method or dataset name when kind is method or dataset",
+    )
+
+
+class SemanticRelationLLM(BaseModel):
+    type: str = Field(
+        ...,
+        description="uses_method | evaluated_on | trained_or_tested_on",
+    )
+    from_: SemanticRelationEndpointLLM = Field(
+        ...,
+        alias="from",
+        description="Start of relation (usually work or method)",
+    )
+    to: SemanticRelationEndpointLLM
+    confidence: float = Field(default=0.5, ge=0.0, le=1.0)
+    evidence: list[SemanticEvidenceLLM] = Field(default_factory=list)
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class SemanticMethodDatasetBundleLLM(BaseModel):
+    """LLM output for ontology v1 semantic stage (ADR 004)."""
+
+    methods: list[SemanticMethodLLM] = Field(
+        default_factory=list,
+        max_length=120,
+        description="Named methodologies / architectures from the manuscript body",
+    )
+    datasets: list[SemanticDatasetLLM] = Field(
+        default_factory=list,
+        max_length=120,
+    )
+    relations: list[SemanticRelationLLM] = Field(
+        default_factory=list,
+        max_length=200,
+    )
+    extraction_notes: str | None = Field(
+        default=None,
+        description="Diagnostics, uncertainty, empty result reason",
     )

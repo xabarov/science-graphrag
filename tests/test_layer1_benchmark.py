@@ -26,7 +26,7 @@ def test_layer1_gold_spec_loads() -> None:
     spec = Layer1GoldSpec.load(FIXTURE_YOLO / "gold.json")
     assert spec.case_id == "yolov1"
     assert len(spec.authorships) == 4
-    assert spec.references.expected_count == 24
+    assert spec.references.expected_count == 44
 
 
 def test_prf1_sets() -> None:
@@ -53,6 +53,7 @@ def test_score_layer1_deterministic() -> None:
     m = score_layer1(work, auth, refs, spec)
     assert m.metadata.get("title_exact_normalized") is True
     assert m.authorships.get("names_recall", 1.0) < 1.0
+    assert m.contract.get("passed") is False
 
 
 def test_yolov1_fixture_reference_heuristic_count() -> None:
@@ -122,3 +123,4 @@ def test_run_case_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
     assert "metrics" in report
     assert "predicted" in report
     assert report["diagnostics"]["document_id"] == "yolov1"
+    assert report["metrics"]["contract"]["passed"] is True

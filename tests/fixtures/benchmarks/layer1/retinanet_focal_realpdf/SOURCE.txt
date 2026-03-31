@@ -3,7 +3,7 @@ Generated from local PDF (not shipped in repo):
 
 Regenerate:
   .venv/bin/python scripts/build_real_pdf_layer1_fixture.py \
-    --pdf "<path>/RetinaNet.pdf" \
+    --pdf "/home/roman/Documents/ML/CV/object-detection/RetinaNet.pdf" \
     --out tests/fixtures/benchmarks/layer1/retinanet_focal_realpdf \
     --case-id retinanet_focal_realpdf
 

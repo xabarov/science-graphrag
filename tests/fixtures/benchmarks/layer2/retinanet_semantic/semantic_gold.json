@@ -1,0 +1,18 @@
+{
+  "case_id": "retinanet_semantic",
+  "schema_version": 1,
+  "description": "Object-detection corpus; layer1=retinanet_focal_realpdf. Nightly semantic when LLM enabled.",
+  "article_path": "../../layer1/retinanet_focal_realpdf/article.md",
+  "min_method_names": 1,
+  "expected_method_names_normalized": [
+    "focal loss",
+    "retinanet"
+  ],
+  "expected_dataset_names_normalized": [
+    "coco",
+    "pascal"
+  ],
+  "allow_empty_when_no_llm": true,
+  "min_method_recall_ratio": 1.0,
+  "min_dataset_recall_ratio": 0.5
+}

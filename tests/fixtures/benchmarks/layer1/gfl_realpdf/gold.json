@@ -1,0 +1,47 @@
+{
+  "case_id": "gfl_realpdf",
+  "schema_version": 1,
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+  "work_metadata": {
+    "title": "Generalized Focal Loss: Learning Qualified and",
+    "publication_year": null,
+    "abstract_prefix": "One-stage detector basically formulates object detection as dense classi",
+    "doi": null,
+    "arxiv_id": null,
+    "venue_name": null,
+    "work_type": null
+  },
+  "authorships": [],
+  "references": {
+    "expected_count": 37,
+    "min_count": 29,
+    "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
+    "sample_arxiv_ids": [
+      "1904.04821",
+      "1906.07155",
+      "1904.03797",
+      "1912.05086",
+      "1908.05641",
+      "1912.05190"
+    ],
+    "sample_dois": []
+  },
+  "graph_expectations": {
+    "min_cites": 0,
+    "max_cites": 57,
+    "expected_cited_arxiv_ids": [
+      "1904.04821",
+      "1906.07155",
+      "1904.03797",
+      "1912.05086",
+      "1908.05641",
+      "1912.05190"
+    ],
+    "max_duplicate_work_fingerprints": 8,
+    "min_authorships": 0,
+    "max_authorships": 8,
+    "min_institutions": 0,
+    "max_institutions": 8,
+    "max_work_dedup_violations": 0
+  }
+}

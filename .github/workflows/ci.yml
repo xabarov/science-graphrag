@@ -26,3 +26,19 @@ jobs:
 
       - name: Tests (exclude integration)
         run: pytest tests -m "not integration" -q
+
+      - name: Layer-1 benchmark (merge_safe, no LLM)
+        env:
+          SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED: "false"
+          SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY: ""
+          API_KEY: ""
+          MAIN_LLM_API_KEY: ""
+        run: science-graphrag-layer1-benchmark tests/fixtures/benchmarks/layer1 --suite --tier merge_safe
+
+      - name: Layer-2 semantic benchmark (merge_safe, no LLM)
+        env:
+          SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED: "false"
+          SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY: ""
+          API_KEY: ""
+          MAIN_LLM_API_KEY: ""
+        run: science-graphrag-layer2-benchmark tests/fixtures/benchmarks/layer2 --suite --tier merge_safe

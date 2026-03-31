@@ -1,0 +1,200 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:c5320748bf3712047f1f",
+    "semantic_prompt_fingerprint": "sha256-20:741929d62eafa6cf4e77",
+    "semantic_extraction_enabled": true
+  },
+  "summary": {
+    "case_count": 2,
+    "case_ids": [
+      "retinanet_semantic",
+      "yolov1_semantic"
+    ],
+    "all_passed": true
+  },
+  "cases": [
+    {
+      "case_id": "retinanet_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/retinanet_semantic",
+      "metrics": {
+        "precision_methods": 1.0,
+        "recall_methods_num": 2,
+        "recall_methods_denom": 2,
+        "precision_datasets": 1.0,
+        "recall_datasets_num": 1,
+        "recall_datasets_denom": 2,
+        "passed": true,
+        "notes": "method_tp=2/2; dataset_tp=1/2"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "retinanet_semantic",
+        "methods": [
+          {
+            "name": "Focal Loss",
+            "aliases": [],
+            "description_short": null,
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We propose to address this class imbalance by reshaping the standard cross entropy loss such that it down-weights the loss assigned to well-classified examples."
+              }
+            ]
+          },
+          {
+            "name": "RetinaNet",
+            "aliases": [],
+            "description_short": "A simple dense detector designed to evaluate the effectiveness of the focal loss.",
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "To evaluate the effectiveness of our loss, we design and train a simple dense detector we call RetinaNet."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "COCO",
+            "aliases": [],
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Our results show that when trained with the focal loss, RetinaNet is able to match the speed of previous one-stage detectors while surpassing the accuracy of all existing state-of-the-art two-stage detectors."
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "Extracted methods and datasets based on the provided article body. Relations were omitted due to complexity and space constraints."
+      },
+      "gold": {
+        "case_id": "retinanet_semantic",
+        "schema_version": 1,
+        "description": "RetinaNet pypdf→MD fixture; expects focal loss / RetinaNet / COCO signals when LLM runs.",
+        "article_path": "../../layer1/retinanet_focal_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "expected_method_names_normalized": [
+          "focal loss",
+          "retinanet"
+        ],
+        "expected_dataset_names_normalized": [
+          "coco",
+          "pascal"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "yolov1_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/yolov1_semantic",
+      "metrics": {
+        "precision_methods": 0.5,
+        "recall_methods_num": 1,
+        "recall_methods_denom": 2,
+        "precision_datasets": 1.0,
+        "recall_datasets_num": 2,
+        "recall_datasets_denom": 2,
+        "passed": true,
+        "notes": "method_tp=1/2; dataset_tp=2/2"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "yolov1_semantic",
+        "methods": [
+          {
+            "name": "YOLO",
+            "aliases": [
+              "You Only Look Once"
+            ],
+            "description_short": null,
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We present YOLO, a new approach to object detection."
+              }
+            ]
+          },
+          {
+            "name": "Fast YOLO",
+            "aliases": [],
+            "description_short": "A smaller version of the YOLO network.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "A smaller version of the network, Fast YOLO, processes an astounding 155 frames per second"
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "PASCAL VOC",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "For evaluating YOLO on PASCAL VOC"
+              }
+            ]
+          },
+          {
+            "name": "ImageNet",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We pretrain our convolutional layers on the ImageNet 1000-class competition dataset"
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "No relations extracted due to space constraints."
+      },
+      "gold": {
+        "case_id": "yolov1_semantic",
+        "schema_version": 1,
+        "description": "YOLOv1 fixture; strict when LLM enabled (nightly). Skips recall checks when LLM off.",
+        "article_path": "../../layer1/yolov1/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "expected_method_names_normalized": [
+          "yolo",
+          "you only look once"
+        ],
+        "expected_dataset_names_normalized": [
+          "pascal voc",
+          "imagenet"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    }
+  ]
+}

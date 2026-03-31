@@ -235,6 +235,8 @@ flowchart LR
 
 **Статус Phase 4:** **в процессе** (2026-03-30, углубление **2026-03-31**).
 
+**Политика: бенчмарки с LLM как эталон качества.** Локальные и ручные регрессионные прогоны, по которым судят о качестве извлечения (метаданные, ссылки, семантический слой) и о содержимом Neo4j после ingest, следует выполнять **с включённым LLM** (`SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED=true`, ключ и base URL в `.env` — см. [eval/README.md](../eval/README.md), `MAIN_LLM_*` / `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*`). Прогон **без** LLM остаётся для быстрых эвристик и merge CI; его метрики и граф **не** считаются эталоном поведения в продакшене.
+
 **Уже есть:**
 
 - [docs/benchmarks/strategy-v1.md](benchmarks/strategy-v1.md), [benchmarks/README.md](benchmarks/README.md), [eval/README.md](../eval/README.md).
@@ -270,6 +272,8 @@ flowchart LR
 
 **Exit criteria:** end-to-end путь для **3–5** ключевых user journeys с воспроизводимым trace.
 
+**Статус Phase 5 (2026-03-31):** **MVP in progress** — реализован минимальный API-контур (`/health`, `POST /v1/query`) и прототип UI в `science_graphrag/api/static/index.html`; для полного UI-flow из Phase 6 ещё нужны отдельные UI-facing endpoints (`works`, `work detail`, `graph neighborhood`, `chunks/evidence`) и стабилизация контрактов.
+
 ---
 
 ### Phase 6 — Frontend под исследовательский workflow
@@ -289,6 +293,11 @@ flowchart LR
 **Риски:** тяжёлый UI до готовности данных. **Митигация:** сначала минимальный reader + chat с citations, затем graph explorer.
 
 **Exit criteria:** карта экранов, модель состояния, контракты API для UI; реализация MVP-набора согласно приоритетам.
+
+**Статус Phase 6 (2026-03-31):** **parallel track approved** — допускается запуск в две волны:  
+1) `frontend shell + mock-driven screens + contract-first planning`;  
+2) полная интеграция после стабилизации Phase 5 API-контрактов.  
+См. [architecture/frontend-parallel-track-strategy.md](architecture/frontend-parallel-track-strategy.md), [specs/frontend-ui-api-contracts-v1.md](specs/frontend-ui-api-contracts-v1.md), [architecture/frontend-phase6-bridge-backlog.md](architecture/frontend-phase6-bridge-backlog.md).
 
 ---
 
@@ -322,7 +331,10 @@ flowchart TD
     phase6 --> phase7
 ```
 
-Параллельно допустимо: начинать черновик Phase 6 (контракты) после Phase 5; Phase 4 итеративно углублять с Phase 1–3.
+Параллельно допустимо:  
+- вести `shell/contracts`-волну Phase 6 параллельно с доработкой Phase 5;  
+- переводить UI на full integration только после стабилизации API-контрактов;  
+- Phase 4 итеративно углублять с Phase 1–3.
 
 ---
 
@@ -341,6 +353,9 @@ flowchart TD
 
 | Документ | Назначение |
 |----------|------------|
+| [architecture/frontend-parallel-track-strategy.md](architecture/frontend-parallel-track-strategy.md) | Strategy параллельного frontend-трека до полного закрытия Phase 5 |
+| [specs/frontend-ui-api-contracts-v1.md](specs/frontend-ui-api-contracts-v1.md) | Минимальные frontend-facing API контракты v1 |
+| [architecture/frontend-phase6-bridge-backlog.md](architecture/frontend-phase6-bridge-backlog.md) | Стартовый backlog: frontend shell + backend bridge endpoints |
 | [benchmarks/graph-level-eval-v1.md](benchmarks/graph-level-eval-v1.md) | План graph-level benchmark после ingest |
 | [benchmarks/benchmark-expansion-v1.md](benchmarks/benchmark-expansion-v1.md) | Расширение корпуса и семейств бенчмарков |
 | [idea.md](idea.md) | Онтология по слоям, первый слой графа, нормализация, промпты, внешние источники |
@@ -354,6 +369,8 @@ flowchart TD
 
 | Версия | Дата | Изменения |
 |--------|------|-----------|
+| 1.0 | 2026-03-31 | Phase 5/6 bridge: зафиксирован параллельный frontend-трек (`shell + mocks + contract-first`), добавлены UI API contracts v1 и общий backlog для frontend shell + backend bridge endpoints; roadmap синхронизирован с фактическим статусом API MVP (`POST /v1/query`). |
+| 0.9 | 2026-03-31 | Phase 4: зафиксирована политика — ручные/репрезентативные бенчмарки с **LLM** как эталон качества; без LLM — только быстрые эвристики / merge CI. |
 | 0.8 | 2026-03-31 | Phase 4/7: nightly CI Postgres + интеграции ingest/SQL/batch; layer1 + graph yolov1 бенчмарки без LLM; `case_tiers.json`, `--tier`; real-pdf gold: dedup graph, authorships для SSD/DETR. Phase 2/3: [adr/004-ontology-v1-scope.md](adr/004-ontology-v1-scope.md), [specs/extraction/semantic-method-dataset-v1.md](specs/extraction/semantic-method-dataset-v1.md) |
 | 0.7 | 2026-03-31 | Phase 2: черновик [specs/ontology-v1-mvp.md](specs/ontology-v1-mvp.md); Phase 4: graph-v1 метрики `max_work_dedup_violations`, `RELATED_VERSION_OF` (через `graph_expectations`); GitHub Actions **integration-nightly** (Neo4j+Qdrant + `pytest -m integration`); roadmap: backlog 4.3 пересортирован после закрытия merge-gate / nightly-базиса / инвариантов графа |
 | 0.6 | 2026-03-31 | Phase 1: `ingest-corpus`, Neo4j dedup audit, canonical Author id, опциональный ROR, `RELATED_VERSION_OF` из OpenAlex; Phase 4: benchmark **suite** (`--suite`), `bench_common`, integration ingest test, расширенный gold-set (синтетика + real-pdf), документация merge/nightly; Phase 7: старт CI merge-gate |

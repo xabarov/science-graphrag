@@ -4,10 +4,11 @@ from typing import Any
 
 from dotenv import load_dotenv
 from pydantic import Field, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
 
 # Unprefixed keys (MAIN_LLM_*, PHOENIX_*, etc.) must be visible to os.getenv for merge validators.
-load_dotenv()
+# override=True: a shell export of MAIN_LLM_API_KEY="" (empty) must not block values from `.env`.
+load_dotenv(override=True)
 
 
 class Settings(BaseSettings):
@@ -17,6 +18,27 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+    @classmethod
+    def settings_customise_sources(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: PydanticBaseSettingsSource,
+        env_settings: PydanticBaseSettingsSource,
+        dotenv_settings: PydanticBaseSettingsSource,
+        file_secret_settings: PydanticBaseSettingsSource,
+    ) -> tuple[PydanticBaseSettingsSource, ...]:
+        """Fixed pydantic-settings signature; order dotenv before process env."""
+
+        # Default order is init → env → dotenv: process env overwrites `.env`, so a stale
+        # `export SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED=false` defeats local `.env`.
+        # Apply dotenv before env so repo `.env` wins over the shell (CI has no secrets `.env`).
+        return (
+            init_settings,
+            dotenv_settings,
+            env_settings,
+            file_secret_settings,
+        )
 
     blob_root: Path = Field(default=Path("./data/blobs"))
     artifact_root: Path = Field(default=Path("./data/artifacts"))
@@ -81,6 +103,22 @@ class Settings(BaseSettings):
     extraction_llm_max_tokens_metadata: int = Field(default=4096)
     extraction_llm_max_tokens_references: int = Field(default=8192)
     extraction_llm_timeout_seconds: float = Field(default=180.0)
+
+    semantic_extraction_enabled: bool = Field(
+        default=True,
+        description="Run ontology-v1 Method/Dataset stage after layer-1 (ADR 004).",
+    )
+    semantic_extraction_max_tokens: int = Field(
+        default=12_288,
+        description="LLM max completion tokens for semantic Method/Dataset (tool JSON must fit).",
+    )
+    semantic_extraction_temperature: float = Field(default=0.0)
+    semantic_graph_confidence_threshold: float = Field(
+        default=0.35,
+        ge=0.0,
+        le=1.0,
+        description="Min confidence to write Method/Dataset nodes and edges to Neo4j.",
+    )
 
     @model_validator(mode="before")
     @classmethod

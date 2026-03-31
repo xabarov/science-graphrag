@@ -18,6 +18,8 @@
 | [architecture/phase-1-backbone.md](architecture/phase-1-backbone.md) | Phase 1: ingestion MVP и стек |
 | [architecture/chunking-strategy.md](architecture/chunking-strategy.md) | Task-aware slices, section chunks, dedup |
 | [architecture/source-of-truth-v1.md](architecture/source-of-truth-v1.md) | Source of Truth слоя 1 |
+| [architecture/frontend-parallel-track-strategy.md](architecture/frontend-parallel-track-strategy.md) | Стратегия параллельного frontend-трека (Phase 5/6 bridge) |
+| [architecture/frontend-phase6-bridge-backlog.md](architecture/frontend-phase6-bridge-backlog.md) | Backlog: frontend shell + backend bridge endpoints |
 
 ## ADR (Architecture Decision Records)
 
@@ -35,6 +37,7 @@
 |----------|----------|
 | [specs/README.md](specs/README.md) | Индекс контрактов извлечения |
 | [specs/extraction/](specs/extraction/) | Layer 1: metadata, authorships, references; semantic chunks |
+| [specs/frontend-ui-api-contracts-v1.md](specs/frontend-ui-api-contracts-v1.md) | Минимальные UI-facing API контракты для Phase 6 MVP |
 | [benchmarks/README.md](benchmarks/README.md) | Индекс бенчмарков и eval |
 | [benchmarks/strategy-v1.md](benchmarks/strategy-v1.md) | Стратегия eval v1 (layer 1+) |
 | [benchmarks/graph-level-eval-v1.md](benchmarks/graph-level-eval-v1.md) | План graph-level eval после ingest |

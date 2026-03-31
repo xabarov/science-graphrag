@@ -9,7 +9,7 @@ from typing import Any
 from science_graphrag.domain.models import AuthorshipDraft, ReferenceDraft, WorkDraft, WorkType
 from science_graphrag.ingestion.dedup import normalize_doi
 
-from .spec import Layer1GoldSpec
+from .spec import Layer1GoldSpec, Layer1QualityThresholds
 
 _ARXIV_IN_TEXT_RE = re.compile(
     r"(?:arxiv:\s*)?(\d{4}\.\d{4,5})\b|abs/(\d{4}\.\d{4,5})\b",
@@ -76,12 +76,14 @@ class BenchmarkMetrics:
     metadata: dict[str, Any] = field(default_factory=dict)
     authorships: dict[str, Any] = field(default_factory=dict)
     references: dict[str, Any] = field(default_factory=dict)
+    contract: dict[str, Any] = field(default_factory=dict)
 
     def to_json_dict(self) -> dict[str, Any]:
         return {
             "metadata": self.metadata,
             "authorships": self.authorships,
             "references": self.references,
+            "contract": self.contract,
         }
 
 
@@ -217,8 +219,53 @@ def score_layer1(
     references: list[ReferenceDraft],
     gold: Layer1GoldSpec,
 ) -> BenchmarkMetrics:
+    metadata = _metadata_scores(work, gold)
+    authorships_m = _authorship_scores(authorships, gold)
+    references_m = _reference_scores(references, gold)
+    thresholds = gold.quality_thresholds or Layer1QualityThresholds()
+    checks: dict[str, bool | None] = {}
+
+    title_exact = metadata.get("title_exact_normalized")
+    if thresholds.require_title_match and title_exact is not None:
+        checks["title_match_required"] = bool(title_exact)
+
+    abstract_ok = metadata.get("abstract_prefix_ok")
+    if thresholds.require_abstract_prefix and abstract_ok is not None:
+        checks["abstract_prefix_required"] = bool(abstract_ok)
+
+    if thresholds.min_authorship_names_f1 is not None:
+        checks["min_authorship_names_f1"] = (
+            float(authorships_m.get("names_f1", 0.0)) >= thresholds.min_authorship_names_f1
+        )
+    if thresholds.min_authorship_names_recall is not None:
+        checks["min_authorship_names_recall"] = (
+            float(authorships_m.get("names_recall", 0.0)) >= thresholds.min_authorship_names_recall
+        )
+    if thresholds.min_affiliations_f1 is not None:
+        checks["min_affiliations_f1"] = (
+            float(authorships_m.get("affiliations_f1", 0.0)) >= thresholds.min_affiliations_f1
+        )
+
+    if thresholds.require_reference_count_ok:
+        checks["reference_count_ok_required"] = bool(references_m.get("count_ok"))
+
+    if thresholds.min_sample_arxiv_f1 is not None:
+        checks["min_sample_arxiv_f1"] = (
+            float(references_m.get("sample_arxiv_f1", 0.0)) >= thresholds.min_sample_arxiv_f1
+        )
+    if thresholds.min_sample_doi_f1 is not None:
+        checks["min_sample_doi_f1"] = (
+            float(references_m.get("sample_doi_f1", 0.0)) >= thresholds.min_sample_doi_f1
+        )
+
+    effective = [v for v in checks.values() if v is not None]
+    contract = {
+        "checks": checks,
+        "passed": all(effective) if effective else True,
+    }
     return BenchmarkMetrics(
-        metadata=_metadata_scores(work, gold),
-        authorships=_authorship_scores(authorships, gold),
-        references=_reference_scores(references, gold),
+        metadata=metadata,
+        authorships=authorships_m,
+        references=references_m,
+        contract=contract,
     )

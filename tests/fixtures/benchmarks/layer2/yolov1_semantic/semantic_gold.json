@@ -1,0 +1,16 @@
+{
+  "case_id": "yolov1_semantic",
+  "schema_version": 1,
+  "description": "Object-detection corpus; layer1=yolov1. Nightly semantic when LLM enabled.",
+  "article_path": "../../layer1/yolov1/article.md",
+  "min_method_names": 1,
+  "expected_method_names_normalized": [
+    "yolo",
+    "you only look once"
+  ],
+  "expected_dataset_names_normalized": [
+    "pascal voc",
+    "imagenet"
+  ],
+  "allow_empty_when_no_llm": true
+}

@@ -1,0 +1,16 @@
+{
+  "case_id": "hog_semantic",
+  "schema_version": 1,
+  "description": "Object-detection corpus; layer1=hog_human_detection_realpdf. Nightly semantic when LLM enabled.",
+  "article_path": "../../layer1/hog_human_detection_realpdf/article.md",
+  "min_method_names": 1,
+  "expected_method_names_normalized": [
+    "histogram of oriented gradients",
+    "hog",
+    "human detection"
+  ],
+  "expected_dataset_names_normalized": [
+    "inria"
+  ],
+  "allow_empty_when_no_llm": true
+}

@@ -1,0 +1,41 @@
+{
+  "case_id": "mask_rcnn_realpdf",
+  "schema_version": 1,
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+  "work_metadata": {
+    "title": "Mask R-CNN",
+    "publication_year": null,
+    "abstract_prefix": "We present a conceptually simple, flexible, and general framework for ob",
+    "doi": null,
+    "arxiv_id": null,
+    "venue_name": null,
+    "work_type": null
+  },
+  "authorships": [],
+  "references": {
+    "expected_count": 52,
+    "min_count": 44,
+    "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
+    "sample_arxiv_ids": [
+      "1712.04440",
+      "1612.06851",
+      "1711.07971"
+    ],
+    "sample_dois": []
+  },
+  "graph_expectations": {
+    "min_cites": 0,
+    "max_cites": 72,
+    "expected_cited_arxiv_ids": [
+      "1712.04440",
+      "1612.06851",
+      "1711.07971"
+    ],
+    "max_duplicate_work_fingerprints": 8,
+    "min_authorships": 0,
+    "max_authorships": 8,
+    "min_institutions": 0,
+    "max_institutions": 8,
+    "max_work_dedup_violations": 0
+  }
+}

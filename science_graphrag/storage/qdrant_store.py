@@ -5,7 +5,14 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, PointStruct, VectorParams
+from qdrant_client.models import (
+    Distance,
+    FieldCondition,
+    Filter,
+    MatchValue,
+    PointStruct,
+    VectorParams,
+)
 
 if TYPE_CHECKING:
     from science_graphrag.ingestion.chunking import DocumentChunk
@@ -100,3 +107,40 @@ class QdrantChunkStore:
             )
         if points:
             self._client.upsert(collection_name=self._collection, points=points)
+
+    def search_similar(
+        self,
+        *,
+        vector: list[float],
+        limit: int = 8,
+        work_id: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """Return scored hits with payload (text, work_id, chunk metadata)."""
+
+        query_filter = None
+        if work_id:
+            query_filter = Filter(
+                must=[FieldCondition(key="work_id", match=MatchValue(value=work_id))],
+            )
+        hits = self._client.search(
+            collection_name=self._collection,
+            query_vector=vector,
+            limit=limit,
+            query_filter=query_filter,
+            with_payload=True,
+        )
+        out: list[dict[str, Any]] = []
+        for hit in hits:
+            payload = hit.payload or {}
+            out.append(
+                {
+                    "id": str(hit.id),
+                    "score": float(hit.score),
+                    "text": payload.get("text"),
+                    "work_id": payload.get("work_id"),
+                    "document_id": payload.get("document_id"),
+                    "chunk_fingerprint": payload.get("chunk_fingerprint"),
+                    "section_path": payload.get("section_path"),
+                },
+            )
+        return out

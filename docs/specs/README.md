@@ -20,5 +20,6 @@
 ## Дальше (Phase 3+)
 
 - Реализация стадий и промптов по [extraction/semantic-method-dataset-v1.md](extraction/semantic-method-dataset-v1.md); см. [roadmap Phase 3](../roadmap.md).
+- Контракты для frontend Phase 6: [frontend-ui-api-contracts-v1.md](frontend-ui-api-contracts-v1.md).
 
 Черновые идеи промптов — в [idea.md](../idea.md).

@@ -101,6 +101,10 @@ def _summarize(report: dict[str, Any]) -> str:
         *[f"- {k}: {v}" for k, v in m["references"].items() if k != "predicted_arxiv_ids"],
         f"- predicted_arxiv_ids: {m['references'].get('predicted_arxiv_ids')}",
         "",
+        "## Contract",
+        f"- passed: {m.get('contract', {}).get('passed')}",
+        f"- checks: {m.get('contract', {}).get('checks')}",
+        "",
     ]
     return "\n".join(lines)
 
@@ -136,12 +140,16 @@ def _cli(
     ),
 ) -> None:
     settings = get_settings()
+
+    def _is_passed(report: dict[str, Any]) -> bool:
+        return bool(report.get("metrics", {}).get("contract", {}).get("passed", True))
+
     if suite:
         cases = discover_layer1_case_dirs(path, tier=tier)
         if not cases:
             typer.echo(f"No layer-1 benchmarks found under {path}", err=True)
             raise typer.Exit(code=1)
-        run_suite_cli_flow(
+        payload = run_suite_cli_flow(
             title="Layer-1 benchmark suite",
             cases=cases,
             settings=settings,
@@ -149,7 +157,13 @@ def _cli(
             summarize=_summarize,
             json_out=json_out,
             md_out=md_out,
+            summary_from_reports=lambda reports: {
+                "all_passed": all(_is_passed(report) for report in reports),
+            },
         )
+        all_passed = bool(payload.get("summary", {}).get("all_passed", True))
+        if not all_passed:
+            raise typer.Exit(code=1)
         return
 
     report = run_case(path, settings=settings)
@@ -160,6 +174,8 @@ def _cli(
         json_out=json_out,
         md_out=md_out,
     )
+    if not _is_passed(report):
+        raise typer.Exit(code=1)
 
 
 def main() -> None:

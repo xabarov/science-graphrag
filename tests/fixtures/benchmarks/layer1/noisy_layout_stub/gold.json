@@ -32,5 +32,11 @@
     "min_authorships": 1,
     "max_duplicate_work_fingerprints": 3,
     "max_work_dedup_violations": 0
+  },
+  "quality_thresholds": {
+    "require_title_match": false,
+    "require_reference_count_ok": true,
+    "min_sample_arxiv_f1": 1.0,
+    "min_sample_doi_f1": 1.0
   }
 }

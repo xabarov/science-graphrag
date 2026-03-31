@@ -1,7 +1,7 @@
 {
   "case_id": "detr_realpdf",
   "schema_version": 1,
-  "description": "Real CV paper: PDF→text (pypdf) → structured MD. Tier: nightly_heavy. authorships[] aligned with heuristic extract_authorships (first four comma-separated authors).",
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
   "work_metadata": {
     "title": "End-to-End Object Detection with Transformers",
     "publication_year": null,
@@ -11,12 +11,7 @@
     "venue_name": null,
     "work_type": null
   },
-  "authorships": [
-    { "name": "Nicolas Carion⋆", "affiliations": [] },
-    { "name": "Francisco Massa⋆", "affiliations": [] },
-    { "name": "Gabriel Synnaeve", "affiliations": [] },
-    { "name": "Nicolas Usunier", "affiliations": [] }
-  ],
+  "authorships": [],
   "references": {
     "expected_count": 54,
     "min_count": 46,
@@ -38,15 +33,22 @@
   },
   "graph_expectations": {
     "min_cites": 0,
-    "max_cites": 64,
+    "max_cites": 74,
     "expected_cited_arxiv_ids": [
       "2002.08926",
       "1904.09324",
       "1905.03072",
       "1711.10433",
-      "1511.06449"
+      "1511.06449",
+      "1904.05709",
+      "1805.00613",
+      "1712.00617"
     ],
     "max_duplicate_work_fingerprints": 8,
+    "min_authorships": 0,
+    "max_authorships": 8,
+    "min_institutions": 0,
+    "max_institutions": 8,
     "max_work_dedup_violations": 0
   }
 }

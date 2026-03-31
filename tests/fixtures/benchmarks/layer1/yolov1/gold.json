@@ -1,7 +1,7 @@
 {
   "case_id": "yolov1",
   "schema_version": 1,
-  "description": "YOLOv1 CVPR-style markdown from PDF→MD; front matter wrapped in fenced ```markdown; ## Abstract / ## References.",
+  "description": "YOLOv1 CVPR-style markdown from PDF→MD (local YOLOv1.pdf); tier merge_safe. Graph expectations relaxed until locked against live Neo4j.",
   "work_metadata": {
     "title": "You Only Look Once: Unified, Real-Time Object Detection",
     "publication_year": null,
@@ -34,18 +34,22 @@
     }
   ],
   "references": {
-    "expected_count": 24,
-    "min_count": 23,
-    "notes": "Fixture ends mid [24]; parsers should still recover prior entries.",
+    "expected_count": 44,
+    "min_count": 36,
+    "notes": "Counts from heuristic extract_references on this MD; PDF hyphenation may shift totals.",
     "sample_arxiv_ids": [
       "1505.00110",
       "1310.1531",
       "1505.01749",
       "1504.08083",
-      "1312.4400",
       "1406.4729",
       "1207.0580",
-      "1506.06981"
+      "1506.06981",
+      "1312.4400",
+      "1412.3128",
+      "1506.01497",
+      "1504.06066",
+      "1312.6229"
     ],
     "sample_dois": []
   },
@@ -53,7 +57,9 @@
     "min_cites": 23,
     "max_cites": 24,
     "min_authorships": 4,
+    "max_authorships": 8,
     "min_institutions": 2,
+    "max_institutions": 8,
     "expected_cited_arxiv_ids": [
       "1505.00110",
       "1310.1531",

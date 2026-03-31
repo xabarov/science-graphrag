@@ -1,0 +1,10 @@
+Generated from local PDF (not shipped in repo):
+  /home/roman/Documents/ML/CV/object-detection/Object Detection with Discriminatively Trained Part-Based Models.pdf
+
+Regenerate:
+  .venv/bin/python scripts/build_real_pdf_layer1_fixture.py \
+    --pdf "/home/roman/Documents/ML/CV/object-detection/Object Detection with Discriminatively Trained Part-Based Models.pdf" \
+    --out tests/fixtures/benchmarks/layer1/part_based_models_realpdf \
+    --case-id part_based_models_realpdf
+
+Text extraction matches production pypdf path (no VL). Markdown structure is produced by scripts/build_real_pdf_layer1_fixture.py.

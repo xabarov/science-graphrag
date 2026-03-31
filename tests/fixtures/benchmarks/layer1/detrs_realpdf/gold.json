@@ -1,0 +1,55 @@
+{
+  "case_id": "detrs_realpdf",
+  "schema_version": 1,
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+  "work_metadata": {
+    "title": "DETRs Beat YOLOs on Real-time Object Detection",
+    "publication_year": null,
+    "abstract_prefix": "The YOLO series has become the most popular frame- work for real-time ob",
+    "doi": null,
+    "arxiv_id": null,
+    "venue_name": null,
+    "work_type": null
+  },
+  "authorships": [],
+  "references": {
+    "expected_count": 46,
+    "min_count": 38,
+    "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
+    "sample_arxiv_ids": [
+      "2004.10934",
+      "2207.13085",
+      "2211.03594",
+      "2107.08430",
+      "2104.10419",
+      "2301.05586",
+      "2203.00860",
+      "2007.12099",
+      "1804.02767",
+      "2304.13027",
+      "2203.16250",
+      "2104.01318"
+    ],
+    "sample_dois": []
+  },
+  "graph_expectations": {
+    "min_cites": 0,
+    "max_cites": 66,
+    "expected_cited_arxiv_ids": [
+      "2004.10934",
+      "2207.13085",
+      "2211.03594",
+      "2107.08430",
+      "2104.10419",
+      "2301.05586",
+      "2203.00860",
+      "2007.12099"
+    ],
+    "max_duplicate_work_fingerprints": 8,
+    "min_authorships": 0,
+    "max_authorships": 8,
+    "min_institutions": 0,
+    "max_institutions": 8,
+    "max_work_dedup_violations": 0
+  }
+}

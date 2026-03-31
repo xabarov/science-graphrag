@@ -1,0 +1,33 @@
+{
+  "case_id": "part_based_models_realpdf",
+  "schema_version": 1,
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+  "work_metadata": {
+    "title": "1",
+    "publication_year": null,
+    "abstract_prefix": "We describe an object detection system based on mixtures of multiscale d",
+    "doi": null,
+    "arxiv_id": null,
+    "venue_name": null,
+    "work_type": null
+  },
+  "authorships": [],
+  "references": {
+    "expected_count": 45,
+    "min_count": 37,
+    "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
+    "sample_arxiv_ids": [],
+    "sample_dois": []
+  },
+  "graph_expectations": {
+    "min_cites": 0,
+    "max_cites": 65,
+    "expected_cited_arxiv_ids": [],
+    "max_duplicate_work_fingerprints": 8,
+    "min_authorships": 0,
+    "max_authorships": 8,
+    "min_institutions": 0,
+    "max_institutions": 8,
+    "max_work_dedup_violations": 0
+  }
+}

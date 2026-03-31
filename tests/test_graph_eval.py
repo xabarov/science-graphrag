@@ -45,6 +45,7 @@ def test_score_graph_snapshot() -> None:
     assert metrics["cited_arxiv_f1"] == 1.0
     assert metrics["duplicate_work_fingerprints_ok"] is True
     assert metrics["work_dedup_violations_ok"] is True
+    assert metrics["contract"]["passed"] is True
 
 
 def test_work_dedup_violations_over_max_fails() -> None:
@@ -62,6 +63,7 @@ def test_work_dedup_violations_over_max_fails() -> None:
     )
     metrics = score_graph_snapshot(snapshot, spec)
     assert metrics["work_dedup_violations_ok"] is False
+    assert metrics["contract"]["passed"] is False
 
 
 def test_graph_run_case_smoke(monkeypatch) -> None:
@@ -118,3 +120,4 @@ def test_graph_run_case_smoke(monkeypatch) -> None:
     assert report["document_id"] == "doc-1"
     assert report["work_id"] == "work-1"
     assert report["metrics"]["snapshot"]["cites_count"] == 23
+    assert report["metrics"]["contract"]["passed"] is True

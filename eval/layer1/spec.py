@@ -66,6 +66,28 @@ class GraphExpectations(BaseModel):
     )
 
 
+class Layer1QualityThresholds(BaseModel):
+    """Optional pass/fail thresholds for layer-1 benchmark gating."""
+
+    require_title_match: bool = Field(
+        default=True,
+        description="Require title_exact_normalized=True when gold title is specified.",
+    )
+    require_abstract_prefix: bool = Field(
+        default=True,
+        description="Require abstract_prefix_ok=True when abstract_prefix is specified in gold.",
+    )
+    min_authorship_names_f1: float | None = Field(default=None, ge=0.0, le=1.0)
+    min_authorship_names_recall: float | None = Field(default=None, ge=0.0, le=1.0)
+    min_affiliations_f1: float | None = Field(default=None, ge=0.0, le=1.0)
+    require_reference_count_ok: bool = Field(
+        default=True,
+        description="Require references.count_ok=True.",
+    )
+    min_sample_arxiv_f1: float | None = Field(default=None, ge=0.0, le=1.0)
+    min_sample_doi_f1: float | None = Field(default=None, ge=0.0, le=1.0)
+
+
 class Layer1GoldSpec(BaseModel):
     """Extensible gold spec; new articles add a directory with gold.json same shape."""
 
@@ -76,6 +98,7 @@ class Layer1GoldSpec(BaseModel):
     authorships: list[GoldAuthor]
     references: GoldReferences
     graph_expectations: GraphExpectations | None = None
+    quality_thresholds: Layer1QualityThresholds | None = None
 
     @classmethod
     def load(cls, path: Path | str) -> Layer1GoldSpec:

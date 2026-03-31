@@ -22,6 +22,21 @@
 
 - **Unit:** dedup, normalize, document slices, section-aware chunking, эвристики стадий (`pytest tests/`).
 - **Integration (опционально):** `pytest -m integration` при поднятом стеке (Postgres + Neo4j + Qdrant, см. `docker-compose.yml` или GitHub `integration-nightly.yml`); `tests/integration/` — см. [graph-level-eval-v1.md](graph-level-eval-v1.md) (merge vs nightly).
+- **Reference lane (LLM-on):** workflow `benchmark-reference.yml` запускает обязательный YOLOv1-контракт (`layer1 + graph + layer2`) с `MAIN_LLM_API_KEY`.
+
+## Benchmark-driven contract
+
+- Layer-1 и graph раннеры теперь имеют явный `metrics.contract.passed` и завершаются ошибкой при `false` (single-case и suite).
+- Layer-2 дополнен минимальными recall-порогами (`min_method_recall_ratio`, `min_dataset_recall_ratio`) в `semantic_gold.json`.
+- Для сравнения baseline/current используйте `science-graphrag-benchmark-compare`.
+
+Минимальный цикл разработки:
+
+1. Выбрать кейс и слой.
+2. Прогнать single-case benchmark.
+3. Сравнить с baseline (`benchmark-compare`).
+4. Исправить регрессии.
+5. Подтвердить suite по tier.
 
 ## Регрессии промптов/моделей
 

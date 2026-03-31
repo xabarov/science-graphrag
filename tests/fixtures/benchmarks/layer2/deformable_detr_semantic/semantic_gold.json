@@ -1,0 +1,15 @@
+{
+  "case_id": "deformable_detr_semantic",
+  "schema_version": 1,
+  "description": "Object-detection corpus; layer1=deformable_detr_realpdf. Nightly semantic when LLM enabled.",
+  "article_path": "../../layer1/deformable_detr_realpdf/article.md",
+  "min_method_names": 1,
+  "expected_method_names_normalized": [
+    "deformable detr",
+    "deformable transformer"
+  ],
+  "expected_dataset_names_normalized": [
+    "coco"
+  ],
+  "allow_empty_when_no_llm": true
+}

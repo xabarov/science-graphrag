@@ -37,6 +37,10 @@ def score_graph_snapshot(snapshot: GraphSnapshot, gold: Layer1GoldSpec) -> dict[
         return {
             "has_expectations": False,
             "snapshot": snapshot.to_json_dict(),
+            "contract": {
+                "checks": {"graph_expectations_present": None},
+                "passed": True,
+            },
         }
 
     cited_gold = {value.strip() for value in exp.expected_cited_arxiv_ids if value.strip()}
@@ -68,9 +72,7 @@ def score_graph_snapshot(snapshot: GraphSnapshot, gold: Layer1GoldSpec) -> dict[
             exp.max_related_version_edges,
         )
 
-    return {
-        "has_expectations": True,
-        "snapshot": snapshot.to_json_dict(),
+    checks = {
         "cites_range_ok": _bounded(snapshot.cites_count, exp.min_cites, exp.max_cites),
         "authorships_range_ok": _bounded(
             snapshot.authorship_count,
@@ -82,11 +84,26 @@ def score_graph_snapshot(snapshot: GraphSnapshot, gold: Layer1GoldSpec) -> dict[
             exp.min_institutions,
             exp.max_institutions,
         ),
+        "duplicate_work_fingerprints_ok": dup_ok,
+        "work_dedup_violations_ok": dedup_ok,
+        "related_version_edges_ok": rel_ok,
+    }
+    contract_values = [value for value in checks.values() if value is not None]
+    return {
+        "has_expectations": True,
+        "snapshot": snapshot.to_json_dict(),
+        "cites_range_ok": checks["cites_range_ok"],
+        "authorships_range_ok": checks["authorships_range_ok"],
+        "institutions_range_ok": checks["institutions_range_ok"],
         "cited_arxiv_precision": arxiv_p,
         "cited_arxiv_recall": arxiv_r,
         "cited_arxiv_f1": arxiv_f1,
         "cited_arxiv_tp_fp_fn": {"tp": tp, "fp": fp, "fn": fn},
-        "duplicate_work_fingerprints_ok": dup_ok,
-        "work_dedup_violations_ok": dedup_ok,
-        "related_version_edges_ok": rel_ok,
+        "duplicate_work_fingerprints_ok": checks["duplicate_work_fingerprints_ok"],
+        "work_dedup_violations_ok": checks["work_dedup_violations_ok"],
+        "related_version_edges_ok": checks["related_version_edges_ok"],
+        "contract": {
+            "checks": checks,
+            "passed": all(contract_values) if contract_values else True,
+        },
     }

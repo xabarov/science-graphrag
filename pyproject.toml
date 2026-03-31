@@ -11,6 +11,7 @@ requires-python = ">=3.11"
 license = { file = "LICENSE" }
 dependencies = [
     "arize-phoenix-otel>=0.6.1",
+    "fastapi>=0.115.0",
     "httpx>=0.27",
     "instructor>=1.7.0",
     "openai>=1.69.0",
@@ -26,6 +27,7 @@ dependencies = [
     "qdrant-client>=1.12",
     "sqlalchemy>=2.0",
     "typer>=0.15",
+    "uvicorn[standard]>=0.32.0",
 ]
 
 [project.optional-dependencies]
@@ -45,6 +47,9 @@ dev = [
 science-graphrag = "science_graphrag.cli.main:main"
 science-graphrag-layer1-benchmark = "eval.layer1.runner:main"
 science-graphrag-graph-benchmark = "eval.graph_v1.runner:main"
+science-graphrag-layer2-benchmark = "eval.layer2.runner:main"
+science-graphrag-benchmark-compare = "eval.report_compare:main"
+science-graphrag-api = "science_graphrag.api.main:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["science_graphrag", "eval"]

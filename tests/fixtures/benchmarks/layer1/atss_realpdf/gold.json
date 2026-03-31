@@ -1,0 +1,33 @@
+{
+  "case_id": "atss_realpdf",
+  "schema_version": 1,
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+  "work_metadata": {
+    "title": "Bridging the Gap Between Anchor-based and Anchor-free Detection via",
+    "publication_year": null,
+    "abstract_prefix": "Object detection has been dominated by anchor-based detectors for severa",
+    "doi": null,
+    "arxiv_id": null,
+    "venue_name": null,
+    "work_type": null
+  },
+  "authorships": [],
+  "references": {
+    "expected_count": 84,
+    "min_count": 76,
+    "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
+    "sample_arxiv_ids": [],
+    "sample_dois": []
+  },
+  "graph_expectations": {
+    "min_cites": 0,
+    "max_cites": 104,
+    "expected_cited_arxiv_ids": [],
+    "max_duplicate_work_fingerprints": 8,
+    "min_authorships": 0,
+    "max_authorships": 8,
+    "min_institutions": 0,
+    "max_institutions": 8,
+    "max_work_dedup_violations": 0
+  }
+}

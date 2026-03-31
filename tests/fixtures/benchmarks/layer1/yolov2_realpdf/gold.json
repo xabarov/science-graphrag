@@ -1,0 +1,54 @@
+{
+  "case_id": "yolov2_realpdf",
+  "schema_version": 1,
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+  "work_metadata": {
+    "title": "YOLO9000:",
+    "publication_year": null,
+    "abstract_prefix": "We introduce YOLO9000, a state-of-the-art, real-time object detection sy",
+    "doi": null,
+    "arxiv_id": null,
+    "venue_name": null,
+    "work_type": null
+  },
+  "authorships": [],
+  "references": {
+    "expected_count": 24,
+    "min_count": 16,
+    "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
+    "sample_arxiv_ids": [
+      "1512.04143",
+      "1504.08083",
+      "1512.03385",
+      "1502.03167",
+      "1312.4400",
+      "1512.02325",
+      "1506.02640",
+      "1506.01497",
+      "1409.1556",
+      "1602.07261",
+      "1409.4842"
+    ],
+    "sample_dois": []
+  },
+  "graph_expectations": {
+    "min_cites": 0,
+    "max_cites": 44,
+    "expected_cited_arxiv_ids": [
+      "1512.04143",
+      "1504.08083",
+      "1512.03385",
+      "1502.03167",
+      "1312.4400",
+      "1512.02325",
+      "1506.02640",
+      "1506.01497"
+    ],
+    "max_duplicate_work_fingerprints": 8,
+    "min_authorships": 0,
+    "max_authorships": 8,
+    "min_institutions": 0,
+    "max_institutions": 8,
+    "max_work_dedup_violations": 0
+  }
+}

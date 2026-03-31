@@ -99,34 +99,51 @@ def _split_head_at_abstract(head: str) -> tuple[str, str]:
         pre = head[: m_inline.start()]
         after = head[m_inline.end() :]
         return pre, after
-    raise ValueError("No 'Abstract' block found (expected a line 'Abstract' or 'Abstract. ')")
+    # Inline "Abstract We propose ..." (ECCV/CVPR one-line abstract label)
+    m_inline_word = re.search(r"(?im)^\s*abstract\s+(?=\S)", head)
+    if m_inline_word:
+        pre = head[: m_inline_word.start()]
+        after = head[m_inline_word.end() :].lstrip()
+        return pre, after
+    # IEEE-style "Abstract— ..." / "Abstract- ..."
+    m_ieee = re.search(r"(?im)^\s*abstract[—\-]\s*", head)
+    if m_ieee:
+        pre = head[: m_ieee.start()]
+        after = head[m_ieee.end() :]
+        return pre, after
+    raise ValueError(
+        "No 'Abstract' block found (expected standalone Abstract, Abstract., "
+        "Abstract—, or inline Abstract <word>)"
+    )
 
 
-def pdf_to_article_md(pdf: Path, *, body_max_chars: int = 48_000) -> str:
-    """Normalize PDF text into benchmark-shaped markdown (title, abstract, body, references)."""
-    norm = normalize_text(extract_text_from_pdf(pdf))
-    mref = re.search(r"(?im)^\s*references\s*\n", norm)
-    if not mref:
-        mref = re.search(r"(?im)^\s*bibliography\s*\n", norm)
-    if not mref:
-        raise ValueError("No 'References' / 'Bibliography' section found in extracted text")
-    head = norm[: mref.start()]
-    ref_tail = norm[mref.end() :]
-    pre, after_abs = _split_head_at_abstract(head)
-    title, authors = _authors_title_pre_abstract(pre)
+def _match_introduction_heading(after_abs: str) -> re.Match[str] | None:
+    """Locate the first ``1 Introduction`` / ``1 INTRODUCTION`` heading in body text."""
+
     mintro = re.search(r"(?im)^\s*1\.\s*Introduction\s*$", after_abs, re.MULTILINE)
     if not mintro:
         mintro = re.search(r"(?im)^\s*1\s+Introduction\s*$", after_abs, re.MULTILINE)
     if not mintro:
-        raise ValueError("No '1. Introduction' / '1 Introduction' heading found in extracted text")
-    chunk = after_abs[: mintro.start()]
-    abstract, mid = _trim_abstract_chunk(chunk)
-    body = (mid + "\n\n" + after_abs[mintro.start() :].strip()).strip()
-    if len(body) > body_max_chars:
-        body = (
-            body[:body_max_chars]
-            + "\n\n[... truncated for benchmark fixture size — see script body_max_chars ...]\n"
+        mintro = re.search(
+            r"(?im)^\s*1\s+I\s+N\s*T\s*R\s*O\s*D\s*U\s*C\s*T\s*I\s*O\s*N\s*$",
+            after_abs,
+            re.MULTILINE,
         )
+    if not mintro:
+        mintro = re.search(r"(?im)^\s*1\s+INTRODUCTION\s*$", after_abs, re.MULTILINE)
+    return mintro
+
+
+def _assemble_benchmark_markdown(
+    *,
+    title: str,
+    authors: str,
+    abstract: str,
+    body: str,
+    ref_tail: str,
+) -> str:
+    """Join title/authors/abstract/body/references into layer-1 fixture markdown."""
+
     parts = [
         f"# {title}",
         "",
@@ -145,6 +162,38 @@ def pdf_to_article_md(pdf: Path, *, body_max_chars: int = 48_000) -> str:
         ref_tail.strip(),
     ]
     return "\n".join(parts)
+
+
+def pdf_to_article_md(pdf: Path, *, body_max_chars: int = 48_000) -> str:
+    """Normalize PDF text into benchmark-shaped markdown (title, abstract, body, references)."""
+    norm = normalize_text(extract_text_from_pdf(pdf))
+    mref = re.search(r"(?im)^\s*references\s*\n", norm)
+    if not mref:
+        mref = re.search(r"(?im)^\s*bibliography\s*\n", norm)
+    if not mref:
+        raise ValueError("No 'References' / 'Bibliography' section found in extracted text")
+    head = norm[: mref.start()]
+    ref_tail = norm[mref.end() :]
+    pre, after_abs = _split_head_at_abstract(head)
+    title, authors = _authors_title_pre_abstract(pre)
+    mintro = _match_introduction_heading(after_abs)
+    if not mintro:
+        raise ValueError("No '1. Introduction' / '1 Introduction' / '1 INTRODUCTION' heading found")
+    chunk = after_abs[: mintro.start()]
+    abstract, mid = _trim_abstract_chunk(chunk)
+    body = (mid + "\n\n" + after_abs[mintro.start() :].strip()).strip()
+    if len(body) > body_max_chars:
+        body = (
+            body[:body_max_chars]
+            + "\n\n[... truncated for benchmark fixture size — see script body_max_chars ...]\n"
+        )
+    return _assemble_benchmark_markdown(
+        title=title,
+        authors=authors,
+        abstract=abstract,
+        body=body,
+        ref_tail=ref_tail,
+    )
 
 
 def _suggest_gold_stub(case_id: str, title: str, abstract: str, article_md: str) -> dict:
@@ -179,7 +228,7 @@ def _suggest_gold_stub(case_id: str, title: str, abstract: str, article_md: str)
         "authorships": [],
         "references": {
             "expected_count": n,
-            "min_count": max(1, n - 8),
+            "min_count": max(0, n - 8) if n else 0,
             "notes": (
                 "Heuristic extract_references counts on this MD; "
                 "PDF hyphenation may shift totals."

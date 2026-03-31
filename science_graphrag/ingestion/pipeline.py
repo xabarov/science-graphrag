@@ -28,6 +28,7 @@ from science_graphrag.ingestion.enrichment.openalex import (
     fetch_work_by_doi,
 )
 from science_graphrag.ingestion.enrichment.ror import lookup_ror_id_optional
+from science_graphrag.ingestion.llm.semantic_extraction import extract_semantic_method_dataset
 from science_graphrag.ingestion.llm.stage_extraction import extract_stages_llm_first
 from science_graphrag.ingestion.normalize import normalize_text
 from science_graphrag.ingestion.pdf import extract_text_from_pdf
@@ -443,6 +444,21 @@ def ingest_document(
                     _persist_reference_citation(neo, work_id, ref, settings)
 
                 _maybe_link_openalex_arxiv_version(neo, work_id, draft, oa_raw)
+
+                with chain_span(
+                    "semantic_method_dataset",
+                    {"document.id": doc_id, "work.id": work_id},
+                ):
+                    semantic = extract_semantic_method_dataset(
+                        normalized,
+                        settings,
+                        document_id=doc_id,
+                    )
+                    neo.sync_work_semantic_layer(
+                        work_id,
+                        semantic,
+                        confidence_threshold=settings.semantic_graph_confidence_threshold,
+                    )
 
             doc_chunks = dedupe_chunks_for_embedding(
                 chunk_document_for_retrieval(

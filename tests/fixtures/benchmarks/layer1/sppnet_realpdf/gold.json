@@ -1,0 +1,54 @@
+{
+  "case_id": "sppnet_realpdf",
+  "schema_version": 1,
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+  "work_metadata": {
+    "title": "1",
+    "publication_year": null,
+    "abstract_prefix": "Existing deep convolutional neural networks (CNNs) require a fixed-size ",
+    "doi": null,
+    "arxiv_id": null,
+    "venue_name": null,
+    "work_type": null
+  },
+  "authorships": [],
+  "references": {
+    "expected_count": 40,
+    "min_count": 32,
+    "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
+    "sample_arxiv_ids": [
+      "1311.2901",
+      "1312.6229",
+      "1405.3531",
+      "1404.4316",
+      "1403.1840",
+      "1310.1531",
+      "1409.0575",
+      "1312.4400",
+      "1409.4842",
+      "1409.1556",
+      "1312.5402"
+    ],
+    "sample_dois": []
+  },
+  "graph_expectations": {
+    "min_cites": 0,
+    "max_cites": 60,
+    "expected_cited_arxiv_ids": [
+      "1311.2901",
+      "1312.6229",
+      "1405.3531",
+      "1404.4316",
+      "1403.1840",
+      "1310.1531",
+      "1409.0575",
+      "1312.4400"
+    ],
+    "max_duplicate_work_fingerprints": 8,
+    "min_authorships": 0,
+    "max_authorships": 8,
+    "min_institutions": 0,
+    "max_institutions": 8,
+    "max_work_dedup_violations": 0
+  }
+}
