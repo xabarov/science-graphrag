@@ -3,7 +3,7 @@
   "schema_version": 1,
   "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
   "work_metadata": {
-    "title": "Published as a conference paper at ICLR 2021",
+    "title": "DEFORMABLE DETR: DEFORMABLE TRANSFORMERS FOR END-TO-END OBJECT DETECTION",
     "publication_year": null,
     "abstract_prefix": "DETR has been recently proposed to eliminate the need for many hand-desi",
     "doi": null,

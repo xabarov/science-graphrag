@@ -3,7 +3,7 @@
   "schema_version": 1,
   "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
   "work_metadata": {
-    "title": "1",
+    "title": "Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks",
     "publication_year": null,
     "abstract_prefix": "State-of-the-art object detection networks depend on region proposal alg",
     "doi": null,

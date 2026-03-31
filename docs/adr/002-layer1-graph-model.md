@@ -46,3 +46,5 @@
 ## Links
 
 - [source-of-truth-v1.md](../architecture/source-of-truth-v1.md)
+- [ADR 005: узел Authorship vs ребро с свойствами](005-authorship-reified-node.md)
+- [Cypher-сравнение и UX vs модель](../architecture/authorship-neo4j-queries.md)

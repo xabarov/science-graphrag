@@ -3,7 +3,7 @@
   "schema_version": 1,
   "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
   "work_metadata": {
-    "title": "DINO: DETR with Improved DeNoising Anchor",
+    "title": "DINO: DETR with Improved DeNoising Anchor Boxes for End-to-End Object Detection",
     "publication_year": null,
     "abstract_prefix": "We present DINO (DETR with Improved deNoising anchOr boxes), a state-of-",
     "doi": null,

@@ -1,0 +1,597 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:c5320748bf3712047f1f",
+    "semantic_prompt_fingerprint": "sha256-20:741929d62eafa6cf4e77",
+    "semantic_extraction_enabled": true
+  },
+  "case": {
+    "case_id": "detr_realpdf",
+    "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/detr_realpdf",
+    "diagnostics": {
+      "document_id": "detr_realpdf",
+      "source_name": "detr_realpdf",
+      "markdown_source": "benchmark",
+      "metadata_source": "llm",
+      "authorships_source": "llm",
+      "references_source": "llm",
+      "extraction_llm_enabled": true,
+      "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+      "fallback_reasons": []
+    },
+    "metrics": {
+      "metadata": {
+        "title_exact_normalized": true,
+        "year_exact": null,
+        "abstract_prefix_ok": true,
+        "doi_match_expected": null,
+        "arxiv_match_expected": null,
+        "work_type_match": null
+      },
+      "authorships": {
+        "names_precision": 0.0,
+        "names_recall": 0.0,
+        "names_f1": 0.0,
+        "names_tp_fp_fn": {
+          "tp": 0,
+          "fp": 6,
+          "fn": 0
+        },
+        "order_accuracy": 0.0,
+        "order_hits": 0,
+        "affiliation_jaccard_macro_on_matched_authors": 0.0,
+        "affiliations_precision": 0.0,
+        "affiliations_recall": 0.0,
+        "affiliations_f1": 0.0,
+        "pred_count": 6,
+        "gold_count": 0
+      },
+      "references": {
+        "count": 53,
+        "expected_count": 54,
+        "min_count": 46,
+        "count_ok": true,
+        "count_delta": -1,
+        "sample_arxiv_precision": 1.0,
+        "sample_arxiv_recall": 1.0,
+        "sample_arxiv_f1": 1.0,
+        "sample_arxiv_tp_fp_fn": {
+          "tp": 11,
+          "fp": 0,
+          "fn": 0
+        },
+        "predicted_arxiv_ids": [
+          "1511.06449",
+          "1711.10433",
+          "1712.00617",
+          "1805.00613",
+          "1904.05709",
+          "1904.07850",
+          "1904.09324",
+          "1905.03072",
+          "1911.08460",
+          "1912.02424",
+          "2002.08926"
+        ],
+        "sample_doi_precision": 1.0,
+        "sample_doi_recall": 1.0,
+        "sample_doi_f1": 1.0
+      },
+      "contract": {
+        "checks": {
+          "title_match_required": true,
+          "abstract_prefix_required": true,
+          "reference_count_ok_required": true
+        },
+        "passed": true
+      }
+    },
+    "predicted": {
+      "work_metadata": {
+        "title": "End-to-End Object Detection with Transformers",
+        "normalized_title": "End-to-End Object Detection with Transformers",
+        "abstract": "We present a new method that views object detection as a direct set prediction problem. Our approach streamlines the detection pipeline, effectively removing the need for many hand-designed components like a non-maximum suppression procedure or anchor generation that explicitly encode our prior knowledge about the task. The main ingredients of the new framework, called DEtection TRansformer or DETR, are a set-based global loss that forces unique predictions via bipartite matching, and a transformer encoder-decoder architecture. Given a fixed small set of learned object queries, DETR reasons about the relations of the objects and the global image context to directly output the final set of predictions in parallel. The new model is conceptually simple and does not require a specialized library, unlike many other modern detectors. DETR demonstrates accuracy and run-time performance on par with the well-established and highly-optimized Faster R-CNN baseline on the challenging COCO object detection dataset. Moreover, DETR can be easily generalized to produce panoptic segmentation in a unified manner. We show that it significantly outperforms competitive baselines. Training code and pretrained models are available at https://github.com/facebookresearch/detr.",
+        "publication_year": null,
+        "doi": null,
+        "arxiv_id": null,
+        "language": "en",
+        "venue_name": null,
+        "work_type": "unknown",
+        "openalex_id": null,
+        "fingerprint": "fad234ac063b634d",
+        "ingestion_confidence": 0.72,
+        "source_metadata": {
+          "extraction_stage": "llm"
+        }
+      },
+      "authorships": [
+        {
+          "author_position": 1,
+          "author_raw_name": "Nicolas Carion",
+          "raw_affiliations": [
+            "Facebook AI"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 2,
+          "author_raw_name": "Francisco Massa",
+          "raw_affiliations": [
+            "Facebook AI"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 3,
+          "author_raw_name": "Gabriel Synnaeve",
+          "raw_affiliations": [
+            "Facebook AI"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 4,
+          "author_raw_name": "Nicolas Usunier",
+          "raw_affiliations": [
+            "Facebook AI"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 5,
+          "author_raw_name": "Alexander Kirillov",
+          "raw_affiliations": [
+            "Facebook AI"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 6,
+          "author_raw_name": "Sergey Zagoruyko",
+          "raw_affiliations": [
+            "Facebook AI"
+          ],
+          "is_corresponding": null,
+          "email": null
+        }
+      ],
+      "references": [
+        {
+          "raw_reference": "1. Al-Rfou, R., Choe, D., Constant, N., Guo, M., Jones, L.: Character-level language modeling with deeper self-attention. In: AAAI Conference on Artificial Intelligence (2019)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "2. Bahdanau, D., Cho, K., Bengio, Y.: Neural machine translation by jointly learning to align and translate. In: ICLR (2015)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "3. Bello, I., Zoph, B., Vaswani, A., Shlens, J., Le, Q.V.: Attention augmented convolutional networks. In: ICCV (2019)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "4. Bodla, N., Singh, B., Chellappa, R., Davis, L.S.: Soft-NMS improving object detection with one line of code. In: ICCV (2017)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "5. Cai, Z., Vasconcelos, N.: Cascade R-CNN: High quality object detection and instance segmentation. PAMI (2019)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "6. Chan, W., Saharia, C., Hinton, G., Norouzi, M., Jaitly, N.: Imputer: Sequence modeling via imputation and dynamic programming. arXiv:2002.08926 (2020)",
+          "doi": null,
+          "arxiv_id": "2002.08926",
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "7. Cordonnier, J.B., Loukas, A., Jaggi, M.: On the relationship between self-attention and convolutional layers. In: ICLR (2020)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "8. Devlin, J., Chang, M.W., Lee, K., Toutanova, K.: BERT: Pre-training of deep bidirectional transformers for language understanding. In: NAACL-HLT (2019)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "9. Erhan, D., Szegedy, C., Toshev, A., Anguelov, D.: Scalable object detection using deep neural networks. In: CVPR (2014)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2014
+        },
+        {
+          "raw_reference": "10. Ghazvininejad, M., Levy, O., Liu, Y., Zettlemoyer, L.: Mask-predict: Parallel decoding of conditional masked language models. arXiv:1904.09324 (2019)",
+          "doi": null,
+          "arxiv_id": "1904.09324",
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "11. Glorot, X., Bengio, Y.: Understanding the difficulty of training deep feedforward neural networks. In: AISTATS (2010)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2010
+        },
+        {
+          "raw_reference": "12. Gu, J., Bradbury, J., Xiong, C., Li, V.O., Socher, R.: Non-autoregressive neural machine translation. In: ICLR (2018)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "13. He, K., Girshick, R., Dollár, P.: Rethinking imagenet pre-training. In: ICCV (2019)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "14. He, K., Gkioxari, G., Dollár, P., Girshick, R.B.: Mask R-CNN. In: ICCV (2017)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "15. He, K., Zhang, X., Ren, S., Sun, J.: Deep residual learning for image recognition. In: CVPR (2016)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2016
+        },
+        {
+          "raw_reference": "16. Hosang, J.H., Benenson, R., Schiele, B.: Learning non-maximum suppression. In: CVPR (2017)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "17. Hu, H., Gu, J., Zhang, Z., Dai, J., Wei, Y.: Relation networks for object detection. In: CVPR (2018)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "18. Kirillov, A., Girshick, R., He, K., Dollár, P.: Panoptic feature pyramid networks. In: CVPR (2019)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "19. Kirillov, A., He, K., Girshick, R., Rother, C., Dollar, P.: Panoptic segmentation. In: CVPR (2019)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "20. Kuhn, H.W.: The hungarian method for the assignment problem (1955)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 1955
+        },
+        {
+          "raw_reference": "21. Li, Y., Qi, H., Dai, J., Ji, X., Wei, Y.: Fully convolutional instance-aware semantic segmentation. In: CVPR (2017)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "22. Lin, T.Y., Dollár, P., Girshick, R., He, K., Hariharan, B., Belongie, S.: Feature pyramid networks for object detection. In: CVPR (2017)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "23. Lin, T.Y., Goyal, P., Girshick, R.B., He, K., Dollár, P.: Focal loss for dense object detection. In: ICCV (2017)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "24. Lin, T.Y., Maire, M., Belongie, S., Hays, J., Perona, P., Ramanan, D., Dollár, P., Zitnick, C.L.: Microsoft COCO: Common objects in context. In: ECCV (2014)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2014
+        },
+        {
+          "raw_reference": "25. Liu, W., Anguelov, D., Erhan, D., Szegedy, C., Reed, S.E., Fu, C.Y., Berg, A.C.: Ssd: Single shot multibox detector. In: ECCV (2016)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2016
+        },
+        {
+          "raw_reference": "26. Loshchilov, I., Hutter, F.: Decoupled weight decay regularization. In: ICLR (2017)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "27. Lüscher, C., Beck, E., Irie, K., Kitza, M., Michel, W., Zeyer, A., Schlüter, R., Ney, H.: Rwth asr systems for librispeech: Hybrid vs attention - w/o data augmentation. arXiv:1905.03072 (2019)",
+          "doi": null,
+          "arxiv_id": "1905.03072",
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "28. Milletari, F., Navab, N., Ahmadi, S.A.: V-net: Fully convolutional neural networks for volumetric medical image segmentation. In: 3DV (2016)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2016
+        },
+        {
+          "raw_reference": "29. Oord, A.v.d., Li, Y., Babuschkin, I., Simonyan, K., Vinyals, O., Kavukcuoglu, K., Driessche, G.v.d., Lockhart, E., Cobo, L.C., Stimberg, F., et al.: Parallel wavenet: Fast high-fidelity speech synthesis. arXiv:1711.10433 (2017)",
+          "doi": null,
+          "arxiv_id": "1711.10433",
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "30. Park, E., Berg, A.C.: Learning to decompose for object detection and instance segmentation. arXiv:1511.06449 (2015)",
+          "doi": null,
+          "arxiv_id": "1511.06449",
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "31. Parmar, N., Vaswani, A., Uszkoreit, J., Kaiser, L., Shazeer, N., Ku, A., Tran, D.: Image transformer. In: ICML (2018)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "32. Paszke, A., Gross, S., Massa, F., Lerer, A., Bradbury, J., Chanan, G., Killeen, T., Lin, Z., Gimelshein, N., Antiga, L., Desmaison, A., Kopf, A., Yang, E., DeVito, Z., Raison, M., Tejani, A., Chilamkurthy, S., Steiner, B., Fang, L., Bai, J., Chintala, S.: Pytorch: An imperative style, high-performance deep learning library. In: NeurIPS (2019)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "33. Pineda, L., Salvador, A., Drozdzal, M., Romero, A.: Elucidating image-to-set prediction: An analysis of models, losses and datasets. arXiv:1904.05709 (2019)",
+          "doi": null,
+          "arxiv_id": "1904.05709",
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "34. Radford, A., Wu, J., Child, R., Luan, D., Amodei, D., Sutskever, I.: Language models are unsupervised multitask learners (2019)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "35. Redmon, J., Divvala, S., Girshick, R., Farhadi, A.: You only look once: Unified, real-time object detection. In: CVPR (2016)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2016
+        },
+        {
+          "raw_reference": "36. Ren, M., Zemel, R.S.: End-to-end instance segmentation with recurrent attention. In: CVPR (2017)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "37. Ren, S., He, K., Girshick, R.B., Sun, J.: Faster R-CNN: Towards real-time object detection with region proposal networks. PAMI (2015)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "38. Rezatofighi, H., Tsoi, N., Gwak, J., Sadeghian, A., Reid, I., Savarese, S.: Generalized intersection over union. In: CVPR (2019)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "39. Rezatofighi, S.H., Kaskman, R., Motlagh, F.T., Shi, Q., Cremers, D., Leal-Taixé, L., Reid, I.: Deep perm-set net: Learn to predict sets with unknown permutation and cardinality using deep neural networks. arXiv:1805.00613 (2018)",
+          "doi": null,
+          "arxiv_id": "1805.00613",
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "40. Rezatofighi, S.H., Milan, A., Abbasnejad, E., Dick, A., Reid, I., Kaskman, R., Cremers, D., Leal-Taixé, L.: Deepsetnet: Predicting sets with deep neural networks. In: ICCV (2017)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "41. Romera-Paredes, B., Torr, P.H.S.: Recurrent instance segmentation. In: ECCV (2015)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "42. Salvador, A., Bellver, M., Baradad, M., Marqués, F., Torres, J., Giró, X.: Recurrent neural networks for semantic instance segmentation. arXiv:1712.00617 (2017)",
+          "doi": null,
+          "arxiv_id": "1712.00617",
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "43. Stewart, R.J., Andriluka, M., Ng, A.Y.: End-to-end people detection in crowded scenes. In: CVPR (2015)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "44. Sutskever, I., Vinyals, O., Le, Q.V.: Sequence to sequence learning with neural networks. In: NeurIPS (2014)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2014
+        },
+        {
+          "raw_reference": "45. Synnaeve, G., Xu, Q., Kahn, J., Grave, E., Likhomanenko, T., Pratap, V., Sriram, A., Liptchinsky, V., Collobert, R.: End-to-end ASR: from supervised to semi-supervised learning with modern architectures. arXiv:1911.08460 (2019)",
+          "doi": null,
+          "arxiv_id": "1911.08460",
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "46. Tian, Z., Shen, C., Chen, H., He, T.: FCOS: Fully convolutional one-stage object detection. In: ICCV (2019)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "47. Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A.N., Kaiser, L., Polosukhin, I.: Attention is all you need. In: NeurIPS (2017)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "48. Vinyals, O., Bengio, S., Kudlur, M.: Order matters: Sequence to sequence for sets. In: ICLR (2016)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2016
+        },
+        {
+          "raw_reference": "49. Wang, X., Girshick, R.B., Gupta, A., He, K.: Non-local neural networks. In: CVPR (2018)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "50. Wu, Y., Kirillov, A., Massa, F., Lo, W.Y., Girshick, R.: Detectron2. https://github.com/facebookresearch/detectron2 (2019)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "51. Xiong, Y., Liao, R., Zhao, H., Hu, R., Bai, M., Yumer, E., Urtasun, R.: Upsnet: A unified panoptic segmentation network. In: CVPR (2019)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "52. Zhang, S., Chi, C., Yao, Y., Lei, Z., Li, S.Z.: Bridging the gap between anchor-based and anchor-free detection via adaptive training sample selection. arXiv:1912.02424 (2019)",
+          "doi": null,
+          "arxiv_id": "1912.02424",
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "53. Zhou, X., Wang, D., Krähenbühl, P.: Objects as points. arXiv:1904.07850 (2019)",
+          "doi": null,
+          "arxiv_id": "1904.07850",
+          "title": null,
+          "year": 2019
+        }
+      ]
+    },
+    "gold": {
+      "case_id": "detr_realpdf",
+      "schema_version": 1,
+      "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+      "work_metadata": {
+        "title": "End-to-End Object Detection with Transformers",
+        "publication_year": null,
+        "abstract_prefix": "We present a new method that views object detection as a direct set pred",
+        "doi": null,
+        "arxiv_id": null,
+        "venue_name": null,
+        "work_type": null
+      },
+      "authorships": [],
+      "references": {
+        "expected_count": 54,
+        "min_count": 46,
+        "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
+        "sample_arxiv_ids": [
+          "2002.08926",
+          "1904.09324",
+          "1905.03072",
+          "1711.10433",
+          "1511.06449",
+          "1904.05709",
+          "1805.00613",
+          "1712.00617",
+          "1911.08460",
+          "1912.02424",
+          "1904.07850"
+        ],
+        "sample_dois": []
+      },
+      "graph_expectations": {
+        "min_cites": 0,
+        "max_cites": 74,
+        "min_authorships": 0,
+        "max_authorships": 8,
+        "min_institutions": 0,
+        "max_institutions": 8,
+        "expected_cited_arxiv_ids": [
+          "2002.08926",
+          "1904.09324",
+          "1905.03072",
+          "1711.10433",
+          "1511.06449",
+          "1904.05709",
+          "1805.00613",
+          "1712.00617"
+        ],
+        "max_duplicate_work_fingerprints": 8,
+        "max_work_dedup_violations": 0,
+        "min_related_version_edges": null,
+        "max_related_version_edges": null
+      },
+      "quality_thresholds": null
+    }
+  }
+}

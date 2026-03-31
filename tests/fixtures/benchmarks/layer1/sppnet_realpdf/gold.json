@@ -3,7 +3,7 @@
   "schema_version": 1,
   "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
   "work_metadata": {
-    "title": "1",
+    "title": "Spatial Pyramid Pooling in Deep Convolutional Networks for Visual Recognition",
     "publication_year": null,
     "abstract_prefix": "Existing deep convolutional neural networks (CNNs) require a fixed-size ",
     "doi": null,

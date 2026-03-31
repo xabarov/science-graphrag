@@ -1,0 +1,311 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:9ef7564010d2d895c2ae",
+    "semantic_extraction_enabled": true
+  },
+  "case": {
+    "case_id": "hog_human_detection_realpdf",
+    "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/hog_human_detection_realpdf",
+    "diagnostics": {
+      "document_id": "hog_human_detection_realpdf",
+      "source_name": "hog_human_detection_realpdf",
+      "markdown_source": "benchmark",
+      "metadata_source": "llm",
+      "authorships_source": "llm",
+      "references_source": "llm",
+      "extraction_llm_enabled": true,
+      "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+      "fallback_reasons": []
+    },
+    "metrics": {
+      "metadata": {
+        "title_exact_normalized": true,
+        "year_exact": null,
+        "abstract_prefix_ok": true,
+        "doi_match_expected": null,
+        "arxiv_match_expected": null,
+        "work_type_match": null
+      },
+      "authorships": {
+        "names_precision": 0.0,
+        "names_recall": 0.0,
+        "names_f1": 0.0,
+        "names_tp_fp_fn": {
+          "tp": 0,
+          "fp": 2,
+          "fn": 0
+        },
+        "order_accuracy": 0.0,
+        "order_hits": 0,
+        "affiliation_jaccard_macro_on_matched_authors": 0.0,
+        "affiliations_precision": 0.0,
+        "affiliations_recall": 0.0,
+        "affiliations_f1": 0.0,
+        "pred_count": 2,
+        "gold_count": 0
+      },
+      "references": {
+        "count": 22,
+        "expected_count": 22,
+        "min_count": 14,
+        "count_ok": true,
+        "count_delta": 0,
+        "sample_arxiv_precision": 1.0,
+        "sample_arxiv_recall": 1.0,
+        "sample_arxiv_f1": 1.0,
+        "sample_arxiv_tp_fp_fn": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0
+        },
+        "predicted_arxiv_ids": [],
+        "sample_doi_precision": 1.0,
+        "sample_doi_recall": 1.0,
+        "sample_doi_f1": 1.0
+      },
+      "contract": {
+        "checks": {
+          "title_match_required": true,
+          "abstract_prefix_required": true,
+          "reference_count_ok_required": true
+        },
+        "passed": true
+      }
+    },
+    "predicted": {
+      "work_metadata": {
+        "title": "Histograms of Oriented Gradients for Human Detection",
+        "normalized_title": "Histograms of Oriented Gradients for Human Detection",
+        "abstract": "We study the question of feature sets for robust visual object recognition, adopting linear SVM based human detection as a test case. After reviewing existing edge and gradient based descriptors, we show experimentally that grids of Histograms of Oriented Gradient (HOG) descriptors significantly outperform existing feature sets for human detection. We study the influence of each stage of the computation on performance, concluding that fine-scale gradients, fine orientation binning, relatively coarse spatial binning, and high-quality local contrast normalization in overlapping descriptor blocks are all important for good results. The new approach gives near-perfect separation on the original MIT pedestrian database, so we introduce a more challenging dataset containing over 1800 annotated human images with a large range of pose variations and backgrounds.",
+        "publication_year": null,
+        "doi": null,
+        "arxiv_id": null,
+        "language": null,
+        "venue_name": null,
+        "work_type": "unknown",
+        "openalex_id": null,
+        "fingerprint": "4680038a87003937",
+        "ingestion_confidence": 0.72,
+        "source_metadata": {
+          "extraction_stage": "llm"
+        }
+      },
+      "authorships": [
+        {
+          "author_position": 1,
+          "author_raw_name": "Navneet Dalal",
+          "raw_affiliations": [
+            "INRIA Rhone-Alps, 655 avenue de l'Europe, Montbonnot 38334, France"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 2,
+          "author_raw_name": "Bill Triggs",
+          "raw_affiliations": [
+            "INRIA Rhone-Alps, 655 avenue de l'Europe, Montbonnot 38334, France"
+          ],
+          "is_corresponding": null,
+          "email": null
+        }
+      ],
+      "references": [
+        {
+          "raw_reference": "[1] S. Belongie, J. Malik, and J. Puzicha. Matching shapes. The 8th ICCV, Vancouver, Canada, pages 454461, 2001.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2001
+        },
+        {
+          "raw_reference": "[2] V. de Poortere, J. Cant, B. Van den Bosch, J. de Prins, F. Fransens, and L. Van Gool. Efcient pedestrian detection: a test case for svm based categorization. Workshop on Cognitive Vision, 2002. Available online: http://www.vision.ethz.ch/cogvis02/.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2002
+        },
+        {
+          "raw_reference": "[3] P. Felzenszwalb and D. Huttenlocher. Efcient matching of pictorial structures. CVPR, Hilton Head Island, South Carolina, USA, pages 6675, 2000.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2000
+        },
+        {
+          "raw_reference": "[4] W. T. Freeman and M. Roth. Orientation histograms for hand gesture recognition. Intl. Workshop on Automatic Face- and Gesture- Recognition, IEEE Computer Society, Zurich, Switzerland, pages 296301, June 1995.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 1995
+        },
+        {
+          "raw_reference": "[5] W. T. Freeman, K. Tanaka, J. Ohta, and K. Kyuma. Com- puter vision for computer games. 2nd International Confer- ence on Automatic Face and Gesture Recognition, Killington, VT, USA, pages 100105, October 1996.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 1996
+        },
+        {
+          "raw_reference": "[6] D. M. Gavrila. The visual analysis of human movement: A survey. CVIU, 73(1):8298, 1999.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 1999
+        },
+        {
+          "raw_reference": "[7] D. M. Gavrila, J. Giebel, and S. Munder. Vision-based pedestrian detection: the protector+ system. Proc. of the IEEE Intelligent Vehicles Symposium, Parma, Italy, 2004.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2004
+        },
+        {
+          "raw_reference": "[8] D. M. Gavrila and V. Philomin. Real-time object detection for smart vehicles. CVPR, Fort Collins, Colorado, USA, pages 8793, 1999.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 1999
+        },
+        {
+          "raw_reference": "[9] S. Ioffe and D. A. Forsyth. Probabilistic methods for nding people. IJCV, 43(1):4568, 2001.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2001
+        },
+        {
+          "raw_reference": "[10] T. Joachims. Making large-scale svm learning practical. In B. Schlkopf, C. Burges, and A. Smola, editors, Advances in Kernel Methods - Support Vector Learning. The MIT Press, Cambridge, MA, USA, 1999.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 1999
+        },
+        {
+          "raw_reference": "[11] Y. Ke and R. Sukthankar. Pca-sift: A more distinctive rep- resentation for local image descriptors. CVPR, Washington, DC, USA, pages 6675, 2004.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2004
+        },
+        {
+          "raw_reference": "[12] D. G. Lowe. Distinctive image features from scale-invariant keypoints. IJCV, 60(2):91110, 2004.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2004
+        },
+        {
+          "raw_reference": "[13] R. K. McConnell. Method of and apparatus for pattern recog- nition, January 1986. U.S. Patent No. 4,567,610.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 1986
+        },
+        {
+          "raw_reference": "[14] K. Mikolajczyk and C. Schmid. A performance evaluation of local descriptors. PAMI, 2004. Accepted.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2004
+        },
+        {
+          "raw_reference": "[15] K. Mikolajczyk and C. Schmid. Scale and afne invariant interest point detectors. IJCV, 60(1):6386, 2004.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2004
+        },
+        {
+          "raw_reference": "[16] K. Mikolajczyk, C. Schmid, and A. Zisserman. Human detec- tion based on a probabilistic assembly of robust part detectors. The 8th ECCV, Prague, Czech Republic, volume I, pages 69- 81, 2004.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2004
+        },
+        {
+          "raw_reference": "[17] A. Mohan, C. Papageorgiou, and T. Poggio. Example-based object detection in images by components. PAMI, 23(4):349 361, April 2001.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2001
+        },
+        {
+          "raw_reference": "[18] C. Papageorgiou and T. Poggio. A trainable system for object detection. IJCV, 38(1):1533, 2000.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2000
+        },
+        {
+          "raw_reference": "[19] R. Ronfard, C. Schmid, and B. Triggs. Learning to parse pic- tures of people. The 7th ECCV, Copenhagen, Denmark, vol- ume IV, pages 700714, 2002.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2002
+        },
+        {
+          "raw_reference": "[20] Henry Schneiderman and Takeo Kanade. Object detection using the statistics of parts. IJCV, 56(3):151177, 2004.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2004
+        },
+        {
+          "raw_reference": "[21] Eric L. Schwartz. Spatial mapping in the primate sensory pro- jection: analytic structure and relevance to perception. Bio- logical Cybernetics, 25(4):181194, 1977.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 1977
+        },
+        {
+          "raw_reference": "[22] P. Viola, M. J. Jones, and D. Snow. Detecting pedestrians using patterns of motion and appearance. The 9th ICCV, Nice, France, volume 1, pages 734741, 2003.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2003
+        }
+      ]
+    },
+    "gold": {
+      "case_id": "hog_human_detection_realpdf",
+      "schema_version": 1,
+      "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+      "work_metadata": {
+        "title": "Histograms of Oriented Gradients for Human Detection",
+        "publication_year": null,
+        "abstract_prefix": "We study the question of feature sets for robust visual object recognit",
+        "doi": null,
+        "arxiv_id": null,
+        "venue_name": null,
+        "work_type": null
+      },
+      "authorships": [],
+      "references": {
+        "expected_count": 22,
+        "min_count": 14,
+        "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
+        "sample_arxiv_ids": [],
+        "sample_dois": []
+      },
+      "graph_expectations": {
+        "min_cites": 0,
+        "max_cites": 42,
+        "min_authorships": 0,
+        "max_authorships": 8,
+        "min_institutions": 0,
+        "max_institutions": 8,
+        "expected_cited_arxiv_ids": [],
+        "max_duplicate_work_fingerprints": 8,
+        "max_work_dedup_violations": 0,
+        "min_related_version_edges": null,
+        "max_related_version_edges": null
+      },
+      "quality_thresholds": null
+    }
+  }
+}

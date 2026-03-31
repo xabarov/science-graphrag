@@ -1,0 +1,441 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:9ef7564010d2d895c2ae",
+    "semantic_extraction_enabled": true
+  },
+  "case": {
+    "case_id": "selective_search_realpdf",
+    "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/selective_search_realpdf",
+    "diagnostics": {
+      "document_id": "selective_search_realpdf",
+      "source_name": "selective_search_realpdf",
+      "markdown_source": "benchmark",
+      "metadata_source": "llm",
+      "authorships_source": "llm",
+      "references_source": "llm",
+      "extraction_llm_enabled": true,
+      "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+      "fallback_reasons": []
+    },
+    "metrics": {
+      "metadata": {
+        "title_exact_normalized": true,
+        "year_exact": null,
+        "abstract_prefix_ok": true,
+        "doi_match_expected": null,
+        "arxiv_match_expected": null,
+        "work_type_match": null
+      },
+      "authorships": {
+        "names_precision": 0.0,
+        "names_recall": 0.0,
+        "names_f1": 0.0,
+        "names_tp_fp_fn": {
+          "tp": 0,
+          "fp": 4,
+          "fn": 0
+        },
+        "order_accuracy": 0.0,
+        "order_hits": 0,
+        "affiliation_jaccard_macro_on_matched_authors": 0.0,
+        "affiliations_precision": 0.0,
+        "affiliations_recall": 0.0,
+        "affiliations_f1": 0.0,
+        "pred_count": 4,
+        "gold_count": 0
+      },
+      "references": {
+        "count": 38,
+        "expected_count": 40,
+        "min_count": 32,
+        "count_ok": true,
+        "count_delta": -2,
+        "sample_arxiv_precision": 1.0,
+        "sample_arxiv_recall": 1.0,
+        "sample_arxiv_f1": 1.0,
+        "sample_arxiv_tp_fp_fn": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0
+        },
+        "predicted_arxiv_ids": [],
+        "sample_doi_precision": 1.0,
+        "sample_doi_recall": 1.0,
+        "sample_doi_f1": 1.0
+      },
+      "contract": {
+        "checks": {
+          "title_match_required": true,
+          "abstract_prefix_required": true,
+          "reference_count_ok_required": true
+        },
+        "passed": true
+      }
+    },
+    "predicted": {
+      "work_metadata": {
+        "title": "Selective Search for Object Recognition",
+        "normalized_title": "Selective Search for Object Recognition",
+        "abstract": "This paper addresses the problem of generating possible object locations for use in object recognition. We introduce Selective Search which combines the strength of both an exhaustive search and segmentation. Like segmentation, we use the image structure to guide our sampling process. Like exhaustive search, we aim to capture all possible object locations. Instead of a single technique to generate possible object locations, we diversify our search and use a variety of complementary image partitionings to deal with as many image conditions as possible. Our Selective Search results in a small set of data-driven, class-independent, high quality locations, yielding 99% recall and a Mean Average Best Overlap of 0.879 at 10,097 locations. The reduced number of locations compared to an exhaustive search enables the use of stronger machine learning techniques and stronger appearance models for object recognition. In this paper we show that our selective search enables the use of the powerful Bag-of-Words model for recognition. The Selective Search software is made publicly available.",
+        "publication_year": 2012,
+        "doi": null,
+        "arxiv_id": null,
+        "language": "en",
+        "venue_name": "IJCV",
+        "work_type": "preprint",
+        "openalex_id": null,
+        "fingerprint": "f0c78eec44f42283",
+        "ingestion_confidence": 0.72,
+        "source_metadata": {
+          "extraction_stage": "llm"
+        }
+      },
+      "authorships": [
+        {
+          "author_position": 1,
+          "author_raw_name": "J.R.R. Uijlings",
+          "raw_affiliations": [
+            "University of Trento, Italy"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 2,
+          "author_raw_name": "K.E.A. van de Sande",
+          "raw_affiliations": [
+            "University of Amsterdam, the Netherlands"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 3,
+          "author_raw_name": "T. Gevers",
+          "raw_affiliations": [
+            "University of Amsterdam, the Netherlands"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 4,
+          "author_raw_name": "A.W.M. Smeulders",
+          "raw_affiliations": [
+            "University of Amsterdam, the Netherlands"
+          ],
+          "is_corresponding": null,
+          "email": null
+        }
+      ],
+      "references": [
+        {
+          "raw_reference": "[1] B. Alexe, T. Deselaers, and V . Ferrari. What is an object? I n CVPR, 2010. 2, 6",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "What is an object?",
+          "year": 2010
+        },
+        {
+          "raw_reference": "[2] B. Alexe, T. Deselaers, and V . Ferrari. Measuring the ob- jectness of image windows. IEEE transactions on Pattern Analysis and Machine Intelligence , 2012. 3, 8, 10, 13",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Measuring the objectness of image windows",
+          "year": 2012
+        },
+        {
+          "raw_reference": "[3] P . Arbel ́aez, M. Maire, C. Fowlkes, and J. Malik. Contour detection and hierarchical image segmentation. TPAMI, 2011. 1, 2, 3, 4, 8, 10, 11",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Contour detection and hierarchical image segmentation",
+          "year": 2011
+        },
+        {
+          "raw_reference": "[4] J. Carreira and C. Sminchisescu. Constrained parametri c min- cuts for automatic object segmentation. In CVPR, 2010. 2, 3, 8, 9, 10, 11, 13",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Constrained parametric min-cuts for automatic object segmentation",
+          "year": 2010
+        },
+        {
+          "raw_reference": "[5] O. Chum and A. Zisserman. An exemplar model for learning object classes. In CVPR, 2007. 3",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "An exemplar model for learning object classes",
+          "year": 2007
+        },
+        {
+          "raw_reference": "[6] D. Comaniciu and P . Meer. Mean shift: a robust approach toward feature space analysis. TPAMI, 24:603–619, 2002. 1, 3",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Mean shift: a robust approach toward feature space analysis",
+          "year": 2002
+        },
+        {
+          "raw_reference": "[7] G. Csurka, C. R. Dance, L. Fan, J. Willamowski, and C. Bray . Visual categorization with bags of keypoints. In ECCV Sta- tistical Learning in Computer Vision , 2004. 5 13",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Visual categorization with bags of keypoints",
+          "year": 2004
+        },
+        {
+          "raw_reference": "[8] N. Dalal and B. Triggs. Histograms of oriented gradients for human detection. In CVPR, 2005. 1, 2, 3, 5",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Histograms of oriented gradients for human detection",
+          "year": 2005
+        },
+        {
+          "raw_reference": "[9] I. Endres and D. Hoiem. Category independent object pro- posals. In ECCV, 2010. 2, 3, 6, 8, 9, 10, 11, 13",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Category independent object proposals",
+          "year": 2010
+        },
+        {
+          "raw_reference": "[10] M. Everingham, L. V . Gool, C. Williams, J. Winn, and A. Zis- serman. Overview and results of the detection challenge. Th e Pascal Visual Object Classes Challenge Workshop, 2011. 12",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Overview and results of the detection challenge",
+          "year": 2011
+        },
+        {
+          "raw_reference": "[11] M. Everingham, L. van Gool, C. K. I. Williams, J. Winn, an d A. Zisserman. The pascal visual object classes (voc) chal- lenge. IJCV, 88:303–338, 2010. 6",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "The pascal visual object classes (voc) challenge",
+          "year": 2010
+        },
+        {
+          "raw_reference": "[12] P . F. Felzenszwalb, R. B. Girshick, D. McAllester, and D. Ra- manan. Object detection with discriminatively trained par t based models. TPAMI, 32:1627–1645, 2010. 1, 2, 3, 5, 6, 8, 11, 12, 13",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Object detection with discriminatively trained part based models",
+          "year": 2010
+        },
+        {
+          "raw_reference": "[13] P . F. Felzenszwalb and D. P . Huttenlocher. Efficient Gra ph- Based Image Segmentation. IJCV, 59:167–181, 2004. 1, 3, 4, 5, 7",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Efficient Graph-Based Image Segmentation",
+          "year": 2004
+        },
+        {
+          "raw_reference": "[14] J. M. Geusebroek, R. van den Boomgaard, A. W. M. Smeul- ders, and H. Geerts. Color invariance. TPAMI, 23:1338–1350, 2001. 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Color invariance",
+          "year": 2001
+        },
+        {
+          "raw_reference": "[15] C. Gu, J. J. Lim, P . Arbel ́aez, and J. Malik. Recognition using regions. In CVPR, 2009. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Recognition using regions",
+          "year": 2009
+        },
+        {
+          "raw_reference": "[16] H. Harzallah, F. Jurie, and C. Schmid. Combining efficie nt object localization and image classification. In ICCV, 2009. 1, 2, 3, 5, 6, 8",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Combining efficient object localization and image classification",
+          "year": 2009
+        },
+        {
+          "raw_reference": "[17] C. H. Lampert, M. B. Blaschko, and T. Hofmann. Efficient subwindow search: A branch and bound framework for object localization. TPAMI, 31:2129–2142, 2009. 2, 5",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Efficient subwindow search: A branch and bound framework for object localization",
+          "year": 2009
+        },
+        {
+          "raw_reference": "[18] S. Lazebnik, C. Schmid, and J. Ponce. Beyond bags of fea- tures: Spatial pyramid matching for recognizing natural scene categories. In CVPR, 2006. 5",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Beyond bags of features: Spatial pyramid matching for recognizing natural scene categories",
+          "year": 2006
+        },
+        {
+          "raw_reference": "[19] F. Li, J. Carreira, and C. Sminchisescu. Object recogni tion as ranking holistic figure-ground hypotheses. In CVPR, 2010. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Object recognition as ranking holistic figure-ground hypotheses",
+          "year": 2010
+        },
+        {
+          "raw_reference": "[20] C. Liu, L. Sharan, E.H. Adelson, and R. Rosenholtz. Ex- ploring features in a bayesian framework for material recog - nition. In Computer Vision and Pattern Recognition 2010 . IEEE, 2010. 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Exploring features in a bayesian framework for material recognition",
+          "year": 2010
+        },
+        {
+          "raw_reference": "[21] D. G. Lowe. Distinctive image features from scale-inva riant keypoints. IJCV, 60:91–110, 2004. 5, 13",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Distinctive image features from scale-invariant keypoints",
+          "year": 2004
+        },
+        {
+          "raw_reference": "[22] S. Maji, A. C. Berg, and J. Malik. Classification using in ter- section kernel support vector machines is efficient. In CVPR, 2008. 5",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Classification using intersection kernel support vector machines is efficient",
+          "year": 2008
+        },
+        {
+          "raw_reference": "[23] S. Maji and J. Malik. Object detection using a max-margi n hough transform. In CVPR, 2009. 3",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Object detection using a max-margin hough transform",
+          "year": 2009
+        },
+        {
+          "raw_reference": "[24] T. Ojala, M. Pietikainen, and T. Maenpaa. Multiresolut ion gray-scale and rotation invariant texture classification w ith local binary patterns. Pattern Analysis and Machine Intel- ligence, IEEE Transactions on, 24(7):971–987, 2002. 7",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Multiresolution gray-scale and rotation invariant texture classification with local binary patterns",
+          "year": 2002
+        },
+        {
+          "raw_reference": "[25] Florent Perronnin, Jorge S ́anchez, and Thomas Mensink. Im- proving the Fisher Kernel for Large-Scale Image Classifica- tion. In ECCV, 2010. 5",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Improving the Fisher Kernel for Large-Scale Image Classification",
+          "year": 2010
+        },
+        {
+          "raw_reference": "[26] J. Shi and J. Malik. Normalized cuts and image segmentat ion. TPAMI, 22:888–905, 2000. 1",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Normalized cuts and image segmentation",
+          "year": 2000
+        },
+        {
+          "raw_reference": "[27] J. Sivic and A. Zisserman. Video google: A text retrieva l approach to object matching in videos. In ICCV, 2003. 5",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Video google: A text retrieval approach to object matching in videos",
+          "year": 2003
+        },
+        {
+          "raw_reference": "[28] Soeren Sonnenburg, Gunnar Raetsch, Sebastian Hensche l, Christian Widmer, Jonas Behr, Alexander Zien, Fabio de Bona, Alexander Binder, Christian Gehl, and V ojtech Franc. The shogun machine learning toolbox. JMLR, 11:1799–1802, 2010. 5",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "The shogun machine learning toolbox",
+          "year": 2010
+        },
+        {
+          "raw_reference": "[29] Z. Tu, X. Chen, A. L. Y uille, and S. Zhu. Image parsing: Un i- fying segmentation, detection and recognition. International Journal of Computer Vision, Marr Prize Issue, 2005. 1",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Image parsing: Unifying segmentation, detection and recognition",
+          "year": 2005
+        },
+        {
+          "raw_reference": "[30] J.R.R. Uijlings, A.W.M. Smeulders, and R.J.H. Scha. Re al- time visual concept classification. IEEE Transactions on Mul- timedia, In press, 2010. 5, 12",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Real-time visual concept classification",
+          "year": 2010
+        },
+        {
+          "raw_reference": "[31] K. E. A. van de Sande and T. Gevers. Illumination-invari ant descriptors for discriminative visual object categorizat ion. Technical report, University of Amsterdam, 2012. 5",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Illumination-invariant descriptors for discriminative visual object categorization",
+          "year": 2012
+        },
+        {
+          "raw_reference": "[32] K. E. A. van de Sande, T. Gevers, and C. G. M. Snoek. Evaluating color descriptors for object and scene recognit ion. TPAMI, 32:1582–1596, 2010. 5, 12",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Evaluating color descriptors for object and scene recognition",
+          "year": 2010
+        },
+        {
+          "raw_reference": "[33] K. E. A. van de Sande, T. Gevers, and C. G. M. Snoek. Empowering visual categorization with the GPU. TMM, 13(1):60–70, 2011. 11",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Empowering visual categorization with the GPU",
+          "year": 2011
+        },
+        {
+          "raw_reference": "[34] A. V edaldi, V . Gulshan, M. V arma, and A. Zisserman. Mul- tiple kernels for object detection. In ICCV, 2009. 3, 5, 6, 8",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Multiple kernels for object detection",
+          "year": 2009
+        },
+        {
+          "raw_reference": "[35] P . Viola and M. Jones. Rapid object detection using a boo sted cascade of simple features. In CVPR, volume 1, pages 511– 518, 2001. 1",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Rapid object detection using a boosted cascade of simple features",
+          "year": 2001
+        },
+        {
+          "raw_reference": "[36] P . Viola and M. J. Jones. Robust real-time face detectio n. IJCV, 57:137–154, 2004. 2, 3",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Robust real-time face detection",
+          "year": 2004
+        },
+        {
+          "raw_reference": "[37] Xi Zhou, Kai Y u, Tong Zhang, and Thomas S. Huang. Im- age classification using super-vector coding of local image descriptors. In ECCV, 2010. 5",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Image classification using super-vector coding of local image descriptors",
+          "year": 2010
+        },
+        {
+          "raw_reference": "[38] L. Zhu, Y . Chen, A. Y uille, and W. Freeman. Latent hierarchi- cal structural learning for object detection. In CVPR, 2010. 13",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Latent hierarchical structural learning for object detection",
+          "year": 2010
+        }
+      ]
+    },
+    "gold": {
+      "case_id": "selective_search_realpdf",
+      "schema_version": 1,
+      "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+      "work_metadata": {
+        "title": "Selective Search for Object Recognition",
+        "publication_year": null,
+        "abstract_prefix": "This paper addresses the problem of generating possible object locations",
+        "doi": null,
+        "arxiv_id": null,
+        "venue_name": null,
+        "work_type": null
+      },
+      "authorships": [],
+      "references": {
+        "expected_count": 40,
+        "min_count": 32,
+        "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
+        "sample_arxiv_ids": [],
+        "sample_dois": []
+      },
+      "graph_expectations": {
+        "min_cites": 0,
+        "max_cites": 60,
+        "min_authorships": 0,
+        "max_authorships": 8,
+        "min_institutions": 0,
+        "max_institutions": 8,
+        "expected_cited_arxiv_ids": [],
+        "max_duplicate_work_fingerprints": 8,
+        "max_work_dedup_violations": 0,
+        "min_related_version_edges": null,
+        "max_related_version_edges": null
+      },
+      "quality_thresholds": null
+    }
+  }
+}

@@ -3,7 +3,7 @@
   "schema_version": 1,
   "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
   "work_metadata": {
-    "title": "arXiv:1312.6229v4 [cs.CV] 24 Feb 2014",
+    "title": "OverFeat: Integrated Recognition, Localization and Detection using Convolutional Networks",
     "publication_year": null,
     "abstract_prefix": "We present an integrated framework for using ConvolutionalNetworks for c",
     "doi": null,

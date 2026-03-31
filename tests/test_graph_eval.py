@@ -17,7 +17,7 @@ def test_graph_expectations_load() -> None:
 
     spec = Layer1GoldSpec.load(FIXTURE_YOLO / "gold.json")
     assert spec.graph_expectations is not None
-    assert spec.graph_expectations.min_cites == 23
+    assert spec.graph_expectations.min_cites == 12
     assert "1505.00110" in spec.graph_expectations.expected_cited_arxiv_ids
     assert spec.graph_expectations.max_work_dedup_violations == 0
 

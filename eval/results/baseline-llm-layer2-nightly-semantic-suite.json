@@ -1,0 +1,3397 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:c5320748bf3712047f1f",
+    "semantic_prompt_fingerprint": "sha256-20:741929d62eafa6cf4e77",
+    "semantic_extraction_enabled": true
+  },
+  "summary": {
+    "case_count": 31,
+    "case_ids": [
+      "atss_semantic",
+      "cascade_rcnn_semantic",
+      "centernet_semantic",
+      "cornernet_semantic",
+      "deformable_detr_semantic",
+      "detr_semantic",
+      "detrs_semantic",
+      "dino_semantic",
+      "dn_detr_semantic",
+      "efficientdet_semantic",
+      "fast_rcnn_semantic",
+      "faster_rcnn_semantic",
+      "fcos_semantic",
+      "fpn_semantic",
+      "gfl_semantic",
+      "hog_semantic",
+      "libra_rcnn_semantic",
+      "mask_rcnn_semantic",
+      "overfeat_semantic",
+      "part_based_models_semantic",
+      "rcnn_semantic",
+      "retinanet_semantic",
+      "rfcn_semantic",
+      "selective_search_semantic",
+      "sppnet_semantic",
+      "ssd_semantic",
+      "tood_semantic",
+      "yolov1_semantic",
+      "yolov2_semantic",
+      "yolov3_semantic",
+      "yolox_semantic"
+    ],
+    "all_passed": false
+  },
+  "cases": [
+    {
+      "case_id": "atss_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/atss_semantic",
+      "metrics": {
+        "precision_methods": 0.5,
+        "recall_methods_num": 1,
+        "recall_methods_denom": 2,
+        "precision_datasets": 0.0,
+        "recall_datasets_num": 0,
+        "recall_datasets_denom": 1,
+        "passed": true,
+        "notes": "method_tp=1/2; dataset_tp=0/1"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "atss_semantic",
+        "methods": [
+          {
+            "name": "Adaptive Training Sample Selection",
+            "aliases": [
+              "ATSS"
+            ],
+            "description_short": null,
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "we propose an Adaptive Training Sample Selection (ATSS) to automatically select positive and negative samples"
+              }
+            ]
+          },
+          {
+            "name": "RetinaNet",
+            "aliases": [],
+            "description_short": null,
+            "confidence": 0.75,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Take the one-stage anchor-based detector RetinaNet"
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "MS COCO",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Extensive experiments conducted on MS COCO support our aforementioned analysis and conclusions"
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "No relations extracted due to space constraints."
+      },
+      "gold": {
+        "case_id": "atss_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=atss_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/atss_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "atss",
+          "adaptive training sample selection"
+        ],
+        "expected_dataset_names_normalized": [
+          "coco"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "cascade_rcnn_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/cascade_rcnn_semantic",
+      "metrics": {
+        "precision_methods": 1.0,
+        "recall_methods_num": 1,
+        "recall_methods_denom": 2,
+        "precision_datasets": 1.0,
+        "recall_datasets_num": 1,
+        "recall_datasets_denom": 1,
+        "passed": true,
+        "notes": "method_tp=1/2; dataset_tp=1/1"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "cascade_rcnn_semantic",
+        "methods": [
+          {
+            "name": "Cascade R-CNN",
+            "aliases": [],
+            "description_short": "A multi-stage object detection architecture that consists of a sequence of detectors trained with increasing IoU thresholds.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "A multi-stage object detection architecture, the Cascade R-CNN, is proposed to address these problems."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "COCO",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "A simple implementation of the Cascade R-CNN is shown to surpass all single-model object detectors on the challenging COCO dataset."
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "Extracted one method and one dataset with high confidence."
+      },
+      "gold": {
+        "case_id": "cascade_rcnn_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=cascade_rcnn_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/cascade_rcnn_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "cascade r-cnn",
+          "cascade rcnn"
+        ],
+        "expected_dataset_names_normalized": [
+          "coco"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "centernet_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/centernet_semantic",
+      "metrics": {
+        "precision_methods": 0.25,
+        "recall_methods_num": 1,
+        "recall_methods_denom": 2,
+        "precision_datasets": 0.0,
+        "recall_datasets_num": 0,
+        "recall_datasets_denom": 1,
+        "passed": true,
+        "notes": "method_tp=1/2; dataset_tp=0/1"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "centernet_semantic",
+        "methods": [
+          {
+            "name": "CenterNet",
+            "aliases": [],
+            "description_short": "Detects objects as a triplet of keypoints and uses center pooling and cascade corner pooling for improved detection.",
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We build our framework upon a representative one-stage keypoint-based detector named CornerNet. Our approach, named CenterNet, detects each object as a triplet, rather than a pair, of keypoints, which improves both precision and recall."
+              }
+            ]
+          },
+          {
+            "name": "CornerNet",
+            "aliases": [],
+            "description_short": "A keypoint-based object detection pipeline that represents each object by a pair of corner keypoints.",
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "CornerNet [20] was proposed. It represented each object by a pair of corner keypoints, which bypassed the need of anchor boxes and achieved the state-of-the-art one-stage object detection accuracy."
+              }
+            ]
+          },
+          {
+            "name": "Center Pooling",
+            "aliases": [],
+            "description_short": "A module designed to enrich information collected by the central regions of objects.",
+            "confidence": 0.7,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Center pooling helps the center keypoints obtain more recognizable visual patterns within objects, which makes it easier to perceive the central part of a proposal."
+              }
+            ]
+          },
+          {
+            "name": "Cascade Corner Pooling",
+            "aliases": [],
+            "description_short": "A module designed to enrich information collected by both top-left and bottom-right corners of objects.",
+            "confidence": 0.7,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Cascade corner pooling equips the original corner pooling module with the ability of perceiving internal information."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "MS-COCO",
+            "aliases": [],
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We evaluate the proposed CenterNet on the MS-COCO dataset [25], one of the most popular benchmarks for large-scale object detection."
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "Extracted methods and datasets based on the provided paper body. Relations were omitted due to space constraints and to keep the output small enough to serialize as one JSON tool call."
+      },
+      "gold": {
+        "case_id": "centernet_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=centernet_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/centernet_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "centernet",
+          "keypoint triplets"
+        ],
+        "expected_dataset_names_normalized": [
+          "coco"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "cornernet_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/cornernet_semantic",
+      "metrics": {
+        "precision_methods": 0.5,
+        "recall_methods_num": 2,
+        "recall_methods_denom": 2,
+        "precision_datasets": 0.0,
+        "recall_datasets_num": 0,
+        "recall_datasets_denom": 1,
+        "passed": true,
+        "notes": "method_tp=2/2; dataset_tp=0/1"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "cornernet_semantic",
+        "methods": [
+          {
+            "name": "CornerNet",
+            "aliases": [],
+            "description_short": "Detects objects as pairs of keypoints (top-left and bottom-right corners) using a single convolutional neural network.",
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We propose CornerNet, a new approach to object detection where we detect an object bounding box as a pair of keypoints, the top-left corner and the bottom-right corner, using a single convolution neural network."
+              }
+            ]
+          },
+          {
+            "name": "Corner Pooling",
+            "aliases": [],
+            "description_short": "A new type of pooling layer that helps a convolutional network better localize corners of bounding boxes.",
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Another novel component of CornerNet is corner pooling, a new type of pooling layer that helps a convolutional network better localize corners of bounding boxes."
+              }
+            ]
+          },
+          {
+            "name": "Associative Embedding",
+            "aliases": [],
+            "description_short": "A method to detect and group keypoints, originally proposed for multi-person pose estimation.",
+            "confidence": 0.7,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Our approach is inspired by the associative embedding method proposed by Newell et al. (2017), who detect and group keypoints in the context of multiperson human-pose estimation."
+              }
+            ]
+          },
+          {
+            "name": "CornerNet with Corner Pooling",
+            "aliases": [],
+            "description_short": "CornerNet enhanced with corner pooling for better corner localization.",
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We demonstrate the effectiveness of CornerNet on MS COCO (Lin et al., 2014). CornerNet achieves a 42.2% AP, outperforming all existing one-stage detectors."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "MS COCO",
+            "aliases": [],
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We demonstrate the effectiveness of CornerNet on MS COCO (Lin et al., 2014)."
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "Extracted methods and datasets based on the provided article body. Relations were omitted due to complexity and space constraints."
+      },
+      "gold": {
+        "case_id": "cornernet_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=cornernet_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/cornernet_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "cornernet",
+          "corner pooling"
+        ],
+        "expected_dataset_names_normalized": [
+          "coco"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "deformable_detr_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/deformable_detr_semantic",
+      "metrics": {
+        "precision_methods": 0.5,
+        "recall_methods_num": 1,
+        "recall_methods_denom": 2,
+        "precision_datasets": 1.0,
+        "recall_datasets_num": 1,
+        "recall_datasets_denom": 1,
+        "passed": true,
+        "notes": "method_tp=1/2; dataset_tp=1/1"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "deformable_detr_semantic",
+        "methods": [
+          {
+            "name": "Deformable DETR",
+            "aliases": [],
+            "description_short": "Deformable DETR is a method that combines deformable attention modules with Transformers to improve object detection performance, especially for small objects, and reduce training time.",
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": "Abstract",
+                "quote": "We proposed Deformable DETR, whose attention modules only attend to a small set of key sampling points around a reference."
+              },
+              {
+                "chunk_id": null,
+                "section_heading": "Abstract",
+                "quote": "Deformable DETR can achieve better performance than DETR (especially on small objects) with 10× less training epochs."
+              }
+            ]
+          },
+          {
+            "name": "Deformable Attention Module",
+            "aliases": [],
+            "description_short": "Deformable Attention Module is a component of Deformable DETR that focuses on a small fixed set of sampling points predicted from the feature of query elements.",
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": "1 Introduction",
+                "quote": "We propose the deformable attention module, which attends to a small set of sampling locations as a pre-filter for prominent key elements out of all the feature map pixels."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "COCO",
+            "aliases": [],
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": "Abstract",
+                "quote": "Extensive experiments on the COCO benchmark demonstrate the effectiveness of our approach."
+              },
+              {
+                "chunk_id": null,
+                "section_heading": "1 Introduction",
+                "quote": "Extensive experiments on the COCO (Lin et al., 2014) benchmark demonstrate the effectiveness of our approach."
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "The paper discusses several related works and methods but focuses primarily on Deformable DETR and its components. The COCO dataset is mentioned as the benchmark for evaluating the effectiveness of the proposed methods."
+      },
+      "gold": {
+        "case_id": "deformable_detr_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=deformable_detr_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/deformable_detr_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "deformable detr",
+          "deformable transformer"
+        ],
+        "expected_dataset_names_normalized": [
+          "coco"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "detr_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/detr_semantic",
+      "metrics": {
+        "precision_methods": 0.5,
+        "recall_methods_num": 1,
+        "recall_methods_denom": 3,
+        "precision_datasets": 1.0,
+        "recall_datasets_num": 1,
+        "recall_datasets_denom": 1,
+        "passed": true,
+        "notes": "method_tp=1/3; dataset_tp=1/1"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "detr_semantic",
+        "methods": [
+          {
+            "name": "DETR",
+            "aliases": [
+              "DEtection TRansformer"
+            ],
+            "description_short": null,
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Our approach streamlines the detection pipeline, effectively removing the need for many hand-designed compo- nents like a non-maximum suppression procedure or anchor generation that explicitly encode our prior knowledge about the task. The main ingredients of the new framework, called DEtection TRansformer or DETR, are a set-based global loss that forces unique predictions via bi- partite matching"
+              }
+            ]
+          },
+          {
+            "name": "Transformer Encoder-Decoder Architecture",
+            "aliases": [],
+            "description_short": null,
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "The main ingredients of the new framework, called DEtection TRansformer or DETR, are a set-based global loss that forces unique predictions via bi- partite matching, and a transformer encoder-decoder architecture."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "COCO",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We evaluate DETR on one of the most popular object detection datasets, COCO [24], against a very competitive Faster R-CNN baseline [37]."
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "No relations extracted due to space constraints."
+      },
+      "gold": {
+        "case_id": "detr_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=detr_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/detr_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "detr",
+          "transformer",
+          "object detection"
+        ],
+        "expected_dataset_names_normalized": [
+          "coco"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "detrs_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/detrs_semantic",
+      "metrics": {
+        "precision_methods": 1.0,
+        "recall_methods_num": 0,
+        "recall_methods_denom": 2,
+        "precision_datasets": 1.0,
+        "recall_datasets_num": 0,
+        "recall_datasets_denom": 1,
+        "passed": false,
+        "notes": "method_tp=0/2; dataset_tp=0/1"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "detrs_semantic",
+        "methods": [],
+        "datasets": [],
+        "relations": [],
+        "extraction_notes": "llm_failed: InstructorRetryException: <failed_attempts>\n\n<generation number=\"1\">\n<exception>\n    1 validation error for MaybeSemanticMethodDatasetBundleLLM\n  Invalid JSON: EOF while parsing a list at line 1 column 402 [type=json_invalid, input_value='{\"result\": {\"methods\": [...1% AP on COCO val2017\"}', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/json_invalid\n</exception>\n<completion>\n    ChatCompletion(id='gen-1774977322-Iw2RT7f5mXSLLgTolcN6', choices=[Choice(finish_reason=None, index=0, logprobs=None, message=ChatCompletionMessage(content=None, refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='chatcmpl-tool-a7b042bd0835ec81', function=Function(arguments='{\"result\": {\"methods\": [{\"name\": \"RT-DETR\", \"description_short\": \"Real-Time DEtection TRansformer, an end-to-end object detector.\", \"confidence\": 1, \"evidence\": [{\"quote\": \"we propose the Real-Time DEtection TRansformer (RT-DETR), the first real-time end-to-end object detector\"}]}], \"datasets\": [{\"name\": \"COCO\", \"confidence\": 1, \"evidence\": [{\"quote\": \"RT-DETR-R50 achieves 53.1% AP on COCO val2017\"}', name='MaybeSemanticMethodDatasetBundleLLM'), type='function', index=0)], reasoning=None), native_finish_reason=None)], created=1774977322, model='mistralai/mistral-small-3.2-24b-instruct-2506', object='chat.completion', service_tier=None, system_fingerprint=None, usage=CompletionUsage(completion_tokens=110, prompt_tokens=14616, total_tokens=14726, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=None, audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=None), prompt_tokens_details=PromptTokensDetails(audio_tokens=0, cached_tokens=0)), provider='Venice')\n</completion>\n</generation>\n\n<generation number=\"2\">\n<exception>\n    Instructor does not support multiple tool calls, use List[Model] instead\n</exception>\n<completion>\n    ChatCompletion(id='gen-1774978230-mXqewugSAG3Zi0mgykq4', choices=[Choice(finish_reason=None, index=0, logprobs=None, message=ChatCompletionMessage(content=None, refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=None, reasoning=None), native_finish_reason=None)], created=1774978230, model='mistralai/mistral-small-3.2-24b-instruct-2506', object='chat.completion', service_tier=None, system_fingerprint=None, usage=CompletionUsage(completion_tokens=110, prompt_tokens=14616, total_tokens=14726, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=None, audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=None), prompt_tokens_details=PromptTokensDetails(audio_tokens=0, cached_tokens=0)), provider='Venice')\n</completion>\n</generation>\n\n<generation number=\"3\">\n<exception>\n    Instructor does not support multiple tool calls, use List[Model] instead\n</exception>\n<completion>\n    ChatCompletion(id='gen-1774978232-xekPvgb7ZSGmoqJlhw3z', choices=[Choice(finish_reason=None, index=0, logprobs=None, message=ChatCompletionMessage(content=None, refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=None, reasoning=None), native_finish_reason=None)], created=1774978232, model='mistralai/mistral-small-3.2-24b-instruct-2506', object='chat.completion', service_tier=None, system_fingerprint=None, usage=CompletionUsage(completion_tokens=110, prompt_tokens=14616, total_tokens=14726, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=None, audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=None), prompt_tokens_details=PromptTokensDetails(audio_tokens=0, cached_tokens=0)), provider='Venice')\n</completion>\n</generation>\n\n</failed_attempts>\n\n<last_exception>\n    Instructor does not support multiple tool calls, use List[Model] instead\n</last_exception>"
+      },
+      "gold": {
+        "case_id": "detrs_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=detrs_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/detrs_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "detr",
+          "real-time"
+        ],
+        "expected_dataset_names_normalized": [
+          "coco"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "dino_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/dino_semantic",
+      "metrics": {
+        "precision_methods": 0.25,
+        "recall_methods_num": 1,
+        "recall_methods_denom": 3,
+        "precision_datasets": 0.5,
+        "recall_datasets_num": 1,
+        "recall_datasets_denom": 1,
+        "passed": true,
+        "notes": "method_tp=1/3; dataset_tp=1/1"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "dino_semantic",
+        "methods": [
+          {
+            "name": "DINO",
+            "aliases": [
+              "DETR with Improved deNoising anchOr boxes"
+            ],
+            "description_short": "A state-of-the-art end-to-end object detector.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We present DINO (DETR with Improved deNoising anchOr boxes), a state-of-the-art end-to-end object detector."
+              }
+            ]
+          },
+          {
+            "name": "Contrastive Denoising Training",
+            "aliases": [],
+            "description_short": "A method to improve one-to-one matching by adding positive and negative samples.",
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "First, to improve the one-to-one matching, we propose a contrastive denoising training by adding both positive and negative samples of the same ground truth at the same time."
+              }
+            ]
+          },
+          {
+            "name": "Mixed Query Selection",
+            "aliases": [],
+            "description_short": "A method for better initialization of queries by selecting initial anchor boxes as positional queries.",
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Second, the dynamic anchor box formulation of queries links DETR-like models with classical two-stage models. Hence we propose a mixed query selection method, which helps better initialize the queries."
+              }
+            ]
+          },
+          {
+            "name": "Look Forward Twice Scheme",
+            "aliases": [],
+            "description_short": "A method to leverage refined box information from later layers to optimize early layers.",
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Third, to leverage the refined box information from later layers to help optimize the parameters of their adjacent early layers, we propose a new look forward twice scheme to correct the updated parameters with gradients from later layers."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "COCO",
+            "aliases": [
+              "COCO 2017",
+              "COCO val2017",
+              "COCO test-dev"
+            ],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "DINO achieves 49.4AP in 12 epochs and 51.3AP in 24 epochs on COCO with a ResNet-50 backbone and multi-scale features."
+              }
+            ]
+          },
+          {
+            "name": "Objects365",
+            "aliases": [],
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "After pre-training on the Objects365 dataset with a SwinL backbone, DINO obtains the best results on both COCO val2017 (63.2AP) and test-dev (63.3AP)."
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "Extracted methods and datasets as per the instructions. No relations were extracted due to space constraints."
+      },
+      "gold": {
+        "case_id": "dino_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=dino_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/dino_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "dino",
+          "denoising",
+          "detr"
+        ],
+        "expected_dataset_names_normalized": [
+          "coco"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "dn_detr_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/dn_detr_semantic",
+      "metrics": {
+        "precision_methods": 0.25,
+        "recall_methods_num": 1,
+        "recall_methods_denom": 2,
+        "precision_datasets": 1.0,
+        "recall_datasets_num": 1,
+        "recall_datasets_denom": 1,
+        "passed": true,
+        "notes": "method_tp=1/2; dataset_tp=1/1"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "dn_detr_semantic",
+        "methods": [
+          {
+            "name": "DN-DETR",
+            "aliases": [],
+            "description_short": "A denoising training method to speed up DETR training by introducing query denoising.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We present in this paper a novel denoising training method to speed up DETR (DEtection TRansformer) training and offer a deepened understanding of the slow convergence issue of DETR-like methods."
+              }
+            ]
+          },
+          {
+            "name": "DETR",
+            "aliases": [
+              "DEtection TRansformer"
+            ],
+            "description_short": "Uses learnable queries and bipartite graph matching for end-to-end object detection.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "DETR (DEtection TRansformer) uses learnable queries to probe image features from the output of Transformer encoders and bipartite graph matching to perform set-based box prediction."
+              }
+            ]
+          },
+          {
+            "name": "DAB-DETR",
+            "aliases": [],
+            "description_short": "Uses 4-D box coordinates as queries and updates boxes layer by layer in a cascade manner.",
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "DAB-DETR uses 4-D box coordinates as queries and updates boxes layer by layer in a cascade manner."
+              }
+            ]
+          },
+          {
+            "name": "Deformable DETR",
+            "aliases": [],
+            "description_short": "Treats 2D reference points as queries to perform cross-attention.",
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Deformable DETR directly treats 2D reference points as queries to perform cross-attention."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "COCO",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "it usually takes 500 epochs of training on the COCO detection dataset"
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "Extracted methods and datasets based on the provided article body. Confidence levels set based on the clarity and direct mention of the methods and datasets in the text."
+      },
+      "gold": {
+        "case_id": "dn_detr_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=dn_detr_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/dn_detr_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "dn-detr",
+          "query denoising"
+        ],
+        "expected_dataset_names_normalized": [
+          "coco"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "efficientdet_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/efficientdet_semantic",
+      "metrics": {
+        "precision_methods": 0.3333333333333333,
+        "recall_methods_num": 1,
+        "recall_methods_denom": 2,
+        "precision_datasets": 0.5,
+        "recall_datasets_num": 1,
+        "recall_datasets_denom": 1,
+        "passed": true,
+        "notes": "method_tp=1/2; dataset_tp=1/1"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "efficientdet_semantic",
+        "methods": [
+          {
+            "name": "BiFPN",
+            "aliases": [],
+            "description_short": "Weighted bi-directional feature pyramid network for efficient multi-scale feature fusion.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "we propose a weighted bi-directional feature pyramid network (BiFPN), which allows easy and fast multi-scale feature fusion;"
+              }
+            ]
+          },
+          {
+            "name": "Compound Scaling",
+            "aliases": [],
+            "description_short": "Uniformly scales the resolution, depth, and width for all backbone, feature network, and box/class prediction networks.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "we propose a compound scaling method that uniformly scales the resolution, depth, and width for all backbone, feature network, and box/class prediction networks at the same time."
+              }
+            ]
+          },
+          {
+            "name": "EfficientDet",
+            "aliases": [],
+            "description_short": "A family of object detectors based on BiFPN and compound scaling.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Based on these optimizations and better backbones, we have developed a new family of object detectors, called EfficientDet,"
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "COCO",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Figure 1 and Figure 4 show the performance comparison on COCO dataset [25]."
+              }
+            ]
+          },
+          {
+            "name": "Pascal VOC 2012",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "our single-model single-scale EfficientDet achieves 81.74% mIOU accuracy with 18B FLOPs on Pascal VOC 2012 semantic segmentation,"
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "Extracted methods and datasets as per the instructions. No relations were extracted due to space constraints."
+      },
+      "gold": {
+        "case_id": "efficientdet_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=efficientdet_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/efficientdet_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "efficientdet",
+          "efficientdet-d"
+        ],
+        "expected_dataset_names_normalized": [
+          "coco"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "fast_rcnn_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/fast_rcnn_semantic",
+      "metrics": {
+        "precision_methods": 0.25,
+        "recall_methods_num": 1,
+        "recall_methods_denom": 2,
+        "precision_datasets": 0.0,
+        "recall_datasets_num": 0,
+        "recall_datasets_denom": 2,
+        "passed": true,
+        "notes": "method_tp=1/2; dataset_tp=0/2"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "fast_rcnn_semantic",
+        "methods": [
+          {
+            "name": "Fast R-CNN",
+            "aliases": [],
+            "description_short": "A method for object detection that efficiently classifies object proposals using deep convolutional networks.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "This paper proposes a Fast Region-based Convolutional Network method (Fast R-CNN) for object detection."
+              }
+            ]
+          },
+          {
+            "name": "RoI Pooling",
+            "aliases": [],
+            "description_short": "A layer that converts features inside any valid region of interest into a fixed-size feature map.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "The RoI pooling layer uses max pooling to convert the features inside any valid region of interest into a small feature map with a fixed spatial extent of H×W."
+              }
+            ]
+          },
+          {
+            "name": "Multi-task Loss",
+            "aliases": [],
+            "description_short": "A loss function that jointly optimizes a softmax classifier and bounding-box regressors.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We use a multi-task loss L on each labeled RoI to jointly train for classification and bounding-box regression."
+              }
+            ]
+          },
+          {
+            "name": "Hierarchical Sampling",
+            "aliases": [],
+            "description_short": "A training method that samples mini-batches hierarchically to share computation and memory.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "In Fast R-CNN training, stochastic gradient descent (SGD) mini-batches are sampled hierarchically, first by sampling N images and then by sampling R/N RoIs from each image."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "PASCAL VOC 2012",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "At runtime, the detection network processes images in 0.3s (excluding object proposal time) while achieving top accuracy on PASCAL VOC 2012 with a mAP of 66%."
+              }
+            ]
+          },
+          {
+            "name": "ImageNet",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We experiment with three pre-trained ImageNet networks, each with five max pooling layers and between five and thirteen conv layers."
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "The paper discusses R-CNN and SPPnet but does not claim them as contributions, so they are not included as methods. The datasets mentioned are PASCAL VOC 2012 and ImageNet."
+      },
+      "gold": {
+        "case_id": "fast_rcnn_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=fast_rcnn_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/fast_rcnn_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "fast r-cnn",
+          "fast rcnn"
+        ],
+        "expected_dataset_names_normalized": [
+          "voc",
+          "coco"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "faster_rcnn_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/faster_rcnn_semantic",
+      "metrics": {
+        "precision_methods": 0.25,
+        "recall_methods_num": 1,
+        "recall_methods_denom": 3,
+        "precision_datasets": 0.0,
+        "recall_datasets_num": 0,
+        "recall_datasets_denom": 2,
+        "passed": true,
+        "notes": "method_tp=1/3; dataset_tp=0/2"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "faster_rcnn_semantic",
+        "methods": [
+          {
+            "name": "Region Proposal Network (RPN)",
+            "aliases": [],
+            "description_short": "A fully convolutional network that predicts object bounds and objectness scores at each position.",
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "An RPN is a fully convolutional network that simultaneously predicts object bounds and objectness scores at each position."
+              }
+            ]
+          },
+          {
+            "name": "Faster R-CNN",
+            "aliases": [],
+            "description_short": "A unified network combining RPN and Fast R-CNN for object detection.",
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We further merge RPN and Fast R-CNN into a single network by sharing their convolutional features."
+              }
+            ]
+          },
+          {
+            "name": "Fast R-CNN",
+            "aliases": [],
+            "description_short": "A region-based convolutional neural network for object detection.",
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Fast R-CNN [2], achieves near real-time rates using very deep networks [3]."
+              }
+            ]
+          },
+          {
+            "name": "Selective Search",
+            "aliases": [],
+            "description_short": "A region proposal method that greedily merges superpixels based on engineered low-level features.",
+            "confidence": 0.7,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Selective Search [4], one of the most popular methods, greedily merges superpixels based on engineered low-level features."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "PASCAL VOC",
+            "aliases": [],
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We comprehensively evaluate our method on the PASCAL VOC detection benchmarks."
+              }
+            ]
+          },
+          {
+            "name": "MS COCO",
+            "aliases": [],
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We also report results on the MS COCO dataset."
+              }
+            ]
+          },
+          {
+            "name": "ILSVRC",
+            "aliases": [],
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "In ILSVRC and COCO 2015 competitions, Faster R-CNN and RPN are the foundations of the 1st-place winning entries in several tracks."
+              }
+            ]
+          },
+          {
+            "name": "ImageNet",
+            "aliases": [],
+            "confidence": 0.7,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "In ILSVRC and COCO 2015 competitions, Faster R-CNN and RPN are the foundations of the 1st-place winning entries in several tracks."
+              }
+            ]
+          },
+          {
+            "name": "EdgeBoxes",
+            "aliases": [],
+            "confidence": 0.6,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "EdgeBoxes [6] currently provides the best tradeoff between proposal quality and speed."
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": null
+      },
+      "gold": {
+        "case_id": "faster_rcnn_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=faster_rcnn_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/faster_rcnn_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "faster r-cnn",
+          "faster rcnn",
+          "rpn"
+        ],
+        "expected_dataset_names_normalized": [
+          "coco",
+          "voc"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "fcos_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/fcos_semantic",
+      "metrics": {
+        "precision_methods": 0.25,
+        "recall_methods_num": 1,
+        "recall_methods_denom": 2,
+        "precision_datasets": 0.5,
+        "recall_datasets_num": 1,
+        "recall_datasets_denom": 1,
+        "passed": true,
+        "notes": "method_tp=1/2; dataset_tp=1/1"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "fcos_semantic",
+        "methods": [
+          {
+            "name": "FCOS",
+            "aliases": [],
+            "description_short": "A fully convolutional one-stage object detector that predicts a 4D vector encoding the location of a bounding box at each foreground pixel.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We propose a fully convolutional one-stage object detector (FCOS) to solve object detection in a per-pixel prediction fashion, analogue to semantic segmentation."
+              }
+            ]
+          },
+          {
+            "name": "Center-ness",
+            "aliases": [],
+            "description_short": "A branch that predicts the deviation of a pixel to the center of its corresponding bounding box to suppress low-quality detections.",
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We introduce a novel “center-ness” branch (only one layer) to predict the deviation of a pixel to the center of its corresponding bounding box."
+              }
+            ]
+          },
+          {
+            "name": "DenseBox",
+            "aliases": [],
+            "description_short": "A method that directly predicts a 4D vector plus a class category at each spatial location on a level of feature maps.",
+            "confidence": 0.7,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "DenseBox [12] crops and resizes training images to a fixed scale."
+              }
+            ]
+          },
+          {
+            "name": "YOLOv1",
+            "aliases": [],
+            "description_short": "An anchor-free detector that predicts bounding boxes at points near the center of objects.",
+            "confidence": 0.6,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "The most popular anchor-free detector might be YOLOv1."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "COCO",
+            "aliases": [],
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "As shown in [15, 24], detection performance is sensitive to the sizes, aspect ratios and number of anchor boxes. For example, in RetinaNet [15], varying these hyper-parameters affects the performance up to 4% in AP on the COCO benchmark [16]."
+              }
+            ]
+          },
+          {
+            "name": "ImageNet",
+            "aliases": [],
+            "confidence": 0.5,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": "1. Introduction",
+                "quote": null
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "Extracted methods and datasets based on the provided article body. Confidence levels adjusted based on the presence and clarity of evidence in the text."
+      },
+      "gold": {
+        "case_id": "fcos_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=fcos_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/fcos_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "fcos",
+          "fully convolutional"
+        ],
+        "expected_dataset_names_normalized": [
+          "coco"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "fpn_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/fpn_semantic",
+      "metrics": {
+        "precision_methods": 0.0,
+        "recall_methods_num": 0,
+        "recall_methods_denom": 2,
+        "precision_datasets": 0.3333333333333333,
+        "recall_datasets_num": 1,
+        "recall_datasets_denom": 1,
+        "passed": false,
+        "notes": "method_tp=0/2; dataset_tp=1/1"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "fpn_semantic",
+        "methods": [
+          {
+            "name": "Feature Pyramid Network (FPN)",
+            "aliases": [],
+            "description_short": "A top-down architecture with lateral connections for building high-level semantic feature maps at all scales.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "A top-down architecture with lateral connections is developed for building high-level semantic feature maps at all scales. This architecture, called a Feature Pyramid Network (FPN), shows significant improvement as a generic feature extractor in several applications."
+              }
+            ]
+          },
+          {
+            "name": "Faster R-CNN",
+            "aliases": [],
+            "description_short": "A basic Faster R-CNN system using FPN achieves state-of-the-art single-model results on the COCO detection benchmark.",
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Using FPN in a basic Faster R-CNN system, our method achieves state-of-the-art single-model results on the COCO detection benchmark without bells and whistles."
+              }
+            ]
+          },
+          {
+            "name": "Single Shot Detector (SSD)",
+            "aliases": [],
+            "description_short": "Uses a ConvNet’s pyramidal feature hierarchy as if it were a featurized image pyramid.",
+            "confidence": 0.7,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "The Single Shot Detector (SSD) is one of the first attempts at using a ConvNet’s pyramidal feature hierarchy as if it were a featurized image pyramid."
+              }
+            ]
+          },
+          {
+            "name": "Featurized Image Pyramid",
+            "aliases": [],
+            "description_short": "A standard solution for detecting objects at different scales.",
+            "confidence": 0.6,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Feature pyramids built upon image pyramids (for short we call these featurized image pyramids) form the basis of a standard solution."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "COCO",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Our method achieves state-of-the-art single-model results on the COCO detection benchmark without bells and whistles."
+              }
+            ]
+          },
+          {
+            "name": "PASCAL",
+            "aliases": [],
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "For object detection, it improves the COCO-style Average Precision (AP) by 2.3 points and PASCAL-style AP by 3.8 points."
+              }
+            ]
+          },
+          {
+            "name": "ImageNet",
+            "aliases": [],
+            "confidence": 0.7,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "All recent top entries in the ImageNet and COCO detection challenges use multi-scale testing on featurized image pyramids."
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "The paper discusses several methods and datasets related to object detection and feature pyramids. The main method introduced is the Feature Pyramid Network (FPN), which is evaluated on the COCO and PASCAL datasets. Other methods mentioned include Faster R-CNN, Single Shot Detector (SSD), and Featurized Image Pyramid. The datasets mentioned are COCO, PASCAL, and ImageNet."
+      },
+      "gold": {
+        "case_id": "fpn_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=fpn_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/fpn_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "fpn",
+          "feature pyramid"
+        ],
+        "expected_dataset_names_normalized": [
+          "coco"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "gfl_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/gfl_semantic",
+      "metrics": {
+        "precision_methods": 0.0,
+        "recall_methods_num": 0,
+        "recall_methods_denom": 3,
+        "precision_datasets": 1.0,
+        "recall_datasets_num": 1,
+        "recall_datasets_denom": 1,
+        "passed": false,
+        "notes": "method_tp=0/3; dataset_tp=1/1"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "gfl_semantic",
+        "methods": [
+          {
+            "name": "Generalized Focal Loss (GFL)",
+            "aliases": [
+              "GFL"
+            ],
+            "description_short": "Generalizes Focal Loss to handle continuous labels for improved object detection.",
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We then propose Generalized Focal Loss (GFL) that generalizes Focal Loss from its discrete form to the continuous version for successful optimization."
+              }
+            ]
+          },
+          {
+            "name": "Quality Focal Loss (QFL)",
+            "aliases": [
+              "QFL"
+            ],
+            "description_short": "Optimizes the classification-IoU joint representation to produce continuous quality estimations.",
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "QFL focuses on a sparse set of hard examples and simultaneously produces their continuous 0∼1 quality estimations on the corresponding category."
+              }
+            ]
+          },
+          {
+            "name": "Distribution Focal Loss (DFL)",
+            "aliases": [
+              "DFL"
+            ],
+            "description_short": "Optimizes the distribution of bounding box locations under an arbitrary and flexible distribution.",
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "DFL makes the network to rapidly focus on learning the probabilities of values around the continuous locations of target bounding boxes, under an arbitrary and flexible distribution."
+              }
+            ]
+          },
+          {
+            "name": "Classification-IoU Joint Representation",
+            "aliases": [
+              "Joint Representation"
+            ],
+            "description_short": "Merges quality estimation into the class prediction vector for consistent training and inference.",
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We propose to merge the quality estimation into the class prediction vector to form a joint representation of localization quality and classification."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "COCO",
+            "aliases": [
+              "COCO test-dev"
+            ],
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "On COCO test-dev, GFL achieves 45.0% AP using ResNet-101 backbone."
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "Extracted methods and datasets based on the provided paper body. Focused on the main contributions and datasets mentioned explicitly."
+      },
+      "gold": {
+        "case_id": "gfl_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=gfl_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/gfl_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "gfl",
+          "generalized focal loss",
+          "focal loss"
+        ],
+        "expected_dataset_names_normalized": [
+          "coco"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "hog_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/hog_semantic",
+      "metrics": {
+        "precision_methods": 0.0,
+        "recall_methods_num": 0,
+        "recall_methods_denom": 3,
+        "precision_datasets": 0.5,
+        "recall_datasets_num": 1,
+        "recall_datasets_denom": 1,
+        "passed": false,
+        "notes": "method_tp=0/3; dataset_tp=1/1"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "hog_semantic",
+        "methods": [
+          {
+            "name": "Histogram of Oriented Gradient (HOG)",
+            "aliases": [],
+            "description_short": null,
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": "Abstract",
+                "quote": "grids of Histograms of Oriented Gradient (HOG) descriptors significantly outperform existing feature sets for human detection."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "MIT pedestrian database",
+            "aliases": [
+              "MIT"
+            ],
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": "4 Data Sets and Methodology",
+                "quote": "The first is the well-established MIT pedestrian database [18], containing 509 training and 200 test images of pedestrians in city scenes"
+              }
+            ]
+          },
+          {
+            "name": "INRIA",
+            "aliases": [],
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": "4 Data Sets and Methodology",
+                "quote": "Our best detectors give essentially perfect results on this data set, so we produced a new and significantly more challenging data set, `INRIA'"
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "No relations extracted due to space constraints."
+      },
+      "gold": {
+        "case_id": "hog_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=hog_human_detection_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/hog_human_detection_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "histogram of oriented gradients",
+          "hog",
+          "human detection"
+        ],
+        "expected_dataset_names_normalized": [
+          "inria"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "libra_rcnn_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/libra_rcnn_semantic",
+      "metrics": {
+        "precision_methods": 0.25,
+        "recall_methods_num": 1,
+        "recall_methods_denom": 3,
+        "precision_datasets": 0.0,
+        "recall_datasets_num": 0,
+        "recall_datasets_denom": 1,
+        "passed": true,
+        "notes": "method_tp=1/3; dataset_tp=0/1"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "libra_rcnn_semantic",
+        "methods": [
+          {
+            "name": "Libra R-CNN",
+            "aliases": [],
+            "description_short": "A framework for object detection that rebalances the training process by combining three new components: IoU-balanced sampling, balanced feature pyramid, and balanced L1 loss.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "we propose Libra R-CNN, a simple but effective framework for object detection that explicitly enforces the balance at all three levels discussed above."
+              }
+            ]
+          },
+          {
+            "name": "IoU-balanced sampling",
+            "aliases": [],
+            "description_short": "Mines hard samples according to their IoU with assigned ground-truth.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "IoU-balanced sampling, which mines hard samples according to their IoU with assigned ground-truth."
+              }
+            ]
+          },
+          {
+            "name": "Balanced feature pyramid",
+            "aliases": [],
+            "description_short": "Strengthens the multi-level features using the same deeply integrated balanced semantic features.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "balanced feature pyramid, which strengthens the multi-level features using the same deeply integrated balanced semantic features."
+              }
+            ]
+          },
+          {
+            "name": "Balanced L1 loss",
+            "aliases": [],
+            "description_short": "Promotes crucial gradients, to rebalance the involved classification, overall localization and accurate localization.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "balanced L1 loss, which promotes crucial gradients, to rebalance the involved classification, overall localization and accurate localization."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "MS COCO",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Libra R-CNN achieves 2.5 points and 2.0 points higher Average Precision (AP) than FPN Faster R-CNN and RetinaNet respectively on MS COCO."
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "Extracted methods and datasets as per the instructions. No relations were extracted due to space constraints."
+      },
+      "gold": {
+        "case_id": "libra_rcnn_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=libra_rcnn_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/libra_rcnn_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "libra r-cnn",
+          "libra rcnn",
+          "balanced learning"
+        ],
+        "expected_dataset_names_normalized": [
+          "coco"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "mask_rcnn_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/mask_rcnn_semantic",
+      "metrics": {
+        "precision_methods": 0.5,
+        "recall_methods_num": 1,
+        "recall_methods_denom": 3,
+        "precision_datasets": 1.0,
+        "recall_datasets_num": 1,
+        "recall_datasets_denom": 1,
+        "passed": true,
+        "notes": "method_tp=1/3; dataset_tp=1/1"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "mask_rcnn_semantic",
+        "methods": [
+          {
+            "name": "Mask R-CNN",
+            "aliases": [
+              "Mask R-CNN"
+            ],
+            "description_short": null,
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Our method, called Mask R-CNN, extends Faster R-CNN by adding a branch for predicting segmentation masks on each Region of Interest (RoI)"
+              }
+            ]
+          },
+          {
+            "name": "RoIAlign",
+            "aliases": [
+              "RoIAlign"
+            ],
+            "description_short": null,
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "To fix the misalignment, we propose a simple, quantization-free layer, called RoIAlign, that faithfully preserves exact spatial locations."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "COCO",
+            "aliases": [
+              "COCO suite of challenges",
+              "COCO instance segmentation task",
+              "COCO object detection task",
+              "COCO keypoint dataset"
+            ],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We show top results in all three tracks of the COCO suite of challenges, including instance segmentation, bounding-box object detection, and person keypoint detection."
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "No relations extracted due to space constraints."
+      },
+      "gold": {
+        "case_id": "mask_rcnn_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=mask_rcnn_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/mask_rcnn_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "mask r-cnn",
+          "mask rcnn",
+          "instance segmentation"
+        ],
+        "expected_dataset_names_normalized": [
+          "coco"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "overfeat_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/overfeat_semantic",
+      "metrics": {
+        "precision_methods": 0.25,
+        "recall_methods_num": 1,
+        "recall_methods_denom": 2,
+        "precision_datasets": 0.0,
+        "recall_datasets_num": 0,
+        "recall_datasets_denom": 1,
+        "passed": true,
+        "notes": "method_tp=1/2; dataset_tp=0/1"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "overfeat_semantic",
+        "methods": [
+          {
+            "name": "OverFeat",
+            "aliases": [],
+            "description_short": "Integrated framework for classification, localization, and detection using Convolutional Networks.",
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We present an integrated framework for using ConvolutionalNetworks for classification, localization and detection. We show how a multiscale and sliding window approach can be efficiently implemented within a ConvNet. We also introduce a novel deep learning approach to localization by learning to predict object boundaries. Bounding boxes are then accumulated rather than suppressed in order to incre"
+              }
+            ]
+          },
+          {
+            "name": "Multiscale Sliding Window Approach",
+            "aliases": [],
+            "description_short": "Efficiently implemented within a ConvNet for classification, localization, and detection.",
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We show how a multiscale and sliding window approach can be efficiently implemented within a ConvNet."
+              }
+            ]
+          },
+          {
+            "name": "Boundary Prediction",
+            "aliases": [],
+            "description_short": "Novel deep learning approach to localization by learning to predict object boundaries.",
+            "confidence": 0.7,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We also introduce a novel deep learning approach to localization by learning to predict object boundaries."
+              }
+            ]
+          },
+          {
+            "name": "Bounding Box Accumulation",
+            "aliases": [],
+            "description_short": "Accumulating predicted bounding boxes to increase detection confidence.",
+            "confidence": 0.7,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Bounding boxes are then accumulated rather than suppressed in order to increase detection confidence."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "ImageNet ILSVRC 2012",
+            "aliases": [],
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Experiments are conducted on the ImageNet ILSVRC 2012 and 2013 datasets and establish state of the art results on the ILSVRC 2013 localization and detection tasks."
+              }
+            ]
+          },
+          {
+            "name": "ImageNet ILSVRC 2013",
+            "aliases": [],
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Experiments are conducted on the ImageNet ILSVRC 2012 and 2013 datasets and establish state of the art results on the ILSVRC 2013 localization and detection tasks."
+              }
+            ]
+          },
+          {
+            "name": "Caltech-101",
+            "aliases": [],
+            "confidence": 0.6,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Recognizing the category of the dominant object in an image is a tasks to which Convolutional Networks (ConvNets) [17] have been applied for many years, whether the objects were handwritten characters [16], house numbers [24], textureless toys [18], traffic signs [3, 26], objects from the Caltech-101 dataset [14], or objects from the 1000-category ImageNet dataset [15]."
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "No relations extracted due to space constraints."
+      },
+      "gold": {
+        "case_id": "overfeat_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=overfeat_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/overfeat_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "overfeat",
+          "convnet"
+        ],
+        "expected_dataset_names_normalized": [
+          "imagenet"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "part_based_models_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/part_based_models_semantic",
+      "metrics": {
+        "precision_methods": 0.0,
+        "recall_methods_num": 0,
+        "recall_methods_denom": 3,
+        "precision_datasets": 0.3333333333333333,
+        "recall_datasets_num": 1,
+        "recall_datasets_denom": 2,
+        "passed": false,
+        "notes": "method_tp=0/3; dataset_tp=1/2"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "part_based_models_semantic",
+        "methods": [
+          {
+            "name": "Deformable Part Models",
+            "aliases": [],
+            "description_short": null,
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We describe an object detection system based on mixtures of multiscale deformable part models."
+              }
+            ]
+          },
+          {
+            "name": "Latent SVM (LSVM)",
+            "aliases": [],
+            "description_short": null,
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "A latent SVM is a reformulation of MI-SVM in terms of latent variables."
+              }
+            ]
+          },
+          {
+            "name": "Star-Structured Part-Based Model",
+            "aliases": [],
+            "description_short": null,
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Our first innovation involves enriching the Dalal-Triggs model using a star-structured part-based model."
+              }
+            ]
+          },
+          {
+            "name": "Mixture of Star Models",
+            "aliases": [],
+            "description_short": null,
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Our second class of models represents an object category by a mixture of star models."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "PASCAL VOC",
+            "aliases": [],
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Our system is able to represent highly variable object classes and achieves state-of-the-art results in the PASCAL object detection challenges."
+              }
+            ]
+          },
+          {
+            "name": "INRIA Person Dataset",
+            "aliases": [],
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Our system is both efficient and accurate, achieving state-of-the-art results on the PASCAL VOC benchmarks and the INRIA Person dataset."
+              }
+            ]
+          },
+          {
+            "name": "Histogram of Oriented Gradients (HOG) Features",
+            "aliases": [],
+            "confidence": 0.7,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "The Dalal-Triggs detector used a single filter on histogram of oriented gradients (HOG) features to represent an object category."
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "Extracted methods and datasets based on the provided article body. Relations were omitted due to space constraints and to keep the output concise."
+      },
+      "gold": {
+        "case_id": "part_based_models_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=part_based_models_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/part_based_models_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "deformable part",
+          "latent svm",
+          "object detection"
+        ],
+        "expected_dataset_names_normalized": [
+          "pascal voc",
+          "voc"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "rcnn_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/rcnn_semantic",
+      "metrics": {
+        "precision_methods": 0.5,
+        "recall_methods_num": 1,
+        "recall_methods_denom": 3,
+        "precision_datasets": 0.3333333333333333,
+        "recall_datasets_num": 1,
+        "recall_datasets_denom": 2,
+        "passed": true,
+        "notes": "method_tp=1/3; dataset_tp=1/2"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "rcnn_semantic",
+        "methods": [
+          {
+            "name": "R-CNN",
+            "aliases": [
+              "Regions with CNN features"
+            ],
+            "description_short": "Combines region proposals with CNNs for object detection.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We call our method R-CNN: Regions with CNN features."
+              }
+            ]
+          },
+          {
+            "name": "OverFeat",
+            "aliases": [],
+            "description_short": "Sliding-window detector based on CNN architecture.",
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We also compare R-CNN to OverFeat, a recently proposed sliding-window detector based on a similar CNN architecture."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "PASCAL VOC",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Object detection performance, as measured on the canonical PASCAL VOC dataset, has plateaued in the last few years."
+              }
+            ]
+          },
+          {
+            "name": "ILSVRC2013",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "On the 200-class ILSVRC2013 detection dataset, R-CNN’s mAP is 31.4%."
+              }
+            ]
+          },
+          {
+            "name": "ImageNet",
+            "aliases": [],
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "supervised pre-training on a large auxiliary dataset (ILSVRC), followed by domain-specific fine-tuning on a small dataset (PASCAL)"
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "Extracted methods and datasets as per the paper's descriptions and comparisons."
+      },
+      "gold": {
+        "case_id": "rcnn_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=rcnn_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/rcnn_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "r-cnn",
+          "rcnn",
+          "selective search"
+        ],
+        "expected_dataset_names_normalized": [
+          "imagenet",
+          "voc"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "retinanet_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/retinanet_semantic",
+      "metrics": {
+        "precision_methods": 1.0,
+        "recall_methods_num": 2,
+        "recall_methods_denom": 2,
+        "precision_datasets": 1.0,
+        "recall_datasets_num": 1,
+        "recall_datasets_denom": 2,
+        "passed": true,
+        "notes": "method_tp=2/2; dataset_tp=1/2"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "retinanet_semantic",
+        "methods": [
+          {
+            "name": "Focal Loss",
+            "aliases": [],
+            "description_short": null,
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We propose to address this class imbalance by reshaping the standard cross entropy loss such that it down-weights the loss assigned to well-classified examples. Our novel Focal Loss focuses training on a sparse set of hard examples and prevents the vast number of easy negatives from overwhelming the detector during training."
+              }
+            ]
+          },
+          {
+            "name": "RetinaNet",
+            "aliases": [],
+            "description_short": "A simple dense detector designed to evaluate the effectiveness of the focal loss.",
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "To evaluate the effectiveness of our loss, we design and train a simple dense detector we call RetinaNet."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "COCO",
+            "aliases": [],
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Our results show that when trained with the focal loss, RetinaNet is able to match the speed of previous one-stage detectors while surpassing the accuracy of all existing state-of-the-art two-stage detectors."
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "Extracted methods and datasets based on the provided article body. Relations were omitted due to complexity and space constraints."
+      },
+      "gold": {
+        "case_id": "retinanet_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=retinanet_focal_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/retinanet_focal_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": 1.0,
+        "min_dataset_recall_ratio": 0.5,
+        "expected_method_names_normalized": [
+          "focal loss",
+          "retinanet"
+        ],
+        "expected_dataset_names_normalized": [
+          "coco",
+          "pascal"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "rfcn_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/rfcn_semantic",
+      "metrics": {
+        "precision_methods": 0.3333333333333333,
+        "recall_methods_num": 1,
+        "recall_methods_denom": 3,
+        "precision_datasets": 0.0,
+        "recall_datasets_num": 0,
+        "recall_datasets_denom": 1,
+        "passed": true,
+        "notes": "method_tp=1/3; dataset_tp=0/1"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "rfcn_semantic",
+        "methods": [
+          {
+            "name": "R-FCN",
+            "aliases": [
+              "Region-based Fully Convolutional Network"
+            ],
+            "description_short": "A fully convolutional network for object detection that uses position-sensitive score maps and RoI pooling.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We present region-based, fully convolutional networks for accurate and efficient object detection."
+              }
+            ]
+          },
+          {
+            "name": "ResNet",
+            "aliases": [
+              "Residual Networks"
+            ],
+            "description_short": "A type of deep convolutional neural network with residual connections.",
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Our method can thus naturally adopt fully convolutional image classifier backbones, such as the latest Residual Networks (ResNets)."
+              }
+            ]
+          },
+          {
+            "name": "Region Proposal Network (RPN)",
+            "aliases": [],
+            "description_short": "A fully convolutional network for proposing candidate regions in an image.",
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We extract candidate regions by the Region Proposal Network (RPN)."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "PASCAL VOC",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We show competitive results on the PASCAL VOC datasets (e.g., 83.6% mAP on the 2007 set)."
+              }
+            ]
+          },
+          {
+            "name": "ImageNet",
+            "aliases": [],
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "The last convolutional block in ResNet-101 is 2048-d, and we attach a randomly initialized 1024-d 1×1 convolutional layer for reducing dimension (to be precise, this increases the depth in Table 1 by 1). Then we apply thek2(C + 1)-channel convolutional layer to generate score maps, as introduced next."
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "Extracted methods and datasets based on the provided article body. Relations were omitted due to space constraints."
+      },
+      "gold": {
+        "case_id": "rfcn_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=rfcn_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/rfcn_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "r-fcn",
+          "position-sensitive",
+          "fcn"
+        ],
+        "expected_dataset_names_normalized": [
+          "coco"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "selective_search_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/selective_search_semantic",
+      "metrics": {
+        "precision_methods": 0.25,
+        "recall_methods_num": 1,
+        "recall_methods_denom": 2,
+        "precision_datasets": 0.0,
+        "recall_datasets_num": 0,
+        "recall_datasets_denom": 1,
+        "passed": true,
+        "notes": "method_tp=1/2; dataset_tp=0/1"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "selective_search_semantic",
+        "methods": [
+          {
+            "name": "Selective Search",
+            "aliases": [],
+            "description_short": "Combines exhaustive search and segmentation to generate high-quality object locations.",
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We introduce Selective Search which combines the strength of both an exhaustive search and segmentation."
+              }
+            ]
+          },
+          {
+            "name": "Bag-of-Words model",
+            "aliases": [],
+            "description_short": "Powerful model for object recognition.",
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Our selective search enables the use of the powerful Bag-of-Words model for recognition."
+              }
+            ]
+          },
+          {
+            "name": "Hierarchical partitioning",
+            "aliases": [],
+            "description_short": "Uses a hierarchical partitioning to address multiple scales in segmentation.",
+            "confidence": 0.7,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "This is most naturally addressed by using a hierarchical partitioning, as done for example by Arbelaez et al. [3]."
+              }
+            ]
+          },
+          {
+            "name": "Grouping-based strategy",
+            "aliases": [],
+            "description_short": "Uses a variety of complementary grouping criteria and color spaces to increase diversity in object locations.",
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We use a data-driven grouping-based strategy where we increase diversity by using a variety of complementary grouping criteria and a variety of complementary color spaces."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "Pascal VOC detection challenge",
+            "aliases": [],
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We therefore evaluate on the most commonly used dataset for this purpose, the Pascal VOC detection challenge which consists of 20 object classes."
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "Extracted methods and datasets based on the provided article body. Confidence levels are assigned based on the clarity and directness of the evidence."
+      },
+      "gold": {
+        "case_id": "selective_search_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=selective_search_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/selective_search_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "selective search",
+          "object recognition"
+        ],
+        "expected_dataset_names_normalized": [
+          "voc"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "sppnet_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/sppnet_semantic",
+      "metrics": {
+        "precision_methods": 0.5,
+        "recall_methods_num": 1,
+        "recall_methods_denom": 3,
+        "precision_datasets": 0.0,
+        "recall_datasets_num": 0,
+        "recall_datasets_denom": 2,
+        "passed": true,
+        "notes": "method_tp=1/3; dataset_tp=0/2"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "sppnet_semantic",
+        "methods": [
+          {
+            "name": "SPP-net",
+            "aliases": [
+              "Spatial Pyramid Pooling"
+            ],
+            "description_short": null,
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We equip the networks with another pooling strategy, “spatial pyramid pooling”, to eliminate the above requirement. The new network structure, called SPP-net, can generate a fixed-length representation regardless of image size/scale."
+              }
+            ]
+          },
+          {
+            "name": "Multi-size Training",
+            "aliases": [],
+            "description_short": null,
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Training with variable-size images increases scale-invariance and reduces over-fitting. We develop a simple multi-size training method."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "ImageNet 2012",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "On the ImageNet 2012 dataset, we demonstrate that SPP-net boosts the accuracy of a variety of CNN architectures despite their different designs."
+              }
+            ]
+          },
+          {
+            "name": "Pascal VOC 2007",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "On the Pascal VOC 2007 and Caltech101 datasets, SPP-net achieves state-of-the-art classification results using a single full-image representation and no fine-tuning."
+              }
+            ]
+          },
+          {
+            "name": "Caltech101",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "On the Pascal VOC 2007 and Caltech101 datasets, SPP-net achieves state-of-the-art classification results using a single full-image representation and no fine-tuning."
+              }
+            ]
+          },
+          {
+            "name": "ILSVRC 2014",
+            "aliases": [],
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "In ImageNet Large Scale Visual Recognition Challenge (ILSVRC) 2014, our methods rank #2 in object detection and #3 in image classification among all 38 teams."
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "Extracted methods and datasets as per the requirements. No relations were explicitly mentioned in the provided text."
+      },
+      "gold": {
+        "case_id": "sppnet_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=sppnet_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/sppnet_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "spp-net",
+          "spatial pyramid pooling",
+          "sppnet"
+        ],
+        "expected_dataset_names_normalized": [
+          "imagenet",
+          "voc"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "ssd_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/ssd_semantic",
+      "metrics": {
+        "precision_methods": 1.0,
+        "recall_methods_num": 1,
+        "recall_methods_denom": 3,
+        "precision_datasets": 0.3333333333333333,
+        "recall_datasets_num": 1,
+        "recall_datasets_denom": 2,
+        "passed": true,
+        "notes": "method_tp=1/3; dataset_tp=1/2"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "ssd_semantic",
+        "methods": [
+          {
+            "name": "SSD",
+            "aliases": [
+              "Single Shot MultiBox Detector"
+            ],
+            "description_short": null,
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We present a method for detecting objects in images using a single deep neural network. Our approach, named SSD,"
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "PASCAL VOC",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Experimental results on the PASCAL VOC, COCO, and ILSVRC datasets confirm that SSD has competitive accuracy"
+              }
+            ]
+          },
+          {
+            "name": "COCO",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Experimental results on the PASCAL VOC, COCO, and ILSVRC datasets confirm that SSD has competitive accuracy"
+              }
+            ]
+          },
+          {
+            "name": "ILSVRC",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Experimental results on the PASCAL VOC, COCO, and ILSVRC datasets confirm that SSD has competitive accuracy"
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "No relations extracted due to space constraints."
+      },
+      "gold": {
+        "case_id": "ssd_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=ssd_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/ssd_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "ssd",
+          "single shot",
+          "multibox"
+        ],
+        "expected_dataset_names_normalized": [
+          "coco",
+          "voc"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "tood_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/tood_semantic",
+      "metrics": {
+        "precision_methods": 0.0,
+        "recall_methods_num": 0,
+        "recall_methods_denom": 3,
+        "precision_datasets": 0.0,
+        "recall_datasets_num": 0,
+        "recall_datasets_denom": 1,
+        "passed": false,
+        "notes": "method_tp=0/3; dataset_tp=0/1"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "tood_semantic",
+        "methods": [
+          {
+            "name": "Task-aligned One-stage Object Detection (TOOD)",
+            "aliases": [],
+            "description_short": "Aligns object classification and localization tasks via T-Head and TAL.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "we propose a Task-aligned One-stage Object Detection (TOOD) that explicitly aligns the two tasks in a learning-based manner."
+              }
+            ]
+          },
+          {
+            "name": "Task-aligned Head (T-Head)",
+            "aliases": [],
+            "description_short": "Enhances interaction between classification and localization tasks.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "we design a novel Task-aligned Head (T-Head) which offers a better balance between learning task-interactive and task-specific features"
+              }
+            ]
+          },
+          {
+            "name": "Task Alignment Learning (TAL)",
+            "aliases": [],
+            "description_short": "Pulls closer optimal anchors for classification and localization during training.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "we propose Task Alignment Learning (TAL) to explicitly pull closer (or even unify) the optimal anchors for the two tasks during training"
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "MS-COCO",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Extensive experiments are conducted on MS-COCO, where TOOD achieves a 51.1 AP at single-model single-scale testing."
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "No relations extracted due to space constraints."
+      },
+      "gold": {
+        "case_id": "tood_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=tood_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/tood_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "tood",
+          "task-aligned",
+          "one-stage"
+        ],
+        "expected_dataset_names_normalized": [
+          "coco"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "yolov1_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/yolov1_semantic",
+      "metrics": {
+        "precision_methods": 0.25,
+        "recall_methods_num": 1,
+        "recall_methods_denom": 2,
+        "precision_datasets": 0.6666666666666666,
+        "recall_datasets_num": 2,
+        "recall_datasets_denom": 2,
+        "passed": true,
+        "notes": "method_tp=1/2; dataset_tp=2/2"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "yolov1_semantic",
+        "methods": [
+          {
+            "name": "YOLO",
+            "aliases": [
+              "You Only Look Once"
+            ],
+            "description_short": "A unified, real-time object detection system that frames object detection as a regression problem.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": "Abstract",
+                "quote": "We present YOLO, a new approach to object detection."
+              },
+              {
+                "chunk_id": null,
+                "section_heading": "Body",
+                "quote": "We reframe object detection as a single regression problem, straight from image pixels to bounding box coordinates and class probabilities."
+              }
+            ]
+          },
+          {
+            "name": "Fast YOLO",
+            "aliases": [],
+            "description_short": "A smaller and faster version of the YOLO network.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": "Abstract",
+                "quote": "A smaller version of the network, Fast YOLO, processes an astounding 155 frames per second while still achieving double the mAP of other real-time detectors."
+              }
+            ]
+          },
+          {
+            "name": "YOLOv2",
+            "aliases": [],
+            "description_short": "An improved version of YOLO with better accuracy and speed.",
+            "confidence": 0.5,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": "Body",
+                "quote": "We also train a fast version of YOLO designed to push the boundaries of fast object detection."
+              }
+            ]
+          },
+          {
+            "name": "Darknet",
+            "aliases": [],
+            "description_short": "A framework used for training and inference of YOLO.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": "Body",
+                "quote": "We use the Darknet framework for all training and inference."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "PASCAL VOC",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": "Body",
+                "quote": "For evaluating YOLO on PASCAL VOC, we use S = 7, B = 2."
+              }
+            ]
+          },
+          {
+            "name": "ImageNet",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": "Body",
+                "quote": "We pretrain our convolutional layers on the ImageNet 1000-class competition dataset."
+              }
+            ]
+          },
+          {
+            "name": "COCO",
+            "aliases": [],
+            "confidence": 0.5,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": "Body",
+                "quote": "We evaluate our model on the COCO dataset to demonstrate its performance."
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "The paper mentions evaluation on COCO but does not provide explicit details about it in the body text. The methods and datasets are clearly described and used in the paper."
+      },
+      "gold": {
+        "case_id": "yolov1_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=yolov1. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/yolov1/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "yolo",
+          "you only look once"
+        ],
+        "expected_dataset_names_normalized": [
+          "pascal voc",
+          "imagenet"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "yolov2_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/yolov2_semantic",
+      "metrics": {
+        "precision_methods": 1.0,
+        "recall_methods_num": 0,
+        "recall_methods_denom": 3,
+        "precision_datasets": 1.0,
+        "recall_datasets_num": 0,
+        "recall_datasets_denom": 2,
+        "passed": false,
+        "notes": "method_tp=0/3; dataset_tp=0/2"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "yolov2_semantic",
+        "methods": [],
+        "datasets": [],
+        "relations": [],
+        "extraction_notes": "llm_failed: llm_empty_result"
+      },
+      "gold": {
+        "case_id": "yolov2_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=yolov2_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/yolov2_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "yolo9000",
+          "yolo",
+          "darknet"
+        ],
+        "expected_dataset_names_normalized": [
+          "coco",
+          "imagenet"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "yolov3_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/yolov3_semantic",
+      "metrics": {
+        "precision_methods": 1.0,
+        "recall_methods_num": 1,
+        "recall_methods_denom": 2,
+        "precision_datasets": 0.3333333333333333,
+        "recall_datasets_num": 1,
+        "recall_datasets_denom": 1,
+        "passed": true,
+        "notes": "method_tp=1/2; dataset_tp=1/1"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "yolov3_semantic",
+        "methods": [
+          {
+            "name": "YOLOv3",
+            "aliases": [
+              "YOLOv3-320",
+              "YOLOv3-416",
+              "YOLOv3-608"
+            ],
+            "description_short": "YOLOv3 is an incremental improvement over YOLOv2, with a new feature extractor called Darknet-53 and multi-scale predictions.",
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We present some updates to YOLO! We made a bunch of little design changes to make it better."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "COCO",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "In our experiments with COCO [10] we predict 3 boxes at each scale so the tensor is N ×N × [3 ∗ (4 + 1 + 80)] for the 4 bounding box offsets, 1 objectness prediction, and 80 class predictions."
+              }
+            ]
+          },
+          {
+            "name": "ImageNet",
+            "aliases": [],
+            "confidence": 1.0,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Here are some ImageNet results:"
+              }
+            ]
+          },
+          {
+            "name": "Open Images Dataset",
+            "aliases": [],
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "This formulation helps when we move to more complex domains like the Open Images Dataset [7]."
+              }
+            ]
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "The paper mentions several baselines and related works, but they are not claimed as contributions. The methods and datasets are clearly stated in the paper."
+      },
+      "gold": {
+        "case_id": "yolov3_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=yolov3_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/yolov3_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "yolov3",
+          "yolo"
+        ],
+        "expected_dataset_names_normalized": [
+          "coco"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "yolox_semantic",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/yolox_semantic",
+      "metrics": {
+        "precision_methods": 0.25,
+        "recall_methods_num": 1,
+        "recall_methods_denom": 2,
+        "precision_datasets": 0.2,
+        "recall_datasets_num": 1,
+        "recall_datasets_denom": 1,
+        "passed": true,
+        "notes": "method_tp=1/2; dataset_tp=1/1"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "yolox_semantic",
+        "methods": [
+          {
+            "name": "YOLOX",
+            "aliases": [],
+            "description_short": "A new high-performance detector based on YOLO series with anchor-free manner and advanced detection techniques.",
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We present some experienced improvements to YOLO series, forming a new high-performance detector — YOLOX."
+              }
+            ]
+          },
+          {
+            "name": "Decoupled Head",
+            "aliases": [],
+            "description_short": "A detection head that separates classification and localization tasks to improve performance.",
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Our two analytical experiments indicate that the coupled detection head may harm the performance."
+              }
+            ]
+          },
+          {
+            "name": "SimOTA",
+            "aliases": [],
+            "description_short": "A leading label assignment strategy used in YOLOX.",
+            "confidence": 0.7,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We switch the YOLO detector to an anchor-free manner and conduct other advanced detection techniques, i.e., a decoupled head and the leading label assignment strategy SimOTA."
+              }
+            ]
+          },
+          {
+            "name": "Anchor-Free",
+            "aliases": [],
+            "description_short": "A detection mechanism that reduces the number of predictions for each image and simplifies the detection process.",
+            "confidence": 0.8,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "Switching YOLO to an anchor-free manner is quite simple."
+              }
+            ]
+          }
+        ],
+        "datasets": [
+          {
+            "name": "COCO",
+            "aliases": [],
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We train the models for a total of 300 epochs with 5 epochs warm-up on COCO train2017."
+              }
+            ]
+          },
+          {
+            "name": "ImageNet",
+            "aliases": [],
+            "confidence": 0.6,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "After using strong data augmentation, we found ImageNet pre-training is no more beneficial."
+              }
+            ]
+          },
+          {
+            "name": "Streaming Perception Challenge",
+            "aliases": [],
+            "confidence": 0.7,
+            "evidence": [
+              {
+                "chunk_id": null,
+                "section_heading": null,
+                "quote": "We won the 1st Place on Streaming Perception Challenge (Workshop on Autonomous Driving at CVPR 2021) using a single YOLOX-L model."
+              }
+            ]
+          },
+          {
+            "name": "PASCAL VOC",
+            "aliases": [],
+            "confidence": 0.5,
+            "evidence": []
+          },
+          {
+            "name": "Cityscapes",
+            "aliases": [],
+            "confidence": 0.5,
+            "evidence": []
+          }
+        ],
+        "relations": [],
+        "extraction_notes": "The paper mentions several datasets and methods, but only COCO, ImageNet, and Streaming Perception Challenge are explicitly named. PASCAL VOC and Cityscapes are common datasets in object detection but are not explicitly mentioned in the provided text. The methods YOLOX, Decoupled Head, SimOTA, and Anchor-Free are explicitly mentioned and described in the text."
+      },
+      "gold": {
+        "case_id": "yolox_semantic",
+        "schema_version": 1,
+        "description": "Object-detection corpus; layer1=yolox_realpdf. Nightly semantic when LLM enabled.",
+        "article_path": "../../layer1/yolox_realpdf/article.md",
+        "min_method_names": 1,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [
+          "yolox",
+          "yolo"
+        ],
+        "expected_dataset_names_normalized": [
+          "coco"
+        ],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    }
+  ]
+}

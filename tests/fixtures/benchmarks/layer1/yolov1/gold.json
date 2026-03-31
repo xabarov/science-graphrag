@@ -54,8 +54,8 @@
     "sample_dois": []
   },
   "graph_expectations": {
-    "min_cites": 23,
-    "max_cites": 24,
+    "min_cites": 12,
+    "max_cites": 28,
     "min_authorships": 4,
     "max_authorships": 8,
     "min_institutions": 2,

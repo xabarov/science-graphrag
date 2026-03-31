@@ -1,0 +1,329 @@
+{
+  "authoritative_artifacts": {
+    "reference": [
+      "eval/results/current-reference-layer1-yolov1.json",
+      "eval/results/current-reference-graph-yolov1.json",
+      "eval/results/current-reference-layer2-yolov1-semantic.json"
+    ],
+    "layer1_nightly": "eval/results/current-llm-layer1-nightly-heavy-suite-after-prompt-fix.json",
+    "layer2_nightly": "eval/results/current-llm-layer2-nightly-semantic-suite.json",
+    "baseline_layer1": "eval/results/baseline-llm-layer1-nightly-heavy-suite.json",
+    "baseline_layer2": "eval/results/baseline-llm-layer2-nightly-semantic-suite.json"
+  },
+  "reference": {
+    "all_passed": true,
+    "lanes": [
+      {
+        "artifact": "eval/results/current-reference-layer1-yolov1.json",
+        "case_id": "yolov1",
+        "kind": "layer1",
+        "passed": true,
+        "run_metadata": {
+          "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+          "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+          "layer1_prompt_fingerprint": "sha256-20:c5320748bf3712047f1f",
+          "semantic_prompt_fingerprint": "sha256-20:9ef7564010d2d895c2ae",
+          "semantic_extraction_enabled": true
+        }
+      },
+      {
+        "artifact": "eval/results/current-reference-graph-yolov1.json",
+        "case_id": "yolov1",
+        "kind": "graph",
+        "passed": true,
+        "run_metadata": {
+          "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+          "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+          "layer1_prompt_fingerprint": "sha256-20:c5320748bf3712047f1f",
+          "semantic_prompt_fingerprint": "sha256-20:9ef7564010d2d895c2ae",
+          "semantic_extraction_enabled": true
+        }
+      },
+      {
+        "artifact": "eval/results/current-reference-layer2-yolov1-semantic.json",
+        "case_id": "yolov1_semantic",
+        "kind": "layer2_semantic",
+        "passed": true,
+        "run_metadata": {
+          "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+          "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+          "layer1_prompt_fingerprint": "sha256-20:c5320748bf3712047f1f",
+          "semantic_prompt_fingerprint": "sha256-20:9ef7564010d2d895c2ae",
+          "semantic_extraction_enabled": true
+        }
+      }
+    ]
+  },
+  "layer1_nightly": {
+    "artifact": "eval/results/current-llm-layer1-nightly-heavy-suite-after-prompt-fix.json",
+    "run_metadata": {
+      "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+      "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+      "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+      "semantic_prompt_fingerprint": "sha256-20:9ef7564010d2d895c2ae",
+      "semantic_extraction_enabled": true
+    },
+    "summary": {
+      "case_count": 30,
+      "case_ids": [
+        "atss_realpdf",
+        "cascade_rcnn_realpdf",
+        "centernet_realpdf",
+        "cornernet_realpdf",
+        "deformable_detr_realpdf",
+        "detr_realpdf",
+        "detrs_realpdf",
+        "dino_realpdf",
+        "dn_detr_realpdf",
+        "efficientdet_realpdf",
+        "fast_rcnn_realpdf",
+        "faster_rcnn_realpdf",
+        "fcos_realpdf",
+        "fpn_realpdf",
+        "gfl_realpdf",
+        "hog_human_detection_realpdf",
+        "libra_rcnn_realpdf",
+        "mask_rcnn_realpdf",
+        "overfeat_realpdf",
+        "part_based_models_realpdf",
+        "rcnn_realpdf",
+        "retinanet_focal_realpdf",
+        "rfcn_realpdf",
+        "selective_search_realpdf",
+        "sppnet_realpdf",
+        "ssd_realpdf",
+        "tood_realpdf",
+        "yolov2_realpdf",
+        "yolov3_realpdf",
+        "yolox_realpdf"
+      ],
+      "all_passed": false
+    },
+    "failed_count": 4,
+    "failed_cases": [
+      {
+        "case_id": "centernet_realpdf",
+        "checks": {
+          "title_match_required": true,
+          "abstract_prefix_required": false,
+          "reference_count_ok_required": true
+        },
+        "classification": "benchmark_gold_abstract_prefix"
+      },
+      {
+        "case_id": "deformable_detr_realpdf",
+        "checks": {
+          "title_match_required": true,
+          "abstract_prefix_required": true,
+          "reference_count_ok_required": false
+        },
+        "classification": "benchmark_gold_references"
+      },
+      {
+        "case_id": "fcos_realpdf",
+        "checks": {
+          "title_match_required": true,
+          "abstract_prefix_required": false,
+          "reference_count_ok_required": true
+        },
+        "classification": "benchmark_gold_abstract_prefix"
+      },
+      {
+        "case_id": "selective_search_realpdf",
+        "checks": {
+          "title_match_required": true,
+          "abstract_prefix_required": false,
+          "reference_count_ok_required": true
+        },
+        "classification": "benchmark_gold_abstract_prefix"
+      }
+    ],
+    "source_histogram": {
+      "metadata_source": {
+        "llm": 30
+      },
+      "authorships_source": {
+        "llm": 30
+      },
+      "references_source": {
+        "heuristic": 14,
+        "llm": 16
+      }
+    },
+    "references_llm_failed_events": 4,
+    "failure_class_histogram": {
+      "benchmark_gold_abstract_prefix": 3,
+      "benchmark_gold_references": 1
+    }
+  },
+  "layer2_nightly": {
+    "artifact": "eval/results/current-llm-layer2-nightly-semantic-suite.json",
+    "run_metadata": {
+      "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+      "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+      "layer1_prompt_fingerprint": "sha256-20:c5320748bf3712047f1f",
+      "semantic_prompt_fingerprint": "sha256-20:9ef7564010d2d895c2ae",
+      "semantic_extraction_enabled": true
+    },
+    "summary": {
+      "case_count": 31,
+      "case_ids": [
+        "atss_semantic",
+        "cascade_rcnn_semantic",
+        "centernet_semantic",
+        "cornernet_semantic",
+        "deformable_detr_semantic",
+        "detr_semantic",
+        "detrs_semantic",
+        "dino_semantic",
+        "dn_detr_semantic",
+        "efficientdet_semantic",
+        "fast_rcnn_semantic",
+        "faster_rcnn_semantic",
+        "fcos_semantic",
+        "fpn_semantic",
+        "gfl_semantic",
+        "hog_semantic",
+        "libra_rcnn_semantic",
+        "mask_rcnn_semantic",
+        "overfeat_semantic",
+        "part_based_models_semantic",
+        "rcnn_semantic",
+        "retinanet_semantic",
+        "rfcn_semantic",
+        "selective_search_semantic",
+        "sppnet_semantic",
+        "ssd_semantic",
+        "tood_semantic",
+        "yolov1_semantic",
+        "yolov2_semantic",
+        "yolov3_semantic",
+        "yolox_semantic"
+      ],
+      "all_passed": false
+    },
+    "failed_count": 1,
+    "failed_cases": [
+      {
+        "case_id": "yolov1_semantic",
+        "notes": "method_tp=0/2; dataset_tp=0/2",
+        "extraction_notes": "llm_failed: llm_empty_result",
+        "classification": "architecture_or_runtime"
+      }
+    ],
+    "failure_class_histogram": {
+      "architecture_or_runtime": 1
+    }
+  },
+  "deltas": {
+    "layer1_nightly_vs_baseline": {
+      "baseline_failed": [
+        "atss_realpdf",
+        "cascade_rcnn_realpdf",
+        "cornernet_realpdf",
+        "deformable_detr_realpdf",
+        "detrs_realpdf",
+        "dino_realpdf",
+        "dn_detr_realpdf",
+        "faster_rcnn_realpdf",
+        "gfl_realpdf",
+        "hog_human_detection_realpdf",
+        "libra_rcnn_realpdf",
+        "overfeat_realpdf",
+        "part_based_models_realpdf",
+        "rfcn_realpdf",
+        "sppnet_realpdf",
+        "tood_realpdf",
+        "yolov2_realpdf",
+        "yolox_realpdf"
+      ],
+      "current_failed": [
+        "centernet_realpdf",
+        "deformable_detr_realpdf",
+        "fcos_realpdf",
+        "selective_search_realpdf"
+      ],
+      "resolved": [
+        "atss_realpdf",
+        "cascade_rcnn_realpdf",
+        "cornernet_realpdf",
+        "detrs_realpdf",
+        "dino_realpdf",
+        "dn_detr_realpdf",
+        "faster_rcnn_realpdf",
+        "gfl_realpdf",
+        "hog_human_detection_realpdf",
+        "libra_rcnn_realpdf",
+        "overfeat_realpdf",
+        "part_based_models_realpdf",
+        "rfcn_realpdf",
+        "sppnet_realpdf",
+        "tood_realpdf",
+        "yolov2_realpdf",
+        "yolox_realpdf"
+      ],
+      "new_regressions": [
+        "centernet_realpdf",
+        "fcos_realpdf",
+        "selective_search_realpdf"
+      ]
+    },
+    "layer2_nightly_vs_baseline": {
+      "baseline_failed": [
+        "detrs_semantic",
+        "fpn_semantic",
+        "gfl_semantic",
+        "hog_semantic",
+        "part_based_models_semantic",
+        "tood_semantic",
+        "yolov2_semantic"
+      ],
+      "current_failed": [
+        "yolov1_semantic"
+      ],
+      "resolved": [
+        "detrs_semantic",
+        "fpn_semantic",
+        "gfl_semantic",
+        "hog_semantic",
+        "part_based_models_semantic",
+        "tood_semantic",
+        "yolov2_semantic"
+      ],
+      "new_regressions": [
+        "yolov1_semantic"
+      ]
+    }
+  },
+  "supplementary_retests": [
+    {
+      "artifact": "eval/results/retest-centernet-after-gold-fix.json",
+      "case_id": "centernet_realpdf",
+      "passed": true
+    },
+    {
+      "artifact": "eval/results/retest-fcos-after-gold-fix.json",
+      "case_id": "fcos_realpdf",
+      "passed": true
+    },
+    {
+      "artifact": "eval/results/retest-selective-search-after-gold-fix.json",
+      "case_id": "selective_search_realpdf",
+      "passed": true
+    },
+    {
+      "artifact": "eval/results/retest-hog-realpdf-after-gold-fix.json",
+      "case_id": "hog_human_detection_realpdf",
+      "passed": true
+    }
+  ],
+  "decision_gate": {
+    "decision": "CONDITIONAL-GO",
+    "reason": "reference_ok_nightly_has_residual_failures_document_in_gate_report",
+    "criteria": {
+      "reference_all_passed": true,
+      "layer1_nightly_failed_count": 4,
+      "layer2_nightly_failed_count": 1
+    }
+  }
+}

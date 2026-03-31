@@ -1,0 +1,543 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:9ef7564010d2d895c2ae",
+    "semantic_extraction_enabled": true
+  },
+  "case": {
+    "case_id": "centernet_realpdf",
+    "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/centernet_realpdf",
+    "diagnostics": {
+      "document_id": "centernet_realpdf",
+      "source_name": "centernet_realpdf",
+      "markdown_source": "benchmark",
+      "metadata_source": "llm",
+      "authorships_source": "llm",
+      "references_source": "llm",
+      "extraction_llm_enabled": true,
+      "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+      "fallback_reasons": []
+    },
+    "metrics": {
+      "metadata": {
+        "title_exact_normalized": true,
+        "year_exact": null,
+        "abstract_prefix_ok": true,
+        "doi_match_expected": null,
+        "arxiv_match_expected": null,
+        "work_type_match": null
+      },
+      "authorships": {
+        "names_precision": 0.0,
+        "names_recall": 0.0,
+        "names_f1": 0.0,
+        "names_tp_fp_fn": {
+          "tp": 0,
+          "fp": 6,
+          "fn": 0
+        },
+        "order_accuracy": 0.0,
+        "order_hits": 0,
+        "affiliation_jaccard_macro_on_matched_authors": 0.0,
+        "affiliations_precision": 0.0,
+        "affiliations_recall": 0.0,
+        "affiliations_f1": 0.0,
+        "pred_count": 6,
+        "gold_count": 0
+      },
+      "references": {
+        "count": 47,
+        "expected_count": 47,
+        "min_count": 39,
+        "count_ok": true,
+        "count_delta": 0,
+        "sample_arxiv_precision": 1.0,
+        "sample_arxiv_recall": 1.0,
+        "sample_arxiv_f1": 1.0,
+        "sample_arxiv_tp_fp_fn": {
+          "tp": 6,
+          "fp": 0,
+          "fn": 0
+        },
+        "predicted_arxiv_ids": [
+          "1612.06851",
+          "1701.06659",
+          "1704.01069",
+          "1705.09587",
+          "1712.00886",
+          "1901.01892"
+        ],
+        "sample_doi_precision": 1.0,
+        "sample_doi_recall": 1.0,
+        "sample_doi_f1": 1.0
+      },
+      "contract": {
+        "checks": {
+          "title_match_required": true,
+          "abstract_prefix_required": true,
+          "reference_count_ok_required": true
+        },
+        "passed": true
+      }
+    },
+    "predicted": {
+      "work_metadata": {
+        "title": "CenterNet: Keypoint Triplets for Object Detection",
+        "normalized_title": "CenterNet: Keypoint Triplets for Object Detection",
+        "abstract": "In object detection, keypoint-based approaches often suffer a large number of incorrect object bounding boxes, arguably due to the lack of an additional look into the cropped regions. This paper presents an efficient solution which explores the visual patterns within each cropped region with minimal costs. We build our framework upon a representative one-stage keypoint-based detector named CornerNet. Our approach, named CenterNet, detects each object as a triplet, rather than a pair, of keypoints, which improves both precision and recall. Accordingly, we design two customized modules named cascade corner pooling and center pooling, which play the roles of enriching information collected by both top-left and bottom-right corners and providing more recognizable information at the central regions, respectively. On the MS-COCO dataset, CenterNet achieves an AP of 47.0%, which outperforms all existing one-stage detectors by at least 4.9%. Meanwhile, with a faster inference speed, CenterNet demonstrates quite comparable performance to the top-ranked two-stage detectors. Code is available at https://github.com/Duankaiwen/CenterNet.",
+        "publication_year": null,
+        "doi": null,
+        "arxiv_id": null,
+        "language": "en",
+        "venue_name": null,
+        "work_type": "unknown",
+        "openalex_id": null,
+        "fingerprint": "2ff8e9d30d917578",
+        "ingestion_confidence": 0.72,
+        "source_metadata": {
+          "extraction_stage": "llm"
+        }
+      },
+      "authorships": [
+        {
+          "author_position": 1,
+          "author_raw_name": "Kaiwen Duan",
+          "raw_affiliations": [
+            "University of Chinese Academy of Sciences"
+          ],
+          "is_corresponding": true,
+          "email": null
+        },
+        {
+          "author_position": 2,
+          "author_raw_name": "Song Bai",
+          "raw_affiliations": [
+            "University of Oxford"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 3,
+          "author_raw_name": "Lingxi Xie",
+          "raw_affiliations": [
+            "Huawei Noah’s Ark Lab"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 4,
+          "author_raw_name": "Honggang Qi",
+          "raw_affiliations": [
+            "University of Chinese Academy of Sciences"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 5,
+          "author_raw_name": "Qingming Huang",
+          "raw_affiliations": [
+            "University of Chinese Academy of Sciences"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 6,
+          "author_raw_name": "Qi Tian",
+          "raw_affiliations": [
+            "Huawei Noah’s Ark Lab"
+          ],
+          "is_corresponding": null,
+          "email": null
+        }
+      ],
+      "references": [
+        {
+          "raw_reference": "[1] S. Bell, C. Lawrence Zitnick, K. Bala, and R. Girshick. Inside-outside net: Detecting objects in context with skip pooling and recurrent neural networks. In Proceedings of the IEEE conference on computer vision and pattern recognition, pages 2874–2883, 2016.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Inside-outside net: Detecting objects in context with skip pooling and recurrent neural networks",
+          "year": 2016
+        },
+        {
+          "raw_reference": "[2] N. Bodla, B. Singh, R. Chellappa, and L. S. Davis. Soft-nms–improving object detection with one line of code. In Proceedings of the IEEE international conference on computer vision, pages 5561–5569, 2017.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Soft-nms–improving object detection with one line of code",
+          "year": 2017
+        },
+        {
+          "raw_reference": "[3] Z. Cai, Q. Fan, R. S. Feris, and N. Vasconcelos. A unified multi-scale deep convolutional neural network for fast object detection. In European conference on computer vision, pages 354–370. Springer, 2016.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "A unified multi-scale deep convolutional neural network for fast object detection",
+          "year": 2016
+        },
+        {
+          "raw_reference": "[4] Z. Cai and N. Vasconcelos. Cascade r-cnn: Delving into high quality object detection. In Proceedings of the IEEE conference on computer vision and pattern recognition , pages 6154–6162, 2018.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Cascade r-cnn: Delving into high quality object detection",
+          "year": 2018
+        },
+        {
+          "raw_reference": "[5] Y . Chen, J. Li, H. Xiao, X. Jin, S. Yan, and J. Feng. Dual path networks. In Advances in neural information processing systems, pages 4467–4475, 2017.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Dual path networks",
+          "year": 2017
+        },
+        {
+          "raw_reference": "[6] J. Dai, Y . Li, K. He, and J. Sun. R-fcn: Object detection via region-based fully convolutional networks. In Advances in neural information processing systems , pages 379–387, 2016.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "R-fcn: Object detection via region-based fully convolutional networks",
+          "year": 2016
+        },
+        {
+          "raw_reference": "[7] J. Dai, H. Qi, Y . Xiong, Y . Li, G. Zhang, H. Hu, and Y . Wei. Deformable convolutional networks. In Proceedings of the IEEE international conference on computer vision , pages 764–773, 2017.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Deformable convolutional networks",
+          "year": 2017
+        },
+        {
+          "raw_reference": "[8] C.-Y . Fu, W. Liu, A. Ranga, A. Tyagi, and A. C. Berg. Dssd: Deconvolutional single shot detector. arXiv preprint arXiv:1701.06659, 2017.",
+          "doi": null,
+          "arxiv_id": "1701.06659",
+          "title": "Dssd: Deconvolutional single shot detector",
+          "year": 2017
+        },
+        {
+          "raw_reference": "[9] S. Gidaris and N. Komodakis. Object detection via a multi-region and semantic segmentation-aware cnn model. In Proceedings of the IEEE international conference on computer vision, pages 1134–1142, 2015.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Object detection via a multi-region and semantic segmentation-aware cnn model",
+          "year": 2015
+        },
+        {
+          "raw_reference": "[10] R. Girshick. Fast r-cnn. In Proceedings of the IEEE international conference on computer vision , pages 1440–1448, 2015.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Fast r-cnn",
+          "year": 2015
+        },
+        {
+          "raw_reference": "[11] R. Girshick, J. Donahue, T. Darrell, and J. Malik. Rich feature hierarchies for accurate object detection and semantic segmentation. In Proceedings of the IEEE conference on computer vision and pattern recognition , pages 580–587, 2014.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Rich feature hierarchies for accurate object detection and semantic segmentation",
+          "year": 2014
+        },
+        {
+          "raw_reference": "[12] K. He, G. Gkioxari, P. Doll ́ar, and R. Girshick. Mask r-cnn. In Proceedings of the IEEE international conference on computer vision, pages 2961–2969, 2017.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Mask r-cnn",
+          "year": 2017
+        },
+        {
+          "raw_reference": "[13] K. He, X. Zhang, S. Ren, and J. Sun. Spatial pyramid pooling in deep convolutional networks for visual recognition. IEEE transactions on pattern analysis and machine intelligence , 37(9):1904–1916, 2015.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Spatial pyramid pooling in deep convolutional networks for visual recognition",
+          "year": 2015
+        },
+        {
+          "raw_reference": "[14] K. He, X. Zhang, S. Ren, and J. Sun. Deep residual learning for image recognition. In Proceedings of the IEEE conference on computer vision and pattern recognition , pages 770–778, 2016.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Deep residual learning for image recognition",
+          "year": 2016
+        },
+        {
+          "raw_reference": "[15] D. Hoiem, Y . Chodpathumwan, and Q. Dai. Diagnosing error in object detectors. In European conference on computer vision, pages 340–353. Springer, 2012.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Diagnosing error in object detectors",
+          "year": 2012
+        },
+        {
+          "raw_reference": "[16] J. Huang, V . Rathod, C. Sun, M. Zhu, A. Korattikara, A. Fathi, I. Fischer, Z. Wojna, Y . Song, S. Guadarrama, et al. Speed/accuracy trade-offs for modern convolutional object detectors. In Proceedings of the IEEE conference on computer vision and pattern recognition, pages 7310–7311, 2017.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Speed/accuracy trade-offs for modern convolutional object detectors",
+          "year": 2017
+        },
+        {
+          "raw_reference": "[17] J. Jeong, H. Park, and N. Kwak. Enhancement of ssd by concatenating feature maps for object detection. arXiv preprint arXiv:1705.09587, 2017.",
+          "doi": null,
+          "arxiv_id": "1705.09587",
+          "title": "Enhancement of ssd by concatenating feature maps for object detection",
+          "year": 2017
+        },
+        {
+          "raw_reference": "[18] D. P. Kingma and J. Ba. Adam: A method for stochastic optimization. Computer science, 2014.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Adam: A method for stochastic optimization",
+          "year": 2014
+        },
+        {
+          "raw_reference": "[19] T. Kong, F. Sun, A. Yao, H. Liu, M. Lu, and Y . Chen. Ron: Reverse connection with objectness prior networks for object detection. In Proceedings of the IEEE conference on computer vision and pattern recognition, pages 5936–5944, 2017.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Ron: Reverse connection with objectness prior networks for object detection",
+          "year": 2017
+        },
+        {
+          "raw_reference": "[20] H. Law and J. Deng. Cornernet: Detecting objects as paired keypoints. In Proceedings of the European conference on computer vision, pages 734–750, 2018.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Cornernet: Detecting objects as paired keypoints",
+          "year": 2018
+        },
+        {
+          "raw_reference": "[21] H. Lee, S. Eum, and H. Kwon. Me r-cnn: Multi-expert r-cnn for object detection. arXiv preprint arXiv:1704.01069, 2017.",
+          "doi": null,
+          "arxiv_id": "1704.01069",
+          "title": "Me r-cnn: Multi-expert r-cnn for object detection",
+          "year": 2017
+        },
+        {
+          "raw_reference": "[22] Y . Li, Y . Chen, N. Wang, and Z. Zhang. Scale-aware trident networks for object detection. arXiv preprint arXiv:1901.01892, 2019.",
+          "doi": null,
+          "arxiv_id": "1901.01892",
+          "title": "Scale-aware trident networks for object detection",
+          "year": 2019
+        },
+        {
+          "raw_reference": "[23] T.-Y . Lin, P. Doll ́ar, R. Girshick, K. He, B. Hariharan, and S. Belongie. Feature pyramid networks for object detection. In Proceedings of the IEEE conference on computer vision and pattern recognition, pages 2117–2125, 2017.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Feature pyramid networks for object detection",
+          "year": 2017
+        },
+        {
+          "raw_reference": "[24] T.-Y . Lin, P. Goyal, R. Girshick, K. He, and P. Doll ́ar. Focal loss for dense object detection. In Proceedings of the IEEE international conference on computer vision , pages 2980–2988, 2017.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Focal loss for dense object detection",
+          "year": 2017
+        },
+        {
+          "raw_reference": "[25] T.-Y . Lin, M. Maire, S. Belongie, J. Hays, P. Perona, D. Ramanan, P. Doll ́ar, and C. L. Zitnick. Microsoft coco: Common objects in context. InEuropean conference on computer vision, pages 740–755. Springer, 2014.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Microsoft coco: Common objects in context",
+          "year": 2014
+        },
+        {
+          "raw_reference": "[26] S. Liu, L. Qi, H. Qin, J. Shi, and J. Jia. Path aggregation network for instance segmentation. In Proceedings of the IEEE conference on computer vision and pattern recognition, pages 8759–8768, 2018.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Path aggregation network for instance segmentation",
+          "year": 2018
+        },
+        {
+          "raw_reference": "[27] W. Liu, D. Anguelov, D. Erhan, C. Szegedy, S. Reed, C.-Y . Fu, and A. C. Berg. Ssd: Single shot multibox detector. In European conference on computer vision , pages 21–37. Springer, 2016.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Ssd: Single shot multibox detector",
+          "year": 2016
+        },
+        {
+          "raw_reference": "[28] X. Lu, B. Li, Y . Yue, Q. Li, and J. Yan. Grid r-cnn. 2018.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "[29] A. Newell, K. Yang, and J. Deng. Stacked hourglass networks for human pose estimation. In European conference on computer vision, pages 483–499. Springer, 2016.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Stacked hourglass networks for human pose estimation",
+          "year": 2016
+        },
+        {
+          "raw_reference": "[30] A. Paszke, S. Gross, S. Chintala, G. Chanan, E. Yang, Z. De-Vito, Z. Lin, A. Desmaison, L. Antiga, and A. Lerer. Automatic differentiation in pytorch. 2017.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Automatic differentiation in pytorch",
+          "year": 2017
+        },
+        {
+          "raw_reference": "[31] J. Redmon, S. Divvala, R. Girshick, and A. Farhadi. You only look once: Unified, real-time object detection. In Proceedings of the IEEE conference on computer vision and pattern recognition, pages 779–788, 2016.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "You only look once: Unified, real-time object detection",
+          "year": 2016
+        },
+        {
+          "raw_reference": "[32] J. Redmon and A. Farhadi. Yolo9000: better, faster, stronger. In Proceedings of the IEEE conference on computer vision and pattern recognition, pages 7263–7271, 2017.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Yolo9000: better, faster, stronger",
+          "year": 2017
+        },
+        {
+          "raw_reference": "[33] S. Ren, K. He, R. Girshick, and J. Sun. Faster r-cnn: Towards real-time object detection with region proposal networks. In Advances in neural information processing systems , pages 91–99, 2015.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Faster r-cnn: Towards real-time object detection with region proposal networks",
+          "year": 2015
+        },
+        {
+          "raw_reference": "[34] Z. Shen, Z. Liu, J. Li, Y .-G. Jiang, Y . Chen, and X. Xue. Dsod: Learning deeply supervised object detectors from scratch. In Proceedings of the IEEE international conference on computer vision, pages 1919–1927, 2017.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Dsod: Learning deeply supervised object detectors from scratch",
+          "year": 2017
+        },
+        {
+          "raw_reference": "[35] Z. Shen, H. Shi, R. Feris, L. Cao, S. Yan, D. Liu, X. Wang, X. Xue, and T. S. Huang. Learning object detectors from scratch with gated recurrent feature pyramids.arXiv preprint arXiv:1712.00886, 2017.",
+          "doi": null,
+          "arxiv_id": "1712.00886",
+          "title": "Learning object detectors from scratch with gated recurrent feature pyramids",
+          "year": 2017
+        },
+        {
+          "raw_reference": "[36] A. Shrivastava and A. Gupta. Contextual priming and feedback for faster r-cnn. In European conference on computer vision, pages 330–348, 2016.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Contextual priming and feedback for faster r-cnn",
+          "year": 2016
+        },
+        {
+          "raw_reference": "[37] A. Shrivastava, R. Sukthankar, J. Malik, and A. Gupta. Beyond skip connections: Top-down modulation for object de- tection. arXiv preprint arXiv:1612.06851, 2016.",
+          "doi": null,
+          "arxiv_id": "1612.06851",
+          "title": "Beyond skip connections: Top-down modulation for object de- tection",
+          "year": 2016
+        },
+        {
+          "raw_reference": "[38] B. Singh and L. S. Davis. An analysis of scale invariance in object detection snip. In Proceedings of the IEEE conference on computer vision and pattern recognition , pages 3578–3587, 2018.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "An analysis of scale invariance in object detection snip",
+          "year": 2018
+        },
+        {
+          "raw_reference": "[39] C. Szegedy, S. Ioffe, V . Vanhoucke, and A. A. Alemi. Inception-v4, inception-resnet and the impact of residual connections on learning. In Thirty-First AAAI conference on artificial intelligence, 2017.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Inception-v4, inception-resnet and the impact of residual connections on learning",
+          "year": 2017
+        },
+        {
+          "raw_reference": "[40] L. Tychsen-Smith and L. Petersson. Denet: Scalable real-time object detection with directed sparse sampling. In Proceedings of the IEEE international conference on computer vision, pages 428–436, 2017.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Denet: Scalable real-time object detection with directed sparse sampling",
+          "year": 2017
+        },
+        {
+          "raw_reference": "[41] L. Tychsen-Smith and L. Petersson. Improving object localization with fitness nms and bounded iou loss. In Proceedings of the IEEE conference on computer vision and pattern recognition, pages 6877–6885, 2018.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Improving object localization with fitness nms and bounded iou loss",
+          "year": 2018
+        },
+        {
+          "raw_reference": "[42] J. R. Uijlings, K. E. Van De Sande, T. Gevers, and A. W. Smeulders. Selective search for object recognition. International journal of computer vision, 104(2):154–171, 2013.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Selective search for object recognition",
+          "year": 2013
+        },
+        {
+          "raw_reference": "[43] H. Xu, X. Lv, X. Wang, Z. Ren, N. Bodla, and R. Chellappa. Deep regionlets for object detection. In Proceedings of the European conference on computer vision , pages 798–814, 2018.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Deep regionlets for object detection",
+          "year": 2018
+        },
+        {
+          "raw_reference": "[44] X. Zeng, W. Ouyang, B. Yang, J. Yan, and X. Wang. Gated bi-directional cnn for object detection. In European conference on computer vision, pages 354–369. Springer, 2016.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Gated bi-directional cnn for object detection",
+          "year": 2016
+        },
+        {
+          "raw_reference": "[45] S. Zhang, L. Wen, X. Bian, Z. Lei, and S. Z. Li. Single-shot refinement neural network for object detection. In Proceedings of the IEEE conference on computer vision and pattern recognition, pages 4203–4212, 2018.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Single-shot refinement neural network for object detection",
+          "year": 2018
+        },
+        {
+          "raw_reference": "[46] R. Zhu, S. Zhang, X. Wang, L. Wen, H. Shi, L. Bo, and T. Mei. Scratchdet: Training single-shot object detectors from scratch. Proceedings of the IEEE conference on computer vision and pattern recognition, 2019.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Scratchdet: Training single-shot object detectors from scratch",
+          "year": 2019
+        },
+        {
+          "raw_reference": "[47] Y . Zhu, C. Zhao, J. Wang, X. Zhao, Y . Wu, and H. Lu. Couplenet: Coupling global structure with local parts for object detection. In Proceedings of the IEEE international conference on computer vision, pages 4126–4134, 2017.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Couplenet: Coupling global structure with local parts for object detection",
+          "year": 2017
+        }
+      ]
+    },
+    "gold": {
+      "case_id": "centernet_realpdf",
+      "schema_version": 1,
+      "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+      "work_metadata": {
+        "title": "CenterNet: Keypoint Triplets for Object Detection",
+        "publication_year": null,
+        "abstract_prefix": "In object detection, keypoint-based approaches often suffer a large numb",
+        "doi": null,
+        "arxiv_id": null,
+        "venue_name": null,
+        "work_type": null
+      },
+      "authorships": [],
+      "references": {
+        "expected_count": 47,
+        "min_count": 39,
+        "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
+        "sample_arxiv_ids": [
+          "1701.06659",
+          "1705.09587",
+          "1704.01069",
+          "1901.01892",
+          "1712.00886",
+          "1612.06851"
+        ],
+        "sample_dois": []
+      },
+      "graph_expectations": {
+        "min_cites": 0,
+        "max_cites": 67,
+        "min_authorships": 0,
+        "max_authorships": 8,
+        "min_institutions": 0,
+        "max_institutions": 8,
+        "expected_cited_arxiv_ids": [
+          "1701.06659",
+          "1705.09587",
+          "1704.01069",
+          "1901.01892",
+          "1712.00886",
+          "1612.06851"
+        ],
+        "max_duplicate_work_fingerprints": 8,
+        "max_work_dedup_violations": 0,
+        "min_related_version_edges": null,
+        "max_related_version_edges": null
+      },
+      "quality_thresholds": null
+    }
+  }
+}

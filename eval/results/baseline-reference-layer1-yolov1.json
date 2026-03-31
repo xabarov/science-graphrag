@@ -1,0 +1,551 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:c5320748bf3712047f1f",
+    "semantic_prompt_fingerprint": "sha256-20:741929d62eafa6cf4e77",
+    "semantic_extraction_enabled": true
+  },
+  "case": {
+    "case_id": "yolov1",
+    "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/yolov1",
+    "diagnostics": {
+      "document_id": "yolov1",
+      "source_name": "yolov1",
+      "markdown_source": "benchmark",
+      "metadata_source": "llm",
+      "authorships_source": "llm",
+      "references_source": "heuristic",
+      "extraction_llm_enabled": true,
+      "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+      "fallback_reasons": []
+    },
+    "metrics": {
+      "metadata": {
+        "title_exact_normalized": true,
+        "year_exact": null,
+        "abstract_prefix_ok": true,
+        "doi_match_expected": null,
+        "arxiv_match_expected": null,
+        "work_type_match": null
+      },
+      "authorships": {
+        "names_precision": 1.0,
+        "names_recall": 1.0,
+        "names_f1": 1.0,
+        "names_tp_fp_fn": {
+          "tp": 4,
+          "fp": 0,
+          "fn": 0
+        },
+        "order_accuracy": 1.0,
+        "order_hits": 4,
+        "affiliation_jaccard_macro_on_matched_authors": 0.7916666666666666,
+        "affiliations_precision": 1.0,
+        "affiliations_recall": 1.0,
+        "affiliations_f1": 1.0,
+        "pred_count": 4,
+        "gold_count": 4
+      },
+      "references": {
+        "count": 44,
+        "expected_count": 44,
+        "min_count": 36,
+        "count_ok": true,
+        "count_delta": 0,
+        "sample_arxiv_precision": 0.8571428571428571,
+        "sample_arxiv_recall": 1.0,
+        "sample_arxiv_f1": 0.923076923076923,
+        "sample_arxiv_tp_fp_fn": {
+          "tp": 12,
+          "fp": 2,
+          "fn": 0
+        },
+        "predicted_arxiv_ids": [
+          "1207.0580",
+          "1310.1531",
+          "1312.4400",
+          "1312.6229",
+          "1406.4729",
+          "1409.4842",
+          "1409.6911",
+          "1412.3128",
+          "1504.06066",
+          "1504.08083",
+          "1505.00110",
+          "1505.01749",
+          "1506.01497",
+          "1506.06981"
+        ],
+        "sample_doi_precision": 1.0,
+        "sample_doi_recall": 1.0,
+        "sample_doi_f1": 1.0
+      },
+      "contract": {
+        "checks": {
+          "title_match_required": true,
+          "abstract_prefix_required": true,
+          "reference_count_ok_required": true
+        },
+        "passed": true
+      }
+    },
+    "predicted": {
+      "work_metadata": {
+        "title": "You Only Look Once: Unified, Real-Time Object Detection",
+        "normalized_title": "You Only Look Once: Unified, Real-Time Object Detection",
+        "abstract": "We present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance. Our unified architecture is extremely fast. Our base YOLO model processes images in real-time at 45 frames per second. A smaller version of the network, Fast YOLO, processes an astounding 155 frames per second while still achieving double the mAP of other real-time detectors. Compared to state-of-the-art detection systems, YOLO makes more localization errors but is less likely to predict false positives on background. Finally, YOLO learns very general representations of objects. It outperforms other detection methods, including DPM and R-CNN, when generalizing from natural images to other domains like artwork.",
+        "publication_year": null,
+        "doi": null,
+        "arxiv_id": null,
+        "language": "en",
+        "venue_name": null,
+        "work_type": "unknown",
+        "openalex_id": null,
+        "fingerprint": "f508bc24aed9a4f4",
+        "ingestion_confidence": 0.72,
+        "source_metadata": {
+          "extraction_stage": "llm"
+        }
+      },
+      "authorships": [
+        {
+          "author_position": 1,
+          "author_raw_name": "Joseph Redmon",
+          "raw_affiliations": [
+            "University of Washington"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 2,
+          "author_raw_name": "Santosh Divvala",
+          "raw_affiliations": [
+            "University of Washington",
+            "Allen Institute for AI"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 3,
+          "author_raw_name": "Ross Girshick",
+          "raw_affiliations": [
+            "Facebook AI Research"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 4,
+          "author_raw_name": "Ali Farhadi",
+          "raw_affiliations": [
+            "University of Washington",
+            "Allen Institute for AI"
+          ],
+          "is_corresponding": null,
+          "email": null
+        }
+      ],
+      "references": [
+        {
+          "raw_reference": "M. B. Blaschko and C. H. Lampert. Learning to localize ob- jects with structured output regression. In Computer Vision– ECCV 2008, pages 2–15. Springer, 2008. 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2008
+        },
+        {
+          "raw_reference": "L. Bourdev and J. Malik. Poselets: Body part detectors trained using 3d human pose annotations. In International Conference on Computer Vision (ICCV), 2009. 8",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2009
+        },
+        {
+          "raw_reference": "H. Cai, Q. Wu, T. Corradi, and P. Hall. The cross- depiction problem: Computer vision algorithms for recog- nising objects in artwork and in photographs. arXiv preprint arXiv:1505.00110, 2015. 7",
+          "doi": null,
+          "arxiv_id": "1505.00110",
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "N. Dalal and B. Triggs. Histograms of oriented gradients for human detection. In Computer Vision and Pattern Recogni- tion, 2005. CVPR 2005. IEEE Computer Society Conference on, volume 1, pages 886–893. IEEE, 2005. 4, 8",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2005
+        },
+        {
+          "raw_reference": "T. Dean, M. Ruzon, M. Segal, J. Shlens, S. Vijaya- narasimhan, J. Yagnik, et al. Fast, accurate detection of 100,000 object classes on a single machine. In Computer Vision and Pattern Recognition (CVPR), 2013 IEEE Confer- ence on, pages 1814–1821. IEEE, 2013. 5",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2013
+        },
+        {
+          "raw_reference": "J. Donahue, Y . Jia, O. Vinyals, J. Hoffman, N. Zhang, E. Tzeng, and T. Darrell. Decaf: A deep convolutional acti- vation feature for generic visual recognition. arXiv preprint arXiv:1310.1531, 2013. 4",
+          "doi": null,
+          "arxiv_id": "1310.1531",
+          "title": null,
+          "year": 2013
+        },
+        {
+          "raw_reference": "J. Dong, Q. Chen, S. Yan, and A. Yuille. Towards unified object detection and semantic segmentation. In Computer Vision–ECCV 2014, pages 299–314. Springer, 2014. 7",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2014
+        },
+        {
+          "raw_reference": "D. Erhan, C. Szegedy, A. Toshev, and D. Anguelov. Scalable object detection using deep neural networks. In Computer Vision and Pattern Recognition (CVPR), 2014 IEEE Confer- ence on, pages 2155–2162. IEEE, 2014. 5, 6",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2014
+        },
+        {
+          "raw_reference": "M. Everingham, S. M. A. Eslami, L. Van Gool, C. K. I. Williams, J. Winn, and A. Zisserman. The pascal visual ob- ject classes challenge: A retrospective.International Journal of Computer Vision, 111(1):98–136, Jan. 2015. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "P. F. Felzenszwalb, R. B. Girshick, D. McAllester, and D. Ra- manan. Object detection with discriminatively trained part based models. IEEE Transactions on Pattern Analysis and Machine Intelligence, 32(9):1627–1645, 2010. 1, 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2010
+        },
+        {
+          "raw_reference": "S. Gidaris and N. Komodakis. Object detection via a multi- region & semantic segmentation-aware CNN model. CoRR, abs/1505.01749, 2015. 7",
+          "doi": null,
+          "arxiv_id": "1505.01749",
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "S. Ginosar, D. Haas, T. Brown, and J. Malik. Detecting peo- ple in cubist art. InComputer Vision-ECCV 2014 Workshops, pages 101–116. Springer, 2014. 7",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2014
+        },
+        {
+          "raw_reference": "R. Girshick, J. Donahue, T. Darrell, and J. Malik. Rich fea- ture hierarchies for accurate object detection and semantic segmentation. In Computer Vision and Pattern Recognition (CVPR), 2014 IEEE Conference on , pages 580–587. IEEE,",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2014
+        },
+        {
+          "raw_reference": "1, 4, 7",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "R. B. Girshick. Fast R-CNN. CoRR, abs/1504.08083, 2015. 2, 5, 6, 7",
+          "doi": null,
+          "arxiv_id": "1504.08083",
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "S. Gould, T. Gao, and D. Koller. Region-based segmenta- tion and object detection. In Advances in neural information processing systems, pages 655–663, 2009. 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2009
+        },
+        {
+          "raw_reference": "B. Hariharan, P. Arbel ́aez, R. Girshick, and J. Malik. Simul- taneous detection and segmentation. In Computer Vision– ECCV 2014, pages 297–312. Springer, 2014. 7",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2014
+        },
+        {
+          "raw_reference": "K. He, X. Zhang, S. Ren, and J. Sun. Spatial pyramid pooling in deep convolutional networks for visual recognition. arXiv preprint arXiv:1406.4729, 2014. 5",
+          "doi": null,
+          "arxiv_id": "1406.4729",
+          "title": null,
+          "year": 2014
+        },
+        {
+          "raw_reference": "G. E. Hinton, N. Srivastava, A. Krizhevsky, I. Sutskever, and R. R. Salakhutdinov. Improving neural networks by pre- venting co-adaptation of feature detectors. arXiv preprint arXiv:1207.0580, 2012. 4",
+          "doi": null,
+          "arxiv_id": "1207.0580",
+          "title": null,
+          "year": 2012
+        },
+        {
+          "raw_reference": "D. Hoiem, Y . Chodpathumwan, and Q. Dai. Diagnosing error in object detectors. In Computer Vision–ECCV 2012, pages 340–353. Springer, 2012. 6",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2012
+        },
+        {
+          "raw_reference": "K. Lenc and A. Vedaldi. R-cnn minus r. arXiv preprint arXiv:1506.06981, 2015. 5, 6",
+          "doi": null,
+          "arxiv_id": "1506.06981",
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "R. Lienhart and J. Maydt. An extended set of haar-like fea- tures for rapid object detection. In Image Processing. 2002. Proceedings. 2002 International Conference on , volume 1, pages I–900. IEEE, 2002. 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2002
+        },
+        {
+          "raw_reference": "M. Lin, Q. Chen, and S. Yan. Network in network. CoRR, abs/1312.4400, 2013. 2",
+          "doi": null,
+          "arxiv_id": "1312.4400",
+          "title": null,
+          "year": 2013
+        },
+        {
+          "raw_reference": "D. G. Lowe. Object recognition from local scale-invariant features. In Computer vision, 1999. The proceedings of the seventh IEEE international conference on , volume 2, pages 1150–1157. Ieee, 1999. 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 1999
+        },
+        {
+          "raw_reference": "D. Mishkin. Models accuracy on imagenet 2012 val. https://github.com/BVLC/caffe/wiki/ Models-accuracy-on-ImageNet-2012-val . Ac- cessed: 2015-10-2. 3",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2012
+        },
+        {
+          "raw_reference": "C. P. Papageorgiou, M. Oren, and T. Poggio. A general framework for object detection. In Computer vision, 1998. sixth international conference on , pages 555–562. IEEE,",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 1998
+        },
+        {
+          "raw_reference": "4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "J. Redmon. Darknet: Open source neural networks in c. http://pjreddie.com/darknet/, 2013–2016. 3",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2013
+        },
+        {
+          "raw_reference": "J. Redmon and A. Angelova. Real-time grasp detection using convolutional neural networks. CoRR, abs/1412.3128, 2014. 5",
+          "doi": null,
+          "arxiv_id": "1412.3128",
+          "title": null,
+          "year": 2014
+        },
+        {
+          "raw_reference": "S. Ren, K. He, R. Girshick, and J. Sun. Faster r-cnn: To- wards real-time object detection with region proposal net- works. arXiv preprint arXiv:1506.01497, 2015. 5, 6, 7",
+          "doi": null,
+          "arxiv_id": "1506.01497",
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "S. Ren, K. He, R. B. Girshick, X. Zhang, and J. Sun. Object detection networks on convolutional feature maps. CoRR, abs/1504.06066, 2015. 3, 7",
+          "doi": null,
+          "arxiv_id": "1504.06066",
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "O. Russakovsky, J. Deng, H. Su, J. Krause, S. Satheesh, S. Ma, Z. Huang, A. Karpathy, A. Khosla, M. Bernstein, A. C. Berg, and L. Fei-Fei. ImageNet Large Scale Visual Recognition Challenge. International Journal of Computer Vision (IJCV), 2015. 3",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "M. A. Sadeghi and D. Forsyth. 30hz object detection with dpm v5. In Computer Vision–ECCV 2014 , pages 65–79. Springer, 2014. 5, 6",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2014
+        },
+        {
+          "raw_reference": "P. Sermanet, D. Eigen, X. Zhang, M. Mathieu, R. Fergus, and Y . LeCun. Overfeat: Integrated recognition, localiza- tion and detection using convolutional networks. CoRR, abs/1312.6229, 2013. 4, 5",
+          "doi": null,
+          "arxiv_id": "1312.6229",
+          "title": null,
+          "year": 2013
+        },
+        {
+          "raw_reference": "Z. Shen and X. Xue. Do more dropouts in pool5 feature maps for better object detection. arXiv preprint arXiv:1409.6911,",
+          "doi": null,
+          "arxiv_id": "1409.6911",
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "7",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "C. Szegedy, W. Liu, Y . Jia, P. Sermanet, S. Reed, D. Anguelov, D. Erhan, V . Vanhoucke, and A. Rabinovich. Going deeper with convolutions. CoRR, abs/1409.4842,",
+          "doi": null,
+          "arxiv_id": "1409.4842",
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "J. R. Uijlings, K. E. van de Sande, T. Gevers, and A. W. Smeulders. Selective search for object recognition. Inter- national journal of computer vision , 104(2):154–171, 2013. 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2013
+        },
+        {
+          "raw_reference": "P. Viola and M. Jones. Robust real-time object detection. International Journal of Computer Vision, 4:34–47, 2001. 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2001
+        },
+        {
+          "raw_reference": "P. Viola and M. J. Jones. Robust real-time face detection. International journal of computer vision , 57(2):137–154,",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "5",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "J. Yan, Z. Lei, L. Wen, and S. Z. Li. The fastest deformable part model for object detection. In Computer Vision and Pat- tern Recognition (CVPR), 2014 IEEE Conference on , pages 2497–2504. IEEE, 2014. 5, 6",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2014
+        },
+        {
+          "raw_reference": "C. L. Zitnick and P. Doll ́ar. Edge boxes: Locating object pro- posals from edges. In Computer Vision–ECCV 2014, pages 391–405. Springer, 2014. 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2014
+        }
+      ]
+    },
+    "gold": {
+      "case_id": "yolov1",
+      "schema_version": 1,
+      "description": "YOLOv1 CVPR-style markdown from PDF→MD (local YOLOv1.pdf); tier merge_safe. Graph expectations relaxed until locked against live Neo4j.",
+      "work_metadata": {
+        "title": "You Only Look Once: Unified, Real-Time Object Detection",
+        "publication_year": null,
+        "abstract_prefix": "We present YOLO, a new approach to object detection.",
+        "doi": null,
+        "arxiv_id": null,
+        "venue_name": null,
+        "work_type": null
+      },
+      "authorships": [
+        {
+          "name": "Joseph Redmon",
+          "affiliations": [
+            "University of Washington"
+          ]
+        },
+        {
+          "name": "Santosh Divvala",
+          "affiliations": [
+            "University of Washington",
+            "Allen Institute for AI"
+          ]
+        },
+        {
+          "name": "Ross Girshick",
+          "affiliations": [
+            "Allen Institute for AI",
+            "Facebook AI Research"
+          ]
+        },
+        {
+          "name": "Ali Farhadi",
+          "affiliations": [
+            "University of Washington",
+            "Allen Institute for AI",
+            "Facebook AI Research"
+          ]
+        }
+      ],
+      "references": {
+        "expected_count": 44,
+        "min_count": 36,
+        "notes": "Counts from heuristic extract_references on this MD; PDF hyphenation may shift totals.",
+        "sample_arxiv_ids": [
+          "1505.00110",
+          "1310.1531",
+          "1505.01749",
+          "1504.08083",
+          "1406.4729",
+          "1207.0580",
+          "1506.06981",
+          "1312.4400",
+          "1412.3128",
+          "1506.01497",
+          "1504.06066",
+          "1312.6229"
+        ],
+        "sample_dois": []
+      },
+      "graph_expectations": {
+        "min_cites": 23,
+        "max_cites": 24,
+        "min_authorships": 4,
+        "max_authorships": 8,
+        "min_institutions": 2,
+        "max_institutions": 8,
+        "expected_cited_arxiv_ids": [
+          "1505.00110",
+          "1310.1531",
+          "1505.01749",
+          "1504.08083",
+          "1312.4400",
+          "1406.4729",
+          "1207.0580",
+          "1506.06981"
+        ],
+        "max_duplicate_work_fingerprints": 0,
+        "max_work_dedup_violations": 0,
+        "min_related_version_edges": null,
+        "max_related_version_edges": null
+      },
+      "quality_thresholds": null
+    }
+  }
+}

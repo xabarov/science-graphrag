@@ -1,0 +1,570 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:9ef7564010d2d895c2ae",
+    "semantic_extraction_enabled": true
+  },
+  "case": {
+    "case_id": "detrs_realpdf",
+    "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/detrs_realpdf",
+    "diagnostics": {
+      "document_id": "detrs_realpdf",
+      "source_name": "detrs_realpdf",
+      "markdown_source": "benchmark",
+      "metadata_source": "llm",
+      "authorships_source": "llm",
+      "references_source": "heuristic",
+      "extraction_llm_enabled": true,
+      "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+      "fallback_reasons": []
+    },
+    "metrics": {
+      "metadata": {
+        "title_exact_normalized": true,
+        "year_exact": null,
+        "abstract_prefix_ok": true,
+        "doi_match_expected": null,
+        "arxiv_match_expected": null,
+        "work_type_match": null
+      },
+      "authorships": {
+        "names_precision": 0.0,
+        "names_recall": 0.0,
+        "names_f1": 0.0,
+        "names_tp_fp_fn": {
+          "tp": 0,
+          "fp": 8,
+          "fn": 0
+        },
+        "order_accuracy": 0.0,
+        "order_hits": 0,
+        "affiliation_jaccard_macro_on_matched_authors": 0.0,
+        "affiliations_precision": 0.0,
+        "affiliations_recall": 0.0,
+        "affiliations_f1": 0.0,
+        "pred_count": 8,
+        "gold_count": 0
+      },
+      "references": {
+        "count": 46,
+        "expected_count": 46,
+        "min_count": 38,
+        "count_ok": true,
+        "count_delta": 0,
+        "sample_arxiv_precision": 1.0,
+        "sample_arxiv_recall": 1.0,
+        "sample_arxiv_f1": 1.0,
+        "sample_arxiv_tp_fp_fn": {
+          "tp": 12,
+          "fp": 0,
+          "fn": 0
+        },
+        "predicted_arxiv_ids": [
+          "1804.02767",
+          "2004.10934",
+          "2007.12099",
+          "2104.01318",
+          "2104.10419",
+          "2107.08430",
+          "2203.00860",
+          "2203.16250",
+          "2207.13085",
+          "2211.03594",
+          "2301.05586",
+          "2304.13027"
+        ],
+        "sample_doi_precision": 1.0,
+        "sample_doi_recall": 1.0,
+        "sample_doi_f1": 1.0
+      },
+      "contract": {
+        "checks": {
+          "title_match_required": true,
+          "abstract_prefix_required": true,
+          "reference_count_ok_required": true
+        },
+        "passed": true
+      }
+    },
+    "predicted": {
+      "work_metadata": {
+        "title": "DETRs Beat YOLOs on Real-time Object Detection",
+        "normalized_title": "DETRs Beat YOLOs on Real-time Object Detection",
+        "abstract": "The YOLO series has become the most popular framework for real-time object detection due to its reasonable trade-off between speed and accuracy. However, we observe that the speed and accuracy of YOLOs are negatively affected by the NMS. Recently, end-to-end Transformer-based detectors (DETRs) have provided an alternative to eliminating NMS. Nevertheless, the high computational cost limits their practicality and hinders them from fully exploiting the advantage of excluding NMS. In this paper, we propose the Real-Time DEtection TRansformer (RT-DETR), the first real-time end-to-end object detector to our best knowledge that addresses the above dilemma. We build RT-DETR in two steps, drawing on the advanced DETR: first we focus on maintaining accuracy while improving speed, followed by maintaining speed while improving accuracy. Specifically, we design an efficient hybrid encoder to expeditiously process multi-scale features by decoupling intra-scale interaction and cross-scale fusion to improve speed. Then, we propose the uncertainty-minimal query selection to provide high-quality initial queries to the decoder, thereby improving accuracy. In addition, RT-DETR supports flexible speed tuning by adjusting the number of decoder layers to adapt to various scenarios without retraining. Our RT-DETR-R50 / R101 achieves 53.1% / 54.3% AP on COCO and 108 / 74 FPS on T4 GPU, outperforming previously advanced YOLOs in both speed and accuracy. Furthermore, RT-DETR-R50 outperforms DINO-R50 by 2.2% AP in accuracy and about 21 times in FPS. After pre-training with Objects365, RT-DETR-R50 / R101 achieves 55.3% / 56.2% AP. The project page: https://zhao-yian.github.io/RTDETR.",
+        "publication_year": null,
+        "doi": null,
+        "arxiv_id": null,
+        "language": "en",
+        "venue_name": null,
+        "work_type": "unknown",
+        "openalex_id": null,
+        "fingerprint": "665d7e83d8006695",
+        "ingestion_confidence": 0.72,
+        "source_metadata": {
+          "extraction_stage": "llm"
+        }
+      },
+      "authorships": [
+        {
+          "author_position": 1,
+          "author_raw_name": "Yian Zhao",
+          "raw_affiliations": [
+            "Baidu Inc, Beijing, China",
+            "School of Electronic and Computer Engineering, Peking University, Shenzhen, China"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 2,
+          "author_raw_name": "Wenyu Lv",
+          "raw_affiliations": [
+            "Baidu Inc, Beijing, China",
+            "School of Electronic and Computer Engineering, Peking University, Shenzhen, China"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 3,
+          "author_raw_name": "Shangliang Xu",
+          "raw_affiliations": [
+            "Baidu Inc, Beijing, China"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 4,
+          "author_raw_name": "Jinman Wei",
+          "raw_affiliations": [
+            "Baidu Inc, Beijing, China"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 5,
+          "author_raw_name": "Guanzhong Wang",
+          "raw_affiliations": [
+            "Baidu Inc, Beijing, China"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 6,
+          "author_raw_name": "Qingqing Dang",
+          "raw_affiliations": [
+            "Baidu Inc, Beijing, China"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 7,
+          "author_raw_name": "Yi Liu",
+          "raw_affiliations": [
+            "Baidu Inc, Beijing, China"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 8,
+          "author_raw_name": "Jie Chen",
+          "raw_affiliations": [
+            "School of Electronic and Computer Engineering, Peking University, Shenzhen, China"
+          ],
+          "is_corresponding": null,
+          "email": null
+        }
+      ],
+      "references": [
+        {
+          "raw_reference": "Alexey Bochkovskiy, Chien-Yao Wang, and Hong-Yuan Mark Liao. Yolov4: Optimal speed and accuracy of object detection. arXiv preprint arXiv:2004.10934, 2020. 1, 2",
+          "doi": null,
+          "arxiv_id": "2004.10934",
+          "title": null,
+          "year": 2004
+        },
+        {
+          "raw_reference": "Daniel Bogdoll, Maximilian Nitsche, and J Marius Z ̈ollner. Anomaly detection in autonomous driving: A survey. In Pro- ceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, pages 4488–4499, 2022. 1",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2022
+        },
+        {
+          "raw_reference": "Yuxuan Cai, Yizhuang Zhou, Qi Han, Jianjian Sun, Xiang- wen Kong, Jun Li, and Xiangyu Zhang. Reversible column networks. In International Conference on Learning Repre- sentations, 2022. 8",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2022
+        },
+        {
+          "raw_reference": "Nicolas Carion, Francisco Massa, Gabriel Synnaeve, Nicolas Usunier, Alexander Kirillov, and Sergey Zagoruyko. End-to- end object detection with transformers. In European Confer- ence on Computer Vision, pages 213–229. Springer, 2020. 1, 2, 7",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Qiang Chen, Xiaokang Chen, Gang Zeng, and Jingdong Wang. Group detr: Fast training convergence with decoupled one- to-many label assignment. arXiv preprint arXiv:2207.13085,",
+          "doi": null,
+          "arxiv_id": "2207.13085",
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "Qiang Chen, Jian Wang, Chuchu Han, Shan Zhang, Zex- ian Li, Xiaokang Chen, Jiahui Chen, Xiaodi Wang, Shum- ing Han, Gang Zhang, et al. Group detr v2: Strong object detector with encoder-decoder pretraining. arXiv preprint arXiv:2211.03594, 2022. 8",
+          "doi": null,
+          "arxiv_id": "2211.03594",
+          "title": null,
+          "year": 2022
+        },
+        {
+          "raw_reference": "Xiaohan Ding, Xiangyu Zhang, Ningning Ma, Jungong Han, Guiguang Ding, and Jian Sun. Repvgg: Making vgg-style convnets great again. In Proceedings of the IEEE/CVF Con- ference on Computer Vision and Pattern Recognition, pages 13733–13742, 2021. 5",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2021
+        },
+        {
+          "raw_reference": "Peng Gao, Minghang Zheng, Xiaogang Wang, Jifeng Dai, and Hongsheng Li. Fast convergence of detr with spatially modulated co-attention. In Proceedings of the IEEE/CVF International Conference on Computer Vision, pages 3621– 3630, 2021. 7",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2021
+        },
+        {
+          "raw_reference": "Zheng Ge, Songtao Liu, Feng Wang, Zeming Li, and Jian Sun. Yolox: Exceeding yolo series in 2021. arXiv preprint arXiv:2107.08430, 2021. 1, 2",
+          "doi": null,
+          "arxiv_id": "2107.08430",
+          "title": null,
+          "year": 2021
+        },
+        {
+          "raw_reference": "Jocher Glenn. Yolov5 release v7.0. https://github. com/ultralytics/yolov5/tree/v7.0, 2022. 2, 3, 6, 7",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2022
+        },
+        {
+          "raw_reference": "Jocher Glenn. Yolov8. https : / / github . com / ultralytics/ultralytics/tree/main , 2023. 1, 2, 3, 6, 7",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2023
+        },
+        {
+          "raw_reference": "Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. Deep residual learning for image recognition. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, pages 770–778, 2016. 6",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2016
+        },
+        {
+          "raw_reference": "Tong He, Zhi Zhang, Hang Zhang, Zhongyue Zhang, Jun- yuan Xie, and Mu Li. Bag of tricks for image classifica- tion with convolutional neural networks. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, pages 558–567, 2019. 6",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "Xin Huang, Xinxin Wang, Wenyu Lv, Xiaying Bai, Xiang Long, Kaipeng Deng, Qingqing Dang, Shumin Han, Qiwen Liu, Xiaoguang Hu, et al. Pp-yolov2: A practical object detector. arXiv preprint arXiv:2104.10419, 2021. 1, 2",
+          "doi": null,
+          "arxiv_id": "2104.10419",
+          "title": null,
+          "year": 2021
+        },
+        {
+          "raw_reference": "Chuyi Li, Lulu Li, Yifei Geng, Hongliang Jiang, Meng Cheng, Bo Zhang, Zaidan Ke, Xiaoming Xu, and Xiangxiang Chu. Yolov6 v3.0: A full-scale reloading. arXiv preprint arXiv:2301.05586, 2023. 1, 2, 3, 6, 7",
+          "doi": null,
+          "arxiv_id": "2301.05586",
+          "title": null,
+          "year": 2023
+        },
+        {
+          "raw_reference": "Feng Li, Hao Zhang, Shilong Liu, Jian Guo, Lionel M Ni, and Lei Zhang. Dn-detr: Accelerate detr training by introducing query denoising. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, pages 13619– 13627, 2022. 1, 2, 7",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2022
+        },
+        {
+          "raw_reference": "Feng Li, Ailing Zeng, Shilong Liu, Hao Zhang, Hongyang Li, Lei Zhang, and Lionel M Ni. Lite detr: An interleaved multi-scale encoder for efficient detr. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, pages 18558–18567, 2023. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2023
+        },
+        {
+          "raw_reference": "Junyu Lin, Xiaofeng Mao, Yuefeng Chen, Lei Xu, Yuan He, and Hui Xue. Dˆ 2etr: Decoder-only detr with com- putationally efficient cross-scale attention. arXiv preprint arXiv:2203.00860, 2022. 4",
+          "doi": null,
+          "arxiv_id": "2203.00860",
+          "title": null,
+          "year": 2022
+        },
+        {
+          "raw_reference": "Tsung-Yi Lin, Michael Maire, Serge Belongie, James Hays, Pietro Perona, Deva Ramanan, Piotr Doll ́ar, and C Lawrence Zitnick. Microsoft coco: Common objects in context. In European Conference on Computer Vision, pages 740–755. Springer, 2014. 3, 8",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2014
+        },
+        {
+          "raw_reference": "Tsung-Yi Lin, Priya Goyal, Ross Girshick, Kaiming He, and Piotr Doll ́ar. Focal loss for dense object detection. InProceed- ings of the IEEE/CVF International Conference on Computer Vision, pages 2980–2988, 2017. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "Shu Liu, Lu Qi, Haifang Qin, Jianping Shi, and Jiaya Jia. Path aggregation network for instance segmentation. In Proceed- ings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, pages 8759–8768, 2018. 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "Shilong Liu, Feng Li, Hao Zhang, Xiao Yang, Xianbiao Qi, Hang Su, Jun Zhu, and Lei Zhang. Dab-detr: Dynamic anchor boxes are better queries for detr. In International Conference on Learning Representations, 2021. 1, 2, 7",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2021
+        },
+        {
+          "raw_reference": "Wei Liu, Dragomir Anguelov, Dumitru Erhan, Christian Szegedy, Scott Reed, Cheng-Yang Fu, and Alexander C Berg. Ssd: Single shot multibox detector. In European Conference on Computer Vision, pages 21–37. Springer, 2016. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2016
+        },
+        {
+          "raw_reference": "Xiang Long, Kaipeng Deng, Guanzhong Wang, Yang Zhang, Qingqing Dang, Yuan Gao, Hui Shen, Jianguo Ren, Shumin Han, Errui Ding, et al. Pp-yolo: An effective and effi- cient implementation of object detector. arXiv preprint arXiv:2007.12099, 2020. 1, 2",
+          "doi": null,
+          "arxiv_id": "2007.12099",
+          "title": null,
+          "year": 2007
+        },
+        {
+          "raw_reference": "Depu Meng, Xiaokang Chen, Zejia Fan, Gang Zeng, Houqiang Li, Yuhui Yuan, Lei Sun, and Jingdong Wang. Con- ditional detr for fast training convergence. In Proceedings of the IEEE/CVF International Conference on Computer Vision, pages 3651–3660, 2021. 1, 3, 7",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2021
+        },
+        {
+          "raw_reference": "Rashmika Nawaratne, Damminda Alahakoon, Daswin De Silva, and Xinghuo Yu. Spatiotemporal anomaly detection using deep learning for real-time video surveillance. IEEE Transactions on Industrial Informatics, 16(1):393–402, 2019. 1",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "Joseph Redmon and Ali Farhadi. Yolo9000: better, faster, stronger. In Proceedings of the IEEE/CVF Conference on 16973 Computer Vision and Pattern Recognition, pages 7263–7271,",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "Joseph Redmon and Ali Farhadi. Yolov3: An incremental improvement. arXiv preprint arXiv:1804.02767, 2018. 1, 2",
+          "doi": null,
+          "arxiv_id": "1804.02767",
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "Joseph Redmon, Santosh Divvala, Ross Girshick, and Ali Farhadi. You only look once: Unified, real-time object de- tection. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, pages 779–788,",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "Tianhe Ren, Jianwei Yang, Shilong Liu, Ailing Zeng, Feng Li, Hao Zhang, Hongyang Li, Zhaoyang Zeng, and Lei Zhang. A strong and reproducible object detector with only public datasets. arXiv preprint arXiv:2304.13027, 2023. 8",
+          "doi": null,
+          "arxiv_id": "2304.13027",
+          "title": null,
+          "year": 2023
+        },
+        {
+          "raw_reference": "Byungseok Roh, JaeWoong Shin, Wuhyun Shin, and Saehoon Kim. Sparse detr: Efficient end-to-end object detection with learnable sparsity. In International Conference on Learning Representations, 2021. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2021
+        },
+        {
+          "raw_reference": "Shuai Shao, Zeming Li, Tianyuan Zhang, Chao Peng, Gang Yu, Xiangyu Zhang, Jing Li, and Jian Sun. Objects365: A large-scale, high-quality dataset for object detection. In Pro- ceedings of the IEEE/CVF International Conference on Com- puter Vision, pages 8430–8439, 2019. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "Peize Sun, Rufeng Zhang, Yi Jiang, Tao Kong, Chenfeng Xu, Wei Zhan, Masayoshi Tomizuka, Lei Li, Zehuan Yuan, Changhu Wang, et al. Sparse r-cnn: End-to-end object detection with learnable proposals. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, pages 14454–14463, 2021. 1",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2021
+        },
+        {
+          "raw_reference": "Chien-Yao Wang, Alexey Bochkovskiy, and Hong-Yuan Mark Liao. Scaled-yolov4: Scaling cross stage partial network. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, pages 13029–13038, 2021. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2021
+        },
+        {
+          "raw_reference": "Chien-Yao Wang, Alexey Bochkovskiy, and Hong-Yuan Mark Liao. Yolov7: Trainable bag-of-freebies sets new state-of- the-art for real-time object detectors. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, pages 7464–7475, 2023. 1, 2, 3, 6, 7",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2023
+        },
+        {
+          "raw_reference": "Yingming Wang, Xiangyu Zhang, Tong Yang, and Jian Sun. Anchor detr: Query design for transformer-based detector. In Proceedings of the AAAI Conference on Artificial Intelligence, pages 2567–2575, 2022. 1, 3, 7",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2022
+        },
+        {
+          "raw_reference": "Shangliang Xu, Xinxin Wang, Wenyu Lv, Qinyao Chang, Cheng Cui, Kaipeng Deng, Guanzhong Wang, Qingqing Dang, Shengyu Wei, Yuning Du, et al. Pp-yoloe: An evolved version of yolo. arXiv preprint arXiv:2203.16250, 2022. 1, 2, 3, 6, 7",
+          "doi": null,
+          "arxiv_id": "2203.16250",
+          "title": null,
+          "year": 2022
+        },
+        {
+          "raw_reference": "Jianwei Yang, Chunyuan Li, Xiyang Dai, and Jianfeng Gao. Focal modulation networks. Advances in Neural Information Processing Systems, 35:4203–4217, 2022. 8",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2022
+        },
+        {
+          "raw_reference": "Zhuyu Yao, Jiangbo Ai, Boxun Li, and Chi Zhang. Efficient detr: improving end-to-end object detector with dense prior. arXiv preprint arXiv:2104.01318, 2021. 2, 5, 7",
+          "doi": null,
+          "arxiv_id": "2104.01318",
+          "title": null,
+          "year": 2021
+        },
+        {
+          "raw_reference": "Fangao Zeng, Bin Dong, Yuang Zhang, Tiancai Wang, Xi- angyu Zhang, and Yichen Wei. Motr: End-to-end multiple- object tracking with transformer. In European Conference on Computer Vision, pages 659–675. Springer, 2022. 1",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2022
+        },
+        {
+          "raw_reference": "Hao Zhang, Feng Li, Shilong Liu, Lei Zhang, Hang Su, Jun Zhu, Lionel Ni, and Heung-Yeung Shum. Dino: Detr with improved denoising anchor boxes for end-to-end object de- tection. In International Conference on Learning Representa- tions, 2022. 1, 2, 3, 5, 7, 8",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2022
+        },
+        {
+          "raw_reference": "Xizhou Zhu, Weijie Su, Lewei Lu, Bin Li, Xiaogang Wang, and Jifeng Dai. Deformable detr: Deformable transformers for end-to-end object detection. In International Conference on Learning Representations, 2020. 1, 2, 3, 4, 5, 7",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Zhuofan Zong, Guanglu Song, and Yu Liu. Detrs with col- laborative hybrid assignments training. In Proceedings of the IEEE/CVF International Conference on Computer Vision, pages 6748–6758, 2023. 8 16974",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2023
+        }
+      ]
+    },
+    "gold": {
+      "case_id": "detrs_realpdf",
+      "schema_version": 1,
+      "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+      "work_metadata": {
+        "title": "DETRs Beat YOLOs on Real-time Object Detection",
+        "publication_year": null,
+        "abstract_prefix": "The YOLO series has become the most popular framework for real-time obje",
+        "doi": null,
+        "arxiv_id": null,
+        "venue_name": null,
+        "work_type": null
+      },
+      "authorships": [],
+      "references": {
+        "expected_count": 46,
+        "min_count": 38,
+        "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
+        "sample_arxiv_ids": [
+          "2004.10934",
+          "2207.13085",
+          "2211.03594",
+          "2107.08430",
+          "2104.10419",
+          "2301.05586",
+          "2203.00860",
+          "2007.12099",
+          "1804.02767",
+          "2304.13027",
+          "2203.16250",
+          "2104.01318"
+        ],
+        "sample_dois": []
+      },
+      "graph_expectations": {
+        "min_cites": 0,
+        "max_cites": 66,
+        "min_authorships": 0,
+        "max_authorships": 8,
+        "min_institutions": 0,
+        "max_institutions": 8,
+        "expected_cited_arxiv_ids": [
+          "2004.10934",
+          "2207.13085",
+          "2211.03594",
+          "2107.08430",
+          "2104.10419",
+          "2301.05586",
+          "2203.00860",
+          "2007.12099"
+        ],
+        "max_duplicate_work_fingerprints": 8,
+        "max_work_dedup_violations": 0,
+        "min_related_version_edges": null,
+        "max_related_version_edges": null
+      },
+      "quality_thresholds": null
+    }
+  }
+}

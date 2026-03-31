@@ -13,8 +13,8 @@
   },
   "authorships": [],
   "references": {
-    "expected_count": 2,
-    "min_count": 0,
+    "expected_count": 49,
+    "min_count": 41,
     "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
     "sample_arxiv_ids": [
       "1712.00726"
@@ -23,7 +23,7 @@
   },
   "graph_expectations": {
     "min_cites": 0,
-    "max_cites": 22,
+    "max_cites": 70,
     "expected_cited_arxiv_ids": [
       "1712.00726"
     ],

@@ -3,7 +3,7 @@
   "schema_version": 1,
   "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
   "work_metadata": {
-    "title": "Bridging the Gap Between Anchor-based and Anchor-free Detection via",
+    "title": "Bridging the Gap Between Anchor-based and Anchor-free Detection via Adaptive Training Sample Selection",
     "publication_year": null,
     "abstract_prefix": "Object detection has been dominated by anchor-based detectors for severa",
     "doi": null,

@@ -3,7 +3,7 @@
   "schema_version": 1,
   "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
   "work_metadata": {
-    "title": "DN-DETR: ACCELERATE DETR TRAINING BY INTRODUCING QUERY DENOISING 1",
+    "title": "DN-DETR: Accelerate DETR Training by Introducing Query DeNoising",
     "publication_year": null,
     "abstract_prefix": "We present in this paper a novel denoising training method to speed up D",
     "doi": null,

@@ -122,13 +122,15 @@ class QdrantChunkStore:
             query_filter = Filter(
                 must=[FieldCondition(key="work_id", match=MatchValue(value=work_id))],
             )
-        hits = self._client.search(
+        # qdrant-client>=1.17: use query_points (search() removed)
+        resp = self._client.query_points(
             collection_name=self._collection,
-            query_vector=vector,
+            query=vector,
             limit=limit,
             query_filter=query_filter,
             with_payload=True,
         )
+        hits = resp.points
         out: list[dict[str, Any]] = []
         for hit in hits:
             payload = hit.payload or {}

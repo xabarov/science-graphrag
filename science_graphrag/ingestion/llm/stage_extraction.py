@@ -43,6 +43,14 @@ SYSTEM_FENCE = (
     "For references without DOI, still fill arxiv_id and year when printed."
 )
 
+SYSTEM_META_NORMALIZE = (
+    "For title and abstract fields, normalize PDF line-break artifacts: join words "
+    "split by an end-of-line hyphen or spacing artifact (e.g. `frame- work` -> "
+    "`framework`, `improve-ments` -> `improvements`, `ob- ject` -> `object`). "
+    "Keep genuine compound terms hyphenated (e.g. `real-time`, `one-stage`, "
+    "`task-aligned`)."
+)
+
 
 def extraction_layer1_prompt_fingerprint() -> str:
     """Short stable id for layer-1 SYSTEM/user prompt contract (for benchmark reports)."""
@@ -50,6 +58,7 @@ def extraction_layer1_prompt_fingerprint() -> str:
     material = "|".join(
         (
             SYSTEM_FENCE,
+            SYSTEM_META_NORMALIZE,
             f"MAX_META_CHARS={MAX_META_CHARS}",
             f"MAX_REFS_PROMPT_CHARS={MAX_REFS_PROMPT_CHARS}",
             "schemas=v1",
@@ -313,7 +322,9 @@ def extract_stages_llm_first(
         parsed, err = extractor.extract_maybe(
             WorkMetadataLLM,
             system=(
-                SYSTEM_FENCE + " Focus on title, abstract, venue, year, DOI, arXiv id, language."
+                SYSTEM_FENCE
+                + " Focus on title, abstract, venue, year, DOI, arXiv id, language. "
+                + SYSTEM_META_NORMALIZE
             ),
             user=user_meta,
         )

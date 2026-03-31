@@ -91,3 +91,35 @@ def test_score_semantic_recall_threshold_enforced() -> None:
     )
     assert not m.passed
     assert "method_recall_below_min" in m.notes
+
+
+def test_score_semantic_substring_alias_matches_long_method_name() -> None:
+    """Gold short tokens (e.g. gfl) match long predicted names containing them."""
+
+    gold = SemanticGoldSpec.model_validate(
+        {
+            "case_id": "x",
+            "min_method_names": 1,
+            "expected_method_names_normalized": ["gfl", "generalized focal loss"],
+            "allow_empty_when_no_llm": False,
+        },
+    )
+    pred = SemanticExtractionV1(
+        document_id="x",
+        methods=[
+            SemanticMethodV1(
+                name="Generalized Focal Loss (GFL)",
+                confidence=0.9,
+                evidence=[SemanticEvidenceV1(quote="GFL")],
+            ),
+        ],
+        datasets=[],
+    )
+    m = score_semantic(
+        pred,
+        gold,
+        extraction_llm_enabled=True,
+        confidence_threshold=0.35,
+    )
+    assert m.passed
+    assert m.recall_methods_num == 2

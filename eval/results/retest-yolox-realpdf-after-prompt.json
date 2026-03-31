@@ -1,0 +1,548 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:9ef7564010d2d895c2ae",
+    "semantic_extraction_enabled": true
+  },
+  "case": {
+    "case_id": "yolox_realpdf",
+    "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/yolox_realpdf",
+    "diagnostics": {
+      "document_id": "yolox_realpdf",
+      "source_name": "yolox_realpdf",
+      "markdown_source": "benchmark",
+      "metadata_source": "llm",
+      "authorships_source": "llm",
+      "references_source": "heuristic",
+      "extraction_llm_enabled": true,
+      "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+      "fallback_reasons": []
+    },
+    "metrics": {
+      "metadata": {
+        "title_exact_normalized": true,
+        "year_exact": null,
+        "abstract_prefix_ok": true,
+        "doi_match_expected": null,
+        "arxiv_match_expected": null,
+        "work_type_match": null
+      },
+      "authorships": {
+        "names_precision": 0.0,
+        "names_recall": 0.0,
+        "names_f1": 0.0,
+        "names_tp_fp_fn": {
+          "tp": 0,
+          "fp": 5,
+          "fn": 0
+        },
+        "order_accuracy": 0.0,
+        "order_hits": 0,
+        "affiliation_jaccard_macro_on_matched_authors": 0.0,
+        "affiliations_precision": 0.0,
+        "affiliations_recall": 0.0,
+        "affiliations_f1": 0.0,
+        "pred_count": 5,
+        "gold_count": 0
+      },
+      "references": {
+        "count": 47,
+        "expected_count": 47,
+        "min_count": 39,
+        "count_ok": true,
+        "count_delta": 0,
+        "sample_arxiv_precision": 1.0,
+        "sample_arxiv_recall": 1.0,
+        "sample_arxiv_f1": 1.0,
+        "sample_arxiv_tp_fp_fn": {
+          "tp": 12,
+          "fp": 0,
+          "fn": 0
+        },
+        "predicted_arxiv_ids": [
+          "1706.02677",
+          "1804.02767",
+          "1902.04103",
+          "1904.07850",
+          "1911.09516",
+          "2004.10934",
+          "2007.03496",
+          "2011.08036",
+          "2101.04307",
+          "2101.11782",
+          "2103.14030",
+          "2104.10419"
+        ],
+        "sample_doi_precision": 1.0,
+        "sample_doi_recall": 1.0,
+        "sample_doi_f1": 1.0
+      },
+      "contract": {
+        "checks": {
+          "title_match_required": true,
+          "abstract_prefix_required": true,
+          "reference_count_ok_required": true
+        },
+        "passed": true
+      }
+    },
+    "predicted": {
+      "work_metadata": {
+        "title": "YOLOX: Exceeding YOLO Series in 2021",
+        "normalized_title": "YOLOX: Exceeding YOLO Series in 2021",
+        "abstract": "In this report, we present some experienced improvements to YOLO series, forming a new high-performance detector — YOLOX. We switch the YOLO detector to an anchor-free manner and conduct other advanced detection techniques, i.e., a decoupled head and the leading label assignment strategy SimOTA to achieve state-of-the-art results across a large scale range of models: For YOLO-Nano with only 0.91M parameters and 1.08G FLOPs, we get 25.3% AP on COCO, surpassing NanoDet by 1.8% AP; for YOLOv3, one of the most widely used detectors in industry, we boost it to 47.3% AP on COCO, outperforming the current best practice by 3.0% AP; for YOLOX-L with roughly the same amount of parameters as YOLOv4-CSP, YOLOv5-L, we achieve 50.0% AP on COCO at a speed of 68.9 FPS on Tesla V100, exceeding YOLOv5-L by 1.8% AP. Further, we won the 1st Place on Streaming Perception Challenge (Workshop on Autonomous Driving at CVPR 2021) using a single YOLOX-L model. We hope this report can provide useful experience for developers and researchers in practical scenes, and we also provide deploy versions with ONNX, TensorRT, NCNN, and Openvino supported. Source code is at https://github.com/Megvii-BaseDetection/YOLOX.",
+        "publication_year": null,
+        "doi": null,
+        "arxiv_id": null,
+        "language": "en",
+        "venue_name": null,
+        "work_type": "unknown",
+        "openalex_id": null,
+        "fingerprint": "992f5fc631075e99",
+        "ingestion_confidence": 0.72,
+        "source_metadata": {
+          "extraction_stage": "llm"
+        }
+      },
+      "authorships": [
+        {
+          "author_position": 1,
+          "author_raw_name": "Zheng Ge",
+          "raw_affiliations": [
+            "Megvii Technology"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 2,
+          "author_raw_name": "Songtao Liu",
+          "raw_affiliations": [
+            "Megvii Technology"
+          ],
+          "is_corresponding": true,
+          "email": null
+        },
+        {
+          "author_position": 3,
+          "author_raw_name": "Feng Wang",
+          "raw_affiliations": [
+            "Megvii Technology"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 4,
+          "author_raw_name": "Zeming Li",
+          "raw_affiliations": [
+            "Megvii Technology"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 5,
+          "author_raw_name": "Jian Sun",
+          "raw_affiliations": [
+            "Megvii Technology"
+          ],
+          "is_corresponding": null,
+          "email": null
+        }
+      ],
+      "references": [
+        {
+          "raw_reference": "Alexey Bochkovskiy, Chien-Yao Wang, and Hong- Yuan Mark Liao. Yolov4: Optimal speed and accuracy of object detection. arXiv preprint arXiv:2004.10934, 2020. 1, 2, 3, 6",
+          "doi": null,
+          "arxiv_id": "2004.10934",
+          "title": null,
+          "year": 2004
+        },
+        {
+          "raw_reference": "Nicolas Carion, Francisco Massa, Gabriel Synnaeve, Nicolas Usunier, Alexander Kirillov, and Sergey Zagoruyko. End-to- end object detection with transformers. In ECCV, 2020. 1, 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Qiang Chen, Yingming Wang, Tong Yang, Xiangyu Zhang, Jian Cheng, and Jian Sun. You only look one-level feature. In CVPR, 2021. 3",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2021
+        },
+        {
+          "raw_reference": "Zheng Ge, Songtao Liu, Zeming Li, Osamu Yoshie, and Jian Sun. Ota: Optimal transport assignment for object detection. In CVPR, 2021. 1, 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2021
+        },
+        {
+          "raw_reference": "Zheng Ge, Jianfeng Wang, Xin Huang, Songtao Liu, and Os- amu Yoshie. Lla: Loss-aware label assignment for dense pedestrian detection. arXiv preprint arXiv:2101.04307 ,",
+          "doi": null,
+          "arxiv_id": "2101.04307",
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "Golnaz Ghiasi, Yin Cui, Aravind Srinivas, Rui Qian, Tsung- Yi Lin, Ekin D Cubuk, Quoc V Le, and Barret Zoph. Simple 6 copy-paste is a strong data augmentation method for instance segmentation. In CVPR, 2021. 5",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2021
+        },
+        {
+          "raw_reference": "glenn jocher et al. yolov5. https://github.com/ ultralytics/yolov5, 2021. 1, 2, 3, 5, 6",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2021
+        },
+        {
+          "raw_reference": "Priya Goyal, Piotr Doll ́ar, Ross Girshick, Pieter Noord- huis, Lukasz Wesolowski, Aapo Kyrola, Andrew Tulloch, Yangqing Jia, and Kaiming He. Accurate, large mini- batch sgd: Training imagenet in 1 hour. arXiv preprint arXiv:1706.02677, 2017. 2",
+          "doi": null,
+          "arxiv_id": "1706.02677",
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. Deep residual learning for image recognition. In CVPR,",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "1",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "Zhang Hongyi, Cisse Moustapha, N. Dauphin Yann, and David Lopez-Paz. mixup: Beyond empirical risk minimiza- tion. ICLR, 2018. 3",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "Xin Huang, Xinxin Wang, Wenyu Lv, Xiaying Bai, Xiang Long, Kaipeng Deng, Qingqing Dang, Shumin Han, Qiwen Liu, Xiaoguang Hu, et al. Pp-yolov2: A practical object detector. arXiv preprint arXiv:2104.10419, 2021. 3, 6",
+          "doi": null,
+          "arxiv_id": "2104.10419",
+          "title": null,
+          "year": 2021
+        },
+        {
+          "raw_reference": "Kang Kim and Hee Seok Lee. Probabilistic anchor assign- ment with iou prediction for object detection. In ECCV,",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "1, 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "Seung-Wook Kim, Hyong-Keun Kook, Jee-Young Sun, Mun-Cheon Kang, and Sung-Jea Ko. Parallel feature pyra- mid network for object detection. In ECCV, 2018. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "Hei Law and Jia Deng. Cornernet: Detecting objects as paired keypoints. In ECCV, 2018. 1, 3",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "Mengtian Li, Yuxiong Wang, and Deva Ramanan. Towards streaming perception. In ECCV, 2020. 5, 6",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Tsung-Yi Lin, Priya Goyal, Ross Girshick, Kaiming He, and Piotr Doll ́ar. Focal loss for dense object detection. In ICCV,",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "Tsung-Yi Lin, Michael Maire, Serge Belongie, James Hays, Pietro Perona, Deva Ramanan, Piotr Doll ́ar, and C Lawrence Zitnick. Microsoft coco: Common objects in context. In ECCV, 2014. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2014
+        },
+        {
+          "raw_reference": "Songtao Liu, Di Huang, and Yunhong Wang. Learning spa- tial fusion for single-shot object detection. arXiv preprint arXiv:1911.09516, 2019. 6",
+          "doi": null,
+          "arxiv_id": "1911.09516",
+          "title": null,
+          "year": 1911
+        },
+        {
+          "raw_reference": "Shu Liu, Lu Qi, Haifang Qin, Jianping Shi, and Jiaya Jia. Path aggregation network for instance segmentation. In CVPR, 2018. 2, 5",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "Shu Liu, Lu Qi, Haifang Qin, Jianping Shi, and Jiaya Jia. Path aggregation network for instance segmentation. In CVPR, 2018. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "Ze Liu, Yutong Lin, Yue Cao, Han Hu, Yixuan Wei, Zheng Zhang, Stephen Lin, and Baining Guo. Swin trans- former: Hierarchical vision transformer using shifted win- dows. arXiv preprint arXiv:2103.14030, 2021. 5",
+          "doi": null,
+          "arxiv_id": "2103.14030",
+          "title": null,
+          "year": 2021
+        },
+        {
+          "raw_reference": "Yuchen Ma, Songtao Liu, Zeming Li, and Jian Sun. Iqdet: Instance-wise quality distribution sampling for object detec- tion. In CVPR, 2021. 1, 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2021
+        },
+        {
+          "raw_reference": "Joseph Redmon, Santosh Divvala, Ross Girshick, and Ali Farhadi. You only look once: Unified, real-time object de- tection. In CVPR, 2016. 1",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2016
+        },
+        {
+          "raw_reference": "Joseph Redmon and Ali Farhadi. Yolo9000: Better, faster, stronger. In CVPR, 2017. 1, 3",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "Joseph Redmon and Ali Farhadi. Yolov3: An incremental improvement. arXiv preprint arXiv:1804.02767, 2018. 1, 2, 3",
+          "doi": null,
+          "arxiv_id": "1804.02767",
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "Shaoqing Ren, Kaiming He, Ross Girshick, and Jian Sun. Faster r-cnn: Towards real-time object detection with region proposal networks. In NeurIPS, 2015. 1",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "Guanglu Song, Yu Liu, and Xiaogang Wang. Revisiting the sibling head in object detector. In CVPR, 2020. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Mingxing Tan, Ruoming Pang, and Quoc V Le. Efficientdet: Scalable and efficient object detection. In CVPR, 2020. 6",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Zhi Tian, Chunhua Shen, Hao Chen, and Tong He. Fcos: Fully convolutional one-stage object detection. In ICCV,",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "1, 2, 3, 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "Chien-Yao Wang, Alexey Bochkovskiy, and Hong- Yuan Mark Liao. Scaled-yolov4: Scaling cross stage partial network. arXiv preprint arXiv:2011.08036, 2020. 1, 5, 6",
+          "doi": null,
+          "arxiv_id": "2011.08036",
+          "title": null,
+          "year": 2011
+        },
+        {
+          "raw_reference": "Chien-Yao Wang, Hong-Yuan Mark Liao, Yueh-Hua Wu, Ping-Yang Chen, Jun-Wei Hsieh, and I-Hau Yeh. Cspnet: A new backbone that can enhance learning capability of cnn. In CVPR workshops, 2020. 2, 5",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Jianfeng Wang, Lin Song, Zeming Li, Hongbin Sun, Jian Sun, and Nanning Zheng. End-to-end object detection with fully convolutional network. In CVPR, 2020. 1",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Jianfeng Wang, Lin Song, Zeming Li, Hongbin Sun, Jian Sun, and Nanning Zheng. End-to-end object detection with fully convolutional network. In CVPR, 2021. 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2021
+        },
+        {
+          "raw_reference": "Yue Wu, Yinpeng Chen, Lu Yuan, Zicheng Liu, Lijuan Wang, Hongzhi Li, and Yun Fu. Rethinking classification and localization for object detection. In CVPR, 2020. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Yue Wu, Yinpeng Chen, Lu Yuan, Zicheng Liu, Lijuan Wang, Hongzhi Li, and Yun Fu. Rethinking classification and localization for object detection. In CVPR, 2020. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Shifeng Zhang, Cheng Chi, Yongqiang Yao, Zhen Lei, and Stan Z Li. Bridging the gap between anchor-based and anchor-free detection via adaptive training sample selection. In CVPR, 2020. 1, 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Xiaosong Zhang, Fang Wan, Chang Liu, Rongrong Ji, and Qixiang Ye. Freeanchor: Learning to match anchors for vi- sual object detection. In NeurIPS, 2019. 1, 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "Zhi Zhang, Tong He, Hang Zhang, Zhongyuan Zhang, Jun- yuan Xie, and Mu Li. Bag of freebies for training object de- tection neural networks. arXiv preprint arXiv:1902.04103 ,",
+          "doi": null,
+          "arxiv_id": "1902.04103",
+          "title": null,
+          "year": 1902
+        },
+        {
+          "raw_reference": "3, 5",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "Qiang Zhou, Chaohui Yu, Chunhua Shen, Zhibin Wang, and Hao Li. Object detection made simpler by eliminating heuristic nms. arXiv preprint arXiv:2101.11782, 2021. 1, 4",
+          "doi": null,
+          "arxiv_id": "2101.11782",
+          "title": null,
+          "year": 2021
+        },
+        {
+          "raw_reference": "Xingyi Zhou, Dequan Wang, and Philipp Kr ̈ahenb ̈uhl. Ob- jects as points. arXiv preprint arXiv:1904.07850 , 2019. 1, 3",
+          "doi": null,
+          "arxiv_id": "1904.07850",
+          "title": null,
+          "year": 1904
+        },
+        {
+          "raw_reference": "Benjin Zhu, Jianfeng Wang, Zhengkai Jiang, Fuhang Zong, Songtao Liu, Zeming Li, and Jian Sun. Autoassign: Differ- entiable label assignment for dense object detection. arXiv preprint arXiv:2007.03496, 2020. 1, 4 7",
+          "doi": null,
+          "arxiv_id": "2007.03496",
+          "title": null,
+          "year": 2007
+        }
+      ]
+    },
+    "gold": {
+      "case_id": "yolox_realpdf",
+      "schema_version": 1,
+      "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+      "work_metadata": {
+        "title": "YOLOX: Exceeding YOLO Series in 2021",
+        "publication_year": null,
+        "abstract_prefix": "In this report, we present some experienced improvements to YOLO series,",
+        "doi": null,
+        "arxiv_id": null,
+        "venue_name": null,
+        "work_type": null
+      },
+      "authorships": [],
+      "references": {
+        "expected_count": 47,
+        "min_count": 39,
+        "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
+        "sample_arxiv_ids": [
+          "2004.10934",
+          "2101.04307",
+          "1706.02677",
+          "2104.10419",
+          "1911.09516",
+          "2103.14030",
+          "1804.02767",
+          "2011.08036",
+          "1902.04103",
+          "2101.11782",
+          "1904.07850",
+          "2007.03496"
+        ],
+        "sample_dois": []
+      },
+      "graph_expectations": {
+        "min_cites": 0,
+        "max_cites": 67,
+        "min_authorships": 0,
+        "max_authorships": 8,
+        "min_institutions": 0,
+        "max_institutions": 8,
+        "expected_cited_arxiv_ids": [
+          "2004.10934",
+          "2101.04307",
+          "1706.02677",
+          "2104.10419",
+          "1911.09516",
+          "2103.14030",
+          "1804.02767",
+          "2011.08036"
+        ],
+        "max_duplicate_work_fingerprints": 8,
+        "max_work_dedup_violations": 0,
+        "min_related_version_edges": null,
+        "max_related_version_edges": null
+      },
+      "quality_thresholds": null
+    }
+  }
+}

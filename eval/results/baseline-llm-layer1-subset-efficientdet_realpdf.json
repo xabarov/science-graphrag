@@ -1,0 +1,545 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:c5320748bf3712047f1f",
+    "semantic_prompt_fingerprint": "sha256-20:741929d62eafa6cf4e77",
+    "semantic_extraction_enabled": true
+  },
+  "case": {
+    "case_id": "efficientdet_realpdf",
+    "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/efficientdet_realpdf",
+    "diagnostics": {
+      "document_id": "efficientdet_realpdf",
+      "source_name": "efficientdet_realpdf",
+      "markdown_source": "benchmark",
+      "metadata_source": "llm",
+      "authorships_source": "llm",
+      "references_source": "heuristic",
+      "extraction_llm_enabled": true,
+      "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+      "fallback_reasons": []
+    },
+    "metrics": {
+      "metadata": {
+        "title_exact_normalized": true,
+        "year_exact": null,
+        "abstract_prefix_ok": true,
+        "doi_match_expected": null,
+        "arxiv_match_expected": null,
+        "work_type_match": null
+      },
+      "authorships": {
+        "names_precision": 0.0,
+        "names_recall": 0.0,
+        "names_f1": 0.0,
+        "names_tp_fp_fn": {
+          "tp": 0,
+          "fp": 3,
+          "fn": 0
+        },
+        "order_accuracy": 0.0,
+        "order_hits": 0,
+        "affiliation_jaccard_macro_on_matched_authors": 0.0,
+        "affiliations_precision": 0.0,
+        "affiliations_recall": 0.0,
+        "affiliations_f1": 0.0,
+        "pred_count": 3,
+        "gold_count": 0
+      },
+      "references": {
+        "count": 52,
+        "expected_count": 52,
+        "min_count": 44,
+        "count_ok": true,
+        "count_delta": 0,
+        "sample_arxiv_precision": 1.0,
+        "sample_arxiv_recall": 1.0,
+        "sample_arxiv_f1": 1.0,
+        "sample_arxiv_tp_fp_fn": {
+          "tp": 4,
+          "fp": 0,
+          "fn": 0
+        },
+        "predicted_arxiv_ids": [
+          "1606.08415",
+          "1804.02767",
+          "1811.05588",
+          "1904.07850"
+        ],
+        "sample_doi_precision": 1.0,
+        "sample_doi_recall": 1.0,
+        "sample_doi_f1": 1.0
+      },
+      "contract": {
+        "checks": {
+          "title_match_required": true,
+          "abstract_prefix_required": true,
+          "reference_count_ok_required": true
+        },
+        "passed": true
+      }
+    },
+    "predicted": {
+      "work_metadata": {
+        "title": "EfficientDet: Scalable and Efficient Object Detection",
+        "normalized_title": "EfficientDet: Scalable and Efficient Object Detection",
+        "abstract": "Model efficiency has become increasingly important in computer vision. In this paper, we systematically study neural network architecture design choices for object detection and propose several key optimizations to improve efficiency. First, we propose a weighted bi-directional feature pyramid network (BiFPN), which allows easy and fast multi-scale feature fusion; Second, we propose a compound scaling method that uniformly scales the resolution, depth, and width for all backbone, feature network, and box/class prediction networks at the same time. Based on these optimizations and better backbones, we have developed a new family of object detectors, called EfficientDet, which consistently achieve much better efficiency than prior art across a wide spectrum of resource constraints. In particular, with single-model and single-scale, our EfficientDet-D7 achieves state-of-the-art 55.1 AP on COCO test-dev with 77M parameters and 410B FLOPs 1, being 4x – 9x smaller and using 13x – 42x fewer FLOPs than previous detectors. Code is available at https://github.com/google/automl/tree/master/efficientdet.",
+        "publication_year": null,
+        "doi": null,
+        "arxiv_id": null,
+        "language": "en",
+        "venue_name": null,
+        "work_type": "unknown",
+        "openalex_id": null,
+        "fingerprint": "18a170e9e235ba2c",
+        "ingestion_confidence": 0.72,
+        "source_metadata": {
+          "extraction_stage": "llm"
+        }
+      },
+      "authorships": [
+        {
+          "author_position": 1,
+          "author_raw_name": "Mingxing Tan",
+          "raw_affiliations": [
+            "Google Research, Brain Team"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 2,
+          "author_raw_name": "Ruoming Pang",
+          "raw_affiliations": [
+            "Google Research, Brain Team"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 3,
+          "author_raw_name": "Quoc V . Le",
+          "raw_affiliations": [
+            "Google Research, Brain Team"
+          ],
+          "is_corresponding": null,
+          "email": null
+        }
+      ],
+      "references": [
+        {
+          "raw_reference": "Detectron2. https://github.com/facebookresearch/ detectron2. Accessed: 05/01/2020. 6, 10",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Md Amirul Islam, Mrigank Rochan, Neil DB Bruce, and Yang Wang. Gated feedback refinement network for dense image labeling. CVPR, pages 3751–3759, 2017. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "Navaneeth Bodla, Bharat Singh, Rama Chellappa, and Larry S Davis. Soft-nms–improving object detection with one line of code. ICCV, pages 5561–5569, 2017. 5",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "Zhaowei Cai, Quanfu Fan, Rogerio S Feris, and Nuno Vas- concelos. A unified multi-scale deep convolutional neural network for fast object detection. ECCV, pages 354–370,",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "Zhaowei Cai and Nuno Vasconcelos. Cascade r-cnn: Delving into high quality object detection. CVPR, pages 6154–6162,",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "Liang-Chieh Chen, Yukun Zhu, George Papandreou, Flo- rian Schroff, and Hartwig Adam. Encoder-decoder with atrous separable convolution for semantic image segmenta- tion. ECCV, 2018. 2, 6, 7",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "Franc ̧ois Chollet. Xception: Deep learning with depthwise separable convolutions. CVPR, pages 1610–02357, 2017. 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "Stefan Elfwing, Eiji Uchibe, and Kenji Doya. Sigmoid- weighted linear units for neural network function approxima- tion in reinforcement learning. Neural Networks, 107:3–11,",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "5",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "Mark Everingham, S. M. Ali Eslami, Luc Van Gool, Christo- pher K. I. Williams, John Winn, and Andrew Zisserman. The pascal visual object classes challenge: A retrospective. In- ternational Journal of Computer Vision, 2015. 6",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "Golnaz Ghiasi, Tsung-Yi Lin, Ruoming Pang, and Quoc V . Le. Nas-fpn: Learning scalable feature pyramid architecture for object detection. CVPR, 2019. 2, 3, 4, 6, 7",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "Ross Girshick. Fast r-cnn. ICCV, 2015. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "Kaiming He, Ross Girshick, and Piotr Doll ́ar. Rethinking imagenet pre-training. ICCV, 2019. 6, 10",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "Kaiming He, Georgia Gkioxari, Piotr Doll ́ar, and Ross Gir- shick. Mask r-cnn. ICCV, pages 2980–2988, 2017. 2, 6",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. Deep residual learning for image recognition. CVPR, pages 770–778, 2016. 1, 2, 7",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2016
+        },
+        {
+          "raw_reference": "Dan Hendrycks and Kevin Gimpel. Gaussian error linear units (gelus). arXiv preprint arXiv:1606.08415, 2016. 5",
+          "doi": null,
+          "arxiv_id": "1606.08415",
+          "title": null,
+          "year": 2016
+        },
+        {
+          "raw_reference": "Andrew Howard, Mark Sandler, Grace Chu, Liang-Chieh Chen, Bo Chen, Mingxing Tan, Weijun Wang, Yukun Zhu, Ruoming Pang, Vijay Vasudevan, Quoc V . Le, and Hartwig Adam. Searching for mobilenetv3. ICCV, 2019. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "Jonathan Huang, Vivek Rathod, Chen Sun, Menglong Zhu, Anoop Korattikara, Alireza Fathi, Ian Fischer, Zbigniew Wo- jna, Yang Song, Sergio Guadarrama, et al. Speed/accuracy trade-offs for modern convolutional object detectors. CVPR,",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "Seung-Wook Kim, Hyong-Keun Kook, Jee-Young Sun, Mun-Cheon Kang, and Sung-Jea Ko. Parallel feature pyra- mid network for object detection. ECCV, 2018. 2, 3",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "Alexander Kirillov, Ross Girshick, Kaiming He, and Piotr Dollr. Panoptic feature pyramid networks. CVPR, 2019. 6",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "Tao Kong, Fuchun Sun, Chuanqi Tan, Huaping Liu, and Wenbing Huang. Deep feature pyramid reconfiguration for object detection. ECCV, 2018. 2, 3",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "Hei Law and Jia Deng. Cornernet: Detecting objects as paired keypoints. ECCV, 2018. 1, 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "Hanchao Li, Pengfei Xiong, Jie An, and Lingxue Wang. Pyramid attention networks. BMVC, 2018. 3",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "Tsung-Yi Lin, Piotr Doll ́ar, Ross Girshick, Kaiming He, Bharath Hariharan, and Serge Belongie. Feature pyramid networks for object detection. CVPR, 2017. 1, 2, 3, 4, 7",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "Tsung-Yi Lin, Piotr Doll ́ar, Ross Girshick, Kaiming He, Bharath Hariharan, and Serge Belongie. Focal loss for dense object detection. ICCV, 2017. 1, 2, 4, 5, 6, 7, 10",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "Tsung-Yi Lin, Michael Maire, Serge Belongie, James Hays, Pietro Perona, Deva Ramanan, Piotr Doll ́ar, and C Lawrence Zitnick. Microsoft COCO: Common objects in context. ECCV, 2014. 2, 5, 6",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2014
+        },
+        {
+          "raw_reference": "Shu Liu, Lu Qi, Haifang Qin, Jianping Shi, and Jiaya Jia. Path aggregation network for instance segmentation. CVPR,",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "2, 3, 7",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "Wei Liu, Dragomir Anguelov, Dumitru Erhan, Christian Szegedy, Scott Reed, Cheng-Yang Fu, and Alexander C Berg. SSD: Single shot multibox detector. ECCV, 2016. 1, 2, 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2016
+        },
+        {
+          "raw_reference": "Zhuang Liu, Mingjie Sun, Tinghui Zhou, Gao Huang, and Trevor Darrell. Rethinking the value of network pruning. ICLR, 2019. 1",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "Jonathan Pedoeem and Rachel Huang. Yolo-lite: a real-time object detection algorithm optimized for non-gpu computers. arXiv preprint arXiv:1811.05588, 2018. 1",
+          "doi": null,
+          "arxiv_id": "1811.05588",
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "Chao Peng, Tete Xiao, Zeming Li, Yuning Jiang, Xiangyu Zhang, Kai Jia, Gang Yu, and Jian Sun. Megdet: A large mini-batch object detector, 2018. 6",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "Prajit Ramachandran, Barret Zoph, and Quoc V Le. Search- ing for activation functions. ICLR workshop, 2018. 5",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "Esteban Real, Alok Aggarwal, Yanping Huang, and Quoc V Le. Regularized evolution for image classifier architecture search. AAAI, 2019. 2, 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "Joseph Redmon and Ali Farhadi. Yolo9000: better, faster, stronger. CVPR, 2017. 1, 2, 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "Joseph Redmon and Ali Farhadi. Yolov3: An incremental improvement. arXiv preprint arXiv:1804.02767, 2018. 1, 2, 6",
+          "doi": null,
+          "arxiv_id": "1804.02767",
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "Shaoqing Ren, Kaiming He, Ross Girshick, and Jian Sun. Faster r-cnn: Towards real-time object detection with region proposal networks. NIPS, 2015. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "Pierre Sermanet, David Eigen, Xiang Zhang, Micha ̈el Math- ieu, Rob Fergus, and Yann LeCun. Overfeat: Integrated recognition, localization and detection using convolutional networks. ICLR, 2014. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2014
+        },
+        {
+          "raw_reference": "Laurent Sifre. Rigid-motion scattering for image classifica- tion. Ph.D. thesis section 6.2, 2014. 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2014
+        },
+        {
+          "raw_reference": "Mingxing Tan, Bo Chen, Ruoming Pang, Vijay Vasudevan, and Quoc V Le. Mnasnet: Platform-aware neural architec- ture search for mobile. CVPR, 2019. 2 9",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "Mingxing Tan and Quoc V . Le. Efficientnet: Rethinking model scaling for convolutional neural networks. ICML,",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "1, 2, 4, 5",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "Zhi Tian, Chunhua Shen, Hao Chen, and Tong He. Fcos: Fully convolutional one-stage object detection. ICCV, 2019. 1",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "Saining Xie, Ross Girshick, Piotr Doll ́ar, Zhuowen Tu, and Kaiming He. Aggregated residual transformations for deep neural networks. CVPR, pages 5987–5995, 2017. 2, 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "Qijie Zhao, Tao Sheng, Yongtao Wang, Zhi Tang, Ying Chen, Ling Cai, and Haibin Ling. M2det: A single-shot object de- tector based on multi-level feature pyramid network. AAAI,",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "2, 3",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "Peng Zhou, Bingbing Ni, Cong Geng, Jianguo Hu, and Yi Xu. Scale-transferrable object detection. CVPR, pages 528– 537, 2018. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "Xingyi Zhou, Dequan Wang, and Philipp Krhenbhl. Objects as points. arXiv:1904.07850, 2019. 1, 2",
+          "doi": null,
+          "arxiv_id": "1904.07850",
+          "title": null,
+          "year": 1904
+        },
+        {
+          "raw_reference": "Barret Zoph, Ekin D. Cubuk, Golnaz Ghiasi, Tsung-Yi Lin, Jonathon Shlens, and Quoc V . Le. Learning data aug- mentation strategies for object detection. arXiv preprint arXiv:1804.02767, 2019. 1, 2, 6, 7 Appendix 1.1. Hyperparameters Neural network architecture and training hyperparamters are both crucial for object detection. Here we ablate two important hyperparamters: training epochs and multi-scale jittering, using RetinaNet-R50 and our EfficientDet-D1. All other hyperparameters are kept the same as section 5. 30 90 300 600 Number of training epochs 34 36 38 40COCO val AP 34.6 38.2 40.2 40.5 35.5 37.9 39.2 39.5 EfficientDet-D1 RetinaNet-R50 Figure 7: Accuracy vs. Training Epochs. Training Epochs: Many previous work only use a small number of epochs: for example, Detectron2 [1] trains each model with 12 epochs (1x schedule) in default, and at most 110 epochs (9x scahedule). Recent work [12] shows train- ing longer is not helpful if using pretrained backbone net- works; however, we observe training longer can signifi- ciantly improve accuracy in our settings. Figure 7 shows the performance comparison for different training epochs. We obseve: (1) both models benefit from longer training until reaching 300 epochs; (2) longer training is particularly important for EfficientDet, perhaps due to its small model size; (3) compared to the default 37 AP [24], our reproduced RetinaNet achieves higher accuracy (+2AP) using our train- ing settings. In this paper, we mainly use 300 epochs for the good trade-off between accuracy and training time. Scale Jittering: A common training-time augmentation is to first resize images and then crop them into fixed size, known as scale jitterinig. Previous object detectors often use small jitters such as [0.8, 1.2], which randomly sample a scaling size between 0.8x to 1.2x of the original image size. However, we observe large jitters can improve accuracy if training longer. Figure 8 shows the results for different jit- ters: (1) when training with 30 epochs, a small jitter like [0.8, 1.2] performs quite good, and large jitters like [0.1, 2.0] actually hurts accuracy; (2) when training with 300 epochs, large jitters consistently improve accuracy, perhaps due to the stronger regularization. This paper uses a large jitter [0.1, 2.0] for all models. no-jitter jitter[0.8, 1.2] jitter[0.5, 1.5] jitter[0.1, 2.0]30 32 34 36 38 40COCO val AP 36.8 38.1 39.1 40.2 32.2 34.7 35.3 34.6 EfficientDet-D1 (300 epochs) EfficientDet-D1 (30 epochs) Figure 8: Accuracy vs. Scale Jittering. 1.2. Image Resolutions In addition to our compound scaling that progres- sively increases image sizes, we are also interested in the accuracy-latency trade-offs with fixed image resolutions. Figure 9 compares EfficientDet-D1 to D6 with fixed and scaled resolutions. Surprisingly, their accuracy-latency trade-offs are very similar even though they have very different preferences: under similar accuracy constraints, models with fixed resolutions require much more param- eters, but less activations and peak memory usage, than those with scaled resolutions. With fixed 640x640, our EfficientDet-D6 achieves real-time 47.9AP at 34ms latency. 15 20 25 30 35 40 V100 GPU Latency (ms) 38 40 42 44 46 48 50COCO val AP D2(768) D3(896) D4(1024) D1(640) D2(640) D3(640) D4(640) D5(640) D6(640) Scaled resolution Fixed resolution Figure 9: Comparison for Fixed and Scaled Resolution – fixed denotes 640x640 size and scaled denotes increased sizes. 10",
+          "doi": null,
+          "arxiv_id": "1804.02767",
+          "title": null,
+          "year": 2019
+        }
+      ]
+    },
+    "gold": {
+      "case_id": "efficientdet_realpdf",
+      "schema_version": 1,
+      "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+      "work_metadata": {
+        "title": "EfficientDet: Scalable and Efficient Object Detection",
+        "publication_year": null,
+        "abstract_prefix": "Model efficiency has become increasingly important in computer vision. I",
+        "doi": null,
+        "arxiv_id": null,
+        "venue_name": null,
+        "work_type": null
+      },
+      "authorships": [],
+      "references": {
+        "expected_count": 52,
+        "min_count": 44,
+        "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
+        "sample_arxiv_ids": [
+          "1606.08415",
+          "1811.05588",
+          "1804.02767",
+          "1904.07850"
+        ],
+        "sample_dois": []
+      },
+      "graph_expectations": {
+        "min_cites": 0,
+        "max_cites": 72,
+        "min_authorships": 0,
+        "max_authorships": 8,
+        "min_institutions": 0,
+        "max_institutions": 8,
+        "expected_cited_arxiv_ids": [
+          "1606.08415",
+          "1811.05588",
+          "1804.02767",
+          "1904.07850"
+        ],
+        "max_duplicate_work_fingerprints": 8,
+        "max_work_dedup_violations": 0,
+        "min_related_version_edges": null,
+        "max_related_version_edges": null
+      },
+      "quality_thresholds": null
+    }
+  }
+}

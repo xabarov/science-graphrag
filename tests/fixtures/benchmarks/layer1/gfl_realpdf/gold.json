@@ -3,7 +3,7 @@
   "schema_version": 1,
   "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
   "work_metadata": {
-    "title": "Generalized Focal Loss: Learning Qualified and",
+    "title": "Generalized Focal Loss: Learning Qualified and Distributed Bounding Boxes for Dense Object Detection",
     "publication_year": null,
     "abstract_prefix": "One-stage detector basically formulates object detection as dense classi",
     "doi": null,

@@ -3,7 +3,7 @@
   "schema_version": 1,
   "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
   "work_metadata": {
-    "title": "1",
+    "title": "Object Detection with Discriminatively Trained Part Based Models",
     "publication_year": null,
     "abstract_prefix": "We describe an object detection system based on mixtures of multiscale d",
     "doi": null,

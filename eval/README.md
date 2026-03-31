@@ -4,6 +4,12 @@
 
 См. [docs/roadmap.md](../docs/roadmap.md) Phase 4, [docs/benchmarks/README.md](../docs/benchmarks/README.md), [docs/benchmarks/object-detection-corpus.md](../docs/benchmarks/object-detection-corpus.md).
 
+Стабилизация benchmark + API: [docs/runbooks/benchmark-stabilization-baseline.md](../docs/runbooks/benchmark-stabilization-baseline.md), [docs/runbooks/benchmark-stabilization-triage.md](../docs/runbooks/benchmark-stabilization-triage.md), [docs/runbooks/benchmark-decision-gate.md](../docs/runbooks/benchmark-decision-gate.md).
+
+**Reference gate:** перед массовыми правками gold/метрик убедитесь, что эталон **YOLOv1** (три `baseline-reference-*-yolov1*.json`) зелёный; см. раздел 6.1 в runbook baseline.
+
+**Сводка метрик по всем lane:** после прогонов выполните `.venv/bin/python scripts/aggregate_benchmark_metrics.py` — см. `eval/results/benchmark-metrics-summary.md`.
+
 ## Установка
 
 Из корня репозитория:

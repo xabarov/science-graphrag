@@ -1,0 +1,501 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:c5320748bf3712047f1f",
+    "semantic_prompt_fingerprint": "sha256-20:741929d62eafa6cf4e77",
+    "semantic_extraction_enabled": true
+  },
+  "case": {
+    "case_id": "retinanet_focal_realpdf",
+    "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/retinanet_focal_realpdf",
+    "diagnostics": {
+      "document_id": "retinanet_focal_realpdf",
+      "source_name": "retinanet_focal_realpdf",
+      "markdown_source": "benchmark",
+      "metadata_source": "llm",
+      "authorships_source": "llm",
+      "references_source": "heuristic",
+      "extraction_llm_enabled": true,
+      "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+      "fallback_reasons": []
+    },
+    "metrics": {
+      "metadata": {
+        "title_exact_normalized": true,
+        "year_exact": null,
+        "abstract_prefix_ok": true,
+        "doi_match_expected": null,
+        "arxiv_match_expected": null,
+        "work_type_match": null
+      },
+      "authorships": {
+        "names_precision": 0.0,
+        "names_recall": 0.0,
+        "names_f1": 0.0,
+        "names_tp_fp_fn": {
+          "tp": 0,
+          "fp": 5,
+          "fn": 0
+        },
+        "order_accuracy": 0.0,
+        "order_hits": 0,
+        "affiliation_jaccard_macro_on_matched_authors": 0.0,
+        "affiliations_precision": 0.0,
+        "affiliations_recall": 0.0,
+        "affiliations_f1": 0.0,
+        "pred_count": 5,
+        "gold_count": 0
+      },
+      "references": {
+        "count": 44,
+        "expected_count": 44,
+        "min_count": 36,
+        "count_ok": true,
+        "count_delta": 0,
+        "sample_arxiv_precision": 1.0,
+        "sample_arxiv_recall": 1.0,
+        "sample_arxiv_f1": 1.0,
+        "sample_arxiv_tp_fp_fn": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0
+        },
+        "predicted_arxiv_ids": [
+          "1612.06851",
+          "1701.06659"
+        ],
+        "sample_doi_precision": 1.0,
+        "sample_doi_recall": 1.0,
+        "sample_doi_f1": 1.0
+      },
+      "contract": {
+        "checks": {
+          "title_match_required": true,
+          "abstract_prefix_required": true,
+          "reference_count_ok_required": true
+        },
+        "passed": true
+      }
+    },
+    "predicted": {
+      "work_metadata": {
+        "title": "Focal Loss for Dense Object Detection",
+        "normalized_title": "Focal Loss for Dense Object Detection",
+        "abstract": "The highest accuracy object detectors to date are based on a two-stage approach popularized by R-CNN, where a classifier is applied to a sparse set of candidate object locations. In contrast, one-stage detectors that are applied over a regular, dense sampling of possible object locations have the potential to be faster and simpler, but have trailed the accuracy of two-stage detectors thus far. In this paper, we investigate why this is the case. We discover that the extreme foreground-background class imbalance encountered during training of dense detectors is the central cause. We propose to address this class imbalance by reshaping the standard cross entropy loss such that it down-weights the loss assigned to well-classified examples. Our novel Focal Loss focuses training on a sparse set of hard examples and prevents the vast number of easy negatives from overwhelming the detector during training. To evaluate the effectiveness of our loss, we design and train a simple dense detector we call RetinaNet. Our results show that when trained with the focal loss, RetinaNet is able to match the speed of previous one-stage detectors while surpassing the accuracy of all existing state-of-the-art two-stage detectors. Code is at: https://github.com/facebookresearch/Detectron.",
+        "publication_year": null,
+        "doi": null,
+        "arxiv_id": null,
+        "language": "en",
+        "venue_name": null,
+        "work_type": "conference_paper",
+        "openalex_id": null,
+        "fingerprint": "fa714a2a6de6f535",
+        "ingestion_confidence": 0.72,
+        "source_metadata": {
+          "extraction_stage": "llm"
+        }
+      },
+      "authorships": [
+        {
+          "author_position": 1,
+          "author_raw_name": "Tsung-Yi Lin",
+          "raw_affiliations": [
+            "Facebook AI Research (FAIR)"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 2,
+          "author_raw_name": "Priya Goyal",
+          "raw_affiliations": [
+            "Facebook AI Research (FAIR)"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 3,
+          "author_raw_name": "Ross Girshick",
+          "raw_affiliations": [
+            "Facebook AI Research (FAIR)"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 4,
+          "author_raw_name": "Kaiming He",
+          "raw_affiliations": [
+            "Facebook AI Research (FAIR)"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 5,
+          "author_raw_name": "Piotr Dollár",
+          "raw_affiliations": [
+            "Facebook AI Research (FAIR)"
+          ],
+          "is_corresponding": null,
+          "email": null
+        }
+      ],
+      "references": [
+        {
+          "raw_reference": "S. Bell, C. L. Zitnick, K. Bala, and R. Girshick. Inside- outside net: Detecting objects in context with skip pooling and recurrent neural networks. In CVPR, 2016. 6",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2016
+        },
+        {
+          "raw_reference": "S. R. Bulo, G. Neuhold, and P. Kontschieder. Loss max- pooling for semantic image segmentation. In CVPR, 2017. 3",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "J. Dai, Y . Li, K. He, and J. Sun. R-FCN: Object detection via region-based fully convolutional networks. In NIPS, 2016. 1",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2016
+        },
+        {
+          "raw_reference": "N. Dalal and B. Triggs. Histograms of oriented gradients for human detection. In CVPR, 2005. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2005
+        },
+        {
+          "raw_reference": "P. Doll ́ar, Z. Tu, P. Perona, and S. Belongie. Integral channel features. In BMVC, 2009. 2, 3",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2009
+        },
+        {
+          "raw_reference": "D. Erhan, C. Szegedy, A. Toshev, and D. Anguelov. Scalable object detection using deep neural networks. InCVPR, 2014. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2014
+        },
+        {
+          "raw_reference": "M. Everingham, L. Van Gool, C. K. Williams, J. Winn, and A. Zisserman. The PASCAL Visual Object Classes (VOC) Challenge. IJCV, 2010. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2010
+        },
+        {
+          "raw_reference": "P. F. Felzenszwalb, R. B. Girshick, and D. McAllester. Cas- cade object detection with deformable part models. InCVPR,",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "2, 3",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "C.-Y . Fu, W. Liu, A. Ranga, A. Tyagi, and A. C. Berg. DSSD: Deconvolutional single shot detector. arXiv:1701.06659,",
+          "doi": null,
+          "arxiv_id": "1701.06659",
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "1, 2, 8",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "R. Girshick. Fast R-CNN. In ICCV, 2015. 1, 2, 4, 6, 8",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "R. Girshick, J. Donahue, T. Darrell, and J. Malik. Rich fea- ture hierarchies for accurate object detection and semantic segmentation. In CVPR, 2014. 1, 2, 5",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2014
+        },
+        {
+          "raw_reference": "R. Girshick, I. Radosavovic, G. Gkioxari, P. Doll ́ar, and K. He. Detectron. https://github.com/ facebookresearch/detectron, 2018. 8",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "T. Hastie, R. Tibshirani, and J. Friedman. The elements of statistical learning . Springer series in statistics Springer, Berlin, 2008. 3, 7",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2008
+        },
+        {
+          "raw_reference": "K. He, G. Gkioxari, P. Doll ́ar, and R. Girshick. Mask R- CNN. In ICCV, 2017. 1, 2, 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "K. He, X. Zhang, S. Ren, and J. Sun. Spatial pyramid pooling in deep convolutional networks for visual recognition. In ECCV. 2014. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2014
+        },
+        {
+          "raw_reference": "K. He, X. Zhang, S. Ren, and J. Sun. Deep residual learning for image recognition. In CVPR, 2016. 2, 4, 5, 6, 8",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2016
+        },
+        {
+          "raw_reference": "J. Huang, V . Rathod, C. Sun, M. Zhu, A. Korattikara, A. Fathi, I. Fischer, Z. Wojna, Y . Song, S. Guadarrama, and K. Murphy. Speed/accuracy trade-offs for modern convolu- tional object detectors. In CVPR, 2017. 2, 8",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "A. Krizhevsky, I. Sutskever, and G. Hinton. ImageNet clas- sification with deep convolutional neural networks. InNIPS,",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "Y . LeCun, B. Boser, J. S. Denker, D. Henderson, R. E. Howard, W. Hubbard, and L. D. Jackel. Backpropagation applied to handwritten zip code recognition. Neural compu- tation, 1989. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 1989
+        },
+        {
+          "raw_reference": "T.-Y . Lin, P. Doll ́ar, R. Girshick, K. He, B. Hariharan, and S. Belongie. Feature pyramid networks for object detection. In CVPR, 2017. 1, 2, 4, 5, 6, 8",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "T.-Y . Lin, M. Maire, S. Belongie, J. Hays, P. Perona, D. Ra- manan, P. Doll ́ar, and C. L. Zitnick. Microsoft COCO: Com- mon objects in context. In ECCV, 2014. 1, 6",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2014
+        },
+        {
+          "raw_reference": "W. Liu, D. Anguelov, D. Erhan, C. Szegedy, and S. Reed. SSD: Single shot multibox detector. In ECCV, 2016. 1, 2, 3, 6, 7, 8",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2016
+        },
+        {
+          "raw_reference": "J. Long, E. Shelhamer, and T. Darrell. Fully convolutional networks for semantic segmentation. In CVPR, 2015. 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "P. O. Pinheiro, R. Collobert, and P. Dollar. Learning to seg- ment object candidates. In NIPS, 2015. 2, 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "P. O. Pinheiro, T.-Y . Lin, R. Collobert, and P. Doll ́ar. Learn- ing to refine object segments. In ECCV, 2016. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2016
+        },
+        {
+          "raw_reference": "J. Redmon, S. Divvala, R. Girshick, and A. Farhadi. You only look once: Unified, real-time object detection. In CVPR, 2016. 1, 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2016
+        },
+        {
+          "raw_reference": "J. Redmon and A. Farhadi. YOLO9000: Better, faster, stronger. In CVPR, 2017. 1, 2, 8",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "S. Ren, K. He, R. Girshick, and J. Sun. Faster R-CNN: To- wards real-time object detection with region proposal net- works. In NIPS, 2015. 1, 2, 4, 5, 8",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "H. Rowley, S. Baluja, and T. Kanade. Human face detec- tion in visual scenes. Technical Report CMU-CS-95-158R, Carnegie Mellon University, 1995. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 1995
+        },
+        {
+          "raw_reference": "P. Sermanet, D. Eigen, X. Zhang, M. Mathieu, R. Fergus, and Y . LeCun. Overfeat: Integrated recognition, localization and detection using convolutional networks. In ICLR, 2014. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2014
+        },
+        {
+          "raw_reference": "A. Shrivastava, A. Gupta, and R. Girshick. Training region- based object detectors with online hard example mining. In CVPR, 2016. 2, 3, 6, 7",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2016
+        },
+        {
+          "raw_reference": "A. Shrivastava, R. Sukthankar, J. Malik, and A. Gupta. Be- yond skip connections: Top-down modulation for object de- tection. arXiv:1612.06851, 2016. 2, 8",
+          "doi": null,
+          "arxiv_id": "1612.06851",
+          "title": null,
+          "year": 2016
+        },
+        {
+          "raw_reference": "K.-K. Sung and T. Poggio. Learning and Example Selection for Object and Pattern Detection. In MIT A.I. Memo No. 1521, 1994. 2, 3",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 1994
+        },
+        {
+          "raw_reference": "C. Szegedy, S. Ioffe, V . Vanhoucke, and A. A. Alemi. Inception-v4, inception-resnet and the impact of residual connections on learning. In AAAI Conference on Artificial Intelligence, 2017. 8",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "J. R. Uijlings, K. E. van de Sande, T. Gevers, and A. W. Smeulders. Selective search for object recognition. IJCV,",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "2, 4",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "R. Vaillant, C. Monrocq, and Y . LeCun. Original approach for the localisation of objects in images.IEE Proc. on Vision, Image, and Signal Processing, 1994. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 1994
+        },
+        {
+          "raw_reference": "P. Viola and M. Jones. Rapid object detection using a boosted cascade of simple features. In CVPR, 2001. 2, 3",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2001
+        },
+        {
+          "raw_reference": "S. Xie, R. Girshick, P. Doll ́ar, Z. Tu, and K. He. Aggregated residual transformations for deep neural networks. In CVPR,",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "8",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "C. L. Zitnick and P. Doll ́ar. Edge boxes: Locating object proposals from edges. In ECCV, 2014. 2 10",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2014
+        }
+      ]
+    },
+    "gold": {
+      "case_id": "retinanet_focal_realpdf",
+      "schema_version": 1,
+      "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+      "work_metadata": {
+        "title": "Focal Loss for Dense Object Detection",
+        "publication_year": null,
+        "abstract_prefix": "The highest accuracy object detectors to date are based on a two-stage a",
+        "doi": null,
+        "arxiv_id": null,
+        "venue_name": null,
+        "work_type": null
+      },
+      "authorships": [],
+      "references": {
+        "expected_count": 44,
+        "min_count": 36,
+        "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
+        "sample_arxiv_ids": [
+          "1701.06659",
+          "1612.06851"
+        ],
+        "sample_dois": []
+      },
+      "graph_expectations": {
+        "min_cites": 0,
+        "max_cites": 64,
+        "min_authorships": 0,
+        "max_authorships": 8,
+        "min_institutions": 0,
+        "max_institutions": 8,
+        "expected_cited_arxiv_ids": [
+          "1701.06659",
+          "1612.06851"
+        ],
+        "max_duplicate_work_fingerprints": 8,
+        "max_work_dedup_violations": 0,
+        "min_related_version_edges": null,
+        "max_related_version_edges": null
+      },
+      "quality_thresholds": null
+    }
+  }
+}

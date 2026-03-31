@@ -1,0 +1,393 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:c5320748bf3712047f1f",
+    "semantic_prompt_fingerprint": "sha256-20:741929d62eafa6cf4e77",
+    "semantic_extraction_enabled": true
+  },
+  "case": {
+    "case_id": "ssd_realpdf",
+    "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/ssd_realpdf",
+    "diagnostics": {
+      "document_id": "ssd_realpdf",
+      "source_name": "ssd_realpdf",
+      "markdown_source": "benchmark",
+      "metadata_source": "llm",
+      "authorships_source": "llm",
+      "references_source": "llm",
+      "extraction_llm_enabled": true,
+      "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+      "fallback_reasons": []
+    },
+    "metrics": {
+      "metadata": {
+        "title_exact_normalized": true,
+        "year_exact": null,
+        "abstract_prefix_ok": true,
+        "doi_match_expected": null,
+        "arxiv_match_expected": null,
+        "work_type_match": null
+      },
+      "authorships": {
+        "names_precision": 0.0,
+        "names_recall": 0.0,
+        "names_f1": 0.0,
+        "names_tp_fp_fn": {
+          "tp": 0,
+          "fp": 7,
+          "fn": 0
+        },
+        "order_accuracy": 0.0,
+        "order_hits": 0,
+        "affiliation_jaccard_macro_on_matched_authors": 0.0,
+        "affiliations_precision": 0.0,
+        "affiliations_recall": 0.0,
+        "affiliations_f1": 0.0,
+        "pred_count": 7,
+        "gold_count": 0
+      },
+      "references": {
+        "count": 26,
+        "expected_count": 27,
+        "min_count": 19,
+        "count_ok": true,
+        "count_delta": -1,
+        "sample_arxiv_precision": 1.0,
+        "sample_arxiv_recall": 1.0,
+        "sample_arxiv_f1": 1.0,
+        "sample_arxiv_tp_fp_fn": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0
+        },
+        "predicted_arxiv_ids": [
+          "1312.5402",
+          "1412.1441"
+        ],
+        "sample_doi_precision": 1.0,
+        "sample_doi_recall": 1.0,
+        "sample_doi_f1": 1.0
+      },
+      "contract": {
+        "checks": {
+          "title_match_required": true,
+          "abstract_prefix_required": true,
+          "reference_count_ok_required": true
+        },
+        "passed": true
+      }
+    },
+    "predicted": {
+      "work_metadata": {
+        "title": "SSD: Single Shot MultiBox Detector",
+        "normalized_title": "SSD: Single Shot MultiBox Detector",
+        "abstract": "We present a method for detecting objects in images using a single deep neural network. Our approach, named SSD, discretizes the output space of bounding boxes into a set of default boxes over different aspect ratios and scales per feature map location. At prediction time, the network generates scores for the presence of each object category in each default box and produces adjustments to the box to better match the object shape. Additionally, the network combines predictions from multiple feature maps with different resolutions to naturally handle objects of various sizes. SSD is simple relative to methods that require object proposals because it completely eliminates proposal generation and subsequent pixel or feature resampling stages and encapsulates all computation in a single network. This makes SSD easy to train and straightforward to integrate into systems that require a detection component. Experimental results on the PASCAL VOC, COCO, and ILSVRC datasets confirm that SSD has competitive accuracy to methods that utilize an additional object proposal step and is much faster, while providing a unified framework for both training and inference. For300× 300 input, SSD achieves 74.3% mAP1 on VOC2007 test at 59 FPS on a Nvidia Titan X and for 512× 512 input, SSD achieves 76.9% mAP, outperforming a comparable state-of-the-art Faster R-CNN model. Compared to other single stage methods, SSD has much better accuracy even with a smaller input image size. Code is available at: https://github.com/weiliu89/caffe/tree/ssd .",
+        "publication_year": null,
+        "doi": null,
+        "arxiv_id": null,
+        "language": "en",
+        "venue_name": null,
+        "work_type": "unknown",
+        "openalex_id": null,
+        "fingerprint": "739d9d4910446b16",
+        "ingestion_confidence": 0.72,
+        "source_metadata": {
+          "extraction_stage": "llm"
+        }
+      },
+      "authorships": [
+        {
+          "author_position": 1,
+          "author_raw_name": "Wei Liu",
+          "raw_affiliations": [
+            "UNC Chapel Hill"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 2,
+          "author_raw_name": "Dragomir Anguelov",
+          "raw_affiliations": [
+            "Zoox Inc."
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 3,
+          "author_raw_name": "Dumitru Erhan",
+          "raw_affiliations": [
+            "Google Inc."
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 4,
+          "author_raw_name": "Christian Szegedy",
+          "raw_affiliations": [
+            "Google Inc."
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 5,
+          "author_raw_name": "Scott Reed",
+          "raw_affiliations": [
+            "University of Michigan, Ann-Arbor"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 6,
+          "author_raw_name": "Cheng-Yang Fu",
+          "raw_affiliations": [
+            "UNC Chapel Hill"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 7,
+          "author_raw_name": "Alexander C. Berg",
+          "raw_affiliations": [
+            "UNC Chapel Hill"
+          ],
+          "is_corresponding": null,
+          "email": null
+        }
+      ],
+      "references": [
+        {
+          "raw_reference": "1. Uijlings, J.R., van de Sande, K.E., Gevers, T., Smeulders, A.W.: Selective search for object recognition. IJCV (2013)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2013
+        },
+        {
+          "raw_reference": "2. Ren, S., He, K., Girshick, R., Sun, J.: Faster R-CNN: Towards real-time object detection with region proposal networks. In: NIPS. (2015)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Faster R-CNN: Towards real-time object detection with region proposal networks",
+          "year": 2015
+        },
+        {
+          "raw_reference": "3. He, K., Zhang, X., Ren, S., Sun, J.: Deep residual learning for image recognition. In: CVPR. (2016)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Deep residual learning for image recognition",
+          "year": 2016
+        },
+        {
+          "raw_reference": "4. Sermanet, P., Eigen, D., Zhang, X., Mathieu, M., Fergus, R., LeCun, Y .: Overfeat: Integrated recognition, localization and detection using convolutional networks. In: ICLR. (2014)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Overfeat: Integrated recognition, localization and detection using convolutional networks",
+          "year": 2014
+        },
+        {
+          "raw_reference": "5. Redmon, J., Divvala, S., Girshick, R., Farhadi, A.: You only look once: Unified, real-time object detection. In: CVPR. (2016)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "You only look once: Unified, real-time object detection",
+          "year": 2016
+        },
+        {
+          "raw_reference": "6. Girshick, R.: Fast R-CNN. In: ICCV . (2015)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Fast R-CNN",
+          "year": 2015
+        },
+        {
+          "raw_reference": "7. Erhan, D., Szegedy, C., Toshev, A., Anguelov, D.: Scalable object detection using deep neural networks. In: CVPR. (2014)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Scalable object detection using deep neural networks",
+          "year": 2014
+        },
+        {
+          "raw_reference": "8. Szegedy, C., Reed, S., Erhan, D., Anguelov, D.: Scalable, high-quality object detection. arXiv preprint arXiv:1412.1441 v3 (2015)",
+          "doi": null,
+          "arxiv_id": "1412.1441",
+          "title": "Scalable, high-quality object detection",
+          "year": 2015
+        },
+        {
+          "raw_reference": "9. He, K., Zhang, X., Ren, S., Sun, J.: Spatial pyramid pooling in deep convolutional networks for visual recognition. In: ECCV . (2014)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Spatial pyramid pooling in deep convolutional networks for visual recognition",
+          "year": 2014
+        },
+        {
+          "raw_reference": "10. Long, J., Shelhamer, E., Darrell, T.: Fully convolutional networks for semantic segmentation. In: CVPR. (2015)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Fully convolutional networks for semantic segmentation",
+          "year": 2015
+        },
+        {
+          "raw_reference": "11. Hariharan, B., Arbel ́aez, P., Girshick, R., Malik, J.: Hypercolumns for object segmentation and fine-grained localization. In: CVPR. (2015)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Hypercolumns for object segmentation and fine-grained localization",
+          "year": 2015
+        },
+        {
+          "raw_reference": "12. Liu, W., Rabinovich, A., Berg, A.C.: ParseNet: Looking wider to see better. In: ILCR. (2016)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "ParseNet: Looking wider to see better",
+          "year": 2016
+        },
+        {
+          "raw_reference": "13. Zhou, B., Khosla, A., Lapedriza, A., Oliva, A., Torralba, A.: Object detectors emerge in deep scene cnns. In: ICLR. (2015)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Object detectors emerge in deep scene cnns",
+          "year": 2015
+        },
+        {
+          "raw_reference": "14. Howard, A.G.: Some improvements on deep convolutional neural network based image classification. arXiv preprint arXiv:1312.5402 (2013)",
+          "doi": null,
+          "arxiv_id": "1312.5402",
+          "title": "Some improvements on deep convolutional neural network based image classification",
+          "year": 2013
+        },
+        {
+          "raw_reference": "15. Simonyan, K., Zisserman, A.: Very deep convolutional networks for large-scale image recognition. In: NIPS. (2015)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Very deep convolutional networks for large-scale image recognition",
+          "year": 2015
+        },
+        {
+          "raw_reference": "16. Russakovsky, O., Deng, J., Su, H., Krause, J., Satheesh, S., Ma, S., Huang, Z., Karpathy, A., Khosla, A., Bernstein, M., Berg, A.C., Fei-Fei, L.: Imagenet large scale visual recognition challenge. IJCV (2015)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Imagenet large scale visual recognition challenge",
+          "year": 2015
+        },
+        {
+          "raw_reference": "17. Chen, L.C., Papandreou, G., Kokkinos, I., Murphy, K., Yuille, A.L.: Semantic image segmentation with deep convolutional nets and fully connected crfs. In: ICLR. (2015)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Semantic image segmentation with deep convolutional nets and fully connected crfs",
+          "year": 2015
+        },
+        {
+          "raw_reference": "18. Holschneider, M., Kronland-Martinet, R., Morlet, J., Tchamitchian, P.: A real-time algorithm for signal analysis with the help of the wavelet transform. In: Wavelets. Springer (1990) 286–297",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "A real-time algorithm for signal analysis with the help of the wavelet transform",
+          "year": 1990
+        },
+        {
+          "raw_reference": "19. Jia, Y ., Shelhamer, E., Donahue, J., Karayev, S., Long, J., Girshick, R., Guadarrama, S., Darrell, T.: Caffe: Convolutional architecture for fast feature embedding. In: MM. (2014)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Caffe: Convolutional architecture for fast feature embedding",
+          "year": 2014
+        },
+        {
+          "raw_reference": "20. Glorot, X., Bengio, Y .: Understanding the difficulty of training deep feedforward neural networks. In: AISTATS. (2010)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Understanding the difficulty of training deep feedforward neural networks",
+          "year": 2010
+        },
+        {
+          "raw_reference": "21. Hoiem, D., Chodpathumwan, Y ., Dai, Q.: Diagnosing error in object detectors. In: ECCV 2012. (2012)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Diagnosing error in object detectors",
+          "year": 2012
+        },
+        {
+          "raw_reference": "22. Girshick, R., Donahue, J., Darrell, T., Malik, J.: Rich feature hierarchies for accurate object detection and semantic segmentation. In: CVPR. (2014)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Rich feature hierarchies for accurate object detection and semantic segmentation",
+          "year": 2014
+        },
+        {
+          "raw_reference": "23. Zhang, L., Lin, L., Liang, X., He, K.: Is faster r-cnn doing well for pedestrian detection. In: ECCV . (2016)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Is faster r-cnn doing well for pedestrian detection",
+          "year": 2016
+        },
+        {
+          "raw_reference": "24. Bell, S., Zitnick, C.L., Bala, K., Girshick, R.: Inside-outside net: Detecting objects in context with skip pooling and recurrent neural networks. In: CVPR. (2016)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Inside-outside net: Detecting objects in context with skip pooling and recurrent neural networks",
+          "year": 2016
+        },
+        {
+          "raw_reference": "25. COCO: Common Objects in Context. http://mscoco.org/dataset/ #detections-leaderboard (2016) [Online; accessed 25-July-2016].",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Common Objects in Context",
+          "year": 2016
+        },
+        {
+          "raw_reference": "26. Felzenszwalb, P., McAllester, D., Ramanan, D.: A discriminatively trained, multiscale, deformable part model. In: CVPR. (2008)",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "A discriminatively trained, multiscale, deformable part model",
+          "year": 2008
+        }
+      ]
+    },
+    "gold": {
+      "case_id": "ssd_realpdf",
+      "schema_version": 1,
+      "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+      "work_metadata": {
+        "title": "SSD: Single Shot MultiBox Detector",
+        "publication_year": null,
+        "abstract_prefix": "We present a method for detecting objects in images using a single deep ",
+        "doi": null,
+        "arxiv_id": null,
+        "venue_name": null,
+        "work_type": null
+      },
+      "authorships": [],
+      "references": {
+        "expected_count": 27,
+        "min_count": 19,
+        "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
+        "sample_arxiv_ids": [
+          "1412.1441",
+          "1312.5402"
+        ],
+        "sample_dois": []
+      },
+      "graph_expectations": {
+        "min_cites": 0,
+        "max_cites": 47,
+        "min_authorships": 0,
+        "max_authorships": 8,
+        "min_institutions": 0,
+        "max_institutions": 8,
+        "expected_cited_arxiv_ids": [
+          "1412.1441",
+          "1312.5402"
+        ],
+        "max_duplicate_work_fingerprints": 8,
+        "max_work_dedup_violations": 0,
+        "min_related_version_edges": null,
+        "max_related_version_edges": null
+      },
+      "quality_thresholds": null
+    }
+  }
+}
