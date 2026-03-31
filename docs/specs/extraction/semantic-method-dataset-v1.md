@@ -81,3 +81,18 @@
 
 - Инкремент **`schema_version`** при breaking changes в форме объекта.
 - Версия промпта / модели — в `run_metadata` отчёта (как для layer-1), см. [strategy-v1.md](../../benchmarks/strategy-v1.md).
+
+## Измеримый exit criteria (Phase 3 ↔ Phase 4)
+
+Для сопоставимости прогонов и gate по [runbooks/benchmark-decision-gate.md](../../runbooks/benchmark-decision-gate.md) каждый значимый отчёт layer-2 должен содержать **`benchmark_run_metadata`** (или эквивалент верхнего уровня) с полями:
+
+| Поле | Назначение |
+|------|------------|
+| Модель LLM | `extraction_llm_model` / снимок настроек |
+| `layer1_prompt_fingerprint` | если stage зависит от layer-1 промптов |
+| `semantic_prompt_fingerprint` | версия семантической стадии |
+| `semantic_extraction_enabled` | согласовано с `.env` и кейсом |
+
+**Контракт на эталоне:** на кейсе `yolov1_semantic` и в suite `nightly_semantic` при включённом LLM отсутствие парсимого JSON или повторяющийся `llm_empty_result` без записи в `extraction_notes` трактуется как **runtime/architecture** fail (Wave B в [runbooks/roadmap-next-waves.md](../../runbooks/roadmap-next-waves.md)), а не как обновление gold.
+
+**Деградация остаётся валидной:** пустые `methods`/`datasets` с явной причиной в `extraction_notes` при недоступном LLM — по таблице «Деградация» выше.

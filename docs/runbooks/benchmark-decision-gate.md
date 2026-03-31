@@ -54,10 +54,22 @@
 
 - **Reference**: все три кейса `passed`.
 - **Layer-1 nightly**: часть fail из-за **gold** (`abstract_prefix` / references count); дополнительно считать `references_llm_failed_events` (runtime флейки references LLM).
-- **Layer-2 nightly**: единичный fail на **`yolov1_semantic`** с `llm_empty_result` — трактовать как **architecture/runtime**, не как gold.
+- **Layer-2 nightly**: после `nano_retry` suite `nightly_semantic` зелёный (`failed_count: 0`); single-case retest `yolov1_semantic` также `passed=True`.
 
 Single-case retest после правок gold (если лежат в `eval/results/retest-*.json`) агрегатор перечисляет отдельно — это подтверждение, что suite нужно **перепрогнать** после коммита фикстур.
 
-## 6. Связь с roadmap
+## 6. Gate между Wave A и Wave B–D
 
-Пока **reference** стабильна, можно продолжать работы по [roadmap Phase 2+](../roadmap.md) (онтология, продуктовые фичи), параллельно закрывая остаточный долг nightly через gold/runtime — см. [benchmark-stabilization-triage.md](benchmark-stabilization-triage.md).
+Волны работ по roadmap описаны в [roadmap-next-waves.md](roadmap-next-waves.md). **Wave A (Phase 4)** — обязательный **decision gate** перед тем, как считать завершёнными следующие волны:
+
+| Состояние `decision` в `benchmark-metrics-summary` | Wave B (Phase 3 semantic) | Wave C (Phase 5/6 e2e) | Wave D (Phase 7 pilot) |
+|------------------------------------------------------|---------------------------|-------------------------|--------------------------|
+| **NO-GO** | не начинать до зелёной reference lane и наличия артефактов | не начинать | не начинать |
+| **CONDITIONAL-GO** | допускается, если каждый nightly fail **классифицирован** (gold vs runtime) и задокументирован | допускается при том же условии + осознанные риски по API/UI | допускается только с явным списком blockers в pilot package |
+| **GO** | можно | можно | можно (при выполнении [pilot-checklist.md](pilot-checklist.md)) |
+
+**Reference lane** (`yolov1`: layer-1 + graph + layer-2 semantic) должна оставаться зелёной при любых массовых изменениях gold/промптов; см. [benchmark-stabilization-baseline.md](benchmark-stabilization-baseline.md).
+
+## 7. Связь с roadmap (параллельные треки)
+
+Пока **reference** стабильна, допустимо **параллельно** вести документацию Phase 2, доработки ingestion и подготовку контрактов Phase 5/6 — но **закрепление** Wave B/C/D в смысле «готово к следующему этапу» опирается на таблицу выше и на сводку агрегатора. Остаточный долг nightly закрывается через gold/runtime — см. [benchmark-stabilization-triage.md](benchmark-stabilization-triage.md).

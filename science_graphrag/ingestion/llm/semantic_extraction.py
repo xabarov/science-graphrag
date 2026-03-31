@@ -30,6 +30,7 @@ _SEM_REF_HEAD_RE = re.compile(
 MAX_SEMANTIC_BODY_CHARS = 12_000
 MAX_SEMANTIC_BODY_CHARS_RETRY = 6_000
 MAX_SEMANTIC_BODY_CHARS_MICRO = 4_000
+MAX_SEMANTIC_BODY_CHARS_NANO = 2_500
 
 SYSTEM_SEMANTIC = (
     "Extract methods and datasets for this paper only. Output must stay small enough to "
@@ -65,6 +66,7 @@ def semantic_prompt_fingerprint() -> str:
             SYSTEM_SEMANTIC_COMPACT,
             f"MAX_SEMANTIC_BODY_CHARS={MAX_SEMANTIC_BODY_CHARS}",
             f"MAX_SEMANTIC_BODY_CHARS_MICRO={MAX_SEMANTIC_BODY_CHARS_MICRO}",
+            f"MAX_SEMANTIC_BODY_CHARS_NANO={MAX_SEMANTIC_BODY_CHARS_NANO}",
             "bundle_schema=v1",
         ),
     )
@@ -251,6 +253,23 @@ def _semantic_compact_slice_attempt(
     )
 
 
+def _accept_retry_result(
+    current: tuple[SemanticMethodDatasetBundleLLM | None, str | None],
+    retry: tuple[SemanticMethodDatasetBundleLLM | None, str | None],
+) -> tuple[SemanticMethodDatasetBundleLLM | None, str | None]:
+    """Merge retry output into current `(parsed, err)` state."""
+
+    parsed, err = current
+    parsed_retry, err_retry = retry
+    if parsed_retry is not None and not err_retry:
+        return parsed_retry, None
+    if err_retry:
+        return parsed, err_retry
+    if parsed_retry is None:
+        return parsed, err_retry or "llm_empty_result"
+    return parsed, err
+
+
 def _semantic_llm_bundle_attempts(
     api_key: str,
     settings: Settings,
@@ -302,36 +321,40 @@ def _semantic_llm_bundle_attempts(
     )
     if err or parsed is None:
         retry_tokens = min(settings.semantic_extraction_max_tokens + 8192, 32_768)
-        parsed_retry, err_retry = _semantic_compact_slice_attempt(
-            call_extract=_call_extract,
-            normalized_markdown=normalized_markdown,
-            max_chars=MAX_SEMANTIC_BODY_CHARS_RETRY,
-            max_tokens=retry_tokens,
-            attempt_label="compact_retry",
+        parsed, err = _accept_retry_result(
+            (parsed, err),
+            _semantic_compact_slice_attempt(
+                call_extract=_call_extract,
+                normalized_markdown=normalized_markdown,
+                max_chars=MAX_SEMANTIC_BODY_CHARS_RETRY,
+                max_tokens=retry_tokens,
+                attempt_label="compact_retry",
+            ),
         )
-        if parsed_retry is not None and not err_retry:
-            parsed = parsed_retry
-            err = None
-        elif err_retry:
-            err = err_retry
-        elif parsed_retry is None:
-            err = err_retry or "llm_empty_result"
     if err or parsed is None:
         micro_tokens = min(settings.semantic_extraction_max_tokens + 12_288, 32_768)
-        parsed_micro, err_micro = _semantic_compact_slice_attempt(
-            call_extract=_call_extract,
-            normalized_markdown=normalized_markdown,
-            max_chars=MAX_SEMANTIC_BODY_CHARS_MICRO,
-            max_tokens=micro_tokens,
-            attempt_label="micro_retry",
+        parsed, err = _accept_retry_result(
+            (parsed, err),
+            _semantic_compact_slice_attempt(
+                call_extract=_call_extract,
+                normalized_markdown=normalized_markdown,
+                max_chars=MAX_SEMANTIC_BODY_CHARS_MICRO,
+                max_tokens=micro_tokens,
+                attempt_label="micro_retry",
+            ),
         )
-        if parsed_micro is not None and not err_micro:
-            parsed = parsed_micro
-            err = None
-        elif err_micro:
-            err = err_micro
-        elif parsed_micro is None:
-            err = err_micro or "llm_empty_result"
+    if err or parsed is None:
+        nano_tokens = min(settings.semantic_extraction_max_tokens + 16_384, 32_768)
+        parsed, err = _accept_retry_result(
+            (parsed, err),
+            _semantic_compact_slice_attempt(
+                call_extract=_call_extract,
+                normalized_markdown=normalized_markdown,
+                max_chars=MAX_SEMANTIC_BODY_CHARS_NANO,
+                max_tokens=nano_tokens,
+                attempt_label="nano_retry",
+            ),
+        )
     return parsed, err
 
 

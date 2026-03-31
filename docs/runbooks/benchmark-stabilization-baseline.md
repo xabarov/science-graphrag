@@ -85,7 +85,7 @@ JSON-отчёты складывать в `eval/results/` с понятными 
 
 ## 6.2. Decision gate и агрегат метрик
 
-Сводный критерий **GO / CONDITIONAL-GO / NO-GO** и список авторитетных `current-*` JSON: [benchmark-decision-gate.md](benchmark-decision-gate.md).
+Сводный критерий **GO / CONDITIONAL-GO / NO-GO** и список авторитетных `current-*` JSON: [benchmark-decision-gate.md](benchmark-decision-gate.md). Этот gate — **Wave A**; он обязателен перед закрытием Wave B–D по roadmap ([roadmap-next-waves.md](roadmap-next-waves.md)).
 
 После прогонов обновляйте машиночитаемую сводку:
 

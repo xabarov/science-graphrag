@@ -8,7 +8,7 @@
 | [extraction/backbone-authorships.md](extraction/backbone-authorships.md) | Авторы и аффилиации |
 | [extraction/backbone-references.md](extraction/backbone-references.md) | Список литературы / `CITES` |
 | [extraction/semantic-chunks.md](extraction/semantic-chunks.md) | Чанки retrieval / merge, provenance |
-| [extraction/semantic-method-dataset-v1.md](extraction/semantic-method-dataset-v1.md) | Контракт извлечения Method / Dataset (Phase 3, до кода) |
+| [extraction/semantic-method-dataset-v1.md](extraction/semantic-method-dataset-v1.md) | Контракт Method / Dataset + измеримый exit criteria, fingerprints в `run_metadata` |
 
 ## Phase 2 (семантический слой поверх backbone)
 
@@ -20,6 +20,6 @@
 ## Дальше (Phase 3+)
 
 - Реализация стадий и промптов по [extraction/semantic-method-dataset-v1.md](extraction/semantic-method-dataset-v1.md); см. [roadmap Phase 3](../roadmap.md).
-- Контракты для frontend Phase 6: [frontend-ui-api-contracts-v1.md](frontend-ui-api-contracts-v1.md).
+- Контракты для frontend Phase 6 и **mandatory API happy-path**: [frontend-ui-api-contracts-v1.md](frontend-ui-api-contracts-v1.md).
 
 Черновые идеи промптов — в [idea.md](../idea.md).

@@ -51,14 +51,16 @@ Definition of done:
 
 ## B1. Endpoint set for first live UI wave
 
-- [ ] Implement `GET /v1/works` (search/list + pagination).
-- [ ] Implement `GET /v1/works/{work_id}` (work card for reader header).
-- [ ] Implement `GET /v1/works/{work_id}/graph` (graph neighborhood payload).
-- [ ] Implement `GET /v1/works/{work_id}/chunks` (reader/evidence payload).
+- [x] Implement `GET /v1/works` (search/list + pagination).
+- [x] Implement `GET /v1/works/{work_id}` (work card for reader header).
+- [x] Implement `GET /v1/works/{work_id}/graph` (graph neighborhood payload).
+- [x] Implement `GET /v1/works/{work_id}/chunks` (reader/evidence payload).
 
 Definition of done:
 
-- endpoints match `docs/specs/frontend-ui-api-contracts-v1.md`.
+- endpoints match `docs/specs/frontend-ui-api-contracts-v1.md` (including **Mandatory API happy-path**).
+
+**Mandatory happy-path:** см. [specs/frontend-ui-api-contracts-v1.md](../specs/frontend-ui-api-contracts-v1.md) — раздел *Mandatory API happy-path*. Расширение `tests/test_api_smoke.py` под маршруты `/v1/*` — backlog при наличии моков сторов или интеграционной среды.
 
 ## B2. Observability and degraded behavior
 

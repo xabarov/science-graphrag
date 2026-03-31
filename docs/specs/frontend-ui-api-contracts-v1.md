@@ -10,6 +10,21 @@ Status by endpoint:
 - `GET /v1/works`, `GET /v1/works/{work_id}`, `GET /v1/works/{work_id}/graph`, `GET /v1/works/{work_id}/chunks`: implemented (same module; Neo4j + Qdrant)
 - other niceties below: optional backlog (filters, richer graph projection)
 
+## Mandatory API happy-path (Wave C)
+
+Один обязательный сквозной сценарий для Phase 5/6 bridge и пилота (после ingest хотя бы одной работы в Neo4j/Qdrant):
+
+1. **Ingest** одного документа: `science-graphrag ingest path/to/paper.pdf` (или корпус — см. [runbooks/deploy.md](../runbooks/deploy.md)).
+2. **`GET /v1/works`** — список не пустой, выбрать `work_id`.
+3. **`GET /v1/works/{work_id}`** — 200, стабильные поля `work_id`, `ingestion`.
+4. **`POST /v1/query`** — ответ с `citations` и `retrieval_trace` (допустимы пустые hits при пустом Qdrant, но не 5xx).
+5. **`GET /v1/works/{work_id}/chunks`** — при наличии чанков: ненулевой `total` или согласованный degraded UX в UI.
+
+Опционально для полной трассируемости: **`GET /v1/works/{work_id}/graph`** — 200, `semantic_available` согласован с фактом semantic ingest.
+
+**Автоматическая проверка (merge CI):** `tests/test_api_smoke.py` проверяет `/health` и API-контракты `/v1/*` на моках (без живых сторов). Полный happy-path с живыми Neo4j/Qdrant — ручной или через `pytest -m integration` после поднятия compose; см. [roadmap Phase 5](../roadmap.md).  
+**Snapshot (2026-03-31):** `pytest tests -m integration` прошёл (`3 passed`) на compose-стеке.
+
 ## Contract principles
 
 - Stable identifiers in all responses: `work_id`, `document_id`, `chunk_fingerprint` where applicable.
@@ -69,7 +84,7 @@ Degraded mode expectations:
 - no retrieval hits -> answer explains empty retrieval; citations empty;
 - Neo4j unavailable -> `graph_context.error = "neo4j_unavailable"`; methods/datasets empty.
 
-## 2) Works list/search (planned)
+## 2) Works list/search (implemented)
 
 ### `GET /v1/works`
 
@@ -99,7 +114,7 @@ Response:
 }
 ```
 
-## 3) Work detail (planned)
+## 3) Work detail (implemented)
 
 ### `GET /v1/works/{work_id}`
 
@@ -129,7 +144,7 @@ Response:
 }
 ```
 
-## 4) Work graph neighborhood (planned)
+## 4) Work graph neighborhood (implemented)
 
 ### `GET /v1/works/{work_id}/graph`
 
@@ -162,7 +177,7 @@ Degraded mode:
 
 - if semantic extraction missing, return backbone-only neighborhood and `semantic_available=false`.
 
-## 5) Chunks/evidence (planned)
+## 5) Chunks/evidence (implemented)
 
 ### `GET /v1/works/{work_id}/chunks`
 

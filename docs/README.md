@@ -9,6 +9,8 @@
 | [../README.md](../README.md) | Краткий PRD: пользователи, MVP-сценарии, non-goals |
 | [roadmap.md](roadmap.md) | Roadmap фаз 0–7, архитектура верхнего уровня, риски |
 | [runbooks/roadmap-next-waves.md](runbooks/roadmap-next-waves.md) | Волны Wave A–D (benchmark gate → pilot KPI) |
+| [runbooks/benchmark-decision-gate.md](runbooks/benchmark-decision-gate.md) | GO / NO-GO, gate перед Wave B–D |
+| [runbooks/pilot-checklist.md](runbooks/pilot-checklist.md) | Phase 7: pilot package, KPI, GO/NO-GO |
 | [idea.md](idea.md) | Онтология по слоям, scholarly backbone, промпты (черновик) |
 
 ## Архитектура

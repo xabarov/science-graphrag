@@ -197,6 +197,10 @@ flowchart LR
 
 **Exit criteria:** для каждого активного stage есть schema, контракт выхода, путь деградации и способ измерения качества (связь с Phase 4).
 
+**Измеримый контракт semantic-stage (MVP):** выход и деградации — [specs/extraction/semantic-method-dataset-v1.md](specs/extraction/semantic-method-dataset-v1.md); в отчётах benchmark обязательны **`benchmark_run_metadata`** с `layer1_prompt_fingerprint` / `semantic_prompt_fingerprint` (или эквивалент) и идентификатором модели — без этого прогон не считается сопоставимым с предыдущими. На эталонных кейсах layer-2 (`yolov1_semantic` и suite `nightly_semantic`) не допускаются **необъяснимые** `llm_empty_result` при доступном LLM; остаточные fail классифицируются по [runbooks/benchmark-stabilization-triage.md](runbooks/benchmark-stabilization-triage.md).
+
+**Статус Phase 3 (2026-03-31):** контракт и спецификация зафиксированы; стабилизация поведения на эталоне — Wave B ([runbooks/roadmap-next-waves.md](runbooks/roadmap-next-waves.md)).
+
 ---
 
 ### Phase 4 — Benchmarks и eval-система
@@ -256,6 +260,17 @@ flowchart LR
 3. **Gold для real-pdf:** заполнить `authorships[]` и при необходимости ужесточить `graph_expectations` под прогон **с включённым LLM** (отдельный job).
 4. Новые **families** и gold по мере Phase 2+ — [benchmarks/benchmark-expansion-v1.md](benchmarks/benchmark-expansion-v1.md).
 
+#### CI и gate-политика (merge vs nightly vs advisory)
+
+| Уровень | Что входит | Роль |
+|---------|------------|------|
+| **Merge (обязательно на PR)** | `.github/workflows/ci.yml`: `pytest -m "not integration"` | Быстрая регрессия кода **без** живых Neo4j/Qdrant и **без** LLM-бенчмарков как эталона прод-поведения. |
+| **Integration (nightly / manual)** | `.github/workflows/integration-nightly.yml`: сервисы Neo4j + Qdrant + `pytest -m integration` | Проверка полного ingest-пайплайна против реальных сторов. |
+| **Benchmark LLM (локально / nightly+)** | `science-graphrag-layer1-benchmark` / `science-graphrag-graph-benchmark` / `science-graphrag-layer2-benchmark` с `--suite`, см. [eval/README.md](../eval/README.md) | **Эталон качества** извлечения при включённом LLM; артефакты `current-*` + [runbooks/benchmark-decision-gate.md](runbooks/benchmark-decision-gate.md). |
+| **Advisory** | Полный graph suite с живым OpenAlex, расширение gold | По мере готовности инфраструктуры; не блокирует merge, пока явно не включено в gate. |
+
+**Wave A (decision gate):** переход к Wave B–D привязан к `GO` / `CONDITIONAL-GO` в `eval/results/benchmark-metrics-summary.md` — см. [runbooks/benchmark-decision-gate.md](runbooks/benchmark-decision-gate.md) и [runbooks/roadmap-next-waves.md](runbooks/roadmap-next-waves.md).
+
 #### Execution policy (локальная разработка и автоматизация)
 
 - **Docker / Compose:** команды `docker` / `docker compose` выполняются **без `sudo`** (предполагается, что пользователь в группе `docker` на Linux или использует Docker Desktop).
@@ -281,6 +296,9 @@ flowchart LR
 **Exit criteria:** end-to-end путь для **3–5** ключевых user journeys с воспроизводимым trace.
 
 **Статус Phase 5 (2026-03-31):** **MVP in progress** — реализованы `GET /health`, `POST /v1/query`, UI-facing `GET /v1/works`, `GET /v1/works/{work_id}`, `GET /v1/works/{work_id}/graph`, `GET /v1/works/{work_id}/chunks` и прототип UI в `science_graphrag/api/static/index.html`; дальше — стабилизация контрактов, интеграционные тесты и (опционально) второй этап синтеза ответа.
+
+**Обязательный happy-path (Wave C):** задокументирован в [specs/frontend-ui-api-contracts-v1.md](specs/frontend-ui-api-contracts-v1.md) (раздел *Mandatory API happy-path*); smoke `tests/test_api_smoke.py` покрывает `/health`, `/v1/query`, `/v1/works`, `/v1/works/{work_id}`, `/v1/works/{work_id}/graph`, `/v1/works/{work_id}/chunks` через моки (без живых Neo4j/Qdrant).  
+**Текущий статус валидации (2026-03-31):** `pytest tests -m integration` на поднятом compose (`neo4j`, `postgres`, `qdrant`) — `3 passed`.
 
 ---
 
@@ -319,6 +337,8 @@ flowchart LR
 - Runbooks: деплой, бэкапы, ключи API внешних реестров.
 - Пилот: узкий научный домен, критерии успеха (время до ответа, доля ответов с корректными цитатами, субъективная полезность).
 
+**Pilot package (Wave D):** единый чеклист и KPI — [runbooks/pilot-checklist.md](runbooks/pilot-checklist.md). **Предусловие:** не слабее **CONDITIONAL-GO** по [runbooks/benchmark-decision-gate.md](runbooks/benchmark-decision-gate.md) (с задокументированными blockers); иначе сначала Wave A.
+
 **Post-MVP (milestones в roadmap):** мульти-статьёвый синтез, граф противоречий, расширенная оценка idea-assist.
 
 **Exit criteria:** пилот завершён с зафиксированными выводами и backlog на следующую волну.
@@ -344,6 +364,8 @@ flowchart TD
 - переводить UI на full integration только после стабилизации API-контрактов;  
 - Phase 4 итеративно углублять с Phase 1–3.
 
+**Волны Wave A–D:** операционная последовательность и зависимость Wave A → gate → B/C/D — [runbooks/roadmap-next-waves.md](runbooks/roadmap-next-waves.md).
+
 ---
 
 ## 7. Риски проекта (сводка)
@@ -361,6 +383,9 @@ flowchart TD
 
 | Документ | Назначение |
 |----------|------------|
+| [runbooks/roadmap-next-waves.md](runbooks/roadmap-next-waves.md) | Wave A–D: decision gate, semantic, e2e, pilot |
+| [runbooks/benchmark-decision-gate.md](runbooks/benchmark-decision-gate.md) | GO / NO-GO и связь с Wave A–D |
+| [runbooks/pilot-checklist.md](runbooks/pilot-checklist.md) | Phase 7: pilot package и KPI |
 | [architecture/frontend-parallel-track-strategy.md](architecture/frontend-parallel-track-strategy.md) | Strategy параллельного frontend-трека до полного закрытия Phase 5 |
 | [specs/frontend-ui-api-contracts-v1.md](specs/frontend-ui-api-contracts-v1.md) | Минимальные frontend-facing API контракты v1 |
 | [architecture/frontend-phase6-bridge-backlog.md](architecture/frontend-phase6-bridge-backlog.md) | Стартовый backlog: frontend shell + backend bridge endpoints |
@@ -377,6 +402,11 @@ flowchart TD
 
 | Версия | Дата | Изменения |
 |--------|------|-----------|
+| 1.7 | 2026-03-31 | Wave B: `nightly_semantic` suite перепрогнан после `nano_retry` — `layer2 nightly failed: 0`; обновлены decision-gate и wave runbooks (single-case + suite snapshots). |
+| 1.6 | 2026-03-31 | Wave B: в `semantic_extraction` добавлен `nano_retry` (после compact/micro) и обновлён `semantic_prompt_fingerprint`; цель — снизить `llm_empty_result` на `nightly_semantic`. |
+| 1.5 | 2026-03-31 | Wave C: подтверждён "живой" e2e-контур — `pytest tests -m integration` (`3 passed`) на поднятом compose; roadmap/runbooks/spec синхронизированы с этим статусом. |
+| 1.4 | 2026-03-31 | Wave C: расширен `tests/test_api_smoke.py` (мок-покрытие `/v1/query`, `/v1/works*`, `/v1/works/{id}/graph`, `/v1/works/{id}/chunks` без живых сторов); синхронизированы roadmap/runbooks/spec с фактическим smoke-покрытием happy-path. |
+| 1.3 | 2026-03-31 | Phase 4: таблица **CI и gate-политика** (merge / integration / LLM benchmark / advisory); явная связь **Wave A** с [benchmark-decision-gate.md](runbooks/benchmark-decision-gate.md). Phase 3: измеримый контракт semantic-stage + fingerprints. Phase 5/6: ссылка на **mandatory API happy-path** в [frontend-ui-api-contracts-v1.md](specs/frontend-ui-api-contracts-v1.md). Phase 7: **pilot package** и предусловие по decision gate. §6: ссылка на Wave A–D. §8: индекс runbooks. |
 | 1.2 | 2026-03-31 | Phase 4/7: зафиксирована **Execution policy** (Docker/compose без `sudo`, автономные прогоны benchmark/decision gate, допустимая пересборка API); добавлен [runbooks/roadmap-next-waves.md](runbooks/roadmap-next-waves.md) (Wave A–D). |
 | 1.1 | 2026-03-31 | Phase 5/6 bridge: реализованы `GET /v1/works` и связанные endpoints по [frontend-ui-api-contracts-v1.md](specs/frontend-ui-api-contracts-v1.md); UI-прототип показывает список works; layer-1 метрики: нормализация unicode-дефисов в `abstract_prefix`; semantic extraction: третья попытка (micro slice); Phase 7: pilot checklist + CI шаг `aggregate_benchmark_metrics.py`. После обновления gold перезапустите LLM suite и обновите `eval/results/current-*.json`. |
 | 1.0 | 2026-03-31 | Phase 5/6 bridge: зафиксирован параллельный frontend-трек (`shell + mocks + contract-first`), добавлены UI API contracts v1 и общий backlog для frontend shell + backend bridge endpoints; roadmap синхронизирован с фактическим статусом API MVP (`POST /v1/query`). |

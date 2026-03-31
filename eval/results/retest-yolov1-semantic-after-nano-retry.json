@@ -1,0 +1,133 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+    "semantic_extraction_enabled": true
+  },
+  "case": {
+    "case_id": "yolov1_semantic",
+    "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/yolov1_semantic",
+    "metrics": {
+      "precision_methods": 1.0,
+      "recall_methods_num": 1,
+      "recall_methods_denom": 2,
+      "precision_datasets": 1.0,
+      "recall_datasets_num": 2,
+      "recall_datasets_denom": 2,
+      "passed": true,
+      "notes": "method_tp=1/2; dataset_tp=2/2"
+    },
+    "predicted": {
+      "schema_version": 1,
+      "document_id": "yolov1_semantic",
+      "methods": [
+        {
+          "name": "YOLO",
+          "aliases": [],
+          "description_short": "A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation.",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "chunk_id": null,
+              "section_heading": null,
+              "quote": "We present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to per-form detection. Instead, we frame object detection as a re-gression problem to spatially separated bounding boxes and associated class probabilities. A single neural network pre-dicts bounding boxes and class probabilities directly from full images in one evaluation."
+            }
+          ]
+        },
+        {
+          "name": "Fast YOLO",
+          "aliases": [],
+          "description_short": "A smaller version of the YOLO network that processes images at 155 frames per second.",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "chunk_id": null,
+              "section_heading": null,
+              "quote": "A smaller version of the network, Fast YOLO, processes an astounding 155 frames per second while still achieving double the mAP of other real-time detec-tors."
+            }
+          ]
+        },
+        {
+          "name": "YOLO Detection System",
+          "aliases": [],
+          "description_short": "Processing images with YOLO is simple and straightforward.",
+          "confidence": 0.8,
+          "evidence": [
+            {
+              "chunk_id": null,
+              "section_heading": null,
+              "quote": "Processing images with YOLO is simple and straightforward. Our system (1) resizes the input image to 448 × 448, (2) runs a single convolutional net-work on the image, and (3) thresholds the resulting detections by the model’s confidence."
+            }
+          ]
+        },
+        {
+          "name": "YOLO Model",
+          "aliases": [],
+          "description_short": "A single convolutional network simultaneously predicts multiple bounding boxes and class probabilities for those boxes.",
+          "confidence": 0.8,
+          "evidence": [
+            {
+              "chunk_id": null,
+              "section_heading": null,
+              "quote": "YOLO is refreshingly simple: see Figure 1. A sin- gle convolutional network simultaneously predicts multi- ple bounding boxes and class probabilities for those boxes."
+            }
+          ]
+        }
+      ],
+      "datasets": [
+        {
+          "name": "PASCAL VOC",
+          "aliases": [],
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "chunk_id": null,
+              "section_heading": null,
+              "quote": "For evaluating YOLO on PASCAL VOC, we useS = 7, B = 2. PASCAL VOC has 20 labelled classes so C = 20."
+            }
+          ]
+        },
+        {
+          "name": "ImageNet",
+          "aliases": [],
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "chunk_id": null,
+              "section_heading": null,
+              "quote": "We pretrain our convolutional layers on the ImageNet 1000-class competition dataset [30]."
+            }
+          ]
+        }
+      ],
+      "relations": [],
+      "extraction_notes": "Extracted methods and datasets as per the paper's descriptions and evidence."
+    },
+    "gold": {
+      "case_id": "yolov1_semantic",
+      "schema_version": 1,
+      "description": "Object-detection corpus; layer1=yolov1. Nightly semantic when LLM enabled.",
+      "article_path": "../../layer1/yolov1/article.md",
+      "min_method_names": 1,
+      "max_method_names": null,
+      "min_method_recall_ratio": null,
+      "min_dataset_recall_ratio": null,
+      "expected_method_names_normalized": [
+        "yolo",
+        "you only look once"
+      ],
+      "expected_dataset_names_normalized": [
+        "pascal voc",
+        "imagenet"
+      ],
+      "allow_empty_when_no_llm": true
+    },
+    "settings_snapshot": {
+      "extraction_llm_enabled": true,
+      "semantic_extraction_enabled": true
+    }
+  }
+}

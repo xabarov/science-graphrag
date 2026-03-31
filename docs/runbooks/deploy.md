@@ -16,7 +16,7 @@
 ## Compose
 
 - Bring up dependencies with project `docker-compose.yml` (Neo4j bolt port, Postgres, Qdrant as configured locally). Use **`docker compose` without `sudo`** (Linux: user in `docker` group; or Docker Desktop).
-- Install package: `pip install -e ".[dev]"(embed optional for sentence-transformers)`.
+- Install package: `pip install -e ".[dev]"` (optional embeddings: `pip install -e ".[dev,embed]"`).
 - Initialize SQL schema via first ingest or app that calls `init_db`.
 - Rebuild after backend changes when validating e2e: e.g. `docker compose up -d --build` (see roadmap **Execution policy**).
 
@@ -44,3 +44,15 @@ science-graphrag-api
 
 - Merge CI: unit tests + layer-2 merge_safe benchmark without LLM.
 - Nightly: integration pytest + layer-1/graph suites + layer-2 suite (see workflows).
+
+## Pilot readiness (Phase 7)
+
+Before a **research pilot** on shared infrastructure:
+
+1. **Benchmark gate:** `GO` or **CONDITIONAL-GO** with documented blockers — [benchmark-decision-gate.md](benchmark-decision-gate.md) (Wave A must not be NO-GO).
+2. **Operational:** stack from this runbook up; backups and API keys per project policy.
+3. **Checklist:** [pilot-checklist.md](pilot-checklist.md) (KPI + mandatory API happy-path from [specs/frontend-ui-api-contracts-v1.md](../specs/frontend-ui-api-contracts-v1.md)).
+
+## End-to-end validation
+
+After ingest, validate the **Mandatory API happy-path** (same as Wave C in [roadmap-next-waves.md](roadmap-next-waves.md)): `GET /v1/works` → `GET /v1/works/{id}` → `POST /v1/query` → `GET /v1/works/{id}/chunks` (see contracts doc for full steps).
