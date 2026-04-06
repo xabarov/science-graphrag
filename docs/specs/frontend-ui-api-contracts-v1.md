@@ -216,20 +216,20 @@ Response:
 }
 ```
 
-## 6) Benchmark console API (implemented, layer-1 + layer-2)
+## 6) Benchmark console API (implemented, layer-1 + layer-2 + graph catalog)
 
 Назначение: страница **`/benchmark`** в `ui/` — просмотр кейсов и запуск прогонов **без обязательного CLI**, по идее как dev/QA-консоль в референсе [osint-gr](/home/roman/pyprojects/ML/Prod/osint-gr) (`frontend/src/pages/BenchmarkPage/` и связанные сервисы). Фикстуры: `tests/fixtures/benchmarks/layer1/` и `tests/fixtures/benchmarks/layer2/`; полный suite и decision gate остаются в [eval/README.md](../../eval/README.md) и [runbooks/benchmark-decision-gate.md](../runbooks/benchmark-decision-gate.md).
 
 | Method | Path | Role |
 |--------|------|------|
-| GET | `/v1/benchmark/cases` | Список кейсов (`family=layer1\|layer2`, `tier`, `q`, `limit`, `offset`) |
+| GET | `/v1/benchmark/cases` | Список кейсов (`family=layer1\|layer2\|graph`, `tier`, `q`, `limit`, `offset`). Для `graph` — только layer-1 кейсы, у которых в `gold.json` есть `graph_expectations` (каталог для UI, без запуска Neo4j из API). |
 | GET | `/v1/benchmark/cases/{case_id}` | Превью: `article_md`, `gold` (layer-2: содержимое `semantic_gold.json`) |
-| POST | `/v1/benchmark/runs` | Старт прогона (`case_ids` или ярлыки `all` / `merge_safe` / `nightly_heavy` / `nightly_semantic`; тело: `family`, `label`) |
+| POST | `/v1/benchmark/runs` | Старт прогона (`case_ids` или ярлыки `all` / `merge_safe` / `nightly_heavy` / `nightly_semantic`; тело: `family`, `label`). Для `family=graph` — **400** с `detail: "graph_benchmark_use_cli"` (исполнение через `science-graphrag-graph-benchmark` / CI, не через API). |
 | GET | `/v1/benchmark/runs` | История прогонов |
 | GET | `/v1/benchmark/runs/{run_id}` | Детали/метрики прогона |
 | DELETE | `/v1/benchmark/runs/{run_id}` | Удалить запись прогона |
 
-**Ограничения (зафиксировать в UX):** список прогонов **in-memory** (потеря при рестарте API); по завершении run пишется **снимок** JSON в `data/benchmark_run_history/{run_id}.json` (каталог в `.gitignore` как часть `/data/`). **graph-v1** из UI не подключён (опасный wipe); backlog — [architecture/frontend-phase6-bridge-backlog.md](../architecture/frontend-phase6-bridge-backlog.md) `B4`.
+**Ограничения (зафиксировать в UX):** список прогонов **in-memory** (потеря при рестарте API); по завершении run пишется **снимок** JSON в `data/benchmark_run_history/{run_id}.json` (каталог в `.gitignore` как часть `/data/`). **Graph-v1 прогоны** из UI не запускаются (ингест + Neo4j); вкладка «graph» в Benchmarks — каталог кейсов и просмотр `graph_expectations`, ссылка на CLI. Детали — [architecture/frontend-phase6-bridge-backlog.md](../architecture/frontend-phase6-bridge-backlog.md) `A5` / `B4`.
 
 **Ответ прогона:** layer-1 — `ComparisonTable`; layer-2 — semantic methods/datasets (`SemanticComparisonTable` в UI).
 

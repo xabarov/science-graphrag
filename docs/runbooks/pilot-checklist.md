@@ -9,7 +9,7 @@ Use for a **narrow scientific subdomain** before widening scope. This document i
 | **Domain** | Computer vision / object detection (aligned with benchmark fixtures) |
 | **Corpus size** | 10–50 representative PDFs — ingest and corpus notes: [pilot-corpus-wave-d.md](pilot-corpus-wave-d.md) |
 | **Environment** | `docker compose` stack per [deploy.md](deploy.md) (Neo4j, Postgres, Qdrant; optional API on 8787) |
-| **Branch / commit** | `e9afc0f9ec1caae718d544607f1f5843a06a6881` (frozen ref for pilot window) |
+| **Branch / commit** | `b2886bc66e2c2d4676be38b5915f71082fc63bed` (pilot engineering slice; refresh on final sign-off) |
 | **Owner** | Sign-off and KPI capture: [docs/pilot/wave-d-exit-record.md](../pilot/wave-d-exit-record.md) |
 
 ## Preconditions (hard)
@@ -35,6 +35,7 @@ Use for a **narrow scientific subdomain** before widening scope. This document i
 - [x] **Compose + mini ingest:** `docker compose up -d`; `science-graphrag ingest-corpus` on a 2-PDF smoke directory completed successfully; Neo4j dedup audit reported OK for that run.
 - [x] **API smoke:** `tests/test_api_smoke.py` includes mandatory-path sequence + `/v1/benchmark/cases` list (merge CI).
 - [x] **UI live surfaces:** `ui/` Workspace / Reader / Graph / Evidence use `GET /v1/works*` against the configured API (same-origin or `VITE_API_BASE_URL`); Ask links citations to Reader/Evidence when `work_id` is present.
+- [x] **Citation structure spot-check (N=5 fixed probes):** with API up, run `BASE=http://127.0.0.1:8787 ./scripts/pilot_spot_check.sh` (or `.venv/bin/python scripts/pilot_spot_check.py`). Pass = every probe has `work_id` and (`chunk_fingerprint` or `document_id`); `second_stage_llm` false when present. Legacy citations without `chunk_fingerprint` surface as warnings only.
 
 ## Product checks
 

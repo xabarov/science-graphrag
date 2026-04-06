@@ -11,15 +11,15 @@ Template for closing the Phase 7 pilot. **Owner** field on the pilot checklist p
 |-------|-------|
 | **Decision** | CONDITIONAL-GO |
 | **Date** | 2026-04-06 |
-| **Git ref** | `08009844b35c2a552ffef3c44dd7cafab644d593` (update when pilot window closes on a newer commit) |
-| **Blockers (if any)** | Formal **10–50 PDF** bulk ingest on the default host corpus path may still need explicit sign-off in the checklist; **latency KPI** and a **single-query trace spot-check** recorded below (2026-04-06). Citation spot-check over N≥5 answers and subjective usefulness still open for owner. Product checks on pilot checklist remain partly manual. |
+| **Git ref** | `b2886bc66e2c2d4676be38b5915f71082fc63bed` (refresh when pilot window closes) |
+| **Blockers (if any)** | **Subjective usefulness** (owner notes / survey). **Bulk ingest** row on [pilot-checklist.md](../runbooks/pilot-checklist.md) still requires explicit sign-off if the deployed corpus path or size differs from the environment used for KPI. Engineering: **N≥5 automated citation probes** + latency snapshot below; `retrieval_trace.retrieval_policy` available for pilot debugging. |
 
 ## KPI (start vs end)
 
 | KPI | Start | End | Notes |
 |-----|-------|-----|-------|
-| Citation correctness (spot-check N) | — | — | Still: sample N≥5 from `/v1/query` vs chunks after pilot workload is frozen. |
-| Retrieval trace completeness | — | **OK (spot-check)** | 2026-04-06, `POST /v1/query` probe (`object detection benchmark`, top_k=3): `hit_count=3`, all citations have `work_id` + `chunk_fingerprint`; trace includes `top_hit_scores`, `query_preview`, `answer_synthesis.second_stage_llm=false`. |
+| Citation correctness (spot-check N) | — | **OK (automated N=5)** | `BASE=… ./scripts/pilot_spot_check.sh` — five fixed queries; structural checks passed on compose-backed API (2026-04-06). Warnings allowed for legacy citations missing `chunk_fingerprint` if `document_id` present. |
+| Retrieval trace completeness | — | **OK (spot-check)** | Same run: traces include `hit_count`, `top_hit_scores`, `query_preview`, `retrieval_policy` (e.g. section boost + back-matter deprioritization); `answer_synthesis.second_stage_llm=false` when field present. |
 | p95 `POST /v1/query` | — | **~96 ms** | `BASE=http://127.0.0.1:8787 N=40` — p50 ≈ **82 ms**, p95 ≈ **96 ms**, max ≈ **149 ms** (`scripts/pilot_measure_latency.py`). |
 | p95 `GET /v1/works` | — | **~34 ms** | Same run — p50 ≈ **18 ms**, p95 ≈ **34 ms**, max ≈ **36 ms**. |
 | Subjective usefulness | — | — | Short researcher notes or survey. |
@@ -43,6 +43,15 @@ Template for closing the Phase 7 pilot. **Owner** field on the pilot checklist p
 **Full** happy-path and `pytest -m integration` require **live** Neo4j, Qdrant, Postgres (and LLM for semantic parity). Merge CI and `tests/test_api_smoke.py` cover contracts on mocks only — do not treat them as a substitute for compose-backed integration when signing off KPI that depend on retrieval and graph context.
 
 **Wave D engineering slice (2026-04-06):** merge CI adds a **monkeypatched** sequence test (`works` → detail → chunks → `query`) and live-filesystem smoke for `GET /v1/benchmark/cases`. UI pages Workspace / Reader / Graph / Evidence call live `/v1/works*` when the API is available.
+
+## Spot-check script (N≥5)
+
+```bash
+# API must serve /v1/query (e.g. compose on 8787)
+BASE=http://127.0.0.1:8787 ./scripts/pilot_spot_check.sh
+```
+
+Writes JSON summary to stdout; exit code 0 means all probes passed structural gates. Use with the same corpus you are signing off for the pilot.
 
 ## Qualitative notes
 

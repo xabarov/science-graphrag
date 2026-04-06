@@ -135,19 +135,41 @@ def _is_likely_back_matter_section(section_path: str | None) -> bool:
     return any(m in s for m in _BACK_MATTER_MARKERS)
 
 
-def _prefer_non_back_matter_hits(
-    hits: list[dict[str, Any]],
-    *,
-    top_k: int,
-) -> list[dict[str, Any]]:
-    """Keep vector order but move acknowledgment/bibliography-style chunks later."""
+def _body_section_bonus(section_path: str | None) -> float:
+    """Small score bump for intro/method-style headings (tie-break on cosine similarity)."""
+
+    if not section_path:
+        return 0.0
+    s = section_path.lower()
+    tiers: tuple[tuple[tuple[str, ...], float], ...] = (
+        (("abstract", "summary"), 0.04),
+        (("introduction", "intro", "overview"), 0.035),
+        (("method", "approach", "architecture", "model", "network"), 0.03),
+        (("experiment", "result", "evaluation", "implementation"), 0.02),
+    )
+    for keys, bonus in tiers:
+        if any(k in s for k in keys):
+            return bonus
+    if "related work" in s:
+        return 0.015
+    return 0.0
+
+
+def _rank_hits_for_answer(hits: list[dict[str, Any]], *, top_k: int) -> list[dict[str, Any]]:
+    """Deprioritize back-matter; among the rest, prefer abstract/intro/method-like sections."""
 
     if not hits:
         return []
-    primary = [h for h in hits if not _is_likely_back_matter_section(h.get("section_path"))]
-    tail = [h for h in hits if _is_likely_back_matter_section(h.get("section_path"))]
-    ordered = primary + tail
-    return ordered[:top_k]
+
+    def sort_key(h: dict[str, Any]) -> tuple[bool, float]:
+        sp = h.get("section_path")
+        back_first = _is_likely_back_matter_section(sp)
+        base = float(h.get("score") or 0.0)
+        boosted = base + _body_section_bonus(sp)
+        return (back_first, -boosted)
+
+    ranked = sorted(hits, key=sort_key)
+    return ranked[:top_k]
 
 
 def _citations_and_snippets_from_hits(
@@ -248,6 +270,7 @@ def _retrieval_trace_payload(
             "mode": "deterministic_snippets",
             "second_stage_llm": False,
         },
+        "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
         "degraded": trace_degraded,
     }
 
@@ -269,7 +292,7 @@ def _qdrant_hits_for_answer(
     )
     fetch_limit = min(max(top_k * 8, top_k), 48)
     hits_raw = qstore.search_similar(vector=vec, limit=fetch_limit, work_id=work_id)
-    hits = _prefer_non_back_matter_hits(hits_raw, top_k=top_k)
+    hits = _rank_hits_for_answer(hits_raw, top_k=top_k)
     return vec, emb_trace, hits
 
 

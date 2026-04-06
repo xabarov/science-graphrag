@@ -8,6 +8,7 @@ import LinearProgress from "@mui/material/LinearProgress";
 import Divider from "@mui/material/Divider";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
+import Alert from "@mui/material/Alert";
 
 import { listBenchmarkCases, getBenchmarkRun, runBenchmark } from "../../services/benchmarkApi.js";
 import { CursorButton, CursorPrimaryButton } from "../../components/common/index.js";
@@ -35,8 +36,11 @@ export default function RunTab({ onSwitchToResults }) {
   const progressTotal = run?.progress?.total ?? 0;
 
   const summary = run?.summary || {};
-  const nightlyTierParam = benchmarkFamily === "layer2" ? "nightly_semantic" : "nightly_heavy";
-  const nightlyLabel = benchmarkFamily === "layer2" ? "nightly_semantic" : "nightly_heavy";
+  const nightlyTierParam =
+    benchmarkFamily === "layer2" ? "nightly_semantic" : "nightly_heavy";
+  const nightlyLabel =
+    benchmarkFamily === "layer2" ? "nightly_semantic" : "nightly_heavy";
+  const isGraphCatalog = benchmarkFamily === "graph";
 
   useEffect(() => {
     setSelectedCaseIds([]);
@@ -47,9 +51,10 @@ export default function RunTab({ onSwitchToResults }) {
     async function loadCases() {
       setLoadingCases(true);
       try {
+        const fam = benchmarkFamily === "graph" ? "graph" : benchmarkFamily;
         const [merge, nightly] = await Promise.all([
-          listBenchmarkCases({ family: benchmarkFamily, tier: "merge_safe" }),
-          listBenchmarkCases({ family: benchmarkFamily, tier: nightlyTierParam }),
+          listBenchmarkCases({ family: fam, tier: "merge_safe" }),
+          listBenchmarkCases({ family: fam, tier: nightlyTierParam }),
         ]);
         if (cancelled) return;
         setMergeSafeCases(merge?.items || []);
@@ -96,6 +101,7 @@ export default function RunTab({ onSwitchToResults }) {
   }, [runId]);
 
   async function startRun({ caseSelector, label }) {
+    if (isGraphCatalog) return;
     setError(null);
     const res = await runBenchmark({ case_ids: caseSelector, label, family: benchmarkFamily });
     const newRunId = res?.run_id;
@@ -106,8 +112,11 @@ export default function RunTab({ onSwitchToResults }) {
 
   const selectedSet = useMemo(() => new Set(selectedCaseIds), [selectedCaseIds]);
 
-  const title =
-    benchmarkFamily === "layer2" ? "Запуск Layer-2 (semantic) Benchmark" : "Запуск Layer-1 Benchmark";
+  const title = isGraphCatalog
+    ? "Graph-v1 cases (catalog only)"
+    : benchmarkFamily === "layer2"
+      ? "Запуск Layer-2 (semantic) Benchmark"
+      : "Запуск Layer-1 Benchmark";
 
   return (
     <Box sx={{ padding: 2 }}>
@@ -121,8 +130,18 @@ export default function RunTab({ onSwitchToResults }) {
         >
           <MenuItem value="layer1">layer1</MenuItem>
           <MenuItem value="layer2">layer2</MenuItem>
+          <MenuItem value="graph">graph (CLI)</MenuItem>
         </Select>
       </Box>
+
+      {isGraphCatalog ? (
+        <Alert severity="info" sx={{ mb: 2, fontSize: "0.8125rem" }}>
+          Graph-v1 runs ingest into Neo4j/Qdrant and are not started from this UI. Use:{" "}
+          <code>science-graphrag-graph-benchmark tests/fixtures/benchmarks/layer1/&lt;case_id&gt;</code> or CI{" "}
+          <code>integration-nightly.yml</code>. Browse cases below; open <strong>Кейсы</strong> for{" "}
+          <code>graph_expectations</code> preview.
+        </Alert>
+      ) : null}
 
       {error && (
         <Typography sx={{ color: "rgba(239, 68, 68, 0.9)", mb: 1 }} role="alert">
@@ -133,18 +152,22 @@ export default function RunTab({ onSwitchToResults }) {
       <Box sx={{ mb: 2 }}>
         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
           <CursorPrimaryButton
-            disabled={selectedCaseIds.length === 0}
+            disabled={isGraphCatalog || selectedCaseIds.length === 0}
             onClick={() => startRun({ caseSelector: selectedCaseIds, label: "selected_cases" })}
           >
             Запустить выделенные ({selectedCaseIds.length})
           </CursorPrimaryButton>
-          <CursorButton onClick={() => startRun({ caseSelector: "merge_safe", label: "merge_safe" })}>
+          <CursorButton
+            disabled={isGraphCatalog}
+            onClick={() => startRun({ caseSelector: "merge_safe", label: "merge_safe" })}
+          >
             Запустить merge_safe
           </CursorButton>
-          <CursorButton onClick={() => startRun({ caseSelector: "all", label: "all_cases" })}>
+          <CursorButton disabled={isGraphCatalog} onClick={() => startRun({ caseSelector: "all", label: "all_cases" })}>
             Запустить все
           </CursorButton>
           <CursorButton
+            disabled={isGraphCatalog}
             onClick={() => startRun({ caseSelector: nightlyTierParam, label: nightlyLabel })}
           >
             Запустить {nightlyLabel}

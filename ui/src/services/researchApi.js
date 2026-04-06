@@ -33,6 +33,7 @@ const EMPTY_GRAPH_CONTEXT = {
 const EMPTY_RETRIEVAL_TRACE = {
   embedding: {},
   hit_count: 0,
+  retrieval_policy: null,
   filter_work_id: null,
   resolved_work_id: null,
   qdrant_collection: "",
@@ -67,6 +68,7 @@ export function normalizeQueryResponse(raw) {
     retrieval_trace: {
       embedding: rt.embedding && typeof rt.embedding === "object" ? rt.embedding : {},
       hit_count: Number.isFinite(Number(rt.hit_count)) ? Number(rt.hit_count) : 0,
+      retrieval_policy: rt.retrieval_policy == null ? null : String(rt.retrieval_policy),
       filter_work_id: rt.filter_work_id == null ? null : String(rt.filter_work_id),
       resolved_work_id: rt.resolved_work_id == null ? null : String(rt.resolved_work_id),
       qdrant_collection: rt.qdrant_collection == null ? "" : String(rt.qdrant_collection),

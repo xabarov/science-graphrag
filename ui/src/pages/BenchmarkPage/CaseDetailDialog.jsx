@@ -25,6 +25,18 @@ export default function CaseDetailDialog({ open, caseId, family = "layer1", onCl
     return JSON.stringify(detail.gold, null, 2);
   }, [detail]);
 
+  const graphExpectationsJson = useMemo(() => {
+    const ge = detail?.gold?.graph_expectations;
+    if (!ge) return "";
+    return JSON.stringify(ge, null, 2);
+  }, [detail]);
+
+  useEffect(() => {
+    if (detail && tabIdx === 2 && !graphExpectationsJson) {
+      setTabIdx(0);
+    }
+  }, [detail, graphExpectationsJson, tabIdx]);
+
   useEffect(() => {
     let cancelled = false;
     async function load() {
@@ -76,6 +88,7 @@ export default function CaseDetailDialog({ open, caseId, family = "layer1", onCl
             <Tabs value={tabIdx} onChange={(e, v) => setTabIdx(v)}>
               <Tab label="Text (article.md)" />
               <Tab label="Gold (gold.json)" />
+              {graphExpectationsJson ? <Tab label="graph_expectations" /> : null}
             </Tabs>
 
             {tabIdx === 0 && (
@@ -132,6 +145,32 @@ export default function CaseDetailDialog({ open, caseId, family = "layer1", onCl
                     </Box>
                   </AccordionDetails>
                 </Accordion>
+              </Box>
+            )}
+
+            {graphExpectationsJson && tabIdx === 2 && (
+              <Box sx={{ mt: 2 }}>
+                <Typography sx={{ color: "rgba(255,255,255,0.6)", mb: 1 }}>
+                  <code>graph_expectations</code> from gold (graph-v1 benchmark). Run:{" "}
+                  <code>science-graphrag-graph-benchmark tests/fixtures/benchmarks/layer1/&lt;case&gt;</code>
+                </Typography>
+                <Box
+                  component="pre"
+                  sx={{
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: 2,
+                    padding: 2,
+                    maxHeight: 520,
+                    overflow: "auto",
+                    background: "rgba(255,255,255,0.02)",
+                    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                    fontSize: "12px",
+                  }}
+                >
+                  {graphExpectationsJson}
+                </Box>
               </Box>
             )}
           </Box>

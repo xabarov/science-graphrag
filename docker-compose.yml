@@ -1,7 +1,10 @@
 # Local stack for Phase 1. Usage: docker compose up -d
 # Host ports chosen to avoid clashes with existing Postgres (5432) / Neo4j (7474, 7687) on the machine.
 #
-# API service uses Docker network hostnames (postgres, neo4j, qdrant). Host .env with localhost:* is for
+# `web` (nginx) publishes :8787 and proxies /v1, /health, etc. to `api`. Rebuild UI only: docker compose build web
+# Rebuild backend only: docker compose build api
+#
+# API uses Docker network hostnames (postgres, neo4j, qdrant). Host .env with localhost:* is for
 # CLI/benchmarks on the machine; override via compose `environment` below when running the API container.
 services:
   neo4j:
@@ -41,9 +44,14 @@ services:
       - phoenix_data:/mnt/data
 
   api:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    expose:
+      - "8787"
     ports:
-      - "8787:8787"
+      # Optional: hit FastAPI directly (bypasses nginx /ui). Main entry remains `web` :8787.
+      - "18787:8787"
     environment:
       SCIENCE_GRAPHRAG_DATABASE_URL: postgresql+psycopg://science:science@postgres:5432/science_graphrag
       SCIENCE_GRAPHRAG_NEO4J_URI: bolt://neo4j:7687
@@ -71,6 +79,30 @@ services:
       timeout: 10s
       retries: 3
       start_period: 25s
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    ports:
+      - "8787:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "-q",
+          "-O",
+          "-",
+          "http://127.0.0.1/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 volumes:
   neo4j_data:

@@ -64,7 +64,7 @@
 | **Merge / PR** | `pytest` без `-m integration` (unit + smoke), при необходимости один быстрый layer-1 кейс с выключенным LLM. |
 | **Nightly / manual** | `pytest -m integration` (нужны Neo4j + Qdrant), полный `science-graphrag-layer1-benchmark tests/fixtures/benchmarks/layer1 --suite`, при необходимости `science-graphrag-graph-benchmark … --suite` с живым OpenAlex. |
 
-CI (ручной/еженедельный прогон на GitHub Actions): [.github/workflows/integration-nightly.yml](../../.github/workflows/integration-nightly.yml) — сервисы **Postgres**, Neo4j и Qdrant в job, затем `pytest tests -m integration`, затем эвристический `science-graphrag-layer1-benchmark … --suite` и graph-бенчмарк на `yolov1` (без LLM).
+CI (ручной/еженедельный прогон на GitHub Actions): [.github/workflows/integration-nightly.yml](../../.github/workflows/integration-nightly.yml) — сервисы **Postgres**, Neo4j и Qdrant в job, затем `pytest tests -m integration`, затем эвристический `science-graphrag-layer1-benchmark … --suite` и graph-бенчмарки **`yolov1`** + **`retinanet_focal_realpdf`** (real-pdf lane, без LLM); опционально layer-2 `nightly_semantic` при наличии `MAIN_LLM_API_KEY`. Артефакты `eval/results/ci-*.json` и `benchmark-metrics-summary.json` прикладываются к workflow.
 
 Интеграционные тесты в `tests/integration/test_full_ingest_integration.py` сами пропускаются, если сервисы недоступны локально.
 

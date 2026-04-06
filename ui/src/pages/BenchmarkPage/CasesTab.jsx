@@ -69,11 +69,13 @@ export default function CasesTab() {
             const f = e.target.value;
             setFamily(f);
             if (f === "layer1" && tier === "nightly_semantic") setTier("merge_safe");
+            if (f === "graph" && tier === "nightly_semantic") setTier("merge_safe");
           }}
           sx={{ minWidth: 120 }}
         >
           <MenuItem value="layer1">layer1</MenuItem>
           <MenuItem value="layer2">layer2</MenuItem>
+          <MenuItem value="graph">graph</MenuItem>
         </Select>
         <Select
           size="small"
@@ -120,6 +122,9 @@ export default function CasesTab() {
               <TableCell>tier</TableCell>
               <TableCell>article</TableCell>
               <TableCell>{family === "layer2" ? "semantic_gold" : "gold.json"}</TableCell>
+              {family === "layer2" || family === "graph" ? null : (
+                <TableCell>graph_exp</TableCell>
+              )}
               <TableCell align="right">Действия</TableCell>
             </TableRow>
           </TableHead>
@@ -130,6 +135,9 @@ export default function CasesTab() {
                 <TableCell>{c.tier || "-"}</TableCell>
                 <TableCell>{c.has_article_md ? "yes" : "no"}</TableCell>
                 <TableCell>{family === "layer2" ? (c.has_semantic_gold ? "yes" : "no") : c.has_gold_json ? "yes" : "no"}</TableCell>
+                {family === "layer2" || family === "graph" ? null : (
+                  <TableCell>{c.has_graph_expectations ? "yes" : "no"}</TableCell>
+                )}
                 <TableCell align="right">
                   <CursorButton
                     onClick={() => {

@@ -54,7 +54,7 @@ GraphRAG-система для помощи исследователю при р
 
 ```bash
 cp .env.example .env   # при необходимости поправьте URL, mailto и SCIENCE_GRAPHRAG_VL_* для VL
-docker compose up -d   # Postgres :15432, Neo4j HTTP :17474 / Bolt :17687, Qdrant :16333 (см. docker-compose.yml)
+docker compose up -d   # Postgres :15432, Neo4j :17474/:17687, Qdrant :16333; UI+API :8787 (nginx→api), прямой API :18787
 python -m venv .venv && .venv/bin/pip install -e ".[dev]"
 .venv/bin/science-graphrag ingest path/to/file.pdf
 # или .txt с полным текстом статьи

@@ -52,8 +52,21 @@ def _tier_for_case_id(case_id: str, tiers: dict[str, list[str]]) -> str | None:
     return None
 
 
+def _gold_has_graph_expectations(fixture_dir: Path) -> bool:
+    """True if layer-1 gold.json defines graph_expectations (graph-v1 benchmark)."""
+
+    path = fixture_dir / "gold.json"
+    if not path.is_file():
+        return False
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, TypeError):
+        return False
+    return bool(data.get("graph_expectations"))
+
+
 class CaseListItem(BaseModel):
-    """One row in the benchmark cases list (layer-1 or layer-2)."""
+    """One row in the benchmark cases list (layer-1, layer-2, or graph-v1 catalog)."""
 
     case_id: str
     family: str = "layer1"
@@ -61,6 +74,7 @@ class CaseListItem(BaseModel):
     has_article_md: int
     has_gold_json: int
     has_semantic_gold: int = 0
+    has_graph_expectations: int = 0
 
 
 class CasesListResponse(BaseModel):
@@ -128,7 +142,7 @@ class RunDetailResponse(BaseModel):
 def get_benchmark_cases_list(  # pylint: disable=too-many-locals
     family: str = Query(
         default="layer1",
-        description="Fixture family: layer1 (article+gold.json) or layer2 (semantic_gold.json).",
+        description="layer1, layer2, or graph (layer1 cases that have graph_expectations in gold).",
     ),
     tier: str | None = Query(
         default=None,
@@ -145,6 +159,13 @@ def get_benchmark_cases_list(  # pylint: disable=too-many-locals
         tiers = _load_case_tiers(root)
         case_dirs = discover_layer2_case_dirs(root, tier=tier)
         fam_label = "layer2"
+    elif fam == "graph":
+        root = _fixtures_root_layer1()
+        tiers = _load_case_tiers(root)
+        case_dirs = [
+            p for p in discover_layer1_case_dirs(root, tier=tier) if _gold_has_graph_expectations(p)
+        ]
+        fam_label = "graph"
     else:
         root = _fixtures_root_layer1()
         tiers = _load_case_tiers(root)
@@ -179,9 +200,23 @@ def get_benchmark_cases_list(  # pylint: disable=too-many-locals
                     has_article_md=int(article_ok),
                     has_gold_json=0,
                     has_semantic_gold=int(sg),
+                    has_graph_expectations=0,
+                ),
+            )
+        elif fam_label == "graph":
+            items.append(
+                CaseListItem(
+                    case_id=cid,
+                    family="graph",
+                    tier=_tier_for_case_id(cid, tiers),
+                    has_article_md=int((d / "article.md").is_file()),
+                    has_gold_json=int((d / "gold.json").is_file()),
+                    has_semantic_gold=0,
+                    has_graph_expectations=1,
                 ),
             )
         else:
+            gexp = _gold_has_graph_expectations(d)
             items.append(
                 CaseListItem(
                     case_id=cid,
@@ -190,6 +225,7 @@ def get_benchmark_cases_list(  # pylint: disable=too-many-locals
                     has_article_md=int((d / "article.md").is_file()),
                     has_gold_json=int((d / "gold.json").is_file()),
                     has_semantic_gold=0,
+                    has_graph_expectations=int(gexp),
                 ),
             )
 
@@ -199,11 +235,11 @@ def get_benchmark_cases_list(  # pylint: disable=too-many-locals
 @router.get("/benchmark/cases/{case_id}", response_model=CaseDetailResponse)
 def get_benchmark_case_detail(
     case_id: str,
-    family: str = Query(default="layer1", description='"layer1" or "layer2".'),
+    family: str = Query(default="layer1", description='"layer1", "layer2", or "graph".'),
 ) -> CaseDetailResponse:
     """Return fixture contents: layer-1 article+gold, or layer-2 article + semantic_gold as gold."""
-    fam = (family or "layer1").strip().lower()
-    if fam == "layer2":
+    raw_fam = (family or "layer1").strip().lower()
+    if raw_fam == "layer2":
         root = _fixtures_root_layer2()
         tiers = _load_case_tiers(root)
         fixture_dir = root / case_id
@@ -238,6 +274,8 @@ def get_benchmark_case_detail(
 
     article_md = article_path.read_text(encoding="utf-8")
     gold = json.loads(gold_path.read_text(encoding="utf-8"))
+    if raw_fam == "graph" and not gold.get("graph_expectations"):
+        raise HTTPException(status_code=404, detail="case_has_no_graph_expectations")
     return CaseDetailResponse(
         case_id=case_id,
         tier=_tier_for_case_id(case_id, tiers),
@@ -281,6 +319,11 @@ def create_benchmark_run(body: RunCreateRequest) -> RunCreateResponse:
     """Create and immediately start a benchmark run (layer-1 or layer-2)."""
     case_ids = _resolve_case_ids(body)
     fam = (body.family or "layer1").strip().lower()
+    if fam == "graph":
+        raise HTTPException(
+            status_code=400,
+            detail="graph_benchmark_use_cli",
+        )
     if fam not in ("layer1", "layer2"):
         raise HTTPException(status_code=400, detail="invalid_family")
     run_id = task_store.create_run(

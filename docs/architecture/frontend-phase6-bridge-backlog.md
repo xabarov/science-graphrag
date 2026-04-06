@@ -56,8 +56,8 @@ Definition of done:
 - [x] Страница `/benchmark` (`ui/src/pages/BenchmarkPage/`), пункт навигации в shell.
 - [x] Вкладки: кейсы (фильтр по tier / поиск), запуск (выбор кейсов), история прогонов, диалоги деталей.
 - [x] Клиент `ui/src/services/benchmarkApi.js` к `/v1/benchmark/*`.
-- [ ] Расширение до **layer-2 / graph-v1** в том же UI (или отдельные подвкладки) — по мере стабилизации API-обёрток поверх `science-graphrag-layer2-benchmark` / `science-graphrag-graph-benchmark`.
-- [ ] **Semantic / graph diff:** для layer-2 — сравнение ожидаемых и фактических **methods/datasets** (и связанных полей) в том же UX-паттерне, что layer-1 `ComparisonTable`; для graph-v1 — наглядное сопоставление с **`graph_expectations`** из `gold.json` (счётчики рёбер, dedup, `RELATED_VERSION_OF` и т.д.). При необходимости — **side-by-side** нормализованный JSON выхода раннера и эталона.
+- [x] **Layer-2 + graph catalog в том же UI:** layer-2 прогоны через API; **graph-v1** — семейство `family=graph` в списке кейсов, колонка/флаг `graph_expectations`, вкладка ожиданий в деталях кейса; запуск graph-прогона **только CLI/CI** (`POST` → `graph_benchmark_use_cli`).
+- [x] **Semantic / graph diff (MVP):** layer-2 — нормализованное сравнение methods/datasets в `SemanticComparisonTable`; graph — просмотр `graph_expectations` в JSON (полный side-by-side выход раннера vs gold в UI — backlog при необходимости).
 - [ ] Согласовать с продуктовым UX: кто целевой пользователь страницы (только внутренняя dev-сборка vs пилот).
 - [x] Smoke на `GET /v1/benchmark/cases` в `tests/test_api_smoke.py` (`test_benchmark_cases_list_smoke`).
 
@@ -96,7 +96,7 @@ Definition of done:
 - [x] `POST /v1/benchmark/runs` — постановка прогона (выбранные `case_ids` или ярлыки вроде `merge_safe`).
 - [x] `GET /v1/benchmark/runs`, `GET /v1/benchmark/runs/{run_id}`, `DELETE /v1/benchmark/runs/{run_id}`.
 - [x] Явно задокументировать ограничения: **in-memory** store прогонов (рестарт API сбрасывает историю), только **layer-1** runner в task pool — [specs/frontend-ui-api-contracts-v1.md](../specs/frontend-ui-api-contracts-v1.md) §6.
-- [ ] Backlog: durable runs (файл/БД), тот же паттерн для layer-2/graph — см. [eval/README.md](../../eval/README.md).
+- [ ] Backlog: durable runs (файл/БД); graph runner остаётся CLI-first — см. [eval/README.md](../../eval/README.md).
 
 ## Sequencing
 

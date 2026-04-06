@@ -1,0 +1,13 @@
+# Frontend edge: Vite production build + nginx reverse proxy to the API service.
+# Rebuild only this image when UI changes: docker compose build web
+FROM node:20-bookworm-slim AS ui_build
+WORKDIR /build/ui
+COPY ui/package.json ui/package-lock.json ./
+RUN npm ci
+COPY ui/ ./
+RUN npm run build
+
+FROM nginx:1.27-alpine
+COPY docker/nginx-web.conf /etc/nginx/conf.d/default.conf
+COPY --from=ui_build /build/science_graphrag/api/static/ui /usr/share/nginx/html/ui
+EXPOSE 80

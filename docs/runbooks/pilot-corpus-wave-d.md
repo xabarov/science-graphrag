@@ -57,3 +57,5 @@ Record dates, corpus path (redacted if needed), and decision in [docs/pilot/wave
 
 **KPI latency (optional):** with API on `8787`, run `BASE=http://127.0.0.1:8787 N=40 ./scripts/pilot_measure_latency.sh` and paste JSON summary into the exit record.
 
+**Citation spot-check (N=5):** `BASE=http://127.0.0.1:8787 ./scripts/pilot_spot_check.sh` — fixed `POST /v1/query` probes for `work_id` + provenance fields; see [wave-d-exit-record.md](../pilot/wave-d-exit-record.md).
+

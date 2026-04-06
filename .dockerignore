@@ -7,6 +7,8 @@ __pycache__
 .agents
 .claude
 ui/node_modules
+# Built UI is shipped in the `web` image only; omit hashed bundles from the API build context.
+science_graphrag/api/static/ui
 .pytest_cache
 .mypy_cache
 .ruff_cache

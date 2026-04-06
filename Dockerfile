@@ -1,4 +1,5 @@
-# API and CLI image (modular monolith). PDF -> image path needs poppler.
+# API and CLI image (Python only). Static React UI is served by the compose `web` service.
+# Rebuild only this image when backend changes: docker compose build api
 FROM python:3.11-slim-bookworm
 
 RUN apt-get update \

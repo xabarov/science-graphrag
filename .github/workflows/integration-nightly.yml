@@ -99,3 +99,13 @@ jobs:
 
       - name: Aggregate benchmark metrics summary
         run: python scripts/aggregate_benchmark_metrics.py
+
+      - name: Upload benchmark JSON artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-ci-json
+          path: |
+            eval/results/ci-*.json
+            eval/results/benchmark-metrics-summary.json
+          if-no-files-found: ignore

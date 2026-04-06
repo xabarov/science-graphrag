@@ -146,6 +146,7 @@ def test_query_endpoint_smoke(monkeypatch: Any) -> None:
                 "citations_returned": 1,
                 "top_hit_scores": [0.1],
                 "query_preview": "test",
+                "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
                 "answer_synthesis": {
                     "mode": "deterministic_snippets",
                     "second_stage_llm": False,
@@ -166,6 +167,7 @@ def test_query_endpoint_smoke(monkeypatch: Any) -> None:
     assert payload["retrieval_trace"]["qdrant_collection"] == "chunks"
     assert payload["retrieval_trace"]["citations_returned"] == 1
     assert payload["retrieval_trace"]["answer_synthesis"]["second_stage_llm"] is False
+    assert "retrieval_policy" in payload["retrieval_trace"]
 
 
 def test_benchmark_cases_list_smoke() -> None:
@@ -191,6 +193,28 @@ def test_benchmark_cases_layer2_list_smoke() -> None:
     assert payload["total"] >= 1
     assert payload["items"][0]["family"] == "layer2"
     assert payload["items"][0]["has_semantic_gold"] in (0, 1)
+
+
+def test_benchmark_cases_graph_family_list_smoke() -> None:
+    """Graph-v1 catalog: layer-1 fixtures that define graph_expectations."""
+
+    client = _client()
+    res = client.get("/v1/benchmark/cases?family=graph&limit=50")
+    assert res.status_code == 200
+    payload = res.json()
+    assert payload["total"] >= 1
+    assert payload["items"][0]["family"] == "graph"
+    assert payload["items"][0]["has_graph_expectations"] == 1
+
+
+def test_benchmark_post_run_rejects_graph_family() -> None:
+    client = _client()
+    res = client.post(
+        "/v1/benchmark/runs",
+        json={"case_ids": ["yolov1"], "label": "x", "family": "graph"},
+    )
+    assert res.status_code == 400
+    assert res.json().get("detail") == "graph_benchmark_use_cli"
 
 
 def test_benchmark_case_layer2_detail_smoke() -> None:

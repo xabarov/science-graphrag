@@ -12,7 +12,8 @@
 - **Postgres**: document metadata and ingestion runs (`SCIENCE_GRAPHRAG_DATABASE_URL`).
 - **Neo4j**: scholarly backbone + ontology v1 `Method` / `Dataset` edges.
 - **Qdrant**: section-aware chunks and embeddings for retrieval.
-- **API** (optional): `science-graphrag-api` serves FastAPI on port 8787 (`/health`, `/v1/query`, static UI at `/`).
+- **API** (`api` service): FastAPI on port **8787** inside the compose network (`/health`, `/v1/*`). Published on the host as **18787** for optional direct access (bypasses nginx).
+- **Web** (`web` service): nginx on host **8787** — serves the Vite UI under `/ui` and proxies `/v1`, `/health`, etc. to `api`. Rebuild only the UI after frontend changes: `docker compose build web` (does not reinstall Python deps). Rebuild only the backend: `docker compose build api`.
 
 ## Configuration
 
@@ -25,7 +26,7 @@
 - Bring up dependencies with project `docker-compose.yml` (Neo4j bolt port, Postgres, Qdrant as configured locally). Use **`docker compose` without `sudo`** (Linux: user in `docker` group; or Docker Desktop).
 - Install package: `pip install -e ".[dev]"` (optional embeddings: `pip install -e ".[dev,embed]"`).
 - Initialize SQL schema via first ingest or app that calls `init_db`.
-- Rebuild after backend changes when validating e2e: e.g. `docker compose up -d --build` (see roadmap **Execution policy**).
+- Rebuild after backend changes when validating e2e: e.g. `docker compose up -d --build api web` or `docker compose build api && docker compose up -d` (see roadmap **Execution policy**). After **only** `ui/` changes: `docker compose build web && docker compose up -d web`.
 
 ## Benchmarks and decision gate
 

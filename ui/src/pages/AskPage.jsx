@@ -1,13 +1,19 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 import Alert from "@mui/material/Alert";
 import Chip from "@mui/material/Chip";
+import Autocomplete from "@mui/material/Autocomplete";
 
 import { CursorPrimaryButton } from "../components/common/index.js";
-import { buildQueryBody, normalizeQueryResponse, postQuery } from "../services/researchApi.js";
+import {
+  buildQueryBody,
+  getWorks,
+  normalizeQueryResponse,
+  postQuery,
+} from "../services/researchApi.js";
 
 function FlagChips({ label, items }) {
   if (!items || items.length === 0) return null;
@@ -26,10 +32,25 @@ function FlagChips({ label, items }) {
 export default function AskPage() {
   const [query, setQuery] = useState("object detection benchmarks");
   const [workId, setWorkId] = useState("");
+  const [workOptions, setWorkOptions] = useState([]);
   const [topK, setTopK] = useState("5");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [normalized, setNormalized] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getWorks({ limit: 80, offset: 0 })
+      .then((res) => {
+        if (!cancelled) setWorkOptions(res.data?.items || []);
+      })
+      .catch(() => {
+        if (!cancelled) setWorkOptions([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const bodyPreview = useMemo(() => buildQueryBody(query, workId, topK), [query, workId, topK]);
 
@@ -72,16 +93,30 @@ export default function AskPage() {
             "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)" },
           }}
         />
-        <TextField
-          label="work_id (optional)"
-          value={workId}
-          onChange={(ev) => setWorkId(ev.target.value)}
-          fullWidth
-          size="small"
-          sx={{
-            "& .MuiInputBase-input": { fontSize: "0.8125rem" },
-            "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)" },
+        <Autocomplete
+          freeSolo
+          options={workOptions}
+          getOptionLabel={(opt) =>
+            typeof opt === "string" ? opt : `${(opt.title || "").slice(0, 80) || opt.work_id} (${opt.work_id})`
+          }
+          inputValue={workId}
+          onInputChange={(_e, v) => setWorkId(v)}
+          onChange={(_e, opt) => {
+            if (opt && typeof opt === "object" && opt.work_id) {
+              setWorkId(String(opt.work_id));
+            }
           }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="work_id (optional, pick from corpus)"
+              size="small"
+              sx={{
+                "& .MuiInputBase-input": { fontSize: "0.8125rem" },
+                "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)" },
+              }}
+            />
+          )}
         />
         <TextField
           label="top_k"
@@ -178,6 +213,7 @@ export default function AskPage() {
                 top_k_requested: normalized.retrieval_trace.top_k_requested,
                 citations_returned: normalized.retrieval_trace.citations_returned,
                 hit_count: normalized.retrieval_trace.hit_count,
+                retrieval_policy: normalized.retrieval_trace.retrieval_policy,
                 filter_work_id: normalized.retrieval_trace.filter_work_id,
                 resolved_work_id: normalized.retrieval_trace.resolved_work_id,
                 embedding: normalized.retrieval_trace.embedding,
