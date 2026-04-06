@@ -14,6 +14,8 @@
    - `science-graphrag-layer2-benchmark tests/fixtures/benchmarks/layer2 --suite --tier nightly_semantic --json-out eval/results/current-llm-layer2-nightly-semantic-suite.json`
 3. Обновить reference при необходимости (yolov1): см. [benchmark-stabilization-baseline.md](benchmark-stabilization-baseline.md).
 4. Сводка: `.venv/bin/python scripts/aggregate_benchmark_metrics.py` → `eval/results/benchmark-metrics-summary.md`.
+5. Snapshot (2026-03-31): для остаточных layer-1 fail выполнены retest-кейсы `centernet_realpdf`, `deformable_detr_realpdf`, `fcos_realpdf`, `selective_search_realpdf` — все `passed=True` (см. supplementary в `benchmark-metrics-summary.md`).
+6. Snapshot (2026-03-31): authoritative suite rerun (`layer1 nightly_heavy` + `layer2 nightly_semantic`) даёт `decision=GO`, `layer1 failed=0`, `layer2 failed=0`.
 
 **Exit:** `decision` в summary — `GO` или осознанный `CONDITIONAL-GO` с классифицированными blockers.
 
@@ -23,7 +25,7 @@
 2. Разделить остаточные fail: gold/alias vs runtime (см. [benchmark-stabilization-triage.md](benchmark-stabilization-triage.md)).
 3. Зафиксировать дельты `layer1_prompt_fingerprint` / `semantic_prompt_fingerprint` в `run_metadata`.
 4. Snapshot (2026-03-31): single-case retest `yolov1_semantic` после `nano_retry` — `passed=True` (`eval/results/retest-yolov1-semantic-after-nano-retry.json`).
-5. Snapshot (2026-03-31): suite `nightly_semantic` перепрогнан — `layer2 nightly failed: 0` в `benchmark-metrics-summary.md`; focus смещается на residual issues в layer-1 nightly.
+5. Snapshot (2026-03-31): suite `nightly_semantic` перепрогнан — `layer2 nightly failed: 0`; после полного rerun Wave A получен общий `decision=GO` (см. `benchmark-metrics-summary.md`).
 
 **Exit:** повторяемый контракт semantic-stage без необъяснимых пустых ответов на эталонных кейсах.
 

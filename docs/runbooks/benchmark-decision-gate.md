@@ -53,7 +53,7 @@
 Актуальные цифры всегда в [`benchmark-metrics-summary.md`](../../eval/results/benchmark-metrics-summary.md). На момент введения runbook типичный паттерн был:
 
 - **Reference**: все три кейса `passed`.
-- **Layer-1 nightly**: часть fail из-за **gold** (`abstract_prefix` / references count); дополнительно считать `references_llm_failed_events` (runtime флейки references LLM).
+- **Layer-1 nightly**: после синхронизации layer-1 gold и authoritative rerun suite — `failed_count: 0`; при этом `references_llm_failed_events` может оставаться > 0 за счёт fallback на heuristic.
 - **Layer-2 nightly**: после `nano_retry` suite `nightly_semantic` зелёный (`failed_count: 0`); single-case retest `yolov1_semantic` также `passed=True`.
 
 Single-case retest после правок gold (если лежат в `eval/results/retest-*.json`) агрегатор перечисляет отдельно — это подтверждение, что suite нужно **перепрогнать** после коммита фикстур.

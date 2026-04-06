@@ -60,7 +60,7 @@
       "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
       "extraction_llm_base_url": "https://openrouter.ai/api/v1",
       "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
-      "semantic_prompt_fingerprint": "sha256-20:9ef7564010d2d895c2ae",
+      "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
       "semantic_extraction_enabled": true
     },
     "summary": {
@@ -97,47 +97,10 @@
         "yolov3_realpdf",
         "yolox_realpdf"
       ],
-      "all_passed": false
+      "all_passed": true
     },
-    "failed_count": 4,
-    "failed_cases": [
-      {
-        "case_id": "centernet_realpdf",
-        "checks": {
-          "title_match_required": true,
-          "abstract_prefix_required": false,
-          "reference_count_ok_required": true
-        },
-        "classification": "benchmark_gold_abstract_prefix"
-      },
-      {
-        "case_id": "deformable_detr_realpdf",
-        "checks": {
-          "title_match_required": true,
-          "abstract_prefix_required": true,
-          "reference_count_ok_required": false
-        },
-        "classification": "benchmark_gold_references"
-      },
-      {
-        "case_id": "fcos_realpdf",
-        "checks": {
-          "title_match_required": true,
-          "abstract_prefix_required": false,
-          "reference_count_ok_required": true
-        },
-        "classification": "benchmark_gold_abstract_prefix"
-      },
-      {
-        "case_id": "selective_search_realpdf",
-        "checks": {
-          "title_match_required": true,
-          "abstract_prefix_required": false,
-          "reference_count_ok_required": true
-        },
-        "classification": "benchmark_gold_abstract_prefix"
-      }
-    ],
+    "failed_count": 0,
+    "failed_cases": [],
     "source_histogram": {
       "metadata_source": {
         "llm": 30
@@ -146,15 +109,12 @@
         "llm": 30
       },
       "references_source": {
-        "heuristic": 14,
-        "llm": 16
+        "heuristic": 13,
+        "llm": 17
       }
     },
     "references_llm_failed_events": 4,
-    "failure_class_histogram": {
-      "benchmark_gold_abstract_prefix": 3,
-      "benchmark_gold_references": 1
-    }
+    "failure_class_histogram": {}
   },
   "layer2_nightly": {
     "artifact": "eval/results/current-llm-layer2-nightly-semantic-suite.json",
@@ -228,16 +188,12 @@
         "yolov2_realpdf",
         "yolox_realpdf"
       ],
-      "current_failed": [
-        "centernet_realpdf",
-        "deformable_detr_realpdf",
-        "fcos_realpdf",
-        "selective_search_realpdf"
-      ],
+      "current_failed": [],
       "resolved": [
         "atss_realpdf",
         "cascade_rcnn_realpdf",
         "cornernet_realpdf",
+        "deformable_detr_realpdf",
         "detrs_realpdf",
         "dino_realpdf",
         "dn_detr_realpdf",
@@ -253,11 +209,7 @@
         "yolov2_realpdf",
         "yolox_realpdf"
       ],
-      "new_regressions": [
-        "centernet_realpdf",
-        "fcos_realpdf",
-        "selective_search_realpdf"
-      ]
+      "new_regressions": []
     },
     "layer2_nightly_vs_baseline": {
       "baseline_failed": [
@@ -289,6 +241,11 @@
       "passed": true
     },
     {
+      "artifact": "eval/results/retest-deformable-detr-after-gold-fix.json",
+      "case_id": "deformable_detr_realpdf",
+      "passed": true
+    },
+    {
       "artifact": "eval/results/retest-fcos-after-gold-fix.json",
       "case_id": "fcos_realpdf",
       "passed": true
@@ -305,11 +262,11 @@
     }
   ],
   "decision_gate": {
-    "decision": "CONDITIONAL-GO",
-    "reason": "reference_ok_nightly_has_residual_failures_document_in_gate_report",
+    "decision": "GO",
+    "reason": "all_nightly_passed",
     "criteria": {
       "reference_all_passed": true,
-      "layer1_nightly_failed_count": 4,
+      "layer1_nightly_failed_count": 0,
       "layer2_nightly_failed_count": 0
     }
   }

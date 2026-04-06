@@ -402,6 +402,8 @@ flowchart TD
 
 | Версия | Дата | Изменения |
 |--------|------|-----------|
+| 1.9 | 2026-03-31 | Wave A закрыта до `GO`: authoritative rerun `layer1 nightly_heavy` + `layer2 nightly_semantic` и пересборка агрегатора дали `decision=GO` (`layer1 failed=0`, `layer2 failed=0`). Обновлены runbooks gate/waves. |
+| 1.8 | 2026-03-31 | Wave A: синхронизированы layer-1 gold `abstract_prefix` для realpdf-кейсов; выполнены targeted retests (`centernet`, `deformable_detr`, `fcos`, `selective_search`) — все `passed=True`; агрегатор метрик расширен supplementary-учётом `deformable_detr`. |
 | 1.7 | 2026-03-31 | Wave B: `nightly_semantic` suite перепрогнан после `nano_retry` — `layer2 nightly failed: 0`; обновлены decision-gate и wave runbooks (single-case + suite snapshots). |
 | 1.6 | 2026-03-31 | Wave B: в `semantic_extraction` добавлен `nano_retry` (после compact/micro) и обновлён `semantic_prompt_fingerprint`; цель — снизить `llm_empty_result` на `nightly_semantic`. |
 | 1.5 | 2026-03-31 | Wave C: подтверждён "живой" e2e-контур — `pytest tests -m integration` (`3 passed`) на поднятом compose; roadmap/runbooks/spec синхронизированы с этим статусом. |

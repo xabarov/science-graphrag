@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from science_graphrag.api import works as works_api
+from science_graphrag.api.benchmark import router as benchmark_router
 from science_graphrag.api.retrieval import GroundedAnswer, answer_query
 from science_graphrag.config import get_settings
 
@@ -18,6 +19,14 @@ app = FastAPI(title="science-graphrag", version="0.1.0")
 _STATIC_DIR = Path(__file__).resolve().parent / "static"
 if _STATIC_DIR.is_dir():
     app.mount("/ui/assets", StaticFiles(directory=_STATIC_DIR), name="ui_assets")
+    # React/Vite build output goes to `science_graphrag/api/static/ui/`.
+    # It is served under `/ui` (index.html on `/ui/`).
+    _UI_DIR = _STATIC_DIR / "ui"
+    if _UI_DIR.is_dir():
+        app.mount("/ui", StaticFiles(directory=_UI_DIR, html=True), name="ui")
+
+# Benchmark endpoints (UI-driven runs + fixtures).
+app.include_router(benchmark_router, prefix="/v1")
 
 
 class QueryRequest(BaseModel):

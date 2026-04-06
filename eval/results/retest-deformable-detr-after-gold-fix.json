@@ -1,0 +1,520 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+    "semantic_extraction_enabled": true
+  },
+  "case": {
+    "case_id": "deformable_detr_realpdf",
+    "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/deformable_detr_realpdf",
+    "diagnostics": {
+      "document_id": "deformable_detr_realpdf",
+      "source_name": "deformable_detr_realpdf",
+      "markdown_source": "benchmark",
+      "metadata_source": "llm",
+      "authorships_source": "llm",
+      "references_source": "llm",
+      "extraction_llm_enabled": true,
+      "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+      "fallback_reasons": []
+    },
+    "metrics": {
+      "metadata": {
+        "title_exact_normalized": true,
+        "year_exact": null,
+        "abstract_prefix_ok": true,
+        "doi_match_expected": null,
+        "arxiv_match_expected": null,
+        "work_type_match": null
+      },
+      "authorships": {
+        "names_precision": 0.0,
+        "names_recall": 0.0,
+        "names_f1": 0.0,
+        "names_tp_fp_fn": {
+          "tp": 0,
+          "fp": 6,
+          "fn": 0
+        },
+        "order_accuracy": 0.0,
+        "order_hits": 0,
+        "affiliation_jaccard_macro_on_matched_authors": 0.0,
+        "affiliations_precision": 0.0,
+        "affiliations_recall": 0.0,
+        "affiliations_f1": 0.0,
+        "pred_count": 6,
+        "gold_count": 0
+      },
+      "references": {
+        "count": 44,
+        "expected_count": 44,
+        "min_count": 35,
+        "count_ok": true,
+        "count_delta": 0,
+        "sample_arxiv_precision": 0.3333333333333333,
+        "sample_arxiv_recall": 1.0,
+        "sample_arxiv_f1": 0.5,
+        "sample_arxiv_tp_fp_fn": {
+          "tp": 4,
+          "fp": 8,
+          "fn": 0
+        },
+        "predicted_arxiv_ids": [
+          "1904.10509",
+          "1911.02972",
+          "1912.12180",
+          "2003.05997",
+          "2003.07853",
+          "2004.05150",
+          "2004.08483",
+          "2006.03555",
+          "2006.04768",
+          "2006.16236",
+          "2007.14062",
+          "2009.06732"
+        ],
+        "sample_doi_precision": 1.0,
+        "sample_doi_recall": 1.0,
+        "sample_doi_f1": 1.0
+      },
+      "contract": {
+        "checks": {
+          "title_match_required": true,
+          "abstract_prefix_required": true,
+          "reference_count_ok_required": true
+        },
+        "passed": true
+      }
+    },
+    "predicted": {
+      "work_metadata": {
+        "title": "DEFORMABLE DETR: DEFORMABLE TRANSFORMERS FOR END-TO-END OBJECT DETECTION",
+        "normalized_title": "DEFORMABLE DETR: DEFORMABLE TRANSFORMERS FOR END-TO-END OBJECT DETECTION",
+        "abstract": "DETR has been recently proposed to eliminate the need for many hand-designed components in object detection while demonstrating good performance. However, it suffers from slow convergence and limited feature spatial resolution, due to the limitation of Transformer attention modules in processing image feature maps. To mitigate these issues, we proposed Deformable DETR, whose attention modules only attend to a small set of key sampling points around a reference. Deformable DETR can achieve better performance than DETR (especially on small objects) with 10× less training epochs. Extensive experiments on the COCO benchmark demonstrate the effectiveness of our approach. Code is released at https://",
+        "publication_year": 2021,
+        "doi": null,
+        "arxiv_id": "2010.04159",
+        "language": "en",
+        "venue_name": "ICLR",
+        "work_type": "conference_paper",
+        "openalex_id": null,
+        "fingerprint": "9e6bfb6f48305c39",
+        "ingestion_confidence": 0.72,
+        "source_metadata": {
+          "extraction_stage": "llm"
+        }
+      },
+      "authorships": [
+        {
+          "author_position": 1,
+          "author_raw_name": "Xizhou Zhu",
+          "raw_affiliations": [
+            "SenseTime Research"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 2,
+          "author_raw_name": "Weijie Su",
+          "raw_affiliations": [
+            "University of Science and Technology of China"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 3,
+          "author_raw_name": "Lewei Lu",
+          "raw_affiliations": [
+            "SenseTime Research"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 4,
+          "author_raw_name": "Bin Li",
+          "raw_affiliations": [
+            "University of Science and Technology of China"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 5,
+          "author_raw_name": "Xiaogang Wang",
+          "raw_affiliations": [
+            "SenseTime Research",
+            "The Chinese University of Hong Kong"
+          ],
+          "is_corresponding": true,
+          "email": null
+        },
+        {
+          "author_position": 6,
+          "author_raw_name": "Jifeng Dai",
+          "raw_affiliations": [
+            "SenseTime Research"
+          ],
+          "is_corresponding": true,
+          "email": null
+        }
+      ],
+      "references": [
+        {
+          "raw_reference": "Joshua Ainslie, Santiago Ontanon, Chris Alberti, Philip Pham, Anirudh Ravula, and Sumit Sanghai. Etc: Encoding long and structured data in transformers. arXiv preprint arXiv:2004.08483, 2020.",
+          "doi": null,
+          "arxiv_id": "2004.08483",
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Iz Beltagy, Matthew E Peters, and Arman Cohan. Longformer: The long-document transformer. arXiv preprint arXiv:2004.05150, 2020.",
+          "doi": null,
+          "arxiv_id": "2004.05150",
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Nicolas Carion, Francisco Massa, Gabriel Synnaeve, Nicolas Usunier, Alexander Kirillov, and Sergey Zagoruyko. End-to-end object detection with transformers. In ECCV, 2020.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Rewon Child, Scott Gray, Alec Radford, and Ilya Sutskever. Generating long sequences with sparse transformers. arXiv preprint arXiv:1904.10509, 2019.",
+          "doi": null,
+          "arxiv_id": "1904.10509",
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "Krzysztof Choromanski, Valerii Likhosherstov, David Dohan, Xingyou Song, Jared Davis, Tamas Sarlos, David Belanger, Lucy Colwell, and Adrian Weller. Masked language modeling for proteins via linearly scalable long-context transformers. arXiv preprint arXiv:2006.03555, 2020.",
+          "doi": null,
+          "arxiv_id": "2006.03555",
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Jifeng Dai, Haozhi Qi, Yuwen Xiong, Yi Li, Guodong Zhang, Han Hu, and Yichen Wei. Deformable convolutional networks. In ICCV, 2017.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "Jia Deng, Wei Dong, Richard Socher, Li-Jia Li, Kai Li, and Li Fei-Fei. Imagenet: A large-scale hierarchical image database. In CVPR, 2009.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2009
+        },
+        {
+          "raw_reference": "Golnaz Ghiasi, Tsung-Yi Lin, and Quoc V Le. Nas-fpn: Learning scalable feature pyramid architecture for object detection. In CVPR, 2019.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. Deep residual learning for image recognition. In CVPR, 2016.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2016
+        },
+        {
+          "raw_reference": "Jonathan Ho, Nal Kalchbrenner, Dirk Weissenborn, and Tim Salimans. Axial attention in multidimensional transformers. arXiv preprint arXiv:1912.12180, 2019.",
+          "doi": null,
+          "arxiv_id": "1912.12180",
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "Han Hu, Zheng Zhang, Zhenda Xie, and Stephen Lin. Local relation networks for image recognition. In ICCV, 2019.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "Zilong Huang, Xinggang Wang, Lichao Huang, Chang Huang, Yunchao Wei, and Wenyu Liu. Ccnet: Criss-cross attention for semantic segmentation. In ICCV, 2019.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "Angelos Katharopoulos, Apoorv Vyas, Nikolaos Pappas, and François Fleuret. Transformers are rnns: Fast autoregressive transformers with linear attention. arXiv preprint arXiv:2006.16236 , 2020.",
+          "doi": null,
+          "arxiv_id": "2006.16236",
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Diederik P Kingma and Jimmy Ba. Adam: A method for stochastic optimization. In ICLR, 2015.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "Nikita Kitaev, Łukasz Kaiser, and Anselm Levskaya. Reformer: The efficient transformer. InICLR, 2020.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Tao Kong, Fuchun Sun, Chuanqi Tan, Huaping Liu, and Wenbing Huang. Deep feature pyramid reconfiguration for object detection. In ECCV, 2018.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "Tsung-Yi Lin, Michael Maire, Serge Belongie, James Hays, Pietro Perona, Deva Ramanan, Piotr Dollár, and C Lawrence Zitnick. Microsoft coco: Common objects in context. In ECCV, 2014.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2014
+        },
+        {
+          "raw_reference": "Tsung-Yi Lin, Piotr Dollár, Ross Girshick, Kaiming He, Bharath Hariharan, and Serge Belongie. Feature pyramid networks for object detection. In CVPR, 2017a.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "Tsung-Yi Lin, Priya Goyal, Ross Girshick, Kaiming He, and Piotr Dollár. Focal loss for dense object detection. In ICCV, 2017b.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "Li Liu, Wanli Ouyang, Xiaogang Wang, Paul Fieguth, Jie Chen, Xinwang Liu, and Matti Pietikäinen. Deep learning for generic object detection: A survey. IJCV, 2020.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Peter J Liu, Mohammad Saleh, Etienne Pot, Ben Goodrich, Ryan Sepassi, Lukasz Kaiser, and Noam Shazeer. Generating wikipedia by summarizing long sequences. In ICLR, 2018a.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "Shu Liu, Lu Qi, Haifang Qin, Jianping Shi, and Jiaya Jia. Path aggregation network for instance segmentation. In CVPR, 2018b.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "Niki Parmar, Ashish Vaswani, Jakob Uszkoreit, Łukasz Kaiser, Noam Shazeer, Alexander Ku, and Dustin Tran. Image transformer. In ICML, 2018.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2018
+        },
+        {
+          "raw_reference": "Jiezhong Qiu, Hao Ma, Omer Levy, Scott Wen-tau Yih, Sinong Wang, and Jie Tang. Blockwise self-attention for long document understanding. arXiv preprint arXiv:1911.02972, 2019.",
+          "doi": null,
+          "arxiv_id": "1911.02972",
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "Prajit Ramachandran, Niki Parmar, Ashish Vaswani, Irwan Bello, Anselm Levskaya, and Jonathon Shlens. Stand-alone self-attention in vision models. In NeurIPS, 2019.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "Shaoqing Ren, Kaiming He, Ross Girshick, and Jian Sun. Faster r-cnn: Towards real-time object detection with region proposal networks. In NeurIPS, 2015.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "Aurko Roy, Mohammad Saffar, Ashish Vaswani, and David Grangier. Efficient content-based sparse attention with routing transformers. arXiv preprint arXiv:2003.05997, 2020.",
+          "doi": null,
+          "arxiv_id": "2003.05997",
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Guanglu Song, Yu Liu, and Xiaogang Wang. Revisiting the sibling head in object detector. InCVPR, 2020.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Mingxing Tan, Ruoming Pang, and Quoc V Le. Efficientdet: Scalable and efficient object detection. In CVPR, 2020.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Yi Tay, Dara Bahri, Liu Yang, Donald Metzler, and Da-Cheng Juan. Sparse sinkhorn attention. In ICML, 2020a.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Yi Tay, Mostafa Dehghani, Dara Bahri, and Donald Metzler. Efficient transformers: A survey.arXiv preprint arXiv:2009.06732, 2020b.",
+          "doi": null,
+          "arxiv_id": "2009.06732",
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Zachary Teed and Jia Deng. Raft: Recurrent all-pairs field transforms for optical flow. In ECCV, 2020.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Zhi Tian, Chunhua Shen, Hao Chen, and Tong He. Fcos: Fully convolutional one-stage object detection. In ICCV, 2019.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Łukasz Kaiser, and Illia Polosukhin. Attention is all you need. In NeurIPS, 2017.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "Huiyu Wang, Yukun Zhu, Bradley Green, Hartwig Adam, Alan Yuille, and Liang-Chieh Chen. Axial-deeplab: Stand-alone axial-attention for panoptic segmentation. arXiv preprint arXiv:2003.07853, 2020a.",
+          "doi": null,
+          "arxiv_id": "2003.07853",
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Sinong Wang, Belinda Li, Madian Khabsa, Han Fang, and Hao Ma. Linformer: Self-attention with linear complexity. arXiv preprint arXiv:2006.04768, 2020b.",
+          "doi": null,
+          "arxiv_id": "2006.04768",
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Felix Wu, Angela Fan, Alexei Baevski, Yann N Dauphin, and Michael Auli. Pay less attention with lightweight and dynamic convolutions. In ICLR, 2019.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "Saining Xie, Ross Girshick, Piotr Dollár, Zhuowen Tu, and Kaiming He. Aggregated residual transformations for deep neural networks. In CVPR, 2017.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2017
+        },
+        {
+          "raw_reference": "Hang Xu, Lewei Yao, Wei Zhang, Xiaodan Liang, and Zhenguo Li. Auto-fpn: Automatic network architecture adaptation for object detection beyond classification. In ICCV, 2019.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "Manzil Zaheer, Guru Guruganesh, Avinava Dubey, Joshua Ainslie, Chris Alberti, Santiago Ontanon, Philip Pham, Anirudh Ravula, Qifan Wang, Li Yang, et al. Big bird: Transformers for longer sequences. arXiv preprint arXiv:2007.14062, 2020.",
+          "doi": null,
+          "arxiv_id": "2007.14062",
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Shifeng Zhang, Cheng Chi, Yongqiang Yao, Zhen Lei, and Stan Z Li. Bridging the gap between anchor-based and anchor-free detection via adaptive training sample selection. In CVPR, 2020.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2020
+        },
+        {
+          "raw_reference": "Qijie Zhao, Tao Sheng, Yongtao Wang, Zhi Tang, Ying Chen, Ling Cai, and Haibin Ling. M2det: A single-shot object detector based on multi-level feature pyramid network. In AAAI, 2019.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "Xizhou Zhu, Dazhi Cheng, Zheng Zhang, Stephen Lin, and Jifeng Dai. An empirical study of spatial attention mechanisms in deep networks. In ICCV, 2019a.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        },
+        {
+          "raw_reference": "Xizhou Zhu, Han Hu, Stephen Lin, and Jifeng Dai. Deformable convnets v2: More deformable, better results. In CVPR, 2019b.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2019
+        }
+      ]
+    },
+    "gold": {
+      "case_id": "deformable_detr_realpdf",
+      "schema_version": 1,
+      "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+      "work_metadata": {
+        "title": "DEFORMABLE DETR: DEFORMABLE TRANSFORMERS FOR END-TO-END OBJECT DETECTION",
+        "publication_year": null,
+        "abstract_prefix": "DETR has been recently proposed to eliminate the need for many hand-desi",
+        "doi": null,
+        "arxiv_id": null,
+        "venue_name": null,
+        "work_type": null
+      },
+      "authorships": [],
+      "references": {
+        "expected_count": 44,
+        "min_count": 35,
+        "notes": "LLM extraction yields ~44 refs on this MD; calibrated from nightly suite.",
+        "sample_arxiv_ids": [
+          "2004.08483",
+          "2004.05150",
+          "1904.10509",
+          "2006.03555"
+        ],
+        "sample_dois": []
+      },
+      "graph_expectations": {
+        "min_cites": 0,
+        "max_cites": 20,
+        "min_authorships": 0,
+        "max_authorships": 8,
+        "min_institutions": 0,
+        "max_institutions": 8,
+        "expected_cited_arxiv_ids": [],
+        "max_duplicate_work_fingerprints": 8,
+        "max_work_dedup_violations": 0,
+        "min_related_version_edges": null,
+        "max_related_version_edges": null
+      },
+      "quality_thresholds": null
+    }
+  }
+}

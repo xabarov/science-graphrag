@@ -34,6 +34,7 @@ DEFAULT_BASELINE_LAYER2 = "eval/results/baseline-llm-layer2-nightly-semantic-sui
 # Optional single-case retests after gold fixes (if present, listed in summary)
 SUPPLEMENTARY_RETESTS = (
     "eval/results/retest-centernet-after-gold-fix.json",
+    "eval/results/retest-deformable-detr-after-gold-fix.json",
     "eval/results/retest-fcos-after-gold-fix.json",
     "eval/results/retest-selective-search-after-gold-fix.json",
     "eval/results/retest-hog-realpdf-after-gold-fix.json",
@@ -370,9 +371,7 @@ def _md_supplementary_section(sup: list[dict[str, Any]]) -> list[str]:
         return []
     lines = ["## Supplementary single-case retests (if present)", ""]
     for s in sup:
-        lines.append(
-            f"- `{s.get('case_id')}`: passed={s.get('passed')} — `{s.get('artifact')}`"
-        )
+        lines.append(f"- `{s.get('case_id')}`: passed={s.get('passed')} — `{s.get('artifact')}`")
     lines.append("")
     return lines
 
