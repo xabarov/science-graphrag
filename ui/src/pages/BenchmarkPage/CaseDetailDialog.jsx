@@ -14,7 +14,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { getBenchmarkCaseDetail } from "../../services/benchmarkApi.js";
 import { CursorButton } from "../../components/common/index.js";
 
-export default function CaseDetailDialog({ open, caseId, onClose }) {
+export default function CaseDetailDialog({ open, caseId, family = "layer1", onClose }) {
   const [tabIdx, setTabIdx] = useState(0);
   const [detail, setDetail] = useState(null);
   const [error, setError] = useState(null);
@@ -34,7 +34,7 @@ export default function CaseDetailDialog({ open, caseId, onClose }) {
       setError(null);
       setLoading(true);
       try {
-        const resp = await getBenchmarkCaseDetail(caseId);
+        const resp = await getBenchmarkCaseDetail(caseId, { family });
         if (cancelled) return;
         setDetail(resp);
       } catch (e) {
@@ -47,7 +47,7 @@ export default function CaseDetailDialog({ open, caseId, onClose }) {
     return () => {
       cancelled = true;
     };
-  }, [open, caseId]);
+  }, [open, caseId, family]);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">

@@ -63,3 +63,5 @@ Before a **research pilot** on shared infrastructure:
 ## End-to-end validation
 
 After ingest, validate the **Mandatory API happy-path** (same as Wave C in [roadmap-next-waves.md](roadmap-next-waves.md)): `GET /v1/works` → `GET /v1/works/{id}` → `POST /v1/query` → `GET /v1/works/{id}/chunks` (see contracts doc for full steps).
+
+**Compose + API smoke (8787):** from repo root, `./scripts/smoke_compose_api.sh` — `docker compose up -d --build`, wait for `GET /health`, then `GET /v1/works?limit=1`.

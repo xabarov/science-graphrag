@@ -75,10 +75,10 @@ export default function ResultsTab() {
           <TableHead>
             <TableRow>
               <TableCell>run_id</TableCell>
+              <TableCell>family</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Progress</TableCell>
-              <TableCell>avg names_f1</TableCell>
-              <TableCell>avg sample_arxiv_f1</TableCell>
+              <TableCell>metrics</TableCell>
               <TableCell align="right">Действия</TableCell>
             </TableRow>
           </TableHead>
@@ -86,17 +86,24 @@ export default function ResultsTab() {
             {items.map((r) => {
               const st = _statusChip(r.status);
               const pct = r?.progress?.percent ?? 0;
+              const fam = r.benchmark_family || "layer1";
+              const metricsCell =
+                fam === "layer2"
+                  ? `L2 recall≈ ${(r.summary?.avg_layer2_recall_ratio ?? 0).toFixed(3)}`
+                  : `names ${(r.summary?.avg_names_f1 ?? 0).toFixed(3)} / arxiv ${(r.summary?.avg_sample_arxiv_f1 ?? 0).toFixed(3)}`;
               return (
                 <TableRow key={r.run_id}>
                   <TableCell sx={{ wordBreak: "break-all" }}>{r.run_id.slice(0, 8)}…</TableCell>
+                  <TableCell>
+                    <Chip label={fam} size="small" variant="outlined" />
+                  </TableCell>
                   <TableCell>
                     <Chip label={st.label} color={st.color} size="small" />
                   </TableCell>
                   <TableCell>
                     {r.progress.completed}/{r.progress.total} ({pct.toFixed(1)}%)
                   </TableCell>
-                  <TableCell>{(r.summary?.avg_names_f1 ?? 0).toFixed(3)}</TableCell>
-                  <TableCell>{(r.summary?.avg_sample_arxiv_f1 ?? 0).toFixed(3)}</TableCell>
+                  <TableCell sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.75)" }}>{metricsCell}</TableCell>
                   <TableCell align="right">
                     <CursorButton
                       onClick={() => {

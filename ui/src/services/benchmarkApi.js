@@ -12,25 +12,26 @@ function authHeaders() {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-export async function listBenchmarkCases({ tier, q, limit = 200, offset = 0 } = {}) {
+export async function listBenchmarkCases({ family = "layer1", tier, q, limit = 200, offset = 0 } = {}) {
   const res = await api.get("/benchmark/cases", {
-    params: { tier, q, limit, offset },
+    params: { family, tier, q, limit, offset },
     headers: authHeaders(),
   });
   return res.data;
 }
 
-export async function getBenchmarkCaseDetail(caseId) {
+export async function getBenchmarkCaseDetail(caseId, { family = "layer1" } = {}) {
   const res = await api.get(`/benchmark/cases/${encodeURIComponent(caseId)}`, {
+    params: { family },
     headers: authHeaders(),
   });
   return res.data;
 }
 
-export async function runBenchmark({ case_ids, label } = {}) {
+export async function runBenchmark({ case_ids, label, family = "layer1" } = {}) {
   const res = await api.post(
     "/benchmark/runs",
-    { case_ids, label },
+    { case_ids, label, family },
     {
       headers: authHeaders(),
     },

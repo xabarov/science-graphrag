@@ -117,6 +117,39 @@ def _neo4j_graph_context_for_work(settings: Settings, work_id: str) -> dict[str,
         }
 
 
+# Section paths from PDF chunking often label tail sections; pure vector search still
+# scores them highly when the question overlaps generic keywords ("object detection").
+_BACK_MATTER_MARKERS: tuple[str, ...] = (
+    "acknowledg",
+    "reference",
+    "references",
+    "bibliograph",
+    "appendix",
+)
+
+
+def _is_likely_back_matter_section(section_path: str | None) -> bool:
+    if not section_path:
+        return False
+    s = section_path.lower()
+    return any(m in s for m in _BACK_MATTER_MARKERS)
+
+
+def _prefer_non_back_matter_hits(
+    hits: list[dict[str, Any]],
+    *,
+    top_k: int,
+) -> list[dict[str, Any]]:
+    """Keep vector order but move acknowledgment/bibliography-style chunks later."""
+
+    if not hits:
+        return []
+    primary = [h for h in hits if not _is_likely_back_matter_section(h.get("section_path"))]
+    tail = [h for h in hits if _is_likely_back_matter_section(h.get("section_path"))]
+    ordered = primary + tail
+    return ordered[:top_k]
+
+
 def _citations_and_snippets_from_hits(
     hits: list[dict[str, Any]],
 ) -> tuple[list[dict[str, Any]], list[str]]:
@@ -186,10 +219,21 @@ class _RetrievalTraceIn(NamedTuple):
     citations_returned: int
 
 
-def _retrieval_trace_payload(inp: _RetrievalTraceIn) -> dict[str, Any]:
+def _retrieval_trace_payload(
+    inp: _RetrievalTraceIn,
+    *,
+    query_preview: str | None = None,
+) -> dict[str, Any]:
     trace_degraded: list[str] = []
     if len(inp.hits) == 0:
         trace_degraded.append("no_retrieval_hits")
+    top_scores: list[float | None] = []
+    for h in inp.hits[: min(8, len(inp.hits))]:
+        s = h.get("score")
+        top_scores.append(float(s) if s is not None else None)
+    qprev = (query_preview or "").strip()
+    if len(qprev) > 240:
+        qprev = qprev[:240] + "…"
     return {
         "embedding": inp.emb_trace,
         "hit_count": len(inp.hits),
@@ -198,8 +242,35 @@ def _retrieval_trace_payload(inp: _RetrievalTraceIn) -> dict[str, Any]:
         "qdrant_collection": inp.qdrant_collection,
         "top_k_requested": inp.top_k,
         "citations_returned": inp.citations_returned,
+        "top_hit_scores": top_scores,
+        "query_preview": qprev or None,
+        "answer_synthesis": {
+            "mode": "deterministic_snippets",
+            "second_stage_llm": False,
+        },
         "degraded": trace_degraded,
     }
+
+
+def _qdrant_hits_for_answer(
+    *,
+    question: str,
+    settings: Settings,
+    work_id: str | None,
+    top_k: int,
+) -> tuple[list[float], dict[str, Any], list[dict[str, Any]]]:
+    """Embed query, search Qdrant with oversampling, deprioritize back-matter sections."""
+
+    vec, emb_trace = _embed_query(question, settings)
+    qstore = QdrantChunkStore(
+        settings.qdrant_url,
+        settings.qdrant_collection,
+        vector_dim=len(vec),
+    )
+    fetch_limit = min(max(top_k * 8, top_k), 48)
+    hits_raw = qstore.search_similar(vector=vec, limit=fetch_limit, work_id=work_id)
+    hits = _prefer_non_back_matter_hits(hits_raw, top_k=top_k)
+    return vec, emb_trace, hits
 
 
 def answer_query(
@@ -216,9 +287,12 @@ def answer_query(
     """
 
     s = settings or get_settings()
-    vec, emb_trace = _embed_query(question, s)
-    qstore = QdrantChunkStore(s.qdrant_url, s.qdrant_collection, vector_dim=len(vec))
-    hits = qstore.search_similar(vector=vec, limit=top_k, work_id=work_id)
+    _, emb_trace, hits = _qdrant_hits_for_answer(
+        question=question,
+        settings=s,
+        work_id=work_id,
+        top_k=top_k,
+    )
     citations, snippets = _citations_and_snippets_from_hits(hits)
     graph, resolved_work = _graph_context_for_hits(s, work_id, hits)
 
@@ -246,5 +320,6 @@ def answer_query(
                 top_k,
                 len(citations),
             ),
+            query_preview=question,
         ),
     )

@@ -8,7 +8,7 @@ Status by endpoint:
 
 - `POST /v1/query`: implemented (source of truth in `science_graphrag/api/main.py`)
 - `GET /v1/works`, `GET /v1/works/{work_id}`, `GET /v1/works/{work_id}/graph`, `GET /v1/works/{work_id}/chunks`: implemented (same module; Neo4j + Qdrant)
-- **`/v1/benchmark/*`:** implemented for **layer-1** benchmark console UI (`science_graphrag/api/benchmark.py`, runs via `science_graphrag/api/task_store.py`) — не часть обязательного research happy-path ниже
+- **`/v1/benchmark/*`:** benchmark console UI (`science_graphrag/api/benchmark.py`, runs via `science_graphrag/api/task_store.py`) — **layer-1** и **layer-2** (`family` query/body); не часть обязательного research happy-path ниже
 - other niceties below: optional backlog (filters, richer graph projection)
 
 ## Mandatory API happy-path (Wave C)
@@ -216,22 +216,22 @@ Response:
 }
 ```
 
-## 6) Benchmark console API (implemented, layer-1)
+## 6) Benchmark console API (implemented, layer-1 + layer-2)
 
-Назначение: страница **`/benchmark`** в `ui/` — просмотр кейсов и запуск прогонов **без обязательного CLI**, по идее как dev/QA-консоль в референсе [osint-gr](/home/roman/pyprojects/ML/Prod/osint-gr) (`frontend/src/pages/BenchmarkPage/` и связанные сервисы). Источник эталонных кейсов — `tests/fixtures/benchmarks/layer1/`; полный suite и decision gate остаются в [eval/README.md](../../eval/README.md) и [runbooks/benchmark-decision-gate.md](../runbooks/benchmark-decision-gate.md).
+Назначение: страница **`/benchmark`** в `ui/` — просмотр кейсов и запуск прогонов **без обязательного CLI**, по идее как dev/QA-консоль в референсе [osint-gr](/home/roman/pyprojects/ML/Prod/osint-gr) (`frontend/src/pages/BenchmarkPage/` и связанные сервисы). Фикстуры: `tests/fixtures/benchmarks/layer1/` и `tests/fixtures/benchmarks/layer2/`; полный suite и decision gate остаются в [eval/README.md](../../eval/README.md) и [runbooks/benchmark-decision-gate.md](../runbooks/benchmark-decision-gate.md).
 
 | Method | Path | Role |
 |--------|------|------|
-| GET | `/v1/benchmark/cases` | Список кейсов (`tier`, `q`, `limit`, `offset`) |
-| GET | `/v1/benchmark/cases/{case_id}` | Превью: `article_md`, `gold` |
-| POST | `/v1/benchmark/runs` | Старт прогона (`case_ids` или ярлыки) |
+| GET | `/v1/benchmark/cases` | Список кейсов (`family=layer1\|layer2`, `tier`, `q`, `limit`, `offset`) |
+| GET | `/v1/benchmark/cases/{case_id}` | Превью: `article_md`, `gold` (layer-2: содержимое `semantic_gold.json`) |
+| POST | `/v1/benchmark/runs` | Старт прогона (`case_ids` или ярлыки `all` / `merge_safe` / `nightly_heavy` / `nightly_semantic`; тело: `family`, `label`) |
 | GET | `/v1/benchmark/runs` | История прогонов |
 | GET | `/v1/benchmark/runs/{run_id}` | Детали/метрики прогона |
 | DELETE | `/v1/benchmark/runs/{run_id}` | Удалить запись прогона |
 
-**Ограничения (зафиксировать в UX):** история прогонов **in-memory** (потеря при рестарте API); только **layer-1** runner в фоне. Расширение на layer-2 / graph-v1 — backlog ([architecture/frontend-phase6-bridge-backlog.md](../architecture/frontend-phase6-bridge-backlog.md) `A5`/`B4`).
+**Ограничения (зафиксировать в UX):** список прогонов **in-memory** (потеря при рестарте API); по завершении run пишется **снимок** JSON в `data/benchmark_run_history/{run_id}.json` (каталог в `.gitignore` как часть `/data/`). **graph-v1** из UI не подключён (опасный wipe); backlog — [architecture/frontend-phase6-bridge-backlog.md](../architecture/frontend-phase6-bridge-backlog.md) `B4`.
 
-**Текущий scope ответа прогона:** детали run включают **predicted vs gold** для layer-1 (как в UI `ComparisonTable`). **Roadmap extension:** те же примитивы визуального сравнения для **layer-2** (semantic) и **graph-v1** после появления обёрток в API и стабильной формы payload.
+**Ответ прогона:** layer-1 — `ComparisonTable`; layer-2 — semantic methods/datasets (`SemanticComparisonTable` в UI).
 
 Клиент: `ui/src/services/benchmarkApi.js`.
 

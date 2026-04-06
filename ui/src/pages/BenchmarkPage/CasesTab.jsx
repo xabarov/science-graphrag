@@ -20,6 +20,7 @@ function _normalizeTier(v) {
 }
 
 export default function CasesTab() {
+  const [family, setFamily] = useState("layer1");
   const [tier, setTier] = useState("merge_safe");
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,7 +38,13 @@ export default function CasesTab() {
     setError(null);
     setLoading(true);
     try {
-      const resp = await listBenchmarkCases({ tier: tierResolved, q: q.trim() || null, limit: 200, offset: 0 });
+      const resp = await listBenchmarkCases({
+        family,
+        tier: tierResolved,
+        q: q.trim() || null,
+        limit: 200,
+        offset: 0,
+      });
       setCasesPayload(resp);
     } catch (e) {
       setError(e?.message || "failed_to_load_cases");
@@ -49,12 +56,25 @@ export default function CasesTab() {
   useEffect(() => {
     loadCases().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tier]);
+  }, [tier, family]);
 
   return (
     <Box sx={{ padding: 2 }}>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap", mb: 2 }}>
         <Typography sx={{ fontWeight: 600 }}>Кейсы</Typography>
+        <Select
+          size="small"
+          value={family}
+          onChange={(e) => {
+            const f = e.target.value;
+            setFamily(f);
+            if (f === "layer1" && tier === "nightly_semantic") setTier("merge_safe");
+          }}
+          sx={{ minWidth: 120 }}
+        >
+          <MenuItem value="layer1">layer1</MenuItem>
+          <MenuItem value="layer2">layer2</MenuItem>
+        </Select>
         <Select
           size="small"
           value={tier}
@@ -64,6 +84,7 @@ export default function CasesTab() {
           <MenuItem value="all">all</MenuItem>
           <MenuItem value="merge_safe">merge_safe</MenuItem>
           <MenuItem value="nightly_heavy">nightly_heavy</MenuItem>
+          {family === "layer2" ? <MenuItem value="nightly_semantic">nightly_semantic</MenuItem> : null}
         </Select>
 
         <TextField
@@ -97,8 +118,8 @@ export default function CasesTab() {
             <TableRow>
               <TableCell>case_id</TableCell>
               <TableCell>tier</TableCell>
-              <TableCell>article.md</TableCell>
-              <TableCell>gold.json</TableCell>
+              <TableCell>article</TableCell>
+              <TableCell>{family === "layer2" ? "semantic_gold" : "gold.json"}</TableCell>
               <TableCell align="right">Действия</TableCell>
             </TableRow>
           </TableHead>
@@ -108,7 +129,7 @@ export default function CasesTab() {
                 <TableCell sx={{ wordBreak: "break-all" }}>{c.case_id}</TableCell>
                 <TableCell>{c.tier || "-"}</TableCell>
                 <TableCell>{c.has_article_md ? "yes" : "no"}</TableCell>
-                <TableCell>{c.has_gold_json ? "yes" : "no"}</TableCell>
+                <TableCell>{family === "layer2" ? (c.has_semantic_gold ? "yes" : "no") : c.has_gold_json ? "yes" : "no"}</TableCell>
                 <TableCell align="right">
                   <CursorButton
                     onClick={() => {
@@ -128,6 +149,7 @@ export default function CasesTab() {
       <CaseDetailDialog
         open={dialogOpen}
         caseId={selectedCaseId}
+        family={family}
         onClose={() => {
           setDialogOpen(false);
           setSelectedCaseId(null);

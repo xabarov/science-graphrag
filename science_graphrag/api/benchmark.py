@@ -13,7 +13,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from eval.bench_common import discover_layer1_case_dirs
+from eval.bench_common import discover_layer1_case_dirs, discover_layer2_case_dirs
 from science_graphrag.api.task_store import RunStatus, task_store
 
 router = APIRouter()
@@ -26,9 +26,14 @@ def _fixtures_root_layer1() -> Path:
     return repo_root / "tests" / "fixtures" / "benchmarks" / "layer1"
 
 
-def _load_case_tiers() -> dict[str, list[str]]:
+def _fixtures_root_layer2() -> Path:
+    """Return fixtures root for layer-2 semantic benchmark cases."""
+    repo_root = Path(__file__).resolve().parents[2]
+    return repo_root / "tests" / "fixtures" / "benchmarks" / "layer2"
+
+
+def _load_case_tiers(root: Path) -> dict[str, list[str]]:
     """Load case_tiers.json mapping (tier -> list[case_id])."""
-    root = _fixtures_root_layer1()
     tiers_path = root / "case_tiers.json"
     if not tiers_path.is_file():
         return {}
@@ -48,12 +53,14 @@ def _tier_for_case_id(case_id: str, tiers: dict[str, list[str]]) -> str | None:
 
 
 class CaseListItem(BaseModel):
-    """One row in the layer-1 cases list."""
+    """One row in the benchmark cases list (layer-1 or layer-2)."""
 
     case_id: str
+    family: str = "layer1"
     tier: str | None = None
     has_article_md: int
     has_gold_json: int
+    has_semantic_gold: int = 0
 
 
 class CasesListResponse(BaseModel):
@@ -79,6 +86,7 @@ class RunCreateRequest(BaseModel):
         ..., description='Either a list of case_ids, or "all" / "merge_safe".'
     )
     label: str | None = None
+    family: str = Field(default="layer1", description='Benchmark family: "layer1" or "layer2".')
 
 
 class RunCreateResponse(BaseModel):
@@ -92,6 +100,7 @@ class RunListItem(BaseModel):
     """One row in the runs list."""
 
     run_id: str
+    benchmark_family: str = "layer1"
     label: str | None = None
     status: str
     created_at: str
@@ -116,48 +125,108 @@ class RunDetailResponse(BaseModel):
 
 
 @router.get("/benchmark/cases", response_model=CasesListResponse)
-def get_layer1_cases_list(
+def get_benchmark_cases_list(  # pylint: disable=too-many-locals
+    family: str = Query(
+        default="layer1",
+        description="Fixture family: layer1 (article+gold.json) or layer2 (semantic_gold.json).",
+    ),
     tier: str | None = Query(
-        default=None, description='Optional: "merge_safe" or "nightly_heavy".'
+        default=None,
+        description="Tier filter: merge_safe, nightly_heavy (L1), nightly_semantic (L2).",
     ),
     q: str | None = Query(default=None, description="Optional substring match on case_id."),
     limit: int = Query(default=200, ge=1, le=1000),
     offset: int = Query(default=0, ge=0),
 ) -> CasesListResponse:
-    """List layer-1 benchmark case directories available to the UI."""
-    root = _fixtures_root_layer1()
-    tiers = _load_case_tiers()
+    """List benchmark case directories available to the UI (layer-1 or layer-2)."""
+    fam = (family or "layer1").strip().lower()
+    if fam == "layer2":
+        root = _fixtures_root_layer2()
+        tiers = _load_case_tiers(root)
+        case_dirs = discover_layer2_case_dirs(root, tier=tier)
+        fam_label = "layer2"
+    else:
+        root = _fixtures_root_layer1()
+        tiers = _load_case_tiers(root)
+        case_dirs = discover_layer1_case_dirs(root, tier=tier)
+        fam_label = "layer1"
 
-    case_dirs = discover_layer1_case_dirs(root, tier=tier)
-    # Optional filter by q.
     needle = (q or "").strip().lower()
     if needle:
         case_dirs = [p for p in case_dirs if needle in p.name.lower()]
 
-    # Stable ordering.
     case_dirs = sorted(case_dirs, key=lambda p: p.name)
     slice_dirs = case_dirs[offset : offset + limit]
 
     items: list[CaseListItem] = []
     for d in slice_dirs:
         cid = d.name
-        items.append(
-            CaseListItem(
-                case_id=cid,
-                tier=_tier_for_case_id(cid, tiers),
-                has_article_md=int((d / "article.md").is_file()),
-                has_gold_json=int((d / "gold.json").is_file()),
+        if fam_label == "layer2":
+            sg = (d / "semantic_gold.json").is_file()
+            article_ok = False
+            if sg:
+                try:
+                    meta = json.loads((d / "semantic_gold.json").read_text(encoding="utf-8"))
+                    rel = meta.get("article_path") or "article.md"
+                    article_ok = (d / rel).resolve().is_file()
+                except (OSError, json.JSONDecodeError, TypeError):
+                    article_ok = False
+            items.append(
+                CaseListItem(
+                    case_id=cid,
+                    family=fam_label,
+                    tier=_tier_for_case_id(cid, tiers),
+                    has_article_md=int(article_ok),
+                    has_gold_json=0,
+                    has_semantic_gold=int(sg),
+                ),
             )
-        )
+        else:
+            items.append(
+                CaseListItem(
+                    case_id=cid,
+                    family=fam_label,
+                    tier=_tier_for_case_id(cid, tiers),
+                    has_article_md=int((d / "article.md").is_file()),
+                    has_gold_json=int((d / "gold.json").is_file()),
+                    has_semantic_gold=0,
+                ),
+            )
 
     return CasesListResponse(items=items, total=len(case_dirs))
 
 
 @router.get("/benchmark/cases/{case_id}", response_model=CaseDetailResponse)
-def get_layer1_case_detail(case_id: str) -> CaseDetailResponse:
-    """Return fixture contents (article.md + parsed gold.json) for a case."""
+def get_benchmark_case_detail(
+    case_id: str,
+    family: str = Query(default="layer1", description='"layer1" or "layer2".'),
+) -> CaseDetailResponse:
+    """Return fixture contents: layer-1 article+gold, or layer-2 article + semantic_gold as gold."""
+    fam = (family or "layer1").strip().lower()
+    if fam == "layer2":
+        root = _fixtures_root_layer2()
+        tiers = _load_case_tiers(root)
+        fixture_dir = root / case_id
+        if not fixture_dir.is_dir():
+            raise HTTPException(status_code=404, detail="case_not_found")
+        sg_path = fixture_dir / "semantic_gold.json"
+        if not sg_path.is_file():
+            raise HTTPException(status_code=404, detail="case_incomplete")
+        gold = json.loads(sg_path.read_text(encoding="utf-8"))
+        rel = gold.get("article_path") or "article.md"
+        article_path = (fixture_dir / rel).resolve()
+        if not article_path.is_file():
+            raise HTTPException(status_code=404, detail="article_not_found")
+        article_md = article_path.read_text(encoding="utf-8")
+        return CaseDetailResponse(
+            case_id=case_id,
+            tier=_tier_for_case_id(case_id, tiers),
+            article_md=article_md,
+            gold=gold,
+        )
+
     root = _fixtures_root_layer1()
-    tiers = _load_case_tiers()
+    tiers = _load_case_tiers(root)
     fixture_dir = root / case_id
     if not fixture_dir.is_dir():
         raise HTTPException(status_code=404, detail="case_not_found")
@@ -179,19 +248,28 @@ def get_layer1_case_detail(case_id: str) -> CaseDetailResponse:
 
 def _resolve_case_ids(req: RunCreateRequest) -> list[str]:
     """Resolve request selectors ("all"/"merge_safe") into concrete case_ids."""
-    root = _fixtures_root_layer1()
+    fam = (req.family or "layer1").strip().lower()
+    if fam == "layer2":
+        root = _fixtures_root_layer2()
+        discover = discover_layer2_case_dirs
+    else:
+        root = _fixtures_root_layer1()
+        discover = discover_layer1_case_dirs
+
     if isinstance(req.case_ids, str):
         selector = req.case_ids.strip()
         if selector == "all":
-            return [p.name for p in discover_layer1_case_dirs(root)]
+            return [p.name for p in discover(root)]
         if selector == "merge_safe":
-            return [p.name for p in discover_layer1_case_dirs(root, tier="merge_safe")]
+            return [p.name for p in discover(root, tier="merge_safe")]
         if selector == "nightly_heavy":
-            return [p.name for p in discover_layer1_case_dirs(root, tier="nightly_heavy")]
+            tier = "nightly_semantic" if fam == "layer2" else "nightly_heavy"
+            return [p.name for p in discover(root, tier=tier)]
+        if selector == "nightly_semantic":
+            return [p.name for p in discover(root, tier="nightly_semantic")]
         raise HTTPException(status_code=400, detail="unknown_case_selector")
 
-    # Explicit list: validate existence.
-    allowed = {p.name for p in discover_layer1_case_dirs(root)}
+    allowed = {p.name for p in discover(root)}
     missing = [x for x in req.case_ids if x not in allowed]
     if missing:
         raise HTTPException(status_code=400, detail=f"unknown_case_ids:{missing}")
@@ -199,10 +277,17 @@ def _resolve_case_ids(req: RunCreateRequest) -> list[str]:
 
 
 @router.post("/benchmark/runs", response_model=RunCreateResponse)
-def create_layer1_benchmark_run(body: RunCreateRequest) -> RunCreateResponse:
-    """Create and immediately start a benchmark run."""
+def create_benchmark_run(body: RunCreateRequest) -> RunCreateResponse:
+    """Create and immediately start a benchmark run (layer-1 or layer-2)."""
     case_ids = _resolve_case_ids(body)
-    run_id = task_store.create_run(case_ids=case_ids, label=body.label)
+    fam = (body.family or "layer1").strip().lower()
+    if fam not in ("layer1", "layer2"):
+        raise HTTPException(status_code=400, detail="invalid_family")
+    run_id = task_store.create_run(
+        case_ids=case_ids,
+        label=body.label,
+        benchmark_family=fam,
+    )
     # We just created; store might still be running.
     run = task_store.get_run(run_id)
     status = run.get("status") if run else RunStatus.RUNNING

@@ -17,13 +17,11 @@ from science_graphrag.config import get_settings
 
 app = FastAPI(title="science-graphrag", version="0.1.0")
 _STATIC_DIR = Path(__file__).resolve().parent / "static"
-if _STATIC_DIR.is_dir():
-    app.mount("/ui/assets", StaticFiles(directory=_STATIC_DIR), name="ui_assets")
-    # React/Vite build output goes to `science_graphrag/api/static/ui/`.
-    # It is served under `/ui` (index.html on `/ui/`).
-    _UI_DIR = _STATIC_DIR / "ui"
-    if _UI_DIR.is_dir():
-        app.mount("/ui", StaticFiles(directory=_UI_DIR, html=True), name="ui")
+# React/Vite build: `science_graphrag/api/static/ui/` → served at `/ui` (includes `/ui/assets/*`).
+# Do not mount `/ui/assets` to `_STATIC_DIR`: hashed bundles live under `static/ui/assets/`.
+_UI_DIR = _STATIC_DIR / "ui"
+if _UI_DIR.is_dir():
+    app.mount("/ui", StaticFiles(directory=_UI_DIR, html=True), name="ui")
 
 # Benchmark endpoints (UI-driven runs + fixtures).
 app.include_router(benchmark_router, prefix="/v1")

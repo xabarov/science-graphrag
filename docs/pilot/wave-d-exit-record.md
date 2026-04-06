@@ -11,18 +11,32 @@ Template for closing the Phase 7 pilot. **Owner** field on the pilot checklist p
 |-------|-------|
 | **Decision** | CONDITIONAL-GO |
 | **Date** | 2026-04-06 |
-| **Git ref** | `e9afc0f9ec1caae718d544607f1f5843a06a6881` (update when pilot window closes on a newer commit) |
-| **Blockers (if any)** | Full **10–50 PDF** bulk ingest on default CV corpus not executed in this iteration (mini 2-PDF ingest + compose verified). KPI table (p95 latency, spot-check citations, subjective usefulness) not filled — owner to complete after full corpus. Product checks in pilot checklist remain manual for full graph. |
+| **Git ref** | `08009844b35c2a552ffef3c44dd7cafab644d593` (update when pilot window closes on a newer commit) |
+| **Blockers (if any)** | Formal **10–50 PDF** bulk ingest on the default host corpus path may still need explicit sign-off in the checklist; **latency KPI** and a **single-query trace spot-check** recorded below (2026-04-06). Citation spot-check over N≥5 answers and subjective usefulness still open for owner. Product checks on pilot checklist remain partly manual. |
 
 ## KPI (start vs end)
 
 | KPI | Start | End | Notes |
 |-----|-------|-----|-------|
-| Citation correctness (spot-check N) | — | — | Run after full corpus; sample N answers from `/v1/query` vs `GET /v1/works/{id}/chunks`. |
-| Retrieval trace completeness | — | — | Expect `chunk_fingerprint` / `work_id` when hits exist. |
-| p95 `POST /v1/query` | — | — | Same hardware + load pattern; e.g. `hey`/`curl` repeated timings or `wrk` against local API. |
-| p95 `GET /v1/works` | — | — | Same as above. |
+| Citation correctness (spot-check N) | — | — | Still: sample N≥5 from `/v1/query` vs chunks after pilot workload is frozen. |
+| Retrieval trace completeness | — | **OK (spot-check)** | 2026-04-06, `POST /v1/query` probe (`object detection benchmark`, top_k=3): `hit_count=3`, all citations have `work_id` + `chunk_fingerprint`; trace includes `top_hit_scores`, `query_preview`, `answer_synthesis.second_stage_llm=false`. |
+| p95 `POST /v1/query` | — | **~96 ms** | `BASE=http://127.0.0.1:8787 N=40` — p50 ≈ **82 ms**, p95 ≈ **96 ms**, max ≈ **149 ms** (`scripts/pilot_measure_latency.py`). |
+| p95 `GET /v1/works` | — | **~34 ms** | Same run — p50 ≈ **18 ms**, p95 ≈ **34 ms**, max ≈ **36 ms**. |
 | Subjective usefulness | — | — | Short researcher notes or survey. |
+
+## Automated measurement snapshot (2026-04-06T22:47+03:00)
+
+- **API:** `http://127.0.0.1:8787` (compose `api` + data plane).
+- **Corpus signal at measure time:** `GET /v1/works?limit=1` → `total` = **38** works (sanity only; not a substitute for checklist ingest sign-off).
+- **Raw latency JSON:**
+
+```json
+{
+  "base": "http://127.0.0.1:8787",
+  "works": {"n": 40, "p50_ms": 18.32, "p95_ms": 33.72, "max_ms": 35.54},
+  "query": {"n": 40, "p50_ms": 81.85, "p95_ms": 96.00, "max_ms": 149.30}
+}
+```
 
 ## Integration / live services
 

@@ -10,6 +10,7 @@ Note: cancellation is "best-effort" (can't interrupt a running case extraction).
 
 from __future__ import annotations
 
+import json
 import uuid
 from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass, field
@@ -18,7 +19,8 @@ from pathlib import Path
 from threading import Lock
 from typing import Any
 
-from eval.layer1.runner import run_case
+from eval.layer1.runner import run_case as run_layer1_case
+from eval.layer2.runner import run_case as run_layer2_case
 
 
 class RunCancelledError(RuntimeError):
@@ -67,6 +69,7 @@ class RunRecord:
     run_id: str
     label: str | None
     case_ids: list[str]
+    benchmark_family: str = "layer1"
     status: str = RunStatus.QUEUED
     created_at: str = field(default_factory=_now_iso)
     started_at: str | None = None
@@ -106,6 +109,28 @@ def _mean(values: list[float]) -> float:
     return float(sum(values)) / float(len(values))
 
 
+def _case_contract_passed(result: dict[str, Any] | None) -> bool:
+    """Layer-1 uses metrics.contract.passed; layer-2 uses metrics.passed."""
+    if not result:
+        return False
+    metrics = result.get("metrics") or {}
+    contract = metrics.get("contract") or {}
+    if contract.get("passed") is True:
+        return True
+    if metrics.get("passed") is True:
+        return True
+    return False
+
+
+def _layer2_recall_ratio(metrics: dict[str, Any]) -> float:
+    """Single scalar for summary: mean of method and dataset recall ratios."""
+    m_num = float(metrics.get("recall_methods_num") or 0)
+    m_den = float(metrics.get("recall_methods_denom") or 0) or 1.0
+    d_num = float(metrics.get("recall_datasets_num") or 0)
+    d_den = float(metrics.get("recall_datasets_denom") or 0) or 1.0
+    return float((m_num / m_den + d_num / d_den) / 2.0)
+
+
 class BenchmarkTaskStore:
     """In-memory storage and background runner for benchmark runs."""
 
@@ -115,10 +140,24 @@ class BenchmarkTaskStore:
         self._lock = Lock()
         self._executor = ThreadPoolExecutor(max_workers=max_workers)
 
-    def create_run(self, *, case_ids: list[str], label: str | None = None) -> str:
+    def create_run(
+        self,
+        *,
+        case_ids: list[str],
+        label: str | None = None,
+        benchmark_family: str = "layer1",
+    ) -> str:
         """Create a run record and start executing it immediately."""
         run_id = str(uuid.uuid4())
-        rec = RunRecord(run_id=run_id, label=label, case_ids=list(case_ids))
+        fam = (benchmark_family or "layer1").strip().lower()
+        if fam not in ("layer1", "layer2"):
+            fam = "layer1"
+        rec = RunRecord(
+            run_id=run_id,
+            label=label,
+            case_ids=list(case_ids),
+            benchmark_family=fam,
+        )
         with self._lock:
             self._runs[run_id] = rec
         self.start_run(run_id)
@@ -177,6 +216,27 @@ class BenchmarkTaskStore:
         repo_root = Path(__file__).resolve().parents[2]
         return repo_root / "tests" / "fixtures" / "benchmarks" / "layer1"
 
+    def _run_root_fixtures_layer2(self) -> Path:
+        """Return path to layer-2 semantic benchmark fixtures root."""
+        repo_root = Path(__file__).resolve().parents[2]
+        return repo_root / "tests" / "fixtures" / "benchmarks" / "layer2"
+
+    def _history_dir(self) -> Path:
+        """Directory for durable run JSON snapshots (best-effort)."""
+        repo_root = Path(__file__).resolve().parents[2]
+        d = repo_root / "data" / "benchmark_run_history"
+        d.mkdir(parents=True, exist_ok=True)
+        return d
+
+    def _persist_run_snapshot(self, rec: RunRecord) -> None:
+        """Write completed run payload to disk (survives API restart)."""
+        try:
+            payload = self._run_to_dict(rec)
+            path = self._history_dir() / f"{rec.run_id}.json"
+            path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
+        except OSError:
+            pass
+
     def _run_one_case(self, run_id: str, case_id: str) -> dict[str, Any]:
         """Execute one benchmark case and return the run_case payload."""
         with self._lock:
@@ -185,12 +245,19 @@ class BenchmarkTaskStore:
                 raise KeyError(f"run_not_found:{run_id}")
             if rec.cancel_requested:
                 raise RunCancelledError("cancel_requested")
+            family = rec.benchmark_family
+
+        if family == "layer2":
+            fixture_dir = self._run_root_fixtures_layer2() / case_id
+            if not fixture_dir.is_dir():
+                raise FileNotFoundError(f"fixture_dir_not_found:{fixture_dir}")
+            return run_layer2_case(fixture_dir)
 
         fixture_dir = self._run_root_fixtures_layer1() / case_id
         if not fixture_dir.is_dir():
             raise FileNotFoundError(f"fixture_dir_not_found:{fixture_dir}")
 
-        return run_case(fixture_dir)
+        return run_layer1_case(fixture_dir)
 
     def _on_case_finished(self, run_id: str, case_id: str, fut: Future[dict[str, Any]]) -> None:
         """Executor callback: store per-case result and update terminal status."""
@@ -236,6 +303,7 @@ class BenchmarkTaskStore:
                 else:
                     # Some cases can be cancelled; still treat as completed if no failures.
                     rec.status = RunStatus.COMPLETED
+                self._persist_run_snapshot(rec)
 
     def _run_to_dict(self, rec: RunRecord) -> dict[str, Any]:
         """Serialize a full run (progress + summaries + all case results)."""
@@ -260,9 +328,16 @@ class BenchmarkTaskStore:
         avg_f1_arxiv = _mean(f1_arxiv)
         avg_f1_doi = _mean(f1_doi)
 
+        l2_recalls = []
+        for r in ok_results:
+            m = r.get("metrics") or {}
+            if m.get("precision_methods") is not None:
+                l2_recalls.append(_layer2_recall_ratio(m))
+
         return {
             "run_id": rec.run_id,
             "label": rec.label,
+            "benchmark_family": rec.benchmark_family,
             "status": rec.status,
             "created_at": rec.created_at,
             "started_at": rec.started_at,
@@ -279,13 +354,9 @@ class BenchmarkTaskStore:
                 "avg_names_f1": avg_f1_names,
                 "avg_sample_arxiv_f1": avg_f1_arxiv,
                 "avg_sample_doi_f1": avg_f1_doi,
+                "avg_layer2_recall_ratio": _mean(l2_recalls),
                 "pass_count": len(
-                    [
-                        1
-                        for c in rec.cases.values()
-                        if c.status == "ok"
-                        and (c.result.get("metrics", {}).get("contract", {}).get("passed") is True)
-                    ]
+                    [1 for c in rec.cases.values() if c.status == "ok" and _case_contract_passed(c.result)]
                 ),
                 "fail_count": len([1 for c in rec.cases.values() if c.status == "failed"]),
                 "cancelled_count": len([1 for c in rec.cases.values() if c.status == "cancelled"]),
@@ -300,6 +371,7 @@ class BenchmarkTaskStore:
         return {
             "run_id": rec.run_id,
             "label": rec.label,
+            "benchmark_family": rec.benchmark_family,
             "status": rec.status,
             "created_at": rec.created_at,
             "started_at": rec.started_at,
@@ -334,13 +406,18 @@ class BenchmarkTaskStore:
                         if c.status == "ok" and c.result
                     ]
                 ),
+                "avg_layer2_recall_ratio": _mean(
+                    [
+                        _layer2_recall_ratio(c.result.get("metrics") or {})
+                        for c in rec.cases.values()
+                        if c.status == "ok" and c.result
+                    ]
+                ),
                 "pass_count": len(
                     [
                         1
                         for c in rec.cases.values()
-                        if c.status == "ok"
-                        and c.result
-                        and c.result.get("metrics", {}).get("contract", {}).get("passed") is True
+                        if c.status == "ok" and c.result and _case_contract_passed(c.result)
                     ]
                 ),
                 "fail_count": len([1 for c in rec.cases.values() if c.status == "failed"]),

@@ -144,6 +144,12 @@ def test_query_endpoint_smoke(monkeypatch: Any) -> None:
                 "qdrant_collection": "chunks",
                 "top_k_requested": 3,
                 "citations_returned": 1,
+                "top_hit_scores": [0.1],
+                "query_preview": "test",
+                "answer_synthesis": {
+                    "mode": "deterministic_snippets",
+                    "second_stage_llm": False,
+                },
                 "degraded": [],
             },
         )
@@ -159,6 +165,7 @@ def test_query_endpoint_smoke(monkeypatch: Any) -> None:
     assert payload["graph_context"]["semantic_available"] is True
     assert payload["retrieval_trace"]["qdrant_collection"] == "chunks"
     assert payload["retrieval_trace"]["citations_returned"] == 1
+    assert payload["retrieval_trace"]["answer_synthesis"]["second_stage_llm"] is False
 
 
 def test_benchmark_cases_list_smoke() -> None:
@@ -172,6 +179,29 @@ def test_benchmark_cases_list_smoke() -> None:
     assert "total" in payload
     assert payload["total"] >= 1
     assert payload["items"][0]["case_id"]
+
+
+def test_benchmark_cases_layer2_list_smoke() -> None:
+    """Benchmark UI: layer-2 fixtures listable."""
+
+    client = _client()
+    res = client.get("/v1/benchmark/cases?family=layer2&tier=merge_safe&limit=20")
+    assert res.status_code == 200
+    payload = res.json()
+    assert payload["total"] >= 1
+    assert payload["items"][0]["family"] == "layer2"
+    assert payload["items"][0]["has_semantic_gold"] in (0, 1)
+
+
+def test_benchmark_case_layer2_detail_smoke() -> None:
+    """Layer-2 case detail returns semantic gold as gold payload."""
+
+    client = _client()
+    res = client.get("/v1/benchmark/cases/no_llm_smoke?family=layer2")
+    assert res.status_code == 200
+    body = res.json()
+    assert body["case_id"] == "no_llm_smoke"
+    assert "expected_method_names_normalized" in body["gold"]
 
 
 def test_mandatory_happy_path_sequence_smoke(monkeypatch: Any) -> None:
@@ -247,6 +277,7 @@ def test_mandatory_happy_path_sequence_smoke(monkeypatch: Any) -> None:
                 "qdrant_collection": "chunks",
                 "top_k_requested": 5,
                 "citations_returned": 1,
+                "answer_synthesis": {"mode": "x", "second_stage_llm": False},
                 "degraded": [],
             },
         )

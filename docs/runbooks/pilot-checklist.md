@@ -26,8 +26,8 @@ Use for a **narrow scientific subdomain** before widening scope. This document i
 |-----|----------------|-------------------------|
 | Citation correctness | Manual spot-check on N answers (sample from `/v1/query` citations vs chunks) | e.g. ≥ agreed % |
 | Retrieval trace completeness | Share of answers where `retrieval_trace` + `chunk_fingerprint` present when expected | e.g. 100% for non-empty retrieval |
-| Latency `POST /v1/query` | p50 / p95 on pilot hardware (same load pattern) | e.g. p95 &lt; X ms |
-| Latency `GET /v1/works` | p95 list load | e.g. p95 &lt; Y ms |
+| Latency `POST /v1/query` | p50 / p95 on pilot hardware (same load pattern); helper: `BASE=… N=40 ./scripts/pilot_measure_latency.sh` | e.g. p95 &lt; X ms |
+| Latency `GET /v1/works` | p95 list load (same script → `works` section) | e.g. p95 &lt; Y ms |
 | Subjective usefulness | Short researcher survey or notes | qualitative |
 
 ## Repository automation (Wave D engineering, 2026-04-06)

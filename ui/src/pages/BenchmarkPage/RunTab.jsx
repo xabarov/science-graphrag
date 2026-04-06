@@ -6,6 +6,8 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import FormGroup from "@mui/material/FormGroup";
 import LinearProgress from "@mui/material/LinearProgress";
 import Divider from "@mui/material/Divider";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
 
 import { listBenchmarkCases, getBenchmarkRun, runBenchmark } from "../../services/benchmarkApi.js";
 import { CursorButton, CursorPrimaryButton } from "../../components/common/index.js";
@@ -18,8 +20,9 @@ function _toggleCase(prev, caseId) {
 }
 
 export default function RunTab({ onSwitchToResults }) {
+  const [benchmarkFamily, setBenchmarkFamily] = useState("layer1");
   const [mergeSafeCases, setMergeSafeCases] = useState([]);
-  const [nightlyHeavyCases, setNightlyHeavyCases] = useState([]);
+  const [nightlyCases, setNightlyCases] = useState([]);
   const [selectedCaseIds, setSelectedCaseIds] = useState([]);
 
   const [runId, setRunId] = useState(() => window.localStorage.getItem("benchmark:lastRunId") || null);
@@ -32,6 +35,12 @@ export default function RunTab({ onSwitchToResults }) {
   const progressTotal = run?.progress?.total ?? 0;
 
   const summary = run?.summary || {};
+  const nightlyTierParam = benchmarkFamily === "layer2" ? "nightly_semantic" : "nightly_heavy";
+  const nightlyLabel = benchmarkFamily === "layer2" ? "nightly_semantic" : "nightly_heavy";
+
+  useEffect(() => {
+    setSelectedCaseIds([]);
+  }, [benchmarkFamily]);
 
   useEffect(() => {
     let cancelled = false;
@@ -39,14 +48,13 @@ export default function RunTab({ onSwitchToResults }) {
       setLoadingCases(true);
       try {
         const [merge, nightly] = await Promise.all([
-          listBenchmarkCases({ tier: "merge_safe" }),
-          listBenchmarkCases({ tier: "nightly_heavy" }),
+          listBenchmarkCases({ family: benchmarkFamily, tier: "merge_safe" }),
+          listBenchmarkCases({ family: benchmarkFamily, tier: nightlyTierParam }),
         ]);
         if (cancelled) return;
         setMergeSafeCases(merge?.items || []);
-        setNightlyHeavyCases(nightly?.items || []);
+        setNightlyCases(nightly?.items || []);
       } catch (e) {
-        // Non-fatal: UI can still run preset suites.
         if (!cancelled) setError(e?.message || "failed_to_load_cases");
       } finally {
         if (!cancelled) setLoadingCases(false);
@@ -56,7 +64,7 @@ export default function RunTab({ onSwitchToResults }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [benchmarkFamily, nightlyTierParam]);
 
   useEffect(() => {
     if (!runId) return;
@@ -89,7 +97,7 @@ export default function RunTab({ onSwitchToResults }) {
 
   async function startRun({ caseSelector, label }) {
     setError(null);
-    const res = await runBenchmark({ case_ids: caseSelector, label });
+    const res = await runBenchmark({ case_ids: caseSelector, label, family: benchmarkFamily });
     const newRunId = res?.run_id;
     if (!newRunId) throw new Error("run_id_missing");
     window.localStorage.setItem("benchmark:lastRunId", newRunId);
@@ -98,9 +106,23 @@ export default function RunTab({ onSwitchToResults }) {
 
   const selectedSet = useMemo(() => new Set(selectedCaseIds), [selectedCaseIds]);
 
+  const title =
+    benchmarkFamily === "layer2" ? "Запуск Layer-2 (semantic) Benchmark" : "Запуск Layer-1 Benchmark";
+
   return (
     <Box sx={{ padding: 2 }}>
-      <Typography sx={{ fontWeight: 600, mb: 1 }}>Запуск Layer-1 Benchmark</Typography>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap", mb: 2 }}>
+        <Typography sx={{ fontWeight: 600 }}>{title}</Typography>
+        <Select
+          size="small"
+          value={benchmarkFamily}
+          onChange={(e) => setBenchmarkFamily(e.target.value)}
+          sx={{ minWidth: 140 }}
+        >
+          <MenuItem value="layer1">layer1</MenuItem>
+          <MenuItem value="layer2">layer2</MenuItem>
+        </Select>
+      </Box>
 
       {error && (
         <Typography sx={{ color: "rgba(239, 68, 68, 0.9)", mb: 1 }} role="alert">
@@ -121,6 +143,11 @@ export default function RunTab({ onSwitchToResults }) {
           </CursorButton>
           <CursorButton onClick={() => startRun({ caseSelector: "all", label: "all_cases" })}>
             Запустить все
+          </CursorButton>
+          <CursorButton
+            onClick={() => startRun({ caseSelector: nightlyTierParam, label: nightlyLabel })}
+          >
+            Запустить {nightlyLabel}
           </CursorButton>
         </Box>
       </Box>
@@ -151,12 +178,12 @@ export default function RunTab({ onSwitchToResults }) {
         </Box>
 
         <Box>
-          <Typography sx={{ fontWeight: 600, mb: 1 }}>nightly_heavy</Typography>
+          <Typography sx={{ fontWeight: 600, mb: 1 }}>{nightlyLabel}</Typography>
           <Typography sx={{ color: "rgba(255,255,255,0.6)", mb: 1 }}>
-            {loadingCases ? "loading..." : `${nightlyHeavyCases.length} кейсов`}
+            {loadingCases ? "loading..." : `${nightlyCases.length} кейсов`}
           </Typography>
           <FormGroup>
-            {nightlyHeavyCases.map((c) => (
+            {nightlyCases.map((c) => (
               <FormControlLabel
                 key={c.case_id}
                 control={
@@ -192,12 +219,20 @@ export default function RunTab({ onSwitchToResults }) {
           {run && (
             <Box sx={{ mt: 1, display: "flex", gap: 2, flexWrap: "wrap" }}>
               <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>status: {run.status}</Typography>
-              <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>
-                avg names_f1: {(summary.avg_names_f1 ?? 0).toFixed(3)}
-              </Typography>
-              <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>
-                avg sample_arxiv_f1: {(summary.avg_sample_arxiv_f1 ?? 0).toFixed(3)}
-              </Typography>
+              {(run.benchmark_family || "layer1") === "layer2" ? (
+                <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>
+                  avg layer2 recall ratio: {(summary.avg_layer2_recall_ratio ?? 0).toFixed(3)}
+                </Typography>
+              ) : (
+                <>
+                  <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>
+                    avg names_f1: {(summary.avg_names_f1 ?? 0).toFixed(3)}
+                  </Typography>
+                  <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>
+                    avg sample_arxiv_f1: {(summary.avg_sample_arxiv_f1 ?? 0).toFixed(3)}
+                  </Typography>
+                </>
+              )}
             </Box>
           )}
 
@@ -214,4 +249,3 @@ export default function RunTab({ onSwitchToResults }) {
     </Box>
   );
 }
-

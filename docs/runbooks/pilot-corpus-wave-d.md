@@ -55,3 +55,5 @@ After at least one successful ingest, validate the **Mandatory API happy-path** 
 
 Record dates, corpus path (redacted if needed), and decision in [docs/pilot/wave-d-exit-record.md](../pilot/wave-d-exit-record.md) and the pilot checklist.
 
+**KPI latency (optional):** with API on `8787`, run `BASE=http://127.0.0.1:8787 N=40 ./scripts/pilot_measure_latency.sh` and paste JSON summary into the exit record.
+
