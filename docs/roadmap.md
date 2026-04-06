@@ -31,6 +31,24 @@
 - Каждая важная научная сущность должна быть **привязана к источнику**; идеи должны быть **разложимы до утверждений и доказательств**.
 - LLM — **extractor и генератор кандидатов**; каноническая правда по метаданным и идентификаторам — через **внешние реестры** (OpenAlex, Crossref, ORCID, ROR и т.д.), см. [idea.md §7](idea.md).
 
+### 1.4. Итеративный цикл: продукт и бенчмарк (flywheel)
+
+Развитие продукта и eval **не линейны**: расширение или ужесточение gold-set и семейств метрик → прогон бенчмарков (CLI и/или UI) → triage регрессий → правки кода, промптов и границ онтологии → новые пользовательские сценарии (reader, graph, query) → новые требования к извлечению и новые кейсы в бенчмарке. Такой цикл держит scope онтологии и промптов **доказуемым** относительно эталона. Практический порядок шагов для разработчика — [runbooks/benchmark-driven-dev-loop.md](runbooks/benchmark-driven-dev-loop.md).
+
+```mermaid
+flowchart LR
+    goldSuite[GoldSuite] --> benchmarkRun[BenchmarkRun]
+    benchmarkRun --> triage[Triage]
+    triage --> codePromptOntology[CodePromptOntology]
+    codePromptOntology --> productSurface[ProductSurface]
+    productSurface --> newMetrics[NewMetricsOrFamilies]
+    newMetrics --> goldSuite
+```
+
+### 1.5. Docker и Compose: ранняя упаковка
+
+**Политика проекта:** по мере появления зависимостей — как можно **раньше** упаковывать их в **Docker** (образы) и сводить запуск в **`docker-compose.yml`**, чтобы разработка, интеграционные тесты и бенчмарки опирались на **один и тот же** воспроизводимый стек (порты и URL согласованы с CI: `integration-nightly`, reference lane). Избегать сценария «сначала только README с ручной установкой Neo4j/Postgres/Qdrant». Новые **stateful** сервисы и **долеживаемые** процессы (API, workers) по умолчанию получают **Dockerfile** и/или сервис в compose, а не только текстовую инструкцию. Команды и состав стека: [runbooks/deploy.md](runbooks/deploy.md).
+
 ---
 
 ## 2. Стратегия реализации: greenfield vs копирование
@@ -101,7 +119,7 @@ flowchart LR
 | Документация: `docs/architecture`, `docs/adr`, roadmap, policies, runbooks | **Reuse (паттерн)** | Воспроизвести структуру каталогов и дисциплину ADR под science-domain. |
 | Разделение benchmark families (KG / IR / stream / gates) | **Reuse (паттерн)** | Адаптировать таксономию под scholarly сценарии (см. §8). |
 | Testing strategy: unit / integration / smoke, merge-blocking subset | **Reuse (паттерн)** | Определить свои маркеры и gates под наличие инфраструктуры. |
-| Docker / compose: граф + вектор + SQL + объекты | **Adapt** | Тот же класс стека часто уместен; конкретные сервисы и версии — решение проекта. |
+| Docker / compose: граф + вектор + SQL + объекты | **Adapt** | Тот же класс стека часто уместен; конкретные сервисы и версии — решение проекта. **Политика:** ранняя упаковка и единый compose для dev/CI — см. §1.5 и [runbooks/deploy.md](runbooks/deploy.md). |
 | FastAPI shell, auth, middleware | **Adapt** | Каркас HTTP — по необходимости; доменные роуты — новые. |
 | Agent orchestration, subagents, tool registry | **Adapt** | Идея «оркестратор + инструменты» переносима; инструменты — literature/graph/citation, не OSINT-case. |
 | Онтология, extractors, KG models | **Rebuild** | Полная замена под scholarly graph (Work, Claim, Method, …). |
@@ -179,7 +197,7 @@ flowchart LR
 
 **Exit criteria:** зафиксирован документ ontology v1 + policy изменений; согласовано с Phase 3 extraction.
 
-**Статус Phase 2 (2026-03-31):** **черновик + scope ADR** — [specs/ontology-v1-mvp.md](specs/ontology-v1-mvp.md), принятый [adr/004-ontology-v1-scope.md](adr/004-ontology-v1-scope.md); контракт Phase 3 для первого semantic-stage: [specs/extraction/semantic-method-dataset-v1.md](specs/extraction/semantic-method-dataset-v1.md). Имплементация узлов/рёбер в Neo4j — следующая волна.
+**Статус Phase 2 (2026-04-06):** **MVP ontology v1** — сущности и связи **`Method` / `Dataset`** реализованы в **Neo4j**, ingestion и API (в т.ч. `science_graphrag/graph/neo4j_store.py`, semantic extraction по [specs/extraction/semantic-method-dataset-v1.md](specs/extraction/semantic-method-dataset-v1.md)). Спецификация и границы scope: [specs/ontology-v1-mvp.md](specs/ontology-v1-mvp.md), [adr/004-ontology-v1-scope.md](adr/004-ontology-v1-scope.md). **Дальнейшее расширение** онтологии остаётся **gated** золотыми эталонами и бенчмарками — см. [benchmarks/benchmark-expansion-v1.md](benchmarks/benchmark-expansion-v1.md).
 
 ---
 
@@ -238,6 +256,8 @@ flowchart LR
 **Exit criteria:** документ `docs/benchmarks/strategy-v1.md` (или раздел здесь) + минимальный автоматический прогон хотя бы для слоя 1 extraction; план merge vs nightly gates.
 
 **Статус Phase 4:** **в процессе** (2026-03-30, углубление **2026-03-31**).
+
+**Dev/QA:** визуальная консоль бенчмарков (`/benchmark` в `ui/`, API `/v1/benchmark/*`) — **основной** интерфейс для просмотра `article.md`, эталона (`gold`) и сравнения с выводом модели **наряду с CLI** и [benchmark-decision-gate](runbooks/benchmark-decision-gate.md); не заменяет воспроизводимые прогоны и агрегатор метрик. См. Phase 6 и [architecture/frontend-phase6-bridge-backlog.md](architecture/frontend-phase6-bridge-backlog.md) (`A5`, `B4`).
 
 **Политика: бенчмарки с LLM как эталон качества.** Локальные и ручные регрессионные прогоны, по которым судят о качестве извлечения (метаданные, ссылки, семантический слой) и о содержимом Neo4j после ingest, следует выполнять **с включённым LLM** (`SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED=true`, ключ и base URL в `.env` — см. [eval/README.md](../eval/README.md), `MAIN_LLM_*` / `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*`). Прогон **без** LLM остаётся для быстрых эвристик и merge CI; его метрики и граф **не** считаются эталоном поведения в продакшене.
 
@@ -313,6 +333,7 @@ flowchart LR
 - Обзор графа (фильтры по типам узлов).
 - Панель доказательств и цитат к ответу системы.
 - Композер запросов; опционально «доска идей» (post-MVP).
+- **Benchmarks (dev/QA):** страница просмотра фикстур и запуска прогонов в UI — тот же класс задач, что консоль бенчмарков в референсе [osint-gr](/home/roman/pyprojects/ML/Prod/osint-gr) (`frontend/src/pages/BenchmarkPage/`, вспомогательно `backend/tests/bench/`, `backend/osint_graphrag/utils/bench/`). Рекомендуется **с ранних Phase 3–4** для визуального QA извлечения (см. §1.4). Не заменяет CLI и [benchmark-decision-gate](runbooks/benchmark-decision-gate.md); дополняет Phase 4 для локальной итерации. См. [architecture/frontend-phase6-bridge-backlog.md](architecture/frontend-phase6-bridge-backlog.md) (`A5`, `B4`).
 
 **MVP flow:** ingest корпуса → просмотр графа/метаданных → вопрос с grounded ответом → инспекция цитат.
 
@@ -324,6 +345,8 @@ flowchart LR
 1) `frontend shell + mock-driven screens + contract-first planning`;  
 2) полная интеграция после стабилизации Phase 5 API-контрактов.  
 См. [architecture/frontend-parallel-track-strategy.md](architecture/frontend-parallel-track-strategy.md), [specs/frontend-ui-api-contracts-v1.md](specs/frontend-ui-api-contracts-v1.md), [architecture/frontend-phase6-bridge-backlog.md](architecture/frontend-phase6-bridge-backlog.md).
+
+**Benchmark console (2026-04-06):** в планах зафиксирована поверхность **Benchmarks** (`/benchmark` в `ui/`, API `/v1/benchmark/*` в `science_graphrag/api/benchmark.py`, фоновые прогоны `science_graphrag/api/task_store.py`). Текущий охват — **layer-1** и in-memory история прогонов; выравнивание с osint-gr по UX и расширение на другие семейства — backlog в [frontend-phase6-bridge-backlog.md](architecture/frontend-phase6-bridge-backlog.md) (`A5`, `B4`).
 
 ---
 
@@ -359,6 +382,8 @@ flowchart TD
     phase6 --> phase7
 ```
 
+Диаграмма задаёт **логический** порядок введения возможностей. **Phase 2–4** на практике развиваются **спиралью**: онтология, контракты извлечения, gold-set и прогоны бенчмарков чередуются с правками промптов и кода, пока метрики на эталоне не стабилизируются (см. §1.4).
+
 Параллельно допустимо:  
 - вести `shell/contracts`-волну Phase 6 параллельно с доработкой Phase 5;  
 - переводить UI на full integration только после стабилизации API-контрактов;  
@@ -384,11 +409,13 @@ flowchart TD
 | Документ | Назначение |
 |----------|------------|
 | [runbooks/roadmap-next-waves.md](runbooks/roadmap-next-waves.md) | Wave A–D: decision gate, semantic, e2e, pilot |
+| [runbooks/benchmark-driven-dev-loop.md](runbooks/benchmark-driven-dev-loop.md) | Короткий цикл: кейс → прогон → compare; CLI и UI `/benchmark` |
 | [runbooks/benchmark-decision-gate.md](runbooks/benchmark-decision-gate.md) | GO / NO-GO и связь с Wave A–D |
 | [runbooks/pilot-checklist.md](runbooks/pilot-checklist.md) | Phase 7: pilot package и KPI |
+| [runbooks/deploy.md](runbooks/deploy.md) | Compose-стек, политика ранней Docker-упаковки |
 | [architecture/frontend-parallel-track-strategy.md](architecture/frontend-parallel-track-strategy.md) | Strategy параллельного frontend-трека до полного закрытия Phase 5 |
 | [specs/frontend-ui-api-contracts-v1.md](specs/frontend-ui-api-contracts-v1.md) | Минимальные frontend-facing API контракты v1 |
-| [architecture/frontend-phase6-bridge-backlog.md](architecture/frontend-phase6-bridge-backlog.md) | Стартовый backlog: frontend shell + backend bridge endpoints |
+| [architecture/frontend-phase6-bridge-backlog.md](architecture/frontend-phase6-bridge-backlog.md) | Стартовый backlog: frontend shell + backend bridge + **benchmark console** (`A5`/`B4`) |
 | [benchmarks/graph-level-eval-v1.md](benchmarks/graph-level-eval-v1.md) | План graph-level benchmark после ingest |
 | [benchmarks/benchmark-expansion-v1.md](benchmarks/benchmark-expansion-v1.md) | Расширение корпуса и семейств бенчмарков |
 | [idea.md](idea.md) | Онтология по слоям, первый слой графа, нормализация, промпты, внешние источники |
@@ -402,6 +429,10 @@ flowchart TD
 
 | Версия | Дата | Изменения |
 |--------|------|-----------|
+| 2.3 | 2026-04-06 | §1.5 и строка в матрице §4: политика **ранней** упаковки сервисов в Docker и `docker-compose.yml`; [runbooks/deploy.md](runbooks/deploy.md) — секция *Policy: Docker and Compose (early)*. |
+| 2.2 | 2026-04-06 | §1.4: flywheel продукт ↔ бенчмарк; §6: спираль Phase 2–4; Phase 4/6: консоль `/benchmark` как основной dev/QA интерфейс наряду с CLI; §8: ссылка на [benchmark-driven-dev-loop.md](runbooks/benchmark-driven-dev-loop.md). |
+| 2.1 | 2026-04-06 | Phase 6: в планах и backlog явно добавлены **Benchmarks** (страница просмотра/запуска бенчмарков, референс osint-gr `BenchmarkPage` + `tests/bench` + `utils/bench`); контракт `/v1/benchmark/*` — [specs/frontend-ui-api-contracts-v1.md](specs/frontend-ui-api-contracts-v1.md); Wave C — опциональный пункт про benchmark UI. |
+| 2.0 | 2026-04-06 | Phase 2: статус — MVP `Method`/`Dataset` в Neo4j, ingestion и API; semantic extraction и контракты синхронизированы. Wave D: [pilot-checklist.md](runbooks/pilot-checklist.md), [pilot-corpus-wave-d.md](runbooks/pilot-corpus-wave-d.md), [pilot/wave-d-exit-record.md](pilot/wave-d-exit-record.md); UI Phase 6 bridge (маршруты Workspace/Reader/Graph/Ask/Evidence); CI job `ui` для `ui/`. |
 | 1.9 | 2026-03-31 | Wave A закрыта до `GO`: authoritative rerun `layer1 nightly_heavy` + `layer2 nightly_semantic` и пересборка агрегатора дали `decision=GO` (`layer1 failed=0`, `layer2 failed=0`). Обновлены runbooks gate/waves. |
 | 1.8 | 2026-03-31 | Wave A: синхронизированы layer-1 gold `abstract_prefix` для realpdf-кейсов; выполнены targeted retests (`centernet`, `deformable_detr`, `fcos`, `selective_search`) — все `passed=True`; агрегатор метрик расширен supplementary-учётом `deformable_detr`. |
 | 1.7 | 2026-03-31 | Wave B: `nightly_semantic` suite перепрогнан после `nano_retry` — `layer2 nightly failed: 0`; обновлены decision-gate и wave runbooks (single-case + suite snapshots). |

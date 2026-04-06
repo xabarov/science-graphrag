@@ -5,6 +5,11 @@ import Tooltip from "@mui/material/Tooltip";
 import { useLocation, Link as RouterLink } from "react-router-dom";
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
+import WorkspacesOutlinedIcon from "@mui/icons-material/WorkspacesOutlined";
+import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
+import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
+import QuestionAnswerOutlinedIcon from "@mui/icons-material/QuestionAnswerOutlined";
+import FactCheckOutlinedIcon from "@mui/icons-material/FactCheckOutlined";
 
 import { CursorIconButton } from "../../common/index.js";
 
@@ -26,11 +31,12 @@ export default function Drawer({ onNavigate }) {
 
   const menu = useMemo(
     () => [
-      {
-        to: "/benchmark",
-        label: "Benchmarks",
-        icon: <ScienceOutlinedIcon />,
-      },
+      { to: "/workspace", label: "Workspace", icon: <WorkspacesOutlinedIcon /> },
+      { to: "/reader", label: "Reader", icon: <MenuBookOutlinedIcon /> },
+      { to: "/graph", label: "Graph", icon: <AccountTreeOutlinedIcon /> },
+      { to: "/ask", label: "Ask", icon: <QuestionAnswerOutlinedIcon /> },
+      { to: "/evidence", label: "Evidence", icon: <FactCheckOutlinedIcon /> },
+      { to: "/benchmark", label: "Benchmarks", icon: <ScienceOutlinedIcon /> },
     ],
     [],
   );
@@ -119,4 +125,3 @@ export default function Drawer({ onNavigate }) {
     </Box>
   );
 }
-

@@ -1,0 +1,12 @@
+---
+description: Использовать виртуальное окружение проекта .venv
+alwaysApply: true
+---
+
+# Virtual environment
+
+- Используй **venv в корне репозитория**: `.venv/` (относительно корня клона `science-graphrag`).
+- Для Python, pip, pytest, CLI `science-graphrag` вызывай бинарники из `.venv`, например:
+  - `source .venv/bin/activate` и далее команды из корня, или
+  - `.venv/bin/python`, `.venv/bin/pip`, `.venv/bin/pytest`, `.venv/bin/science-graphrag`
+- Не используй системный Python или чужой venv для этого проекта, если пользователь явно не попросил иное.

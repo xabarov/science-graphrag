@@ -19,6 +19,8 @@ Run frontend in parallel without blocking on full backend completion:
 - keep one production-backed flow (`POST /v1/query`) connected end-to-end;
 - avoid hard coupling to unstabilized data contracts.
 
+**Visual continuity:** match osint-gr’s **design language** (shell layout, typography, style tokens, BenchmarkPage-style console patterns, compact panels) while rebuilding **domain** UX for scholarly research — corpus, reader, graph, evidence — without importing OSINT investigation metaphors or business entities.
+
 ## Reuse matrix from osint-gr
 
 ### Reuse as pattern
@@ -37,6 +39,7 @@ Primary references:
 - `/home/roman/pyprojects/ML/Prod/osint-gr/frontend/src/components/layout/DashboardLayout.jsx`
 - `/home/roman/pyprojects/ML/Prod/osint-gr/frontend/src/components/features/CompactChat.jsx`
 - `/home/roman/pyprojects/ML/Prod/osint-gr/frontend/src/components/features/GraphVisualization.jsx`
+- Benchmark console (cases / runs / results): `/home/roman/pyprojects/ML/Prod/osint-gr/frontend/src/pages/BenchmarkPage/` (бэкенд-опора: `backend/tests/bench/`, `backend/osint_graphrag/utils/bench/`) — переносим **паттерн**, не OSINT-домен
 
 ### Rebuild for science domain
 
@@ -51,7 +54,7 @@ Primary references:
 
 ## Wave A: shell + mocks + one real flow
 
-- Implement surfaces: `Workspace`, `Reader`, `Graph`, `Ask`, `Evidence`.
+- Implement surfaces: `Workspace`, `Reader`, `Graph`, `Ask`, `Evidence`, **`Benchmarks`** (`/benchmark`) для dev/QA по образцу osint-gr (рекомендуется с ранней фазы извлечения; см. [roadmap.md](../roadmap.md) §1.4).
 - Connect only `Ask` to live `POST /v1/query`.
 - Keep other surfaces mock-driven with fixtures.
 - Define stable UI state model and URL contract.

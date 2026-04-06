@@ -35,10 +35,13 @@
 2. Ручной или автоматический сценарий: ingest → `GET /v1/works` → `GET /v1/works/{id}` → `POST /v1/query` → при необходимости `GET /v1/works/{id}/chunks`.
 3. Smoke: `tests/test_api_smoke.py` (покрывает `/health`, `/v1/query`, `/v1/works*`, `/v1/works/{id}/graph`, `/v1/works/{id}/chunks` через моки); полный путь с живыми сторами — вручную или `pytest -m integration` с compose.
 4. Текущий snapshot (2026-03-31): `pytest tests -m integration` → `3 passed` (compose: Neo4j/Postgres/Qdrant подняты).
+5. **Рекомендуемый** ранний контур (Phase 3–4 dev/QA, не блокирует happy-path п.1–4): страница **Benchmarks** в `ui/` и API `/v1/benchmark/*` — просмотр layer-1 фикстур (`article.md`, `gold`), запуск прогонов и сравнение с эталоном в UI; референс по форме — osint-gr `frontend/src/pages/BenchmarkPage/`, `backend/tests/bench/`, `backend/osint_graphrag/utils/bench/`. Цикл CLI + UI — [benchmark-driven-dev-loop.md](benchmark-driven-dev-loop.md). Детали — [specs/frontend-ui-api-contracts-v1.md](../specs/frontend-ui-api-contracts-v1.md) §6, [architecture/frontend-phase6-bridge-backlog.md](../architecture/frontend-phase6-bridge-backlog.md) `A5`/`B4`.
 
 **Exit:** один документированный happy-path без 404 на обязательных маршрутах при заполненном графе.
 
 ## Wave D — Phase 7: пилот и KPI
+
+**Прогресс (2026-04-06):** зафиксированы целевой домен и артефакты пилота — [pilot-checklist.md](pilot-checklist.md), запись выхода [docs/pilot/wave-d-exit-record.md](../pilot/wave-d-exit-record.md), корпус [pilot-corpus-wave-d.md](pilot-corpus-wave-d.md). Добавлены: скрипт `./scripts/pilot_ingest_cv_corpus.sh`, live-обвязка `ui/` к `/v1/works*`, расширенный smoke в `tests/test_api_smoke.py`; промежуточное **CONDITIONAL-GO** в exit record до полного корпуса и KPI.
 
 1. Pilot package: [pilot-checklist.md](pilot-checklist.md) (предусловие — не слабее **CONDITIONAL-GO** по [benchmark-decision-gate.md](benchmark-decision-gate.md)).
 2. Зафиксировать KPI: корректность цитат (выборочно), полнота `retrieval_trace`, p95 latency для `/v1/query` и списка works — таблица в чеклисте.

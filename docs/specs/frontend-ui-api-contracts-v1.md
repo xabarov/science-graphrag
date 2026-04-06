@@ -8,6 +8,7 @@ Status by endpoint:
 
 - `POST /v1/query`: implemented (source of truth in `science_graphrag/api/main.py`)
 - `GET /v1/works`, `GET /v1/works/{work_id}`, `GET /v1/works/{work_id}/graph`, `GET /v1/works/{work_id}/chunks`: implemented (same module; Neo4j + Qdrant)
+- **`/v1/benchmark/*`:** implemented for **layer-1** benchmark console UI (`science_graphrag/api/benchmark.py`, runs via `science_graphrag/api/task_store.py`) — не часть обязательного research happy-path ниже
 - other niceties below: optional backlog (filters, richer graph projection)
 
 ## Mandatory API happy-path (Wave C)
@@ -65,7 +66,10 @@ Response shape:
   "graph_context": {
     "methods": ["string"],
     "datasets": ["string"],
-    "error": "optional string"
+    "semantic_available": true,
+    "context_work_id": "string | null",
+    "degraded": ["string"],
+    "error": "string | null"
   },
   "retrieval_trace": {
     "embedding": {
@@ -74,15 +78,23 @@ Response shape:
     },
     "hit_count": 0,
     "filter_work_id": "string | null",
-    "resolved_work_id": "string | null"
+    "resolved_work_id": "string | null",
+    "qdrant_collection": "string",
+    "top_k_requested": 0,
+    "citations_returned": 0,
+    "degraded": ["string"]
   }
 }
 ```
 
 Degraded mode expectations:
 
-- no retrieval hits -> answer explains empty retrieval; citations empty;
-- Neo4j unavailable -> `graph_context.error = "neo4j_unavailable"`; methods/datasets empty.
+- **No retrieval hits** → answer explains empty retrieval; citations empty; `retrieval_trace.degraded` contains `no_retrieval_hits`. Compare `retrieval_trace.hit_count`, `top_k_requested`, and `citations_returned` in the UI (e.g. hits present but empty excerpts should be rare; trace should still explain the outcome).
+- **No work id resolved** from filter or top hits → `graph_context.degraded` contains `no_resolved_work`; `context_work_id` null; `semantic_available` false until a work is resolved.
+- **Unknown work id** (resolved id not in Neo4j) → `graph_context.degraded` contains `work_not_in_graph`.
+- **Neo4j unavailable** → `graph_context.error = "neo4j_unavailable"`; `graph_context.degraded` contains `neo4j_unavailable`; methods/datasets empty; UI should surface the error string and avoid implying semantic validation.
+- **Semantic edges absent** (valid state after ingest without LLM or failed semantic stage) → `semantic_available=false`; `graph_context.degraded` may be empty (not an error). Chips/panels should not claim methods/datasets were extracted.
+- **Qdrant / embedding failures** → expect HTTP 5xx or upstream error from the API client; not represented as a successful `degraded` payload. UI should treat transport errors separately from semantic degradation.
 
 ## 2) Works list/search (implemented)
 
@@ -204,6 +216,25 @@ Response:
 }
 ```
 
+## 6) Benchmark console API (implemented, layer-1)
+
+Назначение: страница **`/benchmark`** в `ui/` — просмотр кейсов и запуск прогонов **без обязательного CLI**, по идее как dev/QA-консоль в референсе [osint-gr](/home/roman/pyprojects/ML/Prod/osint-gr) (`frontend/src/pages/BenchmarkPage/` и связанные сервисы). Источник эталонных кейсов — `tests/fixtures/benchmarks/layer1/`; полный suite и decision gate остаются в [eval/README.md](../../eval/README.md) и [runbooks/benchmark-decision-gate.md](../runbooks/benchmark-decision-gate.md).
+
+| Method | Path | Role |
+|--------|------|------|
+| GET | `/v1/benchmark/cases` | Список кейсов (`tier`, `q`, `limit`, `offset`) |
+| GET | `/v1/benchmark/cases/{case_id}` | Превью: `article_md`, `gold` |
+| POST | `/v1/benchmark/runs` | Старт прогона (`case_ids` или ярлыки) |
+| GET | `/v1/benchmark/runs` | История прогонов |
+| GET | `/v1/benchmark/runs/{run_id}` | Детали/метрики прогона |
+| DELETE | `/v1/benchmark/runs/{run_id}` | Удалить запись прогона |
+
+**Ограничения (зафиксировать в UX):** история прогонов **in-memory** (потеря при рестарте API); только **layer-1** runner в фоне. Расширение на layer-2 / graph-v1 — backlog ([architecture/frontend-phase6-bridge-backlog.md](../architecture/frontend-phase6-bridge-backlog.md) `A5`/`B4`).
+
+**Текущий scope ответа прогона:** детали run включают **predicted vs gold** для layer-1 (как в UI `ComparisonTable`). **Roadmap extension:** те же примитивы визуального сравнения для **layer-2** (semantic) и **graph-v1** после появления обёрток в API и стабильной формы payload.
+
+Клиент: `ui/src/services/benchmarkApi.js`.
+
 ## Mapping to UI surfaces
 
 - `Workspace`: `GET /v1/works`
@@ -211,3 +242,4 @@ Response:
 - `Graph`: `GET /v1/works/{work_id}/graph`
 - `Ask`: `POST /v1/query`
 - `Evidence`: query citations + chunks lookup by `chunk_fingerprint`
+- `Benchmarks`: `/v1/benchmark/*` (см. §6)

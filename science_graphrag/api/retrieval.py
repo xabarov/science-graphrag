@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, NamedTuple
 
 from neo4j import GraphDatabase, NotificationClassification
 
@@ -14,6 +14,8 @@ from science_graphrag.storage.qdrant_store import QdrantChunkStore
 
 @dataclass
 class GroundedAnswer:
+    """Deterministic retrieval result for POST /v1/query (no second-stage LLM)."""
+
     answer: str
     citations: list[dict[str, Any]]
     graph_context: dict[str, Any]
@@ -36,39 +38,168 @@ def _embed_query(text: str, settings: Settings) -> tuple[list[float], dict[str, 
     return vec.tolist(), trace
 
 
-def _neo4j_semantic_neighborhood(settings: Settings, work_id: str) -> dict[str, Any]:
-    driver = GraphDatabase.driver(
-        settings.neo4j_uri,
-        auth=(settings.neo4j_user, settings.neo4j_password),
-        notifications_disabled_classifications=[NotificationClassification.UNRECOGNIZED],
-    )
+_SEMANTIC_EXISTS = (
+    "(EXISTS { MATCH (w)-[:USES_METHOD]->(:Method) }) OR "
+    "(EXISTS { MATCH (w)-[:EVALUATED_ON]->(:Dataset) })"
+)
+
+
+def _neo4j_graph_context_for_work(settings: Settings, work_id: str) -> dict[str, Any]:
+    """
+    Neo4j semantic neighborhood for query-time graph_context.
+
+    Returns stable keys for UI: semantic_available, optional error, operational degraded[].
+    """
+
     methods: list[str] = []
     datasets: list[str] = []
     try:
-        with driver.session() as session:
-            for rec in session.run(
-                """
-                MATCH (:Work {id: $wid})-[:USES_METHOD]->(m:Method)
-                RETURN DISTINCT coalesce(m.name, '') AS name
-                """,
-                wid=work_id,
-            ):
-                name = (rec["name"] or "").strip()
-                if name:
-                    methods.append(name)
-            for rec in session.run(
-                """
-                MATCH (:Work {id: $wid})-[:EVALUATED_ON]->(d:Dataset)
-                RETURN DISTINCT coalesce(d.name, '') AS name
-                """,
-                wid=work_id,
-            ):
-                name = (rec["name"] or "").strip()
-                if name:
-                    datasets.append(name)
-    finally:
-        driver.close()
-    return {"methods": sorted(set(methods)), "datasets": sorted(set(datasets))}
+        with GraphDatabase.driver(
+            settings.neo4j_uri,
+            auth=(settings.neo4j_user, settings.neo4j_password),
+            notifications_disabled_classifications=[NotificationClassification.UNRECOGNIZED],
+        ) as driver:
+            with driver.session() as session:
+                row = session.run(
+                    f"""
+                    MATCH (w:Work {{id: $wid}})
+                    RETURN w.id AS wid,
+                           {_SEMANTIC_EXISTS} AS semantic_available
+                    """,
+                    wid=work_id,
+                ).single()
+                if not row:
+                    return {
+                        "methods": [],
+                        "datasets": [],
+                        "semantic_available": False,
+                        "context_work_id": work_id,
+                        "degraded": ["work_not_in_graph"],
+                        "error": None,
+                    }
+                semantic_available = bool(row["semantic_available"])
+                for rec in session.run(
+                    """
+                    MATCH (:Work {id: $wid})-[:USES_METHOD]->(m:Method)
+                    RETURN DISTINCT coalesce(m.name, '') AS name
+                    """,
+                    wid=work_id,
+                ):
+                    name = (rec["name"] or "").strip()
+                    if name:
+                        methods.append(name)
+                for rec in session.run(
+                    """
+                    MATCH (:Work {id: $wid})-[:EVALUATED_ON]->(d:Dataset)
+                    RETURN DISTINCT coalesce(d.name, '') AS name
+                    """,
+                    wid=work_id,
+                ):
+                    name = (rec["name"] or "").strip()
+                    if name:
+                        datasets.append(name)
+                return {
+                    "methods": sorted(set(methods)),
+                    "datasets": sorted(set(datasets)),
+                    "semantic_available": semantic_available,
+                    "context_work_id": work_id,
+                    "degraded": [],
+                    "error": None,
+                }
+    except Exception:  # noqa: BLE001
+        return {
+            "methods": [],
+            "datasets": [],
+            "semantic_available": False,
+            "context_work_id": work_id,
+            "degraded": ["neo4j_unavailable"],
+            "error": "neo4j_unavailable",
+        }
+
+
+def _citations_and_snippets_from_hits(
+    hits: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[str]]:
+    """Build ranked citations and short snippets for the deterministic answer string."""
+
+    citations: list[dict[str, Any]] = []
+    snippets: list[str] = []
+    for rank, h in enumerate(hits, start=1):
+        text = (h.get("text") or "").strip()
+        if not text:
+            continue
+        citations.append(
+            {
+                "rank": rank,
+                "score": h.get("score"),
+                "work_id": h.get("work_id"),
+                "document_id": h.get("document_id"),
+                "chunk_fingerprint": h.get("chunk_fingerprint"),
+                "section_path": h.get("section_path"),
+                "excerpt": text[:600],
+            },
+        )
+        snippets.append(text[:400])
+    return citations, snippets
+
+
+def _effective_work_id(work_id: str | None, hits: list[dict[str, Any]]) -> str | None:
+    return work_id or (hits[0].get("work_id") if hits else None)
+
+
+class _GraphAndResolved(NamedTuple):
+    graph_context: dict[str, Any]
+    resolved_work_id: str | None
+
+
+def _graph_context_for_hits(
+    settings: Settings,
+    work_id: str | None,
+    hits: list[dict[str, Any]],
+) -> _GraphAndResolved:
+    effective = _effective_work_id(work_id, hits)
+    if effective:
+        return _GraphAndResolved(
+            _neo4j_graph_context_for_work(settings, effective),
+            effective,
+        )
+    return _GraphAndResolved(
+        {
+            "methods": [],
+            "datasets": [],
+            "semantic_available": False,
+            "context_work_id": None,
+            "degraded": ["no_resolved_work"],
+            "error": None,
+        },
+        None,
+    )
+
+
+class _RetrievalTraceIn(NamedTuple):
+    emb_trace: dict[str, Any]
+    hits: list[dict[str, Any]]
+    filter_work_id: str | None
+    resolved_work_id: str | None
+    qdrant_collection: str
+    top_k: int
+    citations_returned: int
+
+
+def _retrieval_trace_payload(inp: _RetrievalTraceIn) -> dict[str, Any]:
+    trace_degraded: list[str] = []
+    if len(inp.hits) == 0:
+        trace_degraded.append("no_retrieval_hits")
+    return {
+        "embedding": inp.emb_trace,
+        "hit_count": len(inp.hits),
+        "filter_work_id": inp.filter_work_id,
+        "resolved_work_id": inp.resolved_work_id,
+        "qdrant_collection": inp.qdrant_collection,
+        "top_k_requested": inp.top_k,
+        "citations_returned": inp.citations_returned,
+        "degraded": trace_degraded,
+    }
 
 
 def answer_query(
@@ -88,32 +219,8 @@ def answer_query(
     vec, emb_trace = _embed_query(question, s)
     qstore = QdrantChunkStore(s.qdrant_url, s.qdrant_collection, vector_dim=len(vec))
     hits = qstore.search_similar(vector=vec, limit=top_k, work_id=work_id)
-    citations: list[dict[str, Any]] = []
-    snippets: list[str] = []
-    for rank, h in enumerate(hits, start=1):
-        text = (h.get("text") or "").strip()
-        if not text:
-            continue
-        citations.append(
-            {
-                "rank": rank,
-                "score": h.get("score"),
-                "work_id": h.get("work_id"),
-                "document_id": h.get("document_id"),
-                "chunk_fingerprint": h.get("chunk_fingerprint"),
-                "section_path": h.get("section_path"),
-                "excerpt": text[:600],
-            },
-        )
-        snippets.append(text[:400])
-
-    graph: dict[str, Any] = {"methods": [], "datasets": []}
-    effective_work = work_id or (hits[0].get("work_id") if hits else None)
-    if effective_work:
-        try:
-            graph = _neo4j_semantic_neighborhood(s, effective_work)
-        except Exception:  # noqa: BLE001
-            graph = {"methods": [], "datasets": [], "error": "neo4j_unavailable"}
+    citations, snippets = _citations_and_snippets_from_hits(hits)
+    graph, resolved_work = _graph_context_for_hits(s, work_id, hits)
 
     if snippets:
         joined = " ".join(snippets[:3])
@@ -125,15 +232,19 @@ def answer_query(
     else:
         answer = "No retrieved chunks; ingest documents or check Qdrant collection."
 
-    trace = {
-        "embedding": emb_trace,
-        "hit_count": len(hits),
-        "filter_work_id": work_id,
-        "resolved_work_id": effective_work,
-    }
     return GroundedAnswer(
         answer=answer,
         citations=citations,
         graph_context=graph,
-        retrieval_trace=trace,
+        retrieval_trace=_retrieval_trace_payload(
+            _RetrievalTraceIn(
+                emb_trace,
+                hits,
+                work_id,
+                resolved_work,
+                s.qdrant_collection,
+                top_k,
+                len(citations),
+            ),
+        ),
     )

@@ -1,0 +1,16 @@
+---
+description: Согласование API /v1/* с UI и спецификацией
+globs: ["science_graphrag/api/**", "ui/src/**"]
+alwaysApply: false
+---
+
+# API и UI — контракты
+
+При изменении `science_graphrag/api/*` или клиента в `ui/src/`, затрагивающих эндпоинты **`/v1/*`**:
+
+- Сверяйся с [docs/specs/frontend-ui-api-contracts-v1.md](docs/specs/frontend-ui-api-contracts-v1.md).
+- Сохраняй стабильные идентификаторы в ответах: `work_id`, `document_id`, `chunk_fingerprint` где применимо.
+- Трассируемость: UI должен иметь возможность показать источник (citations, `retrieval_trace`, degraded modes из payload).
+- Не вводи скрытую семантику: пустые или деградированные режимы должны быть явно отражены в JSON.
+
+После правок контрактов обновляй при необходимости [tests/test_api_smoke.py](tests/test_api_smoke.py).

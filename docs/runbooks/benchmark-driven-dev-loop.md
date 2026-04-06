@@ -15,6 +15,10 @@
 4. Исправь регрессию, повтори шаги 2-3.
 5. Прогони suite для нужного tier и только после этого готовь PR.
 
+### Просмотр результата в UI
+
+При поднятом API (`science-graphrag-api` / compose) страница **`/benchmark`** в пакете `ui/` даёт тот же контур без обязательного SSH/CLI: список кейсов, превью **`article.md`** и **`gold.json`**, запуск прогонов и диалог результатов с **predicted vs gold** (сейчас **layer-1**). Эталон для merge/release остаётся **CLI**, сравнение с baseline и [benchmark-decision-gate.md](benchmark-decision-gate.md); UI — для ускорения визуального QA на ранних Phase 3–4. Контракт API: [specs/frontend-ui-api-contracts-v1.md](../specs/frontend-ui-api-contracts-v1.md) §6.
+
 ## Команды
 
 ```bash

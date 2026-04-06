@@ -1,0 +1,35 @@
+---
+description: Тестирование — pytest, маркер integration
+globs: ["tests/**", "**/test_*.py"]
+---
+
+# Testing
+
+## Запуск
+
+Используй интерпретатор и зависимости из **корневого `.venv`**:
+
+```bash
+.venv/bin/pytest tests -v --tb=short
+```
+
+- `tests/` — unit и интеграционные тесты.
+- В `pyproject.toml`: `testpaths = ["tests"]`, `pythonpath = ["."]`.
+
+## Маркер `integration`
+
+Тесты с `@pytest.mark.integration` требуют поднятых Docker-сервисов (Neo4j, Postgres, Qdrant и т.д.). Запуск только unit/smoke без живых сторов:
+
+```bash
+.venv/bin/pytest tests -v -m "not integration"
+```
+
+Интеграция при поднятом compose:
+
+```bash
+.venv/bin/pytest tests -v -m integration
+```
+
+## API-контракты в CI
+
+[tests/test_api_smoke.py](tests/test_api_smoke.py) проверяет `/health` и контракты `/v1/*` на моках (без живых сторов) — ориентир для merge CI.

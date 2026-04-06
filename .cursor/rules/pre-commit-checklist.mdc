@@ -1,0 +1,17 @@
+---
+description: Чеклист после крупных правок перед коммитом
+alwaysApply: false
+---
+
+# Pre-commit checklist (крупные правки)
+
+1. **Backend** — см. `.cursor/rules/backend-quality.mdc`: `isort`, `black`, `pylint`, затем `pytest` (по необходимости `-m "not integration"` или `integration`).
+
+2. **Frontend** — из корня: `cd ui && npm run lint`.
+
+3. **Docker** — если меняли `docker-compose.yml`, Dockerfile или зависимости сервисов: пересобрать затронутые сервисы и проверить `docker compose ps` / health.
+
+4. **Не коммитить**
+   - `.env` с секретами
+   - отладочные дампы с полным текстом корпуса или PII
+   - `node_modules/`, `__pycache__/`, `.pytest_cache/`

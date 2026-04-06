@@ -14,6 +14,7 @@
 ## Gold-set (in-house)
 
 - **Размер:** 10–50 работ или фрагментов (Phase 4 roadmap); на старте — `tests/fixtures/` и расширяемый каталог.
+- **`article.md` в кейсе:** канонический **нормализованный полнотекст** для раннера и UI (извлечение текста из PDF, пост-OCR нормализация или ручной правки) — один артефакт, чтобы benchmark CLI и страница `/benchmark` смотрели на одно и то же входное представление.
 - **Layer-1 markdown:** `tests/fixtures/benchmarks/layer1/<case_id>/` + `eval/layer1/` — эталон [yolov1-baseline.md](yolov1-baseline.md); синтетика (`doi_refs_heavy`, `arxiv_refs_heavy`, `noisy_layout_stub`); реальный pypdf→MD (`*_realpdf`, см. `SOURCE.txt` и `scripts/build_real_pdf_layer1_fixture.py`).
 - **Разметка:** DOI, title, year, список авторов (порядок), список DOI в references (где есть).
 - **Версионирование:** JSON рядом с фикстурами; изменения через PR + заметка в этом файле.

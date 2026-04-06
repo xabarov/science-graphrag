@@ -1,5 +1,8 @@
 # Local stack for Phase 1. Usage: docker compose up -d
 # Host ports chosen to avoid clashes with existing Postgres (5432) / Neo4j (7474, 7687) on the machine.
+#
+# API service uses Docker network hostnames (postgres, neo4j, qdrant). Host .env with localhost:* is for
+# CLI/benchmarks on the machine; override via compose `environment` below when running the API container.
 services:
   neo4j:
     image: neo4j:5-community
@@ -36,6 +39,38 @@ services:
       - "14317:4317"
     volumes:
       - phoenix_data:/mnt/data
+
+  api:
+    build: .
+    ports:
+      - "8787:8787"
+    environment:
+      SCIENCE_GRAPHRAG_DATABASE_URL: postgresql+psycopg://science:science@postgres:5432/science_graphrag
+      SCIENCE_GRAPHRAG_NEO4J_URI: bolt://neo4j:7687
+      SCIENCE_GRAPHRAG_NEO4J_USER: neo4j
+      SCIENCE_GRAPHRAG_NEO4J_PASSWORD: sciencegraphrag
+      SCIENCE_GRAPHRAG_QDRANT_URL: http://qdrant:6333
+      SCIENCE_GRAPHRAG_BLOB_ROOT: /data/blobs
+      SCIENCE_GRAPHRAG_ARTIFACT_ROOT: /data/artifacts
+    volumes:
+      - ./data/blobs:/data/blobs
+      - ./data/artifacts:/data/artifacts
+    depends_on:
+      - postgres
+      - neo4j
+      - qdrant
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8787/health', timeout=5)",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 25s
 
 volumes:
   neo4j_data:

@@ -31,6 +31,8 @@
 | Qdrant | Векторы чанков (текст + embedding id) |
 | Python 3.11+ | Пакет `science_graphrag`, CLI, HTTP-клиенты к реестрам |
 
+**Docker Compose:** канонический способ поднять Postgres, Neo4j и Qdrant локально — корневой `docker-compose.yml` и [runbooks/deploy.md](../runbooks/deploy.md). Политика как можно более **ранней** контейнеризации новых сервисов зафиксирована в [roadmap §1.5](../roadmap.md).
+
 **PDF extraction (текущий код):** режим **VL-first**. При наличии `SCIENCE_GRAPHRAG_VL_API_KEY` используется vision-language PDF → Markdown; иначе pipeline сохраняет `pypdf` fallback в тот же `article.md`. Дефолтная VL-модель: `qwen/qwen3-vl-235b-a22b-instruct` (см. `.env.example`).
 
 **Chunking (после Markdown):** нормализованный текст режется на слайсы **front matter** и **references scope** для стадий Layer 1; векторный индекс (Qdrant) — **section-aware chunks** с `chunk_fingerprint` и путём секции. Подробно: [chunking-strategy.md](chunking-strategy.md), ADR [003](../adr/003-chunking-and-dedup-strategy.md).

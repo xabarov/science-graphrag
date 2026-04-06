@@ -1,0 +1,16 @@
+---
+description: Качество фронтенда — ESLint в ui/
+globs: ["ui/**/*.js", "ui/**/*.jsx"]
+---
+
+# Frontend — качество кода
+
+Клиент: **Vite + React + MUI** в каталоге `ui/` (см. [ui/package.json](ui/package.json)).
+
+После правок во фронтенде:
+
+```bash
+cd ui && npm run lint
+```
+
+Конфигурация ESLint: [ui/.eslintrc.cjs](ui/.eslintrc.cjs).

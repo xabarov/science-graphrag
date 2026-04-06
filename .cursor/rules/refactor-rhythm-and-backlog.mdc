@@ -1,0 +1,39 @@
+---
+description: Режимы «реализация» vs «рефакторинг», бэклог структуры (backend/ui)
+alwaysApply: true
+---
+
+# Structure checks and refactoring rhythm
+
+## Two modes (do not mix in one turn unless the user explicitly asks)
+
+1. **Implementation / modernization step** — deliver the scoped change; keep diffs minimal. If you notice structural debt, **do not** start a wide refactor here. Add a short entry to the right backlog file (see below) or extend an existing item.
+
+2. **Refactor / structure pass** — only when the user asks (e.g. «проход рефакторинга», «разобрать бэклог», «привести структуру»). Then work from `docs/backlog/refactor-backend.md` or `docs/backlog/refactor-frontend.md`, one theme per session when possible.
+
+## Backlog (single source of planned refactors)
+
+- **Backend (Python, layout under repo root):** `docs/backlog/refactor-backend.md`
+- **Frontend (ui/):** `docs/backlog/refactor-frontend.md`
+
+**Entry format (copy block per item):**
+
+```markdown
+### [OPEN] Short title
+- **Area:** package or path (e.g. `science_graphrag/api/`)
+- **Issue:** what is wrong or risky
+- **Proposal:** concrete steps (files/modules)
+- **Acceptance:** how we know it is done
+- **Raised:** YYYY-MM-DD (optional: PR or branch)
+```
+
+Mark done with `[DONE]` and a one-line note; do not delete history without user request.
+
+## After a large modernization step
+
+- Run the usual quality gates (see `pre-commit-checklist.mdc`, `backend-quality.mdc`, `frontend-quality.mdc`).
+- Append backlog items for **follow-up structure** (imports, layering, duplication, API surface), not for cosmetic nits already fixed in the same PR.
+
+## What this rule does *not* replace
+
+- Automated CI, linters, and tests — they run on every push; this rule is for **human/agent scheduling** of deeper refactors.

@@ -1,5 +1,12 @@
 # Runbook: deploy
 
+## Policy: Docker and Compose (early)
+
+- **Goal:** одинаково воспроизводимое окружение для локальной разработки, интеграционных тестов и тяжёлых прогонов (бенчмарки, e2e), без ручной установки СУБД и векторного стора на каждой машине.
+- **Requirement:** новые **stateful** зависимости (БД, очереди, поиск, векторы) и **долеживаемые** сервисы приложения по возможности сразу добавлять в **`docker-compose.yml`** и при необходимости сопровождать **Dockerfile**, а не откладывать контейнеризацию до «продакшена».
+- **Default workflow:** `docker compose up -d` из корня репозитория; порты и переменные окружения согласовать с [benchmark-stabilization-baseline.md](benchmark-stabilization-baseline.md) и `science_graphrag/config.py`.
+- **После правок backend/API:** для согласованного e2e — `docker compose up -d --build` (см. roadmap, раздел **Execution policy**).
+
 ## Stack
 
 - **Postgres**: document metadata and ingestion runs (`SCIENCE_GRAPHRAG_DATABASE_URL`).
