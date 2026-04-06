@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from science_graphrag.config import Settings, get_settings
@@ -45,6 +45,43 @@ from science_graphrag.utils.project_logging import configure_logging, get_logger
 log = get_logger("ingestion.pipeline")
 
 CORPUS_SUPPORTED_SUFFIXES = frozenset({".pdf", ".md", ".txt"})
+
+
+class SkippedDuplicateIngestError(Exception):
+    """Raised when ``skip_existing_sha`` and the file hash is already in ``documents``."""
+
+    def __init__(self, *, document_id: str, sha256: str) -> None:
+        self.document_id = document_id
+        self.sha256 = sha256
+        super().__init__(f"skip duplicate sha256={sha256} document_id={document_id}")
+
+
+def _resolve_document_id_for_sha(
+    session: Session,
+    sha256_hex: str,
+    *,
+    skip_existing_sha: bool,
+    force_new_document: bool,
+) -> tuple[str, bool]:
+    """
+    Pick ``document_id`` for ingest.
+
+    Returns:
+        (document_id, reused_existing) — reused_existing True when re-ingesting same bytes.
+    """
+
+    if force_new_document:
+        return str(uuid.uuid4()), False
+    row = session.execute(
+        select(DocumentRecord)
+        .where(DocumentRecord.sha256 == sha256_hex)
+        .order_by(DocumentRecord.created_at.desc()),
+    ).scalars().first()
+    if row is None:
+        return str(uuid.uuid4()), False
+    if skip_existing_sha:
+        raise SkippedDuplicateIngestError(document_id=row.id, sha256=sha256_hex)
+    return row.id, True
 
 
 def discover_corpus_files(directory: Path) -> list[Path]:
@@ -343,20 +380,37 @@ def ingest_document(
     *,
     settings: Settings | None = None,
     session: Session | None = None,
+    skip_existing_sha: bool = False,
+    force_new_document: bool = False,
 ) -> tuple[str, str]:
     """
     Ingest one PDF or text file. Returns (document_id, work_id).
+
+    With a SQL ``session``, the same file bytes (``sha256``) reuse the existing ``document_id``
+    by default, Qdrant rows for that id are replaced, and Postgres metadata is updated.
+    Use ``skip_existing_sha`` to no-op when the hash exists; ``force_new_document`` for a new row
+    every time (no SQL dedup — e.g. benchmarks with ``session is None``).
     """
     configure_logging()
     settings = settings or get_settings()
-    doc_id = str(uuid.uuid4())
     blob_store = BlobStore(settings.blob_root)
     sha, _stored = blob_store.store_file(path)
+    if session is None:
+        doc_id, reused_doc = str(uuid.uuid4()), False
+    else:
+        doc_id, reused_doc = _resolve_document_id_for_sha(
+            session,
+            sha,
+            skip_existing_sha=skip_existing_sha,
+            force_new_document=force_new_document,
+        )
     with chain_span(
         "ingest_document",
         {
             "document.id": doc_id,
             "document.source_name": path.name,
+            "document.sha256": sha,
+            "document.reused_id": reused_doc,
             "source": str(path.resolve()),
         },
     ):
@@ -479,6 +533,11 @@ def ingest_document(
                 settings.qdrant_collection,
                 vector_dim=embedder.dim,
             )
+            removed = q.delete_points_by_document_id(document_id=doc_id)
+            if removed and reused_doc:
+                log.info(
+                    "qdrant removed %s point(s) before re-ingest document_id=%s", removed, doc_id
+                )
             with chain_span(
                 "qdrant_vector_upsert",
                 {
@@ -498,20 +557,28 @@ def ingest_document(
 
         if session is not None:
             now = datetime.now(UTC)
-            session.add(
-                DocumentRecord(
-                    id=doc_id,
-                    sha256=sha,
-                    source_path=str(path.resolve()),
-                    mime_type=f"application/{path.suffix.lower().lstrip('.') or 'octet-stream'}",
+            mime = f"application/{path.suffix.lower().lstrip('.') or 'octet-stream'}"
+            if reused_doc:
+                existing = session.get(DocumentRecord, doc_id)
+                if existing is not None:
+                    existing.source_path = str(path.resolve())
+                    existing.mime_type = mime
+                    existing.sha256 = sha
+            else:
+                session.add(
+                    DocumentRecord(
+                        id=doc_id,
+                        sha256=sha,
+                        source_path=str(path.resolve()),
+                        mime_type=mime,
+                    ),
                 )
-            )
             session.add(
                 IngestionRunRecord(
                     document_id=doc_id,
                     status="completed",
                     finished_at=now,
-                )
+                ),
             )
 
         return doc_id, work_id
@@ -522,6 +589,8 @@ def run_ingest_batch_cli(
     *,
     continue_on_error: bool = False,
     settings: Settings | None = None,
+    skip_existing_sha: bool = False,
+    force_new_document: bool = False,
 ) -> list[dict[str, Any]]:
     """
     Ingest every ``.pdf`` / ``.md`` / ``.txt`` under ``directory`` (recursive).
@@ -547,16 +616,34 @@ def run_ingest_batch_cli(
         try:
             with factory() as db_session:
                 with db_session.begin():
-                    doc_id, work_id = ingest_document(path, settings=s, session=db_session)
+                    doc_id, work_id = ingest_document(
+                        path,
+                        settings=s,
+                        session=db_session,
+                        skip_existing_sha=skip_existing_sha,
+                        force_new_document=force_new_document,
+                    )
             rows.append(
                 {
                     "path": str(path.resolve()),
                     "document_id": doc_id,
                     "work_id": work_id,
                     "error": None,
+                    "skipped_duplicate": False,
                 },
             )
             print(f"OK path={path} document_id={doc_id} work_id={work_id}")
+        except SkippedDuplicateIngestError as dup:
+            rows.append(
+                {
+                    "path": str(path.resolve()),
+                    "document_id": dup.document_id,
+                    "work_id": None,
+                    "error": None,
+                    "skipped_duplicate": True,
+                },
+            )
+            print(f"SKIP duplicate-sha path={path} document_id={dup.document_id}")
         except Exception as exc:  # noqa: BLE001
             log.exception("Ingest failed for %s", path)
             rows.append(
@@ -565,6 +652,7 @@ def run_ingest_batch_cli(
                     "document_id": None,
                     "work_id": None,
                     "error": str(exc),
+                    "skipped_duplicate": False,
                 },
             )
             print(f"FAIL path={path} error={exc}")
@@ -589,7 +677,12 @@ def run_ingest_batch_cli(
     return rows
 
 
-def run_ingest_cli(path: Path) -> None:
+def run_ingest_cli(
+    path: Path,
+    *,
+    skip_existing_sha: bool = False,
+    force_new_document: bool = False,
+) -> None:
     configure_logging()
     init_tracer_provider()
     s = get_settings()
@@ -597,6 +690,15 @@ def run_ingest_cli(path: Path) -> None:
     init_db(engine)
     factory = sessionmaker(bind=engine)
     with factory() as session:
-        with session.begin():
-            doc_id, work_id = ingest_document(path, settings=s, session=session)
-        print(f"document_id={doc_id} work_id={work_id}")
+        try:
+            with session.begin():
+                doc_id, work_id = ingest_document(
+                    path,
+                    settings=s,
+                    session=session,
+                    skip_existing_sha=skip_existing_sha,
+                    force_new_document=force_new_document,
+                )
+            print(f"document_id={doc_id} work_id={work_id}")
+        except SkippedDuplicateIngestError as dup:
+            print(f"SKIP duplicate sha256={dup.sha256} document_id={dup.document_id}")

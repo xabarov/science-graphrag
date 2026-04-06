@@ -36,8 +36,34 @@
 ## Ingest
 
 - Single file: `science-graphrag ingest path/to/paper.pdf`
-- Corpus: `science-graphrag ingest-corpus /data/corpus`
-- After bulk ingest, review Neo4j dedup audit printed by corpus CLI; optional manual merge: `science-graphrag merge-work <keep_work_id> <drop_work_id>` (drops duplicate only if it has no authorship rows).
+  - **Default (with Postgres):** same file bytes (`sha256`) **reuse** one existing `document_id` (if several rows share the hash — e.g. after `--force-new-document` — the **newest** by `created_at` is used); old Qdrant points for that id are removed before re-upsert (no duplicate chunks for one document).
+  - `--skip-existing-sha` — skip if hash already in `documents` (corpus re-runs).
+  - `--force-new-document` — always new `document_id` (debug / avoid SQL dedup).
+- Corpus: `science-graphrag ingest-corpus /data/corpus` (same flags: `--skip-existing-sha`, `--force-new-document`).
+- After bulk ingest, review Neo4j dedup audit printed by corpus CLI; optional manual merge: `science-graphrag merge-work <keep_work_id> <drop_work_id>` (drops duplicate only if it has no authorship rows). **`merge-work` also rewrites Qdrant chunk payloads** from `drop_work_id` to `keep_work_id` when the duplicate node is removed, so Ask → Reader stays consistent.
+- If citations still show a `work_id` that returns `work_not_found` (e.g. merge before this fix): `science-graphrag diagnose-qdrant-work-ids` then `science-graphrag repoint-qdrant-work-ids <keep_work_id> <stale_work_id>` for each orphan (same order as `merge-work`: keep first, drop second).
+
+## Qdrant maintenance (CLI)
+
+- `science-graphrag delete-qdrant-by-document-id <document_id>` — drop all points with that payload.
+- `science-graphrag delete-qdrant-by-work-id <work_id>` — drop all chunks for a work (destructive).
+- `science-graphrag qdrant-recreate-collection` — delete and recreate the configured collection (empty). **Dev only.**
+
+## Purge one work (MVP)
+
+- `science-graphrag purge-work <work_id>` — deletes Qdrant points for that `work_id`.
+- `science-graphrag purge-work <work_id> --detach-neo4j` — also `DETACH DELETE` the `:Work` if it exists **and** no other `(:Work)-[:CITES]->(w)` (fails with exit 1 otherwise).
+
+## Dev stack reset (avoid Qdrant ↔ Neo4j orphans)
+
+`neo4j-wipe` alone leaves **Qdrant** pointing at deleted `work_id` values. Recommended sequence:
+
+1. `science-graphrag neo4j-wipe`
+2. `science-graphrag qdrant-recreate-collection`
+3. Optionally truncate SQL tables if you need a clean ledger: `TRUNCATE ingestion_runs, documents RESTART IDENTITY CASCADE;` (Postgres; adjust schema if needed).
+4. Re-ingest corpus.
+
+Wrapper (review before run): [`scripts/stack_reset_dev.sh`](../../scripts/stack_reset_dev.sh).
 
 ## API process
 

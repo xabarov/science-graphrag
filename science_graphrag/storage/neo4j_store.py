@@ -81,6 +81,37 @@ class Neo4jGraphStore:
             rec = session.run(q, arxiv_id=arxiv_id).single()
             return rec["id"] if rec else None
 
+    def work_exists(self, work_id: str) -> bool:
+        q = "MATCH (w:Work {id: $id}) RETURN 1 AS ok LIMIT 1"
+        with self._driver.session() as session:
+            rec = session.run(q, id=work_id).single()
+            return bool(rec)
+
+    def work_has_incoming_cites(self, work_id: str) -> bool:
+        q = """
+        MATCH (:Work)-[:CITES]->(w:Work {id: $id})
+        RETURN count(*) AS n
+        """
+        with self._driver.session() as session:
+            rec = session.run(q, id=work_id).single()
+            return bool(rec and int(rec["n"]) > 0)
+
+    def detach_delete_work_if_no_incoming_cites(self, work_id: str) -> bool:
+        """
+        Remove :Work when no other :Work cites it (incoming CITES).
+
+        Returns True if a node was deleted.
+        """
+
+        if not self.work_exists(work_id):
+            return False
+        if self.work_has_incoming_cites(work_id):
+            return False
+        q = "MATCH (w:Work {id: $id}) DETACH DELETE w"
+        with self._driver.session() as session:
+            session.run(q, id=work_id)
+        return True
+
     def upsert_work_layer1(
         self,
         work_id: str,
@@ -473,20 +504,23 @@ class Neo4jGraphStore:
                 wid=work_id,
             )
 
-    def merge_work_into_canonical(self, keep_id: str, drop_id: str) -> None:
+    def merge_work_into_canonical(self, keep_id: str, drop_id: str) -> bool:
         """
         Re-point :CITES / version / semantic edges from duplicate ``drop_id`` onto ``keep_id``.
 
         Removes ``drop_id`` only when it has no outgoing ``HAS_AUTHORSHIP`` (minimal Phase 1 aid).
+
+        Returns:
+            True if ``drop_id`` was detached-deleted; False if merge stopped (e.g. authorship rows).
         """
 
         if keep_id == drop_id:
-            return
+            return False
         with self._driver.session() as session:
-            session.execute_write(self._merge_work_tx, keep_id, drop_id)
+            return bool(session.execute_write(self._merge_work_tx, keep_id, drop_id))
 
     @staticmethod
-    def _merge_work_tx(tx, keep_id: str, drop_id: str) -> None:
+    def _merge_work_tx(tx, keep_id: str, drop_id: str) -> bool:
         tx.run(
             """
             MATCH (k:Work {id: $keep}), (d:Work {id: $drop})
@@ -563,7 +597,7 @@ class Neo4jGraphStore:
             drop=drop_id,
         ).single()
         if auth_row and int(auth_row["n"]) > 0:
-            return
+            return False
         tx.run(
             """
             MATCH (d:Work {id: $drop})
@@ -571,3 +605,4 @@ class Neo4jGraphStore:
             """,
             drop=drop_id,
         )
+        return True

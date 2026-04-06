@@ -7,7 +7,7 @@ from typing import Any
 from neo4j import GraphDatabase, NotificationClassification
 
 from science_graphrag.config import Settings
-from science_graphrag.ingestion.embeddings import HashEmbeddingProvider, try_sentence_transformer
+from science_graphrag.ingestion.embeddings import resolve_embedding_dim
 from science_graphrag.storage.qdrant_store import QdrantChunkStore
 
 
@@ -20,12 +20,7 @@ def _neo4j_driver(settings: Settings):
 
 
 def _vector_dim(settings: Settings) -> int:
-    embedder = HashEmbeddingProvider()
-    if settings.embedding_model:
-        st = try_sentence_transformer(settings.embedding_model)
-        if st is not None:
-            embedder = st
-    return embedder.dim
+    return resolve_embedding_dim(embedding_model=settings.embedding_model)
 
 
 def _has_semantic_layer_cypher() -> str:

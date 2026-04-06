@@ -28,6 +28,17 @@ class HashEmbeddingProvider:
         return out
 
 
+def resolve_embedding_dim(*, embedding_model: str | None) -> int:
+    """Vector size for Qdrant collection / query embedding (hash fallback in CI)."""
+
+    embedder: EmbeddingProvider = HashEmbeddingProvider()
+    if embedding_model:
+        st = try_sentence_transformer(embedding_model)
+        if st is not None:
+            embedder = st
+    return embedder.dim
+
+
 def try_sentence_transformer(model_name: str) -> EmbeddingProvider | None:
     try:
         from sentence_transformers import SentenceTransformer

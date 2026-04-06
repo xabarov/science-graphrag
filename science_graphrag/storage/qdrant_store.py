@@ -108,6 +108,93 @@ class QdrantChunkStore:
         if points:
             self._client.upsert(collection_name=self._collection, points=points)
 
+    def repoint_work_id_payload(self, *, from_work_id: str, to_work_id: str) -> int:
+        """
+        Set payload.work_id from ``from_work_id`` to ``to_work_id`` for all matching points.
+
+        Required after ``merge_work_into_canonical`` so retrieval citations match Neo4j :Work ids.
+        """
+
+        if from_work_id == to_work_id:
+            return 0
+        flt = Filter(
+            must=[FieldCondition(key="work_id", match=MatchValue(value=from_work_id))],
+        )
+        n_before = int(
+            self._client.count(
+                collection_name=self._collection,
+                count_filter=flt,
+                exact=True,
+            ).count
+        )
+        if n_before == 0:
+            return 0
+        self._client.set_payload(
+            collection_name=self._collection,
+            payload={"work_id": to_work_id},
+            points=flt,
+            wait=True,
+        )
+        return n_before
+
+    def delete_points_by_document_id(self, *, document_id: str) -> int:
+        """Remove all points whose payload ``document_id`` matches (re-ingest / cleanup)."""
+
+        flt = Filter(
+            must=[FieldCondition(key="document_id", match=MatchValue(value=document_id))],
+        )
+        res = self._client.count(
+            collection_name=self._collection,
+            count_filter=flt,
+            exact=True,
+        )
+        n = int(res.count)
+        if n == 0:
+            return 0
+        self._client.delete(
+            collection_name=self._collection,
+            points_selector=flt,
+            wait=True,
+        )
+        return n
+
+    def delete_points_by_work_id(self, *, work_id: str) -> int:
+        """Remove all points for a Work (purge / repair). Use with care on shared corpora."""
+
+        flt = Filter(
+            must=[FieldCondition(key="work_id", match=MatchValue(value=work_id))],
+        )
+        res = self._client.count(
+            collection_name=self._collection,
+            count_filter=flt,
+            exact=True,
+        )
+        n = int(res.count)
+        if n == 0:
+            return 0
+        self._client.delete(
+            collection_name=self._collection,
+            points_selector=flt,
+            wait=True,
+        )
+        return n
+
+    def scroll_points_payload_only(
+        self,
+        *,
+        limit: int,
+        offset: int | str | None = None,
+    ) -> tuple[list[Any], int | str | None]:
+        """Low-level scroll for diagnostics (payload only, no vectors)."""
+
+        return self._client.scroll(
+            collection_name=self._collection,
+            limit=limit,
+            offset=offset,
+            with_payload=True,
+            with_vectors=False,
+        )
+
     def search_similar(
         self,
         *,
@@ -192,3 +279,18 @@ class QdrantChunkStore:
                 },
             )
         return out, next_offset
+
+
+def recreate_qdrant_chunk_collection(
+    *,
+    url: str,
+    collection: str,
+    vector_dim: int,
+) -> QdrantChunkStore:
+    """Drop collection if it exists, then return a store that creates a fresh empty collection."""
+
+    client = QdrantClient(url=url, check_compatibility=False)
+    names = {c.name for c in client.get_collections().collections}
+    if collection in names:
+        client.delete_collection(collection_name=collection)
+    return QdrantChunkStore(url, collection, vector_dim)
