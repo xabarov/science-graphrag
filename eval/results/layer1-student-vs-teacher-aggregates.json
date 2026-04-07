@@ -1,0 +1,19 @@
+{
+  "suite": "layer1 nightly_heavy vs gold_teacher (DeepSeek)",
+  "student_model": "mistralai/mistral-small-3.2-24b-instruct",
+  "case_count": 30,
+  "contract_passed_count": 18,
+  "contract_pass_rate": 0.6,
+  "macro_averages": {
+    "names_f1": 0.952778,
+    "names_precision": 0.952778,
+    "names_recall": 0.952778,
+    "affiliations_f1": 0.911111,
+    "sample_arxiv_f1": 0.998551,
+    "sample_doi_f1": 1.0,
+    "title_rouge_l": 0.996296,
+    "title_token_f1": 0.996296,
+    "abstract_rouge_l_vs_prefix": 0.244887,
+    "names_difflib_macro": 0.993308
+  }
+}

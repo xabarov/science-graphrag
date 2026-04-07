@@ -1,0 +1,13 @@
+{
+  "suite": "layer2 nightly_semantic (curated semantic_gold)",
+  "model": "mistralai/mistral-small-3.2-24b-instruct",
+  "case_count": 31,
+  "passed_count": 30,
+  "pass_rate": 0.9677,
+  "macro_avg_precision_methods": 0.675806,
+  "macro_avg_recall_methods": 0.698925,
+  "macro_avg_precision_datasets": 0.736559,
+  "macro_avg_recall_datasets": 0.935484,
+  "macro_f1_methods_proxy": 0.687171,
+  "macro_f1_datasets_proxy": 0.824188
+}

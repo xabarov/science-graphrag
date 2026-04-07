@@ -1,0 +1,62 @@
+{
+  "case_id": "hog_human_detection_realpdf",
+  "schema_version": 1,
+  "description": "Teacher-generated layer-1 gold (model=deepseek/deepseek-v3.2, base=https://openrouter.ai/api/v1). Prompt fingerprint sha256-20:210f7e16d3e0a07ad571.",
+  "work_metadata": {
+    "title": "Histograms of Oriented Gradients for Human Detection",
+    "publication_year": null,
+    "abstract_prefix": "We study the question of feature sets for robust visual object recognition, adopting linear SVM based human detection as a test case. After reviewing existing e",
+    "doi": null,
+    "arxiv_id": null,
+    "venue_name": null,
+    "work_type": "unknown"
+  },
+  "authorships": [
+    {
+      "name": "Navneet Dalal",
+      "affiliations": [
+        "INRIA Rhône-Alps, 655 avenue de l'Europe, Montbonnot 38334, France"
+      ]
+    },
+    {
+      "name": "Bill Triggs",
+      "affiliations": [
+        "INRIA Rhône-Alps, 655 avenue de l'Europe, Montbonnot 38334, France"
+      ]
+    }
+  ],
+  "references": {
+    "expected_count": 22,
+    "min_count": 18,
+    "notes": "Auto-generated from teacher extraction; sample_* are teacher-derived ids.",
+    "sample_arxiv_ids": [],
+    "sample_dois": []
+  },
+  "graph_expectations": {
+    "min_cites": 0,
+    "max_cites": 42,
+    "min_authorships": 0,
+    "max_authorships": 8,
+    "min_institutions": 0,
+    "max_institutions": 8,
+    "expected_cited_arxiv_ids": [],
+    "max_duplicate_work_fingerprints": 8,
+    "max_work_dedup_violations": 0,
+    "min_related_version_edges": null,
+    "max_related_version_edges": null
+  },
+  "quality_thresholds": {
+    "require_title_match": false,
+    "require_abstract_prefix": false,
+    "min_authorship_names_f1": 0.5,
+    "min_authorship_names_recall": 0.55,
+    "min_affiliations_f1": 0.28,
+    "require_reference_count_ok": true,
+    "min_sample_arxiv_f1": 0.45,
+    "min_sample_doi_f1": 0.4,
+    "min_title_rouge_l": 0.82,
+    "min_abstract_rouge_l": 0.22,
+    "min_title_token_f1": 0.82,
+    "min_authorship_names_difflib_macro": 0.88
+  }
+}

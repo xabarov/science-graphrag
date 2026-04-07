@@ -126,6 +126,33 @@ science-graphrag-benchmark-compare \
 4. Повторите правку до отсутствия regressions.
 5. Запустите suite по нужному tier (`merge_safe` / `nightly_*`).
 
+## Teacher gold (DeepSeek) vs student (Mistral) — автоматический эталон
+
+Переменные (опционально, в `.env`): `SCIENCE_GRAPHRAG_BENCHMARK_TEACHER_LLM_API_KEY`, `SCIENCE_GRAPHRAG_BENCHMARK_TEACHER_LLM_BASE_URL`, `SCIENCE_GRAPHRAG_BENCHMARK_TEACHER_LLM_MODEL` (иначе берутся `--api-key` / `--model` или `EXTRACTION_LLM_*` / `MAIN_LLM_*`).
+
+1. Сгенерировать `gold_teacher.json` по корпусу (нужен ключ учителя):
+
+```bash
+.venv/bin/python scripts/generate_teacher_layer1_gold.py \
+  --fixtures-root tests/fixtures/benchmarks/layer1 \
+  --out-root eval/teacher_gold/layer1 \
+  --tier nightly_heavy
+```
+
+2. Оценить **ученика** (в `.env` — модель/ключ Mistral и `SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED=true`) против teacher-gold:
+
+```bash
+science-graphrag-layer1-benchmark tests/fixtures/benchmarks/layer1 \
+  --suite --tier nightly_heavy \
+  --external-gold-root eval/teacher_gold/layer1 \
+  --gold-filename gold_teacher.json \
+  --json-out eval/results/layer1-suite-vs-teacher-gold.json
+```
+
+Опционально смягчить пороги поверх эталона в файле: `--threshold-profile student_mistral`.
+
+3. Семантический слой от учителя (layer-2): `scripts/generate_semantic_teacher_fixtures.py` пишет `eval/teacher_gold/layer2/<case>/semantic_gold_teacher.json`.
+
 ## Регенерация `article.md` из локального PDF
 
 ```bash

@@ -54,11 +54,13 @@ class GraphExpectations(BaseModel):
     max_duplicate_work_fingerprints: int | None = None
     max_work_dedup_violations: int | None = Field(
         default=None,
-        description="Max Neo4j clusters where multiple Work share same doi/openalex_id/fingerprint/arxiv_id.",
+        description=(
+            "Max Neo4j clusters where multiple Work share same doi/openalex_id/fingerprint/arxiv."
+        ),
     )
     min_related_version_edges: int | None = Field(
         default=None,
-        description="Min RELATED_VERSION_OF edges incident on the ingested work (undirected count).",
+        description="Min RELATED_VERSION_OF edges on the ingested work (undirected count).",
     )
     max_related_version_edges: int | None = Field(
         default=None,
@@ -86,6 +88,30 @@ class Layer1QualityThresholds(BaseModel):
     )
     min_sample_arxiv_f1: float | None = Field(default=None, ge=0.0, le=1.0)
     min_sample_doi_f1: float | None = Field(default=None, ge=0.0, le=1.0)
+    min_title_rouge_l: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Require ROUGE-L F1 (word-level) between gold and predicted title.",
+    )
+    min_abstract_rouge_l: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Require ROUGE-L F1 on abstract when gold abstract_prefix is set.",
+    )
+    min_title_token_f1: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Multiset token F1 between gold and predicted title.",
+    )
+    min_authorship_names_difflib_macro: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Mean best difflib ratio per gold author name vs predicted names.",
+    )
 
 
 class Layer1GoldSpec(BaseModel):

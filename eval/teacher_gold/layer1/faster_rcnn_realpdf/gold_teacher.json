@@ -1,0 +1,94 @@
+{
+  "case_id": "faster_rcnn_realpdf",
+  "schema_version": 1,
+  "description": "Teacher-generated layer-1 gold (model=deepseek/deepseek-v3.2, base=https://openrouter.ai/api/v1). Prompt fingerprint sha256-20:210f7e16d3e0a07ad571.",
+  "work_metadata": {
+    "title": "Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks",
+    "publication_year": 2016,
+    "abstract_prefix": "State-of-the-art object detection networks depend on region proposal algorithms to hypothesize object locations. Advances like SPPnet [1] and Fast R-CNN [2] hav",
+    "doi": null,
+    "arxiv_id": "1506.01497",
+    "venue_name": null,
+    "work_type": "conference_paper"
+  },
+  "authorships": [
+    {
+      "name": "Shaoqing Ren",
+      "affiliations": [
+        "University of Science and Technology of China, Hefei, China"
+      ]
+    },
+    {
+      "name": "Kaiming He",
+      "affiliations": [
+        "Visual Computing Group, Microsoft Research"
+      ]
+    },
+    {
+      "name": "Ross Girshick",
+      "affiliations": [
+        "Facebook AI Research"
+      ]
+    },
+    {
+      "name": "Jian Sun",
+      "affiliations": [
+        "Visual Computing Group, Microsoft Research"
+      ]
+    }
+  ],
+  "references": {
+    "expected_count": 39,
+    "min_count": 35,
+    "notes": "Auto-generated from teacher extraction; sample_* are teacher-derived ids.",
+    "sample_arxiv_ids": [
+      "1408.5093",
+      "1412.1441",
+      "1504.06066",
+      "1505.05836",
+      "1511.02300",
+      "1511.04003",
+      "1511.07131",
+      "1511.07571",
+      "1512.03385",
+      "1512.04412"
+    ],
+    "sample_dois": []
+  },
+  "graph_expectations": {
+    "min_cites": 0,
+    "max_cites": 59,
+    "min_authorships": 0,
+    "max_authorships": 8,
+    "min_institutions": 0,
+    "max_institutions": 8,
+    "expected_cited_arxiv_ids": [
+      "1511.02300",
+      "1511.07131",
+      "1512.04412",
+      "1511.07571",
+      "1511.04003",
+      "1512.03385",
+      "1505.05836",
+      "1412.1441"
+    ],
+    "max_duplicate_work_fingerprints": 8,
+    "max_work_dedup_violations": 0,
+    "min_related_version_edges": null,
+    "max_related_version_edges": null
+  },
+  "quality_thresholds": {
+    "require_title_match": false,
+    "require_abstract_prefix": false,
+    "min_authorship_names_f1": 0.5,
+    "min_authorship_names_recall": 0.55,
+    "min_affiliations_f1": 0.28,
+    "require_reference_count_ok": true,
+    "min_sample_arxiv_f1": 0.45,
+    "min_sample_doi_f1": 0.4,
+    "min_title_rouge_l": 0.82,
+    "min_abstract_rouge_l": 0.22,
+    "min_title_token_f1": 0.82,
+    "min_authorship_names_difflib_macro": 0.88
+  }
+}

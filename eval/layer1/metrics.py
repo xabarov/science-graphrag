@@ -10,6 +10,11 @@ from science_graphrag.domain.models import AuthorshipDraft, ReferenceDraft, Work
 from science_graphrag.ingestion.dedup import normalize_doi
 
 from .spec import Layer1GoldSpec, Layer1QualityThresholds
+from .text_similarity import (
+    author_names_difflib_macro,
+    multiset_token_f1,
+    rouge_l_f1,
+)
 
 _ARXIV_IN_TEXT_RE = re.compile(
     r"(?:arxiv:\s*)?(\d{4}\.\d{4,5})\b|abs/(\d{4}\.\d{4,5})\b",
@@ -121,10 +126,28 @@ def _metadata_scores(work: WorkDraft, gold: Layer1GoldSpec) -> dict[str, Any]:
             wt_match = work.work_type == exp
         except ValueError:
             wt_match = work.work_type and work.work_type.value == gm.work_type
+
+    title_rouge_l = None
+    title_token_f1 = None
+    if gm.title and (work.title or "").strip():
+        title_rouge_l = rouge_l_f1(gm.title, work.title or "")
+        title_token_f1 = multiset_token_f1(gm.title, work.title or "")
+
+    abstract_rouge_l_vs_prefix = None
+    if gm.abstract_prefix and (work.abstract or "").strip():
+        abstract_rouge_l_vs_prefix = rouge_l_f1(
+            gm.abstract_prefix,
+            work.abstract or "",
+            max_words=800,
+        )
+
     return {
         "title_exact_normalized": title_match,
+        "title_rouge_l": title_rouge_l,
+        "title_token_f1": title_token_f1,
         "year_exact": year_match,
         "abstract_prefix_ok": abstract_ok,
+        "abstract_rouge_l_vs_prefix": abstract_rouge_l_vs_prefix,
         "doi_match_expected": doi_match,
         "arxiv_match_expected": arx_match,
         "work_type_match": wt_match,
@@ -168,6 +191,10 @@ def _authorship_scores(
     pred_aff_flat = {_norm_aff(x) for a in pred for x in a.raw_affiliations if x.strip()}
     p_aff, r_aff, f1_aff, _, _, _ = prf1_tp_fp_fn(gold_aff_flat, pred_aff_flat)
 
+    raw_g_names = [a.name for a in gold.authorships if (a.name or "").strip()]
+    raw_p_names = [a.author_raw_name for a in pred if (a.author_raw_name or "").strip()]
+    names_difflib_macro = author_names_difflib_macro(raw_g_names, raw_p_names)
+
     return {
         "names_precision": p_n,
         "names_recall": r_n,
@@ -179,6 +206,7 @@ def _authorship_scores(
         "affiliations_precision": p_aff,
         "affiliations_recall": r_aff,
         "affiliations_f1": f1_aff,
+        "names_difflib_macro": names_difflib_macro,
         "pred_count": len(pred),
         "gold_count": len(gold.authorships),
     }
@@ -265,6 +293,24 @@ def score_layer1(
     if thresholds.min_sample_doi_f1 is not None:
         checks["min_sample_doi_f1"] = (
             float(references_m.get("sample_doi_f1", 0.0)) >= thresholds.min_sample_doi_f1
+        )
+
+    if thresholds.min_title_rouge_l is not None:
+        trl = metadata.get("title_rouge_l")
+        if trl is not None:
+            checks["min_title_rouge_l"] = float(trl) >= thresholds.min_title_rouge_l
+    if thresholds.min_title_token_f1 is not None:
+        ttf = metadata.get("title_token_f1")
+        if ttf is not None:
+            checks["min_title_token_f1"] = float(ttf) >= thresholds.min_title_token_f1
+    if thresholds.min_abstract_rouge_l is not None:
+        arl = metadata.get("abstract_rouge_l_vs_prefix")
+        if arl is not None:
+            checks["min_abstract_rouge_l"] = float(arl) >= thresholds.min_abstract_rouge_l
+    if thresholds.min_authorship_names_difflib_macro is not None:
+        nd = authorships_m.get("names_difflib_macro")
+        checks["min_authorship_names_difflib_macro"] = (
+            nd is not None and float(nd) >= thresholds.min_authorship_names_difflib_macro
         )
 
     effective = [v for v in checks.values() if v is not None]

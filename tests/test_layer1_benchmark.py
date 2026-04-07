@@ -9,6 +9,7 @@ import pytest
 from eval.layer1.metrics import _norm_abstract_match, prf1_tp_fp_fn, score_layer1
 from eval.layer1.runner import run_case
 from eval.layer1.spec import Layer1GoldSpec
+from eval.layer1.threshold_profiles import apply_layer1_threshold_profile
 from science_graphrag.config import Settings
 from science_graphrag.domain.models import AuthorshipDraft, ReferenceDraft, WorkDraft, WorkType
 from science_graphrag.ingestion.stages.references import extract_references
@@ -27,6 +28,15 @@ def test_layer1_gold_spec_loads() -> None:
     assert spec.case_id == "yolov1"
     assert len(spec.authorships) == 4
     assert spec.references.expected_count == 44
+
+
+def test_apply_student_mistral_threshold_profile() -> None:
+    spec = Layer1GoldSpec.load(FIXTURE_YOLO / "gold.json")
+    assert spec.quality_thresholds is None
+    merged = apply_layer1_threshold_profile(spec, "student_mistral")
+    assert merged.quality_thresholds is not None
+    assert merged.quality_thresholds.require_title_match is False
+    assert merged.quality_thresholds.min_title_rouge_l is not None
 
 
 def test_norm_abstract_match_hyphen_variants() -> None:
@@ -59,6 +69,8 @@ def test_score_layer1_deterministic() -> None:
     ]
     m = score_layer1(work, auth, refs, spec)
     assert m.metadata.get("title_exact_normalized") is True
+    assert float(m.metadata.get("title_rouge_l", 0.0)) >= 0.99
+    assert float(m.metadata.get("title_token_f1", 0.0)) >= 0.99
     assert m.authorships.get("names_recall", 1.0) < 1.0
     assert m.contract.get("passed") is False
 
@@ -127,6 +139,7 @@ def test_run_case_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("eval.layer1.runner.get_settings", _settings)
     report = run_case(FIXTURE_YOLO)
     assert report["case_id"] == "yolov1"
+    assert report["gold_path"].endswith("gold.json")
     assert "metrics" in report
     assert "predicted" in report
     assert report["diagnostics"]["document_id"] == "yolov1"

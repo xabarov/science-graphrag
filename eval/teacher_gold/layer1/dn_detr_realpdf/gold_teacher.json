@@ -1,0 +1,104 @@
+{
+  "case_id": "dn_detr_realpdf",
+  "schema_version": 1,
+  "description": "Teacher-generated layer-1 gold (model=deepseek/deepseek-v3.2, base=https://openrouter.ai/api/v1). Prompt fingerprint sha256-20:210f7e16d3e0a07ad571.",
+  "work_metadata": {
+    "title": "DN-DETR: Accelerate DETR Training by Introducing Query Denoising",
+    "publication_year": 2022,
+    "abstract_prefix": "We present in this paper a novel denoising training method to speed up DETR (DEtection TRansformer) training and offer a deepened understanding of the slow conv",
+    "doi": null,
+    "arxiv_id": "2203.01305",
+    "venue_name": "CVPR",
+    "work_type": "conference_paper"
+  },
+  "authorships": [
+    {
+      "name": "Feng Li",
+      "affiliations": [
+        "Department of Computer Science and Engineering, The Hong Kong University of Science and Technology, Hong Kong"
+      ]
+    },
+    {
+      "name": "Hao Zhang",
+      "affiliations": [
+        "Department of Computer Science and Engineering, The Hong Kong University of Science and Technology, Hong Kong"
+      ]
+    },
+    {
+      "name": "Shilong Liu",
+      "affiliations": [
+        "Department of Computer Science and Engineering, Tsinghua University, Beijing"
+      ]
+    },
+    {
+      "name": "Jian Guo",
+      "affiliations": [
+        "IDEA"
+      ]
+    },
+    {
+      "name": "Lionel M. Ni",
+      "affiliations": [
+        "The Hong Kong University of Science and Technology (Guangzhou)"
+      ]
+    },
+    {
+      "name": "Lei Zhang",
+      "affiliations": [
+        "IDEA"
+      ]
+    }
+  ],
+  "references": {
+    "expected_count": 25,
+    "min_count": 21,
+    "notes": "Auto-generated from teacher extraction; sample_* are teacher-derived ids.",
+    "sample_arxiv_ids": [
+      "2010.04159",
+      "2011.10881",
+      "2101.07448",
+      "2104.01318",
+      "2108.06152",
+      "2109.07107",
+      "2207.13085",
+      "2207.14172"
+    ],
+    "sample_dois": []
+  },
+  "graph_expectations": {
+    "min_cites": 0,
+    "max_cites": 45,
+    "min_authorships": 0,
+    "max_authorships": 8,
+    "min_institutions": 0,
+    "max_institutions": 8,
+    "expected_cited_arxiv_ids": [
+      "2207.13085",
+      "2101.07448",
+      "2108.06152",
+      "2011.10881",
+      "2109.07107",
+      "2104.01318",
+      "2207.14172",
+      "2010.04159"
+    ],
+    "max_duplicate_work_fingerprints": 8,
+    "max_work_dedup_violations": 0,
+    "min_related_version_edges": null,
+    "max_related_version_edges": null
+  },
+  "quality_thresholds": {
+    "require_title_match": false,
+    "require_abstract_prefix": false,
+    "min_authorship_names_f1": 0.5,
+    "min_authorship_names_recall": 0.55,
+    "min_affiliations_f1": 0.28,
+    "require_reference_count_ok": true,
+    "min_sample_arxiv_f1": 0.45,
+    "min_sample_doi_f1": 0.4,
+    "min_title_rouge_l": 0.82,
+    "min_abstract_rouge_l": 0.22,
+    "min_title_token_f1": 0.82,
+    "min_authorship_names_difflib_macro": 0.88
+  }
+}

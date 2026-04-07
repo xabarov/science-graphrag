@@ -1,0 +1,131 @@
+{
+  "case_id": "dino_realpdf",
+  "schema_version": 1,
+  "description": "Teacher-generated layer-1 gold (model=deepseek/deepseek-v3.2, base=https://openrouter.ai/api/v1). Prompt fingerprint sha256-20:210f7e16d3e0a07ad571.",
+  "work_metadata": {
+    "title": "DINO: DETR with Improved DeNoising Anchor Boxes for End-to-End Object Detection",
+    "publication_year": null,
+    "abstract_prefix": "We present DINO (DETR with Improved deNoising anchOr boxes), a state-of-the-art end-to-end object detector. DINO improves over previous DETR-like models in perf",
+    "doi": null,
+    "arxiv_id": null,
+    "venue_name": null,
+    "work_type": "unknown"
+  },
+  "authorships": [
+    {
+      "name": "Hao Zhang",
+      "affiliations": [
+        "The Hong Kong University of Science and Technology",
+        "International Digital Economy Academy (IDEA)"
+      ]
+    },
+    {
+      "name": "Feng Li",
+      "affiliations": [
+        "The Hong Kong University of Science and Technology",
+        "International Digital Economy Academy (IDEA)"
+      ]
+    },
+    {
+      "name": "Shilong Liu",
+      "affiliations": [
+        "Dept. of CST., BNRist Center, Institute for AI, Tsinghua University",
+        "International Digital Economy Academy (IDEA)"
+      ]
+    },
+    {
+      "name": "Lei Zhang",
+      "affiliations": [
+        "International Digital Economy Academy (IDEA)"
+      ]
+    },
+    {
+      "name": "Hang Su",
+      "affiliations": [
+        "Dept. of CST., BNRist Center, Institute for AI, Tsinghua University"
+      ]
+    },
+    {
+      "name": "Jun Zhu",
+      "affiliations": [
+        "Dept. of CST., BNRist Center, Institute for AI, Tsinghua University"
+      ]
+    },
+    {
+      "name": "Lionel M. Ni",
+      "affiliations": [
+        "The Hong Kong University of Science and Technology",
+        "The Hong Kong University of Science and Technology (Guangzhou)"
+      ]
+    },
+    {
+      "name": "Heung-Yeung Shum",
+      "affiliations": [
+        "The Hong Kong University of Science and Technology",
+        "International Digital Economy Academy (IDEA)"
+      ]
+    }
+  ],
+  "references": {
+    "expected_count": 41,
+    "min_count": 37,
+    "notes": "Auto-generated from teacher extraction; sample_* are teacher-derived ids.",
+    "sample_arxiv_ids": [
+      "1412.6980",
+      "1604.06174",
+      "1711.05101",
+      "1804.02767",
+      "1810.04805",
+      "1906.07155",
+      "2004.10934",
+      "2011.10881",
+      "2101.07448",
+      "2104.01318",
+      "2107.08430",
+      "2108.06152",
+      "2109.07107",
+      "2111.09883",
+      "2111.11432",
+      "2112.03857",
+      "2201.12329",
+      "2203.01305"
+    ],
+    "sample_dois": []
+  },
+  "graph_expectations": {
+    "min_cites": 0,
+    "max_cites": 63,
+    "min_authorships": 0,
+    "max_authorships": 8,
+    "min_institutions": 0,
+    "max_institutions": 8,
+    "expected_cited_arxiv_ids": [
+      "2004.10934",
+      "1906.07155",
+      "1604.06174",
+      "1810.04805",
+      "2101.07448",
+      "2107.08430",
+      "1412.6980",
+      "2203.01305"
+    ],
+    "max_duplicate_work_fingerprints": 8,
+    "max_work_dedup_violations": 0,
+    "min_related_version_edges": null,
+    "max_related_version_edges": null
+  },
+  "quality_thresholds": {
+    "require_title_match": false,
+    "require_abstract_prefix": false,
+    "min_authorship_names_f1": 0.5,
+    "min_authorship_names_recall": 0.55,
+    "min_affiliations_f1": 0.28,
+    "require_reference_count_ok": true,
+    "min_sample_arxiv_f1": 0.45,
+    "min_sample_doi_f1": 0.4,
+    "min_title_rouge_l": 0.82,
+    "min_abstract_rouge_l": 0.22,
+    "min_title_token_f1": 0.82,
+    "min_authorship_names_difflib_macro": 0.88
+  }
+}

@@ -104,6 +104,11 @@ class Settings(BaseSettings):
     extraction_llm_max_tokens_references: int = Field(default=8192)
     extraction_llm_timeout_seconds: float = Field(default=180.0)
 
+    # Optional: separate credentials for benchmark teacher gold generation (OpenRouter, etc.).
+    benchmark_teacher_llm_api_key: str | None = Field(default=None)
+    benchmark_teacher_llm_base_url: str | None = Field(default=None)
+    benchmark_teacher_llm_model: str | None = Field(default=None)
+
     semantic_extraction_enabled: bool = Field(
         default=True,
         description="Run ontology-v1 Method/Dataset stage after layer-1 (ADR 004).",

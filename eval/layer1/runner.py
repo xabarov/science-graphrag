@@ -15,6 +15,7 @@ from eval.bench_common import (
 )
 from eval.layer1.metrics import score_layer1
 from eval.layer1.spec import Layer1GoldSpec
+from eval.layer1.threshold_profiles import apply_layer1_threshold_profile
 from science_graphrag.config import get_settings
 from science_graphrag.ingestion.document_slices import (
     build_references_scope_text,
@@ -24,46 +25,100 @@ from science_graphrag.ingestion.llm.stage_extraction import extract_stages_llm_f
 from science_graphrag.observability.phoenix_tracer import chain_span, init_tracer_provider
 
 
-def run_case(
+def resolve_layer1_gold_path(
+    fixture_dir: Path,
+    *,
+    external_gold_root: Path | None = None,
+    gold_filename: str = "gold.json",
+) -> Path:
+    """
+    Prefer ``external_gold_root / fixture.name / gold_filename`` when present;
+    otherwise ``fixture_dir / gold_filename``, falling back to ``gold.json``.
+    """
+
+    if external_gold_root is not None:
+        ext = external_gold_root / fixture_dir.name / gold_filename
+        if ext.is_file():
+            return ext
+    primary = fixture_dir / gold_filename
+    if primary.is_file():
+        return primary
+    fallback = fixture_dir / "gold.json"
+    if fallback.is_file():
+        return fallback
+    return primary
+
+
+def run_layer1_extraction_only(
     fixture_dir: Path | str,
     *,
-    settings=None,
-) -> dict[str, Any]:
+    settings,
+    case_id: str | None = None,
+):
     """
-    Load article.md + gold.json from fixture_dir, run extract_stages_llm_first with
-    the same slices as ingestion, return scores + diagnostics + raw drafts (serialized).
+    Run ``extract_stages_llm_first`` for one fixture (markdown slices only).
+    Returns ``(work, authorships, references, diagnostics_dataclass)``.
     """
+
     root = Path(fixture_dir)
     md_path = root / "article.md"
-    gold_path = root / "gold.json"
     text = md_path.read_text(encoding="utf-8")
-    gold = Layer1GoldSpec.load(gold_path)
-    if settings is None:
-        settings = get_settings()
+    cid = case_id or root.name
 
-    init_tracer_provider()
     fm = front_matter_slice(text, max_chars=settings.front_matter_max_chars)
     refs_scope = build_references_scope_text(
         text,
         max_chars=settings.references_scope_max_chars,
     )
+    init_tracer_provider()
     with chain_span(
         "metadata_and_references_extraction",
         {
-            "document.id": gold.case_id,
-            "document.source_name": gold.case_id,
-            "source": "layer1_benchmark",
+            "document.id": cid,
+            "document.source_name": cid,
+            "source": "layer1_benchmark_extraction",
         },
     ):
         work, authorships, references, diag = extract_stages_llm_first(
             text,
             settings,
             markdown_source="benchmark",
-            document_id=gold.case_id,
-            source_name=gold.case_id,
+            document_id=cid,
+            source_name=cid,
             front_matter_text=fm.text,
             references_scope_text=refs_scope,
         )
+    return work, authorships, references, diag
+
+
+def run_case(
+    fixture_dir: Path | str,
+    *,
+    settings=None,
+    external_gold_root: Path | None = None,
+    gold_filename: str = "gold_teacher.json",
+    threshold_profile: str | None = None,
+) -> dict[str, Any]:
+    """
+    Load article.md and gold JSON (curated or ``--external-gold-root``), run extraction,
+    score with optional ``--threshold-profile`` merge.
+    """
+    root = Path(fixture_dir)
+    gold_path = resolve_layer1_gold_path(
+        root,
+        external_gold_root=external_gold_root,
+        gold_filename=gold_filename,
+    )
+    gold = Layer1GoldSpec.load(gold_path)
+    gold = apply_layer1_threshold_profile(gold, threshold_profile)
+    if settings is None:
+        settings = get_settings()
+
+    work, authorships, references, diag = run_layer1_extraction_only(
+        root,
+        settings=settings,
+        case_id=gold.case_id,
+    )
     metrics = score_layer1(work, authorships, references, gold)
     return {
         "case_id": gold.case_id,
@@ -76,6 +131,7 @@ def run_case(
             "references": [r.model_dump(mode="json") for r in references],
         },
         "gold": gold.model_dump_for_report(),
+        "gold_path": str(gold_path.resolve()),
     }
 
 
@@ -138,11 +194,40 @@ def _cli(
         "--tier",
         help='Filter suite to tier from case_tiers.json (e.g. "merge_safe", "nightly_heavy")',
     ),
+    external_gold_root: Path | None = typer.Option(
+        None,
+        "--external-gold-root",
+        help="Directory with <case_id>/gold_teacher.json (or see --gold-filename)",
+    ),
+    gold_filename: str = typer.Option(
+        "gold_teacher.json",
+        "--gold-filename",
+        help=(
+            "Gold JSON per case; with no --external-gold-root, defaults to gold.json in fixture."
+        ),
+    ),
+    threshold_profile: str | None = typer.Option(
+        None,
+        "--threshold-profile",
+        help='Optional "student_mistral" (relaxed gates). Else use thresholds from gold JSON.',
+    ),
 ) -> None:
     settings = get_settings()
+    use_gold_name = gold_filename
+    if external_gold_root is None and gold_filename == "gold_teacher.json":
+        use_gold_name = "gold.json"
 
     def _is_passed(report: dict[str, Any]) -> bool:
         return bool(report.get("metrics", {}).get("contract", {}).get("passed", True))
+
+    def _run_one(c: Path) -> dict[str, Any]:
+        return run_case(
+            c,
+            settings=settings,
+            external_gold_root=external_gold_root,
+            gold_filename=use_gold_name,
+            threshold_profile=threshold_profile,
+        )
 
     if suite:
         cases = discover_layer1_case_dirs(path, tier=tier)
@@ -153,7 +238,7 @@ def _cli(
             title="Layer-1 benchmark suite",
             cases=cases,
             settings=settings,
-            run_one=lambda c: run_case(c, settings=settings),
+            run_one=_run_one,
             summarize=_summarize,
             json_out=json_out,
             md_out=md_out,
@@ -166,7 +251,7 @@ def _cli(
             raise typer.Exit(code=1)
         return
 
-    report = run_case(path, settings=settings)
+    report = _run_one(path)
     run_single_case_json_outputs(
         report=report,
         settings=settings,
@@ -179,6 +264,8 @@ def _cli(
 
 
 def main() -> None:
+    """CLI entry for ``science-graphrag-layer1-benchmark``."""
+
     typer.run(_cli)
 
 

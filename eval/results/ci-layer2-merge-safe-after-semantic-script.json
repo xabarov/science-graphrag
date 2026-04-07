@@ -1,0 +1,58 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+    "semantic_extraction_enabled": true
+  },
+  "summary": {
+    "case_count": 1,
+    "case_ids": [
+      "no_llm_smoke"
+    ],
+    "all_passed": true
+  },
+  "cases": [
+    {
+      "case_id": "no_llm_smoke",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer2/no_llm_smoke",
+      "metrics": {
+        "precision_methods": 1.0,
+        "recall_methods_num": 0,
+        "recall_methods_denom": 1,
+        "precision_datasets": 1.0,
+        "recall_datasets_num": 0,
+        "recall_datasets_denom": 1,
+        "passed": true,
+        "notes": "no gold names; structure-only pass"
+      },
+      "predicted": {
+        "schema_version": 1,
+        "document_id": "no_llm_smoke",
+        "methods": [],
+        "datasets": [],
+        "relations": [],
+        "extraction_notes": "No methods, datasets, or relations were identified in the provided article body."
+      },
+      "gold": {
+        "case_id": "no_llm_smoke",
+        "schema_version": 1,
+        "description": "Merge-safe semantic case: passes when LLM is off (empty predictions allowed).",
+        "article_path": null,
+        "min_method_names": 0,
+        "max_method_names": null,
+        "min_method_recall_ratio": null,
+        "min_dataset_recall_ratio": null,
+        "expected_method_names_normalized": [],
+        "expected_dataset_names_normalized": [],
+        "allow_empty_when_no_llm": true
+      },
+      "settings_snapshot": {
+        "extraction_llm_enabled": true,
+        "semantic_extraction_enabled": true
+      }
+    }
+  ]
+}
