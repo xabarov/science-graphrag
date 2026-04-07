@@ -12,8 +12,10 @@ import Alert from "@mui/material/Alert";
 
 import { listBenchmarkCases, getBenchmarkRun, runBenchmark } from "../../services/benchmarkApi.js";
 import { CursorButton, CursorPrimaryButton } from "../../components/common/index.js";
+import BenchmarkModelSelector from "./BenchmarkModelSelector.jsx";
 
 const TERMINAL_STATUSES = ["completed", "failed", "cancelled"];
+const STORAGE_KEY = "benchmark:launcherPrefs";
 
 function _toggleCase(prev, caseId) {
   if (prev.includes(caseId)) return prev.filter((x) => x !== caseId);
@@ -30,6 +32,10 @@ export default function RunTab({ onSwitchToResults }) {
   const [run, setRun] = useState(null);
   const [error, setError] = useState(null);
   const [loadingCases, setLoadingCases] = useState(false);
+  const [modelProfile, setModelProfile] = useState("env_default");
+  const [customModelId, setCustomModelId] = useState("");
+  const [goldSource, setGoldSource] = useState("curated_gold");
+  const [thresholdProfile, setThresholdProfile] = useState("from_gold");
 
   const progressPercent = run?.progress?.percent ?? 0;
   const progressCompleted = run?.progress?.completed ?? 0;
@@ -41,6 +47,34 @@ export default function RunTab({ onSwitchToResults }) {
   const nightlyLabel =
     benchmarkFamily === "layer2" ? "nightly_semantic" : "nightly_heavy";
   const isGraphCatalog = benchmarkFamily === "graph";
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      if (saved.benchmarkFamily) setBenchmarkFamily(saved.benchmarkFamily);
+      if (saved.modelProfile) setModelProfile(saved.modelProfile);
+      if (saved.customModelId) setCustomModelId(saved.customModelId);
+      if (saved.goldSource) setGoldSource(saved.goldSource);
+      if (saved.thresholdProfile) setThresholdProfile(saved.thresholdProfile);
+    } catch (_e) {
+      // Ignore malformed localStorage state.
+    }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        benchmarkFamily,
+        modelProfile,
+        customModelId,
+        goldSource,
+        thresholdProfile,
+      }),
+    );
+  }, [benchmarkFamily, modelProfile, customModelId, goldSource, thresholdProfile]);
 
   useEffect(() => {
     setSelectedCaseIds([]);
@@ -103,7 +137,15 @@ export default function RunTab({ onSwitchToResults }) {
   async function startRun({ caseSelector, label }) {
     if (isGraphCatalog) return;
     setError(null);
-    const res = await runBenchmark({ case_ids: caseSelector, label, family: benchmarkFamily });
+    const res = await runBenchmark({
+      case_ids: caseSelector,
+      label,
+      family: benchmarkFamily,
+      model_profile: modelProfile,
+      model_id: modelProfile === "custom" ? customModelId : undefined,
+      gold_source: benchmarkFamily === "layer2" ? "semantic_gold" : goldSource,
+      threshold_profile: benchmarkFamily === "layer1" && thresholdProfile !== "from_gold" ? thresholdProfile : undefined,
+    });
     const newRunId = res?.run_id;
     if (!newRunId) throw new Error("run_id_missing");
     window.localStorage.setItem("benchmark:lastRunId", newRunId);
@@ -150,6 +192,70 @@ export default function RunTab({ onSwitchToResults }) {
       )}
 
       <Box sx={{ mb: 2 }}>
+        {!isGraphCatalog ? (
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "minmax(0, 1.3fr) minmax(180px, 0.8fr) minmax(180px, 0.8fr)",
+              gap: 1,
+              mb: 2,
+            }}
+          >
+            <Box>
+              <Typography sx={{ color: "rgba(255,255,255,0.6)", mb: 0.5, fontSize: "0.75rem" }}>
+                Model profile
+              </Typography>
+              <BenchmarkModelSelector
+                family={benchmarkFamily}
+                value={modelProfile}
+                customModelId={customModelId}
+                onChange={(nextValue, profile) => {
+                  setModelProfile(nextValue);
+                  if (profile?.default_gold_source && benchmarkFamily === "layer1") {
+                    setGoldSource(profile.default_gold_source);
+                  }
+                  if (profile?.default_threshold_profile && benchmarkFamily === "layer1") {
+                    setThresholdProfile(profile.default_threshold_profile);
+                  }
+                }}
+                onCustomModelIdChange={setCustomModelId}
+              />
+            </Box>
+
+            <Box>
+              <Typography sx={{ color: "rgba(255,255,255,0.6)", mb: 0.5, fontSize: "0.75rem" }}>
+                Gold source
+              </Typography>
+              <Select
+                size="small"
+                fullWidth
+                value={benchmarkFamily === "layer2" ? "semantic_gold" : goldSource}
+                disabled={benchmarkFamily === "layer2"}
+                onChange={(e) => setGoldSource(e.target.value)}
+              >
+                <MenuItem value="curated_gold">curated_gold</MenuItem>
+                <MenuItem value="teacher_gold">teacher_gold</MenuItem>
+              </Select>
+            </Box>
+
+            <Box>
+              <Typography sx={{ color: "rgba(255,255,255,0.6)", mb: 0.5, fontSize: "0.75rem" }}>
+                Threshold profile
+              </Typography>
+              <Select
+                size="small"
+                fullWidth
+                value={benchmarkFamily === "layer2" ? "from_gold" : thresholdProfile}
+                disabled={benchmarkFamily === "layer2"}
+                onChange={(e) => setThresholdProfile(e.target.value)}
+              >
+                <MenuItem value="from_gold">from_gold</MenuItem>
+                <MenuItem value="student_mistral">student_mistral</MenuItem>
+              </Select>
+            </Box>
+          </Box>
+        ) : null}
+
         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
           <CursorPrimaryButton
             disabled={isGraphCatalog || selectedCaseIds.length === 0}
@@ -242,6 +348,14 @@ export default function RunTab({ onSwitchToResults }) {
           {run && (
             <Box sx={{ mt: 1, display: "flex", gap: 2, flexWrap: "wrap" }}>
               <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>status: {run.status}</Typography>
+              <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>
+                model: {run?.run_config?.resolved_model_id || run?.run_config?.model_profile || "default"}
+              </Typography>
+              {run?.run_config?.gold_source ? (
+                <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>
+                  gold: {run.run_config.gold_source}
+                </Typography>
+              ) : null}
               {(run.benchmark_family || "layer1") === "layer2" ? (
                 <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>
                   avg layer2 recall ratio: {(summary.avg_layer2_recall_ratio ?? 0).toFixed(3)}

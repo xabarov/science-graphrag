@@ -46,6 +46,46 @@ def _metric_scalars(case: dict[str, Any]) -> dict[str, Any]:
     return flat
 
 
+def normalize_api_run_for_compare(
+    run: dict[str, Any],
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """Build CLI-shaped report dict for :func:`compare_reports` from API/task_store run JSON.
+
+    Keeps only cases with status ok and a dict ``result.metrics``. Other cases are listed as
+    skipped with a short reason (for UI diagnostics).
+    """
+    skipped: list[dict[str, Any]] = []
+    cases_out: list[dict[str, Any]] = []
+    for row in run.get("cases") or []:
+        if not isinstance(row, dict):
+            continue
+        cid = row.get("case_id")
+        status = row.get("status")
+        if status != "ok":
+            skipped.append({"case_id": cid, "reason": str(status or "not_ok")})
+            continue
+        result = row.get("result")
+        if not isinstance(result, dict):
+            skipped.append({"case_id": cid, "reason": "no_result"})
+            continue
+        metrics = result.get("metrics")
+        if not isinstance(metrics, dict):
+            skipped.append({"case_id": cid, "reason": "no_metrics"})
+            continue
+        cases_out.append({"case_id": cid, "metrics": metrics})
+
+    run_config = run.get("run_config") if isinstance(run.get("run_config"), dict) else {}
+    run_metadata: dict[str, Any] = {
+        "run_id": run.get("run_id"),
+        "label": run.get("label"),
+        "benchmark_family": run.get("benchmark_family"),
+    }
+    for key, val in sorted(run_config.items()):
+        run_metadata[f"cfg_{key}"] = val
+
+    return {"cases": cases_out, "run_metadata": run_metadata}, skipped
+
+
 def compare_reports(baseline: dict[str, Any], current: dict[str, Any]) -> dict[str, Any]:
     baseline_cases = _as_case_map(baseline)
     current_cases = _as_case_map(current)
@@ -128,13 +168,20 @@ def compare_reports(baseline: dict[str, Any], current: dict[str, Any]) -> dict[s
     }
 
 
-def _markdown(result: dict[str, Any], baseline_path: Path, current_path: Path) -> str:
+def compare_result_to_markdown(
+    result: dict[str, Any],
+    *,
+    baseline_label: str = "baseline",
+    current_label: str = "current",
+    max_issue_rows: int = 30,
+) -> str:
+    """Render a compare_reports-style dict as Markdown (no filesystem paths required)."""
     summary = result["summary"]
     lines = [
         "# Benchmark report compare",
         "",
-        f"- baseline: {baseline_path}",
-        f"- current: {current_path}",
+        f"- baseline: {baseline_label}",
+        f"- current: {current_label}",
         "",
         "## Summary",
         f"- baseline_cases: {summary['baseline_cases']}",
@@ -143,25 +190,45 @@ def _markdown(result: dict[str, Any], baseline_path: Path, current_path: Path) -
         f"- added_in_current: {summary['added_in_current']}",
         f"- regressions: {summary['regression_count']}",
         f"- improvements: {summary['improvement_count']}",
+        f"- unchanged_metric_rows: {summary.get('unchanged_count', 0)}",
         "",
     ]
-    if result["run_metadata_delta"]:
-        lines.extend(["## Run metadata changed", f"- {result['run_metadata_delta']}", ""])
-    if result["regressions"]:
+    meta_delta = result.get("run_metadata_delta") or {}
+    if meta_delta:
+        lines.extend(["## Run metadata changed", f"- {meta_delta}", ""])
+    regressions = result.get("regressions") or []
+    if regressions:
         lines.append("## Regressions")
-        for row in result["regressions"][:30]:
+        for row in regressions[:max_issue_rows]:
             lines.append(
                 f"- {row['case_id']} :: {row['metric']} :: {row['baseline']} -> {row['current']}"
             )
         lines.append("")
-    if result["improvements"]:
+    improvements = result.get("improvements") or []
+    if improvements:
         lines.append("## Improvements")
-        for row in result["improvements"][:30]:
+        for row in improvements[:max_issue_rows]:
             lines.append(
                 f"- {row['case_id']} :: {row['metric']} :: {row['baseline']} -> {row['current']}"
+            )
+        lines.append("")
+    unchanged = result.get("unchanged") or []
+    if unchanged:
+        lines.append("## Unchanged (sample)")
+        for row in unchanged[:max_issue_rows]:
+            lines.append(
+                f"- {row['case_id']} :: {row['metric']} :: {row['baseline']} == {row['current']}"
             )
         lines.append("")
     return "\n".join(lines)
+
+
+def _markdown(result: dict[str, Any], baseline_path: Path, current_path: Path) -> str:
+    return compare_result_to_markdown(
+        result,
+        baseline_label=str(baseline_path),
+        current_label=str(current_path),
+    )
 
 
 def _cli(

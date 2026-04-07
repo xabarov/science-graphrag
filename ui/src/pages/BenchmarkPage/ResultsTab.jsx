@@ -11,6 +11,7 @@ import Chip from "@mui/material/Chip";
 import { deleteBenchmarkRun, listBenchmarkRuns } from "../../services/benchmarkApi.js";
 import ResultsDialog from "./ResultsDialog.jsx";
 import { CursorButton, CursorDangerButton } from "../../components/common/index.js";
+import BenchmarkRunSummaryCards from "./BenchmarkRunSummaryCards.jsx";
 
 function _statusChip(status) {
   const normalized = (status || "").toLowerCase();
@@ -20,7 +21,7 @@ function _statusChip(status) {
   return { label: normalized.toUpperCase() || "RUNNING", color: "default" };
 }
 
-export default function ResultsTab() {
+export default function ResultsTab({ onOpenWorkbench }) {
   const [runsPayload, setRunsPayload] = useState(null);
   const [error, setError] = useState(null);
   const [selectedRunId, setSelectedRunId] = useState(null);
@@ -48,6 +49,7 @@ export default function ResultsTab() {
   }, []);
 
   const items = runsPayload?.items || [];
+  const latestRun = items[0] || null;
 
   return (
     <Box sx={{ padding: 2 }}>
@@ -71,67 +73,86 @@ export default function ResultsTab() {
           Пока нет runs. Перейдите на вкладку “Запуск”.
         </Typography>
       ) : (
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>run_id</TableCell>
-              <TableCell>family</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Progress</TableCell>
-              <TableCell>metrics</TableCell>
-              <TableCell align="right">Действия</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {items.map((r) => {
-              const st = _statusChip(r.status);
-              const pct = r?.progress?.percent ?? 0;
-              const fam = r.benchmark_family || "layer1";
-              const metricsCell =
-                fam === "layer2"
-                  ? `L2 recall≈ ${(r.summary?.avg_layer2_recall_ratio ?? 0).toFixed(3)}`
-                  : `names ${(r.summary?.avg_names_f1 ?? 0).toFixed(3)} / arxiv ${(r.summary?.avg_sample_arxiv_f1 ?? 0).toFixed(3)}`;
-              return (
-                <TableRow key={r.run_id}>
-                  <TableCell sx={{ wordBreak: "break-all" }}>{r.run_id.slice(0, 8)}…</TableCell>
-                  <TableCell>
-                    <Chip label={fam} size="small" variant="outlined" />
-                  </TableCell>
-                  <TableCell>
-                    <Chip label={st.label} color={st.color} size="small" />
-                  </TableCell>
-                  <TableCell>
-                    {r.progress.completed}/{r.progress.total} ({pct.toFixed(1)}%)
-                  </TableCell>
-                  <TableCell sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.75)" }}>{metricsCell}</TableCell>
-                  <TableCell align="right">
-                    <CursorButton
-                      onClick={() => {
-                        setSelectedRunId(r.run_id);
-                        setDialogOpen(true);
-                      }}
-                    >
-                      Открыть
-                    </CursorButton>
-                    <CursorDangerButton
-                      onClick={async () => {
-                        await deleteBenchmarkRun(r.run_id);
-                        await refresh();
-                      }}
-                    >
-                      Удалить
-                    </CursorDangerButton>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {latestRun ? <BenchmarkRunSummaryCards run={latestRun} /> : null}
+
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>run_id</TableCell>
+                <TableCell>family</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Progress</TableCell>
+                <TableCell>config</TableCell>
+                <TableCell>metrics</TableCell>
+                <TableCell align="right">Действия</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {items.map((r) => {
+                const st = _statusChip(r.status);
+                const pct = r?.progress?.percent ?? 0;
+                const fam = r.benchmark_family || "layer1";
+                const metricsCell =
+                  fam === "layer2"
+                    ? `L2 recall≈ ${(r.summary?.avg_layer2_recall_ratio ?? 0).toFixed(3)}`
+                    : `names ${(r.summary?.avg_names_f1 ?? 0).toFixed(3)} / arxiv ${(r.summary?.avg_sample_arxiv_f1 ?? 0).toFixed(3)}`;
+                const configCell = [
+                  r?.run_config?.model_profile,
+                  r?.run_config?.gold_source,
+                  r?.run_config?.threshold_profile,
+                ]
+                  .filter(Boolean)
+                  .join(" | ");
+                return (
+                  <TableRow key={r.run_id}>
+                    <TableCell sx={{ wordBreak: "break-all" }}>{r.run_id.slice(0, 8)}…</TableCell>
+                    <TableCell>
+                      <Chip label={fam} size="small" variant="outlined" />
+                    </TableCell>
+                    <TableCell>
+                      <Chip label={st.label} color={st.color} size="small" />
+                    </TableCell>
+                    <TableCell>
+                      {r.progress.completed}/{r.progress.total} ({pct.toFixed(1)}%)
+                    </TableCell>
+                    <TableCell sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.75)" }}>
+                      {configCell || "default"}
+                    </TableCell>
+                    <TableCell sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.75)" }}>{metricsCell}</TableCell>
+                    <TableCell align="right">
+                      <CursorButton
+                        onClick={() => {
+                          setSelectedRunId(r.run_id);
+                          setDialogOpen(true);
+                        }}
+                      >
+                        Открыть
+                      </CursorButton>
+                      <CursorButton onClick={() => onOpenWorkbench?.(r.run_id, r?.cases?.[0]?.case_id || null)}>
+                        Workbench
+                      </CursorButton>
+                      <CursorDangerButton
+                        onClick={async () => {
+                          await deleteBenchmarkRun(r.run_id);
+                          await refresh();
+                        }}
+                      >
+                        Удалить
+                      </CursorDangerButton>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </Box>
       )}
 
       <ResultsDialog
         open={dialogOpen}
         runId={selectedRunId}
+        onOpenWorkbench={onOpenWorkbench}
         onClose={() => {
           setDialogOpen(false);
           setSelectedRunId(null);

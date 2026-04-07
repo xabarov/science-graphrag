@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import unicodedata
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -28,17 +29,42 @@ def _norm_ws(s: str | None) -> str:
     return re.sub(r"\s+", " ", s.strip()).lower()
 
 
+def _replace_common_unicode_punctuation(value: str) -> str:
+    return (
+        value.replace("\u2018", "'")
+        .replace("\u2019", "'")
+        .replace("\u201c", '"')
+        .replace("\u201d", '"')
+        .replace("\u00ab", '"')
+        .replace("\u00bb", '"')
+        .replace("\u00b4", "'")
+        .replace("`", "'")
+        .replace("\u00d7", "x")
+    )
+
+
+def _drop_unicode_controls(value: str) -> str:
+    return "".join(ch for ch in value if not unicodedata.category(ch).startswith("C"))
+
+
 def _norm_abstract_match(s: str | None) -> str:
     """Normalize for abstract prefix checks (PDF/LLM unicode hyphen variants)."""
 
-    t = _norm_ws(s)
+    t = _drop_unicode_controls(_replace_common_unicode_punctuation(_norm_ws(s)))
     for ch in ("\u2010", "\u2011", "\u2012", "\u2013", "\u2014", "\u2212"):
         t = t.replace(ch, "-")
     return t
 
 
 def _norm_aff(s: str) -> str:
-    return _norm_ws(s)
+    t = _norm_abstract_match(s)
+    t = unicodedata.normalize("NFKD", t)
+    t = "".join(
+        ch
+        for ch in t
+        if unicodedata.category(ch) != "Mn" and not unicodedata.category(ch).startswith("C")
+    )
+    return re.sub(r"\s+", " ", t.strip())
 
 
 def prf1_tp_fp_fn(gold: set[str], pred: set[str]) -> tuple[float, float, float, int, int, int]:

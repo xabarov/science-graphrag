@@ -1,0 +1,537 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+    "semantic_extraction_enabled": true
+  },
+  "case": {
+    "case_id": "sppnet_realpdf",
+    "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/sppnet_realpdf",
+    "diagnostics": {
+      "document_id": "sppnet_realpdf",
+      "source_name": "sppnet_realpdf",
+      "markdown_source": "benchmark",
+      "metadata_source": "llm",
+      "authorships_source": "llm",
+      "references_source": "llm",
+      "extraction_llm_enabled": true,
+      "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+      "fallback_reasons": []
+    },
+    "metrics": {
+      "metadata": {
+        "title_exact_normalized": true,
+        "title_rouge_l": 1.0,
+        "title_token_f1": 1.0,
+        "year_exact": false,
+        "abstract_prefix_ok": true,
+        "abstract_rouge_l_vs_prefix": 0.15564202334630348,
+        "doi_match_expected": null,
+        "arxiv_match_expected": false,
+        "work_type_match": false
+      },
+      "authorships": {
+        "names_precision": 1.0,
+        "names_recall": 1.0,
+        "names_f1": 1.0,
+        "names_tp_fp_fn": {
+          "tp": 4,
+          "fp": 0,
+          "fn": 0
+        },
+        "order_accuracy": 1.0,
+        "order_hits": 4,
+        "affiliation_jaccard_macro_on_matched_authors": 1.0,
+        "affiliations_precision": 1.0,
+        "affiliations_recall": 1.0,
+        "affiliations_f1": 1.0,
+        "names_difflib_macro": 1.0,
+        "pred_count": 4,
+        "gold_count": 4
+      },
+      "references": {
+        "count": 40,
+        "expected_count": 40,
+        "min_count": 36,
+        "count_ok": true,
+        "count_delta": 0,
+        "sample_arxiv_precision": 1.0,
+        "sample_arxiv_recall": 1.0,
+        "sample_arxiv_f1": 1.0,
+        "sample_arxiv_tp_fp_fn": {
+          "tp": 11,
+          "fp": 0,
+          "fn": 0
+        },
+        "predicted_arxiv_ids": [
+          "1310.1531",
+          "1311.2901",
+          "1312.4400",
+          "1312.5402",
+          "1312.6229",
+          "1403.1840",
+          "1404.4316",
+          "1405.3531",
+          "1409.0575",
+          "1409.1556",
+          "1409.4842"
+        ],
+        "sample_doi_precision": 1.0,
+        "sample_doi_recall": 1.0,
+        "sample_doi_f1": 1.0
+      },
+      "contract": {
+        "checks": {
+          "min_authorship_names_f1": true,
+          "min_authorship_names_recall": true,
+          "min_affiliations_f1": true,
+          "reference_count_ok_required": true,
+          "min_sample_arxiv_f1": true,
+          "min_sample_doi_f1": true,
+          "min_title_rouge_l": true,
+          "min_title_token_f1": true,
+          "min_authorship_names_difflib_macro": true
+        },
+        "passed": true
+      }
+    },
+    "predicted": {
+      "work_metadata": {
+        "title": "Spatial Pyramid Pooling in Deep Convolutional Networks for Visual Recognition",
+        "normalized_title": "Spatial Pyramid Pooling in Deep Convolutional Networks for Visual Recognition",
+        "abstract": "Existing deep convolutional neural networks (CNNs) require a fixed-size (e.g., 224×224) input image. This requirement is “artificial” and may reduce the recognition accuracy for the images or sub-images of an arbitrary size/scale. In this work, we equip the networks with another pooling strategy, “spatial pyramid pooling”, to eliminate the above requirement. The new network structure, called SPP-net, can generate a fixed-length representation regardless of image size/scale. Pyramid pooling is also robust to object deformations. With these advantages, SPP-net should in general improve all CNN-based image classification methods. On the ImageNet 2012 dataset, we demonstrate that SPP-net boosts the accuracy of a variety of CNN architectures despite their different designs. On the Pascal VOC 2007 and Caltech101 datasets, SPP-net achieves state-of-the-art classification results using a single full-image representation and no fine-tuning. The power of SPP-net is also significant in object detection. Using SPP-net, we compute the feature maps from the entire image only once, and then pool features in arbitrary regions (sub-images) to generate fixed-length representations for training the detectors. This method avoids repeatedly computing the convolutional features. In processing test images, our method is 24-102× faster than the R-CNN method, while achieving better or comparable accuracy on Pascal VOC 2007. In ImageNet Large Scale Visual Recognition Challenge (ILSVRC) 2014, our methods rank #2 in object detection and #3 in image classification among all 38 teams. This manuscript also introduces the improvement made for this competition.",
+        "publication_year": null,
+        "doi": null,
+        "arxiv_id": "1406.4729",
+        "language": "en",
+        "venue_name": "ECCV 2014",
+        "work_type": "conference_paper",
+        "openalex_id": null,
+        "fingerprint": "5e2c2da5b95597f4",
+        "ingestion_confidence": 0.72,
+        "source_metadata": {
+          "extraction_stage": "llm"
+        }
+      },
+      "authorships": [
+        {
+          "author_position": 1,
+          "author_raw_name": "Kaiming He",
+          "raw_affiliations": [
+            "Microsoft Research, Beijing, China"
+          ],
+          "is_corresponding": true,
+          "email": "kahe@microsoft.com"
+        },
+        {
+          "author_position": 2,
+          "author_raw_name": "Xiangyu Zhang",
+          "raw_affiliations": [
+            "Xi’an Jiaotong University, Xi’an, China"
+          ],
+          "is_corresponding": false,
+          "email": "xyz.clx@stu.xjtu.edu.cn"
+        },
+        {
+          "author_position": 3,
+          "author_raw_name": "Shaoqing Ren",
+          "raw_affiliations": [
+            "University of Science and Technology of China, Hefei, China"
+          ],
+          "is_corresponding": false,
+          "email": "sqren@mail.ustc.edu.cn"
+        },
+        {
+          "author_position": 4,
+          "author_raw_name": "Jian Sun",
+          "raw_affiliations": [
+            "Microsoft Research, Beijing, China"
+          ],
+          "is_corresponding": true,
+          "email": "jiansun@microsoft.com"
+        }
+      ],
+      "references": [
+        {
+          "raw_reference": "[1] Y. LeCun, B. Boser, J. S. Denker, D. Henderson, R. E. Howard, W. Hubbard, and L. D. Jackel, “Backpropagation applied to handwritten zip code recognition,” Neural computation, 1989.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Backpropagation applied to handwritten zip code recognition",
+          "year": 1989
+        },
+        {
+          "raw_reference": "[2] J. Deng, W. Dong, R. Socher, L.-J. Li, K. Li, and L. Fei-Fei, “Imagenet: A large-scale hierarchical image database,” in CVPR, 2009.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Imagenet: A large-scale hierarchical image database",
+          "year": 2009
+        },
+        {
+          "raw_reference": "[3] A. Krizhevsky, I. Sutskever, and G. Hinton, “Imagenet classification with deep convolutional neural networks,” in NIPS, 2012.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Imagenet classification with deep convolutional neural networks",
+          "year": 2012
+        },
+        {
+          "raw_reference": "[4] M. D. Zeiler and R. Fergus, “Visualizing and understanding convolutional neural networks,” arXiv:1311.2901, 2013.",
+          "doi": null,
+          "arxiv_id": "1311.2901",
+          "title": "Visualizing and understanding convolutional neural networks",
+          "year": 2013
+        },
+        {
+          "raw_reference": "[5] P . Sermanet, D. Eigen, X. Zhang, M. Mathieu, R. Fergus, and Y. LeCun, “Overfeat: Integrated recognition, localization and detection using convolutional networks,” arXiv:1312.6229, 2013.",
+          "doi": null,
+          "arxiv_id": "1312.6229",
+          "title": "Overfeat: Integrated recognition, localization and detection using convolutional networks",
+          "year": 2013
+        },
+        {
+          "raw_reference": "[6] A. V . K. Chatfield, K. Simonyan and A. Zisserman, “Return of the devil in the details: Delving deep into convolutional nets,” in ArXiv:1405.3531, 2014.",
+          "doi": null,
+          "arxiv_id": "1405.3531",
+          "title": "Return of the devil in the details: Delving deep into convolutional nets",
+          "year": 2014
+        },
+        {
+          "raw_reference": "[7] R. Girshick, J. Donahue, T. Darrell, and J. Malik, “Rich feature hierarchies for accurate object detection and semantic segmentation,” in CVPR, 2014.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Rich feature hierarchies for accurate object detection and semantic segmentation",
+          "year": 2014
+        },
+        {
+          "raw_reference": "[8] W. Y. Zou, X. Wang, M. Sun, and Y. Lin, “Generic object detection with dense neural patterns and regionlets,” in ArXiv:1404.4316, 2014.",
+          "doi": null,
+          "arxiv_id": "1404.4316",
+          "title": "Generic object detection with dense neural patterns and regionlets",
+          "year": 2014
+        },
+        {
+          "raw_reference": "[9] A. S. Razavian, H. Azizpour, J. Sullivan, and S. Carlsson, “Cnn features off-the-shelf: An astounding baseline for recogniton,” in CVPR 2014, DeepVision Workshop , 2014.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Cnn features off-the-shelf: An astounding baseline for recogniton",
+          "year": 2014
+        },
+        {
+          "raw_reference": "[10] Y. Taigman, M. Yang, M. Ranzato, and L. Wolf, “Deepface: Closing the gap to human-level performance in face verification,” in CVPR, 2014.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Deepface: Closing the gap to human-level performance in face verification",
+          "year": 2014
+        },
+        {
+          "raw_reference": "[11] N. Zhang, M. Paluri, M. Ranzato, T. Darrell, and L. Bourdevr, “Panda: Pose aligned networks for deep attribute modeling,” in CVPR, 2014.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Panda: Pose aligned networks for deep attribute modeling",
+          "year": 2014
+        },
+        {
+          "raw_reference": "[12] Y. Gong, L. Wang, R. Guo, and S. Lazebnik, “Multi-scale orderless pooling of deep convolutional activation features,” in ArXiv:1403.1840, 2014.",
+          "doi": null,
+          "arxiv_id": "1403.1840",
+          "title": "Multi-scale orderless pooling of deep convolutional activation features",
+          "year": 2014
+        },
+        {
+          "raw_reference": "[13] J. Donahue, Y. Jia, O. Vinyals, J. Hoffman, N. Zhang, E. Tzeng, and T. Darrell, “Decaf: A deep convolutional activation feature for generic visual recognition,” arXiv:1310.1531, 2013.",
+          "doi": null,
+          "arxiv_id": "1310.1531",
+          "title": "Decaf: A deep convolutional activation feature for generic visual recognition",
+          "year": 2013
+        },
+        {
+          "raw_reference": "[14] K. Grauman and T. Darrell, “The pyramid match kernel: Discriminative classification with sets of image features,” in ICCV, 2005.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "The pyramid match kernel: Discriminative classification with sets of image features",
+          "year": 2005
+        },
+        {
+          "raw_reference": "[15] S. Lazebnik, C. Schmid, and J. Ponce, “Beyond bags of features: Spatial pyramid matching for recognizing natural scene categories,” in CVPR, 2006.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Beyond bags of features: Spatial pyramid matching for recognizing natural scene categories",
+          "year": 2006
+        },
+        {
+          "raw_reference": "[16] J. Sivic and A. Zisserman, “Video google: a text retrieval approach to object matching in videos,” in ICCV, 2003.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Video google: a text retrieval approach to object matching in videos",
+          "year": 2003
+        },
+        {
+          "raw_reference": "[17] J. Yang, K. Yu, Y. Gong, and T. Huang, “Linear spatial pyramid matching using sparse coding for image classification,” in CVPR, 2009.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Linear spatial pyramid matching using sparse coding for image classification",
+          "year": 2009
+        },
+        {
+          "raw_reference": "[18] J. Wang, J. Yang, K. Yu, F. Lv, T. Huang, and Y. Gong, “Locality-constrained linear coding for image classification,” in CVPR, 2010.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Locality-constrained linear coding for image classification",
+          "year": 2010
+        },
+        {
+          "raw_reference": "[19] F. Perronnin, J. S ́anchez, and T. Mensink, “Improving the fisher kernel for large-scale image classification,” in ECCV, 2010.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Improving the fisher kernel for large-scale image classification",
+          "year": 2010
+        },
+        {
+          "raw_reference": "[20] K. E. van de Sande, J. R. Uijlings, T. Gevers, and A. W. Smeulders, “Segmentation as selective search for object recognition,” in ICCV, 2011.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Segmentation as selective search for object recognition",
+          "year": 2011
+        },
+        {
+          "raw_reference": "[21] L. Fei-Fei, R. Fergus, and P . Perona, “Learning generative visual models from few training examples: An incremental bayesian approach tested on 101 object categories,” CVIU, 2007.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Learning generative visual models from few training examples: An incremental bayesian approach tested on 101 object categories",
+          "year": 2007
+        },
+        {
+          "raw_reference": "[22] M. Everingham, L. Van Gool, C. K. I. Williams, J. Winn, and A. Zisserman, “The PASCAL Visual Object Classes Challenge 2007 (VOC2007) Results,” 2007.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "The PASCAL Visual Object Classes Challenge 2007 (VOC2007) Results",
+          "year": 2007
+        },
+        {
+          "raw_reference": "[23] P . F. Felzenszwalb, R. B. Girshick, D. McAllester, and D. Ramanan, “Object detection with discriminatively trained part-based models,” P AMI, 2010.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Object detection with discriminatively trained part-based models",
+          "year": 2010
+        },
+        {
+          "raw_reference": "[24] N. Dalal and B. Triggs, “Histograms of oriented gradients for human detection,” in CVPR, 2005.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Histograms of oriented gradients for human detection",
+          "year": 2005
+        },
+        {
+          "raw_reference": "[25] C. L. Zitnick and P . Doll ́ar, “Edge boxes: Locating object proposals from edges,” in ECCV, 2014.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Edge boxes: Locating object proposals from edges",
+          "year": 2014
+        },
+        {
+          "raw_reference": "[26] O. Russakovsky, J. Deng, H. Su, J. Krause, S. Satheesh, S. Ma, Z. Huang, A. Karpathy, A. Khosla, M. Bernstein et al. , “Imagenet large scale visual recognition challenge,” arXiv:1409.0575, 2014.",
+          "doi": null,
+          "arxiv_id": "1409.0575",
+          "title": "Imagenet large scale visual recognition challenge",
+          "year": 2014
+        },
+        {
+          "raw_reference": "[27] K. Chatfield, V . Lempitsky, A. Vedaldi, and A. Zisserman, “The devil is in the details: an evaluation of recent feature encoding methods,” in BMVC, 2011.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "The devil is in the details: an evaluation of recent feature encoding methods",
+          "year": 2011
+        },
+        {
+          "raw_reference": "[28] A. Coates and A. Ng, “The importance of encoding versus training with sparse coding and vector quantization,” inICML, 2011.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "The importance of encoding versus training with sparse coding and vector quantization",
+          "year": 2011
+        },
+        {
+          "raw_reference": "[29] D. G. Lowe, “Distinctive image features from scale-invariant keypoints,” IJCV, 2004.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Distinctive image features from scale-invariant keypoints",
+          "year": 2004
+        },
+        {
+          "raw_reference": "[30] J. C. van Gemert, J.-M. Geusebroek, C. J. Veenman, and A. W. Smeulders, “Kernel codebooks for scene categorization,” in ECCV, 2008.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Kernel codebooks for scene categorization",
+          "year": 2008
+        },
+        {
+          "raw_reference": "[31] M. Lin, Q. Chen, and S. Yan, “Network in network,” arXiv:1312.4400, 2013.",
+          "doi": null,
+          "arxiv_id": "1312.4400",
+          "title": "Network in network",
+          "year": 2013
+        },
+        {
+          "raw_reference": "[32] C. Szegedy, W. Liu, Y. Jia, P . Sermanet, S. Reed, D. Anguelov, D. Erhan, V . Vanhoucke, and A. Rabinovich, “Going deeper with convolutions,” arXiv:1409.4842, 2014.",
+          "doi": null,
+          "arxiv_id": "1409.4842",
+          "title": "Going deeper with convolutions",
+          "year": 2014
+        },
+        {
+          "raw_reference": "[33] K. Simonyan and A. Zisserman, “Very deep convolutional networks for large-scale image recognition,” arXiv:1409.1556, 2014.",
+          "doi": null,
+          "arxiv_id": "1409.1556",
+          "title": "Very deep convolutional networks for large-scale image recognition",
+          "year": 2014
+        },
+        {
+          "raw_reference": "[34] M. Oquab, L. Bottou, I. Laptev, J. Sivic et al. , “Learning and transferring mid-level image representations using convolutional neural networks,” in CVPR, 2014.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Learning and transferring mid-level image representations using convolutional neural networks",
+          "year": 2014
+        },
+        {
+          "raw_reference": "[35] Y. Jia, “Caffe: An open source convolutional architecture for fast feature embedding,” http://caffe.berkeleyvision.org/, 2013.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Caffe: An open source convolutional architecture for fast feature embedding",
+          "year": 2013
+        },
+        {
+          "raw_reference": "[36] A. G. Howard, “Some improvements on deep convolutional neural network based image classification,” ArXiv:1312.5402, 2013.",
+          "doi": null,
+          "arxiv_id": "1312.5402",
+          "title": "Some improvements on deep convolutional neural network based image classification",
+          "year": 2013
+        },
+        {
+          "raw_reference": "[37] H. Jegou, F. Perronnin, M. Douze, J. Sanchez, P . Perez, and C. Schmid, “Aggregating local image descriptors into compact codes,” TP AMI, vol. 34, no. 9, pp. 1704–1716, 2012.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Aggregating local image descriptors into compact codes",
+          "year": 2012
+        },
+        {
+          "raw_reference": "[38] C.-C. Chang and C.-J. Lin, “Libsvm: a library for support vector machines,” ACM Transactions on Intelligent Systems and Technology (TIST), 2011.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Libsvm: a library for support vector machines",
+          "year": 2011
+        },
+        {
+          "raw_reference": "[39] X. Wang, M. Yang, S. Zhu, and Y. Lin, “Regionlets for generic object detection,” in ICCV, 2013.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Regionlets for generic object detection",
+          "year": 2013
+        },
+        {
+          "raw_reference": "[40] C. Szegedy, A. Toshev, and D. Erhan, “Deep neural networks for object detection,” in NIPS, 2013.",
+          "doi": null,
+          "arxiv_id": null,
+          "title": "Deep neural networks for object detection",
+          "year": 2013
+        }
+      ]
+    },
+    "gold": {
+      "case_id": "sppnet_realpdf",
+      "schema_version": 1,
+      "description": "Teacher-generated layer-1 gold (model=deepseek/deepseek-v3.2, base=https://openrouter.ai/api/v1). Prompt fingerprint sha256-20:210f7e16d3e0a07ad571.",
+      "work_metadata": {
+        "title": "Spatial Pyramid Pooling in Deep Convolutional Networks for Visual Recognition",
+        "publication_year": 2015,
+        "abstract_prefix": "Existing deep convolutional neural networks (CNNs) require a fixed-size (e.g., 224×224) input image. This requirement is \"artificial\" and may reduce the recogni",
+        "doi": null,
+        "arxiv_id": "1406.4729v4",
+        "venue_name": null,
+        "work_type": "preprint"
+      },
+      "authorships": [
+        {
+          "name": "Kaiming He",
+          "affiliations": [
+            "Microsoft Research, Beijing, China"
+          ]
+        },
+        {
+          "name": "Xiangyu Zhang",
+          "affiliations": [
+            "Xi'an Jiaotong University, Xi'an, China"
+          ]
+        },
+        {
+          "name": "Shaoqing Ren",
+          "affiliations": [
+            "University of Science and Technology of China, Hefei, China"
+          ]
+        },
+        {
+          "name": "Jian Sun",
+          "affiliations": [
+            "Microsoft Research, Beijing, China"
+          ]
+        }
+      ],
+      "references": {
+        "expected_count": 40,
+        "min_count": 36,
+        "notes": "Auto-generated from teacher extraction; sample_* are teacher-derived ids.",
+        "sample_arxiv_ids": [
+          "1310.1531",
+          "1311.2901",
+          "1312.4400",
+          "1312.5402",
+          "1312.6229",
+          "1403.1840",
+          "1404.4316",
+          "1405.3531",
+          "1409.0575",
+          "1409.1556",
+          "1409.4842"
+        ],
+        "sample_dois": []
+      },
+      "graph_expectations": {
+        "min_cites": 0,
+        "max_cites": 60,
+        "min_authorships": 0,
+        "max_authorships": 8,
+        "min_institutions": 0,
+        "max_institutions": 8,
+        "expected_cited_arxiv_ids": [
+          "1311.2901",
+          "1312.6229",
+          "1405.3531",
+          "1404.4316",
+          "1403.1840",
+          "1310.1531",
+          "1409.0575",
+          "1312.4400"
+        ],
+        "max_duplicate_work_fingerprints": 8,
+        "max_work_dedup_violations": 0,
+        "min_related_version_edges": null,
+        "max_related_version_edges": null
+      },
+      "quality_thresholds": {
+        "require_title_match": false,
+        "require_abstract_prefix": false,
+        "min_authorship_names_f1": 0.5,
+        "min_authorship_names_recall": 0.55,
+        "min_affiliations_f1": 0.28,
+        "require_reference_count_ok": true,
+        "min_sample_arxiv_f1": 0.45,
+        "min_sample_doi_f1": 0.4,
+        "min_title_rouge_l": 0.82,
+        "min_abstract_rouge_l": null,
+        "min_title_token_f1": 0.82,
+        "min_authorship_names_difflib_macro": 0.88
+      }
+    },
+    "gold_path": "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/teacher_gold/layer1/sppnet_realpdf/gold_teacher.json"
+  }
+}

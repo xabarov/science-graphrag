@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
 
-from eval.layer1.metrics import _norm_abstract_match, prf1_tp_fp_fn, score_layer1
+from eval.layer1.metrics import _norm_abstract_match, _norm_aff, prf1_tp_fp_fn, score_layer1
 from eval.layer1.runner import run_case
 from eval.layer1.spec import Layer1GoldSpec
 from eval.layer1.threshold_profiles import apply_layer1_threshold_profile
@@ -21,6 +22,7 @@ FIXTURE_ARXIV_HEAVY = FIXTURE_ROOT / "arxiv_refs_heavy"
 FIXTURE_NOISY = FIXTURE_ROOT / "noisy_layout_stub"
 FIXTURE_RETINANET_REAL = FIXTURE_ROOT / "retinanet_focal_realpdf"
 FIXTURE_FCOS_REAL = FIXTURE_ROOT / "fcos_realpdf"
+TEACHER_GOLD_ROOT = Path(__file__).resolve().parents[1] / "eval" / "teacher_gold" / "layer1"
 
 
 def test_layer1_gold_spec_loads() -> None:
@@ -37,6 +39,7 @@ def test_apply_student_mistral_threshold_profile() -> None:
     assert merged.quality_thresholds is not None
     assert merged.quality_thresholds.require_title_match is False
     assert merged.quality_thresholds.min_title_rouge_l is not None
+    assert merged.quality_thresholds.min_abstract_rouge_l is None
 
 
 def test_norm_abstract_match_hyphen_variants() -> None:
@@ -44,6 +47,16 @@ def test_norm_abstract_match_hyphen_variants() -> None:
     assert _norm_abstract_match("Keypoint\u2011based").startswith(
         _norm_abstract_match("Keypoint-"),
     )
+
+
+def test_norm_abstract_match_quote_variants() -> None:
+    assert _norm_abstract_match('This is "artificial".') == _norm_abstract_match(
+        "This is “artificial”."
+    )
+
+
+def test_norm_aff_handles_diacritics_and_controls() -> None:
+    assert _norm_aff("INRIA Rhône-Alps, France") == _norm_aff("INRIA Rh\x88one-Alps, France")
 
 
 def test_prf1_sets() -> None:
@@ -144,3 +157,12 @@ def test_run_case_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
     assert "predicted" in report
     assert report["diagnostics"]["document_id"] == "yolov1"
     assert report["metrics"]["contract"]["passed"] is True
+
+
+def test_yolov2_teacher_gold_author_hotfix() -> None:
+    teacher_gold_path = TEACHER_GOLD_ROOT / "yolov2_realpdf" / "gold_teacher.json"
+    if not teacher_gold_path.is_file():
+        pytest.skip("teacher gold not generated locally")
+    data = json.loads(teacher_gold_path.read_text(encoding="utf-8"))
+    names = [item["name"] for item in data.get("authorships", [])]
+    assert "Joseph Redmon" in names

@@ -7,6 +7,7 @@ from typing import Any
 from fastapi.testclient import TestClient
 
 from science_graphrag.api import main as api_main
+from science_graphrag.api import benchmark as benchmark_api
 from science_graphrag.api.retrieval import GroundedAnswer
 
 
@@ -207,6 +208,15 @@ def test_benchmark_cases_graph_family_list_smoke() -> None:
     assert payload["items"][0]["has_graph_expectations"] == 1
 
 
+def test_benchmark_models_list_smoke() -> None:
+    client = _client()
+    res = client.get("/v1/benchmark/models")
+    assert res.status_code == 200
+    payload = res.json()
+    assert payload["total"] >= 3
+    assert any(item["profile_id"] == "env_default" for item in payload["items"])
+
+
 def test_benchmark_post_run_rejects_graph_family() -> None:
     client = _client()
     res = client.post(
@@ -226,6 +236,280 @@ def test_benchmark_case_layer2_detail_smoke() -> None:
     body = res.json()
     assert body["case_id"] == "no_llm_smoke"
     assert "expected_method_names_normalized" in body["gold"]
+
+
+def test_benchmark_case_artifacts_layer1_smoke() -> None:
+    """Artifact inventory for a layer-1 fixture (curated + teacher slots)."""
+
+    client = _client()
+    res = client.get("/v1/benchmark/cases/yolov1/artifacts?family=layer1")
+    assert res.status_code == 200
+    body = res.json()
+    assert body["case_id"] == "yolov1"
+    assert body["family"] == "layer1"
+    assert body["article"]["present"] is True
+    assert body["article"]["path_relative_to_repo"]
+    variants = {v["id"]: v for v in body["gold_variants"]}
+    assert set(variants) == {"curated_gold", "teacher_gold"}
+    assert variants["curated_gold"]["present"] is True
+    assert variants["curated_gold"]["filename"] == "gold.json"
+    assert body["semantic_gold"] is None
+    assert body["semantic_gold_teacher"] is None
+
+
+def test_benchmark_case_artifacts_layer2_smoke() -> None:
+    """Artifact inventory for layer-2 semantic fixture."""
+
+    client = _client()
+    res = client.get("/v1/benchmark/cases/no_llm_smoke/artifacts?family=layer2")
+    assert res.status_code == 200
+    body = res.json()
+    assert body["family"] == "layer2"
+    assert body["semantic_gold"]["present"] is True
+    assert body["semantic_gold"]["path_relative_to_repo"]
+    assert body["gold_variants"] == []
+
+
+def test_benchmark_case_artifacts_graph_family_smoke() -> None:
+    """Graph catalog uses same fixture tree but family=graph in the payload."""
+
+    client = _client()
+    res = client.get("/v1/benchmark/cases/yolov1/artifacts?family=graph")
+    assert res.status_code == 200
+    body = res.json()
+    assert body["family"] == "graph"
+    assert body["graph_expectations"] is True
+
+
+def test_benchmark_run_summary_smoke(monkeypatch: Any) -> None:
+    def _fake_get_run_summary(_run_id: str) -> dict[str, Any]:
+        return {
+            "run_id": "run-sum-1",
+            "label": "l",
+            "benchmark_family": "layer1",
+            "status": "completed",
+            "created_at": "t0",
+            "started_at": "t1",
+            "completed_at": "t2",
+            "error_message": None,
+            "run_config": {},
+            "progress": {"total": 1, "completed": 1},
+            "summary": {"pass_count": 1, "fail_count": 0, "case_count": 1},
+            "cases": [
+                {
+                    "case_id": "yolov1",
+                    "status": "ok",
+                    "error_message": None,
+                    "finished_at": "t3",
+                    "summary": {"passed": True, "failed_checks": []},
+                },
+            ],
+        }
+
+    monkeypatch.setattr(benchmark_api.task_store, "get_run_summary", _fake_get_run_summary)
+    client = _client()
+    res = client.get("/v1/benchmark/runs/run-sum-1/summary")
+    assert res.status_code == 200
+    data = res.json()["data"]
+    assert data["run_id"] == "run-sum-1"
+    assert data["cases"][0]["case_id"] == "yolov1"
+    assert "result" not in data["cases"][0]
+
+
+def test_benchmark_run_summary_not_found(monkeypatch: Any) -> None:
+    monkeypatch.setattr(benchmark_api.task_store, "get_run_summary", lambda _rid: None)
+    assert _client().get("/v1/benchmark/runs/missing-run/summary").status_code == 404
+
+
+def test_benchmark_runs_compare_smoke(monkeypatch: Any) -> None:
+    def _make_run(rid: str, names_f1: float) -> dict[str, Any]:
+        return {
+            "run_id": rid,
+            "benchmark_family": "layer1",
+            "label": rid,
+            "run_config": {"model_profile": "a" if names_f1 >= 1.0 else "b"},
+            "cases": [
+                {
+                    "case_id": "yolov1",
+                    "status": "ok",
+                    "result": {
+                        "metrics": {
+                            "contract": {"passed": True, "checks": {}},
+                            "authorships": {"names_f1": names_f1},
+                            "references": {"sample_arxiv_f1": 0.5},
+                        },
+                    },
+                },
+            ],
+        }
+
+    runs = {
+        "run-base": _make_run("run-base", 1.0),
+        "run-curr": _make_run("run-curr", 0.5),
+    }
+
+    def _fake_get_run(rid: str) -> dict[str, Any] | None:
+        return runs.get(rid)
+
+    monkeypatch.setattr(benchmark_api.task_store, "get_run", _fake_get_run)
+    client = _client()
+    res = client.get(
+        "/v1/benchmark/runs/compare",
+        params={"baseline_run_id": "run-base", "current_run_id": "run-curr"},
+    )
+    assert res.status_code == 200
+    data = res.json()["data"]
+    assert data["summary"]["regression_count"] >= 1
+    assert any(r.get("metric") == "authorships.names_f1" for r in data["regressions"])
+    assert isinstance(data.get("markdown"), str)
+    assert "Benchmark report compare" in data["markdown"]
+    assert "run-base" in data["markdown"]
+
+
+def test_benchmark_runs_compare_case_limit(monkeypatch: Any) -> None:
+    big_cases = [
+        {"case_id": f"c{i}", "status": "ok", "result": {"metrics": {"contract": {"passed": True}}}}
+        for i in range(2001)
+    ]
+
+    def _fake_get_run(rid: str) -> dict[str, Any] | None:
+        return {"run_id": rid, "benchmark_family": "layer1", "cases": big_cases}
+
+    monkeypatch.setattr(benchmark_api.task_store, "get_run", _fake_get_run)
+    res = _client().get(
+        "/v1/benchmark/runs/compare",
+        params={"baseline_run_id": "big-a", "current_run_id": "big-b"},
+    )
+    assert res.status_code == 400
+    assert res.json().get("detail") == "compare_case_limit_exceeded"
+
+
+def test_benchmark_runs_compare_family_mismatch(monkeypatch: Any) -> None:
+    def _fake_get_run(rid: str) -> dict[str, Any]:
+        if rid == "a":
+            return {"run_id": "a", "benchmark_family": "layer1", "cases": []}
+        return {"run_id": "b", "benchmark_family": "layer2", "cases": []}
+
+    monkeypatch.setattr(benchmark_api.task_store, "get_run", _fake_get_run)
+    res = _client().get(
+        "/v1/benchmark/runs/compare",
+        params={"baseline_run_id": "a", "current_run_id": "b"},
+    )
+    assert res.status_code == 400
+    assert res.json().get("detail") == "benchmark_family_mismatch"
+
+
+def test_benchmark_post_run_accepts_model_fields(monkeypatch: Any) -> None:
+    captured: dict[str, Any] = {}
+
+    def _fake_create_run(**kwargs: Any) -> str:
+        captured.update(kwargs)
+        return "run-test-1"
+
+    def _fake_get_run(run_id: str) -> dict[str, Any]:
+        return {"run_id": run_id, "status": "running"}
+
+    monkeypatch.setattr(benchmark_api.task_store, "create_run", _fake_create_run)
+    monkeypatch.setattr(benchmark_api.task_store, "get_run", _fake_get_run)
+    client = _client()
+    res = client.post(
+        "/v1/benchmark/runs",
+        json={
+            "case_ids": ["yolov1"],
+            "label": "student-run",
+            "family": "layer1",
+            "model_profile": "student_mistral_small_32",
+            "gold_source": "teacher_gold",
+            "threshold_profile": "student_mistral",
+        },
+    )
+    assert res.status_code == 200
+    assert res.json()["run_id"] == "run-test-1"
+    assert captured["benchmark_family"] == "layer1"
+    assert captured["run_config"]["model_profile"] == "student_mistral_small_32"
+    assert captured["run_config"]["gold_source"] == "teacher_gold"
+    assert captured["run_config"]["threshold_profile"] == "student_mistral"
+
+
+def test_benchmark_run_cases_page_smoke(monkeypatch: Any) -> None:
+    def _fake_page(
+        _run_id: str,
+        *,
+        offset: int = 0,
+        limit: int = 100,
+    ) -> dict[str, Any]:
+        return {
+            "run_id": "run-page",
+            "benchmark_family": "layer1",
+            "total": 2,
+            "offset": offset,
+            "limit": limit,
+            "items": [
+                {
+                    "case_id": "c1",
+                    "status": "ok",
+                    "summary": {"names_f1": 1.0},
+                    "error_message": None,
+                    "finished_at": "t",
+                },
+            ],
+        }
+
+    monkeypatch.setattr(benchmark_api.task_store, "get_run_cases_page", _fake_page)
+    client = _client()
+    res = client.get("/v1/benchmark/runs/run-page/cases?offset=0&limit=50")
+    assert res.status_code == 200
+    data = res.json()["data"]
+    assert data["total"] == 2
+    assert len(data["items"]) == 1
+    assert data["items"][0]["case_id"] == "c1"
+
+
+def test_benchmark_run_case_detail_smoke(monkeypatch: Any) -> None:
+    def _fake_get_run(_run_id: str) -> dict[str, Any]:
+        return {
+            "run_id": "run-atss",
+            "benchmark_family": "layer1",
+            "run_config": {
+                "gold_source": "teacher_gold",
+                "model_profile": "student_mistral_small_32",
+            },
+            "cases": [
+                {
+                    "case_id": "atss_realpdf",
+                    "status": "ok",
+                    "summary": {"passed": True, "failed_checks": []},
+                    "result": {
+                        "metrics": {
+                            "contract": {"passed": True, "checks": {}},
+                            "authorships": {"names_f1": 1.0},
+                            "references": {"sample_arxiv_f1": 1.0, "sample_doi_f1": 1.0},
+                        },
+                        "predicted": {
+                            "work_metadata": {"title": "ATSS"},
+                            "authorships": [],
+                            "references": [],
+                        },
+                        "gold": {
+                            "work_metadata": {"title": "ATSS"},
+                            "authorships": [],
+                            "references": {"expected_count": 0},
+                        },
+                        "diagnostics": {"metadata_source": "llm"},
+                    },
+                },
+            ],
+        }
+
+    monkeypatch.setattr(benchmark_api.task_store, "get_run", _fake_get_run)
+    client = _client()
+    res = client.get("/v1/benchmark/runs/run-atss/cases/atss_realpdf")
+    assert res.status_code == 200
+    payload = res.json()["data"]
+    assert payload["case_id"] == "atss_realpdf"
+    assert payload["gold"]["source"] == "teacher_gold"
+    assert payload["article"]["raw_markdown"]
+    assert "metadata_rows" in payload["comparison"]
 
 
 def test_mandatory_happy_path_sequence_smoke(monkeypatch: Any) -> None:

@@ -20,18 +20,55 @@ export async function listBenchmarkCases({ family = "layer1", tier, q, limit = 2
   return res.data;
 }
 
-export async function getBenchmarkCaseDetail(caseId, { family = "layer1" } = {}) {
+export async function getBenchmarkCaseDetail(caseId, { family = "layer1", gold_source } = {}) {
+  const params = { family };
+  if (gold_source) params.gold_source = gold_source;
   const res = await api.get(`/benchmark/cases/${encodeURIComponent(caseId)}`, {
+    params,
+    headers: authHeaders(),
+  });
+  return res.data;
+}
+
+export async function getBenchmarkCaseArtifacts(caseId, { family = "layer1" } = {}) {
+  const res = await api.get(`/benchmark/cases/${encodeURIComponent(caseId)}/artifacts`, {
     params: { family },
     headers: authHeaders(),
   });
   return res.data;
 }
 
-export async function runBenchmark({ case_ids, label, family = "layer1" } = {}) {
+export async function listBenchmarkModels() {
+  const res = await api.get("/benchmark/models", {
+    headers: authHeaders(),
+  });
+  return res.data;
+}
+
+export async function runBenchmark({
+  case_ids,
+  label,
+  family = "layer1",
+  model_profile,
+  model_id,
+  base_url_override,
+  api_key_env_name,
+  gold_source,
+  threshold_profile,
+} = {}) {
   const res = await api.post(
     "/benchmark/runs",
-    { case_ids, label, family },
+    {
+      case_ids,
+      label,
+      family,
+      model_profile,
+      model_id,
+      base_url_override,
+      api_key_env_name,
+      gold_source,
+      threshold_profile,
+    },
     {
       headers: authHeaders(),
     },
@@ -44,10 +81,46 @@ export async function listBenchmarkRuns() {
   return res.data;
 }
 
+export async function compareBenchmarkRuns(baselineRunId, currentRunId) {
+  const res = await api.get("/benchmark/runs/compare", {
+    params: {
+      baseline_run_id: baselineRunId,
+      current_run_id: currentRunId,
+    },
+    headers: authHeaders(),
+  });
+  return res.data;
+}
+
 export async function getBenchmarkRun(runId) {
   const res = await api.get(`/benchmark/runs/${encodeURIComponent(runId)}`, {
     headers: authHeaders(),
   });
+  return res.data;
+}
+
+export async function getBenchmarkRunSummary(runId) {
+  const res = await api.get(`/benchmark/runs/${encodeURIComponent(runId)}/summary`, {
+    headers: authHeaders(),
+  });
+  return res.data;
+}
+
+export async function getBenchmarkRunCasesPage(runId, { offset = 0, limit = 100 } = {}) {
+  const res = await api.get(`/benchmark/runs/${encodeURIComponent(runId)}/cases`, {
+    params: { offset, limit },
+    headers: authHeaders(),
+  });
+  return res.data;
+}
+
+export async function getBenchmarkRunCaseDetail(runId, caseId) {
+  const res = await api.get(
+    `/benchmark/runs/${encodeURIComponent(runId)}/cases/${encodeURIComponent(caseId)}`,
+    {
+      headers: authHeaders(),
+    },
+  );
   return res.data;
 }
 

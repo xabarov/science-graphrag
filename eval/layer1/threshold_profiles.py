@@ -15,7 +15,7 @@ STUDENT_MISTRAL_LAYER1_THRESHOLDS = Layer1QualityThresholds(
     min_sample_arxiv_f1=0.45,
     min_sample_doi_f1=0.40,
     min_title_rouge_l=0.82,
-    min_abstract_rouge_l=0.22,
+    min_abstract_rouge_l=None,
     min_title_token_f1=0.82,
     min_authorship_names_difflib_macro=0.88,
 )

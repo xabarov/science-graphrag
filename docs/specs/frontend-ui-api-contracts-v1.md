@@ -223,17 +223,23 @@ Response:
 | Method | Path | Role |
 |--------|------|------|
 | GET | `/v1/benchmark/cases` | Список кейсов (`family=layer1\|layer2\|graph`, `tier`, `q`, `limit`, `offset`). Для `graph` — только layer-1 кейсы, у которых в `gold.json` есть `graph_expectations` (каталог для UI, без запуска Neo4j из API). |
-| GET | `/v1/benchmark/cases/{case_id}` | Превью: `article_md`, `gold` (layer-2: содержимое `semantic_gold.json`) |
-| POST | `/v1/benchmark/runs` | Старт прогона (`case_ids` или ярлыки `all` / `merge_safe` / `nightly_heavy` / `nightly_semantic`; тело: `family`, `label`). Для `family=graph` — **400** с `detail: "graph_benchmark_use_cli"` (исполнение через `science-graphrag-graph-benchmark` / CI, не через API). |
+| GET | `/v1/benchmark/models` | Каталог model presets для UI launcher: `profile_id`, `label`, `role`, `model_id`, `family_support`, `default_gold_source`, `default_threshold_profile`. |
+| GET | `/v1/benchmark/cases/{case_id}` | Превью fixture: `article_md`, `article_sections`, `gold`, `artifacts`; для layer-1 поддержан `gold_source=curated_gold\\|teacher_gold`, для layer-2 `gold` = содержимое `semantic_gold.json`. |
+| GET | `/v1/benchmark/cases/{case_id}/artifacts` | Инвентарь файлов кейса: `family` query (`layer1` / `layer2` / `graph`), пути относительно корня репозитория, `gold_variants` (curated/teacher) для layer-1, `semantic_gold` / `semantic_gold_teacher` для layer-2, `graph_expectations` для graph. Поле `last_run_hints`: при наличии — `{ run_id, completed_at, status }` для последнего **completed** run с тем же `benchmark_family`, где встречается `case_id` (скан до 200 самых новых по mtime JSON в `data/benchmark_runs/` и legacy dir), иначе `null`. |
+| POST | `/v1/benchmark/runs` | Старт прогона (`case_ids` или ярлыки `all` / `merge_safe` / `nightly_heavy` / `nightly_semantic`; тело: `family`, `label`, `model_profile`, `model_id`, `gold_source`, `threshold_profile`, optional `base_url_override`, `api_key_env_name`). Для `family=graph` — **400** с `detail: "graph_benchmark_use_cli"` (исполнение через `science-graphrag-graph-benchmark` / CI, не через API). |
 | GET | `/v1/benchmark/runs` | История прогонов |
-| GET | `/v1/benchmark/runs/{run_id}` | Детали/метрики прогона |
+| GET | `/v1/benchmark/runs/compare` | Сравнение двух прогонов: query `baseline_run_id`, `current_run_id` (оба из store). Одинаковый `benchmark_family`; ответ `data` — результат `compare_reports` (регрессии/улучшения/unchanged по плоским метрикам) плюс `skipped_baseline` / `skipped_current`, `baseline_run_id`, `current_run_id`, строка **`markdown`** (готовый отчёт через `compare_result_to_markdown`). **400**: `same_run_id`, `benchmark_family_mismatch`, `compare_case_limit_exceeded` (если в любом из run-ов `cases.length` > 2000). **404**: `baseline_run_not_found` / `current_run_not_found`. |
+| GET | `/v1/benchmark/runs/{run_id}` | Детали/метрики прогона (полный JSON, включая `result` по кейсам). |
+| GET | `/v1/benchmark/runs/{run_id}/summary` | Компактный прогон: те же верхнеуровневые поля и обычно `cases[]` с `case_id`, `status`, `summary`, `error_message`, `finished_at`, без тяжёлого `result`. Если кейсов больше внутреннего порога (~100), `cases` может быть `[]`, тогда заданы `cases_paginated: true` и `cases_total` — список подгружать через `GET .../cases`. |
+| GET | `/v1/benchmark/runs/{run_id}/cases` | Пагинация slim-строк кейсов (без `result`): query `offset` (≥0), `limit` (1–500). Ответ `data`: `items`, `total`, `offset`, `limit`, `run_id`, `benchmark_family`. Маршрут объявлен **до** `.../cases/{case_id}`. |
+| GET | `/v1/benchmark/runs/{run_id}/cases/{case_id}` | Workbench drill-down: `article`, `gold`, `predicted`, `comparison`, `metrics`, `diagnostics`, `run_config` для одного кейса в рамках run-а. |
 | DELETE | `/v1/benchmark/runs/{run_id}` | Удалить запись прогона |
 
-**Ограничения (зафиксировать в UX):** список прогонов **in-memory** (потеря при рестарте API); по завершении run пишется **снимок** JSON в `data/benchmark_run_history/{run_id}.json` (каталог в `.gitignore` как часть `/data/`). **Graph-v1 прогоны** из UI не запускаются (ингест + Neo4j); вкладка «graph» в Benchmarks — каталог кейсов и просмотр `graph_expectations`, ссылка на CLI. Детали — [architecture/frontend-phase6-bridge-backlog.md](../architecture/frontend-phase6-bridge-backlog.md) `A5` / `B4`.
+**Ограничения (зафиксировать в UX):** run history теперь file-backed и восстанавливается после рестарта API из `data/benchmark_runs/{run_id}.json`; если API был перезапущен посреди выполнения, незавершённый run при restore помечается как interrupted/failed. `api_key_env_name` разрешает только ссылку на переменную окружения на backend, UI не передаёт raw secret. **Graph-v1 прогоны** из UI не запускаются (ингест + Neo4j); вкладка «graph» в Benchmarks — каталог кейсов и просмотр `graph_expectations`, ссылка на CLI. Детали — [architecture/frontend-phase6-bridge-backlog.md](../architecture/frontend-phase6-bridge-backlog.md) `A5` / `B4`.
 
 **Ответ прогона:** layer-1 — `ComparisonTable`; layer-2 — semantic methods/datasets (`SemanticComparisonTable` в UI).
 
-Клиент: `ui/src/services/benchmarkApi.js`.
+Клиент: `ui/src/services/benchmarkApi.js` (`getBenchmarkRunSummary`, `getBenchmarkCaseArtifacts`, `compareBenchmarkRuns`, …).
 
 ## Mapping to UI surfaces
 

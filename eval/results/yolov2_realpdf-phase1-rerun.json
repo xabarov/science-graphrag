@@ -1,0 +1,399 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+    "semantic_extraction_enabled": true
+  },
+  "case": {
+    "case_id": "yolov2_realpdf",
+    "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/yolov2_realpdf",
+    "diagnostics": {
+      "document_id": "yolov2_realpdf",
+      "source_name": "yolov2_realpdf",
+      "markdown_source": "benchmark",
+      "metadata_source": "llm",
+      "authorships_source": "llm",
+      "references_source": "heuristic",
+      "extraction_llm_enabled": true,
+      "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+      "fallback_reasons": []
+    },
+    "metrics": {
+      "metadata": {
+        "title_exact_normalized": true,
+        "title_rouge_l": 1.0,
+        "title_token_f1": 1.0,
+        "year_exact": null,
+        "abstract_prefix_ok": true,
+        "abstract_rouge_l_vs_prefix": 0.17796610169491525,
+        "doi_match_expected": null,
+        "arxiv_match_expected": null,
+        "work_type_match": true
+      },
+      "authorships": {
+        "names_precision": 1.0,
+        "names_recall": 1.0,
+        "names_f1": 1.0,
+        "names_tp_fp_fn": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0
+        },
+        "order_accuracy": 1.0,
+        "order_hits": 2,
+        "affiliation_jaccard_macro_on_matched_authors": 1.0,
+        "affiliations_precision": 1.0,
+        "affiliations_recall": 1.0,
+        "affiliations_f1": 1.0,
+        "names_difflib_macro": 1.0,
+        "pred_count": 2,
+        "gold_count": 2
+      },
+      "references": {
+        "count": 24,
+        "expected_count": 24,
+        "min_count": 20,
+        "count_ok": true,
+        "count_delta": 0,
+        "sample_arxiv_precision": 1.0,
+        "sample_arxiv_recall": 1.0,
+        "sample_arxiv_f1": 1.0,
+        "sample_arxiv_tp_fp_fn": {
+          "tp": 11,
+          "fp": 0,
+          "fn": 0
+        },
+        "predicted_arxiv_ids": [
+          "1312.4400",
+          "1409.1556",
+          "1409.4842",
+          "1502.03167",
+          "1504.08083",
+          "1506.01497",
+          "1506.02640",
+          "1512.02325",
+          "1512.03385",
+          "1512.04143",
+          "1602.07261"
+        ],
+        "sample_doi_precision": 1.0,
+        "sample_doi_recall": 1.0,
+        "sample_doi_f1": 1.0
+      },
+      "contract": {
+        "checks": {
+          "min_authorship_names_f1": true,
+          "min_authorship_names_recall": true,
+          "min_affiliations_f1": true,
+          "reference_count_ok_required": true,
+          "min_sample_arxiv_f1": true,
+          "min_sample_doi_f1": true,
+          "min_title_rouge_l": true,
+          "min_title_token_f1": true,
+          "min_authorship_names_difflib_macro": true
+        },
+        "passed": true
+      }
+    },
+    "predicted": {
+      "work_metadata": {
+        "title": "YOLO9000: Better, Faster, Stronger",
+        "normalized_title": "YOLO9000: Better, Faster, Stronger",
+        "abstract": "We introduce YOLO9000, a state-of-the-art, real-time object detection system that can detect over 9000 object categories. First we propose various improvements to the YOLO detection method, both novel and drawn from prior work. The improved model, YOLOv2, is state-of-the-art on standard detection tasks likePASCAL VOC and COCO. Using a novel, multi-scale training method the same YOLOv2 model can run at varying sizes, offering an easy tradeoff between speed and accuracy. At 67 FPS, YOLOv2 gets 76.8 mAP on VOC 2007. At 40 FPS, YOLOv2 gets 78.6 mAP, outperforming state-of-the-art methods like Faster R-CNN with ResNet and SSD while still running significantly faster. Finally we propose a method to jointly train on object detection and classification. Using this method we train YOLO9000 simultaneously on the COCO detection dataset and the ImageNet classification dataset. Our joint training allows YOLO9000 to predict detections for object classes that don’t have labelled detection data. We validate our approach on the ImageNet detection task. YOLO9000 gets 19.7 mAP on the ImageNet detection validation set despite only having detection data for 44 of the 200 classes. On the 156 classes not in COCO, YOLO9000 gets 16.0 mAP. But YOLO can detect more than just 200 classes; it predicts detections for more than 9000 different object categories. And it still runs in real-time.",
+        "publication_year": null,
+        "doi": null,
+        "arxiv_id": null,
+        "language": "en",
+        "venue_name": null,
+        "work_type": "unknown",
+        "openalex_id": null,
+        "fingerprint": "53e52857aa588adc",
+        "ingestion_confidence": 0.72,
+        "source_metadata": {
+          "extraction_stage": "llm"
+        }
+      },
+      "authorships": [
+        {
+          "author_position": 1,
+          "author_raw_name": "Joseph Redmon",
+          "raw_affiliations": [
+            "University of Washington",
+            "Allen Institute for AI"
+          ],
+          "is_corresponding": null,
+          "email": null
+        },
+        {
+          "author_position": 2,
+          "author_raw_name": "Ali Farhadi",
+          "raw_affiliations": [
+            "University of Washington",
+            "Allen Institute for AI"
+          ],
+          "is_corresponding": null,
+          "email": null
+        }
+      ],
+      "references": [
+        {
+          "raw_reference": "S. Bell, C. L. Zitnick, K. Bala, and R. Girshick. Inside- outside net: Detecting objects in context with skip pooling and recurrent neural networks. arXiv preprint arXiv:1512.04143, 2015. 6",
+          "doi": null,
+          "arxiv_id": "1512.04143",
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "J. Deng, W. Dong, R. Socher, L.-J. Li, K. Li, and L. Fei- Fei. Imagenet: A large-scale hierarchical image database. In Computer Vision and Pattern Recognition, 2009. CVPR",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2009
+        },
+        {
+          "raw_reference": "IEEE Conference on, pages 248–255. IEEE, 2009. 1",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2009
+        },
+        {
+          "raw_reference": "M. Everingham, L. Van Gool, C. K. Williams, J. Winn, and A. Zisserman. The pascal visual object classes (voc) chal- lenge. International journal of computer vision, 88(2):303– 338, 2010. 1",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2010
+        },
+        {
+          "raw_reference": "P. F. Felzenszwalb, R. B. Girshick, and D. McAllester. Discriminatively trained deformable part models, release 4. http://people.cs.uchicago.edu/ pff/latent-release4/. 8",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "R. B. Girshick. Fast R-CNN. CoRR, abs/1504.08083, 2015. 4, 5, 6",
+          "doi": null,
+          "arxiv_id": "1504.08083",
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "K. He, X. Zhang, S. Ren, and J. Sun. Deep residual learn- ing for image recognition. arXiv preprint arXiv:1512.03385,",
+          "doi": null,
+          "arxiv_id": "1512.03385",
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "2, 4, 5",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "S. Ioffe and C. Szegedy. Batch normalization: Accelerating deep network training by reducing internal covariate shift. arXiv preprint arXiv:1502.03167, 2015. 2, 5",
+          "doi": null,
+          "arxiv_id": "1502.03167",
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "A. Krizhevsky, I. Sutskever, and G. E. Hinton. Imagenet classification with deep convolutional neural networks. In Advances in neural information processing systems , pages 1097–1105, 2012. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2012
+        },
+        {
+          "raw_reference": "M. Lin, Q. Chen, and S. Yan. Network in network. arXiv preprint arXiv:1312.4400, 2013. 5",
+          "doi": null,
+          "arxiv_id": "1312.4400",
+          "title": null,
+          "year": 2013
+        },
+        {
+          "raw_reference": "T.-Y . Lin, M. Maire, S. Belongie, J. Hays, P. Perona, D. Ra- manan, P. Doll ́ar, and C. L. Zitnick. Microsoft coco: Com- mon objects in context. In European Conference on Com- puter Vision, pages 740–755. Springer, 2014. 1, 6",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2014
+        },
+        {
+          "raw_reference": "W. Liu, D. Anguelov, D. Erhan, C. Szegedy, and S. E. Reed. SSD: single shot multibox detector. CoRR, abs/1512.02325,",
+          "doi": null,
+          "arxiv_id": "1512.02325",
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "4, 5, 6",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "G. A. Miller, R. Beckwith, C. Fellbaum, D. Gross, and K. J. Miller. Introduction to wordnet: An on-line lexical database. International journal of lexicography , 3(4):235–244, 1990. 6",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 1990
+        },
+        {
+          "raw_reference": "J. Redmon. Darknet: Open source neural networks in c. http://pjreddie.com/darknet/, 2013–2016. 5",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2013
+        },
+        {
+          "raw_reference": "J. Redmon, S. Divvala, R. Girshick, and A. Farhadi. You only look once: Unified, real-time object detection. arXiv preprint arXiv:1506.02640, 2015. 4, 5",
+          "doi": null,
+          "arxiv_id": "1506.02640",
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "S. Ren, K. He, R. Girshick, and J. Sun. Faster r-cnn: To- wards real-time object detection with region proposal net- works. arXiv preprint arXiv:1506.01497, 2015. 2, 3, 4, 5, 6",
+          "doi": null,
+          "arxiv_id": "1506.01497",
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "O. Russakovsky, J. Deng, H. Su, J. Krause, S. Satheesh, S. Ma, Z. Huang, A. Karpathy, A. Khosla, M. Bernstein, A. C. Berg, and L. Fei-Fei. ImageNet Large Scale Visual Recognition Challenge. International Journal of Computer Vision (IJCV), 2015. 2",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2015
+        },
+        {
+          "raw_reference": "K. Simonyan and A. Zisserman. Very deep convolutional networks for large-scale image recognition. arXiv preprint arXiv:1409.1556, 2014. 2, 5",
+          "doi": null,
+          "arxiv_id": "1409.1556",
+          "title": null,
+          "year": 2014
+        },
+        {
+          "raw_reference": "C. Szegedy, S. Ioffe, and V . Vanhoucke. Inception-v4, inception-resnet and the impact of residual connections on learning. CoRR, abs/1602.07261, 2016. 2",
+          "doi": null,
+          "arxiv_id": "1602.07261",
+          "title": null,
+          "year": 2016
+        },
+        {
+          "raw_reference": "C. Szegedy, W. Liu, Y . Jia, P. Sermanet, S. Reed, D. Anguelov, D. Erhan, V . Vanhoucke, and A. Rabinovich. Going deeper with convolutions. CoRR, abs/1409.4842,",
+          "doi": null,
+          "arxiv_id": "1409.4842",
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "5",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": null
+        },
+        {
+          "raw_reference": "B. Thomee, D. A. Shamma, G. Friedland, B. Elizalde, K. Ni, D. Poland, D. Borth, and L.-J. Li. Yfcc100m: The new data in multimedia research. Communications of the ACM , 59(2):64–73, 2016. 1 9",
+          "doi": null,
+          "arxiv_id": null,
+          "title": null,
+          "year": 2016
+        }
+      ]
+    },
+    "gold": {
+      "case_id": "yolov2_realpdf",
+      "schema_version": 1,
+      "description": "Teacher-generated layer-1 gold (model=deepseek/deepseek-v3.2, base=https://openrouter.ai/api/v1). Prompt fingerprint sha256-20:210f7e16d3e0a07ad571.",
+      "work_metadata": {
+        "title": "YOLO9000: Better, Faster, Stronger",
+        "publication_year": null,
+        "abstract_prefix": "We introduce YOLO9000, a state-of-the-art, real-time object detection system that can detect over 9000 object categories. First we propose various improvements ",
+        "doi": null,
+        "arxiv_id": null,
+        "venue_name": null,
+        "work_type": "unknown"
+      },
+      "authorships": [
+        {
+          "name": "Joseph Redmon",
+          "affiliations": [
+            "University of Washington",
+            "Allen Institute for AI"
+          ]
+        },
+        {
+          "name": "Ali Farhadi",
+          "affiliations": [
+            "University of Washington",
+            "Allen Institute for AI"
+          ]
+        }
+      ],
+      "references": {
+        "expected_count": 24,
+        "min_count": 20,
+        "notes": "Auto-generated from teacher extraction; sample_* are teacher-derived ids.",
+        "sample_arxiv_ids": [
+          "1312.4400",
+          "1409.1556",
+          "1409.4842",
+          "1502.03167",
+          "1504.08083",
+          "1506.01497",
+          "1506.02640",
+          "1512.02325",
+          "1512.03385",
+          "1512.04143",
+          "1602.07261"
+        ],
+        "sample_dois": []
+      },
+      "graph_expectations": {
+        "min_cites": 0,
+        "max_cites": 44,
+        "min_authorships": 0,
+        "max_authorships": 8,
+        "min_institutions": 0,
+        "max_institutions": 8,
+        "expected_cited_arxiv_ids": [
+          "1512.04143",
+          "1504.08083",
+          "1512.03385",
+          "1502.03167",
+          "1312.4400",
+          "1512.02325",
+          "1506.02640",
+          "1506.01497"
+        ],
+        "max_duplicate_work_fingerprints": 8,
+        "max_work_dedup_violations": 0,
+        "min_related_version_edges": null,
+        "max_related_version_edges": null
+      },
+      "quality_thresholds": {
+        "require_title_match": false,
+        "require_abstract_prefix": false,
+        "min_authorship_names_f1": 0.5,
+        "min_authorship_names_recall": 0.55,
+        "min_affiliations_f1": 0.28,
+        "require_reference_count_ok": true,
+        "min_sample_arxiv_f1": 0.45,
+        "min_sample_doi_f1": 0.4,
+        "min_title_rouge_l": 0.82,
+        "min_abstract_rouge_l": null,
+        "min_title_token_f1": 0.82,
+        "min_authorship_names_difflib_macro": 0.88
+      }
+    },
+    "gold_path": "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/teacher_gold/layer1/yolov2_realpdf/gold_teacher.json"
+  }
+}
