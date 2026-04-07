@@ -1,0 +1,97 @@
+{
+  "diagnostics": {
+    "document_id": "atss_realpdf",
+    "source_name": "atss_realpdf",
+    "markdown_source": "benchmark",
+    "metadata_source": "heuristic",
+    "authorships_source": "heuristic",
+    "references_source": "heuristic",
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "qwen/qwen3.5-397b-a17b",
+    "fallback_reasons": [
+      {
+        "stage": "metadata",
+        "reason": "llm_failed",
+        "detail": "llm_empty_result"
+      },
+      {
+        "stage": "authorships",
+        "reason": "llm_failed",
+        "detail": "llm_empty_result"
+      },
+      {
+        "stage": "references",
+        "reason": "llm_failed",
+        "detail": "llm_empty_result"
+      }
+    ]
+  },
+  "work_metadata": {
+    "title": "Bridging the Gap Between Anchor-based and Anchor-free Detection via Adaptive Training Sample Selection",
+    "publication_year": null,
+    "abstract_prefix": "Object detection has been dominated by anchor-based detectors for several years. Recently, anchor-free detec- tors have become popular due to the proposal of FP",
+    "doi": null,
+    "arxiv_id": null,
+    "venue_name": null,
+    "work_type": "unknown"
+  },
+  "authorships": [
+    {
+      "name": "Shifeng Zhang1",
+      "affiliations": [
+        "1 CBSR",
+        "NLPR",
+        "CASIA 2 SAI",
+        "UCAS 3 AIR",
+        "CAS 4 BUPT 5 Westlake University"
+      ]
+    },
+    {
+      "name": "Cheng Chi3",
+      "affiliations": [
+        "1 CBSR",
+        "NLPR",
+        "CASIA 2 SAI",
+        "UCAS 3 AIR",
+        "CAS 4 BUPT 5 Westlake University"
+      ]
+    },
+    {
+      "name": "Yongqiang Yao4",
+      "affiliations": [
+        "1 CBSR",
+        "NLPR",
+        "CASIA 2 SAI",
+        "UCAS 3 AIR",
+        "CAS 4 BUPT 5 Westlake University"
+      ]
+    },
+    {
+      "name": "Zhen Lei1",
+      "affiliations": [
+        "1 CBSR",
+        "NLPR",
+        "CASIA 2 SAI",
+        "UCAS 3 AIR",
+        "CAS 4 BUPT 5 Westlake University"
+      ]
+    },
+    {
+      "name": "Stan Z. Li 5",
+      "affiliations": [
+        "1 CBSR",
+        "NLPR",
+        "CASIA 2 SAI",
+        "UCAS 3 AIR",
+        "CAS 4 BUPT 5 Westlake University"
+      ]
+    }
+  ],
+  "references": {
+    "expected_count": 84,
+    "min_count": 80,
+    "notes": "Auto-generated from teacher extraction; sample_* are teacher-derived ids.",
+    "sample_arxiv_ids": [],
+    "sample_dois": []
+  }
+}

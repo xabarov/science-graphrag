@@ -5,6 +5,7 @@ from typing import Any
 from dotenv import load_dotenv
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
+from science_graphrag.settings.service import SettingsService
 
 # Unprefixed keys (MAIN_LLM_*, PHOENIX_*, etc.) must be visible to os.getenv for merge validators.
 # override=True: a shell export of MAIN_LLM_API_KEY="" (empty) must not block values from `.env`.
@@ -181,4 +182,6 @@ class Settings(BaseSettings):
 
 
 def get_settings() -> Settings:
-    return Settings()
+    base_settings = Settings()
+    service = SettingsService(repo_root=Path(__file__).resolve().parents[1])
+    return service.build_runtime_settings(base_settings)

@@ -1,66 +1,67 @@
 {
-  "case_id": "cornernet_realpdf",
+  "case_id": "yolov2_realpdf",
   "schema_version": 1,
-  "description": "Teacher-generated layer-1 gold (model=deepseek/deepseek-v3.2, base=https://openrouter.ai/api/v1). Prompt fingerprint sha256-20:210f7e16d3e0a07ad571.",
+  "description": "Teacher-generated layer-1 gold (model=qwen/qwen3.5-397b-a17b, base=https://openrouter.ai/api/v1). Prompt fingerprint sha256-20:210f7e16d3e0a07ad571. Trial run for Qwen comparison against manually reviewed cases.",
   "work_metadata": {
-    "title": "CornerNet: Detecting Objects as Paired Keypoints",
+    "title": "YOLO9000: Better, Faster, Stronger",
     "publication_year": null,
-    "abstract_prefix": "We propose CornerNet, a new approach to object detection where we detect an object bounding box as a pair of keypoints, the top-left corner and the bottom-right",
+    "abstract_prefix": "We introduce YOLO9000, a state-of-the-art, real-time object detection system that can detect over 9000 object categories. First we propose various improvements ",
     "doi": null,
-    "arxiv_id": "1808.01244",
+    "arxiv_id": null,
     "venue_name": null,
     "work_type": "unknown"
   },
   "authorships": [
     {
-      "name": "Hei Law",
-      "affiliations": []
+      "name": "Joseph Redmon",
+      "affiliations": [
+        "University of Washington",
+        "Allen Institute for AI"
+      ]
     },
     {
-      "name": "Jia Deng",
-      "affiliations": []
+      "name": "Ali Farhadi",
+      "affiliations": [
+        "University of Washington",
+        "Allen Institute for AI"
+      ]
     }
   ],
   "references": {
-    "expected_count": 49,
-    "min_count": 45,
+    "expected_count": 24,
+    "min_count": 20,
     "notes": "Auto-generated from teacher extraction; sample_* are teacher-derived ids.",
     "sample_arxiv_ids": [
+      "1312.4400",
       "1409.1556",
-      "1412.6980",
+      "1409.4842",
+      "1502.03167",
       "1504.08083",
-      "1604.04693",
-      "1605.06409",
-      "1612",
-      "1612.03144",
-      "1612.06851",
-      "1701.06659",
-      "1703.06211",
-      "1703.06870",
-      "1703.10295",
-      "1706.03646",
-      "1707.01691",
-      "1708.02002",
-      "1711.00164",
-      "1711.06897",
-      "1711.07264",
-      "1711.08189",
-      "1711.08879",
-      "1712.00726",
-      "1712.00886",
-      "1712.02408"
+      "1506.01497",
+      "1506.02640",
+      "1512.02325",
+      "1512.03385",
+      "1512.04143",
+      "1602.07261"
     ],
     "sample_dois": []
   },
   "graph_expectations": {
     "min_cites": 0,
-    "max_cites": 70,
+    "max_cites": 44,
     "min_authorships": 0,
     "max_authorships": 8,
     "min_institutions": 0,
     "max_institutions": 8,
     "expected_cited_arxiv_ids": [
-      "1712.00726"
+      "1512.04143",
+      "1504.08083",
+      "1512.03385",
+      "1502.03167",
+      "1312.4400",
+      "1512.02325",
+      "1506.02640",
+      "1506.01497"
     ],
     "max_duplicate_work_fingerprints": 8,
     "max_work_dedup_violations": 0,

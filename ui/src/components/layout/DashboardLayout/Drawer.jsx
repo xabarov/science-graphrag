@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import Divider from "@mui/material/Divider";
 import Tooltip from "@mui/material/Tooltip";
 import { useLocation, Link as RouterLink } from "react-router-dom";
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
@@ -10,6 +11,8 @@ import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
 import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
 import QuestionAnswerOutlinedIcon from "@mui/icons-material/QuestionAnswerOutlined";
 import FactCheckOutlinedIcon from "@mui/icons-material/FactCheckOutlined";
+import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import TroubleshootOutlinedIcon from "@mui/icons-material/TroubleshootOutlined";
 
 import { CursorIconButton } from "../../common/index.js";
 
@@ -25,18 +28,31 @@ function _readExpanded() {
   }
 }
 
+function itemActive(location, to) {
+  return location.pathname === to;
+}
+
 export default function Drawer({ onNavigate }) {
   const [expanded, setExpanded] = useState(_readExpanded());
   const location = useLocation();
 
-  const menu = useMemo(
+  const userMenu = useMemo(
     () => [
+      { to: "/corpus", label: "Corpus", icon: <FolderOpenOutlinedIcon /> },
       { to: "/workspace", label: "Workspace", icon: <WorkspacesOutlinedIcon /> },
       { to: "/reader", label: "Reader", icon: <MenuBookOutlinedIcon /> },
       { to: "/graph", label: "Graph", icon: <AccountTreeOutlinedIcon /> },
       { to: "/ask", label: "Ask", icon: <QuestionAnswerOutlinedIcon /> },
       { to: "/evidence", label: "Evidence", icon: <FactCheckOutlinedIcon /> },
+    ],
+    [],
+  );
+
+  const adminMenu = useMemo(
+    () => [
       { to: "/benchmark", label: "Benchmarks", icon: <ScienceOutlinedIcon /> },
+      { to: "/settings", label: "Settings", icon: <SettingsOutlinedIcon /> },
+      { to: "/diagnostics", label: "Diagnostics", icon: <TroubleshootOutlinedIcon /> },
     ],
     [],
   );
@@ -49,6 +65,38 @@ export default function Drawer({ onNavigate }) {
     } catch {
       // ignore
     }
+  }
+
+  function renderNavItem(item) {
+    const active = itemActive(location, item.to);
+    const content = (
+      <Box
+        component={RouterLink}
+        to={item.to}
+        onClick={() => onNavigate?.()}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: expanded ? 1.2 : 0,
+          padding: expanded ? "10px 12px" : "10px 0",
+          borderRadius: 2,
+          textDecoration: "none",
+          color: "rgba(255,255,255,0.9)",
+          background: active ? "rgba(99, 102, 241, 0.15)" : "transparent",
+          "&:hover": { background: "rgba(255, 255, 255, 0.04)" },
+        }}
+      >
+        <Box sx={{ fontSize: "1.4rem", display: "flex", alignItems: "center" }}>{item.icon}</Box>
+        {expanded && <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem" }}>{item.label}</Typography>}
+      </Box>
+    );
+
+    if (expanded) return <Box key={item.to}>{content}</Box>;
+    return (
+      <Tooltip key={item.to} title={item.label} placement="right">
+        <Box>{content}</Box>
+      </Tooltip>
+    );
   }
 
   return (
@@ -76,43 +124,26 @@ export default function Drawer({ onNavigate }) {
       </Box>
 
       <Box sx={{ padding: expanded ? 1 : 1 }}>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-          {menu.map((item) => {
-            const active = location.pathname === item.to;
-            const content = (
-              <Box
-                component={RouterLink}
-                to={item.to}
-                onClick={() => onNavigate?.()}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: expanded ? 1.2 : 0,
-                  padding: expanded ? "10px 12px" : "10px 0",
-                  borderRadius: 2,
-                  textDecoration: "none",
-                  color: "rgba(255,255,255,0.9)",
-                  background: active ? "rgba(99, 102, 241, 0.15)" : "transparent",
-                  "&:hover": { background: "rgba(255, 255, 255, 0.04)" },
-                }}
-              >
-                <Box sx={{ fontSize: "1.4rem", display: "flex", alignItems: "center" }}>
-                  {item.icon}
-                </Box>
-                {expanded && (
-                  <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem" }}>{item.label}</Typography>
-                )}
-              </Box>
-            );
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>{userMenu.map(renderNavItem)}</Box>
 
-            if (expanded) return <Box key={item.to}>{content}</Box>;
-            return (
-              <Tooltip key={item.to} title={item.label} placement="right">
-                <Box>{content}</Box>
-              </Tooltip>
-            );
-          })}
-        </Box>
+        <Divider sx={{ my: 1.5, borderColor: "rgba(255,255,255,0.08)" }} />
+
+        {expanded ? (
+          <Typography
+            sx={{
+              fontSize: "0.6875rem",
+              fontWeight: 600,
+              letterSpacing: "0.02em",
+              color: "rgba(255,255,255,0.35)",
+              px: 1.5,
+              mb: 0.75,
+            }}
+          >
+            Admin tools
+          </Typography>
+        ) : null}
+
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>{adminMenu.map(renderNavItem)}</Box>
       </Box>
 
       <Box sx={{ flex: 1 }} />

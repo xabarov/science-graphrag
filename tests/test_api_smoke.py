@@ -27,6 +27,114 @@ def test_health_endpoint() -> None:
     assert res.json().get("status") == "ok"
 
 
+def test_settings_schema_endpoint_smoke() -> None:
+    """Settings schema is available for the new settings UI."""
+
+    client = _client()
+    res = client.get("/v1/settings/schema")
+    assert res.status_code == 200
+    payload = res.json()
+    assert payload["version"] >= 1
+    assert payload["sections"][0]["id"] == "llm"
+
+
+def test_settings_snapshot_endpoint_smoke() -> None:
+    """Settings snapshot returns masked LLM state and section catalog."""
+
+    client = _client()
+    res = client.get("/v1/settings")
+    assert res.status_code == 200
+    payload = res.json()
+    assert any(item["id"] == "llm" for item in payload["sections"])
+    assert "status" in payload["llm"]
+    assert "effective" in payload["llm"]
+
+
+def test_settings_llm_patch_and_delete_secret_smoke(tmp_path: Path, monkeypatch: Any) -> None:
+    """Settings API persists non-secret values and masks stored API key."""
+
+    from science_graphrag.api import settings as settings_api
+    from science_graphrag.settings.repository import SettingsRepository
+    from science_graphrag.settings.secrets import SecretStore
+    from science_graphrag.settings.service import SettingsService
+
+    service = SettingsService(
+        repo_root=tmp_path,
+        repository=SettingsRepository(tmp_path),
+        secret_store=SecretStore(tmp_path),
+    )
+    monkeypatch.setattr(settings_api, "_SETTINGS_SERVICE", service)
+
+    client = _client()
+    patch_res = client.patch(
+        "/v1/settings/llm",
+        json={
+            "base_url": "https://openrouter.ai/api/v1",
+            "model": "mistralai/mistral-small-3.2-24b-instruct",
+            "temperature": 0.1,
+            "timeout_seconds": 120,
+            "api_key": "sk-demo-secret",
+        },
+    )
+    assert patch_res.status_code == 200
+    body = patch_res.json()
+    assert body["llm"]["status"]["configured"] is True
+    assert body["llm"]["status"]["masked_key"].startswith("sk-d")
+    assert body["llm"]["effective"]["resolved_model"] == "mistralai/mistral-small-3.2-24b-instruct"
+
+    delete_res = client.delete("/v1/settings/llm/secret")
+    assert delete_res.status_code == 200
+    deleted = delete_res.json()
+    assert deleted["llm"]["status"]["configured"] is False
+
+
+def test_settings_llm_test_uses_service_result(tmp_path: Path, monkeypatch: Any) -> None:
+    """Connection test returns structured service payload to UI."""
+
+    from science_graphrag.api import settings as settings_api
+    from science_graphrag.settings.repository import SettingsRepository
+    from science_graphrag.settings.secrets import SecretStore
+    from science_graphrag.settings.service import SettingsService
+
+    service = SettingsService(
+        repo_root=tmp_path,
+        repository=SettingsRepository(tmp_path),
+        secret_store=SecretStore(tmp_path),
+    )
+
+    def _fake_test(*_args: Any, **_kwargs: Any) -> dict[str, Any]:
+        return {
+            "status": "connected",
+            "message": "OK",
+            "latency_ms": 12,
+            "resolved": {
+                "base_url": "https://openrouter.ai/api/v1",
+                "model": "demo/model",
+                "timeout_seconds": 30,
+                "temperature": 0.0,
+                "used_saved_secret": False,
+            },
+        }
+
+    monkeypatch.setattr(service, "test_llm_connection", _fake_test)
+    monkeypatch.setattr(settings_api, "_SETTINGS_SERVICE", service)
+
+    client = _client()
+    res = client.post(
+        "/v1/settings/llm/test",
+        json={
+            "base_url": "https://openrouter.ai/api/v1",
+            "model": "demo/model",
+            "api_key": "sk-demo",
+            "use_saved_secret": False,
+        },
+    )
+    assert res.status_code == 200
+    payload = res.json()
+    assert payload["status"] == "connected"
+    assert payload["resolved"]["model"] == "demo/model"
+
+
 def test_works_list_endpoint_smoke(monkeypatch: Any) -> None:
     """Works list endpoint returns typed payload via API layer."""
 

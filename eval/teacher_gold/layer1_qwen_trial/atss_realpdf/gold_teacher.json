@@ -1,13 +1,13 @@
 {
   "case_id": "atss_realpdf",
   "schema_version": 1,
-  "description": "Teacher-generated layer-1 gold (model=deepseek/deepseek-v3.2, base=https://openrouter.ai/api/v1). Prompt fingerprint sha256-20:210f7e16d3e0a07ad571.",
+  "description": "Teacher-generated layer-1 gold (model=qwen/qwen3.5-397b-a17b, base=https://openrouter.ai/api/v1). Prompt fingerprint sha256-20:210f7e16d3e0a07ad571. Trial run for Qwen comparison against manually reviewed cases.",
   "work_metadata": {
     "title": "Bridging the Gap Between Anchor-based and Anchor-free Detection via Adaptive Training Sample Selection",
     "publication_year": null,
     "abstract_prefix": "Object detection has been dominated by anchor-based detectors for several years. Recently, anchor-free detectors have become popular due to the proposal of FPN ",
     "doi": null,
-    "arxiv_id": "1912.02424",
+    "arxiv_id": null,
     "venue_name": null,
     "work_type": "unknown"
   },

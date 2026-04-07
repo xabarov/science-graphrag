@@ -63,6 +63,11 @@ function JsonBlock({ value }) {
   );
 }
 
+function formatComparisonCellValue(value, fallback = null) {
+  const resolved = value !== undefined ? value : fallback;
+  return JSON.stringify(resolved);
+}
+
 const CASES_PAGE_SIZE = 500;
 
 /** Filters + case list reset via `key={runId}` on the parent. */
@@ -290,10 +295,10 @@ function WorkbenchRunScopedPanel({ runDetail, caseDetail, selectedCaseId, onSele
                     <TableRow key={`${row.field || row.value || "row"}-${idx}`}>
                       <TableCell>{row.field || row.value || "-"}</TableCell>
                       <TableCell sx={{ maxWidth: 180, wordBreak: "break-word" }}>
-                        {JSON.stringify(row.gold_value ?? row.source ?? "gold")}
+                        {formatComparisonCellValue(row.gold_value, row.source)}
                       </TableCell>
                       <TableCell sx={{ maxWidth: 180, wordBreak: "break-word" }}>
-                        {JSON.stringify(row.predicted_value ?? row.status ?? "-")}
+                        {formatComparisonCellValue(row.predicted_value, row.status ?? "-")}
                       </TableCell>
                     </TableRow>
                   ))}

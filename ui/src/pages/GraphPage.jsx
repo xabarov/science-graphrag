@@ -8,6 +8,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 
 import { CursorPrimaryButton } from "../components/common/index.js";
 import { getWorkGraph } from "../services/researchApi.js";
+import { persistWorkId } from "./WorkspacePage/utils/workContext.js";
 
 export default function GraphPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -21,6 +22,10 @@ export default function GraphPage() {
 
   useEffect(() => {
     setWorkIdInput(workId);
+  }, [workId]);
+
+  useEffect(() => {
+    if (workId.trim()) persistWorkId(workId);
   }, [workId]);
 
   useEffect(() => {
@@ -56,8 +61,10 @@ export default function GraphPage() {
   function applyWorkId(e) {
     e.preventDefault();
     const next = workIdInput.trim();
-    if (next) setSearchParams({ work_id: next });
-    else setSearchParams({});
+    if (next) {
+      persistWorkId(next);
+      setSearchParams({ work_id: next });
+    } else setSearchParams({});
   }
 
   return (

@@ -19,4 +19,9 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 - **Raised:** 2026-04-06
 -->
 
-_(No items yet.)_
+### [OPEN] Audit teacher-gold benchmark fixtures
+- **Area:** `eval/teacher_gold/layer1/`, generation scripts in `scripts/`, benchmark run persistence in `science_graphrag/api/benchmark.py`
+- **Issue:** `teacher_gold` fixtures are partially sparse and can drift from curated gold or persisted run payloads; this creates false negatives in benchmark analysis and makes UI triage harder.
+- **Proposal:** inventory missing/low-confidence metadata fields, compare current fixtures against persisted run `result.gold` payloads, flag suspicious author-name truncations and identifier gaps, then define a repeatable QA pass for teacher-gold generation.
+- **Acceptance:** documented audit checklist, prioritized list of suspect cases, and an agreed remediation path for fixture refresh vs. post-processing repair.
+- **Raised:** 2026-04-07

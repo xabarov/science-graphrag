@@ -32,11 +32,36 @@ class SyncInstructorExtractor:
             base_url=base_url.rstrip("/"),
             timeout=timeout_seconds,
         )
-        self._client = instructor.from_openai(raw)
         self.base_url = base_url.rstrip("/")
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
+        self._extra_body = self._build_extra_body()
+        self._client = instructor.from_openai(raw, mode=self._resolve_mode())
+
+    def _is_openrouter_qwen35_397b(self) -> bool:
+        return self.base_url.startswith("https://openrouter.ai/api") and (
+            self.model.strip().lower() == "qwen/qwen3.5-397b-a17b"
+        )
+
+    def _resolve_mode(self) -> instructor.Mode:
+        # OpenRouter + Qwen3.5 397B currently behaves better via structured outputs
+        # than via the default TOOLS mode used by instructor.
+        if self._is_openrouter_qwen35_397b():
+            return instructor.Mode.OPENROUTER_STRUCTURED_OUTPUTS
+        return instructor.Mode.TOOLS
+
+    def _build_extra_body(self) -> dict[str, Any] | None:
+        if not self._is_openrouter_qwen35_397b():
+            return None
+        return {
+            "provider": {"require_parameters": True},
+            # Qwen 3.5 on OpenRouter has known JSON issues when reasoning is disabled.
+            "reasoning": {
+                "enabled": True,
+                "effort": "medium",
+            },
+        }
 
     @staticmethod
     def _extract_usage(result: Any) -> tuple[int | None, int | None, int | None]:
@@ -114,12 +139,17 @@ class SyncInstructorExtractor:
         )
 
         try:
+            create_kwargs: dict[str, Any] = {
+                "model": self.model,
+                "temperature": self.temperature,
+                "max_tokens": self.max_tokens,
+                "response_model": instructor.Maybe(response_model),
+                "messages": messages,
+            }
+            if self._extra_body is not None:
+                create_kwargs["extra_body"] = self._extra_body
             result = self._client.chat.completions.create(
-                model=self.model,
-                temperature=self.temperature,
-                max_tokens=self.max_tokens,
-                response_model=instructor.Maybe(response_model),
-                messages=messages,
+                **create_kwargs,
             )
         except Exception as exc:  # noqa: BLE001
             set_span_error(exc)

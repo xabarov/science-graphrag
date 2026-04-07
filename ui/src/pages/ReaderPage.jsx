@@ -1,22 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
-import Alert from "@mui/material/Alert";
-import CircularProgress from "@mui/material/CircularProgress";
 
-import { CursorPrimaryButton } from "../components/common/index.js";
-import { getWorkChunks, getWorkDetail } from "../services/researchApi.js";
+import { CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
+import ReaderWorkBody from "../components/work/ReaderWorkBody.jsx";
+import { buildWorkspacePath, persistWorkId } from "./WorkspacePage/utils/workContext.js";
 
 export default function ReaderPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initial = searchParams.get("work_id") || "";
   const [workIdInput, setWorkIdInput] = useState(initial);
-  const [detail, setDetail] = useState(null);
-  const [chunks, setChunks] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   const workId = searchParams.get("work_id") || "";
 
@@ -25,54 +20,24 @@ export default function ReaderPage() {
   }, [workId]);
 
   useEffect(() => {
-    if (!workId.trim()) {
-      setDetail(null);
-      setChunks(null);
-      setError(null);
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const [dRes, cRes] = await Promise.all([
-          getWorkDetail(workId),
-          getWorkChunks(workId, { limit: 80, offset: 0 }),
-        ]);
-        if (cancelled) return;
-        setDetail(dRes.data);
-        setChunks(cRes.data);
-      } catch (err) {
-        if (cancelled) return;
-        const msg = err?.response?.data?.detail
-          ? JSON.stringify(err.response.data.detail)
-          : err?.message || String(err);
-        setError(msg);
-        setDetail(null);
-        setChunks(null);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+    if (workId.trim()) persistWorkId(workId);
   }, [workId]);
 
   function applyWorkId(e) {
     e.preventDefault();
     const next = workIdInput.trim();
-    if (next) setSearchParams({ work_id: next });
-    else setSearchParams({});
+    if (next) {
+      persistWorkId(next);
+      setSearchParams({ work_id: next });
+    } else setSearchParams({});
   }
 
   return (
     <Box sx={{ p: 2, maxWidth: 960 }}>
       <Typography sx={{ fontWeight: 600, mb: 1, color: "rgba(255,255,255,0.9)" }}>Reader</Typography>
       <Typography sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.8125rem", mb: 2 }}>
-        Live: <code style={{ color: "rgba(129,140,248,0.95)" }}>GET /v1/works/{"{work_id}"}</code> +{" "}
-        <code style={{ color: "rgba(129,140,248,0.95)" }}>/chunks</code>.
+        Direct entry: load any <code style={{ color: "rgba(129,140,248,0.95)" }}>work_id</code>. Prefer the{" "}
+        <strong>Workspace → Reader</strong> tab for the main flow.
       </Typography>
 
       <Box component="form" onSubmit={applyWorkId} sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}>
@@ -91,68 +56,14 @@ export default function ReaderPage() {
         <CursorPrimaryButton type="submit">Load</CursorPrimaryButton>
       </Box>
 
-      {loading && (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 2 }}>
-          <CircularProgress size={22} sx={{ color: "rgba(129,140,248,0.9)" }} />
-          <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>Loading…</Typography>
+      {workId.trim() ? <ReaderWorkBody workId={workId} /> : null}
+      {workId.trim() ? (
+        <Box sx={{ mt: 1.5 }}>
+          <CursorSmallButton component={Link} to={buildWorkspacePath(workId, "reader")} sx={{ textDecoration: "none" }}>
+            Open Reader in workspace
+          </CursorSmallButton>
         </Box>
-      )}
-      {error && (
-        <Alert severity="error" sx={{ mb: 2, fontSize: "0.8125rem" }}>
-          {error}
-        </Alert>
-      )}
-
-      {detail && !loading && (
-        <Box sx={{ mb: 2, p: 1.5, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "#1a1a1a" }}>
-          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem" }}>{detail.title || "(no title)"}</Typography>
-          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mt: 0.5 }}>
-            {detail.year != null ? `${detail.year} · ` : ""}
-            {detail.doi ? `DOI ${detail.doi} · ` : ""}
-            {detail.arxiv_id ? `arXiv ${detail.arxiv_id}` : ""}
-          </Typography>
-          {detail.abstract && (
-            <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.75)", mt: 1, whiteSpace: "pre-wrap" }}>
-              {detail.abstract}
-            </Typography>
-          )}
-          {detail.ingestion && (
-            <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mt: 1 }}>
-              document_id: {detail.ingestion.document_id} · has_chunks: {String(detail.ingestion.has_chunks)} · semantic:{" "}
-              {String(detail.ingestion.has_semantic_layer)}
-            </Typography>
-          )}
-        </Box>
-      )}
-
-      {chunks && !loading && (
-        <>
-          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 1 }}>
-            Chunks ({chunks.total ?? (chunks.items || []).length})
-          </Typography>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            {(chunks.items || []).map((ch) => (
-              <Box
-                key={`${ch.chunk_fingerprint}-${ch.order}`}
-                sx={{
-                  p: 1.5,
-                  borderRadius: "6px",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  backgroundColor: "#141414",
-                }}
-              >
-                <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)" }}>
-                  {ch.section_path || "—"} · fp {ch.chunk_fingerprint}
-                </Typography>
-                <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)", mt: 0.5, whiteSpace: "pre-wrap" }}>
-                  {(ch.text || "").slice(0, 4000)}
-                  {(ch.text || "").length > 4000 ? "…" : ""}
-                </Typography>
-              </Box>
-            ))}
-          </Box>
-        </>
-      )}
+      ) : null}
     </Box>
   );
 }

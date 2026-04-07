@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 
 from science_graphrag.api import works as works_api
 from science_graphrag.api.benchmark import router as benchmark_router
+from science_graphrag.api.settings import router as settings_router
 from science_graphrag.api.retrieval import GroundedAnswer, answer_query
 from science_graphrag.config import get_settings
 
@@ -25,6 +26,7 @@ if _UI_DIR.is_dir():
 
 # Benchmark endpoints (UI-driven runs + fixtures).
 app.include_router(benchmark_router, prefix="/v1")
+app.include_router(settings_router, prefix="/v1")
 
 
 class QueryRequest(BaseModel):

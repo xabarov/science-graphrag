@@ -6,10 +6,11 @@ import TextField from "@mui/material/TextField";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 
-import { CursorPrimaryButton } from "../components/common/index.js";
+import { CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
 import { getWorks } from "../services/researchApi.js";
+import { buildWorkspacePath, persistWorkId } from "./WorkspacePage/utils/workContext.js";
 
-export default function WorkspacePage() {
+export default function CorpusPage() {
   const [q, setQ] = useState("");
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
@@ -44,12 +45,16 @@ export default function WorkspacePage() {
     load(q);
   }
 
+  function onOpenWorkspace(workId) {
+    persistWorkId(workId);
+  }
+
   return (
     <Box sx={{ p: 2, maxWidth: 960 }}>
-      <Typography sx={{ fontWeight: 600, mb: 1, color: "rgba(255,255,255,0.9)" }}>Workspace</Typography>
+      <Typography sx={{ fontWeight: 600, mb: 1, color: "rgba(255,255,255,0.9)" }}>Corpus</Typography>
       <Typography sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.8125rem", mb: 2 }}>
-        Live list: <code style={{ color: "rgba(129,140,248,0.95)" }}>GET /v1/works</code>. Use Ask / Reader / Graph with a selected{" "}
-        <code style={{ color: "rgba(129,140,248,0.95)" }}>work_id</code>.
+        Browse indexed works (<code style={{ color: "rgba(129,140,248,0.95)" }}>GET /v1/works</code>). Open a work in the{" "}
+        <strong>Workspace</strong> to read, ask questions, and inspect evidence in one place.
       </Typography>
 
       <Box component="form" onSubmit={onSearch} sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2, alignItems: "flex-start" }}>
@@ -67,7 +72,14 @@ export default function WorkspacePage() {
         <CursorPrimaryButton type="submit" disabled={loading}>
           Search
         </CursorPrimaryButton>
-        <CursorPrimaryButton type="button" disabled={loading} onClick={() => { setQ(""); load(""); }}>
+        <CursorPrimaryButton
+          type="button"
+          disabled={loading}
+          onClick={() => {
+            setQ("");
+            load("");
+          }}
+        >
           Reset
         </CursorPrimaryButton>
       </Box>
@@ -109,35 +121,62 @@ export default function WorkspacePage() {
               {w.work_id}
               {w.has_semantic_layer ? " · semantic" : ""}
             </Typography>
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
-              <Link
-                to={`/reader?work_id=${encodeURIComponent(w.work_id)}`}
-                style={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.95)" }}
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1.25, alignItems: "center" }}>
+              <CursorPrimaryButton
+                component={Link}
+                to={buildWorkspacePath(w.work_id, "overview")}
+                onClick={() => onOpenWorkspace(w.work_id)}
+                sx={{ textDecoration: "none", fontSize: "0.8125rem" }}
+              >
+                Open workspace
+              </CursorPrimaryButton>
+              <CursorSmallButton
+                component={Link}
+                to={buildWorkspacePath(w.work_id, "reader")}
+                onClick={() => onOpenWorkspace(w.work_id)}
+                sx={{ textDecoration: "none" }}
               >
                 Reader
-              </Link>
-              <Link
-                to={`/graph?work_id=${encodeURIComponent(w.work_id)}`}
-                style={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.95)" }}
+              </CursorSmallButton>
+              <CursorSmallButton
+                component={Link}
+                to={buildWorkspacePath(w.work_id, "ask")}
+                onClick={() => onOpenWorkspace(w.work_id)}
+                sx={{ textDecoration: "none" }}
               >
-                Graph
-              </Link>
-              <Link
-                to={`/evidence?work_id=${encodeURIComponent(w.work_id)}`}
-                style={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.95)" }}
+                Ask
+              </CursorSmallButton>
+              <CursorSmallButton
+                component={Link}
+                to={buildWorkspacePath(w.work_id, "evidence")}
+                onClick={() => onOpenWorkspace(w.work_id)}
+                sx={{ textDecoration: "none" }}
               >
                 Evidence
-              </Link>
-              <Link to="/ask" style={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.95)" }}>
-                Ask
-              </Link>
+              </CursorSmallButton>
+              <CursorSmallButton component={Link} to={`/graph?work_id=${encodeURIComponent(w.work_id)}`} sx={{ textDecoration: "none" }}>
+                Graph
+              </CursorSmallButton>
             </Box>
           </Box>
         ))}
       </Box>
 
       {!loading && !error && items.length === 0 && (
-        <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>No works yet — ingest a corpus, then refresh.</Typography>
+        <Box
+          sx={{
+            mt: 2,
+            p: 2,
+            borderRadius: "6px",
+            border: "1px dashed rgba(255,255,255,0.12)",
+            backgroundColor: "rgba(255,255,255,0.02)",
+          }}
+        >
+          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)" }}>No works in corpus</Typography>
+          <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)", mt: 0.75 }}>
+            Ingest a corpus via the API or pipeline, then refresh this page. Works will appear here with a clear path into Workspace.
+          </Typography>
+        </Box>
       )}
     </Box>
   );
