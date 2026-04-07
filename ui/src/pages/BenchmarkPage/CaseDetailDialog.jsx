@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Dialog from "@mui/material/Dialog";
@@ -21,7 +22,11 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
-import { getBenchmarkCaseArtifacts, getBenchmarkCaseDetail } from "../../services/benchmarkApi.js";
+import {
+  getBenchmarkCaseArtifacts,
+  getBenchmarkCaseDetail,
+  postGraphSnapshotPreview,
+} from "../../services/benchmarkApi.js";
 import { CursorButton, CursorSmallButton } from "../../components/common/index.js";
 import {
   compareGraphExpectationsToSnapshot,
@@ -30,6 +35,7 @@ import {
 } from "./graphSnapshotCompare.js";
 
 export default function CaseDetailDialog({ open, caseId, family = "layer1", onClose }) {
+  const navigate = useNavigate();
   const [tabIdx, setTabIdx] = useState(0);
   const [detail, setDetail] = useState(null);
   const [artifacts, setArtifacts] = useState(null);
@@ -38,6 +44,9 @@ export default function CaseDetailDialog({ open, caseId, family = "layer1", onCl
   const [loading, setLoading] = useState(false);
   const [snapshotJson, setSnapshotJson] = useState(null);
   const [snapshotLoadError, setSnapshotLoadError] = useState(null);
+  const [serverPreview, setServerPreview] = useState(null);
+  const [serverPreviewLoading, setServerPreviewLoading] = useState(false);
+  const [serverPreviewError, setServerPreviewError] = useState(null);
   const snapshotFileRef = useRef(null);
 
   const usesLayer1Gold = family === "layer1" || family === "graph";
@@ -100,7 +109,14 @@ export default function CaseDetailDialog({ open, caseId, family = "layer1", onCl
   useEffect(() => {
     setSnapshotJson(null);
     setSnapshotLoadError(null);
+    setServerPreview(null);
+    setServerPreviewError(null);
   }, [caseId, family]);
+
+  useEffect(() => {
+    setServerPreview(null);
+    setServerPreviewError(null);
+  }, [snapshotJson]);
 
   useEffect(() => {
     let cancelled = false;
@@ -228,7 +244,17 @@ export default function CaseDetailDialog({ open, caseId, family = "layer1", onCl
                   size="small"
                   label={`last run ${String(artifacts.last_run_hints.run_id).slice(0, 8)}… · ${artifacts.last_run_hints.status ?? "?"}`}
                   variant="outlined"
-                  sx={{ borderColor: "rgba(99, 102, 241, 0.35)" }}
+                  onClick={() => {
+                    const rid = artifacts.last_run_hints?.run_id;
+                    if (rid) {
+                      navigate(`/benchmark?tab=workbench&run=${encodeURIComponent(String(rid))}`);
+                      onClose?.();
+                    }
+                  }}
+                  sx={{
+                    borderColor: "rgba(99, 102, 241, 0.35)",
+                    cursor: "pointer",
+                  }}
                 />
               ) : null}
             </Box>
@@ -352,14 +378,40 @@ export default function CaseDetailDialog({ open, caseId, family = "layer1", onCl
                   />
                   <CursorSmallButton onClick={() => snapshotFileRef.current?.click()}>Load snapshot JSON</CursorSmallButton>
                   {snapshotJson ? (
-                    <CursorSmallButton
-                      onClick={() => {
-                        setSnapshotJson(null);
-                        setSnapshotLoadError(null);
-                      }}
-                    >
-                      Clear snapshot
-                    </CursorSmallButton>
+                    <>
+                      <CursorSmallButton
+                        onClick={() => {
+                          setSnapshotJson(null);
+                          setSnapshotLoadError(null);
+                        }}
+                      >
+                        Clear snapshot
+                      </CursorSmallButton>
+                      <CursorSmallButton
+                        onClick={async () => {
+                          if (!snapshotJson || !caseId) return;
+                          setServerPreviewLoading(true);
+                          setServerPreviewError(null);
+                          try {
+                            const resp = await postGraphSnapshotPreview(caseId, snapshotJson, {
+                              family: family === "graph" ? "graph" : "layer1",
+                            });
+                            const payload = resp?.data || resp;
+                            setServerPreview(payload);
+                          } catch (err) {
+                            const d = err?.response?.data?.detail;
+                            setServerPreviewError(
+                              typeof d === "string" ? d : err?.message || "server_preview_failed",
+                            );
+                          } finally {
+                            setServerPreviewLoading(false);
+                          }
+                        }}
+                        disabled={serverPreviewLoading}
+                      >
+                        {serverPreviewLoading ? "Server…" : "Preview on server"}
+                      </CursorSmallButton>
+                    </>
                   ) : null}
                 </Box>
 
@@ -587,6 +639,55 @@ export default function CaseDetailDialog({ open, caseId, family = "layer1", onCl
                       <TableBody>
                         {graphCompare.rows.map((row) => (
                           <TableRow key={row.field}>
+                            <TableCell>{row.field}</TableCell>
+                            <TableCell>{row.snapshot}</TableCell>
+                            <TableCell>{row.expected}</TableCell>
+                            <TableCell sx={{ color: row.ok ? "rgba(129,140,248,0.95)" : "rgba(239,68,68,0.9)" }}>
+                              {row.ok ? "yes" : "no"}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </Box>
+                ) : null}
+
+                {serverPreviewError ? (
+                  <Typography sx={{ color: "rgba(239,68,68,0.9)", fontSize: "0.8125rem" }} role="alert">
+                    {serverPreviewError}
+                  </Typography>
+                ) : null}
+
+                {serverPreview?.arxiv_notes?.length ? (
+                  <Box>
+                    <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 0.5 }}>
+                      Server preview — arxiv notes
+                    </Typography>
+                    {serverPreview.arxiv_notes.map((line, idx) => (
+                      <Typography key={idx} sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.65)", mb: 0.5 }}>
+                        {line}
+                      </Typography>
+                    ))}
+                  </Box>
+                ) : null}
+
+                {serverPreview?.rows?.length ? (
+                  <Box sx={{ border: "1px solid rgba(99,102,241,0.25)", borderRadius: 1.5, overflow: "hidden" }}>
+                    <Typography sx={{ px: 1.5, py: 1, fontWeight: 600, fontSize: "0.8125rem" }}>
+                      Server preview — range checks
+                    </Typography>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Field</TableCell>
+                          <TableCell>Snapshot</TableCell>
+                          <TableCell>Expected</TableCell>
+                          <TableCell>OK</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {serverPreview.rows.map((row) => (
+                          <TableRow key={`srv-${row.field}`}>
                             <TableCell>{row.field}</TableCell>
                             <TableCell>{row.snapshot}</TableCell>
                             <TableCell>{row.expected}</TableCell>

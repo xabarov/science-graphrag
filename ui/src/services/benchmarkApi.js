@@ -76,8 +76,15 @@ export async function runBenchmark({
   return res.data;
 }
 
-export async function listBenchmarkRuns() {
-  const res = await api.get("/benchmark/runs", { headers: authHeaders() });
+export async function listBenchmarkRuns({ family, status, q } = {}) {
+  const res = await api.get("/benchmark/runs", {
+    params: {
+      ...(family ? { family } : {}),
+      ...(status ? { status } : {}),
+      ...(q ? { q } : {}),
+    },
+    headers: authHeaders(),
+  });
   return res.data;
 }
 
@@ -96,6 +103,18 @@ export async function getBenchmarkRun(runId) {
   const res = await api.get(`/benchmark/runs/${encodeURIComponent(runId)}`, {
     headers: authHeaders(),
   });
+  return res.data;
+}
+
+export async function postGraphSnapshotPreview(caseId, graphSnapshot, { family = "graph" } = {}) {
+  const res = await api.post(
+    `/benchmark/cases/${encodeURIComponent(caseId)}/graph-snapshot-preview`,
+    { graph_snapshot: graphSnapshot },
+    {
+      params: { family },
+      headers: authHeaders(),
+    },
+  );
   return res.data;
 }
 

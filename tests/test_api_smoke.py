@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from typing import Any
 
 from fastapi.testclient import TestClient
 
-from science_graphrag.api import main as api_main
 from science_graphrag.api import benchmark as benchmark_api
+from science_graphrag.api import main as api_main
 from science_graphrag.api.retrieval import GroundedAnswer
+from science_graphrag.api.task_store import RunPayloadTooLargeError
 
 
 def _client() -> TestClient:
@@ -214,7 +217,12 @@ def test_benchmark_models_list_smoke() -> None:
     assert res.status_code == 200
     payload = res.json()
     assert payload["total"] >= 3
-    assert any(item["profile_id"] == "env_default" for item in payload["items"])
+    env_default = next(item for item in payload["items"] if item["profile_id"] == "env_default")
+    assert env_default["label"]
+    assert "layer1" in env_default["family_support"]
+    student = next(item for item in payload["items"] if item["profile_id"] == "student_mistral_small_32")
+    assert student["default_gold_source"] == "teacher_gold"
+    assert student["default_threshold_profile"] == "student_mistral"
 
 
 def test_benchmark_post_run_rejects_graph_family() -> None:
@@ -321,6 +329,88 @@ def test_benchmark_run_summary_not_found(monkeypatch: Any) -> None:
     assert _client().get("/v1/benchmark/runs/missing-run/summary").status_code == 404
 
 
+def test_benchmark_get_run_payload_too_large(monkeypatch: Any) -> None:
+    def _boom(_rid: str) -> Any:
+        raise RunPayloadTooLargeError("run_payload_too_large_use_cases_api")
+
+    monkeypatch.setattr(benchmark_api.task_store, "get_run", _boom)
+    res = _client().get("/v1/benchmark/runs/any-id")
+    assert res.status_code == 413
+    assert res.json().get("detail") == "run_payload_too_large_use_cases_api"
+
+
+def _fake_run_list_rows() -> list[dict[str, Any]]:
+    base_summary = {
+        "avg_names_f1": 0.0,
+        "avg_sample_arxiv_f1": 0.0,
+        "avg_sample_doi_f1": 0.0,
+        "avg_layer2_recall_ratio": 0.0,
+        "pass_count": 0,
+        "fail_count": 0,
+        "cancelled_count": 0,
+        "case_count": 1,
+    }
+    return [
+        {
+            "run_id": "run-layer1",
+            "label": "alpha",
+            "benchmark_family": "layer1",
+            "status": "completed",
+            "created_at": "2025-01-02T00:00:00+00:00",
+            "started_at": None,
+            "completed_at": None,
+            "run_config": {},
+            "progress": {"total": 1, "completed": 1, "percent": 100.0},
+            "summary": dict(base_summary),
+        },
+        {
+            "run_id": "run-layer2-beta",
+            "label": "beta",
+            "benchmark_family": "layer2",
+            "status": "running",
+            "created_at": "2025-01-03T00:00:00+00:00",
+            "started_at": None,
+            "completed_at": None,
+            "run_config": {},
+            "progress": {"total": 1, "completed": 0, "percent": 0.0},
+            "summary": dict(base_summary),
+        },
+    ]
+
+
+def test_benchmark_list_runs_filters_family(monkeypatch: Any) -> None:
+    monkeypatch.setattr(benchmark_api.task_store, "list_runs_summary", _fake_run_list_rows)
+    res = _client().get("/v1/benchmark/runs", params={"family": "layer2"})
+    assert res.status_code == 200
+    items = res.json()["items"]
+    assert len(items) == 1
+    assert items[0]["run_id"] == "run-layer2-beta"
+
+
+def test_benchmark_list_runs_filters_q(monkeypatch: Any) -> None:
+    monkeypatch.setattr(benchmark_api.task_store, "list_runs_summary", _fake_run_list_rows)
+    res = _client().get("/v1/benchmark/runs", params={"q": "beta"})
+    assert res.status_code == 200
+    items = res.json()["items"]
+    assert len(items) == 1
+    assert items[0]["run_id"] == "run-layer2-beta"
+
+
+def test_benchmark_graph_snapshot_preview_smoke() -> None:
+    repo_root = Path(__file__).resolve().parents[1]
+    sample_path = repo_root / "eval/results/local-graph-yolov1.json"
+    sample = json.loads(sample_path.read_text(encoding="utf-8"))
+    res = _client().post(
+        "/v1/benchmark/cases/yolov1/graph-snapshot-preview?family=graph",
+        json={"graph_snapshot": sample},
+    )
+    assert res.status_code == 200
+    data = res.json()["data"]
+    assert "rows" in data
+    assert data.get("opened_case_id") == "yolov1"
+    assert data.get("case_id_mismatch") is False
+
+
 def test_benchmark_runs_compare_smoke(monkeypatch: Any) -> None:
     def _make_run(rid: str, names_f1: float) -> dict[str, Any]:
         return {
@@ -407,7 +497,18 @@ def test_benchmark_post_run_accepts_model_fields(monkeypatch: Any) -> None:
         return "run-test-1"
 
     def _fake_get_run(run_id: str) -> dict[str, Any]:
-        return {"run_id": run_id, "status": "running"}
+        return {
+            "run_id": run_id,
+            "status": "running",
+            "benchmark_family": "layer1",
+            "label": "student-run",
+            "run_config": {
+                "model_profile": "student_mistral_small_32",
+                "resolved_model_id": "mistralai/mistral-small-3.2-24b-instruct",
+                "gold_source": "teacher_gold",
+                "threshold_profile": "student_mistral",
+            },
+        }
 
     monkeypatch.setattr(benchmark_api.task_store, "create_run", _fake_create_run)
     monkeypatch.setattr(benchmark_api.task_store, "get_run", _fake_get_run)
@@ -425,10 +526,31 @@ def test_benchmark_post_run_accepts_model_fields(monkeypatch: Any) -> None:
     )
     assert res.status_code == 200
     assert res.json()["run_id"] == "run-test-1"
+    assert res.json()["benchmark_family"] == "layer1"
+    assert res.json()["run_config"]["resolved_model_id"] == "mistralai/mistral-small-3.2-24b-instruct"
+    assert res.json()["run_config"]["gold_source"] == "teacher_gold"
     assert captured["benchmark_family"] == "layer1"
     assert captured["run_config"]["model_profile"] == "student_mistral_small_32"
     assert captured["run_config"]["gold_source"] == "teacher_gold"
     assert captured["run_config"]["threshold_profile"] == "student_mistral"
+
+
+def test_benchmark_post_run_returns_human_validation_errors(monkeypatch: Any) -> None:
+    def _fake_create_run(**_kwargs: Any) -> str:
+        raise ValueError("custom_model_id_required")
+
+    monkeypatch.setattr(benchmark_api.task_store, "create_run", _fake_create_run)
+    client = _client()
+    res = client.post(
+        "/v1/benchmark/runs",
+        json={
+            "case_ids": ["yolov1"],
+            "family": "layer1",
+            "model_profile": "custom",
+        },
+    )
+    assert res.status_code == 400
+    assert res.json()["detail"] == "custom_model_id_required"
 
 
 def test_benchmark_run_cases_page_smoke(monkeypatch: Any) -> None:

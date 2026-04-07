@@ -724,6 +724,20 @@ Mitigation:
 - [x] Tests: pytest для summary/pagination, cases endpoint, compare markdown/limit, last-run hint
 - [x] Docs: этот чеклист, [`frontend-ui-api-contracts-v1.md`](frontend-ui-api-contracts-v1.md), backlog `B4`
 
+### Wave 5
+
+- Heavy-run: лимит полного `GET .../runs/{run_id}`, sidecar `{run_id}.summary.json`, поля `full_run_blocked` в summary
+- Graph: `POST .../graph-snapshot-preview` + Python diff [`graph_snapshot_diff.py`](../../science_graphrag/api/graph_snapshot_diff.py)
+- UX: deep-link `/benchmark?tab=…&run=…&case=…`, фильтры списка run-ов, чип `last_run_hints` → Workbench
+
+#### Wave 5 Checklist
+
+- [x] Backend: [`task_store.py`](../../science_graphrag/api/task_store.py) — `RunPayloadTooLargeError`, лимиты `_FULL_RUN_MAX_CASE_IDS` / `_FULL_RUN_MAX_FILE_BYTES`, запись/чтение `.summary.json`, пропуск sidecar в `_load_persisted_runs`
+- [x] Backend: [`benchmark.py`](../../science_graphrag/api/benchmark.py) — **413** на полный run; `GET /benchmark/runs` query `family`, `status`, `q`; `POST /benchmark/cases/{case_id}/graph-snapshot-preview`
+- [x] Frontend: [`ResultsDialog.jsx`](../../ui/src/pages/BenchmarkPage/ResultsDialog.jsx), [`BenchmarkPage.jsx`](../../ui/src/pages/BenchmarkPage/BenchmarkPage.jsx), [`ResultsTab.jsx`](../../ui/src/pages/BenchmarkPage/ResultsTab.jsx), [`CaseDetailDialog.jsx`](../../ui/src/pages/BenchmarkPage/CaseDetailDialog.jsx), [`benchmarkApi.js`](../../ui/src/services/benchmarkApi.js)
+- [x] Tests: pytest graph diff, graph preview API, list filters, full-run 413, sidecar persist, full_run_blocked
+- [x] Docs: этот чеклист + [`frontend-ui-api-contracts-v1.md`](frontend-ui-api-contracts-v1.md)
+
 ## Concrete file targets
 
 ### Frontend

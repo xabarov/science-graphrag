@@ -42,7 +42,10 @@ export default function ResultsDialog({ open, runId, onClose, onOpenWorkbench })
         if (cancelled) return;
         setRunDetail(payload);
       } catch (e) {
-        if (!cancelled) setError(e?.message || "failed_to_fetch_run");
+        if (!cancelled) {
+          const d = e?.response?.data?.detail;
+          setError(typeof d === "string" ? d : e?.message || "failed_to_fetch_run");
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -63,7 +66,8 @@ export default function ResultsDialog({ open, runId, onClose, onOpenWorkbench })
       setRunDetail(payload);
       setHasFullDetail(true);
     } catch (e) {
-      setError(e?.message || "failed_to_fetch_full_run");
+      const d = e?.response?.data?.detail;
+      setError(typeof d === "string" ? d : e?.message || "failed_to_fetch_full_run");
     } finally {
       setLoadingFull(false);
     }
@@ -96,9 +100,15 @@ export default function ResultsDialog({ open, runId, onClose, onOpenWorkbench })
             <Typography sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.8125rem" }}>
               Compact summary (no per-case result blobs). Load full run for complete JSON if needed.
             </Typography>
-            <CursorPrimaryButton onClick={loadFullDetails} disabled={loadingFull}>
-              {loadingFull ? "Loading…" : "Load full details"}
-            </CursorPrimaryButton>
+            {runDetail.full_run_blocked ? (
+              <Typography sx={{ color: "rgba(255,200,100,0.9)", fontSize: "0.8125rem", maxWidth: 560 }}>
+                Full run disabled: {runDetail.full_run_block_reason || "too_large"} — use paginated cases or CLI.
+              </Typography>
+            ) : (
+              <CursorPrimaryButton onClick={loadFullDetails} disabled={loadingFull}>
+                {loadingFull ? "Loading…" : "Load full details"}
+              </CursorPrimaryButton>
+            )}
           </Box>
         ) : null}
 

@@ -32,6 +32,10 @@ class RunCancelledError(RuntimeError):
     """Raised when a run is cancelled before starting a case."""
 
 
+class RunPayloadTooLargeError(RuntimeError):
+    """Full run JSON is refused (API returns 413); use summary + paginated cases or CLI."""
+
+
 class RunStatus(str):
     """String constants for run lifecycle states."""
 
@@ -48,6 +52,11 @@ def _now_iso() -> str:
 
 # Above this count, ``get_run_summary`` omits ``cases``; use ``get_run_cases_page``.
 _SUMMARY_CASES_INLINE_MAX = 100
+
+# Full ``GET .../runs/{run_id}`` guardrails (avoid multi-GB JSON in API memory).
+_FULL_RUN_MAX_CASE_IDS = 2000
+_FULL_RUN_MAX_FILE_BYTES = 50 * 1024 * 1024
+FULL_RUN_BLOCK_DETAIL = "run_payload_too_large_use_cases_api"
 
 
 @dataclass
@@ -306,11 +315,18 @@ class BenchmarkTaskStore:
         return None
 
     def get_run(self, run_id: str) -> dict[str, Any] | None:
-        """Get a full run detail (metrics/predicted/gold per case)."""
+        """Get a full run detail (metrics/predicted/gold per case).
+
+        Raises:
+            RunPayloadTooLargeError: Run exceeds case-count or on-disk size limits.
+        """
         with self._lock:
             rec = self._runs.get(run_id)
             if not rec:
                 return None
+            main_path = self._persisted_main_json_path(run_id)
+            if self._full_run_blocked(rec, main_path):
+                raise RunPayloadTooLargeError(FULL_RUN_BLOCK_DETAIL)
             return self._run_to_dict(rec)
 
     def get_run_summary(self, run_id: str) -> dict[str, Any] | None:
@@ -323,19 +339,36 @@ class BenchmarkTaskStore:
         with self._lock:
             rec = self._runs.get(run_id)
         if rec:
-            return self._run_to_summary_dict(rec, inline_cases_limit=_SUMMARY_CASES_INLINE_MAX)
-        path = self._history_dir() / f"{run_id}.json"
-        if not path.is_file():
-            leg = self._legacy_history_dir() / f"{run_id}.json"
-            path = leg if leg.is_file() else path
-        if path.is_file():
+            summary = self._run_to_summary_dict(rec, inline_cases_limit=_SUMMARY_CASES_INLINE_MAX)
+            main_path = self._persisted_main_json_path(run_id)
+            self._annotate_full_run_guard(summary, rec=rec, main_json_path=main_path)
+            return summary
+        hist = self._history_dir()
+        leg = self._legacy_history_dir()
+        main_path = hist / f"{run_id}.json"
+        if not main_path.is_file():
+            alt = leg / f"{run_id}.json"
+            main_path = alt if alt.is_file() else main_path
+        sidecar = hist / f"{run_id}.summary.json"
+        if sidecar.is_file() and main_path.is_file():
             try:
-                payload = json.loads(path.read_text(encoding="utf-8"))
+                summary = json.loads(sidecar.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError, TypeError):
+                summary = None
+            if isinstance(summary, dict) and summary.get("run_id") == run_id:
+                self._annotate_full_run_guard(summary, rec=None, main_json_path=main_path)
+                return summary
+        if main_path.is_file():
+            try:
+                payload = json.loads(main_path.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError, TypeError):
                 return None
-            return self._persisted_payload_to_summary_dict(
+            summary = self._persisted_payload_to_summary_dict(
                 payload, inline_cases_limit=_SUMMARY_CASES_INLINE_MAX
             )
+            if summary is not None:
+                self._annotate_full_run_guard(summary, rec=None, main_json_path=main_path)
+            return summary
         return None
 
     def get_run_cases_page(
@@ -403,6 +436,8 @@ class BenchmarkTaskStore:
             paths.extend(legacy_dir.glob("*.json"))
         restored: dict[str, RunRecord] = {}
         for path in sorted(paths):
+            if path.name.endswith(".summary.json"):
+                continue
             try:
                 payload = json.loads(path.read_text(encoding="utf-8"))
                 rec = self._run_from_dict(payload)
@@ -415,15 +450,23 @@ class BenchmarkTaskStore:
     def _persist_run_snapshot(self, rec: RunRecord) -> None:
         """Write run payload to disk (survives API restart)."""
         try:
+            hist = self._history_dir()
             payload = self._run_to_dict(rec)
-            path = self._history_dir() / f"{rec.run_id}.json"
+            path = hist / f"{rec.run_id}.json"
             path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
+            slim = self._run_to_summary_dict(rec, inline_cases_limit=_SUMMARY_CASES_INLINE_MAX)
+            self._annotate_full_run_guard(slim, rec=rec, main_json_path=path)
+            (hist / f"{rec.run_id}.summary.json").write_text(
+                json.dumps(slim, indent=2, default=str),
+                encoding="utf-8",
+            )
         except OSError:
             pass
 
     def _delete_persisted_run(self, run_id: str) -> None:
         for path in (
             self._history_dir() / f"{run_id}.json",
+            self._history_dir() / f"{run_id}.summary.json",
             self._legacy_history_dir() / f"{run_id}.json",
         ):
             try:
@@ -431,6 +474,58 @@ class BenchmarkTaskStore:
                     path.unlink()
             except OSError:
                 continue
+
+    def _persisted_main_json_path(self, run_id: str) -> Path | None:
+        """Return path to the full run JSON snapshot if it exists on disk."""
+        hist = self._history_dir()
+        primary = hist / f"{run_id}.json"
+        if primary.is_file():
+            return primary
+        legacy = self._legacy_history_dir() / f"{run_id}.json"
+        if legacy.is_file():
+            return legacy
+        return None
+
+    def _full_run_blocked(self, rec: RunRecord, main_json_path: Path | None) -> bool:
+        if len(rec.case_ids) > _FULL_RUN_MAX_CASE_IDS:
+            return True
+        if main_json_path is not None and main_json_path.is_file():
+            try:
+                if main_json_path.stat().st_size > _FULL_RUN_MAX_FILE_BYTES:
+                    return True
+            except OSError:
+                return False
+        return False
+
+    def _annotate_full_run_guard(
+        self,
+        summary: dict[str, Any],
+        *,
+        rec: RunRecord | None,
+        main_json_path: Path | None,
+    ) -> None:
+        """Set ``full_run_blocked`` / ``full_run_block_reason`` for UI (GET full run guard)."""
+        reason: str | None = None
+        if rec is not None:
+            if self._full_run_blocked(rec, main_json_path):
+                reason = FULL_RUN_BLOCK_DETAIL
+        else:
+            ct_raw = summary.get("cases_total")
+            if ct_raw is None:
+                ct_raw = len(summary.get("cases") or [])
+            try:
+                if int(ct_raw) > _FULL_RUN_MAX_CASE_IDS:
+                    reason = FULL_RUN_BLOCK_DETAIL
+            except (TypeError, ValueError):
+                pass
+            if reason is None and main_json_path is not None and main_json_path.is_file():
+                try:
+                    if main_json_path.stat().st_size > _FULL_RUN_MAX_FILE_BYTES:
+                        reason = FULL_RUN_BLOCK_DETAIL
+                except OSError:
+                    pass
+        summary["full_run_blocked"] = reason is not None
+        summary["full_run_block_reason"] = reason
 
     def _run_from_dict(self, payload: dict[str, Any]) -> RunRecord:
         case_rows = payload.get("cases") or []

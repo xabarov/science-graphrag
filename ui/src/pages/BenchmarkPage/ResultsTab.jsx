@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
 import Table from "@mui/material/Table";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
@@ -26,10 +31,17 @@ export default function ResultsTab({ onOpenWorkbench }) {
   const [error, setError] = useState(null);
   const [selectedRunId, setSelectedRunId] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [familyFilter, setFamilyFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [qFilter, setQFilter] = useState("");
 
   async function refresh() {
     setError(null);
-    const resp = await listBenchmarkRuns();
+    const resp = await listBenchmarkRuns({
+      family: familyFilter || undefined,
+      status: statusFilter || undefined,
+      q: qFilter || undefined,
+    });
     setRunsPayload(resp);
   }
 
@@ -46,7 +58,7 @@ export default function ResultsTab({ onOpenWorkbench }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- initial load; filters via Apply
 
   const items = runsPayload?.items || [];
   const latestRun = items[0] || null;
@@ -67,6 +79,45 @@ export default function ResultsTab({ onOpenWorkbench }) {
           {error}
         </Typography>
       )}
+
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "center", mb: 2 }}>
+        <FormControl size="small" sx={{ minWidth: 120 }}>
+          <InputLabel id="res-fam">Family</InputLabel>
+          <Select
+            labelId="res-fam"
+            label="Family"
+            value={familyFilter}
+            onChange={(e) => setFamilyFilter(e.target.value)}
+          >
+            <MenuItem value="">all</MenuItem>
+            <MenuItem value="layer1">layer1</MenuItem>
+            <MenuItem value="layer2">layer2</MenuItem>
+          </Select>
+        </FormControl>
+        <FormControl size="small" sx={{ minWidth: 140 }}>
+          <InputLabel id="res-st">Status</InputLabel>
+          <Select
+            labelId="res-st"
+            label="Status"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <MenuItem value="">all</MenuItem>
+            <MenuItem value="completed">completed</MenuItem>
+            <MenuItem value="running">running</MenuItem>
+            <MenuItem value="failed">failed</MenuItem>
+            <MenuItem value="cancelled">cancelled</MenuItem>
+          </Select>
+        </FormControl>
+        <TextField
+          size="small"
+          label="run_id / label"
+          value={qFilter}
+          onChange={(e) => setQFilter(e.target.value)}
+          sx={{ minWidth: 220 }}
+        />
+        <CursorButton onClick={() => refresh().catch(() => {})}>Apply filters</CursorButton>
+      </Box>
 
       {items.length === 0 ? (
         <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>

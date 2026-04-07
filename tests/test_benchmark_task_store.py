@@ -10,7 +10,11 @@ from typing import Any
 
 import pytest
 
-from science_graphrag.api.task_store import BenchmarkTaskStore
+from science_graphrag.api.task_store import (
+    FULL_RUN_BLOCK_DETAIL,
+    BenchmarkTaskStore,
+    RunPayloadTooLargeError,
+)
 
 
 def _wait_for_terminal(
@@ -258,3 +262,88 @@ def test_find_last_run_hint_prefers_newer_file(tmp_path: Path) -> None:
     assert hint["run_id"] == rid_new
     assert hint["status"] == "failed"
     assert hint["completed_at"] == "2025-01-01T00:00:00+00:00"
+
+
+def test_persist_writes_summary_sidecar(tmp_path: Path) -> None:
+    def _fake_layer1_runner(
+        fixture_dir: Path,
+        *,
+        settings,
+        external_gold_root=None,
+        gold_filename: str = "gold.json",
+        threshold_profile: str | None = None,
+    ) -> dict[str, Any]:
+        return {
+            "case_id": fixture_dir.name,
+            "metrics": {
+                "contract": {"passed": True, "checks": {}},
+                "authorships": {"names_f1": 1.0},
+                "references": {"sample_arxiv_f1": 1.0, "sample_doi_f1": 1.0},
+            },
+            "predicted": {},
+            "gold": {},
+            "diagnostics": {},
+        }
+
+    hist = tmp_path / "benchmark_runs"
+    store = BenchmarkTaskStore(
+        max_workers=1,
+        history_dir=hist,
+        layer1_runner=_fake_layer1_runner,
+    )
+    run_id = store.create_run(
+        case_ids=["yolov1"],
+        label="sidecar-test",
+        benchmark_family="layer1",
+        run_config={"model_profile": "env_default"},
+    )
+    _wait_for_terminal(store, run_id)
+    sidecar = hist / f"{run_id}.summary.json"
+    assert sidecar.is_file()
+    slim = json.loads(sidecar.read_text(encoding="utf-8"))
+    assert slim.get("run_id") == run_id
+    assert slim.get("full_run_blocked") is False
+
+
+def test_get_run_raises_when_case_count_over_limit(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    def _fake_layer1_runner(
+        fixture_dir: Path,
+        *,
+        settings,
+        external_gold_root=None,
+        gold_filename: str = "gold.json",
+        threshold_profile: str | None = None,
+    ) -> dict[str, Any]:
+        return {
+            "case_id": fixture_dir.name,
+            "metrics": {
+                "contract": {"passed": True, "checks": {}},
+                "authorships": {"names_f1": 1.0},
+                "references": {"sample_arxiv_f1": 1.0, "sample_doi_f1": 1.0},
+            },
+            "predicted": {},
+            "gold": {},
+            "diagnostics": {},
+        }
+
+    store = BenchmarkTaskStore(
+        max_workers=2,
+        history_dir=tmp_path / "benchmark_runs",
+        layer1_runner=_fake_layer1_runner,
+    )
+    run_id = store.create_run(
+        case_ids=["yolov1", "atss_realpdf"],
+        label="over-limit",
+        benchmark_family="layer1",
+        run_config={"model_profile": "env_default"},
+    )
+    _wait_for_terminal(store, run_id)
+    monkeypatch.setattr("science_graphrag.api.task_store._FULL_RUN_MAX_CASE_IDS", 1)
+    slim = store.get_run_summary(run_id)
+    assert slim is not None
+    assert slim.get("full_run_blocked") is True
+    assert slim.get("full_run_block_reason") == FULL_RUN_BLOCK_DETAIL
+    with pytest.raises(RunPayloadTooLargeError):
+        store.get_run(run_id)

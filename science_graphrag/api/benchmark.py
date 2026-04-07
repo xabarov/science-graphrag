@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
 from eval.bench_common import discover_layer1_case_dirs, discover_layer2_case_dirs
@@ -20,12 +20,20 @@ from eval.report_compare import (
     normalize_api_run_for_compare,
 )
 from science_graphrag.api.benchmark_profiles import list_model_profiles
-from science_graphrag.api.task_store import RunStatus, task_store
+from science_graphrag.api.graph_snapshot_diff import (
+    compare_graph_expectations_to_snapshot,
+    extract_metrics_snapshot,
+    snapshot_case_id,
+)
+from science_graphrag.api.task_store import RunPayloadTooLargeError, RunStatus, task_store
 
 router = APIRouter()
 
 # Guardrail for compare: very large runs can produce huge flattened metric diffs.
 _MAX_COMPARE_CASE_ROWS = 2000
+
+# Raw JSON body limit for graph snapshot preview (bytes).
+_GRAPH_SNAPSHOT_PREVIEW_MAX_BYTES = 3 * 1024 * 1024
 
 
 def _repo_root() -> Path:
@@ -462,6 +470,9 @@ class RunCreateResponse(BaseModel):
 
     run_id: str
     status: str
+    benchmark_family: str = "layer1"
+    label: str | None = None
+    run_config: dict[str, Any] = Field(default_factory=dict)
 
 
 class RunListItem(BaseModel):
@@ -513,6 +524,12 @@ class RunCasesListResponse(BaseModel):
 
 class RunCaseDetailResponse(BaseModel):
     """Response payload for GET /benchmark/runs/{run_id}/cases/{case_id}."""
+
+    data: dict[str, Any]
+
+
+class GraphSnapshotPreviewResponse(BaseModel):
+    """Response payload for POST /benchmark/cases/{case_id}/graph-snapshot-preview."""
 
     data: dict[str, Any]
 
@@ -668,6 +685,51 @@ def get_benchmark_case_artifacts(
     return CaseArtifactsResponse(**payload)
 
 
+@router.post(
+    "/benchmark/cases/{case_id}/graph-snapshot-preview",
+    response_model=GraphSnapshotPreviewResponse,
+)
+async def post_graph_snapshot_preview(
+    case_id: str,
+    request: Request,
+    family: str = Query(
+        default="graph",
+        description='Use "graph" (default) or "layer1" for cases with graph_expectations.',
+    ),
+) -> GraphSnapshotPreviewResponse:
+    """Compare uploaded graph-benchmark JSON to fixture ``graph_expectations`` (size-limited body)."""
+    raw = await request.body()
+    if len(raw) > _GRAPH_SNAPSHOT_PREVIEW_MAX_BYTES:
+        raise HTTPException(status_code=413, detail="graph_snapshot_body_too_large")
+    try:
+        outer = json.loads(raw.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        raise HTTPException(status_code=422, detail="invalid_json_body") from exc
+    if not isinstance(outer, dict):
+        raise HTTPException(status_code=422, detail="invalid_json_body")
+    snap_doc = outer.get("graph_snapshot")
+    if not isinstance(snap_doc, dict):
+        raise HTTPException(status_code=422, detail="graph_snapshot_required")
+
+    bundle = _load_case_bundle(case_id, family, gold_source=None)
+    gold = bundle.get("gold") or {}
+    expectations = gold.get("graph_expectations") if isinstance(gold, dict) else None
+    if not isinstance(expectations, dict):
+        raise HTTPException(status_code=404, detail="case_has_no_graph_expectations")
+
+    metrics_snap = extract_metrics_snapshot(snap_doc)
+    compared = compare_graph_expectations_to_snapshot(expectations, metrics_snap)
+    sid = snapshot_case_id(snap_doc)
+    mismatch = bool(sid and sid != case_id)
+    payload = {
+        **compared,
+        "opened_case_id": case_id,
+        "snapshot_case_id": sid,
+        "case_id_mismatch": mismatch,
+    }
+    return GraphSnapshotPreviewResponse(data=payload)
+
+
 def _resolve_case_ids(req: RunCreateRequest) -> list[str]:
     """Resolve request selectors ("all"/"merge_safe") into concrete case_ids."""
     fam = (req.family or "layer1").strip().lower()
@@ -729,14 +791,45 @@ def create_benchmark_run(body: RunCreateRequest) -> RunCreateResponse:
     # We just created; store might still be running.
     run = task_store.get_run(run_id)
     status = run.get("status") if run else RunStatus.RUNNING
-    return RunCreateResponse(run_id=run_id, status=status)
+    return RunCreateResponse(
+        run_id=run_id,
+        status=status,
+        benchmark_family=fam,
+        label=body.label,
+        run_config=(run.get("run_config") if run else {}) or {},
+    )
 
 
 @router.get("/benchmark/runs", response_model=RunsListResponse)
-def list_layer1_benchmark_runs() -> RunsListResponse:
-    """List all known in-memory runs with a compact metrics summary."""
+def list_layer1_benchmark_runs(
+    family: str | None = Query(
+        default=None,
+        description="Filter by benchmark_family (exact, case-insensitive).",
+    ),
+    status: str | None = Query(
+        default=None,
+        description="Filter by run status (exact, case-insensitive).",
+    ),
+    q: str | None = Query(
+        default=None,
+        description="Substring match on run_id or label (case-insensitive).",
+    ),
+) -> RunsListResponse:
+    """List all known runs with a compact metrics summary."""
     items = task_store.list_runs_summary()
-    # Newest first.
+    fam_f = (family or "").strip().lower() or None
+    st_f = (status or "").strip().lower() or None
+    needle = (q or "").strip().lower()
+    if fam_f:
+        items = [x for x in items if (x.get("benchmark_family") or "layer1").lower() == fam_f]
+    if st_f:
+        items = [x for x in items if (x.get("status") or "").lower() == st_f]
+    if needle:
+        items = [
+            x
+            for x in items
+            if needle in (x.get("run_id") or "").lower() or needle in (x.get("label") or "").lower()
+        ]
     items = sorted(items, key=lambda x: x.get("created_at") or "", reverse=True)
     return RunsListResponse(items=items, total=len(items))
 
@@ -792,7 +885,10 @@ def compare_benchmark_runs(
 @router.get("/benchmark/runs/{run_id}", response_model=RunDetailResponse)
 def get_layer1_benchmark_run(run_id: str) -> RunDetailResponse:
     """Return full run details for a given run_id."""
-    run = task_store.get_run(run_id)
+    try:
+        run = task_store.get_run(run_id)
+    except RunPayloadTooLargeError as exc:
+        raise HTTPException(status_code=413, detail=str(exc)) from None
     if not run:
         raise HTTPException(status_code=404, detail="run_not_found")
     return RunDetailResponse(data=run)
