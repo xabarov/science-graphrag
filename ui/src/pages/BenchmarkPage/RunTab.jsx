@@ -106,7 +106,18 @@ export default function RunTab({ onSwitchToResults }) {
           if (intervalId) clearInterval(intervalId);
         }
       } catch (e) {
-        if (!cancelled) setError(e?.message || "failed_to_fetch_run");
+        if (cancelled) return;
+        const statusCode = e?.response?.status;
+        if (statusCode === 404) {
+          window.localStorage.removeItem("benchmark:lastRunId");
+          setRunId(null);
+          setRun(null);
+          setLastStartedSummary(null);
+          setError(null);
+          if (intervalId) clearInterval(intervalId);
+          return;
+        }
+        setError(e?.message || "failed_to_fetch_run");
       }
     }
 

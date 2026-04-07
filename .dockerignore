@@ -18,6 +18,8 @@ build
 data
 eval/results
 tests
+!tests/fixtures
+!tests/fixtures/**
 docs
 *.md
 !README.md

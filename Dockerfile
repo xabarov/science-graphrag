@@ -11,6 +11,7 @@ WORKDIR /app
 COPY pyproject.toml README.md LICENSE ./
 COPY science_graphrag ./science_graphrag
 COPY eval ./eval
+COPY tests/fixtures ./tests/fixtures
 
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir .

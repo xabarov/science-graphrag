@@ -187,6 +187,14 @@ def test_benchmark_cases_list_smoke() -> None:
     assert payload["items"][0]["case_id"]
 
 
+def test_benchmark_cases_layer1_fixture_exists_on_disk() -> None:
+    """Guard docker image inputs: benchmark fixtures must exist in repo for API discovery."""
+
+    repo_root = Path(__file__).resolve().parents[1]
+    fixture = repo_root / "tests" / "fixtures" / "benchmarks" / "layer1" / "yolov1" / "gold.json"
+    assert fixture.is_file()
+
+
 def test_benchmark_cases_layer2_list_smoke() -> None:
     """Benchmark UI: layer-2 fixtures listable."""
 
