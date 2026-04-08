@@ -198,8 +198,11 @@ def test_work_detail_graph_chunks_smoke(monkeypatch: Any) -> None:
     def _fake_work_graph_neighborhood(*_args: Any, **_kwargs: Any) -> dict[str, Any]:
         return {
             "work_id": "w1",
-            "nodes": [{"id": "w1", "type": "Work", "label": "Test work"}],
-            "edges": [],
+            "nodes": [
+                {"id": "w1", "type": "Work", "label": "Test work"},
+                {"id": "n2", "type": "Work", "label": "Neighbor"},
+            ],
+            "edges": [{"source": "n2", "target": "w1", "type": "CITES"}],
             "meta": {"semantic_available": False},
         }
 
@@ -220,6 +223,9 @@ def test_work_detail_graph_chunks_smoke(monkeypatch: Any) -> None:
     assert graph_body["meta"]["semantic_available"] is False
     assert graph_body["nodes"][0]["id"] == "w1"
     assert graph_body["nodes"][0]["label"] == "Test work"
+    assert len(graph_body["edges"]) == 1
+    assert graph_body["edges"][0]["source"] == "n2"
+    assert graph_body["edges"][0]["target"] == "w1"
 
     chunks = client.get("/v1/works/w1/chunks?limit=10&offset=0")
     assert chunks.status_code == 200

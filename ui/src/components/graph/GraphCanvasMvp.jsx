@@ -15,6 +15,7 @@ import {
   getScienceGraphNodeStyle,
   truncateCanvasLabel,
 } from "./graphCanvasStyle.js";
+import { clipSegmentByDiscInsets, distancePointToSegment } from "./graphCanvasGeometry.js";
 
 const LABEL_FONT =
   '600 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif';
@@ -22,6 +23,9 @@ const EDGE_LABEL_FONT =
   '400 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif';
 
 const NODE_RADIUS = 12;
+const ARROW_HEAD_LEN = 7;
+const ARROW_HEAD_HW = 4;
+const EDGE_HOVER_THRESHOLD_PX = 8;
 const MIN_SCALE = 0.06;
 const MAX_SCALE = 8;
 const DRAG_THRESHOLD_PX = 5;
@@ -46,6 +50,7 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
   const [transform, setTransform] = useState({ scale: 1, tx: 0, ty: 0 });
   const [hostSize, setHostSize] = useState({ width: 0, height: 0 });
   const [hoveredNodeId, setHoveredNodeId] = useState("");
+  const [hoveredEdgeId, setHoveredEdgeId] = useState("");
   const [canvasCursor, setCanvasCursor] = useState("grab");
   const hoverPickPendingRef = useRef(false);
   const hoverClientRef = useRef({ x: 0, y: 0 });
@@ -95,6 +100,7 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
     let raf = 0;
     raf = requestAnimationFrame(() => {
       setHoveredNodeId("");
+      setHoveredEdgeId("");
       setCanvasCursor("grab");
     });
     return () => cancelAnimationFrame(raf);
@@ -133,18 +139,39 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
     const positions = computeWorldLayout(graph.nodes, layoutWorldRadius);
     positionsRef.current = positions;
 
-    ctx.strokeStyle = "rgba(255,255,255,0.12)";
-    ctx.lineWidth = 1;
     for (const edge of graph.edges) {
       const p0w = positions.get(edge.source);
       const p1w = positions.get(edge.target);
       if (!p0w || !p1w) continue;
       const p0 = worldToScreen(p0w.x, p0w.y, scale, tx, ty);
       const p1 = worldToScreen(p1w.x, p1w.y, scale, tx, ty);
-      ctx.beginPath();
-      ctx.moveTo(p0.x, p0.y);
-      ctx.lineTo(p1.x, p1.y);
-      ctx.stroke();
+      const hovered = edge.id === hoveredEdgeId;
+      const clipped = clipSegmentByDiscInsets(p0, p1, NODE_RADIUS, NODE_RADIUS);
+      ctx.strokeStyle = hovered ? "rgba(255,255,255,0.38)" : "rgba(255,255,255,0.12)";
+      ctx.lineWidth = hovered ? 1.75 : 1;
+      if (clipped) {
+        const { ax, ay, bx, by, ux, uy } = clipped;
+        const lineEndX = bx - ux * ARROW_HEAD_LEN;
+        const lineEndY = by - uy * ARROW_HEAD_LEN;
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(lineEndX, lineEndY);
+        ctx.stroke();
+        const px = -uy;
+        const py = ux;
+        ctx.beginPath();
+        ctx.moveTo(bx, by);
+        ctx.lineTo(lineEndX + px * ARROW_HEAD_HW, lineEndY + py * ARROW_HEAD_HW);
+        ctx.lineTo(lineEndX - px * ARROW_HEAD_HW, lineEndY - py * ARROW_HEAD_HW);
+        ctx.closePath();
+        ctx.fillStyle = hovered ? "rgba(255,255,255,0.38)" : "rgba(255,255,255,0.2)";
+        ctx.fill();
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(p0.x, p0.y);
+        ctx.lineTo(p1.x, p1.y);
+        ctx.stroke();
+      }
     }
 
     ctx.font = EDGE_LABEL_FONT;
@@ -164,12 +191,13 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
       const padX = 4;
       const bw = metrics.width + padX * 2;
       const bh = 16;
-      ctx.fillStyle = "rgba(26, 26, 26, 0.94)";
+      const eHover = edge.id === hoveredEdgeId;
+      ctx.fillStyle = eHover ? "rgba(40, 40, 40, 0.96)" : "rgba(26, 26, 26, 0.94)";
       ctx.fillRect(midX - bw / 2, midY - bh / 2, bw, bh);
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+      ctx.strokeStyle = eHover ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.08)";
       ctx.lineWidth = 1;
       ctx.strokeRect(midX - bw / 2, midY - bh / 2, bw, bh);
-      ctx.fillStyle = "rgba(255, 255, 255, 0.62)";
+      ctx.fillStyle = eHover ? "rgba(255, 255, 255, 0.82)" : "rgba(255, 255, 255, 0.62)";
       ctx.fillText(elabel, midX, midY);
     }
 
@@ -216,7 +244,7 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
       ctx.fillStyle = sel ? "rgba(255, 255, 255, 0.92)" : "rgba(255, 255, 255, 0.82)";
       ctx.fillText(text, p.x, midY);
     }
-  }, [getViewportDims, graph.edges, graph.nodes, hoveredNodeId, layoutWorldRadius, selectedNodeId]);
+  }, [getViewportDims, graph.edges, graph.nodes, hoveredEdgeId, hoveredNodeId, layoutWorldRadius, selectedNodeId]);
 
   useEffect(() => {
     draw();
@@ -258,6 +286,24 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
     return null;
   }
 
+  function hitTestClosestEdgeId(screenX, screenY, positions, scale, tx, ty) {
+    let best = "";
+    let bestD = EDGE_HOVER_THRESHOLD_PX + 1;
+    for (const edge of graph.edges) {
+      const p0w = positions.get(edge.source);
+      const p1w = positions.get(edge.target);
+      if (!p0w || !p1w) continue;
+      const p0 = worldToScreen(p0w.x, p0w.y, scale, tx, ty);
+      const p1 = worldToScreen(p1w.x, p1w.y, scale, tx, ty);
+      const d = distancePointToSegment(screenX, screenY, p0.x, p0.y, p1.x, p1.y);
+      if (d < bestD) {
+        bestD = d;
+        best = edge.id;
+      }
+    }
+    return bestD <= EDGE_HOVER_THRESHOLD_PX ? best : "";
+  }
+
   function queueHoverPick(clientX, clientY) {
     hoverClientRef.current = { x: clientX, y: clientY };
     if (hoverPickPendingRef.current) return;
@@ -273,9 +319,18 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
       const ly = cy - rect.top;
       const { scale, tx, ty } = transformRef.current;
       const world = screenToWorld(lx, ly, scale, tx, ty);
-      const id = hitTestWorld(world.x, world.y) ?? "";
-      setHoveredNodeId((prev) => (prev === id ? prev : id));
-      setCanvasCursor(id ? "pointer" : "grab");
+      const nodeId = hitTestWorld(world.x, world.y) ?? "";
+      if (nodeId) {
+        setHoveredNodeId((prev) => (prev === nodeId ? prev : nodeId));
+        setHoveredEdgeId("");
+        setCanvasCursor("pointer");
+        return;
+      }
+      setHoveredNodeId("");
+      const positions = computeWorldLayout(graph.nodes, layoutWorldRadius);
+      const edgeId = hitTestClosestEdgeId(lx, ly, positions, scale, tx, ty);
+      setHoveredEdgeId((prev) => (prev === edgeId ? prev : edgeId));
+      setCanvasCursor(edgeId ? "pointer" : "grab");
     });
   }
 
@@ -312,6 +367,7 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
       if (!d.moved && (dx * dx + dy * dy > DRAG_THRESHOLD_PX * DRAG_THRESHOLD_PX)) {
         d.moved = true;
         setHoveredNodeId("");
+        setHoveredEdgeId("");
         setCanvasCursor("grabbing");
       }
       if (d.moved) {
@@ -326,6 +382,7 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
 
   function handleCanvasPointerLeave() {
     setHoveredNodeId("");
+    setHoveredEdgeId("");
     setCanvasCursor("grab");
   }
 

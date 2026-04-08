@@ -185,6 +185,8 @@ Response:
 }
 ```
 
+`source` / `target` follow the **Neo4j relationship orientation** (`startNode(rel)` → `source`, `endNode(rel)` → `target`) for the matched hop between the requested work and each neighbor. Incoming vs outgoing edges therefore differ by which endpoint is the work id.
+
 Degraded mode:
 
 - if semantic extraction missing, return backbone-only neighborhood and `semantic_available=false`.

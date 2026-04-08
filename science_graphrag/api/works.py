@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from neo4j import GraphDatabase, NotificationClassification
+from neo4j import GraphDatabase, NotificationClassification, Session as Neo4jSession
 
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
@@ -28,6 +28,102 @@ def _has_semantic_layer_cypher() -> str:
         "(EXISTS { MATCH (w)-[:USES_METHOD]->(:Method) }) OR "
         "(EXISTS { MATCH (w)-[:EVALUATED_ON]->(:Dataset) })"
     )
+
+
+def _neighborhood_edge_endpoints(
+    center_id: str, neighbor_id: str, raw_src: str, raw_tgt: str
+) -> tuple[str, str]:
+    """Resolve directed edge ends; fallback to center→neighbor if data is inconsistent."""
+    endpoints = {center_id, neighbor_id}
+    if (
+        raw_src
+        and raw_tgt
+        and raw_src != raw_tgt
+        and {raw_src, raw_tgt} == endpoints
+    ):
+        return raw_src, raw_tgt
+    return center_id, neighbor_id
+
+
+def _append_neighbor_edge(
+    nodes: list[dict[str, Any]],
+    edges: list[dict[str, Any]],
+    center_id: str,
+    rec: Any,
+) -> None:
+    """Add neighbor node (if new) and one directed edge from a Neo4j neighborhood row."""
+    labs = rec["labs"] or []
+    ntype = str(labs[0]) if labs else "Node"
+    nid = str(rec["nid"])
+    if not any(x["id"] == nid for x in nodes):
+        nodes.append(
+            {
+                "id": nid,
+                "type": ntype,
+                "label": (rec["nlabel"] or nid)[:200],
+            },
+        )
+    raw_src = str(rec.get("src_id") or "").strip()
+    raw_tgt = str(rec.get("tgt_id") or "").strip()
+    src_id, tgt_id = _neighborhood_edge_endpoints(center_id, nid, raw_src, raw_tgt)
+    edges.append(
+        {
+            "source": src_id,
+            "target": tgt_id,
+            "type": rec["rt"] or "",
+        },
+    )
+
+
+def _work_graph_neighborhood_payload(session: Neo4jSession, work_id: str) -> dict[str, Any] | None:
+    sem = _has_semantic_layer_cypher()
+    row = session.run(
+        """
+        MATCH (w:Work {id: $id})
+        RETURN w.id AS wid,
+               coalesce(w.title, '') AS wtitle,
+               """
+        + sem
+        + """ AS has_semantic
+        """,
+        id=work_id,
+    ).single()
+    if not row:
+        return None
+    nodes: list[dict[str, Any]] = []
+    edges: list[dict[str, Any]] = []
+    center_id = str(row["wid"])
+    raw_title = str(row.get("wtitle") or "").strip()
+    center_label = raw_title[:200] if raw_title else center_id
+    nodes.append(
+        {
+            "id": center_id,
+            "type": "Work",
+            "label": center_label,
+        },
+    )
+    for rec in session.run(
+        """
+        MATCH (w:Work {id: $id})-[r]-(n)
+        RETURN coalesce(n.id, toString(elementId(n))) AS nid,
+               labels(n) AS labs,
+               type(r) AS rt,
+               coalesce(n.name, n.full_name, n.title, '') AS nlabel,
+               coalesce(startNode(r).id, toString(elementId(startNode(r)))) AS src_id,
+               coalesce(endNode(r).id, toString(elementId(endNode(r)))) AS tgt_id
+        LIMIT 200
+        """,
+        id=work_id,
+    ):
+        _append_neighbor_edge(nodes, edges, center_id, rec)
+    return {
+        "work_id": work_id,
+        "nodes": nodes,
+        "edges": edges,
+        "meta": {
+            "semantic_available": bool(row["has_semantic"]),
+        },
+    }
 
 
 def list_works(
@@ -157,71 +253,9 @@ def work_graph_neighborhood(settings: Settings, work_id: str) -> dict[str, Any] 
     """1-hop neighborhood for GET /v1/works/{id}/graph."""
 
     driver = _neo4j_driver(settings)
-    sem = _has_semantic_layer_cypher()
     try:
         with driver.session() as session:
-            row = session.run(
-                """
-                MATCH (w:Work {id: $id})
-                RETURN w.id AS wid,
-                       coalesce(w.title, '') AS wtitle,
-                       """
-                + sem
-                + """ AS has_semantic
-                """,
-                id=work_id,
-            ).single()
-            if not row:
-                return None
-            nodes: list[dict[str, Any]] = []
-            edges: list[dict[str, Any]] = []
-            center_id = str(row["wid"])
-            raw_title = str(row.get("wtitle") or "").strip()
-            center_label = raw_title[:200] if raw_title else center_id
-            nodes.append(
-                {
-                    "id": center_id,
-                    "type": "Work",
-                    "label": center_label,
-                },
-            )
-            for rec in session.run(
-                """
-                MATCH (w:Work {id: $id})-[r]-(n)
-                RETURN coalesce(n.id, toString(elementId(n))) AS nid,
-                       labels(n) AS labs,
-                       type(r) AS rt,
-                       coalesce(n.name, n.full_name, n.title, '') AS nlabel
-                LIMIT 200
-                """,
-                id=work_id,
-            ):
-                labs = rec["labs"] or []
-                ntype = str(labs[0]) if labs else "Node"
-                nid = str(rec["nid"])
-                if not any(x["id"] == nid for x in nodes):
-                    nodes.append(
-                        {
-                            "id": nid,
-                            "type": ntype,
-                            "label": (rec["nlabel"] or nid)[:200],
-                        },
-                    )
-                edges.append(
-                    {
-                        "source": center_id,
-                        "target": nid,
-                        "type": rec["rt"] or "",
-                    },
-                )
-            return {
-                "work_id": work_id,
-                "nodes": nodes,
-                "edges": edges,
-                "meta": {
-                    "semantic_available": bool(row["has_semantic"]),
-                },
-            }
+            return _work_graph_neighborhood_payload(session, work_id)
     finally:
         driver.close()
 

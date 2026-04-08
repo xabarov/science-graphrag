@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   edgeTypeCanvasLabel,
+  getScienceGraphLegendNodeChipSx,
   getScienceGraphNodeStyle,
   truncateCanvasLabel,
 } from "./graphCanvasStyle.js";
@@ -54,5 +55,19 @@ describe("truncateCanvasLabel", () => {
 describe("edgeTypeCanvasLabel", () => {
   it("passes through short types", () => {
     expect(edgeTypeCanvasLabel("CITES")).toBe("CITES");
+  });
+});
+
+describe("getScienceGraphLegendNodeChipSx", () => {
+  it("maps known node types to canvas palette", () => {
+    const sx = getScienceGraphLegendNodeChipSx("Work");
+    expect(sx.backgroundColor).toContain("99");
+    expect(sx.border).toContain("129");
+  });
+
+  it("falls back for unknown types", () => {
+    const sx = getScienceGraphLegendNodeChipSx("X");
+    expect(sx.backgroundColor).toBeTruthy();
+    expect(sx.border).toContain("255");
   });
 });

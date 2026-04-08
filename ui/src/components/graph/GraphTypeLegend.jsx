@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
 
+import { getScienceGraphLegendNodeChipSx } from "./graphCanvasStyle.js";
 import { collectGraphTypeLegend } from "./graphTypeLegend.js";
 
 /**
@@ -51,13 +52,7 @@ export default function GraphTypeLegend({ graph }) {
                 key={`n-${t}`}
                 label={t}
                 size="small"
-                sx={{
-                  height: 22,
-                  fontSize: "0.75rem",
-                  backgroundColor: "rgba(255,255,255,0.08)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  color: "rgba(255,255,255,0.75)",
-                }}
+                sx={getScienceGraphLegendNodeChipSx(t)}
               />
             ))}
           </>

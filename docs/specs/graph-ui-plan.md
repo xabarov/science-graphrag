@@ -18,7 +18,7 @@ Response shape (conceptual):
 |-------|------|--------|
 | `work_id` | string | Center work |
 | `nodes` | array | Each: `id`, `type`, `label` (and optional extra fields preserved in `raw` after normalize) |
-| `edges` | array | Each: `source`, `target`, `type` (relationship type); may omit `id` (UI synthesizes) |
+| `edges` | array | Each: `source`, `target`, `type` (relationship type); orientation matches Neo4j (`startNode`→`source`, `endNode`→`target`); may omit `id` (UI synthesizes) |
 | `meta` | object | e.g. `semantic_available` |
 
 **Server limit:** neighborhood query caps at **200** adjacent rows; additional **client caps** for rendering are `GRAPH_UI_MAX_NODES` / `GRAPH_UI_MAX_EDGES` in [`graphUiLimits.js`](../../ui/src/components/graph/graphUiLimits.js).
@@ -46,7 +46,7 @@ After normalization:
 Any canvas or graph library should consume the **normalized** graph (or a thin mapper from it):
 
 - **Nodes** need stable `id` for selection and URL round-trip.
-- **Edges** need `source` / `target` referencing node `id`s; orphan edges are **filtered** in `normalizeGraphPayload` and summarized in `warnings` (not only dev logs).
+- **Edges** need `source` / `target` referencing node `id`s (directed as in Neo4j); orphan edges are **filtered** in `normalizeGraphPayload` and summarized in `warnings` (not only dev logs).
 - **Layout:** initial positions can be random or circular; force simulation (see osint-gr) or library layout fills `x`, `y` in an internal structure — do not persist layout to API unless product requires it.
 
 ### URL and traceability
@@ -60,7 +60,7 @@ Any canvas or graph library should consume the **normalized** graph (or a thin m
 |-------|------|------|
 | Shell | `GraphWorkspacePanel.jsx` | Load graph, Cards/Graph toggle, normalization + UI-cap alerts, grid + detail |
 | List view | `GraphVisualization.jsx` | Phase 4 **v0** — card grid |
-| Canvas | `GraphCanvasMvp.jsx` | HTML Canvas: zoom/pan, fit / center / reset zoom, Escape; node hover highlight + cursor; labels on nodes and edges |
+| Canvas | `GraphCanvasMvp.jsx` | HTML Canvas: zoom/pan, fit / center / reset zoom, Escape; node + edge hover highlight + cursor; directed edges (arrow at `target`); labels on nodes and edges |
 | Limits | `graphUiLimits.js` | `capGraphForUi` (`GRAPH_UI_MAX_*`); chips show full API counts |
 | Legend | `GraphTypeLegend.jsx`, `graphTypeLegend.js` | Unique `node.type` / `edge.type` chips from `displayGraph` |
 | Shell states | `graphShellStates.jsx` | Shared empty / loading / error patterns (Graph page, tab, panel) |

@@ -20,6 +20,23 @@ const DEFAULT_NODE_STYLE = { fill: "rgba(255,255,255,0.08)", stroke: "rgba(255,2
  * @param {{ selected?: boolean, hovered?: boolean }} [opts]
  * @returns {{ fill: string, stroke: string, lineWidth: number }}
  */
+/**
+ * MUI `sx` fragment for legend Chips so node type colors match the canvas (base, non-selected).
+ * @param {unknown} nodeType
+ * @returns {object}
+ */
+export function getScienceGraphLegendNodeChipSx(nodeType) {
+  const key = nodeType == null ? "" : String(nodeType).trim();
+  const base = NODE_TYPE_STYLES[key] || DEFAULT_NODE_STYLE;
+  return {
+    height: 22,
+    fontSize: "0.75rem",
+    backgroundColor: base.fill,
+    border: `1px solid ${base.stroke}`,
+    color: "rgba(255,255,255,0.82)",
+  };
+}
+
 export function getScienceGraphNodeStyle(nodeType, opts = {}) {
   const selected = Boolean(opts.selected);
   const hovered = Boolean(opts.hovered);
