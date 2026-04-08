@@ -34,5 +34,53 @@
     "min_institutions": 0,
     "max_institutions": 8,
     "max_work_dedup_violations": 0
+  },
+  "references_benchmark": {
+    "bibliography": {
+      "start_line": 569,
+      "end_line": 665
+    },
+    "raw_entries": [
+      "Joshua Ainslie, Santiago Ontanon, Chris Alberti, Philip Pham, Anirudh Ravula, and Sumit Sanghai.\nEtc: Encoding long and structured data in transformers. arXiv preprint arXiv:2004.08483, 2020.",
+      "Iz Beltagy, Matthew E Peters, and Arman Cohan. Longformer: The long-document transformer.\narXiv preprint arXiv:2004.05150, 2020.",
+      "Nicolas Carion, Francisco Massa, Gabriel Synnaeve, Nicolas Usunier, Alexander Kirillov, and\nSergey Zagoruyko. End-to-end object detection with transformers. In ECCV, 2020.",
+      "Rewon Child, Scott Gray, Alec Radford, and Ilya Sutskever. Generating long sequences with sparse\ntransformers. arXiv preprint arXiv:1904.10509, 2019.",
+      "Krzysztof Choromanski, Valerii Likhosherstov, David Dohan, Xingyou Song, Jared Davis, Tamas\nSarlos, David Belanger, Lucy Colwell, and Adrian Weller. Masked language modeling for pro-\nteins via linearly scalable long-context transformers. arXiv preprint arXiv:2006.03555, 2020.\n9\n\nPublished as a conference paper at ICLR 2021\nJifeng Dai, Haozhi Qi, Yuwen Xiong, Yi Li, Guodong Zhang, Han Hu, and Yichen Wei. Deformable\nconvolutional networks. In ICCV, 2017.",
+      "Jia Deng, Wei Dong, Richard Socher, Li-Jia Li, Kai Li, and Li Fei-Fei. Imagenet: A large-scale\nhierarchical image database. In CVPR, 2009.",
+      "Golnaz Ghiasi, Tsung-Yi Lin, and Quoc V Le. Nas-fpn: Learning scalable feature pyramid archi-\ntecture for object detection. In CVPR, 2019.",
+      "Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. Deep residual learning for image recog-\nnition. In CVPR, 2016.",
+      "Jonathan Ho, Nal Kalchbrenner, Dirk Weissenborn, and Tim Salimans. Axial attention in multidi-\nmensional transformers. arXiv preprint arXiv:1912.12180, 2019.",
+      "Han Hu, Zheng Zhang, Zhenda Xie, and Stephen Lin. Local relation networks for image recognition.\nIn ICCV, 2019.",
+      "Zilong Huang, Xinggang Wang, Lichao Huang, Chang Huang, Yunchao Wei, and Wenyu Liu. Ccnet:\nCriss-cross attention for semantic segmentation. In ICCV, 2019.",
+      "Angelos Katharopoulos, Apoorv Vyas, Nikolaos Pappas, and Franc ̧ois Fleuret. Transformers are\nrnns: Fast autoregressive transformers with linear attention. arXiv preprint arXiv:2006.16236 ,\n2020.\nDiederik P Kingma and Jimmy Ba. Adam: A method for stochastic optimization. In ICLR, 2015.",
+      "Nikita Kitaev, Łukasz Kaiser, and Anselm Levskaya. Reformer: The efficient transformer. InICLR,\n2020.",
+      "Tao Kong, Fuchun Sun, Chuanqi Tan, Huaping Liu, and Wenbing Huang. Deep feature pyramid\nreconfiguration for object detection. In ECCV, 2018.\nTsung-Yi Lin, Michael Maire, Serge Belongie, James Hays, Pietro Perona, Deva Ramanan, Piotr\nDoll ́ar, and C Lawrence Zitnick. Microsoft coco: Common objects in context. In ECCV, 2014.\nTsung-Yi Lin, Piotr Doll ́ar, Ross Girshick, Kaiming He, Bharath Hariharan, and Serge Belongie.\nFeature pyramid networks for object detection. In CVPR, 2017a.\nTsung-Yi Lin, Priya Goyal, Ross Girshick, Kaiming He, and Piotr Doll ́ar. Focal loss for dense object\ndetection. In ICCV, 2017b.",
+      "Li Liu, Wanli Ouyang, Xiaogang Wang, Paul Fieguth, Jie Chen, Xinwang Liu, and Matti Pietik ̈ainen.\nDeep learning for generic object detection: A survey. IJCV, 2020.\nPeter J Liu, Mohammad Saleh, Etienne Pot, Ben Goodrich, Ryan Sepassi, Lukasz Kaiser, and Noam\nShazeer. Generating wikipedia by summarizing long sequences. In ICLR, 2018a.",
+      "Shu Liu, Lu Qi, Haifang Qin, Jianping Shi, and Jiaya Jia. Path aggregation network for instance\nsegmentation. In CVPR, 2018b.",
+      "Niki Parmar, Ashish Vaswani, Jakob Uszkoreit, Łukasz Kaiser, Noam Shazeer, Alexander Ku, and\nDustin Tran. Image transformer. In ICML, 2018.",
+      "Jiezhong Qiu, Hao Ma, Omer Levy, Scott Wen-tau Yih, Sinong Wang, and Jie Tang. Blockwise\nself-attention for long document understanding. arXiv preprint arXiv:1911.02972, 2019.",
+      "Prajit Ramachandran, Niki Parmar, Ashish Vaswani, Irwan Bello, Anselm Levskaya, and Jonathon\nShlens. Stand-alone self-attention in vision models. In NeurIPS, 2019.",
+      "Shaoqing Ren, Kaiming He, Ross Girshick, and Jian Sun. Faster r-cnn: Towards real-time object\ndetection with region proposal networks. In NeurIPS, 2015.",
+      "Aurko Roy, Mohammad Saffar, Ashish Vaswani, and David Grangier. Efficient content-based sparse\nattention with routing transformers. arXiv preprint arXiv:2003.05997, 2020.\n10\n\nPublished as a conference paper at ICLR 2021\nGuanglu Song, Yu Liu, and Xiaogang Wang. Revisiting the sibling head in object detector. InCVPR,\n2020.",
+      "Mingxing Tan, Ruoming Pang, and Quoc V Le. Efficientdet: Scalable and efficient object detection.\nIn CVPR, 2020.",
+      "Yi Tay, Dara Bahri, Liu Yang, Donald Metzler, and Da-Cheng Juan. Sparse sinkhorn attention. In\nICML, 2020a.",
+      "Yi Tay, Mostafa Dehghani, Dara Bahri, and Donald Metzler. Efficient transformers: A survey.arXiv\npreprint arXiv:2009.06732, 2020b.\nZachary Teed and Jia Deng. Raft: Recurrent all-pairs field transforms for optical flow. In ECCV,\n2020.",
+      "Zhi Tian, Chunhua Shen, Hao Chen, and Tong He. Fcos: Fully convolutional one-stage object\ndetection. In ICCV, 2019.",
+      "Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez,\nŁukasz Kaiser, and Illia Polosukhin. Attention is all you need. In NeurIPS, 2017.",
+      "Huiyu Wang, Yukun Zhu, Bradley Green, Hartwig Adam, Alan Yuille, and Liang-Chieh\nChen. Axial-deeplab: Stand-alone axial-attention for panoptic segmentation. arXiv preprint\narXiv:2003.07853, 2020a.",
+      "Sinong Wang, Belinda Li, Madian Khabsa, Han Fang, and Hao Ma. Linformer: Self-attention with\nlinear complexity. arXiv preprint arXiv:2006.04768, 2020b.",
+      "Felix Wu, Angela Fan, Alexei Baevski, Yann N Dauphin, and Michael Auli. Pay less attention with\nlightweight and dynamic convolutions. In ICLR, 2019.",
+      "Saining Xie, Ross Girshick, Piotr Doll ́ar, Zhuowen Tu, and Kaiming He. Aggregated residual trans-\nformations for deep neural networks. In CVPR, 2017.",
+      "Hang Xu, Lewei Yao, Wei Zhang, Xiaodan Liang, and Zhenguo Li. Auto-fpn: Automatic network\narchitecture adaptation for object detection beyond classification. In ICCV, 2019.",
+      "Manzil Zaheer, Guru Guruganesh, Avinava Dubey, Joshua Ainslie, Chris Alberti, Santiago Ontanon,\nPhilip Pham, Anirudh Ravula, Qifan Wang, Li Yang, et al. Big bird: Transformers for longer\nsequences. arXiv preprint arXiv:2007.14062, 2020.",
+      "Shifeng Zhang, Cheng Chi, Yongqiang Yao, Zhen Lei, and Stan Z Li. Bridging the gap between\nanchor-based and anchor-free detection via adaptive training sample selection. In CVPR, 2020.",
+      "Qijie Zhao, Tao Sheng, Yongtao Wang, Zhi Tang, Ying Chen, Ling Cai, and Haibin Ling. M2det: A\nsingle-shot object detector based on multi-level feature pyramid network. In AAAI, 2019.",
+      "Xizhou Zhu, Dazhi Cheng, Zheng Zhang, Stephen Lin, and Jifeng Dai. An empirical study of spatial\nattention mechanisms in deep networks. In ICCV, 2019a.",
+      "Xizhou Zhu, Han Hu, Stephen Lin, and Jifeng Dai. Deformable convnets v2: More deformable,\nbetter results. In CVPR, 2019b."
+    ],
+    "expected_count": 36,
+    "stratum": "author_year",
+    "notes": "Paragraph-style bibliography; entries partitioned by hand-tuned rules; span excludes ## References and stops before appendix.",
+    "annotation_kind": "manual"
   }
 }

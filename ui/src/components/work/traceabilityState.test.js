@@ -21,7 +21,16 @@ describe("traceabilityState", () => {
       chunkFingerprint: "fp1",
       section: "intro",
       citation: "2",
+      askSession: "",
     });
+  });
+
+  it("reads ask_session and merge preserves it when updating tab", () => {
+    const params = new URLSearchParams("work_id=w1&tab=graph&ask_session=s_abc");
+    expect(readTraceabilityState(params).askSession).toBe("s_abc");
+    const merged = mergeTraceabilityParams(params, { tab: "ask" });
+    expect(merged.get("ask_session")).toBe("s_abc");
+    expect(merged.get("tab")).toBe("ask");
   });
 
   it("builds workspace trace path with extras", () => {

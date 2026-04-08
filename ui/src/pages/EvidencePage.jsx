@@ -6,6 +6,7 @@ import TextField from "@mui/material/TextField";
 
 import { CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
+import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
 import EvidenceWorkBody from "../components/work/EvidenceWorkBody.jsx";
 import { persistWorkId } from "./WorkspacePage/utils/workContext.js";
 import { buildWorkspaceTracePath, readTraceabilityState } from "../components/work/traceabilityState.js";
@@ -36,7 +37,7 @@ export default function EvidencePage() {
   }
 
   return (
-    <Box sx={{ p: 2, maxWidth: 960 }}>
+    <Box sx={{ p: 2, ...mainShellContentSx }}>
       <PageHeader
         eyebrow="Direct tool"
         title="Evidence"

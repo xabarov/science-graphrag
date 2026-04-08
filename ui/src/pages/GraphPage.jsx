@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 
 import { CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
+import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
 import GraphWorkspacePanel from "../components/graph/GraphWorkspacePanel.jsx";
+import { GraphMissingWorkCallout } from "../components/graph/graphShellStates.jsx";
 import { persistWorkId } from "./WorkspacePage/utils/workContext.js";
 import { buildWorkspaceTracePath, mergeTraceabilityParams, readTraceabilityState } from "../components/work/traceabilityState.js";
 
@@ -17,6 +18,7 @@ export default function GraphPage() {
   const trace = readTraceabilityState(searchParams);
   const workId = trace.workId;
   const selectedNodeId = trace.nodeId;
+  const labMode = searchParams.get("lab") === "1";
 
   useEffect(() => {
     setWorkIdInput(workId);
@@ -31,8 +33,15 @@ export default function GraphPage() {
     const next = workIdInput.trim();
     if (next) {
       persistWorkId(next);
-      setSearchParams({ work_id: next });
-    } else setSearchParams({});
+      const params = new URLSearchParams();
+      params.set("work_id", next);
+      if (searchParams.get("lab") === "1") params.set("lab", "1");
+      setSearchParams(params);
+    } else {
+      const cleared = new URLSearchParams();
+      if (searchParams.get("lab") === "1") cleared.set("lab", "1");
+      setSearchParams(cleared);
+    }
   }
 
   function handleSelectNode(nodeId) {
@@ -41,7 +50,7 @@ export default function GraphPage() {
   }
 
   return (
-    <Box sx={{ p: 2, maxWidth: 1200 }}>
+    <Box sx={{ p: 2, ...mainShellContentSx }}>
       <PageHeader
         eyebrow="Direct tool"
         title="Graph"
@@ -75,23 +84,11 @@ export default function GraphPage() {
       </Box>
 
       {!workId.trim() ? (
-        <Box
-          sx={{
-            mb: 2,
-            p: 2,
-            borderRadius: "6px",
-            border: "1px dashed rgba(255,255,255,0.12)",
-            backgroundColor: "rgba(255,255,255,0.02)",
-          }}
-        >
-          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)" }}>No graph context yet</Typography>
-          <Typography sx={{ mt: 0.75, fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)" }}>
-            Load a `work_id` to inspect graph nodes directly, or open a paper in Workspace and jump here when you need a dedicated graph surface.
-          </Typography>
-          <Typography sx={{ mt: 1, fontSize: "0.75rem", color: "rgba(255,255,255,0.42)" }}>
-            Phase 4 (master plan): richer canvas, controls, and a dedicated graph-first detail panel are the next UX layer on top of this surface.
-          </Typography>
-        </Box>
+        <GraphMissingWorkCallout
+          title="No graph context yet"
+          description="Load a work_id to inspect graph nodes directly, or open a paper in Workspace and jump here when you need a dedicated graph surface."
+          footnote="Tip: append ?lab=1 to expand diagnostics by default (Graph Lab)."
+        />
       ) : null}
 
       {workId.trim() ? (
@@ -152,6 +149,7 @@ export default function GraphPage() {
         selectedNodeId={selectedNodeId}
         onSelectNode={handleSelectNode}
         mode="standalone"
+        labMode={labMode}
         title="Graph lab"
         subtitle="Use this standalone view for node-focused inspection, while Workspace Graph keeps the same context embedded in the main research flow."
         traceContext={{

@@ -46,7 +46,8 @@ Redirect builder: `buildLegacyAdminRedirectTarget` in `routeCompatibility.js`.
 
 ## Policy (current)
 
-- **Roles:** no backend RBAC in UI; visibility is client-side only for admin grouping.
+See [`admin-policy.md`](./admin-policy.md) for admin visibility, roles, and future auth notes.
+
 - **Workspace-first:** primary flow is Corpus → Workspace; standalone tools exist for deep links and power users.
 
 For product phases and remaining work, see [`ui-ux-master-plan.md`](./ui-ux-master-plan.md).

@@ -37,5 +37,51 @@
     "min_institutions": 0,
     "max_institutions": 8,
     "max_work_dedup_violations": 0
+  },
+  "references_benchmark": {
+    "bibliography": {
+      "start_line": 1089,
+      "end_line": 1199
+    },
+    "raw_entries": [
+      "[1] Z. Cai, Q. Fan, R. S. Feris, and N. V asconcelos. A unified\nmulti-scale deep convolutional neural network for fast object\ndetection. In ECCV, pages 354–370, 2016.\n2, 3",
+      "[2] X. Cao, Y . Wei, F. Wen, and J. Sun. Face alignment by ex-\nplicit shape regression. In CVPR, pages 2887–2894, 2012.\n5",
+      "[3] J. Dai, K. He, and J. Sun. Instance-aware semantic segmen ta-\ntion via multi-task network cascades. In CVPR, pages 3150–\n3158, 2016. 3",
+      "[4] J. Dai, Y . Li, K. He, and J. Sun. R-FCN: object detection vi a\nregion-based fully convolutional networks. In NIPS, pages\n379–387, 2016. 2, 3, 5, 8",
+      "[5] J. Dai, H. Qi, Y . Xiong, Y . Li, G. Zhang, H. Hu, and Y . Wei.\nDeformable convolutional networks. In ICCV, 2017. 8",
+      "[6] P . Doll ́ ar, P . Welinder, and P . Perona. Cascaded pose regres-\nsion. In CVPR, pages 1078–1085, 2010. 5",
+      "[7] C. Elkan. The foundations of cost-sensitive learning. I n IJ-\nCAI, pages 973–978, 2001. 2",
+      "[8] P . F. Felzenszwalb, R. B. Girshick, D. A. McAllester, and\nD. Ramanan. Object detection with discriminatively traine d\npart-based models. IEEE Trans. Pattern Anal. Mach. Intell. ,\n32(9):1627–1645, 2010. 2, 3",
+      "[9] S. Gidaris and N. Komodakis. Object detection via a multi -\nregion and semantic segmentation-aware CNN model. In\nICCV, pages 1134–1142, 2015.\n3",
+      "[10] S. Gidaris and N. Komodakis. Attend refine repeat: Activ e\nbox proposal generation via in-out localization. In BMVC,\n2016. 3, 8",
+      "[11] R. B. Girshick. Fast R-CNN. In ICCV, pages 1440–1448,\n2015. 1, 2, 3, 5",
+      "[12] R. B. Girshick, J. Donahue, T. Darrell, and J. Malik. Ric h\nfeature hierarchies for accurate object detection and semantic\nsegmentation. In CVPR, pages 580–587, 2014. 1, 2, 3",
+      "[13] S. Han, J. Pool, J. Tran, and W. J. Dally. Learning both\nweights and connections for efficient neural network. In\nNIPS, pages 1135–1143, 2015.\n6",
+      "[14] K. He, G. Gkioxari, P . Doll ́ ar, and R. Girshick. Mask r-c nn.\nIn ICCV, 2017. 3, 6, 8",
+      "[15] K. He, X. Zhang, S. Ren, and J. Sun. Spatial pyramid pooli ng\nin deep convolutional networks for visual recognition. In\nECCV, pages 346–361, 2014.\n2",
+      "[16] K. He, X. Zhang, S. Ren, and J. Sun. Deep residual learnin g\nfor image recognition. In CVPR, pages 770–778, 2016. 3, 5,\n8",
+      "[17] J. Huang, V . Rathod, C. Sun, M. Zhu, A. Korattikara,\nA. Fathi, I. Fischer, Z. Wojna, Y . Song, S. Guadarrama, and\nK. Murphy. Speed/accuracy trade-offs for modern convolu-\ntional object detectors. CoRR, abs/1611.10012, 2016.\n8",
+      "[18] Y . Jia, E. Shelhamer, J. Donahue, S. Karayev, J. Long, R. B.\nGirshick, S. Guadarrama, and T. Darrell. Caffe: Convolu-\ntional architecture for fast feature embedding. In MM, pages\n675–678, 2014.\n5",
+      "[19] H. Li, Z. Lin, X. Shen, J. Brandt, and G. Hua. A convolu-\ntional neural network cascade for face detection. In CVPR,\npages 5325–5334, 2015. 3",
+      "[20] T. Lin, M. Maire, S. J. Belongie, J. Hays, P . Perona, D. Ra -\nmanan, P . Doll ́ ar, and C. L. Zitnick. Microsoft COCO: com-\nmon objects in context. In ECCV, pages 740–755, 2014.\n2,\n5",
+      "[21] T.-Y . Lin, P . Doll ́ ar, R. Girshick, K. He, B. Hariharan, and\nS. Belongie. Feature pyramid networks for object detection .\nIn CVPR, 2017. 1, 2, 3, 5, 8",
+      "[22] T.-Y . Lin, P . Goyal, R. Girshick, K. He, and P . Doll ́ ar. Focal\nloss for dense object detection. In ICCV, 2017. 3, 8",
+      "[23] W. Liu, D. Anguelov, D. Erhan, C. Szegedy, S. E. Reed,\nC. Fu, and A. C. Berg. SSD: single shot multibox detector.\nIn ECCV, pages 21–37, 2016.\n3, 8",
+      "[24] H. Masnadi-Shirazi and N. V asconcelos. Cost-sensitiv e\nboosting. IEEE Trans. Pattern Anal. Mach. Intell. ,\n33(2):294–309, 2011. 2",
+      "[25] W. Ouyang, K. Wang, X. Zhu, and X. Wang. Learning\nchained deep features and classifiers for cascade in object\ndetection. CoRR, abs/1702.07054, 2017.\n3",
+      "[26] J. Redmon, S. K. Divvala, R. B. Girshick, and A. Farhadi.\nY ou only look once: Unified, real-time object detection. In\nCVPR, pages 779–788, 2016.\n3, 8",
+      "[27] S. Ren, K. He, R. B. Girshick, and J. Sun. Faster R-CNN:\ntowards real-time object detection with region proposal ne t-\nworks. In NIPS, pages 91–99, 2015. 1, 2, 3, 4, 5, 8",
+      "[28] A. Shrivastava, A. Gupta, and R. B. Girshick. Training\nregion-based object detectors with online hard example min -\ning. In CVPR, pages 761–769, 2016. 6",
+      "[29] K. Simonyan and A. Zisserman. V ery deep convolu-\ntional networks for large-scale image recognition. CoRR,\nabs/1409.1556, 2014. 5",
+      "[30] J. R. R. Uijlings, K. E. A. van de Sande, T. Gevers, and\nA. W. M. Smeulders. Selective search for object recognition .\nInternational Journal of Computer Vision , 104(2):154–171,\n2013. 4",
+      "[31] P . A. Viola and M. J. Jones. Robust real-time face detec-\ntion. International Journal of Computer Vision , 57(2):137–\n154, 2004. 2, 3",
+      "[32] J. Yan, Z. Lei, D. Yi, and S. Li. Learn to combine multiple\nhypotheses for accurate face alignment. In ICCV W orkshops,\npages 392–396, 2013. 5",
+      "[33] B. Yang, J. Yan, Z. Lei, and S. Z. Li. CRAFT objects from\nimages. In CVPR, pages 6043–6051, 2016. 3",
+      "[34] S. Zagoruyko, A. Lerer, T. Lin, P . O. Pinheiro, S. Gross,\nS. Chintala, and P . Doll ́ ar. A multipath network for object\ndetection. In BMVC, 2016."
+    ],
+    "expected_count": 34,
+    "stratum": "numbered",
+    "notes": "Bracket-numbered list; trailing isolated page index excluded.",
+    "annotation_kind": "manual"
   }
 }

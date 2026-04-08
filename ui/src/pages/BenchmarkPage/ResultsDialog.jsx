@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Dialog from "@mui/material/Dialog";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { useTheme } from "@mui/material/styles";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 
@@ -11,6 +13,8 @@ import BenchmarkRunSummaryCards from "./BenchmarkRunSummaryCards.jsx";
 import BenchmarkRunCasesTable from "./BenchmarkRunCasesTable.jsx";
 
 export default function ResultsDialog({ open, runId, onClose, onOpenWorkbench }) {
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [runDetail, setRunDetail] = useState(null);
   const [hasFullDetail, setHasFullDetail] = useState(false);
   const [error, setError] = useState(null);
@@ -74,8 +78,15 @@ export default function ResultsDialog({ open, runId, onClose, onOpenWorkbench })
   }
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="lg">
-      <DialogTitle>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="lg"
+      fullScreen={fullScreen}
+      aria-labelledby="benchmark-results-dialog-title"
+    >
+      <DialogTitle id="benchmark-results-dialog-title">
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
           <Box>
             <Typography sx={{ fontWeight: 700 }}>Run details</Typography>
@@ -83,7 +94,9 @@ export default function ResultsDialog({ open, runId, onClose, onOpenWorkbench })
               run_id: {runId ? runId : "-"}
             </Typography>
           </Box>
-          <CursorButton onClick={onClose}>Close</CursorButton>
+          <CursorButton onClick={onClose} aria-label="Close run details dialog">
+            Close
+          </CursorButton>
         </Box>
       </DialogTitle>
       <DialogContent dividers>

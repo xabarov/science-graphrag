@@ -25,7 +25,7 @@ export default function PageHeader({ eyebrow = "", title, description = "", acti
         gap: 1.5,
       }}
     >
-      <Box sx={{ minWidth: 0, maxWidth: 760 }}>
+      <Box sx={{ minWidth: 0, flex: 1 }}>
         {eyebrow ? (
           <Typography sx={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.95)", mb: 0.5 }}>{eyebrow}</Typography>
         ) : null}

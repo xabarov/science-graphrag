@@ -1,0 +1,1331 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+    "semantic_extraction_enabled": true
+  },
+  "summary": {
+    "case_count": 4,
+    "case_ids": [
+      "arxiv_refs_heavy",
+      "doi_refs_heavy",
+      "noisy_layout_stub",
+      "yolov1"
+    ],
+    "all_passed": true
+  },
+  "cases": [
+    {
+      "case_id": "arxiv_refs_heavy",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/arxiv_refs_heavy",
+      "diagnostics": {
+        "document_id": "arxiv_refs_heavy",
+        "source_name": "arxiv_refs_heavy",
+        "markdown_source": "benchmark",
+        "metadata_source": "llm",
+        "authorships_source": "llm",
+        "references_source": "llm",
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "references_scope_chars": 246,
+        "heuristic_reference_count": 6,
+        "llm_reference_count": 6,
+        "llm_reference_batches": 1,
+        "llm_reference_mode": "auto",
+        "merged_reference_count": 6,
+        "reference_chunk_details": [
+          {
+            "chunk_index": 1,
+            "entries_expected_in_chunk": 6,
+            "chunk_chars": 222,
+            "entries_returned_by_llm": 6,
+            "status": "ok"
+          }
+        ],
+        "metadata_extraction_seconds": 1.5937010979978368,
+        "authorships_extraction_seconds": 4.74660632800078,
+        "references_extraction_seconds": 2.8708694009983446,
+        "fallback_reasons": [
+          {
+            "stage": "runtime",
+            "reason": "wall_clock_seconds",
+            "detail": "9.351"
+          }
+        ]
+      },
+      "metrics": {
+        "metadata": {
+          "title_exact_normalized": true,
+          "title_rouge_l": 1.0,
+          "title_token_f1": 1.0,
+          "year_exact": null,
+          "abstract_prefix_ok": true,
+          "abstract_rouge_l_vs_prefix": 0.5555555555555556,
+          "doi_match_expected": null,
+          "arxiv_match_expected": null,
+          "work_type_match": null
+        },
+        "authorships": {
+          "names_precision": 1.0,
+          "names_recall": 1.0,
+          "names_f1": 1.0,
+          "names_tp_fp_fn": {
+            "tp": 2,
+            "fp": 0,
+            "fn": 0
+          },
+          "order_accuracy": 1.0,
+          "order_hits": 2,
+          "affiliation_jaccard_macro_on_matched_authors": 1.0,
+          "affiliations_precision": 1.0,
+          "affiliations_recall": 1.0,
+          "affiliations_f1": 1.0,
+          "names_difflib_macro": 1.0,
+          "pred_count": 2,
+          "gold_count": 2
+        },
+        "references": {
+          "count": 6,
+          "expected_count": 6,
+          "min_count": 5,
+          "count_ok": true,
+          "count_delta": 0,
+          "sample_arxiv_precision": 1.0,
+          "sample_arxiv_recall": 1.0,
+          "sample_arxiv_f1": 1.0,
+          "sample_arxiv_tp_fp_fn": {
+            "tp": 6,
+            "fp": 0,
+            "fn": 0
+          },
+          "predicted_arxiv_ids": [
+            "1310.1531",
+            "1312.4400",
+            "1406.4729",
+            "1504.08083",
+            "1505.00110",
+            "1505.01749"
+          ],
+          "sample_doi_precision": 1.0,
+          "sample_doi_recall": 1.0,
+          "sample_doi_f1": 1.0
+        },
+        "contract": {
+          "checks": {
+            "title_match_required": true,
+            "abstract_prefix_required": true,
+            "reference_count_ok_required": true,
+            "min_sample_arxiv_f1": true
+          },
+          "passed": true
+        }
+      },
+      "predicted": {
+        "work_metadata": {
+          "title": "arXiv-Heavy Bibliography Case",
+          "normalized_title": "arXiv-Heavy Bibliography Case",
+          "abstract": "We cite many arXiv preprints by id; few DOIs appear in the list.",
+          "publication_year": null,
+          "doi": null,
+          "arxiv_id": null,
+          "language": null,
+          "venue_name": null,
+          "work_type": "unknown",
+          "openalex_id": null,
+          "fingerprint": "73cfdae76de1be8a",
+          "ingestion_confidence": 0.72,
+          "source_metadata": {
+            "extraction_stage": "llm"
+          }
+        },
+        "authorships": [
+          {
+            "author_position": 1,
+            "author_raw_name": "A. Researcher",
+            "raw_affiliations": [],
+            "is_corresponding": null,
+            "email": null
+          },
+          {
+            "author_position": 2,
+            "author_raw_name": "B. Scientist",
+            "raw_affiliations": [],
+            "is_corresponding": null,
+            "email": null
+          }
+        ],
+        "references": [
+          {
+            "raw_reference": "Alpha model. arXiv:1505.00110 2015.",
+            "doi": null,
+            "arxiv_id": "1505.00110",
+            "title": null,
+            "year": 2015
+          },
+          {
+            "raw_reference": "Beta baseline. abs/1310.1531 2013.",
+            "doi": null,
+            "arxiv_id": "1310.1531",
+            "title": null,
+            "year": 2013
+          },
+          {
+            "raw_reference": "Gamma nets. arxiv:1505.01749 2015.",
+            "doi": null,
+            "arxiv_id": "1505.01749",
+            "title": null,
+            "year": 2015
+          },
+          {
+            "raw_reference": "Delta data. https://arxiv.org/abs/1504.08083 2015.",
+            "doi": null,
+            "arxiv_id": "1504.08083",
+            "title": null,
+            "year": 2015
+          },
+          {
+            "raw_reference": "Epsilon study. arXiv:1312.4400 2013.",
+            "doi": null,
+            "arxiv_id": "1312.4400",
+            "title": null,
+            "year": 2013
+          },
+          {
+            "raw_reference": "Zeta review. 1406.4729 2014.",
+            "doi": null,
+            "arxiv_id": "1406.4729",
+            "title": null,
+            "year": 2014
+          }
+        ]
+      },
+      "gold": {
+        "case_id": "arxiv_refs_heavy",
+        "schema_version": 1,
+        "description": "References mostly use arXiv id patterns (abs/, arXiv:, bare id).",
+        "work_metadata": {
+          "title": "arXiv-Heavy Bibliography Case",
+          "publication_year": null,
+          "abstract_prefix": "We cite many arXiv preprints",
+          "doi": null,
+          "arxiv_id": null,
+          "venue_name": null,
+          "work_type": null
+        },
+        "authorships": [
+          {
+            "name": "A. Researcher",
+            "affiliations": []
+          },
+          {
+            "name": "B. Scientist",
+            "affiliations": []
+          }
+        ],
+        "references": {
+          "expected_count": 6,
+          "min_count": 5,
+          "notes": null,
+          "sample_arxiv_ids": [
+            "1505.00110",
+            "1310.1531",
+            "1505.01749",
+            "1504.08083",
+            "1312.4400",
+            "1406.4729"
+          ],
+          "sample_dois": []
+        },
+        "graph_expectations": {
+          "min_cites": 0,
+          "max_cites": 32,
+          "min_authorships": 1,
+          "max_authorships": null,
+          "min_institutions": null,
+          "max_institutions": null,
+          "expected_cited_arxiv_ids": [
+            "1505.00110",
+            "1310.1531"
+          ],
+          "max_duplicate_work_fingerprints": 2,
+          "max_work_dedup_violations": 0,
+          "min_related_version_edges": null,
+          "max_related_version_edges": null
+        },
+        "quality_thresholds": {
+          "require_title_match": true,
+          "require_abstract_prefix": true,
+          "min_authorship_names_f1": null,
+          "min_authorship_names_recall": null,
+          "min_affiliations_f1": null,
+          "require_reference_count_ok": true,
+          "min_sample_arxiv_f1": 1.0,
+          "min_sample_doi_f1": null,
+          "min_title_rouge_l": null,
+          "min_abstract_rouge_l": null,
+          "min_title_token_f1": null,
+          "min_authorship_names_difflib_macro": null
+        }
+      },
+      "gold_path": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/arxiv_refs_heavy/gold.json"
+    },
+    {
+      "case_id": "doi_refs_heavy",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/doi_refs_heavy",
+      "diagnostics": {
+        "document_id": "doi_refs_heavy",
+        "source_name": "doi_refs_heavy",
+        "markdown_source": "benchmark",
+        "metadata_source": "heuristic",
+        "authorships_source": "llm",
+        "references_source": "llm",
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "references_scope_chars": 261,
+        "heuristic_reference_count": 5,
+        "llm_reference_count": 5,
+        "llm_reference_batches": 1,
+        "llm_reference_mode": "auto",
+        "merged_reference_count": 5,
+        "reference_chunk_details": [
+          {
+            "chunk_index": 1,
+            "entries_expected_in_chunk": 5,
+            "chunk_chars": 241,
+            "entries_returned_by_llm": 5,
+            "status": "ok"
+          }
+        ],
+        "metadata_extraction_seconds": 0.9990432560007321,
+        "authorships_extraction_seconds": 0.7007954869914101,
+        "references_extraction_seconds": 4.465511436996167,
+        "fallback_reasons": [
+          {
+            "stage": "metadata",
+            "reason": "validation_failed",
+            "detail": "no_title_and_no_doi"
+          },
+          {
+            "stage": "runtime",
+            "reason": "wall_clock_seconds",
+            "detail": "6.200"
+          }
+        ]
+      },
+      "metrics": {
+        "metadata": {
+          "title_exact_normalized": true,
+          "title_rouge_l": 1.0,
+          "title_token_f1": 1.0,
+          "year_exact": null,
+          "abstract_prefix_ok": true,
+          "abstract_rouge_l_vs_prefix": 0.20833333333333334,
+          "doi_match_expected": null,
+          "arxiv_match_expected": null,
+          "work_type_match": null
+        },
+        "authorships": {
+          "names_precision": 1.0,
+          "names_recall": 1.0,
+          "names_f1": 1.0,
+          "names_tp_fp_fn": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 0
+          },
+          "order_accuracy": 1.0,
+          "order_hits": 1,
+          "affiliation_jaccard_macro_on_matched_authors": 1.0,
+          "affiliations_precision": 1.0,
+          "affiliations_recall": 1.0,
+          "affiliations_f1": 1.0,
+          "names_difflib_macro": 1.0,
+          "pred_count": 1,
+          "gold_count": 1
+        },
+        "references": {
+          "count": 5,
+          "expected_count": 5,
+          "min_count": 4,
+          "count_ok": true,
+          "count_delta": 0,
+          "sample_arxiv_precision": 1.0,
+          "sample_arxiv_recall": 1.0,
+          "sample_arxiv_f1": 1.0,
+          "sample_arxiv_tp_fp_fn": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "predicted_arxiv_ids": [],
+          "sample_doi_precision": 0.6,
+          "sample_doi_recall": 1.0,
+          "sample_doi_f1": 0.7499999999999999
+        },
+        "contract": {
+          "checks": {
+            "title_match_required": true,
+            "abstract_prefix_required": true,
+            "reference_count_ok_required": true,
+            "min_sample_doi_f1": true
+          },
+          "passed": true
+        }
+      },
+      "predicted": {
+        "work_metadata": {
+          "title": "DOI-Heavy Reference Layout Demo",
+          "normalized_title": "DOI-Heavy Reference Layout Demo",
+          "abstract": "This fixture stresses bibliography lines that mostly expose DOIs instead of arXiv ids. ## References [1] First DOI paper. Journal 2019. 10.1000/182. [2] Second entry. Science 2020. doi:10.1038/s41586-020-2649-2 [3] Third. Cell 2021. 10.1016/j.cell.2021.01.001 [4] Fourth. PLOS 2018. 10.1371/journal.pone.0191234 [5] Fifth. Nature 2022. 10.1038/s41586-022-04537-5",
+          "publication_year": 2019,
+          "doi": "10.1000/182",
+          "arxiv_id": null,
+          "language": null,
+          "venue_name": null,
+          "work_type": "unknown",
+          "openalex_id": null,
+          "fingerprint": "29f129fb638e9271",
+          "ingestion_confidence": 0.4,
+          "source_metadata": {}
+        },
+        "authorships": [
+          {
+            "author_position": 1,
+            "author_raw_name": "Jane Doe",
+            "raw_affiliations": [],
+            "is_corresponding": null,
+            "email": null
+          }
+        ],
+        "references": [
+          {
+            "raw_reference": "First DOI paper. Journal 2019. 10.1000/182.",
+            "doi": "10.1000/182",
+            "arxiv_id": null,
+            "title": "First DOI paper. Journal 2019",
+            "year": 2019
+          },
+          {
+            "raw_reference": "Second entry. Science 2020. doi:10.1038/s41586-020-2649-2",
+            "doi": "10.1038/s41586-020-2649-2",
+            "arxiv_id": null,
+            "title": "Second entry. Science 2020. doi:",
+            "year": 2020
+          },
+          {
+            "raw_reference": "Third. Cell 2021. 10.1016/j.cell.2021.01.001",
+            "doi": "10.1016/j.cell.2021.01.001",
+            "arxiv_id": null,
+            "title": "Third. Cell 2021",
+            "year": 2021
+          },
+          {
+            "raw_reference": "Fourth. PLOS 2018. 10.1371/journal.pone.0191234",
+            "doi": "10.1371/journal.pone.0191234",
+            "arxiv_id": null,
+            "title": "Fourth. PLOS 2018",
+            "year": 2018
+          },
+          {
+            "raw_reference": "Fifth. Nature 2022. 10.1038/s41586-022-04537-5",
+            "doi": "10.1038/s41586-022-04537-5",
+            "arxiv_id": null,
+            "title": "Fifth. Nature 2022",
+            "year": 2022
+          }
+        ]
+      },
+      "gold": {
+        "case_id": "doi_refs_heavy",
+        "schema_version": 1,
+        "description": "Synthetic bibliography dominated by DOI tokens (no arXiv).",
+        "work_metadata": {
+          "title": "DOI-Heavy Reference Layout Demo",
+          "publication_year": null,
+          "abstract_prefix": "This fixture stresses bibliography lines",
+          "doi": null,
+          "arxiv_id": null,
+          "venue_name": null,
+          "work_type": null
+        },
+        "authorships": [
+          {
+            "name": "Jane Doe",
+            "affiliations": []
+          }
+        ],
+        "references": {
+          "expected_count": 5,
+          "min_count": 4,
+          "notes": "Heuristic reference parser should recover one entry per [n] line.",
+          "sample_arxiv_ids": [],
+          "sample_dois": [
+            "10.1000/182",
+            "10.1038/s41586-020-2649-2",
+            "10.1016/j.cell.2021.01.001"
+          ]
+        },
+        "graph_expectations": {
+          "min_cites": null,
+          "max_cites": null,
+          "min_authorships": 1,
+          "max_authorships": null,
+          "min_institutions": null,
+          "max_institutions": null,
+          "expected_cited_arxiv_ids": [],
+          "max_duplicate_work_fingerprints": 2,
+          "max_work_dedup_violations": 0,
+          "min_related_version_edges": null,
+          "max_related_version_edges": null
+        },
+        "quality_thresholds": {
+          "require_title_match": true,
+          "require_abstract_prefix": true,
+          "min_authorship_names_f1": null,
+          "min_authorship_names_recall": null,
+          "min_affiliations_f1": null,
+          "require_reference_count_ok": true,
+          "min_sample_arxiv_f1": null,
+          "min_sample_doi_f1": 0.7,
+          "min_title_rouge_l": null,
+          "min_abstract_rouge_l": null,
+          "min_title_token_f1": null,
+          "min_authorship_names_difflib_macro": null
+        }
+      },
+      "gold_path": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/doi_refs_heavy/gold.json"
+    },
+    {
+      "case_id": "noisy_layout_stub",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/noisy_layout_stub",
+      "diagnostics": {
+        "document_id": "noisy_layout_stub",
+        "source_name": "noisy_layout_stub",
+        "markdown_source": "benchmark",
+        "metadata_source": "llm",
+        "authorships_source": "llm",
+        "references_source": "hybrid",
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "references_scope_chars": 185,
+        "heuristic_reference_count": 3,
+        "llm_reference_count": 2,
+        "llm_reference_batches": 1,
+        "llm_reference_mode": "auto",
+        "merged_reference_count": 3,
+        "reference_chunk_details": [
+          {
+            "chunk_index": 1,
+            "entries_expected_in_chunk": 3,
+            "chunk_chars": 173,
+            "entries_returned_by_llm": 2,
+            "status": "ok"
+          }
+        ],
+        "metadata_extraction_seconds": 1.4923794079950312,
+        "authorships_extraction_seconds": 1.1114246749930317,
+        "references_extraction_seconds": 1.430402250989573,
+        "fallback_reasons": [
+          {
+            "stage": "runtime",
+            "reason": "wall_clock_seconds",
+            "detail": "4.063"
+          }
+        ]
+      },
+      "metrics": {
+        "metadata": {
+          "title_exact_normalized": true,
+          "title_rouge_l": 1.0,
+          "title_token_f1": 1.0,
+          "year_exact": null,
+          "abstract_prefix_ok": true,
+          "abstract_rouge_l_vs_prefix": 0.5263157894736842,
+          "doi_match_expected": null,
+          "arxiv_match_expected": null,
+          "work_type_match": null
+        },
+        "authorships": {
+          "names_precision": 1.0,
+          "names_recall": 1.0,
+          "names_f1": 1.0,
+          "names_tp_fp_fn": {
+            "tp": 2,
+            "fp": 0,
+            "fn": 0
+          },
+          "order_accuracy": 1.0,
+          "order_hits": 2,
+          "affiliation_jaccard_macro_on_matched_authors": 0.0,
+          "affiliations_precision": 0.0,
+          "affiliations_recall": 0.0,
+          "affiliations_f1": 0.0,
+          "names_difflib_macro": 1.0,
+          "pred_count": 2,
+          "gold_count": 2
+        },
+        "references": {
+          "count": 3,
+          "expected_count": 3,
+          "min_count": 2,
+          "count_ok": true,
+          "count_delta": 0,
+          "sample_arxiv_precision": 1.0,
+          "sample_arxiv_recall": 1.0,
+          "sample_arxiv_f1": 1.0,
+          "sample_arxiv_tp_fp_fn": {
+            "tp": 1,
+            "fp": 0,
+            "fn": 0
+          },
+          "predicted_arxiv_ids": [
+            "1705.03820"
+          ],
+          "sample_doi_precision": 1.0,
+          "sample_doi_recall": 1.0,
+          "sample_doi_f1": 1.0
+        },
+        "contract": {
+          "checks": {
+            "abstract_prefix_required": true,
+            "reference_count_ok_required": true,
+            "min_sample_arxiv_f1": true,
+            "min_sample_doi_f1": true
+          },
+          "passed": true
+        }
+      },
+      "predicted": {
+        "work_metadata": {
+          "title": "Noisy Markdown Wrapper Title Paper",
+          "normalized_title": "Noisy Markdown Wrapper Title Paper",
+          "abstract": "This abstract has leading spaces and should still be discoverable. Second sentence for length.",
+          "publication_year": null,
+          "doi": "10.1000/xyz",
+          "arxiv_id": "1705.03820",
+          "language": null,
+          "venue_name": null,
+          "work_type": "unknown",
+          "openalex_id": null,
+          "fingerprint": "ec3c60de720d3b63",
+          "ingestion_confidence": 0.72,
+          "source_metadata": {
+            "extraction_stage": "llm"
+          }
+        },
+        "authorships": [
+          {
+            "author_position": 1,
+            "author_raw_name": "Author One",
+            "raw_affiliations": [
+              "Messy inline affiliation note."
+            ],
+            "is_corresponding": null,
+            "email": null
+          },
+          {
+            "author_position": 2,
+            "author_raw_name": "Author Two",
+            "raw_affiliations": [
+              "Another noisy line with   extra   spaces."
+            ],
+            "is_corresponding": null,
+            "email": null
+          }
+        ],
+        "references": [
+          {
+            "raw_reference": "Noisy ref line with DOI 10.1000/xyz and year 2019.",
+            "doi": "10.1000/xyz",
+            "arxiv_id": null,
+            "title": "Noisy ref line with DOI",
+            "year": 2019
+          },
+          {
+            "raw_reference": "Continuation line without a new bracket that should merge into [1] or stay attached.",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": null
+          },
+          {
+            "raw_reference": "arXiv:1705.03820 based citation 2017.",
+            "doi": null,
+            "arxiv_id": "1705.03820",
+            "title": null,
+            "year": 2017
+          }
+        ]
+      },
+      "gold": {
+        "case_id": "noisy_layout_stub",
+        "schema_version": 1,
+        "description": "Noisy PDF→MD style: extra whitespace, fenced wrapper, broken ref flow.",
+        "work_metadata": {
+          "title": "Noisy Markdown Wrapper Title Paper",
+          "publication_year": null,
+          "abstract_prefix": "This abstract has leading spaces",
+          "doi": null,
+          "arxiv_id": null,
+          "venue_name": null,
+          "work_type": null
+        },
+        "authorships": [
+          {
+            "name": "Author One",
+            "affiliations": []
+          },
+          {
+            "name": "Author Two",
+            "affiliations": []
+          }
+        ],
+        "references": {
+          "expected_count": 3,
+          "min_count": 2,
+          "notes": "Three [n] lines; [2] may still merge into [1] depending on parser version — min_count kept at 2.",
+          "sample_arxiv_ids": [
+            "1705.03820"
+          ],
+          "sample_dois": [
+            "10.1000/xyz"
+          ]
+        },
+        "graph_expectations": {
+          "min_cites": null,
+          "max_cites": null,
+          "min_authorships": 1,
+          "max_authorships": null,
+          "min_institutions": null,
+          "max_institutions": null,
+          "expected_cited_arxiv_ids": [],
+          "max_duplicate_work_fingerprints": 3,
+          "max_work_dedup_violations": 0,
+          "min_related_version_edges": null,
+          "max_related_version_edges": null
+        },
+        "quality_thresholds": {
+          "require_title_match": false,
+          "require_abstract_prefix": true,
+          "min_authorship_names_f1": null,
+          "min_authorship_names_recall": null,
+          "min_affiliations_f1": null,
+          "require_reference_count_ok": true,
+          "min_sample_arxiv_f1": 1.0,
+          "min_sample_doi_f1": 1.0,
+          "min_title_rouge_l": null,
+          "min_abstract_rouge_l": null,
+          "min_title_token_f1": null,
+          "min_authorship_names_difflib_macro": null
+        }
+      },
+      "gold_path": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/noisy_layout_stub/gold.json"
+    },
+    {
+      "case_id": "yolov1",
+      "fixture_dir": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/yolov1",
+      "diagnostics": {
+        "document_id": "yolov1",
+        "source_name": "yolov1",
+        "markdown_source": "benchmark",
+        "metadata_source": "llm",
+        "authorships_source": "llm",
+        "references_source": "hybrid",
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "references_scope_chars": 6707,
+        "heuristic_reference_count": 45,
+        "llm_reference_count": 39,
+        "llm_reference_batches": 4,
+        "llm_reference_mode": "auto",
+        "merged_reference_count": 45,
+        "reference_chunk_details": [
+          {
+            "chunk_index": 1,
+            "entries_expected_in_chunk": 12,
+            "chunk_chars": 2165,
+            "entries_returned_by_llm": 11,
+            "status": "ok"
+          },
+          {
+            "chunk_index": 2,
+            "entries_expected_in_chunk": 12,
+            "chunk_chars": 1647,
+            "entries_returned_by_llm": 11,
+            "status": "ok"
+          },
+          {
+            "chunk_index": 3,
+            "entries_expected_in_chunk": 12,
+            "chunk_chars": 1744,
+            "entries_returned_by_llm": 11,
+            "status": "ok"
+          },
+          {
+            "chunk_index": 4,
+            "entries_expected_in_chunk": 9,
+            "chunk_chars": 931,
+            "entries_returned_by_llm": 6,
+            "status": "ok"
+          }
+        ],
+        "metadata_extraction_seconds": 2.5055320910032606,
+        "authorships_extraction_seconds": 1.4478861719981069,
+        "references_extraction_seconds": 11.210838170009083,
+        "fallback_reasons": [
+          {
+            "stage": "references",
+            "reason": "merged_sources",
+            "detail": "heuristic_total=45 llm_total=39 llm_new_entries=0 llm_enriched_entries=0 llm_skipped_bare=7 merge_cap_applied=0 policy=conservative"
+          },
+          {
+            "stage": "runtime",
+            "reason": "wall_clock_seconds",
+            "detail": "15.199"
+          }
+        ]
+      },
+      "metrics": {
+        "metadata": {
+          "title_exact_normalized": true,
+          "title_rouge_l": 1.0,
+          "title_token_f1": 1.0,
+          "year_exact": null,
+          "abstract_prefix_ok": true,
+          "abstract_rouge_l_vs_prefix": 0.10465116279069768,
+          "doi_match_expected": null,
+          "arxiv_match_expected": null,
+          "work_type_match": null
+        },
+        "authorships": {
+          "names_precision": 1.0,
+          "names_recall": 1.0,
+          "names_f1": 1.0,
+          "names_tp_fp_fn": {
+            "tp": 4,
+            "fp": 0,
+            "fn": 0
+          },
+          "order_accuracy": 1.0,
+          "order_hits": 4,
+          "affiliation_jaccard_macro_on_matched_authors": 0.7916666666666666,
+          "affiliations_precision": 1.0,
+          "affiliations_recall": 1.0,
+          "affiliations_f1": 1.0,
+          "names_difflib_macro": 1.0,
+          "pred_count": 4,
+          "gold_count": 4
+        },
+        "references": {
+          "count": 45,
+          "expected_count": 44,
+          "min_count": 36,
+          "count_ok": true,
+          "count_delta": 1,
+          "sample_arxiv_precision": 0.8571428571428571,
+          "sample_arxiv_recall": 1.0,
+          "sample_arxiv_f1": 0.923076923076923,
+          "sample_arxiv_tp_fp_fn": {
+            "tp": 12,
+            "fp": 2,
+            "fn": 0
+          },
+          "predicted_arxiv_ids": [
+            "1207.0580",
+            "1310.1531",
+            "1312.4400",
+            "1312.6229",
+            "1406.4729",
+            "1409.4842",
+            "1409.6911",
+            "1412.3128",
+            "1504.06066",
+            "1504.08083",
+            "1505.00110",
+            "1505.01749",
+            "1506.01497",
+            "1506.06981"
+          ],
+          "sample_doi_precision": 1.0,
+          "sample_doi_recall": 1.0,
+          "sample_doi_f1": 1.0
+        },
+        "contract": {
+          "checks": {
+            "title_match_required": true,
+            "abstract_prefix_required": true,
+            "reference_count_ok_required": true
+          },
+          "passed": true
+        }
+      },
+      "predicted": {
+        "work_metadata": {
+          "title": "You Only Look Once: Unified, Real-Time Object Detection",
+          "normalized_title": "You Only Look Once: Unified, Real-Time Object Detection",
+          "abstract": "We present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance. Our unified architecture is extremely fast. Our base YOLO model processes images in real-time at 45 frames per second. A smaller version of the network, Fast YOLO, processes an astounding 155 frames per second while still achieving double the mAP of other real-time detectors. Compared to state-of-the-art detection systems, YOLO makes more localization errors but is less likely to predict false positives on background. Finally, YOLO learns very general representations of objects. It outperforms other detection methods, including DPM and R-CNN, when generalizing from natural images to other domains like artwork.",
+          "publication_year": null,
+          "doi": null,
+          "arxiv_id": null,
+          "language": "en",
+          "venue_name": null,
+          "work_type": "unknown",
+          "openalex_id": null,
+          "fingerprint": "f508bc24aed9a4f4",
+          "ingestion_confidence": 0.72,
+          "source_metadata": {
+            "extraction_stage": "llm"
+          }
+        },
+        "authorships": [
+          {
+            "author_position": 1,
+            "author_raw_name": "Joseph Redmon",
+            "raw_affiliations": [
+              "University of Washington"
+            ],
+            "is_corresponding": null,
+            "email": null
+          },
+          {
+            "author_position": 2,
+            "author_raw_name": "Santosh Divvala",
+            "raw_affiliations": [
+              "University of Washington",
+              "Allen Institute for AI"
+            ],
+            "is_corresponding": null,
+            "email": null
+          },
+          {
+            "author_position": 3,
+            "author_raw_name": "Ross Girshick",
+            "raw_affiliations": [
+              "Facebook AI Research"
+            ],
+            "is_corresponding": null,
+            "email": null
+          },
+          {
+            "author_position": 4,
+            "author_raw_name": "Ali Farhadi",
+            "raw_affiliations": [
+              "University of Washington",
+              "Allen Institute for AI"
+            ],
+            "is_corresponding": null,
+            "email": null
+          }
+        ],
+        "references": [
+          {
+            "raw_reference": "M. B. Blaschko and C. H. Lampert. Learning to localize ob- jects with structured output regression. In Computer Vision– ECCV 2008, pages 2–15. Springer, 2008. 4",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": 2008
+          },
+          {
+            "raw_reference": "L. Bourdev and J. Malik. Poselets: Body part detectors trained using 3d human pose annotations. In International Conference on Computer Vision (ICCV), 2009. 8",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": 2009
+          },
+          {
+            "raw_reference": "H. Cai, Q. Wu, T. Corradi, and P. Hall. The cross- depiction problem: Computer vision algorithms for recog- nising objects in artwork and in photographs. arXiv preprint arXiv:1505.00110, 2015. 7",
+            "doi": null,
+            "arxiv_id": "1505.00110",
+            "title": null,
+            "year": 2015
+          },
+          {
+            "raw_reference": "N. Dalal and B. Triggs. Histograms of oriented gradients for human detection. In Computer Vision and Pattern Recogni- tion, 2005. CVPR 2005. IEEE Computer Society Conference on, volume 1, pages 886–893. IEEE, 2005. 4, 8",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": 2005
+          },
+          {
+            "raw_reference": "T. Dean, M. Ruzon, M. Segal, J. Shlens, S. Vijaya- narasimhan, J. Yagnik, et al. Fast, accurate detection of 100,000 object classes on a single machine. In Computer Vision and Pattern Recognition (CVPR), 2013 IEEE Confer- ence on, pages 1814–1821. IEEE, 2013. 5",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": 2013
+          },
+          {
+            "raw_reference": "J. Donahue, Y . Jia, O. Vinyals, J. Hoffman, N. Zhang, E. Tzeng, and T. Darrell. Decaf: A deep convolutional acti- vation feature for generic visual recognition. arXiv preprint arXiv:1310.1531, 2013. 4",
+            "doi": null,
+            "arxiv_id": "1310.1531",
+            "title": null,
+            "year": 2013
+          },
+          {
+            "raw_reference": "J. Dong, Q. Chen, S. Yan, and A. Yuille. Towards unified object detection and semantic segmentation. In Computer Vision–ECCV 2014, pages 299–314. Springer, 2014. 7",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": 2014
+          },
+          {
+            "raw_reference": "D. Erhan, C. Szegedy, A. Toshev, and D. Anguelov. Scalable object detection using deep neural networks. In Computer Vision and Pattern Recognition (CVPR), 2014 IEEE Confer- ence on, pages 2155–2162. IEEE, 2014. 5, 6",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": 2014
+          },
+          {
+            "raw_reference": "M. Everingham, S. M. A. Eslami, L. Van Gool, C. K. I.",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": null
+          },
+          {
+            "raw_reference": "Williams, J. Winn, and A. Zisserman. The pascal visual ob- ject classes challenge: A retrospective.International Journal of Computer Vision, 111(1):98–136, Jan. 2015. 2",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": 2015
+          },
+          {
+            "raw_reference": "P. F. Felzenszwalb, R. B. Girshick, D. McAllester, and D. Ra- manan. Object detection with discriminatively trained part based models. IEEE Transactions on Pattern Analysis and Machine Intelligence, 32(9):1627–1645, 2010. 1, 4",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": 2010
+          },
+          {
+            "raw_reference": "S. Gidaris and N. Komodakis. Object detection via a multi- region & semantic segmentation-aware CNN model. CoRR, abs/1505.01749, 2015. 7",
+            "doi": null,
+            "arxiv_id": "1505.01749",
+            "title": null,
+            "year": 2015
+          },
+          {
+            "raw_reference": "S. Ginosar, D. Haas, T. Brown, and J. Malik. Detecting peo- ple in cubist art. InComputer Vision-ECCV 2014 Workshops, pages 101–116. Springer, 2014. 7",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": 2014
+          },
+          {
+            "raw_reference": "R. Girshick, J. Donahue, T. Darrell, and J. Malik. Rich fea- ture hierarchies for accurate object detection and semantic segmentation. In Computer Vision and Pattern Recognition (CVPR), 2014 IEEE Conference on , pages 580–587. IEEE,",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": 2014
+          },
+          {
+            "raw_reference": "1, 4, 7",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": null
+          },
+          {
+            "raw_reference": "R. B. Girshick. Fast R-CNN. CoRR, abs/1504.08083, 2015. 2, 5, 6, 7",
+            "doi": null,
+            "arxiv_id": "1504.08083",
+            "title": null,
+            "year": 2015
+          },
+          {
+            "raw_reference": "S. Gould, T. Gao, and D. Koller. Region-based segmenta- tion and object detection. In Advances in neural information processing systems, pages 655–663, 2009. 4",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": 2009
+          },
+          {
+            "raw_reference": "B. Hariharan, P. Arbel ́aez, R. Girshick, and J. Malik. Simul- taneous detection and segmentation. In Computer Vision– ECCV 2014, pages 297–312. Springer, 2014. 7",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": 2014
+          },
+          {
+            "raw_reference": "K. He, X. Zhang, S. Ren, and J. Sun. Spatial pyramid pooling in deep convolutional networks for visual recognition. arXiv preprint arXiv:1406.4729, 2014. 5",
+            "doi": null,
+            "arxiv_id": "1406.4729",
+            "title": null,
+            "year": 2014
+          },
+          {
+            "raw_reference": "G. E. Hinton, N. Srivastava, A. Krizhevsky, I. Sutskever, and R. R. Salakhutdinov. Improving neural networks by pre- venting co-adaptation of feature detectors. arXiv preprint arXiv:1207.0580, 2012. 4",
+            "doi": null,
+            "arxiv_id": "1207.0580",
+            "title": null,
+            "year": 2012
+          },
+          {
+            "raw_reference": "D. Hoiem, Y . Chodpathumwan, and Q. Dai. Diagnosing error in object detectors. In Computer Vision–ECCV 2012, pages 340–353. Springer, 2012. 6",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": 2012
+          },
+          {
+            "raw_reference": "K. Lenc and A. Vedaldi. R-cnn minus r. arXiv preprint arXiv:1506.06981, 2015. 5, 6",
+            "doi": null,
+            "arxiv_id": "1506.06981",
+            "title": null,
+            "year": 2015
+          },
+          {
+            "raw_reference": "R. Lienhart and J. Maydt. An extended set of haar-like fea- tures for rapid object detection. In Image Processing. 2002. Proceedings. 2002 International Conference on , volume 1, pages I–900. IEEE, 2002. 4",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": 2002
+          },
+          {
+            "raw_reference": "M. Lin, Q. Chen, and S. Yan. Network in network. CoRR, abs/1312.4400, 2013. 2",
+            "doi": null,
+            "arxiv_id": "1312.4400",
+            "title": null,
+            "year": 2013
+          },
+          {
+            "raw_reference": "D. G. Lowe. Object recognition from local scale-invariant features. In Computer vision, 1999. The proceedings of the seventh IEEE international conference on , volume 2, pages 1150–1157. Ieee, 1999. 4",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": 1999
+          },
+          {
+            "raw_reference": "D. Mishkin. Models accuracy on imagenet 2012 val. https://github.com/BVLC/caffe/wiki/ Models-accuracy-on-ImageNet-2012-val . Ac- cessed: 2015-10-2. 3",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": 2012
+          },
+          {
+            "raw_reference": "C. P. Papageorgiou, M. Oren, and T. Poggio. A general framework for object detection. In Computer vision, 1998. sixth international conference on , pages 555–562. IEEE,",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": 1998
+          },
+          {
+            "raw_reference": "4",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": null
+          },
+          {
+            "raw_reference": "J. Redmon. Darknet: Open source neural networks in c. http://pjreddie.com/darknet/, 2013–2016. 3",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": 2013
+          },
+          {
+            "raw_reference": "J. Redmon and A. Angelova. Real-time grasp detection using convolutional neural networks. CoRR, abs/1412.3128, 2014. 5",
+            "doi": null,
+            "arxiv_id": "1412.3128",
+            "title": null,
+            "year": 2014
+          },
+          {
+            "raw_reference": "S. Ren, K. He, R. Girshick, and J. Sun. Faster r-cnn: To- wards real-time object detection with region proposal net- works. arXiv preprint arXiv:1506.01497, 2015. 5, 6, 7",
+            "doi": null,
+            "arxiv_id": "1506.01497",
+            "title": null,
+            "year": 2015
+          },
+          {
+            "raw_reference": "S. Ren, K. He, R. B. Girshick, X. Zhang, and J. Sun. Object detection networks on convolutional feature maps. CoRR, abs/1504.06066, 2015. 3, 7",
+            "doi": null,
+            "arxiv_id": "1504.06066",
+            "title": null,
+            "year": 2015
+          },
+          {
+            "raw_reference": "O. Russakovsky, J. Deng, H. Su, J. Krause, S. Satheesh, S. Ma, Z. Huang, A. Karpathy, A. Khosla, M. Bernstein, A. C. Berg, and L. Fei-Fei. ImageNet Large Scale Visual Recognition Challenge. International Journal of Computer Vision (IJCV), 2015. 3",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": 2015
+          },
+          {
+            "raw_reference": "M. A. Sadeghi and D. Forsyth. 30hz object detection with dpm v5. In Computer Vision–ECCV 2014 , pages 65–79. Springer, 2014. 5, 6",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": 2014
+          },
+          {
+            "raw_reference": "P. Sermanet, D. Eigen, X. Zhang, M. Mathieu, R. Fergus, and Y . LeCun. Overfeat: Integrated recognition, localiza- tion and detection using convolutional networks. CoRR, abs/1312.6229, 2013. 4, 5",
+            "doi": null,
+            "arxiv_id": "1312.6229",
+            "title": null,
+            "year": 2013
+          },
+          {
+            "raw_reference": "Z. Shen and X. Xue. Do more dropouts in pool5 feature maps for better object detection. arXiv preprint arXiv:1409.6911,",
+            "doi": null,
+            "arxiv_id": "1409.6911",
+            "title": null,
+            "year": null
+          },
+          {
+            "raw_reference": "7",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": null
+          },
+          {
+            "raw_reference": "C. Szegedy, W. Liu, Y . Jia, P. Sermanet, S. Reed, D. Anguelov, D. Erhan, V . Vanhoucke, and A. Rabinovich. Going deeper with convolutions. CoRR, abs/1409.4842,",
+            "doi": null,
+            "arxiv_id": "1409.4842",
+            "title": null,
+            "year": null
+          },
+          {
+            "raw_reference": "2",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": null
+          },
+          {
+            "raw_reference": "J. R. Uijlings, K. E. van de Sande, T. Gevers, and A. W. Smeulders. Selective search for object recognition. Inter- national journal of computer vision , 104(2):154–171, 2013. 4",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": 2013
+          },
+          {
+            "raw_reference": "P. Viola and M. Jones. Robust real-time object detection. International Journal of Computer Vision, 4:34–47, 2001. 4",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": 2001
+          },
+          {
+            "raw_reference": "P. Viola and M. J. Jones. Robust real-time face detection. International journal of computer vision , 57(2):137–154,",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": null
+          },
+          {
+            "raw_reference": "5",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": null
+          },
+          {
+            "raw_reference": "J. Yan, Z. Lei, L. Wen, and S. Z. Li. The fastest deformable part model for object detection. In Computer Vision and Pat- tern Recognition (CVPR), 2014 IEEE Conference on , pages 2497–2504. IEEE, 2014. 5, 6",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": 2014
+          },
+          {
+            "raw_reference": "C. L. Zitnick and P. Doll ́ar. Edge boxes: Locating object pro- posals from edges. In Computer Vision–ECCV 2014, pages 391–405. Springer, 2014. 4",
+            "doi": null,
+            "arxiv_id": null,
+            "title": null,
+            "year": 2014
+          }
+        ]
+      },
+      "gold": {
+        "case_id": "yolov1",
+        "schema_version": 1,
+        "description": "YOLOv1 CVPR-style markdown from PDF→MD (local YOLOv1.pdf); tier merge_safe. Graph expectations relaxed until locked against live Neo4j.",
+        "work_metadata": {
+          "title": "You Only Look Once: Unified, Real-Time Object Detection",
+          "publication_year": null,
+          "abstract_prefix": "We present YOLO, a new approach to object detection.",
+          "doi": null,
+          "arxiv_id": null,
+          "venue_name": null,
+          "work_type": null
+        },
+        "authorships": [
+          {
+            "name": "Joseph Redmon",
+            "affiliations": [
+              "University of Washington"
+            ]
+          },
+          {
+            "name": "Santosh Divvala",
+            "affiliations": [
+              "University of Washington",
+              "Allen Institute for AI"
+            ]
+          },
+          {
+            "name": "Ross Girshick",
+            "affiliations": [
+              "Allen Institute for AI",
+              "Facebook AI Research"
+            ]
+          },
+          {
+            "name": "Ali Farhadi",
+            "affiliations": [
+              "University of Washington",
+              "Allen Institute for AI",
+              "Facebook AI Research"
+            ]
+          }
+        ],
+        "references": {
+          "expected_count": 44,
+          "min_count": 36,
+          "notes": "Counts from heuristic extract_references on this MD; PDF hyphenation may shift totals.",
+          "sample_arxiv_ids": [
+            "1505.00110",
+            "1310.1531",
+            "1505.01749",
+            "1504.08083",
+            "1406.4729",
+            "1207.0580",
+            "1506.06981",
+            "1312.4400",
+            "1412.3128",
+            "1506.01497",
+            "1504.06066",
+            "1312.6229"
+          ],
+          "sample_dois": []
+        },
+        "graph_expectations": {
+          "min_cites": 12,
+          "max_cites": 28,
+          "min_authorships": 4,
+          "max_authorships": 8,
+          "min_institutions": 2,
+          "max_institutions": 8,
+          "expected_cited_arxiv_ids": [
+            "1505.00110",
+            "1310.1531",
+            "1505.01749",
+            "1504.08083",
+            "1312.4400",
+            "1406.4729",
+            "1207.0580",
+            "1506.06981"
+          ],
+          "max_duplicate_work_fingerprints": 0,
+          "max_work_dedup_violations": 0,
+          "min_related_version_edges": null,
+          "max_related_version_edges": null
+        },
+        "quality_thresholds": null
+      },
+      "gold_path": "/home/roman/pyprojects/ML/Prod/science-graphrag/tests/fixtures/benchmarks/layer1/yolov1/gold.json"
+    }
+  ]
+}

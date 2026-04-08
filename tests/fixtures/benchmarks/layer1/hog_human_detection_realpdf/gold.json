@@ -29,5 +29,39 @@
     "min_institutions": 0,
     "max_institutions": 8,
     "max_work_dedup_violations": 0
+  },
+  "references_benchmark": {
+    "bibliography": {
+      "start_line": 847,
+      "end_line": 909
+    },
+    "raw_entries": [
+      "[1] S. Belongie, J. Malik, and J. Puzicha. Matching shapes. The\n8th ICCV, Vancouver, Canada, pages 454461, 2001.",
+      "[2] V. de Poortere, J. Cant, B. Van den Bosch, J. de\nPrins, F. Fransens, and L. Van Gool. Ef\u0002cient pedes-\ntrian detection: a test case for svm based categorization.\nWorkshop on Cognitive Vision, 2002. Available online:\nhttp://www.vision.ethz.ch/cogvis02/.",
+      "[3] P. Felzenszwalb and D. Huttenlocher. Ef\u0002cient matching of\npictorial structures. CVPR, Hilton Head Island, South Car-\nolina, USA, pages 6675, 2000.",
+      "[4] W. T. Freeman and M. Roth. Orientation histograms for\nhand gesture recognition. Intl. Workshop on Automatic Face-\nand Gesture- Recognition, IEEE Computer Society, Zurich,\nSwitzerland, pages 296301, June 1995.",
+      "[5] W. T. Freeman, K. Tanaka, J. Ohta, and K. Kyuma. Com-\nputer vision for computer games. 2nd International Confer-\nence on Automatic Face and Gesture Recognition, Killington,\nVT, USA, pages 100105, October 1996.",
+      "[6] D. M. Gavrila. The visual analysis of human movement: A\nsurvey. CVIU, 73(1):8298, 1999.",
+      "[7] D. M. Gavrila, J. Giebel, and S. Munder. Vision-based pedes-\ntrian detection: the protector+ system. Proc. of the IEEE In-\ntelligent Vehicles Symposium, Parma, Italy, 2004.",
+      "[8] D. M. Gavrila and V. Philomin. Real-time object detection for\nsmart vehicles. CVPR, Fort Collins, Colorado, USA, pages\n8793, 1999.",
+      "[9] S. Ioffe and D. A. Forsyth. Probabilistic methods for \u0002nding\npeople. IJCV, 43(1):4568, 2001.",
+      "[10] T. Joachims. Making large-scale svm learning practical. In\nB. Schlkopf, C. Burges, and A. Smola, editors, Advances in\nKernel Methods - Support Vector Learning. The MIT Press,\nCambridge, MA, USA, 1999.",
+      "[11] Y. Ke and R. Sukthankar. Pca-sift: A more distinctive rep-\nresentation for local image descriptors. CVPR, Washington,\nDC, USA, pages 6675, 2004.",
+      "[12] D. G. Lowe. Distinctive image features from scale-invariant\nkeypoints. IJCV, 60(2):91110, 2004.",
+      "[13] R. K. McConnell. Method of and apparatus for pattern recog-\nnition, January 1986. U.S. Patent No. 4,567,610.",
+      "[14] K. Mikolajczyk and C. Schmid. A performance evaluation of\nlocal descriptors. PAMI, 2004. Accepted.",
+      "[15] K. Mikolajczyk and C. Schmid. Scale and af\u0002ne invariant\ninterest point detectors. IJCV, 60(1):6386, 2004.",
+      "[16] K. Mikolajczyk, C. Schmid, and A. Zisserman. Human detec-\ntion based on a probabilistic assembly of robust part detectors.\nThe 8th ECCV, Prague, Czech Republic, volume I, pages 69\n81, 2004.",
+      "[17] A. Mohan, C. Papageorgiou, and T. Poggio. Example-based\nobject detection in images by components. PAMI, 23(4):349\n361, April 2001.",
+      "[18] C. Papageorgiou and T. Poggio. A trainable system for object\ndetection. IJCV, 38(1):1533, 2000.",
+      "[19] R. Ronfard, C. Schmid, and B. Triggs. Learning to parse pic-\ntures of people. The 7th ECCV, Copenhagen, Denmark, vol-\nume IV, pages 700714, 2002.",
+      "[20] Henry Schneiderman and Takeo Kanade. Object detection\nusing the statistics of parts. IJCV, 56(3):151177, 2004.",
+      "[21] Eric L. Schwartz. Spatial mapping in the primate sensory pro-\njection: analytic structure and relevance to perception. Bio-\nlogical Cybernetics, 25(4):181194, 1977.",
+      "[22] P. Viola, M. J. Jones, and D. Snow. Detecting pedestrians\nusing patterns of motion and appearance. The 9th ICCV, Nice,\nFrance, volume 1, pages 734741, 2003."
+    ],
+    "expected_count": 22,
+    "stratum": "bracket_numbered_realpdf",
+    "annotation_kind": "manual",
+    "notes": "Bootstrap from eval.references_harness.bibliography_gold_span; main ## References block; monotonic [n] detection; truncated before supplementary."
   }
 }

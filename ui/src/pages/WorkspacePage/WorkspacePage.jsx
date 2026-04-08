@@ -8,6 +8,8 @@ import CircularProgress from "@mui/material/CircularProgress";
 
 import { CursorPrimaryButton, CursorSmallButton } from "../../components/common/index.js";
 import PageHeader from "../../components/layout/PageHeader.jsx";
+import WorkIdGlossaryHint from "../../components/layout/WorkIdGlossaryHint.jsx";
+import { mainShellContentSx } from "../../components/layout/mainShellContentSx.js";
 import { getWorkDetail } from "../../services/researchApi.js";
 import { getLastWorkId, normalizeWorkspaceTab, persistWorkId, persistWorkspaceTab } from "./utils/workContext.js";
 import { WORKSPACE_TAB_CONFIG, workspaceTabIndex, workspaceTabSlugFromIndex } from "./WorkspaceTabs.jsx";
@@ -30,13 +32,18 @@ export default function WorkspacePage() {
 
   const setTabParams = useCallback(
     (nextTabSlug, nextWorkId = workId) => {
-      const params = new URLSearchParams();
+      const params = new URLSearchParams(searchParams);
       const wid = String(nextWorkId || "").trim();
       if (wid) params.set("work_id", wid);
-      params.set("tab", normalizeWorkspaceTab(nextTabSlug));
+      else params.delete("work_id");
+      const nextTab = normalizeWorkspaceTab(nextTabSlug);
+      params.set("tab", nextTab);
+      if (nextTab !== "ask") {
+        params.delete("ask_session");
+      }
       setSearchParams(params, { replace: false });
     },
-    [setSearchParams, workId],
+    [searchParams, setSearchParams, workId],
   );
 
   /** Restore last work when opening /workspace with no work_id */
@@ -111,7 +118,7 @@ export default function WorkspacePage() {
   );
 
   return (
-    <Box sx={{ p: 2, maxWidth: 1100 }}>
+    <Box sx={{ p: { xs: 1.5, sm: 2 }, ...mainShellContentSx }}>
       <PageHeader
         eyebrow="Workspace-first flow"
         title="Workspace"
@@ -132,7 +139,7 @@ export default function WorkspacePage() {
               )}
             </>
           ) : (
-            "Open a work and switch between overview, reading, graph, ask, and evidence without leaving the active research context."
+            <WorkIdGlossaryHint variant="workspace" />
           )
         }
         actions={
@@ -155,13 +162,16 @@ export default function WorkspacePage() {
       <Tabs
         value={tabIndex}
         onChange={handleTabChange}
+        variant="scrollable"
+        scrollButtons="auto"
+        allowScrollButtonsMobile
         sx={{
           minHeight: 36,
           borderBottom: "1px solid rgba(255,255,255,0.08)",
           mb: 2,
           "& .MuiTab-root": {
             minHeight: 36,
-            fontSize: "0.8125rem",
+            fontSize: { xs: "0.75rem", sm: "0.8125rem" },
             fontWeight: 500,
             textTransform: "none",
             color: "rgba(255,255,255,0.6)",

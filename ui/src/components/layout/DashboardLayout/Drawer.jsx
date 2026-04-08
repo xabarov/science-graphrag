@@ -181,7 +181,7 @@ export default function Drawer({ onNavigate }) {
 
       <Box sx={{ padding: expanded ? 2 : 1, position: "absolute", bottom: 12, right: expanded ? 12 : 6 }}>
         <CursorIconButton onClick={toggleExpanded} aria-label="toggle sidebar">
-          <Box sx={{ transform: expanded ? "rotate(180deg)" : "none" }}>{"<"}</Box>
+          <Box sx={{ transform: expanded ? "none" : "rotate(180deg)" }}>{"<"}</Box>
         </CursorIconButton>
       </Box>
     </Box>

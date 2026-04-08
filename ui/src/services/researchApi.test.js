@@ -59,6 +59,11 @@ describe("buildAskAnswerRationale", () => {
     expect(b[0]).toMatch(/corpus-wide/i);
   });
 
+  it("uses paper-scoped wording when form work id set outside workspace", () => {
+    const b = buildAskAnswerRationale(base, { locked: false, inWorkspace: false, formWorkId: "paper-1" });
+    expect(b[0]).toMatch(/paper-scoped/i);
+  });
+
   it("mentions degraded when flags present", () => {
     const n = normalizeQueryResponse({
       answer: "a",

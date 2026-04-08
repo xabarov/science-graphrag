@@ -38,12 +38,33 @@
     "min_authorships": 1,
     "min_cites": 0,
     "max_cites": 32,
-    "expected_cited_arxiv_ids": ["1505.00110", "1310.1531"],
+    "expected_cited_arxiv_ids": [
+      "1505.00110",
+      "1310.1531"
+    ],
     "max_duplicate_work_fingerprints": 2,
     "max_work_dedup_violations": 0
   },
   "quality_thresholds": {
     "require_reference_count_ok": true,
     "min_sample_arxiv_f1": 1.0
+  },
+  "references_benchmark": {
+    "bibliography": {
+      "start_line": 11,
+      "end_line": 16
+    },
+    "raw_entries": [
+      "[1] Alpha model. arXiv:1505.00110 2015.",
+      "[2] Beta baseline. abs/1310.1531 2013.",
+      "[3] Gamma nets. arxiv:1505.01749 2015.",
+      "[4] Delta data. https://arxiv.org/abs/1504.08083 2015.",
+      "[5] Epsilon study. arXiv:1312.4400 2013.",
+      "[6] Zeta review. 1406.4729 2014."
+    ],
+    "expected_count": 6,
+    "stratum": "arxiv_heavy",
+    "annotation_kind": "manual",
+    "notes": "Synthetic fixture; bracket-numbered segmentation."
   }
 }

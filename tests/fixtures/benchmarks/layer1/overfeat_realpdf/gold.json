@@ -33,5 +33,47 @@
     "min_institutions": 0,
     "max_institutions": 8,
     "max_work_dedup_violations": 0
+  },
+  "references_benchmark": {
+    "bibliography": {
+      "start_line": 485,
+      "end_line": 550
+    },
+    "raw_entries": [
+      "[1] J. Carreira, F. Li, and C. Sminchisescu. Object recognit ion by sequential figure-ground ranking. Interna-\ntional journal of computer vision, 98(3):243–262, 2012.",
+      "[2] J. Carreira and C. Sminchisescu. Constrained parametri c min-cuts for automatic object segmentation,\nrelease 1. http://sminchisescu.ins.uni-bonn.de/code/cpmc/.",
+      "[3] D. C. Ciresan, J. Meier, and J. Schmidhuber. Multi-column deep neural networks for image classification.\nIn CVPR, 2012.",
+      "[4] M. Delakis and C. Garcia. Text detection with convolutional neural networks. InInternational Conference\non Computer Vision Theory and Applications (VISAPP 2008), 2008.",
+      "[5] J. Deng, W. Dong, R. Socher, L.-J. Li, K. Li, and L. Fei-Fei . ImageNet: A Large-Scale Hierarchical\nImage Database. In CVPR09, 2009.",
+      "[6] I. Endres and D. Hoiem. Category independent object prop osals. In Computer Vision–ECCV 2010, pages\n575–588. Springer, 2010.",
+      "[7] C. Farabet, C. Couprie, L. Najman, and Y . LeCun. Learninghierarchical features for scene labeling. IEEE\nTransactions on Pattern Analysis and Machine Intelligence, 2013. in press.",
+      "[8] C. Garcia and M. Delakis. Convolutional face finder: A neu ral architecture for fast and robust face\ndetection. IEEE Transactions on Pattern Analysis and Machine Intelligence, 2004.",
+      "[9] A. Giusti, D. C. Ciresan, J. Masci, L. M. Gambardella, andJ. Schmidhuber. Fast image scanning with deep\nmax-pooling convolutional neural networks. In International Conference on Image Processing (ICIP) ,\n2013.",
+      "[10] R. Hadsell, P. Sermanet, M. Scoffier, A. Erkan, K. Kavack uoglu, U. Muller, and Y . LeCun. Learning\nlong-range vision for autonomous off-road driving. Journal of Field Robotics, 26(2):120–144, February\n2009.",
+      "[11] G. Hinton, N. Srivastave, A. Krizhevsky, I. Sutskever, and R. R. Salakhutdinov. Improving neural net-\nworks by preventing co-adaptation of feature detectors. arXiv:1207.0580, 2012.",
+      "[12] G. E. Hinton, A. Krizhevsky, and S. D. Wang. Transforming auto-encoders. In Artificial Neural Networks\nand Machine Learning–ICANN 2011, pages 44–51. Springer Berlin Heidelberg, 2011.",
+      "[13] V . Jain, J. F. Murray, F. Roth, S. Turaga, V . Zhigulin, K.Briggman, M. Helmstaedter, W. Denk, and H. S.\nSeung. Supervised learning of image restoration with convolutional networks. In ICCV’07.",
+      "[14] K. Jarrett, K. Kavukcuoglu, M. Ranzato, and Y . LeCun. Wh at is the best multi-stage architecture for\nobject recognition? In Proc. International Conference on Computer Vision (ICCV’09). IEEE, 2009.\n14",
+      "[15] A. Krizhevsky, I. Sutskever, and G. Hinton. Imagenet cl assification with deep convolutional neural net-\nworks. In NIPS, 2012.",
+      "[16] Y . LeCun, B. Boser, J. S. Denker, D. Henderson, R. E. Howa rd, W. Hubbard, and L. D. Jackel. Hand-\nwritten digit recognition with a back-propagation network . In D. Touretzky, editor, Advances in Neural\nInformation Processing Systems (NIPS 1989), volume 2, Denver, CO, 1990. Morgan Kaufman.",
+      "[17] Y . LeCun, L. Bottou, Y . Bengio, and P. Haffner. Gradient-based learning applied to document recognition.\nProceedings of the IEEE, 86(11):2278–2324, November 1998.",
+      "[18] Y . LeCun, F.-J. Huang, and L. Bottou. Learning methods f or generic object recognition with invariance\nto pose and lighting. In Proceedings of CVPR’04. IEEE Press, 2004.",
+      "[19] S. Manen, M. Guillaumin, and L. Van Gool. Prime object proposals with randomized prims algorithm. In\nInternational Conference on Computer Vision (ICCV), 2013.",
+      "[20] O. Matan, J. Bromley, C. Burges, J. Denker, L. Jackel, Y .LeCun, E. Pednault, W. Satterfield, C. Stenard,\nand T. Thompson. Reading handwritten digits: A zip code recognition system. IEEE Computer, 25(7):59–\n63, July 1992.",
+      "[21] F. Ning, D. Delhomme, Y . LeCun, F. Piano, L. Bottou, and P. Barbano. Toward automatic phenotyping of\ndeveloping embryos from videos. IEEE Transactions on Image Processing, 14(9):1360–1371, September\n2005. Special issue on Molecular and Cellular Bioimaging.",
+      "[22] S. Nowlan and J. Platt. A convolutional neural network h and tracker. pages 901–908, San Mateo, CA,\n1995. Morgan Kaufmann.",
+      "[23] M. Osadchy, Y . LeCun, and M. Miller. Synergistic face detection and pose estimation with energy-based\nmodels. Journal of Machine Learning Research, 8:1197–1215, May 2007.",
+      "[24] P. Sermanet, S. Chintala, and Y . LeCun. Convolutional n eural networks applied to house numbers digit\nclassification. In International Conference on Pattern Recognition (ICPR 2012), 2012.",
+      "[25] P. Sermanet, K. Kavukcuoglu, S. Chintala, and Y . LeCun. Pedestrian detection with unsupervised multi-\nstage feature learning. In Proc. International Conference on Computer Vision and Patt ern Recognition\n(CVPR’13). IEEE, June 2013.",
+      "[26] P. Sermanet and Y . LeCun. Traffic sign recognition with multi-scale convolutional networks. In Proceed-\nings of International Joint Conference on Neural Networks (IJCNN’11), 2011.",
+      "[27] G. Taylor, R. Fergus, G. Williams, I. Spiro, and C. Bregl er. Pose-sensitive embedding by nonlinear nca\nregression. In NIPS, 2011.",
+      "[28] G. Taylor, I. Spiro, C. Bregler, and R. Fergus. Learning invarance through imitation. In CVPR, 2011.",
+      "[29] J. R. R. Uijlings, K. E. A. van de Sande, T. Gevers, and A. W . M. Smeulders. Selective search for object\nrecognition. International Journal of Computer Vision, 104(2):154–171, 2013.",
+      "[30] R. Vaillant, C. Monrocq, and Y . LeCun. Original approach for the localisation of objects in images. IEE"
+    ],
+    "expected_count": 30,
+    "stratum": "bracket_numbered_realpdf",
+    "annotation_kind": "manual",
+    "notes": "Bootstrap from eval.references_harness.bibliography_gold_span; main ## References block; monotonic [n] detection; truncated before supplementary."
   }
 }

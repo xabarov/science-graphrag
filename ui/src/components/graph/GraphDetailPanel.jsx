@@ -14,15 +14,21 @@ export default function GraphDetailPanel({ selectedNode, relatedEdges, mode = "e
 
   return (
     <Box
+      component="aside"
+      role="region"
+      aria-label="Graph node details"
       sx={{
         borderRadius: "6px",
         border: "1px solid rgba(255,255,255,0.08)",
         backgroundColor: "#1a1a1a",
         p: compact ? 1.5 : 2,
-        minHeight: compact ? 240 : 320,
+        flex: 1,
+        minHeight: compact ? 360 : 480,
       }}
     >
-      <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 1 }}>Details</Typography>
+      <Typography component="h2" sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 1 }}>
+        Details
+      </Typography>
 
       {!selectedNode ? (
         <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>

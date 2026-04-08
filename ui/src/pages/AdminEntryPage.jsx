@@ -4,6 +4,8 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 import { CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
+import AdminApiStatusStrip from "./AdminApiStatusStrip.jsx";
+import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
 
 function AdminCard({ title, description, primaryTo, primaryLabel, secondaryTo, secondaryLabel }) {
   return (
@@ -33,7 +35,9 @@ function AdminCard({ title, description, primaryTo, primaryLabel, secondaryTo, s
 
 export default function AdminEntryPage() {
   return (
-    <Box sx={{ maxWidth: 1100 }}>
+    <Box sx={{ p: { xs: 1.5, sm: 0 }, ...mainShellContentSx }}>
+      <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: "rgba(255,255,255,0.9)", mb: 1 }}>API status</Typography>
+      <AdminApiStatusStrip />
       <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 1.5 }}>
         <AdminCard
           title="Benchmarks"
@@ -51,7 +55,7 @@ export default function AdminEntryPage() {
         />
         <AdminCard
           title="Diagnostics"
-          description="Reserved for runtime diagnostics and operational state. This surface remains intentionally lightweight for now."
+          description="Health and catalog probes plus JSON details. Extend with deeper metrics when backend exposes read-only status APIs."
           primaryTo="/admin/diagnostics"
           primaryLabel="Open diagnostics"
         />

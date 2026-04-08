@@ -13,32 +13,79 @@ export function normalizeGraphNodeId(value) {
 
 /**
  * @param {unknown} raw
- * @returns {{workId: string, nodes: Array<object>, edges: Array<object>, meta: object, nodeCount: number, edgeCount: number, selectedNodeId: string}}
+ * @returns {{
+ *   workId: string,
+ *   nodes: Array<object>,
+ *   edges: Array<object>,
+ *   meta: object,
+ *   nodeCount: number,
+ *   edgeCount: number,
+ *   selectedNodeId: string,
+ *   warnings: string[],
+ * }}
  */
 export function normalizeGraphPayload(raw) {
+  const warnings = [];
   const payload = raw && typeof raw === "object" ? raw : {};
-  const nodes = Array.isArray(payload.nodes) ? payload.nodes : [];
-  const edges = Array.isArray(payload.edges) ? payload.edges : [];
+  const rawNodes = Array.isArray(payload.nodes) ? payload.nodes : [];
+  const rawEdges = Array.isArray(payload.edges) ? payload.edges : [];
   const meta = payload.meta && typeof payload.meta === "object" ? payload.meta : {};
-  return {
-    workId: payload.work_id == null ? "" : String(payload.work_id),
-    nodes: nodes.map((node, index) => ({
-      id: node?.id == null ? `node-${index}` : String(node.id),
+
+  const idUsage = new Map();
+  const nodes = rawNodes.map((node, index) => {
+    const baseId = node?.id == null ? `node-${index}` : String(node.id);
+    const seen = idUsage.get(baseId) ?? 0;
+    idUsage.set(baseId, seen + 1);
+    const id = seen === 0 ? baseId : `${baseId}__dup${seen}`;
+    if (seen > 0) {
+      warnings.push(
+        `Duplicate node id "${baseId}" was reassigned to "${id}" (first occurrence keeps "${baseId}").`,
+      );
+    }
+    return {
+      id,
       label: node?.label == null ? String(node?.id ?? `node-${index}`) : String(node.label),
       type: node?.type == null ? "Node" : String(node.type),
       raw: node && typeof node === "object" ? node : {},
-    })),
-    edges: edges.map((edge, index) => ({
-      id: edge?.id == null ? `edge-${index}` : String(edge.id),
-      source: edge?.source == null ? "" : String(edge.source),
-      target: edge?.target == null ? "" : String(edge.target),
-      type: edge?.type == null ? "edge" : String(edge.type),
-      raw: edge && typeof edge === "object" ? edge : {},
-    })),
+    };
+  });
+
+  const nodeIdSet = new Set(nodes.map((n) => n.id));
+
+  const normalizedEdges = rawEdges.map((edge, index) => ({
+    id: edge?.id == null ? `edge-${index}` : String(edge.id),
+    source: edge?.source == null ? "" : String(edge.source),
+    target: edge?.target == null ? "" : String(edge.target),
+    type: edge?.type == null ? "edge" : String(edge.type),
+    raw: edge && typeof edge === "object" ? edge : {},
+  }));
+
+  const edges = [];
+  let orphanCount = 0;
+  for (const edge of normalizedEdges) {
+    const srcOk = nodeIdSet.has(edge.source);
+    const tgtOk = nodeIdSet.has(edge.target);
+    if (srcOk && tgtOk) {
+      edges.push(edge);
+    } else {
+      orphanCount += 1;
+    }
+  }
+  if (orphanCount > 0) {
+    warnings.push(
+      `Dropped ${orphanCount} edge(s) with missing source or target node id (not present after normalization).`,
+    );
+  }
+
+  return {
+    workId: payload.work_id == null ? "" : String(payload.work_id),
+    nodes,
+    edges,
     meta,
     nodeCount: nodes.length,
     edgeCount: edges.length,
     selectedNodeId: "",
+    warnings,
   };
 }
 

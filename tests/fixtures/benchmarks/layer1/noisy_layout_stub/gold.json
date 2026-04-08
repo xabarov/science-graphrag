@@ -25,8 +25,12 @@
     "expected_count": 3,
     "min_count": 2,
     "notes": "Three [n] lines; [2] may still merge into [1] depending on parser version — min_count kept at 2.",
-    "sample_arxiv_ids": ["1705.03820"],
-    "sample_dois": ["10.1000/xyz"]
+    "sample_arxiv_ids": [
+      "1705.03820"
+    ],
+    "sample_dois": [
+      "10.1000/xyz"
+    ]
   },
   "graph_expectations": {
     "min_authorships": 1,
@@ -38,5 +42,20 @@
     "require_reference_count_ok": true,
     "min_sample_arxiv_f1": 1.0,
     "min_sample_doi_f1": 1.0
+  },
+  "references_benchmark": {
+    "bibliography": {
+      "start_line": 23,
+      "end_line": 25
+    },
+    "raw_entries": [
+      "[1] Noisy ref line with DOI 10.1000/xyz and year 2019.",
+      "[2] Continuation line without a new bracket that should merge into [1] or stay attached.",
+      "[3] arXiv:1705.03820 based citation 2017."
+    ],
+    "expected_count": 3,
+    "stratum": "noisy_layout",
+    "annotation_kind": "manual",
+    "notes": "Synthetic fixture; bracket-numbered segmentation."
   }
 }

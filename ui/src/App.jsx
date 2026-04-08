@@ -20,6 +20,7 @@ import PageHeader from "./components/layout/PageHeader.jsx";
 import DashboardLayout from "./components/layout/DashboardLayout/DashboardLayout.jsx";
 import AdminVisibilityGate from "./components/layout/AdminVisibilityGate.jsx";
 import AdminLayout from "./components/layout/AdminLayout.jsx";
+import { mainShellContentSx } from "./components/layout/mainShellContentSx.js";
 import { isAdminModeEnabled } from "./components/layout/adminVisibility.js";
 import { buildLegacyAdminRedirectTarget } from "./routeCompatibility.js";
 
@@ -33,7 +34,7 @@ function AdminRouteShell() {
     return <AdminLayout />;
   }
   return (
-    <Box sx={{ p: 2, maxWidth: 960 }}>
+    <Box sx={{ p: 2, ...mainShellContentSx }}>
       <PageHeader
         eyebrow="Research surface"
         title="Admin tools are hidden"

@@ -47,5 +47,42 @@
     "min_institutions": 0,
     "max_institutions": 8,
     "max_work_dedup_violations": 0
+  },
+  "references_benchmark": {
+    "bibliography": {
+      "start_line": 1028,
+      "end_line": 1117
+    },
+    "raw_entries": [
+      "[1] Nicolas Carion, Francisco Massa, Gabriel Synnaeve, Nicolas\nUsunier, Alexander Kirillov, and Sergey Zagoruyko. End-to-end\nobject detection with transformers. In European Conference on\nComputer Vision, pages 213–229. Springer, 2020.",
+      "[2] Kai Chen, Jiangmiao Pang, Jiaqi Wang, Yu Xiong, Xiaoxiao Li,\nShuyang Sun, Wansen Feng, Ziwei Liu, Jianping Shi, Wanli\nOuyang, et al. Hybrid task cascade for instance segmentation.\nIn Proceedings of the IEEE/CVF Conference on Computer Vision and\nPattern Recognition, pages 4974–4983, 2019.",
+      "[3] Qiang Chen, Xiaokang Chen, Gang Zeng, and Jingdong Wang.\nGroup DETR: Fast Training Convergence with Decoupled One-to-\nMany Label Assignment. arXiv preprint arXiv:2207.13085 , 2022.",
+      "[4] Ting Chen, Saurabh Saxena, Lala Li, David J. Fleet, and Geoffrey\nHinton. Pix2seq: A language modeling framework for object\ndetection, 2021.",
+      "[5] Bowen Cheng, Ishan Misra, Alexander G Schwing, Alexander\nKirillov, and Rohit Girdhar. Masked-attention mask transformer\nfor universal image segmentation. In Proceedings of the IEEE/CVF\nConference on Computer Vision and Pattern Recognition , pages 1290–\n1299, 2022.",
+      "[6] Xiyang Dai, Yinpeng Chen, Jianwei Yang, Pengchuan Zhang,\nLu Yuan, and Lei Zhang. Dynamic DETR: End-to-End Object\nDetection With Dynamic Attention. In Proceedings of the IEEE/CVF\nInternational Conference on Computer Vision , pages 2988–2997, 2021.",
+      "[7] Enrico Maria Fenoaltea, Izat B Baybusinov, Jianyang Zhao, Lei\nZhou, and Yi-Cheng Zhang. The Stable Marriage Problem: An\ninterdisciplinary review from the physicist’s perspective. Physics\nReports, 2021.",
+      "[8] Peng Gao, Minghang Zheng, Xiaogang Wang, Jifeng Dai, and\nHongsheng Li. Fast convergence of DETR with spatially mod-\nulated co-attention. arXiv preprint arXiv:2101.07448 , 2021.",
+      "[9] Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. Deep\nresidual learning for image recognition. In 2016 IEEE Conference\non Computer Vision and Pattern Recognition (CVPR) , pages 770–778,\n2016.",
+      "[10] Feng Li, Hao Zhang, Shilong Liu, Jian Guo, Lionel M Ni, and Lei\nZhang. DN-DETR: Accelerate DETR training by introducing query\ndenoising. In Proceedings of the IEEE/CVF Conference on Computer\nVision and Pattern Recognition , pages 13619–13627, 2022.",
+      "[11] Feng Li, Hao Zhang, Huaizhe xu, Shilong Liu, Lei Zhang, Li-\nonel M. Ni, and Heung-Yeung Shum. Mask DINO: Towards A\nUnified Transformer-based Framework for Object Detection and\nSegmentation, 2022.",
+      "[12] Tsung-Yi Lin, Priya Goyal, Ross Girshick, Kaiming He, and Piotr\nDoll ́ar. Focal Loss for Dense Object Detection, 2018.",
+      "[13] Tsung-Yi Lin, Michael Maire, Serge Belongie, James Hays, Pietro\nPerona, Deva Ramanan, Piotr Doll ́ar, and C Lawrence Zitnick. Mi-\ncrosoft COCO: Common objects in context. In European conference\non computer vision , pages 740–755. Springer, 2014.",
+      "[14] Shilong Liu, Feng Li, Hao Zhang, Xiao Yang, Xianbiao Qi, Hang\nSu, Jun Zhu, and Lei Zhang. DAB-DETR: Dynamic anchor boxes\nare better queries for DETR. In International Conference on Learning\nRepresentations, 2022.",
+      "[15] Depu Meng, Xiaokang Chen, Zejia Fan, Gang Zeng, Houqiang Li,\nYuhui Yuan, Lei Sun, and Jingdong Wang. Conditional DETR for\nFast Training Convergence. arXiv preprint arXiv:2108.06152 , 2021.",
+      "[16] Joseph Redmon and Ali Farhadi. YOLO9000: Better, Faster,\nStronger, 2016.",
+      "[17] Joseph Redmon and Ali Farhadi. YOLOv3: An Incremental Im-\nprovement, 2018.",
+      "[18] Shaoqing Ren, Kaiming He, Ross Girshick, and Jian Sun. Faster\nR-CNN: Towards real-time object detection with region proposal\nnetworks. IEEE T ransactions on Pattern Analysis and Machine Intel-\nligence, 39(6):1137–1149, 2017.",
+      "[19] Zhiqing Sun, Shengcao Cao, Yiming Yang, and Kris Kitani. Re-\nthinking transformer-based set prediction for object detection.\narXiv preprint arXiv:2011.10881 , 2020.",
+      "[20] Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit,\nLlion Jones, Aidan N Gomez, Łukasz Kaiser, and Illia Polosukhin.\n\nDN-DETR: ACCELERATE DETR TRAINING BY INTRODUCING QUERY DENOISING 13\nAttention is all you need. In Advances in neural information\nprocessing systems, pages 5998–6008, 2017.",
+      "[21] Yingming Wang, Xiangyu Zhang, Tong Yang, and Jian Sun. An-\nchor DETR: Query design for transformer-based detector. arXiv\npreprint arXiv:2109.07107, 2021.",
+      "[22] Zhuyu Yao, Jiangbo Ai, Boxun Li, and Chi Zhang. Efficient DETR:\nImproving End-to-End Object Detector with Dense Prior. arXiv\npreprint arXiv:2104.01318, 2021.",
+      "[23] Gongjie Zhang, Zhipeng Luo, Yingchen Yu, Jiaxing Huang, Kai-\nwen Cui, Shijian Lu, and Eric P Xing. Semantic-Aligned Matching\nfor Enhanced DETR Convergence and Multi-Scale Feature Fusion.\narXiv preprint arXiv:2207.14172 , 2022.",
+      "[24] Hao Zhang, Feng Li, Shilong Liu, Lei Zhang, Hang Su, Jun Zhu,\nLionel M. Ni, and Heung-Yeung Shum. DINO: DETR with Im-\nproved DeNoising Anchor Boxes for End-to-End Object Detection,\n2022.",
+      "[25] Xizhou Zhu, Weijie Su, Lewei Lu, Bin Li, Xiaogang Wang, and\nJifeng Dai. Deformable DETR: Deformable transformers for end-\nto-end object detection. arXiv preprint arXiv:2010.04159 , 2020."
+    ],
+    "expected_count": 25,
+    "stratum": "bracket_numbered_realpdf",
+    "annotation_kind": "manual",
+    "notes": "Bootstrap from eval.references_harness.bibliography_gold_span; main ## References block; monotonic [n] detection; truncated before supplementary."
   }
 }

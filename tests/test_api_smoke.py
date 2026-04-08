@@ -216,7 +216,10 @@ def test_work_detail_graph_chunks_smoke(monkeypatch: Any) -> None:
 
     graph = client.get("/v1/works/w1/graph")
     assert graph.status_code == 200
-    assert graph.json()["meta"]["semantic_available"] is False
+    graph_body = graph.json()
+    assert graph_body["meta"]["semantic_available"] is False
+    assert graph_body["nodes"][0]["id"] == "w1"
+    assert graph_body["nodes"][0]["label"] == "Test work"
 
     chunks = client.get("/v1/works/w1/chunks?limit=10&offset=0")
     assert chunks.status_code == 200

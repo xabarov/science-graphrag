@@ -1,0 +1,209 @@
+{
+  "schema": "references_benchmark_gold_manifest_v1",
+  "cases": {
+    "arxiv_refs_heavy": {
+      "start_line": 11,
+      "end_line": 16,
+      "entry_count": 6,
+      "annotation_kind": "manual"
+    },
+    "atss_realpdf": {
+      "start_line": 755,
+      "end_line": 980,
+      "entry_count": 74,
+      "annotation_kind": "manual"
+    },
+    "cascade_rcnn_realpdf": {
+      "start_line": 1089,
+      "end_line": 1199,
+      "entry_count": 34,
+      "annotation_kind": "manual"
+    },
+    "centernet_realpdf": {
+      "start_line": 1065,
+      "end_line": 1236,
+      "entry_count": 47,
+      "annotation_kind": "manual"
+    },
+    "cornernet_realpdf": {
+      "start_line": 853,
+      "end_line": 1041,
+      "entry_count": 51,
+      "annotation_kind": "silver_heuristic"
+    },
+    "deformable_detr_realpdf": {
+      "start_line": 569,
+      "end_line": 665,
+      "entry_count": 36,
+      "annotation_kind": "manual"
+    },
+    "detr_realpdf": {
+      "start_line": 737,
+      "end_line": 851,
+      "entry_count": 68,
+      "annotation_kind": "silver_heuristic"
+    },
+    "detrs_realpdf": {
+      "start_line": 811,
+      "end_line": 995,
+      "entry_count": 43,
+      "annotation_kind": "manual"
+    },
+    "dino_realpdf": {
+      "start_line": 705,
+      "end_line": 831,
+      "entry_count": 43,
+      "annotation_kind": "manual"
+    },
+    "dn_detr_realpdf": {
+      "start_line": 1028,
+      "end_line": 1117,
+      "entry_count": 25,
+      "annotation_kind": "manual"
+    },
+    "doi_refs_heavy": {
+      "start_line": 11,
+      "end_line": 15,
+      "entry_count": 5,
+      "annotation_kind": "manual"
+    },
+    "efficientdet_realpdf": {
+      "start_line": 833,
+      "end_line": 975,
+      "entry_count": 45,
+      "annotation_kind": "manual"
+    },
+    "fast_rcnn_realpdf": {
+      "start_line": 804,
+      "end_line": 876,
+      "entry_count": 25,
+      "annotation_kind": "manual"
+    },
+    "faster_rcnn_realpdf": {
+      "start_line": 1055,
+      "end_line": 1363,
+      "entry_count": 39,
+      "annotation_kind": "manual"
+    },
+    "fcos_realpdf": {
+      "start_line": 817,
+      "end_line": 938,
+      "entry_count": 34,
+      "annotation_kind": "manual"
+    },
+    "fpn_realpdf": {
+      "start_line": 843,
+      "end_line": 951,
+      "entry_count": 40,
+      "annotation_kind": "manual"
+    },
+    "gfl_realpdf": {
+      "start_line": 633,
+      "end_line": 701,
+      "entry_count": 36,
+      "annotation_kind": "manual"
+    },
+    "hog_human_detection_realpdf": {
+      "start_line": 847,
+      "end_line": 909,
+      "entry_count": 22,
+      "annotation_kind": "manual"
+    },
+    "libra_rcnn_realpdf": {
+      "start_line": 683,
+      "end_line": 814,
+      "entry_count": 37,
+      "annotation_kind": "manual"
+    },
+    "mask_rcnn_realpdf": {
+      "start_line": 1379,
+      "end_line": 1501,
+      "entry_count": 45,
+      "annotation_kind": "manual"
+    },
+    "noisy_layout_stub": {
+      "start_line": 23,
+      "end_line": 25,
+      "entry_count": 3,
+      "annotation_kind": "manual"
+    },
+    "overfeat_realpdf": {
+      "start_line": 485,
+      "end_line": 550,
+      "entry_count": 30,
+      "annotation_kind": "manual"
+    },
+    "part_based_models_realpdf": {
+      "start_line": 1072,
+      "end_line": 1212,
+      "entry_count": 45,
+      "annotation_kind": "manual"
+    },
+    "rcnn_realpdf": {
+      "start_line": 1064,
+      "end_line": 1478,
+      "entry_count": 43,
+      "annotation_kind": "manual"
+    },
+    "retinanet_focal_realpdf": {
+      "start_line": 921,
+      "end_line": 1029,
+      "entry_count": 39,
+      "annotation_kind": "manual"
+    },
+    "rfcn_realpdf": {
+      "start_line": 821,
+      "end_line": 1413,
+      "entry_count": 27,
+      "annotation_kind": "manual"
+    },
+    "selective_search_realpdf": {
+      "start_line": 971,
+      "end_line": 1078,
+      "entry_count": 38,
+      "annotation_kind": "manual"
+    },
+    "sppnet_realpdf": {
+      "start_line": 1042,
+      "end_line": 1165,
+      "entry_count": 40,
+      "annotation_kind": "manual"
+    },
+    "ssd_realpdf": {
+      "start_line": 1263,
+      "end_line": 1316,
+      "entry_count": 27,
+      "annotation_kind": "manual"
+    },
+    "tood_realpdf": {
+      "start_line": 1639,
+      "end_line": 1792,
+      "entry_count": 37,
+      "annotation_kind": "manual"
+    },
+    "yolov1": {
+      "start_line": 812,
+      "end_line": 945,
+      "entry_count": 39,
+      "annotation_kind": "manual"
+    },
+    "yolov2_realpdf": {
+      "start_line": 772,
+      "end_line": 839,
+      "entry_count": 20,
+      "annotation_kind": "manual"
+    },
+    "yolov3_realpdf": {
+      "start_line": 477,
+      "end_line": 544,
+      "entry_count": 21,
+      "annotation_kind": "manual"
+    },
+    "yolox_realpdf": {
+      "start_line": 497,
+      "end_line": 627,
+      "entry_count": 41,
+      "annotation_kind": "manual"
+    }
+  }
+}

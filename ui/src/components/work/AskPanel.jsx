@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -7,8 +7,13 @@ import Alert from "@mui/material/Alert";
 import Chip from "@mui/material/Chip";
 import Autocomplete from "@mui/material/Autocomplete";
 import Collapse from "@mui/material/Collapse";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
 
 import { CursorPrimaryButton, CursorSmallButton } from "../common/index.js";
+import WorkIdGlossaryHint from "../layout/WorkIdGlossaryHint.jsx";
 import {
   buildAskAnswerRationale,
   buildQueryBody,
@@ -17,7 +22,18 @@ import {
   normalizeQueryResponse,
   postQuery,
 } from "../../services/researchApi.js";
-import { getAskHistory, rememberAskHistory } from "./askHistoryState.js";
+import { rememberAskHistory } from "./askHistoryState.js";
+import {
+  appendAskSessionTurn,
+  createAskSession,
+  deriveAskScopeKey,
+  getActiveSessionEntries,
+  migrateLegacyAskHistoryToSessions,
+  readAskSessionUi,
+  renameAskSession,
+  sessionExistsInScope,
+  setActiveAskSession,
+} from "./askSessionState.js";
 import { buildStandaloneTracePath, buildWorkspaceTracePath } from "./traceabilityState.js";
 import { persistWorkId } from "../../pages/WorkspacePage/utils/workContext.js";
 
@@ -41,6 +57,8 @@ function FlagChips({ label, items }) {
  *   initialWorkId?: string,
  *   showPageChrome?: boolean,
  *   workspaceWorkId?: string | null,
+ *   urlSessionId?: string,
+ *   onUrlSessionIdChange?: (sessionId: string) => void,
  * }} props
  */
 export default function AskPanel({
@@ -48,6 +66,8 @@ export default function AskPanel({
   initialWorkId = "",
   showPageChrome = true,
   workspaceWorkId = null,
+  urlSessionId = "",
+  onUrlSessionIdChange,
 }) {
   const locked = Boolean(scopedWorkId && String(scopedWorkId).trim());
   const [query, setQuery] = useState("object detection benchmarks");
@@ -59,6 +79,39 @@ export default function AskPanel({
   const [normalized, setNormalized] = useState(null);
   const [history, setHistory] = useState([]);
   const [retrievalJsonOpen, setRetrievalJsonOpen] = useState(false);
+  const [sessionTick, setSessionTick] = useState(0);
+  const [sessionTitleDraft, setSessionTitleDraft] = useState("");
+
+  const scopeKey = useMemo(
+    () => deriveAskScopeKey({ locked, scopedWorkId }),
+    [locked, scopedWorkId],
+  );
+
+  const bumpSessions = useCallback(() => {
+    setSessionTick((t) => t + 1);
+  }, []);
+
+  const { activeId: activeSessionId, sessions: sessionList } = readAskSessionUi(scopeKey, sessionTick);
+
+  const activeSessionMeta = useMemo(
+    () => sessionList.find((s) => s.id === activeSessionId),
+    [sessionList, activeSessionId],
+  );
+
+  useEffect(() => {
+    setSessionTitleDraft(activeSessionMeta?.title || "");
+  }, [activeSessionMeta?.title, activeSessionId]);
+
+  useEffect(() => {
+    const id = String(urlSessionId || "").trim();
+    if (!id) return;
+    if (!sessionExistsInScope(scopeKey, id)) return;
+    const { activeId } = readAskSessionUi(scopeKey, sessionTick);
+    if (activeId !== id) {
+      setActiveAskSession(scopeKey, id);
+      bumpSessions();
+    }
+  }, [urlSessionId, scopeKey, bumpSessions, sessionTick]);
 
   useEffect(() => {
     if (locked) {
@@ -69,14 +122,27 @@ export default function AskPanel({
   }, [locked, scopedWorkId, initialWorkId]);
 
   useEffect(() => {
-    const recent = getAskHistory();
-    setHistory(recent);
-    if (!locked && !initialWorkId && recent[0]) {
+    migrateLegacyAskHistoryToSessions(scopeKey, (item) => {
+      if (locked) return String(item.workId || "").trim() === String(scopedWorkId || "").trim();
+      return true;
+    });
+    getActiveSessionEntries(scopeKey);
+    bumpSessions();
+  }, [scopeKey, locked, scopedWorkId, bumpSessions]);
+
+  useEffect(() => {
+    setHistory(getActiveSessionEntries(scopeKey));
+  }, [scopeKey, sessionTick]);
+
+  useEffect(() => {
+    if (locked || initialWorkId) return;
+    const recent = getActiveSessionEntries(scopeKey);
+    if (recent[0]) {
       setQuery(recent[0].query);
       setWorkId(recent[0].workId);
       setTopK(String(recent[0].topK || 5));
     }
-  }, [initialWorkId, locked]);
+  }, [locked, initialWorkId, scopeKey]);
 
   useEffect(() => {
     let cancelled = false;
@@ -112,7 +178,15 @@ export default function AskPanel({
         citationCount: nextNormalized.citations.length,
         mode: locked || inWorkspace ? "workspace" : workId ? "scoped" : "global",
       });
-      setHistory(getAskHistory());
+      appendAskSessionTurn(scopeKey, {
+        query,
+        workId,
+        topK,
+        answer: nextNormalized.answer,
+        citationCount: nextNormalized.citations.length,
+        mode: locked || inWorkspace ? "workspace" : workId ? "scoped" : "global",
+      });
+      bumpSessions();
     } catch (err) {
       const msg = err?.response?.data?.detail
         ? JSON.stringify(err.response.data.detail)
@@ -133,7 +207,7 @@ export default function AskPanel({
   }, [locked, workId]);
 
   return (
-    <Box sx={{ maxWidth: 960 }}>
+    <Box sx={{ width: "100%", boxSizing: "border-box" }}>
       {showPageChrome ? (
         <>
           <Typography sx={{ fontWeight: 600, mb: 1, color: "rgba(255,255,255,0.9)" }}>Ask</Typography>
@@ -175,10 +249,86 @@ export default function AskPanel({
         >
           <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)" }}>Optional work context</Typography>
           <Typography sx={{ mt: 0.6, fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)" }}>
-            You can ask globally or choose a `work_id` to keep the answer grounded in one paper.
+            <WorkIdGlossaryHint variant="ask" />
           </Typography>
         </Box>
       ) : null}
+
+      <Box
+        sx={{
+          mb: 2,
+          p: 1.5,
+          borderRadius: "6px",
+          border: "1px solid rgba(255,255,255,0.08)",
+          backgroundColor: "#1a1a1a",
+        }}
+      >
+        <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.9)" }}>
+          Ask session
+        </Typography>
+        <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mt: 0.35, mb: 1 }}>
+          {standaloneMode
+            ? "Stored locally in this browser. Each session keeps its own turn list (up to 24 turns)."
+            : "Stored per work for this workspace tab. Switch sessions to separate threads."}
+          {onUrlSessionIdChange ? (
+            <Box component="span" sx={{ display: "block", mt: 0.5 }}>
+              The active session id is reflected in the URL as <code style={{ color: "rgba(129,140,248,0.85)" }}>ask_session</code>{" "}
+              (local browser only; safe to share only on trusted channels).
+            </Box>
+          ) : null}
+        </Typography>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, alignItems: "flex-end" }}>
+          <FormControl size="small" sx={{ minWidth: 200, flex: "1 1 180px" }}>
+            <InputLabel id="ask-session-select-label">Session</InputLabel>
+            <Select
+              labelId="ask-session-select-label"
+              label="Session"
+              value={activeSessionId || ""}
+              onChange={(e) => {
+                const v = String(e.target.value);
+                setActiveAskSession(scopeKey, v);
+                bumpSessions();
+                onUrlSessionIdChange?.(v);
+              }}
+              sx={{ fontSize: "0.8125rem" }}
+            >
+              {sessionList.map((s) => (
+                <MenuItem key={s.id} value={s.id} sx={{ fontSize: "0.8125rem" }}>
+                  {s.title}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <TextField
+            label="Session title"
+            value={sessionTitleDraft}
+            onChange={(ev) => setSessionTitleDraft(ev.target.value)}
+            onBlur={() => {
+              const next = sessionTitleDraft.trim();
+              if (activeSessionId && next && next !== (activeSessionMeta?.title || "").trim()) {
+                renameAskSession(scopeKey, activeSessionId, next);
+                bumpSessions();
+              }
+            }}
+            size="small"
+            sx={{
+              flex: "2 1 220px",
+              "& .MuiInputBase-input": { fontSize: "0.8125rem" },
+              "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)" },
+            }}
+          />
+          <CursorSmallButton
+            type="button"
+            onClick={() => {
+              const id = createAskSession(scopeKey);
+              bumpSessions();
+              if (id) onUrlSessionIdChange?.(id);
+            }}
+          >
+            New session
+          </CursorSmallButton>
+        </Box>
+      </Box>
 
       {history.length > 0 ? (
         <Box
@@ -191,7 +341,7 @@ export default function AskPanel({
           }}
         >
           <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.9)" }}>
-            {standaloneMode ? "Recent questions" : "Recent workspace questions"}
+            {standaloneMode ? "Recent in this session" : "Recent in this workspace session"}
           </Typography>
           <Box sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 0.75 }}>
             {history.slice(0, 3).map((item) => (

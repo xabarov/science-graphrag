@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, Self
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class GoldWorkMetadata(BaseModel):
@@ -39,6 +39,59 @@ class GoldReferences(BaseModel):
     notes: str | None = None
     sample_arxiv_ids: list[str] = Field(default_factory=list)
     sample_dois: list[str] = Field(default_factory=list)
+
+
+class GoldBibliographySpan(BaseModel):
+    """
+    1-based inclusive line numbers in ``article.md`` for the bibliography body.
+
+    Contract: span covers reference *entries* only (excludes the ``## References`` heading).
+    Level-A IoU in the references harness extends this set with the heading line when it
+    immediately precedes ``start_line``, so heuristic spans that start after the heading
+    align with gold.
+    """
+
+    start_line: int = Field(ge=1, description="First line of first reference entry.")
+    end_line: int = Field(ge=1, description="Last line of last reference entry (inclusive).")
+
+
+class ReferencesBenchmarkGold(BaseModel):
+    """
+    Gold for reference localization (level A) and segmentation (level B).
+
+    Span covers reference *entries* only (typically excludes the ``## References`` heading).
+    ``raw_entries`` are ordered logical citations as they appear in the span.
+    """
+
+    bibliography: GoldBibliographySpan
+    raw_entries: list[str] = Field(
+        min_length=1,
+        description="Raw text per reference; multiline entries use embedded newlines.",
+    )
+    expected_count: int | None = Field(
+        default=None,
+        description="If set, must equal len(raw_entries).",
+    )
+    stratum: str | None = Field(
+        default=None,
+        description="Stratification label (e.g. numbered, author_year, arxiv_heavy).",
+    )
+    notes: str | None = None
+    annotation_kind: Literal["manual", "silver_heuristic"] = Field(
+        default="manual",
+        description=(
+            "manual: raw_entries must reconstruct bibliography span (whitespace-normalized). "
+            "silver_heuristic: entries from extract_references bootstrap; relaxed validation."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def _counts_and_span(self) -> Self:
+        if self.bibliography.end_line < self.bibliography.start_line:
+            raise ValueError("bibliography.end_line must be >= start_line")
+        if self.expected_count is not None and self.expected_count != len(self.raw_entries):
+            raise ValueError("expected_count must match len(raw_entries)")
+        return self
 
 
 class GraphExpectations(BaseModel):
@@ -125,6 +178,7 @@ class Layer1GoldSpec(BaseModel):
     references: GoldReferences
     graph_expectations: GraphExpectations | None = None
     quality_thresholds: Layer1QualityThresholds | None = None
+    references_benchmark: ReferencesBenchmarkGold | None = None
 
     @classmethod
     def load(cls, path: Path | str) -> Layer1GoldSpec:

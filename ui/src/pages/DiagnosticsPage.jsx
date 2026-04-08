@@ -5,7 +5,8 @@ import Alert from "@mui/material/Alert";
 import { Link } from "react-router-dom";
 
 import { CursorSmallButton } from "../components/common/index.js";
-import { getHealth, getResearchApiBaseUrl } from "../services/researchApi.js";
+import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
+import { getHealth, getResearchApiBaseUrl, getWorks } from "../services/researchApi.js";
 
 export default function DiagnosticsPage() {
   const [status, setStatus] = useState("idle");
@@ -16,30 +17,50 @@ export default function DiagnosticsPage() {
     setStatus("loading");
     setError(null);
     setPayload(null);
+    const combined = { health: null, works_catalog: null };
     try {
-      const res = await getHealth();
-      setPayload(res.data);
-      setStatus("ok");
+      const h = await getHealth();
+      combined.health = h.data;
     } catch (e) {
       const msg = e?.response?.data?.detail
         ? JSON.stringify(e.response.data.detail)
         : e?.message || String(e);
-      setError(msg);
+      combined.health = { error: msg };
+    }
+    try {
+      const w = await getWorks({ limit: 1, offset: 0 });
+      combined.works_catalog = {
+        total: Number.isFinite(Number(w.data?.total)) ? Number(w.data.total) : null,
+        ok: true,
+      };
+    } catch (e) {
+      const msg = e?.response?.data?.detail
+        ? JSON.stringify(e.response.data.detail)
+        : e?.message || String(e);
+      combined.works_catalog = { ok: false, error: msg };
+    }
+    const healthFailed = combined.health && typeof combined.health === "object" && combined.health.error;
+    const worksFailed = combined.works_catalog && combined.works_catalog.ok === false;
+    if (healthFailed && worksFailed) {
+      setError(`${combined.health.error} · ${combined.works_catalog.error}`);
       setStatus("error");
+    } else {
+      setPayload(combined);
+      setStatus("ok");
     }
   }, []);
 
   const baseHint = getResearchApiBaseUrl() || "(same origin — Vite dev proxies `/health` to the API port when configured)";
 
   return (
-    <Box sx={{ maxWidth: 720 }}>
+    <Box sx={{ p: { xs: 1.5, sm: 2 }, ...mainShellContentSx }}>
       <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: "rgba(255,255,255,0.9)", mb: 1 }}>
         Diagnostics
       </Typography>
       <Typography sx={{ color: "rgba(255,255,255,0.55)", fontSize: "0.8125rem", mb: 2 }}>
-        Lightweight operational checks. Deep runtime metrics and status cards remain a follow-up; use{" "}
-        <strong>Check health</strong> to call <code style={{ color: "rgba(129,140,248,0.95)" }}>GET /health</code> against
-        the configured API base.
+        Run checks against the configured API base: <code style={{ color: "rgba(129,140,248,0.95)" }}>GET /health</code> and a
+        minimal <code style={{ color: "rgba(129,140,248,0.95)" }}>GET /v1/works?limit=1</code> probe. Deep runtime metrics remain a
+        follow-up.
       </Typography>
       <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.75rem", mb: 2 }}>
         API base: <code style={{ color: "rgba(255,255,255,0.65)" }}>{baseHint}</code>
@@ -47,7 +68,7 @@ export default function DiagnosticsPage() {
 
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
         <CursorSmallButton type="button" onClick={() => refresh()} disabled={status === "loading"}>
-          {status === "loading" ? "Checking…" : "Check health"}
+          {status === "loading" ? "Checking…" : "Run checks"}
         </CursorSmallButton>
         <CursorSmallButton component={Link} to="/admin" sx={{ textDecoration: "none" }}>
           Back to admin
@@ -59,7 +80,7 @@ export default function DiagnosticsPage() {
 
       {status === "ok" && payload != null ? (
         <Alert severity="success" sx={{ fontSize: "0.8125rem", mb: 1 }}>
-          Health check succeeded.
+          Checks completed. Inspect the JSON for health body and works catalog probe.
         </Alert>
       ) : null}
       {status === "error" && error ? (

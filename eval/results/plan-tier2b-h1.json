@@ -1,0 +1,20 @@
+[
+  {
+    "case_id": "yolov1",
+    "scope_llm_status": "ok",
+    "fallback_to_build_references_scope": false,
+    "heuristic_full_count": 45,
+    "scope_path_count": 9,
+    "style_hint": "numbered",
+    "confidence": 1.0
+  },
+  {
+    "case_id": "arxiv_refs_heavy",
+    "scope_llm_status": "ok",
+    "fallback_to_build_references_scope": false,
+    "heuristic_full_count": 6,
+    "scope_path_count": 6,
+    "style_hint": "numbered",
+    "confidence": 1.0
+  }
+]

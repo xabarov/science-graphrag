@@ -35,5 +35,44 @@
     "min_institutions": 0,
     "max_institutions": 8,
     "max_work_dedup_violations": 0
+  },
+  "references_benchmark": {
+    "bibliography": {
+      "start_line": 1263,
+      "end_line": 1316
+    },
+    "raw_entries": [
+      "1. Uijlings, J.R., van de Sande, K.E., Gevers, T., Smeulders, A.W.: Selective search for object\nrecognition. IJCV (2013)",
+      "2. Ren, S., He, K., Girshick, R., Sun, J.: Faster R-CNN: Towards real-time object detection\nwith region proposal networks. In: NIPS. (2015)",
+      "3. He, K., Zhang, X., Ren, S., Sun, J.: Deep residual learning for image recognition. In: CVPR.\n(2016)",
+      "4. Sermanet, P., Eigen, D., Zhang, X., Mathieu, M., Fergus, R., LeCun, Y .: Overfeat: Integrated\nrecognition, localization and detection using convolutional networks. In: ICLR. (2014)\n\nSSD: Single Shot MultiBox Detector 17",
+      "5. Redmon, J., Divvala, S., Girshick, R., Farhadi, A.: You only look once: Unified, real-time\nobject detection. In: CVPR. (2016)",
+      "6. Girshick, R.: Fast R-CNN. In: ICCV . (2015)",
+      "7. Erhan, D., Szegedy, C., Toshev, A., Anguelov, D.: Scalable object detection using deep\nneural networks. In: CVPR. (2014)",
+      "8. Szegedy, C., Reed, S., Erhan, D., Anguelov, D.: Scalable, high-quality object detection.\narXiv preprint arXiv:1412.1441 v3 (2015)",
+      "9. He, K., Zhang, X., Ren, S., Sun, J.: Spatial pyramid pooling in deep convolutional networks\nfor visual recognition. In: ECCV . (2014)",
+      "10. Long, J., Shelhamer, E., Darrell, T.: Fully convolutional networks for semantic segmentation.\nIn: CVPR. (2015)",
+      "11. Hariharan, B., Arbel ́aez, P., Girshick, R., Malik, J.: Hypercolumns for object segmentation\nand fine-grained localization. In: CVPR. (2015)",
+      "12. Liu, W., Rabinovich, A., Berg, A.C.: ParseNet: Looking wider to see better. In: ILCR. (2016)",
+      "13. Zhou, B., Khosla, A., Lapedriza, A., Oliva, A., Torralba, A.: Object detectors emerge in deep\nscene cnns. In: ICLR. (2015)",
+      "14. Howard, A.G.: Some improvements on deep convolutional neural network based image\nclassification. arXiv preprint arXiv:1312.5402 (2013)",
+      "15. Simonyan, K., Zisserman, A.: Very deep convolutional networks for large-scale image recog-\nnition. In: NIPS. (2015)",
+      "16. Russakovsky, O., Deng, J., Su, H., Krause, J., Satheesh, S., Ma, S., Huang, Z., Karpathy, A.,\nKhosla, A., Bernstein, M., Berg, A.C., Fei-Fei, L.: Imagenet large scale visual recognition\nchallenge. IJCV (2015)",
+      "17. Chen, L.C., Papandreou, G., Kokkinos, I., Murphy, K., Yuille, A.L.: Semantic image seg-\nmentation with deep convolutional nets and fully connected crfs. In: ICLR. (2015)",
+      "18. Holschneider, M., Kronland-Martinet, R., Morlet, J., Tchamitchian, P.: A real-time algorithm\nfor signal analysis with the help of the wavelet transform. In: Wavelets. Springer (1990)\n286–297",
+      "19. Jia, Y ., Shelhamer, E., Donahue, J., Karayev, S., Long, J., Girshick, R., Guadarrama, S.,\nDarrell, T.: Caffe: Convolutional architecture for fast feature embedding. In: MM. (2014)",
+      "20. Glorot, X., Bengio, Y .: Understanding the difficulty of training deep feedforward neural\nnetworks. In: AISTATS. (2010)",
+      "21. Hoiem, D., Chodpathumwan, Y ., Dai, Q.: Diagnosing error in object detectors. In: ECCV",
+      "2012. (2012)",
+      "22. Girshick, R., Donahue, J., Darrell, T., Malik, J.: Rich feature hierarchies for accurate object\ndetection and semantic segmentation. In: CVPR. (2014)",
+      "23. Zhang, L., Lin, L., Liang, X., He, K.: Is faster r-cnn doing well for pedestrian detection. In:\nECCV . (2016)",
+      "24. Bell, S., Zitnick, C.L., Bala, K., Girshick, R.: Inside-outside net: Detecting objects in context\nwith skip pooling and recurrent neural networks. In: CVPR. (2016)",
+      "25. COCO: Common Objects in Context. http://mscoco.org/dataset/\n#detections-leaderboard (2016) [Online; accessed 25-July-2016].",
+      "26. Felzenszwalb, P., McAllester, D., Ramanan, D.: A discriminatively trained, multiscale, de-\nformable part model. In: CVPR. (2008)"
+    ],
+    "expected_count": 27,
+    "stratum": "numeric_dot_embedded_noise",
+    "annotation_kind": "manual",
+    "notes": "Includes mid-list OCR noise lines; split on ^\\d+\\. "
   }
 }

@@ -35,5 +35,42 @@
     "min_institutions": 0,
     "max_institutions": 8,
     "max_work_dedup_violations": 0
+  },
+  "references_benchmark": {
+    "bibliography": {
+      "start_line": 804,
+      "end_line": 876
+    },
+    "raw_entries": [
+      "[1] J. Carreira, R. Caseiro, J. Batista, and C. Sminchisescu. Se-\nmantic segmentation with second-order pooling. In ECCV,\n2012. 5",
+      "[2] R. Caruana. Multitask learning. Machine learning, 28(1),\n1997. 6",
+      "[3] K. Chatfield, K. Simonyan, A. Vedaldi, and A. Zisserman.\nReturn of the devil in the details: Delving deep into convo-\nlutional nets. In BMVC, 2014. 5",
+      "[4] J. Deng, W. Dong, R. Socher, L.-J. Li, K. Li, and L. Fei-\nFei. ImageNet: A large-scale hierarchical image database.\nIn CVPR, 2009. 2",
+      "[5] E. Denton, W. Zaremba, J. Bruna, Y . LeCun, and R. Fergus.\nExploiting linear structure within convolutional networks for\nefficient evaluation. InNIPS, 2014. 4",
+      "[6] D. Erhan, C. Szegedy, A. Toshev, and D. Anguelov. Scalable\nobject detection using deep neural networks. InCVPR, 2014.\n3",
+      "[7] M. Everingham, L. Van Gool, C. K. I. Williams, J. Winn, and\nA. Zisserman. The PASCAL Visual Object Classes (VOC)\nChallenge. IJCV, 2010. 1",
+      "[8] P. Felzenszwalb, R. Girshick, D. McAllester, and D. Ra-\nmanan. Object detection with discriminatively trained part\nbased models. TPAMI, 2010. 3, 7, 8",
+      "[9] R. Girshick, J. Donahue, T. Darrell, and J. Malik. Rich fea-\nture hierarchies for accurate object detection and semantic\nsegmentation. In CVPR, 2014. 1, 3, 4, 8",
+      "[10] R. Girshick, J. Donahue, T. Darrell, and J. Malik. Region-\nbased convolutional networks for accurate object detection\nand segmentation. TPAMI, 2015. 5, 7, 8",
+      "[11] K. He, X. Zhang, S. Ren, and J. Sun. Spatial pyramid pooling\nin deep convolutional networks for visual recognition. In\nECCV, 2014. 1, 2, 3, 4, 5, 6, 7",
+      "[12] J. H. Hosang, R. Benenson, P. Doll ́ar, and B. Schiele. What\nmakes for effective detection proposals? arXiv preprint\narXiv:1502.05082, 2015. 8",
+      "[13] Y . Jia, E. Shelhamer, J. Donahue, S. Karayev, J. Long, R. Gir-\nshick, S. Guadarrama, and T. Darrell. Caffe: Convolutional\narchitecture for fast feature embedding. In Proc. of the ACM\nInternational Conf. on Multimedia, 2014. 2",
+      "[14] A. Krizhevsky, I. Sutskever, and G. Hinton. ImageNet clas-\nsification with deep convolutional neural networks. InNIPS,\n2012. 1, 4, 6",
+      "[15] S. Lazebnik, C. Schmid, and J. Ponce. Beyond bags of\nfeatures: Spatial pyramid matching for recognizing natural\nscene categories. In CVPR, 2006. 1",
+      "[16] Y . LeCun, B. Boser, J. Denker, D. Henderson, R. Howard,\nW. Hubbard, and L. Jackel. Backpropagation applied to\nhandwritten zip code recognition. Neural Comp., 1989. 1",
+      "[17] M. Lin, Q. Chen, and S. Yan. Network in network. In ICLR,\n2014. 5",
+      "[18] T. Lin, M. Maire, S. Belongie, L. Bourdev, R. Girshick,\nJ. Hays, P. Perona, D. Ramanan, P. Doll ́ar, and C. L. Zit-\nnick. Microsoft COCO: common objects in context. arXiv\ne-prints, arXiv:1405.0312 [cs.CV], 2014. 8",
+      "[19] P. Sermanet, D. Eigen, X. Zhang, M. Mathieu, R. Fergus,\nand Y . LeCun. OverFeat: Integrated Recognition, Localiza-\ntion and Detection using Convolutional Networks. In ICLR,\n2014. 1, 3",
+      "[20] K. Simonyan and A. Zisserman. Very deep convolutional\nnetworks for large-scale image recognition. In ICLR, 2015.\n1, 5",
+      "[21] J. Uijlings, K. van de Sande, T. Gevers, and A. Smeulders.\nSelective search for object recognition. IJCV, 2013. 8",
+      "[22] P. Viola and M. Jones. Rapid object detection using a boosted\ncascade of simple features. In CVPR, 2001. 8",
+      "[23] J. Xue, J. Li, and Y . Gong. Restructuring of deep neural\nnetwork acoustic models with singular value decomposition.\nIn Interspeech, 2013. 4",
+      "[24] X. Zhu, C. V ondrick, D. Ramanan, and C. Fowlkes. Do we\nneed more training data or better models for object detec-\ntion? In BMVC, 2012. 7",
+      "[25] Y . Zhu, R. Urtasun, R. Salakhutdinov, and S. Fidler.\nsegDeepM: Exploiting segmentation and context in deep"
+    ],
+    "expected_count": 25,
+    "stratum": "bracket_numbered_realpdf",
+    "annotation_kind": "manual",
+    "notes": "Bootstrap from eval.references_harness.bibliography_gold_span; main ## References block; monotonic [n] detection; truncated before supplementary."
   }
 }

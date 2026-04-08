@@ -1,0 +1,34 @@
+{
+  "generated_at_utc": "2026-04-08T18:11:53.664716+00:00",
+  "fixture_root": "tests/fixtures/benchmarks/layer1",
+  "case_ids": [
+    "doi_refs_heavy"
+  ],
+  "max_steps": 8,
+  "errors": 0,
+  "rows": [
+    {
+      "status": "ok",
+      "case_id": "doi_refs_heavy",
+      "task_mode": "router",
+      "max_steps": 8,
+      "final_answer": "{\n  \"start_line\": 10,\n  \"end_line\": 15,\n  \"entry_count\": 5,\n  \"style_guess\": \"bracket_numbered\",\n  \"confidence\": 0.95,\n  \"reasoning_summary\": \"High bracket and DOI density, consistent style, and near document end.\"\n}",
+      "wall_seconds": 5.152,
+      "heuristic_baseline_count": 5,
+      "parsed": {
+        "final_answer_raw": "{\n  \"start_line\": 10,\n  \"end_line\": 15,\n  \"entry_count\": 5,\n  \"style_guess\": \"bracket_numbered\",\n  \"confidence\": 0.95,\n  \"reasoning_summary\": \"High bracket and DOI density, consistent style, and near document end.\"\n}",
+        "start_line": 10,
+        "end_line": 15,
+        "entry_count": 5,
+        "style_guess": "bracket_numbered",
+        "confidence": 0.95,
+        "reasoning_summary": "High bracket and DOI density, consistent style, and near document end."
+      },
+      "parsed_entry_count": 5,
+      "gold_entry_count": 5,
+      "abs_error_vs_gold": 0
+    }
+  ],
+  "mean_abs_error_vs_gold": 0.0,
+  "median_abs_error_vs_gold": 0
+}

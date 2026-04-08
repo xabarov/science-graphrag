@@ -21,6 +21,44 @@ _INTRO_MARKERS = (
 
 _REF_HEAD_RE = re.compile(r"^#{0,3}\s*(references|bibliography)\s*$", re.IGNORECASE | re.MULTILINE)
 
+# When no following ``##`` heading exists, avoid swallowing appendix/code tail (plan B1).
+_REF_SECTION_EOF_STOP_PATTERNS: tuple[re.Pattern[str], ...] = (
+    re.compile(r"^#{1,6}\s+A[\.\s]", re.IGNORECASE),  # # A. Appendix, ## A Appendix
+    re.compile(r"^#{1,6}\s+Appendix\b", re.IGNORECASE),
+    re.compile(r"^Appendix\b", re.IGNORECASE),
+    re.compile(r"^A\s+Appendix\b", re.IGNORECASE),
+    re.compile(r"^A\.\s+Appendix\b", re.IGNORECASE),
+    re.compile(r"^A\s+A\s+PPENDIX", re.IGNORECASE),  # OCR: "A A PPENDIX"
+    re.compile(r"^A\.\d+\s+", re.IGNORECASE),  # e.g. "A.1 ..." appendix subsection
+    re.compile(r"^```\s*$"),
+    re.compile(r"^Listing\s+\d+", re.IGNORECASE),
+)
+
+
+def _reference_section_end_without_next_heading(
+    rest: str, *, min_content_lines: int = 2
+) -> int | None:
+    """
+    Return length of prefix of ``rest`` to use as the reference block, or None to use EOF.
+
+    Stops before appendix headings, fenced code blocks, or ``Listing N`` lines once enough
+    bibliography-like content was seen (avoids false positives right under ``## References``).
+    """
+    pos = 0
+    content_lines = 0
+    for i, line in enumerate(rest.split("\n")):
+        if i > 0:
+            pos += 1
+        stripped = line.strip()
+        if stripped:
+            content_lines += 1
+        if content_lines >= min_content_lines:
+            for pat in _REF_SECTION_EOF_STOP_PATTERNS:
+                if pat.match(stripped):
+                    return pos
+        pos += len(line)
+    return None
+
 
 @dataclass(frozen=True, slots=True)
 class DocumentSlice:
@@ -112,7 +150,8 @@ def find_reference_section_spans(text: str) -> list[tuple[int, int]]:
         if next_heading and next_heading.start() > 0:
             end = start + next_heading.start()
         else:
-            end = len(text)
+            early = _reference_section_end_without_next_heading(rest)
+            end = start + early if early is not None else len(text)
         if end > start:
             spans.append((start, end))
     return spans
@@ -126,6 +165,10 @@ def build_references_scope_text(
     """
     Full references scope for LLM / heuristics: all Reference sections concatenated,
     or tail fallback if no heading found.
+
+    Sections are bounded by ``find_reference_section_spans`` (including EOF appendix/code
+    trims). When a scope-LLM excerpt is available in the pipeline, it may further cap
+    overlong tails before parsing (see ingestion stage ordering).
     """
     spans = find_reference_section_spans(text)
     if spans:

@@ -1,0 +1,7 @@
+{
+  "status": "ok",
+  "case_id": "yolov1",
+  "max_steps": 10,
+  "final_answer": "45",
+  "heuristic_baseline_count": 45
+}

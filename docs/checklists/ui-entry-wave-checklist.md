@@ -58,7 +58,11 @@ Manual verification for the Home / Corpus / entry-experience wave.
 - Run a question with no `work_id` and confirm the answer block explains that the result is global.
 - Run a question with a selected `work_id` and confirm the answer block explains that the result is paper-scoped.
 - Reopen `Ask` and confirm recent questions can be restored into the form.
+- In **Ask session**, create a **New session**, rename it via **Session title** (blur to save), switch **Session** dropdown, and confirm **Recent in this session** only shows turns for the active session.
+- Open **Workspace → Ask** for a work and confirm sessions are separate from standalone `/ask` (different scope).
+- Copy the URL while on Ask with a selected session and confirm **`ask_session=`** is present; reload and land on the same session; switch to another workspace tab and confirm `ask_session` is stripped from the query string.
 - From an answer citation, jump into `Workspace`, `Reader`, `Evidence`, and `Graph` and confirm traceability context is preserved.
+- On **Workspace → Graph**, narrow the viewport below the `md` breakpoint and confirm the graph/cards column stacks above the detail panel without unusable horizontal scroll.
 - From `Reader` or `Evidence`, confirm there is a clear path back into `Ask` to continue the question flow.
 - Trigger a degraded response fixture or low-context answer and confirm the degraded-state copy is visible and understandable.
 

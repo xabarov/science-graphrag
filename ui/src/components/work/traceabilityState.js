@@ -7,6 +7,8 @@ export const TRACEABILITY_QUERY_KEYS = {
   chunkFingerprint: "chunk_fingerprint",
   section: "section",
   citation: "citation",
+  /** Local Ask session id (browser-only; preserved across workspace links when present). */
+  askSession: "ask_session",
 };
 
 function trimOrEmpty(value) {
@@ -16,7 +18,7 @@ function trimOrEmpty(value) {
 
 /**
  * @param {URLSearchParams | { get: (key: string) => string | null }} searchParams
- * @returns {{workId: string, tab: string, nodeId: string, chunkFingerprint: string, section: string, citation: string}}
+ * @returns {{workId: string, tab: string, nodeId: string, chunkFingerprint: string, section: string, citation: string, askSession: string}}
  */
 export function readTraceabilityState(searchParams) {
   return {
@@ -26,11 +28,12 @@ export function readTraceabilityState(searchParams) {
     chunkFingerprint: trimOrEmpty(searchParams.get(TRACEABILITY_QUERY_KEYS.chunkFingerprint)),
     section: trimOrEmpty(searchParams.get(TRACEABILITY_QUERY_KEYS.section)),
     citation: trimOrEmpty(searchParams.get(TRACEABILITY_QUERY_KEYS.citation)),
+    askSession: trimOrEmpty(searchParams.get(TRACEABILITY_QUERY_KEYS.askSession)),
   };
 }
 
 /**
- * @param {Partial<{workId: string, tab: string, nodeId: string, chunkFingerprint: string, section: string, citation: string}>} state
+ * @param {Partial<{workId: string, tab: string, nodeId: string, chunkFingerprint: string, section: string, citation: string, askSession: string}>} state
  * @param {{ includeTab?: boolean }} [options]
  * @returns {URLSearchParams}
  */
@@ -43,6 +46,7 @@ export function buildTraceabilityParams(state = {}, options = {}) {
   const chunkFingerprint = trimOrEmpty(state.chunkFingerprint);
   const section = trimOrEmpty(state.section);
   const citation = trimOrEmpty(state.citation);
+  const askSession = trimOrEmpty(state.askSession);
 
   if (workId) params.set(TRACEABILITY_QUERY_KEYS.workId, workId);
   if (includeTab && workId) params.set(TRACEABILITY_QUERY_KEYS.tab, tab);
@@ -50,6 +54,7 @@ export function buildTraceabilityParams(state = {}, options = {}) {
   if (chunkFingerprint) params.set(TRACEABILITY_QUERY_KEYS.chunkFingerprint, chunkFingerprint);
   if (section) params.set(TRACEABILITY_QUERY_KEYS.section, section);
   if (citation) params.set(TRACEABILITY_QUERY_KEYS.citation, citation);
+  if (askSession) params.set(TRACEABILITY_QUERY_KEYS.askSession, askSession);
   return params;
 }
 
@@ -80,7 +85,7 @@ export function buildStandaloneTracePath(routePath, workId, extras = {}) {
 
 /**
  * @param {URLSearchParams | { get: (key: string) => string | null }} searchParams
- * @param {Partial<{workId: string, tab: string, nodeId: string, chunkFingerprint: string, section: string, citation: string}>} updates
+ * @param {Partial<{workId: string, tab: string, nodeId: string, chunkFingerprint: string, section: string, citation: string, askSession: string}>} updates
  * @param {{ includeTab?: boolean }} [options]
  * @returns {URLSearchParams}
  */

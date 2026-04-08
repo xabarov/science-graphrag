@@ -2,10 +2,16 @@ import React from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-
 import { CursorSmallButton } from "../../../components/common/index.js";
+import WorkIdGlossaryHint from "../../../components/layout/WorkIdGlossaryHint.jsx";
 import GraphWorkspacePanel from "../../../components/graph/GraphWorkspacePanel.jsx";
-import { buildStandaloneTracePath, buildWorkspaceTracePath, mergeTraceabilityParams, readTraceabilityState } from "../../../components/work/traceabilityState.js";
+import { GraphMissingWorkInline } from "../../../components/graph/graphShellStates.jsx";
+import {
+  buildStandaloneTracePath,
+  buildWorkspaceTracePath,
+  mergeTraceabilityParams,
+  readTraceabilityState,
+} from "../../../components/work/traceabilityState.js";
 
 /**
  * @param {{ workId: string }} props
@@ -14,13 +20,10 @@ export default function GraphTab({ workId }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const trace = readTraceabilityState(searchParams);
   const selectedNodeId = trace.nodeId;
+  const labMode = searchParams.get("lab") === "1";
 
   if (!workId.trim()) {
-    return (
-      <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>
-        Pick a work from Corpus to inspect graph context.
-      </Typography>
-    );
+    return <GraphMissingWorkInline message="Pick a work from Corpus to inspect graph context." />;
   }
 
   function handleSelectNode(nodeId) {
@@ -67,12 +70,14 @@ export default function GraphTab({ workId }) {
         </CursorSmallButton>
         <CursorSmallButton
           component={Link}
-          to={buildWorkspaceTracePath(workId, "ask", {
+          to={`/workspace?${mergeTraceabilityParams(searchParams, {
+            workId,
+            tab: "ask",
             nodeId: selectedNodeId,
             chunkFingerprint: trace.chunkFingerprint,
             section: trace.section,
             citation: trace.citation,
-          })}
+          }).toString()}`}
           sx={{ textDecoration: "none" }}
         >
           Jump to Ask
@@ -84,8 +89,18 @@ export default function GraphTab({ workId }) {
         selectedNodeId={selectedNodeId}
         onSelectNode={handleSelectNode}
         mode="embedded"
+        labMode={labMode}
         title="Workspace graph"
-        subtitle="Graph stays tied to the active work and keeps URL-driven node focus for deep links."
+        subtitle={
+          <Box>
+            <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)" }}>
+              Graph stays tied to the active work and keeps URL-driven node focus for deep links.
+            </Typography>
+            <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mt: 0.75 }}>
+              <WorkIdGlossaryHint variant="graph" />
+            </Typography>
+          </Box>
+        }
         traceContext={{
           chunkFingerprint: trace.chunkFingerprint,
           section: trace.section,

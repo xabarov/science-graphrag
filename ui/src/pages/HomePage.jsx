@@ -1,12 +1,14 @@
-import React, { useMemo } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useMemo } from "react";
+import { Link, useLocation } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 import { CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
+import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
 import { isAdminModeEnabled } from "../components/layout/adminVisibility.js";
-import { getContinueWorkspaceTarget, getHomeStatus, getRecentWorks } from "./HomePage/homeState.js";
+import { getHomeStatus } from "./HomePage/homeState.js";
+import { useCorpusEntryState } from "./HomePage/useCorpusEntryState.js";
 
 function SurfaceCard({ eyebrow, title, description, actions, accent = "default" }) {
   const accentStyles =
@@ -47,13 +49,17 @@ function SurfaceCard({ eyebrow, title, description, actions, accent = "default" 
 }
 
 export default function HomePage() {
-  const continueTarget = useMemo(() => getContinueWorkspaceTarget(), []);
-  const recentWorks = useMemo(() => getRecentWorks().slice(0, 4), []);
+  const location = useLocation();
+  const { recentWorks, continueTarget, refreshCorpusEntryState } = useCorpusEntryState({ recentLimit: 4 });
   const status = useMemo(() => getHomeStatus(), []);
   const adminModeEnabled = useMemo(() => isAdminModeEnabled(), []);
 
+  useEffect(() => {
+    refreshCorpusEntryState();
+  }, [location.pathname, refreshCorpusEntryState]);
+
   return (
-    <Box sx={{ p: 2, maxWidth: 1100 }}>
+    <Box sx={{ p: 2, ...mainShellContentSx }}>
       <PageHeader
         eyebrow="Research surface"
         title="Home"

@@ -4,6 +4,7 @@ import Typography from "@mui/material/Typography";
 import { Link } from "react-router-dom";
 
 import PageHeader from "../components/layout/PageHeader.jsx";
+import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
 import { CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
 import { isAdminModeEnabled } from "../components/layout/adminVisibility.js";
 import { getContinueWorkspaceTarget } from "./HomePage/homeState.js";
@@ -13,7 +14,7 @@ export default function NotFoundPage() {
   const adminModeEnabled = useMemo(() => isAdminModeEnabled(), []);
 
   return (
-    <Box sx={{ p: 2, maxWidth: 960 }}>
+    <Box sx={{ p: 2, ...mainShellContentSx }}>
       <PageHeader
         eyebrow="Recovery"
         title="Page not found"

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { deriveAskScopeKey } from "./askSessionState.js";
 import { buildStandaloneTracePath, buildWorkspaceTracePath, describeTraceabilityState } from "./traceabilityState.js";
 import { buildQueryBody, normalizeQueryResponse } from "../../services/researchApi.js";
 
@@ -26,6 +27,11 @@ describe("askFlowCompatibility", () => {
         nodeId: "node-1",
       }),
     ).toEqual(["citation #2", "chunk fp-1", "section intro", "node node-1"]);
+  });
+
+  it("partitions ask sessions by standalone vs locked workspace scope", () => {
+    expect(deriveAskScopeKey({ locked: false, scopedWorkId: "w1" })).toBe("standalone");
+    expect(deriveAskScopeKey({ locked: true, scopedWorkId: "w1" })).toBe("workspace:w1");
   });
 
   it("preserves global ask semantics when work id is empty", () => {

@@ -164,6 +164,7 @@ def work_graph_neighborhood(settings: Settings, work_id: str) -> dict[str, Any] 
                 """
                 MATCH (w:Work {id: $id})
                 RETURN w.id AS wid,
+                       coalesce(w.title, '') AS wtitle,
                        """
                 + sem
                 + """ AS has_semantic
@@ -175,11 +176,13 @@ def work_graph_neighborhood(settings: Settings, work_id: str) -> dict[str, Any] 
             nodes: list[dict[str, Any]] = []
             edges: list[dict[str, Any]] = []
             center_id = str(row["wid"])
+            raw_title = str(row.get("wtitle") or "").strip()
+            center_label = raw_title[:200] if raw_title else center_id
             nodes.append(
                 {
                     "id": center_id,
                     "type": "Work",
-                    "label": center_id,
+                    "label": center_label,
                 },
             )
             for rec in session.run(

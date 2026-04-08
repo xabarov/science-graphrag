@@ -43,5 +43,53 @@
     "min_institutions": 0,
     "max_institutions": 8,
     "max_work_dedup_violations": 0
+  },
+  "references_benchmark": {
+    "bibliography": {
+      "start_line": 633,
+      "end_line": 701
+    },
+    "raw_entries": [
+      "[1] Zhaowei Cai and Nuno Vasconcelos. Cascade r-cnn: Delving into high quality object detection. In CVPR,\n2018.",
+      "[2] Yuhang Cao, Kai Chen, Chen Change Loy, and Dahua Lin. Prime sample attention in object detection.\narXiv preprint arXiv:1904.04821, 2019.",
+      "[3] Kai Chen, Jiaqi Wang, Jiangmiao Pang, Yuhang Cao, Yu Xiong, Xiaoxiao Li, Shuyang Sun, Wansen Feng,\nZiwei Liu, Jiarui Xu, et al. Mmdetection: Open mmlab detection toolbox and benchmark. arXiv preprint\narXiv:1906.07155, 2019.",
+      "[4] Jiwoong Choi, Dayoung Chun, Hyun Kim, and Hyuk-Jae Lee. Gaussian yolov3: An accurate and fast\nobject detector using localization uncertainty for autonomous driving. In ICCV, 2019.",
+      "[5] Zhiwei Dong, Guoxuan Li, Yue Liao, Fei Wang, Pengju Ren, and Chen Qian. Centripetalnet: Pursuing\nhigh-quality keypoint pairs for object detection. In CVPR, 2020.",
+      "[6] Kaiwen Duan, Song Bai, Lingxi Xie, Honggang Qi, Qingming Huang, and Qi Tian. Centernet: Keypoint\ntriplets for object detection. In ICCV, 2019.",
+      "[7] Ross Girshick. Fast r-cnn. In ICCV, 2015.",
+      "[8] Kaiming He, Georgia Gkioxari, Piotr Dollár, and Ross Girshick. Mask r-cnn. In ICCV, 2017.",
+      "[9] Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. Deep residual learning for image recognition.\nIn CVPR, 2016.",
+      "[10] Yihui He, Chenchen Zhu, Jianren Wang, Marios Savvides, and Xiangyu Zhang. Bounding box regression\nwith uncertainty for accurate object detection. In CVPR, 2019.",
+      "[11] Zhaojin Huang, Lichao Huang, Yongchao Gong, Chang Huang, and Xinggang Wang. Mask scoring r-cnn.\nIn CVPR, 2019.",
+      "[12] Borui Jiang, Ruixuan Luo, Jiayuan Mao, Tete Xiao, and Yuning Jiang. Acquisition of localization\nconfidence for accurate object detection. In ECCV, 2018.",
+      "[13] Tao Kong, Fuchun Sun, Huaping Liu, Yuning Jiang, and Jianbo Shi. Foveabox: Beyond anchor-based\nobject detector. arXiv preprint arXiv:1904.03797, 2019.",
+      "[14] Hei Law and Jia Deng. Cornernet: Detecting objects as paired keypoints. In ECCV, 2018.",
+      "[15] Hengduo Li, Zuxuan Wu, Chen Zhu, Caiming Xiong, Richard Socher, and Larry S Davis. Learning from\nnoisy anchors for one-stage object detection. arXiv preprint arXiv:1912.05086, 2019.",
+      "[16] Yanghao Li, Yuntao Chen, Naiyan Wang, and Zhaoxiang Zhang. Scale-aware trident networks for object\ndetection. In ICCV, 2019.",
+      "[17] Tsung-Yi Lin, Piotr Dollár, Ross Girshick, Kaiming He, Bharath Hariharan, and Serge Belongie. Feature\npyramid networks for object detection. In CVPR, 2017.",
+      "[18] Tsung-Yi Lin, Priya Goyal, Ross Girshick, Kaiming He, and Piotr Dollár. Focal loss for dense object\ndetection. In ICCV, 2017.",
+      "[19] Tsung-Yi Lin, Michael Maire, Serge Belongie, James Hays, Pietro Perona, Deva Ramanan, Piotr Dollár,\nand C Lawrence Zitnick. Microsoft coco: Common objects in context. In ECCV, 2014.",
+      "[20] Wei Liu, Dragomir Anguelov, Dumitru Erhan, Christian Szegedy, Scott Reed, Cheng-Yang Fu, and\nAlexander C Berg. Ssd: Single shot multibox detector. In ECCV, 2016.\n9",
+      "[21] Xin Lu, Buyu Li, Yuxin Yue, Quanquan Li, and Junjie Yan. Grid r-cnn. In CVPR, 2019.",
+      "[22] Jiangmiao Pang, Kai Chen, Jianping Shi, Huajun Feng, Wanli Ouyang, and Dahua Lin. Libra r-cnn:\nTowards balanced learning for object detection. In CVPR, 2019.",
+      "[23] Shaoqing Ren, Kaiming He, Ross Girshick, and Jian Sun. Faster r-cnn: Towards real-time object detection\nwith region proposal networks. In NeurIPs, 2015.",
+      "[24] Hamid Rezatofighi, Nathan Tsoi, JunYoung Gwak, Amir Sadeghian, Ian Reid, and Silvio Savarese.\nGeneralized intersection over union: A metric and a loss for bounding box regression. In CVPR, 2019.",
+      "[25] Guanglu Song, Yu Liu, and Xiaogang Wang. Revisiting the sibling head in object detector. In CVPR, 2020.",
+      "[26] Zhi Tian, Chunhua Shen, Hao Chen, and Tong He. Fcos: Fully convolutional one-stage object detection.\nIn ICCV, 2019.",
+      "[27] Lachlan Tychsen-Smith and Lars Petersson. Improving object localization with fitness nms and bounded\niou loss. In CVPR, 2018.",
+      "[28] Shengkai Wu and Xiaoping Li. Iou-balanced loss functions for single-stage object detection.arXiv preprint\narXiv:1908.05641, 2019.",
+      "[29] Shengkai Wu, Xiaoping Li, and Xinggang Wang. Iou-aware single-stage object detector for accurate\nlocalization. Image and Vision Computing, 2020.",
+      "[30] Ze Yang, Shaohui Liu, Han Hu, Liwei Wang, and Stephen Lin. Reppoints: Point set representation for\nobject detection. In ICCV, 2019.",
+      "[31] Shifeng Zhang, Cheng Chi, Yongqiang Yao, Zhen Lei, and Stan Z Li. Bridging the gap between anchor-\nbased and anchor-free detection via adaptive training sample selection. In CVPR, 2020.",
+      "[32] Xiaosong Zhang, Fang Wan, Chang Liu, Rongrong Ji, and Qixiang Ye. Freeanchor: Learning to match\nanchors for visual object detection. In NeurIPs, 2019.",
+      "[33] Chenchen Zhu, Fangyi Chen, Zhiqiang Shen, and Marios Savvides. Soft anchor-point object detection. In\nCVPR, 2020.",
+      "[34] Chenchen Zhu, Yihui He, and Marios Savvides. Feature selective anchor-free module for single-shot object\ndetection. In CVPR, 2019.",
+      "[35] Li Zhu, Zihao Xie, Liman Liu, Bo Tao, and Wenbing Tao. Iou-uniform r-cnn: Breaking through the\nlimitations of rpn. arXiv preprint arXiv:1912.05190, 2019.",
+      "[36] Xizhou Zhu, Han Hu, Stephen Lin, and Jifeng Dai. Deformable convnets v2: More deformable, better"
+    ],
+    "expected_count": 36,
+    "stratum": "bracket_numbered_realpdf",
+    "annotation_kind": "manual",
+    "notes": "Bootstrap from eval.references_harness.bibliography_gold_span; main ## References block; monotonic [n] detection; truncated before supplementary."
   }
 }

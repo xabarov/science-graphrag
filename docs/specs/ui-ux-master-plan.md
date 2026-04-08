@@ -508,14 +508,14 @@ Admin-инструменты должны быть:
 
 ## Текущий статус реализации
 
-- `Phase 0`: `partial` — базовая IA и `workspace-first` отражены в коде; canonical route map и admin visibility policy зафиксированы в [`docs/specs/route-map.md`](./route-map.md); отдельная компонентная схема shell и формальная role policy beyond UI-gating всё ещё могут быть расширены.
+- `Phase 0`: `partial` — базовая IA и `workspace-first` отражены в коде; canonical route map в [`docs/specs/route-map.md`](./route-map.md); admin policy в [`docs/specs/admin-policy.md`](./admin-policy.md); компонентная схема shell в [`docs/specs/shell-layout.md`](./shell-layout.md); формальная server-side RBAC всё ещё вне scope UI-only gate.
 - `Phase 1`: `partial` — `Home`, improved 404, shared page header pattern, simplified sidebar grouping и admin route strategy уже внедрены; remaining work смещается в final polish, admin IA и accessibility, а не в базовый shell refactor.
 - `Phase 2`: `done` — `active work context`, restore last work, URL-driven tabs и поток `Corpus -> Workspace` реализованы.
-- `Phase 3`: `partial` — `Home`, `CorpusPage`, `continue flow` и `recent works` уже реализованы, но richer corpus browser и более сильный onboarding still have room to grow.
-- `Phase 4`: `partial` — `Graph` встроен в `Workspace` и вынесен в reusable standalone surface, но до полноценного graph-first UX с controls/canvas ещё есть зазор.
-- `Phase 5`: `partial` — traceability, локальная история вопросов с restore, улучшенный answer/citations UX, degraded-hints, back-links Reader/Evidence → Ask, блок **Why this answer** (`buildAskAnswerRationale` в `researchApi.js`) и свёрнутый advanced JSON retrieval уже есть; следующий слой — при необходимости именованные **сессии Ask** и более глубокий narrative поверх тех же сигналов.
+- `Phase 3`: `partial` — `Home`, `CorpusPage` с load more, sort, view density, клиентские фильтры и общий хук `useCorpusEntryState`; continue/recent flow есть; richer onboarding и server-side фильтры — по мере роста API.
+- `Phase 4`: `done` (v1) — **4.1–4.4**, пост-4.4 hardening и продуктовое закрытие в [`graph-ui-plan.md`](./graph-ui-plan.md) (**Phase 4 completion**): read-only граф, канвас+cards, URL selection, лимиты, Graph Lab, responsive/a11y срез; **v1 = круг + Canvas**; force/sim и сторонняя библиотека — только бэклог/spike, не gate для Phase 4.
+- `Phase 5`: `partial` — именованные локальные сессии + синхронизация **`ask_session`** в URL на `/ask` и workspace Ask (`traceabilityState`, `WorkspacePage` сброс при смене вкладки); см. [`ask-sessions.md`](./ask-sessions.md). Дальше — серверные сессии, удаление/экспорт сессий или более глубокий narrative.
 - `Phase 6`: `partial` — admin tools сгруппированы, есть `AdminEntryPage`, nested `/admin/*` routes и lightweight visibility gate, но финальная admin IA и role policy beyond UI gating ещё не завершены.
-- `Phase 7`: `partial` — consistency pass уже покрывает top-level surfaces, shared headers и recovery flows; добавлены базовый keyboard focus (`ui/src/styles.css`), частичный a11y в shell/benchmark tabs; bundle дробится lazy-маршрутами и `manualChunks` в `vite.config.js`; remaining work — терминология, полный accessibility/responsive pass.
+- `Phase 7`: `partial` — единый **глоссарий work_id** в UI: [`workIdGlossaryCopy.js`](../../ui/src/components/layout/workIdGlossaryCopy.js), [`WorkIdGlossaryHint.jsx`](../../ui/src/components/layout/WorkIdGlossaryHint.jsx) на Workspace (empty state), Corpus, Ask (optional work), Graph tab; tabs чуть компактнее на `xs`; benchmark dialogs `fullScreen` на узких экранах (breakpoint `sm`); graph legend `xs` spacing (см. `graph-ui-plan.md`). Remaining work — полный consistency pass по остальным экранам и копирайту.
 
 ## Phase 0. Architecture alignment
 
@@ -544,7 +544,8 @@ Deliverables:
 
 - этот документ;
 - route map: [`docs/specs/route-map.md`](./route-map.md);
-- компонентная схема shell/layout.
+- компонентная схема shell/layout: [`docs/specs/shell-layout.md`](./shell-layout.md);
+- admin policy: [`docs/specs/admin-policy.md`](./admin-policy.md).
 
 ## Phase 1. Shell and navigation refactor
 
@@ -627,30 +628,83 @@ Checklist:
 
 ## Phase 4. Graph UX modernization
 
-Статус: `partial`
+Статус: `done` (v1 shipped; см. **Phase 4 completion** в [`graph-ui-plan.md`](./graph-ui-plan.md); graph-first с force/sim — опционально в бэклоге).
+
+Спецификация контракта API ↔ UI и целей canvas: [`docs/specs/graph-ui-plan.md`](./graph-ui-plan.md).
+
+Заметки по реализации (текущий код):
+
+- Нормализация ответа API: [`graphAdapter.js`](../../ui/src/components/graph/graphAdapter.js), [`graphViewState.js`](../../ui/src/components/graph/graphViewState.js) — дубликаты id, сироты рёбер, `warnings`.
+- Оболочка: [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx) — загрузка, переключатель Cards/Graph, легенда, алерты, сворачиваемые diagnostics / `lab=1`, сетка + детали.
+- Общие состояния графа: [`graphShellStates.jsx`](../../ui/src/components/graph/graphShellStates.jsx) — empty/loading/error для страницы, вкладки и панели.
+- Визуализация: [`GraphVisualization.jsx`](../../ui/src/components/graph/GraphVisualization.jsx), [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx) + [`graphCanvasTransform.js`](../../ui/src/components/graph/graphCanvasTransform.js), [`graphUiLimits.js`](../../ui/src/components/graph/graphUiLimits.js).
+- Детали: [`GraphDetailPanel.jsx`](../../ui/src/components/graph/GraphDetailPanel.jsx) — полный граф для `deriveGraphDetail`.
+- Точки входа: вкладка Graph в Workspace, [`GraphPage.jsx`](../../ui/src/pages/GraphPage.jsx).
 
 Цель:
 
-- уйти от JSON graph preview к настоящему графовому экрану.
+- уйти от обзорной сетки узлов к **graph-first** экрану: геометрия связей, навигация по графу, предсказуемые состояния loading/empty/error в одном стиле с Phase 7.
 
-Работы:
+### Подфазы (визуализация и UX графа)
 
-- спроектировать graph data adapter для `science-graphrag`;
-- реализовать reusable graph visualization;
-- добавить graph details panel;
-- встроить graph в workspace;
-- подготовить отдельный `Graph Lab`.
+Выполнять по порядку; каждая подфаза — отдельный вертикальный срез (PR), чтобы не блокировать мелкие правки в `graphViewState`.
 
-Референсы:
+#### Phase 4.1 — Контракт данных и стабильность адаптера
 
-- `../../../osint-gr/frontend/src/pages/KnowledgeGraphPage.jsx`
-- `../../../osint-gr/frontend/src/components/features/GraphVisualization.jsx`
+- Зафиксировать целевую модель для рендера: `nodes[]`, `edges[]`, идентификаторы для выбора и deep link (уже близко к `normalizeGraphPayload`).
+- Покрыть краевые случаи: пустой граф, дубликаты id, крупный ответ API — лимиты/предупреждение в UI (без падения).
+- Расширить тесты [`graphViewState.test.js`](../../ui/src/components/graph/graphViewState.test.js) при изменении контракта.
+- **Референс (модель и подготовка к симуляции):** `../../../osint-gr/frontend/src/components/features/graphVisualization/hooks/useGraphData.js` — как из доменной структуры получают узлы/рёбра и размер канваса.
+
+#### Phase 4.2 — Canvas MVP (рёбра на плоскости)
+
+- Ввести второй режим или заменить `GraphVisualization`: отрисовка **узлов и рёбер** на `canvas` (или встроенная библиотека: React Flow / Sigma — решение зафиксировать в PR).
+- Минимум: выбор узла → тот же `GraphDetailPanel` / `deriveGraphDetail`; выделение активного узла из URL (`node_id` / traceability).
+- **Референсы (лучшие практики osint-gr, read-only порт или идеи):**
+  - `../../../osint-gr/frontend/src/components/features/GraphVisualization.jsx` — сборка: симуляция + отрисовка + события.
+  - `../../../osint-gr/frontend/src/components/features/graphVisualization/hooks/useForceSimulation.js` — стабилизация раскладки.
+  - `../../../osint-gr/frontend/src/components/features/graphVisualization/hooks/useCanvasDrawing.js` — отрисовка рёбер/узлов.
+  - `../../../osint-gr/frontend/src/components/features/graphVisualization/hooks/useCanvasEvents.js` — hit-test, zoom/pan (часть переносится в Phase 4.3).
+  - `../../../osint-gr/frontend/src/components/features/graphVisualization/hooks/useCanvasResize.js` — `ResizeObserver` / размер контейнера.
+  - `../../../osint-gr/frontend/src/components/features/graphVisualization/components/GraphControls.jsx` — паттерн панели управления (упрощённо: fit / reset).
+- **Не тащить без нужды:** `KnowledgeGraphContext`, сохранение в БД, чат, модалки редактирования — в science-graphrag другой домен (`work_id`, read-only граф из API).
+
+#### Phase 4.3 — Навигация и устойчивость
+
+- **Сделано в UI:** wheel zoom, drag pan, Fit / Center on selected в `GraphCanvasMvp.jsx`; Escape на сфокусированной области снимает выбор; `capGraphForUi` + Alert в `GraphWorkspacePanel`; выравнивание высот колонок.
+- Дальнейшие улучшения (опционально): клавиатурная навигация по узлам, более умный сэмплинг графа, порт хуков osint-gr или React Flow при росте требований.
+- **Референс компоновки экрана:** `../../../osint-gr/frontend/src/pages/KnowledgeGraphPage/components/KnowledgeGraphVisualizationSection.jsx`.
+
+#### Phase 4.4 — Полировка и Graph Lab
+
+- **Сделано в UI:** [`graphShellStates.jsx`](../../ui/src/components/graph/graphShellStates.jsx), [`GraphTypeLegend.jsx`](../../ui/src/components/graph/GraphTypeLegend.jsx), флаг **`lab=1`** (диagnostics развёрнуты), иначе disclosure; позиционирование канваса централизовано в [`graphCanvasTransform.js`](../../ui/src/components/graph/graphCanvasTransform.js).
+- Дальше (опционально): отдельный маршрут `/graph/lab`, клавиатурная навигация по узлам, выравнивание empty states с глобальным Phase 7 audit.
+- **Референс:** `../../../osint-gr/frontend/src/pages/KnowledgeGraphPage.jsx`.
+
+### Референсы (сводный список osint-gr)
+
+| Назначение | Путь (от корня репозитория osint-gr) |
+|------------|--------------------------------------|
+| Страница-оболочка | `frontend/src/pages/KnowledgeGraphPage.jsx` |
+| Секция: layout графа + панели | `frontend/src/pages/KnowledgeGraphPage/components/KnowledgeGraphVisualizationSection.jsx` |
+| Canvas + симуляция (главный образец) | `frontend/src/components/features/GraphVisualization.jsx` |
+| Хуки и константы | `frontend/src/components/features/graphVisualization/hooks/*`, `components/`, `constants`, `utils` |
+
+### Работы (устаревший список — заменён подфазами 4.1–4.4)
+
+- ~~спроектировать graph data adapter~~ → **4.1** (уточнение контракта).
+- ~~reusable graph visualization~~ → **4.2–4.3** (canvas + навигация).
+- ~~graph details panel~~ → уже есть; синхронизировать с canvas в **4.2**.
+- ~~встроить graph в workspace~~ → сделано; поддерживать паритет с **4.4**.
+- ~~Graph Lab~~ → **4.4**.
 
 Checklist:
 
 - граф usable и в standalone, и во workspace;
-- можно фокусироваться на узле;
-- есть понятные controls и detail panel.
+- на canvas видны **связи** между узлами, не только список узлов;
+- можно сфокусироваться на узле (мышь + URL/trace);
+- есть понятные controls и detail panel;
+- крупные графы деградируют предсказуемо.
 
 ## Phase 5. Ask and Evidence workflow
 
@@ -659,12 +713,14 @@ Checklist:
 Заметки по реализации:
 
 - Локальная история и restore последних вопросов: `ui/src/components/work/askHistoryState.js`, использование в `ui/src/components/work/AskPanel.jsx`.
+- **Именованные сессии Ask (локально):** `ui/src/components/work/askSessionState.js` — до 8 сессий на scope, до 24 turn’ов на сессию, импорт из плоского history при первом открытии scope; UI переключения / rename / New session в `AskPanel.jsx`; контракт в [`docs/specs/ask-sessions.md`](./ask-sessions.md).
+- **URL `ask_session`:** `TRACEABILITY_QUERY_KEYS.askSession` в `traceabilityState.js`; синхронизация в `AskPage` / `AskTab` + `AskPanel` (`urlSessionId` / `onUrlSessionIdChange`); сброс при смене вкладки workspace вне Ask; `mergeTraceabilityParams` сохраняет параметр при навигации (например Graph → Ask).
 - Разведение standalone vs workspace copy, улучшенные CTA цитат и degraded-hints: `ui/src/components/work/AskPanel.jsx`.
 - Продуктовое объяснение ответа: `buildAskAnswerRationale`, `formatRetrievalSummaryLines` в `ui/src/services/researchApi.js`; блок **Why this answer** и свёрнутый raw JSON в `AskPanel.jsx`; тесты в `ui/src/services/researchApi.test.js`.
 - Продолжение потока: «Return to Ask» / «Continue in Ask» в `ui/src/components/work/ReaderWorkBody.jsx` и `ui/src/components/work/EvidenceWorkBody.jsx`.
-- Тесты: `ui/src/components/work/askHistoryState.test.js`, `ui/src/components/work/askFlowCompatibility.test.js`.
-- Ручная проверка: `docs/checklists/ui-entry-wave-checklist.md` (секция Ask and Evidence flow + explanation).
-- Следующий шаг — опционально именованные сессии Ask и лимиты хранения, если понадобится продуктовый сценарий beyond recent N.
+- Тесты: `ui/src/components/work/askHistoryState.test.js`, `ui/src/components/work/askSessionState.test.js`, `ui/src/components/work/askFlowCompatibility.test.js`, `ui/src/components/work/traceabilityState.test.js` (в т.ч. `ask_session`).
+- Ручная проверка: `docs/checklists/ui-entry-wave-checklist.md` (секция Ask and Evidence flow + explanation + sessions).
+- Следующий шаг — при необходимости **серверный persistence**, удаление/экспорт сессий или более глубокий narrative.
 
 Цель:
 
@@ -694,7 +750,7 @@ Checklist:
 - Добавлен `AdminEntryPage` как hub для `Benchmarks`, `Settings`, `Diagnostics`.
 - Nested `/admin/*` routes и legacy aliases уже внедрены.
 - Есть lightweight visibility gate для admin surfaces без backend auth.
-- Следующий шаг — более строгая admin IA и stronger role policy beyond UI-only gating.
+- Следующий шаг — более строгая admin IA и stronger role policy beyond UI-only gating (см. [`admin-policy.md`](./admin-policy.md)); на hub добавлена полоса API status (`AdminApiStatusStrip`), Diagnostics расширен зондом `/v1/works`.
 
 Цель:
 
@@ -706,7 +762,7 @@ Checklist:
 - объединить `Settings`, `Benchmarks`, `Diagnostics`;
 - продумать роли/видимость;
 - добавить системные статус-карточки;
-- later: graph lab и quality tools.
+- later: **Graph Lab** и quality tools (см. Phase 4.4 — после canvas MVP).
 
 Checklist:
 
@@ -724,6 +780,7 @@ Checklist:
 - `NotFoundPage` и top-level pages уже ушли от debug-style presentation.
 - Direct-entry research pages тоже переведены на тот же shell/header pattern.
 - Следующий шаг — добрать terminology consistency, accessibility, keyboard/focus states и responsive polish.
+- Глоссарий **work_id:** [`workIdGlossaryCopy.js`](../../ui/src/components/layout/workIdGlossaryCopy.js) + [`WorkIdGlossaryHint.jsx`](../../ui/src/components/layout/WorkIdGlossaryHint.jsx) — Workspace (без work), Corpus, Ask (optional work), Graph tab; дальше можно переиспользовать на Reader/Evidence.
 - `npm run build` может выдавать предупреждение о размере главного chunk; применяют lazy-loading тяжёлых маршрутов (см. `ui/src/App.jsx`, включая `WorkspacePage`) и при необходимости `manualChunks` в `ui/vite.config.js` для разделения MUI и React.
 
 Цель:
