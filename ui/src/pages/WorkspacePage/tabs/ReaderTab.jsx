@@ -1,15 +1,19 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 import ReaderWorkBody from "../../../components/work/ReaderWorkBody.jsx";
 import { CursorSmallButton } from "../../../components/common/index.js";
+import { buildWorkspaceTracePath, readTraceabilityState } from "../../../components/work/traceabilityState.js";
 
 /**
  * @param {{ workId: string }} props
  */
 export default function ReaderTab({ workId }) {
+  const [searchParams] = useSearchParams();
+  const trace = readTraceabilityState(searchParams);
+
   if (!workId.trim()) {
     return (
       <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>
@@ -28,8 +32,23 @@ export default function ReaderTab({ workId }) {
         <CursorSmallButton component={Link} to={`/reader?work_id=${encodeURIComponent(workId)}`} sx={{ textDecoration: "none" }}>
           Open standalone Reader
         </CursorSmallButton>
+        <CursorSmallButton
+          component={Link}
+          to={buildWorkspaceTracePath(workId, "graph", {
+            section: trace.section,
+            citation: trace.citation,
+          })}
+          sx={{ textDecoration: "none" }}
+        >
+          Jump to Graph
+        </CursorSmallButton>
       </Box>
-      <ReaderWorkBody workId={workId} />
+      <ReaderWorkBody
+        workId={workId}
+        focusedFingerprint={trace.chunkFingerprint}
+        focusedSection={trace.section}
+        citation={trace.citation}
+      />
     </Box>
   );
 }

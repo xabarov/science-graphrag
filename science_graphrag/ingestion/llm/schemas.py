@@ -140,6 +140,31 @@ class ReferencesLLM(BaseModel):
     )
 
 
+class ReferenceIdOnlyItemLLM(BaseModel):
+    """Single bibliography entry with only stable identifiers."""
+
+    raw_reference: str = Field(
+        ...,
+        description="Verbatim or near-verbatim bibliography line(s) for this entry.",
+    )
+    doi: str | None = Field(
+        default=None,
+        description="DOI only if present in the text (`10.`…); else null.",
+    )
+    arxiv_id: str | None = Field(
+        default=None,
+        description=("`YYMM.NNNNN` parsed from `arXiv:…` or `abs/…` or `CoRR, abs/…` when no DOI."),
+    )
+
+
+class ReferenceIdsOnlyLLM(BaseModel):
+    references: list[ReferenceIdOnlyItemLLM] = Field(
+        default_factory=list,
+        max_length=500,
+        description="One item per bibliography entry with raw text plus DOI/arXiv identifiers.",
+    )
+
+
 class SemanticEvidenceLLM(BaseModel):
     chunk_id: str | None = None
     section_heading: str | None = None

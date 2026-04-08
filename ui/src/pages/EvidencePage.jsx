@@ -5,8 +5,10 @@ import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 
 import { CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
+import PageHeader from "../components/layout/PageHeader.jsx";
 import EvidenceWorkBody from "../components/work/EvidenceWorkBody.jsx";
-import { buildWorkspacePath, persistWorkId } from "./WorkspacePage/utils/workContext.js";
+import { persistWorkId } from "./WorkspacePage/utils/workContext.js";
+import { buildWorkspaceTracePath, readTraceabilityState } from "../components/work/traceabilityState.js";
 
 export default function EvidencePage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -14,6 +16,7 @@ export default function EvidencePage() {
   const [workIdInput, setWorkIdInput] = useState(initial);
 
   const workId = searchParams.get("work_id") || "";
+  const trace = readTraceabilityState(searchParams);
 
   useEffect(() => {
     setWorkIdInput(workId);
@@ -34,10 +37,26 @@ export default function EvidencePage() {
 
   return (
     <Box sx={{ p: 2, maxWidth: 960 }}>
-      <Typography sx={{ fontWeight: 600, mb: 1, color: "rgba(255,255,255,0.9)" }}>Evidence</Typography>
-      <Typography sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.8125rem", mb: 2 }}>
-        Direct entry: chunk fingerprints for traceability. Prefer <strong>Workspace → Evidence</strong> for the main flow.
-      </Typography>
+      <PageHeader
+        eyebrow="Direct tool"
+        title="Evidence"
+        description={
+          <>
+            Open chunk-level traceability directly when you already know the target <code style={{ color: "rgba(129,140,248,0.95)" }}>work_id</code>.
+            Prefer <strong>Workspace → Evidence</strong> for the main flow.
+          </>
+        }
+        actions={
+          <>
+            <CursorSmallButton component={Link} to="/workspace" sx={{ textDecoration: "none" }}>
+              Workspace
+            </CursorSmallButton>
+            <CursorSmallButton component={Link} to="/corpus" sx={{ textDecoration: "none" }}>
+              Corpus
+            </CursorSmallButton>
+          </>
+        }
+      />
 
       <Box component="form" onSubmit={applyWorkId} sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}>
         <TextField
@@ -55,15 +74,55 @@ export default function EvidencePage() {
         <CursorPrimaryButton type="submit">Load</CursorPrimaryButton>
       </Box>
 
+      {!workId.trim() ? (
+        <Box
+          sx={{
+            p: 2,
+            borderRadius: "6px",
+            border: "1px dashed rgba(255,255,255,0.12)",
+            backgroundColor: "rgba(255,255,255,0.02)",
+          }}
+        >
+          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)" }}>No evidence context loaded</Typography>
+          <Typography sx={{ mt: 0.75, fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)" }}>
+            Load a `work_id` or start from a citation inside Workspace Ask to inspect evidence with the right traceability context.
+          </Typography>
+        </Box>
+      ) : null}
       {workId.trim() ? (
-        <Box sx={{ mb: 1.5 }}>
-          <CursorSmallButton component={Link} to={buildWorkspacePath(workId, "reader")} sx={{ textDecoration: "none" }}>
+        <Box sx={{ mb: 1.5, display: "flex", flexWrap: "wrap", gap: 1 }}>
+          <CursorSmallButton
+            component={Link}
+            to={buildWorkspaceTracePath(workId, "reader", {
+              chunkFingerprint: trace.chunkFingerprint,
+              section: trace.section,
+              citation: trace.citation,
+            })}
+            sx={{ textDecoration: "none" }}
+          >
             Open Reader in workspace
+          </CursorSmallButton>
+          <CursorSmallButton
+            component={Link}
+            to={buildWorkspaceTracePath(workId, "graph", {
+              section: trace.section,
+              citation: trace.citation,
+            })}
+            sx={{ textDecoration: "none" }}
+          >
+            Open Graph in workspace
           </CursorSmallButton>
         </Box>
       ) : null}
 
-      {workId.trim() ? <EvidenceWorkBody workId={workId} /> : null}
+      {workId.trim() ? (
+        <EvidenceWorkBody
+          workId={workId}
+          highlightedFingerprint={trace.chunkFingerprint}
+          highlightedSection={trace.section}
+          citation={trace.citation}
+        />
+      ) : null}
     </Box>
   );
 }

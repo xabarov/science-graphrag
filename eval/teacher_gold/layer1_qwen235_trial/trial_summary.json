@@ -1,0 +1,103 @@
+[
+  {
+    "case_id": "atss_realpdf",
+    "metadata_source": "heuristic",
+    "authorships_source": "heuristic",
+    "references_source": "heuristic",
+    "fallback_reasons": [
+      {
+        "stage": "metadata",
+        "reason": "llm_failed",
+        "detail": "llm_empty_result"
+      },
+      {
+        "stage": "authorships",
+        "reason": "llm_failed",
+        "detail": "llm_empty_result"
+      }
+    ],
+    "title": "Bridging the Gap Between Anchor-based and Anchor-free Detection via Adaptive Training Sample Selection",
+    "publication_year": null,
+    "arxiv_id": null,
+    "authors": [
+      "Shifeng Zhang1",
+      "Cheng Chi3",
+      "Yongqiang Yao4",
+      "Zhen Lei1",
+      "Stan Z. Li 5"
+    ],
+    "references_count": 84
+  },
+  {
+    "case_id": "centernet_realpdf",
+    "metadata_source": "llm",
+    "authorships_source": "llm",
+    "references_source": "llm",
+    "fallback_reasons": [],
+    "title": "CenterNet: Keypoint Triplets for Object Detection",
+    "publication_year": null,
+    "arxiv_id": null,
+    "authors": [
+      "Kaiwen Duan",
+      "Song Bai",
+      "Lingxi Xie",
+      "Honggang Qi",
+      "Qingming Huang",
+      "Qi Tian"
+    ],
+    "references_count": 47
+  },
+  {
+    "case_id": "cornernet_realpdf",
+    "metadata_source": "llm",
+    "authorships_source": "llm",
+    "references_source": "llm",
+    "fallback_reasons": [],
+    "title": "CornerNet: Detecting Objects as Paired Keypoints",
+    "publication_year": null,
+    "arxiv_id": null,
+    "authors": [
+      "Hei Law",
+      "Jia Deng"
+    ],
+    "references_count": 49
+  },
+  {
+    "case_id": "faster_rcnn_realpdf",
+    "metadata_source": "llm",
+    "authorships_source": "llm",
+    "references_source": "llm",
+    "fallback_reasons": [],
+    "title": "Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks",
+    "publication_year": 2016,
+    "arxiv_id": "1506.01497v3",
+    "authors": [
+      "Shaoqing Ren",
+      "Kaiming He",
+      "Ross Girshick",
+      "Jian Sun"
+    ],
+    "references_count": 39
+  },
+  {
+    "case_id": "yolov2_realpdf",
+    "metadata_source": "llm",
+    "authorships_source": "heuristic",
+    "references_source": "heuristic",
+    "fallback_reasons": [
+      {
+        "stage": "authorships",
+        "reason": "llm_failed",
+        "detail": "llm_empty_result"
+      }
+    ],
+    "title": "YOLO9000: Better, Faster, Stronger",
+    "publication_year": null,
+    "arxiv_id": null,
+    "authors": [
+      "Joseph Redmon",
+      "Ali Farhadi"
+    ],
+    "references_count": 24
+  }
+]

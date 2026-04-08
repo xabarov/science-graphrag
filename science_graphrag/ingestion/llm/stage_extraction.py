@@ -10,17 +10,20 @@ from typing import Any, Literal
 
 from science_graphrag.config import Settings
 from science_graphrag.domain.models import AuthorshipDraft, ReferenceDraft, WorkDraft, WorkType
+from science_graphrag.ingestion.arxiv_ids import extract_arxiv_id_from_text, normalize_arxiv_id
 from science_graphrag.ingestion.dedup import normalize_doi, title_fingerprint
 from science_graphrag.ingestion.llm.extractor import SyncInstructorExtractor
 from science_graphrag.ingestion.llm.schemas import (
     AuthorshipsLLM,
+    ReferenceIdOnlyItemLLM,
+    ReferenceIdsOnlyLLM,
     ReferenceItemLLM,
     ReferencesLLM,
     WorkMetadataLLM,
 )
 from science_graphrag.ingestion.stages.authorships import extract_authorships
 from science_graphrag.ingestion.stages.metadata import extract_metadata
-from science_graphrag.ingestion.stages.references import extract_references
+from science_graphrag.ingestion.stages.references import extract_references, split_reference_entries
 from science_graphrag.observability.phoenix_tracer import add_span_event, chain_span, llm_span
 from science_graphrag.utils.project_logging import get_logger
 
@@ -109,13 +112,14 @@ def _work_from_llm(m: WorkMetadataLLM) -> WorkDraft:
     year = m.publication_year
     fp = title_fingerprint(norm or "", year) if norm else None
     doi = normalize_doi(m.doi)
+    arxiv_id = _canonicalize_arxiv_id(m.arxiv_id)
     return WorkDraft(
         title=title[:500] if title else None,
         normalized_title=norm,
         abstract=(m.abstract or "").strip() or None,
         publication_year=year,
         doi=doi,
-        arxiv_id=(m.arxiv_id or "").strip() or None,
+        arxiv_id=arxiv_id,
         language=(m.language or "").strip() or None,
         venue_name=(m.venue_name or "").strip() or None,
         work_type=_map_work_type(m.work_type),
@@ -150,41 +154,57 @@ def _authorships_from_llm(parsed: AuthorshipsLLM) -> list[AuthorshipDraft]:
     return out
 
 
-_ARXIV_RAW_RE = re.compile(
-    r"(?:arxiv:\s*)?(\d{4}\.\d{4,5})\b|abs/(\d{4}\.\d{4,5})\b",
-    re.IGNORECASE,
-)
-
-
 def _arxiv_from_raw(raw: str) -> str | None:
-    m = _ARXIV_RAW_RE.search(raw)
-    if not m:
-        return None
-    return m.group(1) or m.group(2)
+    return extract_arxiv_id_from_text(raw)
 
 
-def _references_from_llm(items: list[ReferenceItemLLM]) -> list[ReferenceDraft]:
+def _canonicalize_arxiv_id(raw: str | None) -> str | None:
+    return normalize_arxiv_id(raw)
+
+
+def _references_from_llm(
+    items: list[ReferenceItemLLM | ReferenceIdOnlyItemLLM],
+    *,
+    include_titles: bool,
+) -> list[ReferenceDraft]:
     out: list[ReferenceDraft] = []
     for it in items:
         raw = (it.raw_reference or "").strip()
         if not raw:
             continue
         doi = normalize_doi(it.doi) or normalize_doi(raw)
-        arx = (it.arxiv_id or "").strip() or None
+        arx = _canonicalize_arxiv_id(it.arxiv_id)
         if not arx:
             arx = _arxiv_from_raw(raw)
+        title = None
+        year = None
+        if include_titles and isinstance(it, ReferenceItemLLM):
+            title = (it.title or "").strip()[:400] or None
+            year = it.year
         out.append(
             ReferenceDraft(
                 raw_reference=raw[:4000],
                 doi=doi,
                 arxiv_id=arx,
-                title=(it.title or "").strip()[:400] or None,
-                year=it.year,
+                title=title,
+                year=year,
             )
         )
         if len(out) >= 500:
             break
     return out
+
+
+def _reference_chunks(ref_text: str, batch_size: int) -> list[str]:
+    synthetic_text = f"## References\n\n{ref_text}"
+    entries = split_reference_entries(synthetic_text)
+    if not entries:
+        return [ref_text] if ref_text.strip() else []
+    chunks: list[str] = []
+    for i in range(0, len(entries), max(1, batch_size)):
+        group = entries[i : i + batch_size]
+        chunks.append("\n".join(entry.strip() for entry in group if entry).strip())
+    return [chunk for chunk in chunks if chunk]
 
 
 def _references_tail_for_prompt(normalized: str) -> str:
@@ -221,6 +241,11 @@ class ExtractionDiagnostics:
     references_source: Literal["llm", "heuristic"]
     extraction_llm_enabled: bool
     extraction_llm_model: str | None
+    references_scope_chars: int | None = None
+    heuristic_reference_count: int | None = None
+    llm_reference_count: int | None = None
+    llm_reference_batches: int | None = None
+    llm_reference_mode: str | None = None
     fallback_reasons: list[dict[str, Any]] = field(default_factory=list)
 
     def to_json(self) -> str:
@@ -291,6 +316,7 @@ def extract_stages_llm_first(
         temperature=settings.extraction_llm_temperature,
         max_tokens=settings.extraction_llm_max_tokens_metadata,
         timeout_seconds=settings.extraction_llm_timeout_seconds,
+        mode=settings.extraction_llm_mode,
     )
     extractor_refs = SyncInstructorExtractor(
         api_key=api_key.strip(),
@@ -299,6 +325,7 @@ def extract_stages_llm_first(
         temperature=settings.extraction_llm_temperature,
         max_tokens=settings.extraction_llm_max_tokens_references,
         timeout_seconds=settings.extraction_llm_timeout_seconds,
+        mode=settings.extraction_llm_mode,
     )
 
     meta_source = front_matter_text if front_matter_text is not None else normalized_markdown
@@ -429,41 +456,67 @@ def extract_stages_llm_first(
         ref_text = _truncate(references_scope_text, MAX_REFS_PROMPT_CHARS)
     else:
         ref_text = _references_tail_for_prompt(normalized_markdown)
-    user_refs = (
-        "Extract bibliography entries from the references section. For each entry include "
-        "raw_reference (full numbered line), "
-        "doi if present, arxiv_id (YYMM.NNNNN) if the line mentions arXiv or abs/, "
-        "title if obvious, publication year if present.\n\n---\n"
-        f"{ref_text}"
-    )
-    references: list[ReferenceDraft] = []
-    with llm_span(
-        "llm.references_extraction",
-        {
-            "document.id": document_id,
-            "document.source_name": source_name,
-            "extraction.stage": "references",
-        },
-    ):
-        rparsed, rerr = extractor_refs.extract_maybe(
-            ReferencesLLM,
-            system=(
-                SYSTEM_FENCE
-                + " References list only; one item per `[n]` line; capture arXiv when no DOI."
-            ),
-            user=user_refs,
-        )
-    if rerr:
-        diag.fallback_reasons.append(
-            {"stage": "references", "reason": "llm_failed", "detail": rerr},
-        )
-        add_span_event("extraction_fallback", {"stage": "references", "reason": rerr})
-        log.warning("references LLM failed for %s: %s", document_id, rerr)
-    elif rparsed is not None:
-        references = _references_from_llm(rparsed.references)
-
+    diag.references_scope_chars = len(ref_text)
     hcount = _heuristic_ref_count(normalized_markdown)
-    if len(references) < 1 or (hcount > len(references) + 2 and hcount >= 3):
+    diag.heuristic_reference_count = hcount
+    diag.llm_reference_mode = settings.extraction_llm_mode
+    references: list[ReferenceDraft] = []
+    ref_chunks = _reference_chunks(ref_text, settings.extraction_llm_references_batch_size)
+    diag.llm_reference_batches = len(ref_chunks)
+    all_items: list[ReferenceItemLLM | ReferenceIdOnlyItemLLM] = []
+    llm_reference_errors: list[str] = []
+    response_model = ReferencesLLM if settings.extraction_llm_reference_titles_enabled else ReferenceIdsOnlyLLM
+    refs_instruction = (
+        "Extract bibliography entries from the references section. For each entry include "
+        "raw_reference (full bibliography line or merged wrapped lines), doi if present, "
+        "and arxiv_id (YYMM.NNNNN) if the line mentions arXiv or abs/."
+    )
+    if settings.extraction_llm_reference_titles_enabled:
+        refs_instruction += " Also include title if obvious and publication year if present."
+    for chunk_idx, ref_chunk in enumerate(ref_chunks, start=1):
+        user_refs = f"{refs_instruction}\n\n---\n{ref_chunk}"
+        with llm_span(
+            "llm.references_extraction",
+            {
+                "document.id": document_id,
+                "document.source_name": source_name,
+                "extraction.stage": "references",
+                "chunk_index": chunk_idx,
+                "chunk_total": len(ref_chunks),
+            },
+        ):
+            rparsed, rerr = extractor_refs.extract_maybe(
+                response_model,
+                system=(
+                    SYSTEM_FENCE
+                    + " References list only; preserve one bibliography item per entry and capture DOI/arXiv identifiers faithfully."
+                ),
+                user=user_refs,
+            )
+        if rerr:
+            llm_reference_errors.append(f"chunk_{chunk_idx}:{rerr}")
+            continue
+        if rparsed is None:
+            llm_reference_errors.append(f"chunk_{chunk_idx}:llm_empty_result")
+            continue
+        all_items.extend(rparsed.references)
+
+    if llm_reference_errors:
+        detail = "; ".join(llm_reference_errors[:8])
+        diag.fallback_reasons.append(
+            {"stage": "references", "reason": "llm_failed", "detail": detail},
+        )
+        add_span_event("extraction_fallback", {"stage": "references", "reason": detail})
+        log.warning("references LLM failed for %s: %s", document_id, detail)
+
+    if all_items:
+        references = _references_from_llm(
+            all_items,
+            include_titles=settings.extraction_llm_reference_titles_enabled,
+        )
+    diag.llm_reference_count = len(references)
+
+    if len(references) < 1 or (hcount > len(references) + 4 and hcount >= 3):
         if diag.references_source != "heuristic":
             diag.fallback_reasons.append(
                 {

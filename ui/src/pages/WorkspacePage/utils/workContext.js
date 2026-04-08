@@ -1,6 +1,7 @@
 /** Active work context: URL + localStorage restore for workspace-first navigation. */
 
 export const LAST_WORK_ID_KEY = "science-graphrag:lastWorkId";
+export const LAST_WORK_TAB_KEY = "science-graphrag:lastWorkspaceTab";
 
 export const WORKSPACE_TAB_SLUGS = ["overview", "reader", "graph", "ask", "evidence"];
 
@@ -43,6 +44,18 @@ export function persistWorkId(workId) {
 }
 
 /**
+ * @param {string} tab
+ */
+export function persistWorkspaceTab(tab) {
+  const next = normalizeWorkspaceTab(tab);
+  try {
+    window.localStorage.setItem(LAST_WORK_TAB_KEY, next);
+  } catch {
+    // ignore
+  }
+}
+
+/**
  * @returns {string}
  */
 export function getLastWorkId() {
@@ -51,5 +64,16 @@ export function getLastWorkId() {
     return raw && String(raw).trim() ? String(raw).trim() : "";
   } catch {
     return "";
+  }
+}
+
+/**
+ * @returns {string}
+ */
+export function getLastWorkspaceTab() {
+  try {
+    return normalizeWorkspaceTab(window.localStorage.getItem(LAST_WORK_TAB_KEY) || "overview");
+  } catch {
+    return "overview";
   }
 }

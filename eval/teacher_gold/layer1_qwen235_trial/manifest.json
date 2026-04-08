@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-04-07T19:36:53.025205+00:00",
+  "teacher_model": "qwen/qwen3-235b-a22b-2507",
+  "teacher_base_url": "https://openrouter.ai/api/v1",
+  "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+  "extraction_llm_enabled": true,
+  "case_ids": [
+    "atss_realpdf",
+    "centernet_realpdf",
+    "cornernet_realpdf",
+    "faster_rcnn_realpdf",
+    "yolov2_realpdf"
+  ]
+}

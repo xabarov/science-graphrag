@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
-import { useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
+
+import { CursorSmallButton } from "../../components/common/index.js";
 
 import BenchmarkWorkbenchTab from "./BenchmarkWorkbenchTab.jsx";
 import CompareTab from "./CompareTab.jsx";
@@ -13,10 +15,16 @@ import CasesTab from "./CasesTab.jsx";
 const TAB_BY_NAME = { launch: 0, workbench: 1, results: 2, compare: 3, cases: 4 };
 
 export default function BenchmarkPage() {
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const [tabIdx, setTabIdx] = useState(0);
   const [selectedRunId, setSelectedRunId] = useState(() => window.localStorage.getItem("benchmark:lastRunId") || null);
   const [selectedCaseId, setSelectedCaseId] = useState(null);
+  const canonicalAdminPath = useMemo(() => {
+    const query = searchParams.toString();
+    return `/admin/benchmarks${query ? `?${query}` : ""}`;
+  }, [searchParams]);
+  const showAdminReturn = location.pathname !== "/admin/benchmarks";
 
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect -- sync shell from /benchmark? query (external nav) */
@@ -50,6 +58,19 @@ export default function BenchmarkPage() {
 
   return (
     <Box>
+      <Box sx={{ px: 2, pt: 0.5, pb: 1.5, display: "flex", flexWrap: "wrap", gap: 1 }}>
+        <CursorSmallButton component={Link} to="/admin" sx={{ textDecoration: "none" }}>
+          Admin hub
+        </CursorSmallButton>
+        <CursorSmallButton component={Link} to="/" sx={{ textDecoration: "none" }}>
+          Home
+        </CursorSmallButton>
+        {showAdminReturn ? (
+          <CursorSmallButton component={Link} to={canonicalAdminPath} sx={{ textDecoration: "none" }}>
+            Reopen canonical route
+          </CursorSmallButton>
+        ) : null}
+      </Box>
       <Box sx={{ padding: 2, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
         <Tabs
           value={tabIdx}

@@ -104,6 +104,20 @@ class Settings(BaseSettings):
     extraction_llm_max_tokens_metadata: int = Field(default=4096)
     extraction_llm_max_tokens_references: int = Field(default=8192)
     extraction_llm_timeout_seconds: float = Field(default=180.0)
+    extraction_llm_mode: str = Field(
+        default="auto",
+        description="Instructor mode override: auto, tools, json, md_json, or openrouter_structured_outputs.",
+    )
+    extraction_llm_references_batch_size: int = Field(
+        default=12,
+        ge=1,
+        le=100,
+        description="Number of reference entries per LLM batch when splitting bibliography extraction.",
+    )
+    extraction_llm_reference_titles_enabled: bool = Field(
+        default=False,
+        description="If true, ask LLM to extract reference titles and years in addition to DOI/arXiv ids.",
+    )
 
     # Optional: separate credentials for benchmark teacher gold generation (OpenRouter, etc.).
     benchmark_teacher_llm_api_key: str | None = Field(default=None)

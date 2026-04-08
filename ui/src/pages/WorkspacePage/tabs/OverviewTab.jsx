@@ -96,6 +96,9 @@ export default function OverviewTab({ workId }) {
             <CursorSmallButton component={Link} to={buildWorkspacePath(workId, "reader")} sx={{ textDecoration: "none" }}>
               Reader tab
             </CursorSmallButton>
+            <CursorSmallButton component={Link} to={buildWorkspacePath(workId, "graph")} sx={{ textDecoration: "none" }}>
+              Graph tab
+            </CursorSmallButton>
             <CursorSmallButton component={Link} to={buildWorkspacePath(workId, "ask")} sx={{ textDecoration: "none" }}>
               Ask tab
             </CursorSmallButton>
@@ -108,7 +111,7 @@ export default function OverviewTab({ workId }) {
           </Box>
 
           <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mt: 2 }}>
-            Graph stays on a dedicated route in this wave; deep graph UX is planned separately.
+            Graph is now available inside workspace and still kept as a standalone route for deeper inspection.
           </Typography>
         </>
       )}

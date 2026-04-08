@@ -14,7 +14,8 @@ import {
   normalizeQueryResponse,
   postQuery,
 } from "../../services/researchApi.js";
-import { buildWorkspacePath, persistWorkId } from "../../pages/WorkspacePage/utils/workContext.js";
+import { buildStandaloneTracePath, buildWorkspaceTracePath } from "./traceabilityState.js";
+import { persistWorkId } from "../../pages/WorkspacePage/utils/workContext.js";
 
 function FlagChips({ label, items }) {
   if (!items || items.length === 0) return null;
@@ -114,10 +115,39 @@ export default function AskPanel({
           </Typography>
         </>
       ) : (
-        <Typography sx={{ color: "rgba(255,255,255,0.55)", fontSize: "0.8125rem", mb: 2 }}>
-          Question is scoped to the active work. Citations link to Reader / Evidence inside this workspace.
-        </Typography>
+        <Box
+          sx={{
+            mb: 2,
+            p: 1.25,
+            borderRadius: "6px",
+            border: "1px solid rgba(99,102,241,0.2)",
+            backgroundColor: "rgba(99,102,241,0.08)",
+          }}
+        >
+          <Typography sx={{ color: "rgba(129,140,248,0.95)", fontSize: "0.75rem", mb: 0.5 }}>Workspace-scoped research</Typography>
+          <Typography sx={{ color: "rgba(255,255,255,0.78)", fontSize: "0.8125rem" }}>
+            Question is scoped to the active work. Use citations below to jump into evidence, reader context, and graph context without losing
+            `work_id`.
+          </Typography>
+        </Box>
       )}
+
+      {!locked && !workId.trim() ? (
+        <Box
+          sx={{
+            mb: 2,
+            p: 1.5,
+            borderRadius: "6px",
+            border: "1px dashed rgba(255,255,255,0.12)",
+            backgroundColor: "rgba(255,255,255,0.02)",
+          }}
+        >
+          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)" }}>Optional work context</Typography>
+          <Typography sx={{ mt: 0.6, fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)" }}>
+            You can ask globally or choose a `work_id` to keep the answer grounded in one paper.
+          </Typography>
+        </Box>
+      ) : null}
 
       {locked ? (
         <Box sx={{ mb: 2, p: 1.25, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "#1a1a1a" }}>
@@ -187,7 +217,7 @@ export default function AskPanel({
           {inWorkspace ? (
             <CursorSmallButton
               component={Link}
-              to={`/ask?work_id=${encodeURIComponent(workId)}`}
+              to={buildStandaloneTracePath("/ask", workId)}
               sx={{ textDecoration: "none" }}
             >
               Open standalone Ask
@@ -223,6 +253,9 @@ export default function AskPanel({
           ) : (
             normalized.citations.map((c, i) => {
               const wid = c.work_id != null ? String(c.work_id) : "";
+              const chunkFingerprint = c.chunk_fingerprint != null ? String(c.chunk_fingerprint) : "";
+              const sectionPath = c.section_path != null ? String(c.section_path) : "";
+              const citationIndex = String(i + 1);
               const sameAsWorkspace = inWorkspace && wid && wid === String(workspaceWorkId).trim();
               return (
                 <Box key={i} sx={{ mb: 1, fontSize: "0.8125rem", color: "rgba(255,255,255,0.75)" }}>
@@ -232,19 +265,31 @@ export default function AskPanel({
                       {sameAsWorkspace ? (
                         <>
                           <Link
-                            to={buildWorkspacePath(wid, "reader")}
+                            to={buildWorkspaceTracePath(wid, "reader", {
+                              chunkFingerprint,
+                              section: sectionPath,
+                              citation: citationIndex,
+                            })}
                             style={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.95)" }}
                           >
                             Reader (workspace)
                           </Link>
                           <Link
-                            to={buildWorkspacePath(wid, "evidence")}
+                            to={buildWorkspaceTracePath(wid, "evidence", {
+                              chunkFingerprint,
+                              section: sectionPath,
+                              citation: citationIndex,
+                            })}
                             style={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.95)" }}
                           >
                             Evidence (workspace)
                           </Link>
                           <Link
-                            to={buildWorkspacePath(wid, "graph")}
+                            to={buildWorkspaceTracePath(wid, "graph", {
+                              chunkFingerprint,
+                              section: sectionPath,
+                              citation: citationIndex,
+                            })}
                             style={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.95)" }}
                           >
                             Graph (workspace)
@@ -253,25 +298,41 @@ export default function AskPanel({
                       ) : (
                         <>
                           <Link
-                            to={buildWorkspacePath(wid, "reader")}
+                            to={buildWorkspaceTracePath(wid, "reader", {
+                              chunkFingerprint,
+                              section: sectionPath,
+                              citation: citationIndex,
+                            })}
                             style={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.95)" }}
                           >
                             Workspace
                           </Link>
                           <Link
-                            to={`/reader?work_id=${encodeURIComponent(wid)}`}
+                            to={buildStandaloneTracePath("/reader", wid, {
+                              chunkFingerprint,
+                              section: sectionPath,
+                              citation: citationIndex,
+                            })}
                             style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)" }}
                           >
                             Reader
                           </Link>
                           <Link
-                            to={`/evidence?work_id=${encodeURIComponent(wid)}`}
+                            to={buildStandaloneTracePath("/evidence", wid, {
+                              chunkFingerprint,
+                              section: sectionPath,
+                              citation: citationIndex,
+                            })}
                             style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)" }}
                           >
                             Evidence
                           </Link>
                           <Link
-                            to={`/graph?work_id=${encodeURIComponent(wid)}`}
+                            to={buildStandaloneTracePath("/graph", wid, {
+                              chunkFingerprint,
+                              section: sectionPath,
+                              citation: citationIndex,
+                            })}
                             style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)" }}
                           >
                             Graph

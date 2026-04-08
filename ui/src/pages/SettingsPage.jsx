@@ -2,7 +2,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { Link } from "react-router-dom";
 
+import { CursorSmallButton } from "../components/common/index.js";
 import LlmSettingsPanel from "./SettingsPage/LlmSettingsPanel.jsx";
 import SettingsLayout from "./SettingsPage/SettingsLayout.jsx";
 import {
@@ -179,6 +181,14 @@ export default function SettingsPage() {
       subheading={`Secure runtime configuration for providers, extraction defaults, and future system sections.${schema ? ` Schema v${schema.version}` : ""}`}
       dirty={dirtyHint}
     >
+      <Box sx={{ mb: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
+        <CursorSmallButton component={Link} to="/admin" sx={{ textDecoration: "none" }}>
+          Admin hub
+        </CursorSmallButton>
+        <CursorSmallButton component={Link} to="/" sx={{ textDecoration: "none" }}>
+          Home
+        </CursorSmallButton>
+      </Box>
       {renderSection()}
     </SettingsLayout>
   );

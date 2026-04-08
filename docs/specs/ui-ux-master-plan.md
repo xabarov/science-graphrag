@@ -506,7 +506,20 @@ Admin-инструменты должны быть:
 
 ## Фазы реализации
 
+## Текущий статус реализации
+
+- `Phase 0`: `partial` — базовая IA и `workspace-first` модель отражены в коде, но отдельный canonical route map / admin policy document не зафиксирован как самостоятельный артефакт.
+- `Phase 1`: `partial` — `Home`, improved 404, shared page header pattern и admin route strategy уже внедрены, но sidebar hierarchy и remaining direct-entry consistency ещё не доведены до целевого product state.
+- `Phase 2`: `done` — `active work context`, restore last work, URL-driven tabs и поток `Corpus -> Workspace` реализованы.
+- `Phase 3`: `partial` — `Home`, `CorpusPage`, `continue flow` и `recent works` уже реализованы, но richer corpus browser и более сильный onboarding still have room to grow.
+- `Phase 4`: `partial` — `Graph` встроен в `Workspace` и вынесен в reusable standalone surface, но до полноценного graph-first UX с controls/canvas ещё есть зазор.
+- `Phase 5`: `partial` — `Ask -> Evidence -> Reader -> Graph` уже связаны traceability state, но история/restore и более продуктовое explanation UX ещё не завершены.
+- `Phase 6`: `partial` — admin tools сгруппированы, есть `AdminEntryPage` и nested `/admin/*` routes, но role/visibility policy и финальная admin IA ещё не завершены.
+- `Phase 7`: `partial` — consistency pass уже начат через shared headers, route cleanup и product-grade recovery, но пока не завершён на всех top-level surfaces.
+
 ## Phase 0. Architecture alignment
+
+Статус: `partial`
 
 Цель:
 
@@ -535,6 +548,15 @@ Deliverables:
 
 ## Phase 1. Shell and navigation refactor
 
+Статус: `partial`
+
+Заметки по реализации:
+
+- `HomePage` уже работает как основной entry point на `/`.
+- `PageHeader` внедрён как shared shell primitive и уже используется на ключевых user/admin surfaces.
+- Admin route strategy переведена на `/admin/*` с backward-compatible aliases.
+- Следующий шаг — упростить sidebar hierarchy и довести direct-entry research pages до того же shell quality.
+
 Цель:
 
 - превратить flat navigation в более продуктовую.
@@ -555,6 +577,8 @@ Checklist:
 
 ## Phase 2. Work context and workspace foundation
 
+Статус: `done`
+
 Цель:
 
 - сделать `Workspace` основным user-экраном.
@@ -574,6 +598,14 @@ Checklist:
 
 ## Phase 3. Corpus and entry experience
 
+Статус: `partial`
+
+Заметки по реализации:
+
+- `HomePage` уже существует как новый entry point на `/`.
+- Есть `Continue last workspace` и `Recent works` через локальный recent-state.
+- `CorpusPage` уже поддерживает более продуктовый browser flow с primary CTA `Open workspace`.
+
 Цель:
 
 - заменить текущий raw works list на полноценный corpus browser.
@@ -592,6 +624,8 @@ Checklist:
 - admin и user получают релевантные быстрые действия.
 
 ## Phase 4. Graph UX modernization
+
+Статус: `partial`
 
 Цель:
 
@@ -618,6 +652,8 @@ Checklist:
 
 ## Phase 5. Ask and Evidence workflow
 
+Статус: `partial`
+
 Цель:
 
 - связать вопрос, answer, evidence и graph context в единый пользовательский поток.
@@ -638,6 +674,15 @@ Checklist:
 
 ## Phase 6. Admin surface consolidation
 
+Статус: `partial`
+
+Заметки по реализации:
+
+- В sidebar уже есть отдельная секция `Admin tools`.
+- Добавлен `AdminEntryPage` как hub для `Benchmarks`, `Settings`, `Diagnostics`.
+- Nested `/admin/*` routes и legacy aliases уже внедрены.
+- Следующий шаг — role/visibility policy и более строгая admin IA.
+
 Цель:
 
 - собрать benchmark/settings/diagnostics в цельную admin-зону.
@@ -657,6 +702,14 @@ Checklist:
 - user не перегружен операционными инструментами.
 
 ## Phase 7. Polish and consistency pass
+
+Статус: `partial`
+
+Заметки по реализации:
+
+- `PageHeader` уже внедрён как базовый shell primitive.
+- `NotFoundPage` и часть top-level pages уже ушли от debug-style presentation.
+- Следующий шаг — добрать consistency на direct-entry research pages, copy и secondary navigation.
 
 Цель:
 

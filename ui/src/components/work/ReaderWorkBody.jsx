@@ -3,18 +3,30 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
+import Chip from "@mui/material/Chip";
 
 import { getWorkChunks, getWorkDetail } from "../../services/researchApi.js";
+import { describeTraceabilityState } from "./traceabilityState.js";
 
 /**
  * Reader content for a fixed work_id (used by Reader tab and standalone Reader page).
- * @param {{ workId: string }} props
+ * @param {{ workId: string, focusedFingerprint?: string, focusedSection?: string, citation?: string }} props
  */
-export default function ReaderWorkBody({ workId }) {
+export default function ReaderWorkBody({
+  workId,
+  focusedFingerprint = "",
+  focusedSection = "",
+  citation = "",
+}) {
   const [detail, setDetail] = useState(null);
   const [chunks, setChunks] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const traceSummary = describeTraceabilityState({
+    chunkFingerprint: focusedFingerprint,
+    section: focusedSection,
+    citation,
+  });
 
   useEffect(() => {
     if (!workId.trim()) {
@@ -90,28 +102,56 @@ export default function ReaderWorkBody({ workId }) {
 
       {chunks && !loading && (
         <>
+          {traceSummary.length > 0 ? (
+            <Box
+              sx={{
+                mb: 1.5,
+                p: 1.25,
+                borderRadius: "6px",
+                border: "1px solid rgba(99,102,241,0.2)",
+                backgroundColor: "rgba(99,102,241,0.08)",
+              }}
+            >
+              <Typography sx={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.95)", mb: 0.5 }}>Focused reading context</Typography>
+              <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.8)" }}>
+                Opened from {traceSummary.join(" · ")}
+              </Typography>
+            </Box>
+          ) : null}
           <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 1 }}>
             Chunks ({chunks.total ?? (chunks.items || []).length})
           </Typography>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
             {(chunks.items || []).map((ch) => (
+              (() => {
+                const fingerprint = String(ch.chunk_fingerprint || "");
+                const sectionPath = String(ch.section_path || "");
+                const highlighted =
+                  (focusedFingerprint && fingerprint === focusedFingerprint) ||
+                  (focusedSection && sectionPath === focusedSection);
+                return (
               <Box
                 key={`${ch.chunk_fingerprint}-${ch.order}`}
                 sx={{
                   p: 1.5,
                   borderRadius: "6px",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  backgroundColor: "#141414",
+                  border: highlighted ? "1px solid rgba(99,102,241,0.32)" : "1px solid rgba(255,255,255,0.08)",
+                  backgroundColor: highlighted ? "rgba(99,102,241,0.08)" : "#141414",
                 }}
               >
-                <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)" }}>
-                  {ch.section_path || "—"} · fp {ch.chunk_fingerprint}
-                </Typography>
+                <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75 }}>
+                  <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)" }}>
+                    {ch.section_path || "—"} · fp {ch.chunk_fingerprint}
+                  </Typography>
+                  {highlighted ? <Chip label="focused" size="small" sx={{ height: 20, fontSize: "0.6875rem" }} /> : null}
+                </Box>
                 <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)", mt: 0.5, whiteSpace: "pre-wrap" }}>
                   {(ch.text || "").slice(0, 4000)}
                   {(ch.text || "").length > 4000 ? "…" : ""}
                 </Typography>
               </Box>
+                );
+              })()
             ))}
           </Box>
         </>

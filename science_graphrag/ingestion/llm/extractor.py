@@ -26,6 +26,7 @@ class SyncInstructorExtractor:
         temperature: float = 0.0,
         max_tokens: int = 4096,
         timeout_seconds: float = 180.0,
+        mode: str = "auto",
     ) -> None:
         raw = OpenAI(
             api_key=api_key,
@@ -36,6 +37,7 @@ class SyncInstructorExtractor:
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
+        self.mode = mode.strip().lower()
         self._extra_body = self._build_extra_body()
         self._client = instructor.from_openai(raw, mode=self._resolve_mode())
 
@@ -44,7 +46,21 @@ class SyncInstructorExtractor:
             self.model.strip().lower() == "qwen/qwen3.5-397b-a17b"
         )
 
+    @staticmethod
+    def _mode_from_string(mode: str) -> instructor.Mode:
+        mapping = {
+            "tools": instructor.Mode.TOOLS,
+            "json": instructor.Mode.JSON,
+            "md_json": instructor.Mode.MD_JSON,
+            "openrouter_structured_outputs": instructor.Mode.OPENROUTER_STRUCTURED_OUTPUTS,
+        }
+        if mode not in mapping:
+            raise ValueError(f"Unsupported instructor mode override: {mode}")
+        return mapping[mode]
+
     def _resolve_mode(self) -> instructor.Mode:
+        if self.mode != "auto":
+            return self._mode_from_string(self.mode)
         # OpenRouter + Qwen3.5 397B currently behaves better via structured outputs
         # than via the default TOOLS mode used by instructor.
         if self._is_openrouter_qwen35_397b():
@@ -52,7 +68,7 @@ class SyncInstructorExtractor:
         return instructor.Mode.TOOLS
 
     def _build_extra_body(self) -> dict[str, Any] | None:
-        if not self._is_openrouter_qwen35_397b():
+        if self.mode != "auto" or not self._is_openrouter_qwen35_397b():
             return None
         return {
             "provider": {"require_parameters": True},

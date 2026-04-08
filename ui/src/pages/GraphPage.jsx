@@ -1,24 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
-import Alert from "@mui/material/Alert";
-import CircularProgress from "@mui/material/CircularProgress";
 
-import { CursorPrimaryButton } from "../components/common/index.js";
-import { getWorkGraph } from "../services/researchApi.js";
+import { CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
+import PageHeader from "../components/layout/PageHeader.jsx";
+import GraphWorkspacePanel from "../components/graph/GraphWorkspacePanel.jsx";
 import { persistWorkId } from "./WorkspacePage/utils/workContext.js";
+import { buildWorkspaceTracePath, mergeTraceabilityParams, readTraceabilityState } from "../components/work/traceabilityState.js";
 
 export default function GraphPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initial = searchParams.get("work_id") || "";
   const [workIdInput, setWorkIdInput] = useState(initial);
-  const [graph, setGraph] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const workId = searchParams.get("work_id") || "";
+  const trace = readTraceabilityState(searchParams);
+  const workId = trace.workId;
+  const selectedNodeId = trace.nodeId;
 
   useEffect(() => {
     setWorkIdInput(workId);
@@ -26,36 +24,6 @@ export default function GraphPage() {
 
   useEffect(() => {
     if (workId.trim()) persistWorkId(workId);
-  }, [workId]);
-
-  useEffect(() => {
-    if (!workId.trim()) {
-      setGraph(null);
-      setError(null);
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await getWorkGraph(workId);
-        if (cancelled) return;
-        setGraph(res.data);
-      } catch (err) {
-        if (cancelled) return;
-        const msg = err?.response?.data?.detail
-          ? JSON.stringify(err.response.data.detail)
-          : err?.message || String(err);
-        setError(msg);
-        setGraph(null);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
   }, [workId]);
 
   function applyWorkId(e) {
@@ -67,12 +35,28 @@ export default function GraphPage() {
     } else setSearchParams({});
   }
 
+  function handleSelectNode(nodeId) {
+    const params = mergeTraceabilityParams(searchParams, { nodeId });
+    setSearchParams(params, { replace: false });
+  }
+
   return (
-    <Box sx={{ p: 2, maxWidth: 960 }}>
-      <Typography sx={{ fontWeight: 600, mb: 1, color: "rgba(255,255,255,0.9)" }}>Graph</Typography>
-      <Typography sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.8125rem", mb: 2 }}>
-        Live: <code style={{ color: "rgba(129,140,248,0.95)" }}>GET /v1/works/{"{work_id}"}/graph</code> (neighborhood JSON).
-      </Typography>
+    <Box sx={{ p: 2, maxWidth: 1200 }}>
+      <PageHeader
+        eyebrow="Direct tool"
+        title="Graph"
+        description="Use the standalone graph surface for node-focused inspection while keeping the same data model that powers Workspace Graph."
+        actions={
+          <>
+            <CursorSmallButton component={Link} to="/workspace" sx={{ textDecoration: "none" }}>
+              Workspace
+            </CursorSmallButton>
+            <CursorSmallButton component={Link} to="/corpus" sx={{ textDecoration: "none" }}>
+              Corpus
+            </CursorSmallButton>
+          </>
+        }
+      />
 
       <Box component="form" onSubmit={applyWorkId} sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}>
         <TextField
@@ -90,40 +74,89 @@ export default function GraphPage() {
         <CursorPrimaryButton type="submit">Load</CursorPrimaryButton>
       </Box>
 
-      {loading && (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 2 }}>
-          <CircularProgress size={22} sx={{ color: "rgba(129,140,248,0.9)" }} />
-          <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>Loading graph…</Typography>
+      {!workId.trim() ? (
+        <Box
+          sx={{
+            mb: 2,
+            p: 2,
+            borderRadius: "6px",
+            border: "1px dashed rgba(255,255,255,0.12)",
+            backgroundColor: "rgba(255,255,255,0.02)",
+          }}
+        >
+          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)" }}>No graph context yet</Typography>
+          <Typography sx={{ mt: 0.75, fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)" }}>
+            Load a `work_id` to inspect graph nodes directly, or open a paper in Workspace and jump here when you need a dedicated graph surface.
+          </Typography>
         </Box>
-      )}
-      {error && (
-        <Alert severity="error" sx={{ mb: 2, fontSize: "0.8125rem" }}>
-          {error}
-        </Alert>
-      )}
+      ) : null}
 
-      {graph && !loading && (
-        <Box sx={{ p: 1.5, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "#1a1a1a" }}>
-          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mb: 1 }}>
-            semantic_available: {String(graph.meta?.semantic_available)} · nodes: {(graph.nodes || []).length} · edges:{" "}
-            {(graph.edges || []).length}
-          </Typography>
-          <Typography
-            component="pre"
-            sx={{
-              m: 0,
-              fontSize: "0.75rem",
-              color: "rgba(255,255,255,0.75)",
-              overflow: "auto",
-              maxHeight: 480,
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-            }}
+      {workId.trim() ? (
+        <Box sx={{ mb: 1.5, display: "flex", flexWrap: "wrap", gap: 1 }}>
+          <CursorSmallButton
+            component={Link}
+            to={buildWorkspaceTracePath(workId, "graph", {
+              nodeId: selectedNodeId,
+              chunkFingerprint: trace.chunkFingerprint,
+              section: trace.section,
+              citation: trace.citation,
+            })}
+            sx={{ textDecoration: "none" }}
           >
-            {JSON.stringify(graph, null, 2)}
-          </Typography>
+            Open Graph in workspace
+          </CursorSmallButton>
+          <CursorSmallButton
+            component={Link}
+            to={buildWorkspaceTracePath(workId, "reader", {
+              nodeId: selectedNodeId,
+              chunkFingerprint: trace.chunkFingerprint,
+              section: trace.section,
+              citation: trace.citation,
+            })}
+            sx={{ textDecoration: "none" }}
+          >
+            Open Reader in workspace
+          </CursorSmallButton>
+          <CursorSmallButton
+            component={Link}
+            to={buildWorkspaceTracePath(workId, "evidence", {
+              nodeId: selectedNodeId,
+              chunkFingerprint: trace.chunkFingerprint,
+              section: trace.section,
+              citation: trace.citation,
+            })}
+            sx={{ textDecoration: "none" }}
+          >
+            Open Evidence in workspace
+          </CursorSmallButton>
+          <CursorSmallButton
+            component={Link}
+            to={buildWorkspaceTracePath(workId, "ask", {
+              nodeId: selectedNodeId,
+              chunkFingerprint: trace.chunkFingerprint,
+              section: trace.section,
+              citation: trace.citation,
+            })}
+            sx={{ textDecoration: "none" }}
+          >
+            Open Ask in workspace
+          </CursorSmallButton>
         </Box>
-      )}
+      ) : null}
+
+      <GraphWorkspacePanel
+        workId={workId}
+        selectedNodeId={selectedNodeId}
+        onSelectNode={handleSelectNode}
+        mode="standalone"
+        title="Graph lab"
+        subtitle="Use this standalone view for node-focused inspection, while Workspace Graph keeps the same context embedded in the main research flow."
+        traceContext={{
+          chunkFingerprint: trace.chunkFingerprint,
+          section: trace.section,
+          citation: trace.citation,
+        }}
+      />
     </Box>
   );
 }

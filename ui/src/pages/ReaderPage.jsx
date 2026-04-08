@@ -5,8 +5,10 @@ import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 
 import { CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
+import PageHeader from "../components/layout/PageHeader.jsx";
 import ReaderWorkBody from "../components/work/ReaderWorkBody.jsx";
-import { buildWorkspacePath, persistWorkId } from "./WorkspacePage/utils/workContext.js";
+import { persistWorkId } from "./WorkspacePage/utils/workContext.js";
+import { buildWorkspaceTracePath, readTraceabilityState } from "../components/work/traceabilityState.js";
 
 export default function ReaderPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -14,6 +16,7 @@ export default function ReaderPage() {
   const [workIdInput, setWorkIdInput] = useState(initial);
 
   const workId = searchParams.get("work_id") || "";
+  const trace = readTraceabilityState(searchParams);
 
   useEffect(() => {
     setWorkIdInput(workId);
@@ -34,11 +37,26 @@ export default function ReaderPage() {
 
   return (
     <Box sx={{ p: 2, maxWidth: 960 }}>
-      <Typography sx={{ fontWeight: 600, mb: 1, color: "rgba(255,255,255,0.9)" }}>Reader</Typography>
-      <Typography sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.8125rem", mb: 2 }}>
-        Direct entry: load any <code style={{ color: "rgba(129,140,248,0.95)" }}>work_id</code>. Prefer the{" "}
-        <strong>Workspace → Reader</strong> tab for the main flow.
-      </Typography>
+      <PageHeader
+        eyebrow="Direct tool"
+        title="Reader"
+        description={
+          <>
+            Load a specific <code style={{ color: "rgba(129,140,248,0.95)" }}>work_id</code> for focused reading. Prefer <strong>Workspace → Reader</strong>{" "}
+            when you want to stay inside the full research flow.
+          </>
+        }
+        actions={
+          <>
+            <CursorSmallButton component={Link} to="/workspace" sx={{ textDecoration: "none" }}>
+              Workspace
+            </CursorSmallButton>
+            <CursorSmallButton component={Link} to="/corpus" sx={{ textDecoration: "none" }}>
+              Corpus
+            </CursorSmallButton>
+          </>
+        }
+      />
 
       <Box component="form" onSubmit={applyWorkId} sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}>
         <TextField
@@ -56,11 +74,51 @@ export default function ReaderPage() {
         <CursorPrimaryButton type="submit">Load</CursorPrimaryButton>
       </Box>
 
-      {workId.trim() ? <ReaderWorkBody workId={workId} /> : null}
+      {!workId.trim() ? (
+        <Box
+          sx={{
+            p: 2,
+            borderRadius: "6px",
+            border: "1px dashed rgba(255,255,255,0.12)",
+            backgroundColor: "rgba(255,255,255,0.02)",
+          }}
+        >
+          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)" }}>No work loaded</Typography>
+          <Typography sx={{ mt: 0.75, fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)" }}>
+            Enter a `work_id` above or start from the corpus to open a paper in workspace-first mode.
+          </Typography>
+        </Box>
+      ) : null}
       {workId.trim() ? (
-        <Box sx={{ mt: 1.5 }}>
-          <CursorSmallButton component={Link} to={buildWorkspacePath(workId, "reader")} sx={{ textDecoration: "none" }}>
+        <ReaderWorkBody
+          workId={workId}
+          focusedFingerprint={trace.chunkFingerprint}
+          focusedSection={trace.section}
+          citation={trace.citation}
+        />
+      ) : null}
+      {workId.trim() ? (
+        <Box sx={{ mt: 1.5, display: "flex", flexWrap: "wrap", gap: 1 }}>
+          <CursorSmallButton
+            component={Link}
+            to={buildWorkspaceTracePath(workId, "reader", {
+              chunkFingerprint: trace.chunkFingerprint,
+              section: trace.section,
+              citation: trace.citation,
+            })}
+            sx={{ textDecoration: "none" }}
+          >
             Open Reader in workspace
+          </CursorSmallButton>
+          <CursorSmallButton
+            component={Link}
+            to={buildWorkspaceTracePath(workId, "graph", {
+              section: trace.section,
+              citation: trace.citation,
+            })}
+            sx={{ textDecoration: "none" }}
+          >
+            Open Graph in workspace
           </CursorSmallButton>
         </Box>
       ) : null}

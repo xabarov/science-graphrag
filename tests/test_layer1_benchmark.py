@@ -140,6 +140,12 @@ def test_additional_realpdf_fixture_reference_heuristic_count(rel_dir: str, mini
     assert len(refs) >= minimum
 
 
+def test_cornernet_author_year_bibliography_is_not_trivially_dropped() -> None:
+    text = (FIXTURE_ROOT / "cornernet_realpdf" / "article.md").read_text(encoding="utf-8")
+    refs = extract_references(text)
+    assert len(refs) >= 20
+
+
 def test_run_case_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
     """Force heuristic path so CI does not call remote LLMs."""
 

@@ -1,20 +1,22 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 
 import { CursorPrimaryButton, CursorSmallButton } from "../../components/common/index.js";
+import PageHeader from "../../components/layout/PageHeader.jsx";
 import { getWorkDetail } from "../../services/researchApi.js";
-import { getLastWorkId, normalizeWorkspaceTab, persistWorkId } from "./utils/workContext.js";
+import { getLastWorkId, normalizeWorkspaceTab, persistWorkId, persistWorkspaceTab } from "./utils/workContext.js";
 import { WORKSPACE_TAB_CONFIG, workspaceTabIndex, workspaceTabSlugFromIndex } from "./WorkspaceTabs.jsx";
 import OverviewTab from "./tabs/OverviewTab.jsx";
 import ReaderTab from "./tabs/ReaderTab.jsx";
+import GraphTab from "./tabs/GraphTab.jsx";
 import AskTab from "./tabs/AskTab.jsx";
 import EvidenceTab from "./tabs/EvidenceTab.jsx";
+import { rememberRecentWork } from "../HomePage/homeState.js";
 
 export default function WorkspacePage() {
   const navigate = useNavigate();
@@ -54,6 +56,10 @@ export default function WorkspacePage() {
   }, [workId]);
 
   useEffect(() => {
+    persistWorkspaceTab(tabSlug);
+  }, [tabSlug]);
+
+  useEffect(() => {
     if (!workId) {
       setHeaderTitle("");
       return;
@@ -66,6 +72,12 @@ export default function WorkspacePage() {
         if (cancelled) return;
         const t = res.data?.title;
         setHeaderTitle(typeof t === "string" && t.trim() ? t : "");
+        rememberRecentWork({
+          workId,
+          title: typeof t === "string" ? t : "",
+          year: res.data?.year ?? null,
+          tab: tabSlug,
+        });
       } catch {
         if (!cancelled) setHeaderTitle("");
       } finally {
@@ -75,7 +87,7 @@ export default function WorkspacePage() {
     return () => {
       cancelled = true;
     };
-  }, [workId]);
+  }, [workId, tabSlug]);
 
   const handleTabChange = (_e, value) => {
     setTabParams(workspaceTabSlugFromIndex(value), workId);
@@ -90,6 +102,9 @@ export default function WorkspacePage() {
         <CursorPrimaryButton component={Link} to="/corpus" sx={{ textDecoration: "none" }}>
           Go to Corpus
         </CursorPrimaryButton>
+        <CursorSmallButton component={Link} to="/" sx={{ textDecoration: "none", ml: 1 }}>
+          Home
+        </CursorSmallButton>
       </Box>
     ),
     [],
@@ -97,38 +112,45 @@ export default function WorkspacePage() {
 
   return (
     <Box sx={{ p: 2, maxWidth: 1100 }}>
-      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", justifyContent: "space-between", gap: 1, mb: 1 }}>
-        <Box>
-          <Typography sx={{ fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>Workspace</Typography>
-          {workId ? (
-            <Box sx={{ mt: 0.5 }}>
+      <PageHeader
+        eyebrow="Workspace-first flow"
+        title="Workspace"
+        description={
+          workId ? (
+            <>
               {headerLoading ? (
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Box sx={{ display: "inline-flex", alignItems: "center", gap: 1 }}>
                   <CircularProgress size={18} sx={{ color: "rgba(129,140,248,0.9)" }} />
-                  <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>Loading context…</Typography>
+                  <span>Loading context…</span>
                 </Box>
               ) : (
-                <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.75)", maxWidth: 720 }}>
+                <>
                   {headerTitle || "(no title)"}
-                </Typography>
+                  <br />
+                  <span style={{ color: "rgba(255,255,255,0.45)", fontFamily: "monospace", fontSize: "0.75rem" }}>{workId}</span>
+                </>
               )}
-              <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mt: 0.25, fontFamily: "monospace" }}>
-                {workId}
-              </Typography>
-            </Box>
-          ) : null}
-        </Box>
-        {workId ? (
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+            </>
+          ) : (
+            "Open a work and switch between overview, reading, graph, ask, and evidence without leaving the active research context."
+          )
+        }
+        actions={
+          <>
             <CursorSmallButton component={Link} to="/corpus" sx={{ textDecoration: "none" }}>
               Corpus
             </CursorSmallButton>
-            <CursorSmallButton component={Link} to={`/graph?work_id=${encodeURIComponent(workId)}`} sx={{ textDecoration: "none" }}>
-              Graph
+            <CursorSmallButton component={Link} to="/" sx={{ textDecoration: "none" }}>
+              Home
             </CursorSmallButton>
-          </Box>
-        ) : null}
-      </Box>
+            {workId ? (
+              <CursorSmallButton component={Link} to={`/graph?work_id=${encodeURIComponent(workId)}`} sx={{ textDecoration: "none" }}>
+                Graph
+              </CursorSmallButton>
+            ) : null}
+          </>
+        }
+      />
 
       <Tabs
         value={tabIndex}
@@ -159,6 +181,7 @@ export default function WorkspacePage() {
         <>
           {tabSlug === "overview" ? <OverviewTab workId={workId} /> : null}
           {tabSlug === "reader" ? <ReaderTab workId={workId} /> : null}
+          {tabSlug === "graph" ? <GraphTab workId={workId} /> : null}
           {tabSlug === "ask" ? <AskTab workId={workId} /> : null}
           {tabSlug === "evidence" ? <EvidenceTab workId={workId} /> : null}
         </>

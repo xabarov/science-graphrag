@@ -6,15 +6,16 @@ import Tooltip from "@mui/material/Tooltip";
 import { useLocation, Link as RouterLink } from "react-router-dom";
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
+import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import WorkspacesOutlinedIcon from "@mui/icons-material/WorkspacesOutlined";
 import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
 import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
 import QuestionAnswerOutlinedIcon from "@mui/icons-material/QuestionAnswerOutlined";
 import FactCheckOutlinedIcon from "@mui/icons-material/FactCheckOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
-import TroubleshootOutlinedIcon from "@mui/icons-material/TroubleshootOutlined";
 
 import { CursorIconButton } from "../../common/index.js";
+import { isAdminModeEnabled } from "../adminVisibility.js";
 
 const STORAGE_KEY = "sidebarExpanded";
 
@@ -35,11 +36,19 @@ function itemActive(location, to) {
 export default function Drawer({ onNavigate }) {
   const [expanded, setExpanded] = useState(_readExpanded());
   const location = useLocation();
+  const adminModeEnabled = isAdminModeEnabled();
 
   const userMenu = useMemo(
     () => [
+      { to: "/", label: "Home", icon: <HomeOutlinedIcon /> },
       { to: "/corpus", label: "Corpus", icon: <FolderOpenOutlinedIcon /> },
       { to: "/workspace", label: "Workspace", icon: <WorkspacesOutlinedIcon /> },
+    ],
+    [],
+  );
+
+  const directEntryMenu = useMemo(
+    () => [
       { to: "/reader", label: "Reader", icon: <MenuBookOutlinedIcon /> },
       { to: "/graph", label: "Graph", icon: <AccountTreeOutlinedIcon /> },
       { to: "/ask", label: "Ask", icon: <QuestionAnswerOutlinedIcon /> },
@@ -49,12 +58,15 @@ export default function Drawer({ onNavigate }) {
   );
 
   const adminMenu = useMemo(
-    () => [
-      { to: "/benchmark", label: "Benchmarks", icon: <ScienceOutlinedIcon /> },
-      { to: "/settings", label: "Settings", icon: <SettingsOutlinedIcon /> },
-      { to: "/diagnostics", label: "Diagnostics", icon: <TroubleshootOutlinedIcon /> },
-    ],
-    [],
+    () =>
+      adminModeEnabled
+        ? [
+            { to: "/admin", label: "Admin", icon: <ScienceOutlinedIcon /> },
+            { to: "/admin/benchmarks", label: "Benchmarks", icon: <ScienceOutlinedIcon /> },
+            { to: "/admin/settings", label: "Settings", icon: <SettingsOutlinedIcon /> },
+          ]
+        : [],
+    [adminModeEnabled],
   );
 
   function toggleExpanded() {
@@ -126,24 +138,42 @@ export default function Drawer({ onNavigate }) {
       <Box sx={{ padding: expanded ? 1 : 1 }}>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>{userMenu.map(renderNavItem)}</Box>
 
-        <Divider sx={{ my: 1.5, borderColor: "rgba(255,255,255,0.08)" }} />
-
         {expanded ? (
           <Typography
             sx={{
               fontSize: "0.6875rem",
               fontWeight: 600,
               letterSpacing: "0.02em",
-              color: "rgba(255,255,255,0.35)",
+              color: "rgba(255,255,255,0.28)",
               px: 1.5,
-              mb: 0.75,
+              mt: 1.5,
+              mb: 0.5,
             }}
           >
-            Admin tools
+            Secondary access
           </Typography>
         ) : null}
 
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>{adminMenu.map(renderNavItem)}</Box>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>{directEntryMenu.map(renderNavItem)}</Box>
+
+        {adminMenu.length > 0 ? <Divider sx={{ my: 1.5, borderColor: "rgba(255,255,255,0.08)" }} /> : null}
+
+        {expanded && adminMenu.length > 0 ? (
+          <Typography
+            sx={{
+              fontSize: "0.6875rem",
+              fontWeight: 600,
+              letterSpacing: "0.02em",
+              color: "rgba(255,255,255,0.28)",
+              px: 1.5,
+              mb: 0.5,
+            }}
+          >
+            Operations
+          </Typography>
+        ) : null}
+
+        {adminMenu.length > 0 ? <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>{adminMenu.map(renderNavItem)}</Box> : null}
       </Box>
 
       <Box sx={{ flex: 1 }} />

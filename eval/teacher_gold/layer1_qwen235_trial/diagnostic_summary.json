@@ -1,0 +1,193 @@
+[
+  {
+    "case_id": "atss_realpdf",
+    "stages": {
+      "metadata": {
+        "status": "ok",
+        "elapsed_sec": 188.49,
+        "error": null,
+        "preview": {
+          "title": "Bridging the Gap Between Anchor-based and Anchor-free Detection via Adaptive Training Sample Selection",
+          "publication_year": null,
+          "arxiv_id": null,
+          "doi": null
+        }
+      },
+      "authorships": {
+        "status": "ok",
+        "elapsed_sec": 3.54,
+        "error": null,
+        "preview": {
+          "authors_count": 5,
+          "authors_head": [
+            "Shifeng Zhang",
+            "Cheng Chi",
+            "Yongqiang Yao",
+            "Zhen Lei",
+            "Stan Z. Li"
+          ]
+        }
+      },
+      "references": {
+        "status": "ok",
+        "elapsed_sec": 658.06,
+        "error": null,
+        "preview": {
+          "references_count": 74,
+          "first_refs": [
+            "[1] Yancheng Bai, Yongqiang Zhang, Mingli Ding, and Bernard Ghanem. SOD-MTGAN: small object detection via multi- task generative adversarial network. In ECCV, 2018. 8",
+            "[2] Sean Bell, C. Lawrence Zitnick, Kavita Bala, and Ross B. Girshick. Inside-outside net: Detecting objects in context with skip pooling and recurrent neural networks. In CVPR, 2016. 2"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "case_id": "centernet_realpdf",
+    "stages": {
+      "metadata": {
+        "status": "ok",
+        "elapsed_sec": 5.02,
+        "error": null,
+        "preview": {
+          "title": "CenterNet: Keypoint Triplets for Object Detection",
+          "publication_year": null,
+          "arxiv_id": null,
+          "doi": null
+        }
+      },
+      "authorships": {
+        "status": "ok",
+        "elapsed_sec": 4.0,
+        "error": null,
+        "preview": {
+          "authors_count": 6,
+          "authors_head": [
+            "Kaiwen Duan",
+            "Song Bai",
+            "Lingxi Xie",
+            "Honggang Qi",
+            "Qingming Huang"
+          ]
+        }
+      },
+      "references": {
+        "status": "ok",
+        "elapsed_sec": 153.53,
+        "error": null,
+        "preview": {
+          "references_count": 47,
+          "first_refs": [
+            "[1] S. Bell, C. Lawrence Zitnick, K. Bala, and R. Girshick. Inside-outside net: Detecting objects in context with skip pooling and recurrent neural networks. In Proceedings of the IEEE conference on computer vision and pattern recognition, pages 2874\u00132883, 2016.",
+            "[2] N. Bodla, B. Singh, R. Chellappa, and L. S. Davis. Soft-nms\u0013improving object detection with one line of code. In Proceedings of the IEEE international conference on computer vision, pages 5561\u00135569, 2017."
+          ]
+        }
+      }
+    }
+  },
+  {
+    "case_id": "cornernet_realpdf",
+    "stages": {
+      "metadata": {
+        "status": "ok",
+        "elapsed_sec": 3.83,
+        "error": null,
+        "preview": {
+          "title": "CornerNet: Detecting Objects as Paired Keypoints",
+          "publication_year": null,
+          "arxiv_id": null,
+          "doi": null
+        }
+      },
+      "authorships": {
+        "status": "ok",
+        "elapsed_sec": 2.03,
+        "error": null,
+        "preview": {
+          "authors_count": 2,
+          "authors_head": [
+            "Hei Law",
+            "Jia Deng"
+          ]
+        }
+      },
+      "references": {
+        "status": "ok",
+        "elapsed_sec": 75.62,
+        "error": null,
+        "preview": {
+          "references_count": 49,
+          "first_refs": [
+            "Bell, S., Lawrence Zitnick, C., Bala, K., and Girshick, R. (2016). Inside-outside net: Detecting objects in context with skip pooling and recurrent neural networks. In Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition , pages 2874–2883.",
+            "Bodla, N., Singh, B., Chellappa, R., and Davis, L. S. (2017). Soft-nmsimproving object detection with one line of code. In 2017 IEEE International Conference on Computer Vision (ICCV) , pages 5562–5570. IEEE."
+          ]
+        }
+      }
+    }
+  },
+  {
+    "case_id": "faster_rcnn_realpdf",
+    "stages": {
+      "metadata": {
+        "status": "ok",
+        "elapsed_sec": 12.19,
+        "error": null,
+        "preview": {
+          "title": "Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks",
+          "publication_year": 2016,
+          "arxiv_id": "1506.01497v3",
+          "doi": null
+        }
+      },
+      "authorships": {
+        "status": "ok",
+        "elapsed_sec": 4.52,
+        "error": null,
+        "preview": {
+          "authors_count": 4,
+          "authors_head": [
+            "Shaoqing Ren",
+            "Kaiming He",
+            "Ross Girshick",
+            "Jian Sun"
+          ]
+        }
+      },
+      "references": {
+        "status": "error",
+        "elapsed_sec": 249.64,
+        "error": "Invalid JSON format in response",
+        "preview": null
+      }
+    }
+  },
+  {
+    "case_id": "yolov2_realpdf",
+    "stages": {
+      "metadata": {
+        "status": "empty",
+        "elapsed_sec": 9.95,
+        "error": "llm_empty_result",
+        "preview": null
+      },
+      "authorships": {
+        "status": "empty",
+        "elapsed_sec": 23.1,
+        "error": "llm_empty_result",
+        "preview": null
+      },
+      "references": {
+        "status": "ok",
+        "elapsed_sec": 38.04,
+        "error": null,
+        "preview": {
+          "references_count": 20,
+          "first_refs": [
+            "[1] S. Bell, C. L. Zitnick, K. Bala, and R. Girshick. Inside-outside net: Detecting objects in context with skip pooling and recurrent neural networks. arXiv preprint arXiv:1512.04143, 2015. 6",
+            "[2] J. Deng, W. Dong, R. Socher, L.-J. Li, K. Li, and L. Fei-Fei. Imagenet: A large-scale hierarchical image database. In Computer Vision and Pattern Recognition, 2009. CVPR 2009. IEEE Conference on, pages 248–255. IEEE, 2009. 1"
+          ]
+        }
+      }
+    }
+  }
+]

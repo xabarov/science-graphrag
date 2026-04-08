@@ -1,0 +1,112 @@
+[
+  {
+    "case_id": "atss_realpdf",
+    "metadata_source": "llm",
+    "authorships_source": "llm",
+    "references_source": "heuristic",
+    "references_scope_chars": 11104,
+    "heuristic_reference_count": 84,
+    "llm_reference_count": 74,
+    "llm_reference_batches": 7,
+    "llm_reference_mode": "json",
+    "fallback_reasons": [],
+    "reference_count_final": 84,
+    "predicted_arxiv_ids": []
+  },
+  {
+    "case_id": "centernet_realpdf",
+    "metadata_source": "llm",
+    "authorships_source": "llm",
+    "references_source": "llm",
+    "references_scope_chars": 8933,
+    "heuristic_reference_count": 47,
+    "llm_reference_count": 47,
+    "llm_reference_batches": 4,
+    "llm_reference_mode": "json",
+    "fallback_reasons": [],
+    "reference_count_final": 47,
+    "predicted_arxiv_ids": [
+      "1612.06851",
+      "1701.06659",
+      "1704.01069",
+      "1705.09587",
+      "1712.00886",
+      "1901.01892"
+    ]
+  },
+  {
+    "case_id": "cornernet_realpdf",
+    "metadata_source": "llm",
+    "authorships_source": "llm",
+    "references_source": "llm",
+    "references_scope_chars": 8480,
+    "heuristic_reference_count": 24,
+    "llm_reference_count": 49,
+    "llm_reference_batches": 1,
+    "llm_reference_mode": "json",
+    "fallback_reasons": [],
+    "reference_count_final": 49,
+    "predicted_arxiv_ids": [
+      "1409.1556",
+      "1412.6980",
+      "1504.08083",
+      "1604.04693",
+      "1605.06409",
+      "1612",
+      "1612.03144",
+      "1612.06851",
+      "1701.06659",
+      "1703.06211"
+    ]
+  },
+  {
+    "case_id": "faster_rcnn_realpdf",
+    "metadata_source": "llm",
+    "authorships_source": "llm",
+    "references_source": "llm",
+    "references_scope_chars": 9591,
+    "heuristic_reference_count": 39,
+    "llm_reference_count": 39,
+    "llm_reference_batches": 4,
+    "llm_reference_mode": "json",
+    "fallback_reasons": [],
+    "reference_count_final": 39,
+    "predicted_arxiv_ids": [
+      "1408.5093",
+      "1412.1441",
+      "1504.06066",
+      "1505.05836",
+      "1511.02300",
+      "1511.04003",
+      "1511.07131",
+      "1511.07571",
+      "1512.03385",
+      "1512.04412"
+    ]
+  },
+  {
+    "case_id": "yolov2_realpdf",
+    "metadata_source": "llm",
+    "authorships_source": "llm",
+    "references_source": "llm",
+    "references_scope_chars": 3377,
+    "heuristic_reference_count": 24,
+    "llm_reference_count": 20,
+    "llm_reference_batches": 2,
+    "llm_reference_mode": "json",
+    "fallback_reasons": [],
+    "reference_count_final": 20,
+    "predicted_arxiv_ids": [
+      "1312.4400",
+      "1409.1556",
+      "1409.4842",
+      "1502.03167",
+      "1504.08083",
+      "1506.01497",
+      "1506.02640",
+      "1512.02325",
+      "1512.03385",
+      "1512.04143"
+    ]
+  }
+]

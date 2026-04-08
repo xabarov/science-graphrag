@@ -1,0 +1,149 @@
+[
+  {
+    "case_id": "atss_realpdf",
+    "stages": {
+      "metadata": {
+        "status": "ok",
+        "elapsed_sec": 4.15,
+        "error": null,
+        "preview": {
+          "title": "Bridging the Gap Between Anchor-based and Anchor-free Detection via Adaptive Training Sample Selection",
+          "publication_year": null,
+          "arxiv_id": null
+        }
+      },
+      "authorships": {
+        "status": "ok",
+        "elapsed_sec": 21.27,
+        "error": null,
+        "preview": {
+          "authors_count": 5
+        }
+      },
+      "references": {
+        "status": "timeout",
+        "elapsed_sec": 95,
+        "error": "timed_out_after_95s",
+        "preview": null
+      }
+    }
+  },
+  {
+    "case_id": "centernet_realpdf",
+    "stages": {
+      "metadata": {
+        "status": "ok",
+        "elapsed_sec": 6.82,
+        "error": null,
+        "preview": {
+          "title": "CenterNet: Keypoint Triplets for Object Detection",
+          "publication_year": null,
+          "arxiv_id": null
+        }
+      },
+      "authorships": {
+        "status": "ok",
+        "elapsed_sec": 3.53,
+        "error": null,
+        "preview": {
+          "authors_count": 6
+        }
+      },
+      "references": {
+        "status": "timeout",
+        "elapsed_sec": 95,
+        "error": "timed_out_after_95s",
+        "preview": null
+      }
+    }
+  },
+  {
+    "case_id": "cornernet_realpdf",
+    "stages": {
+      "metadata": {
+        "status": "ok",
+        "elapsed_sec": 2.5,
+        "error": null,
+        "preview": {
+          "title": "CornerNet: Detecting Objects as Paired Keypoints",
+          "publication_year": null,
+          "arxiv_id": null
+        }
+      },
+      "authorships": {
+        "status": "ok",
+        "elapsed_sec": 7.68,
+        "error": null,
+        "preview": {
+          "authors_count": 2
+        }
+      },
+      "references": {
+        "status": "timeout",
+        "elapsed_sec": 95,
+        "error": "timed_out_after_95s",
+        "preview": null
+      }
+    }
+  },
+  {
+    "case_id": "faster_rcnn_realpdf",
+    "stages": {
+      "metadata": {
+        "status": "ok",
+        "elapsed_sec": 3.65,
+        "error": null,
+        "preview": {
+          "title": "Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks",
+          "publication_year": 2016,
+          "arxiv_id": "1506.01497v3"
+        }
+      },
+      "authorships": {
+        "status": "ok",
+        "elapsed_sec": 54.93,
+        "error": null,
+        "preview": {
+          "authors_count": 4
+        }
+      },
+      "references": {
+        "status": "ok",
+        "elapsed_sec": 25.32,
+        "error": null,
+        "preview": {
+          "references_count": 39
+        }
+      }
+    }
+  },
+  {
+    "case_id": "yolov2_realpdf",
+    "stages": {
+      "metadata": {
+        "status": "ok",
+        "elapsed_sec": 8.92,
+        "error": null,
+        "preview": {
+          "title": "YOLO9000: Better, Faster, Stronger",
+          "publication_year": null,
+          "arxiv_id": null
+        }
+      },
+      "authorships": {
+        "status": "ok",
+        "elapsed_sec": 3.93,
+        "error": null,
+        "preview": {
+          "authors_count": 2
+        }
+      },
+      "references": {
+        "status": "timeout",
+        "elapsed_sec": 95,
+        "error": "timed_out_after_95s",
+        "preview": null
+      }
+    }
+  }
+]
