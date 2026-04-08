@@ -191,6 +191,19 @@ Degraded mode:
 
 - if semantic extraction missing, return backbone-only neighborhood and `semantic_available=false`.
 
+### UI route `/graph` (client-only query flags)
+
+The standalone graph page is implemented in [`ui/src/pages/GraphPage.jsx`](../../ui/src/pages/GraphPage.jsx). Query parameters (in addition to traceability fields from [`traceabilityState.js`](../../ui/src/components/work/traceabilityState.js), e.g. `node`, `edge`, chunk/section/citation context):
+
+| Query | Meaning |
+|-------|---------|
+| `work_id` | Required to load a graph; persisted client-side when set. |
+| `lab=1` | Graph Lab: diagnostics JSON expanded by default. |
+| `compact=1` | Denser standalone layout: compact panel defaults (e.g. Graph/canvas mode), collapsed chrome-friendly defaults. |
+| `focus=1` | **Max canvas:** implies compact panel behavior and starts with page chrome collapsed, workspace links collapsed, and panel secondary blocks (title block, legend, alerts, details) hidden until the user expands them. Preserved on **Load** with `compact` / `lab`. |
+
+Implementation helpers: [`ui/src/pages/graphPageUrl.js`](../../ui/src/pages/graphPageUrl.js).
+
 ## 5) Chunks/evidence (implemented)
 
 ### `GET /v1/works/{work_id}/chunks`

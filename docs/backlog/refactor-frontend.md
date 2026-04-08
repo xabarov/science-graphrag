@@ -10,6 +10,22 @@ Planned structural work under `ui/` (components, routing, state, API client), no
 
 ## Queue
 
+### [DONE] Graph standalone page — максимизация рабочей области (Wave 5)
+- **Area:** [`GraphPage.jsx`](../../ui/src/pages/GraphPage.jsx), [`DashboardLayout.jsx`](../../ui/src/components/layout/DashboardLayout/DashboardLayout.jsx), [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx), [`GraphTypeLegend.jsx`](../../ui/src/components/graph/GraphTypeLegend.jsx)
+- **Issue:** Канвас графа на `/graph` не заполняет доступную высоту; много вертикального места занимают заголовок, форма `work_id`, алерты, легенда, колонка деталей.
+- **Proposal:** Цепочка flex + `minHeight: 0` от `main`; сворачиваемый chrome страницы; компактные/сворачиваемые алерты и легенда; скрытие колонки деталей; опционально `?compact=1`. См. раздел *Standalone Graph page — workspace maximization* в [`docs/specs/graph-ui-plan.md`](../specs/graph-ui-plan.md).
+- **Acceptance:** В типичном viewport с загруженным `work_id` и режиме Graph канвас занимает большую часть экрана; детали и вторичный UI доступны без потери функций.
+- **Raised:** 2026-04-08
+- **Note (done):** Реализовано: flex-цепочка в `DashboardLayout`, переработка `GraphPage` (chrome + `compact`), standalone-панель с toggles legend/details/alerts.
+
+### [DONE] Graph standalone — focus URL + detail column width (Wave 6)
+- **Area:** [`GraphPage.jsx`](../../ui/src/pages/GraphPage.jsx), [`graphPageUrl.js`](../../ui/src/pages/graphPageUrl.js), [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx), [`docs/specs/graph-ui-plan.md`](../specs/graph-ui-plan.md), [`docs/specs/frontend-ui-api-contracts-v1.md`](../specs/frontend-ui-api-contracts-v1.md)
+- **Issue:** После Wave 5 оставались опциональные URL `focus=1` и настройка ширины колонки деталей; контракт query для `/graph` не был собран в одном месте.
+- **Proposal:** `?focus=1` + сохранение флагов при Load; `focusLayout` в панели; слайдер min-width колонки деталей + `localStorage`; тесты `graphPageUrl`; документация Wave 6 и таблица в frontend-ui-api-contracts.
+- **Acceptance:** Deep link с `focus=1` даёт максимум места канвасу; ширина деталей настраивается и переживает reload; линт/тесты UI зелёные.
+- **Raised:** 2026-04-08
+- **Note (done):** Реализовано: `graphPageUrl.js`, `focusLayout`, слайдер `graphStandaloneDetailMinPx`, раздел Wave 6 в graph-ui-plan и таблица `/graph` в frontend-ui-api-contracts.
+
 ### [OPEN] Graph canvas — библиотека или углублённый порт osint-gr
 - **Area:** `ui/src/components/graph/` (`GraphCanvasMvp.jsx`, `GraphWorkspacePanel.jsx`, `graphUiLimits.js`, `graphViewState.js`)
 - **Issue:** raw HTML Canvas закрывает Phase 4.2–4.3; для force layout, мини-карты, сложных графов может понадобиться **React Flow / Sigma** или порт симуляции osint-gr без дублирования логики.

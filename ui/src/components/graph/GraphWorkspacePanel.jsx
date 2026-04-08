@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
+import Slider from "@mui/material/Slider";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 import { CursorSmallButton } from "../common/index.js";
 import GraphVisualization from "./GraphVisualization.jsx";
@@ -35,8 +37,43 @@ import { describeTraceabilityState } from "../work/traceabilityState.js";
  *   subtitle?: React.ReactNode,
  *   traceContext?: { chunkFingerprint?: string, section?: string, citation?: string, edgeId?: string },
  *   labMode?: boolean,
+ *   compactLayout?: boolean,
+ *   focusLayout?: boolean,
  * }} props
  */
+const LS_STANDALONE_LEGEND = "graphStandaloneLegendOpen";
+const LS_STANDALONE_TITLE = "graphStandaloneTitleOpen";
+const LS_STANDALONE_ALERTS = "graphStandaloneAlertsOpen";
+const LS_STANDALONE_DETAILS = "graphStandaloneDetailsVisible";
+const LS_STANDALONE_DETAIL_MIN_PX = "graphStandaloneDetailMinPx";
+
+const DETAIL_MIN_PX_MIN = 260;
+const DETAIL_MIN_PX_MAX = 480;
+const DETAIL_MIN_PX_STEP = 20;
+
+function readDetailMinPxStored() {
+  if (typeof window === "undefined") return 320;
+  try {
+    const raw = window.localStorage.getItem(LS_STANDALONE_DETAIL_MIN_PX);
+    const n = raw == null ? NaN : parseInt(raw, 10);
+    if (!Number.isFinite(n)) return 320;
+    return Math.min(DETAIL_MIN_PX_MAX, Math.max(DETAIL_MIN_PX_MIN, n));
+  } catch {
+    return 320;
+  }
+}
+
+function readBoolLs(key, fallback) {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const v = window.localStorage.getItem(key);
+    if (v === null) return fallback;
+    return v === "1";
+  } catch {
+    return fallback;
+  }
+}
+
 export default function GraphWorkspacePanel({
   workId,
   selectedNodeId = "",
@@ -44,6 +81,8 @@ export default function GraphWorkspacePanel({
   selectedEdgeId = "",
   onSelectEdge,
   mode = "embedded",
+  compactLayout = false,
+  focusLayout = false,
   title = "Graph",
   subtitle = null,
   traceContext = {},
@@ -52,12 +91,83 @@ export default function GraphWorkspacePanel({
   const [graph, setGraph] = useState(() => normalizeGraphPayload(null));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [vizMode, setVizMode] = useState(/** @type {"cards" | "canvas"} */ ("cards"));
+  const [vizMode, setVizMode] = useState(
+    /** @type {"cards" | "canvas"} */ () => (mode === "standalone" && compactLayout ? "canvas" : "cards"),
+  );
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(labMode);
+
+  const standaloneMax = mode === "standalone";
+  const [detailMinPx, setDetailMinPx] = useState(() => readDetailMinPxStored());
+
+  const [titleBlockOpen, setTitleBlockOpen] = useState(() => {
+    if (!standaloneMax) return true;
+    if (focusLayout) return false;
+    return readBoolLs(LS_STANDALONE_TITLE, !compactLayout);
+  });
+  const [legendOpen, setLegendOpen] = useState(() => {
+    if (!standaloneMax) return true;
+    if (focusLayout) return false;
+    return readBoolLs(LS_STANDALONE_LEGEND, !compactLayout);
+  });
+  const [alertsOpen, setAlertsOpen] = useState(() => {
+    if (!standaloneMax) return true;
+    if (focusLayout) return false;
+    return readBoolLs(LS_STANDALONE_ALERTS, !compactLayout);
+  });
+  const [detailsVisible, setDetailsVisible] = useState(() => {
+    if (!standaloneMax) return true;
+    if (focusLayout) return false;
+    return readBoolLs(LS_STANDALONE_DETAILS, true);
+  });
 
   useEffect(() => {
     setDiagnosticsOpen(labMode);
   }, [labMode]);
+
+  useEffect(() => {
+    if (!standaloneMax) return;
+    try {
+      window.localStorage.setItem(LS_STANDALONE_TITLE, titleBlockOpen ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  }, [standaloneMax, titleBlockOpen]);
+
+  useEffect(() => {
+    if (!standaloneMax) return;
+    try {
+      window.localStorage.setItem(LS_STANDALONE_LEGEND, legendOpen ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  }, [standaloneMax, legendOpen]);
+
+  useEffect(() => {
+    if (!standaloneMax) return;
+    try {
+      window.localStorage.setItem(LS_STANDALONE_ALERTS, alertsOpen ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  }, [standaloneMax, alertsOpen]);
+
+  useEffect(() => {
+    if (!standaloneMax) return;
+    try {
+      window.localStorage.setItem(LS_STANDALONE_DETAILS, detailsVisible ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  }, [standaloneMax, detailsVisible]);
+
+  useEffect(() => {
+    if (!standaloneMax) return;
+    try {
+      window.localStorage.setItem(LS_STANDALONE_DETAIL_MIN_PX, String(detailMinPx));
+    } catch {
+      /* ignore */
+    }
+  }, [standaloneMax, detailMinPx]);
 
   useEffect(() => {
     if (!workId.trim()) {
@@ -132,21 +242,63 @@ export default function GraphWorkspacePanel({
     () => deriveGraphDetail(graph, resolvedSelectedNodeId, resolvedSelectedEdgeId),
     [graph, resolvedSelectedNodeId, resolvedSelectedEdgeId],
   );
-  const compact = mode === "embedded";
+  const isEmbedded = mode === "embedded";
   const traceSummary = describeTraceabilityState(traceContext);
 
+  const mdDetailGridColumns = standaloneMax
+    ? compactLayout
+      ? `minmax(0, 1.7fr) minmax(${detailMinPx}px, 1fr)`
+      : `minmax(0, 2fr) minmax(${detailMinPx}px, 1fr)`
+    : `minmax(0, 1.7fr) minmax(280px, 1fr)`;
+
+  const rootSx = standaloneMax
+    ? { flex: 1, minHeight: 0, display: "flex", flexDirection: "column", width: "100%" }
+    : {};
+
   return (
-    <Box>
-      <Box sx={{ mb: 2 }}>
-        <Typography sx={{ fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>{title}</Typography>
-        {subtitle ? (
-          typeof subtitle === "string" || typeof subtitle === "number" ? (
-            <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)", mt: 0.5 }}>{subtitle}</Typography>
-          ) : (
-            <Box sx={{ mt: 0.5 }}>{subtitle}</Box>
-          )
-        ) : null}
-      </Box>
+    <Box sx={rootSx}>
+      {standaloneMax ? (
+        <Box sx={{ flexShrink: 0, mb: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 0.5 }}>
+            <CursorSmallButton
+              type="button"
+              onClick={() => setTitleBlockOpen((o) => !o)}
+              aria-expanded={titleBlockOpen}
+              sx={{ minWidth: 32, px: 0.5 }}
+            >
+              <ExpandMoreIcon
+                sx={{
+                  fontSize: "1.1rem",
+                  color: "rgba(255,255,255,0.65)",
+                  transform: titleBlockOpen ? "rotate(0deg)" : "rotate(-90deg)",
+                  transition: "transform 0.15s ease",
+                }}
+              />
+            </CursorSmallButton>
+            <Typography sx={{ fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>{title}</Typography>
+          </Box>
+          <Collapse in={titleBlockOpen}>
+            {subtitle ? (
+              typeof subtitle === "string" || typeof subtitle === "number" ? (
+                <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)", mb: 1 }}>{subtitle}</Typography>
+              ) : (
+                <Box sx={{ mb: 1 }}>{subtitle}</Box>
+              )
+            ) : null}
+          </Collapse>
+        </Box>
+      ) : (
+        <Box sx={{ mb: 2 }}>
+          <Typography sx={{ fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>{title}</Typography>
+          {subtitle ? (
+            typeof subtitle === "string" || typeof subtitle === "number" ? (
+              <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)", mt: 0.5 }}>{subtitle}</Typography>
+            ) : (
+              <Box sx={{ mt: 0.5 }}>{subtitle}</Box>
+            )
+          ) : null}
+        </Box>
+      )}
 
       {!workId.trim() ? <GraphMissingWorkInline message="Pick a work to load graph context." /> : null}
 
@@ -156,7 +308,46 @@ export default function GraphWorkspacePanel({
 
       {!loading && !error && workId.trim() ? (
         <>
-          {graph.warnings.length > 0 ? (
+          {standaloneMax && (graph.warnings.length > 0 || capWarnings.length > 0) ? (
+            <Box sx={{ flexShrink: 0, mb: 1 }}>
+              <CursorSmallButton
+                type="button"
+                onClick={() => setAlertsOpen((o) => !o)}
+                aria-expanded={alertsOpen}
+                sx={{ mb: 0.5 }}
+              >
+                {alertsOpen ? "Hide" : "Show"} normalization / UI cap messages
+              </CursorSmallButton>
+              <Collapse in={alertsOpen}>
+                {graph.warnings.length > 0 ? (
+                  <Alert severity="info" sx={{ mb: 2, fontSize: "0.8125rem", backgroundColor: "rgba(255,255,255,0.04)" }}>
+                    <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, mb: 0.5 }}>Graph data was normalized</Typography>
+                    <Box component="ul" sx={{ m: 0, pl: 2.25, mb: 0 }}>
+                      {graph.warnings.map((line, idx) => (
+                        <Typography key={`graph-warn-${idx}`} component="li" sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.75)" }}>
+                          {line}
+                        </Typography>
+                      ))}
+                    </Box>
+                  </Alert>
+                ) : null}
+                {capWarnings.length > 0 ? (
+                  <Alert severity="info" sx={{ mb: 2, fontSize: "0.8125rem", backgroundColor: "rgba(99,102,241,0.08)" }}>
+                    <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, mb: 0.5 }}>Large graph — UI cap</Typography>
+                    <Box component="ul" sx={{ m: 0, pl: 2.25, mb: 0 }}>
+                      {capWarnings.map((line, idx) => (
+                        <Typography key={`graph-cap-${idx}`} component="li" sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.75)" }}>
+                          {line}
+                        </Typography>
+                      ))}
+                    </Box>
+                  </Alert>
+                ) : null}
+              </Collapse>
+            </Box>
+          ) : null}
+
+          {!standaloneMax && graph.warnings.length > 0 ? (
             <Alert severity="info" sx={{ mb: 2, fontSize: "0.8125rem", backgroundColor: "rgba(255,255,255,0.04)" }}>
               <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, mb: 0.5 }}>Graph data was normalized</Typography>
               <Box component="ul" sx={{ m: 0, pl: 2.25, mb: 0 }}>
@@ -169,7 +360,7 @@ export default function GraphWorkspacePanel({
             </Alert>
           ) : null}
 
-          {capWarnings.length > 0 ? (
+          {!standaloneMax && capWarnings.length > 0 ? (
             <Alert severity="info" sx={{ mb: 2, fontSize: "0.8125rem", backgroundColor: "rgba(99,102,241,0.08)" }}>
               <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, mb: 0.5 }}>Large graph — UI cap</Typography>
               <Box component="ul" sx={{ m: 0, pl: 2.25, mb: 0 }}>
@@ -182,7 +373,58 @@ export default function GraphWorkspacePanel({
             </Alert>
           ) : null}
 
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 1.5 }}>
+          <Box
+            sx={
+              standaloneMax
+                ? { flex: 1, minHeight: 0, minWidth: 0, display: "flex", flexDirection: "column" }
+                : {}
+            }
+          >
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 1.5, alignItems: "center", flexShrink: 0 }}>
+            {standaloneMax ? (
+              <>
+                <CursorSmallButton
+                  type="button"
+                  onClick={() => setDetailsVisible((v) => !v)}
+                  aria-pressed={detailsVisible}
+                >
+                  {detailsVisible ? "Hide" : "Show"} details panel
+                </CursorSmallButton>
+                <CursorSmallButton type="button" onClick={() => setLegendOpen((o) => !o)} aria-expanded={legendOpen}>
+                  {legendOpen ? "Hide" : "Show"} type legend
+                </CursorSmallButton>
+                {detailsVisible ? (
+                  <Box
+                    sx={{
+                      flex: "1 1 220px",
+                      minWidth: 180,
+                      maxWidth: 400,
+                      px: 0.5,
+                      alignSelf: "center",
+                    }}
+                  >
+                    <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.45)", mb: 0.25 }}>
+                      Detail column min width ({detailMinPx}px)
+                    </Typography>
+                    <Slider
+                      size="small"
+                      value={detailMinPx}
+                      min={DETAIL_MIN_PX_MIN}
+                      max={DETAIL_MIN_PX_MAX}
+                      step={DETAIL_MIN_PX_STEP}
+                      onChange={(_, v) => setDetailMinPx(v)}
+                      sx={{
+                        color: "rgba(129,140,248,0.85)",
+                        py: 0.25,
+                        "& .MuiSlider-thumb": { width: 12, height: 12 },
+                        "& .MuiSlider-track": { border: "none" },
+                      }}
+                      aria-label="Detail column minimum width"
+                    />
+                  </Box>
+                ) : null}
+              </>
+            ) : null}
             <CursorSmallButton
               type="button"
               onClick={() => setVizMode("cards")}
@@ -215,28 +457,37 @@ export default function GraphWorkspacePanel({
             </CursorSmallButton>
           </Box>
 
-          <GraphTypeLegend graph={displayGraph} />
+          {standaloneMax ? (
+            <Collapse in={legendOpen}>
+              <GraphTypeLegend graph={displayGraph} />
+            </Collapse>
+          ) : (
+            <GraphTypeLegend graph={displayGraph} />
+          )}
 
           <Box
             sx={{
+              flex: standaloneMax ? 1 : undefined,
               display: "grid",
               gap: 2,
-              minHeight: { xs: "auto", md: compact ? 420 : 520 },
-              gridTemplateColumns: {
-                xs: "minmax(0, 1fr)",
-                md: compact ? "minmax(0, 1.7fr) minmax(280px, 1fr)" : "minmax(0, 2fr) minmax(320px, 1fr)",
-              },
+              minHeight: standaloneMax ? 0 : { xs: "auto", md: isEmbedded ? 420 : 520 },
+              gridTemplateColumns: !detailsVisible
+                ? "minmax(0, 1fr)"
+                : {
+                    xs: "minmax(0, 1fr)",
+                    md: mdDetailGridColumns,
+                  },
               alignItems: "stretch",
             }}
           >
             <Box
               sx={{
                 minWidth: 0,
-                minHeight: { xs: 280, md: compact ? 400 : 500 },
+                minHeight: standaloneMax ? 0 : { xs: 280, md: isEmbedded ? 400 : 500 },
                 display: "flex",
                 flexDirection: "column",
                 alignSelf: "stretch",
-                height: "100%",
+                height: standaloneMax ? "100%" : "100%",
               }}
             >
               {vizMode === "cards" ? (
@@ -267,17 +518,20 @@ export default function GraphWorkspacePanel({
                 </Box>
               )}
             </Box>
-            <Box sx={{ minWidth: 0, minHeight: { xs: 220, md: compact ? 400 : 500 }, display: "flex", flexDirection: "column" }}>
-              <GraphDetailPanel
-                selectedNode={detail.selectedNode}
-                selectedEdge={detail.selectedEdge}
-                relatedEdges={detail.relatedEdges}
-                mode={mode}
-              />
-            </Box>
+            {detailsVisible ? (
+              <Box sx={{ minWidth: 0, minHeight: standaloneMax ? 0 : { xs: 220, md: isEmbedded ? 400 : 500 }, display: "flex", flexDirection: "column" }}>
+                <GraphDetailPanel
+                  selectedNode={detail.selectedNode}
+                  selectedEdge={detail.selectedEdge}
+                  relatedEdges={detail.relatedEdges}
+                  mode={mode}
+                />
+              </Box>
+            ) : null}
+          </Box>
           </Box>
 
-          <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
+          <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1, flexShrink: 0 }}>
             <Box sx={{ px: 1, py: 0.5, borderRadius: "999px", backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
               <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.65)" }}>nodes: {graph.nodeCount}</Typography>
             </Box>
@@ -342,7 +596,7 @@ export default function GraphWorkspacePanel({
                     fontSize: "0.75rem",
                     color: "rgba(255,255,255,0.6)",
                     overflow: "auto",
-                    maxHeight: compact ? 180 : 240,
+                    maxHeight: isEmbedded ? 180 : 240,
                     whiteSpace: "pre-wrap",
                     wordBreak: "break-word",
                   }}

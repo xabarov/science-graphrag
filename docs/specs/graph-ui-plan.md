@@ -162,6 +162,35 @@ flowchart TB
 2. **Wave 4.2** — Canvas micro-polish: explicit `Map` for nodes where helpful; **edge label draw order** so hovered/selected labels paint last (readability).
 3. **Wave 4.3** — Time-boxed **layout stack spike**: React Flow / Sigma POC **or** isolated port of osint `useForceSimulation` + QuadTree without OSINT domain hooks — record outcome in [`docs/adr/006-graph-layout-stack-spike.md`](../../docs/adr/006-graph-layout-stack-spike.md) and keep `normalizeGraphPayload` + `GraphDetailPanel` as the contract.
 
+### Standalone Graph page — workspace maximization (Wave 5)
+
+**Goal:** On [`GraphPage.jsx`](../../ui/src/pages/GraphPage.jsx) (`/graph`), the **canvas should use as much of the viewport as practical** for pan/zoom and selection. Secondary UI (page chrome, `work_id` form, warnings, legend, diagnostics, detail column) must not permanently consume most of the vertical space.
+
+**Non-functional targets:**
+
+- **Flex chain:** `DashboardLayout` `main` → route outlet → `GraphPage` → [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx) use `flex: 1`, `minHeight: 0`, and column flex so [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx) receives a real height from [`ResizeObserver`](../../ui/src/components/graph/GraphCanvasMvp.jsx).
+- **Chrome:** Collapsible **page header** / long description; compact **work_id** toolbar; optional query `compact=1` to start in a denser layout.
+- **Panel:** Collapsible **normalization / UI-cap** alerts when lists are long; **legend** behind a toggle; **detail** column hideable for a graph-only column.
+- **Embedded:** Workspace **Graph** tab keeps usable layout; standalone mode may apply stronger maximization.
+
+**Implementation notes:** See [`refactor-frontend.md`](../backlog/refactor-frontend.md) (Wave 5 item); do not mix with Wave 4.3 physics/layout spike.
+
+**Shipped (Wave 5):**
+
+- [`DashboardLayout.jsx`](../../ui/src/components/layout/DashboardLayout/DashboardLayout.jsx): `main` is a column flex container; `Outlet` wrapped in a growing `Box` (`flex: 1`, `minHeight: 0`) so routes can fill height.
+- [`GraphPage.jsx`](../../ui/src/pages/GraphPage.jsx): root column flex + `?compact=1` (denser defaults, initial Graph mode via panel); collapsible **page chrome** (header + long description) with `localStorage` `graphPageChromeExpanded`; compact **work_id** row when chrome collapsed; workspace links behind **Show/Hide**.
+- [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx) (`standalone`): flex chain to canvas; toggles for **details panel**, **type legend**, collapsible **normalization/UI-cap** alerts; panel visibility persisted in `localStorage`.
+
+### Standalone Graph page — focus URL + detail width (Wave 6)
+
+**Goal:** Sharable **maximum canvas** defaults via `?focus=1`, and a **user-tunable minimum width** for the detail column on `md+` when the detail panel is visible (persisted in `localStorage`). URL contract for `/graph` query flags is summarized in [`frontend-ui-api-contracts-v1.md`](./frontend-ui-api-contracts-v1.md) (UI route table).
+
+**Shipped (Wave 6):**
+
+- [`GraphPage.jsx`](../../ui/src/pages/GraphPage.jsx): optional `?focus=1` (implies compact panel layout; collapses page chrome/links like `compact`); preserves `focus` / `compact` / `lab` when submitting **Load**. Helpers in [`graphPageUrl.js`](../../ui/src/pages/graphPageUrl.js).
+- [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx) (`standalone`): prop `focusLayout` — initial **title / legend / alerts / details** collapsed for max canvas; **slider** for detail column `minmax` width (260–480px), key `graphStandaloneDetailMinPx`.
+- Unit tests: [`graphPageUrl.test.js`](../../ui/src/pages/graphPageUrl.test.js).
+
 ## Phased delivery (mirror master plan)
 
 1. **4.1** — Document and test edge cases on normalized model; align with this spec.
@@ -179,3 +208,5 @@ flowchart TB
 - [x] Canvas: Fit on graph change; Center on selected; no auto-recenter on every selection change; Reset zoom; card grid keyboard roving + arrows.
 - [x] Graph workspace panel responsive grid; canvas selection live region + canvas `aria-label`.
 - [x] Graph type legend compact `xs` spacing; benchmark dialogs full-screen on narrow viewports.
+- [x] Standalone `/graph`: viewport-height flex chain; collapsible chrome; optional `?compact=1`; collapsible legend/alerts; hide details panel (Wave 5).
+- [x] Standalone `/graph`: optional `?focus=1`; detail column min-width slider + persistence (Wave 6).
