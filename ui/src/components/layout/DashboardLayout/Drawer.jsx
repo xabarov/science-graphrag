@@ -85,6 +85,7 @@ export default function Drawer({ onNavigate }) {
       <Box
         component={RouterLink}
         to={item.to}
+        aria-label={expanded ? undefined : item.label}
         onClick={() => onNavigate?.()}
         sx={{
           display: "flex",

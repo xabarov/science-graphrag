@@ -61,7 +61,7 @@ export default function CasesTab() {
   return (
     <Box sx={{ padding: 2 }}>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap", mb: 2 }}>
-        <Typography sx={{ fontWeight: 600 }}>Кейсы</Typography>
+        <Typography sx={{ fontWeight: 600 }}>Cases</Typography>
         <Select
           size="small"
           value={family}
@@ -125,7 +125,7 @@ export default function CasesTab() {
               {family === "layer2" || family === "graph" ? null : (
                 <TableCell>graph_exp</TableCell>
               )}
-              <TableCell align="right">Действия</TableCell>
+              <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>

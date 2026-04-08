@@ -180,10 +180,10 @@ export default function CompareTab({ onOpenWorkbench }) {
 
   return (
     <Box sx={{ padding: 2 }}>
-      <Typography sx={{ fontWeight: 600, mb: 2 }}>Сравнение run-ов</Typography>
+      <Typography sx={{ fontWeight: 600, mb: 2 }}>Compare runs</Typography>
       <Typography sx={{ color: "rgba(255,255,255,0.55)", fontSize: "0.8125rem", mb: 2 }}>
-        Baseline = эталон (старый / reference). Current = кандидат (новый). Сравниваются только кейсы со статусом ok и
-        наличием metrics. Семейство benchmark должно совпадать.
+        Baseline is the reference (older) run; Current is the candidate (newer). Only cases with status ok and metrics
+        are compared. Benchmark family must match between runs.
       </Typography>
 
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "center", mb: 2 }}>
@@ -224,9 +224,9 @@ export default function CompareTab({ onOpenWorkbench }) {
           </Select>
         </FormControl>
         <CursorPrimaryButton onClick={runCompare} disabled={loading || !baselineId || !currentId}>
-          {loading ? "Сравнение…" : "Сравнить"}
+          {loading ? "Comparing…" : "Compare"}
         </CursorPrimaryButton>
-        <CursorButton onClick={() => refreshRuns().catch(() => {})}>Обновить список</CursorButton>
+        <CursorButton onClick={() => refreshRuns().catch(() => {})}>Refresh list</CursorButton>
       </Box>
 
       {error ? (

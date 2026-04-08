@@ -165,6 +165,33 @@ class ReferenceIdsOnlyLLM(BaseModel):
     )
 
 
+class ReferenceBibliographyScopeLLM(BaseModel):
+    """
+    LLM identifies the raw bibliography body; deterministic heuristics parse entries.
+    Used by research / tool-router experiments (not the default batched references path).
+    """
+
+    references_block_excerpt: str = Field(
+        ...,
+        max_length=90_000,
+        description=(
+            "Verbatim bibliography lines only: from the first reference entry through the last. "
+            "Do not include a 'References' heading unless it is part of the PDF text; "
+            "prefer body lines only."
+        ),
+    )
+    bibliography_style_hint: str | None = Field(
+        default="auto",
+        description="numbered | author_year | auto — informational; downstream parser uses shared splitter.",
+    )
+    confidence: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Optional self-rated confidence that the excerpt is complete.",
+    )
+
+
 class SemanticEvidenceLLM(BaseModel):
     chunk_id: str | None = None
     section_heading: str | None = None

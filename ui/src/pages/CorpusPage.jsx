@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -6,6 +6,10 @@ import TextField from "@mui/material/TextField";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 import Chip from "@mui/material/Chip";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
 
 import { CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
@@ -21,6 +25,17 @@ export default function CorpusPage() {
   const [error, setError] = useState(null);
   const [recentWorks, setRecentWorks] = useState([]);
   const [continueTarget, setContinueTarget] = useState(null);
+  const [sortBy, setSortBy] = useState("api");
+
+  const sortedItems = useMemo(() => {
+    const arr = [...items];
+    if (sortBy === "title") {
+      arr.sort((a, b) => String(a.title || "").localeCompare(String(b.title || ""), undefined, { sensitivity: "base" }));
+    } else if (sortBy === "year_desc") {
+      arr.sort((a, b) => (Number(b.year) || 0) - (Number(a.year) || 0));
+    }
+    return arr;
+  }, [items, sortBy]);
 
   useEffect(() => {
     setRecentWorks(getRecentWorks().slice(0, 4));
@@ -179,6 +194,19 @@ export default function CorpusPage() {
         >
           Reset
         </CursorPrimaryButton>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
+          <InputLabel id="corpus-sort">Sort</InputLabel>
+          <Select
+            labelId="corpus-sort"
+            label="Sort"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+          >
+            <MenuItem value="api">API order</MenuItem>
+            <MenuItem value="title">Title (A–Z)</MenuItem>
+            <MenuItem value="year_desc">Year (newest)</MenuItem>
+          </Select>
+        </FormControl>
       </Box>
 
       {loading && (
@@ -200,7 +228,7 @@ export default function CorpusPage() {
       )}
 
       <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-        {items.map((w) => (
+        {sortedItems.map((w) => (
           <Box
             key={w.work_id}
             sx={{

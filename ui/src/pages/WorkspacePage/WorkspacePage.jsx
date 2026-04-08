@@ -165,6 +165,10 @@ export default function WorkspacePage() {
             fontWeight: 500,
             textTransform: "none",
             color: "rgba(255,255,255,0.6)",
+            "&:focus-visible": {
+              outline: "2px solid rgba(129, 140, 248, 0.75)",
+              outlineOffset: 2,
+            },
           },
           "& .Mui-selected": { color: "rgba(255,255,255,0.9) !important" },
           "& .MuiTabs-indicator": { backgroundColor: "rgba(99, 102, 241, 0.8)", height: 2 },

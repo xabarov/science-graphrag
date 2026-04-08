@@ -88,6 +88,9 @@ export default function GraphPage() {
           <Typography sx={{ mt: 0.75, fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)" }}>
             Load a `work_id` to inspect graph nodes directly, or open a paper in Workspace and jump here when you need a dedicated graph surface.
           </Typography>
+          <Typography sx={{ mt: 1, fontSize: "0.75rem", color: "rgba(255,255,255,0.42)" }}>
+            Phase 4 (master plan): richer canvas, controls, and a dedicated graph-first detail panel are the next UX layer on top of this surface.
+          </Typography>
         </Box>
       ) : null}
 

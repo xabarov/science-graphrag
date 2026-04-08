@@ -8,12 +8,29 @@ export default defineConfig({
   server: {
     proxy: {
       "/v1": "http://localhost:8787",
+      "/health": "http://localhost:8787",
     },
   },
   build: {
     // Copy the built UI into the FastAPI static directory.
     outDir: "../science_graphrag/api/static/ui",
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (id.includes("@mui") || id.includes("@emotion")) return "mui";
+            if (
+              id.includes("node_modules/react-dom") ||
+              id.includes("node_modules/react-router") ||
+              id.includes("node_modules/react/")
+            ) {
+              return "react-vendor";
+            }
+          }
+        },
+      },
+    },
   },
 });
 

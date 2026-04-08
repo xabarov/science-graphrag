@@ -5,7 +5,9 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict, dataclass, field
+from time import perf_counter
 from typing import Any, Literal
 
 from science_graphrag.config import Settings
@@ -195,6 +197,165 @@ def _references_from_llm(
     return out
 
 
+_LEADING_REF_ENUM_RE = re.compile(r"^\s*\[\d{1,4}\]\s*\.?\s*", re.MULTILINE)
+
+
+def _normalize_raw_reference_key(raw: str) -> str:
+    """Normalize bibliography line for fuzzy identity matching (leading [n] stripped)."""
+
+    text = (raw or "").strip()
+    text = _LEADING_REF_ENUM_RE.sub("", text, count=1)
+    text = re.sub(r"\s+", " ", text).lower()
+    text = re.sub(r"[^a-z0-9.\-:/ ]+", "", text)
+    return text[:500]
+
+
+def _reference_identity(ref: ReferenceDraft) -> tuple[str, str]:
+    if ref.doi:
+        return "doi", ref.doi
+    if ref.arxiv_id:
+        return "arxiv", ref.arxiv_id
+    return "raw", _normalize_raw_reference_key(ref.raw_reference)
+
+
+def _merge_reference_sets_enrich_only(
+    heuristic_refs: list[ReferenceDraft],
+    llm_refs: list[ReferenceDraft],
+) -> tuple[list[ReferenceDraft], dict[str, int]]:
+    """Update heuristic rows from LLM matches only; never append LLM-only rows."""
+
+    merged: list[ReferenceDraft] = []
+    index_by_identity: dict[tuple[str, str], int] = {}
+    raw_identity_to_index: dict[str, int] = {}
+    stats = {
+        "heuristic_total": len(heuristic_refs),
+        "llm_total": len(llm_refs),
+        "llm_new_entries": 0,
+        "llm_enriched_entries": 0,
+        "llm_skipped_bare": 0,
+        "merge_cap_applied": 0,
+        "mode": "enrich_only",
+    }
+
+    for ref in heuristic_refs:
+        identity = _reference_identity(ref)
+        raw_identity = _reference_identity(ReferenceDraft(raw_reference=ref.raw_reference))[1]
+        if identity[1]:
+            index_by_identity[identity] = len(merged)
+        if raw_identity:
+            raw_identity_to_index[raw_identity] = len(merged)
+        merged.append(ref.model_copy(deep=True))
+
+    for ref in llm_refs:
+        identity = _reference_identity(ref)
+        raw_identity = _reference_identity(ReferenceDraft(raw_reference=ref.raw_reference))[1]
+        idx = index_by_identity.get(identity) if identity[1] else None
+        if idx is None and raw_identity:
+            idx = raw_identity_to_index.get(raw_identity)
+        if idx is None:
+            continue
+
+        existing = merged[idx]
+        enriched = False
+        if not existing.doi and ref.doi:
+            existing.doi = ref.doi
+            enriched = True
+        if not existing.arxiv_id and ref.arxiv_id:
+            existing.arxiv_id = ref.arxiv_id
+            enriched = True
+        if not existing.title and ref.title:
+            existing.title = ref.title
+            enriched = True
+        if existing.year is None and ref.year is not None:
+            existing.year = ref.year
+            enriched = True
+        if enriched:
+            stats["llm_enriched_entries"] += 1
+
+    return merged[:500], stats
+
+
+def _merge_reference_sets(
+    heuristic_refs: list[ReferenceDraft],
+    llm_refs: list[ReferenceDraft],
+    *,
+    mode: str = "conservative",
+    max_extra_beyond_heuristic: int = 2,
+) -> tuple[list[ReferenceDraft], dict[str, int]]:
+    merged: list[ReferenceDraft] = []
+    index_by_identity: dict[tuple[str, str], int] = {}
+    raw_identity_to_index: dict[str, int] = {}
+    policy = (mode or "conservative").strip().lower()
+    stats = {
+        "heuristic_total": len(heuristic_refs),
+        "llm_total": len(llm_refs),
+        "llm_new_entries": 0,
+        "llm_enriched_entries": 0,
+        "llm_skipped_bare": 0,
+        "merge_cap_applied": 0,
+        "mode": policy,
+    }
+
+    for ref in heuristic_refs:
+        identity = _reference_identity(ref)
+        raw_identity = _reference_identity(ReferenceDraft(raw_reference=ref.raw_reference))[1]
+        if identity[1]:
+            index_by_identity[identity] = len(merged)
+        if raw_identity:
+            raw_identity_to_index[raw_identity] = len(merged)
+        merged.append(ref.model_copy(deep=True))
+
+    for ref in llm_refs:
+        identity = _reference_identity(ref)
+        raw_identity = _reference_identity(ReferenceDraft(raw_reference=ref.raw_reference))[1]
+        idx = index_by_identity.get(identity) if identity[1] else None
+        if idx is None and raw_identity:
+            idx = raw_identity_to_index.get(raw_identity)
+        if idx is None:
+            if policy == "conservative" and len(heuristic_refs) > 0:
+                if not ref.doi and not ref.arxiv_id:
+                    stats["llm_skipped_bare"] += 1
+                    continue
+            merged.append(ref.model_copy(deep=True))
+            if identity[1]:
+                index_by_identity[identity] = len(merged) - 1
+            if raw_identity:
+                raw_identity_to_index[raw_identity] = len(merged) - 1
+            stats["llm_new_entries"] += 1
+            continue
+
+        existing = merged[idx]
+        enriched = False
+        if not existing.doi and ref.doi:
+            existing.doi = ref.doi
+            enriched = True
+        if not existing.arxiv_id and ref.arxiv_id:
+            existing.arxiv_id = ref.arxiv_id
+            enriched = True
+        if not existing.title and ref.title:
+            existing.title = ref.title
+            enriched = True
+        if existing.year is None and ref.year is not None:
+            existing.year = ref.year
+            enriched = True
+        if enriched:
+            stats["llm_enriched_entries"] += 1
+
+    out = merged[:500]
+    if (
+        policy == "conservative"
+        and heuristic_refs
+        and len(out) > len(heuristic_refs) + max(0, max_extra_beyond_heuristic)
+    ):
+        out, cap_stats = _merge_reference_sets_enrich_only(heuristic_refs, llm_refs)
+        cap_stats["merge_cap_applied"] = 1
+        cap_stats["mode"] = policy
+        cap_stats["llm_skipped_bare"] = stats["llm_skipped_bare"]
+        return out, cap_stats
+
+    return out, stats
+
+
 def _reference_chunks(ref_text: str, batch_size: int) -> list[str]:
     synthetic_text = f"## References\n\n{ref_text}"
     entries = split_reference_entries(synthetic_text)
@@ -205,6 +366,71 @@ def _reference_chunks(ref_text: str, batch_size: int) -> list[str]:
         group = entries[i : i + batch_size]
         chunks.append("\n".join(entry.strip() for entry in group if entry).strip())
     return [chunk for chunk in chunks if chunk]
+
+
+def _reference_chunk_groups(ref_text: str, batch_size: int) -> list[list[str]]:
+    synthetic_text = f"## References\n\n{ref_text}"
+    entries = split_reference_entries(synthetic_text)
+    if not entries:
+        return [[ref_text]] if ref_text.strip() else []
+    return [entries[i : i + max(1, batch_size)] for i in range(0, len(entries), max(1, batch_size))]
+
+
+def _extract_references_one_chunk(
+    *,
+    extractor_refs: SyncInstructorExtractor,
+    response_model: type,
+    refs_instruction: str,
+    chunk_idx: int,
+    chunk_total: int,
+    ref_chunk: str,
+    entry_group: list[str],
+    document_id: str,
+    source_name: str,
+) -> tuple[
+    int,
+    list[ReferenceItemLLM | ReferenceIdOnlyItemLLM],
+    dict[str, Any],
+    str | None,
+]:
+    """Run one batched references LLM call; safe to invoke concurrently (separate HTTP requests)."""
+
+    user_refs = f"{refs_instruction}\n\n---\n{ref_chunk}"
+    detail: dict[str, Any] = {
+        "chunk_index": chunk_idx,
+        "entries_expected_in_chunk": len(entry_group),
+        "chunk_chars": len(ref_chunk),
+    }
+    with llm_span(
+        "llm.references_extraction",
+        {
+            "document.id": document_id,
+            "document.source_name": source_name,
+            "extraction.stage": "references",
+            "chunk_index": chunk_idx,
+            "chunk_total": chunk_total,
+        },
+    ):
+        rparsed, rerr = extractor_refs.extract_maybe(
+            response_model,
+            system=(
+                SYSTEM_FENCE
+                + " References list only; preserve one bibliography item per entry and capture DOI/arXiv identifiers faithfully."
+            ),
+            user=user_refs,
+        )
+    if rerr:
+        detail["entries_returned_by_llm"] = 0
+        detail["status"] = rerr
+        return chunk_idx, [], detail, rerr
+    if rparsed is None:
+        detail["entries_returned_by_llm"] = 0
+        detail["status"] = "llm_empty_result"
+        return chunk_idx, [], detail, "llm_empty_result"
+    items = list(rparsed.references)
+    detail["entries_returned_by_llm"] = len(items)
+    detail["status"] = "ok"
+    return chunk_idx, items, detail, None
 
 
 def _references_tail_for_prompt(normalized: str) -> str:
@@ -238,7 +464,7 @@ class ExtractionDiagnostics:
     markdown_source: str
     metadata_source: Literal["llm", "heuristic"]
     authorships_source: Literal["llm", "heuristic"]
-    references_source: Literal["llm", "heuristic"]
+    references_source: Literal["llm", "heuristic", "hybrid"]
     extraction_llm_enabled: bool
     extraction_llm_model: str | None
     references_scope_chars: int | None = None
@@ -246,6 +472,11 @@ class ExtractionDiagnostics:
     llm_reference_count: int | None = None
     llm_reference_batches: int | None = None
     llm_reference_mode: str | None = None
+    merged_reference_count: int | None = None
+    reference_chunk_details: list[dict[str, Any]] = field(default_factory=list)
+    metadata_extraction_seconds: float | None = None
+    authorships_extraction_seconds: float | None = None
+    references_extraction_seconds: float | None = None
     fallback_reasons: list[dict[str, Any]] = field(default_factory=list)
 
     def to_json(self) -> str:
@@ -338,6 +569,7 @@ def extract_stages_llm_first(
     )
 
     draft: WorkDraft | None = None
+    _meta_t0 = perf_counter()
     with llm_span(
         "llm.metadata_extraction",
         {
@@ -355,6 +587,7 @@ def extract_stages_llm_first(
             ),
             user=user_meta,
         )
+    diag.metadata_extraction_seconds = perf_counter() - _meta_t0
     if err:
         diag.fallback_reasons.append(
             {"stage": "metadata", "reason": "llm_failed", "detail": err},
@@ -395,6 +628,7 @@ def extract_stages_llm_first(
     authorships: list[AuthorshipDraft] = []
     aerr: str | None = None
     aparsed: AuthorshipsLLM | None = None
+    _auth_t0 = perf_counter()
     with llm_span(
         "llm.authorships_extraction",
         {
@@ -410,6 +644,7 @@ def extract_stages_llm_first(
             ),
             user=user_auth,
         )
+    diag.authorships_extraction_seconds = perf_counter() - _auth_t0
     if aerr:
         diag.fallback_reasons.append(
             {"stage": "authorships", "reason": "llm_failed", "detail": aerr},
@@ -461,11 +696,19 @@ def extract_stages_llm_first(
     diag.heuristic_reference_count = hcount
     diag.llm_reference_mode = settings.extraction_llm_mode
     references: list[ReferenceDraft] = []
-    ref_chunks = _reference_chunks(ref_text, settings.extraction_llm_references_batch_size)
+    heuristic_references = extract_references(normalized_markdown)
+    ref_entry_groups = _reference_chunk_groups(
+        ref_text, settings.extraction_llm_references_batch_size
+    )
+    ref_chunks = [
+        "\n".join(entry.strip() for entry in group if entry).strip() for group in ref_entry_groups
+    ]
     diag.llm_reference_batches = len(ref_chunks)
     all_items: list[ReferenceItemLLM | ReferenceIdOnlyItemLLM] = []
     llm_reference_errors: list[str] = []
-    response_model = ReferencesLLM if settings.extraction_llm_reference_titles_enabled else ReferenceIdsOnlyLLM
+    response_model = (
+        ReferencesLLM if settings.extraction_llm_reference_titles_enabled else ReferenceIdsOnlyLLM
+    )
     refs_instruction = (
         "Extract bibliography entries from the references section. For each entry include "
         "raw_reference (full bibliography line or merged wrapped lines), doi if present, "
@@ -473,33 +716,64 @@ def extract_stages_llm_first(
     )
     if settings.extraction_llm_reference_titles_enabled:
         refs_instruction += " Also include title if obvious and publication year if present."
-    for chunk_idx, ref_chunk in enumerate(ref_chunks, start=1):
-        user_refs = f"{refs_instruction}\n\n---\n{ref_chunk}"
-        with llm_span(
-            "llm.references_extraction",
-            {
-                "document.id": document_id,
-                "document.source_name": source_name,
-                "extraction.stage": "references",
-                "chunk_index": chunk_idx,
-                "chunk_total": len(ref_chunks),
-            },
-        ):
-            rparsed, rerr = extractor_refs.extract_maybe(
-                response_model,
-                system=(
-                    SYSTEM_FENCE
-                    + " References list only; preserve one bibliography item per entry and capture DOI/arXiv identifiers faithfully."
-                ),
-                user=user_refs,
-            )
+
+    _refs_t0 = perf_counter()
+    chunk_total = len(ref_chunks)
+    chunk_tasks = [
+        (idx, chunk, group)
+        for idx, (chunk, group) in enumerate(
+            zip(ref_chunks, ref_entry_groups, strict=False), start=1
+        )
+    ]
+
+    def _run_chunk(
+        task: tuple[int, str, list[str]],
+    ) -> tuple[
+        int,
+        list[ReferenceItemLLM | ReferenceIdOnlyItemLLM],
+        dict[str, Any],
+        str | None,
+    ]:
+        chunk_idx, ref_chunk, entry_group = task
+        return _extract_references_one_chunk(
+            extractor_refs=extractor_refs,
+            response_model=response_model,
+            refs_instruction=refs_instruction,
+            chunk_idx=chunk_idx,
+            chunk_total=chunk_total,
+            ref_chunk=ref_chunk,
+            entry_group=entry_group,
+            document_id=document_id,
+            source_name=source_name,
+        )
+
+    ordered_chunk_results: list[
+        tuple[int, list[ReferenceItemLLM | ReferenceIdOnlyItemLLM], dict[str, Any], str | None]
+    ] = []
+    if settings.extraction_llm_references_max_concurrency <= 1:
+        ordered_chunk_results = [_run_chunk(t) for t in chunk_tasks]
+    else:
+        max_workers = min(
+            settings.extraction_llm_references_max_concurrency, max(len(chunk_tasks), 1)
+        )
+        by_index: dict[
+            int,
+            tuple[int, list[ReferenceItemLLM | ReferenceIdOnlyItemLLM], dict[str, Any], str | None],
+        ] = {}
+        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            futures = {pool.submit(_run_chunk, t): t[0] for t in chunk_tasks}
+            for fut in as_completed(futures):
+                by_index[futures[fut]] = fut.result()
+        ordered_chunk_results = [by_index[i] for i in sorted(by_index)]
+
+    for chunk_idx, items, detail, rerr in ordered_chunk_results:
+        diag.reference_chunk_details.append(detail)
         if rerr:
             llm_reference_errors.append(f"chunk_{chunk_idx}:{rerr}")
             continue
-        if rparsed is None:
-            llm_reference_errors.append(f"chunk_{chunk_idx}:llm_empty_result")
-            continue
-        all_items.extend(rparsed.references)
+        all_items.extend(items)
+
+    diag.references_extraction_seconds = perf_counter() - _refs_t0
 
     if llm_reference_errors:
         detail = "; ".join(llm_reference_errors[:8])
@@ -509,20 +783,49 @@ def extract_stages_llm_first(
         add_span_event("extraction_fallback", {"stage": "references", "reason": detail})
         log.warning("references LLM failed for %s: %s", document_id, detail)
 
+    llm_references: list[ReferenceDraft] = []
     if all_items:
-        references = _references_from_llm(
+        llm_references = _references_from_llm(
             all_items,
             include_titles=settings.extraction_llm_reference_titles_enabled,
         )
-    diag.llm_reference_count = len(references)
+    diag.llm_reference_count = len(llm_references)
+    merged_references, merge_stats = _merge_reference_sets(
+        heuristic_references,
+        llm_references,
+        mode=settings.extraction_llm_references_merge_policy,
+        max_extra_beyond_heuristic=settings.extraction_llm_references_merge_max_extra,
+    )
+    diag.merged_reference_count = len(merged_references)
+    if (
+        merge_stats["llm_new_entries"]
+        or merge_stats["llm_enriched_entries"]
+        or merge_stats.get("llm_skipped_bare")
+        or merge_stats.get("merge_cap_applied")
+    ):
+        diag.fallback_reasons.append(
+            {
+                "stage": "references",
+                "reason": "merged_sources",
+                "detail": (
+                    f"heuristic_total={merge_stats['heuristic_total']} "
+                    f"llm_total={merge_stats['llm_total']} "
+                    f"llm_new_entries={merge_stats['llm_new_entries']} "
+                    f"llm_enriched_entries={merge_stats['llm_enriched_entries']} "
+                    f"llm_skipped_bare={merge_stats.get('llm_skipped_bare', 0)} "
+                    f"merge_cap_applied={merge_stats.get('merge_cap_applied', 0)} "
+                    f"policy={merge_stats.get('mode', '')}"
+                ),
+            }
+        )
 
-    if len(references) < 1 or (hcount > len(references) + 4 and hcount >= 3):
+    if len(llm_references) < 1:
         if diag.references_source != "heuristic":
             diag.fallback_reasons.append(
                 {
                     "stage": "references",
                     "reason": "prefer_heuristic",
-                    "detail": f"llm_count={len(references)} heuristic_count={hcount}",
+                    "detail": f"llm_count={len(llm_references)} heuristic_count={hcount}",
                 },
             )
             add_span_event(
@@ -530,14 +833,14 @@ def extract_stages_llm_first(
                 {
                     "stage": "references",
                     "reason": "heuristic_richer",
-                    "llm": len(references),
+                    "llm": len(llm_references),
                     "heuristic": hcount,
                 },
             )
-        with chain_span("fallback.references", {"document_id": document_id}):
-            references = extract_references(normalized_markdown)
+        references = heuristic_references
         diag.references_source = "heuristic"
     else:
-        diag.references_source = "llm"
+        references = merged_references
+        diag.references_source = "llm" if len(llm_references) >= hcount else "hybrid"
 
     return draft, authorships, references, diag

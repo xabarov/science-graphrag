@@ -66,10 +66,10 @@ export default function ResultsTab({ onOpenWorkbench }) {
   return (
     <Box sx={{ padding: 2 }}>
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
-        <Typography sx={{ fontWeight: 600 }}>Результаты</Typography>
+        <Typography sx={{ fontWeight: 600 }}>Results</Typography>
         <Box sx={{ display: "flex", gap: 1 }}>
           <CursorButton onClick={() => refresh()}>
-            Обновить
+            Refresh
           </CursorButton>
         </Box>
       </Box>
@@ -121,7 +121,7 @@ export default function ResultsTab({ onOpenWorkbench }) {
 
       {items.length === 0 ? (
         <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>
-          Пока нет runs. Перейдите на вкладку “Запуск”.
+          No runs yet. Go to the Launch tab to start one.
         </Typography>
       ) : (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -136,7 +136,7 @@ export default function ResultsTab({ onOpenWorkbench }) {
                 <TableCell>Progress</TableCell>
                 <TableCell>config</TableCell>
                 <TableCell>metrics</TableCell>
-                <TableCell align="right">Действия</TableCell>
+                <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -178,7 +178,7 @@ export default function ResultsTab({ onOpenWorkbench }) {
                           setDialogOpen(true);
                         }}
                       >
-                        Открыть
+                        Open
                       </CursorButton>
                       <CursorButton onClick={() => onOpenWorkbench?.(r.run_id, r?.cases?.[0]?.case_id || null)}>
                         Workbench
@@ -189,7 +189,7 @@ export default function ResultsTab({ onOpenWorkbench }) {
                           await refresh();
                         }}
                       >
-                        Удалить
+                        Delete
                       </CursorDangerButton>
                     </TableCell>
                   </TableRow>

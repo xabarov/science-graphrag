@@ -1,19 +1,21 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
 
 import HomePage from "./pages/HomePage.jsx";
 import AdminEntryPage from "./pages/AdminEntryPage.jsx";
-import BenchmarkPage from "./pages/BenchmarkPage/BenchmarkPage.jsx";
 import CorpusPage from "./pages/CorpusPage.jsx";
-import WorkspacePage from "./pages/WorkspacePage/WorkspacePage.jsx";
 import ReaderPage from "./pages/ReaderPage.jsx";
-import GraphPage from "./pages/GraphPage.jsx";
 import AskPage from "./pages/AskPage.jsx";
 import EvidencePage from "./pages/EvidencePage.jsx";
-import SettingsPage from "./pages/SettingsPage.jsx";
-import DiagnosticsPage from "./pages/DiagnosticsPage.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
+
+const WorkspacePage = lazy(() => import("./pages/WorkspacePage/WorkspacePage.jsx"));
+const BenchmarkPage = lazy(() => import("./pages/BenchmarkPage/BenchmarkPage.jsx"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage.jsx"));
+const DiagnosticsPage = lazy(() => import("./pages/DiagnosticsPage.jsx"));
+const GraphPage = lazy(() => import("./pages/GraphPage.jsx"));
 import PageHeader from "./components/layout/PageHeader.jsx";
 import DashboardLayout from "./components/layout/DashboardLayout/DashboardLayout.jsx";
 import AdminVisibilityGate from "./components/layout/AdminVisibilityGate.jsx";
@@ -42,6 +44,14 @@ function AdminRouteShell() {
   );
 }
 
+function LazyRouteFallback() {
+  return (
+    <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "40vh" }}>
+      <CircularProgress size={28} sx={{ color: "rgba(129,140,248,0.85)" }} />
+    </Box>
+  );
+}
+
 export default function App() {
   return (
     <Routes>
@@ -49,16 +59,51 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/home" element={<Navigate to="/" replace />} />
         <Route path="/corpus" element={<CorpusPage />} />
-        <Route path="/workspace" element={<WorkspacePage />} />
+        <Route
+          path="/workspace"
+          element={
+            <Suspense fallback={<LazyRouteFallback />}>
+              <WorkspacePage />
+            </Suspense>
+          }
+        />
         <Route path="/reader" element={<ReaderPage />} />
-        <Route path="/graph" element={<GraphPage />} />
+        <Route
+          path="/graph"
+          element={
+            <Suspense fallback={<LazyRouteFallback />}>
+              <GraphPage />
+            </Suspense>
+          }
+        />
         <Route path="/ask" element={<AskPage />} />
         <Route path="/evidence" element={<EvidencePage />} />
         <Route path="/admin" element={<AdminRouteShell />}>
           <Route index element={<AdminEntryPage />} />
-          <Route path="benchmarks" element={<BenchmarkPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-          <Route path="diagnostics" element={<DiagnosticsPage />} />
+          <Route
+            path="benchmarks"
+            element={
+              <Suspense fallback={<LazyRouteFallback />}>
+                <BenchmarkPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="settings"
+            element={
+              <Suspense fallback={<LazyRouteFallback />}>
+                <SettingsPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="diagnostics"
+            element={
+              <Suspense fallback={<LazyRouteFallback />}>
+                <DiagnosticsPage />
+              </Suspense>
+            }
+          />
         </Route>
         <Route path="/benchmark" element={<LegacyAdminRedirect to="/benchmark" />} />
         <Route path="/settings" element={<LegacyAdminRedirect to="/settings" />} />

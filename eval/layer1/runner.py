@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict
 from pathlib import Path
+from time import perf_counter
 from typing import Any
 
 import typer
@@ -71,6 +72,7 @@ def run_layer1_extraction_only(
         max_chars=settings.references_scope_max_chars,
     )
     init_tracer_provider()
+    started_at = perf_counter()
     with chain_span(
         "metadata_and_references_extraction",
         {
@@ -88,6 +90,13 @@ def run_layer1_extraction_only(
             front_matter_text=fm.text,
             references_scope_text=refs_scope,
         )
+    diag.fallback_reasons.append(
+        {
+            "stage": "runtime",
+            "reason": "wall_clock_seconds",
+            "detail": f"{perf_counter() - started_at:.3f}",
+        }
+    )
     return work, authorships, references, diag
 
 
@@ -144,6 +153,11 @@ def _summarize(report: dict[str, Any]) -> str:
         f"- metadata_source: {report['diagnostics']['metadata_source']}",
         f"- authorships_source: {report['diagnostics']['authorships_source']}",
         f"- references_source: {report['diagnostics']['references_source']}",
+        f"- merged_reference_count: {report['diagnostics'].get('merged_reference_count')}",
+        f"- llm_reference_batches: {report['diagnostics'].get('llm_reference_batches')}",
+        f"- metadata_extraction_seconds: {report['diagnostics'].get('metadata_extraction_seconds')}",
+        f"- authorships_extraction_seconds: {report['diagnostics'].get('authorships_extraction_seconds')}",
+        f"- references_extraction_seconds: {report['diagnostics'].get('references_extraction_seconds')}",
         f"- extraction_llm_enabled: {report['diagnostics']['extraction_llm_enabled']}",
         "",
         "## Metadata",

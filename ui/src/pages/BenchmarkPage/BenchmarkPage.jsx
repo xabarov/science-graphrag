@@ -78,12 +78,18 @@ export default function BenchmarkPage() {
           textColor="inherit"
           indicatorColor="secondary"
           variant="scrollable"
+          sx={{
+            "& .MuiTab-root:focus-visible": {
+              outline: "2px solid rgba(129, 140, 248, 0.75)",
+              outlineOffset: 2,
+            },
+          }}
         >
-          <Tab label="Запуск" />
+          <Tab label="Launch" />
           <Tab label="Workbench" />
-          <Tab label="Результаты" />
-          <Tab label="Сравнение" />
-          <Tab label="Кейсы" />
+          <Tab label="Results" />
+          <Tab label="Compare" />
+          <Tab label="Cases" />
         </Tabs>
       </Box>
 

@@ -194,7 +194,7 @@ export default function CaseDetailDialog({ open, caseId, family = "layer1", onCl
               case_id: {caseId || "-"}
             </Typography>
           </Box>
-          <CursorButton onClick={onClose}>Закрыть</CursorButton>
+          <CursorButton onClick={onClose}>Close</CursorButton>
         </Box>
       </DialogTitle>
       <DialogContent dividers>
@@ -290,7 +290,7 @@ export default function CaseDetailDialog({ open, caseId, family = "layer1", onCl
             {tabIdx === 0 && (
               <Box sx={{ mt: 2 }}>
                 <Typography sx={{ color: "rgba(255,255,255,0.6)", mb: 1 }}>
-                  article.md preview (редактирование не предусмотрено в MVP)
+                  article.md preview (editing not supported in MVP)
                 </Typography>
                 <Box
                   component="pre"
@@ -347,9 +347,9 @@ export default function CaseDetailDialog({ open, caseId, family = "layer1", onCl
             {graphExpectationsJson && tabIdx === 2 && (
               <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 2 }}>
                 <Typography sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.8125rem" }}>
-                  Graph-v1: ожидания из <code>gold.json</code>. Снимок графа получайте через CLI:{" "}
+                  Graph-v1: expectations from <code>gold.json</code>. Fetch graph snapshots via CLI:{" "}
                   <code>science-graphrag-graph-benchmark tests/fixtures/benchmarks/layer1/&lt;case&gt; --json-out …</code>{" "}
-                  (см. eval/README.md).
+                  (see eval/README.md).
                 </Typography>
 
                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center" }}>

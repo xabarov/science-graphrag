@@ -4,7 +4,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 import AskPanel from "../../../components/work/AskPanel.jsx";
-import { readTraceabilityState } from "../../../components/work/traceabilityState.js";
+import { describeTraceabilityState, readTraceabilityState } from "../../../components/work/traceabilityState.js";
 
 /**
  * @param {{ workId: string }} props
@@ -12,6 +12,7 @@ import { readTraceabilityState } from "../../../components/work/traceabilityStat
 export default function AskTab({ workId }) {
   const [searchParams] = useSearchParams();
   const trace = readTraceabilityState(searchParams);
+  const traceSummary = describeTraceabilityState(trace);
 
   if (!workId.trim()) {
     return (
@@ -23,7 +24,7 @@ export default function AskTab({ workId }) {
 
   return (
     <Box>
-      {(trace.nodeId || trace.chunkFingerprint || trace.section || trace.citation) ? (
+      {traceSummary.length > 0 ? (
         <Box
           sx={{
             mb: 2,
@@ -35,10 +36,7 @@ export default function AskTab({ workId }) {
         >
           <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)" }}>Research context</Typography>
           <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.8)", mt: 0.5 }}>
-            {trace.citation ? `Citation #${trace.citation} · ` : ""}
-            {trace.chunkFingerprint ? `chunk ${trace.chunkFingerprint} · ` : ""}
-            {trace.section ? `section ${trace.section} · ` : ""}
-            {trace.nodeId ? `node ${trace.nodeId}` : ""}
+            Continue the current question flow from {traceSummary.join(" · ")}.
           </Typography>
         </Box>
       ) : null}

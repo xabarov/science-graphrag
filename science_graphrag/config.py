@@ -5,6 +5,7 @@ from typing import Any
 from dotenv import load_dotenv
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
+
 from science_graphrag.settings.service import SettingsService
 
 # Unprefixed keys (MAIN_LLM_*, PHOENIX_*, etc.) must be visible to os.getenv for merge validators.
@@ -117,6 +118,27 @@ class Settings(BaseSettings):
     extraction_llm_reference_titles_enabled: bool = Field(
         default=False,
         description="If true, ask LLM to extract reference titles and years in addition to DOI/arXiv ids.",
+    )
+    extraction_llm_references_merge_policy: str = Field(
+        default="conservative",
+        description=(
+            "How to merge heuristic and LLM references: conservative (no bare LLM-only rows, cap extras) "
+            "or union (append unmatched LLM rows like legacy behavior)."
+        ),
+    )
+    extraction_llm_references_merge_max_extra: int = Field(
+        default=2,
+        ge=0,
+        le=50,
+        description=(
+            "Conservative merge: max rows allowed beyond heuristic count; if exceeded, use enrich-only merge."
+        ),
+    )
+    extraction_llm_references_max_concurrency: int = Field(
+        default=1,
+        ge=1,
+        le=8,
+        description="Parallel OpenAI-compatible calls for reference chunks (1 = sequential).",
     )
 
     # Optional: separate credentials for benchmark teacher gold generation (OpenRouter, etc.).

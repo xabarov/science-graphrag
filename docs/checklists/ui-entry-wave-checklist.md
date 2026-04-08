@@ -8,7 +8,7 @@ Manual verification for the Home / Corpus / entry-experience wave.
 - Confirm `Home` shows:
   - `Continue last workspace`
   - `Open corpus`
-  - `Admin` entry
+  - `Admin` entry when admin mode is enabled
   - `Recent works`
 - With empty local state, confirm the page explains there is no saved workspace yet.
 
@@ -46,7 +46,24 @@ Manual verification for the Home / Corpus / entry-experience wave.
 ## Navigation consistency
 
 - Confirm sidebar contains `Home`, `Corpus`, `Workspace`, direct tools, and admin tools.
+- When admin mode is disabled, confirm sidebar still keeps a clear primary research flow without leaving an empty admin gap.
 - Confirm deep links to `Workspace` still work after the `/` route change.
 - Confirm there are no dead-end states after opening `Workspace` without a selected work.
-- Open an unknown route and confirm the 404 page offers `Home`, `Corpus`, `Continue workspace` (when available), and `Admin`.
+- Open an unknown route and confirm the 404 page offers `Home`, `Corpus`, `Continue workspace` (when available), and `Admin` only when admin mode is enabled.
 - Confirm `Reader`, `Graph`, `Ask`, and `Evidence` now use the same top-level header pattern and no longer look like isolated debug wrappers.
+
+## Ask and Evidence flow
+
+- Open standalone `/ask` without `work_id` and confirm the page reads as a global or paper-scoped research surface, not as workspace-only mode.
+- Run a question with no `work_id` and confirm the answer block explains that the result is global.
+- Run a question with a selected `work_id` and confirm the answer block explains that the result is paper-scoped.
+- Reopen `Ask` and confirm recent questions can be restored into the form.
+- From an answer citation, jump into `Workspace`, `Reader`, `Evidence`, and `Graph` and confirm traceability context is preserved.
+- From `Reader` or `Evidence`, confirm there is a clear path back into `Ask` to continue the question flow.
+- Trigger a degraded response fixture or low-context answer and confirm the degraded-state copy is visible and understandable.
+
+### Ask answer explanation (Phase 5)
+
+- After a successful query, confirm the **Why this answer** list appears above the answer body with plain-language bullets (query mode, evidence pack, quality, graph context).
+- Without opening **Show advanced JSON**, confirm you can tell whether the run was corpus-wide, paper-scoped, or workspace session.
+- Expand **Show advanced JSON** only when needed and confirm raw retrieval trace still matches the summary lines.

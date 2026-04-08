@@ -508,14 +508,14 @@ Admin-инструменты должны быть:
 
 ## Текущий статус реализации
 
-- `Phase 0`: `partial` — базовая IA и `workspace-first` модель отражены в коде, но отдельный canonical route map / admin policy document не зафиксирован как самостоятельный артефакт.
-- `Phase 1`: `partial` — `Home`, improved 404, shared page header pattern и admin route strategy уже внедрены, но sidebar hierarchy и remaining direct-entry consistency ещё не доведены до целевого product state.
+- `Phase 0`: `partial` — базовая IA и `workspace-first` отражены в коде; canonical route map и admin visibility policy зафиксированы в [`docs/specs/route-map.md`](./route-map.md); отдельная компонентная схема shell и формальная role policy beyond UI-gating всё ещё могут быть расширены.
+- `Phase 1`: `partial` — `Home`, improved 404, shared page header pattern, simplified sidebar grouping и admin route strategy уже внедрены; remaining work смещается в final polish, admin IA и accessibility, а не в базовый shell refactor.
 - `Phase 2`: `done` — `active work context`, restore last work, URL-driven tabs и поток `Corpus -> Workspace` реализованы.
 - `Phase 3`: `partial` — `Home`, `CorpusPage`, `continue flow` и `recent works` уже реализованы, но richer corpus browser и более сильный onboarding still have room to grow.
 - `Phase 4`: `partial` — `Graph` встроен в `Workspace` и вынесен в reusable standalone surface, но до полноценного graph-first UX с controls/canvas ещё есть зазор.
-- `Phase 5`: `partial` — `Ask -> Evidence -> Reader -> Graph` уже связаны traceability state, но история/restore и более продуктовое explanation UX ещё не завершены.
-- `Phase 6`: `partial` — admin tools сгруппированы, есть `AdminEntryPage` и nested `/admin/*` routes, но role/visibility policy и финальная admin IA ещё не завершены.
-- `Phase 7`: `partial` — consistency pass уже начат через shared headers, route cleanup и product-grade recovery, но пока не завершён на всех top-level surfaces.
+- `Phase 5`: `partial` — traceability, локальная история вопросов с restore, улучшенный answer/citations UX, degraded-hints, back-links Reader/Evidence → Ask, блок **Why this answer** (`buildAskAnswerRationale` в `researchApi.js`) и свёрнутый advanced JSON retrieval уже есть; следующий слой — при необходимости именованные **сессии Ask** и более глубокий narrative поверх тех же сигналов.
+- `Phase 6`: `partial` — admin tools сгруппированы, есть `AdminEntryPage`, nested `/admin/*` routes и lightweight visibility gate, но финальная admin IA и role policy beyond UI gating ещё не завершены.
+- `Phase 7`: `partial` — consistency pass уже покрывает top-level surfaces, shared headers и recovery flows; добавлены базовый keyboard focus (`ui/src/styles.css`), частичный a11y в shell/benchmark tabs; bundle дробится lazy-маршрутами и `manualChunks` в `vite.config.js`; remaining work — терминология, полный accessibility/responsive pass.
 
 ## Phase 0. Architecture alignment
 
@@ -543,7 +543,7 @@ Admin-инструменты должны быть:
 Deliverables:
 
 - этот документ;
-- route map;
+- route map: [`docs/specs/route-map.md`](./route-map.md);
 - компонентная схема shell/layout.
 
 ## Phase 1. Shell and navigation refactor
@@ -555,7 +555,8 @@ Deliverables:
 - `HomePage` уже работает как основной entry point на `/`.
 - `PageHeader` внедрён как shared shell primitive и уже используется на ключевых user/admin surfaces.
 - Admin route strategy переведена на `/admin/*` с backward-compatible aliases.
-- Следующий шаг — упростить sidebar hierarchy и довести direct-entry research pages до того же shell quality.
+- Sidebar hierarchy уже разделяет primary research flow, secondary direct tools и admin access.
+- Следующий шаг — не ещё один shell rewrite, а product polish для copy, accessibility и workflow continuity.
 
 Цель:
 
@@ -604,7 +605,8 @@ Checklist:
 
 - `HomePage` уже существует как новый entry point на `/`.
 - Есть `Continue last workspace` и `Recent works` через локальный recent-state.
-- `CorpusPage` уже поддерживает более продуктовый browser flow с primary CTA `Open workspace`.
+- `CorpusPage` уже поддерживает более продуктовый browser flow с primary CTA `Open workspace`, client-side **sort** (title / year), пагинация **load more**, переключатель **cards vs compact**, клиентские фильтры по году и semantic-ready (см. `useCorpusEntryState` / правки страницы).
+- Общий хук входа: `ui/src/pages/HomePage/useCorpusEntryState.js` для recent + continue target на Home и Corpus.
 
 Цель:
 
@@ -654,6 +656,16 @@ Checklist:
 
 Статус: `partial`
 
+Заметки по реализации:
+
+- Локальная история и restore последних вопросов: `ui/src/components/work/askHistoryState.js`, использование в `ui/src/components/work/AskPanel.jsx`.
+- Разведение standalone vs workspace copy, улучшенные CTA цитат и degraded-hints: `ui/src/components/work/AskPanel.jsx`.
+- Продуктовое объяснение ответа: `buildAskAnswerRationale`, `formatRetrievalSummaryLines` в `ui/src/services/researchApi.js`; блок **Why this answer** и свёрнутый raw JSON в `AskPanel.jsx`; тесты в `ui/src/services/researchApi.test.js`.
+- Продолжение потока: «Return to Ask» / «Continue in Ask» в `ui/src/components/work/ReaderWorkBody.jsx` и `ui/src/components/work/EvidenceWorkBody.jsx`.
+- Тесты: `ui/src/components/work/askHistoryState.test.js`, `ui/src/components/work/askFlowCompatibility.test.js`.
+- Ручная проверка: `docs/checklists/ui-entry-wave-checklist.md` (секция Ask and Evidence flow + explanation).
+- Следующий шаг — опционально именованные сессии Ask и лимиты хранения, если понадобится продуктовый сценарий beyond recent N.
+
 Цель:
 
 - связать вопрос, answer, evidence и graph context в единый пользовательский поток.
@@ -681,7 +693,8 @@ Checklist:
 - В sidebar уже есть отдельная секция `Admin tools`.
 - Добавлен `AdminEntryPage` как hub для `Benchmarks`, `Settings`, `Diagnostics`.
 - Nested `/admin/*` routes и legacy aliases уже внедрены.
-- Следующий шаг — role/visibility policy и более строгая admin IA.
+- Есть lightweight visibility gate для admin surfaces без backend auth.
+- Следующий шаг — более строгая admin IA и stronger role policy beyond UI-only gating.
 
 Цель:
 
@@ -708,8 +721,10 @@ Checklist:
 Заметки по реализации:
 
 - `PageHeader` уже внедрён как базовый shell primitive.
-- `NotFoundPage` и часть top-level pages уже ушли от debug-style presentation.
-- Следующий шаг — добрать consistency на direct-entry research pages, copy и secondary navigation.
+- `NotFoundPage` и top-level pages уже ушли от debug-style presentation.
+- Direct-entry research pages тоже переведены на тот же shell/header pattern.
+- Следующий шаг — добрать terminology consistency, accessibility, keyboard/focus states и responsive polish.
+- `npm run build` может выдавать предупреждение о размере главного chunk; применяют lazy-loading тяжёлых маршрутов (см. `ui/src/App.jsx`, включая `WorkspacePage`) и при необходимости `manualChunks` в `ui/vite.config.js` для разделения MUI и React.
 
 Цель:
 

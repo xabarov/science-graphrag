@@ -21,7 +21,7 @@ export default function AskPage() {
       <PageHeader
         eyebrow="Direct tool"
         title="Ask"
-        description="Run a standalone question when you want a quick query surface. Use Workspace Ask when the answer should stay tied to the active reading context."
+        description="Run a standalone question when you want a quick global or paper-scoped query surface. Use Workspace Ask when the answer should stay tied to the active reading context."
         actions={
           <>
             <CursorSmallButton component={Link} to="/workspace" sx={{ textDecoration: "none" }}>

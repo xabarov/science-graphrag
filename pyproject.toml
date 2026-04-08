@@ -42,6 +42,9 @@ dev = [
     "pytest>=8.0",
     "ruff>=0.8",
 ]
+research = [
+    "smolagents>=1.4.0",
+]
 
 [project.scripts]
 science-graphrag = "science_graphrag.cli.main:main"

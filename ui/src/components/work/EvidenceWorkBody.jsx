@@ -143,6 +143,17 @@ export default function EvidenceWorkBody({
                 >
                   Open in Graph
                 </CursorSmallButton>
+                <CursorSmallButton
+                  component={Link}
+                  to={buildWorkspaceTracePath(workId, "ask", {
+                    chunkFingerprint: fingerprint,
+                    section: sectionPath,
+                    citation,
+                  })}
+                  sx={{ textDecoration: "none" }}
+                >
+                  Continue in Ask
+                </CursorSmallButton>
               </Box>
             </Box>
               );

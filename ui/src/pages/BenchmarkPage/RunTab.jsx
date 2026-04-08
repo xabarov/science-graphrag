@@ -241,8 +241,8 @@ export default function RunTab({ onSwitchToResults }) {
   const title = isGraphCatalog
     ? "Graph-v1 cases (catalog only)"
     : benchmarkFamily === "layer2"
-      ? "Запуск Layer-2 (semantic) Benchmark"
-      : "Запуск Layer-1 Benchmark";
+      ? "Launch Layer-2 (semantic) benchmark"
+      : "Launch Layer-1 benchmark";
   const validationErrors = validateLauncherConfig({
     family: benchmarkFamily,
     launcherScope: familyPrefs.launcherScope,
@@ -282,7 +282,7 @@ export default function RunTab({ onSwitchToResults }) {
         <Alert severity="info" sx={{ mb: 2, fontSize: "0.8125rem" }}>
           Graph-v1 runs ingest into Neo4j/Qdrant and are not started from this UI. Use:{" "}
           <code>science-graphrag-graph-benchmark tests/fixtures/benchmarks/layer1/&lt;case_id&gt;</code> or CI{" "}
-          <code>integration-nightly.yml</code>. Browse cases below; open <strong>Кейсы</strong> for{" "}
+          <code>integration-nightly.yml</code>. Browse cases below; open the <strong>Cases</strong> tab for{" "}
           <code>graph_expectations</code> preview.
         </Alert>
       ) : null}
@@ -312,9 +312,9 @@ export default function RunTab({ onSwitchToResults }) {
 
       <Divider sx={{ my: 2 }} />
 
-      <Typography sx={{ fontWeight: 600, mb: 1 }}>Текущий run</Typography>
+      <Typography sx={{ fontWeight: 600, mb: 1 }}>Current run</Typography>
       {!runId ? (
-        <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>Запустите бенчмарк, чтобы увидеть прогресс.</Typography>
+        <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>Start a benchmark run to see progress here.</Typography>
       ) : (
         <Box>
           <Typography sx={{ color: "rgba(255,255,255,0.6)", mb: 1 }}>
@@ -352,7 +352,7 @@ export default function RunTab({ onSwitchToResults }) {
               disabled={!run || !TERMINAL_STATUSES.includes(run.status)}
               onClick={() => onSwitchToResults?.()}
             >
-              Открыть результаты
+              Open results
             </CursorButton>
           </Box>
         </Box>

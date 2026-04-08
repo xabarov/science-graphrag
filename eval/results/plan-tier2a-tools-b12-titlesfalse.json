@@ -1,0 +1,162 @@
+[
+  {
+    "case_id": "atss_realpdf",
+    "mode": "tools",
+    "batch_size": 12,
+    "titles_enabled": false,
+    "references_scope_chars": 11104,
+    "heuristic_reference_count": 84,
+    "llm_reference_count": 74,
+    "merged_reference_count": 85,
+    "chunk_count": 7,
+    "chunks": [
+      {
+        "chunk_index": 1,
+        "entries_expected_in_chunk": 12,
+        "status": "ok",
+        "entries_returned_by_llm": 11,
+        "chunk_chars": 1663
+      },
+      {
+        "chunk_index": 2,
+        "entries_expected_in_chunk": 12,
+        "status": "ok",
+        "entries_returned_by_llm": 10,
+        "chunk_chars": 1415
+      },
+      {
+        "chunk_index": 3,
+        "entries_expected_in_chunk": 12,
+        "status": "ok",
+        "entries_returned_by_llm": 12,
+        "chunk_chars": 1667
+      },
+      {
+        "chunk_index": 4,
+        "entries_expected_in_chunk": 12,
+        "status": "ok",
+        "entries_returned_by_llm": 10,
+        "chunk_chars": 1484
+      },
+      {
+        "chunk_index": 5,
+        "entries_expected_in_chunk": 12,
+        "status": "ok",
+        "entries_returned_by_llm": 12,
+        "chunk_chars": 1814
+      },
+      {
+        "chunk_index": 6,
+        "entries_expected_in_chunk": 12,
+        "status": "ok",
+        "entries_returned_by_llm": 8,
+        "chunk_chars": 1076
+      },
+      {
+        "chunk_index": 7,
+        "entries_expected_in_chunk": 12,
+        "status": "ok",
+        "entries_returned_by_llm": 11,
+        "chunk_chars": 1557
+      }
+    ],
+    "merge_stats": {
+      "heuristic_total": 84,
+      "llm_total": 74,
+      "llm_new_entries": 1,
+      "llm_enriched_entries": 7,
+      "llm_skipped_bare": 16,
+      "merge_cap_applied": 0,
+      "mode": "conservative"
+    },
+    "predicted_arxiv_ids": [
+      "1311.2524",
+      "1509.04874",
+      "1512.03385",
+      "1611.10011",
+      "1701.08594",
+      "1711.06897",
+      "1803.05589",
+      "1805.06836"
+    ]
+  },
+  {
+    "case_id": "cornernet_realpdf",
+    "mode": "tools",
+    "batch_size": 12,
+    "titles_enabled": false,
+    "references_scope_chars": 8480,
+    "heuristic_reference_count": 51,
+    "llm_reference_count": 49,
+    "merged_reference_count": 53,
+    "chunk_count": 5,
+    "chunks": [
+      {
+        "chunk_index": 1,
+        "entries_expected_in_chunk": 12,
+        "status": "ok",
+        "entries_returned_by_llm": 10,
+        "chunk_chars": 1858
+      },
+      {
+        "chunk_index": 2,
+        "entries_expected_in_chunk": 12,
+        "status": "ok",
+        "entries_returned_by_llm": 11,
+        "chunk_chars": 1890
+      },
+      {
+        "chunk_index": 3,
+        "entries_expected_in_chunk": 12,
+        "status": "ok",
+        "entries_returned_by_llm": 14,
+        "chunk_chars": 2545
+      },
+      {
+        "chunk_index": 4,
+        "entries_expected_in_chunk": 12,
+        "status": "ok",
+        "entries_returned_by_llm": 11,
+        "chunk_chars": 1663
+      },
+      {
+        "chunk_index": 5,
+        "entries_expected_in_chunk": 3,
+        "status": "ok",
+        "entries_returned_by_llm": 3,
+        "chunk_chars": 508
+      }
+    ],
+    "merge_stats": {
+      "heuristic_total": 51,
+      "llm_total": 49,
+      "llm_new_entries": 2,
+      "llm_enriched_entries": 0,
+      "llm_skipped_bare": 8,
+      "merge_cap_applied": 0,
+      "mode": "conservative"
+    },
+    "predicted_arxiv_ids": [
+      "1409.1556",
+      "1412.6980",
+      "1504.08083",
+      "1604.04693",
+      "1605.06409",
+      "1612.03144",
+      "1612.06851",
+      "1701.06659",
+      "1703.06211",
+      "1703.06870",
+      "1703.10295",
+      "1706.03646",
+      "1707.01691",
+      "1708.02002",
+      "1711.00164",
+      "1711.06897",
+      "1711.07264",
+      "1711.08189",
+      "1711.08879",
+      "1712.00726"
+    ]
+  }
+]

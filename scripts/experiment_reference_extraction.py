@@ -11,7 +11,8 @@ from science_graphrag.ingestion.llm.extractor import SyncInstructorExtractor
 from science_graphrag.ingestion.llm.schemas import ReferenceIdsOnlyLLM, ReferencesLLM
 from science_graphrag.ingestion.llm.stage_extraction import (
     SYSTEM_FENCE,
-    _reference_chunks,
+    _merge_reference_sets,
+    _reference_chunk_groups,
     _references_from_llm,
 )
 from science_graphrag.ingestion.stages.references import extract_references
@@ -71,10 +72,19 @@ def main(
         article_path = fixture_root / case_id / "article.md"
         text = article_path.read_text(encoding="utf-8")
         refs_text = build_references_scope_text(text, max_chars=settings.references_scope_max_chars)
-        ref_chunks = _reference_chunks(refs_text, settings.extraction_llm_references_batch_size)
+        ref_entry_groups = _reference_chunk_groups(
+            refs_text, settings.extraction_llm_references_batch_size
+        )
+        ref_chunks = [
+            "\n".join(entry.strip() for entry in group if entry).strip()
+            for group in ref_entry_groups
+        ]
+        heuristic_refs = extract_references(text)
         all_items = []
         chunk_results: list[dict[str, object]] = []
-        for index, chunk in enumerate(ref_chunks, start=1):
+        for index, (chunk, entry_group) in enumerate(
+            zip(ref_chunks, ref_entry_groups, strict=False), start=1
+        ):
             parsed, err = extractor.extract_maybe(
                 response_model,
                 system=(
@@ -95,30 +105,41 @@ def main(
             chunk_results.append(
                 {
                     "chunk_index": index,
+                    "entries_expected_in_chunk": len(entry_group),
                     "status": status,
-                    "references_count": count,
+                    "entries_returned_by_llm": count,
                     "chunk_chars": len(chunk),
                 }
             )
-        refs = _references_from_llm(all_items, include_titles=titles_enabled)
+        llm_refs = _references_from_llm(all_items, include_titles=titles_enabled)
+        merged_refs, merge_stats = _merge_reference_sets(
+            heuristic_refs,
+            llm_refs,
+            mode=settings.extraction_llm_references_merge_policy,
+            max_extra_beyond_heuristic=settings.extraction_llm_references_merge_max_extra,
+        )
         payload = {
             "case_id": case_id,
             "mode": mode,
             "batch_size": batch_size,
             "titles_enabled": titles_enabled,
             "references_scope_chars": len(refs_text),
-            "heuristic_reference_count": len(extract_references(text)),
-            "llm_reference_count": len(refs),
+            "heuristic_reference_count": len(heuristic_refs),
+            "llm_reference_count": len(llm_refs),
+            "merged_reference_count": len(merged_refs),
             "chunk_count": len(ref_chunks),
             "chunks": chunk_results,
-            "predicted_arxiv_ids": sorted({r.arxiv_id for r in refs if r.arxiv_id})[:20],
+            "merge_stats": merge_stats,
+            "predicted_arxiv_ids": sorted({r.arxiv_id for r in merged_refs if r.arxiv_id})[:20],
         }
         summary.append(payload)
         typer.echo(json.dumps(payload, ensure_ascii=False))
 
     if output_path is not None:
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        output_path.write_text(
+            json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
 
 
 if __name__ == "__main__":

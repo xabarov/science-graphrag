@@ -83,7 +83,7 @@ export default function ResultsDialog({ open, runId, onClose, onOpenWorkbench })
               run_id: {runId ? runId : "-"}
             </Typography>
           </Box>
-          <CursorButton onClick={onClose}>Закрыть</CursorButton>
+          <CursorButton onClick={onClose}>Close</CursorButton>
         </Box>
       </DialogTitle>
       <DialogContent dividers>

@@ -4,9 +4,11 @@ import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 import Chip from "@mui/material/Chip";
+import { Link } from "react-router-dom";
 
 import { getWorkChunks, getWorkDetail } from "../../services/researchApi.js";
-import { describeTraceabilityState } from "./traceabilityState.js";
+import { CursorSmallButton } from "../common/index.js";
+import { buildWorkspaceTracePath, describeTraceabilityState } from "./traceabilityState.js";
 
 /**
  * Reader content for a fixed work_id (used by Reader tab and standalone Reader page).
@@ -116,6 +118,30 @@ export default function ReaderWorkBody({
               <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.8)" }}>
                 Opened from {traceSummary.join(" · ")}
               </Typography>
+              <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 1 }}>
+                <CursorSmallButton
+                  component={Link}
+                  to={buildWorkspaceTracePath(workId, "ask", {
+                    chunkFingerprint: focusedFingerprint,
+                    section: focusedSection,
+                    citation,
+                  })}
+                  sx={{ textDecoration: "none" }}
+                >
+                  Return to Ask
+                </CursorSmallButton>
+                <CursorSmallButton
+                  component={Link}
+                  to={buildWorkspaceTracePath(workId, "evidence", {
+                    chunkFingerprint: focusedFingerprint,
+                    section: focusedSection,
+                    citation,
+                  })}
+                  sx={{ textDecoration: "none" }}
+                >
+                  Open Evidence
+                </CursorSmallButton>
+              </Box>
             </Box>
           ) : null}
           <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 1 }}>
