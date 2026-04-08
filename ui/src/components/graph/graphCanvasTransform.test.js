@@ -4,11 +4,40 @@ import {
   computeFitTransform,
   computeWorldLayout,
   DEFAULT_WORLD_RADIUS,
+  MAX_WORLD_RADIUS,
   screenToWorld,
+  worldRadiusForNodeCount,
   worldToScreen,
 } from "./graphCanvasTransform.js";
 
 describe("graphCanvasTransform", () => {
+  it("worldRadiusForNodeCount is flat until growth threshold then increases and caps", () => {
+    expect(worldRadiusForNodeCount(1)).toBe(DEFAULT_WORLD_RADIUS);
+    expect(worldRadiusForNodeCount(10)).toBe(DEFAULT_WORLD_RADIUS);
+    expect(worldRadiusForNodeCount(11)).toBeGreaterThan(DEFAULT_WORLD_RADIUS);
+    expect(worldRadiusForNodeCount(80)).toBeGreaterThan(worldRadiusForNodeCount(20));
+    expect(worldRadiusForNodeCount(5000)).toBe(MAX_WORLD_RADIUS);
+  });
+
+  it("larger node count yields larger world bbox for same fit viewport", () => {
+    const small = Array.from({ length: 12 }, (_, i) => ({ id: `n${i}` }));
+    const large = Array.from({ length: 60 }, (_, i) => ({ id: `m${i}` }));
+    const rSmall = worldRadiusForNodeCount(small.length);
+    const rLarge = worldRadiusForNodeCount(large.length);
+    expect(rLarge).toBeGreaterThan(rSmall);
+    const posS = computeWorldLayout(small, rSmall);
+    const posL = computeWorldLayout(large, rLarge);
+    let maxS = 0;
+    for (const p of posS.values()) {
+      maxS = Math.max(maxS, Math.abs(p.x), Math.abs(p.y));
+    }
+    let maxL = 0;
+    for (const p of posL.values()) {
+      maxL = Math.max(maxL, Math.abs(p.x), Math.abs(p.y));
+    }
+    expect(maxL).toBeGreaterThan(maxS);
+  });
+
   it("computeWorldLayout places nodes on a circle", () => {
     const nodes = [{ id: "a" }, { id: "b" }];
     const m = computeWorldLayout(nodes, 100);

@@ -60,11 +60,12 @@ Any canvas or graph library should consume the **normalized** graph (or a thin m
 |-------|------|------|
 | Shell | `GraphWorkspacePanel.jsx` | Load graph, Cards/Graph toggle, normalization + UI-cap alerts, grid + detail |
 | List view | `GraphVisualization.jsx` | Phase 4 **v0** — card grid |
-| Canvas | `GraphCanvasMvp.jsx` | Phase 4.2–**4.3** — HTML Canvas, zoom/pan, fit / center, Escape |
+| Canvas | `GraphCanvasMvp.jsx` | HTML Canvas: zoom/pan, fit / center / reset zoom, Escape; node hover highlight + cursor; labels on nodes and edges |
 | Limits | `graphUiLimits.js` | `capGraphForUi` (`GRAPH_UI_MAX_*`); chips show full API counts |
 | Legend | `GraphTypeLegend.jsx`, `graphTypeLegend.js` | Unique `node.type` / `edge.type` chips from `displayGraph` |
 | Shell states | `graphShellStates.jsx` | Shared empty / loading / error patterns (Graph page, tab, panel) |
-| Canvas math | `graphCanvasTransform.js` | World layout + fit + screen/world mapping (single source for `GraphCanvasMvp`) |
+| Canvas math | `graphCanvasTransform.js` | World layout + fit + screen/world mapping; `worldRadiusForNodeCount(n)` grows the circle when many nodes reduce chord spacing |
+| Canvas styles | `graphCanvasStyle.js` | Node type colors, hover stroke, truncated node/edge labels on canvas |
 | Details | `GraphDetailPanel.jsx` | Edges + raw JSON (`deriveGraphDetail` on **full** graph) |
 | Data | `graphAdapter.js`, `graphViewState.js` | Fetch + normalize + derive |
 
@@ -85,11 +86,11 @@ Any canvas or graph library should consume the **normalized** graph (or a thin m
 - **Shared states:** [`graphShellStates.jsx`](../../ui/src/components/graph/graphShellStates.jsx) — consistent empty/loading/error copy and styles for [`GraphPage.jsx`](../../ui/src/pages/GraphPage.jsx), [`GraphTab.jsx`](../../ui/src/pages/WorkspacePage/tabs/GraphTab.jsx), and the panel.
 - **Legend:** [`GraphTypeLegend.jsx`](../../ui/src/components/graph/GraphTypeLegend.jsx) under the Cards/Graph toggle.
 - **Graph Lab:** query flag `lab=1` on `/graph` or workspace graph tab — diagnostics JSON expanded by default; otherwise hidden behind **Show diagnostics** (`Collapse`).
-- **Layout source of truth:** circle positions and fit/zoom math live in [`graphCanvasTransform.js`](../../ui/src/components/graph/graphCanvasTransform.js) (used by `GraphCanvasMvp`); unit tests in `graphCanvasTransform.test.js`.
+- **Layout source of truth:** circle positions and fit/zoom math live in [`graphCanvasTransform.js`](../../ui/src/components/graph/graphCanvasTransform.js) (used by `GraphCanvasMvp`); unit tests in `graphCanvasTransform.test.js`. Ring **radius scales with node count** (`worldRadiusForNodeCount`) so dense 1-hop neighborhoods stay readable after **Fit**.
 
 ### Post–4.4 behavior (canvas + cards)
 
-- **Canvas:** when `selectedNodeId` or the displayed node set changes, the view **recenters on the selected node** at the current zoom (same math as **Center on selected**) so deep links and URL-driven selection stay on-screen without an extra click. **Fit** refits bounds; **Reset zoom** sets scale to `1` around the viewport center (world point under the center stays fixed).
+- **Canvas:** changing selection does **not** auto-pan the viewport (avoids fighting user pan/zoom). **Fit** refits the full graph after load or graph change; **Center on selected** pans to the current node at the same zoom; **Reset zoom** sets scale to `1` keeping the world point under the viewport center fixed. The displayed node set changing (new `work_id` / normalized graph) runs **Fit** again via layout effect.
 - **Cards:** [`GraphVisualization.jsx`](../../ui/src/components/graph/GraphVisualization.jsx) uses **roving `tabIndex`**: one card is tab-focusable at a time; **Arrow** keys move focus and update selection; **Enter** / **Space** activate the focused card.
 - **Responsive / a11y slice:** [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx) stacks the graph + detail columns on narrow viewports (`xs` single column, `md` two columns). [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx) exposes a visually hidden **`aria-live="polite"`** line for the current selection and an **`aria-label`** on the canvas element.
 - **Further narrow-view polish:** [`GraphTypeLegend.jsx`](../../ui/src/components/graph/GraphTypeLegend.jsx) uses slightly reduced padding and label size on `xs`. Benchmark **Case** / **Results** dialogs ([`CaseDetailDialog.jsx`](../../ui/src/pages/BenchmarkPage/CaseDetailDialog.jsx), [`ResultsDialog.jsx`](../../ui/src/pages/BenchmarkPage/ResultsDialog.jsx)) use MUI **`fullScreen`** below the `sm` breakpoint.
@@ -100,7 +101,7 @@ For **Phase 4 UI**, the shipped **v1** (circle layout + raw Canvas, ADR above) m
 
 ### Layout stack v1 (product decision)
 
-- **Shipped v1:** deterministic **circle layout** in [`graphCanvasTransform.js`](../../ui/src/components/graph/graphCanvasTransform.js) + raw **Canvas** in `GraphCanvasMvp` — no graph npm dependency, predictable for neighborhood size.
+- **Shipped v1:** deterministic **circle layout** with **adaptive world radius** in [`graphCanvasTransform.js`](../../ui/src/components/graph/graphCanvasTransform.js) + raw **Canvas** in `GraphCanvasMvp` — no graph npm dependency, predictable for neighborhood size; on-canvas **type-colored nodes**, **hover** highlight, **truncated labels** for nodes and edge types ([`graphCanvasStyle.js`](../../ui/src/components/graph/graphCanvasStyle.js)).
 - **When to revisit:** need force-directed layout, minimap, or very dense graphs → time-boxed spike **React Flow / Sigma** or read-only port of osint-gr `useForceSimulation` / `GraphVisualization` hooks; keep `normalizeGraphPayload`, `capGraphForUi`, URL selection, and `GraphDetailPanel` as the contract.
 
 ## Reference implementation (osint-gr)
@@ -129,6 +130,6 @@ Use for **patterns**, not copy-paste of product logic:
 - [x] Canvas shows **edges** as lines (or library equivalent), not only nodes.
 - [x] Behavior documented when `nodeCount` or `edgeCount` exceeds UI threshold (`capGraphForUi` + Alert; see `GRAPH_UI_MAX_NODES` / `GRAPH_UI_MAX_EDGES`).
 - [x] Type legend and Graph Lab (`?lab=1`) / collapsed diagnostics; shared graph shell empty/loading/error patterns.
-- [x] Canvas recenters on selection change; Reset zoom; card grid keyboard roving + arrows.
+- [x] Canvas: Fit on graph change; Center on selected; no auto-recenter on every selection change; Reset zoom; card grid keyboard roving + arrows.
 - [x] Graph workspace panel responsive grid; canvas selection live region + canvas `aria-label`.
 - [x] Graph type legend compact `xs` spacing; benchmark dialogs full-screen on narrow viewports.

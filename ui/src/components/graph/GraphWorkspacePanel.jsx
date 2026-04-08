@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 
@@ -230,11 +231,32 @@ export default function GraphWorkspacePanel({
             <Box sx={{ px: 1, py: 0.5, borderRadius: "999px", backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
               <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.65)" }}>edges: {graph.edgeCount}</Typography>
             </Box>
-            <Box sx={{ px: 1, py: 0.5, borderRadius: "999px", backgroundColor: "rgba(99, 102, 241, 0.1)", border: "1px solid rgba(99, 102, 241, 0.25)" }}>
-              <Typography sx={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.92)" }}>
-                semantic_available: {String(Boolean(graph.meta?.semantic_available))}
-              </Typography>
-            </Box>
+            <Tooltip
+              title={
+                graph.meta?.semantic_available
+                  ? "This work has Method/Dataset links in Neo4j (USES_METHOD / EVALUATED_ON from semantic extraction)."
+                  : "No Method/Dataset layer for this work yet. That is normal if semantic extraction was off, the LLM key was missing, or confidence stayed below the graph threshold."
+              }
+              placement="top"
+              enterDelay={400}
+            >
+              <Box
+                component="span"
+                sx={{
+                  display: "inline-flex",
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: "999px",
+                  backgroundColor: "rgba(99, 102, 241, 0.1)",
+                  border: "1px solid rgba(99, 102, 241, 0.25)",
+                  cursor: "help",
+                }}
+              >
+                <Typography sx={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.92)" }}>
+                  semantic_available: {String(Boolean(graph.meta?.semantic_available))}
+                </Typography>
+              </Box>
+            </Tooltip>
           </Box>
 
           {traceSummary.length > 0 ? (

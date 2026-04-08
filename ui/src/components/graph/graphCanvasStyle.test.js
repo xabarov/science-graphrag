@@ -20,6 +20,17 @@ describe("getScienceGraphNodeStyle", () => {
     expect(sel.stroke).toContain("255");
   });
 
+  it("hovered state strengthens stroke when not selected", () => {
+    const base = getScienceGraphNodeStyle("Work", {});
+    const hov = getScienceGraphNodeStyle("Work", { hovered: true });
+    expect(hov.lineWidth).toBeGreaterThan(base.lineWidth);
+  });
+
+  it("selected wins over hovered", () => {
+    const sel = getScienceGraphNodeStyle("Work", { selected: true, hovered: true });
+    expect(sel.lineWidth).toBe(2);
+  });
+
   it("falls back for unknown types", () => {
     const u = getScienceGraphNodeStyle("UnknownThing");
     expect(u.fill).toBeTruthy();

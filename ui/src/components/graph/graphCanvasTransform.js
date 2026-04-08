@@ -4,6 +4,30 @@
 
 export const DEFAULT_WORLD_RADIUS = 200;
 
+/** Up to this many nodes keep {@link DEFAULT_WORLD_RADIUS}; above that the ring grows (~√n). */
+export const WORLD_RADIUS_GROWTH_START = 10;
+
+const WORLD_RADIUS_GROWTH_K = 12;
+/** Upper cap so very large capped UI graphs stay bounded in world space. */
+export const MAX_WORLD_RADIUS = 520;
+/** Lower cap after growth formula (should not go below this once growth applies). */
+export const MIN_WORLD_RADIUS = 160;
+
+/**
+ * Deterministic circle radius in world units so dense neighborhoods get a larger ring before fit-scale shrinks them.
+ *
+ * @param {number} n
+ * @returns {number}
+ */
+export function worldRadiusForNodeCount(n) {
+  const count = Math.max(0, Math.floor(Number(n)));
+  if (count <= WORLD_RADIUS_GROWTH_START) {
+    return DEFAULT_WORLD_RADIUS;
+  }
+  const extra = WORLD_RADIUS_GROWTH_K * Math.sqrt(count - WORLD_RADIUS_GROWTH_START);
+  return Math.min(MAX_WORLD_RADIUS, Math.max(MIN_WORLD_RADIUS, DEFAULT_WORLD_RADIUS + extra));
+}
+
 /**
  * @param {Array<{ id: string }>} nodes
  * @param {number} worldRadius

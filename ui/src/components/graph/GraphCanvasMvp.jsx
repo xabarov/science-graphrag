@@ -6,8 +6,8 @@ import { CursorSmallButton } from "../common/index.js";
 import {
   computeFitTransform,
   computeWorldLayout,
-  DEFAULT_WORLD_RADIUS,
   screenToWorld,
+  worldRadiusForNodeCount,
   worldToScreen,
 } from "./graphCanvasTransform.js";
 import {
@@ -45,6 +45,10 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
   const transformRef = useRef({ scale: 1, tx: 0, ty: 0 });
   const [transform, setTransform] = useState({ scale: 1, tx: 0, ty: 0 });
   const [hostSize, setHostSize] = useState({ width: 0, height: 0 });
+  const [hoveredNodeId, setHoveredNodeId] = useState("");
+  const [canvasCursor, setCanvasCursor] = useState("grab");
+  const hoverPickPendingRef = useRef(false);
+  const hoverClientRef = useRef({ x: 0, y: 0 });
   const dragRef = useRef({
     active: false,
     moved: false,
@@ -56,6 +60,7 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
   });
 
   const layoutKey = useMemo(() => graph.nodes.map((n) => n.id).join("\0"), [graph.nodes]);
+  const layoutWorldRadius = useMemo(() => worldRadiusForNodeCount(graph.nodes.length), [graph.nodes.length]);
 
   const getViewportDims = useCallback(() => {
     const host = canvasHostRef.current;
@@ -67,12 +72,12 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
   const applyFit = useCallback(() => {
     if (graph.nodes.length === 0) return;
     const { w, h } = getViewportDims();
-    const positions = computeWorldLayout(graph.nodes, DEFAULT_WORLD_RADIUS);
+    const positions = computeWorldLayout(graph.nodes, layoutWorldRadius);
     positionsRef.current = positions;
     const next = computeFitTransform(positions, w, h, NODE_RADIUS, FIT_PADDING);
     transformRef.current = next;
     setTransform(next);
-  }, [getViewportDims, graph.nodes]);
+  }, [getViewportDims, graph.nodes, layoutWorldRadius]);
 
   useEffect(() => {
     transformRef.current = transform;
@@ -85,6 +90,15 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
     });
     return () => cancelAnimationFrame(raf);
   }, [layoutKey, applyFit]);
+
+  useEffect(() => {
+    let raf = 0;
+    raf = requestAnimationFrame(() => {
+      setHoveredNodeId("");
+      setCanvasCursor("grab");
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [layoutKey]);
 
   useEffect(() => {
     const el = canvasHostRef.current;
@@ -116,7 +130,7 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
     ctx.fillRect(0, 0, w, h);
 
     const { scale, tx, ty } = transformRef.current;
-    const positions = computeWorldLayout(graph.nodes, DEFAULT_WORLD_RADIUS);
+    const positions = computeWorldLayout(graph.nodes, layoutWorldRadius);
     positionsRef.current = positions;
 
     ctx.strokeStyle = "rgba(255,255,255,0.12)";
@@ -165,7 +179,10 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
       const p = worldToScreen(pw.x, pw.y, scale, tx, ty);
       const sel = node.id === selectedNodeId;
       const r = NODE_RADIUS;
-      const style = getScienceGraphNodeStyle(node.type, { selected: sel });
+      const style = getScienceGraphNodeStyle(node.type, {
+        selected: sel,
+        hovered: !sel && node.id === hoveredNodeId,
+      });
       ctx.beginPath();
       ctx.arc(p.x, p.y, r, 0, 2 * Math.PI);
       ctx.fillStyle = style.fill;
@@ -199,7 +216,7 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
       ctx.fillStyle = sel ? "rgba(255, 255, 255, 0.92)" : "rgba(255, 255, 255, 0.82)";
       ctx.fillText(text, p.x, midY);
     }
-  }, [getViewportDims, graph.edges, graph.nodes, selectedNodeId]);
+  }, [getViewportDims, graph.edges, graph.nodes, hoveredNodeId, layoutWorldRadius, selectedNodeId]);
 
   useEffect(() => {
     draw();
@@ -241,6 +258,27 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
     return null;
   }
 
+  function queueHoverPick(clientX, clientY) {
+    hoverClientRef.current = { x: clientX, y: clientY };
+    if (hoverPickPendingRef.current) return;
+    hoverPickPendingRef.current = true;
+    requestAnimationFrame(() => {
+      hoverPickPendingRef.current = false;
+      const { x: cx, y: cy } = hoverClientRef.current;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      if (dragRef.current.active && dragRef.current.moved) return;
+      const rect = canvas.getBoundingClientRect();
+      const lx = cx - rect.left;
+      const ly = cy - rect.top;
+      const { scale, tx, ty } = transformRef.current;
+      const world = screenToWorld(lx, ly, scale, tx, ty);
+      const id = hitTestWorld(world.x, world.y) ?? "";
+      setHoveredNodeId((prev) => (prev === id ? prev : id));
+      setCanvasCursor(id ? "pointer" : "grab");
+    });
+  }
+
   function handlePointerDown(ev) {
     if (ev.button !== 0) return;
     const canvas = canvasRef.current;
@@ -261,24 +299,34 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
     };
   }
 
-  function handlePointerMove(ev) {
+  function handleCanvasPointerMove(ev) {
     const d = dragRef.current;
-    if (!d.active) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = ev.clientX - rect.left;
-    const y = ev.clientY - rect.top;
-    const dx = x - d.startX;
-    const dy = y - d.startY;
-    if (!d.moved && (dx * dx + dy * dy > DRAG_THRESHOLD_PX * DRAG_THRESHOLD_PX)) {
-      d.moved = true;
+    if (d.active) {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = ev.clientX - rect.left;
+      const y = ev.clientY - rect.top;
+      const dx = x - d.startX;
+      const dy = y - d.startY;
+      if (!d.moved && (dx * dx + dy * dy > DRAG_THRESHOLD_PX * DRAG_THRESHOLD_PX)) {
+        d.moved = true;
+        setHoveredNodeId("");
+        setCanvasCursor("grabbing");
+      }
+      if (d.moved) {
+        const next = { scale: transformRef.current.scale, tx: d.startTx + dx, ty: d.startTy + dy };
+        transformRef.current = next;
+        setTransform(next);
+      }
+      return;
     }
-    if (d.moved) {
-      const next = { scale: transformRef.current.scale, tx: d.startTx + dx, ty: d.startTy + dy };
-      transformRef.current = next;
-      setTransform(next);
-    }
+    queueHoverPick(ev.clientX, ev.clientY);
+  }
+
+  function handleCanvasPointerLeave() {
+    setHoveredNodeId("");
+    setCanvasCursor("grab");
   }
 
   function handlePointerUp(ev) {
@@ -300,6 +348,8 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
       const world = screenToWorld(x, y, scale, tx, ty);
       const id = hitTestWorld(world.x, world.y);
       if (id) onSelectNode?.(id);
+    } else {
+      queueHoverPick(ev.clientX, ev.clientY);
     }
   }
 
@@ -448,14 +498,15 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
           ref={canvasRef}
           aria-label="Interactive graph: pan and zoom with pointer; click a node to select it."
           onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
+          onPointerMove={handleCanvasPointerMove}
+          onPointerLeave={handleCanvasPointerLeave}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
           style={{
             display: "block",
             width: "100%",
             height: "100%",
-            cursor: "grab",
+            cursor: canvasCursor,
             touchAction: "none",
             verticalAlign: "top",
           }}

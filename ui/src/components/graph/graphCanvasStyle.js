@@ -17,11 +17,12 @@ const DEFAULT_NODE_STYLE = { fill: "rgba(255,255,255,0.08)", stroke: "rgba(255,2
 
 /**
  * @param {unknown} nodeType
- * @param {{ selected?: boolean }} [opts]
+ * @param {{ selected?: boolean, hovered?: boolean }} [opts]
  * @returns {{ fill: string, stroke: string, lineWidth: number }}
  */
 export function getScienceGraphNodeStyle(nodeType, opts = {}) {
   const selected = Boolean(opts.selected);
+  const hovered = Boolean(opts.hovered);
   const key = nodeType == null ? "" : String(nodeType).trim();
   const base = NODE_TYPE_STYLES[key] || DEFAULT_NODE_STYLE;
   if (selected) {
@@ -29,6 +30,13 @@ export function getScienceGraphNodeStyle(nodeType, opts = {}) {
       fill: "rgba(99, 102, 241, 0.36)",
       stroke: "rgba(255, 255, 255, 0.88)",
       lineWidth: 2,
+    };
+  }
+  if (hovered) {
+    return {
+      fill: base.fill,
+      stroke: "rgba(255, 255, 255, 0.55)",
+      lineWidth: 1.75,
     };
   }
   return { fill: base.fill, stroke: base.stroke, lineWidth: 1 };
