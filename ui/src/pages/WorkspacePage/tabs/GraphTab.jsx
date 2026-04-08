@@ -20,6 +20,7 @@ export default function GraphTab({ workId }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const trace = readTraceabilityState(searchParams);
   const selectedNodeId = trace.nodeId;
+  const selectedEdgeId = trace.edgeId;
   const labMode = searchParams.get("lab") === "1";
 
   if (!workId.trim()) {
@@ -27,7 +28,12 @@ export default function GraphTab({ workId }) {
   }
 
   function handleSelectNode(nodeId) {
-    const params = mergeTraceabilityParams(searchParams, { nodeId });
+    const params = mergeTraceabilityParams(searchParams, { nodeId, edgeId: "" });
+    setSearchParams(params, { replace: false });
+  }
+
+  function handleSelectEdge(edgeId) {
+    const params = mergeTraceabilityParams(searchParams, { edgeId, nodeId: "" });
     setSearchParams(params, { replace: false });
   }
 
@@ -38,6 +44,7 @@ export default function GraphTab({ workId }) {
           component={Link}
           to={buildStandaloneTracePath("/graph", workId, {
             nodeId: selectedNodeId,
+            edgeId: selectedEdgeId,
             chunkFingerprint: trace.chunkFingerprint,
             section: trace.section,
             citation: trace.citation,
@@ -88,6 +95,8 @@ export default function GraphTab({ workId }) {
         workId={workId}
         selectedNodeId={selectedNodeId}
         onSelectNode={handleSelectNode}
+        selectedEdgeId={selectedEdgeId}
+        onSelectEdge={handleSelectEdge}
         mode="embedded"
         labMode={labMode}
         title="Workspace graph"
@@ -105,6 +114,7 @@ export default function GraphTab({ workId }) {
           chunkFingerprint: trace.chunkFingerprint,
           section: trace.section,
           citation: trace.citation,
+          edgeId: selectedEdgeId,
         }}
       />
     </Box>

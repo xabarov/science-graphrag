@@ -18,11 +18,17 @@ describe("traceabilityState", () => {
       workId: "w1",
       tab: "graph",
       nodeId: "n1",
+      edgeId: "",
       chunkFingerprint: "fp1",
       section: "intro",
       citation: "2",
       askSession: "",
     });
+  });
+
+  it("reads edge id from query string", () => {
+    const params = new URLSearchParams("work_id=w1&edge=edge-0&node=n1");
+    expect(readTraceabilityState(params).edgeId).toBe("edge-0");
   });
 
   it("reads ask_session and merge preserves it when updating tab", () => {
@@ -63,6 +69,12 @@ describe("traceabilityState", () => {
         nodeId: "n1",
       }),
     ).toEqual(["citation #2", "chunk fp1", "section intro", "node n1"]);
+    expect(
+      describeTraceabilityState({
+        edgeId: "e1",
+        nodeId: "n1",
+      }),
+    ).toEqual(["edge e1", "node n1"]);
     expect(buildTraceabilityParams({ workId: "w1", tab: "ask" }).toString()).toBe("work_id=w1&tab=ask");
   });
 });

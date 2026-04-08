@@ -19,5 +19,6 @@
 | [003](003-chunking-and-dedup-strategy.md) | Task-aware chunking, dedup между чанками, модели VL/LLM |
 | [004](004-ontology-v1-scope.md) | Scope ontology v1: Method, Dataset; SoT; anti-bloat |
 | [005](005-authorship-reified-node.md) | Узел `Authorship` vs свойства на ребре `Work–Author`; критерии выбора |
+| [006](006-graph-layout-stack-spike.md) | Wave 4.3: spike силового/layout-стека (React Flow/Sigma vs порт osint simulation) |
 
 Новые ADR нумеровать по порядку (`001-...`, `002-...`); при отмене пометить как Superseded и сослаться на замену.

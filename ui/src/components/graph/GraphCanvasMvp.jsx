@@ -36,12 +36,20 @@ const MIN_CANVAS_HEIGHT = 280;
 /**
  * Phase 4.2–4.3: canvas with world coords, zoom/pan, fit/reset/center, keyboard (Escape).
  * @param {{
- *   graph: { nodes: Array<{ id: string }>, edges: Array<{ source: string, target: string }> },
+ *   graph: { nodes: Array<{ id: string }>, edges: Array<{ source: string, target: string, id?: string }> },
  *   selectedNodeId: string,
+ *   selectedEdgeId?: string,
  *   onSelectNode?: (nodeId: string) => void,
+ *   onSelectEdge?: (edgeId: string) => void,
  * }} props
  */
-export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) {
+export default function GraphCanvasMvp({
+  graph,
+  selectedNodeId,
+  selectedEdgeId = "",
+  onSelectNode,
+  onSelectEdge,
+}) {
   const canvasRef = useRef(null);
   const wrapRef = useRef(null);
   const canvasHostRef = useRef(null);
@@ -66,6 +74,7 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
 
   const layoutKey = useMemo(() => graph.nodes.map((n) => n.id).join("\0"), [graph.nodes]);
   const layoutWorldRadius = useMemo(() => worldRadiusForNodeCount(graph.nodes.length), [graph.nodes.length]);
+  const nodeById = useMemo(() => new Map(graph.nodes.map((n) => [n.id, n])), [graph.nodes]);
 
   const getViewportDims = useCallback(() => {
     const host = canvasHostRef.current;
@@ -145,10 +154,10 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
       if (!p0w || !p1w) continue;
       const p0 = worldToScreen(p0w.x, p0w.y, scale, tx, ty);
       const p1 = worldToScreen(p1w.x, p1w.y, scale, tx, ty);
-      const hovered = edge.id === hoveredEdgeId;
+      const edgeActive = edge.id === hoveredEdgeId || edge.id === selectedEdgeId;
       const clipped = clipSegmentByDiscInsets(p0, p1, NODE_RADIUS, NODE_RADIUS);
-      ctx.strokeStyle = hovered ? "rgba(255,255,255,0.38)" : "rgba(255,255,255,0.12)";
-      ctx.lineWidth = hovered ? 1.75 : 1;
+      ctx.strokeStyle = edgeActive ? "rgba(255,255,255,0.38)" : "rgba(255,255,255,0.12)";
+      ctx.lineWidth = edgeActive ? 1.75 : 1;
       if (clipped) {
         const { ax, ay, bx, by, ux, uy } = clipped;
         const lineEndX = bx - ux * ARROW_HEAD_LEN;
@@ -164,7 +173,7 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
         ctx.lineTo(lineEndX + px * ARROW_HEAD_HW, lineEndY + py * ARROW_HEAD_HW);
         ctx.lineTo(lineEndX - px * ARROW_HEAD_HW, lineEndY - py * ARROW_HEAD_HW);
         ctx.closePath();
-        ctx.fillStyle = hovered ? "rgba(255,255,255,0.38)" : "rgba(255,255,255,0.2)";
+        ctx.fillStyle = edgeActive ? "rgba(255,255,255,0.38)" : "rgba(255,255,255,0.2)";
         ctx.fill();
       } else {
         ctx.beginPath();
@@ -177,7 +186,11 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
     ctx.font = EDGE_LABEL_FONT;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    for (const edge of graph.edges) {
+    const edgesForLabels = [...graph.edges].sort((a, b) => {
+      const rank = (e) => (e.id === hoveredEdgeId || e.id === selectedEdgeId ? 1 : 0);
+      return rank(a) - rank(b);
+    });
+    for (const edge of edgesForLabels) {
       const p0w = positions.get(edge.source);
       const p1w = positions.get(edge.target);
       if (!p0w || !p1w) continue;
@@ -191,7 +204,7 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
       const padX = 4;
       const bw = metrics.width + padX * 2;
       const bh = 16;
-      const eHover = edge.id === hoveredEdgeId;
+      const eHover = edge.id === hoveredEdgeId || edge.id === selectedEdgeId;
       ctx.fillStyle = eHover ? "rgba(40, 40, 40, 0.96)" : "rgba(26, 26, 26, 0.94)";
       ctx.fillRect(midX - bw / 2, midY - bh / 2, bw, bh);
       ctx.strokeStyle = eHover ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.08)";
@@ -201,7 +214,7 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
       ctx.fillText(elabel, midX, midY);
     }
 
-    for (const node of graph.nodes) {
+    for (const node of nodeById.values()) {
       const pw = positions.get(node.id);
       if (!pw) continue;
       const p = worldToScreen(pw.x, pw.y, scale, tx, ty);
@@ -223,7 +236,7 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
     ctx.font = LABEL_FONT;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    for (const node of graph.nodes) {
+    for (const node of nodeById.values()) {
       const pw = positions.get(node.id);
       if (!pw) continue;
       const p = worldToScreen(pw.x, pw.y, scale, tx, ty);
@@ -244,7 +257,17 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
       ctx.fillStyle = sel ? "rgba(255, 255, 255, 0.92)" : "rgba(255, 255, 255, 0.82)";
       ctx.fillText(text, p.x, midY);
     }
-  }, [getViewportDims, graph.edges, graph.nodes, hoveredEdgeId, hoveredNodeId, layoutWorldRadius, selectedNodeId]);
+  }, [
+    getViewportDims,
+    graph.edges,
+    graph.nodes,
+    hoveredEdgeId,
+    hoveredNodeId,
+    layoutWorldRadius,
+    nodeById,
+    selectedEdgeId,
+    selectedNodeId,
+  ]);
 
   useEffect(() => {
     draw();
@@ -274,7 +297,7 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
 
   function hitTestWorld(wx, wy) {
     const positions = positionsRef.current;
-    for (const node of graph.nodes) {
+    for (const node of nodeById.values()) {
       const p = positions.get(node.id);
       if (!p) continue;
       const dx = wx - p.x;
@@ -403,8 +426,21 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
       const y = ev.clientY - rect.top;
       const { scale, tx, ty } = transformRef.current;
       const world = screenToWorld(x, y, scale, tx, ty);
-      const id = hitTestWorld(world.x, world.y);
-      if (id) onSelectNode?.(id);
+      const nodeId = hitTestWorld(world.x, world.y);
+      if (nodeId) {
+        onSelectEdge?.("");
+        onSelectNode?.(nodeId);
+      } else {
+        const positions = computeWorldLayout(graph.nodes, layoutWorldRadius);
+        const edgeId = hitTestClosestEdgeId(x, y, positions, scale, tx, ty);
+        if (edgeId) {
+          onSelectNode?.("");
+          onSelectEdge?.(edgeId);
+        } else {
+          onSelectNode?.("");
+          onSelectEdge?.("");
+        }
+      }
     } else {
       queueHoverPick(ev.clientX, ev.clientY);
     }
@@ -451,6 +487,7 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
     if (ev.key === "Escape") {
       ev.preventDefault();
       onSelectNode?.("");
+      onSelectEdge?.("");
     }
   }
 
@@ -476,7 +513,11 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
     );
   }
 
-  const selectionLive = selectedNodeId ? `Selected node ${selectedNodeId}.` : "No node selected.";
+  const selectionLive = selectedEdgeId
+    ? `Selected edge ${selectedEdgeId}.`
+    : selectedNodeId
+      ? `Selected node ${selectedNodeId}.`
+      : "No node or edge selected.";
 
   return (
     <Box
@@ -525,8 +566,8 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
       </Typography>
       <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1, px: 1.5, pt: 1, pb: 0.5, flexShrink: 0 }}>
         <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", flex: "1 1 140px" }}>
-          Wheel over the canvas zooms in/out (page scroll works when the cursor is outside this area). Drag to pan · click node
-          to select · Escape clears selection (focus graph first). Use &quot;Center on selected&quot; to align the viewport on a
+          Wheel over the canvas zooms in/out (page scroll works when the cursor is outside this area). Drag to pan · click a node
+          or edge to select · Escape clears selection (focus graph first). Use &quot;Center on selected&quot; to align the viewport on a
           node.
         </Typography>
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
@@ -553,7 +594,7 @@ export default function GraphCanvasMvp({ graph, selectedNodeId, onSelectNode }) 
       >
         <canvas
           ref={canvasRef}
-          aria-label="Interactive graph: pan and zoom with pointer; click a node to select it."
+          aria-label="Interactive graph: pan and zoom with pointer; click a node or edge to select it."
           onPointerDown={handlePointerDown}
           onPointerMove={handleCanvasPointerMove}
           onPointerLeave={handleCanvasPointerLeave}

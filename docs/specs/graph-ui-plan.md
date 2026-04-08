@@ -52,7 +52,7 @@ Any canvas or graph library should consume the **normalized** graph (or a thin m
 ### URL and traceability
 
 - **Standalone:** [`GraphPage.jsx`](../../ui/src/pages/GraphPage.jsx) — `work_id`, optional trace params via [`traceabilityState.js`](../../ui/src/components/work/traceabilityState.js).
-- **Selection:** `selectedNodeId` (or `node_id` in URL where applicable) must resolve with `resolveSelectedNodeId` so deep links never point to a missing id silently without fallback.
+- **Selection:** `selectedNodeId` (or `node` in URL where applicable) must resolve with `resolveSelectedNodeId` so deep links never point to a missing id silently without fallback. Optional **`edge`** query param selects a normalized edge id (Canvas); mutual exclusion with `node` is enforced in [`traceabilityState.js`](../../ui/src/components/work/traceabilityState.js) / [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx).
 
 ## UI composition (current)
 
@@ -66,7 +66,7 @@ Any canvas or graph library should consume the **normalized** graph (or a thin m
 | Shell states | `graphShellStates.jsx` | Shared empty / loading / error patterns (Graph page, tab, panel) |
 | Canvas math | `graphCanvasTransform.js` | World layout + fit + screen/world mapping; `worldRadiusForNodeCount(n)` grows the circle when many nodes reduce chord spacing |
 | Canvas styles | `graphCanvasStyle.js` | Node type colors, hover stroke, truncated node/edge labels on canvas |
-| Details | `GraphDetailPanel.jsx` | Edges + raw JSON (`deriveGraphDetail` on **full** graph) |
+| Details | `GraphDetailPanel.jsx` | Node payload + related edges, or **selected edge** (source/target/type); `deriveGraphDetail` on **full** graph |
 | Data | `graphAdapter.js`, `graphViewState.js` | Fetch + normalize + derive |
 
 **Modes:** **Cards** vs **Graph** share capped `displayGraph`; detail panel uses the full normalized graph.
@@ -106,15 +106,61 @@ For **Phase 4 UI**, the shipped **v1** (circle layout + raw Canvas, ADR above) m
 
 ## Reference implementation (osint-gr)
 
-Use for **patterns**, not copy-paste of product logic:
+Use for **patterns**, not copy-paste of product logic. The osint-gr graph stacks **force simulation**, **spatial acceleration**, and **canvas drawing**; science-graphrag v1 uses **deterministic circle layout** + Canvas only (see *Parity* below).
 
-| Topic | Path (repo `osint-gr`) |
-|-------|-------------------------|
-| Page shell | `frontend/src/pages/KnowledgeGraphPage.jsx` |
-| Layout split | `frontend/src/pages/KnowledgeGraphPage/components/KnowledgeGraphVisualizationSection.jsx` |
-| Canvas + simulation | `frontend/src/components/features/GraphVisualization.jsx` |
-| Hooks | `frontend/src/components/features/graphVisualization/hooks/*` |
-| Toolbar pattern | `frontend/src/components/features/graphVisualization/components/GraphControls.jsx` |
+| Topic | Path (repo `osint-gr`) | Why open it |
+|-------|-------------------------|-------------|
+| Composition | `frontend/src/components/features/GraphVisualization.jsx` | Wires resize, simulation, draw, pointer handlers |
+| Force + cooling + bounds | `frontend/src/components/features/graphVisualization/hooks/useForceSimulation.js` | Custom physics, stability threshold, optional QuadTree repulsion |
+| Barnes–Hut | `frontend/src/components/features/graphVisualization/utils/quadTree.js` | O(n log n) repulsion for larger graphs |
+| Clustering | `frontend/src/components/features/graphVisualization/utils/clustering.js` | `detectHybridCommunities`, personId / community hints |
+| Force helpers | `frontend/src/components/features/graphVisualization/utils/forceUtils.js` | Repulsion tuning, fast sqrt variants |
+| Canvas draw | `frontend/src/components/features/graphVisualization/hooks/useCanvasDrawing.js` | Edges, arrows at target, node shapes, `Map` for O(1) node lookup |
+| Hit testing | `frontend/src/components/features/graphVisualization/hooks/useCanvasEvents.js` | Zoom/pan, node/edge pick, drag |
+| Geometry | `frontend/src/components/features/graphVisualization/utils.js` | `pointToLineDistance` for edge hover |
+| Controls | `frontend/src/components/features/graphVisualization/components/GraphControls.jsx` | Repulsion slider, reset simulation, center |
+| Page shell | `frontend/src/pages/KnowledgeGraphPage.jsx` | App-level wiring |
+| Layout split | `frontend/src/pages/KnowledgeGraphPage/components/KnowledgeGraphVisualizationSection.jsx` | Section layout |
+
+```mermaid
+flowchart TB
+  subgraph science [science_graphrag_v1]
+    norm[normalizeGraphPayload]
+    circle[computeWorldLayout]
+    canvas[GraphCanvasMvp]
+    norm --> circle --> canvas
+  end
+  subgraph osint [osint_gr_reference]
+    sim[useForceSimulation]
+    qt[QuadTree]
+    cl[clustering]
+    draw2[useCanvasDrawing]
+    sim --> qt
+    sim --> cl
+    sim --> draw2
+  end
+  science -.->|"optional spike Wave_4_3"| osint
+```
+
+### Parity vs osint-gr (Wave 3+ baseline)
+
+**Already aligned (ideas ported or matched):**
+
+- Directed edges in API (`source`/`target` = Neo4j orientation); arrows at **target** on canvas; edge hover by **distance to segment** in screen space ([`graphCanvasGeometry.js`](../../ui/src/components/graph/graphCanvasGeometry.js)).
+- `Map` of positions by node id in layout/draw; type-colored nodes; shared legend chip colors via [`graphCanvasStyle.js`](../../ui/src/components/graph/graphCanvasStyle.js).
+
+**Not in science-graphrag v1 (defer to backlog / Wave 4.3 spike):**
+
+- Force-directed layout, iterative rAF simulation, drag-to-move nodes, repulsion slider.
+- QuadTree / Barnes–Hut, community and personId clustering forces.
+- Edge/selection model in osint includes **click edge** (we added **Wave 4.1**: selected edge + detail + optional `edge` URL param).
+- Minimap, icons on nodes, dashed edge styles by domain rules, OSINT-specific graph data.
+
+### Wave 4 roadmap (execution order)
+
+1. **Wave 4.1** — Canvas **edge selection** + **GraphDetailPanel** section for the selected relationship; optional URL query `edge` (see [`traceabilityState.js`](../../ui/src/components/work/traceabilityState.js)); mutual exclusion with `node` selection for deep links.
+2. **Wave 4.2** — Canvas micro-polish: explicit `Map` for nodes where helpful; **edge label draw order** so hovered/selected labels paint last (readability).
+3. **Wave 4.3** — Time-boxed **layout stack spike**: React Flow / Sigma POC **or** isolated port of osint `useForceSimulation` + QuadTree without OSINT domain hooks — record outcome in [`docs/adr/006-graph-layout-stack-spike.md`](../../docs/adr/006-graph-layout-stack-spike.md) and keep `normalizeGraphPayload` + `GraphDetailPanel` as the contract.
 
 ## Phased delivery (mirror master plan)
 

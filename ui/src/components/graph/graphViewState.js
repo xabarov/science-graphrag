@@ -12,6 +12,15 @@ export function normalizeGraphNodeId(value) {
 }
 
 /**
+ * @param {unknown} value
+ * @returns {string}
+ */
+export function normalizeGraphEdgeId(value) {
+  if (value == null) return "";
+  return String(value).trim();
+}
+
+/**
  * @param {unknown} raw
  * @returns {{
  *   workId: string,
@@ -103,12 +112,35 @@ export function resolveSelectedNodeId(graph, preferredNodeId = "") {
 }
 
 /**
+ * @param {{ edges: Array<{ id: string }> }} graph
+ * @param {string} preferredEdgeId
+ * @returns {string}
+ */
+export function resolveSelectedEdgeId(graph, preferredEdgeId = "") {
+  const next = normalizeGraphEdgeId(preferredEdgeId);
+  if (next && graph.edges.some((e) => e.id === next)) {
+    return next;
+  }
+  return "";
+}
+
+/**
  * @param {{ nodes: Array<object>, edges: Array<object>, meta: object }} graph
  * @param {string} selectedNodeId
- * @returns {{selectedNode: object | null, relatedEdges: Array<object>}}
+ * @param {string} [selectedEdgeId]
+ * @returns {{ selectedNode: object | null, relatedEdges: Array<object>, selectedEdge: object | null }}
  */
-export function deriveGraphDetail(graph, selectedNodeId) {
+export function deriveGraphDetail(graph, selectedNodeId, selectedEdgeId = "") {
+  const eid = normalizeGraphEdgeId(selectedEdgeId);
+  if (eid) {
+    const selectedEdge = graph.edges.find((edge) => edge.id === eid) || null;
+    if (selectedEdge) {
+      return { selectedNode: null, relatedEdges: [], selectedEdge };
+    }
+  }
   const selectedNode = graph.nodes.find((node) => node.id === selectedNodeId) || null;
-  const relatedEdges = graph.edges.filter((edge) => edge.source === selectedNodeId || edge.target === selectedNodeId);
-  return { selectedNode, relatedEdges };
+  const relatedEdges = selectedNode
+    ? graph.edges.filter((edge) => edge.source === selectedNodeId || edge.target === selectedNodeId)
+    : [];
+  return { selectedNode, relatedEdges, selectedEdge: null };
 }

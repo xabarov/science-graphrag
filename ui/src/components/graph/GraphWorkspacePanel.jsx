@@ -13,7 +13,14 @@ import GraphTypeLegend from "./GraphTypeLegend.jsx";
 import { GraphErrorAlert, GraphLoadingInline, GraphMissingWorkInline } from "./graphShellStates.jsx";
 import { fetchWorkGraphNormalized } from "./graphAdapter.js";
 import { capGraphForUi } from "./graphUiLimits.js";
-import { deriveGraphDetail, normalizeGraphNodeId, normalizeGraphPayload, resolveSelectedNodeId } from "./graphViewState.js";
+import {
+  deriveGraphDetail,
+  normalizeGraphEdgeId,
+  normalizeGraphNodeId,
+  normalizeGraphPayload,
+  resolveSelectedEdgeId,
+  resolveSelectedNodeId,
+} from "./graphViewState.js";
 import { describeTraceabilityState } from "../work/traceabilityState.js";
 
 /**
@@ -21,10 +28,12 @@ import { describeTraceabilityState } from "../work/traceabilityState.js";
  *   workId: string,
  *   selectedNodeId?: string,
  *   onSelectNode?: (nodeId: string) => void,
+ *   selectedEdgeId?: string,
+ *   onSelectEdge?: (edgeId: string) => void,
  *   mode?: "embedded" | "standalone",
  *   title?: string,
  *   subtitle?: React.ReactNode,
- *   traceContext?: { chunkFingerprint?: string, section?: string, citation?: string },
+ *   traceContext?: { chunkFingerprint?: string, section?: string, citation?: string, edgeId?: string },
  *   labMode?: boolean,
  * }} props
  */
@@ -32,6 +41,8 @@ export default function GraphWorkspacePanel({
   workId,
   selectedNodeId = "",
   onSelectNode,
+  selectedEdgeId = "",
+  onSelectEdge,
   mode = "embedded",
   title = "Graph",
   subtitle = null,
@@ -78,10 +89,15 @@ export default function GraphWorkspacePanel({
     };
   }, [workId]);
 
-  const resolvedSelectedNodeId = useMemo(
-    () => resolveSelectedNodeId(graph, normalizeGraphNodeId(selectedNodeId)),
-    [graph, selectedNodeId],
+  const resolvedSelectedEdgeId = useMemo(
+    () => resolveSelectedEdgeId(graph, normalizeGraphEdgeId(selectedEdgeId)),
+    [graph, selectedEdgeId],
   );
+
+  const resolvedSelectedNodeId = useMemo(() => {
+    if (resolvedSelectedEdgeId) return "";
+    return resolveSelectedNodeId(graph, normalizeGraphNodeId(selectedNodeId));
+  }, [graph, selectedNodeId, resolvedSelectedEdgeId]);
 
   const { displayGraph, capWarnings } = useMemo(
     () => capGraphForUi(graph, resolvedSelectedNodeId),
@@ -94,7 +110,28 @@ export default function GraphWorkspacePanel({
     }
   }, [onSelectNode, resolvedSelectedNodeId, selectedNodeId]);
 
-  const detail = useMemo(() => deriveGraphDetail(graph, resolvedSelectedNodeId), [graph, resolvedSelectedNodeId]);
+  useEffect(() => {
+    if (normalizeGraphEdgeId(selectedEdgeId) && !resolvedSelectedEdgeId) {
+      onSelectEdge?.("");
+    }
+  }, [selectedEdgeId, resolvedSelectedEdgeId, onSelectEdge]);
+
+  useEffect(() => {
+    if (resolvedSelectedEdgeId && normalizeGraphNodeId(selectedNodeId)) {
+      onSelectNode?.("");
+    }
+  }, [resolvedSelectedEdgeId, selectedNodeId, onSelectNode]);
+
+  useEffect(() => {
+    if (resolvedSelectedNodeId && normalizeGraphEdgeId(selectedEdgeId)) {
+      onSelectEdge?.("");
+    }
+  }, [resolvedSelectedNodeId, selectedEdgeId, onSelectEdge]);
+
+  const detail = useMemo(
+    () => deriveGraphDetail(graph, resolvedSelectedNodeId, resolvedSelectedEdgeId),
+    [graph, resolvedSelectedNodeId, resolvedSelectedEdgeId],
+  );
   const compact = mode === "embedded";
   const traceSummary = describeTraceabilityState(traceContext);
 
@@ -206,7 +243,10 @@ export default function GraphWorkspacePanel({
                 <GraphVisualization
                   graph={displayGraph}
                   selectedNodeId={resolvedSelectedNodeId}
-                  onSelectNode={(nodeId) => onSelectNode?.(nodeId)}
+                  onSelectNode={(nodeId) => {
+                    onSelectEdge?.("");
+                    onSelectNode?.(nodeId);
+                  }}
                   mode={mode}
                 />
               ) : (
@@ -214,13 +254,26 @@ export default function GraphWorkspacePanel({
                   <GraphCanvasMvp
                     graph={displayGraph}
                     selectedNodeId={resolvedSelectedNodeId}
-                    onSelectNode={(nodeId) => onSelectNode?.(nodeId)}
+                    selectedEdgeId={resolvedSelectedEdgeId}
+                    onSelectNode={(nodeId) => {
+                      onSelectEdge?.("");
+                      onSelectNode?.(nodeId);
+                    }}
+                    onSelectEdge={(edgeId) => {
+                      onSelectNode?.("");
+                      onSelectEdge?.(edgeId);
+                    }}
                   />
                 </Box>
               )}
             </Box>
             <Box sx={{ minWidth: 0, minHeight: { xs: 220, md: compact ? 400 : 500 }, display: "flex", flexDirection: "column" }}>
-              <GraphDetailPanel selectedNode={detail.selectedNode} relatedEdges={detail.relatedEdges} mode={mode} />
+              <GraphDetailPanel
+                selectedNode={detail.selectedNode}
+                selectedEdge={detail.selectedEdge}
+                relatedEdges={detail.relatedEdges}
+                mode={mode}
+              />
             </Box>
           </Box>
 
@@ -299,6 +352,7 @@ export default function GraphWorkspacePanel({
                       work_id: graph.workId,
                       meta: graph.meta,
                       selected_node_id: resolvedSelectedNodeId,
+                      selected_edge_id: resolvedSelectedEdgeId,
                       node_count: graph.nodeCount,
                       edge_count: graph.edgeCount,
                       warnings: graph.warnings,

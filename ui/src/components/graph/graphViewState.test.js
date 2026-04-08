@@ -4,6 +4,7 @@ import {
   deriveGraphDetail,
   normalizeGraphNodeId,
   normalizeGraphPayload,
+  resolveSelectedEdgeId,
   resolveSelectedNodeId,
 } from "./graphViewState.js";
 
@@ -63,6 +64,7 @@ describe("graphViewState", () => {
     expect(resolveSelectedNodeId(graph, "any")).toBe("");
     const detail = deriveGraphDetail(graph, "");
     expect(detail.selectedNode).toBeNull();
+    expect(detail.selectedEdge).toBeNull();
     expect(detail.relatedEdges).toHaveLength(0);
   });
 
@@ -92,6 +94,30 @@ describe("graphViewState", () => {
 
     const detail = deriveGraphDetail(graph, "n1");
     expect(detail.selectedNode?.id).toBe("n1");
+    expect(detail.selectedEdge).toBeNull();
     expect(detail.relatedEdges).toHaveLength(1);
+  });
+
+  it("resolves selected edge id when present in graph", () => {
+    const graph = normalizeGraphPayload({
+      nodes: [{ id: "n1", label: "A" }],
+      edges: [{ id: "e1", source: "n1", target: "n1", type: "loop" }],
+    });
+    expect(resolveSelectedEdgeId(graph, "e1")).toBe("e1");
+    expect(resolveSelectedEdgeId(graph, "missing")).toBe("");
+  });
+
+  it("derives edge-only detail when selectedEdgeId matches", () => {
+    const graph = normalizeGraphPayload({
+      nodes: [
+        { id: "n1", label: "A" },
+        { id: "n2", label: "B" },
+      ],
+      edges: [{ id: "e1", source: "n1", target: "n2", type: "CITES" }],
+    });
+    const detail = deriveGraphDetail(graph, "n1", "e1");
+    expect(detail.selectedNode).toBeNull();
+    expect(detail.selectedEdge?.id).toBe("e1");
+    expect(detail.relatedEdges).toHaveLength(0);
   });
 });
