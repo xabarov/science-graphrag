@@ -12,13 +12,43 @@ _REF_HEAD_RE = re.compile(
 )
 _NUMBERED_REF_RE = re.compile(r"^(?:\[\d+\]|\d+\.)\s+")
 _AUTHOR_YEAR_REF_RE = re.compile(
-    r"^[A-Z][A-Za-z'`\-]+(?:,\s+[A-Z]\.)?(?:\s+(?:and|&)\s+[A-Z][A-Za-z'`\-]+(?:,\s+[A-Z]\.)?)?.*?\(\d{4}\)",
+    r"^[A-Z][A-Za-z'`\-]+(?:,\s+[A-Z]\.)?"
+    r"(?:\s+(?:and|&)\s+[A-Z][A-Za-z'`\-]+(?:,\s+[A-Z]\.)?)?.*?\(\d{4}\)",
 )
 _AUTHOR_LINE_START_RE = re.compile(
     r"^[A-Z][A-Za-z'`\-]+,\s+[A-Z](?:\.[A-Z])?\.?(?:,|\s)",
 )
 _SENTENCE_START_RE = re.compile(r"^[A-Z][^:]{10,}$")
 _YEAR_RE = re.compile(r"\((?:19|20)\d{2}\)")
+# Plain bibliography lines: "First Last, First Last, ..." (no [n]. or n. prefix),
+# common in ICLR/CV PDFs.
+_PLAIN_AUTHOR_LIST_LINE_RE = re.compile(
+    r"^[A-Z][^,\n]{0,120},\s+[A-Z]",
+)
+
+
+def _looks_like_plain_author_list_line(line: str) -> bool:
+    """Detect author-year blocks without numeric prefixes (Deformable DETR-style)."""
+    s = line.strip()
+    if len(s) < 24:
+        return False
+    if s.startswith(
+        (
+            "In ",
+            "Deep learning for generic",
+            "Feature ",
+            "Microsoft ",
+            "Generating ",
+            "Criss-cross",
+            "End-to-end",
+            "arXiv preprint",
+            "http",
+        ),
+    ):
+        return False
+    if _NUMBERED_REF_RE.match(s):
+        return False
+    return bool(_PLAIN_AUTHOR_LIST_LINE_RE.match(s))
 
 
 def _looks_like_new_reference(line: str) -> bool:
@@ -27,6 +57,8 @@ def _looks_like_new_reference(line: str) -> bool:
     if _AUTHOR_YEAR_REF_RE.match(line):
         return True
     if _AUTHOR_LINE_START_RE.match(line):
+        return True
+    if _looks_like_plain_author_list_line(line):
         return True
     return False
 

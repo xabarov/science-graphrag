@@ -1,3 +1,5 @@
+import { formatResearchApiError } from "../../services/researchApi.js";
+
 const STORAGE_KEY = "benchmark:launcherPrefs:v2";
 
 export const LAUNCHER_SCOPE_PRESETS = ["selected", "merge_safe", "nightly", "all"];
@@ -221,11 +223,16 @@ export function validateLauncherConfig({
 }
 
 export function humanizeLauncherError(errorLike) {
-  const detail =
-    errorLike?.response?.data?.detail ||
-    errorLike?.detail ||
-    errorLike?.message ||
-    String(errorLike || "");
+  let detail = "";
+  if (errorLike?.response != null) {
+    detail = formatResearchApiError(errorLike);
+  } else if (errorLike?.detail != null) {
+    detail = typeof errorLike.detail === "string" ? errorLike.detail : JSON.stringify(errorLike.detail);
+  } else if (errorLike?.message) {
+    detail = String(errorLike.message);
+  } else {
+    detail = String(errorLike ?? "");
+  }
   if (detail === "custom_model_id_required") {
     return "Custom profile requires a custom model id.";
   }

@@ -15,7 +15,7 @@ import { CursorPrimaryButton, CursorSmallButton } from "../components/common/ind
 import PageHeader from "../components/layout/PageHeader.jsx";
 import WorkIdGlossaryHint from "../components/layout/WorkIdGlossaryHint.jsx";
 import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
-import { getWorks } from "../services/researchApi.js";
+import { formatResearchApiError, getWorks } from "../services/researchApi.js";
 import { buildWorkspacePath, persistWorkId } from "./WorkspacePage/utils/workContext.js";
 import { rememberRecentWork } from "./HomePage/homeState.js";
 import { useCorpusEntryState } from "./HomePage/useCorpusEntryState.js";
@@ -51,10 +51,7 @@ export default function CorpusPage() {
       setItems(chunk);
       setTotal(tot);
     } catch (err) {
-      const msg = err?.response?.data?.detail
-        ? JSON.stringify(err.response.data.detail)
-        : err?.message || String(err);
-      setError(msg);
+      setError(formatResearchApiError(err));
       setItems([]);
       setTotal(0);
     } finally {
@@ -71,10 +68,7 @@ export default function CorpusPage() {
       const chunk = Array.isArray(res.data?.items) ? res.data.items : [];
       setItems((prev) => [...prev, ...chunk]);
     } catch (err) {
-      const msg = err?.response?.data?.detail
-        ? JSON.stringify(err.response.data.detail)
-        : err?.message || String(err);
-      setError(msg);
+      setError(formatResearchApiError(err));
     } finally {
       setLoadingMore(false);
     }

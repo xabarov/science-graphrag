@@ -17,6 +17,7 @@ import WorkIdGlossaryHint from "../layout/WorkIdGlossaryHint.jsx";
 import {
   buildAskAnswerRationale,
   buildQueryBody,
+  formatResearchApiError,
   formatRetrievalSummaryLines,
   getWorks,
   normalizeQueryResponse,
@@ -188,10 +189,7 @@ export default function AskPanel({
       });
       bumpSessions();
     } catch (err) {
-      const msg = err?.response?.data?.detail
-        ? JSON.stringify(err.response.data.detail)
-        : err?.message || String(err);
-      setError(msg);
+      setError(formatResearchApiError(err));
     } finally {
       setLoading(false);
     }

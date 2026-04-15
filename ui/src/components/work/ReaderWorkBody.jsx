@@ -6,7 +6,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Chip from "@mui/material/Chip";
 import { Link } from "react-router-dom";
 
-import { getWorkChunks, getWorkDetail } from "../../services/researchApi.js";
+import { formatResearchApiError, getWorkChunks, getWorkDetail } from "../../services/researchApi.js";
 import { CursorSmallButton } from "../common/index.js";
 import { buildWorkspaceTracePath, describeTraceabilityState } from "./traceabilityState.js";
 
@@ -51,10 +51,7 @@ export default function ReaderWorkBody({
         setChunks(cRes.data);
       } catch (err) {
         if (cancelled) return;
-        const msg = err?.response?.data?.detail
-          ? JSON.stringify(err.response.data.detail)
-          : err?.message || String(err);
-        setError(msg);
+        setError(formatResearchApiError(err));
         setDetail(null);
         setChunks(null);
       } finally {

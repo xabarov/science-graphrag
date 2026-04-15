@@ -58,7 +58,8 @@ Definition of done:
 - [x] Клиент `ui/src/services/benchmarkApi.js` к `/v1/benchmark/*`.
 - [x] **Layer-2 + graph catalog в том же UI:** layer-2 прогоны через API; **graph-v1** — семейство `family=graph` в списке кейсов, колонка/флаг `graph_expectations`, вкладка ожиданий в деталях кейса; запуск graph-прогона **только CLI/CI** (`POST` → `graph_benchmark_use_cli`).
 - [x] **Semantic / graph diff (MVP):** layer-2 — нормализованное сравнение methods/datasets в `SemanticComparisonTable`; graph — просмотр `graph_expectations` в JSON (полный side-by-side выход раннера vs gold в UI — backlog при необходимости).
-- [ ] Согласовать с продуктовым UX: кто целевой пользователь страницы (только внутренняя dev-сборка vs пилот).
+- [x] **Целевая аудитория:** зафиксировано для текущей версии — **dev/QA-консоль** (см. [roadmap](../roadmap.md)); отдельный **пилот** для иной аудитории — будущее product/UX-решение, не блокер для консоли.
+- **Note (2026-04-08):** Реализация `/benchmark` и API не блокируется отсутствием пилотного scope. Обновление 2026-04-08: чекбокс закрыт с явным дефолтом dev/QA.
 - [x] Smoke на `GET /v1/benchmark/cases` в `tests/test_api_smoke.py` (`test_benchmark_cases_list_smoke`).
 
 ## Track B: backend bridge backlog

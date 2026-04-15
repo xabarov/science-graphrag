@@ -32,6 +32,10 @@ _REF_SECTION_EOF_STOP_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"^A\.\d+\s+", re.IGNORECASE),  # e.g. "A.1 ..." appendix subsection
     re.compile(r"^```\s*$"),
     re.compile(r"^Listing\s+\d+", re.IGNORECASE),
+    # CVPR/CVPR-style PDF→MD: appendix subsections as plain lines (no ##), after refs + page nums.
+    re.compile(r"^[A-Z]\s+[A-Z][a-z].{4,}"),
+    re.compile(r"^[A-Z]\s+[A-Z]{2,}\b", re.IGNORECASE),  # e.g. "C FL, QFL and DFL ..."
+    re.compile(r"^[–\-]\s*Supplementary\b", re.IGNORECASE),
 )
 
 
@@ -136,6 +140,32 @@ def _truncate(s: str, max_len: int) -> str:
     return s[:max_len] + "\n\n[... truncated for context limit ...]"
 
 
+_PAGE_ONLY_LINE_RE = re.compile(r"^\d{1,2}$")
+
+
+def _trim_trailing_page_number_suffix(text: str, start: int, end: int) -> int:
+    """
+    Drop trailing blank lines and 1-2 digit-only lines (PDF page/column markers).
+
+    Keeps in-body markers such as the ``9`` between two ``[n]`` entries; those are not trailing.
+    """
+    if end <= start:
+        return end
+    chunk = text[start:end]
+    lines = chunk.split("\n")
+    while lines:
+        stripped = lines[-1].strip()
+        if not stripped:
+            lines.pop()
+            continue
+        if _PAGE_ONLY_LINE_RE.match(stripped):
+            lines.pop()
+            continue
+        break
+    trimmed = "\n".join(lines)
+    return start + len(trimmed)
+
+
 def find_reference_section_spans(text: str) -> list[tuple[int, int]]:
     """
     Return list of (start, end) offsets for reference-like regions.
@@ -152,6 +182,7 @@ def find_reference_section_spans(text: str) -> list[tuple[int, int]]:
         else:
             early = _reference_section_end_without_next_heading(rest)
             end = start + early if early is not None else len(text)
+        end = _trim_trailing_page_number_suffix(text, start, end)
         if end > start:
             spans.append((start, end))
     return spans

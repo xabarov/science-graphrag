@@ -15,6 +15,7 @@ import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 
 import { compareBenchmarkRuns, listBenchmarkRuns } from "../../services/benchmarkApi.js";
+import { formatResearchApiError } from "../../services/researchApi.js";
 import { CursorButton, CursorPrimaryButton, CursorSmallButton } from "../../components/common/index.js";
 
 const TABLE_CAP = 200;
@@ -137,7 +138,7 @@ export default function CompareTab({ onOpenWorkbench }) {
       const resp = await compareBenchmarkRuns(baselineId, currentId);
       setResult(resp?.data || resp);
     } catch (e) {
-      setError(e?.response?.data?.detail || e?.message || "compare_failed");
+      setError(formatResearchApiError(e) || "compare_failed");
     } finally {
       setLoading(false);
     }

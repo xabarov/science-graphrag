@@ -32,6 +32,7 @@ Mark done with `[DONE]` and a one-line note; do not delete history without user 
 ## After a large modernization step
 
 - Run the usual quality gates (see `pre-commit-checklist.mdc`, `backend-quality.mdc`, `frontend-quality.mdc`).
+- **File size / scope check:** skim **changed** paths (and obvious hotspots) for line-count growth. Heuristic smells: `ui/` components or pages **~400+ lines**, hooks or adapters **~250+ lines**, Python packages/modules **~400+ lines**, or a single file mixing unrelated layers. If something ballooned or was already oversized, **do not** silently leave it — add **concrete refactoring steps** as backlog entries (`docs/backlog/refactor-frontend.md` or `docs/backlog/refactor-backend.md`) using the format above: what to split, suggested module boundaries, acceptance (e.g. “no file above N lines in this subtree” or “X extracted to `...`”). Same rule applies after big blocks of frontend **or** backend work even when the change is “only” one stack; oversized files are structural debt.
 - Append backlog items for **follow-up structure** (imports, layering, duplication, API surface), not for cosmetic nits already fixed in the same PR.
 
 ## What this rule does *not* replace

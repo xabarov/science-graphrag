@@ -8,6 +8,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 
 import { getBenchmarkRun, getBenchmarkRunSummary } from "../../services/benchmarkApi.js";
+import { formatResearchApiError } from "../../services/researchApi.js";
 import { CursorButton, CursorPrimaryButton } from "../../components/common/index.js";
 import BenchmarkRunSummaryCards from "./BenchmarkRunSummaryCards.jsx";
 import BenchmarkRunCasesTable from "./BenchmarkRunCasesTable.jsx";
@@ -47,8 +48,7 @@ export default function ResultsDialog({ open, runId, onClose, onOpenWorkbench })
         setRunDetail(payload);
       } catch (e) {
         if (!cancelled) {
-          const d = e?.response?.data?.detail;
-          setError(typeof d === "string" ? d : e?.message || "failed_to_fetch_run");
+          setError(formatResearchApiError(e) || "failed_to_fetch_run");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -70,8 +70,7 @@ export default function ResultsDialog({ open, runId, onClose, onOpenWorkbench })
       setRunDetail(payload);
       setHasFullDetail(true);
     } catch (e) {
-      const d = e?.response?.data?.detail;
-      setError(typeof d === "string" ? d : e?.message || "failed_to_fetch_full_run");
+      setError(formatResearchApiError(e) || "failed_to_fetch_full_run");
     } finally {
       setLoadingFull(false);
     }

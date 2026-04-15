@@ -102,11 +102,15 @@ For **Phase 4 UI**, the shipped **v1** (circle layout + raw Canvas, ADR above) m
 ### Layout stack v1 (product decision)
 
 - **Shipped v1:** deterministic **circle layout** with **adaptive world radius** in [`graphCanvasTransform.js`](../../ui/src/components/graph/graphCanvasTransform.js) + raw **Canvas** in `GraphCanvasMvp` — no graph npm dependency, predictable for neighborhood size; on-canvas **type-colored nodes**, **hover** highlight, **truncated labels** for nodes and edge types ([`graphCanvasStyle.js`](../../ui/src/components/graph/graphCanvasStyle.js)).
-- **When to revisit:** need force-directed layout, minimap, or very dense graphs → time-boxed spike **React Flow / Sigma** or read-only port of osint-gr `useForceSimulation` / `GraphVisualization` hooks; keep `normalizeGraphPayload`, `capGraphForUi`, URL selection, and `GraphDetailPanel` as the contract.
+- **Canvas layout modes (2026-04):** In **Graph** (canvas) mode, the toolbar includes **Circle** | **Force** (persisted as `graphCanvasLayoutMode`). **Circle** keeps the deterministic ring + existing fit/pan/zoom. **Force** runs an in-repo **force simulation** (QuadTree repulsion, edge springs, optional structural communities — ported from osint-gr patterns, no OSINT domain types) seeded from the same circle positions as Circle so switching modes does not jump from empty space; **repulsion** slider + `localStorage` (`graphCanvasRepulsionPercent`). **Force toolbar:** **Restart sim** (re-seed with jitter + new run id, like osint reset), **Unpin all** (clear pinned nodes after drag). **Keyboard** (graph section focused): `+` / `−` zoom at center, `0` fit — similar to Neo4j-style graph controls, without command bar. Data path unchanged: `normalizeGraphPayload` / `capGraphForUi` → `buildSimulationState` / `useScienceGraphForceSimulation`. Not Neo4j Browser feature parity; `GRAPH_UI_MAX_*` still apply. See [`docs/adr/007-canvas-force-layout-port.md`](../adr/007-canvas-force-layout-port.md).
+- **Wave 4.3 library POC (optional):** third mode **Flow** — [`@xyflow/react`](https://reactflow.dev/) in [`GraphFlowView.jsx`](../../ui/src/components/graph/GraphFlowView.jsx), same normalized graph + UI caps; initial positions = same circle layout as Canvas; node/edge selection and `GraphDetailPanel` unchanged. **Not** the default view; bundle cost only when the Flow chunk loads.
+- **Phase B (Flow parity, shipped):** [`getGraphLayoutSignature`](../../ui/src/components/graph/graphFlowAdapter.js) drives `fitView` only on topology changes (not selection); toolbar **Fit / Reset zoom / Center on selected** (center supports node or edge endpoints) + **Escape** + empty state match Canvas ergonomics; `onlyRenderVisibleElements`, `nodesDraggable={false}`, `React.memo` on custom nodes for large capped graphs.
+- **Phase C (optional polish, shipped):** Flow **MiniMap** (bottom-right, dark styling, node colors from [`graphCanvasStyle`](../../ui/src/components/graph/graphCanvasStyle.js)) + toolbar **Show/Hide minimap** (persisted in `localStorage` as `graphFlowMinimap`). Benchmark **Case** dialog — graph tab: accordion **Side-by-side: canonical graph_expectations vs snapshot file gold (raw)** when a CLI snapshot JSON is loaded ([`CaseDetailDialog.jsx`](../../ui/src/pages/BenchmarkPage/CaseDetailDialog.jsx)). Cross-cutting **durable run catalog** beyond current file-backed store — backend backlog ([`frontend-phase6-bridge-backlog.md`](../architecture/frontend-phase6-bridge-backlog.md) B4), not a graph-UI blocker.
+- **When to revisit:** **Sigma** comparison, force-directed **Flow** (`@xyflow/react`), deeper osint parity (controls, styling), or server-persisted layouts — keep `normalizeGraphPayload`, `capGraphForUi`, URL selection, and `GraphDetailPanel` as the contract.
 
 ## Reference implementation (osint-gr)
 
-Use for **patterns**, not copy-paste of product logic. The osint-gr graph stacks **force simulation**, **spatial acceleration**, and **canvas drawing**; science-graphrag v1 uses **deterministic circle layout** + Canvas only (see *Parity* below).
+Use for **patterns**, not copy-paste of product logic. The osint-gr graph stacks **force simulation**, **spatial acceleration**, and **canvas drawing**; science-graphrag ships **circle** by default and an optional **force** canvas mode built from the same patterns (see *Parity* below).
 
 | Topic | Path (repo `osint-gr`) | Why open it |
 |-------|-------------------------|-------------|
@@ -149,18 +153,29 @@ flowchart TB
 - Directed edges in API (`source`/`target` = Neo4j orientation); arrows at **target** on canvas; edge hover by **distance to segment** in screen space ([`graphCanvasGeometry.js`](../../ui/src/components/graph/graphCanvasGeometry.js)).
 - `Map` of positions by node id in layout/draw; type-colored nodes; shared legend chip colors via [`graphCanvasStyle.js`](../../ui/src/components/graph/graphCanvasStyle.js).
 
-**Not in science-graphrag v1 (defer to backlog / Wave 4.3 spike):**
+**Optional / partial (Canvas force mode, 2026-04):**
 
-- Force-directed layout, iterative rAF simulation, drag-to-move nodes, repulsion slider.
-- QuadTree / Barnes–Hut, community and personId clustering forces.
+- Force-directed layout, rAF simulation, drag nodes (pin when stable), repulsion slider — see `ui/src/components/graph/physics/` and ADR 007.
+
+**Still not in scope (defer / backlog):**
+
+- **personId** / hybrid community hints as in osint; full Neo4j Browser–style tooling; OSINT-specific graph semantics.
 - Edge/selection model in osint includes **click edge** (we added **Wave 4.1**: selected edge + detail + optional `edge` URL param).
 - Minimap, icons on nodes, dashed edge styles by domain rules, OSINT-specific graph data.
 
 ### Wave 4 roadmap (execution order)
 
 1. **Wave 4.1** — Canvas **edge selection** + **GraphDetailPanel** section for the selected relationship; optional URL query `edge` (see [`traceabilityState.js`](../../ui/src/components/work/traceabilityState.js)); mutual exclusion with `node` selection for deep links.
-2. **Wave 4.2** — Canvas micro-polish: explicit `Map` for nodes where helpful; **edge label draw order** so hovered/selected labels paint last (readability).
-3. **Wave 4.3** — Time-boxed **layout stack spike**: React Flow / Sigma POC **or** isolated port of osint `useForceSimulation` + QuadTree without OSINT domain hooks — record outcome in [`docs/adr/006-graph-layout-stack-spike.md`](../../docs/adr/006-graph-layout-stack-spike.md) and keep `normalizeGraphPayload` + `GraphDetailPanel` as the contract.
+2. **Wave 4.2** — Canvas micro-polish: explicit `Map` for nodes where helpful; **edge label draw order** so hovered/selected labels paint last (readability). **Shipped** — see *Canvas micro-polish (Wave 4.2)* below.
+3. **Wave 4.3** — Time-boxed **layout stack spike**: React Flow / Sigma POC **or** isolated port of osint `useForceSimulation` + QuadTree without OSINT domain hooks — record outcome in [`docs/adr/006-graph-layout-stack-spike.md`](../../docs/adr/006-graph-layout-stack-spike.md) and keep `normalizeGraphPayload` + `GraphDetailPanel` as the contract. **When prioritized**, follow the *Execution checklist* in that ADR (spike remains optional until product need).
+
+### Canvas micro-polish (Wave 4.2)
+
+**Goal:** Readability when edges and nodes overlap: **hovered/selected** edge and node chrome paint **on top**, edge type labels are not hidden under node discs.
+
+**Shipped (Wave 4.2):**
+
+- [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx): Paint order — edge strokes, then node discs (**hovered/selected discs last**), then edge labels (**inactive first, hovered/selected edge labels last**, stable id tie-break), then node name labels (**hovered/selected last**). `nodeById` remains for hit-testing; draw loops use sorted `graph.nodes` / `graph.edges` for z-order.
 
 ### Standalone Graph page — workspace maximization (Wave 5)
 
@@ -191,6 +206,24 @@ flowchart TB
 - [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx) (`standalone`): prop `focusLayout` — initial **title / legend / alerts / details** collapsed for max canvas; **slider** for detail column `minmax` width (260–480px), key `graphStandaloneDetailMinPx`.
 - Unit tests: [`graphPageUrl.test.js`](../../ui/src/pages/graphPageUrl.test.js).
 
+### Standalone Graph page — drag-resize gutter (Wave 7)
+
+**Goal:** On `md+`, when the **detail** column is visible in standalone mode, users can **drag a vertical gutter** between the graph and detail regions to adjust width; the same pixel bounds and `localStorage` key as the Wave 6 slider (`graphStandaloneDetailMinPx`). Shared helpers in [`graphDetailColumnWidth.js`](../../ui/src/components/graph/graphDetailColumnWidth.js).
+
+**Shipped (Wave 7):**
+
+- [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx): CSS grid adds a **6px** track between graph and detail; `gap` on `md` is **0** when the split is active; pointer-driven resize updates `detailMinPx`; gutter hidden on `xs`.
+- Tests: [`graphDetailColumnWidth.test.js`](../../ui/src/components/graph/graphDetailColumnWidth.test.js).
+
+### Standalone Graph page — API contract note + gutter polish (Wave 8)
+
+**Goal:** Surface **client-only** detail split persistence in [`frontend-ui-api-contracts-v1.md`](./frontend-ui-api-contracts-v1.md) (key `graphStandaloneDetailMinPx`, slider + `md+` gutter). Harden drag: **pointer capture** on the gutter and **cursor / user-select** guard on `document.body` during drag.
+
+**Shipped (Wave 8):**
+
+- [`frontend-ui-api-contracts-v1.md`](./frontend-ui-api-contracts-v1.md): paragraph under UI route `/graph` for localStorage split width (no server contract).
+- [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx): gutter pointer handling uses capture + cleanup on body styles.
+
 ## Phased delivery (mirror master plan)
 
 1. **4.1** — Document and test edge cases on normalized model; align with this spec.
@@ -210,3 +243,6 @@ flowchart TB
 - [x] Graph type legend compact `xs` spacing; benchmark dialogs full-screen on narrow viewports.
 - [x] Standalone `/graph`: viewport-height flex chain; collapsible chrome; optional `?compact=1`; collapsible legend/alerts; hide details panel (Wave 5).
 - [x] Standalone `/graph`: optional `?focus=1`; detail column min-width slider + persistence (Wave 6).
+- [x] Standalone graph + details: drag-resize gutter on `md+` (Wave 7).
+- [x] `/graph` client layout persistence documented in frontend-ui-api-contracts; gutter drag polish (Wave 8).
+- [x] Canvas Wave 4.2: z-order for edge labels vs nodes; hover/selected labels and discs on top (see *Canvas micro-polish (Wave 4.2)*).

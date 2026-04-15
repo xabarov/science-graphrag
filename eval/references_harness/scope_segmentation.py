@@ -10,6 +10,7 @@ from science_graphrag.ingestion.llm.reference_tool_router import (
 )
 
 _REF_HEAD_LINE = re.compile(r"^#{1,3}\s*(references|bibliography)\s*$", re.IGNORECASE)
+_BRACKET_ENTRY_SPLIT = re.compile(r"\n(?=\s*\[\d+\])")
 
 
 def normalize_excerpt_body_lines(excerpt: str) -> list[str]:
@@ -65,6 +66,20 @@ def _split_style_for_hint(
     return style
 
 
+def _post_split_collapsed_bracket_blob(entries: list[str]) -> list[str]:
+    """
+    When line-based split or the LLM returns one blob with many ``[n]`` entries, split on
+    ``[n]`` boundaries (scope_llm collapse regression).
+    """
+    if len(entries) != 1:
+        return entries
+    blob = entries[0].strip()
+    if len(re.findall(r"\[\d+\]", blob)) < 2:
+        return entries
+    parts = [p.strip() for p in _BRACKET_ENTRY_SPLIT.split(blob) if p.strip()]
+    return parts if len(parts) >= 2 else entries
+
+
 def pred_raw_entries_from_bibliography_excerpt(
     excerpt: str,
     bibliography_style_hint: str | None,
@@ -81,14 +96,16 @@ def pred_raw_entries_from_bibliography_excerpt(
     lines = normalize_excerpt_body_lines(excerpt)
 
     if hint == "author_year":
-        return [
+        merged_ay = [
             r.raw_reference.strip()
             for r in extract_references_from_bibliography_excerpt(excerpt)
             if r.raw_reference
         ]
+        return _post_split_collapsed_bracket_blob(merged_ay)
 
     style = _split_style_for_hint(lines, bibliography_style_hint)
     split_entries = split_reference_entries(lines, style) if lines else []
+    split_entries = _post_split_collapsed_bracket_blob(split_entries)
     if len(split_entries) >= 2:
         return split_entries
 
@@ -97,6 +114,7 @@ def pred_raw_entries_from_bibliography_excerpt(
         for r in extract_references_from_bibliography_excerpt(excerpt)
         if r.raw_reference
     ]
+    merged = _post_split_collapsed_bracket_blob(merged)
     if merged:
         return merged
     return split_entries

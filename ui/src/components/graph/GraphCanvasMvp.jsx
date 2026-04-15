@@ -1,5 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Box from "@mui/material/Box";
+import Slider from "@mui/material/Slider";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 
 import { CursorSmallButton } from "../common/index.js";
@@ -16,6 +18,10 @@ import {
   truncateCanvasLabel,
 } from "./graphCanvasStyle.js";
 import { clipSegmentByDiscInsets, distancePointToSegment } from "./graphCanvasGeometry.js";
+import { getGraphLayoutSignature } from "./graphFlowAdapter.js";
+import { buildSimulationState } from "./graphSimulationAdapter.js";
+import { useScienceGraphForceSimulation } from "./physics/useScienceGraphForceSimulation.js";
+import { percentToRepulsion, REPULSION_DEFAULT_PERCENT } from "./physics/simConstants.js";
 
 const LABEL_FONT =
   '600 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif';
@@ -30,17 +36,35 @@ const MIN_SCALE = 0.06;
 const MAX_SCALE = 8;
 const DRAG_THRESHOLD_PX = 5;
 const FIT_PADDING = 40;
+/** World-units jitter on force restart (osint-style re-spread around circle seed). */
+const FORCE_RESTART_JITTER_WORLD = 56;
 /** Minimum drawing height before container measurement (matches workspace column expectations). */
 const MIN_CANVAS_HEIGHT = 280;
 
+const LS_GRAPH_CANVAS_REPULSION = "graphCanvasRepulsionPercent";
+
+function readRepulsionPercentStored() {
+  if (typeof window === "undefined") return REPULSION_DEFAULT_PERCENT;
+  try {
+    const v = window.localStorage.getItem(LS_GRAPH_CANVAS_REPULSION);
+    if (v == null) return REPULSION_DEFAULT_PERCENT;
+    const n = Number(v);
+    if (!Number.isFinite(n)) return REPULSION_DEFAULT_PERCENT;
+    return Math.min(100, Math.max(0, n));
+  } catch {
+    return REPULSION_DEFAULT_PERCENT;
+  }
+}
+
 /**
- * Phase 4.2–4.3: canvas with world coords, zoom/pan, fit/reset/center, keyboard (Escape).
+ * Phase 4.2–4.3: canvas with world coords, zoom/pan, fit/reset/center, keyboard (Escape). Wave 4.2: draw order — edge strokes, node discs, edge labels (active last), node labels (active last).
  * @param {{
  *   graph: { nodes: Array<{ id: string }>, edges: Array<{ source: string, target: string, id?: string }> },
  *   selectedNodeId: string,
  *   selectedEdgeId?: string,
  *   onSelectNode?: (nodeId: string) => void,
  *   onSelectEdge?: (edgeId: string) => void,
+ *   layoutMode?: "circle" | "force",
  * }} props
  */
 export default function GraphCanvasMvp({
@@ -49,6 +73,7 @@ export default function GraphCanvasMvp({
   selectedEdgeId = "",
   onSelectNode,
   onSelectEdge,
+  layoutMode = "circle",
 }) {
   const canvasRef = useRef(null);
   const wrapRef = useRef(null);
@@ -71,10 +96,49 @@ export default function GraphCanvasMvp({
     startTy: 0,
     pointerId: null,
   });
+  const nodeDragRef = useRef({
+    active: false,
+    moved: false,
+    nodeId: "",
+    startX: 0,
+    startY: 0,
+    pointerId: null,
+  });
+  const draggedNodePositionRef = useRef(null);
+  const fixedNodesRef = useRef(new Set());
+  const prevLayoutModeRef = useRef(layoutMode);
+  const simNodesRef = useRef([]);
+
+  const [simNodes, setSimNodes] = useState([]);
+  const [simLinks, setSimLinks] = useState([]);
+  const [isSimulationStable, setIsSimulationStable] = useState(false);
+  const [repulsionPercent, setRepulsionPercent] = useState(() => readRepulsionPercentStored());
+  const [forceSimRunNonce, setForceSimRunNonce] = useState(0);
+  const [pinnedNodeCount, setPinnedNodeCount] = useState(0);
 
   const layoutKey = useMemo(() => graph.nodes.map((n) => n.id).join("\0"), [graph.nodes]);
+  const topologySignature = useMemo(
+    () => getGraphLayoutSignature({ nodes: graph.nodes, edges: graph.edges }),
+    [graph.nodes, graph.edges],
+  );
+  const simulationSignature = useMemo(
+    () => `${topologySignature}|${forceSimRunNonce}`,
+    [topologySignature, forceSimRunNonce],
+  );
   const layoutWorldRadius = useMemo(() => worldRadiusForNodeCount(graph.nodes.length), [graph.nodes.length]);
   const nodeById = useMemo(() => new Map(graph.nodes.map((n) => [n.id, n])), [graph.nodes]);
+
+  const repulsionStrength = useMemo(() => percentToRepulsion(repulsionPercent), [repulsionPercent]);
+
+  const canvasSize = useMemo(
+    () => ({
+      width: Math.max(1, hostSize.width || 1),
+      height: Math.max(MIN_CANVAS_HEIGHT, hostSize.height || MIN_CANVAS_HEIGHT),
+    }),
+    [hostSize.height, hostSize.width],
+  );
+
+  simNodesRef.current = simNodes;
 
   const getViewportDims = useCallback(() => {
     const host = canvasHostRef.current;
@@ -83,27 +147,141 @@ export default function GraphCanvasMvp({
     return { w, h };
   }, [hostSize.height, hostSize.width]);
 
+  /** @param {"circle" | "force" | "auto"} mode */
+  const applyFitInner = useCallback(
+    (mode = "auto") => {
+      if (graph.nodes.length === 0) return;
+      const { w, h } = getViewportDims();
+      const useForce =
+        (mode === "force" || (mode === "auto" && layoutMode === "force")) && simNodesRef.current.length > 0;
+      const positions = useForce
+        ? new Map(simNodesRef.current.map((n) => [n.id, { x: n.x, y: n.y }]))
+        : computeWorldLayout(graph.nodes, layoutWorldRadius);
+      positionsRef.current = positions;
+      const next = computeFitTransform(positions, w, h, NODE_RADIUS, FIT_PADDING);
+      transformRef.current = next;
+      setTransform(next);
+    },
+    [getViewportDims, graph.nodes, layoutWorldRadius, layoutMode],
+  );
+
   const applyFit = useCallback(() => {
-    if (graph.nodes.length === 0) return;
-    const { w, h } = getViewportDims();
-    const positions = computeWorldLayout(graph.nodes, layoutWorldRadius);
+    applyFitInner("auto");
+  }, [applyFitInner]);
+
+  const zoomAtViewportCenter = useCallback(
+    (factor) => {
+      const { w, h } = getViewportDims();
+      const cx = w / 2;
+      const cy = h / 2;
+      const { scale, tx, ty } = transformRef.current;
+      const world = screenToWorld(cx, cy, scale, tx, ty);
+      const newScale = Math.min(Math.max(scale * factor, MIN_SCALE), MAX_SCALE);
+      const next = {
+        scale: newScale,
+        tx: cx - world.x * newScale,
+        ty: cy - world.y * newScale,
+      };
+      transformRef.current = next;
+      setTransform(next);
+    },
+    [getViewportDims],
+  );
+
+  const forceSimEnabled = layoutMode === "force" && simNodes.length > 0;
+
+  useScienceGraphForceSimulation(
+    forceSimEnabled,
+    simNodes,
+    setSimNodes,
+    simLinks,
+    repulsionStrength,
+    isSimulationStable,
+    setIsSimulationStable,
+    fixedNodesRef,
+    draggedNodePositionRef,
+    canvasSize,
+    simulationSignature,
+  );
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(LS_GRAPH_CANVAS_REPULSION, String(repulsionPercent));
+    } catch {
+      /* ignore */
+    }
+  }, [repulsionPercent]);
+
+  useLayoutEffect(() => {
+    if (layoutMode !== "force") return;
+    setForceSimRunNonce(0);
+    const built = buildSimulationState(graph);
+    setSimNodes(built.nodes);
+    setSimLinks(built.links);
+    fixedNodesRef.current.clear();
+    draggedNodePositionRef.current = null;
+    setPinnedNodeCount(0);
+    setIsSimulationStable(false);
+    const positions = new Map(built.nodes.map((n) => [n.id, { x: n.x, y: n.y }]));
     positionsRef.current = positions;
+    const { w, h } = getViewportDims();
     const next = computeFitTransform(positions, w, h, NODE_RADIUS, FIT_PADDING);
     transformRef.current = next;
     setTransform(next);
-  }, [getViewportDims, graph.nodes, layoutWorldRadius]);
+    // graph read from closure matches topologySignature
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- avoid re-seed on resize (getViewportDims) or graph object identity
+  }, [layoutMode, topologySignature]);
+
+  const handleRestartForceSimulation = useCallback(() => {
+    if (layoutMode !== "force" || graph.nodes.length === 0) return;
+    fixedNodesRef.current.clear();
+    draggedNodePositionRef.current = null;
+    setPinnedNodeCount(0);
+    const built = buildSimulationState(graph, { jitterWorld: FORCE_RESTART_JITTER_WORLD });
+    setSimLinks(built.links);
+    setSimNodes(built.nodes);
+    setForceSimRunNonce((n) => n + 1);
+    setIsSimulationStable(false);
+    const positions = new Map(built.nodes.map((n) => [n.id, { x: n.x, y: n.y }]));
+    positionsRef.current = positions;
+    const { w, h } = getViewportDims();
+    const next = computeFitTransform(positions, w, h, NODE_RADIUS, FIT_PADDING);
+    transformRef.current = next;
+    setTransform(next);
+  }, [getViewportDims, graph, layoutMode]);
+
+  const handleUnpinAll = useCallback(() => {
+    if (layoutMode !== "force") return;
+    if (fixedNodesRef.current.size === 0) return;
+    fixedNodesRef.current.clear();
+    setPinnedNodeCount(0);
+    setIsSimulationStable(false);
+  }, [layoutMode]);
+
+  useEffect(() => {
+    const prev = prevLayoutModeRef.current;
+    prevLayoutModeRef.current = layoutMode;
+    if (prev === "force" && layoutMode === "circle") {
+      const raf = requestAnimationFrame(() => {
+        applyFitInner("circle");
+      });
+      return () => cancelAnimationFrame(raf);
+    }
+    return undefined;
+  }, [layoutMode, applyFitInner]);
 
   useEffect(() => {
     transformRef.current = transform;
   }, [transform]);
 
   useEffect(() => {
+    if (layoutMode === "force") return;
     let raf = 0;
     raf = requestAnimationFrame(() => {
-      applyFit();
+      applyFitInner("circle");
     });
     return () => cancelAnimationFrame(raf);
-  }, [layoutKey, applyFit]);
+  }, [layoutKey, layoutMode, applyFitInner]);
 
   useEffect(() => {
     let raf = 0;
@@ -129,6 +307,13 @@ export default function GraphCanvasMvp({
     return () => ro.disconnect();
   }, []);
 
+  const getPositionsForFrame = useCallback(() => {
+    if (layoutMode === "force" && simNodes.length > 0) {
+      return new Map(simNodes.map((n) => [n.id, { x: n.x, y: n.y }]));
+    }
+    return computeWorldLayout(graph.nodes, layoutWorldRadius);
+  }, [layoutMode, simNodes, graph.nodes, layoutWorldRadius]);
+
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     const host = canvasHostRef.current;
@@ -145,7 +330,7 @@ export default function GraphCanvasMvp({
     ctx.fillRect(0, 0, w, h);
 
     const { scale, tx, ty } = transformRef.current;
-    const positions = computeWorldLayout(graph.nodes, layoutWorldRadius);
+    const positions = getPositionsForFrame();
     positionsRef.current = positions;
 
     for (const edge of graph.edges) {
@@ -183,12 +368,39 @@ export default function GraphCanvasMvp({
       }
     }
 
+    const nodesForDiscs = [...graph.nodes].sort((a, b) => {
+      const rank = (n) => (n.id === hoveredNodeId || n.id === selectedNodeId ? 1 : 0);
+      const dr = rank(a) - rank(b);
+      if (dr !== 0) return dr;
+      return String(a.id).localeCompare(String(b.id));
+    });
+    for (const node of nodesForDiscs) {
+      const pw = positions.get(node.id);
+      if (!pw) continue;
+      const p = worldToScreen(pw.x, pw.y, scale, tx, ty);
+      const sel = node.id === selectedNodeId;
+      const r = NODE_RADIUS;
+      const style = getScienceGraphNodeStyle(node.type, {
+        selected: sel,
+        hovered: !sel && node.id === hoveredNodeId,
+      });
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r, 0, 2 * Math.PI);
+      ctx.fillStyle = style.fill;
+      ctx.fill();
+      ctx.strokeStyle = style.stroke;
+      ctx.lineWidth = style.lineWidth;
+      ctx.stroke();
+    }
+
     ctx.font = EDGE_LABEL_FONT;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     const edgesForLabels = [...graph.edges].sort((a, b) => {
       const rank = (e) => (e.id === hoveredEdgeId || e.id === selectedEdgeId ? 1 : 0);
-      return rank(a) - rank(b);
+      const dr = rank(a) - rank(b);
+      if (dr !== 0) return dr;
+      return String(a.id ?? "").localeCompare(String(b.id ?? ""));
     });
     for (const edge of edgesForLabels) {
       const p0w = positions.get(edge.source);
@@ -214,29 +426,16 @@ export default function GraphCanvasMvp({
       ctx.fillText(elabel, midX, midY);
     }
 
-    for (const node of nodeById.values()) {
-      const pw = positions.get(node.id);
-      if (!pw) continue;
-      const p = worldToScreen(pw.x, pw.y, scale, tx, ty);
-      const sel = node.id === selectedNodeId;
-      const r = NODE_RADIUS;
-      const style = getScienceGraphNodeStyle(node.type, {
-        selected: sel,
-        hovered: !sel && node.id === hoveredNodeId,
-      });
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, r, 0, 2 * Math.PI);
-      ctx.fillStyle = style.fill;
-      ctx.fill();
-      ctx.strokeStyle = style.stroke;
-      ctx.lineWidth = style.lineWidth;
-      ctx.stroke();
-    }
-
     ctx.font = LABEL_FONT;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    for (const node of nodeById.values()) {
+    const nodesForLabels = [...graph.nodes].sort((a, b) => {
+      const rank = (n) => (n.id === hoveredNodeId || n.id === selectedNodeId ? 1 : 0);
+      const dr = rank(a) - rank(b);
+      if (dr !== 0) return dr;
+      return String(a.id).localeCompare(String(b.id));
+    });
+    for (const node of nodesForLabels) {
       const pw = positions.get(node.id);
       if (!pw) continue;
       const p = worldToScreen(pw.x, pw.y, scale, tx, ty);
@@ -258,13 +457,12 @@ export default function GraphCanvasMvp({
       ctx.fillText(text, p.x, midY);
     }
   }, [
+    getPositionsForFrame,
     getViewportDims,
     graph.edges,
     graph.nodes,
     hoveredEdgeId,
     hoveredNodeId,
-    layoutWorldRadius,
-    nodeById,
     selectedEdgeId,
     selectedNodeId,
   ]);
@@ -295,10 +493,9 @@ export default function GraphCanvasMvp({
     return () => el.removeEventListener("wheel", onWheel);
   }, []);
 
-  function hitTestWorld(wx, wy) {
-    const positions = positionsRef.current;
+  function hitTestWorld(wx, wy, posMap = positionsRef.current) {
     for (const node of nodeById.values()) {
-      const p = positions.get(node.id);
+      const p = posMap.get(node.id);
       if (!p) continue;
       const dx = wx - p.x;
       const dy = wy - p.y;
@@ -337,12 +534,14 @@ export default function GraphCanvasMvp({
       const canvas = canvasRef.current;
       if (!canvas) return;
       if (dragRef.current.active && dragRef.current.moved) return;
+      if (nodeDragRef.current.active && nodeDragRef.current.moved) return;
       const rect = canvas.getBoundingClientRect();
       const lx = cx - rect.left;
       const ly = cy - rect.top;
       const { scale, tx, ty } = transformRef.current;
       const world = screenToWorld(lx, ly, scale, tx, ty);
-      const nodeId = hitTestWorld(world.x, world.y) ?? "";
+      const posMap = getPositionsForFrame();
+      const nodeId = hitTestWorld(world.x, world.y, posMap) ?? "";
       if (nodeId) {
         setHoveredNodeId((prev) => (prev === nodeId ? prev : nodeId));
         setHoveredEdgeId("");
@@ -350,8 +549,7 @@ export default function GraphCanvasMvp({
         return;
       }
       setHoveredNodeId("");
-      const positions = computeWorldLayout(graph.nodes, layoutWorldRadius);
-      const edgeId = hitTestClosestEdgeId(lx, ly, positions, scale, tx, ty);
+      const edgeId = hitTestClosestEdgeId(lx, ly, posMap, scale, tx, ty);
       setHoveredEdgeId((prev) => (prev === edgeId ? prev : edgeId));
       setCanvasCursor(edgeId ? "pointer" : "grab");
     });
@@ -361,11 +559,34 @@ export default function GraphCanvasMvp({
     if (ev.button !== 0) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
-    canvas.setPointerCapture(ev.pointerId);
     const rect = canvas.getBoundingClientRect();
     const x = ev.clientX - rect.left;
     const y = ev.clientY - rect.top;
-    const { tx, ty } = transformRef.current;
+    const { scale, tx, ty } = transformRef.current;
+
+    if (layoutMode === "force" && simNodes.length > 0) {
+      const world = screenToWorld(x, y, scale, tx, ty);
+      const posMap = getPositionsForFrame();
+      const nodeId = hitTestWorld(world.x, world.y, posMap);
+      if (nodeId) {
+        canvas.setPointerCapture(ev.pointerId);
+        nodeDragRef.current = {
+          active: true,
+          moved: false,
+          nodeId,
+          startX: x,
+          startY: y,
+          pointerId: ev.pointerId,
+        };
+        draggedNodePositionRef.current = { id: nodeId, x: world.x, y: world.y };
+        setSimNodes((prev) =>
+          prev.map((n) => (n.id === nodeId ? { ...n, x: world.x, y: world.y, vx: 0, vy: 0 } : n)),
+        );
+        return;
+      }
+    }
+
+    canvas.setPointerCapture(ev.pointerId);
     dragRef.current = {
       active: true,
       moved: false,
@@ -378,6 +599,30 @@ export default function GraphCanvasMvp({
   }
 
   function handleCanvasPointerMove(ev) {
+    const nd = nodeDragRef.current;
+    if (nd.active) {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = ev.clientX - rect.left;
+      const y = ev.clientY - rect.top;
+      const dx = x - nd.startX;
+      const dy = y - nd.startY;
+      if (!nd.moved && dx * dx + dy * dy > DRAG_THRESHOLD_PX * DRAG_THRESHOLD_PX) {
+        nd.moved = true;
+        setHoveredNodeId("");
+        setHoveredEdgeId("");
+        setCanvasCursor("grabbing");
+      }
+      const { scale, tx, ty } = transformRef.current;
+      const world = screenToWorld(x, y, scale, tx, ty);
+      draggedNodePositionRef.current = { id: nd.nodeId, x: world.x, y: world.y };
+      setSimNodes((prev) =>
+        prev.map((n) => (n.id === nd.nodeId ? { ...n, x: world.x, y: world.y, vx: 0, vy: 0 } : n)),
+      );
+      return;
+    }
+
     const d = dragRef.current;
     if (d.active) {
       const canvas = canvasRef.current;
@@ -387,7 +632,7 @@ export default function GraphCanvasMvp({
       const y = ev.clientY - rect.top;
       const dx = x - d.startX;
       const dy = y - d.startY;
-      if (!d.moved && (dx * dx + dy * dy > DRAG_THRESHOLD_PX * DRAG_THRESHOLD_PX)) {
+      if (!d.moved && dx * dx + dy * dy > DRAG_THRESHOLD_PX * DRAG_THRESHOLD_PX) {
         d.moved = true;
         setHoveredNodeId("");
         setHoveredEdgeId("");
@@ -410,9 +655,38 @@ export default function GraphCanvasMvp({
   }
 
   function handlePointerUp(ev) {
+    const canvas = canvasRef.current;
+    const nd = nodeDragRef.current;
+    if (nd.active) {
+      try {
+        canvas?.releasePointerCapture(ev.pointerId);
+      } catch {
+        /* ignore */
+      }
+      const { nodeId, moved } = nd;
+      nodeDragRef.current = {
+        active: false,
+        moved: false,
+        nodeId: "",
+        startX: 0,
+        startY: 0,
+        pointerId: null,
+      };
+      draggedNodePositionRef.current = null;
+      if (moved && isSimulationStable) {
+        fixedNodesRef.current.add(nodeId);
+        setPinnedNodeCount(fixedNodesRef.current.size);
+      }
+      if (!moved) {
+        onSelectEdge?.("");
+        onSelectNode?.(nodeId);
+      }
+      queueHoverPick(ev.clientX, ev.clientY);
+      return;
+    }
+
     const d = dragRef.current;
     if (!d.active) return;
-    const canvas = canvasRef.current;
     try {
       canvas?.releasePointerCapture(ev.pointerId);
     } catch {
@@ -426,13 +700,13 @@ export default function GraphCanvasMvp({
       const y = ev.clientY - rect.top;
       const { scale, tx, ty } = transformRef.current;
       const world = screenToWorld(x, y, scale, tx, ty);
-      const nodeId = hitTestWorld(world.x, world.y);
+      const posMap = getPositionsForFrame();
+      const nodeId = hitTestWorld(world.x, world.y, posMap);
       if (nodeId) {
         onSelectEdge?.("");
         onSelectNode?.(nodeId);
       } else {
-        const positions = computeWorldLayout(graph.nodes, layoutWorldRadius);
-        const edgeId = hitTestClosestEdgeId(x, y, positions, scale, tx, ty);
+        const edgeId = hitTestClosestEdgeId(x, y, posMap, scale, tx, ty);
         if (edgeId) {
           onSelectNode?.("");
           onSelectEdge?.(edgeId);
@@ -449,7 +723,7 @@ export default function GraphCanvasMvp({
   function handleCenterOnSelected() {
     if (!selectedNodeId) return;
     const { w, h } = getViewportDims();
-    const positions = positionsRef.current;
+    const positions = layoutMode === "force" && simNodes.length > 0 ? getPositionsForFrame() : positionsRef.current;
     const pw = positions.get(selectedNodeId);
     if (!pw) return;
     const { scale } = transformRef.current;
@@ -488,6 +762,30 @@ export default function GraphCanvasMvp({
       ev.preventDefault();
       onSelectNode?.("");
       onSelectEdge?.("");
+      return;
+    }
+    const el = ev.target;
+    if (
+      el &&
+      (String(el.tagName).toUpperCase() === "INPUT" ||
+        String(el.tagName).toUpperCase() === "TEXTAREA" ||
+        el.isContentEditable)
+    ) {
+      return;
+    }
+    if (ev.key === "+" || ev.key === "=") {
+      ev.preventDefault();
+      zoomAtViewportCenter(1.08);
+      return;
+    }
+    if (ev.key === "-" || ev.key === "_") {
+      ev.preventDefault();
+      zoomAtViewportCenter(0.92);
+      return;
+    }
+    if (ev.key === "0" && !ev.ctrlKey && !ev.metaKey && !ev.altKey) {
+      ev.preventDefault();
+      applyFit();
     }
   }
 
@@ -518,6 +816,9 @@ export default function GraphCanvasMvp({
     : selectedNodeId
       ? `Selected node ${selectedNodeId}.`
       : "No node or edge selected.";
+
+  const simStatus =
+    layoutMode === "force" ? (isSimulationStable ? "Layout stable." : "Layout simulating.") : "";
 
   return (
     <Box
@@ -563,13 +864,65 @@ export default function GraphCanvasMvp({
         }}
       >
         {selectionLive}
+        {simStatus ? ` ${simStatus}` : ""}
       </Typography>
       <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1, px: 1.5, pt: 1, pb: 0.5, flexShrink: 0 }}>
         <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", flex: "1 1 140px" }}>
           Wheel over the canvas zooms in/out (page scroll works when the cursor is outside this area). Drag to pan · click a node
-          or edge to select · Escape clears selection (focus graph first). Use &quot;Center on selected&quot; to align the viewport on a
-          node.
+          or edge to select · Escape clears selection (focus graph first). Keys + / − / 0 zoom and fit when the graph has focus.
+          Use &quot;Center on selected&quot; to align the viewport on a node.
+          {layoutMode === "force"
+            ? " Force mode: drag a node; after the layout stabilizes, release to pin. Restart sim respreads; Unpin all releases pins."
+            : ""}
         </Typography>
+        {layoutMode === "force" ? (
+          <Box
+            sx={{
+              flex: "1 1 160px",
+              minWidth: 140,
+              maxWidth: 280,
+              px: 0.5,
+            }}
+          >
+            <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.45)", mb: 0.25 }}>
+              Repulsion ({Math.round(repulsionPercent)}%)
+            </Typography>
+            <Slider
+              size="small"
+              value={repulsionPercent}
+              min={0}
+              max={100}
+              step={1}
+              onChange={(_, v) => setRepulsionPercent(v)}
+              getAriaValueText={() => `${Math.round(repulsionPercent)} percent`}
+              sx={{
+                color: "rgba(129,140,248,0.85)",
+                py: 0.25,
+                "& .MuiSlider-thumb": { width: 12, height: 12 },
+                "& .MuiSlider-track": { border: "none" },
+              }}
+              aria-label="Force layout repulsion strength"
+            />
+          </Box>
+        ) : null}
+        {layoutMode === "force" ? (
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "center" }}>
+            <Tooltip title="Reseed positions with jitter and rerun physics (like osint reset)" placement="top" enterDelay={400}>
+              <span>
+                <CursorSmallButton type="button" onClick={handleRestartForceSimulation}>
+                  Restart sim
+                </CursorSmallButton>
+              </span>
+            </Tooltip>
+            <Tooltip title="Clear pinned nodes so forces move them again" placement="top" enterDelay={400}>
+              <span>
+                <CursorSmallButton type="button" onClick={handleUnpinAll} disabled={pinnedNodeCount === 0}>
+                  Unpin all
+                </CursorSmallButton>
+              </span>
+            </Tooltip>
+          </Box>
+        ) : null}
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
           <CursorSmallButton type="button" onClick={handleResetView}>
             Fit

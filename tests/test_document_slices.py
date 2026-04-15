@@ -58,3 +58,21 @@ def test_strip_repeated_boilerplate_drops_consecutive_page_numbers():
     raw = "Intro\n12\n12\n12\nMore text"
     out = strip_repeated_boilerplate(raw)
     assert out.count("12") < raw.count("12")
+
+
+def test_reference_span_stops_before_plain_appendix_letter_sections():
+    """PDF→MD may continue with ``A Section`` appendix lines without ``##`` (CVPR-style)."""
+    text = (
+        "# Paper\n\n## References\n\n[1] Doe et al. 2020.\n\n"
+        "9\n\n"
+        "[2] Roe et al. 2021.\n\n"
+        "10\n\n"
+        "A More Discussions about the Distributions\n\nExtra."
+    )
+    spans = find_reference_section_spans(text)
+    assert len(spans) == 1
+    start, end = spans[0]
+    body = text[start:end]
+    assert "[1]" in body and "[2]" in body
+    assert "A More Discussions" not in body
+    assert "More Discussions" not in body

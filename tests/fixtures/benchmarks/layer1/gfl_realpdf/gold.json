@@ -47,7 +47,7 @@
   "references_benchmark": {
     "bibliography": {
       "start_line": 633,
-      "end_line": 701
+      "end_line": 702
     },
     "raw_entries": [
       "[1] Zhaowei Cai and Nuno Vasconcelos. Cascade r-cnn: Delving into high quality object detection. In CVPR,\n2018.",
@@ -85,7 +85,7 @@
       "[33] Chenchen Zhu, Fangyi Chen, Zhiqiang Shen, and Marios Savvides. Soft anchor-point object detection. In\nCVPR, 2020.",
       "[34] Chenchen Zhu, Yihui He, and Marios Savvides. Feature selective anchor-free module for single-shot object\ndetection. In CVPR, 2019.",
       "[35] Li Zhu, Zihao Xie, Liman Liu, Bo Tao, and Wenbing Tao. Iou-uniform r-cnn: Breaking through the\nlimitations of rpn. arXiv preprint arXiv:1912.05190, 2019.",
-      "[36] Xizhou Zhu, Han Hu, Stephen Lin, and Jifeng Dai. Deformable convnets v2: More deformable, better"
+      "[36] Xizhou Zhu, Han Hu, Stephen Lin, and Jifeng Dai. Deformable convnets v2: More deformable, better\nresults. In CVPR, 2019."
     ],
     "expected_count": 36,
     "stratum": "bracket_numbered_realpdf",

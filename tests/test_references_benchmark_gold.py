@@ -10,7 +10,10 @@ import pytest
 from eval.layer1.spec import Layer1GoldSpec
 from eval.references_harness.metrics import gold_line_set_for_span_iou
 from eval.references_harness.runner import run_case
-from eval.references_harness.scope_segmentation import pred_raw_entries_from_bibliography_excerpt
+from eval.references_harness.scope_segmentation import (
+    _post_split_collapsed_bracket_blob,
+    pred_raw_entries_from_bibliography_excerpt,
+)
 from eval.references_harness.validate import assert_references_benchmark_consistent
 
 FIXTURE_ROOT = Path(__file__).resolve().parent / "fixtures" / "benchmarks" / "layer1"
@@ -66,6 +69,14 @@ def test_heuristic_modes_run_without_error() -> None:
         assert r.error is None
         assert r.gold_entry_count == 5
         assert r.pred_entry_count >= 1
+
+
+def test_post_split_collapsed_bracket_blob_splits_merged_excerpt() -> None:
+    """LLM may return one string with multiple ``[n]`` blocks; recover entries."""
+    merged = ["[1] First.\n[2] Second."]
+    out = _post_split_collapsed_bracket_blob(merged)
+    assert len(out) == 2
+    assert out[0].startswith("[1]") and out[1].startswith("[2]")
 
 
 def test_pred_entries_from_excerpt_matches_gold_count_bracket() -> None:

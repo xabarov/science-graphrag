@@ -1,7 +1,39 @@
 import { describe, expect, it } from "vitest";
 
 import { SAMPLE_QUERY_SEMANTIC_OFF, SAMPLE_QUERY_SEMANTIC_ON } from "../fixtures/researchSemanticSamples.js";
-import { buildAskAnswerRationale, buildQueryBody, formatRetrievalSummaryLines, normalizeQueryResponse } from "./researchApi.js";
+import {
+  buildAskAnswerRationale,
+  buildQueryBody,
+  formatResearchApiError,
+  formatRetrievalSummaryLines,
+  normalizeQueryResponse,
+} from "./researchApi.js";
+
+describe("formatResearchApiError", () => {
+  it("prefers FastAPI string detail from axios-like error", () => {
+    expect(
+      formatResearchApiError({
+        response: { data: { detail: "not_found" } },
+      }),
+    ).toBe("not_found");
+  });
+
+  it("stringifies object detail", () => {
+    expect(
+      formatResearchApiError({
+        response: { data: { detail: [{ loc: ["body"], msg: "x", type: "y" }] } },
+      }),
+    ).toBe(JSON.stringify([{ loc: ["body"], msg: "x", type: "y" }]));
+  });
+
+  it("falls back to Error message", () => {
+    expect(formatResearchApiError(new Error("network"))).toBe("network");
+  });
+
+  it("stringifies unknown values", () => {
+    expect(formatResearchApiError(null)).toBe("null");
+  });
+});
 
 describe("buildQueryBody", () => {
   it("trims query and maps empty work id to null", () => {

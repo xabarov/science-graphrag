@@ -20,5 +20,6 @@
 | [004](004-ontology-v1-scope.md) | Scope ontology v1: Method, Dataset; SoT; anti-bloat |
 | [005](005-authorship-reified-node.md) | Узел `Authorship` vs свойства на ребре `Work–Author`; критерии выбора |
 | [006](006-graph-layout-stack-spike.md) | Wave 4.3: spike силового/layout-стека (React Flow/Sigma vs порт osint simulation) |
+| [007](007-canvas-force-layout-port.md) | Canvas: Circle vs Force (порт силовой симуляции osint-gr без OSINT-домена) |
 
 Новые ADR нумеровать по порядку (`001-...`, `002-...`); при отмене пометить как Superseded и сослаться на замену.

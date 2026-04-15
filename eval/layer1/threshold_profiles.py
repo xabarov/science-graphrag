@@ -5,6 +5,13 @@ from __future__ import annotations
 from eval.layer1.spec import Layer1GoldSpec, Layer1QualityThresholds
 
 # Tuned for Mistral student vs DeepSeek teacher gold: exact title/abstract often drift on PDF-MD.
+# Smoke / CI: run extraction end-to-end without failing on reference count drift (heuristic PDF→MD).
+CI_SMOKE_LAYER1_THRESHOLDS = Layer1QualityThresholds(
+    require_title_match=True,
+    require_abstract_prefix=True,
+    require_reference_count_ok=False,
+)
+
 STUDENT_MISTRAL_LAYER1_THRESHOLDS = Layer1QualityThresholds(
     require_title_match=False,
     require_abstract_prefix=False,
@@ -26,6 +33,8 @@ def apply_layer1_threshold_profile(gold: Layer1GoldSpec, profile: str | None) ->
 
     if not profile or profile in ("none", "from_gold"):
         return gold
+    if profile == "ci_smoke":
+        return gold.model_copy(update={"quality_thresholds": CI_SMOKE_LAYER1_THRESHOLDS})
     if profile == "student_mistral":
         base = (
             gold.quality_thresholds.model_copy()

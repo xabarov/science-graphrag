@@ -14,6 +14,7 @@ import {
   testLlmConnection,
   updateLlmSettings,
 } from "./SettingsPage/settingsApi.js";
+import { formatResearchApiError } from "../services/researchApi.js";
 
 function PlaceholderSection({ title, description }) {
   return (
@@ -64,7 +65,7 @@ export default function SettingsPage() {
         setActiveSectionId(active);
       } catch (error) {
         if (!mounted) return;
-        setLoadError(error?.response?.data?.detail || error?.message || "Failed to load settings.");
+        setLoadError(formatResearchApiError(error) || "Failed to load settings.");
       } finally {
         if (mounted) setLoading(false);
       }
@@ -89,7 +90,7 @@ export default function SettingsPage() {
       setSnapshot(next);
       setDirtyHint(false);
     } catch (error) {
-      setSaveError(error?.response?.data?.detail || error?.message || "Failed to save settings.");
+      setSaveError(formatResearchApiError(error) || "Failed to save settings.");
     } finally {
       setSaving(false);
     }
@@ -102,7 +103,7 @@ export default function SettingsPage() {
       const next = await deleteLlmSecret();
       setSnapshot(next);
     } catch (error) {
-      setSaveError(error?.response?.data?.detail || error?.message || "Failed to remove API key.");
+      setSaveError(formatResearchApiError(error) || "Failed to remove API key.");
     } finally {
       setSaving(false);
     }
@@ -118,7 +119,7 @@ export default function SettingsPage() {
       setTestResult({
         status: "error",
         error_kind: "request_failed",
-        message: error?.response?.data?.detail || error?.message || "Connection test failed.",
+        message: formatResearchApiError(error) || "Connection test failed.",
       });
     } finally {
       setTesting(false);

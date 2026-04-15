@@ -29,6 +29,7 @@ import {
   getBenchmarkCaseDetail,
   postGraphSnapshotPreview,
 } from "../../services/benchmarkApi.js";
+import { formatResearchApiError } from "../../services/researchApi.js";
 import { CursorButton, CursorSmallButton } from "../../components/common/index.js";
 import {
   compareGraphExpectationsToSnapshot,
@@ -412,10 +413,7 @@ export default function CaseDetailDialog({ open, caseId, family = "layer1", onCl
                             const payload = resp?.data || resp;
                             setServerPreview(payload);
                           } catch (err) {
-                            const d = err?.response?.data?.detail;
-                            setServerPreviewError(
-                              typeof d === "string" ? d : err?.message || "server_preview_failed",
-                            );
+                            setServerPreviewError(formatResearchApiError(err) || "server_preview_failed");
                           } finally {
                             setServerPreviewLoading(false);
                           }
@@ -624,6 +622,75 @@ export default function CaseDetailDialog({ open, caseId, family = "layer1", onCl
                     )}
                   </Box>
                 </Box>
+
+                {snapshotJson && graphExpectationsJson ? (
+                  <Accordion defaultExpanded={false}>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                      <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem" }}>
+                        Side-by-side: canonical graph_expectations vs snapshot file gold (raw)
+                      </Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      <Box
+                        sx={{
+                          display: "grid",
+                          gridTemplateColumns: { xs: "1fr", md: "minmax(0,1fr) minmax(0,1fr)" },
+                          gap: 1.5,
+                          alignItems: "stretch",
+                        }}
+                      >
+                        <Box>
+                          <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.5)", mb: 0.5 }}>
+                            Case gold (gold.json)
+                          </Typography>
+                          <Box
+                            component="pre"
+                            sx={{
+                              whiteSpace: "pre-wrap",
+                              wordBreak: "break-word",
+                              border: "1px solid rgba(255,255,255,0.08)",
+                              borderRadius: 2,
+                              padding: 1.5,
+                              maxHeight: 320,
+                              overflow: "auto",
+                              background: "rgba(255,255,255,0.02)",
+                              fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                              fontSize: "11px",
+                              margin: 0,
+                            }}
+                          >
+                            {graphExpectationsJson}
+                          </Box>
+                        </Box>
+                        <Box>
+                          <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.5)", mb: 0.5 }}>
+                            Snapshot embedded gold (if present)
+                          </Typography>
+                          <Box
+                            component="pre"
+                            sx={{
+                              whiteSpace: "pre-wrap",
+                              wordBreak: "break-word",
+                              border: "1px solid rgba(255,255,255,0.08)",
+                              borderRadius: 2,
+                              padding: 1.5,
+                              maxHeight: 320,
+                              overflow: "auto",
+                              background: "rgba(255,255,255,0.02)",
+                              fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                              fontSize: "11px",
+                              margin: 0,
+                            }}
+                          >
+                            {snapshotGoldFromFile != null
+                              ? JSON.stringify(snapshotGoldFromFile, null, 2)
+                              : "— (no gold object in loaded snapshot JSON)"}
+                          </Box>
+                        </Box>
+                      </Box>
+                    </AccordionDetails>
+                  </Accordion>
+                ) : null}
 
                 {graphCompare.arxivNotes.length ? (
                   <Box>

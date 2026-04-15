@@ -18,7 +18,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 2.604
+    "wall_seconds": 3.16
   },
   {
     "case_id": "atss_realpdf",
@@ -39,7 +39,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 24.775
+    "wall_seconds": 55.722
   },
   {
     "case_id": "cascade_rcnn_realpdf",
@@ -47,10 +47,10 @@
     "gold_start_line": 1089,
     "gold_end_line": 1199,
     "pred_start_line": 1089,
-    "pred_end_line": 1200,
-    "span_line_iou": 0.9823008849557522,
+    "pred_end_line": 1172,
+    "span_line_iou": 0.75,
     "span_start_abs_err": 0,
-    "span_end_abs_err": 1,
+    "span_end_abs_err": 27,
     "gold_entry_count": 34,
     "pred_entry_count": 1,
     "count_abs_error": 33,
@@ -60,7 +60,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 15.645
+    "wall_seconds": 13.947
   },
   {
     "case_id": "centernet_realpdf",
@@ -68,10 +68,10 @@
     "gold_start_line": 1065,
     "gold_end_line": 1236,
     "pred_start_line": 1064,
-    "pred_end_line": 1238,
-    "span_line_iou": 0.9772727272727273,
+    "pred_end_line": 1237,
+    "span_line_iou": 0.9828571428571429,
     "span_start_abs_err": 1,
-    "span_end_abs_err": 2,
+    "span_end_abs_err": 1,
     "gold_entry_count": 47,
     "pred_entry_count": 1,
     "count_abs_error": 46,
@@ -81,7 +81,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 28.813
+    "wall_seconds": 34.895
   },
   {
     "case_id": "cornernet_realpdf",
@@ -102,7 +102,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 23.033
+    "wall_seconds": 42.052
   },
   {
     "case_id": "deformable_detr_realpdf",
@@ -114,16 +114,16 @@
     "span_line_iou": 0.9509803921568627,
     "span_start_abs_err": 1,
     "span_end_abs_err": 3,
-    "gold_entry_count": 36,
-    "pred_entry_count": 0,
-    "count_abs_error": 36,
-    "entry_overlap_f1": 0.0,
+    "gold_entry_count": 44,
+    "pred_entry_count": 41,
+    "count_abs_error": 3,
+    "entry_overlap_f1": 0.9647058823529412,
     "entry_overlap_precision": 1.0,
-    "entry_overlap_recall": 0.0,
+    "entry_overlap_recall": 0.9318181818181818,
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 14.497
+    "wall_seconds": 28.157
   },
   {
     "case_id": "detr_realpdf",
@@ -144,7 +144,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 18.175
+    "wall_seconds": 23.729
   },
   {
     "case_id": "detrs_realpdf",
@@ -152,10 +152,10 @@
     "gold_start_line": 811,
     "gold_end_line": 995,
     "pred_start_line": 810,
-    "pred_end_line": 995,
-    "span_line_iou": 0.9893048128342246,
+    "pred_end_line": 936,
+    "span_line_iou": 0.6737967914438503,
     "span_start_abs_err": 1,
-    "span_end_abs_err": 0,
+    "span_end_abs_err": 59,
     "gold_entry_count": 43,
     "pred_entry_count": 1,
     "count_abs_error": 42,
@@ -165,7 +165,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 20.762
+    "wall_seconds": 14.095
   },
   {
     "case_id": "dino_realpdf",
@@ -186,7 +186,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 28.187
+    "wall_seconds": 21.96
   },
   {
     "case_id": "dn_detr_realpdf",
@@ -207,7 +207,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 13.101
+    "wall_seconds": 12.695
   },
   {
     "case_id": "doi_refs_heavy",
@@ -228,7 +228,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 4.411
+    "wall_seconds": 2.784
   },
   {
     "case_id": "efficientdet_realpdf",
@@ -249,7 +249,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 16.276
+    "wall_seconds": 25.995
   },
   {
     "case_id": "fast_rcnn_realpdf",
@@ -257,10 +257,10 @@
     "gold_start_line": 804,
     "gold_end_line": 876,
     "pred_start_line": 803,
-    "pred_end_line": 878,
-    "span_line_iou": 0.948051948051948,
+    "pred_end_line": 877,
+    "span_line_iou": 0.9605263157894737,
     "span_start_abs_err": 1,
-    "span_end_abs_err": 2,
+    "span_end_abs_err": 1,
     "gold_entry_count": 25,
     "pred_entry_count": 1,
     "count_abs_error": 24,
@@ -270,7 +270,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 9.014
+    "wall_seconds": 12.977
   },
   {
     "case_id": "faster_rcnn_realpdf",
@@ -291,41 +291,20 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 17.407
+    "wall_seconds": 14.965
   },
   {
     "case_id": "fcos_realpdf",
     "mode": "scope_llm",
     "gold_start_line": 817,
     "gold_end_line": 938,
-    "pred_start_line": 816,
+    "pred_start_line": 817,
     "pred_end_line": 939,
-    "span_line_iou": 0.976,
-    "span_start_abs_err": 1,
+    "span_line_iou": 0.9838709677419355,
+    "span_start_abs_err": 0,
     "span_end_abs_err": 1,
     "gold_entry_count": 34,
-    "pred_entry_count": 1,
-    "count_abs_error": 33,
-    "entry_overlap_f1": 0.0,
-    "entry_overlap_precision": 0.0,
-    "entry_overlap_recall": 0.0,
-    "scope_llm_status": "ok",
-    "scope_llm_fallback": false,
-    "error": null,
-    "wall_seconds": 33.246
-  },
-  {
-    "case_id": "fpn_realpdf",
-    "mode": "scope_llm",
-    "gold_start_line": 843,
-    "gold_end_line": 951,
-    "pred_start_line": 844,
-    "pred_end_line": 952,
-    "span_line_iou": 0.972972972972973,
-    "span_start_abs_err": 1,
-    "span_end_abs_err": 1,
-    "gold_entry_count": 40,
-    "pred_entry_count": 40,
+    "pred_entry_count": 34,
     "count_abs_error": 0,
     "entry_overlap_f1": 1.0,
     "entry_overlap_precision": 1.0,
@@ -333,18 +312,39 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 23.935
+    "wall_seconds": 17.751
+  },
+  {
+    "case_id": "fpn_realpdf",
+    "mode": "scope_llm",
+    "gold_start_line": 843,
+    "gold_end_line": 951,
+    "pred_start_line": 843,
+    "pred_end_line": 951,
+    "span_line_iou": 0.990909090909091,
+    "span_start_abs_err": 0,
+    "span_end_abs_err": 0,
+    "gold_entry_count": 40,
+    "pred_entry_count": 1,
+    "count_abs_error": 39,
+    "entry_overlap_f1": 0.0,
+    "entry_overlap_precision": 0.0,
+    "entry_overlap_recall": 0.0,
+    "scope_llm_status": "ok",
+    "scope_llm_fallback": false,
+    "error": null,
+    "wall_seconds": 11.493
   },
   {
     "case_id": "gfl_realpdf",
     "mode": "scope_llm",
     "gold_start_line": 633,
-    "gold_end_line": 701,
+    "gold_end_line": 702,
     "pred_start_line": 633,
     "pred_end_line": 702,
-    "span_line_iou": 0.971830985915493,
+    "span_line_iou": 0.9859154929577465,
     "span_start_abs_err": 0,
-    "span_end_abs_err": 1,
+    "span_end_abs_err": 0,
     "gold_entry_count": 36,
     "pred_entry_count": 1,
     "count_abs_error": 35,
@@ -354,7 +354,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 29.486
+    "wall_seconds": 10.934
   },
   {
     "case_id": "hog_human_detection_realpdf",
@@ -375,7 +375,7 @@
     "scope_llm_status": "InstructorRetryException: <failed_attempts>\n\n<generation number=\"1\">\n<exception>\n    1 validation error for MaybeReferenceBibliographyScopeLLM\n  Invalid JSON: control character (\\u0000-\\u001F) found w",
     "scope_llm_fallback": true,
     "error": null,
-    "wall_seconds": 17.599
+    "wall_seconds": 8.801
   },
   {
     "case_id": "libra_rcnn_realpdf",
@@ -396,7 +396,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 22.643
+    "wall_seconds": 11.986
   },
   {
     "case_id": "mask_rcnn_realpdf",
@@ -404,10 +404,10 @@
     "gold_start_line": 1379,
     "gold_end_line": 1501,
     "pred_start_line": 1378,
-    "pred_end_line": 1503,
-    "span_line_iou": 0.968503937007874,
+    "pred_end_line": 1502,
+    "span_line_iou": 0.9761904761904762,
     "span_start_abs_err": 1,
-    "span_end_abs_err": 2,
+    "span_end_abs_err": 1,
     "gold_entry_count": 45,
     "pred_entry_count": 1,
     "count_abs_error": 44,
@@ -417,7 +417,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 17.787
+    "wall_seconds": 18.954
   },
   {
     "case_id": "noisy_layout_stub",
@@ -438,7 +438,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 2.845
+    "wall_seconds": 1.642
   },
   {
     "case_id": "overfeat_realpdf",
@@ -459,7 +459,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 27.932
+    "wall_seconds": 20.049
   },
   {
     "case_id": "part_based_models_realpdf",
@@ -467,10 +467,10 @@
     "gold_start_line": 1072,
     "gold_end_line": 1212,
     "pred_start_line": 1071,
-    "pred_end_line": 1212,
-    "span_line_iou": 0.986013986013986,
+    "pred_end_line": 1207,
+    "span_line_iou": 0.951048951048951,
     "span_start_abs_err": 1,
-    "span_end_abs_err": 0,
+    "span_end_abs_err": 5,
     "gold_entry_count": 45,
     "pred_entry_count": 1,
     "count_abs_error": 44,
@@ -480,7 +480,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 40.393
+    "wall_seconds": 14.149
   },
   {
     "case_id": "rcnn_realpdf",
@@ -488,10 +488,10 @@
     "gold_start_line": 1064,
     "gold_end_line": 1478,
     "pred_start_line": 1063,
-    "pred_end_line": 1694,
-    "span_line_iou": 0.655608214849921,
+    "pred_end_line": 1192,
+    "span_line_iou": 0.30935251798561153,
     "span_start_abs_err": 1,
-    "span_end_abs_err": 216,
+    "span_end_abs_err": 286,
     "gold_entry_count": 43,
     "pred_entry_count": 1,
     "count_abs_error": 42,
@@ -501,7 +501,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 20.061
+    "wall_seconds": 11.509
   },
   {
     "case_id": "retinanet_focal_realpdf",
@@ -509,10 +509,10 @@
     "gold_start_line": 921,
     "gold_end_line": 1029,
     "pred_start_line": 921,
-    "pred_end_line": 1030,
-    "span_line_iou": 0.9819819819819819,
+    "pred_end_line": 1029,
+    "span_line_iou": 0.990909090909091,
     "span_start_abs_err": 0,
-    "span_end_abs_err": 1,
+    "span_end_abs_err": 0,
     "gold_entry_count": 39,
     "pred_entry_count": 1,
     "count_abs_error": 38,
@@ -522,7 +522,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 17.928
+    "wall_seconds": 14.677
   },
   {
     "case_id": "rfcn_realpdf",
@@ -530,10 +530,10 @@
     "gold_start_line": 821,
     "gold_end_line": 1413,
     "pred_start_line": 820,
-    "pred_end_line": 1415,
-    "span_line_iou": 0.9932998324958124,
+    "pred_end_line": 1414,
+    "span_line_iou": 0.9949664429530202,
     "span_start_abs_err": 1,
-    "span_end_abs_err": 2,
+    "span_end_abs_err": 1,
     "gold_entry_count": 27,
     "pred_entry_count": 1,
     "count_abs_error": 26,
@@ -543,7 +543,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 9.425
+    "wall_seconds": 7.834
   },
   {
     "case_id": "selective_search_realpdf",
@@ -551,10 +551,10 @@
     "gold_start_line": 971,
     "gold_end_line": 1078,
     "pred_start_line": 970,
-    "pred_end_line": 1081,
-    "span_line_iou": 0.9557522123893806,
+    "pred_end_line": 1079,
+    "span_line_iou": 0.972972972972973,
     "span_start_abs_err": 1,
-    "span_end_abs_err": 3,
+    "span_end_abs_err": 1,
     "gold_entry_count": 38,
     "pred_entry_count": 1,
     "count_abs_error": 37,
@@ -564,7 +564,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 21.037
+    "wall_seconds": 17.522
   },
   {
     "case_id": "sppnet_realpdf",
@@ -585,7 +585,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 31.944
+    "wall_seconds": 25.333
   },
   {
     "case_id": "ssd_realpdf",
@@ -606,7 +606,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 13.778
+    "wall_seconds": 20.137
   },
   {
     "case_id": "tood_realpdf",
@@ -615,7 +615,7 @@
     "gold_end_line": 1792,
     "pred_start_line": 1638,
     "pred_end_line": 1909,
-    "span_line_iou": 0.5641025641025641,
+    "span_line_iou": 0.77,
     "span_start_abs_err": 1,
     "span_end_abs_err": 117,
     "gold_entry_count": 37,
@@ -627,7 +627,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 7.586
+    "wall_seconds": 49.185
   },
   {
     "case_id": "yolov1",
@@ -648,7 +648,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 15.673
+    "wall_seconds": 27.533
   },
   {
     "case_id": "yolov2_realpdf",
@@ -656,10 +656,10 @@
     "gold_start_line": 772,
     "gold_end_line": 839,
     "pred_start_line": 771,
-    "pred_end_line": 840,
-    "span_line_iou": 0.9577464788732394,
+    "pred_end_line": 839,
+    "span_line_iou": 0.9714285714285714,
     "span_start_abs_err": 1,
-    "span_end_abs_err": 1,
+    "span_end_abs_err": 0,
     "gold_entry_count": 20,
     "pred_entry_count": 1,
     "count_abs_error": 19,
@@ -669,7 +669,7 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 10.901
+    "wall_seconds": 14.374
   },
   {
     "case_id": "yolov3_realpdf",
@@ -677,10 +677,10 @@
     "gold_start_line": 477,
     "gold_end_line": 544,
     "pred_start_line": 476,
-    "pred_end_line": 648,
-    "span_line_iou": 0.39080459770114945,
+    "pred_end_line": 582,
+    "span_line_iou": 0.6296296296296297,
     "span_start_abs_err": 1,
-    "span_end_abs_err": 104,
+    "span_end_abs_err": 38,
     "gold_entry_count": 21,
     "pred_entry_count": 1,
     "count_abs_error": 20,
@@ -690,27 +690,27 @@
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 12.419
+    "wall_seconds": 15.764
   },
   {
     "case_id": "yolox_realpdf",
     "mode": "scope_llm",
     "gold_start_line": 497,
     "gold_end_line": 627,
-    "pred_start_line": 496,
-    "pred_end_line": 629,
-    "span_line_iou": 0.9703703703703703,
-    "span_start_abs_err": 1,
-    "span_end_abs_err": 2,
+    "pred_start_line": 497,
+    "pred_end_line": 593,
+    "span_line_iou": 0.7348484848484849,
+    "span_start_abs_err": 0,
+    "span_end_abs_err": 34,
     "gold_entry_count": 41,
-    "pred_entry_count": 1,
-    "count_abs_error": 40,
-    "entry_overlap_f1": 0.0,
-    "entry_overlap_precision": 0.0,
-    "entry_overlap_recall": 0.0,
+    "pred_entry_count": 31,
+    "count_abs_error": 10,
+    "entry_overlap_f1": 0.8611111111111112,
+    "entry_overlap_precision": 1.0,
+    "entry_overlap_recall": 0.7560975609756098,
     "scope_llm_status": "ok",
     "scope_llm_fallback": false,
     "error": null,
-    "wall_seconds": 21.637
+    "wall_seconds": 15.918
   }
 ]

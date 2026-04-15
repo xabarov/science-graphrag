@@ -6,7 +6,7 @@ import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 
 import { CursorSmallButton } from "../../../components/common/index.js";
-import { getWorkDetail } from "../../../services/researchApi.js";
+import { formatResearchApiError, getWorkDetail } from "../../../services/researchApi.js";
 import { buildWorkspacePath } from "../utils/workContext.js";
 
 /**
@@ -33,10 +33,7 @@ export default function OverviewTab({ workId }) {
         setDetail(res.data);
       } catch (err) {
         if (cancelled) return;
-        const msg = err?.response?.data?.detail
-          ? JSON.stringify(err.response.data.detail)
-          : err?.message || String(err);
-        setError(msg);
+        setError(formatResearchApiError(err));
         setDetail(null);
       } finally {
         if (!cancelled) setLoading(false);

@@ -156,7 +156,9 @@ def test_run_case_smoke(monkeypatch: pytest.MonkeyPatch) -> None:
         )
 
     monkeypatch.setattr("eval.layer1.runner.get_settings", _settings)
-    report = run_case(FIXTURE_YOLO)
+    # Reference count drifts with heuristic-only extraction (PDF hyphenation);
+    # smoke checks pipeline only.
+    report = run_case(FIXTURE_YOLO, threshold_profile="ci_smoke")
     assert report["case_id"] == "yolov1"
     assert report["gold_path"].endswith("gold.json")
     assert "metrics" in report

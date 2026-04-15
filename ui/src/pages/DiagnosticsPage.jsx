@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 
 import { CursorSmallButton } from "../components/common/index.js";
 import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
-import { getHealth, getResearchApiBaseUrl, getWorks } from "../services/researchApi.js";
+import { formatResearchApiError, getHealth, getResearchApiBaseUrl, getWorks } from "../services/researchApi.js";
 
 export default function DiagnosticsPage() {
   const [status, setStatus] = useState("idle");
@@ -22,10 +22,7 @@ export default function DiagnosticsPage() {
       const h = await getHealth();
       combined.health = h.data;
     } catch (e) {
-      const msg = e?.response?.data?.detail
-        ? JSON.stringify(e.response.data.detail)
-        : e?.message || String(e);
-      combined.health = { error: msg };
+      combined.health = { error: formatResearchApiError(e) };
     }
     try {
       const w = await getWorks({ limit: 1, offset: 0 });
@@ -34,10 +31,7 @@ export default function DiagnosticsPage() {
         ok: true,
       };
     } catch (e) {
-      const msg = e?.response?.data?.detail
-        ? JSON.stringify(e.response.data.detail)
-        : e?.message || String(e);
-      combined.works_catalog = { ok: false, error: msg };
+      combined.works_catalog = { ok: false, error: formatResearchApiError(e) };
     }
     const healthFailed = combined.health && typeof combined.health === "object" && combined.health.error;
     const worksFailed = combined.works_catalog && combined.works_catalog.ok === false;

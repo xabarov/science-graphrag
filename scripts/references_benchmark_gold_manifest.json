@@ -34,8 +34,8 @@
     "deformable_detr_realpdf": {
       "start_line": 569,
       "end_line": 665,
-      "entry_count": 36,
-      "annotation_kind": "manual"
+      "entry_count": 44,
+      "annotation_kind": "silver_heuristic"
     },
     "detr_realpdf": {
       "start_line": 737,
@@ -99,7 +99,7 @@
     },
     "gfl_realpdf": {
       "start_line": 633,
-      "end_line": 701,
+      "end_line": 702,
       "entry_count": 36,
       "annotation_kind": "manual"
     },

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
 import Slider from "@mui/material/Slider";
@@ -10,6 +10,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { CursorSmallButton } from "../common/index.js";
 import GraphVisualization from "./GraphVisualization.jsx";
 import GraphCanvasMvp from "./GraphCanvasMvp.jsx";
+import GraphFlowView from "./GraphFlowView.jsx";
 import GraphDetailPanel from "./GraphDetailPanel.jsx";
 import GraphTypeLegend from "./GraphTypeLegend.jsx";
 import { GraphErrorAlert, GraphLoadingInline, GraphMissingWorkInline } from "./graphShellStates.jsx";
@@ -24,6 +25,15 @@ import {
   resolveSelectedNodeId,
 } from "./graphViewState.js";
 import { describeTraceabilityState } from "../work/traceabilityState.js";
+import { formatResearchApiError } from "../../services/researchApi.js";
+import {
+  clampGraphDetailColumnPx,
+  GRAPH_DETAIL_COLUMN_PX_MAX,
+  GRAPH_DETAIL_COLUMN_PX_MIN,
+  GRAPH_DETAIL_COLUMN_PX_STEP,
+  LS_GRAPH_STANDALONE_DETAIL_MIN_PX,
+  readGraphDetailColumnPxStored,
+} from "./graphDetailColumnWidth.js";
 
 /**
  * @param {{
@@ -45,21 +55,16 @@ const LS_STANDALONE_LEGEND = "graphStandaloneLegendOpen";
 const LS_STANDALONE_TITLE = "graphStandaloneTitleOpen";
 const LS_STANDALONE_ALERTS = "graphStandaloneAlertsOpen";
 const LS_STANDALONE_DETAILS = "graphStandaloneDetailsVisible";
-const LS_STANDALONE_DETAIL_MIN_PX = "graphStandaloneDetailMinPx";
+const LS_GRAPH_CANVAS_LAYOUT_MODE = "graphCanvasLayoutMode";
 
-const DETAIL_MIN_PX_MIN = 260;
-const DETAIL_MIN_PX_MAX = 480;
-const DETAIL_MIN_PX_STEP = 20;
-
-function readDetailMinPxStored() {
-  if (typeof window === "undefined") return 320;
+function readCanvasLayoutMode() {
+  if (typeof window === "undefined") return "circle";
   try {
-    const raw = window.localStorage.getItem(LS_STANDALONE_DETAIL_MIN_PX);
-    const n = raw == null ? NaN : parseInt(raw, 10);
-    if (!Number.isFinite(n)) return 320;
-    return Math.min(DETAIL_MIN_PX_MAX, Math.max(DETAIL_MIN_PX_MIN, n));
+    const v = window.localStorage.getItem(LS_GRAPH_CANVAS_LAYOUT_MODE);
+    if (v === "force") return "force";
+    return "circle";
   } catch {
-    return 320;
+    return "circle";
   }
 }
 
@@ -92,12 +97,15 @@ export default function GraphWorkspacePanel({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [vizMode, setVizMode] = useState(
-    /** @type {"cards" | "canvas"} */ () => (mode === "standalone" && compactLayout ? "canvas" : "cards"),
+    /** @type {"cards" | "canvas" | "flow"} */ () => (mode === "standalone" && compactLayout ? "canvas" : "cards"),
+  );
+  const [canvasLayoutMode, setCanvasLayoutMode] = useState(
+    /** @type {"circle" | "force"} */ () => readCanvasLayoutMode(),
   );
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(labMode);
 
   const standaloneMax = mode === "standalone";
-  const [detailMinPx, setDetailMinPx] = useState(() => readDetailMinPxStored());
+  const [detailMinPx, setDetailMinPx] = useState(() => readGraphDetailColumnPxStored());
 
   const [titleBlockOpen, setTitleBlockOpen] = useState(() => {
     if (!standaloneMax) return true;
@@ -163,11 +171,19 @@ export default function GraphWorkspacePanel({
   useEffect(() => {
     if (!standaloneMax) return;
     try {
-      window.localStorage.setItem(LS_STANDALONE_DETAIL_MIN_PX, String(detailMinPx));
+      window.localStorage.setItem(LS_GRAPH_STANDALONE_DETAIL_MIN_PX, String(detailMinPx));
     } catch {
       /* ignore */
     }
   }, [standaloneMax, detailMinPx]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(LS_GRAPH_CANVAS_LAYOUT_MODE, canvasLayoutMode);
+    } catch {
+      /* ignore */
+    }
+  }, [canvasLayoutMode]);
 
   useEffect(() => {
     if (!workId.trim()) {
@@ -185,10 +201,7 @@ export default function GraphWorkspacePanel({
         setGraph(normalized);
       } catch (err) {
         if (cancelled) return;
-        const msg = err?.response?.data?.detail
-          ? JSON.stringify(err.response.data.detail)
-          : err?.message || String(err);
-        setError(msg);
+        setError(formatResearchApiError(err));
         setGraph(normalizeGraphPayload(null));
       } finally {
         if (!cancelled) setLoading(false);
@@ -247,9 +260,50 @@ export default function GraphWorkspacePanel({
 
   const mdDetailGridColumns = standaloneMax
     ? compactLayout
-      ? `minmax(0, 1.7fr) minmax(${detailMinPx}px, 1fr)`
-      : `minmax(0, 2fr) minmax(${detailMinPx}px, 1fr)`
+      ? `minmax(0, 1.7fr) 6px minmax(${detailMinPx}px, 1fr)`
+      : `minmax(0, 2fr) 6px minmax(${detailMinPx}px, 1fr)`
     : `minmax(0, 1.7fr) minmax(280px, 1fr)`;
+
+  const handleDetailSplitPointerDown = useCallback(
+    (e) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      const el = e.currentTarget;
+      const pointerId = e.pointerId;
+      try {
+        el.setPointerCapture(pointerId);
+      } catch {
+        /* ignore */
+      }
+      const startX = e.clientX;
+      const startW = detailMinPx;
+      const prevCursor = document.body.style.cursor;
+      const prevUserSelect = document.body.style.userSelect;
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+
+      const onMove = (ev) => {
+        const dx = ev.clientX - startX;
+        setDetailMinPx(clampGraphDetailColumnPx(startW + dx));
+      };
+      const onEnd = () => {
+        document.body.style.cursor = prevCursor;
+        document.body.style.userSelect = prevUserSelect;
+        try {
+          el.releasePointerCapture(pointerId);
+        } catch {
+          /* ignore */
+        }
+        el.removeEventListener("pointermove", onMove);
+        el.removeEventListener("pointerup", onEnd);
+        el.removeEventListener("pointercancel", onEnd);
+      };
+      el.addEventListener("pointermove", onMove);
+      el.addEventListener("pointerup", onEnd);
+      el.addEventListener("pointercancel", onEnd);
+    },
+    [detailMinPx],
+  );
 
   const rootSx = standaloneMax
     ? { flex: 1, minHeight: 0, display: "flex", flexDirection: "column", width: "100%" }
@@ -409,10 +463,10 @@ export default function GraphWorkspacePanel({
                     <Slider
                       size="small"
                       value={detailMinPx}
-                      min={DETAIL_MIN_PX_MIN}
-                      max={DETAIL_MIN_PX_MAX}
-                      step={DETAIL_MIN_PX_STEP}
-                      onChange={(_, v) => setDetailMinPx(v)}
+                      min={GRAPH_DETAIL_COLUMN_PX_MIN}
+                      max={GRAPH_DETAIL_COLUMN_PX_MAX}
+                      step={GRAPH_DETAIL_COLUMN_PX_STEP}
+                      onChange={(_, v) => setDetailMinPx(clampGraphDetailColumnPx(v))}
                       sx={{
                         color: "rgba(129,140,248,0.85)",
                         py: 0.25,
@@ -455,6 +509,56 @@ export default function GraphWorkspacePanel({
             >
               Graph
             </CursorSmallButton>
+            <CursorSmallButton
+              type="button"
+              onClick={() => setVizMode("flow")}
+              sx={
+                vizMode === "flow"
+                  ? {
+                      backgroundColor: "rgba(99, 102, 241, 0.15)",
+                      borderColor: "rgba(99, 102, 241, 0.3)",
+                      color: "rgba(129,140,248,0.92)",
+                    }
+                  : {}
+              }
+            >
+              Flow
+            </CursorSmallButton>
+            {vizMode === "canvas" ? (
+              <>
+                <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.45)", mx: 0.25 }}>Canvas</Typography>
+                <CursorSmallButton
+                  type="button"
+                  onClick={() => setCanvasLayoutMode("circle")}
+                  sx={
+                    canvasLayoutMode === "circle"
+                      ? {
+                          backgroundColor: "rgba(99, 102, 241, 0.15)",
+                          borderColor: "rgba(99, 102, 241, 0.3)",
+                          color: "rgba(129,140,248,0.92)",
+                        }
+                      : {}
+                  }
+                >
+                  Circle
+                </CursorSmallButton>
+                <CursorSmallButton
+                  type="button"
+                  onClick={() => setCanvasLayoutMode("force")}
+                  sx={
+                    canvasLayoutMode === "force"
+                      ? {
+                          backgroundColor: "rgba(99, 102, 241, 0.15)",
+                          borderColor: "rgba(99, 102, 241, 0.3)",
+                          color: "rgba(129,140,248,0.92)",
+                        }
+                      : {}
+                  }
+                >
+                  Force
+                </CursorSmallButton>
+              </>
+            ) : null}
           </Box>
 
           {standaloneMax ? (
@@ -469,7 +573,10 @@ export default function GraphWorkspacePanel({
             sx={{
               flex: standaloneMax ? 1 : undefined,
               display: "grid",
-              gap: 2,
+              gap: {
+                xs: 2,
+                md: standaloneMax && detailsVisible ? 0 : 2,
+              },
               minHeight: standaloneMax ? 0 : { xs: "auto", md: isEmbedded ? 420 : 520 },
               gridTemplateColumns: !detailsVisible
                 ? "minmax(0, 1fr)"
@@ -500,10 +607,27 @@ export default function GraphWorkspacePanel({
                   }}
                   mode={mode}
                 />
+              ) : vizMode === "flow" ? (
+                <Box sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+                  <GraphFlowView
+                    graph={displayGraph}
+                    selectedNodeId={resolvedSelectedNodeId}
+                    selectedEdgeId={resolvedSelectedEdgeId}
+                    onSelectNode={(nodeId) => {
+                      onSelectEdge?.("");
+                      onSelectNode?.(nodeId);
+                    }}
+                    onSelectEdge={(edgeId) => {
+                      onSelectNode?.("");
+                      onSelectEdge?.(edgeId);
+                    }}
+                  />
+                </Box>
               ) : (
                 <Box sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
                   <GraphCanvasMvp
                     graph={displayGraph}
+                    layoutMode={canvasLayoutMode}
                     selectedNodeId={resolvedSelectedNodeId}
                     selectedEdgeId={resolvedSelectedEdgeId}
                     onSelectNode={(nodeId) => {
@@ -518,6 +642,25 @@ export default function GraphWorkspacePanel({
                 </Box>
               )}
             </Box>
+            {standaloneMax && detailsVisible ? (
+              <Box
+                onPointerDown={handleDetailSplitPointerDown}
+                sx={{
+                  display: { xs: "none", md: "block" },
+                  width: 6,
+                  flexShrink: 0,
+                  cursor: "col-resize",
+                  alignSelf: "stretch",
+                  touchAction: "none",
+                  borderRadius: "2px",
+                  backgroundColor: "rgba(255,255,255,0.06)",
+                  "&:hover": { backgroundColor: "rgba(255,255,255,0.12)" },
+                }}
+                role="separator"
+                aria-orientation="vertical"
+                aria-label="Resize graph and detail panels"
+              />
+            ) : null}
             {detailsVisible ? (
               <Box sx={{ minWidth: 0, minHeight: standaloneMax ? 0 : { xs: 220, md: isEmbedded ? 400 : 500 }, display: "flex", flexDirection: "column" }}>
                 <GraphDetailPanel
