@@ -14,7 +14,6 @@ import argparse
 import json
 import math
 import statistics
-from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -24,29 +23,47 @@ DEFAULT_SUMMARY = ROOT / "eval/results/benchmark-metrics-summary.json"
 DEFAULT_OUT = ROOT / "docs/benchmarks/benchmark-metrics-values.md"
 
 
+# ── Low-level helpers ────────────────────────────────────────────────────────
+
 def _read(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _fmt(v: Any) -> str:
+def _tick(v: Any) -> str:
+    """Boolean → ✓ / ✗ / —."""
     if v is None:
-        return ""
-    if isinstance(v, bool):
-        return "true" if v else "false"
-    if isinstance(v, (int, float)):
-        if isinstance(v, float) and math.isnan(v):
-            return "NaN"
-        s = f"{float(v):.6f}"
-        s = s.rstrip("0").rstrip(".")
-        return s or "0"
-    return str(v)
+        return "—"
+    return "✓" if v else "✗"
+
+
+def _f2(v: Any) -> str:
+    """Float → 2-decimal string, or — if absent/NaN."""
+    if v is None or v == "":
+        return "—"
+    try:
+        fv = float(v)
+        return "—" if math.isnan(fv) else f"{fv:.2f}"
+    except (TypeError, ValueError):
+        return "—"
+
+
+def _case_label(cid: str) -> str:
+    """Strip _realpdf / _semantic suffixes for display."""
+    for suffix in ("_realpdf", "_semantic"):
+        if cid.endswith(suffix):
+            return cid[: -len(suffix)]
+    return cid
 
 
 def _md_table(headers: list[str], rows: list[list[str]]) -> str:
-    out = ["| " + " | ".join(headers) + " |", "| " + " | ".join("---" for _ in headers) + " |"]
+    sep = ["---"] * len(headers)
+    lines = [
+        "| " + " | ".join(headers) + " |",
+        "| " + " | ".join(sep) + " |",
+    ]
     for row in rows:
-        out.append("| " + " | ".join(row) + " |")
-    return "\n".join(out) + "\n"
+        lines.append("| " + " | ".join(row) + " |")
+    return "\n".join(lines) + "\n"
 
 
 def _iter_cases(data: dict[str, Any]) -> list[dict[str, Any]]:
@@ -57,70 +74,60 @@ def _iter_cases(data: dict[str, Any]) -> list[dict[str, Any]]:
     return []
 
 
-def _layer1_row(case: dict[str, Any]) -> list[str]:
+# ── Row builders ─────────────────────────────────────────────────────────────
+
+def _layer1_row(case: dict[str, Any], *, show_authors: bool) -> list[str]:
     m = case.get("metrics") or {}
     md = m.get("metadata") or {}
     au = m.get("authorships") or {}
     rf = m.get("references") or {}
     ct = m.get("contract") or {}
-    return [
-        case.get("case_id", ""),
-        _fmt(ct.get("passed")),
-        _fmt(md.get("title_exact_normalized")),
-        _fmt(md.get("title_rouge_l")),
-        _fmt(md.get("title_token_f1")),
-        _fmt(md.get("abstract_rouge_l_vs_prefix")),
-        _fmt(au.get("names_f1")),
-        _fmt(au.get("affiliations_f1")),
-        _fmt(rf.get("sample_arxiv_f1")),
-        _fmt(rf.get("sample_doi_f1")),
-        _fmt(rf.get("count_ok")),
-    ]
+    has_gold = int(au.get("gold_count") or 0) > 0
+    names_f1 = _f2(au.get("names_f1")) if has_gold else "—"
+    row = [_case_label(case.get("case_id", "")), _tick(md.get("title_exact_normalized"))]
+    if show_authors:
+        row.append(names_f1)
+    row += [_f2(rf.get("sample_arxiv_f1")), _tick(rf.get("count_ok")), _tick(ct.get("passed"))]
+    return row
+
+
+def _layer1_headers(*, show_authors: bool) -> list[str]:
+    base = ["Статья", "Заголовок ✓"]
+    if show_authors:
+        base.append("Авторы F1")
+    base += ["arXiv-ссылки F1", "Кол-во ссылок ✓", "Контракт ✓"]
+    return base
 
 
 def _graph_row(case: dict[str, Any]) -> list[str]:
     m = case.get("metrics") or {}
     ct = m.get("contract") or {}
+    snap = m.get("snapshot") or {}
     return [
-        case.get("case_id", ""),
-        _fmt(m.get("has_expectations")),
-        _fmt(ct.get("passed")),
-        _fmt(m.get("cited_arxiv_precision")),
-        _fmt(m.get("cited_arxiv_recall")),
-        _fmt(m.get("cited_arxiv_f1")),
-        _fmt((m.get("snapshot") or {}).get("cites_count")),
+        _case_label(case.get("case_id", "")),
+        _f2(m.get("cited_arxiv_precision")),
+        _f2(m.get("cited_arxiv_recall")),
+        _f2(m.get("cited_arxiv_f1")),
+        str(snap.get("cites_count") or "—"),
+        _tick(ct.get("passed")),
     ]
 
 
 def _layer2_row(case: dict[str, Any]) -> list[str]:
     m = case.get("metrics") or {}
-    rm = m.get("recall_methods_num")
-    rd = m.get("recall_methods_denom")
-    rdn = m.get("recall_datasets_num")
-    rdd = m.get("recall_datasets_denom")
-    r_frac_m = f"{rm}/{rd}" if rd not in (None, 0) else ""
-    r_frac_d = f"{rdn}/{rdd}" if rdd not in (None, 0) else ""
+    rm_num = m.get("recall_methods_num")
+    rm_den = m.get("recall_methods_denom")
+    rd_num = m.get("recall_datasets_num")
+    rd_den = m.get("recall_datasets_denom")
+    r_m = f"{rm_num}/{rm_den}" if rm_den not in (None, 0) else "—"
+    r_d = f"{rd_num}/{rd_den}" if rd_den not in (None, 0) else "—"
     return [
-        case.get("case_id", ""),
-        _fmt(m.get("passed")),
-        _fmt(m.get("precision_methods")),
-        r_frac_m,
-        _fmt(m.get("precision_datasets")),
-        r_frac_d,
-        _fmt(m.get("notes")),
-    ]
-
-
-def _retrieval_row(case: dict[str, Any]) -> list[str]:
-    m = case.get("metrics") or {}
-    return [
-        case.get("case_id", ""),
-        _fmt(m.get("passed")),
-        _fmt(m.get("contract_only")),
-        _fmt(m.get("hit_count")),
-        _fmt(m.get("hit_ok")),
-        _fmt(m.get("min_hit_count")),
-        _fmt(m.get("work_id_ok")),
+        _case_label(case.get("case_id", "")),
+        _f2(m.get("precision_methods")),
+        r_m,
+        _f2(m.get("precision_datasets")),
+        r_d,
+        _tick(m.get("passed")),
     ]
 
 
@@ -128,11 +135,10 @@ def _claims_row(case: dict[str, Any]) -> list[str]:
     m = case.get("metrics") or {}
     return [
         case.get("case_id", ""),
-        _fmt(m.get("passed")),
-        _fmt(m.get("claim_recall")),
-        _fmt(m.get("claim_precision")),
-        _fmt(m.get("expected_count")),
-        _fmt(m.get("predicted_count")),
+        str(m.get("expected_count") if m.get("expected_count") is not None else "—"),
+        _f2(m.get("claim_recall")),
+        _f2(m.get("claim_precision")),
+        _tick(m.get("passed")),
     ]
 
 
@@ -140,165 +146,82 @@ def _refs_res_row(case: dict[str, Any]) -> list[str]:
     m = case.get("metrics") or {}
     return [
         case.get("case_id", ""),
-        _fmt(m.get("passed")),
-        _fmt(m.get("resolution_recall")),
-        _fmt(m.get("resolution_precision")),
-        _fmt(m.get("expected_count")),
-        _fmt(m.get("predicted_count")),
+        str(m.get("expected_count") if m.get("expected_count") is not None else "—"),
+        _f2(m.get("resolution_recall")),
+        _f2(m.get("resolution_precision")),
+        _tick(m.get("passed")),
     ]
 
 
-def _mean(xs: list[float]) -> str:
-    if not xs:
-        return ""
-    return _fmt(statistics.mean(xs))
+# ── Aggregate helpers ────────────────────────────────────────────────────────
 
-
-def _aggregate_names_f1(cases: list[dict[str, Any]]) -> tuple[str, int]:
+def _collect(cases: list[dict[str, Any]], *keys: str) -> list[float]:
+    """Walk a dotted key path in metrics and collect float values."""
     vals: list[float] = []
     for c in cases:
-        au = (c.get("metrics") or {}).get("authorships") or {}
-        if int(au.get("gold_count") or 0) > 0:
-            try:
-                vals.append(float(au.get("names_f1", 0.0)))
-            except (TypeError, ValueError):
-                pass
-    return _mean(vals), len(vals)
-
-
-def _mean_float_cases(
-    cases: list[dict[str, Any]],
-    getter: Callable[[dict[str, Any]], Any],
-) -> tuple[str, int]:
-    vals: list[float] = []
-    for c in cases:
-        raw = getter(c)
-        if raw is None or raw == "":
+        node: Any = c.get("metrics") or {}
+        for k in keys:
+            if not isinstance(node, dict):
+                node = None
+                break
+            node = node.get(k)
+        if node is None:
             continue
         try:
-            vals.append(float(raw))
+            vals.append(float(node))
         except (TypeError, ValueError):
-            continue
-    return (_mean(vals), len(vals)) if vals else ("", 0)
+            pass
+    return vals
 
 
-def _layer1_nightly_aggregate_rows(  # pylint: disable=too-many-locals
-    cases: list[dict[str, Any]],
-) -> list[list[str]]:
-    """Per-field suite-level stats for layer-1 nightly JSON (one row per signal)."""
+def _mean_str(vals: list[float]) -> str:
+    return f"{statistics.mean(vals):.2f}" if vals else "—"
 
+
+def _count_passed(cases: list[dict[str, Any]], *keys: str) -> int:
+    """Count cases where the nested key path equals True."""
+    count = 0
+    for c in cases:
+        node: Any = c.get("metrics") or {}
+        for k in keys:
+            if not isinstance(node, dict):
+                node = None
+                break
+            node = node.get(k)
+        if node is True:
+            count += 1
+    return count
+
+
+def _layer1_summary(cases: list[dict[str, Any]]) -> str:
     n = len(cases)
-    if not n:
-        return []
-
-    def meta_get(c: dict[str, Any], key: str) -> Any:
-        return (c.get("metrics") or {}).get("metadata", {}).get(key)
-
-    title_true = sum(1 for c in cases if meta_get(c, "title_exact_normalized") is True)
-    contract_true = sum(
-        1 for c in cases if (c.get("metrics") or {}).get("contract", {}).get("passed") is True
-    )
-    ref_ok = sum(
-        1 for c in cases if (c.get("metrics") or {}).get("references", {}).get("count_ok") is True
-    )
-
-    names_vals: list[float] = []
-    aff_vals: list[float] = []
-    for c in cases:
-        au = (c.get("metrics") or {}).get("authorships") or {}
-        if int(au.get("gold_count") or 0) <= 0:
-            continue
-        try:
-            names_vals.append(float(au.get("names_f1", 0.0)))
-            aff_vals.append(float(au.get("affiliations_f1", 0.0)))
-        except (TypeError, ValueError):
-            continue
-
-    arxiv_m, arxiv_n = _mean_float_cases(
-        cases, lambda c: (c.get("metrics") or {}).get("references", {}).get("sample_arxiv_f1")
-    )
-    doi_m, doi_n = _mean_float_cases(
-        cases, lambda c: (c.get("metrics") or {}).get("references", {}).get("sample_doi_f1")
-    )
-    tr_m, tr_n = _mean_float_cases(cases, lambda c: meta_get(c, "title_rouge_l"))
-    tt_m, tt_n = _mean_float_cases(cases, lambda c: meta_get(c, "title_token_f1"))
-    ar_m, ar_n = _mean_float_cases(cases, lambda c: meta_get(c, "abstract_rouge_l_vs_prefix"))
-
-    def pct_fmt(num: int) -> str:
-        return f"{100.0 * num / n:.1f}%"
-
-    rows: list[list[str]] = [
-        ["`contract.passed`", str(n), pct_fmt(contract_true), "доля кейсов с passed"],
-        ["`title_exact_normalized`", str(n), pct_fmt(title_true), "доля exact title"],
-        ["`references.count_ok`", str(n), pct_fmt(ref_ok), "доля кейсов с count_ok"],
-    ]
-    if names_vals:
-        rows.append(
-            [
-                "`names_f1` (mean)",
-                str(len(names_vals)),
-                _fmt(statistics.mean(names_vals)),
-                "только `gold_count`>0 в authorships",
-            ]
+    passed = _count_passed(cases, "contract", "passed")
+    arxiv_vals = _collect(cases, "references", "sample_arxiv_f1")
+    parts = [f"**{passed}/{n}** прошли контракт"]
+    if arxiv_vals:
+        parts.append(
+            f"среднее F1 arXiv-ссылок = **{_mean_str(arxiv_vals)}** (n={len(arxiv_vals)})"
         )
-    else:
-        rows.append(["`names_f1` (mean)", "0", "", "нет эталона авторов в отчёте"])
-    if aff_vals:
-        rows.append(
-            [
-                "`affiliations_f1` (mean)",
-                str(len(aff_vals)),
-                _fmt(statistics.mean(aff_vals)),
-                "только при `gold_count`>0",
-            ]
-        )
-    else:
-        rows.append(["`affiliations_f1` (mean)", "0", "", "нет эталона аффилиаций"])
-    rows.append(
-        [
-            "`sample_arxiv_f1` (mean)",
-            str(arxiv_n),
-            arxiv_m,
-            "по кейсам где значение есть в JSON",
-        ]
-    )
-    rows.append(
-        [
-            "`sample_doi_f1` (mean)",
-            str(doi_n),
-            doi_m,
-            "по кейсам где значение есть в JSON",
-        ]
-    )
-    rows.append(
-        [
-            "`title_rouge_l` (mean)",
-            str(tr_n),
-            tr_m,
-            "если ключ есть в metadata",
-        ]
-    )
-    rows.append(
-        [
-            "`title_token_f1` (mean)",
-            str(tt_n),
-            tt_m,
-            "если ключ есть в metadata",
-        ]
-    )
-    rows.append(
-        [
-            "`abstract_rouge_l_vs_prefix` (mean)",
-            str(ar_n),
-            ar_m,
-            "если ключ есть в metadata",
-        ]
-    )
-    return rows
+    return " · ".join(parts)
 
+
+def _layer2_summary(cases: list[dict[str, Any]]) -> str:
+    n = len(cases)
+    passed = _count_passed(cases, "passed")
+    pm_vals = _collect(cases, "precision_methods")
+    pd_vals = _collect(cases, "precision_datasets")
+    parts = [f"**{passed}/{n}** прошли"]
+    if pm_vals:
+        parts.append(f"ср. точность методов = **{_mean_str(pm_vals)}**")
+    if pd_vals:
+        parts.append(f"ср. точность датасетов = **{_mean_str(pd_vals)}**")
+    return " · ".join(parts)
+
+
+# ── Main ─────────────────────────────────────────────────────────────────────
 
 def main() -> None:  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
-    """Read ``benchmark-metrics-summary.json`` and emit markdown metric tables."""
+    """Read benchmark-metrics-summary.json and emit clean markdown metric tables."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--summary", type=Path, default=DEFAULT_SUMMARY)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
@@ -312,294 +235,272 @@ def main() -> None:  # pylint: disable=too-many-locals,too-many-branches,too-man
 
     summary = _read(summary_path)
     auth = summary.get("authoritative_artifacts") or {}
+    gen_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+
     lines: list[str] = []
 
-    gen_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-    lines.append("# Таблицы значений метрик (снимок артефактов)\n")
-    rel_summary = summary_path.relative_to(ROOT)
+    lines.append("# Метрики бенчмарков\n")
     lines.append(
-        f"Этот файл **генерируется** из JSON в `eval/results/`, перечисленных в "
-        f"`{rel_summary}` → `authoritative_artifacts`. "
-        "Не правьте таблицы вручную: при обновлении отчётов перегенерируйте файл.\n"
-    )
-    lines.append("```bash\n.venv/bin/python scripts/generate_benchmark_metrics_tables.py\n```\n")
-    lines.append(f"**Сгенерировано:** {gen_at}\n")
-    lines.append("## Что означает `passed`\n")
-    lines.append(
-        "- **Layer-1:** `metrics.contract.passed` — все пороговые проверки эталона для кейса.\n"
-        "- **Graph:** `metrics.contract.passed` при наличии `graph_expectations`.\n"
-        "- **Layer-2 semantic:** `metrics.passed` — пороги recall/precision по методам "
-        "и датасетам.\n"
-        "- **Retrieval / claims / references_resolution:** см. `eval/*/metrics.py` и поля `passed` "
-        "в JSON.\n"
-    )
-    lines.append(
-        "Сводка gate без числовых колонок: "
-        "[benchmark-metrics-summary.md](../../eval/results/benchmark-metrics-summary.md). "
-        "Смысл метрик: [benchmark-metrics-catalog.md](benchmark-metrics-catalog.md).\n"
+        f"Сгенерировано: {gen_at}  \n"
+        "Перегенерировать: `.venv/bin/python scripts/generate_benchmark_metrics_tables.py`  \n"
+        "Смысл метрик: [benchmark-metrics-catalog.md](benchmark-metrics-catalog.md)\n"
     )
 
-    # Optional gate extras from summary
+    # ── Статус системы ────────────────────────────────────────────────────────
     l1n = summary.get("layer1_nightly") or {}
-    if l1n:
-        lines.append("## Сводные сигналы из `benchmark-metrics-summary.json`\n")
-        rows = [
-            ["`decision`", _fmt((summary.get("decision_gate") or {}).get("decision"))],
-            ["layer1 nightly `failed_count`", _fmt(l1n.get("failed_count"))],
-            [
-                "layer1 nightly `references_llm_failed_events`",
-                _fmt(l1n.get("references_llm_failed_events")),
-            ],
-        ]
-        l2n = summary.get("layer2_nightly") or {}
+    l2n = summary.get("layer2_nightly") or {}
+    decision = (summary.get("decision_gate") or {}).get("decision")
+    if l1n or decision:
+        lines.append("---\n")
+        lines.append("## Статус системы\n")
+        status_rows: list[list[str]] = []
+        if decision:
+            status_rows.append(["Решение gate", f"**{decision}**"])
+        if l1n:
+            fc = l1n.get("failed_count")
+            ev = l1n.get("references_llm_failed_events")
+            status_rows.append(["Layer-1 nightly — не прошли", str(fc) if fc is not None else "—"])
+            status_rows.append(
+                ["Layer-1 nightly — сбоев LLM-ссылок", str(ev) if ev is not None else "—"]
+            )
         if l2n:
-            rows.append(["layer2 nightly `failed_count`", _fmt(l2n.get("failed_count"))])
-        lines.append(_md_table(["Поле", "Значение"], rows))
+            fc2 = l2n.get("failed_count")
+            status_rows.append(
+                ["Layer-2 nightly — не прошли", str(fc2) if fc2 is not None else "—"]
+            )
+        lines.append(_md_table(["Показатель", "Значение"], status_rows))
         lines.append("")
 
+    # ── 1. Эталонный прогон (YOLOv1) ─────────────────────────────────────────
     ref_paths = auth.get("reference") or []
-    for label, rel in zip(
-        [
-            "Layer-1 reference (yolov1)",
-            "Graph reference (yolov1)",
-            "Layer-2 reference (yolov1_semantic)",
-        ],
-        ref_paths,
-    ):
+    ref_kinds = [
+        ("layer1", "Метаданные статьи"),
+        ("graph", "Граф цитирований"),
+        ("layer2", "Семантика (методы и датасеты)"),
+    ]
+    ref_data: dict[str, tuple[dict[str, Any], str]] = {}
+    for rel, (kind, _) in zip(ref_paths, ref_kinds):
         path = ROOT / rel
-        if not path.is_file():
-            continue
-        data = _read(path)
-        cases = _iter_cases(data)
-        lines.append(f"## {label}\n")
-        lines.append(f"Артефакт: `{rel}`\n")
-        if "layer2" in rel or "semantic" in rel:
-            hdr = [
-                "case_id",
-                "passed",
-                "precision_methods",
-                "recall_methods",
-                "precision_datasets",
-                "recall_datasets",
-                "notes",
-            ]
-            body = [_layer2_row(c) for c in cases]
-        elif "graph" in rel:
-            hdr = [
-                "case_id",
-                "has_expectations",
-                "contract_passed",
-                "cited_arxiv_P",
-                "cited_arxiv_R",
-                "cited_arxiv_F1",
-                "cites_count",
-            ]
-            body = [_graph_row(c) for c in cases]
-        else:
-            hdr = [
-                "case_id",
-                "contract_passed",
-                "title_exact",
-                "title_rouge_L",
-                "title_token_F1",
-                "abstract_rouge_L_vs_prefix",
-                "names_F1",
-                "affiliations_F1",
-                "sample_arxiv_F1",
-                "sample_doi_F1",
-                "ref_count_ok",
-            ]
-            body = [_layer1_row(c) for c in cases]
-        lines.append(_md_table(hdr, body))
-        lines.append("")
+        if path.is_file():
+            ref_data[kind] = (_read(path), rel)
 
+    if ref_data:
+        lines.append("---\n")
+        lines.append("## 1. Эталонный прогон — YOLOv1 (merge_safe)\n")
+        lines.append(
+            "Базовая статья (YOLOv1, CVPR 2016) используется для контроля регрессий "
+            "во всех трёх слоях. Любое изменение чисел сигнализирует о регрессии.\n"
+        )
+
+        if "layer1" in ref_data:
+            data, rel = ref_data["layer1"]
+            cases = _iter_cases(data)
+            lines.append("### 1.1 Метаданные статьи\n")
+            lines.append(
+                "Заголовок, авторы, arXiv-ссылки в библиографии, соответствие числа ссылок.\n"
+            )
+            lines.append(_md_table(_layer1_headers(show_authors=True),
+                                   [_layer1_row(c, show_authors=True) for c in cases]))
+            lines.append("")
+
+        if "graph" in ref_data:
+            data, rel = ref_data["graph"]
+            cases = _iter_cases(data)
+            lines.append("### 1.2 Граф цитирований\n")
+            lines.append(
+                "Precision / Recall / F1 по arXiv-идентификаторам процитированных работ "
+                "в графе Neo4j.\n"
+            )
+            lines.append(_md_table(
+                ["Статья", "P (arXiv)", "R (arXiv)", "F1 (arXiv)", "Цитирований", "Контракт ✓"],
+                [_graph_row(c) for c in cases],
+            ))
+            lines.append("")
+
+        if "layer2" in ref_data:
+            data, rel = ref_data["layer2"]
+            cases = _iter_cases(data)
+            lines.append("### 1.3 Семантика (методы и датасеты)\n")
+            lines.append(
+                "Precision / Recall по методам и датасетам, упомянутым в статье.\n"
+            )
+            lines.append(_md_table(
+                ["Статья", "Методы P", "Методы R", "Датасеты P", "Датасеты R", "✓"],
+                [_layer2_row(c) for c in cases],
+            ))
+            lines.append("")
+
+    # ── 2. Nightly: Layer-1 ───────────────────────────────────────────────────
     l1_rel = auth.get("layer1_nightly")
     if l1_rel:
         path = ROOT / str(l1_rel)
         if path.is_file():
             data = _read(path)
             cases = _iter_cases(data)
-            lines.append("## Layer-1 nightly (`nightly_heavy`)\n")
-            lines.append(f"Артефакт: `{l1_rel}`\n")
-            summ = data.get("summary") or {}
-            lines.append("### Общие цифры (верх suite-JSON)\n")
+            lines.append("---\n")
+            lines.append("## 2. Nightly — извлечение метаданных (Layer-1)\n")
             lines.append(
-                "| Поле | Значение |\n| --- | --- |\n"
-                f"| `summary.case_count` | {_fmt(summ.get('case_count'))} |\n"
-                f"| `summary.all_passed` | {_fmt(summ.get('all_passed'))} |\n"
+                f"**{len(cases)} статей** по детекции объектов (реальные PDF → Markdown).  \n"
+                "Измеряем: точность заголовка, F1 arXiv-ссылок в библиографии, "
+                "соответствие числа ссылок эталону.\n"
             )
+            lines.append(_md_table(
+                _layer1_headers(show_authors=False),
+                [_layer1_row(c, show_authors=False) for c in cases],
+            ))
+            lines.append(_layer1_summary(cases) + "\n")
             lines.append(
-                "Пороговый gate и счётчики (`failed_count`, `references_llm_failed_events`) — в "
-                "`eval/results/benchmark-metrics-summary.json` "
-                "(секции `layer1_nightly`, `decision_gate`). Усреднённых F1/ROUGE по suite там "
-                "**нет**: сводка только про прохождение контракта.\n"
-            )
-            hdr = [
-                "case_id",
-                "contract_passed",
-                "title_exact",
-                "title_rouge_L",
-                "title_token_F1",
-                "abstract_rouge_L_vs_prefix",
-                "names_F1",
-                "aff_F1",
-                "sample_arxiv_F1",
-                "sample_doi_F1",
-                "ref_count_ok",
-            ]
-            body = [_layer1_row(c) for c in cases]
-            lines.append(_md_table(hdr, body))
-            agg_rows = _layer1_nightly_aggregate_rows(cases)
-            if agg_rows:
-                lines.append("### Агрегаты по полям (nightly suite)\n")
-                lines.append(
-                    _md_table(
-                        ["Поле", "N (с сигналом)", "Среднее / доля", "Комментарий"],
-                        agg_rows,
-                    )
-                )
-                lines.append("")
-            mean_nf, n = _aggregate_names_f1(cases)
-            if n:
-                note = (
-                    f"*Среднее `names_F1` по кейсам с `authorships.gold_count` > 0: "
-                    f"**{mean_nf}** (n={n}).*\n"
-                )
-                lines.append(note)
-            else:
-                lines.append(
-                    "*Среднее `names_F1` по кейсам с непустым эталоном авторов: **n/a**. "
-                    "В текущем nightly JSON у всех кейсов `gold_count` = 0 в блоке authorships — "
-                    "колонка `names_F1` не используется как сигнал по корпусу.*\n"
-                )
-            lines.append("### Почему много нулей и пустых ячеек в таблице ниже\n")
-            lines.append(
-                "- **`names_F1` почти везде 0:** в `gold.json` многих `*_realpdf` кейсов список "
-                "`authorships` **намеренно пустой** (см. `description` в gold: авторская строка "
-                "не размечена как comma-separated). Тогда эталон имён — пустое множество, а "
-                "предсказанные авторы считаются ложноположительными → precision/recall/F1 по "
-                "именам = 0 (см. `eval/layer1/metrics.py`, `prf1_tp_fp_fn`). Это **не** значит, "
-                "что модель «не извлекла авторов» в смысле продукта — значит, что **бенчмарк "
-                "пока не ставит эталон по авторам** на этом корпусе.\n"
-            )
-            lines.append(
-                "- **`aff_F1` часто 0 по той же причине** (пустой эталон аффилиаций); единичные "
-                "ненули — там, где в gold всё же заданы аффилиации / совпали множества.\n"
-            )
-            lines.append(
-                "- **Пустые `title_rouge_L` / `title_token_F1` / `abstract_rouge_L_vs_prefix`:** "
-                "в закоммиченном JSON этих ключей в `metrics.metadata` часто **нет** "
-                "(таблица показывает пусто). В актуальном коде `eval/layer1/metrics.py` поля "
-                "считаются и при сериализации обычно были бы `null` или число; если нужны "
-                "ROUGE-цифры в отчёте — **перепрогоните** suite и обновите артефакт, либо "
-                "смотрите кейсы с непустым эталоном заголовка/абстракта (например merge_safe).\n"
-            )
-            lines.append(
-                "- **Что реально драйвит `contract_passed` на nightly:** в типичном `gold.json` "
-                "для realpdf заданы `title` + `abstract_prefix` + ограничения по числу ссылок "
-                "(`references.expected_count` / `min_count`), а `quality_thresholds` часто "
-                "`null` — т.е. **нет** порогов по `min_title_rouge_l` / F1 авторам в контракте.\n"
+                "> **Авторы F1** не показан: артефакт создан до разметки gold-авторов. "
+                "После перепрогона nightly suite столбец появится с реальными значениями "
+                "(все 30 nightly кейсов теперь содержат эталон авторов).\n"
             )
             lines.append("")
 
+    # ── 3. Nightly: Layer-2 ───────────────────────────────────────────────────
     l2_rel = auth.get("layer2_nightly")
     if l2_rel:
         path = ROOT / str(l2_rel)
         if path.is_file():
             data = _read(path)
             cases = _iter_cases(data)
-            lines.append("## Layer-2 nightly (`nightly_semantic`)\n")
-            lines.append(f"Артефакт: `{l2_rel}`\n")
-            summ2 = data.get("summary") or {}
-            lines.append("### Общие цифры (верх suite-JSON)\n")
+            lines.append("---\n")
+            lines.append("## 3. Nightly — семантика (Layer-2)\n")
             lines.append(
-                "| Поле | Значение |\n| --- | --- |\n"
-                f"| `summary.case_count` | {_fmt(summ2.get('case_count'))} |\n"
-                f"| `summary.all_passed` | {_fmt(summ2.get('all_passed'))} |\n"
+                f"**{len(cases)} статей**. Precision/Recall по методам и датасетам, "
+                "упомянутым в статье.\n"
             )
-            lines.append("")
-            hdr = [
-                "case_id",
-                "passed",
-                "P_methods",
-                "R_methods",
-                "P_datasets",
-                "R_datasets",
-                "notes",
-            ]
-            body = [_layer2_row(c) for c in cases]
-            lines.append(_md_table(hdr, body))
+            lines.append(_md_table(
+                ["Статья", "Методы P", "Методы R", "Датасеты P", "Датасеты R", "✓"],
+                [_layer2_row(c) for c in cases],
+            ))
+            lines.append(_layer2_summary(cases) + "\n")
             lines.append("")
 
+    # ── 4. Поиск по корпусу (Retrieval) ──────────────────────────────────────
     retrieval_keys = [
-        ("Retrieval merge_safe_contract (mock)", "retrieval_merge_safe_mock"),
-        ("Retrieval strict_pilot (mock)", "retrieval_strict_pilot_mock"),
-        ("Retrieval live_corpus_mini", "retrieval_live_corpus_mini"),
+        ("Контрактные проверки (mock)", "retrieval_merge_safe_mock"),
+        ("Строгий пилот (mock)", "retrieval_strict_pilot_mock"),
+        ("Живой корпус (mini)", "retrieval_live_corpus_mini"),
     ]
-    for title, key in retrieval_keys:
+    retrieval_sections: list[tuple[str, str, list[dict[str, Any]]]] = []
+    for label, key in retrieval_keys:
         rel = auth.get(key)
         if not rel:
             continue
         path = ROOT / str(rel)
-        if not path.is_file():
-            continue
-        data = _read(path)
-        cases = _iter_cases(data)
-        lines.append(f"## {title}\n")
-        lines.append(f"Артефакт: `{rel}`\n")
-        hdr = [
-            "case_id",
-            "passed",
-            "contract_only",
-            "hit_count",
-            "hit_ok",
-            "min_hit_count",
-            "work_id_ok",
-        ]
-        body = [_retrieval_row(c) for c in cases]
-        lines.append(_md_table(hdr, body))
-        lines.append("")
+        if path.is_file():
+            retrieval_sections.append((label, rel, _iter_cases(_read(path))))
 
+    if retrieval_sections:
+        lines.append("---\n")
+        lines.append("## 4. Поиск по корпусу (Retrieval)\n")
+        lines.append("Тестирование поиска по индексированному корпусу статей.\n")
+        for label, rel, cases in retrieval_sections:
+            all_mock = all(
+                (c.get("metrics") or {}).get("contract_only") is True for c in cases
+            )
+            passed_n = _count_passed(cases, "passed")
+            n = len(cases)
+            if all_mock:
+                lines.append(f"**{label}:** {passed_n}/{n} запросов пройдено (контракт-only).\n")
+            else:
+                lines.append(f"### {label}\n")
+                rows: list[list[str]] = []
+                for c in cases:
+                    m = c.get("metrics") or {}
+                    rows.append([
+                        c.get("case_id", ""),
+                        str(m.get("hit_count") if m.get("hit_count") is not None else "—"),
+                        str(m.get("min_hit_count") if m.get("min_hit_count") is not None else "—"),
+                        _tick(m.get("hit_ok")),
+                        _tick(m.get("passed")),
+                    ])
+                lines.append(_md_table(
+                    ["Запрос", "Найдено документов", "Минимум", "Найдено ✓", "Прошёл ✓"],
+                    rows,
+                ))
+                lines.append("")
+
+    # ── 5. Извлечение утверждений (Claims) ────────────────────────────────────
     claims_keys = [
-        ("Claims merge_contract", "claims_merge_contract"),
-        ("Claims mini", "claims_mini_suite"),
-        ("Claims corpus_v2_mini", "claims_corpus_v2_mini_suite"),
-        ("Claims pilot", "claims_pilot_suite"),
+        ("Контракт", "claims_merge_contract"),
+        ("Mini (5 кейсов)", "claims_mini_suite"),
+        ("Corpus v2 mini (5 кейсов)", "claims_corpus_v2_mini_suite"),
+        ("Pilot (10 кейсов)", "claims_pilot_suite"),
     ]
-    for title, key in claims_keys:
+    claims_sections: list[tuple[str, str, list[dict[str, Any]]]] = []
+    for label, key in claims_keys:
         rel = auth.get(key)
         if not rel:
             continue
         path = ROOT / str(rel)
-        if not path.is_file():
-            continue
-        data = _read(path)
-        cases = _iter_cases(data)
-        lines.append(f"## {title}\n")
-        lines.append(f"Артефакт: `{rel}`\n")
-        hdr = ["case_id", "passed", "claim_recall", "claim_precision", "expected_n", "predicted_n"]
-        body = [_claims_row(c) for c in cases]
-        lines.append(_md_table(hdr, body))
-        lines.append("")
+        if path.is_file():
+            claims_sections.append((label, rel, _iter_cases(_read(path))))
 
-    for title, key in [
-        ("References resolution contract", "references_resolution_contract"),
-        ("References resolution mini", "references_resolution_mini"),
-    ]:
+    if claims_sections:
+        lines.append("---\n")
+        lines.append("## 5. Извлечение утверждений (Claims)\n")
+        lines.append(
+            "Precision/Recall по scientific claims, извлекаемым из текста статьи.  \n"
+            "F1 = 1.00 — точное совпадение всех ожидаемых утверждений.\n"
+        )
+        for label, rel, cases in claims_sections:
+            passed_n = _count_passed(cases, "passed")
+            n = len(cases)
+            rc_vals = _collect(cases, "claim_recall")
+            pr_vals = _collect(cases, "claim_precision")
+            if passed_n == n:
+                lines.append(
+                    f"**{label}:** {passed_n}/{n} ✓ · "
+                    f"полнота = **{_mean_str(rc_vals)}** · "
+                    f"точность = **{_mean_str(pr_vals)}**\n"
+                )
+            else:
+                lines.append(f"### {label}\n")
+                lines.append(_md_table(
+                    ["Кейс", "Эталон (N)", "Полнота", "Точность", "✓"],
+                    [_claims_row(c) for c in cases],
+                ))
+                lines.append("")
+
+    # ── 6. Разрешение ссылок (References Resolution) ─────────────────────────
+    refs_res_keys = [
+        ("Контракт", "references_resolution_contract"),
+        ("Mini", "references_resolution_mini"),
+    ]
+    refs_res_sections: list[tuple[str, str, list[dict[str, Any]]]] = []
+    for label, key in refs_res_keys:
         rel = auth.get(key)
         if not rel:
             continue
         path = ROOT / str(rel)
-        if not path.is_file():
-            continue
-        data = _read(path)
-        cases = _iter_cases(data)
-        lines.append(f"## {title}\n")
-        lines.append(f"Артефакт: `{rel}`\n")
-        hdr = ["case_id", "passed", "resolution_R", "resolution_P", "expected_n", "predicted_n"]
-        body = [_refs_res_row(c) for c in cases]
-        lines.append(_md_table(hdr, body))
-        lines.append("")
+        if path.is_file():
+            refs_res_sections.append((label, rel, _iter_cases(_read(path))))
+
+    if refs_res_sections:
+        lines.append("---\n")
+        lines.append("## 6. Разрешение ссылок (References Resolution)\n")
+        lines.append(
+            "Сопоставление raw-строк ссылок с идентификаторами работ (arXiv ID, DOI).\n"
+        )
+        for label, rel, cases in refs_res_sections:
+            passed_n = _count_passed(cases, "passed")
+            n = len(cases)
+            rc_vals = _collect(cases, "resolution_recall")
+            pr_vals = _collect(cases, "resolution_precision")
+            if passed_n == n and n == 1:
+                lines.append(
+                    f"**{label}:** {passed_n}/{n} ✓ · "
+                    f"полнота = **{_mean_str(rc_vals)}** · "
+                    f"точность = **{_mean_str(pr_vals)}**\n"
+                )
+            else:
+                lines.append(f"### {label}\n")
+                lines.append(_md_table(
+                    ["Тест", "Совпадений (эталон)", "Полнота", "Точность", "✓"],
+                    [_refs_res_row(c) for c in cases],
+                ))
+                lines.append("")
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")

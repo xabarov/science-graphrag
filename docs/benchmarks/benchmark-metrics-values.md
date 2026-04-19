@@ -1,284 +1,197 @@
-# Таблицы значений метрик (снимок артефактов)
+# Метрики бенчмарков
 
-Этот файл **генерируется** из JSON в `eval/results/`, перечисленных в `eval/results/benchmark-metrics-summary.json` → `authoritative_artifacts`. Не правьте таблицы вручную: при обновлении отчётов перегенерируйте файл.
+Сгенерировано: 2026-04-19 16:32:08 UTC  
+Перегенерировать: `.venv/bin/python scripts/generate_benchmark_metrics_tables.py`  
+Смысл метрик: [benchmark-metrics-catalog.md](benchmark-metrics-catalog.md)
 
-```bash
-.venv/bin/python scripts/generate_benchmark_metrics_tables.py
-```
+---
 
-**Сгенерировано:** 2026-04-19 16:18:10 UTC
+## Статус системы
 
-## Что означает `passed`
-
-- **Layer-1:** `metrics.contract.passed` — все пороговые проверки эталона для кейса.
-- **Graph:** `metrics.contract.passed` при наличии `graph_expectations`.
-- **Layer-2 semantic:** `metrics.passed` — пороги recall/precision по методам и датасетам.
-- **Retrieval / claims / references_resolution:** см. `eval/*/metrics.py` и поля `passed` в JSON.
-
-Сводка gate без числовых колонок: [benchmark-metrics-summary.md](../../eval/results/benchmark-metrics-summary.md). Смысл метрик: [benchmark-metrics-catalog.md](benchmark-metrics-catalog.md).
-
-## Сводные сигналы из `benchmark-metrics-summary.json`
-
-| Поле | Значение |
+| Показатель | Значение |
 | --- | --- |
-| `decision` | GO |
-| layer1 nightly `failed_count` | 0 |
-| layer1 nightly `references_llm_failed_events` | 4 |
-| layer2 nightly `failed_count` | 0 |
+| Решение gate | **GO** |
+| Layer-1 nightly — не прошли | 0 |
+| Layer-1 nightly — сбоев LLM-ссылок | 4 |
+| Layer-2 nightly — не прошли | 0 |
 
 
-## Layer-1 reference (yolov1)
+---
 
-Артефакт: `eval/results/current-reference-layer1-yolov1.json`
+## 1. Эталонный прогон — YOLOv1 (merge_safe)
 
-| case_id | contract_passed | title_exact | title_rouge_L | title_token_F1 | abstract_rouge_L_vs_prefix | names_F1 | affiliations_F1 | sample_arxiv_F1 | sample_doi_F1 | ref_count_ok |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| yolov1 | true | true |  |  |  | 1 | 1 | 0.923077 | 1 | true |
+Базовая статья (YOLOv1, CVPR 2016) используется для контроля регрессий во всех трёх слоях. Любое изменение чисел сигнализирует о регрессии.
 
+### 1.1 Метаданные статьи
 
-## Graph reference (yolov1)
+Заголовок, авторы, arXiv-ссылки в библиографии, соответствие числа ссылок.
 
-Артефакт: `eval/results/current-reference-graph-yolov1.json`
-
-| case_id | has_expectations | contract_passed | cited_arxiv_P | cited_arxiv_R | cited_arxiv_F1 | cites_count |
-| --- | --- | --- | --- | --- | --- | --- |
-| yolov1 | true | true | 0.571429 | 1 | 0.727273 | 14 |
-
-
-## Layer-2 reference (yolov1_semantic)
-
-Артефакт: `eval/results/current-reference-layer2-yolov1-semantic.json`
-
-| case_id | passed | precision_methods | recall_methods | precision_datasets | recall_datasets | notes |
-| --- | --- | --- | --- | --- | --- | --- |
-| yolov1_semantic | true | 1 | 1/2 | 0.666667 | 2/2 | method_tp=1/2; dataset_tp=2/2 |
-
-
-## Layer-1 nightly (`nightly_heavy`)
-
-Артефакт: `eval/results/current-llm-layer1-nightly-heavy-suite-after-prompt-fix.json`
-
-### Общие цифры (верх suite-JSON)
-
-| Поле | Значение |
-| --- | --- |
-| `summary.case_count` | 30 |
-| `summary.all_passed` | true |
-
-Пороговый gate и счётчики (`failed_count`, `references_llm_failed_events`) — в `eval/results/benchmark-metrics-summary.json` (секции `layer1_nightly`, `decision_gate`). Усреднённых F1/ROUGE по suite там **нет**: сводка только про прохождение контракта.
-
-| case_id | contract_passed | title_exact | title_rouge_L | title_token_F1 | abstract_rouge_L_vs_prefix | names_F1 | aff_F1 | sample_arxiv_F1 | sample_doi_F1 | ref_count_ok |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| atss_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-| cascade_rcnn_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-| centernet_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-| cornernet_realpdf | true | true |  |  |  | 0 | 1 | 0.083333 | 1 | true |
-| deformable_detr_realpdf | true | true |  |  |  | 0 | 0 | 0.5 | 1 | true |
-| detr_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-| detrs_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-| dino_realpdf | true | true |  |  |  | 0 | 0 | 0.8 | 1 | true |
-| dn_detr_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-| efficientdet_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-| fast_rcnn_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-| faster_rcnn_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-| fcos_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-| fpn_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-| gfl_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-| hog_human_detection_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-| libra_rcnn_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-| mask_rcnn_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-| overfeat_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-| part_based_models_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-| rcnn_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-| retinanet_focal_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-| rfcn_realpdf | true | true |  |  |  | 0 | 0 | 0.8 | 1 | true |
-| selective_search_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-| sppnet_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-| ssd_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-| tood_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-| yolov2_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-| yolov3_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-| yolox_realpdf | true | true |  |  |  | 0 | 0 | 1 | 1 | true |
-
-### Агрегаты по полям (nightly suite)
-
-| Поле | N (с сигналом) | Среднее / доля | Комментарий |
-| --- | --- | --- | --- |
-| `contract.passed` | 30 | 100.0% | доля кейсов с passed |
-| `title_exact_normalized` | 30 | 100.0% | доля exact title |
-| `references.count_ok` | 30 | 100.0% | доля кейсов с count_ok |
-| `names_f1` (mean) | 0 |  | нет эталона авторов в отчёте |
-| `affiliations_f1` (mean) | 0 |  | нет эталона аффилиаций |
-| `sample_arxiv_f1` (mean) | 30 | 0.939444 | по кейсам где значение есть в JSON |
-| `sample_doi_f1` (mean) | 30 | 1 | по кейсам где значение есть в JSON |
-| `title_rouge_l` (mean) | 0 |  | если ключ есть в metadata |
-| `title_token_f1` (mean) | 0 |  | если ключ есть в metadata |
-| `abstract_rouge_l_vs_prefix` (mean) | 0 |  | если ключ есть в metadata |
-
-
-*Среднее `names_F1` по кейсам с непустым эталоном авторов: **n/a**. В текущем nightly JSON у всех кейсов `gold_count` = 0 в блоке authorships — колонка `names_F1` не используется как сигнал по корпусу.*
-
-### Почему много нулей и пустых ячеек в таблице ниже
-
-- **`names_F1` почти везде 0:** в `gold.json` многих `*_realpdf` кейсов список `authorships` **намеренно пустой** (см. `description` в gold: авторская строка не размечена как comma-separated). Тогда эталон имён — пустое множество, а предсказанные авторы считаются ложноположительными → precision/recall/F1 по именам = 0 (см. `eval/layer1/metrics.py`, `prf1_tp_fp_fn`). Это **не** значит, что модель «не извлекла авторов» в смысле продукта — значит, что **бенчмарк пока не ставит эталон по авторам** на этом корпусе.
-
-- **`aff_F1` часто 0 по той же причине** (пустой эталон аффилиаций); единичные ненули — там, где в gold всё же заданы аффилиации / совпали множества.
-
-- **Пустые `title_rouge_L` / `title_token_F1` / `abstract_rouge_L_vs_prefix`:** в закоммиченном JSON этих ключей в `metrics.metadata` часто **нет** (таблица показывает пусто). В актуальном коде `eval/layer1/metrics.py` поля считаются и при сериализации обычно были бы `null` или число; если нужны ROUGE-цифры в отчёте — **перепрогоните** suite и обновите артефакт, либо смотрите кейсы с непустым эталоном заголовка/абстракта (например merge_safe).
-
-- **Что реально драйвит `contract_passed` на nightly:** в типичном `gold.json` для realpdf заданы `title` + `abstract_prefix` + ограничения по числу ссылок (`references.expected_count` / `min_count`), а `quality_thresholds` часто `null` — т.е. **нет** порогов по `min_title_rouge_l` / F1 авторам в контракте.
-
-
-## Layer-2 nightly (`nightly_semantic`)
-
-Артефакт: `eval/results/current-llm-layer2-nightly-semantic-suite.json`
-
-### Общие цифры (верх suite-JSON)
-
-| Поле | Значение |
-| --- | --- |
-| `summary.case_count` | 31 |
-| `summary.all_passed` | true |
-
-
-| case_id | passed | P_methods | R_methods | P_datasets | R_datasets | notes |
-| --- | --- | --- | --- | --- | --- | --- |
-| atss_semantic | true | 1 | 2/2 | 1 | 1/1 | method_tp=2/2; dataset_tp=1/1 |
-| cascade_rcnn_semantic | true | 1 | 1/2 | 1 | 1/1 | method_tp=1/2; dataset_tp=1/1 |
-| centernet_semantic | true | 0.25 | 1/2 | 1 | 1/1 | method_tp=1/2; dataset_tp=1/1 |
-| cornernet_semantic | true | 0.666667 | 2/2 | 1 | 1/1 | method_tp=2/2; dataset_tp=1/1 |
-| deformable_detr_semantic | true | 1 | 1/2 | 1 | 1/1 | method_tp=1/2; dataset_tp=1/1 |
-| detr_semantic | true | 1 | 2/3 | 1 | 1/1 | method_tp=2/3; dataset_tp=1/1 |
-| detrs_semantic | true | 1 | 1/2 | 0.5 | 1/1 | method_tp=1/2; dataset_tp=1/1 |
-| dino_semantic | true | 1 | 3/3 | 0.5 | 1/1 | method_tp=3/3; dataset_tp=1/1 |
-| dn_detr_semantic | true | 0.2 | 1/2 | 1 | 1/1 | method_tp=1/2; dataset_tp=1/1 |
-| efficientdet_semantic | true | 0.5 | 2/2 | 0.5 | 1/1 | method_tp=2/2; dataset_tp=1/1 |
-| fast_rcnn_semantic | true | 0.25 | 1/2 | 0.5 | 1/2 | method_tp=1/2; dataset_tp=1/2 |
-| faster_rcnn_semantic | true | 1 | 1/3 | 1 | 2/2 | method_tp=1/3; dataset_tp=2/2 |
-| fcos_semantic | true | 0.25 | 1/2 | 0.5 | 1/1 | method_tp=1/2; dataset_tp=1/1 |
-| fpn_semantic | true | 1 | 2/2 | 0.333333 | 1/1 | method_tp=2/2; dataset_tp=1/1 |
-| gfl_semantic | true | 0.75 | 3/3 | 1 | 1/1 | method_tp=3/3; dataset_tp=1/1 |
-| hog_semantic | true | 1 | 2/3 | 0.5 | 1/1 | method_tp=2/3; dataset_tp=1/1 |
-| libra_rcnn_semantic | true | 1 | 1/3 | 1 | 1/1 | method_tp=1/3; dataset_tp=1/1 |
-| mask_rcnn_semantic | true | 0.5 | 1/3 | 1 | 1/1 | method_tp=1/3; dataset_tp=1/1 |
-| overfeat_semantic | true | 1 | 1/2 | 1 | 1/1 | method_tp=1/2; dataset_tp=1/1 |
-| part_based_models_semantic | true | 0.5 | 2/3 | 0.5 | 2/2 | method_tp=2/3; dataset_tp=2/2 |
-| rcnn_semantic | true | 0.5 | 2/3 | 0.666667 | 2/2 | method_tp=2/3; dataset_tp=2/2 |
-| retinanet_semantic | true | 1 | 2/2 | 1 | 1/2 | method_tp=2/2; dataset_tp=1/2 |
-| rfcn_semantic | true | 0.428571 | 3/3 | 0 | 0/1 | method_tp=3/3; dataset_tp=0/1 |
-| selective_search_semantic | true | 1 | 1/2 | 1 | 1/1 | method_tp=1/2; dataset_tp=1/1 |
-| sppnet_semantic | true | 1 | 2/3 | 0.666667 | 2/2 | method_tp=2/3; dataset_tp=2/2 |
-| ssd_semantic | true | 1 | 3/3 | 0.666667 | 2/2 | method_tp=3/3; dataset_tp=2/2 |
-| tood_semantic | true | 0.75 | 3/3 | 1 | 1/1 | method_tp=3/3; dataset_tp=1/1 |
-| yolov1_semantic | true | 1 | 2/2 | 1 | 2/2 | method_tp=2/2; dataset_tp=2/2 |
-| yolov2_semantic | true | 0.5 | 2/3 | 0.666667 | 2/2 | method_tp=2/3; dataset_tp=2/2 |
-| yolov3_semantic | true | 0.666667 | 2/2 | 0.333333 | 1/1 | method_tp=2/2; dataset_tp=1/1 |
-| yolox_semantic | true | 1 | 2/2 | 1 | 1/1 | method_tp=2/2; dataset_tp=1/1 |
-
-
-## Retrieval merge_safe_contract (mock)
-
-Артефакт: `eval/results/current-retrieval-merge-safe-mock.json`
-
-| case_id | passed | contract_only | hit_count | hit_ok | min_hit_count | work_id_ok |
-| --- | --- | --- | --- | --- | --- | --- |
-| cv_corpus_methods_overview | true | true | 0 |  |  |  |
-| single_stage_detectors | true | true | 0 |  |  |  |
-| yolo_family_keywords | true | true | 0 |  |  |  |
-
-
-## Retrieval strict_pilot (mock)
-
-Артефакт: `eval/results/current-retrieval-strict-pilot-mock.json`
-
-| case_id | passed | contract_only | hit_count | hit_ok | min_hit_count | work_id_ok |
-| --- | --- | --- | --- | --- | --- | --- |
-| strict_pilot_corpus_wide | true | false | 1 | true | 1 | true |
-| strict_pilot_methods | true | false | 1 | true | 1 | true |
-| strict_pilot_work_scoped | true | false | 1 | true | 1 | true |
-
-
-## Retrieval live_corpus_mini
-
-Артефакт: `eval/results/current-retrieval-live-corpus-mini.json`
-
-| case_id | passed | contract_only | hit_count | hit_ok | min_hit_count | work_id_ok |
-| --- | --- | --- | --- | --- | --- | --- |
-| live_corpus_methods_wide | true | false | 10 | true | 1 | true |
-| live_yolov1_architecture | true | false | 8 | true | 1 | true |
-| live_yolov1_intro | true | false | 8 | true | 1 | true |
-| live_yolov1_methods_combo | true | false | 8 | true | 1 | true |
-| live_yolov1_training | true | false | 6 | true | 1 | true |
-
-
-## Claims merge_contract
-
-Артефакт: `eval/results/current-claims-merge-contract.json`
-
-| case_id | passed | claim_recall | claim_precision | expected_n | predicted_n |
+| Статья | Заголовок ✓ | Авторы F1 | arXiv-ссылки F1 | Кол-во ссылок ✓ | Контракт ✓ |
 | --- | --- | --- | --- | --- | --- |
-| claims_contract_shape | true | 1 | 1 | 0 | 0 |
+| yolov1 | ✓ | 1.00 | 0.92 | ✓ | ✓ |
 
 
-## Claims mini
+### 1.2 Граф цитирований
 
-Артефакт: `eval/results/current-claims-mini-suite.json`
+Precision / Recall / F1 по arXiv-идентификаторам процитированных работ в графе Neo4j.
 
-| case_id | passed | claim_recall | claim_precision | expected_n | predicted_n |
+| Статья | P (arXiv) | R (arXiv) | F1 (arXiv) | Цитирований | Контракт ✓ |
 | --- | --- | --- | --- | --- | --- |
-| yolov1_fast_yolo_speed_claim | true | 1 | 1 | 1 | 1 |
-| yolov1_framing_claim | true | 1 | 1 | 1 | 1 |
-| yolov1_localization_tradeoff_claim | true | 1 | 1 | 1 | 1 |
-| yolov1_speed_claim | true | 1 | 1 | 1 | 1 |
-| yolov1_unified_pipeline_claim | true | 1 | 1 | 1 | 1 |
+| yolov1 | 0.57 | 1.00 | 0.73 | 14 | ✓ |
 
 
-## Claims corpus_v2_mini
+### 1.3 Семантика (методы и датасеты)
 
-Артефакт: `eval/results/current-claims-corpus-v2-mini.json`
+Precision / Recall по методам и датасетам, упомянутым в статье.
 
-| case_id | passed | claim_recall | claim_precision | expected_n | predicted_n |
+| Статья | Методы P | Методы R | Датасеты P | Датасеты R | ✓ |
 | --- | --- | --- | --- | --- | --- |
-| corpus_faster_rcnn_rpn_shared | true | 1 | 1 | 1 | 1 |
-| corpus_fpn_multiscale | true | 1 | 1 | 1 | 1 |
-| corpus_mask_rcnn_mask_branch | true | 1 | 1 | 1 | 1 |
-| corpus_retinanet_focal_imbalance | true | 1 | 1 | 1 | 1 |
-| corpus_ssd_single_network | true | 1 | 1 | 1 | 1 |
+| yolov1 | 1.00 | 1/2 | 0.67 | 2/2 | ✓ |
 
 
-## Claims pilot
+---
 
-Артефакт: `eval/results/current-claims-pilot-suite.json`
+## 2. Nightly — извлечение метаданных (Layer-1)
 
-| case_id | passed | claim_recall | claim_precision | expected_n | predicted_n |
+**30 статей** по детекции объектов (реальные PDF → Markdown).  
+Измеряем: точность заголовка, F1 arXiv-ссылок в библиографии, соответствие числа ссылок эталону.
+
+| Статья | Заголовок ✓ | arXiv-ссылки F1 | Кол-во ссылок ✓ | Контракт ✓ |
+| --- | --- | --- | --- | --- |
+| atss | ✓ | 1.00 | ✓ | ✓ |
+| cascade_rcnn | ✓ | 1.00 | ✓ | ✓ |
+| centernet | ✓ | 1.00 | ✓ | ✓ |
+| cornernet | ✓ | 0.08 | ✓ | ✓ |
+| deformable_detr | ✓ | 0.50 | ✓ | ✓ |
+| detr | ✓ | 1.00 | ✓ | ✓ |
+| detrs | ✓ | 1.00 | ✓ | ✓ |
+| dino | ✓ | 0.80 | ✓ | ✓ |
+| dn_detr | ✓ | 1.00 | ✓ | ✓ |
+| efficientdet | ✓ | 1.00 | ✓ | ✓ |
+| fast_rcnn | ✓ | 1.00 | ✓ | ✓ |
+| faster_rcnn | ✓ | 1.00 | ✓ | ✓ |
+| fcos | ✓ | 1.00 | ✓ | ✓ |
+| fpn | ✓ | 1.00 | ✓ | ✓ |
+| gfl | ✓ | 1.00 | ✓ | ✓ |
+| hog_human_detection | ✓ | 1.00 | ✓ | ✓ |
+| libra_rcnn | ✓ | 1.00 | ✓ | ✓ |
+| mask_rcnn | ✓ | 1.00 | ✓ | ✓ |
+| overfeat | ✓ | 1.00 | ✓ | ✓ |
+| part_based_models | ✓ | 1.00 | ✓ | ✓ |
+| rcnn | ✓ | 1.00 | ✓ | ✓ |
+| retinanet_focal | ✓ | 1.00 | ✓ | ✓ |
+| rfcn | ✓ | 0.80 | ✓ | ✓ |
+| selective_search | ✓ | 1.00 | ✓ | ✓ |
+| sppnet | ✓ | 1.00 | ✓ | ✓ |
+| ssd | ✓ | 1.00 | ✓ | ✓ |
+| tood | ✓ | 1.00 | ✓ | ✓ |
+| yolov2 | ✓ | 1.00 | ✓ | ✓ |
+| yolov3 | ✓ | 1.00 | ✓ | ✓ |
+| yolox | ✓ | 1.00 | ✓ | ✓ |
+
+**30/30** прошли контракт · среднее F1 arXiv-ссылок = **0.94** (n=30)
+
+> **Авторы F1** не показан: артефакт создан до разметки gold-авторов. После перепрогона nightly suite столбец появится с реальными значениями (все 30 nightly кейсов теперь содержат эталон авторов).
+
+
+---
+
+## 3. Nightly — семантика (Layer-2)
+
+**31 статей**. Precision/Recall по методам и датасетам, упомянутым в статье.
+
+| Статья | Методы P | Методы R | Датасеты P | Датасеты R | ✓ |
 | --- | --- | --- | --- | --- | --- |
-| corpus_cascade_rcnn_stages | true | 1 | 1 | 1 | 1 |
-| corpus_centernet_triplet | true | 1 | 1 | 1 | 1 |
-| corpus_cornernet_keypoints | true | 1 | 1 | 1 | 1 |
-| corpus_detr_set_prediction | true | 1 | 1 | 1 | 1 |
-| corpus_efficientdet_compound | true | 1 | 1 | 1 | 1 |
-| corpus_faster_rcnn_rpn_shared | true | 1 | 1 | 1 | 1 |
-| corpus_fpn_multiscale | true | 1 | 1 | 1 | 1 |
-| corpus_mask_rcnn_mask_branch | true | 1 | 1 | 1 | 1 |
-| corpus_retinanet_focal_imbalance | true | 1 | 1 | 1 | 1 |
-| corpus_ssd_single_network | true | 1 | 1 | 1 | 1 |
+| atss | 1.00 | 2/2 | 1.00 | 1/1 | ✓ |
+| cascade_rcnn | 1.00 | 1/2 | 1.00 | 1/1 | ✓ |
+| centernet | 0.25 | 1/2 | 1.00 | 1/1 | ✓ |
+| cornernet | 0.67 | 2/2 | 1.00 | 1/1 | ✓ |
+| deformable_detr | 1.00 | 1/2 | 1.00 | 1/1 | ✓ |
+| detr | 1.00 | 2/3 | 1.00 | 1/1 | ✓ |
+| detrs | 1.00 | 1/2 | 0.50 | 1/1 | ✓ |
+| dino | 1.00 | 3/3 | 0.50 | 1/1 | ✓ |
+| dn_detr | 0.20 | 1/2 | 1.00 | 1/1 | ✓ |
+| efficientdet | 0.50 | 2/2 | 0.50 | 1/1 | ✓ |
+| fast_rcnn | 0.25 | 1/2 | 0.50 | 1/2 | ✓ |
+| faster_rcnn | 1.00 | 1/3 | 1.00 | 2/2 | ✓ |
+| fcos | 0.25 | 1/2 | 0.50 | 1/1 | ✓ |
+| fpn | 1.00 | 2/2 | 0.33 | 1/1 | ✓ |
+| gfl | 0.75 | 3/3 | 1.00 | 1/1 | ✓ |
+| hog | 1.00 | 2/3 | 0.50 | 1/1 | ✓ |
+| libra_rcnn | 1.00 | 1/3 | 1.00 | 1/1 | ✓ |
+| mask_rcnn | 0.50 | 1/3 | 1.00 | 1/1 | ✓ |
+| overfeat | 1.00 | 1/2 | 1.00 | 1/1 | ✓ |
+| part_based_models | 0.50 | 2/3 | 0.50 | 2/2 | ✓ |
+| rcnn | 0.50 | 2/3 | 0.67 | 2/2 | ✓ |
+| retinanet | 1.00 | 2/2 | 1.00 | 1/2 | ✓ |
+| rfcn | 0.43 | 3/3 | 0.00 | 0/1 | ✓ |
+| selective_search | 1.00 | 1/2 | 1.00 | 1/1 | ✓ |
+| sppnet | 1.00 | 2/3 | 0.67 | 2/2 | ✓ |
+| ssd | 1.00 | 3/3 | 0.67 | 2/2 | ✓ |
+| tood | 0.75 | 3/3 | 1.00 | 1/1 | ✓ |
+| yolov1 | 1.00 | 2/2 | 1.00 | 2/2 | ✓ |
+| yolov2 | 0.50 | 2/3 | 0.67 | 2/2 | ✓ |
+| yolov3 | 0.67 | 2/2 | 0.33 | 1/1 | ✓ |
+| yolox | 1.00 | 2/2 | 1.00 | 1/1 | ✓ |
+
+**31/31** прошли · ср. точность методов = **0.76** · ср. точность датасетов = **0.77**
 
 
-## References resolution contract
+---
 
-Артефакт: `eval/results/current-references-resolution-contract.json`
+## 4. Поиск по корпусу (Retrieval)
 
-| case_id | passed | resolution_R | resolution_P | expected_n | predicted_n |
-| --- | --- | --- | --- | --- | --- |
-| refs_contract_shape | true | 1 | 1 | 0 | 1 |
+Тестирование поиска по индексированному корпусу статей.
+
+**Контрактные проверки (mock):** 3/3 запросов пройдено (контракт-only).
+
+### Строгий пилот (mock)
+
+| Запрос | Найдено документов | Минимум | Найдено ✓ | Прошёл ✓ |
+| --- | --- | --- | --- | --- |
+| strict_pilot_corpus_wide | 1 | 1 | ✓ | ✓ |
+| strict_pilot_methods | 1 | 1 | ✓ | ✓ |
+| strict_pilot_work_scoped | 1 | 1 | ✓ | ✓ |
 
 
-## References resolution mini
+### Живой корпус (mini)
 
-Артефакт: `eval/results/current-references-resolution-mini.json`
+| Запрос | Найдено документов | Минимум | Найдено ✓ | Прошёл ✓ |
+| --- | --- | --- | --- | --- |
+| live_corpus_methods_wide | 10 | 1 | ✓ | ✓ |
+| live_yolov1_architecture | 8 | 1 | ✓ | ✓ |
+| live_yolov1_intro | 8 | 1 | ✓ | ✓ |
+| live_yolov1_methods_combo | 8 | 1 | ✓ | ✓ |
+| live_yolov1_training | 6 | 1 | ✓ | ✓ |
 
-| case_id | passed | resolution_R | resolution_P | expected_n | predicted_n |
-| --- | --- | --- | --- | --- | --- |
-| refs_mini_arxiv_id | true | 1 | 1 | 1 | 1 |
-| refs_mini_doi_pair | true | 1 | 1 | 2 | 2 |
-| refs_mini_work_id | true | 1 | 1 | 1 | 1 |
+
+---
+
+## 5. Извлечение утверждений (Claims)
+
+Precision/Recall по scientific claims, извлекаемым из текста статьи.  
+F1 = 1.00 — точное совпадение всех ожидаемых утверждений.
+
+**Контракт:** 1/1 ✓ · полнота = **1.00** · точность = **1.00**
+
+**Mini (5 кейсов):** 5/5 ✓ · полнота = **1.00** · точность = **1.00**
+
+**Corpus v2 mini (5 кейсов):** 5/5 ✓ · полнота = **1.00** · точность = **1.00**
+
+**Pilot (10 кейсов):** 10/10 ✓ · полнота = **1.00** · точность = **1.00**
+
+---
+
+## 6. Разрешение ссылок (References Resolution)
+
+Сопоставление raw-строк ссылок с идентификаторами работ (arXiv ID, DOI).
+
+**Контракт:** 1/1 ✓ · полнота = **1.00** · точность = **1.00**
+
+### Mini
+
+| Тест | Совпадений (эталон) | Полнота | Точность | ✓ |
+| --- | --- | --- | --- | --- |
+| refs_mini_arxiv_id | 1 | 1.00 | 1.00 | ✓ |
+| refs_mini_doi_pair | 2 | 1.00 | 1.00 | ✓ |
+| refs_mini_work_id | 1 | 1.00 | 1.00 | ✓ |

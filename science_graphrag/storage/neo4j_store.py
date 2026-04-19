@@ -19,6 +19,9 @@ class Neo4jGraphStore:
             uri,
             auth=(user, password),
             notifications_disabled_classifications=[NotificationClassification.UNRECOGNIZED],
+            # Fail fast when Bolt is unreachable so API handlers (e.g. /v1/workspaces) do not hang the UI.
+            connection_timeout=15.0,
+            connection_acquisition_timeout=20.0,
         )
 
     def close(self) -> None:
