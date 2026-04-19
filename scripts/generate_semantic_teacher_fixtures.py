@@ -12,6 +12,9 @@ Usage:
     --fixtures-root tests/fixtures/benchmarks/layer2 \\
     --out-root eval/teacher_gold/layer2 \\
     --tier nightly_semantic
+
+Provenance / when to run vs extractor triage: see ``eval/README.md`` section *Teacher-gold remediation*
+(mirror commit message fields with layer-1 teacher refresh).
 """
 
 from __future__ import annotations
@@ -27,6 +30,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 
+from teacher_llm_settings import teacher_extraction_settings
+
 from eval.bench_common import discover_layer2_case_dirs
 from eval.layer2.metrics import load_article_for_case
 from eval.layer2.spec import SemanticGoldSpec
@@ -35,8 +40,6 @@ from science_graphrag.ingestion.document_slices import strip_repeated_boilerplat
 from science_graphrag.ingestion.llm.semantic_extraction import extract_semantic_method_dataset
 from science_graphrag.ingestion.normalize import normalize_text
 from science_graphrag.observability.phoenix_tracer import chain_span, init_tracer_provider
-
-from teacher_llm_settings import teacher_extraction_settings
 
 
 def _norm_name(value: str) -> str:

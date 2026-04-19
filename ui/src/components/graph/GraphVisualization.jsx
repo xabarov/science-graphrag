@@ -71,6 +71,10 @@ export default function GraphVisualization({ graph, selectedNodeId, onSelectNode
       <Box sx={{ display: "grid", gridTemplateColumns: compact ? "repeat(auto-fill, minmax(160px, 1fr))" : "repeat(auto-fill, minmax(180px, 1fr))", gap: 1 }}>
         {graph.nodes.map((node, index) => {
           const active = node.id === selectedNodeId;
+          const headline =
+            node.displayLabel != null && String(node.displayLabel).trim()
+              ? String(node.displayLabel)
+              : String(node.label || "");
           return (
             <Box
               key={node.id}
@@ -80,7 +84,7 @@ export default function GraphVisualization({ graph, selectedNodeId, onSelectNode
               role="button"
               tabIndex={index === activeIndex ? 0 : -1}
               aria-pressed={active}
-              aria-label={`${node.type}: ${node.label}`}
+              aria-label={`${node.type}: ${headline}`}
               onClick={() => onSelectNode(node.id)}
               onKeyDown={(event) => handleCardKeyDown(index, event)}
               sx={{
@@ -102,7 +106,7 @@ export default function GraphVisualization({ graph, selectedNodeId, onSelectNode
             >
               <Typography sx={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.92)", mb: 0.5 }}>{node.type}</Typography>
               <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.88)", fontWeight: 600, lineHeight: 1.35 }}>
-                {node.label}
+                {headline}
               </Typography>
               <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mt: 0.5, fontFamily: "monospace", wordBreak: "break-word" }}>
                 {node.id}

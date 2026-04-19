@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import typer
@@ -271,6 +272,45 @@ def ingest_corpus_cmd(
         skip_existing_sha=skip_existing_sha,
         force_new_document=force_new_document,
     )
+
+
+@app.command("merge-catalog-audit")
+def merge_catalog_audit_cmd() -> None:
+    """Author/institution merge catalog — policy checklist (Wave H2 scaffold).
+
+    Full clients (Crossref/ORCID/ROR) are not wired here yet; this command prints
+    the canonical doc pointer for operators.
+    """
+
+    typer.echo(
+        "merge-catalog-audit: no external API calls in this build.\n"
+        "See docs/specs/merge-catalog-wave-h.md and docs/adr/009-author-institution-merge-catalog.md"
+    )
+
+
+@app.command("work-dedup-report")
+def work_dedup_report_cmd(
+    as_json: bool = typer.Option(False, "--json", help="Emit JSON instead of plain text rows."),
+) -> None:
+    """List Work dedup clusters from Neo4j (read-only; Wave H3 prep)."""
+
+    s = get_settings()
+    neo = Neo4jGraphStore(s.neo4j_uri, s.neo4j_user, s.neo4j_password)
+    try:
+        rows = neo.find_work_dedup_violations()
+    finally:
+        neo.close()
+    if as_json:
+        typer.echo(json.dumps(rows, indent=2, default=str))
+        return
+    if not rows:
+        typer.echo("No duplicate Work clusters reported by find_work_dedup_violations().")
+        return
+    typer.echo(f"Clusters: {len(rows)}")
+    for row in rows[:200]:
+        typer.echo(f"- {row.get('dedup_key')}: {row.get('ids')}")
+    if len(rows) > 200:
+        typer.echo(f"... truncated ({len(rows)} total); use --json for full dump.")
 
 
 def main() -> None:

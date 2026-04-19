@@ -6,6 +6,8 @@
 
 Стабилизация benchmark + API: [docs/runbooks/benchmark-stabilization-baseline.md](../docs/runbooks/benchmark-stabilization-baseline.md), [docs/runbooks/benchmark-stabilization-triage.md](../docs/runbooks/benchmark-stabilization-triage.md), [docs/runbooks/benchmark-decision-gate.md](../docs/runbooks/benchmark-decision-gate.md).
 
+**Docker dev (`make dev-up`):** после смены переменных окружения в `docker-compose.dev.yml` пересоберите только API: `make dev-recreate-api` (или `docker compose -f docker-compose.dev.yml up -d api --force-recreate`).
+
 **Reference gate:** перед массовыми правками gold/метрик убедитесь, что эталон **YOLOv1** (три `baseline-reference-*-yolov1*.json`) зелёный; см. раздел 6.1 в runbook baseline.
 
 **Сводка метрик по всем lane:** после прогонов выполните `.venv/bin/python scripts/aggregate_benchmark_metrics.py` или `./scripts/refresh_benchmark_metrics.sh` — см. `eval/results/benchmark-metrics-summary.md`.
@@ -34,6 +36,46 @@
 3. Чтобы **выключить** LLM при том же `.env` с `true`, поменяйте флаг **в `.env`** или временно закомментируйте строку; одна только переменная в shell больше не перебивает `.env` (в CI секретного `.env` нет — там по-прежнему задаётся `SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED=false` в workflow).
 
 Семантическая стадия (ontology v1) управляется `SCIENCE_GRAPHRAG_SEMANTIC_EXTRACTION_ENABLED` (по умолчанию включена, если LLM доступен).
+
+## Retrieval / `POST /v1/query` (Wave F)
+
+- Код: `eval/retrieval/` (`metrics`, `runner`).
+- Фикстуры: `tests/fixtures/benchmarks/retrieval/<case_id>/`; тиры — [`case_tiers.json`](../tests/fixtures/benchmarks/retrieval/case_tiers.json).
+- Документ: [docs/benchmarks/retrieval-eval-v1.md](../docs/benchmarks/retrieval-eval-v1.md).
+- Сводка агрегатора (advisory lane): [docs/runbooks/benchmark-decision-gate.md](../docs/runbooks/benchmark-decision-gate.md) §8, `eval/results/benchmark-metrics-summary.md`.
+
+```bash
+science-graphrag-retrieval-benchmark tests/fixtures/benchmarks/retrieval/cv_corpus_methods_overview
+# merge-safe contract smoke (default tier)
+science-graphrag-retrieval-benchmark tests/fixtures/benchmarks/retrieval --suite --mock-answer \
+  --json-out eval/results/current-retrieval-merge-safe-mock.json
+# strict fingerprint gold (pilot placeholders until live capture)
+science-graphrag-retrieval-benchmark tests/fixtures/benchmarks/retrieval --suite --tier strict_pilot --mock-answer \
+  --json-out eval/results/current-retrieval-strict-pilot-mock.json
+# all non-skipped cases
+science-graphrag-retrieval-benchmark tests/fixtures/benchmarks/retrieval --suite --tier all --json-out eval/results/retrieval-suite.json
+# live pilot mini-tier (requires ingested pilot corpus + Qdrant; no --mock-answer)
+science-graphrag-retrieval-benchmark tests/fixtures/benchmarks/retrieval --suite --tier live_corpus_mini \
+  --json-out eval/results/retrieval-live-corpus-mini.json
+```
+
+See [docs/benchmarks/retrieval-live-tier-v1.md](../docs/benchmarks/retrieval-live-tier-v1.md).
+
+Полный чеклист advisory прогонов и `aggregate_benchmark_metrics.py`: [docs/runbooks/benchmark-pilot-advisory-runs.md](../docs/runbooks/benchmark-pilot-advisory-runs.md).
+
+## Claims / epistemic ontology (Wave H1, advisory)
+
+- Код: `eval/claims/` (`heuristic_extract`, `metrics`, `runner`).
+- Фикстуры: `tests/fixtures/benchmarks/claims/`; тиры — [`case_tiers.json`](../tests/fixtures/benchmarks/claims/case_tiers.json).
+- Спека: [docs/benchmarks/ontology-claims-benchmark-v1.md](../docs/benchmarks/ontology-claims-benchmark-v1.md).
+
+```bash
+# merge-safe contract (shape-only)
+science-graphrag-claims-benchmark tests/fixtures/benchmarks/claims --suite --tier claims_merge_contract
+# frozen mini-pack (deterministic anchor harness)
+science-graphrag-claims-benchmark tests/fixtures/benchmarks/claims --suite --tier claims_mini \
+  --json-out eval/results/claims-mini-suite.json
+```
 
 ## Layer-1 (markdown → drafts)
 
@@ -152,6 +194,12 @@ science-graphrag-layer1-benchmark tests/fixtures/benchmarks/layer1 \
 Опционально смягчить пороги поверх эталона в файле: `--threshold-profile student_mistral`.
 
 3. Семантический слой от учителя (layer-2): `scripts/generate_semantic_teacher_fixtures.py` пишет `eval/teacher_gold/layer2/<case>/semantic_gold_teacher.json`.
+
+### Teacher-gold remediation (когда регенерировать, provenance)
+
+**Регенерация допустима**, когда осознанно меняется профиль учителя (промпт / модель / tier) и нужен новый эталон для сравнения со студентом: зафиксируйте в **сообщении коммита** скрипт, аргументы (`--tier`, пути `--fixtures-root` / `--out-root`), и идентификатор модели (без секретов). Для layer-1: `scripts/generate_teacher_layer1_gold.py`; для layer-2: `scripts/generate_semantic_teacher_fixtures.py` — одинаковое правило provenance.
+
+**Не используйте регенерацию** как способ скрыть регрессию экстрактора или битый `article.md`: сначала triage по [teacher-gold-audit-checklist.md](../docs/benchmarks/teacher-gold-audit-checklist.md) и [benchmark-stabilization-triage.md](../docs/runbooks/benchmark-stabilization-triage.md) (код или fixture, затем при необходимости teacher refresh).
 
 ## Регенерация `article.md` из локального PDF
 

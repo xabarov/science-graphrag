@@ -80,3 +80,10 @@ Planned structural work under `ui/` (components, routing, state, API client), no
 - **Proposal:** По продукту — контекстное меню узла, легенда типов рёбер на canvas, double-click fit selection; не раздувать MVP без запроса.
 - **Acceptance:** N/A до приоритизации.
 - **Raised:** 2026-04-08
+
+### [OPEN] Graph canvas — split `GraphCanvasMvp` (input vs physics vs draw)
+- **Area:** [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx)
+- **Issue:** Файл ~1000+ строк: pointer/transform, wiring симуляции и отрисовка canvas в одном модуле; после force/reheat правок рост риска регрессий.
+- **Proposal:** Вынести pointer/pan/drag/select в `useGraphCanvasInput` (или модуль рядом), fit/transform в утилиту/hook, оставить в компоненте только glue + `draw` либо `graphCanvasDraw.js`.
+- **Acceptance:** оркестратор canvas без «god file» (heuristic: &lt;400 строк или явно разделённые слои); поведение drag/pan/force без регрессий; `npm run lint` / `npm run test` зелёные.
+- **Raised:** 2026-04-19

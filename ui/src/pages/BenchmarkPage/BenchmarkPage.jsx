@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
+import Tabs from "@mui/material/Tabs";
+import Typography from "@mui/material/Typography";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 
 import { CursorSmallButton } from "../../components/common/index.js";
@@ -70,6 +72,26 @@ export default function BenchmarkPage() {
             Reopen canonical route
           </CursorSmallButton>
         ) : null}
+      </Box>
+      <Box sx={{ px: 2, pb: 1.5 }}>
+        <Alert
+          severity="info"
+          sx={{
+            fontSize: "0.8125rem",
+            backgroundColor: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            color: "rgba(255,255,255,0.9)",
+            "& .MuiAlert-icon": { color: "rgba(129, 140, 248, 0.95)" },
+          }}
+        >
+          <Typography component="div" variant="body2" sx={{ fontSize: "0.8125rem", lineHeight: 1.5 }}>
+            Triage (CLI-first, paths in repo): teacher-gold — <code>docs/benchmarks/teacher-gold-audit-checklist.md</code>;
+            retrieval — <code>docs/benchmarks/retrieval-eval-v1.md</code>,{" "}
+            <code>docs/runbooks/user-journeys-retrieval-v1.md</code>; decision gate / summary —{" "}
+            <code>docs/runbooks/benchmark-decision-gate.md</code>, <code>eval/results/benchmark-metrics-summary.md</code>{" "}
+            (regenerate via <code>scripts/aggregate_benchmark_metrics.py</code>).
+          </Typography>
+        </Alert>
       </Box>
       <Box sx={{ padding: 2, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
         <Tabs

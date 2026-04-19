@@ -25,7 +25,42 @@ describe("graphViewState", () => {
     expect(graph.edgeCount).toBe(1);
     expect(graph.warnings).toHaveLength(0);
     expect(graph.nodes[0].label).toBe("Paper");
+    expect(graph.nodes[0].displayLabel).toBe("Paper");
     expect(graph.edges[0].source).toBe("n1");
+  });
+
+  it("maps API display fields on nodes and edges", () => {
+    const graph = normalizeGraphPayload({
+      work_id: "w1",
+      nodes: [
+        {
+          id: "n1",
+          type: "Work",
+          label: "Short",
+          display_label: "Long Title",
+          subtitle: "Work · 2020",
+          properties: { doi: "10.1/x" },
+        },
+      ],
+      edges: [
+        {
+          id: "e1",
+          source: "n1",
+          target: "n1",
+          type: "LOOP",
+          display_type: "Loop",
+          source_label: "A",
+          target_label: "B",
+          summary: "A —[Loop]→ B",
+        },
+      ],
+      meta: {},
+    });
+    expect(graph.nodes[0].displayLabel).toBe("Long Title");
+    expect(graph.nodes[0].subtitle).toBe("Work · 2020");
+    expect(graph.nodes[0].properties.doi).toBe("10.1/x");
+    expect(graph.edges[0].displayType).toBe("Loop");
+    expect(graph.edges[0].summary).toBe("A —[Loop]→ B");
   });
 
   it("drops orphan edges and adds a warning", () => {

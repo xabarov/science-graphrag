@@ -18,6 +18,10 @@ Set in `.env` or the shell (see [science_graphrag/config.py](../../science_graph
 
 Without LLM keys, backbone ingest may still run, but **Method/Dataset** semantic edges will not populate; align expectations with the pilot KPI table.
 
+## Corpus size target (Wave D3)
+
+Aim for **N≥20–50** ingested works in the pilot corpus before declaring pilot **GO**, so list/search, graph, and Ask behaviors are exercised beyond a demo-sized set. The 2026-04-06 KPI snapshot used **38** works — acceptable for **CONDITIONAL-GO**; grow the corpus and re-run spot-check + latency when feasible.
+
 ## Default host corpus (CV / object detection, 31 PDF)
 
 For the Wave D domain in [pilot-checklist.md](pilot-checklist.md), a convenient **host path** (outside this repo) is:

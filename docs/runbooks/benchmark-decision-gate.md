@@ -73,3 +73,20 @@ Single-case retest после правок gold (если лежат в `eval/re
 ## 7. Связь с roadmap (параллельные треки)
 
 Пока **reference** стабильна, допустимо **параллельно** вести документацию Phase 2, доработки ingestion и подготовку контрактов Phase 5/6 — но **закрепление** Wave B/C/D в смысле «готово к следующему этапу» опирается на таблицу выше и на сводку агрегатора. Остаточный долг nightly закрывается через gold/runtime — см. [benchmark-stabilization-triage.md](benchmark-stabilization-triage.md).
+
+## 8. Retrieval / citation family (advisory)
+
+Семейство `POST /v1/query` **не входит** в автоматический `decision` (GO / CONDITIONAL-GO / NO-GO): оно не может «уронить» gate при красном retrieval-only прогоне, пока политика явно не переведёт lane в blocking.
+
+- **Где смотреть:** секция *Retrieval family (advisory)* в [`eval/results/benchmark-metrics-summary.md`](../../eval/results/benchmark-metrics-summary.md) (генерируется агрегатором из JSON-артефактов ниже).
+- **Артефакты по умолчанию (mock, CI-safe):**
+  - merge-safe contract: [`eval/results/current-retrieval-merge-safe-mock.json`](../../eval/results/current-retrieval-merge-safe-mock.json)
+  - strict pilot (fingerprint gold, mock): [`eval/results/current-retrieval-strict-pilot-mock.json`](../../eval/results/current-retrieval-strict-pilot-mock.json)
+- **Live mini-tier (при наличии файла):** [`eval/results/current-retrieval-live-corpus-mini.json`](../../eval/results/current-retrieval-live-corpus-mini.json) — поднимается в сводке агрегатора; по-прежнему advisory.
+- **Claims (при наличии файлов):** [`eval/results/current-claims-merge-contract.json`](../../eval/results/current-claims-merge-contract.json), [`eval/results/current-claims-mini-suite.json`](../../eval/results/current-claims-mini-suite.json) — см. [`benchmark-pilot-advisory-runs.md`](benchmark-pilot-advisory-runs.md).
+- **Живой pilot / nightly:** после захвата реальных `chunk_fingerprint` на подписанном корпусе обновляйте фикстуры в `tests/fixtures/benchmarks/retrieval/` и при необходимости пути в агрегаторе; см. [retrieval-eval-v1.md](../benchmarks/retrieval-eval-v1.md), [user-journeys-retrieval-v1.md](user-journeys-retrieval-v1.md).
+- **Live mini-tier (`live_corpus_mini`):** пять вопросов с замороженными отпечатками на пилотном корпусе — см. [retrieval-live-tier-v1.md](../benchmarks/retrieval-live-tier-v1.md); по-прежнему **advisory**, без `--mock-answer`.
+
+**Claims / epistemic (Wave H1):** семья `eval/claims/` и фикстуры `tests/fixtures/benchmarks/claims/` — **advisory**; см. [ontology-claims-benchmark-v1.md](../benchmarks/ontology-claims-benchmark-v1.md), сводка программы — [benchmark-program-status.md](benchmark-program-status.md).
+
+Если в будущем retrieval станет **blocking** lane, зафиксируйте это здесь и в `scripts/aggregate_benchmark_metrics.py` (критерии fail/pass и preconditions корпуса).

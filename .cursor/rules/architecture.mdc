@@ -13,8 +13,8 @@ North star и сценарии: [README.md](README.md), [docs/roadmap.md](docs/r
 |------|------------|
 | `science_graphrag/` | Пакет Phase 1: ingestion, storage, CLI, API |
 | `science_graphrag/ingestion/` | Приём документов, пайплайн, PDF/Markdown |
-| `science_graphrag/graph/` | Модель графа, загрузка в Neo4j |
-| `science_graphrag/retrieval/` | Поиск, политики контекста |
+| `science_graphrag/storage/neo4j_store.py` | Загрузка и запросы Neo4j (scholarly graph) |
+| `science_graphrag/api/retrieval.py` | Поиск (Qdrant + Neo4j context), политики контекста для `POST /v1/query` |
 | `science_graphrag/api/` | FastAPI, query-time |
 | `ui/` | Vite + React + MUI: workspace, reader, граф |
 | `eval/` | Бенчмарки и регрессии |

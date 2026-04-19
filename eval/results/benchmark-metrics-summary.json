@@ -8,7 +8,12 @@
     "layer1_nightly": "eval/results/current-llm-layer1-nightly-heavy-suite-after-prompt-fix.json",
     "layer2_nightly": "eval/results/current-llm-layer2-nightly-semantic-suite.json",
     "baseline_layer1": "eval/results/baseline-llm-layer1-nightly-heavy-suite.json",
-    "baseline_layer2": "eval/results/baseline-llm-layer2-nightly-semantic-suite.json"
+    "baseline_layer2": "eval/results/baseline-llm-layer2-nightly-semantic-suite.json",
+    "retrieval_merge_safe_mock": "eval/results/current-retrieval-merge-safe-mock.json",
+    "retrieval_strict_pilot_mock": "eval/results/current-retrieval-strict-pilot-mock.json",
+    "retrieval_live_corpus_mini": "eval/results/current-retrieval-live-corpus-mini.json",
+    "claims_merge_contract": "eval/results/current-claims-merge-contract.json",
+    "claims_mini_suite": "eval/results/current-claims-mini-suite.json"
   },
   "reference": {
     "all_passed": true,
@@ -261,6 +266,118 @@
       "passed": true
     }
   ],
+  "retrieval_family": {
+    "role": "advisory",
+    "merge_safe_contract_mock": {
+      "artifact": "eval/results/current-retrieval-merge-safe-mock.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1"
+      },
+      "summary": {
+        "case_count": 3,
+        "case_ids": [
+          "cv_corpus_methods_overview",
+          "single_stage_detectors",
+          "yolo_family_keywords"
+        ],
+        "all_passed": true,
+        "retrieval_eval": true
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true
+    },
+    "strict_pilot_mock": {
+      "artifact": "eval/results/current-retrieval-strict-pilot-mock.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1"
+      },
+      "summary": {
+        "case_count": 3,
+        "case_ids": [
+          "strict_pilot_corpus_wide",
+          "strict_pilot_methods",
+          "strict_pilot_work_scoped"
+        ],
+        "all_passed": true,
+        "retrieval_eval": true
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true
+    },
+    "live_corpus_mini": {
+      "artifact": "eval/results/current-retrieval-live-corpus-mini.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1"
+      },
+      "summary": {
+        "case_count": 5,
+        "case_ids": [
+          "live_corpus_methods_wide",
+          "live_yolov1_architecture",
+          "live_yolov1_intro",
+          "live_yolov1_methods_combo",
+          "live_yolov1_training"
+        ],
+        "all_passed": true,
+        "retrieval_eval": true
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true
+    }
+  },
+  "claims_family": {
+    "role": "advisory",
+    "claims_merge_contract": {
+      "artifact": "eval/results/current-claims-merge-contract.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190"
+      },
+      "summary": {
+        "case_count": 1,
+        "case_ids": [
+          "claims_contract_shape"
+        ],
+        "all_passed": true,
+        "claims_eval": true
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true
+    },
+    "claims_mini": {
+      "artifact": "eval/results/current-claims-mini-suite.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190"
+      },
+      "summary": {
+        "case_count": 5,
+        "case_ids": [
+          "yolov1_fast_yolo_speed_claim",
+          "yolov1_framing_claim",
+          "yolov1_localization_tradeoff_claim",
+          "yolov1_speed_claim",
+          "yolov1_unified_pipeline_claim"
+        ],
+        "all_passed": true,
+        "claims_eval": true
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true
+    }
+  },
   "decision_gate": {
     "decision": "GO",
     "reason": "all_nightly_passed",

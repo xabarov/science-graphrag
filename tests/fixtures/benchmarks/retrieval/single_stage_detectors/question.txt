@@ -1,0 +1,1 @@
+Summarize anchor-based or region-proposal object detectors mentioned in the corpus.

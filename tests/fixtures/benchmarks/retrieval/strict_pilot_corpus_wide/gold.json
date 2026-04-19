@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "benchmark_suite_tier": "strict_pilot",
+  "description": "Live-captured 2026-04-19: corpus-wide query (work_id null); fingerprints from top citations (includes newer chunk_fingerprint hashes when present).",
+  "work_id": null,
+  "top_k": 10,
+  "min_hit_count": 1,
+  "required_chunk_fingerprints": [
+    "df9bed2a2f99ad0fc96e803818ed053ee79bdc07c47023efcdf769c358299871",
+    "f3d4f47633a2bd6fce9f7ee409c88082a55441304334a4cf734d9b7763a1dacd"
+  ],
+  "contract_only": false
+}

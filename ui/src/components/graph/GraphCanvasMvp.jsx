@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import Box from "@mui/material/Box";
 import Slider from "@mui/material/Slider";
 import Tooltip from "@mui/material/Tooltip";
@@ -40,8 +41,18 @@ const FIT_PADDING = 40;
 const FORCE_RESTART_JITTER_WORLD = 56;
 /** Minimum drawing height before container measurement (matches workspace column expectations). */
 const MIN_CANVAS_HEIGHT = 280;
+/** Prevent fit-to-view from shrinking so far that nodes look like an empty canvas. */
+const MIN_FIT_SCALE = 0.11;
 
 const LS_GRAPH_CANVAS_REPULSION = "graphCanvasRepulsionPercent";
+
+/**
+ * @param {{ scale: number, tx: number, ty: number }} fit
+ */
+function clampFitTransform(fit) {
+  const scale = Math.max(fit.scale, MIN_FIT_SCALE);
+  return { ...fit, scale };
+}
 
 function readRepulsionPercentStored() {
   if (typeof window === "undefined") return REPULSION_DEFAULT_PERCENT;
@@ -65,6 +76,7 @@ function readRepulsionPercentStored() {
  *   onSelectNode?: (nodeId: string) => void,
  *   onSelectEdge?: (edgeId: string) => void,
  *   layoutMode?: "circle" | "force",
+ *   onCanvasLayoutModeChange?: (mode: "circle" | "force") => void,
  * }} props
  */
 export default function GraphCanvasMvp({
@@ -74,6 +86,7 @@ export default function GraphCanvasMvp({
   onSelectNode,
   onSelectEdge,
   layoutMode = "circle",
+  onCanvasLayoutModeChange,
 }) {
   const canvasRef = useRef(null);
   const wrapRef = useRef(null);
@@ -114,6 +127,7 @@ export default function GraphCanvasMvp({
   const [isSimulationStable, setIsSimulationStable] = useState(false);
   const [repulsionPercent, setRepulsionPercent] = useState(() => readRepulsionPercentStored());
   const [forceSimRunNonce, setForceSimRunNonce] = useState(0);
+  const [physicsReheatNonce, setPhysicsReheatNonce] = useState(0);
   const [pinnedNodeCount, setPinnedNodeCount] = useState(0);
 
   const layoutKey = useMemo(() => graph.nodes.map((n) => n.id).join("\0"), [graph.nodes]);
@@ -122,9 +136,13 @@ export default function GraphCanvasMvp({
     [graph.nodes, graph.edges],
   );
   const simulationSignature = useMemo(
-    () => `${topologySignature}|${forceSimRunNonce}`,
-    [topologySignature, forceSimRunNonce],
+    () => `${topologySignature}|${forceSimRunNonce}|${physicsReheatNonce}`,
+    [topologySignature, forceSimRunNonce, physicsReheatNonce],
   );
+
+  const bumpPhysicsReheat = useCallback(() => {
+    setPhysicsReheatNonce((n) => n + 1);
+  }, []);
   const layoutWorldRadius = useMemo(() => worldRadiusForNodeCount(graph.nodes.length), [graph.nodes.length]);
   const nodeById = useMemo(() => new Map(graph.nodes.map((n) => [n.id, n])), [graph.nodes]);
 
@@ -158,11 +176,18 @@ export default function GraphCanvasMvp({
         ? new Map(simNodesRef.current.map((n) => [n.id, { x: n.x, y: n.y }]))
         : computeWorldLayout(graph.nodes, layoutWorldRadius);
       positionsRef.current = positions;
-      const next = computeFitTransform(positions, w, h, NODE_RADIUS, FIT_PADDING);
+      const next = clampFitTransform(computeFitTransform(positions, w, h, NODE_RADIUS, FIT_PADDING));
+      const prev = transformRef.current;
+      if (prev.scale === next.scale && prev.tx === next.tx && prev.ty === next.ty) {
+        return;
+      }
       transformRef.current = next;
       setTransform(next);
     },
-    [getViewportDims, graph.nodes, layoutWorldRadius, layoutMode],
+    // graph / graph.nodes intentionally omitted: parent often passes a new array identity each render,
+    // which would recreate this callback every frame and retrigger fit effects → tight loop + high CPU.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable via topologySignature
+    [getViewportDims, topologySignature, layoutWorldRadius, layoutMode],
   );
 
   const applyFit = useCallback(() => {
@@ -213,8 +238,6 @@ export default function GraphCanvasMvp({
   }, [repulsionPercent]);
 
   useLayoutEffect(() => {
-    if (layoutMode !== "force") return;
-    setForceSimRunNonce(0);
     const built = buildSimulationState(graph);
     setSimNodes(built.nodes);
     setSimLinks(built.links);
@@ -222,15 +245,26 @@ export default function GraphCanvasMvp({
     draggedNodePositionRef.current = null;
     setPinnedNodeCount(0);
     setIsSimulationStable(false);
+    setForceSimRunNonce(0);
+    setPhysicsReheatNonce(0);
     const positions = new Map(built.nodes.map((n) => [n.id, { x: n.x, y: n.y }]));
     positionsRef.current = positions;
-    const { w, h } = getViewportDims();
-    const next = computeFitTransform(positions, w, h, NODE_RADIUS, FIT_PADDING);
-    transformRef.current = next;
-    setTransform(next);
-    // graph read from closure matches topologySignature
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- avoid re-seed on resize (getViewportDims) or graph object identity
-  }, [layoutMode, topologySignature]);
+    if (layoutMode === "force" && built.nodes.length > 0) {
+      const { w, h } = getViewportDims();
+      const next = clampFitTransform(computeFitTransform(positions, w, h, NODE_RADIUS, FIT_PADDING));
+      transformRef.current = next;
+      setTransform(next);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- topology-only reseed; layoutMode read for conditional fit without re-running on mode toggle
+  }, [topologySignature, getViewportDims]);
+
+  useLayoutEffect(() => {
+    if (layoutMode !== "force" || graph.nodes.length === 0) return;
+    if (simNodes.length === 0) return;
+    applyFitInner("force");
+    // graph.nodes.length omitted: same as topologySignature + simNodes.length for emptiness
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layoutMode, simNodes.length, topologySignature, applyFitInner]);
 
   const handleRestartForceSimulation = useCallback(() => {
     if (layoutMode !== "force" || graph.nodes.length === 0) return;
@@ -241,14 +275,17 @@ export default function GraphCanvasMvp({
     setSimLinks(built.links);
     setSimNodes(built.nodes);
     setForceSimRunNonce((n) => n + 1);
+    setPhysicsReheatNonce(0);
     setIsSimulationStable(false);
     const positions = new Map(built.nodes.map((n) => [n.id, { x: n.x, y: n.y }]));
     positionsRef.current = positions;
     const { w, h } = getViewportDims();
-    const next = computeFitTransform(positions, w, h, NODE_RADIUS, FIT_PADDING);
+    const next = clampFitTransform(computeFitTransform(positions, w, h, NODE_RADIUS, FIT_PADDING));
     transformRef.current = next;
     setTransform(next);
-  }, [getViewportDims, graph, layoutMode]);
+    // graph omitted: use topologySignature so restart handler is stable across graph object identity churn
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getViewportDims, topologySignature, layoutMode]);
 
   const handleUnpinAll = useCallback(() => {
     if (layoutMode !== "force") return;
@@ -308,7 +345,8 @@ export default function GraphCanvasMvp({
   }, []);
 
   const getPositionsForFrame = useCallback(() => {
-    if (layoutMode === "force" && simNodes.length > 0) {
+    const dragging = nodeDragRef.current.active;
+    if (simNodes.length > 0 && (layoutMode === "force" || dragging)) {
       return new Map(simNodes.map((n) => [n.id, { x: n.x, y: n.y }]));
     }
     return computeWorldLayout(graph.nodes, layoutWorldRadius);
@@ -440,7 +478,12 @@ export default function GraphCanvasMvp({
       if (!pw) continue;
       const p = worldToScreen(pw.x, pw.y, scale, tx, ty);
       const sel = node.id === selectedNodeId;
-      const rawLabel = node.label != null && String(node.label).trim() ? node.label : node.id;
+      const rawLabel =
+        node.displayLabel != null && String(node.displayLabel).trim()
+          ? node.displayLabel
+          : node.label != null && String(node.label).trim()
+            ? node.label
+            : node.id;
       const text = truncateCanvasLabel(rawLabel);
       const metrics = ctx.measureText(text);
       const padX = 6;
@@ -564,11 +607,14 @@ export default function GraphCanvasMvp({
     const y = ev.clientY - rect.top;
     const { scale, tx, ty } = transformRef.current;
 
-    if (layoutMode === "force" && simNodes.length > 0) {
+    if (simNodes.length > 0) {
       const world = screenToWorld(x, y, scale, tx, ty);
       const posMap = getPositionsForFrame();
       const nodeId = hitTestWorld(world.x, world.y, posMap);
       if (nodeId) {
+        if (layoutMode === "circle" && onCanvasLayoutModeChange) {
+          flushSync(() => onCanvasLayoutModeChange("force"));
+        }
         canvas.setPointerCapture(ev.pointerId);
         nodeDragRef.current = {
           active: true,
@@ -613,6 +659,8 @@ export default function GraphCanvasMvp({
         setHoveredNodeId("");
         setHoveredEdgeId("");
         setCanvasCursor("grabbing");
+        setIsSimulationStable(false);
+        bumpPhysicsReheat();
       }
       const { scale, tx, ty } = transformRef.current;
       const world = screenToWorld(x, y, scale, tx, ty);
@@ -664,6 +712,7 @@ export default function GraphCanvasMvp({
         /* ignore */
       }
       const { nodeId, moved } = nd;
+      const pinAfterDrop = moved && isSimulationStable;
       nodeDragRef.current = {
         active: false,
         moved: false,
@@ -673,7 +722,11 @@ export default function GraphCanvasMvp({
         pointerId: null,
       };
       draggedNodePositionRef.current = null;
-      if (moved && isSimulationStable) {
+      if (moved) {
+        setIsSimulationStable(false);
+        bumpPhysicsReheat();
+      }
+      if (pinAfterDrop) {
         fixedNodesRef.current.add(nodeId);
         setPinnedNodeCount(fixedNodesRef.current.size);
       }
@@ -723,7 +776,7 @@ export default function GraphCanvasMvp({
   function handleCenterOnSelected() {
     if (!selectedNodeId) return;
     const { w, h } = getViewportDims();
-    const positions = layoutMode === "force" && simNodes.length > 0 ? getPositionsForFrame() : positionsRef.current;
+    const positions = getPositionsForFrame();
     const pw = positions.get(selectedNodeId);
     if (!pw) return;
     const { scale } = transformRef.current;
@@ -868,12 +921,12 @@ export default function GraphCanvasMvp({
       </Typography>
       <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1, px: 1.5, pt: 1, pb: 0.5, flexShrink: 0 }}>
         <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", flex: "1 1 140px" }}>
-          Wheel over the canvas zooms in/out (page scroll works when the cursor is outside this area). Drag to pan · click a node
-          or edge to select · Escape clears selection (focus graph first). Keys + / − / 0 zoom and fit when the graph has focus.
-          Use &quot;Center on selected&quot; to align the viewport on a node.
+          Wheel over the canvas zooms in/out (page scroll works when the cursor is outside this area). Drag empty canvas to pan ·
+          click a node or edge to select · Escape clears selection (focus graph first). Keys + / − / 0 zoom and fit when the graph
+          has focus. Use &quot;Center on selected&quot; to align the viewport on a node.
           {layoutMode === "force"
             ? " Force mode: drag a node; after the layout stabilizes, release to pin. Restart sim respreads; Unpin all releases pins."
-            : ""}
+            : " Circle mode: static ring — drag a node to switch to Force and rearrange."}
         </Typography>
         {layoutMode === "force" ? (
           <Box

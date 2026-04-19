@@ -1,13 +1,13 @@
 import axios from "axios";
 
+import { buildAdminApiHeaders } from "../../services/adminApiHeaders.js";
+
 const api = axios.create({
   baseURL: "/v1",
 });
 
 function authHeaders() {
-  const token =
-    window.localStorage.getItem("access_token") || window.localStorage.getItem("token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  return buildAdminApiHeaders();
 }
 
 export async function getSettingsSchema() {

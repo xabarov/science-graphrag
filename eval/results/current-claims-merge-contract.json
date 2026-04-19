@@ -1,0 +1,38 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+    "semantic_extraction_enabled": true
+  },
+  "summary": {
+    "case_count": 1,
+    "case_ids": [
+      "claims_contract_shape"
+    ],
+    "all_passed": true,
+    "claims_eval": true
+  },
+  "cases": [
+    {
+      "case_id": "claims_contract_shape",
+      "metrics": {
+        "contract_only": true,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 1.0,
+        "expected_count": 0,
+        "predicted_count": 0,
+        "matched_claim_ids": [],
+        "missing_claim_ids": []
+      },
+      "predictions": [],
+      "wall_clock_seconds": 0.0,
+      "extractor": "extract_claims_anchor_harness",
+      "extraction_llm_enabled": true
+    }
+  ]
+}

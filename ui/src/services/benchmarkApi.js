@@ -1,15 +1,13 @@
 import axios from "axios";
 
+import { buildAdminApiHeaders } from "./adminApiHeaders.js";
+
 const api = axios.create({
   baseURL: "/v1",
 });
 
 function authHeaders() {
-  // Backend currently doesn't require auth for benchmark endpoints,
-  // but this keeps the UI consistent with other dashboards.
-  const token =
-    window.localStorage.getItem("access_token") || window.localStorage.getItem("token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  return buildAdminApiHeaders();
 }
 
 export async function listBenchmarkCases({ family = "layer1", tier, q, limit = 200, offset = 0 } = {}) {

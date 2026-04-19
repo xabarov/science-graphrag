@@ -194,12 +194,45 @@ function worksUrl(pathWithQuery) {
 }
 
 /** GET /v1/works */
-export async function getWorks({ q, limit = 20, offset = 0 } = {}) {
+export async function getWorks({
+  q,
+  limit = 20,
+  offset = 0,
+  yearMin,
+  yearMax,
+  hasSemantic,
+} = {}) {
   const params = new URLSearchParams();
   params.set("limit", String(limit));
   params.set("offset", String(offset));
   if (q != null && String(q).trim() !== "") params.set("q", String(q).trim());
+  if (yearMin != null && Number.isFinite(Number(yearMin))) params.set("year_min", String(yearMin));
+  if (yearMax != null && Number.isFinite(Number(yearMax))) params.set("year_max", String(yearMax));
+  if (hasSemantic === true) params.set("has_semantic", "true");
+  if (hasSemantic === false) params.set("has_semantic", "false");
   return axios.get(worksUrl(`/v1/works?${params.toString()}`));
+}
+
+/** GET/PATCH/DELETE /v1/ask-sessions — server-backed Ask history (optional UI integration). */
+export async function listAskSessions(scope) {
+  const s = encodeURIComponent(String(scope ?? "").trim());
+  return axios.get(worksUrl(`/v1/ask-sessions?scope=${s}`));
+}
+
+export async function createAskSession(scope, { title } = {}) {
+  return axios.post(worksUrl("/v1/ask-sessions"), { scope, title });
+}
+
+export async function patchAskSession(scope, sessionId, body) {
+  const sid = encodeURIComponent(String(sessionId ?? "").trim());
+  const s = encodeURIComponent(String(scope ?? "").trim());
+  return axios.patch(worksUrl(`/v1/ask-sessions/${sid}?scope=${s}`), body);
+}
+
+export async function deleteAskSession(scope, sessionId) {
+  const sid = encodeURIComponent(String(sessionId ?? "").trim());
+  const s = encodeURIComponent(String(scope ?? "").trim());
+  return axios.delete(worksUrl(`/v1/ask-sessions/${sid}?scope=${s}`));
 }
 
 /** GET /v1/works/{work_id} */
@@ -220,8 +253,22 @@ export async function getWorkChunks(workId, { limit = 50, offset = 0, section_pr
   return axios.get(worksUrl(`/v1/works/${id}/chunks?${params.toString()}`));
 }
 
-/** GET /v1/works/{work_id}/graph */
-export async function getWorkGraph(workId) {
+/**
+ * GET /v1/works/{work_id}/graph
+ * @param {string} workId
+ * @param {{ neighborLimit?: number, depth?: number }} [options]
+ */
+export async function getWorkGraph(workId, options = {}) {
   const id = encodeURIComponent(String(workId ?? "").trim());
-  return axios.get(worksUrl(`/v1/works/${id}/graph`));
+  const params = new URLSearchParams();
+  if (options.neighborLimit != null && Number.isFinite(Number(options.neighborLimit))) {
+    const lim = Math.min(2000, Math.max(1, Math.floor(Number(options.neighborLimit))));
+    params.set("neighbor_limit", String(lim));
+  }
+  if (options.depth != null && Number.isFinite(Number(options.depth))) {
+    const d = Math.min(3, Math.max(1, Math.floor(Number(options.depth))));
+    params.set("depth", String(d));
+  }
+  const q = params.toString();
+  return axios.get(worksUrl(`/v1/works/${id}/graph${q ? `?${q}` : ""}`));
 }

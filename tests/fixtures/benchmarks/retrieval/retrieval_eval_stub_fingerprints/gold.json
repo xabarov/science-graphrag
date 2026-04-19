@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "description": "Unit-test gold with explicit chunk fingerprints (mocked answer_query in tests).",
+  "work_id": null,
+  "top_k": 3,
+  "min_hit_count": 1,
+  "required_chunk_fingerprints": ["stub-fp-1", "stub-fp-2"],
+  "contract_only": false,
+  "skip_in_suite_cli": true
+}

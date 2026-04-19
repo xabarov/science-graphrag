@@ -606,7 +606,7 @@ Checklist:
 
 - `HomePage` уже существует как новый entry point на `/`.
 - Есть `Continue last workspace` и `Recent works` через локальный recent-state.
-- `CorpusPage` уже поддерживает более продуктовый browser flow с primary CTA `Open workspace`, client-side **sort** (title / year), пагинация **load more**, переключатель **cards vs compact**, клиентские фильтры по году и semantic-ready (см. `useCorpusEntryState` / правки страницы).
+- `CorpusPage` уже поддерживает более продуктовый browser flow с primary CTA `Open workspace`, client-side **sort** (title / year), пагинация **load more**, переключатель **cards vs compact**, серверные фильтры **year_min / year_max / has_semantic** на `GET /v1/works` (см. `researchApi.js`, `science_graphrag/api/works.py`), отдельный submit для title query через `lastSearch`.
 - Общий хук входа: `ui/src/pages/HomePage/useCorpusEntryState.js` для recent + continue target на Home и Corpus.
 
 Цель:
@@ -712,6 +712,7 @@ Checklist:
 
 Заметки по реализации:
 
+- **Server-side sessions (optional):** `GET/POST/PATCH/DELETE /v1/ask-sessions` + file store (`science_graphrag/api/ask_sessions.py`); клиентские функции в `ui/src/services/researchApi.js`. UI по умолчанию по-прежнему `localStorage` ([ask-sessions.md](./ask-sessions.md)).
 - Локальная история и restore последних вопросов: `ui/src/components/work/askHistoryState.js`, использование в `ui/src/components/work/AskPanel.jsx`.
 - **Именованные сессии Ask (локально):** `ui/src/components/work/askSessionState.js` — до 8 сессий на scope, до 24 turn’ов на сессию, импорт из плоского history при первом открытии scope; UI переключения / rename / New session в `AskPanel.jsx`; контракт в [`docs/specs/ask-sessions.md`](./ask-sessions.md).
 - **URL `ask_session`:** `TRACEABILITY_QUERY_KEYS.askSession` в `traceabilityState.js`; синхронизация в `AskPage` / `AskTab` + `AskPanel` (`urlSessionId` / `onUrlSessionIdChange`); сброс при смене вкладки workspace вне Ask; `mergeTraceabilityParams` сохраняет параметр при навигации (например Graph → Ask).
@@ -750,7 +751,8 @@ Checklist:
 - Добавлен `AdminEntryPage` как hub для `Benchmarks`, `Settings`, `Diagnostics`.
 - Nested `/admin/*` routes и legacy aliases уже внедрены.
 - Есть lightweight visibility gate для admin surfaces без backend auth.
-- Следующий шаг — более строгая admin IA и stronger role policy beyond UI-only gating (см. [`admin-policy.md`](./admin-policy.md)); на hub добавлена полоса API status (`AdminApiStatusStrip`), Diagnostics расширен зондом `/v1/works`.
+- **API admin key (optional):** `SCIENCE_GRAPHRAG_ADMIN_API_KEY` + заголовок `X-Admin-Key` для `/v1/benchmark/*` и `/v1/settings/*` ([admin-policy.md](./admin-policy.md)).
+- Следующий шаг — более строгая admin IA и полноценный RBAC beyond shared secret (см. [`admin-policy.md`](./admin-policy.md)); на hub добавлена полоса API status (`AdminApiStatusStrip`), Diagnostics расширен зондом `/v1/works`.
 
 Цель:
 

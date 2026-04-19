@@ -21,6 +21,32 @@ export function normalizeGraphEdgeId(value) {
 }
 
 /**
+ * @param {Record<string, unknown>} obj
+ * @param {string[]} keys snake_case and camelCase variants from API
+ * @param {string} fallback
+ */
+function pickStringField(obj, keys, fallback) {
+  for (const k of keys) {
+    const v = obj[k];
+    if (v == null) continue;
+    const s = String(v).trim();
+    if (s) return s;
+  }
+  return fallback;
+}
+
+/**
+ * @param {unknown} v
+ * @returns {Record<string, unknown>}
+ */
+function pickPropertiesObject(v) {
+  if (v && typeof v === "object" && !Array.isArray(v)) {
+    return /** @type {Record<string, unknown>} */ (v);
+  }
+  return {};
+}
+
+/**
  * @param {unknown} raw
  * @returns {{
  *   workId: string,
@@ -51,23 +77,51 @@ export function normalizeGraphPayload(raw) {
         `Duplicate node id "${baseId}" was reassigned to "${id}" (first occurrence keeps "${baseId}").`,
       );
     }
+    const n = node && typeof node === "object" ? /** @type {Record<string, unknown>} */ (node) : {};
+    const label = n.label == null ? String(n.id ?? `node-${index}`) : String(n.label);
+    const type = n.type == null ? "Node" : String(n.type);
+    const displayLabel = pickStringField(n, ["display_label", "displayLabel"], label);
+    const subtitle = pickStringField(n, ["subtitle"], "");
+    const nodeKind = pickStringField(n, ["node_kind", "nodeKind"], type);
+    const properties = { ...pickPropertiesObject(n.properties) };
     return {
       id,
-      label: node?.label == null ? String(node?.id ?? `node-${index}`) : String(node.label),
-      type: node?.type == null ? "Node" : String(node.type),
-      raw: node && typeof node === "object" ? node : {},
+      label,
+      type,
+      displayLabel,
+      subtitle,
+      nodeKind,
+      properties,
+      raw: n,
     };
   });
 
   const nodeIdSet = new Set(nodes.map((n) => n.id));
 
-  const normalizedEdges = rawEdges.map((edge, index) => ({
-    id: edge?.id == null ? `edge-${index}` : String(edge.id),
-    source: edge?.source == null ? "" : String(edge.source),
-    target: edge?.target == null ? "" : String(edge.target),
-    type: edge?.type == null ? "edge" : String(edge.type),
-    raw: edge && typeof edge === "object" ? edge : {},
-  }));
+  const normalizedEdges = rawEdges.map((edge, index) => {
+    const e = edge && typeof edge === "object" ? /** @type {Record<string, unknown>} */ (edge) : {};
+    const src = e.source == null ? "" : String(e.source);
+    const tgt = e.target == null ? "" : String(e.target);
+    const typ = e.type == null ? "edge" : String(e.type);
+    const eid = e.id == null ? `edge-${index}` : String(e.id);
+    const displayType = pickStringField(e, ["display_type", "displayType"], typ.replace(/_/g, " ") || "related");
+    const sourceLabel = pickStringField(e, ["source_label", "sourceLabel"], "");
+    const targetLabel = pickStringField(e, ["target_label", "targetLabel"], "");
+    const summary = pickStringField(e, ["summary"], "");
+    const direction = pickStringField(e, ["direction"], "");
+    return {
+      id: eid,
+      source: src,
+      target: tgt,
+      type: typ,
+      displayType,
+      sourceLabel,
+      targetLabel,
+      summary,
+      direction,
+      raw: e,
+    };
+  });
 
   const edges = [];
   let orphanCount = 0;

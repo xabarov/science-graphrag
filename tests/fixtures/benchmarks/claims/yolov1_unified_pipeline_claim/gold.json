@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "benchmark_suite_tier": "claims_mini",
+  "description": "Mini-pack: unified single-network prediction claim.",
+  "source_layer1_fixture": "yolov1",
+  "contract_only": false,
+  "min_claim_recall": 1.0,
+  "expected_claims": [
+    {
+      "claim_id": "yolov1_single_net_predictions",
+      "claim_text_normalized": "one convnet predicts multiple boxes and class probabilities",
+      "claim_type": "method",
+      "polarity": "positive",
+      "anchor_phrase": "single convolutional network"
+    }
+  ]
+}

@@ -16,8 +16,8 @@ import GraphTypeLegend from "./GraphTypeLegend.jsx";
 import { GraphErrorAlert, GraphLoadingInline, GraphMissingWorkInline } from "./graphShellStates.jsx";
 import { fetchWorkGraphNormalized } from "./graphAdapter.js";
 import { capGraphForUi } from "./graphUiLimits.js";
+import { deriveInspectorDetail } from "./graphInspectorModel.js";
 import {
-  deriveGraphDetail,
   normalizeGraphEdgeId,
   normalizeGraphNodeId,
   normalizeGraphPayload,
@@ -56,16 +56,29 @@ const LS_STANDALONE_TITLE = "graphStandaloneTitleOpen";
 const LS_STANDALONE_ALERTS = "graphStandaloneAlertsOpen";
 const LS_STANDALONE_DETAILS = "graphStandaloneDetailsVisible";
 const LS_GRAPH_CANVAS_LAYOUT_MODE = "graphCanvasLayoutMode";
+const LS_GRAPH_VIZ_MODE = "graphVizMode";
 
 function readCanvasLayoutMode() {
-  if (typeof window === "undefined") return "circle";
+  if (typeof window === "undefined") return "force";
   try {
     const v = window.localStorage.getItem(LS_GRAPH_CANVAS_LAYOUT_MODE);
+    if (v === "circle") return "circle";
     if (v === "force") return "force";
-    return "circle";
+    return "force";
   } catch {
-    return "circle";
+    return "force";
   }
+}
+
+function readVizMode() {
+  if (typeof window === "undefined") return "canvas";
+  try {
+    const v = window.localStorage.getItem(LS_GRAPH_VIZ_MODE);
+    if (v === "cards" || v === "canvas" || v === "flow") return v;
+  } catch {
+    /* ignore */
+  }
+  return "canvas";
 }
 
 function readBoolLs(key, fallback) {
@@ -97,7 +110,7 @@ export default function GraphWorkspacePanel({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [vizMode, setVizMode] = useState(
-    /** @type {"cards" | "canvas" | "flow"} */ () => (mode === "standalone" && compactLayout ? "canvas" : "cards"),
+    /** @type {"cards" | "canvas" | "flow"} */ () => readVizMode(),
   );
   const [canvasLayoutMode, setCanvasLayoutMode] = useState(
     /** @type {"circle" | "force"} */ () => readCanvasLayoutMode(),
@@ -186,6 +199,14 @@ export default function GraphWorkspacePanel({
   }, [canvasLayoutMode]);
 
   useEffect(() => {
+    try {
+      window.localStorage.setItem(LS_GRAPH_VIZ_MODE, vizMode);
+    } catch {
+      /* ignore */
+    }
+  }, [vizMode]);
+
+  useEffect(() => {
     if (!workId.trim()) {
       setGraph(normalizeGraphPayload(null));
       setError(null);
@@ -251,9 +272,9 @@ export default function GraphWorkspacePanel({
     }
   }, [resolvedSelectedNodeId, selectedEdgeId, onSelectEdge]);
 
-  const detail = useMemo(
-    () => deriveGraphDetail(graph, resolvedSelectedNodeId, resolvedSelectedEdgeId),
-    [graph, resolvedSelectedNodeId, resolvedSelectedEdgeId],
+  const inspector = useMemo(
+    () => deriveInspectorDetail(displayGraph, resolvedSelectedNodeId, resolvedSelectedEdgeId),
+    [displayGraph, resolvedSelectedNodeId, resolvedSelectedEdgeId],
   );
   const isEmbedded = mode === "embedded";
   const traceSummary = describeTraceabilityState(traceContext);
@@ -527,36 +548,52 @@ export default function GraphWorkspacePanel({
             {vizMode === "canvas" ? (
               <>
                 <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.45)", mx: 0.25 }}>Canvas</Typography>
-                <CursorSmallButton
-                  type="button"
-                  onClick={() => setCanvasLayoutMode("circle")}
-                  sx={
-                    canvasLayoutMode === "circle"
-                      ? {
-                          backgroundColor: "rgba(99, 102, 241, 0.15)",
-                          borderColor: "rgba(99, 102, 241, 0.3)",
-                          color: "rgba(129,140,248,0.92)",
-                        }
-                      : {}
-                  }
+                <Tooltip
+                  title="Static ring layout: pan and zoom only. Dragging a node switches to Force automatically."
+                  placement="top"
+                  enterDelay={400}
                 >
-                  Circle
-                </CursorSmallButton>
-                <CursorSmallButton
-                  type="button"
-                  onClick={() => setCanvasLayoutMode("force")}
-                  sx={
-                    canvasLayoutMode === "force"
-                      ? {
-                          backgroundColor: "rgba(99, 102, 241, 0.15)",
-                          borderColor: "rgba(99, 102, 241, 0.3)",
-                          color: "rgba(129,140,248,0.92)",
-                        }
-                      : {}
-                  }
+                  <span>
+                    <CursorSmallButton
+                      type="button"
+                      onClick={() => setCanvasLayoutMode("circle")}
+                      sx={
+                        canvasLayoutMode === "circle"
+                          ? {
+                              backgroundColor: "rgba(99, 102, 241, 0.15)",
+                              borderColor: "rgba(99, 102, 241, 0.3)",
+                              color: "rgba(129,140,248,0.92)",
+                            }
+                          : {}
+                      }
+                    >
+                      Circle
+                    </CursorSmallButton>
+                  </span>
+                </Tooltip>
+                <Tooltip
+                  title="Force-directed layout: drag nodes to rearrange; physics reheats after moves."
+                  placement="top"
+                  enterDelay={400}
                 >
-                  Force
-                </CursorSmallButton>
+                  <span>
+                    <CursorSmallButton
+                      type="button"
+                      onClick={() => setCanvasLayoutMode("force")}
+                      sx={
+                        canvasLayoutMode === "force"
+                          ? {
+                              backgroundColor: "rgba(99, 102, 241, 0.15)",
+                              borderColor: "rgba(99, 102, 241, 0.3)",
+                              color: "rgba(129,140,248,0.92)",
+                            }
+                          : {}
+                      }
+                    >
+                      Force
+                    </CursorSmallButton>
+                  </span>
+                </Tooltip>
               </>
             ) : null}
           </Box>
@@ -628,6 +665,7 @@ export default function GraphWorkspacePanel({
                   <GraphCanvasMvp
                     graph={displayGraph}
                     layoutMode={canvasLayoutMode}
+                    onCanvasLayoutModeChange={setCanvasLayoutMode}
                     selectedNodeId={resolvedSelectedNodeId}
                     selectedEdgeId={resolvedSelectedEdgeId}
                     onSelectNode={(nodeId) => {
@@ -664,9 +702,14 @@ export default function GraphWorkspacePanel({
             {detailsVisible ? (
               <Box sx={{ minWidth: 0, minHeight: standaloneMax ? 0 : { xs: 220, md: isEmbedded ? 400 : 500 }, display: "flex", flexDirection: "column" }}>
                 <GraphDetailPanel
-                  selectedNode={detail.selectedNode}
-                  selectedEdge={detail.selectedEdge}
-                  relatedEdges={detail.relatedEdges}
+                  selectedNode={inspector.selectedNode}
+                  selectedEdge={inspector.selectedEdge}
+                  relatedEdges={inspector.relatedEdges}
+                  relatedEdgeRows={inspector.relatedEdgeRows}
+                  selectedEdgeReadable={inspector.selectedEdgeReadable}
+                  graphMeta={displayGraph.meta}
+                  onSelectNode={onSelectNode}
+                  onSelectEdge={onSelectEdge}
                   mode={mode}
                 />
               </Box>

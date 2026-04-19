@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "benchmark_suite_tier": "live_corpus_mini",
+  "description": "Live mini-tier 2026-04-19: same fingerprint capture as strict_pilot_work_scoped.",
+  "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+  "top_k": 6,
+  "min_hit_count": 1,
+  "required_chunk_fingerprints": [
+    "4defe8cb-0c85-5e54-a3db-24cc31a6d64e"
+  ],
+  "contract_only": false
+}

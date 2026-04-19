@@ -221,6 +221,11 @@ class QdrantChunkStore:
         out: list[dict[str, Any]] = []
         for hit in hits:
             payload = hit.payload or {}
+            fp = payload.get("chunk_fingerprint")
+            if not fp:
+                # Legacy upserts (`upsert_chunks`) omitted fingerprints; use stable point id for
+                # citations, benchmarks, and UI keys until chunks are re-ingested with fingerprints.
+                fp = str(hit.id)
             out.append(
                 {
                     "id": str(hit.id),
@@ -228,7 +233,7 @@ class QdrantChunkStore:
                     "text": payload.get("text"),
                     "work_id": payload.get("work_id"),
                     "document_id": payload.get("document_id"),
-                    "chunk_fingerprint": payload.get("chunk_fingerprint"),
+                    "chunk_fingerprint": fp,
                     "section_path": payload.get("section_path"),
                 },
             )

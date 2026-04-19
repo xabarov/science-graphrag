@@ -9,6 +9,10 @@ Usage (repo root):
     --out-md eval/results/benchmark-metrics-summary.md
 
 Authoritative inputs (defaults) match docs/runbooks/benchmark-decision-gate.md.
+
+Optional retrieval + claims JSON lanes (advisory only; do not affect ``decision``) are listed in
+``benchmark-decision-gate.md`` §8 and summarized under ``retrieval_family`` / ``claims_family``
+in the output when the default artifact paths exist.
 """
 
 from __future__ import annotations
@@ -30,6 +34,15 @@ DEFAULT_LAYER1_NIGHTLY = "eval/results/current-llm-layer1-nightly-heavy-suite-af
 DEFAULT_LAYER2_NIGHTLY = "eval/results/current-llm-layer2-nightly-semantic-suite.json"
 DEFAULT_BASELINE_LAYER1 = "eval/results/baseline-llm-layer1-nightly-heavy-suite.json"
 DEFAULT_BASELINE_LAYER2 = "eval/results/baseline-llm-layer2-nightly-semantic-suite.json"
+
+# Retrieval family (advisory — does not change GO / NO-GO; see benchmark-decision-gate.md §8)
+DEFAULT_RETRIEVAL_MERGE_SAFE = "eval/results/current-retrieval-merge-safe-mock.json"
+DEFAULT_RETRIEVAL_STRICT_PILOT = "eval/results/current-retrieval-strict-pilot-mock.json"
+DEFAULT_RETRIEVAL_LIVE_CORPUS_MINI = "eval/results/current-retrieval-live-corpus-mini.json"
+
+# Claims family (advisory — Wave H1; see ontology-claims-benchmark-v1.md)
+DEFAULT_CLAIMS_MERGE_CONTRACT = "eval/results/current-claims-merge-contract.json"
+DEFAULT_CLAIMS_MINI_SUITE = "eval/results/current-claims-mini-suite.json"
 
 # Optional single-case retests after gold fixes (if present, listed in summary)
 SUPPLEMENTARY_RETESTS = (
@@ -190,6 +203,68 @@ def _summarize_layer1_suite(rel: str) -> dict[str, Any]:
         "source_histogram": {k: dict(v) for k, v in fb_agg.items()},
         "references_llm_failed_events": ref_llm_fail,
         "failure_class_histogram": dict(classifications),
+    }
+
+
+def _retrieval_case_passed(case: dict[str, Any]) -> bool:
+    return bool((case.get("metrics") or {}).get("passed"))
+
+
+def _summarize_retrieval_suite(rel: str) -> dict[str, Any]:
+    """Summarize retrieval suite JSON (merge-safe or strict_pilot tier)."""
+
+    p = ROOT / rel
+    if not p.is_file():
+        return {"error": "missing_file", "artifact": rel}
+    data = _read_json(p)
+    meta = data.get("run_metadata", {})
+    cases = data.get("cases") or []
+    summary = data.get("summary") or {}
+    failed = [c for c in cases if not _retrieval_case_passed(c)]
+    return {
+        "artifact": rel,
+        "run_metadata": {
+            "extraction_llm_model": meta.get("extraction_llm_model"),
+            "extraction_llm_base_url": meta.get("extraction_llm_base_url"),
+        },
+        "summary": summary,
+        "failed_count": len(failed),
+        "failed_cases": [
+            {"case_id": c.get("case_id"), "metrics": c.get("metrics")} for c in failed
+        ],
+        "all_passed": bool(summary.get("all_passed")),
+    }
+
+
+def _claims_case_passed(case: dict[str, Any]) -> bool:
+    return bool((case.get("metrics") or {}).get("passed"))
+
+
+def _summarize_claims_suite(rel: str) -> dict[str, Any]:
+    """Summarize claims benchmark suite JSON (same top-level shape as retrieval suite)."""
+
+    p = ROOT / rel
+    if not p.is_file():
+        return {"error": "missing_file", "artifact": rel}
+    data = _read_json(p)
+    meta = data.get("run_metadata", {})
+    cases = data.get("cases") or []
+    summary = data.get("summary") or {}
+    failed = [c for c in cases if not _claims_case_passed(c)]
+    return {
+        "artifact": rel,
+        "run_metadata": {
+            "extraction_llm_model": meta.get("extraction_llm_model"),
+            "extraction_llm_base_url": meta.get("extraction_llm_base_url"),
+            "layer1_prompt_fingerprint": meta.get("layer1_prompt_fingerprint"),
+            "semantic_prompt_fingerprint": meta.get("semantic_prompt_fingerprint"),
+        },
+        "summary": summary,
+        "failed_count": len(failed),
+        "failed_cases": [
+            {"case_id": c.get("case_id"), "metrics": c.get("metrics")} for c in failed
+        ],
+        "all_passed": bool(summary.get("all_passed")),
     }
 
 
@@ -376,6 +451,68 @@ def _md_supplementary_section(sup: list[dict[str, Any]]) -> list[str]:
     return lines
 
 
+def _md_retrieval_family_section(rf: dict[str, Any]) -> list[str]:
+    lines = [
+        "## Retrieval family (advisory)",
+        "",
+        "Retrieval benchmarks are **not** part of the primary decision gate; they track "
+        "`POST /v1/query` grounding signals. See `docs/runbooks/benchmark-decision-gate.md` §8.",
+        "",
+    ]
+    role = (rf.get("role") or "advisory") if isinstance(rf, dict) else "advisory"
+    lines.append(f"- **role**: `{role}`")
+    lines.append("")
+
+    def _one(label: str, block: dict[str, Any]) -> None:
+        lines.append(f"### {label}")
+        lines.append("")
+        if block.get("error"):
+            lines.append(f"- **status**: missing artifact `{block.get('artifact')}`")
+        else:
+            lines.append(f"- artifact: `{block.get('artifact')}`")
+            lines.append(f"- all_passed: **{block.get('all_passed')}**")
+            lines.append(f"- failed_count: **{block.get('failed_count')}**")
+            for fc in block.get("failed_cases") or []:
+                lines.append(f"  - `{fc.get('case_id')}`: {fc.get('metrics')}")
+        lines.append("")
+
+    _one("merge_safe_contract (mock suite)", rf.get("merge_safe_contract_mock") or {})
+    _one("strict_pilot (mock suite)", rf.get("strict_pilot_mock") or {})
+    _one("live_corpus_mini (live suite)", rf.get("live_corpus_mini") or {})
+    return lines
+
+
+def _md_claims_family_section(cf: dict[str, Any]) -> list[str]:
+    lines = [
+        "## Claims family (advisory)",
+        "",
+        "Claims benchmarks are **not** part of the primary decision gate. See "
+        "`docs/benchmarks/ontology-claims-benchmark-v1.md` and "
+        "`docs/runbooks/benchmark-program-status.md`.",
+        "",
+    ]
+    role = (cf.get("role") or "advisory") if isinstance(cf, dict) else "advisory"
+    lines.append(f"- **role**: `{role}`")
+    lines.append("")
+
+    def _one(label: str, block: dict[str, Any]) -> None:
+        lines.append(f"### {label}")
+        lines.append("")
+        if block.get("error"):
+            lines.append(f"- **status**: missing artifact `{block.get('artifact')}`")
+        else:
+            lines.append(f"- artifact: `{block.get('artifact')}`")
+            lines.append(f"- all_passed: **{block.get('all_passed')}**")
+            lines.append(f"- failed_count: **{block.get('failed_count')}**")
+            for fc in block.get("failed_cases") or []:
+                lines.append(f"  - `{fc.get('case_id')}`: {fc.get('metrics')}")
+        lines.append("")
+
+    _one("claims_merge_contract", cf.get("claims_merge_contract") or {})
+    _one("claims_mini", cf.get("claims_mini") or {})
+    return lines
+
+
 def _md_baseline_deltas_section(deltas: dict[str, Any]) -> list[str]:
     return [
         "## Baseline deltas (vs stored baseline JSON)",
@@ -403,6 +540,8 @@ def _render_markdown(payload: dict[str, Any]) -> str:
         *_md_layer1_section(payload.get("layer1_nightly") or {}),
         *_md_layer2_section(payload.get("layer2_nightly") or {}),
         *_md_supplementary_section(payload.get("supplementary_retests") or []),
+        *_md_retrieval_family_section(payload.get("retrieval_family") or {}),
+        *_md_claims_family_section(payload.get("claims_family") or {}),
         *_md_baseline_deltas_section(payload.get("deltas") or {}),
     ]
     return "\n".join(parts)
@@ -446,12 +585,28 @@ def main() -> int:
             "layer2_nightly": DEFAULT_LAYER2_NIGHTLY,
             "baseline_layer1": DEFAULT_BASELINE_LAYER1,
             "baseline_layer2": DEFAULT_BASELINE_LAYER2,
+            "retrieval_merge_safe_mock": DEFAULT_RETRIEVAL_MERGE_SAFE,
+            "retrieval_strict_pilot_mock": DEFAULT_RETRIEVAL_STRICT_PILOT,
+            "retrieval_live_corpus_mini": DEFAULT_RETRIEVAL_LIVE_CORPUS_MINI,
+            "claims_merge_contract": DEFAULT_CLAIMS_MERGE_CONTRACT,
+            "claims_mini_suite": DEFAULT_CLAIMS_MINI_SUITE,
         },
         "reference": reference,
         "layer1_nightly": layer1,
         "layer2_nightly": layer2,
         "deltas": deltas,
         "supplementary_retests": _supplementary_retests(),
+        "retrieval_family": {
+            "role": "advisory",
+            "merge_safe_contract_mock": _summarize_retrieval_suite(DEFAULT_RETRIEVAL_MERGE_SAFE),
+            "strict_pilot_mock": _summarize_retrieval_suite(DEFAULT_RETRIEVAL_STRICT_PILOT),
+            "live_corpus_mini": _summarize_retrieval_suite(DEFAULT_RETRIEVAL_LIVE_CORPUS_MINI),
+        },
+        "claims_family": {
+            "role": "advisory",
+            "claims_merge_contract": _summarize_claims_suite(DEFAULT_CLAIMS_MERGE_CONTRACT),
+            "claims_mini": _summarize_claims_suite(DEFAULT_CLAIMS_MINI_SUITE),
+        },
         "decision_gate": _decision_gate(reference, layer1, layer2),
     }
 

@@ -13,6 +13,8 @@ Example:
     --model deepseek/deepseek-v3.2
 
 Or set SCIENCE_GRAPHRAG_BENCHMARK_TEACHER_LLM_API_KEY / _BASE_URL / _MODEL in .env.
+
+Provenance / when to run vs extractor triage: see ``eval/README.md`` section *Teacher-gold remediation*.
 """
 
 from __future__ import annotations
@@ -27,6 +29,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 
+from teacher_llm_settings import teacher_extraction_settings
+
 from eval.bench_common import discover_layer1_case_dirs
 from eval.layer1.runner import run_layer1_extraction_only
 from eval.layer1.spec import Layer1GoldSpec
@@ -36,8 +40,6 @@ from eval.layer1.teacher_gold import (
     write_teacher_gold_bundle,
 )
 from science_graphrag.config import get_settings
-
-from teacher_llm_settings import teacher_extraction_settings
 
 
 def _parse_args() -> argparse.Namespace:

@@ -57,6 +57,18 @@ jobs:
       - name: Integration tests (Neo4j + Qdrant + Postgres)
         run: pytest tests -m integration -q
 
+      - name: Retrieval benchmark (merge_safe + strict_pilot, mock answers)
+        env:
+          SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED: "false"
+          SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY: ""
+          API_KEY: ""
+          MAIN_LLM_API_KEY: ""
+        run: |
+          python -m eval.retrieval.runner tests/fixtures/benchmarks/retrieval --suite --mock-answer \
+            --json-out eval/results/ci-retrieval-merge-safe-mock.json
+          python -m eval.retrieval.runner tests/fixtures/benchmarks/retrieval --suite --tier strict_pilot --mock-answer \
+            --json-out eval/results/ci-retrieval-strict-pilot-mock.json
+
       - name: Layer-1 benchmark suite (heuristic, no LLM)
         env:
           SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED: "false"
@@ -96,6 +108,13 @@ jobs:
           SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED: "true"
           MAIN_LLM_API_KEY: ${{ secrets.MAIN_LLM_API_KEY }}
         run: science-graphrag-layer2-benchmark tests/fixtures/benchmarks/layer2 --suite --tier nightly_semantic --json-out eval/results/ci-layer2-nightly-semantic.json
+
+      - name: Layer-1 nightly_heavy (optional, needs MAIN_LLM_API_KEY secret)
+        if: ${{ secrets.MAIN_LLM_API_KEY != '' }}
+        env:
+          SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED: "true"
+          MAIN_LLM_API_KEY: ${{ secrets.MAIN_LLM_API_KEY }}
+        run: science-graphrag-layer1-benchmark tests/fixtures/benchmarks/layer1 --suite --tier nightly_heavy --json-out eval/results/ci-layer1-nightly-heavy-llm.json
 
       - name: Aggregate benchmark metrics summary
         run: python scripts/aggregate_benchmark_metrics.py

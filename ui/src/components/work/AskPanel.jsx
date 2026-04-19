@@ -8,21 +8,33 @@ import Chip from "@mui/material/Chip";
 import Autocomplete from "@mui/material/Autocomplete";
 import Collapse from "@mui/material/Collapse";
 import FormControl from "@mui/material/FormControl";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
+import Switch from "@mui/material/Switch";
 
 import { CursorPrimaryButton, CursorSmallButton } from "../common/index.js";
 import WorkIdGlossaryHint from "../layout/WorkIdGlossaryHint.jsx";
 import {
   buildAskAnswerRationale,
   buildQueryBody,
+  createAskSession as createAskSessionRequest,
   formatResearchApiError,
   formatRetrievalSummaryLines,
   getWorks,
+  listAskSessions as listAskSessionsRequest,
   normalizeQueryResponse,
+  patchAskSession as patchAskSessionRequest,
   postQuery,
 } from "../../services/researchApi.js";
+import {
+  apiSessionsToBundle,
+  entriesToApiTurns,
+  isServerAskSessionId,
+  readAskServerSyncPref,
+  writeAskServerSyncPref,
+} from "./askSessionServerBridge.js";
 import { rememberAskHistory } from "./askHistoryState.js";
 import {
   appendAskSessionTurn,
@@ -32,6 +44,7 @@ import {
   migrateLegacyAskHistoryToSessions,
   readAskSessionUi,
   renameAskSession,
+  replaceScopeBundle,
   sessionExistsInScope,
   setActiveAskSession,
 } from "./askSessionState.js";
@@ -82,6 +95,7 @@ export default function AskPanel({
   const [retrievalJsonOpen, setRetrievalJsonOpen] = useState(false);
   const [sessionTick, setSessionTick] = useState(0);
   const [sessionTitleDraft, setSessionTitleDraft] = useState("");
+  const [serverSync, setServerSync] = useState(() => readAskServerSyncPref());
 
   const scopeKey = useMemo(
     () => deriveAskScopeKey({ locked, scopedWorkId }),
@@ -130,6 +144,24 @@ export default function AskPanel({
     getActiveSessionEntries(scopeKey);
     bumpSessions();
   }, [scopeKey, locked, scopedWorkId, bumpSessions]);
+
+  useEffect(() => {
+    if (!serverSync) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await listAskSessionsRequest(scopeKey);
+        if (cancelled) return;
+        replaceScopeBundle(scopeKey, apiSessionsToBundle(res.data));
+        bumpSessions();
+      } catch (err) {
+        if (!cancelled) setError(formatResearchApiError(err));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [serverSync, scopeKey, bumpSessions]);
 
   useEffect(() => {
     setHistory(getActiveSessionEntries(scopeKey));
@@ -188,6 +220,19 @@ export default function AskPanel({
         mode: locked || inWorkspace ? "workspace" : workId ? "scoped" : "global",
       });
       bumpSessions();
+      if (serverSync) {
+        const { activeId: sid } = readAskSessionUi(scopeKey);
+        if (sid && isServerAskSessionId(sid)) {
+          try {
+            await patchAskSessionRequest(scopeKey, sid, {
+              turns: entriesToApiTurns(getActiveSessionEntries(scopeKey)),
+              active: true,
+            });
+          } catch {
+            /* non-fatal */
+          }
+        }
+      }
     } catch (err) {
       setError(formatResearchApiError(err));
     } finally {
@@ -268,6 +313,11 @@ export default function AskPanel({
           {standaloneMode
             ? "Stored locally in this browser. Each session keeps its own turn list (up to 24 turns)."
             : "Stored per work for this workspace tab. Switch sessions to separate threads."}
+          {serverSync ? (
+            <Box component="span" sx={{ display: "block", mt: 0.5 }}>
+              Server sync writes to <code style={{ color: "rgba(129,140,248,0.85)" }}>/v1/ask-sessions</code> (file-backed on the API host).
+            </Box>
+          ) : null}
           {onUrlSessionIdChange ? (
             <Box component="span" sx={{ display: "block", mt: 0.5 }}>
               The active session id is reflected in the URL as <code style={{ color: "rgba(129,140,248,0.85)" }}>ask_session</code>{" "}
@@ -275,6 +325,20 @@ export default function AskPanel({
             </Box>
           ) : null}
         </Typography>
+        <FormControlLabel
+          sx={{ mb: 1, "& .MuiFormControlLabel-label": { fontSize: "0.8125rem", color: "rgba(255,255,255,0.7)" } }}
+          control={
+            <Switch
+              size="small"
+              checked={serverSync}
+              onChange={(_e, v) => {
+                writeAskServerSyncPref(v);
+                setServerSync(v);
+              }}
+            />
+          }
+          label="Server session sync (pilot)"
+        />
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, alignItems: "flex-end" }}>
           <FormControl size="small" sx={{ minWidth: 200, flex: "1 1 180px" }}>
             <InputLabel id="ask-session-select-label">Session</InputLabel>
@@ -282,11 +346,18 @@ export default function AskPanel({
               labelId="ask-session-select-label"
               label="Session"
               value={activeSessionId || ""}
-              onChange={(e) => {
+              onChange={async (e) => {
                 const v = String(e.target.value);
                 setActiveAskSession(scopeKey, v);
                 bumpSessions();
                 onUrlSessionIdChange?.(v);
+                if (serverSync && v && isServerAskSessionId(v)) {
+                  try {
+                    await patchAskSessionRequest(scopeKey, v, { active: true });
+                  } catch {
+                    /* non-fatal */
+                  }
+                }
               }}
               sx={{ fontSize: "0.8125rem" }}
             >
@@ -301,11 +372,18 @@ export default function AskPanel({
             label="Session title"
             value={sessionTitleDraft}
             onChange={(ev) => setSessionTitleDraft(ev.target.value)}
-            onBlur={() => {
+            onBlur={async () => {
               const next = sessionTitleDraft.trim();
               if (activeSessionId && next && next !== (activeSessionMeta?.title || "").trim()) {
                 renameAskSession(scopeKey, activeSessionId, next);
                 bumpSessions();
+                if (serverSync && isServerAskSessionId(activeSessionId)) {
+                  try {
+                    await patchAskSessionRequest(scopeKey, activeSessionId, { title: next, active: true });
+                  } catch {
+                    /* non-fatal */
+                  }
+                }
               }
             }}
             size="small"
@@ -317,7 +395,20 @@ export default function AskPanel({
           />
           <CursorSmallButton
             type="button"
-            onClick={() => {
+            onClick={async () => {
+              if (serverSync) {
+                try {
+                  await createAskSessionRequest(scopeKey, {});
+                  const res = await listAskSessionsRequest(scopeKey);
+                  replaceScopeBundle(scopeKey, apiSessionsToBundle(res.data));
+                  bumpSessions();
+                  const aid = res.data?.active_session_id;
+                  if (aid) onUrlSessionIdChange?.(String(aid));
+                } catch (err) {
+                  setError(formatResearchApiError(err));
+                }
+                return;
+              }
               const id = createAskSession(scopeKey);
               bumpSessions();
               if (id) onUrlSessionIdChange?.(id);
@@ -365,7 +456,22 @@ export default function AskPanel({
             ))}
           </Box>
         </Box>
-      ) : null}
+      ) : (
+        <Box
+          sx={{
+            mb: 2,
+            p: 1.5,
+            borderRadius: "6px",
+            border: "1px dashed rgba(255,255,255,0.1)",
+            backgroundColor: "rgba(255,255,255,0.02)",
+          }}
+        >
+          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.75)" }}>No turns yet</Typography>
+          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mt: 0.5 }}>
+            Run a query to populate this session. Enable server sync if you want the API host to persist turns for the same scope.
+          </Typography>
+        </Box>
+      )}
 
       {locked ? (
         <Box sx={{ mb: 2, p: 1.25, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "#1a1a1a" }}>

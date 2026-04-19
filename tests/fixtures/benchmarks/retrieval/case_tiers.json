@@ -1,0 +1,19 @@
+{
+  "merge_safe_contract": [
+    "cv_corpus_methods_overview",
+    "single_stage_detectors",
+    "yolo_family_keywords"
+  ],
+  "strict_pilot": [
+    "strict_pilot_methods",
+    "strict_pilot_work_scoped",
+    "strict_pilot_corpus_wide"
+  ],
+  "live_corpus_mini": [
+    "live_yolov1_intro",
+    "live_yolov1_architecture",
+    "live_yolov1_training",
+    "live_yolov1_methods_combo",
+    "live_corpus_methods_wide"
+  ]
+}

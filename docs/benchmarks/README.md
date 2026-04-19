@@ -11,6 +11,8 @@
 | [object-detection-inventory.md](object-detection-inventory.md) | Полный PDF ↔ `case_id` ↔ тир |
 | [yolov1-baseline.md](yolov1-baseline.md) | Layer-1 baseline (YOLOv1 fixture + отчёт) |
 | [yolov1-followup.md](yolov1-followup.md) | Follow-up по качеству и графу `CITES` |
+| [retrieval-live-tier-v1.md](retrieval-live-tier-v1.md) | Живой mini-tier retrieval (`live_corpus_mini`) на пилотном корпусе |
+| [ontology-claims-benchmark-v1.md](ontology-claims-benchmark-v1.md) | Claims / epistemic benchmark family (Wave H1, advisory) |
 
 **Reference quality lane (LLM-on):** `.github/workflows/benchmark-reference.yml` — обязательный YOLOv1 benchmark contract (`layer1 + graph + layer2`) с `MAIN_LLM_API_KEY`.
 Runbook: [docs/runbooks/benchmark-driven-dev-loop.md](../runbooks/benchmark-driven-dev-loop.md).

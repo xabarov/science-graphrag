@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 from typing import Any
 
@@ -11,7 +12,7 @@ from fastapi.testclient import TestClient
 from science_graphrag.api import benchmark as benchmark_api
 from science_graphrag.api import main as api_main
 from science_graphrag.api.retrieval import GroundedAnswer
-from science_graphrag.api.task_store import RunPayloadTooLargeError
+from science_graphrag.api.task_store import BenchmarkTaskStore, RunPayloadTooLargeError
 
 
 def _client() -> TestClient:
@@ -25,6 +26,24 @@ def test_health_endpoint() -> None:
     res = client.get("/health")
     assert res.status_code == 200
     assert res.json().get("status") == "ok"
+
+
+def test_root_redirects_to_ui_when_built() -> None:
+    """Root path should send browsers to the SPA shell instead of the legacy MVP page."""
+
+    client = _client()
+    res = client.get("/", follow_redirects=False)
+    assert res.status_code == 307
+    assert res.headers["location"] == "/ui/"
+
+
+def test_legacy_retrieval_mvp_page_smoke() -> None:
+    """Legacy retrieval MVP remains available on an explicit route."""
+
+    client = _client()
+    res = client.get("/legacy/retrieval-mvp")
+    assert res.status_code == 200
+    assert "Grounded query (MVP)" in res.text
 
 
 def test_settings_schema_endpoint_smoke() -> None:
@@ -863,3 +882,64 @@ def test_mandatory_happy_path_sequence_smoke(monkeypatch: Any) -> None:
     body = qres.json()
     assert body["citations"][0]["chunk_fingerprint"] == "fp_hp"
     assert body["retrieval_trace"]["resolved_work_id"] == "w_hp"
+
+
+def test_benchmark_runs_api_lists_restored_store(monkeypatch: Any, tmp_path: Path) -> None:
+    """API GET /v1/benchmark/runs sees runs loaded from disk on a fresh BenchmarkTaskStore (Wave E3)."""
+
+    hist = tmp_path / "br_hist"
+    hist.mkdir()
+
+    def _fake_layer1_runner(
+        fixture_dir: Path,
+        *,
+        settings: Any,
+        external_gold_root=None,
+        gold_filename: str = "gold.json",
+        threshold_profile: str | None = None,
+    ) -> dict[str, Any]:
+        return {
+            "case_id": fixture_dir.name,
+            "metrics": {
+                "contract": {"passed": True, "checks": {}},
+                "authorships": {"names_f1": 1.0},
+                "references": {"sample_arxiv_f1": 1.0, "sample_doi_f1": 1.0},
+            },
+            "predicted": {},
+            "gold": {},
+            "diagnostics": {},
+        }
+
+    store1 = BenchmarkTaskStore(
+        max_workers=1,
+        history_dir=hist,
+        layer1_runner=_fake_layer1_runner,
+    )
+    monkeypatch.setattr(benchmark_api, "task_store", store1)
+    run_id = store1.create_run(
+        case_ids=["yolov1"],
+        label="api-restore-label",
+        benchmark_family="layer1",
+        run_config={"model_profile": "env_default"},
+    )
+    deadline = time.time() + 10.0
+    while time.time() < deadline:
+        run = store1.get_run(run_id)
+        if run and run.get("status") in {"completed", "failed", "cancelled"}:
+            break
+        time.sleep(0.05)
+    assert store1.get_run(run_id)["status"] == "completed"
+
+    store2 = BenchmarkTaskStore(
+        max_workers=1,
+        history_dir=hist,
+        layer1_runner=_fake_layer1_runner,
+    )
+    monkeypatch.setattr(benchmark_api, "task_store", store2)
+
+    client = _client()
+    res = client.get("/v1/benchmark/runs")
+    assert res.status_code == 200
+    items = res.json().get("items") or []
+    labels = [x.get("label") for x in items]
+    assert "api-restore-label" in labels

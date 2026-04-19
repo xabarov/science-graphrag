@@ -24,10 +24,11 @@
 
 | Family | Когда вводить | Примечание |
 |--------|----------------|------------|
-| `references_resolution` | Уже частично покрыто draft-метриками; усилить связью с Neo4j | См. [graph-level-eval-v1.md](graph-level-eval-v1.md) |
+| `references_resolution` | Уже частично покрыто draft-метриками; усилить связью с Neo4j | См. [graph-level-eval-v1.md](graph-level-eval-v1.md), спека семьи: [benchmark-family-references-resolution-v1.md](../specs/benchmark-family-references-resolution-v1.md), заготовка фикстур: [`tests/fixtures/benchmarks/references_resolution/README.md`](../../tests/fixtures/benchmarks/references_resolution/README.md) |
 | `institutions` | После нормализации affiliation → ROR / каноническое имя | Gold: ожидаемые строки или ROR id |
 | `related_versions` | После ingest-логики `RELATED_VERSION_OF` | Gold: пары work ids или DOI preprint/journal |
 | `layer2_semantic` | Phase 2–3 | Отдельный пакет `eval/layer2/`, не смешивать с layer-1 |
+| `claims_epistemic` | Wave H1 | `eval/claims/`, `tests/fixtures/benchmarks/claims/` — см. [ontology-claims-benchmark-v1.md](ontology-claims-benchmark-v1.md) |
 
 ## Версионирование gold
 

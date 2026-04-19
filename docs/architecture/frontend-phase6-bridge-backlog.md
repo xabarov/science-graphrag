@@ -97,7 +97,8 @@ Definition of done:
 - [x] `POST /v1/benchmark/runs` — постановка прогона (выбранные `case_ids` или ярлыки вроде `merge_safe`).
 - [x] `GET /v1/benchmark/runs`, `GET /v1/benchmark/runs/{run_id}`, `DELETE /v1/benchmark/runs/{run_id}`.
 - [x] Явно задокументировать ограничения: run store **file-backed** (`data/benchmark_runs/*.json`, восстановление после рестарта; см. §6 контрактов), in-memory только активные записи + пул; **layer-1** и **layer-2** runner в task pool — [specs/frontend-ui-api-contracts-v1.md](../specs/frontend-ui-api-contracts-v1.md) §6.
-- [ ] Backlog: durable runs (файл/БД); graph runner остаётся CLI-first — см. [eval/README.md](../../eval/README.md).
+- [x] **Durable runs:** file-backed snapshots under `data/benchmark_runs/*.json` + reload on API start (`science_graphrag/api/task_store.py`). Optional later: DB-backed store if operators need multi-host history.
+- [ ] Backlog: graph runner остаётся CLI-first — см. [eval/README.md](../../eval/README.md).
 
 ## Sequencing
 

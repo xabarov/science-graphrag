@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "benchmark_suite_tier": "live_corpus_mini",
+  "description": "Live mini-tier 2026-04-19: two required chunks (same as strict_pilot_methods).",
+  "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+  "top_k": 8,
+  "min_hit_count": 1,
+  "required_chunk_fingerprints": [
+    "7ee12509-2279-5d5d-b450-1607dffde23c",
+    "30091237-ce82-52b7-8f16-efab66d4c2ac"
+  ],
+  "contract_only": false
+}

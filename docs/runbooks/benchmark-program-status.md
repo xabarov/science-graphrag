@@ -1,0 +1,47 @@
+# Benchmark program status (living)
+
+Single entry point for **what is authoritative today**, which benchmark families are **merge-blocking** vs **advisory**, and how **Wave H ontology expansion** is gated.
+
+## Authoritative baseline (decision gate)
+
+- **Machine-readable:** [`eval/results/benchmark-metrics-summary.json`](../../eval/results/benchmark-metrics-summary.json)
+- **Human-readable:** [`eval/results/benchmark-metrics-summary.md`](../../eval/results/benchmark-metrics-summary.md)
+
+Rules for **GO / CONDITIONAL-GO / NO-GO** are in [`benchmark-decision-gate.md`](benchmark-decision-gate.md). As of the last committed summary refresh, **reference lane** (YOLOv1: layer1 + graph + layer2 semantic) and **nightly** layer1/layer2 suites are the **primary** gate inputs.
+
+## Stable benchmark families (core)
+
+| Family | Role | Artifacts / docs |
+|--------|------|------------------|
+| Layer-1 KG draft | Core extraction quality | `eval/layer1/`, `tests/fixtures/benchmarks/layer1/` |
+| Graph post-ingest | Neo4j invariants | `eval/graph_v1/`, `graph_expectations` in layer1 `gold.json` |
+| Layer-2 semantic (Method / Dataset) | Ontology v1 semantic slice | `eval/layer2/`, `tests/fixtures/benchmarks/layer2/` |
+
+Policy: **LLM-on** runs are the quality reference for these families; merge CI may use heuristics-only paths — see [`eval/README.md`](../../eval/README.md) and [`roadmap.md`](../roadmap.md) Phase 4.
+
+## Advisory lanes (non-blocking for decision)
+
+| Lane | Purpose | Notes |
+|------|---------|--------|
+| Retrieval / `POST /v1/query` | Grounding: trace, citations, optional chunk fingerprints | Advisory per [`benchmark-decision-gate.md`](benchmark-decision-gate.md) §8; mock suite for CI in [`eval/README.md`](../../eval/README.md) |
+| **Live retrieval mini-tier** | Real stack checks on a **small frozen** question set | [`retrieval-live-tier-v1.md`](../benchmarks/retrieval-live-tier-v1.md); tier `live_corpus_mini`; default artifact for aggregator: `eval/results/current-retrieval-live-corpus-mini.json` |
+| **Claims / epistemic (Wave H1)** | Ontology expansion beyond Method/Dataset | Advisory until explicitly promoted; see [`ontology-claims-benchmark-v1.md`](../benchmarks/ontology-claims-benchmark-v1.md), `eval/claims/`; aggregator defaults: `eval/results/current-claims-merge-contract.json`, `eval/results/current-claims-mini-suite.json` |
+
+These lanes **must not** flip `decision` to NO-GO until maintainers update [`benchmark-decision-gate.md`](benchmark-decision-gate.md) and [`scripts/aggregate_benchmark_metrics.py`](../../scripts/aggregate_benchmark_metrics.py).
+
+## Wave H ontology expansion — gate
+
+Per [`ontology-wave-h-backlog.md`](../specs/ontology-wave-h-backlog.md):
+
+- **No new Neo4j node types / edges in merge CI** without at least one **benchmark case** (or an agreed pilot rubric row) and a documented gold schema.
+- **Claims** start from a **frozen mini-pack** under `tests/fixtures/benchmarks/claims/`, then **pilot** and **wide** packs per [`ontology-claims-benchmark-v1.md`](../benchmarks/ontology-claims-benchmark-v1.md) (expansion ladder).
+
+## Expansion rule (all new surface)
+
+From [`benchmark-expansion-v1.md`](../benchmarks/benchmark-expansion-v1.md): a new pipeline entity or relation should ship with **fixture + gold + metric** in the same change set or the immediately following one.
+
+## Related runbooks
+
+- [`benchmark-driven-dev-loop.md`](benchmark-driven-dev-loop.md)
+- [`roadmap-next-waves.md`](roadmap-next-waves.md) (Waves E–H)
+- [`benchmark-decision-gate.md`](benchmark-decision-gate.md)

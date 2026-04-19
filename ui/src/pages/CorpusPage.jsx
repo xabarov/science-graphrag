@@ -24,6 +24,8 @@ const PAGE_SIZE = 40;
 
 export default function CorpusPage() {
   const [q, setQ] = useState("");
+  /** Title search string applied to the server (updated on Search submit). */
+  const [lastSearch, setLastSearch] = useState("");
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -41,11 +43,29 @@ export default function CorpusPage() {
     refreshCorpusEntryState();
   }, [refreshCorpusEntryState]);
 
-  const loadFirst = useCallback(async (search) => {
+  const worksServerParams = useCallback(() => {
+    const ymin = yearMin.trim() === "" ? undefined : Number(yearMin);
+    const ymax = yearMax.trim() === "" ? undefined : Number(yearMax);
+    let hasSemantic;
+    if (semanticFilter === "ready") hasSemantic = true;
+    else if (semanticFilter === "not_ready") hasSemantic = false;
+    return {
+      yearMin: Number.isFinite(ymin) ? ymin : undefined,
+      yearMax: Number.isFinite(ymax) ? ymax : undefined,
+      hasSemantic,
+    };
+  }, [yearMin, yearMax, semanticFilter]);
+
+  const loadFirst = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await getWorks({ q: search || undefined, limit: PAGE_SIZE, offset: 0 });
+      const res = await getWorks({
+        q: lastSearch.trim() || undefined,
+        limit: PAGE_SIZE,
+        offset: 0,
+        ...worksServerParams(),
+      });
       const chunk = Array.isArray(res.data?.items) ? res.data.items : [];
       const tot = Number.isFinite(Number(res.data?.total)) ? Number(res.data.total) : 0;
       setItems(chunk);
@@ -57,14 +77,19 @@ export default function CorpusPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [lastSearch, worksServerParams]);
 
   const loadMore = useCallback(async () => {
     if (loadingMore || items.length >= total) return;
     setLoadingMore(true);
     setError(null);
     try {
-      const res = await getWorks({ q: q.trim() || undefined, limit: PAGE_SIZE, offset: items.length });
+      const res = await getWorks({
+        q: lastSearch.trim() || undefined,
+        limit: PAGE_SIZE,
+        offset: items.length,
+        ...worksServerParams(),
+      });
       const chunk = Array.isArray(res.data?.items) ? res.data.items : [];
       setItems((prev) => [...prev, ...chunk]);
     } catch (err) {
@@ -72,15 +97,15 @@ export default function CorpusPage() {
     } finally {
       setLoadingMore(false);
     }
-  }, [items.length, loadingMore, q, total]);
+  }, [items.length, lastSearch, loadingMore, total, worksServerParams]);
 
   useEffect(() => {
-    loadFirst("");
+    loadFirst();
   }, [loadFirst]);
 
   function onSearch(e) {
     e.preventDefault();
-    loadFirst(q.trim() || undefined);
+    setLastSearch(q.trim());
   }
 
   function onOpenWorkspace(workId) {
@@ -95,28 +120,15 @@ export default function CorpusPage() {
     refreshCorpusEntryState();
   }
 
-  const filteredItems = useMemo(() => {
-    return items.filter((w) => {
-      if (semanticFilter === "ready" && !w.has_semantic_layer) return false;
-      if (semanticFilter === "not_ready" && w.has_semantic_layer) return false;
-      const y = Number(w.year);
-      const minY = yearMin.trim() === "" ? null : Number(yearMin);
-      const maxY = yearMax.trim() === "" ? null : Number(yearMax);
-      if (minY != null && Number.isFinite(minY) && (!Number.isFinite(y) || y < minY)) return false;
-      if (maxY != null && Number.isFinite(maxY) && (!Number.isFinite(y) || y > maxY)) return false;
-      return true;
-    });
-  }, [items, semanticFilter, yearMin, yearMax]);
-
   const sortedItems = useMemo(() => {
-    const arr = [...filteredItems];
+    const arr = [...items];
     if (sortBy === "title") {
       arr.sort((a, b) => String(a.title || "").localeCompare(String(b.title || ""), undefined, { sensitivity: "base" }));
     } else if (sortBy === "year_desc") {
       arr.sort((a, b) => (Number(b.year) || 0) - (Number(a.year) || 0));
     }
     return arr;
-  }, [filteredItems, sortBy]);
+  }, [items, sortBy]);
 
   const canLoadMore = !loading && items.length < total;
 
@@ -393,7 +405,9 @@ export default function CorpusPage() {
         <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mb: 1 }}>
           Total in corpus: {total}
           {items.length < total ? ` · Loaded: ${items.length}` : null}
-          {filteredItems.length !== items.length ? ` · After filters: ${filteredItems.length}` : null}
+          {semanticFilter !== "all" || yearMin.trim() !== "" || yearMax.trim() !== ""
+            ? " · Year/semantic filters applied on the server"
+            : null}
         </Typography>
       )}
 

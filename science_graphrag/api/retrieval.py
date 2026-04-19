@@ -9,12 +9,14 @@ from neo4j import GraphDatabase, NotificationClassification
 
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.embeddings import HashEmbeddingProvider, try_sentence_transformer
+from openai import OpenAI
+
 from science_graphrag.storage.qdrant_store import QdrantChunkStore
 
 
 @dataclass
 class GroundedAnswer:
-    """Deterministic retrieval result for POST /v1/query (no second-stage LLM)."""
+    """Retrieval result for POST /v1/query (deterministic snippets + optional second-stage LLM)."""
 
     answer: str
     citations: list[dict[str, Any]]
@@ -245,6 +247,8 @@ def _retrieval_trace_payload(
     inp: _RetrievalTraceIn,
     *,
     query_preview: str | None = None,
+    answer_synthesis: dict[str, Any] | None = None,
+    extra_degraded: list[str] | None = None,
 ) -> dict[str, Any]:
     trace_degraded: list[str] = []
     if len(inp.hits) == 0:
@@ -256,6 +260,11 @@ def _retrieval_trace_payload(
     qprev = (query_preview or "").strip()
     if len(qprev) > 240:
         qprev = qprev[:240] + "…"
+    trace_degraded.extend(extra_degraded or [])
+    syn = answer_synthesis or {
+        "mode": "deterministic_snippets",
+        "second_stage_llm": False,
+    }
     return {
         "embedding": inp.emb_trace,
         "hit_count": len(inp.hits),
@@ -266,13 +275,67 @@ def _retrieval_trace_payload(
         "citations_returned": inp.citations_returned,
         "top_hit_scores": top_scores,
         "query_preview": qprev or None,
-        "answer_synthesis": {
-            "mode": "deterministic_snippets",
-            "second_stage_llm": False,
-        },
+        "answer_synthesis": syn,
         "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
         "degraded": trace_degraded,
     }
+
+
+def _try_query_answer_llm(
+    question: str,
+    citations: list[dict[str, Any]],
+    settings: Settings,
+) -> tuple[str | None, dict[str, Any]]:
+    """Optional second-stage LLM: paraphrase grounded on citation excerpts only."""
+
+    if not settings.query_answer_llm_enabled:
+        return None, {}
+    api_key = settings.extraction_llm_api_key
+    if not api_key:
+        return None, {"skipped": True, "reason": "no_api_key"}
+
+    ctx_lines: list[str] = []
+    for i, c in enumerate(citations[:10], start=1):
+        ex = (c.get("excerpt") or "").strip()
+        if not ex:
+            continue
+        meta: list[str] = []
+        if c.get("section_path"):
+            meta.append(f"section={c['section_path']}")
+        if c.get("chunk_fingerprint"):
+            meta.append(f"chunk={c['chunk_fingerprint']}")
+        ctx_lines.append(f"[{i}] ({', '.join(meta) if meta else 'excerpt'}) {ex}")
+    if not ctx_lines:
+        return None, {"skipped": True, "reason": "no_citation_text"}
+
+    system = (
+        "You are a scientific assistant. Answer ONLY using the numbered excerpts. "
+        "If excerpts are insufficient, say so briefly. Do not invent citations, DOIs, "
+        "or facts that are not supported by the excerpts."
+    )
+    user = f"Question:\n{question}\n\nExcerpts:\n" + "\n".join(ctx_lines)
+    try:
+        timeout = min(float(settings.extraction_llm_timeout_seconds), 120.0)
+        client = OpenAI(
+            api_key=api_key,
+            base_url=settings.extraction_llm_base_url,
+            timeout=timeout,
+        )
+        resp = client.chat.completions.create(
+            model=settings.extraction_llm_model,
+            temperature=float(settings.query_answer_llm_temperature),
+            max_tokens=int(settings.query_answer_llm_max_tokens),
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+        )
+        text = (resp.choices[0].message.content or "").strip()
+        if not text:
+            return None, {"error": "empty_llm_response"}
+        return text, {"model": settings.extraction_llm_model}
+    except Exception as exc:  # noqa: BLE001
+        return None, {"error": f"{type(exc).__name__}: {exc}"}
 
 
 def _qdrant_hits_for_answer(
@@ -329,6 +392,33 @@ def answer_query(
     else:
         answer = "No retrieved chunks; ingest documents or check Qdrant collection."
 
+    synthesis: dict[str, Any] = {
+        "mode": "deterministic_snippets",
+        "second_stage_llm": False,
+    }
+    extra_degraded: list[str] = []
+    llm_answer, llm_meta = _try_query_answer_llm(question, citations, s)
+    if llm_answer:
+        answer = llm_answer
+        synthesis = {
+            "mode": "grounded_llm_paraphrase",
+            "second_stage_llm": True,
+            "model": llm_meta.get("model"),
+        }
+    elif llm_meta.get("error"):
+        extra_degraded.append("second_stage_llm_failed")
+        synthesis = {
+            "mode": "deterministic_snippets",
+            "second_stage_llm": False,
+            "second_stage_error": llm_meta.get("error"),
+        }
+    elif llm_meta.get("skipped"):
+        synthesis = {
+            "mode": "deterministic_snippets",
+            "second_stage_llm": False,
+            "second_stage_skipped": llm_meta.get("reason") or True,
+        }
+
     return GroundedAnswer(
         answer=answer,
         citations=citations,
@@ -344,5 +434,7 @@ def answer_query(
                 len(citations),
             ),
             query_preview=question,
+            answer_synthesis=synthesis,
+            extra_degraded=extra_degraded,
         ),
     )

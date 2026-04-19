@@ -51,6 +51,8 @@ science-graphrag = "science_graphrag.cli.main:main"
 science-graphrag-layer1-benchmark = "eval.layer1.runner:main"
 science-graphrag-graph-benchmark = "eval.graph_v1.runner:main"
 science-graphrag-layer2-benchmark = "eval.layer2.runner:main"
+science-graphrag-retrieval-benchmark = "eval.retrieval.runner:main"
+science-graphrag-claims-benchmark = "eval.claims.runner:main"
 science-graphrag-benchmark-compare = "eval.report_compare:main"
 science-graphrag-api = "science_graphrag.api.main:main"
 

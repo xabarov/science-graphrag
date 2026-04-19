@@ -1,0 +1,164 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+    "semantic_extraction_enabled": true
+  },
+  "summary": {
+    "case_count": 5,
+    "case_ids": [
+      "yolov1_fast_yolo_speed_claim",
+      "yolov1_framing_claim",
+      "yolov1_localization_tradeoff_claim",
+      "yolov1_speed_claim",
+      "yolov1_unified_pipeline_claim"
+    ],
+    "all_passed": true,
+    "claims_eval": true
+  },
+  "cases": [
+    {
+      "case_id": "yolov1_fast_yolo_speed_claim",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 1.0,
+        "expected_count": 1,
+        "predicted_count": 1,
+        "matched_claim_ids": [
+          "yolov1_fast_yolo_fps"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 1.0
+      },
+      "predictions": [
+        {
+          "claim_id": "yolov1_fast_yolo_fps",
+          "claim_text_normalized": "fast yolo runs at about 155 fps",
+          "claim_type": "performance",
+          "polarity": "positive"
+        }
+      ],
+      "wall_clock_seconds": 0.0,
+      "extractor": "extract_claims_anchor_harness",
+      "extraction_llm_enabled": true
+    },
+    {
+      "case_id": "yolov1_framing_claim",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 1.0,
+        "expected_count": 1,
+        "predicted_count": 1,
+        "matched_claim_ids": [
+          "yolov1_regression_framing"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 1.0
+      },
+      "predictions": [
+        {
+          "claim_id": "yolov1_regression_framing",
+          "claim_text_normalized": "object detection framed as regression to boxes and class probabilities",
+          "claim_type": "method",
+          "polarity": "neutral"
+        }
+      ],
+      "wall_clock_seconds": 0.0,
+      "extractor": "extract_claims_anchor_harness",
+      "extraction_llm_enabled": true
+    },
+    {
+      "case_id": "yolov1_localization_tradeoff_claim",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 1.0,
+        "expected_count": 1,
+        "predicted_count": 1,
+        "matched_claim_ids": [
+          "yolov1_loc_vs_fp_tradeoff"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 1.0
+      },
+      "predictions": [
+        {
+          "claim_id": "yolov1_loc_vs_fp_tradeoff",
+          "claim_text_normalized": "yolo makes more localization errors but fewer false positives on background",
+          "claim_type": "comparison",
+          "polarity": "neutral"
+        }
+      ],
+      "wall_clock_seconds": 0.0,
+      "extractor": "extract_claims_anchor_harness",
+      "extraction_llm_enabled": true
+    },
+    {
+      "case_id": "yolov1_speed_claim",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 1.0,
+        "expected_count": 1,
+        "predicted_count": 1,
+        "matched_claim_ids": [
+          "yolov1_base_fps"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 1.0
+      },
+      "predictions": [
+        {
+          "claim_id": "yolov1_base_fps",
+          "claim_text_normalized": "base yolo runs at about 45 fps",
+          "claim_type": "performance",
+          "polarity": "positive"
+        }
+      ],
+      "wall_clock_seconds": 0.0,
+      "extractor": "extract_claims_anchor_harness",
+      "extraction_llm_enabled": true
+    },
+    {
+      "case_id": "yolov1_unified_pipeline_claim",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 1.0,
+        "expected_count": 1,
+        "predicted_count": 1,
+        "matched_claim_ids": [
+          "yolov1_single_net_predictions"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 1.0
+      },
+      "predictions": [
+        {
+          "claim_id": "yolov1_single_net_predictions",
+          "claim_text_normalized": "one convnet predicts multiple boxes and class probabilities",
+          "claim_type": "method",
+          "polarity": "positive"
+        }
+      ],
+      "wall_clock_seconds": 0.0,
+      "extractor": "extract_claims_anchor_harness",
+      "extraction_llm_enabled": true
+    }
+  ]
+}

@@ -33,12 +33,13 @@ export function buildReactFlowNodes(graph, selectedNodeId = "") {
   const sel = String(selectedNodeId || "").trim();
   return nodes.map((n) => {
     const p = pos.get(n.id) || { x: 0, y: 0 };
+    const primaryLabel = n.displayLabel != null && String(n.displayLabel).trim() ? String(n.displayLabel) : String(n.label || "");
     return {
       id: n.id,
       type: "science",
       position: { x: p.x, y: p.y },
       data: {
-        label: truncateCanvasLabel(n.label),
+        label: truncateCanvasLabel(primaryLabel),
         nodeType: n.type,
       },
       selected: Boolean(sel && n.id === sel),
@@ -60,7 +61,7 @@ export function buildReactFlowEdges(graph, selectedEdgeId = "") {
     target: e.target,
     sourceHandle: "out",
     targetHandle: "in",
-    label: edgeTypeCanvasLabel(e.type),
+    label: edgeTypeCanvasLabel(e.displayType || e.type),
     labelStyle: { fill: "rgba(255,255,255,0.55)", fontSize: 10 },
     labelBgPadding: [2, 4],
     labelBgBorderRadius: 4,

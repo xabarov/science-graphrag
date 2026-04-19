@@ -275,8 +275,8 @@ flowchart LR
 
 **Дальше (backlog Phase 4, приоритет):**
 
-1. **Nightly+:** при необходимости добавить в `integration-nightly.yml` прогон `science-graphrag-*-benchmark … --suite` с секретами LLM / полный graph suite с живым OpenAlex (сейчас только integration-тесты).
-2. **Graph suite в CI:** тяжёлый шаг; либо отдельный job на nightly, либо один лёгкий кейс без OpenAlex на merge.
+1. **Nightly+:** при наличии `MAIN_LLM_API_KEY` в GitHub secrets nightly запускает **layer-2 `nightly_semantic`** и **layer-1 `nightly_heavy`** (обновлено 2026-04-19, `.github/workflows/integration-nightly.yml`). Полный graph suite с живым OpenAlex остаётся advisory.
+2. **Graph suite в CI:** тяжёлый шаг; либо отдельный job на nightly, либо один лёгкий кейс без OpenAlex на merge (на nightly уже есть `yolov1` + `retinanet_focal_realpdf` graph benchmarks без LLM).
 3. **Gold для real-pdf:** заполнить `authorships[]` и при необходимости ужесточить `graph_expectations` под прогон **с включённым LLM** (отдельный job).
 4. Новые **families** и gold по мере Phase 2+ — [benchmarks/benchmark-expansion-v1.md](benchmarks/benchmark-expansion-v1.md).
 
@@ -297,7 +297,7 @@ flowchart LR
 - **Прогоны benchmark и decision gate:** если по плану roadmap или runbook требуется прогон (suite, интеграция, агрегатор метрик), его можно выполнять **без дополнительного подтверждения** от владельца репозитория; перед прогоном при необходимости поднимают зависимости из `docker-compose.yml`.
 - **Пересборка API / образов:** при изменениях backend или для валидного e2e-прогона допустимы `docker compose up -d --build` и перезапуск `science-graphrag-api`, если это нужно получить согласованный результат теста.
 
-Подробнее по критериям GO/NO-GO: [runbooks/benchmark-decision-gate.md](runbooks/benchmark-decision-gate.md). Следующая волна работ (Wave A–D): [runbooks/roadmap-next-waves.md](runbooks/roadmap-next-waves.md).
+Подробнее по критериям GO/NO-GO: [runbooks/benchmark-decision-gate.md](runbooks/benchmark-decision-gate.md). Волны **A–D** и следующие **E–H**: [runbooks/roadmap-next-waves.md](runbooks/roadmap-next-waves.md).
 
 ---
 
@@ -315,7 +315,7 @@ flowchart LR
 
 **Exit criteria:** end-to-end путь для **3–5** ключевых user journeys с воспроизводимым trace.
 
-**Статус Phase 5 (2026-03-31):** **MVP in progress** — реализованы `GET /health`, `POST /v1/query`, UI-facing `GET /v1/works`, `GET /v1/works/{work_id}`, `GET /v1/works/{work_id}/graph`, `GET /v1/works/{work_id}/chunks` и прототип UI в `science_graphrag/api/static/index.html`; дальше — стабилизация контрактов, интеграционные тесты и (опционально) второй этап синтеза ответа.
+**Статус Phase 5 (2026-03-31, обновлено 2026-04-19):** **MVP in progress** — реализованы `GET /health`, `POST /v1/query`, UI-facing `GET /v1/works` (в т.ч. фильтры `year_min` / `year_max` / `has_semantic`), `GET /v1/works/{work_id}`, `GET /v1/works/{work_id}/graph`, `GET /v1/works/{work_id}/chunks`; **опциональный второй этап LLM** для ответа (`SCIENCE_GRAPHRAG_QUERY_ANSWER_LLM_ENABLED`, см. `.env.example`, `science_graphrag/api/retrieval.py`). Сценарии учёного: [runbooks/user-journeys-retrieval-v1.md](runbooks/user-journeys-retrieval-v1.md). Дальше — семейство retrieval-бенчмарков ([benchmarks/retrieval-eval-v1.md](benchmarks/retrieval-eval-v1.md)) и стабилизация контрактов.
 
 **Обязательный happy-path (Wave C):** задокументирован в [specs/frontend-ui-api-contracts-v1.md](specs/frontend-ui-api-contracts-v1.md) (раздел *Mandatory API happy-path*); smoke `tests/test_api_smoke.py` покрывает `/health`, `/v1/query`, `/v1/works`, `/v1/works/{work_id}`, `/v1/works/{work_id}/graph`, `/v1/works/{work_id}/chunks` через моки (без живых Neo4j/Qdrant).  
 **Текущий статус валидации (2026-03-31):** `pytest tests -m integration` на поднятом compose (`neo4j`, `postgres`, `qdrant`) — `3 passed`.
@@ -346,7 +346,7 @@ flowchart LR
 2) полная интеграция после стабилизации Phase 5 API-контрактов.  
 См. [architecture/frontend-parallel-track-strategy.md](architecture/frontend-parallel-track-strategy.md), [specs/frontend-ui-api-contracts-v1.md](specs/frontend-ui-api-contracts-v1.md), [architecture/frontend-phase6-bridge-backlog.md](architecture/frontend-phase6-bridge-backlog.md).
 
-**Benchmark console (2026-04-06):** в планах зафиксирована поверхность **Benchmarks** (`/benchmark` в `ui/`, API `/v1/benchmark/*` в `science_graphrag/api/benchmark.py`, фоновые прогоны `science_graphrag/api/task_store.py`). Текущий охват — **layer-1** и in-memory история прогонов; выравнивание с osint-gr по UX и расширение на другие семейства — backlog в [frontend-phase6-bridge-backlog.md](architecture/frontend-phase6-bridge-backlog.md) (`A5`, `B4`).
+**Benchmark console (2026-04-06):** поверхность **Benchmarks** (`/benchmark` в `ui/`, API `/v1/benchmark/*` в `science_graphrag/api/benchmark.py`, фоновые прогоны `science_graphrag/api/task_store.py`). Текущий охват — **layer-1** / **layer-2**; история прогонов **файловая** (`data/benchmark_runs/*.json`, восстановление после рестарта). Опциональный **admin gate**: `SCIENCE_GRAPHRAG_ADMIN_API_KEY` + заголовок `X-Admin-Key` для `/v1/benchmark/*` и `/v1/settings/*`. Backlog UX: [frontend-phase6-bridge-backlog.md](architecture/frontend-phase6-bridge-backlog.md) (`A5`, `B4`).
 
 ---
 
@@ -389,7 +389,7 @@ flowchart TD
 - переводить UI на full integration только после стабилизации API-контрактов;  
 - Phase 4 итеративно углублять с Phase 1–3.
 
-**Волны Wave A–D:** операционная последовательность и зависимость Wave A → gate → B/C/D — [runbooks/roadmap-next-waves.md](runbooks/roadmap-next-waves.md).
+**Волны Wave A–D:** операционная последовательность и зависимость Wave A → gate → B/C/D — [runbooks/roadmap-next-waves.md](runbooks/roadmap-next-waves.md). Следующие волны **E–H** (CI/пилот, retrieval, UI/UX, онтология) описаны в том же runbook.
 
 ---
 
@@ -408,7 +408,12 @@ flowchart TD
 
 | Документ | Назначение |
 |----------|------------|
-| [runbooks/roadmap-next-waves.md](runbooks/roadmap-next-waves.md) | Wave A–D: decision gate, semantic, e2e, pilot |
+| [runbooks/roadmap-next-waves.md](runbooks/roadmap-next-waves.md) | Wave A–D и E–H: decision gate, semantic, e2e, pilot, CI maturity, retrieval, UI/UX, ontology |
+| [runbooks/user-journeys-retrieval-v1.md](runbooks/user-journeys-retrieval-v1.md) | Сценарии Phase 5: corpus → query → evidence (воспроизводимый trace) |
+| [benchmarks/retrieval-eval-v1.md](benchmarks/retrieval-eval-v1.md) | Заготовка семейства retrieval/citation benchmarks |
+| [benchmarks/teacher-gold-audit-v1.md](benchmarks/teacher-gold-audit-v1.md) | Процедура аудита teacher-gold фикстур |
+| [specs/ui-empty-loading-audit-v1.md](specs/ui-empty-loading-audit-v1.md) | Чеклист empty/loading/error по UI |
+| [specs/ontology-wave-h-backlog.md](specs/ontology-wave-h-backlog.md) | Backlog расширения онтологии (Claims, merge) |
 | [runbooks/benchmark-driven-dev-loop.md](runbooks/benchmark-driven-dev-loop.md) | Короткий цикл: кейс → прогон → compare; CLI и UI `/benchmark` |
 | [runbooks/benchmark-decision-gate.md](runbooks/benchmark-decision-gate.md) | GO / NO-GO и связь с Wave A–D |
 | [runbooks/pilot-checklist.md](runbooks/pilot-checklist.md) | Phase 7: pilot package и KPI |
@@ -429,6 +434,7 @@ flowchart TD
 
 | Версия | Дата | Изменения |
 |--------|------|-----------|
+| 2.4 | 2026-04-19 | Wave **E–H** в [runbooks/roadmap-next-waves.md](runbooks/roadmap-next-waves.md); Phase 5: опциональный second-stage LLM для `/v1/query`, фильтры `GET /v1/works`, user journeys; nightly **layer1 nightly_heavy** при секрете; admin gate `X-Admin-Key`; API `/v1/ask-sessions` (file-backed); документы retrieval eval, teacher-gold audit, UI empty-state audit, ontology Wave H backlog; пилот: rubric + corpus target в exit record / pilot corpus runbook. |
 | 2.3 | 2026-04-06 | §1.5 и строка в матрице §4: политика **ранней** упаковки сервисов в Docker и `docker-compose.yml`; [runbooks/deploy.md](runbooks/deploy.md) — секция *Policy: Docker and Compose (early)*. |
 | 2.2 | 2026-04-06 | §1.4: flywheel продукт ↔ бенчмарк; §6: спираль Phase 2–4; Phase 4/6: консоль `/benchmark` как основной dev/QA интерфейс наряду с CLI; §8: ссылка на [benchmark-driven-dev-loop.md](runbooks/benchmark-driven-dev-loop.md). |
 | 2.1 | 2026-04-06 | Phase 6: в планах и backlog явно добавлены **Benchmarks** (страница просмотра/запуска бенчмарков, референс osint-gr `BenchmarkPage` + `tests/bench` + `utils/bench`); контракт `/v1/benchmark/*` — [specs/frontend-ui-api-contracts-v1.md](specs/frontend-ui-api-contracts-v1.md); Wave C — опциональный пункт про benchmark UI. |

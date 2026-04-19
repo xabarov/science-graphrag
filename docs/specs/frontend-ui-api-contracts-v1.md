@@ -8,7 +8,7 @@ Status by endpoint:
 
 - `POST /v1/query`: implemented (source of truth in `science_graphrag/api/main.py`)
 - `GET /v1/works`, `GET /v1/works/{work_id}`, `GET /v1/works/{work_id}/graph`, `GET /v1/works/{work_id}/chunks`: implemented (same module; Neo4j + Qdrant)
-- **`/v1/benchmark/*`:** benchmark console UI (`science_graphrag/api/benchmark.py`, runs via `science_graphrag/api/task_store.py`) — **layer-1** и **layer-2** (`family` query/body); не часть обязательного research happy-path ниже
+- **`/v1/benchmark/*`:** benchmark console UI (`science_graphrag/api/benchmark.py`, runs via `science_graphrag/api/task_store.py`) — **layer-1** и **layer-2** (`family` query/body); не часть обязательного research happy-path ниже. Если задан `SCIENCE_GRAPHRAG_ADMIN_API_KEY`, клиент должен слать заголовок **`X-Admin-Key`** (см. [admin-policy.md](./admin-policy.md)).
 - other niceties below: optional backlog (filters, richer graph projection)
 
 ## Mandatory API happy-path (Wave C)
@@ -102,7 +102,9 @@ Degraded mode expectations:
 
 Query params:
 
-- `q` (optional text search)
+- `q` (optional text search — title substring, case-insensitive)
+- `year_min` / `year_max` (optional int — only works with a non-null `publication_year` in range)
+- `has_semantic` (optional bool — `true`: only works with Method/Dataset edges; `false`: only works without them)
 - `limit` (optional int, default 20, max 100)
 - `offset` (optional int, default 0)
 
@@ -125,6 +127,19 @@ Response:
   "total": 0
 }
 ```
+
+## 2b) Ask sessions — server persistence (optional, implemented)
+
+File-backed store under `data/ask_sessions/<scope>.json` on the API host. Scope is a short ASCII identifier (e.g. `standalone`, `workspace:work-123`).
+
+| Method | Path | Notes |
+|--------|------|-------|
+| `GET` | `/v1/ask-sessions?scope=...` | Returns `{ scope, sessions[], active_session_id }`. |
+| `POST` | `/v1/ask-sessions` | Body `{ "scope": "...", "title": "..." }` → `{ session }`. |
+| `PATCH` | `/v1/ask-sessions/{session_id}?scope=...` | Body `{ "title"?, "turns"?, "active"?: bool }`. |
+| `DELETE` | `/v1/ask-sessions/{session_id}?scope=...` | Removes one session. |
+
+The React UI may keep using `localStorage` sessions ([ask-sessions.md](./ask-sessions.md)); these endpoints are for pilot / multi-device follow-up.
 
 ## 3) Work detail (implemented)
 
@@ -160,7 +175,14 @@ Response:
 
 ### `GET /v1/works/{work_id}/graph`
 
-Response:
+Optional query (server contract):
+
+| Query | Meaning |
+|-------|---------|
+| `neighbor_limit` | Integer **1–2000** (default **200**). Caps rows from the 1-hop `MATCH (w)-[r]-(n)` scan. |
+| `depth` | Integer **1–3** (default **1**). Reserved for future multi-hop; **effective hop is still 1** until implemented. |
+
+Response (backward compatible: `id`, `type`, `label` on nodes and `source`, `target`, `type` on edges remain; extra fields are optional for older clients):
 
 ```json
 {
@@ -168,19 +190,38 @@ Response:
   "nodes": [
     {
       "id": "string",
-      "type": "Work|Method|Dataset|Author|Venue|...",
-      "label": "string"
+      "type": "Work|Method|Dataset|Author|Authorship|Institution|...",
+      "label": "string",
+      "display_label": "string",
+      "subtitle": "string",
+      "node_kind": "string",
+      "properties": { "publication_year": 2016, "doi": "..." }
     }
   ],
   "edges": [
     {
+      "id": "e_stablehash",
       "source": "string",
       "target": "string",
-      "type": "string"
+      "type": "CITES",
+      "display_type": "CITES",
+      "source_label": "string",
+      "target_label": "string",
+      "summary": "Source —[CITES]→ Target",
+      "direction": "outgoing|incoming|lateral"
     }
   ],
   "meta": {
-    "semantic_available": true
+    "semantic_available": true,
+    "graph_scope": "work_1hop",
+    "graph_depth_requested": 1,
+    "graph_depth_effective": 1,
+    "neighbor_match_count": 42,
+    "neighbor_limit_applied": 200,
+    "nodes_returned": 15,
+    "edges_returned": 28,
+    "is_truncated": false,
+    "available_expansions": []
   }
 }
 ```

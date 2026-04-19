@@ -10,7 +10,16 @@ from science_graphrag.settings.service import SettingsService
 
 # Unprefixed keys (MAIN_LLM_*, PHOENIX_*, etc.) must be visible to os.getenv for merge validators.
 # override=True: a shell export of MAIN_LLM_API_KEY="" (empty) must not block values from `.env`.
-load_dotenv(override=True)
+# Inside Docker, Compose already injects SCIENCE_GRAPHRAG_* (Neo4j/Qdrant hosts); do not let
+# load_dotenv clobber them with host-oriented localhost values from a mounted `.env`.
+_skip_host_dotenv = (
+    Path("/.dockerenv").is_file() or os.getenv("SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV") == "1"
+)
+if _skip_host_dotenv:
+    # Fill unprefixed keys (MAIN_LLM_*, etc.) from `.env` without clobbering Compose-injected URLs.
+    load_dotenv(override=False)
+else:
+    load_dotenv(override=True)
 
 
 class Settings(BaseSettings):
@@ -162,6 +171,21 @@ class Settings(BaseSettings):
         description="Min confidence to write Method/Dataset nodes and edges to Neo4j.",
     )
 
+    query_answer_llm_enabled: bool = Field(
+        default=False,
+        description=(
+            "If true and extraction LLM credentials are configured, POST /v1/query may run a "
+            "second-stage LLM over retrieved citation excerpts (grounded paraphrase)."
+        ),
+    )
+    query_answer_llm_max_tokens: int = Field(default=900, ge=64, le=4096)
+    query_answer_llm_temperature: float = Field(default=0.0, ge=0.0, le=1.0)
+
+    admin_api_key: str | None = Field(
+        default=None,
+        description="If set, benchmark and settings HTTP routers require matching X-Admin-Key header.",
+    )
+
     @model_validator(mode="before")
     @classmethod
     def merge_osint_gr_compatible_env(cls, data: Any) -> Any:
@@ -171,6 +195,22 @@ class Settings(BaseSettings):
         """
         if not isinstance(data, dict):
             return data
+
+        # Docker Compose injects service hostnames into the process environment, but
+        # pydantic-settings can still end up preferring host-oriented URLs from a mounted
+        # `.env`. Force storage URLs from os.environ when running in a container / explicit
+        # skip flag (see docker-compose.dev.yml).
+        _in_container = Path("/.dockerenv").is_file()
+        _skip_dotenv = os.getenv("SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV") == "1"
+        if _in_container or _skip_dotenv:
+            for field, envar in (
+                ("neo4j_uri", "SCIENCE_GRAPHRAG_NEO4J_URI"),
+                ("qdrant_url", "SCIENCE_GRAPHRAG_QDRANT_URL"),
+                ("database_url", "SCIENCE_GRAPHRAG_DATABASE_URL"),
+            ):
+                val = os.getenv(envar)
+                if val:
+                    data[field] = val
 
         if not data.get("vl_api_key"):
             key = os.getenv("MAIN_LLM_API_KEY") or os.getenv("API_KEY")

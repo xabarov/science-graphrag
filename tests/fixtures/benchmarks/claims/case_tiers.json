@@ -1,0 +1,12 @@
+{
+  "claims_merge_contract": [
+    "claims_contract_shape"
+  ],
+  "claims_mini": [
+    "yolov1_speed_claim",
+    "yolov1_framing_claim",
+    "yolov1_localization_tradeoff_claim",
+    "yolov1_unified_pipeline_claim",
+    "yolov1_fast_yolo_speed_claim"
+  ]
+}

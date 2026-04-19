@@ -54,11 +54,31 @@ GraphRAG-система для помощи исследователю при р
 
 ```bash
 cp .env.example .env   # при необходимости поправьте URL, mailto и SCIENCE_GRAPHRAG_VL_* для VL
-docker compose up -d   # Postgres :15432, Neo4j :17474/:17687, Qdrant :16333; UI+API :8787 (nginx→api), прямой API :18787
+make prod-up           # prod-like compose: Postgres :15432, Neo4j :17474/:17687, Qdrant :16333; UI+API :8787 (nginx→api), прямой API :18787
 python -m venv .venv && .venv/bin/pip install -e ".[dev]"
 .venv/bin/science-graphrag ingest path/to/file.pdf
 # или .txt с полным текстом статьи
 .venv/bin/science-graphrag ingest-corpus path/to/corpus_dir   # рекурсивно .pdf/.md/.txt + аудит дублей Work в Neo4j
+```
+
+### Docker Compose modes
+
+- `docker-compose.prod.yml` / `make prod-up` — явный prod-like режим: backend и frontend идут из собранных образов; изменения в коде требуют пересборки.
+- `docker-compose.yml` — совместимый alias того же prod-like стека для старых `docker compose ...` команд и скриптов.
+- `docker-compose.dev.yml` / `make dev-up` — dev-режим без пересборки на каждое изменение кода:
+  - backend запущен как `uvicorn --reload` с bind mount репозитория;
+  - frontend идет через Vite dev server с HMR;
+  - внешний вход тот же: [`http://localhost:8787/`](http://localhost:8787/).
+
+Базовые команды:
+
+```bash
+make help
+make prod-up
+make prod-down
+make dev-up
+make dev-down
+make dev-logs
 ```
 
 Архитектура и ADR: [docs/architecture/phase-1-backbone.md](docs/architecture/phase-1-backbone.md), [docs/adr/001-phase1-stack.md](docs/adr/001-phase1-stack.md).

@@ -36,9 +36,9 @@ export function detectCommunities(nodes, links, maxIterations = 10) {
     changed = false;
     iterations += 1;
 
-    const shuffled = [...nodes].sort(() => Math.random() - 0.5);
+    const ordered = [...nodes].sort((a, b) => String(a.id).localeCompare(String(b.id)));
 
-    for (const node of shuffled) {
+    for (const node of ordered) {
       const neighbors = adjacency.get(node.id) || [];
       if (neighbors.length === 0) continue;
 
@@ -52,7 +52,7 @@ export function detectCommunities(nodes, links, maxIterations = 10) {
       let mostFrequentLabel = communities.get(node.id);
 
       labelCounts.forEach((count, label) => {
-        if (count > maxCount || (count === maxCount && Math.random() > 0.5)) {
+        if (count > maxCount || (count === maxCount && String(label).localeCompare(String(mostFrequentLabel)) < 0)) {
           maxCount = count;
           mostFrequentLabel = label;
         }

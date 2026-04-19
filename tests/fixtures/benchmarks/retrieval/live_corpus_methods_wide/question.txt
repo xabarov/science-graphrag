@@ -1,0 +1,1 @@
+Which papers in the corpus discuss single-shot detectors and compare their speed-accuracy trade-offs to two-stage pipelines?

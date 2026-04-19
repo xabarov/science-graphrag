@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
 
 import { getScienceDesiredDistance } from "./desiredLinkDistance.js";
-import { detectCommunities, getNodeCluster } from "./structuralCommunities.js";
+import { getNodeCluster } from "./structuralCommunities.js";
+import { detectScienceHybridCommunities } from "./scienceHybridCommunities.js";
 import {
   CANVAS_MARGIN,
   CLUSTER_ATTRACTION_STRENGTH,
@@ -69,7 +70,7 @@ export function useScienceGraphForceSimulation(
       iterationCountRef.current = 0;
       setIsSimulationStable(false);
       if (USE_COMMUNITY_DETECTION && nodes.length > 5) {
-        communitiesRef.current = detectCommunities(nodes, links);
+        communitiesRef.current = detectScienceHybridCommunities(nodes, links);
       } else {
         communitiesRef.current = null;
       }
@@ -84,13 +85,12 @@ export function useScienceGraphForceSimulation(
     const calculateWorldBounds = (nodeList) => {
       if (!nodeList || nodeList.length === 0) {
         const halfSpan = MIN_WORLD_SPAN / 2 + CANVAS_MARGIN * 2;
-        const centerX = canvasSize.width / 2;
-        const centerY = canvasSize.height / 2;
+        // World-space bounds must not use screen pixel centers (nodes live in world coords).
         return {
-          minX: centerX - halfSpan,
-          maxX: centerX + halfSpan,
-          minY: centerY - halfSpan,
-          maxY: centerY + halfSpan,
+          minX: -halfSpan,
+          maxX: halfSpan,
+          minY: -halfSpan,
+          maxY: halfSpan,
           width: halfSpan * 2,
           height: halfSpan * 2,
         };
@@ -305,13 +305,6 @@ export function useScienceGraphForceSimulation(
                 fy += dy * invDist * communityForce;
               });
             }
-          }
-
-          if (!isSimulationStable) {
-            const centerX = canvasSize.width / 2;
-            const centerY = canvasSize.height / 2;
-            fx -= (node.x - centerX) * 0.0001;
-            fy -= (node.y - centerY) * 0.0001;
           }
 
           const coolingFactor = coolingTemperatureRef.current;

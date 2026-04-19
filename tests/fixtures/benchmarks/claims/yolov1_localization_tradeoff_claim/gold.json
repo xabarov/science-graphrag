@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "benchmark_suite_tier": "claims_mini",
+  "description": "Mini-pack: error profile trade-off claim.",
+  "source_layer1_fixture": "yolov1",
+  "contract_only": false,
+  "min_claim_recall": 1.0,
+  "expected_claims": [
+    {
+      "claim_id": "yolov1_loc_vs_fp_tradeoff",
+      "claim_text_normalized": "yolo makes more localization errors but fewer false positives on background",
+      "claim_type": "comparison",
+      "polarity": "neutral",
+      "anchor_phrase": "localization errors"
+    }
+  ]
+}

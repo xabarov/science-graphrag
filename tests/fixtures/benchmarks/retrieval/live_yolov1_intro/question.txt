@@ -1,0 +1,1 @@
+What is YOLO in one sentence, and how does it differ from classifier-based sliding-window detectors?

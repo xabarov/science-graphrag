@@ -32,6 +32,13 @@
 - исправление явного mojibake / Unicode artifact
 - исправление `publication_year`, только если источник и политика года не вызывают сомнений
 
+## Policy: `publication_year` (arXiv-heavy corpus)
+
+1. **Primary source order:** prefer the year printed on the PDF title block / arXiv stamp that matches `article.md` for the fixture; if venue (CVPR/NeurIPS) is confirmed via DOI or publisher page and differs by ±1 from arXiv, **prefer venue year** and record the rationale in Notes.
+2. **Ambiguous preprint vs camera-ready:** keep `needs_followup` until venue or arXiv page is checked; do not “guess” from ingestion heuristics alone.
+3. **Benchmark scoring:** student runs must not fail solely on `publication_year` deltas that are still under `needs_followup` in this checklist — treat as **policy debt**, not extraction regression, until the row is closed.
+4. **Teacher refresh:** when regenerating `gold_teacher.json`, carry forward the agreed year for the case; if the model changes the year vs a closed row, triage as **teacher drift** (regenerate with pinned profile or fix post-process).
+
 Политика статусов:
 - `reviewed`: статья вручную сверена по источнику
 - `fixed`: `gold_teacher.json` обновлён
@@ -43,10 +50,38 @@
 |------|------:|------|--------|
 | `Phase 1` | 5 | early CV detectors / first quality pass | `completed` |
 | `Phase 2` | 5 | DETR family pass | `completed` |
-| `Phase 3` | 5 | two-stage / FPN family pass | `in_progress` |
-| `Phase 4` | 5 | Mask/RCNN/classic pass | `todo` |
-| `Phase 5` | 5 | reference-count / anchor-era pass | `todo` |
-| `Phase 6` | 5 | YOLO / SSD / late cleanup | `in_progress` |
+| `Phase 3` | 5 | two-stage / FPN family pass | `triaged` — publication_year policy set; row backlog below |
+| `Phase 4` | 5 | Mask/RCNN/classic pass | `triaged` |
+| `Phase 5` | 5 | reference-count / anchor-era pass | `triaged` |
+| `Phase 6` | 5 | YOLO / SSD / late cleanup | `triaged` — publication_year policy set; row backlog below |
+
+## Prioritized suspect backlog (Phase 3-6)
+
+Один исход на строку: `fixture_refresh` (локальный `article.md`/PDF), `teacher_refresh` (регенерация `gold_teacher.json`), `extractor_regression`, `acceptable_tolerance`, `pending_manual_review`.
+
+| Priority | Case | Outcome | Next action |
+|----------|------|---------|-------------|
+| P1 | `cascade_rcnn_realpdf` | `fixture_refresh` | Расхождение авторов: сверить локальный `article.md` с arXiv; исправить fixture source до правок teacher. |
+| P1 | `faster_rcnn_realpdf` | `pending_manual_review` | Закрыть `publication_year=2016` по policy § выше (venue vs arXiv). |
+| P2 | `fast_rcnn_realpdf` | `pending_manual_review` | Ручная сверка Phase 3 batch. |
+| P2 | `fcos_realpdf` | `pending_manual_review` | Ручная сверка Phase 3 batch. |
+| P2 | `fpn_realpdf` | `pending_manual_review` | Ручная сверка Phase 3 batch. |
+| P2 | `gfl_realpdf` | `pending_manual_review` | Ручная сверка Phase 3 batch. |
+| P2 | `hog_human_detection_realpdf` | `pending_manual_review` | Phase 4 batch. |
+| P2 | `libra_rcnn_realpdf` | `pending_manual_review` | Phase 4 batch. |
+| P2 | `mask_rcnn_realpdf` | `pending_manual_review` | Phase 4 batch. |
+| P2 | `overfeat_realpdf` | `pending_manual_review` | Phase 4 batch. |
+| P2 | `part_based_models_realpdf` | `pending_manual_review` | Phase 4 batch. |
+| P2 | `rcnn_realpdf` | `pending_manual_review` | Phase 5 batch. |
+| P2 | `retinanet_focal_realpdf` | `pending_manual_review` | Phase 5 batch. |
+| P2 | `rfcn_realpdf` | `pending_manual_review` | Phase 5 batch. |
+| P2 | `selective_search_realpdf` | `pending_manual_review` | Phase 5 batch. |
+| P2 | `sppnet_realpdf` | `pending_manual_review` | Phase 5 batch. |
+| P2 | `ssd_realpdf` | `pending_manual_review` | Phase 6 batch. |
+| P2 | `tood_realpdf` | `pending_manual_review` | Phase 6 batch. |
+| P2 | `yolov3_realpdf` | `pending_manual_review` | Phase 6 batch. |
+| P2 | `yolox_realpdf` | `pending_manual_review` | Phase 6 batch. |
+| P3 | `yolov1_semantic` (layer2) | `pending_manual_review` | Diff `semantic_gold_teacher.json` vs последний UI run / curated `semantic_gold.json` для того же `case_id`. |
 
 ## Phase 1
 
@@ -72,43 +107,65 @@
 
 | Case | Reviewed | Fixed | Needs follow-up | Notes |
 |------|----------|-------|-----------------|-------|
-| `fast_rcnn_realpdf` | [ ] | [ ] | [ ] |  |
-| `faster_rcnn_realpdf` | [x] | [ ] | [x] | Проверено по `article.md` и arXiv. Teacher gold выглядит качественно; open question только по policy для `publication_year=2016`. |
-| `fcos_realpdf` | [ ] | [ ] | [ ] |  |
-| `fpn_realpdf` | [ ] | [ ] | [ ] |  |
-| `gfl_realpdf` | [ ] | [ ] | [ ] |  |
+| `fast_rcnn_realpdf` | [ ] | [ ] | [ ] | См. приоритетный backlog (P2). |
+| `faster_rcnn_realpdf` | [x] | [ ] | [x] | Проверено по `article.md` и arXiv. Teacher gold выглядит качественно; `publication_year` — policy § выше. |
+| `fcos_realpdf` | [ ] | [ ] | [ ] | См. приоритетный backlog (P2). |
+| `fpn_realpdf` | [ ] | [ ] | [ ] | См. приоритетный backlog (P2). |
+| `gfl_realpdf` | [ ] | [ ] | [ ] | См. приоритетный backlog (P2). |
 
 ## Phase 4
 
 | Case | Reviewed | Fixed | Needs follow-up | Notes |
 |------|----------|-------|-----------------|-------|
-| `hog_human_detection_realpdf` | [ ] | [ ] | [ ] |  |
-| `libra_rcnn_realpdf` | [ ] | [ ] | [ ] |  |
-| `mask_rcnn_realpdf` | [ ] | [ ] | [ ] |  |
-| `overfeat_realpdf` | [ ] | [ ] | [ ] |  |
-| `part_based_models_realpdf` | [ ] | [ ] | [ ] |  |
+| `hog_human_detection_realpdf` | [ ] | [ ] | [ ] | См. приоритетный backlog (P2). |
+| `libra_rcnn_realpdf` | [ ] | [ ] | [ ] | См. приоритетный backlog (P2). |
+| `mask_rcnn_realpdf` | [ ] | [ ] | [ ] | См. приоритетный backlog (P2). |
+| `overfeat_realpdf` | [ ] | [ ] | [ ] | См. приоритетный backlog (P2). |
+| `part_based_models_realpdf` | [ ] | [ ] | [ ] | См. приоритетный backlog (P2). |
 
 ## Phase 5
 
 | Case | Reviewed | Fixed | Needs follow-up | Notes |
 |------|----------|-------|-----------------|-------|
-| `rcnn_realpdf` | [ ] | [ ] | [ ] |  |
-| `retinanet_focal_realpdf` | [ ] | [ ] | [ ] |  |
-| `rfcn_realpdf` | [ ] | [ ] | [ ] |  |
-| `selective_search_realpdf` | [ ] | [ ] | [ ] |  |
-| `sppnet_realpdf` | [ ] | [ ] | [ ] |  |
+| `rcnn_realpdf` | [ ] | [ ] | [ ] | См. приоритетный backlog (P2). |
+| `retinanet_focal_realpdf` | [ ] | [ ] | [ ] | См. приоритетный backlog (P2). |
+| `rfcn_realpdf` | [ ] | [ ] | [ ] | См. приоритетный backlog (P2). |
+| `selective_search_realpdf` | [ ] | [ ] | [ ] | См. приоритетный backlog (P2). |
+| `sppnet_realpdf` | [ ] | [ ] | [ ] | См. приоритетный backlog (P2). |
 
 ## Phase 6
 
 | Case | Reviewed | Fixed | Needs follow-up | Notes |
 |------|----------|-------|-----------------|-------|
-| `ssd_realpdf` | [ ] | [ ] | [ ] |  |
-| `tood_realpdf` | [ ] | [ ] | [ ] |  |
-| `yolov2_realpdf` | [x] | [x] | [x] | Проверено по `article.md` и arXiv. Teacher gold корректен по авторам, добавлен `arxiv_id=1612.08242`; `publication_year` требует общей policy. |
-| `yolov3_realpdf` | [ ] | [ ] | [ ] |  |
-| `yolox_realpdf` | [ ] | [ ] | [ ] |  |
+| `ssd_realpdf` | [ ] | [ ] | [ ] | См. приоритетный backlog (P2). |
+| `tood_realpdf` | [ ] | [ ] | [ ] | См. приоритетный backlog (P2). |
+| `yolov2_realpdf` | [x] | [x] | [x] | Проверено по `article.md` и arXiv. Teacher gold корректен по авторам, добавлен `arxiv_id=1612.08242`; `publication_year` — policy § выше. |
+| `yolov3_realpdf` | [ ] | [ ] | [ ] | См. приоритетный backlog (P2). |
+| `yolox_realpdf` | [ ] | [ ] | [ ] | См. приоритетный backlog (P2). |
+
+## Layer 2 (`eval/teacher_gold/layer2/`)
+
+| Case / suite | Reviewed | Fixed | Needs follow-up | Notes |
+|--------------|----------|-------|-----------------|-------|
+| `no_llm_smoke` | [x] | [ ] | [ ] | Merge-safe semantic stub; teacher slot optional — diff vs curated `semantic_gold.json` when triaging UI runs. |
+| `yolov1_semantic` | [ ] | [ ] | [ ] | Compare `semantic_gold_teacher.json` to latest `data/benchmark_runs/*.json` (or `/v1/benchmark/runs/{id}` export) for same `case_id`; см. backlog P3. |
+| **Policy** | — | — | — | Regenerate teacher fixtures via `scripts/generate_semantic_teacher_fixtures.py` after prompt/model profile change; record model id in commit message. |
+
+## Audit exit (Wave E1)
+
+| Criterion | Status |
+|-----------|--------|
+| Inventory + diff procedure documented | **CLOSED** — this file + [teacher-gold-audit-v1.md](teacher-gold-audit-v1.md) |
+| Prioritized suspect list | **CLOSED** — единая очередь: [Prioritized suspect backlog](#prioritized-suspect-backlog-phase-3-6) |
+| Remediation path agreed | **CLOSED** — safe fixes = confirmed `arxiv_id` / hygiene; policy items = `needs_followup` |
+| `publication_year` policy | **CLOSED** — см. раздел *Policy: `publication_year`* выше |
 
 ## Decision Log
+
+### 2026-04-19
+
+- Закрыт **Audit exit** для Wave E1: приоритетный backlog вынесен в единую таблицу; политика `publication_year` зафиксирована в этом файле; layer-2 triage остаётся в очереди (P3).
+- Remediation / provenance для teacher refresh синхронизированы с `eval/README.md` и docstring’ами скриптов генерации.
 
 ### 2026-04-07
 - Создан фазовый чеклист аудита `teacher_gold`.

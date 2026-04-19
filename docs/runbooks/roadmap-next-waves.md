@@ -48,3 +48,51 @@
 3. Решение: переход к расширению корпуса / следующим фичам roadmap или возврат к Wave A/B при регрессии.
 
 **Exit:** запись в pilot checklist + обновлённый `benchmark-metrics-summary` зафиксированы в репозитории или в release notes; для **GO** пилота см. раздел *Pilot GO / NO-GO* в чеклисте.
+
+---
+
+## Wave E — Phase 4/7: CI benchmark maturity + pilot hardening
+
+**Цель:** закрыть остаток **CONDITIONAL-GO** пилота и укрепить ночные прогоны.
+
+1. **Nightly LLM layer-1:** при наличии `MAIN_LLM_API_KEY` в GitHub secrets — прогон `science-graphrag-layer1-benchmark … --tier nightly_heavy` в `.github/workflows/integration-nightly.yml` (добавлено 2026-04-19).
+2. **Graph suite:** уже есть ingest+graph кейсы на nightly; при необходимости расширить артефакты `eval/results/ci-*.json` и upload.
+3. **Teacher-gold audit:** следовать [benchmarks/teacher-gold-audit-v1.md](../benchmarks/teacher-gold-audit-v1.md).
+4. **Benchmark run persistence:** снимки прогонов в `data/benchmark_runs/` + восстановление после рестарта API (`science_graphrag/api/task_store.py`).
+
+**Exit:** пилот **GO** по чеклисту или зафиксированные blockers; teacher-gold audit с приоритизированным списком кейсов.
+
+---
+
+## Wave F — Phase 5: retrieval evolution
+
+**Цель:** воспроизводимые сценарии учёного и опциональный второй этап ответа.
+
+1. **Second-stage LLM:** `SCIENCE_GRAPHRAG_QUERY_ANSWER_LLM_ENABLED` + reuse extraction LLM credentials — см. `.env.example`, `science_graphrag/api/retrieval.py`.
+2. **User journeys:** [runbooks/user-journeys-retrieval-v1.md](user-journeys-retrieval-v1.md).
+3. **Retrieval eval scaffold:** [benchmarks/retrieval-eval-v1.md](../benchmarks/retrieval-eval-v1.md) + `tests/fixtures/benchmarks/retrieval/`.
+
+**Exit:** 3+ journey записок с реальным trace; контракт `retrieval_trace.answer_synthesis` стабилен в UI и smoke-тестах.
+
+---
+
+## Wave G — Phase 6: UI/UX master plan (остаток)
+
+**Цель:** довести [specs/ui-ux-master-plan.md](../specs/ui-ux-master-plan.md) Phase 3/5/6/7.
+
+1. **Corpus:** серверные фильтры `year_min` / `year_max` / `has_semantic` на `GET /v1/works` + UI (`CorpusPage`, `researchApi.js`).
+2. **Ask:** опциональная синхронизация с `GET/POST/PATCH/DELETE /v1/ask-sessions` (локальный UI по-прежнему в `localStorage`, сервер — для пилота/мультиустройства позже).
+3. **Admin:** опциональный `SCIENCE_GRAPHRAG_ADMIN_API_KEY` + заголовок `X-Admin-Key` для `/v1/benchmark/*` и `/v1/settings/*` ([specs/admin-policy.md](../specs/admin-policy.md)).
+4. **Empty/loading audit:** [specs/ui-empty-loading-audit-v1.md](../specs/ui-empty-loading-audit-v1.md).
+
+**Exit:** чеклисты Phase 3/5/6/7 в master plan отмечены или перенесены в backlog с датой.
+
+---
+
+## Wave H — Phase 2/3: ontology expansion (gated)
+
+**Цель:** Claims/epistemic слой и merge-каталоги без регресса бенчмарков.
+
+См. [specs/ontology-wave-h-backlog.md](../specs/ontology-wave-h-backlog.md).
+
+**Exit:** ADR + gold cases для каждого нового типа узла/ребра перед включением в merge CI.

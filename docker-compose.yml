@@ -1,5 +1,8 @@
-# Local stack for Phase 1. Usage: docker compose up -d
+# Local production-like stack for Phase 1. Usage: docker compose up -d --build
 # Host ports chosen to avoid clashes with existing Postgres (5432) / Neo4j (7474, 7687) on the machine.
+#
+# This is the prod-oriented compose variant: backend runs from the built image, frontend is a static Vite build
+# behind nginx on :8787. For hot-reload development use `docker-compose.dev.yml` or `make dev-up`.
 #
 # `web` (nginx) publishes :8787 and proxies /v1, /health, etc. to `api`. Rebuild UI only: docker compose build web
 # Rebuild backend only: docker compose build api

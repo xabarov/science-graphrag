@@ -1,0 +1,1 @@
+Which papers discuss YOLO-style single-shot detectors and their speed/accuracy trade-offs?

@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "benchmark_suite_tier": "claims_mini",
+  "description": "Mini-pack: throughput claim (excerpt from YOLOv1 abstract).",
+  "source_layer1_fixture": "yolov1",
+  "contract_only": false,
+  "min_claim_recall": 1.0,
+  "expected_claims": [
+    {
+      "claim_id": "yolov1_base_fps",
+      "claim_text_normalized": "base yolo runs at about 45 fps",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "anchor_phrase": "45 frames per second"
+    }
+  ]
+}

@@ -1,0 +1,671 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+    "semantic_extraction_enabled": true
+  },
+  "summary": {
+    "case_count": 5,
+    "case_ids": [
+      "live_corpus_methods_wide",
+      "live_yolov1_architecture",
+      "live_yolov1_intro",
+      "live_yolov1_methods_combo",
+      "live_yolov1_training"
+    ],
+    "all_passed": true,
+    "retrieval_eval": true
+  },
+  "cases": [
+    {
+      "case_id": "live_corpus_methods_wide",
+      "question_preview": "Which papers in the corpus discuss single-shot detectors and compare their speed-accuracy trade-offs to two-stage pipelines?",
+      "metrics": {
+        "passed": true,
+        "contract_only": false,
+        "hit_count": 10,
+        "min_hit_count": 1,
+        "hit_ok": true,
+        "missing_chunk_fingerprints": [],
+        "work_id_ok": true,
+        "filter_work_id": null
+      },
+      "retrieval_trace": {
+        "embedding": {
+          "embedding_model": "hash-deterministic",
+          "vector_dim": 384
+        },
+        "hit_count": 10,
+        "filter_work_id": null,
+        "resolved_work_id": "e811e872-9f0d-410a-b693-24ce8f024ade",
+        "qdrant_collection": "chunks",
+        "top_k_requested": 10,
+        "citations_returned": 10,
+        "top_hit_scores": [
+          0.10137346,
+          0.08409348,
+          0.09695063,
+          0.09695063,
+          0.09695063,
+          0.09695063,
+          0.11670922,
+          0.11670922
+        ],
+        "query_preview": "Which papers in the corpus discuss single-shot detectors and compare their speed-accuracy trade-offs to two-stage pipelines?",
+        "answer_synthesis": {
+          "mode": "deterministic_snippets",
+          "second_stage_llm": false
+        },
+        "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
+        "degraded": []
+      },
+      "graph_context": {
+        "methods": [
+          "SSD"
+        ],
+        "datasets": [
+          "COCO",
+          "ILSVRC",
+          "PASCAL VOC"
+        ],
+        "semantic_available": true,
+        "context_work_id": "e811e872-9f0d-410a-b693-24ce8f024ade",
+        "degraded": [],
+        "error": null
+      },
+      "citations": [
+        {
+          "rank": 1,
+          "score": 0.10137346,
+          "work_id": "e811e872-9f0d-410a-b693-24ce8f024ade",
+          "document_id": "38b47869-d845-4ed0-9a63-1adc49498f87",
+          "chunk_fingerprint": "df9bed2a2f99ad0fc96e803818ed053ee79bdc07c47023efcdf769c358299871",
+          "section_path": "SSD: Single Shot MultiBox Detector / 3 Experimental Results / 3.2 Model analysis",
+          "excerpt": "**Atrous is faster.** As described in Sec. 3, we used the atrous version of a subsampled VGG16, following DeepLab-LargeFOV [17]. If we use the full VGG16, keeping pool5 with $2 \\times 2 - s2$ and not subsampling parameters from fc6 and fc7, and add conv5.3 for prediction, the result is about the same while the speed is about 20% slower.\n\n<!-- Image (10) -->\n\nTable 3: Effects of using multiple output layers.\n\n**Multiple output layers at different resolutions is better.** A major contribution of SSD is using default boxes of different scales on different output layers. To measure the advantage g"
+        },
+        {
+          "rank": 2,
+          "score": 0.08409348,
+          "work_id": "e811e872-9f0d-410a-b693-24ce8f024ade",
+          "document_id": "38b47869-d845-4ed0-9a63-1adc49498f87",
+          "chunk_fingerprint": "f3d4f47633a2bd6fce9f7ee409c88082a55441304334a4cf734d9b7763a1dacd",
+          "section_path": "SSD: Single Shot MultiBox Detector / 1 Introduction",
+          "excerpt": "## 1 Introduction\n\nCurrent state-of-the-art object detection systems are variants of the following approach: hypothesize bounding boxes, resample pixels or features for each box, and apply a high-quality classifier. This pipeline has prevailed on detection benchmarks since the Selective Search work [1] through the current leading results on PASCAL VOC, COCO, and ILSVRC detection all based on Faster R-CNN [2] albeit with deeper features such as [3]. While accurate, these approaches have been too computationally intensive for embedded systems and, even with high-end hardware, too slow for real-t"
+        },
+        {
+          "rank": 3,
+          "score": 0.09695063,
+          "work_id": "2ab535ab-8477-4575-92ec-92c176a32776",
+          "document_id": "2435a77e-17f2-4d3e-954a-b13549ea7274",
+          "chunk_fingerprint": "d8e44eaa7e79ef23008a90c3556195d37c02e32df22f638b527d41bc0c6e2304",
+          "section_path": "You Only Look Once: Unified, Real-Time Object Detection / 4. Experiments / 4.1. Comparison to Other Real-Time Systems",
+          "excerpt": "### 4.1. Comparison to Other Real-Time Systems\n\nMany research efforts in object detection focus on making standard detection pipelines fast. [5] [38] [31] [14] [17] [28] However, only Sadeghi et al. actually produce a detection system that runs in real-time (30 frames per second or better) [31]. We compare YOLO to their GPU implementation of DPM which runs either at 30Hz or 100Hz. While the other efforts don’t reach the real-time milestone we also compare their relative mAP and speed to examine the accuracy-performance tradeoffs available in object detection systems.\n\nFast YOLO is the fastest "
+        },
+        {
+          "rank": 4,
+          "score": 0.09695063,
+          "work_id": "2ab535ab-8477-4575-92ec-92c176a32776",
+          "document_id": "d41464d1-ef98-46b6-87a9-26b680e20915",
+          "chunk_fingerprint": "d8e44eaa7e79ef23008a90c3556195d37c02e32df22f638b527d41bc0c6e2304",
+          "section_path": "You Only Look Once: Unified, Real-Time Object Detection / 4. Experiments / 4.1. Comparison to Other Real-Time Systems",
+          "excerpt": "### 4.1. Comparison to Other Real-Time Systems\n\nMany research efforts in object detection focus on making standard detection pipelines fast. [5] [38] [31] [14] [17] [28] However, only Sadeghi et al. actually produce a detection system that runs in real-time (30 frames per second or better) [31]. We compare YOLO to their GPU implementation of DPM which runs either at 30Hz or 100Hz. While the other efforts don’t reach the real-time milestone we also compare their relative mAP and speed to examine the accuracy-performance tradeoffs available in object detection systems.\n\nFast YOLO is the fastest "
+        },
+        {
+          "rank": 5,
+          "score": 0.09695063,
+          "work_id": "2ab535ab-8477-4575-92ec-92c176a32776",
+          "document_id": "33793930-0da7-48c4-ba2f-54f777767a4e",
+          "chunk_fingerprint": "d8e44eaa7e79ef23008a90c3556195d37c02e32df22f638b527d41bc0c6e2304",
+          "section_path": "You Only Look Once: Unified, Real-Time Object Detection / 4. Experiments / 4.1. Comparison to Other Real-Time Systems",
+          "excerpt": "### 4.1. Comparison to Other Real-Time Systems\n\nMany research efforts in object detection focus on making standard detection pipelines fast. [5] [38] [31] [14] [17] [28] However, only Sadeghi et al. actually produce a detection system that runs in real-time (30 frames per second or better) [31]. We compare YOLO to their GPU implementation of DPM which runs either at 30Hz or 100Hz. While the other efforts don’t reach the real-time milestone we also compare their relative mAP and speed to examine the accuracy-performance tradeoffs available in object detection systems.\n\nFast YOLO is the fastest "
+        },
+        {
+          "rank": 6,
+          "score": 0.09695063,
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "document_id": "688b935f-1520-4448-98fd-200d691812fd",
+          "chunk_fingerprint": "d8e44eaa7e79ef23008a90c3556195d37c02e32df22f638b527d41bc0c6e2304",
+          "section_path": "You Only Look Once: Unified, Real-Time Object Detection / 4. Experiments / 4.1. Comparison to Other Real-Time Systems",
+          "excerpt": "### 4.1. Comparison to Other Real-Time Systems\n\nMany research efforts in object detection focus on making standard detection pipelines fast. [5] [38] [31] [14] [17] [28] However, only Sadeghi et al. actually produce a detection system that runs in real-time (30 frames per second or better) [31]. We compare YOLO to their GPU implementation of DPM which runs either at 30Hz or 100Hz. While the other efforts don’t reach the real-time milestone we also compare their relative mAP and speed to examine the accuracy-performance tradeoffs available in object detection systems.\n\nFast YOLO is the fastest "
+        },
+        {
+          "rank": 7,
+          "score": 0.11670922,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "63f383e2-90f9-4c76-95ba-b6fdde8bf9e3",
+          "chunk_fingerprint": "1f4384e6-2c95-5df6-b6dd-f02b30ab4672",
+          "section_path": null,
+          "excerpt": "rs\n1x1x256\n3x3x512\n1x1x512\n3x3x1024\nMaxpool Layer\n2x2-s-2\n3\n3\n14\n14\n1024\nConv. Layers\n1x1x512\n3x3x1024\n3x3x1024\n3x3x1024-s-2\n3\n3\n7\n7\n1024\n7\n7\n1024\n7\n7\n30\n} ×4 } ×2\nConv. Layers\n3x3x1024\n3x3x1024\nFigure 3: The Architecture. Our detection network has 24 convolutional layers followed by 2 fully connected layers. Alternating 1 × 1\nconvolutional layers reduce the features space from preceding layers. We pretrain the convolutional layers on the ImageNet classification\ntask at half the resolution (224 × 224 input"
+        },
+        {
+          "rank": 8,
+          "score": 0.11670922,
+          "work_id": "22a23594-ac6c-4e03-ae5c-97d671a314d6",
+          "document_id": "a4c51a43-7979-4738-b0d6-2d4fc147b92e",
+          "chunk_fingerprint": "3d755c6f-e06b-5fa3-bc2c-4289773f91ab",
+          "section_path": null,
+          "excerpt": "rs\n1x1x256\n3x3x512\n1x1x512\n3x3x1024\nMaxpool Layer\n2x2-s-2\n3\n3\n14\n14\n1024\nConv. Layers\n1x1x512\n3x3x1024\n3x3x1024\n3x3x1024-s-2\n3\n3\n7\n7\n1024\n7\n7\n1024\n7\n7\n30\n} ×4 } ×2\nConv. Layers\n3x3x1024\n3x3x1024\nFigure 3: The Architecture. Our detection network has 24 convolutional layers followed by 2 fully connected layers. Alternating 1 × 1\nconvolutional layers reduce the features space from preceding layers. We pretrain the convolutional layers on the ImageNet classification\ntask at half the resolution (224 × 224 input"
+        },
+        {
+          "rank": 9,
+          "score": 0.11670922,
+          "work_id": "13022b5b-6db8-414e-8a00-0b4c3acdd99c",
+          "document_id": "d05137da-201f-4e49-8db0-412b2ad0136c",
+          "chunk_fingerprint": "4c67c179-2172-50f1-90d9-c7d0a74e9dc0",
+          "section_path": null,
+          "excerpt": "rs\n1x1x256\n3x3x512\n1x1x512\n3x3x1024\nMaxpool Layer\n2x2-s-2\n3\n3\n14\n14\n1024\nConv. Layers\n1x1x512\n3x3x1024\n3x3x1024\n3x3x1024-s-2\n3\n3\n7\n7\n1024\n7\n7\n1024\n7\n7\n30\n} ×4 } ×2\nConv. Layers\n3x3x1024\n3x3x1024\nFigure 3: The Architecture. Our detection network has 24 convolutional layers followed by 2 fully connected layers. Alternating 1 × 1\nconvolutional layers reduce the features space from preceding layers. We pretrain the convolutional layers on the ImageNet classification\ntask at half the resolution (224 × 224 input"
+        },
+        {
+          "rank": 10,
+          "score": 0.11670922,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "59687884-8589-4e60-8ec0-c7ab293a1e3a",
+          "chunk_fingerprint": "35e20e23-c59a-51e5-9db5-82a6a00783f8",
+          "section_path": null,
+          "excerpt": "rs\n1x1x256\n3x3x512\n1x1x512\n3x3x1024\nMaxpool Layer\n2x2-s-2\n3\n3\n14\n14\n1024\nConv. Layers\n1x1x512\n3x3x1024\n3x3x1024\n3x3x1024-s-2\n3\n3\n7\n7\n1024\n7\n7\n1024\n7\n7\n30\n} ×4 } ×2\nConv. Layers\n3x3x1024\n3x3x1024\nFigure 3: The Architecture. Our detection network has 24 convolutional layers followed by 2 fully connected layers. Alternating 1 × 1\nconvolutional layers reduce the features space from preceding layers. We pretrain the convolutional layers on the ImageNet classification\ntask at half the resolution (224 × 224 input"
+        }
+      ],
+      "answer_preview": "Retrieved context (not LLM-paraphrased): **Atrous is faster.** As described in Sec. 3, we used the atrous version of a subsampled VGG16, following DeepLab-LargeFOV [17]. If we use the full VGG16, keeping pool5 with $2 \\times 2 - s2$ and not subsampling parameters from fc6 and fc7, and add conv5.3 for prediction, the result is about the same while the speed is about 20% slower.\n\n<!-- Image (10) -->",
+      "wall_clock_seconds": 0.06
+    },
+    {
+      "case_id": "live_yolov1_architecture",
+      "question_preview": "Describe the three-step YOLO processing pipeline (resize, network, thresholding) as stated in this paper.",
+      "metrics": {
+        "passed": true,
+        "contract_only": false,
+        "hit_count": 8,
+        "min_hit_count": 1,
+        "hit_ok": true,
+        "missing_chunk_fingerprints": [],
+        "work_id_ok": true,
+        "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
+      },
+      "retrieval_trace": {
+        "embedding": {
+          "embedding_model": "hash-deterministic",
+          "vector_dim": 384
+        },
+        "hit_count": 8,
+        "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+        "resolved_work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+        "qdrant_collection": "chunks",
+        "top_k_requested": 8,
+        "citations_returned": 8,
+        "top_hit_scores": [
+          0.13462289,
+          0.13462289,
+          0.13462289,
+          0.12688856,
+          0.12688856,
+          0.12688856,
+          0.10864197,
+          0.10864197
+        ],
+        "query_preview": "Describe the three-step YOLO processing pipeline (resize, network, thresholding) as stated in this paper.",
+        "answer_synthesis": {
+          "mode": "deterministic_snippets",
+          "second_stage_llm": false
+        },
+        "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
+        "degraded": []
+      },
+      "graph_context": {
+        "methods": [],
+        "datasets": [],
+        "semantic_available": false,
+        "context_work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+        "degraded": [
+          "work_not_in_graph"
+        ],
+        "error": null
+      },
+      "citations": [
+        {
+          "rank": 1,
+          "score": 0.13462289,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "3b76f57a-880e-4f41-8bcc-c35e42e6e50c",
+          "chunk_fingerprint": "105ce800-ba74-5572-95b1-71b3f2e1d035",
+          "section_path": null,
+          "excerpt": "162. IEEE, 2014. 5, 6\n[9] M. Everingham, S. M. A. Eslami, L. Van Gool, C. K. I.\nWilliams, J. Winn, and A. Zisserman. The pascal visual ob-\nject classes challenge: A retrospective.International Journal\nof Computer Vision, 111(1):98–136, Jan. 2015. 2\n[10] P. F. Felzenszwalb, R. B. Girshick, D. McAllester, and D. Ra-\nmanan. Object detection with discriminatively trained part\nbased models. IEEE Transactions on Pattern Analysis and\nMachine Intelligence, 32(9):1627–1645, 2010. 1, 4\n[11] S. Gidaris and N. Komodaki"
+        },
+        {
+          "rank": 2,
+          "score": 0.13462289,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "63f383e2-90f9-4c76-95ba-b6fdde8bf9e3",
+          "chunk_fingerprint": "7c5d8679-88f1-5e2b-b4d1-0abe0f02b9ad",
+          "section_path": null,
+          "excerpt": "162. IEEE, 2014. 5, 6\n[9] M. Everingham, S. M. A. Eslami, L. Van Gool, C. K. I.\nWilliams, J. Winn, and A. Zisserman. The pascal visual ob-\nject classes challenge: A retrospective.International Journal\nof Computer Vision, 111(1):98–136, Jan. 2015. 2\n[10] P. F. Felzenszwalb, R. B. Girshick, D. McAllester, and D. Ra-\nmanan. Object detection with discriminatively trained part\nbased models. IEEE Transactions on Pattern Analysis and\nMachine Intelligence, 32(9):1627–1645, 2010. 1, 4\n[11] S. Gidaris and N. Komodaki"
+        },
+        {
+          "rank": 3,
+          "score": 0.13462289,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "59687884-8589-4e60-8ec0-c7ab293a1e3a",
+          "chunk_fingerprint": "ae368835-9e31-50a6-b57e-0932a56b5177",
+          "section_path": null,
+          "excerpt": "162. IEEE, 2014. 5, 6\n[9] M. Everingham, S. M. A. Eslami, L. Van Gool, C. K. I.\nWilliams, J. Winn, and A. Zisserman. The pascal visual ob-\nject classes challenge: A retrospective.International Journal\nof Computer Vision, 111(1):98–136, Jan. 2015. 2\n[10] P. F. Felzenszwalb, R. B. Girshick, D. McAllester, and D. Ra-\nmanan. Object detection with discriminatively trained part\nbased models. IEEE Transactions on Pattern Analysis and\nMachine Intelligence, 32(9):1627–1645, 2010. 1, 4\n[11] S. Gidaris and N. Komodaki"
+        },
+        {
+          "rank": 4,
+          "score": 0.12688856,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "59687884-8589-4e60-8ec0-c7ab293a1e3a",
+          "chunk_fingerprint": "41925cbf-9da9-57bd-a404-64079c31d48b",
+          "section_path": null,
+          "excerpt": "unding box\ncoordinate predictions and decrease the loss from confi-\ndence predictions for boxes that don’t contain objects. We\nuse two parameters,λcoord andλnoobj to accomplish this. We\nsetλcoord = 5 andλnoobj =.5.\nSum-squared error also equally weights errors in large\nboxes and small boxes. Our error metric should reflect that\nsmall deviations in large boxes matter less than in small\nboxes. To partially address this we predict the square root\nof the bounding box width and height instead of the width\nand he"
+        },
+        {
+          "rank": 5,
+          "score": 0.12688856,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "3b76f57a-880e-4f41-8bcc-c35e42e6e50c",
+          "chunk_fingerprint": "40d3e29d-69f6-5388-a39c-a49668502f1f",
+          "section_path": null,
+          "excerpt": "unding box\ncoordinate predictions and decrease the loss from confi-\ndence predictions for boxes that don’t contain objects. We\nuse two parameters,λcoord andλnoobj to accomplish this. We\nsetλcoord = 5 andλnoobj =.5.\nSum-squared error also equally weights errors in large\nboxes and small boxes. Our error metric should reflect that\nsmall deviations in large boxes matter less than in small\nboxes. To partially address this we predict the square root\nof the bounding box width and height instead of the width\nand he"
+        },
+        {
+          "rank": 6,
+          "score": 0.12688856,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "63f383e2-90f9-4c76-95ba-b6fdde8bf9e3",
+          "chunk_fingerprint": "357db9f1-f0ca-525c-965f-18a675ea01f2",
+          "section_path": null,
+          "excerpt": "unding box\ncoordinate predictions and decrease the loss from confi-\ndence predictions for boxes that don’t contain objects. We\nuse two parameters,λcoord andλnoobj to accomplish this. We\nsetλcoord = 5 andλnoobj =.5.\nSum-squared error also equally weights errors in large\nboxes and small boxes. Our error metric should reflect that\nsmall deviations in large boxes matter less than in small\nboxes. To partially address this we predict the square root\nof the bounding box width and height instead of the width\nand he"
+        },
+        {
+          "rank": 7,
+          "score": 0.10864197,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "59687884-8589-4e60-8ec0-c7ab293a1e3a",
+          "chunk_fingerprint": "00beeecd-297d-535e-9a7f-12d6549d1ddc",
+          "section_path": null,
+          "excerpt": "re 1 obj\ni denotes if object appears in cell i and 1 obj\nij de-\nnotes that the jth bounding box predictor in cell i is “re-\nsponsible” for that prediction.\nNote that the loss function only penalizes classification\nerror if an object is present in that grid cell (hence the con-\nditional class probability discussed earlier). It also only pe-\nnalizes bounding box coordinate error if that predictor is\n“responsible” for the ground truth box (i.e. has the highest\nIOU of any predictor in that grid cell).\nWe train"
+        },
+        {
+          "rank": 8,
+          "score": 0.10864197,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "63f383e2-90f9-4c76-95ba-b6fdde8bf9e3",
+          "chunk_fingerprint": "0de4dc6a-594e-5181-8927-1acc1a360dfb",
+          "section_path": null,
+          "excerpt": "re 1 obj\ni denotes if object appears in cell i and 1 obj\nij de-\nnotes that the jth bounding box predictor in cell i is “re-\nsponsible” for that prediction.\nNote that the loss function only penalizes classification\nerror if an object is present in that grid cell (hence the con-\nditional class probability discussed earlier). It also only pe-\nnalizes bounding box coordinate error if that predictor is\n“responsible” for the ground truth box (i.e. has the highest\nIOU of any predictor in that grid cell).\nWe train"
+        }
+      ],
+      "answer_preview": "Retrieved context (not LLM-paraphrased): 162. IEEE, 2014. 5, 6\n[9] M. Everingham, S. M. A. Eslami, L. Van Gool, C. K. I.\nWilliams, J. Winn, and A. Zisserman. The pascal visual ob-\nject classes challenge: A retrospective.International Journal\nof Computer Vision, 111(1):98–136, Jan. 2015. 2\n[10] P. F. Felzenszwalb, R. B. Girshick, D. McAllester, and D. Ra-\nmanan. Object detection with discriminative",
+      "wall_clock_seconds": 0.03
+    },
+    {
+      "case_id": "live_yolov1_intro",
+      "question_preview": "What is YOLO in one sentence, and how does it differ from classifier-based sliding-window detectors?",
+      "metrics": {
+        "passed": true,
+        "contract_only": false,
+        "hit_count": 8,
+        "min_hit_count": 1,
+        "hit_ok": true,
+        "missing_chunk_fingerprints": [],
+        "work_id_ok": true,
+        "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
+      },
+      "retrieval_trace": {
+        "embedding": {
+          "embedding_model": "hash-deterministic",
+          "vector_dim": 384
+        },
+        "hit_count": 8,
+        "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+        "resolved_work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+        "qdrant_collection": "chunks",
+        "top_k_requested": 8,
+        "citations_returned": 8,
+        "top_hit_scores": [
+          0.15254489,
+          0.15254489,
+          0.15254489,
+          0.122532375,
+          0.122532375,
+          0.122532375,
+          0.11146896,
+          0.11146896
+        ],
+        "query_preview": "What is YOLO in one sentence, and how does it differ from classifier-based sliding-window detectors?",
+        "answer_synthesis": {
+          "mode": "deterministic_snippets",
+          "second_stage_llm": false
+        },
+        "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
+        "degraded": []
+      },
+      "graph_context": {
+        "methods": [],
+        "datasets": [],
+        "semantic_available": false,
+        "context_work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+        "degraded": [
+          "work_not_in_graph"
+        ],
+        "error": null
+      },
+      "citations": [
+        {
+          "rank": 1,
+          "score": 0.15254489,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "3b76f57a-880e-4f41-8bcc-c35e42e6e50c",
+          "chunk_fingerprint": "8226cfd0-aae7-568a-81b1-e81d5f93f767",
+          "section_path": null,
+          "excerpt": "[3]. We compare YOLO to other detection systems on\nthe Picasso Dataset [12] and the People-Art Dataset [3], two\ndatasets for testing person detection on artwork.\nFigure 5 shows comparative performance between\nYOLO and other detection methods. For reference, we give\nVOC 2007 detection AP on person where all models are\ntrained only on VOC 2007 data. On Picasso models are\ntrained on VOC 2012 while on People-Art they are trained\non VOC 2010.\nR-CNN has high AP on VOC 2007. However, R-CNN\ndrops off considerably w"
+        },
+        {
+          "rank": 2,
+          "score": 0.15254489,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "63f383e2-90f9-4c76-95ba-b6fdde8bf9e3",
+          "chunk_fingerprint": "b7e66349-4af1-5ac8-808e-7ae0dd74ad55",
+          "section_path": null,
+          "excerpt": "[3]. We compare YOLO to other detection systems on\nthe Picasso Dataset [12] and the People-Art Dataset [3], two\ndatasets for testing person detection on artwork.\nFigure 5 shows comparative performance between\nYOLO and other detection methods. For reference, we give\nVOC 2007 detection AP on person where all models are\ntrained only on VOC 2007 data. On Picasso models are\ntrained on VOC 2012 while on People-Art they are trained\non VOC 2010.\nR-CNN has high AP on VOC 2007. However, R-CNN\ndrops off considerably w"
+        },
+        {
+          "rank": 3,
+          "score": 0.15254489,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "59687884-8589-4e60-8ec0-c7ab293a1e3a",
+          "chunk_fingerprint": "5a583f07-4536-541a-9059-c8d6e1f70c7a",
+          "section_path": null,
+          "excerpt": "[3]. We compare YOLO to other detection systems on\nthe Picasso Dataset [12] and the People-Art Dataset [3], two\ndatasets for testing person detection on artwork.\nFigure 5 shows comparative performance between\nYOLO and other detection methods. For reference, we give\nVOC 2007 detection AP on person where all models are\ntrained only on VOC 2007 data. On Picasso models are\ntrained on VOC 2012 while on People-Art they are trained\non VOC 2010.\nR-CNN has high AP on VOC 2007. However, R-CNN\ndrops off considerably w"
+        },
+        {
+          "rank": 4,
+          "score": 0.122532375,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "59687884-8589-4e60-8ec0-c7ab293a1e3a",
+          "chunk_fingerprint": "d7d4b2ad-3215-5e86-9c33-3096b3cc25fe",
+          "section_path": null,
+          "excerpt": "You Only Look Once:\nUnified, Real-Time Object Detection\nJoseph Redmon∗, Santosh Divvala∗†, Ross Girshick¶, Ali Farhadi∗†\nUniversity of Washington∗, Allen Institute for AI†, Facebook AI Research¶\nhttp://pjreddie.com/yolo/\nAbstract\nWe present YOLO, a new approach to object detection.\nPrior work on object detection repurposes classifiers to per-\nform detection. Instead, we frame object detection as a re-\ngression problem to spatially separated bounding boxes and\nassociated class probabilities. A single neural"
+        },
+        {
+          "rank": 5,
+          "score": 0.122532375,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "3b76f57a-880e-4f41-8bcc-c35e42e6e50c",
+          "chunk_fingerprint": "c75dbac7-9727-5e68-8701-9e5143df7541",
+          "section_path": null,
+          "excerpt": "You Only Look Once:\nUnified, Real-Time Object Detection\nJoseph Redmon∗, Santosh Divvala∗†, Ross Girshick¶, Ali Farhadi∗†\nUniversity of Washington∗, Allen Institute for AI†, Facebook AI Research¶\nhttp://pjreddie.com/yolo/\nAbstract\nWe present YOLO, a new approach to object detection.\nPrior work on object detection repurposes classifiers to per-\nform detection. Instead, we frame object detection as a re-\ngression problem to spatially separated bounding boxes and\nassociated class probabilities. A single neural"
+        },
+        {
+          "rank": 6,
+          "score": 0.122532375,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "63f383e2-90f9-4c76-95ba-b6fdde8bf9e3",
+          "chunk_fingerprint": "368e42f0-7b06-586a-ba2e-86a3271250ab",
+          "section_path": null,
+          "excerpt": "You Only Look Once:\nUnified, Real-Time Object Detection\nJoseph Redmon∗, Santosh Divvala∗†, Ross Girshick¶, Ali Farhadi∗†\nUniversity of Washington∗, Allen Institute for AI†, Facebook AI Research¶\nhttp://pjreddie.com/yolo/\nAbstract\nWe present YOLO, a new approach to object detection.\nPrior work on object detection repurposes classifiers to per-\nform detection. Instead, we frame object detection as a re-\ngression problem to spatially separated bounding boxes and\nassociated class probabilities. A single neural"
+        },
+        {
+          "rank": 7,
+          "score": 0.11146896,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "59687884-8589-4e60-8ec0-c7ab293a1e3a",
+          "chunk_fingerprint": "c5587697-3846-5744-8f2a-34ab919b207e",
+          "section_path": null,
+          "excerpt": "object. Our\nsystem also proposes far fewer bounding boxes, only 98\nper image compared to about 2000 from Selective Search.\nFinally, our system combines these individual components\ninto a single, jointly optimized model.\nOther Fast Detectors Fast and Faster R-CNN focus on\nspeeding up the R-CNN framework by sharing computa-\ntion and using neural networks to propose regions instead\nof Selective Search [14] [28]. While they offer speed and\naccuracy improvements over R-CNN, both still fall short of\nreal-time per"
+        },
+        {
+          "rank": 8,
+          "score": 0.11146896,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "63f383e2-90f9-4c76-95ba-b6fdde8bf9e3",
+          "chunk_fingerprint": "8ef610d7-7be6-57c2-8c50-a07762a24dff",
+          "section_path": null,
+          "excerpt": "object. Our\nsystem also proposes far fewer bounding boxes, only 98\nper image compared to about 2000 from Selective Search.\nFinally, our system combines these individual components\ninto a single, jointly optimized model.\nOther Fast Detectors Fast and Faster R-CNN focus on\nspeeding up the R-CNN framework by sharing computa-\ntion and using neural networks to propose regions instead\nof Selective Search [14] [28]. While they offer speed and\naccuracy improvements over R-CNN, both still fall short of\nreal-time per"
+        }
+      ],
+      "answer_preview": "Retrieved context (not LLM-paraphrased): [3]. We compare YOLO to other detection systems on\nthe Picasso Dataset [12] and the People-Art Dataset [3], two\ndatasets for testing person detection on artwork.\nFigure 5 shows comparative performance between\nYOLO and other detection methods. For reference, we give\nVOC 2007 detection AP on person where all models are\ntrained only on VOC 2007 data. On Picass",
+      "wall_clock_seconds": 0.028
+    },
+    {
+      "case_id": "live_yolov1_methods_combo",
+      "question_preview": "What methods or architectural blocks does this paper describe for object detection, and how does it position them relative to two-stage detectors?",
+      "metrics": {
+        "passed": true,
+        "contract_only": false,
+        "hit_count": 8,
+        "min_hit_count": 1,
+        "hit_ok": true,
+        "missing_chunk_fingerprints": [],
+        "work_id_ok": true,
+        "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
+      },
+      "retrieval_trace": {
+        "embedding": {
+          "embedding_model": "hash-deterministic",
+          "vector_dim": 384
+        },
+        "hit_count": 8,
+        "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+        "resolved_work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+        "qdrant_collection": "chunks",
+        "top_k_requested": 8,
+        "citations_returned": 8,
+        "top_hit_scores": [
+          0.11867988,
+          0.11867988,
+          0.11867988,
+          0.11839198,
+          0.11839198,
+          0.11839198,
+          0.11678193,
+          0.11678193
+        ],
+        "query_preview": "What methods or architectural blocks does this paper describe for object detection, and how does it position them relative to two-stage detectors?",
+        "answer_synthesis": {
+          "mode": "deterministic_snippets",
+          "second_stage_llm": false
+        },
+        "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
+        "degraded": []
+      },
+      "graph_context": {
+        "methods": [],
+        "datasets": [],
+        "semantic_available": false,
+        "context_work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+        "degraded": [
+          "work_not_in_graph"
+        ],
+        "error": null
+      },
+      "citations": [
+        {
+          "rank": 1,
+          "score": 0.11867988,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "3b76f57a-880e-4f41-8bcc-c35e42e6e50c",
+          "chunk_fingerprint": "7ee12509-2279-5d5d-b450-1607dffde23c",
+          "section_path": null,
+          "excerpt": "Net classification\ntask at half the resolution (224 × 224 input image) and then double the resolution for detection.\nThe final output of our network is the 7× 7× 30 tensor\nof predictions.\n2.2. Training\nWe pretrain our convolutional layers on the ImageNet\n1000-class competition dataset [30]. For pretraining we use\nthe first 20 convolutional layers from Figure 3 followed by a\naverage-pooling layer and a fully connected layer. We train\nthis network for approximately a week and achieve a single\ncrop top-5 accur"
+        },
+        {
+          "rank": 2,
+          "score": 0.11867988,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "63f383e2-90f9-4c76-95ba-b6fdde8bf9e3",
+          "chunk_fingerprint": "30091237-ce82-52b7-8f16-efab66d4c2ac",
+          "section_path": null,
+          "excerpt": "Net classification\ntask at half the resolution (224 × 224 input image) and then double the resolution for detection.\nThe final output of our network is the 7× 7× 30 tensor\nof predictions.\n2.2. Training\nWe pretrain our convolutional layers on the ImageNet\n1000-class competition dataset [30]. For pretraining we use\nthe first 20 convolutional layers from Figure 3 followed by a\naverage-pooling layer and a fully connected layer. We train\nthis network for approximately a week and achieve a single\ncrop top-5 accur"
+        },
+        {
+          "rank": 3,
+          "score": 0.11867988,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "59687884-8589-4e60-8ec0-c7ab293a1e3a",
+          "chunk_fingerprint": "c66e698a-41a1-5548-b129-6fc76a472044",
+          "section_path": null,
+          "excerpt": "Net classification\ntask at half the resolution (224 × 224 input image) and then double the resolution for detection.\nThe final output of our network is the 7× 7× 30 tensor\nof predictions.\n2.2. Training\nWe pretrain our convolutional layers on the ImageNet\n1000-class competition dataset [30]. For pretraining we use\nthe first 20 convolutional layers from Figure 3 followed by a\naverage-pooling layer and a fully connected layer. We train\nthis network for approximately a week and achieve a single\ncrop top-5 accur"
+        },
+        {
+          "rank": 4,
+          "score": 0.11839198,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "59687884-8589-4e60-8ec0-c7ab293a1e3a",
+          "chunk_fingerprint": "1fe4deb1-177a-5e0e-b15d-39119a633bd2",
+          "section_path": null,
+          "excerpt": "our goal of\nmaximizing average precision. It weights localization er-\nror equally with classification error which may not be ideal.\nAlso, in every image many grid cells do not contain any\nobject. This pushes the “confidence” scores of those cells\ntowards zero, often overpowering the gradient from cells\nthat do contain objects. This can lead to model instability,\ncausing training to diverge early on.\nTo remedy this, we increase the loss from bounding box\ncoordinate predictions and decrease the loss from con"
+        },
+        {
+          "rank": 5,
+          "score": 0.11839198,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "3b76f57a-880e-4f41-8bcc-c35e42e6e50c",
+          "chunk_fingerprint": "8f4616f1-566f-59d3-9399-8f52bc5eb9d0",
+          "section_path": null,
+          "excerpt": "our goal of\nmaximizing average precision. It weights localization er-\nror equally with classification error which may not be ideal.\nAlso, in every image many grid cells do not contain any\nobject. This pushes the “confidence” scores of those cells\ntowards zero, often overpowering the gradient from cells\nthat do contain objects. This can lead to model instability,\ncausing training to diverge early on.\nTo remedy this, we increase the loss from bounding box\ncoordinate predictions and decrease the loss from con"
+        },
+        {
+          "rank": 6,
+          "score": 0.11839198,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "63f383e2-90f9-4c76-95ba-b6fdde8bf9e3",
+          "chunk_fingerprint": "cfa50e61-53d9-5574-9773-9d0e8b796bf6",
+          "section_path": null,
+          "excerpt": "our goal of\nmaximizing average precision. It weights localization er-\nror equally with classification error which may not be ideal.\nAlso, in every image many grid cells do not contain any\nobject. This pushes the “confidence” scores of those cells\ntowards zero, often overpowering the gradient from cells\nthat do contain objects. This can lead to model instability,\ncausing training to diverge early on.\nTo remedy this, we increase the loss from bounding box\ncoordinate predictions and decrease the loss from con"
+        },
+        {
+          "rank": 7,
+          "score": 0.11678193,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "59687884-8589-4e60-8ec0-c7ab293a1e3a",
+          "chunk_fingerprint": "1fee57c5-933f-5f89-aa9f-25d280844407",
+          "section_path": null,
+          "excerpt": "5 17.8 0.271\nD&T [4] - 1.9 0.051\n(b) Quantitative results on the VOC 2007, Picasso, and People-Art Datasets.\nThe Picasso Dataset evaluates on both AP and best F1 score.\nFigure 5: Generalization results on Picasso and People-Art datasets.\nFigure 6: Qualitative Results. YOLO running on sample artwork and natural images from the internet. It is mostly accurate although it\ndoes think one person is an airplane.\nincluding the time to fetch images from the camera and dis-\nplay the detections.\nThe resulting system"
+        },
+        {
+          "rank": 8,
+          "score": 0.11678193,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "63f383e2-90f9-4c76-95ba-b6fdde8bf9e3",
+          "chunk_fingerprint": "41868661-8800-5ffb-bbd1-1559010e7372",
+          "section_path": null,
+          "excerpt": "5 17.8 0.271\nD&T [4] - 1.9 0.051\n(b) Quantitative results on the VOC 2007, Picasso, and People-Art Datasets.\nThe Picasso Dataset evaluates on both AP and best F1 score.\nFigure 5: Generalization results on Picasso and People-Art datasets.\nFigure 6: Qualitative Results. YOLO running on sample artwork and natural images from the internet. It is mostly accurate although it\ndoes think one person is an airplane.\nincluding the time to fetch images from the camera and dis-\nplay the detections.\nThe resulting system"
+        }
+      ],
+      "answer_preview": "Retrieved context (not LLM-paraphrased): Net classification\ntask at half the resolution (224 × 224 input image) and then double the resolution for detection.\nThe final output of our network is the 7× 7× 30 tensor\nof predictions.\n2.2. Training\nWe pretrain our convolutional layers on the ImageNet\n1000-class competition dataset [30]. For pretraining we use\nthe first 20 convolutional layers from Figur",
+      "wall_clock_seconds": 0.028
+    },
+    {
+      "case_id": "live_yolov1_training",
+      "question_preview": "Summarize the training objective and loss formulation used in this work, citing the sections where they are defined.",
+      "metrics": {
+        "passed": true,
+        "contract_only": false,
+        "hit_count": 6,
+        "min_hit_count": 1,
+        "hit_ok": true,
+        "missing_chunk_fingerprints": [],
+        "work_id_ok": true,
+        "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
+      },
+      "retrieval_trace": {
+        "embedding": {
+          "embedding_model": "hash-deterministic",
+          "vector_dim": 384
+        },
+        "hit_count": 6,
+        "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+        "resolved_work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+        "qdrant_collection": "chunks",
+        "top_k_requested": 6,
+        "citations_returned": 6,
+        "top_hit_scores": [
+          0.11490515,
+          0.11490515,
+          0.11490515,
+          0.11162444,
+          0.11162444,
+          0.11162444
+        ],
+        "query_preview": "Summarize the training objective and loss formulation used in this work, citing the sections where they are defined.",
+        "answer_synthesis": {
+          "mode": "deterministic_snippets",
+          "second_stage_llm": false
+        },
+        "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
+        "degraded": []
+      },
+      "graph_context": {
+        "methods": [],
+        "datasets": [],
+        "semantic_available": false,
+        "context_work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+        "degraded": [
+          "work_not_in_graph"
+        ],
+        "error": null
+      },
+      "citations": [
+        {
+          "rank": 1,
+          "score": 0.11490515,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "3b76f57a-880e-4f41-8bcc-c35e42e6e50c",
+          "chunk_fingerprint": "4defe8cb-0c85-5e54-a3db-24cc31a6d64e",
+          "section_path": null,
+          "excerpt": "e predicted box fits the\nobject.\nS × S grid on input\nBounding boxes + confidence\nClass probability map\nFinal detections\nFigure 2: The Model. Our system models detection as a regres-\nsion problem. It divides the image into an S × S grid and for each\ngrid cell predicts B bounding boxes, confidence for those boxes,\nand C class probabilities. These predictions are encoded as an\nS × S × (B ∗ 5 + C) tensor.\nFor evaluating YOLO on PASCAL VOC, we useS = 7 ,\nB = 2 . P ASCAL VOC has 20 labelled classes so C = 20 .\nOu"
+        },
+        {
+          "rank": 2,
+          "score": 0.11490515,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "63f383e2-90f9-4c76-95ba-b6fdde8bf9e3",
+          "chunk_fingerprint": "d9795ed4-c270-5a11-b336-8f6be429cfcd",
+          "section_path": null,
+          "excerpt": "e predicted box fits the\nobject.\nS × S grid on input\nBounding boxes + confidence\nClass probability map\nFinal detections\nFigure 2: The Model. Our system models detection as a regres-\nsion problem. It divides the image into an S × S grid and for each\ngrid cell predicts B bounding boxes, confidence for those boxes,\nand C class probabilities. These predictions are encoded as an\nS × S × (B ∗ 5 + C) tensor.\nFor evaluating YOLO on PASCAL VOC, we useS = 7 ,\nB = 2 . P ASCAL VOC has 20 labelled classes so C = 20 .\nOu"
+        },
+        {
+          "rank": 3,
+          "score": 0.11490515,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "59687884-8589-4e60-8ec0-c7ab293a1e3a",
+          "chunk_fingerprint": "9e1792f8-b23b-52bf-9d3f-c83232499890",
+          "section_path": null,
+          "excerpt": "e predicted box fits the\nobject.\nS × S grid on input\nBounding boxes + confidence\nClass probability map\nFinal detections\nFigure 2: The Model. Our system models detection as a regres-\nsion problem. It divides the image into an S × S grid and for each\ngrid cell predicts B bounding boxes, confidence for those boxes,\nand C class probabilities. These predictions are encoded as an\nS × S × (B ∗ 5 + C) tensor.\nFor evaluating YOLO on PASCAL VOC, we useS = 7 ,\nB = 2 . P ASCAL VOC has 20 labelled classes so C = 20 .\nOu"
+        },
+        {
+          "rank": 4,
+          "score": 0.11162444,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "59687884-8589-4e60-8ec0-c7ab293a1e3a",
+          "chunk_fingerprint": "02569e6f-8d62-58d3-99bc-68fbad9639f6",
+          "section_path": null,
+          "excerpt": "ns like artwork.\n1. Introduction\nHumans glance at an image and instantly know what ob-\njects are in the image, where they are, and how they inter-\nact. The human visual system is fast and accurate, allow-\ning us to perform complex tasks like driving with little con-\nscious thought. Fast, accurate algorithms for object detec-\ntion would allow computers to drive cars without special-\nized sensors, enable assistive devices to convey real-time\nscene information to human users, and unlock the potential\nfor gener"
+        },
+        {
+          "rank": 5,
+          "score": 0.11162444,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "3b76f57a-880e-4f41-8bcc-c35e42e6e50c",
+          "chunk_fingerprint": "a4071389-34d0-5452-8a89-3eb8f2037cd3",
+          "section_path": null,
+          "excerpt": "ns like artwork.\n1. Introduction\nHumans glance at an image and instantly know what ob-\njects are in the image, where they are, and how they inter-\nact. The human visual system is fast and accurate, allow-\ning us to perform complex tasks like driving with little con-\nscious thought. Fast, accurate algorithms for object detec-\ntion would allow computers to drive cars without special-\nized sensors, enable assistive devices to convey real-time\nscene information to human users, and unlock the potential\nfor gener"
+        },
+        {
+          "rank": 6,
+          "score": 0.11162444,
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+          "document_id": "63f383e2-90f9-4c76-95ba-b6fdde8bf9e3",
+          "chunk_fingerprint": "6e31cc82-eff8-5a56-9b2e-d39e07e044e6",
+          "section_path": null,
+          "excerpt": "ns like artwork.\n1. Introduction\nHumans glance at an image and instantly know what ob-\njects are in the image, where they are, and how they inter-\nact. The human visual system is fast and accurate, allow-\ning us to perform complex tasks like driving with little con-\nscious thought. Fast, accurate algorithms for object detec-\ntion would allow computers to drive cars without special-\nized sensors, enable assistive devices to convey real-time\nscene information to human users, and unlock the potential\nfor gener"
+        }
+      ],
+      "answer_preview": "Retrieved context (not LLM-paraphrased): e predicted box fits the\nobject.\nS × S grid on input\nBounding boxes + confidence\nClass probability map\nFinal detections\nFigure 2: The Model. Our system models detection as a regres-\nsion problem. It divides the image into an S × S grid and for each\ngrid cell predicts B bounding boxes, confidence for those boxes,\nand C class probabilities. These predictions ",
+      "wall_clock_seconds": 0.029
+    }
+  ]
+}

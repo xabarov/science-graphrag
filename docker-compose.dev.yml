@@ -1,0 +1,139 @@
+services:
+  neo4j:
+    image: neo4j:5-community
+    ports:
+      - "17474:7474"
+      - "17687:7687"
+    environment:
+      NEO4J_AUTH: neo4j/sciencegraphrag
+    volumes:
+      - neo4j_data:/data
+
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "15432:5432"
+    environment:
+      POSTGRES_USER: science
+      POSTGRES_PASSWORD: science
+      POSTGRES_DB: science_graphrag
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  qdrant:
+    image: qdrant/qdrant:v1.12.4
+    ports:
+      - "16333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  phoenix:
+    image: arizephoenix/phoenix:latest
+    ports:
+      - "16006:6006"
+      - "14317:4317"
+    volumes:
+      - phoenix_data:/mnt/data
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /app
+    command:
+      [
+        "python",
+        "-m",
+        "uvicorn",
+        "science_graphrag.api.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8787",
+        "--reload",
+      ]
+    expose:
+      - "8787"
+    ports:
+      - "18787:8787"
+    environment:
+      PYTHONPATH: /app
+      # Let Compose URLs win over a developer `.env` that targets localhost-published ports.
+      SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV: "1"
+      SCIENCE_GRAPHRAG_DATABASE_URL: postgresql+psycopg://science:science@postgres:5432/science_graphrag
+      SCIENCE_GRAPHRAG_NEO4J_URI: bolt://neo4j:7687
+      SCIENCE_GRAPHRAG_NEO4J_USER: neo4j
+      SCIENCE_GRAPHRAG_NEO4J_PASSWORD: sciencegraphrag
+      SCIENCE_GRAPHRAG_QDRANT_URL: http://qdrant:6333
+      SCIENCE_GRAPHRAG_BLOB_ROOT: /data/blobs
+      SCIENCE_GRAPHRAG_ARTIFACT_ROOT: /data/artifacts
+    volumes:
+      - .:/app
+      - ./data/blobs:/data/blobs
+      - ./data/artifacts:/data/artifacts
+    depends_on:
+      - postgres
+      - neo4j
+      - qdrant
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8787/health', timeout=5)",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 25s
+
+  ui:
+    image: node:20-bookworm-slim
+    working_dir: /app/ui
+    command:
+      [
+        "sh",
+        "-lc",
+        "if [ ! -d node_modules ] || [ -z \"$(ls -A node_modules 2>/dev/null)\" ]; then npm ci; fi && npm run dev -- --host 0.0.0.0 --port 5173 --strictPort",
+      ]
+    expose:
+      - "5173"
+    volumes:
+      - ./ui:/app/ui
+      - ui_node_modules:/app/ui/node_modules
+    depends_on:
+      - api
+
+  web:
+    image: nginx:1.27-alpine
+    ports:
+      - "8787:80"
+    volumes:
+      - ./docker/nginx-web.dev.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      api:
+        condition: service_healthy
+      ui:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "-q",
+          "-O",
+          "-",
+          "http://127.0.0.1/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  neo4j_data:
+  pg_data:
+  qdrant_data:
+  phoenix_data:
+  ui_node_modules:

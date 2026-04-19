@@ -1,0 +1,137 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+    "semantic_extraction_enabled": true
+  },
+  "summary": {
+    "case_count": 3,
+    "case_ids": [
+      "strict_pilot_corpus_wide",
+      "strict_pilot_methods",
+      "strict_pilot_work_scoped"
+    ],
+    "all_passed": true,
+    "retrieval_eval": true
+  },
+  "cases": [
+    {
+      "case_id": "strict_pilot_corpus_wide",
+      "question_preview": "Which papers in the corpus discuss single-shot detectors and compare their speed-accuracy trade-offs to two-stage pipelines?",
+      "metrics": {
+        "passed": true,
+        "contract_only": false,
+        "hit_count": 1,
+        "min_hit_count": 1,
+        "hit_ok": true,
+        "missing_chunk_fingerprints": [],
+        "work_id_ok": true,
+        "filter_work_id": null
+      },
+      "retrieval_trace": {
+        "hit_count": 1,
+        "embedding": {
+          "embedding_model": "mock"
+        },
+        "filter_work_id": null
+      },
+      "graph_context": {
+        "semantic_available": false,
+        "methods": [],
+        "datasets": []
+      },
+      "citations": [
+        {
+          "chunk_fingerprint": "df9bed2a2f99ad0fc96e803818ed053ee79bdc07c47023efcdf769c358299871",
+          "rank": 1,
+          "excerpt": "stub"
+        },
+        {
+          "chunk_fingerprint": "f3d4f47633a2bd6fce9f7ee409c88082a55441304334a4cf734d9b7763a1dacd",
+          "rank": 2,
+          "excerpt": "stub"
+        }
+      ],
+      "answer_preview": "mock",
+      "wall_clock_seconds": 0.0
+    },
+    {
+      "case_id": "strict_pilot_methods",
+      "question_preview": "What methods or architectural blocks does this paper describe for object detection, and how does it position them relative to two-stage detectors?",
+      "metrics": {
+        "passed": true,
+        "contract_only": false,
+        "hit_count": 1,
+        "min_hit_count": 1,
+        "hit_ok": true,
+        "missing_chunk_fingerprints": [],
+        "work_id_ok": true,
+        "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
+      },
+      "retrieval_trace": {
+        "hit_count": 1,
+        "embedding": {
+          "embedding_model": "mock"
+        },
+        "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
+      },
+      "graph_context": {
+        "semantic_available": false,
+        "methods": [],
+        "datasets": []
+      },
+      "citations": [
+        {
+          "chunk_fingerprint": "7ee12509-2279-5d5d-b450-1607dffde23c",
+          "rank": 1,
+          "excerpt": "stub"
+        },
+        {
+          "chunk_fingerprint": "30091237-ce82-52b7-8f16-efab66d4c2ac",
+          "rank": 2,
+          "excerpt": "stub"
+        }
+      ],
+      "answer_preview": "mock",
+      "wall_clock_seconds": 0.0
+    },
+    {
+      "case_id": "strict_pilot_work_scoped",
+      "question_preview": "Summarize the training objective and loss formulation used in this work, citing the sections where they are defined.",
+      "metrics": {
+        "passed": true,
+        "contract_only": false,
+        "hit_count": 1,
+        "min_hit_count": 1,
+        "hit_ok": true,
+        "missing_chunk_fingerprints": [],
+        "work_id_ok": true,
+        "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
+      },
+      "retrieval_trace": {
+        "hit_count": 1,
+        "embedding": {
+          "embedding_model": "mock"
+        },
+        "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
+      },
+      "graph_context": {
+        "semantic_available": false,
+        "methods": [],
+        "datasets": []
+      },
+      "citations": [
+        {
+          "chunk_fingerprint": "4defe8cb-0c85-5e54-a3db-24cc31a6d64e",
+          "rank": 1,
+          "excerpt": "stub"
+        }
+      ],
+      "answer_preview": "mock",
+      "wall_clock_seconds": 0.0
+    }
+  ]
+}

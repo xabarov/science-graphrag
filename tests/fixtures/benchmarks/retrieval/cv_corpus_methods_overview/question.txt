@@ -1,0 +1,1 @@
+What evaluation protocols are commonly used for object detection benchmarks?

@@ -1,0 +1,1 @@
+Summarize the training objective and loss formulation used in this work, citing the sections where they are defined.

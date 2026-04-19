@@ -32,7 +32,12 @@ export function buildSimulationState(graph, options = {}) {
       vx: 0,
       vy: 0,
       type: n.type == null ? "Node" : String(n.type),
-      label: n.label == null ? String(n.id) : String(n.label),
+      label:
+        n.displayLabel != null && String(n.displayLabel).trim()
+          ? String(n.displayLabel)
+          : n.label == null
+            ? String(n.id)
+            : String(n.label),
     };
   });
 

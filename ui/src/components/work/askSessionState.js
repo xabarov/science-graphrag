@@ -117,6 +117,22 @@ function saveBundle(scopeKey, bundle) {
 }
 
 /**
+ * Replace the entire session bundle for a scope (e.g. after server pull).
+ *
+ * @param {string} scopeKey
+ * @param {{ activeId: string | null, sessions: Array<{ id: string, title: string, updatedAt: string, entries: unknown[] }> }} bundle
+ */
+export function replaceScopeBundle(scopeKey, bundle) {
+  const storage = safeStorage();
+  if (!storage) return;
+  const normalized = normalizeBundle(bundle);
+  saveBundle(scopeKey, {
+    activeId: normalized.activeId,
+    sessions: normalized.sessions,
+  });
+}
+
+/**
  * One-time import from flat ask history when this scope has no sessions yet.
  *
  * @param {string} scopeKey

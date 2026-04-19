@@ -9,8 +9,11 @@
 | [../README.md](../README.md) | Краткий PRD: пользователи, MVP-сценарии, non-goals |
 | [roadmap.md](roadmap.md) | Roadmap фаз 0–7, архитектура верхнего уровня, риски |
 | [runbooks/benchmark-driven-dev-loop.md](runbooks/benchmark-driven-dev-loop.md) | Короткий benchmark-цикл (CLI, compare, UI `/benchmark`) |
-| [runbooks/roadmap-next-waves.md](runbooks/roadmap-next-waves.md) | Волны Wave A–D (benchmark gate → pilot KPI) |
+| [runbooks/roadmap-next-waves.md](runbooks/roadmap-next-waves.md) | Волны Wave A–D и E–H (benchmark gate → pilot → CI/retrieval/UI/ontology) |
+| [runbooks/user-journeys-retrieval-v1.md](runbooks/user-journeys-retrieval-v1.md) | Сценарии Phase 5: corpus → query → evidence |
 | [runbooks/benchmark-decision-gate.md](runbooks/benchmark-decision-gate.md) | GO / NO-GO, gate перед Wave B–D |
+| [runbooks/benchmark-program-status.md](runbooks/benchmark-program-status.md) | Сводка семейств бенчмарков: core vs advisory, Wave H gate |
+| [runbooks/benchmark-pilot-advisory-runs.md](runbooks/benchmark-pilot-advisory-runs.md) | Чеклист advisory: live retrieval + claims + aggregate |
 | [runbooks/pilot-checklist.md](runbooks/pilot-checklist.md) | Phase 7: pilot package, KPI, GO/NO-GO |
 | [runbooks/deploy.md](runbooks/deploy.md) | Docker Compose, политика ранней упаковки сервисов |
 | [idea.md](idea.md) | Онтология по слоям, scholarly backbone, промпты (черновик) |
@@ -47,6 +50,10 @@
 | [benchmarks/strategy-v1.md](benchmarks/strategy-v1.md) | Стратегия eval v1 (layer 1+) |
 | [benchmarks/graph-level-eval-v1.md](benchmarks/graph-level-eval-v1.md) | План graph-level eval после ingest |
 | [benchmarks/benchmark-expansion-v1.md](benchmarks/benchmark-expansion-v1.md) | Расширение корпуса и families |
+| [benchmarks/retrieval-eval-v1.md](benchmarks/retrieval-eval-v1.md) | Заготовка retrieval/citation benchmark family |
+| [benchmarks/teacher-gold-audit-v1.md](benchmarks/teacher-gold-audit-v1.md) | Процедура аудита teacher-gold фикстур |
+| [specs/ui-empty-loading-audit-v1.md](specs/ui-empty-loading-audit-v1.md) | Чеклист empty/loading/error по UI |
+| [specs/ontology-wave-h-backlog.md](specs/ontology-wave-h-backlog.md) | Backlog онтологии Wave H (Claims, merge) |
 
 ## Открытые вопросы
 

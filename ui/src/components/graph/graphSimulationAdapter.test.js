@@ -30,6 +30,14 @@ describe("buildSimulationState", () => {
     }
   });
 
+  it("prefers displayLabel for simulation label", () => {
+    const { nodes } = buildSimulationState({
+      nodes: [{ id: "n1", type: "Work", label: "id", displayLabel: "Readable" }],
+      edges: [],
+    });
+    expect(nodes[0].label).toBe("Readable");
+  });
+
   it("handles empty graph", () => {
     const { nodes, links } = buildSimulationState({ nodes: [], edges: [] });
     expect(nodes).toHaveLength(0);
