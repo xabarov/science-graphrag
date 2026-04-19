@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "case_id": "overfeat_realpdf",
+  "generated_at_utc": "2026-04-19T16:09:52.353868+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [
+      "1207.0580"
+    ],
+    "count": 1,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": 2014,
+    "arxiv_id": "1312.6229",
+    "doi": null,
+    "authors": [
+      {
+        "name": "Pierre Sermanet",
+        "affiliations": [
+          "Courant Institute of Mathematical Sciences, New York University"
+        ]
+      },
+      {
+        "name": "David Eigen",
+        "affiliations": [
+          "Courant Institute of Mathematical Sciences, New York University"
+        ]
+      },
+      {
+        "name": "Xiang Zhang",
+        "affiliations": [
+          "Courant Institute of Mathematical Sciences, New York University"
+        ]
+      },
+      {
+        "name": "Michael Mathieu",
+        "affiliations": [
+          "Courant Institute of Mathematical Sciences, New York University"
+        ]
+      },
+      {
+        "name": "Rob Fergus",
+        "affiliations": [
+          "Courant Institute of Mathematical Sciences, New York University"
+        ]
+      },
+      {
+        "name": "Yann LeCun",
+        "affiliations": [
+          "Courant Institute of Mathematical Sciences, New York University"
+        ]
+      }
+    ]
+  }
+}

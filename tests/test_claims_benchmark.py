@@ -21,6 +21,25 @@ def test_score_claims_contract_only() -> None:
     assert m["passed"] is True
 
 
+def test_score_claims_text_mode_without_claim_id() -> None:
+    """claim_id_or_normalized_text matches via prediction text fields."""
+
+    gold = {
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_claims": [
+            {
+                "claim_id": "x1",
+                "claim_text_normalized": "neural network proposes",
+            }
+        ],
+        "min_claim_recall": 1.0,
+    }
+    preds = [{"claim_text": "The neural network proposes a solution"}]
+    m = score_claims_extraction(preds, gold)
+    assert m["passed"] is True
+    assert m["claim_recall"] == pytest.approx(1.0)
+
+
 def test_score_claims_recall_partial() -> None:
     """Partial claim_id recall can still pass when min_claim_recall is lowered."""
     gold = {
@@ -50,6 +69,30 @@ def test_anchor_harness_finds_phrase() -> None:
     preds = extract_claims_anchor_harness("prefix hello world suffix", gold)
     assert len(preds) == 1
     assert preds[0]["claim_id"] == "c1"
+
+
+def test_discover_claims_corpus_v2_mini_tier() -> None:
+    """claims_corpus_v2_mini discovers five corpus-derived cases."""
+
+    cases = discover_claims_case_dirs(FIXTURES, tier="claims_corpus_v2_mini")
+    assert len(cases) == 5
+
+
+def test_discover_claims_pilot_tier() -> None:
+    """claims_pilot discovers ten cases."""
+
+    cases = discover_claims_case_dirs(FIXTURES, tier="claims_pilot")
+    assert len(cases) == 10
+
+
+def test_discover_claims_pilot_train_excludes_holdout() -> None:
+    """claims_pilot_train excludes benchmark_holdout cases."""
+
+    cases = discover_claims_case_dirs(FIXTURES, tier="claims_pilot_train")
+    ids = {p.name for p in cases}
+    assert "corpus_cascade_rcnn_stages" not in ids
+    assert "corpus_efficientdet_compound" not in ids
+    assert len(ids) == 8
 
 
 def test_discover_claims_mini_tier() -> None:

@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "case_id": "faster_rcnn_realpdf",
+  "generated_at_utc": "2026-04-19T16:09:27.405848+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [
+      "1408.5093",
+      "1412.1441",
+      "1504.06066",
+      "1505.05836",
+      "1511.02300",
+      "1511.04003",
+      "1511.07131",
+      "1511.07571",
+      "1512.03385",
+      "1512.04412"
+    ],
+    "count": 10,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": 2016,
+    "arxiv_id": "1506.01497",
+    "doi": null,
+    "authors": [
+      {
+        "name": "Shaoqing Ren",
+        "affiliations": [
+          "University of Science and Technology of China",
+          "Microsoft Research"
+        ]
+      },
+      {
+        "name": "Kaiming He",
+        "affiliations": [
+          "Visual Computing Group, Microsoft Research"
+        ]
+      },
+      {
+        "name": "Ross Girshick",
+        "affiliations": [
+          "Facebook AI Research",
+          "Microsoft Research"
+        ]
+      },
+      {
+        "name": "Jian Sun",
+        "affiliations": [
+          "Visual Computing Group, Microsoft Research"
+        ]
+      }
+    ]
+  }
+}

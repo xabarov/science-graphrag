@@ -1,34 +1,94 @@
 {
   "case_id": "dino_realpdf",
   "schema_version": 1,
-  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated. [gold enriched via scripts/enrich_gold_layer1.py]",
   "work_metadata": {
     "title": "DINO: DETR with Improved DeNoising Anchor Boxes for End-to-End Object Detection",
-    "publication_year": null,
+    "publication_year": 2022,
     "abstract_prefix": "We present DINO (DETR with Improved deNoising anchOr boxes), a state-of-",
     "doi": null,
-    "arxiv_id": null,
+    "arxiv_id": "2203.03605",
     "venue_name": null,
     "work_type": null
   },
-  "authorships": [],
+  "authorships": [
+    {
+      "name": "Hao Zhang",
+      "affiliations": [
+        "The Hong Kong University of Science and Technology",
+        "International Digital Economy Academy (IDEA)"
+      ]
+    },
+    {
+      "name": "Feng Li",
+      "affiliations": [
+        "The Hong Kong University of Science and Technology",
+        "International Digital Economy Academy (IDEA)"
+      ]
+    },
+    {
+      "name": "Shilong Liu",
+      "affiliations": [
+        "Dept. of CST., BNRist Center, Institute for AI, Tsinghua University",
+        "International Digital Economy Academy (IDEA)"
+      ]
+    },
+    {
+      "name": "Lei Zhang",
+      "affiliations": [
+        "International Digital Economy Academy (IDEA)"
+      ]
+    },
+    {
+      "name": "Hang Su",
+      "affiliations": [
+        "Dept. of CST., BNRist Center, Institute for AI, Tsinghua University"
+      ]
+    },
+    {
+      "name": "Jun Zhu",
+      "affiliations": [
+        "Dept. of CST., BNRist Center, Institute for AI, Tsinghua University"
+      ]
+    },
+    {
+      "name": "Lionel M. Ni",
+      "affiliations": [
+        "The Hong Kong University of Science and Technology",
+        "The Hong Kong University of Science and Technology (Guangzhou)"
+      ]
+    },
+    {
+      "name": "Heung-Yeung Shum",
+      "affiliations": [
+        "The Hong Kong University of Science and Technology",
+        "International Digital Economy Academy (IDEA)"
+      ]
+    }
+  ],
   "references": {
     "expected_count": 43,
     "min_count": 35,
     "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
     "sample_arxiv_ids": [
-      "2004.10934",
-      "1906.07155",
-      "1604.06174",
-      "1810.04805",
-      "2101.07448",
-      "2107.08430",
       "1412.6980",
-      "2203.01305",
+      "1604.06174",
+      "1711.05101",
+      "1804.02767",
+      "1810.04805",
+      "1906.07155",
+      "2004.10934",
+      "2011.10881",
+      "2101.07448",
+      "2104.01318",
+      "2107.08430",
+      "2108.06152",
+      "2109.07107",
+      "2111.09883",
+      "2111.11432",
       "2112.03857",
       "2201.12329",
-      "2111.09883",
-      "1711.05101"
+      "2203.01305"
     ],
     "sample_dois": []
   },
@@ -106,5 +166,9 @@
     "stratum": "numbered",
     "notes": "Numeric-dot references; OCR page headers merged into adjacent entries where present.",
     "annotation_kind": "manual"
+  },
+  "quality_thresholds": {
+    "min_authorship_names_f1": 0.7,
+    "min_sample_arxiv_f1": 0.7
   }
 }

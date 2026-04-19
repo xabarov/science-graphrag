@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "case_id": "libra_rcnn_realpdf",
+  "generated_at_utc": "2026-04-19T16:09:45.761395+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [
+      "1705.07115",
+      "1711.07971",
+      "1807.11590",
+      "1808.07993",
+      "1901.07518"
+    ],
+    "count": 5,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": 2019,
+    "arxiv_id": "1904.02701",
+    "doi": null,
+    "authors": [
+      {
+        "name": "Jiangmiao Pang",
+        "affiliations": [
+          "Zhejiang University"
+        ]
+      },
+      {
+        "name": "Kai Chen",
+        "affiliations": [
+          "The Chinese University of Hong Kong"
+        ]
+      },
+      {
+        "name": "Jianping Shi",
+        "affiliations": [
+          "SenseTime Research"
+        ]
+      },
+      {
+        "name": "Huajun Feng",
+        "affiliations": [
+          "Zhejiang University"
+        ]
+      },
+      {
+        "name": "Wanli Ouyang",
+        "affiliations": [
+          "The University of Sydney"
+        ]
+      },
+      {
+        "name": "Dahua Lin",
+        "affiliations": [
+          "The Chinese University of Hong Kong"
+        ]
+      }
+    ]
+  }
+}

@@ -2,6 +2,8 @@
 
 Правило: **новая сущность или тип связи в пайплайне** по возможности сопровождается **fixture + gold + метрикой** в том же PR или следующим.
 
+Критерии «benchmark-ready» для расширения онтологии и разделение core/advisory: [`../runbooks/benchmark-ontology-expansion-policy.md`](../runbooks/benchmark-ontology-expansion-policy.md).
+
 ## Layer 1 (текущий контур)
 
 - **Корпус:** каталог `tests/fixtures/benchmarks/layer1/<case_id>/` с `article.md` + `gold.json` (эталон: [yolov1](../../tests/fixtures/benchmarks/layer1/yolov1/)).

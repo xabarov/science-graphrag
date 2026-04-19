@@ -14,8 +14,10 @@ from science_graphrag.api import works as works_api
 from science_graphrag.api.admin_access import require_admin_if_configured
 from science_graphrag.api.ask_sessions import router as ask_sessions_router
 from science_graphrag.api.benchmark import router as benchmark_router
-from science_graphrag.api.settings import router as settings_router
+from science_graphrag.api.ingest_jobs import router as ingest_router
 from science_graphrag.api.retrieval import GroundedAnswer, answer_query
+from science_graphrag.api.settings import router as settings_router
+from science_graphrag.api.workspaces import router as workspaces_router
 from science_graphrag.config import get_settings
 
 app = FastAPI(title="science-graphrag", version="0.1.0")
@@ -38,6 +40,8 @@ app.include_router(
     dependencies=[Depends(require_admin_if_configured)],
 )
 app.include_router(ask_sessions_router, prefix="/v1")
+app.include_router(workspaces_router, prefix="/v1")
+app.include_router(ingest_router, prefix="/v1")
 
 
 class QueryRequest(BaseModel):

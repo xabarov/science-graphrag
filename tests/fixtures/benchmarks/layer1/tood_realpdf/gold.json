@@ -1,27 +1,33 @@
 {
   "case_id": "tood_realpdf",
   "schema_version": 1,
-  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated. [gold enriched via scripts/enrich_gold_layer1.py]",
   "work_metadata": {
     "title": "Task-aligned One-stage Object Detection",
-    "publication_year": null,
+    "publication_year": 2021,
     "abstract_prefix": "One-stage object detection is commonly implemented by optimizing two sub",
     "doi": null,
-    "arxiv_id": null,
+    "arxiv_id": "2108.07755",
     "venue_name": null,
     "work_type": null
   },
-  "authorships": [],
+  "authorships": [
+    {
+      "name": "Chengjian Feng",
+      "affiliations": [
+        "Intellifusion Inc."
+      ]
+    }
+  ],
   "references": {
     "expected_count": 49,
     "min_count": 41,
     "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
     "sample_arxiv_ids": [
-      "2108.07507",
       "1312.6229",
       "1904.06493",
       "1904.07850",
-      "1906.07155"
+      "2108.07507"
     ],
     "sample_dois": []
   },
@@ -90,5 +96,9 @@
     "stratum": "bracket_numbered_realpdf",
     "annotation_kind": "manual",
     "notes": "Bootstrap from eval.references_harness.bibliography_gold_span; main ## References block; monotonic [n] detection; truncated before supplementary."
+  },
+  "quality_thresholds": {
+    "min_authorship_names_f1": 0.7,
+    "min_sample_arxiv_f1": 0.7
   }
 }

@@ -1,0 +1,105 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+    "semantic_extraction_enabled": true
+  },
+  "summary": {
+    "case_count": 3,
+    "case_ids": [
+      "refs_mini_arxiv_id",
+      "refs_mini_doi_pair",
+      "refs_mini_work_id"
+    ],
+    "all_passed": true,
+    "references_resolution_eval": true
+  },
+  "cases": [
+    {
+      "case_id": "refs_mini_arxiv_id",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "resolution_recall": 1.0,
+        "resolution_precision": 1.0,
+        "expected_count": 1,
+        "predicted_count": 1,
+        "matched_span_ids": [
+          "span:arxiv_note"
+        ],
+        "missing_span_ids": [],
+        "min_resolution_recall": 1.0
+      },
+      "predictions": [
+        {
+          "raw_citation_span_id": "span:arxiv_note",
+          "canonical_key": "ARXIV:1703.06870"
+        }
+      ],
+      "wall_clock_seconds": 0.0,
+      "resolver": "default_resolve_predictions",
+      "extraction_llm_enabled": true
+    },
+    {
+      "case_id": "refs_mini_doi_pair",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "resolution_recall": 1.0,
+        "resolution_precision": 1.0,
+        "expected_count": 2,
+        "predicted_count": 2,
+        "matched_span_ids": [
+          "bib:001",
+          "bib:002"
+        ],
+        "missing_span_ids": [],
+        "min_resolution_recall": 1.0
+      },
+      "predictions": [
+        {
+          "raw_citation_span_id": "bib:001",
+          "canonical_key": "doi:10.1109/tpami.2016.2577031"
+        },
+        {
+          "raw_citation_span_id": "bib:002",
+          "canonical_key": "doi:10.5555/mini.pack.second"
+        }
+      ],
+      "wall_clock_seconds": 0.0,
+      "resolver": "default_resolve_predictions",
+      "extraction_llm_enabled": true
+    },
+    {
+      "case_id": "refs_mini_work_id",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "resolution_recall": 1.0,
+        "resolution_precision": 1.0,
+        "expected_count": 1,
+        "predicted_count": 1,
+        "matched_span_ids": [
+          "span:internal_ref"
+        ],
+        "missing_span_ids": [],
+        "min_resolution_recall": 1.0
+      },
+      "predictions": [
+        {
+          "raw_citation_span_id": "span:internal_ref",
+          "canonical_key": "work_id:fixture:yolov1"
+        }
+      ],
+      "wall_clock_seconds": 0.0,
+      "resolver": "default_resolve_predictions",
+      "extraction_llm_enabled": true
+    }
+  ]
+}

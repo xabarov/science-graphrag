@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "case_id": "detr_realpdf",
+  "generated_at_utc": "2026-04-19T16:09:02.343098+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [
+      "1511.06449",
+      "1711.10433",
+      "1712.00617",
+      "1805.00613",
+      "1904.05709",
+      "1904.07850",
+      "1904.09324",
+      "1905.03072",
+      "1911.08460",
+      "1912.02424",
+      "2002.08926"
+    ],
+    "count": 11,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": 2020,
+    "arxiv_id": "2005.12872",
+    "doi": null,
+    "authors": [
+      {
+        "name": "Nicolas Carion",
+        "affiliations": [
+          "Facebook AI"
+        ]
+      },
+      {
+        "name": "Francisco Massa",
+        "affiliations": [
+          "Facebook AI"
+        ]
+      },
+      {
+        "name": "Gabriel Synnaeve",
+        "affiliations": [
+          "Facebook AI"
+        ]
+      },
+      {
+        "name": "Nicolas Usunier",
+        "affiliations": [
+          "Facebook AI"
+        ]
+      },
+      {
+        "name": "Alexander Kirillov",
+        "affiliations": [
+          "Facebook AI"
+        ]
+      },
+      {
+        "name": "Sergey Zagoruyko",
+        "affiliations": [
+          "Facebook AI"
+        ]
+      }
+    ]
+  }
+}

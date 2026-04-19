@@ -23,4 +23,6 @@ export function preserveGraphPageOptionalParams(params, prev) {
   if (prev.get("lab") === "1") params.set("lab", "1");
   if (prev.get("compact") === "1") params.set("compact", "1");
   if (prev.get("focus") === "1") params.set("focus", "1");
+  const ws = prev.get("workspace_id");
+  if (ws && String(ws).trim()) params.set("workspace_id", String(ws).trim());
 }

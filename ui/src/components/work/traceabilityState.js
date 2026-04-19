@@ -2,6 +2,7 @@ import { normalizeWorkspaceTab } from "../../pages/WorkspacePage/utils/workConte
 
 export const TRACEABILITY_QUERY_KEYS = {
   workId: "work_id",
+  workspaceId: "workspace_id",
   tab: "tab",
   nodeId: "node",
   /** Normalized graph edge id (Canvas selection); mutual exclusion with `node` for deep links. */
@@ -20,11 +21,12 @@ function trimOrEmpty(value) {
 
 /**
  * @param {URLSearchParams | { get: (key: string) => string | null }} searchParams
- * @returns {{workId: string, tab: string, nodeId: string, edgeId: string, chunkFingerprint: string, section: string, citation: string, askSession: string}}
+ * @returns {{workId: string, workspaceId: string, tab: string, nodeId: string, edgeId: string, chunkFingerprint: string, section: string, citation: string, askSession: string}}
  */
 export function readTraceabilityState(searchParams) {
   return {
     workId: trimOrEmpty(searchParams.get(TRACEABILITY_QUERY_KEYS.workId)),
+    workspaceId: trimOrEmpty(searchParams.get(TRACEABILITY_QUERY_KEYS.workspaceId)),
     tab: normalizeWorkspaceTab(searchParams.get(TRACEABILITY_QUERY_KEYS.tab) || "overview"),
     nodeId: trimOrEmpty(searchParams.get(TRACEABILITY_QUERY_KEYS.nodeId)),
     edgeId: trimOrEmpty(searchParams.get(TRACEABILITY_QUERY_KEYS.edgeId)),
@@ -36,7 +38,7 @@ export function readTraceabilityState(searchParams) {
 }
 
 /**
- * @param {Partial<{workId: string, tab: string, nodeId: string, edgeId: string, chunkFingerprint: string, section: string, citation: string, askSession: string}>} state
+ * @param {Partial<{workId: string, workspaceId: string, tab: string, nodeId: string, edgeId: string, chunkFingerprint: string, section: string, citation: string, askSession: string}>} state
  * @param {{ includeTab?: boolean }} [options]
  * @returns {URLSearchParams}
  */
@@ -44,6 +46,7 @@ export function buildTraceabilityParams(state = {}, options = {}) {
   const includeTab = options.includeTab !== false;
   const params = new URLSearchParams();
   const workId = trimOrEmpty(state.workId);
+  const workspaceId = trimOrEmpty(state.workspaceId);
   const tab = normalizeWorkspaceTab(state.tab || "overview");
   const nodeId = trimOrEmpty(state.nodeId);
   const edgeId = trimOrEmpty(state.edgeId);
@@ -53,6 +56,7 @@ export function buildTraceabilityParams(state = {}, options = {}) {
   const askSession = trimOrEmpty(state.askSession);
 
   if (workId) params.set(TRACEABILITY_QUERY_KEYS.workId, workId);
+  if (workspaceId) params.set(TRACEABILITY_QUERY_KEYS.workspaceId, workspaceId);
   if (includeTab && workId) params.set(TRACEABILITY_QUERY_KEYS.tab, tab);
   if (nodeId) params.set(TRACEABILITY_QUERY_KEYS.nodeId, nodeId);
   if (edgeId) params.set(TRACEABILITY_QUERY_KEYS.edgeId, edgeId);
@@ -90,7 +94,7 @@ export function buildStandaloneTracePath(routePath, workId, extras = {}) {
 
 /**
  * @param {URLSearchParams | { get: (key: string) => string | null }} searchParams
- * @param {Partial<{workId: string, tab: string, nodeId: string, edgeId: string, chunkFingerprint: string, section: string, citation: string, askSession: string}>} updates
+ * @param {Partial<{workId: string, workspaceId: string, tab: string, nodeId: string, edgeId: string, chunkFingerprint: string, section: string, citation: string, askSession: string}>} updates
  * @param {{ includeTab?: boolean }} [options]
  * @returns {URLSearchParams}
  */

@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "description": "Synthetic mini-case: two DOI resolutions (harness uses synthetic_predictions until graph resolver lands).",
+  "min_resolution_recall": 1.0,
+  "expected_resolutions": [
+    {
+      "raw_citation_span_id": "bib:001",
+      "canonical_key": "doi:10.1109/tpami.2016.2577031"
+    },
+    {
+      "raw_citation_span_id": "bib:002",
+      "canonical_key": "doi:10.5555/mini.pack.second"
+    }
+  ],
+  "synthetic_predictions": [
+    {
+      "raw_citation_span_id": "bib:001",
+      "canonical_key": "doi:10.1109/tpami.2016.2577031"
+    },
+    {
+      "raw_citation_span_id": "bib:002",
+      "canonical_key": "doi:10.5555/mini.pack.second"
+    }
+  ]
+}

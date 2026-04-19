@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "case_id": "rfcn_realpdf",
+  "generated_at_utc": "2026-04-19T16:10:03.909702+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [
+      "1504.06066",
+      "1512.02325",
+      "1603.08678"
+    ],
+    "count": 3,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": 2016,
+    "arxiv_id": "1605.06409",
+    "doi": null,
+    "authors": [
+      {
+        "name": "Jifeng Dai",
+        "affiliations": [
+          "Microsoft Research Asia"
+        ]
+      },
+      {
+        "name": "Yi Li",
+        "affiliations": [
+          "Tsinghua University"
+        ]
+      },
+      {
+        "name": "Kaiming He",
+        "affiliations": [
+          "Microsoft Research"
+        ]
+      },
+      {
+        "name": "Jian Sun",
+        "affiliations": []
+      }
+    ]
+  }
+}

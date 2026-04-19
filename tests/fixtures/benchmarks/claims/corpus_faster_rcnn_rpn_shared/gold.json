@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "description": "Excerpt from tests/fixtures/benchmarks/layer1/faster_rcnn_realpdf/article.md (Abstract).",
+  "benchmark_suite_tier": "claims_corpus_v2_mini",
+  "source_layer1_fixture": "faster_rcnn_realpdf",
+  "claim_match_mode": "claim_id_or_normalized_text",
+  "expected_claims": [
+    {
+      "claim_id": "od_corpus_faster_rcnn_rpn_shared_features",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "anchor_phrase": "nearly cost-free region proposals",
+      "claim_text_normalized": "nearly cost-free region proposals"
+    }
+  ]
+}

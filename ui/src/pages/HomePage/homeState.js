@@ -65,11 +65,9 @@ export function getRecentWorks() {
 export function getContinueWorkspaceTarget() {
   const lastWorkId = getLastWorkId();
   if (!lastWorkId) return null;
-  const recent = getRecentWorks().find((item) => item.workId === lastWorkId);
-  const tab = recent?.tab || "overview";
   return {
     workId: lastWorkId,
-    path: buildWorkspacePath(lastWorkId, tab),
+    path: buildWorkspacePath(lastWorkId),
   };
 }
 

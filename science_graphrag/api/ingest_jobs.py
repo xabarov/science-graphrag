@@ -1,0 +1,316 @@
+"""Background ingest jobs for workspace uploads (PDF / MD / TXT) with polling."""
+
+from __future__ import annotations
+
+import threading
+import uuid
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
+from pathlib import Path
+from tempfile import gettempdir
+from typing import Any
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from science_graphrag.config import Settings
+from science_graphrag.ingestion.pipeline import SkippedDuplicateIngestError, ingest_document
+from science_graphrag.storage.db import init_db
+from science_graphrag.storage.neo4j_store import Neo4jGraphStore
+
+SUPPORTED_SUFFIXES = frozenset({".pdf", ".md", ".txt"})
+
+
+def _append_log(job_id: str, line: str) -> None:
+    ts = datetime.now(UTC).strftime("%H:%M:%S")
+    chunk = f"[{ts}] {line}\n"
+    with _REGISTRY.lock:
+        rec = _REGISTRY.jobs.get(job_id)
+        if not rec:
+            return
+        rec.logs = (rec.logs + chunk)[-48_000:]
+
+
+@dataclass
+class IngestJobRecord:
+    job_id: str
+    workspace_id: str
+    filename: str
+    status: str  # queued | running | completed | failed
+    message: str = ""
+    progress_current: int = 0
+    progress_total: int = 100
+    logs: str = ""
+    work_id: str | None = None
+    document_id: str | None = None
+    skipped_duplicate: bool = False
+    error: str | None = None
+    created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
+    finished_at: str | None = None
+
+
+class IngestJobRegistry:
+    """Process-local job store (sufficient for single-node dev and small deployments)."""
+
+    def __init__(self) -> None:
+        self.lock = threading.Lock()
+        self.jobs: dict[str, IngestJobRecord] = {}
+
+    def create_job(self, workspace_id: str, filename: str) -> IngestJobRecord:
+        job_id = str(uuid.uuid4())
+        rec = IngestJobRecord(
+            job_id=job_id,
+            workspace_id=workspace_id,
+            filename=filename,
+            status="queued",
+            message="Queued",
+        )
+        with self.lock:
+            self.jobs[job_id] = rec
+        return rec
+
+    def get(self, job_id: str) -> IngestJobRecord | None:
+        with self.lock:
+            return self.jobs.get(job_id)
+
+    def _update(self, job_id: str, **kwargs: Any) -> None:
+        with self.lock:
+            rec = self.jobs.get(job_id)
+            if not rec:
+                return
+            for k, v in kwargs.items():
+                setattr(rec, k, v)
+
+
+_REGISTRY = IngestJobRegistry()
+
+
+def _run_ingest_thread(
+    job_id: str,
+    temp_path: Path,
+    settings: Settings,
+) -> None:
+    job = _REGISTRY.get(job_id)
+    if not job:
+        try:
+            temp_path.unlink(missing_ok=True)
+        except OSError:
+            pass
+        return
+
+    def upd(**kwargs: Any) -> None:
+        _REGISTRY._update(job_id, **kwargs)
+
+    try:
+        upd(status="running", message="Starting ingestion", progress_current=5)
+        _append_log(job_id, f"Temp file {temp_path}")
+
+        suf = temp_path.suffix.lower()
+        if suf not in SUPPORTED_SUFFIXES:
+            upd(
+                status="failed",
+                error="unsupported_file_type",
+                message=f"Unsupported type {suf!r}",
+                finished_at=_now_iso(),
+            )
+            return
+
+        upd(message="Running pipeline (Neo4j / vectors / SQL)…", progress_current=15)
+
+        engine = create_engine(settings.database_url, pool_pre_ping=True)
+        init_db(engine)
+        factory = sessionmaker(bind=engine)
+        work_id: str | None = None
+        doc_id: str | None = None
+        skipped = False
+        try:
+            with factory() as session:
+                with session.begin():
+                    doc_id, work_id = ingest_document(
+                        temp_path,
+                        settings=settings,
+                        session=session,
+                        skip_existing_sha=False,
+                        force_new_document=False,
+                    )
+        except SkippedDuplicateIngestError as dup:
+            skipped = True
+            doc_id = dup.document_id
+            work_id = None
+            _append_log(
+                job_id, f"Skipped duplicate sha256={dup.sha256} document_id={dup.document_id}"
+            )
+
+        upd(progress_current=85, message="Attaching to workspace…")
+        store = Neo4jGraphStore(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password)
+        try:
+            ws = store.workspace_get(job.workspace_id)
+            if not ws:
+                upd(
+                    status="failed",
+                    error="workspace_not_found",
+                    message="Workspace not found",
+                    finished_at=_now_iso(),
+                )
+                return
+            if work_id and not skipped:
+                if not store.workspace_add_work(job.workspace_id, str(work_id)):
+                    upd(
+                        status="failed",
+                        error="work_attach_failed",
+                        message="Ingest OK but could not attach work to workspace (invalid work_id?)",
+                        document_id=doc_id,
+                        work_id=work_id,
+                        finished_at=_now_iso(),
+                    )
+                    return
+        finally:
+            store.close()
+
+        upd(
+            status="completed",
+            message="Done" if not skipped else "Duplicate bytes skipped (existing document)",
+            progress_current=100,
+            document_id=doc_id,
+            work_id=work_id,
+            skipped_duplicate=skipped,
+            finished_at=_now_iso(),
+        )
+        _append_log(job_id, "Completed")
+    except Exception as exc:  # noqa: BLE001
+        _append_log(job_id, f"ERROR {exc!r}")
+        upd(status="failed", error="ingest_failed", message=str(exc)[:500], finished_at=_now_iso())
+    finally:
+        try:
+            temp_path.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
+def _now_iso() -> str:
+    return datetime.now(UTC).isoformat()
+
+
+def start_ingest_job(
+    *,
+    workspace_id: str,
+    filename: str,
+    file_bytes: bytes,
+    settings: Settings,
+) -> IngestJobRecord:
+    if not file_bytes:
+        raise HTTPException(status_code=400, detail="empty_file")
+
+    suffix = Path(filename or "upload").suffix.lower()
+    if suffix not in SUPPORTED_SUFFIXES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"unsupported_type_allowed:{','.join(sorted(SUPPORTED_SUFFIXES))}",
+        )
+
+    rec = _REGISTRY.create_job(workspace_id, filename)
+    safe_name = f"ingest-{rec.job_id}{suffix}"
+    temp_path = Path(gettempdir()) / safe_name
+    temp_path.write_bytes(file_bytes)
+    _append_log(rec.job_id, f"Saved {len(file_bytes)} bytes → {temp_path.name}")
+
+    thread = threading.Thread(
+        target=_run_ingest_thread,
+        args=(rec.job_id, temp_path, settings),
+        name=f"ingest-{rec.job_id}",
+        daemon=True,
+    )
+    thread.start()
+    return rec
+
+
+class IngestJobView(BaseModel):
+    """JSON shape for ingest job polling."""
+
+    job_id: str
+    workspace_id: str
+    filename: str
+    status: str
+    message: str = ""
+    progress_current: int = 0
+    progress_total: int = 100
+    logs: str = ""
+    work_id: str | None = None
+    document_id: str | None = None
+    skipped_duplicate: bool = False
+    error: str | None = None
+    created_at: str = ""
+    finished_at: str | None = None
+
+
+def job_to_dict(rec: IngestJobRecord) -> dict[str, Any]:
+    """Serialize a job record for JSON responses."""
+
+    return IngestJobView(
+        job_id=rec.job_id,
+        workspace_id=rec.workspace_id,
+        filename=rec.filename,
+        status=rec.status,
+        message=rec.message,
+        progress_current=rec.progress_current,
+        progress_total=rec.progress_total,
+        logs=rec.logs,
+        work_id=rec.work_id,
+        document_id=rec.document_id,
+        skipped_duplicate=rec.skipped_duplicate,
+        error=rec.error,
+        created_at=rec.created_at,
+        finished_at=rec.finished_at,
+    ).model_dump()
+
+
+router = APIRouter(tags=["ingest"])
+
+
+@router.get("/ingest/jobs/{job_id}")
+def get_ingest_job(job_id: str) -> dict[str, Any]:
+    """Return status and logs for a workspace document ingest job."""
+
+    rec = _REGISTRY.get(job_id)
+    if not rec:
+        raise HTTPException(status_code=404, detail="job_not_found")
+    return job_to_dict(rec)
+
+
+class IngestStubBody(BaseModel):
+    """Unused body for legacy ``/ingest/arxiv`` and ``/ingest/doi`` stubs."""
+
+    arxiv_id: str | None = None
+    doi: str | None = None
+
+
+@router.post("/ingest/arxiv")
+def ingest_arxiv_stub(_body: IngestStubBody) -> dict[str, Any]:
+    """Reserved: use workspace document upload instead."""
+
+    raise HTTPException(
+        status_code=501,
+        detail="ingest_arxiv_not_implemented_upload_pdf_or_md",
+    )
+
+
+@router.post("/ingest/doi")
+def ingest_doi_stub(_body: IngestStubBody) -> dict[str, Any]:
+    """Reserved: use workspace document upload instead."""
+
+    raise HTTPException(
+        status_code=501,
+        detail="ingest_doi_not_implemented_upload_pdf_or_md",
+    )
+
+
+@router.post("/ingest/pdf")
+def ingest_pdf_stub() -> dict[str, Any]:
+    """Reserved: multipart upload is under ``POST /v1/workspaces/{id}/ingest/document``."""
+
+    raise HTTPException(
+        status_code=501,
+        detail="ingest_pdf_use_workspace_upload",
+    )

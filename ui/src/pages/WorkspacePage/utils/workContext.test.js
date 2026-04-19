@@ -30,9 +30,10 @@ describe("workContext", () => {
     expect(normalizeWorkspaceTab("GRAPH")).toBe("graph");
   });
 
-  it("builds workspace path with tab and work id", () => {
-    expect(buildWorkspacePath("w1", "graph")).toBe("/workspace?work_id=w1&tab=graph");
+  it("builds workspace path with work id (no tab)", () => {
+    expect(buildWorkspacePath("w1", "graph")).toBe("/workspace?work_id=w1");
     expect(buildWorkspacePath("", "graph")).toBe("/workspace");
+    expect(buildWorkspacePath("w1", "overview", { workspaceId: "ws-1" })).toBe("/workspace?work_id=w1&workspace_id=ws-1");
   });
 
   it("persists and restores last work id", () => {

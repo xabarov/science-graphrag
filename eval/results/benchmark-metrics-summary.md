@@ -77,6 +77,36 @@ Claims benchmarks are **not** part of the primary decision gate. See `docs/bench
 - all_passed: **True**
 - failed_count: **0**
 
+### claims_corpus_v2_mini
+
+- artifact: `eval/results/current-claims-corpus-v2-mini.json`
+- all_passed: **True**
+- failed_count: **0**
+
+### claims_pilot
+
+- artifact: `eval/results/current-claims-pilot-suite.json`
+- all_passed: **True**
+- failed_count: **0**
+
+## References resolution family (advisory)
+
+Structural scoring harness for bibliography resolution keys; **not** a substitute for Neo4j-backed canonicalization yet. See `docs/specs/benchmark-family-references-resolution-v1.md`.
+
+- **role**: `advisory`
+
+### refs_merge_contract
+
+- artifact: `eval/results/current-references-resolution-contract.json`
+- all_passed: **True**
+- failed_count: **0**
+
+### refs_mini (synthetic harness)
+
+- artifact: `eval/results/current-references-resolution-mini.json`
+- all_passed: **True**
+- failed_count: **0**
+
 ## Baseline deltas (vs stored baseline JSON)
 
 ```json

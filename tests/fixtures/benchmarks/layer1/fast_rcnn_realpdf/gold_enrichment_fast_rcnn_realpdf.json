@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "case_id": "fast_rcnn_realpdf",
+  "generated_at_utc": "2026-04-19T16:09:23.120577+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [
+      "1405.0312",
+      "1502.05082"
+    ],
+    "count": 2,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": 2015,
+    "arxiv_id": "1504.08083",
+    "doi": null,
+    "authors": [
+      {
+        "name": "Ross Girshick",
+        "affiliations": [
+          "Microsoft Research"
+        ]
+      }
+    ]
+  }
+}

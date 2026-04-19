@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "case_id": "ssd_realpdf",
+  "generated_at_utc": "2026-04-19T16:10:14.497515+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [
+      "1312.5402",
+      "1412.1441"
+    ],
+    "count": 2,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": 2016,
+    "arxiv_id": "1512.02325",
+    "doi": null,
+    "authors": [
+      {
+        "name": "Wei Liu",
+        "affiliations": [
+          "UNC Chapel Hill"
+        ]
+      },
+      {
+        "name": "Dragomir Anguelov",
+        "affiliations": [
+          "Zoox Inc."
+        ]
+      },
+      {
+        "name": "Dumitru Erhan",
+        "affiliations": [
+          "Google Inc."
+        ]
+      },
+      {
+        "name": "Christian Szegedy",
+        "affiliations": [
+          "Google Inc."
+        ]
+      },
+      {
+        "name": "Scott Reed",
+        "affiliations": [
+          "University of Michigan, Ann-Arbor"
+        ]
+      },
+      {
+        "name": "Cheng-Yang Fu",
+        "affiliations": [
+          "UNC Chapel Hill"
+        ]
+      },
+      {
+        "name": "Alexander C. Berg",
+        "affiliations": [
+          "UNC Chapel Hill"
+        ]
+      }
+    ]
+  }
+}

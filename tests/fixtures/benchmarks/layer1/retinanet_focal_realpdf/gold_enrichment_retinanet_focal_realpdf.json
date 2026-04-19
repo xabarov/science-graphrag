@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "case_id": "retinanet_focal_realpdf",
+  "generated_at_utc": "2026-04-19T16:10:01.611488+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [
+      "1612.06851",
+      "1701.06659"
+    ],
+    "count": 2,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": 2018,
+    "arxiv_id": "1708.02002",
+    "doi": null,
+    "authors": [
+      {
+        "name": "Tsung-Yi Lin",
+        "affiliations": [
+          "Facebook AI Research (FAIR)"
+        ]
+      },
+      {
+        "name": "Priya Goyal",
+        "affiliations": [
+          "Facebook AI Research (FAIR)"
+        ]
+      },
+      {
+        "name": "Ross Girshick",
+        "affiliations": [
+          "Facebook AI Research (FAIR)"
+        ]
+      },
+      {
+        "name": "Kaiming He",
+        "affiliations": [
+          "Facebook AI Research (FAIR)"
+        ]
+      },
+      {
+        "name": "Piotr Dollár",
+        "affiliations": [
+          "Facebook AI Research (FAIR)"
+        ]
+      }
+    ]
+  }
+}

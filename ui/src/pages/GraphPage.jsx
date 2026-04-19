@@ -1,20 +1,24 @@
 import React, { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
+import Popover from "@mui/material/Popover";
 import TextField from "@mui/material/TextField";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import VpnKeyOutlinedIcon from "@mui/icons-material/VpnKeyOutlined";
 
-import { CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
+import { CursorIconButton, CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
-import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
 import GraphWorkspacePanel from "../components/graph/GraphWorkspacePanel.jsx";
+import DeduplicationPanel from "../components/graph/DeduplicationPanel.jsx";
 import { GraphMissingWorkCallout } from "../components/graph/graphShellStates.jsx";
 import { persistWorkId } from "./WorkspacePage/utils/workContext.js";
-import { buildWorkspaceTracePath, mergeTraceabilityParams, readTraceabilityState } from "../components/work/traceabilityState.js";
+import { mergeTraceabilityParams, readTraceabilityState } from "../components/work/traceabilityState.js";
 import { readGraphPageLayoutFlags, preserveGraphPageOptionalParams } from "./graphPageUrl.js";
 
-const LS_GRAPH_PAGE_CHROME = "graphPageChromeExpanded";
+const LS_GRAPH_PAGE_ABOUT = "graphPageAboutOpen";
 
 export default function GraphPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -22,18 +26,19 @@ export default function GraphPage() {
   const [workIdInput, setWorkIdInput] = useState(initial);
   const trace = readTraceabilityState(searchParams);
   const workId = trace.workId;
+  const workspaceId = trace.workspaceId;
   const selectedNodeId = trace.nodeId;
   const selectedEdgeId = trace.edgeId;
   const labMode = searchParams.get("lab") === "1";
   const { compact, focus, compactLayout } = readGraphPageLayoutFlags(searchParams);
   const chromeDense = compact || focus;
 
-  const [chromeExpanded, setChromeExpanded] = useState(() => {
-    if (typeof window === "undefined") return !chromeDense;
+  const [aboutOpen, setAboutOpen] = useState(() => {
+    if (typeof window === "undefined") return false;
     if (chromeDense) return false;
-    return window.localStorage.getItem(LS_GRAPH_PAGE_CHROME) !== "0";
+    return window.localStorage.getItem(LS_GRAPH_PAGE_ABOUT) === "1";
   });
-  const [linksExpanded, setLinksExpanded] = useState(() => !chromeDense);
+  const [loadAnchor, setLoadAnchor] = useState(null);
 
   useEffect(() => {
     setWorkIdInput(workId);
@@ -45,14 +50,14 @@ export default function GraphPage() {
 
   useEffect(() => {
     try {
-      window.localStorage.setItem(LS_GRAPH_PAGE_CHROME, chromeExpanded ? "1" : "0");
+      window.localStorage.setItem(LS_GRAPH_PAGE_ABOUT, aboutOpen ? "1" : "0");
     } catch {
       /* ignore */
     }
-  }, [chromeExpanded]);
+  }, [aboutOpen]);
 
   function applyWorkId(e) {
-    e.preventDefault();
+    e?.preventDefault?.();
     const next = workIdInput.trim();
     if (next) {
       persistWorkId(next);
@@ -65,6 +70,7 @@ export default function GraphPage() {
       preserveGraphPageOptionalParams(cleared, searchParams);
       setSearchParams(cleared);
     }
+    setLoadAnchor(null);
   }
 
   function handleSelectNode(nodeId) {
@@ -82,182 +88,120 @@ export default function GraphPage() {
       sx={{
         flex: 1,
         minHeight: 0,
+        height: "100%",
         display: "flex",
         flexDirection: "column",
-        p: 2,
-        ...mainShellContentSx,
+        overflow: "hidden",
+        px: 1,
+        pt: 0.75,
+        pb: 0.5,
+        width: "100%",
+        maxWidth: "100%",
         boxSizing: "border-box",
       }}
     >
-      <Box sx={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
-        <CursorSmallButton
-          type="button"
-          onClick={() => setChromeExpanded((v) => !v)}
-          aria-expanded={chromeExpanded}
-          aria-controls="graph-page-chrome"
-          sx={{ minWidth: 36, px: 0.75 }}
-        >
-          <ExpandMoreIcon
-            sx={{
-              fontSize: "1.15rem",
-              color: "rgba(255,255,255,0.65)",
-              transform: chromeExpanded ? "rotate(0deg)" : "rotate(-90deg)",
-              transition: "transform 0.15s ease",
-            }}
-          />
-        </CursorSmallButton>
-        <Box component="span" sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>
-          Page info &amp; load
-        </Box>
+      <Box
+        sx={{
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          gap: 0.75,
+          flexWrap: "wrap",
+          mb: 0.5,
+        }}
+      >
+        <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.9)" }}>Graph</Typography>
+        <Box sx={{ flex: 1, minWidth: 8 }} />
+        <Tooltip title="Load by work_id (advanced)" placement="bottom">
+          <CursorIconButton
+            aria-label="Load graph by work id"
+            aria-haspopup="true"
+            aria-expanded={Boolean(loadAnchor)}
+            onClick={(ev) => setLoadAnchor(ev.currentTarget)}
+          >
+            <VpnKeyOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+          </CursorIconButton>
+        </Tooltip>
+        <Tooltip title="About this page" placement="bottom">
+          <CursorIconButton
+            type="button"
+            onClick={() => setAboutOpen((v) => !v)}
+            aria-expanded={aboutOpen}
+            aria-controls="graph-page-about"
+            aria-label="Toggle page description"
+          >
+            <InfoOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+          </CursorIconButton>
+        </Tooltip>
       </Box>
 
-      <Collapse in={chromeExpanded}>
-        <Box id="graph-page-chrome" sx={{ flexShrink: 0 }}>
-          <PageHeader
-            eyebrow="Direct tool"
-            title="Graph"
-            description="Use the standalone graph surface for node-focused inspection while keeping the same data model that powers Workspace Graph."
-            actions={
-              <>
-                <CursorSmallButton component={Link} to="/workspace" sx={{ textDecoration: "none" }}>
-                  Workspace
-                </CursorSmallButton>
-                <CursorSmallButton component={Link} to="/corpus" sx={{ textDecoration: "none" }}>
-                  Corpus
-                </CursorSmallButton>
-              </>
-            }
-          />
-
-          <Box
-            component="form"
-            onSubmit={applyWorkId}
-            sx={{ display: "flex", flexWrap: "wrap", gap: 1, alignItems: "flex-end", mb: 2 }}
-          >
-            <TextField
-              label="work_id"
-              value={workIdInput}
-              onChange={(ev) => setWorkIdInput(ev.target.value)}
-              size="small"
-              sx={{
-                flex: "1 1 200px",
-                minWidth: 160,
-                maxWidth: 520,
-                "& .MuiInputBase-input": { fontSize: "0.8125rem" },
-                "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)" },
-              }}
-            />
-            <CursorPrimaryButton type="submit">Load</CursorPrimaryButton>
-          </Box>
-        </Box>
-      </Collapse>
-
-      {!chromeExpanded ? (
-        <Box
-          component="form"
-          onSubmit={applyWorkId}
-          sx={{ flexShrink: 0, display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center", mb: 1 }}
-        >
+      <Popover
+        open={Boolean(loadAnchor)}
+        anchorEl={loadAnchor}
+        onClose={() => setLoadAnchor(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
+        slotProps={{
+          paper: {
+            sx: {
+              mt: 0.75,
+              p: 1.5,
+              minWidth: 280,
+              maxWidth: 420,
+              backgroundColor: "#1a1a1a",
+              border: "1px solid rgba(255,255,255,0.08)",
+            },
+          },
+        }}
+      >
+        <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mb: 1 }}>
+          Optional: paste a UUID to open a specific work. Prefer opening a paper from Workspace or Workspaces.
+        </Typography>
+        <Box component="form" onSubmit={applyWorkId} sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
           <TextField
             label="work_id"
             value={workIdInput}
             onChange={(ev) => setWorkIdInput(ev.target.value)}
             size="small"
+            fullWidth
             sx={{
-              flex: "1 1 180px",
-              minWidth: 140,
-              maxWidth: 400,
               "& .MuiInputBase-input": { fontSize: "0.8125rem" },
               "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)" },
             }}
           />
-          <CursorPrimaryButton type="submit">Load</CursorPrimaryButton>
-          <CursorSmallButton component={Link} to="/workspace" sx={{ textDecoration: "none" }}>
-            Workspace
-          </CursorSmallButton>
+          <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
+            <CursorSmallButton type="button" onClick={() => setLoadAnchor(null)}>
+              Cancel
+            </CursorSmallButton>
+            <CursorPrimaryButton type="submit">Apply</CursorPrimaryButton>
+          </Box>
+        </Box>
+      </Popover>
+
+      <Collapse in={aboutOpen}>
+        <Box id="graph-page-about" sx={{ flexShrink: 0, mb: 0.5 }}>
+          <PageHeader
+            eyebrow="Graph"
+            title="Inspection"
+            description="Use the left rail for Workspaces, Ask, and Evidence. Tips: ?lab=1 diagnostics, ?compact=1 denser UI, ?focus=1 hide side panels."
+          />
+        </Box>
+      </Collapse>
+
+      {!workId.trim() && !workspaceId.trim() ? (
+        <Box sx={{ flexShrink: 0, mb: 0.5 }}>
+          <GraphMissingWorkCallout
+            title="No graph context yet"
+            description="Open a workspace graph (workspace_id) or a single paper (work_id) from Workspaces / Workspace, or use the key icon."
+            footnote="Tip: ?lab=1 expands diagnostics. ?compact=1 or ?focus=1 tighten layout."
+          />
         </Box>
       ) : null}
 
-      {!workId.trim() ? (
-        <GraphMissingWorkCallout
-          title="No graph context yet"
-          description="Load a work_id to inspect graph nodes directly, or open a paper in Workspace and jump here when you need a dedicated graph surface."
-          footnote="Tip: append ?lab=1 to expand diagnostics by default (Graph Lab). Add ?compact=1 for a denser layout, or ?focus=1 to maximize canvas (Graph mode, secondary panels collapsed)."
-        />
-      ) : null}
-
-      {workId.trim() ? (
-        <Box sx={{ flexShrink: 0, mb: 1 }}>
-          <CursorSmallButton
-            type="button"
-            onClick={() => setLinksExpanded((v) => !v)}
-            aria-expanded={linksExpanded}
-            sx={{ mb: linksExpanded ? 1 : 0 }}
-          >
-            {linksExpanded ? "Hide" : "Show"} workspace links
-          </CursorSmallButton>
-          <Collapse in={linksExpanded}>
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-              <CursorSmallButton
-                component={Link}
-                to={buildWorkspaceTracePath(workId, "graph", {
-                  nodeId: selectedNodeId,
-                  edgeId: selectedEdgeId,
-                  chunkFingerprint: trace.chunkFingerprint,
-                  section: trace.section,
-                  citation: trace.citation,
-                })}
-                sx={{ textDecoration: "none" }}
-              >
-                Open Graph in workspace
-              </CursorSmallButton>
-              <CursorSmallButton
-                component={Link}
-                to={buildWorkspaceTracePath(workId, "reader", {
-                  nodeId: selectedNodeId,
-                  edgeId: selectedEdgeId,
-                  chunkFingerprint: trace.chunkFingerprint,
-                  section: trace.section,
-                  citation: trace.citation,
-                })}
-                sx={{ textDecoration: "none" }}
-              >
-                Open Reader in workspace
-              </CursorSmallButton>
-              <CursorSmallButton
-                component={Link}
-                to={buildWorkspaceTracePath(workId, "evidence", {
-                  nodeId: selectedNodeId,
-                  edgeId: selectedEdgeId,
-                  chunkFingerprint: trace.chunkFingerprint,
-                  section: trace.section,
-                  citation: trace.citation,
-                })}
-                sx={{ textDecoration: "none" }}
-              >
-                Open Evidence in workspace
-              </CursorSmallButton>
-              <CursorSmallButton
-                component={Link}
-                to={buildWorkspaceTracePath(workId, "ask", {
-                  nodeId: selectedNodeId,
-                  edgeId: selectedEdgeId,
-                  chunkFingerprint: trace.chunkFingerprint,
-                  section: trace.section,
-                  citation: trace.citation,
-                })}
-                sx={{ textDecoration: "none" }}
-              >
-                Open Ask in workspace
-              </CursorSmallButton>
-            </Box>
-          </Collapse>
-        </Box>
-      ) : null}
-
-      <Box sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+      <Box sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <GraphWorkspacePanel
           workId={workId}
+          workspaceId={workspaceId}
           selectedNodeId={selectedNodeId}
           onSelectNode={handleSelectNode}
           selectedEdgeId={selectedEdgeId}
@@ -266,8 +210,8 @@ export default function GraphPage() {
           compactLayout={compactLayout}
           focusLayout={focus}
           labMode={labMode}
-          title="Graph lab"
-          subtitle="Use this standalone view for node-focused inspection, while Workspace Graph keeps the same context embedded in the main research flow."
+          title=""
+          subtitle={null}
           traceContext={{
             chunkFingerprint: trace.chunkFingerprint,
             section: trace.section,
@@ -276,6 +220,11 @@ export default function GraphPage() {
           }}
         />
       </Box>
+      {workspaceId.trim() ? (
+        <Box sx={{ flexShrink: 0, px: 1, pb: 1 }}>
+          <DeduplicationPanel workspaceId={workspaceId} />
+        </Box>
+      ) : null}
     </Box>
   );
 }

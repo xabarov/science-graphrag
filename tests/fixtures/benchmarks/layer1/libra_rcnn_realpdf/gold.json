@@ -1,27 +1,64 @@
 {
   "case_id": "libra_rcnn_realpdf",
   "schema_version": 1,
-  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated. [gold enriched via scripts/enrich_gold_layer1.py]",
   "work_metadata": {
     "title": "Libra R-CNN: Towards Balanced Learning for Object Detection",
-    "publication_year": null,
+    "publication_year": 2019,
     "abstract_prefix": "Compared with model architectures, the training process, which is also c",
     "doi": null,
-    "arxiv_id": null,
+    "arxiv_id": "1904.02701",
     "venue_name": null,
     "work_type": null
   },
-  "authorships": [],
+  "authorships": [
+    {
+      "name": "Jiangmiao Pang",
+      "affiliations": [
+        "Zhejiang University"
+      ]
+    },
+    {
+      "name": "Kai Chen",
+      "affiliations": [
+        "The Chinese University of Hong Kong"
+      ]
+    },
+    {
+      "name": "Jianping Shi",
+      "affiliations": [
+        "SenseTime Research"
+      ]
+    },
+    {
+      "name": "Huajun Feng",
+      "affiliations": [
+        "Zhejiang University"
+      ]
+    },
+    {
+      "name": "Wanli Ouyang",
+      "affiliations": [
+        "The University of Sydney"
+      ]
+    },
+    {
+      "name": "Dahua Lin",
+      "affiliations": [
+        "The Chinese University of Hong Kong"
+      ]
+    }
+  ],
   "references": {
     "expected_count": 37,
     "min_count": 29,
     "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
     "sample_arxiv_ids": [
-      "1901.07518",
-      "1807.11590",
       "1705.07115",
+      "1711.07971",
+      "1807.11590",
       "1808.07993",
-      "1711.07971"
+      "1901.07518"
     ],
     "sample_dois": []
   },
@@ -90,5 +127,9 @@
     "stratum": "bracket_numbered_realpdf",
     "annotation_kind": "manual",
     "notes": "Bootstrap from eval.references_harness.bibliography_gold_span; main ## References block; monotonic [n] detection; truncated before supplementary."
+  },
+  "quality_thresholds": {
+    "min_authorship_names_f1": 0.7,
+    "min_sample_arxiv_f1": 0.7
   }
 }

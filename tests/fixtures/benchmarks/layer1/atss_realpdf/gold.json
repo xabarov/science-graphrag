@@ -1,17 +1,50 @@
 {
   "case_id": "atss_realpdf",
   "schema_version": 1,
-  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated. [gold enriched via scripts/enrich_gold_layer1.py]",
   "work_metadata": {
     "title": "Bridging the Gap Between Anchor-based and Anchor-free Detection via Adaptive Training Sample Selection",
-    "publication_year": null,
+    "publication_year": 2020,
     "abstract_prefix": "Object detection has been dominated by anchor-based detectors for severa",
     "doi": null,
-    "arxiv_id": null,
+    "arxiv_id": "1912.02424",
     "venue_name": null,
     "work_type": null
   },
-  "authorships": [],
+  "authorships": [
+    {
+      "name": "Shifeng Zhang",
+      "affiliations": [
+        "CBSR, NLPR, CASIA",
+        "SAI, UCAS"
+      ]
+    },
+    {
+      "name": "Cheng Chi",
+      "affiliations": [
+        "AIR, CAS"
+      ]
+    },
+    {
+      "name": "Yongqiang Yao",
+      "affiliations": [
+        "BUPT"
+      ]
+    },
+    {
+      "name": "Zhen Lei",
+      "affiliations": [
+        "CBSR, NLPR, CASIA",
+        "SAI, UCAS"
+      ]
+    },
+    {
+      "name": "Stan Z. Li",
+      "affiliations": [
+        "Westlake University"
+      ]
+    }
+  ],
   "references": {
     "expected_count": 84,
     "min_count": 76,
@@ -115,5 +148,8 @@
     "stratum": "long_numbered_cvpr",
     "annotation_kind": "manual",
     "notes": "Real PDF MD; bibliography lines exclude ## References heading."
+  },
+  "quality_thresholds": {
+    "min_authorship_names_f1": 0.7
   }
 }

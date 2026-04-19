@@ -31,14 +31,14 @@ export default function NotFoundPage() {
       >
         <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: "rgba(255,255,255,0.9)" }}>Recommended next actions</Typography>
         <Typography sx={{ mt: 1, fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.55, maxWidth: 700 }}>
-          Return to the main entry surfaces, reopen the corpus, or continue the last saved workspace if you were in the middle of a research session.
+          Return to the main entry surfaces, reopen Workspaces, or continue the last saved workspace if you were in the middle of a research session.
         </Typography>
         <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
           <CursorPrimaryButton component={Link} to="/" sx={{ textDecoration: "none" }}>
             Go home
           </CursorPrimaryButton>
-          <CursorSmallButton component={Link} to="/corpus" sx={{ textDecoration: "none" }}>
-            Open corpus
+          <CursorSmallButton component={Link} to="/workspaces" sx={{ textDecoration: "none" }}>
+            Workspaces
           </CursorSmallButton>
           {continueTarget ? (
             <CursorSmallButton component={Link} to={continueTarget.path} sx={{ textDecoration: "none" }}>

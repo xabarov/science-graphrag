@@ -1,26 +1,73 @@
 {
   "case_id": "deformable_detr_realpdf",
   "schema_version": 1,
-  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated. [gold enriched via scripts/enrich_gold_layer1.py]",
   "work_metadata": {
     "title": "DEFORMABLE DETR: DEFORMABLE TRANSFORMERS FOR END-TO-END OBJECT DETECTION",
-    "publication_year": null,
+    "publication_year": 2021,
     "abstract_prefix": "DETR has been recently proposed to eliminate the need for many hand-desi",
     "doi": null,
-    "arxiv_id": null,
+    "arxiv_id": "2010.04159",
     "venue_name": null,
     "work_type": null
   },
-  "authorships": [],
+  "authorships": [
+    {
+      "name": "Xizhou Zhu",
+      "affiliations": [
+        "SenseTime Research"
+      ]
+    },
+    {
+      "name": "Weijie Su",
+      "affiliations": [
+        "University of Science and Technology of China",
+        "SenseTime Research"
+      ]
+    },
+    {
+      "name": "Lewei Lu",
+      "affiliations": [
+        "SenseTime Research"
+      ]
+    },
+    {
+      "name": "Bin Li",
+      "affiliations": [
+        "University of Science and Technology of China"
+      ]
+    },
+    {
+      "name": "Xiaogang Wang",
+      "affiliations": [
+        "SenseTime Research",
+        "The Chinese University of Hong Kong"
+      ]
+    },
+    {
+      "name": "Jifeng Dai",
+      "affiliations": [
+        "SenseTime Research"
+      ]
+    }
+  ],
   "references": {
     "expected_count": 44,
     "min_count": 35,
     "notes": "LLM extraction yields ~44 refs on this MD; calibrated from nightly suite.",
     "sample_arxiv_ids": [
-      "2004.08483",
-      "2004.05150",
       "1904.10509",
-      "2006.03555"
+      "1911.02972",
+      "1912.12180",
+      "2003.05997",
+      "2003.07853",
+      "2004.05150",
+      "2004.08483",
+      "2006.03555",
+      "2006.04768",
+      "2006.16236",
+      "2007.14062",
+      "2009.06732"
     ],
     "sample_dois": []
   },
@@ -90,5 +137,9 @@
     "stratum": "author_year_iclr_pdf",
     "annotation_kind": "silver_heuristic",
     "notes": "One logical reference per raw_entry; span excludes ## References heading. Page/footer lines inside the PDF slice are not part of raw_entries; silver_heuristic avoids strict line-for-line join with noisy interleaved lines."
+  },
+  "quality_thresholds": {
+    "min_authorship_names_f1": 0.7,
+    "min_sample_arxiv_f1": 0.7
   }
 }

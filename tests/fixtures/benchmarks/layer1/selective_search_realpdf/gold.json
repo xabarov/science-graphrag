@@ -1,17 +1,43 @@
 {
   "case_id": "selective_search_realpdf",
   "schema_version": 1,
-  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated. [gold enriched via scripts/enrich_gold_layer1.py]",
   "work_metadata": {
     "title": "Selective Search for Object Recognition",
-    "publication_year": null,
+    "publication_year": 2012,
     "abstract_prefix": "This paper addresses the problem of generating possible object locations",
     "doi": null,
     "arxiv_id": null,
     "venue_name": null,
     "work_type": null
   },
-  "authorships": [],
+  "authorships": [
+    {
+      "name": "J.R.R. Uijlings",
+      "affiliations": [
+        "University of Trento, Italy",
+        "University of Amsterdam, the Netherlands"
+      ]
+    },
+    {
+      "name": "K.E.A. van de Sande",
+      "affiliations": [
+        "University of Amsterdam, the Netherlands"
+      ]
+    },
+    {
+      "name": "T. Gevers",
+      "affiliations": [
+        "University of Amsterdam, the Netherlands"
+      ]
+    },
+    {
+      "name": "A.W.M. Smeulders",
+      "affiliations": [
+        "University of Amsterdam, the Netherlands"
+      ]
+    }
+  ],
   "references": {
     "expected_count": 40,
     "min_count": 32,
@@ -79,5 +105,8 @@
     "stratum": "bracket_numbered_realpdf",
     "annotation_kind": "manual",
     "notes": "Bootstrap from eval.references_harness.bibliography_gold_span; main ## References block; monotonic [n] detection; truncated before supplementary."
+  },
+  "quality_thresholds": {
+    "min_authorship_names_f1": 0.7
   }
 }

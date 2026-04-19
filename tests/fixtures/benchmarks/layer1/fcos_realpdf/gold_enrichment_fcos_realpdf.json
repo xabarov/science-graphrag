@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "case_id": "fcos_realpdf",
+  "generated_at_utc": "2026-04-19T16:09:30.180232+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [
+      "1509.04874",
+      "1701.06659",
+      "1804.02767"
+    ],
+    "count": 3,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": null,
+    "arxiv_id": null,
+    "doi": null,
+    "authors": [
+      {
+        "name": "Zhi Tian",
+        "affiliations": [
+          "The University of Adelaide, Australia"
+        ]
+      },
+      {
+        "name": "Chunhua Shen",
+        "affiliations": [
+          "The University of Adelaide, Australia"
+        ]
+      },
+      {
+        "name": "Hao Chen",
+        "affiliations": [
+          "The University of Adelaide, Australia"
+        ]
+      },
+      {
+        "name": "Tong He",
+        "affiliations": [
+          "The University of Adelaide, Australia"
+        ]
+      }
+    ]
+  }
+}

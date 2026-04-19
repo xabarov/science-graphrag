@@ -1,6 +1,6 @@
 # Benchmark family: `references_resolution` (v1 draft)
 
-**Status:** spec + fixture placeholder only — runner wiring and CI/gate come after the first frozen gold pack.
+**Status:** implemented **advisory v1 harness** (deterministic `synthetic_predictions` in gold for CI until a Neo4j-backed resolver lands). Runner: `science-graphrag-references-resolution-benchmark`, code under `eval/references_resolution/`, fixtures `tests/fixtures/benchmarks/references_resolution/`.
 
 Companion: [benchmark-expansion-v1.md](../benchmarks/benchmark-expansion-v1.md) (first family in the expansion queue).
 
@@ -25,6 +25,8 @@ Fixture root: `tests/fixtures/benchmarks/references_resolution/<case_id>/`.
 | `description` | Human note for triage. |
 | `expected_resolutions` | List of objects: `{ "raw_citation_span_id": "…", "canonical_key": "doi:…" \| "arxiv:…" \| "work_id:…" }`. |
 | `allow_unresolved` | Optional list of span ids that may remain unresolved in merge-safe tiers. |
+| `synthetic_predictions` | Optional list of `{raw_citation_span_id, canonical_key}` used by the **v1 advisory harness** in CI until graph-backed predictions are wired (must match `expected_resolutions` for passing non-contract cases). |
+| `min_resolution_recall` | Optional float threshold on recall (default `1.0`). |
 
 ## Failure modes
 

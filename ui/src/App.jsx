@@ -5,7 +5,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 
 import HomePage from "./pages/HomePage.jsx";
 import AdminEntryPage from "./pages/AdminEntryPage.jsx";
-import CorpusPage from "./pages/CorpusPage.jsx";
+import WorkspacesPage from "./pages/WorkspacesPage.jsx";
 import ReaderPage from "./pages/ReaderPage.jsx";
 import AskPage from "./pages/AskPage.jsx";
 import EvidencePage from "./pages/EvidencePage.jsx";
@@ -57,9 +57,10 @@ export default function App() {
   return (
     <Routes>
       <Route element={<DashboardLayout />}>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/home" element={<Navigate to="/" replace />} />
-        <Route path="/corpus" element={<CorpusPage />} />
+        <Route path="/" element={<Navigate to="/workspaces" replace />} />
+        <Route path="/home" element={<HomePage />} />
+        <Route path="/workspaces" element={<WorkspacesPage />} />
+        <Route path="/corpus" element={<Navigate to="/workspaces" replace />} />
         <Route
           path="/workspace"
           element={

@@ -1,24 +1,31 @@
 {
   "case_id": "fast_rcnn_realpdf",
   "schema_version": 1,
-  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated. [gold enriched via scripts/enrich_gold_layer1.py]",
   "work_metadata": {
     "title": "Fast R-CNN",
-    "publication_year": null,
+    "publication_year": 2015,
     "abstract_prefix": "This paper proposes a Fast Region-based Convolutional Network method (Fa",
     "doi": null,
-    "arxiv_id": null,
+    "arxiv_id": "1504.08083",
     "venue_name": null,
     "work_type": null
   },
-  "authorships": [],
+  "authorships": [
+    {
+      "name": "Ross Girshick",
+      "affiliations": [
+        "Microsoft Research"
+      ]
+    }
+  ],
   "references": {
     "expected_count": 30,
     "min_count": 22,
     "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
     "sample_arxiv_ids": [
-      "1502.05082",
-      "1405.0312"
+      "1405.0312",
+      "1502.05082"
     ],
     "sample_dois": []
   },
@@ -72,5 +79,9 @@
     "stratum": "bracket_numbered_realpdf",
     "annotation_kind": "manual",
     "notes": "Bootstrap from eval.references_harness.bibliography_gold_span; main ## References block; monotonic [n] detection; truncated before supplementary."
+  },
+  "quality_thresholds": {
+    "min_authorship_names_f1": 0.7,
+    "min_sample_arxiv_f1": 0.7
   }
 }

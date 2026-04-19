@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "case_id": "cascade_rcnn_realpdf",
+  "generated_at_utc": "2026-04-19T16:08:49.876099+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [
+      "1409.1556",
+      "1611.10012",
+      "1702.07054"
+    ],
+    "count": 3,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": 2017,
+    "arxiv_id": "1712.00726",
+    "doi": null,
+    "authors": [
+      {
+        "name": "Zhaowei Cai",
+        "affiliations": [
+          "UC San Diego"
+        ]
+      }
+    ]
+  }
+}

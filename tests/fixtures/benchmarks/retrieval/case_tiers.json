@@ -1,4 +1,10 @@
 {
+  "smoke": [
+    "cv_corpus_methods_overview",
+    "single_stage_detectors",
+    "yolo_family_keywords",
+    "retrieval_eval_stub_fingerprints"
+  ],
   "merge_safe_contract": [
     "cv_corpus_methods_overview",
     "single_stage_detectors",

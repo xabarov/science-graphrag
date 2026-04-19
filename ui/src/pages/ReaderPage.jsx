@@ -39,22 +39,11 @@ export default function ReaderPage() {
   return (
     <Box sx={{ p: 2, ...mainShellContentSx }}>
       <PageHeader
-        eyebrow="Direct tool"
-        title="Reader"
+        eyebrow="Reader"
+        title="Article"
         description={
           <>
-            Load a specific <code style={{ color: "rgba(129,140,248,0.95)" }}>work_id</code> for focused reading. Prefer <strong>Workspace → Reader</strong>{" "}
-            when you want to stay inside the full research flow.
-          </>
-        }
-        actions={
-          <>
-            <CursorSmallButton component={Link} to="/workspace" sx={{ textDecoration: "none" }}>
-              Workspace
-            </CursorSmallButton>
-            <CursorSmallButton component={Link} to="/corpus" sx={{ textDecoration: "none" }}>
-              Corpus
-            </CursorSmallButton>
+            Read extracted text for a <code style={{ color: "rgba(129,140,248,0.95)" }}>work_id</code>. Open from Workspace for the usual flow.
           </>
         }
       />
@@ -86,7 +75,7 @@ export default function ReaderPage() {
         >
           <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)" }}>No work loaded</Typography>
           <Typography sx={{ mt: 0.75, fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)" }}>
-            Enter a `work_id` above or start from the corpus to open a paper in workspace-first mode.
+            Enter a `work_id` above or start from Workspaces to open a paper.
           </Typography>
         </Box>
       ) : null}

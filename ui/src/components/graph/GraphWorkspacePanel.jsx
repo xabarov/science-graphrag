@@ -1,13 +1,20 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
 import Collapse from "@mui/material/Collapse";
+import Menu from "@mui/material/Menu";
 import Slider from "@mui/material/Slider";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import BugReportOutlinedIcon from "@mui/icons-material/BugReportOutlined";
+import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
+import TuneOutlinedIcon from "@mui/icons-material/TuneOutlined";
+import ViewSidebarOutlinedIcon from "@mui/icons-material/ViewSidebarOutlined";
+import WarningAmberOutlinedIcon from "@mui/icons-material/WarningAmberOutlined";
 
-import { CursorSmallButton } from "../common/index.js";
+import { CursorIconButton, CursorSmallButton } from "../common/index.js";
 import GraphVisualization from "./GraphVisualization.jsx";
 import GraphCanvasMvp from "./GraphCanvasMvp.jsx";
 import GraphFlowView from "./GraphFlowView.jsx";
@@ -15,6 +22,7 @@ import GraphDetailPanel from "./GraphDetailPanel.jsx";
 import GraphTypeLegend from "./GraphTypeLegend.jsx";
 import { GraphErrorAlert, GraphLoadingInline, GraphMissingWorkInline } from "./graphShellStates.jsx";
 import { fetchWorkGraphNormalized } from "./graphAdapter.js";
+import { getWorkspaceGraph } from "../../utils/workspaceStore.js";
 import { capGraphForUi } from "./graphUiLimits.js";
 import { deriveInspectorDetail } from "./graphInspectorModel.js";
 import {
@@ -38,6 +46,7 @@ import {
 /**
  * @param {{
  *   workId: string,
+ *   workspaceId?: string,
  *   selectedNodeId?: string,
  *   onSelectNode?: (nodeId: string) => void,
  *   selectedEdgeId?: string,
@@ -94,6 +103,7 @@ function readBoolLs(key, fallback) {
 
 export default function GraphWorkspacePanel({
   workId,
+  workspaceId = "",
   selectedNodeId = "",
   onSelectNode,
   selectedEdgeId = "",
@@ -106,40 +116,45 @@ export default function GraphWorkspacePanel({
   traceContext = {},
   labMode = false,
 }) {
+  const standaloneMax = mode === "standalone";
+
   const [graph, setGraph] = useState(() => normalizeGraphPayload(null));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [vizMode, setVizMode] = useState(
-    /** @type {"cards" | "canvas" | "flow"} */ () => readVizMode(),
+    /** @type {"cards" | "canvas" | "flow"} */ () => (standaloneMax ? "canvas" : readVizMode()),
   );
   const [canvasLayoutMode, setCanvasLayoutMode] = useState(
-    /** @type {"circle" | "force"} */ () => readCanvasLayoutMode(),
+    /** @type {"circle" | "force"} */ () => (standaloneMax ? "force" : readCanvasLayoutMode()),
   );
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(labMode);
+  const [detailWidthMenuAnchor, setDetailWidthMenuAnchor] = useState(null);
 
-  const standaloneMax = mode === "standalone";
   const [detailMinPx, setDetailMinPx] = useState(() => readGraphDetailColumnPxStored());
 
   const [titleBlockOpen, setTitleBlockOpen] = useState(() => {
     if (!standaloneMax) return true;
     if (focusLayout) return false;
-    return readBoolLs(LS_STANDALONE_TITLE, !compactLayout);
+    return readBoolLs(LS_STANDALONE_TITLE, false);
   });
   const [legendOpen, setLegendOpen] = useState(() => {
     if (!standaloneMax) return true;
     if (focusLayout) return false;
-    return readBoolLs(LS_STANDALONE_LEGEND, !compactLayout);
+    return readBoolLs(LS_STANDALONE_LEGEND, false);
   });
   const [alertsOpen, setAlertsOpen] = useState(() => {
     if (!standaloneMax) return true;
     if (focusLayout) return false;
-    return readBoolLs(LS_STANDALONE_ALERTS, !compactLayout);
+    return readBoolLs(LS_STANDALONE_ALERTS, false);
   });
   const [detailsVisible, setDetailsVisible] = useState(() => {
     if (!standaloneMax) return true;
     if (focusLayout) return false;
     return readBoolLs(LS_STANDALONE_DETAILS, true);
   });
+
+  const effectiveVizMode = standaloneMax ? "canvas" : vizMode;
+  const effectiveCanvasLayout = standaloneMax ? "force" : canvasLayoutMode;
 
   useEffect(() => {
     setDiagnosticsOpen(labMode);
@@ -191,23 +206,27 @@ export default function GraphWorkspacePanel({
   }, [standaloneMax, detailMinPx]);
 
   useEffect(() => {
+    if (standaloneMax) return;
     try {
       window.localStorage.setItem(LS_GRAPH_CANVAS_LAYOUT_MODE, canvasLayoutMode);
     } catch {
       /* ignore */
     }
-  }, [canvasLayoutMode]);
+  }, [canvasLayoutMode, standaloneMax]);
 
   useEffect(() => {
+    if (standaloneMax) return;
     try {
       window.localStorage.setItem(LS_GRAPH_VIZ_MODE, vizMode);
     } catch {
       /* ignore */
     }
-  }, [vizMode]);
+  }, [vizMode, standaloneMax]);
 
   useEffect(() => {
-    if (!workId.trim()) {
+    const ws = String(workspaceId || "").trim();
+    const w = String(workId || "").trim();
+    if (!ws && !w) {
       setGraph(normalizeGraphPayload(null));
       setError(null);
       return;
@@ -217,7 +236,13 @@ export default function GraphWorkspacePanel({
       setLoading(true);
       setError(null);
       try {
-        const normalized = await fetchWorkGraphNormalized(workId);
+        let normalized;
+        if (ws) {
+          const raw = await getWorkspaceGraph(ws, { neighborLimit: 200 });
+          normalized = normalizeGraphPayload(raw);
+        } else {
+          normalized = await fetchWorkGraphNormalized(w);
+        }
         if (cancelled) return;
         setGraph(normalized);
       } catch (err) {
@@ -231,7 +256,7 @@ export default function GraphWorkspacePanel({
     return () => {
       cancelled = true;
     };
-  }, [workId]);
+  }, [workId, workspaceId]);
 
   const resolvedSelectedEdgeId = useMemo(
     () => resolveSelectedEdgeId(graph, normalizeGraphEdgeId(selectedEdgeId)),
@@ -280,9 +305,7 @@ export default function GraphWorkspacePanel({
   const traceSummary = describeTraceabilityState(traceContext);
 
   const mdDetailGridColumns = standaloneMax
-    ? compactLayout
-      ? `minmax(0, 1.7fr) 6px minmax(${detailMinPx}px, 1fr)`
-      : `minmax(0, 2fr) 6px minmax(${detailMinPx}px, 1fr)`
+    ? `minmax(0, 1fr) 6px ${detailMinPx}px`
     : `minmax(0, 1.7fr) minmax(280px, 1fr)`;
 
   const handleDetailSplitPointerDown = useCallback(
@@ -327,12 +350,14 @@ export default function GraphWorkspacePanel({
   );
 
   const rootSx = standaloneMax
-    ? { flex: 1, minHeight: 0, display: "flex", flexDirection: "column", width: "100%" }
+    ? { flex: 1, minHeight: 0, display: "flex", flexDirection: "column", width: "100%", overflow: "hidden" }
     : {};
+
+  const hasNormalizationIssues = graph.warnings.length > 0 || capWarnings.length > 0;
 
   return (
     <Box sx={rootSx}>
-      {standaloneMax ? (
+      {standaloneMax && title ? (
         <Box sx={{ flexShrink: 0, mb: 1 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 0.5 }}>
             <CursorSmallButton
@@ -362,7 +387,8 @@ export default function GraphWorkspacePanel({
             ) : null}
           </Collapse>
         </Box>
-      ) : (
+      ) : null}
+      {!standaloneMax ? (
         <Box sx={{ mb: 2 }}>
           <Typography sx={{ fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>{title}</Typography>
           {subtitle ? (
@@ -373,55 +399,18 @@ export default function GraphWorkspacePanel({
             )
           ) : null}
         </Box>
-      )}
+      ) : null}
 
-      {!workId.trim() ? <GraphMissingWorkInline message="Pick a work to load graph context." /> : null}
+      {!workId.trim() && !String(workspaceId || "").trim() ? (
+        <GraphMissingWorkInline message="Pick a work or open a workspace graph (workspace_id)." />
+      ) : null}
 
       {loading ? <GraphLoadingInline /> : null}
 
       {error ? <GraphErrorAlert>{error}</GraphErrorAlert> : null}
 
-      {!loading && !error && workId.trim() ? (
+      {!loading && !error && (workId.trim() || String(workspaceId || "").trim()) ? (
         <>
-          {standaloneMax && (graph.warnings.length > 0 || capWarnings.length > 0) ? (
-            <Box sx={{ flexShrink: 0, mb: 1 }}>
-              <CursorSmallButton
-                type="button"
-                onClick={() => setAlertsOpen((o) => !o)}
-                aria-expanded={alertsOpen}
-                sx={{ mb: 0.5 }}
-              >
-                {alertsOpen ? "Hide" : "Show"} normalization / UI cap messages
-              </CursorSmallButton>
-              <Collapse in={alertsOpen}>
-                {graph.warnings.length > 0 ? (
-                  <Alert severity="info" sx={{ mb: 2, fontSize: "0.8125rem", backgroundColor: "rgba(255,255,255,0.04)" }}>
-                    <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, mb: 0.5 }}>Graph data was normalized</Typography>
-                    <Box component="ul" sx={{ m: 0, pl: 2.25, mb: 0 }}>
-                      {graph.warnings.map((line, idx) => (
-                        <Typography key={`graph-warn-${idx}`} component="li" sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.75)" }}>
-                          {line}
-                        </Typography>
-                      ))}
-                    </Box>
-                  </Alert>
-                ) : null}
-                {capWarnings.length > 0 ? (
-                  <Alert severity="info" sx={{ mb: 2, fontSize: "0.8125rem", backgroundColor: "rgba(99,102,241,0.08)" }}>
-                    <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, mb: 0.5 }}>Large graph — UI cap</Typography>
-                    <Box component="ul" sx={{ m: 0, pl: 2.25, mb: 0 }}>
-                      {capWarnings.map((line, idx) => (
-                        <Typography key={`graph-cap-${idx}`} component="li" sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.75)" }}>
-                          {line}
-                        </Typography>
-                      ))}
-                    </Box>
-                  </Alert>
-                ) : null}
-              </Collapse>
-            </Box>
-          ) : null}
-
           {!standaloneMax && graph.warnings.length > 0 ? (
             <Alert severity="info" sx={{ mb: 2, fontSize: "0.8125rem", backgroundColor: "rgba(255,255,255,0.04)" }}>
               <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, mb: 0.5 }}>Graph data was normalized</Typography>
@@ -451,152 +440,333 @@ export default function GraphWorkspacePanel({
           <Box
             sx={
               standaloneMax
-                ? { flex: 1, minHeight: 0, minWidth: 0, display: "flex", flexDirection: "column" }
+                ? { flex: 1, minHeight: 0, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden" }
                 : {}
             }
           >
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 1.5, alignItems: "center", flexShrink: 0 }}>
-            {standaloneMax ? (
-              <>
-                <CursorSmallButton
-                  type="button"
-                  onClick={() => setDetailsVisible((v) => !v)}
-                  aria-pressed={detailsVisible}
+          {standaloneMax ? (
+            <>
+              <Box
+                sx={{
+                  flexShrink: 0,
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  gap: 0.75,
+                  mb: compactLayout ? 0.5 : 0.75,
+                  pb: 0.5,
+                  borderBottom: "1px solid rgba(255,255,255,0.06)",
+                }}
+              >
+                <Chip
+                  size="small"
+                  label={`${graph.nodeCount} nodes`}
+                  sx={{
+                    height: 22,
+                    fontSize: "0.72rem",
+                    backgroundColor: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    color: "rgba(255,255,255,0.75)",
+                  }}
+                />
+                <Chip
+                  size="small"
+                  label={`${graph.edgeCount} edges`}
+                  sx={{
+                    height: 22,
+                    fontSize: "0.72rem",
+                    backgroundColor: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    color: "rgba(255,255,255,0.75)",
+                  }}
+                />
+                <Tooltip
+                  title={
+                    graph.meta?.semantic_available
+                      ? "Method/Dataset links present (USES_METHOD / EVALUATED_ON)."
+                      : "No Method/Dataset layer for this work yet."
+                  }
+                  placement="bottom"
+                  enterDelay={400}
                 >
-                  {detailsVisible ? "Hide" : "Show"} details panel
-                </CursorSmallButton>
-                <CursorSmallButton type="button" onClick={() => setLegendOpen((o) => !o)} aria-expanded={legendOpen}>
-                  {legendOpen ? "Hide" : "Show"} type legend
-                </CursorSmallButton>
-                {detailsVisible ? (
-                  <Box
+                  <Chip
+                    size="small"
+                    label={`sem: ${String(Boolean(graph.meta?.semantic_available))}`}
                     sx={{
-                      flex: "1 1 220px",
-                      minWidth: 180,
-                      maxWidth: 400,
-                      px: 0.5,
-                      alignSelf: "center",
+                      height: 22,
+                      fontSize: "0.72rem",
+                      backgroundColor: "rgba(99, 102, 241, 0.1)",
+                      border: "1px solid rgba(99, 102, 241, 0.25)",
+                      color: "rgba(129,140,248,0.92)",
+                      cursor: "help",
                     }}
+                  />
+                </Tooltip>
+                <Box sx={{ flex: 1, minWidth: 8 }} />
+                <Tooltip title={detailsVisible ? "Hide details panel" : "Show details panel"} placement="bottom">
+                  <CursorIconButton
+                    type="button"
+                    onClick={() => setDetailsVisible((v) => !v)}
+                    aria-pressed={detailsVisible}
+                    aria-label="Toggle details panel"
+                    sx={
+                      detailsVisible
+                        ? {
+                            backgroundColor: "rgba(99, 102, 241, 0.15)",
+                            borderColor: "rgba(99, 102, 241, 0.3)",
+                            color: "rgba(129,140,248,0.92)",
+                          }
+                        : {}
+                    }
                   >
-                    <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.45)", mb: 0.25 }}>
-                      Detail column min width ({detailMinPx}px)
-                    </Typography>
-                    <Slider
-                      size="small"
-                      value={detailMinPx}
-                      min={GRAPH_DETAIL_COLUMN_PX_MIN}
-                      max={GRAPH_DETAIL_COLUMN_PX_MAX}
-                      step={GRAPH_DETAIL_COLUMN_PX_STEP}
-                      onChange={(_, v) => setDetailMinPx(clampGraphDetailColumnPx(v))}
-                      sx={{
-                        color: "rgba(129,140,248,0.85)",
-                        py: 0.25,
-                        "& .MuiSlider-thumb": { width: 12, height: 12 },
-                        "& .MuiSlider-track": { border: "none" },
-                      }}
-                      aria-label="Detail column minimum width"
-                    />
-                  </Box>
+                    <ViewSidebarOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+                  </CursorIconButton>
+                </Tooltip>
+                <Tooltip title={legendOpen ? "Hide type legend" : "Show type legend"} placement="bottom">
+                  <CursorIconButton
+                    type="button"
+                    onClick={() => setLegendOpen((o) => !o)}
+                    aria-expanded={legendOpen}
+                    aria-label="Toggle type legend"
+                    sx={
+                      legendOpen
+                        ? {
+                            backgroundColor: "rgba(99, 102, 241, 0.15)",
+                            borderColor: "rgba(99, 102, 241, 0.3)",
+                            color: "rgba(129,140,248,0.92)",
+                          }
+                        : {}
+                    }
+                  >
+                    <CategoryOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+                  </CursorIconButton>
+                </Tooltip>
+                <Tooltip title="Detail column width" placement="bottom">
+                  <span>
+                    <CursorIconButton
+                      type="button"
+                      disabled={!detailsVisible}
+                      aria-label="Adjust detail column width"
+                      aria-haspopup="true"
+                      aria-expanded={Boolean(detailWidthMenuAnchor)}
+                      onClick={(ev) => setDetailWidthMenuAnchor(ev.currentTarget)}
+                    >
+                      <TuneOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+                    </CursorIconButton>
+                  </span>
+                </Tooltip>
+                <Menu
+                  anchorEl={detailWidthMenuAnchor}
+                  open={Boolean(detailWidthMenuAnchor)}
+                  onClose={() => setDetailWidthMenuAnchor(null)}
+                  anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                  transformOrigin={{ vertical: "top", horizontal: "right" }}
+                  slotProps={{
+                    paper: {
+                      sx: {
+                        mt: 0.5,
+                        px: 1.5,
+                        py: 1.25,
+                        minWidth: 240,
+                        backgroundColor: "#1a1a1a",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                      },
+                    },
+                  }}
+                >
+                  <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.45)", mb: 0.5 }}>
+                    Detail column width ({detailMinPx}px)
+                  </Typography>
+                  <Slider
+                    size="small"
+                    value={detailMinPx}
+                    min={GRAPH_DETAIL_COLUMN_PX_MIN}
+                    max={GRAPH_DETAIL_COLUMN_PX_MAX}
+                    step={GRAPH_DETAIL_COLUMN_PX_STEP}
+                    onChange={(_, v) => setDetailMinPx(clampGraphDetailColumnPx(v))}
+                    sx={{
+                      color: "rgba(129,140,248,0.85)",
+                      py: 0.25,
+                      "& .MuiSlider-thumb": { width: 12, height: 12 },
+                      "& .MuiSlider-track": { border: "none" },
+                    }}
+                    aria-label="Detail column width"
+                  />
+                </Menu>
+                {hasNormalizationIssues ? (
+                  <Tooltip title="Normalization / UI cap messages" placement="bottom">
+                    <CursorIconButton
+                      type="button"
+                      onClick={() => setAlertsOpen((o) => !o)}
+                      aria-expanded={alertsOpen}
+                      aria-label="Toggle normalization messages"
+                      sx={
+                        alertsOpen
+                          ? {
+                              backgroundColor: "rgba(245, 158, 11, 0.12)",
+                              borderColor: "rgba(245, 158, 11, 0.35)",
+                              color: "rgba(251, 191, 36, 0.95)",
+                            }
+                          : {}
+                      }
+                    >
+                      <WarningAmberOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+                    </CursorIconButton>
+                  </Tooltip>
                 ) : null}
-              </>
-            ) : null}
-            <CursorSmallButton
-              type="button"
-              onClick={() => setVizMode("cards")}
-              sx={
-                vizMode === "cards"
-                  ? {
-                      backgroundColor: "rgba(99, 102, 241, 0.15)",
-                      borderColor: "rgba(99, 102, 241, 0.3)",
-                      color: "rgba(129,140,248,0.92)",
+                <Tooltip title={diagnosticsOpen ? "Hide diagnostics JSON" : "Show diagnostics JSON"} placement="bottom">
+                  <CursorIconButton
+                    type="button"
+                    onClick={() => setDiagnosticsOpen((o) => !o)}
+                    aria-pressed={diagnosticsOpen || labMode}
+                    aria-label="Toggle diagnostics"
+                    disabled={labMode}
+                    sx={
+                      diagnosticsOpen || labMode
+                        ? {
+                            backgroundColor: "rgba(99, 102, 241, 0.15)",
+                            borderColor: "rgba(99, 102, 241, 0.3)",
+                            color: "rgba(129,140,248,0.92)",
+                          }
+                        : {}
                     }
-                  : {}
-              }
-            >
-              Cards
-            </CursorSmallButton>
-            <CursorSmallButton
-              type="button"
-              onClick={() => setVizMode("canvas")}
-              sx={
-                vizMode === "canvas"
-                  ? {
-                      backgroundColor: "rgba(99, 102, 241, 0.15)",
-                      borderColor: "rgba(99, 102, 241, 0.3)",
-                      color: "rgba(129,140,248,0.92)",
-                    }
-                  : {}
-              }
-            >
-              Graph
-            </CursorSmallButton>
-            <CursorSmallButton
-              type="button"
-              onClick={() => setVizMode("flow")}
-              sx={
-                vizMode === "flow"
-                  ? {
-                      backgroundColor: "rgba(99, 102, 241, 0.15)",
-                      borderColor: "rgba(99, 102, 241, 0.3)",
-                      color: "rgba(129,140,248,0.92)",
-                    }
-                  : {}
-              }
-            >
-              Flow
-            </CursorSmallButton>
-            {vizMode === "canvas" ? (
-              <>
-                <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.45)", mx: 0.25 }}>Canvas</Typography>
-                <Tooltip
-                  title="Static ring layout: pan and zoom only. Dragging a node switches to Force automatically."
-                  placement="top"
-                  enterDelay={400}
-                >
-                  <span>
-                    <CursorSmallButton
-                      type="button"
-                      onClick={() => setCanvasLayoutMode("circle")}
-                      sx={
-                        canvasLayoutMode === "circle"
-                          ? {
-                              backgroundColor: "rgba(99, 102, 241, 0.15)",
-                              borderColor: "rgba(99, 102, 241, 0.3)",
-                              color: "rgba(129,140,248,0.92)",
-                            }
-                          : {}
-                      }
-                    >
-                      Circle
-                    </CursorSmallButton>
-                  </span>
+                  >
+                    <BugReportOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+                  </CursorIconButton>
                 </Tooltip>
-                <Tooltip
-                  title="Force-directed layout: drag nodes to rearrange; physics reheats after moves."
-                  placement="top"
-                  enterDelay={400}
-                >
-                  <span>
-                    <CursorSmallButton
-                      type="button"
-                      onClick={() => setCanvasLayoutMode("force")}
-                      sx={
-                        canvasLayoutMode === "force"
-                          ? {
-                              backgroundColor: "rgba(99, 102, 241, 0.15)",
-                              borderColor: "rgba(99, 102, 241, 0.3)",
-                              color: "rgba(129,140,248,0.92)",
-                            }
-                          : {}
+              </Box>
+              {hasNormalizationIssues ? (
+                <Collapse in={alertsOpen}>
+                  <Box sx={{ flexShrink: 0, mb: 0.75 }}>
+                    {graph.warnings.length > 0 ? (
+                      <Alert severity="info" sx={{ mb: 1, fontSize: "0.8125rem", backgroundColor: "rgba(255,255,255,0.04)" }}>
+                        <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, mb: 0.5 }}>Graph data was normalized</Typography>
+                        <Box component="ul" sx={{ m: 0, pl: 2.25, mb: 0 }}>
+                          {graph.warnings.map((line, idx) => (
+                            <Typography key={`graph-warn-${idx}`} component="li" sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.75)" }}>
+                              {line}
+                            </Typography>
+                          ))}
+                        </Box>
+                      </Alert>
+                    ) : null}
+                    {capWarnings.length > 0 ? (
+                      <Alert severity="info" sx={{ mb: 0, fontSize: "0.8125rem", backgroundColor: "rgba(99,102,241,0.08)" }}>
+                        <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, mb: 0.5 }}>Large graph — UI cap</Typography>
+                        <Box component="ul" sx={{ m: 0, pl: 2.25, mb: 0 }}>
+                          {capWarnings.map((line, idx) => (
+                            <Typography key={`graph-cap-${idx}`} component="li" sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.75)" }}>
+                              {line}
+                            </Typography>
+                          ))}
+                        </Box>
+                      </Alert>
+                    ) : null}
+                  </Box>
+                </Collapse>
+              ) : null}
+            </>
+          ) : null}
+          {!standaloneMax ? (
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 1.5, alignItems: "center", flexShrink: 0 }}>
+              <CursorSmallButton
+                type="button"
+                onClick={() => setVizMode("cards")}
+                sx={
+                  vizMode === "cards"
+                    ? {
+                        backgroundColor: "rgba(99, 102, 241, 0.15)",
+                        borderColor: "rgba(99, 102, 241, 0.3)",
+                        color: "rgba(129,140,248,0.92)",
                       }
-                    >
-                      Force
-                    </CursorSmallButton>
-                  </span>
-                </Tooltip>
-              </>
-            ) : null}
-          </Box>
+                    : {}
+                }
+              >
+                Cards
+              </CursorSmallButton>
+              <CursorSmallButton
+                type="button"
+                onClick={() => setVizMode("canvas")}
+                sx={
+                  vizMode === "canvas"
+                    ? {
+                        backgroundColor: "rgba(99, 102, 241, 0.15)",
+                        borderColor: "rgba(99, 102, 241, 0.3)",
+                        color: "rgba(129,140,248,0.92)",
+                      }
+                    : {}
+                }
+              >
+                Graph
+              </CursorSmallButton>
+              <CursorSmallButton
+                type="button"
+                onClick={() => setVizMode("flow")}
+                sx={
+                  vizMode === "flow"
+                    ? {
+                        backgroundColor: "rgba(99, 102, 241, 0.15)",
+                        borderColor: "rgba(99, 102, 241, 0.3)",
+                        color: "rgba(129,140,248,0.92)",
+                      }
+                    : {}
+                }
+              >
+                Flow
+              </CursorSmallButton>
+              {vizMode === "canvas" ? (
+                <>
+                  <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.45)", mx: 0.25 }}>Canvas</Typography>
+                  <Tooltip
+                    title="Static ring layout: pan and zoom only. Dragging a node switches to Force automatically."
+                    placement="top"
+                    enterDelay={400}
+                  >
+                    <span>
+                      <CursorSmallButton
+                        type="button"
+                        onClick={() => setCanvasLayoutMode("circle")}
+                        sx={
+                          canvasLayoutMode === "circle"
+                            ? {
+                                backgroundColor: "rgba(99, 102, 241, 0.15)",
+                                borderColor: "rgba(99, 102, 241, 0.3)",
+                                color: "rgba(129,140,248,0.92)",
+                              }
+                            : {}
+                        }
+                      >
+                        Circle
+                      </CursorSmallButton>
+                    </span>
+                  </Tooltip>
+                  <Tooltip
+                    title="Force-directed layout: drag nodes to rearrange; physics reheats after moves."
+                    placement="top"
+                    enterDelay={400}
+                  >
+                    <span>
+                      <CursorSmallButton
+                        type="button"
+                        onClick={() => setCanvasLayoutMode("force")}
+                        sx={
+                          canvasLayoutMode === "force"
+                            ? {
+                                backgroundColor: "rgba(99, 102, 241, 0.15)",
+                                borderColor: "rgba(99, 102, 241, 0.3)",
+                                color: "rgba(129,140,248,0.92)",
+                              }
+                            : {}
+                        }
+                      >
+                        Force
+                      </CursorSmallButton>
+                    </span>
+                  </Tooltip>
+                </>
+              ) : null}
+            </Box>
+          ) : null}
 
           {standaloneMax ? (
             <Collapse in={legendOpen}>
@@ -634,7 +804,7 @@ export default function GraphWorkspacePanel({
                 height: standaloneMax ? "100%" : "100%",
               }}
             >
-              {vizMode === "cards" ? (
+              {effectiveVizMode === "cards" ? (
                 <GraphVisualization
                   graph={displayGraph}
                   selectedNodeId={resolvedSelectedNodeId}
@@ -644,7 +814,7 @@ export default function GraphWorkspacePanel({
                   }}
                   mode={mode}
                 />
-              ) : vizMode === "flow" ? (
+              ) : effectiveVizMode === "flow" ? (
                 <Box sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
                   <GraphFlowView
                     graph={displayGraph}
@@ -664,8 +834,8 @@ export default function GraphWorkspacePanel({
                 <Box sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
                   <GraphCanvasMvp
                     graph={displayGraph}
-                    layoutMode={canvasLayoutMode}
-                    onCanvasLayoutModeChange={setCanvasLayoutMode}
+                    layoutMode={effectiveCanvasLayout}
+                    onCanvasLayoutModeChange={standaloneMax ? undefined : setCanvasLayoutMode}
                     selectedNodeId={resolvedSelectedNodeId}
                     selectedEdgeId={resolvedSelectedEdgeId}
                     onSelectNode={(nodeId) => {
@@ -717,40 +887,42 @@ export default function GraphWorkspacePanel({
           </Box>
           </Box>
 
-          <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1, flexShrink: 0 }}>
-            <Box sx={{ px: 1, py: 0.5, borderRadius: "999px", backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
-              <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.65)" }}>nodes: {graph.nodeCount}</Typography>
-            </Box>
-            <Box sx={{ px: 1, py: 0.5, borderRadius: "999px", backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
-              <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.65)" }}>edges: {graph.edgeCount}</Typography>
-            </Box>
-            <Tooltip
-              title={
-                graph.meta?.semantic_available
-                  ? "This work has Method/Dataset links in Neo4j (USES_METHOD / EVALUATED_ON from semantic extraction)."
-                  : "No Method/Dataset layer for this work yet. That is normal if semantic extraction was off, the LLM key was missing, or confidence stayed below the graph threshold."
-              }
-              placement="top"
-              enterDelay={400}
-            >
-              <Box
-                component="span"
-                sx={{
-                  display: "inline-flex",
-                  px: 1,
-                  py: 0.5,
-                  borderRadius: "999px",
-                  backgroundColor: "rgba(99, 102, 241, 0.1)",
-                  border: "1px solid rgba(99, 102, 241, 0.25)",
-                  cursor: "help",
-                }}
-              >
-                <Typography sx={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.92)" }}>
-                  semantic_available: {String(Boolean(graph.meta?.semantic_available))}
-                </Typography>
+          {!standaloneMax ? (
+            <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1, flexShrink: 0 }}>
+              <Box sx={{ px: 1, py: 0.5, borderRadius: "999px", backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.65)" }}>nodes: {graph.nodeCount}</Typography>
               </Box>
-            </Tooltip>
-          </Box>
+              <Box sx={{ px: 1, py: 0.5, borderRadius: "999px", backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.65)" }}>edges: {graph.edgeCount}</Typography>
+              </Box>
+              <Tooltip
+                title={
+                  graph.meta?.semantic_available
+                    ? "This work has Method/Dataset links in Neo4j (USES_METHOD / EVALUATED_ON from semantic extraction)."
+                    : "No Method/Dataset layer for this work yet. That is normal if semantic extraction was off, the LLM key was missing, or confidence stayed below the graph threshold."
+                }
+                placement="top"
+                enterDelay={400}
+              >
+                <Box
+                  component="span"
+                  sx={{
+                    display: "inline-flex",
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: "999px",
+                    backgroundColor: "rgba(99, 102, 241, 0.1)",
+                    border: "1px solid rgba(99, 102, 241, 0.25)",
+                    cursor: "help",
+                  }}
+                >
+                  <Typography sx={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.92)" }}>
+                    semantic_available: {String(Boolean(graph.meta?.semantic_available))}
+                  </Typography>
+                </Box>
+              </Tooltip>
+            </Box>
+          ) : null}
 
           {traceSummary.length > 0 ? (
             <Alert severity="info" sx={{ mt: 2, fontSize: "0.8125rem", backgroundColor: "rgba(99,102,241,0.08)" }}>
@@ -764,47 +936,87 @@ export default function GraphWorkspacePanel({
             </Alert>
           ) : null}
 
-          <Box sx={{ mt: 2 }}>
-            {!labMode ? (
-              <CursorSmallButton type="button" onClick={() => setDiagnosticsOpen((o) => !o)} sx={{ mb: 1 }}>
-                {diagnosticsOpen ? "Hide diagnostics" : "Show diagnostics"}
-              </CursorSmallButton>
-            ) : (
-              <Typography sx={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.85)", mb: 1 }}>Graph Lab: diagnostics expanded</Typography>
-            )}
-            <Collapse in={labMode || diagnosticsOpen}>
-              <Box sx={{ p: 1.5, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "#141414" }}>
-                <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 0.75 }}>Diagnostics JSON</Typography>
-                <Typography
-                  component="pre"
-                  sx={{
-                    m: 0,
-                    fontSize: "0.75rem",
-                    color: "rgba(255,255,255,0.6)",
-                    overflow: "auto",
-                    maxHeight: isEmbedded ? 180 : 240,
-                    whiteSpace: "pre-wrap",
-                    wordBreak: "break-word",
-                  }}
-                >
-                  {JSON.stringify(
-                    {
-                      work_id: graph.workId,
-                      meta: graph.meta,
-                      selected_node_id: resolvedSelectedNodeId,
-                      selected_edge_id: resolvedSelectedEdgeId,
-                      node_count: graph.nodeCount,
-                      edge_count: graph.edgeCount,
-                      warnings: graph.warnings,
-                      ui_cap_warnings: capWarnings,
-                    },
-                    null,
-                    2,
-                  )}
-                </Typography>
-              </Box>
-            </Collapse>
-          </Box>
+          {!standaloneMax ? (
+            <Box sx={{ mt: 2 }}>
+              {!labMode ? (
+                <CursorSmallButton type="button" onClick={() => setDiagnosticsOpen((o) => !o)} sx={{ mb: 1 }}>
+                  {diagnosticsOpen ? "Hide diagnostics" : "Show diagnostics"}
+                </CursorSmallButton>
+              ) : (
+                <Typography sx={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.85)", mb: 1 }}>Graph Lab: diagnostics expanded</Typography>
+              )}
+              <Collapse in={labMode || diagnosticsOpen}>
+                <Box sx={{ p: 1.5, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "#141414" }}>
+                  <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 0.75 }}>Diagnostics JSON</Typography>
+                  <Typography
+                    component="pre"
+                    sx={{
+                      m: 0,
+                      fontSize: "0.75rem",
+                      color: "rgba(255,255,255,0.6)",
+                      overflow: "auto",
+                      maxHeight: isEmbedded ? 180 : 240,
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-word",
+                    }}
+                  >
+                    {JSON.stringify(
+                      {
+                        work_id: graph.workId,
+                        meta: graph.meta,
+                        selected_node_id: resolvedSelectedNodeId,
+                        selected_edge_id: resolvedSelectedEdgeId,
+                        node_count: graph.nodeCount,
+                        edge_count: graph.edgeCount,
+                        warnings: graph.warnings,
+                        ui_cap_warnings: capWarnings,
+                      },
+                      null,
+                      2,
+                    )}
+                  </Typography>
+                </Box>
+              </Collapse>
+            </Box>
+          ) : (
+            <Box sx={{ mt: 0.75, flexShrink: 0 }}>
+              {labMode ? (
+                <Typography sx={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.85)", mb: 0.75 }}>Graph Lab: diagnostics expanded</Typography>
+              ) : null}
+              <Collapse in={labMode || diagnosticsOpen}>
+                <Box sx={{ p: 1.25, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "#141414" }}>
+                  <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 0.75 }}>Diagnostics JSON</Typography>
+                  <Typography
+                    component="pre"
+                    sx={{
+                      m: 0,
+                      fontSize: "0.75rem",
+                      color: "rgba(255,255,255,0.6)",
+                      overflow: "auto",
+                      maxHeight: 200,
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-word",
+                    }}
+                  >
+                    {JSON.stringify(
+                      {
+                        work_id: graph.workId,
+                        meta: graph.meta,
+                        selected_node_id: resolvedSelectedNodeId,
+                        selected_edge_id: resolvedSelectedEdgeId,
+                        node_count: graph.nodeCount,
+                        edge_count: graph.edgeCount,
+                        warnings: graph.warnings,
+                        ui_cap_warnings: capWarnings,
+                      },
+                      null,
+                      2,
+                    )}
+                  </Typography>
+                </Box>
+              </Collapse>
+            </Box>
+          )}
         </>
       ) : null}
     </Box>

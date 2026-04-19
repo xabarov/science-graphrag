@@ -1,13 +1,13 @@
 {
   "case_id": "yolov1",
   "schema_version": 1,
-  "description": "YOLOv1 CVPR-style markdown from PDF→MD (local YOLOv1.pdf); tier merge_safe. Graph expectations relaxed until locked against live Neo4j.",
+  "description": "YOLOv1 CVPR-style markdown from PDF→MD (local YOLOv1.pdf); tier merge_safe. Graph expectations relaxed until locked against live Neo4j. [gold enriched via scripts/enrich_gold_layer1.py]",
   "work_metadata": {
     "title": "You Only Look Once: Unified, Real-Time Object Detection",
-    "publication_year": null,
+    "publication_year": 2016,
     "abstract_prefix": "We present YOLO, a new approach to object detection.",
     "doi": null,
-    "arxiv_id": null,
+    "arxiv_id": "1506.02640",
     "venue_name": null,
     "work_type": null
   },
@@ -28,7 +28,6 @@
     {
       "name": "Ross Girshick",
       "affiliations": [
-        "Allen Institute for AI",
         "Facebook AI Research"
       ]
     },
@@ -36,8 +35,7 @@
       "name": "Ali Farhadi",
       "affiliations": [
         "University of Washington",
-        "Allen Institute for AI",
-        "Facebook AI Research"
+        "Allen Institute for AI"
       ]
     }
   ],
@@ -46,18 +44,20 @@
     "min_count": 36,
     "notes": "Counts from heuristic extract_references on this MD; PDF hyphenation may shift totals.",
     "sample_arxiv_ids": [
-      "1505.00110",
-      "1310.1531",
-      "1505.01749",
-      "1504.08083",
-      "1406.4729",
       "1207.0580",
-      "1506.06981",
+      "1310.1531",
       "1312.4400",
+      "1312.6229",
+      "1406.4729",
+      "1409.4842",
+      "1409.6911",
       "1412.3128",
-      "1506.01497",
       "1504.06066",
-      "1312.6229"
+      "1504.08083",
+      "1505.00110",
+      "1505.01749",
+      "1506.01497",
+      "1506.06981"
     ],
     "sample_dois": []
   },
@@ -131,5 +131,9 @@
     "stratum": "numbered_cvpr_hyphenation",
     "annotation_kind": "manual",
     "notes": "Bracket [n] entries in ## References only; count may differ from layer-1 references.expected_count when body cites overlap."
+  },
+  "quality_thresholds": {
+    "min_authorship_names_f1": 0.7,
+    "min_sample_arxiv_f1": 0.7
   }
 }

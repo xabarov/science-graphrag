@@ -63,11 +63,11 @@ export default function HomePage() {
       <PageHeader
         eyebrow="Research surface"
         title="Home"
-        description="Start from your last workspace, browse the corpus, or jump into admin tools without losing the main research flow."
+        description="Open your workspace, browse Workspaces to add papers, or jump into admin tools without losing the main research flow."
         actions={
           <>
-            <CursorSmallButton component={Link} to="/corpus" sx={{ textDecoration: "none" }}>
-              Corpus
+            <CursorSmallButton component={Link} to="/workspaces" sx={{ textDecoration: "none" }}>
+              Workspaces
             </CursorSmallButton>
             {adminModeEnabled ? (
               <CursorSmallButton component={Link} to="/admin" sx={{ textDecoration: "none" }}>
@@ -81,42 +81,41 @@ export default function HomePage() {
       <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 1.5 }}>
         <SurfaceCard
           eyebrow="Research surface"
-          title={continueTarget ? "Continue last workspace" : "Start in corpus"}
+          title={continueTarget ? "Open last paper workspace" : "Open Workspace"}
           description={
             continueTarget
-              ? "Resume the most recent work context and continue reading, asking questions, or checking evidence."
-              : "No active workspace yet. Open the corpus to select a paper and start a research session."
+              ? "Resume the most recently opened paper in the Workspace shell (paper list + tools in the left nav)."
+              : "Create or pick a workspace under Workspaces, then add papers by work id."
           }
           accent="primary"
           actions={
             <>
+              <CursorPrimaryButton component={Link} to="/workspace" sx={{ textDecoration: "none" }}>
+                Open Workspace
+              </CursorPrimaryButton>
               {continueTarget ? (
-                <CursorPrimaryButton component={Link} to={continueTarget.path} sx={{ textDecoration: "none" }}>
-                  Continue workspace
-                </CursorPrimaryButton>
-              ) : (
-                <CursorPrimaryButton component={Link} to="/corpus" sx={{ textDecoration: "none" }}>
-                  Open corpus
-                </CursorPrimaryButton>
-              )}
-              <CursorSmallButton component={Link} to="/workspace" sx={{ textDecoration: "none" }}>
-                Workspace
+                <CursorSmallButton component={Link} to={continueTarget.path} sx={{ textDecoration: "none" }}>
+                  Last paper
+                </CursorSmallButton>
+              ) : null}
+              <CursorSmallButton component={Link} to="/workspaces" sx={{ textDecoration: "none" }}>
+                Browse Workspaces
               </CursorSmallButton>
             </>
           }
         />
 
         <SurfaceCard
-          eyebrow="Corpus browser"
-          title="Browse indexed works"
-          description="Use the corpus as the main entry to search, filter, and open papers into the workspace-first flow."
+          eyebrow="Collections"
+          title="Workspaces & indexed works"
+          description="Manage workspaces (paper sets), merge collections, export JSON, and search the indexed corpus to add papers."
           actions={
             <>
-              <CursorPrimaryButton component={Link} to="/corpus" sx={{ textDecoration: "none" }}>
-                Open corpus
+              <CursorPrimaryButton component={Link} to="/workspaces" sx={{ textDecoration: "none" }}>
+                Workspaces
               </CursorPrimaryButton>
               <CursorSmallButton component={Link} to="/reader" sx={{ textDecoration: "none" }}>
-                Direct reader
+                Reader
               </CursorSmallButton>
             </>
           }
@@ -153,7 +152,7 @@ export default function HomePage() {
           <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: "rgba(255,255,255,0.9)", mb: 1.25 }}>Recent works</Typography>
           {recentWorks.length === 0 ? (
             <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>
-              No recent works yet. Open the corpus and start a workspace session to build a continue flow.
+              No recent works yet. Open Workspaces and add a paper to build a continue flow.
             </Typography>
           ) : (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -179,7 +178,7 @@ export default function HomePage() {
                       {item.workId}
                     </Typography>
                   </Box>
-                  <CursorSmallButton component={Link} to={`/workspace?work_id=${encodeURIComponent(item.workId)}&tab=${encodeURIComponent(item.tab || "overview")}`} sx={{ textDecoration: "none" }}>
+                  <CursorSmallButton component={Link} to={`/workspace?work_id=${encodeURIComponent(item.workId)}`} sx={{ textDecoration: "none" }}>
                     Open
                   </CursorSmallButton>
                 </Box>
@@ -204,7 +203,7 @@ export default function HomePage() {
             Recent work history: {status.hasRecentWorks ? "available" : "empty"}
           </Typography>
           <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.6 }}>
-            Continue flow: {status.hasLocalState ? "ready to resume" : "starts from corpus"}
+            Continue flow: {status.hasLocalState ? "ready to resume" : "starts from Workspaces"}
           </Typography>
         </Box>
       </Box>

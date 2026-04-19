@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "case_id": "sppnet_realpdf",
+  "generated_at_utc": "2026-04-19T16:10:10.323905+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [
+      "1310.1531",
+      "1311.2901",
+      "1312.4400",
+      "1312.5402",
+      "1312.6229",
+      "1403.1840",
+      "1404.4316",
+      "1405.3531",
+      "1409.0575",
+      "1409.1556",
+      "1409.4842"
+    ],
+    "count": 11,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": 2015,
+    "arxiv_id": "1406.4729",
+    "doi": null,
+    "authors": [
+      {
+        "name": "Kaiming He",
+        "affiliations": [
+          "Microsoft Research, Beijing, China"
+        ]
+      },
+      {
+        "name": "Xiangyu Zhang",
+        "affiliations": [
+          "Xi'an Jiaotong University, Xi'an, China"
+        ]
+      },
+      {
+        "name": "Shaoqing Ren",
+        "affiliations": [
+          "University of Science and Technology of China, Hefei, China"
+        ]
+      },
+      {
+        "name": "Jian Sun",
+        "affiliations": [
+          "Microsoft Research, Beijing, China"
+        ]
+      }
+    ]
+  }
+}

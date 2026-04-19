@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "case_id": "detrs_realpdf",
+  "generated_at_utc": "2026-04-19T16:09:08.327887+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [
+      "1804.02767",
+      "2004.10934",
+      "2007.12099",
+      "2104.01318",
+      "2104.10419",
+      "2107.08430",
+      "2203.00860",
+      "2203.16250",
+      "2207.13085",
+      "2211.03594",
+      "2301.05586",
+      "2304.13027"
+    ],
+    "count": 12,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": null,
+    "arxiv_id": "2304.08069",
+    "doi": null,
+    "authors": [
+      {
+        "name": "Yian Zhao",
+        "affiliations": [
+          "Baidu Inc, Beijing, China",
+          "School of Electronic and Computer Engineering, Peking University, Shenzhen, China"
+        ]
+      },
+      {
+        "name": "Wenyu Lv",
+        "affiliations": [
+          "Baidu Inc, Beijing, China"
+        ]
+      },
+      {
+        "name": "Shangliang Xu",
+        "affiliations": [
+          "Baidu Inc, Beijing, China"
+        ]
+      },
+      {
+        "name": "Jinman Wei",
+        "affiliations": [
+          "Baidu Inc, Beijing, China"
+        ]
+      },
+      {
+        "name": "Guanzhong Wang",
+        "affiliations": [
+          "Baidu Inc, Beijing, China"
+        ]
+      },
+      {
+        "name": "Qingqing Dang",
+        "affiliations": [
+          "Baidu Inc, Beijing, China"
+        ]
+      },
+      {
+        "name": "Yi Liu",
+        "affiliations": [
+          "Baidu Inc, Beijing, China"
+        ]
+      },
+      {
+        "name": "Jie Chen",
+        "affiliations": [
+          "School of Electronic and Computer Engineering, Peking University, Shenzhen, China"
+        ]
+      }
+    ]
+  }
+}

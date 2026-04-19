@@ -13,7 +13,11 @@
     "retrieval_strict_pilot_mock": "eval/results/current-retrieval-strict-pilot-mock.json",
     "retrieval_live_corpus_mini": "eval/results/current-retrieval-live-corpus-mini.json",
     "claims_merge_contract": "eval/results/current-claims-merge-contract.json",
-    "claims_mini_suite": "eval/results/current-claims-mini-suite.json"
+    "claims_mini_suite": "eval/results/current-claims-mini-suite.json",
+    "claims_corpus_v2_mini_suite": "eval/results/current-claims-corpus-v2-mini.json",
+    "claims_pilot_suite": "eval/results/current-claims-pilot-suite.json",
+    "references_resolution_contract": "eval/results/current-references-resolution-contract.json",
+    "references_resolution_mini": "eval/results/current-references-resolution-mini.json"
   },
   "reference": {
     "all_passed": true,
@@ -372,6 +376,104 @@
         ],
         "all_passed": true,
         "claims_eval": true
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true
+    },
+    "claims_corpus_v2_mini": {
+      "artifact": "eval/results/current-claims-corpus-v2-mini.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190"
+      },
+      "summary": {
+        "case_count": 5,
+        "case_ids": [
+          "corpus_faster_rcnn_rpn_shared",
+          "corpus_fpn_multiscale",
+          "corpus_mask_rcnn_mask_branch",
+          "corpus_retinanet_focal_imbalance",
+          "corpus_ssd_single_network"
+        ],
+        "all_passed": true,
+        "claims_eval": true
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true
+    },
+    "claims_pilot": {
+      "artifact": "eval/results/current-claims-pilot-suite.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190"
+      },
+      "summary": {
+        "case_count": 10,
+        "case_ids": [
+          "corpus_cascade_rcnn_stages",
+          "corpus_centernet_triplet",
+          "corpus_cornernet_keypoints",
+          "corpus_detr_set_prediction",
+          "corpus_efficientdet_compound",
+          "corpus_faster_rcnn_rpn_shared",
+          "corpus_fpn_multiscale",
+          "corpus_mask_rcnn_mask_branch",
+          "corpus_retinanet_focal_imbalance",
+          "corpus_ssd_single_network"
+        ],
+        "all_passed": true,
+        "claims_eval": true
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true
+    }
+  },
+  "references_resolution_family": {
+    "role": "advisory",
+    "refs_merge_contract": {
+      "artifact": "eval/results/current-references-resolution-contract.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190"
+      },
+      "summary": {
+        "case_count": 1,
+        "case_ids": [
+          "refs_contract_shape"
+        ],
+        "all_passed": true,
+        "references_resolution_eval": true
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true
+    },
+    "refs_mini": {
+      "artifact": "eval/results/current-references-resolution-mini.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190"
+      },
+      "summary": {
+        "case_count": 3,
+        "case_ids": [
+          "refs_mini_arxiv_id",
+          "refs_mini_doi_pair",
+          "refs_mini_work_id"
+        ],
+        "all_passed": true,
+        "references_resolution_eval": true
       },
       "failed_count": 0,
       "failed_cases": [],

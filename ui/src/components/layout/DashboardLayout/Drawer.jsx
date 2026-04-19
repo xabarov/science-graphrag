@@ -6,9 +6,6 @@ import Tooltip from "@mui/material/Tooltip";
 import { useLocation, Link as RouterLink } from "react-router-dom";
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
-import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
-import WorkspacesOutlinedIcon from "@mui/icons-material/WorkspacesOutlined";
-import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
 import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
 import QuestionAnswerOutlinedIcon from "@mui/icons-material/QuestionAnswerOutlined";
 import FactCheckOutlinedIcon from "@mui/icons-material/FactCheckOutlined";
@@ -40,16 +37,7 @@ export default function Drawer({ onNavigate }) {
 
   const userMenu = useMemo(
     () => [
-      { to: "/", label: "Home", icon: <HomeOutlinedIcon /> },
-      { to: "/corpus", label: "Corpus", icon: <FolderOpenOutlinedIcon /> },
-      { to: "/workspace", label: "Workspace", icon: <WorkspacesOutlinedIcon /> },
-    ],
-    [],
-  );
-
-  const directEntryMenu = useMemo(
-    () => [
-      { to: "/reader", label: "Reader", icon: <MenuBookOutlinedIcon /> },
+      { to: "/workspaces", label: "Workspaces", icon: <FolderOpenOutlinedIcon /> },
       { to: "/graph", label: "Graph", icon: <AccountTreeOutlinedIcon /> },
       { to: "/ask", label: "Ask", icon: <QuestionAnswerOutlinedIcon /> },
       { to: "/evidence", label: "Evidence", icon: <FactCheckOutlinedIcon /> },
@@ -138,24 +126,6 @@ export default function Drawer({ onNavigate }) {
 
       <Box sx={{ padding: expanded ? 1 : 1 }}>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>{userMenu.map(renderNavItem)}</Box>
-
-        {expanded ? (
-          <Typography
-            sx={{
-              fontSize: "0.6875rem",
-              fontWeight: 600,
-              letterSpacing: "0.02em",
-              color: "rgba(255,255,255,0.28)",
-              px: 1.5,
-              mt: 1.5,
-              mb: 0.5,
-            }}
-          >
-            Secondary access
-          </Typography>
-        ) : null}
-
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>{directEntryMenu.map(renderNavItem)}</Box>
 
         {adminMenu.length > 0 ? <Divider sx={{ my: 1.5, borderColor: "rgba(255,255,255,0.08)" }} /> : null}
 

@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "description": "Synthetic mini-case: internal work id resolution key form.",
+  "min_resolution_recall": 1.0,
+  "expected_resolutions": [
+    {
+      "raw_citation_span_id": "span:internal_ref",
+      "canonical_key": "work_id:fixture:yolov1"
+    }
+  ],
+  "synthetic_predictions": [
+    {
+      "raw_citation_span_id": "span:internal_ref",
+      "canonical_key": "work_id:fixture:yolov1"
+    }
+  ]
+}

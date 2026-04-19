@@ -1,25 +1,32 @@
 {
   "case_id": "cascade_rcnn_realpdf",
   "schema_version": 1,
-  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated. [gold enriched via scripts/enrich_gold_layer1.py]",
   "work_metadata": {
     "title": "Cascade R-CNN: Delving into High Quality Object Detection",
-    "publication_year": null,
+    "publication_year": 2017,
     "abstract_prefix": "In object detection, an intersection over union (IoU) threshold is requi",
     "doi": null,
-    "arxiv_id": null,
+    "arxiv_id": "1712.00726",
     "venue_name": null,
     "work_type": null
   },
-  "authorships": [],
+  "authorships": [
+    {
+      "name": "Zhaowei Cai",
+      "affiliations": [
+        "UC San Diego"
+      ]
+    }
+  ],
   "references": {
     "expected_count": 37,
     "min_count": 29,
     "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
     "sample_arxiv_ids": [
+      "1409.1556",
       "1611.10012",
-      "1702.07054",
-      "1409.1556"
+      "1702.07054"
     ],
     "sample_dois": []
   },
@@ -83,5 +90,9 @@
     "stratum": "numbered",
     "notes": "Bracket-numbered list; trailing isolated page index excluded.",
     "annotation_kind": "manual"
+  },
+  "quality_thresholds": {
+    "min_authorship_names_f1": 0.7,
+    "min_sample_arxiv_f1": 0.7
   }
 }

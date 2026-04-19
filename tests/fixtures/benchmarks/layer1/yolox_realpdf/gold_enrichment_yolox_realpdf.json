@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "case_id": "yolox_realpdf",
+  "generated_at_utc": "2026-04-19T16:10:23.722170+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [
+      "1706.02677",
+      "1804.02767",
+      "1902.04103",
+      "1904.07850",
+      "1911.09516",
+      "2004.10934",
+      "2011.08036",
+      "2101.04307",
+      "2101.11782",
+      "2103.14030",
+      "2104.10419"
+    ],
+    "count": 11,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": 2021,
+    "arxiv_id": "2107.08430",
+    "doi": null,
+    "authors": [
+      {
+        "name": "Zheng Ge",
+        "affiliations": [
+          "Megvii Technology"
+        ]
+      },
+      {
+        "name": "Songtao Liu",
+        "affiliations": [
+          "Megvii Technology"
+        ]
+      },
+      {
+        "name": "Feng Wang",
+        "affiliations": [
+          "Megvii Technology"
+        ]
+      },
+      {
+        "name": "Zeming Li",
+        "affiliations": [
+          "Megvii Technology"
+        ]
+      },
+      {
+        "name": "Jian Sun",
+        "affiliations": [
+          "Megvii Technology"
+        ]
+      }
+    ]
+  }
+}

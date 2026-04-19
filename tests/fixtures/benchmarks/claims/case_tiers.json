@@ -1,4 +1,7 @@
 {
+  "smoke": [
+    "claims_contract_shape"
+  ],
   "claims_merge_contract": [
     "claims_contract_shape"
   ],
@@ -8,5 +11,34 @@
     "yolov1_localization_tradeoff_claim",
     "yolov1_unified_pipeline_claim",
     "yolov1_fast_yolo_speed_claim"
+  ],
+  "claims_corpus_v2_mini": [
+    "corpus_faster_rcnn_rpn_shared",
+    "corpus_retinanet_focal_imbalance",
+    "corpus_ssd_single_network",
+    "corpus_mask_rcnn_mask_branch",
+    "corpus_fpn_multiscale"
+  ],
+  "claims_pilot": [
+    "corpus_faster_rcnn_rpn_shared",
+    "corpus_retinanet_focal_imbalance",
+    "corpus_ssd_single_network",
+    "corpus_mask_rcnn_mask_branch",
+    "corpus_fpn_multiscale",
+    "corpus_centernet_triplet",
+    "corpus_cornernet_keypoints",
+    "corpus_detr_set_prediction",
+    "corpus_cascade_rcnn_stages",
+    "corpus_efficientdet_compound"
+  ],
+  "claims_pilot_train": [
+    "corpus_faster_rcnn_rpn_shared",
+    "corpus_retinanet_focal_imbalance",
+    "corpus_ssd_single_network",
+    "corpus_mask_rcnn_mask_branch",
+    "corpus_fpn_multiscale",
+    "corpus_centernet_triplet",
+    "corpus_cornernet_keypoints",
+    "corpus_detr_set_prediction"
   ]
 }

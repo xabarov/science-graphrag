@@ -1,17 +1,54 @@
 {
   "case_id": "overfeat_realpdf",
   "schema_version": 1,
-  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated. [gold enriched via scripts/enrich_gold_layer1.py]",
   "work_metadata": {
     "title": "OverFeat: Integrated Recognition, Localization and Detection using Convolutional Networks",
-    "publication_year": null,
+    "publication_year": 2014,
     "abstract_prefix": "We present an integrated framework for using ConvolutionalNetworks for c",
     "doi": null,
-    "arxiv_id": null,
+    "arxiv_id": "1312.6229",
     "venue_name": null,
     "work_type": null
   },
-  "authorships": [],
+  "authorships": [
+    {
+      "name": "Pierre Sermanet",
+      "affiliations": [
+        "Courant Institute of Mathematical Sciences, New York University"
+      ]
+    },
+    {
+      "name": "David Eigen",
+      "affiliations": [
+        "Courant Institute of Mathematical Sciences, New York University"
+      ]
+    },
+    {
+      "name": "Xiang Zhang",
+      "affiliations": [
+        "Courant Institute of Mathematical Sciences, New York University"
+      ]
+    },
+    {
+      "name": "Michael Mathieu",
+      "affiliations": [
+        "Courant Institute of Mathematical Sciences, New York University"
+      ]
+    },
+    {
+      "name": "Rob Fergus",
+      "affiliations": [
+        "Courant Institute of Mathematical Sciences, New York University"
+      ]
+    },
+    {
+      "name": "Yann LeCun",
+      "affiliations": [
+        "Courant Institute of Mathematical Sciences, New York University"
+      ]
+    }
+  ],
   "references": {
     "expected_count": 32,
     "min_count": 24,
@@ -75,5 +112,9 @@
     "stratum": "bracket_numbered_realpdf",
     "annotation_kind": "manual",
     "notes": "Bootstrap from eval.references_harness.bibliography_gold_span; main ## References block; monotonic [n] detection; truncated before supplementary."
+  },
+  "quality_thresholds": {
+    "min_authorship_names_f1": 0.7,
+    "min_sample_arxiv_f1": 0.7
   }
 }

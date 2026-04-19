@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "description": "Excerpt from tests/fixtures/benchmarks/layer1/centernet_realpdf/article.md (Abstract).",
+  "benchmark_suite_tier": "claims_pilot",
+  "source_layer1_fixture": "centernet_realpdf",
+  "claim_match_mode": "claim_id_or_normalized_text",
+  "expected_claims": [
+    {
+      "claim_id": "od_corpus_centernet_triplet_keypoints",
+      "claim_type": "method",
+      "polarity": "positive",
+      "anchor_phrase": "detects each object as a triplet",
+      "claim_text_normalized": "detects each object as a triplet"
+    }
+  ]
+}

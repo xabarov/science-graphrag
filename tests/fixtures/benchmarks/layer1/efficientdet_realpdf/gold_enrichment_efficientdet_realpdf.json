@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "case_id": "efficientdet_realpdf",
+  "generated_at_utc": "2026-04-19T16:09:21.164318+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [
+      "1606.08415",
+      "1804.02767",
+      "1811.05588",
+      "1904.07850"
+    ],
+    "count": 4,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": 2020,
+    "arxiv_id": "1911.09070",
+    "doi": null,
+    "authors": [
+      {
+        "name": "Mingxing Tan",
+        "affiliations": [
+          "Google Research, Brain Team"
+        ]
+      },
+      {
+        "name": "Ruoming Pang",
+        "affiliations": [
+          "Google Research, Brain Team"
+        ]
+      },
+      {
+        "name": "Quoc V. Le",
+        "affiliations": [
+          "Google Research, Brain Team"
+        ]
+      }
+    ]
+  }
+}

@@ -1,17 +1,42 @@
 {
   "case_id": "part_based_models_realpdf",
   "schema_version": 1,
-  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated. [gold enriched via scripts/enrich_gold_layer1.py]",
   "work_metadata": {
     "title": "Object Detection with Discriminatively Trained Part Based Models",
-    "publication_year": null,
+    "publication_year": 2010,
     "abstract_prefix": "We describe an object detection system based on mixtures of multiscale d",
     "doi": null,
     "arxiv_id": null,
     "venue_name": null,
     "work_type": null
   },
-  "authorships": [],
+  "authorships": [
+    {
+      "name": "Pedro F. Felzenszwalb",
+      "affiliations": [
+        "Department of Computer Science, University of Chicago"
+      ]
+    },
+    {
+      "name": "Ross B. Girshick",
+      "affiliations": [
+        "Department of Computer Science, University of Chicago"
+      ]
+    },
+    {
+      "name": "David McAllester",
+      "affiliations": [
+        "Toyota Technological Institute at Chicago"
+      ]
+    },
+    {
+      "name": "Deva Ramanan",
+      "affiliations": [
+        "Department of Computer Science, UC Irvine"
+      ]
+    }
+  ],
   "references": {
     "expected_count": 45,
     "min_count": 37,
@@ -86,5 +111,8 @@
     "stratum": "bracket_numbered_realpdf",
     "annotation_kind": "manual",
     "notes": "Bootstrap from eval.references_harness.bibliography_gold_span; main ## References block; monotonic [n] detection; truncated before supplementary."
+  },
+  "quality_thresholds": {
+    "min_authorship_names_f1": 0.7
   }
 }

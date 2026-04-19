@@ -154,6 +154,38 @@ def test_settings_llm_test_uses_service_result(tmp_path: Path, monkeypatch: Any)
     assert payload["resolved"]["model"] == "demo/model"
 
 
+def test_workspaces_list_smoke(monkeypatch: Any) -> None:
+    """GET /v1/workspaces lists Neo4j-backed workspaces (mocked store)."""
+
+    from science_graphrag.api import workspaces as ws_api
+
+    class _FakeStore:
+        def workspace_list(self) -> list[dict[str, Any]]:
+            return [{"id": "ws-1", "name": "Lab", "created_at": "2020-01-01T00:00:00+00:00", "work_ids": ["w-a"]}]
+
+        def close(self) -> None:
+            return None
+
+    monkeypatch.setattr(ws_api, "_store", lambda _settings: _FakeStore())
+    client = _client()
+    res = client.get("/v1/workspaces")
+    assert res.status_code == 200
+    body = res.json()
+    assert body["total"] == 1
+    assert body["items"][0]["id"] == "ws-1"
+    assert body["items"][0]["work_ids"] == ["w-a"]
+
+
+def test_ingest_stubs_and_job_lookup() -> None:
+    """Legacy ingest entrypoints stay stubbed; job status is 404 for unknown ids."""
+
+    client = _client()
+    assert client.post("/v1/ingest/arxiv", json={"arxiv_id": "1234.5678"}).status_code == 501
+    assert client.post("/v1/ingest/doi", json={"doi": "10.1000/xyz"}).status_code == 501
+    assert client.post("/v1/ingest/pdf").status_code == 501
+    assert client.get("/v1/ingest/jobs/00000000-0000-0000-0000-000000000000").status_code == 404
+
+
 def test_works_list_endpoint_smoke(monkeypatch: Any) -> None:
     """Works list endpoint returns typed payload via API layer."""
 

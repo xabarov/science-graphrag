@@ -22,9 +22,11 @@ def extract_claims_anchor_harness(article_text: str, gold: dict[str, Any]) -> li
         if not cid or not anchor:
             continue
         if anchor.lower() in text_l:
+            text_norm = row.get("claim_text_normalized")
             out.append(
                 {
                     "claim_id": str(cid),
+                    "claim_text": str(text_norm).strip() if text_norm is not None else None,
                     "claim_text_normalized": row.get("claim_text_normalized"),
                     "claim_type": row.get("claim_type"),
                     "polarity": row.get("polarity"),

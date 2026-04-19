@@ -29,6 +29,8 @@ tests/fixtures/benchmarks/claims/
 | `contract_only` | bool | If true, only require a successful extract call and list-shaped output. |
 | `min_claim_recall` | float | Minimum recall on `claim_id` hits (default `1.0` when omitted). |
 | `skip_in_suite_cli` | bool | Exclude from `--suite` discovery when true. |
+| `claim_match_mode` | string | Optional: `claim_id` (default) or `claim_id_or_normalized_text`. In the latter, a gold row counts as matched if **either** the prediction set contains the same `claim_id`, **or** any prediction text field contains `claim_text_normalized` after whitespace-normalization (supports future LLM extractors that omit stable ids). |
+| `benchmark_holdout` | bool | Optional: when `true`, keep the case **out of prompt-tuning loops**; use `claims_pilot_train` tier for training-style packs. |
 | `expected_claims` | list | Gold rows (see row schema). |
 
 **`expected_claims[]` row:**
@@ -47,11 +49,14 @@ tests/fixtures/benchmarks/claims/
 |---------|------|
 | `claims_merge_contract` | Cheap CI: `contract_only` cases or minimal recall thresholds. |
 | `claims_mini` | Frozen **mini-pack** (3–5 excerpts) with full `expected_claims` + `anchor_phrase`. |
+| `claims_corpus_v2_mini` | Corpus-derived **mini-pack** (5 excerpts) mixing `claim_match_mode=claim_id_or_normalized_text` for extractor-agnostic scoring. |
+| `claims_pilot` | **Pilot-pack** (10 excerpts) with broader layout/section variety. |
+| `claims_pilot_train` | Same as `claims_pilot` excluding rows marked `benchmark_holdout: true`. |
 
 ## Metrics (`eval/claims/metrics.py`)
 
-- `claim_recall`: fraction of expected `claim_id` values present in predictions.
-- `claim_precision`: `|matched_ids| / max(|pred_ids|, 1)` using `claim_id` equality.
+- `claim_recall`: fraction of expected rows matched (by `claim_id` and/or normalized text when `claim_match_mode` allows).
+- `claim_precision`: fraction of predictions that match at least one expected row under the active mode.
 - `contract_passed`: shape checks when `contract_only`.
 - `passed`: `contract_passed` if contract-only; else `claim_recall >= min_claim_recall`.
 

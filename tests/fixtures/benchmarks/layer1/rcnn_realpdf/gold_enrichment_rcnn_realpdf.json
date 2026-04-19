@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "case_id": "rcnn_realpdf",
+  "generated_at_utc": "2026-04-19T16:09:58.911267+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [],
+    "count": 0,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": 2014,
+    "arxiv_id": "1311.2524",
+    "doi": null,
+    "authors": [
+      {
+        "name": "Ross Girshick",
+        "affiliations": [
+          "UC Berkeley"
+        ]
+      },
+      {
+        "name": "Jeff Donahue",
+        "affiliations": [
+          "UC Berkeley"
+        ]
+      },
+      {
+        "name": "Trevor Darrell",
+        "affiliations": [
+          "UC Berkeley"
+        ]
+      },
+      {
+        "name": "Jitendra Malik",
+        "affiliations": [
+          "UC Berkeley"
+        ]
+      }
+    ]
+  }
+}

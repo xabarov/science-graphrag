@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "case_id": "yolov1",
+  "generated_at_utc": "2026-04-19T16:08:39.860684+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [
+      "1207.0580",
+      "1310.1531",
+      "1312.4400",
+      "1312.6229",
+      "1406.4729",
+      "1409.4842",
+      "1409.6911",
+      "1412.3128",
+      "1504.06066",
+      "1504.08083",
+      "1505.00110",
+      "1505.01749",
+      "1506.01497",
+      "1506.06981"
+    ],
+    "count": 14,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": 2016,
+    "arxiv_id": "1506.02640",
+    "doi": null,
+    "authors": [
+      {
+        "name": "Joseph Redmon",
+        "affiliations": [
+          "University of Washington"
+        ]
+      },
+      {
+        "name": "Santosh Divvala",
+        "affiliations": [
+          "University of Washington",
+          "Allen Institute for AI"
+        ]
+      },
+      {
+        "name": "Ross Girshick",
+        "affiliations": [
+          "Facebook AI Research"
+        ]
+      },
+      {
+        "name": "Ali Farhadi",
+        "affiliations": [
+          "University of Washington",
+          "Allen Institute for AI"
+        ]
+      }
+    ]
+  }
+}

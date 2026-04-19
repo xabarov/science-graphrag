@@ -1,17 +1,55 @@
 {
   "case_id": "fpn_realpdf",
   "schema_version": 1,
-  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated. [gold enriched via scripts/enrich_gold_layer1.py]",
   "work_metadata": {
     "title": "Feature Pyramid Networks for Object Detection",
-    "publication_year": null,
+    "publication_year": 2017,
     "abstract_prefix": "Feature pyramids are a basic component in recognition systems for detect",
     "doi": null,
-    "arxiv_id": null,
+    "arxiv_id": "1612.03144",
     "venue_name": null,
     "work_type": null
   },
-  "authorships": [],
+  "authorships": [
+    {
+      "name": "Tsung-Yi Lin",
+      "affiliations": [
+        "Facebook AI Research (FAIR)",
+        "Cornell University"
+      ]
+    },
+    {
+      "name": "Piotr Dollár",
+      "affiliations": [
+        "Facebook AI Research (FAIR)"
+      ]
+    },
+    {
+      "name": "Ross Girshick",
+      "affiliations": [
+        "Facebook AI Research (FAIR)"
+      ]
+    },
+    {
+      "name": "Kaiming He",
+      "affiliations": [
+        "Facebook AI Research (FAIR)"
+      ]
+    },
+    {
+      "name": "Bharath Hariharan",
+      "affiliations": [
+        "Facebook AI Research (FAIR)"
+      ]
+    },
+    {
+      "name": "Serge Belongie",
+      "affiliations": [
+        "Cornell University"
+      ]
+    }
+  ],
   "references": {
     "expected_count": 40,
     "min_count": 32,
@@ -85,5 +123,9 @@
     "stratum": "numbered",
     "notes": "Bracket-numbered list; trailing page number line excluded.",
     "annotation_kind": "manual"
+  },
+  "quality_thresholds": {
+    "min_authorship_names_f1": 0.7,
+    "min_sample_arxiv_f1": 0.7
   }
 }

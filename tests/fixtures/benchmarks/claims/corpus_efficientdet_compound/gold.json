@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "description": "Excerpt from tests/fixtures/benchmarks/layer1/efficientdet_realpdf/article.md (Abstract). benchmark_holdout=true for prompt-tuning holdout tiers.",
+  "benchmark_suite_tier": "claims_pilot",
+  "source_layer1_fixture": "efficientdet_realpdf",
+  "benchmark_holdout": true,
+  "claim_match_mode": "claim_id_or_normalized_text",
+  "expected_claims": [
+    {
+      "claim_id": "od_corpus_efficientdet_compound_scaling",
+      "claim_type": "method",
+      "polarity": "positive",
+      "anchor_phrase": "compound scaling method",
+      "claim_text_normalized": "compound scaling method"
+    }
+  ]
+}

@@ -1,12 +1,11 @@
 import React, { useCallback, useEffect } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 
 import AskPanel from "../components/work/AskPanel.jsx";
 import { sessionExistsInScope } from "../components/work/askSessionState.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
 import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
-import { CursorSmallButton } from "../components/common/index.js";
 import { persistWorkId } from "./WorkspacePage/utils/workContext.js";
 
 /** Standalone Ask entry; workspace tab is the primary UX when a work is selected. */
@@ -41,19 +40,9 @@ export default function AskPage() {
   return (
     <Box sx={{ p: 2, ...mainShellContentSx }}>
       <PageHeader
-        eyebrow="Direct tool"
-        title="Ask"
-        description="Run a standalone question when you want a quick global or paper-scoped query surface. Use Workspace Ask when the answer should stay tied to the active reading context."
-        actions={
-          <>
-            <CursorSmallButton component={Link} to="/workspace" sx={{ textDecoration: "none" }}>
-              Workspace
-            </CursorSmallButton>
-            <CursorSmallButton component={Link} to="/corpus" sx={{ textDecoration: "none" }}>
-              Corpus
-            </CursorSmallButton>
-          </>
-        }
+        eyebrow="Ask"
+        title="Questions"
+        description="Paper-scoped or global queries. Pick a paper from Workspaces / Workspace, then set work_id below or in the URL."
       />
       <AskPanel
         initialWorkId={initialWorkId}

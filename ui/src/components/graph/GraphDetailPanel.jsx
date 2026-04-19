@@ -50,7 +50,7 @@ export default function GraphDetailPanel({
   onSelectEdge,
   mode = "embedded",
 }) {
-  const compact = mode === "embedded";
+  const compact = mode === "embedded" || mode === "standalone";
   const [rawOpen, setRawOpen] = useState(false);
   const rows = relatedEdgeRows.length > 0 ? relatedEdgeRows : [];
 
@@ -69,7 +69,7 @@ export default function GraphDetailPanel({
         backgroundColor: "#1a1a1a",
         p: compact ? 1.5 : 2,
         flex: 1,
-        minHeight: compact ? 280 : 360,
+        minHeight: mode === "standalone" ? 0 : compact ? 280 : 360,
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
@@ -102,8 +102,16 @@ export default function GraphDetailPanel({
       ) : null}
 
       {!selectedNode && !selectedEdge ? (
-        <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>
-          Select a node or an edge on the graph to see a readable summary. Technical JSON stays under &quot;Advanced&quot;.
+        <Typography
+          sx={{
+            fontSize: mode === "standalone" ? "0.75rem" : "0.8125rem",
+            color: "rgba(255,255,255,0.45)",
+            lineHeight: 1.4,
+          }}
+        >
+          {mode === "standalone"
+            ? "Click a node or edge on the canvas. Raw JSON: Advanced."
+            : "Select a node or an edge on the graph to see a readable summary. Technical JSON stays under \"Advanced\"."}
         </Typography>
       ) : null}
 

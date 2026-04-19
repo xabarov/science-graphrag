@@ -39,22 +39,12 @@ export default function EvidencePage() {
   return (
     <Box sx={{ p: 2, ...mainShellContentSx }}>
       <PageHeader
-        eyebrow="Direct tool"
-        title="Evidence"
+        eyebrow="Evidence"
+        title="Traceability"
         description={
           <>
-            Open chunk-level traceability directly when you already know the target <code style={{ color: "rgba(129,140,248,0.95)" }}>work_id</code>.
-            Prefer <strong>Workspace → Evidence</strong> for the main flow.
-          </>
-        }
-        actions={
-          <>
-            <CursorSmallButton component={Link} to="/workspace" sx={{ textDecoration: "none" }}>
-              Workspace
-            </CursorSmallButton>
-            <CursorSmallButton component={Link} to="/corpus" sx={{ textDecoration: "none" }}>
-              Corpus
-            </CursorSmallButton>
+            Chunk-level citations for a <code style={{ color: "rgba(129,140,248,0.95)" }}>work_id</code>. Open a paper from Workspace, then use
+            the left rail or URL query.
           </>
         }
       />

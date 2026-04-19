@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "case_id": "dino_realpdf",
+  "generated_at_utc": "2026-04-19T16:09:14.888478+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [
+      "1412.6980",
+      "1604.06174",
+      "1711.05101",
+      "1804.02767",
+      "1810.04805",
+      "1906.07155",
+      "2004.10934",
+      "2011.10881",
+      "2101.07448",
+      "2104.01318",
+      "2107.08430",
+      "2108.06152",
+      "2109.07107",
+      "2111.09883",
+      "2111.11432",
+      "2112.03857",
+      "2201.12329",
+      "2203.01305"
+    ],
+    "count": 18,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": 2022,
+    "arxiv_id": "2203.03605",
+    "doi": null,
+    "authors": [
+      {
+        "name": "Hao Zhang",
+        "affiliations": [
+          "The Hong Kong University of Science and Technology",
+          "International Digital Economy Academy (IDEA)"
+        ]
+      },
+      {
+        "name": "Feng Li",
+        "affiliations": [
+          "The Hong Kong University of Science and Technology",
+          "International Digital Economy Academy (IDEA)"
+        ]
+      },
+      {
+        "name": "Shilong Liu",
+        "affiliations": [
+          "Dept. of CST., BNRist Center, Institute for AI, Tsinghua University",
+          "International Digital Economy Academy (IDEA)"
+        ]
+      },
+      {
+        "name": "Lei Zhang",
+        "affiliations": [
+          "International Digital Economy Academy (IDEA)"
+        ]
+      },
+      {
+        "name": "Hang Su",
+        "affiliations": [
+          "Dept. of CST., BNRist Center, Institute for AI, Tsinghua University"
+        ]
+      },
+      {
+        "name": "Jun Zhu",
+        "affiliations": [
+          "Dept. of CST., BNRist Center, Institute for AI, Tsinghua University"
+        ]
+      },
+      {
+        "name": "Lionel M. Ni",
+        "affiliations": [
+          "The Hong Kong University of Science and Technology",
+          "The Hong Kong University of Science and Technology (Guangzhou)"
+        ]
+      },
+      {
+        "name": "Heung-Yeung Shum",
+        "affiliations": [
+          "The Hong Kong University of Science and Technology",
+          "International Digital Economy Academy (IDEA)"
+        ]
+      }
+    ]
+  }
+}

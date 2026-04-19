@@ -1,23 +1,56 @@
 {
   "case_id": "cornernet_realpdf",
   "schema_version": 1,
-  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated. [gold enriched via scripts/enrich_gold_layer1.py]",
   "work_metadata": {
     "title": "CornerNet: Detecting Objects as Paired Keypoints",
-    "publication_year": null,
+    "publication_year": 2019,
     "abstract_prefix": "We propose CornerNet, a new approach to object detection where we detect",
     "doi": null,
-    "arxiv_id": null,
+    "arxiv_id": "1808.01244",
     "venue_name": null,
     "work_type": null
   },
-  "authorships": [],
+  "authorships": [
+    {
+      "name": "Hei Law",
+      "affiliations": [
+        "Princeton University, Princeton, NJ, USA"
+      ]
+    },
+    {
+      "name": "Jia Deng",
+      "affiliations": [
+        "Princeton University, Princeton, NJ, USA"
+      ]
+    }
+  ],
   "references": {
     "expected_count": 49,
     "min_count": 41,
     "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
     "sample_arxiv_ids": [
-      "1712.00726"
+      "1409.1556",
+      "1412.6980",
+      "1504.08083",
+      "1604.04693",
+      "1605.06409",
+      "1612.03144",
+      "1612.06851",
+      "1701.06659",
+      "1703.06211",
+      "1703.10295",
+      "1706.03646",
+      "1707.01691",
+      "1708.02002",
+      "1711.00164",
+      "1711.06897",
+      "1711.07264",
+      "1711.08189",
+      "1711.08879",
+      "1712.00726",
+      "1712.00886",
+      "1712.02408"
     ],
     "sample_dois": []
   },
@@ -96,5 +129,9 @@
     "stratum": "author_year_compact",
     "annotation_kind": "silver_heuristic",
     "notes": "Silver: author-year layout; human audit recommended for production gold."
+  },
+  "quality_thresholds": {
+    "min_authorship_names_f1": 0.7,
+    "min_sample_arxiv_f1": 0.7
   }
 }

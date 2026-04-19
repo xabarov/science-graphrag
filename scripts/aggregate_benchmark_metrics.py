@@ -43,6 +43,11 @@ DEFAULT_RETRIEVAL_LIVE_CORPUS_MINI = "eval/results/current-retrieval-live-corpus
 # Claims family (advisory — Wave H1; see ontology-claims-benchmark-v1.md)
 DEFAULT_CLAIMS_MERGE_CONTRACT = "eval/results/current-claims-merge-contract.json"
 DEFAULT_CLAIMS_MINI_SUITE = "eval/results/current-claims-mini-suite.json"
+DEFAULT_CLAIMS_CORPUS_V2_MINI_SUITE = "eval/results/current-claims-corpus-v2-mini.json"
+DEFAULT_CLAIMS_PILOT_SUITE = "eval/results/current-claims-pilot-suite.json"
+
+DEFAULT_REFERENCES_RESOLUTION_CONTRACT = "eval/results/current-references-resolution-contract.json"
+DEFAULT_REFERENCES_RESOLUTION_MINI = "eval/results/current-references-resolution-mini.json"
 
 # Optional single-case retests after gold fixes (if present, listed in summary)
 SUPPLEMENTARY_RETESTS = (
@@ -241,7 +246,13 @@ def _claims_case_passed(case: dict[str, Any]) -> bool:
 
 
 def _summarize_claims_suite(rel: str) -> dict[str, Any]:
-    """Summarize claims benchmark suite JSON (same top-level shape as retrieval suite)."""
+    """Backward-compatible name for claims suite summaries."""
+
+    return _summarize_case_metrics_suite(rel)
+
+
+def _summarize_case_metrics_suite(rel: str) -> dict[str, Any]:
+    """Summarize a suite JSON with ``cases[]`` + ``summary`` (claims / references_resolution)."""
 
     p = ROOT / rel
     if not p.is_file():
@@ -510,6 +521,39 @@ def _md_claims_family_section(cf: dict[str, Any]) -> list[str]:
 
     _one("claims_merge_contract", cf.get("claims_merge_contract") or {})
     _one("claims_mini", cf.get("claims_mini") or {})
+    _one("claims_corpus_v2_mini", cf.get("claims_corpus_v2_mini") or {})
+    _one("claims_pilot", cf.get("claims_pilot") or {})
+    return lines
+
+
+def _md_references_resolution_family_section(rf: dict[str, Any]) -> list[str]:
+    lines = [
+        "## References resolution family (advisory)",
+        "",
+        "Structural scoring harness for bibliography resolution keys; **not** a substitute for "
+        "Neo4j-backed canonicalization yet. See "
+        "`docs/specs/benchmark-family-references-resolution-v1.md`.",
+        "",
+    ]
+    role = (rf.get("role") or "advisory") if isinstance(rf, dict) else "advisory"
+    lines.append(f"- **role**: `{role}`")
+    lines.append("")
+
+    def _one(label: str, block: dict[str, Any]) -> None:
+        lines.append(f"### {label}")
+        lines.append("")
+        if block.get("error"):
+            lines.append(f"- **status**: missing artifact `{block.get('artifact')}`")
+        else:
+            lines.append(f"- artifact: `{block.get('artifact')}`")
+            lines.append(f"- all_passed: **{block.get('all_passed')}**")
+            lines.append(f"- failed_count: **{block.get('failed_count')}**")
+            for fc in block.get("failed_cases") or []:
+                lines.append(f"  - `{fc.get('case_id')}`: {fc.get('metrics')}")
+        lines.append("")
+
+    _one("refs_merge_contract", rf.get("refs_merge_contract") or {})
+    _one("refs_mini (synthetic harness)", rf.get("refs_mini") or {})
     return lines
 
 
@@ -542,6 +586,9 @@ def _render_markdown(payload: dict[str, Any]) -> str:
         *_md_supplementary_section(payload.get("supplementary_retests") or []),
         *_md_retrieval_family_section(payload.get("retrieval_family") or {}),
         *_md_claims_family_section(payload.get("claims_family") or {}),
+        *_md_references_resolution_family_section(
+            payload.get("references_resolution_family") or {}
+        ),
         *_md_baseline_deltas_section(payload.get("deltas") or {}),
     ]
     return "\n".join(parts)
@@ -590,6 +637,10 @@ def main() -> int:
             "retrieval_live_corpus_mini": DEFAULT_RETRIEVAL_LIVE_CORPUS_MINI,
             "claims_merge_contract": DEFAULT_CLAIMS_MERGE_CONTRACT,
             "claims_mini_suite": DEFAULT_CLAIMS_MINI_SUITE,
+            "claims_corpus_v2_mini_suite": DEFAULT_CLAIMS_CORPUS_V2_MINI_SUITE,
+            "claims_pilot_suite": DEFAULT_CLAIMS_PILOT_SUITE,
+            "references_resolution_contract": DEFAULT_REFERENCES_RESOLUTION_CONTRACT,
+            "references_resolution_mini": DEFAULT_REFERENCES_RESOLUTION_MINI,
         },
         "reference": reference,
         "layer1_nightly": layer1,
@@ -606,6 +657,17 @@ def main() -> int:
             "role": "advisory",
             "claims_merge_contract": _summarize_claims_suite(DEFAULT_CLAIMS_MERGE_CONTRACT),
             "claims_mini": _summarize_claims_suite(DEFAULT_CLAIMS_MINI_SUITE),
+            "claims_corpus_v2_mini": _summarize_case_metrics_suite(
+                DEFAULT_CLAIMS_CORPUS_V2_MINI_SUITE
+            ),
+            "claims_pilot": _summarize_case_metrics_suite(DEFAULT_CLAIMS_PILOT_SUITE),
+        },
+        "references_resolution_family": {
+            "role": "advisory",
+            "refs_merge_contract": _summarize_case_metrics_suite(
+                DEFAULT_REFERENCES_RESOLUTION_CONTRACT
+            ),
+            "refs_mini": _summarize_case_metrics_suite(DEFAULT_REFERENCES_RESOLUTION_MINI),
         },
         "decision_gate": _decision_gate(reference, layer1, layer2),
     }

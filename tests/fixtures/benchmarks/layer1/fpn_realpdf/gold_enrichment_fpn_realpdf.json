@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "case_id": "fpn_realpdf",
+  "generated_at_utc": "2026-04-19T16:09:33.467091+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [
+      "1703.06870"
+    ],
+    "count": 1,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": 2017,
+    "arxiv_id": "1612.03144",
+    "doi": null,
+    "authors": [
+      {
+        "name": "Tsung-Yi Lin",
+        "affiliations": [
+          "Facebook AI Research (FAIR)",
+          "Cornell University"
+        ]
+      },
+      {
+        "name": "Piotr Dollár",
+        "affiliations": [
+          "Facebook AI Research (FAIR)"
+        ]
+      },
+      {
+        "name": "Ross Girshick",
+        "affiliations": [
+          "Facebook AI Research (FAIR)"
+        ]
+      },
+      {
+        "name": "Kaiming He",
+        "affiliations": [
+          "Facebook AI Research (FAIR)"
+        ]
+      },
+      {
+        "name": "Bharath Hariharan",
+        "affiliations": [
+          "Facebook AI Research (FAIR)"
+        ]
+      },
+      {
+        "name": "Serge Belongie",
+        "affiliations": [
+          "Cornell University"
+        ]
+      }
+    ]
+  }
+}

@@ -1,24 +1,49 @@
 {
   "case_id": "fcos_realpdf",
   "schema_version": 1,
-  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated. [gold enriched via scripts/enrich_gold_layer1.py]",
   "work_metadata": {
     "title": "FCOS: Fully Convolutional One-Stage Object Detection",
-    "publication_year": null,
+    "publication_year": 2019,
     "abstract_prefix": "We propose a fully convolutional one-stage object detector (FCOS) to sol",
     "doi": null,
-    "arxiv_id": null,
+    "arxiv_id": "1904.01355",
     "venue_name": null,
     "work_type": null
   },
-  "authorships": [],
+  "authorships": [
+    {
+      "name": "Zhi Tian",
+      "affiliations": [
+        "The University of Adelaide, Australia"
+      ]
+    },
+    {
+      "name": "Chunhua Shen",
+      "affiliations": [
+        "The University of Adelaide, Australia"
+      ]
+    },
+    {
+      "name": "Hao Chen",
+      "affiliations": [
+        "The University of Adelaide, Australia"
+      ]
+    },
+    {
+      "name": "Tong He",
+      "affiliations": [
+        "The University of Adelaide, Australia"
+      ]
+    }
+  ],
   "references": {
     "expected_count": 34,
     "min_count": 26,
     "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
     "sample_arxiv_ids": [
-      "1701.06659",
       "1509.04874",
+      "1701.06659",
       "1804.02767"
     ],
     "sample_dois": []
@@ -83,5 +108,9 @@
     "stratum": "bracket_numbered_mixed",
     "annotation_kind": "manual",
     "notes": "Spans [1]–[34]; page-number-only lines omitted after last entry."
+  },
+  "quality_thresholds": {
+    "min_authorship_names_f1": 0.7,
+    "min_sample_arxiv_f1": 0.7
   }
 }

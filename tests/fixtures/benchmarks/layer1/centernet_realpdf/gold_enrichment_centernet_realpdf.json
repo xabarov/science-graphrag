@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "case_id": "centernet_realpdf",
+  "generated_at_utc": "2026-04-19T16:08:53.178225+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [
+      "1612.06851",
+      "1701.06659",
+      "1704.01069",
+      "1705.09587",
+      "1712.00886",
+      "1901.01892"
+    ],
+    "count": 6,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": null,
+    "arxiv_id": "1904.08189",
+    "doi": null,
+    "authors": [
+      {
+        "name": "Kaiwen Duan",
+        "affiliations": [
+          "University of Chinese Academy of Sciences",
+          "Huawei Noah's Ark Lab"
+        ]
+      },
+      {
+        "name": "Song Bai",
+        "affiliations": [
+          "University of Oxford"
+        ]
+      },
+      {
+        "name": "Lingxi Xie",
+        "affiliations": [
+          "Huawei Noah's Ark Lab"
+        ]
+      },
+      {
+        "name": "Honggang Qi",
+        "affiliations": [
+          "University of Chinese Academy of Sciences"
+        ]
+      },
+      {
+        "name": "Qingming Huang",
+        "affiliations": [
+          "University of Chinese Academy of Sciences"
+        ]
+      },
+      {
+        "name": "Qi Tian",
+        "affiliations": [
+          "Huawei Noah's Ark Lab"
+        ]
+      }
+    ]
+  }
+}

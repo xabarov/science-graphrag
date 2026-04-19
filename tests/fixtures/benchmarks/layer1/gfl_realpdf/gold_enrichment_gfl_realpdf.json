@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "case_id": "gfl_realpdf",
+  "generated_at_utc": "2026-04-19T16:09:37.354938+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [
+      "1904.03797",
+      "1904.04821",
+      "1906.07155",
+      "1908.05641",
+      "1912.05086",
+      "1912.05190"
+    ],
+    "count": 6,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": 2020,
+    "arxiv_id": "2006.04388",
+    "doi": null,
+    "authors": [
+      {
+        "name": "Xiang Li",
+        "affiliations": [
+          "PCALab, Nanjing University of Science and Technology",
+          "Momenta"
+        ]
+      },
+      {
+        "name": "Wenhai Wang",
+        "affiliations": [
+          "Nanjing University",
+          "Momenta"
+        ]
+      },
+      {
+        "name": "Lijun Wu",
+        "affiliations": [
+          "Microsoft Research"
+        ]
+      },
+      {
+        "name": "Shuo Chen",
+        "affiliations": [
+          "PCALab, Nanjing University of Science and Technology"
+        ]
+      },
+      {
+        "name": "Xiaolin Hu",
+        "affiliations": [
+          "Tsinghua University"
+        ]
+      },
+      {
+        "name": "Jun Li",
+        "affiliations": [
+          "PCALab, Nanjing University of Science and Technology"
+        ]
+      },
+      {
+        "name": "Jinhui Tang",
+        "affiliations": [
+          "PCALab, Nanjing University of Science and Technology"
+        ]
+      },
+      {
+        "name": "Jian Yang",
+        "affiliations": [
+          "PCALab, Nanjing University of Science and Technology"
+        ]
+      }
+    ]
+  }
+}

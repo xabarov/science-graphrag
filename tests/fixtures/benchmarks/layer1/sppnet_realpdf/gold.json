@@ -1,33 +1,58 @@
 {
   "case_id": "sppnet_realpdf",
   "schema_version": 1,
-  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated. [gold enriched via scripts/enrich_gold_layer1.py]",
   "work_metadata": {
     "title": "Spatial Pyramid Pooling in Deep Convolutional Networks for Visual Recognition",
-    "publication_year": null,
+    "publication_year": 2015,
     "abstract_prefix": "Existing deep convolutional neural networks (CNNs) require a fixed-size ",
     "doi": null,
-    "arxiv_id": null,
+    "arxiv_id": "1406.4729",
     "venue_name": null,
     "work_type": null
   },
-  "authorships": [],
+  "authorships": [
+    {
+      "name": "Kaiming He",
+      "affiliations": [
+        "Microsoft Research, Beijing, China"
+      ]
+    },
+    {
+      "name": "Xiangyu Zhang",
+      "affiliations": [
+        "Xi'an Jiaotong University, Xi'an, China"
+      ]
+    },
+    {
+      "name": "Shaoqing Ren",
+      "affiliations": [
+        "University of Science and Technology of China, Hefei, China"
+      ]
+    },
+    {
+      "name": "Jian Sun",
+      "affiliations": [
+        "Microsoft Research, Beijing, China"
+      ]
+    }
+  ],
   "references": {
     "expected_count": 40,
     "min_count": 32,
     "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
     "sample_arxiv_ids": [
-      "1311.2901",
-      "1312.6229",
-      "1405.3531",
-      "1404.4316",
-      "1403.1840",
       "1310.1531",
-      "1409.0575",
+      "1311.2901",
       "1312.4400",
-      "1409.4842",
+      "1312.5402",
+      "1312.6229",
+      "1403.1840",
+      "1404.4316",
+      "1405.3531",
+      "1409.0575",
       "1409.1556",
-      "1312.5402"
+      "1409.4842"
     ],
     "sample_dois": []
   },
@@ -102,5 +127,9 @@
     "stratum": "bracket_numbered_realpdf",
     "annotation_kind": "manual",
     "notes": "Bootstrap from eval.references_harness.bibliography_gold_span; main ## References block; monotonic [n] detection; truncated before supplementary."
+  },
+  "quality_thresholds": {
+    "min_authorship_names_f1": 0.7,
+    "min_sample_arxiv_f1": 0.7
   }
 }

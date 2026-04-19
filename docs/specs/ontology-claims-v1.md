@@ -29,4 +29,4 @@ Represent **assertions anchored to works/chunks** without collapsing into a free
 
 No merge-blocking runner until a `tests/fixtures/benchmarks/**` case defines expected claim tuples.
 
-**Implemented (advisory v1):** benchmark family spec and fixtures — [`ontology-claims-benchmark-v1.md`](../benchmarks/ontology-claims-benchmark-v1.md), `eval/claims/`, `tests/fixtures/benchmarks/claims/`.
+**Implemented (advisory v1):** benchmark family spec and fixtures — [`ontology-claims-benchmark-v1.md`](../benchmarks/ontology-claims-benchmark-v1.md), `eval/claims/`, `tests/fixtures/benchmarks/claims/`. Optional `claim_match_mode=claim_id_or_normalized_text` supports extractor-agnostic scoring (see that doc).

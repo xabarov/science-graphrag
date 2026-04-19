@@ -2,6 +2,10 @@
 
 Single entry point for **what is authoritative today**, which benchmark families are **merge-blocking** vs **advisory**, and how **Wave H ontology expansion** is gated.
 
+Ontology expansion policy (benchmark-ready definition + sequencing): [`benchmark-ontology-expansion-policy.md`](benchmark-ontology-expansion-policy.md).
+
+Promotion checklist (advisory → stronger gate): [`benchmark-family-promotion-review.md`](benchmark-family-promotion-review.md).
+
 ## Authoritative baseline (decision gate)
 
 - **Machine-readable:** [`eval/results/benchmark-metrics-summary.json`](../../eval/results/benchmark-metrics-summary.json)
@@ -25,7 +29,8 @@ Policy: **LLM-on** runs are the quality reference for these families; merge CI m
 |------|---------|--------|
 | Retrieval / `POST /v1/query` | Grounding: trace, citations, optional chunk fingerprints | Advisory per [`benchmark-decision-gate.md`](benchmark-decision-gate.md) §8; mock suite for CI in [`eval/README.md`](../../eval/README.md) |
 | **Live retrieval mini-tier** | Real stack checks on a **small frozen** question set | [`retrieval-live-tier-v1.md`](../benchmarks/retrieval-live-tier-v1.md); tier `live_corpus_mini`; default artifact for aggregator: `eval/results/current-retrieval-live-corpus-mini.json` |
-| **Claims / epistemic (Wave H1)** | Ontology expansion beyond Method/Dataset | Advisory until explicitly promoted; see [`ontology-claims-benchmark-v1.md`](../benchmarks/ontology-claims-benchmark-v1.md), `eval/claims/`; aggregator defaults: `eval/results/current-claims-merge-contract.json`, `eval/results/current-claims-mini-suite.json` |
+| **Claims / epistemic (Wave H1)** | Ontology expansion beyond Method/Dataset | Advisory until explicitly promoted; see [`ontology-claims-benchmark-v1.md`](../benchmarks/ontology-claims-benchmark-v1.md), `eval/claims/`; aggregator defaults include `eval/results/current-claims-merge-contract.json`, `eval/results/current-claims-mini-suite.json`, `eval/results/current-claims-corpus-v2-mini.json`, `eval/results/current-claims-pilot-suite.json` |
+| **References resolution (v1 harness)** | Canonicalize bibliography strings → DOI / arXiv / `work_id` keys | Advisory; spec [`benchmark-family-references-resolution-v1.md`](../specs/benchmark-family-references-resolution-v1.md), `eval/references_resolution/`; default artifacts: `eval/results/current-references-resolution-contract.json`, `eval/results/current-references-resolution-mini.json` |
 
 These lanes **must not** flip `decision` to NO-GO until maintainers update [`benchmark-decision-gate.md`](benchmark-decision-gate.md) and [`scripts/aggregate_benchmark_metrics.py`](../../scripts/aggregate_benchmark_metrics.py).
 

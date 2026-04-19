@@ -1,24 +1,48 @@
 {
   "case_id": "rfcn_realpdf",
   "schema_version": 1,
-  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated. [gold enriched via scripts/enrich_gold_layer1.py]",
   "work_metadata": {
     "title": "R-FCN: Object Detection via Region-based Fully Convolutional Networks",
-    "publication_year": null,
+    "publication_year": 2016,
     "abstract_prefix": "We present region-based, fully convolutional networks for accurate and e",
     "doi": null,
-    "arxiv_id": null,
+    "arxiv_id": "1605.06409",
     "venue_name": null,
     "work_type": null
   },
-  "authorships": [],
+  "authorships": [
+    {
+      "name": "Jifeng Dai",
+      "affiliations": [
+        "Microsoft Research Asia"
+      ]
+    },
+    {
+      "name": "Yi Li",
+      "affiliations": [
+        "Tsinghua University"
+      ]
+    },
+    {
+      "name": "Kaiming He",
+      "affiliations": [
+        "Microsoft Research"
+      ]
+    },
+    {
+      "name": "Jian Sun",
+      "affiliations": []
+    }
+  ],
   "references": {
     "expected_count": 28,
     "min_count": 20,
     "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
     "sample_arxiv_ids": [
-      "1603.08678",
-      "1504.06066"
+      "1504.06066",
+      "1512.02325",
+      "1603.08678"
     ],
     "sample_dois": []
   },
@@ -74,5 +98,9 @@
     "stratum": "bracket_numbered_realpdf",
     "annotation_kind": "manual",
     "notes": "Bootstrap from eval.references_harness.bibliography_gold_span; main ## References block; monotonic [n] detection; truncated before supplementary."
+  },
+  "quality_thresholds": {
+    "min_authorship_names_f1": 0.7,
+    "min_sample_arxiv_f1": 0.7
   }
 }

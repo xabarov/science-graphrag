@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "description": "Excerpt from tests/fixtures/benchmarks/layer1/fpn_realpdf/article.md (Abstract).",
+  "benchmark_suite_tier": "claims_corpus_v2_mini",
+  "source_layer1_fixture": "fpn_realpdf",
+  "claim_match_mode": "claim_id_or_normalized_text",
+  "expected_claims": [
+    {
+      "claim_id": "od_corpus_fpn_multiscale_feature_pyramid",
+      "claim_type": "method",
+      "polarity": "positive",
+      "anchor_phrase": "Feature Pyramid Network (FPN)",
+      "claim_text_normalized": "feature pyramid network (fpn)"
+    }
+  ]
+}

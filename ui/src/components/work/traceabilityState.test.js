@@ -16,6 +16,7 @@ describe("traceabilityState", () => {
     );
     expect(readTraceabilityState(params)).toEqual({
       workId: "w1",
+      workspaceId: "",
       tab: "graph",
       nodeId: "n1",
       edgeId: "",

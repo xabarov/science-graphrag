@@ -1,0 +1,44 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+    "semantic_extraction_enabled": true
+  },
+  "summary": {
+    "case_count": 1,
+    "case_ids": [
+      "refs_contract_shape"
+    ],
+    "all_passed": true,
+    "references_resolution_eval": true
+  },
+  "cases": [
+    {
+      "case_id": "refs_contract_shape",
+      "metrics": {
+        "contract_only": true,
+        "contract_passed": true,
+        "passed": true,
+        "resolution_recall": 1.0,
+        "resolution_precision": 1.0,
+        "expected_count": 0,
+        "predicted_count": 1,
+        "matched_span_ids": [],
+        "missing_span_ids": [],
+        "min_resolution_recall": 1.0
+      },
+      "predictions": [
+        {
+          "raw_citation_span_id": "bib:contract_smoke",
+          "canonical_key": "doi:10.0000/contract.smoke"
+        }
+      ],
+      "wall_clock_seconds": 0.0,
+      "resolver": "default_resolve_predictions",
+      "extraction_llm_enabled": true
+    }
+  ]
+}

@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 import Chip from "@mui/material/Chip";
+import Collapse from "@mui/material/Collapse";
 import { Link } from "react-router-dom";
 
 import { formatResearchApiError, getWorkChunks, getWorkDetail } from "../../services/researchApi.js";
@@ -24,6 +25,7 @@ export default function ReaderWorkBody({
   const [chunks, setChunks] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [chunksOpen, setChunksOpen] = useState(false);
   const traceSummary = describeTraceabilityState({
     chunkFingerprint: focusedFingerprint,
     section: focusedSection,
@@ -44,7 +46,7 @@ export default function ReaderWorkBody({
       try {
         const [dRes, cRes] = await Promise.all([
           getWorkDetail(workId),
-          getWorkChunks(workId, { limit: 80, offset: 0 }),
+          getWorkChunks(workId, { limit: 200, offset: 0 }),
         ]);
         if (cancelled) return;
         setDetail(dRes.data);
@@ -62,6 +64,19 @@ export default function ReaderWorkBody({
       cancelled = true;
     };
   }, [workId]);
+
+  const combinedExtractedText = useMemo(() => {
+    const items = chunks?.items;
+    if (!Array.isArray(items) || !items.length) return "";
+    const sorted = [...items].sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
+    return sorted
+      .map((ch) => {
+        const head = ch.section_path ? `## ${ch.section_path}\n\n` : "";
+        return `${head}${ch.text || ""}`.trim();
+      })
+      .filter(Boolean)
+      .join("\n\n---\n\n");
+  }, [chunks]);
 
   return (
     <Box>
@@ -98,6 +113,34 @@ export default function ReaderWorkBody({
           )}
         </Box>
       )}
+
+      {chunks && !loading && combinedExtractedText ? (
+        <Box sx={{ mb: 2, p: 1.5, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "#141414" }}>
+          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 1 }}>Extracted text (reading view)</Typography>
+          <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.42)", mb: 1 }}>
+            Concatenated chunk texts in document order (Markdown-style headings from section paths). For chunk fingerprints use Advanced below.
+          </Typography>
+          <Box
+            sx={{
+              maxHeight: "min(60vh, 520px)",
+              overflow: "auto",
+              p: 1.25,
+              borderRadius: "4px",
+              border: "1px solid rgba(255,255,255,0.06)",
+              backgroundColor: "#0a0a0a",
+            }}
+          >
+            <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.82)", whiteSpace: "pre-wrap" }}>
+              {combinedExtractedText.length > 120_000 ? `${combinedExtractedText.slice(0, 120_000)}…` : combinedExtractedText}
+            </Typography>
+          </Box>
+          {Number(chunks.total) > (chunks.items || []).length ? (
+            <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.38)", mt: 0.75 }}>
+              Showing first {(chunks.items || []).length} of {chunks.total} chunks — increase limit in UI if needed.
+            </Typography>
+          ) : null}
+        </Box>
+      ) : null}
 
       {chunks && !loading && (
         <>
@@ -141,42 +184,49 @@ export default function ReaderWorkBody({
               </Box>
             </Box>
           ) : null}
-          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 1 }}>
-            Chunks ({chunks.total ?? (chunks.items || []).length})
-          </Typography>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            {(chunks.items || []).map((ch) => (
-              (() => {
-                const fingerprint = String(ch.chunk_fingerprint || "");
-                const sectionPath = String(ch.section_path || "");
-                const highlighted =
-                  (focusedFingerprint && fingerprint === focusedFingerprint) ||
-                  (focusedSection && sectionPath === focusedSection);
-                return (
-              <Box
-                key={`${ch.chunk_fingerprint}-${ch.order}`}
-                sx={{
-                  p: 1.5,
-                  borderRadius: "6px",
-                  border: highlighted ? "1px solid rgba(99,102,241,0.32)" : "1px solid rgba(255,255,255,0.08)",
-                  backgroundColor: highlighted ? "rgba(99,102,241,0.08)" : "#141414",
-                }}
-              >
-                <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75 }}>
-                  <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)" }}>
-                    {ch.section_path || "—"} · fp {ch.chunk_fingerprint}
-                  </Typography>
-                  {highlighted ? <Chip label="focused" size="small" sx={{ height: 20, fontSize: "0.6875rem" }} /> : null}
-                </Box>
-                <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)", mt: 0.5, whiteSpace: "pre-wrap" }}>
-                  {(ch.text || "").slice(0, 4000)}
-                  {(ch.text || "").length > 4000 ? "…" : ""}
-                </Typography>
-              </Box>
-                );
-              })()
-            ))}
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, mb: 0.5 }}>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem" }}>
+              Chunks (advanced) — {chunks.total ?? (chunks.items || []).length}
+            </Typography>
+            <CursorSmallButton type="button" onClick={() => setChunksOpen((o) => !o)} sx={{ fontSize: "0.75rem" }}>
+              {chunksOpen ? "Hide" : "Show"}
+            </CursorSmallButton>
           </Box>
+          <Collapse in={chunksOpen}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              {(chunks.items || []).map((ch) => (
+                (() => {
+                  const fingerprint = String(ch.chunk_fingerprint || "");
+                  const sectionPath = String(ch.section_path || "");
+                  const highlighted =
+                    (focusedFingerprint && fingerprint === focusedFingerprint) ||
+                    (focusedSection && sectionPath === focusedSection);
+                  return (
+                <Box
+                  key={`${ch.chunk_fingerprint}-${ch.order}`}
+                  sx={{
+                    p: 1.5,
+                    borderRadius: "6px",
+                    border: highlighted ? "1px solid rgba(99,102,241,0.32)" : "1px solid rgba(255,255,255,0.08)",
+                    backgroundColor: highlighted ? "rgba(99,102,241,0.08)" : "#141414",
+                  }}
+                >
+                  <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75 }}>
+                    <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)" }}>
+                      {ch.section_path || "—"} · fp {ch.chunk_fingerprint}
+                    </Typography>
+                    {highlighted ? <Chip label="focused" size="small" sx={{ height: 20, fontSize: "0.6875rem" }} /> : null}
+                  </Box>
+                  <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)", mt: 0.5, whiteSpace: "pre-wrap" }}>
+                    {(ch.text || "").slice(0, 4000)}
+                    {(ch.text || "").length > 4000 ? "…" : ""}
+                  </Typography>
+                </Box>
+                  );
+                })()
+              ))}
+            </Box>
+          </Collapse>
         </>
       )}
     </Box>

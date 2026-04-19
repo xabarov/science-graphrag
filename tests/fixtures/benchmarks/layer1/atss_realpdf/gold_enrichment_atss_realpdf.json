@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "case_id": "atss_realpdf",
+  "generated_at_utc": "2026-04-19T16:08:47.292850+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [],
+    "count": 0,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": 2020,
+    "arxiv_id": "1912.02424",
+    "doi": null,
+    "authors": [
+      {
+        "name": "Shifeng Zhang",
+        "affiliations": [
+          "CBSR, NLPR, CASIA",
+          "SAI, UCAS"
+        ]
+      },
+      {
+        "name": "Cheng Chi",
+        "affiliations": [
+          "AIR, CAS"
+        ]
+      },
+      {
+        "name": "Yongqiang Yao",
+        "affiliations": [
+          "BUPT"
+        ]
+      },
+      {
+        "name": "Zhen Lei",
+        "affiliations": [
+          "CBSR, NLPR, CASIA",
+          "SAI, UCAS"
+        ]
+      },
+      {
+        "name": "Stan Z. Li",
+        "affiliations": [
+          "Westlake University"
+        ]
+      }
+    ]
+  }
+}

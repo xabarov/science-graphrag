@@ -1,0 +1,13 @@
+{
+  "smoke": [
+    "refs_contract_shape"
+  ],
+  "refs_merge_contract": [
+    "refs_contract_shape"
+  ],
+  "refs_mini": [
+    "refs_mini_doi_pair",
+    "refs_mini_arxiv_id",
+    "refs_mini_work_id"
+  ]
+}

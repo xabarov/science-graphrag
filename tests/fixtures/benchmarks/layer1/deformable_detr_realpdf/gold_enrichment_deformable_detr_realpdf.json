@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "case_id": "deformable_detr_realpdf",
+  "generated_at_utc": "2026-04-19T16:08:59.519777+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [
+      "1904.10509",
+      "1911.02972",
+      "1912.12180",
+      "2003.05997",
+      "2003.07853",
+      "2004.05150",
+      "2004.08483",
+      "2006.03555",
+      "2006.04768",
+      "2006.16236",
+      "2007.14062",
+      "2009.06732"
+    ],
+    "count": 12,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": 2021,
+    "arxiv_id": "2010.04159",
+    "doi": null,
+    "authors": [
+      {
+        "name": "Xizhou Zhu",
+        "affiliations": [
+          "SenseTime Research"
+        ]
+      },
+      {
+        "name": "Weijie Su",
+        "affiliations": [
+          "University of Science and Technology of China",
+          "SenseTime Research"
+        ]
+      },
+      {
+        "name": "Lewei Lu",
+        "affiliations": [
+          "SenseTime Research"
+        ]
+      },
+      {
+        "name": "Bin Li",
+        "affiliations": [
+          "University of Science and Technology of China"
+        ]
+      },
+      {
+        "name": "Xiaogang Wang",
+        "affiliations": [
+          "SenseTime Research",
+          "The Chinese University of Hong Kong"
+        ]
+      },
+      {
+        "name": "Jifeng Dai",
+        "affiliations": [
+          "SenseTime Research"
+        ]
+      }
+    ]
+  }
+}

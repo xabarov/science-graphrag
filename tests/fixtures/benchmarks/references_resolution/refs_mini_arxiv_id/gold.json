@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "description": "Synthetic mini-case: arXiv-style canonical key normalization (lowercase in scorer).",
+  "min_resolution_recall": 1.0,
+  "expected_resolutions": [
+    {
+      "raw_citation_span_id": "span:arxiv_note",
+      "canonical_key": "arxiv:1703.06870"
+    }
+  ],
+  "synthetic_predictions": [
+    {
+      "raw_citation_span_id": "span:arxiv_note",
+      "canonical_key": "ARXIV:1703.06870"
+    }
+  ]
+}

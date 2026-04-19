@@ -16,17 +16,20 @@ export function normalizeWorkspaceTab(tab) {
 
 /**
  * @param {string | null | undefined} workId
- * @param {string} [tab]
+ * @param {string} [tab] legacy; ignored — workspace is a paper list, tools live in the left nav.
+ * @param {{ workspaceId?: string | null }} [options]
  * @returns {string}
  */
-export function buildWorkspacePath(workId, tab = "overview") {
-  const t = normalizeWorkspaceTab(tab);
-  if (!workId || !String(workId).trim()) {
+export function buildWorkspacePath(workId, tab = "overview", options = {}) {
+  void tab;
+  const wid = workId && String(workId).trim() ? String(workId).trim() : "";
+  const ws = options?.workspaceId != null && String(options.workspaceId).trim() ? String(options.workspaceId).trim() : "";
+  if (!wid && !ws) {
     return "/workspace";
   }
   const params = new URLSearchParams();
-  params.set("work_id", String(workId).trim());
-  params.set("tab", t);
+  if (wid) params.set("work_id", wid);
+  if (ws) params.set("workspace_id", ws);
   return `/workspace?${params.toString()}`;
 }
 

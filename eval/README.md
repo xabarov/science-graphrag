@@ -75,6 +75,26 @@ science-graphrag-claims-benchmark tests/fixtures/benchmarks/claims --suite --tie
 # frozen mini-pack (deterministic anchor harness)
 science-graphrag-claims-benchmark tests/fixtures/benchmarks/claims --suite --tier claims_mini \
   --json-out eval/results/claims-mini-suite.json
+# corpus-derived v2 mini + pilot (see docs/benchmarks/ontology-claims-benchmark-v1.md)
+science-graphrag-claims-benchmark tests/fixtures/benchmarks/claims --suite --tier claims_corpus_v2_mini \
+  --json-out eval/results/current-claims-corpus-v2-mini.json
+science-graphrag-claims-benchmark tests/fixtures/benchmarks/claims --suite --tier claims_pilot \
+  --json-out eval/results/current-claims-pilot-suite.json
+```
+
+## References resolution (v1 harness, advisory)
+
+- Код: `eval/references_resolution/` (`metrics`, `runner`).
+- Фикстуры: `tests/fixtures/benchmarks/references_resolution/`; тиры — [`case_tiers.json`](../tests/fixtures/benchmarks/references_resolution/case_tiers.json).
+- Спека: [docs/specs/benchmark-family-references-resolution-v1.md](../docs/specs/benchmark-family-references-resolution-v1.md).
+
+```bash
+science-graphrag-references-resolution-benchmark tests/fixtures/benchmarks/references_resolution --suite \
+  --tier refs_merge_contract \
+  --json-out eval/results/current-references-resolution-contract.json
+science-graphrag-references-resolution-benchmark tests/fixtures/benchmarks/references_resolution --suite \
+  --tier refs_mini \
+  --json-out eval/results/current-references-resolution-mini.json
 ```
 
 ## Layer-1 (markdown → drafts)
@@ -104,6 +124,8 @@ SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED=false \
 ```
 
 Тиры: `tests/fixtures/benchmarks/layer1/case_tiers.json`. Альтернатива: `python -m eval.layer1.runner …`.
+
+**Обогащение gold (regex + опционально LLM):** [`scripts/enrich_gold_layer1.py`](../scripts/enrich_gold_layer1.py) пишет рядом с `gold.json` файл `gold_enrichment_<case_id>.json` (шаг A: все arXiv из `references_benchmark.raw_entries`; шаг B: год / arXiv работы / авторы из начала `article.md`, нужен `TESTGEN_LLM_*`). Сначала пилот на 1–3 кейсах с `--dry-run` (без LLM), затем с ключами без `--dry-run`, ревью, потом `--apply`.
 
 **Корпус object-detection (много PDF):** инвентарь и скрипты — [docs/benchmarks/object-detection-inventory.md](../docs/benchmarks/object-detection-inventory.md), [docs/benchmarks/object-detection-corpus.md](../docs/benchmarks/object-detection-corpus.md). Регенерация layer-1 из локальной папки: `scripts/build_od_corpus_fixtures.py`; layer-2 semantic: `scripts/generate_layer2_od_semantic_fixtures.py`.
 

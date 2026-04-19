@@ -34,7 +34,7 @@ describe("homeState", () => {
     );
     expect(getContinueWorkspaceTarget()).toEqual({
       workId: "w1",
-      path: "/workspace?work_id=w1&tab=graph",
+      path: "/workspace?work_id=w1",
     });
   });
 

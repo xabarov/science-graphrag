@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "description": "Merge-safe contract: list-shaped predictions with required keys.",
+  "contract_only": true,
+  "expected_resolutions": [],
+  "synthetic_predictions": [
+    {
+      "raw_citation_span_id": "bib:contract_smoke",
+      "canonical_key": "doi:10.0000/contract.smoke"
+    }
+  ]
+}

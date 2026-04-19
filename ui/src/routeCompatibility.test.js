@@ -23,8 +23,8 @@ describe("routeCompatibility", () => {
     expect(buildLegacyAdminRedirectTarget("/workspace")).toBeNull();
   });
 
-  it("keeps workspace deep links unchanged", () => {
-    expect(buildWorkspacePath("paper-1", "graph")).toBe("/workspace?work_id=paper-1&tab=graph");
-    expect(buildWorkspacePath("paper-2", "ask")).toBe("/workspace?work_id=paper-2&tab=ask");
+  it("keeps workspace paths work-id centric (tabs removed from shell)", () => {
+    expect(buildWorkspacePath("paper-1", "graph")).toBe("/workspace?work_id=paper-1");
+    expect(buildWorkspacePath("paper-2", "ask")).toBe("/workspace?work_id=paper-2");
   });
 });

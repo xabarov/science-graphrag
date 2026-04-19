@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "case_id": "selective_search_realpdf",
+  "generated_at_utc": "2026-04-19T16:10:07.344681+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [],
+    "count": 0,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": 2012,
+    "arxiv_id": null,
+    "doi": null,
+    "authors": [
+      {
+        "name": "J.R.R. Uijlings",
+        "affiliations": [
+          "University of Trento, Italy",
+          "University of Amsterdam, the Netherlands"
+        ]
+      },
+      {
+        "name": "K.E.A. van de Sande",
+        "affiliations": [
+          "University of Amsterdam, the Netherlands"
+        ]
+      },
+      {
+        "name": "T. Gevers",
+        "affiliations": [
+          "University of Amsterdam, the Netherlands"
+        ]
+      },
+      {
+        "name": "A.W.M. Smeulders",
+        "affiliations": [
+          "University of Amsterdam, the Netherlands"
+        ]
+      }
+    ]
+  }
+}

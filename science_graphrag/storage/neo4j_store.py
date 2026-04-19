@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import re
 import uuid
+from datetime import datetime, timezone
 from typing import Any
 
 from neo4j import Driver, GraphDatabase, NotificationClassification
@@ -57,6 +58,10 @@ class Neo4jGraphStore:
             (
                 "CREATE CONSTRAINT dataset_id_unique IF NOT EXISTS "
                 "FOR (d:Dataset) REQUIRE d.id IS UNIQUE"
+            ),
+            (
+                "CREATE CONSTRAINT workspace_id_unique IF NOT EXISTS "
+                "FOR (ws:Workspace) REQUIRE ws.id IS UNIQUE"
             ),
         ]
         with self._driver.session() as session:
@@ -606,3 +611,108 @@ class Neo4jGraphStore:
             drop=drop_id,
         )
         return True
+
+    # --- User workspaces (:Workspace)-[:CONTAINS]->(:Work) ---
+
+    def workspace_create(self, name: str) -> dict[str, Any]:
+        """Create a Workspace node and return ``{id, name, created_at}``."""
+
+        ws_id = str(uuid.uuid4())
+        created = datetime.now(tz=timezone.utc).isoformat()
+        label = (name or "").strip() or "Workspace"
+        q = (
+            "CREATE (ws:Workspace {id: $id, name: $name, created_at: $created}) "
+            "RETURN ws.id AS id, ws.name AS name, ws.created_at AS created_at"
+        )
+        with self._driver.session() as session:
+            rec = session.run(q, id=ws_id, name=label, created=created).single()
+            if not rec:
+                raise RuntimeError("workspace_create_failed")
+        return {"id": str(rec["id"]), "name": str(rec["name"]), "created_at": str(rec["created_at"])}
+
+    def workspace_list(self) -> list[dict[str, Any]]:
+        q = """
+        MATCH (ws:Workspace)
+        OPTIONAL MATCH (ws)-[:CONTAINS]->(w:Work)
+        WITH ws, collect(DISTINCT w.id) AS wids
+        RETURN ws.id AS id, ws.name AS name, ws.created_at AS created_at, wids AS work_ids
+        ORDER BY ws.created_at DESC
+        """
+        out: list[dict[str, Any]] = []
+        with self._driver.session() as session:
+            for rec in session.run(q):
+                wids = [str(x) for x in (rec["work_ids"] or []) if x]
+                out.append(
+                    {
+                        "id": str(rec["id"]),
+                        "name": str(rec["name"] or ""),
+                        "created_at": str(rec["created_at"] or ""),
+                        "work_ids": wids,
+                    },
+                )
+        return out
+
+    def workspace_get(self, workspace_id: str) -> dict[str, Any] | None:
+        q = """
+        MATCH (ws:Workspace {id: $id})
+        OPTIONAL MATCH (ws)-[:CONTAINS]->(w:Work)
+        WITH ws, collect(DISTINCT w.id) AS wids
+        RETURN ws.id AS id, ws.name AS name, ws.created_at AS created_at, wids AS work_ids
+        """
+        with self._driver.session() as session:
+            rec = session.run(q, id=workspace_id).single()
+            if not rec:
+                return None
+            wids = [str(x) for x in (rec["work_ids"] or []) if x]
+            return {
+                "id": str(rec["id"]),
+                "name": str(rec["name"] or ""),
+                "created_at": str(rec["created_at"] or ""),
+                "work_ids": wids,
+            }
+
+    def workspace_rename(self, workspace_id: str, name: str) -> bool:
+        label = (name or "").strip()
+        if not label:
+            return False
+        q = "MATCH (ws:Workspace {id: $id}) SET ws.name = $name RETURN 1 AS ok"
+        with self._driver.session() as session:
+            return bool(session.run(q, id=workspace_id, name=label).single())
+
+    def workspace_delete(self, workspace_id: str) -> bool:
+        q = "MATCH (ws:Workspace {id: $id}) DETACH DELETE ws"
+        with self._driver.session() as session:
+            summary = session.run(q, id=workspace_id).consume()
+            return int(summary.counters.nodes_deleted) > 0
+
+    def workspace_add_work(self, workspace_id: str, work_id: str) -> bool:
+        if not self.work_exists(work_id):
+            return False
+        q = """
+        MATCH (ws:Workspace {id: $wid})
+        MATCH (w:Work {id: $work})
+        MERGE (ws)-[:CONTAINS]->(w)
+        RETURN 1 AS ok
+        """
+        with self._driver.session() as session:
+            return bool(session.run(q, wid=workspace_id, work=work_id).single())
+
+    def workspace_remove_work(self, workspace_id: str, work_id: str) -> bool:
+        q = """
+        MATCH (ws:Workspace {id: $wid})-[r:CONTAINS]->(w:Work {id: $work})
+        DELETE r
+        RETURN count(*) AS n
+        """
+        with self._driver.session() as session:
+            rec = session.run(q, wid=workspace_id, work=work_id).single()
+            return bool(rec and int(rec["n"]) > 0)
+
+    def workspace_merge_into(self, keep_workspace_id: str, drop_workspace_id: str) -> bool:
+        if keep_workspace_id == drop_workspace_id:
+            return False
+        drop = self.workspace_get(drop_workspace_id)
+        if not drop:
+            return False
+        for wid in drop.get("work_ids") or []:
+            self.workspace_add_work(keep_workspace_id, str(wid))
+        return self.workspace_delete(drop_workspace_id)

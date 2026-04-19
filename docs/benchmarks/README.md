@@ -1,5 +1,19 @@
 # Бенчмарки и оценка качества
 
+## Пакет «benchmark program overview» (начать здесь)
+
+Единая карта программы бенчмарков, инвентарь фикстур, каталог метрик и roadmap:
+
+| Файл | Описание |
+|------|----------|
+| [benchmark-program-overview.md](benchmark-program-overview.md) | Входная точка: семейства, core vs advisory, снимок сводки, навигация |
+| [benchmark-dataset-inventory.md](benchmark-dataset-inventory.md) | Учёт `tests/fixtures/benchmarks/*`, тиры, происхождение данных |
+| [benchmark-metrics-catalog.md](benchmark-metrics-catalog.md) | Метрики по семействам + committed values из `benchmark-metrics-summary` |
+| [benchmark-metrics-values.md](benchmark-metrics-values.md) | Таблицы чисел по кейсам (генерация: `scripts/generate_benchmark_metrics_tables.py`) |
+| [benchmark-roadmap-ir-extraction.md](benchmark-roadmap-ir-extraction.md) | Roadmap чётких IR-style extraction задач |
+| [benchmark-roadmap-fuzzy-eval.md](benchmark-roadmap-fuzzy-eval.md) | Roadmap ROUGE / similarity / LLM-as-a-judge (advisory) |
+| [../runbooks/benchmark-roadmap-checklist.md](../runbooks/benchmark-roadmap-checklist.md) | Операционные чеклисты для команды |
+
 ## Документы
 
 | Файл | Описание |
@@ -13,6 +27,9 @@
 | [yolov1-followup.md](yolov1-followup.md) | Follow-up по качеству и графу `CITES` |
 | [retrieval-live-tier-v1.md](retrieval-live-tier-v1.md) | Живой mini-tier retrieval (`live_corpus_mini`) на пилотном корпусе |
 | [ontology-claims-benchmark-v1.md](ontology-claims-benchmark-v1.md) | Claims / epistemic benchmark family (Wave H1, advisory) |
+| [benchmark-family-references-resolution-v1.md](../specs/benchmark-family-references-resolution-v1.md) | References resolution benchmark family (v1 harness, advisory) |
+
+**Ontology expansion policy:** [`../runbooks/benchmark-ontology-expansion-policy.md`](../runbooks/benchmark-ontology-expansion-policy.md).
 
 **Reference quality lane (LLM-on):** `.github/workflows/benchmark-reference.yml` — обязательный YOLOv1 benchmark contract (`layer1 + graph + layer2`) с `MAIN_LLM_API_KEY`.
 Runbook: [docs/runbooks/benchmark-driven-dev-loop.md](../runbooks/benchmark-driven-dev-loop.md).

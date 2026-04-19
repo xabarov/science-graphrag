@@ -1,24 +1,67 @@
 {
   "case_id": "ssd_realpdf",
   "schema_version": 1,
-  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated. [gold enriched via scripts/enrich_gold_layer1.py]",
   "work_metadata": {
     "title": "SSD: Single Shot MultiBox Detector",
-    "publication_year": null,
+    "publication_year": 2016,
     "abstract_prefix": "We present a method for detecting objects in images using a single deep ",
     "doi": null,
-    "arxiv_id": null,
+    "arxiv_id": "1512.02325",
     "venue_name": null,
     "work_type": null
   },
-  "authorships": [],
+  "authorships": [
+    {
+      "name": "Wei Liu",
+      "affiliations": [
+        "UNC Chapel Hill"
+      ]
+    },
+    {
+      "name": "Dragomir Anguelov",
+      "affiliations": [
+        "Zoox Inc."
+      ]
+    },
+    {
+      "name": "Dumitru Erhan",
+      "affiliations": [
+        "Google Inc."
+      ]
+    },
+    {
+      "name": "Christian Szegedy",
+      "affiliations": [
+        "Google Inc."
+      ]
+    },
+    {
+      "name": "Scott Reed",
+      "affiliations": [
+        "University of Michigan, Ann-Arbor"
+      ]
+    },
+    {
+      "name": "Cheng-Yang Fu",
+      "affiliations": [
+        "UNC Chapel Hill"
+      ]
+    },
+    {
+      "name": "Alexander C. Berg",
+      "affiliations": [
+        "UNC Chapel Hill"
+      ]
+    }
+  ],
   "references": {
     "expected_count": 27,
     "min_count": 19,
     "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
     "sample_arxiv_ids": [
-      "1412.1441",
-      "1312.5402"
+      "1312.5402",
+      "1412.1441"
     ],
     "sample_dois": []
   },
@@ -74,5 +117,9 @@
     "stratum": "numeric_dot_embedded_noise",
     "annotation_kind": "manual",
     "notes": "Includes mid-list OCR noise lines; split on ^\\d+\\. "
+  },
+  "quality_thresholds": {
+    "min_authorship_names_f1": 0.7,
+    "min_sample_arxiv_f1": 0.7
   }
 }

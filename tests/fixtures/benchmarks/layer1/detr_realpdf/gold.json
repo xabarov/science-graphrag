@@ -1,33 +1,70 @@
 {
   "case_id": "detr_realpdf",
   "schema_version": 1,
-  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated. [gold enriched via scripts/enrich_gold_layer1.py]",
   "work_metadata": {
     "title": "End-to-End Object Detection with Transformers",
-    "publication_year": null,
+    "publication_year": 2020,
     "abstract_prefix": "We present a new method that views object detection as a direct set pred",
     "doi": null,
-    "arxiv_id": null,
+    "arxiv_id": "2005.12872",
     "venue_name": null,
     "work_type": null
   },
-  "authorships": [],
+  "authorships": [
+    {
+      "name": "Nicolas Carion",
+      "affiliations": [
+        "Facebook AI"
+      ]
+    },
+    {
+      "name": "Francisco Massa",
+      "affiliations": [
+        "Facebook AI"
+      ]
+    },
+    {
+      "name": "Gabriel Synnaeve",
+      "affiliations": [
+        "Facebook AI"
+      ]
+    },
+    {
+      "name": "Nicolas Usunier",
+      "affiliations": [
+        "Facebook AI"
+      ]
+    },
+    {
+      "name": "Alexander Kirillov",
+      "affiliations": [
+        "Facebook AI"
+      ]
+    },
+    {
+      "name": "Sergey Zagoruyko",
+      "affiliations": [
+        "Facebook AI"
+      ]
+    }
+  ],
   "references": {
     "expected_count": 54,
     "min_count": 46,
     "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
     "sample_arxiv_ids": [
-      "2002.08926",
+      "1511.06449",
+      "1711.10433",
+      "1712.00617",
+      "1805.00613",
+      "1904.05709",
+      "1904.07850",
       "1904.09324",
       "1905.03072",
-      "1711.10433",
-      "1511.06449",
-      "1904.05709",
-      "1805.00613",
-      "1712.00617",
       "1911.08460",
       "1912.02424",
-      "1904.07850"
+      "2002.08926"
     ],
     "sample_dois": []
   },
@@ -130,5 +167,9 @@
     "stratum": "numeric_dot_page_footers",
     "annotation_kind": "silver_heuristic",
     "notes": "Silver: extract_references on synthetic heading + bibliography slice; footer lines inside slice may merge into adjacent entries."
+  },
+  "quality_thresholds": {
+    "min_authorship_names_f1": 0.7,
+    "min_sample_arxiv_f1": 0.7
   }
 }

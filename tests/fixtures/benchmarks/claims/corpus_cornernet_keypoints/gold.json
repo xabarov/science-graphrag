@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "description": "Excerpt from tests/fixtures/benchmarks/layer1/cornernet_realpdf/article.md (Abstract).",
+  "benchmark_suite_tier": "claims_pilot",
+  "source_layer1_fixture": "cornernet_realpdf",
+  "claim_match_mode": "claim_id_or_normalized_text",
+  "expected_claims": [
+    {
+      "claim_id": "od_corpus_cornernet_paired_keypoints",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "anchor_phrase": "eliminate the need for designing a set of anchor boxes",
+      "claim_text_normalized": "eliminate the need for designing a set of anchor boxes"
+    }
+  ]
+}

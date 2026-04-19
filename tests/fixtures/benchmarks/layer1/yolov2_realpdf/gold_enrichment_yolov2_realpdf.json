@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "case_id": "yolov2_realpdf",
+  "generated_at_utc": "2026-04-19T16:10:18.766806+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [
+      "1312.4400",
+      "1409.1556",
+      "1409.4842",
+      "1502.03167",
+      "1504.08083",
+      "1506.01497",
+      "1506.02640",
+      "1512.02325",
+      "1512.03385",
+      "1512.04143",
+      "1602.07261"
+    ],
+    "count": 11,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": 2016,
+    "arxiv_id": "1612.08242",
+    "doi": null,
+    "authors": [
+      {
+        "name": "Joseph Redmon",
+        "affiliations": [
+          "University of Washington",
+          "Allen Institute for AI"
+        ]
+      },
+      {
+        "name": "Ali Farhadi",
+        "affiliations": [
+          "University of Washington",
+          "Allen Institute for AI"
+        ]
+      }
+    ]
+  }
+}

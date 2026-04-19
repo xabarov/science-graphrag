@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "case_id": "dn_detr_realpdf",
+  "generated_at_utc": "2026-04-19T16:09:18.408821+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [
+      "2010.04159",
+      "2011.10881",
+      "2101.07448",
+      "2104.01318",
+      "2108.06152",
+      "2109.07107",
+      "2207.13085",
+      "2207.14172"
+    ],
+    "count": 8,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": 2022,
+    "arxiv_id": "2203.01305",
+    "doi": null,
+    "authors": [
+      {
+        "name": "Feng Li",
+        "affiliations": [
+          "Department of Computer Science and Engineering, The Hong Kong University of Science and Technology, Hong Kong"
+        ]
+      },
+      {
+        "name": "Hao Zhang",
+        "affiliations": [
+          "Department of Computer Science and Engineering, The Hong Kong University of Science and Technology, Hong Kong"
+        ]
+      },
+      {
+        "name": "Shilong Liu",
+        "affiliations": [
+          "Department of Computer Science and Engineering, Tsinghua University, Beijing"
+        ]
+      },
+      {
+        "name": "Jian Guo",
+        "affiliations": [
+          "IDEA"
+        ]
+      },
+      {
+        "name": "Lionel M. Ni",
+        "affiliations": [
+          "The Hong Kong University of Science and Technology (Guangzhou)"
+        ]
+      },
+      {
+        "name": "Lei Zhang",
+        "affiliations": [
+          "IDEA"
+        ]
+      }
+    ]
+  }
+}

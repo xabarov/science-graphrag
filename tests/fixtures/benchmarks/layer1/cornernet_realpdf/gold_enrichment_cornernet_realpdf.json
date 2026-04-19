@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "case_id": "cornernet_realpdf",
+  "generated_at_utc": "2026-04-19T16:08:55.686644+00:00",
+  "dry_run": false,
+  "step_a_arxiv_from_bibliography": {
+    "arxiv_ids_from_bibliography": [
+      "1409.1556",
+      "1412.6980",
+      "1504.08083",
+      "1604.04693",
+      "1605.06409",
+      "1612.03144",
+      "1612.06851",
+      "1701.06659",
+      "1703.06211",
+      "1703.10295",
+      "1706.03646",
+      "1707.01691",
+      "1708.02002",
+      "1711.00164",
+      "1711.06897",
+      "1711.07264",
+      "1711.08189",
+      "1711.08879",
+      "1712.00726",
+      "1712.00886",
+      "1712.02408"
+    ],
+    "count": 21,
+    "source": "regex_on_references_benchmark.raw_entries"
+  },
+  "step_b_header_metadata": {
+    "year": 2019,
+    "arxiv_id": "1808.01244",
+    "doi": null,
+    "authors": [
+      {
+        "name": "Hei Law",
+        "affiliations": [
+          "Princeton University, Princeton, NJ, USA"
+        ]
+      },
+      {
+        "name": "Jia Deng",
+        "affiliations": [
+          "Princeton University, Princeton, NJ, USA"
+        ]
+      }
+    ]
+  }
+}

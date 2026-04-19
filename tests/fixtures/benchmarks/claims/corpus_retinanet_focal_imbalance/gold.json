@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "description": "Excerpt from tests/fixtures/benchmarks/layer1/retinanet_focal_realpdf/article.md (Abstract).",
+  "benchmark_suite_tier": "claims_corpus_v2_mini",
+  "source_layer1_fixture": "retinanet_focal_realpdf",
+  "claim_match_mode": "claim_id_or_normalized_text",
+  "expected_claims": [
+    {
+      "claim_id": "od_corpus_retinanet_class_imbalance",
+      "claim_type": "finding",
+      "polarity": "neutral",
+      "anchor_phrase": "extreme foreground-background class imbalance",
+      "claim_text_normalized": "extreme foreground-background class imbalance"
+    }
+  ]
+}

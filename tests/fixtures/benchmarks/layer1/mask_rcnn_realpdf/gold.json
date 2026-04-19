@@ -1,25 +1,50 @@
 {
   "case_id": "mask_rcnn_realpdf",
   "schema_version": 1,
-  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated.",
+  "description": "Real CV paper: PDF→text (pypdf) → structured MD; noisy but realistic. Tier: nightly_heavy (see case_tiers.json). Authorships empty in gold when author line is not comma-separated. [gold enriched via scripts/enrich_gold_layer1.py]",
   "work_metadata": {
     "title": "Mask R-CNN",
-    "publication_year": null,
+    "publication_year": 2018,
     "abstract_prefix": "We present a conceptually simple, flexible, and general framework for ob",
     "doi": null,
-    "arxiv_id": null,
+    "arxiv_id": "1703.06870",
     "venue_name": null,
     "work_type": null
   },
-  "authorships": [],
+  "authorships": [
+    {
+      "name": "Kaiming He",
+      "affiliations": [
+        "Facebook AI Research (FAIR)"
+      ]
+    },
+    {
+      "name": "Georgia Gkioxari",
+      "affiliations": [
+        "Facebook AI Research (FAIR)"
+      ]
+    },
+    {
+      "name": "Piotr Dollár",
+      "affiliations": [
+        "Facebook AI Research (FAIR)"
+      ]
+    },
+    {
+      "name": "Ross Girshick",
+      "affiliations": [
+        "Facebook AI Research (FAIR)"
+      ]
+    }
+  ],
   "references": {
     "expected_count": 52,
     "min_count": 44,
     "notes": "Heuristic extract_references counts on this MD; PDF hyphenation may shift totals.",
     "sample_arxiv_ids": [
-      "1712.04440",
       "1612.06851",
-      "1711.07971"
+      "1711.07971",
+      "1712.04440"
     ],
     "sample_dois": []
   },
@@ -94,5 +119,9 @@
     "stratum": "bracket_numbered_realpdf",
     "annotation_kind": "manual",
     "notes": "Bootstrap from eval.references_harness.bibliography_gold_span; main ## References block; monotonic [n] detection; truncated before supplementary."
+  },
+  "quality_thresholds": {
+    "min_authorship_names_f1": 0.7,
+    "min_sample_arxiv_f1": 0.7
   }
 }

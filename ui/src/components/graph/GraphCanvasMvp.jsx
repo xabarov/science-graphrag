@@ -4,8 +4,14 @@ import Box from "@mui/material/Box";
 import Slider from "@mui/material/Slider";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import CenterFocusStrongOutlinedIcon from "@mui/icons-material/CenterFocusStrongOutlined";
+import FitScreenOutlinedIcon from "@mui/icons-material/FitScreenOutlined";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import LinkOffOutlinedIcon from "@mui/icons-material/LinkOffOutlined";
+import RestartAltOutlinedIcon from "@mui/icons-material/RestartAltOutlined";
+import ZoomOutMapOutlinedIcon from "@mui/icons-material/ZoomOutMapOutlined";
 
-import { CursorSmallButton } from "../common/index.js";
+import { CursorIconButton } from "../common/index.js";
 import {
   computeFitTransform,
   computeWorldLayout,
@@ -873,6 +879,16 @@ export default function GraphCanvasMvp({
   const simStatus =
     layoutMode === "force" ? (isSimulationStable ? "Layout stable." : "Layout simulating.") : "";
 
+  const canvasHelpTitle = (
+    <Box component="span" sx={{ display: "block", maxWidth: 340, fontSize: "0.75rem", lineHeight: 1.45, fontWeight: 400 }}>
+      Wheel over the canvas zooms. Drag empty canvas to pan. Click a node or edge to select. Escape clears selection (focus the
+      graph first). Keys + / − / 0 zoom and fit when the graph has focus.
+      {layoutMode === "force"
+        ? " Force: drag a node; after layout stabilizes, release to pin. Restart respreads; Unpin releases pins."
+        : " Circle: static ring — drag a node to switch to Force."}
+    </Box>
+  );
+
   return (
     <Box
       ref={wrapRef}
@@ -919,26 +935,27 @@ export default function GraphCanvasMvp({
         {selectionLive}
         {simStatus ? ` ${simStatus}` : ""}
       </Typography>
-      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1, px: 1.5, pt: 1, pb: 0.5, flexShrink: 0 }}>
-        <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", flex: "1 1 140px" }}>
-          Wheel over the canvas zooms in/out (page scroll works when the cursor is outside this area). Drag empty canvas to pan ·
-          click a node or edge to select · Escape clears selection (focus graph first). Keys + / − / 0 zoom and fit when the graph
-          has focus. Use &quot;Center on selected&quot; to align the viewport on a node.
-          {layoutMode === "force"
-            ? " Force mode: drag a node; after the layout stabilizes, release to pin. Restart sim respreads; Unpin all releases pins."
-            : " Circle mode: static ring — drag a node to switch to Force and rearrange."}
-        </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: 0.75,
+          px: 1,
+          py: 0.5,
+          flexShrink: 0,
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+        }}
+      >
+        <Tooltip title={canvasHelpTitle} placement="bottom" enterDelay={300}>
+          <CursorIconButton type="button" aria-label="Canvas controls help">
+            <InfoOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+          </CursorIconButton>
+        </Tooltip>
         {layoutMode === "force" ? (
-          <Box
-            sx={{
-              flex: "1 1 160px",
-              minWidth: 140,
-              maxWidth: 280,
-              px: 0.5,
-            }}
-          >
-            <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.45)", mb: 0.25 }}>
-              Repulsion ({Math.round(repulsionPercent)}%)
+          <Box sx={{ width: 120, minWidth: 100, maxWidth: 140, px: 0.25 }}>
+            <Typography sx={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.42)", mb: 0.15 }}>
+              Repulsion {Math.round(repulsionPercent)}%
             </Typography>
             <Slider
               size="small"
@@ -950,8 +967,8 @@ export default function GraphCanvasMvp({
               getAriaValueText={() => `${Math.round(repulsionPercent)} percent`}
               sx={{
                 color: "rgba(129,140,248,0.85)",
-                py: 0.25,
-                "& .MuiSlider-thumb": { width: 12, height: 12 },
+                py: 0,
+                "& .MuiSlider-thumb": { width: 10, height: 10 },
                 "& .MuiSlider-track": { border: "none" },
               }}
               aria-label="Force layout repulsion strength"
@@ -959,34 +976,44 @@ export default function GraphCanvasMvp({
           </Box>
         ) : null}
         {layoutMode === "force" ? (
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "center" }}>
-            <Tooltip title="Reseed positions with jitter and rerun physics (like osint reset)" placement="top" enterDelay={400}>
+          <>
+            <Tooltip title="Restart simulation (reseed + rerun physics)" placement="bottom" enterDelay={300}>
+              <CursorIconButton type="button" onClick={handleRestartForceSimulation} aria-label="Restart simulation">
+                <RestartAltOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+              </CursorIconButton>
+            </Tooltip>
+            <Tooltip title="Unpin all nodes" placement="bottom" enterDelay={300}>
               <span>
-                <CursorSmallButton type="button" onClick={handleRestartForceSimulation}>
-                  Restart sim
-                </CursorSmallButton>
+                <CursorIconButton type="button" onClick={handleUnpinAll} disabled={pinnedNodeCount === 0} aria-label="Unpin all nodes">
+                  <LinkOffOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+                </CursorIconButton>
               </span>
             </Tooltip>
-            <Tooltip title="Clear pinned nodes so forces move them again" placement="top" enterDelay={400}>
-              <span>
-                <CursorSmallButton type="button" onClick={handleUnpinAll} disabled={pinnedNodeCount === 0}>
-                  Unpin all
-                </CursorSmallButton>
-              </span>
-            </Tooltip>
-          </Box>
+          </>
         ) : null}
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
-          <CursorSmallButton type="button" onClick={handleResetView}>
-            Fit
-          </CursorSmallButton>
-          <CursorSmallButton type="button" onClick={handleResetZoom}>
-            Reset zoom
-          </CursorSmallButton>
-          <CursorSmallButton type="button" onClick={handleCenterOnSelected} disabled={!selectedNodeId}>
-            Center on selected
-          </CursorSmallButton>
-        </Box>
+        <Box sx={{ flex: 1, minWidth: 4 }} />
+        <Tooltip title="Fit graph to view" placement="bottom">
+          <CursorIconButton type="button" onClick={handleResetView} aria-label="Fit graph to view">
+            <FitScreenOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+          </CursorIconButton>
+        </Tooltip>
+        <Tooltip title="Reset zoom (scale 1 at center)" placement="bottom">
+          <CursorIconButton type="button" onClick={handleResetZoom} aria-label="Reset zoom">
+            <ZoomOutMapOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+          </CursorIconButton>
+        </Tooltip>
+        <Tooltip title="Center viewport on selected node" placement="bottom">
+          <span>
+            <CursorIconButton
+              type="button"
+              onClick={handleCenterOnSelected}
+              disabled={!selectedNodeId}
+              aria-label="Center on selected node"
+            >
+              <CenterFocusStrongOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+            </CursorIconButton>
+          </span>
+        </Tooltip>
       </Box>
       <Box
         ref={canvasHostRef}
