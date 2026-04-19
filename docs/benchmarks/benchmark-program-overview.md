@@ -25,6 +25,16 @@
 
 Подробнее: [../runbooks/benchmark-program-status.md](../runbooks/benchmark-program-status.md), [../runbooks/benchmark-decision-gate.md](../runbooks/benchmark-decision-gate.md).
 
+## Полосы прогонов (lanes): reference, nightly, advisory
+
+| Lane | Что это | Где смотреть | Комментарий |
+|------|---------|--------------|-------------|
+| **Reference** | Один стабильный кейс **YOLOv1** (merge_safe): layer-1 + graph + layer-2 semantic | три JSON в `eval/results/current-reference-*.json` | Регрессия «сдвинули промпт / пайплайн». Отпечатки промптов **могут отличаться** от nightly — это нормально, сравнивайте только внутри lane. |
+| **Nightly** | Корпус **~30 real-PDF** (layer-1 `nightly_heavy`) и **~31** semantic (layer-2 `nightly_semantic`) | `current-llm-layer1-*.json`, `current-llm-layer2-*.json` | Основной сигнал по корпусу. Layer-1 authoritative: `--threshold-profile reporting_skip_f1_gates` ([benchmark-decision-gate.md](../runbooks/benchmark-decision-gate.md)) — **метрики** F1 авторов/arXiv и `count_ok` считаются; из контракта сняты `min_*_f1` из gold и gate по **точному** числу ссылок (`require_reference_count_ok=false`), чтобы PDF→MD не ломал suite целиком. |
+| **Advisory** | Retrieval, claims, references resolution | секции в `benchmark-metrics-summary.md` | Не входят в `decision` (GO / NO-GO), пока политика не изменится. |
+
+Полный **decision gate** (GO / CONDITIONAL-GO / NO-GO): только [`eval/results/benchmark-metrics-summary.json`](../../eval/results/benchmark-metrics-summary.md) после `scripts/aggregate_benchmark_metrics.py`.
+
 ## Семейства бенчмарков одной таблицей
 
 | Семейство | Что измеряем по-человечески | Где фикстуры | Роль сейчас | Где метрики и детали |
@@ -41,11 +51,9 @@
 
 Источник: [`eval/results/benchmark-metrics-summary.md`](../../eval/results/benchmark-metrics-summary.md) (генерируется `scripts/aggregate_benchmark_metrics.py`).
 
-- **Decision gate:** `GO`, nightly layer-1 и layer-2 без падений (`failed_count = 0`).
-- **Reference lane (YOLOv1):** три прогона (layer1 + graph + layer2 semantic) — **все passed**.
-- **Advisory блоки** (retrieval / claims / references_resolution): на момент сводки — **все `all_passed`, `failed_count = 0`**.
+Актуальные поля `decision`, `failed_count` и advisory-блоки — **только в этом файле** после последнего прогона и агрегации. Обзор не дублирует числа, чтобы не расходиться с JSON.
 
-Важно: **зелёный advisory** не означает автоматически «модель идеально понимает текст ответа» — у retrieval и claims часть прогонов **структурные** или **harness**, см. каталог метрик.
+Важно: **зелёный advisory** не означает автоматически «модель идеально понимает текст ответа» — у retrieval и claims часть прогонов **структурные** или **harness**, см. каталог метрик. Для retrieval добавлен опциональный слой **ROUGE-L ответа** (`answer_reference_text` / `min_answer_rouge_l` в gold), см. `eval/retrieval/metrics.py`.
 
 ## Что такое claims
 

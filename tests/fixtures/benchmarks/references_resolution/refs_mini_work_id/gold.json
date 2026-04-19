@@ -13,5 +13,11 @@
       "raw_citation_span_id": "span:internal_ref",
       "canonical_key": "work_id:fixture:yolov1"
     }
+  ],
+  "graph_stub_predictions": [
+    {
+      "raw_citation_span_id": "span:internal_ref",
+      "canonical_key": "work_id:fixture:yolov1"
+    }
   ]
 }

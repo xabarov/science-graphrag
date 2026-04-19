@@ -118,11 +118,11 @@
         "llm": 30
       },
       "references_source": {
-        "heuristic": 13,
-        "llm": 17
+        "hybrid": 29,
+        "llm": 1
       }
     },
-    "references_llm_failed_events": 4,
+    "references_llm_failed_events": 6,
     "failure_class_histogram": {}
   },
   "layer2_nightly": {

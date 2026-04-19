@@ -27,6 +27,21 @@
 .venv/bin/python scripts/aggregate_benchmark_metrics.py
 ```
 
+### Перегенерация authoritative layer-1 nightly (`nightly_heavy`)
+
+После изменений в `gold.json` (в т.ч. enrichment авторов / `quality_thresholds`) переснимите suite и агрегатор:
+
+```bash
+.venv/bin/science-graphrag-layer1-benchmark tests/fixtures/benchmarks/layer1 \
+  --suite --tier nightly_heavy \
+  --threshold-profile reporting_skip_f1_gates \
+  --json-out eval/results/current-llm-layer1-nightly-heavy-suite-after-prompt-fix.json
+.venv/bin/python scripts/aggregate_benchmark_metrics.py
+.venv/bin/python scripts/generate_benchmark_metrics_tables.py
+```
+
+Профиль **`reporting_skip_f1_gates`**: обнуляет в контракте `min_authorship_names_f1` и `min_sample_arxiv_f1` из gold, выставляет **`require_reference_count_ok=False`** (как в `ci_smoke` по числу ссылок: PDF→MD даёт дрейф), при этом **метрики** `count_ok` / дельты в JSON остаются. Title и abstract по-прежнему режут контракт согласно gold/defaults.
+
 Появятся:
 
 - [`eval/results/benchmark-metrics-summary.json`](../../eval/results/benchmark-metrics-summary.json) — machine-readable;

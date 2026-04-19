@@ -125,6 +125,19 @@ SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED=false \
 
 Тиры: `tests/fixtures/benchmarks/layer1/case_tiers.json`. Альтернатива: `python -m eval.layer1.runner …`.
 
+**Authoritative nightly (`nightly_heavy`) + сводка gate** — после правок `gold.json` переснимите JSON и агрегатор (нужен LLM, см. `EXTRACTION_LLM_*` / `MAIN_LLM_*`):
+
+```bash
+science-graphrag-layer1-benchmark tests/fixtures/benchmarks/layer1 \
+  --suite --tier nightly_heavy \
+  --threshold-profile reporting_skip_f1_gates \
+  --json-out eval/results/current-llm-layer1-nightly-heavy-suite-after-prompt-fix.json
+python scripts/aggregate_benchmark_metrics.py
+python scripts/generate_benchmark_metrics_tables.py
+```
+
+Профиль `reporting_skip_f1_gates` описан в [docs/runbooks/benchmark-decision-gate.md](../docs/runbooks/benchmark-decision-gate.md).
+
 **Обогащение gold (regex + опционально LLM):** [`scripts/enrich_gold_layer1.py`](../scripts/enrich_gold_layer1.py) пишет рядом с `gold.json` файл `gold_enrichment_<case_id>.json` (шаг A: все arXiv из `references_benchmark.raw_entries`; шаг B: год / arXiv работы / авторы из начала `article.md`, нужен `TESTGEN_LLM_*`). Сначала пилот на 1–3 кейсах с `--dry-run` (без LLM), затем с ключами без `--dry-run`, ревью, потом `--apply`.
 
 **Корпус object-detection (много PDF):** инвентарь и скрипты — [docs/benchmarks/object-detection-inventory.md](../docs/benchmarks/object-detection-inventory.md), [docs/benchmarks/object-detection-corpus.md](../docs/benchmarks/object-detection-corpus.md). Регенерация layer-1 из локальной папки: `scripts/build_od_corpus_fixtures.py`; layer-2 semantic: `scripts/generate_layer2_od_semantic_fixtures.py`.

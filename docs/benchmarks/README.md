@@ -31,6 +31,8 @@
 
 **Ontology expansion policy:** [`../runbooks/benchmark-ontology-expansion-policy.md`](../runbooks/benchmark-ontology-expansion-policy.md).
 
+**Claims extractor / holdout:** [`../runbooks/benchmark-claims-extractor-policy.md`](../runbooks/benchmark-claims-extractor-policy.md). **References resolution graph stub lane:** [`../runbooks/benchmark-references-resolution-graph-lane.md`](../runbooks/benchmark-references-resolution-graph-lane.md).
+
 **Reference quality lane (LLM-on):** `.github/workflows/benchmark-reference.yml` — обязательный YOLOv1 benchmark contract (`layer1 + graph + layer2`) с `MAIN_LLM_API_KEY`.
 Runbook: [docs/runbooks/benchmark-driven-dev-loop.md](../runbooks/benchmark-driven-dev-loop.md).
 

@@ -17,6 +17,12 @@ from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.claims.stub import extract_claims_stub
 
 
+def extract_claims_production_path(article: str, _gold: dict[str, Any]) -> list[dict[str, Any]]:
+    """Same entrypoint as ingestion until ontology-claims-v1 ships (currently stub)."""
+
+    return extract_claims_stub(article)
+
+
 def _load_claims_case_tiers(fixtures_root: Path) -> dict[str, list[str]] | None:
     path = fixtures_root / "case_tiers.json"
     if not path.is_file():
@@ -181,6 +187,11 @@ def _cli(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         "--use-stub",
         help="Use production stub extractor (returns no claims; useful for negative testing).",
     ),
+    extractor: str = typer.Option(
+        "harness",
+        "--extractor",
+        help='Claims extractor: "harness" (frozen anchor), "production" (ingestion stub path).',
+    ),
     json_out: Path | None = typer.Option(None, "--json-out", help="Write JSON report path"),
     md_out: Path | None = typer.Option(None, "--md-out", help="Write Markdown summary path"),
 ) -> None:
@@ -189,9 +200,19 @@ def _cli(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     def _stub_fn(article: str, _gold: dict[str, Any]) -> list[dict[str, Any]]:
         return extract_claims_stub(article)
 
-    extract_fn: Callable[[str, dict[str, Any]], list[dict[str, Any]]] = (
-        _stub_fn if use_stub else extract_claims_anchor_harness
-    )
+    ext = str(extractor or "harness").strip().lower()
+    if use_stub and ext != "harness":
+        typer.echo("--use-stub conflicts with --extractor production; use one mode.", err=True)
+        raise typer.Exit(code=1)
+    if ext in {"harness", "anchor", "anchor_harness"}:
+        extract_fn: Callable[[str, dict[str, Any]], list[dict[str, Any]]] = (
+            _stub_fn if use_stub else extract_claims_anchor_harness
+        )
+    elif ext in {"production", "prod", "ingestion"}:
+        extract_fn = extract_claims_production_path
+    else:
+        typer.echo(f"Unknown --extractor {extractor!r}; use harness or production.", err=True)
+        raise typer.Exit(code=1)
 
     def _run_one(c: Path) -> dict[str, Any]:
         return run_claims_case(c, settings=settings, extract_fn=extract_fn)

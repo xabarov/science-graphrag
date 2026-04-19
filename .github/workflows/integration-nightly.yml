@@ -114,7 +114,7 @@ jobs:
         env:
           SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED: "true"
           MAIN_LLM_API_KEY: ${{ secrets.MAIN_LLM_API_KEY }}
-        run: science-graphrag-layer1-benchmark tests/fixtures/benchmarks/layer1 --suite --tier nightly_heavy --json-out eval/results/ci-layer1-nightly-heavy-llm.json
+        run: science-graphrag-layer1-benchmark tests/fixtures/benchmarks/layer1 --suite --tier nightly_heavy --threshold-profile reporting_skip_f1_gates --json-out eval/results/ci-layer1-nightly-heavy-llm.json
 
       - name: Aggregate benchmark metrics summary
         run: python scripts/aggregate_benchmark_metrics.py

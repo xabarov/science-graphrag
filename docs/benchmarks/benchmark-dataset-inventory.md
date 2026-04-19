@@ -10,7 +10,7 @@
 | `tests/fixtures/benchmarks/layer2/` | `semantic_gold.json` | **32** | `smoke` / `merge_safe` (**1**), `nightly_semantic` (**31**) | Семантика к статьям из layer1 + смок `no_llm_smoke` |
 | `tests/fixtures/benchmarks/retrieval/` | `gold.json` | **12** | `smoke` (**4**: mock contract + stub), `merge_safe_contract` (**3**), `strict_pilot` (**3**), `live_corpus_mini` (**5**) | `smoke` = contract-only mock; measurement — `strict_pilot` / `live_corpus_mini` |
 | `tests/fixtures/benchmarks/claims/` | `gold.json` | **16** | `smoke` (**1**), см. `case_tiers.json` ниже | `claims_contract_shape` — smoke; остальное — advisory packs |
-| `tests/fixtures/benchmarks/references_resolution/` | `gold.json` | **4** | `refs_merge_contract` (**1**), `refs_mini` (**3**) | Пока **synthetic harness** в gold |
+| `tests/fixtures/benchmarks/references_resolution/` | `gold.json` | **4** | `refs_merge_contract` (**1**), `refs_mini` (**3**), `refs_graph_stub` (**3**, дублирует mini) | Synthetic harness; тир `refs_graph_stub` — заготовка под graph-backed lane (см. runbook) |
 
 Числа **34 / 32 / 12 / 16 / 4** получены подсчётом файлов эталонов в дереве на момент составления документа.
 
@@ -110,10 +110,13 @@ README фикстур: `tests/fixtures/benchmarks/claims/README.md`.
 |-----|--------|-------------|
 | `refs_merge_contract` | **1** | Контрактная форма |
 | `refs_mini` | **3** | Мини-пак; пока **synthetic_predictions** внутри `gold.json` |
+| `refs_graph_stub` | **3** | Те же три кейса, что `refs_mini`; в gold добавлено поле **`graph_stub_predictions`** (пока копия synthetic) — прогон с `--graph-stub-lane` у раннера |
+
+Runbook: [../runbooks/benchmark-references-resolution-graph-lane.md](../runbooks/benchmark-references-resolution-graph-lane.md).
 
 ## Что из этого «под F1», а что «под fuzzy»
 
 - **Ближе к чётким IR-style метрикам:** layer1 (идентификаторы, множества), graph (ожидаемые рёбра/счётчики), layer2 (имена сущностей), references_resolution (ключи), claims по `claim_id` / нормализованному тексту.
-- **Ближе к fuzzy / текстовой оценке (пока мало или нет в отчётах):** качество **свободного текста ответа** в retrieval, «эквивалентность» claims формулировками, hypothesis/idea-assist — см. [benchmark-roadmap-fuzzy-eval.md](benchmark-roadmap-fuzzy-eval.md).
+- **Ближе к fuzzy / текстовой оценке:** опционально **ROUGE-L ответа** в retrieval (`answer_reference_text` + `min_answer_rouge_l` в `gold.json`, см. `eval/retrieval/metrics.py`); «эквивалентность» claims формулировками, hypothesis/idea-assist — см. [benchmark-roadmap-fuzzy-eval.md](benchmark-roadmap-fuzzy-eval.md).
 
 Дальше: [benchmark-metrics-catalog.md](benchmark-metrics-catalog.md).

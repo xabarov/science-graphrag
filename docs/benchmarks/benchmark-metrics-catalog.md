@@ -71,7 +71,7 @@
 
 ### Что мерим сейчас
 
-Структурные сигналы **grounding**, а не «красота текста ответа»:
+Структурные сигналы **grounding**; опционально — **ROUGE-L** по тексту ответа.
 
 | Сигнал | Смысл |
 |--------|--------|
@@ -79,10 +79,13 @@
 | `required_chunk_fingerprints` | Каждый требуемый fingerprint должен встретиться среди citation chunk fingerprints |
 | `work_id` | Соответствие `retrieval_trace.filter_work_id` эталону (scoped прогоны) |
 | `contract_only` | Только форма trace + список citations (дешёвый smoke) |
+| `answer_reference_text` | (Опционально) эталонный фрагмент для сравнения с полем `answer` |
+| `answer_rouge_l` | ROUGE-L F1 между `answer_reference_text` и ответом (если эталон задан) |
+| `min_answer_rouge_l` | (Опционально) порог: при заданном эталоне ответ должен набрать ≥ порога, иначе `passed=false` |
 
 ### Ограничение (важно для интерпретации)
 
-Пока **нет** ROUGE / LLM-judge по тексту ответа в committed gate; см. [benchmark-roadmap-fuzzy-eval.md](benchmark-roadmap-fuzzy-eval.md).
+Полноценный LLM-judge и богатый корпус текстовых эталонов — в [benchmark-roadmap-fuzzy-eval.md](benchmark-roadmap-fuzzy-eval.md). В committed артефактах поля `answer_reference_text` могут отсутствовать — тогда оценка остаётся структурной.
 
 ---
 
@@ -99,6 +102,10 @@
 | `claim_match_mode` | `claim_id` (строго) или `claim_id_or_normalized_text` (подстрока по нормализованному тексту) |
 | `min_claim_recall` | Порог из gold; `passed` если recall ≥ порога |
 | `contract_only` | Только проверка формы payload |
+
+### Экстрактор (harness vs production)
+
+По умолчанию CLI использует **anchor harness** (`extract_claims_anchor_harness`). Путь ingestion: **`--extractor production`** → `science_graphrag.ingestion.claims.stub.extract_claims_stub` (пока заглушка). Политика и holdout: [../runbooks/benchmark-claims-extractor-policy.md](../runbooks/benchmark-claims-extractor-policy.md).
 
 ### Ограничение
 
@@ -121,7 +128,7 @@
 
 ### Ограничение
 
-Пока это **structural scoring harness**; не заменяет полноценный graph-backed resolver в Neo4j. См. спеку: [`docs/specs/benchmark-family-references-resolution-v1.md`](../specs/benchmark-family-references-resolution-v1.md).
+Пока это **structural scoring harness**; не заменяет полноценный graph-backed resolver в Neo4j. Заготовка lane: **`--graph-stub-lane`** + поле `graph_stub_predictions` в gold (см. [../runbooks/benchmark-references-resolution-graph-lane.md](../runbooks/benchmark-references-resolution-graph-lane.md)). Спека: [`docs/specs/benchmark-family-references-resolution-v1.md`](../specs/benchmark-family-references-resolution-v1.md).
 
 ---
 

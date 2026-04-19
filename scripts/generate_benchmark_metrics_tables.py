@@ -339,21 +339,28 @@ def main() -> None:  # pylint: disable=too-many-locals,too-many-branches,too-man
             cases = _iter_cases(data)
             lines.append("---\n")
             lines.append("## 2. Nightly — извлечение метаданных (Layer-1)\n")
+            show_authors = any(
+                int(((c.get("metrics") or {}).get("authorships") or {}).get("gold_count") or 0) > 0
+                for c in cases
+            )
             lines.append(
                 f"**{len(cases)} статей** по детекции объектов (реальные PDF → Markdown).  \n"
                 "Измеряем: точность заголовка, F1 arXiv-ссылок в библиографии, "
-                "соответствие числа ссылок эталону.\n"
+                "соответствие числа ссылок эталону"
+                + ("; F1 имён авторов (при непустом эталоне в отчёте)." if show_authors else ".")
+                + "\n"
+            )
+            lines.append(
+                "> Контракт nightly: профиль **`reporting_skip_f1_gates`** — пороги "
+                "`min_authorship_names_f1` / `min_sample_arxiv_f1` из gold не режут контракт; "
+                "`require_reference_count_ok=false` (дрейф числа ссылок при PDF→MD). "
+                "Метрики F1 и `count_ok` в JSON всё равно считаются.\n"
             )
             lines.append(_md_table(
-                _layer1_headers(show_authors=False),
-                [_layer1_row(c, show_authors=False) for c in cases],
+                _layer1_headers(show_authors=show_authors),
+                [_layer1_row(c, show_authors=show_authors) for c in cases],
             ))
             lines.append(_layer1_summary(cases) + "\n")
-            lines.append(
-                "> **Авторы F1** не показан: артефакт создан до разметки gold-авторов. "
-                "После перепрогона nightly suite столбец появится с реальными значениями "
-                "(все 30 nightly кейсов теперь содержат эталон авторов).\n"
-            )
             lines.append("")
 
     # ── 3. Nightly: Layer-2 ───────────────────────────────────────────────────
@@ -405,20 +412,32 @@ def main() -> None:  # pylint: disable=too-many-locals,too-many-branches,too-man
                 lines.append(f"**{label}:** {passed_n}/{n} запросов пройдено (контракт-only).\n")
             else:
                 lines.append(f"### {label}\n")
-                rows: list[list[str]] = []
+                show_arl = any(
+                    (c.get("metrics") or {}).get("answer_rouge_l") is not None for c in cases
+                )
+                rows = []
                 for c in cases:
                     m = c.get("metrics") or {}
-                    rows.append([
+                    row = [
                         c.get("case_id", ""),
                         str(m.get("hit_count") if m.get("hit_count") is not None else "—"),
                         str(m.get("min_hit_count") if m.get("min_hit_count") is not None else "—"),
-                        _tick(m.get("hit_ok")),
-                        _tick(m.get("passed")),
-                    ])
-                lines.append(_md_table(
-                    ["Запрос", "Найдено документов", "Минимум", "Найдено ✓", "Прошёл ✓"],
-                    rows,
-                ))
+                    ]
+                    if show_arl:
+                        arl = m.get("answer_rouge_l")
+                        row.append(_f2(arl) if arl is not None else "—")
+                    row += [_tick(m.get("hit_ok")), _tick(m.get("passed"))]
+                    rows.append(row)
+                hdr = ["Запрос", "Найдено документов", "Минимум"]
+                if show_arl:
+                    hdr.append("Ответ ROUGE-L")
+                hdr += ["Найдено ✓", "Прошёл ✓"]
+                lines.append(_md_table(hdr, rows))
+                if show_arl:
+                    lines.append(
+                        "*Ответ ROUGE-L*: сравнение текста ответа с `answer_reference_text` в gold "
+                        "(см. `eval/retrieval/metrics.py`).\n"
+                    )
                 lines.append("")
 
     # ── 5. Извлечение утверждений (Claims) ────────────────────────────────────

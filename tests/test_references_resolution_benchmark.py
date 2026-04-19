@@ -10,6 +10,7 @@ import pytest
 from eval.references_resolution.metrics import score_references_resolution
 from eval.references_resolution.runner import (
     default_resolve_predictions,
+    default_resolve_predictions_graph_stub,
     discover_references_resolution_case_dirs,
     run_references_resolution_case,
 )
@@ -51,6 +52,20 @@ def test_discover_refs_mini_tier() -> None:
         "refs_mini_doi_pair",
         "refs_mini_work_id",
     }
+
+
+def test_graph_stub_lane_matches_synthetic_for_mini_doi() -> None:
+    case = FIXTURES / "refs_mini_doi_pair"
+    gold = json.loads((case / "gold.json").read_text(encoding="utf-8"))
+    assert default_resolve_predictions_graph_stub(case, gold) == default_resolve_predictions(
+        case, gold
+    )
+
+
+def test_discover_refs_graph_stub_tier() -> None:
+    cases = discover_references_resolution_case_dirs(FIXTURES, tier="refs_graph_stub")
+    ids = {p.name for p in cases}
+    assert ids == {"refs_mini_arxiv_id", "refs_mini_doi_pair", "refs_mini_work_id"}
 
 
 def test_default_resolve_reads_synthetic_predictions() -> None:

@@ -23,6 +23,42 @@ def test_score_retrieval_contract_only_passes_minimal_trace() -> None:
     assert m["passed"] is True
 
 
+def test_score_retrieval_answer_rouge_reported_when_reference_set() -> None:
+    ga = GroundedAnswer(
+        answer="the cat sat on mat",
+        citations=[{"chunk_fingerprint": "stub-fp-1"}],
+        graph_context={},
+        retrieval_trace={"hit_count": 2},
+    )
+    gold = {
+        "required_chunk_fingerprints": ["stub-fp-1"],
+        "min_hit_count": 1,
+        "answer_reference_text": "the cat sat on the mat",
+    }
+    m = score_retrieval_answer(ga, gold)
+    assert m["passed"] is True
+    assert m.get("answer_rouge_l") is not None
+    assert float(m["answer_rouge_l"]) > 0.5
+
+
+def test_score_retrieval_answer_rouge_can_fail_contract() -> None:
+    ga = GroundedAnswer(
+        answer="unrelated text about dogs",
+        citations=[{"chunk_fingerprint": "stub-fp-1"}],
+        graph_context={},
+        retrieval_trace={"hit_count": 2},
+    )
+    gold = {
+        "required_chunk_fingerprints": ["stub-fp-1"],
+        "min_hit_count": 1,
+        "answer_reference_text": "the cat sat on the mat",
+        "min_answer_rouge_l": 0.99,
+    }
+    m = score_retrieval_answer(ga, gold)
+    assert m["passed"] is False
+    assert float(m.get("answer_rouge_l") or 0.0) < 0.99
+
+
 def test_score_retrieval_requires_fingerprints() -> None:
     ga = GroundedAnswer(
         answer="x",

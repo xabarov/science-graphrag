@@ -223,7 +223,11 @@ def _cli(
     threshold_profile: str | None = typer.Option(
         None,
         "--threshold-profile",
-        help='Optional "student_mistral" (relaxed gates). Else use thresholds from gold JSON.',
+        help=(
+            'Optional: "student_mistral" (relaxed student gates), '
+            '"reporting_skip_f1_gates" (measure F1 without failing on min_* F1 in gold), '
+            '"ci_smoke". Else use thresholds from gold JSON.'
+        ),
     ),
 ) -> None:
     settings = get_settings()

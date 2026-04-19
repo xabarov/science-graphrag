@@ -43,6 +43,15 @@ def test_apply_student_mistral_threshold_profile() -> None:
     assert merged.quality_thresholds.min_abstract_rouge_l is None
 
 
+def test_reporting_skip_f1_gates_clears_min_f1_thresholds() -> None:
+    spec = Layer1GoldSpec.load(FIXTURE_YOLO / "gold.json")
+    merged = apply_layer1_threshold_profile(spec, "reporting_skip_f1_gates")
+    assert merged.quality_thresholds is not None
+    assert merged.quality_thresholds.min_authorship_names_f1 is None
+    assert merged.quality_thresholds.min_sample_arxiv_f1 is None
+    assert merged.quality_thresholds.require_reference_count_ok is False
+
+
 def test_norm_abstract_match_hyphen_variants() -> None:
     assert _norm_abstract_match("a\u2011b") == _norm_abstract_match("a-b")
     assert _norm_abstract_match("Keypoint\u2011based").startswith(

@@ -73,6 +73,18 @@ def discover_references_resolution_case_dirs(
     return out
 
 
+def default_resolve_predictions_graph_stub(
+    _unused_case_dir: Path,
+    gold: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Prefer ``graph_stub_predictions`` (placeholder Neo4j lane); else synthetic harness."""
+
+    gp = gold.get("graph_stub_predictions")
+    if isinstance(gp, list):
+        return [dict(x) for x in gp if isinstance(x, dict)]
+    return default_resolve_predictions(_unused_case_dir, gold)
+
+
 def default_resolve_predictions(
     _unused_case_dir: Path,
     gold: dict[str, Any],
@@ -198,13 +210,25 @@ def _cli(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         "--use-expected",
         help="Use gold expected_resolutions as predictions (golden-path smoke).",
     ),
+    graph_stub_lane: bool = typer.Option(
+        False,
+        "--graph-stub-lane",
+        help="Read predictions from gold['graph_stub_predictions'] (placeholder graph-backed lane).",
+    ),
     json_out: Path | None = typer.Option(None, "--json-out", help="Write JSON report path"),
     md_out: Path | None = typer.Option(None, "--md-out", help="Write Markdown summary path"),
 ) -> None:
     settings = get_settings()
-    resolve_fn: Callable[[Path, dict[str, Any]], list[dict[str, Any]]] = (
-        resolve_predictions_use_expected if use_expected else default_resolve_predictions
-    )
+    if use_expected and graph_stub_lane:
+        typer.echo("Choose only one of --use-expected and --graph-stub-lane", err=True)
+        raise typer.Exit(code=1)
+    resolve_fn: Callable[[Path, dict[str, Any]], list[dict[str, Any]]]
+    if use_expected:
+        resolve_fn = resolve_predictions_use_expected
+    elif graph_stub_lane:
+        resolve_fn = default_resolve_predictions_graph_stub
+    else:
+        resolve_fn = default_resolve_predictions
 
     def _run_one(c: Path) -> dict[str, Any]:
         return run_references_resolution_case(c, settings=settings, resolve_fn=resolve_fn)
