@@ -10,8 +10,8 @@ Usage (repo root):
 
 Authoritative inputs (defaults) match docs/runbooks/benchmark-decision-gate.md.
 
-Optional retrieval + claims + claims production pilot + references_resolution + concept_topic
-graph JSON lanes are listed in ``benchmark-decision-gate.md`` §8 and summarized under
+Optional retrieval + hybrid ablation + claims + claims production pilot + references_resolution
++ concept_topic graph JSON lanes are listed in ``benchmark-decision-gate.md`` §8 and summarized under
 ``retrieval_family`` / ``claims_family`` / ``claims_production_family`` /
 ``references_resolution_family`` / ``concept_topic_family`` when the default artifact paths exist.
 **Claims production pilot** is part of the **core** ``decision_gate`` (Wave O promotion).
@@ -44,6 +44,7 @@ DEFAULT_RETRIEVAL_STRICT_PILOT = "eval/results/current-retrieval-strict-pilot-mo
 DEFAULT_RETRIEVAL_LIVE_CORPUS_MINI = "eval/results/current-retrieval-live-corpus-mini.json"
 DEFAULT_RETRIEVAL_WORKSPACE_SCOPED = "eval/results/current-retrieval-workspace-scoped.json"
 DEFAULT_RETRIEVAL_JUDGE_PILOT = "eval/results/current-retrieval-judge-pilot.json"
+DEFAULT_RETRIEVAL_HYBRID_ABLATION = "eval/results/current-retrieval-hybrid-ablation.json"
 
 # Claims family (advisory — Wave H1; see ontology-claims-benchmark-v1.md)
 DEFAULT_CLAIMS_MERGE_CONTRACT = "eval/results/current-claims-merge-contract.json"
@@ -564,6 +565,7 @@ def _md_retrieval_family_section(rf: dict[str, Any]) -> list[str]:
     _one("live_corpus_mini (live suite)", rf.get("live_corpus_mini") or {})
     _one("workspace_scoped (live suite, Wave P)", rf.get("workspace_scoped") or {})
     _one("judge_pilot (LLM rubric advisory, Wave P)", rf.get("judge_pilot") or {})
+    _one("hybrid_ablation (contract harness, Wave Q)", rf.get("hybrid_ablation") or {})
     lines.append(
         "Promotion roadmap for workspace-scoped + judge → core retrieval gate: "
         "`docs/runbooks/benchmark-decision-gate.md` §8.3.",
@@ -795,6 +797,15 @@ def main() -> int:
         default=DEFAULT_RETRIEVAL_JUDGE_PILOT,
         help="Optional retrieval LLM-judge pilot JSON from eval/retrieval/judge.py (advisory, Wave P).",
     )
+    parser.add_argument(
+        "--hybrid-ablation-json",
+        type=str,
+        default=DEFAULT_RETRIEVAL_HYBRID_ABLATION,
+        help=(
+            "Optional hybrid retrieval ablation suite JSON from "
+            "`science-graphrag-retrieval-hybrid-ablation --suite` (advisory, Wave Q)."
+        ),
+    )
     args = parser.parse_args()
 
     reference = _summarize_reference(DEFAULT_REFERENCE)
@@ -825,6 +836,7 @@ def main() -> int:
             "retrieval_live_corpus_mini": DEFAULT_RETRIEVAL_LIVE_CORPUS_MINI,
             "retrieval_workspace_scoped": args.retrieval_workspace_scoped_json,
             "retrieval_judge_pilot": args.retrieval_judge_json,
+            "retrieval_hybrid_ablation": args.hybrid_ablation_json,
             "claims_merge_contract": DEFAULT_CLAIMS_MERGE_CONTRACT,
             "claims_mini_suite": DEFAULT_CLAIMS_MINI_SUITE,
             "claims_corpus_v2_mini_suite": DEFAULT_CLAIMS_CORPUS_V2_MINI_SUITE,
@@ -847,6 +859,7 @@ def main() -> int:
             "live_corpus_mini": _summarize_retrieval_suite(DEFAULT_RETRIEVAL_LIVE_CORPUS_MINI),
             "workspace_scoped": _summarize_retrieval_suite(args.retrieval_workspace_scoped_json),
             "judge_pilot": _summarize_retrieval_judge_suite(args.retrieval_judge_json),
+            "hybrid_ablation": _summarize_case_metrics_suite(args.hybrid_ablation_json),
         },
         "claims_family": {
             "role": "advisory",

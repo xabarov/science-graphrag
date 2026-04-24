@@ -53,7 +53,7 @@ flowchart LR
 
 `work_id` is carried in query params (`/workspace?work_id=…&tab=…`) and mirrored in local storage helpers under [`ui/src/pages/WorkspacePage/utils/workContext.js`](../../ui/src/pages/WorkspacePage/utils/workContext.js).
 
-**Workspace context (Wave I):** `workspace_id` in the URL is the shareable source of truth; [`workspaceStore.js`](../../ui/src/utils/workspaceStore.js) persists `activeWorkspaceId` for drawer links and [`appendWorkspaceQuery`](../../ui/src/utils/workspaceStore.js) / [`getLastWorkspaceHref`](../../ui/src/utils/workspaceStore.js).
+**Workspace context (Wave I):** `workspace_id` in the URL is the shareable source of truth; [`workspaceStore.js`](../../ui/src/utils/workspaceStore.js) persists `activeWorkspaceId` for drawer links and [`appendWorkspaceQuery`](../../ui/src/utils/workspaceStore.js) / [`getLastWorkspaceHref`](../../ui/src/utils/workspaceStore.js). Workspace-scoped Ask responses echo the scope on `POST /v1/query` as flat `retrieval_trace.workspace_id` (not a nested `context` object); optional `workspace_scope_payload_miss` documents a Qdrant payload miss + retry — see [frontend-ui-api-contracts-v1.md](./frontend-ui-api-contracts-v1.md) §1.
 
 ## Lazy-loaded chunks
 

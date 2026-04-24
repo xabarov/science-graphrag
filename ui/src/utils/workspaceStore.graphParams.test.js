@@ -1,12 +1,7 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
-import axios from "axios";
 
 import { getWorkspaceGraph } from "./workspaceStore.js";
-
-vi.mock("./researchApi.js", () => ({
-  formatResearchApiError: (e) => String(e?.message || e),
-  getResearchApiBaseUrl: () => "",
-}));
+import { apiClient } from "../services/apiClient.js";
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -14,7 +9,7 @@ afterEach(() => {
 
 describe("getWorkspaceGraph query params", () => {
   it("passes mode depth include_external node_types and external_min_internal_citers", async () => {
-    const spy = vi.spyOn(axios, "get").mockResolvedValue({ data: { nodes: [], edges: [], meta: {} } });
+    const spy = vi.spyOn(apiClient, "get").mockResolvedValue({ data: { nodes: [], edges: [], meta: {} } });
     await getWorkspaceGraph("ws-1", {
       mode: "inner_only",
       depth: 2,

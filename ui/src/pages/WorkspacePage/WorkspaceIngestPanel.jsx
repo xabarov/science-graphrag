@@ -169,12 +169,35 @@ export default function WorkspaceIngestPanel({
               </Typography>
             ) : null}
             {isParentBatch && childJobs.length ? (
-              <Box sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 0.5 }}>
-                {childJobs.map((cj) => (
-                  <Typography key={String(cj.job_id)} sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.5)" }}>
-                    {String(cj.filename || "—")} · {String(cj.status || "—")}
-                  </Typography>
-                ))}
+              <Box sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 1 }}>
+                {childJobs.map((cj) => {
+                  const pct = Math.min(
+                    100,
+                    Math.max(
+                      0,
+                      (Number(cj.progress_total) || 0) > 0
+                        ? (100 * (Number(cj.progress_current) || 0)) / Number(cj.progress_total)
+                        : Number(cj.progress_current) || 0,
+                    ),
+                  );
+                  return (
+                    <Box key={String(cj.job_id)}>
+                      <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.5)", mb: 0.35 }}>
+                        {String(cj.filename || "—")} · {String(cj.status || "—")}
+                      </Typography>
+                      <LinearProgress
+                        variant="determinate"
+                        value={pct}
+                        sx={{
+                          height: 3,
+                          borderRadius: 2,
+                          backgroundColor: "rgba(255,255,255,0.06)",
+                          "& .MuiLinearProgress-bar": { backgroundColor: "rgba(99,102,241,0.75)" },
+                        }}
+                      />
+                    </Box>
+                  );
+                })}
               </Box>
             ) : null}
             {ingestJob.logs ? (

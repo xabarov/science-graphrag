@@ -18,6 +18,10 @@ export default {
   "wsTab.reader.liveLine": "Live: GET /v1/works/{work_id} + /chunks.",
   "wsTab.reader.openStandalone": "Open standalone Reader",
   "wsTab.reader.jumpGraph": "Jump to Graph",
+  "wsTab.reader.claimsTitle": "Claims (experimental)",
+  "wsTab.reader.claimsLoading": "Loading claims…",
+  "wsTab.reader.claimsEmpty": "No claims extracted for this work yet.",
+  "wsTab.reader.claimConfidence": "confidence: {{v}}",
 
   "wsTab.graph.pickWork": "Pick a work from Corpus to inspect graph context.",
   "wsTab.graph.openStandalone": "Open standalone Graph",

@@ -1,0 +1,10 @@
+{
+  "case_id": "ha_04",
+  "hybrid_ablation_contract": true,
+  "contract_only": true,
+  "min_hit_count": 0,
+  "vector_ranked_work_ids": ["noise_doc", "rel_alpha", "rel_beta"],
+  "hybrid_ranked_work_ids": ["rel_alpha", "rel_beta", "noise_doc"],
+  "relevant_work_ids": ["rel_alpha", "rel_beta"],
+  "min_mrr_delta": 0.05
+}

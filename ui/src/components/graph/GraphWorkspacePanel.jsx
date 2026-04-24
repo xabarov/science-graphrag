@@ -64,6 +64,7 @@ import {
  *   labMode?: boolean,
  *   compactLayout?: boolean,
  *   focusLayout?: boolean,
+ *   standaloneWorkGraphDepth?: 1 | 2,
  * }} props
  */
 const LS_STANDALONE_LEGEND = "graphStandaloneLegendOpen";
@@ -182,6 +183,7 @@ export default function GraphWorkspacePanel({
   subtitle = null,
   traceContext = {},
   labMode = false,
+  standaloneWorkGraphDepth = 1,
 }) {
   const { t } = useI18n();
   const standaloneMax = mode === "standalone";
@@ -350,7 +352,8 @@ export default function GraphWorkspacePanel({
           normalized = normalizeGraphPayload(raw);
         } else {
           setWorkspaceGraphRaw(null);
-          normalized = await fetchWorkGraphNormalized(w);
+          const depth = standaloneWorkGraphDepth === 2 ? 2 : 1;
+          normalized = await fetchWorkGraphNormalized(w, { depth });
         }
         if (cancelled) return;
         setGraph(normalized);
@@ -366,7 +369,7 @@ export default function GraphWorkspacePanel({
     return () => {
       cancelled = true;
     };
-  }, [workId, workspaceId, wsGraphOpts]);
+  }, [workId, workspaceId, wsGraphOpts, standaloneWorkGraphDepth]);
 
   const resolvedSelectedEdgeId = useMemo(
     () => resolveSelectedEdgeId(graph, normalizeGraphEdgeId(selectedEdgeId)),

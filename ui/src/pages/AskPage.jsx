@@ -19,6 +19,7 @@ export default function AskPage() {
   const workspaceIdFromUrl = (searchParams.get("workspace_id") || "").trim();
   const { activeWorkspaceId, getLastWorkspaceHref } = useWorkspaceContext();
   const askSessionUrl = (searchParams.get("ask_session") || "").trim();
+  const labMode = searchParams.get("lab") === "1";
 
   const effectiveWorkspaceId = useMemo(
     () => workspaceIdFromUrl || (activeWorkspaceId || "").trim(),
@@ -75,6 +76,7 @@ export default function AskPage() {
         showPageChrome={false}
         urlSessionId={askSessionUrl}
         onUrlSessionIdChange={onAskSessionUrlChange}
+        labMode={labMode}
       />
     </Box>
   );

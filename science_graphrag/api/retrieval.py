@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import dataclass
-from typing import Any, NamedTuple
+from typing import Any, Literal, NamedTuple
 
 logger = logging.getLogger(__name__)
-
-from neo4j import GraphDatabase, NotificationClassification
 
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.embeddings import HashEmbeddingProvider, try_sentence_transformer
@@ -59,59 +58,55 @@ def _neo4j_graph_context_for_work(settings: Settings, work_id: str) -> dict[str,
 
     methods: list[str] = []
     datasets: list[str] = []
+    store = Neo4jGraphStore(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password)
     try:
-        with GraphDatabase.driver(
-            settings.neo4j_uri,
-            auth=(settings.neo4j_user, settings.neo4j_password),
-            notifications_disabled_classifications=[NotificationClassification.UNRECOGNIZED],
-        ) as driver:
-            with driver.session() as session:
-                row = session.run(
-                    f"""
-                    MATCH (w:Work {{id: $wid}})
-                    RETURN w.id AS wid,
-                           {_SEMANTIC_EXISTS} AS semantic_available
-                    """,
-                    wid=work_id,
-                ).single()
-                if not row:
-                    return {
-                        "methods": [],
-                        "datasets": [],
-                        "semantic_available": False,
-                        "context_work_id": work_id,
-                        "degraded": ["work_not_in_graph"],
-                        "error": None,
-                    }
-                semantic_available = bool(row["semantic_available"])
-                for rec in session.run(
-                    """
-                    MATCH (:Work {id: $wid})-[:USES_METHOD]->(m:Method)
-                    RETURN DISTINCT coalesce(m.name, '') AS name
-                    """,
-                    wid=work_id,
-                ):
-                    name = (rec["name"] or "").strip()
-                    if name:
-                        methods.append(name)
-                for rec in session.run(
-                    """
-                    MATCH (:Work {id: $wid})-[:EVALUATED_ON]->(d:Dataset)
-                    RETURN DISTINCT coalesce(d.name, '') AS name
-                    """,
-                    wid=work_id,
-                ):
-                    name = (rec["name"] or "").strip()
-                    if name:
-                        datasets.append(name)
+        with store.session() as session:
+            row = session.run(
+                f"""
+                MATCH (w:Work {{id: $wid}})
+                RETURN w.id AS wid,
+                       {_SEMANTIC_EXISTS} AS semantic_available
+                """,
+                wid=work_id,
+            ).single()
+            if not row:
                 return {
-                    "methods": sorted(set(methods)),
-                    "datasets": sorted(set(datasets)),
-                    "semantic_available": semantic_available,
+                    "methods": [],
+                    "datasets": [],
+                    "semantic_available": False,
                     "context_work_id": work_id,
-                    "degraded": [],
+                    "degraded": ["work_not_in_graph"],
                     "error": None,
                 }
+            semantic_available = bool(row["semantic_available"])
+            for rec in session.run(
+                """
+                MATCH (:Work {id: $wid})-[:USES_METHOD]->(m:Method)
+                RETURN DISTINCT coalesce(m.name, '') AS name
+                """,
+                wid=work_id,
+            ):
+                name = (rec["name"] or "").strip()
+                if name:
+                    methods.append(name)
+            for rec in session.run(
+                """
+                MATCH (:Work {id: $wid})-[:EVALUATED_ON]->(d:Dataset)
+                RETURN DISTINCT coalesce(d.name, '') AS name
+                """,
+                wid=work_id,
+            ):
+                name = (rec["name"] or "").strip()
+                if name:
+                    datasets.append(name)
+            return {
+                "methods": sorted(set(methods)),
+                "datasets": sorted(set(datasets)),
+                "semantic_available": semantic_available,
+                "context_work_id": work_id,
+                "degraded": [],
+                "error": None,
+            }
     except Exception:  # noqa: BLE001
         return {
             "methods": [],
@@ -121,6 +116,8 @@ def _neo4j_graph_context_for_work(settings: Settings, work_id: str) -> dict[str,
             "degraded": ["neo4j_unavailable"],
             "error": "neo4j_unavailable",
         }
+    finally:
+        store.close()
 
 
 # Section paths from PDF chunking often label tail sections; pure vector search still
@@ -189,17 +186,22 @@ def _citations_and_snippets_from_hits(
         text = (h.get("text") or "").strip()
         if not text:
             continue
-        citations.append(
-            {
-                "rank": rank,
-                "score": h.get("score"),
-                "work_id": h.get("work_id"),
-                "document_id": h.get("document_id"),
-                "chunk_fingerprint": h.get("chunk_fingerprint"),
-                "section_path": h.get("section_path"),
-                "excerpt": text[:600],
-            },
-        )
+        cit: dict[str, Any] = {
+            "rank": rank,
+            "score": h.get("score"),
+            "work_id": h.get("work_id"),
+            "document_id": h.get("document_id"),
+            "chunk_fingerprint": h.get("chunk_fingerprint"),
+            "section_path": h.get("section_path"),
+            "excerpt": text[:600],
+        }
+        if h.get("chunk_kind") is not None:
+            cit["chunk_kind"] = h.get("chunk_kind")
+        if h.get("language") is not None:
+            cit["language"] = h.get("language")
+        if h.get("rrf_score") is not None:
+            cit["rrf_score"] = h.get("rrf_score")
+        citations.append(cit)
         snippets.append(text[:400])
     return citations, snippets
 
@@ -254,6 +256,8 @@ def _retrieval_trace_payload(
     answer_synthesis: dict[str, Any] | None = None,
     extra_degraded: list[str] | None = None,
     workspace_id: str | None = None,
+    retrieval_mode: Literal["vector", "hybrid"] = "vector",
+    retrieval_policy: str | None = None,
 ) -> dict[str, Any]:
     trace_degraded: list[str] = []
     if len(inp.hits) == 0:
@@ -270,6 +274,10 @@ def _retrieval_trace_payload(
         "mode": "deterministic_snippets",
         "second_stage_llm": False,
     }
+    policy = (
+        retrieval_policy
+        or "section_boost_v1;back_matter_deprioritized;oversample_then_top_k"
+    )
     out: dict[str, Any] = {
         "embedding": inp.emb_trace,
         "hit_count": len(inp.hits),
@@ -281,7 +289,8 @@ def _retrieval_trace_payload(
         "top_hit_scores": top_scores,
         "query_preview": qprev or None,
         "answer_synthesis": syn,
-        "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
+        "retrieval_mode": retrieval_mode,
+        "retrieval_policy": policy,
         "degraded": trace_degraded,
     }
     ws = (workspace_id or "").strip()
@@ -376,6 +385,133 @@ def _qdrant_hits_for_answer(
     return vec, emb_trace, hits
 
 
+def _sanitize_fulltext_query(text: str) -> str:
+    """Keep Lucene-friendly tokens for ``db.index.fulltext.queryNodes``."""
+
+    raw = (text or "").strip()
+    if not raw:
+        return ""
+    t = re.sub(r"[^a-zA-Z0-9\s\-.]", " ", raw)
+    t = re.sub(r"\s+", " ", t).strip()
+    return t[:220] if t else raw[:220]
+
+
+def _hit_fingerprint_key(hit: dict[str, Any]) -> str:
+    fp = hit.get("chunk_fingerprint")
+    if fp:
+        return str(fp)
+    return str(hit.get("id") or "")
+
+
+def _reciprocal_rank_fusion(
+    ranked_lists: list[list[dict[str, Any]]],
+    *,
+    k: int = 60,
+    top_n: int = 12,
+) -> list[dict[str, Any]]:
+    """RRF over chunk-level ranked lists; dedupe by chunk fingerprint."""
+
+    scores: dict[str, float] = {}
+    by_fp: dict[str, dict[str, Any]] = {}
+    for lst in ranked_lists:
+        for rank, hit in enumerate(lst, start=1):
+            fp = _hit_fingerprint_key(hit)
+            if not fp:
+                continue
+            scores[fp] = scores.get(fp, 0.0) + 1.0 / (k + rank)
+            prev = by_fp.get(fp)
+            if prev is None or float(hit.get("score") or 0.0) > float(prev.get("score") or 0.0):
+                by_fp[fp] = hit
+    ordered = sorted(by_fp.keys(), key=lambda fp: scores[fp], reverse=True)
+    out: list[dict[str, Any]] = []
+    for fp in ordered[:top_n]:
+        h = dict(by_fp[fp])
+        h["rrf_score"] = scores[fp]
+        out.append(h)
+    return out
+
+
+def _hybrid_hits_for_answer(
+    *,
+    question: str,
+    settings: Settings,
+    work_id: str | None,
+    work_ids: list[str] | None,
+    top_k: int,
+    workspace_id: str | None = None,
+) -> tuple[list[float], dict[str, Any], list[dict[str, Any]]]:
+    """Vector chunks + Neo4j fulltext works + CITES-expanded works → RRF merge (Wave Q)."""
+
+    oversample = max(top_k * 6, 24)
+    vec, emb_trace, hits_vector = _qdrant_hits_for_answer(
+        question=question,
+        settings=settings,
+        work_id=work_id,
+        work_ids=work_ids,
+        top_k=oversample,
+        workspace_id=workspace_id,
+    )
+    q_ft = _sanitize_fulltext_query(question)
+    ft_works: list[tuple[str, float]] = []
+    graph_works: list[str] = []
+    neo = Neo4jGraphStore(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password)
+    try:
+        if q_ft:
+            ft_works = neo.fulltext_search_work_ids(q_ft, limit=20)
+        seeds: list[str] = []
+        for h in hits_vector[:10]:
+            wid = h.get("work_id")
+            if wid:
+                seeds.append(str(wid))
+        for wid, _s in ft_works[:12]:
+            seeds.append(wid)
+        seeds = list(dict.fromkeys(seeds))
+        excl: set[str] = set()
+        if work_id:
+            excl.add(str(work_id).strip())
+        graph_works = neo.cites_neighbor_work_ids(seeds, exclude_ids=excl, limit=60)
+    finally:
+        neo.close()
+
+    qstore = QdrantChunkStore(
+        settings.qdrant_url,
+        settings.qdrant_collection,
+        vector_dim=len(vec),
+    )
+    lanes: list[list[dict[str, Any]]] = [hits_vector]
+    ft_ids = [w for w, _s in ft_works][:18]
+    if ft_ids:
+        raw_ft = qstore.search_similar(
+            vector=vec,
+            limit=36,
+            work_id=None,
+            work_ids=ft_ids,
+            workspace_id=workspace_id,
+        )
+        lanes.append(_rank_hits_for_answer(raw_ft, top_k=max(top_k * 4, 16)))
+    gid_set = set(ft_ids)
+    graph_ids = [w for w in graph_works if w not in gid_set][:18]
+    if graph_ids:
+        raw_g = qstore.search_similar(
+            vector=vec,
+            limit=28,
+            work_id=None,
+            work_ids=graph_ids,
+            workspace_id=workspace_id,
+        )
+        lanes.append(_rank_hits_for_answer(raw_g, top_k=max(top_k * 3, 12)))
+
+    fused = _reciprocal_rank_fusion(lanes, k=60, top_n=top_k)
+    hybrid_meta = {
+        "fulltext_work_hits": len(ft_works),
+        "graph_extra_works": len(graph_works),
+        "fusion_lanes": len(lanes),
+        "fulltext_query": q_ft or None,
+    }
+    emb_out = {**emb_trace, "hybrid": hybrid_meta}
+    return vec, emb_out, fused
+
+
 def _workspace_scope_work_ids(settings: Settings, workspace_id: str) -> tuple[list[str] | None, dict[str, Any]]:
     """
     Returns (work_ids, meta) for Qdrant filter.
@@ -404,15 +540,21 @@ def answer_query(
     work_id: str | None = None,
     workspace_id: str | None = None,
     top_k: int = 5,
+    mode: Literal["vector", "hybrid"] = "vector",
 ) -> GroundedAnswer:
     """
     MVP GraphRAG path: embed question, search Qdrant, attach chunk citations, add Neo4j context.
+
+    ``mode="hybrid"`` (Wave Q): RRF over dense chunk search + Neo4j full-text work hits +
+    vector search scoped to CITES-expanded works.
 
     No second-stage LLM: answer is a short deterministic summary over retrieved snippets.
     """
 
     s = settings or get_settings()
+    mode_norm: Literal["vector", "hybrid"] = "hybrid" if (mode or "").strip().lower() == "hybrid" else "vector"
     ws_meta: dict[str, Any] = {}
+    ws_scope_payload_miss: str | None = None
     work_ids_filter: list[str] | None = None
     wid_param = (work_id or "").strip() or None
     ws_param = (workspace_id or "").strip() or None
@@ -426,7 +568,8 @@ def answer_query(
     else:
         q_work_ids = None if wid_param else (work_ids_filter if work_ids_filter and len(work_ids_filter) > 0 else None)
         ws_qdrant = ws_param if (ws_param and not wid_param) else None
-        _, emb_trace, hits = _qdrant_hits_for_answer(
+        fetch_hits = _hybrid_hits_for_answer if mode_norm == "hybrid" else _qdrant_hits_for_answer
+        _, emb_trace, hits = fetch_hits(
             question=question,
             settings=s,
             work_id=wid_param,
@@ -442,7 +585,7 @@ def answer_query(
             and q_work_ids
             and len(q_work_ids) > 0
         ):
-            _, emb_trace_fb, hits = _qdrant_hits_for_answer(
+            _, emb_trace_fb, hits = fetch_hits(
                 question=question,
                 settings=s,
                 work_id=None,
@@ -457,7 +600,8 @@ def answer_query(
                 ws_qdrant,
                 len(q_work_ids),
             )
-            emb_trace = {**emb_trace_fb, **ws_meta, "workspace_scope_payload_miss": "work_ids_payload"}
+            ws_scope_payload_miss = "work_ids_payload"
+            emb_trace = {**emb_trace_fb, **ws_meta}
 
     citations, snippets = _citations_and_snippets_from_hits(hits)
     graph, resolved_work = _graph_context_for_hits(s, wid_param, hits)
@@ -499,6 +643,11 @@ def answer_query(
             "second_stage_skipped": llm_meta.get("reason") or True,
         }
 
+    rpolicy = (
+        "hybrid_rrf_v1;neo4j_fulltext_works;graph_cites_expand;qdrant_multi_lane"
+        if mode_norm == "hybrid"
+        else None
+    )
     trace_payload = _retrieval_trace_payload(
         _RetrievalTraceIn(
             emb_trace,
@@ -513,9 +662,13 @@ def answer_query(
         answer_synthesis=synthesis,
         extra_degraded=extra_degraded,
         workspace_id=ws_param,
+        retrieval_mode=mode_norm,
+        retrieval_policy=rpolicy,
     )
     if ws_meta:
         trace_payload = {**trace_payload, **ws_meta}
+    if ws_scope_payload_miss:
+        trace_payload = {**trace_payload, "workspace_scope_payload_miss": ws_scope_payload_miss}
 
     return GroundedAnswer(
         answer=answer,

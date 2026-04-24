@@ -18,6 +18,8 @@ from qdrant_client.models import (
 if TYPE_CHECKING:
     from science_graphrag.ingestion.chunking import DocumentChunk
 
+from science_graphrag.ingestion.chunking import infer_chunk_kind_from_section_path
+
 
 class QdrantChunkStore:
     def __init__(self, url: str, collection: str, vector_dim: int) -> None:
@@ -95,6 +97,8 @@ class QdrantChunkStore:
                 "chunk_index": ch.chunk_index,
                 "chunk_fingerprint": ch.chunk_fingerprint,
                 "section_path": ch.section_path,
+                "chunk_kind": infer_chunk_kind_from_section_path(ch.section_path),
+                "language": "en",
                 "overlap_prev": ch.overlap_prev,
                 "overlap_next": ch.overlap_next,
                 "start_offset": ch.start_offset,
@@ -298,6 +302,8 @@ class QdrantChunkStore:
                     "document_id": payload.get("document_id"),
                     "chunk_fingerprint": fp,
                     "section_path": payload.get("section_path"),
+                    "chunk_kind": payload.get("chunk_kind"),
+                    "language": payload.get("language"),
                 },
             )
         return out
@@ -405,6 +411,12 @@ class QdrantWorkEmbeddingStore:
         vector: list[float] | np.ndarray,
         embedding_model: str,
         workspace_ids: list[str],
+        title: str | None = None,
+        publication_year: int | None = None,
+        doi: str | None = None,
+        arxiv_id: str | None = None,
+        first_author_normalized: str | None = None,
+        embedding_kind: str = "work_summary_v1",
     ) -> None:
         wid = str(work_id or "").strip()
         if not wid:
@@ -415,8 +427,14 @@ class QdrantWorkEmbeddingStore:
         payload: dict[str, Any] = {
             "work_id": wid,
             "embedding_model": embedding_model,
-            "kind": "work_summary",
+            "kind": embedding_kind,
+            "embedding_kind": embedding_kind,
             "workspace_ids": ws_ids,
+            "title": (title or "")[:2000],
+            "year": publication_year,
+            "doi": ((doi or "").strip())[:512],
+            "arxiv_id": ((arxiv_id or "").strip())[:64],
+            "first_author_normalized": (first_author_normalized or "")[:512],
         }
         self._client.upsert(
             collection_name=self._collection,

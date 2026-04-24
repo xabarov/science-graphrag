@@ -14,6 +14,7 @@
     "retrieval_live_corpus_mini": "eval/results/current-retrieval-live-corpus-mini.json",
     "retrieval_workspace_scoped": "eval/results/current-retrieval-workspace-scoped.json",
     "retrieval_judge_pilot": "eval/results/current-retrieval-judge-pilot.json",
+    "retrieval_hybrid_ablation": "eval/results/current-retrieval-hybrid-ablation.json",
     "claims_merge_contract": "eval/results/current-claims-merge-contract.json",
     "claims_mini_suite": "eval/results/current-claims-mini-suite.json",
     "claims_corpus_v2_mini_suite": "eval/results/current-claims-corpus-v2-mini.json",
@@ -388,6 +389,34 @@
       ],
       "all_passed": false,
       "mean_weighted_score": 5.1
+    },
+    "hybrid_ablation": {
+      "artifact": "eval/results/current-retrieval-hybrid-ablation.json",
+      "run_metadata": {
+        "extraction_llm_model": null,
+        "extraction_llm_base_url": null,
+        "layer1_prompt_fingerprint": "sha256-20:00000000000000000000",
+        "semantic_prompt_fingerprint": "sha256-20:00000000000000000000"
+      },
+      "summary": {
+        "case_count": 8,
+        "case_ids": [
+          "ha_01",
+          "ha_02",
+          "ha_03",
+          "ha_04",
+          "ha_05",
+          "ha_06",
+          "ha_07",
+          "ha_08"
+        ],
+        "all_passed": true,
+        "hybrid_ablation_eval": true
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true,
+      "mean_claim_recall": null
     }
   },
   "claims_family": {

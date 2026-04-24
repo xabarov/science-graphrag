@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 import ReaderWorkBody from "../../../components/work/ReaderWorkBody.jsx";
+import ReaderClaimsPanel from "../../../components/work/ReaderClaimsPanel.jsx";
 import { CursorSmallButton } from "../../../components/common/index.js";
 import { buildWorkspaceTracePath, readTraceabilityState } from "../../../components/work/traceabilityState.js";
 import { useI18n } from "../../../i18n/I18nContext.jsx";
@@ -40,6 +41,7 @@ export default function ReaderTab({ workId }) {
           {t("wsTab.reader.jumpGraph")}
         </CursorSmallButton>
       </Box>
+      <ReaderClaimsPanel workId={workId} />
       <ReaderWorkBody
         workId={workId}
         focusedFingerprint={trace.chunkFingerprint}

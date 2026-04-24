@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import uuid
 from datetime import UTC, datetime
 
@@ -37,6 +38,65 @@ class IngestionRunRecord(Base):
     )
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class IngestJobRecordOrm(Base):
+    __tablename__ = "ingest_jobs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    job_id: Mapped[str] = mapped_column(String(36), index=True, unique=True)
+    workspace_id: Mapped[str] = mapped_column(String(128), index=True)
+    filename: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(32), default="queued", index=True)
+    message: Mapped[str] = mapped_column(Text, default="")
+    progress_current: Mapped[int] = mapped_column(default=0)
+    progress_total: Mapped[int] = mapped_column(default=100)
+    logs: Mapped[str] = mapped_column(Text, default="")
+    work_id: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    document_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    skipped_duplicate: Mapped[bool] = mapped_column(default=False)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    kind: Mapped[str] = mapped_column(String(32), default="single")
+    parent_job_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    child_job_ids_json: Mapped[str] = mapped_column(Text, default="[]")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+    )
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    @property
+    def child_job_ids(self) -> list[str]:
+        raw = (self.child_job_ids_json or "").strip() or "[]"
+        try:
+            data = json.loads(raw)
+        except Exception:
+            return []
+        if not isinstance(data, list):
+            return []
+        return [str(x) for x in data if x]
+
+    @child_job_ids.setter
+    def child_job_ids(self, value: list[str] | None) -> None:
+        self.child_job_ids_json = json.dumps([str(x) for x in (value or []) if x], ensure_ascii=True)
+
+
+class DedupJobRecordOrm(Base):
+    __tablename__ = "dedup_jobs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    job_id: Mapped[str] = mapped_column(String(36), index=True, unique=True)
+    workspace_id: Mapped[str] = mapped_column(String(128), index=True)
+    kind: Mapped[str] = mapped_column(String(32), index=True)
+    status: Mapped[str] = mapped_column(String(32), default="queued", index=True)
+    message: Mapped[str] = mapped_column(Text, default="")
+    conflicts_inserted: Mapped[int] = mapped_column(default=0)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+    )
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class WorkDedupConflict(Base):

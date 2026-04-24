@@ -8,13 +8,13 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import select
 
-from science_graphrag.config import Settings
+from science_graphrag.config import Settings, get_settings
 from science_graphrag.dedup.author_dedup_engine import run_author_dedup_scan
 from science_graphrag.dedup.work_dedup_engine import run_work_dedup_scan
-from science_graphrag.storage.db import init_db
+from science_graphrag.storage.db import get_engine, init_db, session_factory
+from science_graphrag.storage.models_orm import DedupJobRecordOrm
 
 
 def _now_iso() -> str:
@@ -35,31 +35,84 @@ class DedupJobRecord:
 
 
 class DedupJobRegistry:
-    def __init__(self) -> None:
+    def __init__(self, settings: Settings) -> None:
         self.lock = threading.Lock()
-        self.jobs: dict[str, DedupJobRecord] = {}
+        self._engine = get_engine(settings.database_url)
+        init_db(self._engine)
+        self._session_factory = session_factory(self._engine)
+        self.mark_stale_running_jobs_failed()
+
+    @staticmethod
+    def _to_dataclass(row: DedupJobRecordOrm) -> DedupJobRecord:
+        return DedupJobRecord(
+            job_id=row.job_id,
+            workspace_id=row.workspace_id,
+            kind=row.kind,
+            status=row.status,
+            message=row.message or "",
+            conflicts_inserted=int(row.conflicts_inserted or 0),
+            error=row.error,
+            finished_at=row.finished_at.isoformat() if row.finished_at else None,
+            created_at=row.created_at.isoformat() if row.created_at else _now_iso(),
+        )
+
+    def mark_stale_running_jobs_failed(self) -> None:
+        with self.lock:
+            with self._session_factory() as session:
+                rows = session.execute(
+                    select(DedupJobRecordOrm).where(DedupJobRecordOrm.status.in_(("queued", "running")))
+                ).scalars()
+                changed = False
+                for row in rows:
+                    row.status = "failed"
+                    row.error = row.error or "server_restarted"
+                    row.message = "Job interrupted by API restart"
+                    row.finished_at = datetime.now(UTC)
+                    changed = True
+                if changed:
+                    session.commit()
 
     def create(self, *, workspace_id: str, kind: str) -> DedupJobRecord:
         jid = str(uuid.uuid4())
-        rec = DedupJobRecord(job_id=jid, workspace_id=workspace_id, kind=kind, status="queued")
         with self.lock:
-            self.jobs[jid] = rec
-        return rec
+            with self._session_factory() as session:
+                row = DedupJobRecordOrm(
+                    job_id=jid,
+                    workspace_id=workspace_id,
+                    kind=kind,
+                    status="queued",
+                    message="Queued",
+                )
+                session.add(row)
+                session.commit()
+                session.refresh(row)
+                return self._to_dataclass(row)
 
     def get(self, job_id: str) -> DedupJobRecord | None:
         with self.lock:
-            return self.jobs.get(job_id)
+            with self._session_factory() as session:
+                row = session.execute(
+                    select(DedupJobRecordOrm).where(DedupJobRecordOrm.job_id == str(job_id).strip()).limit(1)
+                ).scalar_one_or_none()
+                return self._to_dataclass(row) if row else None
 
-    def _upd(self, job_id: str, **kwargs: Any) -> None:
+    def update(self, job_id: str, **kwargs: Any) -> None:
         with self.lock:
-            rec = self.jobs.get(job_id)
-            if not rec:
-                return
-            for k, v in kwargs.items():
-                setattr(rec, k, v)
+            with self._session_factory() as session:
+                row = session.execute(
+                    select(DedupJobRecordOrm).where(DedupJobRecordOrm.job_id == str(job_id).strip()).limit(1)
+                ).scalar_one_or_none()
+                if not row:
+                    return
+                for k, v in kwargs.items():
+                    if k == "finished_at":
+                        row.finished_at = datetime.fromisoformat(v) if isinstance(v, str) and v else v
+                    else:
+                        setattr(row, k, v)
+                session.commit()
 
 
-_REGISTRY = DedupJobRegistry()
+_REGISTRY = DedupJobRegistry(get_settings())
 
 
 def get_dedup_job(job_id: str) -> DedupJobRecord | None:
@@ -84,15 +137,15 @@ def _run_work_scan(job_id: str, settings: Settings) -> None:
     rec = _REGISTRY.get(job_id)
     if not rec:
         return
-    _REGISTRY._upd(job_id, status="running", message="Scanning works…")
+    _REGISTRY.update(job_id, status="running", message="Scanning works…")
 
     def upd(**kwargs: Any) -> None:
-        _REGISTRY._upd(job_id, **kwargs)
+        _REGISTRY.update(job_id, **kwargs)
 
     try:
-        engine = create_engine(settings.database_url, pool_pre_ping=True)
+        engine = get_engine(settings.database_url)
         init_db(engine)
-        factory = sessionmaker(bind=engine)
+        factory = session_factory(engine)
         with factory() as session:
             n = run_work_dedup_scan(
                 settings=settings,
@@ -118,15 +171,15 @@ def _run_author_scan(job_id: str, settings: Settings) -> None:
     rec = _REGISTRY.get(job_id)
     if not rec:
         return
-    _REGISTRY._upd(job_id, status="running", message="Scanning authors…")
+    _REGISTRY.update(job_id, status="running", message="Scanning authors…")
 
     def upd(**kwargs: Any) -> None:
-        _REGISTRY._upd(job_id, **kwargs)
+        _REGISTRY.update(job_id, **kwargs)
 
     try:
-        engine = create_engine(settings.database_url, pool_pre_ping=True)
+        engine = get_engine(settings.database_url)
         init_db(engine)
-        factory = sessionmaker(bind=engine)
+        factory = session_factory(engine)
         with factory() as session:
             n = run_author_dedup_scan(
                 settings=settings,

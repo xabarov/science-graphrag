@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 import re
 import uuid
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import Any
 
@@ -27,6 +29,11 @@ class Neo4jGraphStore:
 
     def close(self) -> None:
         self._driver.close()
+
+    @contextmanager
+    def session(self) -> Iterator[Any]:
+        with self._driver.session() as session:
+            yield session
 
     def wipe_all(self) -> None:
         """Delete all nodes and relationships (dev / benchmark reset)."""
@@ -81,6 +88,33 @@ class Neo4jGraphStore:
             (
                 "CREATE FULLTEXT INDEX claim_normalized_fulltext IF NOT EXISTS "
                 "FOR (n:Claim) ON EACH [n.normalized_text]"
+            ),
+            # Wave Q — range + composite + fulltext (idempotent; see neo4j_migrations/002_indexes_and_fulltext.cypher)
+            "CREATE INDEX work_year IF NOT EXISTS FOR (w:Work) ON (w.publication_year)",
+            "CREATE INDEX work_fingerprint IF NOT EXISTS FOR (w:Work) ON (w.fingerprint)",
+            "CREATE INDEX work_normalized_title IF NOT EXISTS FOR (w:Work) ON (w.normalized_title)",
+            "CREATE INDEX work_doi IF NOT EXISTS FOR (w:Work) ON (w.doi)",
+            "CREATE INDEX work_arxiv_id IF NOT EXISTS FOR (w:Work) ON (w.arxiv_id)",
+            "CREATE INDEX author_normalized_name IF NOT EXISTS FOR (a:Author) ON (a.normalized_name)",
+            "CREATE INDEX institution_normalized_name IF NOT EXISTS FOR (i:Institution) ON (i.normalized_name)",
+            "CREATE INDEX institution_ror_id IF NOT EXISTS FOR (i:Institution) ON (i.ror_id)",
+            "CREATE INDEX venue_issn IF NOT EXISTS FOR (v:Venue) ON (v.issn)",
+            "CREATE INDEX method_normalized IF NOT EXISTS FOR (m:Method) ON (m.normalized_name)",
+            "CREATE INDEX dataset_normalized IF NOT EXISTS FOR (d:Dataset) ON (d.normalized_name)",
+            "CREATE INDEX work_year_type IF NOT EXISTS FOR (w:Work) ON (w.publication_year, w.work_type)",
+            (
+                "CREATE FULLTEXT INDEX works_title_abstract IF NOT EXISTS "
+                "FOR (n:Work) ON EACH [n.title, n.abstract]"
+            ),
+            "CREATE FULLTEXT INDEX methods_text IF NOT EXISTS FOR (n:Method) ON EACH [n.name]",
+            "CREATE FULLTEXT INDEX datasets_text IF NOT EXISTS FOR (n:Dataset) ON EACH [n.name]",
+            (
+                "CREATE FULLTEXT INDEX authors_text IF NOT EXISTS "
+                "FOR (n:Author) ON EACH [n.full_name, n.normalized_name]"
+            ),
+            (
+                "CREATE FULLTEXT INDEX institutions_text IF NOT EXISTS "
+                "FOR (n:Institution) ON EACH [n.name, n.normalized_name]"
             ),
         ]
         with self._driver.session() as session:
@@ -704,6 +738,8 @@ class Neo4jGraphStore:
         RETURN coalesce(w.title, '') AS title,
                w.publication_year AS year,
                coalesce(w.abstract, '') AS abstract,
+               coalesce(w.doi, '') AS doi,
+               coalesce(w.arxiv_id, '') AS arxiv_id,
                coalesce(auth.full_name, '') AS first_author
         LIMIT 1
         """
@@ -716,8 +752,62 @@ class Neo4jGraphStore:
                 "title": str(rec["title"] or ""),
                 "year": rec["year"],
                 "abstract": str(rec["abstract"] or ""),
+                "doi": str(rec["doi"] or ""),
+                "arxiv_id": str(rec["arxiv_id"] or ""),
                 "first_author": str(rec["first_author"] or ""),
             }
+
+    def fulltext_search_work_ids(self, query: str, *, limit: int = 20) -> list[tuple[str, float]]:
+        """Full-text search on ``works_title_abstract`` index (Wave Q). Returns (work_id, score)."""
+
+        q = (query or "").strip()
+        if not q:
+            return []
+        cypher = """
+        CALL db.index.fulltext.queryNodes('works_title_abstract', $search)
+        YIELD node, score
+        WHERE 'Work' IN labels(node)
+        RETURN node.id AS wid, score
+        LIMIT $lim
+        """
+        try:
+            with self._driver.session() as session:
+                rows = session.run(cypher, search=q, lim=int(limit))
+                out: list[tuple[str, float]] = []
+                for r in rows:
+                    wid = str(r["wid"] or "").strip()
+                    if wid:
+                        out.append((wid, float(r["score"] or 0.0)))
+                return out
+        except Exception:  # noqa: BLE001 — index missing or unsupported query
+            return []
+
+    def cites_neighbor_work_ids(
+        self,
+        seed_work_ids: list[str],
+        *,
+        exclude_ids: set[str],
+        limit: int = 80,
+    ) -> list[str]:
+        """Distinct :Work ids reachable by one ``CITES`` hop from any seed work."""
+
+        seeds = [str(x).strip() for x in seed_work_ids if str(x).strip()]
+        if not seeds:
+            return []
+        excl = [str(x).strip() for x in exclude_ids if str(x).strip()]
+        cypher = """
+        UNWIND $seeds AS sid
+        MATCH (w:Work {id: sid})-[r:CITES]-(n:Work)
+        WHERE NOT n.id IN $excl
+        RETURN DISTINCT n.id AS nid
+        LIMIT $lim
+        """
+        try:
+            with self._driver.session() as session:
+                rows = session.run(cypher, seeds=seeds[:50], excl=excl[:500], lim=int(limit))
+                return [str(r["nid"]) for r in rows if r.get("nid")]
+        except Exception:  # noqa: BLE001
+            return []
 
     def list_workspace_authors(self, workspace_id: str) -> list[dict[str, Any]]:
         """Distinct authors attached to works in a workspace (for L2 dedup scan)."""

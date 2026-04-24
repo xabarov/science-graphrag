@@ -1,41 +1,42 @@
-import axios from "axios";
-
 import { buildAdminApiHeaders } from "../../services/adminApiHeaders.js";
-
-const api = axios.create({
-  baseURL: "/v1",
-});
+import { apiClient, buildApiUrl } from "../../services/apiClient.js";
 
 function authHeaders() {
   return buildAdminApiHeaders();
 }
 
 export async function getSettingsSchema() {
-  const res = await api.get("/settings/schema", { headers: authHeaders() });
+  const res = await apiClient.get(buildApiUrl("/v1/settings/schema"), { headers: authHeaders() });
   return res.data;
 }
 
 export async function getSettingsSnapshot() {
-  const res = await api.get("/settings", { headers: authHeaders() });
+  const res = await apiClient.get(buildApiUrl("/v1/settings"), { headers: authHeaders() });
   return res.data;
 }
 
 export async function updateLlmSettings(payload) {
-  const res = await api.patch("/settings/llm", payload, { headers: authHeaders() });
+  const res = await apiClient.patch(buildApiUrl("/v1/settings/llm"), payload, { headers: authHeaders() });
   return res.data;
 }
 
 export async function updateIngestionSettings(payload) {
-  const res = await api.patch("/settings/ingestion", payload, { headers: authHeaders() });
+  const res = await apiClient.patch(buildApiUrl("/v1/settings/ingestion"), payload, {
+    headers: authHeaders(),
+  });
   return res.data;
 }
 
 export async function deleteLlmSecret() {
-  const res = await api.delete("/settings/llm/secret", { headers: authHeaders() });
+  const res = await apiClient.delete(buildApiUrl("/v1/settings/llm/secret"), {
+    headers: authHeaders(),
+  });
   return res.data;
 }
 
 export async function testLlmConnection(payload) {
-  const res = await api.post("/settings/llm/test", payload, { headers: authHeaders() });
+  const res = await apiClient.post(buildApiUrl("/v1/settings/llm/test"), payload, {
+    headers: authHeaders(),
+  });
   return res.data;
 }

@@ -108,19 +108,19 @@
 **Источник анализа:** [docs/analysis/workspace-experience-gap-2026-04-24.md §6 Wave I](../analysis/workspace-experience-gap-2026-04-24.md#wave-i--workspace-context-everywhere-ui--thin-backend).
 
 1. `WorkspaceContextProvider` + `WorkspaceContextChip` (TopBar), Drawer rework: `Workspace` → последний open, `Graph/Ask/Evidence` несут `workspace_id`; **Reader** в Drawer при наличии `work_id` (URL или `lastReaderWorkId` / `getLastWorkId()`).
-2. `POST /v1/query` принимает опциональный `workspace_id` (фильтрует Qdrant по членам workspace). Smoke: неизвестный workspace + **позитивный** сценарий с фильтром Qdrant и `retrieval_trace.context.workspace_id` (см. `tests/test_api_smoke.py`).
+2. `POST /v1/query` принимает опциональный `workspace_id` (фильтрует Qdrant по payload `workspace_ids`, с одноразовым fallback на список `work_id` при `workspace_scope_payload_miss`). Smoke: неизвестный workspace + **позитивный** сценарий с фильтром Qdrant и `retrieval_trace.workspace_id` (см. `tests/test_api_smoke.py`).
 3. Empty states новых страниц: «Open last workspace» fallback из `localStorage`.
 4. Предусловие: закрыть `[OPEN]` строки в [backlog/refactor-frontend.md](../backlog/refactor-frontend.md) (split `WorkspacePage.jsx`, `WorkspacesPage.jsx`).
 
 **Exit:** manual user-journey «Workspace → sidebar Ask → sidebar Graph → sidebar Evidence → обратно» — `workspace_id` не теряется ни на одном шаге; smoke зелёный; Reader доступен из Drawer при выбранной работе.
 
-**Статус реализации (2026-04-24):** код и доки обновлены под этот exit (см. [`WorkspaceContext.jsx`](../../ui/src/components/layout/WorkspaceContext.jsx), [`WorkspaceContextChip.jsx`](../../ui/src/components/layout/WorkspaceContextChip.jsx), [`Drawer.jsx`](../../ui/src/components/layout/DashboardLayout/Drawer.jsx), [`workspaceStore.js`](../../ui/src/utils/workspaceStore.js) `appendWorkspaceQuery` / `getLastWorkspaceHref`, [`main.py`](../../science_graphrag/api/main.py) `workspace_id` на `POST /v1/query`, [`retrieval.py`](../../science_graphrag/api/retrieval.py), smoke `test_post_query_accepts_workspace_id_unknown_workspace` и **`test_post_query_with_workspace_id_filters_qdrant`** в [`tests/test_api_smoke.py`](../../tests/test_api_smoke.py); спеки [`shell-layout.md`](../specs/shell-layout.md), [`route-map.md`](../specs/route-map.md), [`frontend-ui-api-contracts-v1.md`](../specs/frontend-ui-api-contracts-v1.md) (в т.ч. `retrieval_trace.context.workspace_id`).
+**Статус реализации (2026-04-24):** код и доки обновлены под этот exit (см. [`WorkspaceContext.jsx`](../../ui/src/components/layout/WorkspaceContext.jsx), [`WorkspaceContextChip.jsx`](../../ui/src/components/layout/WorkspaceContextChip.jsx), [`Drawer.jsx`](../../ui/src/components/layout/DashboardLayout/Drawer.jsx), [`workspaceStore.js`](../../ui/src/utils/workspaceStore.js) `appendWorkspaceQuery` / `getLastWorkspaceHref`, [`main.py`](../../science_graphrag/api/main.py) `workspace_id` на `POST /v1/query`, [`retrieval.py`](../../science_graphrag/api/retrieval.py), smoke `test_post_query_accepts_workspace_id_unknown_workspace` и **`test_post_query_with_workspace_id_filters_qdrant`** в [`tests/test_api_smoke.py`](../../tests/test_api_smoke.py); спеки [`shell-layout.md`](../specs/shell-layout.md), [`route-map.md`](../specs/route-map.md), [`frontend-ui-api-contracts-v1.md`](../specs/frontend-ui-api-contracts-v1.md) (в т.ч. плоский ключ `retrieval_trace.workspace_id` и опционально `workspace_scope_payload_miss`).
 
 ---
 
 ## Wave J — Workspace knowledge graph v2 (Phase 5/6)
 
-**Цель:** граф workspace воспринимается как один связный knowledge graph; видны cross-paper цитирования; есть фильтры по типу и режимы (`inner_only`, `union_1hop`, `semantic_layer`).
+**Цель:** граф workspace воспринимается как один связный knowledge graph; видны cross-paper цитирования; есть фильтры по типу и режимы (`inner_only`, `union_1hop`, `semantic_layer`, `full`).
 
 **Источник анализа:** [workspace-experience-gap-2026-04-24.md §6 Wave J](../analysis/workspace-experience-gap-2026-04-24.md#wave-j--workspace-knowledge-graph-v2).
 
@@ -131,13 +131,13 @@
 
 **Exit (Wave J):**
 
-- [ ] `GET /v1/workspaces/{id}/graph` v2 с `workspace_membership`, `inner_only` по умолчанию; `/graph/stats`, `/graph/neighbors`.
-- [ ] UI: toolbar + internal/external палитра + lazy expand; счётчики stats в Workspace header/toolbar.
-- [ ] Smoke/API-тесты на graph + stats; при необходимости Neo4j mock / integration.
-- [ ] `npm run lint` + `npm run test` (ui), `pytest` (backend) зелёные.
-- [ ] GDS: только при флаге + порогах; иначе Cypher fallback (`meta.gds_used` / `gds_runtime_available`).
+- [x] `GET /v1/workspaces/{id}/graph` v2 с `workspace_membership`, `inner_only` по умолчанию; `/graph/stats`, `/graph/neighbors` (в т.ч. `depth=2` на neighbors, `mode=full` игнорирует `node_types`).
+- [x] UI: toolbar + internal/external палитра + lazy expand; счётчики stats в Workspace header/toolbar.
+- [x] Smoke/API-тесты на graph + stats; Neo4j integration: [`tests/test_workspace_graph_integration.py`](../../tests/test_workspace_graph_integration.py).
+- [x] `npm run lint` + `npm run test` (ui), `pytest` (backend) зелёные.
+- [x] GDS: только при флаге + порогах; иначе Cypher fallback (`meta.gds_used` / `gds_runtime_available`).
 
-**Статус реализации (2026-04-24):** backend [`workspace_graph.py`](../../science_graphrag/api/workspace_graph.py) + роуты в [`workspaces.py`](../../science_graphrag/api/workspaces.py); UI toolbar/panel/store; доки §5b contracts + ADR 012 + этот runbook; фикстура graph_v1; опциональный GDS-путь для крупных workspace при `depth=2`.
+**Статус реализации (2026-04-24, доп. 2026-04-25):** backend [`workspace_graph.py`](../../science_graphrag/api/workspace_graph.py) + роуты в [`workspaces.py`](../../science_graphrag/api/workspaces.py); UI toolbar/panel/store; доки §5b contracts + ADR 012 + этот runbook; фикстура graph_v1; опциональный GDS-путь для крупных workspace при `depth=2`; интеграционный тест на две работы с `CITES` + unit на `ws-internal` в [`scienceHybridCommunities.test.js`](../../ui/src/components/graph/physics/scienceHybridCommunities.test.js).
 
 ---
 

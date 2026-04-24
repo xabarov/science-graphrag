@@ -5,13 +5,12 @@ from pathlib import Path
 
 import typer
 
-from sqlalchemy import create_engine, desc, select
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import desc, select
 
 from science_graphrag.config import get_settings
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
 from science_graphrag.ingestion.pipeline import run_ingest_batch_cli, run_ingest_cli
-from science_graphrag.storage.db import init_db
+from science_graphrag.storage.db import get_engine, init_db, session_factory
 from science_graphrag.storage.models_orm import WorkDedupMergeLog
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 from science_graphrag.storage.qdrant_store import QdrantChunkStore, QdrantWorkEmbeddingStore, recreate_qdrant_chunk_collection
@@ -308,9 +307,9 @@ def dedup_merge_audit_cmd(
     """Print Postgres work_dedup_merge_log rows (Wave L audit; reverse merge not automated)."""
 
     s = get_settings()
-    engine = create_engine(s.database_url, pool_pre_ping=True)
+    engine = get_engine(s.database_url)
     init_db(engine)
-    factory = sessionmaker(bind=engine)
+    factory = session_factory(engine)
     with factory() as session:
         q = select(WorkDedupMergeLog).order_by(desc(WorkDedupMergeLog.created_at)).limit(limit)
         if workspace_id:

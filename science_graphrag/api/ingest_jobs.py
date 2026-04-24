@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-import io
 import threading
 import uuid
-import zipfile
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -14,12 +12,12 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import select
 
-from science_graphrag.config import Settings
+from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.pipeline import SkippedDuplicateIngestError, ingest_document
-from science_graphrag.storage.db import init_db
+from science_graphrag.storage.db import get_engine, init_db, session_factory
+from science_graphrag.storage.models_orm import IngestJobRecordOrm
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 
 SUPPORTED_SUFFIXES = frozenset({".pdf", ".md", ".txt"})
@@ -30,10 +28,14 @@ def _append_log(job_id: str, line: str) -> None:
     ts = datetime.now(UTC).strftime("%H:%M:%S")
     chunk = f"[{ts}] {line}\n"
     with _REGISTRY.lock:
-        rec = _REGISTRY.jobs.get(job_id)
-        if not rec:
-            return
-        rec.logs = (rec.logs + chunk)[-48_000:]
+        with _REGISTRY._session_factory() as session:
+            row = session.execute(
+                select(IngestJobRecordOrm).where(IngestJobRecordOrm.job_id == str(job_id).strip()).limit(1)
+            ).scalar_one_or_none()
+            if not row:
+                return
+            row.logs = ((row.logs or "") + chunk)[-48_000:]
+            session.commit()
 
 
 @dataclass
@@ -58,11 +60,53 @@ class IngestJobRecord:
 
 
 class IngestJobRegistry:
-    """Process-local job store (sufficient for single-node dev and small deployments)."""
+    """Durable ingest job store backed by Postgres."""
 
-    def __init__(self) -> None:
+    def __init__(self, settings: Settings) -> None:
         self.lock = threading.Lock()
-        self.jobs: dict[str, IngestJobRecord] = {}
+        self._settings = settings
+        self._engine = get_engine(settings.database_url)
+        init_db(self._engine)
+        self._session_factory = session_factory(self._engine)
+        self.mark_stale_running_jobs_failed()
+
+    @staticmethod
+    def _to_dataclass(row: IngestJobRecordOrm) -> IngestJobRecord:
+        return IngestJobRecord(
+            job_id=row.job_id,
+            workspace_id=row.workspace_id,
+            filename=row.filename,
+            status=row.status,
+            message=row.message or "",
+            progress_current=int(row.progress_current or 0),
+            progress_total=int(row.progress_total or 100),
+            logs=row.logs or "",
+            work_id=row.work_id,
+            document_id=row.document_id,
+            skipped_duplicate=bool(row.skipped_duplicate),
+            error=row.error,
+            created_at=row.created_at.isoformat() if row.created_at else _now_iso(),
+            finished_at=row.finished_at.isoformat() if row.finished_at else None,
+            kind=row.kind or "single",
+            parent_job_id=row.parent_job_id,
+            child_job_ids=row.child_job_ids,
+        )
+
+    def mark_stale_running_jobs_failed(self) -> None:
+        with self.lock:
+            with self._session_factory() as session:
+                rows = session.execute(
+                    select(IngestJobRecordOrm).where(IngestJobRecordOrm.status.in_(("queued", "running")))
+                ).scalars()
+                changed = False
+                for row in rows:
+                    row.status = "failed"
+                    row.error = row.error or "server_restarted"
+                    row.message = "Job interrupted by API restart"
+                    row.finished_at = datetime.now(UTC)
+                    changed = True
+                if changed:
+                    session.commit()
 
     def create_job(
         self,
@@ -73,33 +117,54 @@ class IngestJobRegistry:
         parent_job_id: str | None = None,
     ) -> IngestJobRecord:
         job_id = str(uuid.uuid4())
-        rec = IngestJobRecord(
-            job_id=job_id,
-            workspace_id=workspace_id,
-            filename=filename,
-            status="queued",
-            message="Queued",
-            kind=kind,
-            parent_job_id=parent_job_id,
-        )
         with self.lock:
-            self.jobs[job_id] = rec
-        return rec
+            with self._session_factory() as session:
+                row = IngestJobRecordOrm(
+                    job_id=job_id,
+                    workspace_id=workspace_id,
+                    filename=filename,
+                    status="queued",
+                    message="Queued",
+                    kind=kind,
+                    parent_job_id=parent_job_id,
+                )
+                session.add(row)
+                session.commit()
+                session.refresh(row)
+                return self._to_dataclass(row)
 
     def get(self, job_id: str) -> IngestJobRecord | None:
         with self.lock:
-            return self.jobs.get(job_id)
+            with self._session_factory() as session:
+                row = session.execute(
+                    select(IngestJobRecordOrm).where(IngestJobRecordOrm.job_id == str(job_id).strip()).limit(1)
+                ).scalar_one_or_none()
+                return self._to_dataclass(row) if row else None
 
     def _update(self, job_id: str, **kwargs: Any) -> None:
         with self.lock:
-            rec = self.jobs.get(job_id)
-            if not rec:
-                return
-            for k, v in kwargs.items():
-                setattr(rec, k, v)
+            with self._session_factory() as session:
+                row = session.execute(
+                    select(IngestJobRecordOrm).where(IngestJobRecordOrm.job_id == str(job_id).strip()).limit(1)
+                ).scalar_one_or_none()
+                if not row:
+                    return
+                for k, v in kwargs.items():
+                    if k == "created_at":
+                        continue
+                    if k == "finished_at":
+                        row.finished_at = (
+                            datetime.fromisoformat(v) if isinstance(v, str) and v else v
+                        )
+                        continue
+                    if k == "child_job_ids":
+                        row.child_job_ids = [str(x) for x in (v or []) if x]
+                        continue
+                    setattr(row, k, v)
+                session.commit()
 
 
-_REGISTRY = IngestJobRegistry()
+_REGISTRY = IngestJobRegistry(get_settings())
 
 
 def _ingest_workspace_tag(workspace_id: str) -> list[str]:
@@ -131,9 +196,9 @@ def _execute_single_ingest(job_id: str, temp_path: Path, settings: Settings) -> 
 
         upd(message="Running pipeline (Neo4j / vectors / SQL)…", progress_current=15)
 
-        engine = create_engine(settings.database_url, pool_pre_ping=True)
+        engine = get_engine(settings.database_url)
         init_db(engine)
-        factory = sessionmaker(bind=engine)
+        factory = session_factory(engine)
         work_id: str | None = None
         doc_id: str | None = None
         skipped = False

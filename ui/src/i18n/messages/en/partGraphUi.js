@@ -12,6 +12,8 @@ export default {
   "graph.wsToolbar.modeFull": "Full",
   "graph.wsToolbar.depth1": "depth 1",
   "graph.wsToolbar.depth2": "depth 2",
+  "graph.standaloneDepth.depth1Aria": "Single-hop neighborhood",
+  "graph.standaloneDepth.depth2Aria": "Two-hop neighborhood (citations)",
   "graph.wsToolbar.external": "External",
   "graph.wsToolbar.statsWorks": "{{count}} works",
   "graph.wsToolbar.statsAuthors": "{{count}} authors",

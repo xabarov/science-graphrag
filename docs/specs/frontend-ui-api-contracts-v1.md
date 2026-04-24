@@ -48,7 +48,7 @@ Request:
 }
 ```
 
-When **`workspace_id` is set** and **`work_id` is omitted**, retrieval restricts Qdrant vector search to chunks whose `work_id` belongs to that Neo4j workspace (`Workspace-[:CONTAINS]->Work`). Unknown workspace → HTTP 200 with empty hits and `retrieval_trace.workspace_missing: true`. **`work_id` wins** when both are provided (single-paper scope). For workspace-scoped calls, the request `workspace_id` is echoed on `retrieval_trace.workspace_id` together with `workspace_scope_work_count` (and `workspace_missing` when the workspace is unknown).
+When **`workspace_id` is set** and **`work_id` is omitted**, retrieval first filters Qdrant vector search by payload `workspace_ids` containing that workspace id. Unknown workspace → HTTP 200 with empty hits and `retrieval_trace.workspace_missing: true`. **`work_id` wins** when both are provided (single-paper scope). For workspace-scoped calls, the request `workspace_id` is echoed on `retrieval_trace.workspace_id` together with `workspace_scope_work_count` (and `workspace_missing` when the workspace is unknown). If the payload-filtered search returns **no hits** but Neo4j still lists member works, the API performs **one retry** using `work_id IN (workspace members)` and sets `retrieval_trace.workspace_scope_payload_miss = "work_ids_payload"` (log warning) — run `scripts/backfill_workspace_payloads.py` if this appears after ingest migrations.
 
 Response shape:
 
@@ -85,6 +85,7 @@ Response shape:
     "workspace_id": "string | null",
     "workspace_scope_work_count": "number | omitted",
     "workspace_missing": "boolean | omitted",
+    "workspace_scope_payload_miss": "string | omitted",
     "qdrant_collection": "string",
     "top_k_requested": 0,
     "citations_returned": 0,
@@ -176,6 +177,11 @@ Response:
   }
 }
 ```
+
+### `GET /v1/works/{work_id}/sources` and `GET /v1/works/{work_id}/pdf`
+
+- **`/sources`:** JSON inventory (`pdf`, `markdown` availability) for Reader UI.
+- **`/pdf`:** Streams `application/pdf` from the blob store (`StreamingResponse`). Supports **`Range: bytes=…`** → **206 Partial Content** with `Content-Range` and `Content-Length` for the slice; full file → **200** with `Content-Length`. **`ETag`** + `Accept-Ranges: bytes`; **`If-None-Match`** → **304**. Malformed or unsatisfiable range → **416** with `Content-Range: bytes */{size}`.
 
 ## 4) Work graph neighborhood (implemented)
 
@@ -299,6 +305,8 @@ Response matches work graph shape (`work_id`, `nodes`, `edges`, `meta`). Each no
 
 - `workspace_membership`: `internal` \| `external` (for `:Work`, membership in the workspace collection; for other labels, adjacency to internal works).
 - `internal_cite_count` / `external_cite_count` on `:Work` (outgoing `CITES` targets split by membership).
+
+**`mode=full`:** same hop depth as `inner_only` / depth-2 paths, but **ignores** the `node_types` query filter so every 1-hop (or 2-hop) neighbor label reachable from internal `:Work` nodes is eligible (still respects `include_external` for non-member `:Work` nodes). Use when you need Methods/Datasets/Authors even after narrowing `node_types` in the UI.
 
 `meta.graph_scope` is `workspace_v2` (or `workspace_union_1hop` inside legacy union mode until merged into v2 meta). `meta` also includes `gds_runtime_available`, `gds_used`, `cap_applied`, `source_work_ids`, `internal_node_count`, `external_node_count`.
 

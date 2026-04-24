@@ -1,6 +1,6 @@
 # API and CLI image (Python only). Static React UI is served by the compose `web` service.
 # Rebuild only this image when backend changes: docker compose build api
-FROM python:3.11-slim-bookworm
+FROM python:3.12-slim-bookworm
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends poppler-utils \

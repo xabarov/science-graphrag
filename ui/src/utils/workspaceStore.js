@@ -2,14 +2,12 @@
  * Client helpers for workspace API + active workspace pointer in localStorage.
  */
 
-import axios from "axios";
-
-import { formatResearchApiError, getResearchApiBaseUrl } from "../services/researchApi.js";
+import { apiClient, buildApiUrl, DEFAULT_TIMEOUT_MS } from "../services/apiClient.js";
+import { formatResearchApiError } from "../services/researchApi.js";
 
 const ACTIVE_WORKSPACE_KEY = "science-graphrag:activeWorkspaceId";
 
 /** Default HTTP timeout so a dead API/Neo4j does not leave the UI stuck on “Loading…”. */
-const DEFAULT_TIMEOUT_MS = 25_000;
 const INGEST_UPLOAD_TIMEOUT_MS = 120_000;
 const INGEST_BATCH_TIMEOUT_MS = 600_000;
 
@@ -18,8 +16,7 @@ function httpConfig(extra = {}) {
 }
 
 function apiUrl(pathWithQuery) {
-  const base = getResearchApiBaseUrl();
-  return base ? `${base}${pathWithQuery}` : pathWithQuery;
+  return buildApiUrl(pathWithQuery);
 }
 
 /**
@@ -77,7 +74,7 @@ export function getLastWorkspaceHref() {
  * @returns {Promise<Array<{ id: string, name: string, created_at?: string, work_ids: string[] }>>}
  */
 export async function listWorkspaces() {
-  const { data } = await axios.get(apiUrl("/v1/workspaces"), httpConfig());
+  const { data } = await apiClient.get(apiUrl("/v1/workspaces"), httpConfig());
   const items = Array.isArray(data?.items) ? data.items : [];
   return items;
 }
@@ -90,7 +87,7 @@ export async function getWorkspace(id) {
   const wid = encodeURIComponent(String(id || "").trim());
   if (!wid) return null;
   try {
-    const { data } = await axios.get(apiUrl(`/v1/workspaces/${wid}`), httpConfig());
+    const { data } = await apiClient.get(apiUrl(`/v1/workspaces/${wid}`), httpConfig());
     return data;
   } catch (e) {
     if (e?.response?.status === 404) return null;
@@ -102,24 +99,32 @@ export async function getWorkspace(id) {
  * @param {string} name
  */
 export async function createWorkspace(name) {
-  const { data } = await axios.post(apiUrl("/v1/workspaces"), { name: name || "Workspace" }, httpConfig());
+  const { data } = await apiClient.post(
+    apiUrl("/v1/workspaces"),
+    { name: name || "Workspace" },
+    httpConfig(),
+  );
   return data;
 }
 
 export async function renameWorkspace(id, name) {
   const wid = encodeURIComponent(String(id || "").trim());
-  const { data } = await axios.patch(apiUrl(`/v1/workspaces/${wid}`), { name: name || "Workspace" }, httpConfig());
+  const { data } = await apiClient.patch(
+    apiUrl(`/v1/workspaces/${wid}`),
+    { name: name || "Workspace" },
+    httpConfig(),
+  );
   return data;
 }
 
 export async function deleteWorkspaceApi(id) {
   const wid = encodeURIComponent(String(id || "").trim());
-  await axios.delete(apiUrl(`/v1/workspaces/${wid}`), httpConfig());
+  await apiClient.delete(apiUrl(`/v1/workspaces/${wid}`), httpConfig());
 }
 
 export async function addWorkToWorkspace(workspaceId, workId) {
   const wid = encodeURIComponent(String(workspaceId || "").trim());
-  const { data } = await axios.post(
+  const { data } = await apiClient.post(
     apiUrl(`/v1/workspaces/${wid}/works`),
     {
       work_id: String(workId || "").trim(),
@@ -132,12 +137,12 @@ export async function addWorkToWorkspace(workspaceId, workId) {
 export async function removeWorkFromWorkspace(workspaceId, workId) {
   const ws = encodeURIComponent(String(workspaceId || "").trim());
   const w = encodeURIComponent(String(workId || "").trim());
-  const { data } = await axios.delete(apiUrl(`/v1/workspaces/${ws}/works/${w}`), httpConfig());
+  const { data } = await apiClient.delete(apiUrl(`/v1/workspaces/${ws}/works/${w}`), httpConfig());
   return data;
 }
 
 export async function mergeWorkspacesApi(keepWorkspaceId, dropWorkspaceId) {
-  const { data } = await axios.post(
+  const { data } = await apiClient.post(
     apiUrl("/v1/workspaces/merge"),
     {
       keep_workspace_id: String(keepWorkspaceId || "").trim(),
@@ -182,7 +187,7 @@ export async function getWorkspaceGraph(workspaceId, opts = {}) {
     if (v > 0) params.set("external_min_internal_citers", String(v));
   }
   const q = params.toString();
-  const { data } = await axios.get(apiUrl(`/v1/workspaces/${wid}/graph${q ? `?${q}` : ""}`), httpConfig());
+  const { data } = await apiClient.get(apiUrl(`/v1/workspaces/${wid}/graph${q ? `?${q}` : ""}`), httpConfig());
   return data;
 }
 
@@ -192,7 +197,7 @@ export async function getWorkspaceGraph(workspaceId, opts = {}) {
  */
 export async function getWorkspaceGraphStats(workspaceId) {
   const wid = encodeURIComponent(String(workspaceId || "").trim());
-  const { data } = await axios.get(apiUrl(`/v1/workspaces/${wid}/graph/stats`), httpConfig());
+  const { data } = await apiClient.get(apiUrl(`/v1/workspaces/${wid}/graph/stats`), httpConfig());
   return data;
 }
 
@@ -212,19 +217,19 @@ export async function getWorkspaceGraphNeighbors(workspaceId, nodeId, opts = {})
     params.set("limit", String(Math.min(200, Math.max(1, Math.floor(Number(opts.limit))))));
   }
   const q = params.toString();
-  const { data } = await axios.get(apiUrl(`/v1/workspaces/${wid}/graph/neighbors?${q}`), httpConfig());
+  const { data } = await apiClient.get(apiUrl(`/v1/workspaces/${wid}/graph/neighbors?${q}`), httpConfig());
   return data;
 }
 
 export async function getWorkspaceDedupCandidates(workspaceId) {
   const wid = encodeURIComponent(String(workspaceId || "").trim());
-  const { data } = await axios.get(apiUrl(`/v1/workspaces/${wid}/deduplication-candidates`), httpConfig());
+  const { data } = await apiClient.get(apiUrl(`/v1/workspaces/${wid}/deduplication-candidates`), httpConfig());
   return Array.isArray(data?.items) ? data.items : [];
 }
 
 export async function mergeWorksInWorkspace(workspaceId, keepWorkId, dropWorkId) {
   const wid = encodeURIComponent(String(workspaceId || "").trim());
-  const { data } = await axios.post(
+  const { data } = await apiClient.post(
     apiUrl(`/v1/workspaces/${wid}/merge-works`),
     {
       keep_work_id: String(keepWorkId || "").trim(),
@@ -245,7 +250,7 @@ export async function startWorkspaceDocumentIngest(workspaceId, file) {
   const wid = encodeURIComponent(String(workspaceId || "").trim());
   const form = new FormData();
   form.append("file", file);
-  const { data } = await axios.post(apiUrl(`/v1/workspaces/${wid}/ingest/document`), form, {
+  const { data } = await apiClient.post(apiUrl(`/v1/workspaces/${wid}/ingest/document`), form, {
     headers: { "Content-Type": "multipart/form-data" },
     timeout: INGEST_UPLOAD_TIMEOUT_MS,
   });
@@ -269,7 +274,7 @@ export async function startWorkspaceBatchIngest(workspaceId, files, archive = nu
   if (archive) {
     form.append("archive", archive);
   }
-  const { data } = await axios.post(apiUrl(`/v1/workspaces/${wid}/ingest/batch`), form, {
+  const { data } = await apiClient.post(apiUrl(`/v1/workspaces/${wid}/ingest/batch`), form, {
     headers: { "Content-Type": "multipart/form-data" },
     timeout: INGEST_BATCH_TIMEOUT_MS,
   });
@@ -282,14 +287,14 @@ export async function startWorkspaceBatchIngest(workspaceId, files, archive = nu
  */
 export async function getIngestJob(jobId) {
   const id = encodeURIComponent(String(jobId || "").trim());
-  const { data } = await axios.get(apiUrl(`/v1/ingest/jobs/${id}`), httpConfig());
+  const { data } = await apiClient.get(apiUrl(`/v1/ingest/jobs/${id}`), httpConfig());
   return data;
 }
 
 /** @param {string} workspaceId */
 export async function startWorkspaceSmartDedupScan(workspaceId) {
   const wid = encodeURIComponent(String(workspaceId || "").trim());
-  const { data } = await axios.post(apiUrl(`/v1/workspaces/${wid}/dedup/scan`), {}, httpConfig());
+  const { data } = await apiClient.post(apiUrl(`/v1/workspaces/${wid}/dedup/scan`), {}, httpConfig());
   return data;
 }
 
@@ -297,7 +302,7 @@ export async function startWorkspaceSmartDedupScan(workspaceId) {
 export async function getWorkspaceDedupJob(workspaceId, jobId) {
   const ws = encodeURIComponent(String(workspaceId || "").trim());
   const jid = encodeURIComponent(String(jobId || "").trim());
-  const { data } = await axios.get(apiUrl(`/v1/workspaces/${ws}/dedup/jobs/${jid}`), httpConfig());
+  const { data } = await apiClient.get(apiUrl(`/v1/workspaces/${ws}/dedup/jobs/${jid}`), httpConfig());
   return data;
 }
 
@@ -312,7 +317,7 @@ export async function getWorkspaceSmartDedupConflicts(workspaceId, opts = {}) {
   if (opts.limit != null) params.set("limit", String(opts.limit));
   if (opts.offset != null) params.set("offset", String(opts.offset));
   const q = params.toString();
-  const { data } = await axios.get(
+  const { data } = await apiClient.get(
     apiUrl(`/v1/workspaces/${wid}/dedup/conflicts${q ? `?${q}` : ""}`),
     httpConfig(),
   );
@@ -323,7 +328,7 @@ export async function getWorkspaceSmartDedupConflicts(workspaceId, opts = {}) {
 export async function decideWorkspaceSmartDedupConflict(workspaceId, conflictId, decision) {
   const ws = encodeURIComponent(String(workspaceId || "").trim());
   const cid = encodeURIComponent(String(conflictId || "").trim());
-  const { data } = await axios.post(
+  const { data } = await apiClient.post(
     apiUrl(`/v1/workspaces/${ws}/dedup/conflicts/${cid}/decide`),
     { decision },
     httpConfig(),
@@ -334,6 +339,6 @@ export async function decideWorkspaceSmartDedupConflict(workspaceId, conflictId,
 /** @param {string} workspaceId */
 export async function getWorkspaceDedupAudit(workspaceId) {
   const wid = encodeURIComponent(String(workspaceId || "").trim());
-  const { data } = await axios.get(apiUrl(`/v1/workspaces/${wid}/dedup/audit`), httpConfig());
+  const { data } = await apiClient.get(apiUrl(`/v1/workspaces/${wid}/dedup/audit`), httpConfig());
   return data;
 }

@@ -8,8 +8,7 @@ from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import create_engine, desc, select
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import desc, select
 
 from science_graphrag.api.dedup_jobs import (
     dedup_job_to_dict,
@@ -19,7 +18,7 @@ from science_graphrag.api.dedup_jobs import (
 )
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
-from science_graphrag.storage.db import init_db
+from science_graphrag.storage.db import get_engine, init_db, session_factory
 from science_graphrag.storage.models_orm import (
     AuthorDedupConflict,
     WorkDedupConflict,
@@ -40,9 +39,9 @@ def _store(settings: Settings) -> Neo4jGraphStore:
 
 
 def _session_factory(settings: Settings):
-    engine = create_engine(settings.database_url, pool_pre_ping=True)
+    engine = get_engine(settings.database_url)
     init_db(engine)
-    return sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
+    return session_factory(engine)
 
 
 class DedupDecideBody(BaseModel):
@@ -159,6 +158,10 @@ def post_dedup_conflict_decide(
             raise HTTPException(status_code=404, detail="conflict_not_found")
         if row.status != "pending":
             raise HTTPException(status_code=400, detail="conflict_already_resolved")
+
+        kid_raw = (body.keep_work_id or "").strip()
+        if kid_raw and body.decision != "merge":
+            raise HTTPException(status_code=400, detail="keep_work_id_only_with_decision_merge")
 
         now = datetime.now(UTC)
         if body.decision in ("keep_separate", "skip"):

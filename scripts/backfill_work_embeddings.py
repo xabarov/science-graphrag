@@ -63,6 +63,12 @@ def main() -> None:
                 vector=vec,
                 embedding_model=settings.embedding_model or "hash-deterministic",
                 workspace_ids=[ws_id],
+                title=str(card.get("title") or ""),
+                publication_year=card.get("year"),
+                doi=str(card.get("doi") or "") or None,
+                arxiv_id=str(card.get("arxiv_id") or "") or None,
+                first_author_normalized=str(card.get("first_author") or ""),
+                embedding_kind="work_summary_v1",
             )
             n += 1
         print(f"Upserted {n} work summary vector(s) for workspace={ws_id}")

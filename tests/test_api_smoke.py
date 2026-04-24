@@ -451,6 +451,128 @@ def test_get_work_pdf_ok(monkeypatch: Any, tmp_path: Path) -> None:
     assert "application/pdf" in (res.headers.get("content-type") or "")
 
 
+def test_get_work_pdf_range_returns_206(monkeypatch: Any, tmp_path: Path) -> None:
+    """Range: bytes=0-3 returns 206 Partial Content with Content-Range."""
+
+    sha = "b" * 64
+    pdf = tmp_path / "raw" / sha[:2] / sha
+    pdf.parent.mkdir(parents=True)
+    pdf.write_bytes(b"%PDF-1234567890")
+    monkeypatch.setattr(api_main.works_api, "work_pdf_blob_path", lambda *_a, **_k: pdf)
+    client = _client()
+    res = client.get("/v1/works/w2/pdf", headers={"Range": "bytes=0-3"})
+    assert res.status_code == 206
+    assert res.headers.get("content-range") == "bytes 0-3/15"
+    assert int(res.headers.get("content-length") or 0) == 4
+    assert res.content == b"%PDF"
+
+
+def test_post_query_workspace_payload_miss_fallback(monkeypatch: Any) -> None:
+    """When workspace_ids filter yields no hits, retrieval retries with work_ids and records payload miss."""
+
+    from science_graphrag.api import retrieval as retr_mod
+    from science_graphrag.storage.qdrant_store import QdrantChunkStore
+
+    def _fake_ws_scope(_settings: Any, workspace_id: str) -> tuple[list[str], dict[str, Any]]:
+        return ["w-a", "w-b"], {
+            "workspace_id": workspace_id.strip(),
+            "workspace_scope_work_count": 2,
+        }
+
+    calls: list[dict[str, Any]] = []
+
+    def _spy_search_similar(
+        self: Any,
+        *,
+        vector: list[float],
+        limit: int = 8,
+        work_id: str | None = None,
+        work_ids: list[str] | None = None,
+        workspace_id: str | None = None,
+    ) -> list[dict[str, Any]]:
+        calls.append(
+            {
+                "work_id": work_id,
+                "work_ids": work_ids,
+                "workspace_id": workspace_id,
+            },
+        )
+        if workspace_id:
+            return []
+        if work_ids:
+            return [
+                {
+                    "id": "hit-fb",
+                    "score": 0.5,
+                    "text": "fb",
+                    "work_id": "w-a",
+                    "document_id": "d1",
+                    "chunk_fingerprint": "fp-fb",
+                    "section_path": None,
+                },
+            ]
+        return []
+
+    monkeypatch.setattr(retr_mod, "_workspace_scope_work_ids", _fake_ws_scope)
+    monkeypatch.setattr(QdrantChunkStore, "search_similar", _spy_search_similar)
+
+    client = _client()
+    res = client.post(
+        "/v1/query",
+        json={"query": "q", "workspace_id": "ws-payload-miss", "top_k": 3},
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["retrieval_trace"].get("workspace_scope_payload_miss") == "work_ids_payload"
+    assert len(calls) == 2
+    assert calls[0]["workspace_id"] == "ws-payload-miss"
+    assert calls[1]["work_ids"] == ["w-a", "w-b"]
+    assert calls[1]["workspace_id"] is None
+
+
+def test_get_idea_search_stub() -> None:
+    """Wave R prep: idea-search returns empty items and stub status."""
+
+    client = _client()
+    res = client.get("/v1/idea-search", params={"q": "test", "kinds": "work,chunk", "top_k": 3})
+    assert res.status_code == 200
+    body = res.json()
+    assert body.get("items") == []
+    assert body.get("query") == "test"
+    assert body.get("status") == "stub_wave_r"
+
+
+def test_post_query_passes_mode_to_answer_query(monkeypatch: Any) -> None:
+    """POST /v1/query forwards retrieval mode to answer_query (hybrid)."""
+
+    seen: dict[str, Any] = {}
+
+    def _spy_answer_query(
+        *args: Any,
+        mode: str = "vector",
+        **kwargs: Any,
+    ) -> GroundedAnswer:
+        seen["mode"] = mode
+        return GroundedAnswer(
+            answer="ok",
+            citations=[],
+            graph_context={"methods": [], "datasets": [], "semantic_available": False, "degraded": []},
+            retrieval_trace={
+                "embedding": {"embedding_model": "mock"},
+                "hit_count": 0,
+                "retrieval_mode": mode,
+                "degraded": [],
+            },
+        )
+
+    monkeypatch.setattr(api_main, "answer_query", _spy_answer_query)
+    client = _client()
+    res = client.post("/v1/query", json={"query": "x", "top_k": 2, "mode": "hybrid"})
+    assert res.status_code == 200
+    assert seen.get("mode") == "hybrid"
+    assert res.json()["retrieval_trace"].get("retrieval_mode") == "hybrid"
+
+
 def test_query_endpoint_smoke(monkeypatch: Any) -> None:
     """Query endpoint returns answer with traceable citation fields."""
 

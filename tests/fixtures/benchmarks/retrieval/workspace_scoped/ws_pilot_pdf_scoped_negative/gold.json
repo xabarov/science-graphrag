@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "benchmark_suite_tier": "workspace_scoped",
-  "description": "Negative control mirror for ws-pilot-pdf.",
+  "description": "Negative-scope control: question about focal loss / RetinaNet is out-of-scope for YOLOv1-only workspace. No hits required; check that forbidden_work_ids do not leak into citations.",
   "workspace_id": "ws-pilot-pdf",
   "expected_workspace_scope": true,
   "workspace_member_work_ids": [
@@ -12,6 +12,6 @@
   ],
   "work_id": null,
   "top_k": 8,
-  "min_hit_count": 1,
+  "min_hit_count": 0,
   "contract_only": false
 }

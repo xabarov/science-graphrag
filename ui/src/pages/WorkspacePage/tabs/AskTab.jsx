@@ -17,6 +17,7 @@ export default function AskTab({ workId }) {
   const trace = readTraceabilityState(searchParams);
   const traceSummary = describeTraceabilityState(trace);
   const askSessionUrl = (searchParams.get("ask_session") || "").trim();
+  const labMode = searchParams.get("lab") === "1";
   const sessionScopeKey = `workspace:${workId.trim()}`;
 
   const onAskSessionUrlChange = useCallback(
@@ -68,6 +69,7 @@ export default function AskTab({ workId }) {
         workspaceWorkId={workId}
         urlSessionId={askSessionUrl}
         onUrlSessionIdChange={onAskSessionUrlChange}
+        labMode={labMode}
       />
     </Box>
   );

@@ -6,6 +6,8 @@ import Popover from "@mui/material/Popover";
 import TextField from "@mui/material/TextField";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import VpnKeyOutlinedIcon from "@mui/icons-material/VpnKeyOutlined";
 
@@ -35,6 +37,7 @@ export default function GraphPage() {
   const selectedNodeId = trace.nodeId;
   const selectedEdgeId = trace.edgeId;
   const labMode = searchParams.get("lab") === "1";
+  const graphDepth = searchParams.get("graph_depth") === "2" ? 2 : 1;
   const { compact, focus, compactLayout } = readGraphPageLayoutFlags(searchParams);
   const chromeDense = compact || focus;
 
@@ -88,6 +91,14 @@ export default function GraphPage() {
     setSearchParams(params, { replace: false });
   }
 
+  function handleStandaloneGraphDepth(_ev, nextDepth) {
+    if (nextDepth == null) return;
+    const params = new URLSearchParams(searchParams);
+    if (nextDepth === 2) params.set("graph_depth", "2");
+    else params.delete("graph_depth");
+    setSearchParams(params, { replace: true });
+  }
+
   return (
     <Box
       sx={{
@@ -116,6 +127,31 @@ export default function GraphPage() {
         }}
       >
         <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.9)" }}>{t("graph.toolbar.title")}</Typography>
+        {workId.trim() && !effectiveWorkspaceId ? (
+          <ToggleButtonGroup
+            size="small"
+            exclusive
+            value={graphDepth}
+            onChange={handleStandaloneGraphDepth}
+            sx={{
+              "& .MuiToggleButton-root": {
+                fontSize: "0.7rem",
+                py: 0.25,
+                px: 0.75,
+                color: "rgba(255,255,255,0.55)",
+                borderColor: "rgba(255,255,255,0.12)",
+              },
+              "& .Mui-selected": { color: "rgba(129,140,248,0.95)", backgroundColor: "rgba(99,102,241,0.12)" },
+            }}
+          >
+            <ToggleButton value={1} aria-label={t("graph.standaloneDepth.depth1Aria")}>
+              {t("graph.wsToolbar.depth1")}
+            </ToggleButton>
+            <ToggleButton value={2} aria-label={t("graph.standaloneDepth.depth2Aria")}>
+              {t("graph.wsToolbar.depth2")}
+            </ToggleButton>
+          </ToggleButtonGroup>
+        ) : null}
         <Box sx={{ flex: 1, minWidth: 8 }} />
         <Tooltip title={t("graph.toolbar.loadTooltip")} placement="bottom">
           <CursorIconButton
@@ -218,6 +254,7 @@ export default function GraphPage() {
           compactLayout={compactLayout}
           focusLayout={focus}
           labMode={labMode}
+          standaloneWorkGraphDepth={graphDepth}
           title=""
           subtitle={null}
           traceContext={{

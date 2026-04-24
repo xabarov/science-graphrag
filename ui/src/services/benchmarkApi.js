@@ -1,17 +1,12 @@
-import axios from "axios";
-
 import { buildAdminApiHeaders } from "./adminApiHeaders.js";
-
-const api = axios.create({
-  baseURL: "/v1",
-});
+import { apiClient, buildApiUrl } from "./apiClient.js";
 
 function authHeaders() {
   return buildAdminApiHeaders();
 }
 
 export async function listBenchmarkCases({ family = "layer1", tier, q, limit = 200, offset = 0 } = {}) {
-  const res = await api.get("/benchmark/cases", {
+  const res = await apiClient.get(buildApiUrl("/v1/benchmark/cases"), {
     params: { family, tier, q, limit, offset },
     headers: authHeaders(),
   });
@@ -21,7 +16,7 @@ export async function listBenchmarkCases({ family = "layer1", tier, q, limit = 2
 export async function getBenchmarkCaseDetail(caseId, { family = "layer1", gold_source } = {}) {
   const params = { family };
   if (gold_source) params.gold_source = gold_source;
-  const res = await api.get(`/benchmark/cases/${encodeURIComponent(caseId)}`, {
+  const res = await apiClient.get(buildApiUrl(`/v1/benchmark/cases/${encodeURIComponent(caseId)}`), {
     params,
     headers: authHeaders(),
   });
@@ -29,15 +24,18 @@ export async function getBenchmarkCaseDetail(caseId, { family = "layer1", gold_s
 }
 
 export async function getBenchmarkCaseArtifacts(caseId, { family = "layer1" } = {}) {
-  const res = await api.get(`/benchmark/cases/${encodeURIComponent(caseId)}/artifacts`, {
+  const res = await apiClient.get(
+    buildApiUrl(`/v1/benchmark/cases/${encodeURIComponent(caseId)}/artifacts`),
+    {
     params: { family },
     headers: authHeaders(),
-  });
+    },
+  );
   return res.data;
 }
 
 export async function listBenchmarkModels() {
-  const res = await api.get("/benchmark/models", {
+  const res = await apiClient.get(buildApiUrl("/v1/benchmark/models"), {
     headers: authHeaders(),
   });
   return res.data;
@@ -54,8 +52,8 @@ export async function runBenchmark({
   gold_source,
   threshold_profile,
 } = {}) {
-  const res = await api.post(
-    "/benchmark/runs",
+  const res = await apiClient.post(
+    buildApiUrl("/v1/benchmark/runs"),
     {
       case_ids,
       label,
@@ -75,7 +73,7 @@ export async function runBenchmark({
 }
 
 export async function listBenchmarkRuns({ family, status, q } = {}) {
-  const res = await api.get("/benchmark/runs", {
+  const res = await apiClient.get(buildApiUrl("/v1/benchmark/runs"), {
     params: {
       ...(family ? { family } : {}),
       ...(status ? { status } : {}),
@@ -87,7 +85,7 @@ export async function listBenchmarkRuns({ family, status, q } = {}) {
 }
 
 export async function compareBenchmarkRuns(baselineRunId, currentRunId) {
-  const res = await api.get("/benchmark/runs/compare", {
+  const res = await apiClient.get(buildApiUrl("/v1/benchmark/runs/compare"), {
     params: {
       baseline_run_id: baselineRunId,
       current_run_id: currentRunId,
@@ -98,15 +96,15 @@ export async function compareBenchmarkRuns(baselineRunId, currentRunId) {
 }
 
 export async function getBenchmarkRun(runId) {
-  const res = await api.get(`/benchmark/runs/${encodeURIComponent(runId)}`, {
+  const res = await apiClient.get(buildApiUrl(`/v1/benchmark/runs/${encodeURIComponent(runId)}`), {
     headers: authHeaders(),
   });
   return res.data;
 }
 
 export async function postGraphSnapshotPreview(caseId, graphSnapshot, { family = "graph" } = {}) {
-  const res = await api.post(
-    `/benchmark/cases/${encodeURIComponent(caseId)}/graph-snapshot-preview`,
+  const res = await apiClient.post(
+    buildApiUrl(`/v1/benchmark/cases/${encodeURIComponent(caseId)}/graph-snapshot-preview`),
     { graph_snapshot: graphSnapshot },
     {
       params: { family },
@@ -117,14 +115,14 @@ export async function postGraphSnapshotPreview(caseId, graphSnapshot, { family =
 }
 
 export async function getBenchmarkRunSummary(runId) {
-  const res = await api.get(`/benchmark/runs/${encodeURIComponent(runId)}/summary`, {
+  const res = await apiClient.get(buildApiUrl(`/v1/benchmark/runs/${encodeURIComponent(runId)}/summary`), {
     headers: authHeaders(),
   });
   return res.data;
 }
 
 export async function getBenchmarkRunCasesPage(runId, { offset = 0, limit = 100 } = {}) {
-  const res = await api.get(`/benchmark/runs/${encodeURIComponent(runId)}/cases`, {
+  const res = await apiClient.get(buildApiUrl(`/v1/benchmark/runs/${encodeURIComponent(runId)}/cases`), {
     params: { offset, limit },
     headers: authHeaders(),
   });
@@ -132,8 +130,8 @@ export async function getBenchmarkRunCasesPage(runId, { offset = 0, limit = 100 
 }
 
 export async function getBenchmarkRunCaseDetail(runId, caseId) {
-  const res = await api.get(
-    `/benchmark/runs/${encodeURIComponent(runId)}/cases/${encodeURIComponent(caseId)}`,
+  const res = await apiClient.get(
+    buildApiUrl(`/v1/benchmark/runs/${encodeURIComponent(runId)}/cases/${encodeURIComponent(caseId)}`),
     {
       headers: authHeaders(),
     },
@@ -142,7 +140,7 @@ export async function getBenchmarkRunCaseDetail(runId, caseId) {
 }
 
 export async function deleteBenchmarkRun(runId) {
-  const res = await api.delete(`/benchmark/runs/${encodeURIComponent(runId)}`, {
+  const res = await apiClient.delete(buildApiUrl(`/v1/benchmark/runs/${encodeURIComponent(runId)}`), {
     headers: authHeaders(),
   });
   return res.data;

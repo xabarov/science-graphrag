@@ -6,24 +6,20 @@ import hashlib
 from pathlib import Path
 from typing import Any
 
-from neo4j import GraphDatabase, NotificationClassification, Session as Neo4jSession
-from sqlalchemy import create_engine, select
-from sqlalchemy.orm import sessionmaker
+from neo4j import Session as Neo4jSession
+from sqlalchemy import select
 
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
 from science_graphrag.storage.blobs import BlobStore
-from science_graphrag.storage.db import init_db
+from science_graphrag.storage.db import get_engine, init_db, session_factory
 from science_graphrag.storage.models_orm import DocumentRecord
+from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 from science_graphrag.storage.qdrant_store import QdrantChunkStore
 
 
-def _neo4j_driver(settings: Settings):
-    return GraphDatabase.driver(
-        settings.neo4j_uri,
-        auth=(settings.neo4j_user, settings.neo4j_password),
-        notifications_disabled_classifications=[NotificationClassification.UNRECOGNIZED],
-    )
+def _store(settings: Settings) -> Neo4jGraphStore:
+    return Neo4jGraphStore(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password)
 
 
 def _vector_dim(settings: Settings) -> int:
@@ -161,6 +157,9 @@ def _enrich_edges_with_display(
             edge["direction"] = "lateral"
 
 
+MAX_WORK_GRAPH_NEIGHBORS = 300
+
+
 def _work_graph_neighborhood_payload(
     session: Neo4jSession,
     work_id: str,
@@ -217,6 +216,7 @@ def _work_graph_neighborhood_payload(
             "subtitle": center_sub,
             "node_kind": "Work",
             "properties": center_props,
+            "distance": 0,
         },
     )
 
@@ -230,10 +230,16 @@ def _work_graph_neighborhood_payload(
         ).single()["c"],
     )
 
-    lim = max(1, min(int(neighbor_limit), 2000))
-    effective_depth = 1
-    if depth != effective_depth:
-        pass  # reserved for future multi-hop; still 1-hop today
+    depth_req = max(1, min(int(depth), 3))
+    cap = min(MAX_WORK_GRAPH_NEIGHBORS, max(1, min(int(neighbor_limit), 2000)))
+    if depth_req <= 1:
+        hop1_lim = cap
+        hop2_lim = 0
+        effective_depth = 1
+    else:
+        hop1_lim = max(1, (cap * 2) // 3)
+        hop2_lim = max(1, cap - hop1_lim)
+        effective_depth = 2
 
     for rec in session.run(
         """
@@ -251,18 +257,63 @@ def _work_graph_neighborhood_payload(
         LIMIT $lim
         """,
         id=work_id,
-        lim=lim,
+        lim=hop1_lim,
     ):
         _append_neighbor_edge(nodes, edges, center_id, rec)
 
+    for n in nodes[1:]:
+        if "distance" not in n:
+            n["distance"] = 1
+
+    if effective_depth >= 2 and hop2_lim > 0:
+        hop1_work_ids = [
+            str(n["id"])
+            for n in nodes
+            if str(n.get("type") or "") == "Work" and str(n.get("id") or "") != center_id
+        ][:30]
+        h1_ids = [str(n["id"]) for n in nodes]
+        if hop1_work_ids:
+            for rec in session.run(
+                """
+                UNWIND $h1 AS wid
+                MATCH (w:Work {id: wid})-[r:CITES]-(n:Work)
+                WHERE n.id <> $center AND NOT n.id IN $h1set
+                RETURN coalesce(n.id, toString(elementId(n))) AS nid,
+                       labels(n) AS labs,
+                       type(r) AS rt,
+                       coalesce(n.name, n.full_name, n.title, '') AS nlabel,
+                       coalesce(startNode(r).id, toString(elementId(startNode(r)))) AS src_id,
+                       coalesce(endNode(r).id, toString(elementId(endNode(r)))) AS tgt_id,
+                       n.publication_year AS n_pub_year,
+                       coalesce(n.doi, '') AS n_doi,
+                       coalesce(n.arxiv_id, '') AS n_arxiv,
+                       coalesce(n.venue_name, '') AS n_venue
+                LIMIT $lim2
+                """,
+                h1=hop1_work_ids,
+                center=center_id,
+                h1set=h1_ids,
+                lim2=hop2_lim,
+            ):
+                nid = str(rec["nid"] or "")
+                if not nid or any(x["id"] == nid for x in nodes):
+                    continue
+                _append_neighbor_edge(nodes, edges, center_id, rec)
+                for n in nodes:
+                    if n.get("id") == nid:
+                        n["distance"] = 2
+                        break
+
     _enrich_edges_with_display(center_id, nodes, edges)
 
-    truncated = total_neighbors > lim
+    truncated = total_neighbors > hop1_lim
     expansions: list[str] = []
     if truncated:
         expansions.append("increase_neighbor_limit")
-    if effective_depth == 1 and depth > 1:
+    if depth_req > effective_depth:
         expansions.append("multi_hop_depth")
+
+    graph_scope = "work_2hop" if effective_depth >= 2 else "work_1hop"
 
     return {
         "work_id": work_id,
@@ -270,11 +321,11 @@ def _work_graph_neighborhood_payload(
         "edges": edges,
         "meta": {
             "semantic_available": bool(row["has_semantic"]),
-            "graph_scope": "work_1hop",
+            "graph_scope": graph_scope,
             "graph_depth_requested": int(depth),
             "graph_depth_effective": effective_depth,
             "neighbor_match_count": total_neighbors,
-            "neighbor_limit_applied": lim,
+            "neighbor_limit_applied": hop1_lim + (hop2_lim if effective_depth >= 2 else 0),
             "nodes_returned": len(nodes),
             "edges_returned": len(edges),
             "is_truncated": truncated,
@@ -295,7 +346,7 @@ def list_works(
 ) -> tuple[list[dict[str, Any]], int]:
     """Return work rows and total count for GET /v1/works."""
 
-    driver = _neo4j_driver(settings)
+    store = _store(settings)
     sem = _has_semantic_layer_cypher()
     sem_filter = ""
     if has_semantic is True:
@@ -303,7 +354,7 @@ def list_works(
     elif has_semantic is False:
         sem_filter = f"AND NOT ({sem})"
     try:
-        with driver.session() as session:
+        with store.session() as session:
             filt = (q or "").strip()
             count_q = (
                 """
@@ -370,13 +421,13 @@ def list_works(
                 )
             return items, int(total)
     finally:
-        driver.close()
+        store.close()
 
 
 def _sql_session_factory(settings: Settings):
-    engine = create_engine(settings.database_url, pool_pre_ping=True)
+    engine = get_engine(settings.database_url)
     init_db(engine)
-    return sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
+    return session_factory(engine)
 
 
 def resolve_document_for_work(settings: Settings, work_id: str) -> DocumentRecord | None:
@@ -466,10 +517,10 @@ def work_sources_payload(settings: Settings, work_id: str) -> dict[str, Any] | N
 def get_work_detail(settings: Settings, work_id: str) -> dict[str, Any] | None:
     """Single work + authors for GET /v1/works/{work_id}."""
 
-    driver = _neo4j_driver(settings)
+    store = _store(settings)
     sem = _has_semantic_layer_cypher()
     try:
-        with driver.session() as session:
+        with store.session() as session:
             wrec = session.run(
                 """
                 MATCH (w:Work {id: $id})
@@ -526,7 +577,7 @@ def get_work_detail(settings: Settings, work_id: str) -> dict[str, Any] | None:
                 out["ingestion"]["document_id"] = doc_row.id
             return out
     finally:
-        driver.close()
+        store.close()
 
 
 def work_graph_neighborhood(
@@ -538,9 +589,9 @@ def work_graph_neighborhood(
 ) -> dict[str, Any] | None:
     """1-hop neighborhood for GET /v1/works/{id}/graph."""
 
-    driver = _neo4j_driver(settings)
+    store = _store(settings)
     try:
-        with driver.session() as session:
+        with store.session() as session:
             return _work_graph_neighborhood_payload(
                 session,
                 work_id,
@@ -548,7 +599,7 @@ def work_graph_neighborhood(
                 depth=depth,
             )
     finally:
-        driver.close()
+        store.close()
 
 
 def list_work_claims(settings: Settings, work_id: str) -> list[dict[str, Any]] | None:
@@ -556,7 +607,7 @@ def list_work_claims(settings: Settings, work_id: str) -> list[dict[str, Any]] |
 
     if get_work_detail(settings, work_id) is None:
         return None
-    driver = _neo4j_driver(settings)
+    store = _store(settings)
     q = """
     MATCH (w:Work {id: $wid})<-[:ANCHORED_IN]-(e:Evidence)<-[:SUPPORTED_BY]-(c:Claim)
     RETURN c.id AS claim_id,
@@ -570,10 +621,10 @@ def list_work_claims(settings: Settings, work_id: str) -> list[dict[str, Any]] |
     ORDER BY claim_id, chunk_fingerprint
     """
     try:
-        with driver.session() as session:
+        with store.session() as session:
             rows = list(session.run(q, wid=work_id))
     finally:
-        driver.close()
+        store.close()
     by_claim: dict[str, dict[str, Any]] = {}
     for rec in rows:
         cid = str(rec["claim_id"] or "")

@@ -76,6 +76,12 @@ Retrieval benchmarks are **not** part of the primary decision gate; they track `
   - `live_yolov1_architecture`: None
   - `live_yolov1_training`: None
 
+### hybrid_ablation (contract harness, Wave Q)
+
+- artifact: `eval/results/current-retrieval-hybrid-ablation.json`
+- all_passed: **True**
+- failed_count: **0**
+
 Promotion roadmap for workspace-scoped + judge → core retrieval gate: `docs/runbooks/benchmark-decision-gate.md` §8.3.
 
 ## Claims family (advisory)

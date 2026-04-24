@@ -378,7 +378,7 @@ Wave I — обязательное предусловие: без global worksp
 **Бэкенд:**
 
 1. `POST /v1/query` принимает опциональный `workspace_id`; если задан — фильтрует Qdrant поиск по списку `work_id`'ов из workspace ([`storage/neo4j_store.py`](../../science_graphrag/storage/neo4j_store.py) `workspace_get_works`).
-2. Тот же `workspace_id` пробрасывается в `retrieval_trace.context` для UI-объяснения.
+2. Тот же `workspace_id` пробрасывается в **`retrieval_trace.workspace_id`** (плоский ключ trace) для UI-объяснения; при fallback на список work_id см. `retrieval_trace.workspace_scope_payload_miss`.
 3. Smoke в [`tests/test_api_smoke.py`](../../tests/test_api_smoke.py).
 
 **Фронт:**
@@ -451,7 +451,7 @@ Wave I — обязательное предусловие: без global worksp
    - стримит файл из `BlobStore.path_for_sha`,
    - возвращает `404` если нет PDF (например, work был ingested из markdown).
 2. `GET /v1/works/{work_id}/sources` — список доступных репрезентаций (markdown / pdf / VL-output) с размерами и sha256.
-3. Опциональный `Range` support для будущего **scroll-to-page**.
+3. **`Range`** (HTTP 206 + `Content-Range`) для частичной выдачи байт; неудовлетворимый range → **416**.
 
 **Фронт:**
 
@@ -482,7 +482,7 @@ Wave I — обязательное предусловие: без global worksp
 2. `<input multiple webkitdirectory>`-подобный fallback (browser-зависимый — для UX лучше принимать **drop folder** с обработкой `dataTransfer.items` recursively).
 3. Прогресс: per-file row + parent progress bar.
 
-**Чеклист:** *(закрыто 2026-04-24 — `POST .../ingest/batch`, `WorkspaceIngestPanel`, `collectIngestFiles`)*
+**Чеклист:** *(закрыто 2026-04-24 — `POST .../ingest/batch`, `WorkspaceIngestPanel`, `collectIngestFiles`; 2026-04-25 — per-child `LinearProgress` в batch UI)*
 
 - [x] Backend: батч из 5 PDF принимается одним POST'ом, child jobs выполняются (sequentially либо в bounded executor); parent job содержит summary.
 - [x] UI: drag папку → видим список файлов → старт; видимый прогресс per file.
@@ -528,7 +528,7 @@ Wave I — обязательное предусловие: без global worksp
    - middle-zone — отправляет в LLM с prompt `is_the_same_work` (заголовок + год + first author + abstract span обоих),
    - результат сохраняет в Postgres `work_dedup_conflicts` (status=`pending`, confidence, reason, similarity).
 4. **List**: `GET /v1/workspaces/{id}/dedup/conflicts` — pending + последние решённые.
-5. **Resolve**: `POST /v1/workspaces/{id}/dedup/conflicts/{conflict_id}/decide` — `{ decision: "merge" | "keep_separate", keep_work_id?: str }`. На `merge` — вызывает существующий `merge_work_into_canonical` (Wave L1 fix: при `HAS_AUTHORSHIP` сначала переcчепляет authorships на keep_work).
+5. **Resolve**: `POST /v1/workspaces/{id}/dedup/conflicts/{conflict_id}/decide` — тело: `decision`: `merge_a` \| `merge_b` \| `merge` \| `keep_separate` \| `skip`; при `merge` обязателен `keep_work_id` (должен совпасть с `work_id_a` или `work_id_b`, алиас к `merge_a`/`merge_b`). На merge — вызывает существующий `merge_work_into_canonical` (Wave L1 fix: при `HAS_AUTHORSHIP` сначала пересчепляет authorships на keep_work).
 6. **Reverse / audit**: `GET /v1/workspaces/{id}/dedup/audit` — все merges с возможностью отмены (опционально, через `merge_log` table).
 
 **Фронт:**
@@ -544,7 +544,7 @@ Wave I — обязательное предусловие: без global worksp
 - [x] **L1.3** Qdrant `QdrantWorkEmbeddingStore` (`work_embeddings`).
 - [x] **L1.4** Ingest: upsert work embedding; скрипт `scripts/backfill_work_embeddings.py`.
 - [x] **L1.5** `run_work_dedup_scan` + LLM prompt (`dedup/work_dedup_engine.py`, `dedup/prompts.py`).
-- [x] **L1.6** API: `POST .../dedup/scan`, `GET .../dedup/jobs/{id}`, `GET .../dedup/conflicts`, `POST .../decide`, `GET .../dedup/audit`.
+- [x] **L1.6** API: `POST .../dedup/scan`, `GET .../dedup/jobs/{id}`, `GET .../dedup/conflicts`, `POST .../decide` (`merge_a` / `merge_b` / `merge`+`keep_work_id` / `keep_separate` / `skip`), `GET .../dedup/audit`.
 - [x] **L1.7** `merge_work_into_canonical`: rebind `HAS_AUTHORSHIP`.
 - [x] **L1.8** UI: `WorkDedupReviewDialog` + `WorkspaceDedupSection` + `workspaceStore.js` API helpers.
 - [x] **L1.9** Каркас `tests/fixtures/benchmarks/dedup_v1/` + `science-graphrag-dedup-v1-benchmark` (схема + fingerprint); **метрики P/R на golden — после заполнения реальными work_id**.
@@ -580,7 +580,7 @@ Wave I — обязательное предусловие: без global worksp
 | L1 | ADR 014 + dedup pipeline v2 spec | Docs | **Done 2026-04-24** |
 | L1 | Work embedding + LLM judge | Backend | **Done** |
 | L1 | Conflicts queue API + dialog UI | Backend + UI | **Done** |
-| L1 | Dedup gold benchmark | Eval | **Scaffold done** (наполнение gold — ongoing) |
+| L1 | Dedup gold benchmark | Eval | **Done (offline heuristic)** — 5 кластеров в [`tests/fixtures/benchmarks/dedup_v1/gold.json`](../../tests/fixtures/benchmarks/dedup_v1/gold.json); `science-graphrag-dedup-v1-benchmark` passes при gates precision ≥ 0.9, recall ≥ 0.8 |
 | L2 | Author embedding + dedup | Backend + UI | **Done** |
 | L3 | Institution / Venue dedup | Backend + UI | **Gated stub** |
 

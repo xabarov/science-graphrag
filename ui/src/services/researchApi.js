@@ -1,13 +1,11 @@
-import axios from "axios";
+import { apiClient, buildApiUrl, getApiBaseUrl } from "./apiClient.js";
 
 /**
  * Base URL for the research API (no trailing slash). Empty string = same-origin `/v1/*`
  * (Vite dev proxy + FastAPI static deploy).
  */
 export function getResearchApiBaseUrl() {
-  const v = import.meta.env.VITE_API_BASE_URL;
-  if (v == null || String(v).trim() === "") return "";
-  return String(v).replace(/\/+$/, "");
+  return getApiBaseUrl();
 }
 
 /**
@@ -27,7 +25,7 @@ export function formatResearchApiError(err) {
   return String(err);
 }
 
-export function buildQueryBody(query, workId = null, topK = 5, workspaceId = null) {
+export function buildQueryBody(query, workId = null, topK = 5, workspaceId = null, mode = "vector") {
   const t = Math.trunc(Number(topK));
   const tk = Number.isFinite(t) ? Math.min(24, Math.max(1, t)) : 5;
   const wid = workId === undefined || workId === "" ? null : workId;
@@ -35,11 +33,13 @@ export function buildQueryBody(query, workId = null, topK = 5, workspaceId = nul
     workspaceId === undefined || workspaceId === null || workspaceId === ""
       ? null
       : String(workspaceId).trim() || null;
+  const m = String(mode || "vector").toLowerCase() === "hybrid" ? "hybrid" : "vector";
   return {
     query: String(query ?? "").trim(),
     work_id: wid,
     workspace_id: ws,
     top_k: tk,
+    mode: m,
   };
 }
 
@@ -69,6 +69,9 @@ export function formatRetrievalSummaryLines(rt) {
   if (!rt || typeof rt !== "object") return [];
   const lines = [];
   lines.push(`Hits: ${Number(rt.hit_count) || 0} · Citations returned: ${Number(rt.citations_returned) || 0}`);
+  if (rt.retrieval_mode) {
+    lines.push(`Mode: ${String(rt.retrieval_mode)}`);
+  }
   lines.push(`top_k requested: ${Number(rt.top_k_requested) || 0}`);
   const coll = rt.qdrant_collection != null && String(rt.qdrant_collection).trim() !== "" ? String(rt.qdrant_collection) : "—";
   lines.push(`Collection: ${coll}`);
@@ -180,22 +183,15 @@ export function normalizeQueryResponse(raw) {
 
 /** GET /health (same origin as API when `VITE_API_BASE_URL` is set). */
 export async function getHealth(config) {
-  const base = getResearchApiBaseUrl();
-  const path = "/health";
-  const url = base ? `${base}${path}` : path;
-  return axios.get(url, config);
+  return apiClient.get(buildApiUrl("/health"), config);
 }
 
 export async function postQuery(body, config) {
-  const base = getResearchApiBaseUrl();
-  const path = "/v1/query";
-  const url = base ? `${base}${path}` : path;
-  return axios.post(url, body, config);
+  return apiClient.post(buildApiUrl("/v1/query"), body, config);
 }
 
 function worksUrl(pathWithQuery) {
-  const base = getResearchApiBaseUrl();
-  return base ? `${base}${pathWithQuery}` : pathWithQuery;
+  return buildApiUrl(pathWithQuery);
 }
 
 /** GET /v1/works */
@@ -215,29 +211,29 @@ export async function getWorks({
   if (yearMax != null && Number.isFinite(Number(yearMax))) params.set("year_max", String(yearMax));
   if (hasSemantic === true) params.set("has_semantic", "true");
   if (hasSemantic === false) params.set("has_semantic", "false");
-  return axios.get(worksUrl(`/v1/works?${params.toString()}`));
+  return apiClient.get(worksUrl(`/v1/works?${params.toString()}`));
 }
 
 /** GET/PATCH/DELETE /v1/ask-sessions — server-backed Ask history (optional UI integration). */
 export async function listAskSessions(scope) {
   const s = encodeURIComponent(String(scope ?? "").trim());
-  return axios.get(worksUrl(`/v1/ask-sessions?scope=${s}`));
+  return apiClient.get(worksUrl(`/v1/ask-sessions?scope=${s}`));
 }
 
 export async function createAskSession(scope, { title } = {}) {
-  return axios.post(worksUrl("/v1/ask-sessions"), { scope, title });
+  return apiClient.post(worksUrl("/v1/ask-sessions"), { scope, title });
 }
 
 export async function patchAskSession(scope, sessionId, body) {
   const sid = encodeURIComponent(String(sessionId ?? "").trim());
   const s = encodeURIComponent(String(scope ?? "").trim());
-  return axios.patch(worksUrl(`/v1/ask-sessions/${sid}?scope=${s}`), body);
+  return apiClient.patch(worksUrl(`/v1/ask-sessions/${sid}?scope=${s}`), body);
 }
 
 export async function deleteAskSession(scope, sessionId) {
   const sid = encodeURIComponent(String(sessionId ?? "").trim());
   const s = encodeURIComponent(String(scope ?? "").trim());
-  return axios.delete(worksUrl(`/v1/ask-sessions/${sid}?scope=${s}`));
+  return apiClient.delete(worksUrl(`/v1/ask-sessions/${sid}?scope=${s}`));
 }
 
 /** Absolute URL for GET /v1/works/{work_id}/pdf (for react-pdf ``file`` prop). */
@@ -249,13 +245,13 @@ export function workPdfUrl(workId) {
 /** GET /v1/works/{work_id}/sources */
 export async function getWorkSources(workId) {
   const id = encodeURIComponent(String(workId ?? "").trim());
-  return axios.get(worksUrl(`/v1/works/${id}/sources`));
+  return apiClient.get(worksUrl(`/v1/works/${id}/sources`));
 }
 
 /** GET /v1/works/{work_id} */
 export async function getWorkDetail(workId) {
   const id = encodeURIComponent(String(workId ?? "").trim());
-  return axios.get(worksUrl(`/v1/works/${id}`));
+  return apiClient.get(worksUrl(`/v1/works/${id}`));
 }
 
 /** GET /v1/works/{work_id}/chunks */
@@ -267,13 +263,13 @@ export async function getWorkChunks(workId, { limit = 50, offset = 0, section_pr
   if (sectionPrefix != null && String(sectionPrefix).trim() !== "") {
     params.set("section_prefix", String(sectionPrefix).trim());
   }
-  return axios.get(worksUrl(`/v1/works/${id}/chunks?${params.toString()}`));
+  return apiClient.get(worksUrl(`/v1/works/${id}/chunks?${params.toString()}`));
 }
 
 /** GET /v1/works/{work_id}/claims */
 export async function getWorkClaims(workId) {
   const id = encodeURIComponent(String(workId ?? "").trim());
-  return axios.get(worksUrl(`/v1/works/${id}/claims`));
+  return apiClient.get(worksUrl(`/v1/works/${id}/claims`));
 }
 
 /**
@@ -293,5 +289,5 @@ export async function getWorkGraph(workId, options = {}) {
     params.set("depth", String(d));
   }
   const q = params.toString();
-  return axios.get(worksUrl(`/v1/works/${id}/graph${q ? `?${q}` : ""}`));
+  return apiClient.get(worksUrl(`/v1/works/${id}/graph${q ? `?${q}` : ""}`));
 }

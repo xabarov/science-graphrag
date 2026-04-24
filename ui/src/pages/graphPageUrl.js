@@ -25,4 +25,5 @@ export function preserveGraphPageOptionalParams(params, prev) {
   if (prev.get("focus") === "1") params.set("focus", "1");
   const ws = prev.get("workspace_id");
   if (ws && String(ws).trim()) params.set("workspace_id", String(ws).trim());
+  if (prev.get("graph_depth") === "2") params.set("graph_depth", "2");
 }

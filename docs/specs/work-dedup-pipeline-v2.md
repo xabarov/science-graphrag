@@ -30,7 +30,7 @@
 | `POST` | `/v1/workspaces/{workspace_id}/dedup/scan` | Start background scan → `{ "job_id": "..." }` |
 | `GET` | `/v1/ingest/jobs/{job_id}` | Poll scan job (reuses ingest job registry shape where possible) |
 | `GET` | `/v1/workspaces/{workspace_id}/dedup/conflicts` | Query `status` (`pending`, `all`), `limit`, `offset` |
-| `POST` | `/v1/workspaces/{workspace_id}/dedup/conflicts/{conflict_id}/decide` | Body: `decision`: `merge_a` \| `merge_b` \| `keep_separate` \| `skip` |
+| `POST` | `/v1/workspaces/{workspace_id}/dedup/conflicts/{conflict_id}/decide` | Body: `decision`: `merge_a` \| `merge_b` \| `merge` \| `keep_separate` \| `skip`; with `merge`, set `keep_work_id` to `work_id_a` or `work_id_b` (alias for `merge_a` / `merge_b`) |
 | `GET` | `/v1/workspaces/{workspace_id}/dedup/audit` | Recent rows from `work_dedup_merge_log` |
 | `POST` | `/v1/workspaces/{workspace_id}/dedup/authors/scan` | Author dedup scan (L2) |
 | `GET` | `/v1/workspaces/{workspace_id}/dedup/authors/conflicts` | List author conflicts |
@@ -41,9 +41,13 @@
 
 Snapshot includes `work_dedup` object with effective thresholds and collection names (from `SCIENCE_GRAPHRAG_*` env).
 
+## Workspace-tagged chunks (Wave K3)
+
+Chunk points carry payload `workspace_ids` (array). Workspace-scoped `POST /v1/query` filters with `MatchAny` on that field. If the filter returns no hits while Neo4j still lists member works, the retriever retries once with `work_id IN (members)` and records `retrieval_trace.workspace_scope_payload_miss` (see [frontend-ui-api-contracts-v1.md](./frontend-ui-api-contracts-v1.md) §1).
+
 ## Merge semantics
 
-- **Work**: `merge_a` keeps `work_id_a`, drops `work_id_b`; `merge_b` the inverse.
+- **Work**: `merge_a` keeps `work_id_a`, drops `work_id_b`; `merge_b` the inverse. **`merge` + `keep_work_id`** (must equal one side) is an equivalent alias for clients that prefer a single canonical id.
 - **Author**: same pattern for `author_id_a` / `author_id_b`.
 - After successful work merge: chunks + work-embedding payloads repointed; drop work removed from workspace membership.
 

@@ -1,24 +1,40 @@
 services:
   neo4j:
     image: neo4j:5-community
+    env_file:
+      - .env
     ports:
       - "17474:7474"
       - "17687:7687"
     environment:
-      NEO4J_AUTH: neo4j/sciencegraphrag
+      NEO4J_AUTH: ${SCIENCE_GRAPHRAG_NEO4J_USER:-neo4j}/${SCIENCE_GRAPHRAG_NEO4J_PASSWORD:-change-me}
     volumes:
       - neo4j_data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:7474"]
+      interval: 20s
+      timeout: 10s
+      retries: 6
+      start_period: 30s
 
   postgres:
     image: postgres:16-alpine
+    env_file:
+      - .env
     ports:
       - "15432:5432"
     environment:
-      POSTGRES_USER: science
-      POSTGRES_PASSWORD: science
-      POSTGRES_DB: science_graphrag
+      POSTGRES_USER: ${POSTGRES_USER:-science}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+      POSTGRES_DB: ${POSTGRES_DB:-science_graphrag}
     volumes:
       - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-science} -d ${POSTGRES_DB:-science_graphrag}"]
+      interval: 20s
+      timeout: 8s
+      retries: 8
+      start_period: 15s
 
   qdrant:
     image: qdrant/qdrant:v1.12.4
@@ -26,14 +42,26 @@ services:
       - "16333:6333"
     volumes:
       - qdrant_data:/qdrant/storage
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:6333/healthz"]
+      interval: 20s
+      timeout: 8s
+      retries: 8
+      start_period: 10s
 
   phoenix:
-    image: arizephoenix/phoenix:latest
+    image: arizephoenix/phoenix:8.24.0
     ports:
       - "16006:6006"
       - "14317:4317"
     volumes:
       - phoenix_data:/mnt/data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:6006"]
+      interval: 30s
+      timeout: 10s
+      retries: 6
+      start_period: 20s
 
   api:
     build:
@@ -56,14 +84,16 @@ services:
       - "8787"
     ports:
       - "18787:8787"
+    env_file:
+      - .env
     environment:
       PYTHONPATH: /app
       # Let Compose URLs win over a developer `.env` that targets localhost-published ports.
       SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV: "1"
-      SCIENCE_GRAPHRAG_DATABASE_URL: postgresql+psycopg://science:science@postgres:5432/science_graphrag
+      SCIENCE_GRAPHRAG_DATABASE_URL: ${SCIENCE_GRAPHRAG_DATABASE_URL_DOCKER:-postgresql+psycopg://science:change-me@postgres:5432/science_graphrag}
       SCIENCE_GRAPHRAG_NEO4J_URI: bolt://neo4j:7687
-      SCIENCE_GRAPHRAG_NEO4J_USER: neo4j
-      SCIENCE_GRAPHRAG_NEO4J_PASSWORD: sciencegraphrag
+      SCIENCE_GRAPHRAG_NEO4J_USER: ${SCIENCE_GRAPHRAG_NEO4J_USER:-neo4j}
+      SCIENCE_GRAPHRAG_NEO4J_PASSWORD: ${SCIENCE_GRAPHRAG_NEO4J_PASSWORD:-change-me}
       SCIENCE_GRAPHRAG_QDRANT_URL: http://qdrant:6333
       SCIENCE_GRAPHRAG_BLOB_ROOT: /data/blobs
       SCIENCE_GRAPHRAG_ARTIFACT_ROOT: /data/artifacts
@@ -72,9 +102,12 @@ services:
       - ./data/blobs:/data/blobs
       - ./data/artifacts:/data/artifacts
     depends_on:
-      - postgres
-      - neo4j
-      - qdrant
+      postgres:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
     healthcheck:
       test:
         [
@@ -99,7 +132,14 @@ services:
       - ./ui:/app/ui
       - ui_node_modules:/app/ui/node_modules
     depends_on:
-      - api
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:5173/ui/"]
+      interval: 20s
+      timeout: 8s
+      retries: 8
+      start_period: 20s
 
   web:
     image: nginx:1.27-alpine
@@ -111,7 +151,7 @@ services:
       api:
         condition: service_healthy
       ui:
-        condition: service_started
+        condition: service_healthy
     healthcheck:
       test:
         [

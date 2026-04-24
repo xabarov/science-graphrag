@@ -6,8 +6,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import create_engine, select
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+from tenacity import Retrying, retry, stop_after_attempt, wait_exponential
 
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.domain.models import ReferenceDraft, WorkDraft
@@ -37,7 +38,7 @@ from science_graphrag.ingestion.stages.metadata import merge_draft_prefer_enrich
 from science_graphrag.ingestion.vl_pdf import VLPDFProcessor
 from science_graphrag.observability.phoenix_tracer import chain_span, init_tracer_provider
 from science_graphrag.storage.blobs import BlobStore
-from science_graphrag.storage.db import init_db
+from science_graphrag.storage.db import get_engine, init_db, session_factory
 from science_graphrag.storage.models_orm import DocumentRecord, IngestionRunRecord
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 from science_graphrag.storage.qdrant_claims_store import QdrantClaimsStore
@@ -56,6 +57,16 @@ class SkippedDuplicateIngestError(Exception):
         self.document_id = document_id
         self.sha256 = sha256
         super().__init__(f"skip duplicate sha256={sha256} document_id={document_id}")
+
+
+@retry(wait=wait_exponential(multiplier=1, min=1, max=8), stop=stop_after_attempt(3), reraise=True)
+def _openalex_lookup_with_retry(doi: str, mailto: str) -> dict[str, Any] | None:
+    return fetch_work_by_doi(doi, mailto)
+
+
+def _retry_call(func, *args, **kwargs):
+    runner = Retrying(wait=wait_exponential(multiplier=1, min=1, max=8), stop=stop_after_attempt(3), reraise=True)
+    return runner(func, *args, **kwargs)
 
 
 def _resolve_document_id_for_sha(
@@ -199,7 +210,7 @@ def _persist_reference_citation(
 
     if doi:
         try:
-            oa = fetch_work_by_doi(doi, settings.openalex_mailto)
+            oa = _openalex_lookup_with_retry(doi, settings.openalex_mailto)
         except Exception as exc:  # noqa: BLE001
             log.warning("OpenAlex lookup failed for ref doi=%s: %s", doi, exc)
             oa = None
@@ -464,7 +475,7 @@ def ingest_document(
         with chain_span("openalex_enrichment"):
             if draft.doi:
                 try:
-                    oa = fetch_work_by_doi(draft.doi, settings.openalex_mailto)
+                    oa = _openalex_lookup_with_retry(draft.doi, settings.openalex_mailto)
                     if oa:
                         oa_raw = oa
                         enriched = draft_from_openalex(oa)
@@ -475,12 +486,13 @@ def ingest_document(
         neo = Neo4jGraphStore(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password)
         try:
             with chain_span("neo4j_graph_persistence"):
-                neo.ensure_schema()
+                _retry_call(neo.ensure_schema)
                 work_id = _resolve_work_id(neo, draft)
                 vid = _venue_id(draft.venue_name)
                 inst_nodes = _institution_nodes_from_authorships(authorships, settings)
 
-                neo.upsert_work_layer1(
+                _retry_call(
+                    neo.upsert_work_layer1,
                     work_id,
                     draft,
                     authorships,
@@ -498,9 +510,9 @@ def ingest_document(
                         )
                     ):
                         continue
-                    _persist_reference_citation(neo, work_id, ref, settings)
+                    _retry_call(_persist_reference_citation, neo, work_id, ref, settings)
 
-                _maybe_link_openalex_arxiv_version(neo, work_id, draft, oa_raw)
+                _retry_call(_maybe_link_openalex_arxiv_version, neo, work_id, draft, oa_raw)
 
                 with chain_span(
                     "semantic_method_dataset",
@@ -511,7 +523,8 @@ def ingest_document(
                         settings,
                         document_id=doc_id,
                     )
-                    neo.sync_work_semantic_layer(
+                    _retry_call(
+                        neo.sync_work_semantic_layer,
                         work_id,
                         semantic,
                         confidence_threshold=settings.semantic_graph_confidence_threshold,
@@ -544,8 +557,8 @@ def ingest_document(
                         settings,
                         force_benchmark=False,
                     )
-                neo.detach_delete_claims_for_work(work_id)
-                neo.upsert_claims_with_evidence(work_id, claim_rows)
+                _retry_call(neo.detach_delete_claims_for_work, work_id)
+                _retry_call(neo.upsert_claims_with_evidence, work_id, claim_rows)
 
             embedder = (
                 try_sentence_transformer(settings.embedding_model)
@@ -565,18 +578,25 @@ def ingest_document(
                 settings.qdrant_work_embeddings_collection,
                 vector_dim=embedder.dim,
             )
-            qw.upsert_work_summary(
+            _retry_call(
+                qw.upsert_work_summary,
                 work_id=work_id,
                 vector=w_summary_vec,
                 embedding_model=settings.embedding_model or "hash-deterministic",
                 workspace_ids=ingest_workspace_ids or [],
+                title=draft.title,
+                publication_year=draft.publication_year,
+                doi=draft.doi,
+                arxiv_id=draft.arxiv_id,
+                first_author_normalized=first_author,
+                embedding_kind="work_summary_v1",
             )
             q = QdrantChunkStore(
                 settings.qdrant_url,
                 settings.qdrant_collection,
                 vector_dim=embedder.dim,
             )
-            removed = q.delete_points_by_document_id(document_id=doc_id)
+            removed = _retry_call(q.delete_points_by_document_id, document_id=doc_id)
             if removed and reused_doc:
                 log.info(
                     "qdrant removed %s point(s) before re-ingest document_id=%s", removed, doc_id
@@ -588,7 +608,8 @@ def ingest_document(
                     "embedding": settings.embedding_model or "hash",
                 },
             ):
-                q.upsert_document_chunks(
+                _retry_call(
+                    q.upsert_document_chunks,
                     work_id=work_id,
                     document_id=doc_id,
                     document_chunks=doc_chunks,
@@ -606,8 +627,9 @@ def ingest_document(
                         settings.qdrant_claims_collection,
                         vector_dim=embedder.dim,
                     )
-                    qc.delete_points_by_work_id(work_id=work_id)
-                    qc.upsert_claims(
+                    _retry_call(qc.delete_points_by_work_id, work_id=work_id)
+                    _retry_call(
+                        qc.upsert_claims,
                         work_id=work_id,
                         claims=claim_rows,
                         embedder=embedder,
@@ -665,9 +687,9 @@ def run_ingest_batch_cli(
     configure_logging()
     init_tracer_provider()
     s = settings or get_settings()
-    engine = create_engine(s.database_url, pool_pre_ping=True)
+    engine = get_engine(s.database_url)
     init_db(engine)
-    factory = sessionmaker(bind=engine)
+    factory = session_factory(engine)
     paths = discover_corpus_files(directory)
     if not paths:
         log.warning("No ingestible files under %s", directory)
@@ -749,9 +771,9 @@ def run_ingest_cli(
     configure_logging()
     init_tracer_provider()
     s = get_settings()
-    engine = create_engine(s.database_url, pool_pre_ping=True)
+    engine = get_engine(s.database_url)
     init_db(engine)
-    factory = sessionmaker(bind=engine)
+    factory = session_factory(engine)
     with factory() as session:
         try:
             with session.begin():

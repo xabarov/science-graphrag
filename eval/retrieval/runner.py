@@ -30,6 +30,7 @@ def _canned_answer_fn(case_path: Path) -> Callable[..., GroundedAnswer]:
         work_id=None,
         workspace_id=None,
         top_k=5,
+        mode: str = "vector",
     ) -> GroundedAnswer:  # noqa: ARG001
         citations = [{"chunk_fingerprint": fp, "rank": i + 1, "excerpt": "stub"} for i, fp in enumerate(fps)]
         min_hits = int(gold.get("min_hit_count") or 0)
@@ -45,6 +46,7 @@ def _canned_answer_fn(case_path: Path) -> Callable[..., GroundedAnswer]:
             "hit_count": hit_count,
             "embedding": {"embedding_model": "mock"},
             "filter_work_id": work_id,
+            "retrieval_mode": str(mode or "vector"),
         }
         if ws_g:
             rt["workspace_id"] = ws_g
@@ -160,8 +162,18 @@ def run_retrieval_case(
     top_k = gold.get("top_k")
     top_k_i = int(top_k) if top_k is not None else 5
 
+    mode_raw = gold.get("retrieval_mode") or gold.get("mode") or "vector"
+    mode_s = "hybrid" if str(mode_raw).strip().lower() == "hybrid" else "vector"
+
     started = perf_counter()
-    ga = fn(question, settings=s, work_id=work_id, workspace_id=workspace_id, top_k=top_k_i)
+    ga = fn(
+        question,
+        settings=s,
+        work_id=work_id,
+        workspace_id=workspace_id,
+        top_k=top_k_i,
+        mode=mode_s,
+    )
     elapsed = perf_counter() - started
     metrics = score_retrieval_answer(ga, gold)
     return {

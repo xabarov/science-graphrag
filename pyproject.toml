@@ -10,6 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = { file = "LICENSE" }
 dependencies = [
+    "alembic>=1.14",
     "arize-phoenix-otel>=0.6.1",
     "fastapi>=0.115.0",
     "python-multipart>=0.0.9",
@@ -27,6 +28,7 @@ dependencies = [
     "pypdf>=5.0",
     "qdrant-client>=1.12",
     "sqlalchemy>=2.0",
+    "tenacity>=9.0.0",
     "typer>=0.15",
     "uvicorn[standard]>=0.32.0",
 ]
@@ -56,6 +58,7 @@ science-graphrag-retrieval-benchmark = "eval.retrieval.runner:main"
 science-graphrag-retrieval-judge-benchmark = "eval.retrieval.judge:main"
 science-graphrag-claims-benchmark = "eval.claims.runner:main"
 science-graphrag-concept-topic-benchmark = "eval.concept_topic.runner:main"
+science-graphrag-retrieval-hybrid-ablation = "eval.retrieval.hybrid_ablation_runner:main"
 science-graphrag-dedup-v1-benchmark = "eval.dedup_v1.runner:cli"
 science-graphrag-references-resolution-benchmark = "eval.references_resolution.runner:main"
 science-graphrag-benchmark-compare = "eval.report_compare:main"
@@ -66,7 +69,7 @@ packages = ["science_graphrag", "eval"]
 
 [tool.black]
 line-length = 100
-target-version = ['py311']
+target-version = ['py312']
 include = '\.pyi?$'
 extend-exclude = '''
 /(
@@ -100,7 +103,7 @@ max-line-length = 100
 
 [tool.ruff]
 line-length = 100
-target-version = "py311"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]

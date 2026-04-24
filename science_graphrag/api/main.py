@@ -10,6 +10,8 @@ import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from typing import Any, Literal
+
 from pydantic import BaseModel, Field
 
 from science_graphrag.api import works as works_api
@@ -21,7 +23,7 @@ from science_graphrag.api.retrieval import GroundedAnswer, answer_query
 from science_graphrag.api.settings import router as settings_router
 from science_graphrag.api.workspace_dedup import router as workspace_dedup_router
 from science_graphrag.api.workspaces import router as workspaces_router
-from science_graphrag.config import get_settings
+from science_graphrag.config import Settings, get_settings
 
 app = FastAPI(title="science-graphrag", version="0.1.0")
 _STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -101,6 +103,10 @@ class QueryRequest(BaseModel):
     work_id: str | None = None
     workspace_id: str | None = None
     top_k: int = Field(default=5, ge=1, le=24)
+    mode: Literal["vector", "hybrid"] = Field(
+        default="vector",
+        description="Retrieval path: dense vector only, or hybrid (RRF + Neo4j fulltext + CITES expand).",
+    )
 
 
 class QueryResponse(BaseModel):
@@ -140,14 +146,35 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/v1/idea-search")
+def idea_search_stub(
+    q: str = Query("", min_length=0),
+    kinds: str = Query("work,chunk", description="Comma-separated kinds (stub ignores)."),
+    top_k: int = Query(5, ge=1, le=24),
+    workspace_id: str | None = Query(default=None),
+) -> dict[str, Any]:
+    """Stub for Wave R ``idea_search`` tool; returns empty hits until agent stack ships."""
+
+    kind_list = [k.strip() for k in (kinds or "").split(",") if k.strip()]
+    return {
+        "items": [],
+        "query": q,
+        "kinds": kind_list,
+        "top_k": top_k,
+        "workspace_id": (workspace_id or "").strip() or None,
+        "status": "stub_wave_r",
+    }
+
+
 @app.post("/v1/query", response_model=QueryResponse)
-def post_query(body: QueryRequest) -> QueryResponse:
+def post_query(body: QueryRequest, settings: Settings = Depends(get_settings)) -> QueryResponse:
     result: GroundedAnswer = answer_query(
         body.query,
-        settings=get_settings(),
+        settings=settings,
         work_id=body.work_id,
         workspace_id=body.workspace_id,
         top_k=body.top_k,
+        mode=body.mode,
     )
     return QueryResponse(
         answer=result.answer,
@@ -168,9 +195,10 @@ def get_works_list(
         default=None,
         description="If true, only works with Method/Dataset edges; if false, only without.",
     ),
+    settings: Settings = Depends(get_settings),
 ) -> WorksListResponse:
     items, total = works_api.list_works(
-        get_settings(),
+        settings,
         q=q,
         limit=limit,
         offset=offset,
@@ -182,11 +210,11 @@ def get_works_list(
 
 
 @app.get("/v1/works/{work_id}")
-def get_work_by_id(work_id: str) -> dict:
-    detail = works_api.get_work_detail(get_settings(), work_id)
+def get_work_by_id(work_id: str, settings: Settings = Depends(get_settings)) -> dict:
+    detail = works_api.get_work_detail(settings, work_id)
     if not detail:
         raise HTTPException(status_code=404, detail="work_not_found")
-    chunks = works_api.work_chunks(get_settings(), work_id, limit=1, offset=0)
+    chunks = works_api.work_chunks(settings, work_id, limit=1, offset=0)
     if "error" not in chunks:
         detail["ingestion"]["has_chunks"] = int(chunks.get("total", 0)) > 0
     return detail
@@ -197,9 +225,10 @@ def get_work_graph(
     work_id: str,
     neighbor_limit: int = Query(default=200, ge=1, le=2000),
     depth: int = Query(default=1, ge=1, le=3),
+    settings: Settings = Depends(get_settings),
 ) -> dict:
     g = works_api.work_graph_neighborhood(
-        get_settings(),
+        settings,
         work_id,
         neighbor_limit=neighbor_limit,
         depth=depth,
@@ -214,34 +243,35 @@ def get_work_chunks(
     work_id: str,
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
+    settings: Settings = Depends(get_settings),
 ) -> dict:
-    exists = works_api.get_work_detail(get_settings(), work_id)
+    exists = works_api.get_work_detail(settings, work_id)
     if not exists:
         raise HTTPException(status_code=404, detail="work_not_found")
-    return works_api.work_chunks(get_settings(), work_id, limit=limit, offset=offset)
+    return works_api.work_chunks(settings, work_id, limit=limit, offset=offset)
 
 
 @app.get("/v1/works/{work_id}/claims", response_model=WorkClaimsResponse)
-def get_work_claims(work_id: str) -> WorkClaimsResponse:
+def get_work_claims(work_id: str, settings: Settings = Depends(get_settings)) -> WorkClaimsResponse:
     """Claims + verbatim evidence for Reader / Evidence UI (Wave O)."""
 
-    items = works_api.list_work_claims(get_settings(), work_id)
+    items = works_api.list_work_claims(settings, work_id)
     if items is None:
         raise HTTPException(status_code=404, detail="work_not_found")
     return WorkClaimsResponse(work_id=work_id, items=items)
 
 
 @app.get("/v1/works/{work_id}/sources")
-def get_work_sources(work_id: str) -> dict:
-    body = works_api.work_sources_payload(get_settings(), work_id)
+def get_work_sources(work_id: str, settings: Settings = Depends(get_settings)) -> dict:
+    body = works_api.work_sources_payload(settings, work_id)
     if not body:
         raise HTTPException(status_code=404, detail="work_not_found")
     return body
 
 
 @app.get("/v1/works/{work_id}/pdf", response_model=None)
-def get_work_pdf(request: Request, work_id: str) -> Response:
-    p = works_api.work_pdf_blob_path(get_settings(), work_id)
+def get_work_pdf(request: Request, work_id: str, settings: Settings = Depends(get_settings)) -> Response:
+    p = works_api.work_pdf_blob_path(settings, work_id)
     if not p:
         raise HTTPException(status_code=404, detail="pdf_not_found")
     size = int(p.stat().st_size)

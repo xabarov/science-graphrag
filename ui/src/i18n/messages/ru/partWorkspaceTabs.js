@@ -18,6 +18,10 @@ export default {
   "wsTab.reader.liveLine": "Живые данные: GET /v1/works/{work_id} + /chunks.",
   "wsTab.reader.openStandalone": "Чтение отдельно",
   "wsTab.reader.jumpGraph": "К графу",
+  "wsTab.reader.claimsTitle": "Утверждения (Claims, эксперимент)",
+  "wsTab.reader.claimsLoading": "Загрузка claims…",
+  "wsTab.reader.claimsEmpty": "Для этой работы пока нет извлечённых claims.",
+  "wsTab.reader.claimConfidence": "уверенность: {{v}}",
 
   "wsTab.graph.pickWork": "Выберите статью из корпуса для контекста графа.",
   "wsTab.graph.openStandalone": "Граф отдельно",

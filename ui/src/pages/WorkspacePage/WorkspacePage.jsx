@@ -27,6 +27,9 @@ import WorkspaceDedupSection from "./WorkspaceDedupSection.jsx";
 import WorkspaceIngestPanel from "./WorkspaceIngestPanel.jsx";
 import WorkspacePaperList from "./WorkspacePaperList.jsx";
 import { workGraphUrl } from "./workspacePageUrls.js";
+import usePollJob from "../../hooks/usePollJob.js";
+
+const INGEST_JOB_STORAGE_PREFIX = "science-graphrag:workspaceIngestJob:";
 
 export default function WorkspacePage() {
   const { t } = useI18n();
@@ -59,6 +62,29 @@ export default function WorkspacePage() {
     }
   }, [workspaceMeta.id]);
 
+  const setPersistedIngestJobId = useCallback((workspaceId, jobId) => {
+    const ws = String(workspaceId || "").trim();
+    if (!ws) return;
+    const key = `${INGEST_JOB_STORAGE_PREFIX}${ws}`;
+    try {
+      const jid = String(jobId || "").trim();
+      if (jid) window.sessionStorage.setItem(key, jid);
+      else window.sessionStorage.removeItem(key);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const readPersistedIngestJobId = useCallback((workspaceId) => {
+    const ws = String(workspaceId || "").trim();
+    if (!ws) return "";
+    try {
+      return String(window.sessionStorage.getItem(`${INGEST_JOB_STORAGE_PREFIX}${ws}`) || "").trim();
+    } catch {
+      return "";
+    }
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -82,6 +108,8 @@ export default function WorkspacePage() {
           return;
         }
         setWorkspaceMeta(ws);
+        const restoredJobId = readPersistedIngestJobId(ws.id);
+        if (restoredJobId) setIngestJobId(restoredJobId);
         const nextParams = new URLSearchParams();
         nextParams.set("workspace_id", ws.id);
         const ids = Array.isArray(ws.work_ids) ? ws.work_ids : [];
@@ -100,7 +128,7 @@ export default function WorkspacePage() {
     return () => {
       cancelled = true;
     };
-  }, [workspaceIdFromUrl, workIdFromUrl, setSearchParams, t]);
+  }, [workspaceIdFromUrl, workIdFromUrl, setSearchParams, t, readPersistedIngestJobId]);
 
   useEffect(() => {
     const id = String(workspaceMeta.id || "").trim();
@@ -206,29 +234,26 @@ export default function WorkspacePage() {
     if (selectedWorkId) persistWorkId(selectedWorkId);
   }, [selectedWorkId]);
 
-  useEffect(() => {
-    if (!ingestJobId) return undefined;
-    let cancelled = false;
-    const tick = async () => {
-      try {
-        const j = await getIngestJob(ingestJobId);
-        if (cancelled) return;
-        setIngestJob(j);
-        if (j?.status === "completed" || j?.status === "failed") {
-          await refreshWorkspaceMeta();
-          setIngestJobId("");
-        }
-      } catch {
-        /* ignore transient poll errors */
-      }
-    };
-    tick();
-    const id = setInterval(tick, 2000);
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-    };
-  }, [ingestJobId, refreshWorkspaceMeta]);
+  usePollJob({
+    enabled: Boolean(ingestJobId),
+    intervalMs: 2000,
+    fetchJob: useCallback(() => getIngestJob(ingestJobId), [ingestJobId]),
+    onUpdate: useCallback((job) => setIngestJob(job), []),
+    onTerminal: useCallback(
+      async () => {
+        await refreshWorkspaceMeta();
+        setPersistedIngestJobId(workspaceMeta.id, "");
+        setIngestJobId("");
+      },
+      [refreshWorkspaceMeta, setPersistedIngestJobId, workspaceMeta.id],
+    ),
+    onError: useCallback(
+      (err, failCount) => {
+        if (failCount >= 3) setIngestErr(formatResearchApiError(err));
+      },
+      [setIngestErr],
+    ),
+  });
 
   const emptyState = useMemo(
     () => (
@@ -277,6 +302,7 @@ export default function WorkspacePage() {
       if (jid) {
         setIngestJob(job);
         setIngestJobId(jid);
+        setPersistedIngestJobId(workspaceMeta.id, jid);
       }
     } catch (err) {
       setIngestErr(formatResearchApiError(err));
@@ -297,6 +323,7 @@ export default function WorkspacePage() {
       if (jid) {
         setIngestJob(job);
         setIngestJobId(jid);
+        setPersistedIngestJobId(workspaceMeta.id, jid);
       }
     } catch (err) {
       setIngestErr(formatResearchApiError(err));

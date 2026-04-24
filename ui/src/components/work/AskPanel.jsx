@@ -13,8 +13,11 @@ import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import Switch from "@mui/material/Switch";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 
 import { CursorPrimaryButton, CursorSmallButton } from "../common/index.js";
+import { isAdminModeEnabled } from "../layout/adminVisibility.js";
 import WorkIdGlossaryHint from "../layout/WorkIdGlossaryHint.jsx";
 import {
   buildAskAnswerRationale,
@@ -75,6 +78,7 @@ function FlagChips({ label, items }) {
  *   workspaceId?: string,
  *   urlSessionId?: string,
  *   onUrlSessionIdChange?: (sessionId: string) => void,
+ *   labMode?: boolean,
  * }} props
  */
 export default function AskPanel({
@@ -85,6 +89,7 @@ export default function AskPanel({
   workspaceId = "",
   urlSessionId = "",
   onUrlSessionIdChange,
+  labMode = false,
 }) {
   const { t } = useI18n();
   const locked = Boolean(scopedWorkId && String(scopedWorkId).trim());
@@ -100,6 +105,8 @@ export default function AskPanel({
   const [sessionTick, setSessionTick] = useState(0);
   const [sessionTitleDraft, setSessionTitleDraft] = useState("");
   const [serverSync, setServerSync] = useState(() => readAskServerSyncPref());
+  const [retrievalMode, setRetrievalMode] = useState(() => "vector");
+  const retrievalLabVisible = Boolean(labMode || isAdminModeEnabled());
 
   const scopeKey = useMemo(
     () => deriveAskScopeKey({ locked, scopedWorkId, workspaceId }),
@@ -195,7 +202,10 @@ export default function AskPanel({
     };
   }, []);
 
-  const bodyPreview = useMemo(() => buildQueryBody(query, workId, topK, workspaceId), [query, workId, topK, workspaceId]);
+  const bodyPreview = useMemo(
+    () => buildQueryBody(query, workId, topK, workspaceId, retrievalLabVisible ? retrievalMode : "vector"),
+    [query, workId, topK, workspaceId, retrievalMode, retrievalLabVisible],
+  );
 
   const inWorkspace = Boolean(workspaceWorkId && String(workspaceWorkId).trim());
   const corpusWorkspaceOnly = Boolean(
@@ -545,6 +555,31 @@ export default function AskPanel({
             "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)" },
           }}
         />
+        {retrievalLabVisible ? (
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+            <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)" }}>{t("askPanel.retrieval.modeLabel")}</Typography>
+            <ToggleButtonGroup
+              exclusive
+              size="small"
+              value={retrievalMode}
+              onChange={(_e, v) => v != null && setRetrievalMode(v)}
+              sx={{
+                alignSelf: "flex-start",
+                "& .MuiToggleButton-root": {
+                  fontSize: "0.75rem",
+                  py: 0.35,
+                  px: 1,
+                  color: "rgba(255,255,255,0.55)",
+                  borderColor: "rgba(255,255,255,0.12)",
+                },
+                "& .Mui-selected": { color: "rgba(129,140,248,0.95)", backgroundColor: "rgba(99,102,241,0.12)" },
+              }}
+            >
+              <ToggleButton value="vector">{t("askPanel.retrieval.vector")}</ToggleButton>
+              <ToggleButton value="hybrid">{t("askPanel.retrieval.hybrid")}</ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
+        ) : null}
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center" }}>
           <CursorPrimaryButton type="submit" disabled={loading}>
             {loading ? t("askPanel.runQueryLoading") : t("askPanel.runQuery")}

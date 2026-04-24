@@ -12,6 +12,8 @@ export default {
   "graph.wsToolbar.modeFull": "Полный",
   "graph.wsToolbar.depth1": "глубина 1",
   "graph.wsToolbar.depth2": "глубина 2",
+  "graph.standaloneDepth.depth1Aria": "Окрестность в один шаг",
+  "graph.standaloneDepth.depth2Aria": "Два шага по связям цитирования",
   "graph.wsToolbar.external": "Внешние",
   "graph.wsToolbar.statsWorks": "{{count}} стат.",
   "graph.wsToolbar.statsAuthors": "{{count}} авт.",

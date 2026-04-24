@@ -233,6 +233,28 @@ def chunk_document_for_retrieval(
     return all_chunks
 
 
+def infer_chunk_kind_from_section_path(section_path: str | None, *, default: str = "body") -> str:
+    """
+    Coarse section bucket for hybrid retrieval / rerank (Wave Q).
+
+    TODO: cited_work_ids / mentioned_method_ids on chunk payload require a later
+    ``extract_in_text_citations`` pipeline stage (ontology roadmap §6.2).
+    """
+
+    sp = (section_path or "").lower()
+    if "abstract" in sp or sp.strip() == "(preamble)":
+        return "abstract"
+    if any(k in sp for k in ("reference", "bibliograph")):
+        return "references"
+    if any(k in sp for k in ("method", "approach", "architecture", "model", "network")):
+        return "method"
+    if any(k in sp for k in ("experiment", "result", "evaluation", "implementation")):
+        return "result"
+    if any(k in sp for k in ("discussion", "conclusion")):
+        return "discussion"
+    return default
+
+
 def dedupe_chunks_for_embedding(chunks: list[DocumentChunk]) -> list[DocumentChunk]:
     """Drop exact fingerprint duplicates (keep first order)."""
     seen: set[str] = set()

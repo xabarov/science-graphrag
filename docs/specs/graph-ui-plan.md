@@ -235,8 +235,9 @@ flowchart TB
 - [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx) — wires toolbar + `getWorkspaceGraph` / stats / neighbors merge for lazy **Expand external**.
 - **Palette:** `workspace_membership` (`internal` | `external`) in [`graphCanvasStyle.js`](../../ui/src/components/graph/graphCanvasStyle.js) + dashed edges when an endpoint is external.
 - **Force layout:** internal works join a `ws-internal` cluster hint in [`scienceHybridCommunities.js`](../../ui/src/components/graph/physics/scienceHybridCommunities.js).
+- **`mode=full`:** server ignores the `node_types` CSV filter for the projection (still honors `include_external` for non-member `:Work` nodes) so every neighbor label attached to internal works can appear — useful when the toolbar filters to `Work` only but you still need Methods/Authors in one shot.
 
-**Lazy expand:** selecting a work with external cite count uses `/graph/neighbors` to merge more nodes without reloading the full workspace graph.
+**Lazy expand:** selecting a work with external cite count uses `/graph/neighbors` to merge more nodes without reloading the full workspace graph. `depth=2` on neighbors walks an extra hop (bounded `limit`, split budget vs depth-1 rows).
 
 **GDS:** optional server path for large `depth=2` projections when `SCIENCE_GRAPHRAG_GDS_ENABLED` and the GDS plugin respond to `gds.version()`; otherwise Cypher-only with caps.
 

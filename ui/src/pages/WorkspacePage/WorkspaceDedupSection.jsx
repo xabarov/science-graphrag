@@ -11,6 +11,7 @@ import {
   getWorkspaceSmartDedupConflicts,
   startWorkspaceSmartDedupScan,
 } from "../../utils/workspaceStore.js";
+import usePollJob from "../../hooks/usePollJob.js";
 
 /**
  * @param {{ workspaceId: string, onMerged: () => void }} props
@@ -21,6 +22,7 @@ export default function WorkspaceDedupSection({ workspaceId, onMerged }) {
   const [conflicts, setConflicts] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activeConflict, setActiveConflict] = useState(null);
+  const [dedupJobId, setDedupJobId] = useState("");
 
   const loadConflicts = useCallback(async () => {
     if (!workspaceId) return;
@@ -33,20 +35,39 @@ export default function WorkspaceDedupSection({ workspaceId, onMerged }) {
   }, [workspaceId]);
 
   useEffect(() => {
-    void loadConflicts();
+    const id = setTimeout(() => {
+      void loadConflicts();
+    }, 0);
+    return () => clearTimeout(id);
   }, [loadConflicts]);
 
-  const pollJob = async (jobId) => {
-    const max = 60;
-    for (let i = 0; i < max; i += 1) {
-      // eslint-disable-next-line no-await-in-loop
-      const j = await getWorkspaceDedupJob(workspaceId, jobId);
-      if (j?.status === "completed" || j?.status === "failed") return j;
-      // eslint-disable-next-line no-await-in-loop
-      await new Promise((r) => setTimeout(r, 1000));
-    }
-    return { status: "failed", message: "timeout" };
-  };
+  usePollJob({
+    enabled: Boolean(dedupJobId),
+    intervalMs: 1000,
+    fetchJob: useCallback(() => getWorkspaceDedupJob(workspaceId, dedupJobId), [workspaceId, dedupJobId]),
+    onTerminal: useCallback(
+      async (done) => {
+        if (done?.status === "failed") {
+          setScanMsg(formatResearchApiError({ message: done?.error || done?.message || "scan_failed" }));
+        } else {
+          setScanMsg(
+            `Scan done: ${String(done?.conflicts_inserted ?? done?.message ?? "")} new conflict(s). Refresh list below.`,
+          );
+          await loadConflicts();
+        }
+        setScanBusy(false);
+        setDedupJobId("");
+      },
+      [loadConflicts],
+    ),
+    onError: useCallback((err, failCount) => {
+      if (failCount >= 3) {
+        setScanMsg(formatResearchApiError(err));
+        setScanBusy(false);
+        setDedupJobId("");
+      }
+    }, []),
+  });
 
   const onScan = async () => {
     if (!workspaceId) return;
@@ -57,20 +78,12 @@ export default function WorkspaceDedupSection({ workspaceId, onMerged }) {
       const jid = start?.job_id;
       if (!jid) {
         setScanMsg("No job_id returned");
+        setScanBusy(false);
         return;
       }
-      const done = await pollJob(String(jid));
-      if (done?.status === "failed") {
-        setScanMsg(formatResearchApiError({ message: done?.error || done?.message || "scan_failed" }));
-      } else {
-        setScanMsg(
-          `Scan done: ${String(done?.conflicts_inserted ?? done?.message ?? "")} new conflict(s). Refresh list below.`,
-        );
-        await loadConflicts();
-      }
+      setDedupJobId(String(jid));
     } catch (e) {
       setScanMsg(formatResearchApiError(e));
-    } finally {
       setScanBusy(false);
     }
   };

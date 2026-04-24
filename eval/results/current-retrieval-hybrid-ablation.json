@@ -1,0 +1,107 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": false,
+    "extraction_llm_model": null,
+    "extraction_llm_base_url": null,
+    "layer1_prompt_fingerprint": "sha256-20:00000000000000000000",
+    "semantic_prompt_fingerprint": "sha256-20:00000000000000000000",
+    "semantic_extraction_enabled": false
+  },
+  "summary": {
+    "case_count": 8,
+    "case_ids": [
+      "ha_01",
+      "ha_02",
+      "ha_03",
+      "ha_04",
+      "ha_05",
+      "ha_06",
+      "ha_07",
+      "ha_08"
+    ],
+    "all_passed": true,
+    "hybrid_ablation_eval": true
+  },
+  "cases": [
+    {
+      "case_id": "ha_01",
+      "metrics": {
+        "passed": true,
+        "mrr_vector": 0.5,
+        "mrr_hybrid": 1.0,
+        "mrr_delta": 0.5,
+        "min_mrr_delta": 0.05
+      }
+    },
+    {
+      "case_id": "ha_02",
+      "metrics": {
+        "passed": true,
+        "mrr_vector": 0.5,
+        "mrr_hybrid": 1.0,
+        "mrr_delta": 0.5,
+        "min_mrr_delta": 0.05
+      }
+    },
+    {
+      "case_id": "ha_03",
+      "metrics": {
+        "passed": true,
+        "mrr_vector": 0.5,
+        "mrr_hybrid": 1.0,
+        "mrr_delta": 0.5,
+        "min_mrr_delta": 0.05
+      }
+    },
+    {
+      "case_id": "ha_04",
+      "metrics": {
+        "passed": true,
+        "mrr_vector": 0.5,
+        "mrr_hybrid": 1.0,
+        "mrr_delta": 0.5,
+        "min_mrr_delta": 0.05
+      }
+    },
+    {
+      "case_id": "ha_05",
+      "metrics": {
+        "passed": true,
+        "mrr_vector": 0.5,
+        "mrr_hybrid": 1.0,
+        "mrr_delta": 0.5,
+        "min_mrr_delta": 0.05
+      }
+    },
+    {
+      "case_id": "ha_06",
+      "metrics": {
+        "passed": true,
+        "mrr_vector": 0.5,
+        "mrr_hybrid": 1.0,
+        "mrr_delta": 0.5,
+        "min_mrr_delta": 0.05
+      }
+    },
+    {
+      "case_id": "ha_07",
+      "metrics": {
+        "passed": true,
+        "mrr_vector": 0.5,
+        "mrr_hybrid": 1.0,
+        "mrr_delta": 0.5,
+        "min_mrr_delta": 0.05
+      }
+    },
+    {
+      "case_id": "ha_08",
+      "metrics": {
+        "passed": true,
+        "mrr_vector": 0.5,
+        "mrr_hybrid": 1.0,
+        "mrr_delta": 0.5,
+        "min_mrr_delta": 0.05
+      }
+    }
+  ]
+}
