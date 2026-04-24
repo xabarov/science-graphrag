@@ -1,0 +1,74 @@
+{
+  "schema_version": 2,
+  "description": "Wave L offline gold-set: records + duplicate clusters for precision/recall evaluation.",
+  "records": [
+    {
+      "work_id": "e811e872-9f0d-410a-b693-24ce8f024ade",
+      "title": "Efficient Transformers for Long Documents",
+      "year": 2021,
+      "first_author": "A. Petrov",
+      "abstract": "We introduce sparse attention blocks to process long scientific documents."
+    },
+    {
+      "work_id": "a05f7281-dd74-4269-b10e-75aecf09320d",
+      "title": "Efficient Transformers for Long Documents (Journal Version)",
+      "year": 2022,
+      "first_author": "Alexey Petrov",
+      "abstract": "Extended journal version of sparse attention blocks for long scientific documents."
+    },
+    {
+      "work_id": "37b95c3d-a6b5-4caf-b50e-51a9d37508c0",
+      "title": "Graph Neural Networks for Credit Risk Scoring",
+      "year": 2020,
+      "first_author": "Maria Ivanova",
+      "abstract": "A message passing model for portfolio-level credit risk estimation."
+    },
+    {
+      "work_id": "44869d2a-c37c-49e5-a385-ffa2d35d81f1",
+      "title": "Graph Neural Network Models for Credit Risk Scoring",
+      "year": 2020,
+      "first_author": "M. Ivanova",
+      "abstract": "We study message passing models for credit portfolio risk estimation."
+    },
+    {
+      "work_id": "db6796f1-78d0-41d1-8237-4814f256bc75",
+      "title": "Meta-analysis of COVID-19 Vaccine Effectiveness",
+      "year": 2023,
+      "first_author": "J. Smith",
+      "abstract": "Meta-analysis of observational studies on vaccine effectiveness."
+    },
+    {
+      "work_id": "fa2f8a64-453b-495a-9e84-5aa27967299b",
+      "title": "Meta Analysis of Covid19 Vaccine Effectiveness",
+      "year": 2023,
+      "first_author": "John Smith",
+      "abstract": "A pooled analysis of observational cohorts studying vaccine effectiveness."
+    },
+    {
+      "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+      "title": "Diffusion Models for Audio Synthesis",
+      "year": 2022,
+      "first_author": "S. Lee",
+      "abstract": "Score-based diffusion for waveform generation and neural vocoders."
+    },
+    {
+      "work_id": "807c8f48-f811-4d22-bb05-6fe7d27615c2",
+      "title": "Ocean Plastics Monitoring with Satellite Imaging",
+      "year": 2021,
+      "first_author": "Elena Rossi",
+      "abstract": "Satellite segmentation pipeline for detecting marine plastic debris."
+    },
+    {
+      "work_id": "a20fa709-67c1-4bde-ae13-4c81127b3de2",
+      "title": "A Literature Review on Solid-State Batteries",
+      "year": 2019,
+      "first_author": "N. Kumar",
+      "abstract": "Survey of electrolyte chemistries and manufacturing constraints."
+    }
+  ],
+  "clusters": [
+    ["e811e872-9f0d-410a-b693-24ce8f024ade", "a05f7281-dd74-4269-b10e-75aecf09320d"],
+    ["37b95c3d-a6b5-4caf-b50e-51a9d37508c0", "44869d2a-c37c-49e5-a385-ffa2d35d81f1"],
+    ["db6796f1-78d0-41d1-8237-4814f256bc75", "fa2f8a64-453b-495a-9e84-5aa27967299b"]
+  ]
+}
