@@ -180,6 +180,66 @@ class Settings(BaseSettings):
         description="Min confidence to write Method/Dataset nodes and edges to Neo4j.",
     )
 
+    claims_extraction_enabled: bool = Field(
+        default=False,
+        description=(
+            "If true, run LLM claims extraction after semantic layer and persist Claim/Evidence "
+            "to Neo4j + Qdrant claims collection (Wave O)."
+        ),
+    )
+    claims_extraction_max_tokens: int = Field(
+        default=4096,
+        ge=256,
+        le=8192,
+        description="Max completion tokens for claims extraction LLM call.",
+    )
+    qdrant_claims_collection: str = Field(
+        default="claims",
+        description="Qdrant collection name for claim text embeddings (Wave O).",
+    )
+
+    # Wave L — smart dedup (work / author embeddings + LLM judge)
+    qdrant_work_embeddings_collection: str = Field(
+        default="work_embeddings",
+        description="Qdrant collection for one vector per Work (title+abstract+first author summary).",
+    )
+    qdrant_author_embeddings_collection: str = Field(
+        default="author_embeddings",
+        description="Qdrant collection for author dedup (L2).",
+    )
+    work_dedup_sim_low: float = Field(
+        default=0.78,
+        ge=0.0,
+        le=1.0,
+        description="Below this cosine similarity, skip pair (no conflict row).",
+    )
+    work_dedup_sim_high: float = Field(
+        default=0.93,
+        ge=0.0,
+        le=1.0,
+        description="At or above: queue as embedding-only high confidence (check_mode=auto_high).",
+    )
+    work_dedup_max_candidates: int = Field(
+        default=20,
+        ge=1,
+        le=100,
+        description="Top-k similar works considered per center work during scan.",
+    )
+    work_dedup_llm_mode: str = Field(
+        default="embedding_with_llm",
+        description="One of: embedding_only, embedding_with_llm, llm (middle band uses LLM when embedding_with_llm).",
+    )
+    work_dedup_llm_timeout_s: float = Field(
+        default=30.0,
+        ge=1.0,
+        le=120.0,
+        description="Timeout for LLM same-work judge call.",
+    )
+    author_dedup_sim_low: float = Field(default=0.75, ge=0.0, le=1.0)
+    author_dedup_sim_high: float = Field(default=0.92, ge=0.0, le=1.0)
+    author_dedup_max_candidates: int = Field(default=15, ge=1, le=80)
+    author_dedup_llm_timeout_s: float = Field(default=30.0, ge=1.0, le=120.0)
+
     query_answer_llm_enabled: bool = Field(
         default=False,
         description=(

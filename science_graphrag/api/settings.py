@@ -36,6 +36,7 @@ def get_settings_snapshot(_: str = Depends(require_settings_access)) -> Settings
         ingestion=snapshot.ingestion,
         diagnostics=snapshot.diagnostics,
         security=snapshot.security,
+        work_dedup=snapshot.work_dedup,
     )
 
 
@@ -59,6 +60,7 @@ def patch_llm_settings(
         ingestion=snapshot.ingestion,
         diagnostics=snapshot.diagnostics,
         security=snapshot.security,
+        work_dedup=snapshot.work_dedup,
     )
 
 
@@ -78,6 +80,7 @@ def patch_ingestion_settings(
         ingestion=snapshot.ingestion,
         diagnostics=snapshot.diagnostics,
         security=snapshot.security,
+        work_dedup=snapshot.work_dedup,
     )
 
 
@@ -91,6 +94,7 @@ def delete_llm_secret(actor: str = Depends(require_settings_access)) -> Settings
         ingestion=snapshot.ingestion,
         diagnostics=snapshot.diagnostics,
         security=snapshot.security,
+        work_dedup=snapshot.work_dedup,
     )
 
 

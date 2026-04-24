@@ -35,13 +35,13 @@ Record the outcome in the family spec header (status + policy) and, if applicabl
 | Family | Typical enforcement today | Notes |
 |--------|---------------------------|-------|
 | Layer-1 / graph / layer-2 semantic | Core / blocking | Primary `decision` inputs |
-| Retrieval | Advisory | Includes mock tiers + optional live mini-tier |
-| Claims | Advisory | Start with harness-friendly packs; tighten match modes when wiring real extraction |
-| References resolution | Advisory | Synthetic + graph_stub harness in CI; **Neo4j `--resolver graph` lane** (Wave M) — advisory; **conditional core** после 7 зелёных ночей + promotion review (см. `benchmark-decision-gate.md` §8.1) |
+| Retrieval | Advisory | Mock tiers + live mini-tier; **Wave P** `workspace_scoped` + `judge_pilot` — advisory; promotion roadmap — `benchmark-decision-gate.md` §8.3 |
+| Claims | Mixed | Harness / merge contract — **advisory**; **Wave O** production pilot `current-claims-production-pilot.json` — **core** в `decision_gate` (см. `benchmark-decision-gate.md` §8.1) |
+| References resolution | Advisory | Synthetic + graph_stub harness in CI; **Neo4j `--resolver graph` lane** (Wave M) — advisory; **conditional core** после 7 зелёных ночей + promotion review (см. `benchmark-decision-gate.md` §8.2) |
 
 ## Checklist: References resolution — graph resolver lane (Wave M → core)
 
-Use when promoting the **Neo4j-backed** lane from advisory to **blocking / merge-safe** (or into primary `decision`). Aligns with [`benchmark-decision-gate.md`](benchmark-decision-gate.md) §8.1.
+Use when promoting the **Neo4j-backed** lane from advisory to **blocking / merge-safe** (or into primary `decision`). Aligns with [`benchmark-decision-gate.md`](benchmark-decision-gate.md) §8.2.
 
 ### Preconditions
 
@@ -60,3 +60,24 @@ Use when promoting the **Neo4j-backed** lane from advisory to **blocking / merge
 - [ ] Record outcome in [`docs/specs/benchmark-family-references-resolution-v1.md`](../specs/benchmark-family-references-resolution-v1.md) (status + enforcement).
 - [ ] Update [`benchmark-program-status.md`](benchmark-program-status.md) and §8 in [`benchmark-decision-gate.md`](benchmark-decision-gate.md) if policy changes.
 - [ ] If lane becomes blocking: update [`scripts/aggregate_benchmark_metrics.py`](../../scripts/aggregate_benchmark_metrics.py) so `decision` incorporates the graph lane (explicit maintainer decision only).
+
+## Checklist: Retrieval — workspace-scoped + LLM-judge (Wave P → core)
+
+Use when promoting **workspace-scoped retrieval** and/or **LLM-judge** from advisory into a **blocking** retrieval gate. Aligns with [`benchmark-decision-gate.md`](benchmark-decision-gate.md) §8.3.
+
+### Preconditions
+
+- [ ] **Core gate healthy:** primary `decision` acceptable with current backbone + claims production inputs.
+- [ ] **Seeded workspaces stable:** `ws-pilot-od` / `ws-pilot-pdf` documented; `scripts/seed_benchmark_workspaces.py` idempotent; `_workspaces.json` is single source of truth for member `work_id` lists in gold.
+- [ ] **Artifacts:** default paths `eval/results/current-retrieval-workspace-scoped.json` and `eval/results/current-retrieval-judge-pilot.json` produced by documented CLIs on the agreed stack.
+
+### Stabilization window
+
+- [ ] **14 consecutive nights** `workspace_scoped` suite `summary.all_passed = true` (live, not `--mock-answer`, unless policy explicitly allows mock for interim).
+- [ ] **14 consecutive nights** judge pilot `mean_weighted_score ≥ 4.5/6` on the frozen rubric (`eval/retrieval/judge_prompt_v1.md`); prompt changes require a new fingerprint + restart window.
+- [ ] **Holdout:** ~30% judge cases excluded from nightly `current-retrieval-judge-pilot.json`, evaluated weekly via `current-retrieval-judge-holdout.json` (mitigate overfit).
+
+### Exit (same PR or follow-up)
+
+- [ ] Update [`benchmark-program-status.md`](benchmark-program-status.md) and §8.3 in [`benchmark-decision-gate.md`](benchmark-decision-gate.md) if policy changes.
+- [ ] If retrieval becomes blocking: extend [`scripts/aggregate_benchmark_metrics.py`](../../scripts/aggregate_benchmark_metrics.py) `_decision_gate` with explicit criteria (maintainer decision only).

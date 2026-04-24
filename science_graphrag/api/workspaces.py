@@ -2,13 +2,20 @@
 
 from __future__ import annotations
 
+import io
 import uuid
+import zipfile
 from typing import Any
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
 from pydantic import BaseModel, Field
 
-from science_graphrag.api.ingest_jobs import job_to_dict, start_ingest_job
+from science_graphrag.api.ingest_jobs import (
+    SUPPORTED_SUFFIXES,
+    job_to_dict,
+    start_batch_ingest_job,
+    start_ingest_job,
+)
 from science_graphrag.api.workspace_graph import (
     legacy_workspace_graph_union as workspace_graph_union,
     project_workspace_graph,
@@ -18,9 +25,33 @@ from science_graphrag.api.workspace_graph import (
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
-from science_graphrag.storage.qdrant_store import QdrantChunkStore
+from science_graphrag.storage.qdrant_store import QdrantChunkStore, QdrantWorkEmbeddingStore
 
 router = APIRouter(prefix="/workspaces", tags=["workspaces"])
+
+
+def _files_from_zip(data: bytes) -> list[tuple[str, bytes]]:
+    """Extract ``.pdf`` / ``.md`` / ``.txt`` from a zip (basename only, no path traversal)."""
+
+    out: list[tuple[str, bytes]] = []
+    try:
+        with zipfile.ZipFile(io.BytesIO(data)) as zf:
+            for info in zf.infolist():
+                if info.is_dir():
+                    continue
+                name = Path(info.filename).name
+                if not name or name.startswith("."):
+                    continue
+                if Path(name).suffix.lower() not in SUPPORTED_SUFFIXES:
+                    continue
+                try:
+                    raw = zf.read(info)
+                except Exception:  # noqa: BLE001
+                    continue
+                out.append((name, raw))
+    except zipfile.BadZipFile:
+        return []
+    return out
 
 
 def _store(settings: Settings) -> Neo4jGraphStore:
@@ -139,8 +170,15 @@ def add_work_to_workspace(
     try:
         if not store.workspace_get(workspace_id):
             raise HTTPException(status_code=404, detail="workspace_not_found")
-        if not store.workspace_add_work(workspace_id, body.work_id.strip()):
+        wid = body.work_id.strip()
+        if not store.workspace_add_work(workspace_id, wid):
             raise HTTPException(status_code=400, detail="work_add_failed")
+        dim = resolve_embedding_dim(embedding_model=settings.embedding_model)
+        qdrant = QdrantChunkStore(settings.qdrant_url, settings.qdrant_collection, vector_dim=dim)
+        try:
+            qdrant.add_workspace_to_chunks(work_id=wid, workspace_id=workspace_id)
+        except Exception:  # noqa: BLE001
+            pass
         ws = store.workspace_get(workspace_id)
         assert ws is not None
         return ws
@@ -295,6 +333,54 @@ async def ingest_document_to_workspace(
     return job_to_dict(rec)
 
 
+@router.post("/{workspace_id}/ingest/batch")
+async def ingest_batch_to_workspace(
+    workspace_id: str,
+    request: Request,
+    settings: Settings = Depends(get_settings),
+) -> dict[str, Any]:
+    """Multipart: repeated ``files`` entries and/or ``archive`` ``.zip`` (PDF/MD/TXT inside)."""
+
+    store = _store(settings)
+    try:
+        if not store.workspace_get(workspace_id):
+            raise HTTPException(status_code=404, detail="workspace_not_found")
+    finally:
+        store.close()
+
+    form = await request.form()
+    items: list[tuple[str, bytes]] = []
+    arch = form.get("archive")
+    if arch is not None and hasattr(arch, "read"):
+        data = await arch.read()
+        fn = (getattr(arch, "filename", "") or "").strip()
+        if not fn.lower().endswith(".zip"):
+            raise HTTPException(status_code=400, detail="archive_must_be_zip")
+        items.extend(_files_from_zip(data))
+    max_bytes = int(settings.workspace_upload_max_file_size_mb) * 1024 * 1024
+    for f in form.getlist("files"):
+        if f is None or not hasattr(f, "read"):
+            continue
+        raw = await f.read()
+        fn = (getattr(f, "filename", "") or "upload").strip() or "upload"
+        if Path(fn).suffix.lower() not in SUPPORTED_SUFFIXES:
+            continue
+        if len(raw) > max_bytes:
+            raise HTTPException(
+                status_code=413,
+                detail={
+                    "error": "workspace_upload_file_too_large",
+                    "filename": fn,
+                    "max_file_size_mb": settings.workspace_upload_max_file_size_mb,
+                },
+            )
+        items.append((fn, raw))
+    if not items:
+        raise HTTPException(status_code=400, detail="no_supported_files_in_batch")
+    rec = start_batch_ingest_job(workspace_id=workspace_id, files=items, settings=settings)
+    return job_to_dict(rec)
+
+
 @router.post("/{workspace_id}/merge-works")
 def merge_workspace_works(
     workspace_id: str,
@@ -313,18 +399,26 @@ def merge_workspace_works(
         drop = body.drop_work_id.strip()
         merged = store.merge_work_into_canonical(keep, drop)
         qdrant_repointed = 0
+        work_embed_deleted = 0
         if merged:
             dim = resolve_embedding_dim(embedding_model=settings.embedding_model)
             qdrant = QdrantChunkStore(
                 settings.qdrant_url, settings.qdrant_collection, vector_dim=dim
             )
             qdrant_repointed = qdrant.repoint_work_id_payload(from_work_id=drop, to_work_id=keep)
+            qw = QdrantWorkEmbeddingStore(
+                settings.qdrant_url,
+                settings.qdrant_work_embeddings_collection,
+                vector_dim=dim,
+            )
+            work_embed_deleted = qw.delete_by_work_id(work_id=drop)
             store.workspace_remove_work(workspace_id, drop)
         return {
             "merged": bool(merged),
             "keep_work_id": keep,
             "drop_work_id": drop,
             "qdrant_repointed": qdrant_repointed,
+            "work_embedding_deleted": int(work_embed_deleted),
         }
     finally:
         store.close()

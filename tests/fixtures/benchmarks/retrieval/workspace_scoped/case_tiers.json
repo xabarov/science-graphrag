@@ -1,0 +1,18 @@
+{
+  "workspace_scoped": [
+    "ws_pilot_od_methods_overview",
+    "ws_pilot_od_chunk_anchor",
+    "ws_pilot_od_scoped_negative",
+    "ws_pilot_pdf_methods_overview",
+    "ws_pilot_pdf_chunk_anchor",
+    "ws_pilot_pdf_scoped_negative"
+  ],
+  "all": [
+    "ws_pilot_od_methods_overview",
+    "ws_pilot_od_chunk_anchor",
+    "ws_pilot_od_scoped_negative",
+    "ws_pilot_pdf_methods_overview",
+    "ws_pilot_pdf_chunk_anchor",
+    "ws_pilot_pdf_scoped_negative"
+  ]
+}

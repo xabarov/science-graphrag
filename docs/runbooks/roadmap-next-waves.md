@@ -169,3 +169,13 @@
 **Предусловие:** Wave K3 (Qdrant payload `workspace_ids`) — для workspace-scoped dedup scan.
 
 **Exit:** на gold-set из 5–10 кластеров (preprint+journal, 2 написания, разные работы) — precision ≥ 0.9, recall ≥ 0.8; manual merge через UI работает; reverse merge возможен через CLI.
+
+---
+
+## Wave O — Claims production extractor + promotion
+
+**Цель:** LLM-извлечение `Claim` / `Evidence`, Neo4j + Qdrant `claims`, API `GET /v1/works/{id}/claims`, UI (Reader при `VITE_CLAIMS_ENABLED=true`), advisory lane `eval/results/current-claims-production-pilot.json` и promotion по [benchmark-family-promotion-review.md](benchmark-family-promotion-review.md).
+
+**Источник плана:** [analysis/ontology-benchmarks-roadmap-2026-04-24.md §7.4](../analysis/ontology-benchmarks-roadmap-2026-04-24.md#74-wave-o--claims-production-extractor--promotion).
+
+**Exit:** ingestion с `SCIENCE_GRAPHRAG_CLAIMS_EXTRACTION_ENABLED=true` пишет граф; harness `claims_pilot` зелёный; production lane ≥ 0.8 recall **7 ночей** — затем обновление `benchmark-program-status` / опционально core gate.

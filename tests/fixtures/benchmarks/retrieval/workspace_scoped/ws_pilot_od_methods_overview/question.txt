@@ -1,0 +1,1 @@
+What methods or architectural blocks does this paper describe for object detection, and how does it position them relative to two-stage detectors?

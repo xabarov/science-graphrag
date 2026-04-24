@@ -10,11 +10,12 @@ Usage (repo root):
 
 Authoritative inputs (defaults) match docs/runbooks/benchmark-decision-gate.md.
 
-Optional retrieval + claims + references_resolution + concept_topic graph JSON lanes (advisory
-only; do not affect ``decision``) are listed in ``benchmark-decision-gate.md`` §8 and summarized
-under ``retrieval_family`` / ``claims_family`` / ``references_resolution_family`` /
-``concept_topic_family`` when the default artifact paths exist (graph lane: ``--refs-graph-json``;
-concept/topic: ``--concept-topic-json``).
+Optional retrieval + claims + claims production pilot + references_resolution + concept_topic
+graph JSON lanes are listed in ``benchmark-decision-gate.md`` §8 and summarized under
+``retrieval_family`` / ``claims_family`` / ``claims_production_family`` /
+``references_resolution_family`` / ``concept_topic_family`` when the default artifact paths exist.
+**Claims production pilot** is part of the **core** ``decision_gate`` (Wave O promotion).
+Retrieval ``workspace_scoped`` + ``judge_pilot`` blocks remain **advisory** (Wave P).
 """
 
 from __future__ import annotations
@@ -41,12 +42,15 @@ DEFAULT_BASELINE_LAYER2 = "eval/results/baseline-llm-layer2-nightly-semantic-sui
 DEFAULT_RETRIEVAL_MERGE_SAFE = "eval/results/current-retrieval-merge-safe-mock.json"
 DEFAULT_RETRIEVAL_STRICT_PILOT = "eval/results/current-retrieval-strict-pilot-mock.json"
 DEFAULT_RETRIEVAL_LIVE_CORPUS_MINI = "eval/results/current-retrieval-live-corpus-mini.json"
+DEFAULT_RETRIEVAL_WORKSPACE_SCOPED = "eval/results/current-retrieval-workspace-scoped.json"
+DEFAULT_RETRIEVAL_JUDGE_PILOT = "eval/results/current-retrieval-judge-pilot.json"
 
 # Claims family (advisory — Wave H1; see ontology-claims-benchmark-v1.md)
 DEFAULT_CLAIMS_MERGE_CONTRACT = "eval/results/current-claims-merge-contract.json"
 DEFAULT_CLAIMS_MINI_SUITE = "eval/results/current-claims-mini-suite.json"
 DEFAULT_CLAIMS_CORPUS_V2_MINI_SUITE = "eval/results/current-claims-corpus-v2-mini.json"
 DEFAULT_CLAIMS_PILOT_SUITE = "eval/results/current-claims-pilot-suite.json"
+DEFAULT_CLAIMS_PRODUCTION_PILOT = "eval/results/current-claims-production-pilot.json"
 
 DEFAULT_REFERENCES_RESOLUTION_CONTRACT = "eval/results/current-references-resolution-contract.json"
 DEFAULT_REFERENCES_RESOLUTION_MINI = "eval/results/current-references-resolution-mini.json"
@@ -270,6 +274,15 @@ def _summarize_case_metrics_suite(rel: str) -> dict[str, Any]:
     cases = data.get("cases") or []
     summary = data.get("summary") or {}
     failed = [c for c in cases if not _claims_case_passed(c)]
+    recalls: list[float] = []
+    for c in cases:
+        cr = (c.get("metrics") or {}).get("claim_recall")
+        if cr is not None:
+            try:
+                recalls.append(float(cr))
+            except (TypeError, ValueError):
+                pass
+    mean_claim_recall = (sum(recalls) / len(recalls)) if recalls else None
     return {
         "artifact": rel,
         "run_metadata": {
@@ -284,6 +297,33 @@ def _summarize_case_metrics_suite(rel: str) -> dict[str, Any]:
             {"case_id": c.get("case_id"), "metrics": c.get("metrics")} for c in failed
         ],
         "all_passed": bool(summary.get("all_passed")),
+        "mean_claim_recall": mean_claim_recall,
+    }
+
+
+def _summarize_retrieval_judge_suite(rel: str) -> dict[str, Any]:
+    """Summarize ``eval/retrieval/judge.py`` output (Wave P advisory)."""
+
+    p = ROOT / rel
+    if not p.is_file():
+        return {"error": "missing_file", "artifact": rel}
+    data = _read_json(p)
+    meta = data.get("run_metadata") or {}
+    cases = data.get("cases") or []
+    summary = data.get("summary") or {}
+    failed = [c for c in cases if not bool(c.get("passed"))]
+    return {
+        "artifact": rel,
+        "run_metadata": {
+            "extraction_llm_model": meta.get("extraction_llm_model"),
+            "judge_prompt_fingerprint": meta.get("judge_prompt_fingerprint"),
+            "judge_schema_version": meta.get("judge_schema_version"),
+        },
+        "summary": summary,
+        "failed_count": len(failed),
+        "failed_cases": [{"case_id": c.get("case_id"), "error": c.get("error")} for c in failed],
+        "all_passed": bool(summary.get("all_passed")),
+        "mean_weighted_score": summary.get("mean_weighted_score"),
     }
 
 
@@ -369,10 +409,17 @@ def _decision_gate(
     reference: dict[str, Any],
     layer1: dict[str, Any],
     layer2: dict[str, Any],
+    claims_production: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     ref_ok = reference.get("all_passed") is True
     l1_failed = layer1.get("failed_count", 0) if "error" not in layer1 else None
     l2_failed = layer2.get("failed_count", 0) if "error" not in layer2 else None
+
+    cp = claims_production or {}
+    cp_missing = bool(cp.get("error") == "missing_file")
+    cp_ok = bool(cp.get("all_passed")) if cp and "error" not in cp else False
+    mcr = cp.get("mean_claim_recall") if cp and "error" not in cp else None
+    cp_recall_ok = mcr is None or (float(mcr) + 1e-9 >= 0.8)
 
     # GO: reference stable; nightly may still have classified debt
     if not ref_ok:
@@ -388,6 +435,17 @@ def _decision_gate(
         decision = "CONDITIONAL-GO"
         reason = "reference_ok_nightly_has_residual_failures_document_in_gate_report"
 
+    if decision == "GO" and cp_missing:
+        decision = "CONDITIONAL-GO"
+        reason = f"{reason};claims_production_artifact_missing"
+    elif not cp_missing and cp and "error" not in cp:
+        if not cp_ok:
+            decision = "NO-GO"
+            reason = "claims_production_pilot_not_all_passed"
+        elif not cp_recall_ok:
+            decision = "NO-GO"
+            reason = "claims_production_mean_recall_below_0_8"
+
     return {
         "decision": decision,
         "reason": reason,
@@ -395,6 +453,9 @@ def _decision_gate(
             "reference_all_passed": ref_ok,
             "layer1_nightly_failed_count": l1_failed,
             "layer2_nightly_failed_count": l2_failed,
+            "claims_production_artifact_missing": cp_missing,
+            "claims_production_all_passed": None if cp_missing else cp_ok,
+            "claims_production_mean_claim_recall": mcr,
         },
     }
 
@@ -407,6 +468,9 @@ def _md_decision_gate_section(dg: dict[str, Any]) -> list[str]:
     lines.append(f"- **reference_all_passed**: {crit.get('reference_all_passed')}")
     lines.append(f"- **layer1 nightly failed**: {crit.get('layer1_nightly_failed_count')}")
     lines.append(f"- **layer2 nightly failed**: {crit.get('layer2_nightly_failed_count')}")
+    lines.append(f"- **claims_production_artifact_missing**: {crit.get('claims_production_artifact_missing')}")
+    lines.append(f"- **claims_production_all_passed**: {crit.get('claims_production_all_passed')}")
+    lines.append(f"- **claims_production_mean_claim_recall**: {crit.get('claims_production_mean_claim_recall')}")
     lines.append("")
     return lines
 
@@ -498,6 +562,13 @@ def _md_retrieval_family_section(rf: dict[str, Any]) -> list[str]:
     _one("merge_safe_contract (mock suite)", rf.get("merge_safe_contract_mock") or {})
     _one("strict_pilot (mock suite)", rf.get("strict_pilot_mock") or {})
     _one("live_corpus_mini (live suite)", rf.get("live_corpus_mini") or {})
+    _one("workspace_scoped (live suite, Wave P)", rf.get("workspace_scoped") or {})
+    _one("judge_pilot (LLM rubric advisory, Wave P)", rf.get("judge_pilot") or {})
+    lines.append(
+        "Promotion roadmap for workspace-scoped + judge → core retrieval gate: "
+        "`docs/runbooks/benchmark-decision-gate.md` §8.3.",
+    )
+    lines.append("")
     return lines
 
 
@@ -531,6 +602,38 @@ def _md_claims_family_section(cf: dict[str, Any]) -> list[str]:
     _one("claims_mini", cf.get("claims_mini") or {})
     _one("claims_corpus_v2_mini", cf.get("claims_corpus_v2_mini") or {})
     _one("claims_pilot", cf.get("claims_pilot") or {})
+    return lines
+
+
+def _md_claims_production_family_section(pf: dict[str, Any]) -> list[str]:
+    lines = [
+        "## Claims production lane (core gate, Wave O)",
+        "",
+        "LLM extractor via ``science-graphrag-claims-benchmark --suite --tier claims_pilot "
+        "--extractor production``; artifact "
+        f"default: `{DEFAULT_CLAIMS_PRODUCTION_PILOT}`. "
+        "``decision_gate`` requires ``all_passed`` and mean ``claim_recall`` ≥ 0.8 when the "
+        "artifact is present; a missing artifact downgrades a would-be **GO** to **CONDITIONAL-GO**.",
+        "",
+    ]
+    role = (pf.get("role") or "core") if isinstance(pf, dict) else "core"
+    lines.append(f"- **role**: `{role}`")
+    lines.append("")
+
+    def _one(label: str, block: dict[str, Any]) -> None:
+        lines.append(f"### {label}")
+        lines.append("")
+        if block.get("error"):
+            lines.append(f"- **status**: missing artifact `{block.get('artifact')}`")
+        else:
+            lines.append(f"- artifact: `{block.get('artifact')}`")
+            lines.append(f"- all_passed: **{block.get('all_passed')}**")
+            lines.append(f"- failed_count: **{block.get('failed_count')}**")
+            for fc in block.get("failed_cases") or []:
+                lines.append(f"  - `{fc.get('case_id')}`: {fc.get('metrics')}")
+        lines.append("")
+
+    _one("claims_pilot (production extractor)", pf.get("claims_pilot_production") or {})
     return lines
 
 
@@ -625,6 +728,7 @@ def _render_markdown(payload: dict[str, Any]) -> str:
         *_md_supplementary_section(payload.get("supplementary_retests") or []),
         *_md_retrieval_family_section(payload.get("retrieval_family") or {}),
         *_md_claims_family_section(payload.get("claims_family") or {}),
+        *_md_claims_production_family_section(payload.get("claims_production_family") or {}),
         *_md_references_resolution_family_section(
             payload.get("references_resolution_family") or {}
         ),
@@ -666,11 +770,37 @@ def main() -> int:
             "`science-graphrag-concept-topic-benchmark --suite --tier concept_topic_mini` (advisory)."
         ),
     )
+    parser.add_argument(
+        "--claims-production-json",
+        type=str,
+        default=DEFAULT_CLAIMS_PRODUCTION_PILOT,
+        help=(
+            "Optional claims pilot JSON from "
+            "`science-graphrag-claims-benchmark --suite --tier claims_pilot --extractor production` "
+            "(core gate, Wave O; see benchmark-decision-gate.md §8.1)."
+        ),
+    )
+    parser.add_argument(
+        "--retrieval-workspace-scoped-json",
+        type=str,
+        default=DEFAULT_RETRIEVAL_WORKSPACE_SCOPED,
+        help=(
+            "Optional retrieval workspace_scoped suite JSON (advisory, Wave P). "
+            "Default path is committed when live stack is green."
+        ),
+    )
+    parser.add_argument(
+        "--retrieval-judge-json",
+        type=str,
+        default=DEFAULT_RETRIEVAL_JUDGE_PILOT,
+        help="Optional retrieval LLM-judge pilot JSON from eval/retrieval/judge.py (advisory, Wave P).",
+    )
     args = parser.parse_args()
 
     reference = _summarize_reference(DEFAULT_REFERENCE)
     layer1 = _summarize_layer1_suite(DEFAULT_LAYER1_NIGHTLY)
     layer2 = _summarize_layer2_suite(DEFAULT_LAYER2_NIGHTLY)
+    claims_prod = _summarize_case_metrics_suite(args.claims_production_json)
 
     deltas = {
         "layer1_nightly_vs_baseline": _compare_suite_failures(
@@ -693,10 +823,13 @@ def main() -> int:
             "retrieval_merge_safe_mock": DEFAULT_RETRIEVAL_MERGE_SAFE,
             "retrieval_strict_pilot_mock": DEFAULT_RETRIEVAL_STRICT_PILOT,
             "retrieval_live_corpus_mini": DEFAULT_RETRIEVAL_LIVE_CORPUS_MINI,
+            "retrieval_workspace_scoped": args.retrieval_workspace_scoped_json,
+            "retrieval_judge_pilot": args.retrieval_judge_json,
             "claims_merge_contract": DEFAULT_CLAIMS_MERGE_CONTRACT,
             "claims_mini_suite": DEFAULT_CLAIMS_MINI_SUITE,
             "claims_corpus_v2_mini_suite": DEFAULT_CLAIMS_CORPUS_V2_MINI_SUITE,
             "claims_pilot_suite": DEFAULT_CLAIMS_PILOT_SUITE,
+            "claims_production_pilot_suite": args.claims_production_json,
             "references_resolution_contract": DEFAULT_REFERENCES_RESOLUTION_CONTRACT,
             "references_resolution_mini": DEFAULT_REFERENCES_RESOLUTION_MINI,
             "references_resolution_graph": args.refs_graph_json,
@@ -712,6 +845,8 @@ def main() -> int:
             "merge_safe_contract_mock": _summarize_retrieval_suite(DEFAULT_RETRIEVAL_MERGE_SAFE),
             "strict_pilot_mock": _summarize_retrieval_suite(DEFAULT_RETRIEVAL_STRICT_PILOT),
             "live_corpus_mini": _summarize_retrieval_suite(DEFAULT_RETRIEVAL_LIVE_CORPUS_MINI),
+            "workspace_scoped": _summarize_retrieval_suite(args.retrieval_workspace_scoped_json),
+            "judge_pilot": _summarize_retrieval_judge_suite(args.retrieval_judge_json),
         },
         "claims_family": {
             "role": "advisory",
@@ -721,6 +856,10 @@ def main() -> int:
                 DEFAULT_CLAIMS_CORPUS_V2_MINI_SUITE
             ),
             "claims_pilot": _summarize_case_metrics_suite(DEFAULT_CLAIMS_PILOT_SUITE),
+        },
+        "claims_production_family": {
+            "role": "core",
+            "claims_pilot_production": claims_prod,
         },
         "references_resolution_family": {
             "role": "advisory",
@@ -734,7 +873,7 @@ def main() -> int:
             "role": "advisory",
             "concept_topic_mini": _summarize_case_metrics_suite(args.concept_topic_json),
         },
-        "decision_gate": _decision_gate(reference, layer1, layer2),
+        "decision_gate": _decision_gate(reference, layer1, layer2, claims_prod),
     }
 
     args.out_json.parent.mkdir(parents=True, exist_ok=True)

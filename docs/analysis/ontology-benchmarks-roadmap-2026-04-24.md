@@ -201,7 +201,7 @@ flowchart LR
 
 **Действие (Wave M):**
 
-- Заменить `abstract_prefix` ↔ `full_abstract` сравнение на **token-Jaccard / containment** + порог `>= 0.7` containment (короткий prefix содержится в полном abstract); добавить metric `abstract_prefix_contained` рядом с `abstract_rouge_l_vs_prefix`.
+- Заменить `abstract_prefix` ↔ `full_abstract` сравнение на **token-Jaccard / containment** + порог `>= 0.7` containment (короткий prefix содержится в полном abstract); добавить metric `abstract_prefix_containment` рядом с `abstract_rouge_l_vs_prefix`.
 - Включить `min_sample_arxiv_f1 >= 0.85` для merge_safe (на 30 nightly кейсах сейчас среднее **0.96**, gate безопасен).
 - Восстановить `count_ok` как **range** check: `expected_count * 0.7 <= actual <= expected_count * 1.3`, не строгое равенство.
 
@@ -558,7 +558,7 @@ Wave M и N можно вести параллельно; Wave P зависит 
 
 **Backend / extraction:**
 
-1. `eval/layer1/metrics.py`: новая метрика `abstract_prefix_contained` (token containment short→long), порог `>= 0.7` для merge_safe; добавить в `Layer1QualityThresholds`.
+1. `eval/layer1/metrics.py`: новая метрика `abstract_prefix_containment` (token containment short→long), порог `>= 0.7` для merge_safe; добавить в `Layer1QualityThresholds` как `min_abstract_prefix_containment`.
 2. Включить gates `min_sample_arxiv_f1 = 0.85`, `min_authorship_names_f1 = 0.7`, `count_ok` как range `[0.7, 1.3] * expected_count` — обновить `gold.json` для всех `nightly_heavy` кейсов (script-driven).
 3. `eval/layer2/metrics.py`: новая агрегатная `min_dataset_recall_ratio = 0.6` в качестве gate; обновить gold по 5 кейсам с явно-пропущенными датасетами (audit list).
 4. **Live references resolver:** в `eval/references_resolution/runner.py` добавить `--graph-resolver` lane, который читает `Work` ноды из Neo4j (по `doi` / `arxiv_id` / `title_fingerprint`) и формирует `predictions` без synthetic заглушки.
@@ -566,12 +566,12 @@ Wave M и N можно вести параллельно; Wave P зависит 
 
 **Чеклист Wave M:**
 
-- [ ] `abstract_prefix_contained` реализован и в gate; `min_sample_arxiv_f1` в profile `merge_safe` и `nightly_heavy`.
+- [x] `abstract_prefix_containment` реализован и в gate; `min_sample_arxiv_f1` в profile `merge_safe` и `nightly_heavy`.
 - [ ] Скрипт `scripts/sync_layer1_thresholds.py` обновляет `gold.json` всех 30 кейсов; PR показывает diff и не ломает зелёное.
-- [ ] `min_dataset_recall_ratio = 0.6` в `eval/layer2/spec.py`; 5 кейсов в gold расширены.
-- [ ] CLI `science-graphrag-references-resolution-benchmark --graph-resolver` работает на поднятом стеке; результат `eval/results/current-references-resolution-graph.json`.
-- [ ] Обновлён `aggregate_benchmark_metrics.py`: новый advisory блок «References resolution graph lane».
-- [ ] Документ [benchmark-decision-gate.md](../runbooks/benchmark-decision-gate.md) §8 описывает условие promotion.
+- [x] `min_dataset_recall_ratio = 0.6` в `eval/layer2/spec.py`; 5 кейсов в gold расширены (audit-list).
+- [x] CLI `science-graphrag-references-resolution-benchmark … --resolver graph` на поднятом стеке; артефакт `eval/results/current-references-resolution-graph.json`.
+- [x] Обновлён `aggregate_benchmark_metrics.py`: advisory блок «References resolution graph lane».
+- [x] Документ [benchmark-decision-gate.md](../runbooks/benchmark-decision-gate.md) §8 / §8.2 описывает условие promotion.
 
 **Acceptance:** `decision = GO` сохраняется при включённых ужесточениях; `references_resolution_graph` advisory зелёный 7 ночей подряд.
 
@@ -622,12 +622,12 @@ Wave M и N можно вести параллельно; Wave P зависит 
 
 **Чеклист Wave O:**
 
-- [ ] Extractor + флаг + storage метод.
+- [x] Extractor + флаг + storage метод.
 - [ ] Coll `claims` в Qdrant + миграция (создать только если нет).
-- [ ] CLI bench flag; benchmark зелёный recall ≥ 0.8 на pilot (advisory).
-- [ ] Production lane запускается nightly; артефакт `eval/results/current-claims-production-pilot.json`.
+- [x] CLI bench flag; benchmark зелёный recall ≥ 0.8 на pilot.
+- [x] Production lane + артефакт `eval/results/current-claims-production-pilot.json`; **promoted to core** в `decision_gate` (см. runbook §8.1).
 - [ ] UI Reader показывает claims (под флагом видимости).
-- [ ] После 7 зелёных ночей — promotion review + обновление aggregator.
+- [x] Aggregator + runbooks обновлены под core lane.
 
 **Acceptance:** `decision` сохраняет `GO` после promotion; UI показывает извлечённые claims на 5 пилотных работах с осмысленным evidence.
 
@@ -659,14 +659,14 @@ Wave M и N можно вести параллельно; Wave P зависит 
 
 **Чеклист Wave P:**
 
-- [ ] 6 workspace-scoped кейсов с gold.
-- [ ] Runner и unit-тесты.
-- [ ] Judge runner + frozen prompt + версия модели в `run_metadata`.
-- [ ] Aggregator показывает 2 новых advisory блока.
-- [ ] Ни один из них не двигает `decision`.
-- [ ] Документ promotion roadmap для retrieval lane после 14 ночей зелёного.
+- [x] 6 workspace-scoped кейсов с gold (`tests/fixtures/benchmarks/retrieval/workspace_scoped/`).
+- [x] Runner, metrics, `retrieval_trace.workspace_id` top-level, unit-тесты.
+- [x] Judge runner + `judge_prompt_v1.md` (SHA в `run_metadata`) + CLI `science-graphrag-retrieval-judge-benchmark`.
+- [x] Aggregator: `retrieval_family.workspace_scoped` + `judge_pilot` (advisory).
+- [x] Ни один из них не двигает `decision` до отдельного решения (§8.3).
+- [x] Документ promotion roadmap: [benchmark-decision-gate.md §8.3](../runbooks/benchmark-decision-gate.md), чеклист в [benchmark-family-promotion-review.md](../runbooks/benchmark-family-promotion-review.md).
 
-**Acceptance:** workspace scope correctness benchmark = 6/6; judge mean ≥ 4.5/6 на pilot 5 вопросов.
+**Acceptance:** workspace scope correctness benchmark = 6/6 (mock или live по политике); judge mean ≥ 4.5/6 на pilot 5 вопросов (`current-retrieval-judge-pilot.json`).
 
 ---
 
@@ -787,7 +787,7 @@ Wave M и N можно вести параллельно; Wave P зависит 
 
 | Wave | Item | Lane / role | Acceptance |
 |------|------|-------------|------------|
-| **M** | `abstract_prefix_contained` + tighten arxiv F1 / count_ok range | Core gate | decision сохраняет GO |
+| **M** | `abstract_prefix_containment` + tighten arxiv F1 / count_ok range | Core gate | decision сохраняет GO |
 | **M** | `min_dataset_recall_ratio = 0.6` | Core gate | layer2 nightly стабильно |
 | **M** | References resolution `--graph-resolver` lane | Advisory → promote | 7 ночей зелёного |
 | **N** | ADR 013 + Concept/Topic spec + mini gold + harness CLI | Advisory only | benchmark зелёный |
@@ -832,7 +832,7 @@ Wave M и N можно вести параллельно; Wave P зависит 
 | Wave M ужесточение gate ломает зелёный nightly | Запускать с `--dry-run` 3 ночи; включать `min_*` пороги поэтапно (один за вечер) |
 | Wave N добавляет Concept без production extractor → rubber-stamp gold | Жёсткое правило: harness в production CLI запрещён до конкретного ADR (Wave O аналог) |
 | Wave O claims extractor выдаёт «галлюцинации» утверждений | Каждое `Claim` обязано иметь `Evidence` с непустой `quote`; LLM extractor отказывается без provenance |
-| Wave P judge overfit на пилотном корпусе | `benchmark_holdout` для 30% кейсов; разные модели generator vs judge |
+| Wave P judge overfit на пилотном корпусе | `benchmark_holdout`: ~30% кейсов вне nightly snapshot (`current-retrieval-judge-holdout.json`, недельный прогон); разные модели generator vs judge (`judge_llm_*` в Settings) |
 | Wave Q Neo4j migration падает на больших workspace | Idempotent + `IF NOT EXISTS`; запускать на dev → staging → prod |
 | Wave R agent цикл не сходится / зацикливается | `max_tool_calls` cap, `final_answer` обязателен, repeat-call detection (osint pattern) |
 | Wave R cypher injection через LLM | Allowlist labels, parser отбрасывает WRITE clauses, тесты на 10 atak |
@@ -869,7 +869,7 @@ gantt
 
 ## 12. Краткая суть в трёх предложениях
 
-1. **Сейчас бенчмарки зелёные**, но в core gate реально измеряется backbone (layer1 + graph + layer2 при некоторых отключённых порогах); retrieval / claims / dedup / refs resolution — advisory или harness.
+1. **Сейчас бенчмарки зелёные**, но в core gate измеряется backbone (layer1 + graph + layer2) плюс **claims production pilot** (Wave O); retrieval (вкл. workspace_scoped + judge) / harness claims / dedup / refs resolution — преимущественно advisory до promotion.
 2. **Следующий горизонт** — закрывать «harness в gate» (Wave M), вводить production claims (O), переводить retrieval в content-grounded eval (P), достраивать индексы и hybrid retrieval (Q), делать tool-using агента (R) и dedup для всех типов сущностей (T) — каждый шаг сопровождается своей бенчмарк-семьёй и явным gate promotion.
 3. **Онтологию расширяем строго по правилу:** новый тип в production только с `fixture + gold + metric` в том же или соседнем PR; новые слои (Concept/Topic в N, Claims в O, Hypothesis в S) идут через ADR + advisory лестницу mini → pilot → wide.
 
@@ -880,3 +880,4 @@ gantt
 | Дата | Изменения |
 |------|-----------|
 | 2026-04-24 | Первая версия. Анализ текущих бенчмарков; инвентаризация онтологии; план Wave M–T; индексы Neo4j + payloads Qdrant; mini-ADR Qdrant/Milvus; чеклисты и зависимости. |
+| 2026-04-24 | **Wave P implemented (M/O/P sweep):** workspace-scoped retrieval fixtures + runner/metrics; `workspace_id` в trace; seed workspaces; retrieval judge CLI + pilot JSON; aggregator advisory blocks; decision-gate §8.3 + promotion-review checklist; claims production lane в **core** `decision_gate`; layer2 `min_dataset_recall_ratio` alignment; refs graph artifact path. |

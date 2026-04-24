@@ -1,0 +1,86 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+    "semantic_extraction_enabled": true,
+    "judge_prompt_fingerprint": "sha256-20:4a8a4e1fd59c0baace44",
+    "judge_schema_version": "retrieval_judge_v1",
+    "retrieval_artifact": "eval/results/current-retrieval-live-corpus-mini.json"
+  },
+  "summary": {
+    "case_count": 5,
+    "mean_weighted_score": 5.1,
+    "all_passed": false,
+    "retrieval_judge_eval": true
+  },
+  "cases": [
+    {
+      "case_id": "live_corpus_methods_wide",
+      "passed": true,
+      "weighted_score": 5.0,
+      "scores": {
+        "factuality": 2,
+        "coverage": 2,
+        "no_contradictions": 2,
+        "language": 2,
+        "justification": "The answer is mostly factual, but it does not directly address the question about single-shot detectors and their comparison to two-stage pipelines. The coverage is neutral because there is no gold reference snippet to compare against. The answer is free of contradictions and is written in clear English."
+      },
+      "wall_clock_seconds": 3.656
+    },
+    {
+      "case_id": "live_yolov1_architecture",
+      "passed": false,
+      "weighted_score": 3.7,
+      "scores": {
+        "factuality": 0,
+        "coverage": 3,
+        "no_contradictions": 2,
+        "language": 2,
+        "justification": "The answer fails to describe the three-step YOLO processing pipeline (resize, network, thresholding) as requested. Instead, it provides irrelevant context and citations. Since the gold reference snippet is empty, coverage is not penalized. The answer is free of contradictions and written in clear English."
+      },
+      "wall_clock_seconds": 2.593
+    },
+    {
+      "case_id": "live_yolov1_intro",
+      "passed": true,
+      "weighted_score": 6.7,
+      "scores": {
+        "factuality": 3,
+        "coverage": 3,
+        "no_contradictions": 2,
+        "language": 2,
+        "justification": "The answer is factually accurate, as it directly references the provided context. It also fully covers the question by explaining what YOLO is and how it differs from classifier-based sliding-window detectors. There are no contradictions in the answer. The language used is clear and coherent."
+      },
+      "wall_clock_seconds": 2.45
+    },
+    {
+      "case_id": "live_yolov1_methods_combo",
+      "passed": true,
+      "weighted_score": 5.7,
+      "scores": {
+        "factuality": 2,
+        "coverage": 3,
+        "no_contradictions": 2,
+        "language": 2,
+        "justification": "The answer is coherent and on-topic, but it does not provide specific methods or architectural blocks for object detection or how they position relative to two-stage detectors. The factuality score is reduced because the answer does not address the question directly. The coverage score is high because there is no gold reference snippet to compare against. The no_contradictions and language scores are high because the answer is clear and coherent."
+      },
+      "wall_clock_seconds": 2.784
+    },
+    {
+      "case_id": "live_yolov1_training",
+      "passed": false,
+      "weighted_score": 4.4,
+      "scores": {
+        "factuality": 1,
+        "coverage": 3,
+        "no_contradictions": 2,
+        "language": 1,
+        "justification": ""
+      },
+      "wall_clock_seconds": 1.639
+    }
+  ]
+}

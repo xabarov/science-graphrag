@@ -8,4 +8,5 @@ export default {
   "evidenceBody.openReader": "Открыть в чтении",
   "evidenceBody.openGraph": "Открыть в графе",
   "evidenceBody.continueAsk": "Продолжить во «Вопросах»",
+  "evidenceBody.filterClaimsOnly": "Только чанки с evidence из claims",
 };

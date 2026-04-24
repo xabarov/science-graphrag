@@ -6,7 +6,9 @@
   "min_method_names": 1,
   "expected_method_names_normalized": [
     "atss",
-    "adaptive training sample selection"
+    "adaptive training sample selection",
+    "fcos",
+    "retinanet"
   ],
   "expected_dataset_names_normalized": [
     "coco",

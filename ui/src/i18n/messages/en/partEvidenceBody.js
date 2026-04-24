@@ -8,4 +8,5 @@ export default {
   "evidenceBody.openReader": "Open in Reader",
   "evidenceBody.openGraph": "Open in Graph",
   "evidenceBody.continueAsk": "Continue in Ask",
+  "evidenceBody.filterClaimsOnly": "Only chunks with claim evidence",
 };

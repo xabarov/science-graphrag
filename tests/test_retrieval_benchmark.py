@@ -114,3 +114,106 @@ def test_discover_retrieval_strict_pilot_three_cases() -> None:
     cases = discover_retrieval_case_dirs(RETRIEVAL_FIXTURES, tier="strict_pilot")
     ids = {c.name for c in cases}
     assert ids == {"strict_pilot_methods", "strict_pilot_work_scoped", "strict_pilot_corpus_wide"}
+
+
+def test_discover_retrieval_workspace_scoped_six_cases() -> None:
+    root = RETRIEVAL_FIXTURES / "workspace_scoped"
+    cases = discover_retrieval_case_dirs(root, tier="workspace_scoped")
+    ids = {c.name for c in cases}
+    assert len(ids) == 6
+    assert ids == {
+        "ws_pilot_od_methods_overview",
+        "ws_pilot_od_chunk_anchor",
+        "ws_pilot_od_scoped_negative",
+        "ws_pilot_pdf_methods_overview",
+        "ws_pilot_pdf_chunk_anchor",
+        "ws_pilot_pdf_scoped_negative",
+    }
+
+
+def test_score_retrieval_workspace_scope_ok_when_trace_and_citations_match() -> None:
+    member = "work-a"
+    ga = GroundedAnswer(
+        answer="scoped",
+        citations=[{"chunk_fingerprint": "fp1", "work_id": member}],
+        graph_context={},
+        retrieval_trace={
+            "hit_count": 1,
+            "workspace_id": "ws-pilot-od",
+            "embedding": {"embedding_model": "hash-deterministic"},
+        },
+    )
+    gold = {
+        "workspace_id": "ws-pilot-od",
+        "expected_workspace_scope": True,
+        "workspace_member_work_ids": [member],
+        "forbidden_work_ids": ["external-work"],
+        "min_hit_count": 1,
+        "required_chunk_fingerprints": ["fp1"],
+    }
+    m = score_retrieval_answer(ga, gold)
+    assert m["workspace_scope_ok"] is True
+    assert m["trace_workspace_matches"] is True
+    assert m.get("out_of_scope_citation_work_ids") == []
+    assert m.get("forbidden_work_ids_leaked") == []
+    assert m["passed"] is True
+
+
+def test_score_retrieval_workspace_scope_fails_on_trace_workspace_mismatch() -> None:
+    ga = GroundedAnswer(
+        answer="x",
+        citations=[{"work_id": "work-a"}],
+        graph_context={},
+        retrieval_trace={"hit_count": 1, "workspace_id": "ws-other"},
+    )
+    gold = {
+        "workspace_id": "ws-pilot-od",
+        "expected_workspace_scope": True,
+        "workspace_member_work_ids": ["work-a"],
+    }
+    m = score_retrieval_answer(ga, gold)
+    assert m["trace_workspace_matches"] is False
+    assert m["workspace_scope_ok"] is False
+    assert m["passed"] is False
+
+
+def test_score_retrieval_workspace_scope_fails_on_forbidden_work_id() -> None:
+    forbidden = "external-uuid"
+    ga = GroundedAnswer(
+        answer="leak",
+        citations=[{"chunk_fingerprint": "fp1", "work_id": forbidden}],
+        graph_context={},
+        retrieval_trace={"hit_count": 1, "workspace_id": "ws-pilot-od"},
+    )
+    gold = {
+        "workspace_id": "ws-pilot-od",
+        "expected_workspace_scope": True,
+        "workspace_member_work_ids": ["work-a"],
+        "forbidden_work_ids": [forbidden],
+        "min_hit_count": 1,
+        "required_chunk_fingerprints": ["fp1"],
+    }
+    m = score_retrieval_answer(ga, gold)
+    assert forbidden in (m.get("forbidden_work_ids_leaked") or [])
+    assert m["workspace_scope_ok"] is False
+    assert m["passed"] is False
+
+
+def test_score_retrieval_contract_only_respects_workspace_scope() -> None:
+    ga = GroundedAnswer(
+        answer="x",
+        citations=[{"work_id": "outsider"}],
+        graph_context={},
+        retrieval_trace={"hit_count": 0, "embedding": {"x": 1}, "workspace_id": "ws-1"},
+    )
+    gold = {
+        "contract_only": True,
+        "expected_workspace_scope": True,
+        "workspace_id": "ws-1",
+        "workspace_member_work_ids": ["member-only"],
+        "forbidden_work_ids": ["outsider"],
+    }
+    m = score_retrieval_answer(ga, gold)
+    assert m["contract_only"] is True
+    assert m["workspace_scope_ok"] is False
+    assert m["passed"] is False

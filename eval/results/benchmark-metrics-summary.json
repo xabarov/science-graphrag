@@ -12,10 +12,13 @@
     "retrieval_merge_safe_mock": "eval/results/current-retrieval-merge-safe-mock.json",
     "retrieval_strict_pilot_mock": "eval/results/current-retrieval-strict-pilot-mock.json",
     "retrieval_live_corpus_mini": "eval/results/current-retrieval-live-corpus-mini.json",
+    "retrieval_workspace_scoped": "eval/results/current-retrieval-workspace-scoped.json",
+    "retrieval_judge_pilot": "eval/results/current-retrieval-judge-pilot.json",
     "claims_merge_contract": "eval/results/current-claims-merge-contract.json",
     "claims_mini_suite": "eval/results/current-claims-mini-suite.json",
     "claims_corpus_v2_mini_suite": "eval/results/current-claims-corpus-v2-mini.json",
     "claims_pilot_suite": "eval/results/current-claims-pilot-suite.json",
+    "claims_production_pilot_suite": "eval/results/current-claims-production-pilot.json",
     "references_resolution_contract": "eval/results/current-references-resolution-contract.json",
     "references_resolution_mini": "eval/results/current-references-resolution-mini.json",
     "references_resolution_graph": "eval/results/current-references-resolution-graph.json",
@@ -335,6 +338,56 @@
       "failed_count": 0,
       "failed_cases": [],
       "all_passed": true
+    },
+    "workspace_scoped": {
+      "artifact": "eval/results/current-retrieval-workspace-scoped.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1"
+      },
+      "summary": {
+        "case_count": 6,
+        "case_ids": [
+          "ws_pilot_od_chunk_anchor",
+          "ws_pilot_od_methods_overview",
+          "ws_pilot_od_scoped_negative",
+          "ws_pilot_pdf_chunk_anchor",
+          "ws_pilot_pdf_methods_overview",
+          "ws_pilot_pdf_scoped_negative"
+        ],
+        "all_passed": true,
+        "retrieval_eval": true
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true
+    },
+    "judge_pilot": {
+      "artifact": "eval/results/current-retrieval-judge-pilot.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "judge_prompt_fingerprint": "sha256-20:4a8a4e1fd59c0baace44",
+        "judge_schema_version": "retrieval_judge_v1"
+      },
+      "summary": {
+        "case_count": 5,
+        "mean_weighted_score": 5.1,
+        "all_passed": false,
+        "retrieval_judge_eval": true
+      },
+      "failed_count": 2,
+      "failed_cases": [
+        {
+          "case_id": "live_yolov1_architecture",
+          "error": null
+        },
+        {
+          "case_id": "live_yolov1_training",
+          "error": null
+        }
+      ],
+      "all_passed": false,
+      "mean_weighted_score": 5.1
     }
   },
   "claims_family": {
@@ -357,7 +410,8 @@
       },
       "failed_count": 0,
       "failed_cases": [],
-      "all_passed": true
+      "all_passed": true,
+      "mean_claim_recall": 1.0
     },
     "claims_mini": {
       "artifact": "eval/results/current-claims-mini-suite.json",
@@ -381,7 +435,8 @@
       },
       "failed_count": 0,
       "failed_cases": [],
-      "all_passed": true
+      "all_passed": true,
+      "mean_claim_recall": 1.0
     },
     "claims_corpus_v2_mini": {
       "artifact": "eval/results/current-claims-corpus-v2-mini.json",
@@ -405,7 +460,8 @@
       },
       "failed_count": 0,
       "failed_cases": [],
-      "all_passed": true
+      "all_passed": true,
+      "mean_claim_recall": 1.0
     },
     "claims_pilot": {
       "artifact": "eval/results/current-claims-pilot-suite.json",
@@ -434,7 +490,41 @@
       },
       "failed_count": 0,
       "failed_cases": [],
-      "all_passed": true
+      "all_passed": true,
+      "mean_claim_recall": 1.0
+    }
+  },
+  "claims_production_family": {
+    "role": "core",
+    "claims_pilot_production": {
+      "artifact": "eval/results/current-claims-production-pilot.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190"
+      },
+      "summary": {
+        "case_count": 10,
+        "case_ids": [
+          "corpus_cascade_rcnn_stages",
+          "corpus_centernet_triplet",
+          "corpus_cornernet_keypoints",
+          "corpus_detr_set_prediction",
+          "corpus_efficientdet_compound",
+          "corpus_faster_rcnn_rpn_shared",
+          "corpus_fpn_multiscale",
+          "corpus_mask_rcnn_mask_branch",
+          "corpus_retinanet_focal_imbalance",
+          "corpus_ssd_single_network"
+        ],
+        "all_passed": true,
+        "claims_eval": true
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true,
+      "mean_claim_recall": 1.0
     }
   },
   "references_resolution_family": {
@@ -457,7 +547,8 @@
       },
       "failed_count": 0,
       "failed_cases": [],
-      "all_passed": true
+      "all_passed": true,
+      "mean_claim_recall": null
     },
     "refs_mini": {
       "artifact": "eval/results/current-references-resolution-mini.json",
@@ -479,11 +570,29 @@
       },
       "failed_count": 0,
       "failed_cases": [],
-      "all_passed": true
+      "all_passed": true,
+      "mean_claim_recall": null
     },
     "refs_graph": {
-      "error": "missing_file",
-      "artifact": "eval/results/current-references-resolution-graph.json"
+      "artifact": "eval/results/current-references-resolution-graph.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190"
+      },
+      "summary": {
+        "case_count": 1,
+        "case_ids": [
+          "refs_contract_shape"
+        ],
+        "all_passed": true,
+        "references_resolution_eval": true
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true,
+      "mean_claim_recall": null
     }
   },
   "concept_topic_family": {
@@ -510,7 +619,8 @@
       },
       "failed_count": 0,
       "failed_cases": [],
-      "all_passed": true
+      "all_passed": true,
+      "mean_claim_recall": null
     }
   },
   "decision_gate": {
@@ -519,7 +629,10 @@
     "criteria": {
       "reference_all_passed": true,
       "layer1_nightly_failed_count": 0,
-      "layer2_nightly_failed_count": 0
+      "layer2_nightly_failed_count": 0,
+      "claims_production_artifact_missing": false,
+      "claims_production_all_passed": true,
+      "claims_production_mean_claim_recall": 1.0
     }
   }
 }

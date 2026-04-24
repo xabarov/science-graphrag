@@ -28,6 +28,7 @@ from science_graphrag.ingestion.enrichment.openalex import (
     fetch_work_by_doi,
 )
 from science_graphrag.ingestion.enrichment.ror import lookup_ror_id_optional
+from science_graphrag.ingestion.claims.extractor import extract_claims_llm
 from science_graphrag.ingestion.llm.semantic_extraction import extract_semantic_method_dataset
 from science_graphrag.ingestion.llm.stage_extraction import extract_stages_llm_first
 from science_graphrag.ingestion.normalize import normalize_text
@@ -39,7 +40,8 @@ from science_graphrag.storage.blobs import BlobStore
 from science_graphrag.storage.db import init_db
 from science_graphrag.storage.models_orm import DocumentRecord, IngestionRunRecord
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
-from science_graphrag.storage.qdrant_store import QdrantChunkStore
+from science_graphrag.storage.qdrant_claims_store import QdrantClaimsStore
+from science_graphrag.storage.qdrant_store import QdrantChunkStore, QdrantWorkEmbeddingStore
 from science_graphrag.utils.project_logging import configure_logging, get_logger
 
 log = get_logger("ingestion.pipeline")
@@ -382,6 +384,7 @@ def ingest_document(
     session: Session | None = None,
     skip_existing_sha: bool = False,
     force_new_document: bool = False,
+    ingest_workspace_ids: list[str] | None = None,
 ) -> tuple[str, str]:
     """
     Ingest one PDF or text file. Returns (document_id, work_id).
@@ -521,6 +524,29 @@ def ingest_document(
                     overlap_tokens=settings.chunk_overlap_tokens,
                 ),
             )
+            claim_rows: list[Any] = []
+            if settings.claims_extraction_enabled:
+                chunk_dicts = [
+                    {
+                        "text": c.text,
+                        "chunk_fingerprint": c.chunk_fingerprint,
+                        "section_path": c.section_path,
+                    }
+                    for c in doc_chunks
+                ]
+                with chain_span(
+                    "claims_extraction",
+                    {"document.id": doc_id, "work.id": work_id, "chunks": len(chunk_dicts)},
+                ):
+                    claim_rows = extract_claims_llm(
+                        chunk_dicts,
+                        work_id,
+                        settings,
+                        force_benchmark=False,
+                    )
+                neo.detach_delete_claims_for_work(work_id)
+                neo.upsert_claims_with_evidence(work_id, claim_rows)
+
             embedder = (
                 try_sentence_transformer(settings.embedding_model)
                 if settings.embedding_model
@@ -528,6 +554,23 @@ def ingest_document(
             )
             chunk_texts = [c.text for c in doc_chunks]
             vectors = embedder.embed(chunk_texts)
+            first_author = ""
+            if authorships:
+                ordered_auth = sorted(authorships, key=lambda x: x.author_position or 0)
+                first_author = (ordered_auth[0].author_raw_name or "").strip()
+            summary_text = f"{draft.title or ''}\n{draft.abstract or ''}\n{first_author}"[:8000]
+            w_summary_vec = embedder.embed([summary_text])[0]
+            qw = QdrantWorkEmbeddingStore(
+                settings.qdrant_url,
+                settings.qdrant_work_embeddings_collection,
+                vector_dim=embedder.dim,
+            )
+            qw.upsert_work_summary(
+                work_id=work_id,
+                vector=w_summary_vec,
+                embedding_model=settings.embedding_model or "hash-deterministic",
+                workspace_ids=ingest_workspace_ids or [],
+            )
             q = QdrantChunkStore(
                 settings.qdrant_url,
                 settings.qdrant_collection,
@@ -551,7 +594,25 @@ def ingest_document(
                     document_chunks=doc_chunks,
                     vectors=vectors,
                     embedding_model=settings.embedding_model or "hash-deterministic",
+                    workspace_ids=ingest_workspace_ids or [],
                 )
+            if settings.claims_extraction_enabled and claim_rows:
+                with chain_span(
+                    "qdrant_claims_upsert",
+                    {"claims": len(claim_rows), "embedding": settings.embedding_model or "hash"},
+                ):
+                    qc = QdrantClaimsStore(
+                        settings.qdrant_url,
+                        settings.qdrant_claims_collection,
+                        vector_dim=embedder.dim,
+                    )
+                    qc.delete_points_by_work_id(work_id=work_id)
+                    qc.upsert_claims(
+                        work_id=work_id,
+                        claims=claim_rows,
+                        embedder=embedder,
+                        embedding_model=settings.embedding_model or "hash-deterministic",
+                    )
         finally:
             neo.close()
 
@@ -564,6 +625,7 @@ def ingest_document(
                     existing.source_path = str(path.resolve())
                     existing.mime_type = mime
                     existing.sha256 = sha
+                    existing.work_id = work_id
             else:
                 session.add(
                     DocumentRecord(
@@ -571,6 +633,7 @@ def ingest_document(
                         sha256=sha,
                         source_path=str(path.resolve()),
                         mime_type=mime,
+                        work_id=work_id,
                     ),
                 )
             session.add(

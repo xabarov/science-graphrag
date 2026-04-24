@@ -14,11 +14,20 @@ from eval.claims.runner import discover_claims_case_dirs, extract_claims_product
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "benchmarks" / "claims"
 
 
-def test_production_claims_extractor_matches_ingestion_stub() -> None:
-    """Benchmark ``production`` lane uses the same stub as ingestion until claims ship."""
+def test_production_claims_extractor_matches_ingestion_stub(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Production lane returns ([], diagnostics) without LLM credentials (CI-safe)."""
 
-    preds = extract_claims_production_path("any text", {})
+    for key in (
+        "SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY",
+        "MAIN_LLM_API_KEY",
+        "API_KEY",
+    ):
+        monkeypatch.delenv(key, raising=False)
+    raw = extract_claims_production_path("any text", {})
+    assert isinstance(raw, tuple)
+    preds, diag = raw
     assert preds == []
+    assert diag.get("llm_error_message") == "missing extraction_llm_api_key"
 
 
 def test_score_claims_contract_only() -> None:

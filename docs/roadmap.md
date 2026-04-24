@@ -217,7 +217,7 @@ flowchart LR
 
 **Измеримый контракт semantic-stage (MVP):** выход и деградации — [specs/extraction/semantic-method-dataset-v1.md](specs/extraction/semantic-method-dataset-v1.md); в отчётах benchmark обязательны **`benchmark_run_metadata`** с `layer1_prompt_fingerprint` / `semantic_prompt_fingerprint` (или эквивалент) и идентификатором модели — без этого прогон не считается сопоставимым с предыдущими. На эталонных кейсах layer-2 (`yolov1_semantic` и suite `nightly_semantic`) не допускаются **необъяснимые** `llm_empty_result` при доступном LLM; остаточные fail классифицируются по [runbooks/benchmark-stabilization-triage.md](runbooks/benchmark-stabilization-triage.md).
 
-**Статус Phase 3 (2026-03-31):** контракт и спецификация зафиксированы; стабилизация поведения на эталоне — Wave B ([runbooks/roadmap-next-waves.md](runbooks/roadmap-next-waves.md)).
+**Статус Phase 3 (2026-03-31):** контракт и спецификация зафиксированы; стабилизация поведения на эталоне — Wave B ([runbooks/roadmap-next-waves.md](runbooks/roadmap-next-waves.md)). **Claims / evidence (Wave O):** production LLM stage + Neo4j + Qdrant + `GET /v1/works/{id}/claims` — [analysis/ontology-benchmarks-roadmap-2026-04-24.md](analysis/ontology-benchmarks-roadmap-2026-04-24.md) §7.4, флаг `SCIENCE_GRAPHRAG_CLAIMS_EXTRACTION_ENABLED`.
 
 ---
 

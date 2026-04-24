@@ -1,0 +1,399 @@
+"""Wave L workspace dedup: scan, conflicts queue, decide, audit."""
+
+from __future__ import annotations
+
+import uuid
+from datetime import UTC, datetime
+from typing import Any, Literal
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
+from sqlalchemy import create_engine, desc, select
+from sqlalchemy.orm import sessionmaker
+
+from science_graphrag.api.dedup_jobs import (
+    dedup_job_to_dict,
+    get_dedup_job,
+    start_author_dedup_scan_job,
+    start_work_dedup_scan_job,
+)
+from science_graphrag.config import Settings, get_settings
+from science_graphrag.ingestion.embeddings import resolve_embedding_dim
+from science_graphrag.storage.db import init_db
+from science_graphrag.storage.models_orm import (
+    AuthorDedupConflict,
+    WorkDedupConflict,
+    WorkDedupMergeLog,
+)
+from science_graphrag.storage.neo4j_store import Neo4jGraphStore
+from science_graphrag.storage.qdrant_store import (
+    QdrantAuthorEmbeddingStore,
+    QdrantChunkStore,
+    QdrantWorkEmbeddingStore,
+)
+
+router = APIRouter(tags=["workspace-dedup"])
+
+
+def _store(settings: Settings) -> Neo4jGraphStore:
+    return Neo4jGraphStore(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password)
+
+
+def _session_factory(settings: Settings):
+    engine = create_engine(settings.database_url, pool_pre_ping=True)
+    init_db(engine)
+    return sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
+
+
+class DedupDecideBody(BaseModel):
+    decision: Literal["merge_a", "merge_b", "merge", "keep_separate", "skip"] = Field(
+        ...,
+        description="merge_a/merge_b keep that side; merge + keep_work_id is an alias for the matching side",
+    )
+    keep_work_id: str | None = Field(
+        default=None,
+        description="When decision is merge, the canonical work id (must equal work_id_a or work_id_b).",
+    )
+
+
+class AuthorDedupDecideBody(BaseModel):
+    decision: Literal["merge_a", "merge_b", "keep_separate", "skip"]
+
+
+@router.post("/{workspace_id}/dedup/scan")
+def post_dedup_scan(
+    workspace_id: str,
+    settings: Settings = Depends(get_settings),
+) -> dict[str, Any]:
+    store = _store(settings)
+    try:
+        if not store.workspace_get(workspace_id):
+            raise HTTPException(status_code=404, detail="workspace_not_found")
+    finally:
+        store.close()
+    rec = start_work_dedup_scan_job(workspace_id=workspace_id, settings=settings)
+    return {"job_id": rec.job_id, "kind": rec.kind, "status": rec.status}
+
+
+@router.get("/{workspace_id}/dedup/jobs/{job_id}")
+def get_dedup_scan_job(
+    workspace_id: str,
+    job_id: str,
+    settings: Settings = Depends(get_settings),
+) -> dict[str, Any]:
+    store = _store(settings)
+    try:
+        if not store.workspace_get(workspace_id):
+            raise HTTPException(status_code=404, detail="workspace_not_found")
+    finally:
+        store.close()
+    rec = get_dedup_job(job_id)
+    if not rec or rec.workspace_id != workspace_id:
+        raise HTTPException(status_code=404, detail="job_not_found")
+    return dedup_job_to_dict(rec)
+
+
+@router.get("/{workspace_id}/dedup/conflicts")
+def get_dedup_conflicts(
+    workspace_id: str,
+    status: str = Query(default="pending", description="pending | all"),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    settings: Settings = Depends(get_settings),
+) -> dict[str, Any]:
+    store = _store(settings)
+    try:
+        if not store.workspace_get(workspace_id):
+            raise HTTPException(status_code=404, detail="workspace_not_found")
+    finally:
+        store.close()
+
+    factory = _session_factory(settings)
+    with factory() as session:
+        q = select(WorkDedupConflict).where(WorkDedupConflict.workspace_id == workspace_id)
+        if status == "pending":
+            q = q.where(WorkDedupConflict.status == "pending")
+        q = q.order_by(desc(WorkDedupConflict.created_at)).offset(offset).limit(limit)
+        rows = list(session.scalars(q).all())
+        items = [
+            {
+                "id": r.id,
+                "work_id_a": r.work_id_a,
+                "work_id_b": r.work_id_b,
+                "similarity_score": r.similarity_score,
+                "check_mode": r.check_mode,
+                "llm_same_work": r.llm_same_work,
+                "llm_reason": r.llm_reason,
+                "status": r.status,
+                "decision": r.decision,
+                "keep_work_id": r.keep_work_id,
+                "fingerprint": r.fingerprint,
+                "created_at": r.created_at.isoformat() if r.created_at else None,
+                "decided_at": r.decided_at.isoformat() if r.decided_at else None,
+            }
+            for r in rows
+        ]
+        return {"items": items, "total": len(items)}
+
+
+@router.post("/{workspace_id}/dedup/conflicts/{conflict_id}/decide")
+def post_dedup_conflict_decide(
+    workspace_id: str,
+    conflict_id: str,
+    body: DedupDecideBody,
+    settings: Settings = Depends(get_settings),
+) -> dict[str, Any]:
+    store = _store(settings)
+    try:
+        ws = store.workspace_get(workspace_id)
+        if not ws:
+            raise HTTPException(status_code=404, detail="workspace_not_found")
+        allowed = set(str(x) for x in (ws.get("work_ids") or []))
+    finally:
+        store.close()
+
+    factory = _session_factory(settings)
+    with factory() as session:
+        row = session.get(WorkDedupConflict, conflict_id)
+        if not row or row.workspace_id != workspace_id:
+            raise HTTPException(status_code=404, detail="conflict_not_found")
+        if row.status != "pending":
+            raise HTTPException(status_code=400, detail="conflict_already_resolved")
+
+        now = datetime.now(UTC)
+        if body.decision in ("keep_separate", "skip"):
+            row.status = "skipped" if body.decision == "skip" else "rejected"
+            row.decision = body.decision
+            row.decided_at = now
+            session.commit()
+            return {"ok": True, "merged": False, "decision": body.decision}
+
+        eff_decision = body.decision
+        if eff_decision == "merge":
+            kid = (body.keep_work_id or "").strip()
+            if not kid:
+                raise HTTPException(status_code=400, detail="keep_work_id_required_for_merge")
+            if kid == row.work_id_a:
+                eff_decision = "merge_a"
+            elif kid == row.work_id_b:
+                eff_decision = "merge_b"
+            else:
+                raise HTTPException(status_code=400, detail="keep_work_id_not_in_conflict_pair")
+
+        keep = row.work_id_a if eff_decision == "merge_a" else row.work_id_b
+        drop = row.work_id_b if eff_decision == "merge_a" else row.work_id_a
+        if keep not in allowed or drop not in allowed:
+            raise HTTPException(status_code=400, detail="works_must_belong_to_workspace")
+
+        neo = _store(settings)
+        try:
+            merged = neo.merge_work_into_canonical(keep, drop)
+        finally:
+            neo.close()
+
+        if not merged:
+            raise HTTPException(status_code=500, detail="merge_failed")
+
+        dim = resolve_embedding_dim(embedding_model=settings.embedding_model)
+        qdr = QdrantChunkStore(settings.qdrant_url, settings.qdrant_collection, vector_dim=dim)
+        qdr.repoint_work_id_payload(from_work_id=drop, to_work_id=keep)
+        qw = QdrantWorkEmbeddingStore(
+            settings.qdrant_url,
+            settings.qdrant_work_embeddings_collection,
+            vector_dim=dim,
+        )
+        qw.delete_by_work_id(work_id=drop)
+        neo2 = _store(settings)
+        try:
+            neo2.workspace_remove_work(workspace_id, drop)
+        finally:
+            neo2.close()
+
+        row.status = "approved"
+        row.decision = eff_decision
+        row.keep_work_id = keep
+        row.decided_at = now
+        session.add(
+            WorkDedupMergeLog(
+                id=str(uuid.uuid4()),
+                workspace_id=workspace_id,
+                keep_work_id=keep,
+                drop_work_id=drop,
+                conflict_id=conflict_id,
+            ),
+        )
+        session.commit()
+        return {"ok": True, "merged": True, "keep_work_id": keep, "drop_work_id": drop}
+
+
+@router.get("/{workspace_id}/dedup/audit")
+def get_dedup_audit(
+    workspace_id: str,
+    limit: int = Query(default=80, ge=1, le=500),
+    settings: Settings = Depends(get_settings),
+) -> dict[str, Any]:
+    store = _store(settings)
+    try:
+        if not store.workspace_get(workspace_id):
+            raise HTTPException(status_code=404, detail="workspace_not_found")
+    finally:
+        store.close()
+
+    factory = _session_factory(settings)
+    with factory() as session:
+        q = (
+            select(WorkDedupMergeLog)
+            .where(WorkDedupMergeLog.workspace_id == workspace_id)
+            .order_by(desc(WorkDedupMergeLog.created_at))
+            .limit(limit)
+        )
+        rows = list(session.scalars(q).all())
+        return {
+            "items": [
+                {
+                    "id": r.id,
+                    "keep_work_id": r.keep_work_id,
+                    "drop_work_id": r.drop_work_id,
+                    "conflict_id": r.conflict_id,
+                    "created_at": r.created_at.isoformat() if r.created_at else None,
+                }
+                for r in rows
+            ],
+            "total": len(rows),
+        }
+
+
+# --- Author dedup (L2) ---
+
+
+@router.post("/{workspace_id}/dedup/authors/scan")
+def post_author_dedup_scan(
+    workspace_id: str,
+    settings: Settings = Depends(get_settings),
+) -> dict[str, Any]:
+    store = _store(settings)
+    try:
+        if not store.workspace_get(workspace_id):
+            raise HTTPException(status_code=404, detail="workspace_not_found")
+    finally:
+        store.close()
+    rec = start_author_dedup_scan_job(workspace_id=workspace_id, settings=settings)
+    return {"job_id": rec.job_id, "kind": rec.kind, "status": rec.status}
+
+
+@router.get("/{workspace_id}/dedup/authors/conflicts")
+def get_author_dedup_conflicts(
+    workspace_id: str,
+    status: str = Query(default="pending"),
+    limit: int = Query(default=50, ge=1, le=200),
+    offset: int = Query(default=0, ge=0),
+    settings: Settings = Depends(get_settings),
+) -> dict[str, Any]:
+    store = _store(settings)
+    try:
+        if not store.workspace_get(workspace_id):
+            raise HTTPException(status_code=404, detail="workspace_not_found")
+    finally:
+        store.close()
+
+    factory = _session_factory(settings)
+    with factory() as session:
+        q = select(AuthorDedupConflict).where(AuthorDedupConflict.workspace_id == workspace_id)
+        if status == "pending":
+            q = q.where(AuthorDedupConflict.status == "pending")
+        q = q.order_by(desc(AuthorDedupConflict.created_at)).offset(offset).limit(limit)
+        rows = list(session.scalars(q).all())
+        items = [
+            {
+                "id": r.id,
+                "author_id_a": r.author_id_a,
+                "author_id_b": r.author_id_b,
+                "similarity_score": r.similarity_score,
+                "check_mode": r.check_mode,
+                "llm_same_author": r.llm_same_author,
+                "llm_reason": r.llm_reason,
+                "status": r.status,
+                "decision": r.decision,
+                "keep_author_id": r.keep_author_id,
+                "created_at": r.created_at.isoformat() if r.created_at else None,
+            }
+            for r in rows
+        ]
+        return {"items": items, "total": len(items)}
+
+
+@router.post("/{workspace_id}/dedup/authors/conflicts/{conflict_id}/decide")
+def post_author_dedup_decide(
+    workspace_id: str,
+    conflict_id: str,
+    body: AuthorDedupDecideBody,
+    settings: Settings = Depends(get_settings),
+) -> dict[str, Any]:
+    store = _store(settings)
+    try:
+        if not store.workspace_get(workspace_id):
+            raise HTTPException(status_code=404, detail="workspace_not_found")
+    finally:
+        store.close()
+
+    factory = _session_factory(settings)
+    with factory() as session:
+        row = session.get(AuthorDedupConflict, conflict_id)
+        if not row or row.workspace_id != workspace_id:
+            raise HTTPException(status_code=404, detail="conflict_not_found")
+        if row.status != "pending":
+            raise HTTPException(status_code=400, detail="conflict_already_resolved")
+
+        now = datetime.now(UTC)
+        if body.decision in ("keep_separate", "skip"):
+            row.status = "skipped" if body.decision == "skip" else "rejected"
+            row.decision = body.decision
+            row.decided_at = now
+            session.commit()
+            return {"ok": True, "merged": False}
+
+        keep = row.author_id_a if body.decision == "merge_a" else row.author_id_b
+        drop = row.author_id_b if body.decision == "merge_a" else row.author_id_a
+
+        neo = _store(settings)
+        try:
+            merged = neo.merge_author_into_canonical(keep, drop)
+        finally:
+            neo.close()
+
+        if merged:
+            dim = resolve_embedding_dim(embedding_model=settings.embedding_model)
+            ast = QdrantAuthorEmbeddingStore(
+                settings.qdrant_url,
+                settings.qdrant_author_embeddings_collection,
+                vector_dim=dim,
+            )
+            ast.delete_by_author_id(author_id=drop)
+
+        row.status = "approved"
+        row.decision = body.decision
+        row.keep_author_id = keep
+        row.decided_at = now
+        session.commit()
+        return {"ok": True, "merged": bool(merged), "keep_author_id": keep, "drop_author_id": drop}
+
+
+@router.post("/{workspace_id}/dedup/institutions/scan")
+def post_institution_dedup_scan(
+    workspace_id: str,
+    settings: Settings = Depends(get_settings),
+) -> dict[str, Any]:
+    store = _store(settings)
+    try:
+        if not store.workspace_get(workspace_id):
+            raise HTTPException(status_code=404, detail="workspace_not_found")
+    finally:
+        store.close()
+    return {
+        "gated": True,
+        "message": (
+            "Institution/venue smart dedup is gated by merge-catalog policy "
+            "(docs/specs/merge-catalog-wave-h.md). No graph changes."
+        ),
+        "items": [],
+    }

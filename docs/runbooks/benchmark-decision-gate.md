@@ -89,21 +89,41 @@ Single-case retest после правок gold (если лежат в `eval/re
 
 Пока **reference** стабильна, допустимо **параллельно** вести документацию Phase 2, доработки ingestion и подготовку контрактов Phase 5/6 — но **закрепление** Wave B/C/D в смысле «готово к следующему этапу» опирается на таблицу выше и на сводку агрегатора. Остаточный долг nightly закрывается через gold/runtime — см. [benchmark-stabilization-triage.md](benchmark-stabilization-triage.md).
 
-## 8. Retrieval / citation family (advisory)
+## 8. Retrieval / citation family (advisory) и связанные артефакты
 
-Семейство `POST /v1/query` **не входит** в автоматический `decision` (GO / CONDITIONAL-GO / NO-GO): оно не может «уронить» gate при красном retrieval-only прогоне, пока политика явно не переведёт lane в blocking.
+Семейство `POST /v1/query` **не входит** в автоматический `decision` (GO / CONDITIONAL-GO / NO-GO): оно не может «уронить» gate при красном retrieval-only прогоне, пока политика явно не переведёт lane в blocking. **Исключение:** production **claims** lane (Wave O) после promotion участвует в `decision_gate` — см. §8.1 и `scripts/aggregate_benchmark_metrics.py`.
 
 - **Где смотреть:** секция *Retrieval family (advisory)* в [`eval/results/benchmark-metrics-summary.md`](../../eval/results/benchmark-metrics-summary.md) (генерируется агрегатором из JSON-артефактов ниже).
 - **Артефакты по умолчанию (mock, CI-safe):**
   - merge-safe contract: [`eval/results/current-retrieval-merge-safe-mock.json`](../../eval/results/current-retrieval-merge-safe-mock.json)
   - strict pilot (fingerprint gold, mock): [`eval/results/current-retrieval-strict-pilot-mock.json`](../../eval/results/current-retrieval-strict-pilot-mock.json)
 - **Live mini-tier (при наличии файла):** [`eval/results/current-retrieval-live-corpus-mini.json`](../../eval/results/current-retrieval-live-corpus-mini.json) — поднимается в сводке агрегатора; по-прежнему advisory.
-- **Claims (при наличии файлов):** [`eval/results/current-claims-merge-contract.json`](../../eval/results/current-claims-merge-contract.json), [`eval/results/current-claims-mini-suite.json`](../../eval/results/current-claims-mini-suite.json), [`eval/results/current-claims-corpus-v2-mini.json`](../../eval/results/current-claims-corpus-v2-mini.json), [`eval/results/current-claims-pilot-suite.json`](../../eval/results/current-claims-pilot-suite.json) — см. [`benchmark-pilot-advisory-runs.md`](benchmark-pilot-advisory-runs.md).
+- **Workspace-scoped retrieval (Wave P, advisory):** [`eval/results/current-retrieval-workspace-scoped.json`](../../eval/results/current-retrieval-workspace-scoped.json) — tier `workspace_scoped`; перед live-прогоном: `scripts/seed_benchmark_workspaces.py` + Qdrant backfill; `--retrieval-workspace-scoped-json`.
+- **Retrieval LLM-judge pilot (Wave P, advisory):** [`eval/results/current-retrieval-judge-pilot.json`](../../eval/results/current-retrieval-judge-pilot.json) — `science-graphrag-retrieval-judge-benchmark` поверх JSON runner; `--retrieval-judge-json`; не влияет на `decision`.
+- **Claims (при наличии файлов):** [`eval/results/current-claims-merge-contract.json`](../../eval/results/current-claims-merge-contract.json), [`eval/results/current-claims-mini-suite.json`](../../eval/results/current-claims-mini-suite.json), [`eval/results/current-claims-corpus-v2-mini.json`](../../eval/results/current-claims-corpus-v2-mini.json), [`eval/results/current-claims-pilot-suite.json`](../../eval/results/current-claims-pilot-suite.json) — см. [`benchmark-pilot-advisory-runs.md`](benchmark-pilot-advisory-runs.md); **advisory** (harness / merge contract).
+- **Claims — production LLM lane (Wave O, core gate):** [`eval/results/current-claims-production-pilot.json`](../../eval/results/current-claims-production-pilot.json) — `science-graphrag-claims-benchmark --suite --tier claims_pilot --extractor production`; **входит** в `decision_gate` (см. §8.1); сводка: секция *Claims production lane* в `benchmark-metrics-summary.md`; путь: `--claims-production-json`.
 - **References resolution (при наличии файлов):** [`eval/results/current-references-resolution-contract.json`](../../eval/results/current-references-resolution-contract.json), [`eval/results/current-references-resolution-mini.json`](../../eval/results/current-references-resolution-mini.json) — см. [`benchmark-family-references-resolution-v1.md`](../specs/benchmark-family-references-resolution-v1.md).
 - **References resolution — graph lane (Neo4j, опционально):** [`eval/results/current-references-resolution-graph.json`](../../eval/results/current-references-resolution-graph.json) — прогон `science-graphrag-references-resolution-benchmark … --resolver graph` на поднятом стеке; **advisory**, не влияет на `decision`. Снимок в агрегаторе: `--refs-graph-json` (по умолчанию путь выше).
 - **Concept / ResearchTopic (Wave N, ontology v1.5):** [`eval/results/current-concept-topic-mini.json`](../../eval/results/current-concept-topic-mini.json) — suite `science-graphrag-concept-topic-benchmark --suite --tier concept_topic_mini` (harness по `anchor_phrase`); **advisory**, **без** узлов `:Concept` / `:ResearchTopic` в production Neo4j. Сводка в агрегаторе: секция *Concept / ResearchTopic family*; путь по умолчанию переопределяется флагом `--concept-topic-json`. Спека: [`semantic-concept-topic-v1.md`](../specs/extraction/semantic-concept-topic-v1.md), ADR: [`013-concept-research-topic-ontology-v1-5.md`](../adr/013-concept-research-topic-ontology-v1-5.md).
+- **Живой pilot / nightly (retrieval):** после захвата реальных `chunk_fingerprint` на подписанном корпусе обновляйте фикстуры в `tests/fixtures/benchmarks/retrieval/` и при необходимости пути в агрегаторе; см. [retrieval-eval-v1.md](../benchmarks/retrieval-eval-v1.md), [user-journeys-retrieval-v1.md](user-journeys-retrieval-v1.md).
+- **Live mini-tier (`live_corpus_mini`):** пять вопросов с замороженными отпечатками на пилотном корпусе — см. [retrieval-live-tier-v1.md](../benchmarks/retrieval-live-tier-v1.md); по-прежнему **advisory**, без `--mock-answer`.
 
-### 8.1 Promotion: references resolution graph lane → core
+**Claims / epistemic (Wave H1):** семья `eval/claims/` и фикстуры `tests/fixtures/benchmarks/claims/` — в основном **advisory** (harness / contract); **production lane** Wave O — в **core** `decision_gate` (см. §8.1). Документация: [ontology-claims-benchmark-v1.md](../benchmarks/ontology-claims-benchmark-v1.md), [benchmark-program-status.md](benchmark-program-status.md).
+
+**References resolution (v1 harness):** семья `eval/references_resolution/` и фикстуры `tests/fixtures/benchmarks/references_resolution/` — **advisory**; см. [benchmark-family-references-resolution-v1.md](../specs/benchmark-family-references-resolution-v1.md).
+
+### 8.1 Promotion: claims production extractor → core (Wave O)
+
+**Статус:** production lane **promoted to core** — `claims_production_family.role = core` в агрегаторе; `_decision_gate` требует наличия артефакта `current-claims-production-pilot.json`, `summary.all_passed = true` и средний `claim_recall ≥ 0.8` (при отсутствии файла — **CONDITIONAL-GO**, если иначе GO).
+
+Историческое условие стабилизации (см. [`benchmark-family-promotion-review.md`](benchmark-family-promotion-review.md)):
+
+- **7 ночей подряд** tier `claims_pilot` зелёный с `--extractor production`, `claim_recall ≥ 0.8` без правки gold.
+- Harness lane (`--extractor harness`) остаётся зелёным (регрессионный якорь).
+
+Остальные claims-артефакты (merge contract, mini, harness pilot) остаются **advisory**.
+
+### 8.2 Promotion: references resolution graph lane → core
 
 Условие (см. также [`benchmark-family-promotion-review.md`](benchmark-family-promotion-review.md)):
 
@@ -111,11 +131,16 @@ Single-case retest после правок gold (если лежат в `eval/re
 - Нет хронических **infra** fail (Bolt timeout, пустая БД без fixture works).
 
 После выполнения — review по чеклисту promotion, обновление [`benchmark-program-status.md`](benchmark-program-status.md), при необходимости включение lane в blocking `decision` (отдельное решение мейнтейнеров).
-- **Живой pilot / nightly:** после захвата реальных `chunk_fingerprint` на подписанном корпусе обновляйте фикстуры в `tests/fixtures/benchmarks/retrieval/` и при необходимости пути в агрегаторе; см. [retrieval-eval-v1.md](../benchmarks/retrieval-eval-v1.md), [user-journeys-retrieval-v1.md](user-journeys-retrieval-v1.md).
-- **Live mini-tier (`live_corpus_mini`):** пять вопросов с замороженными отпечатками на пилотном корпусе — см. [retrieval-live-tier-v1.md](../benchmarks/retrieval-live-tier-v1.md); по-прежнему **advisory**, без `--mock-answer`.
-
-**Claims / epistemic (Wave H1):** семья `eval/claims/` и фикстуры `tests/fixtures/benchmarks/claims/` — **advisory**; см. [ontology-claims-benchmark-v1.md](../benchmarks/ontology-claims-benchmark-v1.md), сводка программы — [benchmark-program-status.md](benchmark-program-status.md).
-
-**References resolution (v1 harness):** семья `eval/references_resolution/` и фикстуры `tests/fixtures/benchmarks/references_resolution/` — **advisory**; см. [benchmark-family-references-resolution-v1.md](../specs/benchmark-family-references-resolution-v1.md).
 
 Если в будущем retrieval станет **blocking** lane, зафиксируйте это здесь и в `scripts/aggregate_benchmark_metrics.py` (критерии fail/pass и preconditions корпуса).
+
+### 8.3 Promotion roadmap: retrieval workspace-scoped + LLM-judge → core (Wave P)
+
+Пока **не** в `_decision_gate`. Условие для смены политики (после review по [`benchmark-family-promotion-review.md`](benchmark-family-promotion-review.md)):
+
+- **14 ночей подряд:** suite `workspace_scoped` зелёная (`summary.all_passed = true`) на зафиксированном пилотном стеке (Neo4j workspaces `ws-pilot-*` + Qdrant `workspace_ids` после `scripts/seed_benchmark_workspaces.py`).
+- **14 ночей подряд:** judge pilot `mean_weighted_score ≥ 4.5/6` в [`eval/results/current-retrieval-judge-pilot.json`](../../eval/results/current-retrieval-judge-pilot.json) (запуск `science-graphrag-retrieval-judge-benchmark` поверх `current-retrieval-live-corpus-mini.json` или согласованного входа).
+
+**Митигация overfit judge:** держать **~30% holdout** кейсов вне nightly snapshot (`eval/results/current-retrieval-judge-holdout.json`, недельный прогон), не подмешивать holdout в текущий judge pilot при тюнинге промпта/модели.
+
+После выполнения — чеклист в promotion-review, обновление [`benchmark-program-status.md`](benchmark-program-status.md), явное включение lane в `aggregate_benchmark_metrics._decision_gate` (только решение мейнтейнеров).

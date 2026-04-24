@@ -14,13 +14,34 @@ from eval.bench_common import run_single_case_json_outputs, run_suite_cli_flow
 from eval.claims.heuristic_extract import extract_claims_anchor_harness
 from eval.claims.metrics import score_claims_extraction
 from science_graphrag.config import Settings, get_settings
+from science_graphrag.ingestion.claims.extractor import (
+    claim_drafts_to_predictions,
+    extract_claims_llm,
+)
 from science_graphrag.ingestion.claims.stub import extract_claims_stub
 
 
-def extract_claims_production_path(article: str, _gold: dict[str, Any]) -> list[dict[str, Any]]:
-    """Same entrypoint as ingestion until ontology-claims-v1 ships (currently stub)."""
+def extract_claims_production_path(
+    article: str,
+    _gold: dict[str, Any],
+) -> list[dict[str, Any]] | tuple[list[dict[str, Any]], dict[str, Any]]:
+    """LLM production lane (``force_benchmark`` bypasses ingest feature flag).
 
-    return extract_claims_stub(article)
+    Returns ``(predictions, diagnostics)`` so ``run_claims_case`` can surface LLM/drop counts.
+    """
+
+    settings = get_settings()
+    fp = "benchmark_inline"
+    chunks = [{"text": article, "chunk_fingerprint": fp, "section_path": None}]
+    diag: dict[str, Any] = {}
+    drafts = extract_claims_llm(
+        chunks,
+        "benchmark_eval",
+        settings,
+        force_benchmark=True,
+        diagnostics=diag,
+    )
+    return claim_drafts_to_predictions(drafts), diag
 
 
 def _load_claims_case_tiers(fixtures_root: Path) -> dict[str, list[str]] | None:
@@ -96,10 +117,16 @@ def run_claims_case(
     fn = extract_fn or extract_claims_anchor_harness
 
     started = perf_counter()
-    preds = fn(article, gold)
+    raw = fn(article, gold)
+    preds: list[dict[str, Any]]
+    extraction_diagnostics: dict[str, Any] = {}
+    if isinstance(raw, tuple) and len(raw) == 2 and isinstance(raw[1], dict):
+        preds, extraction_diagnostics = raw[0], raw[1]
+    else:
+        preds = raw  # type: ignore[assignment]
     elapsed = perf_counter() - started
     metrics = score_claims_extraction(preds, gold)
-    return {
+    out: dict[str, Any] = {
         "case_id": root.name,
         "metrics": metrics,
         "predictions": preds,
@@ -107,6 +134,9 @@ def run_claims_case(
         "extractor": getattr(fn, "__name__", str(fn)),
         "extraction_llm_enabled": s.extraction_llm_enabled,
     }
+    if extraction_diagnostics:
+        out["extraction_diagnostics"] = extraction_diagnostics
+    return out
 
 
 def _claims_tier_is_defined(tiers: dict[str, list[str]], tier: str) -> bool:

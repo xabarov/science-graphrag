@@ -9,8 +9,8 @@
       "claim_id": "od_corpus_cornernet_paired_keypoints",
       "claim_type": "method",
       "polarity": "neutral",
-      "anchor_phrase": "eliminate the need for designing a set of anchor boxes",
-      "claim_text_normalized": "eliminate the need for designing a set of anchor boxes"
+      "anchor_phrase": "the need for designing a set of anchor boxes",
+      "claim_text_normalized": "the need for designing a set of anchor boxes"
     }
   ]
 }

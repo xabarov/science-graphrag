@@ -11,6 +11,7 @@ const ACTIVE_WORKSPACE_KEY = "science-graphrag:activeWorkspaceId";
 /** Default HTTP timeout so a dead API/Neo4j does not leave the UI stuck on “Loading…”. */
 const DEFAULT_TIMEOUT_MS = 25_000;
 const INGEST_UPLOAD_TIMEOUT_MS = 120_000;
+const INGEST_BATCH_TIMEOUT_MS = 600_000;
 
 function httpConfig(extra = {}) {
   return { timeout: DEFAULT_TIMEOUT_MS, ...extra };
@@ -252,11 +253,87 @@ export async function startWorkspaceDocumentIngest(workspaceId, file) {
 }
 
 /**
+ * Batch upload: multiple files and/or a ``.zip`` of PDF/MD/TXT (poll parent job id).
+ * @param {string} workspaceId
+ * @param {File[]} files
+ * @param {File | null} [archive]
+ */
+export async function startWorkspaceBatchIngest(workspaceId, files, archive = null) {
+  const wid = encodeURIComponent(String(workspaceId || "").trim());
+  const form = new FormData();
+  if (Array.isArray(files)) {
+    for (const f of files) {
+      if (f) form.append("files", f);
+    }
+  }
+  if (archive) {
+    form.append("archive", archive);
+  }
+  const { data } = await axios.post(apiUrl(`/v1/workspaces/${wid}/ingest/batch`), form, {
+    headers: { "Content-Type": "multipart/form-data" },
+    timeout: INGEST_BATCH_TIMEOUT_MS,
+  });
+  return data;
+}
+
+/**
  * @param {string} jobId
  * @returns {Promise<Record<string, unknown>>}
  */
 export async function getIngestJob(jobId) {
   const id = encodeURIComponent(String(jobId || "").trim());
   const { data } = await axios.get(apiUrl(`/v1/ingest/jobs/${id}`), httpConfig());
+  return data;
+}
+
+/** @param {string} workspaceId */
+export async function startWorkspaceSmartDedupScan(workspaceId) {
+  const wid = encodeURIComponent(String(workspaceId || "").trim());
+  const { data } = await axios.post(apiUrl(`/v1/workspaces/${wid}/dedup/scan`), {}, httpConfig());
+  return data;
+}
+
+/** @param {string} workspaceId @param {string} jobId */
+export async function getWorkspaceDedupJob(workspaceId, jobId) {
+  const ws = encodeURIComponent(String(workspaceId || "").trim());
+  const jid = encodeURIComponent(String(jobId || "").trim());
+  const { data } = await axios.get(apiUrl(`/v1/workspaces/${ws}/dedup/jobs/${jid}`), httpConfig());
+  return data;
+}
+
+/**
+ * @param {string} workspaceId
+ * @param {{ status?: string, limit?: number, offset?: number }} [opts]
+ */
+export async function getWorkspaceSmartDedupConflicts(workspaceId, opts = {}) {
+  const wid = encodeURIComponent(String(workspaceId || "").trim());
+  const params = new URLSearchParams();
+  if (opts.status) params.set("status", String(opts.status));
+  if (opts.limit != null) params.set("limit", String(opts.limit));
+  if (opts.offset != null) params.set("offset", String(opts.offset));
+  const q = params.toString();
+  const { data } = await axios.get(
+    apiUrl(`/v1/workspaces/${wid}/dedup/conflicts${q ? `?${q}` : ""}`),
+    httpConfig(),
+  );
+  return data;
+}
+
+/** @param {string} workspaceId @param {string} conflictId @param {string} decision */
+export async function decideWorkspaceSmartDedupConflict(workspaceId, conflictId, decision) {
+  const ws = encodeURIComponent(String(workspaceId || "").trim());
+  const cid = encodeURIComponent(String(conflictId || "").trim());
+  const { data } = await axios.post(
+    apiUrl(`/v1/workspaces/${ws}/dedup/conflicts/${cid}/decide`),
+    { decision },
+    httpConfig(),
+  );
+  return data;
+}
+
+/** @param {string} workspaceId */
+export async function getWorkspaceDedupAudit(workspaceId) {
+  const wid = encodeURIComponent(String(workspaceId || "").trim());
+  const { data } = await axios.get(apiUrl(`/v1/workspaces/${wid}/dedup/audit`), httpConfig());
   return data;
 }

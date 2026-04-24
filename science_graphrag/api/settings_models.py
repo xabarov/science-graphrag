@@ -13,6 +13,10 @@ class SettingsSnapshotResponse(BaseModel):
     ingestion: dict[str, Any] = Field(default_factory=dict)
     diagnostics: dict[str, Any] = Field(default_factory=dict)
     security: dict[str, Any] = Field(default_factory=dict)
+    work_dedup: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Wave L dedup thresholds and Qdrant collection names (read-only from env).",
+    )
 
 
 class SettingsSchemaResponse(BaseModel):

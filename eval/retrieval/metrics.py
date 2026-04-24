@@ -20,6 +20,9 @@ def score_retrieval_answer(ga: GroundedAnswer, gold: dict[str, Any]) -> dict[str
     - ``answer_reference_text`` — optional reference snippet; when set, ``answer_rouge_l`` is reported.
     - ``min_answer_rouge_l`` — optional; when set with ``answer_reference_text``, answer ROUGE-L F1
       must be >= this value for ``passed`` (advisory / pilot quality layer).
+    - ``workspace_id`` — passed to ``answer_query``; when ``expected_workspace_scope`` is true,
+      ``retrieval_trace.workspace_id`` must match and citations' ``work_id`` must lie in
+      ``workspace_member_work_ids`` and must not appear in ``forbidden_work_ids``.
     """
 
     rt: dict[str, Any] = ga.retrieval_trace if isinstance(ga.retrieval_trace, dict) else {}
@@ -43,6 +46,36 @@ def score_retrieval_answer(ga: GroundedAnswer, gold: dict[str, Any]) -> dict[str
     if gold_wid not in (None, "", "null"):
         fw = rt.get("filter_work_id")
         wid_ok = str(fw or "") == str(gold_wid)
+
+    exp_scope = bool(gold.get("expected_workspace_scope"))
+    ws_gold = str(gold.get("workspace_id") or "").strip()
+    member_set = {str(x).strip() for x in (gold.get("workspace_member_work_ids") or []) if str(x).strip()}
+    forbidden_set = {str(x).strip() for x in (gold.get("forbidden_work_ids") or []) if str(x).strip()}
+    trace_ws = str(rt.get("workspace_id") or "").strip()
+
+    trace_workspace_matches = True
+    workspace_scope_ok = True
+    out_of_scope_citation_work_ids: list[str] = []
+    forbidden_work_ids_leaked: list[str] = []
+
+    if exp_scope:
+        if ws_gold and trace_ws != ws_gold:
+            trace_workspace_matches = False
+            workspace_scope_ok = False
+        cit_wids = [
+            str(c.get("work_id") or "").strip()
+            for c in citations
+            if isinstance(c, dict) and c.get("work_id")
+        ]
+        if member_set:
+            for w in cit_wids:
+                if w not in member_set:
+                    out_of_scope_citation_work_ids.append(w)
+                    workspace_scope_ok = False
+        for w in cit_wids:
+            if w in forbidden_set:
+                forbidden_work_ids_leaked.append(w)
+                workspace_scope_ok = False
 
     contract_only = bool(gold.get("contract_only"))
     ref_text = gold.get("answer_reference_text")
@@ -78,9 +111,16 @@ def score_retrieval_answer(ga: GroundedAnswer, gold: dict[str, Any]) -> dict[str
             out["min_answer_rouge_l"] = min_arl_f
             out["checks"]["answer_rouge_ok"] = answer_rouge_ok
             out["passed"] = bool(passed and answer_rouge_ok)
+        if exp_scope or ws_gold:
+            out["expected_workspace_scope"] = exp_scope
+            out["workspace_scope_ok"] = workspace_scope_ok
+            out["trace_workspace_matches"] = trace_workspace_matches
+            out["out_of_scope_citation_work_ids"] = out_of_scope_citation_work_ids
+            out["forbidden_work_ids_leaked"] = forbidden_work_ids_leaked
+            out["passed"] = bool(out["passed"] and workspace_scope_ok)
         return out
 
-    passed = bool(hit_ok and fp_ok and wid_ok and answer_rouge_ok)
+    passed = bool(hit_ok and fp_ok and wid_ok and answer_rouge_ok and workspace_scope_ok)
     out = {
         "passed": passed,
         "contract_only": False,
@@ -95,4 +135,10 @@ def score_retrieval_answer(ga: GroundedAnswer, gold: dict[str, Any]) -> dict[str
         out["answer_rouge_l"] = answer_rouge_l
     if min_arl_f is not None:
         out["min_answer_rouge_l"] = min_arl_f
+    if exp_scope or ws_gold:
+        out["expected_workspace_scope"] = exp_scope
+        out["workspace_scope_ok"] = workspace_scope_ok
+        out["trace_workspace_matches"] = trace_workspace_matches
+        out["out_of_scope_citation_work_ids"] = out_of_scope_citation_work_ids
+        out["forbidden_work_ids_leaked"] = forbidden_work_ids_leaked
     return out

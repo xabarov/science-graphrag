@@ -1,7 +1,8 @@
 """Claims / epistemic extraction stub (Wave H1 — gated).
 
-Real extraction will live behind ``SCIENCE_GRAPHRAG_CLAIMS_EXTRACTION_ENABLED`` and
-benchmark gold cases; this module keeps import boundaries stable for planning and tests.
+Production LLM extraction lives in ``extractor.extract_claims_llm`` (Wave O), gated by
+``SCIENCE_GRAPHRAG_CLAIMS_EXTRACTION_ENABLED`` for ingestion; benchmarks use
+``force_benchmark=True``. This stub remains for negative / import-stable tests.
 """
 
 from __future__ import annotations

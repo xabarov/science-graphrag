@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "description": "Stable ids for Wave P workspace-scoped retrieval fixtures; keep in sync with scripts/seed_benchmark_workspaces.py.",
+  "pilot_work_yolov1": "437764be-f69e-46f1-9273-fd3197f0c399",
+  "workspaces": {
+    "ws-pilot-od": {
+      "name": "Pilot: Object Detection (YOLOv1)",
+      "work_ids": ["437764be-f69e-46f1-9273-fd3197f0c399"]
+    },
+    "ws-pilot-pdf": {
+      "name": "Pilot: PDF corpus slice (YOLOv1)",
+      "work_ids": ["437764be-f69e-46f1-9273-fd3197f0c399"]
+    }
+  },
+  "forbidden_placeholder_work_id": "deadbeef-dead-4000-8000-000000000001"
+}

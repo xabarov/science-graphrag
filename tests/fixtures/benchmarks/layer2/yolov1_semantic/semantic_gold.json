@@ -12,5 +12,6 @@
     "pascal voc",
     "imagenet"
   ],
-  "allow_empty_when_no_llm": true
+  "allow_empty_when_no_llm": true,
+  "min_dataset_recall_ratio": 0.6
 }

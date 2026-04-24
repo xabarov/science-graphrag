@@ -363,6 +363,7 @@ def test_work_detail_graph_chunks_smoke(monkeypatch: Any) -> None:
     monkeypatch.setattr(
         api_main.works_api, "work_graph_neighborhood", _fake_work_graph_neighborhood
     )
+    monkeypatch.setattr(api_main.works_api, "list_work_claims", lambda *_a, **_k: [])
     client = _client()
 
     detail = client.get("/v1/works/w1")
@@ -382,6 +383,72 @@ def test_work_detail_graph_chunks_smoke(monkeypatch: Any) -> None:
     chunks = client.get("/v1/works/w1/chunks?limit=10&offset=0")
     assert chunks.status_code == 200
     assert chunks.json()["total"] == 1
+
+    claims = client.get("/v1/works/w1/claims")
+    assert claims.status_code == 200
+    assert claims.json() == {"work_id": "w1", "items": []}
+
+
+def test_get_work_sources_smoke(monkeypatch: Any) -> None:
+    """GET /v1/works/{id}/sources returns inventory JSON."""
+
+    def _fake_sources(_settings: Any, work_id: str) -> dict[str, Any]:
+        return {
+            "work_id": work_id,
+            "sources": [
+                {
+                    "repr": "pdf",
+                    "sha256": "aa" * 32,
+                    "mime_type": "application/pdf",
+                    "size_bytes": 12,
+                    "available": True,
+                },
+                {
+                    "repr": "markdown",
+                    "sha256": None,
+                    "mime_type": "text/markdown",
+                    "size_bytes": None,
+                    "available": True,
+                },
+            ],
+        }
+
+    monkeypatch.setattr(api_main.works_api, "work_sources_payload", _fake_sources)
+    client = _client()
+    res = client.get("/v1/works/w1/sources")
+    assert res.status_code == 200
+    body = res.json()
+    assert body["work_id"] == "w1"
+    assert len(body["sources"]) == 2
+
+
+def test_get_work_sources_not_found(monkeypatch: Any) -> None:
+    monkeypatch.setattr(api_main.works_api, "work_sources_payload", lambda *_a, **_k: None)
+    client = _client()
+    res = client.get("/v1/works/missing/sources")
+    assert res.status_code == 404
+
+
+def test_get_work_pdf_not_found(monkeypatch: Any) -> None:
+    monkeypatch.setattr(api_main.works_api, "work_pdf_blob_path", lambda *_a, **_k: None)
+    client = _client()
+    res = client.get("/v1/works/x/pdf")
+    assert res.status_code == 404
+
+
+def test_get_work_pdf_ok(monkeypatch: Any, tmp_path: Path) -> None:
+    """GET /v1/works/{id}/pdf streams when blob path resolves."""
+
+    sha = "a" * 64
+    pdf = tmp_path / "raw" / sha[:2] / sha
+    pdf.parent.mkdir(parents=True)
+    pdf.write_bytes(b"%PDF-1.4\n")
+    monkeypatch.setattr(api_main.works_api, "work_pdf_blob_path", lambda *_a, **_k: pdf)
+    client = _client()
+    res = client.get("/v1/works/w1/pdf")
+    assert res.status_code == 200
+    assert res.headers.get("etag")
+    assert "application/pdf" in (res.headers.get("content-type") or "")
 
 
 def test_query_endpoint_smoke(monkeypatch: Any) -> None:
@@ -489,8 +556,40 @@ def test_post_query_with_workspace_id_filters_qdrant(monkeypatch: Any) -> None:
         limit: int = 8,
         work_id: str | None = None,
         work_ids: list[str] | None = None,
+        workspace_id: str | None = None,
     ) -> list[dict[str, Any]]:
-        calls.append({"work_id": work_id, "work_ids": work_ids, "limit": limit})
+        calls.append(
+            {
+                "work_id": work_id,
+                "work_ids": work_ids,
+                "workspace_id": workspace_id,
+                "limit": limit,
+            },
+        )
+        if workspace_id:
+            return [
+                {
+                    "id": "hit1",
+                    "score": 0.9,
+                    "text": "snippet",
+                    "work_id": "w-scope",
+                    "document_id": "doc1",
+                    "chunk_fingerprint": "fp1",
+                    "section_path": "intro",
+                },
+            ]
+        if work_ids:
+            return [
+                {
+                    "id": "hit2",
+                    "score": 0.85,
+                    "text": "fallback",
+                    "work_id": "w-scope",
+                    "document_id": "doc1",
+                    "chunk_fingerprint": "fp2",
+                    "section_path": None,
+                },
+            ]
         return []
 
     monkeypatch.setattr(retr_mod, "_workspace_scope_work_ids", _fake_ws_scope)
@@ -508,7 +607,8 @@ def test_post_query_with_workspace_id_filters_qdrant(monkeypatch: Any) -> None:
     assert body["retrieval_trace"].get("workspace_scope_work_count") == 1
     assert len(calls) == 1
     assert calls[0]["work_id"] is None
-    assert calls[0]["work_ids"] == ["w-scope"]
+    assert calls[0]["workspace_id"] == "ws-known-uuid"
+    assert calls[0]["work_ids"] is None
 
 
 def test_benchmark_cases_list_smoke() -> None:

@@ -11,6 +11,7 @@ from neo4j import Driver, GraphDatabase, NotificationClassification
 from science_graphrag.domain.authorship_ids import canonical_author_node_id
 from science_graphrag.domain.models import AuthorshipDraft, WorkDraft
 from science_graphrag.domain.semantic_models import SemanticExtractionV1
+from science_graphrag.ingestion.claims.models import ClaimDraft
 
 
 class Neo4jGraphStore:
@@ -65,6 +66,21 @@ class Neo4jGraphStore:
             (
                 "CREATE CONSTRAINT workspace_id_unique IF NOT EXISTS "
                 "FOR (ws:Workspace) REQUIRE ws.id IS UNIQUE"
+            ),
+            (
+                "CREATE CONSTRAINT claim_id_unique IF NOT EXISTS "
+                "FOR (c:Claim) REQUIRE c.id IS UNIQUE"
+            ),
+            (
+                "CREATE CONSTRAINT evidence_id_unique IF NOT EXISTS "
+                "FOR (e:Evidence) REQUIRE e.id IS UNIQUE"
+            ),
+            "CREATE INDEX claim_type_idx IF NOT EXISTS FOR (c:Claim) ON (c.claim_type)",
+            "CREATE INDEX claim_polarity_idx IF NOT EXISTS FOR (c:Claim) ON (c.polarity)",
+            "CREATE INDEX evidence_chunk_fp_idx IF NOT EXISTS FOR (e:Evidence) ON (e.chunk_fingerprint)",
+            (
+                "CREATE FULLTEXT INDEX claim_normalized_fulltext IF NOT EXISTS "
+                "FOR (n:Claim) ON EACH [n.normalized_text]"
             ),
         ]
         with self._driver.session() as session:
@@ -534,12 +550,11 @@ class Neo4jGraphStore:
 
     def merge_work_into_canonical(self, keep_id: str, drop_id: str) -> bool:
         """
-        Re-point :CITES / version / semantic edges from duplicate ``drop_id`` onto ``keep_id``.
-
-        Removes ``drop_id`` only when it has no outgoing ``HAS_AUTHORSHIP`` (minimal Phase 1 aid).
+        Re-point :CITES / version / semantic edges from duplicate ``drop_id`` onto ``keep_id``,
+        re-bind ``HAS_AUTHORSHIP`` edges onto ``keep_id``, then ``DETACH DELETE`` the drop work.
 
         Returns:
-            True if ``drop_id`` was detached-deleted; False if merge stopped (e.g. authorship rows).
+            True if ``drop_id`` was detached-deleted.
         """
 
         if keep_id == drop_id:
@@ -617,15 +632,18 @@ class Neo4jGraphStore:
             keep=keep_id,
             drop=drop_id,
         )
-        auth_row = tx.run(
+        # Re-bind authorship subgraph from duplicate work onto canonical work (Wave L).
+        tx.run(
             """
-            MATCH (d:Work {id: $drop})-[:HAS_AUTHORSHIP]->(:Authorship)
-            RETURN count(*) AS n
+            MATCH (k:Work {id: $keep}), (d:Work {id: $drop})
+            MATCH (d)-[ha:HAS_AUTHORSHIP]->(a:Authorship)
+            MERGE (k)-[ha2:HAS_AUTHORSHIP]->(a)
+            SET ha2 += properties(ha)
+            DELETE ha
             """,
+            keep=keep_id,
             drop=drop_id,
-        ).single()
-        if auth_row and int(auth_row["n"]) > 0:
-            return False
+        )
         tx.run(
             """
             MATCH (d:Work {id: $drop})
@@ -634,6 +652,161 @@ class Neo4jGraphStore:
             drop=drop_id,
         )
         return True
+
+    def merge_author_into_canonical(self, keep_id: str, drop_id: str) -> bool:
+        """
+        Move all ``(:Authorship)-[:OF_AUTHOR]->(drop)`` to ``keep`` Author, then remove ``drop``.
+
+        Returns True if ``drop`` Author node was removed.
+        """
+
+        if keep_id == drop_id:
+            return False
+        with self._driver.session() as session:
+            return bool(session.execute_write(self._merge_author_tx, keep_id, drop_id))
+
+    @staticmethod
+    def _merge_author_tx(tx, keep_id: str, drop_id: str) -> bool:
+        tx.run(
+            """
+            MATCH (keep:Author {id: $keep}), (drop:Author {id: $drop})
+            MATCH (x:Authorship)-[r:OF_AUTHOR]->(drop)
+            MERGE (x)-[r2:OF_AUTHOR]->(keep)
+            SET r2 += properties(r)
+            DELETE r
+            """,
+            keep=keep_id,
+            drop=drop_id,
+        )
+        row = tx.run(
+            """
+            MATCH (drop:Author {id: $drop})
+            OPTIONAL MATCH (x:Authorship)-[:OF_AUTHOR]->(drop)
+            WITH drop, count(x) AS n
+            WHERE n = 0
+            DETACH DELETE drop
+            RETURN 1 AS deleted
+            """,
+            drop=drop_id,
+        ).single()
+        return bool(row)
+
+    def fetch_work_bibliography_card(self, work_id: str) -> dict[str, Any] | None:
+        """Title/year/first author + abstract snippet for dedup LLM prompts."""
+
+        q = """
+        MATCH (w:Work {id: $id})
+        OPTIONAL MATCH (w)-[:HAS_AUTHORSHIP]->(ash:Authorship)
+        WITH w, ash
+        ORDER BY ash.author_position ASC
+        WITH w, head(collect(ash)) AS a1
+        OPTIONAL MATCH (a1)-[:OF_AUTHOR]->(auth:Author)
+        RETURN coalesce(w.title, '') AS title,
+               w.publication_year AS year,
+               coalesce(w.abstract, '') AS abstract,
+               coalesce(auth.full_name, '') AS first_author
+        LIMIT 1
+        """
+        with self._driver.session() as session:
+            rec = session.run(q, id=work_id).single()
+            if not rec:
+                return None
+            return {
+                "work_id": work_id,
+                "title": str(rec["title"] or ""),
+                "year": rec["year"],
+                "abstract": str(rec["abstract"] or ""),
+                "first_author": str(rec["first_author"] or ""),
+            }
+
+    def list_workspace_authors(self, workspace_id: str) -> list[dict[str, Any]]:
+        """Distinct authors attached to works in a workspace (for L2 dedup scan)."""
+
+        q = """
+        MATCH (ws:Workspace {id: $ws})-[:CONTAINS]->(:Work)-[:HAS_AUTHORSHIP]->(:Authorship)-[:OF_AUTHOR]->(a:Author)
+        RETURN DISTINCT a.id AS id, coalesce(a.full_name, '') AS full_name
+        """
+        with self._driver.session() as session:
+            rows = session.run(q, ws=workspace_id)
+            return [{"id": str(r["id"]), "full_name": str(r["full_name"] or "")} for r in rows]
+
+    def fetch_author_affiliation_hint(self, author_id: str) -> str:
+        q = """
+        MATCH (a:Author {id: $id})<-[:OF_AUTHOR]-(x:Authorship)
+        RETURN coalesce(x.raw_affiliation, '') AS aff
+        LIMIT 1
+        """
+        with self._driver.session() as session:
+            rec = session.run(q, id=author_id).single()
+            if not rec:
+                return ""
+            return str(rec["aff"] or "")
+
+    def detach_delete_claims_for_work(self, work_id: str) -> None:
+        """Remove Claim/Evidence subgraph anchored in this work (re-ingest idempotency)."""
+
+        q = """
+        MATCH (w:Work {id: $wid})<-[:ANCHORED_IN]-(e:Evidence)
+        MATCH (c:Claim)-[:SUPPORTED_BY]->(e)
+        DETACH DELETE c, e
+        """
+        with self._driver.session() as session:
+            session.run(q, wid=work_id)
+
+    def upsert_claims_with_evidence(self, work_id: str, claims: list[ClaimDraft]) -> None:
+        """Merge :Claim / :Evidence nodes and edges for one work (Wave O)."""
+
+        if not claims:
+            return
+
+        def _tx(tx, wid: str, rows: list[ClaimDraft]) -> None:
+            """Persist claim and evidence nodes for one work."""
+
+            for draft in rows:
+                tx.run(
+                    """
+                    MATCH (w:Work {id: $wid})
+                    MERGE (c:Claim {id: $cid})
+                    SET c.text = $text,
+                        c.normalized_text = $norm,
+                        c.claim_type = $ctype,
+                        c.polarity = $pol,
+                        c.confidence = $conf,
+                        c.schema_version = 1
+                    """,
+                    wid=wid,
+                    cid=draft.claim_id,
+                    text=draft.text,
+                    norm=draft.normalized_text,
+                    ctype=draft.claim_type,
+                    pol=draft.polarity,
+                    conf=float(draft.confidence),
+                )
+                for ev in draft.evidence:
+                    tx.run(
+                        """
+                        MATCH (w:Work {id: $wid})
+                        MATCH (c:Claim {id: $cid})
+                        MERGE (e:Evidence {id: $eid})
+                        SET e.chunk_fingerprint = $cfp,
+                            e.quote = $quote,
+                            e.section_path = $spath,
+                            e.schema_version = 1
+                        MERGE (c)-[sr:SUPPORTED_BY]->(e)
+                        SET sr.confidence = $conf
+                        MERGE (e)-[:ANCHORED_IN]->(w)
+                        """,
+                        wid=wid,
+                        cid=draft.claim_id,
+                        eid=ev.evidence_id,
+                        cfp=ev.chunk_fingerprint,
+                        quote=ev.quote,
+                        spath=ev.section_path,
+                        conf=float(draft.confidence),
+                    )
+
+        with self._driver.session() as session:
+            session.execute_write(_tx, work_id, claims)
 
     # --- User workspaces (:Workspace)-[:CONTAINS]->(:Work) ---
 

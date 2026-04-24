@@ -1,6 +1,6 @@
 # Work dedup review queue (v1 draft, Wave H3)
 
-**Status:** draft — reporting only.
+**Status:** draft — reporting only. **Smart dedup (embeddings + LLM + Postgres queue)** is specified in [work-dedup-pipeline-v2.md](work-dedup-pipeline-v2.md) (ADR [014](../adr/014-work-dedup-smart-wave-l.md)).
 
 ## Operator flow
 

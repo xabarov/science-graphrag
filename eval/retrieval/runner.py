@@ -23,19 +23,37 @@ def _canned_answer_fn(case_path: Path) -> Callable[..., GroundedAnswer]:
     contract = bool(gold.get("contract_only"))
     fps = [fp for fp in (gold.get("required_chunk_fingerprints") or []) if fp]
 
-    def inner(_question: str, *, settings, work_id=None, top_k=5) -> GroundedAnswer:  # noqa: ARG001
+    def inner(
+        _question: str,
+        *,
+        settings,
+        work_id=None,
+        workspace_id=None,
+        top_k=5,
+    ) -> GroundedAnswer:  # noqa: ARG001
         citations = [{"chunk_fingerprint": fp, "rank": i + 1, "excerpt": "stub"} for i, fp in enumerate(fps)]
         min_hits = int(gold.get("min_hit_count") or 0)
         hit_count = 0 if contract else max(min_hits, 1)
+        ws_g = str(gold.get("workspace_id") or "").strip()
+        members = [str(x) for x in (gold.get("workspace_member_work_ids") or []) if x]
+        wid_cit = str(members[0]) if members else None
+        if wid_cit:
+            for c in citations:
+                if isinstance(c, dict):
+                    c["work_id"] = wid_cit
+        rt: dict[str, Any] = {
+            "hit_count": hit_count,
+            "embedding": {"embedding_model": "mock"},
+            "filter_work_id": work_id,
+        }
+        if ws_g:
+            rt["workspace_id"] = ws_g
+            rt["workspace_scope_work_count"] = len(members)
         return GroundedAnswer(
             answer="mock",
             citations=citations,
             graph_context={"semantic_available": False, "methods": [], "datasets": []},
-            retrieval_trace={
-                "hit_count": hit_count,
-                "embedding": {"embedding_model": "mock"},
-                "filter_work_id": work_id,
-            },
+            retrieval_trace=rt,
         )
 
     return inner
@@ -133,20 +151,28 @@ def run_retrieval_case(
     else:
         work_id = str(work_id).strip() or None
 
+    ws_gold = gold.get("workspace_id")
+    if ws_gold in ("", "null", None):
+        workspace_id = None
+    else:
+        workspace_id = str(ws_gold).strip() or None
+
     top_k = gold.get("top_k")
     top_k_i = int(top_k) if top_k is not None else 5
 
     started = perf_counter()
-    ga = fn(question, settings=s, work_id=work_id, top_k=top_k_i)
+    ga = fn(question, settings=s, work_id=work_id, workspace_id=workspace_id, top_k=top_k_i)
     elapsed = perf_counter() - started
     metrics = score_retrieval_answer(ga, gold)
     return {
         "case_id": root.name,
+        "question": question,
         "question_preview": question[:240],
         "metrics": metrics,
         "retrieval_trace": ga.retrieval_trace,
         "graph_context": ga.graph_context,
         "citations": ga.citations,
+        "answer": ga.answer,
         "answer_preview": (ga.answer or "")[:400],
         "wall_clock_seconds": round(elapsed, 3),
     }
@@ -172,7 +198,7 @@ def _cli(
         "--tier",
         help=(
             "Suite tier from case_tiers.json: merge_safe_contract, strict_pilot, "
-            "live_corpus_mini (live Qdrant/Neo4j), or 'all'."
+            "live_corpus_mini (live Qdrant/Neo4j), workspace_scoped (Wave P subdir), or 'all'."
         ),
     ),
     mock_answer: bool = typer.Option(

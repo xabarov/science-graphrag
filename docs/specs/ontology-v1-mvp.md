@@ -10,10 +10,10 @@
 
 | Сущность | Назначение | Статус |
 |----------|------------|--------|
-| `ResearchTopic` / `Concept` | Тема или концепт из текста | Не в коде; только идеи в [idea.md](../idea.md) |
-| `Method` | Названная методика / архитектура модели | В scope [ADR 004](../adr/004-ontology-v1-scope.md); не в коде |
-| `Dataset` | Набор данных, на котором оценивают | В scope ADR 004; не в коде |
-| `Claim` | Проверяемое утверждение + опора на фрагмент | Phase 3+ (извлечение + provenance) |
+| `ResearchTopic` / `Concept` | Тема или концепт из текста | **MVP candidate:** [ADR 013](../adr/013-concept-research-topic-ontology-v1-5.md) (Accepted) + advisory harness [semantic-concept-topic-v1.md](extraction/semantic-concept-topic-v1.md); production Neo4j — после отдельного promotion (см. roadmap Wave N→O) |
+| `Method` | Названная методика / архитектура модели | В scope [ADR 004](../adr/004-ontology-v1-scope.md); **в production** |
+| `Dataset` | Набор данных, на котором оценивают | В scope ADR 004; **в production** |
+| `Claim` / `Evidence` | Проверяемое утверждение + опора на чанк | **MVP candidate:** [ADR 008](../adr/008-ontology-claims-wave-h.md), [ontology-claims-v1.md](ontology-claims-v1.md); production за флагом `SCIENCE_GRAPHRAG_CLAIMS_EXTRACTION_ENABLED` (Wave O) |
 
 ## Политика расширения
 

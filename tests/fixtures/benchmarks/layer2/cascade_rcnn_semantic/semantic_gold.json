@@ -6,7 +6,9 @@
   "min_method_names": 1,
   "expected_method_names_normalized": [
     "cascade r-cnn",
-    "cascade rcnn"
+    "cascade rcnn",
+    "faster r-cnn",
+    "faster rcnn"
   ],
   "expected_dataset_names_normalized": [
     "coco",

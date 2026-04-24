@@ -240,6 +240,18 @@ export async function deleteAskSession(scope, sessionId) {
   return axios.delete(worksUrl(`/v1/ask-sessions/${sid}?scope=${s}`));
 }
 
+/** Absolute URL for GET /v1/works/{work_id}/pdf (for react-pdf ``file`` prop). */
+export function workPdfUrl(workId) {
+  const id = encodeURIComponent(String(workId ?? "").trim());
+  return worksUrl(`/v1/works/${id}/pdf`);
+}
+
+/** GET /v1/works/{work_id}/sources */
+export async function getWorkSources(workId) {
+  const id = encodeURIComponent(String(workId ?? "").trim());
+  return axios.get(worksUrl(`/v1/works/${id}/sources`));
+}
+
 /** GET /v1/works/{work_id} */
 export async function getWorkDetail(workId) {
   const id = encodeURIComponent(String(workId ?? "").trim());
@@ -256,6 +268,12 @@ export async function getWorkChunks(workId, { limit = 50, offset = 0, section_pr
     params.set("section_prefix", String(sectionPrefix).trim());
   }
   return axios.get(worksUrl(`/v1/works/${id}/chunks?${params.toString()}`));
+}
+
+/** GET /v1/works/{work_id}/claims */
+export async function getWorkClaims(workId) {
+  const id = encodeURIComponent(String(workId ?? "").trim());
+  return axios.get(worksUrl(`/v1/works/${id}/claims`));
 }
 
 /**

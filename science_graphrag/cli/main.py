@@ -5,11 +5,16 @@ from pathlib import Path
 
 import typer
 
+from sqlalchemy import create_engine, desc, select
+from sqlalchemy.orm import sessionmaker
+
 from science_graphrag.config import get_settings
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
 from science_graphrag.ingestion.pipeline import run_ingest_batch_cli, run_ingest_cli
+from science_graphrag.storage.db import init_db
+from science_graphrag.storage.models_orm import WorkDedupMergeLog
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
-from science_graphrag.storage.qdrant_store import QdrantChunkStore, recreate_qdrant_chunk_collection
+from science_graphrag.storage.qdrant_store import QdrantChunkStore, QdrantWorkEmbeddingStore, recreate_qdrant_chunk_collection
 
 app = typer.Typer(no_args_is_help=True, help="science-graphrag CLI")
 
@@ -63,7 +68,7 @@ def merge_work_cmd(
     keep_id: str = typer.Argument(..., help="Canonical Work.id to keep"),
     drop_id: str = typer.Argument(..., help="Duplicate Work.id to re-point and delete"),
 ) -> None:
-    """Re-point citations / semantic edges onto keep_id; delete drop_id if it has no authorships."""
+    """Re-point citations / semantic edges onto keep_id; re-bind authorships; delete drop_id."""
 
     s = get_settings()
     neo = Neo4jGraphStore(s.neo4j_uri, s.neo4j_user, s.neo4j_password)
@@ -75,15 +80,18 @@ def merge_work_cmd(
         dim = resolve_embedding_dim(embedding_model=s.embedding_model)
         q = QdrantChunkStore(s.qdrant_url, s.qdrant_collection, vector_dim=dim)
         n = q.repoint_work_id_payload(from_work_id=drop_id, to_work_id=keep_id)
+        qw = QdrantWorkEmbeddingStore(
+            s.qdrant_url,
+            s.qdrant_work_embeddings_collection,
+            vector_dim=dim,
+        )
+        we = qw.delete_by_work_id(work_id=drop_id)
         typer.echo(
             f"Neo4j: merged into keep={keep_id}, removed drop={drop_id}. "
-            f"Qdrant: repointed {n} chunk(s)."
+            f"Qdrant: repointed {n} chunk(s); work_embeddings removed={we}."
         )
     else:
-        typer.echo(
-            f"Neo4j: merge did not remove drop={drop_id} (e.g. HAS_AUTHORSHIP present). "
-            f"Qdrant unchanged. keep={keep_id}"
-        )
+        typer.echo(f"Neo4j: merge did not complete for drop={drop_id}. keep={keep_id}")
 
 
 @app.command("repoint-qdrant-work-ids")
@@ -288,6 +296,36 @@ def merge_catalog_audit_cmd() -> None:
     )
 
 
+@app.command("dedup-merge-audit")
+def dedup_merge_audit_cmd(
+    workspace_id: str | None = typer.Option(
+        None,
+        "--workspace-id",
+        help="If set, only merge log rows for this workspace.",
+    ),
+    limit: int = typer.Option(50, "--limit", min=1, max=500),
+) -> None:
+    """Print Postgres work_dedup_merge_log rows (Wave L audit; reverse merge not automated)."""
+
+    s = get_settings()
+    engine = create_engine(s.database_url, pool_pre_ping=True)
+    init_db(engine)
+    factory = sessionmaker(bind=engine)
+    with factory() as session:
+        q = select(WorkDedupMergeLog).order_by(desc(WorkDedupMergeLog.created_at)).limit(limit)
+        if workspace_id:
+            q = q.where(WorkDedupMergeLog.workspace_id == workspace_id.strip())
+        rows = list(session.scalars(q).all())
+    if not rows:
+        typer.echo("No merge log rows.")
+        return
+    for r in rows:
+        typer.echo(
+            f"{r.created_at.isoformat() if r.created_at else ''} "
+            f"ws={r.workspace_id} keep={r.keep_work_id} drop={r.drop_work_id} conflict={r.conflict_id or '—'}",
+        )
+
+
 @app.command("work-dedup-report")
 def work_dedup_report_cmd(
     as_json: bool = typer.Option(False, "--json", help="Emit JSON instead of plain text rows."),
@@ -308,7 +346,7 @@ def work_dedup_report_cmd(
         return
     typer.echo(f"Clusters: {len(rows)}")
     for row in rows[:200]:
-        typer.echo(f"- {row.get('dedup_key')}: {row.get('ids')}")
+        typer.echo(f"- {row.get('dedup_key')}: {row.get('work_ids')}")
     if len(rows) > 200:
         typer.echo(f"... truncated ({len(rows)} total); use --json for full dump.")
 

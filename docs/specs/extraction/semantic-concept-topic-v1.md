@@ -65,7 +65,7 @@
 
 **Concept — да, если** это обобщающая тема или постановка задачи (например, «multi-scale representation», «set prediction»).
 
-**Concept — нет, если** это уже **имя метода** (`Faster R-CNN`, `DETR`) или **датасет** (`COCO`) — они остаются в [semantic-method-dataset-v1.md](semantic-method-dataset-v1.md).
+**Concept — нет, если** это уже **имя метода** (`Faster R-CNN`, `DETR`) или **датасет** (`COCO`) — они остаются в [`semantic-method-dataset-v1.md`](semantic-method-dataset-v1.md).
 
 **ResearchTopic — да, если** это устойчивое поле или подполе (Computer Vision, Object Detection).
 

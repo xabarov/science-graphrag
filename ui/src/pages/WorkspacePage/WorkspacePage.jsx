@@ -17,6 +17,7 @@ import {
   addWorkToWorkspace,
   getIngestJob,
   startWorkspaceDocumentIngest,
+  startWorkspaceBatchIngest,
   getWorkspaceGraphStats,
 } from "../../utils/workspaceStore.js";
 import { persistWorkId, resolveSelectedWorkId } from "./utils/workContext.js";
@@ -284,6 +285,26 @@ export default function WorkspacePage() {
     }
   }
 
+  async function handleUploadBatch(files, archive = null) {
+    if (!workspaceMeta.id) return;
+    const list = Array.isArray(files) ? files.filter(Boolean) : [];
+    if (!list.length && !archive) return;
+    setUploadBusy(true);
+    setIngestErr(null);
+    try {
+      const job = await startWorkspaceBatchIngest(workspaceMeta.id, list, archive);
+      const jid = String(job?.job_id || "").trim();
+      if (jid) {
+        setIngestJob(job);
+        setIngestJobId(jid);
+      }
+    } catch (err) {
+      setIngestErr(formatResearchApiError(err));
+    } finally {
+      setUploadBusy(false);
+    }
+  }
+
   const onCardActivate =
     workspaceMeta.id && effectiveWorkIds.length > 1 ? (wid) => setWorkFocusInUrl(wid) : undefined;
 
@@ -360,6 +381,7 @@ export default function WorkspacePage() {
             ingestJob={ingestJob}
             ingestErr={ingestErr}
             onUploadDocument={handleUploadDocument}
+            onUploadBatch={handleUploadBatch}
             addWorkInput={addWorkInput}
             onAddWorkInputChange={setAddWorkInput}
             addBusy={addBusy}

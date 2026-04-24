@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "description": "Wave L offline gold-set: records + duplicate clusters for precision/recall evaluation.",
+  "description": "Wave L offline gold-set: records + five duplicate clusters for precision/recall (heuristic matcher in eval/dedup_v1/runner.py). work_id values are stable fixture identities, not Neo4j graph ids.",
   "records": [
     {
       "work_id": "e811e872-9f0d-410a-b693-24ce8f024ade",
@@ -64,11 +64,41 @@
       "year": 2019,
       "first_author": "N. Kumar",
       "abstract": "Survey of electrolyte chemistries and manufacturing constraints."
+    },
+    {
+      "work_id": "f1a2b3c4-d5e6-4789-a012-3456789abcde",
+      "title": "Neural Machine Translation by Jointly Learning to Align and Translate",
+      "year": 2015,
+      "first_author": "Dzmitry Bahdanau",
+      "abstract": "We propose an attention mechanism for encoder-decoder neural machine translation models."
+    },
+    {
+      "work_id": "f1a2b3c4-d5e6-4789-a012-3456789abcdf",
+      "title": "Neural Machine Translation by Jointly Learning to Align and Translate (ICLR)",
+      "year": 2015,
+      "first_author": "D. Bahdanau",
+      "abstract": "Attention-based encoder-decoder neural machine translation with soft alignment over source positions."
+    },
+    {
+      "work_id": "a0b1c2d3-e4f5-4678-9012-abcdef012301",
+      "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+      "year": 2019,
+      "first_author": "Jacob Devlin",
+      "abstract": "We introduce BERT, a bidirectional transformer pre-trained on masked language modeling and next sentence prediction."
+    },
+    {
+      "work_id": "a0b1c2d3-e4f5-4678-9012-abcdef012302",
+      "title": "BERT Pre-training of Deep Bidirectional Transformers",
+      "year": 2019,
+      "first_author": "J. Devlin",
+      "abstract": "Bidirectional transformer representations from unlabeled text using masked LM and NSP objectives."
     }
   ],
   "clusters": [
     ["e811e872-9f0d-410a-b693-24ce8f024ade", "a05f7281-dd74-4269-b10e-75aecf09320d"],
     ["37b95c3d-a6b5-4caf-b50e-51a9d37508c0", "44869d2a-c37c-49e5-a385-ffa2d35d81f1"],
-    ["db6796f1-78d0-41d1-8237-4814f256bc75", "fa2f8a64-453b-495a-9e84-5aa27967299b"]
+    ["db6796f1-78d0-41d1-8237-4814f256bc75", "fa2f8a64-453b-495a-9e84-5aa27967299b"],
+    ["f1a2b3c4-d5e6-4789-a012-3456789abcde", "f1a2b3c4-d5e6-4789-a012-3456789abcdf"],
+    ["a0b1c2d3-e4f5-4678-9012-abcdef012301", "a0b1c2d3-e4f5-4678-9012-abcdef012302"]
   ]
 }

@@ -80,6 +80,10 @@ science-graphrag-claims-benchmark tests/fixtures/benchmarks/claims --suite --tie
   --json-out eval/results/current-claims-corpus-v2-mini.json
 science-graphrag-claims-benchmark tests/fixtures/benchmarks/claims --suite --tier claims_pilot \
   --json-out eval/results/current-claims-pilot-suite.json
+# Wave O: production LLM lane (requires MAIN_LLM_* / extraction LLM key); advisory artifact for aggregator
+science-graphrag-claims-benchmark tests/fixtures/benchmarks/claims --suite --tier claims_pilot \
+  --extractor production \
+  --json-out eval/results/current-claims-production-pilot.json
 ```
 
 ## References resolution (v1 harness, advisory)

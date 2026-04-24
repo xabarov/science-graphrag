@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Any, NamedTuple
+
+logger = logging.getLogger(__name__)
 
 from neo4j import GraphDatabase, NotificationClassification
 
@@ -250,6 +253,7 @@ def _retrieval_trace_payload(
     query_preview: str | None = None,
     answer_synthesis: dict[str, Any] | None = None,
     extra_degraded: list[str] | None = None,
+    workspace_id: str | None = None,
 ) -> dict[str, Any]:
     trace_degraded: list[str] = []
     if len(inp.hits) == 0:
@@ -266,7 +270,7 @@ def _retrieval_trace_payload(
         "mode": "deterministic_snippets",
         "second_stage_llm": False,
     }
-    return {
+    out: dict[str, Any] = {
         "embedding": inp.emb_trace,
         "hit_count": len(inp.hits),
         "filter_work_id": inp.filter_work_id,
@@ -280,6 +284,10 @@ def _retrieval_trace_payload(
         "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
         "degraded": trace_degraded,
     }
+    ws = (workspace_id or "").strip()
+    if ws:
+        out["workspace_id"] = ws
+    return out
 
 
 def _try_query_answer_llm(
@@ -346,6 +354,7 @@ def _qdrant_hits_for_answer(
     work_id: str | None,
     work_ids: list[str] | None,
     top_k: int,
+    workspace_id: str | None = None,
 ) -> tuple[list[float], dict[str, Any], list[dict[str, Any]]]:
     """Embed query, search Qdrant with oversampling, deprioritize back-matter sections."""
 
@@ -356,7 +365,13 @@ def _qdrant_hits_for_answer(
         vector_dim=len(vec),
     )
     fetch_limit = min(max(top_k * 8, top_k), 48)
-    hits_raw = qstore.search_similar(vector=vec, limit=fetch_limit, work_id=work_id, work_ids=work_ids)
+    hits_raw = qstore.search_similar(
+        vector=vec,
+        limit=fetch_limit,
+        work_id=work_id,
+        work_ids=work_ids,
+        workspace_id=workspace_id,
+    )
     hits = _rank_hits_for_answer(hits_raw, top_k=top_k)
     return vec, emb_trace, hits
 
@@ -410,15 +425,39 @@ def answer_query(
         emb_trace = {**emb_trace, **ws_meta}
     else:
         q_work_ids = None if wid_param else (work_ids_filter if work_ids_filter and len(work_ids_filter) > 0 else None)
+        ws_qdrant = ws_param if (ws_param and not wid_param) else None
         _, emb_trace, hits = _qdrant_hits_for_answer(
             question=question,
             settings=s,
             work_id=wid_param,
-            work_ids=q_work_ids,
+            work_ids=None if ws_qdrant else q_work_ids,
             top_k=top_k,
+            workspace_id=ws_qdrant,
         )
         if ws_meta:
             emb_trace = {**emb_trace, **ws_meta}
+        if (
+            ws_qdrant
+            and not hits
+            and q_work_ids
+            and len(q_work_ids) > 0
+        ):
+            _, emb_trace_fb, hits = _qdrant_hits_for_answer(
+                question=question,
+                settings=s,
+                work_id=None,
+                work_ids=q_work_ids,
+                top_k=top_k,
+                workspace_id=None,
+            )
+            logger.warning(
+                "workspace_scope_payload_miss: no Qdrant hits with workspace_ids filter for "
+                "workspace_id=%s; retrying with work_id list (%d works). Backfill workspace_ids on chunks "
+                "if this persists.",
+                ws_qdrant,
+                len(q_work_ids),
+            )
+            emb_trace = {**emb_trace_fb, **ws_meta, "workspace_scope_payload_miss": "work_ids_payload"}
 
     citations, snippets = _citations_and_snippets_from_hits(hits)
     graph, resolved_work = _graph_context_for_hits(s, wid_param, hits)
@@ -473,6 +512,7 @@ def answer_query(
         query_preview=question,
         answer_synthesis=synthesis,
         extra_degraded=extra_degraded,
+        workspace_id=ws_param,
     )
     if ws_meta:
         trace_payload = {**trace_payload, **ws_meta}

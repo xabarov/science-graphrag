@@ -16,6 +16,10 @@ class BlobStore:
     def _path_for_sha(self, sha256_hex: str) -> Path:
         return self.root / "raw" / sha256_hex[:2] / sha256_hex
 
+    def path_for_sha(self, sha256_hex: str) -> Path:
+        """Resolved path for a raw blob by content hash (may not exist on disk)."""
+        return self._path_for_sha(sha256_hex)
+
     def store_file(self, source_path: Path) -> tuple[str, Path]:
         """Copy file into blob store. Returns (sha256_hex, stored_path)."""
         data = source_path.read_bytes()

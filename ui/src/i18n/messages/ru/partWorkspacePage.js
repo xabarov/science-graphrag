@@ -34,6 +34,10 @@ export default {
   "workspace.upload.starting": "Запуск…",
   "workspace.upload.processing": "Обработка…",
   "workspace.upload.chooseFile": "Выбрать файл",
+  "workspace.upload.chooseMultiple": "Несколько файлов",
+  "workspace.upload.chooseZip": "Загрузить .zip",
+  "workspace.upload.dropHint":
+    "Или перетащите сюда файлы или папку (PDF / Markdown / текст).",
   "workspace.upload.jobLine": "job {{id}} · {{status}}",
   "workspace.upload.newWorkId": "Новый work_id (id статьи):",
   "workspace.upload.dash": "—",

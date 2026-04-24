@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 import hashlib
+from pathlib import Path
 from typing import Any
 
 from neo4j import GraphDatabase, NotificationClassification, Session as Neo4jSession
+from sqlalchemy import create_engine, select
+from sqlalchemy.orm import sessionmaker
 
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
+from science_graphrag.storage.blobs import BlobStore
+from science_graphrag.storage.db import init_db
+from science_graphrag.storage.models_orm import DocumentRecord
 from science_graphrag.storage.qdrant_store import QdrantChunkStore
 
 
@@ -367,6 +373,96 @@ def list_works(
         driver.close()
 
 
+def _sql_session_factory(settings: Settings):
+    engine = create_engine(settings.database_url, pool_pre_ping=True)
+    init_db(engine)
+    return sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
+
+
+def resolve_document_for_work(settings: Settings, work_id: str) -> DocumentRecord | None:
+    """Postgres ``documents`` row for a work (``work_id`` column or Qdrant ``document_id`` fallback)."""
+
+    factory = _sql_session_factory(settings)
+    with factory() as session:
+        row = session.execute(
+            select(DocumentRecord).where(DocumentRecord.work_id == work_id).limit(1),
+        ).scalar_one_or_none()
+        if row is not None:
+            return row
+    dim = _vector_dim(settings)
+    qstore = QdrantChunkStore(settings.qdrant_url, settings.qdrant_collection, vector_dim=dim)
+    try:
+        batch, _ = qstore.scroll_chunks_for_work(work_id=work_id, limit=1, offset=None)
+    except Exception:  # noqa: BLE001
+        return None
+    if not batch:
+        return None
+    doc_id = batch[0].get("document_id")
+    if not doc_id:
+        return None
+    with factory() as session:
+        return session.get(DocumentRecord, str(doc_id))
+
+
+def work_pdf_blob_path(settings: Settings, work_id: str) -> Path | None:
+    """Path to raw PDF in ``BlobStore`` if this work was ingested from a PDF and blob exists."""
+
+    doc = resolve_document_for_work(settings, work_id)
+    if doc is None:
+        return None
+    mime = (doc.mime_type or "").lower()
+    src = (doc.source_path or "").lower()
+    if "pdf" not in mime and not src.endswith(".pdf"):
+        return None
+    blob = BlobStore(settings.blob_root)
+    path = blob.path_for_sha(doc.sha256)
+    if not path.is_file():
+        return None
+    return path
+
+
+def work_sources_payload(settings: Settings, work_id: str) -> dict[str, Any] | None:
+    """Inventory for ``GET /v1/works/{id}/sources`` (PDF blob + markdown chunks)."""
+
+    if get_work_detail(settings, work_id) is None:
+        return None
+    dim = _vector_dim(settings)
+    qstore = QdrantChunkStore(settings.qdrant_url, settings.qdrant_collection, vector_dim=dim)
+    try:
+        chunk_total = qstore.count_chunks_for_work(work_id=work_id)
+    except Exception:  # noqa: BLE001
+        chunk_total = 0
+    doc = resolve_document_for_work(settings, work_id)
+    sources: list[dict[str, Any]] = []
+    pdf_path: Path | None = None
+    if doc is not None:
+        mime = (doc.mime_type or "").lower()
+        src = (doc.source_path or "").lower()
+        if "pdf" in mime or src.endswith(".pdf"):
+            blob = BlobStore(settings.blob_root)
+            pdf_path = blob.path_for_sha(doc.sha256)
+            sz = int(pdf_path.stat().st_size) if pdf_path.is_file() else 0
+            sources.append(
+                {
+                    "repr": "pdf",
+                    "sha256": doc.sha256,
+                    "mime_type": doc.mime_type or "application/pdf",
+                    "size_bytes": sz,
+                    "available": pdf_path.is_file(),
+                },
+            )
+    sources.append(
+        {
+            "repr": "markdown",
+            "sha256": None,
+            "mime_type": "text/markdown",
+            "size_bytes": None,
+            "available": chunk_total > 0,
+        },
+    )
+    return {"work_id": work_id, "sources": sources}
+
+
 def get_work_detail(settings: Settings, work_id: str) -> dict[str, Any] | None:
     """Single work + authors for GET /v1/works/{work_id}."""
 
@@ -410,7 +506,7 @@ def get_work_detail(settings: Settings, work_id: str) -> dict[str, Any] | None:
                         "institutions": arec["institutions"] or [],
                     },
                 )
-            return {
+            out: dict[str, Any] = {
                 "work_id": work_id,
                 "title": node.get("title") or "",
                 "abstract": node.get("abstract"),
@@ -425,6 +521,10 @@ def get_work_detail(settings: Settings, work_id: str) -> dict[str, Any] | None:
                     "has_semantic_layer": semantic_ok,
                 },
             }
+            doc_row = resolve_document_for_work(settings, work_id)
+            if doc_row is not None:
+                out["ingestion"]["document_id"] = doc_row.id
+            return out
     finally:
         driver.close()
 
@@ -449,6 +549,56 @@ def work_graph_neighborhood(
             )
     finally:
         driver.close()
+
+
+def list_work_claims(settings: Settings, work_id: str) -> list[dict[str, Any]] | None:
+    """Return claims + evidence for ``GET /v1/works/{id}/claims`` (Neo4j)."""
+
+    if get_work_detail(settings, work_id) is None:
+        return None
+    driver = _neo4j_driver(settings)
+    q = """
+    MATCH (w:Work {id: $wid})<-[:ANCHORED_IN]-(e:Evidence)<-[:SUPPORTED_BY]-(c:Claim)
+    RETURN c.id AS claim_id,
+           coalesce(c.normalized_text, c.text, '') AS normalized_text,
+           coalesce(c.claim_type, '') AS claim_type,
+           coalesce(c.polarity, '') AS polarity,
+           coalesce(c.confidence, 0.0) AS confidence,
+           e.chunk_fingerprint AS chunk_fingerprint,
+           coalesce(e.quote, '') AS quote,
+           e.section_path AS section_path
+    ORDER BY claim_id, chunk_fingerprint
+    """
+    try:
+        with driver.session() as session:
+            rows = list(session.run(q, wid=work_id))
+    finally:
+        driver.close()
+    by_claim: dict[str, dict[str, Any]] = {}
+    for rec in rows:
+        cid = str(rec["claim_id"] or "")
+        if not cid:
+            continue
+        if cid not in by_claim:
+            by_claim[cid] = {
+                "claim_id": cid,
+                "normalized_text": str(rec["normalized_text"] or ""),
+                "claim_type": str(rec["claim_type"] or ""),
+                "polarity": str(rec["polarity"] or ""),
+                "confidence": float(rec["confidence"] or 0.0),
+                "evidence": [],
+            }
+        quote = str(rec["quote"] or "").strip()
+        if not quote:
+            continue
+        by_claim[cid]["evidence"].append(
+            {
+                "chunk_fingerprint": str(rec["chunk_fingerprint"] or ""),
+                "quote": quote,
+                "section_path": rec["section_path"],
+            },
+        )
+    return list(by_claim.values())
 
 
 def work_chunks(

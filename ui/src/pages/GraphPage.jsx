@@ -24,13 +24,14 @@ const LS_GRAPH_PAGE_ABOUT = "graphPageAboutOpen";
 
 export default function GraphPage() {
   const { t } = useI18n();
-  const { getLastWorkspaceHref } = useWorkspaceContext();
+  const { getLastWorkspaceHref, activeWorkspaceId } = useWorkspaceContext();
   const [searchParams, setSearchParams] = useSearchParams();
   const initial = searchParams.get("work_id") || "";
   const [workIdInput, setWorkIdInput] = useState(initial);
   const trace = readTraceabilityState(searchParams);
   const workId = trace.workId;
   const workspaceId = trace.workspaceId;
+  const effectiveWorkspaceId = (workspaceId || activeWorkspaceId || "").trim();
   const selectedNodeId = trace.nodeId;
   const selectedEdgeId = trace.edgeId;
   const labMode = searchParams.get("lab") === "1";
@@ -190,7 +191,7 @@ export default function GraphPage() {
         </Box>
       </Collapse>
 
-      {!workId.trim() && !workspaceId.trim() ? (
+      {!workId.trim() && !effectiveWorkspaceId ? (
         <Box sx={{ flexShrink: 0, mb: 0.5 }}>
           <GraphMissingWorkCallout
             title={t("graph.missing.title")}
@@ -208,7 +209,7 @@ export default function GraphPage() {
       <Box sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <GraphWorkspacePanel
           workId={workId}
-          workspaceId={workspaceId}
+          workspaceId={effectiveWorkspaceId}
           selectedNodeId={selectedNodeId}
           onSelectNode={handleSelectNode}
           selectedEdgeId={selectedEdgeId}
@@ -227,9 +228,9 @@ export default function GraphPage() {
           }}
         />
       </Box>
-      {workspaceId.trim() ? (
+      {effectiveWorkspaceId ? (
         <Box sx={{ flexShrink: 0, px: 1, pb: 1 }}>
-          <DeduplicationPanel workspaceId={workspaceId} />
+          <DeduplicationPanel workspaceId={effectiveWorkspaceId} />
         </Box>
       ) : null}
     </Box>

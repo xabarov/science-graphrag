@@ -101,6 +101,7 @@ class SettingsSnapshot:
     diagnostics: dict[str, Any]
     security: dict[str, Any]
     sections: list[dict[str, Any]]
+    work_dedup: dict[str, Any]
 
 
 class SettingsService:
@@ -215,6 +216,21 @@ class SettingsService:
         diagnostics_snapshot = _build_diagnostics_snapshot()
         security_snapshot = _build_security_snapshot(base_settings)
 
+        work_dedup_snapshot = {
+            "effective": {
+                "qdrant_work_embeddings_collection": base_settings.qdrant_work_embeddings_collection,
+                "qdrant_author_embeddings_collection": base_settings.qdrant_author_embeddings_collection,
+                "work_dedup_sim_low": float(base_settings.work_dedup_sim_low),
+                "work_dedup_sim_high": float(base_settings.work_dedup_sim_high),
+                "work_dedup_max_candidates": int(base_settings.work_dedup_max_candidates),
+                "work_dedup_llm_mode": str(base_settings.work_dedup_llm_mode),
+                "work_dedup_llm_timeout_s": float(base_settings.work_dedup_llm_timeout_s),
+                "author_dedup_sim_low": float(base_settings.author_dedup_sim_low),
+                "author_dedup_sim_high": float(base_settings.author_dedup_sim_high),
+                "author_dedup_max_candidates": int(base_settings.author_dedup_max_candidates),
+            }
+        }
+
         sections = [
             {
                 "id": "general",
@@ -279,6 +295,7 @@ class SettingsService:
             diagnostics=diagnostics_snapshot,
             security=security_snapshot,
             sections=sections,
+            work_dedup=work_dedup_snapshot,
         )
 
     def get_schema(self) -> dict[str, Any]:

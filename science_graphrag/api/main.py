@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import re
+from collections.abc import Iterator
 from pathlib import Path
 
 import uvicorn
-from fastapi import Depends, FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -17,6 +19,7 @@ from science_graphrag.api.benchmark import router as benchmark_router
 from science_graphrag.api.ingest_jobs import router as ingest_router
 from science_graphrag.api.retrieval import GroundedAnswer, answer_query
 from science_graphrag.api.settings import router as settings_router
+from science_graphrag.api.workspace_dedup import router as workspace_dedup_router
 from science_graphrag.api.workspaces import router as workspaces_router
 from science_graphrag.config import get_settings
 
@@ -41,7 +44,56 @@ app.include_router(
 )
 app.include_router(ask_sessions_router, prefix="/v1")
 app.include_router(workspaces_router, prefix="/v1")
+app.include_router(workspace_dedup_router, prefix="/v1/workspaces")
 app.include_router(ingest_router, prefix="/v1")
+
+
+def _parse_single_byte_range(range_header: str, file_size: int) -> tuple[int, int] | None:
+    """Parse one ``bytes=`` range; return inclusive (start, end) or None if unsatisfiable."""
+
+    if file_size <= 0:
+        return None
+    rh = range_header.strip()
+    if not rh.lower().startswith("bytes="):
+        return None
+    spec = rh[6:].strip().split(",", maxsplit=1)[0].strip()
+    m = re.match(r"^(\d*)-(\d*)$", spec)
+    if not m:
+        return None
+    a, b = m.group(1), m.group(2)
+    if a != "" and b != "":
+        start, end = int(a), int(b)
+    elif a != "":
+        start = int(a)
+        end = file_size - 1
+    elif b != "":
+        suffix = int(b)
+        if suffix <= 0:
+            return None
+        start = max(0, file_size - suffix)
+        end = file_size - 1
+    else:
+        return None
+    if start < 0 or start >= file_size:
+        return None
+    end = min(end, file_size - 1)
+    if end < start:
+        return None
+    return start, end
+
+
+def _iter_pdf_slice(path: Path, start: int, length: int) -> Iterator[bytes]:
+    chunk = 64 * 1024
+    with path.open("rb") as handle:
+        handle.seek(start)
+        remaining = length
+        while remaining > 0:
+            n = min(chunk, remaining)
+            block = handle.read(n)
+            if not block:
+                break
+            remaining -= len(block)
+            yield block
 
 
 class QueryRequest(BaseModel):
@@ -61,6 +113,26 @@ class QueryResponse(BaseModel):
 class WorksListResponse(BaseModel):
     items: list[dict]
     total: int
+
+
+class ClaimEvidenceOut(BaseModel):
+    chunk_fingerprint: str
+    quote: str
+    section_path: str | None = None
+
+
+class ClaimOut(BaseModel):
+    claim_id: str
+    normalized_text: str
+    claim_type: str
+    polarity: str
+    confidence: float
+    evidence: list[ClaimEvidenceOut]
+
+
+class WorkClaimsResponse(BaseModel):
+    work_id: str
+    items: list[ClaimOut]
 
 
 @app.get("/health")
@@ -147,6 +219,75 @@ def get_work_chunks(
     if not exists:
         raise HTTPException(status_code=404, detail="work_not_found")
     return works_api.work_chunks(get_settings(), work_id, limit=limit, offset=offset)
+
+
+@app.get("/v1/works/{work_id}/claims", response_model=WorkClaimsResponse)
+def get_work_claims(work_id: str) -> WorkClaimsResponse:
+    """Claims + verbatim evidence for Reader / Evidence UI (Wave O)."""
+
+    items = works_api.list_work_claims(get_settings(), work_id)
+    if items is None:
+        raise HTTPException(status_code=404, detail="work_not_found")
+    return WorkClaimsResponse(work_id=work_id, items=items)
+
+
+@app.get("/v1/works/{work_id}/sources")
+def get_work_sources(work_id: str) -> dict:
+    body = works_api.work_sources_payload(get_settings(), work_id)
+    if not body:
+        raise HTTPException(status_code=404, detail="work_not_found")
+    return body
+
+
+@app.get("/v1/works/{work_id}/pdf", response_model=None)
+def get_work_pdf(request: Request, work_id: str) -> Response:
+    p = works_api.work_pdf_blob_path(get_settings(), work_id)
+    if not p:
+        raise HTTPException(status_code=404, detail="pdf_not_found")
+    size = int(p.stat().st_size)
+    etag = f'W/"{p.name}"'
+    common = {
+        "Accept-Ranges": "bytes",
+        "ETag": etag,
+        "Cache-Control": "private, max-age=0",
+    }
+    inm = request.headers.get("if-none-match")
+    if inm:
+        tokens = {t.strip() for t in inm.split(",") if t.strip()}
+        if etag in tokens:
+            return Response(status_code=304, headers=common)
+
+    range_hdr = request.headers.get("range")
+    if not range_hdr:
+        return StreamingResponse(
+            _iter_pdf_slice(p, 0, size),
+            media_type="application/pdf",
+            headers={
+                **common,
+                "Content-Length": str(size),
+                "Content-Disposition": 'inline; filename="document.pdf"',
+            },
+        )
+
+    parsed = _parse_single_byte_range(range_hdr, size)
+    if parsed is None:
+        return Response(
+            status_code=416,
+            headers={**common, "Content-Range": f"bytes */{size}"},
+        )
+    start, end = parsed
+    length = end - start + 1
+    return StreamingResponse(
+        _iter_pdf_slice(p, start, length),
+        status_code=206,
+        media_type="application/pdf",
+        headers={
+            **common,
+            "Content-Range": f"bytes {start}-{end}/{size}",
+            "Content-Length": str(length),
+            "Content-Disposition": 'inline; filename="document.pdf"',
+        },
+    )
 
 
 @app.get("/", response_model=None)

@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 import Chip from "@mui/material/Chip";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Switch from "@mui/material/Switch";
 import { Link } from "react-router-dom";
 
-import { formatResearchApiError, getWorkChunks } from "../../services/researchApi.js";
+import { formatResearchApiError, getWorkClaims, getWorkChunks } from "../../services/researchApi.js";
 import { CursorSmallButton } from "../common/index.js";
 import { buildWorkspaceTracePath, describeTraceabilityState } from "./traceabilityState.js";
 import { useI18n } from "../../i18n/I18nContext.jsx";
@@ -25,6 +27,8 @@ export default function EvidenceWorkBody({
   const [chunks, setChunks] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [onlyClaimEvidence, setOnlyClaimEvidence] = useState(false);
+  const [claimChunkFingerprints, setClaimChunkFingerprints] = useState(() => new Set());
   const traceSummary = describeTraceabilityState({
     chunkFingerprint: highlightedFingerprint,
     section: highlightedSection,
@@ -42,9 +46,23 @@ export default function EvidenceWorkBody({
       setLoading(true);
       setError(null);
       try {
-        const res = await getWorkChunks(workId, { limit: 200, offset: 0 });
+        const [cRes, clRes] = await Promise.all([
+          getWorkChunks(workId, { limit: 200, offset: 0 }),
+          getWorkClaims(workId).catch(() => ({ data: { items: [] } })),
+        ]);
         if (cancelled) return;
-        setChunks(res.data);
+        setChunks(cRes.data);
+        const fps = new Set();
+        const items = clRes.data?.items;
+        if (Array.isArray(items)) {
+          for (const cl of items) {
+            for (const ev of cl.evidence || []) {
+              const fp = String(ev.chunk_fingerprint || "").trim();
+              if (fp) fps.add(fp);
+            }
+          }
+        }
+        setClaimChunkFingerprints(fps);
       } catch (err) {
         if (cancelled) return;
         setError(formatResearchApiError(err));
@@ -57,6 +75,13 @@ export default function EvidenceWorkBody({
       cancelled = true;
     };
   }, [workId]);
+
+  const visibleChunkItems = useMemo(() => {
+    const raw = chunks?.items;
+    if (!Array.isArray(raw)) return [];
+    if (!onlyClaimEvidence || claimChunkFingerprints.size === 0) return raw;
+    return raw.filter((ch) => claimChunkFingerprints.has(String(ch.chunk_fingerprint || "").trim()));
+  }, [chunks, onlyClaimEvidence, claimChunkFingerprints]);
 
   return (
     <Box>
@@ -89,10 +114,25 @@ export default function EvidenceWorkBody({
               </Typography>
             </Box>
           ) : null}
-          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)" }}>
-            {t("evidenceBody.total", { total: String(chunks.total ?? "—") })}
-          </Typography>
-          {(chunks.items || []).map((ch) => (
+          <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+            <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)" }}>
+              {t("evidenceBody.total", { total: String(chunks.total ?? "—") })}
+            </Typography>
+            {claimChunkFingerprints.size > 0 ? (
+              <FormControlLabel
+                control={
+                  <Switch
+                    size="small"
+                    checked={onlyClaimEvidence}
+                    onChange={(_e, v) => setOnlyClaimEvidence(v)}
+                    sx={{ ml: 0.5 }}
+                  />
+                }
+                label={<Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.65)" }}>{t("evidenceBody.filterClaimsOnly")}</Typography>}
+              />
+            ) : null}
+          </Box>
+          {visibleChunkItems.map((ch) => (
             (() => {
               const fingerprint = String(ch.chunk_fingerprint || "");
               const sectionPath = String(ch.section_path || "");

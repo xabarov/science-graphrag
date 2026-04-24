@@ -30,4 +30,15 @@ describe("detectScienceHybridCommunities", () => {
     expect(m.get("a")).toBe("sem:a");
     expect(m.get("b")).toBe("sem:b");
   });
+
+  it("pins internal Work nodes to ws-internal cluster", () => {
+    const nodes = [
+      { id: "w1", type: "Work", workspaceMembership: "internal" },
+      { id: "w2", type: "Work", workspaceMembership: "external" },
+    ];
+    const links = [];
+    const m = detectScienceHybridCommunities(nodes, links);
+    expect(m.get("w1")).toBe("ws-internal");
+    expect(m.get("w2")).not.toBe("ws-internal");
+  });
 });

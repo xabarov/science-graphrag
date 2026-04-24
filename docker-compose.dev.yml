@@ -91,12 +91,8 @@ services:
   ui:
     image: node:20-bookworm-slim
     working_dir: /app/ui
-    command:
-      [
-        "sh",
-        "-lc",
-        "if [ ! -d node_modules ] || [ -z \"$(ls -A node_modules 2>/dev/null)\" ]; then npm ci; fi && npm run dev -- --host 0.0.0.0 --port 5173 --strictPort",
-      ]
+    # Named volume ui_node_modules: see ui/docker-entrypoint-dev.sh for lockfile-driven npm ci.
+    command: ["sh", "/app/ui/docker-entrypoint-dev.sh"]
     expose:
       - "5173"
     volumes:

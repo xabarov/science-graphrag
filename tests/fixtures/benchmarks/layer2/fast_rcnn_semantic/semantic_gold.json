@@ -6,12 +6,15 @@
   "min_method_names": 1,
   "expected_method_names_normalized": [
     "fast r-cnn",
-    "fast rcnn"
+    "fast rcnn",
+    "roi pooling",
+    "selective search"
   ],
   "expected_dataset_names_normalized": [
     "voc",
     "coco",
-    "pascal voc"
+    "pascal voc",
+    "imagenet"
   ],
   "min_dataset_recall_ratio": 0.6,
   "allow_empty_when_no_llm": true

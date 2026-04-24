@@ -6,7 +6,9 @@
   "min_method_names": 1,
   "expected_method_names_normalized": [
     "dn-detr",
-    "query denoising"
+    "query denoising",
+    "detr",
+    "transformer"
   ],
   "expected_dataset_names_normalized": [
     "coco",

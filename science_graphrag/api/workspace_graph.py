@@ -541,8 +541,9 @@ def _build_from_depth1_rows(
     node_types: list[str] | None,
     semantic_only: bool,
     cap: int,
+    ignore_node_type_filter: bool = False,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], bool]:
-    types_empty = not node_types
+    types_empty = bool(ignore_node_type_filter) or (not node_types)
     type_list = node_types or []
     sem_clause = ""
     params: dict[str, Any] = {
@@ -598,8 +599,9 @@ def _build_from_depth2_rows(
     node_types: list[str] | None,
     semantic_only: bool,
     cap: int,
+    ignore_node_type_filter: bool = False,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], bool]:
-    types_empty = not node_types
+    types_empty = bool(ignore_node_type_filter) or (not node_types)
     type_list = node_types or []
     sem_clause = ""
     if semantic_only:
@@ -762,6 +764,7 @@ def project_workspace_graph(
             }
 
         semantic_only = mode_norm == "semantic_layer"
+        ignore_node_type_filter = mode_norm == "full"
         inc_ext = include_external
 
         with driver.session() as session:
@@ -774,6 +777,7 @@ def project_workspace_graph(
                     node_types=types_list,
                     semantic_only=semantic_only,
                     cap=cap,
+                    ignore_node_type_filter=ignore_node_type_filter,
                 )
                 gds_used = False
             else:
@@ -783,6 +787,7 @@ def project_workspace_graph(
                     and not inc_ext
                     and not semantic_only
                     and mode_norm != "union_1hop"
+                    and not ignore_node_type_filter
                     and len(internal_ids) > 50
                     and (types_list is None or "Work" in types_list)
                 )
@@ -816,6 +821,7 @@ def project_workspace_graph(
                         node_types=types_list,
                         semantic_only=semantic_only,
                         cap=cap,
+                        ignore_node_type_filter=ignore_node_type_filter,
                     )
                     gds_used = False
 
@@ -938,12 +944,16 @@ def workspace_graph_neighbors(
     depth: int = 1,
     limit: int = 80,
 ) -> dict[str, Any] | None:
-    """1-hop (or shallow) neighborhood for lazy expand; does not require node to be in workspace."""
+    """1-hop or 2-hop neighborhood for lazy expand; does not require node to be in workspace."""
 
     nid = (node_id or "").strip()
     if not nid:
         return None
-    lim = max(1, min(int(limit), 200))
+    lim = max(1, min(int(limit), MAX_NEIGHBORS_CAP))
+    depth_req = max(1, min(int(depth), 2))
+    depth_eff = depth_req
+    hop1_lim = lim if depth_req <= 1 else max(1, lim // 2)
+    hop2_lim = max(1, lim - hop1_lim) if depth_req >= 2 else 0
     driver = _neo4j_driver(settings)
     try:
         with driver.session() as session:
@@ -953,7 +963,10 @@ def workspace_graph_neighbors(
             ).single()
             if not ws_row or not ws_row["wid"]:
                 return None
-            rows = session.run(
+            nodes_by_id: dict[str, dict[str, Any]] = {}
+            edges_by_key: dict[str, dict[str, Any]] = {}
+
+            for rec in session.run(
                 """
                 MATCH (n {id: $nid})
                 MATCH (n)-[r]-(m)
@@ -961,11 +974,8 @@ def workspace_graph_neighbors(
                 LIMIT $lim
                 """,
                 nid=nid,
-                lim=lim,
-            )
-            nodes_by_id: dict[str, dict[str, Any]] = {}
-            edges_by_key: dict[str, dict[str, Any]] = {}
-            for rec in rows:
+                lim=hop1_lim,
+            ):
                 n, rel_obj, m = rec["n"], rec["r"], rec["m"]
                 nn = _node_dict_from_neo(n)
                 nm = _node_dict_from_neo(m)
@@ -976,6 +986,30 @@ def workspace_graph_neighbors(
                 if n is not None and m is not None and rel_obj is not None:
                     ed = _edge_dict_from_rel(n, m, rel_obj, len(edges_by_key))
                     edges_by_key[_edge_key(ed["source"], ed["type"], ed["target"])] = ed
+
+            if depth_req >= 2 and hop2_lim > 0:
+                for rec in session.run(
+                    """
+                    MATCH (n {id: $nid})
+                    MATCH (n)-[r1]-(m1)-[r2]-(m2)
+                    RETURN n, r1, m1, r2, m2
+                    LIMIT $lim
+                    """,
+                    nid=nid,
+                    lim=hop2_lim,
+                ):
+                    n, r1, m1, r2, m2 = rec["n"], rec["r1"], rec["m1"], rec["r2"], rec["m2"]
+                    for node in (n, m1, m2):
+                        nd = _node_dict_from_neo(node)
+                        if nd:
+                            nodes_by_id[nd["id"]] = nd
+                    if n is not None and m1 is not None and r1 is not None:
+                        e1 = _edge_dict_from_rel(n, m1, r1, len(edges_by_key))
+                        edges_by_key[_edge_key(e1["source"], e1["type"], e1["target"])] = e1
+                    if m1 is not None and m2 is not None and r2 is not None:
+                        e2 = _edge_dict_from_rel(m1, m2, r2, len(edges_by_key))
+                        edges_by_key[_edge_key(e2["source"], e2["type"], e2["target"])] = e2
+
             nodes = list(nodes_by_id.values())
             edges = list(edges_by_key.values())
             row_ids = session.run(
@@ -992,13 +1026,10 @@ def workspace_graph_neighbors(
             "workspace_id": workspace_id,
             "center_id": nid,
             "depth_requested": int(depth),
-            "depth_effective": 1,
+            "depth_effective": depth_eff,
             "nodes": nodes,
             "edges": edges,
             "meta": {"graph_scope": "workspace_neighbors", "neighbor_limit_applied": lim},
         }
     finally:
         driver.close()
-
-
-# Fix neighbors: rec should include relationship object - use rec["r"] from query RETURN n, r, m

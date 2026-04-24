@@ -26,7 +26,7 @@ class SemanticGoldSpec(BaseModel):
         description="Optional lower bound for method recall (tp / |gold methods|) when LLM is enabled.",
     )
     min_dataset_recall_ratio: float | None = Field(
-        default=None,
+        default=0.6,
         ge=0.0,
         le=1.0,
         description="Optional lower bound for dataset recall (tp / |gold datasets|) when LLM is enabled.",

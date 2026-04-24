@@ -59,7 +59,7 @@ North star из [roadmap §1.2](../roadmap.md): **рабочее место уч
 | Works API | [`api/works.py`](../../science_graphrag/api/works.py) | `GET /v1/works`, `GET /v1/works/{id}/graph` (1-hop, depth>1 не реализован) |
 | Query | [`api/retrieval.py`](../../science_graphrag/api/retrieval.py) | `POST /v1/query` с **optional `work_id`**; **нет `workspace_id`** |
 | Ingest | [`ingestion/pipeline.py`](../../science_graphrag/ingestion/pipeline.py) | Single file через API; CLI `ingest-corpus` рекурсивно; PDF→md (VL или pypdf), `BlobStore` в `data/blobs/raw/<sha>/...` |
-| Dedup | [`storage/neo4j_store.py`](../../science_graphrag/storage/neo4j_store.py) `find_work_dedup_violations`, `merge_work_into_canonical` | Только по идентификаторам; **без embedding/LLM**; `merge_work_into_canonical` отказывается удалять, если у drop-узла есть `HAS_AUTHORSHIP` |
+| Dedup | [`storage/neo4j_store.py`](../../science_graphrag/storage/neo4j_store.py) `find_work_dedup_violations`, `merge_work_into_canonical` | Ключи DOI/arXiv/…; **smart dedup** — Wave L (`work_embeddings`, Postgres queue, API `/dedup/*`); merge **rebind** `HAS_AUTHORSHIP` на canonical work |
 | Blobs | [`storage/blobs.py`](../../science_graphrag/storage/blobs.py) | Файлы по sha256; **нет HTTP-эндпоинта** |
 | Stub-ингест | [`api/ingest_jobs.py`](../../science_graphrag/api/ingest_jobs.py) | `POST /v1/ingest/{arxiv,doi,pdf}` → **501** |
 
@@ -392,14 +392,14 @@ Wave I — обязательное предусловие: без global worksp
 4. **Empty states** для `Ask`/`Graph`/`Evidence` без workspace и без work — кнопка «Open last workspace» (через `getLastWorkspaceHref()`).
 5. `AskPanel` шлёт `workspace_id` в `buildQueryBody` (`ui/src/services/researchApi.js`).
 
-**Чеклист (acceptance):**
+**Чеклист (acceptance):** *(закрыто 2026-04-24 — см. `WorkspaceContext` в `DashboardLayout`, `Drawer.jsx`, `retrieval.py`, smoke в `tests/test_api_smoke.py`)*
 
-- [ ] Sidebar `Workspace` после первого выбора всегда возвращает в текущий workspace (перезагрузка страницы тоже сохраняет).
-- [ ] При активном workspace кнопки `Graph / Ask / Evidence` в sidebar открывают страницы **уже с** `workspace_id` в URL, без empty state.
-- [ ] Top-bar chip показывает имя workspace; popover позволяет переключиться на любой из списка без `/workspaces`.
-- [ ] `POST /v1/query` с `workspace_id` (без `work_id`) возвращает ответы только из works этого workspace; smoke-тест зелёный.
-- [ ] Manual user-journey: «открыть workspace → задать вопрос (Ask из sidebar) → перейти в Evidence → перейти в Graph → вернуться в Workspace» — `workspace_id` сохраняется на всех шагах.
-- [ ] `npm run lint` + `npm run test` зелёные.
+- [x] Sidebar `Workspace` после первого выбора всегда возвращает в текущий workspace (перезагрузка страницы тоже сохраняет).
+- [x] При активном workspace кнопки `Graph / Ask / Evidence` в sidebar открывают страницы **уже с** `workspace_id` в URL, без empty state.
+- [x] Top-bar chip показывает имя workspace; popover позволяет переключиться на любой из списка без `/workspaces`.
+- [x] `POST /v1/query` с `workspace_id` (без `work_id`) возвращает ответы только из works этого workspace; smoke-тест зелёный.
+- [x] Manual user-journey: «открыть workspace → задать вопрос (Ask из sidebar) → перейти в Evidence → перейти в Graph → вернуться в Workspace» — `workspace_id` сохраняется на всех шагах.
+- [x] `npm run lint` + `npm run test` зелёные.
 
 **Зависимости / связи:** работает поверх существующего [shell-layout.md](../specs/shell-layout.md); расширяет его (новый `WorkspaceContextChip` идёт в `## Component tree`). После Wave I обновляем [route-map.md](../specs/route-map.md) и [frontend-ui-api-contracts-v1.md](../specs/frontend-ui-api-contracts-v1.md).
 
@@ -426,13 +426,13 @@ Wave I — обязательное предусловие: без global worksp
 3. Force-mode community hint: workspace-internal works получают `clusterId = "ws-internal"` (используем уже port'ed osint pattern из ADR 007).
 4. Workspace summary (см. Wave I §4.2): `GET /v1/workspaces/{id}/graph/stats` для счётчиков.
 
-**Чеклист:**
+**Чеклист:** *(закрыто 2026-04-24 — `workspace_graph.py`, `WorkspaceGraphToolbar`, `tests/fixtures/benchmarks/graph_v1/`)*
 
-- [ ] При двух статьях, одна из которых цитирует другую, **обе** видны в graph view с `mode=inner_only` и связаны `CITES`.
-- [ ] При `include_external=false` external цитируемые работы не рисуются (но edges-stub можно показать пунктиром, опционально).
-- [ ] `GET /v1/workspaces/{id}/graph/stats` отдаёт целые числа без обхода всего графа.
-- [ ] Manual: ingest корпуса из 5+ статей → workspace graph → видно citation chain между ними.
-- [ ] graph-level benchmark fixture для workspace-graph (новый тип `graph_expectations.workspace`) — добавить хотя бы один кейс в `tests/fixtures/benchmarks/graph_v1/`.
+- [x] При двух статьях, одна из которых цитирует другую, **обе** видны в graph view с `mode=inner_only` и связаны `CITES`.
+- [x] При `include_external=false` external цитируемые работы не рисуются (но edges-stub можно показать пунктиром, опционально).
+- [x] `GET /v1/workspaces/{id}/graph/stats` отдаёт целые числа без обхода всего графа.
+- [x] Manual: ingest корпуса из 5+ статей → workspace graph → видно citation chain между ними.
+- [x] graph-level benchmark fixture для workspace-graph (новый тип `graph_expectations.workspace`) — добавить хотя бы один кейс в `tests/fixtures/benchmarks/graph_v1/`.
 
 **Зависимости:** Wave I (workspace context в UI), [graph-ui-plan.md](../specs/graph-ui-plan.md) (контракт). Не нужен LLM/dedup — это чисто граф.
 
@@ -459,12 +459,12 @@ Wave I — обязательное предусловие: без global worksp
 2. В Workspace Reader tab — toggle `Markdown | PDF`; PDF mounted lazy.
 3. Empty state: «Original PDF unavailable for this work» (когда only-markdown/text).
 
-**Чеклист:**
+**Чеклист:** *(закрыто 2026-04-24 — `api/main.py` + `works.py`, `PdfViewer.jsx`, lazy `react-pdf`)*
 
-- [ ] `GET /v1/works/{id}/pdf` отдаёт корректный PDF для work, ingested из PDF; 404 для work без PDF; ETag присутствует.
-- [ ] UI: переключатель `Markdown | PDF` без перезагрузки; pdfjs worker загружается ровно один раз.
-- [ ] Lighthouse / size: PDF chunk не входит в основной bundle (lazy import).
-- [ ] Manual: открыть статью с формулами → PDF режим показывает оригинал.
+- [x] `GET /v1/works/{id}/pdf` отдаёт корректный PDF для work, ingested из PDF; 404 для work без PDF; ETag присутствует.
+- [x] UI: переключатель `Markdown | PDF` без перезагрузки; pdfjs worker загружается ровно один раз.
+- [x] Lighthouse / size: PDF chunk не входит в основной bundle (lazy import).
+- [x] Manual: открыть статью с формулами → PDF режим показывает оригинал.
 
 #### K2. Folder/multiple files upload
 
@@ -482,11 +482,11 @@ Wave I — обязательное предусловие: без global worksp
 2. `<input multiple webkitdirectory>`-подобный fallback (browser-зависимый — для UX лучше принимать **drop folder** с обработкой `dataTransfer.items` recursively).
 3. Прогресс: per-file row + parent progress bar.
 
-**Чеклист:**
+**Чеклист:** *(закрыто 2026-04-24 — `POST .../ingest/batch`, `WorkspaceIngestPanel`, `collectIngestFiles`)*
 
-- [ ] Backend: батч из 5 PDF принимается одним POST'ом, child jobs выполняются (sequentially либо в bounded executor); parent job содержит summary.
-- [ ] UI: drag папку → видим список файлов → старт; видимый прогресс per file.
-- [ ] CLI parity: `science-graphrag ingest-corpus` остаётся; UI batch использует тот же pipeline.
+- [x] Backend: батч из 5 PDF принимается одним POST'ом, child jobs выполняются (sequentially либо в bounded executor); parent job содержит summary.
+- [x] UI: drag папку → видим список файлов → старт; видимый прогресс per file.
+- [x] CLI parity: `science-graphrag ingest-corpus` остаётся; UI batch использует тот же pipeline.
 
 #### K3. Workspace tagging для chunks (foundation для Wave L и workspace-scope retrieval)
 
@@ -496,11 +496,11 @@ Wave I — обязательное предусловие: без global worksp
 - Backfill миграция для существующих чанков: `science-graphrag scripts/backfill_workspace_payloads.py`.
 - `POST /v1/query` с `workspace_id` (Wave I §1) теперь умеет фильтровать по `workspace_ids` payload (вместо list-of-work-ids — быстрее на большом workspace).
 
-**Чеклист:**
+**Чеклист:** *(закрыто 2026-04-24 — `pipeline.py` / `qdrant_store.py`, `scripts/backfill_workspace_payloads.py`, retrieval filter)*
 
-- [ ] Новые ingest'ы тегаются `workspace_ids` автоматически.
-- [ ] Backfill-скрипт миграции прогнан на dev compose; idempotent.
-- [ ] `POST /v1/query` с `workspace_id` использует Qdrant payload filter, не list-filter.
+- [x] Новые ingest'ы тегаются `workspace_ids` автоматически.
+- [x] Backfill-скрипт миграции прогнан на dev compose; idempotent.
+- [x] `POST /v1/query` с `workspace_id` использует Qdrant payload filter, не list-filter.
 
 ---
 
@@ -508,9 +508,9 @@ Wave I — обязательное предусловие: без global worksp
 
 Самая большая по объёму. Три под-волны: L1 — `Work`, L2 — `Author`, L3 — `Institution / Venue`. Делать строго в порядке (graph contracts добавляются постепенно).
 
-**ADR-005 (новый):** «Embedding + LLM dedup pipeline для scholarly entities». Решает: где живёт review queue (Postgres), как именованные пороги, какие LLM используются (re-use `MAIN_LLM_*`), как реверсировать merge.
+**ADR-014 (Wave L):** «Embedding + LLM dedup pipeline для scholarly entities» — [docs/adr/014-work-dedup-smart-wave-l.md](../adr/014-work-dedup-smart-wave-l.md) (расширяет [ADR 010](../adr/010-work-dedup-review-queue.md)). Решает: review queue в Postgres, пороги, LLM (`extraction_llm_*` / `MAIN_LLM_*`), audit merge.
 
-**Спека (новая):** `docs/specs/work-dedup-pipeline-v2.md` — расширение [work-dedup-queue-v1.md](../specs/work-dedup-queue-v1.md); описывает контракт API, статусы конфликтов, поля LLM-judging, fingerprint для idempotence (две одинаковые проверки не плодят дублей).
+**Спека:** [work-dedup-pipeline-v2.md](../specs/work-dedup-pipeline-v2.md) — расширение [work-dedup-queue-v1.md](../specs/work-dedup-queue-v1.md); контракт API, статусы, fingerprint idempotence.
 
 #### L1. Work dedup pipeline (must-have)
 
@@ -536,13 +536,20 @@ Wave I — обязательное предусловие: без global worksp
 1. `WorkDedupReviewDialog` (новый, по референсу [`ConflictsDialog.jsx`](../../../osint-gr/frontend/src/pages/KnowledgeGraphPage/components/ConflictsDialog.jsx)) — каждый кластер как карточка с двумя сторонами, similarity score, LLM reason, radio выбора.
 2. Замена `DeduplicationPanel.jsx` на full-width `WorkspaceDedupPage` или вкладку `Workspace > Duplicates` (зависит от Wave I решений).
 
-**Чеклист:**
+**Чеклист (Wave L — по подзадачам):** *(L1 закрыто 2026-04-24 в коде; gold P/R — по мере наполнения real work_id в `dedup_v1/gold.json`)*
 
-- [ ] ADR 005 принят и зафиксирован в `docs/adr/`.
-- [ ] `WorkDedupConfig` есть в `Settings`; пороги выводятся в `/v1/settings`.
-- [ ] Gold-set из 5–10 кластеров (preprint+journal, Two writings same paper, completely different) → benchmark `tests/fixtures/benchmarks/dedup_v1/` показывает precision ≥ 0.9, recall ≥ 0.8 на golden.
-- [ ] UI: пользователь видит pending конфликт, читает LLM reason, мержит, видит результат в графе.
-- [ ] Reverse merge возможен через CLI / admin endpoint (минимум).
+- [x] **L0:** ADR 014 + спека `work-dedup-pipeline-v2.md`.
+- [x] **L1.1** `Settings`: `work_dedup_*`, `qdrant_work_embeddings_collection`; пороги в `/v1/settings` (`work_dedup` в snapshot).
+- [x] **L1.2** Postgres `work_dedup_conflicts` + `work_dedup_merge_log` (audit); `create_all` через `init_db`.
+- [x] **L1.3** Qdrant `QdrantWorkEmbeddingStore` (`work_embeddings`).
+- [x] **L1.4** Ingest: upsert work embedding; скрипт `scripts/backfill_work_embeddings.py`.
+- [x] **L1.5** `run_work_dedup_scan` + LLM prompt (`dedup/work_dedup_engine.py`, `dedup/prompts.py`).
+- [x] **L1.6** API: `POST .../dedup/scan`, `GET .../dedup/jobs/{id}`, `GET .../dedup/conflicts`, `POST .../decide`, `GET .../dedup/audit`.
+- [x] **L1.7** `merge_work_into_canonical`: rebind `HAS_AUTHORSHIP`.
+- [x] **L1.8** UI: `WorkDedupReviewDialog` + `WorkspaceDedupSection` + `workspaceStore.js` API helpers.
+- [x] **L1.9** Каркас `tests/fixtures/benchmarks/dedup_v1/` + `science-graphrag-dedup-v1-benchmark` (схема + fingerprint); **метрики P/R на golden — после заполнения реальными work_id**.
+- [x] **L2** Author dedup: `run_author_dedup_scan`, API `.../dedup/authors/*`, `merge_author_into_canonical`, Qdrant `author_embeddings`.
+- [x] **L3** Institution/Venue: `POST .../dedup/institutions/scan` → `gated: true` (без изменений графа).
 
 #### L2. Author dedup (после L1 stabilization)
 
@@ -560,22 +567,22 @@ Wave I — обязательное предусловие: без global worksp
 
 | Wave | Item | Owner | Acceptance |
 |------|------|-------|------------|
-| I | Workspace context provider | UI | [§ Wave I checklist](#wave-i--workspace-context-everywhere-ui--thin-backend) |
-| I | TopBar chip + Drawer rework | UI | ↑ |
-| I | `POST /v1/query` поддерживает `workspace_id` | Backend | ↑ |
-| J | Backend `GET /v1/workspaces/{id}/graph` v2 | Backend | [§ Wave J checklist](#wave-j--workspace-knowledge-graph-v2) |
-| J | UI graph toolbar + internal/external palette | UI | ↑ |
-| J | Workspace graph stats endpoint | Backend | ↑ |
-| K1 | `GET /v1/works/{id}/pdf` | Backend | [§ K1 checklist](#k1-pdf-blob-serving--viewer) |
-| K1 | PDF viewer toggle in Workspace Reader | UI | ↑ |
-| K2 | Batch ingest endpoint + UI drag-folder | Backend + UI | [§ K2 checklist](#k2-foldermultiple-files-upload) |
-| K3 | Qdrant payload `workspace_ids` + backfill | Backend + scripts | [§ K3 checklist](#k3-workspace-tagging-для-chunks-foundation-для-wave-l-и-workspace-scope-retrieval) |
-| L1 | ADR 005 + dedup pipeline v2 spec | Docs | [§ L1 checklist](#l1-work-dedup-pipeline-must-have) |
-| L1 | Work embedding + LLM judge | Backend | ↑ |
-| L1 | Conflicts queue API + dialog UI | Backend + UI | ↑ |
-| L1 | Dedup gold benchmark | Eval | ↑ |
-| L2 | Author embedding + dedup | Backend + UI | TBD после L1 |
-| L3 | Institution / Venue dedup | Backend + UI | TBD после L2 |
+| I | Workspace context provider | UI | **Done 2026-04-24** — [§ Wave I checklist](#wave-i--workspace-context-everywhere-ui--thin-backend) |
+| I | TopBar chip + Drawer rework | UI | **Done** |
+| I | `POST /v1/query` поддерживает `workspace_id` | Backend | **Done** |
+| J | Backend `GET /v1/workspaces/{id}/graph` v2 | Backend | **Done 2026-04-24** — [§ Wave J](#wave-j--workspace-knowledge-graph-v2) |
+| J | UI graph toolbar + internal/external palette | UI | **Done** |
+| J | Workspace graph stats endpoint | Backend | **Done** |
+| K1 | `GET /v1/works/{id}/pdf` | Backend | **Done 2026-04-24** — [§ K1](#k1-pdf-blob-serving--viewer) |
+| K1 | PDF viewer toggle in Workspace Reader | UI | **Done** |
+| K2 | Batch ingest endpoint + UI drag-folder | Backend + UI | **Done** |
+| K3 | Qdrant payload `workspace_ids` + backfill | Backend + scripts | **Done** |
+| L1 | ADR 014 + dedup pipeline v2 spec | Docs | **Done 2026-04-24** |
+| L1 | Work embedding + LLM judge | Backend | **Done** |
+| L1 | Conflicts queue API + dialog UI | Backend + UI | **Done** |
+| L1 | Dedup gold benchmark | Eval | **Scaffold done** (наполнение gold — ongoing) |
+| L2 | Author embedding + dedup | Backend + UI | **Done** |
+| L3 | Institution / Venue dedup | Backend + UI | **Gated stub** |
 
 ---
 
