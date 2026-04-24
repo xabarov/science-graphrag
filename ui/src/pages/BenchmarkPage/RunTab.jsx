@@ -20,6 +20,7 @@ import {
   saveLauncherPrefs,
   validateLauncherConfig,
 } from "./benchmarkLauncherConfig.js";
+import { useI18n } from "../../i18n/I18nContext.jsx";
 
 const TERMINAL_STATUSES = ["completed", "failed", "cancelled"];
 
@@ -29,6 +30,7 @@ function _toggleCase(prev, caseId) {
 }
 
 export default function RunTab({ onSwitchToResults }) {
+  const { t } = useI18n();
   const [launcherPrefs, setLauncherPrefs] = useState(() => loadLauncherPrefs());
   const benchmarkFamily = launcherPrefs.activeFamily || "layer1";
   const [mergeSafeCases, setMergeSafeCases] = useState([]);
@@ -239,10 +241,10 @@ export default function RunTab({ onSwitchToResults }) {
   }
 
   const title = isGraphCatalog
-    ? "Graph-v1 cases (catalog only)"
+    ? t("benchmark.run.titleGraph")
     : benchmarkFamily === "layer2"
-      ? "Launch Layer-2 (semantic) benchmark"
-      : "Launch Layer-1 benchmark";
+      ? t("benchmark.run.titleLayer2")
+      : t("benchmark.run.titleLayer1");
   const validationErrors = validateLauncherConfig({
     family: benchmarkFamily,
     launcherScope: familyPrefs.launcherScope,
@@ -280,10 +282,7 @@ export default function RunTab({ onSwitchToResults }) {
 
       {isGraphCatalog ? (
         <Alert severity="info" sx={{ mb: 2, fontSize: "0.8125rem" }}>
-          Graph-v1 runs ingest into Neo4j/Qdrant and are not started from this UI. Use:{" "}
-          <code>science-graphrag-graph-benchmark tests/fixtures/benchmarks/layer1/&lt;case_id&gt;</code> or CI{" "}
-          <code>integration-nightly.yml</code>. Browse cases below; open the <strong>Cases</strong> tab for{" "}
-          <code>graph_expectations</code> preview.
+          {t("benchmark.run.graphAlert")}
         </Alert>
       ) : null}
 
@@ -312,35 +311,39 @@ export default function RunTab({ onSwitchToResults }) {
 
       <Divider sx={{ my: 2 }} />
 
-      <Typography sx={{ fontWeight: 600, mb: 1 }}>Current run</Typography>
+      <Typography sx={{ fontWeight: 600, mb: 1 }}>{t("benchmark.run.currentRun")}</Typography>
       {!runId ? (
-        <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>Start a benchmark run to see progress here.</Typography>
+        <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>{t("benchmark.run.emptyRun")}</Typography>
       ) : (
         <Box>
           <Typography sx={{ color: "rgba(255,255,255,0.6)", mb: 1 }}>
-            run_id: <span style={{ color: "rgba(255,255,255,0.9)" }}>{runId}</span>
+            {t("benchmark.run.runId")} <span style={{ color: "rgba(255,255,255,0.9)" }}>{runId}</span>
           </Typography>
 
           <LinearProgress variant="determinate" value={progressPercent} />
           <Typography sx={{ color: "rgba(255,255,255,0.6)", mt: 1 }}>
-            {progressCompleted}/{progressTotal} ({progressPercent.toFixed(1)}%)
+            {t("benchmark.run.progressLine", {
+              done: String(progressCompleted),
+              total: String(progressTotal),
+              pct: progressPercent.toFixed(1),
+            })}
           </Typography>
 
-          {currentRunSummary ? <BenchmarkRunConfigSummary summary={currentRunSummary} title="Current run config" /> : null}
+          {currentRunSummary ? <BenchmarkRunConfigSummary summary={currentRunSummary} title={t("benchmark.run.configTitle")} /> : null}
 
           {run && (
             <Box sx={{ mt: 1, display: "flex", gap: 2, flexWrap: "wrap" }}>
               {(run.benchmark_family || "layer1") === "layer2" ? (
                 <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>
-                  avg layer2 recall ratio: {(summary.avg_layer2_recall_ratio ?? 0).toFixed(3)}
+                  {t("benchmark.run.metricLayer2", { v: (summary.avg_layer2_recall_ratio ?? 0).toFixed(3) })}
                 </Typography>
               ) : (
                 <>
                   <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>
-                    avg names_f1: {(summary.avg_names_f1 ?? 0).toFixed(3)}
+                    {t("benchmark.run.metricNames", { v: (summary.avg_names_f1 ?? 0).toFixed(3) })}
                   </Typography>
                   <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>
-                    avg sample_arxiv_f1: {(summary.avg_sample_arxiv_f1 ?? 0).toFixed(3)}
+                    {t("benchmark.run.metricArxiv", { v: (summary.avg_sample_arxiv_f1 ?? 0).toFixed(3) })}
                   </Typography>
                 </>
               )}
@@ -352,7 +355,7 @@ export default function RunTab({ onSwitchToResults }) {
               disabled={!run || !TERMINAL_STATUSES.includes(run.status)}
               onClick={() => onSwitchToResults?.()}
             >
-              Open results
+              {t("benchmark.run.openResults")}
             </CursorButton>
           </Box>
         </Box>

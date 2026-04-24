@@ -12,11 +12,13 @@ import {
   mergeTraceabilityParams,
   readTraceabilityState,
 } from "../../../components/work/traceabilityState.js";
+import { useI18n } from "../../../i18n/I18nContext.jsx";
 
 /**
  * @param {{ workId: string }} props
  */
 export default function GraphTab({ workId }) {
+  const { t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const trace = readTraceabilityState(searchParams);
   const selectedNodeId = trace.nodeId;
@@ -24,7 +26,7 @@ export default function GraphTab({ workId }) {
   const labMode = searchParams.get("lab") === "1";
 
   if (!workId.trim()) {
-    return <GraphMissingWorkInline message="Pick a work from Corpus to inspect graph context." />;
+    return <GraphMissingWorkInline message={t("wsTab.graph.pickWork")} />;
   }
 
   function handleSelectNode(nodeId) {
@@ -51,7 +53,7 @@ export default function GraphTab({ workId }) {
           })}
           sx={{ textDecoration: "none" }}
         >
-          Open standalone Graph
+          {t("wsTab.graph.openStandalone")}
         </CursorSmallButton>
         <CursorSmallButton
           component={Link}
@@ -62,7 +64,7 @@ export default function GraphTab({ workId }) {
           })}
           sx={{ textDecoration: "none" }}
         >
-          Jump to Reader
+          {t("wsTab.graph.jumpReader")}
         </CursorSmallButton>
         <CursorSmallButton
           component={Link}
@@ -73,7 +75,7 @@ export default function GraphTab({ workId }) {
           })}
           sx={{ textDecoration: "none" }}
         >
-          Jump to Evidence
+          {t("wsTab.graph.jumpEvidence")}
         </CursorSmallButton>
         <CursorSmallButton
           component={Link}
@@ -87,7 +89,7 @@ export default function GraphTab({ workId }) {
           }).toString()}`}
           sx={{ textDecoration: "none" }}
         >
-          Jump to Ask
+          {t("wsTab.graph.jumpAsk")}
         </CursorSmallButton>
       </Box>
 
@@ -99,12 +101,10 @@ export default function GraphTab({ workId }) {
         onSelectEdge={handleSelectEdge}
         mode="embedded"
         labMode={labMode}
-        title="Workspace graph"
+        title={t("workspace.header.workspaceGraph")}
         subtitle={
           <Box>
-            <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)" }}>
-              Graph stays tied to the active work and keeps URL-driven node focus for deep links.
-            </Typography>
+            <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)" }}>{t("wsTab.graph.subtitle")}</Typography>
             <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mt: 0.75 }}>
               <WorkIdGlossaryHint variant="graph" />
             </Typography>

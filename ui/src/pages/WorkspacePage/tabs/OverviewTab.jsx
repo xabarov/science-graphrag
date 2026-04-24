@@ -8,11 +8,13 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { CursorSmallButton } from "../../../components/common/index.js";
 import { formatResearchApiError, getWorkDetail } from "../../../services/researchApi.js";
 import { buildWorkspacePath } from "../utils/workContext.js";
+import { useI18n } from "../../../i18n/I18nContext.jsx";
 
 /**
  * @param {{ workId: string }} props
  */
 export default function OverviewTab({ workId }) {
+  const { t } = useI18n();
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -46,9 +48,7 @@ export default function OverviewTab({ workId }) {
 
   if (!workId.trim()) {
     return (
-      <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>
-        Select a work from Corpus to see an overview.
-      </Typography>
+      <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>{t("wsTab.overview.pickWork")}</Typography>
     );
   }
 
@@ -57,7 +57,7 @@ export default function OverviewTab({ workId }) {
       {loading && (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 2 }}>
           <CircularProgress size={22} sx={{ color: "rgba(129,140,248,0.9)" }} />
-          <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>Loading work…</Typography>
+          <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>{t("wsTab.overview.loading")}</Typography>
         </Box>
       )}
       {error && (
@@ -69,7 +69,7 @@ export default function OverviewTab({ workId }) {
       {detail && !loading && (
         <>
           <Box sx={{ p: 1.5, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "#1a1a1a", mb: 2 }}>
-            <Typography sx={{ fontWeight: 600, fontSize: "0.9375rem" }}>{detail.title || "(no title)"}</Typography>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.9375rem" }}>{detail.title || t("wsTab.overview.noTitle")}</Typography>
             <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mt: 0.5 }}>
               {detail.year != null ? `${detail.year} · ` : ""}
               {detail.doi ? `DOI ${detail.doi} · ` : ""}
@@ -82,34 +82,35 @@ export default function OverviewTab({ workId }) {
             ) : null}
             {detail.ingestion ? (
               <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mt: 1 }}>
-                document_id: {detail.ingestion.document_id} · has_chunks: {String(detail.ingestion.has_chunks)} · semantic:{" "}
-                {String(detail.ingestion.has_semantic_layer)}
+                {t("wsTab.overview.ingestionLine", {
+                  docId: String(detail.ingestion.document_id ?? ""),
+                  hasChunks: String(detail.ingestion.has_chunks),
+                  semantic: String(detail.ingestion.has_semantic_layer),
+                })}
               </Typography>
             ) : null}
           </Box>
 
-          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 1 }}>Quick actions</Typography>
+          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 1 }}>{t("wsTab.overview.quickActions")}</Typography>
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
             <CursorSmallButton component={Link} to={buildWorkspacePath(workId, "reader")} sx={{ textDecoration: "none" }}>
-              Reader tab
+              {t("wsTab.overview.readerTab")}
             </CursorSmallButton>
             <CursorSmallButton component={Link} to={buildWorkspacePath(workId, "graph")} sx={{ textDecoration: "none" }}>
-              Graph tab
+              {t("wsTab.overview.graphTab")}
             </CursorSmallButton>
             <CursorSmallButton component={Link} to={buildWorkspacePath(workId, "ask")} sx={{ textDecoration: "none" }}>
-              Ask tab
+              {t("wsTab.overview.askTab")}
             </CursorSmallButton>
             <CursorSmallButton component={Link} to={buildWorkspacePath(workId, "evidence")} sx={{ textDecoration: "none" }}>
-              Evidence tab
+              {t("wsTab.overview.evidenceTab")}
             </CursorSmallButton>
             <CursorSmallButton component={Link} to={`/graph?work_id=${encodeURIComponent(workId)}`} sx={{ textDecoration: "none" }}>
-              Open graph (full page)
+              {t("wsTab.overview.openGraphFull")}
             </CursorSmallButton>
           </Box>
 
-          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mt: 2 }}>
-            Graph is now available inside workspace and still kept as a standalone route for deeper inspection.
-          </Typography>
+          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mt: 2 }}>{t("wsTab.overview.graphNote")}</Typography>
         </>
       )}
     </Box>

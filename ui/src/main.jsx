@@ -4,6 +4,7 @@ import { HashRouter } from "react-router-dom";
 import { CssBaseline, ThemeProvider, createTheme } from "@mui/material";
 
 import App from "./App.jsx";
+import { I18nProvider } from "./i18n/I18nContext.jsx";
 import "./styles.css";
 
 const theme = createTheme({
@@ -21,12 +22,14 @@ const theme = createTheme({
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <HashRouter>
-        <App />
-      </HashRouter>
-    </ThemeProvider>
+    <I18nProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <HashRouter>
+          <App />
+        </HashRouter>
+      </ThemeProvider>
+    </I18nProvider>
   </React.StrictMode>,
 );
 

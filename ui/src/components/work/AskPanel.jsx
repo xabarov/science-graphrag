@@ -50,6 +50,7 @@ import {
 } from "./askSessionState.js";
 import { buildStandaloneTracePath, buildWorkspaceTracePath } from "./traceabilityState.js";
 import { persistWorkId } from "../../pages/WorkspacePage/utils/workContext.js";
+import { useI18n } from "../../i18n/I18nContext.jsx";
 
 function FlagChips({ label, items }) {
   if (!items || items.length === 0) return null;
@@ -71,6 +72,7 @@ function FlagChips({ label, items }) {
  *   initialWorkId?: string,
  *   showPageChrome?: boolean,
  *   workspaceWorkId?: string | null,
+ *   workspaceId?: string,
  *   urlSessionId?: string,
  *   onUrlSessionIdChange?: (sessionId: string) => void,
  * }} props
@@ -80,9 +82,11 @@ export default function AskPanel({
   initialWorkId = "",
   showPageChrome = true,
   workspaceWorkId = null,
+  workspaceId = "",
   urlSessionId = "",
   onUrlSessionIdChange,
 }) {
+  const { t } = useI18n();
   const locked = Boolean(scopedWorkId && String(scopedWorkId).trim());
   const [query, setQuery] = useState("object detection benchmarks");
   const [workId, setWorkId] = useState(locked ? String(scopedWorkId).trim() : initialWorkId);
@@ -98,8 +102,8 @@ export default function AskPanel({
   const [serverSync, setServerSync] = useState(() => readAskServerSyncPref());
 
   const scopeKey = useMemo(
-    () => deriveAskScopeKey({ locked, scopedWorkId }),
-    [locked, scopedWorkId],
+    () => deriveAskScopeKey({ locked, scopedWorkId, workspaceId }),
+    [locked, scopedWorkId, workspaceId],
   );
 
   const bumpSessions = useCallback(() => {
@@ -191,7 +195,13 @@ export default function AskPanel({
     };
   }, []);
 
-  const bodyPreview = useMemo(() => buildQueryBody(query, workId, topK), [query, workId, topK]);
+  const bodyPreview = useMemo(() => buildQueryBody(query, workId, topK, workspaceId), [query, workId, topK, workspaceId]);
+
+  const inWorkspace = Boolean(workspaceWorkId && String(workspaceWorkId).trim());
+  const corpusWorkspaceOnly = Boolean(
+    String(workspaceId || "").trim() && !String(workId || "").trim() && !locked,
+  );
+  const standaloneMode = !inWorkspace && !locked && !corpusWorkspaceOnly;
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -203,13 +213,15 @@ export default function AskPanel({
       const res = await postQuery(bodyPreview);
       const nextNormalized = normalizeQueryResponse(res.data);
       setNormalized(nextNormalized);
+      const queryMode =
+        locked || inWorkspace ? "workspace" : corpusWorkspaceOnly ? "workspace_corpus" : workId ? "scoped" : "global";
       rememberAskHistory({
         query,
         workId,
         topK,
         answer: nextNormalized.answer,
         citationCount: nextNormalized.citations.length,
-        mode: locked || inWorkspace ? "workspace" : workId ? "scoped" : "global",
+        mode: queryMode,
       });
       appendAskSessionTurn(scopeKey, {
         query,
@@ -217,7 +229,7 @@ export default function AskPanel({
         topK,
         answer: nextNormalized.answer,
         citationCount: nextNormalized.citations.length,
-        mode: locked || inWorkspace ? "workspace" : workId ? "scoped" : "global",
+        mode: queryMode,
       });
       bumpSessions();
       if (serverSync) {
@@ -240,9 +252,6 @@ export default function AskPanel({
     }
   }
 
-  const inWorkspace = Boolean(workspaceWorkId && String(workspaceWorkId).trim());
-  const standaloneMode = !inWorkspace && !locked;
-
   useEffect(() => {
     if (!locked && workId.trim()) {
       persistWorkId(workId);
@@ -253,10 +262,11 @@ export default function AskPanel({
     <Box sx={{ width: "100%", boxSizing: "border-box" }}>
       {showPageChrome ? (
         <>
-          <Typography sx={{ fontWeight: 600, mb: 1, color: "rgba(255,255,255,0.9)" }}>Ask</Typography>
+          <Typography sx={{ fontWeight: 600, mb: 1, color: "rgba(255,255,255,0.9)" }}>{t("askPanel.chromeTitle")}</Typography>
           <Typography sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.8125rem", mb: 2 }}>
-            POST /v1/query (live). Set <code style={{ color: "rgba(129,140,248,0.95)" }}>VITE_API_BASE_URL</code> if the API is not
-            same-origin.
+            {t("askPanel.chrome.p1")}
+            <code style={{ color: "rgba(129,140,248,0.95)" }}>VITE_API_BASE_URL</code>
+            {t("askPanel.chrome.p2")}
           </Typography>
         </>
       ) : (
@@ -270,12 +280,18 @@ export default function AskPanel({
           }}
         >
           <Typography sx={{ color: "rgba(129,140,248,0.95)", fontSize: "0.75rem", mb: 0.5 }}>
-            {inWorkspace || locked ? "Workspace-scoped research" : "Standalone research"}
+            {inWorkspace || locked
+              ? t("askPanel.banner.workspaceScoped")
+              : corpusWorkspaceOnly
+                ? t("askPanel.banner.workspaceCorpusTitle")
+                : t("askPanel.banner.standalone")}
           </Typography>
           <Typography sx={{ color: "rgba(255,255,255,0.78)", fontSize: "0.8125rem" }}>
             {inWorkspace || locked
-              ? "Question is scoped to the active work. Use citations below to jump into evidence, reader context, and graph context without losing `work_id`."
-              : "Ask across the corpus or pick one paper first. Use the answer actions below to move into evidence, reader context, or graph context when you need deeper inspection."}
+              ? t("askPanel.banner.descWorkspace")
+              : corpusWorkspaceOnly
+                ? t("askPanel.banner.descWorkspaceCorpus")
+                : t("askPanel.banner.descStandalone")}
           </Typography>
         </Box>
       )}
@@ -290,7 +306,9 @@ export default function AskPanel({
             backgroundColor: "rgba(255,255,255,0.02)",
           }}
         >
-          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)" }}>Optional work context</Typography>
+          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)" }}>
+            {t("askPanel.optionalContext.title")}
+          </Typography>
           <Typography sx={{ mt: 0.6, fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)" }}>
             <WorkIdGlossaryHint variant="ask" />
           </Typography>
@@ -306,22 +324,17 @@ export default function AskPanel({
           backgroundColor: "#1a1a1a",
         }}
       >
-        <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.9)" }}>
-          Ask session
-        </Typography>
+        <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.9)" }}>{t("askPanel.session.title")}</Typography>
         <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mt: 0.35, mb: 1 }}>
-          {standaloneMode
-            ? "Stored locally in this browser. Each session keeps its own turn list (up to 24 turns)."
-            : "Stored per work for this workspace tab. Switch sessions to separate threads."}
+          {standaloneMode ? t("askPanel.session.hintStandalone") : t("askPanel.session.hintWorkspace")}
           {serverSync ? (
             <Box component="span" sx={{ display: "block", mt: 0.5 }}>
-              Server sync writes to <code style={{ color: "rgba(129,140,248,0.85)" }}>/v1/ask-sessions</code> (file-backed on the API host).
+              {t("askPanel.session.serverSyncLine")}
             </Box>
           ) : null}
           {onUrlSessionIdChange ? (
             <Box component="span" sx={{ display: "block", mt: 0.5 }}>
-              The active session id is reflected in the URL as <code style={{ color: "rgba(129,140,248,0.85)" }}>ask_session</code>{" "}
-              (local browser only; safe to share only on trusted channels).
+              {t("askPanel.session.urlLine")}
             </Box>
           ) : null}
         </Typography>
@@ -337,14 +350,14 @@ export default function AskPanel({
               }}
             />
           }
-          label="Server session sync (pilot)"
+          label={t("askPanel.serverSyncLabel")}
         />
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, alignItems: "flex-end" }}>
           <FormControl size="small" sx={{ minWidth: 200, flex: "1 1 180px" }}>
-            <InputLabel id="ask-session-select-label">Session</InputLabel>
+            <InputLabel id="ask-session-select-label">{t("askPanel.session.selectLabel")}</InputLabel>
             <Select
               labelId="ask-session-select-label"
-              label="Session"
+              label={t("askPanel.session.selectLabel")}
               value={activeSessionId || ""}
               onChange={async (e) => {
                 const v = String(e.target.value);
@@ -369,7 +382,7 @@ export default function AskPanel({
             </Select>
           </FormControl>
           <TextField
-            label="Session title"
+            label={t("askPanel.sessionTitle")}
             value={sessionTitleDraft}
             onChange={(ev) => setSessionTitleDraft(ev.target.value)}
             onBlur={async () => {
@@ -414,7 +427,7 @@ export default function AskPanel({
               if (id) onUrlSessionIdChange?.(id);
             }}
           >
-            New session
+            {t("askPanel.newSession")}
           </CursorSmallButton>
         </Box>
       </Box>
@@ -430,7 +443,7 @@ export default function AskPanel({
           }}
         >
           <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.9)" }}>
-            {standaloneMode ? "Recent in this session" : "Recent in this workspace session"}
+            {standaloneMode ? t("askPanel.recent.standalone") : t("askPanel.recent.workspace")}
           </Typography>
           <Box sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 0.75 }}>
             {history.slice(0, 3).map((item) => (
@@ -438,8 +451,8 @@ export default function AskPanel({
                 <Box sx={{ minWidth: 0 }}>
                   <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.82)" }}>{item.query}</Typography>
                   <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mt: 0.25 }}>
-                    {item.workId ? `${item.workId} · ` : "global corpus · "}
-                    top_k {item.topK} · {item.citationCount} citations
+                    {item.workId ? `${item.workId} · ` : t("askPanel.recent.globalLine")}
+                    {t("askPanel.recent.topK", { k: String(item.topK), count: String(item.citationCount) })}
                   </Typography>
                 </Box>
                 <CursorSmallButton
@@ -450,7 +463,7 @@ export default function AskPanel({
                     setTopK(String(item.topK));
                   }}
                 >
-                  Restore
+                  {t("askPanel.restore")}
                 </CursorSmallButton>
               </Box>
             ))}
@@ -466,16 +479,14 @@ export default function AskPanel({
             backgroundColor: "rgba(255,255,255,0.02)",
           }}
         >
-          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.75)" }}>No turns yet</Typography>
-          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mt: 0.5 }}>
-            Run a query to populate this session. Enable server sync if you want the API host to persist turns for the same scope.
-          </Typography>
+          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.75)" }}>{t("askPanel.noTurns.title")}</Typography>
+          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mt: 0.5 }}>{t("askPanel.noTurns.body")}</Typography>
         </Box>
       )}
 
       {locked ? (
         <Box sx={{ mb: 2, p: 1.25, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "#1a1a1a" }}>
-          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)" }}>work_id (workspace scope)</Typography>
+          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)" }}>{t("askPanel.workIdScopeLabel")}</Typography>
           <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)", fontFamily: "monospace", mt: 0.25 }}>
             {workId}
           </Typography>
@@ -484,7 +495,7 @@ export default function AskPanel({
 
       <Box component="form" onSubmit={onSubmit} sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
         <TextField
-          label="Query"
+          label={t("askPanel.query")}
           value={query}
           onChange={(ev) => setQuery(ev.target.value)}
           multiline
@@ -513,7 +524,7 @@ export default function AskPanel({
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="work_id (optional, pick from corpus)"
+                label={t("askPanel.workIdAutocomplete")}
                 size="small"
                 sx={{
                   "& .MuiInputBase-input": { fontSize: "0.8125rem" },
@@ -524,7 +535,7 @@ export default function AskPanel({
           />
         ) : null}
         <TextField
-          label="top_k"
+          label={t("askPanel.topK")}
           value={topK}
           onChange={(ev) => setTopK(ev.target.value)}
           fullWidth
@@ -536,7 +547,7 @@ export default function AskPanel({
         />
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center" }}>
           <CursorPrimaryButton type="submit" disabled={loading}>
-            {loading ? "Querying…" : "Run query"}
+            {loading ? t("askPanel.runQueryLoading") : t("askPanel.runQuery")}
           </CursorPrimaryButton>
           {inWorkspace ? (
             <CursorSmallButton
@@ -544,7 +555,7 @@ export default function AskPanel({
               to={buildStandaloneTracePath("/ask", workId)}
               sx={{ textDecoration: "none" }}
             >
-              Open standalone Ask
+              {t("askPanel.openStandaloneAsk")}
             </CursorSmallButton>
           ) : null}
         </Box>
@@ -566,8 +577,8 @@ export default function AskPanel({
             backgroundColor: "#1a1a1a",
           }}
         >
-          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 1 }}>Answer</Typography>
-          <Typography sx={{ fontWeight: 600, fontSize: "0.75rem", color: "rgba(255,255,255,0.72)", mb: 0.5 }}>Why this answer</Typography>
+          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 1 }}>{t("askPanel.answer.title")}</Typography>
+          <Typography sx={{ fontWeight: 600, fontSize: "0.75rem", color: "rgba(255,255,255,0.72)", mb: 0.5 }}>{t("askPanel.answer.why")}</Typography>
           <Box component="ul" sx={{ m: 0, mb: 1.25, pl: 2.25, color: "rgba(255,255,255,0.62)", fontSize: "0.75rem", lineHeight: 1.5 }}>
             {buildAskAnswerRationale(normalized, { locked, inWorkspace, formWorkId: workId }).map((line, idx) => (
               <Box component="li" key={idx} sx={{ mb: 0.35 }}>
@@ -576,20 +587,18 @@ export default function AskPanel({
             ))}
           </Box>
           <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)", whiteSpace: "pre-wrap" }}>
-            {normalized.answer || "—"}
+            {normalized.answer || t("workspace.upload.dash")}
           </Typography>
 
           {normalized.retrieval_trace.degraded.length > 0 || normalized.graph_context.degraded.length > 0 ? (
             <Alert severity="info" sx={{ mt: 1.5, fontSize: "0.8125rem", backgroundColor: "rgba(255,255,255,0.03)" }}>
-              Some context had to degrade during retrieval. Review the trace details below before using this answer as a final conclusion.
+              {t("askPanel.answer.degraded")}
             </Alert>
           ) : null}
 
-          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 2, mb: 0.5 }}>Citations</Typography>
+          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 2, mb: 0.5 }}>{t("askPanel.citations.title")}</Typography>
           {normalized.citations.length === 0 ? (
-            <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>
-              No supporting citations were returned for this answer.
-            </Typography>
+            <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>{t("askPanel.citations.none")}</Typography>
           ) : (
             normalized.citations.map((c, i) => {
               const wid = c.work_id != null ? String(c.work_id) : "";
@@ -600,10 +609,14 @@ export default function AskPanel({
               return (
                 <Box key={i} sx={{ mb: 1, fontSize: "0.8125rem", color: "rgba(255,255,255,0.75)" }}>
                   <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.82)" }}>
-                    Citation #{c.rank} · score {String(c.score)} · {wid || "no work context"}
+                    {t("askPanel.citation.line", {
+                      rank: String(c.rank),
+                      score: String(c.score),
+                      work: wid || t("askPanel.citation.noWork"),
+                    })}
                   </Typography>
                   <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mt: 0.25 }}>
-                    chunk {String(c.chunk_fingerprint ?? "—")}
+                    {t("askPanel.chunkLabel")} {String(c.chunk_fingerprint ?? t("workspace.upload.dash"))}
                   </Typography>
                   {wid ? (
                     <Box sx={{ mt: 0.5, display: "flex", flexWrap: "wrap", gap: 1 }}>
@@ -617,7 +630,7 @@ export default function AskPanel({
                             })}
                             style={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.95)" }}
                           >
-                            Open Reader
+                            {t("askPanel.openReader")}
                           </Link>
                           <Link
                             to={buildWorkspaceTracePath(wid, "evidence", {
@@ -627,7 +640,7 @@ export default function AskPanel({
                             })}
                             style={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.95)" }}
                           >
-                            Open Evidence
+                            {t("askPanel.openEvidence")}
                           </Link>
                           <Link
                             to={buildWorkspaceTracePath(wid, "graph", {
@@ -637,7 +650,7 @@ export default function AskPanel({
                             })}
                             style={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.95)" }}
                           >
-                            Open Graph
+                            {t("askPanel.openGraph")}
                           </Link>
                         </>
                       ) : (
@@ -650,7 +663,7 @@ export default function AskPanel({
                             })}
                             style={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.95)" }}
                           >
-                            Open in Workspace
+                            {t("askPanel.openInWorkspace")}
                           </Link>
                           <Link
                             to={buildStandaloneTracePath("/reader", wid, {
@@ -660,7 +673,7 @@ export default function AskPanel({
                             })}
                             style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)" }}
                           >
-                            Standalone Reader
+                            {t("askPanel.standaloneReader")}
                           </Link>
                           <Link
                             to={buildStandaloneTracePath("/evidence", wid, {
@@ -670,7 +683,7 @@ export default function AskPanel({
                             })}
                             style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)" }}
                           >
-                            Standalone Evidence
+                            {t("askPanel.standaloneEvidence")}
                           </Link>
                           <Link
                             to={buildStandaloneTracePath("/graph", wid, {
@@ -680,7 +693,7 @@ export default function AskPanel({
                             })}
                             style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)" }}
                           >
-                            Standalone Graph
+                            {t("askPanel.standaloneGraph")}
                           </Link>
                         </>
                       )}
@@ -695,13 +708,15 @@ export default function AskPanel({
             })
           )}
 
-          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 2, mb: 0.5 }}>Graph context</Typography>
+          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 2, mb: 0.5 }}>{t("askPanel.graphContext.title")}</Typography>
           <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.55)" }}>
-            semantic_available={String(normalized.graph_context.semantic_available)} · context_work_id=
-            {normalized.graph_context.context_work_id ?? "null"}
-            {normalized.graph_context.error ? ` error=${normalized.graph_context.error}` : ""}
+            {t("askPanel.graphContext.body", {
+              semantic: String(normalized.graph_context.semantic_available),
+              ctx: String(normalized.graph_context.context_work_id ?? "null"),
+              err: normalized.graph_context.error ? ` error=${normalized.graph_context.error}` : "",
+            })}
           </Typography>
-          <FlagChips label="graph_context.degraded" items={normalized.graph_context.degraded} />
+          <FlagChips label={t("askPanel.flag.graphDegraded")} items={normalized.graph_context.degraded} />
           <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 0.5 }}>
             {normalized.graph_context.methods.map((m) => (
               <Chip key={`m-${m}`} label={m} size="small" sx={{ height: 22, fontSize: "0.75rem" }} />
@@ -711,10 +726,8 @@ export default function AskPanel({
             ))}
           </Box>
 
-          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 2, mb: 0.5 }}>Retrieval trace</Typography>
-          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mb: 0.75 }}>
-            Summary of how evidence was retrieved. Expand advanced for the full JSON (embedding and low-level fields).
-          </Typography>
+          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 2, mb: 0.5 }}>{t("askPanel.retrieval.title")}</Typography>
+          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mb: 0.75 }}>{t("askPanel.retrieval.summary")}</Typography>
           <Box sx={{ mb: 1 }}>
             {formatRetrievalSummaryLines(normalized.retrieval_trace).map((line, idx) => (
               <Typography key={idx} sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.65)", lineHeight: 1.45 }}>
@@ -723,7 +736,7 @@ export default function AskPanel({
             ))}
           </Box>
           <CursorSmallButton type="button" onClick={() => setRetrievalJsonOpen((v) => !v)} sx={{ mb: 1 }}>
-            {retrievalJsonOpen ? "Hide advanced JSON" : "Show advanced JSON"}
+            {retrievalJsonOpen ? t("askPanel.toggleJson.hide") : t("askPanel.toggleJson.show")}
           </CursorSmallButton>
           <Collapse in={retrievalJsonOpen} timeout="auto" unmountOnExit>
             <Typography

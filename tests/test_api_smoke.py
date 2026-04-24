@@ -55,6 +55,10 @@ def test_settings_schema_endpoint_smoke() -> None:
     payload = res.json()
     assert payload["version"] >= 1
     assert payload["sections"][0]["id"] == "llm"
+    section_ids = {s["id"] for s in payload["sections"]}
+    assert "ingestion" in section_ids
+    ingest = next(s for s in payload["sections"] if s["id"] == "ingestion")
+    assert ingest["fields"][0]["id"] == "max_file_size_mb"
 
 
 def test_settings_snapshot_endpoint_smoke() -> None:
@@ -67,6 +71,57 @@ def test_settings_snapshot_endpoint_smoke() -> None:
     assert any(item["id"] == "llm" for item in payload["sections"])
     assert "status" in payload["llm"]
     assert "effective" in payload["llm"]
+    assert "ingestion" in payload
+    assert payload["ingestion"]["effective"]["resolved_max_file_size_mb"] >= 1
+    assert "diagnostics" in payload and "app_version" in payload["diagnostics"]
+    assert "security" in payload and "settings_auth_required" in payload["security"]
+    assert "has_saved_secret" in payload["llm"]["status"]
+    assert "secret_source" in payload["llm"]["status"]
+
+
+def test_settings_service_llm_snapshot_env_secret_only(tmp_path: Path) -> None:
+    """LLM snapshot reflects environment API key when vault is empty."""
+
+    from science_graphrag.config import Settings
+    from science_graphrag.settings.repository import SettingsRepository
+    from science_graphrag.settings.secrets import SecretStore
+    from science_graphrag.settings.service import SettingsService
+
+    service = SettingsService(
+        repo_root=tmp_path,
+        repository=SettingsRepository(tmp_path),
+        secret_store=SecretStore(tmp_path),
+    )
+    base = Settings(extraction_llm_api_key="sk-env-12345678901234567890")
+    snap = service.get_snapshot(base)
+    st = snap.llm["status"]
+    assert st["secret_source"] == "environment"
+    assert st["has_saved_secret"] is False
+    assert st["configured"] is True
+    assert st["masked_key"]
+
+
+def test_settings_ingestion_patch_smoke(tmp_path: Path, monkeypatch: Any) -> None:
+    """Settings API persists workspace upload size limit."""
+
+    from science_graphrag.api import settings as settings_api
+    from science_graphrag.settings.repository import SettingsRepository
+    from science_graphrag.settings.secrets import SecretStore
+    from science_graphrag.settings.service import SettingsService
+
+    service = SettingsService(
+        repo_root=tmp_path,
+        repository=SettingsRepository(tmp_path),
+        secret_store=SecretStore(tmp_path),
+    )
+    monkeypatch.setattr(settings_api, "_SETTINGS_SERVICE", service)
+
+    client = _client()
+    patch_res = client.patch("/v1/settings/ingestion", json={"max_file_size_mb": 96})
+    assert patch_res.status_code == 200
+    body = patch_res.json()
+    assert body["ingestion"]["max_file_size_mb"] == 96
+    assert body["ingestion"]["effective"]["resolved_max_file_size_mb"] == 96
 
 
 def test_settings_llm_patch_and_delete_secret_smoke(tmp_path: Path, monkeypatch: Any) -> None:
@@ -98,13 +153,59 @@ def test_settings_llm_patch_and_delete_secret_smoke(tmp_path: Path, monkeypatch:
     assert patch_res.status_code == 200
     body = patch_res.json()
     assert body["llm"]["status"]["configured"] is True
+    assert body["llm"]["status"]["has_saved_secret"] is True
+    assert body["llm"]["status"]["secret_source"] == "server_managed"
     assert body["llm"]["status"]["masked_key"].startswith("sk-d")
     assert body["llm"]["effective"]["resolved_model"] == "mistralai/mistral-small-3.2-24b-instruct"
 
     delete_res = client.delete("/v1/settings/llm/secret")
     assert delete_res.status_code == 200
     deleted = delete_res.json()
-    assert deleted["llm"]["status"]["configured"] is False
+    assert deleted["llm"]["status"]["has_saved_secret"] is False
+    assert deleted["llm"]["status"]["secret_source"] in ("none", "environment")
+    if deleted["llm"]["status"]["secret_source"] == "none":
+        assert deleted["llm"]["status"]["configured"] is False
+    else:
+        assert deleted["llm"]["status"]["configured"] is True
+    assert "ingestion" in deleted
+
+
+def test_workspace_upload_rejects_oversized_file(monkeypatch: Any) -> None:
+    """POST .../ingest/document returns 413 when file exceeds configured limit."""
+
+    from science_graphrag.api import workspaces as ws_api
+    from science_graphrag.config import Settings
+
+    class _FakeStore:
+        def workspace_get(self, workspace_id: str) -> dict[str, Any] | None:
+            if workspace_id == "ws-upload":
+                return {"id": workspace_id, "name": "U", "work_ids": []}
+            return None
+
+        def close(self) -> None:
+            return None
+
+    monkeypatch.setattr(ws_api, "_store", lambda _settings: _FakeStore())
+
+    limited = Settings().model_copy(update={"workspace_upload_max_file_size_mb": 1})
+    client = _client()
+    # Must match the callable captured on the route (``workspaces`` import), not
+    # ``science_graphrag.config.get_settings`` after conftest wraps the latter.
+    dep = ws_api.get_settings
+    client.app.dependency_overrides[dep] = lambda: limited
+    try:
+        two_mb = b"x" * (2 * 1024 * 1024)
+        res = client.post(
+            "/v1/workspaces/ws-upload/ingest/document",
+            files={"file": ("big.pdf", two_mb, "application/pdf")},
+        )
+    finally:
+        client.app.dependency_overrides.pop(dep, None)
+
+    assert res.status_code == 413
+    detail = res.json()["detail"]
+    assert detail["error"] == "workspace_upload_file_too_large"
+    assert detail["max_file_size_mb"] == 1
 
 
 def test_settings_llm_test_uses_service_result(tmp_path: Path, monkeypatch: Any) -> None:
@@ -340,6 +441,31 @@ def test_query_endpoint_smoke(monkeypatch: Any) -> None:
     assert payload["retrieval_trace"]["citations_returned"] == 1
     assert payload["retrieval_trace"]["answer_synthesis"]["second_stage_llm"] is False
     assert "retrieval_policy" in payload["retrieval_trace"]
+
+
+def test_post_query_accepts_workspace_id_unknown_workspace(monkeypatch: Any) -> None:
+    """POST /v1/query with workspace_id (no work_id) does not 500 when workspace is unknown."""
+
+    from science_graphrag.api import retrieval as retr_mod
+
+    def _fake_ws_scope(_settings: Any, workspace_id: str) -> tuple[list[str], dict[str, Any]]:
+        return [], {
+            "workspace_id": workspace_id.strip(),
+            "workspace_missing": True,
+            "workspace_scope_work_count": 0,
+        }
+
+    monkeypatch.setattr(retr_mod, "_workspace_scope_work_ids", _fake_ws_scope)
+    client = _client()
+    res = client.post(
+        "/v1/query",
+        json={"query": "hello workspace corpus", "workspace_id": "missing-ws-uuid", "top_k": 3},
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["retrieval_trace"]["workspace_id"] == "missing-ws-uuid"
+    assert body["retrieval_trace"].get("workspace_missing") is True
+    assert body["retrieval_trace"].get("workspace_scope_work_count") == 0
 
 
 def test_benchmark_cases_list_smoke() -> None:

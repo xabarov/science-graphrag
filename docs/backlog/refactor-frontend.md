@@ -88,16 +88,10 @@ Planned structural work under `ui/` (components, routing, state, API client), no
 - **Acceptance:** оркестратор canvas без «god file» (heuristic: &lt;400 строк или явно разделённые слои); поведение drag/pan/force без регрессий; `npm run lint` / `npm run test` зелёные.
 - **Raised:** 2026-04-19
 
-### [OPEN] Workspaces page — split shell vs indexed-works browser
-- **Area:** [`WorkspacesPage.jsx`](../../ui/src/pages/WorkspacesPage.jsx)
-- **Issue:** Single page ~620 lines after product pivot: workspace CRUD/merge/export + full `GET /v1/works` browser in one file.
-- **Proposal:** Extract `WorkspaceCollectionPanel` (list/create/rename/delete/merge/export) and `IndexedWorksBrowser` (search, filters, rows) under `ui/src/pages/workspaces/` or `ui/src/components/workspaces/`; keep `WorkspacesPage` as composition + data hooks.
-- **Acceptance:** No file above ~400 lines in that subtree; lint/tests green; behavior unchanged.
-- **Raised:** 2026-04-19
+### [DONE] Workspaces page — split shell vs indexed-works browser (Wave I)
+- **Area:** [`WorkspacesPage.jsx`](../../ui/src/pages/WorkspacesPage.jsx), [`WorkspacesPage/WorkspaceCollectionPanel.jsx`](../../ui/src/pages/WorkspacesPage/WorkspaceCollectionPanel.jsx), [`WorkspacesPage/WorkspaceRecentPanel.jsx`](../../ui/src/pages/WorkspacesPage/WorkspaceRecentPanel.jsx), [`WorkspacesPage/IndexedWorksBrowser.jsx`](../../ui/src/pages/WorkspacesPage/IndexedWorksBrowser.jsx)
+- **Done:** 2026-04-24 — composition shell + extracted panels; `npm run lint` / `npm run test` green.
 
-### [OPEN] Workspace page — split upload / dedup / paper list
-- **Area:** [`WorkspacePage.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx)
-- **Issue:** After workspace-centric upload + ingest polling + dedup panel, the page is ~520 lines (overview + cards + advanced add-by-id).
-- **Proposal:** Extract `WorkspaceIngestPanel` (file upload, job poll, logs), `WorkspacePaperList` / `WorkPaperCard` to `components/work/`, optional `WorkspaceDedupSection` wrapper; keep routing/query sync in the page shell.
-- **Acceptance:** `WorkspacePage.jsx` under ~250 lines; extracted modules each under ~300 lines; `npm run lint` / `npm run test` green.
-- **Raised:** 2026-04-19
+### [DONE] Workspace page — split upload / dedup / paper list (Wave I)
+- **Area:** [`WorkspacePage/WorkspacePage.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx), [`WorkspaceIngestPanel.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceIngestPanel.jsx), [`WorkspacePaperList.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePaperList.jsx), [`WorkPaperCard.jsx`](../../ui/src/pages/WorkspacePage/WorkPaperCard.jsx), [`WorkspaceDedupSection.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceDedupSection.jsx)
+- **Done:** 2026-04-24 — shell coordinates URL + meta; `npm run lint` / `npm run test` green.

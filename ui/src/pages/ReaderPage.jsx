@@ -7,11 +7,13 @@ import TextField from "@mui/material/TextField";
 import { CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
 import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
+import { useI18n } from "../i18n/I18nContext.jsx";
 import ReaderWorkBody from "../components/work/ReaderWorkBody.jsx";
 import { persistWorkId } from "./WorkspacePage/utils/workContext.js";
 import { buildWorkspaceTracePath, readTraceabilityState } from "../components/work/traceabilityState.js";
 
 export default function ReaderPage() {
+  const { t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const initial = searchParams.get("work_id") || "";
   const [workIdInput, setWorkIdInput] = useState(initial);
@@ -39,18 +41,20 @@ export default function ReaderPage() {
   return (
     <Box sx={{ p: 2, ...mainShellContentSx }}>
       <PageHeader
-        eyebrow="Reader"
-        title="Article"
+        eyebrow={t("reader.header.eyebrow")}
+        title={t("reader.header.title")}
         description={
           <>
-            Read extracted text for a <code style={{ color: "rgba(129,140,248,0.95)" }}>work_id</code>. Open from Workspace for the usual flow.
+            {t("reader.header.descBefore")}{" "}
+            <code style={{ color: "rgba(129,140,248,0.95)" }}>work_id</code>
+            {t("reader.header.descAfter")}
           </>
         }
       />
 
       <Box component="form" onSubmit={applyWorkId} sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}>
         <TextField
-          label="work_id"
+          label={t("reader.workIdLabel")}
           value={workIdInput}
           onChange={(ev) => setWorkIdInput(ev.target.value)}
           size="small"
@@ -61,7 +65,7 @@ export default function ReaderPage() {
             "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)" },
           }}
         />
-        <CursorPrimaryButton type="submit">Load</CursorPrimaryButton>
+        <CursorPrimaryButton type="submit">{t("reader.load")}</CursorPrimaryButton>
       </Box>
 
       {!workId.trim() ? (
@@ -73,10 +77,10 @@ export default function ReaderPage() {
             backgroundColor: "rgba(255,255,255,0.02)",
           }}
         >
-          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)" }}>No work loaded</Typography>
-          <Typography sx={{ mt: 0.75, fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)" }}>
-            Enter a `work_id` above or start from Workspaces to open a paper.
+          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)" }}>
+            {t("reader.empty.title")}
           </Typography>
+          <Typography sx={{ mt: 0.75, fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)" }}>{t("reader.empty.body")}</Typography>
         </Box>
       ) : null}
       {workId.trim() ? (
@@ -98,7 +102,7 @@ export default function ReaderPage() {
             })}
             sx={{ textDecoration: "none" }}
           >
-            Open Reader in workspace
+            {t("reader.openReaderWs")}
           </CursorSmallButton>
           <CursorSmallButton
             component={Link}
@@ -108,7 +112,7 @@ export default function ReaderPage() {
             })}
             sx={{ textDecoration: "none" }}
           >
-            Open Graph in workspace
+            {t("reader.openGraphWs")}
           </CursorSmallButton>
         </Box>
       ) : null}

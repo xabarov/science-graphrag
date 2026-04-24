@@ -9,6 +9,7 @@ import {
   normalizeWorkspaceTab,
   persistWorkId,
   persistWorkspaceTab,
+  resolveSelectedWorkId,
   WORKSPACE_TAB_SLUGS,
 } from "./workContext.js";
 
@@ -34,6 +35,30 @@ describe("workContext", () => {
     expect(buildWorkspacePath("w1", "graph")).toBe("/workspace?work_id=w1");
     expect(buildWorkspacePath("", "graph")).toBe("/workspace");
     expect(buildWorkspacePath("w1", "overview", { workspaceId: "ws-1" })).toBe("/workspace?work_id=w1&workspace_id=ws-1");
+    expect(buildWorkspacePath("", "overview", { workspaceId: "ws-only" })).toBe("/workspace?workspace_id=ws-only");
+  });
+
+  it("resolveSelectedWorkId prefers URL work when it belongs to workspace", () => {
+    expect(
+      resolveSelectedWorkId({
+        workIds: ["gemma-id", "yolo-id"],
+        workIdFromUrl: "yolo-id",
+      }),
+    ).toBe("yolo-id");
+  });
+
+  it("resolveSelectedWorkId falls back to first id when URL work is absent or invalid", () => {
+    expect(resolveSelectedWorkId({ workIds: ["a", "b"], workIdFromUrl: "" })).toBe("a");
+    expect(resolveSelectedWorkId({ workIds: ["a", "b"], workIdFromUrl: "missing" })).toBe("a");
+  });
+
+  it("resolveSelectedWorkId uses sole member when one paper", () => {
+    expect(resolveSelectedWorkId({ workIds: ["only"], workIdFromUrl: "" })).toBe("only");
+    expect(resolveSelectedWorkId({ workIds: ["only"], workIdFromUrl: "other" })).toBe("only");
+  });
+
+  it("resolveSelectedWorkId returns empty for empty list", () => {
+    expect(resolveSelectedWorkId({ workIds: [], workIdFromUrl: "x" })).toBe("");
   });
 
   it("persists and restores last work id", () => {

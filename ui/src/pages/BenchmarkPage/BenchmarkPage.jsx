@@ -13,10 +13,12 @@ import CompareTab from "./CompareTab.jsx";
 import RunTab from "./RunTab.jsx";
 import ResultsTab from "./ResultsTab.jsx";
 import CasesTab from "./CasesTab.jsx";
+import { useI18n } from "../../i18n/I18nContext.jsx";
 
 const TAB_BY_NAME = { launch: 0, workbench: 1, results: 2, compare: 3, cases: 4 };
 
 export default function BenchmarkPage() {
+  const { t } = useI18n();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const [tabIdx, setTabIdx] = useState(0);
@@ -30,15 +32,15 @@ export default function BenchmarkPage() {
 
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect -- sync shell from /benchmark? query (external nav) */
-    const t = searchParams.get("tab");
+    const tabParam = searchParams.get("tab");
     const run = searchParams.get("run");
     const c = searchParams.get("case");
-    if (t != null && t !== "") {
-      const n = Number(t);
+    if (tabParam != null && tabParam !== "") {
+      const n = Number(tabParam);
       if (!Number.isNaN(n) && n >= 0 && n <= 4) {
         setTabIdx(n);
-      } else if (TAB_BY_NAME[t] != null) {
-        setTabIdx(TAB_BY_NAME[t]);
+      } else if (TAB_BY_NAME[tabParam] != null) {
+        setTabIdx(TAB_BY_NAME[tabParam]);
       }
     }
     if (run) {
@@ -62,14 +64,14 @@ export default function BenchmarkPage() {
     <Box>
       <Box sx={{ px: 2, pt: 0.5, pb: 1.5, display: "flex", flexWrap: "wrap", gap: 1 }}>
         <CursorSmallButton component={Link} to="/admin" sx={{ textDecoration: "none" }}>
-          Admin hub
+          {t("benchmarkPage.adminHub")}
         </CursorSmallButton>
         <CursorSmallButton component={Link} to="/" sx={{ textDecoration: "none" }}>
-          Home
+          {t("benchmarkPage.home")}
         </CursorSmallButton>
         {showAdminReturn ? (
           <CursorSmallButton component={Link} to={canonicalAdminPath} sx={{ textDecoration: "none" }}>
-            Reopen canonical route
+            {t("benchmarkPage.reopenCanonical")}
           </CursorSmallButton>
         ) : null}
       </Box>
@@ -85,11 +87,7 @@ export default function BenchmarkPage() {
           }}
         >
           <Typography component="div" variant="body2" sx={{ fontSize: "0.8125rem", lineHeight: 1.5 }}>
-            Triage (CLI-first, paths in repo): teacher-gold — <code>docs/benchmarks/teacher-gold-audit-checklist.md</code>;
-            retrieval — <code>docs/benchmarks/retrieval-eval-v1.md</code>,{" "}
-            <code>docs/runbooks/user-journeys-retrieval-v1.md</code>; decision gate / summary —{" "}
-            <code>docs/runbooks/benchmark-decision-gate.md</code>, <code>eval/results/benchmark-metrics-summary.md</code>{" "}
-            (regenerate via <code>scripts/aggregate_benchmark_metrics.py</code>).
+            {t("benchmarkPage.triageAlert")}
           </Typography>
         </Alert>
       </Box>
@@ -107,11 +105,11 @@ export default function BenchmarkPage() {
             },
           }}
         >
-          <Tab label="Launch" />
-          <Tab label="Workbench" />
-          <Tab label="Results" />
-          <Tab label="Compare" />
-          <Tab label="Cases" />
+          <Tab label={t("benchmarkPage.tab.launch")} />
+          <Tab label={t("benchmarkPage.tab.workbench")} />
+          <Tab label={t("benchmarkPage.tab.results")} />
+          <Tab label={t("benchmarkPage.tab.compare")} />
+          <Tab label={t("benchmarkPage.tab.cases")} />
         </Tabs>
       </Box>
 

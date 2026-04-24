@@ -11,6 +11,7 @@ import {
   CursorDangerButton,
   CursorPrimaryButton,
 } from "../../components/common/index.js";
+import { useI18n } from "../../i18n/I18nContext.jsx";
 import LlmConnectionTestCard from "./LlmConnectionTestCard.jsx";
 
 const FIELD_SX = {
@@ -33,14 +34,52 @@ const FIELD_SX = {
   },
 };
 
-function providerSummary(llm) {
+function providerSummary(llm, t) {
+  const bits = [];
   const configured = llm?.status?.configured;
-  const bits = [
-    configured ? "Configured on server" : "No server key",
-    llm?.effective?.resolved_model ? `Model ${llm.effective.resolved_model}` : null,
-    llm?.effective?.resolved_base_url ? llm.effective.resolved_base_url : null,
-  ].filter(Boolean);
-  return bits.join(" • ");
+  const src = llm?.status?.secret_source;
+  if (configured) {
+    if (src === "server_managed") bits.push(t("llm.summary.sourceServer"));
+    else if (src === "environment") bits.push(t("llm.summary.sourceEnv"));
+    else bits.push(t("llm.summary.hasCredential"));
+  } else {
+    bits.push(t("llm.summary.noCredential"));
+  }
+  if (llm?.effective?.resolved_model) {
+    bits.push(t("llm.summary.model", { model: llm.effective.resolved_model }));
+  }
+  if (llm?.effective?.resolved_base_url) {
+    bits.push(llm.effective.resolved_base_url);
+  }
+  return bits.filter(Boolean).join(" • ");
+}
+
+function credentialAlertSeverity(secretSource, configured) {
+  if (!configured) return "warning";
+  if (secretSource === "environment") return "info";
+  return "success";
+}
+
+function credentialAlertBody(llm, t) {
+  const st = llm?.status || {};
+  const configured = st.configured;
+  const src = st.secret_source;
+  const masked = st.masked_key;
+  const maskedSuffix = masked ? ` (${masked})` : "";
+
+  if (!configured) {
+    return { primary: t("llm.credentials.none"), hint: null };
+  }
+  if (src === "environment") {
+    return {
+      primary: t("llm.credentials.fromEnv", { masked: maskedSuffix }),
+      hint: st.env_key_hint || null,
+    };
+  }
+  return {
+    primary: t("llm.credentials.fromServer", { masked: maskedSuffix }),
+    hint: null,
+  };
 }
 
 export default function LlmSettingsPanel({
@@ -55,6 +94,7 @@ export default function LlmSettingsPanel({
   onTestDraft,
   onDirtyChange,
 }) {
+  const { t } = useI18n();
   const [baseUrl, setBaseUrl] = useState(llm?.base_url || "");
   const [model, setModel] = useState(llm?.model || "");
   const [temperature, setTemperature] = useState(String(llm?.temperature ?? 0));
@@ -62,6 +102,9 @@ export default function LlmSettingsPanel({
   const [apiKey, setApiKey] = useState("");
   const [revealDraftKey, setRevealDraftKey] = useState(false);
   const [replaceKey, setReplaceKey] = useState(false);
+
+  const hasSavedSecret = Boolean(llm?.status?.has_saved_secret);
+  const secretSource = llm?.status?.secret_source;
 
   const dirty = useMemo(() => {
     return (
@@ -106,6 +149,22 @@ export default function LlmSettingsPanel({
     onTestDraft(buildDraftPayload(apiKey ? false : true));
   }
 
+  const alertBody = credentialAlertBody(llm, t);
+  const alertSev = credentialAlertSeverity(secretSource, llm?.status?.configured);
+
+  const credentialsBlurbSecond =
+    secretSource === "server_managed"
+      ? t("llm.credentials.blurbVault")
+      : secretSource === "environment"
+        ? t("llm.credentials.blurbEnv")
+        : t("llm.credentials.blurbNone");
+
+  const replaceHelper = hasSavedSecret
+    ? t("llm.credentials.helperReplace")
+    : secretSource === "environment"
+      ? t("llm.credentials.helperSaveOverridesEnv")
+      : t("llm.credentials.helperSaveFirst");
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
       <Box
@@ -116,9 +175,9 @@ export default function LlmSettingsPanel({
           padding: 2,
         }}
       >
-        <Typography sx={{ fontSize: "0.875rem", fontWeight: 600 }}>LLM settings</Typography>
+        <Typography sx={{ fontSize: "0.875rem", fontWeight: 600 }}>{t("llm.panel.title")}</Typography>
         <Typography sx={{ marginTop: 0.75, fontSize: "0.75rem", color: "rgba(255,255,255,0.58)", lineHeight: 1.5 }}>
-          {providerSummary(llm)}
+          {providerSummary(llm, t)}
         </Typography>
 
         <Box
@@ -130,7 +189,7 @@ export default function LlmSettingsPanel({
           }}
         >
           <TextField
-            label="Base URL"
+            label={t("llm.field.baseUrl")}
             size="small"
             value={baseUrl}
             onChange={(e) => setBaseUrl(e.target.value)}
@@ -138,7 +197,7 @@ export default function LlmSettingsPanel({
             fullWidth
           />
           <TextField
-            label="Model"
+            label={t("llm.field.model")}
             size="small"
             value={model}
             onChange={(e) => setModel(e.target.value)}
@@ -146,7 +205,7 @@ export default function LlmSettingsPanel({
             fullWidth
           />
           <TextField
-            label="Temperature"
+            label={t("llm.field.temperature")}
             size="small"
             type="number"
             value={temperature}
@@ -155,7 +214,7 @@ export default function LlmSettingsPanel({
             fullWidth
           />
           <TextField
-            label="Timeout"
+            label={t("llm.field.timeout")}
             size="small"
             type="number"
             value={timeoutSeconds}
@@ -163,7 +222,7 @@ export default function LlmSettingsPanel({
             sx={FIELD_SX}
             fullWidth
             InputProps={{
-              endAdornment: <InputAdornment position="end">s</InputAdornment>,
+              endAdornment: <InputAdornment position="end">{t("llm.field.secondsSuffix")}</InputAdornment>,
             }}
           />
         </Box>
@@ -177,13 +236,16 @@ export default function LlmSettingsPanel({
           padding: 2,
         }}
       >
-        <Typography sx={{ fontSize: "0.875rem", fontWeight: 600 }}>Credentials</Typography>
+        <Typography sx={{ fontSize: "0.875rem", fontWeight: 600 }}>{t("llm.credentials.title")}</Typography>
         <Typography sx={{ marginTop: 0.75, fontSize: "0.75rem", color: "rgba(255,255,255,0.58)", lineHeight: 1.5 }}>
-          API key is stored securely on the server and is never returned to the browser after save.
+          {t("llm.credentials.blurbLead")}
+        </Typography>
+        <Typography sx={{ marginTop: 0.5, fontSize: "0.72rem", color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>
+          {credentialsBlurbSecond}
         </Typography>
 
         <Alert
-          severity={llm?.status?.configured ? "success" : "warning"}
+          severity={alertSev}
           sx={{
             marginTop: 2,
             backgroundColor: "rgba(255,255,255,0.03)",
@@ -192,29 +254,30 @@ export default function LlmSettingsPanel({
             "& .MuiAlert-icon": { color: "inherit" },
           }}
         >
-          <Typography sx={{ fontSize: "0.75rem" }}>
-            {llm?.status?.configured
-              ? `Configured on server${llm?.status?.masked_key ? ` (${llm.status.masked_key})` : ""}`
-              : "No API key is currently configured on the server."}
-          </Typography>
-          {(llm?.status?.last_updated_at || llm?.status?.last_updated_by) && (
-            <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.62)", marginTop: 0.5 }}>
+          <Typography sx={{ fontSize: "0.75rem" }}>{alertBody.primary}</Typography>
+          {alertBody.hint ? (
+            <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.62)", marginTop: 0.75 }}>
+              {alertBody.hint}
+            </Typography>
+          ) : null}
+          {(llm?.status?.last_updated_at || llm?.status?.last_updated_by) && hasSavedSecret ? (
+            <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.55)", marginTop: 0.75 }}>
               {[llm?.status?.last_updated_by, llm?.status?.last_updated_at].filter(Boolean).join(" • ")}
             </Typography>
-          )}
+          ) : null}
         </Alert>
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, marginTop: 2 }}>
           <Switch checked={replaceKey} onChange={(e) => setReplaceKey(e.target.checked)} />
           <Typography sx={{ fontSize: "0.8125rem" }}>
-            {llm?.status?.configured ? "Replace stored API key" : "Set API key"}
+            {hasSavedSecret ? t("llm.credentials.replaceSwitch") : t("llm.credentials.setSwitch")}
           </Typography>
         </Box>
 
         {replaceKey ? (
           <Box sx={{ marginTop: 1.5 }}>
             <TextField
-              label="New API key"
+              label={t("llm.credentials.newKey")}
               size="small"
               type={revealDraftKey ? "text" : "password"}
               value={apiKey}
@@ -222,13 +285,11 @@ export default function LlmSettingsPanel({
               sx={FIELD_SX}
               fullWidth
             />
-            <FormHelperText sx={{ color: "rgba(255,255,255,0.55)" }}>
-              A new key will replace the existing secret.
-            </FormHelperText>
+            <FormHelperText sx={{ color: "rgba(255,255,255,0.55)" }}>{replaceHelper}</FormHelperText>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, marginTop: 1 }}>
               <Switch checked={revealDraftKey} onChange={(e) => setRevealDraftKey(e.target.checked)} />
               <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.65)" }}>
-                Reveal current draft only
+                {t("llm.credentials.revealDraft")}
               </Typography>
             </Box>
           </Box>
@@ -236,10 +297,10 @@ export default function LlmSettingsPanel({
 
         <Box sx={{ display: "flex", gap: 1, marginTop: 2, flexWrap: "wrap" }}>
           <CursorPrimaryButton onClick={submit} disabled={saving || !dirty}>
-            {saving ? "Saving..." : "Save changes"}
+            {saving ? t("llm.save.saving") : t("llm.save.idle")}
           </CursorPrimaryButton>
-          <CursorDangerButton onClick={onDeleteSecret} disabled={saving || testing || !llm?.status?.configured}>
-            Remove key
+          <CursorDangerButton onClick={onDeleteSecret} disabled={saving || testing || !hasSavedSecret}>
+            {t("llm.removeKey")}
           </CursorDangerButton>
         </Box>
 

@@ -40,6 +40,7 @@ describe("buildQueryBody", () => {
     expect(buildQueryBody("  q  ", "", 3)).toEqual({
       query: "q",
       work_id: null,
+      workspace_id: null,
       top_k: 3,
     });
   });

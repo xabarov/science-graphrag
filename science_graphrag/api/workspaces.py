@@ -312,6 +312,17 @@ async def ingest_document_to_workspace(
 
     raw_name = (file.filename or "document.pdf").strip() or "document.pdf"
     data = await file.read()
+    max_bytes = int(settings.workspace_upload_max_file_size_mb) * 1024 * 1024
+    if len(data) > max_bytes:
+        size_mb = len(data) / (1024 * 1024)
+        raise HTTPException(
+            status_code=413,
+            detail={
+                "error": "workspace_upload_file_too_large",
+                "max_file_size_mb": settings.workspace_upload_max_file_size_mb,
+                "file_size_mb": round(size_mb, 2),
+            },
+        )
     rec = start_ingest_job(
         workspace_id=workspace_id, filename=raw_name, file_bytes=data, settings=settings
     )

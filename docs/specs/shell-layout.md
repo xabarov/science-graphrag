@@ -10,8 +10,10 @@ flowchart TB
     App[App Routes]
   end
   App --> Dash[DashboardLayout]
-  Dash --> Drawer[Drawer sidebar]
-  Dash --> Main[main Outlet]
+  Dash --> WCP[WorkspaceContextProvider]
+  WCP --> Drawer[Drawer sidebar]
+  WCP --> Top[Top bar WorkspaceContextChip]
+  WCP --> Main[main Outlet]
   Main --> Pages[Page components]
   subgraph adminRoute [Route /admin]
     AdminShell[AdminRouteShell]
@@ -25,8 +27,10 @@ flowchart TB
 
 | Piece | Role |
 |-------|------|
-| [`DashboardLayout`](../../ui/src/components/layout/DashboardLayout/DashboardLayout.jsx) | Persistent sidebar + scrollable main column for research routes. |
-| [`Drawer`](../../ui/src/components/layout/DashboardLayout/Drawer.jsx) | Primary navigation; optional `aria-label` when collapsed. |
+| [`DashboardLayout`](../../ui/src/components/layout/DashboardLayout/DashboardLayout.jsx) | Wraps research shell in [`WorkspaceContextProvider`](../../ui/src/components/layout/WorkspaceContext.jsx); top bar + sidebar + scrollable `Outlet`. |
+| [`WorkspaceContextProvider`](../../ui/src/components/layout/WorkspaceContext.jsx) | Active `workspace_id` from URL (sync to `localStorage`) with lazy meta for chip. |
+| [`WorkspaceContextChip`](../../ui/src/components/layout/WorkspaceContextChip.jsx) | Header chip: switch workspace, manage list, create. |
+| [`Drawer`](../../ui/src/components/layout/DashboardLayout/Drawer.jsx) | Primary navigation: **Workspace** (last/active), **Graph / Ask / Evidence** append `workspace_id` when known; optional `aria-label` when collapsed. |
 | [`PageHeader`](../../ui/src/components/layout/PageHeader.jsx) | Shared title / eyebrow / description / actions. |
 | [`AdminLayout`](../../ui/src/components/layout/AdminLayout.jsx) | Nested admin chrome + outlet for benchmarks/settings/diagnostics. |
 | [`WorkspacePage`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx) | URL-driven `work_id` + tab slug; coordinates work-scoped tabs. |
@@ -48,6 +52,8 @@ flowchart LR
 ```
 
 `work_id` is carried in query params (`/workspace?work_id=…&tab=…`) and mirrored in local storage helpers under [`ui/src/pages/WorkspacePage/utils/workContext.js`](../../ui/src/pages/WorkspacePage/utils/workContext.js).
+
+**Workspace context (Wave I):** `workspace_id` in the URL is the shareable source of truth; [`workspaceStore.js`](../../ui/src/utils/workspaceStore.js) persists `activeWorkspaceId` for drawer links and [`appendWorkspaceQuery`](../../ui/src/utils/workspaceStore.js) / [`getLastWorkspaceHref`](../../ui/src/utils/workspaceStore.js).
 
 ## Lazy-loaded chunks
 

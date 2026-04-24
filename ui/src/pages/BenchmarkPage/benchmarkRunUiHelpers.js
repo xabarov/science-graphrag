@@ -2,6 +2,8 @@
  * Shared filtering/sorting for benchmark run case lists (Results dialog + Workbench).
  */
 
+import { getRuntimeIntlLocale } from "../../i18n/runtimeIntlLocale.js";
+
 export function collectFailedCheckNames(cases) {
   const names = new Set();
   for (const item of cases || []) {
@@ -9,7 +11,7 @@ export function collectFailedCheckNames(cases) {
       if (c != null && String(c).trim()) names.add(String(c));
     }
   }
-  return Array.from(names).sort((a, b) => a.localeCompare(b));
+  return Array.from(names).sort((a, b) => a.localeCompare(b, getRuntimeIntlLocale(), { sensitivity: "base" }));
 }
 
 /**
@@ -63,7 +65,7 @@ export function sortBenchmarkCases(cases, sortKey, dir) {
     const va = val(a);
     const vb = val(b);
     if (typeof va === "string" && typeof vb === "string") {
-      return mult * va.localeCompare(vb);
+      return mult * va.localeCompare(vb, getRuntimeIntlLocale(), { sensitivity: "base" });
     }
     if (va < vb) return -1 * mult;
     if (va > vb) return 1 * mult;

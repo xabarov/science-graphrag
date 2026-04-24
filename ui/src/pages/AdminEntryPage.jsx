@@ -6,6 +6,7 @@ import Typography from "@mui/material/Typography";
 import { CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
 import AdminApiStatusStrip from "./AdminApiStatusStrip.jsx";
 import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
+import { useI18n } from "../i18n/I18nContext.jsx";
 
 function AdminCard({ title, description, primaryTo, primaryLabel, secondaryTo, secondaryLabel }) {
   return (
@@ -34,30 +35,31 @@ function AdminCard({ title, description, primaryTo, primaryLabel, secondaryTo, s
 }
 
 export default function AdminEntryPage() {
+  const { t } = useI18n();
   return (
     <Box sx={{ p: { xs: 1.5, sm: 0 }, ...mainShellContentSx }}>
-      <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: "rgba(255,255,255,0.9)", mb: 1 }}>API status</Typography>
+      <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: "rgba(255,255,255,0.9)", mb: 1 }}>{t("adminEntry.apiStatus")}</Typography>
       <AdminApiStatusStrip />
       <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 1.5 }}>
         <AdminCard
-          title="Benchmarks"
-          description="Run benchmark flows, inspect workbench output, compare runs, and review benchmark cases."
+          title={t("adminEntry.card.benchmarks.title")}
+          description={t("adminEntry.card.benchmarks.description")}
           primaryTo="/admin/benchmarks"
-          primaryLabel="Open benchmarks"
+          primaryLabel={t("adminEntry.card.benchmarks.primary")}
           secondaryTo="/admin/benchmarks?tab=workbench"
-          secondaryLabel="Open workbench"
+          secondaryLabel={t("adminEntry.card.benchmarks.secondary")}
         />
         <AdminCard
-          title="Settings"
-          description="Configure runtime and LLM settings with a dedicated settings layout that can grow over time."
+          title={t("adminEntry.card.settings.title")}
+          description={t("adminEntry.card.settings.description")}
           primaryTo="/admin/settings"
-          primaryLabel="Open settings"
+          primaryLabel={t("adminEntry.card.settings.primary")}
         />
         <AdminCard
-          title="Diagnostics"
-          description="Health and catalog probes plus JSON details. Extend with deeper metrics when backend exposes read-only status APIs."
+          title={t("adminEntry.card.diagnostics.title")}
+          description={t("adminEntry.card.diagnostics.description")}
           primaryTo="/admin/diagnostics"
-          primaryLabel="Open diagnostics"
+          primaryLabel={t("adminEntry.card.diagnostics.primary")}
         />
       </Box>
     </Box>

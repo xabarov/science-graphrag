@@ -7,6 +7,7 @@ import { CursorPrimaryButton, CursorSmallButton } from "../components/common/ind
 import PageHeader from "../components/layout/PageHeader.jsx";
 import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
 import { isAdminModeEnabled } from "../components/layout/adminVisibility.js";
+import { useI18n } from "../i18n/I18nContext.jsx";
 import { getHomeStatus } from "./HomePage/homeState.js";
 import { useCorpusEntryState } from "./HomePage/useCorpusEntryState.js";
 
@@ -49,6 +50,7 @@ function SurfaceCard({ eyebrow, title, description, actions, accent = "default" 
 }
 
 export default function HomePage() {
+  const { t } = useI18n();
   const location = useLocation();
   const { recentWorks, continueTarget, refreshCorpusEntryState } = useCorpusEntryState({ recentLimit: 4 });
   const status = useMemo(() => getHomeStatus(), []);
@@ -61,17 +63,17 @@ export default function HomePage() {
   return (
     <Box sx={{ p: 2, ...mainShellContentSx }}>
       <PageHeader
-        eyebrow="Research surface"
-        title="Home"
-        description="Open your workspace, browse Workspaces to add papers, or jump into admin tools without losing the main research flow."
+        eyebrow={t("home.header.eyebrow")}
+        title={t("home.header.title")}
+        description={t("home.header.description")}
         actions={
           <>
             <CursorSmallButton component={Link} to="/workspaces" sx={{ textDecoration: "none" }}>
-              Workspaces
+              {t("home.header.workspaces")}
             </CursorSmallButton>
             {adminModeEnabled ? (
               <CursorSmallButton component={Link} to="/admin" sx={{ textDecoration: "none" }}>
-                Admin
+                {t("home.header.admin")}
               </CursorSmallButton>
             ) : null}
           </>
@@ -80,42 +82,40 @@ export default function HomePage() {
 
       <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 1.5 }}>
         <SurfaceCard
-          eyebrow="Research surface"
-          title={continueTarget ? "Open last paper workspace" : "Open Workspace"}
+          eyebrow={t("home.card.workspace.eyebrow")}
+          title={continueTarget ? t("home.card.workspace.titleOpenLast") : t("home.card.workspace.titleDefault")}
           description={
-            continueTarget
-              ? "Resume the most recently opened paper in the Workspace shell (paper list + tools in the left nav)."
-              : "Create or pick a workspace under Workspaces, then add papers by work id."
+            continueTarget ? t("home.card.workspace.descOpenLast") : t("home.card.workspace.descDefault")
           }
           accent="primary"
           actions={
             <>
               <CursorPrimaryButton component={Link} to="/workspace" sx={{ textDecoration: "none" }}>
-                Open Workspace
+                {t("home.card.workspace.openWorkspace")}
               </CursorPrimaryButton>
               {continueTarget ? (
                 <CursorSmallButton component={Link} to={continueTarget.path} sx={{ textDecoration: "none" }}>
-                  Last paper
+                  {t("home.card.workspace.lastPaper")}
                 </CursorSmallButton>
               ) : null}
               <CursorSmallButton component={Link} to="/workspaces" sx={{ textDecoration: "none" }}>
-                Browse Workspaces
+                {t("home.card.workspace.browse")}
               </CursorSmallButton>
             </>
           }
         />
 
         <SurfaceCard
-          eyebrow="Collections"
-          title="Workspaces & indexed works"
-          description="Manage workspaces (paper sets), merge collections, export JSON, and search the indexed corpus to add papers."
+          eyebrow={t("home.card.collections.eyebrow")}
+          title={t("home.card.collections.title")}
+          description={t("home.card.collections.description")}
           actions={
             <>
               <CursorPrimaryButton component={Link} to="/workspaces" sx={{ textDecoration: "none" }}>
-                Workspaces
+                {t("home.card.collections.workspaces")}
               </CursorPrimaryButton>
               <CursorSmallButton component={Link} to="/reader" sx={{ textDecoration: "none" }}>
-                Reader
+                {t("home.card.collections.reader")}
               </CursorSmallButton>
             </>
           }
@@ -123,16 +123,16 @@ export default function HomePage() {
 
         {adminModeEnabled ? (
           <SurfaceCard
-            eyebrow="Operations surface"
-            title="Admin tools"
-            description="Benchmarks, settings, and diagnostics stay available from a dedicated entry, without dominating the core research journey."
+            eyebrow={t("home.card.admin.eyebrow")}
+            title={t("home.card.admin.title")}
+            description={t("home.card.admin.description")}
             actions={
               <>
                 <CursorPrimaryButton component={Link} to="/admin" sx={{ textDecoration: "none" }}>
-                  Open admin
+                  {t("home.card.admin.openAdmin")}
                 </CursorPrimaryButton>
                 <CursorSmallButton component={Link} to="/admin/benchmarks" sx={{ textDecoration: "none" }}>
-                  Benchmarks
+                  {t("home.card.admin.benchmarks")}
                 </CursorSmallButton>
               </>
             }
@@ -149,11 +149,11 @@ export default function HomePage() {
             p: 2,
           }}
         >
-          <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: "rgba(255,255,255,0.9)", mb: 1.25 }}>Recent works</Typography>
+          <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: "rgba(255,255,255,0.9)", mb: 1.25 }}>
+            {t("home.recentWorks.title")}
+          </Typography>
           {recentWorks.length === 0 ? (
-            <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>
-              No recent works yet. Open Workspaces and add a paper to build a continue flow.
-            </Typography>
+            <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>{t("home.recentWorks.empty")}</Typography>
           ) : (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
               {recentWorks.map((item) => (
@@ -179,7 +179,7 @@ export default function HomePage() {
                     </Typography>
                   </Box>
                   <CursorSmallButton component={Link} to={`/workspace?work_id=${encodeURIComponent(item.workId)}`} sx={{ textDecoration: "none" }}>
-                    Open
+                    {t("home.recentWorks.open")}
                   </CursorSmallButton>
                 </Box>
               ))}
@@ -195,15 +195,20 @@ export default function HomePage() {
             p: 2,
           }}
         >
-          <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: "rgba(255,255,255,0.9)", mb: 1.25 }}>Session readiness</Typography>
-          <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.6 }}>
-            Last workspace context: {status.hasLastWork ? "saved locally" : "not saved yet"}
+          <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: "rgba(255,255,255,0.9)", mb: 1.25 }}>
+            {t("home.session.title")}
           </Typography>
           <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.6 }}>
-            Recent work history: {status.hasRecentWorks ? "available" : "empty"}
+            {t("home.session.lastContext")}{" "}
+            {status.hasLastWork ? t("home.session.savedLocally") : t("home.session.notSaved")}
           </Typography>
           <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.6 }}>
-            Continue flow: {status.hasLocalState ? "ready to resume" : "starts from Workspaces"}
+            {t("home.session.recentHistory")}{" "}
+            {status.hasRecentWorks ? t("home.session.available") : t("home.session.empty")}
+          </Typography>
+          <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.6 }}>
+            {t("home.session.continueFlow")}{" "}
+            {status.hasLocalState ? t("home.session.readyResume") : t("home.session.startsWorkspaces")}
           </Typography>
         </Box>
       </Box>

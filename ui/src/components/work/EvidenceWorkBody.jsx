@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 import { formatResearchApiError, getWorkChunks } from "../../services/researchApi.js";
 import { CursorSmallButton } from "../common/index.js";
 import { buildWorkspaceTracePath, describeTraceabilityState } from "./traceabilityState.js";
+import { useI18n } from "../../i18n/I18nContext.jsx";
 
 /**
  * Evidence (chunk fingerprints) for a fixed work_id.
@@ -20,6 +21,7 @@ export default function EvidenceWorkBody({
   highlightedSection = "",
   citation = "",
 }) {
+  const { t } = useI18n();
   const [chunks, setChunks] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -61,7 +63,7 @@ export default function EvidenceWorkBody({
       {loading && (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 2 }}>
           <CircularProgress size={22} sx={{ color: "rgba(129,140,248,0.9)" }} />
-          <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>Loading chunks…</Typography>
+          <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>{t("evidenceBody.loading")}</Typography>
         </Box>
       )}
       {error && (
@@ -81,13 +83,15 @@ export default function EvidenceWorkBody({
                 backgroundColor: "rgba(99,102,241,0.08)",
               }}
             >
-              <Typography sx={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.95)", mb: 0.5 }}>Opened from traceability flow</Typography>
+              <Typography sx={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.95)", mb: 0.5 }}>{t("evidenceBody.traceTitle")}</Typography>
               <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.8)" }}>
-                Focus: {traceSummary.join(" · ")}
+                {t("evidenceBody.focus", { summary: traceSummary.join(" · ") })}
               </Typography>
             </Box>
           ) : null}
-          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)" }}>total: {chunks.total ?? "—"}</Typography>
+          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)" }}>
+            {t("evidenceBody.total", { total: String(chunks.total ?? "—") })}
+          </Typography>
           {(chunks.items || []).map((ch) => (
             (() => {
               const fingerprint = String(ch.chunk_fingerprint || "");
@@ -111,7 +115,9 @@ export default function EvidenceWorkBody({
                 <Typography sx={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.9)", fontFamily: "monospace" }}>
                   {ch.chunk_fingerprint}
                 </Typography>
-                {highlighted ? <Chip label="answer-linked" size="small" sx={{ height: 20, fontSize: "0.6875rem" }} /> : null}
+                {highlighted ? (
+                  <Chip label={t("evidenceBody.answerLinked")} size="small" sx={{ height: 20, fontSize: "0.6875rem" }} />
+                ) : null}
               </Box>
               <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mt: 0.25 }}>{ch.section_path || "—"}</Typography>
               <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.75)", mt: 0.35 }}>
@@ -128,7 +134,7 @@ export default function EvidenceWorkBody({
                   })}
                   sx={{ textDecoration: "none" }}
                 >
-                  Open in Reader
+                  {t("evidenceBody.openReader")}
                 </CursorSmallButton>
                 <CursorSmallButton
                   component={Link}
@@ -138,7 +144,7 @@ export default function EvidenceWorkBody({
                   })}
                   sx={{ textDecoration: "none" }}
                 >
-                  Open in Graph
+                  {t("evidenceBody.openGraph")}
                 </CursorSmallButton>
                 <CursorSmallButton
                   component={Link}
@@ -149,7 +155,7 @@ export default function EvidenceWorkBody({
                   })}
                   sx={{ textDecoration: "none" }}
                 >
-                  Continue in Ask
+                  {t("evidenceBody.continueAsk")}
                 </CursorSmallButton>
               </Box>
             </Box>

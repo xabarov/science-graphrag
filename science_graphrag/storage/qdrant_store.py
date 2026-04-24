@@ -201,6 +201,7 @@ class QdrantChunkStore:
         vector: list[float],
         limit: int = 8,
         work_id: str | None = None,
+        work_ids: list[str] | None = None,
     ) -> list[dict[str, Any]]:
         """Return scored hits with payload (text, work_id, chunk metadata)."""
 
@@ -209,6 +210,12 @@ class QdrantChunkStore:
             query_filter = Filter(
                 must=[FieldCondition(key="work_id", match=MatchValue(value=work_id))],
             )
+        elif work_ids:
+            cleaned = [str(w).strip() for w in work_ids if str(w).strip()]
+            if cleaned:
+                query_filter = Filter(
+                    should=[FieldCondition(key="work_id", match=MatchValue(value=w)) for w in cleaned],
+                )
         # qdrant-client>=1.17: use query_points (search() removed)
         resp = self._client.query_points(
             collection_name=self._collection,

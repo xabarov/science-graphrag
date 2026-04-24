@@ -4,6 +4,8 @@ import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 
+import { useI18n } from "../../i18n/I18nContext.jsx";
+
 /** Shared muted body text for graph empty/loading hints (Phase 4.4). */
 export const graphShellMutedTextSx = {
   fontSize: "0.8125rem",
@@ -14,10 +16,11 @@ export const graphShellMutedTextSx = {
  * Loading row used by GraphWorkspacePanel (and keeps typography aligned with the rest of the graph UI).
  */
 export function GraphLoadingInline() {
+  const { t } = useI18n();
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 2 }}>
       <CircularProgress size={22} sx={{ color: "rgba(129,140,248,0.9)" }} />
-      <Typography sx={graphShellMutedTextSx}>Loading graph…</Typography>
+      <Typography sx={graphShellMutedTextSx}>{t("graphShell.loading")}</Typography>
     </Box>
   );
 }

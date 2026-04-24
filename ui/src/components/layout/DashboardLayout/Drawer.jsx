@@ -12,7 +12,10 @@ import FactCheckOutlinedIcon from "@mui/icons-material/FactCheckOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 
 import { CursorIconButton } from "../../common/index.js";
+import { useI18n } from "../../../i18n/I18nContext.jsx";
 import { isAdminModeEnabled } from "../adminVisibility.js";
+import { useWorkspaceContext } from "../WorkspaceContext.jsx";
+import { appendWorkspaceQuery } from "../../../utils/workspaceStore.js";
 
 const STORAGE_KEY = "sidebarExpanded";
 
@@ -27,34 +30,37 @@ function _readExpanded() {
 }
 
 function itemActive(location, to) {
-  return location.pathname === to;
+  const path = String(to || "").split("?")[0] || "";
+  return location.pathname === path;
 }
 
 export default function Drawer({ onNavigate }) {
+  const { t } = useI18n();
   const [expanded, setExpanded] = useState(_readExpanded());
   const location = useLocation();
   const adminModeEnabled = isAdminModeEnabled();
+  const { activeWorkspaceId, getLastWorkspaceHref } = useWorkspaceContext();
 
-  const userMenu = useMemo(
-    () => [
-      { to: "/workspaces", label: "Workspaces", icon: <FolderOpenOutlinedIcon /> },
-      { to: "/graph", label: "Graph", icon: <AccountTreeOutlinedIcon /> },
-      { to: "/ask", label: "Ask", icon: <QuestionAnswerOutlinedIcon /> },
-      { to: "/evidence", label: "Evidence", icon: <FactCheckOutlinedIcon /> },
-    ],
-    [],
-  );
+  const userMenu = useMemo(() => {
+    const wid = activeWorkspaceId || "";
+    return [
+      { to: getLastWorkspaceHref(), label: t("shell.drawer.workspace"), icon: <FolderOpenOutlinedIcon /> },
+      { to: appendWorkspaceQuery("/graph", wid), label: t("shell.drawer.graph"), icon: <AccountTreeOutlinedIcon /> },
+      { to: appendWorkspaceQuery("/ask", wid), label: t("shell.drawer.ask"), icon: <QuestionAnswerOutlinedIcon /> },
+      { to: appendWorkspaceQuery("/evidence", wid), label: t("shell.drawer.evidence"), icon: <FactCheckOutlinedIcon /> },
+    ];
+  }, [t, activeWorkspaceId, getLastWorkspaceHref]);
 
   const adminMenu = useMemo(
     () =>
       adminModeEnabled
         ? [
-            { to: "/admin", label: "Admin", icon: <ScienceOutlinedIcon /> },
-            { to: "/admin/benchmarks", label: "Benchmarks", icon: <ScienceOutlinedIcon /> },
-            { to: "/admin/settings", label: "Settings", icon: <SettingsOutlinedIcon /> },
+            { to: "/admin", label: t("shell.drawer.admin"), icon: <ScienceOutlinedIcon /> },
+            { to: "/admin/benchmarks", label: t("shell.drawer.benchmarks"), icon: <ScienceOutlinedIcon /> },
+            { to: "/admin/settings", label: t("shell.drawer.settings"), icon: <SettingsOutlinedIcon /> },
           ]
         : [],
-    [adminModeEnabled],
+    [adminModeEnabled, t],
   );
 
   function toggleExpanded() {
@@ -114,9 +120,9 @@ export default function Drawer({ onNavigate }) {
     >
       <Box sx={{ padding: expanded ? 2 : 1.5 }}>
         {expanded ? (
-          <Typography sx={{ fontWeight: 700 }}>science-graphrag</Typography>
+          <Typography sx={{ fontWeight: 700 }}>{t("shell.drawer.brand")}</Typography>
         ) : (
-          <Tooltip title="science-graphrag">
+          <Tooltip title={t("shell.drawer.brand")}>
             <Box sx={{ display: "flex", alignItems: "center" }}>
               <FolderOpenOutlinedIcon />
             </Box>
@@ -140,7 +146,7 @@ export default function Drawer({ onNavigate }) {
               mb: 0.5,
             }}
           >
-            Operations
+            {t("shell.drawer.operations")}
           </Typography>
         ) : null}
 
@@ -150,7 +156,7 @@ export default function Drawer({ onNavigate }) {
       <Box sx={{ flex: 1 }} />
 
       <Box sx={{ padding: expanded ? 2 : 1, position: "absolute", bottom: 12, right: expanded ? 12 : 6 }}>
-        <CursorIconButton onClick={toggleExpanded} aria-label="toggle sidebar">
+        <CursorIconButton onClick={toggleExpanded} aria-label={t("shell.drawer.toggleSidebar")}>
           <Box sx={{ transform: expanded ? "none" : "rotate(180deg)" }}>{"<"}</Box>
         </CursorIconButton>
       </Box>

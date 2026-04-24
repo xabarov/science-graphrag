@@ -4,8 +4,10 @@ import Typography from "@mui/material/Typography";
 import { Link } from "react-router-dom";
 
 import { CursorPrimaryButton, CursorSmallButton } from "../common/index.js";
+import { useI18n } from "../../i18n/I18nContext.jsx";
 
 export default function AdminVisibilityGate() {
+  const { t } = useI18n();
   return (
     <Box
       sx={{
@@ -16,19 +18,19 @@ export default function AdminVisibilityGate() {
         p: 2,
       }}
     >
-      <Typography sx={{ fontWeight: 600, fontSize: "0.9375rem", color: "rgba(255,255,255,0.9)" }}>Admin surface is unavailable</Typography>
+      <Typography sx={{ fontWeight: 600, fontSize: "0.9375rem", color: "rgba(255,255,255,0.9)" }}>{t("adminGate.title")}</Typography>
       <Typography sx={{ mt: 1, fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.55 }}>
-        This environment is currently running in research-only mode. Return to Workspaces or continue a workspace session without exposing operational tools.
+        {t("adminGate.body")}
       </Typography>
       <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
         <CursorPrimaryButton component={Link} to="/" sx={{ textDecoration: "none" }}>
-          Go home
+          {t("adminGate.goHome")}
         </CursorPrimaryButton>
         <CursorSmallButton component={Link} to="/workspaces" sx={{ textDecoration: "none" }}>
-          Workspaces
+          {t("adminGate.workspaces")}
         </CursorSmallButton>
         <CursorSmallButton component={Link} to="/workspace" sx={{ textDecoration: "none" }}>
-          Workspace
+          {t("adminGate.workspace")}
         </CursorSmallButton>
       </Box>
     </Box>

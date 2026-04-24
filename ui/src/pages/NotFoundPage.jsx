@@ -7,18 +7,20 @@ import PageHeader from "../components/layout/PageHeader.jsx";
 import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
 import { CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
 import { isAdminModeEnabled } from "../components/layout/adminVisibility.js";
+import { useI18n } from "../i18n/I18nContext.jsx";
 import { getContinueWorkspaceTarget } from "./HomePage/homeState.js";
 
 export default function NotFoundPage() {
+  const { t } = useI18n();
   const continueTarget = useMemo(() => getContinueWorkspaceTarget(), []);
   const adminModeEnabled = useMemo(() => isAdminModeEnabled(), []);
 
   return (
     <Box sx={{ p: 2, ...mainShellContentSx }}>
       <PageHeader
-        eyebrow="Recovery"
-        title="Page not found"
-        description="This route does not exist or is no longer available. Choose a safe next step to return to the main research or admin flow."
+        eyebrow={t("notFound.header.eyebrow")}
+        title={t("notFound.header.title")}
+        description={t("notFound.header.description")}
       />
 
       <Box
@@ -29,25 +31,27 @@ export default function NotFoundPage() {
           p: 2,
         }}
       >
-        <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: "rgba(255,255,255,0.9)" }}>Recommended next actions</Typography>
+        <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: "rgba(255,255,255,0.9)" }}>
+          {t("notFound.actions.title")}
+        </Typography>
         <Typography sx={{ mt: 1, fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.55, maxWidth: 700 }}>
-          Return to the main entry surfaces, reopen Workspaces, or continue the last saved workspace if you were in the middle of a research session.
+          {t("notFound.actions.body")}
         </Typography>
         <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
           <CursorPrimaryButton component={Link} to="/" sx={{ textDecoration: "none" }}>
-            Go home
+            {t("notFound.actions.goHome")}
           </CursorPrimaryButton>
           <CursorSmallButton component={Link} to="/workspaces" sx={{ textDecoration: "none" }}>
-            Workspaces
+            {t("notFound.actions.workspaces")}
           </CursorSmallButton>
           {continueTarget ? (
             <CursorSmallButton component={Link} to={continueTarget.path} sx={{ textDecoration: "none" }}>
-              Continue workspace
+              {t("notFound.actions.continueWorkspace")}
             </CursorSmallButton>
           ) : null}
           {adminModeEnabled ? (
             <CursorSmallButton component={Link} to="/admin" sx={{ textDecoration: "none" }}>
-              Open admin
+              {t("notFound.actions.openAdmin")}
             </CursorSmallButton>
           ) : null}
         </Box>

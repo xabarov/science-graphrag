@@ -3,6 +3,7 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
+import { useI18n } from "../../i18n/I18nContext.jsx";
 import SettingsSectionNav from "./SettingsSectionNav.jsx";
 
 export default function SettingsLayout({
@@ -14,6 +15,7 @@ export default function SettingsLayout({
   dirty,
   children,
 }) {
+  const { t } = useI18n();
   return (
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
       <SettingsSectionNav sections={sections} activeSectionId={activeSectionId} onSelect={onSelectSection} />
@@ -45,7 +47,7 @@ export default function SettingsLayout({
               }}
             >
               <Typography sx={{ fontSize: "0.75rem" }}>
-                You have unsaved changes in this section.
+                {t("shell.settings.unsaved")}
               </Typography>
             </Alert>
           ) : null}

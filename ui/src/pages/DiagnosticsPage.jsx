@@ -6,9 +6,11 @@ import { Link } from "react-router-dom";
 
 import { CursorSmallButton } from "../components/common/index.js";
 import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
+import { useI18n } from "../i18n/I18nContext.jsx";
 import { formatResearchApiError, getHealth, getResearchApiBaseUrl, getWorks } from "../services/researchApi.js";
 
 export default function DiagnosticsPage() {
+  const { t } = useI18n();
   const [status, setStatus] = useState("idle");
   const [payload, setPayload] = useState(null);
   const [error, setError] = useState(null);
@@ -48,33 +50,29 @@ export default function DiagnosticsPage() {
 
   return (
     <Box sx={{ p: { xs: 1.5, sm: 2 }, ...mainShellContentSx }}>
-      <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: "rgba(255,255,255,0.9)", mb: 1 }}>
-        Diagnostics
-      </Typography>
+      <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: "rgba(255,255,255,0.9)", mb: 1 }}>{t("diagnostics.title")}</Typography>
       <Typography sx={{ color: "rgba(255,255,255,0.55)", fontSize: "0.8125rem", mb: 2 }}>
-        Run checks against the configured API base: <code style={{ color: "rgba(129,140,248,0.95)" }}>GET /health</code> and a
-        minimal <code style={{ color: "rgba(129,140,248,0.95)" }}>GET /v1/works?limit=1</code> probe. Deep runtime metrics remain a
-        follow-up.
+        {t("diagnostics.intro")}
       </Typography>
       <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.75rem", mb: 2 }}>
-        API base: <code style={{ color: "rgba(255,255,255,0.65)" }}>{baseHint}</code>
+        {t("diagnostics.apiBase")} <code style={{ color: "rgba(255,255,255,0.65)" }}>{baseHint}</code>
       </Typography>
 
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
         <CursorSmallButton type="button" onClick={() => refresh()} disabled={status === "loading"}>
-          {status === "loading" ? "Checking…" : "Run checks"}
+          {status === "loading" ? t("diagnostics.checking") : t("diagnostics.runChecks")}
         </CursorSmallButton>
         <CursorSmallButton component={Link} to="/admin" sx={{ textDecoration: "none" }}>
-          Back to admin
+          {t("diagnostics.backAdmin")}
         </CursorSmallButton>
         <CursorSmallButton component={Link} to="/" sx={{ textDecoration: "none" }}>
-          Home
+          {t("diagnostics.home")}
         </CursorSmallButton>
       </Box>
 
       {status === "ok" && payload != null ? (
         <Alert severity="success" sx={{ fontSize: "0.8125rem", mb: 1 }}>
-          Checks completed. Inspect the JSON for health body and works catalog probe.
+          {t("diagnostics.success")}
         </Alert>
       ) : null}
       {status === "error" && error ? (

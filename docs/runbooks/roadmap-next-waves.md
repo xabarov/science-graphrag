@@ -4,6 +4,8 @@
 
 **Зависимость волн:** **Wave A завершена** (в смысле decision gate — `GO` или осознанный `CONDITIONAL-GO` с классифицированными blockers) **до** того, как считать закрытыми Wave B, C или D. Правила: раздел *Gate между Wave A и Wave B–D* в [benchmark-decision-gate.md](benchmark-decision-gate.md). При **NO-GO** не переходить к Wave B–D, пока не восстановлена reference lane и не обновлены `current-*` / сводка агрегатора.
 
+**Wave I–L** (UX/UI и dedup, см. [analysis/workspace-experience-gap-2026-04-24.md](../analysis/workspace-experience-gap-2026-04-24.md)) идут **параллельно** Wave E–H и **не блокируются** decision gate Wave A; зависимости между ними — внутри §6 анализа (I → J/K → L).
+
 ## Wave A — Phase 4: decision gate до устойчивого GO
 
 Без ключей LLM в `.env` (`MAIN_LLM_API_KEY` / `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*`) шаги 2–3 пропускаются; сводка агрегатора всё равно строится по последним закоммиченным `eval/results/current-*.json`.
@@ -96,3 +98,66 @@
 См. [specs/ontology-wave-h-backlog.md](../specs/ontology-wave-h-backlog.md).
 
 **Exit:** ADR + gold cases для каждого нового типа узла/ребра перед включением в merge CI.
+
+---
+
+## Wave I — Workspace context everywhere (Phase 6)
+
+**Цель:** active workspace становится shell-уровневым контекстом, а не локальной деталью одной страницы. Sidebar/Ask/Graph/Evidence знают про текущий workspace и не падают в empty state при прямой навигации.
+
+**Источник анализа:** [docs/analysis/workspace-experience-gap-2026-04-24.md §6 Wave I](../analysis/workspace-experience-gap-2026-04-24.md#wave-i--workspace-context-everywhere-ui--thin-backend).
+
+1. `WorkspaceContextProvider` + `WorkspaceContextChip` (TopBar), Drawer rework: `Workspace` → последний open, `Graph/Ask/Evidence` несут `workspace_id`.
+2. `POST /v1/query` принимает опциональный `workspace_id` (фильтрует Qdrant по членам workspace). Smoke-тест.
+3. Empty states новых страниц: «Open last workspace» fallback из `localStorage`.
+4. Предусловие: закрыть `[OPEN]` строки в [backlog/refactor-frontend.md](../backlog/refactor-frontend.md) (split `WorkspacePage.jsx`, `WorkspacesPage.jsx`).
+
+**Exit:** manual user-journey «Workspace → sidebar Ask → sidebar Graph → sidebar Evidence → обратно» — `workspace_id` не теряется ни на одном шаге; smoke зелёный.
+
+**Статус реализации (2026-04-24):** код и доки обновлены под этот exit (см. [`WorkspaceContext.jsx`](../../ui/src/components/layout/WorkspaceContext.jsx), [`WorkspaceContextChip.jsx`](../../ui/src/components/layout/WorkspaceContextChip.jsx), [`Drawer.jsx`](../../ui/src/components/layout/DashboardLayout/Drawer.jsx), [`workspaceStore.js`](../../ui/src/utils/workspaceStore.js) `appendWorkspaceQuery` / `getLastWorkspaceHref`, [`main.py`](../../science_graphrag/api/main.py) `workspace_id` на `POST /v1/query`, [`retrieval.py`](../../science_graphrag/api/retrieval.py), smoke `test_post_query_accepts_workspace_id_unknown_workspace` в [`tests/test_api_smoke.py`](../../tests/test_api_smoke.py); спеки [`shell-layout.md`](../specs/shell-layout.md), [`route-map.md`](../specs/route-map.md), [`frontend-ui-api-contracts-v1.md`](../specs/frontend-ui-api-contracts-v1.md)).
+
+---
+
+## Wave J — Workspace knowledge graph v2 (Phase 5/6)
+
+**Цель:** граф workspace воспринимается как один связный knowledge graph; видны cross-paper цитирования; есть фильтры по типу и режимы (`inner_only`, `union_1hop`, `semantic_layer`).
+
+**Источник анализа:** [workspace-experience-gap-2026-04-24.md §6 Wave J](../analysis/workspace-experience-gap-2026-04-24.md#wave-j--workspace-knowledge-graph-v2).
+
+1. `GET /v1/workspaces/{id}/graph` v2: `mode`, `depth`, `include_external`, `node_types`; payload отмечает `workspace_membership = internal | external`.
+2. `GET /v1/workspaces/{id}/graph/stats` для summary в WorkspacePage.
+3. UI: `WorkspaceGraphToolbar`, цветовая стратификация internal vs external, force-mode community hint по `Workspace.CONTAINS`.
+4. Графовый бенчмарк: фикстура «два work'а с пересекающимся CITES».
+
+**Exit:** ingest 5+ статей с overlapping references → workspace graph показывает связную citation chain; benchmark fixture зелёный.
+
+---
+
+## Wave K — PDF reader + folder/batch ingest (Phase 1/6)
+
+**Цель:** оригинальный PDF доступен для проверки; загрузка нескольких файлов / папки / архива через UI.
+
+**Источник анализа:** [workspace-experience-gap-2026-04-24.md §6 Wave K](../analysis/workspace-experience-gap-2026-04-24.md#wave-k--pdf-reader--folderbatch-ingest).
+
+1. **K1 (PDF viewer):** `GET /v1/works/{id}/pdf` (`StreamingResponse`, ETag, опционально Range), `GET /v1/works/{id}/sources` для inventory; UI toggle `Markdown | PDF` через `react-pdf` (lazy chunk).
+2. **K2 (batch ingest):** `POST /v1/workspaces/{id}/ingest/batch` (multiple files либо `.zip`); UI drag-and-drop folder / multi-file; per-file прогресс.
+3. **K3 (workspace tagging):** Qdrant payload `workspace_ids` + backfill миграция; ускоряет workspace-scope retrieval из Wave I и dedup из Wave L.
+
+**Exit:** статья с формулами читается в PDF mode; батч из 5+ PDF загружается одним drag-drop'ом; backfill payloads idempotent.
+
+---
+
+## Wave L — Smart dedup pipeline (Phase 1/2, gated)
+
+**Цель:** дедупликация `Work` (затем `Author`, `Institution`/`Venue`) через **embedding + threshold + LLM judge + user-gated merge** — паттерн osint-gr `dedup/`, адаптированный под scholarly entities.
+
+**Источник анализа:** [workspace-experience-gap-2026-04-24.md §6 Wave L](../analysis/workspace-experience-gap-2026-04-24.md#wave-l--smart-dedup-llm--embeddings); карта переиспользования osint-gr — [§5](../analysis/workspace-experience-gap-2026-04-24.md#5-карта-переиспользования-osint-gr).
+
+1. **ADR 005** + новая спека `docs/specs/work-dedup-pipeline-v2.md` (расширение [work-dedup-queue-v1.md](../specs/work-dedup-queue-v1.md)).
+2. **L1 (Work):** `WorkDedupConfig` (пороги, mode), embedding по title+abstract+first author в Qdrant collection `works`, detect-эндпоинт + Postgres review queue + `WorkDedupReviewDialog` (по референсу `osint-gr/.../ConflictsDialog.jsx`); fix `merge_work_into_canonical` для `HAS_AUTHORSHIP` rebind. Gold-set fixture в `tests/fixtures/benchmarks/dedup_v1/`.
+3. **L2 (Author):** embedding name + co-author signature + last institution; LLM context-aware prompt; `Authorship` rebind при merge.
+4. **L3 (Institution / Venue):** ROR/OpenAlex first, embedding только для unmatched; синхронизировать с [merge-catalog-wave-h.md](../specs/merge-catalog-wave-h.md).
+
+**Предусловие:** Wave K3 (Qdrant payload `workspace_ids`) — для workspace-scoped dedup scan.
+
+**Exit:** на gold-set из 5–10 кластеров (preprint+journal, 2 написания, разные работы) — precision ≥ 0.9, recall ≥ 0.8; manual merge через UI работает; reverse merge возможен через CLI.

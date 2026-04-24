@@ -1,4 +1,16 @@
-/** Active work context: URL + localStorage restore for workspace-first navigation. */
+/**
+ * Active work context: URL + localStorage restore for workspace-first navigation.
+ *
+ * ## Routing contract: `/workspace`
+ *
+ * - `workspace_id` — Neo4j workspace collection (required for server-backed list).
+ * - `work_id` — optional focus within that workspace.
+ * - **Selected work** (UI focus + `persistWorkId`) is resolved by {@link resolveSelectedWorkId}:
+ *   if `work_id` is present and belongs to `workspace.work_ids`, use it; else if exactly one
+ *   paper in the workspace, use it; else use the first paper in list order (Neo4j `collect` order);
+ *   if the list is empty, none.
+ * - Callers that open a specific paper must set both query params via {@link buildWorkspacePath}.
+ */
 
 export const LAST_WORK_ID_KEY = "science-graphrag:lastWorkId";
 export const LAST_WORK_TAB_KEY = "science-graphrag:lastWorkspaceTab";
@@ -31,6 +43,21 @@ export function buildWorkspacePath(workId, tab = "overview", options = {}) {
   if (wid) params.set("work_id", wid);
   if (ws) params.set("workspace_id", ws);
   return `/workspace?${params.toString()}`;
+}
+
+/**
+ * Resolve which `work_id` should be treated as the focused paper for a workspace.
+ *
+ * @param {{ workIds: string[], workIdFromUrl?: string | null }} args
+ * @returns {string} empty string when there is no selection
+ */
+export function resolveSelectedWorkId({ workIds, workIdFromUrl }) {
+  const ids = Array.isArray(workIds) ? workIds.map((x) => String(x || "").trim()).filter(Boolean) : [];
+  if (!ids.length) return "";
+  const fromUrl = workIdFromUrl != null ? String(workIdFromUrl).trim() : "";
+  if (fromUrl && ids.includes(fromUrl)) return fromUrl;
+  if (ids.length === 1) return ids[0];
+  return ids[0];
 }
 
 /**

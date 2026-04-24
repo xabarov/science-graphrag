@@ -3,7 +3,10 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
 
+import { useI18n } from "../../i18n/I18nContext.jsx";
+
 export default function SettingsSectionNav({ sections, activeSectionId, onSelect }) {
+  const { t } = useI18n();
   return (
     <Box
       sx={{
@@ -16,11 +19,15 @@ export default function SettingsSectionNav({ sections, activeSectionId, onSelect
       }}
     >
       <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", letterSpacing: "0.04em" }}>
-        Settings
+        {t("shell.settings.navTitle")}
       </Typography>
       {sections.map((section) => {
         const active = section.id === activeSectionId;
         const ready = section.status === "ready";
+        const labelKey = `settings.snapshot.${section.id}.label`;
+        const descKey = `settings.snapshot.${section.id}.description`;
+        const label = t(labelKey) !== labelKey ? t(labelKey) : section.label;
+        const description = t(descKey) !== descKey ? t(descKey) : section.description;
         return (
           <Box
             key={section.id}
@@ -39,9 +46,9 @@ export default function SettingsSectionNav({ sections, activeSectionId, onSelect
             }}
           >
             <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
-              <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600 }}>{section.label}</Typography>
+              <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600 }}>{label}</Typography>
               <Chip
-                label={ready ? "Ready" : "Soon"}
+                label={ready ? t("shell.settings.statusReady") : t("shell.settings.statusSoon")}
                 size="small"
                 sx={{
                   height: 20,
@@ -53,7 +60,7 @@ export default function SettingsSectionNav({ sections, activeSectionId, onSelect
               />
             </Box>
             <Typography sx={{ marginTop: 0.75, fontSize: "0.75rem", color: "rgba(255,255,255,0.58)", lineHeight: 1.45 }}>
-              {section.description}
+              {description}
             </Typography>
           </Box>
         );

@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 import { formatResearchApiError, getWorkChunks, getWorkDetail } from "../../services/researchApi.js";
 import { CursorSmallButton } from "../common/index.js";
 import { buildWorkspaceTracePath, describeTraceabilityState } from "./traceabilityState.js";
+import { useI18n } from "../../i18n/I18nContext.jsx";
 
 /**
  * Reader content for a fixed work_id (used by Reader tab and standalone Reader page).
@@ -21,6 +22,7 @@ export default function ReaderWorkBody({
   focusedSection = "",
   citation = "",
 }) {
+  const { t } = useI18n();
   const [detail, setDetail] = useState(null);
   const [chunks, setChunks] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -83,7 +85,7 @@ export default function ReaderWorkBody({
       {loading && (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 2 }}>
           <CircularProgress size={22} sx={{ color: "rgba(129,140,248,0.9)" }} />
-          <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>Loading…</Typography>
+          <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>{t("readerBody.loading")}</Typography>
         </Box>
       )}
       {error && (
@@ -94,7 +96,7 @@ export default function ReaderWorkBody({
 
       {detail && !loading && (
         <Box sx={{ mb: 2, p: 1.5, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "#1a1a1a" }}>
-          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem" }}>{detail.title || "(no title)"}</Typography>
+          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem" }}>{detail.title || t("readerBody.noTitle")}</Typography>
           <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mt: 0.5 }}>
             {detail.year != null ? `${detail.year} · ` : ""}
             {detail.doi ? `DOI ${detail.doi} · ` : ""}
@@ -107,8 +109,11 @@ export default function ReaderWorkBody({
           )}
           {detail.ingestion && (
             <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mt: 1 }}>
-              document_id: {detail.ingestion.document_id} · has_chunks: {String(detail.ingestion.has_chunks)} · semantic:{" "}
-              {String(detail.ingestion.has_semantic_layer)}
+              {t("readerBody.ingestionLine", {
+                docId: String(detail.ingestion.document_id ?? ""),
+                hasChunks: String(detail.ingestion.has_chunks),
+                semantic: String(detail.ingestion.has_semantic_layer),
+              })}
             </Typography>
           )}
         </Box>
@@ -116,10 +121,8 @@ export default function ReaderWorkBody({
 
       {chunks && !loading && combinedExtractedText ? (
         <Box sx={{ mb: 2, p: 1.5, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "#141414" }}>
-          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 1 }}>Extracted text (reading view)</Typography>
-          <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.42)", mb: 1 }}>
-            Concatenated chunk texts in document order (Markdown-style headings from section paths). For chunk fingerprints use Advanced below.
-          </Typography>
+          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 1 }}>{t("readerBody.extractedTitle")}</Typography>
+          <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.42)", mb: 1 }}>{t("readerBody.extractedHint")}</Typography>
           <Box
             sx={{
               maxHeight: "min(60vh, 520px)",
@@ -136,7 +139,7 @@ export default function ReaderWorkBody({
           </Box>
           {Number(chunks.total) > (chunks.items || []).length ? (
             <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.38)", mt: 0.75 }}>
-              Showing first {(chunks.items || []).length} of {chunks.total} chunks — increase limit in UI if needed.
+              {t("readerBody.chunksPartial", { shown: String((chunks.items || []).length), total: String(chunks.total) })}
             </Typography>
           ) : null}
         </Box>
@@ -154,9 +157,9 @@ export default function ReaderWorkBody({
                 backgroundColor: "rgba(99,102,241,0.08)",
               }}
             >
-              <Typography sx={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.95)", mb: 0.5 }}>Focused reading context</Typography>
+              <Typography sx={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.95)", mb: 0.5 }}>{t("readerBody.focusedContext")}</Typography>
               <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.8)" }}>
-                Opened from {traceSummary.join(" · ")}
+                {t("readerBody.openedFrom", { summary: traceSummary.join(" · ") })}
               </Typography>
               <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 1 }}>
                 <CursorSmallButton
@@ -168,7 +171,7 @@ export default function ReaderWorkBody({
                   })}
                   sx={{ textDecoration: "none" }}
                 >
-                  Return to Ask
+                  {t("readerBody.returnAsk")}
                 </CursorSmallButton>
                 <CursorSmallButton
                   component={Link}
@@ -179,17 +182,17 @@ export default function ReaderWorkBody({
                   })}
                   sx={{ textDecoration: "none" }}
                 >
-                  Open Evidence
+                  {t("readerBody.openEvidence")}
                 </CursorSmallButton>
               </Box>
             </Box>
           ) : null}
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, mb: 0.5 }}>
             <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem" }}>
-              Chunks (advanced) — {chunks.total ?? (chunks.items || []).length}
+              {t("readerBody.chunksAdvanced", { count: String(chunks.total ?? (chunks.items || []).length) })}
             </Typography>
             <CursorSmallButton type="button" onClick={() => setChunksOpen((o) => !o)} sx={{ fontSize: "0.75rem" }}>
-              {chunksOpen ? "Hide" : "Show"}
+              {chunksOpen ? t("readerBody.hide") : t("readerBody.show")}
             </CursorSmallButton>
           </Box>
           <Collapse in={chunksOpen}>
@@ -213,9 +216,14 @@ export default function ReaderWorkBody({
                 >
                   <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75 }}>
                     <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)" }}>
-                      {ch.section_path || "—"} · fp {ch.chunk_fingerprint}
+                      {t("readerBody.chunkMeta", {
+                        section: ch.section_path || "—",
+                        fp: String(ch.chunk_fingerprint || ""),
+                      })}
                     </Typography>
-                    {highlighted ? <Chip label="focused" size="small" sx={{ height: 20, fontSize: "0.6875rem" }} /> : null}
+                    {highlighted ? (
+                      <Chip label={t("readerBody.focusedChip")} size="small" sx={{ height: 20, fontSize: "0.6875rem" }} />
+                    ) : null}
                   </Box>
                   <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)", mt: 0.5, whiteSpace: "pre-wrap" }}>
                     {(ch.text || "").slice(0, 4000)}

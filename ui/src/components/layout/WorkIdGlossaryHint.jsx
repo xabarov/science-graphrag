@@ -2,7 +2,7 @@ import React from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
-import { WORK_ID_GLOSSARY_COPY } from "./workIdGlossaryCopy.js";
+import { useI18n } from "../../i18n/I18nContext.jsx";
 
 /**
  * @param {{
@@ -11,6 +11,7 @@ import { WORK_ID_GLOSSARY_COPY } from "./workIdGlossaryCopy.js";
  * }} props
  */
 export default function WorkIdGlossaryHint({ variant, sx }) {
+  const { t } = useI18n();
   return (
     <Box component="span" sx={sx}>
       <Typography
@@ -19,24 +20,23 @@ export default function WorkIdGlossaryHint({ variant, sx }) {
       >
         {variant === "workspace" ? (
           <>
-            Open a work and switch tabs without leaving context. <strong>work_id</strong> is the indexed paper id; the{" "}
-            <strong>workspace session</strong> ties Reader, Graph, Ask, and Evidence to that paper.
+            {t("workIdHint.workspace.p1")} <strong>work_id</strong> {t("workIdHint.workspace.p2")}{" "}
+            <strong>{t("workIdHint.workspace.session")}</strong> {t("workIdHint.workspace.p3")}
           </>
         ) : variant === "corpus" ? (
           <>
-            {WORK_ID_GLOSSARY_COPY.corpusIntroPrefix}{" "}
+            {t("workIdHint.corpus.prefix")}{" "}
             <code style={{ color: "rgba(129,140,248,0.95)" }}>GET /v1/works</code>
             {". "}
-            {WORK_ID_GLOSSARY_COPY.corpusIntroRest}
+            {t("workIdHint.corpus.rest")}
           </>
         ) : variant === "ask" ? (
           <>
-            <code style={{ color: "rgba(129,140,248,0.95)" }}>work_id</code> {WORK_ID_GLOSSARY_COPY.askOptionalWorkRest}
+            <code style={{ color: "rgba(129,140,248,0.95)" }}>work_id</code> {t("workIdHint.ask.rest")}
           </>
         ) : (
           <>
-            This graph is loaded for the active <code style={{ color: "rgba(129,140,248,0.95)" }}>work_id</code>.{" "}
-            {WORK_ID_GLOSSARY_COPY.graphScopedRest}
+            {t("workIdHint.graph.p1")} <code style={{ color: "rgba(129,140,248,0.95)" }}>work_id</code>. {t("workIdHint.graph.p2")}
           </>
         )}
       </Typography>

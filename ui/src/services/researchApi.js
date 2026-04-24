@@ -27,13 +27,18 @@ export function formatResearchApiError(err) {
   return String(err);
 }
 
-export function buildQueryBody(query, workId = null, topK = 5) {
+export function buildQueryBody(query, workId = null, topK = 5, workspaceId = null) {
   const t = Math.trunc(Number(topK));
   const tk = Number.isFinite(t) ? Math.min(24, Math.max(1, t)) : 5;
   const wid = workId === undefined || workId === "" ? null : workId;
+  const ws =
+    workspaceId === undefined || workspaceId === null || workspaceId === ""
+      ? null
+      : String(workspaceId).trim() || null;
   return {
     query: String(query ?? "").trim(),
     work_id: wid,
+    workspace_id: ws,
     top_k: tk,
   };
 }

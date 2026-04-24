@@ -32,12 +32,14 @@ describe("askFlowCompatibility", () => {
   it("partitions ask sessions by standalone vs locked workspace scope", () => {
     expect(deriveAskScopeKey({ locked: false, scopedWorkId: "w1" })).toBe("standalone");
     expect(deriveAskScopeKey({ locked: true, scopedWorkId: "w1" })).toBe("workspace:w1");
+    expect(deriveAskScopeKey({ locked: false, scopedWorkId: null, workspaceId: "ws-1" })).toBe("standalone-ws:ws-1");
   });
 
   it("preserves global ask semantics when work id is empty", () => {
     expect(buildQueryBody("  compare detectors  ", "", 9)).toEqual({
       query: "compare detectors",
       work_id: null,
+      workspace_id: null,
       top_k: 9,
     });
     const normalized = normalizeQueryResponse({

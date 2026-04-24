@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import os
+import sys
 from copy import deepcopy
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from importlib import metadata
 from pathlib import Path
 from threading import Lock
 from typing import TYPE_CHECKING, Any
@@ -19,6 +22,44 @@ if TYPE_CHECKING:
     from science_graphrag.config import Settings
 
 _LLM_SECRET_KEY = "llm.api_key"
+
+_LLM_ENV_KEY_HINT = (
+    "SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY (or MAIN_LLM_API_KEY / API_KEY per .env.example merge rules)"
+)
+
+
+def _settings_auth_required() -> bool:
+    return os.getenv("SCIENCE_GRAPHRAG_SETTINGS_AUTH_REQUIRED", "false").lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+
+
+def _build_diagnostics_snapshot() -> dict[str, Any]:
+    try:
+        app_version = metadata.version("science-graphrag")
+    except metadata.PackageNotFoundError:
+        app_version = None
+    git_commit = (
+        os.getenv("SCIENCE_GRAPHRAG_GIT_COMMIT")
+        or os.getenv("CI_COMMIT_SHA")
+        or os.getenv("GIT_COMMIT_SHA")
+    )
+    return {
+        "app_version": app_version or "unknown",
+        "python_version": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
+        "in_docker": Path("/.dockerenv").is_file(),
+        "git_commit": git_commit,
+    }
+
+
+def _build_security_snapshot(base_settings: Settings) -> dict[str, Any]:
+    return {
+        "admin_api_key_configured": bool((base_settings.admin_api_key or "").strip()),
+        "settings_auth_required": _settings_auth_required(),
+    }
 
 
 def _now_iso() -> str:
@@ -56,6 +97,9 @@ class SettingsSnapshot:
 
     non_secret_overrides: dict[str, Any]
     llm: dict[str, Any]
+    ingestion: dict[str, Any]
+    diagnostics: dict[str, Any]
+    security: dict[str, Any]
     sections: list[dict[str, Any]]
 
 
@@ -90,9 +134,26 @@ class SettingsService:
         """Return a masked UI-facing snapshot of runtime settings."""
         persisted = self._repository.load()
         llm = dict(persisted.get("llm") or {})
+        ingestion_cfg = dict(persisted.get("ingestion") or {})
+        ingestion_meta = dict(ingestion_cfg.get("_meta") or {})
         meta = dict(llm.get("_meta") or {})
-        api_key = self._secret_store.get_secret(_LLM_SECRET_KEY)
-        configured = bool(api_key)
+        saved_secret = self._secret_store.get_secret(_LLM_SECRET_KEY)
+        has_saved_secret = bool(saved_secret)
+        env_key_raw = base_settings.extraction_llm_api_key
+        env_key = (env_key_raw or "").strip() if env_key_raw else ""
+        has_env_key = bool(env_key)
+
+        if has_saved_secret:
+            secret_source = "server_managed"
+            active_key_for_mask = saved_secret
+        elif has_env_key:
+            secret_source = "environment"
+            active_key_for_mask = env_key
+        else:
+            secret_source = "none"
+            active_key_for_mask = None
+
+        configured = has_saved_secret or has_env_key
 
         timeout_seconds = llm.get("timeout_seconds")
         if timeout_seconds is None:
@@ -106,8 +167,10 @@ class SettingsService:
             "timeout_seconds": timeout_seconds,
             "status": {
                 "configured": configured,
-                "masked_key": _mask_secret(api_key),
-                "secret_source": "server_managed" if configured else "none",
+                "has_saved_secret": has_saved_secret,
+                "masked_key": _mask_secret(active_key_for_mask),
+                "secret_source": secret_source,
+                "env_key_hint": _LLM_ENV_KEY_HINT if secret_source == "environment" else None,
                 "last_updated_at": meta.get("last_updated_at"),
                 "last_updated_by": meta.get("last_updated_by"),
             },
@@ -124,12 +187,40 @@ class SettingsService:
             },
         }
 
+        raw_upload_mb = ingestion_cfg.get("max_file_size_mb")
+        try:
+            persisted_upload_mb = int(raw_upload_mb) if raw_upload_mb is not None else None
+        except (TypeError, ValueError):
+            persisted_upload_mb = None
+        if persisted_upload_mb is not None:
+            persisted_upload_mb = max(1, min(2048, persisted_upload_mb))
+        resolved_upload_mb = (
+            persisted_upload_mb
+            if persisted_upload_mb is not None
+            else int(base_settings.workspace_upload_max_file_size_mb)
+        )
+        resolved_upload_mb = max(1, min(2048, resolved_upload_mb))
+
+        ingestion_snapshot = {
+            "max_file_size_mb": resolved_upload_mb,
+            "status": {
+                "last_updated_at": ingestion_meta.get("last_updated_at"),
+                "last_updated_by": ingestion_meta.get("last_updated_by"),
+            },
+            "effective": {
+                "resolved_max_file_size_mb": resolved_upload_mb,
+            },
+        }
+
+        diagnostics_snapshot = _build_diagnostics_snapshot()
+        security_snapshot = _build_security_snapshot(base_settings)
+
         sections = [
             {
                 "id": "general",
                 "label": "General",
-                "status": "coming_soon",
-                "description": "Environment, app identity, and global defaults.",
+                "status": "ready",
+                "description": "Interface language and environment documentation hints.",
             },
             {
                 "id": "llm",
@@ -140,8 +231,8 @@ class SettingsService:
             {
                 "id": "ingestion",
                 "label": "Ingestion",
-                "status": "coming_soon",
-                "description": "PDF, front-matter, references, and extraction pipeline tuning.",
+                "status": "ready",
+                "description": "Workspace file uploads and related limits.",
             },
             {
                 "id": "storage",
@@ -158,14 +249,14 @@ class SettingsService:
             {
                 "id": "security",
                 "label": "Security & Access",
-                "status": "coming_soon",
-                "description": "Permissions, access model, and secret governance.",
+                "status": "ready",
+                "description": "Read-only flags for admin and settings API protection.",
             },
             {
                 "id": "diagnostics",
                 "label": "Diagnostics",
-                "status": "coming_soon",
-                "description": "Connection status, recent tests, and runtime environment diagnostics.",
+                "status": "ready",
+                "description": "Runtime build identity (read-only).",
             },
         ]
 
@@ -179,17 +270,21 @@ class SettingsService:
         }
         if "enabled" in llm:
             non_secret_overrides["extraction_llm_enabled"] = bool(llm["enabled"])
+        non_secret_overrides["workspace_upload_max_file_size_mb"] = resolved_upload_mb
 
         return SettingsSnapshot(
             non_secret_overrides=non_secret_overrides,
             llm=llm_snapshot,
+            ingestion=ingestion_snapshot,
+            diagnostics=diagnostics_snapshot,
+            security=security_snapshot,
             sections=sections,
         )
 
     def get_schema(self) -> dict[str, Any]:
         """Return a UI-friendly schema so future sections can extend the page safely."""
         return {
-            "version": 1,
+            "version": 2,
             "sections": [
                 {
                     "id": "llm",
@@ -212,7 +307,19 @@ class SettingsService:
                         },
                         {"id": "api_key", "type": "secret", "required": False},
                     ],
-                }
+                },
+                {
+                    "id": "ingestion",
+                    "fields": [
+                        {
+                            "id": "max_file_size_mb",
+                            "type": "integer",
+                            "required": True,
+                            "min": 1,
+                            "max": 2048,
+                        },
+                    ],
+                },
             ],
         }
 
@@ -250,6 +357,31 @@ class SettingsService:
                 self._secret_store.set_secret(_LLM_SECRET_KEY, api_key.strip())
         return self.get_snapshot(base_settings)
 
+    def update_ingestion_settings(
+        self,
+        *,
+        base_settings: Settings,
+        max_file_size_mb: int,
+        actor: str,
+    ) -> SettingsSnapshot:
+        """Persist workspace upload size limit (megabytes per file)."""
+        bounded = max(1, min(2048, int(max_file_size_mb)))
+        with self._lock:
+            payload = self._repository.load()
+            ingestion = dict(payload.get("ingestion") or {})
+            ingestion.update(
+                {
+                    "max_file_size_mb": bounded,
+                    "_meta": {
+                        "last_updated_at": _now_iso(),
+                        "last_updated_by": actor,
+                    },
+                },
+            )
+            payload["ingestion"] = ingestion
+            self._repository.save(payload)
+        return self.get_snapshot(base_settings)
+
     def delete_llm_secret(self, *, base_settings: Settings) -> SettingsSnapshot:
         """Remove the managed LLM secret while keeping non-secret config intact."""
         with self._lock:
@@ -284,6 +416,10 @@ class SettingsService:
         api_key = (candidate.api_key or "").strip() if candidate.api_key is not None else None
         if not api_key and candidate.use_saved_secret:
             api_key = self._secret_store.get_secret(_LLM_SECRET_KEY)
+        if not api_key and candidate.use_saved_secret:
+            env_fallback = (base_settings.extraction_llm_api_key or "").strip()
+            if env_fallback:
+                api_key = env_fallback
 
         if not api_key:
             return {

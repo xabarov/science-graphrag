@@ -43,9 +43,12 @@ Request:
 {
   "query": "string, required",
   "work_id": "string | null",
+  "workspace_id": "string | null",
   "top_k": "int [1..24], default 5"
 }
 ```
+
+When **`workspace_id` is set** and **`work_id` is omitted**, retrieval restricts Qdrant vector search to chunks whose `work_id` belongs to that Neo4j workspace (`Workspace-[:CONTAINS]->Work`). Unknown workspace → HTTP 200 with empty hits and `retrieval_trace.workspace_missing: true`. **`work_id` wins** when both are provided (single-paper scope).
 
 Response shape:
 
@@ -79,6 +82,9 @@ Response shape:
     "hit_count": 0,
     "filter_work_id": "string | null",
     "resolved_work_id": "string | null",
+    "workspace_id": "string | null",
+    "workspace_scope_work_count": "number | omitted",
+    "workspace_missing": "boolean | omitted",
     "qdrant_collection": "string",
     "top_k_requested": 0,
     "citations_returned": 0,

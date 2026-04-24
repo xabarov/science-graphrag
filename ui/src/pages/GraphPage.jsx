@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
 import Popover from "@mui/material/Popover";
@@ -11,16 +11,20 @@ import VpnKeyOutlinedIcon from "@mui/icons-material/VpnKeyOutlined";
 
 import { CursorIconButton, CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
+import { useWorkspaceContext } from "../components/layout/WorkspaceContext.jsx";
 import GraphWorkspacePanel from "../components/graph/GraphWorkspacePanel.jsx";
 import DeduplicationPanel from "../components/graph/DeduplicationPanel.jsx";
 import { GraphMissingWorkCallout } from "../components/graph/graphShellStates.jsx";
 import { persistWorkId } from "./WorkspacePage/utils/workContext.js";
 import { mergeTraceabilityParams, readTraceabilityState } from "../components/work/traceabilityState.js";
 import { readGraphPageLayoutFlags, preserveGraphPageOptionalParams } from "./graphPageUrl.js";
+import { useI18n } from "../i18n/I18nContext.jsx";
 
 const LS_GRAPH_PAGE_ABOUT = "graphPageAboutOpen";
 
 export default function GraphPage() {
+  const { t } = useI18n();
+  const { getLastWorkspaceHref } = useWorkspaceContext();
   const [searchParams, setSearchParams] = useSearchParams();
   const initial = searchParams.get("work_id") || "";
   const [workIdInput, setWorkIdInput] = useState(initial);
@@ -110,11 +114,11 @@ export default function GraphPage() {
           mb: 0.5,
         }}
       >
-        <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.9)" }}>Graph</Typography>
+        <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.9)" }}>{t("graph.toolbar.title")}</Typography>
         <Box sx={{ flex: 1, minWidth: 8 }} />
-        <Tooltip title="Load by work_id (advanced)" placement="bottom">
+        <Tooltip title={t("graph.toolbar.loadTooltip")} placement="bottom">
           <CursorIconButton
-            aria-label="Load graph by work id"
+            aria-label={t("graph.toolbar.loadAria")}
             aria-haspopup="true"
             aria-expanded={Boolean(loadAnchor)}
             onClick={(ev) => setLoadAnchor(ev.currentTarget)}
@@ -122,13 +126,13 @@ export default function GraphPage() {
             <VpnKeyOutlinedIcon sx={{ fontSize: "1.05rem" }} />
           </CursorIconButton>
         </Tooltip>
-        <Tooltip title="About this page" placement="bottom">
+        <Tooltip title={t("graph.toolbar.aboutTooltip")} placement="bottom">
           <CursorIconButton
             type="button"
             onClick={() => setAboutOpen((v) => !v)}
             aria-expanded={aboutOpen}
             aria-controls="graph-page-about"
-            aria-label="Toggle page description"
+            aria-label={t("graph.toolbar.aboutAria")}
           >
             <InfoOutlinedIcon sx={{ fontSize: "1.05rem" }} />
           </CursorIconButton>
@@ -154,12 +158,10 @@ export default function GraphPage() {
           },
         }}
       >
-        <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mb: 1 }}>
-          Optional: paste a UUID to open a specific work. Prefer opening a paper from Workspace or Workspaces.
-        </Typography>
+        <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mb: 1 }}>{t("graph.popover.hint")}</Typography>
         <Box component="form" onSubmit={applyWorkId} sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
           <TextField
-            label="work_id"
+            label={t("reader.workIdLabel")}
             value={workIdInput}
             onChange={(ev) => setWorkIdInput(ev.target.value)}
             size="small"
@@ -171,9 +173,9 @@ export default function GraphPage() {
           />
           <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
             <CursorSmallButton type="button" onClick={() => setLoadAnchor(null)}>
-              Cancel
+              {t("graph.popover.cancel")}
             </CursorSmallButton>
-            <CursorPrimaryButton type="submit">Apply</CursorPrimaryButton>
+            <CursorPrimaryButton type="submit">{t("graph.popover.apply")}</CursorPrimaryButton>
           </Box>
         </Box>
       </Popover>
@@ -181,9 +183,9 @@ export default function GraphPage() {
       <Collapse in={aboutOpen}>
         <Box id="graph-page-about" sx={{ flexShrink: 0, mb: 0.5 }}>
           <PageHeader
-            eyebrow="Graph"
-            title="Inspection"
-            description="Use the left rail for Workspaces, Ask, and Evidence. Tips: ?lab=1 diagnostics, ?compact=1 denser UI, ?focus=1 hide side panels."
+            eyebrow={t("graph.about.eyebrow")}
+            title={t("graph.about.title")}
+            description={t("graph.about.description")}
           />
         </Box>
       </Collapse>
@@ -191,10 +193,15 @@ export default function GraphPage() {
       {!workId.trim() && !workspaceId.trim() ? (
         <Box sx={{ flexShrink: 0, mb: 0.5 }}>
           <GraphMissingWorkCallout
-            title="No graph context yet"
-            description="Open a workspace graph (workspace_id) or a single paper (work_id) from Workspaces / Workspace, or use the key icon."
-            footnote="Tip: ?lab=1 expands diagnostics. ?compact=1 or ?focus=1 tighten layout."
+            title={t("graph.missing.title")}
+            description={t("graph.missing.description")}
+            footnote={t("graph.missing.footnote")}
           />
+          <Box sx={{ mt: 1.5 }}>
+            <CursorPrimaryButton component={Link} to={getLastWorkspaceHref()} sx={{ textDecoration: "none" }}>
+              {t("graph.openLastWorkspace")}
+            </CursorPrimaryButton>
+          </Box>
         </Box>
       ) : null}
 

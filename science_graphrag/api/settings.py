@@ -11,6 +11,7 @@ from science_graphrag.api.settings_models import (
     SettingsSchemaResponse,
     SettingsSnapshotResponse,
     TestLlmConnectionRequest,
+    UpdateIngestionSettingsRequest,
     UpdateLlmSettingsRequest,
 )
 from science_graphrag.config import get_settings
@@ -29,7 +30,13 @@ def get_settings_schema(_: str = Depends(require_settings_access)) -> SettingsSc
 @router.get("", response_model=SettingsSnapshotResponse)
 def get_settings_snapshot(_: str = Depends(require_settings_access)) -> SettingsSnapshotResponse:
     snapshot = _SETTINGS_SERVICE.get_snapshot(get_settings())
-    return SettingsSnapshotResponse(sections=snapshot.sections, llm=snapshot.llm)
+    return SettingsSnapshotResponse(
+        sections=snapshot.sections,
+        llm=snapshot.llm,
+        ingestion=snapshot.ingestion,
+        diagnostics=snapshot.diagnostics,
+        security=snapshot.security,
+    )
 
 
 @router.patch("/llm", response_model=SettingsSnapshotResponse)
@@ -46,14 +53,45 @@ def patch_llm_settings(
         actor=actor,
         api_key=body.api_key,
     )
-    return SettingsSnapshotResponse(sections=snapshot.sections, llm=snapshot.llm)
+    return SettingsSnapshotResponse(
+        sections=snapshot.sections,
+        llm=snapshot.llm,
+        ingestion=snapshot.ingestion,
+        diagnostics=snapshot.diagnostics,
+        security=snapshot.security,
+    )
+
+
+@router.patch("/ingestion", response_model=SettingsSnapshotResponse)
+def patch_ingestion_settings(
+    body: UpdateIngestionSettingsRequest,
+    actor: str = Depends(require_settings_access),
+) -> SettingsSnapshotResponse:
+    snapshot = _SETTINGS_SERVICE.update_ingestion_settings(
+        base_settings=get_settings(),
+        max_file_size_mb=body.max_file_size_mb,
+        actor=actor,
+    )
+    return SettingsSnapshotResponse(
+        sections=snapshot.sections,
+        llm=snapshot.llm,
+        ingestion=snapshot.ingestion,
+        diagnostics=snapshot.diagnostics,
+        security=snapshot.security,
+    )
 
 
 @router.delete("/llm/secret", response_model=SettingsSnapshotResponse)
 def delete_llm_secret(actor: str = Depends(require_settings_access)) -> SettingsSnapshotResponse:
     del actor
     snapshot = _SETTINGS_SERVICE.delete_llm_secret(base_settings=get_settings())
-    return SettingsSnapshotResponse(sections=snapshot.sections, llm=snapshot.llm)
+    return SettingsSnapshotResponse(
+        sections=snapshot.sections,
+        llm=snapshot.llm,
+        ingestion=snapshot.ingestion,
+        diagnostics=snapshot.diagnostics,
+        security=snapshot.security,
+    )
 
 
 @router.post("/llm/test")

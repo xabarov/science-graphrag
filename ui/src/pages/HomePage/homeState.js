@@ -1,4 +1,5 @@
 import { buildWorkspacePath, getLastWorkId, LAST_WORK_ID_KEY } from "../WorkspacePage/utils/workContext.js";
+import { getActiveWorkspaceId } from "../../utils/workspaceStore.js";
 
 export const RECENT_WORKS_KEY = "science-graphrag:recentWorks";
 
@@ -19,7 +20,7 @@ function safeLocalStorage() {
 }
 
 /**
- * @param {{ workId: string, title?: string, year?: string | number | null, tab?: string, visitedAt?: string }} entry
+ * @param {{ workId: string, title?: string, year?: string | number | null, tab?: string, visitedAt?: string, workspaceId?: string | null }} entry
  */
 export function rememberRecentWork(entry) {
   const storage = safeLocalStorage();
@@ -27,19 +28,22 @@ export function rememberRecentWork(entry) {
   const workId = String(entry?.workId || "").trim();
   if (!workId) return;
   const existing = getRecentWorks();
+  const ws =
+    entry?.workspaceId != null && String(entry.workspaceId).trim() ? String(entry.workspaceId).trim() : "";
   const nextItem = {
     workId,
     title: entry?.title ? String(entry.title) : "",
     year: entry?.year == null ? null : String(entry.year),
     tab: entry?.tab ? String(entry.tab) : "overview",
     visitedAt: entry?.visitedAt ? String(entry.visitedAt) : new Date().toISOString(),
+    workspaceId: ws,
   };
   const deduped = [nextItem, ...existing.filter((item) => item.workId !== workId)].slice(0, 8);
   storage.setItem(RECENT_WORKS_KEY, JSON.stringify(deduped));
 }
 
 /**
- * @returns {Array<{workId: string, title: string, year: string | null, tab: string, visitedAt: string}>}
+ * @returns {Array<{workId: string, title: string, year: string | null, tab: string, visitedAt: string, workspaceId: string}>}
  */
 export function getRecentWorks() {
   const storage = safeLocalStorage();
@@ -55,6 +59,7 @@ export function getRecentWorks() {
       year: item?.year == null ? null : String(item.year),
       tab: item?.tab ? String(item.tab) : "overview",
       visitedAt: item?.visitedAt ? String(item.visitedAt) : "",
+      workspaceId: item?.workspaceId != null && String(item.workspaceId).trim() ? String(item.workspaceId).trim() : "",
     }))
     .filter((item) => item.workId);
 }
@@ -65,9 +70,20 @@ export function getRecentWorks() {
 export function getContinueWorkspaceTarget() {
   const lastWorkId = getLastWorkId();
   if (!lastWorkId) return null;
+  const recent = getRecentWorks();
+  const match = recent.find((r) => r.workId === lastWorkId);
+  const fromRecent = match?.workspaceId ? String(match.workspaceId).trim() : "";
+  const fromActive = (() => {
+    try {
+      return getActiveWorkspaceId() || "";
+    } catch {
+      return "";
+    }
+  })();
+  const workspaceId = fromRecent || fromActive;
   return {
     workId: lastWorkId,
-    path: buildWorkspacePath(lastWorkId),
+    path: buildWorkspacePath(lastWorkId, "overview", workspaceId ? { workspaceId } : {}),
   };
 }
 

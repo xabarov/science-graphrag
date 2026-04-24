@@ -5,16 +5,22 @@ import Typography from "@mui/material/Typography";
 import { Link } from "react-router-dom";
 
 import { CursorSmallButton } from "../components/common/index.js";
+import DiagnosticsSettingsPanel from "./SettingsPage/DiagnosticsSettingsPanel.jsx";
+import IngestionSettingsPanel from "./SettingsPage/IngestionSettingsPanel.jsx";
+import GeneralSettingsPanel from "./SettingsPage/GeneralSettingsPanel.jsx";
 import LlmSettingsPanel from "./SettingsPage/LlmSettingsPanel.jsx";
+import SecuritySettingsPanel from "./SettingsPage/SecuritySettingsPanel.jsx";
 import SettingsLayout from "./SettingsPage/SettingsLayout.jsx";
 import {
   deleteLlmSecret,
   getSettingsSchema,
   getSettingsSnapshot,
   testLlmConnection,
+  updateIngestionSettings,
   updateLlmSettings,
 } from "./SettingsPage/settingsApi.js";
 import { formatResearchApiError } from "../services/researchApi.js";
+import { useI18n } from "../i18n/I18nContext.jsx";
 
 function PlaceholderSection({ title, description }) {
   return (
@@ -35,6 +41,7 @@ function PlaceholderSection({ title, description }) {
 }
 
 export default function SettingsPage() {
+  const { t } = useI18n();
   const [snapshot, setSnapshot] = useState(null);
   const [schema, setSchema] = useState(null);
   const [activeSectionId, setActiveSectionId] = useState("llm");
@@ -45,6 +52,9 @@ export default function SettingsPage() {
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState(null);
   const [dirtyHint, setDirtyHint] = useState(false);
+  const [ingestionDirty, setIngestionDirty] = useState(false);
+  const [ingestionSaveError, setIngestionSaveError] = useState("");
+  const [ingestionSaving, setIngestionSaving] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -65,7 +75,7 @@ export default function SettingsPage() {
         setActiveSectionId(active);
       } catch (error) {
         if (!mounted) return;
-        setLoadError(formatResearchApiError(error) || "Failed to load settings.");
+        setLoadError(formatResearchApiError(error) || t("settings.page.loadError"));
       } finally {
         if (mounted) setLoading(false);
       }
@@ -74,7 +84,7 @@ export default function SettingsPage() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [t]);
 
   const sections = useMemo(() => snapshot?.sections || [], [snapshot]);
   const activeSection = useMemo(
@@ -90,9 +100,23 @@ export default function SettingsPage() {
       setSnapshot(next);
       setDirtyHint(false);
     } catch (error) {
-      setSaveError(formatResearchApiError(error) || "Failed to save settings.");
+      setSaveError(formatResearchApiError(error) || t("settings.page.saveError"));
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleSaveIngestion(payload) {
+    setIngestionSaving(true);
+    setIngestionSaveError("");
+    try {
+      const next = await updateIngestionSettings(payload);
+      setSnapshot(next);
+      setIngestionDirty(false);
+    } catch (error) {
+      setIngestionSaveError(formatResearchApiError(error) || "Failed to save ingestion settings.");
+    } finally {
+      setIngestionSaving(false);
     }
   }
 
@@ -103,7 +127,7 @@ export default function SettingsPage() {
       const next = await deleteLlmSecret();
       setSnapshot(next);
     } catch (error) {
-      setSaveError(formatResearchApiError(error) || "Failed to remove API key.");
+      setSaveError(formatResearchApiError(error) || t("settings.page.removeKeyError"));
     } finally {
       setSaving(false);
     }
@@ -119,7 +143,7 @@ export default function SettingsPage() {
       setTestResult({
         status: "error",
         error_kind: "request_failed",
-        message: formatResearchApiError(error) || "Connection test failed.",
+        message: formatResearchApiError(error) || t("settings.page.connectionFailed"),
       });
     } finally {
       setTesting(false);
@@ -128,6 +152,9 @@ export default function SettingsPage() {
 
   function renderSection() {
     if (!activeSection) return null;
+    if (activeSection.id === "general") {
+      return <GeneralSettingsPanel />;
+    }
     if (activeSection.id === "llm") {
       return (
         <LlmSettingsPanel
@@ -144,14 +171,35 @@ export default function SettingsPage() {
         />
       );
     }
-    return <PlaceholderSection title={activeSection.label} description={activeSection.description} />;
+    if (activeSection.id === "ingestion") {
+      return (
+        <IngestionSettingsPanel
+          ingestion={snapshot?.ingestion}
+          saving={ingestionSaving}
+          saveError={ingestionSaveError}
+          onSave={handleSaveIngestion}
+          onDirtyChange={setIngestionDirty}
+        />
+      );
+    }
+    if (activeSection.id === "diagnostics") {
+      return <DiagnosticsSettingsPanel diagnostics={snapshot?.diagnostics} />;
+    }
+    if (activeSection.id === "security") {
+      return <SecuritySettingsPanel security={snapshot?.security} />;
+    }
+    const labelKey = `settings.snapshot.${activeSection.id}.label`;
+    const descKey = `settings.snapshot.${activeSection.id}.description`;
+    const title = t(labelKey) !== labelKey ? t(labelKey) : activeSection.label;
+    const description = t(descKey) !== descKey ? t(descKey) : activeSection.description;
+    return <PlaceholderSection title={title} description={description} />;
   }
 
   if (loading) {
     return (
       <Box sx={{ padding: 3 }}>
         <Typography sx={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.65)" }}>
-          Loading settings...
+          {t("settings.page.loading")}
         </Typography>
       </Box>
     );
@@ -178,16 +226,16 @@ export default function SettingsPage() {
       sections={sections}
       activeSectionId={activeSectionId}
       onSelectSection={setActiveSectionId}
-      heading="Settings"
-      subheading={`Secure runtime configuration for providers, extraction defaults, and future system sections.${schema ? ` Schema v${schema.version}` : ""}`}
-      dirty={dirtyHint}
+      heading={t("settings.page.heading")}
+      subheading={`${t("settings.page.subheadingPrefix")}${schema ? t("settings.page.subheadingSchema", { version: schema.version }) : ""}`}
+      dirty={dirtyHint || ingestionDirty}
     >
       <Box sx={{ mb: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
         <CursorSmallButton component={Link} to="/admin" sx={{ textDecoration: "none" }}>
-          Admin hub
+          {t("settings.page.adminHub")}
         </CursorSmallButton>
         <CursorSmallButton component={Link} to="/" sx={{ textDecoration: "none" }}>
-          Home
+          {t("settings.page.home")}
         </CursorSmallButton>
       </Box>
       {renderSection()}

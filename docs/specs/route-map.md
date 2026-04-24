@@ -12,11 +12,11 @@ All routes below render inside [`DashboardLayout`](../../ui/src/components/layou
 |------|---------|
 | `/` | Home entry |
 | `/corpus` | Corpus browser |
-| `/workspace` | Workspace (tabs: overview, reader, graph, ask, evidence) |
+| `/workspace` | Workspace command center (`?workspace_id=` + optional `work_id`); drawer label **Workspace** opens last/active workspace |
 | `/reader` | Standalone reader |
-| `/graph` | Standalone graph |
-| `/ask` | Standalone Ask |
-| `/evidence` | Standalone evidence |
+| `/graph` | Standalone graph (sidebar adds `?workspace_id=` when active) |
+| `/ask` | Standalone Ask (same; `POST /v1/query` may send `workspace_id` for corpus-scoped retrieval) |
+| `/evidence` | Standalone evidence (preserve `workspace_id` in trace links when present) |
 
 ## Admin surfaces (nested + visibility gate)
 

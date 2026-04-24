@@ -25,6 +25,11 @@ export async function updateLlmSettings(payload) {
   return res.data;
 }
 
+export async function updateIngestionSettings(payload) {
+  const res = await api.patch("/settings/ingestion", payload, { headers: authHeaders() });
+  return res.data;
+}
+
 export async function deleteLlmSecret() {
   const res = await api.delete("/settings/llm/secret", { headers: authHeaders() });
   return res.data;

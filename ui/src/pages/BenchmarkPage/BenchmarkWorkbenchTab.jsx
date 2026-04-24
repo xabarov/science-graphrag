@@ -25,6 +25,7 @@ import {
   sortBenchmarkCases,
   sortOptionsForFamily,
 } from "./benchmarkRunUiHelpers.js";
+import { useI18n } from "../../i18n/I18nContext.jsx";
 
 function Panel({ title, children }) {
   return (
@@ -72,6 +73,7 @@ const CASES_PAGE_SIZE = 500;
 
 /** Filters + case list reset via `key={runId}` on the parent. */
 function WorkbenchRunScopedPanel({ runDetail, caseDetail, selectedCaseId, onSelectCase }) {
+  const { t } = useI18n();
   const runId = runDetail?.run_id;
   const casesTotal = runDetail?.cases_total ?? 0;
   const [loadedCases, setLoadedCases] = useState(() => runDetail?.cases ?? []);
@@ -128,60 +130,60 @@ function WorkbenchRunScopedPanel({ runDetail, caseDetail, selectedCaseId, onSele
     <>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap", mb: 2 }}>
         <FormControl size="small" sx={{ minWidth: 160 }}>
-          <InputLabel id="wb-sort-key">Sort</InputLabel>
+          <InputLabel id="wb-sort-key">{t("benchmark.workbench.sort")}</InputLabel>
           <Select
             labelId="wb-sort-key"
-            label="Sort"
+            label={t("benchmark.workbench.sort")}
             value={sortKey}
             onChange={(e) => setSortKey(e.target.value)}
           >
             {sortOptions.map((opt) => (
               <MenuItem key={opt.key} value={opt.key}>
-                {opt.label}
+                {t(`benchmark.sortOption.${opt.key}`)}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
         <FormControl size="small" sx={{ minWidth: 100 }}>
-          <InputLabel id="wb-sort-dir">Dir</InputLabel>
+          <InputLabel id="wb-sort-dir">{t("benchmark.workbench.dir")}</InputLabel>
           <Select
             labelId="wb-sort-dir"
-            label="Dir"
+            label={t("benchmark.workbench.dir")}
             value={sortDir}
             onChange={(e) => setSortDir(e.target.value)}
           >
-            <MenuItem value="asc">asc</MenuItem>
-            <MenuItem value="desc">desc</MenuItem>
+            <MenuItem value="asc">{t("benchmark.workbench.asc")}</MenuItem>
+            <MenuItem value="desc">{t("benchmark.workbench.desc")}</MenuItem>
           </Select>
         </FormControl>
         <FormControl size="small" sx={{ minWidth: 200 }}>
-          <InputLabel id="wb-fail">Failures</InputLabel>
+          <InputLabel id="wb-fail">{t("benchmark.workbench.failures")}</InputLabel>
           <Select
             labelId="wb-fail"
-            label="Failures"
+            label={t("benchmark.workbench.failures")}
             value={failureMode}
             onChange={(e) => {
               setFailureMode(e.target.value);
               if (e.target.value !== "checks") setSelectedChecks([]);
             }}
           >
-            <MenuItem value="all">All cases</MenuItem>
-            <MenuItem value="any">Any failed check</MenuItem>
+            <MenuItem value="all">{t("benchmark.workbench.allCases")}</MenuItem>
+            <MenuItem value="any">{t("benchmark.workbench.anyFailed")}</MenuItem>
             <MenuItem value="checks" disabled={!checkNames.length}>
-              By check…
+              {t("benchmark.workbench.byCheck")}
             </MenuItem>
           </Select>
         </FormControl>
         {failureMode === "checks" && checkNames.length ? (
           <FormControl size="small" sx={{ minWidth: 220 }}>
-            <InputLabel id="wb-checks">Checks</InputLabel>
+            <InputLabel id="wb-checks">{t("benchmark.workbench.checks")}</InputLabel>
             <Select
               labelId="wb-checks"
-              label="Checks"
+              label={t("benchmark.workbench.checks")}
               multiple
               value={selectedChecks}
               onChange={(e) => setSelectedChecks(e.target.value)}
-              renderValue={(selected) => (selected.length ? selected.join(", ") : "Select…")}
+              renderValue={(selected) => (selected.length ? selected.join(", ") : t("benchmark.workbench.checksPlaceholder"))}
             >
               {checkNames.map((name) => (
                 <MenuItem key={name} value={name}>
@@ -194,7 +196,7 @@ function WorkbenchRunScopedPanel({ runDetail, caseDetail, selectedCaseId, onSele
       </Box>
 
       <Box sx={{ display: "grid", gridTemplateColumns: "280px minmax(0, 1fr) minmax(0, 1fr)", gap: 2 }}>
-        <Panel title="Cases">
+        <Panel title={t("benchmark.workbench.panelCases")}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
             {caseRows.map((item) => (
               <Box
@@ -227,7 +229,12 @@ function WorkbenchRunScopedPanel({ runDetail, caseDetail, selectedCaseId, onSele
             {hasMoreCases ? (
               <Box sx={{ pt: 1 }}>
                 <CursorButton onClick={handleLoadMoreCases} disabled={casesLoading}>
-                  {casesLoading ? "Loading…" : `Load more (${loadedCases.length} / ${casesTotal})`}
+                  {casesLoading
+                    ? t("benchmark.workbench.loadingCases")
+                    : t("benchmark.workbench.loadMoreTpl", {
+                        loaded: String(loadedCases.length),
+                        total: String(casesTotal),
+                      })}
                 </CursorButton>
               </Box>
             ) : null}
@@ -240,11 +247,12 @@ function WorkbenchRunScopedPanel({ runDetail, caseDetail, selectedCaseId, onSele
         </Panel>
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <Panel title="Source article">
+          <Panel title={t("benchmark.workbench.sourceArticle")}>
             {caseDetail ? (
               <>
                 <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", mb: 1 }}>
-                  sections: {(caseDetail.article?.sections || []).map((item) => item.label).join(", ") || "—"}
+                  {t("benchmark.workbench.sections")}{" "}
+                  {(caseDetail.article?.sections || []).map((item) => item.label).join(", ") || t("workspace.upload.dash")}
                 </Typography>
                 <Box
                   component="pre"
@@ -262,32 +270,32 @@ function WorkbenchRunScopedPanel({ runDetail, caseDetail, selectedCaseId, onSele
                 </Box>
               </>
             ) : (
-              <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>Select a case.</Typography>
+              <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>{t("benchmark.workbench.selectCase")}</Typography>
             )}
           </Panel>
 
-          <Panel title="Gold payload">
+          <Panel title={t("benchmark.workbench.goldPayload")}>
             {caseDetail ? <JsonBlock value={caseDetail.gold?.payload || {}} /> : null}
           </Panel>
         </Box>
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <Panel title="Metrics">
+          <Panel title={t("benchmark.workbench.metrics")}>
             {caseDetail ? <MetricsCard metrics={caseDetail.metrics || {}} /> : null}
           </Panel>
 
-          <Panel title="Prediction">
+          <Panel title={t("benchmark.workbench.prediction")}>
             {caseDetail ? <JsonBlock value={caseDetail.predicted?.payload || {}} /> : null}
           </Panel>
 
-          <Panel title="Diff">
+          <Panel title={t("benchmark.workbench.diff")}>
             {comparisonRows.length ? (
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>field</TableCell>
-                    <TableCell>gold</TableCell>
-                    <TableCell>predicted / status</TableCell>
+                    <TableCell>{t("benchmark.workbench.diffColField")}</TableCell>
+                    <TableCell>{t("benchmark.workbench.diffColGold")}</TableCell>
+                    <TableCell>{t("benchmark.workbench.diffColPred")}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -305,7 +313,7 @@ function WorkbenchRunScopedPanel({ runDetail, caseDetail, selectedCaseId, onSele
                 </TableBody>
               </Table>
             ) : (
-              <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>No diff rows for this case yet.</Typography>
+              <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>{t("benchmark.workbench.noDiff")}</Typography>
             )}
           </Panel>
         </Box>
@@ -320,6 +328,7 @@ export default function BenchmarkWorkbenchTab({
   onSelectRun,
   onSelectCase,
 }) {
+  const { t } = useI18n();
   const [runsPayload, setRunsPayload] = useState(null);
   const [runDetail, setRunDetail] = useState(null);
   const [caseDetail, setCaseDetail] = useState(null);
@@ -411,7 +420,7 @@ export default function BenchmarkWorkbenchTab({
   return (
     <Box sx={{ padding: 2 }}>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap", mb: 2 }}>
-        <Typography sx={{ fontWeight: 600 }}>Workbench</Typography>
+        <Typography sx={{ fontWeight: 600 }}>{t("benchmark.workbench.pageTitle")}</Typography>
         <Select
           size="small"
           value={selectedRunId || ""}
@@ -422,14 +431,14 @@ export default function BenchmarkWorkbenchTab({
           }}
           sx={{ minWidth: 280 }}
         >
-          <MenuItem value="">Select run</MenuItem>
+          <MenuItem value="">{t("benchmark.workbench.selectRun")}</MenuItem>
           {runItems.map((item) => (
             <MenuItem key={item.run_id} value={item.run_id}>
               {item.run_id.slice(0, 8)}... | {item.benchmark_family} | {item.status}
             </MenuItem>
           ))}
         </Select>
-        <CursorButton onClick={() => window.location.reload()}>Refresh</CursorButton>
+        <CursorButton onClick={() => window.location.reload()}>{t("benchmark.workbench.reload")}</CursorButton>
       </Box>
 
       {error ? (
@@ -439,11 +448,9 @@ export default function BenchmarkWorkbenchTab({
       ) : null}
 
       {!selectedRunId ? (
-        <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>
-          Select a run to inspect article, gold, predicted output, and field-level diff.
-        </Typography>
+        <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>{t("benchmark.workbench.pickRun")}</Typography>
       ) : !runDetail ? (
-        <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>Loading run…</Typography>
+        <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>{t("benchmark.workbench.loadingRun")}</Typography>
       ) : (
         <WorkbenchRunScopedPanel
           key={selectedRunId}

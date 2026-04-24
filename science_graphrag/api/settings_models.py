@@ -10,11 +10,23 @@ from pydantic import BaseModel, Field, HttpUrl
 class SettingsSnapshotResponse(BaseModel):
     sections: list[dict[str, Any]]
     llm: dict[str, Any]
+    ingestion: dict[str, Any] = Field(default_factory=dict)
+    diagnostics: dict[str, Any] = Field(default_factory=dict)
+    security: dict[str, Any] = Field(default_factory=dict)
 
 
 class SettingsSchemaResponse(BaseModel):
     version: int
     sections: list[dict[str, Any]]
+
+
+class UpdateIngestionSettingsRequest(BaseModel):
+    max_file_size_mb: int = Field(
+        ...,
+        ge=1,
+        le=2048,
+        description="Per-file limit for POST .../ingest/document (PDF, Markdown, or plain text).",
+    )
 
 
 class UpdateLlmSettingsRequest(BaseModel):

@@ -1,3 +1,6 @@
+import { translate } from "../../i18n/translate.js";
+import { readStoredLocale } from "../../i18n/readStoredLocale.js";
+import { getRuntimeIntlLocale } from "../../i18n/runtimeIntlLocale.js";
 import { getAskHistory } from "./askHistoryState.js";
 
 export const ASK_SESSIONS_STORAGE_KEY = "science-graphrag:askSessions:v1";
@@ -28,20 +31,27 @@ function newSessionId() {
 
 function defaultSessionTitle() {
   try {
-    return `Session ${new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(new Date())}`;
+    const loc = readStoredLocale();
+    const tag = getRuntimeIntlLocale();
+    const date = new Intl.DateTimeFormat(tag, { dateStyle: "medium", timeStyle: "short" }).format(new Date());
+    return translate("ask.session.titleWithDate", loc, { date });
   } catch {
     return `Session ${new Date().toISOString().slice(0, 16)}`;
   }
 }
 
 /**
- * @param {{ locked: boolean, scopedWorkId?: string | null }} ctx
+ * @param {{ locked: boolean, scopedWorkId?: string | null, workspaceId?: string | null }} ctx
  * @returns {string}
  */
-export function deriveAskScopeKey({ locked, scopedWorkId }) {
+export function deriveAskScopeKey({ locked, scopedWorkId, workspaceId }) {
   const wid = String(scopedWorkId || "").trim();
   if (locked && wid) {
     return `workspace:${wid}`;
+  }
+  const ws = String(workspaceId || "").trim();
+  if (ws) {
+    return `standalone-ws:${ws}`;
   }
   return "standalone";
 }
@@ -94,7 +104,7 @@ function normalizeBundle(raw) {
     sessions: sessions
       .map((s) => ({
         id: String(s?.id || "").trim(),
-        title: String(s?.title || "Session").trim() || "Session",
+        title: String(s?.title || translate("ask.session.defaultName", readStoredLocale())).trim() || translate("ask.session.defaultName", readStoredLocale()),
         updatedAt: String(s?.updatedAt || ""),
         entries: Array.isArray(s?.entries)
           ? s.entries.map((e) => normalizeTurn(e)).filter((e) => e.id && e.query)
@@ -153,7 +163,7 @@ export function migrateLegacyAskHistoryToSessions(scopeKey, filterLegacyItem) {
     sessions: [
       {
         id,
-        title: "Imported",
+        title: translate("ask.session.imported", readStoredLocale()),
         updatedAt: now,
         entries,
       },
@@ -169,7 +179,9 @@ export function migrateLegacyAskHistoryToSessions(scopeKey, filterLegacyItem) {
 export function readAskSessionUi(scopeKey, _epoch) {
   void _epoch;
   const bundle = getBundle(scopeKey);
-  const sorted = [...bundle.sessions].sort((a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""));
+  const sorted = [...bundle.sessions].sort((a, b) =>
+    (b.updatedAt || "").localeCompare(a.updatedAt || "", getRuntimeIntlLocale()),
+  );
   return { activeId: bundle.activeId, sessions: sorted };
 }
 
@@ -259,7 +271,8 @@ export function renameAskSession(scopeKey, sessionId, title) {
   const storage = safeStorage();
   if (!storage) return;
   const bundle = getBundle(scopeKey);
-  const next = String(title || "").trim().slice(0, 120) || "Session";
+  const next =
+    String(title || "").trim().slice(0, 120) || translate("ask.session.defaultName", readStoredLocale());
   const sessions = bundle.sessions.map((s) => (s.id === sessionId ? { ...s, title: next } : s));
   saveBundle(scopeKey, { ...bundle, sessions });
 }

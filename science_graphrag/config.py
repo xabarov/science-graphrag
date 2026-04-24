@@ -76,6 +76,15 @@ class Settings(BaseSettings):
         default=True,
         description="Reuse cached article.md for repeated PDF ingests when available.",
     )
+    workspace_upload_max_file_size_mb: int = Field(
+        default=128,
+        ge=1,
+        le=2048,
+        description=(
+            "Max size for a single workspace document upload (PDF/MD/TXT). "
+            "Enforced in the API; reverse proxies (e.g. nginx client_max_body_size) must be >= this."
+        ),
+    )
     embedding_model: str | None = Field(
         default=None,
         description="If set, use sentence-transformers; else deterministic hash vectors.",

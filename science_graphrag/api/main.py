@@ -47,6 +47,7 @@ app.include_router(ingest_router, prefix="/v1")
 class QueryRequest(BaseModel):
     query: str = Field(..., min_length=1)
     work_id: str | None = None
+    workspace_id: str | None = None
     top_k: int = Field(default=5, ge=1, le=24)
 
 
@@ -73,6 +74,7 @@ def post_query(body: QueryRequest) -> QueryResponse:
         body.query,
         settings=get_settings(),
         work_id=body.work_id,
+        workspace_id=body.workspace_id,
         top_k=body.top_k,
     )
     return QueryResponse(

@@ -1,0 +1,13 @@
+/** @type {Record<string, string>} */
+export default {
+  "benchmarkPage.adminHub": "Admin hub",
+  "benchmarkPage.home": "Home",
+  "benchmarkPage.reopenCanonical": "Reopen canonical route",
+  "benchmarkPage.triageAlert":
+    "Triage (CLI-first, paths in repo): teacher-gold — docs/benchmarks/teacher-gold-audit-checklist.md; retrieval — docs/benchmarks/retrieval-eval-v1.md, docs/runbooks/user-journeys-retrieval-v1.md; decision gate / summary — docs/runbooks/benchmark-decision-gate.md, eval/results/benchmark-metrics-summary.md (regenerate via scripts/aggregate_benchmark_metrics.py).",
+  "benchmarkPage.tab.launch": "Launch",
+  "benchmarkPage.tab.workbench": "Workbench",
+  "benchmarkPage.tab.results": "Results",
+  "benchmarkPage.tab.compare": "Compare",
+  "benchmarkPage.tab.cases": "Cases",
+};

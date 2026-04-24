@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -6,18 +6,27 @@ import TextField from "@mui/material/TextField";
 
 import { CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
+import { useWorkspaceContext } from "../components/layout/WorkspaceContext.jsx";
 import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
+import { useI18n } from "../i18n/I18nContext.jsx";
 import EvidenceWorkBody from "../components/work/EvidenceWorkBody.jsx";
 import { persistWorkId } from "./WorkspacePage/utils/workContext.js";
 import { buildWorkspaceTracePath, readTraceabilityState } from "../components/work/traceabilityState.js";
 
 export default function EvidencePage() {
+  const { t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const initial = searchParams.get("work_id") || "";
   const [workIdInput, setWorkIdInput] = useState(initial);
+  const { activeWorkspaceId, getLastWorkspaceHref } = useWorkspaceContext();
 
   const workId = searchParams.get("work_id") || "";
   const trace = readTraceabilityState(searchParams);
+  const workspaceIdInUrl = (searchParams.get("workspace_id") || "").trim();
+  const effectiveWorkspaceId = useMemo(
+    () => workspaceIdInUrl || trace.workspaceId || (activeWorkspaceId || "").trim(),
+    [workspaceIdInUrl, trace.workspaceId, activeWorkspaceId],
+  );
 
   useEffect(() => {
     setWorkIdInput(workId);
@@ -30,28 +39,45 @@ export default function EvidencePage() {
   function applyWorkId(e) {
     e.preventDefault();
     const next = workIdInput.trim();
+    const ws = (searchParams.get("workspace_id") || trace.workspaceId || "").trim();
+    const p = new URLSearchParams();
     if (next) {
       persistWorkId(next);
-      setSearchParams({ work_id: next });
-    } else setSearchParams({});
+      p.set("work_id", next);
+    }
+    if (ws) p.set("workspace_id", ws);
+    setSearchParams(p);
   }
+
+  const traceExtras = useMemo(
+    () => ({
+      chunkFingerprint: trace.chunkFingerprint,
+      section: trace.section,
+      citation: trace.citation,
+      ...(effectiveWorkspaceId ? { workspaceId: effectiveWorkspaceId } : {}),
+    }),
+    [trace.chunkFingerprint, trace.section, trace.citation, effectiveWorkspaceId],
+  );
+
+  const showEmptyWorkspaceCta = !workId.trim() && !workspaceIdInUrl && !activeWorkspaceId;
 
   return (
     <Box sx={{ p: 2, ...mainShellContentSx }}>
       <PageHeader
-        eyebrow="Evidence"
-        title="Traceability"
+        eyebrow={t("evidence.header.eyebrow")}
+        title={t("evidence.header.title")}
         description={
           <>
-            Chunk-level citations for a <code style={{ color: "rgba(129,140,248,0.95)" }}>work_id</code>. Open a paper from Workspace, then use
-            the left rail or URL query.
+            {t("evidence.header.descBefore")}{" "}
+            <code style={{ color: "rgba(129,140,248,0.95)" }}>work_id</code>
+            {t("evidence.header.descMid")}
           </>
         }
       />
 
       <Box component="form" onSubmit={applyWorkId} sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}>
         <TextField
-          label="work_id"
+          label={t("reader.workIdLabel")}
           value={workIdInput}
           onChange={(ev) => setWorkIdInput(ev.target.value)}
           size="small"
@@ -62,7 +88,7 @@ export default function EvidencePage() {
             "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)" },
           }}
         />
-        <CursorPrimaryButton type="submit">Load</CursorPrimaryButton>
+        <CursorPrimaryButton type="submit">{t("reader.load")}</CursorPrimaryButton>
       </Box>
 
       {!workId.trim() ? (
@@ -74,34 +100,30 @@ export default function EvidencePage() {
             backgroundColor: "rgba(255,255,255,0.02)",
           }}
         >
-          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)" }}>No evidence context loaded</Typography>
-          <Typography sx={{ mt: 0.75, fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)" }}>
-            Load a `work_id` or start from a citation inside Workspace Ask to inspect evidence with the right traceability context.
+          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)" }}>
+            {t("evidence.empty.title")}
           </Typography>
+          <Typography sx={{ mt: 0.75, fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)" }}>{t("evidence.empty.body")}</Typography>
+          {showEmptyWorkspaceCta ? (
+            <Box sx={{ mt: 1.5 }}>
+              <CursorPrimaryButton component={Link} to={getLastWorkspaceHref()} sx={{ textDecoration: "none" }}>
+                {t("evidence.openLastWorkspace")}
+              </CursorPrimaryButton>
+            </Box>
+          ) : null}
         </Box>
       ) : null}
       {workId.trim() ? (
         <Box sx={{ mb: 1.5, display: "flex", flexWrap: "wrap", gap: 1 }}>
           <CursorSmallButton
             component={Link}
-            to={buildWorkspaceTracePath(workId, "reader", {
-              chunkFingerprint: trace.chunkFingerprint,
-              section: trace.section,
-              citation: trace.citation,
-            })}
+            to={buildWorkspaceTracePath(workId, "reader", traceExtras)}
             sx={{ textDecoration: "none" }}
           >
-            Open Reader in workspace
+            {t("reader.openReaderWs")}
           </CursorSmallButton>
-          <CursorSmallButton
-            component={Link}
-            to={buildWorkspaceTracePath(workId, "graph", {
-              section: trace.section,
-              citation: trace.citation,
-            })}
-            sx={{ textDecoration: "none" }}
-          >
-            Open Graph in workspace
+          <CursorSmallButton component={Link} to={buildWorkspaceTracePath(workId, "graph", traceExtras)} sx={{ textDecoration: "none" }}>
+            {t("reader.openGraphWs")}
           </CursorSmallButton>
         </Box>
       ) : null}
