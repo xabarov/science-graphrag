@@ -468,6 +468,49 @@ def test_post_query_accepts_workspace_id_unknown_workspace(monkeypatch: Any) -> 
     assert body["retrieval_trace"].get("workspace_scope_work_count") == 0
 
 
+def test_post_query_with_workspace_id_filters_qdrant(monkeypatch: Any) -> None:
+    """POST /v1/query with workspace_id passes work_ids filter to Qdrant and merges workspace meta into trace."""
+
+    from science_graphrag.api import retrieval as retr_mod
+    from science_graphrag.storage.qdrant_store import QdrantChunkStore
+
+    def _fake_ws_scope(_settings: Any, workspace_id: str) -> tuple[list[str], dict[str, Any]]:
+        return ["w-scope"], {
+            "workspace_id": workspace_id.strip(),
+            "workspace_scope_work_count": 1,
+        }
+
+    calls: list[dict[str, Any]] = []
+
+    def _spy_search_similar(
+        self: Any,
+        *,
+        vector: list[float],
+        limit: int = 8,
+        work_id: str | None = None,
+        work_ids: list[str] | None = None,
+    ) -> list[dict[str, Any]]:
+        calls.append({"work_id": work_id, "work_ids": work_ids, "limit": limit})
+        return []
+
+    monkeypatch.setattr(retr_mod, "_workspace_scope_work_ids", _fake_ws_scope)
+    monkeypatch.setattr(QdrantChunkStore, "search_similar", _spy_search_similar)
+
+    client = _client()
+    res = client.post(
+        "/v1/query",
+        json={"query": "scoped question", "workspace_id": "ws-known-uuid", "top_k": 3},
+    )
+    assert res.status_code == 200
+    body = res.json()
+    assert body["retrieval_trace"]["workspace_id"] == "ws-known-uuid"
+    assert body["retrieval_trace"].get("workspace_missing") is not True
+    assert body["retrieval_trace"].get("workspace_scope_work_count") == 1
+    assert len(calls) == 1
+    assert calls[0]["work_id"] is None
+    assert calls[0]["work_ids"] == ["w-scope"]
+
+
 def test_benchmark_cases_list_smoke() -> None:
     """Benchmark UI: cases list returns fixtures from repo (no mocks)."""
 
@@ -505,12 +548,27 @@ def test_benchmark_cases_graph_family_list_smoke() -> None:
     """Graph-v1 catalog: layer-1 fixtures that define graph_expectations."""
 
     client = _client()
-    res = client.get("/v1/benchmark/cases?family=graph&limit=50")
+    res = client.get("/v1/benchmark/cases?family=graph&limit=500")
     assert res.status_code == 200
     payload = res.json()
     assert payload["total"] >= 1
     assert payload["items"][0]["family"] == "graph"
     assert payload["items"][0]["has_graph_expectations"] == 1
+    case_ids = {item["case_id"] for item in payload["items"]}
+    assert "workspace_cites_minimal" in case_ids
+
+
+def test_benchmark_case_graph_v1_detail_smoke() -> None:
+    """graph_v1-only case resolves via benchmark API (layer1 tree fallback)."""
+
+    client = _client()
+    res = client.get("/v1/benchmark/cases/workspace_cites_minimal?family=graph")
+    assert res.status_code == 200
+    body = res.json()
+    assert body["case_id"] == "workspace_cites_minimal"
+    ge = (body.get("gold") or {}).get("graph_expectations") or {}
+    ws = ge.get("workspace") or {}
+    assert int(ws.get("min_internal_work_nodes") or 0) >= 2
 
 
 def test_benchmark_models_list_smoke() -> None:

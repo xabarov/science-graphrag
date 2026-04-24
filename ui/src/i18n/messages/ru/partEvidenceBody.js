@@ -5,7 +5,7 @@ export default {
   "evidenceBody.focus": "Фокус: {{summary}}",
   "evidenceBody.total": "всего: {{total}}",
   "evidenceBody.answerLinked": "связано с ответом",
-  "evidenceBody.openReader": "Открыть в Reader",
-  "evidenceBody.openGraph": "Открыть в Graph",
-  "evidenceBody.continueAsk": "Продолжить в Ask",
+  "evidenceBody.openReader": "Открыть в чтении",
+  "evidenceBody.openGraph": "Открыть в графе",
+  "evidenceBody.continueAsk": "Продолжить во «Вопросах»",
 };

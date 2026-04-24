@@ -22,5 +22,7 @@
 | [006](006-graph-layout-stack-spike.md) | Wave 4.3: spike силового/layout-стека (React Flow/Sigma vs порт osint simulation) |
 | [007](007-canvas-force-layout-port.md) | Canvas: Circle vs Force (порт силовой симуляции osint-gr без OSINT-домена) |
 | [011](011-graph-live-ux-and-payload.md) | Live graph UX: enriched `/graph` payload, inspector panel, defaults (force + canvas) |
+| [012](012-workspace-graph-projection.md) | Wave J: workspace graph projection, depth, GDS fallback |
+| [013](013-concept-research-topic-ontology-v1-5.md) | Wave N: Concept / ResearchTopic ontology v1.5 (gold-first, no production graph) |
 
 Новые ADR нумеровать по порядку (`001-...`, `002-...`); при отмене пометить как Superseded и сослаться на замену.

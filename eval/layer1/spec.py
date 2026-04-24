@@ -137,7 +137,16 @@ class Layer1QualityThresholds(BaseModel):
     min_affiliations_f1: float | None = Field(default=None, ge=0.0, le=1.0)
     require_reference_count_ok: bool = Field(
         default=True,
-        description="Require references.count_ok=True.",
+        description="Require references.count_ok=True (strict band vs expected_count).",
+    )
+    reference_count_range_factor: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "When >0, require reference count within "
+            "[expected_count * (1-factor), expected_count * (1+factor)] instead of strict count_ok."
+        ),
     )
     min_sample_arxiv_f1: float | None = Field(default=None, ge=0.0, le=1.0)
     min_sample_doi_f1: float | None = Field(default=None, ge=0.0, le=1.0)
@@ -152,6 +161,15 @@ class Layer1QualityThresholds(BaseModel):
         ge=0.0,
         le=1.0,
         description="Require ROUGE-L F1 on abstract when gold abstract_prefix is set.",
+    )
+    min_abstract_prefix_containment: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "When set with gold abstract_prefix: require token containment score "
+            "(prefix tokens found in full abstract) >= this threshold."
+        ),
     )
     min_title_token_f1: float | None = Field(
         default=None,

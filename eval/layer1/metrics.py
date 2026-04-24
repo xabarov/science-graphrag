@@ -12,6 +12,7 @@ from science_graphrag.ingestion.dedup import normalize_doi
 
 from .spec import Layer1GoldSpec, Layer1QualityThresholds
 from .text_similarity import (
+    abstract_prefix_token_containment,
     author_names_difflib_macro,
     multiset_token_f1,
     rouge_l_f1,
@@ -167,6 +168,13 @@ def _metadata_scores(work: WorkDraft, gold: Layer1GoldSpec) -> dict[str, Any]:
             max_words=800,
         )
 
+    abstract_prefix_containment = None
+    if gm.abstract_prefix and (work.abstract or "").strip():
+        abstract_prefix_containment = abstract_prefix_token_containment(
+            _norm_abstract_match(gm.abstract_prefix),
+            _norm_abstract_match(work.abstract or ""),
+        )
+
     return {
         "title_exact_normalized": title_match,
         "title_rouge_l": title_rouge_l,
@@ -174,6 +182,7 @@ def _metadata_scores(work: WorkDraft, gold: Layer1GoldSpec) -> dict[str, Any]:
         "year_exact": year_match,
         "abstract_prefix_ok": abstract_ok,
         "abstract_rouge_l_vs_prefix": abstract_rouge_l_vs_prefix,
+        "abstract_prefix_containment": abstract_prefix_containment,
         "doi_match_expected": doi_match,
         "arxiv_match_expected": arx_match,
         "work_type_match": wt_match,
@@ -309,7 +318,14 @@ def score_layer1(
             float(authorships_m.get("affiliations_f1", 0.0)) >= thresholds.min_affiliations_f1
         )
 
-    if thresholds.require_reference_count_ok:
+    if thresholds.reference_count_range_factor > 0.0:
+        exp_c = float(gold.references.expected_count)
+        fac = float(thresholds.reference_count_range_factor)
+        act_c = float(references_m.get("count", 0))
+        low = exp_c * (1.0 - fac)
+        high = exp_c * (1.0 + fac)
+        checks["reference_count_in_expected_range"] = low <= act_c <= high
+    elif thresholds.require_reference_count_ok:
         checks["reference_count_ok_required"] = bool(references_m.get("count_ok"))
 
     if thresholds.min_sample_arxiv_f1 is not None:
@@ -333,6 +349,12 @@ def score_layer1(
         arl = metadata.get("abstract_rouge_l_vs_prefix")
         if arl is not None:
             checks["min_abstract_rouge_l"] = float(arl) >= thresholds.min_abstract_rouge_l
+    if thresholds.min_abstract_prefix_containment is not None:
+        apc = metadata.get("abstract_prefix_containment")
+        if apc is not None:
+            checks["min_abstract_prefix_containment"] = (
+                float(apc) >= thresholds.min_abstract_prefix_containment
+            )
     if thresholds.min_authorship_names_difflib_macro is not None:
         nd = authorships_m.get("names_difflib_macro")
         checks["min_authorship_names_difflib_macro"] = (

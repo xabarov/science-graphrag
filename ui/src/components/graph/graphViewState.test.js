@@ -63,6 +63,27 @@ describe("graphViewState", () => {
     expect(graph.edges[0].summary).toBe("A —[Loop]→ B");
   });
 
+  it("preserves workspace membership and cite counts on nodes", () => {
+    const graph = normalizeGraphPayload({
+      work_id: "",
+      nodes: [
+        {
+          id: "w1",
+          type: "Work",
+          label: "In",
+          workspace_membership: "internal",
+          internal_cite_count: 2,
+          external_cite_count: 5,
+        },
+      ],
+      edges: [],
+      meta: {},
+    });
+    expect(graph.nodes[0].workspaceMembership).toBe("internal");
+    expect(graph.nodes[0].internalCiteCount).toBe(2);
+    expect(graph.nodes[0].externalCiteCount).toBe(5);
+  });
+
   it("drops orphan edges and adds a warning", () => {
     const graph = normalizeGraphPayload({
       work_id: "w1",

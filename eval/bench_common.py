@@ -49,6 +49,16 @@ def discover_layer1_case_dirs(
     return found
 
 
+def discover_graph_v1_case_dirs(
+    fixtures_root: Path,
+    *,
+    tier: str | None = None,
+) -> list[Path]:
+    """Same shape as layer-1 discovery, for ``tests/fixtures/benchmarks/graph_v1`` (workspace graph gold)."""
+
+    return discover_layer1_case_dirs(fixtures_root, tier=tier)
+
+
 def discover_layer2_case_dirs(
     fixtures_root: Path,
     *,

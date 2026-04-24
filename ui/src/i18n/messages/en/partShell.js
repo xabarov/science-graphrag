@@ -7,6 +7,7 @@ export default {
   "shell.drawer.graph": "Graph",
   "shell.drawer.ask": "Ask",
   "shell.drawer.evidence": "Evidence",
+  "shell.drawer.reader": "Reader",
   "shell.drawer.admin": "Admin",
   "shell.drawer.benchmarks": "Benchmarks",
   "shell.drawer.settings": "Settings",

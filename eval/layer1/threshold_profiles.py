@@ -10,12 +10,14 @@ CI_SMOKE_LAYER1_THRESHOLDS = Layer1QualityThresholds(
     require_title_match=True,
     require_abstract_prefix=True,
     require_reference_count_ok=False,
+    reference_count_range_factor=0.0,
 )
 
 STUDENT_MISTRAL_LAYER1_THRESHOLDS = Layer1QualityThresholds(
     require_title_match=False,
     require_abstract_prefix=False,
     require_reference_count_ok=True,
+    reference_count_range_factor=0.0,
     min_authorship_names_recall=0.55,
     min_authorship_names_f1=0.50,
     min_affiliations_f1=0.28,
@@ -34,8 +36,7 @@ def apply_layer1_threshold_profile(gold: Layer1GoldSpec, profile: str | None) ->
     if not profile or profile in ("none", "from_gold"):
         return gold
     if profile == "reporting_skip_f1_gates":
-        # Keep gold-authored lists for metrics (names_f1, sample_arxiv_f1) but do not fail the
-        # contract on min_* F1 gates yet — extractor is still being tuned against enriched gold.
+        # Wave M: tighten backbone gates while tolerating PDF→MD reference-count drift via range.
         base = (
             gold.quality_thresholds.model_copy()
             if gold.quality_thresholds
@@ -44,11 +45,12 @@ def apply_layer1_threshold_profile(gold: Layer1GoldSpec, profile: str | None) ->
         merged = base.model_dump()
         merged.update(
             {
-                "min_authorship_names_f1": None,
-                "min_sample_arxiv_f1": None,
-                # PDF→MD hyphenation shifts reference counts; nightly reporting matches CI smoke
-                # for this gate while still emitting count_ok / deltas in metrics.
+                "min_authorship_names_f1": 0.7,
+                "min_sample_arxiv_f1": 0.85,
                 "require_reference_count_ok": False,
+                "reference_count_range_factor": 0.3,
+                "require_abstract_prefix": False,
+                "min_abstract_prefix_containment": 0.7,
             }
         )
         return gold.model_copy(

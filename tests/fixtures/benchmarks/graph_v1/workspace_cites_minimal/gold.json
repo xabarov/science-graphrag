@@ -1,0 +1,43 @@
+{
+  "case_id": "workspace_cites_minimal",
+  "schema_version": 1,
+  "description": "Two internal works with one internal CITES edge (workspace graph v2 contract).",
+  "work_metadata": {
+    "title": "Paper B cites Paper A (fixture)",
+    "publication_year": 2024,
+    "abstract_prefix": "Fixture abstract for workspace graph benchmark.",
+    "doi": null,
+    "arxiv_id": null,
+    "venue_name": null,
+    "work_type": null
+  },
+  "authorships": [],
+  "references": {
+    "expected_count": 0,
+    "min_count": 0,
+    "notes": "Graph expectations drive this case, not reference extraction.",
+    "sample_arxiv_ids": [],
+    "sample_dois": []
+  },
+  "graph_expectations": {
+    "min_cites": 0,
+    "max_cites": 99,
+    "min_authorships": 0,
+    "max_authorships": 99,
+    "workspace": {
+      "min_internal_work_nodes": 2,
+      "min_internal_cites_edges": 1,
+      "notes": "Compared when snapshot includes workspace_projection / inner_only graph metrics."
+    }
+  },
+  "quality_thresholds": {
+    "require_title_match": false,
+    "require_reference_count_ok": false,
+    "min_sample_arxiv_f1": 0.0,
+    "min_sample_doi_f1": 0.0,
+    "reference_count_range_factor": 0.3,
+    "min_authorship_names_f1": 0.0,
+    "require_abstract_prefix": false,
+    "min_abstract_prefix_containment": 0.0
+  }
+}

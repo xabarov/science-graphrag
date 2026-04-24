@@ -377,6 +377,7 @@ export default function GraphCanvasMvp({
     const positions = getPositionsForFrame();
     positionsRef.current = positions;
 
+    const nodeById = new Map(graph.nodes.map((n) => [n.id, n]));
     for (const edge of graph.edges) {
       const p0w = positions.get(edge.source);
       const p1w = positions.get(edge.target);
@@ -384,8 +385,18 @@ export default function GraphCanvasMvp({
       const p0 = worldToScreen(p0w.x, p0w.y, scale, tx, ty);
       const p1 = worldToScreen(p1w.x, p1w.y, scale, tx, ty);
       const edgeActive = edge.id === hoveredEdgeId || edge.id === selectedEdgeId;
+      const n0 = nodeById.get(edge.source);
+      const n1 = nodeById.get(edge.target);
+      const extEdge =
+        String(n0?.workspaceMembership || "").toLowerCase() === "external" ||
+        String(n1?.workspaceMembership || "").toLowerCase() === "external";
+      ctx.setLineDash(extEdge ? [5, 4] : []);
       const clipped = clipSegmentByDiscInsets(p0, p1, NODE_RADIUS, NODE_RADIUS);
-      ctx.strokeStyle = edgeActive ? "rgba(255,255,255,0.38)" : "rgba(255,255,255,0.12)";
+      ctx.strokeStyle = edgeActive
+        ? "rgba(255,255,255,0.38)"
+        : extEdge
+          ? "rgba(255,255,255,0.08)"
+          : "rgba(255,255,255,0.12)";
       ctx.lineWidth = edgeActive ? 1.75 : 1;
       if (clipped) {
         const { ax, ay, bx, by, ux, uy } = clipped;
@@ -411,6 +422,7 @@ export default function GraphCanvasMvp({
         ctx.stroke();
       }
     }
+    ctx.setLineDash([]);
 
     const nodesForDiscs = [...graph.nodes].sort((a, b) => {
       const rank = (n) => (n.id === hoveredNodeId || n.id === selectedNodeId ? 1 : 0);
@@ -427,6 +439,7 @@ export default function GraphCanvasMvp({
       const style = getScienceGraphNodeStyle(node.type, {
         selected: sel,
         hovered: !sel && node.id === hoveredNodeId,
+        workspaceMembership: node.workspaceMembership,
       });
       ctx.beginPath();
       ctx.arc(p.x, p.y, r, 0, 2 * Math.PI);

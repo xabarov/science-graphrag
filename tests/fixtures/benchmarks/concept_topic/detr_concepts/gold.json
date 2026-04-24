@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "benchmark_suite_tier": "concept_topic_mini",
+  "case_id": "detr_concepts",
+  "description": "DETR: transformers, set prediction, bipartite matching.",
+  "article_path": "../../layer1/detr_realpdf/article.md",
+  "contract_only": false,
+  "min_concept_recall": 0.7,
+  "min_topic_recall": 1.0,
+  "expected_concepts": [
+    {
+      "concept_id": "transformer_backbone",
+      "name": "transformer encoder-decoder",
+      "anchor_phrase": "transformer"
+    },
+    {
+      "concept_id": "set_prediction",
+      "name": "direct set prediction",
+      "anchor_phrase": "set prediction"
+    },
+    {
+      "concept_id": "bipartite_matching",
+      "name": "bipartite matching loss",
+      "anchor_phrase": "bipartite matching"
+    }
+  ],
+  "expected_topics": [
+    {
+      "topic_id": "object_detection",
+      "name": "Object Detection",
+      "anchor_phrase": "object detection"
+    },
+    {
+      "topic_id": "panoptic_segmentation",
+      "name": "Panoptic Segmentation",
+      "anchor_phrase": "panoptic segmentation"
+    }
+  ]
+}

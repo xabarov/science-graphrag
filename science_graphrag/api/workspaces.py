@@ -5,11 +5,16 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from pydantic import BaseModel, Field
 
-from science_graphrag.api import works as works_api
 from science_graphrag.api.ingest_jobs import job_to_dict, start_ingest_job
+from science_graphrag.api.workspace_graph import (
+    legacy_workspace_graph_union as workspace_graph_union,
+    project_workspace_graph,
+    workspace_graph_neighbors,
+    workspace_graph_stats,
+)
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
@@ -42,93 +47,6 @@ class WorkspaceMergeBody(BaseModel):
 class MergeWorksBody(BaseModel):
     keep_work_id: str = Field(..., min_length=1)
     drop_work_id: str = Field(..., min_length=1)
-
-
-def _merge_graph_payloads(payloads: list[dict[str, Any]]) -> dict[str, Any]:
-    nodes_by_id: dict[str, dict[str, Any]] = {}
-    edges_by_key: dict[str, dict[str, Any]] = {}
-    semantic_any = False
-    truncated_any = False
-    for g in payloads:
-        if not g:
-            continue
-        if g.get("meta", {}).get("semantic_available"):
-            semantic_any = True
-        if g.get("meta", {}).get("is_truncated"):
-            truncated_any = True
-        for n in g.get("nodes") or []:
-            nid = str(n.get("id") or "")
-            if nid:
-                nodes_by_id[nid] = n
-        for e in g.get("edges") or []:
-            eid = str(e.get("id") or "")
-            if eid:
-                edges_by_key[eid] = e
-                continue
-            src = str(e.get("source_id") or e.get("source") or "")
-            tgt = str(e.get("target_id") or e.get("target") or "")
-            rt = str(e.get("rel_type") or e.get("type") or "")
-            key = f"{src}|{rt}|{tgt}"
-            edges_by_key[key] = e
-    nodes = list(nodes_by_id.values())
-    edges = list(edges_by_key.values())
-    return {
-        "work_id": "",
-        "nodes": nodes,
-        "edges": edges,
-        "meta": {
-            "semantic_available": semantic_any,
-            "graph_scope": "workspace_union_1hop",
-            "graph_depth_effective": 1,
-            "workspace_node_count": len(nodes),
-            "workspace_edge_count": len(edges),
-            "is_truncated": truncated_any,
-            "available_expansions": [],
-        },
-    }
-
-
-def workspace_graph_union(
-    settings: Settings, workspace_id: str, *, neighbor_limit: int = 160
-) -> dict[str, Any] | None:
-    store = _store(settings)
-    try:
-        ws = store.workspace_get(workspace_id)
-        if not ws:
-            return None
-        work_ids: list[str] = list(ws.get("work_ids") or [])
-        if not work_ids:
-            return {
-                "work_id": "",
-                "nodes": [],
-                "edges": [],
-                "meta": {
-                    "semantic_available": False,
-                    "graph_scope": "workspace_union_1hop",
-                    "graph_depth_effective": 1,
-                    "workspace_node_count": 0,
-                    "workspace_edge_count": 0,
-                    "is_truncated": False,
-                    "available_expansions": [],
-                },
-            }
-        per_lim = max(30, min(neighbor_limit, 800 // max(1, len(work_ids))))
-        payloads: list[dict[str, Any]] = []
-        for wid in work_ids:
-            g = works_api.work_graph_neighborhood(
-                settings,
-                wid,
-                neighbor_limit=per_lim,
-                depth=1,
-            )
-            if g:
-                payloads.append(g)
-        merged = _merge_graph_payloads(payloads)
-        merged["meta"]["workspace_id"] = workspace_id
-        merged["meta"]["source_work_ids"] = work_ids
-        return merged
-    finally:
-        store.close()
 
 
 @router.get("")
@@ -184,7 +102,7 @@ def get_workspace(workspace_id: str, settings: Settings = Depends(get_settings))
 
 
 @router.patch("/{workspace_id}")
-def patch_workspace(
+def rename_workspace(
     workspace_id: str,
     body: WorkspaceRenameBody,
     settings: Settings = Depends(get_settings),
@@ -194,22 +112,19 @@ def patch_workspace(
         if not store.workspace_rename(workspace_id, body.name):
             raise HTTPException(status_code=404, detail="workspace_not_found")
         ws = store.workspace_get(workspace_id)
-        if not ws:
-            raise HTTPException(status_code=404, detail="workspace_not_found")
+        assert ws is not None
         return ws
     finally:
         store.close()
 
 
 @router.delete("/{workspace_id}")
-def delete_workspace(
-    workspace_id: str, settings: Settings = Depends(get_settings)
-) -> dict[str, str]:
+def delete_workspace(workspace_id: str, settings: Settings = Depends(get_settings)) -> dict[str, Any]:
     store = _store(settings)
     try:
         if not store.workspace_delete(workspace_id):
             raise HTTPException(status_code=404, detail="workspace_not_found")
-        return {"status": "deleted", "id": workspace_id}
+        return {"deleted": True, "id": workspace_id}
     finally:
         store.close()
 
@@ -225,7 +140,7 @@ def add_work_to_workspace(
         if not store.workspace_get(workspace_id):
             raise HTTPException(status_code=404, detail="workspace_not_found")
         if not store.workspace_add_work(workspace_id, body.work_id.strip()):
-            raise HTTPException(status_code=400, detail="work_not_found_or_invalid")
+            raise HTTPException(status_code=400, detail="work_add_failed")
         ws = store.workspace_get(workspace_id)
         assert ws is not None
         return ws
@@ -254,10 +169,61 @@ def remove_work_from_workspace(
 @router.get("/{workspace_id}/graph")
 def get_workspace_graph(
     workspace_id: str,
-    neighbor_limit: int = 200,
+    mode: str = Query(
+        default="inner_only",
+        description="inner_only | union_1hop | semantic_layer | full",
+    ),
+    depth: int = Query(default=1, ge=1, le=2),
+    include_external: bool = Query(default=False),
+    external_min_internal_citers: int = Query(default=0, ge=0, le=50),
+    node_types: str | None = Query(
+        default=None,
+        description="Comma-separated: Work,Author,Method,Dataset,Venue,Institution,Authorship",
+    ),
+    neighbor_limit: int = Query(default=200, ge=1, le=2000),
     settings: Settings = Depends(get_settings),
 ) -> dict[str, Any]:
-    g = workspace_graph_union(settings, workspace_id, neighbor_limit=neighbor_limit)
+    g = project_workspace_graph(
+        settings,
+        workspace_id,
+        mode=mode,
+        depth=depth,
+        include_external=include_external,
+        node_types=node_types,
+        neighbor_limit=neighbor_limit,
+        external_min_internal_citers=external_min_internal_citers,
+    )
+    if g is None:
+        raise HTTPException(status_code=404, detail="workspace_not_found")
+    return g
+
+
+@router.get("/{workspace_id}/graph/stats")
+def get_workspace_graph_stats(
+    workspace_id: str,
+    settings: Settings = Depends(get_settings),
+) -> dict[str, Any]:
+    s = workspace_graph_stats(settings, workspace_id)
+    if s is None:
+        raise HTTPException(status_code=404, detail="workspace_not_found")
+    return s
+
+
+@router.get("/{workspace_id}/graph/neighbors")
+def get_workspace_graph_neighbors(
+    workspace_id: str,
+    node_id: str = Query(..., min_length=1, description="Neo4j node id (e.g. Work.id)"),
+    depth: int = Query(default=1, ge=1, le=2),
+    limit: int = Query(default=80, ge=1, le=200),
+    settings: Settings = Depends(get_settings),
+) -> dict[str, Any]:
+    g = workspace_graph_neighbors(
+        settings,
+        workspace_id,
+        node_id,
+        depth=depth,
+        limit=limit,
+    )
     if g is None:
         raise HTTPException(status_code=404, detail="workspace_not_found")
     return g

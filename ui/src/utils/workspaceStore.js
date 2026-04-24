@@ -149,7 +149,14 @@ export async function mergeWorkspacesApi(keepWorkspaceId, dropWorkspaceId) {
 
 /**
  * @param {string} workspaceId
- * @param {{ neighborLimit?: number }} [opts]
+ * @param {{
+ *   neighborLimit?: number,
+ *   mode?: string,
+ *   depth?: number,
+ *   includeExternal?: boolean,
+ *   nodeTypes?: string,
+ *   externalMinInternalCiters?: number,
+ * }} [opts]
  */
 export async function getWorkspaceGraph(workspaceId, opts = {}) {
   const wid = encodeURIComponent(String(workspaceId || "").trim());
@@ -157,8 +164,54 @@ export async function getWorkspaceGraph(workspaceId, opts = {}) {
   if (opts.neighborLimit != null && Number.isFinite(Number(opts.neighborLimit))) {
     params.set("neighbor_limit", String(Math.min(2000, Math.max(1, Math.floor(Number(opts.neighborLimit))))));
   }
+  if (opts.mode != null && String(opts.mode).trim()) {
+    params.set("mode", String(opts.mode).trim());
+  }
+  if (opts.depth != null && Number.isFinite(Number(opts.depth))) {
+    params.set("depth", String(Math.min(2, Math.max(1, Math.floor(Number(opts.depth))))));
+  }
+  if (opts.includeExternal === true) {
+    params.set("include_external", "true");
+  }
+  if (opts.nodeTypes != null && String(opts.nodeTypes).trim()) {
+    params.set("node_types", String(opts.nodeTypes).trim());
+  }
+  if (opts.externalMinInternalCiters != null && Number.isFinite(Number(opts.externalMinInternalCiters))) {
+    const v = Math.min(50, Math.max(0, Math.floor(Number(opts.externalMinInternalCiters))));
+    if (v > 0) params.set("external_min_internal_citers", String(v));
+  }
   const q = params.toString();
   const { data } = await axios.get(apiUrl(`/v1/workspaces/${wid}/graph${q ? `?${q}` : ""}`), httpConfig());
+  return data;
+}
+
+/**
+ * @param {string} workspaceId
+ * @returns {Promise<Record<string, unknown>>}
+ */
+export async function getWorkspaceGraphStats(workspaceId) {
+  const wid = encodeURIComponent(String(workspaceId || "").trim());
+  const { data } = await axios.get(apiUrl(`/v1/workspaces/${wid}/graph/stats`), httpConfig());
+  return data;
+}
+
+/**
+ * @param {string} workspaceId
+ * @param {string} nodeId
+ * @param {{ depth?: number, limit?: number }} [opts]
+ */
+export async function getWorkspaceGraphNeighbors(workspaceId, nodeId, opts = {}) {
+  const wid = encodeURIComponent(String(workspaceId || "").trim());
+  const params = new URLSearchParams();
+  params.set("node_id", String(nodeId || "").trim());
+  if (opts.depth != null && Number.isFinite(Number(opts.depth))) {
+    params.set("depth", String(Math.min(2, Math.max(1, Math.floor(Number(opts.depth))))));
+  }
+  if (opts.limit != null && Number.isFinite(Number(opts.limit))) {
+    params.set("limit", String(Math.min(200, Math.max(1, Math.floor(Number(opts.limit))))));
+  }
+  const q = params.toString();
+  const { data } = await axios.get(apiUrl(`/v1/workspaces/${wid}/graph/neighbors?${q}`), httpConfig());
   return data;
 }
 

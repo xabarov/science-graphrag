@@ -10,7 +10,9 @@
   ],
   "expected_dataset_names_normalized": [
     "voc",
-    "coco"
+    "coco",
+    "pascal voc"
   ],
+  "min_dataset_recall_ratio": 0.6,
   "allow_empty_when_no_llm": true
 }

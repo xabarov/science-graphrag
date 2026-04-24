@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "benchmark_suite_tier": "concept_topic_mini",
+  "case_id": "mask_rcnn_concepts",
+  "description": "Mask R-CNN: instance segmentation, mask branch, alignment.",
+  "article_path": "../../layer1/mask_rcnn_realpdf/article.md",
+  "contract_only": false,
+  "min_concept_recall": 0.7,
+  "min_topic_recall": 1.0,
+  "expected_concepts": [
+    {
+      "concept_id": "instance_segmentation",
+      "name": "instance segmentation",
+      "anchor_phrase": "instance segmentation"
+    },
+    {
+      "concept_id": "mask_branch",
+      "name": "mask prediction branch",
+      "anchor_phrase": "mask branch"
+    },
+    {
+      "concept_id": "pixel_alignment",
+      "name": "pixel-to-pixel alignment",
+      "anchor_phrase": "pixel-to-pixel"
+    }
+  ],
+  "expected_topics": [
+    {
+      "topic_id": "computer_vision",
+      "name": "Computer Vision",
+      "anchor_phrase": "computer vision"
+    },
+    {
+      "topic_id": "object_detection",
+      "name": "Object Detection",
+      "anchor_phrase": "object detection"
+    }
+  ]
+}

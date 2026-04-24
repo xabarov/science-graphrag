@@ -37,6 +37,13 @@ describe("getScienceGraphNodeStyle", () => {
     expect(u.fill).toBeTruthy();
     expect(u.stroke).toBeTruthy();
   });
+
+  it("dims external workspace membership vs internal", () => {
+    const inner = getScienceGraphNodeStyle("Work", { workspaceMembership: "internal" });
+    const outer = getScienceGraphNodeStyle("Work", { workspaceMembership: "external" });
+    expect(outer.lineWidth).toBeLessThanOrEqual(inner.lineWidth);
+    expect(outer.fill).not.toBe(inner.fill);
+  });
 });
 
 describe("truncateCanvasLabel", () => {

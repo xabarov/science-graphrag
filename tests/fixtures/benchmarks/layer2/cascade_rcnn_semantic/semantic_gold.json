@@ -9,7 +9,9 @@
     "cascade rcnn"
   ],
   "expected_dataset_names_normalized": [
-    "coco"
+    "coco",
+    "common objects in context"
   ],
+  "min_dataset_recall_ratio": 0.6,
   "allow_empty_when_no_llm": true
 }

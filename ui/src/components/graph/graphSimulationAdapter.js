@@ -5,12 +5,12 @@
 import { computeWorldLayout, worldRadiusForNodeCount } from "./graphCanvasTransform.js";
 
 /**
- * @typedef {{ id: string, x: number, y: number, vx: number, vy: number, type: string, label: string }} SimNode
+ * @typedef {{ id: string, x: number, y: number, vx: number, vy: number, type: string, label: string, workspaceMembership?: string }} SimNode
  * @typedef {{ id: string, source: string, target: string, type: string }} SimLink
  */
 
 /**
- * @param {{ nodes: Array<{ id: string, label?: string, type?: string }>, edges: Array<{ id: string, source: string, target: string, type?: string }> }} graph
+ * @param {{ nodes: Array<{ id: string, label?: string, type?: string, workspaceMembership?: string }>, edges: Array<{ id: string, source: string, target: string, type?: string }> }} graph
  * @param {{ jitterWorld?: number }} [options] If `jitterWorld` &gt; 0, per-node random offset in world units (osint-style restart spread).
  * @returns {{ nodes: SimNode[], links: SimLink[] }}
  */
@@ -32,6 +32,8 @@ export function buildSimulationState(graph, options = {}) {
       vx: 0,
       vy: 0,
       type: n.type == null ? "Node" : String(n.type),
+      workspaceMembership:
+        n.workspaceMembership == null ? "" : String(n.workspaceMembership).trim().toLowerCase(),
       label:
         n.displayLabel != null && String(n.displayLabel).trim()
           ? String(n.displayLabel)

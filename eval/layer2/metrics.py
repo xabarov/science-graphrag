@@ -166,7 +166,7 @@ def score_semantic(
             notes_parts.append(
                 f"method_recall_below_min={method_recall:.3f}<{gold.min_method_recall_ratio:.3f}",
             )
-    if gold.min_dataset_recall_ratio is not None:
+    if gold.min_dataset_recall_ratio is not None and gold_ds:
         dataset_recall = ds_tp / ds_r_denom if ds_r_denom else 1.0
         if dataset_recall < gold.min_dataset_recall_ratio:
             ok = False

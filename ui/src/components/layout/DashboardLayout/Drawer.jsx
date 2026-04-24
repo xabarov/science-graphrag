@@ -4,11 +4,13 @@ import Typography from "@mui/material/Typography";
 import Divider from "@mui/material/Divider";
 import Tooltip from "@mui/material/Tooltip";
 import { useLocation, Link as RouterLink } from "react-router-dom";
+import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
 import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
 import QuestionAnswerOutlinedIcon from "@mui/icons-material/QuestionAnswerOutlined";
 import FactCheckOutlinedIcon from "@mui/icons-material/FactCheckOutlined";
+import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 
 import { CursorIconButton } from "../../common/index.js";
@@ -16,6 +18,7 @@ import { useI18n } from "../../../i18n/I18nContext.jsx";
 import { isAdminModeEnabled } from "../adminVisibility.js";
 import { useWorkspaceContext } from "../WorkspaceContext.jsx";
 import { appendWorkspaceQuery } from "../../../utils/workspaceStore.js";
+import { getLastWorkId } from "../../../pages/WorkspacePage/utils/workContext.js";
 
 const STORAGE_KEY = "sidebarExpanded";
 
@@ -43,19 +46,36 @@ export default function Drawer({ onNavigate }) {
 
   const userMenu = useMemo(() => {
     const wid = activeWorkspaceId || "";
-    return [
+    const sp = new URLSearchParams(location.search || "");
+    const workFromUrl = sp.get("work_id") || "";
+    const readerWorkId = (workFromUrl || getLastWorkId()).trim();
+    const readerHref = readerWorkId
+      ? appendWorkspaceQuery(`/reader?work_id=${encodeURIComponent(readerWorkId)}`, wid)
+      : "";
+
+    const base = [
       { to: getLastWorkspaceHref(), label: t("shell.drawer.workspace"), icon: <FolderOpenOutlinedIcon /> },
+    ];
+    if (readerHref) {
+      base.push({
+        to: readerHref,
+        label: t("shell.drawer.reader"),
+        icon: <MenuBookOutlinedIcon />,
+      });
+    }
+    base.push(
       { to: appendWorkspaceQuery("/graph", wid), label: t("shell.drawer.graph"), icon: <AccountTreeOutlinedIcon /> },
       { to: appendWorkspaceQuery("/ask", wid), label: t("shell.drawer.ask"), icon: <QuestionAnswerOutlinedIcon /> },
       { to: appendWorkspaceQuery("/evidence", wid), label: t("shell.drawer.evidence"), icon: <FactCheckOutlinedIcon /> },
-    ];
-  }, [t, activeWorkspaceId, getLastWorkspaceHref]);
+    );
+    return base;
+  }, [t, activeWorkspaceId, getLastWorkspaceHref, location.search]);
 
   const adminMenu = useMemo(
     () =>
       adminModeEnabled
         ? [
-            { to: "/admin", label: t("shell.drawer.admin"), icon: <ScienceOutlinedIcon /> },
+            { to: "/admin", label: t("shell.drawer.admin"), icon: <AdminPanelSettingsOutlinedIcon /> },
             { to: "/admin/benchmarks", label: t("shell.drawer.benchmarks"), icon: <ScienceOutlinedIcon /> },
             { to: "/admin/settings", label: t("shell.drawer.settings"), icon: <SettingsOutlinedIcon /> },
           ]

@@ -1,0 +1,5 @@
+{
+  "description": "Graph-v1 workspace projection fixtures (catalog family=graph with layer1 graph_expectations cases).",
+  "smoke": ["workspace_cites_minimal"],
+  "merge_safe": ["workspace_cites_minimal"]
+}

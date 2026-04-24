@@ -1,0 +1,11 @@
+{
+  "smoke": ["contract_shape"],
+  "concept_topic_merge_contract": ["contract_shape"],
+  "concept_topic_mini": [
+    "yolov1_concepts",
+    "faster_rcnn_concepts",
+    "detr_concepts",
+    "fpn_concepts",
+    "mask_rcnn_concepts"
+  ]
+}

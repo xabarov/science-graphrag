@@ -190,6 +190,14 @@ class Settings(BaseSettings):
     query_answer_llm_max_tokens: int = Field(default=900, ge=64, le=4096)
     query_answer_llm_temperature: float = Field(default=0.0, ge=0.0, le=1.0)
 
+    gds_enabled: bool = Field(
+        default=False,
+        description=(
+            "If true, allow Neo4j Graph Data Science procedures for large workspace graph "
+            "projections when the plugin is installed (otherwise Cypher-only fallback)."
+        ),
+    )
+
     admin_api_key: str | None = Field(
         default=None,
         description="If set, benchmark and settings HTTP routers require matching X-Admin-Key header.",

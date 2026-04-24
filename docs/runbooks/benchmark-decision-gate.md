@@ -40,7 +40,7 @@
 .venv/bin/python scripts/generate_benchmark_metrics_tables.py
 ```
 
-Профиль **`reporting_skip_f1_gates`**: обнуляет в контракте `min_authorship_names_f1` и `min_sample_arxiv_f1` из gold, выставляет **`require_reference_count_ok=False`** (как в `ci_smoke` по числу ссылок: PDF→MD даёт дрейф), при этом **метрики** `count_ok` / дельты в JSON остаются. Title и abstract по-прежнему режут контракт согласно gold/defaults.
+Профиль **`reporting_skip_f1_gates`** (Wave M): выставляет в контракте **`min_authorship_names_f1=0.7`**, **`min_sample_arxiv_f1=0.85`**, **`require_reference_count_ok=False`**, **`reference_count_range_factor=0.3`** (допустимый диапазон числа ссылок вокруг `expected_count`), **`require_abstract_prefix=False`**, **`min_abstract_prefix_containment=0.7`** (token containment префикса в полном abstract вместо хрупкого ROUGE-L gate). Метрики `count_ok`, ROUGE-L и F1 по-прежнему пишутся в JSON для диагностики.
 
 Появятся:
 
@@ -100,6 +100,17 @@ Single-case retest после правок gold (если лежат в `eval/re
 - **Live mini-tier (при наличии файла):** [`eval/results/current-retrieval-live-corpus-mini.json`](../../eval/results/current-retrieval-live-corpus-mini.json) — поднимается в сводке агрегатора; по-прежнему advisory.
 - **Claims (при наличии файлов):** [`eval/results/current-claims-merge-contract.json`](../../eval/results/current-claims-merge-contract.json), [`eval/results/current-claims-mini-suite.json`](../../eval/results/current-claims-mini-suite.json), [`eval/results/current-claims-corpus-v2-mini.json`](../../eval/results/current-claims-corpus-v2-mini.json), [`eval/results/current-claims-pilot-suite.json`](../../eval/results/current-claims-pilot-suite.json) — см. [`benchmark-pilot-advisory-runs.md`](benchmark-pilot-advisory-runs.md).
 - **References resolution (при наличии файлов):** [`eval/results/current-references-resolution-contract.json`](../../eval/results/current-references-resolution-contract.json), [`eval/results/current-references-resolution-mini.json`](../../eval/results/current-references-resolution-mini.json) — см. [`benchmark-family-references-resolution-v1.md`](../specs/benchmark-family-references-resolution-v1.md).
+- **References resolution — graph lane (Neo4j, опционально):** [`eval/results/current-references-resolution-graph.json`](../../eval/results/current-references-resolution-graph.json) — прогон `science-graphrag-references-resolution-benchmark … --resolver graph` на поднятом стеке; **advisory**, не влияет на `decision`. Снимок в агрегаторе: `--refs-graph-json` (по умолчанию путь выше).
+- **Concept / ResearchTopic (Wave N, ontology v1.5):** [`eval/results/current-concept-topic-mini.json`](../../eval/results/current-concept-topic-mini.json) — suite `science-graphrag-concept-topic-benchmark --suite --tier concept_topic_mini` (harness по `anchor_phrase`); **advisory**, **без** узлов `:Concept` / `:ResearchTopic` в production Neo4j. Сводка в агрегаторе: секция *Concept / ResearchTopic family*; путь по умолчанию переопределяется флагом `--concept-topic-json`. Спека: [`semantic-concept-topic-v1.md`](../specs/extraction/semantic-concept-topic-v1.md), ADR: [`013-concept-research-topic-ontology-v1-5.md`](../adr/013-concept-research-topic-ontology-v1-5.md).
+
+### 8.1 Promotion: references resolution graph lane → core
+
+Условие (см. также [`benchmark-family-promotion-review.md`](benchmark-family-promotion-review.md)):
+
+- **7 ночей подряд** suite `refs_mini` (или расширенный tier после freeze) **зелёный** с `--resolver graph` и актуальным пилотным Neo4j (те же `expected_resolutions`, предсказания из live resolver).
+- Нет хронических **infra** fail (Bolt timeout, пустая БД без fixture works).
+
+После выполнения — review по чеклисту promotion, обновление [`benchmark-program-status.md`](benchmark-program-status.md), при необходимости включение lane в blocking `decision` (отдельное решение мейнтейнеров).
 - **Живой pilot / nightly:** после захвата реальных `chunk_fingerprint` на подписанном корпусе обновляйте фикстуры в `tests/fixtures/benchmarks/retrieval/` и при необходимости пути в агрегаторе; см. [retrieval-eval-v1.md](../benchmarks/retrieval-eval-v1.md), [user-journeys-retrieval-v1.md](user-journeys-retrieval-v1.md).
 - **Live mini-tier (`live_corpus_mini`):** пять вопросов с замороженными отпечатками на пилотном корпусе — см. [retrieval-live-tier-v1.md](../benchmarks/retrieval-live-tier-v1.md); по-прежнему **advisory**, без `--mock-answer`.
 

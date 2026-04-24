@@ -9,7 +9,9 @@
     "query denoising"
   ],
   "expected_dataset_names_normalized": [
-    "coco"
+    "coco",
+    "imagenet"
   ],
+  "min_dataset_recall_ratio": 0.6,
   "allow_empty_when_no_llm": true
 }

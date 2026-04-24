@@ -36,6 +36,8 @@ function formatPropertyValue(v) {
  *   graphMeta?: Record<string, unknown>,
  *   onSelectNode?: (nodeId: string) => void,
  *   onSelectEdge?: (edgeId: string) => void,
+ *   onExpandWorkspaceNeighbors?: () => void | Promise<void>,
+ *   expandWorkspaceNeighborsBusy?: boolean,
  *   mode?: "embedded" | "standalone",
  * }} props
  */
@@ -48,6 +50,8 @@ export default function GraphDetailPanel({
   graphMeta = {},
   onSelectNode,
   onSelectEdge,
+  onExpandWorkspaceNeighbors,
+  expandWorkspaceNeighborsBusy = false,
   mode = "embedded",
 }) {
   const compact = mode === "embedded" || mode === "standalone";
@@ -146,6 +150,45 @@ export default function GraphDetailPanel({
             </Typography>
             {selectedNode.subtitle ? (
               <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.55)", mt: 0.35 }}>{selectedNode.subtitle}</Typography>
+            ) : null}
+
+            {String(selectedNode.type) === "Work" &&
+            (selectedNode.workspaceMembership ||
+              selectedNode.internalCiteCount != null ||
+              selectedNode.externalCiteCount != null) ? (
+              <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "center" }}>
+                {selectedNode.workspaceMembership ? (
+                  <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.5)", fontFamily: "monospace" }}>
+                    {String(selectedNode.workspaceMembership)}
+                  </Typography>
+                ) : null}
+                {selectedNode.internalCiteCount != null ? (
+                  <Typography sx={{ fontSize: "0.68rem", color: "rgba(129,140,248,0.85)" }}>
+                    int cites: {String(selectedNode.internalCiteCount)}
+                  </Typography>
+                ) : null}
+                {selectedNode.externalCiteCount != null ? (
+                  <Typography sx={{ fontSize: "0.68rem", color: "rgba(251,191,36,0.85)" }}>
+                    ext cites: {String(selectedNode.externalCiteCount)}
+                  </Typography>
+                ) : null}
+              </Box>
+            ) : null}
+
+            {onExpandWorkspaceNeighbors &&
+            String(selectedNode.type) === "Work" &&
+            Number(selectedNode.externalCiteCount) > 0 ? (
+              <Box sx={{ mt: 1 }}>
+                <CursorSmallButton
+                  type="button"
+                  disabled={expandWorkspaceNeighborsBusy}
+                  onClick={() => onExpandWorkspaceNeighbors()}
+                >
+                  {expandWorkspaceNeighborsBusy
+                    ? "Loading…"
+                    : `Expand external neighborhood (+${String(selectedNode.externalCiteCount)})`}
+                </CursorSmallButton>
+              </Box>
             ) : null}
 
             <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 2, mb: 0.75 }}>Key properties</Typography>

@@ -124,6 +124,10 @@
   },
   "quality_thresholds": {
     "min_authorship_names_f1": 0.7,
-    "min_sample_arxiv_f1": 0.7
+    "min_sample_arxiv_f1": 0.85,
+    "require_reference_count_ok": false,
+    "reference_count_range_factor": 0.3,
+    "require_abstract_prefix": false,
+    "min_abstract_prefix_containment": 0.7
   }
 }

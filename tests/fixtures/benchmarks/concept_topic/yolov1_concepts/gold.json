@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "benchmark_suite_tier": "concept_topic_mini",
+  "case_id": "yolov1_concepts",
+  "description": "YOLOv1: real-time unified grid-based detection + CV topic.",
+  "article_path": "../../layer1/yolov1/article.md",
+  "contract_only": false,
+  "min_concept_recall": 0.7,
+  "min_topic_recall": 1.0,
+  "expected_concepts": [
+    {
+      "concept_id": "real_time_detection",
+      "name": "real-time object detection",
+      "anchor_phrase": "real-time"
+    },
+    {
+      "concept_id": "unified_architecture",
+      "name": "unified detection architecture",
+      "anchor_phrase": "unified architecture"
+    },
+    {
+      "concept_id": "grid_localization",
+      "name": "grid-based localization",
+      "anchor_phrase": "grid cell"
+    }
+  ],
+  "expected_topics": [
+    {
+      "topic_id": "computer_vision",
+      "name": "Computer Vision",
+      "anchor_phrase": "computer vision"
+    }
+  ]
+}

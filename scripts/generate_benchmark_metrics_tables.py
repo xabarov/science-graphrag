@@ -351,10 +351,10 @@ def main() -> None:  # pylint: disable=too-many-locals,too-many-branches,too-man
                 + "\n"
             )
             lines.append(
-                "> Контракт nightly: профиль **`reporting_skip_f1_gates`** — пороги "
-                "`min_authorship_names_f1` / `min_sample_arxiv_f1` из gold не режут контракт; "
-                "`require_reference_count_ok=false` (дрейф числа ссылок при PDF→MD). "
-                "Метрики F1 и `count_ok` в JSON всё равно считаются.\n"
+                "> Контракт nightly: профиль **`reporting_skip_f1_gates`** (Wave M) — "
+                "`min_authorship_names_f1=0.7`, `min_sample_arxiv_f1=0.85`, "
+                "`reference_count_range_factor=0.3`, `min_abstract_prefix_containment=0.7`; "
+                "`require_reference_count_ok=false`. Метрики `count_ok` / ROUGE-L / F1 по-прежнему в JSON.\n"
             )
             lines.append(_md_table(
                 _layer1_headers(show_authors=show_authors),

@@ -11,8 +11,10 @@ from typing import Any
 import typer
 
 from eval.bench_common import run_single_case_json_outputs, run_suite_cli_flow
+from eval.references_resolution.graph_resolver import graph_resolve_predictions
 from eval.references_resolution.metrics import score_references_resolution
 from science_graphrag.config import Settings, get_settings
+from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 
 
 def _load_refs_case_tiers(fixtures_root: Path) -> dict[str, list[str]] | None:
@@ -137,6 +139,7 @@ def run_references_resolution_case(
         "predictions": preds,
         "wall_clock_seconds": round(elapsed, 3),
         "resolver": getattr(fn, "__name__", str(fn)),
+        "resolver_mode": getattr(fn, "_resolver_mode_label", None),
         "extraction_llm_enabled": s.extraction_llm_enabled,
     }
 
@@ -192,6 +195,22 @@ def _run_refs_suite(  # pylint: disable=too-many-arguments
         raise typer.Exit(code=1)
 
 
+def _wrap_graph_resolver(settings: Settings) -> Callable[[Path, dict[str, Any]], list[dict[str, Any]]]:
+    def _fn(_case_dir: Path, gold: dict[str, Any]) -> list[dict[str, Any]]:
+        store = Neo4jGraphStore(
+            settings.neo4j_uri,
+            settings.neo4j_user,
+            settings.neo4j_password,
+        )
+        try:
+            return graph_resolve_predictions(gold, store)
+        finally:
+            store.close()
+
+    _fn._resolver_mode_label = "graph"  # type: ignore[attr-defined]
+    return _fn
+
+
 def _cli(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     path: Path = typer.Argument(
         ...,
@@ -210,25 +229,44 @@ def _cli(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         "--use-expected",
         help="Use gold expected_resolutions as predictions (golden-path smoke).",
     ),
+    resolver: str = typer.Option(
+        "synthetic",
+        "--resolver",
+        help="Prediction source: synthetic | graph_stub | graph (Neo4j; needs live stack).",
+    ),
     graph_stub_lane: bool = typer.Option(
         False,
         "--graph-stub-lane",
-        help="Read predictions from gold['graph_stub_predictions'] (placeholder graph-backed lane).",
+        help="Deprecated: same as --resolver graph_stub.",
     ),
     json_out: Path | None = typer.Option(None, "--json-out", help="Write JSON report path"),
     md_out: Path | None = typer.Option(None, "--md-out", help="Write Markdown summary path"),
 ) -> None:
     settings = get_settings()
-    if use_expected and graph_stub_lane:
-        typer.echo("Choose only one of --use-expected and --graph-stub-lane", err=True)
+    eff_resolver = resolver.strip().lower() if resolver else "synthetic"
+    if graph_stub_lane:
+        if eff_resolver not in ("synthetic", "graph_stub"):
+            typer.echo("Do not combine --graph-stub-lane with a different --resolver", err=True)
+            raise typer.Exit(code=1)
+        eff_resolver = "graph_stub"
+    if eff_resolver not in ("synthetic", "graph_stub", "graph"):
+        typer.echo(
+            f"Unknown --resolver {eff_resolver!r}; expected synthetic|graph_stub|graph",
+            err=True,
+        )
         raise typer.Exit(code=1)
     resolve_fn: Callable[[Path, dict[str, Any]], list[dict[str, Any]]]
     if use_expected:
         resolve_fn = resolve_predictions_use_expected
-    elif graph_stub_lane:
+        resolve_fn._resolver_mode_label = "use_expected"  # type: ignore[attr-defined]
+    elif eff_resolver == "graph_stub":
         resolve_fn = default_resolve_predictions_graph_stub
+        resolve_fn._resolver_mode_label = "graph_stub"  # type: ignore[attr-defined]
+    elif eff_resolver == "graph":
+        resolve_fn = _wrap_graph_resolver(settings)
     else:
         resolve_fn = default_resolve_predictions
+        resolve_fn._resolver_mode_label = "synthetic"  # type: ignore[attr-defined]
 
     def _run_one(c: Path) -> dict[str, Any]:
         return run_references_resolution_case(c, settings=settings, resolve_fn=resolve_fn)

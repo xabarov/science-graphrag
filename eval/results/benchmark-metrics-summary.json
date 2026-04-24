@@ -17,7 +17,9 @@
     "claims_corpus_v2_mini_suite": "eval/results/current-claims-corpus-v2-mini.json",
     "claims_pilot_suite": "eval/results/current-claims-pilot-suite.json",
     "references_resolution_contract": "eval/results/current-references-resolution-contract.json",
-    "references_resolution_mini": "eval/results/current-references-resolution-mini.json"
+    "references_resolution_mini": "eval/results/current-references-resolution-mini.json",
+    "references_resolution_graph": "eval/results/current-references-resolution-graph.json",
+    "concept_topic_mini_suite": "eval/results/current-concept-topic-mini.json"
   },
   "reference": {
     "all_passed": true,
@@ -474,6 +476,37 @@
         ],
         "all_passed": true,
         "references_resolution_eval": true
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true
+    },
+    "refs_graph": {
+      "error": "missing_file",
+      "artifact": "eval/results/current-references-resolution-graph.json"
+    }
+  },
+  "concept_topic_family": {
+    "role": "advisory",
+    "concept_topic_mini": {
+      "artifact": "eval/results/current-concept-topic-mini.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190"
+      },
+      "summary": {
+        "case_count": 5,
+        "case_ids": [
+          "detr_concepts",
+          "faster_rcnn_concepts",
+          "fpn_concepts",
+          "mask_rcnn_concepts",
+          "yolov1_concepts"
+        ],
+        "all_passed": true,
+        "concept_topic_eval": true
       },
       "failed_count": 0,
       "failed_cases": [],

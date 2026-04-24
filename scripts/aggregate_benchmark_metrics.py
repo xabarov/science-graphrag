@@ -10,9 +10,11 @@ Usage (repo root):
 
 Authoritative inputs (defaults) match docs/runbooks/benchmark-decision-gate.md.
 
-Optional retrieval + claims JSON lanes (advisory only; do not affect ``decision``) are listed in
-``benchmark-decision-gate.md`` §8 and summarized under ``retrieval_family`` / ``claims_family``
-in the output when the default artifact paths exist.
+Optional retrieval + claims + references_resolution + concept_topic graph JSON lanes (advisory
+only; do not affect ``decision``) are listed in ``benchmark-decision-gate.md`` §8 and summarized
+under ``retrieval_family`` / ``claims_family`` / ``references_resolution_family`` /
+``concept_topic_family`` when the default artifact paths exist (graph lane: ``--refs-graph-json``;
+concept/topic: ``--concept-topic-json``).
 """
 
 from __future__ import annotations
@@ -48,6 +50,10 @@ DEFAULT_CLAIMS_PILOT_SUITE = "eval/results/current-claims-pilot-suite.json"
 
 DEFAULT_REFERENCES_RESOLUTION_CONTRACT = "eval/results/current-references-resolution-contract.json"
 DEFAULT_REFERENCES_RESOLUTION_MINI = "eval/results/current-references-resolution-mini.json"
+DEFAULT_REFERENCES_RESOLUTION_GRAPH = "eval/results/current-references-resolution-graph.json"
+
+# Concept / ResearchTopic family (advisory — Wave N; see ADR 013)
+DEFAULT_CONCEPT_TOPIC_MINI_SUITE = "eval/results/current-concept-topic-mini.json"
 
 # Optional single-case retests after gold fixes (if present, listed in summary)
 SUPPLEMENTARY_RETESTS = (
@@ -109,7 +115,9 @@ def _classify_layer1_failure(case: dict[str, Any]) -> str:
     fr = case.get("diagnostics", {}).get("fallback_reasons") or []
     if any(x.get("stage") == "metadata" for x in fr):
         return "architecture_or_runtime"
-    if not checks.get("reference_count_ok_required", True):
+    if checks.get("reference_count_ok_required") is False:
+        return "benchmark_gold_references"
+    if checks.get("reference_count_in_expected_range") is False:
         return "benchmark_gold_references"
     if not checks.get("abstract_prefix_required", True):
         return "benchmark_gold_abstract_prefix"
@@ -554,6 +562,37 @@ def _md_references_resolution_family_section(rf: dict[str, Any]) -> list[str]:
 
     _one("refs_merge_contract", rf.get("refs_merge_contract") or {})
     _one("refs_mini (synthetic harness)", rf.get("refs_mini") or {})
+    _one("refs_graph (Neo4j resolver lane, Wave M)", rf.get("refs_graph") or {})
+    return lines
+
+
+def _md_concept_topic_family_section(cf: dict[str, Any]) -> list[str]:
+    lines = [
+        "## Concept / ResearchTopic family (advisory)",
+        "",
+        "Ontology v1.5 concept and topic extraction benchmarks are **not** part of the primary "
+        "decision gate. See [ADR 013](../../docs/adr/013-concept-research-topic-ontology-v1-5.md) and "
+        "[semantic-concept-topic-v1.md](../../docs/specs/extraction/semantic-concept-topic-v1.md).",
+        "",
+    ]
+    role = (cf.get("role") or "advisory") if isinstance(cf, dict) else "advisory"
+    lines.append(f"- **role**: `{role}`")
+    lines.append("")
+
+    def _one(label: str, block: dict[str, Any]) -> None:
+        lines.append(f"### {label}")
+        lines.append("")
+        if block.get("error"):
+            lines.append(f"- **status**: missing artifact `{block.get('artifact')}`")
+        else:
+            lines.append(f"- artifact: `{block.get('artifact')}`")
+            lines.append(f"- all_passed: **{block.get('all_passed')}**")
+            lines.append(f"- failed_count: **{block.get('failed_count')}**")
+            for fc in block.get("failed_cases") or []:
+                lines.append(f"  - `{fc.get('case_id')}`: {fc.get('metrics')}")
+        lines.append("")
+
+    _one("concept_topic_mini (harness)", cf.get("concept_topic_mini") or {})
     return lines
 
 
@@ -589,6 +628,7 @@ def _render_markdown(payload: dict[str, Any]) -> str:
         *_md_references_resolution_family_section(
             payload.get("references_resolution_family") or {}
         ),
+        *_md_concept_topic_family_section(payload.get("concept_topic_family") or {}),
         *_md_baseline_deltas_section(payload.get("deltas") or {}),
     ]
     return "\n".join(parts)
@@ -607,6 +647,24 @@ def main() -> int:
         "--out-md",
         type=Path,
         default=ROOT / "eval/results/benchmark-metrics-summary.md",
+    )
+    parser.add_argument(
+        "--refs-graph-json",
+        type=str,
+        default=DEFAULT_REFERENCES_RESOLUTION_GRAPH,
+        help=(
+            "Optional references_resolution suite JSON from "
+            "`science-graphrag-references-resolution-benchmark --resolver graph` (advisory)."
+        ),
+    )
+    parser.add_argument(
+        "--concept-topic-json",
+        type=str,
+        default=DEFAULT_CONCEPT_TOPIC_MINI_SUITE,
+        help=(
+            "Optional concept/topic suite JSON from "
+            "`science-graphrag-concept-topic-benchmark --suite --tier concept_topic_mini` (advisory)."
+        ),
     )
     args = parser.parse_args()
 
@@ -641,6 +699,8 @@ def main() -> int:
             "claims_pilot_suite": DEFAULT_CLAIMS_PILOT_SUITE,
             "references_resolution_contract": DEFAULT_REFERENCES_RESOLUTION_CONTRACT,
             "references_resolution_mini": DEFAULT_REFERENCES_RESOLUTION_MINI,
+            "references_resolution_graph": args.refs_graph_json,
+            "concept_topic_mini_suite": args.concept_topic_json,
         },
         "reference": reference,
         "layer1_nightly": layer1,
@@ -668,6 +728,11 @@ def main() -> int:
                 DEFAULT_REFERENCES_RESOLUTION_CONTRACT
             ),
             "refs_mini": _summarize_case_metrics_suite(DEFAULT_REFERENCES_RESOLUTION_MINI),
+            "refs_graph": _summarize_case_metrics_suite(args.refs_graph_json),
+        },
+        "concept_topic_family": {
+            "role": "advisory",
+            "concept_topic_mini": _summarize_case_metrics_suite(args.concept_topic_json),
         },
         "decision_gate": _decision_gate(reference, layer1, layer2),
     }

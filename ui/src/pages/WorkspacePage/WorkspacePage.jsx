@@ -17,6 +17,7 @@ import {
   addWorkToWorkspace,
   getIngestJob,
   startWorkspaceDocumentIngest,
+  getWorkspaceGraphStats,
 } from "../../utils/workspaceStore.js";
 import { persistWorkId, resolveSelectedWorkId } from "./utils/workContext.js";
 import { rememberRecentWork } from "../HomePage/homeState.js";
@@ -44,6 +45,7 @@ export default function WorkspacePage() {
   const [ingestJob, setIngestJob] = useState(null);
   const [ingestErr, setIngestErr] = useState(null);
   const [uploadBusy, setUploadBusy] = useState(false);
+  const [graphStats, setGraphStats] = useState(null);
 
   const refreshWorkspaceMeta = useCallback(async () => {
     const id = workspaceMeta.id;
@@ -98,6 +100,26 @@ export default function WorkspacePage() {
       cancelled = true;
     };
   }, [workspaceIdFromUrl, workIdFromUrl, setSearchParams, t]);
+
+  useEffect(() => {
+    const id = String(workspaceMeta.id || "").trim();
+    if (!id) {
+      setGraphStats(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const s = await getWorkspaceGraphStats(id);
+        if (!cancelled) setGraphStats(s);
+      } catch {
+        if (!cancelled) setGraphStats(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [workspaceMeta.id]);
 
   const effectiveWorkIds = useMemo(() => {
     const fromWs = Array.isArray(workspaceMeta.work_ids) ? workspaceMeta.work_ids : [];
@@ -294,6 +316,19 @@ export default function WorkspacePage() {
               <span style={{ color: "rgba(255,255,255,0.38)", fontFamily: "monospace", fontSize: "0.72rem" }}>
                 {workspaceMeta.id}
               </span>
+              {graphStats && typeof graphStats === "object" ? (
+                <>
+                  <br />
+                  <span style={{ color: "rgba(255,255,255,0.42)", fontSize: "0.75rem" }}>
+                    {t("workspace.header.graphStatsLine", {
+                      works: String(graphStats.works_count ?? "—"),
+                      authors: String(graphStats.authors_count ?? "—"),
+                      internal: String(graphStats.internal_citations ?? "—"),
+                      external: String(graphStats.external_citations ?? "—"),
+                    })}
+                  </span>
+                </>
+              ) : null}
             </>
           ) : (
             <WorkIdGlossaryHint variant="workspace" />

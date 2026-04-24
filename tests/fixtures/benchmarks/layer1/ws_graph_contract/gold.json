@@ -1,0 +1,48 @@
+{
+  "case_id": "ws_graph_contract",
+  "schema_version": 1,
+  "description": "Stub case for workspace graph v2 / graph_expectations.workspace documentation.",
+  "work_metadata": {
+    "title": "Workspace Graph Contract Placeholder",
+    "publication_year": 2024,
+    "abstract_prefix": "Synthetic fixture for Wave J workspace graph benchmarks.",
+    "doi": null,
+    "arxiv_id": null,
+    "venue_name": null,
+    "work_type": null
+  },
+  "authorships": [
+    {
+      "name": "Stub Author",
+      "affiliations": []
+    }
+  ],
+  "references": {
+    "expected_count": 0,
+    "min_count": 0,
+    "notes": "No references required for this contract stub.",
+    "sample_arxiv_ids": [],
+    "sample_dois": []
+  },
+  "graph_expectations": {
+    "min_cites": 0,
+    "max_cites": 99,
+    "min_authorships": 0,
+    "max_authorships": 99,
+    "workspace": {
+      "min_internal_work_nodes": 0,
+      "min_internal_cites_edges": 0,
+      "notes": "Evaluated when graph snapshot includes workspace_projection metrics."
+    }
+  },
+  "quality_thresholds": {
+    "require_title_match": false,
+    "require_reference_count_ok": false,
+    "min_sample_arxiv_f1": 0.0,
+    "min_sample_doi_f1": 0.0,
+    "reference_count_range_factor": 0.3,
+    "min_authorship_names_f1": 0.0,
+    "require_abstract_prefix": false,
+    "min_abstract_prefix_containment": 0.0
+  }
+}

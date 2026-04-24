@@ -5,6 +5,7 @@ export default {
   "workspaces.header.desc":
     "Create and switch workspaces. Open a workspace to upload PDFs / text, see papers, and run dedup. Use the left rail for Graph, Ask, and Evidence. Browse the global index below only when you need to attach existing works.",
   "workspaces.continue": "Continue",
+  "workspaces.defaultNewName": "Research",
 
   "workspaces.wsPanel.title": "Workspaces",
   "workspaces.loading": "Loading…",

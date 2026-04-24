@@ -84,6 +84,15 @@ export function normalizeGraphPayload(raw) {
     const subtitle = pickStringField(n, ["subtitle"], "");
     const nodeKind = pickStringField(n, ["node_kind", "nodeKind"], type);
     const properties = { ...pickPropertiesObject(n.properties) };
+    const workspaceMembership = pickStringField(
+      n,
+      ["workspace_membership", "workspaceMembership"],
+      "",
+    );
+    const ic = n.internal_cite_count ?? n.internalCiteCount;
+    const ec = n.external_cite_count ?? n.externalCiteCount;
+    const internalCiteCount = typeof ic === "number" && Number.isFinite(ic) ? ic : undefined;
+    const externalCiteCount = typeof ec === "number" && Number.isFinite(ec) ? ec : undefined;
     return {
       id,
       label,
@@ -92,6 +101,9 @@ export function normalizeGraphPayload(raw) {
       subtitle,
       nodeKind,
       properties,
+      workspaceMembership,
+      internalCiteCount,
+      externalCiteCount,
       raw: n,
     };
   });

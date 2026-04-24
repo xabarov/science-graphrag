@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from eval.bench_common import discover_layer1_case_dirs
+from eval.bench_common import discover_graph_v1_case_dirs, discover_layer1_case_dirs
 from science_graphrag.ingestion.pipeline import discover_corpus_files
 
 FIXTURES_LAYER1 = Path(__file__).resolve().parent / "fixtures" / "benchmarks" / "layer1"
+FIXTURES_GRAPH_V1 = Path(__file__).resolve().parent / "fixtures" / "benchmarks" / "graph_v1"
 
 
 def test_discover_layer1_case_dirs_finds_known_cases() -> None:
@@ -30,8 +31,15 @@ def test_discover_layer1_merge_safe_tier() -> None:
         "arxiv_refs_heavy",
         "doi_refs_heavy",
         "noisy_layout_stub",
+        "ws_graph_contract",
         "yolov1",
     }
+
+
+def test_discover_graph_v1_case_dirs_finds_workspace_cites_minimal() -> None:
+    cases = discover_graph_v1_case_dirs(FIXTURES_GRAPH_V1)
+    ids = {p.name for p in cases}
+    assert "workspace_cites_minimal" in ids
 
 
 def test_discover_corpus_files_finds_suffixes(tmp_path: Path) -> None:

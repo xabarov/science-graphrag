@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from eval.layer1.metrics import _norm_abstract_match, _norm_aff, prf1_tp_fp_fn, score_layer1
+from eval.layer1.text_similarity import abstract_prefix_token_containment
 from eval.layer1.runner import run_case
 from eval.layer1.spec import Layer1GoldSpec
 from eval.layer1.threshold_profiles import apply_layer1_threshold_profile
@@ -43,13 +44,15 @@ def test_apply_student_mistral_threshold_profile() -> None:
     assert merged.quality_thresholds.min_abstract_rouge_l is None
 
 
-def test_reporting_skip_f1_gates_clears_min_f1_thresholds() -> None:
+def test_reporting_skip_f1_gates_wave_m_tightening() -> None:
     spec = Layer1GoldSpec.load(FIXTURE_YOLO / "gold.json")
     merged = apply_layer1_threshold_profile(spec, "reporting_skip_f1_gates")
     assert merged.quality_thresholds is not None
-    assert merged.quality_thresholds.min_authorship_names_f1 is None
-    assert merged.quality_thresholds.min_sample_arxiv_f1 is None
+    assert merged.quality_thresholds.min_authorship_names_f1 == pytest.approx(0.7)
+    assert merged.quality_thresholds.min_sample_arxiv_f1 == pytest.approx(0.85)
     assert merged.quality_thresholds.require_reference_count_ok is False
+    assert merged.quality_thresholds.reference_count_range_factor == pytest.approx(0.3)
+    assert merged.quality_thresholds.min_abstract_prefix_containment == pytest.approx(0.7)
 
 
 def test_norm_abstract_match_hyphen_variants() -> None:
@@ -67,6 +70,13 @@ def test_norm_abstract_match_quote_variants() -> None:
 
 def test_norm_aff_handles_diacritics_and_controls() -> None:
     assert _norm_aff("INRIA Rhône-Alps, France") == _norm_aff("INRIA Rh\x88one-Alps, France")
+
+
+def test_abstract_prefix_token_containment_basic() -> None:
+    prefix = "we propose atss for object detection"
+    full = "we propose atss for object detection on coco and imagenet backbones"
+    assert abstract_prefix_token_containment(prefix, full) == pytest.approx(1.0)
+    assert abstract_prefix_token_containment("zzuniqueprefixtokenzz", full) == pytest.approx(0.0)
 
 
 def test_prf1_sets() -> None:

@@ -4,13 +4,15 @@
     "yolov1",
     "doi_refs_heavy",
     "arxiv_refs_heavy",
-    "noisy_layout_stub"
+    "noisy_layout_stub",
+    "ws_graph_contract"
   ],
   "merge_safe": [
     "yolov1",
     "doi_refs_heavy",
     "arxiv_refs_heavy",
-    "noisy_layout_stub"
+    "noisy_layout_stub",
+    "ws_graph_contract"
   ],
   "references_benchmark_v1": [
     "yolov1",

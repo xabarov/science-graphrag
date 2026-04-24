@@ -48,7 +48,7 @@ Request:
 }
 ```
 
-When **`workspace_id` is set** and **`work_id` is omitted**, retrieval restricts Qdrant vector search to chunks whose `work_id` belongs to that Neo4j workspace (`Workspace-[:CONTAINS]->Work`). Unknown workspace → HTTP 200 with empty hits and `retrieval_trace.workspace_missing: true`. **`work_id` wins** when both are provided (single-paper scope).
+When **`workspace_id` is set** and **`work_id` is omitted**, retrieval restricts Qdrant vector search to chunks whose `work_id` belongs to that Neo4j workspace (`Workspace-[:CONTAINS]->Work`). Unknown workspace → HTTP 200 with empty hits and `retrieval_trace.workspace_missing: true`. **`work_id` wins** when both are provided (single-paper scope). For workspace-scoped calls, the request `workspace_id` is echoed on `retrieval_trace.workspace_id` together with `workspace_scope_work_count` (and `workspace_missing` when the workspace is unknown).
 
 Response shape:
 
@@ -280,6 +280,38 @@ Response:
 }
 ```
 
+## 5b) Workspace graph v2 (implemented)
+
+### `GET /v1/workspaces/{workspace_id}/graph`
+
+Query params:
+
+| Param | Default | Notes |
+|-------|---------|--------|
+| `mode` | `inner_only` | `inner_only` \| `union_1hop` \| `semantic_layer` \| `full` |
+| `depth` | `1` | `1` or `2` (capped server-side) |
+| `include_external` | `false` | When `true`, may include cited `:Work` nodes outside the workspace |
+| `node_types` | *(all)* | Comma-separated: `Work`, `Author`, `Method`, `Dataset`, `Venue`, `Institution`, `Authorship` |
+| `neighbor_limit` | `200` | Clamped with global cap (300 for multi-hop) |
+| `external_min_internal_citers` | `0` | When &gt; 0 and `include_external=true`, keep external works only if at least N distinct internal works cite them |
+
+Response matches work graph shape (`work_id`, `nodes`, `edges`, `meta`). Each node may include:
+
+- `workspace_membership`: `internal` \| `external` (for `:Work`, membership in the workspace collection; for other labels, adjacency to internal works).
+- `internal_cite_count` / `external_cite_count` on `:Work` (outgoing `CITES` targets split by membership).
+
+`meta.graph_scope` is `workspace_v2` (or `workspace_union_1hop` inside legacy union mode until merged into v2 meta). `meta` also includes `gds_runtime_available`, `gds_used`, `cap_applied`, `source_work_ids`, `internal_node_count`, `external_node_count`.
+
+### `GET /v1/workspaces/{workspace_id}/graph/stats`
+
+Lightweight counts: `works_count`, `authors_count`, `internal_citations`, `external_citations`, `external_works_count`.
+
+### `GET /v1/workspaces/{workspace_id}/graph/neighbors`
+
+Query: `node_id` (required), `depth` (1–2), `limit` (1–200). Returns a subgraph slice for lazy UI merge.
+
+Implementation: [`science_graphrag/api/workspace_graph.py`](../../science_graphrag/api/workspace_graph.py), routes in [`science_graphrag/api/workspaces.py`](../../science_graphrag/api/workspaces.py). ADR: [`docs/adr/012-workspace-graph-projection.md`](../adr/012-workspace-graph-projection.md).
+
 ## 6) Benchmark console API (implemented, layer-1 + layer-2 + graph catalog)
 
 Назначение: страница **`/benchmark`** в `ui/` — просмотр кейсов и запуск прогонов **без обязательного CLI**, по идее как dev/QA-консоль в референсе [osint-gr](/home/roman/pyprojects/ML/Prod/osint-gr) (`frontend/src/pages/BenchmarkPage/` и связанные сервисы). Фикстуры: `tests/fixtures/benchmarks/layer1/` и `tests/fixtures/benchmarks/layer2/`; полный suite и decision gate остаются в [eval/README.md](../../eval/README.md) и [runbooks/benchmark-decision-gate.md](../runbooks/benchmark-decision-gate.md).
@@ -310,7 +342,7 @@ Response:
 
 - `Workspace`: `GET /v1/works`
 - `Reader`: `GET /v1/works/{work_id}` + `GET /v1/works/{work_id}/chunks`
-- `Graph`: `GET /v1/works/{work_id}/graph`
+- `Graph`: `GET /v1/works/{work_id}/graph` or workspace mode `GET /v1/workspaces/{workspace_id}/graph` (§5b)
 - `Ask`: `POST /v1/query`
 - `Evidence`: query citations + chunks lookup by `chunk_fingerprint`
 - `Benchmarks`: `/v1/benchmark/*` (см. §6)

@@ -2,7 +2,7 @@
  * Semantic + structural community ids for scholarly graphs (science-graphrag).
  * Unions nodes linked by authorship-related edge types so force clustering matches domain structure.
  *
- * @param {Array<{ id: string }>} nodes
+ * @param {Array<{ id: string, type?: string, workspaceMembership?: string }>} nodes
  * @param {Array<{ source: string, target: string, type?: string }>} links
  * @returns {Map<string, string>} nodeId -> communityId
  */
@@ -45,6 +45,12 @@ export function detectScienceHybridCommunities(nodes, links) {
 
   const communities = new Map();
   nodes.forEach((n) => {
+    const t = n.type == null ? "" : String(n.type);
+    const wsm = (n.workspaceMembership || "").toLowerCase();
+    if (t === "Work" && wsm === "internal") {
+      communities.set(n.id, "ws-internal");
+      return;
+    }
     const root = find(n.id);
     communities.set(n.id, `sem:${root}`);
   });

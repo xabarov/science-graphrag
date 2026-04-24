@@ -56,7 +56,7 @@ Precision / Recall по методам и датасетам, упомянуты
 **30 статей** по детекции объектов (реальные PDF → Markdown).  
 Измеряем: точность заголовка, F1 arXiv-ссылок в библиографии, соответствие числа ссылок эталону; F1 имён авторов (при непустом эталоне в отчёте).
 
-> Контракт nightly: профиль **`reporting_skip_f1_gates`** — пороги `min_authorship_names_f1` / `min_sample_arxiv_f1` из gold не режут контракт; `require_reference_count_ok=false` (дрейф числа ссылок при PDF→MD). Метрики F1 и `count_ok` в JSON всё равно считаются.
+> Контракт nightly: профиль **`reporting_skip_f1_gates`** (Wave M) — `min_authorship_names_f1=0.7`, `min_sample_arxiv_f1=0.85`, `reference_count_range_factor=0.3`, `min_abstract_prefix_containment=0.7`; `require_reference_count_ok=false`. Метрики F1 и `count_ok` в JSON по-прежнему считаются.
 
 | Статья | Заголовок ✓ | Авторы F1 | arXiv-ссылки F1 | Кол-во ссылок ✓ | Контракт ✓ |
 | --- | --- | --- | --- | --- | --- |

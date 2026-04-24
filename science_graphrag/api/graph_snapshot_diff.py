@@ -153,4 +153,25 @@ def compare_graph_expectations_to_snapshot(  # pylint: disable=too-many-locals
         if not missing and not extra and expected_arxiv:
             arxiv_notes.append("cited_arxiv_ids set matches expected_cited_arxiv_ids.")
 
+    ws_exp = exp.get("workspace")
+    ws_snap = snap.get("workspace_projection") if isinstance(snap.get("workspace_projection"), dict) else None
+    if isinstance(ws_exp, dict) and ws_snap:
+        for key, label in (
+            ("internal_work_nodes", "workspace_internal_work_nodes"),
+            ("internal_cites_edges", "workspace_internal_cites_edges"),
+        ):
+            min_c = _num(ws_exp.get(f"min_{key}"))
+            snap_v = _num(ws_snap.get(label))
+            if min_c is None or snap_v is None:
+                continue
+            ok = snap_v >= min_c
+            rows.append(
+                {
+                    "field": label,
+                    "snapshot": str(int(snap_v) if snap_v == int(snap_v) else snap_v),
+                    "expected": f"≥ {min_c}",
+                    "ok": ok,
+                },
+            )
+
     return {"rows": rows, "arxiv_notes": arxiv_notes}

@@ -25,6 +25,8 @@ export default {
   "workspace.header.paperCountMany": "{{count}} papers in this workspace.",
   "workspace.header.focusedPaper": "Focused paper:",
   "workspace.header.workspaceGraph": "Workspace graph",
+  "workspace.header.graphStatsLine":
+    "Graph: {{works}} works · {{authors}} authors · {{internal}} internal cites · {{external}} external cites",
 
   "workspace.upload.title": "Upload article",
   "workspace.upload.desc":

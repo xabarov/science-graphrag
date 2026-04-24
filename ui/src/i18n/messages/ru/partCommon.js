@@ -11,11 +11,11 @@ export default {
 
   "workIdHint.workspace.p1": "Откройте работу и переключайте вкладки, не теряя контекст.",
   "workIdHint.workspace.p2": "— это id проиндексированной статьи;",
-  "workIdHint.workspace.session": "сессия workspace",
-  "workIdHint.workspace.p3": "связывает Reader, Graph, Ask и Evidence с этой статьёй.",
+  "workIdHint.workspace.session": "сессия рабочей области",
+  "workIdHint.workspace.p3": "связывает «Чтение», «Граф», «Вопросы» и «Доказательства» с этой статьёй.",
   "workIdHint.corpus.prefix": "Просмотр проиндексированных работ",
   "workIdHint.corpus.rest":
-    "Каждая строка — work_id в корпусе; откройте работу в Workspace для полной сессии (reader, ask, evidence, graph).",
+    "Каждая строка — work_id в корпусе; откройте работу в рабочей области для полной сессии (чтение, вопросы, доказательства, граф).",
   "workIdHint.ask.rest":
     "ограничивает вопрос одной статьёй, если выбрать её из корпуса или вставить id. Оставьте пустым для поиска по всему корпусу.",
   "workIdHint.graph.p1": "Граф загружен для активного",

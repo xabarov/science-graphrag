@@ -22,7 +22,12 @@ import GraphDetailPanel from "./GraphDetailPanel.jsx";
 import GraphTypeLegend from "./GraphTypeLegend.jsx";
 import { GraphErrorAlert, GraphLoadingInline, GraphMissingWorkInline } from "./graphShellStates.jsx";
 import { fetchWorkGraphNormalized } from "./graphAdapter.js";
-import { getWorkspaceGraph } from "../../utils/workspaceStore.js";
+import {
+  getWorkspaceGraph,
+  getWorkspaceGraphNeighbors,
+  getWorkspaceGraphStats,
+} from "../../utils/workspaceStore.js";
+import WorkspaceGraphToolbar from "./WorkspaceGraphToolbar.jsx";
 import { capGraphForUi } from "./graphUiLimits.js";
 import { deriveInspectorDetail } from "./graphInspectorModel.js";
 import {
@@ -34,6 +39,7 @@ import {
 } from "./graphViewState.js";
 import { describeTraceabilityState } from "../work/traceabilityState.js";
 import { formatResearchApiError } from "../../services/researchApi.js";
+import { useI18n } from "../../i18n/I18nContext.jsx";
 import {
   clampGraphDetailColumnPx,
   GRAPH_DETAIL_COLUMN_PX_MAX,
@@ -66,6 +72,67 @@ const LS_STANDALONE_ALERTS = "graphStandaloneAlertsOpen";
 const LS_STANDALONE_DETAILS = "graphStandaloneDetailsVisible";
 const LS_GRAPH_CANVAS_LAYOUT_MODE = "graphCanvasLayoutMode";
 const LS_GRAPH_VIZ_MODE = "graphVizMode";
+
+/**
+ * @param {Record<string, unknown> | null} base
+ * @param {Record<string, unknown>} extra
+ */
+function mergeWorkspaceRawGraph(base, extra) {
+  if (!base || typeof base !== "object") return extra;
+  const nmap = new Map();
+  for (const n of /** @type {unknown[]} */ (base.nodes || [])) {
+    const o = n && typeof n === "object" ? /** @type {{ id?: string }} */ (n) : {};
+    const id = o.id == null ? "" : String(o.id);
+    if (id) nmap.set(id, n);
+  }
+  for (const n of /** @type {unknown[]} */ (extra.nodes || [])) {
+    const o = n && typeof n === "object" ? /** @type {{ id?: string }} */ (n) : {};
+    const id = o.id == null ? "" : String(o.id);
+    if (id) nmap.set(id, n);
+  }
+  const emap = new Map();
+  const ekey = (e) => {
+    const x = e && typeof e === "object" ? /** @type {{ id?: string, source?: string, type?: string, target?: string }} */ (e) : {};
+    return x.id || `${x.source}|${x.type}|${x.target}`;
+  };
+  for (const e of /** @type {unknown[]} */ (base.edges || [])) emap.set(ekey(e), e);
+  for (const e of /** @type {unknown[]} */ (extra.edges || [])) emap.set(ekey(e), e);
+  return {
+    ...base,
+    nodes: [...nmap.values()],
+    edges: [...emap.values()],
+    meta: { ...(typeof base.meta === "object" ? base.meta : {}), ...(typeof extra.meta === "object" ? extra.meta : {}) },
+  };
+}
+
+function readWsGraphOptsFromLs(wid) {
+  const id = String(wid || "").trim();
+  const fallback = {
+    mode: "inner_only",
+    depth: 1,
+    includeExternal: false,
+    nodeTypesCsv: "Work,Author",
+    externalMinInternalCiters: 0,
+  };
+  if (!id || typeof window === "undefined") return fallback;
+  try {
+    const modeRaw = window.localStorage.getItem(`workspaceGraphMode:${id}`) || "inner_only";
+    const mode = ["inner_only", "union_1hop", "semantic_layer", "full"].includes(modeRaw) ? modeRaw : "inner_only";
+    const d = parseInt(window.localStorage.getItem(`workspaceGraphDepth:${id}`) || "1", 10);
+    const depth = d === 2 ? 2 : 1;
+    const inc = window.localStorage.getItem(`workspaceGraphIncludeExternal:${id}`) === "1";
+    const nodeTypesCsv = window.localStorage.getItem(`workspaceGraphNodeTypes:${id}`) || "Work,Author";
+    return {
+      mode,
+      depth,
+      includeExternal: inc,
+      nodeTypesCsv,
+      externalMinInternalCiters: inc ? 2 : 0,
+    };
+  } catch {
+    return fallback;
+  }
+}
 
 function readCanvasLayoutMode() {
   if (typeof window === "undefined") return "force";
@@ -116,6 +183,7 @@ export default function GraphWorkspacePanel({
   traceContext = {},
   labMode = false,
 }) {
+  const { t } = useI18n();
   const standaloneMax = mode === "standalone";
 
   const [graph, setGraph] = useState(() => normalizeGraphPayload(null));
@@ -152,6 +220,36 @@ export default function GraphWorkspacePanel({
     if (focusLayout) return false;
     return readBoolLs(LS_STANDALONE_DETAILS, true);
   });
+
+  const wsId = String(workspaceId || "").trim();
+  const [wsGraphOpts, setWsGraphOpts] = useState(() => readWsGraphOptsFromLs(wsId));
+  const [wsGraphStats, setWsGraphStats] = useState(null);
+  const [workspaceGraphRaw, setWorkspaceGraphRaw] = useState(null);
+  const [expandNeighborsBusy, setExpandNeighborsBusy] = useState(false);
+
+  useEffect(() => {
+    setWsGraphOpts(readWsGraphOptsFromLs(wsId));
+    setWorkspaceGraphRaw(null);
+  }, [wsId]);
+
+  useEffect(() => {
+    if (!wsId) {
+      setWsGraphStats(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const s = await getWorkspaceGraphStats(wsId);
+        if (!cancelled) setWsGraphStats(s);
+      } catch {
+        if (!cancelled) setWsGraphStats(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [wsId]);
 
   const effectiveVizMode = standaloneMax ? "canvas" : vizMode;
   const effectiveCanvasLayout = standaloneMax ? "force" : canvasLayoutMode;
@@ -228,6 +326,7 @@ export default function GraphWorkspacePanel({
     const w = String(workId || "").trim();
     if (!ws && !w) {
       setGraph(normalizeGraphPayload(null));
+      setWorkspaceGraphRaw(null);
       setError(null);
       return;
     }
@@ -238,9 +337,19 @@ export default function GraphWorkspacePanel({
       try {
         let normalized;
         if (ws) {
-          const raw = await getWorkspaceGraph(ws, { neighborLimit: 200 });
+          const raw = await getWorkspaceGraph(ws, {
+            neighborLimit: 200,
+            mode: wsGraphOpts.mode,
+            depth: wsGraphOpts.depth,
+            includeExternal: wsGraphOpts.includeExternal,
+            nodeTypes: wsGraphOpts.nodeTypesCsv,
+            externalMinInternalCiters: wsGraphOpts.externalMinInternalCiters,
+          });
+          if (cancelled) return;
+          setWorkspaceGraphRaw(raw);
           normalized = normalizeGraphPayload(raw);
         } else {
+          setWorkspaceGraphRaw(null);
           normalized = await fetchWorkGraphNormalized(w);
         }
         if (cancelled) return;
@@ -249,6 +358,7 @@ export default function GraphWorkspacePanel({
         if (cancelled) return;
         setError(formatResearchApiError(err));
         setGraph(normalizeGraphPayload(null));
+        setWorkspaceGraphRaw(null);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -256,7 +366,7 @@ export default function GraphWorkspacePanel({
     return () => {
       cancelled = true;
     };
-  }, [workId, workspaceId]);
+  }, [workId, workspaceId, wsGraphOpts]);
 
   const resolvedSelectedEdgeId = useMemo(
     () => resolveSelectedEdgeId(graph, normalizeGraphEdgeId(selectedEdgeId)),
@@ -267,6 +377,23 @@ export default function GraphWorkspacePanel({
     if (resolvedSelectedEdgeId) return "";
     return resolveSelectedNodeId(graph, normalizeGraphNodeId(selectedNodeId));
   }, [graph, selectedNodeId, resolvedSelectedEdgeId]);
+
+  const handleExpandWorkspaceNeighbors = useCallback(async () => {
+    const wid = String(workspaceId || "").trim();
+    const nid = String(resolvedSelectedNodeId || "").trim();
+    if (!wid || !nid || !workspaceGraphRaw) return;
+    setExpandNeighborsBusy(true);
+    try {
+      const extra = await getWorkspaceGraphNeighbors(wid, nid, { limit: 80 });
+      const merged = mergeWorkspaceRawGraph(workspaceGraphRaw, extra);
+      setWorkspaceGraphRaw(merged);
+      setGraph(normalizeGraphPayload(merged));
+    } catch (err) {
+      setError(formatResearchApiError(err));
+    } finally {
+      setExpandNeighborsBusy(false);
+    }
+  }, [workspaceId, resolvedSelectedNodeId, workspaceGraphRaw]);
 
   const { displayGraph, capWarnings } = useMemo(
     () => capGraphForUi(graph, resolvedSelectedNodeId),
@@ -402,7 +529,7 @@ export default function GraphWorkspacePanel({
       ) : null}
 
       {!workId.trim() && !String(workspaceId || "").trim() ? (
-        <GraphMissingWorkInline message="Pick a work or open a workspace graph (workspace_id)." />
+        <GraphMissingWorkInline message={t("graph.workspacePanel.emptyHint")} />
       ) : null}
 
       {loading ? <GraphLoadingInline /> : null}
@@ -411,6 +538,14 @@ export default function GraphWorkspacePanel({
 
       {!loading && !error && (workId.trim() || String(workspaceId || "").trim()) ? (
         <>
+          {wsId ? (
+            <WorkspaceGraphToolbar
+              workspaceId={wsId}
+              stats={wsGraphStats}
+              value={wsGraphOpts}
+              onChange={setWsGraphOpts}
+            />
+          ) : null}
           {!standaloneMax && graph.warnings.length > 0 ? (
             <Alert severity="info" sx={{ mb: 2, fontSize: "0.8125rem", backgroundColor: "rgba(255,255,255,0.04)" }}>
               <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, mb: 0.5 }}>Graph data was normalized</Typography>
@@ -880,6 +1015,8 @@ export default function GraphWorkspacePanel({
                   graphMeta={displayGraph.meta}
                   onSelectNode={onSelectNode}
                   onSelectEdge={onSelectEdge}
+                  onExpandWorkspaceNeighbors={wsId ? handleExpandWorkspaceNeighbors : undefined}
+                  expandWorkspaceNeighborsBusy={expandNeighborsBusy}
                   mode={mode}
                 />
               </Box>

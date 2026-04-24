@@ -89,6 +89,26 @@ class Neo4jGraphStore:
             rec = session.run(q, arxiv_id=arxiv_id).single()
             return rec["id"] if rec else None
 
+    def get_work_external_keys(self, work_id: str) -> dict[str, str] | None:
+        """Return doi / arxiv_id / fingerprint for canonical-key checks (benchmarks, tools)."""
+
+        q = """
+        MATCH (w:Work {id: $id})
+        RETURN coalesce(w.doi, '') AS doi,
+               coalesce(w.arxiv_id, '') AS arxiv_id,
+               coalesce(w.fingerprint, '') AS fingerprint
+        LIMIT 1
+        """
+        with self._driver.session() as session:
+            rec = session.run(q, id=work_id).single()
+            if not rec:
+                return None
+            return {
+                "doi": str(rec["doi"] or ""),
+                "arxiv_id": str(rec["arxiv_id"] or ""),
+                "fingerprint": str(rec["fingerprint"] or ""),
+            }
+
     def work_exists(self, work_id: str) -> bool:
         q = "MATCH (w:Work {id: $id}) RETURN 1 AS ok LIMIT 1"
         with self._driver.session() as session:

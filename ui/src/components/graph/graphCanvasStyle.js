@@ -37,11 +37,30 @@ export function getScienceGraphLegendNodeChipSx(nodeType) {
   };
 }
 
+/**
+ * @param {unknown} nodeType
+ * @param {{ selected?: boolean, hovered?: boolean, workspaceMembership?: string }} [opts]
+ * @returns {{ fill: string, stroke: string, lineWidth: number }}
+ */
 export function getScienceGraphNodeStyle(nodeType, opts = {}) {
   const selected = Boolean(opts.selected);
   const hovered = Boolean(opts.hovered);
   const key = nodeType == null ? "" : String(nodeType).trim();
   const base = NODE_TYPE_STYLES[key] || DEFAULT_NODE_STYLE;
+  const ext = String(opts.workspaceMembership || "").toLowerCase() === "external";
+  const dim = (rgba) => {
+    const m = String(rgba).match(/rgba?\(([^)]+)\)/);
+    if (!m) return rgba;
+    const parts = m[1].split(",").map((s) => s.trim());
+    if (parts.length === 4) {
+      const a = Math.min(0.22, parseFloat(parts[3]) * 0.35 || 0.08);
+      return `rgba(${parts[0]}, ${parts[1]}, ${parts[2]}, ${a})`;
+    }
+    return rgba;
+  };
+  const fillBase = ext ? dim(base.fill) : base.fill;
+  const strokeBase = ext ? dim(base.stroke) : base.stroke;
+  const lwBase = ext ? 1 : opts.workspaceMembership === "internal" ? 1.5 : 1;
   if (selected) {
     return {
       fill: "rgba(99, 102, 241, 0.36)",
@@ -51,12 +70,12 @@ export function getScienceGraphNodeStyle(nodeType, opts = {}) {
   }
   if (hovered) {
     return {
-      fill: base.fill,
+      fill: fillBase,
       stroke: "rgba(255, 255, 255, 0.55)",
       lineWidth: 1.75,
     };
   }
-  return { fill: base.fill, stroke: base.stroke, lineWidth: 1 };
+  return { fill: fillBase, stroke: strokeBase, lineWidth: lwBase };
 }
 
 const EDGE_LABEL_MAX = 18;

@@ -48,7 +48,7 @@ export default function WorkspacesPage() {
   const [workspaces, setWorkspaces] = useState([]);
   const [wsLoading, setWsLoading] = useState(true);
   const [wsError, setWsError] = useState(null);
-  const [newWsName, setNewWsName] = useState("Research");
+  const [newWsName, setNewWsName] = useState(() => t("workspaces.defaultNewName"));
   const [targetWorkspaceId, setTargetWorkspaceId] = useState("");
   const [mergeKeep, setMergeKeep] = useState("");
   const [mergeDrop, setMergeDrop] = useState("");

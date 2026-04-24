@@ -107,6 +107,22 @@ Structural scoring harness for bibliography resolution keys; **not** a substitut
 - all_passed: **True**
 - failed_count: **0**
 
+### refs_graph (Neo4j resolver lane, Wave M)
+
+- **status**: missing artifact `eval/results/current-references-resolution-graph.json`
+
+## Concept / ResearchTopic family (advisory)
+
+Ontology v1.5 concept and topic extraction benchmarks are **not** part of the primary decision gate. See [ADR 013](../../docs/adr/013-concept-research-topic-ontology-v1-5.md) and [semantic-concept-topic-v1.md](../../docs/specs/extraction/semantic-concept-topic-v1.md).
+
+- **role**: `advisory`
+
+### concept_topic_mini (harness)
+
+- artifact: `eval/results/current-concept-topic-mini.json`
+- all_passed: **True**
+- failed_count: **0**
+
 ## Baseline deltas (vs stored baseline JSON)
 
 ```json

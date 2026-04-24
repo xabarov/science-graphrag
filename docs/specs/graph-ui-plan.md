@@ -225,6 +225,21 @@ flowchart TB
 - [`frontend-ui-api-contracts-v1.md`](./frontend-ui-api-contracts-v1.md): paragraph under UI route `/graph` for localStorage split width (no server contract).
 - [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx): gutter pointer handling uses capture + cleanup on body styles.
 
+## Workspace graph v2 (Wave J)
+
+**Endpoints:** `GET /v1/workspaces/{id}/graph`, `/graph/stats`, `/graph/neighbors` — see [`frontend-ui-api-contracts-v1.md`](./frontend-ui-api-contracts-v1.md) §5b and ADR [`docs/adr/012-workspace-graph-projection.md`](../adr/012-workspace-graph-projection.md).
+
+**UI:**
+
+- [`WorkspaceGraphToolbar.jsx`](../../ui/src/components/graph/WorkspaceGraphToolbar.jsx) — `mode`, `depth`, `include external`, multi-select node types, stats line; per-workspace persistence (`workspaceGraphMode:*`, `workspaceGraphDepth:*`, …).
+- [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx) — wires toolbar + `getWorkspaceGraph` / stats / neighbors merge for lazy **Expand external**.
+- **Palette:** `workspace_membership` (`internal` | `external`) in [`graphCanvasStyle.js`](../../ui/src/components/graph/graphCanvasStyle.js) + dashed edges when an endpoint is external.
+- **Force layout:** internal works join a `ws-internal` cluster hint in [`scienceHybridCommunities.js`](../../ui/src/components/graph/physics/scienceHybridCommunities.js).
+
+**Lazy expand:** selecting a work with external cite count uses `/graph/neighbors` to merge more nodes without reloading the full workspace graph.
+
+**GDS:** optional server path for large `depth=2` projections when `SCIENCE_GRAPHRAG_GDS_ENABLED` and the GDS plugin respond to `gds.version()`; otherwise Cypher-only with caps.
+
 ## Phased delivery (mirror master plan)
 
 1. **4.1** — Document and test edge cases on normalized model; align with this spec.

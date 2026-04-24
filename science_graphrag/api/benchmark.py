@@ -13,7 +13,11 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
-from eval.bench_common import discover_layer1_case_dirs, discover_layer2_case_dirs
+from eval.bench_common import (
+    discover_graph_v1_case_dirs,
+    discover_layer1_case_dirs,
+    discover_layer2_case_dirs,
+)
 from eval.report_compare import (
     compare_reports,
     compare_result_to_markdown,
@@ -50,6 +54,23 @@ def _fixtures_root_layer2() -> Path:
     return _repo_root() / "tests" / "fixtures" / "benchmarks" / "layer2"
 
 
+def _fixtures_root_graph_v1() -> Path:
+    """Graph-v1 benchmark cases (workspace projection expectations, etc.)."""
+    return _repo_root() / "tests" / "fixtures" / "benchmarks" / "graph_v1"
+
+
+def _resolve_graph_benchmark_fixture_dir(case_id: str) -> Path | None:
+    """Layer-1 dir if present, else graph_v1 case directory (for catalog + detail)."""
+
+    layer1 = _fixtures_root_layer1() / case_id
+    if layer1.is_dir():
+        return layer1
+    gv1 = _fixtures_root_graph_v1() / case_id
+    if gv1.is_dir():
+        return gv1
+    return None
+
+
 def _teacher_gold_root_layer1() -> Path:
     return _repo_root() / "eval" / "teacher_gold" / "layer1"
 
@@ -75,6 +96,21 @@ def _load_case_tiers(root: Path) -> dict[str, list[str]]:
     out: dict[str, list[str]] = {}
     for k, v in raw.items():
         out[str(k)] = [str(x) for x in (v or [])]
+    return out
+
+
+def _merge_case_tier_dicts(*maps: dict[str, list[str]]) -> dict[str, list[str]]:
+    """Merge tier manifests (e.g. layer1 + graph_v1) without duplicate case_ids per tier."""
+    out: dict[str, list[str]] = {}
+    for m in maps:
+        for tier, ids in m.items():
+            bucket = out.setdefault(str(tier), [])
+            seen = set(bucket)
+            for cid in ids:
+                c = str(cid)
+                if c not in seen:
+                    bucket.append(c)
+                    seen.add(c)
     return out
 
 
@@ -117,14 +153,19 @@ def _build_article_sections(article_md: str) -> list[dict[str, Any]]:
     return sections
 
 
-def _resolve_layer1_gold_path(case_id: str, gold_source: str | None) -> Path:
-    fixture_dir = _fixtures_root_layer1() / case_id
+def _resolve_layer1_gold_path(
+    case_id: str,
+    gold_source: str | None,
+    *,
+    fixture_dir: Path | None = None,
+) -> Path:
+    base = fixture_dir or (_fixtures_root_layer1() / case_id)
     requested_source = (gold_source or "curated_gold").strip().lower()
     if requested_source == "teacher_gold":
         teacher_path = _teacher_gold_root_layer1() / case_id / "gold_teacher.json"
         if teacher_path.is_file():
             return teacher_path
-    return fixture_dir / "gold.json"
+    return base / "gold.json"
 
 
 def _load_case_bundle(
@@ -160,13 +201,12 @@ def _load_case_bundle(
             },
         }
 
-    root = _fixtures_root_layer1()
-    tiers = _load_case_tiers(root)
-    fixture_dir = root / case_id
-    if not fixture_dir.is_dir():
+    fixture_dir = _resolve_graph_benchmark_fixture_dir(case_id)
+    if fixture_dir is None:
         raise HTTPException(status_code=404, detail="case_not_found")
+    tiers = _load_case_tiers(fixture_dir.parent)
     article_path = fixture_dir / "article.md"
-    gold_path = _resolve_layer1_gold_path(case_id, gold_source)
+    gold_path = _resolve_layer1_gold_path(case_id, gold_source, fixture_dir=fixture_dir)
     if not article_path.is_file() or not gold_path.is_file():
         raise HTTPException(status_code=404, detail="case_incomplete")
     article_md = article_path.read_text(encoding="utf-8")
@@ -234,8 +274,8 @@ def _collect_case_artifacts(case_id: str, family: str) -> dict[str, Any]:
             "last_run_hints": task_store.find_last_run_hint_for_case(case_id, "layer2"),
         }
 
-    fixture_dir = _fixtures_root_layer1() / case_id
-    if not fixture_dir.is_dir():
+    fixture_dir = _resolve_graph_benchmark_fixture_dir(case_id)
+    if fixture_dir is None:
         raise HTTPException(status_code=404, detail="case_not_found")
     curated = fixture_dir / "gold.json"
     teacher = _teacher_gold_root_layer1() / case_id / "gold_teacher.json"
@@ -577,10 +617,21 @@ def get_benchmark_cases_list(  # pylint: disable=too-many-locals
         fam_label = "layer2"
     elif fam == "graph":
         root = _fixtures_root_layer1()
-        tiers = _load_case_tiers(root)
-        case_dirs = [
+        root_gv1 = _fixtures_root_graph_v1()
+        tiers = _merge_case_tier_dicts(_load_case_tiers(root), _load_case_tiers(root_gv1))
+        layer1_graph = [
             p for p in discover_layer1_case_dirs(root, tier=tier) if _gold_has_graph_expectations(p)
         ]
+        gv1_graph = [
+            p for p in discover_graph_v1_case_dirs(root_gv1, tier=tier) if _gold_has_graph_expectations(p)
+        ]
+        seen_names: set[str] = set()
+        case_dirs = []
+        for p in sorted(layer1_graph + gv1_graph, key=lambda x: x.name):
+            if p.name in seen_names:
+                continue
+            seen_names.add(p.name)
+            case_dirs.append(p)
         fam_label = "graph"
     else:
         root = _fixtures_root_layer1()

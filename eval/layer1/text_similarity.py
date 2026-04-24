@@ -14,6 +14,23 @@ def _tokens(s: str) -> list[str]:
     return [x for x in re.split(r"\s+", t) if x]
 
 
+def abstract_prefix_token_containment(prefix: str, full_text: str) -> float:
+    """
+    Fraction of prefix tokens that appear in full_text (multiset intersection / |prefix|).
+
+    Robust to PDF→MD drift vs strict prefix substring or ROUGE-L on long abstracts.
+    """
+
+    pt = _tokens(prefix)
+    if not pt:
+        return 1.0
+    ft = Counter(_tokens(full_text))
+    if not ft:
+        return 0.0
+    overlap = sum((Counter(pt) & ft).values())
+    return overlap / len(pt)
+
+
 def multiset_token_f1(reference: str, hypothesis: str) -> float:
     """Micro-F1 over token counts (order-free)."""
 

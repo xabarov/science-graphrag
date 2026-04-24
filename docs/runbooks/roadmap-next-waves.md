@@ -107,14 +107,14 @@
 
 **Источник анализа:** [docs/analysis/workspace-experience-gap-2026-04-24.md §6 Wave I](../analysis/workspace-experience-gap-2026-04-24.md#wave-i--workspace-context-everywhere-ui--thin-backend).
 
-1. `WorkspaceContextProvider` + `WorkspaceContextChip` (TopBar), Drawer rework: `Workspace` → последний open, `Graph/Ask/Evidence` несут `workspace_id`.
-2. `POST /v1/query` принимает опциональный `workspace_id` (фильтрует Qdrant по членам workspace). Smoke-тест.
+1. `WorkspaceContextProvider` + `WorkspaceContextChip` (TopBar), Drawer rework: `Workspace` → последний open, `Graph/Ask/Evidence` несут `workspace_id`; **Reader** в Drawer при наличии `work_id` (URL или `lastReaderWorkId` / `getLastWorkId()`).
+2. `POST /v1/query` принимает опциональный `workspace_id` (фильтрует Qdrant по членам workspace). Smoke: неизвестный workspace + **позитивный** сценарий с фильтром Qdrant и `retrieval_trace.context.workspace_id` (см. `tests/test_api_smoke.py`).
 3. Empty states новых страниц: «Open last workspace» fallback из `localStorage`.
 4. Предусловие: закрыть `[OPEN]` строки в [backlog/refactor-frontend.md](../backlog/refactor-frontend.md) (split `WorkspacePage.jsx`, `WorkspacesPage.jsx`).
 
-**Exit:** manual user-journey «Workspace → sidebar Ask → sidebar Graph → sidebar Evidence → обратно» — `workspace_id` не теряется ни на одном шаге; smoke зелёный.
+**Exit:** manual user-journey «Workspace → sidebar Ask → sidebar Graph → sidebar Evidence → обратно» — `workspace_id` не теряется ни на одном шаге; smoke зелёный; Reader доступен из Drawer при выбранной работе.
 
-**Статус реализации (2026-04-24):** код и доки обновлены под этот exit (см. [`WorkspaceContext.jsx`](../../ui/src/components/layout/WorkspaceContext.jsx), [`WorkspaceContextChip.jsx`](../../ui/src/components/layout/WorkspaceContextChip.jsx), [`Drawer.jsx`](../../ui/src/components/layout/DashboardLayout/Drawer.jsx), [`workspaceStore.js`](../../ui/src/utils/workspaceStore.js) `appendWorkspaceQuery` / `getLastWorkspaceHref`, [`main.py`](../../science_graphrag/api/main.py) `workspace_id` на `POST /v1/query`, [`retrieval.py`](../../science_graphrag/api/retrieval.py), smoke `test_post_query_accepts_workspace_id_unknown_workspace` в [`tests/test_api_smoke.py`](../../tests/test_api_smoke.py); спеки [`shell-layout.md`](../specs/shell-layout.md), [`route-map.md`](../specs/route-map.md), [`frontend-ui-api-contracts-v1.md`](../specs/frontend-ui-api-contracts-v1.md)).
+**Статус реализации (2026-04-24):** код и доки обновлены под этот exit (см. [`WorkspaceContext.jsx`](../../ui/src/components/layout/WorkspaceContext.jsx), [`WorkspaceContextChip.jsx`](../../ui/src/components/layout/WorkspaceContextChip.jsx), [`Drawer.jsx`](../../ui/src/components/layout/DashboardLayout/Drawer.jsx), [`workspaceStore.js`](../../ui/src/utils/workspaceStore.js) `appendWorkspaceQuery` / `getLastWorkspaceHref`, [`main.py`](../../science_graphrag/api/main.py) `workspace_id` на `POST /v1/query`, [`retrieval.py`](../../science_graphrag/api/retrieval.py), smoke `test_post_query_accepts_workspace_id_unknown_workspace` и **`test_post_query_with_workspace_id_filters_qdrant`** в [`tests/test_api_smoke.py`](../../tests/test_api_smoke.py); спеки [`shell-layout.md`](../specs/shell-layout.md), [`route-map.md`](../specs/route-map.md), [`frontend-ui-api-contracts-v1.md`](../specs/frontend-ui-api-contracts-v1.md) (в т.ч. `retrieval_trace.context.workspace_id`).
 
 ---
 
@@ -127,9 +127,17 @@
 1. `GET /v1/workspaces/{id}/graph` v2: `mode`, `depth`, `include_external`, `node_types`; payload отмечает `workspace_membership = internal | external`.
 2. `GET /v1/workspaces/{id}/graph/stats` для summary в WorkspacePage.
 3. UI: `WorkspaceGraphToolbar`, цветовая стратификация internal vs external, force-mode community hint по `Workspace.CONTAINS`.
-4. Графовый бенчмарк: фикстура «два work'а с пересекающимся CITES».
+4. Графовый бенчмарк: фикстура «два work'а с пересекающимся CITES» (`tests/fixtures/benchmarks/graph_v1/workspace_cites_minimal/`) + каталог `family=graph` объединяет layer1-кейсы с `graph_expectations` и graph_v1.
 
-**Exit:** ingest 5+ статей с overlapping references → workspace graph показывает связную citation chain; benchmark fixture зелёный.
+**Exit (Wave J):**
+
+- [ ] `GET /v1/workspaces/{id}/graph` v2 с `workspace_membership`, `inner_only` по умолчанию; `/graph/stats`, `/graph/neighbors`.
+- [ ] UI: toolbar + internal/external палитра + lazy expand; счётчики stats в Workspace header/toolbar.
+- [ ] Smoke/API-тесты на graph + stats; при необходимости Neo4j mock / integration.
+- [ ] `npm run lint` + `npm run test` (ui), `pytest` (backend) зелёные.
+- [ ] GDS: только при флаге + порогах; иначе Cypher fallback (`meta.gds_used` / `gds_runtime_available`).
+
+**Статус реализации (2026-04-24):** backend [`workspace_graph.py`](../../science_graphrag/api/workspace_graph.py) + роуты в [`workspaces.py`](../../science_graphrag/api/workspaces.py); UI toolbar/panel/store; доки §5b contracts + ADR 012 + этот runbook; фикстура graph_v1; опциональный GDS-путь для крупных workspace при `depth=2`.
 
 ---
 
