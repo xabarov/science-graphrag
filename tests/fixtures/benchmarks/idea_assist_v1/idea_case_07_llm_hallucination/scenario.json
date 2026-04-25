@@ -1,0 +1,6 @@
+{
+  "workspace_id": "ws_idea_07",
+  "seed_topic": "hallucination mitigation in retrieval-augmented assistants",
+  "mode": "contradictions",
+  "notes": "Find contradiction candidates around faithfulness and answer quality."
+}

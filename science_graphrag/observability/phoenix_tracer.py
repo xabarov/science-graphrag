@@ -22,7 +22,9 @@ from phoenix.otel import register
 _PHOENIX_TRACE_SCOPE_FULL = "full"
 _PHOENIX_TRACE_SCOPE_EXTRACTION_LLM = "extraction_llm"
 
-_EXTRACTION_LLM_CHAIN_NAMES = frozenset({"ingest_document", "metadata_and_references_extraction"})
+_EXTRACTION_LLM_CHAIN_NAMES = frozenset(
+    {"ingest_document", "ingest.extract_meta.metadata_and_refs"}
+)
 _EXTRACTION_LLM_MANUAL_LLM_NAMES = frozenset(
     {
         "llm.metadata_extraction",
@@ -39,6 +41,7 @@ class SpanKindOI:
     CHAIN = "CHAIN"
     RETRIEVER = "RETRIEVER"
     TOOL = "TOOL"
+    EMBEDDING = "EMBEDDING"
 
 
 class OpenInferenceAttributes:
@@ -190,6 +193,21 @@ def llm_span(name: str, attributes: dict[str, Any] | None = None):
         return
     with get_tracer().start_as_current_span(name, kind=SpanKind.CLIENT) as span:
         span.set_attribute(OpenInferenceAttributes.SPAN_KIND, SpanKindOI.LLM)
+        if attributes:
+            set_span_attributes(attributes)
+        try:
+            yield span
+        except Exception as exc:
+            span.set_status(Status(StatusCode.ERROR, str(exc)))
+            span.record_exception(exc)
+            raise
+
+
+@contextmanager
+def embeddings_span(name: str, attributes: dict[str, Any] | None = None):
+    """EMBEDDING-style span for vectorization calls."""
+    with get_tracer().start_as_current_span(name, kind=SpanKind.CLIENT) as span:
+        span.set_attribute(OpenInferenceAttributes.SPAN_KIND, SpanKindOI.EMBEDDING)
         if attributes:
             set_span_attributes(attributes)
         try:

@@ -1,0 +1,12 @@
+{
+  "idea_assist_mini": [
+    "idea_case_01_contrastive_learning",
+    "idea_case_02_transformer_efficiency",
+    "idea_case_03_dedup_methods",
+    "idea_case_04_dataset_bias",
+    "idea_case_05_few_shot_segmentation",
+    "idea_case_06_graph_neural_drug",
+    "idea_case_07_llm_hallucination",
+    "idea_case_08_cross_modal_retrieval"
+  ]
+}

@@ -4,7 +4,7 @@ import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
 
 import { getScienceGraphLegendNodeChipSx } from "./graphCanvasStyle.js";
-import { collectGraphTypeLegend } from "./graphTypeLegend.js";
+import { collectGraphTypeLegend, collectGraphTypeLegendByKind } from "./graphTypeLegend.js";
 
 /**
  * Compact legend of node and edge `type` values in the current display graph.
@@ -12,6 +12,7 @@ import { collectGraphTypeLegend } from "./graphTypeLegend.js";
  */
 export default function GraphTypeLegend({ graph }) {
   const { nodeTypes, edgeTypes } = collectGraphTypeLegend(graph);
+  const groupedNodeKinds = collectGraphTypeLegendByKind(graph);
   if (nodeTypes.length === 0 && edgeTypes.length === 0) {
     return null;
   }
@@ -47,13 +48,20 @@ export default function GraphTypeLegend({ graph }) {
         {nodeTypes.length > 0 ? (
           <>
             <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", mr: 0.25 }}>Nodes</Typography>
-            {nodeTypes.map((t) => (
-              <Chip
-                key={`n-${t}`}
-                label={t}
-                size="small"
-                sx={getScienceGraphLegendNodeChipSx(t)}
-              />
+            {Object.entries(groupedNodeKinds).map(([group, kinds]) => (
+              <React.Fragment key={`grp-${group}`}>
+                <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.45)", mr: 0.25 }}>
+                  {group}
+                </Typography>
+                {kinds.map((t) => (
+                  <Chip
+                    key={`n-${group}-${t}`}
+                    label={t}
+                    size="small"
+                    sx={getScienceGraphLegendNodeChipSx(t)}
+                  />
+                ))}
+              </React.Fragment>
             ))}
           </>
         ) : null}

@@ -48,6 +48,20 @@ def test_get_workspace_graph_v2_smoke(monkeypatch: Any) -> None:
     assert body["nodes"][0]["workspace_membership"] == "internal"
 
 
+def test_get_workspace_graph_passes_prioritize(monkeypatch: Any) -> None:
+    captured: dict[str, Any] = {}
+
+    def _fake_project(*_a: Any, **_kw: Any) -> dict[str, Any]:
+        captured.update(_kw)
+        return {"work_id": "", "nodes": [], "edges": [], "meta": {"graph_scope": "workspace_v2"}}
+
+    monkeypatch.setattr(workspaces_mod, "project_workspace_graph", _fake_project)
+    client = _client()
+    res = client.get("/v1/workspaces/ws-x/graph?prioritize=Method,Dataset")
+    assert res.status_code == 200
+    assert captured["prioritize"] == "Method,Dataset"
+
+
 def test_get_workspace_graph_stats_smoke(monkeypatch: Any) -> None:
     monkeypatch.setattr(
         workspaces_mod,

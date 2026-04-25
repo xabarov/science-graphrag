@@ -326,7 +326,11 @@ def test_get_ingest_job_returns_stages(monkeypatch: Any) -> None:
             },
         ],
     )
-    monkeypatch.setattr(ingest_api._REGISTRY, "get", lambda _job_id: job)
+    monkeypatch.setattr(
+        ingest_api,
+        "_registry",
+        lambda *_args, **_kwargs: type("R", (), {"get": lambda *_a, **_k: job})(),
+    )
 
     client = _client()
     res = client.get("/v1/ingest/jobs/11111111-1111-1111-1111-111111111111")
@@ -335,6 +339,84 @@ def test_get_ingest_job_returns_stages(monkeypatch: Any) -> None:
     assert isinstance(body.get("stages"), list)
     assert body["stages"][0]["name"] == "parse_pdf"
     assert body["stages"][1]["metrics"]["references"] == 4
+
+
+def test_ingest_job_events_stream_yields_stage_events(monkeypatch: Any) -> None:
+    from science_graphrag.api import ingest_jobs as ingest_api
+
+    job = ingest_api.IngestJobRecord(
+        job_id="22222222-2222-2222-2222-222222222222",
+        workspace_id="ws1",
+        filename="paper.pdf",
+        status="running",
+        message="Running pipeline",
+        stages=[],
+    )
+    monkeypatch.setattr(
+        ingest_api, "_registry", lambda *_args, **_kwargs: type("R", (), {"get": lambda *_a: job})()
+    )
+
+    monkeypatch.setattr(
+        ingest_api.BUS,
+        "replay_from",
+        lambda _job_id, _last_seq: [
+            (
+                3,
+                {
+                    "job_id": job.job_id,
+                    "kind": "stage_started",
+                    "payload": {"job_id": job.job_id, "stage": "parse_pdf", "status": "running"},
+                },
+            )
+        ],
+    )
+
+    async def _subscribe(_job_id: str):
+        yield (
+            4,
+            {
+                "job_id": job.job_id,
+                "kind": "stage_finished",
+                "payload": {"job_id": job.job_id, "stage": "parse_pdf", "status": "completed"},
+            },
+        )
+        yield (
+            5,
+            {
+                "job_id": job.job_id,
+                "kind": "terminal",
+                "payload": {"job_id": job.job_id, "status": "completed"},
+            },
+        )
+
+    monkeypatch.setattr(ingest_api.BUS, "subscribe", _subscribe)
+
+    client = _client()
+    with client.stream(
+        "GET",
+        f"/v1/ingest/jobs/{job.job_id}/events",
+        headers={"Last-Event-ID": "2"},
+    ) as response:
+        assert response.status_code == 200
+        body = "".join(chunk for chunk in response.iter_text())
+    assert "event: snapshot" in body
+    assert "event: stage_started" in body
+    assert "event: stage_finished" in body
+    assert "event: terminal" in body
+
+
+def test_ingest_job_events_stream_404_for_unknown_job(monkeypatch: Any) -> None:
+    from science_graphrag.api import ingest_jobs as ingest_api
+
+    monkeypatch_registry = type("R", (), {"get": lambda *_a, **_k: None})
+    monkeypatch.setattr(
+        ingest_api,
+        "_registry",
+        lambda *_args, **_kwargs: monkeypatch_registry(),
+    )
+    client = _client()
+    res = client.get("/v1/ingest/jobs/00000000-0000-0000-0000-000000000000/events")
+    assert res.status_code == 404
 
 
 def test_works_list_endpoint_smoke(monkeypatch: Any) -> None:

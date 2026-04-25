@@ -253,6 +253,10 @@ class Settings(BaseSettings):
         default=False,
         description="Enable Wave R agent endpoint (/v1/agent/query).",
     )
+    hypothesis_enabled: bool = Field(
+        default=False,
+        description="Enable Wave S idea-assist endpoint (/v1/agent/idea-assist).",
+    )
     agent_max_tool_calls: int = Field(default=8, ge=1, le=30)
     agent_step_timeout_seconds: float = Field(default=30.0, ge=1.0, le=180.0)
 

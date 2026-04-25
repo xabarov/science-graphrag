@@ -519,7 +519,7 @@ def extract_stages_llm_first(
             {"stage": "all", "reason": "no_api_key", "detail": "extraction_llm_api_key unset"},
         )
         fb_attrs = {"reason": "no_api_key", "document_id": document_id}
-        with chain_span("fallback.all_heuristic", fb_attrs):
+        with chain_span("ingest.extract_meta.fallback.all_heuristic", fb_attrs):
             draft = extract_metadata(normalized_markdown)
             authorships = extract_authorships(normalized_markdown)
             references = extract_references(normalized_markdown)
@@ -531,7 +531,7 @@ def extract_stages_llm_first(
             {"stage": "all", "reason": "disabled", "detail": "extraction_llm_enabled=false"},
         )
         fb_attrs = {"reason": "disabled", "document_id": document_id}
-        with chain_span("fallback.all_heuristic", fb_attrs):
+        with chain_span("ingest.extract_meta.fallback.all_heuristic", fb_attrs):
             draft = extract_metadata(normalized_markdown)
             authorships = extract_authorships(normalized_markdown)
             references = extract_references(normalized_markdown)
@@ -612,7 +612,7 @@ def extract_stages_llm_first(
             draft = None
 
     if draft is None:
-        with chain_span("fallback.metadata", {"document_id": document_id}):
+        with chain_span("ingest.extract_meta.fallback.metadata", {"document_id": document_id}):
             draft = extract_metadata(normalized_markdown)
         diag.metadata_source = "heuristic"
     else:
@@ -656,7 +656,7 @@ def extract_stages_llm_first(
 
     heuristic_authorships: list[AuthorshipDraft] | None = None
     if len(authorships) < 1:
-        with chain_span("fallback.authorships", {"document_id": document_id}):
+        with chain_span("ingest.extract_meta.fallback.authorships", {"document_id": document_id}):
             authorships = extract_authorships(normalized_markdown)
         diag.authorships_source = "heuristic"
         if aparsed is not None and not aerr:
@@ -668,7 +668,10 @@ def extract_stages_llm_first(
                 },
             )
     else:
-        with chain_span("fallback.authorships_probe", {"document_id": document_id}):
+        with chain_span(
+            "ingest.extract_meta.fallback.authorships_probe",
+            {"document_id": document_id},
+        ):
             heuristic_authorships = extract_authorships(normalized_markdown)
         if _llm_authorships_need_fallback(authorships, heuristic_authorships):
             authorships = heuristic_authorships

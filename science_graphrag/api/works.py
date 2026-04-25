@@ -9,7 +9,13 @@ from typing import Any
 from neo4j import Session as Neo4jSession
 from sqlalchemy import select
 
-from science_graphrag.api.graph_display import compute_node_display, enrich_authorship_nodes
+from science_graphrag.api.graph_display import (
+    compute_node_display,
+    edge_display_type,
+    enrich_authorship_nodes,
+    parse_priority_csv,
+    resolve_node_kind,
+)
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
 from science_graphrag.storage.blobs import BlobStore
@@ -50,11 +56,6 @@ def _stable_edge_id(source: str, rel_type: str, target: str, seq: int) -> str:
     return "e_" + hashlib.sha256(payload).hexdigest()[:22]
 
 
-def _display_type(rel_type: str) -> str:
-    t = (rel_type or "").strip()
-    return t.replace("_", " ") if t else "related"
-
-
 def _neighbor_subtitle_and_properties(ntype: str, rec: Any) -> tuple[str, dict[str, Any]]:
     """Human subtitle line + small property bag for inspector UI."""
     props: dict[str, Any] = {}
@@ -76,6 +77,21 @@ def _neighbor_subtitle_and_properties(ntype: str, rec: Any) -> tuple[str, dict[s
         s = str(nvenue).strip()
         if s:
             props["venue"] = s[:200]
+    ncountry = rec.get("n_country")
+    if ncountry:
+        s = str(ncountry).strip()
+        if s:
+            props["country"] = s[:120]
+    nvenue_type = rec.get("n_venue_type")
+    if nvenue_type:
+        s = str(nvenue_type).strip()
+        if s:
+            props["venue_type"] = s[:120]
+    nissn = rec.get("n_issn")
+    if nissn:
+        s = str(nissn).strip()
+        if s:
+            props["issn"] = s[:64]
 
     rendered = compute_node_display(
         ntype,
@@ -135,7 +151,7 @@ def _append_neighbor_edge(
                 "label": disp,
                 "display_label": disp,
                 "subtitle": subtitle,
-                "node_kind": ntype,
+                "node_kind": resolve_node_kind(ntype),
                 "properties": props,
             },
         )
@@ -165,7 +181,7 @@ def _enrich_edges_with_display(
         sl = str(src_n.get("display_label") or src_n.get("label") or src_id)
         tl = str(tgt_n.get("display_label") or tgt_n.get("label") or tgt_id)
         rt = str(edge.get("type") or "")
-        disp_t = _display_type(rt)
+        disp_t = edge_display_type(rt)
         edge["id"] = str(edge.get("id") or "").strip() or _stable_edge_id(src_id, rt, tgt_id, seq)
         edge["display_type"] = disp_t
         edge["source_label"] = sl
@@ -182,12 +198,63 @@ def _enrich_edges_with_display(
 MAX_WORK_GRAPH_NEIGHBORS = 300
 
 
+def _work_neighbors_rows(
+    session: Neo4jSession,
+    *,
+    work_id: str,
+    lim: int,
+    priority_types: tuple[str, ...],
+    prefer_priority: bool,
+    exclude_ids: list[str] | None = None,
+) -> list[Any]:
+    q = """
+        MATCH (w:Work {id: $id})-[r]-(n)
+        WHERE ($prefer_priority AND any(l IN labels(n) WHERE l IN $priority_types))
+           OR ((NOT $prefer_priority) AND NOT any(l IN labels(n) WHERE l IN $priority_types))
+        """
+    if exclude_ids:
+        q += " AND NOT coalesce(n.id, toString(elementId(n))) IN $exclude_ids "
+    q += """
+        OPTIONAL MATCH (n)-[:OF_AUTHOR]->(auth:Author)
+        OPTIONAL MATCH (n)-[:AFFILIATED_WITH]->(inst:Institution)
+        RETURN coalesce(n.id, toString(elementId(n))) AS nid,
+               labels(n) AS labs,
+               type(r) AS rt,
+               coalesce(n.title, n.name, n.full_name, '') AS nlabel,
+               coalesce(startNode(r).id, toString(elementId(startNode(r)))) AS src_id,
+               coalesce(endNode(r).id, toString(elementId(endNode(r)))) AS tgt_id,
+               n.publication_year AS n_pub_year,
+               coalesce(n.doi, '') AS n_doi,
+               coalesce(n.arxiv_id, '') AS n_arxiv,
+               coalesce(n.venue_name, '') AS n_venue,
+               coalesce(n.country, '') AS n_country,
+               coalesce(n.venue_type, '') AS n_venue_type,
+               coalesce(n.issn, '') AS n_issn,
+               n.author_position AS n_ash_pos,
+               coalesce(n.raw_affiliation, '') AS n_ash_aff,
+               n.is_corresponding AS n_ash_corr,
+               coalesce(auth.full_name, '') AS n_ash_author,
+               coalesce(inst.name, '') AS n_ash_inst
+        LIMIT $lim
+    """
+    params: dict[str, Any] = {
+        "id": work_id,
+        "lim": lim,
+        "priority_types": list(priority_types),
+        "prefer_priority": bool(prefer_priority),
+    }
+    if exclude_ids:
+        params["exclude_ids"] = exclude_ids
+    return list(session.run(q, **params))
+
+
 def _work_graph_neighborhood_payload(
     session: Neo4jSession,
     work_id: str,
     *,
     neighbor_limit: int = 200,
     depth: int = 1,
+    prioritize: str | None = None,
 ) -> dict[str, Any] | None:
     sem = _has_semantic_layer_cypher()
     row = session.run(
@@ -236,7 +303,7 @@ def _work_graph_neighborhood_payload(
             "label": center_label,
             "display_label": center_label,
             "subtitle": center_sub,
-            "node_kind": "Work",
+            "node_kind": resolve_node_kind("Work"),
             "properties": center_props,
             "distance": 0,
         },
@@ -263,32 +330,34 @@ def _work_graph_neighborhood_payload(
         hop2_lim = max(1, cap - hop1_lim)
         effective_depth = 2
 
-    for rec in session.run(
-        """
-        MATCH (w:Work {id: $id})-[r]-(n)
-        OPTIONAL MATCH (n)-[:OF_AUTHOR]->(auth:Author)
-        OPTIONAL MATCH (n)-[:AFFILIATED_WITH]->(inst:Institution)
-        RETURN coalesce(n.id, toString(elementId(n))) AS nid,
-               labels(n) AS labs,
-               type(r) AS rt,
-               coalesce(n.title, n.name, n.full_name, '') AS nlabel,
-               coalesce(startNode(r).id, toString(elementId(startNode(r)))) AS src_id,
-               coalesce(endNode(r).id, toString(elementId(endNode(r)))) AS tgt_id,
-               n.publication_year AS n_pub_year,
-               coalesce(n.doi, '') AS n_doi,
-               coalesce(n.arxiv_id, '') AS n_arxiv,
-               coalesce(n.venue_name, '') AS n_venue,
-               n.author_position AS n_ash_pos,
-               coalesce(n.raw_affiliation, '') AS n_ash_aff,
-               n.is_corresponding AS n_ash_corr,
-               coalesce(auth.full_name, '') AS n_ash_author,
-               coalesce(inst.name, '') AS n_ash_inst
-        LIMIT $lim
-        """,
-        id=work_id,
+    priority_types = parse_priority_csv(prioritize)
+    primary_rows = _work_neighbors_rows(
+        session,
+        work_id=work_id,
         lim=hop1_lim,
-    ):
+        priority_types=priority_types,
+        prefer_priority=True,
+    )
+    primary_take = min(len(primary_rows), max(hop1_lim // 2, hop1_lim - 50))
+    primary_used = primary_rows[:primary_take]
+    taken_ids = [str(rec.get("nid") or "") for rec in primary_used if str(rec.get("nid") or "")]
+    rest_lim = max(0, hop1_lim - len(primary_used))
+    secondary_rows: list[Any] = []
+    if rest_lim > 0:
+        secondary_rows = _work_neighbors_rows(
+            session,
+            work_id=work_id,
+            lim=rest_lim,
+            priority_types=priority_types,
+            prefer_priority=False,
+            exclude_ids=taken_ids,
+        )
+    returned_by_kind: dict[str, int] = {}
+    for rec in [*primary_used, *secondary_rows]:
         _append_neighbor_edge(nodes, edges, center_id, rec)
+        labs = rec.get("labs") or []
+        kind = str(labs[0]) if labs else "Node"
+        returned_by_kind[kind] = returned_by_kind.get(kind, 0) + 1
 
     for n in nodes[1:]:
         if "distance" not in n:
@@ -337,6 +406,21 @@ def _work_graph_neighborhood_payload(
     _enrich_edges_with_display(center_id, nodes, edges)
 
     truncated = total_neighbors > hop1_lim
+    skipped_by_kind: dict[str, int] = {}
+    if truncated:
+        for rec in session.run(
+            """
+            MATCH (w:Work {id: $id})-[r]-(n)
+            WITH labels(n) AS labs, count(r) AS c
+            RETURN CASE WHEN size(labs) > 0 THEN labs[0] ELSE 'Node' END AS kind, c
+            """,
+            id=work_id,
+        ):
+            kind = str(rec.get("kind") or "Node")
+            total_kind = int(rec.get("c") or 0)
+            skipped = max(0, total_kind - int(returned_by_kind.get(kind, 0)))
+            if skipped > 0:
+                skipped_by_kind[kind] = skipped
     expansions: list[str] = []
     if truncated:
         expansions.append("increase_neighbor_limit")
@@ -359,6 +443,7 @@ def _work_graph_neighborhood_payload(
             "nodes_returned": len(nodes),
             "edges_returned": len(edges),
             "is_truncated": truncated,
+            "skipped_by_kind": skipped_by_kind if skipped_by_kind else {},
             "available_expansions": expansions,
         },
     }
@@ -616,6 +701,7 @@ def work_graph_neighborhood(
     *,
     neighbor_limit: int = 200,
     depth: int = 1,
+    prioritize: str | None = None,
 ) -> dict[str, Any] | None:
     """1-hop neighborhood for GET /v1/works/{id}/graph."""
 
@@ -627,6 +713,7 @@ def work_graph_neighborhood(
                 work_id,
                 neighbor_limit=neighbor_limit,
                 depth=depth,
+                prioritize=prioritize,
             )
     finally:
         store.close()

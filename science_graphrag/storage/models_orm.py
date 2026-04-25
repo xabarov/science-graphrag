@@ -4,7 +4,7 @@ import json
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, Float, String, Text, UniqueConstraint
+from sqlalchemy import DateTime, Float, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -56,6 +56,7 @@ class IngestJobRecordOrm(Base):
     document_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     skipped_duplicate: Mapped[bool] = mapped_column(default=False)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    phoenix_trace_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     kind: Mapped[str] = mapped_column(String(32), default="single")
     parent_job_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     child_job_ids_json: Mapped[str] = mapped_column(Text, default="[]")
@@ -98,6 +99,21 @@ class IngestJobStageOrm(Base):
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     metrics_json: Mapped[str] = mapped_column(Text, default="{}")
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class IngestJobEventOrm(Base):
+    __tablename__ = "ingest_job_events"
+    __table_args__ = (UniqueConstraint("job_id", "seq", name="uq_ingest_job_event_seq"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    job_id: Mapped[str] = mapped_column(String(36), index=True)
+    seq: Mapped[int] = mapped_column(Integer, nullable=False)
+    kind: Mapped[str] = mapped_column(String(64), nullable=False)
+    payload_json: Mapped[str] = mapped_column(Text, default="{}")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+    )
 
 
 class DedupJobRecordOrm(Base):

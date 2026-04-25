@@ -1,0 +1,6 @@
+{
+  "workspace_id": "ws_idea_01",
+  "seed_topic": "contrastive representation learning for low-label remote sensing",
+  "mode": "both",
+  "notes": "Hypotheses should connect augmentation policy and low-shot transfer gains."
+}

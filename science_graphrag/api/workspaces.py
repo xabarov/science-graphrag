@@ -222,6 +222,7 @@ def get_workspace_graph(
         default=None,
         description="Comma-separated: Work,Author,Method,Dataset,Venue,Institution,Authorship",
     ),
+    prioritize: str | None = Query(default="Method,Dataset,Work"),
     neighbor_limit: int = Query(default=200, ge=1, le=2000),
     settings: Settings = Depends(get_settings),
 ) -> dict[str, Any]:
@@ -234,6 +235,7 @@ def get_workspace_graph(
         node_types=node_types,
         neighbor_limit=neighbor_limit,
         external_min_internal_citers=external_min_internal_citers,
+        prioritize=prioritize,
     )
     if g is None:
         raise HTTPException(status_code=404, detail="workspace_not_found")
@@ -257,6 +259,7 @@ def get_workspace_graph_neighbors(
     node_id: str = Query(..., min_length=1, description="Neo4j node id (e.g. Work.id)"),
     depth: int = Query(default=1, ge=1, le=2),
     limit: int = Query(default=80, ge=1, le=200),
+    prioritize: str | None = Query(default="Method,Dataset,Work"),
     settings: Settings = Depends(get_settings),
 ) -> dict[str, Any]:
     g = workspace_graph_neighbors(
@@ -265,6 +268,7 @@ def get_workspace_graph_neighbors(
         node_id,
         depth=depth,
         limit=limit,
+        prioritize=prioritize,
     )
     if g is None:
         raise HTTPException(status_code=404, detail="workspace_not_found")

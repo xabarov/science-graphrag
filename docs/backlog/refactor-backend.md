@@ -46,7 +46,7 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 - **Acceptance:** graph payload includes stable counter properties enabling weighted radius/ranking without extra query passes.
 - **Raised:** 2026-04-25
 
-### [OPEN] Ingest pipeline async-redesign (Wave U–W)
+### [PARTIAL] Ingest pipeline async-redesign (Wave U–W)
 
 - **Area:** `science_graphrag/api/ingest_jobs.py`, `science_graphrag/ingestion/pipeline.py`, `ui/src/hooks/usePollJob.js`, `docker/nginx-web.conf`, `docker-compose.yml`
 - **Issue:** ingest исполняется `threading.Thread` внутри API → рестарт убивает работу; UI поллит `GET /v1/ingest/jobs/{id}` каждые 2 с → access-лог зашумлён; пайплайн не размечен на стадии → видимость нулевая (`message: "Running pipeline (Neo4j / vectors / SQL)…"` минутами).
@@ -55,6 +55,14 @@ Planned structural work for Python packages under this repo (not day-to-day lint
   - **Wave V** — `sse-starlette` + `GET /v1/ingest/jobs/{id}/events` с `Last-Event-ID`; nginx SSE-friendly `location`; UI `useJobStream` с graceful fallback на polling.
   - **Wave W** — ADR + `redis` и `worker` в compose; `dramatiq` actor `ingest_document_actor`; API только enqueue; `IngestEventBus` v2 поверх Redis pub/sub; идемпотентность + compensation sweep; `mark_stale_running_jobs_failed` удаляется.
 - **Acceptance:** см. чеклисты Wave U/V/W в роадмапе. Закрывается тремя независимыми проходами; до Wave W можно держать `[PARTIAL]` после прохождения U или V.
+- **Raised:** 2026-04-25
+- **Note (Wave U done):** 2026-04-25 — stage timeline, OTel stage spans, `IngestStageStepper`, и filtering polling access-log доставлены; Wave V/W остаются открытыми.
+
+### [OPEN] Split idea-assist workflow orchestration (Wave S follow-up)
+- **Area:** `science_graphrag/agent/idea_workflow.py`
+- **Issue:** `idea_workflow.py` reached ~270 lines and now mixes retrieval orchestration, claim querying, LLM prompting, and output normalization in one module.
+- **Proposal:** Extract (1) claim/context collector, (2) LLM schema+prompt builder, and (3) result normalizer into separate modules under `science_graphrag/agent/idea_assist/`.
+- **Acceptance:** orchestrator file <= 180 lines, prompt/schema logic isolated, and unit tests target each submodule independently.
 - **Raised:** 2026-04-25
 
 ### [OPEN] DB-backed benchmark run store (deferred)

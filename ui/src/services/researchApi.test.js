@@ -42,6 +42,7 @@ describe("buildQueryBody", () => {
       work_id: null,
       workspace_id: null,
       top_k: 3,
+      mode: "vector",
     });
   });
 

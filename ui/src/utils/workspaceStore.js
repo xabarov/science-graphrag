@@ -162,6 +162,7 @@ export async function mergeWorkspacesApi(keepWorkspaceId, dropWorkspaceId) {
  *   includeExternal?: boolean,
  *   nodeTypes?: string,
  *   externalMinInternalCiters?: number,
+ *   prioritize?: string,
  * }} [opts]
  */
 export async function getWorkspaceGraph(workspaceId, opts = {}) {
@@ -186,6 +187,9 @@ export async function getWorkspaceGraph(workspaceId, opts = {}) {
     const v = Math.min(50, Math.max(0, Math.floor(Number(opts.externalMinInternalCiters))));
     if (v > 0) params.set("external_min_internal_citers", String(v));
   }
+  if (opts.prioritize != null && String(opts.prioritize).trim()) {
+    params.set("prioritize", String(opts.prioritize).trim());
+  }
   const q = params.toString();
   const { data } = await apiClient.get(apiUrl(`/v1/workspaces/${wid}/graph${q ? `?${q}` : ""}`), httpConfig());
   return data;
@@ -204,7 +208,7 @@ export async function getWorkspaceGraphStats(workspaceId) {
 /**
  * @param {string} workspaceId
  * @param {string} nodeId
- * @param {{ depth?: number, limit?: number }} [opts]
+ * @param {{ depth?: number, limit?: number, prioritize?: string }} [opts]
  */
 export async function getWorkspaceGraphNeighbors(workspaceId, nodeId, opts = {}) {
   const wid = encodeURIComponent(String(workspaceId || "").trim());
@@ -215,6 +219,9 @@ export async function getWorkspaceGraphNeighbors(workspaceId, nodeId, opts = {})
   }
   if (opts.limit != null && Number.isFinite(Number(opts.limit))) {
     params.set("limit", String(Math.min(200, Math.max(1, Math.floor(Number(opts.limit))))));
+  }
+  if (opts.prioritize != null && String(opts.prioritize).trim()) {
+    params.set("prioritize", String(opts.prioritize).trim());
   }
   const q = params.toString();
   const { data } = await apiClient.get(apiUrl(`/v1/workspaces/${wid}/graph/neighbors?${q}`), httpConfig());

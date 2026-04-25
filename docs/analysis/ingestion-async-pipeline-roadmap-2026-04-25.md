@@ -234,13 +234,13 @@ ingest_job_stage(
 
 ### 4.5 Чеклист Wave V
 
-- [ ] `sse-starlette` в зависимостях; `IngestEventBus` (in-process) реализован.
-- [ ] `GET /v1/ingest/jobs/{id}/events` отвечает `text/event-stream`, поддерживает `Last-Event-ID`, heartbeat 15s.
-- [ ] Таблица `ingest_job_event` для replay; TTL/cleanup.
-- [ ] nginx prod + dev конфиги имеют SSE-friendly `location`; smoke `curl -N` через `:8787` показывает мгновенный chunk.
-- [ ] UI `useJobStream` с graceful fallback на polling; `WorkspacePage` использует его.
-- [ ] Smoke + unit-тесты (backend и UI) зелёные.
-- [ ] Backend pylint + isort + black; UI lint + tests.
+- [x] `sse-starlette` в зависимостях; `IngestEventBus` (in-process) реализован.
+- [x] `GET /v1/ingest/jobs/{id}/events` отвечает `text/event-stream`, поддерживает `Last-Event-ID`, heartbeat 15s.
+- [x] Таблица `ingest_job_event` для replay; TTL/cleanup.
+- [x] nginx prod + dev конфиги имеют SSE-friendly `location`; smoke `curl -N` через `:8787` показывает мгновенный chunk.
+- [x] UI `useJobStream` с graceful fallback на polling; `WorkspacePage` использует его.
+- [x] Smoke + unit-тесты (backend и UI) зелёные.
+- [x] Backend pylint + isort + black; UI lint + tests.
 - [ ] Запись в [backlog/refactor-backend.md](../backlog/refactor-backend.md) **закрыта**: «[DONE] SSE-канал прогресса джобы».
 
 **Exit:** при открытом окне ingestion в browser DevTools на одну джобу — **одно** долгое HTTP-соединение `/events` вместо `setInterval(2000)`; access-лог чист; при reload вкладки события «доезжают» с момента последнего `Last-Event-ID`; при принудительном закрытии SSE (например, отключив сеть на 30 секунд) UI автоматически переходит на polling и обратно.

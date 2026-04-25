@@ -1,0 +1,6 @@
+{
+  "workspace_id": "ws_idea_03",
+  "seed_topic": "dedup false positives in scholarly graph ingestion",
+  "mode": "both",
+  "notes": "Encourage hypotheses linking title fingerprints and citation-network cues."
+}

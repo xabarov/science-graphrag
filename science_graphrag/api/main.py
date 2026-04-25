@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 from collections.abc import Iterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Literal
 
@@ -25,6 +27,8 @@ from science_graphrag.api.admin_access import require_admin_if_configured
 from science_graphrag.api.agent import router as agent_router
 from science_graphrag.api.ask_sessions import router as ask_sessions_router
 from science_graphrag.api.benchmark import router as benchmark_router
+from science_graphrag.api.idea_assist import router as idea_assist_router
+from science_graphrag.api.ingest_event_bus import BUS
 from science_graphrag.api.ingest_jobs import router as ingest_router
 from science_graphrag.api.retrieval import GroundedAnswer, answer_query
 from science_graphrag.api.settings import router as settings_router
@@ -32,9 +36,18 @@ from science_graphrag.api.workspace_dedup import router as workspace_dedup_route
 from science_graphrag.api.workspaces import router as workspaces_router
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
+from science_graphrag.observability.phoenix_tracer import init_tracer_provider
 from science_graphrag.storage.qdrant_store import QdrantChunkStore, QdrantWorkEmbeddingStore
 
-app = FastAPI(title="science-graphrag", version="0.1.0")
+
+@asynccontextmanager
+async def _app_lifespan(_app: FastAPI):
+    init_tracer_provider()
+    BUS.attach_loop(asyncio.get_running_loop())
+    yield
+
+
+app = FastAPI(title="science-graphrag", version="0.1.0", lifespan=_app_lifespan)
 _STATIC_DIR = Path(__file__).resolve().parent / "static"
 # React/Vite build: `science_graphrag/api/static/ui/` → served at `/ui` (includes `/ui/assets/*`).
 # Do not mount `/ui/assets` to `_STATIC_DIR`: hashed bundles live under `static/ui/assets/`.
@@ -58,6 +71,7 @@ app.include_router(workspaces_router, prefix="/v1")
 app.include_router(workspace_dedup_router, prefix="/v1/workspaces")
 app.include_router(ingest_router, prefix="/v1")
 app.include_router(agent_router, prefix="/v1")
+app.include_router(idea_assist_router, prefix="/v1")
 
 
 def _configure_access_log_filters() -> None:
@@ -69,7 +83,9 @@ def _configure_access_log_filters() -> None:
             return "/v1/ingest/jobs/" not in msg or '" 200' not in msg
 
     access_logger = logging.getLogger("uvicorn.access")
-    if any(type(existing).__name__ == "_SuppressIngestPolling" for existing in access_logger.filters):
+    if any(
+        type(existing).__name__ == "_SuppressIngestPolling" for existing in access_logger.filters
+    ):
         return
     access_logger.addFilter(_SuppressIngestPolling())
 
@@ -209,7 +225,14 @@ def idea_search(
         workspace_id=(workspace_id or "").strip() or None,
         top_k=top_k,
     )
-    return {"items": res.payload.get("items", []), "query": q, "kinds": kind_list, "top_k": top_k, "workspace_id": (workspace_id or "").strip() or None, "status": "ok"}
+    return {
+        "items": res.payload.get("items", []),
+        "query": q,
+        "kinds": kind_list,
+        "top_k": top_k,
+        "workspace_id": (workspace_id or "").strip() or None,
+        "status": "ok",
+    }
 
 
 @app.post("/v1/query", response_model=QueryResponse)
@@ -271,6 +294,7 @@ def get_work_graph(
     work_id: str,
     neighbor_limit: int = Query(default=200, ge=1, le=2000),
     depth: int = Query(default=1, ge=1, le=3),
+    prioritize: str | None = Query(default="Method,Dataset,Work"),
     settings: Settings = Depends(get_settings),
 ) -> dict:
     g = works_api.work_graph_neighborhood(
@@ -278,6 +302,7 @@ def get_work_graph(
         work_id,
         neighbor_limit=neighbor_limit,
         depth=depth,
+        prioritize=prioritize,
     )
     if not g:
         raise HTTPException(status_code=404, detail="work_not_found")

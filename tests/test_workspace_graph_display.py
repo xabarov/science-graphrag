@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from science_graphrag.api.graph_display import enrich_authorship_nodes
+from science_graphrag.api.workspace_graph import _apply_workspace_node_kind
 
 
 class _FakeSession:
@@ -37,3 +38,15 @@ def test_enrich_authorship_nodes_rewrites_display_fields() -> None:
     assert node["display_label"] == "Wei Liu (#1)"
     assert node["subtitle"] == "Author #1 · IBM Research"
     assert node["properties"]["author_position"] == 1
+
+
+def test_apply_workspace_node_kind_for_work_membership() -> None:
+    nodes = [
+        {"id": "w1", "type": "Work", "workspace_membership": "internal", "node_kind": "Work"},
+        {"id": "w2", "type": "Work", "workspace_membership": "external", "node_kind": "Work"},
+        {"id": "ash", "type": "Authorship", "node_kind": "Authorship"},
+    ]
+    _apply_workspace_node_kind(nodes)
+    assert nodes[0]["node_kind"] == "WorkInternal"
+    assert nodes[1]["node_kind"] == "WorkExternal"
+    assert nodes[2]["node_kind"] == "AuthorshipReification"

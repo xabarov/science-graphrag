@@ -200,20 +200,20 @@ Wave «GR» = Graph Readability (отдельный индекс, чтобы н�
 
 **Чеклист:**
 
-- [ ] В `_work_graph_neighborhood_payload` ([`works.py`](../../science_graphrag/api/works.py)) Cypher-запрос соседей:
-  - [ ] подтянуть `Authorship.author_position`, и `(:Authorship)-[:OF_AUTHOR]->(:Author).full_name` через `OPTIONAL MATCH` или второй проход;
-  - [ ] подтянуть `Authorship.raw_affiliation` и опционально `(:Authorship)-[:AFFILIATED_WITH]->(:Institution).name`.
-- [ ] `_neighbor_subtitle_and_properties` для `Authorship`:
-  - [ ] `display_label = f"{author_short_name} (#{position})"`, fallback `f"Author #{position}"` если имя пустое;
-  - [ ] `subtitle = f"Author #{position}{' · ' + institution if institution else ''}"`;
-  - [ ] `properties: { author_position, is_corresponding, raw_affiliation, institution_id? }`.
-- [ ] Для `:Author` всегда `display_label = full_name`, никогда не UUID.
-- [ ] Для `:Institution` `display_label = name`, `subtitle = country` (опционально).
-- [ ] Для `:Venue` `display_label = name`, `subtitle = venue_type or issn or ""`.
-- [ ] То же самое для `_node_dict_from_neo` в [`workspace_graph.py`](../../science_graphrag/api/workspace_graph.py).
-- [ ] Новые pytest-кейсы: `tests/api/test_works_graph_display.py`, проверка `display_label` ≠ UUID для каждого типа.
-- [ ] Снимок benchmark `graph_v1` пересобрать, убедиться что diff содержит **только** `display_label`/`subtitle` (структура графа неизменна).
-- [ ] UI smoke в [`GraphDetailPanel.jsx`](../../ui/src/components/graph/GraphDetailPanel.jsx): `display_label` отрисовывается, fallback `label` уже работает.
+- [x] В `_work_graph_neighborhood_payload` ([`works.py`](../../science_graphrag/api/works.py)) Cypher-запрос соседей:
+  - [x] подтянуть `Authorship.author_position`, и `(:Authorship)-[:OF_AUTHOR]->(:Author).full_name` через `OPTIONAL MATCH` или второй проход;
+  - [x] подтянуть `Authorship.raw_affiliation` и опционально `(:Authorship)-[:AFFILIATED_WITH]->(:Institution).name`.
+- [x] `_neighbor_subtitle_and_properties` для `Authorship`:
+  - [x] `display_label = f"{author_short_name} (#{position})"`, fallback `f"Author #{position}"` если имя пустое;
+  - [x] `subtitle = f"Author #{position}{' · ' + institution if institution else ''}"`;
+  - [x] `properties: { author_position, is_corresponding, raw_affiliation, institution_id? }`.
+- [x] Для `:Author` всегда `display_label = full_name`, никогда не UUID.
+- [x] Для `:Institution` `display_label = name`, `subtitle = country` (опционально).
+- [x] Для `:Venue` `display_label = name`, `subtitle = venue_type or issn or ""` (опционально).
+- [x] То же самое для `_node_dict_from_neo` в [`workspace_graph.py`](../../science_graphrag/api/workspace_graph.py).
+- [x] Новые pytest-кейсы: `tests/test_works_graph_display.py`, проверка `display_label` ≠ UUID для каждого типа.
+- [x] Снимок benchmark `graph_v1` пересобрать, убедиться что diff содержит **только** `display_label`/`subtitle` (структура графа неизменна). *(n/a: `graph_v1` проверяет структурные метрики, не `display_*` поля)*.
+- [x] UI smoke в [`GraphDetailPanel.jsx`](../../ui/src/components/graph/GraphDetailPanel.jsx): `display_label` отрисовывается, fallback `label` уже работает.
 
 **Acceptance:** На `/graph?work_id=…` ни один отображаемый узел в боковой панели и на канвасе не имеет в качестве заголовка UUID; технический `id` по-прежнему виден в Advanced JSON.
 
@@ -222,6 +222,8 @@ Wave «GR» = Graph Readability (отдельный индекс, чтобы н�
 ### 5.2 Wave GR2 — `node_kind`, семантичные `display_type`, приоритизация LIMIT
 
 **Цель:** очистить семантику UI-полей, чтобы Wave GR3/GR4 могли строить агрегацию и сворачивание без дальнейших правок API.
+
+**Статус:** in progress (backend + API contract + UI legend).
 
 **Чеклист:**
 
@@ -338,7 +340,7 @@ Wave «GR» = Graph Readability (отдельный индекс, чтобы н�
 ## 7. Открытые вопросы (до старта Wave GR3/GR4)
 
 1. **Default `view`.** Стартуем с `reader` сразу для всех клиентов или вводим `?view=reader` opt-in и переводим UI отдельно? Предложение: opt-in на бэкенде (default `raw` для совместимости), `reader` принудительно из UI. Это исключает ломку CLI/snapshot-сценариев.
-2. **Где хранить `aggregator_threshold`.** Глобально в `Settings`, на workspace, в URL? Предложение: глобал с возможностью override через query, без UI-настройки до сбора фидбэка.
+2. **`aggregator_threshold` (перенесено в GR3).** В GR2 не меняем; параметр и место хранения согласуем перед стартом Wave GR3.
 3. **`AUTHORED_THROUGH` или `AFFILIATED_AS_AUTHOR`?** Имя виртуального ребра. Предлагаемое: просто `AUTHORED`, аффилиация — в `properties` ребра или текстом в `summary`.
 4. **`Authorship` в edge-инспекторе.** При клике на виртуальное `AUTHORED` показывать «trace via Authorship UUID» в Advanced или скрыть полностью?
 5. **Бенчмарк `graph_v1` контракт.** Если `view=raw` остаётся источником истины для тестов, надо ли в gold-payloads явно фиксировать `display_label`? Скорее нет — gold должен оставаться структурным.

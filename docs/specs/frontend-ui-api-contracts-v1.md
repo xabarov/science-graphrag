@@ -193,6 +193,7 @@ Optional query (server contract):
 |-------|---------|
 | `neighbor_limit` | Integer **1–2000** (default **200**). Caps rows from the 1-hop `MATCH (w)-[r]-(n)` scan. |
 | `depth` | Integer **1–3** (default **1**). Reserved for future multi-hop; **effective hop is still 1** until implemented. |
+| `prioritize` | CSV list of preferred neighbor kinds (default **`Method,Dataset,Work`**). Server preserves these kinds first when `neighbor_limit` truncates dense neighborhoods. |
 
 Response (backward compatible: `id`, `type`, `label` on nodes and `source`, `target`, `type` on edges remain; extra fields are optional for older clients):
 
@@ -206,7 +207,7 @@ Response (backward compatible: `id`, `type`, `label` on nodes and `source`, `tar
       "label": "string",
       "display_label": "string",
       "subtitle": "string",
-      "node_kind": "string",
+      "node_kind": "Work|WorkInternal|WorkExternal|AuthorshipReification|string",
       "properties": { "publication_year": 2016, "doi": "..." }
     }
   ],
@@ -233,6 +234,7 @@ Response (backward compatible: `id`, `type`, `label` on nodes and `source`, `tar
     "nodes_returned": 15,
     "edges_returned": 28,
     "is_truncated": false,
+    "skipped_by_kind": { "Author": 12, "Authorship": 8 },
     "available_expansions": []
   }
 }
@@ -298,6 +300,7 @@ Query params:
 | `depth` | `1` | `1` or `2` (capped server-side) |
 | `include_external` | `false` | When `true`, may include cited `:Work` nodes outside the workspace |
 | `node_types` | *(all)* | Comma-separated: `Work`, `Author`, `Method`, `Dataset`, `Venue`, `Institution`, `Authorship` |
+| `prioritize` | `Method,Dataset,Work` | CSV list of preferred kinds for truncation-aware neighbor selection. |
 | `neighbor_limit` | `200` | Clamped with global cap (300 for multi-hop) |
 | `external_min_internal_citers` | `0` | When &gt; 0 and `include_external=true`, keep external works only if at least N distinct internal works cite them |
 
@@ -317,6 +320,7 @@ Lightweight counts: `works_count`, `authors_count`, `internal_citations`, `exter
 ### `GET /v1/workspaces/{workspace_id}/graph/neighbors`
 
 Query: `node_id` (required), `depth` (1–2), `limit` (1–200). Returns a subgraph slice for lazy UI merge.
+Optional: `prioritize=Method,Dataset,Work` (same semantics as workspace root graph endpoint).
 
 Implementation: [`science_graphrag/api/workspace_graph.py`](../../science_graphrag/api/workspace_graph.py), routes in [`science_graphrag/api/workspaces.py`](../../science_graphrag/api/workspaces.py). ADR: [`docs/adr/012-workspace-graph-projection.md`](../adr/012-workspace-graph-projection.md).
 

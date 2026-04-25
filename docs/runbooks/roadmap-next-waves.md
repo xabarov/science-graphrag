@@ -189,3 +189,18 @@
 См.: [analysis/ontology-benchmarks-roadmap-2026-04-24.md](../analysis/ontology-benchmarks-roadmap-2026-04-24.md) §7.7, [adr/016-agent-tool-registry-and-langgraph.md](../adr/016-agent-tool-registry-and-langgraph.md), [specs/agent-tools-v1.md](../specs/agent-tools-v1.md).
 
 **Статус (2026-04-25):** базовая реализация внесена (`science_graphrag/agent/`, `/v1/agent/query`, `eval/agent_tools/*`, UI trace в AskPanel); lane остаётся advisory до отдельного promotion review.
+
+---
+
+## Wave V — SSE-канал прогресса ingest-джобы (Phase 1, без новой инфры)
+
+**Цель:** убрать 2s polling для ingest-progress в UI, перейти на push-модель через SSE, сохранив polling как fallback.
+
+**Источник анализа:** [analysis/ingestion-async-pipeline-roadmap-2026-04-25.md](../analysis/ingestion-async-pipeline-roadmap-2026-04-25.md) §4.
+
+1. Backend: `sse-starlette`, in-process `IngestEventBus`, таблица `ingest_job_events` (replay/`Last-Event-ID`), эндпоинт `GET /v1/ingest/jobs/{id}/events`.
+2. Edge: отдельный SSE-friendly `location` в `docker/nginx-web.conf` и `docker/nginx-web.dev.conf` (`proxy_buffering off`, `proxy_read_timeout 1h`).
+3. Frontend: `useJobStream` (EventSource) + graceful fallback на polling после повторных SSE ошибок; `WorkspacePage` переключен на stream-модель.
+4. Batch: parent stream поддерживает агрегированные события `batch_progress` и terminal + child stage events (через `source_job_id`).
+
+**Exit:** в DevTools для active ingest виден один длительный `/events` stream вместо периодических `GET /v1/ingest/jobs/{id}`; reload вкладки подхватывает replay по `Last-Event-ID`; при SSE ошибках UI автоматически деградирует в polling.

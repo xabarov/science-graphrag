@@ -35,6 +35,9 @@ class StageHandle:
         self.metrics[str(key)] = value
 
 
+StageEventPublisher = Callable[[IngestStage, str, dict[str, Any], str | None], None]
+
+
 def _upsert_stage_row(
     *,
     session_factory: Callable[[], Any],
@@ -77,6 +80,7 @@ def stage(
     job_id: str | None,
     stage_name: IngestStage,
     session_factory: Callable[[], Any] | None = None,
+    publisher: StageEventPublisher | None = None,
 ) -> Iterator[StageHandle]:
     handle = StageHandle(stage=stage_name)
     if not job_id or session_factory is None:
@@ -90,10 +94,13 @@ def stage(
         stage_value=stage_name,
         status="running",
     )
+    if publisher is not None:
+        publisher(stage_name, "running", {}, None)
     with chain_span(f"ingest.{stage_name.value}"):
         try:
             yield handle
         except Exception as exc:
+            error_text = str(exc)
             _upsert_stage_row(
                 session_factory=session_factory,
                 job_id=job_id,
@@ -101,8 +108,10 @@ def stage(
                 status="failed",
                 finished_at=datetime.now(UTC),
                 metrics=handle.metrics,
-                error=str(exc),
+                error=error_text,
             )
+            if publisher is not None:
+                publisher(stage_name, "failed", dict(handle.metrics), error_text)
             raise
         _upsert_stage_row(
             session_factory=session_factory,
@@ -112,3 +121,5 @@ def stage(
             finished_at=datetime.now(UTC),
             metrics=handle.metrics,
         )
+        if publisher is not None:
+            publisher(stage_name, "completed", dict(handle.metrics), None)

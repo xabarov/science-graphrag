@@ -46,7 +46,10 @@ def validate_readonly_cypher(query: str, *, max_limit: int = 200) -> None:
         if token in upper:
             raise CypherNotAllowedError(f"forbidden_token:{token}")
 
-    for label in re.findall(r":([A-Za-z_][A-Za-z0-9_]*)", raw):
+    # Strip relationship patterns in square brackets so `:REL_TYPE`
+    # does not get validated as a node label.
+    node_scope = re.sub(r"\[[^\]]*\]", "", raw)
+    for label in re.findall(r":([A-Za-z_][A-Za-z0-9_]*)", node_scope):
         if label not in ALLOWED_LABELS:
             raise CypherNotAllowedError(f"unknown_label:{label}")
 

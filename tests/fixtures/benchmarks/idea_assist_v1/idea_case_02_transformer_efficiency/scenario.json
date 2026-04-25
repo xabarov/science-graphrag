@@ -1,0 +1,6 @@
+{
+  "workspace_id": "ws_idea_02",
+  "seed_topic": "efficient transformers for long scientific documents",
+  "mode": "hypotheses",
+  "notes": "Focus on memory/computation tradeoffs and retrieval quality."
+}

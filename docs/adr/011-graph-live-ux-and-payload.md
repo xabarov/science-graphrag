@@ -13,7 +13,20 @@ The graph UI was inspection-first: **Cards** defaulted ahead of **Canvas**, circ
    - Nodes: `display_label`, `subtitle`, `node_kind`, `properties` (small bag), keep `id`, `type`, `label`.
    - Edges: stable `id`, `display_type`, `source_label`, `target_label`, `summary`, `direction`; keep `source`, `target`, `type`.
    - `meta`: `graph_scope`, `neighbor_match_count`, `neighbor_limit_applied`, `is_truncated`, `available_expansions`, depth requested vs effective (multi-hop reserved).
-   - Query params: `neighbor_limit` (1–2000), `depth` (1–3, effective hop still 1 until implemented).
+   - Query params: `neighbor_limit` (1–2000), `depth` (1–3, effective hop still 1 until implemented), `prioritize` (CSV, default `Method,Dataset,Work`).
+
+   Wave GR2 semantic mapping (additive):
+
+   | Relation `type` | `display_type` |
+   |---|---|
+   | `CITES` | `cites` |
+   | `HAS_AUTHORSHIP` | `has authorship` |
+   | `OF_AUTHOR` | `of author` |
+   | `AFFILIATED_WITH` | `affiliated with` |
+   | `PUBLISHED_IN` | `published in` |
+   | `USES_METHOD` | `uses method` |
+   | `EVALUATED_ON` | `evaluated on` |
+   | `TRAINED_OR_TESTED_ON` | `trained/tested on` |
 
 2. **Frontend defaults** — Persist `graphVizMode` defaulting to **canvas**; persist `graphCanvasLayoutMode` defaulting to **force**. Cards/Flow remain secondary.
 

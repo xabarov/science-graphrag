@@ -16,6 +16,21 @@ from science_graphrag.dedup.work_dedup_engine import run_work_dedup_scan
 from science_graphrag.storage.db import get_engine, init_db, session_factory
 from science_graphrag.storage.models_orm import DedupJobRecordOrm
 
+_REGISTRY_LOCK = threading.Lock()
+_REGISTRY_BOX: dict[str, DedupJobRegistry | None] = {"value": None}
+
+
+def _registry(settings: Settings | None = None):
+    registry = _REGISTRY_BOX["value"]
+    if registry is not None:
+        return registry
+    with _REGISTRY_LOCK:
+        registry = _REGISTRY_BOX["value"]
+        if registry is None:
+            registry = DedupJobRegistry(settings or get_settings())
+            _REGISTRY_BOX["value"] = registry
+    return registry
+
 
 def _now_iso() -> str:
     return datetime.now(UTC).isoformat()
@@ -120,11 +135,8 @@ class DedupJobRegistry:
                 session.commit()
 
 
-_REGISTRY = DedupJobRegistry(get_settings())
-
-
 def get_dedup_job(job_id: str) -> DedupJobRecord | None:
-    return _REGISTRY.get(job_id)
+    return _registry().get(job_id)
 
 
 def dedup_job_to_dict(rec: DedupJobRecord) -> dict[str, Any]:
@@ -142,13 +154,14 @@ def dedup_job_to_dict(rec: DedupJobRecord) -> dict[str, Any]:
 
 
 def _run_work_scan(job_id: str, settings: Settings) -> None:
-    rec = _REGISTRY.get(job_id)
+    registry = _registry(settings)
+    rec = registry.get(job_id)
     if not rec:
         return
-    _REGISTRY.update(job_id, status="running", message="Scanning works…")
+    registry.update(job_id, status="running", message="Scanning works…")
 
     def upd(**kwargs: Any) -> None:
-        _REGISTRY.update(job_id, **kwargs)
+        registry.update(job_id, **kwargs)
 
     try:
         engine = get_engine(settings.database_url)
@@ -176,13 +189,14 @@ def _run_work_scan(job_id: str, settings: Settings) -> None:
 
 
 def _run_author_scan(job_id: str, settings: Settings) -> None:
-    rec = _REGISTRY.get(job_id)
+    registry = _registry(settings)
+    rec = registry.get(job_id)
     if not rec:
         return
-    _REGISTRY.update(job_id, status="running", message="Scanning authors…")
+    registry.update(job_id, status="running", message="Scanning authors…")
 
     def upd(**kwargs: Any) -> None:
-        _REGISTRY.update(job_id, **kwargs)
+        registry.update(job_id, **kwargs)
 
     try:
         engine = get_engine(settings.database_url)
@@ -210,14 +224,14 @@ def _run_author_scan(job_id: str, settings: Settings) -> None:
 
 
 def start_work_dedup_scan_job(*, workspace_id: str, settings: Settings) -> DedupJobRecord:
-    rec = _REGISTRY.create(workspace_id=workspace_id, kind="work_scan")
+    rec = _registry(settings).create(workspace_id=workspace_id, kind="work_scan")
     t = threading.Thread(target=_run_work_scan, args=(rec.job_id, settings), daemon=True)
     t.start()
     return rec
 
 
 def start_author_dedup_scan_job(*, workspace_id: str, settings: Settings) -> DedupJobRecord:
-    rec = _REGISTRY.create(workspace_id=workspace_id, kind="author_scan")
+    rec = _registry(settings).create(workspace_id=workspace_id, kind="author_scan")
     t = threading.Thread(target=_run_author_scan, args=(rec.job_id, settings), daemon=True)
     t.start()
     return rec

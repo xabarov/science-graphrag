@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi.testclient import TestClient
 
 from science_graphrag.api.main import app
-from science_graphrag.config import Settings
+from science_graphrag.config import Settings, get_settings
 
 
 def test_post_agent_query_disabled_by_default() -> None:
@@ -26,18 +26,13 @@ def test_post_agent_query_enabled_smoke(monkeypatch) -> None:
             return _FakeOut()
 
     monkeypatch.setattr(agent_api, "build_agent", lambda **_kwargs: _FakeAgent())
-    monkeypatch.setattr(
-        agent_api,
-        "get_settings",
-        lambda: Settings(agent_enabled=True),
-    )
     client = TestClient(app)
     # Override dependency used by FastAPI router.
-    client.app.dependency_overrides[agent_api.get_settings] = lambda: Settings(agent_enabled=True)
+    client.app.dependency_overrides[get_settings] = lambda: Settings(agent_enabled=True)
     try:
         res = client.post("/v1/agent/query", json={"question": "hello"})
     finally:
-        client.app.dependency_overrides.pop(agent_api.get_settings, None)
+        client.app.dependency_overrides.pop(get_settings, None)
     assert res.status_code == 200
     body = res.json()
     assert body["answer"] == "ok"

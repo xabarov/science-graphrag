@@ -41,6 +41,7 @@ describe("askFlowCompatibility", () => {
       work_id: null,
       workspace_id: null,
       top_k: 9,
+      mode: "vector",
     });
     const normalized = normalizeQueryResponse({
       answer: "summary",

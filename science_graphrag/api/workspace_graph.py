@@ -10,7 +10,13 @@ from typing import Any
 from neo4j import GraphDatabase, NotificationClassification
 
 from science_graphrag.api import works as works_api
-from science_graphrag.api.graph_display import compute_node_display, enrich_authorship_nodes
+from science_graphrag.api.graph_display import (
+    compute_node_display,
+    edge_display_type,
+    enrich_authorship_nodes,
+    parse_priority_csv,
+    resolve_node_kind,
+)
 from science_graphrag.config import Settings
 
 MAX_NEIGHBORS_CAP = 300
@@ -172,6 +178,12 @@ def _node_dict_from_neo(node: Any) -> dict[str, Any] | None:
         center_props["arxiv_id"] = str(props["arxiv_id"]).strip()
     if props.get("venue_name"):
         center_props["venue"] = str(props["venue_name"]).strip()[:200]
+    if props.get("country"):
+        center_props["country"] = str(props["country"]).strip()[:120]
+    if props.get("venue_type"):
+        center_props["venue_type"] = str(props["venue_type"]).strip()[:120]
+    if props.get("issn"):
+        center_props["issn"] = str(props["issn"]).strip()[:64]
     rendered = compute_node_display(ntype, raw_title, center_props)
     label = str(rendered["display_label"])
     subtitle = str(rendered["subtitle"])
@@ -182,7 +194,7 @@ def _node_dict_from_neo(node: Any) -> dict[str, Any] | None:
         "label": label,
         "display_label": label,
         "subtitle": subtitle,
-        "node_kind": ntype,
+        "node_kind": resolve_node_kind(ntype),
         "properties": center_props,
     }
 
@@ -203,10 +215,6 @@ def _edge_dict_from_rel(a: Any, b: Any, rel: Any, seq: int) -> dict[str, Any]:
 def _enrich_edges_workspace(nodes: list[dict[str, Any]], edges: list[dict[str, Any]]) -> None:
     by_id = {n["id"]: n for n in nodes}
 
-    def _display_type(rel_type: str) -> str:
-        t = (rel_type or "").strip()
-        return t.replace("_", " ") if t else "related"
-
     for seq, edge in enumerate(edges):
         src_id = str(edge.get("source") or "")
         tgt_id = str(edge.get("target") or "")
@@ -215,12 +223,22 @@ def _enrich_edges_workspace(nodes: list[dict[str, Any]], edges: list[dict[str, A
         sl = str(src_n.get("display_label") or src_n.get("label") or src_id)
         tl = str(tgt_n.get("display_label") or tgt_n.get("label") or tgt_id)
         rt = str(edge.get("type") or "")
-        disp_t = _display_type(rt)
+        disp_t = edge_display_type(rt)
         edge["display_type"] = disp_t
         edge["source_label"] = sl
         edge["target_label"] = tl
         edge["summary"] = f"{sl} —[{disp_t}]→ {tl}"
         edge["direction"] = "lateral"
+
+
+def _apply_workspace_node_kind(nodes: list[dict[str, Any]]) -> None:
+    for n in nodes:
+        ntype = str(n.get("type") or "")
+        if ntype == "Work":
+            wm = str(n.get("workspace_membership") or "")
+            n["node_kind"] = resolve_node_kind("Work", workspace_membership=wm)
+            continue
+        n["node_kind"] = resolve_node_kind(ntype)
 
 
 def _annotate_membership_and_cites(
@@ -548,19 +566,20 @@ def _build_from_depth1_rows(
     node_types: list[str] | None,
     semantic_only: bool,
     cap: int,
+    prioritize: str | None = None,
     ignore_node_type_filter: bool = False,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], bool]:
     types_empty = bool(ignore_node_type_filter) or (not node_types)
     type_list = node_types or []
     sem_clause = ""
-    params: dict[str, Any] = {
+    params_base: dict[str, Any] = {
         "wid": workspace_id,
         "includeExternal": include_external,
         "typesEmpty": types_empty,
         "nodeTypes": type_list,
-        "cap": cap,
         "semTypes": SEMANTIC_REL_TYPES_LIST,
     }
+    priority_types = parse_priority_csv(prioritize)
     if semantic_only:
         sem_clause = (
             "AND (type(r) IN $semTypes OR any(l IN labels(b) WHERE l IN ['Method','Dataset'])) "
@@ -572,15 +591,47 @@ def _build_from_depth1_rows(
         "WHERE a.id IN internalIds "
         "AND ($includeExternal OR NOT b:Work OR b.id IN internalIds) "
         "AND ($typesEmpty OR any(l IN labels(b) WHERE l IN $nodeTypes)) "
+        "AND (($preferPriority AND any(l IN labels(b) WHERE l IN $priorityTypes)) "
+        "  OR ((NOT $preferPriority) AND NOT any(l IN labels(b) WHERE l IN $priorityTypes))) "
+        "AND ($excludeEmpty OR NOT coalesce(b.id, toString(elementId(b))) IN $excludeIds) "
         f"{sem_clause}"
         "RETURN DISTINCT a, r, b "
-        "LIMIT $cap"
+        "LIMIT $lim"
     )
     nodes_by_id: dict[str, dict[str, Any]] = {}
     edges_by_key: dict[str, dict[str, Any]] = {}
     truncated = False
     count = 0
-    for rec in session.run(q, **params):
+    taken_ids: set[str] = set()
+    params_primary = {
+        **params_base,
+        "preferPriority": True,
+        "priorityTypes": list(priority_types),
+        "excludeEmpty": True,
+        "excludeIds": [],
+        "lim": cap,
+    }
+    primary_rows = list(session.run(q, **params_primary))
+    primary_take = min(len(primary_rows), max(cap // 2, cap - 50))
+    selected_rows = primary_rows[:primary_take]
+    for rec in selected_rows:
+        b = rec.get("b")
+        if b is not None:
+            bid = str(dict(b).get("id") or b.element_id)
+            if bid:
+                taken_ids.add(bid)
+    rest_lim = max(0, cap - len(selected_rows))
+    if rest_lim > 0:
+        params_rest = {
+            **params_base,
+            "preferPriority": False,
+            "priorityTypes": list(priority_types),
+            "excludeEmpty": not bool(taken_ids),
+            "excludeIds": list(taken_ids),
+            "lim": rest_lim,
+        }
+        selected_rows.extend(list(session.run(q, **params_rest)))
+    for rec in selected_rows:
         count += 1
         a, rel, b = rec["a"], rec["r"], rec["b"]
         na = _node_dict_from_neo(a)
@@ -606,6 +657,7 @@ def _build_from_depth2_rows(
     node_types: list[str] | None,
     semantic_only: bool,
     cap: int,
+    prioritize: str | None = None,
     ignore_node_type_filter: bool = False,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], bool]:
     types_empty = bool(ignore_node_type_filter) or (not node_types)
@@ -617,6 +669,7 @@ def _build_from_depth2_rows(
             "OR any(l IN labels(m) WHERE l IN ['Method','Dataset']) "
             "OR any(l IN labels(b) WHERE l IN ['Method','Dataset'])) "
         )
+    priority_types = parse_priority_csv(prioritize)
     q = (
         "MATCH (ws:Workspace {id: $wid})-[:CONTAINS]->(iw:Work) "
         "WITH collect(DISTINCT iw.id) AS I "
@@ -625,6 +678,9 @@ def _build_from_depth2_rows(
         "AND (NOT m:Work OR m.id IN I OR $includeExternal) "
         "AND (NOT b:Work OR b.id IN I OR $includeExternal) "
         "AND ($typesEmpty OR any(l IN labels(b) WHERE l IN $nodeTypes)) "
+        "AND (($preferPriority AND any(l IN labels(b) WHERE l IN $priorityTypes)) "
+        "  OR ((NOT $preferPriority) AND NOT any(l IN labels(b) WHERE l IN $priorityTypes))) "
+        "AND ($excludeEmpty OR NOT coalesce(b.id, toString(elementId(b))) IN $excludeIds) "
         f"{sem_clause}"
         "RETURN DISTINCT a, r1, m, r2, b "
         "LIMIT $lim"
@@ -632,16 +688,44 @@ def _build_from_depth2_rows(
     nodes_by_id: dict[str, dict[str, Any]] = {}
     edges_by_key: dict[str, dict[str, Any]] = {}
     lim = max(1, cap // 2)
-    params = {
+    params_base = {
         "wid": workspace_id,
         "includeExternal": include_external,
         "typesEmpty": types_empty,
         "nodeTypes": type_list,
-        "lim": lim,
         "semTypes": SEMANTIC_REL_TYPES_LIST,
     }
     n_rows = 0
-    for rec in session.run(q, **params):
+    taken_ids: set[str] = set()
+    params_primary = {
+        **params_base,
+        "preferPriority": True,
+        "priorityTypes": list(priority_types),
+        "excludeEmpty": True,
+        "excludeIds": [],
+        "lim": lim,
+    }
+    primary_rows = list(session.run(q, **params_primary))
+    primary_take = min(len(primary_rows), max(lim // 2, lim - 50))
+    selected_rows = primary_rows[:primary_take]
+    for rec in selected_rows:
+        b = rec.get("b")
+        if b is not None:
+            bid = str(dict(b).get("id") or b.element_id)
+            if bid:
+                taken_ids.add(bid)
+    rest_lim = max(0, lim - len(selected_rows))
+    if rest_lim > 0:
+        params_rest = {
+            **params_base,
+            "preferPriority": False,
+            "priorityTypes": list(priority_types),
+            "excludeEmpty": not bool(taken_ids),
+            "excludeIds": list(taken_ids),
+            "lim": rest_lim,
+        }
+        selected_rows.extend(list(session.run(q, **params_rest)))
+    for rec in selected_rows:
         n_rows += 1
         a, r1, m, r2, b = rec["a"], rec["r1"], rec["m"], rec["r2"], rec["b"]
         for node in (a, m, b):
@@ -684,6 +768,7 @@ def project_workspace_graph(
     node_types: str | None = None,
     neighbor_limit: int = 200,
     external_min_internal_citers: int = 0,
+    prioritize: str | None = None,
 ) -> dict[str, Any] | None:
     """
     Workspace graph v2. Modes: inner_only, union_1hop, semantic_layer, full.
@@ -725,6 +810,7 @@ def project_workspace_graph(
             enrich_authorship_nodes(session, nodes)
             _enrich_edges_workspace(nodes, edges)
             inc, exc = _annotate_membership_and_cites(nodes, edges, iws)
+            _apply_workspace_node_kind(nodes)
             meta = dict(out.get("meta") or {})
             meta.update(
                 {
@@ -787,6 +873,7 @@ def project_workspace_graph(
                     node_types=types_list,
                     semantic_only=semantic_only,
                     cap=cap,
+                    prioritize=prioritize,
                     ignore_node_type_filter=ignore_node_type_filter,
                 )
                 gds_used = False
@@ -831,6 +918,7 @@ def project_workspace_graph(
                         node_types=types_list,
                         semantic_only=semantic_only,
                         cap=cap,
+                        prioritize=prioritize,
                         ignore_node_type_filter=ignore_node_type_filter,
                     )
                     gds_used = False
@@ -849,6 +937,7 @@ def project_workspace_graph(
             enrich_authorship_nodes(session, nodes)
         _enrich_edges_workspace(nodes, edges)
         inc_n, exc_n = _annotate_membership_and_cites(nodes, edges, iws)
+        _apply_workspace_node_kind(nodes)
 
         expansions: list[str] = []
         if truncated:
@@ -955,6 +1044,7 @@ def workspace_graph_neighbors(
     *,
     depth: int = 1,
     limit: int = 80,
+    prioritize: str | None = None,
 ) -> dict[str, Any] | None:
     """1-hop or 2-hop neighborhood for lazy expand; does not require node to be in workspace."""
 
@@ -966,6 +1056,7 @@ def workspace_graph_neighbors(
     depth_eff = depth_req
     hop1_lim = lim if depth_req <= 1 else max(1, lim // 2)
     hop2_lim = max(1, lim - hop1_lim) if depth_req >= 2 else 0
+    priority_types = parse_priority_csv(prioritize)
     driver = _neo4j_driver(settings)
     try:
         with driver.session() as session:
@@ -978,16 +1069,53 @@ def workspace_graph_neighbors(
             nodes_by_id: dict[str, dict[str, Any]] = {}
             edges_by_key: dict[str, dict[str, Any]] = {}
 
-            for rec in session.run(
-                """
+            q_h1 = """
                 MATCH (n {id: $nid})
                 MATCH (n)-[r]-(m)
+                WHERE (($preferPriority AND any(l IN labels(m) WHERE l IN $priorityTypes))
+                   OR ((NOT $preferPriority) AND NOT any(l IN labels(m) WHERE l IN $priorityTypes)))
+                  AND ($excludeEmpty OR NOT coalesce(m.id, toString(elementId(m))) IN $excludeIds)
                 RETURN n, r, m
                 LIMIT $lim
-                """,
-                nid=nid,
-                lim=hop1_lim,
-            ):
+            """
+            h1_primary = list(
+                session.run(
+                    q_h1,
+                    nid=nid,
+                    lim=hop1_lim,
+                    preferPriority=True,
+                    priorityTypes=list(priority_types),
+                    excludeEmpty=True,
+                    excludeIds=[],
+                )
+            )
+            h1_take = min(len(h1_primary), max(hop1_lim // 2, hop1_lim - 50))
+            h1_rows = h1_primary[:h1_take]
+            h1_taken: set[str] = set()
+            for rec in h1_rows:
+                m = rec.get("m")
+                if m is None:
+                    continue
+                mid = str(dict(m).get("id") or m.element_id)
+                if mid:
+                    h1_taken.add(mid)
+            h1_rest_lim = max(0, hop1_lim - len(h1_rows))
+            if h1_rest_lim > 0:
+                h1_rows.extend(
+                    list(
+                        session.run(
+                            q_h1,
+                            nid=nid,
+                            lim=h1_rest_lim,
+                            preferPriority=False,
+                            priorityTypes=list(priority_types),
+                            excludeEmpty=not bool(h1_taken),
+                            excludeIds=list(h1_taken),
+                        )
+                    )
+                )
+
+            for rec in h1_rows:
                 n, rel_obj, m = rec["n"], rec["r"], rec["m"]
                 nn = _node_dict_from_neo(n)
                 nm = _node_dict_from_neo(m)
@@ -1000,16 +1128,53 @@ def workspace_graph_neighbors(
                     edges_by_key[_edge_key(ed["source"], ed["type"], ed["target"])] = ed
 
             if depth_req >= 2 and hop2_lim > 0:
-                for rec in session.run(
-                    """
+                q_h2 = """
                     MATCH (n {id: $nid})
                     MATCH (n)-[r1]-(m1)-[r2]-(m2)
+                    WHERE (($preferPriority AND any(l IN labels(m2) WHERE l IN $priorityTypes))
+                       OR ((NOT $preferPriority) AND NOT any(l IN labels(m2) WHERE l IN $priorityTypes)))
+                      AND ($excludeEmpty OR NOT coalesce(m2.id, toString(elementId(m2))) IN $excludeIds)
                     RETURN n, r1, m1, r2, m2
                     LIMIT $lim
-                    """,
-                    nid=nid,
-                    lim=hop2_lim,
-                ):
+                """
+                h2_primary = list(
+                    session.run(
+                        q_h2,
+                        nid=nid,
+                        lim=hop2_lim,
+                        preferPriority=True,
+                        priorityTypes=list(priority_types),
+                        excludeEmpty=True,
+                        excludeIds=[],
+                    )
+                )
+                h2_take = min(len(h2_primary), max(hop2_lim // 2, hop2_lim - 50))
+                h2_rows = h2_primary[:h2_take]
+                h2_taken: set[str] = set()
+                for rec in h2_rows:
+                    m2 = rec.get("m2")
+                    if m2 is None:
+                        continue
+                    mid = str(dict(m2).get("id") or m2.element_id)
+                    if mid:
+                        h2_taken.add(mid)
+                h2_rest_lim = max(0, hop2_lim - len(h2_rows))
+                if h2_rest_lim > 0:
+                    h2_rows.extend(
+                        list(
+                            session.run(
+                                q_h2,
+                                nid=nid,
+                                lim=h2_rest_lim,
+                                preferPriority=False,
+                                priorityTypes=list(priority_types),
+                                excludeEmpty=not bool(h2_taken),
+                                excludeIds=list(h2_taken),
+                            )
+                        )
+                    )
+
+                for rec in h2_rows:
                     n, r1, m1, r2, m2 = rec["n"], rec["r1"], rec["m1"], rec["r2"], rec["m2"]
                     for node in (n, m1, m2):
                         nd = _node_dict_from_neo(node)
@@ -1035,6 +1200,7 @@ def workspace_graph_neighbors(
             iws = {str(x) for x in (row_ids["I"] or []) if x}
             _enrich_edges_workspace(nodes, edges)
             _annotate_membership_and_cites(nodes, edges, iws)
+            _apply_workspace_node_kind(nodes)
         return {
             "workspace_id": workspace_id,
             "center_id": nid,

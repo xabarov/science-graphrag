@@ -13,18 +13,19 @@ import { CursorPrimaryButton, CursorSmallButton } from "../../components/common/
 import PageHeader from "../../components/layout/PageHeader.jsx";
 import WorkIdGlossaryHint from "../../components/layout/WorkIdGlossaryHint.jsx";
 import { mainShellContentSx } from "../../components/layout/mainShellContentSx.js";
-import { formatResearchApiError, getWorkDetail, postAgentQuery } from "../../services/researchApi.js";
+import { formatResearchApiError, getWorkDetail, postAgentQuery, postIdeaAssist } from "../../services/researchApi.js";
 import {
   getActiveWorkspaceId,
   setActiveWorkspaceId,
   listWorkspaces,
   getWorkspace,
   addWorkToWorkspace,
-  getIngestJob,
   startWorkspaceDocumentIngest,
   startWorkspaceBatchIngest,
   getWorkspaceGraphStats,
 } from "../../utils/workspaceStore.js";
+import { isAdminModeEnabled } from "../../components/layout/adminVisibility.js";
+import HypothesisPanel from "../../components/work/HypothesisPanel.jsx";
 import { persistWorkId, resolveSelectedWorkId } from "./utils/workContext.js";
 import { rememberRecentWork } from "../HomePage/homeState.js";
 import { useI18n } from "../../i18n/I18nContext.jsx";
@@ -32,7 +33,7 @@ import WorkspaceDedupSection from "./WorkspaceDedupSection.jsx";
 import WorkspaceIngestPanel from "./WorkspaceIngestPanel.jsx";
 import WorkspacePaperList from "./WorkspacePaperList.jsx";
 import { workGraphUrl } from "./workspacePageUrls.js";
-import usePollJob from "../../hooks/usePollJob.js";
+import useJobStream from "../../hooks/useJobStream.js";
 
 const INGEST_JOB_STORAGE_PREFIX = "science-graphrag:workspaceIngestJob:";
 
@@ -58,6 +59,11 @@ export default function WorkspacePage() {
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [summaryBusy, setSummaryBusy] = useState(false);
   const [summaryText, setSummaryText] = useState("");
+  const [ideaOpen, setIdeaOpen] = useState(false);
+  const [ideaBusy, setIdeaBusy] = useState(false);
+  const [ideaError, setIdeaError] = useState("");
+  const [ideaResult, setIdeaResult] = useState({ hypotheses: [], contradictions: [], toolTrace: [] });
+  const canUseIdeaAssist = useMemo(() => isAdminModeEnabled(), []);
 
   const refreshWorkspaceMeta = useCallback(async () => {
     const id = workspaceMeta.id;
@@ -242,10 +248,9 @@ export default function WorkspacePage() {
     if (selectedWorkId) persistWorkId(selectedWorkId);
   }, [selectedWorkId]);
 
-  usePollJob({
+  useJobStream({
+    jobId: ingestJobId,
     enabled: Boolean(ingestJobId),
-    intervalMs: 2000,
-    fetchJob: useCallback(() => getIngestJob(ingestJobId), [ingestJobId]),
     onUpdate: useCallback((job) => setIngestJob(job), []),
     onTerminal: useCallback(
       async () => {
@@ -261,6 +266,7 @@ export default function WorkspacePage() {
       },
       [setIngestErr],
     ),
+    fallbackPollMs: 2000,
   });
 
   const emptyState = useMemo(
@@ -362,6 +368,32 @@ export default function WorkspacePage() {
     }
   }
 
+  async function handleGenerateHypotheses() {
+    if (!workspaceMeta.id || !canUseIdeaAssist) return;
+    setIdeaBusy(true);
+    setIdeaError("");
+    try {
+      const res = await postIdeaAssist({
+        workspace_id: workspaceMeta.id,
+        mode: "both",
+        max_candidates: 3,
+      });
+      const data = res?.data || {};
+      setIdeaResult({
+        hypotheses: Array.isArray(data.hypotheses) ? data.hypotheses : [],
+        contradictions: Array.isArray(data.contradictions) ? data.contradictions : [],
+        toolTrace: Array.isArray(data.tool_trace) ? data.tool_trace : [],
+      });
+      setIdeaOpen(true);
+    } catch (err) {
+      setIdeaResult({ hypotheses: [], contradictions: [], toolTrace: [] });
+      setIdeaError(formatResearchApiError(err));
+      setIdeaOpen(true);
+    } finally {
+      setIdeaBusy(false);
+    }
+  }
+
   return (
     <Box sx={{ p: { xs: 1.5, sm: 2 }, ...mainShellContentSx }}>
       <PageHeader
@@ -418,6 +450,11 @@ export default function WorkspacePage() {
               <CursorSmallButton onClick={handleSummarizeWorkspace} disabled={summaryBusy}>
                 {summaryBusy ? "Summarizing..." : "Summarize this workspace"}
               </CursorSmallButton>
+              {canUseIdeaAssist ? (
+                <CursorSmallButton onClick={handleGenerateHypotheses} disabled={ideaBusy}>
+                  {ideaBusy ? "Generating..." : "Generate hypotheses"}
+                </CursorSmallButton>
+              ) : null}
             </Box>
           ) : null
         }
@@ -472,6 +509,21 @@ export default function WorkspacePage() {
         </DialogContent>
         <DialogActions>
           <CursorPrimaryButton onClick={() => setSummaryOpen(false)}>Close</CursorPrimaryButton>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={ideaOpen} onClose={() => setIdeaOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Hypothesis / contradiction assist</DialogTitle>
+        <DialogContent>
+          <HypothesisPanel
+            hypotheses={ideaResult.hypotheses}
+            contradictions={ideaResult.contradictions}
+            toolTrace={ideaResult.toolTrace}
+            loading={ideaBusy}
+            error={ideaError}
+          />
+        </DialogContent>
+        <DialogActions>
+          <CursorPrimaryButton onClick={() => setIdeaOpen(false)}>Close</CursorPrimaryButton>
         </DialogActions>
       </Dialog>
     </Box>

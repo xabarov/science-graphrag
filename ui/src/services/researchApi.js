@@ -195,6 +195,10 @@ export async function postAgentQuery(body, config) {
   return apiClient.post(buildApiUrl("/v1/agent/query"), body, config);
 }
 
+export async function postIdeaAssist(body, config) {
+  return apiClient.post(buildApiUrl("/v1/agent/idea-assist"), body, config);
+}
+
 function worksUrl(pathWithQuery) {
   return buildApiUrl(pathWithQuery);
 }
@@ -292,6 +296,9 @@ export async function getWorkGraph(workId, options = {}) {
   if (options.depth != null && Number.isFinite(Number(options.depth))) {
     const d = Math.min(3, Math.max(1, Math.floor(Number(options.depth))));
     params.set("depth", String(d));
+  }
+  if (options.prioritize != null && String(options.prioritize).trim()) {
+    params.set("prioritize", String(options.prioritize).trim());
   }
   const q = params.toString();
   return apiClient.get(worksUrl(`/v1/works/${id}/graph${q ? `?${q}` : ""}`));

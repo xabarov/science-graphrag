@@ -1,0 +1,6 @@
+{
+  "workspace_id": "ws_idea_06",
+  "seed_topic": "graph neural networks for drug-target affinity",
+  "mode": "both",
+  "notes": "Test cross-paper synthesis on model architecture and assay mismatch."
+}

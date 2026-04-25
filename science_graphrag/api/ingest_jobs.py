@@ -5,32 +5,52 @@ from __future__ import annotations
 import json
 import threading
 import uuid
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import gettempdir
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
+from opentelemetry import trace as trace_api
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import select, text
+from sse_starlette.sse import EventSourceResponse
 
+from science_graphrag.api.ingest_event_bus import BUS
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.pipeline import SkippedDuplicateIngestError, ingest_document
 from science_graphrag.ingestion.stage_context import IngestStage, stage
+from science_graphrag.observability.phoenix_tracer import chain_span
 from science_graphrag.storage.db import get_engine, init_db, session_factory
 from science_graphrag.storage.models_orm import IngestJobRecordOrm, IngestJobStageOrm
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 
 SUPPORTED_SUFFIXES = frozenset({".pdf", ".md", ".txt"})
 BATCH_MAX_FILES = 200
+_REGISTRY_LOCK = threading.Lock()
+_REGISTRY_BOX: dict[str, IngestJobRegistry | None] = {"value": None}
+
+
+def _registry(settings: Settings | None = None):
+    registry = _REGISTRY_BOX["value"]
+    if registry is not None:
+        return registry
+    with _REGISTRY_LOCK:
+        registry = _REGISTRY_BOX["value"]
+        if registry is None:
+            registry = IngestJobRegistry(settings or get_settings())
+            _REGISTRY_BOX["value"] = registry
+    return registry
 
 
 def _append_log(job_id: str, line: str) -> None:
+    registry = _registry()
     ts = datetime.now(UTC).strftime("%H:%M:%S")
     chunk = f"[{ts}] {line}\n"
-    with _REGISTRY.lock:
-        with _REGISTRY._session_factory() as session:
+    with registry.lock:
+        with registry._session_factory() as session:
             row = session.execute(
                 select(IngestJobRecordOrm)
                 .where(IngestJobRecordOrm.job_id == str(job_id).strip())
@@ -62,6 +82,7 @@ class IngestJobRecord:
     parent_job_id: str | None = None
     child_job_ids: list[str] = field(default_factory=list)
     stages: list[dict[str, Any]] = field(default_factory=list)
+    phoenix_trace_id: str | None = None
 
 
 class IngestJobRegistry:
@@ -73,6 +94,14 @@ class IngestJobRegistry:
         self._engine = get_engine(settings.database_url)
         init_db(self._engine)
         self._session_factory = session_factory(self._engine)
+        # Keep runtime compatibility with databases created before phoenix_trace_id existed.
+        with self._engine.begin() as conn:
+            conn.execute(
+                text(
+                    "ALTER TABLE ingest_jobs "
+                    "ADD COLUMN IF NOT EXISTS phoenix_trace_id VARCHAR(64)"
+                )
+            )
         self.mark_stale_running_jobs_failed()
 
     @staticmethod
@@ -105,6 +134,7 @@ class IngestJobRegistry:
             parent_job_id=row.parent_job_id,
             child_job_ids=row.child_job_ids,
             stages=stage_rows,
+            phoenix_trace_id=row.phoenix_trace_id,
         )
 
     @staticmethod
@@ -172,6 +202,7 @@ class IngestJobRegistry:
         parent_job_id: str | None = None,
     ) -> IngestJobRecord:
         job_id = str(uuid.uuid4())
+        BUS.cleanup_old_events(ttl_hours=24)
         with self.lock:
             with self._session_factory() as session:
                 row = IngestJobRecordOrm(
@@ -226,22 +257,66 @@ class IngestJobRegistry:
                 session.commit()
 
 
-_REGISTRY = IngestJobRegistry(get_settings())
-
-
 def _ingest_workspace_tag(workspace_id: str) -> list[str]:
     w = workspace_id.strip()
     return [w] if w else []
 
 
+def _publish_bus_event(
+    *,
+    job_id: str,
+    parent_job_id: str | None,
+    kind: str,
+    payload: dict[str, Any],
+) -> None:
+    BUS.publish_threadsafe({"job_id": job_id, "kind": kind, "payload": payload})
+    if parent_job_id:
+        parent_payload = dict(payload)
+        parent_payload["source_job_id"] = job_id
+        BUS.publish_threadsafe({"job_id": parent_job_id, "kind": kind, "payload": parent_payload})
+
+
+def _stage_event_publisher(job_id: str, parent_job_id: str | None = None):
+    def _publish(
+        stage_name: IngestStage, status: str, metrics: dict[str, Any], error: str | None
+    ) -> None:
+        now_iso = _now_iso()
+        payload: dict[str, Any] = {
+            "job_id": job_id,
+            "stage": stage_name.value,
+            "status": status,
+            "metrics": dict(metrics or {}),
+        }
+        if status == "running":
+            payload["started_at"] = now_iso
+            _publish_bus_event(
+                job_id=job_id, parent_job_id=parent_job_id, kind="stage_started", payload=payload
+            )
+            return
+        payload["finished_at"] = now_iso
+        if error:
+            payload["error"] = error
+            _publish_bus_event(
+                job_id=job_id, parent_job_id=parent_job_id, kind="stage_failed", payload=payload
+            )
+            return
+        _publish_bus_event(
+            job_id=job_id, parent_job_id=parent_job_id, kind="stage_finished", payload=payload
+        )
+
+    return _publish
+
+
 def _execute_single_ingest(job_id: str, temp_path: Path, settings: Settings) -> None:
-    job = _REGISTRY.get(job_id)
+    registry = _registry(settings)
+    job = registry.get(job_id)
     if not job:
         return
 
     def upd(**kwargs: Any) -> None:
-        _REGISTRY._update(job_id, **kwargs)
+        registry._update(job_id, **kwargs)
 
+    stage_publisher = _stage_event_publisher(job_id, job.parent_job_id)
     try:
         upd(status="running", message="Starting ingestion", progress_current=5)
         _append_log(job_id, f"Temp file {temp_path}")
@@ -254,83 +329,145 @@ def _execute_single_ingest(job_id: str, temp_path: Path, settings: Settings) -> 
                 message=f"Unsupported type {suf!r}",
                 finished_at=_now_iso(),
             )
+            _publish_bus_event(
+                job_id=job_id,
+                parent_job_id=job.parent_job_id,
+                kind="terminal",
+                payload={
+                    "job_id": job_id,
+                    "status": "failed",
+                    "error": "unsupported_file_type",
+                    "finished_at": _now_iso(),
+                },
+            )
             return
 
         upd(message="Running pipeline (Neo4j / vectors / SQL)…", progress_current=15)
+        with chain_span(
+            "api.ingest_job",
+            {"job.id": job_id, "workspace.id": job.workspace_id, "input.file": temp_path.name},
+        ):
+            trace_ctx = trace_api.get_current_span().get_span_context()
+            if trace_ctx.trace_id:
+                registry._update(job_id, phoenix_trace_id=format(trace_ctx.trace_id, "032x"))
 
-        engine = get_engine(settings.database_url)
-        init_db(engine)
-        factory = session_factory(engine)
-        work_id: str | None = None
-        doc_id: str | None = None
-        skipped = False
-        ws_tag = _ingest_workspace_tag(job.workspace_id)
-        try:
-            with factory() as session:
-                with session.begin():
-                    doc_id, work_id = ingest_document(
-                        temp_path,
-                        settings=settings,
-                        session=session,
-                        skip_existing_sha=False,
-                        force_new_document=False,
-                        ingest_workspace_ids=ws_tag,
-                        job_id=job_id,
-                        stage_session_factory=_REGISTRY._session_factory,
-                    )
-        except SkippedDuplicateIngestError as dup:
-            skipped = True
-            doc_id = dup.document_id
-            work_id = None
-            _append_log(
-                job_id, f"Skipped duplicate sha256={dup.sha256} document_id={dup.document_id}"
-            )
-
-        upd(progress_current=85, message="Attaching to workspace…")
-        store = Neo4jGraphStore(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password)
-        try:
-            ws = store.workspace_get(job.workspace_id)
-            if not ws:
-                upd(
-                    status="failed",
-                    error="workspace_not_found",
-                    message="Workspace not found",
-                    finished_at=_now_iso(),
-                )
-                return
-            if work_id and not skipped:
-                with stage(
-                    job_id,
-                    IngestStage.ATTACH_WORKSPACE,
-                    session_factory=_REGISTRY._session_factory,
-                ) as st:
-                    st.metric("workspace_id", job.workspace_id)
-                    if not store.workspace_add_work(job.workspace_id, str(work_id)):
-                        upd(
-                            status="failed",
-                            error="work_attach_failed",
-                            message="Ingest OK but could not attach work to workspace (invalid work_id?)",
-                            document_id=doc_id,
-                            work_id=work_id,
-                            finished_at=_now_iso(),
+            engine = get_engine(settings.database_url)
+            init_db(engine)
+            factory = session_factory(engine)
+            work_id: str | None = None
+            doc_id: str | None = None
+            skipped = False
+            ws_tag = _ingest_workspace_tag(job.workspace_id)
+            try:
+                with factory() as session:
+                    with session.begin():
+                        doc_id, work_id = ingest_document(
+                            temp_path,
+                            settings=settings,
+                            session=session,
+                            skip_existing_sha=False,
+                            force_new_document=False,
+                            ingest_workspace_ids=ws_tag,
+                            job_id=job_id,
+                            parent_job_id=job.parent_job_id,
+                            stage_session_factory=registry._session_factory,
+                            stage_event_publisher=stage_publisher,
                         )
-                        return
-        finally:
-            store.close()
+            except SkippedDuplicateIngestError as dup:
+                skipped = True
+                doc_id = dup.document_id
+                work_id = None
+                _append_log(
+                    job_id, f"Skipped duplicate sha256={dup.sha256} document_id={dup.document_id}"
+                )
 
-        upd(
-            status="completed",
-            message="Done" if not skipped else "Duplicate bytes skipped (existing document)",
-            progress_current=100,
-            document_id=doc_id,
-            work_id=work_id,
-            skipped_duplicate=skipped,
-            finished_at=_now_iso(),
-        )
-        _append_log(job_id, "Completed")
+            upd(progress_current=85, message="Attaching to workspace…")
+            store = Neo4jGraphStore(
+                settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password
+            )
+            try:
+                ws = store.workspace_get(job.workspace_id)
+                if not ws:
+                    upd(
+                        status="failed",
+                        error="workspace_not_found",
+                        message="Workspace not found",
+                        finished_at=_now_iso(),
+                    )
+                    _publish_bus_event(
+                        job_id=job_id,
+                        parent_job_id=job.parent_job_id,
+                        kind="terminal",
+                        payload={
+                            "job_id": job_id,
+                            "status": "failed",
+                            "error": "workspace_not_found",
+                            "finished_at": _now_iso(),
+                        },
+                    )
+                    return
+                if work_id and not skipped:
+                    with stage(
+                        job_id,
+                        IngestStage.ATTACH_WORKSPACE,
+                        session_factory=registry._session_factory,
+                        publisher=stage_publisher,
+                    ) as st:
+                        st.metric("workspace_id", job.workspace_id)
+                        if not store.workspace_add_work(job.workspace_id, str(work_id)):
+                            upd(
+                                status="failed",
+                                error="work_attach_failed",
+                                message="Ingest OK but could not attach work to workspace (invalid work_id?)",
+                                document_id=doc_id,
+                                work_id=work_id,
+                                finished_at=_now_iso(),
+                            )
+                            _publish_bus_event(
+                                job_id=job_id,
+                                parent_job_id=job.parent_job_id,
+                                kind="terminal",
+                                payload={
+                                    "job_id": job_id,
+                                    "status": "failed",
+                                    "error": "work_attach_failed",
+                                    "finished_at": _now_iso(),
+                                },
+                            )
+                            return
+            finally:
+                store.close()
+
+            upd(
+                status="completed",
+                message="Done" if not skipped else "Duplicate bytes skipped (existing document)",
+                progress_current=100,
+                document_id=doc_id,
+                work_id=work_id,
+                skipped_duplicate=skipped,
+                finished_at=_now_iso(),
+            )
+            _append_log(job_id, "Completed")
+            _publish_bus_event(
+                job_id=job_id,
+                parent_job_id=job.parent_job_id,
+                kind="terminal",
+                payload={"job_id": job_id, "status": "completed", "finished_at": _now_iso()},
+            )
     except Exception as exc:  # noqa: BLE001
         _append_log(job_id, f"ERROR {exc!r}")
         upd(status="failed", error="ingest_failed", message=str(exc)[:500], finished_at=_now_iso())
+        _publish_bus_event(
+            job_id=job_id,
+            parent_job_id=job.parent_job_id,
+            kind="terminal",
+            payload={
+                "job_id": job_id,
+                "status": "failed",
+                "error": str(exc)[:500],
+                "finished_at": _now_iso(),
+            },
+        )
 
 
 def _run_ingest_thread(
@@ -348,7 +485,8 @@ def _run_ingest_thread(
 
 
 def _refresh_parent_job(parent_id: str) -> None:
-    parent = _REGISTRY.get(parent_id)
+    registry = _registry()
+    parent = registry.get(parent_id)
     if not parent or parent.kind != "batch_parent":
         return
     children = [cid for cid in parent.child_job_ids if cid]
@@ -356,7 +494,7 @@ def _refresh_parent_job(parent_id: str) -> None:
         return
     statuses = []
     for cid in children:
-        ch = _REGISTRY.get(cid)
+        ch = registry.get(cid)
         if ch:
             statuses.append(ch.status)
     failed = sum(1 for s in statuses if s == "failed")
@@ -376,7 +514,7 @@ def _refresh_parent_job(parent_id: str) -> None:
     else:
         msg = f"Batch completed ({total} file(s))"
         st = "completed"
-    _REGISTRY._update(
+    registry._update(
         parent_id,
         status=st,
         message=msg,
@@ -384,12 +522,34 @@ def _refresh_parent_job(parent_id: str) -> None:
         progress_total=100,
         finished_at=_now_iso() if done == total else parent.finished_at,
     )
+    _publish_bus_event(
+        job_id=parent_id,
+        parent_job_id=None,
+        kind="batch_progress",
+        payload={
+            "job_id": parent_id,
+            "status": st,
+            "message": msg,
+            "progress_current": pct,
+            "progress_total": 100,
+            "done_children": done,
+            "total_children": total,
+        },
+    )
+    if done == total:
+        _publish_bus_event(
+            job_id=parent_id,
+            parent_job_id=None,
+            kind="terminal",
+            payload={"job_id": parent_id, "status": st, "finished_at": _now_iso()},
+        )
 
 
 def _run_batch_thread(
     parent_id: str, child_paths: list[tuple[str, Path]], settings: Settings
 ) -> None:
-    parent = _REGISTRY.get(parent_id)
+    registry = _registry(settings)
+    parent = registry.get(parent_id)
     if not parent:
         for _, p in child_paths:
             try:
@@ -397,7 +557,7 @@ def _run_batch_thread(
             except OSError:
                 pass
         return
-    _REGISTRY._update(
+    registry._update(
         parent_id,
         status="running",
         message=f"Processing {len(child_paths)} file(s)…",
@@ -436,12 +596,13 @@ def start_batch_ingest_job(
             status_code=400,
             detail={"error": "too_many_files", "max": BATCH_MAX_FILES, "got": len(files)},
         )
-    parent = _REGISTRY.create_job(
+    registry = _registry(settings)
+    parent = registry.create_job(
         workspace_id,
         f"batch ({len(files)} files)",
         kind="batch_parent",
     )
-    _REGISTRY._update(
+    registry._update(
         parent.job_id,
         progress_total=len(files),
         message=f"Queued {len(files)} file(s)",
@@ -453,7 +614,7 @@ def start_batch_ingest_job(
         suffix = Path(name or "doc").suffix.lower()
         if suffix not in SUPPORTED_SUFFIXES:
             continue
-        child = _REGISTRY.create_job(
+        child = registry.create_job(
             workspace_id,
             (name or "upload").strip() or "upload",
             kind="batch_child",
@@ -465,7 +626,7 @@ def start_batch_ingest_job(
         child_paths.append((child.job_id, temp_path))
         _append_log(child.job_id, f"Part of batch {parent.job_id}")
     if not child_paths:
-        _REGISTRY._update(
+        registry._update(
             parent.job_id,
             status="failed",
             error="no_valid_files",
@@ -473,7 +634,7 @@ def start_batch_ingest_job(
             finished_at=_now_iso(),
         )
         raise HTTPException(status_code=400, detail="no_supported_files_in_batch")
-    _REGISTRY._update(parent.job_id, child_job_ids=[c[0] for c in child_paths])
+    registry._update(parent.job_id, child_job_ids=[c[0] for c in child_paths])
     threading.Thread(
         target=_run_batch_thread,
         args=(parent.job_id, child_paths, settings),
@@ -500,7 +661,7 @@ def start_ingest_job(
             detail=f"unsupported_type_allowed:{','.join(sorted(SUPPORTED_SUFFIXES))}",
         )
 
-    rec = _REGISTRY.create_job(workspace_id, filename)
+    rec = _registry(settings).create_job(workspace_id, filename)
     safe_name = f"ingest-{rec.job_id}{suffix}"
     temp_path = Path(gettempdir()) / safe_name
     temp_path.write_bytes(file_bytes)
@@ -537,6 +698,7 @@ class IngestJobView(BaseModel):
     parent_job_id: str | None = None
     child_job_ids: list[str] = Field(default_factory=list)
     stages: list["IngestStageView"] = Field(default_factory=list)
+    phoenix_trace_id: str | None = None
 
 
 class IngestStageView(BaseModel):
@@ -571,11 +733,12 @@ def job_to_dict(rec: IngestJobRecord) -> dict[str, Any]:
         parent_job_id=rec.parent_job_id,
         child_job_ids=list(rec.child_job_ids),
         stages=[IngestStageView(**stage_row) for stage_row in rec.stages],
+        phoenix_trace_id=rec.phoenix_trace_id,
     ).model_dump()
     if rec.kind == "batch_parent":
         child_jobs: list[dict[str, Any]] = []
         for cid in rec.child_job_ids:
-            ch = _REGISTRY.get(cid)
+            ch = _registry().get(cid)
             if ch:
                 child_jobs.append(job_to_dict(ch))
         out["child_jobs"] = child_jobs
@@ -589,13 +752,71 @@ router = APIRouter(tags=["ingest"])
 def get_ingest_job(job_id: str) -> dict[str, Any]:
     """Return status and logs for a workspace document ingest job."""
 
-    rec = _REGISTRY.get(job_id)
+    registry = _registry()
+    rec = registry.get(job_id)
     if not rec:
         raise HTTPException(status_code=404, detail="job_not_found")
     if rec.kind == "batch_parent":
         _refresh_parent_job(job_id)
-        rec = _REGISTRY.get(job_id) or rec
+        rec = registry.get(job_id) or rec
     return job_to_dict(rec)
+
+
+def _parse_last_event_id(raw: str | None) -> int:
+    if not raw:
+        return 0
+    try:
+        return max(0, int(str(raw).strip()))
+    except Exception:
+        return 0
+
+
+def _is_terminal_status(status: str | None) -> bool:
+    return str(status or "").strip().lower() in {"completed", "failed"}
+
+
+def _to_sse_event(seq: int, kind: str, payload: dict[str, Any]) -> dict[str, Any]:
+    return {"id": str(seq), "event": str(kind), "data": json.dumps(payload, ensure_ascii=True)}
+
+
+async def _job_events_stream(job_id: str, request: Request) -> AsyncIterator[dict[str, Any]]:
+    registry = _registry()
+    rec = registry.get(job_id)
+    if not rec:
+        return
+    yield _to_sse_event(0, "snapshot", {"job": job_to_dict(rec)})
+    last_seq = _parse_last_event_id(request.headers.get("last-event-id"))
+    if last_seq > 0:
+        for seq, event in BUS.replay_from(job_id, last_seq):
+            yield _to_sse_event(seq, event["kind"], event["payload"])
+            if event["kind"] == "terminal":
+                return
+    async for seq, event in BUS.subscribe(job_id):
+        if await request.is_disconnected():
+            break
+        yield _to_sse_event(seq, event["kind"], event["payload"])
+        if event["kind"] == "terminal":
+            break
+        if rec.kind == "batch_parent" and event["kind"] == "batch_progress":
+            refreshed = registry.get(job_id)
+            if refreshed and _is_terminal_status(refreshed.status):
+                break
+
+
+@router.get("/ingest/jobs/{job_id}/events")
+async def get_ingest_job_events(job_id: str, request: Request) -> EventSourceResponse:
+    registry = _registry()
+    rec = registry.get(job_id)
+    if not rec:
+        raise HTTPException(status_code=404, detail="job_not_found")
+    if rec.kind == "batch_parent":
+        _refresh_parent_job(job_id)
+    return EventSourceResponse(
+        _job_events_stream(job_id, request),
+        ping=15,
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache"},
+    )
 
 
 class IngestStubBody(BaseModel):

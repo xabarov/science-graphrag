@@ -1,0 +1,6 @@
+{
+  "workspace_id": "ws_idea_05",
+  "seed_topic": "few-shot medical segmentation with synthetic priors",
+  "mode": "hypotheses",
+  "notes": "Prefer non-trivial claims on transferability and calibration."
+}

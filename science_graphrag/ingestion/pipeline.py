@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from opentelemetry import trace as trace_api
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from tenacity import Retrying, retry, stop_after_attempt, wait_exponential
@@ -37,10 +38,22 @@ from science_graphrag.ingestion.pdf import extract_text_from_pdf
 from science_graphrag.ingestion.stage_context import IngestStage, stage
 from science_graphrag.ingestion.stages.metadata import merge_draft_prefer_enriched
 from science_graphrag.ingestion.vl_pdf import VLPDFProcessor
-from science_graphrag.observability.phoenix_tracer import chain_span, init_tracer_provider
+from science_graphrag.observability.phoenix_tracer import (
+    OpenInferenceAttributes,
+    SpanAttributes,
+    chain_span,
+    embeddings_span,
+    init_tracer_provider,
+    llm_span,
+    set_span_attributes,
+)
 from science_graphrag.storage.blobs import BlobStore
 from science_graphrag.storage.db import get_engine, init_db, session_factory
-from science_graphrag.storage.models_orm import DocumentRecord, IngestionRunRecord
+from science_graphrag.storage.models_orm import (
+    DocumentRecord,
+    IngestionRunRecord,
+    IngestJobRecordOrm,
+)
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 from science_graphrag.storage.qdrant_claims_store import QdrantClaimsStore
 from science_graphrag.storage.qdrant_store import QdrantChunkStore, QdrantWorkEmbeddingStore
@@ -173,7 +186,7 @@ def _markdown_from_path(path: Path, settings: Settings) -> tuple[str, str]:
             return cached
 
     with chain_span(
-        "pdf_to_markdown",
+        "ingest.parse_pdf.markdown",
         {"use_vl": settings.use_vl_for_pdf, "path": path.name},
     ):
         if settings.use_vl_for_pdf:
@@ -404,7 +417,9 @@ def ingest_document(
     force_new_document: bool = False,
     ingest_workspace_ids: list[str] | None = None,
     job_id: str | None = None,
+    parent_job_id: str | None = None,
     stage_session_factory: Any | None = None,
+    stage_event_publisher: Any | None = None,
 ) -> tuple[str, str]:
     """
     Ingest one PDF or text file. Returns (document_id, work_id).
@@ -427,18 +442,46 @@ def ingest_document(
             skip_existing_sha=skip_existing_sha,
             force_new_document=force_new_document,
         )
-    with chain_span(
-        "ingest_document",
-        {
-            "document.id": doc_id,
-            "document.source_name": path.name,
-            "document.sha256": sha,
-            "document.reused_id": reused_doc,
-            "source": str(path.resolve()),
-        },
-    ):
-        with stage(job_id, IngestStage.PARSE_PDF, session_factory=stage_session_factory) as st:
+    workspace_id = (ingest_workspace_ids or [None])[0]
+    root_attrs: dict[str, Any] = {
+        "document.id": doc_id,
+        "document.source_name": path.name,
+        "document.sha256": sha,
+        "document.reused_id": reused_doc,
+        "source": str(path.resolve()),
+        "metadata.source_name": path.name,
+        "metadata.extraction_llm_model": settings.extraction_llm_model,
+        "metadata.embedding_model": settings.embedding_model or "hash-deterministic",
+        "metadata.vl_model": settings.vl_model,
+    }
+    if job_id:
+        root_attrs[OpenInferenceAttributes.SESSION_ID] = str(job_id)
+        root_attrs["metadata.job_id"] = str(job_id)
+    if parent_job_id:
+        root_attrs["metadata.parent_job_id"] = str(parent_job_id)
+    if workspace_id:
+        root_attrs[OpenInferenceAttributes.USER_ID] = str(workspace_id)
+        root_attrs["metadata.workspace_id"] = str(workspace_id)
+    with chain_span("ingest_document", root_attrs):
+        if session is not None and job_id:
+            trace_ctx = trace_api.get_current_span().get_span_context()
+            if trace_ctx.trace_id:
+                trace_id = format(trace_ctx.trace_id, "032x")
+                row = session.execute(
+                    select(IngestJobRecordOrm)
+                    .where(IngestJobRecordOrm.job_id == str(job_id).strip())
+                    .limit(1)
+                ).scalar_one_or_none()
+                if row is not None and not row.phoenix_trace_id:
+                    row.phoenix_trace_id = trace_id
+        with stage(
+            job_id,
+            IngestStage.PARSE_PDF,
+            session_factory=stage_session_factory,
+            publisher=stage_event_publisher,
+        ) as st:
             markdown_text, extraction_mode = _markdown_from_path(path, settings)
+            set_span_attributes({"metadata.extraction_mode": extraction_mode})
             st.metric("source_suffix", path.suffix.lower())
             st.metric("extraction_mode", extraction_mode)
         _artifact_path = _write_markdown_artifact(
@@ -460,9 +503,14 @@ def ingest_document(
             max_chars=settings.references_scope_max_chars,
         )
 
-        with stage(job_id, IngestStage.EXTRACT_META, session_factory=stage_session_factory) as st:
+        with stage(
+            job_id,
+            IngestStage.EXTRACT_META,
+            session_factory=stage_session_factory,
+            publisher=stage_event_publisher,
+        ) as st:
             with chain_span(
-                "metadata_and_references_extraction",
+                "ingest.extract_meta.metadata_and_refs",
                 {
                     "document.id": doc_id,
                     "document.source_name": path.name,
@@ -488,36 +536,68 @@ def ingest_document(
 
         oa_raw: dict[str, Any] | None = None
         with stage(
-            job_id, IngestStage.ENRICH_OPENALEX, session_factory=stage_session_factory
+            job_id,
+            IngestStage.ENRICH_OPENALEX,
+            session_factory=stage_session_factory,
+            publisher=stage_event_publisher,
         ) as st:
-            with chain_span("openalex_enrichment"):
+            with chain_span("ingest.enrich_openalex.lookup"):
+                SpanAttributes.set_input({"doi": draft.doi})
                 if draft.doi:
+                    openalex_url = f"https://api.openalex.org/works/doi:{draft.doi}"
+                    set_span_attributes(
+                        {
+                            "http.request.method": "GET",
+                            "http.url": openalex_url,
+                            "openalex.doi": draft.doi,
+                            "retry.max_attempts": 3,
+                        }
+                    )
                     try:
                         oa = _openalex_lookup_with_retry(draft.doi, settings.openalex_mailto)
                         if oa:
                             oa_raw = oa
                             enriched = draft_from_openalex(oa)
                             draft = merge_draft_prefer_enriched(draft, enriched)
+                            SpanAttributes.set_output(
+                                {
+                                    "openalex_id": oa.get("id"),
+                                    "title": (oa.get("display_name") or "")[:300],
+                                }
+                            )
+                            set_span_attributes({"openalex.found": True})
+                        else:
+                            set_span_attributes({"openalex.found": False})
                     except Exception as exc:  # noqa: BLE001
+                        set_span_attributes({"openalex.found": False})
                         log.warning("OpenAlex enrichment failed for doi=%s: %s", draft.doi, exc)
             st.metric("has_doi", int(bool(draft.doi)))
             st.metric("enriched", int(bool(oa_raw)))
 
         neo = Neo4jGraphStore(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password)
         try:
-            with chain_span("neo4j_graph_persistence"):
-                _retry_call(neo.ensure_schema)
-                work_id = _resolve_work_id(neo, draft)
-                vid = _venue_id(draft.venue_name)
-                with stage(
-                    job_id, IngestStage.ENRICH_ROR, session_factory=stage_session_factory
-                ) as st:
-                    inst_nodes = _institution_nodes_from_authorships(authorships, settings)
-                    st.metric("institutions", len(inst_nodes))
+            _retry_call(neo.ensure_schema)
+            work_id = _resolve_work_id(neo, draft)
+            vid = _venue_id(draft.venue_name)
+            with stage(
+                job_id,
+                IngestStage.ENRICH_ROR,
+                session_factory=stage_session_factory,
+                publisher=stage_event_publisher,
+            ) as st:
+                inst_nodes = _institution_nodes_from_authorships(authorships, settings)
+                st.metric("institutions", len(inst_nodes))
 
-                with stage(
-                    job_id, IngestStage.WRITE_GRAPH, session_factory=stage_session_factory
-                ) as st:
+            with stage(
+                job_id,
+                IngestStage.WRITE_GRAPH,
+                session_factory=stage_session_factory,
+                publisher=stage_event_publisher,
+            ) as st:
+                with chain_span(
+                    "ingest.write_graph.upsert_work_layer1",
+                    {"db.system": "neo4j", "db.operation": "merge", "writes.count": 1},
+                ):
                     _retry_call(
                         neo.upsert_work_layer1,
                         work_id,
@@ -526,47 +606,55 @@ def ingest_document(
                         venue_id=vid,
                         institution_nodes=inst_nodes,
                     )
-                    st.metric("authorships", len(authorships))
+                st.metric("authorships", len(authorships))
 
-                    with chain_span(
-                        "semantic_method_dataset",
-                        {"document.id": doc_id, "work.id": work_id},
-                    ):
-                        semantic = extract_semantic_method_dataset(
-                            normalized,
-                            settings,
-                            document_id=doc_id,
-                        )
-                        _retry_call(
-                            neo.sync_work_semantic_layer,
-                            work_id,
-                            semantic,
-                            confidence_threshold=settings.semantic_graph_confidence_threshold,
-                        )
-                    st.metric("semantic_claims", len(getattr(semantic, "claims", []) or []))
-
-                with stage(
-                    job_id, IngestStage.RESOLVE_REFERENCES, session_factory=stage_session_factory
+                with chain_span(
+                    "ingest.write_graph.semantic",
+                    {"document.id": doc_id, "work.id": work_id},
                 ) as st:
-                    linked_refs = 0
-                    for ref in references:
-                        if not (
-                            normalize_doi(ref.doi)
-                            or _normalize_arxiv_id(ref.arxiv_id)
-                            or (
-                                _normalized_title_for_fingerprint(ref.title) is not None
-                                and ref.year is not None
-                            )
-                        ):
-                            continue
-                        _retry_call(_persist_reference_citation, neo, work_id, ref, settings)
-                        linked_refs += 1
-                    st.metric("references_total", len(references))
-                    st.metric("references_linked", linked_refs)
+                    semantic = extract_semantic_method_dataset(
+                        normalized,
+                        settings,
+                        document_id=doc_id,
+                    )
+                    _retry_call(
+                        neo.sync_work_semantic_layer,
+                        work_id,
+                        semantic,
+                        confidence_threshold=settings.semantic_graph_confidence_threshold,
+                    )
+                st.metric("semantic_claims", len(getattr(semantic, "claims", []) or []))
 
-                _retry_call(_maybe_link_openalex_arxiv_version, neo, work_id, draft, oa_raw)
+            with stage(
+                job_id,
+                IngestStage.RESOLVE_REFERENCES,
+                session_factory=stage_session_factory,
+                publisher=stage_event_publisher,
+            ) as st:
+                linked_refs = 0
+                for ref in references:
+                    if not (
+                        normalize_doi(ref.doi)
+                        or _normalize_arxiv_id(ref.arxiv_id)
+                        or (
+                            _normalized_title_for_fingerprint(ref.title) is not None
+                            and ref.year is not None
+                        )
+                    ):
+                        continue
+                    _retry_call(_persist_reference_citation, neo, work_id, ref, settings)
+                    linked_refs += 1
+                st.metric("references_total", len(references))
+                st.metric("references_linked", linked_refs)
 
-            with stage(job_id, IngestStage.CHUNK, session_factory=stage_session_factory) as st:
+            _retry_call(_maybe_link_openalex_arxiv_version, neo, work_id, draft, oa_raw)
+
+            with stage(
+                job_id,
+                IngestStage.CHUNK,
+                session_factory=stage_session_factory,
+                publisher=stage_event_publisher,
+            ) as st:
                 doc_chunks = dedupe_chunks_for_embedding(
                     chunk_document_for_retrieval(
                         normalized,
@@ -577,7 +665,10 @@ def ingest_document(
                 st.metric("chunks", len(doc_chunks))
             claim_rows: list[Any] = []
             with stage(
-                job_id, IngestStage.EXTRACT_CLAIMS, session_factory=stage_session_factory
+                job_id,
+                IngestStage.EXTRACT_CLAIMS,
+                session_factory=stage_session_factory,
+                publisher=stage_event_publisher,
             ) as st:
                 if settings.claims_extraction_enabled:
                     chunk_dicts = [
@@ -589,35 +680,69 @@ def ingest_document(
                         for c in doc_chunks
                     ]
                     with chain_span(
-                        "claims_extraction",
+                        "ingest.extract_claims.llm",
                         {"document.id": doc_id, "work.id": work_id, "chunks": len(chunk_dicts)},
                     ):
-                        claim_rows = extract_claims_llm(
-                            chunk_dicts,
-                            work_id,
-                            settings,
-                            force_benchmark=False,
-                        )
+                        with llm_span(
+                            "llm.claims_extraction",
+                            {"document.id": doc_id, "work.id": work_id, "chunks": len(chunk_dicts)},
+                        ):
+                            claim_rows = extract_claims_llm(
+                                chunk_dicts,
+                                work_id,
+                                settings,
+                                force_benchmark=False,
+                            )
                     st.metric("claims", len(claim_rows))
-                    _retry_call(neo.detach_delete_claims_for_work, work_id)
-                    _retry_call(neo.upsert_claims_with_evidence, work_id, claim_rows)
+                    with chain_span(
+                        "ingest.extract_claims.upsert_claims",
+                        {
+                            "db.system": "neo4j",
+                            "db.operation": "merge",
+                            "writes.count": len(claim_rows),
+                        },
+                    ):
+                        _retry_call(neo.detach_delete_claims_for_work, work_id)
+                        _retry_call(neo.upsert_claims_with_evidence, work_id, claim_rows)
                 else:
                     st.metric("claims_extraction_enabled", 0)
 
-            with stage(job_id, IngestStage.EMBED, session_factory=stage_session_factory) as st:
+            with stage(
+                job_id,
+                IngestStage.EMBED,
+                session_factory=stage_session_factory,
+                publisher=stage_event_publisher,
+            ) as st:
                 embedder = (
                     try_sentence_transformer(settings.embedding_model)
                     if settings.embedding_model
                     else HashEmbeddingProvider()
                 )
                 chunk_texts = [c.text for c in doc_chunks]
-                vectors = embedder.embed(chunk_texts)
+                embedding_model = settings.embedding_model or "hash-deterministic"
+                with embeddings_span(
+                    "ingest.embed.vectorize_chunks",
+                    {
+                        "embedding.model_name": embedding_model,
+                        "embedding.dim": embedder.dim,
+                        "embedding.input_count": len(chunk_texts),
+                    },
+                ):
+                    vectors = embedder.embed(chunk_texts)
                 first_author = ""
                 if authorships:
                     ordered_auth = sorted(authorships, key=lambda x: x.author_position or 0)
                     first_author = (ordered_auth[0].author_raw_name or "").strip()
                 summary_text = f"{draft.title or ''}\n{draft.abstract or ''}\n{first_author}"[:8000]
-                w_summary_vec = embedder.embed([summary_text])[0]
+                with embeddings_span(
+                    "ingest.embed.vectorize_work_summary",
+                    {
+                        "embedding.model_name": embedding_model,
+                        "embedding.dim": embedder.dim,
+                        "embedding.input_count": 1,
+                    },
+                ):
+                    w_summary_vec = embedder.embed([summary_text])[0]
                 qw = QdrantWorkEmbeddingStore(
                     settings.qdrant_url,
                     settings.qdrant_work_embeddings_collection,
@@ -649,10 +774,15 @@ def ingest_document(
                         doc_id,
                     )
                 with chain_span(
-                    "qdrant_vector_upsert",
+                    "ingest.embed.qdrant_chunks",
                     {
                         "chunks": len(doc_chunks),
-                        "embedding": settings.embedding_model or "hash",
+                        "embedding": embedding_model,
+                        "db.system": "qdrant",
+                        "db.collection.name": settings.qdrant_collection,
+                        "db.operation": "upsert",
+                        "vector.dim": embedder.dim,
+                        "vector.count": len(vectors),
                     },
                 ):
                     _retry_call(
@@ -666,10 +796,15 @@ def ingest_document(
                     )
                 if settings.claims_extraction_enabled and claim_rows:
                     with chain_span(
-                        "qdrant_claims_upsert",
+                        "ingest.embed.qdrant_claims",
                         {
                             "claims": len(claim_rows),
-                            "embedding": settings.embedding_model or "hash",
+                            "embedding": embedding_model,
+                            "db.system": "qdrant",
+                            "db.collection.name": settings.qdrant_claims_collection,
+                            "db.operation": "upsert",
+                            "vector.dim": embedder.dim,
+                            "vector.count": len(claim_rows),
                         },
                     ):
                         qc = QdrantClaimsStore(

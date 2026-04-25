@@ -16,6 +16,22 @@ UUID_RE = re.compile(
     r"(?::[A-Za-z0-9._-]+)*$",
 )
 
+EDGE_DISPLAY_TYPE_RAW: dict[str, str] = {
+    "CITES": "cites",
+    "HAS_AUTHORSHIP": "has authorship",
+    "OF_AUTHOR": "of author",
+    "AFFILIATED_WITH": "affiliated with",
+    "PUBLISHED_IN": "published in",
+    "USES_METHOD": "uses method",
+    "EVALUATED_ON": "evaluated on",
+    "TRAINED_OR_TESTED_ON": "trained/tested on",
+}
+EDGE_DISPLAY_TYPE_READER: dict[str, str] = {
+    **EDGE_DISPLAY_TYPE_RAW,
+    "HAS_AUTHORSHIP": "is author of",
+}
+PRIORITY_NEIGHBOR_KINDS_DEFAULT: tuple[str, ...] = ("Method", "Dataset", "Work")
+
 
 def _is_uuid_like(value: str) -> bool:
     s = (value or "").strip()
@@ -24,6 +40,50 @@ def _is_uuid_like(value: str) -> bool:
 
 def _clean_label(value: str) -> str:
     return (value or "").strip()[:200]
+
+
+def edge_display_type(rel_type: str, *, view: str = "raw") -> str:
+    """Map relation type to human-readable label."""
+    key = (rel_type or "").strip().upper()
+    if not key:
+        return "related"
+    mapping = EDGE_DISPLAY_TYPE_READER if (view or "").strip().lower() == "reader" else EDGE_DISPLAY_TYPE_RAW
+    if key in mapping:
+        return mapping[key]
+    return key.replace("_", " ").lower()
+
+
+def resolve_node_kind(node_type: str, *, workspace_membership: str | None = None) -> str:
+    """Return UI-oriented node kind independent from raw Neo4j label."""
+    ntype = (node_type or "").strip() or "Node"
+    if ntype == "Authorship":
+        return "AuthorshipReification"
+    if ntype == "Work":
+        wm = (workspace_membership or "").strip().lower()
+        if wm == "internal":
+            return "WorkInternal"
+        if wm == "external":
+            return "WorkExternal"
+        return "Work"
+    return ntype
+
+
+def parse_priority_csv(raw: str | None) -> tuple[str, ...]:
+    """Parse `prioritize` CSV preserving order and removing duplicates."""
+    if not raw or not str(raw).strip():
+        return PRIORITY_NEIGHBOR_KINDS_DEFAULT
+    parts = [p.strip() for p in str(raw).split(",")]
+    cleaned: list[str] = []
+    seen: set[str] = set()
+    for part in parts:
+        if not part:
+            continue
+        token = part[0].upper() + part[1:] if len(part) > 1 else part.upper()
+        if token in seen:
+            continue
+        seen.add(token)
+        cleaned.append(token)
+    return tuple(cleaned) or PRIORITY_NEIGHBOR_KINDS_DEFAULT
 
 
 def compute_node_display(
@@ -52,10 +112,13 @@ def compute_node_display(
         subtitle = "Author"
     elif node_type == "Institution":
         display_label = display_label or "Unnamed institution"
-        subtitle = "Institution"
+        country = _clean_label(str(p.get("country") or ""))
+        subtitle = f"Institution · {country}" if country else "Institution"
     elif node_type == "Venue":
         display_label = display_label or "Unknown venue"
-        subtitle = "Venue"
+        venue_type = _clean_label(str(p.get("venue_type") or ""))
+        issn = _clean_label(str(p.get("issn") or ""))
+        subtitle = f"Venue · {venue_type}" if venue_type else (f"Venue · {issn}" if issn else "Venue")
     elif node_type in {"Method", "Dataset"}:
         display_label = display_label or f"Unnamed {node_type.lower()}"
         subtitle = node_type

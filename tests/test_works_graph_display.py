@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from science_graphrag.api.graph_display import compute_node_display
+from science_graphrag.api.graph_display import EDGE_DISPLAY_TYPE_RAW, compute_node_display, edge_display_type
 from science_graphrag.api.works import _append_neighbor_edge
 
 
@@ -25,6 +25,19 @@ def test_compute_node_display_humanized_fallbacks() -> None:
 
     dataset = compute_node_display("Dataset", "", {})
     assert dataset["display_label"] == "Unnamed dataset"
+
+
+def test_compute_node_display_institution_and_venue_subtitles_from_props() -> None:
+    institution = compute_node_display("Institution", "MIT", {"country": "US"})
+    assert institution["display_label"] == "MIT"
+    assert institution["subtitle"] == "Institution · US"
+
+    venue = compute_node_display("Venue", "ACL", {"venue_type": "conference"})
+    assert venue["display_label"] == "ACL"
+    assert venue["subtitle"] == "Venue · conference"
+
+    venue_with_issn = compute_node_display("Venue", "JMLR", {"issn": "1532-4435"})
+    assert venue_with_issn["subtitle"] == "Venue · 1532-4435"
 
 
 def test_compute_node_display_authorship_prefers_author_name() -> None:
@@ -80,4 +93,10 @@ def test_append_neighbor_edge_does_not_use_uuid_in_display_label() -> None:
     _append_neighbor_edge(nodes, edges, "w1", rec)
     node = nodes[0]
     assert node["display_label"] == "Author #1"
+    assert node["node_kind"] == "AuthorshipReification"
     assert ":ash:" not in str(node["display_label"])
+
+
+def test_edge_display_type_dictionary() -> None:
+    for rel_type, expected in EDGE_DISPLAY_TYPE_RAW.items():
+        assert edge_display_type(rel_type) == expected
