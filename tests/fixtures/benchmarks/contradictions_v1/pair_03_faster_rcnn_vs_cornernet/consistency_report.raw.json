@@ -1,0 +1,10 @@
+{
+  "contradiction_found": "true",
+  "claim_a_text": "Anchor boxes are an effective and necessary design for efficient region proposal and object detection.",
+  "claim_b_text": "Anchor boxes have significant drawbacks and can be eliminated in favor of a keypoint-based detection approach.",
+  "claim_a_quote": "We introduce novel Region Proposal Networks (RPNs) that share convolutional layers with state-of-the-art object detection networks [1], [2]. By sharing convolutions at test-time, the marginal cost for computing proposals is small (e.g., 10ms per image).",
+  "claim_b_quote": "But the use of anchor boxes has two drawbacks. First, we typically need a very large set of anchor boxes... this creates a huge imbalance between positive and negative anchor boxes and slows down training.",
+  "contradiction_type": "design_paradigm",
+  "severity": "nuanced",
+  "rationale": "Article A advocates for anchor boxes as an efficient and effective solution for region proposal, while Article B argues that anchor boxes are problematic due to imbalance and hyperparameter complexity, proposing a different paradigm without anchors."
+}

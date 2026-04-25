@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "pack_id": "idea_assist_v1/live_04_realtime_video_streaming_anchor_free",
+  "pack_path": "tests/fixtures/benchmarks/idea_assist_v1/live_04_realtime_video_streaming_anchor_free",
+  "layer": "idea_assist_live",
+  "generated_at_utc": "2026-04-25T19:52:29.824868+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "low_relevance_in_pool=1, pool=thin",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/idea_assist_v1/live_04_realtime_video_streaming_anchor_free/gold.json",
+    "count": 5,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_reviewer",
+    "source": "gold fixture review (not output generation)",
+    "count": 5,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:cd1562e7a0e82bec6c327a58a9fe626e486a9f6f77147438015aeddfb0920076",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 849,
+      "completion": 459,
+      "total": 1308
+    },
+    "latency_ms": 17084
+  },
+  "summary": {
+    "a_total": 5,
+    "b_total": 5,
+    "matched": 5,
+    "matched_lexical": 5,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "review": {
+      "pool_sufficiency": "thin",
+      "pool_sufficiency_rationale": "The pool includes relevant anchor-free claims but lacks direct evidence on temporal coherence or streaming video optimization.",
+      "forbidden_substrings_quality": "appropriate",
+      "forbidden_substrings_rationale": "The forbidden substrings are specific to key methods (CornerNet, FCOS) to prevent verbatim copying, which is reasonable.",
+      "reference_hypothesis_quality": "plausible",
+      "reference_hypothesis_rationale": "The hypothesis proposes a temporal-attention block for CenterNet, aligning with the seed topic's focus on exploiting temporal coherence in streaming video.",
+      "overall_assessment": "needs_revision",
+      "issues": [
+        "Pool lacks claims on temporal coherence or streaming video methods.",
+        "Supporting claims are insufficient to fully address the seed topic's emphasis on temporal exploitation."
+      ]
+    }
+  },
+  "matched_pairs": [
+    {
+      "claim_id": "cornernet_paired_keypoints",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "high",
+      "b_rationale": "Directly describes an anchor-free detector using keypoints, relevant to the seed topic's focus on anchor-free methods.",
+      "field_disagreements": []
+    },
+    {
+      "claim_id": "centernet_triplet_keypoints",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "high",
+      "b_rationale": "Describes an anchor-free detector using keypoints, directly relevant to the seed topic's anchor-free optimization.",
+      "field_disagreements": []
+    },
+    {
+      "claim_id": "yolox_l_50ap_v100_speed",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "medium",
+      "b_rationale": "Provides speed and accuracy benchmarks for a detector, which is somewhat relevant for performance comparison but not directly about anchor-free or temporal coherence.",
+      "field_disagreements": []
+    },
+    {
+      "claim_id": "yolov1_speed_45_155_fps",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "low",
+      "b_rationale": "Provides historical speed data for an early detector, minimally relevant as it lacks anchor-free or temporal coherence aspects.",
+      "field_disagreements": [
+        {
+          "field": "relevance",
+          "a": "implicit_high",
+          "b": "low"
+        }
+      ]
+    },
+    {
+      "claim_id": "fcos_anchor_hyperparameter_burden_negative",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "high",
+      "b_rationale": "Discusses drawbacks of anchor boxes, supporting the rationale for anchor-free detectors relevant to the seed topic.",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": []
+}

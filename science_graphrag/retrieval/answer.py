@@ -56,7 +56,7 @@ def answer_query(
         owned_qdrant = QdrantChunkStore(
             s.qdrant_url,
             s.qdrant_collection,
-            vector_dim=resolve_embedding_dim(embedding_model=s.embedding_model),
+            vector_dim=resolve_embedding_dim(settings=s),
         )
         neo4j = owned_neo4j
         qdrant_chunks = owned_qdrant

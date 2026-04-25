@@ -1,0 +1,154 @@
+{
+  "labels": [
+    {
+      "concept_id": "region_proposal",
+      "status": "present",
+      "evidence_quote": "We also show that the proposed FCOS can be used as a Region Proposal Networks (RPNs) in two-stage detectors",
+      "rationale": ""
+    },
+    {
+      "concept_id": "selective_search",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention Selective Search or its aliases."
+    },
+    {
+      "concept_id": "anchor_based",
+      "status": "present",
+      "evidence_quote": "Almost all state-of-the-art object detectors such as RetinaNet, SSD, YOLOv3, and Faster R-CNN rely on pre-defined anchor boxes.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "anchor_free",
+      "status": "present",
+      "evidence_quote": "In contrast, our proposed detector FCOS is anchor box free, as well as proposal free.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "set_prediction",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention bipartite matching, Hungarian matching, or direct set prediction."
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "status": "present",
+      "evidence_quote": "Following FPN [14], we detect different sizes of objects on different levels of feature maps.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "focal_loss",
+      "status": "present",
+      "evidence_quote": "where Lcls is focal loss as in [15] and Lreg is the IOU loss as in UnitBox [32].",
+      "rationale": ""
+    },
+    {
+      "concept_id": "nms",
+      "status": "present",
+      "evidence_quote": "With the only post-processing non-maximum suppression (NMS), FCOS with ResNeXt-64x4d-101 achieves 44.7% in AP",
+      "rationale": ""
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention transformer architecture, attention encoder-decoder, or transformer object detection."
+    },
+    {
+      "concept_id": "roi_pooling",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention ROI pooling or its aliases."
+    },
+    {
+      "concept_id": "roi_align",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention ROIAlign or its aliases."
+    },
+    {
+      "concept_id": "mask_branch",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention an instance segmentation branch or mask prediction head."
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "status": "present",
+      "evidence_quote": "We propose a fully convolutional one-stage object detector (FCOS) to solve object detection in a per-pixel prediction fashion",
+      "rationale": ""
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "status": "present",
+      "evidence_quote": "We also show that the proposed FCOS can be used as a Region Proposal Networks (RPNs) in two-stage detectors",
+      "rationale": ""
+    },
+    {
+      "concept_id": "keypoint_detection",
+      "status": "present",
+      "evidence_quote": "Recently, fully convolutional networks (FCNs) [20] have achieved tremendous success in dense prediction tasks such as semantic segmentation [20, 28, 9, 19], depth estimation [17, 31], keypoint detection [3] and counting [2].",
+      "rationale": ""
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "status": "present",
+      "evidence_quote": "Unless specified, ResNet-50 [8] is used as our backbone networks",
+      "rationale": ""
+    },
+    {
+      "concept_id": "backbone_darknet",
+      "status": "present",
+      "evidence_quote": "YOLOv2 [22] DarkNet-19 [22] 21.6 44.0 19.2 5.0 22.4 35.5",
+      "rationale": ""
+    },
+    {
+      "concept_id": "compound_scaling",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention compound model scaling or joint depth-width-resolution scaling."
+    },
+    {
+      "concept_id": "cascade_iou_progression",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention cascade detector, cascade R-CNN, or stage-wise IoU threshold."
+    },
+    {
+      "concept_id": "centerness",
+      "status": "present",
+      "evidence_quote": "we introduce a novel “center-ness” branch (only one layer) to predict the deviation of a pixel to the center of its corresponding bounding box",
+      "rationale": ""
+    },
+    {
+      "concept_id": "iou_loss",
+      "status": "present",
+      "evidence_quote": "where Lcls is focal loss as in [15] and Lreg is the IOU loss as in UnitBox [32].",
+      "rationale": ""
+    },
+    {
+      "concept_id": "classical_dpm",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention Deformable Parts Model (DPM) or deformable part-based model."
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention handcrafted features like HOG, SIFT, or SURF."
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "status": "present",
+      "evidence_quote": "We define our training loss function as follows: L({pppx,y}, {tttx,y}) = 1 Npos ∑ x,y Lcls(pppx,y, c∗ x,y) + λ Npos ∑ x,y ✶ {c∗ x,y>0}Lreg(tttx,y, ttt∗ x,y),",
+      "rationale": ""
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "status": "present",
+      "evidence_quote": "Our experiments are conducted on the large-scale detection benchmark COCO [16].",
+      "rationale": ""
+    }
+  ]
+}

@@ -2,9 +2,20 @@
   "schema_version": 2,
   "case_id": "ha_iou_loss_quality",
   "meta": {
-    "validation_status": "draft",
+    "validation_status": "llm_dual_validated",
     "needs_human_review": true,
-    "extractor_pass": "single_human_authored_2026-04-25"
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "validation_history": [
+      {
+        "promoted_at_utc": "2026-04-25T20:11:09.481184+00:00",
+        "from_status": "draft",
+        "to_status": "llm_dual_validated",
+        "spot_check_priority": "medium",
+        "consistency_report": "tests/fixtures/benchmarks/retrieval/hybrid_ablation_v2/ha_iou_loss_quality/consistency_report.json",
+        "rule": "auto-promote on Phase 6.D embedding-cascade pass"
+      }
+    ],
+    "validation_status_previous": "draft"
   },
   "question_file": "question.txt",
   "relevant_corpus_work_ids": [

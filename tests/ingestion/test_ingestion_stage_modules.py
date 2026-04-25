@@ -106,8 +106,8 @@ def test_run_embeddings(monkeypatch) -> None:
             return [[0.1, 0.2, 0.3, 0.4]]
 
     monkeypatch.setattr(
-        "science_graphrag.ingestion.stages.embeddings.HashEmbeddingProvider",
-        lambda: _Embedder(),
+        "science_graphrag.ingestion.stages.embeddings.resolve_embedder",
+        lambda _settings: _Embedder(),
     )
     embedder, vectors = run_embeddings(ctx, texts=["hello"])
     assert embedder.dim == 4

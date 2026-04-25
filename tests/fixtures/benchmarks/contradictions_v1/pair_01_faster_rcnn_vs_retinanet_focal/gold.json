@@ -2,9 +2,20 @@
   "schema_version": 1,
   "pair_id": "c01_two_stage_vs_one_stage_accuracy",
   "meta": {
-    "validation_status": "draft",
-    "needs_human_review": true,
-    "extractor_pass": "single_human_authored_2026-04-25"
+    "validation_status": "llm_dual_validated",
+    "needs_human_review": false,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "validation_history": [
+      {
+        "promoted_at_utc": "2026-04-25T19:46:09.993409+00:00",
+        "from_status": "draft",
+        "to_status": "llm_dual_validated",
+        "spot_check_priority": "low",
+        "consistency_report": "tests/fixtures/benchmarks/contradictions_v1/pair_01_faster_rcnn_vs_retinanet_focal/consistency_report.json",
+        "rule": "auto-promote on Phase 6.D embedding-cascade pass"
+      }
+    ],
+    "validation_status_previous": "draft"
   },
   "claim_a": {
     "claim_id": "faster_rcnn_two_stage_sota",

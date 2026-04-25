@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "pack_id": "live_02_anchor_free_papers_overview",
+  "pack_path": "tests/fixtures/benchmarks/agent_tools_v1/live_02_anchor_free_papers_overview",
+  "layer": "agent_tools_live",
+  "generated_at_utc": "2026-04-25T20:14:07.429186+00:00",
+  "spot_check_priority": "medium",
+  "spot_check_priority_rationale": "tool_req_recall=0.50, works=0.50, methods=0.00",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/agent_tools_v1/live_02_anchor_free_papers_overview/gold.json",
+    "count": 9,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "question.txt | tool_set=7",
+    "count": 6,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:151ddc3d000fdfb39926636ad95e3f421d5777e245f650cc4d78e24f3a5a1701",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 413,
+      "completion": 123,
+      "total": 536
+    },
+    "latency_ms": 3005
+  },
+  "summary": {
+    "a_total": 9,
+    "b_total": 6,
+    "matched": 3,
+    "matched_lexical": 3,
+    "matched_embedding": 0,
+    "unmatched_a": 6,
+    "unmatched_b": 3,
+    "tool_metrics": {
+      "required_recall": 0.5,
+      "all_recall": 0.5,
+      "missing_required": [
+        "cypher_query"
+      ],
+      "extra_tools_in_b": [
+        "cite_works"
+      ]
+    },
+    "works_jaccard": 0.5,
+    "methods_jaccard": 0.0,
+    "answer_token_jaccard": 0.183,
+    "is_negative_case": false,
+    "behavior_agreement": true,
+    "behavior_a": "answer",
+    "behavior_b": "answer"
+  },
+  "matched_pairs": [
+    {
+      "tool_name": "vector_search",
+      "kind": "required_tool_match",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "centernet_realpdf",
+      "kind": "expected_work_match",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "cornernet_realpdf",
+      "kind": "expected_work_match",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [
+    {
+      "tool_name": "cypher_query",
+      "kind": "required_tool_missing_in_b"
+    },
+    {
+      "corpus_work_id": "atss_realpdf",
+      "kind": "expected_work_missing_in_b"
+    },
+    {
+      "corpus_work_id": "fcos_realpdf",
+      "kind": "expected_work_missing_in_b"
+    },
+    {
+      "method_canonical": "anchor_free",
+      "kind": "expected_method_missing_in_b"
+    },
+    {
+      "method_canonical": "centerness",
+      "kind": "expected_method_missing_in_b"
+    },
+    {
+      "method_canonical": "keypoint_detection",
+      "kind": "expected_method_missing_in_b"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "tool_name": "cite_works",
+      "kind": "extra_tool_in_b"
+    },
+    {
+      "method_canonical": "center_net",
+      "kind": "extra_method_in_b"
+    },
+    {
+      "method_canonical": "corner_net",
+      "kind": "extra_method_in_b"
+    }
+  ]
+}

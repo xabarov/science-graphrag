@@ -1,0 +1,7 @@
+{
+  "expected_tool_sequence": [{"tool_name": "vector_search"}, {"tool_name": "cite_works"}],
+  "expected_works_corpus_ids": ["retinanet_focal_realpdf"],
+  "expected_methods_canonical": ["focal_loss", "retinanet"],
+  "answer_reference_text": "The paper 'Focal Loss for Dense Object Detection' introduced focal loss to address class imbalance. This method is canonically known as RetinaNet.",
+  "expected_behavior": "answer"
+}

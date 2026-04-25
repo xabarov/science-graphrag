@@ -1,0 +1,81 @@
+{
+  "clusters": [
+    {
+      "cluster_id": "pascal_voc_2007",
+      "entity_ids": ["ds_pascal_voc_2007_full", "ds_pascal_voc_2007_short", "ds_pascal_voc_2007_compact", "ds_pascal_voc_2007_dotted"],
+      "rationale": "All refer to PASCAL VOC 2007 with version 2007 and object detection task."
+    },
+    {
+      "cluster_id": "pascal_voc_2012",
+      "entity_ids": ["ds_pascal_voc_2012_short", "ds_pascal_voc_2012_compact"],
+      "rationale": "Both refer to PASCAL VOC 2012 with version 2012 and object detection task."
+    },
+    {
+      "cluster_id": "mscoco_generic",
+      "entity_ids": ["ds_mscoco_full", "ds_mscoco_short", "ds_coco_short"],
+      "rationale": "All refer to Microsoft COCO with version 'any' and object detection task."
+    },
+    {
+      "cluster_id": "coco_2014",
+      "entity_ids": ["ds_coco_2014"],
+      "rationale": "Refers to COCO 2014 with version 2014 and object detection task."
+    },
+    {
+      "cluster_id": "coco_2017",
+      "entity_ids": ["ds_coco_2017"],
+      "rationale": "Refers to COCO 2017 with version 2017 and object detection task."
+    },
+    {
+      "cluster_id": "imagenet_generic",
+      "entity_ids": ["ds_imagenet_full", "ds_imagenet_alt_caps", "ds_ilsvrc_full"],
+      "rationale": "All refer to ImageNet with version 'any' and image classification task."
+    },
+    {
+      "cluster_id": "ilsvrc_generic",
+      "entity_ids": ["ds_ilsvrc_acronym"],
+      "rationale": "Refers to ILSVRC with version 'any' and no specified task."
+    },
+    {
+      "cluster_id": "ilsvrc_2012",
+      "entity_ids": ["ds_ilsvrc_2012"],
+      "rationale": "Refers to ILSVRC 2012 with version 2012."
+    },
+    {
+      "cluster_id": "ilsvrc_2013",
+      "entity_ids": ["ds_ilsvrc_2013"],
+      "rationale": "Refers to ILSVRC 2013 with version 2013."
+    },
+    {
+      "cluster_id": "objects365",
+      "entity_ids": ["ds_objects365", "ds_objects365_with_space"],
+      "rationale": "Both refer to Objects365 with version v1 and object detection task."
+    },
+    {
+      "cluster_id": "kitti",
+      "entity_ids": ["ds_kitti"],
+      "rationale": "Refers to KITTI with autonomous driving detection task."
+    },
+    {
+      "cluster_id": "lvis",
+      "entity_ids": ["ds_lvis"],
+      "rationale": "Refers to LVIS with long tail instance segmentation task."
+    }
+  ],
+  "negative_pairs": [
+    {
+      "pair_id": "pascal_voc_2007_vs_2012",
+      "entity_ids": ["ds_pascal_voc_2007_short", "ds_pascal_voc_2012_short"],
+      "rationale": "Same dataset name but different versions (2007 vs 2012) indicate distinct releases."
+    },
+    {
+      "pair_id": "coco_2014_vs_2017",
+      "entity_ids": ["ds_coco_2014", "ds_coco_2017"],
+      "rationale": "Same dataset name but different versions (2014 vs 2017) indicate distinct releases."
+    },
+    {
+      "pair_id": "ilsvrc_2012_vs_2013",
+      "entity_ids": ["ds_ilsvrc_2012", "ds_ilsvrc_2013"],
+      "rationale": "Same dataset name but different versions (2012 vs 2013) indicate distinct releases."
+    }
+  ]
+}

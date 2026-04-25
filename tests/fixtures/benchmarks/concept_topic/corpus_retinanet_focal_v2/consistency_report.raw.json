@@ -1,0 +1,154 @@
+{
+  "labels": [
+    {
+      "concept_id": "region_proposal",
+      "status": "present",
+      "evidence_quote": "The proposal stage ( e.g., Selective Search [35], EdgeBoxes [39], DeepMask [24, 25], RPN [28]) rapidly narrows down the number of candidate object locations to a small number",
+      "rationale": ""
+    },
+    {
+      "concept_id": "selective_search",
+      "status": "present",
+      "evidence_quote": "The proposal stage ( e.g., Selective Search [35], EdgeBoxes [39], DeepMask [24, 25], RPN [28]) rapidly narrows down the number of candidate object locations",
+      "rationale": ""
+    },
+    {
+      "concept_id": "anchor_based",
+      "status": "present",
+      "evidence_quote": "Its design features an efficient in-network feature pyramid and use of anchor boxes.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "anchor_free",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article uses anchor boxes and does not mention anchor-free detection."
+    },
+    {
+      "concept_id": "set_prediction",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention bipartite matching or direct set prediction."
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "status": "present",
+      "evidence_quote": "We adopt the Feature Pyramid Network (FPN) from [20] as the backbone network for RetinaNet.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "focal_loss",
+      "status": "present",
+      "evidence_quote": "Our novel Focal Loss focuses training on a sparse set of hard examples and prevents the vast number of easy negatives from overwhelming the detector during training.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "nms",
+      "status": "present",
+      "evidence_quote": "The top predictions from all levels are merged and non-maximum suppression with a threshold of 0.5 is applied to yield the final detections.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention transformer architecture or attention encoder-decoder."
+    },
+    {
+      "concept_id": "roi_pooling",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention ROI pooling or RoIPool."
+    },
+    {
+      "concept_id": "roi_align",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention ROIAlign or RoIAlign."
+    },
+    {
+      "concept_id": "mask_branch",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article focuses on object detection, not instance segmentation or mask prediction."
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "status": "present",
+      "evidence_quote": "In contrast, one-stage detectors that are applied over a regular, dense sampling of possible object locations have the potential to be faster and simpler",
+      "rationale": ""
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "status": "present",
+      "evidence_quote": "The highest accuracy object detectors to date are based on a two-stage approach popularized by R-CNN",
+      "rationale": ""
+    },
+    {
+      "concept_id": "keypoint_detection",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention keypoint or corner detection."
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "status": "present",
+      "evidence_quote": "Following [20], we build FPN on top of the ResNet architecture [16].",
+      "rationale": ""
+    },
+    {
+      "concept_id": "backbone_darknet",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article mentions YOLOv2 using DarkNet-19 but does not use Darknet as a backbone for RetinaNet."
+    },
+    {
+      "concept_id": "compound_scaling",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention compound model scaling or joint depth-width-resolution scaling."
+    },
+    {
+      "concept_id": "cascade_iou_progression",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention cascade detectors or stage-wise IoU thresholds."
+    },
+    {
+      "concept_id": "centerness",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention center-ness branch or center prediction."
+    },
+    {
+      "concept_id": "iou_loss",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention IoU loss, GIoU, or DIoU."
+    },
+    {
+      "concept_id": "classical_dpm",
+      "status": "present",
+      "evidence_quote": "DPMs [8] helped extend dense detectors to more general object categories and had top results on PASCAL [7] for many years.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "status": "present",
+      "evidence_quote": "The introduction of HOG [4] and integral channel features [5] gave rise to effective methods for pedestrian detection.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "status": "present",
+      "evidence_quote": "The training loss is the sum the focal loss and the standard smooth L1 loss used for box regression [10].",
+      "rationale": ""
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "status": "present",
+      "evidence_quote": "Our results show that when trained with the focal loss, RetinaNet is able to match the speed of previous one-stage detectors while surpassing the accuracy of all existing state-of-the-art two-stage detectors.",
+      "rationale": ""
+    }
+  ]
+}

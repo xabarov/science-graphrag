@@ -34,9 +34,7 @@ class LegacyRetrievalAgent:
         self.entity_search = EntitySearchTool(neo4j)
         self.edge_search = EdgeSearchTool(neo4j)
         self.cypher_query = CypherQueryTool(neo4j)
-        self.idea_search = IdeaSearchTool(
-            chunks, work_store=works, embedding_model=settings.embedding_model
-        )
+        self.idea_search = IdeaSearchTool(chunks, work_store=works, settings=settings)
         self.summarize_workspace = SummarizeWorkspaceTool(neo4j)
         self.final_answer = FinalAnswerTool()
 

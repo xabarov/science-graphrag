@@ -1,0 +1,154 @@
+{
+  "labels": [
+    {
+      "concept_id": "region_proposal",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article explicitly contrasts DETR with methods that rely on proposals or anchors, stating it removes such components."
+    },
+    {
+      "concept_id": "selective_search",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention Selective Search or any alias for it."
+    },
+    {
+      "concept_id": "anchor_based",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article explicitly states DETR removes anchor generation and does not use anchor-based detection."
+    },
+    {
+      "concept_id": "anchor_free",
+      "status": "present",
+      "evidence_quote": "Our approach streamlines the detection pipeline, effectively removing the need for many hand-designed components like a non-maximum suppression procedure or anchor generation",
+      "rationale": ""
+    },
+    {
+      "concept_id": "set_prediction",
+      "status": "present",
+      "evidence_quote": "We present a new method that views object detection as a direct set prediction problem.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article mentions FPN only as a comparison point for Faster R-CNN, not as a component of DETR."
+    },
+    {
+      "concept_id": "focal_loss",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention focal loss; it uses a combination of negative log-likelihood, l1 loss, and GIoU loss."
+    },
+    {
+      "concept_id": "nms",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article explicitly states DETR removes the need for non-maximum suppression."
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "status": "present",
+      "evidence_quote": "The main ingredients of the new framework, called DEtection TRansformer or DETR, are a set-based global loss that forces unique predictions via bipartite matching, and a transformer encoder-decoder architecture.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "roi_pooling",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention ROI pooling or any alias for it."
+    },
+    {
+      "concept_id": "roi_align",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention ROIAlign or any alias for it."
+    },
+    {
+      "concept_id": "mask_branch",
+      "status": "present",
+      "evidence_quote": "Similarly to the extension of Faster R-CNN [37] to Mask R-CNN [14], DETR can be naturally extended by adding a mask head on top of the decoder outputs.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article contrasts DETR with both two-stage and single-stage detectors but does not classify DETR as a one-stage detector."
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article contrasts DETR with two-stage detectors like Faster R-CNN but does not use DETR as a two-stage detector."
+    },
+    {
+      "concept_id": "keypoint_detection",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention keypoint detection or any alias for it."
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "status": "present",
+      "evidence_quote": "All transformer weights are initialized with Xavier init [11], and the backbone is with ImageNet-pretrained ResNet model [15] from torchvision with frozen batchnorm layers.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "backbone_darknet",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention Darknet or any alias for it."
+    },
+    {
+      "concept_id": "compound_scaling",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention compound scaling or any alias for it."
+    },
+    {
+      "concept_id": "cascade_iou_progression",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention cascade IoU progression or any alias for it."
+    },
+    {
+      "concept_id": "centerness",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention center-ness or any alias for it."
+    },
+    {
+      "concept_id": "iou_loss",
+      "status": "present",
+      "evidence_quote": "Overall, our box loss is Lbox(bi,ˆbσ(i)) defined as λiouLiou(bi,ˆbσ(i)) +λL1||bi− ˆbσ(i)||1 where λiou,λ L1∈ R are hyperparameters.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "classical_dpm",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention Deformable Parts Model or any alias for it."
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention handcrafted features like HOG or SIFT."
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "status": "present",
+      "evidence_quote": "We define the loss similarly to the losses of common object detectors, i.e. a linear combination of a negative log-likelihood for class prediction and a box loss defined later.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "status": "present",
+      "evidence_quote": "We evaluate DETR on one of the most popular object detection datasets, COCO [24], against a very competitive Faster R-CNN baseline [37].",
+      "rationale": ""
+    }
+  ]
+}

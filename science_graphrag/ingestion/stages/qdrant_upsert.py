@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from science_graphrag.embeddings import resolve_embedding_model_label
 from science_graphrag.storage.qdrant_claims_store import QdrantClaimsStore
 from science_graphrag.storage.qdrant_store import QdrantChunkStore, QdrantWorkEmbeddingStore
 
@@ -17,6 +18,7 @@ def run_qdrant_upsert(
     embedder: Any,
     claim_rows: list[Any],
 ) -> None:
+    emb_label = resolve_embedding_model_label(ctx.settings)
     q_chunks = QdrantChunkStore(
         ctx.settings.qdrant_url,
         ctx.settings.qdrant_collection,
@@ -28,7 +30,7 @@ def run_qdrant_upsert(
         document_id=document_id,
         document_chunks=chunks,
         vectors=chunk_vectors,
-        embedding_model=ctx.settings.embedding_model or "hash-deterministic",
+        embedding_model=emb_label,
         workspace_ids=ctx.ingest_workspace_ids,
     )
 
@@ -40,7 +42,7 @@ def run_qdrant_upsert(
     q_work.upsert_work_summary(
         work_id=work_id,
         vector=work_vector,
-        embedding_model=ctx.settings.embedding_model or "hash-deterministic",
+        embedding_model=emb_label,
         workspace_ids=ctx.ingest_workspace_ids,
         title=None,
         publication_year=None,
@@ -61,5 +63,5 @@ def run_qdrant_upsert(
             work_id=work_id,
             claims=claim_rows,
             embedder=embedder,
-            embedding_model=ctx.settings.embedding_model or "hash-deterministic",
+            embedding_model=emb_label,
         )

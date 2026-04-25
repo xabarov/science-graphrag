@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "pack_id": "mh_detr_lineage_chain",
+  "pack_path": "tests/fixtures/benchmarks/retrieval/multihop_v2/mh_detr_lineage_chain",
+  "layer": "multihop_v2",
+  "generated_at_utc": "2026-04-25T20:11:45.036388+00:00",
+  "spot_check_priority": "low",
+  "spot_check_priority_rationale": "f1=1.00, order=1.0",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/retrieval/multihop_v2/mh_detr_lineage_chain/gold.json",
+    "count": 4,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "path_kind=ordered_chain | question.txt",
+    "count": 4,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:47fd4bc175a0db11246d0f82757ec06e4b416e34c9ad02e79114fd052909ca44",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 278,
+      "completion": 123,
+      "total": 401
+    },
+    "latency_ms": 6985
+  },
+  "summary": {
+    "a_total": 4,
+    "b_total": 4,
+    "matched": 4,
+    "matched_lexical": 4,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "expected_path_kind": "ordered_chain",
+    "metrics": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "jaccard": 1.0
+    },
+    "a_chain": [
+      "detr_realpdf",
+      "deformable_detr_realpdf",
+      "dn_detr_realpdf",
+      "dino_realpdf"
+    ],
+    "b_chain": [
+      "detr_realpdf",
+      "deformable_detr_realpdf",
+      "dn_detr_realpdf",
+      "dino_realpdf"
+    ],
+    "order_correctness": 1.0,
+    "min_chain_order_correctness": 0.7
+  },
+  "matched_pairs": [
+    {
+      "node_or_work_id": "deformable_detr_realpdf",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "node_or_work_id": "detr_realpdf",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "node_or_work_id": "dino_realpdf",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "node_or_work_id": "dn_detr_realpdf",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": []
+}

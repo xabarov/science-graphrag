@@ -40,14 +40,41 @@ from science_graphrag.embeddings import (
 )
 from scripts.dual_validate.consistency_report import write_report
 from scripts.dual_validate.embedding_scorer import EmbeddingScorer
-from scripts.dual_validate.extractors import ClaimsV2Extractor, ExtractorBase
+from scripts.dual_validate.extractors import (
+    AgentToolsLiveExtractor,
+    ClaimsV2Extractor,
+    ConceptTopicV2Extractor,
+    ContradictionsV1Extractor,
+    DedupAuthorsV1Extractor,
+    DedupDatasetsV1Extractor,
+    DedupInstitutionsV1Extractor,
+    DedupMethodsV1Extractor,
+    DedupVenuesV1Extractor,
+    ExtractorBase,
+    HybridAblationV2Extractor,
+    IdeaAssistLiveExtractor,
+    MultihopV2Extractor,
+    WorkspaceScopedLiveExtractor,
+)
 from scripts.dual_validate.llm_client import (
     DualValidateLLMClient,
     resolve_llm_settings,
 )
 
 _EXTRACTORS: dict[str, type[ExtractorBase]] = {
+    "agent_tools_live": AgentToolsLiveExtractor,
     "claims_v2": ClaimsV2Extractor,
+    "concept_topic_v2": ConceptTopicV2Extractor,
+    "contradictions_v1": ContradictionsV1Extractor,
+    "dedup_authors_v1": DedupAuthorsV1Extractor,
+    "dedup_institutions_v1": DedupInstitutionsV1Extractor,
+    "dedup_venues_v1": DedupVenuesV1Extractor,
+    "dedup_methods_v1": DedupMethodsV1Extractor,
+    "dedup_datasets_v1": DedupDatasetsV1Extractor,
+    "idea_assist_live": IdeaAssistLiveExtractor,
+    "workspace_scoped_live": WorkspaceScopedLiveExtractor,
+    "hybrid_ablation_v2": HybridAblationV2Extractor,
+    "multihop_v2": MultihopV2Extractor,
 }
 
 
@@ -265,9 +292,7 @@ def main() -> int:
     return 0
 
 
-def _promote_validation_status(
-    gold_path: Path, *, report_path: Path, priority: str
-) -> bool:
+def _promote_validation_status(gold_path: Path, *, report_path: Path, priority: str) -> bool:
     """Idempotently promote ``meta.validation_status`` to ``llm_dual_validated``.
 
     Returns True when the file was actually changed. Records the consistency report

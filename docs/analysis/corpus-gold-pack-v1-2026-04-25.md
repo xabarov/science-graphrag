@@ -427,23 +427,41 @@ Source: tests/fixtures/benchmarks/layer1/<slug>/article.md
 - **Не делаем промо `validation_status: draft → llm_dual_validated`** в этом раунде: 19/20 high — недостаточный сигнал для авто-промо. Промо требует либо (a) embedding-based matcher с recall > 75%, либо (b) human spot-check листа disagreements. Phase 6.B завершает **infrastructure + один LLM extractor**; промо — отдельная активность.
 - **Test coverage:** `tests/test_dual_extract_validate.py` 14/14 passed, добавлены тесты на `char_jaccard`, `combined_score`, `rebuild_run_from_raw`. Pylint 9.90/10 для `scripts/dual_validate/` + `scripts/dual_extract_validate.py`.
 
-#### Phase 6.C — расширение на остальные layers (pending)
+#### Phase 6.D — embedding cascade matcher с baai/bge-m3 ✅
 
-#### Phase 6.C — расширение на остальные layers (pending)
+- Reusable `science_graphrag/embeddings/openrouter_provider.py` — `OpenRouterEmbeddingProvider` с per-text JSON file cache, batching, retry на `RateLimitError/APIError`. Готов к подключению в Qdrant ingestion (см. ADR-021), но в Phase 6.D используется только из dual_validate.
+- Cascade-логика в `scripts/dual_validate/matcher.py`: если `lexical ≥ lexical_accept_threshold (0.50)` — берём lexical без вызова embeddings. Иначе считаем `embedding ≥ embedding_min_score (0.75) AND > lexical` → берём embedding. Иначе fallback к lexical c floor `min_score (0.35)`. Так амортизируем стоимость и **не теряем валидные lexical pairs**, у которых embedding сам по себе ниже порога.
+- CLI: `--with-embeddings --embedding-model baai/bge-m3 --embedding-cache-root eval/dual_validate/embeddings_cache --promote-validation-status` (последний — идемпотентный апдейт `meta.validation_status: draft → llm_dual_validated` для priority∈{low, medium}).
+- **Re-run 20 packs через `--rebuild-from-raw --with-embeddings` (zero new tokens):** recall **50.6% → 58.8%** (lex=28, emb=22 — embedding доля 44% всех matches). Priority: 0 low / **2 medium** / 18 high (vs 0/1/19 в Phase 6.B). **Auto-promoted в `llm_dual_validated`:** `corpus_centernet_v2`, `corpus_detr_v2`. Сводка: `eval/dual_validate/claims_v2_bge_m3_summary.json`. Tests 18/18, pylint 9.68/10.
+- **Honest assessment:** прирост скромнее прогноза — DeepSeek extractor B часто извлекает claims из других параграфов или делает другую декомпозицию (одно gold-утверждение разнесено в B на 2-3 более мелких). Это **structural disagreements**, embedding similarity их не закрывает. Решается либо (a) prompt-engineering экстрактора B чтобы зафорсить ту же декомпозицию, либо (b) human spot-check disagreement-листа, либо (c) Phase 6.E (triple-vote multi-model).
 
-- Доб. `extractors/contradictions_v1.py` (B re-derives contradictions из обеих source articles, diff на pair coverage),
-  `extractors/concept_topic_v2.py` (B размечает present/absent против frozen concepts, diff на label set per article),
-  `extractors/dedup_*.py` (B re-clusters per layer, diff на cluster equivalence — Adjusted Rand Index),
-  `extractors/multihop_v2.py` / `extractors/workspace_scoped_live.py` / `extractors/hybrid_ablation_v2.py` (B re-derives expected_works_corpus_ids по той же question.txt, diff на set overlap),
-  `extractors/agent_tools_live.py` / `extractors/idea_assist_live.py` (B оценивает adequacy gold по rubric, diff на gate values).
-- LLM-модели для dual-extractor: `deepseek/deepseek-v3.2`, `anthropic/claude-sonnet-4.6`, `moonshotai/kimi-k2.6` (см. `.env`).
-- Промо всех pack'ов в `meta.validation_status: human_spot_checked` после прохождения Phase 6.B + spot-check disagreements.
+#### Phase 6.C — расширение на остальные layers (8/8 done) ✅
 
-#### Phase 6.D — embedding-based matcher (на будущее)
+- **Done в эту сессию (2026-04-25), free-text extractors:**
+  - `scripts/dual_validate/extractors/concept_topic_v2.py` — closed-set diff по 25 frozen concepts. Полный прогон 10 packs × deepseek (~4 мин): **138/138 = 100% matched**, 2 promoted (`mask_rcnn`, `ssd`), 8 high из-за status flips. Сводка: `concept_topic_v2_deepseek_summary.json`.
+  - `scripts/dual_validate/extractors/contradictions_v1.py` — per-pair diff с lexical+embedding cascade. 7 pairs × deepseek + bge-m3 (~1.5 мин): 6/7 matched, **embedding cascade сработал в 2/6 = 33% матчей**. 4 promoted, 3 high. Сводка: `contradictions_v1_deepseek_summary.json`.
+  - `scripts/dual_validate/extractors/idea_assist_live.py` — B-reviewer оценивает gold-pool на адекватность. 4 cases × deepseek (~2 мин): 20/20 covered, **B пометил pool=`thin` и 2 claims с `relevance=low`** в 3/4 cases. 1 promoted, 3 high. Сводка: `idea_assist_live_deepseek_summary.json`.
+- **Done в эту сессию (2026-04-25), dedup × 5:**
+  - `scripts/dual_validate/extractors/dedup_v1.py` — общий `DedupExtractorBase` (≈300 строк) + `DedupAuthorsV1Extractor`/`Institutions`/`Venues`/`Methods`/`Datasets` с per-type domain-hint'ами в prompt'ах. Один LLM call per layer (≤4K tokens, всего 5 calls на ~1.5 мин на все 5 packs).
+  - **ARI metric** через `_pair_counting_metrics` (Hubert-Arabie formulation): contingency-таблица over shared ids → expected/max indices → ARI ∈ [0, 1].
+  - Результаты: ARI **0.88-1.00** (`authors=1.00, venues=1.00, methods=0.97, institutions=0.95, datasets=0.88`), **все 5 promoted** (medium из-за частичного покрытия `negative_pairs`). DeepSeek **дополнительно нашёл 3 must-not-merge constraint в methods_v1** (`R-CNN ≠ Fast R-CNN ≠ R-FCN`) и 1 в institutions — реальное расширение coverage. Сводки: `dedup_*_deepseek_summary.json`.
+- **Done в эту сессию (2026-04-25), retrieval × 3:**
+  - `scripts/dual_validate/extractors/retrieval_v1.py` — `WorkspaceScopedLiveExtractor` / `HybridAblationV2Extractor` / `MultihopV2Extractor`. Общий `_load_inventory()` парсит `tests/fixtures/corpus/CATALOG.md` (35 papers с title + year, кэшируется). Embedding cascade не применим — output space — закрытый набор `corpus_work_id`'ов.
+  - `WorkspaceScopedLiveExtractor` (6 packs, ~30s): **ВСЕ 6 promoted, all low**. Special-case логика: при `a_total=0` (negative case) и `b_total=0` без boundary violations → low priority.
+  - `HybridAblationV2Extractor` (8 packs, ~40s): 7/8 promoted (4 low + 3 medium + 1 high). B классифицирует кандидатов как relevant/irrelevant (без знания gold labels) — accuracy 0.60-1.00.
+  - `MultihopV2Extractor` (5 packs, ~25s): для `ordered_chain` Kendall-style order correctness, для `unordered_set` — Jaccard. **3/3 chain perfect (F1=1.0, order=1.0)**, 2/2 set high (slug-vs-canonical disagreement в датасетах, B вернул empty list для author intersection).
+- **Done в эту сессию (2026-04-25), agent_tools_live:**
+  - `scripts/dual_validate/extractors/agent_tools_live.py` — focus только на 6 `live_*` cases. Tool-required-recall + works/methods Jaccard + answer token Jaccard. Special-case для negative (abstain_or_empty). 3/6 promoted (1 low + 2 medium + 3 high). Сводка: `agent_tools_live_deepseek_summary.json`.
+- **Shared infra:**
+  - **Lenient JSON parser** `parse_json_object_lenient` — применён ко всем 12 extractor'ам.
+  - **Aggregator** `scripts/dual_validate/aggregate_summary.py` теперь поддерживает single-pack mode (для dedup) + multi-pack для всех остальных.
+  - **`_safe_relative` path helper** в `dual_extract_validate.py` — безопасная конвертация в relative paths когда они не под cwd.
+- **Итог Phase 6.C done:** **+24 packs auto-promoted** в этой сессии (3 free-text + 5 dedup + 16 retrieval/agent), **общий итог Phase 6:** **71 packs total → 33 promoted → 38 high-priority в очереди**. Tests **44/44**, pylint **9.59/10** (выше CI 7.0).
 
-- Алгоритмический matcher (token Jaccard + char-4gram overlap) упирается в потолок ~50% recall на сильно парафразированных claims. Например `cascade_rcnn_v2` A1 «high IoU threshold limits accuracy» ↔ B3 «high IoU threshold can degrade due to overfitting» — семантически идентично, lexical distance > 0.35.
-- Для recall > 75% нужен embedding-based scorer: sentence-transformers/all-MiniLM-L6-v2 (или совместимые), cosine similarity threshold 0.7-0.8. Уже есть зависимость в проекте (settings слот `extraction_llm_embedding_model_name`), но не активирован для dual_validate.
-- После Phase 6.D можно делать авто-промо `validation_status: llm_dual_validated` для pack'ов с (recall ≥ 0.75, polarity_flips=0, type_flips=0).
+#### Phase 6.E — second/third model pass (опционально)
+
+- Прогон тех же 21 packs (Phase 6.B claims 20 + любые из новых) через `anthropic/claude-sonnet-4.6` (~$0.20) и `moonshotai/kimi-k2.6` (~$0.04). Triple-vote (2-of-3 agreement) снимет single-model bias и потенциально разблокирует ещё 5-10 авто-промоутов из текущих high-priority packs.
+- После Phase 6.E можно делать дополнительный промо `validation_status: llm_dual_validated → human_spot_checked` для pack'ов где **все три модели сошлись** на одном matched payload.
 
 ---
 

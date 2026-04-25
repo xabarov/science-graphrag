@@ -1,0 +1,11 @@
+{
+  "expected_tool_sequence": [
+    {"tool_name": "entity_search"},
+    {"tool_name": "edge_search"},
+    {"tool_name": "cite_works"}
+  ],
+  "expected_works_corpus_ids": ["faster_rcnn_realpdf", "retinanet_focal_realpdf"],
+  "expected_methods_canonical": ["region_proposal_network", "focal_loss"],
+  "answer_reference_text": "In the Faster R-CNN paper, two-stage detectors with a Region Proposal Network achieved high accuracy but were slower. The RetinaNet paper introduced focal loss, enabling one-stage detectors to match the accuracy of two-stage detectors by addressing class imbalance.",
+  "expected_behavior": "answer"
+}

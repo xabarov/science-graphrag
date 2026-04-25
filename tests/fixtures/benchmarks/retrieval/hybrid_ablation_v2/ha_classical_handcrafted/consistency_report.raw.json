@@ -1,0 +1,5 @@
+{
+  "relevant_corpus_work_ids": ["hog_human_detection_realpdf", "part_based_models_realpdf"],
+  "irrelevant_corpus_work_ids": ["faster_rcnn_realpdf", "retinanet_focal_realpdf", "ssd_realpdf", "yolov1"],
+  "rationale": "The question specifically asks for pre-deep-learning object detection methods using histogram-of-oriented-gradients (HOG) and deformable parts models (DPM), which are represented by the HOG for human detection paper and the discriminatively trained part-based models paper, while the other papers are deep-learning-based approaches."
+}

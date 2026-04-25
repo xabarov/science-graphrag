@@ -1,0 +1,10 @@
+{
+  "contradiction_found": true,
+  "claim_a_text": "Sliding-window detection with deep CNNs is challenging due to large receptive fields and strides, making precise localization difficult.",
+  "claim_b_text": "A fully convolutional sliding-window approach (RPN) is effective for generating region proposals and enables precise localization.",
+  "claim_a_quote": "units high up in our network, which has five convolutional layers, have very large receptive fields (195 × 195 pixels) and strides (32×32 pixels) in the input image, which makes precise localization within the sliding-window paradigm an open technical challenge.",
+  "claim_b_quote": "An RPN is a fully convolutional network that simultaneously predicts object bounds and objectness scores at each position.",
+  "contradiction_type": "architectural",
+  "severity": "nuanced",
+  "rationale": "ARTICLE_A explicitly states that sliding-window detection with deep CNNs is challenging for precise localization, while ARTICLE_B introduces an RPN, a fully convolutional sliding-window network, as an effective solution for generating region proposals and predicting object bounds, representing a nuanced architectural disagreement on the feasibility of sliding-window approaches in deep CNNs."
+}

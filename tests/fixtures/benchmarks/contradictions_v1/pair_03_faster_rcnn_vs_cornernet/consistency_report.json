@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "pack_id": "contradictions_v1/pair_03_faster_rcnn_vs_cornernet",
+  "pack_path": "tests/fixtures/benchmarks/contradictions_v1/pair_03_faster_rcnn_vs_cornernet",
+  "layer": "contradictions_v1",
+  "generated_at_utc": "2026-04-25T19:46:30.347346+00:00",
+  "spot_check_priority": "medium",
+  "spot_check_priority_rationale": "type matches but severity_match=False, worst_claim_text_score=0.34 (gate: severity flip OR text<0.30)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/contradictions_v1/pair_03_faster_rcnn_vs_cornernet/gold.json",
+    "count": 1,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article_a.md + article_b.md (paired)",
+    "count": 1,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:af31261e505ca143fd229fcfd9d8952cb9e3b98a8237b2844dd3ef91834e3382",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 15554,
+      "completion": 242,
+      "total": 15796
+    },
+    "latency_ms": 6203
+  },
+  "summary": {
+    "a_total": 1,
+    "b_total": 1,
+    "matched": 1,
+    "matched_lexical": 1,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "field_agreements": {
+      "contradiction_type": {
+        "agreed": 1,
+        "disagreed": 0
+      },
+      "severity": {
+        "agreed": 0,
+        "disagreed": 1
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "pair_id": "c03_anchors_vs_keypoint_detection",
+      "match_score": 0.337,
+      "match_source": "lexical",
+      "claim_a_score": 0.337,
+      "claim_b_score": 0.349,
+      "field_disagreements": [
+        {
+          "field": "severity",
+          "a": "direct",
+          "b": "nuanced"
+        }
+      ],
+      "a_claim_a_text": "Object detection should generate region proposals through anchor-based regression on a feature map.",
+      "b_claim_a_text": "Anchor boxes are an effective and necessary design for efficient region proposal and object detection.",
+      "a_claim_b_text": "Object detection can be framed as predicting paired bounding-box keypoints (top-left and bottom-right corners), eliminating the need for any anchor boxes or region proposals.",
+      "b_claim_b_text": "Anchor boxes have significant drawbacks and can be eliminated in favor of a keypoint-based detection approach."
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": []
+}

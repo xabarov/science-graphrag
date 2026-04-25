@@ -1,0 +1,195 @@
+{
+  "schema_version": 1,
+  "pack_id": "dedup/venues_v1",
+  "pack_path": "tests/fixtures/benchmarks/dedup/venues_v1",
+  "layer": "dedup_venues_v1",
+  "generated_at_utc": "2026-04-25T20:05:10.880650+00:00",
+  "spot_check_priority": "medium",
+  "spot_check_priority_rationale": "ARI=1.00, pair_f1=1.00, neg_diffs=2",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/dedup/venues_v1/gold.json",
+    "count": 9,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "records list (19 surface forms re-clustered)",
+    "count": 9,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:05831f168c29af5073d14b98e1a28d4a611757be1878ca3f84839a698bfc1b3a",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 1348,
+      "completion": 730,
+      "total": 2078
+    },
+    "latency_ms": 7989
+  },
+  "summary": {
+    "a_total": 9,
+    "b_total": 9,
+    "matched": 7,
+    "matched_lexical": 7,
+    "matched_embedding": 0,
+    "unmatched_a": 2,
+    "unmatched_b": 0,
+    "metrics": {
+      "shared_ids": 19,
+      "pair_precision": 1.0,
+      "pair_recall": 1.0,
+      "pair_f1": 1.0,
+      "adjusted_rand_index": 1.0
+    },
+    "negative_pairs": {
+      "agreed": 2,
+      "only_in_a": 2,
+      "only_in_b": 0
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_cluster_id": "cluster_cvpr_2016",
+      "a_entity_ids": [
+        "venue_cvpr_2016_apostrophe",
+        "venue_cvpr_2016_full",
+        "venue_cvpr_2016_proc",
+        "venue_cvpr_2016_short"
+      ],
+      "b_cluster_partition": {
+        "cvpr_2016": [
+          "venue_cvpr_2016_apostrophe",
+          "venue_cvpr_2016_full",
+          "venue_cvpr_2016_proc",
+          "venue_cvpr_2016_short"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_iccv_2017",
+      "a_entity_ids": [
+        "venue_iccv_2017_apostrophe",
+        "venue_iccv_2017_full",
+        "venue_iccv_2017_short"
+      ],
+      "b_cluster_partition": {
+        "iccv_2017": [
+          "venue_iccv_2017_apostrophe",
+          "venue_iccv_2017_full",
+          "venue_iccv_2017_short"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_eccv_2020",
+      "a_entity_ids": [
+        "venue_eccv_2020_full",
+        "venue_eccv_2020_short"
+      ],
+      "b_cluster_partition": {
+        "eccv_2020": [
+          "venue_eccv_2020_full",
+          "venue_eccv_2020_short"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_neurips_nips_2017",
+      "a_entity_ids": [
+        "venue_neurips_2017_short",
+        "venue_nips_2017_old_name"
+      ],
+      "b_cluster_partition": {
+        "neurips_2017": [
+          "venue_neurips_2017_short",
+          "venue_nips_2017_old_name"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_arxiv_corr",
+      "a_entity_ids": [
+        "venue_arxiv_corr",
+        "venue_arxiv_preprint"
+      ],
+      "b_cluster_partition": {
+        "arxiv_preprint": [
+          "venue_arxiv_corr",
+          "venue_arxiv_preprint"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_pami",
+      "a_entity_ids": [
+        "venue_pami_journal",
+        "venue_pami_short"
+      ],
+      "b_cluster_partition": {
+        "pami_journal": [
+          "venue_pami_journal",
+          "venue_pami_short"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_ijcv",
+      "a_entity_ids": [
+        "venue_ijcv_journal",
+        "venue_ijcv_short"
+      ],
+      "b_cluster_partition": {
+        "ijcv_journal": [
+          "venue_ijcv_journal",
+          "venue_ijcv_short"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [
+    {
+      "kind": "negative_pair_missing_in_b",
+      "entity_ids": [
+        "venue_cvpr_2017_short",
+        "venue_iccv_2017_short"
+      ],
+      "comment": "must-not-merge constraint declared by gold A but not flagged by B"
+    },
+    {
+      "kind": "negative_pair_missing_in_b",
+      "entity_ids": [
+        "venue_ijcv_short",
+        "venue_pami_short"
+      ],
+      "comment": "must-not-merge constraint declared by gold A but not flagged by B"
+    }
+  ],
+  "unmatched_b": []
+}

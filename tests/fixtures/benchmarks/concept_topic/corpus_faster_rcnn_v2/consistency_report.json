@@ -1,0 +1,300 @@
+{
+  "schema_version": 1,
+  "pack_id": "concept_topic/corpus_faster_rcnn_v2",
+  "pack_path": "tests/fixtures/benchmarks/concept_topic/corpus_faster_rcnn_v2",
+  "layer": "concept_topic_v2",
+  "generated_at_utc": "2026-04-25T19:48:24.275529+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "flips=3, missing_in_b_ratio=0.00 (gate: flips ≥ 1 OR missing_in_b_ratio ≥ 0.40)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/concept_topic/corpus_faster_rcnn_v2/gold.json",
+    "count": 17,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-labelled against frozen 25 concepts)",
+    "count": 25,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:53892a3623f2b738c5ffa747014ca638f31471b8bfacf03504426d4c94a26b2d",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 17111,
+      "completion": 1452,
+      "total": 18563
+    },
+    "latency_ms": 23180
+  },
+  "summary": {
+    "a_total": 17,
+    "b_total": 25,
+    "matched": 17,
+    "matched_lexical": 17,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 8,
+    "field_agreements": {
+      "status": {
+        "agreed_present": 7,
+        "agreed_absent": 7,
+        "flips": 3
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "concept_id": "region_proposal",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "State-of-the-art object detection networks depend on region proposal algorithms to hypothesize object locations.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "anchor_based",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "we introduce novel \"anchor\" boxes that serve as references at multiple scales and aspect ratios.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "Our object detection system, called Faster R-CNN, is composed of two modules.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "nms",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "we adopt non-maximum suppression (NMS) on the proposal regions based on their cls scores.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "roi_pooling",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "The RoI pooling layer [2] in Fast R-CNN accepts the convolutional features and also the predicted bounding boxes as input",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "Our loss function for an image is defined as: L({pi},{ti}) = 1/Ncls ∑ i Lcls (pi,p∗ i ) +λ 1/Nreg ∑ i p∗ iLreg(ti,t∗ i ).",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "achieving state-of-the-art object detection accuracy on PASCAL VOC 2007, 2012, and MS COCO datasets",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "anchor_free",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention anchor-free detection; it explicitly uses anchor boxes."
+    },
+    {
+      "concept_id": "set_prediction",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention bipartite matching or direct set prediction; it uses region proposals and NMS."
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention transformer architecture or attention encoder-decoder; it uses CNNs and RPN."
+    },
+    {
+      "concept_id": "focal_loss",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention focal loss; it uses log loss (cross-entropy) for classification."
+    },
+    {
+      "concept_id": "mask_branch",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention an instance segmentation or mask prediction branch; it focuses on object detection."
+    },
+    {
+      "concept_id": "roi_align",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention ROIAlign; it refers to RoI pooling and RoI warping."
+    },
+    {
+      "concept_id": "compound_scaling",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention compound model scaling; it uses single-scale images and fixed anchors."
+    },
+    {
+      "concept_id": "selective_search",
+      "a_status": "absent",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "absent",
+          "b": "present"
+        }
+      ],
+      "b_evidence_quote": "Selective Search [4], one of the most popular methods, greedily merges superpixels based on engineered low-level features.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "classical_dpm",
+      "a_status": "absent",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "absent",
+          "b": "present"
+        }
+      ],
+      "b_evidence_quote": "in DPM [8] and CNN-based methods [9], [1], [2].",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "a_status": "absent",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "absent",
+          "b": "present"
+        }
+      ],
+      "b_evidence_quote": "Selective Search [4], one of the most popular methods, greedily merges superpixels based on engineered low-level features.",
+      "b_rationale": ""
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": [
+    {
+      "concept_id": "feature_pyramid",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article mentions pyramids of images/filters but not a feature pyramid network (FPN) with lateral connections.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "b_status": "present",
+      "b_evidence_quote": "One-Stage Detection vs. Two-Stage Proposal + Detection.",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "keypoint_detection",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention keypoint or corner detection; it focuses on object bounding box detection.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article mentions VGG-16 and ZF nets but not ResNet as a backbone.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "backbone_darknet",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention Darknet; it uses VGG-16 and ZF nets.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "cascade_iou_progression",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention cascade detectors or stage-wise IoU thresholds; it uses a two-stage Faster R-CNN.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "centerness",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention a center-ness branch; it uses anchor boxes and objectness scores.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "iou_loss",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article uses IoU for assigning labels but does not mention IoU loss as a training objective; it uses smooth L1 loss.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    }
+  ]
+}

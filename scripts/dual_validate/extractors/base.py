@@ -2,13 +2,60 @@
 
 from __future__ import annotations
 
+import json
+import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from scripts.dual_validate.consistency_report import ConsistencyReport
 from scripts.dual_validate.llm_client import DualValidateLLMClient, LLMCallSpec, prompt_hash
 from scripts.dual_validate.matcher import EmbeddingScorerProtocol
+
+_FENCED = re.compile(r"```(?:json)?\s*(.*?)\s*```", re.DOTALL)
+
+
+def parse_json_object_lenient(raw: str) -> Any:
+    """Parse a JSON object out of a possibly-noisy LLM response.
+
+    LLMs occasionally append commentary, repeat the object twice, or wrap the
+    body in ``` fences even when ``response_format=json_object`` was requested.
+    We try, in order:
+
+    1. straight ``json.loads`` of the trimmed payload;
+    2. unwrap a ``` ... ``` fence if present and retry;
+    3. ``json.JSONDecoder().raw_decode`` to consume only the leading object.
+
+    Raises ``ValueError`` if none of these succeed; the caller wraps the message
+    with extractor-specific context.
+    """
+
+    text = raw.strip()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+
+    fenced = _FENCED.search(text)
+    if fenced is not None:
+        try:
+            return json.loads(fenced.group(1).strip())
+        except json.JSONDecodeError:
+            pass
+
+    decoder = json.JSONDecoder()
+    start = text.find("{")
+    if start >= 0:
+        try:
+            obj, _ = decoder.raw_decode(text[start:])
+            return obj
+        except json.JSONDecodeError as exc:
+            raise ValueError(
+                f"could not decode JSON from LLM response: {exc.msg} " f"at offset {exc.pos}"
+            ) from exc
+
+    raise ValueError("LLM response contained no JSON object")
 
 
 @dataclass(frozen=True)

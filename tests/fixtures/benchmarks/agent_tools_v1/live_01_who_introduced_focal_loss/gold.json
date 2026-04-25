@@ -3,9 +3,20 @@
   "case_id": "live_01_who_introduced_focal_loss",
   "tier": "agent_tools_live",
   "meta": {
-    "validation_status": "draft",
+    "validation_status": "llm_dual_validated",
     "needs_human_review": true,
-    "extractor_pass": "single_human_authored_2026-04-25"
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "validation_history": [
+      {
+        "promoted_at_utc": "2026-04-25T20:14:04.420820+00:00",
+        "from_status": "draft",
+        "to_status": "llm_dual_validated",
+        "spot_check_priority": "medium",
+        "consistency_report": "tests/fixtures/benchmarks/agent_tools_v1/live_01_who_introduced_focal_loss/consistency_report.json",
+        "rule": "auto-promote on Phase 6.D embedding-cascade pass"
+      }
+    ],
+    "validation_status_previous": "draft"
   },
   "question_file": "question.txt",
   "expected_tool_sequence": [

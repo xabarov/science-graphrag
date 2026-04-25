@@ -3,13 +3,24 @@
   "case_id": "concept_corpus_mask_rcnn_v2",
   "corpus_work_id": "mask_rcnn_realpdf",
   "meta": {
-    "validation_status": "draft",
-    "needs_human_review": true,
+    "validation_status": "llm_dual_validated",
+    "needs_human_review": false,
     "extractor_pass": "single_human_authored_2026-04-25",
     "spot_check_required_fields": [
       "concepts_present",
       "concepts_absent"
-    ]
+    ],
+    "validation_history": [
+      {
+        "promoted_at_utc": "2026-04-25T19:49:22.954048+00:00",
+        "from_status": "draft",
+        "to_status": "llm_dual_validated",
+        "spot_check_priority": "low",
+        "consistency_report": "tests/fixtures/benchmarks/concept_topic/corpus_mask_rcnn_v2/consistency_report.json",
+        "rule": "auto-promote on Phase 6.D embedding-cascade pass"
+      }
+    ],
+    "validation_status_previous": "draft"
   },
   "concepts_present": [
     {

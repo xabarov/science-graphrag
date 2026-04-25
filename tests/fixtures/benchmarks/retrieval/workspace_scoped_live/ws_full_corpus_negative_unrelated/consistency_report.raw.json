@@ -1,0 +1,5 @@
+{
+  "expected_corpus_work_ids": [],
+  "would_violate_workspace_with": [],
+  "rationale": "The question asks about BERT or large language model pre-training for natural language understanding, but all papers in the workspace are focused on computer vision and object detection, with no relevant NLP papers."
+}

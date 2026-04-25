@@ -1,0 +1,10 @@
+{
+  "expected_tool_sequence": [
+    {"tool_name": "entity_search"},
+    {"tool_name": "cite_works"}
+  ],
+  "expected_works_corpus_ids": ["yolov3"],
+  "expected_methods_canonical": ["yolo"],
+  "answer_reference_text": "The YOLOv3 paper reports an inference speed of 22 ms per image on COCO at 320x320 resolution, which corresponds to approximately 45 FPS. This is stated in the YOLOv3 paper under the 'How We Do' section.",
+  "expected_behavior": "answer"
+}

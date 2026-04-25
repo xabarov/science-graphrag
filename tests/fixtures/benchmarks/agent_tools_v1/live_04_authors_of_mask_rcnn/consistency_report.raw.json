@@ -1,0 +1,11 @@
+{
+  "expected_tool_sequence": [
+    {"tool_name": "entity_search"},
+    {"tool_name": "edge_search"},
+    {"tool_name": "cite_works"}
+  ],
+  "expected_works_corpus_ids": ["mask_rcnn_realpdf", "faster_rcnn_realpdf", "fast_rcnn_realpdf", "r_cnn_realpdf"],
+  "expected_methods_canonical": ["mask_rcnn", "faster_rcnn", "fast_rcnn", "r_cnn"],
+  "answer_reference_text": "The Mask R-CNN paper authors are Kaiming He, Georgia Gkioxari, Piotr Dollár, and Ross Girshick. In the corpus, other detection papers sharing at least one author with it include Faster R-CNN, Fast R-CNN, and R-CNN, all co-authored by Ross Girshick.",
+  "expected_behavior": "answer"
+}

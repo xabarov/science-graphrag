@@ -2,9 +2,20 @@
   "schema_version": 1,
   "case_id": "mh_yolo_lineage_chain",
   "meta": {
-    "validation_status": "draft",
-    "needs_human_review": true,
-    "extractor_pass": "single_human_authored_2026-04-25"
+    "validation_status": "llm_dual_validated",
+    "needs_human_review": false,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "validation_history": [
+      {
+        "promoted_at_utc": "2026-04-25T20:11:51.985274+00:00",
+        "from_status": "draft",
+        "to_status": "llm_dual_validated",
+        "spot_check_priority": "low",
+        "consistency_report": "tests/fixtures/benchmarks/retrieval/multihop_v2/mh_yolo_lineage_chain/consistency_report.json",
+        "rule": "auto-promote on Phase 6.D embedding-cascade pass"
+      }
+    ],
+    "validation_status_previous": "draft"
   },
   "question_file": "question.txt",
   "expected_path_kind": "ordered_chain",

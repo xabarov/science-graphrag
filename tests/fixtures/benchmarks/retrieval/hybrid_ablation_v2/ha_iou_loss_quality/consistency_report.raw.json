@@ -1,0 +1,5 @@
+{
+  "relevant_corpus_work_ids": ["gfl_realpdf", "tood_realpdf"],
+  "irrelevant_corpus_work_ids": ["atss_realpdf", "hog_human_detection_realpdf", "rcnn_realpdf", "yolov1"],
+  "rationale": "The question specifically asks for IoU-based localization loss and quality-aware classification, which are the core contributions of GFL (Generalized Focal Loss) and TOOD (Task-aligned One-stage Object Detection)."
+}

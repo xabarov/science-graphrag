@@ -1,0 +1,5 @@
+{
+  "relevant_corpus_work_ids": ["faster_rcnn_realpdf"],
+  "irrelevant_corpus_work_ids": ["detr_realpdf", "fast_rcnn_realpdf", "retinanet_focal_realpdf", "rfcn_realpdf", "ssd_realpdf", "yolov1"],
+  "rationale": "Faster R-CNN introduces the region proposal network (RPN) with end-to-end training and shared convolutional features for two-stage detection, directly matching the query."
+}

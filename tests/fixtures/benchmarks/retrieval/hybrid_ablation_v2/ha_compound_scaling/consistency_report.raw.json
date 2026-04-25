@@ -1,0 +1,5 @@
+{
+  "relevant_corpus_work_ids": ["efficientdet_realpdf"],
+  "irrelevant_corpus_work_ids": ["faster_rcnn_realpdf", "fpn_realpdf", "retinanet_focal_realpdf", "ssd_realpdf"],
+  "rationale": "Only EfficientDet explicitly introduces and studies the compound scaling of depth, width, and input resolution for efficient object detection."
+}

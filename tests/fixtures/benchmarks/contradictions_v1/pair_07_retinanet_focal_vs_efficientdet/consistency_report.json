@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "pack_id": "contradictions_v1/pair_07_retinanet_focal_vs_efficientdet",
+  "pack_path": "tests/fixtures/benchmarks/contradictions_v1/pair_07_retinanet_focal_vs_efficientdet",
+  "layer": "contradictions_v1",
+  "generated_at_utc": "2026-04-25T19:47:36.098401+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "extractor B did not confirm the contradiction (unmatched_a=1, unmatched_b=0)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/contradictions_v1/pair_07_retinanet_focal_vs_efficientdet/gold.json",
+    "count": 1,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article_a.md + article_b.md (paired)",
+    "count": 0,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:5b86ddc6eac175bfad34c8bc98013b310a2c3ef1a18ccd061c7cb01e50ee1b3e",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 17082,
+      "completion": 63,
+      "total": 17145
+    },
+    "latency_ms": 4179
+  },
+  "summary": {
+    "a_total": 1,
+    "b_total": 0,
+    "matched": 0,
+    "matched_lexical": 0,
+    "matched_embedding": 0,
+    "unmatched_a": 1,
+    "unmatched_b": 1,
+    "field_agreements": {
+      "contradiction_type": {
+        "agreed": 0,
+        "disagreed": 0
+      },
+      "severity": {
+        "agreed": 0,
+        "disagreed": 0
+      }
+    }
+  },
+  "matched_pairs": [],
+  "unmatched_a": [
+    {
+      "pair_id": "c07_depth_scaling_vs_compound_scaling",
+      "a_contradiction_type": "scaling",
+      "a_severity": "nuanced",
+      "comment": "extractor B did not confirm a contradiction between the two articles"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "pair_id": "B_returned_empty",
+      "b_rationale": "",
+      "comment": "B returned contradiction_found=false"
+    }
+  ]
+}

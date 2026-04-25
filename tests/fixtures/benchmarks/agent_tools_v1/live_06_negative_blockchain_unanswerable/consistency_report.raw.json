@@ -1,0 +1,12 @@
+{
+  "expected_tool_sequence": [
+    {"tool_name": "vector_search"},
+    {"tool_name": "cypher_query"},
+    {"tool_name": "idea_search"},
+    {"tool_name": "final_answer"}
+  ],
+  "expected_works_corpus_ids": [],
+  "expected_methods_canonical": [],
+  "answer_reference_text": "No paper in the object-detection corpus introduces a blockchain-based decentralized object detection model. This topic is out of scope for the corpus, which focuses on traditional computer vision methods.",
+  "expected_behavior": "abstain_or_empty"
+}

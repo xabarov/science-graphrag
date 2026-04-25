@@ -64,7 +64,7 @@ def post_idea_assist(
         idea_search=IdeaSearchTool(
             stores.qdrant_chunks,
             work_store=stores.qdrant_works,
-            embedding_model=settings.embedding_model,
+            settings=settings,
         ),
         cypher_query=CypherQueryTool(stores.neo4j),
         edge_search=EdgeSearchTool(stores.neo4j),

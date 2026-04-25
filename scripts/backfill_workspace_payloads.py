@@ -21,7 +21,7 @@ def main() -> int:
     args = p.parse_args()
     settings = get_settings()
     neo = Neo4jGraphStore(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password)
-    dim = resolve_embedding_dim(embedding_model=settings.embedding_model)
+    dim = resolve_embedding_dim(settings=settings)
     qdrant = QdrantChunkStore(settings.qdrant_url, settings.qdrant_collection, vector_dim=dim)
     engine = create_engine(settings.database_url, pool_pre_ping=True)
     init_db(engine)

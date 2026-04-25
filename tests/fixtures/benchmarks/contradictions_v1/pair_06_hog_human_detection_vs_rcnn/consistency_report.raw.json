@@ -1,0 +1,10 @@
+{
+  "contradiction_found": true,
+  "claim_a_text": "HOG features with a linear SVM are highly effective for human detection, outperforming other feature sets including wavelets and PCA-SIFT.",
+  "claim_b_text": "CNN-based features (R-CNN) dramatically outperform HOG-like features for object detection, achieving a large improvement in mAP on PASCAL VOC.",
+  "claim_a_quote": "grids of Histograms of Oriented Gradient (HOG) descriptors significantly outperform existing feature sets for human detection.",
+  "claim_b_quote": "a CNN can lead to dramatically higher object detection performance on PASCAL VOC as compared to systems based on simpler HOG-like features.",
+  "contradiction_type": "era_shift",
+  "severity": "nuanced",
+  "rationale": "Article A (2005) champions HOG as state-of-the-art for detection, while Article B (2014) shows CNNs supersede HOG, marking a shift from handcrafted to learned features."
+}

@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "pack_id": "dedup/authors_v1",
+  "pack_path": "tests/fixtures/benchmarks/dedup/authors_v1",
+  "layer": "dedup_authors_v1",
+  "generated_at_utc": "2026-04-25T20:04:41.687644+00:00",
+  "spot_check_priority": "medium",
+  "spot_check_priority_rationale": "ARI=1.00, pair_f1=1.00, neg_diffs=1",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/dedup/authors_v1/gold.json",
+    "count": 12,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "records list (19 surface forms re-clustered)",
+    "count": 12,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:7b87ae8d116da25aa4b3e478dcf32797503799d00d63343438a3a68a4030fa48",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 1981,
+      "completion": 1099,
+      "total": 3080
+    },
+    "latency_ms": 24178
+  },
+  "summary": {
+    "a_total": 12,
+    "b_total": 12,
+    "matched": 6,
+    "matched_lexical": 6,
+    "matched_embedding": 0,
+    "unmatched_a": 1,
+    "unmatched_b": 0,
+    "metrics": {
+      "shared_ids": 19,
+      "pair_precision": 1.0,
+      "pair_recall": 1.0,
+      "pair_f1": 1.0,
+      "adjusted_rand_index": 1.0
+    },
+    "negative_pairs": {
+      "agreed": 3,
+      "only_in_a": 1,
+      "only_in_b": 0
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_cluster_id": "cluster_redmon_joseph",
+      "a_entity_ids": [
+        "auth_redmon_j_initial",
+        "auth_redmon_joseph_full"
+      ],
+      "b_cluster_partition": {
+        "redmon_joseph": [
+          "auth_redmon_j_initial",
+          "auth_redmon_joseph_full"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_girshick_ross",
+      "a_entity_ids": [
+        "auth_girshick_r_initial",
+        "auth_girshick_ross_b_middle_initial",
+        "auth_girshick_ross_full"
+      ],
+      "b_cluster_partition": {
+        "girshick_ross": [
+          "auth_girshick_r_initial",
+          "auth_girshick_ross_b_middle_initial",
+          "auth_girshick_ross_full"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_he_kaiming",
+      "a_entity_ids": [
+        "auth_he_k_initial",
+        "auth_he_kaiming_full"
+      ],
+      "b_cluster_partition": {
+        "he_kaiming": [
+          "auth_he_k_initial",
+          "auth_he_kaiming_full"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_sun_jian",
+      "a_entity_ids": [
+        "auth_sun_j_initial",
+        "auth_sun_jian_full"
+      ],
+      "b_cluster_partition": {
+        "sun_jian": [
+          "auth_sun_j_initial",
+          "auth_sun_jian_full"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_dai_jifeng",
+      "a_entity_ids": [
+        "auth_dai_j_initial",
+        "auth_dai_jifeng_full"
+      ],
+      "b_cluster_partition": {
+        "dai_jifeng": [
+          "auth_dai_j_initial",
+          "auth_dai_jifeng_full"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_lin_tsung_yi",
+      "a_entity_ids": [
+        "auth_lin_t_y_dot_initial",
+        "auth_lin_tsung_yi_full"
+      ],
+      "b_cluster_partition": {
+        "lin_tsung_yi": [
+          "auth_lin_t_y_dot_initial",
+          "auth_lin_tsung_yi_full"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [
+    {
+      "kind": "negative_pair_missing_in_b",
+      "entity_ids": [
+        "auth_zhang_x_initial_ambiguous",
+        "auth_zhang_xiangyu"
+      ],
+      "comment": "must-not-merge constraint declared by gold A but not flagged by B"
+    }
+  ],
+  "unmatched_b": []
+}

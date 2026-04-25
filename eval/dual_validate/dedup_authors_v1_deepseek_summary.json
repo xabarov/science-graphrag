@@ -1,0 +1,41 @@
+{
+  "generated_at_utc": "2026-04-25T20:15:12.263794+00:00",
+  "phase": "Phase 6.C",
+  "layer": "dedup_authors_v1",
+  "tag": "deepseek_phase6c",
+  "fixtures_subdir": "dedup/authors_v1",
+  "totals": {
+    "packs": 1,
+    "a_total": 12,
+    "b_total": 12,
+    "matched": 6,
+    "matched_lexical": 6,
+    "matched_embedding": 0,
+    "unmatched_a": 1,
+    "unmatched_b": 0,
+    "promoted_to_llm_dual_validated": 1,
+    "global_match_ratio": 0.5,
+    "embedding_share_of_matches": 0.0
+  },
+  "priority_counts": {
+    "low": 0,
+    "medium": 1,
+    "high": 0
+  },
+  "results": [
+    {
+      "pack": "authors_v1",
+      "spot_check_priority": "medium",
+      "spot_check_priority_rationale": "ARI=1.00, pair_f1=1.00, neg_diffs=1",
+      "a_total": 12,
+      "b_total": 12,
+      "matched": 6,
+      "matched_lexical": 6,
+      "matched_embedding": 0,
+      "unmatched_a": 1,
+      "unmatched_b": 0,
+      "promoted_to_llm_dual_validated": true,
+      "model": "deepseek/deepseek-v3.2"
+    }
+  ]
+}

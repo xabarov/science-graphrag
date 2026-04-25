@@ -1,0 +1,111 @@
+{
+  "generated_at_utc": "2026-04-25T20:15:18.748247+00:00",
+  "phase": "Phase 6.C",
+  "layer": "agent_tools_live",
+  "tag": "deepseek_phase6c",
+  "fixtures_subdir": "agent_tools_v1",
+  "totals": {
+    "packs": 6,
+    "a_total": 28,
+    "b_total": 37,
+    "matched": 13,
+    "matched_lexical": 13,
+    "matched_embedding": 0,
+    "unmatched_a": 13,
+    "unmatched_b": 23,
+    "promoted_to_llm_dual_validated": 3,
+    "global_match_ratio": 0.464,
+    "embedding_share_of_matches": 0.0
+  },
+  "priority_counts": {
+    "low": 1,
+    "medium": 2,
+    "high": 3
+  },
+  "results": [
+    {
+      "pack": "live_01_who_introduced_focal_loss",
+      "spot_check_priority": "medium",
+      "spot_check_priority_rationale": "tool_req_recall=0.50, works=1.00, methods=0.50",
+      "a_total": 5,
+      "b_total": 5,
+      "matched": 3,
+      "matched_lexical": 3,
+      "matched_embedding": 0,
+      "unmatched_a": 1,
+      "unmatched_b": 1,
+      "promoted_to_llm_dual_validated": true,
+      "model": "deepseek/deepseek-v3.2"
+    },
+    {
+      "pack": "live_02_anchor_free_papers_overview",
+      "spot_check_priority": "medium",
+      "spot_check_priority_rationale": "tool_req_recall=0.50, works=0.50, methods=0.00",
+      "a_total": 9,
+      "b_total": 6,
+      "matched": 3,
+      "matched_lexical": 3,
+      "matched_embedding": 0,
+      "unmatched_a": 6,
+      "unmatched_b": 3,
+      "promoted_to_llm_dual_validated": true,
+      "model": "deepseek/deepseek-v3.2"
+    },
+    {
+      "pack": "live_03_yolov3_speed_paper_only",
+      "spot_check_priority": "high",
+      "spot_check_priority_rationale": "tool_req_recall=0.00, works=0.00, methods=0.00 (gate)",
+      "a_total": 2,
+      "b_total": 4,
+      "matched": 0,
+      "matched_lexical": 0,
+      "matched_embedding": 0,
+      "unmatched_a": 2,
+      "unmatched_b": 4,
+      "promoted_to_llm_dual_validated": false,
+      "model": "deepseek/deepseek-v3.2"
+    },
+    {
+      "pack": "live_04_authors_of_mask_rcnn",
+      "spot_check_priority": "high",
+      "spot_check_priority_rationale": "tool_req_recall=0.00, works=0.50, methods=0.00 (gate)",
+      "a_total": 6,
+      "b_total": 11,
+      "matched": 3,
+      "matched_lexical": 3,
+      "matched_embedding": 0,
+      "unmatched_a": 3,
+      "unmatched_b": 8,
+      "promoted_to_llm_dual_validated": false,
+      "model": "deepseek/deepseek-v3.2"
+    },
+    {
+      "pack": "live_05_compare_two_stage_one_stage_accuracy",
+      "spot_check_priority": "high",
+      "spot_check_priority_rationale": "tool_req_recall=0.00, works=1.00, methods=0.50 (gate)",
+      "a_total": 5,
+      "b_total": 7,
+      "matched": 3,
+      "matched_lexical": 3,
+      "matched_embedding": 0,
+      "unmatched_a": 1,
+      "unmatched_b": 4,
+      "promoted_to_llm_dual_validated": false,
+      "model": "deepseek/deepseek-v3.2"
+    },
+    {
+      "pack": "live_06_negative_blockchain_unanswerable",
+      "spot_check_priority": "low",
+      "spot_check_priority_rationale": "negative case: B abstained, required tools matched",
+      "a_total": 1,
+      "b_total": 4,
+      "matched": 1,
+      "matched_lexical": 1,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 3,
+      "promoted_to_llm_dual_validated": true,
+      "model": "deepseek/deepseek-v3.2"
+    }
+  ]
+}

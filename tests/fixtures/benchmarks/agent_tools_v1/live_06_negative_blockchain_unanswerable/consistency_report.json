@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "pack_id": "live_06_negative_blockchain_unanswerable",
+  "pack_path": "tests/fixtures/benchmarks/agent_tools_v1/live_06_negative_blockchain_unanswerable",
+  "layer": "agent_tools_live",
+  "generated_at_utc": "2026-04-25T20:14:40.641669+00:00",
+  "spot_check_priority": "low",
+  "spot_check_priority_rationale": "negative case: B abstained, required tools matched",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/agent_tools_v1/live_06_negative_blockchain_unanswerable/gold.json",
+    "count": 1,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "question.txt | tool_set=7",
+    "count": 4,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:61f98dcffb5d942dc3988971ac3d29b18816e41a87977b875491a5d7e6456d96",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 400,
+      "completion": 127,
+      "total": 527
+    },
+    "latency_ms": 6166
+  },
+  "summary": {
+    "a_total": 1,
+    "b_total": 4,
+    "matched": 1,
+    "matched_lexical": 1,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 3,
+    "tool_metrics": {
+      "required_recall": 1.0,
+      "all_recall": 1.0,
+      "missing_required": [],
+      "extra_tools_in_b": [
+        "cypher_query",
+        "final_answer",
+        "idea_search"
+      ]
+    },
+    "works_jaccard": 1.0,
+    "methods_jaccard": 1.0,
+    "answer_token_jaccard": 0.5,
+    "is_negative_case": true,
+    "behavior_agreement": true,
+    "behavior_a": "abstain_or_empty",
+    "behavior_b": "abstain_or_empty"
+  },
+  "matched_pairs": [
+    {
+      "tool_name": "vector_search",
+      "kind": "required_tool_match",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": [
+    {
+      "tool_name": "cypher_query",
+      "kind": "extra_tool_in_b"
+    },
+    {
+      "tool_name": "final_answer",
+      "kind": "extra_tool_in_b"
+    },
+    {
+      "tool_name": "idea_search",
+      "kind": "extra_tool_in_b"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "clusters": [
+    {"cluster_id": "cvpr_2016", "entity_ids": ["venue_cvpr_2016_full", "venue_cvpr_2016_short", "venue_cvpr_2016_apostrophe", "venue_cvpr_2016_proc"], "rationale": "All refer to the CVPR conference in 2016, with consistent year and conference kind."},
+    {"cluster_id": "cvpr_2017", "entity_ids": ["venue_cvpr_2017_short"], "rationale": "Singleton cluster for CVPR 2017, as no other records share the same year and venue."},
+    {"cluster_id": "iccv_2017", "entity_ids": ["venue_iccv_2017_full", "venue_iccv_2017_short", "venue_iccv_2017_apostrophe"], "rationale": "All refer to the ICCV conference in 2017, with consistent year and conference kind."},
+    {"cluster_id": "eccv_2020", "entity_ids": ["venue_eccv_2020_full", "venue_eccv_2020_short"], "rationale": "Both refer to the ECCV conference in 2020, with consistent year and conference kind."},
+    {"cluster_id": "neurips_2017", "entity_ids": ["venue_neurips_2017_short", "venue_nips_2017_old_name"], "rationale": "Both refer to the NeurIPS (formerly NIPS) conference in 2017, with consistent year and conference kind."},
+    {"cluster_id": "neurips_2018", "entity_ids": ["venue_neurips_2018_post_rename"], "rationale": "Singleton cluster for NeurIPS 2018, as no other records share the same year and venue."},
+    {"cluster_id": "arxiv_preprint", "entity_ids": ["venue_arxiv_preprint", "venue_arxiv_corr"], "rationale": "Both refer to the arXiv preprint repository, with consistent preprint_repository kind and no year."},
+    {"cluster_id": "pami_journal", "entity_ids": ["venue_pami_journal", "venue_pami_short"], "rationale": "Both refer to the IEEE Transactions on Pattern Analysis and Machine Intelligence (TPAMI) journal, with consistent journal kind."},
+    {"cluster_id": "ijcv_journal", "entity_ids": ["venue_ijcv_journal", "venue_ijcv_short"], "rationale": "Both refer to the International Journal of Computer Vision (IJCV) journal, with consistent journal kind."}
+  ],
+  "negative_pairs": [
+    {"pair_id": "cvpr_2016_vs_2017", "entity_ids": ["venue_cvpr_2016_short", "venue_cvpr_2017_short"], "rationale": "Different years (2016 vs 2017) for the same conference series, so they are distinct venues."},
+    {"pair_id": "neurips_2017_vs_2018", "entity_ids": ["venue_neurips_2017_short", "venue_neurips_2018_post_rename"], "rationale": "Different years (2017 vs 2018) for the same conference series, so they are distinct venues."}
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "pack_id": "ws_yolo_negative_mask_segmentation",
+  "pack_path": "tests/fixtures/benchmarks/retrieval/workspace_scoped_live/ws_yolo_negative_mask_segmentation",
+  "layer": "workspace_scoped_live",
+  "generated_at_utc": "2026-04-25T20:10:32.193737+00:00",
+  "spot_check_priority": "low",
+  "spot_check_priority_rationale": "negative case: B also returned an empty expected_corpus_work_ids set",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/retrieval/workspace_scoped_live/ws_yolo_negative_mask_segmentation/gold.json",
+    "count": 0,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "workspace=ws_yolo_family | question.txt",
+    "count": 0,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:83c5f21f4cfef8fef21a8a687403c9ffcf7bc45439fc2ccb5dfbc220b3a4df0c",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 445,
+      "completion": 82,
+      "total": 527
+    },
+    "latency_ms": 3605
+  },
+  "summary": {
+    "a_total": 0,
+    "b_total": 0,
+    "matched": 0,
+    "matched_lexical": 0,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "metrics_required_only": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "jaccard": 0.0
+    },
+    "metrics_required_or_optional": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "jaccard": 0.0
+    },
+    "boundary_violations_count": 0,
+    "real_forbidden_predictions": 1,
+    "phantom_forbidden_predictions": 0,
+    "rationale_b": "The question asks about a mask prediction branch for instance segmentation, which is a feature introduced by Mask R-CNN, an out-of-scope paper, and no paper in the YOLO-focused workspace introduces this."
+  },
+  "matched_pairs": [],
+  "unmatched_a": [],
+  "unmatched_b": []
+}

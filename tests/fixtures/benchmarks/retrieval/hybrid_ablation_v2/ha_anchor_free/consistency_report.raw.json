@@ -1,0 +1,5 @@
+{
+  "relevant_corpus_work_ids": ["atss_realpdf", "centernet_realpdf", "cornernet_realpdf", "fcos_realpdf"],
+  "irrelevant_corpus_work_ids": ["faster_rcnn_realpdf", "ssd_realpdf", "yolov2_realpdf"],
+  "rationale": "ATSS, CenterNet, CornerNet, and FCOS are explicitly anchor-free methods, while Faster R-CNN, SSD, and YOLOv2 rely on predefined anchor boxes."
+}

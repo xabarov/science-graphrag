@@ -1,0 +1,288 @@
+{
+  "schema_version": 1,
+  "pack_id": "concept_topic/corpus_yolov1_v2",
+  "pack_path": "tests/fixtures/benchmarks/concept_topic/corpus_yolov1_v2",
+  "layer": "concept_topic_v2",
+  "generated_at_utc": "2026-04-25T19:50:18.291006+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "flips=3, missing_in_b_ratio=0.00 (gate: flips ≥ 1 OR missing_in_b_ratio ≥ 0.40)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/concept_topic/corpus_yolov1_v2/gold.json",
+    "count": 13,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-labelled against frozen 25 concepts)",
+    "count": 25,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:89e2f62a2a23e81191cd51a74192501792896f6ee35945c5e1084b6ddf424611",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 13470,
+      "completion": 1363,
+      "total": 14833
+    },
+    "latency_ms": 21489
+  },
+  "summary": {
+    "a_total": 13,
+    "b_total": 25,
+    "matched": 13,
+    "matched_lexical": 13,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 12,
+    "field_agreements": {
+      "status": {
+        "agreed_present": 4,
+        "agreed_absent": 6,
+        "flips": 3
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "concept_id": "one_stage_detector",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "We present YOLO, a new approach to object detection. ... A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "nms",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "Non-maximal suppression can be used to fix these multiple detections.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "During training we optimize the following, multi-part loss function:",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "backbone_darknet",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "We use the Darknet framework for all training and inference [26].",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "a_status": "present",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "present",
+          "b": "absent"
+        }
+      ],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention MS COCO benchmark, COCO test-dev, or COCO 2017 val."
+    },
+    {
+      "concept_id": "region_proposal",
+      "a_status": "absent",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "absent",
+          "b": "present"
+        }
+      ],
+      "b_evidence_quote": "More recent approaches like R-CNN use region proposal methods to first generate potential bounding boxes in an image",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "anchor_based",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention anchor boxes, predefined anchors, or similar anchor-based mechanisms."
+    },
+    {
+      "concept_id": "set_prediction",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention bipartite matching, Hungarian matching, or direct set prediction."
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention transformer architecture, attention encoder-decoder, or transformer object detection."
+    },
+    {
+      "concept_id": "focal_loss",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention focal loss or modulating factor cross-entropy."
+    },
+    {
+      "concept_id": "roi_align",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention ROIAlign or RoIAlign."
+    },
+    {
+      "concept_id": "mask_branch",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not discuss instance segmentation, mask prediction, or per-instance mask."
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "a_status": "absent",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "absent",
+          "b": "present"
+        }
+      ],
+      "b_evidence_quote": "Detection pipelines generally start by extracting a set of robust features from input images (Haar [25], SIFT [23], HOG [4], convolutional features [6]).",
+      "b_rationale": ""
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": [
+    {
+      "concept_id": "selective_search",
+      "b_status": "present",
+      "b_evidence_quote": "Selective Search [35] generates potential bounding boxes",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "anchor_free",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not discuss anchor-free detection or per-pixel prediction without anchors.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not discuss multi-scale features, FPN, or pyramid networks.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "roi_pooling",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention ROI pooling, RoIPool, or region-of-interest pooling.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "b_status": "present",
+      "b_evidence_quote": "More recent approaches like R-CNN use region proposal methods to first generate potential bounding boxes in an image and then run a classifier on these proposed boxes.",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "keypoint_detection",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention keypoint detection, corner detection, or paired keypoints.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention ResNet, residual network backbone, ResNet-50, or ResNet 101.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "compound_scaling",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention compound model scaling or joint depth-width-resolution scaling.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "cascade_iou_progression",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention cascade detector, cascade R-CNN, or stage-wise IoU threshold.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "centerness",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention center-ness branch or center prediction.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "iou_loss",
+      "b_status": "present",
+      "b_evidence_quote": "Formally we define confidence as Pr(Object)∗ IOUtruth pred .",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "classical_dpm",
+      "b_status": "present",
+      "b_evidence_quote": "Systems like deformable parts models (DPM) use a sliding window approach",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    }
+  ]
+}

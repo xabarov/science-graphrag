@@ -31,5 +31,9 @@
 | [015](015-neo4j-vector-index-work-title-embedding.md) | Wave Q2 (optional): Neo4j vector index `Work.title_embedding` for in-graph similarity |
 | [016](016-agent-tool-registry-and-langgraph.md) | Wave R: read-only agent tool registry, LangGraph runtime, `/v1/agent/query` |
 | [017](017-hypothesis-idea-assist-advisory.md) | Wave S: hypothesis/idea-assist advisory layer, rubric benchmark, no production graph writes |
+| [018](018-ingest-worker-redis.md) | Ingest worker / Redis queue |
+| [019](019-entity-dedup-pipeline.md) | Entity dedup Qdrant collections (methods, datasets, venues, institutions) |
+| [020](020-langgraph-supervisor-multiagent.md) | LangGraph supervisor multi-agent |
+| [021](021-openrouter-bge-m3-embeddings.md) | OpenRouter `baai/bge-m3` as canonical remote embeddings (Qdrant + dedup) |
 
 Новые ADR нумеровать по порядку (`001-...`, `002-...`); при отмене пометить как Superseded и сослаться на замену.

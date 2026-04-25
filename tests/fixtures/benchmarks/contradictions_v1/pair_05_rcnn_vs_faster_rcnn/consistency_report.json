@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "pack_id": "contradictions_v1/pair_05_rcnn_vs_faster_rcnn",
+  "pack_path": "tests/fixtures/benchmarks/contradictions_v1/pair_05_rcnn_vs_faster_rcnn",
+  "layer": "contradictions_v1",
+  "generated_at_utc": "2026-04-25T19:47:16.834271+00:00",
+  "spot_check_priority": "medium",
+  "spot_check_priority_rationale": "type matches but severity_match=True, worst_claim_text_score=0.12 (gate: severity flip OR text<0.30)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/contradictions_v1/pair_05_rcnn_vs_faster_rcnn/gold.json",
+    "count": 1,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article_a.md + article_b.md (paired)",
+    "count": 1,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:2809f323ba1e0ebdbae7ee91e13b945785f933903f62e1dc2c2cebf915f02953",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 16712,
+      "completion": 256,
+      "total": 16968
+    },
+    "latency_ms": 10925
+  },
+  "summary": {
+    "a_total": 1,
+    "b_total": 1,
+    "matched": 1,
+    "matched_lexical": 1,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "field_agreements": {
+      "contradiction_type": {
+        "agreed": 1,
+        "disagreed": 0
+      },
+      "severity": {
+        "agreed": 1,
+        "disagreed": 0
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "pair_id": "c05_external_proposals_vs_integrated_rpn",
+      "match_score": 0.118,
+      "match_source": "lexical",
+      "claim_a_score": 0.118,
+      "claim_b_score": 0.177,
+      "field_disagreements": [],
+      "a_claim_a_text": "High-quality external region proposals (e.g. Selective Search) are the foundation of accurate region-based detection.",
+      "b_claim_a_text": "Sliding-window detection with deep CNNs is challenging due to large receptive fields and strides, making precise localization difficult.",
+      "a_claim_b_text": "An integrated Region Proposal Network is faster and equally accurate, removing the dependence on external proposal algorithms.",
+      "b_claim_b_text": "A fully convolutional sliding-window approach (RPN) is effective for generating region proposals and enables precise localization."
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": []
+}

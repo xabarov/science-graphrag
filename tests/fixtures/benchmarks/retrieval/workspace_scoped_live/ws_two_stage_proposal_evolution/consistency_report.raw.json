@@ -1,0 +1,5 @@
+{
+  "expected_corpus_work_ids": ["rcnn_realpdf", "fast_rcnn_realpdf", "faster_rcnn_realpdf"],
+  "would_violate_workspace_with": ["selective_search_realpdf", "sppnet_realpdf"],
+  "rationale": "The question focuses on the evolution of region-proposal mechanisms within the R-CNN family, which is directly addressed by R-CNN (using selective search), Fast R-CNN (improving efficiency but still using external proposals), and Faster R-CNN (introducing the Region Proposal Network to integrate proposal generation)."
+}

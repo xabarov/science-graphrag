@@ -15,6 +15,7 @@ from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 from science_graphrag.storage.qdrant_store import (
     QdrantChunkStore,
     QdrantWorkEmbeddingStore,
+    recreate_all_embedding_collections,
     recreate_qdrant_chunk_collection,
 )
 
@@ -79,7 +80,7 @@ def merge_work_cmd(
     finally:
         neo.close()
     if dropped:
-        dim = resolve_embedding_dim(embedding_model=s.embedding_model)
+        dim = resolve_embedding_dim(settings=s)
         q = QdrantChunkStore(s.qdrant_url, s.qdrant_collection, vector_dim=dim)
         n = q.repoint_work_id_payload(from_work_id=drop_id, to_work_id=keep_id)
         qw = QdrantWorkEmbeddingStore(
@@ -110,7 +111,7 @@ def repoint_qdrant_work_ids_cmd(
     """Rewrite Qdrant payloads: drop_id → keep_id (repair old merge without Qdrant sync)."""
 
     s = get_settings()
-    dim = resolve_embedding_dim(embedding_model=s.embedding_model)
+    dim = resolve_embedding_dim(settings=s)
     q = QdrantChunkStore(s.qdrant_url, s.qdrant_collection, vector_dim=dim)
     n = q.repoint_work_id_payload(from_work_id=drop_id, to_work_id=keep_id)
     typer.echo(f"Qdrant: repointed {n} chunk(s) from work_id={drop_id} to work_id={keep_id}.")
@@ -127,7 +128,7 @@ def diagnose_qdrant_work_ids_cmd(
     """List Qdrant payload work_id values with no matching :Work in Neo4j."""
 
     s = get_settings()
-    dim = resolve_embedding_dim(embedding_model=s.embedding_model)
+    dim = resolve_embedding_dim(settings=s)
     q = QdrantChunkStore(s.qdrant_url, s.qdrant_collection, vector_dim=dim)
     neo = Neo4jGraphStore(s.neo4j_uri, s.neo4j_user, s.neo4j_password)
     seen: set[str] = set()
@@ -184,7 +185,7 @@ def delete_qdrant_by_document_id_cmd(
     """Delete all Qdrant points with this payload document_id."""
 
     s = get_settings()
-    dim = resolve_embedding_dim(embedding_model=s.embedding_model)
+    dim = resolve_embedding_dim(settings=s)
     q = QdrantChunkStore(s.qdrant_url, s.qdrant_collection, vector_dim=dim)
     n = q.delete_points_by_document_id(document_id=document_id)
     typer.echo(f"Qdrant: deleted {n} point(s) for document_id={document_id}.")
@@ -197,7 +198,7 @@ def delete_qdrant_by_work_id_cmd(
     """Delete all Qdrant points with this payload work_id (destructive)."""
 
     s = get_settings()
-    dim = resolve_embedding_dim(embedding_model=s.embedding_model)
+    dim = resolve_embedding_dim(settings=s)
     q = QdrantChunkStore(s.qdrant_url, s.qdrant_collection, vector_dim=dim)
     n = q.delete_points_by_work_id(work_id=work_id)
     typer.echo(f"Qdrant: deleted {n} point(s) for work_id={work_id}.")
@@ -208,13 +209,25 @@ def qdrant_recreate_collection_cmd() -> None:
     """Delete and recreate the configured Qdrant collection (empty). Dev reset."""
 
     s = get_settings()
-    dim = resolve_embedding_dim(embedding_model=s.embedding_model)
+    dim = resolve_embedding_dim(settings=s)
     recreate_qdrant_chunk_collection(
         url=s.qdrant_url,
         collection=s.qdrant_collection,
         vector_dim=dim,
     )
     typer.echo(f"Qdrant: recreated empty collection {s.qdrant_collection!r}.")
+
+
+@app.command("qdrant-recreate-embedding-collections")
+def qdrant_recreate_embedding_collections_cmd() -> None:
+    """Drop and recreate all dense-vector Qdrant collections (chunks, works, claims, authors, entities)."""
+
+    s = get_settings()
+    dim = recreate_all_embedding_collections(s)
+    typer.echo(
+        f"Qdrant: recreated embedding collections with vector_dim={dim} "
+        f"(chunks, work_embeddings, claims, author_embeddings, entity dedup)."
+    )
 
 
 @app.command("purge-work")
@@ -229,7 +242,7 @@ def purge_work_cmd(
     """Remove retrieval chunks for a work; optionally remove isolated :Work in Neo4j."""
 
     s = get_settings()
-    dim = resolve_embedding_dim(embedding_model=s.embedding_model)
+    dim = resolve_embedding_dim(settings=s)
     q = QdrantChunkStore(s.qdrant_url, s.qdrant_collection, vector_dim=dim)
     n = q.delete_points_by_work_id(work_id=work_id)
     typer.echo(f"Qdrant: deleted {n} point(s) for work_id={work_id}.")

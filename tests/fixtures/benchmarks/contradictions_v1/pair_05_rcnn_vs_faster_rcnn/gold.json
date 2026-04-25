@@ -2,9 +2,20 @@
   "schema_version": 1,
   "pair_id": "c05_external_proposals_vs_integrated_rpn",
   "meta": {
-    "validation_status": "draft",
+    "validation_status": "llm_dual_validated",
     "needs_human_review": true,
-    "extractor_pass": "single_human_authored_2026-04-25"
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "validation_history": [
+      {
+        "promoted_at_utc": "2026-04-25T19:47:16.834684+00:00",
+        "from_status": "draft",
+        "to_status": "llm_dual_validated",
+        "spot_check_priority": "medium",
+        "consistency_report": "tests/fixtures/benchmarks/contradictions_v1/pair_05_rcnn_vs_faster_rcnn/consistency_report.json",
+        "rule": "auto-promote on Phase 6.D embedding-cascade pass"
+      }
+    ],
+    "validation_status_previous": "draft"
   },
   "claim_a": {
     "claim_id": "rcnn_external_proposals_foundation",

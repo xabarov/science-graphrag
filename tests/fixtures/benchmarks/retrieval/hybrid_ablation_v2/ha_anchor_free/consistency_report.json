@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "pack_id": "ha_anchor_free",
+  "pack_path": "tests/fixtures/benchmarks/retrieval/hybrid_ablation_v2/ha_anchor_free",
+  "layer": "hybrid_ablation_v2",
+  "generated_at_utc": "2026-04-25T20:10:48.401394+00:00",
+  "spot_check_priority": "low",
+  "spot_check_priority_rationale": "accuracy=1.00, f1_relevant=1.00",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/retrieval/hybrid_ablation_v2/ha_anchor_free/gold.json",
+    "count": 4,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "question.txt | candidates=7",
+    "count": 4,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:c85251b766b4038c8e5f2b64a6f51d6cb99036e886fd1ab387348e95f57714e8",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 291,
+      "completion": 113,
+      "total": 404
+    },
+    "latency_ms": 6312
+  },
+  "summary": {
+    "a_total": 4,
+    "b_total": 4,
+    "matched": 7,
+    "matched_lexical": 7,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "candidates_total": 7,
+    "accuracy": 1.0,
+    "metrics_relevant": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "jaccard": 1.0
+    },
+    "rationale_b": "ATSS, CenterNet, CornerNet, and FCOS are explicitly anchor-free methods, while Faster R-CNN, SSD, and YOLOv2 rely on predefined anchor boxes."
+  },
+  "matched_pairs": [
+    {
+      "corpus_work_id": "atss_realpdf",
+      "label": "relevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "centernet_realpdf",
+      "label": "relevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "cornernet_realpdf",
+      "label": "relevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "fcos_realpdf",
+      "label": "relevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "faster_rcnn_realpdf",
+      "label": "irrelevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "ssd_realpdf",
+      "label": "irrelevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "yolov2_realpdf",
+      "label": "irrelevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": []
+}

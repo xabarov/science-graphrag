@@ -58,6 +58,8 @@ def test_init_close_cycle(monkeypatch: Any) -> None:
         qdrant_work_embeddings_collection="works",
         qdrant_claims_collection="claims",
         embedding_model=None,
+        openrouter_embedding_model=None,
+        openrouter_embedding_dim=1024,
         blob_root="data/blobs",
     )
 

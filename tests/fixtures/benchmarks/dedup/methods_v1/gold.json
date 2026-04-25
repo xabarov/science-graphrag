@@ -3,9 +3,20 @@
   "entity_type": "method",
   "description": "Method-level dedup gold for Wave T (BT11). Surface forms cover acronym/expansion/typographic variations. CRITICAL: superficially similar names (Faster R-CNN != Mask R-CNN, R-CNN != Fast R-CNN) MUST NOT merge. See docs/specs/benchmark-gold-schemas-v1.md section 9 and tests/fixtures/corpus/CATALOG.md section 3.",
   "meta": {
-    "validation_status": "draft",
+    "validation_status": "llm_dual_validated",
     "needs_human_review": true,
-    "extractor_pass": "single_human_authored_2026-04-25"
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "validation_history": [
+      {
+        "promoted_at_utc": "2026-04-25T20:05:46.203470+00:00",
+        "from_status": "draft",
+        "to_status": "llm_dual_validated",
+        "spot_check_priority": "medium",
+        "consistency_report": "tests/fixtures/benchmarks/dedup/methods_v1/consistency_report.json",
+        "rule": "auto-promote on Phase 6.D embedding-cascade pass"
+      }
+    ],
+    "validation_status_previous": "draft"
   },
   "records": [
     {
@@ -21,67 +32,97 @@
       "entity_id": "method_rcnn_expansion",
       "display_name": "Region-based Convolutional Neural Network",
       "surface_form": "Region-based Convolutional Neural Network",
-      "context_attributes": {"introduced_in_corpus_work_id": "rcnn_realpdf", "task": "object_detection"}
+      "context_attributes": {
+        "introduced_in_corpus_work_id": "rcnn_realpdf",
+        "task": "object_detection"
+      }
     },
     {
       "entity_id": "method_rcnn_no_hyphen",
       "display_name": "RCNN",
       "surface_form": "RCNN",
-      "context_attributes": {"introduced_in_corpus_work_id": "rcnn_realpdf", "task": "object_detection"}
+      "context_attributes": {
+        "introduced_in_corpus_work_id": "rcnn_realpdf",
+        "task": "object_detection"
+      }
     },
     {
       "entity_id": "method_fast_rcnn",
       "display_name": "Fast R-CNN",
       "surface_form": "Fast R-CNN",
-      "context_attributes": {"introduced_in_corpus_work_id": "fast_rcnn_realpdf", "task": "object_detection"}
+      "context_attributes": {
+        "introduced_in_corpus_work_id": "fast_rcnn_realpdf",
+        "task": "object_detection"
+      }
     },
     {
       "entity_id": "method_faster_rcnn",
       "display_name": "Faster R-CNN",
       "surface_form": "Faster R-CNN",
-      "context_attributes": {"introduced_in_corpus_work_id": "faster_rcnn_realpdf", "task": "object_detection"}
+      "context_attributes": {
+        "introduced_in_corpus_work_id": "faster_rcnn_realpdf",
+        "task": "object_detection"
+      }
     },
     {
       "entity_id": "method_faster_rcnn_no_hyphen",
       "display_name": "Faster RCNN",
       "surface_form": "Faster RCNN",
-      "context_attributes": {"introduced_in_corpus_work_id": "faster_rcnn_realpdf", "task": "object_detection"}
+      "context_attributes": {
+        "introduced_in_corpus_work_id": "faster_rcnn_realpdf",
+        "task": "object_detection"
+      }
     },
     {
       "entity_id": "method_mask_rcnn",
       "display_name": "Mask R-CNN",
       "surface_form": "Mask R-CNN",
-      "context_attributes": {"introduced_in_corpus_work_id": "mask_rcnn_realpdf", "task": "instance_segmentation"}
+      "context_attributes": {
+        "introduced_in_corpus_work_id": "mask_rcnn_realpdf",
+        "task": "instance_segmentation"
+      }
     },
     {
       "entity_id": "method_fpn_canonical",
       "display_name": "FPN",
       "surface_form": "FPN",
-      "context_attributes": {"introduced_in_corpus_work_id": "fpn_realpdf", "task": "object_detection_backbone"}
+      "context_attributes": {
+        "introduced_in_corpus_work_id": "fpn_realpdf",
+        "task": "object_detection_backbone"
+      }
     },
     {
       "entity_id": "method_fpn_expansion",
       "display_name": "Feature Pyramid Network",
       "surface_form": "Feature Pyramid Network",
-      "context_attributes": {"introduced_in_corpus_work_id": "fpn_realpdf"}
+      "context_attributes": {
+        "introduced_in_corpus_work_id": "fpn_realpdf"
+      }
     },
     {
       "entity_id": "method_fpn_plural",
       "display_name": "Feature Pyramid Networks",
       "surface_form": "Feature Pyramid Networks",
-      "context_attributes": {"introduced_in_corpus_work_id": "fpn_realpdf"}
+      "context_attributes": {
+        "introduced_in_corpus_work_id": "fpn_realpdf"
+      }
     },
     {
       "entity_id": "method_ssd_canonical",
       "display_name": "SSD",
       "surface_form": "SSD",
-      "context_attributes": {"introduced_in_corpus_work_id": "ssd_realpdf", "task": "object_detection"}
+      "context_attributes": {
+        "introduced_in_corpus_work_id": "ssd_realpdf",
+        "task": "object_detection"
+      }
     },
     {
       "entity_id": "method_ssd_expansion",
       "display_name": "Single Shot MultiBox Detector",
       "surface_form": "Single Shot MultiBox Detector",
-      "context_attributes": {"introduced_in_corpus_work_id": "ssd_realpdf"}
+      "context_attributes": {
+        "introduced_in_corpus_work_id": "ssd_realpdf"
+      }
     },
     {
       "entity_id": "method_ssd_short_expansion",
@@ -96,25 +137,35 @@
       "entity_id": "method_detr_canonical",
       "display_name": "DETR",
       "surface_form": "DETR",
-      "context_attributes": {"introduced_in_corpus_work_id": "detr_realpdf", "task": "object_detection"}
+      "context_attributes": {
+        "introduced_in_corpus_work_id": "detr_realpdf",
+        "task": "object_detection"
+      }
     },
     {
       "entity_id": "method_detr_expansion",
       "display_name": "DEtection TRansformer",
       "surface_form": "DEtection TRansformer",
-      "context_attributes": {"introduced_in_corpus_work_id": "detr_realpdf"}
+      "context_attributes": {
+        "introduced_in_corpus_work_id": "detr_realpdf"
+      }
     },
     {
       "entity_id": "method_detr_no_caps",
       "display_name": "Detection Transformer",
       "surface_form": "Detection Transformer",
-      "context_attributes": {"introduced_in_corpus_work_id": "detr_realpdf"}
+      "context_attributes": {
+        "introduced_in_corpus_work_id": "detr_realpdf"
+      }
     },
     {
       "entity_id": "method_yolov1",
       "display_name": "YOLOv1",
       "surface_form": "YOLOv1",
-      "context_attributes": {"introduced_in_corpus_work_id": "yolov1", "task": "object_detection"}
+      "context_attributes": {
+        "introduced_in_corpus_work_id": "yolov1",
+        "task": "object_detection"
+      }
     },
     {
       "entity_id": "method_yolo_no_version",
@@ -129,13 +180,18 @@
       "entity_id": "method_yolo_expansion",
       "display_name": "You Only Look Once",
       "surface_form": "You Only Look Once",
-      "context_attributes": {"introduced_in_corpus_work_id": "yolov1"}
+      "context_attributes": {
+        "introduced_in_corpus_work_id": "yolov1"
+      }
     },
     {
       "entity_id": "method_yolov2",
       "display_name": "YOLOv2",
       "surface_form": "YOLOv2",
-      "context_attributes": {"introduced_in_corpus_work_id": "yolov2_realpdf", "task": "object_detection"}
+      "context_attributes": {
+        "introduced_in_corpus_work_id": "yolov2_realpdf",
+        "task": "object_detection"
+      }
     },
     {
       "entity_id": "method_yolo9000",
@@ -150,19 +206,27 @@
       "entity_id": "method_yolov3",
       "display_name": "YOLOv3",
       "surface_form": "YOLOv3",
-      "context_attributes": {"introduced_in_corpus_work_id": "yolov3_realpdf", "task": "object_detection"}
+      "context_attributes": {
+        "introduced_in_corpus_work_id": "yolov3_realpdf",
+        "task": "object_detection"
+      }
     },
     {
       "entity_id": "method_focal_loss",
       "display_name": "Focal Loss",
       "surface_form": "Focal Loss",
-      "context_attributes": {"introduced_in_corpus_work_id": "retinanet_focal_realpdf", "task": "loss_function"}
+      "context_attributes": {
+        "introduced_in_corpus_work_id": "retinanet_focal_realpdf",
+        "task": "loss_function"
+      }
     },
     {
       "entity_id": "method_focal_loss_lower",
       "display_name": "focal loss",
       "surface_form": "focal loss",
-      "context_attributes": {"introduced_in_corpus_work_id": "retinanet_focal_realpdf"}
+      "context_attributes": {
+        "introduced_in_corpus_work_id": "retinanet_focal_realpdf"
+      }
     },
     {
       "entity_id": "method_gfl_distinct_loss",
@@ -177,69 +241,113 @@
   "clusters": [
     {
       "cluster_id": "cluster_rcnn",
-      "entity_ids": ["method_rcnn_canonical", "method_rcnn_expansion", "method_rcnn_no_hyphen"],
+      "entity_ids": [
+        "method_rcnn_canonical",
+        "method_rcnn_expansion",
+        "method_rcnn_no_hyphen"
+      ],
       "rationale": "R-CNN, Region-based Convolutional Neural Network, RCNN - hyphenation/expansion variants of the SAME 2014 method."
     },
     {
       "cluster_id": "cluster_faster_rcnn",
-      "entity_ids": ["method_faster_rcnn", "method_faster_rcnn_no_hyphen"],
+      "entity_ids": [
+        "method_faster_rcnn",
+        "method_faster_rcnn_no_hyphen"
+      ],
       "rationale": "Faster R-CNN with and without hyphen."
     },
     {
       "cluster_id": "cluster_fpn",
-      "entity_ids": ["method_fpn_canonical", "method_fpn_expansion", "method_fpn_plural"],
+      "entity_ids": [
+        "method_fpn_canonical",
+        "method_fpn_expansion",
+        "method_fpn_plural"
+      ],
       "rationale": "FPN acronym, full expansion, and plural form (paper title)."
     },
     {
       "cluster_id": "cluster_ssd",
-      "entity_ids": ["method_ssd_canonical", "method_ssd_expansion", "method_ssd_short_expansion"],
+      "entity_ids": [
+        "method_ssd_canonical",
+        "method_ssd_expansion",
+        "method_ssd_short_expansion"
+      ],
       "rationale": "SSD acronym, official MultiBox expansion, common informal short expansion."
     },
     {
       "cluster_id": "cluster_detr",
-      "entity_ids": ["method_detr_canonical", "method_detr_expansion", "method_detr_no_caps"],
+      "entity_ids": [
+        "method_detr_canonical",
+        "method_detr_expansion",
+        "method_detr_no_caps"
+      ],
       "rationale": "DETR with original camelCase expansion and case-normalized form."
     },
     {
       "cluster_id": "cluster_yolov1",
-      "entity_ids": ["method_yolov1", "method_yolo_no_version", "method_yolo_expansion"],
+      "entity_ids": [
+        "method_yolov1",
+        "method_yolo_no_version",
+        "method_yolo_expansion"
+      ],
       "rationale": "YOLOv1, bare 'YOLO' (2016-era citation form), and full 'You Only Look Once' expansion."
     },
     {
       "cluster_id": "cluster_focal_loss",
-      "entity_ids": ["method_focal_loss", "method_focal_loss_lower"],
+      "entity_ids": [
+        "method_focal_loss",
+        "method_focal_loss_lower"
+      ],
       "rationale": "Focal Loss with case-only variation."
     }
   ],
   "negative_pairs": [
     {
       "pair_id": "neg_rcnn_vs_fast_rcnn",
-      "entity_ids": ["method_rcnn_canonical", "method_fast_rcnn"],
+      "entity_ids": [
+        "method_rcnn_canonical",
+        "method_fast_rcnn"
+      ],
       "rationale": "R-CNN (2014) and Fast R-CNN (2015) are DIFFERENT methods/papers. Substring match (Fast R-CNN contains 'R-CNN') must not auto-merge."
     },
     {
       "pair_id": "neg_fast_rcnn_vs_faster_rcnn",
-      "entity_ids": ["method_fast_rcnn", "method_faster_rcnn"],
+      "entity_ids": [
+        "method_fast_rcnn",
+        "method_faster_rcnn"
+      ],
       "rationale": "Fast R-CNN and Faster R-CNN are different methods; differ by single word."
     },
     {
       "pair_id": "neg_faster_rcnn_vs_mask_rcnn",
-      "entity_ids": ["method_faster_rcnn", "method_mask_rcnn"],
+      "entity_ids": [
+        "method_faster_rcnn",
+        "method_mask_rcnn"
+      ],
       "rationale": "Faster R-CNN and Mask R-CNN are different methods; both end in 'R-CNN' family."
     },
     {
       "pair_id": "neg_yolov1_vs_yolov2",
-      "entity_ids": ["method_yolov1", "method_yolov2"],
+      "entity_ids": [
+        "method_yolov1",
+        "method_yolov2"
+      ],
       "rationale": "YOLOv1 and YOLOv2 are different methods/papers; differ by version number."
     },
     {
       "pair_id": "neg_yolov2_vs_yolo9000",
-      "entity_ids": ["method_yolov2", "method_yolo9000"],
+      "entity_ids": [
+        "method_yolov2",
+        "method_yolo9000"
+      ],
       "rationale": "Same paper introduces both, but they are distinct variants (YOLOv2 = base detector, YOLO9000 = joint training over 9000 classes)."
     },
     {
       "pair_id": "neg_focal_loss_vs_generalized_focal_loss",
-      "entity_ids": ["method_focal_loss", "method_gfl_distinct_loss"],
+      "entity_ids": [
+        "method_focal_loss",
+        "method_gfl_distinct_loss"
+      ],
       "rationale": "GFL extends focal loss but is a different formulation (continuous quality estimation + distribution focal loss)."
     }
   ]

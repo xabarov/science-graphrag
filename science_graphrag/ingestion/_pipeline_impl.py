@@ -14,6 +14,7 @@ from tenacity import Retrying, retry, stop_after_attempt, wait_exponential
 
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.domain.models import ReferenceDraft, WorkDraft
+from science_graphrag.embeddings import resolve_embedder, resolve_embedding_model_label
 from science_graphrag.ingestion.chunking import (
     chunk_document_for_retrieval,
     dedupe_chunks_for_embedding,
@@ -25,7 +26,6 @@ from science_graphrag.ingestion.document_slices import (
     front_matter_slice,
     strip_repeated_boilerplate,
 )
-from science_graphrag.ingestion.embeddings import HashEmbeddingProvider, try_sentence_transformer
 from science_graphrag.ingestion.enrichment.openalex import (
     arxiv_id_from_openalex_ids,
     draft_from_openalex,
@@ -534,7 +534,7 @@ def ingest_document(
         "source": str(path.resolve()),
         "metadata.source_name": path.name,
         "metadata.extraction_llm_model": settings.extraction_llm_model,
-        "metadata.embedding_model": settings.embedding_model or "hash-deterministic",
+        "metadata.embedding_model": resolve_embedding_model_label(settings),
         "metadata.vl_model": settings.vl_model,
     }
     if job_id:
@@ -796,13 +796,9 @@ def ingest_document(
                 session_factory=stage_session_factory,
                 publisher=stage_event_publisher,
             ) as st:
-                embedder = (
-                    try_sentence_transformer(settings.embedding_model)
-                    if settings.embedding_model
-                    else HashEmbeddingProvider()
-                )
+                embedder = resolve_embedder(settings)
                 chunk_texts = [c.text for c in doc_chunks]
-                embedding_model = settings.embedding_model or "hash-deterministic"
+                embedding_model = resolve_embedding_model_label(settings)
                 with embeddings_span(
                     "ingest.embed.vectorize_chunks",
                     {
@@ -835,7 +831,7 @@ def ingest_document(
                     qw.upsert_work_summary,
                     work_id=work_id,
                     vector=w_summary_vec,
-                    embedding_model=settings.embedding_model or "hash-deterministic",
+                    embedding_model=embedding_model,
                     workspace_ids=ingest_workspace_ids or [],
                     title=draft.title,
                     publication_year=draft.publication_year,
@@ -874,7 +870,7 @@ def ingest_document(
                         document_id=doc_id,
                         document_chunks=doc_chunks,
                         vectors=vectors,
-                        embedding_model=settings.embedding_model or "hash-deterministic",
+                        embedding_model=embedding_model,
                         workspace_ids=ingest_workspace_ids or [],
                     )
                 if settings.claims_extraction_enabled and claim_rows:
@@ -901,7 +897,7 @@ def ingest_document(
                             work_id=work_id,
                             claims=claim_rows,
                             embedder=embedder,
-                            embedding_model=settings.embedding_model or "hash-deterministic",
+                            embedding_model=embedding_model,
                         )
                 st.metric("chunks", len(doc_chunks))
                 st.metric("embedding_dim", embedder.dim)

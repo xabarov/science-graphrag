@@ -3,9 +3,20 @@
   "case_id": "ws_two_stage_proposal_evolution",
   "workspace_id": "ws_two_stage",
   "meta": {
-    "validation_status": "draft",
-    "needs_human_review": true,
-    "extractor_pass": "single_human_authored_2026-04-25"
+    "validation_status": "llm_dual_validated",
+    "needs_human_review": false,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "validation_history": [
+      {
+        "promoted_at_utc": "2026-04-25T20:09:50.840372+00:00",
+        "from_status": "draft",
+        "to_status": "llm_dual_validated",
+        "spot_check_priority": "low",
+        "consistency_report": "tests/fixtures/benchmarks/retrieval/workspace_scoped_live/ws_two_stage_proposal_evolution/consistency_report.json",
+        "rule": "auto-promote on Phase 6.D embedding-cascade pass"
+      }
+    ],
+    "validation_status_previous": "draft"
   },
   "question_file": "question.txt",
   "answer_reference_text": "R-CNN used external Selective Search proposals fed into a CNN per region. Fast R-CNN moved feature extraction to a single shared forward pass and applied RoI pooling, but still relied on external proposals. Faster R-CNN replaced external proposals with an integrated Region Proposal Network (RPN) that shares features with the detection head, making proposals nearly cost-free.",

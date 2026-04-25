@@ -14,11 +14,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from science_graphrag.config import get_settings
-from science_graphrag.ingestion.embeddings import (
-    HashEmbeddingProvider,
-    resolve_embedding_dim,
-    try_sentence_transformer,
-)
+from science_graphrag.embeddings import resolve_embedder, resolve_embedding_model_label
+from science_graphrag.ingestion.embeddings import resolve_embedding_dim
 from science_graphrag.storage.db import init_db
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 from science_graphrag.storage.qdrant_store import QdrantWorkEmbeddingStore
@@ -55,12 +52,9 @@ def main() -> None:
     finally:
         neo.close()
 
-    embedder = (
-        try_sentence_transformer(settings.embedding_model)
-        if settings.embedding_model
-        else HashEmbeddingProvider()
-    )
-    dim = resolve_embedding_dim(embedding_model=settings.embedding_model)
+    embedder = resolve_embedder(settings)
+    dim = resolve_embedding_dim(settings=settings)
+    emb_label = resolve_embedding_model_label(settings)
     qw = None
     if target == "qdrant":
         qw = QdrantWorkEmbeddingStore(
@@ -92,7 +86,7 @@ def main() -> None:
                 qw.upsert_work_summary(
                     work_id=wid,
                     vector=vec,
-                    embedding_model=settings.embedding_model or "hash-deterministic",
+                    embedding_model=emb_label,
                     workspace_ids=[ws_id],
                     title=str(card.get("title") or ""),
                     publication_year=card.get("year"),

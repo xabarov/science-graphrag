@@ -1,0 +1,5 @@
+{
+  "relevant_corpus_work_ids": ["deformable_detr_realpdf", "detr_realpdf", "detrs_realpdf", "dino_realpdf", "dn_detr_realpdf"],
+  "irrelevant_corpus_work_ids": ["faster_rcnn_realpdf", "ssd_realpdf", "yolov3_realpdf"],
+  "rationale": "The question specifically asks about end-to-end set prediction with bipartite matching using transformer encoder-decoder for object detection, which directly describes the DETR family of models, while the irrelevant papers are non-transformer, non-end-to-end detection methods."
+}

@@ -314,7 +314,7 @@ def post_author_dedup_decide(
         merged = stores.neo4j.merge_author_into_canonical(keep, drop)
 
         if merged:
-            dim = resolve_embedding_dim(embedding_model=settings.embedding_model)
+            dim = resolve_embedding_dim(settings=settings)
             ast = QdrantAuthorEmbeddingStore(
                 settings.qdrant_url,
                 settings.qdrant_author_embeddings_collection,

@@ -1,0 +1,106 @@
+{
+  "layer": "concept_topic_v2",
+  "model": "deepseek/deepseek-v3.2",
+  "results": [
+    {
+      "pack": "corpus_cascade_rcnn_v2",
+      "spot_check_priority": "high",
+      "matched": 14,
+      "matched_lexical": 14,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 11,
+      "promoted_to_llm_dual_validated": false
+    },
+    {
+      "pack": "corpus_cornernet_v2",
+      "spot_check_priority": "high",
+      "matched": 12,
+      "matched_lexical": 12,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 13,
+      "promoted_to_llm_dual_validated": false
+    },
+    {
+      "pack": "corpus_detr_v2",
+      "spot_check_priority": "high",
+      "matched": 17,
+      "matched_lexical": 17,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 8,
+      "promoted_to_llm_dual_validated": false
+    },
+    {
+      "pack": "corpus_faster_rcnn_v2",
+      "spot_check_priority": "high",
+      "matched": 17,
+      "matched_lexical": 17,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 8,
+      "promoted_to_llm_dual_validated": false
+    },
+    {
+      "pack": "corpus_fcos_v2",
+      "spot_check_priority": "high",
+      "matched": 13,
+      "matched_lexical": 13,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 12,
+      "promoted_to_llm_dual_validated": false
+    },
+    {
+      "pack": "corpus_fpn_v2",
+      "spot_check_priority": "high",
+      "matched": 12,
+      "matched_lexical": 12,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 13,
+      "promoted_to_llm_dual_validated": false
+    },
+    {
+      "pack": "corpus_mask_rcnn_v2",
+      "spot_check_priority": "low",
+      "matched": 14,
+      "matched_lexical": 14,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 11,
+      "promoted_to_llm_dual_validated": true
+    },
+    {
+      "pack": "corpus_retinanet_focal_v2",
+      "spot_check_priority": "high",
+      "matched": 13,
+      "matched_lexical": 13,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 12,
+      "promoted_to_llm_dual_validated": false
+    },
+    {
+      "pack": "corpus_ssd_v2",
+      "spot_check_priority": "low",
+      "matched": 13,
+      "matched_lexical": 13,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 12,
+      "promoted_to_llm_dual_validated": true
+    },
+    {
+      "pack": "corpus_yolov1_v2",
+      "spot_check_priority": "high",
+      "matched": 13,
+      "matched_lexical": 13,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 12,
+      "promoted_to_llm_dual_validated": false
+    }
+  ]
+}

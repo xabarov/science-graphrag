@@ -1,0 +1,4 @@
+{
+  "expected_chain_corpus_work_ids": ["detr_realpdf", "deformable_detr_realpdf", "dn_detr_realpdf", "dino_realpdf"],
+  "rationale": "The chain begins with the original DETR (2020), is extended by Deformable DETR (2021) which addresses slow convergence, followed by DN-DETR (2022) introducing query denoising, and culminates with DINO (2022) which builds upon DN-DETR with improved denoising anchor boxes."
+}

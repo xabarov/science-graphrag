@@ -1,0 +1,4 @@
+{
+  "expected_chain_corpus_work_ids": ["yolov1", "yolov2_realpdf", "yolov3_realpdf", "yolox_realpdf"],
+  "rationale": "The papers are listed in chronological order, and each subsequent paper (YOLOv2, YOLOv3, YOLOX) builds upon and cites the previous one in the YOLO family."
+}

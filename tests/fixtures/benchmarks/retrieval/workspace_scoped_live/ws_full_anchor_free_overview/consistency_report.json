@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "pack_id": "ws_full_anchor_free_overview",
+  "pack_path": "tests/fixtures/benchmarks/retrieval/workspace_scoped_live/ws_full_anchor_free_overview",
+  "layer": "workspace_scoped_live",
+  "generated_at_utc": "2026-04-25T20:10:32.189368+00:00",
+  "spot_check_priority": "low",
+  "spot_check_priority_rationale": "required-recall=1.00, precision=1.00",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/retrieval/workspace_scoped_live/ws_full_anchor_free_overview/gold.json",
+    "count": 4,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "workspace=ws_full_corpus | question.txt",
+    "count": 3,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:3fb81d0bb7a21d3f3ecfda717f8f3e9dc38bcefaa21b6be21b8097cd12f95498",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 1167,
+      "completion": 88,
+      "total": 1255
+    },
+    "latency_ms": 1961
+  },
+  "summary": {
+    "a_total": 4,
+    "b_total": 3,
+    "matched": 3,
+    "matched_lexical": 3,
+    "matched_embedding": 0,
+    "unmatched_a": 1,
+    "unmatched_b": 0,
+    "metrics_required_only": {
+      "precision": 0.667,
+      "recall": 1.0,
+      "f1": 0.8,
+      "jaccard": 0.667
+    },
+    "metrics_required_or_optional": {
+      "precision": 1.0,
+      "recall": 0.75,
+      "f1": 0.857,
+      "jaccard": 0.75
+    },
+    "boundary_violations_count": 0,
+    "real_forbidden_predictions": 0,
+    "phantom_forbidden_predictions": 0,
+    "rationale_b": "CornerNet pioneers anchor-free detection by detecting objects as paired keypoints, CenterNet introduces keypoint triplets for object detection, and FCOS presents a fully convolutional one-stage anchor-free approach."
+  },
+  "matched_pairs": [
+    {
+      "corpus_work_id": "centernet_realpdf",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "cornernet_realpdf",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "fcos_realpdf",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [
+    {
+      "corpus_work_id": "atss_realpdf",
+      "kind": "missed_by_b",
+      "required": false
+    }
+  ],
+  "unmatched_b": []
+}

@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "pack_id": "ha_set_prediction_transformer",
+  "pack_path": "tests/fixtures/benchmarks/retrieval/hybrid_ablation_v2/ha_set_prediction_transformer",
+  "layer": "hybrid_ablation_v2",
+  "generated_at_utc": "2026-04-25T20:11:17.273342+00:00",
+  "spot_check_priority": "low",
+  "spot_check_priority_rationale": "accuracy=1.00, f1_relevant=1.00",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/retrieval/hybrid_ablation_v2/ha_set_prediction_transformer/gold.json",
+    "count": 5,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "question.txt | candidates=8",
+    "count": 5,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:2cefe97f0bed75bcb897458be51177f6e1ce79ad80c5b22c69f12920ec22f442",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 344,
+      "completion": 139,
+      "total": 483
+    },
+    "latency_ms": 2110
+  },
+  "summary": {
+    "a_total": 5,
+    "b_total": 5,
+    "matched": 8,
+    "matched_lexical": 8,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "candidates_total": 8,
+    "accuracy": 1.0,
+    "metrics_relevant": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "jaccard": 1.0
+    },
+    "rationale_b": "The question specifically asks about end-to-end set prediction with bipartite matching using transformer encoder-decoder for object detection, which directly describes the DETR family of models, while the irrelevant papers are non-transformer, non-end-to-end detection methods."
+  },
+  "matched_pairs": [
+    {
+      "corpus_work_id": "deformable_detr_realpdf",
+      "label": "relevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "detr_realpdf",
+      "label": "relevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "detrs_realpdf",
+      "label": "relevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "dino_realpdf",
+      "label": "relevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "dn_detr_realpdf",
+      "label": "relevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "faster_rcnn_realpdf",
+      "label": "irrelevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "ssd_realpdf",
+      "label": "irrelevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "yolov3_realpdf",
+      "label": "irrelevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": []
+}

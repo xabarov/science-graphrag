@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "pack_id": "ws_two_stage_proposal_evolution",
+  "pack_path": "tests/fixtures/benchmarks/retrieval/workspace_scoped_live/ws_two_stage_proposal_evolution",
+  "layer": "workspace_scoped_live",
+  "generated_at_utc": "2026-04-25T20:10:32.192824+00:00",
+  "spot_check_priority": "low",
+  "spot_check_priority_rationale": "required-recall=1.00, precision=1.00",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/retrieval/workspace_scoped_live/ws_two_stage_proposal_evolution/gold.json",
+    "count": 3,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "workspace=ws_two_stage | question.txt",
+    "count": 3,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:e9776e060b28c5e56617e19fb8d0fff199b3f68c98531666c686d654e47a6d0f",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 962,
+      "completion": 131,
+      "total": 1093
+    },
+    "latency_ms": 6610
+  },
+  "summary": {
+    "a_total": 3,
+    "b_total": 3,
+    "matched": 3,
+    "matched_lexical": 3,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "metrics_required_only": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "jaccard": 1.0
+    },
+    "metrics_required_or_optional": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "jaccard": 1.0
+    },
+    "boundary_violations_count": 0,
+    "real_forbidden_predictions": 2,
+    "phantom_forbidden_predictions": 0,
+    "rationale_b": "The question focuses on the evolution of region-proposal mechanisms within the R-CNN family, which is directly addressed by R-CNN (using selective search), Fast R-CNN (improving efficiency but still using external proposals), and Faster R-CNN (introducing the Region Proposal Network to integrate proposal generation)."
+  },
+  "matched_pairs": [
+    {
+      "corpus_work_id": "fast_rcnn_realpdf",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "faster_rcnn_realpdf",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "rcnn_realpdf",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": []
+}

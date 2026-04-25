@@ -155,7 +155,8 @@ def test_suite_contract_tier_passes() -> None:
 
 
 def test_all_gold_files_parse() -> None:
-    """Every claims fixture gold uses schema_version 1."""
+    """Every claims fixture gold declares a supported schema_version."""
     for gold_path in FIXTURES.glob("*/gold.json"):
         data = json.loads(gold_path.read_text(encoding="utf-8"))
-        assert data.get("schema_version") == 1
+        sv = data.get("schema_version")
+        assert sv in (1, 2), f"{gold_path}: unsupported schema_version {sv!r}"

@@ -1,0 +1,195 @@
+{
+  "schema_version": 1,
+  "pack_id": "dedup/institutions_v1",
+  "pack_path": "tests/fixtures/benchmarks/dedup/institutions_v1",
+  "layer": "dedup_institutions_v1",
+  "generated_at_utc": "2026-04-25T20:05:02.369132+00:00",
+  "spot_check_priority": "medium",
+  "spot_check_priority_rationale": "ARI=0.95, pair_f1=0.96, neg_diffs=1",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/dedup/institutions_v1/gold.json",
+    "count": 11,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "records list (20 surface forms re-clustered)",
+    "count": 10,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:40e61a57ff7d863117906bb364b3a9701dd2dc0c7a237ee89d8e1cb3b008a2ba",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 1637,
+      "completion": 615,
+      "total": 2252
+    },
+    "latency_ms": 20154
+  },
+  "summary": {
+    "a_total": 11,
+    "b_total": 10,
+    "matched": 7,
+    "matched_lexical": 7,
+    "matched_embedding": 0,
+    "unmatched_a": 1,
+    "unmatched_b": 1,
+    "metrics": {
+      "shared_ids": 20,
+      "pair_precision": 0.917,
+      "pair_recall": 1.0,
+      "pair_f1": 0.957,
+      "adjusted_rand_index": 0.954
+    },
+    "negative_pairs": {
+      "agreed": 2,
+      "only_in_a": 1,
+      "only_in_b": 0
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_cluster_id": "cluster_msr",
+      "a_entity_ids": [
+        "inst_msr_acronym",
+        "inst_msr_full",
+        "inst_msr_visual_computing_group"
+      ],
+      "b_cluster_partition": {
+        "msr_us": [
+          "inst_msr_acronym",
+          "inst_msr_full",
+          "inst_msr_visual_computing_group"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_fair",
+      "a_entity_ids": [
+        "inst_fair_acronym",
+        "inst_fair_full",
+        "inst_meta_ai_renamed"
+      ],
+      "b_cluster_partition": {
+        "fair_meta": [
+          "inst_fair_acronym",
+          "inst_fair_full",
+          "inst_meta_ai_renamed"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_uw",
+      "a_entity_ids": [
+        "inst_uw_acronym",
+        "inst_uw_full"
+      ],
+      "b_cluster_partition": {
+        "uw": [
+          "inst_uw_acronym",
+          "inst_uw_full"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_ai2",
+      "a_entity_ids": [
+        "inst_ai2_acronym",
+        "inst_ai2_full"
+      ],
+      "b_cluster_partition": {
+        "ai2": [
+          "inst_ai2_acronym",
+          "inst_ai2_full"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_ucb",
+      "a_entity_ids": [
+        "inst_ucb_full",
+        "inst_ucb_long_form"
+      ],
+      "b_cluster_partition": {
+        "uc_berkeley": [
+          "inst_ucb_full",
+          "inst_ucb_long_form"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_megvii",
+      "a_entity_ids": [
+        "inst_megvii",
+        "inst_megvii_short"
+      ],
+      "b_cluster_partition": {
+        "megvii": [
+          "inst_megvii",
+          "inst_megvii_short"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_cuhk",
+      "a_entity_ids": [
+        "inst_cuhk",
+        "inst_cuhk_acronym"
+      ],
+      "b_cluster_partition": {
+        "cuhk": [
+          "inst_cuhk",
+          "inst_cuhk_acronym"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [
+    {
+      "kind": "negative_pair_missing_in_b",
+      "entity_ids": [
+        "inst_msr_acronym",
+        "inst_msra_acronym"
+      ],
+      "comment": "must-not-merge constraint declared by gold A but not flagged by B"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "kind": "merge_extra_in_b",
+      "b_cluster_id": "msr_asia",
+      "b_entity_ids": [
+        "inst_msr_asia",
+        "inst_msra_acronym"
+      ],
+      "comment": "B merged records that gold A keeps in different clusters: ['singleton_inst_msr_asia', 'singleton_inst_msra_acronym']"
+    }
+  ]
+}

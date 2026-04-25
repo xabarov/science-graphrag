@@ -1,0 +1,233 @@
+{
+  "schema_version": 1,
+  "pack_id": "dedup/methods_v1",
+  "pack_path": "tests/fixtures/benchmarks/dedup/methods_v1",
+  "layer": "dedup_methods_v1",
+  "generated_at_utc": "2026-04-25T20:05:46.203078+00:00",
+  "spot_check_priority": "medium",
+  "spot_check_priority_rationale": "ARI=0.97, pair_f1=0.97, neg_diffs=5",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/dedup/methods_v1/gold.json",
+    "count": 13,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "records list (25 surface forms re-clustered)",
+    "count": 12,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:52e886143d1d2b2092f5d3f58d428de8496cea30b3f2cbfbfedc14e28dc2475c",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 1807,
+      "completion": 1116,
+      "total": 2923
+    },
+    "latency_ms": 34780
+  },
+  "summary": {
+    "a_total": 13,
+    "b_total": 12,
+    "matched": 7,
+    "matched_lexical": 7,
+    "matched_embedding": 0,
+    "unmatched_a": 2,
+    "unmatched_b": 4,
+    "metrics": {
+      "shared_ids": 25,
+      "pair_precision": 0.944,
+      "pair_recall": 1.0,
+      "pair_f1": 0.971,
+      "adjusted_rand_index": 0.97
+    },
+    "negative_pairs": {
+      "agreed": 4,
+      "only_in_a": 2,
+      "only_in_b": 3
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_cluster_id": "cluster_rcnn",
+      "a_entity_ids": [
+        "method_rcnn_canonical",
+        "method_rcnn_expansion",
+        "method_rcnn_no_hyphen"
+      ],
+      "b_cluster_partition": {
+        "rcnn": [
+          "method_rcnn_canonical",
+          "method_rcnn_expansion",
+          "method_rcnn_no_hyphen"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_faster_rcnn",
+      "a_entity_ids": [
+        "method_faster_rcnn",
+        "method_faster_rcnn_no_hyphen"
+      ],
+      "b_cluster_partition": {
+        "faster_rcnn": [
+          "method_faster_rcnn",
+          "method_faster_rcnn_no_hyphen"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_fpn",
+      "a_entity_ids": [
+        "method_fpn_canonical",
+        "method_fpn_expansion",
+        "method_fpn_plural"
+      ],
+      "b_cluster_partition": {
+        "fpn": [
+          "method_fpn_canonical",
+          "method_fpn_expansion",
+          "method_fpn_plural"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_ssd",
+      "a_entity_ids": [
+        "method_ssd_canonical",
+        "method_ssd_expansion",
+        "method_ssd_short_expansion"
+      ],
+      "b_cluster_partition": {
+        "ssd": [
+          "method_ssd_canonical",
+          "method_ssd_expansion",
+          "method_ssd_short_expansion"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_detr",
+      "a_entity_ids": [
+        "method_detr_canonical",
+        "method_detr_expansion",
+        "method_detr_no_caps"
+      ],
+      "b_cluster_partition": {
+        "detr": [
+          "method_detr_canonical",
+          "method_detr_expansion",
+          "method_detr_no_caps"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_yolov1",
+      "a_entity_ids": [
+        "method_yolo_expansion",
+        "method_yolo_no_version",
+        "method_yolov1"
+      ],
+      "b_cluster_partition": {
+        "yolov1": [
+          "method_yolo_expansion",
+          "method_yolo_no_version",
+          "method_yolov1"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_focal_loss",
+      "a_entity_ids": [
+        "method_focal_loss",
+        "method_focal_loss_lower"
+      ],
+      "b_cluster_partition": {
+        "focal_loss": [
+          "method_focal_loss",
+          "method_focal_loss_lower"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [
+    {
+      "kind": "negative_pair_missing_in_b",
+      "entity_ids": [
+        "method_yolo9000",
+        "method_yolov2"
+      ],
+      "comment": "must-not-merge constraint declared by gold A but not flagged by B"
+    },
+    {
+      "kind": "negative_pair_missing_in_b",
+      "entity_ids": [
+        "method_yolov1",
+        "method_yolov2"
+      ],
+      "comment": "must-not-merge constraint declared by gold A but not flagged by B"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "kind": "negative_pair_extra_in_b",
+      "entity_ids": [
+        "method_fast_rcnn",
+        "method_mask_rcnn"
+      ],
+      "comment": "B flagged this as must-not-merge but gold A did not"
+    },
+    {
+      "kind": "negative_pair_extra_in_b",
+      "entity_ids": [
+        "method_faster_rcnn",
+        "method_rcnn_canonical"
+      ],
+      "comment": "B flagged this as must-not-merge but gold A did not"
+    },
+    {
+      "kind": "negative_pair_extra_in_b",
+      "entity_ids": [
+        "method_mask_rcnn",
+        "method_rcnn_canonical"
+      ],
+      "comment": "B flagged this as must-not-merge but gold A did not"
+    },
+    {
+      "kind": "merge_extra_in_b",
+      "b_cluster_id": "yolov2",
+      "b_entity_ids": [
+        "method_yolo9000",
+        "method_yolov2"
+      ],
+      "comment": "B merged records that gold A keeps in different clusters: ['singleton_method_yolo9000', 'singleton_method_yolov2']"
+    }
+  ]
+}

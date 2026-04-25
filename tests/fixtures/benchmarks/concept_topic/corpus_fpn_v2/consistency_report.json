@@ -1,0 +1,279 @@
+{
+  "schema_version": 1,
+  "pack_id": "concept_topic/corpus_fpn_v2",
+  "pack_path": "tests/fixtures/benchmarks/concept_topic/corpus_fpn_v2",
+  "layer": "concept_topic_v2",
+  "generated_at_utc": "2026-04-25T19:49:04.968683+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "flips=2, missing_in_b_ratio=0.00 (gate: flips ≥ 1 OR missing_in_b_ratio ≥ 0.40)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/concept_topic/corpus_fpn_v2/gold.json",
+    "count": 12,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-labelled against frozen 25 concepts)",
+    "count": 25,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:7137bf312737dcd5697b167238d6c512c345bb44ed1374386295d03704c41801",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 14520,
+      "completion": 1400,
+      "total": 15920
+    },
+    "latency_ms": 17953
+  },
+  "summary": {
+    "a_total": 12,
+    "b_total": 25,
+    "matched": 12,
+    "matched_lexical": 12,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 13,
+    "field_agreements": {
+      "status": {
+        "agreed_present": 6,
+        "agreed_absent": 4,
+        "flips": 2
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "concept_id": "feature_pyramid",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "This architecture, called a Feature Pyramid Network (FPN), shows significant improvement as a generic feature extractor.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "Using FPN in a basic Faster R-CNN system, our method achieves state-of-the-art single-model results.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "anchor_based",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "The anchors are of multiple pre-defined scales and aspect ratios in order to cover objects of different shapes.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "All results are based on ResNet-50 and share the same hyper-parameters.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "region_proposal",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "RPN [29] is a sliding-window class-agnostic object detector.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "nms",
+      "a_status": "present",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "present",
+          "b": "absent"
+        }
+      ],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not explicitly mention non-maximum suppression (NMS) in the provided text."
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "our method achieves state-of-the-art single-model results on the COCO detection benchmark",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "anchor_free",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not discuss anchor-free detection methods; it uses anchor-based RPN."
+    },
+    {
+      "concept_id": "set_prediction",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention set prediction, bipartite matching, or Hungarian matching; it uses standard region-based detection."
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention transformer architectures or attention encoder-decoder; it uses convolutional networks."
+    },
+    {
+      "concept_id": "focal_loss",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention focal loss or modulating factor cross-entropy; it uses standard classification loss."
+    },
+    {
+      "concept_id": "mask_branch",
+      "a_status": "absent",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "absent",
+          "b": "present"
+        }
+      ],
+      "b_evidence_quote": "We apply a small 5×5 MLP to predict 14×14 masks and object scores in a fully convolutional fashion.",
+      "b_rationale": ""
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": [
+    {
+      "concept_id": "selective_search",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention Selective Search or its aliases; it focuses on RPN for region proposals.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "roi_pooling",
+      "b_status": "present",
+      "b_evidence_quote": "Fast R-CNN [11] is a region-based object detector in which Region-of-Interest (RoI) pooling is used to extract features.",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "roi_align",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention ROIAlign or RoIAlign; it only refers to RoI pooling.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not discuss one-stage detectors like SSD; it focuses on two-stage Faster R-CNN with FPN.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "keypoint_detection",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention keypoint detection or corner detection; it focuses on object detection and segmentation.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "backbone_darknet",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention Darknet backbone; it uses ResNet as the backbone.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "compound_scaling",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention compound scaling or joint depth-width-resolution scaling.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "cascade_iou_progression",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention cascade detectors, cascade R-CNN, or stage-wise IoU thresholds.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "centerness",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention center-ness branch or center prediction.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "iou_loss",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention IoU loss, GIoU, or DIoU; it uses standard bounding box regression loss.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "classical_dpm",
+      "b_status": "present",
+      "b_evidence_quote": "object detectors like DPM [7] required dense scale sampling to achieve good results",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "b_status": "present",
+      "b_evidence_quote": "SIFT features [25] were originally extracted at scale-space extrema and used for feature point matching.",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not explicitly describe a multi-task loss combining classification and regression.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    }
+  ]
+}

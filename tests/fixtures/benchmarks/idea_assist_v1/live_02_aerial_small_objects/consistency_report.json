@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "pack_id": "idea_assist_v1/live_02_aerial_small_objects",
+  "pack_path": "tests/fixtures/benchmarks/idea_assist_v1/live_02_aerial_small_objects",
+  "layer": "idea_assist_live",
+  "generated_at_utc": "2026-04-25T19:46:29.656916+00:00",
+  "spot_check_priority": "medium",
+  "spot_check_priority_rationale": "pool=thin, forbidden=too_loose, refhyp=plausible, overall=needs_revision",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/idea_assist_v1/live_02_aerial_small_objects/gold.json",
+    "count": 5,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_reviewer",
+    "source": "gold fixture review (not output generation)",
+    "count": 5,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:25896f96e14fd6242b7f70a54894b94c98e912594465b92fb0eb47772c06cf65",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 805,
+      "completion": 426,
+      "total": 1231
+    },
+    "latency_ms": 9920
+  },
+  "summary": {
+    "a_total": 5,
+    "b_total": 5,
+    "matched": 5,
+    "matched_lexical": 5,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "review": {
+      "pool_sufficiency": "thin",
+      "pool_sufficiency_rationale": "Only five claims cover limited aspects of small object detection without specific aerial imagery or benchmark data.",
+      "forbidden_substrings_quality": "too_loose",
+      "forbidden_substrings_rationale": "Only two generic phrases may not prevent verbatim copying of other key technical descriptions.",
+      "reference_hypothesis_quality": "plausible",
+      "reference_hypothesis_rationale": "Proposes a specific augmentation to DINO with evaluation on an aerial benchmark, aligning with the topic.",
+      "overall_assessment": "needs_revision",
+      "issues": [
+        "Pool lacks claims on aerial imagery specifics or benchmark metrics.",
+        "Forbidden substrings are insufficient to prevent plagiarism of core methods."
+      ]
+    }
+  },
+  "matched_pairs": [
+    {
+      "claim_id": "fpn_topdown_lateral_pyramid",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "high",
+      "b_rationale": "Directly describes a multi-scale feature pyramid method crucial for detecting small objects in aerial imagery.",
+      "field_disagreements": []
+    },
+    {
+      "claim_id": "fpn_single_scale_small_objects_negative",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "high",
+      "b_rationale": "Highlights the importance of multi-scale features for small object accuracy, directly relevant to the topic.",
+      "field_disagreements": []
+    },
+    {
+      "claim_id": "dino_earlier_detr_slow_small_obj_negative",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "high",
+      "b_rationale": "Addresses limitations of transformer detectors on small objects, key for improving accuracy in the topic.",
+      "field_disagreements": []
+    },
+    {
+      "claim_id": "detr_small_obj_slow_train_negative",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "high",
+      "b_rationale": "Identifies small object performance and training issues in DETR, relevant to detector comparison.",
+      "field_disagreements": []
+    },
+    {
+      "claim_id": "fcos_anchor_hyperparameter_burden_negative",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "medium",
+      "b_rationale": "Discusses anchor-based detector drawbacks, indirectly relevant as context for method selection.",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": []
+}

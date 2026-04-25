@@ -3,9 +3,20 @@
   "case_id": "ws_two_stage_negative_focal_loss",
   "workspace_id": "ws_two_stage",
   "meta": {
-    "validation_status": "draft",
-    "needs_human_review": true,
-    "extractor_pass": "single_human_authored_2026-04-25"
+    "validation_status": "llm_dual_validated",
+    "needs_human_review": false,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "validation_history": [
+      {
+        "promoted_at_utc": "2026-04-25T20:10:32.191957+00:00",
+        "from_status": "draft",
+        "to_status": "llm_dual_validated",
+        "spot_check_priority": "low",
+        "consistency_report": "tests/fixtures/benchmarks/retrieval/workspace_scoped_live/ws_two_stage_negative_focal_loss/consistency_report.json",
+        "rule": "auto-promote on Phase 6.D embedding-cascade pass"
+      }
+    ],
+    "validation_status_previous": "draft"
   },
   "question_file": "question.txt",
   "answer_reference_text": "No paper in the two-stage R-CNN family workspace introduces focal loss; focal loss was introduced by RetinaNet (Lin et al. 2017), which is a one-stage detector outside this workspace.",

@@ -54,6 +54,7 @@ def resolve_openrouter_embedding_settings(
     cli_base_url: str | None = None,
     cli_model: str | None = None,
     cache_root: Path | None = None,
+    vector_dim_hint: int | None = None,
 ) -> OpenRouterEmbeddingSettings:
     """Resolve API key / base URL / model in the same precedence as the LLM clients.
 
@@ -69,22 +70,20 @@ def resolve_openrouter_embedding_settings(
     if settings is not None:
         if not api_key:
             api_key = (
-                settings.benchmark_teacher_llm_api_key
-                or settings.extraction_llm_api_key
-                or ""
+                settings.benchmark_teacher_llm_api_key or settings.extraction_llm_api_key or ""
             ).strip()
         if not base_url:
             base_url = (
-                settings.benchmark_teacher_llm_base_url
-                or settings.extraction_llm_base_url
-                or ""
+                settings.benchmark_teacher_llm_base_url or settings.extraction_llm_base_url or ""
             ).strip()
 
     if not api_key:
         api_key = (os.getenv("MAIN_LLM_API_KEY") or os.getenv("API_KEY") or "").strip()
     if not base_url:
         base_url = (
-            os.getenv("MAIN_LLM_BASE_URL") or os.getenv("BASE_URL") or "https://openrouter.ai/api/v1"
+            os.getenv("MAIN_LLM_BASE_URL")
+            or os.getenv("BASE_URL")
+            or "https://openrouter.ai/api/v1"
         ).strip()
     if not model:
         model = (os.getenv("EMBEDDING_MODEL") or "baai/bge-m3").strip()
@@ -97,11 +96,17 @@ def resolve_openrouter_embedding_settings(
         )
 
     root = cache_root or Path("eval/dual_validate/embeddings_cache")
+    dim_hint = vector_dim_hint
+    if dim_hint is None and settings is not None:
+        dim_hint = settings.openrouter_embedding_dim
+    if dim_hint is None:
+        dim_hint = 1024
     return OpenRouterEmbeddingSettings(
         api_key=api_key,
         base_url=base_url,
         model=model,
         cache_root=root,
+        vector_dim_hint=int(dim_hint),
     )
 
 

@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "pack_id": "ha_focal_loss",
+  "pack_path": "tests/fixtures/benchmarks/retrieval/hybrid_ablation_v2/ha_focal_loss",
+  "layer": "hybrid_ablation_v2",
+  "generated_at_utc": "2026-04-25T20:11:04.428941+00:00",
+  "spot_check_priority": "medium",
+  "spot_check_priority_rationale": "accuracy=0.80, f1_relevant=0.67",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/retrieval/hybrid_ablation_v2/ha_focal_loss/gold.json",
+    "count": 2,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "question.txt | candidates=5",
+    "count": 1,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:ddd4096128298c67435b12fb9dfcbd52e624a5f831697e38224b51c771dc109b",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 269,
+      "completion": 88,
+      "total": 357
+    },
+    "latency_ms": 4348
+  },
+  "summary": {
+    "a_total": 2,
+    "b_total": 1,
+    "matched": 4,
+    "matched_lexical": 4,
+    "matched_embedding": 0,
+    "unmatched_a": 1,
+    "unmatched_b": 0,
+    "candidates_total": 5,
+    "accuracy": 0.8,
+    "metrics_relevant": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.667,
+      "jaccard": 0.5
+    },
+    "rationale_b": "Only the RetinaNet paper explicitly introduces and applies focal loss to address extreme foreground-background class imbalance in dense object detection."
+  },
+  "matched_pairs": [
+    {
+      "corpus_work_id": "retinanet_focal_realpdf",
+      "label": "relevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "rcnn_realpdf",
+      "label": "irrelevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "ssd_realpdf",
+      "label": "irrelevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "yolov1",
+      "label": "irrelevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [
+    {
+      "corpus_work_id": "gfl_realpdf",
+      "label_a": "relevant",
+      "label_b": "irrelevant"
+    }
+  ],
+  "unmatched_b": []
+}

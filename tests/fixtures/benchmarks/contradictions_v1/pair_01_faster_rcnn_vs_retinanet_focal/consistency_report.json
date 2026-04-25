@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "pack_id": "contradictions_v1/pair_01_faster_rcnn_vs_retinanet_focal",
+  "pack_path": "tests/fixtures/benchmarks/contradictions_v1/pair_01_faster_rcnn_vs_retinanet_focal",
+  "layer": "contradictions_v1",
+  "generated_at_utc": "2026-04-25T19:46:09.992635+00:00",
+  "spot_check_priority": "low",
+  "spot_check_priority_rationale": "type+severity match, claim text scores>=0.30 (0.79/0.56)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/contradictions_v1/pair_01_faster_rcnn_vs_retinanet_focal/gold.json",
+    "count": 1,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article_a.md + article_b.md (paired)",
+    "count": 1,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:edeb1a63ecd2da1c9bf71baacfc8afa085a61605325c72c934d163a4f0e6edac",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 15839,
+      "completion": 238,
+      "total": 16077
+    },
+    "latency_ms": 7146
+  },
+  "summary": {
+    "a_total": 1,
+    "b_total": 1,
+    "matched": 1,
+    "matched_lexical": 0,
+    "matched_embedding": 1,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "field_agreements": {
+      "contradiction_type": {
+        "agreed": 1,
+        "disagreed": 0
+      },
+      "severity": {
+        "agreed": 1,
+        "disagreed": 0
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "pair_id": "c01_two_stage_vs_one_stage_accuracy",
+      "match_score": 0.562,
+      "match_source": "embedding+lexical",
+      "claim_a_score": 0.788,
+      "claim_b_score": 0.562,
+      "field_disagreements": [],
+      "a_claim_a_text": "Two-stage detectors with region proposal networks achieve state-of-the-art object detection accuracy, while one-stage detectors trade accuracy for speed.",
+      "b_claim_a_text": "Two-stage detectors like Faster R-CNN are state-of-the-art and achieve high accuracy by using region proposals to filter out most background samples.",
+      "a_claim_b_text": "A one-stage detector trained with focal loss matches or exceeds two-stage detectors in accuracy, eliminating the historical accuracy-speed tradeoff.",
+      "b_claim_b_text": "One-stage detectors like RetinaNet can match or surpass the accuracy of two-stage detectors when trained with focal loss, eliminating the accuracy gap."
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": []
+}

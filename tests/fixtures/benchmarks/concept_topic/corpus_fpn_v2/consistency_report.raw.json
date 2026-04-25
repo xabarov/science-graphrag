@@ -1,0 +1,154 @@
+{
+  "labels": [
+    {
+      "concept_id": "region_proposal",
+      "status": "present",
+      "evidence_quote": "RPN [29] is a sliding-window class-agnostic object detector.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "selective_search",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention Selective Search or its aliases; it focuses on RPN for region proposals."
+    },
+    {
+      "concept_id": "anchor_based",
+      "status": "present",
+      "evidence_quote": "The anchors are of multiple pre-defined scales and aspect ratios in order to cover objects of different shapes.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "anchor_free",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not discuss anchor-free detection methods; it uses anchor-based RPN."
+    },
+    {
+      "concept_id": "set_prediction",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention set prediction, bipartite matching, or Hungarian matching; it uses standard region-based detection."
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "status": "present",
+      "evidence_quote": "This architecture, called a Feature Pyramid Network (FPN), shows significant improvement as a generic feature extractor.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "focal_loss",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention focal loss or modulating factor cross-entropy; it uses standard classification loss."
+    },
+    {
+      "concept_id": "nms",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not explicitly mention non-maximum suppression (NMS) in the provided text."
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention transformer architectures or attention encoder-decoder; it uses convolutional networks."
+    },
+    {
+      "concept_id": "roi_pooling",
+      "status": "present",
+      "evidence_quote": "Fast R-CNN [11] is a region-based object detector in which Region-of-Interest (RoI) pooling is used to extract features.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "roi_align",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention ROIAlign or RoIAlign; it only refers to RoI pooling."
+    },
+    {
+      "concept_id": "mask_branch",
+      "status": "present",
+      "evidence_quote": "We apply a small 5×5 MLP to predict 14×14 masks and object scores in a fully convolutional fashion.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not discuss one-stage detectors like SSD; it focuses on two-stage Faster R-CNN with FPN."
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "status": "present",
+      "evidence_quote": "Using FPN in a basic Faster R-CNN system, our method achieves state-of-the-art single-model results.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "keypoint_detection",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention keypoint detection or corner detection; it focuses on object detection and segmentation."
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "status": "present",
+      "evidence_quote": "All results are based on ResNet-50 and share the same hyper-parameters.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "backbone_darknet",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention Darknet backbone; it uses ResNet as the backbone."
+    },
+    {
+      "concept_id": "compound_scaling",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention compound scaling or joint depth-width-resolution scaling."
+    },
+    {
+      "concept_id": "cascade_iou_progression",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention cascade detectors, cascade R-CNN, or stage-wise IoU thresholds."
+    },
+    {
+      "concept_id": "centerness",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention center-ness branch or center prediction."
+    },
+    {
+      "concept_id": "iou_loss",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention IoU loss, GIoU, or DIoU; it uses standard bounding box regression loss."
+    },
+    {
+      "concept_id": "classical_dpm",
+      "status": "present",
+      "evidence_quote": "object detectors like DPM [7] required dense scale sampling to achieve good results",
+      "rationale": ""
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "status": "present",
+      "evidence_quote": "SIFT features [25] were originally extracted at scale-space extrema and used for feature point matching.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not explicitly describe a multi-task loss combining classification and regression."
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "status": "present",
+      "evidence_quote": "our method achieves state-of-the-art single-model results on the COCO detection benchmark",
+      "rationale": ""
+    }
+  ]
+}

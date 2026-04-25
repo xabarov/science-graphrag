@@ -1,0 +1,36 @@
+{
+  "layer": "idea_assist_live",
+  "model": "deepseek/deepseek-v3.2",
+  "results": [
+    {
+      "pack": "live_01_low_light_detector",
+      "spot_check_priority": "high",
+      "matched": 5,
+      "matched_lexical": 5,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 0,
+      "promoted_to_llm_dual_validated": false
+    },
+    {
+      "pack": "live_02_aerial_small_objects",
+      "spot_check_priority": "medium",
+      "matched": 5,
+      "matched_lexical": 5,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 0,
+      "promoted_to_llm_dual_validated": true
+    },
+    {
+      "pack": "live_03_medical_imaging_few_shot",
+      "spot_check_priority": "high",
+      "matched": 5,
+      "matched_lexical": 5,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 0,
+      "promoted_to_llm_dual_validated": false
+    }
+  ]
+}

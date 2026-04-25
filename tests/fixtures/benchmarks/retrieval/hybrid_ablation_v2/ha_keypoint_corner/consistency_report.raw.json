@@ -1,0 +1,5 @@
+{
+  "relevant_corpus_work_ids": ["cornernet_realpdf"],
+  "irrelevant_corpus_work_ids": ["centernet_realpdf", "faster_rcnn_realpdf", "retinanet_focal_realpdf", "ssd_realpdf", "yolov3_realpdf"],
+  "rationale": "CornerNet directly detects objects as paired keypoints (top-left and bottom-right corners), which matches the question's description, while the other papers use different detection approaches like center points, anchors, or region proposals."
+}

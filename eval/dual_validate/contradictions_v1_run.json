@@ -1,0 +1,76 @@
+{
+  "layer": "contradictions_v1",
+  "model": "deepseek/deepseek-v3.2",
+  "results": [
+    {
+      "pack": "pair_01_faster_rcnn_vs_retinanet_focal",
+      "spot_check_priority": "low",
+      "matched": 1,
+      "matched_lexical": 0,
+      "matched_embedding": 1,
+      "unmatched_a": 0,
+      "unmatched_b": 0,
+      "promoted_to_llm_dual_validated": true
+    },
+    {
+      "pack": "pair_02_faster_rcnn_vs_fcos",
+      "spot_check_priority": "low",
+      "matched": 1,
+      "matched_lexical": 0,
+      "matched_embedding": 1,
+      "unmatched_a": 0,
+      "unmatched_b": 0,
+      "promoted_to_llm_dual_validated": true
+    },
+    {
+      "pack": "pair_03_faster_rcnn_vs_cornernet",
+      "spot_check_priority": "medium",
+      "matched": 1,
+      "matched_lexical": 1,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 0,
+      "promoted_to_llm_dual_validated": true
+    },
+    {
+      "pack": "pair_04_faster_rcnn_vs_detr",
+      "spot_check_priority": "high",
+      "matched": 1,
+      "matched_lexical": 1,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 0,
+      "promoted_to_llm_dual_validated": false
+    },
+    {
+      "pack": "pair_05_rcnn_vs_faster_rcnn",
+      "spot_check_priority": "medium",
+      "matched": 1,
+      "matched_lexical": 1,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 0,
+      "promoted_to_llm_dual_validated": true
+    },
+    {
+      "pack": "pair_06_hog_human_detection_vs_rcnn",
+      "spot_check_priority": "high",
+      "matched": 1,
+      "matched_lexical": 1,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 0,
+      "promoted_to_llm_dual_validated": false
+    },
+    {
+      "pack": "pair_07_retinanet_focal_vs_efficientdet",
+      "spot_check_priority": "high",
+      "matched": 0,
+      "matched_lexical": 0,
+      "matched_embedding": 0,
+      "unmatched_a": 1,
+      "unmatched_b": 1,
+      "promoted_to_llm_dual_validated": false
+    }
+  ]
+}

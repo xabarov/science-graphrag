@@ -1,0 +1,154 @@
+{
+  "labels": [
+    {
+      "concept_id": "region_proposal",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article explicitly states SSD eliminates proposal generation and does not use region proposals."
+    },
+    {
+      "concept_id": "selective_search",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "Selective Search is mentioned only as a prior method in related work, not used in SSD."
+    },
+    {
+      "concept_id": "anchor_based",
+      "status": "present",
+      "evidence_quote": "Our default boxes are similar to the anchor boxes used in Faster R-CNN [2], however we apply them to several feature maps of different resolutions.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "anchor_free",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "SSD uses default boxes (anchors) for prediction, so it is not anchor-free."
+    },
+    {
+      "concept_id": "set_prediction",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention bipartite matching or direct set prediction; it uses matching based on overlap."
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "status": "present",
+      "evidence_quote": "To achieve high detection accuracy we produce predictions of different scales from feature maps of different scales, and explicitly separate predictions by aspect ratio.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "focal_loss",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article uses softmax loss and hard negative mining, not focal loss."
+    },
+    {
+      "concept_id": "nms",
+      "status": "present",
+      "evidence_quote": "SSD is based on a feed-forward convolutional network that produces a fixed-size collection of bounding boxes and scores ... followed by a non-maximum suppression step to produce the final detections.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention transformer architecture; it uses convolutional networks."
+    },
+    {
+      "concept_id": "roi_pooling",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "SSD eliminates feature resampling stages and does not use ROI pooling."
+    },
+    {
+      "concept_id": "roi_align",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention ROIAlign; SSD does not use region-of-interest operations."
+    },
+    {
+      "concept_id": "mask_branch",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "SSD is an object detector, not an instance segmentation method; no mask branch is mentioned."
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "status": "present",
+      "evidence_quote": "We introduce SSD, a single-shot detector for multiple categories that is faster than the previous state-of-the-art for single shot detectors (YOLO).",
+      "rationale": ""
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "SSD is a one-stage detector and contrasts itself with two-stage methods like Faster R-CNN."
+    },
+    {
+      "concept_id": "keypoint_detection",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article focuses on bounding box detection, not keypoint detection."
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article uses VGG16 as the base network, not ResNet."
+    },
+    {
+      "concept_id": "backbone_darknet",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article uses VGG16, not Darknet."
+    },
+    {
+      "concept_id": "compound_scaling",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention compound scaling of depth, width, and resolution."
+    },
+    {
+      "concept_id": "cascade_iou_progression",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention cascade detectors or stage-wise IoU thresholds."
+    },
+    {
+      "concept_id": "centerness",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention a center-ness branch or center prediction."
+    },
+    {
+      "concept_id": "iou_loss",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article uses Smooth L1 loss for localization, not IoU loss."
+    },
+    {
+      "concept_id": "classical_dpm",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "DPM is mentioned only in related work as a prior method, not used in SSD."
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article uses deep convolutional features, not handcrafted features like HOG or SIFT."
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "status": "present",
+      "evidence_quote": "The overall objective loss function is a weighted sum of the localization loss (loc) and the confidence loss (conf).",
+      "rationale": ""
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "status": "present",
+      "evidence_quote": "Experimental results on the PASCAL VOC, COCO, and ILSVRC datasets confirm that SSD has competitive accuracy.",
+      "rationale": ""
+    }
+  ]
+}

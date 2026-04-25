@@ -1,0 +1,5 @@
+{
+  "expected_corpus_work_ids": ["cornernet_realpdf", "centernet_realpdf", "fcos_realpdf"],
+  "would_violate_workspace_with": [],
+  "rationale": "CornerNet pioneers anchor-free detection by detecting objects as paired keypoints, CenterNet introduces keypoint triplets for object detection, and FCOS presents a fully convolutional one-stage anchor-free approach."
+}

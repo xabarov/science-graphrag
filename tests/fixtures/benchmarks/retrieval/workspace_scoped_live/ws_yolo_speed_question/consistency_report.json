@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "pack_id": "ws_yolo_speed_question",
+  "pack_path": "tests/fixtures/benchmarks/retrieval/workspace_scoped_live/ws_yolo_speed_question",
+  "layer": "workspace_scoped_live",
+  "generated_at_utc": "2026-04-25T20:10:32.194851+00:00",
+  "spot_check_priority": "low",
+  "spot_check_priority_rationale": "required-recall=1.00, precision=1.00",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/retrieval/workspace_scoped_live/ws_yolo_speed_question/gold.json",
+    "count": 4,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "workspace=ws_yolo_family | question.txt",
+    "count": 4,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:70410e02811f11533f6ee1d624cdc6add203e40a95621ea2137c68809019e93e",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 982,
+      "completion": 99,
+      "total": 1081
+    },
+    "latency_ms": 4409
+  },
+  "summary": {
+    "a_total": 4,
+    "b_total": 4,
+    "matched": 4,
+    "matched_lexical": 4,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "metrics_required_only": {
+      "precision": 0.25,
+      "recall": 1.0,
+      "f1": 0.4,
+      "jaccard": 0.25
+    },
+    "metrics_required_or_optional": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "jaccard": 1.0
+    },
+    "boundary_violations_count": 0,
+    "real_forbidden_predictions": 0,
+    "phantom_forbidden_predictions": 0,
+    "rationale_b": "The question specifically asks for the real-time speed (FPS) reported by YOLO papers, and all four provided workspace papers are core YOLO series works that would contain such information."
+  },
+  "matched_pairs": [
+    {
+      "corpus_work_id": "yolov1",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "yolov2_realpdf",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "yolov3_realpdf",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "yolox_realpdf",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": []
+}

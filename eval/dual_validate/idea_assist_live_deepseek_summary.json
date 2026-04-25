@@ -1,0 +1,83 @@
+{
+  "generated_at_utc": "2026-04-25T19:52:55.315443+00:00",
+  "phase": "Phase 6.C",
+  "layer": "idea_assist_live",
+  "tag": "deepseek_phase6c",
+  "fixtures_subdir": "idea_assist_v1",
+  "totals": {
+    "packs": 4,
+    "a_total": 20,
+    "b_total": 20,
+    "matched": 20,
+    "matched_lexical": 20,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "promoted_to_llm_dual_validated": 1,
+    "global_match_ratio": 1.0,
+    "embedding_share_of_matches": 0.0
+  },
+  "priority_counts": {
+    "low": 0,
+    "medium": 1,
+    "high": 3
+  },
+  "results": [
+    {
+      "pack": "live_01_low_light_detector",
+      "spot_check_priority": "high",
+      "spot_check_priority_rationale": "low_relevance_in_pool=2, pool=insufficient",
+      "a_total": 5,
+      "b_total": 5,
+      "matched": 5,
+      "matched_lexical": 5,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 0,
+      "promoted_to_llm_dual_validated": false,
+      "model": "deepseek/deepseek-v3.2"
+    },
+    {
+      "pack": "live_02_aerial_small_objects",
+      "spot_check_priority": "medium",
+      "spot_check_priority_rationale": "pool=thin, forbidden=too_loose, refhyp=plausible, overall=needs_revision",
+      "a_total": 5,
+      "b_total": 5,
+      "matched": 5,
+      "matched_lexical": 5,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 0,
+      "promoted_to_llm_dual_validated": true,
+      "model": "deepseek/deepseek-v3.2"
+    },
+    {
+      "pack": "live_03_medical_imaging_few_shot",
+      "spot_check_priority": "high",
+      "spot_check_priority_rationale": "low_relevance_in_pool=2, pool=thin",
+      "a_total": 5,
+      "b_total": 5,
+      "matched": 5,
+      "matched_lexical": 5,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 0,
+      "promoted_to_llm_dual_validated": false,
+      "model": "deepseek/deepseek-v3.2"
+    },
+    {
+      "pack": "live_04_realtime_video_streaming_anchor_free",
+      "spot_check_priority": "high",
+      "spot_check_priority_rationale": "low_relevance_in_pool=1, pool=thin",
+      "a_total": 5,
+      "b_total": 5,
+      "matched": 5,
+      "matched_lexical": 5,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 0,
+      "promoted_to_llm_dual_validated": false,
+      "model": "deepseek/deepseek-v3.2"
+    }
+  ]
+}

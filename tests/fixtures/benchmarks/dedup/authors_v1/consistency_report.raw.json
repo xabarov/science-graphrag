@@ -1,0 +1,81 @@
+{
+  "clusters": [
+    {
+      "cluster_id": "redmon_joseph",
+      "entity_ids": ["auth_redmon_joseph_full", "auth_redmon_j_initial"],
+      "rationale": "Same surname Redmon, first initial J matches Joseph, shared affiliation University of Washington and co-appearance in yolov2_realpdf."
+    },
+    {
+      "cluster_id": "girshick_ross",
+      "entity_ids": ["auth_girshick_ross_full", "auth_girshick_r_initial", "auth_girshick_ross_b_middle_initial"],
+      "rationale": "Same surname Girshick, first initial R matches Ross, overlapping affiliations (UC Berkeley, Facebook AI Research) and co-appearance in works like faster_rcnn_realpdf."
+    },
+    {
+      "cluster_id": "he_kaiming",
+      "entity_ids": ["auth_he_kaiming_full", "auth_he_k_initial"],
+      "rationale": "Same surname He, first initial K matches Kaiming, shared affiliations Microsoft Research and co-appearance in faster_rcnn_realpdf and mask_rcnn_realpdf."
+    },
+    {
+      "cluster_id": "sun_jian",
+      "entity_ids": ["auth_sun_jian_full", "auth_sun_j_initial"],
+      "rationale": "Same surname Sun, first initial J matches Jian, shared affiliation Microsoft Research and co-appearance in faster_rcnn_realpdf and rfcn_realpdf."
+    },
+    {
+      "cluster_id": "zhang_xiangyu",
+      "entity_ids": ["auth_zhang_xiangyu"],
+      "rationale": "Singleton cluster for Xiangyu Zhang with specific affiliations and work in sppnet_realpdf; no matching context for other X. Zhang records."
+    },
+    {
+      "cluster_id": "zhang_xinyu",
+      "entity_ids": ["auth_zhang_xinyu_unrelated"],
+      "rationale": "Singleton cluster for Xinyu Zhang with different first name and affiliation University of Wisconsin-Madison, no overlapping works with Xiangyu Zhang."
+    },
+    {
+      "cluster_id": "zhang_x_initial_ambiguous",
+      "entity_ids": ["auth_zhang_x_initial_ambiguous"],
+      "rationale": "Singleton cluster for ambiguous X. Zhang; without disambiguation context, cannot merge with any specific full-name Zhang."
+    },
+    {
+      "cluster_id": "dai_jifeng",
+      "entity_ids": ["auth_dai_jifeng_full", "auth_dai_j_initial"],
+      "rationale": "Same surname Dai, first initial J matches Jifeng, shared affiliation Microsoft Research Asia and co-appearance in rfcn_realpdf."
+    },
+    {
+      "cluster_id": "lin_tsung_yi",
+      "entity_ids": ["auth_lin_tsung_yi_full", "auth_lin_t_y_dot_initial"],
+      "rationale": "Same surname Lin, hyphenated initial T.-Y. matches Tsung-Yi, common in BibTeX renderings for the same author with no conflicting context."
+    },
+    {
+      "cluster_id": "lin_dahua",
+      "entity_ids": ["auth_lin_dahua_unrelated"],
+      "rationale": "Singleton cluster for Dahua Lin, different first name and affiliation Chinese University of Hong Kong, no overlapping works with Tsung-Yi Lin."
+    },
+    {
+      "cluster_id": "li_feng_dn_detr",
+      "entity_ids": ["auth_li_feng_dn_detr"],
+      "rationale": "Singleton cluster for Feng Li co-authoring DN-DETR and DINO with specific affiliation Hong Kong University of Science and Technology."
+    },
+    {
+      "cluster_id": "li_feng_unrelated",
+      "entity_ids": ["auth_li_feng_unrelated"],
+      "rationale": "Singleton cluster for unrelated Feng Li with different affiliation and no overlapping works, preventing erroneous merge."
+    }
+  ],
+  "negative_pairs": [
+    {
+      "pair_id": "zhang_xiangyu_vs_xinyu",
+      "entity_ids": ["auth_zhang_xiangyu", "auth_zhang_xinyu_unrelated"],
+      "rationale": "Different first names Xiangyu vs Xinyu, distinct affiliations and no overlapping works, despite same surname and initial X."
+    },
+    {
+      "pair_id": "lin_tsung_yi_vs_dahua",
+      "entity_ids": ["auth_lin_tsung_yi_full", "auth_lin_dahua_unrelated"],
+      "rationale": "Different first names Tsung-Yi vs Dahua, distinct affiliations and no overlapping works, despite same surname Lin."
+    },
+    {
+      "pair_id": "li_feng_dn_detr_vs_unrelated",
+      "entity_ids": ["auth_li_feng_dn_detr", "auth_li_feng_unrelated"],
+      "rationale": "Same surface form Feng Li but different persons with distinct affiliations and no co-author evidence, requiring separation."
+    }
+  ]
+}

@@ -1,0 +1,214 @@
+{
+  "schema_version": 1,
+  "pack_id": "dedup/datasets_v1",
+  "pack_path": "tests/fixtures/benchmarks/dedup/datasets_v1",
+  "layer": "dedup_datasets_v1",
+  "generated_at_utc": "2026-04-25T20:05:58.564795+00:00",
+  "spot_check_priority": "medium",
+  "spot_check_priority_rationale": "ARI=0.88, pair_f1=0.89, neg_diffs=4",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/dedup/datasets_v1/gold.json",
+    "count": 12,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "records list (21 surface forms re-clustered)",
+    "count": 12,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:e51167bd963bf7122282ebbc0346cad379de20ffba21ea1f210bb330ce2809da",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 1307,
+      "completion": 937,
+      "total": 2244
+    },
+    "latency_ms": 11851
+  },
+  "summary": {
+    "a_total": 12,
+    "b_total": 12,
+    "matched": 6,
+    "matched_lexical": 6,
+    "matched_embedding": 0,
+    "unmatched_a": 3,
+    "unmatched_b": 2,
+    "metrics": {
+      "shared_ids": 21,
+      "pair_precision": 0.857,
+      "pair_recall": 0.923,
+      "pair_f1": 0.889,
+      "adjusted_rand_index": 0.881
+    },
+    "negative_pairs": {
+      "agreed": 2,
+      "only_in_a": 3,
+      "only_in_b": 1
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_cluster_id": "cluster_voc_2007",
+      "a_entity_ids": [
+        "ds_pascal_voc_2007_compact",
+        "ds_pascal_voc_2007_dotted",
+        "ds_pascal_voc_2007_full",
+        "ds_pascal_voc_2007_short"
+      ],
+      "b_cluster_partition": {
+        "pascal_voc_2007": [
+          "ds_pascal_voc_2007_compact",
+          "ds_pascal_voc_2007_dotted",
+          "ds_pascal_voc_2007_full",
+          "ds_pascal_voc_2007_short"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_voc_2012",
+      "a_entity_ids": [
+        "ds_pascal_voc_2012_compact",
+        "ds_pascal_voc_2012_short"
+      ],
+      "b_cluster_partition": {
+        "pascal_voc_2012": [
+          "ds_pascal_voc_2012_compact",
+          "ds_pascal_voc_2012_short"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_mscoco_generic",
+      "a_entity_ids": [
+        "ds_coco_short",
+        "ds_mscoco_full",
+        "ds_mscoco_short"
+      ],
+      "b_cluster_partition": {
+        "mscoco_generic": [
+          "ds_coco_short",
+          "ds_mscoco_full",
+          "ds_mscoco_short"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_imagenet_full",
+      "a_entity_ids": [
+        "ds_imagenet_alt_caps",
+        "ds_imagenet_full"
+      ],
+      "b_cluster_partition": {
+        "imagenet_generic": [
+          "ds_imagenet_alt_caps",
+          "ds_imagenet_full"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    },
+    {
+      "a_cluster_id": "cluster_ilsvrc_generic",
+      "a_entity_ids": [
+        "ds_ilsvrc_acronym",
+        "ds_ilsvrc_full"
+      ],
+      "b_cluster_partition": {
+        "ilsvrc_generic": [
+          "ds_ilsvrc_acronym"
+        ],
+        "imagenet_generic": [
+          "ds_ilsvrc_full"
+        ]
+      },
+      "match_score": 0.5,
+      "match_source": "pair_counting",
+      "field_disagreements": [
+        {
+          "field": "cluster_membership",
+          "a": "single_cluster",
+          "b": "split_into_2"
+        }
+      ]
+    },
+    {
+      "a_cluster_id": "cluster_objects365",
+      "a_entity_ids": [
+        "ds_objects365",
+        "ds_objects365_with_space"
+      ],
+      "b_cluster_partition": {
+        "objects365": [
+          "ds_objects365",
+          "ds_objects365_with_space"
+        ]
+      },
+      "match_score": 1.0,
+      "match_source": "pair_counting",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [
+    {
+      "kind": "negative_pair_missing_in_b",
+      "entity_ids": [
+        "ds_ilsvrc_2013",
+        "ds_imagenet_full"
+      ],
+      "comment": "must-not-merge constraint declared by gold A but not flagged by B"
+    },
+    {
+      "kind": "negative_pair_missing_in_b",
+      "entity_ids": [
+        "ds_imagenet_full",
+        "ds_lvis"
+      ],
+      "comment": "must-not-merge constraint declared by gold A but not flagged by B"
+    },
+    {
+      "kind": "negative_pair_missing_in_b",
+      "entity_ids": [
+        "ds_kitti",
+        "ds_pascal_voc_2007_short"
+      ],
+      "comment": "must-not-merge constraint declared by gold A but not flagged by B"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "kind": "negative_pair_extra_in_b",
+      "entity_ids": [
+        "ds_ilsvrc_2012",
+        "ds_ilsvrc_2013"
+      ],
+      "comment": "B flagged this as must-not-merge but gold A did not"
+    },
+    {
+      "kind": "merge_extra_in_b",
+      "b_cluster_id": "imagenet_generic",
+      "b_entity_ids": [
+        "ds_ilsvrc_full",
+        "ds_imagenet_alt_caps",
+        "ds_imagenet_full"
+      ],
+      "comment": "B merged records that gold A keeps in different clusters: ['cluster_ilsvrc_generic', 'cluster_imagenet_full']"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "expected_chain_corpus_work_ids": ["selective_search_realpdf", "rcnn_realpdf", "fast_rcnn_realpdf", "faster_rcnn_realpdf", "mask_rcnn_realpdf"],
+  "rationale": "The papers form a direct citation lineage where each subsequent work builds on the previous to improve region-proposal and object detection, culminating in Mask R-CNN."
+}

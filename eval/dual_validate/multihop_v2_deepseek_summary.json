@@ -1,0 +1,97 @@
+{
+  "generated_at_utc": "2026-04-25T20:15:18.720865+00:00",
+  "phase": "Phase 6.C",
+  "layer": "multihop_v2",
+  "tag": "deepseek_phase6c",
+  "fixtures_subdir": "retrieval/multihop_v2",
+  "totals": {
+    "packs": 5,
+    "a_total": 18,
+    "b_total": 16,
+    "matched": 13,
+    "matched_lexical": 13,
+    "matched_embedding": 0,
+    "unmatched_a": 5,
+    "unmatched_b": 3,
+    "promoted_to_llm_dual_validated": 3,
+    "global_match_ratio": 0.722,
+    "embedding_share_of_matches": 0.0
+  },
+  "priority_counts": {
+    "low": 3,
+    "medium": 0,
+    "high": 2
+  },
+  "results": [
+    {
+      "pack": "mh_authors_yolo_intersect_rcnn_family",
+      "spot_check_priority": "high",
+      "spot_check_priority_rationale": "f1=0.00, order=n/a (gate)",
+      "a_total": 2,
+      "b_total": 0,
+      "matched": 0,
+      "matched_lexical": 0,
+      "matched_embedding": 0,
+      "unmatched_a": 2,
+      "unmatched_b": 0,
+      "promoted_to_llm_dual_validated": false,
+      "model": "deepseek/deepseek-v3.2"
+    },
+    {
+      "pack": "mh_datasets_shared_one_stage_detectors",
+      "spot_check_priority": "high",
+      "spot_check_priority_rationale": "f1=0.00, order=n/a (gate)",
+      "a_total": 3,
+      "b_total": 3,
+      "matched": 0,
+      "matched_lexical": 0,
+      "matched_embedding": 0,
+      "unmatched_a": 3,
+      "unmatched_b": 3,
+      "promoted_to_llm_dual_validated": false,
+      "model": "deepseek/deepseek-v3.2"
+    },
+    {
+      "pack": "mh_detr_lineage_chain",
+      "spot_check_priority": "low",
+      "spot_check_priority_rationale": "f1=1.00, order=1.0",
+      "a_total": 4,
+      "b_total": 4,
+      "matched": 4,
+      "matched_lexical": 4,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 0,
+      "promoted_to_llm_dual_validated": true,
+      "model": "deepseek/deepseek-v3.2"
+    },
+    {
+      "pack": "mh_proposal_evolution_chain",
+      "spot_check_priority": "low",
+      "spot_check_priority_rationale": "f1=1.00, order=1.0",
+      "a_total": 5,
+      "b_total": 5,
+      "matched": 5,
+      "matched_lexical": 5,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 0,
+      "promoted_to_llm_dual_validated": true,
+      "model": "deepseek/deepseek-v3.2"
+    },
+    {
+      "pack": "mh_yolo_lineage_chain",
+      "spot_check_priority": "low",
+      "spot_check_priority_rationale": "f1=1.00, order=1.0",
+      "a_total": 4,
+      "b_total": 4,
+      "matched": 4,
+      "matched_lexical": 4,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 0,
+      "promoted_to_llm_dual_validated": true,
+      "model": "deepseek/deepseek-v3.2"
+    }
+  ]
+}

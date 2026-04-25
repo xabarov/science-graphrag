@@ -3,9 +3,20 @@
   "case_id": "ws_yolo_speed_question",
   "workspace_id": "ws_yolo_family",
   "meta": {
-    "validation_status": "draft",
-    "needs_human_review": true,
-    "extractor_pass": "single_human_authored_2026-04-25"
+    "validation_status": "llm_dual_validated",
+    "needs_human_review": false,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "validation_history": [
+      {
+        "promoted_at_utc": "2026-04-25T20:09:58.864079+00:00",
+        "from_status": "draft",
+        "to_status": "llm_dual_validated",
+        "spot_check_priority": "low",
+        "consistency_report": "tests/fixtures/benchmarks/retrieval/workspace_scoped_live/ws_yolo_speed_question/consistency_report.json",
+        "rule": "auto-promote on Phase 6.D embedding-cascade pass"
+      }
+    ],
+    "validation_status_previous": "draft"
   },
   "question_file": "question.txt",
   "answer_reference_text": "YOLOv1 reports 45 FPS for the base model and 155 FPS for Fast YOLO on a Titan X. YOLOv2 (YOLO9000) reports 67 FPS with 76.8 mAP at 416x416 resolution. YOLOv3 reports 22 ms inference at 320x320 (~45 FPS) on a Titan X. YOLOX reports up to 102 FPS for YOLOX-Tiny on a single V100.",

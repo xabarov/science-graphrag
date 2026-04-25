@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "pack_id": "mh_proposal_evolution_chain",
+  "pack_path": "tests/fixtures/benchmarks/retrieval/multihop_v2/mh_proposal_evolution_chain",
+  "layer": "multihop_v2",
+  "generated_at_utc": "2026-04-25T20:11:47.050934+00:00",
+  "spot_check_priority": "low",
+  "spot_check_priority_rationale": "f1=1.00, order=1.0",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/retrieval/multihop_v2/mh_proposal_evolution_chain/gold.json",
+    "count": 5,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "path_kind=ordered_chain | question.txt",
+    "count": 5,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:f9722c8be5596c6559cbd41bd81c1ff4e9bddf3a002e5af4fc768d8021b54b0f",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 284,
+      "completion": 89,
+      "total": 373
+    },
+    "latency_ms": 2011
+  },
+  "summary": {
+    "a_total": 5,
+    "b_total": 5,
+    "matched": 5,
+    "matched_lexical": 5,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "expected_path_kind": "ordered_chain",
+    "metrics": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "jaccard": 1.0
+    },
+    "a_chain": [
+      "selective_search_realpdf",
+      "rcnn_realpdf",
+      "fast_rcnn_realpdf",
+      "faster_rcnn_realpdf",
+      "mask_rcnn_realpdf"
+    ],
+    "b_chain": [
+      "selective_search_realpdf",
+      "rcnn_realpdf",
+      "fast_rcnn_realpdf",
+      "faster_rcnn_realpdf",
+      "mask_rcnn_realpdf"
+    ],
+    "order_correctness": 1.0,
+    "min_chain_order_correctness": 0.8
+  },
+  "matched_pairs": [
+    {
+      "node_or_work_id": "fast_rcnn_realpdf",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "node_or_work_id": "faster_rcnn_realpdf",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "node_or_work_id": "mask_rcnn_realpdf",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "node_or_work_id": "rcnn_realpdf",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "node_or_work_id": "selective_search_realpdf",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": []
+}

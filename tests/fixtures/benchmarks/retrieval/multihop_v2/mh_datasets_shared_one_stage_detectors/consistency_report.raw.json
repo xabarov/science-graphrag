@@ -1,0 +1,4 @@
+{
+  "expected_node_canonical_names": ["pascal_voc_2007", "pascal_voc_2012", "coco"],
+  "rationale": "The SSD, YOLOv3, and RetinaNet papers all commonly use PASCAL VOC 2007, PASCAL VOC 2012, and MS COCO as evaluation benchmarks, though COCO is not explicitly listed in the inventory but is a standard dataset referenced in these works."
+}

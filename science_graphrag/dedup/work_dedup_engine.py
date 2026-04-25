@@ -107,7 +107,7 @@ def run_work_dedup_scan(
             return 0
         allowed = set(work_ids)
 
-        dim = resolve_embedding_dim(embedding_model=settings.embedding_model)
+        dim = resolve_embedding_dim(settings=settings)
         qstore = QdrantWorkEmbeddingStore(
             settings.qdrant_url,
             settings.qdrant_work_embeddings_collection,

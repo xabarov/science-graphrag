@@ -1,0 +1,273 @@
+{
+  "schema_version": 1,
+  "pack_id": "concept_topic/corpus_mask_rcnn_v2",
+  "pack_path": "tests/fixtures/benchmarks/concept_topic/corpus_mask_rcnn_v2",
+  "layer": "concept_topic_v2",
+  "generated_at_utc": "2026-04-25T19:49:22.952928+00:00",
+  "spot_check_priority": "low",
+  "spot_check_priority_rationale": "flips=0, missing_in_b=0 (no gate hit)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/concept_topic/corpus_mask_rcnn_v2/gold.json",
+    "count": 14,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-labelled against frozen 25 concepts)",
+    "count": 25,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:0272b63d6c2a17244bea4cd979ad1979c62f2cf26ca4343f62257eb355e1f343",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 18143,
+      "completion": 1454,
+      "total": 19597
+    },
+    "latency_ms": 17977
+  },
+  "summary": {
+    "a_total": 14,
+    "b_total": 25,
+    "matched": 14,
+    "matched_lexical": 14,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 11,
+    "field_agreements": {
+      "status": {
+        "agreed_present": 9,
+        "agreed_absent": 5,
+        "flips": 0
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "concept_id": "mask_branch",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "Mask R-CNN extends Faster R-CNN by adding a branch for predicting segmentation masks on each Region of Interest (RoI).",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "roi_align",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "To fix the misalignment, we propose a simple, quantization-free layer, called RoIAlign, that faithfully preserves exact spatial locations.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "Mask R-CNN adopts the same two-stage procedure, with an identical first stage (which is RPN).",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "region_proposal",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "The first stage, called a Region Proposal Network (RPN), proposes candidate object bounding boxes.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "anchor_based",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "The RPN anchors span 5 scales and 3 aspect ratios, following [27].",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "We also explore another more effective backbone recently proposed by Lin et al. [27], called a Feature Pyramid Network (FPN).",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "We evaluate ResNet [19] and ResNeXt [45] networks of depth 50 or 101 layers.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "Formally, during training, we define a multi-task loss on each sampled RoI as L = Lcls + Lbox + Lmask.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "We show top results in all three tracks of the COCO suite of challenges, including instance segmentation, bounding-box object detection, and person keypoint detection.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "anchor_free",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not discuss anchor-free detection; it uses anchor-based RPN."
+    },
+    {
+      "concept_id": "set_prediction",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention bipartite matching or direct set prediction; it uses a two-stage detector with RPN and RoI classification."
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention transformer architecture; it uses CNN-based Faster R-CNN with FCN mask branch."
+    },
+    {
+      "concept_id": "focal_loss",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention focal loss; it uses binary cross-entropy for masks and standard losses for classification/box regression."
+    },
+    {
+      "concept_id": "compound_scaling",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not discuss compound scaling of depth, width, and resolution."
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": [
+    {
+      "concept_id": "selective_search",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention Selective Search or its aliases; it uses RPN for region proposals.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "nms",
+      "b_status": "present",
+      "b_evidence_quote": "We run the box prediction branch on these proposals, followed by non-maximum suppression [14].",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "roi_pooling",
+      "b_status": "present",
+      "b_evidence_quote": "RoIPool [12] is a standard operation for extracting a small feature map (e.g., 7×7) from each RoI.",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article describes a two-stage detector (Faster R-CNN based) and does not mention single-stage detectors.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "keypoint_detection",
+      "b_status": "present",
+      "b_evidence_quote": "We show top results in all three tracks of the COCO suite of challenges, including ... person keypoint detection.",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "backbone_darknet",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention Darknet; it uses ResNet and ResNeXt backbones.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "cascade_iou_progression",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention cascade detectors or stage-wise IoU thresholds.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "centerness",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention center-ness prediction.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "iou_loss",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention IoU loss; it uses binary cross-entropy for masks and smooth L1 for boxes.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "classical_dpm",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention Deformable Parts Model (DPM).",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention handcrafted features like HOG or SIFT; it uses deep CNN features.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    }
+  ]
+}

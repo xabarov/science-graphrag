@@ -1,0 +1,111 @@
+{
+  "generated_at_utc": "2026-04-25T20:15:18.676332+00:00",
+  "phase": "Phase 6.C",
+  "layer": "workspace_scoped_live",
+  "tag": "deepseek_phase6c",
+  "fixtures_subdir": "retrieval/workspace_scoped_live",
+  "totals": {
+    "packs": 6,
+    "a_total": 11,
+    "b_total": 10,
+    "matched": 10,
+    "matched_lexical": 10,
+    "matched_embedding": 0,
+    "unmatched_a": 1,
+    "unmatched_b": 0,
+    "promoted_to_llm_dual_validated": 6,
+    "global_match_ratio": 0.909,
+    "embedding_share_of_matches": 0.0
+  },
+  "priority_counts": {
+    "low": 6,
+    "medium": 0,
+    "high": 0
+  },
+  "results": [
+    {
+      "pack": "ws_full_anchor_free_overview",
+      "spot_check_priority": "low",
+      "spot_check_priority_rationale": "required-recall=1.00, precision=1.00",
+      "a_total": 4,
+      "b_total": 3,
+      "matched": 3,
+      "matched_lexical": 3,
+      "matched_embedding": 0,
+      "unmatched_a": 1,
+      "unmatched_b": 0,
+      "promoted_to_llm_dual_validated": true,
+      "model": "deepseek/deepseek-v3.2"
+    },
+    {
+      "pack": "ws_full_corpus_negative_unrelated",
+      "spot_check_priority": "low",
+      "spot_check_priority_rationale": "negative case: B also returned an empty expected_corpus_work_ids set",
+      "a_total": 0,
+      "b_total": 0,
+      "matched": 0,
+      "matched_lexical": 0,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 0,
+      "promoted_to_llm_dual_validated": true,
+      "model": "deepseek/deepseek-v3.2"
+    },
+    {
+      "pack": "ws_two_stage_negative_focal_loss",
+      "spot_check_priority": "low",
+      "spot_check_priority_rationale": "negative case: B also returned an empty expected_corpus_work_ids set",
+      "a_total": 0,
+      "b_total": 0,
+      "matched": 0,
+      "matched_lexical": 0,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 0,
+      "promoted_to_llm_dual_validated": true,
+      "model": "deepseek/deepseek-v3.2"
+    },
+    {
+      "pack": "ws_two_stage_proposal_evolution",
+      "spot_check_priority": "low",
+      "spot_check_priority_rationale": "required-recall=1.00, precision=1.00",
+      "a_total": 3,
+      "b_total": 3,
+      "matched": 3,
+      "matched_lexical": 3,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 0,
+      "promoted_to_llm_dual_validated": true,
+      "model": "deepseek/deepseek-v3.2"
+    },
+    {
+      "pack": "ws_yolo_negative_mask_segmentation",
+      "spot_check_priority": "low",
+      "spot_check_priority_rationale": "negative case: B also returned an empty expected_corpus_work_ids set",
+      "a_total": 0,
+      "b_total": 0,
+      "matched": 0,
+      "matched_lexical": 0,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 0,
+      "promoted_to_llm_dual_validated": true,
+      "model": "deepseek/deepseek-v3.2"
+    },
+    {
+      "pack": "ws_yolo_speed_question",
+      "spot_check_priority": "low",
+      "spot_check_priority_rationale": "required-recall=1.00, precision=1.00",
+      "a_total": 4,
+      "b_total": 4,
+      "matched": 4,
+      "matched_lexical": 4,
+      "matched_embedding": 0,
+      "unmatched_a": 0,
+      "unmatched_b": 0,
+      "promoted_to_llm_dual_validated": true,
+      "model": "deepseek/deepseek-v3.2"
+    }
+  ]
+}

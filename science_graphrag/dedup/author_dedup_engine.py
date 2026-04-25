@@ -7,11 +7,8 @@ from sqlalchemy.orm import Session
 from science_graphrag.config import Settings
 from science_graphrag.dedup.fingerprints import author_pair_fingerprint
 from science_graphrag.dedup.prompts import SYSTEM_SAME_AUTHOR, USER_SAME_AUTHOR_TEMPLATE
-from science_graphrag.ingestion.embeddings import (
-    HashEmbeddingProvider,
-    resolve_embedding_dim,
-    try_sentence_transformer,
-)
+from science_graphrag.embeddings import resolve_embedder, resolve_embedding_model_label
+from science_graphrag.ingestion.embeddings import resolve_embedding_dim
 from science_graphrag.ingestion.llm.extractor import SyncInstructorExtractor
 from science_graphrag.storage.models_orm import AuthorDedupConflict
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
@@ -70,12 +67,9 @@ def run_author_dedup_scan(
         if len(authors) < 2:
             return 0
 
-        embedder = (
-            try_sentence_transformer(settings.embedding_model)
-            if settings.embedding_model
-            else HashEmbeddingProvider()
-        )
-        dim = resolve_embedding_dim(embedding_model=settings.embedding_model)
+        embedder = resolve_embedder(settings)
+        dim = resolve_embedding_dim(settings=settings)
+        emb_label = resolve_embedding_model_label(settings)
         astore = QdrantAuthorEmbeddingStore(
             settings.qdrant_url,
             settings.qdrant_author_embeddings_collection,
@@ -91,7 +85,7 @@ def run_author_dedup_scan(
             astore.upsert_author_summary(
                 author_id=aid,
                 vector=vec,
-                embedding_model=settings.embedding_model or "hash-deterministic",
+                embedding_model=emb_label,
                 workspace_ids=[ws_id],
             )
 

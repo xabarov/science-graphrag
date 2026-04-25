@@ -90,6 +90,24 @@ class Settings(BaseSettings):
         default=None,
         description="If set, use sentence-transformers; else deterministic hash vectors.",
     )
+    openrouter_embedding_model: str | None = Field(
+        default=None,
+        description=(
+            "If set, use OpenAI-compatible POST /v1/embeddings via OpenRouter "
+            "(same credentials as MAIN_LLM_* / extraction LLM). Overrides sentence-transformers "
+            "when both are set."
+        ),
+    )
+    openrouter_embedding_dim: int = Field(
+        default=1024,
+        ge=32,
+        le=8192,
+        description="Declared vector size for Qdrant and stores before first embed() (e.g. 1024 for baai/bge-m3).",
+    )
+    openrouter_embedding_cache_root: Path = Field(
+        default=Path("./data/embeddings_cache"),
+        description="On-disk cache root for OpenRouterEmbeddingProvider (ingestion / retrieval).",
+    )
     chunk_size: int = Field(default=512)
     chunk_overlap: int = Field(default=64)
     front_matter_max_chars: int = Field(

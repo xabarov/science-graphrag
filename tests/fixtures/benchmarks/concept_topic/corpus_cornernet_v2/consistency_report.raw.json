@@ -1,0 +1,154 @@
+{
+  "labels": [
+    {
+      "concept_id": "region_proposal",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention region proposals, object proposals, RPN proposals, or candidate regions; it focuses on detecting objects as paired keypoints."
+    },
+    {
+      "concept_id": "selective_search",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention Selective Search or SS proposals; it discusses a one-stage detector without region proposals."
+    },
+    {
+      "concept_id": "anchor_based",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article explicitly avoids anchor boxes, stating it eliminates the need for anchor boxes commonly used in prior single-stage detectors."
+    },
+    {
+      "concept_id": "anchor_free",
+      "status": "present",
+      "evidence_quote": "We propose CornerNet, a new approach to object detection where we detect an object bounding box as a pair of keypoints... eliminating the need for designing a set of anchor boxes commonly used in prior single-stage detectors.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "set_prediction",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention bipartite matching, Hungarian matching, or direct set prediction; it groups corners via embeddings."
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention feature pyramids, multi-scale features, FPN, or lateral connections; it uses an hourglass network without multi-scale feature fusion for detection."
+    },
+    {
+      "concept_id": "focal_loss",
+      "status": "present",
+      "evidence_quote": "We design a variant of focal loss (Lin et al., 2017): Ldet=-1/N ...",
+      "rationale": ""
+    },
+    {
+      "concept_id": "nms",
+      "status": "present",
+      "evidence_quote": "During testing, we use a simple post-processing algorithm... We first apply non-maximal suppression (NMS) by using a 3×3 max pooling layer on the corner heatmaps.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention transformer architecture, attention encoder-decoder, or transformer object detection; it uses a convolutional hourglass network."
+    },
+    {
+      "concept_id": "roi_pooling",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention ROI pooling, RoIPool, or region-of-interest pooling; it introduces corner pooling instead."
+    },
+    {
+      "concept_id": "roi_align",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention ROIAlign or RoIAlign; it focuses on corner pooling."
+    },
+    {
+      "concept_id": "mask_branch",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention instance segmentation branch, mask prediction head, or per-instance mask; it is solely about object detection."
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "status": "present",
+      "evidence_quote": "CornerNet achieves a 42.2% AP on MS COCO, outperforming all existing one-stage detectors.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "status": "present",
+      "evidence_quote": "One-stage detectors can achieve results highly competitive with two-stage detectors (Ren et al., 2015; Girshick et al., 2014; Girshick, 2015; He et al., 2017).",
+      "rationale": ""
+    },
+    {
+      "concept_id": "keypoint_detection",
+      "status": "present",
+      "evidence_quote": "We detect an object as a pair of keypoints—the top-left corner and bottom-right corner of the bounding box.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention ResNet, residual network backbone, ResNet-50, or ResNet-101; it uses an hourglass network as the backbone."
+    },
+    {
+      "concept_id": "backbone_darknet",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention Darknet, Darknet-19, or Darknet-53; it uses an hourglass network."
+    },
+    {
+      "concept_id": "compound_scaling",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention compound scaling, joint depth-width-resolution scaling, or compound model scaling."
+    },
+    {
+      "concept_id": "cascade_iou_progression",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention cascade detector, cascade R-CNN, or stage-wise IoU threshold; it is a one-stage detector."
+    },
+    {
+      "concept_id": "centerness",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention center-ness branch, centerness, or center prediction; it predicts corners."
+    },
+    {
+      "concept_id": "iou_loss",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention IoU loss, GIoU, generalized IoU loss, or DIoU; it uses focal loss and smooth L1 loss."
+    },
+    {
+      "concept_id": "classical_dpm",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention Deformable Parts Model (DPM) or deformable part-based model; it is based on deep convolutional networks."
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention handcrafted features like HOG, SIFT, or SURF; it uses convolutional neural networks."
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "status": "present",
+      "evidence_quote": "We use Adam to optimize the full training loss: L = Ldet + αLpull + βLpush + γLoff",
+      "rationale": ""
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "status": "present",
+      "evidence_quote": "We evaluate CornerNet on the very challenging MS COCO dataset (Lin et al., 2014).",
+      "rationale": ""
+    }
+  ]
+}

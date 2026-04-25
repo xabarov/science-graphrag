@@ -12,15 +12,17 @@ from science_graphrag.agent.tools.summarize_workspace import (
     _make_summarize_workspace_tool,
 )
 from science_graphrag.api.deps import StoreRegistry
+from science_graphrag.config import get_settings
 
 
 def build_retrieval_tools(stores: StoreRegistry) -> list[BaseTool]:
     """Tools for retrieval specialist node."""
+    settings = get_settings()
     return [
         _make_idea_search_tool(
             stores.qdrant_chunks,
             stores.qdrant_works,
-            embedding_model=None,
+            settings=settings,
         ),
         _make_summarize_workspace_tool(stores.neo4j),
     ]

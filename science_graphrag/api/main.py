@@ -37,6 +37,7 @@ from science_graphrag.api.workspace_dedup import router as workspace_dedup_route
 from science_graphrag.api.workspace_graph import router as workspace_graph_router
 from science_graphrag.api.workspaces import router as workspaces_router
 from science_graphrag.config import get_settings
+from science_graphrag.ingestion.embeddings import resolve_embedding_dim
 from science_graphrag.observability.phoenix_tracer import init_tracer_provider
 from science_graphrag.storage.qdrant_store import ensure_entity_dedup_collections
 
@@ -48,8 +49,10 @@ async def _app_lifespan(app: FastAPI):
     settings = get_settings()
     _registry(settings).bootstrap()
     app.state.stores = init_store_registry(settings)
+    _dim = resolve_embedding_dim(settings=settings)
     ensure_entity_dedup_collections(
         QdrantClient(url=settings.qdrant_url, check_compatibility=False),
+        vector_dim=_dim,
     )
     try:
         yield
@@ -139,7 +142,7 @@ def idea_search(
     tool = IdeaSearchTool(
         stores.qdrant_chunks,
         work_store=stores.qdrant_works,
-        embedding_model=settings.embedding_model,
+        settings=settings,
     )
     res = tool.run(
         q=q,

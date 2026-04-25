@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "pack_id": "ha_iou_loss_quality",
+  "pack_path": "tests/fixtures/benchmarks/retrieval/hybrid_ablation_v2/ha_iou_loss_quality",
+  "layer": "hybrid_ablation_v2",
+  "generated_at_utc": "2026-04-25T20:11:09.480937+00:00",
+  "spot_check_priority": "medium",
+  "spot_check_priority_rationale": "accuracy=0.83, f1_relevant=0.80",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/retrieval/hybrid_ablation_v2/ha_iou_loss_quality/gold.json",
+    "count": 3,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "question.txt | candidates=6",
+    "count": 2,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:7ec8665679a493e28e36576ecca67df545faca4be07a6b5f24a90666a0ff9d3a",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 293,
+      "completion": 113,
+      "total": 406
+    },
+    "latency_ms": 5049
+  },
+  "summary": {
+    "a_total": 3,
+    "b_total": 2,
+    "matched": 5,
+    "matched_lexical": 5,
+    "matched_embedding": 0,
+    "unmatched_a": 1,
+    "unmatched_b": 0,
+    "candidates_total": 6,
+    "accuracy": 0.833,
+    "metrics_relevant": {
+      "precision": 1.0,
+      "recall": 0.667,
+      "f1": 0.8,
+      "jaccard": 0.667
+    },
+    "rationale_b": "The question specifically asks for IoU-based localization loss and quality-aware classification, which are the core contributions of GFL (Generalized Focal Loss) and TOOD (Task-aligned One-stage Object Detection)."
+  },
+  "matched_pairs": [
+    {
+      "corpus_work_id": "gfl_realpdf",
+      "label": "relevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "tood_realpdf",
+      "label": "relevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "hog_human_detection_realpdf",
+      "label": "irrelevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "rcnn_realpdf",
+      "label": "irrelevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "yolov1",
+      "label": "irrelevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [
+    {
+      "corpus_work_id": "atss_realpdf",
+      "label_a": "relevant",
+      "label_b": "irrelevant"
+    }
+  ],
+  "unmatched_b": []
+}

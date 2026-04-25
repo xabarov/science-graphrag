@@ -1,0 +1,18 @@
+{
+  "clusters": [
+    {"cluster_id": "msr_us", "entity_ids": ["inst_msr_full", "inst_msr_acronym", "inst_msr_visual_computing_group"], "rationale": "All refer to Microsoft Research in the US, with the visual computing group being an internal unit."},
+    {"cluster_id": "msr_asia", "entity_ids": ["inst_msr_asia", "inst_msra_acronym"], "rationale": "Both refer to Microsoft Research Asia, a distinct lab in China."},
+    {"cluster_id": "fair_meta", "entity_ids": ["inst_fair_full", "inst_fair_acronym", "inst_meta_ai_renamed"], "rationale": "Facebook AI Research (FAIR) rebranded to Meta AI, representing the same entity."},
+    {"cluster_id": "uw", "entity_ids": ["inst_uw_full", "inst_uw_acronym"], "rationale": "University of Washington and its abbreviation UW refer to the same institution."},
+    {"cluster_id": "ai2", "entity_ids": ["inst_ai2_full", "inst_ai2_acronym"], "rationale": "Allen Institute for AI and its abbreviation AI2 refer to the same entity."},
+    {"cluster_id": "uc_berkeley", "entity_ids": ["inst_ucb_full", "inst_ucb_long_form"], "rationale": "UC Berkeley and University of California, Berkeley are the same institution."},
+    {"cluster_id": "megvii", "entity_ids": ["inst_megvii", "inst_megvii_short"], "rationale": "MEGVII Technology and Megvii refer to the same company."},
+    {"cluster_id": "ustc", "entity_ids": ["inst_ustc"], "rationale": "University of Science and Technology of China is a singleton with no matching variants."},
+    {"cluster_id": "cuhk", "entity_ids": ["inst_cuhk", "inst_cuhk_acronym"], "rationale": "Chinese University of Hong Kong and its abbreviation CUHK refer to the same institution."},
+    {"cluster_id": "uchicago", "entity_ids": ["inst_uchicago_unrelated"], "rationale": "University of Chicago is a singleton with no matching variants."}
+  ],
+  "negative_pairs": [
+    {"pair_id": "msr_us_vs_asia", "entity_ids": ["inst_msr_full", "inst_msr_asia"], "rationale": "Microsoft Research (US) and Microsoft Research Asia are distinct labs in different countries."},
+    {"pair_id": "uw_vs_uchicago", "entity_ids": ["inst_uw_full", "inst_uchicago_unrelated"], "rationale": "University of Washington and University of Chicago are different US universities with no contextual overlap."}
+  ]
+}

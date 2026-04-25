@@ -7,7 +7,8 @@ from langchain_core.tools import BaseTool, tool
 from pydantic import BaseModel, Field
 
 from science_graphrag.agent.tools.base import BaseAgentTool, ToolResult
-from science_graphrag.ingestion.embeddings import HashEmbeddingProvider, try_sentence_transformer
+from science_graphrag.config import Settings
+from science_graphrag.embeddings import resolve_embedder, resolve_embedding_model_label
 from science_graphrag.observability.spans import traced_tool_span
 from science_graphrag.observability.spans.decorators import embeddings_span
 from science_graphrag.storage.qdrant_store import QdrantChunkStore, QdrantWorkEmbeddingStore
@@ -21,20 +22,15 @@ class IdeaSearchTool(BaseAgentTool):
         chunk_store: QdrantChunkStore,
         work_store: QdrantWorkEmbeddingStore | None = None,
         *,
-        embedding_model: str | None = None,
+        settings: Settings,
     ) -> None:
         self._chunk_store = chunk_store
         self._work_store = work_store
-        self._embedding_model = embedding_model
-        self._embedder = self._build_embedder(embedding_model)
-
-    @staticmethod
-    def _build_embedder(model_name: str | None):
-        if model_name:
-            maybe = try_sentence_transformer(model_name)
-            if maybe is not None:
-                return maybe
-        return HashEmbeddingProvider()
+        self._embedder = resolve_embedder(settings)
+        span_label = resolve_embedding_model_label(settings)
+        if not settings.openrouter_embedding_model and not settings.embedding_model:
+            span_label = "hash-deterministic"
+        self._span_model_label = span_label
 
     def run(
         self,
@@ -52,7 +48,7 @@ class IdeaSearchTool(BaseAgentTool):
             k = max(1, min(int(top_k), 24))
             with embeddings_span(
                 "embedding.agent.idea_search",
-                attributes={"embedding.model_name": self._embedding_model or "hash_embedding"},
+                attributes={"embedding.model_name": self._span_model_label},
             ):
                 qv = self._embedder.embed([q])
             if isinstance(qv, np.ndarray):
@@ -106,11 +102,9 @@ def _make_idea_search_tool(
     chunk_store: QdrantChunkStore,
     work_store: QdrantWorkEmbeddingStore | None,
     *,
-    embedding_model: str | None,
+    settings: Settings,
 ) -> BaseTool:
-    runtime_tool = IdeaSearchTool(
-        chunk_store, work_store=work_store, embedding_model=embedding_model
-    )
+    runtime_tool = IdeaSearchTool(chunk_store, work_store=work_store, settings=settings)
 
     @tool("idea_search", args_schema=IdeaSearchArgs, return_direct=False)
     def idea_search_tool(

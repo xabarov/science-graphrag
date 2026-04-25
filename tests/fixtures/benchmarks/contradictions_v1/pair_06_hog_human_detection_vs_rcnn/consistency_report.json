@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "pack_id": "contradictions_v1/pair_06_hog_human_detection_vs_rcnn",
+  "pack_path": "tests/fixtures/benchmarks/contradictions_v1/pair_06_hog_human_detection_vs_rcnn",
+  "layer": "contradictions_v1",
+  "generated_at_utc": "2026-04-25T19:47:31.914435+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "B confirmed contradiction but contradiction_type differs from gold",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/contradictions_v1/pair_06_hog_human_detection_vs_rcnn/gold.json",
+    "count": 1,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article_a.md + article_b.md (paired)",
+    "count": 1,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:20c089687e6e0caedf49eca88ec2353bc966b0261bd8a453ed074b56dd653c17",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 17058,
+      "completion": 220,
+      "total": 17278
+    },
+    "latency_ms": 13210
+  },
+  "summary": {
+    "a_total": 1,
+    "b_total": 1,
+    "matched": 1,
+    "matched_lexical": 1,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "field_agreements": {
+      "contradiction_type": {
+        "agreed": 0,
+        "disagreed": 1
+      },
+      "severity": {
+        "agreed": 0,
+        "disagreed": 1
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "pair_id": "c06_handcrafted_vs_learned_features",
+      "match_score": 0.156,
+      "match_source": "lexical",
+      "claim_a_score": 0.156,
+      "claim_b_score": 0.333,
+      "field_disagreements": [
+        {
+          "field": "contradiction_type",
+          "a": "classical_vs_deep",
+          "b": "era_shift"
+        },
+        {
+          "field": "severity",
+          "a": "direct",
+          "b": "nuanced"
+        }
+      ],
+      "a_claim_a_text": "Histograms of oriented gradients capture the edge structure that is sufficient for accurate human and object detection.",
+      "b_claim_a_text": "HOG features with a linear SVM are highly effective for human detection, outperforming other feature sets including wavelets and PCA-SIFT.",
+      "a_claim_b_text": "Learned convolutional features substantially outperform handcrafted feature representations such as HOG and DPM on object detection.",
+      "b_claim_b_text": "CNN-based features (R-CNN) dramatically outperform HOG-like features for object detection, achieving a large improvement in mAP on PASCAL VOC."
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": []
+}

@@ -45,7 +45,7 @@ def init_store_registry(settings: Settings) -> StoreRegistry:
     global _registry
     if _registry is not None:
         return _registry
-    dim = resolve_embedding_dim(embedding_model=settings.embedding_model)
+    dim = resolve_embedding_dim(settings=settings)
     _registry = StoreRegistry(
         neo4j=Neo4jGraphStore(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password),
         qdrant_chunks=QdrantChunkStore(

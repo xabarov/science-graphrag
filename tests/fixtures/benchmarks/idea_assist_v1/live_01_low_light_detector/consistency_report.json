@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "pack_id": "idea_assist_v1/live_01_low_light_detector",
+  "pack_path": "tests/fixtures/benchmarks/idea_assist_v1/live_01_low_light_detector",
+  "layer": "idea_assist_live",
+  "generated_at_utc": "2026-04-25T19:46:19.734268+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "low_relevance_in_pool=2, pool=insufficient",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/idea_assist_v1/live_01_low_light_detector/gold.json",
+    "count": 5,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_reviewer",
+    "source": "gold fixture review (not output generation)",
+    "count": 5,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:b90145e93b8080511809d7b8a4a617501ef45b0f1f6282794244c0d84cf9a619",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 865,
+      "completion": 463,
+      "total": 1328
+    },
+    "latency_ms": 15874
+  },
+  "summary": {
+    "a_total": 5,
+    "b_total": 5,
+    "matched": 5,
+    "matched_lexical": 5,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "review": {
+      "pool_sufficiency": "insufficient",
+      "pool_sufficiency_rationale": "The pool lacks any claims directly about low-light robustness, data augmentation for low-light, or performance on commodity GPUs like Jetson Nano.",
+      "forbidden_substrings_quality": "appropriate",
+      "forbidden_substrings_rationale": "The forbidden phrases are specific, well-known definitions that should be paraphrased, aligning with the goal of avoiding verbatim copying.",
+      "reference_hypothesis_quality": "plausible",
+      "reference_hypothesis_rationale": "The hypothesis logically combines mentioned techniques (focal loss, data augmentation) with a specific low-light and speed target.",
+      "overall_assessment": "needs_revision",
+      "issues": [
+        "Pool lacks direct evidence on low-light robustness or augmentation.",
+        "Pool does not contain claims about performance on target hardware (Jetson Nano)."
+      ]
+    }
+  },
+  "matched_pairs": [
+    {
+      "claim_id": "yolov1_speed_45_155_fps",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "medium",
+      "b_rationale": "It provides baseline speed metrics relevant to the FPS target but does not address low-light conditions.",
+      "field_disagreements": []
+    },
+    {
+      "claim_id": "yolox_l_50ap_v100_speed",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "medium",
+      "b_rationale": "It offers speed and accuracy data for a modern YOLO variant, which is relevant to the performance aspect, but lacks low-light context.",
+      "field_disagreements": []
+    },
+    {
+      "claim_id": "yolov1_localization_error_negative",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "low",
+      "b_rationale": "It discusses a general YOLO weakness not specifically tied to low-light robustness.",
+      "field_disagreements": [
+        {
+          "field": "relevance",
+          "a": "implicit_high",
+          "b": "low"
+        }
+      ]
+    },
+    {
+      "claim_id": "retinanet_focal_loss_definition",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "medium",
+      "b_rationale": "It explains focal loss, which is referenced in the hypothesis for handling class imbalance, but not directly linked to low-light.",
+      "field_disagreements": []
+    },
+    {
+      "claim_id": "yolov3_strict_iou_underperform_negative",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "low",
+      "b_rationale": "It compares YOLOv3 to RetinaNet on general performance, not under low-light conditions.",
+      "field_disagreements": [
+        {
+          "field": "relevance",
+          "a": "implicit_high",
+          "b": "low"
+        }
+      ]
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": []
+}

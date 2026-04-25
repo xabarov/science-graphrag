@@ -135,6 +135,61 @@ Planned structural work for Python packages under this repo (not day-to-day lint
   - **Optional second model pass:** `anthropic/claude-sonnet-4.6` или `moonshotai/kimi-k2.6` как third-party reference на тех же 20 packs; подсветит pack'и где deepseek и claude расходятся (более достоверный сигнал чем single-model).
 - **Raised:** 2026-04-25 → **DONE (6.B):** 2026-04-25.
 
+### [DONE] Corpus Gold Pack v1 — Phase 6.D (embedding cascade matcher с baai/bge-m3) — 2026-04-25
+- **Area:** `science_graphrag/embeddings/{__init__.py, openrouter_provider.py}`, `scripts/dual_validate/{matcher.py, embedding_scorer.py, extractors/base.py, extractors/claims_v2.py}`, `scripts/dual_extract_validate.py`, `tests/test_dual_extract_validate.py`, `eval/dual_validate/claims_v2_bge_m3_summary.json`, `docs/adr/021-openrouter-bge-m3-embeddings.md`
+- **What landed:**
+  - **Reusable provider** `OpenRouterEmbeddingProvider` — sync OpenAI SDK + per-text JSON cache (`eval/dual_validate/embeddings_cache/<model_slug>/`), batching до 64, retry на `RateLimitError/APIError`. Готов к использованию из ingestion (см. ADR-021).
+  - **Cascade matcher** в `scripts/dual_validate/matcher.py`: `lexical ≥ 0.50` → lex без вызова, иначе `embedding ≥ 0.75 AND > lex` → embedding, иначе fallback к lexical с `min_score=0.35`. `Pair.score_source ∈ {"lexical", "embedding"}` для трассировки.
+  - **CLI:** `--with-embeddings --embedding-model baai/bge-m3 --embedding-cache-root eval/.../cache --promote-validation-status` (последний — идемпотентный апдейт `meta.validation_status: draft → llm_dual_validated` для priority∈{low,medium} с записью в `validation_history`).
+  - **Re-run всех 20 claims packs** через `--rebuild-from-raw --with-embeddings` (zero new tokens): recall **50.6% → 58.8%** (lex=28, emb=22). Priority: 0 low / 2 medium / 18 high (vs 0/1/19 в Phase 6.B). **Auto-promoted:** `corpus_centernet_v2`, `corpus_detr_v2`. Сводка `eval/dual_validate/claims_v2_bge_m3_summary.json`.
+  - **Honest assessment:** прирост скромнее прогноза — DeepSeek extractor B часто извлекает claims из других параграфов или делает другую декомпозицию. Это **structural disagreements**, embedding similarity их не закрывает.
+  - **ADR-021** `docs/adr/021-openrouter-bge-m3-embeddings.md` — план миграции production Qdrant с hash-fallback (384-dim) на bge-m3 (1024-dim). Отдельная сессия (см. open entry ниже).
+  - Tests 18/18, pylint 9.68/10.
+- **Raised:** 2026-04-25 → **DONE (6.D):** 2026-04-25.
+
+### [DONE] Corpus Gold Pack v1 — Phase 6.C (per-layer extractors, 8/8 done) — 2026-04-25
+- **Area:** `scripts/dual_validate/extractors/` (12 extractor классов: claims_v2, concept_topic_v2, contradictions_v1, idea_assist_live, dedup_v1×5, retrieval_v1×3, agent_tools_live), `scripts/dual_validate/aggregate_summary.py`, `tests/test_dual_extract_validate.py`, `eval/dual_validate/*_deepseek_summary.json` (12 summaries)
+- **What landed (free-text extractors, 3):**
+  - `ConceptTopicV2Extractor` — closed-set diff против 25 frozen concepts. Полный прогон 10 packs × deepseek: 138/138 matched, **2 promoted** (`mask_rcnn_v2`, `ssd_v2`), 8 high из-за status flips (B нашёл упоминания концептов в related-work, которые человек пропустил).
+  - `ContradictionsV1Extractor` — per-pair бинарная проверка + diff `contradiction_type`/`severity` + claim text similarity (lex+emb cascade). Полный прогон 7 pairs × deepseek + bge-m3: 6/7 matched, **embedding cascade сработал в 2/6 (33%)** — реальная иллюстрация ценности bge-m3. **4 promoted** (2 low + 2 medium), 3 high (B нашёл другую плоскость противоречия).
+  - `IdeaAssistLiveExtractor` — необычный: B-reviewer оценивает gold-pool на адекватность. **1 promoted** (`live_02_aerial`), 3 high.
+- **What landed (dedup × 5):**
+  - `DedupExtractorBase` (≈300 строк) + `DedupAuthorsV1`/`Institutions`/`Venues`/`Methods`/`Datasets` extractors. Один LLM call per layer (≤4K tokens, всего 5 calls на все 5 packs ~1.5 мин).
+  - **ARI metric** через `_pair_counting_metrics` (Hubert-Arabie). Domain-hint в prompt'ах учитывает специфику каждого типа (initial-only formов в авторах, re-branding в инстит-ях, slug variants в methods).
+  - Результаты: ARI **0.88-1.00** (authors=1.00, venues=1.00, methods=0.97, institutions=0.95, datasets=0.88). **Все 5 promoted** (medium из-за частичного покрытия `negative_pairs` — DeepSeek нашёл 3 дополнительных must-not-merge constraint в methods, 1 в institutions).
+- **What landed (retrieval × 3):**
+  - `WorkspaceScopedLiveExtractor` — B классифицирует workspace papers как relevant/forbidden. **6/6 promoted, all low** (3 positive perfect, 3 negative cases с правильным empty list через special-case логику).
+  - `HybridAblationV2Extractor` — B как retrieval-judge классифицирует candidate set. **7/8 promoted** (4 low + 3 medium), 1 high (`ha_two_stage_rpn_evolution` — B пропустил классические RPN-precursors).
+  - `MultihopV2Extractor` — для `ordered_chain` Kendall-style order correctness, для `unordered_set` — Jaccard. **3 chain perfect (3/3 promoted, F1=1.0)**, 2 unordered_set high (`mh_authors_*` — B вернул empty list, `mh_datasets_*` — slug-vs-canonical disagreement).
+- **What landed (agent_tools_live):**
+  - `AgentToolsLiveExtractor` — focus на 6 `live_*` cases. Tool-required-recall + works/methods Jaccard + answer token Jaccard. **3/6 promoted** (1 low + 2 medium + 3 high). Реальный сигнал: B на `live_03` предложил 4 alternative tool sequences (`cypher_query`, `idea_search`, `entity_search`, `cite_works`) вместо одного `vector_search` — gold слишком узкий.
+- **Shared infra:**
+  - **Lenient JSON parser** `parse_json_object_lenient` — применён ко всем 12 extractor'ам.
+  - **Aggregator** `scripts/dual_validate/aggregate_summary.py` — single-pack mode для dedup + multi-pack для всех остальных.
+  - **CATALOG.md inventory loader** в `retrieval_v1.py` — парсит markdown-таблицу с 35 papers (title + year), кэшируется.
+  - **Special negative-case логика** для retrieval/agent_tools_live (a_total=0 + b_empty + no boundary leak → low priority).
+- **Итог Phase 6.C:** **51 packs прогнано → 31 auto-promoted в `llm_dual_validated`** (60.8%). Вместе с Phase 6.B/D: **71 total → 33 promoted, 38 high-priority очередь**. Tests 44/44, pylint 9.59/10 (выше CI 7.0).
+- **Raised:** 2026-04-25 → **PARTIAL:** 2026-04-25 → **DONE:** 2026-04-25.
+
+### [OPEN] Refactor `scripts/dual_validate/extractors/` — extract common base patterns
+- **Area:** `scripts/dual_validate/extractors/{base.py, claims_v2.py, concept_topic_v2.py, contradictions_v1.py, idea_assist_live.py}`
+- **Issue:** pylint R0801 (`duplicate-code`) флагает 3 повторяющихся блока в 4 extractor'ах: (а) JSON parsing wrapper (теперь решено через `parse_json_object_lenient`, но осталась оболочка `try/except → ValueError("extractor B (...): ...")`), (б) `ExtractorInfo` construction для extractor_b с одинаковыми полями provenance, (в) `summary` dict с `matched_lexical`/`matched_embedding`/`unmatched_*`. Каждый новый extractor добавляет ~30 lines дублирующегося скаффолдинга.
+- **Proposal:** добавить в `ExtractorBase`:
+  - `_safe_parse(self, raw: str, layer_label: str) -> Any` — обёртка над `parse_json_object_lenient` с layer prefix в ошибке;
+  - `_extractor_b_info(self, run, *, role, source) -> ExtractorInfo` — собирает provenance из `run` или возвращает dry-run заглушку;
+  - `_summary_skeleton(self, *, a_total, b_total, matched_pairs, unmatched_a, unmatched_b, embedding_used: bool) -> dict` — стандартный summary с opt-in полями (review block, field_agreements);
+  - `_safe_relative_paths(self, pack_dir) -> tuple[Path, Path]` — общий resolver pack/gold relative path (сейчас одинаковый try/except в 3 файлах).
+- **Acceptance:** pylint без R0801 на всех 4 extractor'ах; каждый extractor ≤180 LoC (сейчас claims_v2 = 280, concept_topic_v2 = 270, contradictions_v1 = 290, idea_assist_live = 320); добавить новый extractor (один из 5 pending) ≤120 LoC скаффолдинга на класс.
+- **Raised:** 2026-04-25 (Phase 6.C session)
+
+### [OPEN] Switch Qdrant production embeddings to bge-m3 (ADR-021)
+- **Area:** `science_graphrag/ingestion/embeddings/`, `science_graphrag/embeddings/openrouter_provider.py`, `science_graphrag/api/qdrant_client.py`, `.env`, all retrieval benchmarks
+- **Issue:** Production Qdrant сейчас использует hash-fallback embeddings (384-dim, deterministic-but-meaningless). Phase 6.D ввела `OpenRouterEmbeddingProvider` с `baai/bge-m3` (1024-dim). Нужна полная миграция: vector_size, recreate collections, reingest corpus, перепрогнать BT1-BT5.
+- **Proposal:** см. `docs/adr/021-openrouter-bge-m3-embeddings.md`. Шаги: (1) добавить `SCIENCE_GRAPHRAG_EMBEDDING_MODEL=baai/bge-m3` в `.env` и `Settings`, (2) plumb provider через `science_graphrag/ingestion/{layer1,layer2,claims}_pipeline.py` (заменить hash-fallback fallback chain), (3) drop+recreate `works`, `claims` Qdrant collections с vector_size=1024, (4) reingest всё корпуса (10-15 мин, $1-2 за embeddings), (5) rerun BT1-BT5 retrieval benchmarks, (6) update `decision_gate` thresholds если потребуется.
+- **Acceptance:** все retrieval benchmarks (workspace_scoped_live, hybrid_ablation_v2, multihop_v2, live_corpus_methods_*, judge_pilot) либо стабильны либо улучшились vs baseline; `qdrant info` показывает 1024-dim collections; `Settings.embedding_model == "baai/bge-m3"`; нет hash-fallback кода в production paths.
+- **Risks:** hard cutover (не A/B, нельзя rollback без re-ingest); outbound network dependency на OpenRouter в ingestion path (раньше было self-contained); retrieval gates могут сдвинуться.
+- **Raised:** 2026-04-25 (out of scope of Phase 6.D — отдельная сессия)
+
 
 ### [OPEN] Fix pre-existing isort/black violations in ingest_jobs and idea_workflow
 - **Area:** `science_graphrag/api/ingest_jobs.py`, `science_graphrag/agent/idea_workflow.py`

@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "pack_id": "live_01_who_introduced_focal_loss",
+  "pack_path": "tests/fixtures/benchmarks/agent_tools_v1/live_01_who_introduced_focal_loss",
+  "layer": "agent_tools_live",
+  "generated_at_utc": "2026-04-25T20:14:04.420502+00:00",
+  "spot_check_priority": "medium",
+  "spot_check_priority_rationale": "tool_req_recall=0.50, works=1.00, methods=0.50",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/agent_tools_v1/live_01_who_introduced_focal_loss/gold.json",
+    "count": 5,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "question.txt | tool_set=7",
+    "count": 5,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:163d6bdabd456d1fccafe357ceefcb29b067df8d612626edfea96b671c7bad31",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 435,
+      "completion": 116,
+      "total": 551
+    },
+    "latency_ms": 5205
+  },
+  "summary": {
+    "a_total": 5,
+    "b_total": 5,
+    "matched": 3,
+    "matched_lexical": 3,
+    "matched_embedding": 0,
+    "unmatched_a": 1,
+    "unmatched_b": 1,
+    "tool_metrics": {
+      "required_recall": 0.5,
+      "all_recall": 0.667,
+      "missing_required": [
+        "cypher_query"
+      ],
+      "extra_tools_in_b": []
+    },
+    "works_jaccard": 1.0,
+    "methods_jaccard": 0.5,
+    "answer_token_jaccard": 0.231,
+    "is_negative_case": false,
+    "behavior_agreement": true,
+    "behavior_a": "answer",
+    "behavior_b": "answer"
+  },
+  "matched_pairs": [
+    {
+      "tool_name": "vector_search",
+      "kind": "required_tool_match",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "retinanet_focal_realpdf",
+      "kind": "expected_work_match",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "method_canonical": "focal_loss",
+      "kind": "expected_method_match",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [
+    {
+      "tool_name": "cypher_query",
+      "kind": "required_tool_missing_in_b"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "method_canonical": "retinanet",
+      "kind": "extra_method_in_b"
+    }
+  ]
+}

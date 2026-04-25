@@ -1,0 +1,5 @@
+{
+  "expected_corpus_work_ids": [],
+  "would_violate_workspace_with": ["retinanet_focal_realpdf"],
+  "rationale": "Focal loss was introduced in the RetinaNet paper, which is out-of-scope, while all workspace papers are from the R-CNN family and do not introduce focal loss."
+}

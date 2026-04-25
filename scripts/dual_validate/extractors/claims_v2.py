@@ -21,7 +21,11 @@ from scripts.dual_validate.consistency_report import (
     ConsistencyReport,
     ExtractorInfo,
 )
-from scripts.dual_validate.extractors.base import ExtractorBase, ExtractorRunOutput
+from scripts.dual_validate.extractors.base import (
+    ExtractorBase,
+    ExtractorRunOutput,
+    parse_json_object_lenient,
+)
 from scripts.dual_validate.llm_client import LLMCallSpec
 from scripts.dual_validate.matcher import (
     EmbeddingScorerProtocol,
@@ -112,9 +116,9 @@ class ClaimsV2Extractor(ExtractorBase):
 
     def parse_response(self, raw_response: str) -> list[dict]:
         try:
-            obj = json.loads(raw_response)
-        except json.JSONDecodeError as exc:
-            raise ValueError(f"extractor B returned non-JSON content: {exc}") from exc
+            obj = parse_json_object_lenient(raw_response)
+        except ValueError as exc:
+            raise ValueError(f"extractor B (claims_v2): {exc}") from exc
         claims_raw = obj.get("claims") if isinstance(obj, dict) else obj
         if not isinstance(claims_raw, list):
             raise ValueError("extractor B response: missing/invalid 'claims' list")

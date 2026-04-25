@@ -1,0 +1,5 @@
+{
+  "relevant_corpus_work_ids": ["retinanet_focal_realpdf"],
+  "irrelevant_corpus_work_ids": ["gfl_realpdf", "rcnn_realpdf", "ssd_realpdf", "yolov1"],
+  "rationale": "Only the RetinaNet paper explicitly introduces and applies focal loss to address extreme foreground-background class imbalance in dense object detection."
+}

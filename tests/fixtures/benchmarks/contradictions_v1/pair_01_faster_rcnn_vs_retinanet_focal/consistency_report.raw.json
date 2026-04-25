@@ -1,0 +1,10 @@
+{
+  "contradiction_found": true,
+  "claim_a_text": "Two-stage detectors like Faster R-CNN are state-of-the-art and achieve high accuracy by using region proposals to filter out most background samples.",
+  "claim_b_text": "One-stage detectors like RetinaNet can match or surpass the accuracy of two-stage detectors when trained with focal loss, eliminating the accuracy gap.",
+  "claim_a_quote": "State-of-the-art object detection networks depend on region proposal algorithms to hypothesize object locations.",
+  "claim_b_quote": "Our results show that when trained with the focal loss, RetinaNet is able to match the speed of previous one-stage detectors while surpassing the accuracy of all existing state-of-the-art two-stage detectors.",
+  "contradiction_type": "era_shift",
+  "severity": "nuanced",
+  "rationale": "ARTICLE_A presents the two-stage Faster R-CNN as the state-of-the-art foundation for high accuracy, while ARTICLE_B claims that its one-stage RetinaNet with focal loss surpasses the accuracy of all existing two-stage detectors, indicating a shift in the leading paradigm."
+}

@@ -1,0 +1,25 @@
+{
+  "clusters": [
+    {"cluster_id": "rcnn", "entity_ids": ["method_rcnn_canonical", "method_rcnn_expansion", "method_rcnn_no_hyphen"], "rationale": "Same method (R-CNN) with typographic/expansion variants, introduced in the same work."},
+    {"cluster_id": "fast_rcnn", "entity_ids": ["method_fast_rcnn"], "rationale": "Singleton cluster for Fast R-CNN, a distinct method from R-CNN."},
+    {"cluster_id": "faster_rcnn", "entity_ids": ["method_faster_rcnn", "method_faster_rcnn_no_hyphen"], "rationale": "Same method (Faster R-CNN) with typographic variant, introduced in the same work."},
+    {"cluster_id": "mask_rcnn", "entity_ids": ["method_mask_rcnn"], "rationale": "Singleton cluster for Mask R-CNN, a distinct method for instance segmentation."},
+    {"cluster_id": "fpn", "entity_ids": ["method_fpn_canonical", "method_fpn_expansion", "method_fpn_plural"], "rationale": "Same method (Feature Pyramid Network) with acronym and expansion variants, introduced in the same work."},
+    {"cluster_id": "ssd", "entity_ids": ["method_ssd_canonical", "method_ssd_expansion", "method_ssd_short_expansion"], "rationale": "Same method (SSD) with acronym and expansion variants, introduced in the same work."},
+    {"cluster_id": "detr", "entity_ids": ["method_detr_canonical", "method_detr_expansion", "method_detr_no_caps"], "rationale": "Same method (DETR) with acronym and expansion variants, introduced in the same work."},
+    {"cluster_id": "yolov1", "entity_ids": ["method_yolov1", "method_yolo_no_version", "method_yolo_expansion"], "rationale": "Same method (YOLOv1) with version, acronym, and expansion variants, introduced in the same work."},
+    {"cluster_id": "yolov2", "entity_ids": ["method_yolov2", "method_yolo9000"], "rationale": "Same method family introduced in the same work (YOLOv2 paper), with YOLO9000 as a variant sharing the same core."},
+    {"cluster_id": "yolov3", "entity_ids": ["method_yolov3"], "rationale": "Singleton cluster for YOLOv3, a distinct method introduced in a different work."},
+    {"cluster_id": "focal_loss", "entity_ids": ["method_focal_loss", "method_focal_loss_lower"], "rationale": "Same method (Focal Loss) with case variant, introduced in the same work."},
+    {"cluster_id": "generalized_focal_loss", "entity_ids": ["method_gfl_distinct_loss"], "rationale": "Singleton cluster for Generalized Focal Loss, a distinct method from Focal Loss."}
+  ],
+  "negative_pairs": [
+    {"pair_id": "rcnn_vs_fast_rcnn", "entity_ids": ["method_rcnn_canonical", "method_fast_rcnn"], "rationale": "R-CNN and Fast R-CNN are different methods with distinct work IDs."},
+    {"pair_id": "rcnn_vs_faster_rcnn", "entity_ids": ["method_rcnn_canonical", "method_faster_rcnn"], "rationale": "R-CNN and Faster R-CNN are different methods with distinct work IDs."},
+    {"pair_id": "rcnn_vs_mask_rcnn", "entity_ids": ["method_rcnn_canonical", "method_mask_rcnn"], "rationale": "R-CNN and Mask R-CNN are different methods with distinct work IDs and tasks."},
+    {"pair_id": "fast_rcnn_vs_faster_rcnn", "entity_ids": ["method_fast_rcnn", "method_faster_rcnn"], "rationale": "Fast R-CNN and Faster R-CNN are different methods with distinct work IDs."},
+    {"pair_id": "fast_rcnn_vs_mask_rcnn", "entity_ids": ["method_fast_rcnn", "method_mask_rcnn"], "rationale": "Fast R-CNN and Mask R-CNN are different methods with distinct work IDs and tasks."},
+    {"pair_id": "faster_rcnn_vs_mask_rcnn", "entity_ids": ["method_faster_rcnn", "method_mask_rcnn"], "rationale": "Faster R-CNN and Mask R-CNN are different methods with distinct work IDs and tasks."},
+    {"pair_id": "focal_loss_vs_generalized_focal_loss", "entity_ids": ["method_focal_loss", "method_gfl_distinct_loss"], "rationale": "Focal Loss and Generalized Focal Loss are different loss formulations with distinct work IDs."}
+  ]
+}

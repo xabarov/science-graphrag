@@ -1,0 +1,5 @@
+{
+  "expected_corpus_work_ids": ["yolov1", "yolov2_realpdf", "yolov3_realpdf", "yolox_realpdf"],
+  "would_violate_workspace_with": [],
+  "rationale": "The question specifically asks for the real-time speed (FPS) reported by YOLO papers, and all four provided workspace papers are core YOLO series works that would contain such information."
+}

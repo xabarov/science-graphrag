@@ -1,0 +1,154 @@
+{
+  "labels": [
+    {
+      "concept_id": "region_proposal",
+      "status": "present",
+      "evidence_quote": "The first stage, called a Region Proposal Network (RPN), proposes candidate object bounding boxes.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "selective_search",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention Selective Search or its aliases; it uses RPN for region proposals."
+    },
+    {
+      "concept_id": "anchor_based",
+      "status": "present",
+      "evidence_quote": "The RPN anchors span 5 scales and 3 aspect ratios, following [27].",
+      "rationale": ""
+    },
+    {
+      "concept_id": "anchor_free",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not discuss anchor-free detection; it uses anchor-based RPN."
+    },
+    {
+      "concept_id": "set_prediction",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention bipartite matching or direct set prediction; it uses a two-stage detector with RPN and RoI classification."
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "status": "present",
+      "evidence_quote": "We also explore another more effective backbone recently proposed by Lin et al. [27], called a Feature Pyramid Network (FPN).",
+      "rationale": ""
+    },
+    {
+      "concept_id": "focal_loss",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention focal loss; it uses binary cross-entropy for masks and standard losses for classification/box regression."
+    },
+    {
+      "concept_id": "nms",
+      "status": "present",
+      "evidence_quote": "We run the box prediction branch on these proposals, followed by non-maximum suppression [14].",
+      "rationale": ""
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention transformer architecture; it uses CNN-based Faster R-CNN with FCN mask branch."
+    },
+    {
+      "concept_id": "roi_pooling",
+      "status": "present",
+      "evidence_quote": "RoIPool [12] is a standard operation for extracting a small feature map (e.g., 7×7) from each RoI.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "roi_align",
+      "status": "present",
+      "evidence_quote": "To fix the misalignment, we propose a simple, quantization-free layer, called RoIAlign, that faithfully preserves exact spatial locations.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "mask_branch",
+      "status": "present",
+      "evidence_quote": "Mask R-CNN extends Faster R-CNN by adding a branch for predicting segmentation masks on each Region of Interest (RoI).",
+      "rationale": ""
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article describes a two-stage detector (Faster R-CNN based) and does not mention single-stage detectors."
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "status": "present",
+      "evidence_quote": "Mask R-CNN adopts the same two-stage procedure, with an identical first stage (which is RPN).",
+      "rationale": ""
+    },
+    {
+      "concept_id": "keypoint_detection",
+      "status": "present",
+      "evidence_quote": "We show top results in all three tracks of the COCO suite of challenges, including ... person keypoint detection.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "status": "present",
+      "evidence_quote": "We evaluate ResNet [19] and ResNeXt [45] networks of depth 50 or 101 layers.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "backbone_darknet",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention Darknet; it uses ResNet and ResNeXt backbones."
+    },
+    {
+      "concept_id": "compound_scaling",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not discuss compound scaling of depth, width, and resolution."
+    },
+    {
+      "concept_id": "cascade_iou_progression",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention cascade detectors or stage-wise IoU thresholds."
+    },
+    {
+      "concept_id": "centerness",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention center-ness prediction."
+    },
+    {
+      "concept_id": "iou_loss",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention IoU loss; it uses binary cross-entropy for masks and smooth L1 for boxes."
+    },
+    {
+      "concept_id": "classical_dpm",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention Deformable Parts Model (DPM)."
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention handcrafted features like HOG or SIFT; it uses deep CNN features."
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "status": "present",
+      "evidence_quote": "Formally, during training, we define a multi-task loss on each sampled RoI as L = Lcls + Lbox + Lmask.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "status": "present",
+      "evidence_quote": "We show top results in all three tracks of the COCO suite of challenges, including instance segmentation, bounding-box object detection, and person keypoint detection.",
+      "rationale": ""
+    }
+  ]
+}

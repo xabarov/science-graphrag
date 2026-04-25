@@ -1,0 +1,5 @@
+{
+  "expected_corpus_work_ids": [],
+  "would_violate_workspace_with": ["mask_rcnn_realpdf"],
+  "rationale": "The question asks about a mask prediction branch for instance segmentation, which is a feature introduced by Mask R-CNN, an out-of-scope paper, and no paper in the YOLO-focused workspace introduces this."
+}
