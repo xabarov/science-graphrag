@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 # API and CLI image (Python only). Static React UI is served by the compose `web` service.
 # Rebuild only this image when backend changes: docker compose build api
 FROM python:3.12-slim-bookworm
@@ -10,14 +11,18 @@ WORKDIR /app
 
 COPY pyproject.toml README.md LICENSE ./
 COPY science_graphrag ./science_graphrag
-COPY eval ./eval
-COPY tests/fixtures ./tests/fixtures
 
 # python-multipart is required for multipart routes (e.g. workspace document upload); keep explicit so
 # `pip install .` cache layers cannot accidentally omit it on older pyproject snapshots.
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir "python-multipart>=0.0.9" \
-    && pip install --no-cache-dir .
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --upgrade pip \
+    && pip install "python-multipart>=0.0.9" \
+    && pip install .
+
+# Keep non-runtime directories after dependency install so edits there
+# do not invalidate the expensive `pip install` layer.
+COPY eval ./eval
+COPY tests/fixtures ./tests/fixtures
 
 EXPOSE 8787
 
