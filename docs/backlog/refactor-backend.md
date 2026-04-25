@@ -10,6 +10,25 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 
 ## Queue
 
+### [OPEN] Migrate dual_validate extractors to instructor (Phase 7 task)
+- **Area:** `scripts/dual_validate/extractors/*.py` (12 extractor'ов), `scripts/dual_validate/llm_client.py` (станет transport-layer), новый `scripts/dual_validate/instructor_client.py`, новый `science_graphrag/llm/instructor_factory.py` (общий backend с `science_graphrag/ingestion/llm/extractor.py:SyncInstructorExtractor`).
+- **Issue:** в Phase 6.E мы потеряли несколько packs из-за malformed JSON от Kimi/Claude/v4-pro (truncated, unescaped quotes). Сейчас каждый из 12 extractor'ов вручную дублирует: (a) JSON-схему в prompt, (b) `parse_json_object_lenient` парсинг, (c) post-hoc валидацию полей через `_VALID_TYPES`/`_VALID_POLARITIES`/etc. **`instructor>=1.7.0` уже в deps** и используется в production ingestion (`SyncInstructorExtractor` с `instructor.Maybe`, mode-selection для OpenRouter Qwen3.5).
+- **Proposal:**
+  - Каждый extractor получает Pydantic `response_model` (Literal-типы вместо string sets, `Field(min_length=...)` вместо ручных проверок).
+  - `instructor.Maybe[Model]` с `max_retries=1` даёт auto-retry с error feedback в prompt при validation failure → восстанавливает потерянные packs Phase 6.E без human review.
+  - Наши retry helpers (`_extract_retry_after`, `_compute_backoff`, empty-choices guard) **остаются** на transport-layer (HTTP 429/502/503), Instructor работает на application-layer (Pydantic validation). Они комплементарны.
+  - Постепенная миграция: `ExtractorBase.run_for_pack` поддерживает оба режима через атрибут `response_model: type[BaseModel] | None`.
+  - Pull common backend в `science_graphrag/llm/instructor_factory.py` (mode-selection + extra_body builder + usage extraction), которым пользуются и ingestion, и dual_validate.
+- **Acceptance:**
+  - все 12 extractor'ов имеют Pydantic `response_model`;
+  - `parse_json_object_lenient` больше не вызывается из `extractors/*` (остаётся как util для legacy raw-логов);
+  - failed Phase 6.E packs пере-проганы и либо succeed, либо имеют осмысленный validation-error в logs;
+  - tests 57+ → 70+ (новые tests на schemas + Instructor mock);
+  - дубль кода между `SyncInstructorExtractor` и dual_validate client устранён.
+- **Estimated effort:** 1-2 дня focused work; не блокирует BT2-BT12, кандидат для следующего refactor pass.
+- **Reference:** полный анализ — `docs/analysis/instructor-adoption-dual-validate-2026-04-25.md`.
+- **Raised:** 2026-04-25.
+
 ### [DONE] Corpus Gold Pack v1 — Phase 1 (dedup_5 + relations_v1.json) — 2026-04-25
 - **Area:** `tests/fixtures/benchmarks/dedup/{institutions,venues,methods,datasets}_v1/`, `tests/fixtures/corpus/relations_v1.json`
 - **Result:**

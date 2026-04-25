@@ -84,20 +84,21 @@
 
 ### 4.D — Ontology / Benchmarks / IR (серия BT)
 
-> **Контекст 2026-04-25:** см. [`ontology-benchmarks-trust-audit-2026-04-25.md`](ontology-benchmarks-trust-audit-2026-04-25.md). Wave M/N/O/P/Q/R/S отмечены `[x]` формально, но половина advisory-семей зелёная **по построению** (`--mock-runtime`, synthetic gold, substring-harness, или `Connection refused` в последнем прогоне). `decision_gate.GO` это не отражает. Серия **BT (Benchmark Trust)** превращает каждый advisory-фантом в реально измеряющий артефакт.
+> **Контекст 2026-04-25 → 2026-04-26:** см. [`ontology-benchmarks-trust-audit-2026-04-25.md`](ontology-benchmarks-trust-audit-2026-04-25.md) (§0 Snapshot — пост-Phase-6 состояние). Wave M/N/O/P/Q/R/S отмечены `[x]` формально, но половина advisory-семей зелёная **по построению на runner-level** (`--mock-runtime`, canned answers, synthetic gold, `Connection refused`). **Phase 0-6 Corpus Gold Pack v1 закрыт (2026-04-26):** для всех 8 advisory-семей построен и провалидирован 3 моделями (DeepSeek-v3.2 + DeepSeek-v4-pro + Claude-Sonnet-4.6) gold (71 packs, 35 promoted в `llm_dual/triple_validated`, 36 high — подтверждённые disagreements). **Серия BT теперь = «runners поверх готового gold»** — каждое задание 1-2 дня вместо 1-3.
 
-**Реальный статус по волнам (после Trust Audit):**
+**Реальный статус по волнам (после Trust Audit + Phase 6 closure):**
 
-| Wave | Code | Bench | Trust |
-|------|------|-------|-------|
-| M (backbone tightening + refs resolver) | done | nightly real | ✅ доверяем gates |
-| N (Concept/Topic gold) | scaffold | harness substring | ⛔ tautology (BT7) |
-| O (Claims production) | done | recall=1.0 на тривиальной gold | ⚠️ shallow (BT6) |
-| P (workspace-scoped + judge) | scaffold | canned answers + judge mean скрывает 2/5 fail | ⛔ scope=contract / ⚠️ judge (BT2 + BT5) |
-| Q (hybrid + indexes + multihop) | indexes done | hybrid synthetic / multihop broken | ⛔ phantom + broken (BT3 + BT4) |
-| R (agent tools) | endpoint done | mini=mock_runtime; judge=missing | ⛔ phantom (BT8 + BT9) |
-| S (idea-assist) | API done | mini=mock; rubric награждает мок | ⛔ phantom (BT10) |
-| T (entity dedup) | 5 pipelines coded | gold нет ни для одного типа | ⚠️ code-only (BT11) |
+| Wave | Code | Gold | Runner | Trust |
+|------|------|------|--------|-------|
+| M (backbone tightening + refs resolver) | done | — | nightly real | ✅ доверяем gates |
+| N (Concept/Topic gold) | scaffold | ✅ `concept_topic_v2` 10 packs / 138 labels (Phase 6.C) | harness substring | ⛔ tautology runner (BT7 path A или B) |
+| O (Claims production) | done | ✅ `claims_v2` 15 pilot + 5 holdout / 85 claims (Phase 6.B/D) | recall=1.0 на тривиальной gold | ⚠️ runner на старом gold (BT6 — переключить) |
+| P (workspace-scoped + judge) | scaffold | ✅ `workspace_scoped_live` 6 packs (Phase 6.C, **all promoted**) | canned answers + judge mean скрывает 2/5 fail | ⛔ runner=contract (BT2) / ⚠️ judge tightening (BT5) |
+| Q (hybrid + indexes + multihop) | indexes done | ✅ `hybrid_ablation_v2` 8 packs + `multihop_v2` 5 packs (Phase 6.C) | hybrid synthetic / multihop broken | ⛔ runners pending (BT3 + BT4) |
+| R (agent tools) | endpoint done | ✅ `agent_tools_v1/{live,multiagent_live,adversarial_cypher}` 9 packs (Phase 6.C) | mini=mock_runtime; judge=missing | ⛔ runners pending (BT8 + BT9) |
+| S (idea-assist) | API done | ✅ `idea_assist_v1/live_*` 4 packs (Phase 6.C) | mini=mock; rubric награждает мок | ⛔ runner + Hypothesis persistence pending (BT10) |
+| T (entity dedup) | 5 pipelines coded | ✅ `dedup/{authors,inst,venues,methods,datasets}_v1` 5 packs / 104 records (Phase 1, **all promoted**) | gold не подключён к runner | ⚠️ runners pending для 5 типов (BT11) |
+| — (contradictions persistence) | API возвращает payload | ✅ `contradictions_v1` 7 pairs (Phase 1) | `:CONTRADICTS` нет в graph | ⛔ persistence + bench pending (BT12) |
 
 **Открытые крупные пункты (по приоритету):**
 

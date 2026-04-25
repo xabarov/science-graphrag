@@ -1,13 +1,65 @@
 # Ontology & Benchmarks — Trust Audit & Follow-up Plan (2026-04-25)
 
-**Дата:** 2026-04-25
-**Тип:** review + new plan
-**Статус:** living doc; продолжение [`ontology-benchmarks-roadmap-2026-04-24.md`](ontology-benchmarks-roadmap-2026-04-24.md) (Wave M–T) и [`master-roadmap-and-refactor-plan-2026-04-25.md`](master-roadmap-and-refactor-plan-2026-04-25.md).
+**Дата:** 2026-04-25 (Trust Audit), последнее обновление — 2026-04-26 после Phase 6 closure
+**Тип:** review + plan (living doc)
+**Статус:** **Gold side DONE (Phase 0-6 of Corpus Gold Pack v1), runner side OPEN (BT1-BT12)**
+**Связанные документы:** [`ontology-benchmarks-roadmap-2026-04-24.md`](ontology-benchmarks-roadmap-2026-04-24.md) (Wave M–T исходный roadmap), [`master-roadmap-and-refactor-plan-2026-04-25.md`](master-roadmap-and-refactor-plan-2026-04-25.md) (мастер-план), [`corpus-gold-pack-v1-2026-04-25.md`](corpus-gold-pack-v1-2026-04-25.md) (детали gold-side работ Phase 0-6), [`instructor-adoption-dual-validate-2026-04-25.md`](instructor-adoption-dual-validate-2026-04-25.md) (план Phase 7 рефакторинга dual_validate).
 **Аналог по графу:** [`graph-readability-followup-2026-04-25.md`](graph-readability-followup-2026-04-25.md) (там — UX-аудит, тут — измерительный).
 
 ---
 
-## 1. Executive summary
+## 0. Snapshot after Gold Pack v1 (2026-04-26)
+
+> Это секция **дописана после Phase 6 closure**, чтобы не приходилось читать весь BT0-блок ниже.
+
+**Что изменилось с момента первоначального аудита (2026-04-25 утро):**
+
+- **Gold для всех 8 advisory-слоёв создан и провалидирован.** 71 packs total в `tests/fixtures/benchmarks/`, из них **35 promoted** (33 `llm_dual_validated` через DeepSeek + bge-m3 cascade в Phase 6.B/C/D + 2 `llm_triple_validated` через DeepSeek+v4-pro+Claude в Phase 6.E). Оставшиеся 36 high-priority packs — **подтверждённые** disagreements тремя независимыми моделями: single-model bias не объясняет, нужен либо human review, либо ревизия gold.
+- **Phantom-green killers заложены в самом gold-формате**: `forbidden_substrings` (idea_assist), `paraphrase verified ≤ 8-word overlap` (claims_v2), `forbidden_corpus_work_ids` (workspace_scoped), `ranked_lists_source: "runner_generated"` (hybrid_ablation_v2 — runtime обязан live retrieval), `infrastructure_required: ["neo4j", "qdrant"]` (multihop_v2 — runner обязан hard-fail без стека), `args_match.query_contains` (agent_tools — substring matchers на args), `cypher_safety_violation_count_gate: 0` + adversarial cypher case с реальным DELETE/DROP в вопросе.
+- **Триple-vote infra работает end-to-end** и выявила **4 split-decision packs** как приоритет №1 для human review (record_match=1.0 у двух из них — disagreement только на `priority` уровне, не на семантике): `claims_v2/corpus_cascade_rcnn_v2`, `contradictions_v1/pair_07_retinanet_focal_vs_efficientdet`, `agent_tools_live/live_03_yolov3_speed_paper_only`, `hybrid_ablation_v2/ha_two_stage_rpn_evolution`.
+- **Honest по-новому**: исходный диагноз «advisory_phantom_count > 0» **остаётся в силе на runner-level** — gold готов, но runners (BT2-BT12) ещё не написаны. То есть **decision_gate всё ещё врёт** (показывает GO при mock-runtime / canned answers), просто теперь у нас есть готовое gold для каждого нового runner'а.
+
+**Обновлённый светофор по доверию (на 2026-04-26):**
+
+```
+core (доверяем gates):
+  ✅ reference (yolov1 layer1 / graph / layer2)
+  ✅ layer1 nightly (30 PDF, real extraction)
+  ✅ layer2 nightly (31 cases, real extraction)
+  ✅ graph_v1 (yolov1, retinanet_focal_realpdf)
+  ⚠️ claims_production_pilot (старый gold, recall=1.0 — но trivially extractable; новый gold готов в claims_v2/holdout_v1, runner ждёт BT6)
+
+advisory с готовым gold + runner pending (8 семей, что было «фантомом»):
+  📦 retrieval workspace_scoped_live (6 packs, ВСЕ promoted) → runner BT2 ждёт
+  📦 retrieval hybrid_ablation_v2   (8 packs, 7 promoted)   → runner BT4 ждёт
+  📦 retrieval multihop_v2           (5 packs, 3 promoted)   → runner BT3 ждёт
+  📦 concept_topic_v2                (10 packs, 2 promoted)  → runner BT7 ждёт
+  📦 agent_tools_live + adversarial_cypher (9 packs, 4 promoted) → runner BT8/BT9 ждёт
+  📦 idea_assist_live                (4 packs, 1 promoted)   → runner BT10 ждёт
+  📦 dedup × 5 (authors/inst/venues/methods/datasets, 5 promoted) → runner BT11 ждёт
+  📦 contradictions_v1               (7 pairs, 4 promoted)   → runner BT12 ждёт + persistence
+
+advisory с реальным сигналом (как было):
+  ⚠️ retrieval live_corpus_mini (5 кейсов, hit_count + контракт)
+  ⚠️ retrieval judge_pilot (5 кейсов, частично failed) → tightening BT5
+
+phantom-зелёные на runner-level (ВСЁ ЕЩЁ):
+  ⛔ старые current-*.json артефакты с --mock-runtime / canned / synthetic gold
+  ⛔ multihop_mini.json с Connection refused
+  ⛔ decision_gate без trust_signal/advisory_phantom_count → BT1
+```
+
+**Что это значит для приоритизации:**
+
+1. **BT1 (honest decision_gate)** — теперь это **самый дешёвый high-leverage PR** во всей серии: у нас уже есть готовое gold для 8 семей и validated промоушены — `trust_signal` объект может ссылаться на `validation_status` из gold-пакетов. ~0.5-1 день. Закрывает «искажение» в gate напрямую, без необходимости сначала строить runners.
+2. **BT2..BT12 (real runners)** — каждый теперь **1-2 дня** вместо «1-3 дня + придумать gold», потому что gold уже валидирован. Можно делать параллельно (см. file conflict matrix).
+3. **Phase 7 (Instructor refactor)** — opportunistic, не блокирует BT-серию, см. [`instructor-adoption-dual-validate-2026-04-25.md`](instructor-adoption-dual-validate-2026-04-25.md).
+
+**Дальнейшая структура документа:** §1-§4 — исходный аудит (2026-04-25 утро), оставлен для контекста. §5 — план BT1-BT12 (BT0 в нём заменён на ссылку на закрывшую его серию Phase 0-6). §6-§9 — изменения в других документах, acceptance, ссылки.
+
+---
+
+## 1. Executive summary (исходный, 2026-04-25 утро)
 
 После прогона мастер-плана через ревью бенчмарков и онтологии получаем картину «**volume done, trust shallow**»:
 
@@ -18,6 +70,8 @@
 Поэтому план ниже не «придумываем новые волны», а вводит **семейство BT (Benchmark Trust)** — серию точечных PR-ов, каждый из которых превращает один advisory artefact из «зеленая контрактная заглушка» в «измеряет то, что заявлено».
 
 > **Главный тезис.** Сейчас декларация *«у нас 30 ночных кейсов и зелёный production claims pilot»* верна. Декларация *«у нас работают agent-tools, idea-assist, hybrid retrieval, multi-hop, workspace retrieval, concept/topic extraction»* — **не верна** в смысле «измеряется чем-то нетривиальным». Это нужно либо честно отразить в `decision_gate`, либо починить.
+
+> **Update 2026-04-26:** диагноз остался верен **на runner-level**. На gold-level — закрыто (см. §0 Snapshot выше).
 
 ---
 
@@ -162,14 +216,29 @@ advisory-фантомы (зелёные by construction):
 
 > **Принцип**: каждый BT — это маленький PR, который превращает один advisory artefact из «зелёный по конструкции» в «измеряет работу системы». В диапазоне 1–3 дня каждый.
 
-### BT0 / BT-Prep — Corpus Gold Pack v1 (готовим gold заранее)
+### BT0 / BT-Prep — Corpus Gold Pack v1 ✅ DONE (2026-04-25 → 2026-04-26)
 
-Перед серией BT2..BT12 заранее строим единый «золотой пакет» поверх существующих 35+ статей object-detection (`tests/fixtures/benchmarks/layer1/*_realpdf/`), чтобы серия BT свелась к «инструментировать готовый gold», а не «исследовать домен на лету».
+Перед серией BT2..BT12 заранее построен единый «золотой пакет» поверх существующих 35+ статей object-detection (`tests/fixtures/benchmarks/layer1/*_realpdf/`), чтобы серия BT свелась к «инструментировать готовый gold», а не «исследовать домен на лету».
 
-**Полный план:** [`corpus-gold-pack-v1-2026-04-25.md`](corpus-gold-pack-v1-2026-04-25.md). Состоит из 9 слоёв (catalog → claims_v2 + holdout → workspace_live → hybrid_v2 → multihop_v2 → agent_live + multi-agent → idea_live → concept_v2 → dedup_5 → contradictions_v1).
+**Полный план + детальные результаты:** [`corpus-gold-pack-v1-2026-04-25.md`](corpus-gold-pack-v1-2026-04-25.md) (живой документ, обновляется).
 
-**Что уже готово (Phase 0 + Phase 1 + Phase 2 + Phase 3 + Phase 4 + Phase 5, 2026-04-25):**
-- План: `docs/analysis/corpus-gold-pack-v1-2026-04-25.md` (Phase 1, 2, 3, 4 отмечены ✅).
+**Краткий итог Phase 0–6 (детали — в основной плане):**
+
+- **9 слоёв gold построены** для всех advisory-семей: catalog (35 works), claims_v2 + holdout (20 packs / 85 claims), concept_topic_v2 (10 packs / 138 labels + frozen 25 concepts), contradictions_v1 (7 pairs), workspace_scoped_live (6 cases / 3 ws), hybrid_ablation_v2 (8 cases / 50 labels), multihop_v2 (5 cases), agent_tools_live + multiagent + adversarial_cypher (9 cases), idea_assist_live (4 cases), dedup × 5 типов (5 packs / 104 records / 33 clusters / 22 negatives), relations_v1.json (502 edges).
+- **Phantom-green killers заложены в формат gold** (см. §0 Snapshot выше).
+- **3-model dual/triple-validation framework построен** (`scripts/dual_validate/`): 12 extractor'ов, embedding cascade matcher с `baai/bge-m3`, robust retry с `retry_after_seconds` mining, triple-vote consensus с conservative tie-break.
+- **71 packs total → 35 promoted** (33 `llm_dual_validated` + 2 `llm_triple_validated`); **36 high-priority** в очереди на human review (4 из них — split-decision priority №1).
+- **57/57 tests pass, pylint 9.83/10, ADR-021 (bge-m3 для Qdrant) draft, backlog Phase 7 (Instructor refactor) создан.**
+
+**Старый детальный лог Phase 0-6** (с числами по каждому extractor'у) — целиком перенесён в `corpus-gold-pack-v1-2026-04-25.md` § «Phase 6.E DONE» и далее. Здесь оставлено только саммари, чтобы аудит читался без 60-строчного нарост а.
+
+**Эффект на BT2..BT12:** каждое BT-задание теперь сводится к написанию runner'а под уже готовый и провалидированный gold (~1-2 дня каждый PR вместо «1-3 дня + придумать gold + руками валидировать»).
+
+<!-- removed: длинный bullet-список Phase 0..Phase 6.E с per-extractor числами; см. corpus-gold-pack-v1-2026-04-25.md -->
+
+<!--
+Старый якорь для редиректа из других документов: см. также §0 Snapshot выше.
+План: `docs/analysis/corpus-gold-pack-v1-2026-04-25.md` (Phase 1, 2, 3, 4 отмечены ✅).
 - JSON-схемы для всех слоёв: `docs/specs/benchmark-gold-schemas-v1.md`.
 - Каталог корпуса (skeleton, 35 работ): `tests/fixtures/corpus/{CATALOG.md, corpus_v1.json}` (`validation_status: "draft"`).
 - **Layer 8 (dedup_5 для BT11) — все 5 pack'ов:** `tests/fixtures/benchmarks/dedup/{authors,institutions,venues,methods,datasets}_v1/{gold.json, README.md}`. Итого 104 records / 33 clusters / 22 negative_pairs (включая критические `MSR vs MSRA`, `R-CNN vs Fast R-CNN vs Faster R-CNN`, `VOC 2007 vs 2012`, `COCO 2014 vs 2017`, `NeurIPS 2017 vs 2018`, `Focal Loss vs Generalized Focal Loss`).
@@ -211,8 +280,7 @@ advisory-фантомы (зелёные by construction):
 - **Robust retry в LLM client:** `_extract_retry_after` mining `retry_after_seconds` из OpenRouter metadata + `_compute_backoff` (jittered exponential, cap=30s) + `max_retries=5`. Покрывает upstream 429/502/503 от Together provider — 15/38 первых попыток v4-pro упали с rate-limit, retry с parallel=2 закрыл все 15.
 - **Total Phase 6 итог:** 71 packs total → **35 promoted** (33 от Phase 6.B/C/D `llm_dual_validated` + 2 от 6.E `llm_triple_validated`), 36 high-priority остались для human spot-check (4 из них — split-decision priority, остальные 32 — confirmed-high).
 - **Артефакты:** `eval/dual_validate/consensus/{layer}.json` (8 файлов), `tests/fixtures/benchmarks/.../consensus_report.json` (38 файлов), `tests/fixtures/benchmarks/.../consistency_report.{v4pro,claude}.json` (75 файлов). Tests 57/57 pass, pylint 9.83/10.
-
-**Эффект на BT2..BT12:** каждое BT-задание после BT0 сводится к написанию runner'а под уже готовый gold (серия PR-ов меньше и параллельных).
+-->
 
 ### Зависимости
 
@@ -230,6 +298,8 @@ flowchart LR
 ```
 
 ### BT1 — Honest `decision_gate`
+
+> **Статус:** **gold N/A (это infra-задача), runner pending.** Самый дешёвый high-leverage PR серии после Phase 6 — теперь `trust_signal` объект может прямо ссылаться на `validation_status` из существующих gold-пакетов (e.g. `llm_dual_validated`/`llm_triple_validated`/`draft`). ~0.5-1 день.
 
 **Проблема:** `decision_gate.decision = "GO"` при `multihop_mini.failed_count=5`, `judge_pilot.failed_count=2`, `agent_tools_judge.error=missing_file`, `workspace_scoped` на canned answers. Reason `all_nightly_passed` формально верен, но скрывает деградации.
 
@@ -253,6 +323,8 @@ flowchart LR
 
 ### BT2 — Workspace-scoped retrieval против реального стека
 
+> **Статус:** **gold ✅ ready** (`tests/fixtures/benchmarks/retrieval/workspace_scoped_live/`, 6 packs, **ВСЕ 6 promoted в Phase 6.C**, `forbidden_corpus_work_ids` валидирован non-vacuous). **Runner pending.** ~1-2 дня: `_live_answer_fn` поверх реального `answer_query` с поднятым Qdrant+Neo4j.
+
 **Проблема:** `_canned_answer_fn` в `eval/retrieval/runner.py` рисует ответ из gold.
 
 **Изменения:**
@@ -270,6 +342,8 @@ flowchart LR
 
 ### BT3 — Multihop nightly: либо живой Neo4j, либо снять артефакт
 
+> **Статус:** **gold ✅ ready** (`multihop_v2/`, 5 cases, **3 ordered_chains promoted**, 2 unordered_set high-priority — slug-vs-canonical disagreement выявлен в Phase 6.C). `infrastructure_required: ["neo4j", "qdrant"]` уже зашит в gold (runner обязан hard-fail). **Runner pending.** ~1-2 дня.
+
 **Проблема:** `multihop_mini` 5/5 fail с `Connection refused`; артефакт регулярно перезаписывается без поднятого стека.
 
 **Изменения:**
@@ -284,6 +358,8 @@ flowchart LR
 **Файлы:** `eval/retrieval/multihop_runner.py` (либо где живёт), CI workflow, runbook.
 
 ### BT4 — Hybrid ablation: реальный Qdrant retrieval вместо синтетического gold
+
+> **Статус:** **gold ✅ ready** (`hybrid_ablation_v2/`, 8 packs / 50 labels, 7 promoted, 1 high-priority `ha_two_stage_rpn_evolution` подтверждён 3-моделями). Pre-cooked `vector_ranked_work_ids`/`hybrid_ranked_work_ids` запрещены в gold v2 (validation gate); `ranked_lists_source: "runner_generated"` — runner обязан live retrieval. **Runner pending.** ~1-2 дня.
 
 **Проблема:** `gold.json` ha_NN содержит pre-cooked `vector_ranked_work_ids` / `hybrid_ranked_work_ids`.
 
@@ -301,6 +377,8 @@ flowchart LR
 
 ### BT5 — Retrieval judge: per-case gate + holdout
 
+> **Статус:** **gold side N/A** (judge — это rubric LLM, не fixture-bound). **Runner-tightening pending.** ~0.5-1 день: per-case gate `min_individual_weighted_score=4.0`, holdout 30%.
+
 **Проблема:** `mean_weighted_score=5.1` ≥ 4.5 проходит overall, но 2/5 кейсов фактически fail.
 
 **Изменения:**
@@ -315,6 +393,8 @@ flowchart LR
 **Файлы:** `eval/retrieval/judge.py`, `eval/retrieval/judge_metrics.py`, `eval/retrieval/judge_prompt_v1.md`.
 
 ### BT6 — Claims production gold harden + holdout
+
+> **Статус:** **gold ✅ ready** (`claims/corpus_<slug>_v2/` 15 pilot + `holdout_<slug>_v1/` 5 holdout = 85 claims, 30.6% negative; **paraphrase verified ≤ 8-word overlap** с `article.md`; 18/20 high после triple-vote — это **подтверждённые extractor-disagreements**, реальный сигнал). **Runner pending.** ~1-2 дня: переключить runner на новый gold + добавить distractor chunks + holdout-lane.
 
 **Проблема:** `mean_claim_recall=1.0` потому что extractor возвращает ту же фразу, что в `expected_claims`, и она дословно есть в `article_text`. Production extractor «доказан» на тривиальных задачах.
 
@@ -335,6 +415,8 @@ flowchart LR
 **Файлы:** `tests/fixtures/benchmarks/claims/{pilot_v2,holdout_v1}/*`, `eval/claims/metrics.py`, `science_graphrag/ingestion/claims/extractor.py` (verify не overfit на anchor — он и так не использует, но прогнать).
 
 ### BT7 — Concept/Topic: либо production, либо честно «no measurement»
+
+> **Статус:** **gold ✅ ready для пути A** (`concept_topic/concepts_frozen_v1.json` + 10 packs `corpus_<slug>_v2/gold.json` = 138 labels = 67 present + **71 absent**, что убивает substring tautology). 8/10 high-priority через triple-vote — DeepSeek нашёл concepts в related-work секциях (extractor B чувствительнее A — реальный сигнал, не bug). **Runner + production extractor pending.** Путь A: ~2-3 дня (+ ADR 013 update). Путь B (закрыть как «no measurement»): ~0.5 дня.
 
 **Проблема:** harness substring match на собственном gold = мера консистентности fixture, не extractor'а.
 
@@ -358,6 +440,8 @@ flowchart LR
 
 ### BT8 — Agent tools: реальный runtime + tool-trace gold
 
+> **Статус:** **gold ✅ ready** (`agent_tools_v1/{live_*, adversarial_cypher_*}/`, 6 live + 1 adversarial cypher case с реальными `DELETE`/`DROP` в вопросе и `cypher_safety_violation_count_gate: 0`; `args_match.query_contains_any/_all` — substring matchers на args, не только tool-name). 3/6 promoted в Phase 6.C. **Runner pending.** ~2 дня: `--live-runtime` default + agent_tools_judge artifact.
+
 **Проблема:** `agent_tools_mini` собран с `--mock-runtime`; `agent_tools_judge` отсутствует.
 
 **Изменения:**
@@ -376,6 +460,8 @@ flowchart LR
 
 ### BT9 — Multi-agent supervisor benchmarks (Wave R follow-up + Y4 closure)
 
+> **Статус:** **gold ✅ ready** (`agent_tools_v1/multiagent_live_*/`, 2 cases с `expected_specialist_sequence` + `allowed_alternative_sequences` + `min_specialist_sequence_match`). **Runner pending.** ~1 день (tier discovery + порог `>= 0.7` advisory).
+
 **Проблема:** Wave Y4 (multi-agent supervisor) задеплоен, но `agent_tools_multiagent` fixtures отсутствуют (см. master roadmap Round 5 Agent 1+3).
 
 **Изменения:**
@@ -389,6 +475,8 @@ flowchart LR
 **Файлы:** `tests/fixtures/benchmarks/agent_tools_multiagent/*`, `eval/agent_tools/runner.py` (tier discovery), ADR 020.
 
 ### BT10 — Idea-assist: реальный runtime + content-aware rubric
+
+> **Статус:** **gold ✅ ready** (`idea_assist_v1/live_*/`, 4 cases с `forbidden_substrings`, `max_rouge_l_against_evidence_quotes: 0.7`, `supporting_claim_id_pool` — 20 ids, **0 unknown**). 1/4 promoted; Phase 6.C явно показал, что наши supporting claim pools `thin` для seed_topics — gold нуждается в расширении (топик-targeted claims). **Runner + Hypothesis persistence pending.** ~2-3 дня.
 
 **Проблема:** `--mock-runtime` + rubric награждает мок (длина текста ≥ 40, непустые поля).
 
@@ -412,6 +500,8 @@ flowchart LR
 
 ### BT11 — Wave T полный финал: фикстуры и gold для 5 типов dedup
 
+> **Статус:** **gold ✅ ready для всех 5 типов** (`tests/fixtures/benchmarks/dedup/{authors,institutions,venues,methods,datasets}_v1/`, 104 records / 33 clusters / 22 negative_pairs включая критические `MSR vs MSRA`, `R-CNN vs Fast R-CNN vs Faster R-CNN`, `VOC 2007 vs 2012`, `COCO 2014 vs 2017`, `NeurIPS 2017 vs 2018`, `Focal Loss vs Generalized Focal Loss`). **Все 5 promoted в Phase 6.C, ARI 0.88-1.00.** DeepSeek в methods_v1 нашёл 3 must-not-merge constraint'a которые мы пропустили (R-CNN ≠ Fast R-CNN ≠ R-FCN). **Runner pending.** ~1.5-2 дня для общего runner'а + adapters per-type. Также remap старого `dedup_v1/works_v1/` runner на реальный engine.
+
 **Проблема:** код Wave T есть, но `dedup_v1/` фикстуры есть только для `Work`, а runner работает на heuristic matcher. Pipelines `{author,institution,venue,method,dataset}_pipeline.py` без gold-доказательств precision/recall.
 
 **Изменения:**
@@ -432,6 +522,8 @@ flowchart LR
 **Файлы:** `tests/fixtures/benchmarks/dedup/{authors,institutions,venues,methods,datasets}_v1/*`, `eval/dedup/{author,institution,venue,method,dataset}_runner.py`, `eval/dedup/metrics.py`.
 
 ### BT12 — Contradictions persistence + bench
+
+> **Статус:** **gold ✅ ready** (`contradictions_v1/`, 7 pairs, все 6 `contradiction_type`, оба `severity`, `expected_neo4j_pattern` у каждой пары + sync с 7 `contradicts` edges из `relations_v1.json`). 4/7 promoted в Phase 6.C; **embedding cascade сработал в 2/6 = 33% матчей** — реальная иллюстрация ценности bge-m3 на этом слое. **Runner + Neo4j-persistence pending.** ~2-3 дня.
 
 **Проблема:** `idea_workflow` возвращает `contradictions: [...]`, но не пишет `:CONTRADICTS` в граф; нет cross-paper synthesis измерения.
 
@@ -515,6 +607,14 @@ flowchart LR
 ---
 
 ## 9. Краткая суть в трёх предложениях
+
+**Update 2026-04-26 (после Phase 6 closure):**
+
+1. **Gold side закрыт:** для всех 8 advisory-семей (claims, concept_topic, contradictions, workspace_scoped, hybrid_ablation, multihop, agent_tools, idea_assist, dedup × 5 типов) — 71 packs построены и провалидированы 3 моделями (`deepseek/deepseek-v3.2`, `deepseek/deepseek-v4-pro`, `anthropic/claude-sonnet-4.6`), 35 `llm_dual_validated` или `llm_triple_validated`, остальные 36 — **подтверждённые** disagreements (single-model bias не объясняет). Phantom-green killers зашиты в формат gold (forbidden_substrings, paraphrase verified, ranked_lists_source: runner_generated, infrastructure_required hard-fail, adversarial cypher с реальными DELETE/DROP).
+2. **Runner side ОСТАЁТСЯ открытым:** `decision_gate.GO` всё ещё не учитывает `runtime_mode != "live"` — старые `current-*.json` артефакты с `--mock-runtime` / canned answers / `Connection refused` всё ещё формируют сигнал. **BT1..BT12 теперь — это «1-2 дня каждый» вместо «1-3 дня + придумать gold»**, потому что gold готов и валидирован.
+3. **Серия BT (BT1..BT12)** превращает каждый advisory из «зелёный контракт» в «измеряет работу»: BT1 чинит честность gate (теперь самый дешёвый PR серии — может ссылаться на готовые `validation_status`), BT2..BT10 — конкретные runner'ы поверх готового gold, BT11 закрывает Wave T для всех 5 типов dedup, BT12 вводит persistence + bench для contradictions.
+
+**Исходная (2026-04-25 утро) формулировка:**
 
 1. **Сейчас ~50% advisory-бенчмарков из Wave M–S зелёные «по построению»**: либо `--mock-runtime`, либо synthetic gold, либо substring-harness на собственном fixture, либо `Connection refused`. `decision_gate.GO` это не отражает.
 2. **Фундамент крепкий**: backbone (layer1/layer2 nightly), graph_v1 reference, refs_mini synthetic, judge_pilot частично — реальный сигнал. Production claims существует, но gold тривиальная — recall=1.0 искусственно высока.
