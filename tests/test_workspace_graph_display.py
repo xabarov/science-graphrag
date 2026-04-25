@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from science_graphrag.api.graph_display import enrich_authorship_nodes
-from science_graphrag.api.workspace_graph import _apply_workspace_node_kind
+from science_graphrag.api.workspace_graph.projection import apply_workspace_node_kind
 
 
 class _FakeSession:
@@ -46,7 +46,7 @@ def test_apply_workspace_node_kind_for_work_membership() -> None:
         {"id": "w2", "type": "Work", "workspace_membership": "external", "node_kind": "Work"},
         {"id": "ash", "type": "Authorship", "node_kind": "Authorship"},
     ]
-    _apply_workspace_node_kind(nodes)
+    apply_workspace_node_kind(nodes)
     assert nodes[0]["node_kind"] == "WorkInternal"
     assert nodes[1]["node_kind"] == "WorkExternal"
     assert nodes[2]["node_kind"] == "AuthorshipReification"

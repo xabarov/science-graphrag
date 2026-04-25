@@ -13,10 +13,27 @@ from science_graphrag.api import benchmark as benchmark_api
 from science_graphrag.api import main as api_main
 from science_graphrag.api.retrieval import GroundedAnswer
 from science_graphrag.api.task_store import BenchmarkTaskStore, RunPayloadTooLargeError
+from science_graphrag.storage.qdrant_store import QdrantChunkStore
 
 
 def _client() -> TestClient:
-    return TestClient(api_main.app)
+    client = TestClient(api_main.app)
+
+    class _FakeNeo4j:
+        def session(self) -> Any:
+            raise RuntimeError("neo4j_unavailable")
+
+    fake_stores = type(
+        "_FakeStores",
+        (),
+        {
+            "neo4j": _FakeNeo4j(),
+            "qdrant_chunks": object.__new__(QdrantChunkStore),
+            "qdrant_works": object(),
+        },
+    )()
+    client.app.dependency_overrides[api_main.get_stores] = lambda: fake_stores
+    return client
 
 
 def test_health_endpoint() -> None:
@@ -176,23 +193,23 @@ def test_workspace_upload_rejects_oversized_file(monkeypatch: Any) -> None:
     from science_graphrag.api import workspaces as ws_api
     from science_graphrag.config import Settings
 
-    class _FakeStore:
+    class _FakeNeo4j:
         def workspace_get(self, workspace_id: str) -> dict[str, Any] | None:
             if workspace_id == "ws-upload":
                 return {"id": workspace_id, "name": "U", "work_ids": []}
             return None
 
-        def close(self) -> None:
-            return None
-
-    monkeypatch.setattr(ws_api, "_store", lambda _settings: _FakeStore())
+    class _FakeStores:
+        neo4j = _FakeNeo4j()
 
     limited = Settings().model_copy(update={"workspace_upload_max_file_size_mb": 1})
     client = _client()
     # Must match the callable captured on the route (``workspaces`` import), not
     # ``science_graphrag.config.get_settings`` after conftest wraps the latter.
     dep = ws_api.get_settings
+    stores_dep = ws_api.get_stores
     client.app.dependency_overrides[dep] = lambda: limited
+    client.app.dependency_overrides[stores_dep] = lambda: _FakeStores()
     try:
         two_mb = b"x" * (2 * 1024 * 1024)
         res = client.post(
@@ -201,6 +218,7 @@ def test_workspace_upload_rejects_oversized_file(monkeypatch: Any) -> None:
         )
     finally:
         client.app.dependency_overrides.pop(dep, None)
+        client.app.dependency_overrides.pop(stores_dep, None)
 
     assert res.status_code == 413
     detail = res.json()["detail"]
@@ -260,7 +278,7 @@ def test_workspaces_list_smoke(monkeypatch: Any) -> None:
 
     from science_graphrag.api import workspaces as ws_api
 
-    class _FakeStore:
+    class _FakeNeo4j:
         def workspace_list(self) -> list[dict[str, Any]]:
             return [
                 {
@@ -271,12 +289,16 @@ def test_workspaces_list_smoke(monkeypatch: Any) -> None:
                 }
             ]
 
-        def close(self) -> None:
-            return None
+    class _FakeStores:
+        neo4j = _FakeNeo4j()
 
-    monkeypatch.setattr(ws_api, "_store", lambda _settings: _FakeStore())
     client = _client()
-    res = client.get("/v1/workspaces")
+    dep = ws_api.get_stores
+    client.app.dependency_overrides[dep] = lambda: _FakeStores()
+    try:
+        res = client.get("/v1/workspaces")
+    finally:
+        client.app.dependency_overrides.pop(dep, None)
     assert res.status_code == 200
     body = res.json()
     assert body["total"] == 1
@@ -356,7 +378,9 @@ def test_ingest_job_events_stream_yields_stage_events(monkeypatch: Any) -> None:
         stages=[],
     )
     monkeypatch.setattr(
-        ingest_router, "_registry", lambda *_args, **_kwargs: type("R", (), {"get": lambda *_a: job})()
+        ingest_router,
+        "_registry",
+        lambda *_args, **_kwargs: type("R", (), {"get": lambda *_a: job})(),
     )
 
     monkeypatch.setattr(
@@ -527,7 +551,7 @@ def test_work_detail_graph_chunks_smoke(monkeypatch: Any) -> None:
 def test_get_work_sources_smoke(monkeypatch: Any) -> None:
     """GET /v1/works/{id}/sources returns inventory JSON."""
 
-    def _fake_sources(_settings: Any, work_id: str) -> dict[str, Any]:
+    def _fake_sources(_settings: Any, _stores: Any, work_id: str) -> dict[str, Any]:
         return {
             "work_id": work_id,
             "sources": [

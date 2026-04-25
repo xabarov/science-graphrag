@@ -65,11 +65,12 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 - **Acceptance:** orchestrator file <= 180 lines, prompt/schema logic isolated, and unit tests target each submodule independently.
 - **Raised:** 2026-04-25
 
-### [OPEN] Split `api/workspace_graph.py` (1214 lines) — projection vs Cypher vs HTTP
+### [DONE] Split `api/workspace_graph.py` (1214 lines) — projection vs Cypher vs HTTP
 - **Area:** `science_graphrag/api/workspace_graph.py`, `science_graphrag/api/graph_display.py`, `science_graphrag/storage/neo4j_store.py`
 - **Issue:** Файл вырос до ≈1214 строк и совмещает: (1) собственный `GraphDatabase.driver` (раз дополнительный путь к Bolt мимо `Neo4jGraphStore`), (2) Cypher для neighbors/stats/projection, (3) merge member vs external и аннотации membership/cites, (4) FastAPI router + DTO. Сильный hub: импорты сходятся со всех граф-эндпоинтов.
 - **Proposal:** разнести на пакет `api/workspace_graph/`: `cypher.py` (запросы/проекция), `projection.py` (склейка member/external, membership annotations), `router.py` (тонкие хендлеры FastAPI). Доступ к Bolt — только через `Neo4jGraphStore` (или общий driver-фабрику в `storage/`).
 - **Acceptance:** ни один файл в `api/workspace_graph/` не превышает ≈400 строк; нет прямого `GraphDatabase.driver(...)` за пределами `storage/`; тесты `test_workspace_graph_*.py` зелёные без правок поведения.
+- **Note (done):** 2026-04-25 — разнесено на `api/workspace_graph/{cypher.py,projection.py,router.py,__init__.py}` (+ helper-модули), graph-endpoints вынесены из `workspaces.py`, подключены через DI `get_stores()`, backward-compat shim в `api/workspace_graph.py`.
 - **Synergy:** разблокирует **Wave GR2/GR3/GR4** (агрегаторы, `view=reader`, prioritized LIMIT) — каждой волне нужно отдельно править маленькие модули вместо god-файла.
 - **Raised:** 2026-04-25
 
@@ -133,19 +134,29 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 - **Synergy:** **Wave Q** (hybrid + RRF + multihop) — добавление новых mode не растягивает router. **Wave R** (`idea_search` как tool) и **Wave Y2** (LangGraph) переиспользуют core напрямую без обхода API. **Wave P** (workspace-scoped + judge) — вынесение фильтра `workspace_ids` в `qdrant_search.py`.
 - **Raised:** 2026-04-25
 
-### [OPEN] Split `api/works.py` (817) — graph DTO vs vector vs blob
+### [DONE] Split `api/works.py` (817) — graph DTO vs vector vs blob
 - **Area:** `science_graphrag/api/works.py`, `science_graphrag/api/graph_display.py`
 - **Issue:** Совмещает list/detail работ, neighborhood payload, чанки из Qdrant, blob/PDF entry, semantic context. Параллельно с `workspace_graph.py` участвует в **Wave GR1–GR5**.
 - **Proposal:** разнести на `api/works/`: `router.py`, `detail.py`, `graph_neighborhood.py` (использует общий `graph_display`), `chunks.py`. Wave GR работает только в `graph_neighborhood.py`.
 - **Acceptance:** ни один файл > ≈400 строк; тесты `tests/test_works_graph_display.py` и smoke зелёные.
 - **Synergy:** **Wave GR2/GR4** — `node_kind`, `view=reader` на одном work правится в одном модуле.
 - **Raised:** 2026-04-25
+- **Note (done):** 2026-04-25 — разнесено на `api/works/{dto,detail,graph_neighborhood,chunks,router}.py`; backward-compat shim оставлен в `api/works.py`; GR2/GR4 могут менять только `graph_neighborhood.py`.
 
-### [OPEN] Unified Bolt access factory + agent/idea-assist composition root
+### [OPEN] Cleanup `api/main.py` works_api shim + works package __init__ naming conflict
+- **Area:** `science_graphrag/api/main.py`, `science_graphrag/api/works/__init__.py`, `tests/test_api_smoke.py`
+- **Issue:** `works/__init__.py` re-экспортирует `router` (APIRouter instance) под тем же именем, что и submodule `works/router.py`. Это затеняет module-reference: `import science_graphrag.api.works.router` возвращает APIRouter, а не модуль. В `main.py` добавлен shim `works_api = sys.modules["science_graphrag.api.works.router"]`, чтобы тесты могли monkeypatch-ить функции через `api_main.works_api.list_works`. Паттерн хрупкий и неочевидный.
+- **Proposal:** 1) Переименовать re-export в `works/__init__.py` — вместо `router` использовать `works_router` или убрать вовсе (router доступен как `works.router`). 2) Обновить тесты на string-based patching (`monkeypatch.setattr("science_graphrag.api.works.router.list_works", fake)`) или прямой импорт модуля. 3) Удалить shim из `main.py`.
+- **Acceptance:** `main.py` не содержит `sys.modules` hacks; тесты patching прозрачны; `import science_graphrag.api.works.router as m; type(m)` возвращает `<class 'module'>`.
+- **Raised:** 2026-04-25 (обнаружено в Round 2 review)
+- **Synergy:** Удобно объединить с **G-RetrievalCore** (Sprint S4), когда тесты retrieval/works в любом случае рефакторятся.
+
+### [DONE] Unified Bolt access factory + agent/idea-assist composition root
 - **Area:** `science_graphrag/api/deps.py` (новый, или существующий), `science_graphrag/storage/neo4j_store.py`, `science_graphrag/api/agent.py`, `science_graphrag/api/idea_assist.py`, `science_graphrag/agent/`
 - **Issue:** Паттерн `Neo4jGraphStore(settings.neo4j_uri, ...)` вручную поднимается в десятке мест (`retrieval`, `works`, `idea_assist`, `agent`, `ingest_jobs`, `workspaces`, `workspace_dedup`, `cli`, `pipeline`); `api/workspace_graph.py` дополнительно использует raw `GraphDatabase.driver(...)`. Каждый запрос к agent-эндпоинтам пересоздаёт stores (отмечено в `phoenix-tracing-coverage` как pain). Composition root для idea-assist дублирует agent.
 - **Proposal:** ввести FastAPI dependency `get_stores()` → singleton-фасад `StoreRegistry` (`neo4j`, `qdrant_chunks`, `qdrant_works`, `qdrant_claims`, `blobs`, `postgres_session`); все API роуты и agent/idea-assist берут stores через DI. CLI — через сервис-фабрику. Убрать прямой `GraphDatabase.driver` из `workspace_graph`.
 - **Acceptance:** один источник создания клиентов; тесты могут подменять `StoreRegistry` фикстурой; per-request init Neo4j/Qdrant исчезает в agent-пути.
+- **Note (done):** 2026-04-25 — создан `api/deps.py`: `StoreRegistry` + `get_stores()` + `init/close`; lifecycle в `api/main.py` инициализирует `app.state.stores`; `api/{retrieval,agent,idea_assist,workspaces,workspace_dedup}.py` переключены на `Depends(get_stores)`; `api/{workspace_graph,works}.py` оставлены для Agent 2/3 (Round 2).
 - **Synergy:** **Wave Y2/Y3** (LangGraph) — supervisor + tools получают stores через `build_tool_registry(stores)`; **Wave X2** (Phoenix retrieval agent) — единая точка для `init_tracer_provider` lifespan; **Wave W** (Dramatiq worker) — один `StoreRegistry` в воркере.
 - **Raised:** 2026-04-25
 

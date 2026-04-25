@@ -16,6 +16,7 @@ from science_graphrag.api.dedup_jobs import (
     start_author_dedup_scan_job,
     start_work_dedup_scan_job,
 )
+from science_graphrag.api.deps import StoreRegistry, get_stores
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
 from science_graphrag.storage.db import get_engine, init_db, session_factory
@@ -24,18 +25,9 @@ from science_graphrag.storage.models_orm import (
     WorkDedupConflict,
     WorkDedupMergeLog,
 )
-from science_graphrag.storage.neo4j_store import Neo4jGraphStore
-from science_graphrag.storage.qdrant_store import (
-    QdrantAuthorEmbeddingStore,
-    QdrantChunkStore,
-    QdrantWorkEmbeddingStore,
-)
+from science_graphrag.storage.qdrant_store import QdrantAuthorEmbeddingStore
 
 router = APIRouter(tags=["workspace-dedup"])
-
-
-def _store(settings: Settings) -> Neo4jGraphStore:
-    return Neo4jGraphStore(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password)
 
 
 def _session_factory(settings: Settings):
@@ -63,13 +55,10 @@ class AuthorDedupDecideBody(BaseModel):
 def post_dedup_scan(
     workspace_id: str,
     settings: Settings = Depends(get_settings),
+    stores: StoreRegistry = Depends(get_stores),
 ) -> dict[str, Any]:
-    store = _store(settings)
-    try:
-        if not store.workspace_get(workspace_id):
-            raise HTTPException(status_code=404, detail="workspace_not_found")
-    finally:
-        store.close()
+    if not stores.neo4j.workspace_get(workspace_id):
+        raise HTTPException(status_code=404, detail="workspace_not_found")
     rec = start_work_dedup_scan_job(workspace_id=workspace_id, settings=settings)
     return {"job_id": rec.job_id, "kind": rec.kind, "status": rec.status}
 
@@ -79,13 +68,10 @@ def get_dedup_scan_job(
     workspace_id: str,
     job_id: str,
     settings: Settings = Depends(get_settings),
+    stores: StoreRegistry = Depends(get_stores),
 ) -> dict[str, Any]:
-    store = _store(settings)
-    try:
-        if not store.workspace_get(workspace_id):
-            raise HTTPException(status_code=404, detail="workspace_not_found")
-    finally:
-        store.close()
+    if not stores.neo4j.workspace_get(workspace_id):
+        raise HTTPException(status_code=404, detail="workspace_not_found")
     rec = get_dedup_job(job_id)
     if not rec or rec.workspace_id != workspace_id:
         raise HTTPException(status_code=404, detail="job_not_found")
@@ -99,13 +85,10 @@ def get_dedup_conflicts(
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     settings: Settings = Depends(get_settings),
+    stores: StoreRegistry = Depends(get_stores),
 ) -> dict[str, Any]:
-    store = _store(settings)
-    try:
-        if not store.workspace_get(workspace_id):
-            raise HTTPException(status_code=404, detail="workspace_not_found")
-    finally:
-        store.close()
+    if not stores.neo4j.workspace_get(workspace_id):
+        raise HTTPException(status_code=404, detail="workspace_not_found")
 
     factory = _session_factory(settings)
     with factory() as session:
@@ -141,15 +124,13 @@ def post_dedup_conflict_decide(
     conflict_id: str,
     body: DedupDecideBody,
     settings: Settings = Depends(get_settings),
+    stores: StoreRegistry = Depends(get_stores),
 ) -> dict[str, Any]:
-    store = _store(settings)
-    try:
-        ws = store.workspace_get(workspace_id)
-        if not ws:
-            raise HTTPException(status_code=404, detail="workspace_not_found")
-        allowed = set(str(x) for x in (ws.get("work_ids") or []))
-    finally:
-        store.close()
+    neo = stores.neo4j
+    ws = neo.workspace_get(workspace_id)
+    if not ws:
+        raise HTTPException(status_code=404, detail="workspace_not_found")
+    allowed = set(str(x) for x in (ws.get("work_ids") or []))
 
     factory = _session_factory(settings)
     with factory() as session:
@@ -188,29 +169,13 @@ def post_dedup_conflict_decide(
         if keep not in allowed or drop not in allowed:
             raise HTTPException(status_code=400, detail="works_must_belong_to_workspace")
 
-        neo = _store(settings)
-        try:
-            merged = neo.merge_work_into_canonical(keep, drop)
-        finally:
-            neo.close()
-
+        merged = neo.merge_work_into_canonical(keep, drop)
         if not merged:
             raise HTTPException(status_code=500, detail="merge_failed")
 
-        dim = resolve_embedding_dim(embedding_model=settings.embedding_model)
-        qdr = QdrantChunkStore(settings.qdrant_url, settings.qdrant_collection, vector_dim=dim)
-        qdr.repoint_work_id_payload(from_work_id=drop, to_work_id=keep)
-        qw = QdrantWorkEmbeddingStore(
-            settings.qdrant_url,
-            settings.qdrant_work_embeddings_collection,
-            vector_dim=dim,
-        )
-        qw.delete_by_work_id(work_id=drop)
-        neo2 = _store(settings)
-        try:
-            neo2.workspace_remove_work(workspace_id, drop)
-        finally:
-            neo2.close()
+        stores.qdrant_chunks.repoint_work_id_payload(from_work_id=drop, to_work_id=keep)
+        stores.qdrant_works.delete_by_work_id(work_id=drop)
+        neo.workspace_remove_work(workspace_id, drop)
 
         row.status = "approved"
         row.decision = eff_decision
@@ -234,13 +199,10 @@ def get_dedup_audit(
     workspace_id: str,
     limit: int = Query(default=80, ge=1, le=500),
     settings: Settings = Depends(get_settings),
+    stores: StoreRegistry = Depends(get_stores),
 ) -> dict[str, Any]:
-    store = _store(settings)
-    try:
-        if not store.workspace_get(workspace_id):
-            raise HTTPException(status_code=404, detail="workspace_not_found")
-    finally:
-        store.close()
+    if not stores.neo4j.workspace_get(workspace_id):
+        raise HTTPException(status_code=404, detail="workspace_not_found")
 
     factory = _session_factory(settings)
     with factory() as session:
@@ -273,13 +235,10 @@ def get_dedup_audit(
 def post_author_dedup_scan(
     workspace_id: str,
     settings: Settings = Depends(get_settings),
+    stores: StoreRegistry = Depends(get_stores),
 ) -> dict[str, Any]:
-    store = _store(settings)
-    try:
-        if not store.workspace_get(workspace_id):
-            raise HTTPException(status_code=404, detail="workspace_not_found")
-    finally:
-        store.close()
+    if not stores.neo4j.workspace_get(workspace_id):
+        raise HTTPException(status_code=404, detail="workspace_not_found")
     rec = start_author_dedup_scan_job(workspace_id=workspace_id, settings=settings)
     return {"job_id": rec.job_id, "kind": rec.kind, "status": rec.status}
 
@@ -291,13 +250,10 @@ def get_author_dedup_conflicts(
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     settings: Settings = Depends(get_settings),
+    stores: StoreRegistry = Depends(get_stores),
 ) -> dict[str, Any]:
-    store = _store(settings)
-    try:
-        if not store.workspace_get(workspace_id):
-            raise HTTPException(status_code=404, detail="workspace_not_found")
-    finally:
-        store.close()
+    if not stores.neo4j.workspace_get(workspace_id):
+        raise HTTPException(status_code=404, detail="workspace_not_found")
 
     factory = _session_factory(settings)
     with factory() as session:
@@ -331,13 +287,10 @@ def post_author_dedup_decide(
     conflict_id: str,
     body: AuthorDedupDecideBody,
     settings: Settings = Depends(get_settings),
+    stores: StoreRegistry = Depends(get_stores),
 ) -> dict[str, Any]:
-    store = _store(settings)
-    try:
-        if not store.workspace_get(workspace_id):
-            raise HTTPException(status_code=404, detail="workspace_not_found")
-    finally:
-        store.close()
+    if not stores.neo4j.workspace_get(workspace_id):
+        raise HTTPException(status_code=404, detail="workspace_not_found")
 
     factory = _session_factory(settings)
     with factory() as session:
@@ -358,11 +311,7 @@ def post_author_dedup_decide(
         keep = row.author_id_a if body.decision == "merge_a" else row.author_id_b
         drop = row.author_id_b if body.decision == "merge_a" else row.author_id_a
 
-        neo = _store(settings)
-        try:
-            merged = neo.merge_author_into_canonical(keep, drop)
-        finally:
-            neo.close()
+        merged = stores.neo4j.merge_author_into_canonical(keep, drop)
 
         if merged:
             dim = resolve_embedding_dim(embedding_model=settings.embedding_model)
@@ -384,14 +333,10 @@ def post_author_dedup_decide(
 @router.post("/{workspace_id}/dedup/institutions/scan")
 def post_institution_dedup_scan(
     workspace_id: str,
-    settings: Settings = Depends(get_settings),
+    stores: StoreRegistry = Depends(get_stores),
 ) -> dict[str, Any]:
-    store = _store(settings)
-    try:
-        if not store.workspace_get(workspace_id):
-            raise HTTPException(status_code=404, detail="workspace_not_found")
-    finally:
-        store.close()
+    if not stores.neo4j.workspace_get(workspace_id):
+        raise HTTPException(status_code=404, detail="workspace_not_found")
     return {
         "gated": True,
         "message": (

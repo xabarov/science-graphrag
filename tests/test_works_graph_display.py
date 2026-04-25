@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
-from science_graphrag.api.graph_display import EDGE_DISPLAY_TYPE_RAW, compute_node_display, edge_display_type
-from science_graphrag.api.works import _append_neighbor_edge
+from science_graphrag.api.graph_display import (
+    EDGE_DISPLAY_TYPE_RAW,
+    compute_node_display,
+    edge_display_type,
+)
+from science_graphrag.api.works.graph_neighborhood import _append_neighbor_edge
 
 
 def test_compute_node_display_humanized_fallbacks() -> None:

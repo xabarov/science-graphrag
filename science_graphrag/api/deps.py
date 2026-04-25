@@ -1,18 +1,107 @@
 from __future__ import annotations
 
-from collections.abc import Generator
+from dataclasses import dataclass
+from typing import Any
 
-from fastapi import Depends
+from fastapi import Depends, Request
 
-from science_graphrag.config import Settings, get_settings
+from science_graphrag.config import Settings
+from science_graphrag.ingestion.embeddings import resolve_embedding_dim
+from science_graphrag.storage.blobs import BlobStore
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
+from science_graphrag.storage.qdrant_claims_store import QdrantClaimsStore
+from science_graphrag.storage.qdrant_store import QdrantChunkStore, QdrantWorkEmbeddingStore
 
 
-def get_neo4j_store(
-    settings: Settings = Depends(get_settings),
-) -> Generator[Neo4jGraphStore, None, None]:
-    store = Neo4jGraphStore(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password)
-    try:
-        yield store
-    finally:
-        store.close()
+@dataclass
+class StoreRegistry:
+    """Application-level registry for shared infrastructure stores."""
+
+    neo4j: Neo4jGraphStore
+    qdrant_chunks: QdrantChunkStore
+    qdrant_works: QdrantWorkEmbeddingStore
+    qdrant_claims: QdrantClaimsStore
+    blob: BlobStore
+
+    def close(self) -> None:
+        for store in (
+            self.neo4j,
+            self.qdrant_chunks,
+            self.qdrant_works,
+            self.qdrant_claims,
+            self.blob,
+        ):
+            closer = getattr(store, "close", None)
+            if callable(closer):
+                closer()
+
+
+_registry: StoreRegistry | None = None
+
+
+def init_store_registry(settings: Settings) -> StoreRegistry:
+    """Create and cache singleton store registry for app lifespan."""
+
+    global _registry
+    if _registry is not None:
+        return _registry
+    dim = resolve_embedding_dim(embedding_model=settings.embedding_model)
+    _registry = StoreRegistry(
+        neo4j=Neo4jGraphStore(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password),
+        qdrant_chunks=QdrantChunkStore(
+            settings.qdrant_url,
+            settings.qdrant_collection,
+            vector_dim=dim,
+        ),
+        qdrant_works=QdrantWorkEmbeddingStore(
+            settings.qdrant_url,
+            settings.qdrant_work_embeddings_collection,
+            vector_dim=dim,
+        ),
+        qdrant_claims=QdrantClaimsStore(
+            settings.qdrant_url,
+            settings.qdrant_claims_collection,
+            vector_dim=dim,
+        ),
+        blob=BlobStore(settings.blob_root),
+    )
+    return _registry
+
+
+def close_store_registry() -> None:
+    """Close global store registry and reset cache."""
+
+    global _registry
+    if _registry is None:
+        return
+    _registry.close()
+    _registry = None
+
+
+def get_stores(request: Request) -> StoreRegistry:
+    """FastAPI dependency returning app-level store registry."""
+
+    stores = getattr(request.app.state, "stores", None)
+    if stores is None:
+        raise RuntimeError(
+            "StoreRegistry not initialized. Ensure init_store_registry() runs in app lifespan."
+        )
+    if not isinstance(stores, StoreRegistry):
+        raise RuntimeError(f"Invalid app.state.stores type: {type(stores)!r}")
+    return stores
+
+
+def get_neo4j_store(stores: StoreRegistry = Depends(get_stores)) -> Neo4jGraphStore:
+    """Backward-compatible dependency for endpoints that only need Neo4j."""
+
+    return stores.neo4j
+
+
+def build_store_registry_for_tests(**overrides: Any) -> StoreRegistry:
+    """Helper constructor for tests with optional field overrides."""
+
+    required = {"neo4j", "qdrant_chunks", "qdrant_works", "qdrant_claims", "blob"}
+    missing = required.difference(overrides)
+    if missing:
+        raise ValueError(f"Missing required overrides: {sorted(missing)}")
+    return StoreRegistry(**overrides)

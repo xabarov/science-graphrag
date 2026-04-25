@@ -11,8 +11,13 @@ logger = logging.getLogger(__name__)
 
 from openai import OpenAI
 
+from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings, get_settings
-from science_graphrag.ingestion.embeddings import HashEmbeddingProvider, try_sentence_transformer
+from science_graphrag.ingestion.embeddings import (
+    HashEmbeddingProvider,
+    resolve_embedding_dim,
+    try_sentence_transformer,
+)
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 from science_graphrag.storage.qdrant_store import QdrantChunkStore
 
@@ -49,7 +54,7 @@ _SEMANTIC_EXISTS = (
 )
 
 
-def _neo4j_graph_context_for_work(settings: Settings, work_id: str) -> dict[str, Any]:
+def _neo4j_graph_context_for_work(store: Neo4jGraphStore, work_id: str) -> dict[str, Any]:
     """
     Neo4j semantic neighborhood for query-time graph_context.
 
@@ -58,7 +63,6 @@ def _neo4j_graph_context_for_work(settings: Settings, work_id: str) -> dict[str,
 
     methods: list[str] = []
     datasets: list[str] = []
-    store = Neo4jGraphStore(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password)
     try:
         with store.session() as session:
             row = session.run(
@@ -116,8 +120,6 @@ def _neo4j_graph_context_for_work(settings: Settings, work_id: str) -> dict[str,
             "degraded": ["neo4j_unavailable"],
             "error": "neo4j_unavailable",
         }
-    finally:
-        store.close()
 
 
 # Section paths from PDF chunking often label tail sections; pure vector search still
@@ -216,14 +218,14 @@ class _GraphAndResolved(NamedTuple):
 
 
 def _graph_context_for_hits(
-    settings: Settings,
+    neo4j: Neo4jGraphStore,
     work_id: str | None,
     hits: list[dict[str, Any]],
 ) -> _GraphAndResolved:
     effective = _effective_work_id(work_id, hits)
     if effective:
         return _GraphAndResolved(
-            _neo4j_graph_context_for_work(settings, effective),
+            _neo4j_graph_context_for_work(neo4j, effective),
             effective,
         )
     return _GraphAndResolved(
@@ -357,6 +359,7 @@ def _qdrant_hits_for_answer(
     *,
     question: str,
     settings: Settings,
+    qdrant_chunks: QdrantChunkStore,
     work_id: str | None,
     work_ids: list[str] | None,
     top_k: int,
@@ -365,13 +368,8 @@ def _qdrant_hits_for_answer(
     """Embed query, search Qdrant with oversampling, deprioritize back-matter sections."""
 
     vec, emb_trace = _embed_query(question, settings)
-    qstore = QdrantChunkStore(
-        settings.qdrant_url,
-        settings.qdrant_collection,
-        vector_dim=len(vec),
-    )
     fetch_limit = min(max(top_k * 8, top_k), 48)
-    hits_raw = qstore.search_similar(
+    hits_raw = qdrant_chunks.search_similar(
         vector=vec,
         limit=fetch_limit,
         work_id=work_id,
@@ -432,6 +430,8 @@ def _hybrid_hits_for_answer(
     *,
     question: str,
     settings: Settings,
+    neo4j: Neo4jGraphStore,
+    qdrant_chunks: QdrantChunkStore,
     work_id: str | None,
     work_ids: list[str] | None,
     top_k: int,
@@ -443,6 +443,7 @@ def _hybrid_hits_for_answer(
     vec, emb_trace, hits_vector = _qdrant_hits_for_answer(
         question=question,
         settings=settings,
+        qdrant_chunks=qdrant_chunks,
         work_id=work_id,
         work_ids=work_ids,
         top_k=oversample,
@@ -451,34 +452,25 @@ def _hybrid_hits_for_answer(
     q_ft = _sanitize_fulltext_query(question)
     ft_works: list[tuple[str, float]] = []
     graph_works: list[str] = []
-    neo = Neo4jGraphStore(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password)
-    try:
-        if q_ft:
-            ft_works = neo.fulltext_search_work_ids(q_ft, limit=20)
-        seeds: list[str] = []
-        for h in hits_vector[:10]:
-            wid = h.get("work_id")
-            if wid:
-                seeds.append(str(wid))
-        for wid, _s in ft_works[:12]:
-            seeds.append(wid)
-        seeds = list(dict.fromkeys(seeds))
-        excl: set[str] = set()
-        if work_id:
-            excl.add(str(work_id).strip())
-        graph_works = neo.cites_neighbor_work_ids(seeds, exclude_ids=excl, limit=60)
-    finally:
-        neo.close()
+    if q_ft:
+        ft_works = neo4j.fulltext_search_work_ids(q_ft, limit=20)
+    seeds: list[str] = []
+    for h in hits_vector[:10]:
+        wid = h.get("work_id")
+        if wid:
+            seeds.append(str(wid))
+    for wid, _s in ft_works[:12]:
+        seeds.append(wid)
+    seeds = list(dict.fromkeys(seeds))
+    excl: set[str] = set()
+    if work_id:
+        excl.add(str(work_id).strip())
+    graph_works = neo4j.cites_neighbor_work_ids(seeds, exclude_ids=excl, limit=60)
 
-    qstore = QdrantChunkStore(
-        settings.qdrant_url,
-        settings.qdrant_collection,
-        vector_dim=len(vec),
-    )
     lanes: list[list[dict[str, Any]]] = [hits_vector]
     ft_ids = [w for w, _s in ft_works][:18]
     if ft_ids:
-        raw_ft = qstore.search_similar(
+        raw_ft = qdrant_chunks.search_similar(
             vector=vec,
             limit=36,
             work_id=None,
@@ -489,7 +481,7 @@ def _hybrid_hits_for_answer(
     gid_set = set(ft_ids)
     graph_ids = [w for w in graph_works if w not in gid_set][:18]
     if graph_ids:
-        raw_g = qstore.search_similar(
+        raw_g = qdrant_chunks.search_similar(
             vector=vec,
             limit=28,
             work_id=None,
@@ -510,7 +502,7 @@ def _hybrid_hits_for_answer(
 
 
 def _workspace_scope_work_ids(
-    settings: Settings, workspace_id: str
+    neo4j: Neo4jGraphStore, workspace_id: str
 ) -> tuple[list[str] | None, dict[str, Any]]:
     """
     Returns (work_ids, meta) for Qdrant filter.
@@ -521,25 +513,22 @@ def _workspace_scope_work_ids(
     wid = (workspace_id or "").strip()
     if not wid:
         return None, {}
-    store = Neo4jGraphStore(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password)
-    try:
-        row = store.workspace_get(wid)
-        if not row:
-            return [], {
-                "workspace_id": wid,
-                "workspace_missing": True,
-                "workspace_scope_work_count": 0,
-            }
-        ids = [str(x) for x in (row.get("work_ids") or []) if x]
-        return ids, {"workspace_id": wid, "workspace_scope_work_count": len(ids)}
-    finally:
-        store.close()
+    row = neo4j.workspace_get(wid)
+    if not row:
+        return [], {
+            "workspace_id": wid,
+            "workspace_missing": True,
+            "workspace_scope_work_count": 0,
+        }
+    ids = [str(x) for x in (row.get("work_ids") or []) if x]
+    return ids, {"workspace_id": wid, "workspace_scope_work_count": len(ids)}
 
 
 def answer_query(
     question: str,
     *,
     settings: Settings | None = None,
+    stores: StoreRegistry | None = None,
     work_id: str | None = None,
     workspace_id: str | None = None,
     top_k: int = 5,
@@ -555,6 +544,20 @@ def answer_query(
     """
 
     s = settings or get_settings()
+    owned_neo4j: Neo4jGraphStore | None = None
+    if stores is None:
+        # Backward-compatible fallback for non-API callers.
+        owned_neo4j = Neo4jGraphStore(s.neo4j_uri, s.neo4j_user, s.neo4j_password)
+        owned_qdrant = QdrantChunkStore(
+            s.qdrant_url,
+            s.qdrant_collection,
+            vector_dim=resolve_embedding_dim(embedding_model=s.embedding_model),
+        )
+        neo4j = owned_neo4j
+        qdrant_chunks = owned_qdrant
+    else:
+        neo4j = stores.neo4j
+        qdrant_chunks = stores.qdrant_chunks
     mode_norm: Literal["vector", "hybrid"] = (
         "hybrid" if (mode or "").strip().lower() == "hybrid" else "vector"
     )
@@ -564,7 +567,7 @@ def answer_query(
     wid_param = (work_id or "").strip() or None
     ws_param = (workspace_id or "").strip() or None
     if ws_param and not wid_param:
-        work_ids_filter, ws_meta = _workspace_scope_work_ids(s, ws_param)
+        work_ids_filter, ws_meta = _workspace_scope_work_ids(neo4j, ws_param)
 
     if work_ids_filter is not None and len(work_ids_filter) == 0:
         _, emb_trace = _embed_query(question, s)
@@ -577,26 +580,51 @@ def answer_query(
             else (work_ids_filter if work_ids_filter and len(work_ids_filter) > 0 else None)
         )
         ws_qdrant = ws_param if (ws_param and not wid_param) else None
-        fetch_hits = _hybrid_hits_for_answer if mode_norm == "hybrid" else _qdrant_hits_for_answer
-        _, emb_trace, hits = fetch_hits(
-            question=question,
-            settings=s,
-            work_id=wid_param,
-            work_ids=None if ws_qdrant else q_work_ids,
-            top_k=top_k,
-            workspace_id=ws_qdrant,
-        )
+        if mode_norm == "hybrid":
+            _, emb_trace, hits = _hybrid_hits_for_answer(
+                question=question,
+                settings=s,
+                neo4j=neo4j,
+                qdrant_chunks=qdrant_chunks,
+                work_id=wid_param,
+                work_ids=None if ws_qdrant else q_work_ids,
+                top_k=top_k,
+                workspace_id=ws_qdrant,
+            )
+        else:
+            _, emb_trace, hits = _qdrant_hits_for_answer(
+                question=question,
+                settings=s,
+                qdrant_chunks=qdrant_chunks,
+                work_id=wid_param,
+                work_ids=None if ws_qdrant else q_work_ids,
+                top_k=top_k,
+                workspace_id=ws_qdrant,
+            )
         if ws_meta:
             emb_trace = {**emb_trace, **ws_meta}
         if ws_qdrant and not hits and q_work_ids and len(q_work_ids) > 0:
-            _, emb_trace_fb, hits = fetch_hits(
-                question=question,
-                settings=s,
-                work_id=None,
-                work_ids=q_work_ids,
-                top_k=top_k,
-                workspace_id=None,
-            )
+            if mode_norm == "hybrid":
+                _, emb_trace_fb, hits = _hybrid_hits_for_answer(
+                    question=question,
+                    settings=s,
+                    neo4j=neo4j,
+                    qdrant_chunks=qdrant_chunks,
+                    work_id=None,
+                    work_ids=q_work_ids,
+                    top_k=top_k,
+                    workspace_id=None,
+                )
+            else:
+                _, emb_trace_fb, hits = _qdrant_hits_for_answer(
+                    question=question,
+                    settings=s,
+                    qdrant_chunks=qdrant_chunks,
+                    work_id=None,
+                    work_ids=q_work_ids,
+                    top_k=top_k,
+                    workspace_id=None,
+                )
             logger.warning(
                 "workspace_scope_payload_miss: no Qdrant hits with workspace_ids filter for "
                 "workspace_id=%s; retrying with work_id list (%d works). Backfill workspace_ids on chunks "
@@ -608,7 +636,7 @@ def answer_query(
             emb_trace = {**emb_trace_fb, **ws_meta}
 
     citations, snippets = _citations_and_snippets_from_hits(hits)
-    graph, resolved_work = _graph_context_for_hits(s, wid_param, hits)
+    graph, resolved_work = _graph_context_for_hits(neo4j, wid_param, hits)
 
     if snippets:
         joined = " ".join(snippets[:3])
@@ -674,9 +702,13 @@ def answer_query(
     if ws_scope_payload_miss:
         trace_payload = {**trace_payload, "workspace_scope_payload_miss": ws_scope_payload_miss}
 
-    return GroundedAnswer(
-        answer=answer,
-        citations=citations,
-        graph_context=graph,
-        retrieval_trace=trace_payload,
-    )
+    try:
+        return GroundedAnswer(
+            answer=answer,
+            citations=citations,
+            graph_context=graph,
+            retrieval_trace=trace_payload,
+        )
+    finally:
+        if owned_neo4j is not None:
+            owned_neo4j.close()

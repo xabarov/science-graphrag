@@ -115,13 +115,14 @@ Planned structural work under `ui/` (components, routing, state, API client), no
 - **Synergy:** **Wave Y3** (`/v2/agent/query` SSE) — `useAskSubmit` будет точкой переключения REST→SSE без правки UI-каркаса; **Wave Y4** (multi-agent supervisor) — `AskAnswerPanel` сразу подцепит `routing_log` без раскопок в god-файле.
 - **Raised:** 2026-04-25
 
-### [OPEN] Split `GraphWorkspacePanel.jsx` (1164) — data hook vs view modes vs debug
+### [DONE] Split `GraphWorkspacePanel.jsx` (1164) — data hook vs view modes vs debug
 - **Area:** [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx), [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx), [`GraphFlowView.jsx`](../../ui/src/components/graph/GraphFlowView.jsx), [`graphViewState.js`](../../ui/src/components/graph/graphViewState.js), [`mergeWorkspaceRawGraph.js`](../../ui/src/components/graph/mergeWorkspaceRawGraph.js)
 - **Issue:** Файл ≈1164 строки. Совмещает: загрузку/мердж графа, переключение Cards/Canvas/Flow, боковую колонку деталей, drag-resize gutter, легенду, raw JSON inspector, алерты, `formatResearchApiError`.
 - **Proposal:** Вынести `useGraphWorkspaceData` (fetch + merge + retry + кеш neighbors), `GraphViewModeSwitch` (Cards/Canvas/Flow), `GraphDebugInspector` (raw JSON + diagnostic), `GraphSidePanel` (колонка деталей + gutter из существующего `graphDetailColumnWidth.js`); оставить в `GraphWorkspacePanel` только composition + URL state.
 - **Acceptance:** ни один модуль в `components/graph/` не превышает ~500 строк (кроме `GraphCanvasMvp` — отдельный пункт); `npm run lint` / `npm run test` зелёные.
 - **Synergy:** **Wave GR2/GR3/GR4** (агрегаторы + reader view + prioritized LIMIT) — сразу видно, какой компонент трогать; добавление UI для `aggregator_id` expand идёт в `GraphSidePanel` без god-файла; легенда `node_kind` правится отдельно.
 - **Raised:** 2026-04-25
+- **Note (done):** 2026-04-25 — разнесено на `hooks/useGraphWorkspaceData.js`, `GraphViewModeSwitch.jsx`, `GraphSidePanel.jsx`, `GraphDebugInspector.jsx`; `GraphWorkspacePanel.jsx` оставлен как composition-shell с прежним публичным API.
 
 ### [OPEN] Split `BenchmarkPage/CaseDetailDialog.jsx` (790)
 - **Area:** [`BenchmarkPage/CaseDetailDialog.jsx`](../../ui/src/pages/BenchmarkPage/CaseDetailDialog.jsx), смежные `BenchmarkPage/{CompareTab,RunTab,BenchmarkWorkbenchTab,BenchmarkRunCasesTable}.jsx`

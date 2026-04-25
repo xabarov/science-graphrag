@@ -7,7 +7,7 @@ import uuid
 import pytest
 from neo4j import GraphDatabase
 
-from science_graphrag.api.workspace_graph import (
+from science_graphrag.api.workspace_graph.cypher import (
     project_workspace_graph,
     workspace_graph_neighbors,
     workspace_graph_stats,
@@ -47,6 +47,7 @@ def test_workspace_graph_inner_only_two_works_cites_and_full_ignores_type_filter
         settings.neo4j_uri,
         auth=(settings.neo4j_user, settings.neo4j_password),
     )
+    neo_store: Neo4jGraphStore | None = None
     try:
         with driver.session() as session:
             session.run(
@@ -80,11 +81,15 @@ def test_workspace_graph_inner_only_two_works_cites_and_full_ignores_type_filter
                 ash2=ash2,
             )
 
-        stats = workspace_graph_stats(settings, ws_id)
+        neo_store = Neo4jGraphStore(
+            settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password
+        )
+        stats = workspace_graph_stats(neo_store, ws_id)
         assert stats is not None
         assert int(stats["internal_citations"]) >= 1
 
         g = project_workspace_graph(
+            neo_store,
             settings,
             ws_id,
             mode="inner_only",
@@ -113,6 +118,7 @@ def test_workspace_graph_inner_only_two_works_cites_and_full_ignores_type_filter
         assert len(cites) >= 1
 
         g_work_only = project_workspace_graph(
+            neo_store,
             settings,
             ws_id,
             mode="inner_only",
@@ -126,6 +132,7 @@ def test_workspace_graph_inner_only_two_works_cites_and_full_ignores_type_filter
         )
 
         g_full = project_workspace_graph(
+            neo_store,
             settings,
             ws_id,
             mode="full",
@@ -136,7 +143,7 @@ def test_workspace_graph_inner_only_two_works_cites_and_full_ignores_type_filter
         assert g_full is not None
         assert any(str(n.get("id") or "") == mid for n in (g_full.get("nodes") or []))
 
-        nb = workspace_graph_neighbors(settings, ws_id, w1, depth=2, limit=50)
+        nb = workspace_graph_neighbors(neo_store, ws_id, w1, depth=2, limit=50)
         assert nb is not None
         assert int(nb["depth_requested"]) == 2
         assert int(nb["depth_effective"]) == 2
@@ -144,6 +151,11 @@ def test_workspace_graph_inner_only_two_works_cites_and_full_ignores_type_filter
         assert nb_by_id[a1].get("display_label") == "Wei Liu"
         assert nb_by_id[a2].get("display_label") == "Jia Deng"
     finally:
+        if neo_store is not None:
+            try:
+                neo_store.close()
+            except Exception:  # noqa: BLE001
+                pass
         with driver.session() as session:
             session.run(
                 """

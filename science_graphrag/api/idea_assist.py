@@ -14,10 +14,8 @@ from science_graphrag.agent.tools import (
     IdeaSearchTool,
     SummarizeWorkspaceTool,
 )
+from science_graphrag.api.deps import StoreRegistry, get_stores
 from science_graphrag.config import Settings, get_settings
-from science_graphrag.ingestion.embeddings import resolve_embedding_dim
-from science_graphrag.storage.neo4j_store import Neo4jGraphStore
-from science_graphrag.storage.qdrant_store import QdrantChunkStore, QdrantWorkEmbeddingStore
 
 router = APIRouter()
 
@@ -56,35 +54,29 @@ class IdeaAssistResponse(BaseModel):
 def post_idea_assist(
     body: IdeaAssistRequest,
     settings: Settings = Depends(get_settings),
+    stores: StoreRegistry = Depends(get_stores),
 ) -> IdeaAssistResponse:
     if not settings.hypothesis_enabled:
         raise HTTPException(status_code=503, detail="hypothesis_disabled")
     started = perf_counter()
-    dim = resolve_embedding_dim(embedding_model=settings.embedding_model)
-    neo = Neo4jGraphStore(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password)
-    chunks = QdrantChunkStore(settings.qdrant_url, settings.qdrant_collection, vector_dim=dim)
-    works = QdrantWorkEmbeddingStore(
-        settings.qdrant_url,
-        settings.qdrant_work_embeddings_collection,
-        vector_dim=dim,
+    orchestrator = IdeaOrchestrator(
+        settings=settings,
+        idea_search=IdeaSearchTool(
+            stores.qdrant_chunks,
+            work_store=stores.qdrant_works,
+            embedding_model=settings.embedding_model,
+        ),
+        cypher_query=CypherQueryTool(stores.neo4j),
+        edge_search=EdgeSearchTool(stores.neo4j),
+        summarize_workspace=SummarizeWorkspaceTool(stores.neo4j),
+        final_answer=FinalAnswerTool(),
     )
-    try:
-        orchestrator = IdeaOrchestrator(
-            settings=settings,
-            idea_search=IdeaSearchTool(chunks, work_store=works, embedding_model=settings.embedding_model),
-            cypher_query=CypherQueryTool(neo),
-            edge_search=EdgeSearchTool(neo),
-            summarize_workspace=SummarizeWorkspaceTool(neo),
-            final_answer=FinalAnswerTool(),
-        )
-        out = orchestrator.run(
-            workspace_id=body.workspace_id.strip(),
-            seed_topic=(body.seed_topic or "").strip() or None,
-            mode=body.mode,
-            max_candidates=body.max_candidates,
-        )
-    finally:
-        neo.close()
+    out = orchestrator.run(
+        workspace_id=body.workspace_id.strip(),
+        seed_topic=(body.seed_topic or "").strip() or None,
+        mode=body.mode,
+        max_candidates=body.max_candidates,
+    )
     duration_ms = int((perf_counter() - started) * 1000)
     return IdeaAssistResponse(
         hypotheses=[

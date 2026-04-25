@@ -2,16 +2,24 @@
 
 from __future__ import annotations
 
+import importlib
 from typing import Any
 
 from fastapi.testclient import TestClient
 
 from science_graphrag.api import main as api_main
-from science_graphrag.api import workspace_graph as wg_mod
-from science_graphrag.api import workspaces as workspaces_mod
+from science_graphrag.api.deps import get_stores
+from science_graphrag.api.workspace_graph import router as graph_router
+from science_graphrag.api.workspace_graph.router import (
+    project_workspace_graph,
+    workspace_graph_stats,
+)
+
+graph_router_module = importlib.import_module("science_graphrag.api.workspace_graph.router")
 
 
 def _client() -> TestClient:
+    api_main.app.dependency_overrides[get_stores] = lambda: type("S", (), {"neo4j": object()})()
     return TestClient(api_main.app)
 
 
@@ -39,7 +47,7 @@ def test_get_workspace_graph_v2_smoke(monkeypatch: Any) -> None:
             },
         }
 
-    monkeypatch.setattr(workspaces_mod, "project_workspace_graph", _fake_project)
+    monkeypatch.setattr(graph_router_module, "project_workspace_graph", _fake_project)
     client = _client()
     res = client.get("/v1/workspaces/ws-x/graph?mode=inner_only&depth=1&include_external=false")
     assert res.status_code == 200
@@ -55,7 +63,7 @@ def test_get_workspace_graph_passes_prioritize(monkeypatch: Any) -> None:
         captured.update(_kw)
         return {"work_id": "", "nodes": [], "edges": [], "meta": {"graph_scope": "workspace_v2"}}
 
-    monkeypatch.setattr(workspaces_mod, "project_workspace_graph", _fake_project)
+    monkeypatch.setattr(graph_router_module, "project_workspace_graph", _fake_project)
     client = _client()
     res = client.get("/v1/workspaces/ws-x/graph?prioritize=Method,Dataset")
     assert res.status_code == 200
@@ -64,7 +72,7 @@ def test_get_workspace_graph_passes_prioritize(monkeypatch: Any) -> None:
 
 def test_get_workspace_graph_stats_smoke(monkeypatch: Any) -> None:
     monkeypatch.setattr(
-        workspaces_mod,
+        graph_router_module,
         "workspace_graph_stats",
         lambda *_a, **_k: {
             "workspace_id": "ws-x",
@@ -83,7 +91,7 @@ def test_get_workspace_graph_stats_smoke(monkeypatch: Any) -> None:
 
 
 def test_workspace_graph_annotate_membership() -> None:
-    from science_graphrag.api.workspace_graph import _annotate_membership_and_cites
+    from science_graphrag.api.workspace_graph.projection import annotate_membership_and_cites
 
     nodes = [
         {"id": "a", "type": "Work"},
@@ -94,8 +102,20 @@ def test_workspace_graph_annotate_membership() -> None:
         {"id": "e1", "source": "a", "target": "b", "type": "CITES"},
         {"id": "e2", "source": "a", "target": "x", "type": "OF_AUTHOR"},
     ]
-    inc, exc = _annotate_membership_and_cites(nodes, edges, {"a"})
+    inc, exc = annotate_membership_and_cites(nodes, edges, {"a"})
     assert inc == 2
     assert exc == 1
     assert nodes[0]["workspace_membership"] == "internal"
     assert nodes[1]["workspace_membership"] == "external"
+
+
+def test_workspace_graph_imports() -> None:
+    assert graph_router is not None
+    assert project_workspace_graph is not None
+
+
+def test_workspace_graph_shim() -> None:
+    from science_graphrag.api.workspace_graph import router as shim_router
+
+    assert workspace_graph_stats is not None
+    assert shim_router is graph_router

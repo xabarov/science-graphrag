@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from science_graphrag.api.works import _work_graph_neighborhood_payload
+from science_graphrag.api.works.graph_neighborhood import _work_graph_neighborhood_payload
 
 
 class _Single:
@@ -72,9 +72,14 @@ class _FakeSession:
             return _FakeResult([{"c": 55}])
         if "WITH labels(n) AS labs, count(r) AS c" in query:
             return _FakeResult([{"kind": "Method", "c": 5}, {"kind": "Author", "c": 50}])
-        if "MATCH (w:Work {id: $id})-[r]-(n)" in query and "OPTIONAL MATCH (n)-[:OF_AUTHOR]" in query:
+        if (
+            "MATCH (w:Work {id: $id})-[r]-(n)" in query
+            and "OPTIONAL MATCH (n)-[:OF_AUTHOR]" in query
+        ):
             if params.get("prefer_priority"):
-                return _FakeResult([_neighbor_row(f"m{i}", "Method", "USES_METHOD") for i in range(1, 6)])
+                return _FakeResult(
+                    [_neighbor_row(f"m{i}", "Method", "USES_METHOD") for i in range(1, 6)]
+                )
             return _FakeResult([_neighbor_row(f"a{i}", "Author", "OF_AUTHOR") for i in range(1, 6)])
         if "UNWIND $ids AS aid" in query:
             return _FakeResult([])

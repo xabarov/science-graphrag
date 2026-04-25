@@ -308,11 +308,23 @@
 
   > Agent 4: нет — три задачи не пересекаются по файлам, безопасно параллельны. Wave Y1 (P3 Sprint S1) выполнен полностью: deps установлены, `instrumentation.py` наполнен, `config.py` и `.env.example` обновлены. ✅
 
-- **Раунд 2 (после раунда 1.5 + Y1 foundation):**
-  - Agent 1: G-StoreFactory (FastAPI deps).
-  - Agent 2: G-WorkspaceGraphSplit.
-  - Agent 3: G-WorksSplit.
-  - Agent 4: H-GraphWorkspacePanelSplit.
+- **Раунд 2 (после раунда 1.5 + Y1 foundation) ✅ DONE 2026-04-25:**
+  - Agent 1: G-StoreFactory — `api/deps.py` с `StoreRegistry` + `get_stores()`; lifespan в `main.py`. ✅
+  - Agent 2: G-WorkspaceGraphSplit — `api/workspace_graph.py` (1214 строк) → пакет `api/workspace_graph/{cypher,projection,router,__init__}.py` + helpers. ✅
+  - Agent 3: G-WorksSplit — `api/works.py` (817 строк) → пакет `api/works/{dto,detail,graph_neighborhood,chunks,router,__init__}.py`. ✅
+  - Agent 4: H-GraphWorkspacePanelSplit — `GraphWorkspacePanel.jsx` (1164 строк) → shell + `useGraphWorkspaceData`, `GraphViewModeSwitch`, `GraphSidePanel`, `GraphDebugInspector`. ✅
+
+  > **Review 2026-04-25 (9 тестов исправлено):**
+  >
+  > Три класса дефектов обнаружены и устранены в ходе review:
+  >
+  > 1. **`works/__init__.py` naming-конфликт:** пакет re-экспортирует `router` (APIRouter instance), что затеняет submodule-ссылку `works.router`. Тесты использовали `api_main.works_api.*` — атрибут исчез после сплита. **Фикс:** `works_api = sys.modules["science_graphrag.api.works.router"]` shim в `main.py`. Технический долг: очистить при G-RetrievalCore (см. ниже).
+  >
+  > 2. **DI-ordering в `agent.py`:** `Depends(get_stores)` резолвится до тела endpoint, поэтому `agent_enabled` guard не защищал от `RuntimeError` при незаполненном `app.state.stores` в тестах. **Фикс:** оба теста теперь переопределяют `get_stores`.
+  >
+  > 3. **Сигнатура `work_sources_payload`:** в сплите добавился параметр `stores`, тест-fake имел старую сигнатуру. **Фикс:** обновлен fake.
+  >
+  > Качество: pylint 8.78/10, isort/black чисто, frontend ESLint чисто, **383 passed, 2 skipped**.
 - **Раунд 3 (Wave W + Y2 + X2 + Neo4jSplit):**
   - Agent 1: Wave W backend (Dramatiq actor + Redis).
   - Agent 2: Wave Y2 + Wave X2 (один комбинированный PR в `agent/`).

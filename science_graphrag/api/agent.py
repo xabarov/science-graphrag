@@ -7,10 +7,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from science_graphrag.agent.runtime import build_agent
+from science_graphrag.api.deps import StoreRegistry, get_stores
 from science_graphrag.config import Settings, get_settings
-from science_graphrag.ingestion.embeddings import resolve_embedding_dim
-from science_graphrag.storage.neo4j_store import Neo4jGraphStore
-from science_graphrag.storage.qdrant_store import QdrantChunkStore, QdrantWorkEmbeddingStore
 
 router = APIRouter()
 
@@ -33,27 +31,22 @@ class AgentQueryResponse(BaseModel):
 def post_agent_query(
     body: AgentQueryRequest,
     settings: Settings = Depends(get_settings),
+    stores: StoreRegistry = Depends(get_stores),
 ) -> AgentQueryResponse:
     if not settings.agent_enabled:
         raise HTTPException(status_code=503, detail="agent_disabled")
     started = perf_counter()
-    dim = resolve_embedding_dim(embedding_model=settings.embedding_model)
-    neo = Neo4jGraphStore(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password)
-    chunks = QdrantChunkStore(settings.qdrant_url, settings.qdrant_collection, vector_dim=dim)
-    works = QdrantWorkEmbeddingStore(
-        settings.qdrant_url,
-        settings.qdrant_work_embeddings_collection,
-        vector_dim=dim,
+    agent = build_agent(
+        settings=settings,
+        neo4j=stores.neo4j,
+        chunks=stores.qdrant_chunks,
+        works=stores.qdrant_works,
     )
-    try:
-        agent = build_agent(settings=settings, neo4j=neo, chunks=chunks, works=works)
-        out = agent.run(
-            question=body.question,
-            workspace_id=(body.workspace_id or "").strip() or None,
-            max_tool_calls=body.max_tool_calls or settings.agent_max_tool_calls,
-        )
-    finally:
-        neo.close()
+    out = agent.run(
+        question=body.question,
+        workspace_id=(body.workspace_id or "").strip() or None,
+        max_tool_calls=body.max_tool_calls or settings.agent_max_tool_calls,
+    )
     duration_ms = int((perf_counter() - started) * 1000)
     return AgentQueryResponse(
         answer=out.answer,
