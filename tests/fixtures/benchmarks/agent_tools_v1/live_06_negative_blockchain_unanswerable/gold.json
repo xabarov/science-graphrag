@@ -1,0 +1,39 @@
+{
+  "schema_version": 2,
+  "case_id": "live_06_negative_blockchain_unanswerable",
+  "tier": "agent_tools_live",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "question_file": "question.txt",
+  "expected_tool_sequence": [
+    {
+      "tool_name": "vector_search",
+      "args_match": {
+        "query_contains_any": [
+          "blockchain",
+          "decentralized"
+        ]
+      },
+      "required": true
+    }
+  ],
+  "expected_methods_canonical": [],
+  "expected_works_corpus_ids": [],
+  "answer_reference_text": "No paper in the object-detection corpus introduces a blockchain-based or decentralized object detection model; the corpus is restricted to centralized supervised detection methods.",
+  "answer_metric": {
+    "type": "abstain_keywords",
+    "must_contain_any": [
+      "no paper",
+      "not in",
+      "out of scope",
+      "n/a",
+      "not present",
+      "does not"
+    ]
+  },
+  "cypher_safety_required": 1.0,
+  "expected_behavior": "abstain_or_empty"
+}

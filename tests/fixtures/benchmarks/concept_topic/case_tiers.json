@@ -7,5 +7,17 @@
     "detr_concepts",
     "fpn_concepts",
     "mask_rcnn_concepts"
+  ],
+  "concept_topic_pilot_v2": [
+    "concept_corpus_yolov1_v2",
+    "concept_corpus_faster_rcnn_v2",
+    "concept_corpus_retinanet_focal_v2",
+    "concept_corpus_ssd_v2",
+    "concept_corpus_mask_rcnn_v2",
+    "concept_corpus_fpn_v2",
+    "concept_corpus_detr_v2",
+    "concept_corpus_cornernet_v2",
+    "concept_corpus_fcos_v2",
+    "concept_corpus_cascade_rcnn_v2"
   ]
 }

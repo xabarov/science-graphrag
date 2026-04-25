@@ -1,0 +1,40 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "The essential difference between anchor-based and anchor-free detection is how to define positive and negative training samples.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "the essential difference between anchor-based and anchor-free detection is actually how to define positive and negative training samples"
+    },
+    {
+      "claim_text_normalized": "Adaptive Training Sample Selection (ATSS) automatically selects positive and negative samples based on object characteristics.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "we propose an Adaptive Training Sample Selection (ATSS) to automatically select positive and negative samples according to statistical characteristics of object."
+    },
+    {
+      "claim_text_normalized": "ATSS significantly improves the performance of both anchor-based and anchor-free detectors.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "It significantly improves the performance of anchor-based and anchor-free detectors"
+    },
+    {
+      "claim_text_normalized": "Tiling multiple anchors per location on the image to detect objects is not necessary.",
+      "claim_type": "finding",
+      "polarity": "negative",
+      "evidence_quote_short": "tiling multiple anchors per location on the image to detect objects is not necessary."
+    },
+    {
+      "claim_text_normalized": "With ATSS, state-of-the-art detectors are improved to 50.7% AP without introducing any overhead.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "With the newly introduced ATSS, we improve state-of-the-art detectors by a large margin to 50.7% AP without introducing any overhead."
+    },
+    {
+      "claim_text_normalized": "The regression starting status (box or point) is an irrelevant difference between anchor-based and anchor-free detectors.",
+      "claim_type": "finding",
+      "polarity": "neutral",
+      "evidence_quote_short": "the regression starting status is an irrelevant difference rather than an essential difference."
+    }
+  ]
+}

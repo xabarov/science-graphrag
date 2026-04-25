@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "Fast R-CNN trains the VGG16 network 9 times faster than R-CNN.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "Fast R-CNN trains the very deep VGG16 network 9× faster than R-CNN"
+    },
+    {
+      "claim_text_normalized": "Fast R-CNN achieves a higher mAP on PASCAL VOC 2012 than R-CNN.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "achieves a higher mAP on PASCAL VOC 2012"
+    },
+    {
+      "claim_text_normalized": "R-CNN training is a multi-stage pipeline that is slow and inelegant.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "Training is a multi-stage pipeline"
+    },
+    {
+      "claim_text_normalized": "Fast R-CNN uses a single-stage training algorithm with a multi-task loss.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "We propose a single-stage training algorithm that jointly learns to classify object proposals and refine their spatial locations."
+    },
+    {
+      "claim_text_normalized": "Fine-tuning convolutional layers in VGG16 improves mean average precision.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "Fine-tuning conv layers in VGG16 improves mAP"
+    },
+    {
+      "claim_text_normalized": "Multi-task training improves classification accuracy over training for classification alone.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "multi-task training improves pure classification accuracy relative to training for classification alone"
+    },
+    {
+      "claim_text_normalized": "Single-scale detection performs almost as well as multi-scale detection for deep convolutional networks.",
+      "claim_type": "finding",
+      "polarity": "neutral",
+      "evidence_quote_short": "single-scale detection performs almost as well as multi-scale detection"
+    },
+    {
+      "claim_text_normalized": "Using more object proposals does not always improve detection accuracy.",
+      "claim_type": "finding",
+      "polarity": "neutral",
+      "evidence_quote_short": "swamping the deep classifier with more proposals does not help, and even slightly hurts, accuracy"
+    }
+  ]
+}

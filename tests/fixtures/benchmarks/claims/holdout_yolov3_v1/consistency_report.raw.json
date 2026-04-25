@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "YOLOv3 runs at 22 ms at 28.2 mAP on a 320x320 input.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "At 320 × 320 YOLOv3 runs in 22 ms at 28.2 mAP"
+    },
+    {
+      "claim_text_normalized": "YOLOv3 is as accurate as SSD but three times faster.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "as accurate as SSD but three times faster"
+    },
+    {
+      "claim_text_normalized": "YOLOv3 achieves 57.9 AP50 in 51 ms compared to 57.5 AP50 in 198 ms by RetinaNet.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "It achieves 57.9 AP50 in 51 ms on a Titan X, compared to 57.5 AP50 in 198 ms by RetinaNet"
+    },
+    {
+      "claim_text_normalized": "YOLOv3 predicts boxes at three different scales using a concept similar to feature pyramid networks.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "YOLOv3 predicts boxes at 3 different scales. Our system extracts features from those scales using a similar concept to feature pyramid networks"
+    },
+    {
+      "claim_text_normalized": "YOLOv3 uses a new feature extractor network called Darknet-53.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "We use a new network for performing feature extraction. ... Darknet-53!"
+    },
+    {
+      "claim_text_normalized": "Darknet-53 performs on par with state-of-the-art classifiers but with fewer floating point operations and more speed.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "Darknet-53 performs on par with state-of-the-art classifiers but with fewer floating point operations and more speed."
+    },
+    {
+      "claim_text_normalized": "YOLOv3 struggles to get bounding boxes perfectly aligned with objects as the IOU threshold increases.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "performance drops significantly as the IOU threshold increases indicating YOLOv3 struggles to get the boxes perfectly aligned with the object."
+    },
+    {
+      "claim_text_normalized": "Using focal loss dropped YOLOv3's mAP by about two points.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "We tried using focal loss. It dropped our mAP about 2 points."
+    }
+  ]
+}

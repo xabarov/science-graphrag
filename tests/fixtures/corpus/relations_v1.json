@@ -1,0 +1,3653 @@
+{
+  "schema_version": 1,
+  "description": "Inter-paper relations within the corpus (used by Layer 4 multihop and Layer 9 contradictions). cites edges are auto-derived from gold_enrichment_*.json::step_a_arxiv_from_bibliography or manually added for known citations missing from bibliography parsing. extends/compares_with/contradicts are domain-knowledge edges. shares_author/shares_dataset are derived edges for multihop graph traversal benchmarks.",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "spot_check_required_fields": [
+      "edges[edge_type=contradicts]"
+    ],
+    "edge_counts": {
+      "cites": 78,
+      "extends": 15,
+      "compares_with": 12,
+      "contradicts": 7,
+      "shares_author": 59,
+      "shares_dataset": 331
+    }
+  },
+  "edges": [
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "cornernet_realpdf",
+      "target_corpus_work_id": "cascade_rcnn_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "cornernet_realpdf",
+      "target_corpus_work_id": "fast_rcnn_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "cornernet_realpdf",
+      "target_corpus_work_id": "fpn_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "cornernet_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "cornernet_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "detr_realpdf",
+      "target_corpus_work_id": "atss_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "detrs_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "detrs_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "dn_detr_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "dn_detr_realpdf",
+      "target_corpus_work_id": "deformable_detr_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "efficientdet_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "fcos_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "fpn_realpdf",
+      "target_corpus_work_id": "mask_rcnn_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "rfcn_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "sppnet_realpdf",
+      "target_corpus_work_id": "overfeat_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "tood_realpdf",
+      "target_corpus_work_id": "overfeat_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "yolov1",
+      "target_corpus_work_id": "fast_rcnn_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "yolov1",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "yolov1",
+      "target_corpus_work_id": "overfeat_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "yolov1",
+      "target_corpus_work_id": "sppnet_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "yolov2_realpdf",
+      "target_corpus_work_id": "fast_rcnn_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "yolov2_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "yolov2_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "yolov2_realpdf",
+      "target_corpus_work_id": "yolov1",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "yolov3_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "yolov3_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "yolox_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "discovery_method": "bibliography_arxiv_id_match"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "rcnn_realpdf",
+      "target_corpus_work_id": "selective_search_realpdf",
+      "evidence_quotes": [
+        "Region proposals follow Selective Search (Uijlings et al., 2012)."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "rcnn_realpdf",
+      "target_corpus_work_id": "hog_human_detection_realpdf",
+      "evidence_quotes": [
+        "Compares against HOG-based deformable parts baseline."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "rcnn_realpdf",
+      "target_corpus_work_id": "part_based_models_realpdf",
+      "evidence_quotes": [
+        "Compared against Deformable Part Models (DPM)."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "rcnn_realpdf",
+      "target_corpus_work_id": "overfeat_realpdf",
+      "evidence_quotes": [
+        "OverFeat as concurrent work on CNN-based detection/localization."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "fast_rcnn_realpdf",
+      "target_corpus_work_id": "rcnn_realpdf",
+      "evidence_quotes": [
+        "Builds on R-CNN (Girshick et al., 2014); shares CNN feature reuse motivation."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "fast_rcnn_realpdf",
+      "target_corpus_work_id": "sppnet_realpdf",
+      "evidence_quotes": [
+        "ROI pooling generalizes single-level SPP from SPPNet (He et al., 2015)."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "fast_rcnn_realpdf",
+      "evidence_quotes": [
+        "RPN replaces external proposals used by Fast R-CNN."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "rcnn_realpdf",
+      "evidence_quotes": [
+        "References R-CNN as origin of region-based detection."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "selective_search_realpdf",
+      "evidence_quotes": [
+        "Identifies Selective Search as the speed bottleneck removed by RPN."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "mask_rcnn_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "evidence_quotes": [
+        "Adds mask branch to Faster R-CNN architecture."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "mask_rcnn_realpdf",
+      "target_corpus_work_id": "fpn_realpdf",
+      "evidence_quotes": [
+        "Uses FPN backbone for multi-scale features."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "retinanet_focal_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "evidence_quotes": [
+        "Compares against SSD as one-stage baseline."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "retinanet_focal_realpdf",
+      "target_corpus_work_id": "fpn_realpdf",
+      "evidence_quotes": [
+        "Uses FPN as feature aggregator."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "retinanet_focal_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "evidence_quotes": [
+        "Compares one-stage focal-loss vs two-stage RPN."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "retinanet_focal_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "evidence_quotes": [
+        "Compares against YOLOv2 as one-stage baseline."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "fpn_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "evidence_quotes": [
+        "FPN integrated with Faster R-CNN as primary use case."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "fpn_realpdf",
+      "target_corpus_work_id": "sppnet_realpdf",
+      "evidence_quotes": [
+        "References spatial pyramid pooling lineage."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "ssd_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "evidence_quotes": [
+        "Compares against Faster R-CNN as two-stage baseline."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "ssd_realpdf",
+      "target_corpus_work_id": "overfeat_realpdf",
+      "evidence_quotes": [
+        "References OverFeat for CNN-based detection."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "ssd_realpdf",
+      "target_corpus_work_id": "yolov1",
+      "evidence_quotes": [
+        "References YOLOv1 as concurrent one-stage detector."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "yolov3_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "evidence_quotes": [
+        "Direct successor to YOLOv2."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "fcos_realpdf",
+      "target_corpus_work_id": "cornernet_realpdf",
+      "evidence_quotes": [
+        "References CornerNet as anchor-free predecessor."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "fcos_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "evidence_quotes": [
+        "Builds on RetinaNet+FPN; replaces anchors with point-based prediction."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "fcos_realpdf",
+      "target_corpus_work_id": "fpn_realpdf",
+      "evidence_quotes": [
+        "Uses FPN backbone."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "centernet_realpdf",
+      "target_corpus_work_id": "cornernet_realpdf",
+      "evidence_quotes": [
+        "Direct extension: triplets vs corner pairs."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "atss_realpdf",
+      "target_corpus_work_id": "fcos_realpdf",
+      "evidence_quotes": [
+        "Compares anchor-based vs anchor-free, with FCOS as anchor-free baseline."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "atss_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "evidence_quotes": [
+        "Uses RetinaNet as anchor-based baseline."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "gfl_realpdf",
+      "target_corpus_work_id": "atss_realpdf",
+      "evidence_quotes": [
+        "Builds on ATSS detection framework."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "gfl_realpdf",
+      "target_corpus_work_id": "fcos_realpdf",
+      "evidence_quotes": [
+        "References FCOS as anchor-free baseline."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "tood_realpdf",
+      "target_corpus_work_id": "atss_realpdf",
+      "evidence_quotes": [
+        "Compares TOOD task-aligned head against ATSS sample selection."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "tood_realpdf",
+      "target_corpus_work_id": "fcos_realpdf",
+      "evidence_quotes": [
+        "References FCOS for one-stage anchor-free baseline."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "efficientdet_realpdf",
+      "target_corpus_work_id": "fpn_realpdf",
+      "evidence_quotes": [
+        "BiFPN extends FPN with bidirectional connections."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "efficientdet_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "evidence_quotes": [
+        "RetinaNet with focal loss as one-stage reference."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "efficientdet_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "evidence_quotes": [
+        "SSD as multi-scale one-stage baseline."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "deformable_detr_realpdf",
+      "target_corpus_work_id": "detr_realpdf",
+      "evidence_quotes": [
+        "Direct extension of DETR with deformable attention."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "dn_detr_realpdf",
+      "target_corpus_work_id": "detr_realpdf",
+      "evidence_quotes": [
+        "DN-DETR adds query denoising to DETR."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "detr_realpdf",
+      "evidence_quotes": [
+        "DINO is the DETR-family extension."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "deformable_detr_realpdf",
+      "evidence_quotes": [
+        "Builds on Deformable DETR."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "detrs_realpdf",
+      "target_corpus_work_id": "detr_realpdf",
+      "evidence_quotes": [
+        "RT-DETR distills DETR family into real-time."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "detrs_realpdf",
+      "target_corpus_work_id": "deformable_detr_realpdf",
+      "evidence_quotes": [
+        "References Deformable DETR for efficiency comparisons."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "cascade_rcnn_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "evidence_quotes": [
+        "Cascade applies on top of Faster R-CNN heads."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "cascade_rcnn_realpdf",
+      "target_corpus_work_id": "fpn_realpdf",
+      "evidence_quotes": [
+        "Uses FPN backbone in main experiments."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "libra_rcnn_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "evidence_quotes": [
+        "Libra balances training of Faster R-CNN."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "libra_rcnn_realpdf",
+      "target_corpus_work_id": "fpn_realpdf",
+      "evidence_quotes": [
+        "Balanced FPN as one of three balancing components."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "libra_rcnn_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "evidence_quotes": [
+        "Compares against RetinaNet."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "rfcn_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "evidence_quotes": [
+        "Builds on Faster R-CNN; replaces ROI subnet with position-sensitive maps."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "rfcn_realpdf",
+      "target_corpus_work_id": "fast_rcnn_realpdf",
+      "evidence_quotes": [
+        "References Fast R-CNN for ROI pooling lineage."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "yolov1",
+      "target_corpus_work_id": "rcnn_realpdf",
+      "evidence_quotes": [
+        "Compares against R-CNN as accurate but slow baseline."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "cites",
+      "source_corpus_work_id": "yolox_realpdf",
+      "target_corpus_work_id": "yolov1",
+      "evidence_quotes": [
+        "Cites YOLO origin."
+      ],
+      "discovery_method": "domain_knowledge_manual"
+    },
+    {
+      "edge_type": "extends",
+      "source_corpus_work_id": "fast_rcnn_realpdf",
+      "target_corpus_work_id": "rcnn_realpdf",
+      "evidence_quotes": [
+        "Fast R-CNN is the direct architectural successor to R-CNN."
+      ]
+    },
+    {
+      "edge_type": "extends",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "fast_rcnn_realpdf",
+      "evidence_quotes": [
+        "Faster R-CNN integrates RPN into Fast R-CNN."
+      ]
+    },
+    {
+      "edge_type": "extends",
+      "source_corpus_work_id": "mask_rcnn_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "evidence_quotes": [
+        "Mask R-CNN adds segmentation branch to Faster R-CNN."
+      ]
+    },
+    {
+      "edge_type": "extends",
+      "source_corpus_work_id": "cascade_rcnn_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "evidence_quotes": [
+        "Cascade R-CNN multi-stage refinement on Faster R-CNN."
+      ]
+    },
+    {
+      "edge_type": "extends",
+      "source_corpus_work_id": "yolov2_realpdf",
+      "target_corpus_work_id": "yolov1",
+      "evidence_quotes": [
+        "YOLOv2 = direct successor."
+      ]
+    },
+    {
+      "edge_type": "extends",
+      "source_corpus_work_id": "yolov3_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "evidence_quotes": [
+        "YOLOv3 = direct successor."
+      ]
+    },
+    {
+      "edge_type": "extends",
+      "source_corpus_work_id": "yolox_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "evidence_quotes": [
+        "YOLOX = decoupled-head successor of YOLOv3."
+      ]
+    },
+    {
+      "edge_type": "extends",
+      "source_corpus_work_id": "deformable_detr_realpdf",
+      "target_corpus_work_id": "detr_realpdf",
+      "evidence_quotes": [
+        "Deformable DETR extends DETR with deformable attention."
+      ]
+    },
+    {
+      "edge_type": "extends",
+      "source_corpus_work_id": "dn_detr_realpdf",
+      "target_corpus_work_id": "detr_realpdf",
+      "evidence_quotes": [
+        "DN-DETR extends DETR with query denoising."
+      ]
+    },
+    {
+      "edge_type": "extends",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "deformable_detr_realpdf",
+      "evidence_quotes": [
+        "DINO extends Deformable DETR."
+      ]
+    },
+    {
+      "edge_type": "extends",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "dn_detr_realpdf",
+      "evidence_quotes": [
+        "DINO uses query-denoising idea from DN-DETR."
+      ]
+    },
+    {
+      "edge_type": "extends",
+      "source_corpus_work_id": "detrs_realpdf",
+      "target_corpus_work_id": "deformable_detr_realpdf",
+      "evidence_quotes": [
+        "RT-DETR derives from Deformable DETR family."
+      ]
+    },
+    {
+      "edge_type": "extends",
+      "source_corpus_work_id": "centernet_realpdf",
+      "target_corpus_work_id": "cornernet_realpdf",
+      "evidence_quotes": [
+        "CenterNet (Triplets) extends CornerNet with center keypoints."
+      ]
+    },
+    {
+      "edge_type": "extends",
+      "source_corpus_work_id": "gfl_realpdf",
+      "target_corpus_work_id": "atss_realpdf",
+      "evidence_quotes": [
+        "GFL extends ATSS sample selection with Generalized Focal Loss."
+      ]
+    },
+    {
+      "edge_type": "extends",
+      "source_corpus_work_id": "tood_realpdf",
+      "target_corpus_work_id": "atss_realpdf",
+      "evidence_quotes": [
+        "TOOD extends ATSS with task-aligned head."
+      ]
+    },
+    {
+      "edge_type": "compares_with",
+      "source_corpus_work_id": "retinanet_focal_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "evidence_quotes": [
+        "RetinaNet outperforms SSD on COCO mAP."
+      ]
+    },
+    {
+      "edge_type": "compares_with",
+      "source_corpus_work_id": "retinanet_focal_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "evidence_quotes": [
+        "RetinaNet outperforms YOLOv2 on COCO mAP."
+      ]
+    },
+    {
+      "edge_type": "compares_with",
+      "source_corpus_work_id": "retinanet_focal_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "evidence_quotes": [
+        "RetinaNet matches/exceeds Faster R-CNN with FPN on COCO."
+      ]
+    },
+    {
+      "edge_type": "compares_with",
+      "source_corpus_work_id": "ssd_realpdf",
+      "target_corpus_work_id": "yolov1",
+      "evidence_quotes": [
+        "SSD vs YOLO comparison: SSD300 reaches similar mAP at higher FPS."
+      ]
+    },
+    {
+      "edge_type": "compares_with",
+      "source_corpus_work_id": "ssd_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "evidence_quotes": [
+        "SSD compared with Faster R-CNN as accuracy reference."
+      ]
+    },
+    {
+      "edge_type": "compares_with",
+      "source_corpus_work_id": "fcos_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "evidence_quotes": [
+        "FCOS outperforms RetinaNet on COCO without anchors."
+      ]
+    },
+    {
+      "edge_type": "compares_with",
+      "source_corpus_work_id": "atss_realpdf",
+      "target_corpus_work_id": "fcos_realpdf",
+      "evidence_quotes": [
+        "ATSS shows that anchor-based and anchor-free perform comparably with proper sample selection."
+      ]
+    },
+    {
+      "edge_type": "compares_with",
+      "source_corpus_work_id": "efficientdet_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "evidence_quotes": [
+        "EfficientDet vs YOLOv3 on COCO across compute scales."
+      ]
+    },
+    {
+      "edge_type": "compares_with",
+      "source_corpus_work_id": "efficientdet_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "evidence_quotes": [
+        "EfficientDet compared against RetinaNet at multiple scales."
+      ]
+    },
+    {
+      "edge_type": "compares_with",
+      "source_corpus_work_id": "detr_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "evidence_quotes": [
+        "DETR matches Faster R-CNN on COCO at large object scales."
+      ]
+    },
+    {
+      "edge_type": "compares_with",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "deformable_detr_realpdf",
+      "evidence_quotes": [
+        "DINO outperforms Deformable DETR on COCO."
+      ]
+    },
+    {
+      "edge_type": "compares_with",
+      "source_corpus_work_id": "detrs_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "evidence_quotes": [
+        "RT-DETR outperforms YOLOX in real-time settings on COCO."
+      ]
+    },
+    {
+      "source_corpus_work_id": "retinanet_focal_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "contradiction_subtype": "era_shift",
+      "evidence_quotes": [
+        "[faster_rcnn] Two-stage detectors with region proposal networks achieve state-of-the-art accuracy.",
+        "[retinanet] Our one-stage detector with focal loss outperforms all existing single- and two-stage detectors on COCO."
+      ],
+      "edge_type": "contradicts"
+    },
+    {
+      "source_corpus_work_id": "fcos_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "contradiction_subtype": "design_paradigm",
+      "evidence_quotes": [
+        "[faster_rcnn] Anchor boxes are crucial for high-quality region proposals.",
+        "[fcos] Anchor-free design eliminates the need for hand-crafted anchor boxes."
+      ],
+      "edge_type": "contradicts"
+    },
+    {
+      "source_corpus_work_id": "cornernet_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "contradiction_subtype": "design_paradigm",
+      "evidence_quotes": [
+        "[faster_rcnn] Region proposal networks predict object regions.",
+        "[cornernet] We detect objects as paired keypoints, eliminating the need for anchor boxes and proposals."
+      ],
+      "edge_type": "contradicts"
+    },
+    {
+      "source_corpus_work_id": "detr_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "contradiction_subtype": "post_processing",
+      "evidence_quotes": [
+        "[faster_rcnn] NMS removes duplicate detections produced by overlapping anchors.",
+        "[detr] Bipartite matching between predictions and ground truth removes the need for NMS."
+      ],
+      "edge_type": "contradicts"
+    },
+    {
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "rcnn_realpdf",
+      "contradiction_subtype": "architectural",
+      "evidence_quotes": [
+        "[rcnn] High-quality external region proposals (Selective Search) are the foundation of accurate detection.",
+        "[faster_rcnn] RPN integrated in the network is faster and equally accurate, removing the proposal bottleneck."
+      ],
+      "edge_type": "contradicts"
+    },
+    {
+      "source_corpus_work_id": "rcnn_realpdf",
+      "target_corpus_work_id": "hog_human_detection_realpdf",
+      "contradiction_subtype": "classical_vs_deep",
+      "evidence_quotes": [
+        "[hog] Histograms of oriented gradients capture edge structure sufficient for human detection.",
+        "[rcnn] Learned CNN features substantially outperform handcrafted features (HOG, DPM) on detection."
+      ],
+      "edge_type": "contradicts"
+    },
+    {
+      "source_corpus_work_id": "efficientdet_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "contradiction_subtype": "scaling",
+      "evidence_quotes": [
+        "[retinanet] Deeper backbones (ResNet-101, ResNeXt) yield substantial accuracy gains.",
+        "[efficientdet] Compound scaling of depth, width, and resolution is more efficient than scaling depth alone."
+      ],
+      "edge_type": "contradicts"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "yolov1",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_author": "Ali Farhadi",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "yolov1",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "via_author": "Ali Farhadi",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "yolov2_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "via_author": "Ali Farhadi",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "dn_detr_realpdf",
+      "via_author": "Feng Li",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "dn_detr_realpdf",
+      "via_author": "Hao Zhang",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_author": "Jian Sun",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "sppnet_realpdf",
+      "via_author": "Jian Sun",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "via_author": "Jian Sun",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "rfcn_realpdf",
+      "target_corpus_work_id": "sppnet_realpdf",
+      "via_author": "Jian Sun",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "rfcn_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "via_author": "Jian Sun",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "sppnet_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "via_author": "Jian Sun",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "deformable_detr_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_author": "Jifeng Dai",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "yolov1",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_author": "Joseph Redmon",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "yolov1",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "via_author": "Joseph Redmon",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "yolov2_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "via_author": "Joseph Redmon",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "fpn_realpdf",
+      "via_author": "Kaiming He",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "mask_rcnn_realpdf",
+      "via_author": "Kaiming He",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_author": "Kaiming He",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_author": "Kaiming He",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "sppnet_realpdf",
+      "via_author": "Kaiming He",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "fpn_realpdf",
+      "target_corpus_work_id": "mask_rcnn_realpdf",
+      "via_author": "Kaiming He",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "fpn_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_author": "Kaiming He",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "fpn_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_author": "Kaiming He",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "fpn_realpdf",
+      "target_corpus_work_id": "sppnet_realpdf",
+      "via_author": "Kaiming He",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "mask_rcnn_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_author": "Kaiming He",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "mask_rcnn_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_author": "Kaiming He",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "mask_rcnn_realpdf",
+      "target_corpus_work_id": "sppnet_realpdf",
+      "via_author": "Kaiming He",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "retinanet_focal_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_author": "Kaiming He",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "retinanet_focal_realpdf",
+      "target_corpus_work_id": "sppnet_realpdf",
+      "via_author": "Kaiming He",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "rfcn_realpdf",
+      "target_corpus_work_id": "sppnet_realpdf",
+      "via_author": "Kaiming He",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "dn_detr_realpdf",
+      "via_author": "Lei Zhang",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "dn_detr_realpdf",
+      "via_author": "Lionel M. Ni",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "fpn_realpdf",
+      "target_corpus_work_id": "mask_rcnn_realpdf",
+      "via_author": "Piotr Dollár",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "fpn_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_author": "Piotr Dollár",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "mask_rcnn_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_author": "Piotr Dollár",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "fast_rcnn_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "via_author": "Ross Girshick",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "fast_rcnn_realpdf",
+      "target_corpus_work_id": "fpn_realpdf",
+      "via_author": "Ross Girshick",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "fast_rcnn_realpdf",
+      "target_corpus_work_id": "mask_rcnn_realpdf",
+      "via_author": "Ross Girshick",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "fast_rcnn_realpdf",
+      "target_corpus_work_id": "rcnn_realpdf",
+      "via_author": "Ross Girshick",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "fast_rcnn_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_author": "Ross Girshick",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "fast_rcnn_realpdf",
+      "target_corpus_work_id": "yolov1",
+      "via_author": "Ross Girshick",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "fpn_realpdf",
+      "via_author": "Ross Girshick",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "mask_rcnn_realpdf",
+      "via_author": "Ross Girshick",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "rcnn_realpdf",
+      "via_author": "Ross Girshick",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_author": "Ross Girshick",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "yolov1",
+      "via_author": "Ross Girshick",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "fpn_realpdf",
+      "target_corpus_work_id": "mask_rcnn_realpdf",
+      "via_author": "Ross Girshick",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "fpn_realpdf",
+      "target_corpus_work_id": "rcnn_realpdf",
+      "via_author": "Ross Girshick",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "fpn_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_author": "Ross Girshick",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "fpn_realpdf",
+      "target_corpus_work_id": "yolov1",
+      "via_author": "Ross Girshick",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "mask_rcnn_realpdf",
+      "target_corpus_work_id": "rcnn_realpdf",
+      "via_author": "Ross Girshick",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "mask_rcnn_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_author": "Ross Girshick",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "mask_rcnn_realpdf",
+      "target_corpus_work_id": "yolov1",
+      "via_author": "Ross Girshick",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "rcnn_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_author": "Ross Girshick",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "rcnn_realpdf",
+      "target_corpus_work_id": "yolov1",
+      "via_author": "Ross Girshick",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "retinanet_focal_realpdf",
+      "target_corpus_work_id": "yolov1",
+      "via_author": "Ross Girshick",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "sppnet_realpdf",
+      "via_author": "Shaoqing Ren",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "dn_detr_realpdf",
+      "via_author": "Shilong Liu",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_author",
+      "source_corpus_work_id": "fpn_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_author": "Tsung-Yi Lin",
+      "discovery_method": "derived_from_corpus_v1_authors"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "overfeat_realpdf",
+      "target_corpus_work_id": "sppnet_realpdf",
+      "via_dataset": "imagenet",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "atss_realpdf",
+      "target_corpus_work_id": "cascade_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "atss_realpdf",
+      "target_corpus_work_id": "centernet_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "atss_realpdf",
+      "target_corpus_work_id": "cornernet_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "atss_realpdf",
+      "target_corpus_work_id": "deformable_detr_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "atss_realpdf",
+      "target_corpus_work_id": "detr_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "atss_realpdf",
+      "target_corpus_work_id": "detrs_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "atss_realpdf",
+      "target_corpus_work_id": "dino_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "atss_realpdf",
+      "target_corpus_work_id": "dn_detr_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "atss_realpdf",
+      "target_corpus_work_id": "efficientdet_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "atss_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "atss_realpdf",
+      "target_corpus_work_id": "fcos_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "atss_realpdf",
+      "target_corpus_work_id": "fpn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "atss_realpdf",
+      "target_corpus_work_id": "gfl_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "atss_realpdf",
+      "target_corpus_work_id": "libra_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "atss_realpdf",
+      "target_corpus_work_id": "mask_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "atss_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "atss_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "atss_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "atss_realpdf",
+      "target_corpus_work_id": "tood_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "atss_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "atss_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "atss_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cascade_rcnn_realpdf",
+      "target_corpus_work_id": "centernet_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cascade_rcnn_realpdf",
+      "target_corpus_work_id": "cornernet_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cascade_rcnn_realpdf",
+      "target_corpus_work_id": "deformable_detr_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cascade_rcnn_realpdf",
+      "target_corpus_work_id": "detr_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cascade_rcnn_realpdf",
+      "target_corpus_work_id": "detrs_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cascade_rcnn_realpdf",
+      "target_corpus_work_id": "dino_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cascade_rcnn_realpdf",
+      "target_corpus_work_id": "dn_detr_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cascade_rcnn_realpdf",
+      "target_corpus_work_id": "efficientdet_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cascade_rcnn_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cascade_rcnn_realpdf",
+      "target_corpus_work_id": "fcos_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cascade_rcnn_realpdf",
+      "target_corpus_work_id": "fpn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cascade_rcnn_realpdf",
+      "target_corpus_work_id": "gfl_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cascade_rcnn_realpdf",
+      "target_corpus_work_id": "libra_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cascade_rcnn_realpdf",
+      "target_corpus_work_id": "mask_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cascade_rcnn_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cascade_rcnn_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cascade_rcnn_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cascade_rcnn_realpdf",
+      "target_corpus_work_id": "tood_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cascade_rcnn_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cascade_rcnn_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cascade_rcnn_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "centernet_realpdf",
+      "target_corpus_work_id": "cornernet_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "centernet_realpdf",
+      "target_corpus_work_id": "deformable_detr_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "centernet_realpdf",
+      "target_corpus_work_id": "detr_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "centernet_realpdf",
+      "target_corpus_work_id": "detrs_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "centernet_realpdf",
+      "target_corpus_work_id": "dino_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "centernet_realpdf",
+      "target_corpus_work_id": "dn_detr_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "centernet_realpdf",
+      "target_corpus_work_id": "efficientdet_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "centernet_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "centernet_realpdf",
+      "target_corpus_work_id": "fcos_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "centernet_realpdf",
+      "target_corpus_work_id": "fpn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "centernet_realpdf",
+      "target_corpus_work_id": "gfl_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "centernet_realpdf",
+      "target_corpus_work_id": "libra_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "centernet_realpdf",
+      "target_corpus_work_id": "mask_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "centernet_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "centernet_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "centernet_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "centernet_realpdf",
+      "target_corpus_work_id": "tood_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "centernet_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "centernet_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "centernet_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cornernet_realpdf",
+      "target_corpus_work_id": "deformable_detr_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cornernet_realpdf",
+      "target_corpus_work_id": "detr_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cornernet_realpdf",
+      "target_corpus_work_id": "detrs_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cornernet_realpdf",
+      "target_corpus_work_id": "dino_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cornernet_realpdf",
+      "target_corpus_work_id": "dn_detr_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cornernet_realpdf",
+      "target_corpus_work_id": "efficientdet_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cornernet_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cornernet_realpdf",
+      "target_corpus_work_id": "fcos_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cornernet_realpdf",
+      "target_corpus_work_id": "fpn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cornernet_realpdf",
+      "target_corpus_work_id": "gfl_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cornernet_realpdf",
+      "target_corpus_work_id": "libra_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cornernet_realpdf",
+      "target_corpus_work_id": "mask_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cornernet_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cornernet_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cornernet_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cornernet_realpdf",
+      "target_corpus_work_id": "tood_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cornernet_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cornernet_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "cornernet_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "deformable_detr_realpdf",
+      "target_corpus_work_id": "detr_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "deformable_detr_realpdf",
+      "target_corpus_work_id": "detrs_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "deformable_detr_realpdf",
+      "target_corpus_work_id": "dino_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "deformable_detr_realpdf",
+      "target_corpus_work_id": "dn_detr_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "deformable_detr_realpdf",
+      "target_corpus_work_id": "efficientdet_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "deformable_detr_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "deformable_detr_realpdf",
+      "target_corpus_work_id": "fcos_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "deformable_detr_realpdf",
+      "target_corpus_work_id": "fpn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "deformable_detr_realpdf",
+      "target_corpus_work_id": "gfl_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "deformable_detr_realpdf",
+      "target_corpus_work_id": "libra_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "deformable_detr_realpdf",
+      "target_corpus_work_id": "mask_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "deformable_detr_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "deformable_detr_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "deformable_detr_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "deformable_detr_realpdf",
+      "target_corpus_work_id": "tood_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "deformable_detr_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "deformable_detr_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "deformable_detr_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detr_realpdf",
+      "target_corpus_work_id": "detrs_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detr_realpdf",
+      "target_corpus_work_id": "dino_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detr_realpdf",
+      "target_corpus_work_id": "dn_detr_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detr_realpdf",
+      "target_corpus_work_id": "efficientdet_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detr_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detr_realpdf",
+      "target_corpus_work_id": "fcos_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detr_realpdf",
+      "target_corpus_work_id": "fpn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detr_realpdf",
+      "target_corpus_work_id": "gfl_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detr_realpdf",
+      "target_corpus_work_id": "libra_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detr_realpdf",
+      "target_corpus_work_id": "mask_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detr_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detr_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detr_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detr_realpdf",
+      "target_corpus_work_id": "tood_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detr_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detr_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detr_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detrs_realpdf",
+      "target_corpus_work_id": "dino_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detrs_realpdf",
+      "target_corpus_work_id": "dn_detr_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detrs_realpdf",
+      "target_corpus_work_id": "efficientdet_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detrs_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detrs_realpdf",
+      "target_corpus_work_id": "fcos_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detrs_realpdf",
+      "target_corpus_work_id": "fpn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detrs_realpdf",
+      "target_corpus_work_id": "gfl_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detrs_realpdf",
+      "target_corpus_work_id": "libra_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detrs_realpdf",
+      "target_corpus_work_id": "mask_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detrs_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detrs_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detrs_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detrs_realpdf",
+      "target_corpus_work_id": "tood_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detrs_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detrs_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detrs_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "dn_detr_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "efficientdet_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "fcos_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "fpn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "gfl_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "libra_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "mask_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "tood_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dino_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dn_detr_realpdf",
+      "target_corpus_work_id": "efficientdet_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dn_detr_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dn_detr_realpdf",
+      "target_corpus_work_id": "fcos_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dn_detr_realpdf",
+      "target_corpus_work_id": "fpn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dn_detr_realpdf",
+      "target_corpus_work_id": "gfl_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dn_detr_realpdf",
+      "target_corpus_work_id": "libra_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dn_detr_realpdf",
+      "target_corpus_work_id": "mask_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dn_detr_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dn_detr_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dn_detr_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dn_detr_realpdf",
+      "target_corpus_work_id": "tood_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dn_detr_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dn_detr_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "dn_detr_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "efficientdet_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "efficientdet_realpdf",
+      "target_corpus_work_id": "fcos_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "efficientdet_realpdf",
+      "target_corpus_work_id": "fpn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "efficientdet_realpdf",
+      "target_corpus_work_id": "gfl_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "efficientdet_realpdf",
+      "target_corpus_work_id": "libra_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "efficientdet_realpdf",
+      "target_corpus_work_id": "mask_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "efficientdet_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "efficientdet_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "efficientdet_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "efficientdet_realpdf",
+      "target_corpus_work_id": "tood_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "efficientdet_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "efficientdet_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "efficientdet_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "fcos_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "fpn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "gfl_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "libra_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "mask_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "tood_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fcos_realpdf",
+      "target_corpus_work_id": "fpn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fcos_realpdf",
+      "target_corpus_work_id": "gfl_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fcos_realpdf",
+      "target_corpus_work_id": "libra_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fcos_realpdf",
+      "target_corpus_work_id": "mask_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fcos_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fcos_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fcos_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fcos_realpdf",
+      "target_corpus_work_id": "tood_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fcos_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fcos_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fcos_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fpn_realpdf",
+      "target_corpus_work_id": "gfl_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fpn_realpdf",
+      "target_corpus_work_id": "libra_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fpn_realpdf",
+      "target_corpus_work_id": "mask_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fpn_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fpn_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fpn_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fpn_realpdf",
+      "target_corpus_work_id": "tood_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fpn_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fpn_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fpn_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "gfl_realpdf",
+      "target_corpus_work_id": "libra_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "gfl_realpdf",
+      "target_corpus_work_id": "mask_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "gfl_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "gfl_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "gfl_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "gfl_realpdf",
+      "target_corpus_work_id": "tood_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "gfl_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "gfl_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "gfl_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "libra_rcnn_realpdf",
+      "target_corpus_work_id": "mask_rcnn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "libra_rcnn_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "libra_rcnn_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "libra_rcnn_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "libra_rcnn_realpdf",
+      "target_corpus_work_id": "tood_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "libra_rcnn_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "libra_rcnn_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "libra_rcnn_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "mask_rcnn_realpdf",
+      "target_corpus_work_id": "retinanet_focal_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "mask_rcnn_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "mask_rcnn_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "mask_rcnn_realpdf",
+      "target_corpus_work_id": "tood_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "mask_rcnn_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "mask_rcnn_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "mask_rcnn_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "retinanet_focal_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "retinanet_focal_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "retinanet_focal_realpdf",
+      "target_corpus_work_id": "tood_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "retinanet_focal_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "retinanet_focal_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "retinanet_focal_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "rfcn_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "rfcn_realpdf",
+      "target_corpus_work_id": "tood_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "rfcn_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "rfcn_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "rfcn_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "ssd_realpdf",
+      "target_corpus_work_id": "tood_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "ssd_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "ssd_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "ssd_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "tood_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "tood_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "tood_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "yolov2_realpdf",
+      "target_corpus_work_id": "yolov3_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "yolov2_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "yolov3_realpdf",
+      "target_corpus_work_id": "yolox_realpdf",
+      "via_dataset": "mscoco",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "detrs_realpdf",
+      "target_corpus_work_id": "dino_realpdf",
+      "via_dataset": "objects365",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fast_rcnn_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fast_rcnn_realpdf",
+      "target_corpus_work_id": "libra_rcnn_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fast_rcnn_realpdf",
+      "target_corpus_work_id": "part_based_models_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fast_rcnn_realpdf",
+      "target_corpus_work_id": "rcnn_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fast_rcnn_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fast_rcnn_realpdf",
+      "target_corpus_work_id": "selective_search_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fast_rcnn_realpdf",
+      "target_corpus_work_id": "sppnet_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fast_rcnn_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fast_rcnn_realpdf",
+      "target_corpus_work_id": "yolov1",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fast_rcnn_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "libra_rcnn_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "part_based_models_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "rcnn_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "selective_search_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "sppnet_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "yolov1",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "libra_rcnn_realpdf",
+      "target_corpus_work_id": "part_based_models_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "libra_rcnn_realpdf",
+      "target_corpus_work_id": "rcnn_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "libra_rcnn_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "libra_rcnn_realpdf",
+      "target_corpus_work_id": "selective_search_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "libra_rcnn_realpdf",
+      "target_corpus_work_id": "sppnet_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "libra_rcnn_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "libra_rcnn_realpdf",
+      "target_corpus_work_id": "yolov1",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "libra_rcnn_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "part_based_models_realpdf",
+      "target_corpus_work_id": "rcnn_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "part_based_models_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "part_based_models_realpdf",
+      "target_corpus_work_id": "selective_search_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "part_based_models_realpdf",
+      "target_corpus_work_id": "sppnet_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "part_based_models_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "part_based_models_realpdf",
+      "target_corpus_work_id": "yolov1",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "part_based_models_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "rcnn_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "rcnn_realpdf",
+      "target_corpus_work_id": "selective_search_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "rcnn_realpdf",
+      "target_corpus_work_id": "sppnet_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "rcnn_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "rcnn_realpdf",
+      "target_corpus_work_id": "yolov1",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "rcnn_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "rfcn_realpdf",
+      "target_corpus_work_id": "selective_search_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "rfcn_realpdf",
+      "target_corpus_work_id": "sppnet_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "rfcn_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "rfcn_realpdf",
+      "target_corpus_work_id": "yolov1",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "rfcn_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "selective_search_realpdf",
+      "target_corpus_work_id": "sppnet_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "selective_search_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "selective_search_realpdf",
+      "target_corpus_work_id": "yolov1",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "selective_search_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "sppnet_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "sppnet_realpdf",
+      "target_corpus_work_id": "yolov1",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "sppnet_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "ssd_realpdf",
+      "target_corpus_work_id": "yolov1",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "ssd_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "yolov1",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "pascal_voc_2007",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fast_rcnn_realpdf",
+      "target_corpus_work_id": "faster_rcnn_realpdf",
+      "via_dataset": "pascal_voc_2012",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fast_rcnn_realpdf",
+      "target_corpus_work_id": "rcnn_realpdf",
+      "via_dataset": "pascal_voc_2012",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fast_rcnn_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_dataset": "pascal_voc_2012",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fast_rcnn_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "pascal_voc_2012",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fast_rcnn_realpdf",
+      "target_corpus_work_id": "yolov1",
+      "via_dataset": "pascal_voc_2012",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "fast_rcnn_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "pascal_voc_2012",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "rcnn_realpdf",
+      "via_dataset": "pascal_voc_2012",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_dataset": "pascal_voc_2012",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "pascal_voc_2012",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "yolov1",
+      "via_dataset": "pascal_voc_2012",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "faster_rcnn_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "pascal_voc_2012",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "rcnn_realpdf",
+      "target_corpus_work_id": "rfcn_realpdf",
+      "via_dataset": "pascal_voc_2012",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "rcnn_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "pascal_voc_2012",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "rcnn_realpdf",
+      "target_corpus_work_id": "yolov1",
+      "via_dataset": "pascal_voc_2012",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "rcnn_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "pascal_voc_2012",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "rfcn_realpdf",
+      "target_corpus_work_id": "ssd_realpdf",
+      "via_dataset": "pascal_voc_2012",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "rfcn_realpdf",
+      "target_corpus_work_id": "yolov1",
+      "via_dataset": "pascal_voc_2012",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "rfcn_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "pascal_voc_2012",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "ssd_realpdf",
+      "target_corpus_work_id": "yolov1",
+      "via_dataset": "pascal_voc_2012",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "ssd_realpdf",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "pascal_voc_2012",
+      "discovery_method": "manual_dataset_table"
+    },
+    {
+      "edge_type": "shares_dataset",
+      "source_corpus_work_id": "yolov1",
+      "target_corpus_work_id": "yolov2_realpdf",
+      "via_dataset": "pascal_voc_2012",
+      "discovery_method": "manual_dataset_table"
+    }
+  ]
+}

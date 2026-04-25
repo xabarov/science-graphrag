@@ -1,0 +1,70 @@
+{
+  "schema_version": 2,
+  "case_id": "concept_corpus_yolov1_v2",
+  "corpus_work_id": "yolov1",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "spot_check_required_fields": [
+      "concepts_present",
+      "concepts_absent"
+    ]
+  },
+  "concepts_present": [
+    {
+      "concept_id": "one_stage_detector",
+      "evidence_quote": "We frame object detection as a single regression problem ... a single neural network predicts bounding boxes and class probabilities."
+    },
+    {
+      "concept_id": "nms",
+      "evidence_quote": "We use non-maximal suppression to fix these multiple detections."
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "evidence_quote": "Our loss function is a sum-squared error over coordinates, confidence, and class probabilities."
+    },
+    {
+      "concept_id": "backbone_darknet",
+      "evidence_quote": null
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "evidence_quote": null
+    }
+  ],
+  "concepts_absent": [
+    {
+      "concept_id": "region_proposal",
+      "rationale": "YOLO removes the region-proposal stage entirely; detection is done in one network pass over the full image."
+    },
+    {
+      "concept_id": "anchor_based",
+      "rationale": "YOLOv1 predicts boxes directly per grid cell without using anchor priors (anchors first appeared in YOLOv2)."
+    },
+    {
+      "concept_id": "set_prediction",
+      "rationale": "YOLO does not use bipartite matching or set-prediction objectives; it relies on per-cell prediction + NMS."
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "rationale": "YOLOv1 uses convolutional + fully-connected layers, not transformers."
+    },
+    {
+      "concept_id": "focal_loss",
+      "rationale": "YOLOv1 predates focal loss; it uses sum-squared error reweighting for the no-object case."
+    },
+    {
+      "concept_id": "roi_align",
+      "rationale": "No ROI extraction step in YOLO."
+    },
+    {
+      "concept_id": "mask_branch",
+      "rationale": "YOLOv1 is a detection-only model; no segmentation branch."
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "rationale": "YOLOv1 features are learned by a Darknet-like CNN; no HOG/SIFT-style handcrafted descriptors."
+    }
+  ]
+}

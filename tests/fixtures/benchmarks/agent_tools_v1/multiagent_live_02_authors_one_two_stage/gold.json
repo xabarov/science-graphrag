@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "case_id": "multiagent_live_02_authors_one_two_stage",
+  "tier": "agent_tools_multiagent",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "question_file": "question.txt",
+  "expected_specialist_sequence": [
+    "graph_specialist",
+    "writer"
+  ],
+  "min_specialist_sequence_match": 0.5,
+  "allowed_alternative_sequences": [
+    [
+      "graph_specialist",
+      "retrieval_specialist",
+      "writer"
+    ]
+  ],
+  "expected_works_corpus_ids": [
+    "yolov1",
+    "rcnn_realpdf",
+    "fast_rcnn_realpdf",
+    "faster_rcnn_realpdf",
+    "mask_rcnn_realpdf"
+  ],
+  "expected_authors_canonical": [
+    "Ross Girshick"
+  ],
+  "answer_reference_text": "Ross Girshick is a co-author on the R-CNN family papers (R-CNN, Fast R-CNN, Faster R-CNN, Mask R-CNN — two-stage) and on YOLOv1 (one-stage), making him the most prominent author straddling both detector families in this corpus.",
+  "answer_metric": {
+    "type": "rouge_l",
+    "min_value": 0.18
+  },
+  "cypher_safety_required": 1.0
+}

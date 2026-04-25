@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "Deformable DETR achieves better performance than DETR with 10 times less training epochs.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "Deformable DETR can achieve better performance than DETR (especially on small objects) with 10× less training epochs."
+    },
+    {
+      "claim_text_normalized": "DETR requires 500 epochs to converge on the COCO benchmark.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "DETR needs 500 epochs to converge, which is around 10 to 20 times slower than Faster R-CNN."
+    },
+    {
+      "claim_text_normalized": "Deformable DETR's attention modules attend to a small set of key sampling points around a reference.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "Deformable DETR, whose attention modules only attend to a small set of key sampling points around a reference."
+    },
+    {
+      "claim_text_normalized": "DETR delivers relatively low performance at detecting small objects.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "DETR delivers relatively low performance at detecting small objects."
+    },
+    {
+      "claim_text_normalized": "Deformable DETR has on par FLOPs with Faster R-CNN + FPN and DETR-DC5.",
+      "claim_type": "comparison",
+      "polarity": "neutral",
+      "evidence_quote_short": "Our proposed Deformable DETR has on par FLOPs with Faster R-CNN + FPN and DETR-DC5."
+    },
+    {
+      "claim_text_normalized": "The deformable attention module is inspired by deformable convolution.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "Our proposed deformable attention module is inspired by deformable convolution."
+    },
+    {
+      "claim_text_normalized": "Deformable DETR's runtime speed is much faster than DETR-DC5.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "But the runtime speed is much faster (1.6×) than DETR-DC5."
+    },
+    {
+      "claim_text_normalized": "Using multi-scale inputs instead of single-scale inputs improves detection accuracy.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "Using multi-scale inputs instead of single-scale inputs can effectively improve detection accuracy with 1.7% AP."
+    }
+  ]
+}

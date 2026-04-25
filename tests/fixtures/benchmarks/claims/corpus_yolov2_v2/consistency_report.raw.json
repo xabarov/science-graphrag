@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "YOLOv2 achieves 76.8 mAP on VOC 2007 at 67 FPS.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "At 67 FPS, YOLOv2 gets 76.8 mAP on VOC 2007."
+    },
+    {
+      "claim_text_normalized": "YOLOv2 outperforms Faster R-CNN with ResNet and SSD while running significantly faster.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "outperforming state-of-the-art methods like Faster R-CNN with ResNet and SSD while still running significantly faster."
+    },
+    {
+      "claim_text_normalized": "YOLO9000 can detect over 9000 object categories in real-time.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "YOLO9000, a real-time object detector that can detect over 9000 different object categories."
+    },
+    {
+      "claim_text_normalized": "Adding batch normalization to YOLO improves mAP by more than 2%.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "By adding batch normalization on all of the convolutional layers in YOLO we get more than 2% improvement in mAP."
+    },
+    {
+      "claim_text_normalized": "Using anchor boxes with YOLO decreases accuracy slightly but increases recall.",
+      "claim_type": "finding",
+      "polarity": "neutral",
+      "evidence_quote_short": "Using anchor boxes we get a small decrease in accuracy. ... With anchor boxes our model gets69.2 mAP with a recall of 88%."
+    },
+    {
+      "claim_text_normalized": "YOLO9000 achieves 19.7 mAP on the ImageNet detection validation set with only partial detection data.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "YOLO9000 gets 19.7 mAP on the ImageNet detection validation set despite only having detection data for 44 of the 200 classes."
+    },
+    {
+      "claim_text_normalized": "The original YOLO suffers from a significant number of localization errors and low recall.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "YOLO makes a significant number of localization errors. Furthermore, YOLO has relatively low recall compared to region proposal-based methods."
+    },
+    {
+      "claim_text_normalized": "Darknet-19 requires only 5.58 billion operations and achieves 72.9% top-1 accuracy on ImageNet.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "Darknet-19 only requires 5.58 billion operations to process an image yet achieves 72.9% top-1 accuracy and 91.2% top-5 accuracy on ImageNet."
+    }
+  ]
+}

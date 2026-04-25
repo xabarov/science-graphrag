@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "pair_id": "c01_two_stage_vs_one_stage_accuracy",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "claim_a": {
+    "claim_id": "faster_rcnn_two_stage_sota",
+    "corpus_work_id": "faster_rcnn_realpdf",
+    "claim_text": "Two-stage detectors with region proposal networks achieve state-of-the-art object detection accuracy, while one-stage detectors trade accuracy for speed.",
+    "evidence_quote": "Our Faster R-CNN with VGG-16 ... has a frame rate of 5fps on a GPU, while achieving state-of-the-art object detection accuracy on PASCAL VOC 2007, 2012, and MS COCO datasets.",
+    "anchor_offset": {
+      "file": "article.md",
+      "approx_paragraph": 1
+    }
+  },
+  "claim_b": {
+    "claim_id": "retinanet_one_stage_match_accuracy",
+    "corpus_work_id": "retinanet_focal_realpdf",
+    "claim_text": "A one-stage detector trained with focal loss matches or exceeds two-stage detectors in accuracy, eliminating the historical accuracy-speed tradeoff.",
+    "evidence_quote": "We design and train a simple dense detector we call RetinaNet. Our results show that when trained with the focal loss, RetinaNet ... matches the speed of previous one-stage detectors while surpassing the accuracy of all existing state-of-the-art two-stage detectors.",
+    "anchor_offset": {
+      "file": "article.md",
+      "approx_paragraph": 1
+    }
+  },
+  "contradiction_type": "era_shift",
+  "severity": "nuanced",
+  "rationale": "Both papers are correct in their context: in 2015 two-stage detectors held the SOTA accuracy crown; in 2017 RetinaNet showed that addressing class imbalance with focal loss closes the gap. The contradiction is an era_shift, not a logical conflict.",
+  "expected_neo4j_pattern": "(:Work {corpus_work_id:'faster_rcnn_realpdf'})-[:CONTRADICTS {subtype:'era_shift'}]-(:Work {corpus_work_id:'retinanet_focal_realpdf'})"
+}

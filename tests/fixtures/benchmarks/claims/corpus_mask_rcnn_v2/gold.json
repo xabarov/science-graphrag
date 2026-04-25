@@ -1,0 +1,77 @@
+{
+  "schema_version": 2,
+  "case_id": "corpus_mask_rcnn_v2",
+  "corpus_work_id": "mask_rcnn_realpdf",
+  "benchmark_suite_tier": "claims_pilot_v2",
+  "claim_match_mode": "claim_id_or_normalized_text",
+  "source_layer1_fixture": "mask_rcnn_realpdf",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "spot_check_required_fields": [
+      "expected_claims[].claim_text_normalized",
+      "expected_claims[].polarity"
+    ]
+  },
+  "distractor_strategy": {
+    "type": "neighboring_paper_paragraphs",
+    "neighbor_corpus_work_ids": [
+      "faster_rcnn_realpdf",
+      "fpn_realpdf",
+      "cascade_rcnn_realpdf"
+    ],
+    "max_distractor_paragraphs": 3,
+    "rng_seed": 42
+  },
+  "expected_claims": [
+    {
+      "claim_id": "mask_rcnn_parallel_mask_branch",
+      "claim_type": "method",
+      "polarity": "positive",
+      "claim_text_normalized": "Mask R-CNN augments the Faster R-CNN detector with an additional, parallel head that outputs a per-instance binary segmentation mask for each proposal.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "mask_rcnn_roialign_quantization_fix",
+      "claim_type": "design_choice",
+      "polarity": "positive",
+      "claim_text_normalized": "ROIAlign replaces ROIPool by removing harsh feature quantization, which substantially improves mask localization accuracy.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "mask_rcnn_decoupled_per_class_sigmoid",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "claim_text_normalized": "Predicting per-class binary masks with sigmoid avoids inter-class competition that arises when mask classes are normalized with softmax.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "mask_rcnn_softmax_mask_competition_negative",
+      "claim_type": "comparison",
+      "polarity": "negative",
+      "claim_text_normalized": "Per-class softmax over mask classes induces inter-class competition that degrades mask quality compared to the per-class sigmoid formulation.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "mask_rcnn_pretraining_dependency_negative",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "claim_text_normalized": "Detection accuracy of Mask R-CNN drops noticeably without ImageNet pre-training, indicating a dependence on large-scale supervised pre-training of the backbone.",
+      "match_mode": "embedding_sim"
+    }
+  ],
+  "expected_claim_count_min": 5,
+  "expected_claim_count_max": 5,
+  "polarity_distribution_min": {
+    "positive": 1,
+    "negative": 1
+  },
+  "claim_type_distribution_min": {
+    "method": 1,
+    "design_choice": 1,
+    "finding": 1,
+    "comparison": 1,
+    "limitation": 1
+  }
+}

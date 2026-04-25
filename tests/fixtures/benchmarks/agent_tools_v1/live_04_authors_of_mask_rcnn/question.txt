@@ -1,0 +1,1 @@
+Who are the authors of the Mask R-CNN paper, and which other detection papers in the corpus share at least one author with it?

@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "case_id": "multiagent_live_01_yolo_evolution_writer",
+  "tier": "agent_tools_multiagent",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "question_file": "question.txt",
+  "expected_specialist_sequence": [
+    "retrieval_specialist",
+    "graph_specialist",
+    "writer"
+  ],
+  "min_specialist_sequence_match": 0.7,
+  "allowed_alternative_sequences": [
+    [
+      "graph_specialist",
+      "retrieval_specialist",
+      "writer"
+    ],
+    [
+      "retrieval_specialist",
+      "writer"
+    ]
+  ],
+  "expected_works_corpus_ids": [
+    "yolov1",
+    "yolov2_realpdf",
+    "yolov3_realpdf",
+    "yolox_realpdf"
+  ],
+  "answer_reference_text": "YOLOv1 frames detection as a single regression problem on a fixed grid; YOLOv2 (YOLO9000) adds anchor boxes, batch normalisation and Darknet-19; YOLOv3 introduces multi-scale prediction and Darknet-53; YOLOX decouples the classification and regression heads and adopts an anchor-free formulation.",
+  "answer_metric": {
+    "type": "rouge_l",
+    "min_value": 0.18
+  },
+  "cypher_safety_required": 1.0
+}

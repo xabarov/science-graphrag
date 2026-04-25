@@ -1,0 +1,1 @@
+Compound scaling of depth, width, and input resolution for efficient object detection.

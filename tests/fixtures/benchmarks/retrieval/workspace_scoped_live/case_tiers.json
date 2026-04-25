@@ -1,0 +1,13 @@
+{
+  "smoke": [
+    "contract_shape"
+  ],
+  "workspace_scoped_live_pilot": [
+    "ws_yolo_speed_question",
+    "ws_yolo_negative_mask_segmentation",
+    "ws_two_stage_proposal_evolution",
+    "ws_two_stage_negative_focal_loss",
+    "ws_full_anchor_free_overview",
+    "ws_full_corpus_negative_unrelated"
+  ]
+}

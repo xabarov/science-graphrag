@@ -1,0 +1,1 @@
+Object detection by predicting paired bounding-box keypoints (top-left and bottom-right corners).

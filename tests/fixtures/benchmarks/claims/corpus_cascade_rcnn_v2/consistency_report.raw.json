@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "Cascade R-CNN is a multi-stage object detection architecture that addresses overfitting and inference-time mismatch.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "A multi-stage object detection architecture, the Cascade R-CNN, is proposed to address these problems."
+    },
+    {
+      "claim_text_normalized": "Cascade R-CNN surpasses all single-model object detectors on the COCO dataset.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "A simple implementation of the Cascade R-CNN is shown to surpass all single-model object detectors on the challenging COCO dataset."
+    },
+    {
+      "claim_text_normalized": "Cascade R-CNN achieves consistent gains across detector architectures independently of baseline strength.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "Experiments also show that the Cascade R-CNN is widely applicable across detector architectures, achieving consistent gains independently of the baseline detector strength."
+    },
+    {
+      "claim_text_normalized": "Training a detector with a high IoU threshold can degrade detection performance due to overfitting.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "However, detection performance tends to degrade with increasing the IoU thresholds."
+    },
+    {
+      "claim_text_normalized": "A single detector can only be optimal for a single quality level.",
+      "claim_type": "finding",
+      "polarity": "neutral",
+      "evidence_quote_short": "The basic idea is that a single detector can only be optimal for a single quality level."
+    },
+    {
+      "claim_text_normalized": "The output IoU of a regressor is almost invariably better than the input IoU.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "This is motivated by the observation that the output IoU of a regressor is almost invariably better than the input IoU."
+    },
+    {
+      "claim_text_normalized": "Cascade R-CNN improves localization performance over iterative bounding box regression.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "The cascade regressor has better performance at later stages, outperforming iterative BBox at almost all IoU levels."
+    },
+    {
+      "claim_text_normalized": "The Cascade R-CNN outperforms the integral loss detector across all IoU evaluation metrics.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "The cascade R-CNN has the best performance for all evaluation metrics."
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "DETR streamlines the detection pipeline by removing the need for many hand-designed components like non-maximum suppression or anchor generation.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "Our approach streamlines the detection pipeline, effectively removing the need for many hand-designed components like a non-maximum suppression procedure or anchor generation"
+    },
+    {
+      "claim_text_normalized": "DETR demonstrates accuracy and run-time performance on par with the well-established Faster R-CNN baseline on the COCO dataset.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "DETR demonstrates accuracy and run-time performance on par with the well-established and highly-optimized Faster R-CNN baseline on the challenging COCO object detection dataset."
+    },
+    {
+      "claim_text_normalized": "DETR obtains lower performances on small objects compared to Faster R-CNN.",
+      "claim_type": "performance",
+      "polarity": "negative",
+      "evidence_quote_short": "It obtains, however, lower performances on small objects."
+    },
+    {
+      "claim_text_normalized": "DETR significantly outperforms competitive baselines on panoptic segmentation.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "Moreover, DETR can be easily generalized to produce panoptic segmentation in a unified manner. We show that it significantly outperforms competitive baselines."
+    },
+    {
+      "claim_text_normalized": "The new model requires extra-long training schedule and benefits from auxiliary decoding losses in the transformer.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "The new model requires extra-long training schedule and benefits from auxiliary decoding losses in the transformer."
+    },
+    {
+      "claim_text_normalized": "DETR achieves significantly better performance on large objects than Faster R-CNN.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "DETR demonstrates significantly better performance on large objects"
+    },
+    {
+      "claim_text_normalized": "DETR does not require any customized layers and can be reproduced easily in any framework that contains standard CNN and transformer classes.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "Unlike most existing detection methods, DETR doesn’t require any customized layers, and thus can be reproduced easily in any framework that contains standard CNN and transformer classes."
+    },
+    {
+      "claim_text_normalized": "The main ingredients of DETR are a set-based global loss that forces unique predictions via bipartite matching and a transformer encoder-decoder architecture.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "The main ingredients of the new framework, called DEtection TRansformer or DETR, are a set-based global loss that forces unique predictions via bipartite matching, and a transformer encoder-decoder architecture."
+    }
+  ]
+}

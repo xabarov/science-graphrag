@@ -1,0 +1,74 @@
+{
+  "schema_version": 2,
+  "case_id": "concept_corpus_mask_rcnn_v2",
+  "corpus_work_id": "mask_rcnn_realpdf",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "spot_check_required_fields": [
+      "concepts_present",
+      "concepts_absent"
+    ]
+  },
+  "concepts_present": [
+    {
+      "concept_id": "mask_branch",
+      "evidence_quote": "Mask R-CNN extends Faster R-CNN by adding a branch for predicting an object mask in parallel with the existing branch for bounding box recognition."
+    },
+    {
+      "concept_id": "roi_align",
+      "evidence_quote": "We propose a layer called RoIAlign that removes the harsh quantization of RoIPool."
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "evidence_quote": "Mask R-CNN is conceptually simple: Faster R-CNN has two outputs for each candidate object ... we add a third branch."
+    },
+    {
+      "concept_id": "region_proposal",
+      "evidence_quote": "We adopt the same two-stage procedure, with an identical first stage (which is RPN)."
+    },
+    {
+      "concept_id": "anchor_based",
+      "evidence_quote": "Anchors are inherited from Faster R-CNN's RPN."
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "evidence_quote": "We use FPN as a default backbone."
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "evidence_quote": "We use ResNet and ResNeXt networks of depth 50 or 101 layers."
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "evidence_quote": "Loss is L = L_cls + L_box + L_mask."
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "evidence_quote": "We evaluate on the challenging COCO dataset ..."
+    }
+  ],
+  "concepts_absent": [
+    {
+      "concept_id": "anchor_free",
+      "rationale": "Mask R-CNN inherits the anchor-based design of Faster R-CNN."
+    },
+    {
+      "concept_id": "set_prediction",
+      "rationale": "NMS-based deduplication; no bipartite matching."
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "rationale": "Convolutional architecture; no transformer."
+    },
+    {
+      "concept_id": "focal_loss",
+      "rationale": "Standard cross-entropy + smooth-L1 + per-pixel sigmoid for masks; no focal."
+    },
+    {
+      "concept_id": "compound_scaling",
+      "rationale": "Not used in Mask R-CNN."
+    }
+  ]
+}

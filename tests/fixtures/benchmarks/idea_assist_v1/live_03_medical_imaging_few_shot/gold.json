@@ -1,0 +1,27 @@
+{
+  "schema_version": 2,
+  "case_id": "live_03_medical_imaging_few_shot",
+  "tier": "idea_assist_live",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "scenario_file": "scenario.json",
+  "seed_topic": "Adapt a general-purpose object detector to a medical imaging domain (e.g. polyp detection in colonoscopy frames) using fewer than 200 annotated examples.",
+  "supporting_claim_ids_min": 2,
+  "supporting_claim_id_pool": [
+    "mask_rcnn_pretraining_dependency_negative",
+    "retinanet_focal_loss_definition",
+    "deformable_detr_10x_faster_convergence",
+    "faster_rcnn_anchor_boxes",
+    "rcnn_inference_2k_proposals_slow_negative"
+  ],
+  "forbidden_substrings": [
+    "Mask R-CNN extends Faster R-CNN by adding a branch for predicting an object mask",
+    "Region Proposal Network shares full-image convolutional features"
+  ],
+  "max_rouge_l_against_evidence_quotes": 0.7,
+  "novelty_must_reference_gap": true,
+  "reference_hypothesis_optional": "Fine-tune a Deformable DETR pre-trained on COCO with a domain-specific contrastive head on unlabeled colonoscopy frames followed by 200-shot supervised fine-tuning, targeting matching specialist polyp detector recall while reducing labelling cost by 10x."
+}

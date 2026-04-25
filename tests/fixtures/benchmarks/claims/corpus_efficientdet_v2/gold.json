@@ -1,0 +1,77 @@
+{
+  "schema_version": 2,
+  "case_id": "corpus_efficientdet_v2",
+  "corpus_work_id": "efficientdet_realpdf",
+  "benchmark_suite_tier": "claims_pilot_v2",
+  "claim_match_mode": "claim_id_or_normalized_text",
+  "source_layer1_fixture": "efficientdet_realpdf",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "spot_check_required_fields": [
+      "expected_claims[].claim_text_normalized",
+      "expected_claims[].polarity"
+    ]
+  },
+  "distractor_strategy": {
+    "type": "neighboring_paper_paragraphs",
+    "neighbor_corpus_work_ids": [
+      "retinanet_focal_realpdf",
+      "fpn_realpdf",
+      "ssd_realpdf"
+    ],
+    "max_distractor_paragraphs": 3,
+    "rng_seed": 42
+  },
+  "expected_claims": [
+    {
+      "claim_id": "efficientdet_bifpn_weighted",
+      "claim_type": "method",
+      "polarity": "positive",
+      "claim_text_normalized": "EfficientDet introduces a Bidirectional Feature Pyramid Network (BiFPN) with weighted feature fusion to combine multi-scale features more effectively than top-down-only pyramids.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "efficientdet_compound_scaling",
+      "claim_type": "design_choice",
+      "polarity": "positive",
+      "claim_text_normalized": "A compound scaling rule jointly scales backbone depth, BiFPN width and depth, and input resolution rather than scaling a single dimension in isolation.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "efficientdet_d7_55_ap_efficient",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "claim_text_normalized": "EfficientDet-D7 achieves around 55 AP on COCO with significantly fewer FLOPs and parameters than prior detectors at similar accuracy levels.",
+      "match_mode": "rouge_l"
+    },
+    {
+      "claim_id": "efficientdet_single_dim_scaling_negative",
+      "claim_type": "comparison",
+      "polarity": "negative",
+      "claim_text_normalized": "Scaling only network depth, only width, or only input resolution leads to a suboptimal accuracy-efficiency tradeoff compared to compound multi-dimension scaling.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "efficientdet_throughput_tradeoff_negative",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "claim_text_normalized": "EfficientDet trades raw GPU latency for parameter and FLOP efficiency, which can disadvantage it on hardware tuned for high-throughput inference of larger but simpler architectures.",
+      "match_mode": "embedding_sim"
+    }
+  ],
+  "expected_claim_count_min": 5,
+  "expected_claim_count_max": 5,
+  "polarity_distribution_min": {
+    "positive": 1,
+    "negative": 1
+  },
+  "claim_type_distribution_min": {
+    "method": 1,
+    "design_choice": 1,
+    "performance": 1,
+    "comparison": 1,
+    "limitation": 1
+  }
+}

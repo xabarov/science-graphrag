@@ -1,0 +1,240 @@
+{
+  "schema_version": 3,
+  "entity_type": "institution",
+  "description": "Institution-level dedup gold for Wave T (BT11). Records contain surface variations as observed in tests/fixtures/benchmarks/layer1/*_realpdf/gold_enrichment_*.json (step_b_header_metadata.authors[].affiliations). Clusters encode positive ground truth, negative_pairs encode 'must not merge'. See docs/specs/benchmark-gold-schemas-v1.md section 9 for schema and tests/fixtures/corpus/CATALOG.md section 5 for source institutions.",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "spot_check_required_fields": ["clusters[].entity_ids", "negative_pairs[].entity_ids"]
+  },
+  "records": [
+    {
+      "entity_id": "inst_msr_full",
+      "display_name": "Microsoft Research",
+      "surface_form": "Microsoft Research",
+      "context_attributes": {
+        "country": "US",
+        "ror_id": "https://ror.org/00d0nc645",
+        "appears_in_corpus_work_ids": ["faster_rcnn_realpdf", "rfcn_realpdf", "sppnet_realpdf", "mask_rcnn_realpdf"]
+      }
+    },
+    {
+      "entity_id": "inst_msr_acronym",
+      "display_name": "MSR",
+      "surface_form": "MSR",
+      "context_attributes": {
+        "country": "US",
+        "appears_in_corpus_work_ids": [],
+        "synthetic_alias_form": true,
+        "rationale": "Common abbreviation for Microsoft Research; appears in some bibliography styles."
+      }
+    },
+    {
+      "entity_id": "inst_msr_visual_computing_group",
+      "display_name": "Visual Computing Group, Microsoft Research",
+      "surface_form": "Visual Computing Group, Microsoft Research",
+      "context_attributes": {
+        "country": "US",
+        "appears_in_corpus_work_ids": ["faster_rcnn_realpdf"],
+        "rationale": "Internal group within MSR; should map to MSR for canonical institution."
+      }
+    },
+    {
+      "entity_id": "inst_msr_asia",
+      "display_name": "Microsoft Research Asia",
+      "surface_form": "Microsoft Research Asia",
+      "context_attributes": {
+        "country": "CN",
+        "ror_id": "https://ror.org/01nrjzg42",
+        "parent_institution_id": "inst_msr_full",
+        "appears_in_corpus_work_ids": ["rfcn_realpdf"],
+        "rationale": "Distinct legal entity; same Microsoft umbrella but DIFFERENT lab. Treated as separate canonical."
+      }
+    },
+    {
+      "entity_id": "inst_msra_acronym",
+      "display_name": "MSRA",
+      "surface_form": "MSRA",
+      "context_attributes": {"country": "CN", "appears_in_corpus_work_ids": [], "synthetic_alias_form": true}
+    },
+    {
+      "entity_id": "inst_fair_full",
+      "display_name": "Facebook AI Research",
+      "surface_form": "Facebook AI Research",
+      "context_attributes": {
+        "country": "US",
+        "ror_id": "https://ror.org/0223bsq45",
+        "appears_in_corpus_work_ids": ["yolov1", "faster_rcnn_realpdf", "mask_rcnn_realpdf", "fpn_realpdf", "retinanet_focal_realpdf", "detr_realpdf"]
+      }
+    },
+    {
+      "entity_id": "inst_fair_acronym",
+      "display_name": "FAIR",
+      "surface_form": "FAIR",
+      "context_attributes": {"country": "US", "appears_in_corpus_work_ids": [], "synthetic_alias_form": true}
+    },
+    {
+      "entity_id": "inst_meta_ai_renamed",
+      "display_name": "Meta AI",
+      "surface_form": "Meta AI",
+      "context_attributes": {
+        "country": "US",
+        "appears_in_corpus_work_ids": [],
+        "rename_history": "FAIR rebranded to Meta AI after 2021",
+        "synthetic_alias_form": true,
+        "rationale": "Same legal entity post-rename; matches FAIR canonical."
+      }
+    },
+    {
+      "entity_id": "inst_uw_full",
+      "display_name": "University of Washington",
+      "surface_form": "University of Washington",
+      "context_attributes": {
+        "country": "US",
+        "ror_id": "https://ror.org/00cvxb145",
+        "appears_in_corpus_work_ids": ["yolov1"]
+      }
+    },
+    {
+      "entity_id": "inst_uw_acronym",
+      "display_name": "UW",
+      "surface_form": "UW",
+      "context_attributes": {"country": "US", "synthetic_alias_form": true}
+    },
+    {
+      "entity_id": "inst_ai2_full",
+      "display_name": "Allen Institute for AI",
+      "surface_form": "Allen Institute for AI",
+      "context_attributes": {
+        "country": "US",
+        "appears_in_corpus_work_ids": ["yolov1"]
+      }
+    },
+    {
+      "entity_id": "inst_ai2_acronym",
+      "display_name": "AI2",
+      "surface_form": "AI2",
+      "context_attributes": {"country": "US", "synthetic_alias_form": true}
+    },
+    {
+      "entity_id": "inst_ucb_full",
+      "display_name": "UC Berkeley",
+      "surface_form": "UC Berkeley",
+      "context_attributes": {
+        "country": "US",
+        "appears_in_corpus_work_ids": ["rcnn_realpdf"]
+      }
+    },
+    {
+      "entity_id": "inst_ucb_long_form",
+      "display_name": "University of California, Berkeley",
+      "surface_form": "University of California, Berkeley",
+      "context_attributes": {"country": "US", "synthetic_alias_form": true}
+    },
+    {
+      "entity_id": "inst_megvii",
+      "display_name": "MEGVII Technology",
+      "surface_form": "MEGVII Technology",
+      "context_attributes": {
+        "country": "CN",
+        "appears_in_corpus_work_ids": ["yolox_realpdf"]
+      }
+    },
+    {
+      "entity_id": "inst_megvii_short",
+      "display_name": "Megvii",
+      "surface_form": "Megvii",
+      "context_attributes": {"country": "CN", "synthetic_alias_form": true}
+    },
+    {
+      "entity_id": "inst_ustc",
+      "display_name": "University of Science and Technology of China",
+      "surface_form": "University of Science and Technology of China",
+      "context_attributes": {
+        "country": "CN",
+        "appears_in_corpus_work_ids": ["faster_rcnn_realpdf"]
+      }
+    },
+    {
+      "entity_id": "inst_cuhk",
+      "display_name": "Chinese University of Hong Kong",
+      "surface_form": "Chinese University of Hong Kong",
+      "context_attributes": {
+        "country": "HK",
+        "appears_in_corpus_work_ids": ["libra_rcnn_realpdf"]
+      }
+    },
+    {
+      "entity_id": "inst_cuhk_acronym",
+      "display_name": "CUHK",
+      "surface_form": "CUHK",
+      "context_attributes": {"country": "HK", "synthetic_alias_form": true}
+    },
+    {
+      "entity_id": "inst_uchicago_unrelated",
+      "display_name": "University of Chicago",
+      "surface_form": "University of Chicago",
+      "context_attributes": {
+        "country": "US",
+        "appears_in_corpus_work_ids": [],
+        "synthetic_for_negative_pair": true,
+        "rationale": "Different institution; abbreviation 'UChicago' would not collide with UW or UC Berkeley but is included for negative-pair coverage of US universities."
+      }
+    }
+  ],
+  "clusters": [
+    {
+      "cluster_id": "cluster_msr",
+      "entity_ids": ["inst_msr_full", "inst_msr_acronym", "inst_msr_visual_computing_group"],
+      "rationale": "Microsoft Research (Redmond/HQ) including internal Visual Computing Group sub-team; MSR acronym."
+    },
+    {
+      "cluster_id": "cluster_fair",
+      "entity_ids": ["inst_fair_full", "inst_fair_acronym", "inst_meta_ai_renamed"],
+      "rationale": "Facebook AI Research (FAIR) and its post-rebrand identity Meta AI map to one canonical institution."
+    },
+    {
+      "cluster_id": "cluster_uw",
+      "entity_ids": ["inst_uw_full", "inst_uw_acronym"],
+      "rationale": "University of Washington (Redmon's affiliation in YOLO papers)."
+    },
+    {
+      "cluster_id": "cluster_ai2",
+      "entity_ids": ["inst_ai2_full", "inst_ai2_acronym"],
+      "rationale": "Allen Institute for AI."
+    },
+    {
+      "cluster_id": "cluster_ucb",
+      "entity_ids": ["inst_ucb_full", "inst_ucb_long_form"],
+      "rationale": "UC Berkeley (R-CNN paper affiliation)."
+    },
+    {
+      "cluster_id": "cluster_megvii",
+      "entity_ids": ["inst_megvii", "inst_megvii_short"],
+      "rationale": "MEGVII Technology (YOLOX). Capitalization variations in citations."
+    },
+    {
+      "cluster_id": "cluster_cuhk",
+      "entity_ids": ["inst_cuhk", "inst_cuhk_acronym"],
+      "rationale": "Chinese University of Hong Kong."
+    }
+  ],
+  "negative_pairs": [
+    {
+      "pair_id": "neg_msr_vs_msra",
+      "entity_ids": ["inst_msr_full", "inst_msr_asia"],
+      "rationale": "Microsoft Research (Redmond) vs Microsoft Research Asia (Beijing) are DIFFERENT labs with separate research programs. Auto-merging would lose lab attribution. Both share Microsoft umbrella via parent_institution_id but should remain distinct."
+    },
+    {
+      "pair_id": "neg_msr_acronym_vs_msra_acronym",
+      "entity_ids": ["inst_msr_acronym", "inst_msra_acronym"],
+      "rationale": "MSR vs MSRA differ by single character but represent distinct labs."
+    },
+    {
+      "pair_id": "neg_uw_vs_uchicago",
+      "entity_ids": ["inst_uw_full", "inst_uchicago_unrelated"],
+      "rationale": "Different US universities; 'University of W...' prefix collision is shallow."
+    }
+  ]
+}

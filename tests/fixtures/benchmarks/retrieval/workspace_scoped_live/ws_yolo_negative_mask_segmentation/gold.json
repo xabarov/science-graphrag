@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "case_id": "ws_yolo_negative_mask_segmentation",
+  "workspace_id": "ws_yolo_family",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "question_file": "question.txt",
+  "answer_reference_text": "No paper in the YOLO-family workspace introduces a per-instance mask prediction branch; instance segmentation with a mask branch is the contribution of Mask R-CNN, which is not part of this workspace.",
+  "answer_metric": {
+    "type": "abstain_keywords",
+    "must_contain_any": [
+      "no paper",
+      "not in",
+      "out of scope",
+      "outside",
+      "n/a",
+      "not present"
+    ]
+  },
+  "expected_citations_min_count": 0,
+  "expected_citations": [],
+  "forbidden_corpus_work_ids": [
+    "mask_rcnn_realpdf",
+    "rcnn_realpdf",
+    "fast_rcnn_realpdf",
+    "faster_rcnn_realpdf",
+    "cascade_rcnn_realpdf",
+    "rfcn_realpdf"
+  ],
+  "forbidden_violation_gate": 0,
+  "expected_behavior": "abstain_or_empty"
+}

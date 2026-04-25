@@ -1,0 +1,1 @@
+Which papers in this corpus pioneer the anchor-free object detection paradigm and what is each one's main contribution?

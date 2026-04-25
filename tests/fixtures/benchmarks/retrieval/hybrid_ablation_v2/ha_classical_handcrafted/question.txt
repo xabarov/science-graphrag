@@ -1,0 +1,1 @@
+Pre-deep-learning object detection using histogram-of-oriented-gradients and deformable parts models.

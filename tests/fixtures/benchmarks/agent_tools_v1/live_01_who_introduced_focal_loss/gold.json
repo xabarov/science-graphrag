@@ -1,0 +1,54 @@
+{
+  "schema_version": 2,
+  "case_id": "live_01_who_introduced_focal_loss",
+  "tier": "agent_tools_live",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "question_file": "question.txt",
+  "expected_tool_sequence": [
+    {
+      "tool_name": "vector_search",
+      "args_match": {
+        "query_contains_any": [
+          "focal loss",
+          "class imbalance",
+          "dense detector"
+        ]
+      },
+      "required": true
+    },
+    {
+      "tool_name": "cypher_query",
+      "args_match": {
+        "query_contains_any": [
+          "MENTIONS_METHOD",
+          "Method",
+          "focal_loss"
+        ],
+        "query_contains_all": [
+          "focal_loss"
+        ]
+      },
+      "required": true
+    },
+    {
+      "tool_name": "cite_works",
+      "required": false
+    }
+  ],
+  "expected_methods_canonical": [
+    "focal_loss"
+  ],
+  "expected_works_corpus_ids": [
+    "retinanet_focal_realpdf"
+  ],
+  "answer_reference_text": "Focal loss was introduced by RetinaNet (Lin et al., 2017) to address the extreme foreground-background class imbalance encountered when training a one-stage dense detector. The canonical method name is focal_loss; it down-weights the loss assigned to well-classified examples via a modulating factor on the standard cross-entropy.",
+  "answer_metric": {
+    "type": "rouge_l",
+    "min_value": 0.2
+  },
+  "cypher_safety_required": 1.0
+}

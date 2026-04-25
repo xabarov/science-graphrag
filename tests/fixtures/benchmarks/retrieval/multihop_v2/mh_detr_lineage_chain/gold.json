@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "case_id": "mh_detr_lineage_chain",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "question_file": "question.txt",
+  "expected_path_kind": "ordered_chain",
+  "expected_neo4j_relations_used": [
+    "EXTENDS",
+    "CITES"
+  ],
+  "infrastructure_required": [
+    "neo4j",
+    "qdrant"
+  ],
+  "expected_chain_corpus_work_ids": [
+    "detr_realpdf",
+    "deformable_detr_realpdf",
+    "dn_detr_realpdf",
+    "dino_realpdf"
+  ],
+  "min_chain_order_correctness": 0.7
+}

@@ -75,5 +75,20 @@
         }
       ]
     }
-  }
+  },
+  "agent_tools_live_pilot": [
+    "live_01_who_introduced_focal_loss",
+    "live_02_anchor_free_papers_overview",
+    "live_03_yolov3_speed_paper_only",
+    "live_04_authors_of_mask_rcnn",
+    "live_05_compare_two_stage_one_stage_accuracy",
+    "live_06_negative_blockchain_unanswerable"
+  ],
+  "agent_tools_multiagent_live": [
+    "multiagent_live_01_yolo_evolution_writer",
+    "multiagent_live_02_authors_one_two_stage"
+  ],
+  "agent_tools_adversarial_cypher": [
+    "adversarial_cypher_01_drop_method_nodes"
+  ]
 }

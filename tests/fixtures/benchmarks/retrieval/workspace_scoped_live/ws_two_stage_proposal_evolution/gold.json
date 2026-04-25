@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "case_id": "ws_two_stage_proposal_evolution",
+  "workspace_id": "ws_two_stage",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "question_file": "question.txt",
+  "answer_reference_text": "R-CNN used external Selective Search proposals fed into a CNN per region. Fast R-CNN moved feature extraction to a single shared forward pass and applied RoI pooling, but still relied on external proposals. Faster R-CNN replaced external proposals with an integrated Region Proposal Network (RPN) that shares features with the detection head, making proposals nearly cost-free.",
+  "answer_metric": {
+    "type": "rouge_l",
+    "min_value": 0.2
+  },
+  "expected_citations_min_count": 3,
+  "expected_citations": [
+    {
+      "corpus_work_id": "rcnn_realpdf",
+      "required": true
+    },
+    {
+      "corpus_work_id": "fast_rcnn_realpdf",
+      "required": true
+    },
+    {
+      "corpus_work_id": "faster_rcnn_realpdf",
+      "required": true
+    }
+  ],
+  "forbidden_corpus_work_ids": [
+    "yolov1",
+    "yolov2_realpdf",
+    "yolov3_realpdf",
+    "yolox_realpdf",
+    "ssd_realpdf",
+    "retinanet_focal_realpdf",
+    "detr_realpdf",
+    "deformable_detr_realpdf",
+    "dn_detr_realpdf",
+    "dino_realpdf",
+    "fcos_realpdf",
+    "atss_realpdf",
+    "cornernet_realpdf",
+    "centernet_realpdf",
+    "efficientdet_realpdf",
+    "gfl_realpdf",
+    "tood_realpdf",
+    "hog_human_detection_realpdf",
+    "part_based_models_realpdf",
+    "selective_search_realpdf",
+    "sppnet_realpdf",
+    "overfeat_realpdf",
+    "fpn_realpdf",
+    "detrs_realpdf"
+  ],
+  "forbidden_violation_gate": 0
+}

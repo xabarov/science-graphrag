@@ -1,0 +1,1 @@
+How does the accuracy of one-stage detectors compare to two-stage detectors as reflected in the Faster R-CNN and RetinaNet papers, and what changed between them?

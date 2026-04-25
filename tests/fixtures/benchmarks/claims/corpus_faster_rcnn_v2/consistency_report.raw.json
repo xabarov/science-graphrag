@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "The Region Proposal Network shares full-image convolutional features with the detection network.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "we introduce a Region Proposal Network (RPN) that shares full-image convolutional features with the detection network"
+    },
+    {
+      "claim_text_normalized": "Faster R-CNN achieves state-of-the-art object detection accuracy on PASCAL VOC 2007, 2012, and MS COCO datasets.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "achieving state-of-the-art object detection accuracy on PASCAL VOC 2007, 2012, and MS COCO datasets"
+    },
+    {
+      "claim_text_normalized": "The RPN is a fully convolutional network that simultaneously predicts object bounds and objectness scores.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "An RPN is a fully convolutional network that simultaneously predicts object bounds and objectness scores at each position."
+    },
+    {
+      "claim_text_normalized": "Selective Search is an order of magnitude slower than efficient detection networks.",
+      "claim_type": "comparison",
+      "polarity": "negative",
+      "evidence_quote_short": "Selective Search is an order of magnitude slower, at 2 seconds per image in a CPU implementation."
+    },
+    {
+      "claim_text_normalized": "The marginal cost for computing proposals with RPN is small, e.g., 10ms per image.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "the marginal cost for computing proposals is small ( e.g., 10ms per image)."
+    },
+    {
+      "claim_text_normalized": "Faster R-CNN with VGG-16 has a frame rate of 5fps on a GPU.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "our detection system has a frame rate of 5fps ( including all steps ) on a GPU"
+    },
+    {
+      "claim_text_normalized": "RPNs are trained end-to-end to generate high-quality region proposals.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "The RPN is trained end-to-end to generate high-quality region proposals"
+    },
+    {
+      "claim_text_normalized": "The region proposal step is the test-time computational bottleneck in state-of-the-art detection systems.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "proposals are the test-time computational bottleneck in state-of-the-art detection systems."
+    }
+  ]
+}

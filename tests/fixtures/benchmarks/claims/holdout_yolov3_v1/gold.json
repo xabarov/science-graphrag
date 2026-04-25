@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "case_id": "holdout_yolov3_v1",
+  "corpus_work_id": "yolov3_realpdf",
+  "benchmark_suite_tier": "claims_holdout_v1",
+  "claim_match_mode": "claim_id_or_normalized_text",
+  "source_layer1_fixture": "yolov3_realpdf",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "spot_check_required_fields": [
+      "expected_claims[].claim_text_normalized",
+      "expected_claims[].polarity"
+    ]
+  },
+  "distractor_strategy": {
+    "type": "neighboring_paper_paragraphs",
+    "neighbor_corpus_work_ids": [
+      "yolov2_realpdf",
+      "yolox_realpdf",
+      "ssd_realpdf"
+    ],
+    "max_distractor_paragraphs": 3,
+    "rng_seed": 42
+  },
+  "expected_claims": [
+    {
+      "claim_id": "yolov3_three_scale_predictions",
+      "claim_type": "method",
+      "polarity": "positive",
+      "claim_text_normalized": "YOLOv3 predicts bounding boxes at three different scales using a feature pyramid built on a Darknet-53 backbone.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "yolov3_logistic_per_class",
+      "claim_type": "design_choice",
+      "polarity": "positive",
+      "claim_text_normalized": "Independent logistic classifiers for each class allow YOLOv3 to handle multi-label data, replacing the softmax used in earlier YOLO versions.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "yolov3_speed_vs_retinanet",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "claim_text_normalized": "On COCO, YOLOv3 achieves an AP at IoU 0.5 comparable to RetinaNet while running roughly 3.8 times faster.",
+      "match_mode": "rouge_l"
+    },
+    {
+      "claim_id": "yolov3_strict_iou_underperform_negative",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "claim_text_normalized": "YOLOv3 underperforms RetinaNet on the strict AP at higher IoU thresholds for medium and large objects despite being significantly faster.",
+      "match_mode": "embedding_sim"
+    }
+  ],
+  "expected_claim_count_min": 4,
+  "expected_claim_count_max": 4,
+  "polarity_distribution_min": {
+    "positive": 1,
+    "negative": 1
+  },
+  "claim_type_distribution_min": {
+    "design_choice": 1,
+    "limitation": 1,
+    "method": 1,
+    "comparison": 1
+  }
+}

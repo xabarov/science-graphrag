@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "description": "Frozen list of canonical object-detection concepts used as ground truth for Layer 7 (concept_topic) gold packs. Aliases capture surface variations encountered in tests/fixtures/benchmarks/layer1/*_realpdf/article.md. Adding/removing concepts requires schema_version bump.",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "frozen_at": "2026-04-25"
+  },
+  "concepts": [
+    {"concept_id": "region_proposal", "canonical_name": "Region proposal", "aliases": ["region proposals", "object proposals", "RPN proposals", "candidate regions"]},
+    {"concept_id": "selective_search", "canonical_name": "Selective Search", "aliases": ["SS proposals", "selective-search regions"]},
+    {"concept_id": "anchor_based", "canonical_name": "Anchor-based detection", "aliases": ["anchor boxes", "predefined anchors", "anchor priors", "k anchors"]},
+    {"concept_id": "anchor_free", "canonical_name": "Anchor-free detection", "aliases": ["anchor-free", "without anchor boxes", "per-pixel prediction without anchors"]},
+    {"concept_id": "set_prediction", "canonical_name": "Set prediction", "aliases": ["bipartite matching", "Hungarian matching", "direct set prediction"]},
+    {"concept_id": "feature_pyramid", "canonical_name": "Feature pyramid", "aliases": ["multi-scale features", "FPN", "pyramid network", "lateral connections"]},
+    {"concept_id": "focal_loss", "canonical_name": "Focal loss", "aliases": ["focal-loss", "modulating factor cross-entropy"]},
+    {"concept_id": "nms", "canonical_name": "Non-maximum suppression", "aliases": ["NMS", "non-max suppression"]},
+    {"concept_id": "transformer_decoder", "canonical_name": "Transformer encoder-decoder", "aliases": ["transformer architecture", "attention encoder-decoder", "transformer object detection"]},
+    {"concept_id": "roi_pooling", "canonical_name": "ROI pooling", "aliases": ["ROI pool", "RoIPool", "region-of-interest pooling"]},
+    {"concept_id": "roi_align", "canonical_name": "ROIAlign", "aliases": ["RoIAlign", "ROI align"]},
+    {"concept_id": "mask_branch", "canonical_name": "Mask branch", "aliases": ["instance segmentation branch", "mask prediction head", "per-instance mask"]},
+    {"concept_id": "one_stage_detector", "canonical_name": "One-stage detector", "aliases": ["single-stage detector", "single-shot detector", "dense detector"]},
+    {"concept_id": "two_stage_detector", "canonical_name": "Two-stage detector", "aliases": ["region-based detector", "two-stage R-CNN family"]},
+    {"concept_id": "keypoint_detection", "canonical_name": "Keypoint detection", "aliases": ["corner detection", "keypoint pairs", "paired keypoints"]},
+    {"concept_id": "backbone_resnet", "canonical_name": "ResNet backbone", "aliases": ["ResNet", "residual network backbone", "ResNet-50", "ResNet-101", "ResNeXt"]},
+    {"concept_id": "backbone_darknet", "canonical_name": "Darknet backbone", "aliases": ["Darknet", "Darknet-19", "Darknet-53"]},
+    {"concept_id": "compound_scaling", "canonical_name": "Compound scaling", "aliases": ["compound model scaling", "joint depth-width-resolution scaling"]},
+    {"concept_id": "cascade_iou_progression", "canonical_name": "Cascade IoU progression", "aliases": ["cascade detector", "cascade R-CNN", "stage-wise IoU threshold"]},
+    {"concept_id": "centerness", "canonical_name": "Center-ness branch", "aliases": ["center-ness", "centerness branch", "center prediction"]},
+    {"concept_id": "iou_loss", "canonical_name": "IoU loss", "aliases": ["IoU loss", "GIoU", "generalized IoU loss", "DIoU"]},
+    {"concept_id": "classical_dpm", "canonical_name": "Deformable Parts Model", "aliases": ["DPM", "deformable part-based model"]},
+    {"concept_id": "handcrafted_features", "canonical_name": "Handcrafted visual features", "aliases": ["HOG", "SIFT", "SURF", "hand-engineered features"]},
+    {"concept_id": "multi_task_loss", "canonical_name": "Multi-task loss", "aliases": ["joint classification regression loss", "smooth L1 + cross-entropy"]},
+    {"concept_id": "coco_benchmark", "canonical_name": "MS COCO benchmark", "aliases": ["COCO", "MS COCO", "MS-COCO", "COCO test-dev", "COCO 2017 val"]}
+  ]
+}

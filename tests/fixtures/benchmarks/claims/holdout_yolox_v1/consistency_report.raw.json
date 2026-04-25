@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "YOLOX-L achieves 50.0% AP on COCO at a speed of 68.9 FPS on Tesla V100.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "for YOLOX-L with roughly the same amount of parameters as YOLOv4-CSP , YOLOv5-L, we achieve 50.0% AP on COCO at a speed of 68.9 FPS on Tesla V100"
+    },
+    {
+      "claim_text_normalized": "YOLOX-Nano with 0.91M parameters and 1.08G FLOPs gets 25.3% AP on COCO.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "for YOLO-Nano with only 0.91M parameters and 1.08G FLOPs, we get 25.3% AP on COCO"
+    },
+    {
+      "claim_text_normalized": "YOLOX boosts YOLOv3 to 47.3% AP on COCO, surpassing the current best practice by 3.0% AP.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "we boost it to 47.3% AP on COCO, outperforming the current best practice by 3.0% AP"
+    },
+    {
+      "claim_text_normalized": "YOLOX switches the YOLO detector to an anchor-free manner.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "We switch the YOLO detector to an anchor-free manner"
+    },
+    {
+      "claim_text_normalized": "The decoupled head greatly improves the converging speed compared to the YOLOv3 head.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "Replacing YOLO’s head with a decoupled one greatly improves the converging speed"
+    },
+    {
+      "claim_text_normalized": "SimOTA raises the detector from 45.0% AP to 47.3% AP on COCO.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "SimOTA raises the detector from 45.0% AP to 47.3% AP"
+    },
+    {
+      "claim_text_normalized": "YOLOX-Tiny outperforms YOLOv4-Tiny by 10% AP on COCO.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "YOLOX-Tiny and YOLOX-Nano outperform the corresponding counterparts YOLOv4-Tiny and NanoDet3 by 10% AP and 1.8% AP, respectively."
+    },
+    {
+      "claim_text_normalized": "The end-to-end version of YOLO slightly decreases performance and inference speed.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "These enable the detector to perform an end-to-end manner, but slightly decreasing the performance and the inference speed"
+    }
+  ]
+}

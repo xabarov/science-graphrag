@@ -1,0 +1,12 @@
+{
+  "smoke": [
+    "contract_shape"
+  ],
+  "multihop_v2_pilot": [
+    "mh_proposal_evolution_chain",
+    "mh_yolo_lineage_chain",
+    "mh_detr_lineage_chain",
+    "mh_authors_yolo_intersect_rcnn_family",
+    "mh_datasets_shared_one_stage_detectors"
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "DINO achieves 49.4 AP in 12 epochs on COCO with a ResNet-50 backbone and multi-scale features.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "DINO achieves 49 .4AP in 12 epochs and 51 .3AP in 24 epochs on COCO with a ResNet-50 backbone and multi-scale features"
+    },
+    {
+      "claim_text_normalized": "DINO yields a significant improvement of +6.0 AP compared to DN-DETR in 12 epochs.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "yielding a significant improvement of +6.0AP and +2.7AP, respectively, compared to DN-DETR, the previous best DETR-like model."
+    },
+    {
+      "claim_text_normalized": "DINO obtains the best results on COCO test-dev (63.3 AP) after pre-training on Objects365 with a SwinL backbone.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "DINO obtains the best results on both COCO val2017 (63.2AP) and test-dev (63.3AP)."
+    },
+    {
+      "claim_text_normalized": "DINO reduces its model size to 1/15 compared to SwinV2-G while achieving better results.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "Compared to other models on the leaderboard, DINO significantly reduces its model size and pre-training data size while achieving better results."
+    },
+    {
+      "claim_text_normalized": "DINO introduces a contrastive denoising training method to avoid duplicate outputs.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "First, to improve the one-to-one matching, we propose a contrastive denoising training by adding both positive and negative samples of the same ground truth at the same time."
+    },
+    {
+      "claim_text_normalized": "DINO uses a mixed query selection method for anchor initialization.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "Second, the dynamic anchor box formulation of queries links DETR-like models with classical two-stage models. Hence we propose a mixed query selection method, which helps better initialize the queries."
+    },
+    {
+      "claim_text_normalized": "DINO proposes a look forward twice scheme for box prediction.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "Third, to leverage the refined box information from later layers to help optimize the parameters of their adjacent early layers, we propose a new look forward twice scheme to correct the updated parameters with gradients from later layers."
+    },
+    {
+      "claim_text_normalized": "DINO is the first end-to-end Transformer detector to outperform state-of-the-art models on the COCO leaderboard.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "To the best of our knowledge, this is the first time that an end-to-end Transformer detector outperforms state-of-the-art (SOTA) models on the COCO leaderboard [1]."
+    }
+  ]
+}

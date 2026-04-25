@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "R-CNN improves mean average precision by more than 30% relative to the previous best result on VOC 2012.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "improves mean average precision (mAP) by more than 30% relative to the previous best result on VOC 2012"
+    },
+    {
+      "claim_text_normalized": "R-CNN achieves a mean average precision of 53.3% on VOC 2012.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "achieving a mAP of 53.3%"
+    },
+    {
+      "claim_text_normalized": "R-CNN significantly outperforms OverFeat on the ILSVRC2013 detection dataset.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "R-CNN significantly outperforms OverFeat, with a mAP of 31.4% versus 24.3%."
+    },
+    {
+      "claim_text_normalized": "Supervised pre-training on a large auxiliary dataset followed by domain-specific fine-tuning yields a significant performance boost.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "supervised pre-training for an auxiliary task, followed by domain-specific fine-tuning, yields a significant performance boost"
+    },
+    {
+      "claim_text_normalized": "Fine-tuning for detection improves mAP performance by 8 percentage points.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "fine-tuning for detection improves mAP performance by 8 percentage points"
+    },
+    {
+      "claim_text_normalized": "R-CNN achieves a mAP of 54% on VOC 2010 compared to 33% for the deformable part model.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "After fine-tuning, our system achieves a mAP of 54% on VOC 2010 compared to 33% for the highly-tuned, HOG-based deformable part model (DPM)"
+    },
+    {
+      "claim_text_normalized": "R-CNN is agnostic to the particular region proposal method.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "While R-CNN is agnostic to the particular region proposal method"
+    },
+    {
+      "claim_text_normalized": "The choice of architecture has a large effect on R-CNN detection performance.",
+      "claim_type": "finding",
+      "polarity": "neutral",
+      "evidence_quote_short": "the choice of architecture has a large effect on R-CNN detection performance"
+    }
+  ]
+}

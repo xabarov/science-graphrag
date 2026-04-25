@@ -1,0 +1,76 @@
+{
+  "schema_version": 2,
+  "case_id": "corpus_yolov2_v2",
+  "corpus_work_id": "yolov2_realpdf",
+  "benchmark_suite_tier": "claims_pilot_v2",
+  "claim_match_mode": "claim_id_or_normalized_text",
+  "source_layer1_fixture": "yolov2_realpdf",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "spot_check_required_fields": [
+      "expected_claims[].claim_text_normalized",
+      "expected_claims[].polarity"
+    ]
+  },
+  "distractor_strategy": {
+    "type": "neighboring_paper_paragraphs",
+    "neighbor_corpus_work_ids": [
+      "yolov1",
+      "yolov3_realpdf",
+      "ssd_realpdf"
+    ],
+    "max_distractor_paragraphs": 3,
+    "rng_seed": 42
+  },
+  "expected_claims": [
+    {
+      "claim_id": "yolov2_batchnorm_dropout_replace",
+      "claim_type": "design_choice",
+      "polarity": "positive",
+      "claim_text_normalized": "YOLOv2 introduces batch normalization on every convolutional layer and removes dropout, improving mAP by more than two points.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "yolov2_dimension_priors_kmeans",
+      "claim_type": "method",
+      "polarity": "positive",
+      "claim_text_normalized": "Dimension priors learned by k-means clustering on training boxes replace hand-picked anchor box shapes used in prior detectors.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "yolov2_yolo9000_joint_training",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "claim_text_normalized": "YOLO9000 jointly trains on detection and classification data, enabling detection of more than nine thousand object categories without per-class detection labels.",
+      "match_mode": "rouge_l"
+    },
+    {
+      "claim_id": "yolov2_handpicked_anchors_negative",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "claim_text_normalized": "Hand-picked anchor box shapes do not match the real distribution of training boxes well, limiting the model capacity to learn diverse object proportions.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "yolov2_yolov1_coarse_grid_negative",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "claim_text_normalized": "Localization in YOLOv1 is constrained by coarse grid-cell predictions, a limitation that YOLOv2 mitigates through learned anchor priors and a higher-resolution classification step.",
+      "match_mode": "embedding_sim"
+    }
+  ],
+  "expected_claim_count_min": 5,
+  "expected_claim_count_max": 5,
+  "polarity_distribution_min": {
+    "positive": 1,
+    "negative": 1
+  },
+  "claim_type_distribution_min": {
+    "design_choice": 1,
+    "method": 1,
+    "finding": 1,
+    "limitation": 1
+  }
+}

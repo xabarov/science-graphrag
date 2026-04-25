@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "pair_id": "c02_anchor_based_vs_anchor_free",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "claim_a": {
+    "claim_id": "faster_rcnn_anchors_essential",
+    "corpus_work_id": "faster_rcnn_realpdf",
+    "claim_text": "Anchor boxes of multiple scales and aspect ratios are essential for high-quality region proposals in dense feature maps.",
+    "evidence_quote": "Our scheme can be thought of as a pyramid of regression references ... we use 3 scales and 3 aspect ratios, yielding k=9 anchors at each sliding position.",
+    "anchor_offset": {
+      "file": "article.md",
+      "approx_paragraph": 4
+    }
+  },
+  "claim_b": {
+    "claim_id": "fcos_anchor_free_better",
+    "corpus_work_id": "fcos_realpdf",
+    "claim_text": "Anchor-free per-pixel detection without any predefined anchor boxes outperforms anchor-based detectors and removes anchor hyperparameter tuning.",
+    "evidence_quote": "We propose a fully convolutional one-stage object detector (FCOS) to solve object detection in a per-pixel prediction fashion ... FCOS completely avoids the complicated computation related to anchor boxes ... and surpasses previous anchor-based one-stage detectors with the advantage of being much simpler.",
+    "anchor_offset": {
+      "file": "article.md",
+      "approx_paragraph": 1
+    }
+  },
+  "contradiction_type": "design_paradigm",
+  "severity": "direct",
+  "rationale": "FCOS directly contradicts the Faster R-CNN claim that anchor design is necessary for accurate detection; both make architectural recommendations and one supersedes the other on the same metric (COCO AP).",
+  "expected_neo4j_pattern": "(:Work {corpus_work_id:'faster_rcnn_realpdf'})-[:CONTRADICTS {subtype:'design_paradigm'}]-(:Work {corpus_work_id:'fcos_realpdf'})"
+}

@@ -1,0 +1,80 @@
+{
+  "schema_version": 2,
+  "case_id": "corpus_detr_v2",
+  "corpus_work_id": "detr_realpdf",
+  "benchmark_suite_tier": "claims_pilot_v2",
+  "claim_match_mode": "claim_id_or_normalized_text",
+  "source_layer1_fixture": "detr_realpdf",
+  "meta": {
+    "validation_status": "llm_dual_validated",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "spot_check_required_fields": [
+      "expected_claims[].claim_text_normalized",
+      "expected_claims[].polarity"
+    ],
+    "validation_history": [
+      {
+        "promoted_at_utc": "2026-04-25T19:19:53.581620+00:00",
+        "from_status": "draft",
+        "to_status": "llm_dual_validated",
+        "spot_check_priority": "medium",
+        "consistency_report": "tests/fixtures/benchmarks/claims/corpus_detr_v2/consistency_report.json",
+        "rule": "auto-promote on Phase 6.D embedding-cascade pass"
+      }
+    ],
+    "validation_status_previous": "draft"
+  },
+  "distractor_strategy": {
+    "type": "neighboring_paper_paragraphs",
+    "neighbor_corpus_work_ids": [
+      "deformable_detr_realpdf",
+      "dino_realpdf",
+      "faster_rcnn_realpdf"
+    ],
+    "max_distractor_paragraphs": 3,
+    "rng_seed": 42
+  },
+  "expected_claims": [
+    {
+      "claim_id": "detr_set_prediction_pipeline",
+      "claim_type": "method",
+      "polarity": "positive",
+      "claim_text_normalized": "DETR treats detection as predicting an unordered set of objects directly, using a transformer encoder-decoder and dropping hand-crafted components such as anchor boxes and non-maximum suppression.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "detr_bipartite_matching_no_nms",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "claim_text_normalized": "Bipartite matching between predicted and ground-truth boxes during training enforces a unique prediction per object, which removes the need for non-maximum suppression at inference.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "detr_match_faster_rcnn_large_obj",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "claim_text_normalized": "DETR matches the performance of a well-tuned Faster R-CNN baseline on COCO, particularly excelling on large objects.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "detr_small_obj_slow_train_negative",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "claim_text_normalized": "DETR underperforms on small objects and requires substantially longer training schedules than Faster R-CNN to converge.",
+      "match_mode": "embedding_sim"
+    }
+  ],
+  "expected_claim_count_min": 4,
+  "expected_claim_count_max": 4,
+  "polarity_distribution_min": {
+    "positive": 1,
+    "negative": 1
+  },
+  "claim_type_distribution_min": {
+    "performance": 1,
+    "finding": 1,
+    "method": 1,
+    "limitation": 1
+  }
+}

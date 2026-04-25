@@ -1,0 +1,39 @@
+{
+  "schema_version": 2,
+  "description": "Workspace definitions for Layer 2 (BT2). corpus_work_ids list resolves against tests/fixtures/benchmarks/layer1/<slug>/. Use scripts/seed_benchmark_workspaces.py --pack <ws_id> to seed Postgres+Qdrant+Neo4j with only these papers, then run runner against gold cases below.",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "workspaces": {
+    "ws_yolo_family": {
+      "name": "YOLO family",
+      "corpus_work_ids": [
+        "yolov1",
+        "yolov2_realpdf",
+        "yolov3_realpdf",
+        "yolox_realpdf"
+      ],
+      "seed_command_hint": "scripts/seed_benchmark_workspaces.py --pack ws_yolo_family"
+    },
+    "ws_two_stage": {
+      "name": "Two-stage detectors (R-CNN family)",
+      "corpus_work_ids": [
+        "rcnn_realpdf",
+        "fast_rcnn_realpdf",
+        "faster_rcnn_realpdf",
+        "rfcn_realpdf",
+        "mask_rcnn_realpdf",
+        "cascade_rcnn_realpdf",
+        "libra_rcnn_realpdf"
+      ],
+      "seed_command_hint": "scripts/seed_benchmark_workspaces.py --pack ws_two_stage"
+    },
+    "ws_full_corpus": {
+      "name": "Full pilot object-detection corpus",
+      "corpus_work_ids": "*",
+      "seed_command_hint": "scripts/seed_benchmark_workspaces.py --pack ws_full_corpus"
+    }
+  }
+}

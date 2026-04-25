@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "FCOS is an anchor-free and proposal-free one-stage object detector.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "our proposed detector FCOS is anchor box free, as well as proposal free."
+    },
+    {
+      "claim_text_normalized": "FCOS with ResNeXt-64x4d-101 achieves 44.7% in AP with single-model and single-scale testing.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "FCOS with ResNeXt-64x4d-101 achieves 44.7% in AP with single-model and single-scale testing"
+    },
+    {
+      "claim_text_normalized": "FCOS outperforms the anchor-based counterpart RetinaNet by 2.4% in AP with the same backbone.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "FCOS outperforms the RetinaNet with the same backbone ResNet-101-FPN by 2.4% in AP"
+    },
+    {
+      "claim_text_normalized": "The center-ness branch improves the detection performance under all metrics.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "The center-ness branch can boost AP from 33.5% to 37.1%"
+    },
+    {
+      "claim_text_normalized": "Detection performance of anchor-based detectors is sensitive to the sizes, aspect ratios and number of anchor boxes.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "detection performance is sensitive to the sizes, aspect ratios and number of anchor boxes."
+    },
+    {
+      "claim_text_normalized": "FCOS completely avoids the complicated computation related to anchor boxes such as calculating overlapping during training.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "FCOS completely avoids the complicated computation related to anchor boxes such as calculating overlapping during training."
+    },
+    {
+      "claim_text_normalized": "FCOS can be used as Region Proposal Networks in two-stage detectors and achieve significantly better performance than anchor-based RPN counterparts.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "FCOS can be used as a Region Proposal Networks (RPNs) in two-stage detectors and can achieve significantly better performance than its anchor-based RPN counterparts."
+    },
+    {
+      "claim_text_normalized": "Multi-level prediction with FPN can largely eliminate the ambiguity from overlapping bounding boxes.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "with multi-level prediction, the ambiguity can be greatly resolved"
+    }
+  ]
+}

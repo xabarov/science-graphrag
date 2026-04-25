@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "SSD achieves 74.3% mAP on VOC2007 test at 59 FPS on a Nvidia Titan X for 300x300 input.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "For300× 300 input, SSD achieves 74.3% mAP1 on VOC2007 test at 59 FPS on a Nvidia Titan X"
+    },
+    {
+      "claim_text_normalized": "SSD with 512x512 input achieves 76.9% mAP, outperforming a comparable Faster R-CNN model.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "for 512× 512 input, SSD achieves 76.9% mAP, outperforming a comparable state-of-the-art Faster R-CNN model."
+    },
+    {
+      "claim_text_normalized": "SSD is simpler than methods requiring object proposals because it eliminates proposal generation and resampling stages.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "SSD is simple relative to methods that require object proposals because it completely eliminates proposal generation and subsequent pixel or feature resampling stages"
+    },
+    {
+      "claim_text_normalized": "SSD has much worse performance on smaller objects than on larger objects.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "it has much worse performance on smaller objects than bigger objects."
+    },
+    {
+      "claim_text_normalized": "SSD uses multiple feature maps with different resolutions to handle objects of various sizes.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "the network combines predictions from multiple feature maps with different resolutions to naturally handle objects of various sizes."
+    },
+    {
+      "claim_text_normalized": "Data augmentation improves SSD performance by 8.8% mAP on VOC2007.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "Table 2 shows that we can improve 8.8% mAP with this sampling strategy."
+    },
+    {
+      "claim_text_normalized": "SSD300 is the first real-time method to achieve above 70% mAP on Pascal VOC2007.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "SSD300 is the only real-time detection method that can achieve above 70% mAP."
+    },
+    {
+      "claim_text_normalized": "Using more default box shapes improves SSD performance.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "More default box shapes is better."
+    }
+  ]
+}

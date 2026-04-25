@@ -1,0 +1,1 @@
+Region proposal network end-to-end training with shared convolutional features for two-stage detection.

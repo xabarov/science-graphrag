@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "Mask R-CNN extends Faster R-CNN by adding a branch for predicting an object mask in parallel with the existing branch for bounding box recognition.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "Mask R-CNN extends Faster R-CNN by adding a branch for predicting an object mask in parallel with the existing branch for bounding box recognition."
+    },
+    {
+      "claim_text_normalized": "Mask R-CNN runs at 5 frames per second.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "Mask R-CNN is simple to train and adds only a small overhead to Faster R-CNN, running at 5 fps."
+    },
+    {
+      "claim_text_normalized": "Mask R-CNN outperforms all existing single-model entries on every COCO challenge task.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "Without bells and whistles, Mask R-CNN outperforms all existing, single-model entries on every task, including the COCO 2016 challenge winners."
+    },
+    {
+      "claim_text_normalized": "The RoIAlign layer improves mask accuracy by relative 10% to 50% compared to RoIPool.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "RoIAlign has a large impact: it improves mask accuracy by relative 10% to 50%, showing bigger gains under stricter localization metrics."
+    },
+    {
+      "claim_text_normalized": "Decoupling mask and class prediction is essential for good instance segmentation results.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "we found it essential to decouple mask and class prediction"
+    },
+    {
+      "claim_text_normalized": "Mask R-CNN surpasses the winner of the 2016 COCO keypoint competition.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "Mask R-CNN surpasses the winner of the 2016 COCO keypoint competition"
+    },
+    {
+      "claim_text_normalized": "FCIS exhibits systematic errors on overlapping instances.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "FCIS exhibits systematic errors on overlapping instances and creates spurious edges"
+    },
+    {
+      "claim_text_normalized": "Training Mask R-CNN on COCO takes one to two days on a single 8-GPU machine.",
+      "claim_type": "performance",
+      "polarity": "neutral",
+      "evidence_quote_short": "training on COCO takes one to two days on a single 8-GPU machine."
+    }
+  ]
+}

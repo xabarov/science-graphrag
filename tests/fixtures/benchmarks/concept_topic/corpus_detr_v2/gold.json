@@ -1,0 +1,86 @@
+{
+  "schema_version": 2,
+  "case_id": "concept_corpus_detr_v2",
+  "corpus_work_id": "detr_realpdf",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "spot_check_required_fields": [
+      "concepts_present",
+      "concepts_absent"
+    ]
+  },
+  "concepts_present": [
+    {
+      "concept_id": "set_prediction",
+      "evidence_quote": "We view object detection as a direct set prediction problem."
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "evidence_quote": "DETR uses a transformer encoder-decoder architecture on top of a convolutional backbone."
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "evidence_quote": "We use ResNet-50 and ResNet-101 as backbones."
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "evidence_quote": "Set prediction loss combines the classification loss and the box loss."
+    },
+    {
+      "concept_id": "iou_loss",
+      "evidence_quote": "Box loss combines L1 and the generalized IoU loss."
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "evidence_quote": "Detection results on COCO 2017 val ..."
+    }
+  ],
+  "concepts_absent": [
+    {
+      "concept_id": "region_proposal",
+      "rationale": "DETR explicitly removes the region-proposal stage."
+    },
+    {
+      "concept_id": "anchor_based",
+      "rationale": "DETR explicitly removes anchor boxes."
+    },
+    {
+      "concept_id": "anchor_free",
+      "rationale": "Although DETR has no anchors, it is not described as anchor-free in the FCOS / CornerNet sense; it uses learned object queries."
+    },
+    {
+      "concept_id": "nms",
+      "rationale": "DETR removes NMS via bipartite matching."
+    },
+    {
+      "concept_id": "roi_pooling",
+      "rationale": "No ROI extraction; queries attend directly to features."
+    },
+    {
+      "concept_id": "roi_align",
+      "rationale": "Same: no ROIAlign."
+    },
+    {
+      "concept_id": "focal_loss",
+      "rationale": "Cross-entropy + L1/GIoU loss; not focal."
+    },
+    {
+      "concept_id": "mask_branch",
+      "rationale": "Base DETR is detection-only (mask version is panoptic-DETR, separate)."
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "rationale": "DETR is end-to-end single-pass; not two-stage."
+    },
+    {
+      "concept_id": "selective_search",
+      "rationale": "DETR has no proposal stage; Selective Search is irrelevant to its end-to-end transformer pipeline."
+    },
+    {
+      "concept_id": "classical_dpm",
+      "rationale": "DETR is a transformer-based detector; DPM is a pre-deep-learning method."
+    }
+  ]
+}

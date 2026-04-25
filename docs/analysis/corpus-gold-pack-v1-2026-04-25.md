@@ -335,26 +335,115 @@ Source: tests/fixtures/benchmarks/layer1/<slug>/article.md
 5. Backlog entries по оставшимся pack'ам.
 6. Обновить trust-audit doc (раздел BT0 / BT-Prep).
 
-### Phase 1 — Dedup-5 + catalog finalize
-- Остальные 4 dedup pack'а (institutions, venues, methods, datasets).
-- `relations_v1.json` дополнен `extends`, `compares_with`.
+### Phase 1 — Dedup-5 + catalog finalize ✅ (2026-04-25)
+- 4 dedup pack'а собраны: `institutions_v1` (20/7/3, MSR↔MSRA как критический negative), `venues_v1` (19/7/4, year-shift negatives), `methods_v1` (25/7/6, R-CNN substring traps + GFL≠Focal Loss), `datasets_v1` (21/6/5, version-shift negatives).
+- `relations_v1.json` собран: 502 ребра (cites=78 [29 авто из bibliography + 49 manual для R-CNN/YOLO/DETR family chains], extends=15, compares_with=12, contradicts=7, shares_author=59 derived, shares_dataset=331 derived).
+- Все 5 файлов проходят structural validation (см. `docs/backlog/refactor-backend.md` entry `[DONE] Corpus Gold Pack v1 — Phase 1`).
+- Все pack'и оставлены в `meta.validation_status: "draft"` — финальная промоутка через Phase 6 (dual-LLM extractor + spot-check).
 
-### Phase 2 — Claims gold v2 + holdout (BT6 prep)
-- 15 статей × 3–5 claims; pilot v2 + holdout_v1.
-- Включая paraphrased + distractor flag в schema.
+### Phase 2 — Claims gold v2 + holdout (BT6 prep) ✅ (2026-04-25)
+- 15 pilot pack'ов (`tests/fixtures/benchmarks/claims/corpus_<slug>_v2/gold.json`, 64 claims, 31.2% negative).
+- 5 holdout pack'ов (`holdout_<slug>_v1/gold.json`, 21 claims, 28.6% negative, 0 overlap c pilot по `corpus_work_id`).
+- 85 claims итого, 30.6% negative (acceptance ≥ 30% выполнено), все 6 `claim_type` представлены.
+- `match_mode`: embedding_sim + rouge_l (no `exact`).
+- `distractor_strategy.neighboring_paper_paragraphs` задан в каждом case.
+- Paraphrase verified: 0 случаев 8-словного дословного substring overlap с `article.md`.
+- Tier'ы `claims_pilot_v2` / `claims_holdout_v1` добавлены в `case_tiers.json`.
+- Runner-side работа (BT6 patch для distractor injection + embedding matching + weekly cron) **out of scope** Phase 2 — отдельное BT6 задание.
 
-### Phase 3 — Contradictions v1 (BT12 prep) + Concept/Topic v2 (BT7 prep)
-- 5–7 пар противоречий с цитатами.
-- Frozen list концептов и разметка для 10 статей.
+### Phase 3 — Contradictions v1 (BT12 prep) + Concept/Topic v2 (BT7 prep) ✅ (2026-04-25)
+- **Layer 9 — Contradictions v1**: 7 пар (`tests/fixtures/benchmarks/contradictions_v1/pair_NN_<a>_vs_<b>/gold.json`), все 6 разрешённых `contradiction_type` (era_shift/design_paradigm × 2/post_processing/architectural/classical_vs_deep/scaling), оба `severity` (direct × 4, nuanced × 3), у каждого case прямые `evidence_quote` из обеих статей + `expected_neo4j_pattern` подсказка.
+- **Layer 7 — Concept/Topic v2**:
+  - `concept_topic/concepts_frozen_v1.json`: 25 канонических концептов с aliases (proposal/pipeline, stage type, backbones, loss/post-proc, architecture, classical/data).
+  - `concept_topic/corpus_<slug>_v2/gold.json`: 10 пилотных статей (yolov1, faster_rcnn, retinanet_focal, ssd, mask_rcnn, fpn, detr, cornernet, fcos, cascade_rcnn).
+  - 138 разметочных лейблов всего (67 present + 71 absent), 25/25 frozen концептов покрыты ≥ 1 pack'ом.
+- Tier'ы добавлены: `concept_topic_pilot_v2` (10 cases) и `contradictions_pilot_v1` (7 cases) в соответствующие `case_tiers.json`.
+- README с матрицами покрытия в обоих каталогах.
+- Все pack'и с `meta.validation_status: "draft"` — финальная промоутка через Phase 6 (dual-LLM extractor).
+- Cross-ref валидация (corpus_v1.works ∪ layer1 slugs): 0 unknown `corpus_work_id`, 0 unknown `concept_id`, 0 дубликатов в present/absent одной статьи.
+- Runner-side работа (BT12 — `:CONTRADICTS` persistence + recall runner; BT7 Path A — substring-tautology kill в concept extraction) **out of scope** Phase 3 — отдельные BT задания.
 
-### Phase 4 — Retrieval (workspace_live + hybrid_v2 + multihop_v2)
-- Layers 2, 3, 4. Можно за одну сессию — формат у трёх близкий.
+### Phase 4 — Retrieval (workspace_live + hybrid_v2 + multihop_v2) ✅ (2026-04-25)
+- **Layer 2 (workspace_scoped_live, BT2):** `tests/fixtures/benchmarks/retrieval/workspace_scoped_live/`.
+  - 3 workspaces в `_workspaces.json`: `ws_yolo_family` (4 papers), `ws_two_stage` (7 papers), `ws_full_corpus` (`*` = все 35).
+  - 6 cases (3 positive + 3 negative): по 2 кейса на workspace, в каждом по одному positive (multi-paper aggregation) и negative (abstain — ответ вне ws).
+  - `forbidden_corpus_work_ids` с `forbidden_violation_gate: 0` в каждом case; validation enforced — все forbidden ids ВНЕ workspace.
+  - `expected_citations` всегда внутри ws; `answer_metric` = `rouge_l` (positive) или `abstain_keywords` (negative).
+- **Layer 3 (hybrid_ablation_v2, BT4):** `tests/fixtures/benchmarks/retrieval/hybrid_ablation_v2/`.
+  - 8 cases. Топики выбраны где BM25 keyword даёт edge поверх vector: anchor_free, focal_loss, set_prediction_transformer, compound_scaling, keypoint_corner, classical_handcrafted, two_stage_rpn_evolution, iou_loss_quality.
+  - 22 relevant + 28 irrelevant ids = 50 ground-truth labels.
+  - **Phantom-green killer:** `vector_ranked_work_ids` / `hybrid_ranked_work_ids` запрещены в gold v2 (validation gate). `ranked_lists_source: "runner_generated"` — runner обязан сам делать live запрос к Qdrant + BM25.
+  - `min_mrr_delta_hybrid_minus_vector: 0.05`, `k_for_mrr: 10`.
+- **Layer 4 (multihop_v2, BT3):** `tests/fixtures/benchmarks/retrieval/multihop_v2/`.
+  - 5 cases (3 ordered chains + 2 unordered sets).
+  - Ordered: `mh_proposal_evolution_chain` (5 nodes: selective_search→rcnn→fast_rcnn→faster_rcnn→mask_rcnn), `mh_yolo_lineage_chain` (4 nodes), `mh_detr_lineage_chain` (4 nodes).
+  - Unordered: `mh_authors_yolo_intersect_rcnn_family` (Author kind), `mh_datasets_shared_one_stage_detectors` (Dataset kind).
+  - Все chain adjacencies подтверждены `relations_v1.json` (CITES + EXTENDS edges); unordered cases опираются на `shares_author` × 59 + `shares_dataset` × 331.
+  - `infrastructure_required: ["neo4j", "qdrant"]` — runner обязан hard-fail (не skip) если сервисы недоступны.
+- **Tier'ы добавлены:** `workspace_scoped_live_pilot` (6 case_id), `hybrid_ablation_v2_pilot` (8), `multihop_v2_pilot` (5) в соответствующие `case_tiers.json`.
+- README с матрицами покрытия и метриками в каждом из 3 каталогов.
+- Cross-ref валидация: 0 unknown `corpus_work_id`, 0 leak'ов `vector_ranked_work_ids`/`hybrid_ranked_work_ids` в hybrid v2, 0 forbidden ids внутри ws, 0 overlap relevant∩irrelevant.
+- Все pack'и в `meta.validation_status: "draft"` — финальный промоут через Phase 6.
+- Runner-side работа (BT2 — abstain detection + workspace boundary; BT3 — neo4j hard-fail + chain LCS metric; BT4 — live Qdrant+BM25 ranking) **out of scope** Phase 4 — отдельные BT задания.
 
-### Phase 5 — Agent-tools live + Multi-agent + Idea-assist live
-- Layers 5, 6.
+### Phase 5 — Agent-tools live + Multi-agent + Idea-assist live ✅
+- Layers 5 (`agent_tools_v1/{live_*, multiagent_live_*, adversarial_cypher_*}`), 6 (`idea_assist_v1/live_*`).
+- 9 agent-tools cases (6 live + 2 multi-agent + 1 adversarial cypher) и 4 idea-assist cases.
+- Agent live cases несут `expected_tool_sequence` с `args_match` (`query_contains_any` / `query_contains_all`), `expected_works_corpus_ids`, `expected_methods_canonical`, `answer_reference_text` + `answer_metric: rouge_l ≥ 0.18..0.20` (positive) или `abstain_keywords` (negative), и `cypher_safety_required: 1.0`.
+- 5 positive + 1 negative (abstain) live кейса; multi-agent кейсы добавляют `allowed_alternative_sequences` и `min_specialist_sequence_match`.
+- Adversarial cypher case инжектит `DELETE` и `DROP` в текст вопроса — gate `cypher_safety_violation_count_gate: 0`; валидация подтверждает что вопрос реально содержит forbidden keywords (gate non-vacuous).
+- Idea-assist кейсы используют `supporting_claim_id_pool` из 20 реальных claim_id'ов из Phase 2 claims pack (85 known); `forbidden_substrings` — verbatim фразы из article.md, `max_rouge_l_against_evidence_quotes: 0.7`, `novelty_must_reference_gap: true`.
+- Cross-ref валидация: 0 unknown `corpus_work_id`, 0 unknown `claim_id`, schemas корректны (live=v2, multi-agent/adversarial=v1, idea_assist=v2), все tier-файлы консистентны.
+- Все pack'и в `meta.validation_status: "draft"` — финальный промоут через Phase 6.
+- Runner-side работа (BT8 — args_match enforcement + cite_works recall; BT9 — specialist sequence; BT10 — supporting_claim_recall + forbidden_substring gate + LLM-judge novelty) **out of scope** Phase 5 — отдельные BT задания.
 
 ### Phase 6 — LLM-validation pass (через все pack'и)
-- Прогнать extractor B на всём, собрать `consistency_report.json` для каждого, выдать тебе короткий отчёт «вот N disagreements на spot-check».
+
+#### Phase 6.A — инфраструктура + PoC на claims_v2 ✅ (2026-04-25)
+
+- **`scripts/dual_validate/`** — модуль с extractor framework (`extractors/base.py` → `ExtractorBase`), OpenRouter-compatible LLM wrapper (`llm_client.py`), алгоритмический A/B matcher (`matcher.py` — Jaccard token overlap + greedy bipartite, default min_score=0.20), JSON schema для `consistency_report` (`consistency_report.py`).
+- **`scripts/dual_extract_validate.py`** — CLI (`--layer`, `--pack`, `--model`, `--dry-run`, `--save-raw-response`). Резолвит API key/base/model в порядке: CLI → `benchmark_teacher_*` → `extraction_llm_*` (тот же priority что у `scripts/teacher_llm_settings.py`).
+- **Per-layer extractor**: реализован первый — `extractors/claims_v2.py` (для `tests/fixtures/benchmarks/claims/corpus_*_v2/`).
+- **`tests/test_dual_extract_validate.py`** — 11 unit-тестов: tokenizer, jaccard, greedy bipartite (включая field-disagreement detection), spot-check priority branching, schema roundtrip, claims_v2 dry-run skeleton, response parsing с enum-coercion, rejection of non-JSON. Pylint 9.95/10, 11/11 passed.
+- **PoC прогон на `corpus_yolov1_v2` с deepseek/deepseek-v3.2** (28s, 13.5K tokens) — найдены 4 actionable disagreements:
+  1. `yolov1_unified_pipeline` — polarity flip A=positive vs B=neutral (semantic ambiguity «является ли описание метода positive claim?»).
+  2. `yolov1_artwork_generalization` — type flip A=finding vs B=comparison (обе категории применимы).
+  3. `yolov1_grid_based_detection` пропущен B (потенциально merged в "regression problem").
+  4. `yolov1_two_stage_higher_acc_negative` пропущен B — реальный negative claim, важный для polarity_distribution.
+  - Spot-check priority `high` (rationale: polarity_flips=1, unmatched_a_ratio=0.33).
+  - Отчёт: `tests/fixtures/benchmarks/claims/corpus_yolov1_v2/consistency_report.json` + `consistency_report.raw.json`.
+
+#### Phase 6.B — full claims_v2 pass ✅ (2026-04-25)
+
+- Прогнан extractor B = `deepseek/deepseek-v3.2` на **всех 20** claims pack'ах (15 pilot + 5 holdout): 7 минут wall-time, **300K** tokens, **≈$0.06** на OpenRouter. 20/20 `consistency_report.json` + 20/20 `consistency_report.raw.json` сохранены рядом с `gold.json`.
+- **Усиление matcher (matcher v2):** добавлены `char_ngrams`, `char_overlap_coefficient` (Szymkiewicz–Simpson), `combined_score = max(token_jaccard, char_overlap_4gram)`. `match_records` получил параметр `scoring: "token" | "combined"`, default = `combined` с `min_score=0.35`. Char-overlap robust к length asymmetry: короткий B-парафраз больше не отваливается от длинного A-claim.
+- **`--rebuild-from-raw` режим CLI** — пересобирает отчёты из сохранённых `.raw.json` без LLM-вызовов. Использован для бесплатного pre/post сравнения матчеров.
+- **Сводка** в `eval/dual_validate/claims_v2_deepseek_summary.json`:
+  - **global match ratio: 41.2% → 50.6% (+23%)** после перехода на combined-score @0.35;
+  - 19/20 packs остаются `priority=high`, 1/20 (`corpus_detr_v2`) — `priority=medium` (только type flip без unmatched);
+  - **10 polarity flips, 14 type flips** на 43 matched pairs — это и есть наиболее ценный сигнал для human spot-check;
+  - 42 unmatched_a (B пропустил), 113 unmatched_b (B сгенерировал extra) — экстрактор B склонен к **более широкой** выборке (среднее 7.8 vs наши 4.25 на pack), что нормально для temperature=0.1 sampling;
+  - **Recall ceiling алгоритмического матчера ≈ 50%**: оставшиеся unmatched пары (например `cascade_rcnn_v2`: 0/3) — это семантически совпадающие claims с лексической дистанцией > 0.35, для которых нужны **embeddings** (запланировано в Phase 6.D).
+- **Не делаем промо `validation_status: draft → llm_dual_validated`** в этом раунде: 19/20 high — недостаточный сигнал для авто-промо. Промо требует либо (a) embedding-based matcher с recall > 75%, либо (b) human spot-check листа disagreements. Phase 6.B завершает **infrastructure + один LLM extractor**; промо — отдельная активность.
+- **Test coverage:** `tests/test_dual_extract_validate.py` 14/14 passed, добавлены тесты на `char_jaccard`, `combined_score`, `rebuild_run_from_raw`. Pylint 9.90/10 для `scripts/dual_validate/` + `scripts/dual_extract_validate.py`.
+
+#### Phase 6.C — расширение на остальные layers (pending)
+
+#### Phase 6.C — расширение на остальные layers (pending)
+
+- Доб. `extractors/contradictions_v1.py` (B re-derives contradictions из обеих source articles, diff на pair coverage),
+  `extractors/concept_topic_v2.py` (B размечает present/absent против frozen concepts, diff на label set per article),
+  `extractors/dedup_*.py` (B re-clusters per layer, diff на cluster equivalence — Adjusted Rand Index),
+  `extractors/multihop_v2.py` / `extractors/workspace_scoped_live.py` / `extractors/hybrid_ablation_v2.py` (B re-derives expected_works_corpus_ids по той же question.txt, diff на set overlap),
+  `extractors/agent_tools_live.py` / `extractors/idea_assist_live.py` (B оценивает adequacy gold по rubric, diff на gate values).
+- LLM-модели для dual-extractor: `deepseek/deepseek-v3.2`, `anthropic/claude-sonnet-4.6`, `moonshotai/kimi-k2.6` (см. `.env`).
+- Промо всех pack'ов в `meta.validation_status: human_spot_checked` после прохождения Phase 6.B + spot-check disagreements.
+
+#### Phase 6.D — embedding-based matcher (на будущее)
+
+- Алгоритмический matcher (token Jaccard + char-4gram overlap) упирается в потолок ~50% recall на сильно парафразированных claims. Например `cascade_rcnn_v2` A1 «high IoU threshold limits accuracy» ↔ B3 «high IoU threshold can degrade due to overfitting» — семантически идентично, lexical distance > 0.35.
+- Для recall > 75% нужен embedding-based scorer: sentence-transformers/all-MiniLM-L6-v2 (или совместимые), cosine similarity threshold 0.7-0.8. Уже есть зависимость в проекте (settings слот `extraction_llm_embedding_model_name`), но не активирован для dual_validate.
+- После Phase 6.D можно делать авто-промо `validation_status: llm_dual_validated` для pack'ов с (recall ≥ 0.75, polarity_flips=0, type_flips=0).
 
 ---
 

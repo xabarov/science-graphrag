@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "case_id": "ws_two_stage_negative_focal_loss",
+  "workspace_id": "ws_two_stage",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "question_file": "question.txt",
+  "answer_reference_text": "No paper in the two-stage R-CNN family workspace introduces focal loss; focal loss was introduced by RetinaNet (Lin et al. 2017), which is a one-stage detector outside this workspace.",
+  "answer_metric": {
+    "type": "abstain_keywords",
+    "must_contain_any": [
+      "no paper",
+      "not in",
+      "out of scope",
+      "outside",
+      "n/a",
+      "not present"
+    ]
+  },
+  "expected_citations_min_count": 0,
+  "expected_citations": [],
+  "forbidden_corpus_work_ids": [
+    "retinanet_focal_realpdf",
+    "gfl_realpdf",
+    "yolov1",
+    "yolov2_realpdf",
+    "yolov3_realpdf",
+    "yolox_realpdf",
+    "ssd_realpdf",
+    "detr_realpdf",
+    "deformable_detr_realpdf",
+    "dn_detr_realpdf",
+    "dino_realpdf",
+    "fcos_realpdf",
+    "atss_realpdf",
+    "cornernet_realpdf",
+    "centernet_realpdf",
+    "efficientdet_realpdf",
+    "tood_realpdf"
+  ],
+  "forbidden_violation_gate": 0,
+  "expected_behavior": "abstain_or_empty"
+}

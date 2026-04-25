@@ -1,0 +1,74 @@
+{
+  "schema_version": 2,
+  "case_id": "concept_corpus_cascade_rcnn_v2",
+  "corpus_work_id": "cascade_rcnn_realpdf",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "spot_check_required_fields": [
+      "concepts_present",
+      "concepts_absent"
+    ]
+  },
+  "concepts_present": [
+    {
+      "concept_id": "cascade_iou_progression",
+      "evidence_quote": "Cascade R-CNN is a multi-stage object detection architecture, consisting of a sequence of detectors trained with increasing IoU thresholds."
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "evidence_quote": "Cascade R-CNN extends Faster R-CNN architecture."
+    },
+    {
+      "concept_id": "region_proposal",
+      "evidence_quote": "First stage is RPN (inherited)."
+    },
+    {
+      "concept_id": "anchor_based",
+      "evidence_quote": "Inherits anchor-based RPN."
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "evidence_quote": "Often used with FPN backbone in main experiments."
+    },
+    {
+      "concept_id": "nms",
+      "evidence_quote": "NMS is applied at the last stage."
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "evidence_quote": "Stage losses combine classification and bounding-box regression."
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "evidence_quote": "Experiments on the COCO dataset ..."
+    }
+  ],
+  "concepts_absent": [
+    {
+      "concept_id": "anchor_free",
+      "rationale": "Anchor-based; not anchor-free."
+    },
+    {
+      "concept_id": "set_prediction",
+      "rationale": "NMS-based deduplication."
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "rationale": "Convolutional pipeline."
+    },
+    {
+      "concept_id": "focal_loss",
+      "rationale": "Standard cross-entropy across stages; not focal."
+    },
+    {
+      "concept_id": "mask_branch",
+      "rationale": "Cascade Mask R-CNN exists separately; the original Cascade R-CNN paper is detection-only."
+    },
+    {
+      "concept_id": "compound_scaling",
+      "rationale": "Not used."
+    }
+  ]
+}

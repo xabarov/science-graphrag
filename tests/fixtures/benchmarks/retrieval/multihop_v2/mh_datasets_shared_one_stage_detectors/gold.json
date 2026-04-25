@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "case_id": "mh_datasets_shared_one_stage_detectors",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "question_file": "question.txt",
+  "expected_path_kind": "unordered_set",
+  "expected_neo4j_relations_used": [
+    "EVALUATED_ON",
+    "SHARES_DATASET"
+  ],
+  "infrastructure_required": [
+    "neo4j"
+  ],
+  "expected_node_kind": "Dataset",
+  "expected_node_canonical_names": [
+    "MS COCO",
+    "PASCAL VOC",
+    "ImageNet"
+  ],
+  "min_recall": 0.6,
+  "min_precision": 0.6
+}

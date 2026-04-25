@@ -1,0 +1,77 @@
+{
+  "schema_version": 2,
+  "case_id": "holdout_dino_v1",
+  "corpus_work_id": "dino_realpdf",
+  "benchmark_suite_tier": "claims_holdout_v1",
+  "claim_match_mode": "claim_id_or_normalized_text",
+  "source_layer1_fixture": "dino_realpdf",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "spot_check_required_fields": [
+      "expected_claims[].claim_text_normalized",
+      "expected_claims[].polarity"
+    ]
+  },
+  "distractor_strategy": {
+    "type": "neighboring_paper_paragraphs",
+    "neighbor_corpus_work_ids": [
+      "dn_detr_realpdf",
+      "deformable_detr_realpdf",
+      "detr_realpdf"
+    ],
+    "max_distractor_paragraphs": 3,
+    "rng_seed": 42
+  },
+  "expected_claims": [
+    {
+      "claim_id": "dino_three_components",
+      "claim_type": "method",
+      "polarity": "positive",
+      "claim_text_normalized": "DINO upgrades DETR-style detectors via three pieces: a contrastive denoising training objective, a hybrid query selection used to seed anchors, and a refined two-step look-ahead box update.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "dino_swinl_63ap",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "claim_text_normalized": "DINO achieves around 63 AP on COCO 2017 val with a Swin-L backbone, setting a new state of the art for object detection at the time of publication.",
+      "match_mode": "rouge_l"
+    },
+    {
+      "claim_id": "dino_detr_scaling_overcomes_classical",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "claim_text_normalized": "End-to-end DETR-like detectors outperform classical detectors when scaled with proper backbones and pre-training, contrary to earlier results that favored classical pipelines.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "dino_earlier_detr_slow_small_obj_negative",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "claim_text_normalized": "Earlier DETR-like detectors converge slowly and underperform on small objects, problems addressed by query denoising and mixed query selection in DINO.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "dino_classical_pipelines_scaling_negative",
+      "claim_type": "comparison",
+      "polarity": "negative",
+      "claim_text_normalized": "Classical multi-stage detectors do not benefit as much from very large backbones and large-scale pre-training as DETR-style detectors, limiting their ability to scale to the latest state-of-the-art accuracy.",
+      "match_mode": "embedding_sim"
+    }
+  ],
+  "expected_claim_count_min": 5,
+  "expected_claim_count_max": 5,
+  "polarity_distribution_min": {
+    "positive": 1,
+    "negative": 1
+  },
+  "claim_type_distribution_min": {
+    "method": 1,
+    "performance": 1,
+    "finding": 1,
+    "limitation": 1,
+    "comparison": 1
+  }
+}

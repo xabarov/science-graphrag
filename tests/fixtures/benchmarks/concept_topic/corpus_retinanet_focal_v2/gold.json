@@ -1,0 +1,70 @@
+{
+  "schema_version": 2,
+  "case_id": "concept_corpus_retinanet_focal_v2",
+  "corpus_work_id": "retinanet_focal_realpdf",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "spot_check_required_fields": [
+      "concepts_present",
+      "concepts_absent"
+    ]
+  },
+  "concepts_present": [
+    {
+      "concept_id": "focal_loss",
+      "evidence_quote": "We propose a novel loss we term the Focal Loss that focuses training on a sparse set of hard examples and prevents the vast number of easy negatives from overwhelming the detector."
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "evidence_quote": "We design and train a simple dense detector we call RetinaNet ... matches the speed of previous one-stage detectors."
+    },
+    {
+      "concept_id": "anchor_based",
+      "evidence_quote": "RetinaNet uses translation-invariant anchor boxes ... 9 anchors per location ... 3 scales x 3 aspect ratios."
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "evidence_quote": "RetinaNet uses a Feature Pyramid Network (FPN) backbone on top of a feedforward ResNet architecture."
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "evidence_quote": "Our best model, RetinaNet with ResNet-101-FPN ..."
+    },
+    {
+      "concept_id": "nms",
+      "evidence_quote": "Box predictions ... are then thresholded ... and decoded into the final detections via NMS."
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "evidence_quote": "All ablation experiments use ResNet-50-FPN ... on COCO trainval35k."
+    }
+  ],
+  "concepts_absent": [
+    {
+      "concept_id": "region_proposal",
+      "rationale": "RetinaNet is a one-stage dense detector; no region-proposal stage."
+    },
+    {
+      "concept_id": "anchor_free",
+      "rationale": "RetinaNet is anchor-based; the anchor-free narrative emerges later (FCOS, ATSS)."
+    },
+    {
+      "concept_id": "set_prediction",
+      "rationale": "RetinaNet relies on NMS, not bipartite matching."
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "rationale": "Architecture is fully convolutional FPN; no transformer."
+    },
+    {
+      "concept_id": "mask_branch",
+      "rationale": "RetinaNet is detection-only."
+    },
+    {
+      "concept_id": "compound_scaling",
+      "rationale": "Compound scaling is later EfficientDet; RetinaNet primarily varies depth/backbone."
+    }
+  ]
+}

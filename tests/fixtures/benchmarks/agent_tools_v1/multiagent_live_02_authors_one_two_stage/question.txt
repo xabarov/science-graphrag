@@ -1,0 +1,1 @@
+Which authors appear on papers from both one-stage and two-stage detector families in this corpus?

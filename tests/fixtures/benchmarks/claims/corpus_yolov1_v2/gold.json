@@ -1,0 +1,84 @@
+{
+  "schema_version": 2,
+  "case_id": "corpus_yolov1_v2",
+  "corpus_work_id": "yolov1",
+  "benchmark_suite_tier": "claims_pilot_v2",
+  "claim_match_mode": "claim_id_or_normalized_text",
+  "source_layer1_fixture": "yolov1",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "spot_check_required_fields": [
+      "expected_claims[].claim_text_normalized",
+      "expected_claims[].polarity"
+    ]
+  },
+  "distractor_strategy": {
+    "type": "neighboring_paper_paragraphs",
+    "neighbor_corpus_work_ids": [
+      "yolov2_realpdf",
+      "yolov3_realpdf",
+      "ssd_realpdf"
+    ],
+    "max_distractor_paragraphs": 3,
+    "rng_seed": 42
+  },
+  "expected_claims": [
+    {
+      "claim_id": "yolov1_unified_pipeline",
+      "claim_type": "method",
+      "polarity": "positive",
+      "claim_text_normalized": "YOLO formulates object detection as a single regression problem from raw pixels to bounding box coordinates and class probabilities, using one neural network for the entire task.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "yolov1_speed_45_155_fps",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "claim_text_normalized": "The base YOLO model processes images at approximately 45 frames per second on a Titan X GPU, while the Fast YOLO variant reaches around 155 FPS.",
+      "match_mode": "rouge_l"
+    },
+    {
+      "claim_id": "yolov1_grid_based_detection",
+      "claim_type": "method",
+      "polarity": "positive",
+      "claim_text_normalized": "Detection is performed by dividing the input image into a fixed grid where each cell predicts a small number of bounding boxes with confidence scores and class probabilities.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "yolov1_localization_error_negative",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "claim_text_normalized": "YOLO produces more localization errors than two-stage detectors and struggles with small objects appearing in groups.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "yolov1_artwork_generalization",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "claim_text_normalized": "When evaluated on artwork datasets such as Picasso and People-Art, YOLO generalizes better than detectors trained only on natural images.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "yolov1_two_stage_higher_acc_negative",
+      "claim_type": "comparison",
+      "polarity": "negative",
+      "claim_text_normalized": "Two-stage region-based detectors achieve noticeably higher detection accuracy than YOLO, but at the cost of substantially lower inference throughput.",
+      "match_mode": "embedding_sim"
+    }
+  ],
+  "expected_claim_count_min": 6,
+  "expected_claim_count_max": 6,
+  "polarity_distribution_min": {
+    "positive": 2,
+    "negative": 1
+  },
+  "claim_type_distribution_min": {
+    "method": 1,
+    "performance": 1,
+    "limitation": 1,
+    "finding": 1,
+    "comparison": 1
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "case_id": "mh_proposal_evolution_chain",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "question_file": "question.txt",
+  "expected_path_kind": "ordered_chain",
+  "expected_neo4j_relations_used": [
+    "CITES",
+    "EXTENDS"
+  ],
+  "infrastructure_required": [
+    "neo4j",
+    "qdrant"
+  ],
+  "expected_chain_corpus_work_ids": [
+    "selective_search_realpdf",
+    "rcnn_realpdf",
+    "fast_rcnn_realpdf",
+    "faster_rcnn_realpdf",
+    "mask_rcnn_realpdf"
+  ],
+  "min_chain_order_correctness": 0.8
+}

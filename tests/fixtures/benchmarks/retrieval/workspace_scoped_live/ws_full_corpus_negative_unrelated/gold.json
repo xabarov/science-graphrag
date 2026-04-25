@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "case_id": "ws_full_corpus_negative_unrelated",
+  "workspace_id": "ws_full_corpus",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "question_file": "question.txt",
+  "answer_reference_text": "No paper in this object-detection corpus addresses BERT or large language model pre-training. The corpus is restricted to computer-vision object detection.",
+  "answer_metric": {
+    "type": "abstain_keywords",
+    "must_contain_any": [
+      "no paper",
+      "not in",
+      "out of scope",
+      "n/a",
+      "not present",
+      "does not"
+    ]
+  },
+  "expected_citations_min_count": 0,
+  "expected_citations": [],
+  "forbidden_corpus_work_ids": [],
+  "forbidden_violation_gate": 0,
+  "expected_behavior": "abstain_or_empty"
+}

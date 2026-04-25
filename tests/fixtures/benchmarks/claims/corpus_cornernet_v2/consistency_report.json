@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/corpus_cornernet_v2",
+  "pack_path": "tests/fixtures/benchmarks/claims/corpus_cornernet_v2",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T19:19:53.574672+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "polarity_flips=0, unmatched_a_ratio=0.33 (gate: polarity_flips ≥ 1 OR unmatched_a_ratio ≥ 0.30)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/claims/corpus_cornernet_v2/gold.json",
+    "count": 3,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-extracted)",
+    "count": 8,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:ea0d40f1a9dd1980d7c2c9ce8bf4501336ab1a232e0437970e4edf70bf4c3c33",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 14333,
+      "completion": 715,
+      "total": 15048
+    },
+    "latency_ms": 19191
+  },
+  "summary": {
+    "a_total": 3,
+    "b_total": 8,
+    "matched": 2,
+    "matched_lexical": 1,
+    "matched_embedding": 1,
+    "unmatched_a": 1,
+    "unmatched_b": 6,
+    "field_agreements": {
+      "polarity": {
+        "agreed": 2,
+        "disagreed": 0
+      },
+      "claim_type": {
+        "agreed": 1,
+        "disagreed": 1
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_claim_id": "cornernet_hourglass_backbone",
+      "b_index": 6,
+      "match_score": 0.367,
+      "match_source": "lexical",
+      "a_claim_text_normalized": "An hourglass network is used as the backbone to predict heatmaps and embeddings used for keypoint grouping.",
+      "b_claim_text_normalized": "The hourglass network is crucial to the performance of CornerNet.",
+      "field_disagreements": [
+        {
+          "field": "claim_type",
+          "a": "design_choice",
+          "b": "finding"
+        }
+      ]
+    },
+    {
+      "a_claim_id": "cornernet_paired_keypoints",
+      "b_index": 1,
+      "match_score": 0.775,
+      "match_source": "embedding",
+      "a_claim_text_normalized": "CornerNet detects bounding boxes by predicting paired top-left and bottom-right keypoints, eliminating the need for anchor boxes.",
+      "b_claim_text_normalized": "CornerNet eliminates the need for designing anchor boxes used in prior single-stage detectors.",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [
+    {
+      "a_claim_id": "cornernet_anchor_design_drawbacks_negative",
+      "a_claim_text_normalized": "Anchor box design introduces many hyperparameters and a large mismatch between positive and negative samples that the keypoint formulation avoids.",
+      "a_polarity": "negative",
+      "a_claim_type": "comparison",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "b_index": 0,
+      "b_claim_text_normalized": "CornerNet detects objects as a pair of keypoints, the top-left and bottom-right corners, using a single convolutional network.",
+      "b_polarity": "positive",
+      "b_claim_type": "method",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 2,
+      "b_claim_text_normalized": "CornerNet introduces corner pooling, a new pooling layer that helps the network better localize corners.",
+      "b_polarity": "positive",
+      "b_claim_type": "method",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 3,
+      "b_claim_text_normalized": "CornerNet achieves a 42.2% AP on MS COCO, outperforming all existing one-stage detectors.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 4,
+      "b_claim_text_normalized": "The use of anchor boxes in prior detectors creates a huge imbalance between positive and negative anchor boxes and slows down training.",
+      "b_polarity": "negative",
+      "b_claim_type": "limitation",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 5,
+      "b_claim_text_normalized": "Corner pooling significantly improves AP by 2.0% on MS COCO validation.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 7,
+      "b_claim_text_normalized": "CornerNet is able to generate bounding boxes of higher quality compared to other state-of-the-art detectors.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    }
+  ]
+}

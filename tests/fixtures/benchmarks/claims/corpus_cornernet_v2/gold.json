@@ -1,0 +1,60 @@
+{
+  "schema_version": 2,
+  "case_id": "corpus_cornernet_v2",
+  "corpus_work_id": "cornernet_realpdf",
+  "benchmark_suite_tier": "claims_pilot_v2",
+  "claim_match_mode": "claim_id_or_normalized_text",
+  "source_layer1_fixture": "cornernet_realpdf",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "spot_check_required_fields": [
+      "expected_claims[].claim_text_normalized",
+      "expected_claims[].polarity"
+    ]
+  },
+  "distractor_strategy": {
+    "type": "neighboring_paper_paragraphs",
+    "neighbor_corpus_work_ids": [
+      "centernet_realpdf",
+      "fcos_realpdf"
+    ],
+    "max_distractor_paragraphs": 3,
+    "rng_seed": 42
+  },
+  "expected_claims": [
+    {
+      "claim_id": "cornernet_paired_keypoints",
+      "claim_type": "method",
+      "polarity": "positive",
+      "claim_text_normalized": "CornerNet detects bounding boxes by predicting paired top-left and bottom-right keypoints, eliminating the need for anchor boxes.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "cornernet_hourglass_backbone",
+      "claim_type": "design_choice",
+      "polarity": "positive",
+      "claim_text_normalized": "An hourglass network is used as the backbone to predict heatmaps and embeddings used for keypoint grouping.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "cornernet_anchor_design_drawbacks_negative",
+      "claim_type": "comparison",
+      "polarity": "negative",
+      "claim_text_normalized": "Anchor box design introduces many hyperparameters and a large mismatch between positive and negative samples that the keypoint formulation avoids.",
+      "match_mode": "embedding_sim"
+    }
+  ],
+  "expected_claim_count_min": 3,
+  "expected_claim_count_max": 3,
+  "polarity_distribution_min": {
+    "positive": 1,
+    "negative": 1
+  },
+  "claim_type_distribution_min": {
+    "design_choice": 1,
+    "method": 1,
+    "comparison": 1
+  }
+}

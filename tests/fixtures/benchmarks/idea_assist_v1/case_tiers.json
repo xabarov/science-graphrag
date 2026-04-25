@@ -8,5 +8,11 @@
     "idea_case_06_graph_neural_drug",
     "idea_case_07_llm_hallucination",
     "idea_case_08_cross_modal_retrieval"
+  ],
+  "idea_assist_live_pilot": [
+    "live_01_low_light_detector",
+    "live_02_aerial_small_objects",
+    "live_03_medical_imaging_few_shot",
+    "live_04_realtime_video_streaming_anchor_free"
   ]
 }

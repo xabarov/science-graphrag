@@ -1,0 +1,45 @@
+{
+  "schema_version": 2,
+  "case_id": "live_04_authors_of_mask_rcnn",
+  "tier": "agent_tools_live",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "question_file": "question.txt",
+  "expected_tool_sequence": [
+    {
+      "tool_name": "cypher_query",
+      "args_match": {
+        "query_contains_any": [
+          "AUTHORED",
+          "Author",
+          "Work"
+        ],
+        "query_contains_all": [
+          "mask_rcnn"
+        ]
+      },
+      "required": true
+    }
+  ],
+  "expected_methods_canonical": [],
+  "expected_works_corpus_ids": [
+    "mask_rcnn_realpdf",
+    "fast_rcnn_realpdf",
+    "faster_rcnn_realpdf",
+    "rcnn_realpdf",
+    "fpn_realpdf"
+  ],
+  "expected_authors_canonical": [
+    "Kaiming He",
+    "Ross Girshick"
+  ],
+  "answer_reference_text": "Mask R-CNN (He, Gkioxari, Dollar, Girshick, 2017) shares Ross Girshick with R-CNN, Fast R-CNN, and Faster R-CNN, and shares Kaiming He with FPN and Faster R-CNN. The shared-author chain links Mask R-CNN to nearly the entire R-CNN family in the corpus.",
+  "answer_metric": {
+    "type": "rouge_l",
+    "min_value": 0.2
+  },
+  "cypher_safety_required": 1.0
+}

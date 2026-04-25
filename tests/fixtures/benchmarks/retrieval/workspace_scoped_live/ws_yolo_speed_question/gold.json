@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "case_id": "ws_yolo_speed_question",
+  "workspace_id": "ws_yolo_family",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "question_file": "question.txt",
+  "answer_reference_text": "YOLOv1 reports 45 FPS for the base model and 155 FPS for Fast YOLO on a Titan X. YOLOv2 (YOLO9000) reports 67 FPS with 76.8 mAP at 416x416 resolution. YOLOv3 reports 22 ms inference at 320x320 (~45 FPS) on a Titan X. YOLOX reports up to 102 FPS for YOLOX-Tiny on a single V100.",
+  "answer_metric": {
+    "type": "rouge_l",
+    "min_value": 0.18
+  },
+  "expected_citations_min_count": 2,
+  "expected_citations": [
+    {
+      "corpus_work_id": "yolov1",
+      "required": true
+    },
+    {
+      "corpus_work_id": "yolov2_realpdf",
+      "required": false
+    },
+    {
+      "corpus_work_id": "yolov3_realpdf",
+      "required": false
+    },
+    {
+      "corpus_work_id": "yolox_realpdf",
+      "required": false
+    }
+  ],
+  "forbidden_corpus_work_ids": [
+    "rcnn_realpdf",
+    "fast_rcnn_realpdf",
+    "faster_rcnn_realpdf",
+    "mask_rcnn_realpdf",
+    "cascade_rcnn_realpdf",
+    "rfcn_realpdf",
+    "retinanet_focal_realpdf",
+    "ssd_realpdf",
+    "detr_realpdf",
+    "deformable_detr_realpdf",
+    "dn_detr_realpdf",
+    "dino_realpdf",
+    "fpn_realpdf",
+    "fcos_realpdf",
+    "atss_realpdf",
+    "cornernet_realpdf",
+    "centernet_realpdf",
+    "efficientdet_realpdf",
+    "gfl_realpdf",
+    "tood_realpdf",
+    "hog_human_detection_realpdf",
+    "part_based_models_realpdf",
+    "selective_search_realpdf",
+    "sppnet_realpdf",
+    "overfeat_realpdf",
+    "libra_rcnn_realpdf",
+    "detrs_realpdf"
+  ],
+  "forbidden_violation_gate": 0
+}

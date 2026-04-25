@@ -1,0 +1,48 @@
+{
+  "schema_version": 2,
+  "case_id": "live_05_compare_two_stage_one_stage_accuracy",
+  "tier": "agent_tools_live",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "question_file": "question.txt",
+  "expected_tool_sequence": [
+    {
+      "tool_name": "vector_search",
+      "args_match": {
+        "query_contains_any": [
+          "one-stage",
+          "two-stage",
+          "accuracy",
+          "focal loss"
+        ]
+      },
+      "required": true
+    },
+    {
+      "tool_name": "cypher_query",
+      "args_match": {
+        "query_contains_any": [
+          "CONTRADICTS",
+          "Work"
+        ]
+      },
+      "required": false
+    }
+  ],
+  "expected_methods_canonical": [
+    "focal_loss"
+  ],
+  "expected_works_corpus_ids": [
+    "faster_rcnn_realpdf",
+    "retinanet_focal_realpdf"
+  ],
+  "answer_reference_text": "Faster R-CNN (2015) argued that two-stage detectors with region proposal networks held the SOTA accuracy crown while one-stage detectors traded accuracy for speed. RetinaNet (2017) showed that the gap was caused by class imbalance and that a one-stage dense detector trained with focal loss matches or surpasses two-stage detectors in accuracy.",
+  "answer_metric": {
+    "type": "rouge_l",
+    "min_value": 0.2
+  },
+  "cypher_safety_required": 1.0
+}

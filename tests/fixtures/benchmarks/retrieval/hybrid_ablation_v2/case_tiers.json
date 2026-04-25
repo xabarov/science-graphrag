@@ -1,0 +1,15 @@
+{
+  "smoke": [
+    "contract_shape"
+  ],
+  "hybrid_ablation_v2_pilot": [
+    "ha_anchor_free",
+    "ha_focal_loss",
+    "ha_set_prediction_transformer",
+    "ha_compound_scaling",
+    "ha_keypoint_corner",
+    "ha_classical_handcrafted",
+    "ha_two_stage_rpn_evolution",
+    "ha_iou_loss_quality"
+  ]
+}

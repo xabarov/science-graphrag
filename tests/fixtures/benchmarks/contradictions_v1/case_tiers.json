@@ -1,0 +1,12 @@
+{
+  "smoke": ["contract_shape"],
+  "contradictions_pilot_v1": [
+    "c01_two_stage_vs_one_stage_accuracy",
+    "c02_anchor_based_vs_anchor_free",
+    "c03_anchors_vs_keypoint_detection",
+    "c04_nms_required_vs_set_prediction",
+    "c05_external_proposals_vs_integrated_rpn",
+    "c06_handcrafted_vs_learned_features",
+    "c07_depth_scaling_vs_compound_scaling"
+  ]
+}

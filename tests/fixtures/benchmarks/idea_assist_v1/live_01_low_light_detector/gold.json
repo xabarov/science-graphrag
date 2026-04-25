@@ -1,0 +1,27 @@
+{
+  "schema_version": 2,
+  "case_id": "live_01_low_light_detector",
+  "tier": "idea_assist_live",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "scenario_file": "scenario.json",
+  "seed_topic": "Improve real-time object detector robustness under low-light conditions while preserving 30+ FPS on commodity GPUs.",
+  "supporting_claim_ids_min": 2,
+  "supporting_claim_id_pool": [
+    "yolov1_speed_45_155_fps",
+    "yolox_l_50ap_v100_speed",
+    "yolov1_localization_error_negative",
+    "retinanet_focal_loss_definition",
+    "yolov3_strict_iou_underperform_negative"
+  ],
+  "forbidden_substrings": [
+    "YOLO formulates object detection as a single regression problem from raw pixels to bounding box coordinates",
+    "Focal loss down-weights the loss assigned to well-classified examples"
+  ],
+  "max_rouge_l_against_evidence_quotes": 0.7,
+  "novelty_must_reference_gap": true,
+  "reference_hypothesis_optional": "Combine focal-loss style class re-weighting with low-light-specific data augmentation (synthetic darkening of COCO + per-channel gain jitter) on a YOLOX-Tiny backbone, targeting 30+ FPS on Jetson Nano while reducing miss-rate at <0.1 lux."
+}

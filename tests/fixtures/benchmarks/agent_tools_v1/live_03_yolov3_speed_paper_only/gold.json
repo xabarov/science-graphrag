@@ -1,0 +1,35 @@
+{
+  "schema_version": 2,
+  "case_id": "live_03_yolov3_speed_paper_only",
+  "tier": "agent_tools_live",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "question_file": "question.txt",
+  "expected_tool_sequence": [
+    {
+      "tool_name": "vector_search",
+      "args_match": {
+        "query_contains_any": [
+          "YOLOv3",
+          "320",
+          "speed",
+          "ms"
+        ]
+      },
+      "required": true
+    }
+  ],
+  "expected_methods_canonical": [],
+  "expected_works_corpus_ids": [
+    "yolov3_realpdf"
+  ],
+  "answer_reference_text": "YOLOv3 reports about 22 ms inference time on a Titan X at 320x320 input resolution (roughly 45 FPS), achieving 28.2 mAP on COCO test-dev.",
+  "answer_metric": {
+    "type": "rouge_l",
+    "min_value": 0.18
+  },
+  "cypher_safety_required": 1.0
+}

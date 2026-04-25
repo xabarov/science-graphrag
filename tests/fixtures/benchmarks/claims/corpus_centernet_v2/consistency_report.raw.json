@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "CenterNet detects each object as a triplet of keypoints rather than a pair.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "Our approach, named CenterNet, detects each object as a triplet, rather than a pair, of keypoints"
+    },
+    {
+      "claim_text_normalized": "CenterNet achieves an AP of 47.0% on the MS-COCO dataset.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "On the MS-COCO dataset, CenterNet achieves an AP of 47.0%"
+    },
+    {
+      "claim_text_normalized": "CenterNet outperforms all existing one-stage detectors by at least 4.9% in AP.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "CenterNet achieves an AP of 47.0%, which outperforms all existing one-stage detectors by at least 4.9%"
+    },
+    {
+      "claim_text_normalized": "CenterNet demonstrates quite comparable performance to the top-ranked two-stage detectors.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "CenterNet demonstrates quite comparable performance to the top-ranked two-stage detectors."
+    },
+    {
+      "claim_text_normalized": "Keypoint-based approaches often suffer a large number of incorrect object bounding boxes.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "In object detection, keypoint-based approaches often suffer a large number of incorrect object bounding boxes"
+    },
+    {
+      "claim_text_normalized": "CenterNet uses a scale-aware central region to adaptively fit the size of bounding boxes.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "we propose a scale-aware central region to adaptively fit the size of bounding boxes."
+    },
+    {
+      "claim_text_normalized": "Center pooling helps the center keypoints obtain more recognizable visual patterns within objects.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "Center pooling helps the center keypoints obtain more recognizable visual patterns within objects"
+    },
+    {
+      "claim_text_normalized": "Cascade corner pooling equips the original corner pooling module with the ability of perceiving internal information.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "cascade corner pooling, which equips the original corner pooling module with the ability of perceiving internal information."
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "case_id": "ws_full_anchor_free_overview",
+  "workspace_id": "ws_full_corpus",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "question_file": "question.txt",
+  "answer_reference_text": "CornerNet detects bounding boxes as pairs of corner keypoints. CenterNet (Objects as Points) extends this by predicting object centers and regressing size from each center. FCOS performs per-pixel anchor-free prediction and adds a center-ness branch to suppress low-quality boxes. ATSS automatically selects training samples for either anchor-based or anchor-free heads, blurring the distinction.",
+  "answer_metric": {
+    "type": "rouge_l",
+    "min_value": 0.18
+  },
+  "expected_citations_min_count": 3,
+  "expected_citations": [
+    {
+      "corpus_work_id": "cornernet_realpdf",
+      "required": true
+    },
+    {
+      "corpus_work_id": "centernet_realpdf",
+      "required": false
+    },
+    {
+      "corpus_work_id": "fcos_realpdf",
+      "required": true
+    },
+    {
+      "corpus_work_id": "atss_realpdf",
+      "required": false
+    }
+  ],
+  "forbidden_corpus_work_ids": [],
+  "forbidden_violation_gate": 0
+}

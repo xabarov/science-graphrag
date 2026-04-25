@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "pair_id": "c04_nms_required_vs_set_prediction",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "claim_a": {
+    "claim_id": "faster_rcnn_nms_required",
+    "corpus_work_id": "faster_rcnn_realpdf",
+    "claim_text": "Non-maximum suppression is required to remove duplicate detections produced by overlapping anchor predictions.",
+    "evidence_quote": "We adopt non-maximum suppression (NMS) on the proposal regions based on their cls scores. We fix the IoU threshold for NMS at 0.7, which leaves us about 2000 proposal regions per image.",
+    "anchor_offset": {
+      "file": "article.md",
+      "approx_paragraph": 5
+    }
+  },
+  "claim_b": {
+    "claim_id": "detr_set_prediction_no_nms",
+    "corpus_work_id": "detr_realpdf",
+    "claim_text": "Bipartite matching between predictions and ground truth removes the need for non-maximum suppression at inference time.",
+    "evidence_quote": "DETR streamlines the detection pipeline, effectively removing the need for many hand-designed components like a non-maximum suppression procedure or anchor generation that explicitly encode our prior knowledge about the task.",
+    "anchor_offset": {
+      "file": "article.md",
+      "approx_paragraph": 1
+    }
+  },
+  "contradiction_type": "post_processing",
+  "severity": "direct",
+  "rationale": "DETR explicitly removes a post-processing step that Faster R-CNN treats as essential. Both approaches are valid for object detection, but the implementation contract for downstream consumers (multi-detection deduplication) is different.",
+  "expected_neo4j_pattern": "(:Work {corpus_work_id:'faster_rcnn_realpdf'})-[:CONTRADICTS {subtype:'post_processing'}]-(:Work {corpus_work_id:'detr_realpdf'})"
+}

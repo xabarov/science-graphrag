@@ -1,0 +1,66 @@
+{
+  "schema_version": 2,
+  "case_id": "concept_corpus_fpn_v2",
+  "corpus_work_id": "fpn_realpdf",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "spot_check_required_fields": [
+      "concepts_present",
+      "concepts_absent"
+    ]
+  },
+  "concepts_present": [
+    {
+      "concept_id": "feature_pyramid",
+      "evidence_quote": "Feature Pyramid Network ... a top-down architecture with lateral connections is developed for building high-level semantic feature maps at all scales."
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "evidence_quote": "We integrate FPN into the Faster R-CNN system."
+    },
+    {
+      "concept_id": "anchor_based",
+      "evidence_quote": "Anchors are now defined to have a single scale per pyramid level."
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "evidence_quote": "Our base model is ResNet-50 / ResNet-101 with the C2-C5 stages."
+    },
+    {
+      "concept_id": "region_proposal",
+      "evidence_quote": "FPN is plugged into RPN as a feature aggregator."
+    },
+    {
+      "concept_id": "nms",
+      "evidence_quote": "Standard NMS is used at inference."
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "evidence_quote": "On the COCO detection benchmark, our method achieves state-of-the-art results."
+    }
+  ],
+  "concepts_absent": [
+    {
+      "concept_id": "anchor_free",
+      "rationale": "FPN is not anchor-free; it provides multi-scale features for anchor-based RPN."
+    },
+    {
+      "concept_id": "set_prediction",
+      "rationale": "Set-prediction is unrelated to FPN."
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "rationale": "Pure convolutional pipeline."
+    },
+    {
+      "concept_id": "focal_loss",
+      "rationale": "FPN paper uses cross-entropy; focal loss appears in the later RetinaNet paper that builds on FPN."
+    },
+    {
+      "concept_id": "mask_branch",
+      "rationale": "Detection-focused; mask is added by Mask R-CNN that uses FPN."
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "schema_version": 2,
+  "case_id": "corpus_ssd_v2",
+  "corpus_work_id": "ssd_realpdf",
+  "benchmark_suite_tier": "claims_pilot_v2",
+  "claim_match_mode": "claim_id_or_normalized_text",
+  "source_layer1_fixture": "ssd_realpdf",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "spot_check_required_fields": [
+      "expected_claims[].claim_text_normalized",
+      "expected_claims[].polarity"
+    ]
+  },
+  "distractor_strategy": {
+    "type": "neighboring_paper_paragraphs",
+    "neighbor_corpus_work_ids": [
+      "yolov1",
+      "retinanet_focal_realpdf",
+      "yolov2_realpdf"
+    ],
+    "max_distractor_paragraphs": 3,
+    "rng_seed": 42
+  },
+  "expected_claims": [
+    {
+      "claim_id": "ssd_default_boxes_multiscale",
+      "claim_type": "method",
+      "polarity": "positive",
+      "claim_text_normalized": "SSD predicts category scores and bounding-box offsets relative to a set of default boxes per feature-map location, evaluated across multiple scales of feature maps.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "ssd_300_voc_speed",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "claim_text_normalized": "SSD300 reaches around 74 mAP on PASCAL VOC 2007 test at roughly 59 FPS on a Titan X GPU, surpassing YOLO at higher speed.",
+      "match_mode": "rouge_l"
+    },
+    {
+      "claim_id": "ssd_multiple_feature_maps",
+      "claim_type": "design_choice",
+      "polarity": "positive",
+      "claim_text_normalized": "Predicting from feature maps at several different resolutions is critical for handling objects of different sizes within a single forward pass.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "ssd_yolo_localization_negative",
+      "claim_type": "comparison",
+      "polarity": "negative",
+      "claim_text_normalized": "YOLO's single-scale grid prediction degrades accuracy on small objects falling near grid boundaries, an issue mitigated by SSD's per-location multi-box predictions across feature maps.",
+      "match_mode": "embedding_sim"
+    }
+  ],
+  "expected_claim_count_min": 4,
+  "expected_claim_count_max": 4,
+  "polarity_distribution_min": {
+    "positive": 1,
+    "negative": 1
+  },
+  "claim_type_distribution_min": {
+    "performance": 1,
+    "design_choice": 1,
+    "method": 1,
+    "comparison": 1
+  }
+}

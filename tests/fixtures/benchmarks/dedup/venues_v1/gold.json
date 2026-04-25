@@ -1,0 +1,193 @@
+{
+  "schema_version": 3,
+  "entity_type": "venue",
+  "description": "Venue-level dedup gold for Wave T (BT11). Surface forms cover bibliography styles (full name, short name, year-suffixed, conference vs proceedings). CRITICAL: same venue + DIFFERENT year is NOT a cluster (e.g. CVPR 2014 != CVPR 2017). See docs/specs/benchmark-gold-schemas-v1.md section 9.",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "records": [
+    {
+      "entity_id": "venue_cvpr_2016_full",
+      "display_name": "IEEE Conference on Computer Vision and Pattern Recognition 2016",
+      "surface_form": "IEEE Conference on Computer Vision and Pattern Recognition 2016",
+      "context_attributes": {"venue_year": 2016, "venue_kind": "conference"}
+    },
+    {
+      "entity_id": "venue_cvpr_2016_short",
+      "display_name": "CVPR 2016",
+      "surface_form": "CVPR 2016",
+      "context_attributes": {"venue_year": 2016, "venue_kind": "conference"}
+    },
+    {
+      "entity_id": "venue_cvpr_2016_apostrophe",
+      "display_name": "CVPR'16",
+      "surface_form": "CVPR'16",
+      "context_attributes": {"venue_year": 2016, "venue_kind": "conference"}
+    },
+    {
+      "entity_id": "venue_cvpr_2016_proc",
+      "display_name": "Proc. of CVPR 2016",
+      "surface_form": "Proc. of CVPR 2016",
+      "context_attributes": {"venue_year": 2016, "venue_kind": "conference"}
+    },
+    {
+      "entity_id": "venue_cvpr_2017_short",
+      "display_name": "CVPR 2017",
+      "surface_form": "CVPR 2017",
+      "context_attributes": {"venue_year": 2017, "venue_kind": "conference"}
+    },
+    {
+      "entity_id": "venue_iccv_2017_full",
+      "display_name": "IEEE International Conference on Computer Vision 2017",
+      "surface_form": "IEEE International Conference on Computer Vision 2017",
+      "context_attributes": {"venue_year": 2017, "venue_kind": "conference"}
+    },
+    {
+      "entity_id": "venue_iccv_2017_short",
+      "display_name": "ICCV 2017",
+      "surface_form": "ICCV 2017",
+      "context_attributes": {"venue_year": 2017, "venue_kind": "conference"}
+    },
+    {
+      "entity_id": "venue_iccv_2017_apostrophe",
+      "display_name": "ICCV'17",
+      "surface_form": "ICCV'17",
+      "context_attributes": {"venue_year": 2017, "venue_kind": "conference"}
+    },
+    {
+      "entity_id": "venue_eccv_2020_full",
+      "display_name": "European Conference on Computer Vision 2020",
+      "surface_form": "European Conference on Computer Vision 2020",
+      "context_attributes": {"venue_year": 2020, "venue_kind": "conference"}
+    },
+    {
+      "entity_id": "venue_eccv_2020_short",
+      "display_name": "ECCV 2020",
+      "surface_form": "ECCV 2020",
+      "context_attributes": {"venue_year": 2020, "venue_kind": "conference"}
+    },
+    {
+      "entity_id": "venue_neurips_2017_short",
+      "display_name": "NeurIPS 2017",
+      "surface_form": "NeurIPS 2017",
+      "context_attributes": {"venue_year": 2017, "venue_kind": "conference"}
+    },
+    {
+      "entity_id": "venue_nips_2017_old_name",
+      "display_name": "NIPS 2017",
+      "surface_form": "NIPS 2017",
+      "context_attributes": {
+        "venue_year": 2017,
+        "venue_kind": "conference",
+        "rationale": "NIPS was renamed to NeurIPS in 2018; pre-2018 NIPS papers are sometimes cited with both forms."
+      }
+    },
+    {
+      "entity_id": "venue_neurips_2018_post_rename",
+      "display_name": "NeurIPS 2018",
+      "surface_form": "NeurIPS 2018",
+      "context_attributes": {"venue_year": 2018, "venue_kind": "conference"}
+    },
+    {
+      "entity_id": "venue_arxiv_preprint",
+      "display_name": "arXiv preprint",
+      "surface_form": "arXiv preprint",
+      "context_attributes": {"venue_year": null, "venue_kind": "preprint_repository"}
+    },
+    {
+      "entity_id": "venue_arxiv_corr",
+      "display_name": "CoRR",
+      "surface_form": "CoRR",
+      "context_attributes": {
+        "venue_year": null,
+        "venue_kind": "preprint_repository",
+        "rationale": "CoRR (Computing Research Repository) is the arXiv subset for CS papers; often cited as the venue."
+      }
+    },
+    {
+      "entity_id": "venue_pami_journal",
+      "display_name": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+      "surface_form": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+      "context_attributes": {"venue_kind": "journal"}
+    },
+    {
+      "entity_id": "venue_pami_short",
+      "display_name": "TPAMI",
+      "surface_form": "TPAMI",
+      "context_attributes": {"venue_kind": "journal"}
+    },
+    {
+      "entity_id": "venue_ijcv_journal",
+      "display_name": "International Journal of Computer Vision",
+      "surface_form": "International Journal of Computer Vision",
+      "context_attributes": {"venue_kind": "journal"}
+    },
+    {
+      "entity_id": "venue_ijcv_short",
+      "display_name": "IJCV",
+      "surface_form": "IJCV",
+      "context_attributes": {"venue_kind": "journal"}
+    }
+  ],
+  "clusters": [
+    {
+      "cluster_id": "cluster_cvpr_2016",
+      "entity_ids": ["venue_cvpr_2016_full", "venue_cvpr_2016_short", "venue_cvpr_2016_apostrophe", "venue_cvpr_2016_proc"],
+      "rationale": "Same venue (CVPR 2016) - 4 surface forms differ in expansion and prefix only."
+    },
+    {
+      "cluster_id": "cluster_iccv_2017",
+      "entity_ids": ["venue_iccv_2017_full", "venue_iccv_2017_short", "venue_iccv_2017_apostrophe"],
+      "rationale": "ICCV 2017 - full name, short name, apostrophe-year form."
+    },
+    {
+      "cluster_id": "cluster_eccv_2020",
+      "entity_ids": ["venue_eccv_2020_full", "venue_eccv_2020_short"],
+      "rationale": "ECCV 2020 - full and short."
+    },
+    {
+      "cluster_id": "cluster_neurips_nips_2017",
+      "entity_ids": ["venue_neurips_2017_short", "venue_nips_2017_old_name"],
+      "rationale": "Same conference (year 2017) cited with both NIPS and NeurIPS forms - this is the rename-equivalence cluster."
+    },
+    {
+      "cluster_id": "cluster_arxiv_corr",
+      "entity_ids": ["venue_arxiv_preprint", "venue_arxiv_corr"],
+      "rationale": "arXiv and CoRR refer to the same preprint repository (CoRR = arXiv CS subset)."
+    },
+    {
+      "cluster_id": "cluster_pami",
+      "entity_ids": ["venue_pami_journal", "venue_pami_short"],
+      "rationale": "TPAMI journal."
+    },
+    {
+      "cluster_id": "cluster_ijcv",
+      "entity_ids": ["venue_ijcv_journal", "venue_ijcv_short"],
+      "rationale": "IJCV journal."
+    }
+  ],
+  "negative_pairs": [
+    {
+      "pair_id": "neg_cvpr_2016_vs_2017",
+      "entity_ids": ["venue_cvpr_2016_short", "venue_cvpr_2017_short"],
+      "rationale": "Same venue (CVPR) but DIFFERENT years are different proceedings. Critical for citation accuracy."
+    },
+    {
+      "pair_id": "neg_iccv_vs_cvpr_2017",
+      "entity_ids": ["venue_iccv_2017_short", "venue_cvpr_2017_short"],
+      "rationale": "Different conferences (ICCV vs CVPR) in the same year."
+    },
+    {
+      "pair_id": "neg_neurips_2017_vs_2018",
+      "entity_ids": ["venue_neurips_2017_short", "venue_neurips_2018_post_rename"],
+      "rationale": "Same conference different years."
+    },
+    {
+      "pair_id": "neg_pami_vs_ijcv",
+      "entity_ids": ["venue_pami_short", "venue_ijcv_short"],
+      "rationale": "Different journals (TPAMI vs IJCV); both common in computer vision."
+    }
+  ]
+}

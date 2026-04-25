@@ -1,0 +1,52 @@
+{
+  "schema_version": 2,
+  "case_id": "live_02_anchor_free_papers_overview",
+  "tier": "agent_tools_live",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "question_file": "question.txt",
+  "expected_tool_sequence": [
+    {
+      "tool_name": "vector_search",
+      "args_match": {
+        "query_contains_any": [
+          "anchor-free",
+          "without anchor",
+          "per-pixel detection"
+        ]
+      },
+      "required": true
+    },
+    {
+      "tool_name": "cypher_query",
+      "args_match": {
+        "query_contains_any": [
+          "MENTIONS_METHOD",
+          "Method",
+          "anchor_free"
+        ]
+      },
+      "required": true
+    }
+  ],
+  "expected_methods_canonical": [
+    "anchor_free",
+    "keypoint_detection",
+    "centerness"
+  ],
+  "expected_works_corpus_ids": [
+    "cornernet_realpdf",
+    "centernet_realpdf",
+    "fcos_realpdf",
+    "atss_realpdf"
+  ],
+  "answer_reference_text": "CornerNet (Law & Deng, 2018) detects bounding boxes as paired top-left and bottom-right corner keypoints. CenterNet (Objects as Points, Zhou et al., 2019) regresses object size from a single center keypoint. FCOS (Tian et al., 2019) is a fully-convolutional one-stage detector that predicts boxes per pixel and adds a center-ness branch. ATSS (Zhang et al., 2020) blurs the anchor-based vs. anchor-free distinction with adaptive sample selection.",
+  "answer_metric": {
+    "type": "rouge_l",
+    "min_value": 0.18
+  },
+  "cypher_safety_required": 1.0
+}

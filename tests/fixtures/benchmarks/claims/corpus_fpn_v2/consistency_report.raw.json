@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "Feature Pyramid Networks show significant improvement as a generic feature extractor in several applications.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "This architecture, called a Feature Pyramid Network (FPN), shows significant improvement as a generic feature extractor in several applications."
+    },
+    {
+      "claim_text_normalized": "Using FPN in a basic Faster R-CNN system achieves state-of-the-art single-model results on the COCO detection benchmark.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "Using FPN in a basic Faster R-CNN system, our method achieves state-of-the-art single-model results on the COCO detection benchmark without bells and whistles"
+    },
+    {
+      "claim_text_normalized": "Featurizing each level of an image pyramid increases inference time considerably.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "Inference time increases considerably (e.g., by four times [11]), making this approach impractical for real applications."
+    },
+    {
+      "claim_text_normalized": "SSD misses the opportunity to reuse the higher-resolution maps of the feature hierarchy.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "Thus it misses the opportunity to reuse the higher-resolution maps of the feature hierarchy."
+    },
+    {
+      "claim_text_normalized": "For bounding box proposals, FPN significantly increases the Average Recall by 8.0 points.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "In ablation experiments, we find that for bounding box proposals, FPN significantly increases the Average Recall (AR) by 8.0 points"
+    },
+    {
+      "claim_text_normalized": "Our method can run at 6 FPS on a GPU and thus is a practical solution to multi-scale object detection.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "In addition, our method can run at 6 FPS on a GPU and thus is a practical and accurate solution to multi-scale object detection."
+    },
+    {
+      "claim_text_normalized": "The pyramid structure can be trained end-to-end with all scales and is used consistently at train/test time.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "In addition, our pyramid structure can be trained end-to-end with all scales and is used consistently at train/test time"
+    },
+    {
+      "claim_text_normalized": "Our method outperforms the accuracy of previous mask proposal approaches by over 8.3 points AR.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "We outperform the accuracy of these approaches by over 8.3 points AR."
+    }
+  ]
+}

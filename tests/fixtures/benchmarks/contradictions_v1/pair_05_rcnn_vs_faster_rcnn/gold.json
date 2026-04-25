@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "pair_id": "c05_external_proposals_vs_integrated_rpn",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "claim_a": {
+    "claim_id": "rcnn_external_proposals_foundation",
+    "corpus_work_id": "rcnn_realpdf",
+    "claim_text": "High-quality external region proposals (e.g. Selective Search) are the foundation of accurate region-based detection.",
+    "evidence_quote": "Our system ... applies high-capacity convolutional neural networks (CNNs) to bottom-up region proposals in order to localize and segment objects ... we use selective search to generate category-independent region proposals.",
+    "anchor_offset": {
+      "file": "article.md",
+      "approx_paragraph": 1
+    }
+  },
+  "claim_b": {
+    "claim_id": "faster_rcnn_rpn_replaces_external",
+    "corpus_work_id": "faster_rcnn_realpdf",
+    "claim_text": "An integrated Region Proposal Network is faster and equally accurate, removing the dependence on external proposal algorithms.",
+    "evidence_quote": "We introduce a Region Proposal Network (RPN) that shares full-image convolutional features with the detection network, thus enabling nearly cost-free region proposals.",
+    "anchor_offset": {
+      "file": "article.md",
+      "approx_paragraph": 1
+    }
+  },
+  "contradiction_type": "architectural",
+  "severity": "nuanced",
+  "rationale": "Both detection pipelines are valid, but Faster R-CNN explicitly identifies external Selective Search proposals as the bottleneck and replaces them; this contradicts R-CNN's architectural premise that the proposal stage must be external.",
+  "expected_neo4j_pattern": "(:Work {corpus_work_id:'rcnn_realpdf'})-[:CONTRADICTS {subtype:'architectural'}]-(:Work {corpus_work_id:'faster_rcnn_realpdf'})"
+}

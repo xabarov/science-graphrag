@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "YOLO processes images in real-time at 45 frames per second.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "Our base YOLO model processes images in real-time at 45 frames per second."
+    },
+    {
+      "claim_text_normalized": "Fast YOLO processes 155 frames per second while achieving double the mAP of other real-time detectors.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "Fast YOLO, processes an astounding 155 frames per second while still achieving double the mAP of other real-time detectors."
+    },
+    {
+      "claim_text_normalized": "YOLO makes more localization errors compared to state-of-the-art detection systems.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "Compared to state-of-the-art detection systems, YOLO makes more localization errors"
+    },
+    {
+      "claim_text_normalized": "YOLO is less likely to predict false positives on background than Fast R-CNN.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "YOLO makes less than half the number of background errors compared to Fast R-CNN."
+    },
+    {
+      "claim_text_normalized": "YOLO outperforms DPM and R-CNN when generalizing from natural images to artwork domains.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "It outperforms other detection methods, including DPM and R-CNN, when generalizing from natural images to other domains like artwork."
+    },
+    {
+      "claim_text_normalized": "YOLO struggles to precisely localize small objects.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "While it can quickly identify objects in images it struggles to precisely localize some objects, especially small ones."
+    },
+    {
+      "claim_text_normalized": "YOLO frames object detection as a single regression problem from image pixels to bounding boxes and class probabilities.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "We reframe object detection as a single regression problem, straight from image pixels to bounding box coordinates and class probabilities."
+    },
+    {
+      "claim_text_normalized": "YOLO's unified architecture enables end-to-end training and real-time speeds while maintaining high average precision.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "The YOLO design enables end-to-end training and real-time speeds while maintaining high average precision."
+    }
+  ]
+}

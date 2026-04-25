@@ -1,0 +1,197 @@
+{
+  "schema_version": 3,
+  "entity_type": "dataset",
+  "description": "Dataset-level dedup gold for Wave T (BT11). Surface forms cover acronym/expansion/case-and-spacing/year-suffix variations. CRITICAL: same dataset family + DIFFERENT version (PASCAL VOC 2007 != 2012, COCO 2014 != 2017) MUST NOT merge. See docs/specs/benchmark-gold-schemas-v1.md section 9 and tests/fixtures/corpus/CATALOG.md section 2.",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "records": [
+    {
+      "entity_id": "ds_pascal_voc_2007_full",
+      "display_name": "PASCAL Visual Object Classes 2007",
+      "surface_form": "PASCAL Visual Object Classes 2007",
+      "context_attributes": {"version": "2007", "task": "object_detection"}
+    },
+    {
+      "entity_id": "ds_pascal_voc_2007_short",
+      "display_name": "PASCAL VOC 2007",
+      "surface_form": "PASCAL VOC 2007",
+      "context_attributes": {"version": "2007", "task": "object_detection"}
+    },
+    {
+      "entity_id": "ds_pascal_voc_2007_compact",
+      "display_name": "VOC2007",
+      "surface_form": "VOC2007",
+      "context_attributes": {"version": "2007", "task": "object_detection"}
+    },
+    {
+      "entity_id": "ds_pascal_voc_2007_dotted",
+      "display_name": "VOC07",
+      "surface_form": "VOC07",
+      "context_attributes": {"version": "2007", "task": "object_detection"}
+    },
+    {
+      "entity_id": "ds_pascal_voc_2012_short",
+      "display_name": "PASCAL VOC 2012",
+      "surface_form": "PASCAL VOC 2012",
+      "context_attributes": {"version": "2012", "task": "object_detection"}
+    },
+    {
+      "entity_id": "ds_pascal_voc_2012_compact",
+      "display_name": "VOC2012",
+      "surface_form": "VOC2012",
+      "context_attributes": {"version": "2012", "task": "object_detection"}
+    },
+    {
+      "entity_id": "ds_mscoco_full",
+      "display_name": "Microsoft COCO",
+      "surface_form": "Microsoft COCO",
+      "context_attributes": {"version": "any", "task": "object_detection"}
+    },
+    {
+      "entity_id": "ds_mscoco_short",
+      "display_name": "MS COCO",
+      "surface_form": "MS COCO",
+      "context_attributes": {"version": "any", "task": "object_detection"}
+    },
+    {
+      "entity_id": "ds_coco_short",
+      "display_name": "COCO",
+      "surface_form": "COCO",
+      "context_attributes": {"version": "any", "task": "object_detection"}
+    },
+    {
+      "entity_id": "ds_coco_2014",
+      "display_name": "COCO 2014",
+      "surface_form": "COCO 2014",
+      "context_attributes": {"version": "2014", "task": "object_detection"}
+    },
+    {
+      "entity_id": "ds_coco_2017",
+      "display_name": "COCO 2017",
+      "surface_form": "COCO 2017",
+      "context_attributes": {"version": "2017", "task": "object_detection"}
+    },
+    {
+      "entity_id": "ds_imagenet_full",
+      "display_name": "ImageNet",
+      "surface_form": "ImageNet",
+      "context_attributes": {"version": "any", "task": "image_classification"}
+    },
+    {
+      "entity_id": "ds_imagenet_alt_caps",
+      "display_name": "Imagenet",
+      "surface_form": "Imagenet",
+      "context_attributes": {"version": "any", "task": "image_classification"}
+    },
+    {
+      "entity_id": "ds_ilsvrc_full",
+      "display_name": "ImageNet Large Scale Visual Recognition Challenge",
+      "surface_form": "ImageNet Large Scale Visual Recognition Challenge",
+      "context_attributes": {"version": "any", "task": "image_classification"}
+    },
+    {
+      "entity_id": "ds_ilsvrc_acronym",
+      "display_name": "ILSVRC",
+      "surface_form": "ILSVRC",
+      "context_attributes": {"version": "any"}
+    },
+    {
+      "entity_id": "ds_ilsvrc_2012",
+      "display_name": "ILSVRC 2012",
+      "surface_form": "ILSVRC 2012",
+      "context_attributes": {"version": "2012"}
+    },
+    {
+      "entity_id": "ds_ilsvrc_2013",
+      "display_name": "ILSVRC 2013",
+      "surface_form": "ILSVRC 2013",
+      "context_attributes": {"version": "2013"}
+    },
+    {
+      "entity_id": "ds_objects365",
+      "display_name": "Objects365",
+      "surface_form": "Objects365",
+      "context_attributes": {"version": "v1", "task": "object_detection"}
+    },
+    {
+      "entity_id": "ds_objects365_with_space",
+      "display_name": "Objects 365",
+      "surface_form": "Objects 365",
+      "context_attributes": {"version": "v1", "task": "object_detection"}
+    },
+    {
+      "entity_id": "ds_kitti",
+      "display_name": "KITTI",
+      "surface_form": "KITTI",
+      "context_attributes": {"task": "autonomous_driving_detection"}
+    },
+    {
+      "entity_id": "ds_lvis",
+      "display_name": "LVIS",
+      "surface_form": "LVIS",
+      "context_attributes": {"task": "long_tail_instance_segmentation"}
+    }
+  ],
+  "clusters": [
+    {
+      "cluster_id": "cluster_voc_2007",
+      "entity_ids": ["ds_pascal_voc_2007_full", "ds_pascal_voc_2007_short", "ds_pascal_voc_2007_compact", "ds_pascal_voc_2007_dotted"],
+      "rationale": "PASCAL VOC 2007 - 4 surface forms (full, short, compact, year-only)."
+    },
+    {
+      "cluster_id": "cluster_voc_2012",
+      "entity_ids": ["ds_pascal_voc_2012_short", "ds_pascal_voc_2012_compact"],
+      "rationale": "PASCAL VOC 2012."
+    },
+    {
+      "cluster_id": "cluster_mscoco_generic",
+      "entity_ids": ["ds_mscoco_full", "ds_mscoco_short", "ds_coco_short"],
+      "rationale": "Generic 'MS COCO' / 'COCO' / 'Microsoft COCO' all refer to the COCO benchmark family WITHOUT version specification. When version IS specified (2014 vs 2017), they become distinct - see negative_pairs."
+    },
+    {
+      "cluster_id": "cluster_imagenet_full",
+      "entity_ids": ["ds_imagenet_full", "ds_imagenet_alt_caps"],
+      "rationale": "ImageNet capitalization variant ('Imagenet' is incorrect but common in older bibliography)."
+    },
+    {
+      "cluster_id": "cluster_ilsvrc_generic",
+      "entity_ids": ["ds_ilsvrc_full", "ds_ilsvrc_acronym"],
+      "rationale": "ILSVRC generic (without year) - the challenge name."
+    },
+    {
+      "cluster_id": "cluster_objects365",
+      "entity_ids": ["ds_objects365", "ds_objects365_with_space"],
+      "rationale": "Objects365 / Objects 365 (whitespace variation)."
+    }
+  ],
+  "negative_pairs": [
+    {
+      "pair_id": "neg_voc_2007_vs_2012",
+      "entity_ids": ["ds_pascal_voc_2007_short", "ds_pascal_voc_2012_short"],
+      "rationale": "DIFFERENT splits/versions of the PASCAL VOC challenge; benchmarks report both separately and accuracy comparisons across versions are invalid."
+    },
+    {
+      "pair_id": "neg_coco_2014_vs_2017",
+      "entity_ids": ["ds_coco_2014", "ds_coco_2017"],
+      "rationale": "Different annotation revisions and train/val splits; reported numbers are not directly comparable."
+    },
+    {
+      "pair_id": "neg_imagenet_vs_ilsvrc_2013",
+      "entity_ids": ["ds_imagenet_full", "ds_ilsvrc_2013"],
+      "rationale": "Generic ImageNet typically means ILSVRC 2012 (1000 classes); ILSVRC 2013 has different classes/images. Without explicit year, NOT same as 2013."
+    },
+    {
+      "pair_id": "neg_imagenet_classification_vs_lvis_segmentation",
+      "entity_ids": ["ds_imagenet_full", "ds_lvis"],
+      "rationale": "Different datasets entirely; included to test that entity_type='dataset' name overlap doesn't trigger false merge."
+    },
+    {
+      "pair_id": "neg_kitti_vs_voc_2007",
+      "entity_ids": ["ds_kitti", "ds_pascal_voc_2007_short"],
+      "rationale": "Different domains (autonomous driving vs general). Negative-pair sanity check."
+    }
+  ]
+}

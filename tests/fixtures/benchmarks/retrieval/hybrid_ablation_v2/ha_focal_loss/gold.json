@@ -1,0 +1,26 @@
+{
+  "schema_version": 2,
+  "case_id": "ha_focal_loss",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "question_file": "question.txt",
+  "relevant_corpus_work_ids": [
+    "retinanet_focal_realpdf",
+    "gfl_realpdf"
+  ],
+  "irrelevant_corpus_work_ids": [
+    "yolov1",
+    "ssd_realpdf",
+    "rcnn_realpdf"
+  ],
+  "min_mrr_delta_hybrid_minus_vector": 0.05,
+  "k_for_mrr": 10,
+  "ranked_lists_source": "runner_generated",
+  "runner_modes": [
+    "vector",
+    "hybrid"
+  ]
+}

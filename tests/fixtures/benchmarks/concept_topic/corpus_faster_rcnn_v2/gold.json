@@ -1,0 +1,86 @@
+{
+  "schema_version": 2,
+  "case_id": "concept_corpus_faster_rcnn_v2",
+  "corpus_work_id": "faster_rcnn_realpdf",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "spot_check_required_fields": [
+      "concepts_present",
+      "concepts_absent"
+    ]
+  },
+  "concepts_present": [
+    {
+      "concept_id": "region_proposal",
+      "evidence_quote": "We introduce a Region Proposal Network (RPN) that shares full-image convolutional features with the detection network."
+    },
+    {
+      "concept_id": "anchor_based",
+      "evidence_quote": "We introduce novel 'anchor' boxes that serve as references at multiple scales and aspect ratios."
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "evidence_quote": "Faster R-CNN is composed of two modules: a deep fully convolutional network that proposes regions, and the Fast R-CNN detector that uses the proposed regions."
+    },
+    {
+      "concept_id": "nms",
+      "evidence_quote": "We adopt non-maximum suppression on the proposal regions based on their cls scores."
+    },
+    {
+      "concept_id": "roi_pooling",
+      "evidence_quote": "RoI pooling layer ... The ROI pooling layer uses max pooling to convert the features inside any valid region of interest into a small feature map."
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "evidence_quote": "Our loss function for an image is defined as ... a multi-task loss with classification log loss and bounding-box regression."
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "evidence_quote": "We achieve state-of-the-art object detection accuracy on PASCAL VOC 2007, 2012, and MS COCO datasets."
+    }
+  ],
+  "concepts_absent": [
+    {
+      "concept_id": "anchor_free",
+      "rationale": "Faster R-CNN is the canonical anchor-based detector; it explicitly motivates the introduction of anchors."
+    },
+    {
+      "concept_id": "set_prediction",
+      "rationale": "Faster R-CNN uses NMS to deduplicate, not bipartite matching or set prediction."
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "rationale": "Architecture is fully convolutional + RPN; no transformer."
+    },
+    {
+      "concept_id": "focal_loss",
+      "rationale": "Faster R-CNN uses cross-entropy without the focal modulation term."
+    },
+    {
+      "concept_id": "mask_branch",
+      "rationale": "Faster R-CNN is detection-only; the mask branch is added later by Mask R-CNN."
+    },
+    {
+      "concept_id": "roi_align",
+      "rationale": "ROIAlign is a Mask R-CNN contribution; Faster R-CNN uses RoIPool with quantization."
+    },
+    {
+      "concept_id": "compound_scaling",
+      "rationale": "Compound scaling is an EfficientDet contribution and not part of Faster R-CNN."
+    },
+    {
+      "concept_id": "selective_search",
+      "rationale": "Faster R-CNN replaces external Selective Search with the integrated RPN, motivated explicitly by SS being the speed bottleneck."
+    },
+    {
+      "concept_id": "classical_dpm",
+      "rationale": "Faster R-CNN is a deep-learning detector; DPM is a classical part-based method not used in this architecture."
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "rationale": "Features are learned by VGG/ResNet backbones; no HOG/SIFT-style hand-engineered features."
+    }
+  ]
+}

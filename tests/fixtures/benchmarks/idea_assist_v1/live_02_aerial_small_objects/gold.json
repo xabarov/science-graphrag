@@ -1,0 +1,27 @@
+{
+  "schema_version": 2,
+  "case_id": "live_02_aerial_small_objects",
+  "tier": "idea_assist_live",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "scenario_file": "scenario.json",
+  "seed_topic": "Detect very small objects in high-altitude aerial imagery (vehicles at <16 px) with comparable accuracy to current best detectors.",
+  "supporting_claim_ids_min": 2,
+  "supporting_claim_id_pool": [
+    "fpn_topdown_lateral_pyramid",
+    "fpn_single_scale_small_objects_negative",
+    "dino_earlier_detr_slow_small_obj_negative",
+    "detr_small_obj_slow_train_negative",
+    "fcos_anchor_hyperparameter_burden_negative"
+  ],
+  "forbidden_substrings": [
+    "Feature Pyramid Network builds high-level semantic feature maps at all scales",
+    "DETR streamlines the detection pipeline"
+  ],
+  "max_rouge_l_against_evidence_quotes": 0.7,
+  "novelty_must_reference_gap": true,
+  "reference_hypothesis_optional": "Augment a DINO-style transformer detector with an extra high-resolution P2 pyramid level and contrastive sampling against background tiles, evaluated on the VisDrone aerial benchmark with target +5 AP_small over baseline DINO."
+}

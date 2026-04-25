@@ -1,0 +1,76 @@
+{
+  "schema_version": 2,
+  "case_id": "corpus_retinanet_focal_v2",
+  "corpus_work_id": "retinanet_focal_realpdf",
+  "benchmark_suite_tier": "claims_pilot_v2",
+  "claim_match_mode": "claim_id_or_normalized_text",
+  "source_layer1_fixture": "retinanet_focal_realpdf",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "spot_check_required_fields": [
+      "expected_claims[].claim_text_normalized",
+      "expected_claims[].polarity"
+    ]
+  },
+  "distractor_strategy": {
+    "type": "neighboring_paper_paragraphs",
+    "neighbor_corpus_work_ids": [
+      "ssd_realpdf",
+      "fcos_realpdf",
+      "fpn_realpdf"
+    ],
+    "max_distractor_paragraphs": 3,
+    "rng_seed": 42
+  },
+  "expected_claims": [
+    {
+      "claim_id": "retinanet_focal_loss_definition",
+      "claim_type": "method",
+      "polarity": "positive",
+      "claim_text_normalized": "Focal Loss reshapes the standard cross-entropy by down-weighting the contribution of well-classified examples, allowing effective training under extreme foreground-background class imbalance.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "retinanet_hard_mining_insufficient",
+      "claim_type": "comparison",
+      "polarity": "negative",
+      "claim_text_normalized": "Hard negative mining and online hard example mining are insufficient to address the dense one-stage class imbalance that Focal Loss handles by reweighting.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "retinanet_resnet101_fpn_ap",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "claim_text_normalized": "RetinaNet built on a ResNet-101-FPN backbone reaches roughly 39 AP on COCO test-dev, matching or exceeding two-stage detectors at comparable inference speed.",
+      "match_mode": "rouge_l"
+    },
+    {
+      "claim_id": "retinanet_imbalance_root_cause",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "claim_text_normalized": "The accuracy gap between one-stage and two-stage detectors is closed by addressing class imbalance with a loss reweighting rather than by adding architectural complexity.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "retinanet_alpha_balanced_alone_negative",
+      "claim_type": "comparison",
+      "polarity": "negative",
+      "claim_text_normalized": "An alpha-balanced cross-entropy alone is not sufficient to overcome extreme foreground-background imbalance in dense detection, motivating the modulating term that focal loss adds.",
+      "match_mode": "embedding_sim"
+    }
+  ],
+  "expected_claim_count_min": 5,
+  "expected_claim_count_max": 5,
+  "polarity_distribution_min": {
+    "positive": 1,
+    "negative": 1
+  },
+  "claim_type_distribution_min": {
+    "method": 1,
+    "comparison": 1,
+    "performance": 1,
+    "finding": 1
+  }
+}

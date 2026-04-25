@@ -1,0 +1,70 @@
+{
+  "schema_version": 2,
+  "case_id": "concept_corpus_ssd_v2",
+  "corpus_work_id": "ssd_realpdf",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "spot_check_required_fields": [
+      "concepts_present",
+      "concepts_absent"
+    ]
+  },
+  "concepts_present": [
+    {
+      "concept_id": "anchor_based",
+      "evidence_quote": "Default boxes are similar to the anchor boxes used in Faster R-CNN, however we apply them to several feature maps of different resolutions."
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "evidence_quote": "SSD discretizes the output space of bounding boxes into a set of default boxes over different aspect ratios and scales per feature map location."
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "evidence_quote": "Predictions of different scales by adding multiple convolutional feature layers, allowing detection at multiple scales."
+    },
+    {
+      "concept_id": "nms",
+      "evidence_quote": "Output the final detections after thresholding and non-maximum suppression."
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "evidence_quote": "Loss = localization + confidence loss across default boxes."
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "evidence_quote": "On COCO trainval35k, SSD512 achieves ..."
+    }
+  ],
+  "concepts_absent": [
+    {
+      "concept_id": "region_proposal",
+      "rationale": "SSD has no region-proposal step; predictions are direct from feature maps."
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "rationale": "SSD is single-shot."
+    },
+    {
+      "concept_id": "anchor_free",
+      "rationale": "SSD uses default boxes (anchors)."
+    },
+    {
+      "concept_id": "set_prediction",
+      "rationale": "SSD uses per-location prediction + NMS, not set prediction."
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "rationale": "SSD is fully convolutional VGG-16-based; no transformer."
+    },
+    {
+      "concept_id": "focal_loss",
+      "rationale": "SSD uses hard negative mining, not focal loss."
+    },
+    {
+      "concept_id": "mask_branch",
+      "rationale": "SSD is detection-only."
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "pair_id": "c06_handcrafted_vs_learned_features",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "claim_a": {
+    "claim_id": "hog_handcrafted_sufficient",
+    "corpus_work_id": "hog_human_detection_realpdf",
+    "claim_text": "Histograms of oriented gradients capture the edge structure that is sufficient for accurate human and object detection.",
+    "evidence_quote": "We show experimentally that grids of Histograms of Oriented Gradient (HOG) descriptors significantly outperform existing feature sets for human detection.",
+    "anchor_offset": {
+      "file": "article.md",
+      "approx_paragraph": 1
+    }
+  },
+  "claim_b": {
+    "claim_id": "rcnn_learned_features_dominate",
+    "corpus_work_id": "rcnn_realpdf",
+    "claim_text": "Learned convolutional features substantially outperform handcrafted feature representations such as HOG and DPM on object detection.",
+    "evidence_quote": "Compared to systems based on the more boutique HOG-like features, mAP for HOG-based DPM ... our R-CNN approach gives a substantial improvement (mAP from 33.7% to 53.7%).",
+    "anchor_offset": {
+      "file": "article.md",
+      "approx_paragraph": 6
+    }
+  },
+  "contradiction_type": "classical_vs_deep",
+  "severity": "direct",
+  "rationale": "R-CNN directly demonstrates that learned CNN features substantially outperform the handcrafted HOG features that the earlier paper claimed were sufficient. The contradiction reflects the deep-learning era shift.",
+  "expected_neo4j_pattern": "(:Work {corpus_work_id:'hog_human_detection_realpdf'})-[:CONTRADICTS {subtype:'classical_vs_deep'}]-(:Work {corpus_work_id:'rcnn_realpdf'})"
+}

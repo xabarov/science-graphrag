@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "EfficientDet-D7 achieves state-of-the-art 55.1 AP on COCO test-dev.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "our EfficientDet-D7 achieves state-of-the-art 55.1 AP on COCO test-dev"
+    },
+    {
+      "claim_text_normalized": "EfficientDet uses 28x fewer FLOPs than YOLOv3 under similar accuracy constraints.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "Under similar accuracy constraint, our EfficientDet uses 28x fewer FLOPs than YOLOv3"
+    },
+    {
+      "claim_text_normalized": "The weighted bi-directional feature pyramid network allows easy and fast multi-scale feature fusion.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "we propose a weighted bi-directional feature pyramid network (BiFPN), which allows easy and fast multi-scale feature fusion"
+    },
+    {
+      "claim_text_normalized": "The compound scaling method uniformly scales resolution, depth, and width for all networks.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "we propose a compound scaling method that uniformly scales the resolution, depth, and width for all backbone, feature network, and box/class prediction networks at the same time"
+    },
+    {
+      "claim_text_normalized": "EfficientDet models are up to 4x faster on GPU than previous detectors.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "Our EfficientDet is also up to 4x to 11x faster on GPU/CPU than previous detectors."
+    },
+    {
+      "claim_text_normalized": "Fast normalized fusion runs up to 30% faster on GPUs than softmax-based fusion.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "this fast fusion approach has very similar learning behavior and accuracy as the softmax-based fusion, but runs up to 30% faster on GPUs"
+    },
+    {
+      "claim_text_normalized": "EfficientDet achieves 81.74% mIOU accuracy on Pascal VOC 2012 semantic segmentation.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "our single-model single-scale EfficientDet achieves 81.74% mIOU accuracy on Pascal VOC 2012 semantic segmentation"
+    },
+    {
+      "claim_text_normalized": "The compound scaling method achieves better efficiency than single-dimension scaling methods.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "our compound scaling method achieves better efficiency than other methods"
+    }
+  ]
+}

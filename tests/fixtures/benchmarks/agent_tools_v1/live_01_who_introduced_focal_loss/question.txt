@@ -1,0 +1,1 @@
+Which paper in the corpus introduced focal loss to address class imbalance in dense object detection, and what method canonical name does it use?

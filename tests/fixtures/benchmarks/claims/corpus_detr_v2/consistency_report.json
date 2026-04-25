@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/corpus_detr_v2",
+  "pack_path": "tests/fixtures/benchmarks/claims/corpus_detr_v2",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T19:19:53.581278+00:00",
+  "spot_check_priority": "medium",
+  "spot_check_priority_rationale": "type_flips=2, unmatched_a=1 (gate: type_flips ≥ 1 OR unmatched_a ≥ 1)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/claims/corpus_detr_v2/gold.json",
+    "count": 4,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-extracted)",
+    "count": 8,
+    "model": "deepseek/deepseek-v3.2",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:867d5b886bc1a030d05620b46f53d32b10439101864c4fdd8014eb5f3465eaa5",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 16195,
+      "completion": 688,
+      "total": 16883
+    },
+    "latency_ms": 8502
+  },
+  "summary": {
+    "a_total": 4,
+    "b_total": 8,
+    "matched": 3,
+    "matched_lexical": 1,
+    "matched_embedding": 2,
+    "unmatched_a": 1,
+    "unmatched_b": 5,
+    "field_agreements": {
+      "polarity": {
+        "agreed": 3,
+        "disagreed": 0
+      },
+      "claim_type": {
+        "agreed": 1,
+        "disagreed": 2
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_claim_id": "detr_match_faster_rcnn_large_obj",
+      "b_index": 1,
+      "match_score": 0.887,
+      "match_source": "embedding",
+      "a_claim_text_normalized": "DETR matches the performance of a well-tuned Faster R-CNN baseline on COCO, particularly excelling on large objects.",
+      "b_claim_text_normalized": "DETR demonstrates accuracy and run-time performance on par with the well-established Faster R-CNN baseline on the COCO dataset.",
+      "field_disagreements": [
+        {
+          "field": "claim_type",
+          "a": "performance",
+          "b": "comparison"
+        }
+      ]
+    },
+    {
+      "a_claim_id": "detr_set_prediction_pipeline",
+      "b_index": 0,
+      "match_score": 0.397,
+      "match_source": "lexical",
+      "a_claim_text_normalized": "DETR treats detection as predicting an unordered set of objects directly, using a transformer encoder-decoder and dropping hand-crafted components such as anchor boxes and non-maximum suppression.",
+      "b_claim_text_normalized": "DETR streamlines the detection pipeline by removing the need for many hand-designed components like non-maximum suppression or anchor generation.",
+      "field_disagreements": []
+    },
+    {
+      "a_claim_id": "detr_small_obj_slow_train_negative",
+      "b_index": 2,
+      "match_score": 0.915,
+      "match_source": "embedding",
+      "a_claim_text_normalized": "DETR underperforms on small objects and requires substantially longer training schedules than Faster R-CNN to converge.",
+      "b_claim_text_normalized": "DETR obtains lower performances on small objects compared to Faster R-CNN.",
+      "field_disagreements": [
+        {
+          "field": "claim_type",
+          "a": "limitation",
+          "b": "performance"
+        }
+      ]
+    }
+  ],
+  "unmatched_a": [
+    {
+      "a_claim_id": "detr_bipartite_matching_no_nms",
+      "a_claim_text_normalized": "Bipartite matching between predicted and ground-truth boxes during training enforces a unique prediction per object, which removes the need for non-maximum suppression at inference.",
+      "a_polarity": "positive",
+      "a_claim_type": "finding",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "b_index": 3,
+      "b_claim_text_normalized": "DETR significantly outperforms competitive baselines on panoptic segmentation.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 4,
+      "b_claim_text_normalized": "The new model requires extra-long training schedule and benefits from auxiliary decoding losses in the transformer.",
+      "b_polarity": "negative",
+      "b_claim_type": "limitation",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 5,
+      "b_claim_text_normalized": "DETR achieves significantly better performance on large objects than Faster R-CNN.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 6,
+      "b_claim_text_normalized": "DETR does not require any customized layers and can be reproduced easily in any framework that contains standard CNN and transformer classes.",
+      "b_polarity": "positive",
+      "b_claim_type": "method",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 7,
+      "b_claim_text_normalized": "The main ingredients of DETR are a set-based global loss that forces unique predictions via bipartite matching and a transformer encoder-decoder architecture.",
+      "b_polarity": "neutral",
+      "b_claim_type": "method",
+      "comment": "produced by independent extractor B but not in human gold A"
+    }
+  ]
+}

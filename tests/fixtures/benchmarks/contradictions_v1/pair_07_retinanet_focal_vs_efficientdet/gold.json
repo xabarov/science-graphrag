@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "pair_id": "c07_depth_scaling_vs_compound_scaling",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "claim_a": {
+    "claim_id": "retinanet_depth_scaling",
+    "corpus_work_id": "retinanet_focal_realpdf",
+    "claim_text": "Deeper backbones (ResNet-101, ResNeXt) yield substantial accuracy gains over shallower ones for dense object detection.",
+    "evidence_quote": "RetinaNet with ResNet-101-FPN achieves 39.1 AP on COCO test-dev, surpassing all published results from both one- and two-stage detectors.",
+    "anchor_offset": {
+      "file": "article.md",
+      "approx_paragraph": 1
+    }
+  },
+  "claim_b": {
+    "claim_id": "efficientdet_compound_scaling",
+    "corpus_work_id": "efficientdet_realpdf",
+    "claim_text": "Joint compound scaling of depth, width, and input resolution is more efficient than scaling depth alone for object detection.",
+    "evidence_quote": "Inspired by recent works ... we propose a compound scaling method for object detectors, which jointly scales up the resolution / depth / width for all backbone, feature network, and box/class prediction networks.",
+    "anchor_offset": {
+      "file": "article.md",
+      "approx_paragraph": 2
+    }
+  },
+  "contradiction_type": "scaling",
+  "severity": "nuanced",
+  "rationale": "EfficientDet shows that scaling depth alone (RetinaNet's approach) is suboptimal under FLOP/parameter constraints. The contradiction is in the recommended scaling strategy for the detector designer.",
+  "expected_neo4j_pattern": "(:Work {corpus_work_id:'retinanet_focal_realpdf'})-[:CONTRADICTS {subtype:'scaling'}]-(:Work {corpus_work_id:'efficientdet_realpdf'})"
+}

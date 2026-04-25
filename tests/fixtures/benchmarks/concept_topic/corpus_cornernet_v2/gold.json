@@ -1,0 +1,66 @@
+{
+  "schema_version": 2,
+  "case_id": "concept_corpus_cornernet_v2",
+  "corpus_work_id": "cornernet_realpdf",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "spot_check_required_fields": [
+      "concepts_present",
+      "concepts_absent"
+    ]
+  },
+  "concepts_present": [
+    {
+      "concept_id": "keypoint_detection",
+      "evidence_quote": "We detect an object bounding box as a pair of keypoints, the top-left corner and the bottom-right corner."
+    },
+    {
+      "concept_id": "anchor_free",
+      "evidence_quote": "We propose a new approach to object detection that eliminates the need for designing a set of anchor boxes."
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "evidence_quote": "CornerNet is a single-stage detector."
+    },
+    {
+      "concept_id": "nms",
+      "evidence_quote": "After computing all corner pairs, we apply NMS on the resulting boxes."
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "evidence_quote": "We achieve a 42.1% AP on MS COCO."
+    }
+  ],
+  "concepts_absent": [
+    {
+      "concept_id": "anchor_based",
+      "rationale": "Explicitly removed by design."
+    },
+    {
+      "concept_id": "region_proposal",
+      "rationale": "No proposal stage."
+    },
+    {
+      "concept_id": "set_prediction",
+      "rationale": "Not bipartite matching; NMS is used."
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "rationale": "Hourglass network backbone; no transformer."
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "rationale": "Single-stage."
+    },
+    {
+      "concept_id": "mask_branch",
+      "rationale": "Detection-only."
+    },
+    {
+      "concept_id": "roi_pooling",
+      "rationale": "No ROI extraction."
+    }
+  ]
+}

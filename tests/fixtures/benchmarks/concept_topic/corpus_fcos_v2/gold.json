@@ -1,0 +1,70 @@
+{
+  "schema_version": 2,
+  "case_id": "concept_corpus_fcos_v2",
+  "corpus_work_id": "fcos_realpdf",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "spot_check_required_fields": [
+      "concepts_present",
+      "concepts_absent"
+    ]
+  },
+  "concepts_present": [
+    {
+      "concept_id": "anchor_free",
+      "evidence_quote": "We propose FCOS to solve object detection in a per-pixel prediction fashion ... FCOS completely avoids the complicated computation related to anchor boxes."
+    },
+    {
+      "concept_id": "centerness",
+      "evidence_quote": "We propose a center-ness branch that suppresses low-quality predictions far from the object center."
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "evidence_quote": "FCOS is a fully convolutional one-stage object detector."
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "evidence_quote": "We use FPN multi-level prediction to handle overlapping ambiguity."
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "evidence_quote": "We use ResNet-50 and ResNet-101 as backbones in the experiments."
+    },
+    {
+      "concept_id": "nms",
+      "evidence_quote": "Final post-processing applies NMS."
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "evidence_quote": "Our experiments on the MS COCO benchmark ..."
+    }
+  ],
+  "concepts_absent": [
+    {
+      "concept_id": "anchor_based",
+      "rationale": "Explicitly anchor-free."
+    },
+    {
+      "concept_id": "region_proposal",
+      "rationale": "FCOS is single-stage; no proposals."
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "rationale": "Single-stage."
+    },
+    {
+      "concept_id": "set_prediction",
+      "rationale": "FCOS uses NMS-based deduplication."
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "rationale": "Fully convolutional."
+    },
+    {
+      "concept_id": "mask_branch",
+      "rationale": "Detection-only."
+    }
+  ]
+}

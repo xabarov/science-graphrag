@@ -1,0 +1,61 @@
+{
+  "schema_version": 2,
+  "case_id": "corpus_cascade_rcnn_v2",
+  "corpus_work_id": "cascade_rcnn_realpdf",
+  "benchmark_suite_tier": "claims_pilot_v2",
+  "claim_match_mode": "claim_id_or_normalized_text",
+  "source_layer1_fixture": "cascade_rcnn_realpdf",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "spot_check_required_fields": [
+      "expected_claims[].claim_text_normalized",
+      "expected_claims[].polarity"
+    ]
+  },
+  "distractor_strategy": {
+    "type": "neighboring_paper_paragraphs",
+    "neighbor_corpus_work_ids": [
+      "faster_rcnn_realpdf",
+      "libra_rcnn_realpdf",
+      "mask_rcnn_realpdf"
+    ],
+    "max_distractor_paragraphs": 3,
+    "rng_seed": 42
+  },
+  "expected_claims": [
+    {
+      "claim_id": "cascade_rcnn_iou_progression",
+      "claim_type": "method",
+      "polarity": "positive",
+      "claim_text_normalized": "Cascade R-CNN trains a sequence of detectors with progressively higher IoU thresholds, where each stage's regressed boxes serve as proposals for the next.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "cascade_rcnn_quality_paradox_negative",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "claim_text_normalized": "A single-IoU detector trained at a high threshold suffers from too few positive samples, while one trained at a low threshold produces noisy detections that limit final accuracy.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "cascade_rcnn_ap_gain_2_4",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "claim_text_normalized": "Cascade R-CNN improves the COCO AP of Faster R-CNN by roughly two to four points across multiple backbones with negligible inference overhead.",
+      "match_mode": "embedding_sim"
+    }
+  ],
+  "expected_claim_count_min": 3,
+  "expected_claim_count_max": 3,
+  "polarity_distribution_min": {
+    "positive": 1,
+    "negative": 1
+  },
+  "claim_type_distribution_min": {
+    "performance": 1,
+    "method": 1,
+    "limitation": 1
+  }
+}

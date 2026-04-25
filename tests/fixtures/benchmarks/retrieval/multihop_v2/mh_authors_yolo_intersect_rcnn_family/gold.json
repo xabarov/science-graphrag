@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "case_id": "mh_authors_yolo_intersect_rcnn_family",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25"
+  },
+  "question_file": "question.txt",
+  "expected_path_kind": "unordered_set",
+  "expected_neo4j_relations_used": [
+    "AUTHORED",
+    "SHARES_AUTHOR"
+  ],
+  "infrastructure_required": [
+    "neo4j"
+  ],
+  "expected_node_kind": "Author",
+  "expected_node_canonical_names": [
+    "Ross Girshick",
+    "Ali Farhadi"
+  ],
+  "min_recall": 0.5,
+  "min_precision": 0.6
+}

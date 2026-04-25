@@ -1,0 +1,79 @@
+{
+  "schema_version": 2,
+  "case_id": "corpus_centernet_v2",
+  "corpus_work_id": "centernet_realpdf",
+  "benchmark_suite_tier": "claims_pilot_v2",
+  "claim_match_mode": "claim_id_or_normalized_text",
+  "source_layer1_fixture": "centernet_realpdf",
+  "meta": {
+    "validation_status": "llm_dual_validated",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "spot_check_required_fields": [
+      "expected_claims[].claim_text_normalized",
+      "expected_claims[].polarity"
+    ],
+    "validation_history": [
+      {
+        "promoted_at_utc": "2026-04-25T19:17:44.288362+00:00",
+        "from_status": "draft",
+        "to_status": "llm_dual_validated",
+        "spot_check_priority": "medium",
+        "consistency_report": "tests/fixtures/benchmarks/claims/corpus_centernet_v2/consistency_report.json",
+        "rule": "auto-promote on Phase 6.D embedding-cascade pass"
+      }
+    ],
+    "validation_status_previous": "draft"
+  },
+  "distractor_strategy": {
+    "type": "neighboring_paper_paragraphs",
+    "neighbor_corpus_work_ids": [
+      "cornernet_realpdf",
+      "fcos_realpdf"
+    ],
+    "max_distractor_paragraphs": 3,
+    "rng_seed": 42
+  },
+  "expected_claims": [
+    {
+      "claim_id": "centernet_triplet_keypoints",
+      "claim_type": "method",
+      "polarity": "positive",
+      "claim_text_normalized": "CenterNet detects each object as a triplet of keypoints — top-left corner, bottom-right corner, and center — improving over CornerNet's keypoint-pair formulation.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "centernet_center_pooling_filter",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "claim_text_normalized": "Adding the center keypoint together with center pooling reduces incorrect bounding boxes formed by pairing corners that belong to different objects.",
+      "match_mode": "embedding_sim"
+    },
+    {
+      "claim_id": "centernet_47_ap_coco",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "claim_text_normalized": "CenterNet achieves around 47 percent AP on COCO test-dev, surpassing prior one-stage detectors at the time of publication.",
+      "match_mode": "rouge_l"
+    },
+    {
+      "claim_id": "centernet_cornernet_false_pairs_negative",
+      "claim_type": "comparison",
+      "polarity": "negative",
+      "claim_text_normalized": "Pure corner-based detection generates many false-positive boxes by pairing corners from unrelated objects, a problem CenterNet's center-keypoint filter mitigates.",
+      "match_mode": "embedding_sim"
+    }
+  ],
+  "expected_claim_count_min": 4,
+  "expected_claim_count_max": 4,
+  "polarity_distribution_min": {
+    "positive": 1,
+    "negative": 1
+  },
+  "claim_type_distribution_min": {
+    "performance": 1,
+    "finding": 1,
+    "method": 1,
+    "comparison": 1
+  }
+}

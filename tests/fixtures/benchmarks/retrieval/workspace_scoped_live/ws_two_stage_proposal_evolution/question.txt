@@ -1,0 +1,1 @@
+How did the region-proposal mechanism evolve across the R-CNN family from R-CNN to Faster R-CNN?

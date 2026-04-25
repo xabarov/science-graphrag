@@ -1,0 +1,1 @@
+Trace the evolution of region-proposal mechanisms from Selective Search to Mask R-CNN, listing each paper that built directly on the previous one.
