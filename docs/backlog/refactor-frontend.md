@@ -109,7 +109,85 @@ Planned structural work under `ui/` (components, routing, state, API client), no
 
 ### [OPEN] AskPanel decomposition after Wave R agent mode
 - **Area:** [`AskPanel.jsx`](../../ui/src/components/work/AskPanel.jsx), [`AgentToolTrace.jsx`](../../ui/src/components/work/AgentToolTrace.jsx)
-- **Issue:** После добавления `agent` режима в Wave R `AskPanel` остаётся большим модулем с несколькими ответственностями (session state, submit flows, retrieval/agent trace rendering).
+- **Issue:** После добавления `agent` режима в Wave R `AskPanel` остаётся большим модулем с несколькими ответственностями (session state, submit flows, retrieval/agent trace rendering). Файл — 841 строка.
 - **Proposal:** Вынести submit orchestration (`useAskSubmit`), session controls (`AskSessionControls`) и answer sections (`AskAnswerPanel`) в отдельные модули; оставить в `AskPanel` только composition layer.
 - **Acceptance:** Ни один модуль в `ui/src/components/work/` по этому флоу не превышает ~400 строк; `npm run lint` / `npm run test` зелёные.
+- **Synergy:** **Wave Y3** (`/v2/agent/query` SSE) — `useAskSubmit` будет точкой переключения REST→SSE без правки UI-каркаса; **Wave Y4** (multi-agent supervisor) — `AskAnswerPanel` сразу подцепит `routing_log` без раскопок в god-файле.
+- **Raised:** 2026-04-25
+
+### [OPEN] Split `GraphWorkspacePanel.jsx` (1164) — data hook vs view modes vs debug
+- **Area:** [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx), [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx), [`GraphFlowView.jsx`](../../ui/src/components/graph/GraphFlowView.jsx), [`graphViewState.js`](../../ui/src/components/graph/graphViewState.js), [`mergeWorkspaceRawGraph.js`](../../ui/src/components/graph/mergeWorkspaceRawGraph.js)
+- **Issue:** Файл ≈1164 строки. Совмещает: загрузку/мердж графа, переключение Cards/Canvas/Flow, боковую колонку деталей, drag-resize gutter, легенду, raw JSON inspector, алерты, `formatResearchApiError`.
+- **Proposal:** Вынести `useGraphWorkspaceData` (fetch + merge + retry + кеш neighbors), `GraphViewModeSwitch` (Cards/Canvas/Flow), `GraphDebugInspector` (raw JSON + diagnostic), `GraphSidePanel` (колонка деталей + gutter из существующего `graphDetailColumnWidth.js`); оставить в `GraphWorkspacePanel` только composition + URL state.
+- **Acceptance:** ни один модуль в `components/graph/` не превышает ~500 строк (кроме `GraphCanvasMvp` — отдельный пункт); `npm run lint` / `npm run test` зелёные.
+- **Synergy:** **Wave GR2/GR3/GR4** (агрегаторы + reader view + prioritized LIMIT) — сразу видно, какой компонент трогать; добавление UI для `aggregator_id` expand идёт в `GraphSidePanel` без god-файла; легенда `node_kind` правится отдельно.
+- **Raised:** 2026-04-25
+
+### [OPEN] Split `BenchmarkPage/CaseDetailDialog.jsx` (790)
+- **Area:** [`BenchmarkPage/CaseDetailDialog.jsx`](../../ui/src/pages/BenchmarkPage/CaseDetailDialog.jsx), смежные `BenchmarkPage/{CompareTab,RunTab,BenchmarkWorkbenchTab,BenchmarkRunCasesTable}.jsx`
+- **Issue:** Один диалог с превью кейса, таблицами gold vs pred, server preview, ошибками; работает в трёх вкладках. С добавлением новых семейств (`workspace_scoped`, `hybrid_ablation`, `multihop`, `agent_tools`, `idea_assist`) растёт линейно.
+- **Proposal:** Вынести `CasePreviewTable`, `GoldVsPredSection`, `useCaseDetailDialogData` (fetch + ошибки + кеш). Семейство-специфичные превью — в `pages/BenchmarkPage/families/<family>.jsx`.
+- **Acceptance:** ни один файл в `pages/BenchmarkPage/` не превышает ~400 строк; добавление нового семейства бенчмарков требует только нового `families/<name>.jsx` + регистрации.
+- **Synergy:** **Wave M/P/Q/R/S** в `ontology-benchmarks-roadmap` — постоянно добавляются семейства бенчмарков.
+- **Raised:** 2026-04-25
+
+### [OPEN] Slim `WorkspacePage.jsx` (530) — extract papers model + dialogs + ingest wiring
+- **Area:** [`WorkspacePage/WorkspacePage.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx), [`WorkspacePage/WorkspaceIngestPanel.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceIngestPanel.jsx), [`WorkspacePage/WorkspaceDedupSection.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceDedupSection.jsx)
+- **Issue:** После Wave I split осталась оркестрация: URL/meta workspace, work ids, `useJobStream` для ingest, paper cards, дедуп, summary/idea-диалоги. Размер 530 строк, риск регрессий при добавлении hypothesis диалога и новых ingest-сценариев (Wave K2 batch, Wave W actor).
+- **Proposal:** Вынести `useWorkspacePapersModel` (works + meta + sort/filter), `WorkspaceDialogs` (summary, hypothesis, idea-assist), оставить в `WorkspacePage` только URL state + composition.
+- **Acceptance:** `WorkspacePage.jsx` <= 280 строк; `npm run lint` / `npm run test` зелёные.
+- **Synergy:** разблокирует UI-стороны **Wave S** (hypothesis modal) и расширения **Wave L** (smart dedup) без раздувания shell.
+- **Raised:** 2026-04-25
+
+### [OPEN] Split `ReaderWorkBody.jsx` (485) — chunks list + formatters + claims linking
+- **Area:** [`ReaderWorkBody.jsx`](../../ui/src/components/work/ReaderWorkBody.jsx), [`ReaderClaimsPanel.jsx`](../../ui/src/components/work/ReaderClaimsPanel.jsx), [`PdfViewer.jsx`](../../ui/src/components/work/PdfViewer.jsx)
+- **Issue:** Чанки + подсветка + сворачивания + ссылки в graph/ask + слайс `0..4000` в JSX; рост ожидается под Wave O (claims в Reader) и Wave M (страница PDF из цитаты, Wave K2.5).
+- **Proposal:** `useReaderChunksState`, `ReaderChunkList`, `readerFormatters.js`; интеграцию с `ReaderClaimsPanel` оставить через композицию.
+- **Acceptance:** `ReaderWorkBody.jsx` <= 280 строк; форматтеры покрыты юнитами.
+- **Synergy:** **Wave O** (claims production) — UI claims в Reader; **Wave Q/R** (multi-hop, agent answer trace) — кросс-ссылки на работу.
+- **Raised:** 2026-04-25
+
+### [OPEN] Split `BenchmarkPage/CompareTab.jsx` (417) and `RunTab.jsx` (365)
+- **Area:** [`BenchmarkPage/CompareTab.jsx`](../../ui/src/pages/BenchmarkPage/CompareTab.jsx), [`BenchmarkPage/RunTab.jsx`](../../ui/src/pages/BenchmarkPage/RunTab.jsx)
+- **Issue:** Сравнение прогонов / запуск конфигурации — крупные tabs, контейнер логики.
+- **Proposal:** Вынести `useCompareDeltas`, `DeltaTable`, `useRunLauncher`, `RunConfigForm`. Хранить metric formatting в общем хелпере.
+- **Acceptance:** ни один таб > ≈250 строк.
+- **Synergy:** Облегчит добавление UI для **Wave Q/R/P** ablation и judge-метрик.
+- **Raised:** 2026-04-25
+
+### [OPEN] Услoвный split `services/researchApi.js` (305) by domain modules
+- **Area:** [`services/researchApi.js`](../../ui/src/services/researchApi.js)
+- **Issue:** Текущий «один файл — все эндпоинты» (works, graph, ask, settings, agent, idea-assist) растёт линейно. После Wave Y3 добавится агент v2 SSE; после Wave T — больше dedup-эндпоинтов; после Wave M — judge-метрики.
+- **Proposal:** Сегментировать на `services/research/{works,graph,ask,agent,ideaAssist,dedup,settings,benchmarks}.js`, оставить `services/researchApi.js` как barrel-export для обратной совместимости. `formatResearchApiError` — в `services/research/errors.js`.
+- **Acceptance:** ни один сервис-модуль > ~150 строк; импорты в существующих компонентах продолжают работать через barrel-re-export.
+- **Synergy:** **Wave Y3** (agent v2 SSE), **Wave T** (entity dedup), **Wave M/P** (judge endpoints).
+- **Raised:** 2026-04-25
+
+### [OPEN] i18n hardcoded copy: HypothesisPanel, IngestionSettings, Workspace dialogs
+- **Area:** [`HypothesisPanel.jsx`](../../ui/src/components/work/HypothesisPanel.jsx), [`pages/SettingsPage/IngestionSettingsPanel.jsx`](../../ui/src/pages/SettingsPage/IngestionSettingsPanel.jsx), [`WorkspacePage/WorkspacePage.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx)
+- **Issue:** В этих модулях встречаются хардкод-строки (`Generating...`, `No candidates`, `Workspace summary`, `Hypothesis / contradiction assist`, `Saving…`, `Save ingestion settings`) — расходится с [`docs/specs/ui-i18n-guidelines.md`](../specs/ui-i18n-guidelines.md).
+- **Proposal:** Вынести в i18n словари, добавить EN+RU ключи, заменить литералы на `t(...)`.
+- **Acceptance:** ESLint i18n-проверка зелёная (если включена); ручной аудит не находит литералов в этих компонентах; `npm run lint` зелёный.
+- **Raised:** 2026-04-25
+
+### [OPEN] Switch dedup dialogs to `Cursor*` button family
+- **Area:** [`WorkspacePage/WorkspaceDedupSection.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceDedupSection.jsx), [`WorkDedupReviewDialog.jsx`](../../ui/src/components/graph/WorkDedupReviewDialog.jsx)
+- **Issue:** Прямое использование MUI `Button` вместо `CursorButton` / `CursorPrimaryButton` / `CursorDangerButton` — расходится с дизайн-каноном (см. `.cursorrules` в osint-gr и общая дисциплина проекта).
+- **Proposal:** Заменить импорты на `Cursor*` варианты из `components/common`; учесть варианты `contained/outlined/text`.
+- **Acceptance:** ни один прямой импорт `@mui/material/Button` в `WorkspaceDedupSection`/`WorkDedupReviewDialog`; визуальный паритет с остальными dedup-кнопками; `npm run lint` зелёный.
+- **Raised:** 2026-04-25
+
+### [OPEN] Move `useScienceGraphForceSimulation.js` to `hooks/graph/`
+- **Area:** [`components/graph/physics/useScienceGraphForceSimulation.js`](../../ui/src/components/graph/physics/useScienceGraphForceSimulation.js), [`hooks/`](../../ui/src/hooks/)
+- **Issue:** ≈425 строк хука лежит в `components/graph/physics/`, рядом со «не-React» утилитами (quadTree, structuralCommunities). В `hooks/` сейчас только `useJobStream`/`usePollJob` — два «места» для сложной async-логики.
+- **Proposal:** Перенести хук в `ui/src/hooks/graph/useScienceGraphForceSimulation.js` (или `hooks/useGraphSimulation.js`); оставить чистые модули physics в `components/graph/physics/`.
+- **Acceptance:** импорт обновлён в `GraphCanvasMvp`; тесты симуляции зелёные.
+- **Raised:** 2026-04-25
+
+### [OPEN] Frontend wiring for `/v2/agent/query` SSE (Wave Y3 follow-up)
+- **Area:** [`AskPanel.jsx`](../../ui/src/components/work/AskPanel.jsx), [`hooks/useJobStream.js`](../../ui/src/hooks/useJobStream.js) (как референс), новый `hooks/useAgentStream.js`, `services/research/agent.js`
+- **Issue:** Когда backend выкатит `/v2/agent/query` (SSE: `tool_call` / `tool_result` / `token` / `final_answer` / `error`), UI ещё на REST `/v1/agent/query`. Без отдельного refactor-пункта Wave Y6 не сможет удалить v1.
+- **Proposal:** Хук `useAgentStream(query, ctx, { onEvent, onTerminal, fallbackPostMs })` поверх `EventSource`; интеграция в `useAskSubmit` (см. AskPanel decomposition); graceful fallback на v1.
+- **Acceptance:** при `agent_runtime != "retrieval_v1"` UI открывает один SSE-стрим, рендерит инкрементальный tool trace и финальный ответ; lint/test зелёные.
+- **Synergy:** **Wave Y3 → Y6** — необходимое условие удаления `POST /v1/agent/query`.
 - **Raised:** 2026-04-25
