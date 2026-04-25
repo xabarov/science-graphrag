@@ -31,7 +31,7 @@ export default function PageHeader({ eyebrow = "", title, description = "", acti
         ) : null}
         <Typography sx={{ fontWeight: 600, color: "rgba(255,255,255,0.92)" }}>{title}</Typography>
         {description ? (
-          <Typography sx={{ mt: 0.65, fontSize: "0.875rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.55 }}>
+          <Typography component="div" sx={{ mt: 0.65, fontSize: "0.875rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.55 }}>
             {description}
           </Typography>
         ) : null}

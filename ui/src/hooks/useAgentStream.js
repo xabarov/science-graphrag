@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 
-import { buildApiUrl } from "../services/researchApi.js";
+import { buildApiUrl } from "../services/apiClient.js";
 
 function flushSseBuffer(buffer, onEvent, onFinalAnswer, onError) {
   const frames = buffer.split("\n\n");
