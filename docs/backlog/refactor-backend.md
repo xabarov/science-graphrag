@@ -130,13 +130,14 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 - **Synergy:** **Wave N/O** (онтология), **Wave Y2** (LangGraph tool-граф) — общий executor можно потом переключить на `langchain_core` LLM-калл без сноса orchestrator.
 - **Raised:** 2026-04-25
 
-### [OPEN] Core/router split for `api/retrieval.py` (682)
+### [DONE] Core/router split for `api/retrieval.py` (682)
 - **Area:** `science_graphrag/api/retrieval.py`, `science_graphrag/api/main.py` (`answer_query`/`GroundedAnswer`)
 - **Issue:** Один файл собирает: query embedding (OpenAI), Qdrant search, Neo4j semantic context, second-stage answer, payload фильтры. Тестировать фрагменты без поднятия всего стека сложно. `api/main.py` отдельно импортирует `answer_query` для собственных хендлеров — двойной entry point.
 - **Proposal:** выделить `science_graphrag/retrieval/` пакет: `query_embedder.py`, `qdrant_search.py`, `neo4j_context.py`, `hybrid_combiner.py` (под Wave Q), `answer.py`. `api/retrieval.py` — тонкий router; `api/main.py` импортирует только из `science_graphrag/retrieval/`.
 - **Acceptance:** core retrieval тестируется юнитами с заглушенными stores; ни один модуль не превышает ≈300 строк.
 - **Synergy:** **Wave Q** (hybrid + RRF + multihop) — добавление новых mode не растягивает router. **Wave R** (`idea_search` как tool) и **Wave Y2** (LangGraph) переиспользуют core напрямую без обхода API. **Wave P** (workspace-scoped + judge) — вынесение фильтра `workspace_ids` в `qdrant_search.py`.
 - **Raised:** 2026-04-25
+- **Note (done):** 2026-04-25 (Round 4) — выделен пакет `science_graphrag/retrieval/` с модулями `query_embedder.py`, `qdrant_search.py`, `neo4j_context.py`, `ranking.py`, `answer.py`; `api/retrieval.py` переведён в thin router; добавлены unit-тесты `tests/retrieval/`; ни один файл retrieval core не превышает 300 строк.
 
 ### [DONE] Split `api/works.py` (817) — graph DTO vs vector vs blob
 - **Area:** `science_graphrag/api/works.py`, `science_graphrag/api/graph_display.py`
@@ -147,13 +148,14 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 - **Raised:** 2026-04-25
 - **Note (done):** 2026-04-25 — разнесено на `api/works/{dto,detail,graph_neighborhood,chunks,router}.py`; backward-compat shim оставлен в `api/works.py`; GR2/GR4 могут менять только `graph_neighborhood.py`.
 
-### [OPEN] Cleanup `api/main.py` works_api shim + works package __init__ naming conflict
+### [DONE] Cleanup `api/main.py` works_api shim + works package __init__ naming conflict
 - **Area:** `science_graphrag/api/main.py`, `science_graphrag/api/works/__init__.py`, `tests/test_api_smoke.py`
 - **Issue:** `works/__init__.py` re-экспортирует `router` (APIRouter instance) под тем же именем, что и submodule `works/router.py`. Это затеняет module-reference: `import science_graphrag.api.works.router` возвращает APIRouter, а не модуль. В `main.py` добавлен shim `works_api = sys.modules["science_graphrag.api.works.router"]`, чтобы тесты могли monkeypatch-ить функции через `api_main.works_api.list_works`. Паттерн хрупкий и неочевидный.
 - **Proposal:** 1) Переименовать re-export в `works/__init__.py` — вместо `router` использовать `works_router` или убрать вовсе (router доступен как `works.router`). 2) Обновить тесты на string-based patching (`monkeypatch.setattr("science_graphrag.api.works.router.list_works", fake)`) или прямой импорт модуля. 3) Удалить shim из `main.py`.
 - **Acceptance:** `main.py` не содержит `sys.modules` hacks; тесты patching прозрачны; `import science_graphrag.api.works.router as m; type(m)` возвращает `<class 'module'>`.
 - **Raised:** 2026-04-25 (обнаружено в Round 2 review)
 - **Synergy:** Удобно объединить с **G-RetrievalCore** (Sprint S4), когда тесты retrieval/works в любом случае рефакторятся.
+- **Note (done):** 2026-04-25 (Round 4) — удалён shim из `api/main.py`; в `api/works/__init__.py` router re-export переименован в `works_router`; тесты переведены на прямой импорт модулей для patching.
 
 ### [DONE] Unified Bolt access factory + agent/idea-assist composition root
 - **Area:** `science_graphrag/api/deps.py` (новый, или существующий), `science_graphrag/storage/neo4j_store.py`, `science_graphrag/api/agent.py`, `science_graphrag/api/idea_assist.py`, `science_graphrag/agent/`

@@ -9,9 +9,10 @@ from typing import Any
 
 from fastapi.testclient import TestClient
 
+import science_graphrag.api.works.router as works_router_mod
 from science_graphrag.api import benchmark as benchmark_api
 from science_graphrag.api import main as api_main
-from science_graphrag.api.retrieval import GroundedAnswer
+from science_graphrag.retrieval import GroundedAnswer
 from science_graphrag.api.task_store import BenchmarkTaskStore, RunPayloadTooLargeError
 from science_graphrag.storage.qdrant_store import QdrantChunkStore
 
@@ -466,7 +467,7 @@ def test_works_list_endpoint_smoke(monkeypatch: Any) -> None:
             1,
         )
 
-    monkeypatch.setattr(api_main.works_api, "list_works", _fake_list_works)
+    monkeypatch.setattr(works_router_mod, "list_works", _fake_list_works)
     client = _client()
 
     res = client.get("/v1/works?limit=20&offset=0")
@@ -517,12 +518,12 @@ def test_work_detail_graph_chunks_smoke(monkeypatch: Any) -> None:
             "meta": {"semantic_available": False},
         }
 
-    monkeypatch.setattr(api_main.works_api, "get_work_detail", _fake_get_work_detail)
-    monkeypatch.setattr(api_main.works_api, "work_chunks", _fake_work_chunks)
+    monkeypatch.setattr(works_router_mod, "get_work_detail", _fake_get_work_detail)
+    monkeypatch.setattr(works_router_mod, "work_chunks", _fake_work_chunks)
     monkeypatch.setattr(
-        api_main.works_api, "work_graph_neighborhood", _fake_work_graph_neighborhood
+        works_router_mod, "work_graph_neighborhood", _fake_work_graph_neighborhood
     )
-    monkeypatch.setattr(api_main.works_api, "list_work_claims", lambda *_a, **_k: [])
+    monkeypatch.setattr(works_router_mod, "list_work_claims", lambda *_a, **_k: [])
     client = _client()
 
     detail = client.get("/v1/works/w1")
@@ -572,7 +573,7 @@ def test_get_work_sources_smoke(monkeypatch: Any) -> None:
             ],
         }
 
-    monkeypatch.setattr(api_main.works_api, "work_sources_payload", _fake_sources)
+    monkeypatch.setattr(works_router_mod, "work_sources_payload", _fake_sources)
     client = _client()
     res = client.get("/v1/works/w1/sources")
     assert res.status_code == 200
@@ -582,14 +583,14 @@ def test_get_work_sources_smoke(monkeypatch: Any) -> None:
 
 
 def test_get_work_sources_not_found(monkeypatch: Any) -> None:
-    monkeypatch.setattr(api_main.works_api, "work_sources_payload", lambda *_a, **_k: None)
+    monkeypatch.setattr(works_router_mod, "work_sources_payload", lambda *_a, **_k: None)
     client = _client()
     res = client.get("/v1/works/missing/sources")
     assert res.status_code == 404
 
 
 def test_get_work_pdf_not_found(monkeypatch: Any) -> None:
-    monkeypatch.setattr(api_main.works_api, "work_pdf_blob_path", lambda *_a, **_k: None)
+    monkeypatch.setattr(works_router_mod, "work_pdf_blob_path", lambda *_a, **_k: None)
     client = _client()
     res = client.get("/v1/works/x/pdf")
     assert res.status_code == 404
@@ -602,7 +603,7 @@ def test_get_work_pdf_ok(monkeypatch: Any, tmp_path: Path) -> None:
     pdf = tmp_path / "raw" / sha[:2] / sha
     pdf.parent.mkdir(parents=True)
     pdf.write_bytes(b"%PDF-1.4\n")
-    monkeypatch.setattr(api_main.works_api, "work_pdf_blob_path", lambda *_a, **_k: pdf)
+    monkeypatch.setattr(works_router_mod, "work_pdf_blob_path", lambda *_a, **_k: pdf)
     client = _client()
     res = client.get("/v1/works/w1/pdf")
     assert res.status_code == 200
@@ -617,7 +618,7 @@ def test_get_work_pdf_range_returns_206(monkeypatch: Any, tmp_path: Path) -> Non
     pdf = tmp_path / "raw" / sha[:2] / sha
     pdf.parent.mkdir(parents=True)
     pdf.write_bytes(b"%PDF-1234567890")
-    monkeypatch.setattr(api_main.works_api, "work_pdf_blob_path", lambda *_a, **_k: pdf)
+    monkeypatch.setattr(works_router_mod, "work_pdf_blob_path", lambda *_a, **_k: pdf)
     client = _client()
     res = client.get("/v1/works/w2/pdf", headers={"Range": "bytes=0-3"})
     assert res.status_code == 206
@@ -629,7 +630,7 @@ def test_get_work_pdf_range_returns_206(monkeypatch: Any, tmp_path: Path) -> Non
 def test_post_query_workspace_payload_miss_fallback(monkeypatch: Any) -> None:
     """When workspace_ids filter yields no hits, retrieval retries with work_ids and records payload miss."""
 
-    from science_graphrag.api import retrieval as retr_mod
+    from science_graphrag.retrieval import answer as retr_answer_mod
     from science_graphrag.storage.qdrant_store import QdrantChunkStore
 
     def _fake_ws_scope(_settings: Any, workspace_id: str) -> tuple[list[str], dict[str, Any]]:
@@ -672,7 +673,7 @@ def test_post_query_workspace_payload_miss_fallback(monkeypatch: Any) -> None:
             ]
         return []
 
-    monkeypatch.setattr(retr_mod, "_workspace_scope_work_ids", _fake_ws_scope)
+    monkeypatch.setattr(retr_answer_mod, "_workspace_scope_work_ids", _fake_ws_scope)
     monkeypatch.setattr(QdrantChunkStore, "search_similar", _spy_search_similar)
 
     client = _client()
@@ -729,7 +730,7 @@ def test_post_query_passes_mode_to_answer_query(monkeypatch: Any) -> None:
             },
         )
 
-    monkeypatch.setattr(api_main, "answer_query", _spy_answer_query)
+    monkeypatch.setattr("science_graphrag.api.retrieval.answer_query", _spy_answer_query)
     client = _client()
     res = client.post("/v1/query", json={"query": "x", "top_k": 2, "mode": "hybrid"})
     assert res.status_code == 200
@@ -781,7 +782,7 @@ def test_query_endpoint_smoke(monkeypatch: Any) -> None:
             },
         )
 
-    monkeypatch.setattr(api_main, "answer_query", _fake_answer_query)
+    monkeypatch.setattr("science_graphrag.api.retrieval.answer_query", _fake_answer_query)
     client = _client()
 
     res = client.post("/v1/query", json={"query": "test", "top_k": 3})
@@ -799,7 +800,7 @@ def test_query_endpoint_smoke(monkeypatch: Any) -> None:
 def test_post_query_accepts_workspace_id_unknown_workspace(monkeypatch: Any) -> None:
     """POST /v1/query with workspace_id (no work_id) does not 500 when workspace is unknown."""
 
-    from science_graphrag.api import retrieval as retr_mod
+    from science_graphrag.retrieval import answer as retr_answer_mod
 
     def _fake_ws_scope(_settings: Any, workspace_id: str) -> tuple[list[str], dict[str, Any]]:
         return [], {
@@ -808,7 +809,7 @@ def test_post_query_accepts_workspace_id_unknown_workspace(monkeypatch: Any) -> 
             "workspace_scope_work_count": 0,
         }
 
-    monkeypatch.setattr(retr_mod, "_workspace_scope_work_ids", _fake_ws_scope)
+    monkeypatch.setattr(retr_answer_mod, "_workspace_scope_work_ids", _fake_ws_scope)
     client = _client()
     res = client.post(
         "/v1/query",
@@ -824,7 +825,7 @@ def test_post_query_accepts_workspace_id_unknown_workspace(monkeypatch: Any) -> 
 def test_post_query_with_workspace_id_filters_qdrant(monkeypatch: Any) -> None:
     """POST /v1/query with workspace_id passes work_ids filter to Qdrant and merges workspace meta into trace."""
 
-    from science_graphrag.api import retrieval as retr_mod
+    from science_graphrag.retrieval import answer as retr_answer_mod
     from science_graphrag.storage.qdrant_store import QdrantChunkStore
 
     def _fake_ws_scope(_settings: Any, workspace_id: str) -> tuple[list[str], dict[str, Any]]:
@@ -878,7 +879,7 @@ def test_post_query_with_workspace_id_filters_qdrant(monkeypatch: Any) -> None:
             ]
         return []
 
-    monkeypatch.setattr(retr_mod, "_workspace_scope_work_ids", _fake_ws_scope)
+    monkeypatch.setattr(retr_answer_mod, "_workspace_scope_work_ids", _fake_ws_scope)
     monkeypatch.setattr(QdrantChunkStore, "search_similar", _spy_search_similar)
 
     client = _client()
@@ -1462,10 +1463,10 @@ def test_mandatory_happy_path_sequence_smoke(monkeypatch: Any) -> None:
             },
         )
 
-    monkeypatch.setattr(api_main.works_api, "list_works", _fake_list_works)
-    monkeypatch.setattr(api_main.works_api, "get_work_detail", _fake_get_work_detail)
-    monkeypatch.setattr(api_main.works_api, "work_chunks", _fake_work_chunks)
-    monkeypatch.setattr(api_main, "answer_query", _fake_answer_query)
+    monkeypatch.setattr(works_router_mod, "list_works", _fake_list_works)
+    monkeypatch.setattr(works_router_mod, "get_work_detail", _fake_get_work_detail)
+    monkeypatch.setattr(works_router_mod, "work_chunks", _fake_work_chunks)
+    monkeypatch.setattr("science_graphrag.api.retrieval.answer_query", _fake_answer_query)
 
     client = _client()
     works = client.get("/v1/works?limit=5&offset=0")

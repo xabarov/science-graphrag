@@ -4,7 +4,30 @@ import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
 
 import { getScienceGraphLegendNodeChipSx } from "./graphCanvasStyle.js";
-import { collectGraphTypeLegend, collectGraphTypeLegendByKind } from "./graphTypeLegend.js";
+import { collectGraphTypeLegend } from "./graphTypeLegend.js";
+
+const NODE_KIND_GROUPS = [
+  {
+    group: "Works",
+    kinds: ["Work", "WorkInternal", "WorkExternal"],
+    description: "Research papers",
+  },
+  {
+    group: "Semantic",
+    kinds: ["Method", "Dataset"],
+    description: "Methods & Datasets",
+  },
+  {
+    group: "People",
+    kinds: ["Author", "AuthorshipReification"],
+    description: "Authors & Authorship",
+  },
+  {
+    group: "Context",
+    kinds: ["Venue", "Institution"],
+    description: "Venues & Institutions",
+  },
+];
 
 /**
  * Compact legend of node and edge `type` values in the current display graph.
@@ -12,7 +35,16 @@ import { collectGraphTypeLegend, collectGraphTypeLegendByKind } from "./graphTyp
  */
 export default function GraphTypeLegend({ graph }) {
   const { nodeTypes, edgeTypes } = collectGraphTypeLegend(graph);
-  const groupedNodeKinds = collectGraphTypeLegendByKind(graph);
+  const presentKinds = new Set(
+    (graph?.nodes || []).map((n) => {
+      const kind = n?.nodeKind ?? n?.node_kind ?? n?.type;
+      return kind != null && String(kind).trim() ? String(kind) : "Node";
+    }),
+  );
+  const groupedNodeKinds = NODE_KIND_GROUPS.map((entry) => ({
+    ...entry,
+    kinds: entry.kinds.filter((kind) => presentKinds.has(kind)),
+  })).filter((entry) => entry.kinds.length > 0);
   if (nodeTypes.length === 0 && edgeTypes.length === 0) {
     return null;
   }
@@ -48,7 +80,7 @@ export default function GraphTypeLegend({ graph }) {
         {nodeTypes.length > 0 ? (
           <>
             <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", mr: 0.25 }}>Nodes</Typography>
-            {Object.entries(groupedNodeKinds).map(([group, kinds]) => (
+            {groupedNodeKinds.map(({ group, kinds }) => (
               <React.Fragment key={`grp-${group}`}>
                 <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.45)", mr: 0.25 }}>
                   {group}

@@ -30,6 +30,8 @@ export function AskAnswerPanel({
   agentToolTrace,
   retrievalJsonOpen,
   onToggleRetrievalJson,
+  streamEvents = [],
+  isStreaming = false,
 }) {
   if (!normalized) return null;
   return (
@@ -39,6 +41,13 @@ export function AskAnswerPanel({
       <Box component="ul" sx={{ m: 0, mb: 1.25, pl: 2.25, color: "rgba(255,255,255,0.62)", fontSize: "0.75rem", lineHeight: 1.5 }}>
         {buildAskAnswerRationale(normalized, { locked, inWorkspace, formWorkId: workId }).map((line, idx) => <Box component="li" key={idx} sx={{ mb: 0.35 }}>{line}</Box>)}
       </Box>
+      {isStreaming ? <Box sx={{ mb: 1 }}>
+        <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.7rem" }}>Agent thinking...</Typography>
+        {streamEvents.filter((event) => event?.type === "tool_call").map((event, index) => <Box key={`${String(event?.step ?? index)}-${index}`} sx={{ display: "flex", alignItems: "center", gap: 0.5, py: 0.25, opacity: 0.7 }}>
+          <Typography component="span" sx={{ fontSize: "0.7rem", fontFamily: "monospace", color: "rgba(129,140,248,0.9)" }}>{String(event?.tool || "tool")}</Typography>
+          {event?.args_summary?.query ? <Typography component="span" sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.5)" }}>{`"${String(event.args_summary.query).slice(0, 40)}"`}</Typography> : null}
+        </Box>)}
+      </Box> : null}
       <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)", whiteSpace: "pre-wrap" }}>{normalized.answer || t("workspace.upload.dash")}</Typography>
       {normalized.retrieval_trace.degraded.length > 0 || normalized.graph_context.degraded.length > 0 ? <Alert severity="info" sx={{ mt: 1.5, fontSize: "0.8125rem", backgroundColor: "rgba(255,255,255,0.03)" }}>{t("askPanel.answer.degraded")}</Alert> : null}
 

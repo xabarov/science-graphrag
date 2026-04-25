@@ -31,6 +31,7 @@ export default function AskPanel({ scopedWorkId = null, initialWorkId = "", show
   const [serverSync, setServerSync] = useState(() => readAskServerSyncPref());
   const [retrievalMode, setRetrievalMode] = useState(() => "vector");
   const [agentToolTrace, setAgentToolTrace] = useState([]);
+  const [streamEvents, setStreamEvents] = useState([]);
   const retrievalLabVisible = Boolean(labMode || isAdminModeEnabled());
 
   const scopeKey = useMemo(() => deriveAskScopeKey({ locked, scopedWorkId, workspaceId }), [locked, scopedWorkId, workspaceId]);
@@ -49,9 +50,15 @@ export default function AskPanel({ scopedWorkId = null, initialWorkId = "", show
       setNormalized(null);
       setRetrievalJsonOpen(false);
       setAgentToolTrace([]);
+      setStreamEvents([]);
     },
     onResult: setNormalized,
     onToolTrace: setAgentToolTrace,
+    onStreamEvent: (event) => {
+      if (event?.type === "tool_call" || event?.type === "tool_result") {
+        setStreamEvents((prev) => [...prev, event]);
+      }
+    },
     onError: setError,
   });
 
@@ -209,7 +216,7 @@ export default function AskPanel({ scopedWorkId = null, initialWorkId = "", show
       {locked ? (<Box sx={{ mb: 2, p: 1.25, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "#1a1a1a" }}><Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)" }}>{t("askPanel.workIdScopeLabel")}</Typography><Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)", fontFamily: "monospace", mt: 0.25 }}>{workId}</Typography></Box>) : null}
       <AskSessionControls t={t} query={query} onQueryChange={setQuery} workId={workId} onWorkIdChange={setWorkId} workOptions={workOptions} topK={topK} onTopKChange={setTopK} retrievalLabVisible={retrievalLabVisible} retrievalMode={retrievalMode} onRetrievalModeChange={setRetrievalMode} loading={isLoading} onSubmit={onSubmit} inWorkspace={inWorkspace} standaloneAskPath={buildStandaloneTracePath("/ask", workId)} locked={locked} serverSync={serverSync} onServerSyncChange={(next) => { writeAskServerSyncPref(next); setServerSync(next); }} activeSessionId={activeSessionId} sessionList={sessionList} onActiveSessionChange={onActiveSessionChange} sessionTitleDraft={sessionTitleDraft} onSessionTitleDraftChange={setSessionTitleDraft} onSessionTitleCommit={onSessionTitleCommit} onNewSession={onNewSession} history={history} onRestoreFromHistory={(item) => { setQuery(item.query); if (!locked) setWorkId(item.workId); setTopK(String(item.topK)); }} standaloneMode={standaloneMode} onUrlSyncSupported={Boolean(onUrlSessionIdChange)} />
       {error ? <Alert severity="error" sx={{ mt: 2, fontSize: "0.8125rem" }}>{error}</Alert> : null}
-      <AskAnswerPanel t={t} normalized={normalized} locked={locked} inWorkspace={inWorkspace} workId={workId} workspaceWorkId={workspaceWorkId} retrievalLabVisible={retrievalLabVisible} retrievalMode={retrievalMode} agentToolTrace={agentToolTrace} retrievalJsonOpen={retrievalJsonOpen} onToggleRetrievalJson={() => setRetrievalJsonOpen((v) => !v)} />
+      <AskAnswerPanel t={t} normalized={normalized} locked={locked} inWorkspace={inWorkspace} workId={workId} workspaceWorkId={workspaceWorkId} retrievalLabVisible={retrievalLabVisible} retrievalMode={retrievalMode} agentToolTrace={agentToolTrace} retrievalJsonOpen={retrievalJsonOpen} onToggleRetrievalJson={() => setRetrievalJsonOpen((v) => !v)} streamEvents={streamEvents} isStreaming={isLoading && streamEvents.length > 0} />
     </Box>
   );
 }

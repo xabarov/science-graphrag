@@ -10,6 +10,7 @@ from science_graphrag.api.graph_display import (
     compute_node_display,
     edge_display_type,
     enrich_authorship_nodes,
+    node_kind_priority,
     parse_priority_csv,
     resolve_node_kind,
 )
@@ -53,6 +54,7 @@ def _append_neighbor_edge(
         ("doi", "n_doi", 256),
         ("arxiv_id", "n_arxiv", 256),
         ("venue", "n_venue", 200),
+        ("workspace_membership", "n_workspace_membership", 32),
         ("country", "n_country", 120),
         ("venue_type", "n_venue_type", 120),
         ("issn", "n_issn", 64),
@@ -79,6 +81,9 @@ def _append_neighbor_edge(
             else None
         ),
     )
+    workspace_membership = str(
+        props.get("workspace_membership") or rec.get("n_workspace_membership") or ""
+    ).strip()
     if not any(x["id"] == nid for x in nodes):
         nodes.append(
             {
@@ -87,7 +92,7 @@ def _append_neighbor_edge(
                 "label": str(rendered["display_label"]),
                 "display_label": str(rendered["display_label"]),
                 "subtitle": str(rendered["subtitle"]),
-                "node_kind": resolve_node_kind(ntype),
+                "node_kind": resolve_node_kind(ntype, workspace_membership=workspace_membership),
                 "properties": dict(rendered["properties"]),
             }
         )
@@ -215,6 +220,14 @@ def _work_graph_neighborhood_payload(
             "c"
         ]
     )
+    kind_distribution: dict[str, int] = {
+        str(rec["kind"] or "Unknown"): int(rec["c"])
+        for rec in session.run(
+            "MATCH (w:Work {id: $id})-[r]-(n) WITH labels(n) AS labs, count(r) AS c "
+            "RETURN labs[0] AS kind, c",
+            id=work_id,
+        )
+    }
     depth_req = max(1, min(int(depth), 3))
     cap = min(MAX_WORK_GRAPH_NEIGHBORS, max(1, min(int(neighbor_limit), 2000)))
     hop1_lim, hop2_lim, effective_depth = (
@@ -239,13 +252,8 @@ def _work_graph_neighborhood_payload(
             prefer_priority=False,
             exclude_ids=taken_ids,
         )
-    returned_by_kind: dict[str, int] = {}
     for rec in [*primary_used, *secondary_rows]:
         _append_neighbor_edge(nodes, edges, center_id, rec)
-        labs = rec.get("labs") or []
-        returned_by_kind[str(labs[0]) if labs else "Node"] = (
-            returned_by_kind.get(str(labs[0]) if labs else "Node", 0) + 1
-        )
     for n in nodes[1:]:
         n.setdefault("distance", 1)
     if effective_depth >= 2 and hop2_lim > 0:
@@ -282,23 +290,35 @@ def _work_graph_neighborhood_payload(
                     if n.get("id") == nid:
                         n["distance"] = 2
                         break
+    center_node = next((n for n in nodes if str(n.get("id") or "") == center_id), None)
+    neighbor_nodes = [n for n in nodes if str(n.get("id") or "") != center_id]
+    neighbor_nodes.sort(
+        key=lambda n: (node_kind_priority(str(n.get("node_kind") or "")), str(n.get("id") or ""))
+    )
+    skipped_by_kind: dict[str, int] = {}
+    if len(neighbor_nodes) > cap:
+        neighbor_nodes = neighbor_nodes[:cap]
+    # Compute skipped counts from graph-level kind distribution vs what is returned.
+    # This covers both cap-truncated and never-fetched nodes.
+    if kind_distribution:
+        fetched_by_type: dict[str, int] = {}
+        for node in neighbor_nodes:
+            t = str(node.get("type") or "Unknown")
+            fetched_by_type[t] = fetched_by_type.get(t, 0) + 1
+        for kind, available in kind_distribution.items():
+            fetched = fetched_by_type.get(kind, 0)
+            if available > fetched:
+                skipped_by_kind[kind] = available - fetched
+    kept_ids = {center_id, *[str(n.get("id") or "") for n in neighbor_nodes]}
+    nodes = ([center_node] if center_node else []) + neighbor_nodes
+    edges = [
+        e
+        for e in edges
+        if str(e.get("source") or "") in kept_ids and str(e.get("target") or "") in kept_ids
+    ]
     enrich_authorship_nodes(session, nodes)
     _enrich_edges_with_display(center_id, nodes, edges)
-    truncated = total_neighbors > hop1_lim
-    skipped_by_kind: dict[str, int] = {}
-    if truncated:
-        for rec in session.run(
-            """
-            MATCH (w:Work {id: $id})-[r]-(n)
-            WITH labels(n) AS labs, count(r) AS c
-            RETURN CASE WHEN size(labs) > 0 THEN labs[0] ELSE 'Node' END AS kind, c
-            """,
-            id=work_id,
-        ):
-            kind = str(rec.get("kind") or "Node")
-            skipped = max(0, int(rec.get("c") or 0) - int(returned_by_kind.get(kind, 0)))
-            if skipped > 0:
-                skipped_by_kind[kind] = skipped
+    truncated = bool(skipped_by_kind) or total_neighbors > hop1_lim
     expansions = ["increase_neighbor_limit"] if truncated else []
     if depth_req > effective_depth:
         expansions.append("multi_hop_depth")

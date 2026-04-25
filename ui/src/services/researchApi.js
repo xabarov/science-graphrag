@@ -195,6 +195,16 @@ export async function postAgentQuery(body, config) {
   return apiClient.post(buildApiUrl("/v1/agent/query"), body, config);
 }
 
+export async function postAgentQueryV2(body, config) {
+  return apiClient.post(buildApiUrl("/v2/agent/query"), body, {
+    ...config,
+    headers: {
+      ...config?.headers,
+      Accept: "application/json",
+    },
+  });
+}
+
 export async function postIdeaAssist(body, config) {
   return apiClient.post(buildApiUrl("/v1/agent/idea-assist"), body, config);
 }

@@ -16,10 +16,10 @@
 | Трек | Заголовок | Источник | Status | Текущая волна / next |
 |------|-----------|----------|--------|----------------------|
 | **A** | Ingest async pipeline | [`ingestion-async-pipeline-roadmap-2026-04-25.md`](ingestion-async-pipeline-roadmap-2026-04-25.md) | Wave U done, V done, W done | **Wave W done** → Round 4 |
-| **B** | LangGraph migration | [`langgraph-migration-plan-2026-04-25.md`](langgraph-migration-plan-2026-04-25.md) + ADR 016/017 | Wave R/S done, Y1/Y2 done | **Wave Y3** (`/v2/agent/query` SSE) |
+| **B** | LangGraph migration | [`langgraph-migration-plan-2026-04-25.md`](langgraph-migration-plan-2026-04-25.md) + ADR 016/017 | Wave R/S done, Y1/Y2 done, Y3 done | **Wave Y4** (multi-agent supervisor) |
 | **C** | Phoenix tracing coverage | [`phoenix-tracing-coverage-2026-04-25.md`](phoenix-tracing-coverage-2026-04-25.md) | Wave X1 done, X2 done | **Wave X2 done** → X3 (worker OTel propagation) |
 | **D** | Ontology + Benchmarks + IR | [`ontology-benchmarks-roadmap-2026-04-24.md`](ontology-benchmarks-roadmap-2026-04-24.md) | M/N/O/P/Q/R/S done, T open | **Wave T** (entity dedup), continuation of Q (multihop), R (multi-agent metrics — ждёт Y4) |
-| **E** | Graph UX aggregation | [`graph-ux-aggregation-roadmap-2026-04-25.md`](graph-ux-aggregation-roadmap-2026-04-25.md) + ADR 011/012 | GR1 done, GR2..GR5 open | **Wave GR2** → GR3/GR4 |
+| **E** | Graph UX aggregation | [`graph-ux-aggregation-roadmap-2026-04-25.md`](graph-ux-aggregation-roadmap-2026-04-25.md) + ADR 011/012 | GR1 done, GR2 done, GR3..GR5 open | **Wave GR3** (aggregator + lazy expand) |
 | **F** | Workspace experience | [`workspace-experience-gap-2026-04-24.md`](workspace-experience-gap-2026-04-24.md) | Wave I/J/K1/K2/K3/L1/L2 done, L3 gated | **Wave L3** stub, Wave M (PDF page citations, optional) |
 | **G** | Backend refactor | [`docs/backlog/refactor-backend.md`](../backlog/refactor-backend.md) | mixed | см. §4 |
 | **H** | Frontend refactor | [`docs/backlog/refactor-frontend.md`](../backlog/refactor-frontend.md) | mixed | см. §4 |
@@ -332,11 +332,13 @@
   - Agent 4: H-AskPanelSplit (`AskPanel.jsx` → shell + `useAskSubmit`, `AskSessionControls`, `AskAnswerPanel`). ✅
 
   > **Review 2026-04-25:** 390 passed, 2 skipped; pylint 8.92/10; isort/black/ESLint чисто. Единственное отклонение от спецификации: `IngestEventBus` живёт в `api/ingest_event_bus.py`, а не в `api/ingest/dispatcher.py` — функционально не влияет, Round 4 не блокирует. Метрика: 23 новых модуля, neo4j_store 1022→11 файлов, AskPanel 670→4 файла 487 строк суммарно.
-- **Раунд 4 (Wave Y3 + GR2 + benchmark UI):**
-  - Agent 1: Wave Y3 backend (`api/agent_v2.py` + spec).
-  - Agent 2: Wave GR2 backend (после WorkspaceGraphSplit и WorksSplit).
-  - Agent 3: G-RetrievalCore.
-  - Agent 4: H-AskV2SSE (после backend Y3 готов в превью).
+- **Раунд 4 (Wave Y3 + GR2 + G-RetrievalCore + H-AskV2SSE) ✅ DONE 2026-04-25 — промпты: [`round4-agent-prompts-2026-04-25.md`](round4-agent-prompts-2026-04-25.md):**
+  - Agent 1: Wave Y3 backend — `api/agent_v2.py`, `/v2/agent/query` (SSE+sync), `docs/specs/agent-tools-v2.md`, deprecation header v1. ✅
+  - Agent 2: Wave GR2 backend — `node_kind`, semantic `display_type`, prioritized LIMIT + `meta.skipped_by_kind`; ADR 011 updated. ✅
+  - Agent 3: G-RetrievalCore — `science_graphrag/retrieval/` пакет; `api/retrieval.py` тонкий router (54 строки); `main.py` shim удалён; `works/__init__` naming fixed. ✅
+  - Agent 4: H-AskV2SSE — `useAgentStream.js`; `useAskSubmit.js` SSE path; `AskAnswerPanel` stream events. ✅
+
+  > **Review 2026-04-25:** 406 passed, 2 skipped, 0 failures; pylint 9.34–9.50/10; isort/black/ESLint чисто. Исправлен дефект GR2: `skipped_by_kind` вычислялся только из cap-overflow, но не учитывал узлы, которые не были запрошены из-за priority-ограничений — добавлен запрос kind-distribution и пересчёт `skipped_by_kind = available − fetched`. Все структурные и smoke-проверки ✓.
 - **Раунд 5 (Wave T + GR3 + GR4 + Y4):**
   - Agent 1: Wave T backend (entity dedup) — требует G-Neo4jSplit.
   - Agent 2: Wave GR3 backend + frontend (последовательно внутри агента).

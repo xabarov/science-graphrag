@@ -14,10 +14,11 @@ COPY science_graphrag ./science_graphrag
 
 # python-multipart is required for multipart routes (e.g. workspace document upload); keep explicit so
 # `pip install .` cache layers cannot accidentally omit it on older pyproject snapshots.
+# [agent] extra installs langgraph/langchain-core/langchain-openai required by agent/runtime.py.
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --upgrade pip \
     && pip install "python-multipart>=0.0.9" \
-    && pip install .
+    && pip install ".[agent]"
 
 # Keep non-runtime directories after dependency install so edits there
 # do not invalidate the expensive `pip install` layer.

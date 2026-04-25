@@ -12,7 +12,7 @@ import typer
 
 from eval.bench_common import benchmark_run_metadata, run_single_case_json_outputs, run_suite_cli_flow
 from eval.retrieval.metrics import score_retrieval_answer
-from science_graphrag.api.retrieval import GroundedAnswer, answer_query
+from science_graphrag.retrieval import GroundedAnswer, answer_query
 from science_graphrag.config import Settings, get_settings
 
 

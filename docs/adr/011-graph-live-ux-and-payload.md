@@ -47,3 +47,15 @@ The graph UI was inspection-first: **Cards** defaulted ahead of **Canvas**, circ
 - [`science_graphrag/api/works.py`](../../science_graphrag/api/works.py)
 - [`science_graphrag/api/main.py`](../../science_graphrag/api/main.py)
 - [`docs/specs/graph-ui-plan.md`](../specs/graph-ui-plan.md)
+
+## Addendum: Wave GR2 (2026-04-25)
+
+- Added `node_kind` field to all nodes in graph payload. `node_kind` is the
+  UI-level semantic subtype and may differ from `type` (Neo4j label).
+  Values: `Work | WorkInternal | WorkExternal | AuthorshipReification |
+  Author | Method | Dataset | Venue | Institution | Aggregator`.
+- Expanded `display_type` for edges: now uses human-readable labels
+  (`"cites"`, `"authored by"`, `"affiliated with"`, etc.) instead of
+  `_`-separated Neo4j relation names.
+- Added prioritized LIMIT: neighbors sorted by `node_kind_priority` before
+  truncation. `meta.skipped_by_kind` reports dropped counts per kind.

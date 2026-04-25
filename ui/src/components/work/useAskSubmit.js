@@ -5,6 +5,7 @@ import {
   postAgentQuery,
   postQuery,
 } from "../../services/researchApi.js";
+import { useAgentStream } from "../../hooks/useAgentStream.js";
 
 /**
  * Orchestrates Ask submit flow: builds request, calls API, updates shell callbacks.
@@ -15,18 +16,69 @@ import {
  *  onError?: (message: string) => void,
  *  onToolTrace?: (trace: unknown[]) => void,
  *  onStart?: () => void,
- *  onFinish?: () => void
+ *  onFinish?: () => void,
+ *  onStreamEvent?: (event: unknown) => void,
+ *  useStreamingAgent?: boolean
  * }} params
  */
-export function useAskSubmit({ workspaceId = "", onResult, onError, onToolTrace, onStart, onFinish }) {
+export function useAskSubmit({
+  workspaceId = "",
+  onResult,
+  onError,
+  onToolTrace,
+  onStart,
+  onFinish,
+  onStreamEvent,
+  useStreamingAgent = true,
+}) {
   const [isLoading, setIsLoading] = useState(false);
   const abortRef = useRef(null);
+
+  const { stream: streamAgent, isStreaming, abort: abortStream } = useAgentStream({
+    workspaceId,
+    onEvent: (event) => {
+      onStreamEvent?.(event);
+    },
+    onFinalAnswer: (event) => {
+      const trace = Array.isArray(event?.tool_trace) ? event.tool_trace : [];
+      onToolTrace?.(trace);
+      const citations = Array.isArray(event?.citations) ? event.citations : [];
+      const normalized = normalizeQueryResponse({
+        answer: String(event?.answer || ""),
+        citations,
+        graph_context: {},
+        retrieval_trace: {
+          retrieval_mode: "agent_v2_stream",
+          hit_count: citations.length,
+          citations_returned: citations.length,
+          retrieval_policy: "agent_tools_v2",
+        },
+      });
+      onResult?.(normalized);
+    },
+    onError: (msg) => onError?.(msg),
+    onStart: () => {
+      setIsLoading(true);
+      onStart?.();
+    },
+    onFinish: () => {
+      setIsLoading(false);
+      onFinish?.();
+    },
+  });
 
   const submit = useCallback(
     async ({ query, topK, retrievalMode, retrievalLabVisible, bodyPreview }) => {
       if (!String(query || "").trim()) return null;
+      const isAgentMode = retrievalLabVisible && retrievalMode === "agent";
+
+      if (isAgentMode && useStreamingAgent) {
+        await streamAgent({ question: query, maxToolCalls: 8 });
+        return null;
+      }
 
       abortRef.current?.abort?.();
+      abortStream();
       const controller = new AbortController();
       abortRef.current = controller;
 
@@ -36,7 +88,7 @@ export function useAskSubmit({ workspaceId = "", onResult, onError, onToolTrace,
         let normalized;
         let trace = [];
 
-        if (retrievalLabVisible && retrievalMode === "agent") {
+        if (isAgentMode) {
           const res = await postAgentQuery(
             {
               question: query,
@@ -81,8 +133,20 @@ export function useAskSubmit({ workspaceId = "", onResult, onError, onToolTrace,
         onFinish?.();
       }
     },
-    [onError, onFinish, onResult, onStart, onToolTrace, workspaceId],
+    [
+      abortStream,
+      onError,
+      onFinish,
+      onResult,
+      onStart,
+      onToolTrace,
+      streamAgent,
+      useStreamingAgent,
+      workspaceId,
+    ],
   );
 
-  return { submit, isLoading, abortRef };
+  const isActive = isLoading || isStreaming;
+
+  return { submit, isLoading: isActive, abortRef };
 }

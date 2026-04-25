@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from eval.layer1.text_similarity import rouge_l_f1
-from science_graphrag.api.retrieval import GroundedAnswer
+from science_graphrag.retrieval import GroundedAnswer
 
 
 def score_retrieval_answer(ga: GroundedAnswer, gold: dict[str, Any]) -> dict[str, Any]:

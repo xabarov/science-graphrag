@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from science_graphrag.api.retrieval import _try_query_answer_llm
+from science_graphrag.retrieval.answer import _try_query_answer_llm
 from science_graphrag.config import Settings
 
 
@@ -46,7 +46,7 @@ def test_try_query_answer_llm_mocked(monkeypatch: Any) -> None:
             return _Resp()
 
     monkeypatch.setattr(
-        "science_graphrag.api.retrieval.OpenAI",
+        "science_graphrag.retrieval.llm_answer.OpenAI",
         lambda **_: _Client(),
     )
 

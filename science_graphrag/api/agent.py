@@ -3,7 +3,7 @@ from __future__ import annotations
 from time import perf_counter
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel, Field
 
 from science_graphrag.agent.runtime import build_agent
@@ -30,9 +30,13 @@ class AgentQueryResponse(BaseModel):
 @router.post("/agent/query", response_model=AgentQueryResponse)
 def post_agent_query(
     body: AgentQueryRequest,
+    response: Response,
     settings: Settings = Depends(get_settings),
     stores: StoreRegistry = Depends(get_stores),
 ) -> AgentQueryResponse:
+    response.headers["Deprecation"] = "true"
+    response.headers["Sunset"] = "2026-07-01"
+    response.headers["Link"] = '</v2/agent/query>; rel="successor-version"'
     if not settings.agent_enabled:
         raise HTTPException(status_code=503, detail="agent_disabled")
     started = perf_counter()

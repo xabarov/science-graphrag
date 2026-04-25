@@ -6,7 +6,7 @@ from pathlib import Path
 
 from eval.retrieval.metrics import score_retrieval_answer
 from eval.retrieval.runner import discover_retrieval_case_dirs, run_retrieval_case
-from science_graphrag.api.retrieval import GroundedAnswer
+from science_graphrag.retrieval import GroundedAnswer
 
 RETRIEVAL_FIXTURES = Path(__file__).resolve().parent / "fixtures" / "benchmarks" / "retrieval"
 

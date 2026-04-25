@@ -4,22 +4,17 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any
 
 import uvicorn
 from fastapi import Depends, FastAPI, Query
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
-
-# works_api: module reference used by tests for monkeypatching (works/__init__.py
-# overwrites the "router" package attribute, so we read from sys.modules directly).
-import science_graphrag.api.works.router as _  # noqa: F401  ensure module loaded
 from science_graphrag.api.admin_access import require_admin_if_configured
 from science_graphrag.api.agent import router as agent_router
+from science_graphrag.api.agent_v2 import router as agent_v2_router
 from science_graphrag.api.ask_sessions import router as ask_sessions_router
 from science_graphrag.api.benchmark import router as benchmark_router
 from science_graphrag.api.deps import (
@@ -32,16 +27,13 @@ from science_graphrag.api.idea_assist import router as idea_assist_router
 from science_graphrag.api.ingest.registry import _registry
 from science_graphrag.api.ingest_event_bus import BUS
 from science_graphrag.api.ingest_jobs import router as ingest_router
-from science_graphrag.api.retrieval import GroundedAnswer, answer_query
+from science_graphrag.api.retrieval import router as retrieval_router
 from science_graphrag.api.settings import router as settings_router
-from science_graphrag.api.works import router as works_router
-
-works_api = sys.modules["science_graphrag.api.works.router"]
-
+from science_graphrag.api.works import works_router
 from science_graphrag.api.workspace_dedup import router as workspace_dedup_router
 from science_graphrag.api.workspace_graph import router as workspace_graph_router
 from science_graphrag.api.workspaces import router as workspaces_router
-from science_graphrag.config import Settings, get_settings
+from science_graphrag.config import get_settings
 from science_graphrag.observability.phoenix_tracer import init_tracer_provider
 
 
@@ -83,7 +75,9 @@ app.include_router(workspace_graph_router)
 app.include_router(workspace_dedup_router, prefix="/v1/workspaces")
 app.include_router(ingest_router, prefix="/v1")
 app.include_router(agent_router, prefix="/v1")
+app.include_router(agent_v2_router, prefix="/v2")
 app.include_router(idea_assist_router, prefix="/v1")
+app.include_router(retrieval_router, prefix="/v1")
 app.include_router(works_router)
 
 
@@ -104,24 +98,6 @@ def _configure_access_log_filters() -> None:
 
 
 _configure_access_log_filters()
-
-
-class QueryRequest(BaseModel):
-    query: str = Field(..., min_length=1)
-    work_id: str | None = None
-    workspace_id: str | None = None
-    top_k: int = Field(default=5, ge=1, le=24)
-    mode: Literal["vector", "hybrid"] = Field(
-        default="vector",
-        description="Retrieval path: dense vector only, or hybrid (RRF + Neo4j fulltext + CITES expand).",
-    )
-
-
-class QueryResponse(BaseModel):
-    answer: str
-    citations: list[dict]
-    graph_context: dict
-    retrieval_trace: dict
 
 
 @app.get("/health")
@@ -171,29 +147,6 @@ def idea_search(
         "workspace_id": (workspace_id or "").strip() or None,
         "status": "ok",
     }
-
-
-@app.post("/v1/query", response_model=QueryResponse)
-def post_query(
-    body: QueryRequest,
-    settings: Settings = Depends(get_settings),
-    stores: StoreRegistry = Depends(get_stores),
-) -> QueryResponse:
-    result: GroundedAnswer = answer_query(
-        body.query,
-        settings=settings,
-        stores=stores,
-        work_id=body.work_id,
-        workspace_id=body.workspace_id,
-        top_k=body.top_k,
-        mode=body.mode,
-    )
-    return QueryResponse(
-        answer=result.answer,
-        citations=result.citations,
-        graph_context=result.graph_context,
-        retrieval_trace=result.retrieval_trace,
-    )
 
 
 @app.get("/", response_model=None)

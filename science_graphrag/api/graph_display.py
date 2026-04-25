@@ -17,20 +17,35 @@ UUID_RE = re.compile(
 )
 
 EDGE_DISPLAY_TYPE_RAW: dict[str, str] = {
-    "CITES": "cites",
-    "HAS_AUTHORSHIP": "has authorship",
-    "OF_AUTHOR": "of author",
+    # Authorship cluster
+    "HAS_AUTHORSHIP": "authored by",
+    "OF_AUTHOR": "is author of",
     "AFFILIATED_WITH": "affiliated with",
+    # Content relationships
+    "CITES": "cites",
     "PUBLISHED_IN": "published in",
+    # Semantic relationships
     "USES_METHOD": "uses method",
     "EVALUATED_ON": "evaluated on",
     "TRAINED_OR_TESTED_ON": "trained/tested on",
-}
-EDGE_DISPLAY_TYPE_READER: dict[str, str] = {
-    **EDGE_DISPLAY_TYPE_RAW,
-    "HAS_AUTHORSHIP": "is author of",
+    # Claims
+    "SUPPORTS": "supports",
+    "CONTRADICTS": "contradicts",
+    "MENTIONS": "mentions",
 }
 PRIORITY_NEIGHBOR_KINDS_DEFAULT: tuple[str, ...] = ("Method", "Dataset", "Work")
+_NODE_KIND_PRIORITY: dict[str, int] = {
+    "Work": 0,
+    "WorkInternal": 0,
+    "WorkExternal": 0,
+    "Method": 1,
+    "Dataset": 2,
+    "Author": 3,
+    "AuthorshipReification": 4,
+    "Venue": 5,
+    "Institution": 5,
+    "Aggregator": 6,
+}
 
 
 def _is_uuid_like(value: str) -> bool:
@@ -47,7 +62,9 @@ def edge_display_type(rel_type: str, *, view: str = "raw") -> str:
     key = (rel_type or "").strip().upper()
     if not key:
         return "related"
-    mapping = EDGE_DISPLAY_TYPE_READER if (view or "").strip().lower() == "reader" else EDGE_DISPLAY_TYPE_RAW
+    mapping = EDGE_DISPLAY_TYPE_RAW
+    if (view or "").strip().lower() == "reader":
+        mapping = EDGE_DISPLAY_TYPE_RAW
     if key in mapping:
         return mapping[key]
     return key.replace("_", " ").lower()
@@ -66,6 +83,11 @@ def resolve_node_kind(node_type: str, *, workspace_membership: str | None = None
             return "WorkExternal"
         return "Work"
     return ntype
+
+
+def node_kind_priority(node_kind: str) -> int:
+    """Lower index means higher priority when truncating neighbors."""
+    return _NODE_KIND_PRIORITY.get((node_kind or "").strip(), 99)
 
 
 def parse_priority_csv(raw: str | None) -> tuple[str, ...]:
@@ -118,7 +140,9 @@ def compute_node_display(
         display_label = display_label or "Unknown venue"
         venue_type = _clean_label(str(p.get("venue_type") or ""))
         issn = _clean_label(str(p.get("issn") or ""))
-        subtitle = f"Venue · {venue_type}" if venue_type else (f"Venue · {issn}" if issn else "Venue")
+        subtitle = (
+            f"Venue · {venue_type}" if venue_type else (f"Venue · {issn}" if issn else "Venue")
+        )
     elif node_type in {"Method", "Dataset"}:
         display_label = display_label or f"Unnamed {node_type.lower()}"
         subtitle = node_type
