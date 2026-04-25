@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "workspace_id": null,
+  "max_calls": 8,
+  "min_tool_call_correctness": 0.6,
+  "min_specialist_sequence_match": 0.5,
+  "expected_specialist_sequence": [
+    "graph_agent",
+    "writer_agent"
+  ],
+  "expected_tool_sequence": [
+    "entity_search",
+    "edge_search",
+    "final_answer"
+  ]
+}

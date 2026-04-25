@@ -1,9 +1,10 @@
 import React from "react";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
 
-import { getScienceGraphLegendNodeChipSx } from "./graphCanvasStyle.js";
+import { getScienceGraphLegendNodeChipSx, getScienceGraphNodeTypeIcon } from "./graphCanvasStyle.js";
 import { collectGraphTypeLegend } from "./graphTypeLegend.js";
 
 const NODE_KIND_GROUPS = [
@@ -85,14 +86,32 @@ export default function GraphTypeLegend({ graph }) {
                 <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.45)", mr: 0.25 }}>
                   {group}
                 </Typography>
-                {kinds.map((t) => (
-                  <Chip
-                    key={`n-${group}-${t}`}
-                    label={t}
-                    size="small"
-                    sx={getScienceGraphLegendNodeChipSx(t)}
-                  />
-                ))}
+                {kinds.map((kind) => {
+                  const KindIcon = getScienceGraphNodeTypeIcon(kind);
+                  const dimInternal = kind === "WorkInternal";
+                  return (
+                    <Chip
+                      key={`n-${group}-${kind}`}
+                      icon={
+                        KindIcon ? (
+                          <KindIcon
+                            sx={{
+                              fontSize: "0.9rem !important",
+                              color: "inherit !important",
+                              opacity: dimInternal ? 0.65 : 0.95,
+                            }}
+                          />
+                        ) : undefined
+                      }
+                      label={kind}
+                      size="small"
+                      sx={{
+                        ...getScienceGraphLegendNodeChipSx(kind),
+                        "& .MuiChip-icon": { marginLeft: "6px" },
+                      }}
+                    />
+                  );
+                })}
               </React.Fragment>
             ))}
           </>
@@ -102,10 +121,11 @@ export default function GraphTypeLegend({ graph }) {
             <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", ml: nodeTypes.length ? 1 : 0, mr: 0.25 }}>
               Edges
             </Typography>
-            {edgeTypes.map((t) => (
+            {edgeTypes.map((edgeType) => (
               <Chip
-                key={`e-${t}`}
-                label={t}
+                key={`e-${edgeType}`}
+                icon={<ArrowForwardIcon sx={{ fontSize: "0.65rem !important", color: "rgba(255,255,255,0.45) !important" }} />}
+                label={edgeType}
                 size="small"
                 variant="outlined"
                 sx={{
@@ -113,6 +133,7 @@ export default function GraphTypeLegend({ graph }) {
                   fontSize: "0.75rem",
                   borderColor: "rgba(255,255,255,0.14)",
                   color: "rgba(255,255,255,0.65)",
+                  "& .MuiChip-icon": { marginLeft: "6px" },
                 }}
               />
             ))}

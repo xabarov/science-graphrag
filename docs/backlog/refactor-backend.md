@@ -10,6 +10,17 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 
 ## Queue
 
+### [OPEN] Fix pre-existing isort/black violations in ingest_jobs and idea_workflow
+- **Area:** `science_graphrag/api/ingest_jobs.py`, `science_graphrag/agent/idea_workflow.py`
+- **Issue:** `isort` and `black --check` fail on these two files (not touched by Round 5; pre-existing).
+- **Proposal:** run `isort` and `black` on those paths from repo root (`.venv/bin/isort`, `.venv/bin/black`).
+- **Acceptance:** `black --check` and `isort --check-only` over `science_graphrag/` report no issues.
+- **Raised:** 2026-04-25 (Round 5 review)
+
+### [DONE] Wave T - Entity dedup pipeline (Institution / Venue / Method / Dataset)
+- **Note (done):** 2026-04-25 - added pipelines for 4 entity types, `EntityDedupConflict` ORM,
+  Neo4j write helpers, Qdrant collection ensure, and unified `/v1/dedup/entity/*` API with tests.
+
 ### [DONE] Graph readability — Wave GR1 display labels (Authorship/Author/Institution/Venue)
 - **Area:** `science_graphrag/api/graph_display.py`, `science_graphrag/api/works.py`, `science_graphrag/api/workspace_graph.py`
 - **Issue:** Graph projections leaked technical UUID-like node ids (notably `:Authorship` ids like `...:ash:1`) into `display_label`/`subtitle`, reducing readability.
@@ -25,12 +36,14 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 - **Acceptance:** priority kinds (`Method`,`Dataset`,`Work`) survive truncation reliably and UI legend can render semantic edge labels.
 - **Raised:** 2026-04-25
 
-### [OPEN] Graph readability — Wave GR3 aggregator nodes + lazy expand endpoint
+### [DONE] Graph readability — Wave GR3 aggregator nodes + lazy expand endpoint
 - **Area:** `science_graphrag/api/works.py`, `science_graphrag/api/workspace_graph.py`
 - **Issue:** Dense one-kind neighbor stars (authors/cites/institutions) overload graph readability at default limits.
 - **Proposal:** Add `node_kind: Aggregator` projection with `aggregation_hints` and expand endpoint for lazy unfolding.
 - **Acceptance:** oversized neighbor groups collapse into one aggregator node with count/preview and expand on demand.
 - **Raised:** 2026-04-25
+- **Note (done):** 2026-04-25 — добавлены `_apply_aggregators()` для work/workspace payload,
+  `view=reader|raw`, endpoint-ы `GET /v1/works/{id}/graph/expand` и `GET /v1/workspaces/{id}/graph/expand`.
 
 ### [OPEN] Graph readability — Wave GR4 reader view with virtual AUTHORED edges
 - **Area:** `science_graphrag/api/works.py`, `science_graphrag/api/workspace_graph.py`, `science_graphrag/api/graph_snapshot_diff.py`
@@ -244,3 +257,6 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 
 ### [DONE] Wave Y2: LangGraph single-agent ReAct behind v1 endpoint + X2 Phoenix
 - **Note (done):** 2026-04-25 — создан `agent/graph/{state,supervisor,tracing}.py`; `agent/llm/chat.py`; 6 tools переведены на `langchain_core.tools` + `build_tool_registry`; `runtime.py` обертка вокруг LangGraph `graph.invoke`; legacy fallback в `runtime_legacy.py`; `chain_span("agent.query")` + `traced_tool_span`/`embeddings_span` на `idea_search`; добавлены `tests/agent/{test_tools_registry,test_graph_smoke}.py`; v1 endpoint сохранен.
+
+### [DONE] Wave Y4 — Multi-agent supervisor (LangGraph)
+- **Note (done):** 2026-04-25 (Round 5) — добавлены specialists `retrieval_agent`/`graph_agent`/`writer_agent`, LLM-based supervisor routing, расширен `AgentState` (`specialist_results`, `current_specialist`, `routing_log`), добавлен tier `agent_tools_multiagent`, и принят ADR `020-langgraph-supervisor-multiagent.md`.

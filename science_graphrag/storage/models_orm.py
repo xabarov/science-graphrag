@@ -210,3 +210,31 @@ class AuthorDedupConflict(Base):
         default=lambda: datetime.now(UTC),
     )
     decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class EntityDedupConflict(Base):
+    """Unified Postgres review queue for all entity types (Wave T)."""
+
+    __tablename__ = "entity_dedup_conflicts"
+    __table_args__ = (
+        UniqueConstraint("entity_type", "fingerprint", name="uq_entity_dedup_type_fingerprint"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    entity_type: Mapped[str] = mapped_column(String(32), index=True)
+    entity_id_a: Mapped[str] = mapped_column(String(256), index=True)
+    entity_id_b: Mapped[str] = mapped_column(String(256), index=True)
+    similarity_score: Mapped[float] = mapped_column(Float, default=0.0)
+    check_mode: Mapped[str] = mapped_column(String(32), default="embedding")
+    llm_same_entity: Mapped[bool | None] = mapped_column(nullable=True)
+    llm_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(24), default="pending", index=True)
+    decision: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    keep_entity_id: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    fingerprint: Mapped[str] = mapped_column(String(64), index=True)
+    workspace_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+    )
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

@@ -17,6 +17,7 @@ from science_graphrag.api.workspace_graph._cypher_projection import (
 )
 from science_graphrag.api.workspace_graph.projection import (
     annotate_membership_and_cites,
+    apply_workspace_aggregators,
     apply_workspace_node_kind,
     edge_dict_from_rel,
     edge_key,
@@ -93,6 +94,7 @@ def project_workspace_graph(
     neighbor_limit: int = 200,
     external_min_internal_citers: int = 0,
     prioritize: str | None = None,
+    view: str = "reader",
 ) -> dict[str, Any] | None:
     mode_norm = (mode or "inner_only").strip().lower()
     depth_eff = 2 if int(depth) >= 2 else 1
@@ -231,6 +233,12 @@ def project_workspace_graph(
     enrich_edges_workspace(nodes, edges)
     inc_n, exc_n = annotate_membership_and_cites(nodes, edges, iws)
     apply_workspace_node_kind(nodes)
+    if str(view or "reader").strip().lower() != "raw":
+        nodes, edges = apply_workspace_aggregators(
+            workspace_id,
+            nodes,
+            edges,
+        )
     expansions: list[str] = []
     if truncated:
         expansions.append("increase_neighbor_limit")

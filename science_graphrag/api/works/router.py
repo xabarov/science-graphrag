@@ -19,7 +19,10 @@ from science_graphrag.api.works.detail import (
     work_sources_payload,
 )
 from science_graphrag.api.works.dto import WorkClaimsResponse, WorkListResponse
-from science_graphrag.api.works.graph_neighborhood import work_graph_neighborhood
+from science_graphrag.api.works.graph_neighborhood import (
+    expand_work_aggregator,
+    work_graph_neighborhood,
+)
 from science_graphrag.config import Settings
 
 router = APIRouter(prefix="/v1/works", tags=["works"])
@@ -114,6 +117,7 @@ def get_work_graph(
     neighbor_limit: int = Query(default=200, ge=1, le=2000),
     depth: int = Query(default=1, ge=1, le=3),
     prioritize: str | None = Query(default="Method,Dataset,Work"),
+    view: str = Query(default="reader", description="reader | raw"),
     stores: StoreRegistry = Depends(get_stores),
 ) -> dict[str, Any]:
     g = work_graph_neighborhood(
@@ -122,10 +126,24 @@ def get_work_graph(
         neighbor_limit=neighbor_limit,
         depth=depth,
         prioritize=prioritize,
+        view=view,
     )
     if not g:
         raise HTTPException(status_code=404, detail="work_not_found")
     return g
+
+
+@router.get("/{work_id}/graph/expand")
+def expand_aggregator(
+    work_id: str,
+    aggregator_id: str = Query(..., min_length=6),
+    limit: int = Query(default=50, ge=1, le=300),
+    stores: StoreRegistry = Depends(get_stores),
+) -> dict[str, Any]:
+    payload = expand_work_aggregator(stores, work_id, aggregator_id, limit=limit)
+    if payload is None:
+        raise HTTPException(status_code=404, detail="work_not_found")
+    return payload
 
 
 @router.get("/{work_id}/chunks")

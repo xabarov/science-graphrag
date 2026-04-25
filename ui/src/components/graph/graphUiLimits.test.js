@@ -3,13 +3,14 @@ import { describe, expect, it } from "vitest";
 import { capGraphForUi, GRAPH_UI_MAX_EDGES, GRAPH_UI_MAX_NODES } from "./graphUiLimits.js";
 
 describe("graphUiLimits", () => {
-  it("returns same graph when under caps", () => {
+  it("returns same graph reference when under caps (stable for selection re-renders)", () => {
     const graph = {
       nodes: [{ id: "a" }, { id: "b" }],
       edges: [{ source: "a", target: "b" }],
     };
     const { displayGraph, capWarnings } = capGraphForUi(graph);
     expect(capWarnings).toHaveLength(0);
+    expect(displayGraph).toBe(graph);
     expect(displayGraph.nodes).toHaveLength(2);
     expect(displayGraph.edges).toHaveLength(1);
   });

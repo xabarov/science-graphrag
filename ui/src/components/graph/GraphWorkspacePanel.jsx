@@ -2,9 +2,13 @@ import React, { useEffect, useMemo, useState } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import BugReportOutlinedIcon from "@mui/icons-material/BugReportOutlined";
+import LayersOutlinedIcon from "@mui/icons-material/LayersOutlined";
+import ViewSidebarOutlinedIcon from "@mui/icons-material/ViewSidebarOutlined";
 
-import { CursorSmallButton } from "../common/index.js";
+import { CursorIconButton } from "../common/index.js";
 import { useI18n } from "../../i18n/I18nContext.jsx";
 import { describeTraceabilityState } from "../work/traceabilityState.js";
 import GraphCanvasMvp from "./GraphCanvasMvp.jsx";
@@ -80,7 +84,18 @@ export default function GraphWorkspacePanel({
 }) {
   const { t } = useI18n();
   const standalone = mode === "standalone";
-  const { wsId, graph, loading, error, wsGraphOpts, setWsGraphOpts, wsGraphStats, fetchNeighbors, expandNeighborsBusy } =
+  const {
+    wsId,
+    graph,
+    loading,
+    error,
+    wsGraphOpts,
+    setWsGraphOpts,
+    wsGraphStats,
+    fetchNeighbors,
+    expandNeighborsBusy,
+    expandAggregatorNode,
+  } =
     useGraphWorkspaceData(workspaceId, workId, { standaloneWorkGraphDepth });
 
   const [vizMode, setVizMode] = useState(() => (standalone ? "canvas" : readLsMode()));
@@ -149,19 +164,58 @@ export default function GraphWorkspacePanel({
         <>
           {wsId ? <WorkspaceGraphToolbar workspaceId={wsId} stats={wsGraphStats} value={wsGraphOpts} onChange={setWsGraphOpts} /> : null}
           {!standalone ? <GraphViewModeSwitch mode={vizMode} onChange={setVizMode} compact={compactLayout} /> : null}
-          <Box sx={{ display: "flex", gap: 1, mb: 1, flexWrap: "wrap" }}>
-            <CursorSmallButton type="button" onClick={() => setDetailsVisible((v) => !v)}>
-              {detailsVisible ? "Hide details" : "Show details"}
-            </CursorSmallButton>
+          <Box sx={{ display: "flex", gap: 0.5, mb: 1, flexWrap: "wrap", alignItems: "center" }}>
+            <Tooltip title={detailsVisible ? t("graph.workspacePanel.tooltipDetailsHide") : t("graph.workspacePanel.tooltipDetailsShow")}>
+              <CursorIconButton
+                type="button"
+                aria-label={t("graph.workspacePanel.ariaToggleDetails")}
+                onClick={() => setDetailsVisible((v) => !v)}
+                sx={{
+                  ...(detailsVisible
+                    ? { borderColor: "rgba(99,102,241,0.35)", color: "rgba(129,140,248,0.95)" }
+                    : { opacity: 0.75 }),
+                }}
+              >
+                <ViewSidebarOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+              </CursorIconButton>
+            </Tooltip>
             {standalone ? (
-              <CursorSmallButton type="button" onClick={() => setLegendOpen((v) => !v)}>
-                {legendOpen ? "Hide legend" : "Show legend"}
-              </CursorSmallButton>
+              <Tooltip title={legendOpen ? t("graph.workspacePanel.tooltipLegendHide") : t("graph.workspacePanel.tooltipLegendShow")}>
+                <CursorIconButton
+                  type="button"
+                  aria-label={t("graph.workspacePanel.ariaToggleLegend")}
+                  onClick={() => setLegendOpen((v) => !v)}
+                  sx={{
+                    ...(legendOpen
+                      ? { borderColor: "rgba(99,102,241,0.35)", color: "rgba(129,140,248,0.95)" }
+                      : { opacity: 0.75 }),
+                  }}
+                >
+                  <LayersOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+                </CursorIconButton>
+              </Tooltip>
             ) : null}
             {!labMode ? (
-              <CursorSmallButton type="button" onClick={() => setDiagnosticsOpen((v) => !v)}>
-                {diagnosticsOpen ? "Hide diagnostics" : "Show diagnostics"}
-              </CursorSmallButton>
+              <Tooltip
+                title={
+                  diagnosticsOpen
+                    ? t("graph.workspacePanel.tooltipDiagnosticsHide")
+                    : t("graph.workspacePanel.tooltipDiagnosticsShow")
+                }
+              >
+                <CursorIconButton
+                  type="button"
+                  aria-label={t("graph.workspacePanel.ariaToggleDiagnostics")}
+                  onClick={() => setDiagnosticsOpen((v) => !v)}
+                  sx={{
+                    ...(diagnosticsOpen
+                      ? { borderColor: "rgba(99,102,241,0.35)", color: "rgba(129,140,248,0.95)" }
+                      : { opacity: 0.75 }),
+                  }}
+                >
+                  <BugReportOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+                </CursorIconButton>
+              </Tooltip>
             ) : null}
           </Box>
           {graph.warnings.length > 0 ? <Alert severity="info" sx={{ mb: 1 }}>Graph data was normalized</Alert> : null}
@@ -204,6 +258,7 @@ export default function GraphWorkspacePanel({
                   selectedEdgeId={resolvedSelectedEdgeId}
                   onSelectNode={(id) => { onSelectEdge?.(""); onSelectNode?.(id); }}
                   onSelectEdge={(id) => { onSelectNode?.(""); onSelectEdge?.(id); }}
+                  onAggregatorExpand={(_, expandEndpoint) => expandAggregatorNode(expandEndpoint)}
                 />
               )}
             </Box>
@@ -219,6 +274,10 @@ export default function GraphWorkspacePanel({
               onSelectNode={onSelectNode}
               onSelectEdge={onSelectEdge}
               onExpandWorkspaceNeighbors={wsId ? () => fetchNeighbors(resolvedSelectedNodeId) : undefined}
+              onAggregatorExpand={(node, expandEndpoint) => {
+                onSelectNode?.(node?.id || "");
+                expandAggregatorNode(expandEndpoint);
+              }}
               expandWorkspaceNeighborsBusy={expandNeighborsBusy}
               mode={mode}
               width={detailMinPx}

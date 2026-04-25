@@ -2,7 +2,12 @@ import React, { useState } from "react";
 import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
@@ -37,6 +42,7 @@ function formatPropertyValue(v) {
  *   onSelectNode?: (nodeId: string) => void,
  *   onSelectEdge?: (edgeId: string) => void,
  *   onExpandWorkspaceNeighbors?: () => void | Promise<void>,
+ *   onAggregatorExpand?: (node: object, expandEndpoint: string) => void | Promise<void>,
  *   expandWorkspaceNeighborsBusy?: boolean,
  *   mode?: "embedded" | "standalone",
  * }} props
@@ -51,6 +57,7 @@ export default function GraphDetailPanel({
   onSelectNode,
   onSelectEdge,
   onExpandWorkspaceNeighbors,
+  onAggregatorExpand,
   expandWorkspaceNeighborsBusy = false,
   mode = "embedded",
 }) {
@@ -142,6 +149,38 @@ export default function GraphDetailPanel({
 
         {selectedNode ? (
           <>
+            {String(selectedNode.nodeKind) === "Aggregator" ? (
+              <Box sx={{ mb: 1.5 }}>
+                <Typography sx={{ fontSize: "0.7rem", color: "rgba(129,140,248,0.92)" }}>Aggregator</Typography>
+                <Typography sx={{ fontSize: "0.9375rem", fontWeight: 600, color: "rgba(255,255,255,0.9)", mt: 0.25 }}>
+                  {selectedNode.displayLabel || selectedNode.label}
+                </Typography>
+                <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.55)", mt: 0.35 }}>
+                  {String(selectedNode.raw?.aggregation_hints?.aggregator_kind || "").replace(/_/g, " ")}
+                </Typography>
+                {Array.isArray(selectedNode.raw?.aggregation_hints?.preview_labels) &&
+                selectedNode.raw.aggregation_hints.preview_labels.length > 0 ? (
+                  <List dense sx={{ py: 0.5 }}>
+                    {selectedNode.raw.aggregation_hints.preview_labels.map((label) => (
+                      <ListItem key={String(label)} sx={{ px: 0 }}>
+                        <ListItemText primary={String(label)} />
+                      </ListItem>
+                    ))}
+                  </List>
+                ) : null}
+                <CursorSmallButton
+                  type="button"
+                  disabled={expandWorkspaceNeighborsBusy}
+                  onClick={() =>
+                    onAggregatorExpand?.(selectedNode, String(selectedNode.raw?.aggregation_hints?.expand_endpoint || ""))
+                  }
+                >
+                  {expandWorkspaceNeighborsBusy
+                    ? "Loading…"
+                    : `Expand all (${String(selectedNode.raw?.aggregation_hints?.count || 0)})`}
+                </CursorSmallButton>
+              </Box>
+            ) : null}
             <Typography sx={{ fontSize: "0.7rem", color: "rgba(129,140,248,0.92)" }}>
               {selectedNode.nodeKind || selectedNode.type}
             </Typography>
@@ -241,10 +280,23 @@ export default function GraphDetailPanel({
                     <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.42)", textTransform: "lowercase" }}>
                       {directionHint}
                     </Typography>
-                    <Typography sx={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.92)" }}>
-                      {edge.displayType || String(edge.type || "").replace(/_/g, " ")}
-                    </Typography>
-                    <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.86)", mt: 0.25, lineHeight: 1.4 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap", mt: 0.25 }}>
+                      <ArrowForwardIcon sx={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.55)" }} aria-hidden />
+                      <Chip
+                        component="span"
+                        size="small"
+                        label={edge.displayType || String(edge.type || "").replace(/_/g, " ") || "—"}
+                        sx={{
+                          height: 22,
+                          fontSize: "0.7rem",
+                          border: "1px solid rgba(129,140,248,0.35)",
+                          backgroundColor: "rgba(99,102,241,0.12)",
+                          color: "rgba(129,140,248,0.95)",
+                          "& .MuiChip-label": { px: 0.75 },
+                        }}
+                      />
+                    </Box>
+                    <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.86)", mt: 0.35, lineHeight: 1.4 }}>
                       → {otherLabel}
                     </Typography>
                     <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.48)", mt: 0.35, lineHeight: 1.35 }}>
@@ -263,9 +315,27 @@ export default function GraphDetailPanel({
                       onSelectNode?.("");
                       onSelectEdge?.(edge.id);
                     }}
-                    sx={{ justifyContent: "flex-start", textAlign: "left", height: "auto", py: 0.75 }}
+                    sx={{ justifyContent: "flex-start", textAlign: "left", height: "auto", py: 0.75, alignItems: "center", gap: 0.75 }}
                   >
-                    {edge.displayType || edge.type}: {edge.source} → {edge.target}
+                    <ArrowForwardIcon sx={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.55)", flexShrink: 0 }} aria-hidden />
+                    <Chip
+                      component="span"
+                      size="small"
+                      label={edge.displayType || edge.type || "—"}
+                      sx={{
+                        height: 22,
+                        fontSize: "0.7rem",
+                        border: "1px solid rgba(129,140,248,0.35)",
+                        backgroundColor: "rgba(99,102,241,0.12)",
+                        color: "rgba(129,140,248,0.95)",
+                        flexShrink: 0,
+                        verticalAlign: "middle",
+                        "& .MuiChip-label": { px: 0.75 },
+                      }}
+                    />
+                    <Typography component="span" sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.75)", textAlign: "left" }}>
+                      {edge.source} → {edge.target}
+                    </Typography>
                   </CursorSmallButton>
                 ))}
               </Box>

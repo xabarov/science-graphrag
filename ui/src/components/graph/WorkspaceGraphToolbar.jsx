@@ -2,12 +2,15 @@ import React, { useCallback, useMemo } from "react";
 import { useI18n } from "../../i18n/I18nContext.jsx";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
+import Divider from "@mui/material/Divider";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
+
+import { getScienceGraphNodeTypeIcon } from "./graphCanvasStyle.js";
 
 const NODE_TYPE_OPTIONS = ["Work", "Author", "Method", "Dataset", "Venue", "Institution"];
 
@@ -146,66 +149,98 @@ export default function WorkspaceGraphToolbar({ workspaceId, stats, value, onCha
         backgroundColor: "rgba(255,255,255,0.02)",
       }}
     >
-      <Stack direction="row" flexWrap="wrap" alignItems="center" gap={1} useFlexGap>
+      <Stack direction="row" flexWrap="wrap" alignItems="flex-start" gap={1} useFlexGap>
         <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.45)", width: "100%" }}>
           {t("graph.wsToolbar.title")}
         </Typography>
-        <ToggleButtonGroup
-          size="small"
-          exclusive
-          value={value.mode}
-          onChange={(_, v) => v && persistMode(v)}
-          sx={{ "& .MuiToggleButton-root": { fontSize: "0.7rem", py: 0.25, px: 0.75 } }}
-        >
-          <ToggleButton value="inner_only">{t("graph.wsToolbar.modeInner")}</ToggleButton>
-          <ToggleButton value="union_1hop">{t("graph.wsToolbar.modeUnion1hop")}</ToggleButton>
-          <ToggleButton value="semantic_layer">{t("graph.wsToolbar.modeSemantic")}</ToggleButton>
-          <ToggleButton value="full">{t("graph.wsToolbar.modeFull")}</ToggleButton>
-        </ToggleButtonGroup>
-        <ToggleButtonGroup
-          size="small"
-          exclusive
-          value={value.depth}
-          onChange={(_, v) => v != null && persistDepth(v)}
-          sx={{ "& .MuiToggleButton-root": { fontSize: "0.7rem", py: 0.25, px: 0.75 } }}
-        >
-          <ToggleButton value={1}>{t("graph.wsToolbar.depth1")}</ToggleButton>
-          <ToggleButton value={2}>{t("graph.wsToolbar.depth2")}</ToggleButton>
-        </ToggleButtonGroup>
-        <FormControlLabel
-          control={
-            <Switch
-              size="small"
-              checked={Boolean(value.includeExternal)}
-              onChange={(e) => persistInclude(e.target.checked)}
-            />
-          }
-          label={
-            <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.75)" }}>
-              {t("graph.wsToolbar.external")}
+        <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1, flex: 1, minWidth: 0 }}>
+          <ToggleButtonGroup
+            size="small"
+            exclusive
+            value={value.mode}
+            onChange={(_, v) => v && persistMode(v)}
+            sx={{ "& .MuiToggleButton-root": { fontSize: "0.7rem", py: 0.25, px: 0.75 } }}
+          >
+            <ToggleButton value="inner_only">{t("graph.wsToolbar.modeInner")}</ToggleButton>
+            <ToggleButton value="union_1hop">{t("graph.wsToolbar.modeUnion1hop")}</ToggleButton>
+            <ToggleButton value="semantic_layer">{t("graph.wsToolbar.modeSemantic")}</ToggleButton>
+            <ToggleButton value="full">{t("graph.wsToolbar.modeFull")}</ToggleButton>
+          </ToggleButtonGroup>
+          <Divider orientation="vertical" flexItem sx={{ borderColor: "rgba(255,255,255,0.08)", alignSelf: "stretch", minHeight: 28 }} />
+          <ToggleButtonGroup
+            size="small"
+            exclusive
+            value={value.depth}
+            onChange={(_, v) => v != null && persistDepth(v)}
+            sx={{ "& .MuiToggleButton-root": { fontSize: "0.7rem", py: 0.25, px: 0.75 } }}
+          >
+            <ToggleButton value={1}>{t("graph.wsToolbar.depth1")}</ToggleButton>
+            <ToggleButton value={2}>{t("graph.wsToolbar.depth2")}</ToggleButton>
+          </ToggleButtonGroup>
+          <Divider orientation="vertical" flexItem sx={{ borderColor: "rgba(255,255,255,0.08)", alignSelf: "stretch", minHeight: 28 }} />
+          <FormControlLabel
+            control={
+              <Switch
+                size="small"
+                checked={Boolean(value.includeExternal)}
+                onChange={(e) => persistInclude(e.target.checked)}
+              />
+            }
+            label={
+              <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.75)" }}>
+                {t("graph.wsToolbar.external")}
+              </Typography>
+            }
+            sx={{ mr: 0 }}
+          />
+          <Divider orientation="vertical" flexItem sx={{ borderColor: "rgba(255,255,255,0.08)", alignSelf: "stretch", minHeight: 28 }} />
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.35, minWidth: 0 }}>
+            <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.4)", lineHeight: 1 }}>
+              {t("graph.wsToolbar.nodeTypesLabel")}
             </Typography>
-          }
-        />
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, alignItems: "center" }}>
-          {NODE_TYPE_OPTIONS.map((nodeType) => (
-            <Chip
-              key={nodeType}
-              label={t(`graph.wsToolbar.nodeType.${nodeType}`)}
-              size="small"
-              variant={chipTypes.has(nodeType) ? "filled" : "outlined"}
-              onClick={() => toggleType(nodeType)}
-              sx={{
-                height: 24,
-                fontSize: "0.68rem",
-                ...(chipTypes.has(nodeType)
-                  ? { backgroundColor: "rgba(99,102,241,0.2)", borderColor: "rgba(129,140,248,0.4)" }
-                  : { borderColor: "rgba(255,255,255,0.15)" }),
-              }}
-            />
-          ))}
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, alignItems: "center" }}>
+              {NODE_TYPE_OPTIONS.map((nodeType) => {
+                const TypeIcon = getScienceGraphNodeTypeIcon(nodeType);
+                return (
+                  <Chip
+                    key={nodeType}
+                    icon={
+                      TypeIcon ? (
+                        <TypeIcon sx={{ fontSize: "0.95rem !important", color: "inherit !important", opacity: 0.92 }} />
+                      ) : undefined
+                    }
+                    label={t(`graph.wsToolbar.nodeType.${nodeType}`)}
+                    size="small"
+                    variant={chipTypes.has(nodeType) ? "filled" : "outlined"}
+                    onClick={() => toggleType(nodeType)}
+                    sx={{
+                      height: 24,
+                      fontSize: "0.68rem",
+                      "& .MuiChip-icon": { marginLeft: "6px" },
+                      ...(chipTypes.has(nodeType)
+                        ? { backgroundColor: "rgba(99,102,241,0.2)", borderColor: "rgba(129,140,248,0.4)" }
+                        : { borderColor: "rgba(255,255,255,0.15)" }),
+                    }}
+                  />
+                );
+              })}
+            </Box>
+          </Box>
         </Box>
         {statsLine ? (
-          <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.5)", ml: "auto" }}>{statsLine}</Typography>
+          <Typography
+            sx={{
+              fontSize: "0.72rem",
+              color: "rgba(255,255,255,0.5)",
+              alignSelf: "center",
+              ml: { xs: 0, md: "auto" },
+              flexShrink: 0,
+              width: { xs: "100%", md: "auto" },
+              textAlign: { xs: "left", md: "right" },
+            }}
+          >
+            {statsLine}
+          </Typography>
         ) : null}
       </Stack>
     </Box>

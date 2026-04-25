@@ -9,6 +9,8 @@ export const GRAPH_UI_MAX_EDGES = 350;
  * Returns a shallow copy of the graph with truncated nodes/edges for rendering only.
  * If `preferredNodeId` is set and would be dropped by the node cap, it replaces the last slot so selection stays visible.
  *
+ * When no cap applies, returns the same `graph` reference so selection changes do not force canvas re-seed.
+ *
  * @param {{ nodes: Array<object>, edges: Array<object> }} graph normalized graph
  * @param {string} [preferredNodeId] resolved selection (may be empty)
  * @returns {{ displayGraph: object, capWarnings: string[] }}
@@ -38,8 +40,10 @@ export function capGraphForUi(graph, preferredNodeId = "") {
     );
   }
 
-  const idSet = new Set(nodes.map((n) => n.id));
-  edges = graph.edges.filter((e) => idSet.has(e.source) && idSet.has(e.target));
+  if (nodes !== graph.nodes) {
+    const idSet = new Set(nodes.map((n) => n.id));
+    edges = graph.edges.filter((e) => idSet.has(e.source) && idSet.has(e.target));
+  }
 
   if (edges.length > GRAPH_UI_MAX_EDGES) {
     capWarnings.push(
@@ -48,6 +52,9 @@ export function capGraphForUi(graph, preferredNodeId = "") {
     edges = edges.slice(0, GRAPH_UI_MAX_EDGES);
   }
 
+  if (nodes === graph.nodes && edges === graph.edges) {
+    return { displayGraph: graph, capWarnings };
+  }
   return {
     displayGraph: { ...graph, nodes, edges },
     capWarnings,

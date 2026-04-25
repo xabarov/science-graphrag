@@ -5,6 +5,16 @@ export default {
   "graph.workspacePanel.emptyHint":
     "Pick a paper or open the workspace graph (workspace_id query parameter).",
 
+  "graph.workspacePanel.ariaToggleDetails": "Toggle details panel",
+  "graph.workspacePanel.tooltipDetailsHide": "Hide details panel",
+  "graph.workspacePanel.tooltipDetailsShow": "Show details panel",
+  "graph.workspacePanel.ariaToggleLegend": "Toggle type legend",
+  "graph.workspacePanel.tooltipLegendHide": "Hide type legend",
+  "graph.workspacePanel.tooltipLegendShow": "Show type legend",
+  "graph.workspacePanel.ariaToggleDiagnostics": "Toggle diagnostics",
+  "graph.workspacePanel.tooltipDiagnosticsHide": "Hide diagnostics JSON",
+  "graph.workspacePanel.tooltipDiagnosticsShow": "Show diagnostics JSON",
+
   "graph.wsToolbar.title": "Workspace graph",
   "graph.wsToolbar.modeInner": "Inner",
   "graph.wsToolbar.modeUnion1hop": "Union 1-hop",
@@ -15,6 +25,7 @@ export default {
   "graph.standaloneDepth.depth1Aria": "Single-hop neighborhood",
   "graph.standaloneDepth.depth2Aria": "Two-hop neighborhood (citations)",
   "graph.wsToolbar.external": "External",
+  "graph.wsToolbar.nodeTypesLabel": "Node types",
   "graph.wsToolbar.statsWorks": "{{count}} works",
   "graph.wsToolbar.statsAuthors": "{{count}} authors",
   "graph.wsToolbar.statsExtCites": "{{count}} ext cites",

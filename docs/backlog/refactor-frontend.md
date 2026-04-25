@@ -92,12 +92,18 @@ Planned structural work under `ui/` (components, routing, state, API client), no
 - **Acceptance:** N/A до приоритизации.
 - **Raised:** 2026-04-08
 
-### [OPEN] Graph canvas — split `GraphCanvasMvp` (input vs physics vs draw)
+### [DONE] Graph canvas — split `GraphCanvasMvp` (input vs physics vs draw)
 - **Area:** [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx)
 - **Issue:** Файл ~1000+ строк: pointer/transform, wiring симуляции и отрисовка canvas в одном модуле; после force/reheat правок рост риска регрессий.
 - **Proposal:** Вынести pointer/pan/drag/select в `useGraphCanvasInput` (или модуль рядом), fit/transform в утилиту/hook, оставить в компоненте только glue + `draw` либо `graphCanvasDraw.js`.
 - **Acceptance:** оркестратор canvas без «god file» (heuristic: &lt;400 строк или явно разделённые слои); поведение drag/pan/force без регрессий; `npm run lint` / `npm run test` зелёные.
 - **Raised:** 2026-04-19
+- **Note (done):** 2026-04-25 (Round 5) — разнесено на `GraphCanvasMvp.jsx` (shell),
+  `hooks/useGraphCanvasInput.js`, `graphCanvasDraw.js`; добавлен рендер агрегатор badge и smoke-test `graphCanvasDraw.test.js`.
+
+### [DONE] Graph UI — Aggregator rendering + expand-on-click
+- **Area:** [`graphCanvasStyle.js`](../../ui/src/components/graph/graphCanvasStyle.js), [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx), [`GraphDetailPanel.jsx`](../../ui/src/components/graph/GraphDetailPanel.jsx), [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx), [`hooks/useGraphWorkspaceData.js`](../../ui/src/components/graph/hooks/useGraphWorkspaceData.js), [`researchApi.js`](../../ui/src/services/researchApi.js)
+- **Note (done):** 2026-04-25 — стиль Aggregator (пунктир), expand по клику в canvas/details, merge раскрытых узлов/рёбер в локальный graph state через `expandAggregator`.
 
 ### [DONE] Workspaces page — split shell vs indexed-works browser (Wave I)
 - **Area:** [`WorkspacesPage.jsx`](../../ui/src/pages/WorkspacesPage.jsx), [`WorkspacesPage/WorkspaceCollectionPanel.jsx`](../../ui/src/pages/WorkspacesPage/WorkspaceCollectionPanel.jsx), [`WorkspacesPage/WorkspaceRecentPanel.jsx`](../../ui/src/pages/WorkspacesPage/WorkspaceRecentPanel.jsx), [`WorkspacesPage/IndexedWorksBrowser.jsx`](../../ui/src/pages/WorkspacesPage/IndexedWorksBrowser.jsx)

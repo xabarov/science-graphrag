@@ -16,6 +16,7 @@ from science_graphrag.api.graph_display import (
 )
 
 MAX_WORK_GRAPH_NEIGHBORS = 300
+AGGREGATOR_THRESHOLD = 8
 
 
 def _has_semantic_layer_cypher() -> str:
@@ -37,6 +38,108 @@ def _neighborhood_edge_endpoints(
 def _stable_edge_id(source: str, rel_type: str, target: str, seq: int) -> str:
     payload = f"{source}\0{rel_type or ''}\0{target}\0{seq}".encode()
     return "e_" + hashlib.sha256(payload).hexdigest()[:22]
+
+
+def _aggregator_id(owner_id: str, node_kind: str, edge_type: str) -> str:
+    encoded_owner = owner_id.replace(":", "%3A")
+    return f"agg:{encoded_owner}:{node_kind.lower()}:{edge_type.upper()}"
+
+
+def parse_aggregator_id(aggregator_id: str) -> tuple[str, str, str]:
+    raw = str(aggregator_id or "").strip()
+    if not raw.startswith("agg:"):
+        raise ValueError("invalid_aggregator_id")
+    _, owner_encoded, node_kind, edge_type = raw.split(":", 3)
+    return owner_encoded.replace("%3A", ":"), node_kind, edge_type
+
+
+def _apply_aggregators(
+    work_id: str,
+    nodes: list[dict[str, Any]],
+    edges: list[dict[str, Any]],
+    threshold: int = AGGREGATOR_THRESHOLD,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    node_by_id = {str(n.get("id") or ""): n for n in nodes}
+    groups: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
+    for edge in edges:
+        src_id = str(edge.get("source") or "")
+        tgt_id = str(edge.get("target") or "")
+        edge_type = str(edge.get("type") or "")
+        for owner_id, neighbor_id in ((src_id, tgt_id), (tgt_id, src_id)):
+            owner = node_by_id.get(owner_id)
+            neighbor = node_by_id.get(neighbor_id)
+            if not owner or not neighbor:
+                continue
+            if str(owner.get("type") or "") != "Work":
+                continue
+            neighbor_kind = str(neighbor.get("node_kind") or neighbor.get("type") or "Node")
+            key = (owner_id, neighbor_kind, edge_type)
+            groups.setdefault(key, []).append(edge)
+    to_remove_nodes: set[str] = set()
+    to_remove_edges: set[str] = set()
+    add_nodes: list[dict[str, Any]] = []
+    add_edges: list[dict[str, Any]] = []
+    for (owner_id, node_kind, edge_type), grouped_edges in groups.items():
+        uniq_neighbors: list[str] = []
+        seen_neighbors: set[str] = set()
+        for edge in grouped_edges:
+            src_id = str(edge.get("source") or "")
+            tgt_id = str(edge.get("target") or "")
+            other = tgt_id if src_id == owner_id else src_id
+            if not other or other in seen_neighbors:
+                continue
+            seen_neighbors.add(other)
+            uniq_neighbors.append(other)
+        if len(uniq_neighbors) < threshold:
+            continue
+        preview_labels = []
+        for nid in uniq_neighbors[:3]:
+            n = node_by_id.get(nid, {})
+            preview_labels.append(str(n.get("display_label") or n.get("label") or nid))
+        aggregator_id = _aggregator_id(owner_id, node_kind, edge_type)
+        add_nodes.append(
+            {
+                "id": aggregator_id,
+                "type": "Aggregator",
+                "node_kind": "Aggregator",
+                "label": f"{len(uniq_neighbors)} {node_kind.lower()}",
+                "display_label": f"{len(uniq_neighbors)} {node_kind.lower()}",
+                "subtitle": "Click to expand",
+                "properties": {},
+                "aggregation_hints": {
+                    "aggregator_kind": f"{node_kind.lower()}_of_work",
+                    "count": len(uniq_neighbors),
+                    "preview_labels": preview_labels,
+                    "expand_endpoint": f"/v1/works/{work_id}/graph/expand?aggregator_id={aggregator_id}",
+                },
+            }
+        )
+        for edge in grouped_edges:
+            to_remove_edges.add(str(edge.get("id") or ""))
+        to_remove_nodes.update(uniq_neighbors)
+        add_edges.append(
+            {
+                "id": _stable_edge_id(owner_id, "AGGREGATED", aggregator_id, len(add_edges)),
+                "source": owner_id,
+                "target": aggregator_id,
+                "type": "AGGREGATED",
+                "display_type": f"{len(uniq_neighbors)} {node_kind.lower()} of Work",
+                "summary": f"{len(uniq_neighbors)} {node_kind.lower()} · click to expand",
+                "direction": "outgoing",
+            }
+        )
+    if not add_nodes:
+        return nodes, edges
+    kept_nodes = [n for n in nodes if str(n.get("id") or "") not in to_remove_nodes]
+    kept_edges = [e for e in edges if str(e.get("id") or "") not in to_remove_edges]
+    kept_node_ids = {str(n.get("id") or "") for n in kept_nodes}
+    kept_edges = [
+        e
+        for e in kept_edges
+        if str(e.get("source") or "") in kept_node_ids
+        and str(e.get("target") or "") in kept_node_ids
+    ]
+    return kept_nodes + add_nodes, kept_edges + add_edges
 
 
 def _append_neighbor_edge(
@@ -175,6 +278,7 @@ def _work_graph_neighborhood_payload(
     neighbor_limit: int = 200,
     depth: int = 1,
     prioritize: str | None = None,
+    view: str = "reader",
 ) -> dict[str, Any] | None:
     row = session.run(
         """
@@ -318,6 +422,8 @@ def _work_graph_neighborhood_payload(
     ]
     enrich_authorship_nodes(session, nodes)
     _enrich_edges_with_display(center_id, nodes, edges)
+    if str(view or "reader").strip().lower() != "raw":
+        nodes, edges = _apply_aggregators(work_id, nodes, edges, threshold=AGGREGATOR_THRESHOLD)
     truncated = bool(skipped_by_kind) or total_neighbors > hop1_lim
     expansions = ["increase_neighbor_limit"] if truncated else []
     if depth_req > effective_depth:
@@ -349,6 +455,7 @@ def work_graph_neighborhood(
     neighbor_limit: int = 200,
     depth: int = 1,
     prioritize: str | None = None,
+    view: str = "reader",
 ) -> dict[str, Any] | None:
     # Backward compatibility: older callers pass Settings instead of StoreRegistry.
     if not hasattr(stores, "neo4j"):
@@ -363,6 +470,7 @@ def work_graph_neighborhood(
                     neighbor_limit=neighbor_limit,
                     depth=depth,
                     prioritize=prioritize,
+                    view=view,
                 )
         finally:
             temp.close()
@@ -373,4 +481,66 @@ def work_graph_neighborhood(
             neighbor_limit=neighbor_limit,
             depth=depth,
             prioritize=prioritize,
+            view=view,
         )
+
+
+def expand_work_aggregator(
+    stores: StoreRegistry | Any,
+    work_id: str,
+    aggregator_id: str,
+    *,
+    limit: int = 50,
+) -> dict[str, Any] | None:
+    owner_id, node_kind, edge_type = parse_aggregator_id(aggregator_id)
+    payload = work_graph_neighborhood(
+        stores,
+        work_id,
+        neighbor_limit=max(200, limit * 4),
+        depth=1,
+        prioritize="Method,Dataset,Work,Author,Authorship,Institution,Venue",
+        view="raw",
+    )
+    if not payload:
+        return None
+    nodes = list(payload.get("nodes") or [])
+    edges = list(payload.get("edges") or [])
+    node_by_id = {str(n.get("id") or ""): n for n in nodes}
+    picked_nodes: list[dict[str, Any]] = []
+    picked_edges: list[dict[str, Any]] = []
+    for edge in edges:
+        src = str(edge.get("source") or "")
+        tgt = str(edge.get("target") or "")
+        rt = str(edge.get("type") or "").upper()
+        if rt != edge_type.upper():
+            continue
+        if src == owner_id:
+            other = tgt
+        elif tgt == owner_id:
+            other = src
+        else:
+            continue
+        node = node_by_id.get(other)
+        kind = str(node.get("node_kind") or node.get("type") or "").lower() if node else ""
+        if kind != node_kind.lower():
+            continue
+        picked_edges.append(edge)
+        if node:
+            picked_nodes.append(node)
+        if len(picked_nodes) >= max(1, int(limit)):
+            break
+    uniq_nodes = {owner_id: node_by_id.get(owner_id)}
+    for node in picked_nodes:
+        uniq_nodes[str(node.get("id") or "")] = node
+    final_nodes = [n for n in uniq_nodes.values() if n]
+    kept_ids = {str(n.get("id") or "") for n in final_nodes}
+    final_edges = [
+        e
+        for e in picked_edges
+        if str(e.get("source") or "") in kept_ids and str(e.get("target") or "") in kept_ids
+    ]
+    return {
+        "nodes": final_nodes,
+        "edges": final_edges,
+        "meta": {"expanded_aggregator_id": aggregator_id},
+    }

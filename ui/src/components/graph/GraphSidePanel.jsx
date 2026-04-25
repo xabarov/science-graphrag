@@ -16,6 +16,7 @@ export default function GraphSidePanel({
   onSelectNode,
   onSelectEdge,
   onExpandWorkspaceNeighbors,
+  onAggregatorExpand,
   expandWorkspaceNeighborsBusy,
   mode,
   width,
@@ -92,6 +93,7 @@ export default function GraphSidePanel({
           onSelectNode={onSelectNode}
           onSelectEdge={onSelectEdge}
           onExpandWorkspaceNeighbors={onExpandWorkspaceNeighbors}
+          onAggregatorExpand={onAggregatorExpand}
           expandWorkspaceNeighborsBusy={expandWorkspaceNeighborsBusy}
           mode={mode}
         />

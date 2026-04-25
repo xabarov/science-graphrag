@@ -84,6 +84,9 @@ class RetrievalAgent:
                 "tool_trace": [],
                 "budget_remaining": budget,
                 "metadata": {"agent_runtime": self._settings.agent_runtime},
+                "specialist_results": {},
+                "current_specialist": None,
+                "routing_log": [],
             }
             assert self._graph is not None
             final_state = self._graph.invoke(
@@ -91,7 +94,7 @@ class RetrievalAgent:
                 config={"recursion_limit": self._settings.agent_supervisor_recursion_limit},
             )
             messages = final_state.get("messages", [])
-            trace = collect_tool_trace(messages)
+            trace = collect_tool_trace(final_state)
             answer = ""
             for msg in reversed(messages):
                 if isinstance(msg, AIMessage) and not getattr(msg, "tool_calls", None):

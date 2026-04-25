@@ -10,7 +10,15 @@ from science_graphrag.domain.models import AuthorshipDraft, WorkDraft
 from science_graphrag.domain.semantic_models import SemanticExtractionV1
 from science_graphrag.storage.neo4j import reads, schema
 from science_graphrag.storage.neo4j.client import _Neo4jClient
-from science_graphrag.storage.neo4j.writes import claims, dedup, semantic, works, workspace
+from science_graphrag.storage.neo4j.writes import (
+    claims,
+    dedup,
+    institutions,
+    semantic,
+    venues,
+    works,
+    workspace,
+)
 
 if TYPE_CHECKING:
     from science_graphrag.ingestion.claims.models import ClaimDraft
@@ -184,6 +192,30 @@ class Neo4jGraphStore:
 
     def fetch_author_affiliation_hint(self, author_id: str) -> str:
         return reads.fetch_author_affiliation_hint(self._client, author_id)
+
+    def list_workspace_institutions(self, workspace_id: str) -> list[dict[str, Any]]:
+        return reads.list_workspace_institutions(self._client, workspace_id)
+
+    def list_workspace_venues(self, workspace_id: str) -> list[dict[str, Any]]:
+        return reads.list_workspace_venues(self._client, workspace_id)
+
+    def list_workspace_methods(self, workspace_id: str) -> list[dict[str, Any]]:
+        return reads.list_workspace_methods(self._client, workspace_id)
+
+    def list_workspace_datasets(self, workspace_id: str) -> list[dict[str, Any]]:
+        return reads.list_workspace_datasets(self._client, workspace_id)
+
+    def merge_institution_into_canonical(self, keep_id: str, drop_id: str) -> bool:
+        return institutions.merge_institution(self._client, keep_id, drop_id, keep_id)
+
+    def merge_venue_into_canonical(self, keep_id: str, drop_id: str) -> bool:
+        return venues.merge_venue(self._client, keep_id, drop_id, keep_id)
+
+    def add_method_alias(self, method_id: str, alias: str) -> bool:
+        return semantic.add_method_alias(self._client, method_id, alias)
+
+    def add_dataset_alias(self, dataset_id: str, alias: str) -> bool:
+        return semantic.add_dataset_alias(self._client, dataset_id, alias)
 
     def detach_delete_claims_for_work(self, work_id: str) -> None:
         claims.detach_delete_claims_for_work(self._client, work_id)

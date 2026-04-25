@@ -2,6 +2,15 @@
  * Canvas draw styles for science-graphrag graph MVP (node types + edge labels).
  */
 
+import AccountBalanceOutlinedIcon from "@mui/icons-material/AccountBalanceOutlined";
+import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
+import LinkOutlinedIcon from "@mui/icons-material/LinkOutlined";
+import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
+import OpenInNewOutlinedIcon from "@mui/icons-material/OpenInNewOutlined";
+import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
+import PsychologyOutlinedIcon from "@mui/icons-material/PsychologyOutlined";
+import StorageOutlinedIcon from "@mui/icons-material/StorageOutlined";
+
 /** @type {Record<string, { fill: string, stroke: string }>} */
 const NODE_TYPE_STYLES = {
   Work: { fill: "rgba(99, 102, 241, 0.22)", stroke: "rgba(129, 140, 248, 0.55)" },
@@ -16,10 +25,31 @@ const NODE_TYPE_STYLES = {
 const DEFAULT_NODE_STYLE = { fill: "rgba(255,255,255,0.08)", stroke: "rgba(255,255,255,0.2)" };
 
 /**
- * @param {unknown} nodeType
- * @param {{ selected?: boolean, hovered?: boolean }} [opts]
- * @returns {{ fill: string, stroke: string, lineWidth: number }}
+ * MUI icon component per graph node kind / type (toolbar, legend, chips).
+ * @type {Record<string, import("react").ComponentType<{ sx?: object }>>}
  */
+export const NODE_TYPE_ICON_MAP = {
+  Work: ArticleOutlinedIcon,
+  WorkInternal: ArticleOutlinedIcon,
+  WorkExternal: OpenInNewOutlinedIcon,
+  Author: PersonOutlinedIcon,
+  Authorship: LinkOutlinedIcon,
+  AuthorshipReification: LinkOutlinedIcon,
+  Method: PsychologyOutlinedIcon,
+  Dataset: StorageOutlinedIcon,
+  Venue: MenuBookOutlinedIcon,
+  Institution: AccountBalanceOutlinedIcon,
+};
+
+/**
+ * @param {unknown} nodeType
+ * @returns {import("react").ComponentType<{ sx?: object }> | null}
+ */
+export function getScienceGraphNodeTypeIcon(nodeType) {
+  const key = nodeType == null ? "" : String(nodeType).trim();
+  return NODE_TYPE_ICON_MAP[key] || null;
+}
+
 /**
  * MUI `sx` fragment for legend Chips so node type colors match the canvas (base, non-selected).
  * @param {unknown} nodeType
@@ -39,10 +69,18 @@ export function getScienceGraphLegendNodeChipSx(nodeType) {
 
 /**
  * @param {unknown} nodeType
- * @param {{ selected?: boolean, hovered?: boolean, workspaceMembership?: string }} [opts]
- * @returns {{ fill: string, stroke: string, lineWidth: number }}
+ * @param {{ selected?: boolean, hovered?: boolean, workspaceMembership?: string, nodeKind?: string }} [opts]
+ * @returns {{ fill: string, stroke: string, lineWidth: number, strokeDash?: number[] }}
  */
 export function getScienceGraphNodeStyle(nodeType, opts = {}) {
+  if (String(opts.nodeKind || "") === "Aggregator") {
+    return {
+      fill: "rgba(99, 102, 241, 0.12)",
+      stroke: "rgba(99, 102, 241, 0.6)",
+      lineWidth: 1.5,
+      strokeDash: [6, 3],
+    };
+  }
   const selected = Boolean(opts.selected);
   const hovered = Boolean(opts.hovered);
   const key = nodeType == null ? "" : String(nodeType).trim();

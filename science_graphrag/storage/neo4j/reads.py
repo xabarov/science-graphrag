@@ -273,3 +273,53 @@ def workspace_get(client: _Neo4jClient, workspace_id: str) -> dict[str, Any] | N
             "created_at": str(rec["created_at"] or ""),
             "work_ids": wids,
         }
+
+
+def list_workspace_institutions(client: _Neo4jClient, workspace_id: str) -> list[dict[str, Any]]:
+    q = """
+    MATCH (:Workspace {id: $ws})-[:CONTAINS]->(:Work)-[:HAS_AUTHORSHIP]->(:Authorship)-[:AFFILIATED_WITH]->(i:Institution)
+    RETURN DISTINCT i.id AS id,
+           coalesce(i.name, '') AS name,
+           coalesce(i.normalized_name, i.name, '') AS normalized_name,
+           coalesce(i.country, '') AS country,
+           coalesce(i.city, '') AS city
+    """
+    with client.session() as session:
+        return [dict(r) for r in session.run(q, ws=workspace_id)]
+
+
+def list_workspace_venues(client: _Neo4jClient, workspace_id: str) -> list[dict[str, Any]]:
+    q = """
+    MATCH (:Workspace {id: $ws})-[:CONTAINS]->(:Work)-[:PUBLISHED_IN]->(v:Venue)
+    RETURN DISTINCT v.id AS id,
+           coalesce(v.name, '') AS name,
+           coalesce(v.normalized_name, v.name, '') AS normalized_name,
+           coalesce(v.venue_type, '') AS venue_type
+    """
+    with client.session() as session:
+        return [dict(r) for r in session.run(q, ws=workspace_id)]
+
+
+def list_workspace_methods(client: _Neo4jClient, workspace_id: str) -> list[dict[str, Any]]:
+    q = """
+    MATCH (:Workspace {id: $ws})-[:CONTAINS]->(:Work)-[:USES_METHOD]->(m:Method)
+    RETURN DISTINCT m.id AS id,
+           coalesce(m.name, '') AS name,
+           coalesce(m.normalized_name, m.name, '') AS normalized_name,
+           coalesce(m.aliases, []) AS aliases,
+           coalesce(m.description_short, '') AS description_short
+    """
+    with client.session() as session:
+        return [dict(r) for r in session.run(q, ws=workspace_id)]
+
+
+def list_workspace_datasets(client: _Neo4jClient, workspace_id: str) -> list[dict[str, Any]]:
+    q = """
+    MATCH (:Workspace {id: $ws})-[:CONTAINS]->(:Work)-[:EVALUATED_ON]->(d:Dataset)
+    RETURN DISTINCT d.id AS id,
+           coalesce(d.name, '') AS name,
+           coalesce(d.normalized_name, d.name, '') AS normalized_name,
+           coalesce(d.aliases, []) AS aliases
+    """
+    with client.session() as session:
+        return [dict(r) for r in session.run(q, ws=workspace_id)]

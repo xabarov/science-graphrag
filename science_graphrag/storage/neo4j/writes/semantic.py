@@ -45,6 +45,44 @@ def sync_work_semantic_layer(
         session.execute_write(_sync_semantic_tx, work_id, extraction, confidence_threshold)
 
 
+def add_method_alias(client: _Neo4jClient, method_id: str, alias: str) -> bool:
+    alias_clean = str(alias or "").strip()
+    if not method_id or not alias_clean:
+        return False
+    with client.session() as session:
+        rec = session.run(
+            """
+            MATCH (n:Method {id: $id})
+            WITH n, coalesce(n.aliases, []) + [$alias] AS all_aliases
+            WITH n, reduce(acc = [], x IN all_aliases | CASE WHEN x = '' OR x IN acc THEN acc ELSE acc + x END) AS dedup_aliases
+            SET n.aliases = dedup_aliases
+            RETURN 1 AS ok
+            """,
+            id=method_id,
+            alias=alias_clean,
+        ).single()
+        return bool(rec)
+
+
+def add_dataset_alias(client: _Neo4jClient, dataset_id: str, alias: str) -> bool:
+    alias_clean = str(alias or "").strip()
+    if not dataset_id or not alias_clean:
+        return False
+    with client.session() as session:
+        rec = session.run(
+            """
+            MATCH (n:Dataset {id: $id})
+            WITH n, coalesce(n.aliases, []) + [$alias] AS all_aliases
+            WITH n, reduce(acc = [], x IN all_aliases | CASE WHEN x = '' OR x IN acc THEN acc ELSE acc + x END) AS dedup_aliases
+            SET n.aliases = dedup_aliases
+            RETURN 1 AS ok
+            """,
+            id=dataset_id,
+            alias=alias_clean,
+        ).single()
+        return bool(rec)
+
+
 def _sync_semantic_tx(
     tx,
     work_id: str,

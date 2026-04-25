@@ -294,7 +294,7 @@ export async function getWorkClaims(workId) {
 /**
  * GET /v1/works/{work_id}/graph
  * @param {string} workId
- * @param {{ neighborLimit?: number, depth?: number }} [options]
+ * @param {{ neighborLimit?: number, depth?: number, view?: "reader" | "raw" }} [options]
  */
 export async function getWorkGraph(workId, options = {}) {
   const id = encodeURIComponent(String(workId ?? "").trim());
@@ -310,6 +310,15 @@ export async function getWorkGraph(workId, options = {}) {
   if (options.prioritize != null && String(options.prioritize).trim()) {
     params.set("prioritize", String(options.prioritize).trim());
   }
+  if (options.view && (options.view === "reader" || options.view === "raw")) {
+    params.set("view", options.view);
+  }
   const q = params.toString();
   return apiClient.get(worksUrl(`/v1/works/${id}/graph${q ? `?${q}` : ""}`));
+}
+
+export async function expandAggregator(expandEndpoint) {
+  const endpoint = String(expandEndpoint || "").trim();
+  if (!endpoint) throw new Error("expand_endpoint_is_required");
+  return apiClient.get(buildApiUrl(endpoint));
 }

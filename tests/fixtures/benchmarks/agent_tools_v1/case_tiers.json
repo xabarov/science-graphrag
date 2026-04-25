@@ -10,5 +10,70 @@
     "agent_case_08",
     "agent_case_09",
     "agent_case_10"
-  ]
+  ],
+  "agent_tools_multiagent": [
+    "multiagent_01_who_cited_yolov1",
+    "multiagent_02_author_graph",
+    "multiagent_03_method_comparison"
+  ],
+  "tiers": {
+    "agent_tools_multiagent": {
+      "cases": [
+        {
+          "case_id": "multiagent_01_who_cited_yolov1",
+          "question": "Which papers in the workspace cite YOLOv1 and use Transformer-based methods?",
+          "workspace_id": null,
+          "expected_specialist_sequence": [
+            "retrieval_agent",
+            "graph_agent",
+            "writer_agent"
+          ],
+          "expected_tool_sequence": [
+            "idea_search",
+            "cypher_query",
+            "final_answer"
+          ],
+          "min_tool_call_correctness": 0.6,
+          "min_specialist_sequence_match": 0.5,
+          "min_answer_contains": [
+            "YOLOv1",
+            "Transformer"
+          ]
+        },
+        {
+          "case_id": "multiagent_02_author_graph",
+          "question": "Find all coauthors of the paper 'Attention is All You Need' in our corpus.",
+          "workspace_id": null,
+          "expected_specialist_sequence": [
+            "graph_agent",
+            "writer_agent"
+          ],
+          "expected_tool_sequence": [
+            "entity_search",
+            "edge_search",
+            "final_answer"
+          ],
+          "min_tool_call_correctness": 0.6,
+          "min_specialist_sequence_match": 0.5
+        },
+        {
+          "case_id": "multiagent_03_method_comparison",
+          "question": "Compare the methods used in the top 3 most-cited papers in the workspace.",
+          "workspace_id": null,
+          "expected_specialist_sequence": [
+            "graph_agent",
+            "retrieval_agent",
+            "writer_agent"
+          ],
+          "expected_tool_sequence": [
+            "cypher_query",
+            "idea_search",
+            "final_answer"
+          ],
+          "min_tool_call_correctness": 0.5,
+          "min_specialist_sequence_match": 0.5
+        }
+      ]
+    }
+  }
 }

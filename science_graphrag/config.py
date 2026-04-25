@@ -259,7 +259,7 @@ class Settings(BaseSettings):
         default=False,
         description="Enable Wave S idea-assist endpoint (/v1/agent/idea-assist).",
     )
-    agent_runtime: str = Field(default="retrieval_v1")
+    agent_runtime: str = Field(default="langgraph_supervisor_v1")
     agent_max_tool_calls: int = Field(default=8, ge=1, le=30)
     agent_step_timeout_seconds: float = Field(default=30.0, ge=1.0, le=180.0)
     agent_supervisor_recursion_limit: int = Field(default=32, ge=4, le=128)

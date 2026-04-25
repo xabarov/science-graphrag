@@ -12,6 +12,8 @@ import uvicorn
 from fastapi import Depends, FastAPI, Query
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from qdrant_client import QdrantClient
+
 from science_graphrag.api.admin_access import require_admin_if_configured
 from science_graphrag.api.agent import router as agent_router
 from science_graphrag.api.agent_v2 import router as agent_v2_router
@@ -23,6 +25,7 @@ from science_graphrag.api.deps import (
     get_stores,
     init_store_registry,
 )
+from science_graphrag.api.entity_dedup import router as entity_dedup_router
 from science_graphrag.api.idea_assist import router as idea_assist_router
 from science_graphrag.api.ingest.registry import _registry
 from science_graphrag.api.ingest_event_bus import BUS
@@ -35,6 +38,7 @@ from science_graphrag.api.workspace_graph import router as workspace_graph_route
 from science_graphrag.api.workspaces import router as workspaces_router
 from science_graphrag.config import get_settings
 from science_graphrag.observability.phoenix_tracer import init_tracer_provider
+from science_graphrag.storage.qdrant_store import ensure_entity_dedup_collections
 
 
 @asynccontextmanager
@@ -44,6 +48,9 @@ async def _app_lifespan(app: FastAPI):
     settings = get_settings()
     _registry(settings).bootstrap()
     app.state.stores = init_store_registry(settings)
+    ensure_entity_dedup_collections(
+        QdrantClient(url=settings.qdrant_url, check_compatibility=False),
+    )
     try:
         yield
     finally:
@@ -70,6 +77,7 @@ app.include_router(
     dependencies=[Depends(require_admin_if_configured)],
 )
 app.include_router(ask_sessions_router, prefix="/v1")
+app.include_router(entity_dedup_router, prefix="/v1")
 app.include_router(workspaces_router, prefix="/v1")
 app.include_router(workspace_graph_router)
 app.include_router(workspace_dedup_router, prefix="/v1/workspaces")

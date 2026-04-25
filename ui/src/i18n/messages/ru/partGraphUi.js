@@ -5,6 +5,16 @@ export default {
   "graph.workspacePanel.emptyHint":
     "Выберите статью или откройте граф рабочей области (параметр workspace_id).",
 
+  "graph.workspacePanel.ariaToggleDetails": "Показать или скрыть панель деталей",
+  "graph.workspacePanel.tooltipDetailsHide": "Скрыть панель деталей",
+  "graph.workspacePanel.tooltipDetailsShow": "Показать панель деталей",
+  "graph.workspacePanel.ariaToggleLegend": "Показать или скрыть легенду типов",
+  "graph.workspacePanel.tooltipLegendHide": "Скрыть легенду типов",
+  "graph.workspacePanel.tooltipLegendShow": "Показать легенду типов",
+  "graph.workspacePanel.ariaToggleDiagnostics": "Показать или скрыть диагностику",
+  "graph.workspacePanel.tooltipDiagnosticsHide": "Скрыть JSON диагностики",
+  "graph.workspacePanel.tooltipDiagnosticsShow": "Показать JSON диагностики",
+
   "graph.wsToolbar.title": "Граф рабочей области",
   "graph.wsToolbar.modeInner": "Внутренний",
   "graph.wsToolbar.modeUnion1hop": "Объединение +1",
@@ -15,6 +25,7 @@ export default {
   "graph.standaloneDepth.depth1Aria": "Окрестность в один шаг",
   "graph.standaloneDepth.depth2Aria": "Два шага по связям цитирования",
   "graph.wsToolbar.external": "Внешние",
+  "graph.wsToolbar.nodeTypesLabel": "Типы узлов",
   "graph.wsToolbar.statsWorks": "{{count}} стат.",
   "graph.wsToolbar.statsAuthors": "{{count}} авт.",
   "graph.wsToolbar.statsExtCites": "{{count}} внеш. цит.",

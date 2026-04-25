@@ -4,6 +4,7 @@ import {
   edgeTypeCanvasLabel,
   getScienceGraphLegendNodeChipSx,
   getScienceGraphNodeStyle,
+  getScienceGraphNodeTypeIcon,
   truncateCanvasLabel,
 } from "./graphCanvasStyle.js";
 
@@ -62,6 +63,17 @@ describe("truncateCanvasLabel", () => {
 describe("edgeTypeCanvasLabel", () => {
   it("passes through short types", () => {
     expect(edgeTypeCanvasLabel("CITES")).toBe("CITES");
+  });
+});
+
+describe("getScienceGraphNodeTypeIcon", () => {
+  it("returns a renderable component for known node kinds", () => {
+    const workIcon = getScienceGraphNodeTypeIcon("Work");
+    const internalIcon = getScienceGraphNodeTypeIcon("WorkInternal");
+    expect(workIcon).toBeTruthy();
+    expect(internalIcon).toBeTruthy();
+    expect(["function", "object"]).toContain(typeof workIcon);
+    expect(getScienceGraphNodeTypeIcon("UnknownX")).toBeNull();
   });
 });
 

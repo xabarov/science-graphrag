@@ -13,6 +13,7 @@ from science_graphrag.api.graph_display import (
 ALLOWED_NODE_TYPES = frozenset(
     {"Work", "Author", "Method", "Dataset", "Venue", "Institution", "Authorship"}
 )
+AGGREGATOR_THRESHOLD = 8
 
 
 def merge_graph_payloads(payloads: list[dict[str, Any]]) -> dict[str, Any]:
@@ -264,3 +265,94 @@ def merge_nodes_edges_lists(
     for edge in extra_edges:
         eb[edge_key(str(edge["source"]), str(edge["type"]), str(edge["target"]))] = edge
     return list(nb.values()), list(eb.values())
+
+
+def apply_workspace_aggregators(
+    workspace_id: str,
+    nodes: list[dict[str, Any]],
+    edges: list[dict[str, Any]],
+    *,
+    threshold: int = AGGREGATOR_THRESHOLD,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    node_by_id = {str(n.get("id") or ""): n for n in nodes}
+    groups: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
+    for edge in edges:
+        src = str(edge.get("source") or "")
+        tgt = str(edge.get("target") or "")
+        edge_type = str(edge.get("type") or "")
+        for owner_id, other_id in ((src, tgt), (tgt, src)):
+            owner = node_by_id.get(owner_id)
+            other = node_by_id.get(other_id)
+            if not owner or not other or str(owner.get("type") or "") != "Work":
+                continue
+            other_kind = str(other.get("node_kind") or other.get("type") or "Node")
+            groups.setdefault((owner_id, other_kind, edge_type), []).append(edge)
+    remove_nodes: set[str] = set()
+    remove_edges: set[str] = set()
+    add_nodes: list[dict[str, Any]] = []
+    add_edges: list[dict[str, Any]] = []
+    for (owner_id, kind, edge_type), grouped_edges in groups.items():
+        uniq_neighbors: list[str] = []
+        seen: set[str] = set()
+        for edge in grouped_edges:
+            src = str(edge.get("source") or "")
+            tgt = str(edge.get("target") or "")
+            other = tgt if src == owner_id else src
+            if not other or other in seen:
+                continue
+            seen.add(other)
+            uniq_neighbors.append(other)
+        if len(uniq_neighbors) < threshold:
+            continue
+        agg_id = f"agg:{owner_id.replace(':', '%3A')}:{kind.lower()}:{edge_type.upper()}"
+        preview = [
+            str(
+                node_by_id.get(nid, {}).get("display_label")
+                or node_by_id.get(nid, {}).get("label")
+                or nid
+            )
+            for nid in uniq_neighbors[:3]
+        ]
+        add_nodes.append(
+            {
+                "id": agg_id,
+                "type": "Aggregator",
+                "node_kind": "Aggregator",
+                "label": f"{len(uniq_neighbors)} {kind.lower()}",
+                "display_label": f"{len(uniq_neighbors)} {kind.lower()}",
+                "subtitle": "Click to expand",
+                "properties": {},
+                "aggregation_hints": {
+                    "aggregator_kind": f"{kind.lower()}_of_work",
+                    "count": len(uniq_neighbors),
+                    "preview_labels": preview,
+                    "expand_endpoint": f"/v1/workspaces/{workspace_id}/graph/expand?aggregator_id={agg_id}",
+                },
+            }
+        )
+        remove_nodes.update(uniq_neighbors)
+        for edge in grouped_edges:
+            remove_edges.add(str(edge.get("id") or ""))
+        add_edges.append(
+            {
+                "id": "e_"
+                + hashlib.sha256(f"{owner_id}\0AGGREGATED\0{agg_id}".encode()).hexdigest()[:22],
+                "source": owner_id,
+                "target": agg_id,
+                "type": "AGGREGATED",
+                "display_type": f"{len(uniq_neighbors)} {kind.lower()} of Work",
+                "summary": f"{len(uniq_neighbors)} {kind.lower()} · click to expand",
+                "direction": "outgoing",
+            }
+        )
+    if not add_nodes:
+        return nodes, edges
+    kept_nodes = [n for n in nodes if str(n.get("id") or "") not in remove_nodes]
+    kept_edges = [e for e in edges if str(e.get("id") or "") not in remove_edges]
+    kept_ids = {str(n.get("id") or "") for n in kept_nodes}
+    kept_edges = [
+        e
+        for e in kept_edges
+        if str(e.get("source") or "") in kept_ids and str(e.get("target") or "") in kept_ids
+    ]
+    return kept_nodes + add_nodes, kept_edges + add_edges

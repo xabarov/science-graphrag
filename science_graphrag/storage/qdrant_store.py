@@ -20,6 +20,25 @@ if TYPE_CHECKING:
 
 from science_graphrag.ingestion.chunking import infer_chunk_kind_from_section_path
 
+ENTITY_COLLECTIONS: dict[str, int] = {
+    "institutions": 384,
+    "venues": 384,
+    "methods": 384,
+    "datasets": 384,
+}
+
+
+def ensure_entity_dedup_collections(client: QdrantClient) -> None:
+    """Create entity dedup collections if they do not exist."""
+    existing = {c.name for c in client.get_collections().collections}
+    for name, dim in ENTITY_COLLECTIONS.items():
+        if name in existing:
+            continue
+        client.create_collection(
+            collection_name=name,
+            vectors_config=VectorParams(size=dim, distance=Distance.COSINE),
+        )
+
 
 class QdrantChunkStore:
     def __init__(self, url: str, collection: str, vector_dim: int) -> None:

@@ -1,21 +1,126 @@
-"""LangGraph ReAct supervisor graph (single-specialist, Wave Y2)."""
+"""LangGraph multi-agent supervisor graph (Wave Y4)."""
 
 from __future__ import annotations
 
 from typing import Literal
 
+from langchain_core.messages import HumanMessage
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode
 
+from science_graphrag.agent.graph.nodes.graph_agent import SPECIALIST_NAME as GRAPH_SPECIALIST
+from science_graphrag.agent.graph.nodes.graph_agent import (
+    build_graph_agent_node,
+)
+from science_graphrag.agent.graph.nodes.retrieval_agent import (
+    SPECIALIST_NAME as RETRIEVAL_SPECIALIST,
+)
+from science_graphrag.agent.graph.nodes.retrieval_agent import (
+    build_retrieval_agent_node,
+)
+from science_graphrag.agent.graph.nodes.writer_agent import SPECIALIST_NAME as WRITER_SPECIALIST
+from science_graphrag.agent.graph.nodes.writer_agent import (
+    build_writer_agent_node,
+)
 from science_graphrag.agent.graph.state import AgentState
 from science_graphrag.agent.llm.chat import build_chat_model
 from science_graphrag.agent.tools import build_tool_registry
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
 
+ROUTE_FINISH = "finish"
+ROUTING_PROMPT = """You are a supervisor for scholarly research agents.
+Available specialists:
+- retrieval_agent: semantic search in papers and workspace summaries
+- graph_agent: structural queries, entity lookup and graph traversal
+- writer_agent: synthesize final answer with citations
+
+Given the user question and accumulated specialist_results, decide the next specialist.
+Respond with exactly one token:
+retrieval_agent | graph_agent | writer_agent | FINISH
+"""
+
+
+def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
+    """Build and compile Wave Y4 multi-agent supervisor graph."""
+    llm = build_chat_model(settings)
+    retrieval_node = build_retrieval_agent_node(stores, settings)
+    graph_node = build_graph_agent_node(stores, settings)
+    writer_node = build_writer_agent_node(stores, settings)
+
+    def supervisor_node(state: AgentState) -> dict:
+        budget = int(state.get("budget_remaining", settings.agent_max_tool_calls))
+        if budget <= 0:
+            return {
+                "current_specialist": WRITER_SPECIALIST,
+                "routing_log": [
+                    *list(state.get("routing_log") or []),
+                    {"from": "supervisor", "to": WRITER_SPECIALIST, "reason": "budget_exhausted"},
+                ],
+            }
+        specialist_context = str(state.get("specialist_results") or {})
+        response = llm.invoke(
+            [
+                HumanMessage(content=ROUTING_PROMPT),
+                HumanMessage(content=f"specialist_results={specialist_context[:12000]}"),
+                *list(state.get("messages") or []),
+            ]
+        )
+        choice = str(response.content or "").strip().lower()
+        if choice not in {RETRIEVAL_SPECIALIST, GRAPH_SPECIALIST, WRITER_SPECIALIST, ROUTE_FINISH}:
+            choice = RETRIEVAL_SPECIALIST
+        return {
+            "current_specialist": choice,
+            "routing_log": [
+                *list(state.get("routing_log") or []),
+                {"from": "supervisor", "to": choice, "budget_left": budget},
+            ],
+        }
+
+    def route_to_specialist(
+        state: AgentState,
+    ) -> Literal["retrieval_agent", "graph_agent", "writer_agent", "__end__"]:
+        specialist = str(state.get("current_specialist") or WRITER_SPECIALIST)
+        if specialist == ROUTE_FINISH:
+            return END
+        if specialist in {RETRIEVAL_SPECIALIST, GRAPH_SPECIALIST, WRITER_SPECIALIST}:
+            return specialist
+        return WRITER_SPECIALIST
+
+    graph = StateGraph(AgentState)
+    graph.add_node("supervisor", supervisor_node)
+    graph.add_node(RETRIEVAL_SPECIALIST, retrieval_node)
+    graph.add_node(GRAPH_SPECIALIST, graph_node)
+    graph.add_node(WRITER_SPECIALIST, writer_node)
+    graph.set_entry_point("supervisor")
+    graph.add_conditional_edges(
+        "supervisor",
+        route_to_specialist,
+        {
+            RETRIEVAL_SPECIALIST: RETRIEVAL_SPECIALIST,
+            GRAPH_SPECIALIST: GRAPH_SPECIALIST,
+            WRITER_SPECIALIST: WRITER_SPECIALIST,
+            END: END,
+        },
+    )
+    graph.add_edge(RETRIEVAL_SPECIALIST, "supervisor")
+    graph.add_edge(GRAPH_SPECIALIST, "supervisor")
+    graph.add_edge(WRITER_SPECIALIST, END)
+    return graph.compile()
+
 
 def build_retrieval_graph(stores: StoreRegistry, settings: Settings):
-    """Build and compile the single-agent ReAct StateGraph."""
+    """Build retrieval graph alias with runtime switch."""
+    if settings.agent_runtime == "langgraph_supervisor_v1":
+        return build_supervisor_graph(stores, settings)
+    if settings.agent_runtime == "retrieval_v1":
+        return _build_single_agent_graph(stores, settings)
+    # Any non-legacy runtime defaults to the supervisor graph.
+    return build_supervisor_graph(stores, settings)
+
+
+def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
+    """Wave Y2 fallback: single-agent ReAct graph."""
     tool_registry = build_tool_registry(stores)
     llm = build_chat_model(settings).bind_tools(tool_registry)
 

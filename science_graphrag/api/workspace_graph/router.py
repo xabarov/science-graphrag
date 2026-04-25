@@ -30,6 +30,7 @@ def get_workspace_graph(
         description="Comma-separated: Work,Author,Method,Dataset,Venue,Institution,Authorship",
     ),
     prioritize: str | None = Query(default="Method,Dataset,Work"),
+    view: str = Query(default="reader", description="reader | raw"),
     neighbor_limit: int = Query(default=200, ge=1, le=2000),
     settings: Settings = Depends(get_settings),
     stores: StoreRegistry = Depends(get_stores),
@@ -45,6 +46,7 @@ def get_workspace_graph(
         neighbor_limit=neighbor_limit,
         external_min_internal_citers=external_min_internal_citers,
         prioritize=prioritize,
+        view=view,
     )
     if graph is None:
         raise HTTPException(status_code=404, detail="workspace_not_found")
@@ -82,3 +84,69 @@ def get_workspace_graph_neighbors(
     if graph is None:
         raise HTTPException(status_code=404, detail="workspace_not_found")
     return graph
+
+
+@router.get("/{workspace_id}/graph/expand")
+def expand_workspace_aggregator(
+    workspace_id: str,
+    aggregator_id: str = Query(..., min_length=6),
+    limit: int = Query(default=50, ge=1, le=300),
+    stores: StoreRegistry = Depends(get_stores),
+) -> dict[str, Any]:
+    raw = str(aggregator_id or "").strip()
+    if not raw.startswith("agg:"):
+        raise HTTPException(status_code=400, detail="invalid_aggregator_id")
+    try:
+        _, owner_encoded, node_kind, edge_type = raw.split(":", 3)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="invalid_aggregator_id") from exc
+    owner_id = owner_encoded.replace("%3A", ":")
+    payload = workspace_graph_neighbors(
+        stores.neo4j,
+        workspace_id,
+        owner_id,
+        depth=2,
+        limit=max(80, int(limit) * 3),
+        prioritize="Method,Dataset,Work,Author,Authorship,Institution,Venue",
+    )
+    if payload is None:
+        raise HTTPException(status_code=404, detail="workspace_not_found")
+    nodes = list(payload.get("nodes") or [])
+    edges = list(payload.get("edges") or [])
+    node_by_id = {str(n.get("id") or ""): n for n in nodes}
+    picked_nodes = []
+    picked_edges = []
+    for edge in edges:
+        src = str(edge.get("source") or "")
+        tgt = str(edge.get("target") or "")
+        rt = str(edge.get("type") or "").upper()
+        if rt != edge_type.upper():
+            continue
+        other = tgt if src == owner_id else src if tgt == owner_id else ""
+        if not other:
+            continue
+        node = node_by_id.get(other)
+        if not node:
+            continue
+        kind = str(node.get("node_kind") or node.get("type") or "").lower()
+        if kind != node_kind.lower():
+            continue
+        picked_edges.append(edge)
+        picked_nodes.append(node)
+        if len(picked_nodes) >= int(limit):
+            break
+    uniq_nodes = {owner_id: node_by_id.get(owner_id)}
+    for node in picked_nodes:
+        uniq_nodes[str(node.get("id") or "")] = node
+    out_nodes = [n for n in uniq_nodes.values() if n]
+    kept_ids = {str(n.get("id") or "") for n in out_nodes}
+    out_edges = [
+        e
+        for e in picked_edges
+        if str(e.get("source") or "") in kept_ids and str(e.get("target") or "") in kept_ids
+    ]
+    return {
+        "nodes": out_nodes,
+        "edges": out_edges,
+        "meta": {"expanded_aggregator_id": aggregator_id},
+    }

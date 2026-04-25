@@ -339,11 +339,15 @@
   - Agent 4: H-AskV2SSE — `useAgentStream.js`; `useAskSubmit.js` SSE path; `AskAnswerPanel` stream events. ✅
 
   > **Review 2026-04-25:** 406 passed, 2 skipped, 0 failures; pylint 9.34–9.50/10; isort/black/ESLint чисто. Исправлен дефект GR2: `skipped_by_kind` вычислялся только из cap-overflow, но не учитывал узлы, которые не были запрошены из-за priority-ограничений — добавлен запрос kind-distribution и пересчёт `skipped_by_kind = available − fetched`. Все структурные и smoke-проверки ✓.
-- **Раунд 5 (Wave T + GR3 + Y4 + G-StageExtractionSplit) — промпты: [`round5-agent-prompts-2026-04-25.md`](round5-agent-prompts-2026-04-25.md):**
+- **Раунд 5 (Wave T + GR3 + Y4 + G-StageExtractionSplit) ✅ DONE 2026-04-25 — промпты: [`round5-agent-prompts-2026-04-25.md`](round5-agent-prompts-2026-04-25.md):**
   - Agent 1: Wave T backend (entity dedup Institution/Venue/Method/Dataset + ADR 019) — требует G-Neo4jSplit ✅.
-  - Agent 2: Wave GR3 backend + frontend (H-GraphCanvasMvpSplit → aggregator → expand endpoint) — последовательно внутри агента.
-  - Agent 3: Wave Y4 backend (multi-agent supervisor: retrieval/graph/writer specialists + ADR 020).
-  - Agent 4: G-StageExtractionSplit (ingestion/llm → prompts/ + heuristics/ + executor + orchestrator).
+  - Agent 2: Wave GR3 backend + frontend (H-GraphCanvasMvpSplit → aggregator → expand endpoint) — последовательно внутри агента ✅.
+  - Agent 3: Wave Y4 backend (multi-agent supervisor: retrieval/graph/writer specialists + ADR 020) ✅.
+  - Agent 4: G-StageExtractionSplit (ingestion/llm → prompts/ + heuristics/ + executor + orchestrator) ✅.
+
+  > **Review 2026-04-25:** 421 passed, 2 skipped, 0 stable failures; pylint 9.03/10; ESLint чисто, vitest 135 passed.
+  > Дефект D1 (`test_build_agent_and_run_smoke` flaky — реальный LLM в smoke тесте) исправлен: fake LLM через `monkeypatch`.
+  > isort/black нарушения в `ingest_jobs.py` и `idea_workflow.py` — pre-existing, зафиксированы в бэклоге.
 
 > При каждом раунде проверять матрицу §6: если задача в строке/колонке имеет ⛔/⚠️ с другой задачей этого же раунда — переносить в следующий раунд.
 

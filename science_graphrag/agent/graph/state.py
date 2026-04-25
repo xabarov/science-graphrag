@@ -15,3 +15,6 @@ class AgentState(TypedDict):
     tool_trace: list[dict]
     budget_remaining: int
     metadata: dict
+    specialist_results: dict[str, list[dict]]
+    current_specialist: str | None
+    routing_log: list[dict]

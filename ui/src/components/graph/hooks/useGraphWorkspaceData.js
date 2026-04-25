@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 
-import { formatResearchApiError } from "../../../services/researchApi.js";
+import { expandAggregator, formatResearchApiError, getWorkGraph } from "../../../services/researchApi.js";
 import {
   getWorkspaceGraph,
   getWorkspaceGraphNeighbors,
   getWorkspaceGraphStats,
 } from "../../../utils/workspaceStore.js";
-import { fetchWorkGraphNormalized } from "../graphAdapter.js";
 import { normalizeGraphPayload } from "../graphViewState.js";
 
 function mergeWorkspaceRawGraph(base, extra) {
@@ -60,6 +59,7 @@ function readWsGraphOptsFromLs(workspaceId) {
 
 export function useGraphWorkspaceData(workspaceId, workId, options = {}) {
   const wsId = String(workspaceId || "").trim();
+  const workIdNorm = String(workId || "").trim();
   const [graph, setGraph] = useState(() => normalizeGraphPayload(null));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -96,7 +96,7 @@ export function useGraphWorkspaceData(workspaceId, workId, options = {}) {
 
   useEffect(() => {
     const ws = String(workspaceId || "").trim();
-    const w = String(workId || "").trim();
+    const w = workIdNorm;
     if (!ws && !w) {
       setGraph(normalizeGraphPayload(null));
       setWorkspaceGraphRaw(null);
@@ -122,9 +122,12 @@ export function useGraphWorkspaceData(workspaceId, workId, options = {}) {
           setWorkspaceGraphRaw(raw);
           normalized = normalizeGraphPayload(raw);
         } else {
-          setWorkspaceGraphRaw(null);
+          setNeighborCache(new Set());
           const depth = options.standaloneWorkGraphDepth === 2 ? 2 : 1;
-          normalized = await fetchWorkGraphNormalized(w, { depth });
+          const raw = await getWorkGraph(w, { depth, view: "reader" });
+          if (cancelled) return;
+          setWorkspaceGraphRaw(raw.data);
+          normalized = normalizeGraphPayload(raw.data);
         }
         if (!cancelled) setGraph(normalized);
       } catch (err) {
@@ -139,7 +142,7 @@ export function useGraphWorkspaceData(workspaceId, workId, options = {}) {
     return () => {
       cancelled = true;
     };
-  }, [workId, workspaceId, wsGraphOpts, options.standaloneWorkGraphDepth]);
+  }, [workIdNorm, workspaceId, wsGraphOpts, options.standaloneWorkGraphDepth]);
 
   const fetchNeighbors = useCallback(
     async (nodeId) => {
@@ -161,6 +164,25 @@ export function useGraphWorkspaceData(workspaceId, workId, options = {}) {
     [wsId, workspaceGraphRaw, neighborCache],
   );
 
+  const expandAggregatorNode = useCallback(
+    async (expandEndpoint) => {
+      const endpoint = String(expandEndpoint || "").trim();
+      if (!endpoint || !workspaceGraphRaw) return;
+      setExpandNeighborsBusy(true);
+      try {
+        const extra = await expandAggregator(endpoint);
+        const merged = mergeWorkspaceRawGraph(workspaceGraphRaw, extra.data || {});
+        setWorkspaceGraphRaw(merged);
+        setGraph(normalizeGraphPayload(merged));
+      } catch (err) {
+        setError(formatResearchApiError(err));
+      } finally {
+        setExpandNeighborsBusy(false);
+      }
+    },
+    [workspaceGraphRaw],
+  );
+
   return {
     wsId,
     graph,
@@ -171,5 +193,6 @@ export function useGraphWorkspaceData(workspaceId, workId, options = {}) {
     wsGraphStats,
     expandNeighborsBusy,
     fetchNeighbors,
+    expandAggregatorNode,
   };
 }
