@@ -49,7 +49,6 @@ class IngestJobRegistry:
             if self._bootstrapped:
                 return
             init_db(self._engine)
-            self.mark_stale_running_jobs_failed()
             self._bootstrapped = True
 
     @staticmethod
@@ -224,6 +223,26 @@ class IngestJobRegistry:
                         select(IngestJobRecordOrm)
                         .where(IngestJobRecordOrm.workspace_id == workspace_id)
                         .order_by(IngestJobRecordOrm.created_at.desc())
+                    )
+                    .scalars()
+                    .all()
+                )
+                return [
+                    self._to_dataclass(row, stages=self._load_job_stages(session, row.job_id))
+                    for row in rows
+                ]
+
+    def list_stale_queued_jobs(self, *, before: datetime) -> list[IngestJobRecord]:
+        with self.lock:
+            with self._session_factory() as session:
+                rows = (
+                    session.execute(
+                        select(IngestJobRecordOrm)
+                        .where(
+                            IngestJobRecordOrm.status == "queued",
+                            IngestJobRecordOrm.created_at < before,
+                        )
+                        .order_by(IngestJobRecordOrm.created_at.asc())
                     )
                     .scalars()
                     .all()

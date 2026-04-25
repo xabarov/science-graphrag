@@ -60,6 +60,7 @@ class Settings(BaseSettings):
     neo4j_user: str = Field(default="neo4j")
     neo4j_password: str = Field(default="sciencegraphrag")
     qdrant_url: str = Field(default="http://localhost:16333")
+    redis_url: str = Field(default="redis://localhost:6379/0")
     qdrant_collection: str = Field(default="chunks")
     openalex_mailto: str = Field(default="dev@localhost")
     ror_lookup_enabled: bool = Field(
@@ -261,6 +262,9 @@ class Settings(BaseSettings):
     agent_runtime: str = Field(default="retrieval_v1")
     agent_max_tool_calls: int = Field(default=8, ge=1, le=30)
     agent_step_timeout_seconds: float = Field(default=30.0, ge=1.0, le=180.0)
+    agent_supervisor_recursion_limit: int = Field(default=32, ge=4, le=128)
+    agent_chat_temperature: float = Field(default=0.0, ge=0.0, le=1.0)
+    agent_chat_max_tokens: int = Field(default=1024, ge=64, le=8192)
 
     gds_enabled: bool = Field(
         default=False,
@@ -296,6 +300,7 @@ class Settings(BaseSettings):
                 ("neo4j_uri", "SCIENCE_GRAPHRAG_NEO4J_URI"),
                 ("qdrant_url", "SCIENCE_GRAPHRAG_QDRANT_URL"),
                 ("database_url", "SCIENCE_GRAPHRAG_DATABASE_URL"),
+                ("redis_url", "SCIENCE_GRAPHRAG_REDIS_URL"),
             ):
                 val = os.getenv(envar)
                 if val:

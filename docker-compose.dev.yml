@@ -49,6 +49,19 @@ services:
       retries: 8
       start_period: 10s
 
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"]
+    ports:
+      - "16379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+
   phoenix:
     # Override in `.env` for deterministic builds, e.g.:
     # SCIENCE_GRAPHRAG_PHOENIX_IMAGE=arizephoenix/phoenix@sha256:<digest>
@@ -104,6 +117,7 @@ services:
       SCIENCE_GRAPHRAG_NEO4J_USER: ${SCIENCE_GRAPHRAG_NEO4J_USER:-neo4j}
       SCIENCE_GRAPHRAG_NEO4J_PASSWORD: ${SCIENCE_GRAPHRAG_NEO4J_PASSWORD:-change-me}
       SCIENCE_GRAPHRAG_QDRANT_URL: http://qdrant:6333
+      SCIENCE_GRAPHRAG_REDIS_URL: redis://redis:6379/0
       SCIENCE_GRAPHRAG_BLOB_ROOT: /data/blobs
       SCIENCE_GRAPHRAG_ARTIFACT_ROOT: /data/artifacts
       PHOENIX_COLLECTOR_ENDPOINT: http://phoenix:6006/v1/traces
@@ -117,6 +131,8 @@ services:
       neo4j:
         condition: service_healthy
       qdrant:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test:
@@ -183,9 +199,44 @@ services:
       retries: 3
       start_period: 10s
 
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /app
+    command: ["python", "-m", "science_graphrag.worker"]
+    env_file:
+      - .env
+    environment:
+      PYTHONPATH: /app
+      SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV: "1"
+      SCIENCE_GRAPHRAG_DATABASE_URL: ${SCIENCE_GRAPHRAG_DATABASE_URL_DOCKER:-postgresql+psycopg://${POSTGRES_USER:-science}:${POSTGRES_PASSWORD:-change-me}@postgres:5432/${POSTGRES_DB:-science_graphrag}}
+      SCIENCE_GRAPHRAG_NEO4J_URI: bolt://neo4j:7687
+      SCIENCE_GRAPHRAG_NEO4J_USER: ${SCIENCE_GRAPHRAG_NEO4J_USER:-neo4j}
+      SCIENCE_GRAPHRAG_NEO4J_PASSWORD: ${SCIENCE_GRAPHRAG_NEO4J_PASSWORD:-change-me}
+      SCIENCE_GRAPHRAG_QDRANT_URL: http://qdrant:6333
+      SCIENCE_GRAPHRAG_REDIS_URL: redis://redis:6379/0
+      SCIENCE_GRAPHRAG_BLOB_ROOT: /data/blobs
+      SCIENCE_GRAPHRAG_ARTIFACT_ROOT: /data/artifacts
+      PHOENIX_COLLECTOR_ENDPOINT: http://phoenix:6006/v1/traces
+    volumes:
+      - .:/app
+      - ./data/blobs:/data/blobs
+      - ./data/artifacts:/data/artifacts
+    depends_on:
+      postgres:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
 volumes:
   neo4j_data:
   pg_data:
   qdrant_data:
   phoenix_data:
+  redis_data:
   ui_node_modules:

@@ -46,7 +46,7 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 - **Acceptance:** graph payload includes stable counter properties enabling weighted radius/ranking without extra query passes.
 - **Raised:** 2026-04-25
 
-### [PARTIAL] Ingest pipeline async-redesign (Wave U–W)
+### [DONE] Ingest pipeline async-redesign (Wave U–W)
 
 - **Area:** `science_graphrag/api/ingest_jobs.py`, `science_graphrag/ingestion/pipeline.py`, `ui/src/hooks/usePollJob.js`, `docker/nginx-web.conf`, `docker-compose.yml`
 - **Issue:** ingest исполняется `threading.Thread` внутри API → рестарт убивает работу; UI поллит `GET /v1/ingest/jobs/{id}` каждые 2 с → access-лог зашумлён; пайплайн не размечен на стадии → видимость нулевая (`message: "Running pipeline (Neo4j / vectors / SQL)…"` минутами).
@@ -57,6 +57,7 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 - **Acceptance:** см. чеклисты Wave U/V/W в роадмапе. Закрывается тремя независимыми проходами; до Wave W можно держать `[PARTIAL]` после прохождения U или V.
 - **Raised:** 2026-04-25
 - **Note (Wave U done):** 2026-04-25 — stage timeline, OTel stage spans, `IngestStageStepper`, и filtering polling access-log доставлены; Wave V/W остаются открытыми.
+- **Note (done Wave W):** 2026-04-25 — добавлены `redis` + `worker` в compose; создан пакет `science_graphrag/worker/` с `ingest_document_actor`; `IngestEventBus` переведён на Redis pub/sub для live-stream; `threading.Thread` удалён из API ingest-dispatch; принят ADR `018-ingest-worker-redis.md`; добавлена спецификация `docs/specs/ingest-worker-v1.md`; добавлен startup compensation sweep для stale queued jobs.
 
 ### [OPEN] Split idea-assist workflow orchestration (Wave S follow-up)
 - **Area:** `science_graphrag/agent/idea_workflow.py`
@@ -74,13 +75,16 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 - **Synergy:** разблокирует **Wave GR2/GR3/GR4** (агрегаторы, `view=reader`, prioritized LIMIT) — каждой волне нужно отдельно править маленькие модули вместо god-файла.
 - **Raised:** 2026-04-25
 
-### [OPEN] Split `storage/neo4j_store.py` (1022 lines) by domain or layer
+### [DONE] Split `storage/neo4j_store.py` (1022 lines) by domain or layer
 - **Area:** `science_graphrag/storage/neo4j_store.py`
 - **Issue:** `Neo4jGraphStore` совмещает schema/init, write-операции (works/authorships/semantic/claims/workspace), reads, merge и wipe; сильная связность всех ingest-стадий и API-роутеров.
 - **Proposal:** разнести на пакет `storage/neo4j/`: `client.py` (driver + sessions), `schema.py` (constraints/indexes), `writes/{works,authorships,semantic,claims,workspace}.py`, `reads.py`. Сохранить публичный класс `Neo4jGraphStore` как фасад с прежним API.
 - **Acceptance:** ни один модуль > ≈400 строк; интеграционные тесты `tests/integration/test_full_ingest_integration.py` и юнит-тесты Neo4j зелёные; импорты из `api/*` и `ingestion/*` не меняются.
 - **Synergy:** **Wave GR5** (denormalized counters), **Wave Q** (Neo4j vector index, fulltext indexes, миграции) — независимые модули проще тестировать; **Wave T** (entity dedup) добавляет writes/{authors,institutions,...} без расширения god-файла.
 - **Raised:** 2026-04-25
+- **Note (done):** 2026-04-25 — разнесено на `storage/neo4j/{client,schema,reads,facade}.py` и
+  `storage/neo4j/writes/{works,semantic,claims,dedup,workspace}.py`; `Neo4jGraphStore` оставлен
+  фасадом; backward-compat shim сохранен в `storage/neo4j_store.py`.
 
 ### [DONE] Refactor `ingestion/pipeline.py` (976 lines) into stages-with-context facade
 - **Area:** `science_graphrag/ingestion/pipeline.py`, `science_graphrag/ingestion/stages/`, `science_graphrag/ingestion/stage_context.py`
@@ -235,3 +239,6 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 - **Acceptance:** Restart API → run list/history still lists completed runs from disk; documented in Phase 6 bridge backlog.
 - **Raised:** 2026-04-06
 - **Note (done):** 2026-04-19 — backlog row closed; optional future work is DB-backed store if file volume becomes a bottleneck.
+
+### [DONE] Wave Y2: LangGraph single-agent ReAct behind v1 endpoint + X2 Phoenix
+- **Note (done):** 2026-04-25 — создан `agent/graph/{state,supervisor,tracing}.py`; `agent/llm/chat.py`; 6 tools переведены на `langchain_core.tools` + `build_tool_registry`; `runtime.py` обертка вокруг LangGraph `graph.invoke`; legacy fallback в `runtime_legacy.py`; `chain_span("agent.query")` + `traced_tool_span`/`embeddings_span` на `idea_search`; добавлены `tests/agent/{test_tools_registry,test_graph_smoke}.py`; v1 endpoint сохранен.

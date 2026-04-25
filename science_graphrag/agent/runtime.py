@@ -3,18 +3,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from science_graphrag.agent.tools import (
-    CypherQueryTool,
-    EdgeSearchTool,
-    EntitySearchTool,
-    FinalAnswerTool,
-    IdeaSearchTool,
-    SummarizeWorkspaceTool,
-)
+from langchain_core.messages import AIMessage, HumanMessage
+
+from science_graphrag.agent.graph.supervisor import build_retrieval_graph
+from science_graphrag.agent.graph.tracing import collect_tool_trace
 from science_graphrag.agent.trace import ToolCallTrace
+from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
-from science_graphrag.storage.neo4j_store import Neo4jGraphStore
-from science_graphrag.storage.qdrant_store import QdrantChunkStore, QdrantWorkEmbeddingStore
+from science_graphrag.observability.spans import chain_span
 
 
 @dataclass
@@ -25,27 +21,29 @@ class AgentRunOutput:
 
 
 class RetrievalAgent:
-    """Wave R baseline agent runtime.
-
-    This implementation keeps the runtime deterministic and safe-first:
-    it performs idea_search and optional workspace summary, then finalizes.
-    """
+    """Production retrieval agent runtime (Wave Y2: LangGraph ReAct)."""
 
     def __init__(
         self,
         *,
         settings: Settings,
-        neo4j: Neo4jGraphStore,
-        chunks: QdrantChunkStore,
-        works: QdrantWorkEmbeddingStore | None,
+        stores: StoreRegistry,
     ) -> None:
-        self.settings = settings
-        self.entity_search = EntitySearchTool(neo4j)
-        self.edge_search = EdgeSearchTool(neo4j)
-        self.cypher_query = CypherQueryTool(neo4j)
-        self.idea_search = IdeaSearchTool(chunks, work_store=works, embedding_model=settings.embedding_model)
-        self.summarize_workspace = SummarizeWorkspaceTool(neo4j)
-        self.final_answer = FinalAnswerTool()
+        self._settings = settings
+        self._stores = stores
+        if settings.agent_runtime == "retrieval_v1":
+            from science_graphrag.agent.runtime_legacy import LegacyRetrievalAgent
+
+            self._legacy = LegacyRetrievalAgent(
+                settings=settings,
+                neo4j=stores.neo4j,
+                chunks=stores.qdrant_chunks,
+                works=stores.qdrant_works,
+            )
+            self._graph = None
+        else:
+            self._legacy = None
+            self._graph = build_retrieval_graph(stores, settings)
 
     def run(
         self,
@@ -54,61 +52,61 @@ class RetrievalAgent:
         workspace_id: str | None,
         max_tool_calls: int,
     ) -> AgentRunOutput:
-        trace: list[ToolCallTrace] = []
-        step = 1
-        idea = self.idea_search.run_with_trace(
-            step=step,
-            trace=trace,
-            args_summary={"q": question[:120], "workspace_id": workspace_id, "top_k": 5},
-            q=question,
-            kinds=["chunk", "work"],
-            workspace_id=workspace_id,
-            top_k=5,
-        )
-        step += 1
-        summary_text = ""
-        if workspace_id and step <= max_tool_calls:
-            ws = self.summarize_workspace.run_with_trace(
-                step=step,
-                trace=trace,
-                args_summary={"workspace_id": workspace_id, "top_n_works": 8},
+        if self._legacy is not None:
+            return self._legacy.run(
+                question=question,
                 workspace_id=workspace_id,
-                top_n_works=8,
+                max_tool_calls=max_tool_calls,
             )
-            summary_text = str(ws.payload.get("summary") or "")
-            step += 1
+        return self._run_langgraph(
+            question=question, workspace_id=workspace_id, max_tool_calls=max_tool_calls
+        )
 
-        hits = idea.payload.get("items") or []
-        citations = [{"work_id": i.get("work_id"), "snippet": i.get("snippet", "")} for i in hits[:3]]
-        answer_lines = [
-            "Agent retrieval summary:",
-            f"- Question: {question}",
-            f"- Retrieved items: {len(hits)}",
-        ]
-        if summary_text:
-            answer_lines.append(f"- Workspace: {summary_text}")
-        if citations:
-            answer_lines.append("- Supporting works: " + ", ".join(str(c.get("work_id") or "") for c in citations))
-        answer = "\n".join(answer_lines)
-        final = self.final_answer.run_with_trace(
-            step=step,
-            trace=trace,
-            args_summary={"answer_chars": len(answer), "citations": len(citations)},
-            answer=answer,
-            citations=citations,
-        )
-        return AgentRunOutput(
-            answer=str(final.payload.get("answer") or ""),
-            citations=list(final.payload.get("citations") or []),
-            tool_trace=trace,
-        )
+    def _run_langgraph(
+        self,
+        *,
+        question: str,
+        workspace_id: str | None,
+        max_tool_calls: int,
+    ) -> AgentRunOutput:
+        attrs = {
+            "agent.runtime": self._settings.agent_runtime,
+            "agent.max_tool_calls": max_tool_calls or self._settings.agent_max_tool_calls,
+            "user.id": workspace_id or "",
+            "input.value": question[:500],
+        }
+        with chain_span("agent.query", attrs):
+            budget = max_tool_calls or self._settings.agent_max_tool_calls
+            initial_state = {
+                "messages": [HumanMessage(content=question)],
+                "workspace_id": workspace_id,
+                "citations": [],
+                "tool_trace": [],
+                "budget_remaining": budget,
+                "metadata": {"agent_runtime": self._settings.agent_runtime},
+            }
+            assert self._graph is not None
+            final_state = self._graph.invoke(
+                initial_state,
+                config={"recursion_limit": self._settings.agent_supervisor_recursion_limit},
+            )
+            messages = final_state.get("messages", [])
+            trace = collect_tool_trace(messages)
+            answer = ""
+            for msg in reversed(messages):
+                if isinstance(msg, AIMessage) and not getattr(msg, "tool_calls", None):
+                    answer = str(msg.content or "")
+                    break
+            return AgentRunOutput(
+                answer=answer,
+                citations=list(final_state.get("citations", [])),
+                tool_trace=trace,
+            )
 
 
 def build_agent(
     *,
     settings: Settings,
-    neo4j: Neo4jGraphStore,
-    chunks: QdrantChunkStore,
-    works: QdrantWorkEmbeddingStore | None,
+    stores: StoreRegistry,
 ) -> RetrievalAgent:
-    return RetrievalAgent(settings=settings, neo4j=neo4j, chunks=chunks, works=works)
+    return RetrievalAgent(settings=settings, stores=stores)

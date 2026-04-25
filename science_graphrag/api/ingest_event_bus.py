@@ -8,6 +8,8 @@ from collections.abc import AsyncIterator
 from datetime import UTC, datetime, timedelta
 from typing import Any, TypedDict
 
+import redis
+import redis.asyncio as aioredis
 from sqlalchemy import delete, func, select
 
 from science_graphrag.config import get_settings
@@ -30,6 +32,16 @@ class IngestEventBus:
         self._loop: asyncio.AbstractEventLoop | None = None
         self._loop_lock = threading.Lock()
         self._write_lock = threading.Lock()
+        self._settings = get_settings()
+        self._channel_prefix = "ingest:events"
+        self._redis_sync = redis.Redis.from_url(
+            self._settings.redis_url,
+            decode_responses=True,
+        )
+        self._redis_async = aioredis.from_url(
+            self._settings.redis_url,
+            decode_responses=True,
+        )
         self._subscribers: dict[str, set[asyncio.Queue[Any]]] = defaultdict(set)
         self._memory_events: dict[str, list[tuple[int, IngestEvent, datetime]]] = defaultdict(list)
         self._memory_seq: dict[str, int] = defaultdict(int)
@@ -40,9 +52,16 @@ class IngestEventBus:
 
     def publish_threadsafe(self, event: IngestEvent) -> int:
         seq = self._persist_event(event)
+        envelope = json.dumps({"seq": seq, "event": event}, ensure_ascii=True, default=str)
+        published = False
+        try:
+            self._redis_sync.publish(self._channel(event["job_id"]), envelope)
+            published = True
+        except Exception:
+            published = False
         with self._loop_lock:
             loop = self._loop
-        if loop is None:
+        if published or loop is None:
             return seq
         asyncio.run_coroutine_threadsafe(self._fanout(seq, event), loop)
         return seq
@@ -89,6 +108,36 @@ class IngestEventBus:
 
     async def subscribe(self, job_id: str) -> AsyncIterator[tuple[int, IngestEvent]]:
         key = str(job_id).strip()
+        channel = self._channel(key)
+        pubsub = self._redis_async.pubsub()
+        subscribed = False
+        try:
+            await pubsub.subscribe(channel)
+            subscribed = True
+        except Exception:
+            subscribed = False
+
+        if subscribed:
+            try:
+                async for message in pubsub.listen():
+                    if message.get("type") != "message":
+                        continue
+                    raw = str(message.get("data") or "").strip()
+                    if not raw:
+                        continue
+                    try:
+                        parsed = json.loads(raw)
+                        seq = int(parsed["seq"])
+                        event = parsed["event"]
+                        if isinstance(event, dict):
+                            yield seq, event
+                    except Exception:
+                        continue
+            finally:
+                await pubsub.unsubscribe(channel)
+                await pubsub.aclose()
+            return
+
         queue: asyncio.Queue[Any] = asyncio.Queue(maxsize=256)
         self._subscribers[key].add(queue)
         try:
@@ -101,6 +150,9 @@ class IngestEventBus:
             self._subscribers[key].discard(queue)
             if not self._subscribers[key]:
                 self._subscribers.pop(key, None)
+
+    def _channel(self, job_id: str) -> str:
+        return f"{self._channel_prefix}:{str(job_id).strip()}"
 
     def cleanup_old_events(self, *, ttl_hours: int = 24) -> None:
         cutoff = datetime.now(UTC) - timedelta(hours=max(1, ttl_hours))

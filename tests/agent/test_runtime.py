@@ -34,9 +34,17 @@ def test_build_agent_and_run_smoke() -> None:
     settings = Settings()
     agent = build_agent(
         settings=settings,
-        neo4j=_FakeNeo(),  # type: ignore[arg-type]
-        chunks=_FakeChunks(),  # type: ignore[arg-type]
-        works=_FakeWorks(),  # type: ignore[arg-type]
+        stores=type(
+            "_Stores",
+            (),
+            {
+                "neo4j": _FakeNeo(),
+                "qdrant_chunks": _FakeChunks(),
+                "qdrant_works": _FakeWorks(),
+                "qdrant_claims": None,
+                "blob": None,
+            },
+        )(),
     )
     out = agent.run(question="test question", workspace_id="ws1", max_tool_calls=8)
     assert out.answer

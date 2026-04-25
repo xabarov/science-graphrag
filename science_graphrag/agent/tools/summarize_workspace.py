@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from langchain_core.tools import BaseTool, tool
+from pydantic import BaseModel, Field
+
 from science_graphrag.agent.tools.base import BaseAgentTool, ToolResult
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 
@@ -26,3 +29,25 @@ class SummarizeWorkspaceTool(BaseAgentTool):
         return ToolResult(
             payload={"summary": summary, "cited_work_ids": work_ids}, row_count=len(work_ids)
         )
+
+
+class SummarizeWorkspaceArgs(BaseModel):
+    workspace_id: str = Field(..., description="Workspace id.")
+    top_n_works: int = Field(default=8, ge=1, le=15, description="How many work ids to include.")
+
+
+def _make_summarize_workspace_tool(store: Neo4jGraphStore) -> BaseTool:
+    runtime_tool = SummarizeWorkspaceTool(store)
+
+    @tool("summarize_workspace", args_schema=SummarizeWorkspaceArgs, return_direct=False)
+    def summarize_workspace_tool(
+        workspace_id: str, top_n_works: int = 8
+    ) -> dict[str, str | list[str] | int]:
+        """Summarize workspace composition and sample work ids."""
+        result = runtime_tool.run(workspace_id=workspace_id, top_n_works=top_n_works)
+        payload = dict(result.payload)
+        payload.setdefault("row_count", result.row_count)
+        payload.setdefault("truncated", result.truncated)
+        return payload
+
+    return summarize_workspace_tool

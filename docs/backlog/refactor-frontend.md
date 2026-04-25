@@ -107,13 +107,16 @@ Planned structural work under `ui/` (components, routing, state, API client), no
 - **Area:** [`WorkspacePage/WorkspacePage.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx), [`WorkspaceIngestPanel.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceIngestPanel.jsx), [`WorkspacePaperList.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePaperList.jsx), [`WorkPaperCard.jsx`](../../ui/src/pages/WorkspacePage/WorkPaperCard.jsx), [`WorkspaceDedupSection.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceDedupSection.jsx)
 - **Done:** 2026-04-24 — shell coordinates URL + meta; `npm run lint` / `npm run test` green.
 
-### [OPEN] AskPanel decomposition after Wave R agent mode
+### [DONE] AskPanel decomposition after Wave R agent mode
 - **Area:** [`AskPanel.jsx`](../../ui/src/components/work/AskPanel.jsx), [`AgentToolTrace.jsx`](../../ui/src/components/work/AgentToolTrace.jsx)
 - **Issue:** После добавления `agent` режима в Wave R `AskPanel` остаётся большим модулем с несколькими ответственностями (session state, submit flows, retrieval/agent trace rendering). Файл — 841 строка.
 - **Proposal:** Вынести submit orchestration (`useAskSubmit`), session controls (`AskSessionControls`) и answer sections (`AskAnswerPanel`) в отдельные модули; оставить в `AskPanel` только composition layer.
 - **Acceptance:** Ни один модуль в `ui/src/components/work/` по этому флоу не превышает ~400 строк; `npm run lint` / `npm run test` зелёные.
 - **Synergy:** **Wave Y3** (`/v2/agent/query` SSE) — `useAskSubmit` будет точкой переключения REST→SSE без правки UI-каркаса; **Wave Y4** (multi-agent supervisor) — `AskAnswerPanel` сразу подцепит `routing_log` без раскопок в god-файле.
 - **Raised:** 2026-04-25
+- **Note (done):** 2026-04-25 — разнесено на `useAskSubmit.js` (submit orchestration),
+  `AskSessionControls.jsx` (input + buttons), `AskAnswerPanel.jsx` (answer + citations + trace);
+  `AskPanel.jsx` = composition shell ≤280 строк; Wave Y3 SSE переключается только в `useAskSubmit`.
 
 ### [DONE] Split `GraphWorkspacePanel.jsx` (1164) — data hook vs view modes vs debug
 - **Area:** [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx), [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx), [`GraphFlowView.jsx`](../../ui/src/components/graph/GraphFlowView.jsx), [`graphViewState.js`](../../ui/src/components/graph/graphViewState.js), [`mergeWorkspaceRawGraph.js`](../../ui/src/components/graph/mergeWorkspaceRawGraph.js)

@@ -38,9 +38,7 @@ def post_agent_query(
     started = perf_counter()
     agent = build_agent(
         settings=settings,
-        neo4j=stores.neo4j,
-        chunks=stores.qdrant_chunks,
-        works=stores.qdrant_works,
+        stores=stores,
     )
     out = agent.run(
         question=body.question,
@@ -54,7 +52,7 @@ def post_agent_query(
         tool_trace=list(out.tool_trace),
         duration_ms=duration_ms,
         run_metadata={
-            "agent_runtime": "langgraph_like_v1",
+            "agent_runtime": settings.agent_runtime,
             "agent_enabled": settings.agent_enabled,
             "agent_max_tool_calls": body.max_tool_calls or settings.agent_max_tool_calls,
             "extraction_llm_model": settings.extraction_llm_model,

@@ -15,9 +15,9 @@
 
 | Трек | Заголовок | Источник | Status | Текущая волна / next |
 |------|-----------|----------|--------|----------------------|
-| **A** | Ingest async pipeline | [`ingestion-async-pipeline-roadmap-2026-04-25.md`](ingestion-async-pipeline-roadmap-2026-04-25.md) | Wave U done, V done, W open | **Wave W** (Redis + Dramatiq) |
-| **B** | LangGraph migration | [`langgraph-migration-plan-2026-04-25.md`](langgraph-migration-plan-2026-04-25.md) + ADR 016/017 | Wave R/S done, Y1–Y6 plan | **Wave Y1 → Y2** |
-| **C** | Phoenix tracing coverage | [`phoenix-tracing-coverage-2026-04-25.md`](phoenix-tracing-coverage-2026-04-25.md) | Wave X1 done, X2 open | **Wave X2** (agent observability) |
+| **A** | Ingest async pipeline | [`ingestion-async-pipeline-roadmap-2026-04-25.md`](ingestion-async-pipeline-roadmap-2026-04-25.md) | Wave U done, V done, W done | **Wave W done** → Round 4 |
+| **B** | LangGraph migration | [`langgraph-migration-plan-2026-04-25.md`](langgraph-migration-plan-2026-04-25.md) + ADR 016/017 | Wave R/S done, Y1/Y2 done | **Wave Y3** (`/v2/agent/query` SSE) |
+| **C** | Phoenix tracing coverage | [`phoenix-tracing-coverage-2026-04-25.md`](phoenix-tracing-coverage-2026-04-25.md) | Wave X1 done, X2 done | **Wave X2 done** → X3 (worker OTel propagation) |
 | **D** | Ontology + Benchmarks + IR | [`ontology-benchmarks-roadmap-2026-04-24.md`](ontology-benchmarks-roadmap-2026-04-24.md) | M/N/O/P/Q/R/S done, T open | **Wave T** (entity dedup), continuation of Q (multihop), R (multi-agent metrics — ждёт Y4) |
 | **E** | Graph UX aggregation | [`graph-ux-aggregation-roadmap-2026-04-25.md`](graph-ux-aggregation-roadmap-2026-04-25.md) + ADR 011/012 | GR1 done, GR2..GR5 open | **Wave GR2** → GR3/GR4 |
 | **F** | Workspace experience | [`workspace-experience-gap-2026-04-24.md`](workspace-experience-gap-2026-04-24.md) | Wave I/J/K1/K2/K3/L1/L2 done, L3 gated | **Wave L3** stub, Wave M (PDF page citations, optional) |
@@ -325,11 +325,13 @@
   > 3. **Сигнатура `work_sources_payload`:** в сплите добавился параметр `stores`, тест-fake имел старую сигнатуру. **Фикс:** обновлен fake.
   >
   > Качество: pylint 8.78/10, isort/black чисто, frontend ESLint чисто, **383 passed, 2 skipped**.
-- **Раунд 3 (Wave W + Y2 + X2 + Neo4jSplit):**
-  - Agent 1: Wave W backend (Dramatiq actor + Redis).
-  - Agent 2: Wave Y2 + Wave X2 (один комбинированный PR в `agent/`).
-  - Agent 3: G-Neo4jSplit (большой, отдельный PR).
-  - Agent 4: H-AskPanelSplit.
+- **Раунд 3 (Wave W + Y2 + X2 + Neo4jSplit + AskPanelSplit) ✅ DONE 2026-04-25 — промпты: [`round3-agent-prompts-2026-04-25.md`](round3-agent-prompts-2026-04-25.md):**
+  - Agent 1: Wave W backend (Dramatiq actor + Redis). ✅
+  - Agent 2: Wave Y2 + Wave X2 (один комбинированный PR в `agent/`). ✅
+  - Agent 3: G-Neo4jSplit (`neo4j_store.py` 1022 строки → 11 модулей пакета). ✅
+  - Agent 4: H-AskPanelSplit (`AskPanel.jsx` → shell + `useAskSubmit`, `AskSessionControls`, `AskAnswerPanel`). ✅
+
+  > **Review 2026-04-25:** 390 passed, 2 skipped; pylint 8.92/10; isort/black/ESLint чисто. Единственное отклонение от спецификации: `IngestEventBus` живёт в `api/ingest_event_bus.py`, а не в `api/ingest/dispatcher.py` — функционально не влияет, Round 4 не блокирует. Метрика: 23 новых модуля, neo4j_store 1022→11 файлов, AskPanel 670→4 файла 487 строк суммарно.
 - **Раунд 4 (Wave Y3 + GR2 + benchmark UI):**
   - Agent 1: Wave Y3 backend (`api/agent_v2.py` + spec).
   - Agent 2: Wave GR2 backend (после WorkspaceGraphSplit и WorksSplit).
