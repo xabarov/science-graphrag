@@ -576,18 +576,18 @@ def ingest_document(
                 )
                 st.metric("chunks", len(doc_chunks))
             claim_rows: list[Any] = []
-            if settings.claims_extraction_enabled:
-                chunk_dicts = [
-                    {
-                        "text": c.text,
-                        "chunk_fingerprint": c.chunk_fingerprint,
-                        "section_path": c.section_path,
-                    }
-                    for c in doc_chunks
-                ]
-                with stage(
-                    job_id, IngestStage.EXTRACT_CLAIMS, session_factory=stage_session_factory
-                ) as st:
+            with stage(
+                job_id, IngestStage.EXTRACT_CLAIMS, session_factory=stage_session_factory
+            ) as st:
+                if settings.claims_extraction_enabled:
+                    chunk_dicts = [
+                        {
+                            "text": c.text,
+                            "chunk_fingerprint": c.chunk_fingerprint,
+                            "section_path": c.section_path,
+                        }
+                        for c in doc_chunks
+                    ]
                     with chain_span(
                         "claims_extraction",
                         {"document.id": doc_id, "work.id": work_id, "chunks": len(chunk_dicts)},
@@ -599,8 +599,10 @@ def ingest_document(
                             force_benchmark=False,
                         )
                     st.metric("claims", len(claim_rows))
-                _retry_call(neo.detach_delete_claims_for_work, work_id)
-                _retry_call(neo.upsert_claims_with_evidence, work_id, claim_rows)
+                    _retry_call(neo.detach_delete_claims_for_work, work_id)
+                    _retry_call(neo.upsert_claims_with_evidence, work_id, claim_rows)
+                else:
+                    st.metric("claims_extraction_enabled", 0)
 
             with stage(job_id, IngestStage.EMBED, session_factory=stage_session_factory) as st:
                 embedder = (

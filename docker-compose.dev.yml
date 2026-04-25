@@ -106,6 +106,7 @@ services:
       SCIENCE_GRAPHRAG_QDRANT_URL: http://qdrant:6333
       SCIENCE_GRAPHRAG_BLOB_ROOT: /data/blobs
       SCIENCE_GRAPHRAG_ARTIFACT_ROOT: /data/artifacts
+      PHOENIX_COLLECTOR_ENDPOINT: http://phoenix:6006/v1/traces
     volumes:
       - .:/app
       - ./data/blobs:/data/blobs
