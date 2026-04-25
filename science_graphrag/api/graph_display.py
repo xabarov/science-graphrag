@@ -1,0 +1,146 @@
+"""Graph node display helpers shared across graph API projections."""
+
+from __future__ import annotations
+
+import re
+from typing import Any
+
+from neo4j import Session as Neo4jSession
+
+UUID_RE = re.compile(
+    r"^[0-9a-fA-F]{8}-"
+    r"[0-9a-fA-F]{4}-"
+    r"[0-9a-fA-F]{4}-"
+    r"[0-9a-fA-F]{4}-"
+    r"[0-9a-fA-F]{12}"
+    r"(?::[A-Za-z0-9._-]+)*$",
+)
+
+
+def _is_uuid_like(value: str) -> bool:
+    s = (value or "").strip()
+    return bool(s and UUID_RE.match(s))
+
+
+def _clean_label(value: str) -> str:
+    return (value or "").strip()[:200]
+
+
+def compute_node_display(
+    ntype: str,
+    raw_label: str,
+    props: dict[str, Any],
+    *,
+    authorship_extra: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Return node display fields with UUID-safe human fallbacks."""
+    node_type = (ntype or "").strip() or "Node"
+    p = dict(props or {})
+    label = _clean_label(raw_label)
+    if _is_uuid_like(label):
+        label = ""
+
+    subtitle = node_type
+    display_label = label
+
+    if node_type == "Work":
+        year = p.get("publication_year")
+        display_label = display_label or "Untitled work"
+        subtitle = f"Work · {int(year)}" if year is not None else "Work"
+    elif node_type == "Author":
+        display_label = display_label or "Unnamed author"
+        subtitle = "Author"
+    elif node_type == "Institution":
+        display_label = display_label or "Unnamed institution"
+        subtitle = "Institution"
+    elif node_type == "Venue":
+        display_label = display_label or "Unknown venue"
+        subtitle = "Venue"
+    elif node_type in {"Method", "Dataset"}:
+        display_label = display_label or f"Unnamed {node_type.lower()}"
+        subtitle = node_type
+    elif node_type == "Authorship":
+        extra = authorship_extra or {}
+        position = extra.get("author_position")
+        author_name = _clean_label(str(extra.get("author_name") or ""))
+        if _is_uuid_like(author_name):
+            author_name = ""
+        raw_aff = _clean_label(str(extra.get("raw_affiliation") or ""))
+        inst_name = _clean_label(str(extra.get("institution_name") or ""))
+        affiliation = inst_name or raw_aff
+
+        if position is not None:
+            if author_name:
+                display_label = f"{author_name} (#{int(position)})"
+            else:
+                display_label = f"Author #{int(position)}"
+            subtitle = f"Author #{int(position)}"
+            if affiliation:
+                subtitle = f"{subtitle} · {affiliation}"
+        else:
+            display_label = author_name or display_label or "Authorship"
+            subtitle = "Authorship"
+
+        if position is not None:
+            p["author_position"] = int(position)
+        if extra.get("is_corresponding") is not None:
+            p["is_corresponding"] = bool(extra.get("is_corresponding"))
+        if raw_aff:
+            p["raw_affiliation"] = raw_aff
+        if inst_name:
+            p["institution_name"] = inst_name
+    else:
+        display_label = display_label or node_type
+        subtitle = node_type
+
+    return {
+        "display_label": display_label[:200],
+        "subtitle": subtitle[:200],
+        "properties": p,
+    }
+
+
+def enrich_authorship_nodes(session: Neo4jSession, nodes: list[dict[str, Any]]) -> None:
+    """Hydrate Authorship display fields from related Author/Institution nodes."""
+    ids = [str(n.get("id") or "") for n in nodes if str(n.get("type") or "") == "Authorship"]
+    ids = [x for x in ids if x]
+    if not ids:
+        return
+
+    by_id = {str(n.get("id") or ""): n for n in nodes}
+    rows = session.run(
+        """
+        UNWIND $ids AS aid
+        MATCH (x:Authorship {id: aid})
+        OPTIONAL MATCH (x)-[:OF_AUTHOR]->(au:Author)
+        OPTIONAL MATCH (x)-[:AFFILIATED_WITH]->(i:Institution)
+        RETURN aid,
+               x.author_position AS pos,
+               coalesce(x.raw_affiliation, '') AS raw_aff,
+               x.is_corresponding AS corr,
+               coalesce(au.full_name, '') AS auth_name,
+               coalesce(i.name, '') AS inst_name
+        """,
+        ids=ids,
+    )
+    for row in rows:
+        nid = str(row.get("aid") or "")
+        node = by_id.get(nid)
+        if not node:
+            continue
+        rendered = compute_node_display(
+            "Authorship",
+            str(node.get("display_label") or node.get("label") or ""),
+            dict(node.get("properties") or {}),
+            authorship_extra={
+                "author_position": row.get("pos"),
+                "author_name": row.get("auth_name"),
+                "raw_affiliation": row.get("raw_aff"),
+                "institution_name": row.get("inst_name"),
+                "is_corresponding": row.get("corr"),
+            },
+        )
+        node["label"] = rendered["display_label"]
+        node["display_label"] = rendered["display_label"]
+        node["subtitle"] = rendered["subtitle"]
+        node["properties"] = rendered["properties"]

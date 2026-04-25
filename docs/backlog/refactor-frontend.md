@@ -105,3 +105,10 @@ Planned structural work under `ui/` (components, routing, state, API client), no
 ### [DONE] Workspace page — split upload / dedup / paper list (Wave I)
 - **Area:** [`WorkspacePage/WorkspacePage.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx), [`WorkspaceIngestPanel.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceIngestPanel.jsx), [`WorkspacePaperList.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePaperList.jsx), [`WorkPaperCard.jsx`](../../ui/src/pages/WorkspacePage/WorkPaperCard.jsx), [`WorkspaceDedupSection.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceDedupSection.jsx)
 - **Done:** 2026-04-24 — shell coordinates URL + meta; `npm run lint` / `npm run test` green.
+
+### [OPEN] AskPanel decomposition after Wave R agent mode
+- **Area:** [`AskPanel.jsx`](../../ui/src/components/work/AskPanel.jsx), [`AgentToolTrace.jsx`](../../ui/src/components/work/AgentToolTrace.jsx)
+- **Issue:** После добавления `agent` режима в Wave R `AskPanel` остаётся большим модулем с несколькими ответственностями (session state, submit flows, retrieval/agent trace rendering).
+- **Proposal:** Вынести submit orchestration (`useAskSubmit`), session controls (`AskSessionControls`) и answer sections (`AskAnswerPanel`) в отдельные модули; оставить в `AskPanel` только composition layer.
+- **Acceptance:** Ни один модуль в `ui/src/components/work/` по этому флоу не превышает ~400 строк; `npm run lint` / `npm run test` зелёные.
+- **Raised:** 2026-04-25

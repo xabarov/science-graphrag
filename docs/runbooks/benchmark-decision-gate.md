@@ -144,3 +144,14 @@ Single-case retest после правок gold (если лежат в `eval/re
 **Митигация overfit judge:** держать **~30% holdout** кейсов вне nightly snapshot (`eval/results/current-retrieval-judge-holdout.json`, недельный прогон), не подмешивать holdout в текущий judge pilot при тюнинге промпта/модели.
 
 После выполнения — чеклист в promotion-review, обновление [`benchmark-program-status.md`](benchmark-program-status.md), явное включение lane в `aggregate_benchmark_metrics._decision_gate` (только решение мейнтейнеров).
+
+### 8.4 Wave R: agent tools family (`agent_tools_v1`)
+
+`agent_tools_v1` и `agent_tools_judge` — **advisory** lanes. Они агрегируются в
+`benchmark-metrics-summary` (секция `agent_tools_family`), но **не участвуют** в
+`_decision_gate` и не меняют `GO/CONDITIONAL-GO/NO-GO` до отдельного promotion-review.
+
+Артефакты по умолчанию:
+
+- `eval/results/current-agent-tools-mini.json`
+- `eval/results/current-agent-tools-judge-pilot.json`

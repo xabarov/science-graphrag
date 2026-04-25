@@ -262,7 +262,14 @@ def test_workspaces_list_smoke(monkeypatch: Any) -> None:
 
     class _FakeStore:
         def workspace_list(self) -> list[dict[str, Any]]:
-            return [{"id": "ws-1", "name": "Lab", "created_at": "2020-01-01T00:00:00+00:00", "work_ids": ["w-a"]}]
+            return [
+                {
+                    "id": "ws-1",
+                    "name": "Lab",
+                    "created_at": "2020-01-01T00:00:00+00:00",
+                    "work_ids": ["w-a"],
+                }
+            ]
 
         def close(self) -> None:
             return None
@@ -285,6 +292,49 @@ def test_ingest_stubs_and_job_lookup() -> None:
     assert client.post("/v1/ingest/doi", json={"doi": "10.1000/xyz"}).status_code == 501
     assert client.post("/v1/ingest/pdf").status_code == 501
     assert client.get("/v1/ingest/jobs/00000000-0000-0000-0000-000000000000").status_code == 404
+
+
+def test_get_ingest_job_returns_stages(monkeypatch: Any) -> None:
+    from science_graphrag.api import ingest_jobs as ingest_api
+
+    job = ingest_api.IngestJobRecord(
+        job_id="11111111-1111-1111-1111-111111111111",
+        workspace_id="ws1",
+        filename="paper.pdf",
+        status="running",
+        message="Running pipeline",
+        progress_current=10,
+        progress_total=100,
+        stages=[
+            {
+                "name": "parse_pdf",
+                "status": "completed",
+                "started_at": "2026-01-01T00:00:00+00:00",
+                "finished_at": "2026-01-01T00:00:01+00:00",
+                "duration_ms": 1000,
+                "metrics": {"source_suffix": ".pdf"},
+                "error": None,
+            },
+            {
+                "name": "extract_meta",
+                "status": "running",
+                "started_at": "2026-01-01T00:00:02+00:00",
+                "finished_at": None,
+                "duration_ms": None,
+                "metrics": {"references": 4},
+                "error": None,
+            },
+        ],
+    )
+    monkeypatch.setattr(ingest_api._REGISTRY, "get", lambda _job_id: job)
+
+    client = _client()
+    res = client.get("/v1/ingest/jobs/11111111-1111-1111-1111-111111111111")
+    assert res.status_code == 200
+    body = res.json()
+    assert isinstance(body.get("stages"), list)
+    assert body["stages"][0]["name"] == "parse_pdf"
+    assert body["stages"][1]["metrics"]["references"] == 4
 
 
 def test_works_list_endpoint_smoke(monkeypatch: Any) -> None:
@@ -556,7 +606,12 @@ def test_post_query_passes_mode_to_answer_query(monkeypatch: Any) -> None:
         return GroundedAnswer(
             answer="ok",
             citations=[],
-            graph_context={"methods": [], "datasets": [], "semantic_available": False, "degraded": []},
+            graph_context={
+                "methods": [],
+                "datasets": [],
+                "semantic_available": False,
+                "degraded": [],
+            },
             retrieval_trace={
                 "embedding": {"embedding_model": "mock"},
                 "hit_count": 0,
@@ -802,7 +857,9 @@ def test_benchmark_models_list_smoke() -> None:
     env_default = next(item for item in payload["items"] if item["profile_id"] == "env_default")
     assert env_default["label"]
     assert "layer1" in env_default["family_support"]
-    student = next(item for item in payload["items"] if item["profile_id"] == "student_mistral_small_32")
+    student = next(
+        item for item in payload["items"] if item["profile_id"] == "student_mistral_small_32"
+    )
     assert student["default_gold_source"] == "teacher_gold"
     assert student["default_threshold_profile"] == "student_mistral"
 
@@ -1109,7 +1166,9 @@ def test_benchmark_post_run_accepts_model_fields(monkeypatch: Any) -> None:
     assert res.status_code == 200
     assert res.json()["run_id"] == "run-test-1"
     assert res.json()["benchmark_family"] == "layer1"
-    assert res.json()["run_config"]["resolved_model_id"] == "mistralai/mistral-small-3.2-24b-instruct"
+    assert (
+        res.json()["run_config"]["resolved_model_id"] == "mistralai/mistral-small-3.2-24b-instruct"
+    )
     assert res.json()["run_config"]["gold_source"] == "teacher_gold"
     assert captured["benchmark_family"] == "layer1"
     assert captured["run_config"]["model_profile"] == "student_mistral_small_32"

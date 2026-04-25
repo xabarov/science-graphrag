@@ -60,7 +60,9 @@ class DedupJobRegistry:
         with self.lock:
             with self._session_factory() as session:
                 rows = session.execute(
-                    select(DedupJobRecordOrm).where(DedupJobRecordOrm.status.in_(("queued", "running")))
+                    select(DedupJobRecordOrm).where(
+                        DedupJobRecordOrm.status.in_(("queued", "running"))
+                    )
                 ).scalars()
                 changed = False
                 for row in rows:
@@ -92,7 +94,9 @@ class DedupJobRegistry:
         with self.lock:
             with self._session_factory() as session:
                 row = session.execute(
-                    select(DedupJobRecordOrm).where(DedupJobRecordOrm.job_id == str(job_id).strip()).limit(1)
+                    select(DedupJobRecordOrm)
+                    .where(DedupJobRecordOrm.job_id == str(job_id).strip())
+                    .limit(1)
                 ).scalar_one_or_none()
                 return self._to_dataclass(row) if row else None
 
@@ -100,13 +104,17 @@ class DedupJobRegistry:
         with self.lock:
             with self._session_factory() as session:
                 row = session.execute(
-                    select(DedupJobRecordOrm).where(DedupJobRecordOrm.job_id == str(job_id).strip()).limit(1)
+                    select(DedupJobRecordOrm)
+                    .where(DedupJobRecordOrm.job_id == str(job_id).strip())
+                    .limit(1)
                 ).scalar_one_or_none()
                 if not row:
                     return
                 for k, v in kwargs.items():
                     if k == "finished_at":
-                        row.finished_at = datetime.fromisoformat(v) if isinstance(v, str) and v else v
+                        row.finished_at = (
+                            datetime.fromisoformat(v) if isinstance(v, str) and v else v
+                        )
                     else:
                         setattr(row, k, v)
                 session.commit()

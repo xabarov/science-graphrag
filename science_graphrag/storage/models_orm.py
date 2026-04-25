@@ -78,7 +78,26 @@ class IngestJobRecordOrm(Base):
 
     @child_job_ids.setter
     def child_job_ids(self, value: list[str] | None) -> None:
-        self.child_job_ids_json = json.dumps([str(x) for x in (value or []) if x], ensure_ascii=True)
+        self.child_job_ids_json = json.dumps(
+            [str(x) for x in (value or []) if x], ensure_ascii=True
+        )
+
+
+class IngestJobStageOrm(Base):
+    __tablename__ = "ingest_job_stages"
+    __table_args__ = (UniqueConstraint("job_id", "stage", name="uq_ingest_job_stage"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    job_id: Mapped[str] = mapped_column(String(36), index=True)
+    stage: Mapped[str] = mapped_column(String(64), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), default="running")
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+    )
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    metrics_json: Mapped[str] = mapped_column(Text, default="{}")
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class DedupJobRecordOrm(Base):

@@ -114,7 +114,10 @@ def _quote_accepted(
         return False, "none"
     if _quote_verified_strict(quote, chunk_text):
         return True, "strict"
-    if len(_tokens_claim(quote)) >= 3 and _quote_token_jaccard(quote, chunk_text) >= soft_jaccard_min:
+    if (
+        len(_tokens_claim(quote)) >= 3
+        and _quote_token_jaccard(quote, chunk_text) >= soft_jaccard_min
+    ):
         return True, "jaccard"
     return False, "none"
 
@@ -318,7 +321,9 @@ def extract_claims_llm(
                     evidence_id=eid,
                     chunk_fingerprint=fp,
                     quote=quote[:4000],
-                    section_path=(str(ev.section_path).strip() or None) if ev.section_path else None,
+                    section_path=(
+                        (str(ev.section_path).strip() or None) if ev.section_path else None
+                    ),
                 ),
             )
         if not ev_out:
@@ -376,5 +381,3 @@ def claim_drafts_to_predictions(claims: list[ClaimDraft]) -> list[dict[str, Any]
             },
         )
     return rows
-
-

@@ -179,3 +179,13 @@
 **Источник плана:** [analysis/ontology-benchmarks-roadmap-2026-04-24.md §7.4](../analysis/ontology-benchmarks-roadmap-2026-04-24.md#74-wave-o--claims-production-extractor--promotion).
 
 **Exit:** ingestion с `SCIENCE_GRAPHRAG_CLAIMS_EXTRACTION_ENABLED=true` пишет граф; harness `claims_pilot` зелёный; production lane ≥ 0.8 recall **7 ночей** — затем обновление `benchmark-program-status` / опционально core gate.
+
+---
+
+## Wave R — Agent retrieval + tool-use benchmarks
+
+**Цель:** read-only tool-using agent для retrieval-сценариев + отдельная advisory family `agent_tools_v1`.
+
+См.: [analysis/ontology-benchmarks-roadmap-2026-04-24.md](../analysis/ontology-benchmarks-roadmap-2026-04-24.md) §7.7, [adr/016-agent-tool-registry-and-langgraph.md](../adr/016-agent-tool-registry-and-langgraph.md), [specs/agent-tools-v1.md](../specs/agent-tools-v1.md).
+
+**Статус (2026-04-25):** базовая реализация внесена (`science_graphrag/agent/`, `/v1/agent/query`, `eval/agent_tools/*`, UI trace в AskPanel); lane остаётся advisory до отдельного promotion review.

@@ -48,6 +48,11 @@ dev = [
 research = [
     "smolagents>=1.4.0",
 ]
+agent = [
+    "langgraph>=0.2.50,<0.3",
+    "langchain-core>=0.3.20",
+    "langchain-openai>=0.2.10",
+]
 
 [project.scripts]
 science-graphrag = "science_graphrag.cli.main:main"
@@ -62,6 +67,8 @@ science-graphrag-retrieval-hybrid-ablation = "eval.retrieval.hybrid_ablation_run
 science-graphrag-retrieval-multihop-benchmark = "eval.retrieval.multihop_runner:main"
 science-graphrag-dedup-v1-benchmark = "eval.dedup_v1.runner:cli"
 science-graphrag-references-resolution-benchmark = "eval.references_resolution.runner:main"
+science-graphrag-agent-benchmark = "eval.agent_tools.runner:main"
+science-graphrag-agent-judge-benchmark = "eval.agent_tools.judge:main"
 science-graphrag-benchmark-compare = "eval.report_compare:main"
 science-graphrag-api = "science_graphrag.api.main:main"
 

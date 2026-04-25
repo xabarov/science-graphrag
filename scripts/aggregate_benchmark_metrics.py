@@ -46,6 +46,8 @@ DEFAULT_RETRIEVAL_WORKSPACE_SCOPED = "eval/results/current-retrieval-workspace-s
 DEFAULT_RETRIEVAL_JUDGE_PILOT = "eval/results/current-retrieval-judge-pilot.json"
 DEFAULT_RETRIEVAL_HYBRID_ABLATION = "eval/results/current-retrieval-hybrid-ablation.json"
 DEFAULT_RETRIEVAL_MULTIHOP_MINI = "eval/results/current-retrieval-multihop-mini.json"
+DEFAULT_AGENT_TOOLS_MINI = "eval/results/current-agent-tools-mini.json"
+DEFAULT_AGENT_TOOLS_JUDGE = "eval/results/current-agent-tools-judge-pilot.json"
 
 # Claims family (advisory — Wave H1; see ontology-claims-benchmark-v1.md)
 DEFAULT_CLAIMS_MERGE_CONTRACT = "eval/results/current-claims-merge-contract.json"
@@ -718,6 +720,30 @@ def _md_baseline_deltas_section(deltas: dict[str, Any]) -> list[str]:
     ]
 
 
+def _md_agent_tools_family_section(af: dict[str, Any]) -> list[str]:
+    lines = [
+        "## Agent tools family (advisory)",
+        "",
+        "Wave R benchmark family for `POST /v1/agent/query`.",
+        "",
+    ]
+    role = (af.get("role") or "advisory") if isinstance(af, dict) else "advisory"
+    lines.append(f"- **role**: `{role}`")
+    lines.append("")
+    for label, key in (("agent_tools_mini", "agent_tools_mini"), ("agent_tools_judge", "agent_tools_judge")):
+        block = af.get(key) or {}
+        lines.append(f"### {label}")
+        lines.append("")
+        if block.get("error"):
+            lines.append(f"- **status**: missing artifact `{block.get('artifact')}`")
+        else:
+            lines.append(f"- artifact: `{block.get('artifact')}`")
+            lines.append(f"- all_passed: **{block.get('all_passed')}**")
+            lines.append(f"- failed_count: **{block.get('failed_count')}**")
+        lines.append("")
+    return lines
+
+
 def _render_markdown(payload: dict[str, Any]) -> str:
     """Human-readable markdown mirror of benchmark-metrics-summary.json."""
 
@@ -741,6 +767,7 @@ def _render_markdown(payload: dict[str, Any]) -> str:
             payload.get("references_resolution_family") or {}
         ),
         *_md_concept_topic_family_section(payload.get("concept_topic_family") or {}),
+        *_md_agent_tools_family_section(payload.get("agent_tools_family") or {}),
         *_md_baseline_deltas_section(payload.get("deltas") or {}),
     ]
     return "\n".join(parts)
@@ -821,6 +848,18 @@ def main() -> int:
             "`science-graphrag-retrieval-multihop-benchmark --suite` (advisory, Wave Q)."
         ),
     )
+    parser.add_argument(
+        "--agent-tools-json",
+        type=str,
+        default=DEFAULT_AGENT_TOOLS_MINI,
+        help="Optional Wave R suite JSON from science-graphrag-agent-benchmark.",
+    )
+    parser.add_argument(
+        "--agent-judge-json",
+        type=str,
+        default=DEFAULT_AGENT_TOOLS_JUDGE,
+        help="Optional Wave R judge JSON from science-graphrag-agent-judge-benchmark.",
+    )
     args = parser.parse_args()
 
     reference = _summarize_reference(DEFAULT_REFERENCE)
@@ -862,6 +901,8 @@ def main() -> int:
             "references_resolution_mini": DEFAULT_REFERENCES_RESOLUTION_MINI,
             "references_resolution_graph": args.refs_graph_json,
             "concept_topic_mini_suite": args.concept_topic_json,
+            "agent_tools_mini_suite": args.agent_tools_json,
+            "agent_tools_judge_suite": args.agent_judge_json,
         },
         "reference": reference,
         "layer1_nightly": layer1,
@@ -902,6 +943,11 @@ def main() -> int:
         "concept_topic_family": {
             "role": "advisory",
             "concept_topic_mini": _summarize_case_metrics_suite(args.concept_topic_json),
+        },
+        "agent_tools_family": {
+            "role": "advisory",
+            "agent_tools_mini": _summarize_case_metrics_suite(args.agent_tools_json),
+            "agent_tools_judge": _summarize_retrieval_judge_suite(args.agent_judge_json),
         },
         "decision_gate": _decision_gate(reference, layer1, layer2, claims_prod),
     }

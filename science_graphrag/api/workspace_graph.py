@@ -10,6 +10,7 @@ from typing import Any
 from neo4j import GraphDatabase, NotificationClassification
 
 from science_graphrag.api import works as works_api
+from science_graphrag.api.graph_display import compute_node_display, enrich_authorship_nodes
 from science_graphrag.config import Settings
 
 MAX_NEIGHBORS_CAP = 300
@@ -22,7 +23,9 @@ SEMANTIC_REL_TYPES_LIST = sorted(
         "AFFILIATED_WITH",
     },
 )
-ALLOWED_NODE_TYPES = frozenset({"Work", "Author", "Method", "Dataset", "Venue", "Institution", "Authorship"})
+ALLOWED_NODE_TYPES = frozenset(
+    {"Work", "Author", "Method", "Dataset", "Venue", "Institution", "Authorship"}
+)
 
 
 def _neo4j_driver(settings: Settings):
@@ -160,10 +163,6 @@ def _node_dict_from_neo(node: Any) -> dict[str, Any] | None:
         return None
     ntype = _primary_label(list(node.labels))
     raw_title = str(props.get("title") or props.get("name") or props.get("full_name") or "").strip()
-    label = (raw_title[:200] if raw_title else nid)[:200]
-    subtitle = ntype
-    if ntype == "Work" and props.get("publication_year") is not None:
-        subtitle = f"Work · {int(props['publication_year'])}"
     center_props: dict[str, Any] = {}
     if props.get("publication_year") is not None:
         center_props["publication_year"] = props["publication_year"]
@@ -173,6 +172,10 @@ def _node_dict_from_neo(node: Any) -> dict[str, Any] | None:
         center_props["arxiv_id"] = str(props["arxiv_id"]).strip()
     if props.get("venue_name"):
         center_props["venue"] = str(props["venue_name"]).strip()[:200]
+    rendered = compute_node_display(ntype, raw_title, center_props)
+    label = str(rendered["display_label"])
+    subtitle = str(rendered["subtitle"])
+    center_props = dict(rendered["properties"])
     return {
         "id": nid,
         "type": ntype,
@@ -301,7 +304,11 @@ def _filter_external_works_by_min_citers(
         if not (str(n.get("type")) == "Work" and n["id"] in drop_works and n["id"] not in iws)
     ]
     kept = {n["id"] for n in new_nodes}
-    new_edges = [e for e in edges if str(e.get("source") or "") in kept and str(e.get("target") or "") in kept]
+    new_edges = [
+        e
+        for e in edges
+        if str(e.get("source") or "") in kept and str(e.get("target") or "") in kept
+    ]
     return new_nodes, new_edges
 
 
@@ -708,11 +715,14 @@ def project_workspace_graph(
             gds_avail = _gds_runtime_available(session)
 
         if mode_norm == "union_1hop":
-            out = legacy_workspace_graph_union(settings, workspace_id, neighbor_limit=neighbor_limit)
+            out = legacy_workspace_graph_union(
+                settings, workspace_id, neighbor_limit=neighbor_limit
+            )
             if out is None:
                 return None
             nodes = list(out.get("nodes") or [])
             edges = list(out.get("edges") or [])
+            enrich_authorship_nodes(session, nodes)
             _enrich_edges_workspace(nodes, edges)
             inc, exc = _annotate_membership_and_cites(nodes, edges, iws)
             meta = dict(out.get("meta") or {})
@@ -835,6 +845,8 @@ def project_workspace_graph(
                 external_min_internal_citers,
             )
 
+        with driver.session() as session:
+            enrich_authorship_nodes(session, nodes)
         _enrich_edges_workspace(nodes, edges)
         inc_n, exc_n = _annotate_membership_and_cites(nodes, edges, iws)
 
@@ -1012,6 +1024,7 @@ def workspace_graph_neighbors(
 
             nodes = list(nodes_by_id.values())
             edges = list(edges_by_key.values())
+            enrich_authorship_nodes(session, nodes)
             row_ids = session.run(
                 """
                 MATCH (ws:Workspace {id: $wid})-[:CONTAINS]->(w:Work)

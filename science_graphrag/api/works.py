@@ -9,6 +9,7 @@ from typing import Any
 from neo4j import Session as Neo4jSession
 from sqlalchemy import select
 
+from science_graphrag.api.graph_display import compute_node_display, enrich_authorship_nodes
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
 from science_graphrag.storage.blobs import BlobStore
@@ -38,12 +39,7 @@ def _neighborhood_edge_endpoints(
 ) -> tuple[str, str]:
     """Resolve directed edge ends; fallback to center→neighbor if data is inconsistent."""
     endpoints = {center_id, neighbor_id}
-    if (
-        raw_src
-        and raw_tgt
-        and raw_src != raw_tgt
-        and {raw_src, raw_tgt} == endpoints
-    ):
+    if raw_src and raw_tgt and raw_src != raw_tgt and {raw_src, raw_tgt} == endpoints:
         return raw_src, raw_tgt
     return center_id, neighbor_id
 
@@ -81,15 +77,23 @@ def _neighbor_subtitle_and_properties(ntype: str, rec: Any) -> tuple[str, dict[s
         if s:
             props["venue"] = s[:200]
 
-    if ntype == "Work" and pub is not None:
-        subtitle = f"Work · {int(pub)}"
-    elif ntype == "Work":
-        subtitle = "Work"
-    elif ntype in ("Method", "Dataset", "Author", "Institution", "Authorship"):
-        subtitle = ntype
-    else:
-        subtitle = str(ntype) if ntype else "Node"
-    return subtitle, props
+    rendered = compute_node_display(
+        ntype,
+        str(rec.get("nlabel") or ""),
+        props,
+        authorship_extra=(
+            {
+                "author_position": rec.get("n_ash_pos"),
+                "author_name": rec.get("n_ash_author"),
+                "raw_affiliation": rec.get("n_ash_aff"),
+                "institution_name": rec.get("n_ash_inst"),
+                "is_corresponding": rec.get("n_ash_corr"),
+            }
+            if ntype == "Authorship"
+            else None
+        ),
+    )
+    return rendered["subtitle"], rendered["properties"]
 
 
 def _append_neighbor_edge(
@@ -103,8 +107,26 @@ def _append_neighbor_edge(
     ntype = str(labs[0]) if labs else "Node"
     nid = str(rec["nid"])
     raw_label = str(rec.get("nlabel") or "").strip()
-    disp = (raw_label or nid)[:200]
     subtitle, props = _neighbor_subtitle_and_properties(ntype, rec)
+    rendered = compute_node_display(
+        ntype,
+        raw_label,
+        props,
+        authorship_extra=(
+            {
+                "author_position": rec.get("n_ash_pos"),
+                "author_name": rec.get("n_ash_author"),
+                "raw_affiliation": rec.get("n_ash_aff"),
+                "institution_name": rec.get("n_ash_inst"),
+                "is_corresponding": rec.get("n_ash_corr"),
+            }
+            if ntype == "Authorship"
+            else None
+        ),
+    )
+    disp = str(rendered["display_label"])
+    subtitle = str(rendered["subtitle"])
+    props = dict(rendered["properties"])
     if not any(x["id"] == nid for x in nodes):
         nodes.append(
             {
@@ -189,7 +211,6 @@ def _work_graph_neighborhood_payload(
     edges: list[dict[str, Any]] = []
     center_id = str(row["wid"])
     raw_title = str(row.get("wtitle") or "").strip()
-    center_label = raw_title[:200] if raw_title else center_id
     wyear = row.get("wyear")
     center_props: dict[str, Any] = {}
     if wyear is not None:
@@ -203,9 +224,10 @@ def _work_graph_neighborhood_payload(
     wvenue = str(row.get("wvenue") or "").strip()
     if wvenue:
         center_props["venue"] = wvenue[:200]
-    center_sub = "Work"
-    if wyear is not None:
-        center_sub = f"Work · {int(wyear)}"
+    center_rendered = compute_node_display("Work", raw_title, center_props)
+    center_label = str(center_rendered["display_label"])
+    center_sub = str(center_rendered["subtitle"])
+    center_props = dict(center_rendered["properties"])
 
     nodes.append(
         {
@@ -244,16 +266,23 @@ def _work_graph_neighborhood_payload(
     for rec in session.run(
         """
         MATCH (w:Work {id: $id})-[r]-(n)
+        OPTIONAL MATCH (n)-[:OF_AUTHOR]->(auth:Author)
+        OPTIONAL MATCH (n)-[:AFFILIATED_WITH]->(inst:Institution)
         RETURN coalesce(n.id, toString(elementId(n))) AS nid,
                labels(n) AS labs,
                type(r) AS rt,
-               coalesce(n.name, n.full_name, n.title, '') AS nlabel,
+               coalesce(n.title, n.name, n.full_name, '') AS nlabel,
                coalesce(startNode(r).id, toString(elementId(startNode(r)))) AS src_id,
                coalesce(endNode(r).id, toString(elementId(endNode(r)))) AS tgt_id,
                n.publication_year AS n_pub_year,
                coalesce(n.doi, '') AS n_doi,
                coalesce(n.arxiv_id, '') AS n_arxiv,
-               coalesce(n.venue_name, '') AS n_venue
+               coalesce(n.venue_name, '') AS n_venue,
+               n.author_position AS n_ash_pos,
+               coalesce(n.raw_affiliation, '') AS n_ash_aff,
+               n.is_corresponding AS n_ash_corr,
+               coalesce(auth.full_name, '') AS n_ash_author,
+               coalesce(inst.name, '') AS n_ash_inst
         LIMIT $lim
         """,
         id=work_id,
@@ -304,6 +333,7 @@ def _work_graph_neighborhood_payload(
                         n["distance"] = 2
                         break
 
+    enrich_authorship_nodes(session, nodes)
     _enrich_edges_with_display(center_id, nodes, edges)
 
     truncated = total_neighbors > hop1_lim

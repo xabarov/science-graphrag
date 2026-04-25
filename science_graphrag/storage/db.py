@@ -31,6 +31,8 @@ def session_factory(engine):
     with _ENGINE_LOCK:
         fac = _SESSION_FACTORIES.get(key)
         if fac is None:
-            fac = sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
+            fac = sessionmaker(
+                bind=engine, autoflush=False, autocommit=False, expire_on_commit=False
+            )
             _SESSION_FACTORIES[key] = fac
         return fac

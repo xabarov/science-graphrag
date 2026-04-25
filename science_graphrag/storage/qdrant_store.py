@@ -170,7 +170,9 @@ class QdrantChunkStore:
                 break
             for rec in records:
                 payload = rec.payload or {}
-                cur = [str(x).strip() for x in (payload.get("workspace_ids") or []) if str(x).strip()]
+                cur = [
+                    str(x).strip() for x in (payload.get("workspace_ids") or []) if str(x).strip()
+                ]
                 if wid in cur:
                     continue
                 cur.append(wid)
@@ -268,7 +270,9 @@ class QdrantChunkStore:
             cleaned = [str(w).strip() for w in work_ids if str(w).strip()]
             if cleaned:
                 work_clause = Filter(
-                    should=[FieldCondition(key="work_id", match=MatchValue(value=w)) for w in cleaned],
+                    should=[
+                        FieldCondition(key="work_id", match=MatchValue(value=w)) for w in cleaned
+                    ],
                 )
                 if must_clauses:
                     query_filter = Filter(must=[*must_clauses, work_clause])

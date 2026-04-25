@@ -1,0 +1,483 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+    "semantic_extraction_enabled": true
+  },
+  "summary": {
+    "case_count": 10,
+    "case_ids": [
+      "agent_case_01",
+      "agent_case_02",
+      "agent_case_03",
+      "agent_case_04",
+      "agent_case_05",
+      "agent_case_06",
+      "agent_case_07",
+      "agent_case_08",
+      "agent_case_09",
+      "agent_case_10"
+    ],
+    "all_passed": true,
+    "agent_tools_eval": true,
+    "latency_p95_ms": 2
+  },
+  "cases": [
+    {
+      "case_id": "agent_case_01",
+      "answer": "mock answer",
+      "citations": [
+        {
+          "work_id": "mock-work"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 1,
+          "tool": "idea_search",
+          "args_summary": {
+            "q": "List key object detection papers using F"
+          },
+          "row_count": 3,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer_chars": 12
+          },
+          "row_count": 1,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 2,
+      "metrics": {
+        "tool_call_correctness": 1.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": true
+      },
+      "wall_clock_seconds": 0.0
+    },
+    {
+      "case_id": "agent_case_02",
+      "answer": "mock answer",
+      "citations": [
+        {
+          "work_id": "mock-work"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 1,
+          "tool": "idea_search",
+          "args_summary": {
+            "q": "Which works in this workspace compare on"
+          },
+          "row_count": 3,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "summarize_workspace",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 2,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer_chars": 12
+          },
+          "row_count": 1,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 2,
+      "metrics": {
+        "tool_call_correctness": 1.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": true
+      },
+      "wall_clock_seconds": 0.0
+    },
+    {
+      "case_id": "agent_case_03",
+      "answer": "mock answer",
+      "citations": [
+        {
+          "work_id": "mock-work"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 1,
+          "tool": "idea_search",
+          "args_summary": {
+            "q": "Find papers citing YOLOv1 within two hop"
+          },
+          "row_count": 3,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer_chars": 12
+          },
+          "row_count": 1,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 2,
+      "metrics": {
+        "tool_call_correctness": 1.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": true
+      },
+      "wall_clock_seconds": 0.0
+    },
+    {
+      "case_id": "agent_case_04",
+      "answer": "mock answer",
+      "citations": [
+        {
+          "work_id": "mock-work"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 1,
+          "tool": "idea_search",
+          "args_summary": {
+            "q": "Summarize major datasets used by RetinaN"
+          },
+          "row_count": 3,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer_chars": 12
+          },
+          "row_count": 1,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 2,
+      "metrics": {
+        "tool_call_correctness": 1.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": true
+      },
+      "wall_clock_seconds": 0.0
+    },
+    {
+      "case_id": "agent_case_05",
+      "answer": "mock answer",
+      "citations": [
+        {
+          "work_id": "mock-work"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 1,
+          "tool": "idea_search",
+          "args_summary": {
+            "q": "Which papers in workspace mention BiFPN "
+          },
+          "row_count": 3,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "summarize_workspace",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 2,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer_chars": 12
+          },
+          "row_count": 1,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 2,
+      "metrics": {
+        "tool_call_correctness": 1.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": true
+      },
+      "wall_clock_seconds": 0.0
+    },
+    {
+      "case_id": "agent_case_06",
+      "answer": "mock answer",
+      "citations": [
+        {
+          "work_id": "mock-work"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 1,
+          "tool": "idea_search",
+          "args_summary": {
+            "q": "Give three most cited detector papers in"
+          },
+          "row_count": 3,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "summarize_workspace",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 2,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer_chars": 12
+          },
+          "row_count": 1,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 2,
+      "metrics": {
+        "tool_call_correctness": 1.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": true
+      },
+      "wall_clock_seconds": 0.0
+    },
+    {
+      "case_id": "agent_case_07",
+      "answer": "mock answer",
+      "citations": [
+        {
+          "work_id": "mock-work"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 1,
+          "tool": "idea_search",
+          "args_summary": {
+            "q": "What methods are common between YOLO and"
+          },
+          "row_count": 3,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer_chars": 12
+          },
+          "row_count": 1,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 2,
+      "metrics": {
+        "tool_call_correctness": 1.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": true
+      },
+      "wall_clock_seconds": 0.0
+    },
+    {
+      "case_id": "agent_case_08",
+      "answer": "mock answer",
+      "citations": [
+        {
+          "work_id": "mock-work"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 1,
+          "tool": "idea_search",
+          "args_summary": {
+            "q": "Find external citations linked to select"
+          },
+          "row_count": 3,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer_chars": 12
+          },
+          "row_count": 1,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 2,
+      "metrics": {
+        "tool_call_correctness": 1.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": true
+      },
+      "wall_clock_seconds": 0.0
+    },
+    {
+      "case_id": "agent_case_09",
+      "answer": "mock answer",
+      "citations": [
+        {
+          "work_id": "mock-work"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 1,
+          "tool": "idea_search",
+          "args_summary": {
+            "q": "Answer with evidence if FPN appears in 2"
+          },
+          "row_count": 3,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer_chars": 12
+          },
+          "row_count": 1,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 2,
+      "metrics": {
+        "tool_call_correctness": 1.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": true
+      },
+      "wall_clock_seconds": 0.0
+    },
+    {
+      "case_id": "agent_case_10",
+      "answer": "mock answer",
+      "citations": [
+        {
+          "work_id": "mock-work"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 1,
+          "tool": "idea_search",
+          "args_summary": {
+            "q": "If no relevant works are found, return n"
+          },
+          "row_count": 3,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer_chars": 12
+          },
+          "row_count": 1,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 2,
+      "metrics": {
+        "tool_call_correctness": 1.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": true
+      },
+      "wall_clock_seconds": 0.0
+    }
+  ]
+}

@@ -33,7 +33,8 @@ export function buildQueryBody(query, workId = null, topK = 5, workspaceId = nul
     workspaceId === undefined || workspaceId === null || workspaceId === ""
       ? null
       : String(workspaceId).trim() || null;
-  const m = String(mode || "vector").toLowerCase() === "hybrid" ? "hybrid" : "vector";
+  const modeRaw = String(mode || "vector").toLowerCase();
+  const m = modeRaw === "hybrid" ? "hybrid" : modeRaw === "agent" ? "agent" : "vector";
   return {
     query: String(query ?? "").trim(),
     work_id: wid,
@@ -188,6 +189,10 @@ export async function getHealth(config) {
 
 export async function postQuery(body, config) {
   return apiClient.post(buildApiUrl("/v1/query"), body, config);
+}
+
+export async function postAgentQuery(body, config) {
+  return apiClient.post(buildApiUrl("/v1/agent/query"), body, config);
 }
 
 function worksUrl(pathWithQuery) {

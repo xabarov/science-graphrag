@@ -9,12 +9,18 @@ import pytest
 
 from eval.claims.heuristic_extract import extract_claims_anchor_harness
 from eval.claims.metrics import score_claims_extraction
-from eval.claims.runner import discover_claims_case_dirs, extract_claims_production_path, run_claims_case
+from eval.claims.runner import (
+    discover_claims_case_dirs,
+    extract_claims_production_path,
+    run_claims_case,
+)
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "benchmarks" / "claims"
 
 
-def test_production_claims_extractor_matches_ingestion_stub(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_production_claims_extractor_matches_ingestion_stub(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Production lane returns ([], diagnostics) without LLM credentials (CI-safe)."""
 
     for key in (

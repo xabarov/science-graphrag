@@ -10,6 +10,42 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 
 ## Queue
 
+### [DONE] Graph readability — Wave GR1 display labels (Authorship/Author/Institution/Venue)
+- **Area:** `science_graphrag/api/graph_display.py`, `science_graphrag/api/works.py`, `science_graphrag/api/workspace_graph.py`
+- **Issue:** Graph projections leaked technical UUID-like node ids (notably `:Authorship` ids like `...:ash:1`) into `display_label`/`subtitle`, reducing readability.
+- **Proposal:** Introduce shared display helper and enrich Authorship labels from `OF_AUTHOR`/`AFFILIATED_WITH`; apply in all graph endpoints.
+- **Acceptance:** no UUID-like labels in graph node titles/subtitles for core node types; integration + unit tests cover Authorship rendering.
+- **Raised:** 2026-04-25
+- **Note (done):** 2026-04-25 — implemented in GR1 pass with tests for `/v1/works/{id}/graph`, `/v1/workspaces/{id}/graph`, and `/v1/workspaces/{id}/graph/neighbors`.
+
+### [OPEN] Graph readability — Wave GR2 node_kind + semantic display_type + prioritized LIMIT
+- **Area:** `science_graphrag/api/works.py`, `science_graphrag/api/workspace_graph.py`
+- **Issue:** `node_kind` is still equal to Neo4j `type`; edge labels remain technical (`HAS_AUTHORSHIP`, etc.); `LIMIT` truncation is not priority-aware.
+- **Proposal:** Add `node_kind` projection semantics, relation `display_type` mapping, and limit prioritization with `meta.skipped_by_kind`.
+- **Acceptance:** priority kinds (`Method`,`Dataset`,`Work`) survive truncation reliably and UI legend can render semantic edge labels.
+- **Raised:** 2026-04-25
+
+### [OPEN] Graph readability — Wave GR3 aggregator nodes + lazy expand endpoint
+- **Area:** `science_graphrag/api/works.py`, `science_graphrag/api/workspace_graph.py`
+- **Issue:** Dense one-kind neighbor stars (authors/cites/institutions) overload graph readability at default limits.
+- **Proposal:** Add `node_kind: Aggregator` projection with `aggregation_hints` and expand endpoint for lazy unfolding.
+- **Acceptance:** oversized neighbor groups collapse into one aggregator node with count/preview and expand on demand.
+- **Raised:** 2026-04-25
+
+### [OPEN] Graph readability — Wave GR4 reader view with virtual AUTHORED edges
+- **Area:** `science_graphrag/api/works.py`, `science_graphrag/api/workspace_graph.py`, `science_graphrag/api/graph_snapshot_diff.py`
+- **Issue:** Raw `Authorship` reification is useful for ontology/debug but too verbose for default reader UX.
+- **Proposal:** Add `view=raw|reader`; in reader view project virtual `AUTHORED` edges with `via` trace fields, keep raw mode for snapshots/tests.
+- **Acceptance:** reader view hides `Authorship` nodes by default while preserving traceability and raw compatibility.
+- **Raised:** 2026-04-25
+
+### [OPEN] Graph readability — Wave GR5 denormalized Work counters for weighted layout
+- **Area:** `science_graphrag/storage/neo4j_store.py`, ingestion pipelines, graph API payload properties
+- **Issue:** Work importance signals (`cites_in/out`, `authors_count`) are recomputed ad hoc and not consistently available for graph styling.
+- **Proposal:** Persist denormalized counters on `:Work` and expose them in graph payload properties.
+- **Acceptance:** graph payload includes stable counter properties enabling weighted radius/ranking without extra query passes.
+- **Raised:** 2026-04-25
+
 ### [OPEN] Ingest pipeline async-redesign (Wave U–W)
 
 - **Area:** `science_graphrag/api/ingest_jobs.py`, `science_graphrag/ingestion/pipeline.py`, `ui/src/hooks/usePollJob.js`, `docker/nginx-web.conf`, `docker-compose.yml`

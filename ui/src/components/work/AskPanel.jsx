@@ -29,6 +29,7 @@ import {
   listAskSessions as listAskSessionsRequest,
   normalizeQueryResponse,
   patchAskSession as patchAskSessionRequest,
+  postAgentQuery,
   postQuery,
 } from "../../services/researchApi.js";
 import {
@@ -54,6 +55,7 @@ import {
 import { buildStandaloneTracePath, buildWorkspaceTracePath } from "./traceabilityState.js";
 import { persistWorkId } from "../../pages/WorkspacePage/utils/workContext.js";
 import { useI18n } from "../../i18n/I18nContext.jsx";
+import AgentToolTrace from "./AgentToolTrace.jsx";
 
 function FlagChips({ label, items }) {
   if (!items || items.length === 0) return null;
@@ -106,6 +108,7 @@ export default function AskPanel({
   const [sessionTitleDraft, setSessionTitleDraft] = useState("");
   const [serverSync, setServerSync] = useState(() => readAskServerSyncPref());
   const [retrievalMode, setRetrievalMode] = useState(() => "vector");
+  const [agentToolTrace, setAgentToolTrace] = useState([]);
   const retrievalLabVisible = Boolean(labMode || isAdminModeEnabled());
 
   const scopeKey = useMemo(
@@ -219,9 +222,33 @@ export default function AskPanel({
     setError(null);
     setNormalized(null);
     setRetrievalJsonOpen(false);
+    setAgentToolTrace([]);
     try {
-      const res = await postQuery(bodyPreview);
-      const nextNormalized = normalizeQueryResponse(res.data);
+      let nextNormalized;
+      if (retrievalLabVisible && retrievalMode === "agent") {
+        const res = await postAgentQuery({
+          question: query,
+          workspace_id: workspaceId || null,
+          max_tool_calls: 8,
+        });
+        const raw = res.data || {};
+        setAgentToolTrace(Array.isArray(raw.tool_trace) ? raw.tool_trace : []);
+        nextNormalized = normalizeQueryResponse({
+          answer: String(raw.answer || ""),
+          citations: Array.isArray(raw.citations) ? raw.citations : [],
+          graph_context: {},
+          retrieval_trace: {
+            retrieval_mode: "agent",
+            hit_count: Array.isArray(raw.citations) ? raw.citations.length : 0,
+            top_k_requested: topK,
+            citations_returned: Array.isArray(raw.citations) ? raw.citations.length : 0,
+            retrieval_policy: "agent_tools_v1",
+          },
+        });
+      } else {
+        const res = await postQuery(bodyPreview);
+        nextNormalized = normalizeQueryResponse(res.data);
+      }
       setNormalized(nextNormalized);
       const queryMode =
         locked || inWorkspace ? "workspace" : corpusWorkspaceOnly ? "workspace_corpus" : workId ? "scoped" : "global";
@@ -577,6 +604,7 @@ export default function AskPanel({
             >
               <ToggleButton value="vector">{t("askPanel.retrieval.vector")}</ToggleButton>
               <ToggleButton value="hybrid">{t("askPanel.retrieval.hybrid")}</ToggleButton>
+              <ToggleButton value="agent">{t("askPanel.retrieval.agent")}</ToggleButton>
             </ToggleButtonGroup>
           </Box>
         ) : null}
@@ -763,6 +791,7 @@ export default function AskPanel({
 
           <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 2, mb: 0.5 }}>{t("askPanel.retrieval.title")}</Typography>
           <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mb: 0.75 }}>{t("askPanel.retrieval.summary")}</Typography>
+          {retrievalLabVisible && retrievalMode === "agent" ? <AgentToolTrace toolTrace={agentToolTrace} /> : null}
           <Box sx={{ mb: 1 }}>
             {formatRetrievalSummaryLines(normalized.retrieval_trace).map((line, idx) => (
               <Typography key={idx} sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.65)", lineHeight: 1.45 }}>

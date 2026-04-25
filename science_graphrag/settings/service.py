@@ -23,9 +23,7 @@ if TYPE_CHECKING:
 
 _LLM_SECRET_KEY = "llm.api_key"
 
-_LLM_ENV_KEY_HINT = (
-    "SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY (or MAIN_LLM_API_KEY / API_KEY per .env.example merge rules)"
-)
+_LLM_ENV_KEY_HINT = "SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY (or MAIN_LLM_API_KEY / API_KEY per .env.example merge rules)"
 
 
 def _settings_auth_required() -> bool:
@@ -182,9 +180,7 @@ class SettingsService:
                 "resolved_temperature": llm.get(
                     "temperature", base_settings.extraction_llm_temperature
                 ),
-                "resolved_enabled": bool(
-                    llm.get("enabled", base_settings.extraction_llm_enabled)
-                ),
+                "resolved_enabled": bool(llm.get("enabled", base_settings.extraction_llm_enabled)),
             },
         }
 

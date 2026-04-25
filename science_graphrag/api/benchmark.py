@@ -623,7 +623,9 @@ def get_benchmark_cases_list(  # pylint: disable=too-many-locals
             p for p in discover_layer1_case_dirs(root, tier=tier) if _gold_has_graph_expectations(p)
         ]
         gv1_graph = [
-            p for p in discover_graph_v1_case_dirs(root_gv1, tier=tier) if _gold_has_graph_expectations(p)
+            p
+            for p in discover_graph_v1_case_dirs(root_gv1, tier=tier)
+            if _gold_has_graph_expectations(p)
         ]
         seen_names: set[str] = set()
         case_dirs = []

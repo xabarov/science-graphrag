@@ -7,8 +7,8 @@ from typing import Any
 from fastapi.testclient import TestClient
 
 from science_graphrag.api import main as api_main
-from science_graphrag.api import workspaces as workspaces_mod
 from science_graphrag.api import workspace_graph as wg_mod
+from science_graphrag.api import workspaces as workspaces_mod
 
 
 def _client() -> TestClient:

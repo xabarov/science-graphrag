@@ -82,6 +82,17 @@ Retrieval benchmarks are **not** part of the primary decision gate; they track `
 - all_passed: **True**
 - failed_count: **0**
 
+### multihop_mini (2-hop graph precision, Wave Q)
+
+- artifact: `eval/results/current-retrieval-multihop-mini.json`
+- all_passed: **False**
+- failed_count: **5**
+  - `mh_01_yolov1_cites`: {'passed': False, 'precision': 0.0, 'recall': 0.0, 'min_precision': 0.7, 'min_recall': 0.5, 'expected_count': 3, 'returned_count': 0, 'matched_work_ids': [], 'missing_work_ids': ['faster_rcnn_realpdf', 'retinanet_focal_realpdf', 'ssd_realpdf'], 'unexpected_work_ids': [], 'request_error': '[Errno 111] Connection refused'}
+  - `mh_02_retinanet_cites`: {'passed': False, 'precision': 0.0, 'recall': 0.0, 'min_precision': 0.7, 'min_recall': 0.5, 'expected_count': 3, 'returned_count': 0, 'matched_work_ids': [], 'missing_work_ids': ['faster_rcnn_realpdf', 'mask_rcnn_realpdf', 'yolov3_realpdf'], 'unexpected_work_ids': [], 'request_error': '[Errno 111] Connection refused'}
+  - `mh_03_faster_rcnn_cites`: {'passed': False, 'precision': 0.0, 'recall': 0.0, 'min_precision': 0.7, 'min_recall': 0.5, 'expected_count': 3, 'returned_count': 0, 'matched_work_ids': [], 'missing_work_ids': ['mask_rcnn_realpdf', 'rcnn_realpdf', 'rfcn_realpdf'], 'unexpected_work_ids': [], 'request_error': '[Errno 111] Connection refused'}
+  - `mh_04_mask_rcnn_cites`: {'passed': False, 'precision': 0.0, 'recall': 0.0, 'min_precision': 0.7, 'min_recall': 0.5, 'expected_count': 3, 'returned_count': 0, 'matched_work_ids': [], 'missing_work_ids': ['faster_rcnn_realpdf', 'fpn_realpdf', 'retinanet_focal_realpdf'], 'unexpected_work_ids': [], 'request_error': '[Errno 111] Connection refused'}
+  - `mh_05_detr_cites`: {'passed': False, 'precision': 0.0, 'recall': 0.0, 'min_precision': 0.7, 'min_recall': 0.5, 'expected_count': 3, 'returned_count': 0, 'matched_work_ids': [], 'missing_work_ids': ['deformable_detr_realpdf', 'dino_realpdf', 'dn_detr_realpdf'], 'unexpected_work_ids': [], 'request_error': '[Errno 111] Connection refused'}
+
 Promotion roadmap for workspace-scoped + judge → core retrieval gate: `docs/runbooks/benchmark-decision-gate.md` §8.3.
 
 ## Claims family (advisory)
@@ -161,6 +172,22 @@ Ontology v1.5 concept and topic extraction benchmarks are **not** part of the pr
 - artifact: `eval/results/current-concept-topic-mini.json`
 - all_passed: **True**
 - failed_count: **0**
+
+## Agent tools family (advisory)
+
+Wave R benchmark family for `POST /v1/agent/query`.
+
+- **role**: `advisory`
+
+### agent_tools_mini
+
+- artifact: `eval/results/current-agent-tools-mini.json`
+- all_passed: **True**
+- failed_count: **0**
+
+### agent_tools_judge
+
+- **status**: missing artifact `eval/results/current-agent-tools-judge-pilot.json`
 
 ## Baseline deltas (vs stored baseline JSON)
 

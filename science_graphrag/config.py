@@ -249,6 +249,12 @@ class Settings(BaseSettings):
     )
     query_answer_llm_max_tokens: int = Field(default=900, ge=64, le=4096)
     query_answer_llm_temperature: float = Field(default=0.0, ge=0.0, le=1.0)
+    agent_enabled: bool = Field(
+        default=False,
+        description="Enable Wave R agent endpoint (/v1/agent/query).",
+    )
+    agent_max_tool_calls: int = Field(default=8, ge=1, le=30)
+    agent_step_timeout_seconds: float = Field(default=30.0, ge=1.0, le=180.0)
 
     gds_enabled: bool = Field(
         default=False,

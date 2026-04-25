@@ -44,7 +44,9 @@ def test_yolov1_concepts_mini_case_passes_harness() -> None:
     assert report["metrics"]["passed"] is True
 
 
-@pytest.mark.parametrize("case_id", list(discover_concept_topic_case_dirs(FIXTURE_ROOT, tier="concept_topic_mini")))
+@pytest.mark.parametrize(
+    "case_id", list(discover_concept_topic_case_dirs(FIXTURE_ROOT, tier="concept_topic_mini"))
+)
 def test_concept_topic_mini_harness_passes(case_id: Path) -> None:
     report = run_concept_topic_case(case_id)
     assert report["metrics"]["passed"] is True, (case_id.name, report["metrics"])

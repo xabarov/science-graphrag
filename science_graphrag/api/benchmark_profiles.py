@@ -114,7 +114,9 @@ def prepare_run_config(
 
     gold_source = _resolve_gold_source(profile, family, requested.get("gold_source"))
     threshold_profile = _resolve_threshold_profile(profile, requested.get("threshold_profile"))
-    resolved_base_url = _resolve_base_url(profile, base_settings, requested.get("base_url_override"))
+    resolved_base_url = _resolve_base_url(
+        profile, base_settings, requested.get("base_url_override")
+    )
     resolved_api_key, api_key_source = _resolve_api_key(
         profile,
         base_settings,
@@ -144,12 +146,14 @@ def prepare_run_config(
             "extraction_llm_enabled": base_settings.extraction_llm_enabled,
             "semantic_extraction_enabled": base_settings.semantic_extraction_enabled,
         },
-        "layer1_gold": _resolve_layer1_gold_config(
-            repo_root=Path(__file__).resolve().parents[2],
-            gold_source=gold_source,
-        )
-        if family == "layer1"
-        else None,
+        "layer1_gold": (
+            _resolve_layer1_gold_config(
+                repo_root=Path(__file__).resolve().parents[2],
+                gold_source=gold_source,
+            )
+            if family == "layer1"
+            else None
+        ),
     }
 
 
@@ -219,7 +223,9 @@ def _resolve_gold_source(
     return profile.default_gold_source or "curated_gold"
 
 
-def _resolve_threshold_profile(profile: BenchmarkModelProfile, threshold_profile: Any) -> str | None:
+def _resolve_threshold_profile(
+    profile: BenchmarkModelProfile, threshold_profile: Any
+) -> str | None:
     requested = _strip_or_none(threshold_profile)
     if requested in ("none", "from_gold"):
         return None

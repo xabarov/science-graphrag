@@ -38,6 +38,7 @@ Record the outcome in the family spec header (status + policy) and, if applicabl
 | Retrieval | Advisory | Mock tiers + live mini-tier; **Wave P** `workspace_scoped` + `judge_pilot` — advisory; promotion roadmap — `benchmark-decision-gate.md` §8.3 |
 | Claims | Mixed | Harness / merge contract — **advisory**; **Wave O** production pilot `current-claims-production-pilot.json` — **core** в `decision_gate` (см. `benchmark-decision-gate.md` §8.1) |
 | References resolution | Advisory | Synthetic + graph_stub harness in CI; **Neo4j `--resolver graph` lane** (Wave M) — advisory; **conditional core** после 7 зелёных ночей + promotion review (см. `benchmark-decision-gate.md` §8.2) |
+| Agent tools (`agent_tools_v1`) | Advisory | Wave R: `current-agent-tools-mini.json` + `current-agent-tools-judge-pilot.json`; promotion только после стабильного nightly и holdout |
 
 ## Checklist: References resolution — graph resolver lane (Wave M → core)
 
@@ -81,3 +82,22 @@ Use when promoting **workspace-scoped retrieval** and/or **LLM-judge** from advi
 
 - [ ] Update [`benchmark-program-status.md`](benchmark-program-status.md) and §8.3 in [`benchmark-decision-gate.md`](benchmark-decision-gate.md) if policy changes.
 - [ ] If retrieval becomes blocking: extend [`scripts/aggregate_benchmark_metrics.py`](../../scripts/aggregate_benchmark_metrics.py) `_decision_gate` with explicit criteria (maintainer decision only).
+
+## Checklist: Agent tools (Wave R → stronger gate)
+
+### Preconditions
+
+- [ ] `POST /v1/agent/query` стабилен на frozen mini-suite (`agent_tools_mini`) и не требует write-операций в graph/vector stores.
+- [ ] `cypher_safety` policy и тесты атак зафиксированы; нет bypass через tool args.
+- [ ] Артефакты `current-agent-tools-mini.json` и `current-agent-tools-judge-pilot.json` публикуются регулярно.
+
+### Stabilization window
+
+- [ ] 14 ночей подряд `agent_tools_mini` проходит (`tool_call_correctness ≥ 0.7`, `cypher_safety = 1.0`).
+- [ ] 14 ночей подряд judge-пилот `mean_weighted_score ≥ 4.5/6`.
+- [ ] Holdout: не менее 5 кейсов вне nightly snapshot, недельный прогон отдельно.
+
+### Exit
+
+- [ ] Обновить `benchmark-program-status.md` и `benchmark-decision-gate.md` (policy change).
+- [ ] Если lane становится blocking — явно расширить `_decision_gate` в агрегаторе отдельным PR.

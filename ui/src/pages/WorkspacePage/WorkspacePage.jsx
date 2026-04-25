@@ -3,12 +3,17 @@ import { Link, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import Typography from "@mui/material/Typography";
 
 import { CursorPrimaryButton, CursorSmallButton } from "../../components/common/index.js";
 import PageHeader from "../../components/layout/PageHeader.jsx";
 import WorkIdGlossaryHint from "../../components/layout/WorkIdGlossaryHint.jsx";
 import { mainShellContentSx } from "../../components/layout/mainShellContentSx.js";
-import { formatResearchApiError, getWorkDetail } from "../../services/researchApi.js";
+import { formatResearchApiError, getWorkDetail, postAgentQuery } from "../../services/researchApi.js";
 import {
   getActiveWorkspaceId,
   setActiveWorkspaceId,
@@ -50,6 +55,9 @@ export default function WorkspacePage() {
   const [ingestErr, setIngestErr] = useState(null);
   const [uploadBusy, setUploadBusy] = useState(false);
   const [graphStats, setGraphStats] = useState(null);
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  const [summaryBusy, setSummaryBusy] = useState(false);
+  const [summaryText, setSummaryText] = useState("");
 
   const refreshWorkspaceMeta = useCallback(async () => {
     const id = workspaceMeta.id;
@@ -335,6 +343,25 @@ export default function WorkspacePage() {
   const onCardActivate =
     workspaceMeta.id && effectiveWorkIds.length > 1 ? (wid) => setWorkFocusInUrl(wid) : undefined;
 
+  async function handleSummarizeWorkspace() {
+    if (!workspaceMeta.id) return;
+    setSummaryBusy(true);
+    try {
+      const res = await postAgentQuery({
+        question: "Briefly summarize this workspace: topics, methods, datasets, and key findings.",
+        workspace_id: workspaceMeta.id,
+        max_tool_calls: 8,
+      });
+      setSummaryText(String(res?.data?.answer || ""));
+      setSummaryOpen(true);
+    } catch (err) {
+      setSummaryText(formatResearchApiError(err));
+      setSummaryOpen(true);
+    } finally {
+      setSummaryBusy(false);
+    }
+  }
+
   return (
     <Box sx={{ p: { xs: 1.5, sm: 2 }, ...mainShellContentSx }}>
       <PageHeader
@@ -384,9 +411,14 @@ export default function WorkspacePage() {
         }
         actions={
           workspaceMeta.id ? (
-            <CursorSmallButton component={Link} to={workGraphUrl("", workspaceMeta.id)} sx={{ textDecoration: "none" }}>
-              {t("workspace.header.workspaceGraph")}
-            </CursorSmallButton>
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <CursorSmallButton component={Link} to={workGraphUrl("", workspaceMeta.id)} sx={{ textDecoration: "none" }}>
+                {t("workspace.header.workspaceGraph")}
+              </CursorSmallButton>
+              <CursorSmallButton onClick={handleSummarizeWorkspace} disabled={summaryBusy}>
+                {summaryBusy ? "Summarizing..." : "Summarize this workspace"}
+              </CursorSmallButton>
+            </Box>
           ) : null
         }
       />
@@ -431,6 +463,17 @@ export default function WorkspacePage() {
           <WorkspaceDedupSection workspaceId={workspaceMeta.id} onMerged={() => refreshWorkspaceMeta()} />
         </>
       )}
+      <Dialog open={summaryOpen} onClose={() => setSummaryOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Workspace summary</DialogTitle>
+        <DialogContent>
+          <Typography sx={{ whiteSpace: "pre-wrap", fontSize: "0.875rem" }}>
+            {summaryText || "No summary yet."}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <CursorPrimaryButton onClick={() => setSummaryOpen(false)}>Close</CursorPrimaryButton>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

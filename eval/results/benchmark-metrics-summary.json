@@ -15,6 +15,7 @@
     "retrieval_workspace_scoped": "eval/results/current-retrieval-workspace-scoped.json",
     "retrieval_judge_pilot": "eval/results/current-retrieval-judge-pilot.json",
     "retrieval_hybrid_ablation": "eval/results/current-retrieval-hybrid-ablation.json",
+    "retrieval_multihop_mini": "eval/results/current-retrieval-multihop-mini.json",
     "claims_merge_contract": "eval/results/current-claims-merge-contract.json",
     "claims_mini_suite": "eval/results/current-claims-mini-suite.json",
     "claims_corpus_v2_mini_suite": "eval/results/current-claims-corpus-v2-mini.json",
@@ -23,7 +24,9 @@
     "references_resolution_contract": "eval/results/current-references-resolution-contract.json",
     "references_resolution_mini": "eval/results/current-references-resolution-mini.json",
     "references_resolution_graph": "eval/results/current-references-resolution-graph.json",
-    "concept_topic_mini_suite": "eval/results/current-concept-topic-mini.json"
+    "concept_topic_mini_suite": "eval/results/current-concept-topic-mini.json",
+    "agent_tools_mini_suite": "eval/results/current-agent-tools-mini.json",
+    "agent_tools_judge_suite": "eval/results/current-agent-tools-judge-pilot.json"
   },
   "reference": {
     "all_passed": true,
@@ -417,6 +420,132 @@
       "failed_cases": [],
       "all_passed": true,
       "mean_claim_recall": null
+    },
+    "multihop_mini": {
+      "artifact": "eval/results/current-retrieval-multihop-mini.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190"
+      },
+      "summary": {
+        "case_count": 5,
+        "case_ids": [
+          "mh_01_yolov1_cites",
+          "mh_02_retinanet_cites",
+          "mh_03_faster_rcnn_cites",
+          "mh_04_mask_rcnn_cites",
+          "mh_05_detr_cites"
+        ],
+        "all_passed": false,
+        "multihop_eval": true
+      },
+      "failed_count": 5,
+      "failed_cases": [
+        {
+          "case_id": "mh_01_yolov1_cites",
+          "metrics": {
+            "passed": false,
+            "precision": 0.0,
+            "recall": 0.0,
+            "min_precision": 0.7,
+            "min_recall": 0.5,
+            "expected_count": 3,
+            "returned_count": 0,
+            "matched_work_ids": [],
+            "missing_work_ids": [
+              "faster_rcnn_realpdf",
+              "retinanet_focal_realpdf",
+              "ssd_realpdf"
+            ],
+            "unexpected_work_ids": [],
+            "request_error": "[Errno 111] Connection refused"
+          }
+        },
+        {
+          "case_id": "mh_02_retinanet_cites",
+          "metrics": {
+            "passed": false,
+            "precision": 0.0,
+            "recall": 0.0,
+            "min_precision": 0.7,
+            "min_recall": 0.5,
+            "expected_count": 3,
+            "returned_count": 0,
+            "matched_work_ids": [],
+            "missing_work_ids": [
+              "faster_rcnn_realpdf",
+              "mask_rcnn_realpdf",
+              "yolov3_realpdf"
+            ],
+            "unexpected_work_ids": [],
+            "request_error": "[Errno 111] Connection refused"
+          }
+        },
+        {
+          "case_id": "mh_03_faster_rcnn_cites",
+          "metrics": {
+            "passed": false,
+            "precision": 0.0,
+            "recall": 0.0,
+            "min_precision": 0.7,
+            "min_recall": 0.5,
+            "expected_count": 3,
+            "returned_count": 0,
+            "matched_work_ids": [],
+            "missing_work_ids": [
+              "mask_rcnn_realpdf",
+              "rcnn_realpdf",
+              "rfcn_realpdf"
+            ],
+            "unexpected_work_ids": [],
+            "request_error": "[Errno 111] Connection refused"
+          }
+        },
+        {
+          "case_id": "mh_04_mask_rcnn_cites",
+          "metrics": {
+            "passed": false,
+            "precision": 0.0,
+            "recall": 0.0,
+            "min_precision": 0.7,
+            "min_recall": 0.5,
+            "expected_count": 3,
+            "returned_count": 0,
+            "matched_work_ids": [],
+            "missing_work_ids": [
+              "faster_rcnn_realpdf",
+              "fpn_realpdf",
+              "retinanet_focal_realpdf"
+            ],
+            "unexpected_work_ids": [],
+            "request_error": "[Errno 111] Connection refused"
+          }
+        },
+        {
+          "case_id": "mh_05_detr_cites",
+          "metrics": {
+            "passed": false,
+            "precision": 0.0,
+            "recall": 0.0,
+            "min_precision": 0.7,
+            "min_recall": 0.5,
+            "expected_count": 3,
+            "returned_count": 0,
+            "matched_work_ids": [],
+            "missing_work_ids": [
+              "deformable_detr_realpdf",
+              "dino_realpdf",
+              "dn_detr_realpdf"
+            ],
+            "unexpected_work_ids": [],
+            "request_error": "[Errno 111] Connection refused"
+          }
+        }
+      ],
+      "all_passed": false,
+      "mean_claim_recall": null
     }
   },
   "claims_family": {
@@ -650,6 +779,44 @@
       "failed_cases": [],
       "all_passed": true,
       "mean_claim_recall": null
+    }
+  },
+  "agent_tools_family": {
+    "role": "advisory",
+    "agent_tools_mini": {
+      "artifact": "eval/results/current-agent-tools-mini.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190"
+      },
+      "summary": {
+        "case_count": 10,
+        "case_ids": [
+          "agent_case_01",
+          "agent_case_02",
+          "agent_case_03",
+          "agent_case_04",
+          "agent_case_05",
+          "agent_case_06",
+          "agent_case_07",
+          "agent_case_08",
+          "agent_case_09",
+          "agent_case_10"
+        ],
+        "all_passed": true,
+        "agent_tools_eval": true,
+        "latency_p95_ms": 2
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true,
+      "mean_claim_recall": null
+    },
+    "agent_tools_judge": {
+      "error": "missing_file",
+      "artifact": "eval/results/current-agent-tools-judge-pilot.json"
     }
   },
   "decision_gate": {

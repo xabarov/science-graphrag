@@ -6,7 +6,9 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
-def _neutralize_admin_api_key_for_api_smoke(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> None:
+def _neutralize_admin_api_key_for_api_smoke(
+    request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Merge CI and local runs: ``test_api_smoke`` assumes open benchmark/settings unless overridden."""
 
     if "test_api_smoke.py" not in str(request.node.fspath):

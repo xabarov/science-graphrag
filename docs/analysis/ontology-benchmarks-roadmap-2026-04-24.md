@@ -707,7 +707,7 @@ Wave M и N можно вести параллельно; Wave P зависит 
 
 **Backend (architecture):**
 
-1. ADR 014 «Agent tool registry для retrieval (read-only)».
+1. ADR 016 «Agent tool registry для retrieval (read-only)».
 2. `science_graphrag/agent/tools/` — 6 tools из §5.2 (cypher_query, entity_search, edge_search, idea_search, summarize_workspace, final_answer).
 3. **Cypher safety:** parser + allowlist (`Work`/`Author`/...), запрет `WRITE` clauses через grammar check; cap `LIMIT 200`, timeout 5s.
 4. Агент: smolagents `ToolCallingAgent` (по референсу [reference-extraction-llm-agent-tools.md](reference-extraction-llm-agent-tools.md)) — простой ReAct loop, model = `MAIN_LLM_*`.
@@ -722,12 +722,12 @@ Wave M и N можно вести параллельно; Wave P зависит 
 
 **Чеклист Wave R:**
 
-- [ ] 6 tools реализованы; unit-тесты на каждом + safety тесты для cypher_query (отказ на WRITE / nonsense).
-- [ ] Agent endpoint + смок.
-- [ ] Bench mini зелёный (tool_call_correctness ≥ 0.7).
-- [ ] UI tool trace показывает каждый шаг (tool name, args summary, row count, latency).
-- [ ] Артефакт `current-agent-tools-mini.json` в advisory.
-- [ ] ADR 014 + спека `docs/specs/agent-tools-v1.md`.
+- [x] 6 tools реализованы; unit-тесты на каждом + safety тесты для cypher_query (отказ на WRITE / nonsense).
+- [x] Agent endpoint + смок.
+- [x] Bench mini зелёный (tool_call_correctness ≥ 0.7).
+- [x] UI tool trace показывает каждый шаг (tool name, args summary, row count, latency).
+- [x] Артефакт `current-agent-tools-mini.json` в advisory.
+- [x] ADR 016 + спека `docs/specs/agent-tools-v1.md`.
 
 **Acceptance:** на 10 mini кейсах — `tool_call_correctness ≥ 0.7`, `cypher_safety = 1.0`, `answer_judge_score ≥ 4.0/6` (advisory).
 
@@ -740,14 +740,14 @@ Wave M и N можно вести параллельно; Wave P зависит 
 **Backend:**
 
 1. `science_graphrag/agent/idea_workflow.py` — orchestrator: query graph через tools → extract claims (Wave O) → LLM генерирует 3 кандидата гипотез или находит противоречие (через `Claim.polarity` + `:CONTRADICTS`).
-2. ADR 015 «Hypothesis / Contradiction слой как rubric-only advisory» — нет production graph до отдельного review.
+2. ADR 016 «Hypothesis / Contradiction слой как rubric-only advisory» — нет production graph до отдельного review.
 3. `tests/fixtures/benchmarks/idea_assist_v1/` — 8 ground-truth «scenario cards»: workspace, набор работ, ожидаемая гипотеза (или ожидаемое противоречие). Rubric: новизна, поддержка evidence, отсутствие плагиата.
 4. Judge runner + frozen prompt; advisory only.
 5. UI: на WorkspacePage — `Generate hypotheses` button (admin-visible); показывает 3 кандидата + supporting claims/evidence.
 
 **Чеклист Wave S:**
 
-- [ ] ADR 015.
+- [ ] ADR 016.
 - [ ] Idea workflow + UI button.
 - [ ] 8 mini кейсов + judge.
 - [ ] Mean rubric score ≥ 4.0/6 на pilot.
@@ -882,3 +882,4 @@ gantt
 | 2026-04-24 | Первая версия. Анализ текущих бенчмарков; инвентаризация онтологии; план Wave M–T; индексы Neo4j + payloads Qdrant; mini-ADR Qdrant/Milvus; чеклисты и зависимости. |
 | 2026-04-24 | **Wave P implemented (M/O/P sweep):** workspace-scoped retrieval fixtures + runner/metrics; `workspace_id` в trace; seed workspaces; retrieval judge CLI + pilot JSON; aggregator advisory blocks; decision-gate §8.3 + promotion-review checklist; claims production lane в **core** `decision_gate`; layer2 `min_dataset_recall_ratio` alignment; refs graph artifact path. |
 | 2026-04-25 | **Wave M/N/O/Q reconciliation:** подтверждены реализованные пункты (sync layer1 thresholds, Concept/Topic family, claims Qdrant+UI, hybrid/Qdrant works/depth toggles); добавлены Wave Q артефакты `multihop_v1` (fixtures+CLI+aggregator), ADR 015 (Neo4j vector index `Work.title_embedding`), обновлён runbook status; refs graph lane остаётся advisory до 7 зелёных ночей на `refs_mini --resolver graph`. |
+| 2026-04-25 | **Wave R implemented:** `science_graphrag/agent/` (6 read-only tools + cypher safety), `POST /v1/agent/query`, AskPanel `mode=agent` + `AgentToolTrace`, Workspace summarize action, `eval/agent_tools/*` + артефакты `current-agent-tools-mini.json` / `current-agent-tools-judge-pilot.json`, ADR 016 и `docs/specs/agent-tools-v1.md`. |

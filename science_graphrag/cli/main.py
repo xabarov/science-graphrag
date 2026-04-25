@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 
 import typer
-
 from sqlalchemy import desc, select
 
 from science_graphrag.config import get_settings
@@ -13,7 +12,11 @@ from science_graphrag.ingestion.pipeline import run_ingest_batch_cli, run_ingest
 from science_graphrag.storage.db import get_engine, init_db, session_factory
 from science_graphrag.storage.models_orm import WorkDedupMergeLog
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
-from science_graphrag.storage.qdrant_store import QdrantChunkStore, QdrantWorkEmbeddingStore, recreate_qdrant_chunk_collection
+from science_graphrag.storage.qdrant_store import (
+    QdrantChunkStore,
+    QdrantWorkEmbeddingStore,
+    recreate_qdrant_chunk_collection,
+)
 
 app = typer.Typer(no_args_is_help=True, help="science-graphrag CLI")
 

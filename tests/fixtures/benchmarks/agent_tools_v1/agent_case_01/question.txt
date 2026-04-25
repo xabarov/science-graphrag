@@ -1,0 +1,1 @@
+List key object detection papers using FPN on COCO between 2018 and 2020.

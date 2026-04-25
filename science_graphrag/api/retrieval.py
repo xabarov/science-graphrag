@@ -9,10 +9,10 @@ from typing import Any, Literal, NamedTuple
 
 logger = logging.getLogger(__name__)
 
-from science_graphrag.config import Settings, get_settings
-from science_graphrag.ingestion.embeddings import HashEmbeddingProvider, try_sentence_transformer
 from openai import OpenAI
 
+from science_graphrag.config import Settings, get_settings
+from science_graphrag.ingestion.embeddings import HashEmbeddingProvider, try_sentence_transformer
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 from science_graphrag.storage.qdrant_store import QdrantChunkStore
 
@@ -274,10 +274,7 @@ def _retrieval_trace_payload(
         "mode": "deterministic_snippets",
         "second_stage_llm": False,
     }
-    policy = (
-        retrieval_policy
-        or "section_boost_v1;back_matter_deprioritized;oversample_then_top_k"
-    )
+    policy = retrieval_policy or "section_boost_v1;back_matter_deprioritized;oversample_then_top_k"
     out: dict[str, Any] = {
         "embedding": inp.emb_trace,
         "hit_count": len(inp.hits),
@@ -512,7 +509,9 @@ def _hybrid_hits_for_answer(
     return vec, emb_out, fused
 
 
-def _workspace_scope_work_ids(settings: Settings, workspace_id: str) -> tuple[list[str] | None, dict[str, Any]]:
+def _workspace_scope_work_ids(
+    settings: Settings, workspace_id: str
+) -> tuple[list[str] | None, dict[str, Any]]:
     """
     Returns (work_ids, meta) for Qdrant filter.
     None work_ids => do not apply workspace filter (invalid / unused).
@@ -526,7 +525,11 @@ def _workspace_scope_work_ids(settings: Settings, workspace_id: str) -> tuple[li
     try:
         row = store.workspace_get(wid)
         if not row:
-            return [], {"workspace_id": wid, "workspace_missing": True, "workspace_scope_work_count": 0}
+            return [], {
+                "workspace_id": wid,
+                "workspace_missing": True,
+                "workspace_scope_work_count": 0,
+            }
         ids = [str(x) for x in (row.get("work_ids") or []) if x]
         return ids, {"workspace_id": wid, "workspace_scope_work_count": len(ids)}
     finally:
@@ -552,7 +555,9 @@ def answer_query(
     """
 
     s = settings or get_settings()
-    mode_norm: Literal["vector", "hybrid"] = "hybrid" if (mode or "").strip().lower() == "hybrid" else "vector"
+    mode_norm: Literal["vector", "hybrid"] = (
+        "hybrid" if (mode or "").strip().lower() == "hybrid" else "vector"
+    )
     ws_meta: dict[str, Any] = {}
     ws_scope_payload_miss: str | None = None
     work_ids_filter: list[str] | None = None
@@ -566,7 +571,11 @@ def answer_query(
         hits = []
         emb_trace = {**emb_trace, **ws_meta}
     else:
-        q_work_ids = None if wid_param else (work_ids_filter if work_ids_filter and len(work_ids_filter) > 0 else None)
+        q_work_ids = (
+            None
+            if wid_param
+            else (work_ids_filter if work_ids_filter and len(work_ids_filter) > 0 else None)
+        )
         ws_qdrant = ws_param if (ws_param and not wid_param) else None
         fetch_hits = _hybrid_hits_for_answer if mode_norm == "hybrid" else _qdrant_hits_for_answer
         _, emb_trace, hits = fetch_hits(
@@ -579,12 +588,7 @@ def answer_query(
         )
         if ws_meta:
             emb_trace = {**emb_trace, **ws_meta}
-        if (
-            ws_qdrant
-            and not hits
-            and q_work_ids
-            and len(q_work_ids) > 0
-        ):
+        if ws_qdrant and not hits and q_work_ids and len(q_work_ids) > 0:
             _, emb_trace_fb, hits = fetch_hits(
                 question=question,
                 settings=s,

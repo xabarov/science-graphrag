@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import threading
 import uuid
 from dataclasses import dataclass, field
@@ -16,8 +17,9 @@ from sqlalchemy import select
 
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.pipeline import SkippedDuplicateIngestError, ingest_document
+from science_graphrag.ingestion.stage_context import IngestStage, stage
 from science_graphrag.storage.db import get_engine, init_db, session_factory
-from science_graphrag.storage.models_orm import IngestJobRecordOrm
+from science_graphrag.storage.models_orm import IngestJobRecordOrm, IngestJobStageOrm
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 
 SUPPORTED_SUFFIXES = frozenset({".pdf", ".md", ".txt"})
@@ -30,7 +32,9 @@ def _append_log(job_id: str, line: str) -> None:
     with _REGISTRY.lock:
         with _REGISTRY._session_factory() as session:
             row = session.execute(
-                select(IngestJobRecordOrm).where(IngestJobRecordOrm.job_id == str(job_id).strip()).limit(1)
+                select(IngestJobRecordOrm)
+                .where(IngestJobRecordOrm.job_id == str(job_id).strip())
+                .limit(1)
             ).scalar_one_or_none()
             if not row:
                 return
@@ -57,6 +61,7 @@ class IngestJobRecord:
     kind: str = "single"  # single | batch_parent | batch_child
     parent_job_id: str | None = None
     child_job_ids: list[str] = field(default_factory=list)
+    stages: list[dict[str, Any]] = field(default_factory=list)
 
 
 class IngestJobRegistry:
@@ -71,15 +76,24 @@ class IngestJobRegistry:
         self.mark_stale_running_jobs_failed()
 
     @staticmethod
-    def _to_dataclass(row: IngestJobRecordOrm) -> IngestJobRecord:
+    def _to_dataclass(
+        row: IngestJobRecordOrm, stages: list[dict[str, Any]] | None = None
+    ) -> IngestJobRecord:
+        stage_rows = list(stages or [])
+        progress_current = int(row.progress_current or 0)
+        progress_total = int(row.progress_total or 100)
+        if row.kind == "single" and stage_rows:
+            completed = sum(1 for item in stage_rows if item.get("status") == "completed")
+            progress_total = max(progress_total, 100)
+            progress_current = int((completed / max(len(IngestStage), 1)) * 100)
         return IngestJobRecord(
             job_id=row.job_id,
             workspace_id=row.workspace_id,
             filename=row.filename,
             status=row.status,
             message=row.message or "",
-            progress_current=int(row.progress_current or 0),
-            progress_total=int(row.progress_total or 100),
+            progress_current=progress_current,
+            progress_total=progress_total,
             logs=row.logs or "",
             work_id=row.work_id,
             document_id=row.document_id,
@@ -90,13 +104,54 @@ class IngestJobRegistry:
             kind=row.kind or "single",
             parent_job_id=row.parent_job_id,
             child_job_ids=row.child_job_ids,
+            stages=stage_rows,
         )
+
+    @staticmethod
+    def _stage_to_dict(row: IngestJobStageOrm) -> dict[str, Any]:
+        started_iso = row.started_at.isoformat() if row.started_at else None
+        finished_iso = row.finished_at.isoformat() if row.finished_at else None
+        duration_ms = None
+        if row.started_at and row.finished_at:
+            duration_ms = max(0, int((row.finished_at - row.started_at).total_seconds() * 1000))
+        metrics: dict[str, Any] = {}
+        raw_metrics = (row.metrics_json or "").strip()
+        if raw_metrics:
+            try:
+                parsed = json.loads(raw_metrics)
+                if isinstance(parsed, dict):
+                    metrics = parsed
+            except Exception:
+                metrics = {}
+        return {
+            "name": row.stage,
+            "status": row.status,
+            "started_at": started_iso,
+            "finished_at": finished_iso,
+            "duration_ms": duration_ms,
+            "metrics": metrics,
+            "error": row.error,
+        }
+
+    def _load_job_stages(self, session: Any, job_id: str) -> list[dict[str, Any]]:
+        stage_rows = (
+            session.execute(
+                select(IngestJobStageOrm)
+                .where(IngestJobStageOrm.job_id == str(job_id).strip())
+                .order_by(IngestJobStageOrm.started_at.asc(), IngestJobStageOrm.stage.asc())
+            )
+            .scalars()
+            .all()
+        )
+        return [self._stage_to_dict(row) for row in stage_rows]
 
     def mark_stale_running_jobs_failed(self) -> None:
         with self.lock:
             with self._session_factory() as session:
                 rows = session.execute(
-                    select(IngestJobRecordOrm).where(IngestJobRecordOrm.status.in_(("queued", "running")))
+                    select(IngestJobRecordOrm).where(
+                        IngestJobRecordOrm.status.in_(("queued", "running"))
+                    )
                 ).scalars()
                 changed = False
                 for row in rows:
@@ -137,15 +192,22 @@ class IngestJobRegistry:
         with self.lock:
             with self._session_factory() as session:
                 row = session.execute(
-                    select(IngestJobRecordOrm).where(IngestJobRecordOrm.job_id == str(job_id).strip()).limit(1)
+                    select(IngestJobRecordOrm)
+                    .where(IngestJobRecordOrm.job_id == str(job_id).strip())
+                    .limit(1)
                 ).scalar_one_or_none()
-                return self._to_dataclass(row) if row else None
+                if not row:
+                    return None
+                stages = self._load_job_stages(session, job_id)
+                return self._to_dataclass(row, stages=stages)
 
     def _update(self, job_id: str, **kwargs: Any) -> None:
         with self.lock:
             with self._session_factory() as session:
                 row = session.execute(
-                    select(IngestJobRecordOrm).where(IngestJobRecordOrm.job_id == str(job_id).strip()).limit(1)
+                    select(IngestJobRecordOrm)
+                    .where(IngestJobRecordOrm.job_id == str(job_id).strip())
+                    .limit(1)
                 ).scalar_one_or_none()
                 if not row:
                     return
@@ -213,6 +275,8 @@ def _execute_single_ingest(job_id: str, temp_path: Path, settings: Settings) -> 
                         skip_existing_sha=False,
                         force_new_document=False,
                         ingest_workspace_ids=ws_tag,
+                        job_id=job_id,
+                        stage_session_factory=_REGISTRY._session_factory,
                     )
         except SkippedDuplicateIngestError as dup:
             skipped = True
@@ -235,16 +299,22 @@ def _execute_single_ingest(job_id: str, temp_path: Path, settings: Settings) -> 
                 )
                 return
             if work_id and not skipped:
-                if not store.workspace_add_work(job.workspace_id, str(work_id)):
-                    upd(
-                        status="failed",
-                        error="work_attach_failed",
-                        message="Ingest OK but could not attach work to workspace (invalid work_id?)",
-                        document_id=doc_id,
-                        work_id=work_id,
-                        finished_at=_now_iso(),
-                    )
-                    return
+                with stage(
+                    job_id,
+                    IngestStage.ATTACH_WORKSPACE,
+                    session_factory=_REGISTRY._session_factory,
+                ) as st:
+                    st.metric("workspace_id", job.workspace_id)
+                    if not store.workspace_add_work(job.workspace_id, str(work_id)):
+                        upd(
+                            status="failed",
+                            error="work_attach_failed",
+                            message="Ingest OK but could not attach work to workspace (invalid work_id?)",
+                            document_id=doc_id,
+                            work_id=work_id,
+                            finished_at=_now_iso(),
+                        )
+                        return
         finally:
             store.close()
 
@@ -316,7 +386,9 @@ def _refresh_parent_job(parent_id: str) -> None:
     )
 
 
-def _run_batch_thread(parent_id: str, child_paths: list[tuple[str, Path]], settings: Settings) -> None:
+def _run_batch_thread(
+    parent_id: str, child_paths: list[tuple[str, Path]], settings: Settings
+) -> None:
     parent = _REGISTRY.get(parent_id)
     if not parent:
         for _, p in child_paths:
@@ -464,6 +536,17 @@ class IngestJobView(BaseModel):
     kind: str = "single"
     parent_job_id: str | None = None
     child_job_ids: list[str] = Field(default_factory=list)
+    stages: list["IngestStageView"] = Field(default_factory=list)
+
+
+class IngestStageView(BaseModel):
+    name: str
+    status: str
+    started_at: str | None = None
+    finished_at: str | None = None
+    duration_ms: int | None = None
+    metrics: dict[str, Any] = Field(default_factory=dict)
+    error: str | None = None
 
 
 def job_to_dict(rec: IngestJobRecord) -> dict[str, Any]:
@@ -487,6 +570,7 @@ def job_to_dict(rec: IngestJobRecord) -> dict[str, Any]:
         kind=rec.kind,
         parent_job_id=rec.parent_job_id,
         child_job_ids=list(rec.child_job_ids),
+        stages=[IngestStageView(**stage_row) for stage_row in rec.stages],
     ).model_dump()
     if rec.kind == "batch_parent":
         child_jobs: list[dict[str, Any]] = []

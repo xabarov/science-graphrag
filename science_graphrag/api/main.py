@@ -2,20 +2,27 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any, Literal
 
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response, StreamingResponse
+from fastapi.responses import (
+    FileResponse,
+    HTMLResponse,
+    RedirectResponse,
+    Response,
+    StreamingResponse,
+)
 from fastapi.staticfiles import StaticFiles
-from typing import Any, Literal
-
 from pydantic import BaseModel, Field
 
 from science_graphrag.api import works as works_api
 from science_graphrag.api.admin_access import require_admin_if_configured
+from science_graphrag.api.agent import router as agent_router
 from science_graphrag.api.ask_sessions import router as ask_sessions_router
 from science_graphrag.api.benchmark import router as benchmark_router
 from science_graphrag.api.ingest_jobs import router as ingest_router
@@ -24,6 +31,8 @@ from science_graphrag.api.settings import router as settings_router
 from science_graphrag.api.workspace_dedup import router as workspace_dedup_router
 from science_graphrag.api.workspaces import router as workspaces_router
 from science_graphrag.config import Settings, get_settings
+from science_graphrag.ingestion.embeddings import resolve_embedding_dim
+from science_graphrag.storage.qdrant_store import QdrantChunkStore, QdrantWorkEmbeddingStore
 
 app = FastAPI(title="science-graphrag", version="0.1.0")
 _STATIC_DIR = Path(__file__).resolve().parent / "static"
@@ -48,6 +57,24 @@ app.include_router(ask_sessions_router, prefix="/v1")
 app.include_router(workspaces_router, prefix="/v1")
 app.include_router(workspace_dedup_router, prefix="/v1/workspaces")
 app.include_router(ingest_router, prefix="/v1")
+app.include_router(agent_router, prefix="/v1")
+
+
+def _configure_access_log_filters() -> None:
+    class _SuppressIngestPolling(logging.Filter):
+        def filter(self, record: logging.LogRecord) -> bool:  # noqa: A003
+            msg = record.getMessage()
+            if record.levelno != logging.INFO:
+                return True
+            return "/v1/ingest/jobs/" not in msg or '" 200' not in msg
+
+    access_logger = logging.getLogger("uvicorn.access")
+    if any(type(existing).__name__ == "_SuppressIngestPolling" for existing in access_logger.filters):
+        return
+    access_logger.addFilter(_SuppressIngestPolling())
+
+
+_configure_access_log_filters()
 
 
 def _parse_single_byte_range(range_header: str, file_size: int) -> tuple[int, int] | None:
@@ -147,23 +174,42 @@ def health() -> dict[str, str]:
 
 
 @app.get("/v1/idea-search")
-def idea_search_stub(
+def idea_search(
     q: str = Query("", min_length=0),
-    kinds: str = Query("work,chunk", description="Comma-separated kinds (stub ignores)."),
+    kinds: str = Query("work,chunk", description="Comma-separated kinds."),
     top_k: int = Query(5, ge=1, le=24),
     workspace_id: str | None = Query(default=None),
+    settings: Settings = Depends(get_settings),
 ) -> dict[str, Any]:
-    """Stub for Wave R ``idea_search`` tool; returns empty hits until agent stack ships."""
+    if not settings.agent_enabled:
+        kind_list = [k.strip() for k in (kinds or "").split(",") if k.strip()]
+        return {
+            "items": [],
+            "query": q,
+            "kinds": kind_list,
+            "top_k": top_k,
+            "workspace_id": (workspace_id or "").strip() or None,
+            "status": "stub_wave_r",
+        }
+
+    from science_graphrag.agent.tools.idea_search import IdeaSearchTool
 
     kind_list = [k.strip() for k in (kinds or "").split(",") if k.strip()]
-    return {
-        "items": [],
-        "query": q,
-        "kinds": kind_list,
-        "top_k": top_k,
-        "workspace_id": (workspace_id or "").strip() or None,
-        "status": "stub_wave_r",
-    }
+    dim = resolve_embedding_dim(embedding_model=settings.embedding_model)
+    qstore = QdrantChunkStore(settings.qdrant_url, settings.qdrant_collection, vector_dim=dim)
+    wstore = QdrantWorkEmbeddingStore(
+        settings.qdrant_url,
+        settings.qdrant_work_embeddings_collection,
+        vector_dim=dim,
+    )
+    tool = IdeaSearchTool(qstore, work_store=wstore, embedding_model=settings.embedding_model)
+    res = tool.run(
+        q=q,
+        kinds=kind_list,
+        workspace_id=(workspace_id or "").strip() or None,
+        top_k=top_k,
+    )
+    return {"items": res.payload.get("items", []), "query": q, "kinds": kind_list, "top_k": top_k, "workspace_id": (workspace_id or "").strip() or None, "status": "ok"}
 
 
 @app.post("/v1/query", response_model=QueryResponse)
@@ -270,7 +316,9 @@ def get_work_sources(work_id: str, settings: Settings = Depends(get_settings)) -
 
 
 @app.get("/v1/works/{work_id}/pdf", response_model=None)
-def get_work_pdf(request: Request, work_id: str, settings: Settings = Depends(get_settings)) -> Response:
+def get_work_pdf(
+    request: Request, work_id: str, settings: Settings = Depends(get_settings)
+) -> Response:
     p = works_api.work_pdf_blob_path(settings, work_id)
     if not p:
         raise HTTPException(status_code=404, detail="pdf_not_found")

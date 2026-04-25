@@ -154,7 +154,11 @@ def compare_graph_expectations_to_snapshot(  # pylint: disable=too-many-locals
             arxiv_notes.append("cited_arxiv_ids set matches expected_cited_arxiv_ids.")
 
     ws_exp = exp.get("workspace")
-    ws_snap = snap.get("workspace_projection") if isinstance(snap.get("workspace_projection"), dict) else None
+    ws_snap = (
+        snap.get("workspace_projection")
+        if isinstance(snap.get("workspace_projection"), dict)
+        else None
+    )
     if isinstance(ws_exp, dict) and ws_snap:
         for key, label in (
             ("internal_work_nodes", "workspace_internal_work_nodes"),

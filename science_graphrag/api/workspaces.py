@@ -18,6 +18,8 @@ from science_graphrag.api.ingest_jobs import (
 )
 from science_graphrag.api.workspace_graph import (
     legacy_workspace_graph_union as workspace_graph_union,
+)
+from science_graphrag.api.workspace_graph import (
     project_workspace_graph,
     workspace_graph_neighbors,
     workspace_graph_stats,
@@ -150,7 +152,9 @@ def rename_workspace(
 
 
 @router.delete("/{workspace_id}")
-def delete_workspace(workspace_id: str, settings: Settings = Depends(get_settings)) -> dict[str, Any]:
+def delete_workspace(
+    workspace_id: str, settings: Settings = Depends(get_settings)
+) -> dict[str, Any]:
     store = _store(settings)
     try:
         if not store.workspace_delete(workspace_id):

@@ -41,6 +41,7 @@ export default {
   "askPanel.retrieval.modeLabel": "Режим retrieval (lab / admin)",
   "askPanel.retrieval.vector": "vector",
   "askPanel.retrieval.hybrid": "hybrid",
+  "askPanel.retrieval.agent": "agent",
   "askPanel.runQueryLoading": "Запрос…",
   "askPanel.runQuery": "Выполнить запрос",
   "askPanel.openStandaloneAsk": "Открыть вопросы отдельно",

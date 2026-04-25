@@ -8,9 +8,9 @@ from pathlib import Path
 import pytest
 
 from eval.layer1.metrics import _norm_abstract_match, _norm_aff, prf1_tp_fp_fn, score_layer1
-from eval.layer1.text_similarity import abstract_prefix_token_containment
 from eval.layer1.runner import run_case
 from eval.layer1.spec import Layer1GoldSpec
+from eval.layer1.text_similarity import abstract_prefix_token_containment
 from eval.layer1.threshold_profiles import apply_layer1_threshold_profile
 from science_graphrag.config import Settings
 from science_graphrag.domain.models import AuthorshipDraft, ReferenceDraft, WorkDraft, WorkType
