@@ -10,4 +10,10 @@ export default {
   "benchmarkPage.tab.results": "Results",
   "benchmarkPage.tab.compare": "Compare",
   "benchmarkPage.tab.cases": "Cases",
+  "benchmarkPage.trustSignal.loading": "Loading benchmark trust summary…",
+  "benchmarkPage.trustSignal.missingSummary":
+    "benchmark-metrics-summary.json not found. Run: .venv/bin/python scripts/aggregate_benchmark_metrics.py",
+  "benchmarkPage.trustSignal.retry": "Retry",
+  "benchmarkPage.trustSignal.refresh": "Refresh",
+  "benchmarkPage.trustSignal.phantomCount": "Phantom / low-trust suite members: {{count}}",
 };

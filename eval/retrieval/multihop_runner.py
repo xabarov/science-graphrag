@@ -15,7 +15,10 @@ from eval.bench_common import (
     run_single_case_json_outputs,
     run_suite_cli_flow,
 )
+from eval.retrieval.stack_health import check_api_health, write_skip_artifact
 from science_graphrag.config import Settings, get_settings
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _load_tiers(fixtures_root: Path) -> dict[str, list[str]] | None:
@@ -32,6 +35,43 @@ def _load_tiers(fixtures_root: Path) -> dict[str, list[str]] | None:
     return out or None
 
 
+def _load_multihop_case_dict(root: Path) -> dict[str, Any]:
+    """Load v1 ``question.json`` or derive from multihop v2 ``gold.json`` + ``question.txt`` (ordered_chain)."""
+
+    q_json = root / "question.json"
+    if q_json.is_file():
+        raw = json.loads(q_json.read_text(encoding="utf-8"))
+        if isinstance(raw, dict):
+            return raw
+        raise TypeError("question.json must be an object")
+    gold_path = root / "gold.json"
+    if not gold_path.is_file():
+        raise FileNotFoundError(f"no question.json or gold.json in {root}")
+    gold = json.loads(gold_path.read_text(encoding="utf-8"))
+    if not isinstance(gold, dict):
+        raise TypeError("gold.json must be an object")
+    if str(gold.get("expected_path_kind") or "") != "ordered_chain":
+        raise ValueError(
+            f"multihop case {root.name}: unsupported gold layout "
+            "(only ordered_chain from gold without question.json; unordered_set pending)",
+        )
+    chain = [str(x).strip() for x in (gold.get("expected_chain_corpus_work_ids") or []) if str(x).strip()]
+    if len(chain) < 2:
+        raise ValueError(f"multihop case {root.name}: expected_chain_corpus_work_ids too short")
+    qfile = str(gold.get("question_file") or "question.txt")
+    q_path = root / qfile
+    q_text = q_path.read_text(encoding="utf-8").strip() if q_path.is_file() else ""
+    return {
+        "center_work_id": chain[0],
+        "expected_neighbor_work_ids": chain[1:],
+        "depth": int(gold.get("depth") or 2),
+        "neighbor_limit": int(gold.get("neighbor_limit") or 300),
+        "min_precision": float(gold.get("min_precision") or 0.6),
+        "min_recall": float(gold.get("min_recall") or 0.5),
+        "query_hint": q_text[:500],
+    }
+
+
 def discover_multihop_cases(fixtures_root: Path, *, tier: str) -> list[Path]:
     tiers = _load_tiers(fixtures_root)
     allowed = set(tiers.get(tier) or []) if tiers else None
@@ -39,7 +79,23 @@ def discover_multihop_cases(fixtures_root: Path, *, tier: str) -> list[Path]:
     for child in sorted(fixtures_root.iterdir()):
         if not child.is_dir():
             continue
-        if not (child / "question.json").is_file():
+        has_q_json = (child / "question.json").is_file()
+        has_q_txt = (child / "question.txt").is_file()
+        if not has_q_json and not has_q_txt:
+            continue
+        gold_path = child / "gold.json"
+        if gold_path.is_file():
+            try:
+                gmeta = json.loads(gold_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError, TypeError):
+                gmeta = {}
+            if not isinstance(gmeta, dict):
+                gmeta = {}
+            if str(gmeta.get("expected_path_kind") or "") == "unordered_set":
+                continue
+            if not has_q_json and str(gmeta.get("expected_path_kind") or "") != "ordered_chain":
+                continue
+        elif not has_q_json:
             continue
         if allowed is not None and child.name not in allowed:
             continue
@@ -101,7 +157,21 @@ def run_multihop_case(
     settings: Settings | None = None,
 ) -> dict[str, Any]:
     root = Path(case_dir)
-    case = json.loads((root / "question.json").read_text(encoding="utf-8"))
+    try:
+        case = _load_multihop_case_dict(root)
+    except (OSError, json.JSONDecodeError, TypeError, ValueError, FileNotFoundError) as exc:
+        s = settings or get_settings()
+        return {
+            "case_id": root.name,
+            "query_hint": "",
+            "center_work_id": "",
+            "depth": 2,
+            "neighbor_limit": 300,
+            "metrics": {"passed": False, "request_error": str(exc)},
+            "returned_neighbor_work_ids": [],
+            "wall_clock_seconds": 0.0,
+            "run_metadata": benchmark_run_metadata(s),
+        }
     center_work_id = str(case.get("center_work_id") or "").strip()
     depth = int(case.get("depth") or 2)
     neighbor_limit = int(case.get("neighbor_limit") or 300)
@@ -174,16 +244,21 @@ def _cli(
     ),
     suite: bool = typer.Option(False, "--suite", help="Run all multihop cases for tier"),
     tier: str = typer.Option(
-        "multihop_mini",
+        "multihop_v2_pilot",
         "--tier",
-        help="Tier key from case_tiers.json (default: multihop_mini).",
+        help="Tier key from case_tiers.json (default: multihop_v2_pilot for multihop_v2 fixtures).",
     ),
     api_base_url: str = typer.Option(
-        "http://localhost:8000",
+        "http://127.0.0.1:8000",
         "--api-base-url",
-        help="Base URL for science-graphrag API.",
+        help="Base URL for science-graphrag API (used for /health and graph calls).",
     ),
     timeout_seconds: float = typer.Option(20.0, "--timeout-seconds", help="Per-case HTTP timeout."),
+    allow_skip_on_infra: bool = typer.Option(
+        False,
+        "--allow-skip-on-infra",
+        help="If API /health fails, write multihop-skipped-*.json and exit 0 (CI-friendly).",
+    ),
     json_out: Path | None = typer.Option(None, "--json-out"),
     md_out: Path | None = typer.Option(None, "--md-out"),
 ) -> None:
@@ -201,6 +276,23 @@ def _cli(
         )
 
     if suite:
+        ok, detail = check_api_health(api_base_url)
+        if not ok:
+            skip_path = write_skip_artifact(
+                _REPO_ROOT,
+                stem="multihop-skipped",
+                payload={
+                    "reason": "api_health_failed",
+                    "detail": detail,
+                    "api_base_url": api_base_url,
+                    "tier": tier,
+                },
+            )
+            typer.echo(
+                f"Multihop suite skipped: API not healthy ({detail}). Wrote {skip_path}",
+                err=True,
+            )
+            raise typer.Exit(0 if allow_skip_on_infra else 2)
         cases = discover_multihop_cases(path, tier=tier)
         if not cases:
             typer.echo(f"No multihop cases under {path} for tier={tier!r}", err=True)

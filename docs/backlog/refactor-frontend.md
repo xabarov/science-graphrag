@@ -171,6 +171,14 @@ Planned structural work under `ui/` (components, routing, state, API client), no
 - **Raised:** 2026-04-25
 - **Note (done):** 2026-04-25 — разнесено на `hooks/useGraphWorkspaceData.js`, `GraphViewModeSwitch.jsx`, `GraphSidePanel.jsx`, `GraphDebugInspector.jsx`; `GraphWorkspacePanel.jsx` оставлен как composition-shell с прежним публичным API.
 
+### [OPEN] Benchmark trust drill-in (`TrustSignalPanel` + API slice)
+- **Area:** [`TrustSignalPanel.jsx`](../../ui/src/pages/BenchmarkPage/TrustSignalPanel.jsx), [`benchmark_decision_gate.py`](../../science_graphrag/api/benchmark_decision_gate.py) (optional: extend response), i18n `partBenchmarkPage.js`.
+- **Issue:** API already returns `trust_signal.consistency_warnings`, `validation_status_aggregate`, and `criteria.advisory_individual_failures`; UI only shows decision chip + `runtime_mode` rows — operators cannot drill into failed case_ids without opening raw JSON.
+- **Proposal:** Expandable rows or secondary panel: show `consistency_warnings`, `validation_status_aggregate`, and a compact table for `criteria.advisory_individual_failures` (case_id, family.member); extract presentational helpers to `TrustSignalDrillIn.jsx` when file approaches ~250 lines.
+- **Acceptance:** `/benchmark` shows actionable drill-in for judge failures and phantom warnings; `npm run lint` / vitest green.
+- **Synergy:** **Round 6 BT2–BT5** — more fields in summary; avoid growing `TrustSignalPanel.jsx` into a god-component.
+- **Raised:** 2026-04-26 (post-BT1).
+
 ### [OPEN] Split `BenchmarkPage/CaseDetailDialog.jsx` (790)
 - **Area:** [`BenchmarkPage/CaseDetailDialog.jsx`](../../ui/src/pages/BenchmarkPage/CaseDetailDialog.jsx), смежные `BenchmarkPage/{CompareTab,RunTab,BenchmarkWorkbenchTab,BenchmarkRunCasesTable}.jsx`
 - **Issue:** Один диалог с превью кейса, таблицами gold vs pred, server preview, ошибками; работает в трёх вкладках. С добавлением новых семейств (`workspace_scoped`, `hybrid_ablation`, `multihop`, `agent_tools`, `idea_assist`) растёт линейно.

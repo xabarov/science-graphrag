@@ -1,0 +1,267 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+    "semantic_extraction_enabled": true
+  },
+  "summary": {
+    "case_count": 6,
+    "case_ids": [
+      "ws_pilot_od_chunk_anchor",
+      "ws_pilot_od_methods_overview",
+      "ws_pilot_od_scoped_negative",
+      "ws_pilot_pdf_chunk_anchor",
+      "ws_pilot_pdf_methods_overview",
+      "ws_pilot_pdf_scoped_negative"
+    ],
+    "all_passed": true,
+    "retrieval_eval": true
+  },
+  "cases": [
+    {
+      "case_id": "ws_pilot_od_chunk_anchor",
+      "question": "Summarize how the unified detection pipeline is framed in the introduction of this paper.",
+      "question_preview": "Summarize how the unified detection pipeline is framed in the introduction of this paper.",
+      "metrics": {
+        "passed": true,
+        "contract_only": false,
+        "hit_count": 1,
+        "min_hit_count": 1,
+        "hit_ok": true,
+        "missing_chunk_fingerprints": [],
+        "work_id_ok": true,
+        "filter_work_id": null,
+        "expected_workspace_scope": true,
+        "workspace_scope_ok": true,
+        "trace_workspace_matches": true,
+        "out_of_scope_citation_work_ids": [],
+        "forbidden_work_ids_leaked": []
+      },
+      "retrieval_trace": {
+        "hit_count": 1,
+        "embedding": {
+          "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
+        },
+        "filter_work_id": null,
+        "workspace_id": "ws-pilot-od",
+        "workspace_scope_work_count": 1
+      },
+      "graph_context": {
+        "semantic_available": false,
+        "methods": [],
+        "datasets": []
+      },
+      "citations": [
+        {
+          "chunk_fingerprint": "8226cfd0-aae7-568a-81b1-e81d5f93f767",
+          "rank": 1,
+          "excerpt": "stub",
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
+        }
+      ],
+      "answer": "mock",
+      "answer_preview": "mock",
+      "wall_clock_seconds": 0.0
+    },
+    {
+      "case_id": "ws_pilot_od_methods_overview",
+      "question": "What methods or architectural blocks does this paper describe for object detection, and how does it position them relative to two-stage detectors?",
+      "question_preview": "What methods or architectural blocks does this paper describe for object detection, and how does it position them relative to two-stage detectors?",
+      "metrics": {
+        "passed": true,
+        "contract_only": false,
+        "hit_count": 1,
+        "min_hit_count": 1,
+        "hit_ok": true,
+        "missing_chunk_fingerprints": [],
+        "work_id_ok": true,
+        "filter_work_id": null,
+        "expected_workspace_scope": true,
+        "workspace_scope_ok": true,
+        "trace_workspace_matches": true,
+        "out_of_scope_citation_work_ids": [],
+        "forbidden_work_ids_leaked": []
+      },
+      "retrieval_trace": {
+        "hit_count": 1,
+        "embedding": {
+          "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
+        },
+        "filter_work_id": null,
+        "workspace_id": "ws-pilot-od",
+        "workspace_scope_work_count": 1
+      },
+      "graph_context": {
+        "semantic_available": false,
+        "methods": [],
+        "datasets": []
+      },
+      "citations": [],
+      "answer": "mock",
+      "answer_preview": "mock",
+      "wall_clock_seconds": 0.0
+    },
+    {
+      "case_id": "ws_pilot_od_scoped_negative",
+      "question": "Explain focal loss for dense object detection and how it addresses extreme foreground-background imbalance.",
+      "question_preview": "Explain focal loss for dense object detection and how it addresses extreme foreground-background imbalance.",
+      "metrics": {
+        "passed": true,
+        "contract_only": false,
+        "hit_count": 1,
+        "min_hit_count": 0,
+        "hit_ok": true,
+        "missing_chunk_fingerprints": [],
+        "work_id_ok": true,
+        "filter_work_id": null,
+        "expected_workspace_scope": true,
+        "workspace_scope_ok": true,
+        "trace_workspace_matches": true,
+        "out_of_scope_citation_work_ids": [],
+        "forbidden_work_ids_leaked": []
+      },
+      "retrieval_trace": {
+        "hit_count": 1,
+        "embedding": {
+          "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
+        },
+        "filter_work_id": null,
+        "workspace_id": "ws-pilot-od",
+        "workspace_scope_work_count": 1
+      },
+      "graph_context": {
+        "semantic_available": false,
+        "methods": [],
+        "datasets": []
+      },
+      "citations": [],
+      "answer": "mock",
+      "answer_preview": "mock",
+      "wall_clock_seconds": 0.0
+    },
+    {
+      "case_id": "ws_pilot_pdf_chunk_anchor",
+      "question": "Summarize how the unified detection pipeline is framed in the introduction of this paper.",
+      "question_preview": "Summarize how the unified detection pipeline is framed in the introduction of this paper.",
+      "metrics": {
+        "passed": true,
+        "contract_only": false,
+        "hit_count": 1,
+        "min_hit_count": 1,
+        "hit_ok": true,
+        "missing_chunk_fingerprints": [],
+        "work_id_ok": true,
+        "filter_work_id": null,
+        "expected_workspace_scope": true,
+        "workspace_scope_ok": true,
+        "trace_workspace_matches": true,
+        "out_of_scope_citation_work_ids": [],
+        "forbidden_work_ids_leaked": []
+      },
+      "retrieval_trace": {
+        "hit_count": 1,
+        "embedding": {
+          "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
+        },
+        "filter_work_id": null,
+        "workspace_id": "ws-pilot-pdf",
+        "workspace_scope_work_count": 1
+      },
+      "graph_context": {
+        "semantic_available": false,
+        "methods": [],
+        "datasets": []
+      },
+      "citations": [
+        {
+          "chunk_fingerprint": "8226cfd0-aae7-568a-81b1-e81d5f93f767",
+          "rank": 1,
+          "excerpt": "stub",
+          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
+        }
+      ],
+      "answer": "mock",
+      "answer_preview": "mock",
+      "wall_clock_seconds": 0.0
+    },
+    {
+      "case_id": "ws_pilot_pdf_methods_overview",
+      "question": "What methods or architectural blocks does this paper describe for object detection, and how does it position them relative to two-stage detectors?",
+      "question_preview": "What methods or architectural blocks does this paper describe for object detection, and how does it position them relative to two-stage detectors?",
+      "metrics": {
+        "passed": true,
+        "contract_only": false,
+        "hit_count": 1,
+        "min_hit_count": 1,
+        "hit_ok": true,
+        "missing_chunk_fingerprints": [],
+        "work_id_ok": true,
+        "filter_work_id": null,
+        "expected_workspace_scope": true,
+        "workspace_scope_ok": true,
+        "trace_workspace_matches": true,
+        "out_of_scope_citation_work_ids": [],
+        "forbidden_work_ids_leaked": []
+      },
+      "retrieval_trace": {
+        "hit_count": 1,
+        "embedding": {
+          "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
+        },
+        "filter_work_id": null,
+        "workspace_id": "ws-pilot-pdf",
+        "workspace_scope_work_count": 1
+      },
+      "graph_context": {
+        "semantic_available": false,
+        "methods": [],
+        "datasets": []
+      },
+      "citations": [],
+      "answer": "mock",
+      "answer_preview": "mock",
+      "wall_clock_seconds": 0.0
+    },
+    {
+      "case_id": "ws_pilot_pdf_scoped_negative",
+      "question": "Explain focal loss for dense object detection and how it addresses extreme foreground-background imbalance.",
+      "question_preview": "Explain focal loss for dense object detection and how it addresses extreme foreground-background imbalance.",
+      "metrics": {
+        "passed": true,
+        "contract_only": false,
+        "hit_count": 1,
+        "min_hit_count": 0,
+        "hit_ok": true,
+        "missing_chunk_fingerprints": [],
+        "work_id_ok": true,
+        "filter_work_id": null,
+        "expected_workspace_scope": true,
+        "workspace_scope_ok": true,
+        "trace_workspace_matches": true,
+        "out_of_scope_citation_work_ids": [],
+        "forbidden_work_ids_leaked": []
+      },
+      "retrieval_trace": {
+        "hit_count": 1,
+        "embedding": {
+          "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
+        },
+        "filter_work_id": null,
+        "workspace_id": "ws-pilot-pdf",
+        "workspace_scope_work_count": 1
+      },
+      "graph_context": {
+        "semantic_available": false,
+        "methods": [],
+        "datasets": []
+      },
+      "citations": [],
+      "answer": "mock",
+      "answer_preview": "mock",
+      "wall_clock_seconds": 0.0
+    }
+  ]
+}

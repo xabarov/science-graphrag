@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "decision_gate": {
+    "decision": "NO-GO",
+    "reason": "hard_block_individual_failures:retrieval_judge_pilot",
+    "criteria": {
+      "reference_all_passed": true,
+      "layer1_nightly_failed_count": 0,
+      "layer2_nightly_failed_count": 0,
+      "claims_production_artifact_missing": false,
+      "claims_production_all_passed": true,
+      "claims_production_mean_claim_recall": 1.0,
+      "advisory_phantom_count": 6,
+      "advisory_phantom_families": [
+        "merge_safe_contract_mock",
+        "strict_pilot_mock",
+        "hybrid_ablation",
+        "concept_topic_mini",
+        "agent_tools_mini",
+        "agent_tools_judge"
+      ],
+      "advisory_individual_failures": [
+        {
+          "family": "retrieval_family",
+          "member_id": "judge_pilot",
+          "case_id": "live_yolov1_architecture",
+          "passed": false,
+          "weighted_score": 3.7,
+          "error": null
+        },
+        {
+          "family": "retrieval_family",
+          "member_id": "judge_pilot",
+          "case_id": "live_yolov1_training",
+          "passed": false,
+          "weighted_score": 4.4,
+          "error": null
+        }
+      ],
+      "hard_block_individual_failures": [
+        "retrieval_judge_pilot"
+      ]
+    }
+  },
+  "trust_aggregate_per_family": {
+    "retrieval_family": {
+      "phantom_member_count": 3,
+      "phantom_members": [
+        "retrieval_family.merge_safe_contract_mock",
+        "retrieval_family.strict_pilot_mock",
+        "retrieval_family.hybrid_ablation"
+      ],
+      "mixed_validation_status_member_count": 1
+    },
+    "claims_family": {
+      "phantom_member_count": 0,
+      "phantom_members": [],
+      "mixed_validation_status_member_count": 0
+    },
+    "claims_production_family": {
+      "phantom_member_count": 0,
+      "phantom_members": [],
+      "mixed_validation_status_member_count": 0
+    },
+    "references_resolution_family": {
+      "phantom_member_count": 0,
+      "phantom_members": [],
+      "mixed_validation_status_member_count": 0
+    },
+    "concept_topic_family": {
+      "phantom_member_count": 1,
+      "phantom_members": [
+        "concept_topic_family.concept_topic_mini"
+      ],
+      "mixed_validation_status_member_count": 0
+    },
+    "agent_tools_family": {
+      "phantom_member_count": 2,
+      "phantom_members": [
+        "agent_tools_family.agent_tools_mini",
+        "agent_tools_family.agent_tools_judge"
+      ],
+      "mixed_validation_status_member_count": 1
+    }
+  },
+  "advisory_phantom_count": 6,
+  "advisory_phantom_families": [
+    "merge_safe_contract_mock",
+    "strict_pilot_mock",
+    "hybrid_ablation",
+    "concept_topic_mini",
+    "agent_tools_mini",
+    "agent_tools_judge"
+  ]
+}

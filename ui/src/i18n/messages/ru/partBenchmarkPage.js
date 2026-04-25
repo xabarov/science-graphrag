@@ -10,4 +10,10 @@ export default {
   "benchmarkPage.tab.results": "Результаты",
   "benchmarkPage.tab.compare": "Сравнение",
   "benchmarkPage.tab.cases": "Кейсы",
+  "benchmarkPage.trustSignal.loading": "Загрузка сводки доверия к бенчмаркам…",
+  "benchmarkPage.trustSignal.missingSummary":
+    "Файл benchmark-metrics-summary.json не найден. Запустите: .venv/bin/python scripts/aggregate_benchmark_metrics.py",
+  "benchmarkPage.trustSignal.retry": "Повторить",
+  "benchmarkPage.trustSignal.refresh": "Обновить",
+  "benchmarkPage.trustSignal.phantomCount": "Участников suite с phantom/low-trust: {{count}}",
 };

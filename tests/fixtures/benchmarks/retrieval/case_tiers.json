@@ -21,5 +21,9 @@
     "live_yolov1_training",
     "live_yolov1_methods_combo",
     "live_corpus_methods_wide"
+  ],
+  "judge_holdout_v1": [
+    "live_yolov1_intro",
+    "live_yolov1_methods_combo"
   ]
 }

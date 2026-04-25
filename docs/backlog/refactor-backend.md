@@ -10,6 +10,20 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 
 ## Queue
 
+### [OPEN] Split `scripts/aggregate_benchmark_metrics.py` (BT1 follow-up)
+- **Area:** `scripts/aggregate_benchmark_metrics.py` (~1000 lines after BT1 trust wiring).
+- **Issue:** Summarizers (`_summarize_*`), markdown render (`_md_*`), and CLI `main()` live in one file; hard to review and parallel-edit with BT2–BT12 aggregator deltas.
+- **Proposal:** Extract `scripts/benchmark_aggregator/summarizers.py`, `scripts/benchmark_aggregator/markdown.py`, keep thin CLI in `aggregate_benchmark_metrics.py`; trust/decision glue stays in `science_graphrag/benchmarks/`.
+- **Acceptance:** `aggregate_benchmark_metrics.py` ≤ ~200 lines; `python scripts/aggregate_benchmark_metrics.py` unchanged CLI; pytest for benchmarks + smoke unchanged.
+- **Raised:** 2026-04-26 (post-BT1).
+
+### [OPEN] CI: run `aggregate_benchmark_metrics` + enforce `benchmark-trust-baseline` regression
+- **Area:** `.github/workflows/integration-nightly.yml` (and/or `ci.yml`), `tests/benchmarks/test_trust_baseline_regression.py`.
+- **Issue:** Regression test no-ops when summary/baseline files are absent; runbook §10 policy is not enforced on every push.
+- **Proposal:** Nightly (or main-branch) step: `python scripts/aggregate_benchmark_metrics.py` then `pytest tests/benchmarks/test_trust_baseline_regression.py -q`; fail job if `advisory_phantom_count` grows vs committed baseline.
+- **Acceptance:** CI fails on phantom regression with clear log line; baseline updates remain manual commit.
+- **Raised:** 2026-04-26 (post-BT1).
+
 ### [OPEN] Migrate dual_validate extractors to instructor (Phase 7 task)
 - **Area:** `scripts/dual_validate/extractors/*.py` (12 extractor'ов), `scripts/dual_validate/llm_client.py` (станет transport-layer), новый `scripts/dual_validate/instructor_client.py`, новый `science_graphrag/llm/instructor_factory.py` (общий backend с `science_graphrag/ingestion/llm/extractor.py:SyncInstructorExtractor`).
 - **Issue:** в Phase 6.E мы потеряли несколько packs из-за malformed JSON от Kimi/Claude/v4-pro (truncated, unescaped quotes). Сейчас каждый из 12 extractor'ов вручную дублирует: (a) JSON-схему в prompt, (b) `parse_json_object_lenient` парсинг, (c) post-hoc валидацию полей через `_VALID_TYPES`/`_VALID_POLARITIES`/etc. **`instructor>=1.7.0` уже в deps** и используется в production ingestion (`SyncInstructorExtractor` с `instructor.Maybe`, mode-selection для OpenRouter Qwen3.5).

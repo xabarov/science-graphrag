@@ -19,6 +19,7 @@ from science_graphrag.api.agent import router as agent_router
 from science_graphrag.api.agent_v2 import router as agent_v2_router
 from science_graphrag.api.ask_sessions import router as ask_sessions_router
 from science_graphrag.api.benchmark import router as benchmark_router
+from science_graphrag.api.benchmark_decision_gate import router as benchmark_decision_gate_router
 from science_graphrag.api.deps import (
     StoreRegistry,
     close_store_registry,
@@ -71,6 +72,11 @@ if _UI_DIR.is_dir():
 # Benchmark endpoints (UI-driven runs + fixtures).
 app.include_router(
     benchmark_router,
+    prefix="/v1",
+    dependencies=[Depends(require_admin_if_configured)],
+)
+app.include_router(
+    benchmark_decision_gate_router,
     prefix="/v1",
     dependencies=[Depends(require_admin_if_configured)],
 )

@@ -13,6 +13,7 @@ import CompareTab from "./CompareTab.jsx";
 import RunTab from "./RunTab.jsx";
 import ResultsTab from "./ResultsTab.jsx";
 import CasesTab from "./CasesTab.jsx";
+import TrustSignalPanel from "./TrustSignalPanel.jsx";
 import { useI18n } from "../../i18n/I18nContext.jsx";
 
 const TAB_BY_NAME = { launch: 0, workbench: 1, results: 2, compare: 3, cases: 4 };
@@ -91,6 +92,7 @@ export default function BenchmarkPage() {
           </Typography>
         </Alert>
       </Box>
+      <TrustSignalPanel />
       <Box sx={{ padding: 2, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
         <Tabs
           value={tabIdx}

@@ -26,7 +26,19 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+from science_graphrag.benchmarks.decision_gate import evaluate_decision_gate
+from science_graphrag.benchmarks.trust_signal import (
+    PHANTOM_RUNTIME_MODES,
+    _cases_from_block,
+    build_trust_signal_dict,
+    compute_gate_trust_criteria,
+    detect_runtime_mode,
+    summarize_family_trust,
+    trust_baseline_payload,
+)
+
 ROOT = Path(__file__).resolve().parents[1]
+GOLD_ROOT = ROOT / "tests" / "fixtures" / "benchmarks"
 
 DEFAULT_REFERENCE = (
     "eval/results/current-reference-layer1-yolov1.json",
@@ -43,7 +55,11 @@ DEFAULT_RETRIEVAL_MERGE_SAFE = "eval/results/current-retrieval-merge-safe-mock.j
 DEFAULT_RETRIEVAL_STRICT_PILOT = "eval/results/current-retrieval-strict-pilot-mock.json"
 DEFAULT_RETRIEVAL_LIVE_CORPUS_MINI = "eval/results/current-retrieval-live-corpus-mini.json"
 DEFAULT_RETRIEVAL_WORKSPACE_SCOPED = "eval/results/current-retrieval-workspace-scoped.json"
+DEFAULT_RETRIEVAL_WORKSPACE_SCOPED_LIVE = (
+    "eval/results/current-retrieval-workspace-scoped-live.json"
+)
 DEFAULT_RETRIEVAL_JUDGE_PILOT = "eval/results/current-retrieval-judge-pilot.json"
+DEFAULT_RETRIEVAL_JUDGE_HOLDOUT = "eval/results/current-retrieval-judge-holdout.json"
 DEFAULT_RETRIEVAL_HYBRID_ABLATION = "eval/results/current-retrieval-hybrid-ablation.json"
 DEFAULT_RETRIEVAL_MULTIHOP_MINI = "eval/results/current-retrieval-multihop-mini.json"
 DEFAULT_AGENT_TOOLS_MINI = "eval/results/current-agent-tools-mini.json"
@@ -249,6 +265,7 @@ def _summarize_retrieval_suite(rel: str) -> dict[str, Any]:
             "extraction_llm_base_url": meta.get("extraction_llm_base_url"),
         },
         "summary": summary,
+        "cases": cases,
         "failed_count": len(failed),
         "failed_cases": [
             {"case_id": c.get("case_id"), "metrics": c.get("metrics")} for c in failed
@@ -296,6 +313,7 @@ def _summarize_case_metrics_suite(rel: str) -> dict[str, Any]:
             "semantic_prompt_fingerprint": meta.get("semantic_prompt_fingerprint"),
         },
         "summary": summary,
+        "cases": cases,
         "failed_count": len(failed),
         "failed_cases": [
             {"case_id": c.get("case_id"), "metrics": c.get("metrics")} for c in failed
@@ -303,6 +321,35 @@ def _summarize_case_metrics_suite(rel: str) -> dict[str, Any]:
         "all_passed": bool(summary.get("all_passed")),
         "mean_claim_recall": mean_claim_recall,
     }
+
+
+def _summarize_multihop_mini_suite(rel: str) -> dict[str, Any]:
+    """Summarize multihop artifact; attach ``last_infra_skip`` when main JSON is absent (BT3)."""
+
+    base = _summarize_case_metrics_suite(rel)
+    if base.get("error") != "missing_file":
+        return base
+    results_dir = ROOT / "eval" / "results"
+    if not results_dir.is_dir():
+        return base
+    skips = sorted(
+        results_dir.glob("multihop-skipped-*.json"),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True,
+    )
+    if not skips:
+        return base
+    skip_path = skips[0]
+    try:
+        skip_data = _read_json(skip_path)
+    except (OSError, TypeError):
+        skip_data = {}
+    base["last_infra_skip"] = {
+        "artifact": skip_path.relative_to(ROOT).as_posix(),
+        "reason": skip_data.get("reason"),
+        "detail": skip_data.get("detail"),
+    }
+    return base
 
 
 def _summarize_retrieval_judge_suite(rel: str) -> dict[str, Any]:
@@ -324,6 +371,7 @@ def _summarize_retrieval_judge_suite(rel: str) -> dict[str, Any]:
             "judge_schema_version": meta.get("judge_schema_version"),
         },
         "summary": summary,
+        "cases": cases,
         "failed_count": len(failed),
         "failed_cases": [{"case_id": c.get("case_id"), "error": c.get("error")} for c in failed],
         "all_passed": bool(summary.get("all_passed")),
@@ -409,59 +457,46 @@ def _supplementary_retests() -> list[dict[str, Any]]:
     return out
 
 
-def _decision_gate(
-    reference: dict[str, Any],
-    layer1: dict[str, Any],
-    layer2: dict[str, Any],
-    claims_production: dict[str, Any] | None = None,
-) -> dict[str, Any]:
-    ref_ok = reference.get("all_passed") is True
-    l1_failed = layer1.get("failed_count", 0) if "error" not in layer1 else None
-    l2_failed = layer2.get("failed_count", 0) if "error" not in layer2 else None
+def _strip_suite_cases_from_payload(payload: dict[str, Any]) -> None:
+    """Remove embedded ``cases`` lists after trust_signal is computed (keep summary small)."""
 
-    cp = claims_production or {}
-    cp_missing = bool(cp.get("error") == "missing_file")
-    cp_ok = bool(cp.get("all_passed")) if cp and "error" not in cp else False
-    mcr = cp.get("mean_claim_recall") if cp and "error" not in cp else None
-    cp_recall_ok = mcr is None or (float(mcr) + 1e-9 >= 0.8)
+    for fam_key in (
+        "retrieval_family",
+        "claims_family",
+        "claims_production_family",
+        "references_resolution_family",
+        "concept_topic_family",
+        "agent_tools_family",
+    ):
+        fam = payload.get(fam_key)
+        if not isinstance(fam, dict):
+            continue
+        for _mid, block in fam.items():
+            if isinstance(block, dict):
+                block.pop("cases", None)
+                block.pop("_workspace_scoped_delegated_to_live", None)
+                block.pop("last_infra_skip", None)
 
-    # GO: reference stable; nightly may still have classified debt
-    if not ref_ok:
-        decision = "NO-GO"
-        reason = "reference_lane_not_all_passed"
-    elif l1_failed is None or l2_failed is None:
-        decision = "NO-GO"
-        reason = "missing_suite_artifacts"
-    elif l1_failed == 0 and l2_failed == 0:
-        decision = "GO"
-        reason = "all_nightly_passed"
-    else:
-        decision = "CONDITIONAL-GO"
-        reason = "reference_ok_nightly_has_residual_failures_document_in_gate_report"
 
-    if decision == "GO" and cp_missing:
-        decision = "CONDITIONAL-GO"
-        reason = f"{reason};claims_production_artifact_missing"
-    elif not cp_missing and cp and "error" not in cp:
-        if not cp_ok:
-            decision = "NO-GO"
-            reason = "claims_production_pilot_not_all_passed"
-        elif not cp_recall_ok:
-            decision = "NO-GO"
-            reason = "claims_production_mean_recall_below_0_8"
+def _finalize_family_trust(family_key: str, family: dict[str, Any]) -> None:
+    """Attach ``trust_signal`` to each suite block and ``trust_aggregate`` on the family."""
 
-    return {
-        "decision": decision,
-        "reason": reason,
-        "criteria": {
-            "reference_all_passed": ref_ok,
-            "layer1_nightly_failed_count": l1_failed,
-            "layer2_nightly_failed_count": l2_failed,
-            "claims_production_artifact_missing": cp_missing,
-            "claims_production_all_passed": None if cp_missing else cp_ok,
-            "claims_production_mean_claim_recall": mcr,
-        },
-    }
+    if family_key == "retrieval_family":
+        live = family.get("workspace_scoped_live")
+        ws = family.get("workspace_scoped")
+        if isinstance(live, dict) and isinstance(ws, dict) and live.get("error") != "missing_file":
+            cases_live = _cases_from_block(live)
+            if (
+                detect_runtime_mode("workspace_scoped_live", live, cases_live)
+                not in PHANTOM_RUNTIME_MODES
+            ):
+                ws["_workspace_scoped_delegated_to_live"] = True
+
+    for member_id, block in list(family.items()):
+        if member_id in {"role", "trust_aggregate"} or not isinstance(block, dict):
+            continue
+        block["trust_signal"] = build_trust_signal_dict(family_key, member_id, block, GOLD_ROOT)
+    family["trust_aggregate"] = summarize_family_trust(family, family_key=family_key)
 
 
 def _md_decision_gate_section(dg: dict[str, Any]) -> list[str]:
@@ -478,6 +513,11 @@ def _md_decision_gate_section(dg: dict[str, Any]) -> list[str]:
     lines.append(f"- **claims_production_all_passed**: {crit.get('claims_production_all_passed')}")
     lines.append(
         f"- **claims_production_mean_claim_recall**: {crit.get('claims_production_mean_claim_recall')}"
+    )
+    lines.append(f"- **advisory_phantom_count**: {crit.get('advisory_phantom_count')}")
+    lines.append(f"- **advisory_phantom_families**: {crit.get('advisory_phantom_families')}")
+    lines.append(
+        f"- **hard_block_individual_failures**: {crit.get('hard_block_individual_failures')}"
     )
     lines.append("")
     return lines
@@ -571,7 +611,9 @@ def _md_retrieval_family_section(rf: dict[str, Any]) -> list[str]:
     _one("strict_pilot (mock suite)", rf.get("strict_pilot_mock") or {})
     _one("live_corpus_mini (live suite)", rf.get("live_corpus_mini") or {})
     _one("workspace_scoped (live suite, Wave P)", rf.get("workspace_scoped") or {})
+    _one("workspace_scoped_live (BT2 live stack)", rf.get("workspace_scoped_live") or {})
     _one("judge_pilot (LLM rubric advisory, Wave P)", rf.get("judge_pilot") or {})
+    _one("judge_holdout (BT5 weekly holdout)", rf.get("judge_holdout") or {})
     _one("hybrid_ablation (contract harness, Wave Q)", rf.get("hybrid_ablation") or {})
     _one("multihop_mini (2-hop graph precision, Wave Q)", rf.get("multihop_mini") or {})
     lines.append(
@@ -730,7 +772,10 @@ def _md_agent_tools_family_section(af: dict[str, Any]) -> list[str]:
     role = (af.get("role") or "advisory") if isinstance(af, dict) else "advisory"
     lines.append(f"- **role**: `{role}`")
     lines.append("")
-    for label, key in (("agent_tools_mini", "agent_tools_mini"), ("agent_tools_judge", "agent_tools_judge")):
+    for label, key in (
+        ("agent_tools_mini", "agent_tools_mini"),
+        ("agent_tools_judge", "agent_tools_judge"),
+    ):
         block = af.get(key) or {}
         lines.append(f"### {label}")
         lines.append("")
@@ -831,6 +876,21 @@ def main() -> int:
         help="Optional retrieval LLM-judge pilot JSON from eval/retrieval/judge.py (advisory, Wave P).",
     )
     parser.add_argument(
+        "--retrieval-workspace-scoped-live-json",
+        type=str,
+        default=DEFAULT_RETRIEVAL_WORKSPACE_SCOPED_LIVE,
+        help=(
+            "Optional BT2 live workspace-scoped suite JSON "
+            "(``science-graphrag-retrieval-benchmark …/workspace_scoped_live --tier workspace_scoped_live_pilot``)."
+        ),
+    )
+    parser.add_argument(
+        "--retrieval-judge-holdout-json",
+        type=str,
+        default=DEFAULT_RETRIEVAL_JUDGE_HOLDOUT,
+        help="Optional BT5 judge holdout JSON (``eval/retrieval/judge.py --case-tier judge_holdout_v1``).",
+    )
+    parser.add_argument(
         "--hybrid-ablation-json",
         type=str,
         default=DEFAULT_RETRIEVAL_HYBRID_ABLATION,
@@ -859,6 +919,15 @@ def main() -> int:
         type=str,
         default=DEFAULT_AGENT_TOOLS_JUDGE,
         help="Optional Wave R judge JSON from science-graphrag-agent-judge-benchmark.",
+    )
+    parser.add_argument(
+        "--write-trust-baseline",
+        type=Path,
+        default=None,
+        help=(
+            "Also write a frozen trust snapshot (decision_gate + trust aggregates) to this path, "
+            "e.g. eval/results/benchmark-trust-baseline.json"
+        ),
     )
     args = parser.parse_args()
 
@@ -889,7 +958,9 @@ def main() -> int:
             "retrieval_strict_pilot_mock": DEFAULT_RETRIEVAL_STRICT_PILOT,
             "retrieval_live_corpus_mini": DEFAULT_RETRIEVAL_LIVE_CORPUS_MINI,
             "retrieval_workspace_scoped": args.retrieval_workspace_scoped_json,
+            "retrieval_workspace_scoped_live": args.retrieval_workspace_scoped_live_json,
             "retrieval_judge_pilot": args.retrieval_judge_json,
+            "retrieval_judge_holdout": args.retrieval_judge_holdout_json,
             "retrieval_hybrid_ablation": args.hybrid_ablation_json,
             "retrieval_multihop_mini": args.retrieval_multihop_json,
             "claims_merge_contract": DEFAULT_CLAIMS_MERGE_CONTRACT,
@@ -915,9 +986,13 @@ def main() -> int:
             "strict_pilot_mock": _summarize_retrieval_suite(DEFAULT_RETRIEVAL_STRICT_PILOT),
             "live_corpus_mini": _summarize_retrieval_suite(DEFAULT_RETRIEVAL_LIVE_CORPUS_MINI),
             "workspace_scoped": _summarize_retrieval_suite(args.retrieval_workspace_scoped_json),
+            "workspace_scoped_live": _summarize_retrieval_suite(
+                args.retrieval_workspace_scoped_live_json
+            ),
             "judge_pilot": _summarize_retrieval_judge_suite(args.retrieval_judge_json),
+            "judge_holdout": _summarize_retrieval_judge_suite(args.retrieval_judge_holdout_json),
             "hybrid_ablation": _summarize_case_metrics_suite(args.hybrid_ablation_json),
-            "multihop_mini": _summarize_case_metrics_suite(args.retrieval_multihop_json),
+            "multihop_mini": _summarize_multihop_mini_suite(args.retrieval_multihop_json),
         },
         "claims_family": {
             "role": "advisory",
@@ -949,14 +1024,44 @@ def main() -> int:
             "agent_tools_mini": _summarize_case_metrics_suite(args.agent_tools_json),
             "agent_tools_judge": _summarize_retrieval_judge_suite(args.agent_judge_json),
         },
-        "decision_gate": _decision_gate(reference, layer1, layer2, claims_prod),
     }
+
+    _finalize_family_trust("retrieval_family", payload["retrieval_family"])
+    _finalize_family_trust("claims_family", payload["claims_family"])
+    _finalize_family_trust("claims_production_family", payload["claims_production_family"])
+    _finalize_family_trust("references_resolution_family", payload["references_resolution_family"])
+    _finalize_family_trust("concept_topic_family", payload["concept_topic_family"])
+    _finalize_family_trust("agent_tools_family", payload["agent_tools_family"])
+
+    trust_criteria = compute_gate_trust_criteria(
+        retrieval_family=payload["retrieval_family"],
+        claims_family=payload["claims_family"],
+        claims_production_family=payload["claims_production_family"],
+        references_resolution_family=payload["references_resolution_family"],
+        concept_topic_family=payload["concept_topic_family"],
+        agent_tools_family=payload["agent_tools_family"],
+    )
+    payload["decision_gate"] = evaluate_decision_gate(
+        reference,
+        layer1,
+        layer2,
+        claims_prod,
+        trust_criteria=trust_criteria,
+    )
+    _strip_suite_cases_from_payload(payload)
 
     args.out_json.parent.mkdir(parents=True, exist_ok=True)
     args.out_json.write_text(
         json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
     args.out_md.write_text(_render_markdown(payload), encoding="utf-8")
+    if args.write_trust_baseline is not None:
+        args.write_trust_baseline.parent.mkdir(parents=True, exist_ok=True)
+        baseline_body = (
+            json.dumps(trust_baseline_payload(payload), indent=2, ensure_ascii=False) + "\n"
+        )
+        args.write_trust_baseline.write_text(baseline_body, encoding="utf-8")
+        print(f"Wrote {args.write_trust_baseline}")
     print(f"Wrote {args.out_json}")
     print(f"Wrote {args.out_md}")
     return 0

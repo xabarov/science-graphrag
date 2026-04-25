@@ -12,8 +12,11 @@ import typer
 
 from eval.bench_common import run_single_case_json_outputs, run_suite_cli_flow
 from eval.retrieval.metrics import score_retrieval_answer
+from eval.retrieval.stack_health import check_api_health, write_skip_artifact
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.retrieval import GroundedAnswer, answer_query
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _optional_workspace_str(value: Any) -> str | None:
@@ -98,6 +101,19 @@ def _canned_answer_fn(case_path: Path) -> Callable[..., GroundedAnswer]:
         )
 
     return inner
+
+
+def _load_workspace_catalog(case_dir: Path) -> dict[str, Any] | None:
+    """Parse ``_workspaces.json`` adjacent to workspace-scoped-live case packs (BT2)."""
+
+    path = case_dir.parent / "_workspaces.json"
+    if not path.is_file():
+        return None
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, TypeError):
+        return None
+    return raw if isinstance(raw, dict) else None
 
 
 def _load_retrieval_case_tiers(fixtures_root: Path) -> dict[str, list[str]] | None:
@@ -203,7 +219,8 @@ def run_retrieval_case(
         mode=mode_s,
     )
     elapsed = perf_counter() - started
-    metrics = score_retrieval_answer(ga, gold)
+    catalog = _load_workspace_catalog(root)
+    metrics = score_retrieval_answer(ga, gold, workspace_catalog=catalog)
     return _retrieval_case_report_payload(root, question, ga, metrics, elapsed)
 
 
@@ -234,25 +251,35 @@ def _cli(
         "--tier",
         help=(
             "Suite tier from case_tiers.json: merge_safe_contract, strict_pilot, "
-            "live_corpus_mini (live Qdrant/Neo4j), workspace_scoped (Wave P subdir), or 'all'."
+            "live_corpus_mini (live Qdrant/Neo4j), workspace_scoped (Wave P subdir), "
+            "workspace_scoped_live_pilot (BT2 live stack), or 'all'."
         ),
     ),
     mock_answer: bool = typer.Option(
         False,
         "--mock-answer",
-        help=(
-            "Do not call Qdrant/Neo4j; canned answers from each case gold.json "
-            "(CI / tooling smoke)."
-        ),
+        help="Deprecated alias for ``--canned-answer`` (canned answers only).",
+    ),
+    canned_answer: bool = typer.Option(
+        False,
+        "--canned-answer",
+        help="Do not call Qdrant/Neo4j; use canned answers from gold (CI smoke). Default is live.",
+    ),
+    api_base_url: str = typer.Option(
+        "http://127.0.0.1:8000",
+        "--api-base-url",
+        help="API base for ``/health`` check before live ``workspace_scoped_live_pilot`` suite.",
     ),
     json_out: Path | None = typer.Option(None, "--json-out", help="Write JSON report path"),
     md_out: Path | None = typer.Option(None, "--md-out", help="Write Markdown summary path"),
 ) -> None:
+    use_canned = bool(canned_answer or mock_answer)
     _run_retrieval_cli(
         path=path,
         suite=suite,
         tier=tier,
-        mock_answer=mock_answer,
+        use_canned=use_canned,
+        api_base_url=api_base_url,
         json_out=json_out,
         md_out=md_out,
     )
@@ -263,7 +290,8 @@ def _run_retrieval_cli(
     path: Path,
     suite: bool,
     tier: str,
-    mock_answer: bool,
+    use_canned: bool,
+    api_base_url: str,
     json_out: Path | None,
     md_out: Path | None,
 ) -> None:
@@ -273,7 +301,7 @@ def _run_retrieval_cli(
         return bool((report.get("metrics") or {}).get("passed"))
 
     def _run_one(c: Path) -> dict[str, Any]:
-        fn = _canned_answer_fn(c) if mock_answer else None
+        fn = _canned_answer_fn(c) if use_canned else None
         return run_retrieval_case(c, settings=settings, answer_fn=fn)
 
     if suite:
@@ -285,6 +313,29 @@ def _run_retrieval_cli(
                 err=True,
             )
             raise typer.Exit(code=1)
+        if (
+            suite
+            and not use_canned
+            and tier == "workspace_scoped_live_pilot"
+            and path.name == "workspace_scoped_live"
+        ):
+            ok, detail = check_api_health(api_base_url)
+            if not ok:
+                skip_path = write_skip_artifact(
+                    _REPO_ROOT,
+                    stem="retrieval-workspace-scoped-live-skipped",
+                    payload={
+                        "reason": "api_health_failed",
+                        "detail": detail,
+                        "api_base_url": api_base_url,
+                        "tier": tier,
+                    },
+                )
+                typer.echo(
+                    f"Live workspace_scoped suite skipped (API not healthy): {detail}. Wrote {skip_path}",
+                    err=True,
+                )
+                raise typer.Exit(code=2)
         cases = discover_retrieval_case_dirs(path, tier=tier)
         if not cases:
             typer.echo(f"No retrieval cases found under {path}", err=True)

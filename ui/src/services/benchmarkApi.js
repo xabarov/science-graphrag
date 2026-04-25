@@ -165,3 +165,11 @@ export async function pollProgress(runId, { intervalMs = 2000, maxWaitMs = 30 * 
   throw new Error("poll_progress_timeout");
 }
 
+/** Aggregated decision gate + per-family trust signals (BT1). */
+export async function fetchDecisionGateSummary() {
+  const res = await apiClient.get(buildApiUrl("/v1/benchmark/decision-gate-summary"), {
+    headers: authHeaders(),
+  });
+  return res.data;
+}
+

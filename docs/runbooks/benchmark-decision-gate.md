@@ -6,13 +6,13 @@
 
 Используйте **эти** JSON как источник истины для gate (имена могут совпадать с `baseline-*`, но приоритет у последнего локального `current-*`):
 
-| Lane | Файл |
-|------|------|
-| Reference layer-1 | [`eval/results/current-reference-layer1-yolov1.json`](../../eval/results/current-reference-layer1-yolov1.json) |
-| Reference graph | [`eval/results/current-reference-graph-yolov1.json`](../../eval/results/current-reference-graph-yolov1.json) |
-| Reference layer-2 semantic | [`eval/results/current-reference-layer2-yolov1-semantic.json`](../../eval/results/current-reference-layer2-yolov1-semantic.json) |
-| Nightly layer-1 (`nightly_heavy`) | [`eval/results/current-llm-layer1-nightly-heavy-suite-after-prompt-fix.json`](../../eval/results/current-llm-layer1-nightly-heavy-suite-after-prompt-fix.json) |
-| Nightly layer-2 (`nightly_semantic`) | [`eval/results/current-llm-layer2-nightly-semantic-suite.json`](../../eval/results/current-llm-layer2-nightly-semantic-suite.json) |
+| Lane | Файл | `runtime_mode` (BT1 trust, advisory lanes — см. §9) |
+|------|------|--------------------------------------------------------|
+| Reference layer-1 | [`eval/results/current-reference-layer1-yolov1.json`](../../eval/results/current-reference-layer1-yolov1.json) | — (core reference, не advisory) |
+| Reference graph | [`eval/results/current-reference-graph-yolov1.json`](../../eval/results/current-reference-graph-yolov1.json) | — |
+| Reference layer-2 semantic | [`eval/results/current-reference-layer2-yolov1-semantic.json`](../../eval/results/current-reference-layer2-yolov1-semantic.json) | — |
+| Nightly layer-1 (`nightly_heavy`) | [`eval/results/current-llm-layer1-nightly-heavy-suite-after-prompt-fix.json`](../../eval/results/current-llm-layer1-nightly-heavy-suite-after-prompt-fix.json) | — |
+| Nightly layer-2 (`nightly_semantic`) | [`eval/results/current-llm-layer2-nightly-semantic-suite.json`](../../eval/results/current-llm-layer2-nightly-semantic-suite.json) | — |
 
 Для сравнения с предыдущим зафиксированным baseline в репозитории:
 
@@ -53,7 +53,14 @@
 - **CONDITIONAL-GO**: reference зелёная, но **nightly** ещё содержит fail — допустимо для движения по roadmap **если** каждый fail классифицирован (см. ниже) и нет необъяснимых регрессий относительно baseline.
 - **GO** (строгий): reference зелёная и **оба** nightly suite полностью `all_passed` в JSON.
 
-Поле `decision` в `benchmark-metrics-summary.json` кодирует это правило автоматически.
+**BT1 (honest gate, advisory trust):** поверх правил выше агрегатор добавляет в `decision_gate.criteria`:
+
+- `advisory_phantom_count` / `advisory_phantom_families` — сумма «фантомных» advisory-семейств (mock / canned / synthetic harness и т.д., см. §9).
+- Если итоговый `decision` был **GO**, но `advisory_phantom_count > 0` → понижение до **CONDITIONAL-GO** с дополнением в `reason` (`advisory_phantom_count=…`).
+- `advisory_individual_failures` — per-case `passed=false` там, где family-level mean всё ещё может быть зелёным.
+- `hard_block_individual_failures` — список блокирующих lane (на старте: **`retrieval_judge_pilot`** при любых per-case judge fail). При непустом списке → **NO-GO** (`reason` начинается с `hard_block_individual_failures:…`), даже если nightly зелёный.
+
+Поле `decision` в `benchmark-metrics-summary.json` кодирует это правило автоматически (`science_graphrag/benchmarks/decision_gate.py` + `scripts/aggregate_benchmark_metrics.py`).
 
 ## 4. Классификация остаточных fail
 
@@ -99,7 +106,7 @@ Single-case retest после правок gold (если лежат в `eval/re
   - strict pilot (fingerprint gold, mock): [`eval/results/current-retrieval-strict-pilot-mock.json`](../../eval/results/current-retrieval-strict-pilot-mock.json)
 - **Live mini-tier (при наличии файла):** [`eval/results/current-retrieval-live-corpus-mini.json`](../../eval/results/current-retrieval-live-corpus-mini.json) — поднимается в сводке агрегатора; по-прежнему advisory.
 - **Workspace-scoped retrieval (Wave P, advisory):** [`eval/results/current-retrieval-workspace-scoped.json`](../../eval/results/current-retrieval-workspace-scoped.json) — tier `workspace_scoped`; перед live-прогоном: `scripts/seed_benchmark_workspaces.py` + Qdrant backfill; `--retrieval-workspace-scoped-json`.
-- **Retrieval LLM-judge pilot (Wave P, advisory):** [`eval/results/current-retrieval-judge-pilot.json`](../../eval/results/current-retrieval-judge-pilot.json) — `science-graphrag-retrieval-judge-benchmark` поверх JSON runner; `--retrieval-judge-json`; не влияет на `decision`.
+- **Retrieval LLM-judge pilot (Wave P, advisory):** [`eval/results/current-retrieval-judge-pilot.json`](../../eval/results/current-retrieval-judge-pilot.json) — `science-graphrag-retrieval-judge-benchmark` поверх JSON runner; `--retrieval-judge-json`; **BT1:** per-case judge fail → **NO-GO** через `hard_block_individual_failures` (см. §3), lane остаётся advisory по данным, но gate честный.
 - **Claims (при наличии файлов):** [`eval/results/current-claims-merge-contract.json`](../../eval/results/current-claims-merge-contract.json), [`eval/results/current-claims-mini-suite.json`](../../eval/results/current-claims-mini-suite.json), [`eval/results/current-claims-corpus-v2-mini.json`](../../eval/results/current-claims-corpus-v2-mini.json), [`eval/results/current-claims-pilot-suite.json`](../../eval/results/current-claims-pilot-suite.json) — см. [`benchmark-pilot-advisory-runs.md`](benchmark-pilot-advisory-runs.md); **advisory** (harness / merge contract).
 - **Claims — production LLM lane (Wave O, core gate):** [`eval/results/current-claims-production-pilot.json`](../../eval/results/current-claims-production-pilot.json) — `science-graphrag-claims-benchmark --suite --tier claims_pilot --extractor production`; **входит** в `decision_gate` (см. §8.1); сводка: секция *Claims production lane* в `benchmark-metrics-summary.md`; путь: `--claims-production-json`.
 - **References resolution (при наличии файлов):** [`eval/results/current-references-resolution-contract.json`](../../eval/results/current-references-resolution-contract.json), [`eval/results/current-references-resolution-mini.json`](../../eval/results/current-references-resolution-mini.json) — см. [`benchmark-family-references-resolution-v1.md`](../specs/benchmark-family-references-resolution-v1.md).
@@ -136,7 +143,7 @@ Single-case retest после правок gold (если лежат в `eval/re
 
 ### 8.3 Promotion roadmap: retrieval workspace-scoped + LLM-judge → core (Wave P)
 
-Пока **не** в `_decision_gate`. Условие для смены политики (после review по [`benchmark-family-promotion-review.md`](benchmark-family-promotion-review.md)):
+Пока **не** в базовых nightly-правилах `_decision_gate` как обязательный mean-score. **BT1:** per-case judge failures уже **блокируют** merge как **NO-GO** (см. §3). Условие для смены политики (после review по [`benchmark-family-promotion-review.md`](benchmark-family-promotion-review.md)):
 
 - **14 ночей подряд:** suite `workspace_scoped` зелёная (`summary.all_passed = true`) на зафиксированном пилотном стеке (Neo4j workspaces `ws-pilot-*` + Qdrant `workspace_ids` после `scripts/seed_benchmark_workspaces.py`).
 - **14 ночей подряд:** judge pilot `mean_weighted_score ≥ 4.5/6` в [`eval/results/current-retrieval-judge-pilot.json`](../../eval/results/current-retrieval-judge-pilot.json) (запуск `science-graphrag-retrieval-judge-benchmark` поверх `current-retrieval-live-corpus-mini.json` или согласованного входа).
@@ -155,3 +162,48 @@ Single-case retest после правок gold (если лежат в `eval/re
 
 - `eval/results/current-agent-tools-mini.json`
 - `eval/results/current-agent-tools-judge-pilot.json`
+
+## 9. Trust signal: что считается «фантомом»
+
+Источник правил: `science_graphrag/benchmarks/trust_signal.py` (`detect_runtime_mode`, `build_trust_signal_dict`). Для каждого member-блока в `benchmark-metrics-summary.json` пишется `trust_signal`:
+
+| Member (пример) | Условие → `runtime_mode` | `is_phantom` |
+|-----------------|--------------------------|--------------|
+| `workspace_scoped` | большинство кейсов: `retrieval_trace.embedding.embedding_model == "mock"` | да → `canned` |
+| `merge_safe_contract_mock`, `strict_pilot_mock` | как выше / contract mock | да |
+| `agent_tools_mini` | ≥50%: `answer == "mock answer"` или `work_id == "mock-work"` в citations | да → `mock_runtime` |
+| `multihop_mini` | ≥50%: `request_error` начинается с `[Errno 111]` | да → `broken_connection` |
+| `hybrid_ablation` | `extraction_llm_model is null` и идентичные triples MRR по всем кейсам | да → `synthetic_gold` |
+| `concept_topic_mini` | v1 mini harness (substring) | да → `harness_substring` |
+| `judge_pilot` | всегда живой judge | нет → `live` |
+| `agent_tools_judge` | `error == missing_file` | да → `missing` |
+
+`validation_status_aggregate` строится по большинству `meta.validation_status` из `tests/fixtures/benchmarks/**/gold.json` для соответствующего поддерева (≥80% одного статуса, иначе `mixed`).
+
+Пример фрагмента JSON:
+
+```json
+"trust_signal": {
+  "family": "retrieval_family",
+  "member_id": "workspace_scoped",
+  "runtime_mode": "canned",
+  "validation_status_aggregate": "llm_dual_validated",
+  "is_phantom": true,
+  "individual_failures": []
+}
+```
+
+UI: `GET /v1/benchmark/decision-gate-summary` (см. [`frontend-ui-api-contracts-v1.md`](../specs/frontend-ui-api-contracts-v1.md)) + `TrustSignalPanel` на `/benchmark`.
+
+## 10. Baseline snapshot (trust regression)
+
+Заморозить снимок trust + `decision_gate` (без timestamp для стабильных байтов):
+
+```bash
+.venv/bin/python scripts/aggregate_benchmark_metrics.py \
+  --write-trust-baseline eval/results/benchmark-trust-baseline.json
+```
+
+Файл [`eval/results/benchmark-trust-baseline.json`](../../eval/results/benchmark-trust-baseline.json): `schema_version`, `decision_gate`, `trust_aggregate_per_family`, счётчики phantom в criteria.
+
+**Политика регрессий:** в CI не пересоздавать baseline автоматически; при росте `advisory_phantom_count` относительно закоммиченного baseline — падать шагом проверки (после подключения job в `integration-nightly.yml` / отдельный pytest). Улучшение (меньше phantom) — зелёный diff, baseline обновляют вручную при осознанном «новом полу».

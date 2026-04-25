@@ -13,7 +13,9 @@
     "retrieval_strict_pilot_mock": "eval/results/current-retrieval-strict-pilot-mock.json",
     "retrieval_live_corpus_mini": "eval/results/current-retrieval-live-corpus-mini.json",
     "retrieval_workspace_scoped": "eval/results/current-retrieval-workspace-scoped.json",
+    "retrieval_workspace_scoped_live": "eval/results/current-retrieval-workspace-scoped-live.json",
     "retrieval_judge_pilot": "eval/results/current-retrieval-judge-pilot.json",
+    "retrieval_judge_holdout": "eval/results/current-retrieval-judge-holdout.json",
     "retrieval_hybrid_ablation": "eval/results/current-retrieval-hybrid-ablation.json",
     "retrieval_multihop_mini": "eval/results/current-retrieval-multihop-mini.json",
     "claims_merge_contract": "eval/results/current-claims-merge-contract.json",
@@ -299,7 +301,20 @@
       },
       "failed_count": 0,
       "failed_cases": [],
-      "all_passed": true
+      "all_passed": true,
+      "trust_signal": {
+        "family": "retrieval_family",
+        "member_id": "merge_safe_contract_mock",
+        "runtime_mode": "canned",
+        "validation_status_aggregate": null,
+        "validation_status_by_pack": null,
+        "last_known_real_run_at": null,
+        "consistency_warnings": [
+          "merge_safe_contract_mock: retrieval_trace uses mock embedding (canned / contract)"
+        ],
+        "individual_failures": [],
+        "is_phantom": true
+      }
     },
     "strict_pilot_mock": {
       "artifact": "eval/results/current-retrieval-strict-pilot-mock.json",
@@ -319,7 +334,20 @@
       },
       "failed_count": 0,
       "failed_cases": [],
-      "all_passed": true
+      "all_passed": true,
+      "trust_signal": {
+        "family": "retrieval_family",
+        "member_id": "strict_pilot_mock",
+        "runtime_mode": "canned",
+        "validation_status_aggregate": null,
+        "validation_status_by_pack": null,
+        "last_known_real_run_at": null,
+        "consistency_warnings": [
+          "strict_pilot_mock: retrieval_trace uses mock embedding (canned / contract)"
+        ],
+        "individual_failures": [],
+        "is_phantom": true
+      }
     },
     "live_corpus_mini": {
       "artifact": "eval/results/current-retrieval-live-corpus-mini.json",
@@ -341,7 +369,18 @@
       },
       "failed_count": 0,
       "failed_cases": [],
-      "all_passed": true
+      "all_passed": true,
+      "trust_signal": {
+        "family": "retrieval_family",
+        "member_id": "live_corpus_mini",
+        "runtime_mode": "live",
+        "validation_status_aggregate": null,
+        "validation_status_by_pack": null,
+        "last_known_real_run_at": null,
+        "consistency_warnings": [],
+        "individual_failures": [],
+        "is_phantom": false
+      }
     },
     "workspace_scoped": {
       "artifact": "eval/results/current-retrieval-workspace-scoped.json",
@@ -364,7 +403,61 @@
       },
       "failed_count": 0,
       "failed_cases": [],
-      "all_passed": true
+      "all_passed": true,
+      "trust_signal": {
+        "family": "retrieval_family",
+        "member_id": "workspace_scoped",
+        "runtime_mode": "verified_by_sibling_live",
+        "validation_status_aggregate": null,
+        "validation_status_by_pack": null,
+        "last_known_real_run_at": null,
+        "consistency_warnings": [
+          "workspace_scoped: canned lane; live signal delegated to workspace_scoped_live"
+        ],
+        "individual_failures": [],
+        "is_phantom": false
+      }
+    },
+    "workspace_scoped_live": {
+      "artifact": "eval/results/current-retrieval-workspace-scoped-live.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1"
+      },
+      "summary": {
+        "case_count": 6,
+        "case_ids": [
+          "ws_pilot_od_chunk_anchor",
+          "ws_pilot_od_methods_overview",
+          "ws_pilot_od_scoped_negative",
+          "ws_pilot_pdf_chunk_anchor",
+          "ws_pilot_pdf_methods_overview",
+          "ws_pilot_pdf_scoped_negative"
+        ],
+        "all_passed": true,
+        "retrieval_eval": true
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true,
+      "trust_signal": {
+        "family": "retrieval_family",
+        "member_id": "workspace_scoped_live",
+        "runtime_mode": "live",
+        "validation_status_aggregate": "llm_dual_validated",
+        "validation_status_by_pack": {
+          "ws_yolo_speed_question": "llm_dual_validated",
+          "ws_full_corpus_negative_unrelated": "llm_dual_validated",
+          "ws_two_stage_proposal_evolution": "llm_dual_validated",
+          "ws_two_stage_negative_focal_loss": "llm_dual_validated",
+          "ws_full_anchor_free_overview": "llm_dual_validated",
+          "ws_yolo_negative_mask_segmentation": "llm_dual_validated"
+        },
+        "last_known_real_run_at": null,
+        "consistency_warnings": [],
+        "individual_failures": [],
+        "is_phantom": false
+      }
     },
     "judge_pilot": {
       "artifact": "eval/results/current-retrieval-judge-pilot.json",
@@ -391,7 +484,78 @@
         }
       ],
       "all_passed": false,
-      "mean_weighted_score": 5.1
+      "mean_weighted_score": 5.1,
+      "trust_signal": {
+        "family": "retrieval_family",
+        "member_id": "judge_pilot",
+        "runtime_mode": "live",
+        "validation_status_aggregate": null,
+        "validation_status_by_pack": null,
+        "last_known_real_run_at": null,
+        "consistency_warnings": [],
+        "individual_failures": [
+          {
+            "case_id": "live_yolov1_architecture",
+            "passed": false,
+            "weighted_score": 3.7,
+            "error": null
+          },
+          {
+            "case_id": "live_yolov1_training",
+            "passed": false,
+            "weighted_score": 4.4,
+            "error": null
+          }
+        ],
+        "is_phantom": false
+      }
+    },
+    "judge_holdout": {
+      "artifact": "eval/results/current-retrieval-judge-holdout.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "judge_prompt_fingerprint": "sha256-20:4a8a4e1fd59c0baace44",
+        "judge_schema_version": "retrieval_judge_v1"
+      },
+      "summary": {
+        "case_count": 2,
+        "mean_weighted_score": 6.2,
+        "all_passed": true,
+        "retrieval_judge_eval": true,
+        "per_case_score_breakdown": [
+          {
+            "case_id": "live_yolov1_intro",
+            "factuality": 3,
+            "coverage": 3,
+            "no_contradictions": 2,
+            "language": 2,
+            "weighted": 6.7
+          },
+          {
+            "case_id": "live_yolov1_methods_combo",
+            "factuality": 2,
+            "coverage": 3,
+            "no_contradictions": 2,
+            "language": 2,
+            "weighted": 5.7
+          }
+        ]
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true,
+      "mean_weighted_score": 6.2,
+      "trust_signal": {
+        "family": "retrieval_family",
+        "member_id": "judge_holdout",
+        "runtime_mode": "live",
+        "validation_status_aggregate": null,
+        "validation_status_by_pack": null,
+        "last_known_real_run_at": null,
+        "consistency_warnings": [],
+        "individual_failures": [],
+        "is_phantom": false
+      }
     },
     "hybrid_ablation": {
       "artifact": "eval/results/current-retrieval-hybrid-ablation.json",
@@ -419,133 +583,61 @@
       "failed_count": 0,
       "failed_cases": [],
       "all_passed": true,
-      "mean_claim_recall": null
+      "mean_claim_recall": null,
+      "trust_signal": {
+        "family": "retrieval_family",
+        "member_id": "hybrid_ablation",
+        "runtime_mode": "synthetic_gold",
+        "validation_status_aggregate": "llm_dual_validated",
+        "validation_status_by_pack": {
+          "ha_keypoint_corner": "llm_dual_validated",
+          "ha_iou_loss_quality": "llm_dual_validated",
+          "ha_compound_scaling": "llm_dual_validated",
+          "ha_classical_handcrafted": "llm_dual_validated",
+          "ha_set_prediction_transformer": "llm_dual_validated",
+          "ha_two_stage_rpn_evolution": "draft",
+          "ha_focal_loss": "llm_dual_validated",
+          "ha_anchor_free": "llm_dual_validated"
+        },
+        "last_known_real_run_at": null,
+        "consistency_warnings": [
+          "hybrid_ablation: hybrid ablation appears synthetic (identical MRR rows)"
+        ],
+        "individual_failures": [],
+        "is_phantom": true
+      }
     },
     "multihop_mini": {
+      "error": "missing_file",
       "artifact": "eval/results/current-retrieval-multihop-mini.json",
-      "run_metadata": {
-        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
-        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
-        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
-        "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190"
-      },
-      "summary": {
-        "case_count": 5,
-        "case_ids": [
-          "mh_01_yolov1_cites",
-          "mh_02_retinanet_cites",
-          "mh_03_faster_rcnn_cites",
-          "mh_04_mask_rcnn_cites",
-          "mh_05_detr_cites"
+      "trust_signal": {
+        "family": "retrieval_family",
+        "member_id": "multihop_mini",
+        "runtime_mode": "infra_skipped",
+        "validation_status_aggregate": "mixed",
+        "validation_status_by_pack": {
+          "mh_authors_yolo_intersect_rcnn_family": "draft",
+          "mh_detr_lineage_chain": "llm_dual_validated",
+          "mh_proposal_evolution_chain": "llm_dual_validated",
+          "mh_datasets_shared_one_stage_detectors": "draft",
+          "mh_yolo_lineage_chain": "llm_dual_validated"
+        },
+        "last_known_real_run_at": null,
+        "consistency_warnings": [
+          "multihop_mini: suite artifact missing; last infra skip: eval/results/multihop-skipped-repo-honesty-stub.json (neo4j_unreachable)"
         ],
-        "all_passed": false,
-        "multihop_eval": true
-      },
-      "failed_count": 5,
-      "failed_cases": [
-        {
-          "case_id": "mh_01_yolov1_cites",
-          "metrics": {
-            "passed": false,
-            "precision": 0.0,
-            "recall": 0.0,
-            "min_precision": 0.7,
-            "min_recall": 0.5,
-            "expected_count": 3,
-            "returned_count": 0,
-            "matched_work_ids": [],
-            "missing_work_ids": [
-              "faster_rcnn_realpdf",
-              "retinanet_focal_realpdf",
-              "ssd_realpdf"
-            ],
-            "unexpected_work_ids": [],
-            "request_error": "[Errno 111] Connection refused"
-          }
-        },
-        {
-          "case_id": "mh_02_retinanet_cites",
-          "metrics": {
-            "passed": false,
-            "precision": 0.0,
-            "recall": 0.0,
-            "min_precision": 0.7,
-            "min_recall": 0.5,
-            "expected_count": 3,
-            "returned_count": 0,
-            "matched_work_ids": [],
-            "missing_work_ids": [
-              "faster_rcnn_realpdf",
-              "mask_rcnn_realpdf",
-              "yolov3_realpdf"
-            ],
-            "unexpected_work_ids": [],
-            "request_error": "[Errno 111] Connection refused"
-          }
-        },
-        {
-          "case_id": "mh_03_faster_rcnn_cites",
-          "metrics": {
-            "passed": false,
-            "precision": 0.0,
-            "recall": 0.0,
-            "min_precision": 0.7,
-            "min_recall": 0.5,
-            "expected_count": 3,
-            "returned_count": 0,
-            "matched_work_ids": [],
-            "missing_work_ids": [
-              "mask_rcnn_realpdf",
-              "rcnn_realpdf",
-              "rfcn_realpdf"
-            ],
-            "unexpected_work_ids": [],
-            "request_error": "[Errno 111] Connection refused"
-          }
-        },
-        {
-          "case_id": "mh_04_mask_rcnn_cites",
-          "metrics": {
-            "passed": false,
-            "precision": 0.0,
-            "recall": 0.0,
-            "min_precision": 0.7,
-            "min_recall": 0.5,
-            "expected_count": 3,
-            "returned_count": 0,
-            "matched_work_ids": [],
-            "missing_work_ids": [
-              "faster_rcnn_realpdf",
-              "fpn_realpdf",
-              "retinanet_focal_realpdf"
-            ],
-            "unexpected_work_ids": [],
-            "request_error": "[Errno 111] Connection refused"
-          }
-        },
-        {
-          "case_id": "mh_05_detr_cites",
-          "metrics": {
-            "passed": false,
-            "precision": 0.0,
-            "recall": 0.0,
-            "min_precision": 0.7,
-            "min_recall": 0.5,
-            "expected_count": 3,
-            "returned_count": 0,
-            "matched_work_ids": [],
-            "missing_work_ids": [
-              "deformable_detr_realpdf",
-              "dino_realpdf",
-              "dn_detr_realpdf"
-            ],
-            "unexpected_work_ids": [],
-            "request_error": "[Errno 111] Connection refused"
-          }
-        }
+        "individual_failures": [],
+        "is_phantom": false
+      }
+    },
+    "trust_aggregate": {
+      "phantom_member_count": 3,
+      "phantom_members": [
+        "retrieval_family.merge_safe_contract_mock",
+        "retrieval_family.strict_pilot_mock",
+        "retrieval_family.hybrid_ablation"
       ],
-      "all_passed": false,
-      "mean_claim_recall": null
+      "mixed_validation_status_member_count": 1
     }
   },
   "claims_family": {
@@ -569,7 +661,39 @@
       "failed_count": 0,
       "failed_cases": [],
       "all_passed": true,
-      "mean_claim_recall": 1.0
+      "mean_claim_recall": 1.0,
+      "trust_signal": {
+        "family": "claims_family",
+        "member_id": "claims_merge_contract",
+        "runtime_mode": "live",
+        "validation_status_aggregate": "draft",
+        "validation_status_by_pack": {
+          "corpus_detr_v2": "llm_dual_validated",
+          "corpus_fcos_v2": "draft",
+          "corpus_cornernet_v2": "draft",
+          "holdout_atss_v1": "draft",
+          "holdout_yolov3_v1": "draft",
+          "holdout_dino_v1": "draft",
+          "holdout_yolox_v1": "draft",
+          "corpus_rcnn_v2": "draft",
+          "corpus_centernet_v2": "llm_dual_validated",
+          "corpus_fpn_v2": "draft",
+          "corpus_yolov1_v2": "draft",
+          "corpus_yolov2_v2": "draft",
+          "holdout_deformable_detr_v1": "draft",
+          "corpus_faster_rcnn_v2": "draft",
+          "corpus_mask_rcnn_v2": "draft",
+          "corpus_efficientdet_v2": "draft",
+          "corpus_cascade_rcnn_v2": "draft",
+          "corpus_retinanet_focal_v2": "draft",
+          "corpus_ssd_v2": "draft",
+          "corpus_fast_rcnn_v2": "draft"
+        },
+        "last_known_real_run_at": null,
+        "consistency_warnings": [],
+        "individual_failures": [],
+        "is_phantom": false
+      }
     },
     "claims_mini": {
       "artifact": "eval/results/current-claims-mini-suite.json",
@@ -594,7 +718,39 @@
       "failed_count": 0,
       "failed_cases": [],
       "all_passed": true,
-      "mean_claim_recall": 1.0
+      "mean_claim_recall": 1.0,
+      "trust_signal": {
+        "family": "claims_family",
+        "member_id": "claims_mini",
+        "runtime_mode": "live",
+        "validation_status_aggregate": "draft",
+        "validation_status_by_pack": {
+          "corpus_detr_v2": "llm_dual_validated",
+          "corpus_fcos_v2": "draft",
+          "corpus_cornernet_v2": "draft",
+          "holdout_atss_v1": "draft",
+          "holdout_yolov3_v1": "draft",
+          "holdout_dino_v1": "draft",
+          "holdout_yolox_v1": "draft",
+          "corpus_rcnn_v2": "draft",
+          "corpus_centernet_v2": "llm_dual_validated",
+          "corpus_fpn_v2": "draft",
+          "corpus_yolov1_v2": "draft",
+          "corpus_yolov2_v2": "draft",
+          "holdout_deformable_detr_v1": "draft",
+          "corpus_faster_rcnn_v2": "draft",
+          "corpus_mask_rcnn_v2": "draft",
+          "corpus_efficientdet_v2": "draft",
+          "corpus_cascade_rcnn_v2": "draft",
+          "corpus_retinanet_focal_v2": "draft",
+          "corpus_ssd_v2": "draft",
+          "corpus_fast_rcnn_v2": "draft"
+        },
+        "last_known_real_run_at": null,
+        "consistency_warnings": [],
+        "individual_failures": [],
+        "is_phantom": false
+      }
     },
     "claims_corpus_v2_mini": {
       "artifact": "eval/results/current-claims-corpus-v2-mini.json",
@@ -619,7 +775,39 @@
       "failed_count": 0,
       "failed_cases": [],
       "all_passed": true,
-      "mean_claim_recall": 1.0
+      "mean_claim_recall": 1.0,
+      "trust_signal": {
+        "family": "claims_family",
+        "member_id": "claims_corpus_v2_mini",
+        "runtime_mode": "live",
+        "validation_status_aggregate": "draft",
+        "validation_status_by_pack": {
+          "corpus_detr_v2": "llm_dual_validated",
+          "corpus_fcos_v2": "draft",
+          "corpus_cornernet_v2": "draft",
+          "holdout_atss_v1": "draft",
+          "holdout_yolov3_v1": "draft",
+          "holdout_dino_v1": "draft",
+          "holdout_yolox_v1": "draft",
+          "corpus_rcnn_v2": "draft",
+          "corpus_centernet_v2": "llm_dual_validated",
+          "corpus_fpn_v2": "draft",
+          "corpus_yolov1_v2": "draft",
+          "corpus_yolov2_v2": "draft",
+          "holdout_deformable_detr_v1": "draft",
+          "corpus_faster_rcnn_v2": "draft",
+          "corpus_mask_rcnn_v2": "draft",
+          "corpus_efficientdet_v2": "draft",
+          "corpus_cascade_rcnn_v2": "draft",
+          "corpus_retinanet_focal_v2": "draft",
+          "corpus_ssd_v2": "draft",
+          "corpus_fast_rcnn_v2": "draft"
+        },
+        "last_known_real_run_at": null,
+        "consistency_warnings": [],
+        "individual_failures": [],
+        "is_phantom": false
+      }
     },
     "claims_pilot": {
       "artifact": "eval/results/current-claims-pilot-suite.json",
@@ -649,7 +837,44 @@
       "failed_count": 0,
       "failed_cases": [],
       "all_passed": true,
-      "mean_claim_recall": 1.0
+      "mean_claim_recall": 1.0,
+      "trust_signal": {
+        "family": "claims_family",
+        "member_id": "claims_pilot",
+        "runtime_mode": "live",
+        "validation_status_aggregate": "draft",
+        "validation_status_by_pack": {
+          "corpus_detr_v2": "llm_dual_validated",
+          "corpus_fcos_v2": "draft",
+          "corpus_cornernet_v2": "draft",
+          "holdout_atss_v1": "draft",
+          "holdout_yolov3_v1": "draft",
+          "holdout_dino_v1": "draft",
+          "holdout_yolox_v1": "draft",
+          "corpus_rcnn_v2": "draft",
+          "corpus_centernet_v2": "llm_dual_validated",
+          "corpus_fpn_v2": "draft",
+          "corpus_yolov1_v2": "draft",
+          "corpus_yolov2_v2": "draft",
+          "holdout_deformable_detr_v1": "draft",
+          "corpus_faster_rcnn_v2": "draft",
+          "corpus_mask_rcnn_v2": "draft",
+          "corpus_efficientdet_v2": "draft",
+          "corpus_cascade_rcnn_v2": "draft",
+          "corpus_retinanet_focal_v2": "draft",
+          "corpus_ssd_v2": "draft",
+          "corpus_fast_rcnn_v2": "draft"
+        },
+        "last_known_real_run_at": null,
+        "consistency_warnings": [],
+        "individual_failures": [],
+        "is_phantom": false
+      }
+    },
+    "trust_aggregate": {
+      "phantom_member_count": 0,
+      "phantom_members": [],
+      "mixed_validation_status_member_count": 0
     }
   },
   "claims_production_family": {
@@ -682,7 +907,44 @@
       "failed_count": 0,
       "failed_cases": [],
       "all_passed": true,
-      "mean_claim_recall": 1.0
+      "mean_claim_recall": 1.0,
+      "trust_signal": {
+        "family": "claims_production_family",
+        "member_id": "claims_pilot_production",
+        "runtime_mode": "live",
+        "validation_status_aggregate": "draft",
+        "validation_status_by_pack": {
+          "corpus_detr_v2": "llm_dual_validated",
+          "corpus_fcos_v2": "draft",
+          "corpus_cornernet_v2": "draft",
+          "holdout_atss_v1": "draft",
+          "holdout_yolov3_v1": "draft",
+          "holdout_dino_v1": "draft",
+          "holdout_yolox_v1": "draft",
+          "corpus_rcnn_v2": "draft",
+          "corpus_centernet_v2": "llm_dual_validated",
+          "corpus_fpn_v2": "draft",
+          "corpus_yolov1_v2": "draft",
+          "corpus_yolov2_v2": "draft",
+          "holdout_deformable_detr_v1": "draft",
+          "corpus_faster_rcnn_v2": "draft",
+          "corpus_mask_rcnn_v2": "draft",
+          "corpus_efficientdet_v2": "draft",
+          "corpus_cascade_rcnn_v2": "draft",
+          "corpus_retinanet_focal_v2": "draft",
+          "corpus_ssd_v2": "draft",
+          "corpus_fast_rcnn_v2": "draft"
+        },
+        "last_known_real_run_at": null,
+        "consistency_warnings": [],
+        "individual_failures": [],
+        "is_phantom": false
+      }
+    },
+    "trust_aggregate": {
+      "phantom_member_count": 0,
+      "phantom_members": [],
+      "mixed_validation_status_member_count": 0
     }
   },
   "references_resolution_family": {
@@ -706,7 +968,18 @@
       "failed_count": 0,
       "failed_cases": [],
       "all_passed": true,
-      "mean_claim_recall": null
+      "mean_claim_recall": null,
+      "trust_signal": {
+        "family": "references_resolution_family",
+        "member_id": "refs_merge_contract",
+        "runtime_mode": "live",
+        "validation_status_aggregate": null,
+        "validation_status_by_pack": null,
+        "last_known_real_run_at": null,
+        "consistency_warnings": [],
+        "individual_failures": [],
+        "is_phantom": false
+      }
     },
     "refs_mini": {
       "artifact": "eval/results/current-references-resolution-mini.json",
@@ -729,7 +1002,18 @@
       "failed_count": 0,
       "failed_cases": [],
       "all_passed": true,
-      "mean_claim_recall": null
+      "mean_claim_recall": null,
+      "trust_signal": {
+        "family": "references_resolution_family",
+        "member_id": "refs_mini",
+        "runtime_mode": "live",
+        "validation_status_aggregate": null,
+        "validation_status_by_pack": null,
+        "last_known_real_run_at": null,
+        "consistency_warnings": [],
+        "individual_failures": [],
+        "is_phantom": false
+      }
     },
     "refs_graph": {
       "artifact": "eval/results/current-references-resolution-graph.json",
@@ -750,7 +1034,23 @@
       "failed_count": 0,
       "failed_cases": [],
       "all_passed": true,
-      "mean_claim_recall": null
+      "mean_claim_recall": null,
+      "trust_signal": {
+        "family": "references_resolution_family",
+        "member_id": "refs_graph",
+        "runtime_mode": "live",
+        "validation_status_aggregate": null,
+        "validation_status_by_pack": null,
+        "last_known_real_run_at": null,
+        "consistency_warnings": [],
+        "individual_failures": [],
+        "is_phantom": false
+      }
+    },
+    "trust_aggregate": {
+      "phantom_member_count": 0,
+      "phantom_members": [],
+      "mixed_validation_status_member_count": 0
     }
   },
   "concept_topic_family": {
@@ -778,7 +1078,38 @@
       "failed_count": 0,
       "failed_cases": [],
       "all_passed": true,
-      "mean_claim_recall": null
+      "mean_claim_recall": null,
+      "trust_signal": {
+        "family": "concept_topic_family",
+        "member_id": "concept_topic_mini",
+        "runtime_mode": "harness_substring",
+        "validation_status_aggregate": "draft",
+        "validation_status_by_pack": {
+          "corpus_detr_v2": "draft",
+          "corpus_fcos_v2": "draft",
+          "corpus_cornernet_v2": "draft",
+          "corpus_fpn_v2": "draft",
+          "corpus_yolov1_v2": "draft",
+          "corpus_faster_rcnn_v2": "draft",
+          "corpus_mask_rcnn_v2": "llm_dual_validated",
+          "corpus_cascade_rcnn_v2": "draft",
+          "corpus_retinanet_focal_v2": "draft",
+          "corpus_ssd_v2": "llm_dual_validated"
+        },
+        "last_known_real_run_at": null,
+        "consistency_warnings": [
+          "concept_topic_mini: harness substring fixture (not production extraction)"
+        ],
+        "individual_failures": [],
+        "is_phantom": true
+      }
+    },
+    "trust_aggregate": {
+      "phantom_member_count": 1,
+      "phantom_members": [
+        "concept_topic_family.concept_topic_mini"
+      ],
+      "mixed_validation_status_member_count": 0
     }
   },
   "agent_tools_family": {
@@ -812,23 +1143,97 @@
       "failed_count": 0,
       "failed_cases": [],
       "all_passed": true,
-      "mean_claim_recall": null
+      "mean_claim_recall": null,
+      "trust_signal": {
+        "family": "agent_tools_family",
+        "member_id": "agent_tools_mini",
+        "runtime_mode": "mock_runtime",
+        "validation_status_aggregate": "mixed",
+        "validation_status_by_pack": {
+          "multiagent_live_01_yolo_evolution_writer": "draft",
+          "live_01_who_introduced_focal_loss": "llm_dual_validated",
+          "live_03_yolov3_speed_paper_only": "draft",
+          "live_05_compare_two_stage_one_stage_accuracy": "llm_triple_validated",
+          "live_02_anchor_free_papers_overview": "llm_dual_validated",
+          "adversarial_cypher_01_drop_method_nodes": "draft",
+          "live_06_negative_blockchain_unanswerable": "llm_dual_validated",
+          "live_04_authors_of_mask_rcnn": "draft",
+          "multiagent_live_02_authors_one_two_stage": "draft"
+        },
+        "last_known_real_run_at": null,
+        "consistency_warnings": [
+          "agent_tools_mini: mock runtime answers detected"
+        ],
+        "individual_failures": [],
+        "is_phantom": true
+      }
     },
     "agent_tools_judge": {
       "error": "missing_file",
-      "artifact": "eval/results/current-agent-tools-judge-pilot.json"
+      "artifact": "eval/results/current-agent-tools-judge-pilot.json",
+      "trust_signal": {
+        "family": "agent_tools_family",
+        "member_id": "agent_tools_judge",
+        "runtime_mode": "missing",
+        "validation_status_aggregate": null,
+        "validation_status_by_pack": null,
+        "last_known_real_run_at": null,
+        "consistency_warnings": [
+          "agent_tools_judge: artifact missing (error=missing_file)"
+        ],
+        "individual_failures": [],
+        "is_phantom": true
+      }
+    },
+    "trust_aggregate": {
+      "phantom_member_count": 2,
+      "phantom_members": [
+        "agent_tools_family.agent_tools_mini",
+        "agent_tools_family.agent_tools_judge"
+      ],
+      "mixed_validation_status_member_count": 1
     }
   },
   "decision_gate": {
-    "decision": "GO",
-    "reason": "all_nightly_passed",
+    "decision": "NO-GO",
+    "reason": "hard_block_individual_failures:retrieval_judge_pilot",
     "criteria": {
       "reference_all_passed": true,
       "layer1_nightly_failed_count": 0,
       "layer2_nightly_failed_count": 0,
       "claims_production_artifact_missing": false,
       "claims_production_all_passed": true,
-      "claims_production_mean_claim_recall": 1.0
+      "claims_production_mean_claim_recall": 1.0,
+      "advisory_phantom_count": 6,
+      "advisory_phantom_families": [
+        "merge_safe_contract_mock",
+        "strict_pilot_mock",
+        "hybrid_ablation",
+        "concept_topic_mini",
+        "agent_tools_mini",
+        "agent_tools_judge"
+      ],
+      "advisory_individual_failures": [
+        {
+          "family": "retrieval_family",
+          "member_id": "judge_pilot",
+          "case_id": "live_yolov1_architecture",
+          "passed": false,
+          "weighted_score": 3.7,
+          "error": null
+        },
+        {
+          "family": "retrieval_family",
+          "member_id": "judge_pilot",
+          "case_id": "live_yolov1_training",
+          "passed": false,
+          "weighted_score": 4.4,
+          "error": null
+        }
+      ],
+      "hard_block_individual_failures": [
+        "retrieval_judge_pilot"
+      ]
     }
   }
 }

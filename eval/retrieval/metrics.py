@@ -8,7 +8,157 @@ from eval.layer1.text_similarity import rouge_l_f1
 from science_graphrag.retrieval import GroundedAnswer
 
 
-def score_retrieval_answer(ga: GroundedAnswer, gold: dict[str, Any]) -> dict[str, Any]:
+def _uses_workspace_scoped_live_schema(gold: dict[str, Any]) -> bool:
+    """BT2: gold from ``workspace_scoped_live`` packs (schema v1 + workspace + citations contract)."""
+
+    if gold.get("schema_version") != 1:
+        return False
+    if not str(gold.get("workspace_id") or "").strip():
+        return False
+    return "expected_citations" in gold
+
+
+def _workspace_member_ids(
+    workspace_id: str,
+    workspace_catalog: dict[str, Any] | None,
+) -> set[str] | None:
+    """Return allowed corpus work ids for workspace, or None if unbounded (e.g. full corpus ``*``)."""
+
+    if not workspace_catalog:
+        return None
+    raw = workspace_catalog.get("workspaces")
+    if not isinstance(raw, dict):
+        return None
+    block = raw.get(workspace_id)
+    if not isinstance(block, dict):
+        return None
+    ids = block.get("corpus_work_ids")
+    if ids == "*":
+        return None
+    if not isinstance(ids, list):
+        return None
+    return {str(x).strip() for x in ids if str(x).strip()}
+
+
+def score_workspace_scoped_live_answer(
+    ga: GroundedAnswer,
+    gold: dict[str, Any],
+    *,
+    workspace_catalog: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Score workspace-scoped live packs (BT2): forbidden leaks, scope, citations, answer metric."""
+
+    rt: dict[str, Any] = ga.retrieval_trace if isinstance(ga.retrieval_trace, dict) else {}
+    citations = ga.citations if isinstance(ga.citations, list) else []
+    ws_gold = str(gold.get("workspace_id") or "").strip()
+    trace_ws = str(rt.get("workspace_id") or "").strip()
+    trace_workspace_matches = not ws_gold or trace_ws == ws_gold
+
+    member_set = _workspace_member_ids(ws_gold, workspace_catalog)
+
+    forbidden_raw = list(
+        gold.get("forbidden_corpus_work_ids") or gold.get("forbidden_work_ids") or []
+    )
+    forbidden_set = {str(x).strip() for x in forbidden_raw if str(x).strip()}
+
+    cit_wids = [
+        str(c.get("work_id") or "").strip()
+        for c in citations
+        if isinstance(c, dict) and str(c.get("work_id") or "").strip()
+    ]
+
+    forbidden_leaks = [w for w in cit_wids if w in forbidden_set]
+    out_of_scope: list[str] = []
+    if member_set is not None:
+        out_of_scope = [w for w in cit_wids if w not in member_set]
+
+    violation_count = len(forbidden_leaks) + len(out_of_scope)
+    gate = int(gold.get("forbidden_violation_gate") or 0)
+
+    expected_rows = list(gold.get("expected_citations") or [])
+    missing_required: list[str] = []
+    for row in expected_rows:
+        if not isinstance(row, dict):
+            continue
+        if not row.get("required"):
+            continue
+        cid = str(row.get("corpus_work_id") or "").strip()
+        if cid and cid not in cit_wids:
+            missing_required.append(cid)
+
+    exp_min = gold.get("expected_citations_min_count")
+    try:
+        min_cites = int(exp_min) if exp_min is not None else 0
+    except (TypeError, ValueError):
+        min_cites = 0
+    citation_count_ok = len(citations) >= min_cites
+
+    ref_text = str(gold.get("answer_reference_text") or "").strip()
+    answer_body = str(ga.answer or "").strip()
+    answer_metric = gold.get("answer_metric") if isinstance(gold.get("answer_metric"), dict) else {}
+    metric_type = str(answer_metric.get("type") or "rouge_l").strip().lower()
+
+    answer_ok = True
+    answer_rouge_l: float | None = None
+    abstain_hit = False
+
+    if metric_type == "abstain_keywords":
+        must_any = [
+            str(x).lower() for x in (answer_metric.get("must_contain_any") or []) if str(x).strip()
+        ]
+        low = answer_body.lower()
+        abstain_hit = any(k in low for k in must_any) if must_any else False
+        wants_empty = gold.get("expected_behavior") == "abstain_or_empty"
+        if must_any:
+            answer_ok = abstain_hit or (wants_empty and not answer_body)
+        else:
+            answer_ok = wants_empty and not answer_body
+    elif ref_text:
+        answer_rouge_l = float(rouge_l_f1(ref_text, answer_body))
+        try:
+            min_v = float(answer_metric.get("min_value") or gold.get("min_answer_rouge_l") or 0.18)
+        except (TypeError, ValueError):
+            min_v = 0.18
+        answer_ok = answer_rouge_l + 1e-9 >= min_v
+
+    hit_count = int(rt.get("hit_count") or 0)
+    hit_ok = hit_count >= int(gold.get("min_hit_count") or 0)
+
+    scope_ok = (
+        trace_workspace_matches
+        and violation_count <= gate
+        and not missing_required
+        and citation_count_ok
+    )
+
+    passed = bool(scope_ok and answer_ok and hit_ok)
+
+    return {
+        "passed": passed,
+        "contract_only": False,
+        "workspace_scoped_live": True,
+        "hit_count": hit_count,
+        "trace_workspace_matches": trace_workspace_matches,
+        "forbidden_work_id_violation_count": violation_count,
+        "forbidden_corpus_work_ids_leaked": forbidden_leaks,
+        "out_of_scope_citation_work_ids": out_of_scope,
+        "forbidden_violation_gate": gate,
+        "missing_required_corpus_work_ids": missing_required,
+        "expected_citations_min_count": min_cites,
+        "citation_count_ok": citation_count_ok,
+        "answer_rouge_l": answer_rouge_l,
+        "abstain_keyword_hit": abstain_hit,
+        "answer_metric_type": metric_type,
+        "workspace_scope_ok": scope_ok,
+    }
+
+
+def score_retrieval_answer(
+    ga: GroundedAnswer,
+    gold: dict[str, Any],
+    *,
+    workspace_catalog: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """
     Compare retrieval output to ``gold.json`` for a benchmark case.
 
@@ -24,6 +174,9 @@ def score_retrieval_answer(ga: GroundedAnswer, gold: dict[str, Any]) -> dict[str
       ``retrieval_trace.workspace_id`` must match and citations' ``work_id`` must lie in
       ``workspace_member_work_ids`` and must not appear in ``forbidden_work_ids``.
     """
+
+    if _uses_workspace_scoped_live_schema(gold):
+        return score_workspace_scoped_live_answer(ga, gold, workspace_catalog=workspace_catalog)
 
     rt: dict[str, Any] = ga.retrieval_trace if isinstance(ga.retrieval_trace, dict) else {}
     citations = ga.citations if isinstance(ga.citations, list) else []
@@ -49,8 +202,15 @@ def score_retrieval_answer(ga: GroundedAnswer, gold: dict[str, Any]) -> dict[str
 
     exp_scope = bool(gold.get("expected_workspace_scope"))
     ws_gold = str(gold.get("workspace_id") or "").strip()
-    member_set = {str(x).strip() for x in (gold.get("workspace_member_work_ids") or []) if str(x).strip()}
-    forbidden_set = {str(x).strip() for x in (gold.get("forbidden_work_ids") or []) if str(x).strip()}
+    member_set = {
+        str(x).strip() for x in (gold.get("workspace_member_work_ids") or []) if str(x).strip()
+    }
+    forbidden_set = {
+        str(x).strip() for x in (gold.get("forbidden_work_ids") or []) if str(x).strip()
+    }
+    forbidden_set |= {
+        str(x).strip() for x in (gold.get("forbidden_corpus_work_ids") or []) if str(x).strip()
+    }
     trace_ws = str(rt.get("workspace_id") or "").strip()
 
     trace_workspace_matches = True
