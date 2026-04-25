@@ -1,0 +1,13 @@
+{
+  "center_work_id": "faster_rcnn_realpdf",
+  "depth": 2,
+  "neighbor_limit": 300,
+  "query_hint": "2-hop neighborhood around Faster R-CNN",
+  "expected_neighbor_work_ids": [
+    "rcnn_realpdf",
+    "mask_rcnn_realpdf",
+    "rfcn_realpdf"
+  ],
+  "min_precision": 0.7,
+  "min_recall": 0.5
+}

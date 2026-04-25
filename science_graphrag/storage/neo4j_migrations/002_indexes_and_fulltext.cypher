@@ -19,3 +19,8 @@ CREATE FULLTEXT INDEX methods_text IF NOT EXISTS FOR (n:Method) ON EACH [n.name]
 CREATE FULLTEXT INDEX datasets_text IF NOT EXISTS FOR (n:Dataset) ON EACH [n.name];
 CREATE FULLTEXT INDEX authors_text IF NOT EXISTS FOR (n:Author) ON EACH [n.full_name, n.normalized_name];
 CREATE FULLTEXT INDEX institutions_text IF NOT EXISTS FOR (n:Institution) ON EACH [n.name, n.normalized_name];
+
+// Optional (Wave Q2): requires Neo4j vector-index support (5.13+)
+CREATE VECTOR INDEX work_title_emb IF NOT EXISTS
+FOR (w:Work) ON (w.title_embedding)
+OPTIONS {indexConfig: {`vector.dimensions`: 384, `vector.similarity_function`: 'cosine'}};

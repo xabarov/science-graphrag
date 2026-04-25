@@ -1,0 +1,13 @@
+{
+  "center_work_id": "yolov1",
+  "depth": 2,
+  "neighbor_limit": 300,
+  "query_hint": "2-hop neighborhood around YOLOv1 in object detection corpus",
+  "expected_neighbor_work_ids": [
+    "retinanet_focal_realpdf",
+    "faster_rcnn_realpdf",
+    "ssd_realpdf"
+  ],
+  "min_precision": 0.7,
+  "min_recall": 0.5
+}

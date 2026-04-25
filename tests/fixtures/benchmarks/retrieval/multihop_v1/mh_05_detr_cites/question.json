@@ -1,0 +1,13 @@
+{
+  "center_work_id": "detr_realpdf",
+  "depth": 2,
+  "neighbor_limit": 300,
+  "query_hint": "2-hop neighborhood around DETR-family paper",
+  "expected_neighbor_work_ids": [
+    "deformable_detr_realpdf",
+    "dn_detr_realpdf",
+    "dino_realpdf"
+  ],
+  "min_precision": 0.7,
+  "min_recall": 0.5
+}

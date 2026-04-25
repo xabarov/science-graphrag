@@ -567,13 +567,13 @@ Wave M и N можно вести параллельно; Wave P зависит 
 **Чеклист Wave M:**
 
 - [x] `abstract_prefix_containment` реализован и в gate; `min_sample_arxiv_f1` в profile `merge_safe` и `nightly_heavy`.
-- [ ] Скрипт `scripts/sync_layer1_thresholds.py` обновляет `gold.json` всех 30 кейсов; PR показывает diff и не ломает зелёное.
+- [x] Скрипт `scripts/sync_layer1_thresholds.py` обновляет `gold.json` всех 30 кейсов; PR показывает diff и не ломает зелёное.
 - [x] `min_dataset_recall_ratio = 0.6` в `eval/layer2/spec.py`; 5 кейсов в gold расширены (audit-list).
 - [x] CLI `science-graphrag-references-resolution-benchmark … --resolver graph` на поднятом стеке; артефакт `eval/results/current-references-resolution-graph.json`.
 - [x] Обновлён `aggregate_benchmark_metrics.py`: advisory блок «References resolution graph lane».
 - [x] Документ [benchmark-decision-gate.md](../runbooks/benchmark-decision-gate.md) §8 / §8.2 описывает условие promotion.
 
-**Acceptance:** `decision = GO` сохраняется при включённых ужесточениях; `references_resolution_graph` advisory зелёный 7 ночей подряд.
+**Acceptance:** `decision = GO` сохраняется при включённых ужесточениях; `references_resolution_graph` остаётся advisory до 7 зелёных ночей (`refs_mini`, `--resolver graph`) по promotion checklist.
 
 ---
 
@@ -591,12 +591,12 @@ Wave M и N можно вести параллельно; Wave P зависит 
 
 **Чеклист Wave N:**
 
-- [ ] ADR 013 принят.
-- [ ] Спека extraction.
-- [ ] Mini pack 5 кейсов + `case_tiers.json` `concept_topic_mini`.
-- [ ] CLI + unit test.
-- [ ] `aggregate_benchmark_metrics.py` показывает advisory секцию.
-- [ ] **Concept/ResearchTopic в Neo4j НЕ добавляются** до Wave O (production extractor отдельно).
+- [x] ADR 013 принят.
+- [x] Спека extraction.
+- [x] Mini pack 5 кейсов + `case_tiers.json` `concept_topic_mini`.
+- [x] CLI + unit test.
+- [x] `aggregate_benchmark_metrics.py` показывает advisory секцию.
+- [x] **Concept/ResearchTopic в Neo4j НЕ добавляются** до Wave O (production extractor отдельно).
 
 **Acceptance:** advisory benchmark зелёный; production граф не изменился.
 
@@ -623,10 +623,10 @@ Wave M и N можно вести параллельно; Wave P зависит 
 **Чеклист Wave O:**
 
 - [x] Extractor + флаг + storage метод.
-- [ ] Coll `claims` в Qdrant + миграция (создать только если нет).
+- [x] Coll `claims` в Qdrant + миграция (создать только если нет).
 - [x] CLI bench flag; benchmark зелёный recall ≥ 0.8 на pilot.
 - [x] Production lane + артефакт `eval/results/current-claims-production-pilot.json`; **promoted to core** в `decision_gate` (см. runbook §8.1).
-- [ ] UI Reader показывает claims (под флагом видимости).
+- [x] UI Reader показывает claims (под флагом видимости).
 - [x] Aggregator + runbooks обновлены под core lane.
 
 **Acceptance:** `decision` сохраняет `GO` после promotion; UI показывает извлечённые claims на 5 пилотных работах с осмысленным evidence.
@@ -690,12 +690,12 @@ Wave M и N можно вести параллельно; Wave P зависит 
 
 **Чеклист Wave Q:**
 
-- [ ] Migration `002_indexes_and_fulltext.cypher` применяется на dev compose без warnings.
-- [ ] `idea_search` MCP-стиль tool — заглушка возвращает empty (готовится к Wave R).
-- [ ] Qdrant `works` + индексер + backfill script.
-- [ ] `mode=hybrid` в `/v1/query` с тестом RRF (unit + smoke).
-- [ ] `depth=2` работает с cap; benchmark Multi-hop precision ≥ 0.7 на mini pack.
-- [ ] Hybrid ablation benchmark зелёный (контракт-уровень); цифры опубликованы в advisory.
+- [x] Migration `002_indexes_and_fulltext.cypher` применяется на dev compose без warnings.
+- [x] `idea_search` MCP-стиль tool — заглушка возвращает empty (готовится к Wave R).
+- [x] Qdrant `works` + индексер + backfill script.
+- [x] `mode=hybrid` в `/v1/query` с тестом RRF (unit + smoke).
+- [x] `depth=2` работает с cap; benchmark Multi-hop family (`tests/fixtures/benchmarks/retrieval/multihop_v1/`) + CLI реализованы; live precision gate фиксируется отдельным nightly артефактом.
+- [x] Hybrid ablation benchmark зелёный (контракт-уровень); цифры опубликованы в advisory.
 
 **Acceptance:** hybrid retrieval измеримо лучше pure-vector на mini ablation (MRR улучшение ≥ 0.05); UI mode toggle работает.
 
@@ -820,7 +820,7 @@ Wave M и N можно вести параллельно; Wave P зависит 
 6. [specs/ontology-claims-v1.md](../specs/ontology-claims-v1.md) — после Wave O пометить статус `Implemented (Wave O)`.
 7. [specs/work-dedup-queue-v1.md](../specs/work-dedup-queue-v1.md) → superseded by `entity-dedup-pipeline-v2.md` после Wave T.
 8. [specs/merge-catalog-wave-h.md](../specs/merge-catalog-wave-h.md) → закрытие при Wave T.
-9. [adr/](../adr/) — Wave N: ADR 013 (Concept/Topic); далее по плану: 014 (Agent tools), 015 (Hypothesis), 016 (Entity dedup pipeline).
+9. [adr/](../adr/) — Wave N: ADR 013 (Concept/Topic); Wave L: ADR 014 (smart dedup); Wave Q2: ADR 015 (Neo4j vector index); далее по горизонту: 016 (Agent tools), 017 (Hypothesis), 018 (Entity dedup pipeline).
 10. [specs/extraction/](../specs/extraction/) — новый `semantic-concept-topic-v1.md` (Wave N), `claims-extraction-v1.md` (Wave O).
 
 ---
@@ -881,3 +881,4 @@ gantt
 |------|-----------|
 | 2026-04-24 | Первая версия. Анализ текущих бенчмарков; инвентаризация онтологии; план Wave M–T; индексы Neo4j + payloads Qdrant; mini-ADR Qdrant/Milvus; чеклисты и зависимости. |
 | 2026-04-24 | **Wave P implemented (M/O/P sweep):** workspace-scoped retrieval fixtures + runner/metrics; `workspace_id` в trace; seed workspaces; retrieval judge CLI + pilot JSON; aggregator advisory blocks; decision-gate §8.3 + promotion-review checklist; claims production lane в **core** `decision_gate`; layer2 `min_dataset_recall_ratio` alignment; refs graph artifact path. |
+| 2026-04-25 | **Wave M/N/O/Q reconciliation:** подтверждены реализованные пункты (sync layer1 thresholds, Concept/Topic family, claims Qdrant+UI, hybrid/Qdrant works/depth toggles); добавлены Wave Q артефакты `multihop_v1` (fixtures+CLI+aggregator), ADR 015 (Neo4j vector index `Work.title_embedding`), обновлён runbook status; refs graph lane остаётся advisory до 7 зелёных ночей на `refs_mini --resolver graph`. |

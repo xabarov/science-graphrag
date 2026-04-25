@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Backfill Qdrant ``work_embeddings`` from Neo4j for all works in a workspace (idempotent upsert)."""
+"""Backfill work summary embeddings for all workspace works.
+
+Targets:
+- ``qdrant``: upsert into Qdrant work_embeddings collection (default).
+- ``neo4j``: write vectors to ``(:Work {id}).title_embedding``.
+"""
 
 from __future__ import annotations
 
@@ -9,7 +14,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from science_graphrag.config import get_settings
-from science_graphrag.ingestion.embeddings import HashEmbeddingProvider, resolve_embedding_dim, try_sentence_transformer
+from science_graphrag.ingestion.embeddings import (
+    HashEmbeddingProvider,
+    resolve_embedding_dim,
+    try_sentence_transformer,
+)
 from science_graphrag.storage.db import init_db
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 from science_graphrag.storage.qdrant_store import QdrantWorkEmbeddingStore
@@ -18,10 +27,23 @@ from science_graphrag.storage.qdrant_store import QdrantWorkEmbeddingStore
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("workspace_id", help="Workspace id whose member works get summary vectors")
+    p.add_argument(
+        "--target",
+        choices=("qdrant", "neo4j"),
+        default="qdrant",
+        help="Where to write vectors (default: qdrant).",
+    )
+    p.add_argument(
+        "--apply",
+        action="store_true",
+        help="Persist changes. Without this flag, run in dry-run mode.",
+    )
     args = p.parse_args()
     ws_id = str(args.workspace_id).strip()
     if not ws_id:
         raise SystemExit("workspace_id required")
+    target = str(args.target).strip().lower()
+    dry_run = not bool(args.apply)
 
     settings = get_settings()
     neo = Neo4jGraphStore(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password)
@@ -39,11 +61,13 @@ def main() -> None:
         else HashEmbeddingProvider()
     )
     dim = resolve_embedding_dim(embedding_model=settings.embedding_model)
-    qw = QdrantWorkEmbeddingStore(
-        settings.qdrant_url,
-        settings.qdrant_work_embeddings_collection,
-        vector_dim=dim,
-    )
+    qw = None
+    if target == "qdrant":
+        qw = QdrantWorkEmbeddingStore(
+            settings.qdrant_url,
+            settings.qdrant_work_embeddings_collection,
+            vector_dim=dim,
+        )
 
     engine = create_engine(settings.database_url, pool_pre_ping=True)
     init_db(engine)
@@ -56,22 +80,40 @@ def main() -> None:
             card = neo2.fetch_work_bibliography_card(wid)
             if not card:
                 continue
-            text = f"{card.get('title') or ''}\n{card.get('abstract') or ''}\n{card.get('first_author') or ''}"[:8000]
+            text = f"{card.get('title') or ''}\n{card.get('abstract') or ''}\n{card.get('first_author') or ''}"[
+                :8000
+            ]
             vec = embedder.embed([text])[0]
-            qw.upsert_work_summary(
-                work_id=wid,
-                vector=vec,
-                embedding_model=settings.embedding_model or "hash-deterministic",
-                workspace_ids=[ws_id],
-                title=str(card.get("title") or ""),
-                publication_year=card.get("year"),
-                doi=str(card.get("doi") or "") or None,
-                arxiv_id=str(card.get("arxiv_id") or "") or None,
-                first_author_normalized=str(card.get("first_author") or ""),
-                embedding_kind="work_summary_v1",
-            )
+            if dry_run:
+                n += 1
+                continue
+            if target == "qdrant":
+                assert qw is not None
+                qw.upsert_work_summary(
+                    work_id=wid,
+                    vector=vec,
+                    embedding_model=settings.embedding_model or "hash-deterministic",
+                    workspace_ids=[ws_id],
+                    title=str(card.get("title") or ""),
+                    publication_year=card.get("year"),
+                    doi=str(card.get("doi") or "") or None,
+                    arxiv_id=str(card.get("arxiv_id") or "") or None,
+                    first_author_normalized=str(card.get("first_author") or ""),
+                    embedding_kind="work_summary_v1",
+                )
+            else:
+                with neo2.session() as session:
+                    session.run(
+                        """
+                        MATCH (w:Work {id: $work_id})
+                        SET w.title_embedding = $vec
+                        """,
+                        work_id=wid,
+                        vec=[float(x) for x in vec],
+                    )
             n += 1
-        print(f"Upserted {n} work summary vector(s) for workspace={ws_id}")
+        mode = "DRY-RUN planned" if dry_run else "Applied"
+        print(f"{mode} {n} work summary vector update(s) for workspace={ws_id} target={target}")
     finally:
         neo2.close()
 

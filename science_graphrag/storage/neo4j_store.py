@@ -1,19 +1,24 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 import uuid
 from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import datetime, timezone
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from neo4j import Driver, GraphDatabase, NotificationClassification
 
 from science_graphrag.domain.authorship_ids import canonical_author_node_id
 from science_graphrag.domain.models import AuthorshipDraft, WorkDraft
 from science_graphrag.domain.semantic_models import SemanticExtractionV1
-from science_graphrag.ingestion.claims.models import ClaimDraft
+
+if TYPE_CHECKING:
+    from science_graphrag.ingestion.claims.models import ClaimDraft
+
+LOGGER = logging.getLogger(__name__)
 
 
 class Neo4jGraphStore:
@@ -120,6 +125,15 @@ class Neo4jGraphStore:
         with self._driver.session() as session:
             for q in stmts:
                 session.run(q)
+            try:
+                session.run(
+                    "CREATE VECTOR INDEX work_title_emb IF NOT EXISTS "
+                    "FOR (w:Work) ON (w.title_embedding) OPTIONS {indexConfig:{"
+                    "`vector.dimensions`: 384, `vector.similarity_function`: 'cosine'}}"
+                )
+            except Exception as exc:  # noqa: BLE001
+                # Neo4j vector indexes require specific 5.x capabilities; skip on older engines.
+                LOGGER.warning("Skipping work_title_emb vector index creation: %s", exc)
 
     def find_work_id_by_doi(self, doi: str) -> str | None:
         q = "MATCH (w:Work {doi: $doi}) RETURN w.id AS id LIMIT 1"
@@ -914,7 +928,11 @@ class Neo4jGraphStore:
             rec = session.run(q, id=ws_id, name=label, created=created).single()
             if not rec:
                 raise RuntimeError("workspace_create_failed")
-        return {"id": str(rec["id"]), "name": str(rec["name"]), "created_at": str(rec["created_at"])}
+        return {
+            "id": str(rec["id"]),
+            "name": str(rec["name"]),
+            "created_at": str(rec["created_at"]),
+        }
 
     def workspace_list(self) -> list[dict[str, Any]]:
         q = """

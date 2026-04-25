@@ -1,0 +1,89 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+    "semantic_extraction_enabled": true
+  },
+  "summary": {
+    "case_count": 3,
+    "case_ids": [
+      "refs_mini_arxiv_id",
+      "refs_mini_doi_pair",
+      "refs_mini_work_id"
+    ],
+    "all_passed": false,
+    "references_resolution_eval": true
+  },
+  "cases": [
+    {
+      "case_id": "refs_mini_arxiv_id",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": false,
+        "resolution_recall": 0.0,
+        "resolution_precision": 0.0,
+        "expected_count": 1,
+        "predicted_count": 0,
+        "matched_span_ids": [],
+        "missing_span_ids": [
+          "span:arxiv_note"
+        ],
+        "min_resolution_recall": 1.0
+      },
+      "predictions": [],
+      "wall_clock_seconds": 0.005,
+      "resolver": "_fn",
+      "resolver_mode": "graph",
+      "extraction_llm_enabled": true
+    },
+    {
+      "case_id": "refs_mini_doi_pair",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": false,
+        "resolution_recall": 0.0,
+        "resolution_precision": 0.0,
+        "expected_count": 2,
+        "predicted_count": 0,
+        "matched_span_ids": [],
+        "missing_span_ids": [
+          "bib:001",
+          "bib:002"
+        ],
+        "min_resolution_recall": 1.0
+      },
+      "predictions": [],
+      "wall_clock_seconds": 0.021,
+      "resolver": "_fn",
+      "resolver_mode": "graph",
+      "extraction_llm_enabled": true
+    },
+    {
+      "case_id": "refs_mini_work_id",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": false,
+        "resolution_recall": 0.0,
+        "resolution_precision": 0.0,
+        "expected_count": 1,
+        "predicted_count": 0,
+        "matched_span_ids": [],
+        "missing_span_ids": [
+          "span:internal_ref"
+        ],
+        "min_resolution_recall": 1.0
+      },
+      "predictions": [],
+      "wall_clock_seconds": 0.005,
+      "resolver": "_fn",
+      "resolver_mode": "graph",
+      "extraction_llm_enabled": true
+    }
+  ]
+}

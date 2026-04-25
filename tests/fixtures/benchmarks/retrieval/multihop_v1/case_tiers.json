@@ -1,0 +1,9 @@
+{
+  "multihop_mini": [
+    "mh_01_yolov1_cites",
+    "mh_02_retinanet_cites",
+    "mh_03_faster_rcnn_cites",
+    "mh_04_mask_rcnn_cites",
+    "mh_05_detr_cites"
+  ]
+}

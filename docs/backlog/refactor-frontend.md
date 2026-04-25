@@ -74,6 +74,16 @@ Planned structural work under `ui/` (components, routing, state, API client), no
 - **Raised:** 2026-04-08
 - **Note (done):** 2026-04-08 — см. [`docs/adr/007-canvas-force-layout-port.md`](../adr/007-canvas-force-layout-port.md). Открытым остаётся сравнение с Sigma / force-flow только при продуктовом запросе (новый пункт при необходимости).
 
+### [OPEN] Ingest UI — switch from polling to `useJobStream` (Wave U/V)
+
+- **Area:** [`usePollJob.js`](../../ui/src/hooks/usePollJob.js), [`WorkspacePage/WorkspaceIngestPanel.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceIngestPanel.jsx) (и любые другие места `setInterval`-поллинга `/v1/ingest/jobs/{id}`)
+- **Issue:** UI каждые 2 с дёргает `GET /v1/ingest/jobs/{id}`; пользователь видит фиксированный `message` («Running pipeline (Neo4j / vectors / SQL)…»), стадию пайплайна не понять; access-лог зашумлён.
+- **Proposal:** в две стадии по [docs/analysis/ingestion-async-pipeline-roadmap-2026-04-25.md](../analysis/ingestion-async-pipeline-roadmap-2026-04-25.md):
+  - **Wave U (UI):** компонент `IngestStageStepper` рендерит `job.stages[]` (новое поле `IngestJobView.stages` от backend), polling остаётся.
+  - **Wave V (UI):** хук `useJobStream(jobId, { onEvent, onTerminal, fallbackPollMs })` поверх `EventSource` к `/v1/ingest/jobs/{id}/events`; graceful fallback на `usePollJob` при reconnect-фейлах. `usePollJob` остаётся как named export.
+- **Acceptance:** в WorkspacePage при ingest одного PDF — одно долгое HTTP-соединение `/events` в DevTools вместо периодических `GET /jobs/{id}`; степпер показывает все 10 стадий со статусами и метриками; `npm run lint` / `npm run test` зелёные.
+- **Raised:** 2026-04-25
+
 ### [OPEN] Graph canvas — Neo4j Browser–grade UX (optional)
 - **Area:** `GraphCanvasMvp.jsx`, при необходимости отдельный hook
 - **Issue:** Сделано: force restart, unpin, +/- / 0 keyboard zoom/fit, tooltips. В Neo4j Browser ещё есть command bar, стили рёбер по типу, инспектор запросов, контекстное меню, экспорт — не требуются для read-only neighborhood v1.

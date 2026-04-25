@@ -28,5 +28,6 @@
 | [012](012-workspace-graph-projection.md) | Wave J: workspace graph projection, depth, GDS fallback |
 | [013](013-concept-research-topic-ontology-v1-5.md) | Wave N: Concept / ResearchTopic ontology v1.5 (gold-first, no production graph) |
 | [014](014-work-dedup-smart-wave-l.md) | Wave L: smart dedup (work/author embeddings, LLM judge, Postgres queue) |
+| [015](015-neo4j-vector-index-work-title-embedding.md) | Wave Q2 (optional): Neo4j vector index `Work.title_embedding` for in-graph similarity |
 
 Новые ADR нумеровать по порядку (`001-...`, `002-...`); при отмене пометить как Superseded и сослаться на замену.

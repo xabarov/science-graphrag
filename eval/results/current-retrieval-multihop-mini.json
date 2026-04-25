@@ -1,0 +1,194 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+    "semantic_extraction_enabled": true
+  },
+  "summary": {
+    "case_count": 5,
+    "case_ids": [
+      "mh_01_yolov1_cites",
+      "mh_02_retinanet_cites",
+      "mh_03_faster_rcnn_cites",
+      "mh_04_mask_rcnn_cites",
+      "mh_05_detr_cites"
+    ],
+    "all_passed": false,
+    "multihop_eval": true
+  },
+  "cases": [
+    {
+      "case_id": "mh_01_yolov1_cites",
+      "query_hint": "2-hop neighborhood around YOLOv1 in object detection corpus",
+      "center_work_id": "yolov1",
+      "depth": 2,
+      "neighbor_limit": 300,
+      "metrics": {
+        "passed": false,
+        "precision": 0.0,
+        "recall": 0.0,
+        "min_precision": 0.7,
+        "min_recall": 0.5,
+        "expected_count": 3,
+        "returned_count": 0,
+        "matched_work_ids": [],
+        "missing_work_ids": [
+          "faster_rcnn_realpdf",
+          "retinanet_focal_realpdf",
+          "ssd_realpdf"
+        ],
+        "unexpected_work_ids": [],
+        "request_error": "[Errno 111] Connection refused"
+      },
+      "returned_neighbor_work_ids": [],
+      "wall_clock_seconds": 0.044179,
+      "run_metadata": {
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "mh_02_retinanet_cites",
+      "query_hint": "2-hop neighborhood around RetinaNet focal loss paper",
+      "center_work_id": "retinanet_focal_realpdf",
+      "depth": 2,
+      "neighbor_limit": 300,
+      "metrics": {
+        "passed": false,
+        "precision": 0.0,
+        "recall": 0.0,
+        "min_precision": 0.7,
+        "min_recall": 0.5,
+        "expected_count": 3,
+        "returned_count": 0,
+        "matched_work_ids": [],
+        "missing_work_ids": [
+          "faster_rcnn_realpdf",
+          "mask_rcnn_realpdf",
+          "yolov3_realpdf"
+        ],
+        "unexpected_work_ids": [],
+        "request_error": "[Errno 111] Connection refused"
+      },
+      "returned_neighbor_work_ids": [],
+      "wall_clock_seconds": 0.013472,
+      "run_metadata": {
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "mh_03_faster_rcnn_cites",
+      "query_hint": "2-hop neighborhood around Faster R-CNN",
+      "center_work_id": "faster_rcnn_realpdf",
+      "depth": 2,
+      "neighbor_limit": 300,
+      "metrics": {
+        "passed": false,
+        "precision": 0.0,
+        "recall": 0.0,
+        "min_precision": 0.7,
+        "min_recall": 0.5,
+        "expected_count": 3,
+        "returned_count": 0,
+        "matched_work_ids": [],
+        "missing_work_ids": [
+          "mask_rcnn_realpdf",
+          "rcnn_realpdf",
+          "rfcn_realpdf"
+        ],
+        "unexpected_work_ids": [],
+        "request_error": "[Errno 111] Connection refused"
+      },
+      "returned_neighbor_work_ids": [],
+      "wall_clock_seconds": 0.013276,
+      "run_metadata": {
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "mh_04_mask_rcnn_cites",
+      "query_hint": "2-hop neighborhood around Mask R-CNN",
+      "center_work_id": "mask_rcnn_realpdf",
+      "depth": 2,
+      "neighbor_limit": 300,
+      "metrics": {
+        "passed": false,
+        "precision": 0.0,
+        "recall": 0.0,
+        "min_precision": 0.7,
+        "min_recall": 0.5,
+        "expected_count": 3,
+        "returned_count": 0,
+        "matched_work_ids": [],
+        "missing_work_ids": [
+          "faster_rcnn_realpdf",
+          "fpn_realpdf",
+          "retinanet_focal_realpdf"
+        ],
+        "unexpected_work_ids": [],
+        "request_error": "[Errno 111] Connection refused"
+      },
+      "returned_neighbor_work_ids": [],
+      "wall_clock_seconds": 0.012612,
+      "run_metadata": {
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "mh_05_detr_cites",
+      "query_hint": "2-hop neighborhood around DETR-family paper",
+      "center_work_id": "detr_realpdf",
+      "depth": 2,
+      "neighbor_limit": 300,
+      "metrics": {
+        "passed": false,
+        "precision": 0.0,
+        "recall": 0.0,
+        "min_precision": 0.7,
+        "min_recall": 0.5,
+        "expected_count": 3,
+        "returned_count": 0,
+        "matched_work_ids": [],
+        "missing_work_ids": [
+          "deformable_detr_realpdf",
+          "dino_realpdf",
+          "dn_detr_realpdf"
+        ],
+        "unexpected_work_ids": [],
+        "request_error": "[Errno 111] Connection refused"
+      },
+      "returned_neighbor_work_ids": [],
+      "wall_clock_seconds": 0.012775,
+      "run_metadata": {
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+        "semantic_extraction_enabled": true
+      }
+    }
+  ]
+}
