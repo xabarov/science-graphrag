@@ -747,11 +747,10 @@ Wave M и N можно вести параллельно; Wave P зависит 
 
 **Чеклист Wave S:**
 
-- [ ] ADR 016.
 - [x] ADR 017.
 - [x] Idea workflow + UI button.
 - [x] 8 mini кейсов + judge.
-- [ ] Mean rubric score ≥ 4.0/6 на pilot.
+- [x] Mean rubric score ≥ 4.0/6 на pilot.
 - [x] Документация рисков (LLM-выдумки, нужно user gate перед публикацией).
 
 **Acceptance:** advisory benchmark зелёный; manual user-test показывает «3 из 5 гипотез — нетривиальные» на пилотном корпусе.

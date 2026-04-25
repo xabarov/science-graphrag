@@ -15,7 +15,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 from opentelemetry import trace as trace_api
 from pydantic import BaseModel, Field
-from sqlalchemy import select, text
+from sqlalchemy import select
 from sse_starlette.sse import EventSourceResponse
 
 from science_graphrag.api.ingest_event_bus import BUS
@@ -94,14 +94,6 @@ class IngestJobRegistry:
         self._engine = get_engine(settings.database_url)
         init_db(self._engine)
         self._session_factory = session_factory(self._engine)
-        # Keep runtime compatibility with databases created before phoenix_trace_id existed.
-        with self._engine.begin() as conn:
-            conn.execute(
-                text(
-                    "ALTER TABLE ingest_jobs "
-                    "ADD COLUMN IF NOT EXISTS phoenix_trace_id VARCHAR(64)"
-                )
-            )
         self.mark_stale_running_jobs_failed()
 
     @staticmethod
@@ -789,8 +781,6 @@ async def _job_events_stream(job_id: str, request: Request) -> AsyncIterator[dic
     if last_seq > 0:
         for seq, event in BUS.replay_from(job_id, last_seq):
             yield _to_sse_event(seq, event["kind"], event["payload"])
-            if event["kind"] == "terminal":
-                return
     async for seq, event in BUS.subscribe(job_id):
         if await request.is_disconnected():
             break

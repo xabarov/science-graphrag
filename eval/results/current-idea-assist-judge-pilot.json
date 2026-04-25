@@ -1,0 +1,61 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+    "semantic_extraction_enabled": true,
+    "judge_prompt_fingerprint": "sha256-20:d0767ca5e16ebd1d5207",
+    "judge_schema_version": "idea_assist_judge_v1",
+    "idea_assist_artifact": "eval/results/current-idea-assist-mini.json"
+  },
+  "summary": {
+    "case_count": 8,
+    "mean_weighted_score": 6.0,
+    "all_passed": true,
+    "idea_assist_judge_eval": true
+  },
+  "cases": [
+    {
+      "case_id": "idea_case_01_contrastive_learning",
+      "weighted_score": 6.0,
+      "passed": true
+    },
+    {
+      "case_id": "idea_case_02_transformer_efficiency",
+      "weighted_score": 6.0,
+      "passed": true
+    },
+    {
+      "case_id": "idea_case_03_dedup_methods",
+      "weighted_score": 6.0,
+      "passed": true
+    },
+    {
+      "case_id": "idea_case_04_dataset_bias",
+      "weighted_score": 6.0,
+      "passed": true
+    },
+    {
+      "case_id": "idea_case_05_few_shot_segmentation",
+      "weighted_score": 6.0,
+      "passed": true
+    },
+    {
+      "case_id": "idea_case_06_graph_neural_drug",
+      "weighted_score": 6.0,
+      "passed": true
+    },
+    {
+      "case_id": "idea_case_07_llm_hallucination",
+      "weighted_score": 6.0,
+      "passed": true
+    },
+    {
+      "case_id": "idea_case_08_cross_modal_retrieval",
+      "weighted_score": 6.0,
+      "passed": true
+    }
+  ]
+}

@@ -257,7 +257,7 @@ with llm_span("llm.claims_extraction", {"document.id": doc_id, "work.id": work_i
 
 #### Чеклист X1
 
-- [ ] **X1.1 VL PDF: довести `vl_pdf.chat_completions` до полноценного LLM-спана.**
+- [x] **X1.1 VL PDF: довести `vl_pdf.chat_completions` до полноценного LLM-спана.**
   - В `science_graphrag/ingestion/vl_pdf.py::pdf_to_markdown` после получения `data`:
     - `SpanAttributes.set_llm_attrs(model=settings.vl_model, base_url=settings.vl_base_url, temperature=0.0, max_tokens=12000)`
     - `SpanAttributes.set_llm_invocation_parameters({"max_tokens": 12000, "pages": len(images), "dpi": settings.vl_dpi})`
@@ -266,11 +266,11 @@ with llm_span("llm.claims_extraction", {"document.id": doc_id, "work.id": work_i
     - Если `data.get("usage")` есть — `set_llm_token_counts(**usage, usage_source="api")`, иначе `set_llm_token_counts_from_text(prompt_text=DEFAULT_VL_PROMPT, completion_text=markdown)`.
   - Acceptance: в Phoenix Settings → Models в строке `qwen/qwen3-vl-235b-a22b-instruct` появляются ненулевые входные/выходные токены и стоимость.
 
-- [ ] **X1.2 Claims: обернуть LLM-вызов в `llm_span("llm.claims_extraction", …)`.**
+- [x] **X1.2 Claims: обернуть LLM-вызов в `llm_span("llm.claims_extraction", …)`.**
   - В `science_graphrag/ingestion/pipeline.py` (или, лучше, внутри `extract_claims_llm`) обернуть `ext.extract_maybe(_ClaimsLLMResponse, …)` в `llm_span("llm.claims_extraction", {"document.id": doc_id, "work.id": work_id, "chunks": len(chunk_dicts)})`. Снаружи оставить `chain_span("ingest.extract_claims.llm", …)` с метриками (количество claim'ов, raw vs accepted) — как в metadata-блоке.
   - Acceptance: в Phoenix отдельный LLM-спан `llm.claims_extraction` с `llm.model_name = mistralai/mistral-small-3.2-24b-instruct`, токенами и стоимостью.
 
-- [ ] **X1.3 Унифицировать имена подспанов: префикс `ingest.<stage>.<substep>`.**
+- [x] **X1.3 Унифицировать имена подспанов: префикс `ingest.<stage>.<substep>`.**
   - `pdf_to_markdown` → `ingest.parse_pdf.markdown` (внутри ставить атрибут `extraction_mode=vl|pypdf|cached`).
   - `metadata_and_references_extraction` → `ingest.extract_meta.metadata_and_refs`.
   - `openalex_enrichment` → `ingest.enrich_openalex.lookup`.
@@ -281,35 +281,35 @@ with llm_span("llm.claims_extraction", {"document.id": doc_id, "work.id": work_i
   - **Не забыть** обновить `_EXTRACTION_LLM_CHAIN_NAMES` в `phoenix_tracer.py` (`{"ingest_document", "ingest.extract_meta.metadata_and_refs"}`).
   - Acceptance: дерево спанов читается линейно сверху вниз, scope `extraction_llm` по-прежнему оставляет только нужное.
 
-- [ ] **X1.4 Убрать обёртку `neo4j_graph_persistence` (split в три независимые стадии).**
+- [x] **X1.4 Убрать обёртку `neo4j_graph_persistence` (split в три независимые стадии).**
   - В `pipeline.py` снять `with chain_span("neo4j_graph_persistence")`. Оставить `stage(ENRICH_ROR)`, `stage(WRITE_GRAPH)`, `stage(RESOLVE_REFERENCES)` как прямые детей `ingest_document`.
   - Внутри `WRITE_GRAPH` для крупных Neo4j-операций добавить локальные `chain_span("ingest.write_graph.upsert_work_layer1")` и (внутри claims-блока) `chain_span("ingest.extract_claims.upsert_claims")` с атрибутами `db.system="neo4j"`, `db.operation="merge"`, `writes.count=…`.
   - Acceptance: каждая стадия — на одном уровне дерева; в спанах Neo4j виден `db.system = "neo4j"`.
 
-- [ ] **X1.5 Поднять `ATTACH_WORKSPACE` под общий корень.**
+- [x] **X1.5 Поднять `ATTACH_WORKSPACE` под общий корень.**
   - Вариант A (предпочтительно): передать в `ingest_document(...)` параметр `attach_workspace_id` и выполнить attach как стадию **внутри** функции, до возврата из `chain_span("ingest_document")`.
   - Вариант B (минимум): обернуть всё тело `_execute_single_ingest` (от старта до пост-attach) в `chain_span("api.ingest_job", {"job.id": job_id, "workspace.id": workspace_id})`. Acceptance: в Phoenix `attach_workspace` лежит под общим корневым trace, а не отдельным root-спаном.
 
-- [ ] **X1.6 Корреляция trace ↔ ingest job (`session.id`, `user.id`, `metadata.*`).**
+- [x] **X1.6 Корреляция trace ↔ ingest job (`session.id`, `user.id`, `metadata.*`).**
   - В `chain_span("ingest_document", attrs)` добавить `session.id = job_id` (через `OpenInferenceAttributes.SESSION_ID`), `user.id = workspace_id`, и плоские `metadata.workspace_id`, `metadata.job_id`, `metadata.parent_job_id`, `metadata.source_name`, `metadata.extraction_mode`, `metadata.embedding_model`, `metadata.extraction_llm_model`, `metadata.vl_model`.
   - В `IngestJobRecord(Orm)` добавить `phoenix_trace_id text NULL`, заполнять из `format(trace_api.get_current_span().get_span_context().trace_id, "032x")` сразу после открытия корневого спана. Migration через alembic.
   - Acceptance: в Phoenix → Sessions появляется по одному session per ingest-job; в `GET /v1/ingest/jobs/{id}` возвращается `phoenix_trace_id` и UI может построить ссылку «Открыть в Phoenix».
 
-- [ ] **X1.7 OpenAlex / Qdrant / Neo4j — DB/HTTP-конвенция.**
+- [x] **X1.7 OpenAlex / Qdrant / Neo4j — DB/HTTP-конвенция.**
   - На `ingest.enrich_openalex.lookup`: `http.request.method="GET"`, `http.url="https://api.openalex.org/works/doi:..."`, `openalex.doi=…`, `openalex.found=true|false`, `retry.attempts=N`. Также `SpanAttributes.set_input({"doi": draft.doi})`, `set_output({"openalex_id": …, "title": …})`.
   - На `ingest.embed.qdrant_chunks` / `ingest.embed.qdrant_claims`: `db.system="qdrant"`, `db.collection.name=…`, `db.operation="upsert"`, `vector.dim=…`, `vector.count=…`.
   - На крупных Neo4j-write (см. X1.4): `db.system="neo4j"`, `db.operation="merge|delete"`, `writes.count=…`.
   - Acceptance: в Phoenix можно отфильтровать спаны по `db.collection.name = chunks` или `http.url contains "openalex"`.
 
-- [ ] **X1.8 Эмбеддинги: тонкий спан вокруг `embedder.embed(...)`.**
+- [x] **X1.8 Эмбеддинги: тонкий спан вокруг `embedder.embed(...)`.**
   - В `science_graphrag/ingestion/embeddings.py` (или в pipeline-местах вызова) добавить `embeddings_span(name, model, dim, count)` (новая обёртка в `phoenix_tracer.py`, ставит `openinference.span.kind = "EMBEDDING"`, `embedding.model_name`, `embedding.embeddings.{i}.embedding.text` опционально, `embedding.dim`, `embedding.input_count`).
   - Acceptance: в Phoenix UI вызовы Sentence-Transformers видны отдельной строкой, не теряются в `ingest.embed`.
 
-- [ ] **X1.9 FastAPI startup: `init_tracer_provider` один раз.**
+- [x] **X1.9 FastAPI startup: `init_tracer_provider` один раз.**
   - В `science_graphrag/api/app.py` (или там, где собирается `FastAPI(...)`) на `lifespan` вызывать `init_tracer_provider()`. Убрать (или оставить для CLI) явные вызовы из `run_ingest_cli` / `run_ingest_batch_cli`.
   - Acceptance: `POST /v1/agent/query` и `POST /v1/ingest/...` шлют трейсы независимо от того, что было до этого в процессе.
 
-- [ ] **X1.10 Документация и тесты.**
+- [x] **X1.10 Документация и тесты.**
   - Обновить `docs/architecture/observability-phoenix.md` (создать, если нет) с правилами наименования (`ingest.<stage>.<substep>`, `llm.<call>`, `agent.*`, `retrieval.*`) и контрактом атрибутов.
   - В `tests/observability/` (создать пакет) добавить smoke-тест: моделируем `ingest_document` на крошечном PDF, экспортируем спаны через `InMemorySpanExporter` (OTel SDK), проверяем, что у LLM-спанов есть `llm.model_name` и `llm.token_count.total`, у CHAIN — нет.
   - Acceptance: тест зелёный, регрессия по дырам §3.1 ловится статически.
@@ -365,16 +365,16 @@ with llm_span("llm.claims_extraction", {"document.id": doc_id, "work.id": work_i
 
 ### X1 — fix ingest-tracing
 
-- [ ] X1.1 VL PDF → полный LLM-контракт (model + tokens + I/O).
-- [ ] X1.2 `claims_extraction` → `llm_span("llm.claims_extraction")`.
-- [ ] X1.3 Унификация имён `ingest.<stage>.<substep>` + sync `_EXTRACTION_LLM_CHAIN_NAMES`.
-- [ ] X1.4 Убрать `neo4j_graph_persistence`, плюс DB-атрибуты на крупные write.
-- [ ] X1.5 `ATTACH_WORKSPACE` под общий root (или новый `api.ingest_job`).
-- [ ] X1.6 `session.id = job_id`, `user.id = workspace_id`, `metadata.*`, `phoenix_trace_id` в `ingest_jobs`.
-- [ ] X1.7 HTTP/DB-конвенция для OpenAlex / Qdrant / Neo4j.
-- [ ] X1.8 EMBEDDING-спан + `embeddings_span(...)` в `phoenix_tracer.py`.
-- [ ] X1.9 `init_tracer_provider` в FastAPI lifespan.
-- [ ] X1.10 Doc + `tests/observability/` smoke на наличие `llm.model_name` / `llm.token_count.total`.
+- [x] X1.1 VL PDF → полный LLM-контракт (model + tokens + I/O).
+- [x] X1.2 `claims_extraction` → `llm_span("llm.claims_extraction")`.
+- [x] X1.3 Унификация имён `ingest.<stage>.<substep>` + sync `_EXTRACTION_LLM_CHAIN_NAMES`.
+- [x] X1.4 Убрать `neo4j_graph_persistence`, плюс DB-атрибуты на крупные write.
+- [x] X1.5 `ATTACH_WORKSPACE` под общий root (или новый `api.ingest_job`).
+- [x] X1.6 `session.id = job_id`, `user.id = workspace_id`, `metadata.*`, `phoenix_trace_id` в `ingest_jobs`.
+- [x] X1.7 HTTP/DB-конвенция для OpenAlex / Qdrant / Neo4j.
+- [x] X1.8 EMBEDDING-спан + `embeddings_span(...)` в `phoenix_tracer.py`.
+- [x] X1.9 `init_tracer_provider` в FastAPI lifespan.
+- [x] X1.10 Doc + `tests/observability/` smoke на наличие `llm.model_name` / `llm.token_count.total`.
 
 ### X2 — IR / agent observability
 

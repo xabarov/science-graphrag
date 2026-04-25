@@ -550,7 +550,7 @@ def ingest_document(
                             "http.request.method": "GET",
                             "http.url": openalex_url,
                             "openalex.doi": draft.doi,
-                            "retry.max_attempts": 3,
+                            "retry.attempts": 3,
                         }
                     )
                     try:

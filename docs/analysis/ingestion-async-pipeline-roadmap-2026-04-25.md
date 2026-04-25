@@ -241,7 +241,7 @@ ingest_job_stage(
 - [x] UI `useJobStream` с graceful fallback на polling; `WorkspacePage` использует его.
 - [x] Smoke + unit-тесты (backend и UI) зелёные.
 - [x] Backend pylint + isort + black; UI lint + tests.
-- [ ] Запись в [backlog/refactor-backend.md](../backlog/refactor-backend.md) **закрыта**: «[DONE] SSE-канал прогресса джобы».
+- [x] Запись в [backlog/refactor-backend.md](../backlog/refactor-backend.md) обновлена: Wave U/V отмечены как выполненные (`[PARTIAL]`, Wave W остаётся открытым).
 
 **Exit:** при открытом окне ingestion в browser DevTools на одну джобу — **одно** долгое HTTP-соединение `/events` вместо `setInterval(2000)`; access-лог чист; при reload вкладки события «доезжают» с момента последнего `Last-Event-ID`; при принудительном закрытии SSE (например, отключив сеть на 30 секунд) UI автоматически переходит на polling и обратно.
 

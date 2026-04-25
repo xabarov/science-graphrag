@@ -1,0 +1,244 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+    "semantic_extraction_enabled": true
+  },
+  "summary": {
+    "case_count": 8,
+    "case_ids": [
+      "idea_case_01_contrastive_learning",
+      "idea_case_02_transformer_efficiency",
+      "idea_case_03_dedup_methods",
+      "idea_case_04_dataset_bias",
+      "idea_case_05_few_shot_segmentation",
+      "idea_case_06_graph_neural_drug",
+      "idea_case_07_llm_hallucination",
+      "idea_case_08_cross_modal_retrieval"
+    ],
+    "all_passed": true,
+    "idea_assist_eval": true,
+    "mean_rubric_score": 6.0
+  },
+  "cases": [
+    {
+      "case_id": "idea_case_01_contrastive_learning",
+      "hypotheses": [
+        {
+          "text": "Synthetic benchmark hypothesis candidate.",
+          "supporting_claim_ids": [
+            "claim_mock_1"
+          ],
+          "novelty_hint": "Not a direct restatement of source claims.",
+          "evidence_quotes": [
+            "verbatim quote from mock fixture"
+          ]
+        }
+      ],
+      "contradictions": [
+        {
+          "claim_a_id": "claim_mock_1",
+          "claim_b_id": "claim_mock_2",
+          "description": "Claims disagree about effect direction."
+        }
+      ],
+      "tool_trace": [],
+      "duration_ms": 1,
+      "metrics": {
+        "novelty_score": 2.0,
+        "evidence_score": 2.0,
+        "no_plagiarism_score": 2.0,
+        "mean_rubric_score": 6.0,
+        "passed": true
+      },
+      "wall_clock_seconds": 0.0
+    },
+    {
+      "case_id": "idea_case_02_transformer_efficiency",
+      "hypotheses": [
+        {
+          "text": "Synthetic benchmark hypothesis candidate.",
+          "supporting_claim_ids": [
+            "claim_mock_1"
+          ],
+          "novelty_hint": "Not a direct restatement of source claims.",
+          "evidence_quotes": [
+            "verbatim quote from mock fixture"
+          ]
+        }
+      ],
+      "contradictions": [],
+      "tool_trace": [],
+      "duration_ms": 1,
+      "metrics": {
+        "novelty_score": 2.0,
+        "evidence_score": 2.0,
+        "no_plagiarism_score": 2.0,
+        "mean_rubric_score": 6.0,
+        "passed": true
+      },
+      "wall_clock_seconds": 0.0
+    },
+    {
+      "case_id": "idea_case_03_dedup_methods",
+      "hypotheses": [
+        {
+          "text": "Synthetic benchmark hypothesis candidate.",
+          "supporting_claim_ids": [
+            "claim_mock_1"
+          ],
+          "novelty_hint": "Not a direct restatement of source claims.",
+          "evidence_quotes": [
+            "verbatim quote from mock fixture"
+          ]
+        }
+      ],
+      "contradictions": [
+        {
+          "claim_a_id": "claim_mock_1",
+          "claim_b_id": "claim_mock_2",
+          "description": "Claims disagree about effect direction."
+        }
+      ],
+      "tool_trace": [],
+      "duration_ms": 1,
+      "metrics": {
+        "novelty_score": 2.0,
+        "evidence_score": 2.0,
+        "no_plagiarism_score": 2.0,
+        "mean_rubric_score": 6.0,
+        "passed": true
+      },
+      "wall_clock_seconds": 0.0
+    },
+    {
+      "case_id": "idea_case_04_dataset_bias",
+      "hypotheses": [],
+      "contradictions": [
+        {
+          "claim_a_id": "claim_mock_1",
+          "claim_b_id": "claim_mock_2",
+          "description": "Claims disagree about effect direction."
+        }
+      ],
+      "tool_trace": [],
+      "duration_ms": 1,
+      "metrics": {
+        "novelty_score": 2.0,
+        "evidence_score": 2.0,
+        "no_plagiarism_score": 2.0,
+        "mean_rubric_score": 6.0,
+        "passed": true
+      },
+      "wall_clock_seconds": 0.0
+    },
+    {
+      "case_id": "idea_case_05_few_shot_segmentation",
+      "hypotheses": [
+        {
+          "text": "Synthetic benchmark hypothesis candidate.",
+          "supporting_claim_ids": [
+            "claim_mock_1"
+          ],
+          "novelty_hint": "Not a direct restatement of source claims.",
+          "evidence_quotes": [
+            "verbatim quote from mock fixture"
+          ]
+        }
+      ],
+      "contradictions": [],
+      "tool_trace": [],
+      "duration_ms": 1,
+      "metrics": {
+        "novelty_score": 2.0,
+        "evidence_score": 2.0,
+        "no_plagiarism_score": 2.0,
+        "mean_rubric_score": 6.0,
+        "passed": true
+      },
+      "wall_clock_seconds": 0.0
+    },
+    {
+      "case_id": "idea_case_06_graph_neural_drug",
+      "hypotheses": [
+        {
+          "text": "Synthetic benchmark hypothesis candidate.",
+          "supporting_claim_ids": [
+            "claim_mock_1"
+          ],
+          "novelty_hint": "Not a direct restatement of source claims.",
+          "evidence_quotes": [
+            "verbatim quote from mock fixture"
+          ]
+        }
+      ],
+      "contradictions": [
+        {
+          "claim_a_id": "claim_mock_1",
+          "claim_b_id": "claim_mock_2",
+          "description": "Claims disagree about effect direction."
+        }
+      ],
+      "tool_trace": [],
+      "duration_ms": 1,
+      "metrics": {
+        "novelty_score": 2.0,
+        "evidence_score": 2.0,
+        "no_plagiarism_score": 2.0,
+        "mean_rubric_score": 6.0,
+        "passed": true
+      },
+      "wall_clock_seconds": 0.0
+    },
+    {
+      "case_id": "idea_case_07_llm_hallucination",
+      "hypotheses": [],
+      "contradictions": [
+        {
+          "claim_a_id": "claim_mock_1",
+          "claim_b_id": "claim_mock_2",
+          "description": "Claims disagree about effect direction."
+        }
+      ],
+      "tool_trace": [],
+      "duration_ms": 1,
+      "metrics": {
+        "novelty_score": 2.0,
+        "evidence_score": 2.0,
+        "no_plagiarism_score": 2.0,
+        "mean_rubric_score": 6.0,
+        "passed": true
+      },
+      "wall_clock_seconds": 0.0
+    },
+    {
+      "case_id": "idea_case_08_cross_modal_retrieval",
+      "hypotheses": [
+        {
+          "text": "Synthetic benchmark hypothesis candidate.",
+          "supporting_claim_ids": [
+            "claim_mock_1"
+          ],
+          "novelty_hint": "Not a direct restatement of source claims.",
+          "evidence_quotes": [
+            "verbatim quote from mock fixture"
+          ]
+        }
+      ],
+      "contradictions": [],
+      "tool_trace": [],
+      "duration_ms": 1,
+      "metrics": {
+        "novelty_score": 2.0,
+        "evidence_score": 2.0,
+        "no_plagiarism_score": 2.0,
+        "mean_rubric_score": 6.0,
+        "passed": true
+      },
+      "wall_clock_seconds": 0.0
+    }
+  ]
+}
