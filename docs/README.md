@@ -10,7 +10,7 @@
 | [roadmap.md](roadmap.md) | Roadmap фаз 0–7, архитектура верхнего уровня, риски |
 | [runbooks/benchmark-driven-dev-loop.md](runbooks/benchmark-driven-dev-loop.md) | Короткий benchmark-цикл (CLI, compare, UI `/benchmark`) |
 | [runbooks/roadmap-next-waves.md](runbooks/roadmap-next-waves.md) | Волны Wave A–H (benchmark gate → pilot → CI/retrieval/UI/ontology) и I–L (workspace UX + smart dedup) |
-| [analysis/workspace-experience-gap-2026-04-24.md](analysis/workspace-experience-gap-2026-04-24.md) | Глубокий анализ workspace UX и dedup; план Wave I–L; карта переиспользования паттернов из `osint-gr` |
+| [analysis/_archive/workspace-experience-gap-2026-04-24.md](analysis/_archive/workspace-experience-gap-2026-04-24.md) | [HISTORICAL] Глубокий анализ workspace UX и dedup (Wave I–L закрыты); карта переиспользования паттернов из `osint-gr`. Активное продолжение — [analysis/workspace-ux-redesign-2026-04-25.md](analysis/workspace-ux-redesign-2026-04-25.md). |
 | [runbooks/user-journeys-retrieval-v1.md](runbooks/user-journeys-retrieval-v1.md) | Сценарии Phase 5: corpus → query → evidence |
 | [runbooks/benchmark-decision-gate.md](runbooks/benchmark-decision-gate.md) | GO / NO-GO, gate перед Wave B–D |
 | [runbooks/benchmark-program-status.md](runbooks/benchmark-program-status.md) | Сводка семейств бенчмарков: core vs advisory, Wave H gate |

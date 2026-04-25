@@ -1,0 +1,178 @@
+{
+  "schema_version": 1,
+  "description": "Corpus Gold Pack v1 - machine-readable catalog of object-detection papers used as ground source for all benchmark families. See tests/fixtures/corpus/CATALOG.md for human-readable view and docs/specs/benchmark-gold-schemas-v1.md section 1.1 for schema.",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "generated_at": "2026-04-25T00:00:00Z",
+    "extractors_used": ["gold_enrichment_layer1_extracted_2026-04-19"],
+    "todo": [
+      "Fill key_claims_summary[] for each work (3-5 claims).",
+      "Cross-link methods_referenced[] using citations and gold_enrichment step_a arxiv_ids.",
+      "Run dual LLM extractor pass (Layer 0 of Phase 6 in plan)."
+    ]
+  },
+  "works": [
+    {
+      "corpus_work_id": "yolov1",
+      "fixture_path": "tests/fixtures/benchmarks/layer1/yolov1/",
+      "title": "You Only Look Once: Unified, Real-Time Object Detection",
+      "year": 2016,
+      "arxiv_id": "1506.02640",
+      "venue_canonical": "CVPR",
+      "venue_year": 2016,
+      "primary_stage": "one_stage",
+      "primary_stage_alt": ["regression_based"],
+      "authors_canonical": [
+        {"name": "Joseph Redmon", "first_position": true, "affiliations": ["University of Washington"]},
+        {"name": "Santosh Divvala", "affiliations": ["University of Washington", "Allen Institute for AI"]},
+        {"name": "Ross Girshick", "affiliations": ["Facebook AI Research"]},
+        {"name": "Ali Farhadi", "affiliations": ["University of Washington", "Allen Institute for AI"]}
+      ],
+      "institutions_canonical": ["University of Washington", "Allen Institute for AI", "Facebook AI Research"],
+      "methods_canonical": ["yolov1", "darknet"],
+      "methods_referenced": ["selective_search", "rcnn", "overfeat", "dpm", "sliding_window"],
+      "datasets_canonical": ["pascal_voc_2007", "pascal_voc_2012", "picasso", "people_art"],
+      "key_claims_summary": [
+        "Single-network real-time detection at 45 FPS on Titan X.",
+        "Fast YOLO variant at 155 FPS with reduced accuracy.",
+        "More localization errors than two-stage R-CNN family.",
+        "Generalizes better to artwork (Picasso, People-Art) than R-CNN."
+      ]
+    },
+    {
+      "corpus_work_id": "rcnn_realpdf",
+      "fixture_path": "tests/fixtures/benchmarks/layer1/rcnn_realpdf/",
+      "title": "Rich feature hierarchies for accurate object detection and semantic segmentation",
+      "year": 2014,
+      "arxiv_id": "1311.2524",
+      "primary_stage": "two_stage",
+      "authors_canonical": [
+        {"name": "Ross Girshick", "first_position": true, "affiliations": ["UC Berkeley"]},
+        {"name": "Jeff Donahue", "affiliations": ["UC Berkeley"]},
+        {"name": "Trevor Darrell", "affiliations": ["UC Berkeley"]},
+        {"name": "Jitendra Malik", "affiliations": ["UC Berkeley"]}
+      ],
+      "institutions_canonical": ["UC Berkeley"],
+      "methods_canonical": ["rcnn", "selective_search_proposals", "svm_classifier"],
+      "methods_referenced": ["selective_search", "hog", "dpm", "sliding_window"],
+      "datasets_canonical": ["pascal_voc_2010", "pascal_voc_2012", "ilsvrc2013"],
+      "key_claims_summary": [
+        "Mean AP 53.3% on PASCAL VOC 2012, 30%+ relative improvement over best prior result.",
+        "Generic CNN features (AlexNet pre-trained on ImageNet) transfer well to detection.",
+        "Per-region forward passes make inference slow (~47s/image on GPU).",
+        "Bounding-box regression reduces localization error noticeably."
+      ]
+    },
+    {
+      "corpus_work_id": "faster_rcnn_realpdf",
+      "fixture_path": "tests/fixtures/benchmarks/layer1/faster_rcnn_realpdf/",
+      "title": "Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks",
+      "year": 2016,
+      "arxiv_id": "1506.01497",
+      "primary_stage": "two_stage",
+      "authors_canonical": [
+        {"name": "Shaoqing Ren", "first_position": true, "affiliations": ["University of Science and Technology of China", "Microsoft Research"]},
+        {"name": "Kaiming He", "affiliations": ["Microsoft Research"]},
+        {"name": "Ross Girshick", "affiliations": ["Facebook AI Research", "Microsoft Research"]},
+        {"name": "Jian Sun", "affiliations": ["Microsoft Research"]}
+      ],
+      "institutions_canonical": ["Microsoft Research", "University of Science and Technology of China", "Facebook AI Research"],
+      "methods_canonical": ["faster_rcnn", "region_proposal_network", "anchor_boxes"],
+      "methods_referenced": ["fast_rcnn", "selective_search", "edge_boxes"],
+      "datasets_canonical": ["pascal_voc_2007", "pascal_voc_2012", "mscoco"],
+      "key_claims_summary": [
+        "RPN integrated in network produces nearly cost-free region proposals.",
+        "Anchor-based design enables single-stage proposal generation.",
+        "Achieves 5 FPS with VGG-16 backbone on PASCAL VOC.",
+        "Two-stage (RPN + Fast R-CNN) jointly trained achieves SOTA on COCO 2015."
+      ]
+    },
+    {
+      "corpus_work_id": "retinanet_focal_realpdf",
+      "fixture_path": "tests/fixtures/benchmarks/layer1/retinanet_focal_realpdf/",
+      "title": "Focal Loss for Dense Object Detection",
+      "year": 2018,
+      "arxiv_id": "1708.02002",
+      "primary_stage": "one_stage",
+      "authors_canonical": [
+        {"name": "Tsung-Yi Lin", "first_position": true, "affiliations": ["Facebook AI Research"]},
+        {"name": "Priya Goyal", "affiliations": ["Facebook AI Research"]},
+        {"name": "Ross Girshick", "affiliations": ["Facebook AI Research"]},
+        {"name": "Kaiming He", "affiliations": ["Facebook AI Research"]},
+        {"name": "Piotr Dollár", "affiliations": ["Facebook AI Research"]}
+      ],
+      "institutions_canonical": ["Facebook AI Research"],
+      "methods_canonical": ["retinanet", "focal_loss"],
+      "methods_referenced": ["faster_rcnn", "ssd", "feature_pyramid_network", "anchor_boxes", "yolov2"],
+      "datasets_canonical": ["mscoco"],
+      "key_claims_summary": [
+        "Class imbalance is the central obstacle for one-stage accuracy.",
+        "Focal loss reshapes cross-entropy to down-weight easy negatives.",
+        "RetinaNet matches or exceeds two-stage detectors on COCO.",
+        "Maintains one-stage speed advantages."
+      ]
+    },
+    {
+      "corpus_work_id": "detr_realpdf",
+      "fixture_path": "tests/fixtures/benchmarks/layer1/detr_realpdf/",
+      "title": "End-to-End Object Detection with Transformers",
+      "year": 2020,
+      "arxiv_id": "2005.12872",
+      "primary_stage": "transformer",
+      "authors_canonical": [
+        {"name": "Nicolas Carion", "first_position": true, "affiliations": ["Facebook AI Research"]},
+        {"name": "Francisco Massa", "affiliations": ["Facebook AI Research"]},
+        {"name": "Gabriel Synnaeve", "affiliations": ["Facebook AI Research"]},
+        {"name": "Nicolas Usunier", "affiliations": ["Facebook AI Research"]},
+        {"name": "Alexander Kirillov", "affiliations": ["Facebook AI Research"]},
+        {"name": "Sergey Zagoruyko", "affiliations": ["Facebook AI Research"]}
+      ],
+      "institutions_canonical": ["Facebook AI Research"],
+      "methods_canonical": ["detr", "set_prediction", "bipartite_matching", "transformer_decoder"],
+      "methods_referenced": ["faster_rcnn", "anchor_boxes", "nms"],
+      "datasets_canonical": ["mscoco"],
+      "key_claims_summary": [
+        "Object detection cast as direct set prediction problem.",
+        "Bipartite matching loss enforces unique predictions per object, removing need for NMS.",
+        "Transformer encoder-decoder operates on CNN features without anchors.",
+        "Slow convergence (500 epochs vs ~12 for Faster R-CNN) is the main limitation.",
+        "Lower performance on small objects compared to FPN-based detectors."
+      ]
+    }
+  ],
+  "stub_works_for_inventory_only": [
+    {"corpus_work_id": "yolov2_realpdf", "year": 2016, "arxiv_id": "1612.08242", "primary_stage": "one_stage"},
+    {"corpus_work_id": "yolov3_realpdf", "year": 2018, "arxiv_id": "1804.02767", "primary_stage": "one_stage"},
+    {"corpus_work_id": "yolox_realpdf", "year": 2021, "arxiv_id": "2107.08430", "primary_stage": "one_stage"},
+    {"corpus_work_id": "fast_rcnn_realpdf", "year": 2015, "arxiv_id": "1504.08083", "primary_stage": "two_stage"},
+    {"corpus_work_id": "mask_rcnn_realpdf", "year": 2018, "arxiv_id": "1703.06870", "primary_stage": "two_stage"},
+    {"corpus_work_id": "cascade_rcnn_realpdf", "year": 2017, "arxiv_id": "1712.00726", "primary_stage": "two_stage"},
+    {"corpus_work_id": "libra_rcnn_realpdf", "year": 2019, "arxiv_id": "1904.02701", "primary_stage": "two_stage"},
+    {"corpus_work_id": "rfcn_realpdf", "year": 2016, "arxiv_id": "1605.06409", "primary_stage": "two_stage"},
+    {"corpus_work_id": "sppnet_realpdf", "year": 2015, "arxiv_id": "1406.4729", "primary_stage": "two_stage"},
+    {"corpus_work_id": "ssd_realpdf", "year": 2016, "arxiv_id": "1512.02325", "primary_stage": "one_stage"},
+    {"corpus_work_id": "fcos_realpdf", "year": 2019, "arxiv_id": "1904.01355", "primary_stage": "one_stage"},
+    {"corpus_work_id": "atss_realpdf", "year": 2020, "arxiv_id": "1912.02424", "primary_stage": "one_stage"},
+    {"corpus_work_id": "gfl_realpdf", "year": 2020, "arxiv_id": "2006.04388", "primary_stage": "one_stage"},
+    {"corpus_work_id": "tood_realpdf", "year": 2021, "arxiv_id": "2108.07755", "primary_stage": "one_stage"},
+    {"corpus_work_id": "cornernet_realpdf", "year": 2019, "arxiv_id": "1808.01244", "primary_stage": "keypoint_based"},
+    {"corpus_work_id": "centernet_realpdf", "year": 2019, "arxiv_id": "1904.08189", "primary_stage": "keypoint_based"},
+    {"corpus_work_id": "fpn_realpdf", "year": 2017, "arxiv_id": "1612.03144", "primary_stage": "enabling_module"},
+    {"corpus_work_id": "efficientdet_realpdf", "year": 2020, "arxiv_id": "1911.09070", "primary_stage": "one_stage"},
+    {"corpus_work_id": "deformable_detr_realpdf", "year": 2021, "arxiv_id": "2010.04159", "primary_stage": "transformer"},
+    {"corpus_work_id": "dn_detr_realpdf", "year": 2022, "arxiv_id": "2203.01305", "primary_stage": "transformer"},
+    {"corpus_work_id": "dino_realpdf", "year": 2022, "arxiv_id": "2203.03605", "primary_stage": "transformer"},
+    {"corpus_work_id": "detrs_realpdf", "year": 2023, "arxiv_id": "2304.08069", "primary_stage": "transformer"},
+    {"corpus_work_id": "overfeat_realpdf", "year": 2014, "arxiv_id": "1312.6229", "primary_stage": "one_stage"},
+    {"corpus_work_id": "selective_search_realpdf", "year": 2012, "arxiv_id": null, "primary_stage": "classical"},
+    {"corpus_work_id": "hog_human_detection_realpdf", "year": 2005, "arxiv_id": null, "primary_stage": "classical"},
+    {"corpus_work_id": "part_based_models_realpdf", "year": 2010, "arxiv_id": null, "primary_stage": "classical"}
+  ],
+  "synthetic_or_contract_works": [
+    {"corpus_work_id": "arxiv_refs_heavy", "purpose": "synthetic refs-heavy stub for layer1 references benchmark"},
+    {"corpus_work_id": "doi_refs_heavy", "purpose": "synthetic refs-heavy stub (DOI variant)"},
+    {"corpus_work_id": "noisy_layout_stub", "purpose": "synthetic noisy-layout PDF stub"},
+    {"corpus_work_id": "ws_graph_contract", "purpose": "workspace graph contract stub"}
+  ]
+}

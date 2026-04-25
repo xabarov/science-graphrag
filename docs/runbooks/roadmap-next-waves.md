@@ -4,7 +4,7 @@
 
 **Зависимость волн:** **Wave A завершена** (в смысле decision gate — `GO` или осознанный `CONDITIONAL-GO` с классифицированными blockers) **до** того, как считать закрытыми Wave B, C или D. Правила: раздел *Gate между Wave A и Wave B–D* в [benchmark-decision-gate.md](benchmark-decision-gate.md). При **NO-GO** не переходить к Wave B–D, пока не восстановлена reference lane и не обновлены `current-*` / сводка агрегатора.
 
-**Wave I–L** (UX/UI и dedup, см. [analysis/workspace-experience-gap-2026-04-24.md](../analysis/workspace-experience-gap-2026-04-24.md)) идут **параллельно** Wave E–H и **не блокируются** decision gate Wave A; зависимости между ними — внутри §6 анализа (I → J/K → L).
+**Wave I–L** (UX/UI и dedup, см. [analysis/_archive/workspace-experience-gap-2026-04-24.md](../analysis/_archive/workspace-experience-gap-2026-04-24.md) — [HISTORICAL]) идут **параллельно** Wave E–H и **не блокируются** decision gate Wave A; зависимости между ними — внутри §6 анализа (I → J/K → L).
 
 ## Wave Y1 — Done (2026-04-25)
 
@@ -124,7 +124,7 @@ Foundation LangGraph/LangChain добавлен без изменения runtim
 
 **Цель:** active workspace становится shell-уровневым контекстом, а не локальной деталью одной страницы. Sidebar/Ask/Graph/Evidence знают про текущий workspace и не падают в empty state при прямой навигации.
 
-**Источник анализа:** [docs/analysis/workspace-experience-gap-2026-04-24.md §6 Wave I](../analysis/workspace-experience-gap-2026-04-24.md#wave-i--workspace-context-everywhere-ui--thin-backend).
+**Источник анализа:** [docs/analysis/_archive/workspace-experience-gap-2026-04-24.md §6 Wave I](../analysis/_archive/workspace-experience-gap-2026-04-24.md#wave-i--workspace-context-everywhere-ui--thin-backend) — [HISTORICAL].
 
 1. `WorkspaceContextProvider` + `WorkspaceContextChip` (TopBar), Drawer rework: `Workspace` → последний open, `Graph/Ask/Evidence` несут `workspace_id`; **Reader** в Drawer при наличии `work_id` (URL или `lastReaderWorkId` / `getLastWorkId()`).
 2. `POST /v1/query` принимает опциональный `workspace_id` (фильтрует Qdrant по payload `workspace_ids`, с одноразовым fallback на список `work_id` при `workspace_scope_payload_miss`). Smoke: неизвестный workspace + **позитивный** сценарий с фильтром Qdrant и `retrieval_trace.workspace_id` (см. `tests/test_api_smoke.py`).
@@ -141,7 +141,7 @@ Foundation LangGraph/LangChain добавлен без изменения runtim
 
 **Цель:** граф workspace воспринимается как один связный knowledge graph; видны cross-paper цитирования; есть фильтры по типу и режимы (`inner_only`, `union_1hop`, `semantic_layer`, `full`).
 
-**Источник анализа:** [workspace-experience-gap-2026-04-24.md §6 Wave J](../analysis/workspace-experience-gap-2026-04-24.md#wave-j--workspace-knowledge-graph-v2).
+**Источник анализа:** [workspace-experience-gap-2026-04-24.md §6 Wave J](../analysis/_archive/workspace-experience-gap-2026-04-24.md#wave-j--workspace-knowledge-graph-v2) — [HISTORICAL].
 
 1. `GET /v1/workspaces/{id}/graph` v2: `mode`, `depth`, `include_external`, `node_types`; payload отмечает `workspace_membership = internal | external`.
 2. `GET /v1/workspaces/{id}/graph/stats` для summary в WorkspacePage.
@@ -164,7 +164,7 @@ Foundation LangGraph/LangChain добавлен без изменения runtim
 
 **Цель:** оригинальный PDF доступен для проверки; загрузка нескольких файлов / папки / архива через UI.
 
-**Источник анализа:** [workspace-experience-gap-2026-04-24.md §6 Wave K](../analysis/workspace-experience-gap-2026-04-24.md#wave-k--pdf-reader--folderbatch-ingest).
+**Источник анализа:** [workspace-experience-gap-2026-04-24.md §6 Wave K](../analysis/_archive/workspace-experience-gap-2026-04-24.md#wave-k--pdf-reader--folderbatch-ingest) — [HISTORICAL].
 
 1. **K1 (PDF viewer):** `GET /v1/works/{id}/pdf` (`StreamingResponse`, ETag, опционально Range), `GET /v1/works/{id}/sources` для inventory; UI toggle `Markdown | PDF` через `react-pdf` (lazy chunk).
 2. **K2 (batch ingest):** `POST /v1/workspaces/{id}/ingest/batch` (multiple files либо `.zip`); UI drag-and-drop folder / multi-file; per-file прогресс.
@@ -178,7 +178,7 @@ Foundation LangGraph/LangChain добавлен без изменения runtim
 
 **Цель:** дедупликация `Work` (затем `Author`, `Institution`/`Venue`) через **embedding + threshold + LLM judge + user-gated merge** — паттерн osint-gr `dedup/`, адаптированный под scholarly entities.
 
-**Источник анализа:** [workspace-experience-gap-2026-04-24.md §6 Wave L](../analysis/workspace-experience-gap-2026-04-24.md#wave-l--smart-dedup-llm--embeddings); карта переиспользования osint-gr — [§5](../analysis/workspace-experience-gap-2026-04-24.md#5-карта-переиспользования-osint-gr).
+**Источник анализа:** [workspace-experience-gap-2026-04-24.md §6 Wave L](../analysis/_archive/workspace-experience-gap-2026-04-24.md#wave-l--smart-dedup-llm--embeddings) — [HISTORICAL]; карта переиспользования osint-gr — [§5](../analysis/_archive/workspace-experience-gap-2026-04-24.md#5-карта-переиспользования-osint-gr).
 
 1. **ADR 005** + новая спека `docs/specs/work-dedup-pipeline-v2.md` (расширение [work-dedup-queue-v1.md](../specs/work-dedup-queue-v1.md)).
 2. **L1 (Work):** `WorkDedupConfig` (пороги, mode), embedding по title+abstract+first author в Qdrant collection `works`, detect-эндпоинт + Postgres review queue + `WorkDedupReviewDialog` (по референсу `osint-gr/.../ConflictsDialog.jsx`); fix `merge_work_into_canonical` для `HAS_AUTHORSHIP` rebind. Gold-set fixture в `tests/fixtures/benchmarks/dedup_v1/`.

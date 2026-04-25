@@ -10,10 +10,47 @@ from typing import Any
 
 import typer
 
-from eval.bench_common import benchmark_run_metadata, run_single_case_json_outputs, run_suite_cli_flow
+from eval.bench_common import run_single_case_json_outputs, run_suite_cli_flow
 from eval.retrieval.metrics import score_retrieval_answer
-from science_graphrag.retrieval import GroundedAnswer, answer_query
 from science_graphrag.config import Settings, get_settings
+from science_graphrag.retrieval import GroundedAnswer, answer_query
+
+
+def _optional_workspace_str(value: Any) -> str | None:
+    if value in ("", "null", None):
+        return None
+    return str(value).strip() or None
+
+
+def _gold_retrieval_params(gold: dict[str, Any]) -> tuple[str | None, str | None, int, str]:
+    work_id = _optional_workspace_str(gold.get("work_id"))
+    workspace_id = _optional_workspace_str(gold.get("workspace_id"))
+    top_k = gold.get("top_k")
+    top_k_i = int(top_k) if top_k is not None else 5
+    mode_raw = gold.get("retrieval_mode") or gold.get("mode") or "vector"
+    mode_s = "hybrid" if str(mode_raw).strip().lower() == "hybrid" else "vector"
+    return work_id, workspace_id, top_k_i, mode_s
+
+
+def _retrieval_case_report_payload(
+    root: Path,
+    question: str,
+    ga: GroundedAnswer,
+    metrics: dict[str, Any],
+    elapsed: float,
+) -> dict[str, Any]:
+    return {
+        "case_id": root.name,
+        "question": question,
+        "question_preview": question[:240],
+        "metrics": metrics,
+        "retrieval_trace": ga.retrieval_trace,
+        "graph_context": ga.graph_context,
+        "citations": ga.citations,
+        "answer": ga.answer,
+        "answer_preview": (ga.answer or "")[:400],
+        "wall_clock_seconds": round(elapsed, 3),
+    }
 
 
 def _canned_answer_fn(case_path: Path) -> Callable[..., GroundedAnswer]:
@@ -26,13 +63,15 @@ def _canned_answer_fn(case_path: Path) -> Callable[..., GroundedAnswer]:
     def inner(
         _question: str,
         *,
-        settings,
+        _settings,
         work_id=None,
-        workspace_id=None,
-        top_k=5,
+        _workspace_id=None,
+        _top_k=5,
         mode: str = "vector",
     ) -> GroundedAnswer:  # noqa: ARG001
-        citations = [{"chunk_fingerprint": fp, "rank": i + 1, "excerpt": "stub"} for i, fp in enumerate(fps)]
+        citations = [
+            {"chunk_fingerprint": fp, "rank": i + 1, "excerpt": "stub"} for i, fp in enumerate(fps)
+        ]
         min_hits = int(gold.get("min_hit_count") or 0)
         hit_count = 0 if contract else max(min_hits, 1)
         ws_g = str(gold.get("workspace_id") or "").strip()
@@ -97,12 +136,14 @@ def discover_retrieval_case_dirs(
     if not fixtures_root.is_dir():
         return []
     tiers = _load_retrieval_case_tiers(fixtures_root)
+    has_tiers = tiers is not None
+    tiers_dict: dict[str, list[str]] = tiers or {}
     allowed: set[str] | None
     if tier == "all":
         allowed = None
-    elif tiers is not None and tier in tiers:
-        allowed = set(tiers[tier])
-    elif tiers is not None:
+    elif tier in tiers_dict:
+        allowed = set(tiers_dict[tier])
+    elif has_tiers:
         return []
     else:
         allowed = None
@@ -133,6 +174,12 @@ def discover_retrieval_case_dirs(
     return out
 
 
+def _read_retrieval_fixture(root: Path) -> tuple[str, dict[str, Any]]:
+    question = (root / "question.txt").read_text(encoding="utf-8").strip()
+    gold = json.loads((root / "gold.json").read_text(encoding="utf-8"))
+    return question, gold
+
+
 def run_retrieval_case(
     case_dir: Path | str,
     *,
@@ -140,30 +187,11 @@ def run_retrieval_case(
     answer_fn: Callable[..., GroundedAnswer] | None = None,
 ) -> dict[str, Any]:
     """Run ``answer_query`` (or injectable ``answer_fn``) for one fixture directory."""
-
     root = Path(case_dir)
-    question = (root / "question.txt").read_text(encoding="utf-8").strip()
-    gold = json.loads((root / "gold.json").read_text(encoding="utf-8"))
+    question, gold = _read_retrieval_fixture(root)
     s = settings or get_settings()
     fn = answer_fn or answer_query
-
-    work_id = gold.get("work_id")
-    if work_id in ("", "null", None):
-        work_id = None
-    else:
-        work_id = str(work_id).strip() or None
-
-    ws_gold = gold.get("workspace_id")
-    if ws_gold in ("", "null", None):
-        workspace_id = None
-    else:
-        workspace_id = str(ws_gold).strip() or None
-
-    top_k = gold.get("top_k")
-    top_k_i = int(top_k) if top_k is not None else 5
-
-    mode_raw = gold.get("retrieval_mode") or gold.get("mode") or "vector"
-    mode_s = "hybrid" if str(mode_raw).strip().lower() == "hybrid" else "vector"
+    work_id, workspace_id, top_k_i, mode_s = _gold_retrieval_params(gold)
 
     started = perf_counter()
     ga = fn(
@@ -176,17 +204,13 @@ def run_retrieval_case(
     )
     elapsed = perf_counter() - started
     metrics = score_retrieval_answer(ga, gold)
+    return _retrieval_case_report_payload(root, question, ga, metrics, elapsed)
+
+
+def _retrieval_suite_summary(reports: list[dict[str, Any]]) -> dict[str, Any]:
     return {
-        "case_id": root.name,
-        "question": question,
-        "question_preview": question[:240],
-        "metrics": metrics,
-        "retrieval_trace": ga.retrieval_trace,
-        "graph_context": ga.graph_context,
-        "citations": ga.citations,
-        "answer": ga.answer,
-        "answer_preview": (ga.answer or "")[:400],
-        "wall_clock_seconds": round(elapsed, 3),
+        "all_passed": all(bool((r.get("metrics") or {}).get("passed")) for r in reports),
+        "retrieval_eval": True,
     }
 
 
@@ -216,10 +240,32 @@ def _cli(
     mock_answer: bool = typer.Option(
         False,
         "--mock-answer",
-        help="Do not call Qdrant/Neo4j; canned answers from each case gold.json (CI / tooling smoke).",
+        help=(
+            "Do not call Qdrant/Neo4j; canned answers from each case gold.json "
+            "(CI / tooling smoke)."
+        ),
     ),
     json_out: Path | None = typer.Option(None, "--json-out", help="Write JSON report path"),
     md_out: Path | None = typer.Option(None, "--md-out", help="Write Markdown summary path"),
+) -> None:
+    _run_retrieval_cli(
+        path=path,
+        suite=suite,
+        tier=tier,
+        mock_answer=mock_answer,
+        json_out=json_out,
+        md_out=md_out,
+    )
+
+
+def _run_retrieval_cli(
+    *,
+    path: Path,
+    suite: bool,
+    tier: str,
+    mock_answer: bool,
+    json_out: Path | None,
+    md_out: Path | None,
 ) -> None:
     settings = get_settings()
 
@@ -232,9 +278,10 @@ def _cli(
 
     if suite:
         tiers_map = _load_retrieval_case_tiers(path)
-        if tier not in ("all",) and tiers_map is not None and tier not in tiers_map:
+        tiers_map_dict: dict[str, list[str]] = tiers_map or {}
+        if tier not in ("all",) and tiers_map is not None and tier not in tiers_map_dict:
             typer.echo(
-                f"Unknown --tier {tier!r}; defined tiers: all, {', '.join(sorted(tiers_map))}",
+                f"Unknown --tier {tier!r}; defined tiers: all, {', '.join(sorted(tiers_map_dict))}",
                 err=True,
             )
             raise typer.Exit(code=1)
@@ -250,10 +297,7 @@ def _cli(
             summarize=_summarize,
             json_out=json_out,
             md_out=md_out,
-            summary_from_reports=lambda reports: {
-                "all_passed": all(_is_passed(r) for r in reports),
-                "retrieval_eval": True,
-            },
+            summary_from_reports=_retrieval_suite_summary,
         )
         if not bool(payload.get("summary", {}).get("all_passed", True)):
             raise typer.Exit(code=1)

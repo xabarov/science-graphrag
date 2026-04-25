@@ -1,12 +1,17 @@
+"""Runtime context and stage tracking for the ingestion pipeline."""
+
 from __future__ import annotations
 
 import json
+import uuid
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Iterator
+
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from science_graphrag.observability.phoenix_tracer import chain_span
 from science_graphrag.storage.blobs import BlobStore
@@ -140,30 +145,36 @@ def _upsert_stage_row(
     metrics: dict[str, Any] | None = None,
     error: str | None = None,
 ) -> None:
-    with session_factory() as session:
-        row = (
-            session.query(IngestJobStageOrm)
-            .filter(
-                IngestJobStageOrm.job_id == job_id,
-                IngestJobStageOrm.stage == stage_value.value,
-            )
-            .first()
+    now = datetime.now(UTC)
+    metrics_json_str = json.dumps(metrics or {}, ensure_ascii=True, default=str)
+    values: dict[str, Any] = {
+        "id": str(uuid.uuid4()),
+        "job_id": job_id,
+        "stage": stage_value.value,
+        "status": status,
+        "started_at": now,
+        "finished_at": finished_at,
+        "metrics_json": metrics_json_str,
+        "error": error or None,
+    }
+    update_set: dict[str, Any] = {"status": status}
+    if finished_at is not None:
+        update_set["finished_at"] = finished_at
+    if metrics is not None:
+        update_set["metrics_json"] = metrics_json_str
+    if error:
+        update_set["error"] = error
+
+    stmt = (
+        pg_insert(IngestJobStageOrm)
+        .values(**values)
+        .on_conflict_do_update(
+            index_elements=["job_id", "stage"],
+            set_=update_set,
         )
-        now = datetime.now(UTC)
-        if row is None:
-            row = IngestJobStageOrm(
-                job_id=job_id,
-                stage=stage_value.value,
-                started_at=now,
-            )
-            session.add(row)
-        row.status = status
-        if finished_at is not None:
-            row.finished_at = finished_at
-        if metrics is not None:
-            row.metrics_json = json.dumps(metrics, ensure_ascii=True, default=str)
-        if error:
-            row.error = error
+    )
+    with session_factory() as session:
+        session.execute(stmt)
         session.commit()
 
 

@@ -1,7 +1,9 @@
-# Workspace experience gap — глубокий анализ и план Wave I–L
+# [HISTORICAL] Workspace experience gap — глубокий анализ и план Wave I–L
+
+> **[HISTORICAL] Перемещён в `_archive/` 2026-04-25.** Wave I/J/K1/K2/K3/L1/L2 закрыты; продолжение по треку **Workspace experience** ведётся в [`../workspace-ux-redesign-2026-04-25.md`](../workspace-ux-redesign-2026-04-25.md) (серия WX1–WX6). Сохранён как контекст и карта переиспользования паттернов из `osint-gr` (§5). Внутренние относительные ссылки на `../` могут указывать на устаревшие пути — для актуального положения см. [`../master-roadmap-and-refactor-plan-2026-04-25.md`](../master-roadmap-and-refactor-plan-2026-04-25.md).
 
 **Дата:** 2026-04-24  
-**Статус:** living working doc; служит входом для последующих Wave I–L (см. [runbooks/roadmap-next-waves.md](../runbooks/roadmap-next-waves.md)).  
+**Статус:** [HISTORICAL] — входил в активный план Wave I–L (закрыты). Не редактировать; для нового анализа Workspace UX — `workspace-ux-redesign-2026-04-25.md`.  
 **Связанные документы:**
 
 | Документ | Что в нём |

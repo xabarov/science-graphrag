@@ -24,6 +24,12 @@ jobs:
       - name: Install package (dev)
         run: pip install -e ".[dev,agent]"
 
+      - name: Lint (isort, black, pylint)
+        run: |
+          isort --check-only science_graphrag tests
+          black --check science_graphrag tests
+          pylint science_graphrag tests --fail-under=7.0
+
       - name: Tests (exclude integration)
         run: pytest tests -m "not integration" -q
 

@@ -19,7 +19,16 @@ def _queued_blob_path(job_id: str, filename: str, settings) -> Path:
     return Path(settings.blob_root) / "_ingest_queue" / f"{job_id}{suffix}"
 
 
-@dramatiq.actor(queue_name="ingest", max_retries=2)
+def _try_claim_job(registry, job_id: str) -> bool:
+    """Atomically claim the job by setting status=running only if it is still queued.
+
+    Returns True if this worker successfully claimed the job, False if another
+    worker already claimed it (race condition guard).
+    """
+    return registry.claim_queued_job(job_id)
+
+
+@dramatiq.actor(queue_name="ingest", max_retries=0)
 def ingest_document_actor(job_id: str) -> None:
     """Run ingest for a queued job id."""
     settings = get_settings()
@@ -32,8 +41,12 @@ def ingest_document_actor(job_id: str) -> None:
     if job.kind != "single":
         logger.info("Ingest actor: skipping non-single job_id=%s kind=%s", job_id, job.kind)
         return
-    if job.status in {"completed", "failed"}:
-        logger.info("Ingest actor: terminal job_id=%s status=%s", job_id, job.status)
+    if job.status in {"completed", "failed", "running"}:
+        logger.info("Ingest actor: terminal/claimed job_id=%s status=%s", job_id, job.status)
+        return
+
+    if not _try_claim_job(registry, job_id):
+        logger.info("Ingest actor: job_id=%s already claimed by another worker, skipping", job_id)
         return
 
     source_path = _queued_blob_path(job_id, job.filename, settings)

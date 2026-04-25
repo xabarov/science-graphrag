@@ -3,10 +3,15 @@
 COMPOSE_PROD = docker compose -f docker-compose.prod.yml
 COMPOSE_DEV = docker compose -f docker-compose.dev.yml
 
-.PHONY: help prod-up prod-down prod-build prod-logs prod-ps prod-restart dev-up dev-down dev-build dev-logs dev-ps dev-restart dev-recreate-api
+.PHONY: help quality prod-up prod-down prod-build prod-logs prod-ps prod-restart dev-up dev-down dev-build dev-logs dev-ps dev-restart dev-recreate-api
 
 help: ## Show available targets
 	@awk 'BEGIN {FS = ":.*## "}; /^[a-zA-Z0-9_.-]+:.*## / {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+quality: ## Backend: isort/black check + pylint (same as CI lint gate)
+	.venv/bin/isort --check-only science_graphrag tests
+	.venv/bin/black --check science_graphrag tests
+	.venv/bin/pylint science_graphrag tests --fail-under=7.0
 
 prod-up: ## Start prod-like stack in background
 	$(COMPOSE_PROD) up -d --build

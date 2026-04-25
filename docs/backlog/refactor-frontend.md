@@ -105,6 +105,44 @@ Planned structural work under `ui/` (components, routing, state, API client), no
 - **Area:** [`graphCanvasStyle.js`](../../ui/src/components/graph/graphCanvasStyle.js), [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx), [`GraphDetailPanel.jsx`](../../ui/src/components/graph/GraphDetailPanel.jsx), [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx), [`hooks/useGraphWorkspaceData.js`](../../ui/src/components/graph/hooks/useGraphWorkspaceData.js), [`researchApi.js`](../../ui/src/services/researchApi.js)
 - **Note (done):** 2026-04-25 — стиль Aggregator (пунктир), expand по клику в canvas/details, merge раскрытых узлов/рёбер в локальный graph state через `expandAggregator`.
 
+### [OPEN] Graph UI — Wave GR6 use displayType on canvas (closes Wave GR2 frontend gap)
+- **Area:** [`graphCanvasDraw.js`](../../ui/src/components/graph/graphCanvasDraw.js),
+  [`graphCanvasStyle.js`](../../ui/src/components/graph/graphCanvasStyle.js),
+  [`graphCanvasDraw.test.js`](../../ui/src/components/graph/graphCanvasDraw.test.js)
+- **Issue:** Канвас рисует raw `edge.type` (`HAS_AUTHORSHIP`, `OF_AUTHOR`, `CITES`), игнорируя
+  `edge.displayType`, который backend GR2 уже возвращает. Боковая панель и React Flow адаптер
+  используют `displayType` корректно — на канвасе видны технические Neo4j-метки.
+- **Proposal:** В `drawLabels` (line 112) заменить `edgeTypeCanvasLabel(edge.type)` на
+  `edgeTypeCanvasLabel(edge.displayType || edge.type)`; обновить `edgeTypeCanvasLabel` так,
+  чтобы пустой fallback заменял `_` на пробел; добавить unit-тест на displayType-кейс.
+- **Acceptance:** на канвасе `/graph?work_id=…` рёбра подписаны как `cites`, `is author of`,
+  `affiliated with`; `npm run lint` / `npm run test` зелёные.
+- **Synergy:** **Wave GR2** backend done; этот пункт закрывает frontend integration. Делается
+  отдельным микро-PR, до Wave GR7 (i18n).
+- **Raised:** 2026-04-25 (см. [`docs/analysis/graph-readability-followup-2026-04-25.md`](../analysis/graph-readability-followup-2026-04-25.md) §2.1)
+
+### [OPEN] Graph UI — Wave GR7 i18n EN/RU for graph edges, node kinds, aggregator labels
+- **Area:** [`ui/src/i18n/messages/en/partGraphUi.js`](../../ui/src/i18n/messages/en/partGraphUi.js),
+  [`ui/src/i18n/messages/ru/partGraphUi.js`](../../ui/src/i18n/messages/ru/partGraphUi.js),
+  новый `ui/src/components/graph/graphLocalize.js`,
+  [`graphCanvasDraw.js`](../../ui/src/components/graph/graphCanvasDraw.js),
+  [`graphFlowAdapter.js`](../../ui/src/components/graph/graphFlowAdapter.js),
+  [`GraphDetailPanel.jsx`](../../ui/src/components/graph/GraphDetailPanel.jsx),
+  [`GraphTypeLegend.jsx`](../../ui/src/components/graph/GraphTypeLegend.jsx)
+- **Issue:** `display_type` приходит EN-строкой из backend (`graph_display.py:EDGE_DISPLAY_TYPE_RAW`),
+  поэтому русская локаль показывает «authored by» / «is author of» вместо «является автором» /
+  «цитирует». То же — для `node_kind` и подписей агрегаторов («8 author of Work»).
+- **Proposal:** Локализация по raw key (`edge.type`) через `t("graph.edgeType.HAS_AUTHORSHIP")`;
+  единый модуль `graphLocalize.js` с `localizeEdgeType(edge, t)`,
+  `localizeNodeKind(node, t)`, `localizeAggregatorLabel(node, t)`; ключи добавить в
+  `partGraphUi.js` обоих локалей; функцию `t` пробросить из `<GraphCanvasMvp>` в `drawLabels`.
+- **Acceptance:** на ru-локали ребра «цитирует»/«использует метод»/«опубликовано в»; узлы-агрегаторы
+  «5 авторов работы»; EN regression-safe; `npm run lint` зелёный.
+- **Synergy:** Закрывает второй пункт из жалобы пользователя («не поддерживает перевод на русский»).
+  Опциональная фаза B (backend `display_*_key` поля) — отдельный backend-пункт в
+  [`refactor-backend.md`](./refactor-backend.md).
+- **Raised:** 2026-04-25 (см. [`docs/analysis/graph-readability-followup-2026-04-25.md`](../analysis/graph-readability-followup-2026-04-25.md) §2.2)
+
 ### [DONE] Workspaces page — split shell vs indexed-works browser (Wave I)
 - **Area:** [`WorkspacesPage.jsx`](../../ui/src/pages/WorkspacesPage.jsx), [`WorkspacesPage/WorkspaceCollectionPanel.jsx`](../../ui/src/pages/WorkspacesPage/WorkspaceCollectionPanel.jsx), [`WorkspacesPage/WorkspaceRecentPanel.jsx`](../../ui/src/pages/WorkspacesPage/WorkspaceRecentPanel.jsx), [`WorkspacesPage/IndexedWorksBrowser.jsx`](../../ui/src/pages/WorkspacesPage/IndexedWorksBrowser.jsx)
 - **Done:** 2026-04-24 — composition shell + extracted panels; `npm run lint` / `npm run test` green.
@@ -192,6 +230,149 @@ Planned structural work under `ui/` (components, routing, state, API client), no
 - **Issue:** ≈425 строк хука лежит в `components/graph/physics/`, рядом со «не-React» утилитами (quadTree, structuralCommunities). В `hooks/` сейчас только `useJobStream`/`usePollJob` — два «места» для сложной async-логики.
 - **Proposal:** Перенести хук в `ui/src/hooks/graph/useScienceGraphForceSimulation.js` (или `hooks/useGraphSimulation.js`); оставить чистые модули physics в `components/graph/physics/`.
 - **Acceptance:** импорт обновлён в `GraphCanvasMvp`; тесты симуляции зелёные.
+- **Raised:** 2026-04-25
+
+### [OPEN] Workspace UX — Wave WX1 layout & hero (закрывает H-WorkspacePageSlim)
+- **Area:** [`WorkspacePage/WorkspacePage.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx),
+  [`WorkspaceIngestPanel.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceIngestPanel.jsx),
+  [`WorkspacePaperList.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePaperList.jsx),
+  [`WorkPaperCard.jsx`](../../ui/src/pages/WorkspacePage/WorkPaperCard.jsx),
+  новые `WorkspaceLayout.jsx`, `WorkspaceHero.jsx`, `WorkspaceSidePanel.jsx`
+- **Issue:** На 1920px viewport контент `WorkspacePage` занимает ≤ 720px ширины
+  (`WorkspaceIngestPanel` `maxWidth: 560`, `WorkPaperCard` `maxWidth: 720`), правые ~60% экрана пустые.
+  «Активный workspace» виден только через `WorkspaceContextChip` 28×220px в правом верхнем углу shell-хедера —
+  пользователь не понимает, в каком корпусе он работает и что куда грузится.
+- **Proposal:** Убрать `maxWidth` из ingest-панели и карточек. `WorkspacePaperList` перевести на CSS grid
+  `repeat(auto-fit, minmax(320px, 1fr))`. Двухколонный body через новый `WorkspaceLayout.jsx`
+  (`grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr)` на md+; single column на xs/sm).
+  Новый `WorkspaceHero.jsx` (90px, `FolderOpenOutlinedIcon` + h1 + counts/age + actions) заменяет блок `PageHeader`
+  на этой странице. `WorkspaceSidePanel.jsx` — правая колонка (compact dedup queue + graph stats + recent activity).
+  План: [`docs/analysis/workspace-ux-redesign-2026-04-25.md`](../analysis/workspace-ux-redesign-2026-04-25.md) §3.1.
+- **Acceptance:** На 1920×1080 контент использует ≥ 1280px (4 колонки карточек); на 1366×768 — 3 колонки;
+  `WorkspaceHero` всегда виден над контентом; `WorkspacePage.jsx` ≤ 280 строк (закрывает существующий пункт
+  `H-WorkspacePageSlim`); `npm run lint` / `npm run test` зелёные.
+- **Synergy:** Закрывает пункт «Slim WorkspacePage.jsx (530)» выше; разблокирует Wave T UI (новые dedup-вкладки)
+  и Wave S+ (hypothesis modal в side panel).
+- **Raised:** 2026-04-25
+
+### [OPEN] Workspace UX — Wave WX2-FE ingest progress card (shimmer + ETA + i18n stages)
+- **Area:** новые [`ui/src/components/ingestion/IngestProgressCard.jsx`](../../ui/src/components/ingestion/IngestProgressCard.jsx),
+  [`IngestStageRow.jsx`](../../ui/src/components/ingestion/IngestStageRow.jsx);
+  [`WorkspaceIngestPanel.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceIngestPanel.jsx);
+  [`partWorkspacePage.js`](../../ui/src/i18n/messages/ru/partWorkspacePage.js) (+ EN)
+- **Issue:** При активном ingest job UI показывает `<pre>`-блок «Logs» (`Details / Logs` accordion) рядом с
+  `IngestStageStepper`. Stepper использует ASCII-символы (`✓ ● ○ ×`), нет общего progress-бара/процента, нет
+  shimmer на активной стадии, нет ETA, имена стадий приходят с бэкенда EN-only (`vl_extract`, `embed_chunks`).
+  Пользователь не видит «сколько ещё ждать» и не понимает, в какой workspace грузится файл.
+- **Proposal:** Новый `IngestProgressCard.jsx`:
+  header (filename + size + target workspace name);
+  общий `LinearProgress determinate` (значение из `IngestJobView.progress_pct`, fallback — равномерный по `stages.length`);
+  список стадий через `IngestStageRow.jsx` (MUI-иконка по статусу: `CheckCircleOutlineOutlinedIcon`/
+  `ErrorOutlineOutlinedIcon`/`RotateRightIcon` с `keyframes spin`/`RadioButtonUncheckedOutlinedIcon`;
+  локализованное имя через `t("ingest.stage.{name}")`; длительность для завершённых; shimmer-полоса для running);
+  ETA-строка из `sum(remaining expected_duration_ms)`;
+  «Подробности» accordion свёрнут (внутри — старый `<pre>` с `ingestJob.logs`).
+  План: [`docs/analysis/workspace-ux-redesign-2026-04-25.md`](../analysis/workspace-ux-redesign-2026-04-25.md) §3.2.
+- **Acceptance:** При активном job в UI виден только `IngestProgressCard`; «Logs» свёрнут под «Подробности»;
+  активная стадия со shimmer, ETA-строка появляется при ≥ 1 завершённой стадии; на ru-локали имена стадий —
+  на русском (`Извлечение текста`, `Чанки и эмбеддинги`); `npm run lint` / `npm run test` / новый
+  `IngestProgressCard.test.jsx` зелёные.
+- **Synergy:** Backend-сторона `IngestJobView.progress_pct` + `expected_duration_ms` —
+  отдельный backend-PR (Wave WX2-BE); UI-сторона работает с fallback при отсутствии полей.
+- **Raised:** 2026-04-25
+
+### [OPEN] Workspace UX — Wave WX3-FE ingest-time duplicate card
+- **Area:** новые [`ui/src/components/ingestion/IngestDedupCard.jsx`](../../ui/src/components/ingestion/IngestDedupCard.jsx),
+  [`services/research/ingest.js`](../../ui/src/services/research/ingest.js);
+  [`hooks/useJobStream.js`](../../ui/src/hooks/useJobStream.js);
+  [`WorkspaceIngestPanel.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceIngestPanel.jsx)
+- **Issue:** При загрузке статьи-дубликата (DOI/arXiv hit или vector ≥ 0.88) backend Wave L1/L2 уже умеет
+  обнаружить совпадение, но текущий UI **не показывает confirmation card** прямо в момент ingest.
+  Пользователь должен ждать конца pipeline, потом руками открыть `WorkspaceDedupSection` →
+  `Scan for near-duplicates` → ручной merge. Принцип «detect → score → user-gated merge»
+  ([`_archive/workspace-experience-gap-2026-04-24.md`](../analysis/_archive/workspace-experience-gap-2026-04-24.md) §1.3 — [HISTORICAL]) нарушен.
+- **Proposal:** Backend (Wave WX3-BE, отдельный PR) переводит pipeline в стейт `awaiting_user_decision` при hit'е
+  и расширяет `IngestJobView.dedup_decision_required: { candidate_work_id, score, match_keys, reason }`.
+  Frontend: `useJobStream` реагирует на это поле, показывает `IngestDedupCard` поверх `IngestProgressCard`.
+  Карта: 2 колонки (новый work / existing), score, кнопки `Объединить (рекомендуется)` / `Загрузить как отдельную` / `Отмена`.
+  Сервис `postIngestDedupDecision(jobId, action)` через `POST /v1/ingest/jobs/{id}/dedup-decision`.
+  План: [`docs/analysis/workspace-ux-redesign-2026-04-25.md`](../analysis/workspace-ux-redesign-2026-04-25.md) §3.3.
+- **Acceptance:** При загрузке файла-дубля видна `IngestDedupCard` с правильным score/reason; клик `Объединить`
+  возобновляет job в `running`; клик `Отмена` завершает job со статусом `cancelled`; e2e-тест
+  `IngestDedupCard.test.jsx` (mock job stream + action click) зелёный; `npm run lint` зелёный.
+- **Synergy:** **Зависит от Wave WX3-BE** (новый payload field). Делать после backend-PR merge.
+  Соприкасается с Track D Wave T (общий `vector_dedup_check` helper).
+- **Raised:** 2026-04-25
+
+### [OPEN] Workspace UX — Wave WX4 icons & visual hierarchy sweep
+- **Area:** [`WorkPaperCard.jsx`](../../ui/src/pages/WorkspacePage/WorkPaperCard.jsx),
+  [`WorkspaceHero.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceHero.jsx) (из WX1),
+  [`WorkspaceIngestPanel.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceIngestPanel.jsx),
+  [`IngestStageRow.jsx`](../../ui/src/components/ingestion/IngestStageRow.jsx) (из WX2),
+  [`WorkspaceDedupSection.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceDedupSection.jsx),
+  [`Cursor*` кнопки](../../ui/src/components/common/) (опционально — поддержка `startIcon`)
+- **Issue:** Action-кнопки `Чтение / Граф / Вопросы / Доказательства` на `WorkPaperCard` — голый текст
+  (хотя в Drawer те же иконки уже импортированы). В `PageHeader` действия `Граф области` / `Суммировать` /
+  `Сгенерировать гипотезы` тоже без иконок. Stage stepper использует ASCII-символы.
+- **Proposal:** Добавить MUI-иконки слева у всех action-кнопок: `MenuBookOutlinedIcon` (Чтение),
+  `AccountTreeOutlinedIcon` (Граф), `QuestionAnswerOutlinedIcon` (Вопросы), `FactCheckOutlinedIcon` (Доказательства),
+  `AutoStoriesOutlinedIcon` (Сводка), `LightbulbOutlinedIcon` (Гипотезы), `UploadFileOutlinedIcon` (Загрузка),
+  `CloudUploadOutlinedIcon` (drop-zone), `MergeTypeIcon` (Smart dedup), `BoltOutlinedIcon` (Scan).
+  Stage stepper иконки: `CheckCircleOutlineOutlinedIcon` / `RadioButtonUncheckedOutlinedIcon` /
+  `ErrorOutlineOutlinedIcon` / `RotateRightIcon` (+ `keyframes spin` для running).
+  Если `Cursor*` кнопки не поддерживают `startIcon` — добавить prop через MUI Button base.
+  План: [`docs/analysis/workspace-ux-redesign-2026-04-25.md`](../analysis/workspace-ux-redesign-2026-04-25.md) §3.4.
+- **Acceptance:** Все action-кнопки на `WorkspacePage` имеют осмысленную иконку слева; stage stepper использует
+  MUI-иконки; running-стадия вращается через `keyframes spin`; `npm run lint` зелёный.
+- **Synergy:** Зависит от WX1 (нужен `WorkspaceHero`) и WX2 (нужен `IngestStageRow`).
+- **Raised:** 2026-04-25
+
+### [OPEN] Workspace UX — Wave WX5 workspace switcher + create CTA
+- **Area:** новый [`ui/src/components/layout/WorkspaceSwitcher.jsx`](../../ui/src/components/layout/WorkspaceSwitcher.jsx);
+  [`DashboardLayout.jsx`](../../ui/src/components/layout/DashboardLayout/DashboardLayout.jsx);
+  [`WorkspaceContextChip.jsx`](../../ui/src/components/layout/WorkspaceContextChip.jsx) (deprecate/remove);
+  [`WorkspaceHero.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceHero.jsx) (из WX1);
+  [`WorkspacePage.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx) (новый empty state)
+- **Issue:** «Создать новую workspace» доступно только внутри `WorkspaceContextChip` `Popover` (28×220px chip
+  в правом верхнем углу shell-хедера, малозаметен) или на отдельной странице `/workspaces`. На самой `/workspace`
+  без активной области показывается info-`Alert` с ссылкой `/workspaces` — пользователь должен покинуть страницу.
+- **Proposal:** Расширить `WorkspaceContextChip` в полноценный `WorkspaceSwitcher.jsx`:
+  триггер — `Button` h36 с `FolderOpenOutlinedIcon` слева и `ExpandMoreOutlinedIcon` справа;
+  popover с searchable списком (search-поле сверху, цветной «аватар» от id, badge `{count}`);
+  footer-пиктограммы: `+ Новая` / `⚙ Управлять` / `↗ Открыть текущую`;
+  empty state триггера — `Выбрать область` с пунктирной обводкой и subtle pulse animation.
+  Использовать switcher и в shell-хедере, и inline в `WorkspaceHero`.
+  Empty state в `WorkspacePage.jsx`: большой блок с CTA `+ Новая рабочая область` (создаёт `Workspace N` через
+  `createWorkspace` и редиректит) + secondary `Открыть существующую` (открывает switcher popover).
+  План: [`docs/analysis/workspace-ux-redesign-2026-04-25.md`](../analysis/workspace-ux-redesign-2026-04-25.md) §3.4 + §3.5.
+- **Acceptance:** На `/workspace` без активной области виден большой CTA «+ Новая»; клик создаёт workspace и
+  редиректит на её URL; имя workspace в `WorkspaceHero` кликабельно, открывает switcher; switcher доступен
+  в shell-хедере на любой странице; `npm run lint` / `npm run test` зелёные.
+- **Synergy:** Зависит от WX1 (нужен `WorkspaceHero`).
+- **Raised:** 2026-04-25
+
+### [OPEN] Workspace UX — Wave WX6 i18n smart-dedup + compact side panel
+- **Area:** [`WorkspaceDedupSection.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceDedupSection.jsx),
+  [`WorkDedupReviewDialog.jsx`](../../ui/src/components/graph/dedup/WorkDedupReviewDialog.jsx);
+  новый [`ui/src/components/dedup/DedupQueueDialog.jsx`](../../ui/src/components/dedup/DedupQueueDialog.jsx);
+  [`partWorkspacePage.js`](../../ui/src/i18n/messages/ru/partWorkspacePage.js) (+ EN)
+- **Issue:** EN-хардкод в `WorkspaceDedupSection.jsx`: «Smart dedup (embeddings + LLM)»,
+  «Scan for near-duplicates», «Pending», «Review», «No pending smart-dedup conflicts». Кнопка `CursorButton`
+  без `Cursor*Primary/Danger` варианта (диссонанс с дизайн-каноном). На основной surface страницы секция
+  занимает много места при пустом состоянии.
+- **Proposal:** Локализация через `t(...)` (ключи `dedup.smart.title`, `dedup.smart.desc`, `dedup.smart.scan`,
+  `dedup.smart.scanning`, `dedup.smart.empty`, `dedup.smart.pending`, `dedup.smart.review`).
+  В `WorkspaceSidePanel` (из WX1) — compact-карточка `Smart dedup ▸ {N} конфликтов`, full-list через
+  `<DedupQueueDialog>` (новый). На основной surface — оставить `WorkspaceDedupSection` для backward-compat.
+  Заменить прямые MUI-`Button` в `WorkDedupReviewDialog` на `Cursor*` family (закрывает существующий пункт
+  `H-Cursor*-buttons in dedup` выше). Цвета score: high=`rgba(99,102,241,…)`,
+  medium=`rgba(255,193,7,…)`, low=`rgba(239,68,68,…)`.
+  План: [`docs/analysis/workspace-ux-redesign-2026-04-25.md`](../analysis/workspace-ux-redesign-2026-04-25.md) §3.6.
+- **Acceptance:** Ни одного EN-литерала в `WorkspaceDedupSection.jsx` / `WorkDedupReviewDialog.jsx`;
+  smart dedup section согласован с дизайн-каноном (`Cursor*`, иконки, цвета score);
+  в side panel виден compact-card; `npm run lint` / `npm run test` зелёные.
+- **Synergy:** Закрывает существующий пункт `H-Cursor*-buttons in dedup` выше; частично закрывает
+  `H-i18n-fixes` (часть про Workspace dialogs).
 - **Raised:** 2026-04-25
 
 ### [OPEN] Frontend wiring for `/v2/agent/query` SSE (Wave Y3 follow-up)

@@ -1,0 +1,255 @@
+{
+  "schema_version": 3,
+  "entity_type": "author",
+  "description": "Author-level dedup gold for Wave T (BT11). Records contain surface variations as observed in the object-detection corpus (tests/fixtures/benchmarks/layer1/*_realpdf/gold_enrichment_*.json). Clusters encode positive ground truth (same person, different surface), negative_pairs encode 'must not merge' constraints. See docs/specs/benchmark-gold-schemas-v1.md section 9 for schema and tests/fixtures/corpus/CATALOG.md section 4 for source authors.",
+  "meta": {
+    "validation_status": "draft",
+    "needs_human_review": true,
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "spot_check_required_fields": ["clusters[].entity_ids", "negative_pairs[].entity_ids"]
+  },
+  "records": [
+    {
+      "entity_id": "auth_redmon_joseph_full",
+      "display_name": "Joseph Redmon",
+      "surface_form": "Joseph Redmon",
+      "context_attributes": {
+        "first_known_year": 2016,
+        "appears_in_corpus_work_ids": ["yolov1", "yolov2_realpdf", "yolov3_realpdf"],
+        "affiliations_normalized": ["University of Washington"]
+      }
+    },
+    {
+      "entity_id": "auth_redmon_j_initial",
+      "display_name": "J. Redmon",
+      "surface_form": "J. Redmon",
+      "context_attributes": {
+        "appears_in_corpus_work_ids": ["yolov2_realpdf"],
+        "affiliations_normalized": ["University of Washington"]
+      }
+    },
+    {
+      "entity_id": "auth_girshick_ross_full",
+      "display_name": "Ross Girshick",
+      "surface_form": "Ross Girshick",
+      "context_attributes": {
+        "first_known_year": 2014,
+        "appears_in_corpus_work_ids": ["rcnn_realpdf", "fast_rcnn_realpdf", "faster_rcnn_realpdf", "mask_rcnn_realpdf", "fpn_realpdf", "retinanet_focal_realpdf", "yolov1"],
+        "affiliations_normalized": ["UC Berkeley", "Microsoft Research", "Facebook AI Research"]
+      }
+    },
+    {
+      "entity_id": "auth_girshick_r_initial",
+      "display_name": "R. Girshick",
+      "surface_form": "R. Girshick",
+      "context_attributes": {
+        "appears_in_corpus_work_ids": ["faster_rcnn_realpdf", "mask_rcnn_realpdf"],
+        "affiliations_normalized": ["Facebook AI Research"]
+      }
+    },
+    {
+      "entity_id": "auth_girshick_ross_b_middle_initial",
+      "display_name": "Ross B. Girshick",
+      "surface_form": "Ross B. Girshick",
+      "context_attributes": {
+        "appears_in_corpus_work_ids": ["part_based_models_realpdf"],
+        "affiliations_normalized": ["UC Berkeley"]
+      }
+    },
+    {
+      "entity_id": "auth_he_kaiming_full",
+      "display_name": "Kaiming He",
+      "surface_form": "Kaiming He",
+      "context_attributes": {
+        "first_known_year": 2015,
+        "appears_in_corpus_work_ids": ["sppnet_realpdf", "faster_rcnn_realpdf", "mask_rcnn_realpdf", "fpn_realpdf", "retinanet_focal_realpdf", "rfcn_realpdf"],
+        "affiliations_normalized": ["Microsoft Research", "Facebook AI Research"]
+      }
+    },
+    {
+      "entity_id": "auth_he_k_initial",
+      "display_name": "K. He",
+      "surface_form": "K. He",
+      "context_attributes": {
+        "appears_in_corpus_work_ids": ["faster_rcnn_realpdf", "mask_rcnn_realpdf"],
+        "affiliations_normalized": ["Microsoft Research"]
+      }
+    },
+    {
+      "entity_id": "auth_sun_jian_full",
+      "display_name": "Jian Sun",
+      "surface_form": "Jian Sun",
+      "context_attributes": {
+        "first_known_year": 2015,
+        "appears_in_corpus_work_ids": ["sppnet_realpdf", "faster_rcnn_realpdf", "rfcn_realpdf", "yolox_realpdf"],
+        "affiliations_normalized": ["Microsoft Research", "MEGVII Technology"]
+      }
+    },
+    {
+      "entity_id": "auth_sun_j_initial",
+      "display_name": "J. Sun",
+      "surface_form": "J. Sun",
+      "context_attributes": {
+        "appears_in_corpus_work_ids": ["faster_rcnn_realpdf", "rfcn_realpdf"],
+        "affiliations_normalized": ["Microsoft Research"]
+      }
+    },
+    {
+      "entity_id": "auth_zhang_xiangyu",
+      "display_name": "Xiangyu Zhang",
+      "surface_form": "Xiangyu Zhang",
+      "context_attributes": {
+        "appears_in_corpus_work_ids": ["sppnet_realpdf"],
+        "affiliations_normalized": ["Xi'an Jiaotong University", "Microsoft Research"],
+        "research_focus": "deep_learning_architectures"
+      }
+    },
+    {
+      "entity_id": "auth_zhang_xinyu_unrelated",
+      "display_name": "Xinyu Zhang",
+      "surface_form": "Xinyu Zhang",
+      "context_attributes": {
+        "appears_in_corpus_work_ids": [],
+        "affiliations_normalized": ["University of Wisconsin-Madison"],
+        "research_focus": "computer_vision_unrelated_to_corpus",
+        "synthetic_for_negative_pair": true,
+        "rationale": "Different first name (Xinyu) from Xiangyu Zhang; both share initial 'X.' which collides on initial-only matching."
+      }
+    },
+    {
+      "entity_id": "auth_zhang_x_initial_ambiguous",
+      "display_name": "X. Zhang",
+      "surface_form": "X. Zhang",
+      "context_attributes": {
+        "appears_in_corpus_work_ids": [],
+        "synthetic_for_negative_pair": true,
+        "rationale": "Initial 'X. Zhang' is intentionally ambiguous; without disambiguation should NOT auto-merge with either Xiangyu or Xinyu Zhang."
+      }
+    },
+    {
+      "entity_id": "auth_dai_jifeng_full",
+      "display_name": "Jifeng Dai",
+      "surface_form": "Jifeng Dai",
+      "context_attributes": {
+        "first_known_year": 2016,
+        "appears_in_corpus_work_ids": ["rfcn_realpdf", "deformable_detr_realpdf"],
+        "affiliations_normalized": ["Microsoft Research Asia", "SenseTime"]
+      }
+    },
+    {
+      "entity_id": "auth_dai_j_initial",
+      "display_name": "J. Dai",
+      "surface_form": "J. Dai",
+      "context_attributes": {
+        "appears_in_corpus_work_ids": ["rfcn_realpdf"],
+        "affiliations_normalized": ["Microsoft Research Asia"]
+      }
+    },
+    {
+      "entity_id": "auth_lin_tsung_yi_full",
+      "display_name": "Tsung-Yi Lin",
+      "surface_form": "Tsung-Yi Lin",
+      "context_attributes": {
+        "first_known_year": 2017,
+        "appears_in_corpus_work_ids": ["fpn_realpdf", "retinanet_focal_realpdf"],
+        "affiliations_normalized": ["Facebook AI Research", "Cornell Tech"]
+      }
+    },
+    {
+      "entity_id": "auth_lin_t_y_dot_initial",
+      "display_name": "T.-Y. Lin",
+      "surface_form": "T.-Y. Lin",
+      "context_attributes": {
+        "appears_in_corpus_work_ids": [],
+        "synthetic_test_form": true,
+        "rationale": "Hyphenated initial 'T.-Y. Lin' for the same author, common in BibTeX renderings."
+      }
+    },
+    {
+      "entity_id": "auth_lin_dahua_unrelated",
+      "display_name": "Dahua Lin",
+      "surface_form": "Dahua Lin",
+      "context_attributes": {
+        "appears_in_corpus_work_ids": ["libra_rcnn_realpdf"],
+        "affiliations_normalized": ["Chinese University of Hong Kong"],
+        "rationale": "Different person from Tsung-Yi Lin; same surname only."
+      }
+    },
+    {
+      "entity_id": "auth_li_feng_dn_detr",
+      "display_name": "Feng Li (DN-DETR)",
+      "surface_form": "Feng Li",
+      "context_attributes": {
+        "appears_in_corpus_work_ids": ["dn_detr_realpdf", "dino_realpdf"],
+        "affiliations_normalized": ["Hong Kong University of Science and Technology"],
+        "research_focus": "transformer_object_detection",
+        "rationale": "Common name; this Feng Li specifically co-authored DN-DETR and DINO with Hao Zhang."
+      }
+    },
+    {
+      "entity_id": "auth_li_feng_unrelated",
+      "display_name": "Feng Li (unrelated researcher)",
+      "surface_form": "Feng Li",
+      "context_attributes": {
+        "appears_in_corpus_work_ids": [],
+        "affiliations_normalized": ["Different institution"],
+        "synthetic_for_negative_pair": true,
+        "rationale": "Same surface 'Feng Li' but different person; without coauthor/affiliation evidence MUST NOT auto-merge."
+      }
+    }
+  ],
+  "clusters": [
+    {
+      "cluster_id": "cluster_redmon_joseph",
+      "entity_ids": ["auth_redmon_joseph_full", "auth_redmon_j_initial"],
+      "rationale": "Same author across YOLO papers (yolov2 bibliography uses initial-form)."
+    },
+    {
+      "cluster_id": "cluster_girshick_ross",
+      "entity_ids": ["auth_girshick_ross_full", "auth_girshick_r_initial", "auth_girshick_ross_b_middle_initial"],
+      "rationale": "Ross Girshick across R-CNN family, FPN, RetinaNet, YOLOv1; surface variations include initial-only and middle-initial forms."
+    },
+    {
+      "cluster_id": "cluster_he_kaiming",
+      "entity_ids": ["auth_he_kaiming_full", "auth_he_k_initial"],
+      "rationale": "Kaiming He across SPPNet, Faster R-CNN, Mask R-CNN, FPN, RetinaNet, R-FCN."
+    },
+    {
+      "cluster_id": "cluster_sun_jian",
+      "entity_ids": ["auth_sun_jian_full", "auth_sun_j_initial"],
+      "rationale": "Jian Sun across SPPNet, Faster R-CNN, R-FCN; later joined MEGVII (YOLOX)."
+    },
+    {
+      "cluster_id": "cluster_dai_jifeng",
+      "entity_ids": ["auth_dai_jifeng_full", "auth_dai_j_initial"],
+      "rationale": "Jifeng Dai (R-FCN, Deformable DETR)."
+    },
+    {
+      "cluster_id": "cluster_lin_tsung_yi",
+      "entity_ids": ["auth_lin_tsung_yi_full", "auth_lin_t_y_dot_initial"],
+      "rationale": "Tsung-Yi Lin (FPN, RetinaNet); BibTeX-style hyphenated initial form is the same person."
+    }
+  ],
+  "negative_pairs": [
+    {
+      "pair_id": "neg_zhang_xiangyu_vs_xinyu",
+      "entity_ids": ["auth_zhang_xiangyu", "auth_zhang_xinyu_unrelated"],
+      "rationale": "Different first names (Xiangyu vs Xinyu) - both collapse to 'X. Zhang' on initial-only matching but are distinct researchers."
+    },
+    {
+      "pair_id": "neg_zhang_x_initial_unresolvable",
+      "entity_ids": ["auth_zhang_x_initial_ambiguous", "auth_zhang_xiangyu"],
+      "rationale": "Initial-only 'X. Zhang' without any disambiguating context (affiliation, coauthors) MUST NOT auto-merge with Xiangyu Zhang. Pipeline should flag for human review."
+    },
+    {
+      "pair_id": "neg_lin_tsung_yi_vs_dahua",
+      "entity_ids": ["auth_lin_tsung_yi_full", "auth_lin_dahua_unrelated"],
+      "rationale": "Both Lin, but Tsung-Yi (FPN/RetinaNet, FAIR) is a different researcher from Dahua Lin (Libra R-CNN, CUHK). Surname-only match must not merge."
+    },
+    {
+      "pair_id": "neg_feng_li_dn_detr_vs_unrelated",
+      "entity_ids": ["auth_li_feng_dn_detr", "auth_li_feng_unrelated"],
+      "rationale": "Common name 'Feng Li' shared between two researchers; coauthor signature (Hao Zhang, Shilong Liu, Lei Zhang in transformer-detection cluster) is required to disambiguate. Without it - no merge."
+    }
+  ]
+}

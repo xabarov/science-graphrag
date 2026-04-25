@@ -1,8 +1,10 @@
 # Карта развития: онтология, индексы, бенчмарки и retrieval — Wave M–T
 
-**Дата:** 2026-04-24  
-**Статус:** living working doc; продолжение [workspace-experience-gap-2026-04-24.md](workspace-experience-gap-2026-04-24.md) (Wave I–L) и [runbooks/roadmap-next-waves.md](../runbooks/roadmap-next-waves.md) (Wave A–H).  
+**Дата:** 2026-04-24 (история ниже до 2026-04-25; trust-audit вынесен в отдельный документ)
+**Статус:** living working doc; продолжение [_archive/workspace-experience-gap-2026-04-24.md](_archive/workspace-experience-gap-2026-04-24.md) [HISTORICAL] (Wave I–L) и [runbooks/roadmap-next-waves.md](../runbooks/roadmap-next-waves.md) (Wave A–H).
 **Цель:** дать **единый план** на следующий горизонт — продуктовая разработка фич **в связке** с расширением и ужесточением бенчмарков, чтобы любое движение онтологии / retrieval / графа сопровождалось измеримой регрессионной защитой.
+
+> **Trust Audit 2026-04-25 (важно для читателя):** все статусы `[x]` в этом документе означают «код доставлен и формальный contract-test зелёный». Качественный аудит advisory-семей вынесен в [`ontology-benchmarks-trust-audit-2026-04-25.md`](ontology-benchmarks-trust-audit-2026-04-25.md). Часть advisory-зелёных — **mock_runtime / canned answers / substring-harness / synthetic gold**; план починки — серия BT (BT1..BT12) там же. Колонка `runtime_mode` в §1.1 ниже отражает реальную природу артефактов.
 
 **Что внутри:**
 
@@ -20,11 +22,12 @@
 |----------|-----------|
 | [../roadmap.md](../roadmap.md) | Phases 0–7 продукта |
 | [../runbooks/roadmap-next-waves.md](../runbooks/roadmap-next-waves.md) | Wave A–H статус + I–L (workspace, dedup) — статус |
-| [workspace-experience-gap-2026-04-24.md](workspace-experience-gap-2026-04-24.md) | Wave I–L (workspace UX, smart dedup MVP) — анализ |
+| [_archive/workspace-experience-gap-2026-04-24.md](_archive/workspace-experience-gap-2026-04-24.md) | [HISTORICAL] Wave I–L (workspace UX, smart dedup MVP) — анализ |
 | [../benchmarks/benchmark-program-overview.md](../benchmarks/benchmark-program-overview.md) | Обзор семейств, lanes, advisory vs core |
 | [../benchmarks/benchmark-metrics-values.md](../benchmarks/benchmark-metrics-values.md) | Числа по последнему committed snapshot |
 | [../benchmarks/benchmark-roadmap-ir-extraction.md](../benchmarks/benchmark-roadmap-ir-extraction.md) | IR-style четкие метрики |
 | [../benchmarks/benchmark-roadmap-fuzzy-eval.md](../benchmarks/benchmark-roadmap-fuzzy-eval.md) | Fuzzy / LLM-judge |
+| [ontology-benchmarks-trust-audit-2026-04-25.md](ontology-benchmarks-trust-audit-2026-04-25.md) | Trust audit (2026-04-25) — runtime_mode advisory-семей и план BT1..BT12 |
 | [../runbooks/benchmark-decision-gate.md](../runbooks/benchmark-decision-gate.md) | GO/CONDITIONAL-GO/NO-GO |
 | [../runbooks/benchmark-ontology-expansion-policy.md](../runbooks/benchmark-ontology-expansion-policy.md) | Условие «ontology expansion benchmark-ready» |
 | [../specs/ontology-v1-mvp.md](../specs/ontology-v1-mvp.md), [../adr/004-ontology-v1-scope.md](../adr/004-ontology-v1-scope.md) | Текущий scope онтологии в production |
@@ -37,18 +40,30 @@
 
 ## 1. Снимок: где мы по бенчмаркам сейчас
 
-### 1.1 Status board
+### 1.1 Status board (обновлено 2026-04-25 после Trust Audit)
 
-| Уровень | Family | Tier / scope | Состояние |
-|---------|--------|--------------|-----------|
-| **Reference** | YOLOv1: layer1 + graph + layer2 | merge_safe | Все три **`passed`**. Ср. F1 arXiv-ссылок 0.73; методы 1.00; датасеты 0.67. |
-| **Core nightly** | Layer-1 `nightly_heavy` (30 кейсов) | `--threshold-profile reporting_skip_f1_gates` | **30/30 contract OK**, ср. F1 arXiv-ссылок = **0.96**, но `count_ok` = 12/30 (PDF→MD дрейф). `references_llm_failed_events` = 6 (диагностический). |
-| **Core nightly** | Layer-2 `nightly_semantic` (31 кейс) | nightly | **31/31 ✓**, **ср. precision_methods = 0.76**, **ср. precision_datasets = 0.77**; recall (методы) у 12 кейсов **≤ 0.5** (1/2 или 1/3). |
-| **Core graph** | `graph_v1` (yolov1, retinanet_focal_realpdf — без LLM) | merge_safe + nightly | OK, без расширенных кейсов (institutions, dedup violations). |
-| Advisory | Retrieval contract (`merge_safe_contract_mock`, `strict_pilot_mock`, `live_corpus_mini`) | mock + 5 живых | Все **5+3+3 ✓**, но это **только структура trace** (hit_count ≥ 1, fingerprints где есть). Релевантность не оценивается. |
-| Advisory | Claims (contract / mini / corpus_v2_mini / pilot, до 10 кейсов) | mini → pilot | Все **✓** при recall 1.00 / precision 1.00, **но через harness** (`extract_claims_anchor_harness`), не через production extractor. |
-| Advisory | References resolution (refs_mini / contract / graph_stub) | 3+1 | **✓** при recall/precision 1.00, через **synthetic predictions** в gold; нет live resolver поверх Neo4j. |
-| Advisory | Live retrieval `live_corpus_mini` | 5 кейсов на пилотном корпусе | Все ✓ по hit_count; reference text / ROUGE-L gold пока не везде заданы. |
+| Уровень | Family | Tier / scope | runtime_mode | Состояние / trust |
+|---------|--------|--------------|--------------|--------------------|
+| **Reference** | YOLOv1: layer1 + graph + layer2 | merge_safe | `live` | Все три **`passed`**. Ср. F1 arXiv-ссылок 0.73; методы 1.00; датасеты 0.67. ✅ |
+| **Core nightly** | Layer-1 `nightly_heavy` (30 кейсов) | `--threshold-profile reporting_skip_f1_gates` | `live` | **30/30 contract OK**, ср. F1 arXiv-ссылок = **0.96**, но `count_ok` = 12/30 (PDF→MD дрейф). `references_llm_failed_events` = 6. ✅ |
+| **Core nightly** | Layer-2 `nightly_semantic` (31 кейс) | nightly | `live` | **31/31 ✓**, **ср. precision_methods = 0.76**, **ср. precision_datasets = 0.77**; recall (методы) у 12 кейсов **≤ 0.5**. ✅ |
+| **Core graph** | `graph_v1` (yolov1, retinanet_focal_realpdf — без LLM) | merge_safe + nightly | `live` | OK, без расширенных кейсов (institutions, dedup violations). ✅ |
+| Advisory | Retrieval contract (`merge_safe_contract_mock`, `strict_pilot_mock`) | mock | `canned` | Все **3+3 ✓**, но это **только структура trace** (hit_count ≥ 1). Релевантность не оценивается. ⚠️ |
+| Advisory | Retrieval `live_corpus_mini` | 5 кейсов на пилотном корпусе | `live` | 5 ✓ по hit_count; reference text / ROUGE-L gold пока не везде заданы. ⚠️ слабый сигнал |
+| Advisory | Retrieval `workspace_scoped` | 6 кейсов | **`canned`** | `_canned_answer_fn` синтезирует `answer="mock"`, `embedding_model="mock"`. Реально проверяется shape, не retrieval. ⛔ phantom — закрывается **BT2** |
+| Advisory | Retrieval `judge_pilot` | 5 кейсов | `live` (judge) | `mean_weighted_score=5.1 ≥ 4.5` overall PASS, но **2/5 кейсов FAIL** (3.7 / 4.4) — aggregate-маска. ⚠️ ужесточение через **BT5** |
+| Advisory | Retrieval `hybrid_ablation` | 8 кейсов | **`synthetic_gold`** | gold содержит готовые `vector_ranked_work_ids` / `hybrid_ranked_work_ids`; runner считает MRR хардкоженых списков. `extraction_llm_model: null`. ⛔ phantom — закрывается **BT4** |
+| Advisory | Retrieval `multihop_mini` | 5 кейсов | `live` (broken) | Все 5/5 **FAIL**: `request_error: "[Errno 111] Connection refused"`. Артефакт stale. ⛔ закрывается **BT3** |
+| Advisory | Claims contract / mini / corpus_v2_mini / pilot (до 10 кейсов) | mini → pilot | `harness` | Все **✓** при recall 1.00 / precision 1.00, **через harness** (`extract_claims_anchor_harness` — substring match). ⚠️ |
+| Core | Claims `claims_pilot_production` (10 кейсов) | core | `live` | recall=1.0, precision=1.0 — но gold тривиальная: одно короткое предложение, дословно присутствующее в chunk. LLM возвращает 1-в-1. ⚠️ ужесточение через **BT6** (paraphrase + distractor + holdout) |
+| Advisory | References resolution (refs_mini / contract / graph_stub) | 3+1 | `synthetic` | **✓** при recall/precision 1.00, через **synthetic predictions** в gold; нет live resolver поверх Neo4j. ⚠️ |
+| Advisory | Concept/Topic mini (5 кейсов) | mini | **`harness_substring`** | Extractor `harness_extract.py` ищет `anchor_phrase` из gold в тексте → всегда зелёное by construction. ⛔ phantom — закрывается **BT7** |
+| Advisory | Agent tools mini (10 кейсов) | mini | **`mock_runtime`** | `--mock-runtime`: `latency_p95_ms=2`, `answer="mock answer"`. ⛔ phantom — закрывается **BT8** |
+| Advisory | Agent tools judge | pilot | **`missing`** | Артефакт `current-agent-tools-judge-pilot.json` отсутствует (`error: "missing_file"`). ⛔ закрывается **BT8** |
+| Advisory | Agent tools multi-agent | mini | **`no_fixtures`** | После Wave Y4 supervisor добавлен `_specialist_sequence_match`, но `agent_tools_multiagent` fixtures не созданы. ⛔ закрывается **BT9** |
+| Advisory | Idea-assist mini (8 кейсов) | mini | **`mock_runtime`** | `--mock-runtime`: захардкоженный кандидат `"Synthetic benchmark hypothesis candidate."` (41 char ≥ 40 порога), все rubric-метрики проходят by construction. ⛔ phantom — закрывается **BT10** |
+| — | Entity dedup (Author/Inst/Venue/Method/Dataset) | — | **`no_fixtures`** | Pipeline-код есть; `dedup_v1/` фикстуры только для Work + heuristic matcher. Для остальных 5 типов precision/recall не измеряется. ⚠️ закрывается **BT11** |
+| — | Contradictions | — | **`no_persistence`** | `idea_workflow` возвращает `contradictions[]` payload, но `:CONTRADICTS` в Neo4j не пишется; bench отсутствует. ⛔ закрывается **BT12** |
 
 ### 1.2 Где сильный сигнал, а где «зелень — это контракт, а не качество»
 
@@ -61,9 +76,24 @@
 
 - **Layer-1 abstract / count_ok.** `abstract_rouge_l_vs_prefix` исторически давал «12 fail из шума», поэтому профиль `reporting_skip_f1_gates` его не режет; `require_reference_count_ok=false` снимает gate числа ссылок при PDF→MD дрейфе (детали — [nightly-failures-analysis-2026-04-07.md](../benchmarks/nightly-failures-analysis-2026-04-07.md)). Это **осознанное** решение, но значит: **точность extraction abstract / counts реально не измеряется**.
 - **Layer-2 datasets recall.** На многих кейсах знаменатель = 1, и recall = 1/1 даёт 100 % — но это значит, что мы покрываем **один** ожидаемый датасет, а не всё семейство. На YOLOv2/YOLOv3/Mask R-CNN ожидание явно неполное.
-- **Retrieval.** В core gate **отсутствует**; в advisory — только `hit_count ≥ 1` + опциональные `chunk_fingerprints`. **Нет** оценки релевантности ответа смыслу вопроса (есть зачаток `min_answer_rouge_l`, но в большинстве gold не задан).
-- **Claims.** Run через **anchor harness** — фактически совпадение substring; production extractor (LLM) ещё не подключен.
-- **References resolution.** Synthetic harness; нет lane против реального graph-resolver.
+- **Retrieval `live_corpus_mini`.** Только `hit_count ≥ 1` + опциональные `chunk_fingerprints`. **Нет** оценки релевантности ответа смыслу вопроса (есть зачаток `min_answer_rouge_l`, но в большинстве gold не задан).
+- **References resolution `refs_mini`.** Synthetic predictions в gold; нет live resolver поверх Neo4j (refs_graph artifact — лишь contract shape).
+- **Claims `claims_pilot_production`.** recall=1.0 / precision=1.0 на 10 кейсах — но gold тривиальная (одно предложение, дословно в chunk). LLM возвращает входное предложение. Закрывается BT6.
+
+**Зелёное по построению — phantom (фикстура определяет результат, см. [Trust Audit](ontology-benchmarks-trust-audit-2026-04-25.md)):**
+
+- **Concept/Topic mini (`concept_topic_family.concept_topic_mini`).** Harness — substring `anchor_phrase` из gold по тексту кейса. Зелёное by construction. Закрывается **BT7**.
+- **Claims advisory mini/pilot (`claims_family.*`, не production).** `extract_claims_anchor_harness` — substring match по тому же anchor. Закрывается отдельно от BT6 (BT7 по аналогии — переход на production extractor либо явная маркировка как `harness_substring`).
+- **Retrieval `workspace_scoped`.** `_canned_answer_fn` синтезирует `GroundedAnswer(answer="mock", ...)` из gold. **Не вызывает Qdrant/Neo4j.** Закрывается **BT2**.
+- **Retrieval `hybrid_ablation`.** Gold содержит `vector_ranked_work_ids` и `hybrid_ranked_work_ids` напрямую — runner считает MRR хардкоженых списков. **Никакого ablation.** Закрывается **BT4**.
+- **Agent tools `mini`.** Прогон с `--mock-runtime`, `latency_p95_ms=2`, `answer="mock answer"`. Закрывается **BT8**.
+- **Idea-assist `mini`.** Mock возвращает `"Synthetic benchmark hypothesis candidate."` (длина ровно ≥ 40), все поля непустые → rubric `mean_rubric_score=6.0` by construction. Закрывается **BT10**.
+
+**Сломанные артефакты (зелёное в `decision_gate.GO`, но реально fail):**
+
+- **Multihop `mh_*`.** 5/5 fail с `Connection refused` — Neo4j не был поднят при последнем прогоне. Артефакт stale, агрегатор не блокирует. Закрывается **BT3**.
+- **Judge `judge_pilot`.** `mean=5.1 ≥ 4.5` overall PASS, но `live_yolov1_architecture` (3.7) и `live_yolov1_training` (4.4) **fail per-case**. Закрывается **BT5** (per-case gate).
+- **Agent tools judge.** Артефакт missing (`error: "missing_file"`). Закрывается **BT8**.
 
 ### 1.3 Декларативные дыры (ничего не измеряется)
 
@@ -258,7 +288,7 @@ flowchart LR
 
 ## 4. Дедупликация: бенчмарк-семьи и gold
 
-Wave L анализа [workspace-experience-gap §6 Wave L](workspace-experience-gap-2026-04-24.md#wave-l--smart-dedup-llm--embeddings) описывает пайплайн (embedding + threshold + LLM judge + user-gated merge). Здесь — **бенчмарк-сторона**: какие фикстуры собираем, какие метрики, какие пороги.
+Wave L анализа [workspace-experience-gap §6 Wave L](_archive/workspace-experience-gap-2026-04-24.md#wave-l--smart-dedup-llm--embeddings) [HISTORICAL] описывает пайплайн (embedding + threshold + LLM judge + user-gated merge). Здесь — **бенчмарк-сторона**: какие фикстуры собираем, какие метрики, какие пороги.
 
 ### 4.1 Общая структура фикстур
 
@@ -710,7 +740,7 @@ Wave M и N можно вести параллельно; Wave P зависит 
 1. ADR 016 «Agent tool registry для retrieval (read-only)».
 2. `science_graphrag/agent/tools/` — 6 tools из §5.2 (cypher_query, entity_search, edge_search, idea_search, summarize_workspace, final_answer).
 3. **Cypher safety:** parser + allowlist (`Work`/`Author`/...), запрет `WRITE` clauses через grammar check; cap `LIMIT 200`, timeout 5s.
-4. Агент: smolagents `ToolCallingAgent` (по референсу [reference-extraction-llm-agent-tools.md](reference-extraction-llm-agent-tools.md)) — простой ReAct loop, model = `MAIN_LLM_*`.
+4. Агент: smolagents `ToolCallingAgent` (по референсу [_archive/reference-extraction-llm-agent-tools.md](_archive/reference-extraction-llm-agent-tools.md) [HISTORICAL]) — простой ReAct loop, model = `MAIN_LLM_*`.
 5. API: `POST /v1/agent/query` — `{question, workspace_id?, max_tool_calls=8}` → `{answer, tool_trace[], citations[], duration_ms}`.
 6. Bench `tests/fixtures/benchmarks/agent_tools_v1/` — 10 кейсов с `expected_tool_sequence` (см. §5.2); CLI `science-graphrag-agent-benchmark`.
 7. Метрики из §5.2: `tool_call_correctness`, `tool_budget_ok`, `cypher_safety = 1.0`, `answer_grounded`, `answer_judge_score`, `latency_p95`.
@@ -770,16 +800,17 @@ Wave M и N можно вести параллельно; Wave P зависит 
 5. UI: `WorkspaceDedupPage` имеет вкладки `Works | Authors | Institutions | Venues | Methods | Datasets` (как в osint-gr).
 6. Bench: все 5 семей dedup из §4.
 
-**Чеклист Wave T:**
+**Чеклист Wave T (обновлено 2026-04-25):**
 
-- [ ] ADR 016 принят.
-- [ ] Per-type pipeline + конфиг.
-- [ ] Review queue UI с 5 вкладками.
-- [ ] Все 5 семей бенчмарков зелёные на mini (`pairwise_precision ≥ 0.9`).
-- [ ] Auto-merge гейт `sim_high = 0.95` для Author/Institution; для Methods/Datasets — alias-merge через словарь без LLM.
+- [x] ADR 019 (`019-entity-dedup-pipeline.md`) принят (`science_graphrag/dedup/{author,institution,venue,method,dataset}_pipeline.py` существуют; см. Round 5 master roadmap).
+- [x] Per-type pipeline + конфиг.
+- [x] Postgres review queue (`EntityDedupConflict` ORM).
+- [ ] Review queue UI с 5 вкладками — частично; см. backlog.
+- [ ] **Все 5 семей бенчмарков зелёные на mini (`pairwise_precision ≥ 0.9`)** — **отложено в [BT11](ontology-benchmarks-trust-audit-2026-04-25.md#bt11--wave-t-полный-финал-фикстуры-и-gold-для-5-типов-dedup)**: `tests/fixtures/benchmarks/dedup/{authors,institutions,venues,methods,datasets}_v1/` пока отсутствуют, runner-обёртки тоже. Существующий `eval/dedup_v1/` покрывает только Work и работает на heuristic matcher (не LLM-pipeline).
+- [ ] Auto-merge гейт `sim_high = 0.95` — реализовано в коде, но не подтверждено бенчмарками (BT11).
 - [ ] Reverse merge через CLI / admin endpoint.
 
-**Acceptance:** на pilot корпусе после T — реально снижается число `find_work_dedup_violations` (instituutions/authors дубликаты в Neo4j).
+**Acceptance:** Wave T закрывается ТОЛЬКО после **BT11** — пока есть только backend-код без gold-доказательств precision/recall/auto_merge_rate.
 
 ---
 
@@ -883,3 +914,4 @@ gantt
 | 2026-04-24 | **Wave P implemented (M/O/P sweep):** workspace-scoped retrieval fixtures + runner/metrics; `workspace_id` в trace; seed workspaces; retrieval judge CLI + pilot JSON; aggregator advisory blocks; decision-gate §8.3 + promotion-review checklist; claims production lane в **core** `decision_gate`; layer2 `min_dataset_recall_ratio` alignment; refs graph artifact path. |
 | 2026-04-25 | **Wave M/N/O/Q reconciliation:** подтверждены реализованные пункты (sync layer1 thresholds, Concept/Topic family, claims Qdrant+UI, hybrid/Qdrant works/depth toggles); добавлены Wave Q артефакты `multihop_v1` (fixtures+CLI+aggregator), ADR 015 (Neo4j vector index `Work.title_embedding`), обновлён runbook status; refs graph lane остаётся advisory до 7 зелёных ночей на `refs_mini --resolver graph`. |
 | 2026-04-25 | **Wave R implemented:** `science_graphrag/agent/` (6 read-only tools + cypher safety), `POST /v1/agent/query`, AskPanel `mode=agent` + `AgentToolTrace`, Workspace summarize action, `eval/agent_tools/*` + артефакты `current-agent-tools-mini.json` / `current-agent-tools-judge-pilot.json`, ADR 016 и `docs/specs/agent-tools-v1.md`. |
+| 2026-04-25 | **Trust Audit:** см. [`ontology-benchmarks-trust-audit-2026-04-25.md`](ontology-benchmarks-trust-audit-2026-04-25.md). Status board (§1.1) переписан с колонкой `runtime_mode`; явно помечены phantom-зелёные семьи (`workspace_scoped`/`hybrid_ablation`/`concept_topic_mini`/`agent_tools_mini`/`agent_tools_judge`/`idea_assist_mini`) и broken `multihop_mini`. Серия BT (BT1..BT12) описана в trust-audit; Wave T закрывается через **BT11** (нет gold для Author/Inst/Venue/Method/Dataset dedup). `decision_gate.GO` будет honest после BT1. |

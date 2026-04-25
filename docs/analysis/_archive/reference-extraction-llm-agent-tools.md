@@ -1,8 +1,11 @@
-# Analysis: LLM agent with tools for reference extraction
+# [HISTORICAL] Analysis: LLM agent with tools for reference extraction
+
+> **[HISTORICAL] Moved to `_archive/` on 2026-04-25.** Original research spike (`smolagents.ToolCallingAgent`) describing the H2 path. Production agent migrated to LangChain/LangGraph in Wave Y2 (see [`../langgraph-migration-plan-2026-04-25.md`](../langgraph-migration-plan-2026-04-25.md)). Wave Y5 will replace `experiment_references_smolagents_spike.py` with a LangGraph variant; this note remains as historical reference for the original tool design and metrics. Internal relative links may be stale.
 
 **Scope:** This note covers the research spike in `scripts/experiment_references_smolagents_spike.py` (H2: `ToolCallingAgent` from **smolagents**). It also briefly contrasts the separate H1 path (`scripts/experiment_references_tool_router.py` + `science_graphrag/ingestion/llm/reference_tool_router.py`), which is **not** a multi-step tool agent.
 
-**Date:** 2026-04-08
+**Date:** 2026-04-08  
+**Status:** [HISTORICAL] — kept for Wave Y5 migration reference.
 
 ---
 

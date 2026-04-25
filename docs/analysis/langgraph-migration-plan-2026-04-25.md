@@ -15,7 +15,7 @@
 |----------|-----------|
 | [`../adr/016-agent-tool-registry-and-langgraph.md`](../adr/016-agent-tool-registry-and-langgraph.md) | Решение Wave R: tool registry, feature flag, advisory benchmark |
 | [`../specs/agent-tools-v1.md`](../specs/agent-tools-v1.md) | Контракт инструментов агента (idea_search, edge_search, …) |
-| [`reference-extraction-llm-agent-tools.md`](reference-extraction-llm-agent-tools.md) | Описание H2 spike: `ToolCallingAgent` + 6 кастомных tools |
+| [`_archive/reference-extraction-llm-agent-tools.md`](_archive/reference-extraction-llm-agent-tools.md) | [HISTORICAL] Описание H2 spike: `ToolCallingAgent` + 6 кастомных tools |
 | [`phoenix-tracing-coverage-2026-04-25.md`](phoenix-tracing-coverage-2026-04-25.md) | Wave X-Phoenix: разметка agent-trace (X2.1–X2.8) |
 | [`ontology-benchmarks-roadmap-2026-04-24.md`](ontology-benchmarks-roadmap-2026-04-24.md) | §7.7 Wave R + claims/semantic LLM-блоки, к которым придут multi-agent сценарии |
 | [`../runbooks/roadmap-next-waves.md`](../runbooks/roadmap-next-waves.md) | Сводный список волн (после принятия — добавить Wave Y) |
@@ -28,7 +28,7 @@
    - `pyproject.toml` `[research]` extra (`smolagents>=1.4.0`).
    - `scripts/experiment_references_smolagents_spike.py` — единственный live consumer (CLI с двумя командами `spike`/`suite`, 6 inline `Tool`-классов, `ToolCallingAgent`).
    - `eval/references_harness/agent_suite_metrics.py` + `tests/test_agent_suite_metrics.py` — пост-хок метрики (импортируют **не** `smolagents`, а локальные `agent_toolkit` + `metrics`).
-   - Документация (`docs/analysis/reference-extraction-llm-agent-tools.md`, `docs/analysis/ontology-benchmarks-roadmap-2026-04-24.md`, `eval/results/refs_llm_agent_experiment_*.md`) — описание spike и его метрик.
+   - Документация (`docs/analysis/_archive/reference-extraction-llm-agent-tools.md` [HISTORICAL], `docs/analysis/ontology-benchmarks-roadmap-2026-04-24.md`, `eval/results/refs_llm_agent_experiment_*.md`) — описание spike и его метрик.
 2. **Production retrieval-агент уже без `smolagents`**, но **ещё без `LangGraph`**:
    - `science_graphrag/agent/runtime.py::RetrievalAgent` — детерминированный, без LLM-планировщика, фиксированный pipeline `idea_search → (опц.) summarize_workspace → final_answer`.
    - 6 tools (`cypher_query`, `entity_search`, `edge_search`, `idea_search`, `summarize_workspace`, `final_answer`) под собственным `BaseAgentTool` + `run_with_trace` (`ToolCallTrace` TypedDict).
@@ -51,7 +51,7 @@
 | [`scripts/experiment_references_smolagents_spike.py`](../../scripts/experiment_references_smolagents_spike.py) | `from smolagents import OpenAIServerModel, Tool, ToolCallingAgent`; 6 inline `Tool`-классов (`HeuristicRefsTool`, `GrepArticleTool`, `GetLinesTool`, `FindBibliographyCandidatesTool`, `CountReferenceMarkersTool`, `SegmentReferenceBlockTool`); CLI `spike` + `suite`; модель — `OpenAIServerModel(model_id=settings.extraction_llm_model, api_key=…, api_base=settings.extraction_llm_base_url)` (OpenRouter); `ToolCallingAgent(tools=…, model=…, max_steps=…, add_base_tools=False, instructions=…)`. |
 | [`eval/references_harness/agent_suite_metrics.py`](../../eval/references_harness/agent_suite_metrics.py) | Docstring «Align smolagents router suite rows…», но импортирует локальные модули — самой `smolagents` зависимости нет. |
 | [`tests/test_agent_suite_metrics.py`](../../tests/test_agent_suite_metrics.py) | Тесты для метрик; `smolagents` не импортируется. |
-| Docs: [`reference-extraction-llm-agent-tools.md`](reference-extraction-llm-agent-tools.md), [`ontology-benchmarks-roadmap-2026-04-24.md`](ontology-benchmarks-roadmap-2026-04-24.md) §7.7 (713 строка), [`eval/results/refs_llm_agent_experiment_2026-04-08.md`](../../eval/results/refs_llm_agent_experiment_2026-04-08.md), [`eval/results/refs_llm_agent_experiment_2026-04-09.md`](../../eval/results/refs_llm_agent_experiment_2026-04-09.md) | Описание H2-эксперимента, ссылки на `ToolCallingAgent`. |
+| Docs: [`_archive/reference-extraction-llm-agent-tools.md`](_archive/reference-extraction-llm-agent-tools.md) [HISTORICAL], [`ontology-benchmarks-roadmap-2026-04-24.md`](ontology-benchmarks-roadmap-2026-04-24.md) §7.7 (713 строка), [`eval/results/refs_llm_agent_experiment_2026-04-08.md`](../../eval/results/refs_llm_agent_experiment_2026-04-08.md), [`eval/results/refs_llm_agent_experiment_2026-04-09.md`](../../eval/results/refs_llm_agent_experiment_2026-04-09.md) | Описание H2-эксперимента, ссылки на `ToolCallingAgent`. |
 
 **Что делает spike:** `ToolCallingAgent` маршрутизирует «найди библиографию, посчитай записи»: вызывает `find_bibliography_candidates` → опционально `count_reference_markers` → детерминированный `segment_reference_block` → JSON-ответ. Это **не product-runtime**, это «cost/quality-проба» против harness-режимов `scope_llm` и `batched_llm`.
 
@@ -537,7 +537,7 @@ Y2/Y3 и Y4/Y5 могут идти параллельно, если хватае
   - Acceptance: `python scripts/experiment_references_langgraph_spike.py suite --tier references_benchmark_v1 --case yolov1` → JSON c теми же ключами; `tests/test_agent_suite_metrics.py` зелёный (не зависит от runtime).
 
 - [ ] **Y5.4 Документация.**
-  - Обновить [`reference-extraction-llm-agent-tools.md`](reference-extraction-llm-agent-tools.md): секция «Migration to LangGraph (Wave Y5)» — что переехало, ссылки на новые файлы.
+  - Обновить [`_archive/reference-extraction-llm-agent-tools.md`](_archive/reference-extraction-llm-agent-tools.md) (или вернуть из `_archive/` если станет вновь активным): секция «Migration to LangGraph (Wave Y5)» — что переехало, ссылки на новые файлы.
   - В `eval/results/refs_llm_agent_experiment_*.md` добавить запись о Y5: «новые прогоны через LangGraph; legacy smolagents результаты сохранены для исторической репродукции».
 
 ### 6.6 Wave Y6 — выпил `smolagents` и legacy `BaseAgentTool`
@@ -549,7 +549,7 @@ Y2/Y3 и Y4/Y5 могут идти параллельно, если хватае
 - [ ] **Y6.1 Удалить `smolagents` из `pyproject.toml`.**
   - `[project.optional-dependencies] research = []` → удалить ключ полностью или оставить пустым с комментарием.
   - `pip install -e '.[agent]'` без претензий на `[research]`.
-  - Acceptance: `rg -n smolagents` по репо возвращает только архивные `eval/results/refs_llm_agent_experiment_*.md` и (опционально) `docs/analysis/reference-extraction-llm-agent-tools.md` в исторической секции.
+  - Acceptance: `rg -n smolagents` по репо возвращает только архивные `eval/results/refs_llm_agent_experiment_*.md` и (опционально) `docs/analysis/_archive/reference-extraction-llm-agent-tools.md` [HISTORICAL] в исторической секции.
 
 - [ ] **Y6.2 Удалить `scripts/experiment_references_smolagents_spike.py`.**
   - Перенести историческую копию (если нужна для воспроизводимости) в `scripts/_archive/`. Обычно достаточно git history.
@@ -622,7 +622,7 @@ Y2/Y3 и Y4/Y5 могут идти параллельно, если хватае
 - [ ] Y5.1 6 research tools в `agent/tools/research/`.
 - [ ] Y5.2 `references_router` LangGraph subgraph.
 - [ ] Y5.3 `scripts/experiment_references_langgraph_spike.py` (тот же CLI/JSON-shape).
-- [ ] Y5.4 Doc update в `reference-extraction-llm-agent-tools.md` + `eval/results/refs_llm_agent_experiment_*.md`.
+- [ ] Y5.4 Doc update в `_archive/reference-extraction-llm-agent-tools.md` [HISTORICAL] + `eval/results/refs_llm_agent_experiment_*.md`.
 
 ### Y6 — выпил smolagents и legacy
 

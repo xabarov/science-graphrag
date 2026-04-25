@@ -1,8 +1,10 @@
-# Graph UX и агрегация узлов — анализ и план Wave GR1–GR5
+# [HISTORICAL] Graph UX и агрегация узлов — анализ и план Wave GR1–GR5
+
+> **[HISTORICAL] Перемещён в `_archive/` 2026-04-25.** Wave GR1/GR2/GR3 закрыты (с caveats); Wave GR4 переименован в GR9; продолжение по треку **Graph UX** ведётся в [`../graph-readability-followup-2026-04-25.md`](../graph-readability-followup-2026-04-25.md) (серия GR6–GR12). Сохранён как исходный анализ ontology vs visualization split и контракт UI ↔ API. Внутренние относительные ссылки на `../` могут указывать на устаревшие пути.
 
 **Дата:** 2026-04-25  
-**Статус:** living working doc; вход для последующих Wave GR1–GR5 в [`refactor-frontend.md`](../backlog/refactor-frontend.md) и [`refactor-backend.md`](../backlog/refactor-backend.md).  
-**Цель:** разобрать визуальные и онтологические проблемы текущего просмотра графа (`/graph`, `WorkspacePage` Graph tab), отделить «оставить как есть в Neo4j» от «улучшить на API/UI», и зафиксировать поэтапный план.
+**Статус:** [HISTORICAL] — Wave GR1–GR5 закрыты или переименованы; для актуальной работы см. `graph-readability-followup-2026-04-25.md`.  
+**Цель (на момент написания):** разобрать визуальные и онтологические проблемы текущего просмотра графа (`/graph`, `WorkspacePage` Graph tab), отделить «оставить как есть в Neo4j» от «улучшить на API/UI», и зафиксировать поэтапный план.
 
 **Связанные документы:**
 

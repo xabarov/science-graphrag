@@ -6,7 +6,7 @@ Accepted — 2026-04-24
 
 ## Context
 
-[ADR 010](010-work-dedup-review-queue.md) scoped a **read-only** work-dedup report; Neo4j still only detected duplicates by **hard keys** (DOI, arXiv, fingerprint). Scholarly corpora need **near-duplicate** detection (preprint vs journal, spelling variants) with **human-in-the-loop** merge, aligned with [workspace experience gap §6 Wave L](../analysis/workspace-experience-gap-2026-04-24.md).
+[ADR 010](010-work-dedup-review-queue.md) scoped a **read-only** work-dedup report; Neo4j still only detected duplicates by **hard keys** (DOI, arXiv, fingerprint). Scholarly corpora need **near-duplicate** detection (preprint vs journal, spelling variants) with **human-in-the-loop** merge, aligned with [workspace experience gap §6 Wave L](../analysis/_archive/workspace-experience-gap-2026-04-24.md).
 
 ## Decision
 

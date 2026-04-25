@@ -8,9 +8,10 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 
 from science_graphrag.config import Settings, get_settings
+from science_graphrag.ingestion.stage_context import IngestStage
 from science_graphrag.storage.db import get_engine, init_db, session_factory
 from science_graphrag.storage.models_orm import IngestJobRecordOrm, IngestJobStageOrm
 
@@ -43,6 +44,7 @@ class IngestJobRegistry:
         self._bootstrapped = False
 
     def bootstrap(self) -> None:
+        """Create DB tables if needed (idempotent)."""
         if self._bootstrapped:
             return
         with self.lock:
@@ -52,6 +54,20 @@ class IngestJobRegistry:
             self._bootstrapped = True
 
     @staticmethod
+    def _single_job_progress_from_stages(
+        stage_rows: list[dict[str, Any]],
+        *,
+        progress_current: int,
+        progress_total: int,
+    ) -> tuple[int, int]:
+        """Derive UI progress for single-document jobs from completed stage rows."""
+        stage_count = max(len(IngestStage), 1)
+        completed = sum(1 for item in stage_rows if item.get("status") == "completed")
+        p_total = max(progress_total, 100)
+        p_current = int((completed / stage_count) * 100)
+        return p_current, p_total
+
+    @staticmethod
     def _to_dataclass(
         row: IngestJobRecordOrm, stages: list[dict[str, Any]] | None = None
     ) -> IngestJobRecord:
@@ -59,16 +75,11 @@ class IngestJobRegistry:
         progress_current = int(row.progress_current or 0)
         progress_total = int(row.progress_total or 100)
         if row.kind == "single" and stage_rows:
-            stage_count = max(len(stage_rows), 1)
-            try:
-                from science_graphrag.ingestion.stage_context import IngestStage  # noqa: PLC0415
-
-                stage_count = max(len(IngestStage), 1)
-            except Exception:
-                stage_count = max(len(stage_rows), 1)
-            completed = sum(1 for item in stage_rows if item.get("status") == "completed")
-            progress_total = max(progress_total, 100)
-            progress_current = int((completed / stage_count) * 100)
+            progress_current, progress_total = IngestJobRegistry._single_job_progress_from_stages(
+                stage_rows,
+                progress_current=progress_current,
+                progress_total=progress_total,
+            )
         return IngestJobRecord(
             job_id=row.job_id,
             workspace_id=row.workspace_id,
@@ -105,7 +116,7 @@ class IngestJobRegistry:
                 parsed = json.loads(raw_metrics)
                 if isinstance(parsed, dict):
                     metrics = parsed
-            except Exception:
+            except (json.JSONDecodeError, TypeError, ValueError):
                 metrics = {}
         return {
             "name": row.stage,
@@ -130,6 +141,7 @@ class IngestJobRegistry:
         return [self._stage_to_dict(row) for row in stage_rows]
 
     def mark_stale_running_jobs_failed(self) -> None:
+        """Mark queued/running jobs as failed after API restart."""
         with self.lock:
             with self._session_factory() as session:
                 rows = session.execute(
@@ -155,6 +167,7 @@ class IngestJobRegistry:
         kind: str = "single",
         parent_job_id: str | None = None,
     ) -> IngestJobRecord:
+        """Insert a new ingest job row and return its DTO."""
         job_id = str(uuid.uuid4())
         with self.lock:
             with self._session_factory() as session:
@@ -173,6 +186,7 @@ class IngestJobRegistry:
                 return self._to_dataclass(row)
 
     def get(self, job_id: str) -> IngestJobRecord | None:
+        """Load job by id including stage rows."""
         with self.lock:
             with self._session_factory() as session:
                 row = session.execute(
@@ -185,7 +199,24 @@ class IngestJobRegistry:
                 stages = self._load_job_stages(session, job_id)
                 return self._to_dataclass(row, stages=stages)
 
+    def claim_queued_job(self, job_id: str) -> bool:
+        """Atomically set queued job status to running and return claim result."""
+        with self.lock:
+            with self._session_factory() as session:
+                result = session.execute(
+                    text(
+                        "UPDATE ingest_jobs SET status='running' "
+                        "WHERE job_id=:job_id AND status='queued' "
+                        "RETURNING job_id"
+                    ),
+                    {"job_id": str(job_id).strip()},
+                )
+                claimed = result.fetchone() is not None
+                session.commit()
+        return claimed
+
     def _update(self, job_id: str, **kwargs: Any) -> None:
+        """Apply partial field updates to a job row."""
         with self.lock:
             with self._session_factory() as session:
                 row = session.execute(

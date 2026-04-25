@@ -10,6 +10,49 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 
 ## Queue
 
+### [OPEN] Corpus Gold Pack v1 — Phase 1 (dedup_5 + relations_v1.json)
+- **Area:** `tests/fixtures/benchmarks/dedup/{institutions,venues,methods,datasets}_v1/`, `tests/fixtures/corpus/relations_v1.json`
+- **Issue:** Phase 0 закрыта (план + схемы + каталог + образец `dedup/authors_v1/`); остальные 4 dedup pack'а и cross-paper relations ещё нужны для BT11 + Layer 4/9.
+- **Proposal:** по шаблону `dedup/authors_v1/{gold.json, README.md}` собрать 4 pack'а: institutions (MSR/MSRA/FAIR/AI2/UW/MIT), venues (CVPR/ICCV/ECCV/NeurIPS-NIPS), methods (R-CNN family + DETR family naming, important negatives), datasets (PASCAL VOC/COCO/ImageNet с version-разделением). Параллельно — `relations_v1.json` (CITES/EXTENDS/COMPARES_WITH/CONTRADICTS) на основе `gold_enrichment_*.json::step_a_arxiv_from_bibliography`.
+- **Acceptance:** 4 pack'а валидируются JSON-схемой `docs/specs/benchmark-gold-schemas-v1.md` §9; `relations_v1.json` содержит ≥ 60 рёбер; all `meta.validation_status: "human_spot_checked"`.
+- **Raised:** 2026-04-25 (см. `docs/analysis/corpus-gold-pack-v1-2026-04-25.md` §5 Phase 1)
+
+### [OPEN] Corpus Gold Pack v1 — Phase 2 (claims_v2 + holdout)
+- **Area:** `tests/fixtures/benchmarks/claims/corpus_<slug>_v2/`, `tests/fixtures/benchmarks/claims/holdout_<slug>_v1/`
+- **Issue:** Текущий `corpus_<slug>` тривиален (1 claim, anchor дословно в тексте → recall=1.0 по построению; см. trust-audit §3.1). Нужны paraphrased + distractor + polarity diversity для BT6.
+- **Proposal:** 15 статей × 3–5 claims (см. план §3.2): `match_mode: embedding_sim|rouge_l`, `polarity ∈ {positive, negative, neutral}` с distribution ≥ 30% negative, `distractor_strategy: neighboring_paper_paragraphs`. Расширить `eval/claims/runner.py` под distractor injection и embedding-based matching. Добавить tier `claims_pilot_v2` и `claims_holdout_v1` в `case_tiers.json`.
+- **Acceptance:** `mean_claim_recall` на v2 в 0.6–0.85 (не 1.0); `precision_drop_with_distractors ≤ 0.15`; 5 holdout-кейсов прогоняются weekly cron.
+- **Raised:** 2026-04-25 (план §5 Phase 2)
+
+### [OPEN] Corpus Gold Pack v1 — Phase 3 (contradictions_v1 + concept_v2)
+- **Area:** `tests/fixtures/benchmarks/contradictions_v1/pair_<NN>_<slug>/`, `tests/fixtures/benchmarks/concept_topic/{concepts_frozen_v1.json,corpus_<slug>_v2/}`
+- **Issue:** Layer 9 (BT12) и Layer 7 (BT7 путь A) — оба требуют семантического разбора корпуса. Без gold нельзя собрать `:CONTRADICTS` persistence и убить substring-tautology в concept extraction.
+- **Proposal:** 5–7 пар противоречий (era_shift/design_paradigm/post_processing/architectural/scaling/classical_vs_deep) с прямыми цитатами обеих claim'ов; frozen list ~25 концептов + разметка present/absent для 10 пилотных статей.
+- **Acceptance:** `contradiction_pair_recall ≥ 0.6` advisory; concept v2 даёт реалистичный recall 0.5–0.8 (не 1.0).
+- **Raised:** 2026-04-25 (план §5 Phase 3)
+
+### [OPEN] Corpus Gold Pack v1 — Phase 4 (retrieval: workspace_live + hybrid_v2 + multihop_v2)
+- **Area:** `tests/fixtures/benchmarks/retrieval/{workspace_scoped_live,hybrid_ablation_v2,multihop_v2}/`
+- **Issue:** Все 3 текущих family — phantom-зелёные (canned answer / synthetic ranked / connection refused; см. trust-audit §3.2–3.5). Gold нужен ДО починки runner'ов (BT2/BT3/BT4).
+- **Proposal:** 3 workspaces (yolo_family/two_stage/full_corpus) × 6 кейсов с `forbidden_corpus_work_ids` и `answer_reference_text`; 8 hybrid кейсов с `relevant_corpus_work_ids` (без захардкоженных ranked); 5 multihop кейсов c `expected_chain` и `expected_neo4j_relations_used`.
+- **Acceptance:** все 3 pack'а проходят JSON-schema validation; референс-ответы написаны и spot-checked.
+- **Raised:** 2026-04-25 (план §5 Phase 4)
+
+### [OPEN] Corpus Gold Pack v1 — Phase 5 (agent_live + multi_agent + idea_live)
+- **Area:** `tests/fixtures/benchmarks/agent_tools_v1/live_<NN>_*/`, `tests/fixtures/benchmarks/idea_assist_v1/live_<NN>_*/`
+- **Issue:** Текущие mini-pack'и собраны с `--mock-runtime`; rubric/judge даёт зелёный на mock by construction (trust-audit §3.6, §3.8). BT8/BT9/BT10 требуют gold с `expected_tool_sequence`, `forbidden_substrings`, `reference_hypothesis`.
+- **Proposal:** 8 agent live кейсов с `expected_tool_sequence` (vector_search → cypher_query → cite_works), 5 multi-agent (retrieval → graph → writer), 8 idea live кейсов с `forbidden_substrings` и `max_rouge_l_against_evidence_quotes ≤ 0.7`.
+- **Acceptance:** все pack'и валидируются; adversarial cypher case существует (gate `cypher_safety = 1.0`).
+- **Raised:** 2026-04-25 (план §5 Phase 5)
+
+### [OPEN] Corpus Gold Pack v1 — Phase 6 (LLM dual-validation pass)
+- **Area:** `tests/fixtures/benchmarks/**/consistency_report.json`, `tests/fixtures/corpus/{CATALOG.md, corpus_v1.json}` (промоутить из draft)
+- **Issue:** Все pack'и Phase 0–5 идут с `meta.validation_status: "draft"` или `"llm_dual_validated"`. Финальный шаг — двойной независимый extractor + spot-check disagreements + промо в `"human_spot_checked"`.
+- **Proposal:** Скрипт `scripts/dual_extract_validate.py` (extractor A/B на разных моделях, diff в `consistency_report.json` per pack); CLI чтобы по диффу пройти spot-check'ом; `pytest tests/eval/test_gold_schemas.py` валидирует все `gold.json`.
+- **Acceptance:** Все pack'и Phase 0–5 → `meta.validation_status: "human_spot_checked"`; CI gate на schema validation.
+- **Raised:** 2026-04-25 (план §5 Phase 6)
+
+
 ### [OPEN] Fix pre-existing isort/black violations in ingest_jobs and idea_workflow
 - **Area:** `science_graphrag/api/ingest_jobs.py`, `science_graphrag/agent/idea_workflow.py`
 - **Issue:** `isort` and `black --check` fail on these two files (not touched by Round 5; pre-existing).
@@ -29,12 +72,17 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 - **Raised:** 2026-04-25
 - **Note (done):** 2026-04-25 — implemented in GR1 pass with tests for `/v1/works/{id}/graph`, `/v1/workspaces/{id}/graph`, and `/v1/workspaces/{id}/graph/neighbors`.
 
-### [OPEN] Graph readability — Wave GR2 node_kind + semantic display_type + prioritized LIMIT
-- **Area:** `science_graphrag/api/works.py`, `science_graphrag/api/workspace_graph.py`
-- **Issue:** `node_kind` is still equal to Neo4j `type`; edge labels remain technical (`HAS_AUTHORSHIP`, etc.); `LIMIT` truncation is not priority-aware.
-- **Proposal:** Add `node_kind` projection semantics, relation `display_type` mapping, and limit prioritization with `meta.skipped_by_kind`.
-- **Acceptance:** priority kinds (`Method`,`Dataset`,`Work`) survive truncation reliably and UI legend can render semantic edge labels.
+### [PARTIAL] Graph readability — Wave GR2 node_kind + semantic display_type + prioritized LIMIT
+- **Area:** `science_graphrag/api/graph_display.py`, `science_graphrag/api/works/graph_neighborhood.py`,
+  `science_graphrag/api/workspace_graph/projection.py`
+- **Issue:** `node_kind` was equal to Neo4j `type`; edge labels were technical; `LIMIT` was not priority-aware.
+- **Proposal:** Add `node_kind` semantics, `EDGE_DISPLAY_TYPE_RAW` mapping, and limit prioritization with `meta.skipped_by_kind`.
+- **Acceptance:** priority kinds (`Method`,`Dataset`,`Work`) survive truncation; UI legend can render semantic edge labels.
 - **Raised:** 2026-04-25
+- **Note (partial 2026-04-25):** backend часть доставлена (`graph_display.py` с `EDGE_DISPLAY_TYPE_RAW`,
+  `resolve_node_kind`, `node_kind_priority`, `_enrich_edges_with_display`, `meta.skipped_by_kind` через
+  `kind_distribution`). **UI integration не выполнена** — `graphCanvasDraw.js` рисует raw `edge.type`. Закрывается
+  Wave GR6 (frontend) — см. [`docs/analysis/graph-readability-followup-2026-04-25.md`](../analysis/graph-readability-followup-2026-04-25.md).
 
 ### [DONE] Graph readability — Wave GR3 aggregator nodes + lazy expand endpoint
 - **Area:** `science_graphrag/api/works.py`, `science_graphrag/api/workspace_graph.py`
@@ -44,13 +92,51 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 - **Raised:** 2026-04-25
 - **Note (done):** 2026-04-25 — добавлены `_apply_aggregators()` для work/workspace payload,
   `view=reader|raw`, endpoint-ы `GET /v1/works/{id}/graph/expand` и `GET /v1/workspaces/{id}/graph/expand`.
+- **Note (caveat 2026-04-25):** дефолтный порог `AGGREGATOR_THRESHOLD=8` и owner-фильтр `Work` означают,
+  что типичная статья (4–6 авторов) **не** агрегируется. Пользователь по-прежнему видит звезду
+  `:Authorship`-дисков. Закрывается **Wave GR8** (per-kind thresholds + non-Work owners + cap-aware) —
+  см. [`docs/analysis/graph-readability-followup-2026-04-25.md`](../analysis/graph-readability-followup-2026-04-25.md) §2.3.
 
-### [OPEN] Graph readability — Wave GR4 reader view with virtual AUTHORED edges
-- **Area:** `science_graphrag/api/works.py`, `science_graphrag/api/workspace_graph.py`, `science_graphrag/api/graph_snapshot_diff.py`
-- **Issue:** Raw `Authorship` reification is useful for ontology/debug but too verbose for default reader UX.
-- **Proposal:** Add `view=raw|reader`; in reader view project virtual `AUTHORED` edges with `via` trace fields, keep raw mode for snapshots/tests.
-- **Acceptance:** reader view hides `Authorship` nodes by default while preserving traceability and raw compatibility.
-- **Raised:** 2026-04-25
+### [OPEN] Graph readability — Wave GR8 smarter aggregation defaults (per-kind thresholds, non-Work owners, cap-aware)
+- **Area:** `science_graphrag/api/works/graph_neighborhood.py`,
+  `science_graphrag/api/workspace_graph/projection.py`, `science_graphrag/api/graph_display.py`
+- **Issue:** GR3 поставил `AGGREGATOR_THRESHOLD=8` + owner-фильтр `Work`. Типичная статья (4–6 авторов,
+  5–10 цитат) **не агрегируется**; cap-truncation (`is_truncated=true`) не отображается визуально.
+- **Proposal:** per-kind thresholds (например `AuthorshipReification`/`Author`=4, `Institution`=5, `Work`=8);
+  разрешить owner-типы `Author`/`Institution`/`Venue` в дополнение к `Work`; cap-aware агрегатор
+  «`+N hidden`» от `meta.skipped_by_kind`/`kind_distribution`; query-параметры
+  `aggregator_threshold` (override) и `aggregator_disabled_kinds` (CSV opt-out); расширить
+  `_apply_aggregators` на двух-хоп цепочки `Work → Authorship → Author` для `view=raw`.
+- **Acceptance:** статья с 5+ авторами свёрнута по умолчанию; `is_truncated=true` показывает
+  `+N hidden`-агрегатор; pytest на разных порогах per-kind зелёный.
+- **Raised:** 2026-04-25 (см. [`docs/analysis/graph-readability-followup-2026-04-25.md`](../analysis/graph-readability-followup-2026-04-25.md) §2.3)
+
+### [OPEN] Graph readability — Wave GR9 reader view with virtual AUTHORED edges (formerly GR4)
+- **Area:** `science_graphrag/api/works/graph_neighborhood.py`,
+  `science_graphrag/api/workspace_graph/projection.py`, `science_graphrag/api/graph_snapshot_diff.py`
+- **Issue:** Raw `Authorship` reification полезен для ontology/debug, но избыточен для default reader UX.
+  Сейчас параметр `view` влияет только на агрегацию, `:Authorship` всегда возвращается.
+- **Proposal:** Добавить настоящий `view=raw|reader`; в reader view не возвращать `:Authorship` узлы
+  и `HAS_AUTHORSHIP`/`OF_AUTHOR` рёбра, генерировать виртуальные `Work –[AUTHORED]→ Author` с
+  `via: ["HAS_AUTHORSHIP","OF_AUTHOR"]` и `properties: {author_position, is_corresponding, raw_affiliation}`.
+  `view=raw` остаётся источником истины для `graph_snapshot_diff` и benchmark `graph_v1`.
+- **Acceptance:** reader view не содержит `node_kind: AuthorshipReification`; pytest-симметрия
+  множеств `Work`/`Author` между raw и reader; bench `graph_v1` не сломан.
+- **Raised:** 2026-04-25 (renamed from GR4 — см. [`docs/analysis/graph-readability-followup-2026-04-25.md`](../analysis/graph-readability-followup-2026-04-25.md) §2.4)
+
+### [OPEN] Graph readability — Wave GR7 phase B: display_*_key fields in graph payload (i18n-friendly)
+- **Area:** `science_graphrag/api/graph_display.py`, `science_graphrag/api/works/graph_neighborhood.py`,
+  `science_graphrag/api/workspace_graph/projection.py`, `docs/adr/011-graph-live-ux-and-payload.md`
+- **Issue:** `display_type` / `display_label` / `subtitle` / aggregator labels приходят как
+  EN-строки, что мешает локализации в UI и не масштабируется для будущих claim-edge типов
+  (`SUPPORTS`/`CONTRADICTS`/`MENTIONS`).
+- **Proposal:** Добавить аддитивные поля `display_type_key` (например `"authored_by"`),
+  `display_label_key` + `display_label_vars` (например `key="aggregator.authors_of_work"`,
+  `vars={count: 5}`). Старые `display_type`/`display_label` сохраняются как fallback. Обновить ADR 011.
+  Опциональная фаза, активируется по необходимости (см. фаза A — UI-only локализация).
+- **Acceptance:** payload содержит `*_key` поля; UI Wave GR7 фаза B читает их через `t(key, vars)`;
+  старые клиенты продолжают работать на EN-fallback.
+- **Raised:** 2026-04-25 (см. [`docs/analysis/graph-readability-followup-2026-04-25.md`](../analysis/graph-readability-followup-2026-04-25.md) §2.2.3)
 
 ### [OPEN] Graph readability — Wave GR5 denormalized Work counters for weighted layout
 - **Area:** `science_graphrag/storage/neo4j_store.py`, ingestion pipelines, graph API payload properties

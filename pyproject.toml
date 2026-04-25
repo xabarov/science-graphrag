@@ -113,6 +113,13 @@ disable = [
 [tool.pylint.format]
 max-line-length = 100
 
+[tool.pylint.design]
+# Typer CLI and dataclass DTOs legitimately exceed defaults.
+max-args = 8
+max-positional-arguments = 8
+max-locals = 18
+max-attributes = 16
+
 [tool.ruff]
 line-length = 100
 target-version = "py312"
