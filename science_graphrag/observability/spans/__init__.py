@@ -1,14 +1,12 @@
-"""Observability helpers (Phoenix / OpenTelemetry)."""
+from __future__ import annotations
 
-from science_graphrag.observability.init import init_tracer_provider
-from science_graphrag.observability.scope import (
-    _EXTRACTION_LLM_CHAIN_NAMES,
-    PHOENIX_TRACE_SCOPE,
-    phoenix_trace_scope,
-)
-from science_graphrag.observability.spans import (
+from science_graphrag.observability.spans.attributes import SpanAttributes
+from science_graphrag.observability.spans.decorators import (
+    DEFAULT_SPAN_PAYLOAD_LIMIT,
+    MIME_TYPE_JSON,
+    MIME_TYPE_TEXT,
     OpenInferenceAttributes,
-    SpanAttributes,
+    SpanKindOI,
     add_span_event,
     chain_span,
     embeddings_span,
@@ -21,17 +19,17 @@ from science_graphrag.observability.spans import (
 )
 
 __all__ = [
-    "PHOENIX_TRACE_SCOPE",
+    "DEFAULT_SPAN_PAYLOAD_LIMIT",
+    "MIME_TYPE_JSON",
+    "MIME_TYPE_TEXT",
     "OpenInferenceAttributes",
     "SpanAttributes",
-    "_EXTRACTION_LLM_CHAIN_NAMES",
+    "SpanKindOI",
     "add_span_event",
     "chain_span",
     "embeddings_span",
     "get_tracer",
-    "init_tracer_provider",
     "llm_span",
-    "phoenix_trace_scope",
     "set_span_attribute",
     "set_span_attributes",
     "set_span_error",

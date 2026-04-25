@@ -249,6 +249,7 @@ class Settings(BaseSettings):
     )
     query_answer_llm_max_tokens: int = Field(default=900, ge=64, le=4096)
     query_answer_llm_temperature: float = Field(default=0.0, ge=0.0, le=1.0)
+    openrouter_base_url: str = Field(default="https://openrouter.ai/api/v1")
     agent_enabled: bool = Field(
         default=False,
         description="Enable Wave R agent endpoint (/v1/agent/query).",
@@ -257,6 +258,7 @@ class Settings(BaseSettings):
         default=False,
         description="Enable Wave S idea-assist endpoint (/v1/agent/idea-assist).",
     )
+    agent_runtime: str = Field(default="retrieval_v1")
     agent_max_tool_calls: int = Field(default=8, ge=1, le=30)
     agent_step_timeout_seconds: float = Field(default=30.0, ge=1.0, le=180.0)
 

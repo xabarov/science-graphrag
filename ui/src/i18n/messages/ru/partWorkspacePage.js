@@ -25,8 +25,16 @@ export default {
   "workspace.header.paperCountMany": "В этой области статей: {{count}}.",
   "workspace.header.focusedPaper": "Фокус на статье:",
   "workspace.header.workspaceGraph": "Граф области",
+  "workspace.header.summarizing": "Сводка...",
+  "workspace.header.summarizeAction": "Суммировать рабочую область",
+  "workspace.header.generatingHypotheses": "Генерация...",
+  "workspace.header.generateHypotheses": "Сгенерировать гипотезы",
   "workspace.header.graphStatsLine":
     "Граф: {{works}} работ · {{authors}} авторов · {{internal}} внутр. цит. · {{external}} внеш. цит.",
+  "workspace.summary.dialogTitle": "Сводка по рабочей области",
+  "workspace.summary.empty": "Сводки пока нет.",
+  "workspace.idea.dialogTitle": "Помощник гипотез и противоречий",
+  "workspace.dialog.close": "Закрыть",
 
   "workspace.upload.title": "Загрузка статьи",
   "workspace.upload.desc":

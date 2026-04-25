@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
+import { CursorButton } from "../../components/common/index.js";
 
 import DeduplicationPanel from "../../components/graph/DeduplicationPanel.jsx";
 import WorkDedupReviewDialog from "../../components/graph/dedup/WorkDedupReviewDialog.jsx";
@@ -99,9 +99,9 @@ export default function WorkspaceDedupSection({ workspaceId, onMerged }) {
         Scans work summary vectors in this workspace and opens a review queue. Requires ingested papers (work
         embeddings). Key-only duplicates remain under the classic panel below.
       </Typography>
-      <Button variant="outlined" size="small" onClick={() => void onScan()} disabled={scanBusy} sx={{ mb: 1 }}>
+      <CursorButton variant="outlined" size="small" onClick={() => void onScan()} disabled={scanBusy} sx={{ mb: 1 }}>
         {scanBusy ? "Scanning…" : "Scan for near-duplicates"}
-      </Button>
+      </CursorButton>
       {scanMsg ? (
         <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.65)", mb: 1 }}>{scanMsg}</Typography>
       ) : null}
@@ -129,7 +129,7 @@ export default function WorkspaceDedupSection({ workspaceId, onMerged }) {
                 {String(c.work_id_a).slice(0, 10)}… ↔ {String(c.work_id_b).slice(0, 10)}… · sim{" "}
                 {Number(c.similarity_score).toFixed(3)}
               </Typography>
-              <Button
+              <CursorButton
                 size="small"
                 onClick={() => {
                   setActiveConflict(c);
@@ -137,7 +137,7 @@ export default function WorkspaceDedupSection({ workspaceId, onMerged }) {
                 }}
               >
                 Review
-              </Button>
+              </CursorButton>
             </Box>
           ))}
         </Box>

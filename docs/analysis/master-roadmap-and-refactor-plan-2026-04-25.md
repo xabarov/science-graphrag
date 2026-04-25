@@ -293,12 +293,22 @@
 
 **Безопасный шаблон одного раунда (по 4 агента):**
 
-- **Раунд 1 (Sprint S1 ядро):**
-  - Agent 1: G-IngestSlim (`api/ingest_jobs.py` → `api/ingest/`).
-  - Agent 2: G-PipelineFacade (`ingestion/pipeline.py` → stages + context).
-  - Agent 3: G-PhoenixSplit (`observability/`).
-  - Agent 4: H-i18n-fixes + H-Cursor-buttons-in-dedup (frontend, разные файлы).
-- **Раунд 2 (после раунда 1 + Y1 foundation):**
+- **Раунд 1 (Sprint S1 ядро) ✅ DONE 2026-04-25:**
+  - Agent 1: G-IngestSlim (`api/ingest_jobs.py` → `api/ingest/`). ✅
+  - Agent 2: G-PipelineFacade (`ingestion/pipeline.py` → stages + context). ✅
+  - Agent 3: G-PhoenixSplit (`observability/`). ✅
+  - Agent 4: H-i18n-fixes + H-Cursor-buttons-in-dedup (frontend, разные файлы). ✅
+- **Раунд 1.5 (закрываем долги Sprint S1 перед запуском Раунда 2) ✅ DONE 2026-04-25:**
+
+  > Раунд добавлен по итогам Sprint S1 review (2026-04-25): три задачи Sprint S1 не прошли acceptance-критерии и блокируют Раунд 2. Выполняется строго до Раунда 2.
+
+  - Agent 1: **Завершить G-PipelineFacade** ✅ — тяжёлая логика в `_pipeline_impl.py`; `pipeline.py` = 53 строки фасад-реэкспорт (≤250 ✅). 375 тестов зелёные.
+  - Agent 2: **Split `observability/spans.py` (410 строк)** ✅ — разнесено на `observability/spans/{attributes.py,decorators.py,__init__.py}`; все файлы ≤300 строк ✅; `test_span_contract.py` зелёный.
+  - Agent 3: **Фикс регрессии IngestJobRegistry** ✅ — `__init__` не вызывает `init_db`/`mark_stale`; добавлен ленивый `bootstrap()`; monkeypatch-тесты перенесены на `router._registry`; все `test_api_smoke` зелёные.
+
+  > Agent 4: нет — три задачи не пересекаются по файлам, безопасно параллельны. Wave Y1 (P3 Sprint S1) выполнен полностью: deps установлены, `instrumentation.py` наполнен, `config.py` и `.env.example` обновлены. ✅
+
+- **Раунд 2 (после раунда 1.5 + Y1 foundation):**
   - Agent 1: G-StoreFactory (FastAPI deps).
   - Agent 2: G-WorkspaceGraphSplit.
   - Agent 3: G-WorksSplit.

@@ -1,0 +1,101 @@
+"""DTO and data records for ingest jobs."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
+from typing import Any
+
+from pydantic import BaseModel, Field
+
+
+def now_iso() -> str:
+    return datetime.now(UTC).isoformat()
+
+
+@dataclass
+class IngestJobRecord:
+    job_id: str
+    workspace_id: str
+    filename: str
+    status: str
+    message: str = ""
+    progress_current: int = 0
+    progress_total: int = 100
+    logs: str = ""
+    work_id: str | None = None
+    document_id: str | None = None
+    skipped_duplicate: bool = False
+    error: str | None = None
+    created_at: str = field(default_factory=now_iso)
+    finished_at: str | None = None
+    kind: str = "single"
+    parent_job_id: str | None = None
+    child_job_ids: list[str] = field(default_factory=list)
+    stages: list[dict[str, Any]] = field(default_factory=list)
+    phoenix_trace_id: str | None = None
+
+
+class IngestStageView(BaseModel):
+    name: str
+    status: str
+    started_at: str | None = None
+    finished_at: str | None = None
+    duration_ms: int | None = None
+    metrics: dict[str, Any] = Field(default_factory=dict)
+    error: str | None = None
+
+
+class IngestJobEvent(BaseModel):
+    job_id: str
+    kind: str
+    payload: dict[str, Any] = Field(default_factory=dict)
+    source_job_id: str | None = None
+
+
+class IngestJobView(BaseModel):
+    """JSON shape for ingest job polling."""
+
+    job_id: str
+    workspace_id: str
+    filename: str
+    status: str
+    message: str = ""
+    progress_current: int = 0
+    progress_total: int = 100
+    logs: str = ""
+    work_id: str | None = None
+    document_id: str | None = None
+    skipped_duplicate: bool = False
+    error: str | None = None
+    created_at: str = ""
+    finished_at: str | None = None
+    kind: str = "single"
+    parent_job_id: str | None = None
+    child_job_ids: list[str] = Field(default_factory=list)
+    stages: list[IngestStageView] = Field(default_factory=list)
+    phoenix_trace_id: str | None = None
+
+
+def job_record_to_view(rec: IngestJobRecord) -> IngestJobView:
+    return IngestJobView(
+        job_id=rec.job_id,
+        workspace_id=rec.workspace_id,
+        filename=rec.filename,
+        status=rec.status,
+        message=rec.message,
+        progress_current=rec.progress_current,
+        progress_total=rec.progress_total,
+        logs=rec.logs,
+        work_id=rec.work_id,
+        document_id=rec.document_id,
+        skipped_duplicate=rec.skipped_duplicate,
+        error=rec.error,
+        created_at=rec.created_at,
+        finished_at=rec.finished_at,
+        kind=rec.kind,
+        parent_job_id=rec.parent_job_id,
+        child_job_ids=list(rec.child_job_ids),
+        stages=[IngestStageView(**stage_row) for stage_row in rec.stages],
+        phoenix_trace_id=rec.phoenix_trace_id,
+    )

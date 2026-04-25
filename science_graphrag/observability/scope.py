@@ -1,0 +1,30 @@
+from __future__ import annotations
+
+import os
+
+_PHOENIX_TRACE_SCOPE_FULL = "full"
+_PHOENIX_TRACE_SCOPE_EXTRACTION_LLM = "extraction_llm"
+
+_EXTRACTION_LLM_CHAIN_NAMES = frozenset(
+    {"ingest_document", "ingest.extract_meta.metadata_and_refs"}
+)
+_EXTRACTION_LLM_MANUAL_LLM_NAMES = frozenset(
+    {
+        "llm.metadata_extraction",
+        "llm.authorships_extraction",
+        "llm.references_extraction",
+    }
+)
+
+
+def phoenix_trace_scope() -> str:
+    """OTel/Phoenix verbosity: ``full`` (default) or ``extraction_llm``."""
+
+    return os.getenv("PHOENIX_TRACE_SCOPE", _PHOENIX_TRACE_SCOPE_FULL).strip().lower()
+
+
+PHOENIX_TRACE_SCOPE = phoenix_trace_scope()
+
+
+def is_extraction_llm_scope() -> bool:
+    return phoenix_trace_scope() == _PHOENIX_TRACE_SCOPE_EXTRACTION_LLM

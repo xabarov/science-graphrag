@@ -70,4 +70,10 @@ export default {
   "askPanel.toggleJson.hide": "Скрыть расширенный JSON",
   "askPanel.toggleJson.show": "Показать расширенный JSON",
   "askPanel.flag.graphDegraded": "graph_context.degraded",
+  "askPanel.idea.loadingCandidates": "Генерация кандидатов гипотез...",
+  "askPanel.idea.noCandidates": "Кандидаты не возвращены.",
+  "askPanel.idea.advisory": "Только вспомогательная подсказка. Перед внешним использованием проверьте вывод с профильным экспертом.",
+  "askPanel.idea.noveltyHint": "Подсказка по новизне:",
+  "askPanel.idea.claims": "Утверждения:",
+  "askPanel.idea.contradictionCandidates": "Кандидаты на противоречия",
 };

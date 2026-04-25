@@ -53,6 +53,7 @@ agent = [
     "langgraph>=0.2.50,<0.3",
     "langchain-core>=0.3.20",
     "langchain-openai>=0.2.10",
+    "openinference-instrumentation-langchain>=0.1",
 ]
 
 [project.scripts]

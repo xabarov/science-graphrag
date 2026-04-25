@@ -49,7 +49,7 @@ jobs:
           cache: pip
 
       - name: Install package (dev)
-        run: pip install -e ".[dev]"
+        run: pip install -e ".[dev,agent]"
 
       - name: Wait for services
         run: sleep 40

@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
@@ -10,6 +9,7 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Radio from "@mui/material/Radio";
 import RadioGroup from "@mui/material/RadioGroup";
 import Typography from "@mui/material/Typography";
+import { CursorButton, CursorPrimaryButton } from "../../common/index.js";
 
 import { formatResearchApiError, getWorkDetail } from "../../../services/researchApi.js";
 import { decideWorkspaceSmartDedupConflict } from "../../../utils/workspaceStore.js";
@@ -106,12 +106,12 @@ export default function WorkDedupReviewDialog({ open, onClose, workspaceId, conf
         </FormControl>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={busy}>
+        <CursorButton onClick={onClose} disabled={busy}>
           Cancel
-        </Button>
-        <Button variant="contained" onClick={() => void submit()} disabled={busy}>
+        </CursorButton>
+        <CursorPrimaryButton onClick={() => void submit()} disabled={busy}>
           {busy ? "Saving…" : "Submit"}
-        </Button>
+        </CursorPrimaryButton>
       </DialogActions>
     </Dialog>
   );

@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 import AgentToolTrace from "./AgentToolTrace.jsx";
+import { useI18n } from "../../i18n/I18nContext.jsx";
 
 export default function HypothesisPanel({
   hypotheses = [],
@@ -12,10 +13,11 @@ export default function HypothesisPanel({
   loading = false,
   error = "",
 }) {
+  const { t } = useI18n();
   if (loading) {
     return (
       <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.7)" }}>
-        Generating hypothesis candidates...
+        {t("askPanel.idea.loadingCandidates")}
       </Typography>
     );
   }
@@ -32,7 +34,7 @@ export default function HypothesisPanel({
   if (!hasHypotheses && !hasContradictions) {
     return (
       <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.65)" }}>
-        No candidates returned.
+        {t("askPanel.idea.noCandidates")}
       </Typography>
     );
   }
@@ -48,7 +50,7 @@ export default function HypothesisPanel({
           border: "1px solid rgba(99,102,241,0.22)",
         }}
       >
-        Advisory only. Review with a domain expert before external use.
+        {t("askPanel.idea.advisory")}
       </Alert>
       {hasHypotheses ? (
         <Box sx={{ display: "grid", gap: 1 }}>
@@ -67,12 +69,12 @@ export default function HypothesisPanel({
               </Typography>
               {item?.novelty_hint ? (
                 <Typography sx={{ mt: 0.5, fontSize: "0.74rem", color: "rgba(129,140,248,0.95)" }}>
-                  Novelty hint: {item.novelty_hint}
+                  {t("askPanel.idea.noveltyHint")} {item.novelty_hint}
                 </Typography>
               ) : null}
               {Array.isArray(item?.supporting_claim_ids) && item.supporting_claim_ids.length > 0 ? (
                 <Typography sx={{ mt: 0.5, fontSize: "0.72rem", color: "rgba(255,255,255,0.58)" }}>
-                  Claims: {item.supporting_claim_ids.join(", ")}
+                  {t("askPanel.idea.claims")} {item.supporting_claim_ids.join(", ")}
                 </Typography>
               ) : null}
               {Array.isArray(item?.evidence_quotes) && item.evidence_quotes.length > 0 ? (
@@ -98,7 +100,7 @@ export default function HypothesisPanel({
           }}
         >
           <Typography sx={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.84)", mb: 0.5 }}>
-            Contradiction candidates
+            {t("askPanel.idea.contradictionCandidates")}
           </Typography>
           {contradictions.map((item, idx) => (
             <Typography key={`c-${idx}`} sx={{ fontSize: "0.74rem", color: "rgba(255,255,255,0.68)" }}>

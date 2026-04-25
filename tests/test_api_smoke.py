@@ -295,9 +295,10 @@ def test_ingest_stubs_and_job_lookup() -> None:
 
 
 def test_get_ingest_job_returns_stages(monkeypatch: Any) -> None:
-    from science_graphrag.api import ingest_jobs as ingest_api
+    import science_graphrag.api.ingest.router as ingest_router
+    from science_graphrag.api.ingest.dto import IngestJobRecord
 
-    job = ingest_api.IngestJobRecord(
+    job = IngestJobRecord(
         job_id="11111111-1111-1111-1111-111111111111",
         workspace_id="ws1",
         filename="paper.pdf",
@@ -327,7 +328,7 @@ def test_get_ingest_job_returns_stages(monkeypatch: Any) -> None:
         ],
     )
     monkeypatch.setattr(
-        ingest_api,
+        ingest_router,
         "_registry",
         lambda *_args, **_kwargs: type("R", (), {"get": lambda *_a, **_k: job})(),
     )
@@ -342,9 +343,11 @@ def test_get_ingest_job_returns_stages(monkeypatch: Any) -> None:
 
 
 def test_ingest_job_events_stream_yields_stage_events(monkeypatch: Any) -> None:
+    import science_graphrag.api.ingest.router as ingest_router
     from science_graphrag.api import ingest_jobs as ingest_api
+    from science_graphrag.api.ingest.dto import IngestJobRecord
 
-    job = ingest_api.IngestJobRecord(
+    job = IngestJobRecord(
         job_id="22222222-2222-2222-2222-222222222222",
         workspace_id="ws1",
         filename="paper.pdf",
@@ -353,7 +356,7 @@ def test_ingest_job_events_stream_yields_stage_events(monkeypatch: Any) -> None:
         stages=[],
     )
     monkeypatch.setattr(
-        ingest_api, "_registry", lambda *_args, **_kwargs: type("R", (), {"get": lambda *_a: job})()
+        ingest_router, "_registry", lambda *_args, **_kwargs: type("R", (), {"get": lambda *_a: job})()
     )
 
     monkeypatch.setattr(
@@ -406,11 +409,11 @@ def test_ingest_job_events_stream_yields_stage_events(monkeypatch: Any) -> None:
 
 
 def test_ingest_job_events_stream_404_for_unknown_job(monkeypatch: Any) -> None:
-    from science_graphrag.api import ingest_jobs as ingest_api
+    import science_graphrag.api.ingest.router as ingest_router
 
     monkeypatch_registry = type("R", (), {"get": lambda *_a, **_k: None})
     monkeypatch.setattr(
-        ingest_api,
+        ingest_router,
         "_registry",
         lambda *_args, **_kwargs: monkeypatch_registry(),
     )

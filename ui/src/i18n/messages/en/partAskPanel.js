@@ -71,4 +71,10 @@ export default {
   "askPanel.toggleJson.hide": "Hide advanced JSON",
   "askPanel.toggleJson.show": "Show advanced JSON",
   "askPanel.flag.graphDegraded": "graph_context.degraded",
+  "askPanel.idea.loadingCandidates": "Generating hypothesis candidates...",
+  "askPanel.idea.noCandidates": "No candidates returned.",
+  "askPanel.idea.advisory": "Advisory only. Review with a domain expert before external use.",
+  "askPanel.idea.noveltyHint": "Novelty hint:",
+  "askPanel.idea.claims": "Claims:",
+  "askPanel.idea.contradictionCandidates": "Contradiction candidates",
 };

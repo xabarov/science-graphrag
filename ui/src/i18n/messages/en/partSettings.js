@@ -39,6 +39,14 @@ export default {
   "settings.page.saveError": "Failed to save settings.",
   "settings.page.removeKeyError": "Failed to remove API key.",
   "settings.page.connectionFailed": "Connection test failed.",
+  "settings.ingestion.title": "Workspace uploads",
+  "settings.ingestion.desc.p1":
+    "Maximum size for one PDF, Markdown, or plain-text file when adding a document to a workspace. Values above your reverse proxy limit (for example",
+  "settings.ingestion.desc.p2": "in nginx) still fail with HTTP 413 until the proxy is raised to match.",
+  "settings.ingestion.maxFileSizeLabel": "Max file size (MB)",
+  "settings.ingestion.rangeHint": "Allowed range: 1–2048 MB. Default from environment applies until you save here.",
+  "settings.ingestion.saveSaving": "Saving…",
+  "settings.ingestion.saveButton": "Save ingestion settings",
 
   "llm.summary.sourceServer": "API key: saved on server",
   "llm.summary.sourceEnv": "API key: from environment",

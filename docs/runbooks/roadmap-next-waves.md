@@ -6,6 +6,25 @@
 
 **Wave I–L** (UX/UI и dedup, см. [analysis/workspace-experience-gap-2026-04-24.md](../analysis/workspace-experience-gap-2026-04-24.md)) идут **параллельно** Wave E–H и **не блокируются** decision gate Wave A; зависимости между ними — внутри §6 анализа (I → J/K → L).
 
+## Wave Y1 — Done (2026-04-25)
+
+Foundation LangGraph/LangChain добавлен без изменения runtime-поведения агента (default остаётся `retrieval_v1`).
+
+- Installed packages (agent extra):
+  - `langgraph==0.2.76`
+  - `langchain-core==0.3.84`
+  - `langchain-openai==0.3.35`
+  - `openinference-instrumentation-langchain==0.1.63`
+- LangChain instrumentation implementation:
+  - `science_graphrag/observability/instrumentation.py`
+  - `science_graphrag/observability/init.py` (call inside `init_tracer_provider()` after provider registration)
+- Config/env/CI foundation updated:
+  - `.env.example` (Wave Y1 section)
+  - `science_graphrag/config.py` (`agent_runtime`, `agent_max_tool_calls`, `openrouter_base_url`)
+  - `.github/workflows/ci.yml`
+  - `.github/workflows/integration-nightly.yml`
+  - `.github/workflows/benchmark-reference.yml`
+
 ## Wave A — Phase 4: decision gate до устойчивого GO
 
 Без ключей LLM в `.env` (`MAIN_LLM_API_KEY` / `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*`) шаги 2–3 пропускаются; сводка агрегатора всё равно строится по последним закоммиченным `eval/results/current-*.json`.

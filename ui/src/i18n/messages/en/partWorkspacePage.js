@@ -25,8 +25,16 @@ export default {
   "workspace.header.paperCountMany": "{{count}} papers in this workspace.",
   "workspace.header.focusedPaper": "Focused paper:",
   "workspace.header.workspaceGraph": "Workspace graph",
+  "workspace.header.summarizing": "Summarizing...",
+  "workspace.header.summarizeAction": "Summarize this workspace",
+  "workspace.header.generatingHypotheses": "Generating...",
+  "workspace.header.generateHypotheses": "Generate hypotheses",
   "workspace.header.graphStatsLine":
     "Graph: {{works}} works · {{authors}} authors · {{internal}} internal cites · {{external}} external cites",
+  "workspace.summary.dialogTitle": "Workspace summary",
+  "workspace.summary.empty": "No summary yet.",
+  "workspace.idea.dialogTitle": "Hypothesis / contradiction assist",
+  "workspace.dialog.close": "Close",
 
   "workspace.upload.title": "Upload article",
   "workspace.upload.desc":

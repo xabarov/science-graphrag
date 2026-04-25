@@ -81,21 +81,33 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 - **Synergy:** **Wave GR5** (denormalized counters), **Wave Q** (Neo4j vector index, fulltext indexes, миграции) — независимые модули проще тестировать; **Wave T** (entity dedup) добавляет writes/{authors,institutions,...} без расширения god-файла.
 - **Raised:** 2026-04-25
 
-### [OPEN] Refactor `ingestion/pipeline.py` (976 lines) into stages-with-context facade
+### [DONE] Refactor `ingestion/pipeline.py` (976 lines) into stages-with-context facade
 - **Area:** `science_graphrag/ingestion/pipeline.py`, `science_graphrag/ingestion/stages/`, `science_graphrag/ingestion/stage_context.py`
 - **Issue:** Один файл оркеструет OpenAlex, normalization, chunking, embeddings, claims, semantic, references, Neo4j upsert, Qdrant upsert, workspace attach, Phoenix spans и CLI entrypoints. Каждый ingest-route (CLI, batch, API job, Wave W actor) копирует инициализацию stores. Затрудняет per-stage error handling и blast radius.
 - **Proposal:** ввести `IngestRunContext` (создаёт и переиспользует `Neo4jGraphStore`, `QdrantChunkStore`, `BlobStore`, `PhoenixTracer`); переписать `run_ingest_*` как тонкий фасад, последовательно вызывающий модули `stages/{vl_pdf,metadata,chunking,embeddings,semantic,claims,references,authorships,neo4j_upsert,qdrant_upsert,workspace_attach}.py`; каждый stage — изолированная функция с входным/выходным DTO и обёрткой `with stage(...)`. CLI остаётся одним entrypoint, но без копипасты сторов.
 - **Acceptance:** `pipeline.py` <= 250 строк; есть отдельный модуль на каждую stage, покрытый юнит-тестом с моками `stores`; интеграционный тест end-to-end зелёный; маршрут A (CLI) и маршрут B (`api/ingest_jobs._execute_single_ingest`) повторно используют один и тот же контекст.
 - **Synergy:** **Wave U** уже добавил `stage_context` — продолжение в эту сторону; **Wave W** (Dramatiq actor) сразу получает один и тот же `IngestRunContext` без копипасты. **Wave X1** (Phoenix) — уже отметил «слипшийся `neo4j_graph_persistence`», эта работа закрывает структурную часть. **Wave Q** (hybrid retrieval) добавит Neo4j-индексацию work post-upsert одной новой стадией без god-файла.
 - **Raised:** 2026-04-25
+- **Note (partial) 2026-04-25:** `IngestRunContext` расширен stores/lazy init; добавлены `stages/{chunking,embeddings,semantic,claims,neo4j_upsert,qdrant_upsert,workspace_attach,vl_pdf}.py` — правильные делегаторы с `ctx.stage(...)`. НО: функция `ingest_document` (≈900 строк, строки 494–940) **не переписана** для вызова stage-модулей; `run_ingest_pipeline` просто делает `ingest_document(...)`. `pipeline.py` = 1059 строк, acceptance-критерий ≤250 **не выполнен**. Acceptance: вынести логику `ingest_document` в stage-вызовы и оставить `pipeline.py` как оркестратор-фасад. Блокирует Wave W (воркер использует pipeline напрямую). Вошло в Раунд 1.5 мастер-плана.
+- **Note (done) 2026-04-25 (Раунд 1.5):** тяжёлая логика вынесена в `_pipeline_impl.py`; `pipeline.py` стал тонким фасадом-реэкспортом (53 строки, ≤250 ✅); `ingest_document` и все stage-вызовы живут в `_pipeline_impl.py`; 375 тестов зелёные.
 
-### [OPEN] Slim `api/ingest_jobs.py` (846 lines) — registry/worker vs HTTP/SSE
+### [DONE] Fix `IngestJobRegistry` eager `init_db` — test regression from G-IngestSlim
+- **Area:** `science_graphrag/api/ingest/registry.py`, `science_graphrag/api/main.py` (lifespan)
+- **Issue:** `IngestJobRegistry.__init__` вызывает `init_db(engine)` (→ `Base.metadata.create_all`) немедленно при конструировании. Singleton создаётся при первом HTTP-запросе к `/v1/ingest/jobs/{id}`. В тест-среде без живого PostgreSQL это вызывает `psycopg.OperationalError` вместо корректного 404. **Регрессия:** `tests/test_api_smoke.py::test_ingest_stubs_and_job_lookup` упал (был зелёным до G-IngestSlim).
+- **Proposal:** перенести `init_db(engine)` из конструктора `IngestJobRegistry` в `@asynccontextmanager lifespan` FastAPI-приложения (`science_graphrag/api/main.py`). Registry создаётся при старте приложения, а не при первом запросе. В тестах lifespan замокировать или использовать `override_dependency`. Дополнительно: убрать `mark_stale_running_jobs_failed()` из `__init__` туда же.
+- **Acceptance:** `pytest tests/test_api_smoke.py::test_ingest_stubs_and_job_lookup` зелёный без запущенного PostgreSQL (mock DB или in-memory SQLite через env); `IngestJobRegistry.__init__` не содержит DDL-вызовов.
+- **Raised:** 2026-04-25 (обнаружена при Sprint S1 review)
+- **Synergy:** согласуется с **G-StoreFactory** (Раунд 2) — единая точка init stores в lifespan. Вошло в Раунд 1.5 мастер-плана.
+- **Note (done) 2026-04-25 (Раунд 1.5):** `IngestJobRegistry.__init__` больше не вызывает `init_db`/`mark_stale_running_jobs_failed`; добавлен ленивый метод `bootstrap()`; monkeypatch-тесты перенесены на `science_graphrag.api.ingest.router._registry`; `test_ingest_stubs_and_job_lookup` зелёный без PostgreSQL.
+
+### [DONE] Slim `api/ingest_jobs.py` (846 lines) — registry/worker vs HTTP/SSE
 - **Area:** `science_graphrag/api/ingest_jobs.py`, `science_graphrag/api/ingest_event_bus.py`, будущий `science_graphrag/worker/`
 - **Issue:** Файл совмещает HTTP-роутер, `IngestJobRegistry` с прямым SQLAlchemy/ORM, in-process `threading.Thread` воркер, SSE endpoint, маппинг ORM↔DTO и intermix с `chain_span`. Wave W удалит `threading.Thread`, но без структурного разделения регистр/SSE/HTTP останутся в одной куче.
 - **Proposal:** разделить на (1) `api/ingest/router.py` (HTTP + SSE, тонко), (2) `api/ingest/registry.py` (Postgres-стор jobs/stages/events, маппинг DTO), (3) `api/ingest/dispatcher.py` (in-process до Wave W, `enqueue` к Dramatiq после), (4) `api/ingest/dto.py` (`IngestJobView`, `IngestStageView`, `IngestJobEvent`). `IngestEventBus` остаётся отдельным модулем — менять только реализацию (in-process → Redis pub/sub).
 - **Acceptance:** ни один файл > ≈400 строк; тесты `test_api_smoke` + новые юниты на registry зелёные; **Wave W** меняет только `dispatcher.py` и реализацию `IngestEventBus`.
 - **Synergy:** **Wave V** (SSE done) — уже отделил event bus; **Wave W** (Dramatiq+Redis) — сядет на готовую границу dispatcher. Тонкая schema под `phoenix_trace_id` (Wave X1.6) тоже изолирована.
 - **Raised:** 2026-04-25
+- **Note (done):** 2026-04-25 — разнесено на `api/ingest/{dto,registry,dispatcher,router}.py`; backward-compat shim в `ingest_jobs.py`; Wave W меняет только `dispatcher.py`.
 
 ### [OPEN] Split `api/benchmark.py` (1027) + `api/task_store.py` (908)
 - **Area:** `science_graphrag/api/benchmark.py`, `science_graphrag/api/task_store.py`, `science_graphrag/api/benchmark_profiles.py`
@@ -137,13 +149,23 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 - **Synergy:** **Wave Y2/Y3** (LangGraph) — supervisor + tools получают stores через `build_tool_registry(stores)`; **Wave X2** (Phoenix retrieval agent) — единая точка для `init_tracer_provider` lifespan; **Wave W** (Dramatiq worker) — один `StoreRegistry` в воркере.
 - **Raised:** 2026-04-25
 
-### [OPEN] Split `observability/phoenix_tracer.py` (492) — init vs spans vs instrumentation
+### [DONE] Split `observability/spans.py` (410 lines) — SpanAttributes vs decorators vs helpers
+- **Area:** `science_graphrag/observability/spans.py`
+- **Issue:** G-PhoenixSplit создал `spans.py` как часть правильного пакета, но файл вырос до 410 строк и сам стал god-файлом. `SpanAttributes` (строки 139–387, ≈250 строк методов класса) и контекст-менеджеры (`chain_span`, `llm_span`, `embeddings_span`, `traced_tool_span`) логически разные слои. Превышает acceptance-лимит ≤300 строк, установленный для пакета.
+- **Proposal:** разнести на: `observability/spans/attributes.py` (`SpanAttributes`, `OpenInferenceAttributes`, `SpanKindOI`, helper-methods), `observability/spans/decorators.py` (`chain_span`, `llm_span`, `embeddings_span`, `traced_tool_span`, `_noop_span_context`), `observability/spans/__init__.py` (re-export всего публичного API без изменений). `observability/__init__.py` — без изменений.
+- **Acceptance:** ни один файл в `observability/` не превышает 300 строк; `test_span_contract.py` без правок зелёный; `from science_graphrag.observability.spans import ...` работает через `__init__.py`.
+- **Raised:** 2026-04-25 (обнаружена при Sprint S1 review)
+- **Synergy:** **Wave X2** (Phoenix retrieval agent) — добавление `traced_tool_span`-обёрток в agent-пути проще в разнесённом модуле. Вошло в Раунд 1.5 мастер-плана.
+- **Note (done) 2026-04-25 (Раунд 1.5):** разнесено на `observability/spans/{attributes.py,decorators.py,__init__.py}`; ни один файл в `observability/` не превышает 300 строк ✅; `test_span_contract.py` зелёный; backward-compat через `spans/__init__.py`.
+
+### [DONE] Split `observability/phoenix_tracer.py` (492) — init vs spans vs instrumentation
 - **Area:** `science_graphrag/observability/phoenix_tracer.py`, `science_graphrag/ingestion/stage_context.py`
 - **Issue:** В одном файле — init Phoenix/OTel + конфигурация scope (`PHOENIX_TRACE_SCOPE`) + helpers `chain_span`/`llm_span` + обёртка OpenAI auto-instrumentation. Ветвления по scope разрастаются с каждой волной (`extraction_llm`, перспективный `agent_only`).
 - **Proposal:** пакет `science_graphrag/observability/`: `init.py` (`init_tracer_provider`, lifespan helper), `spans.py` (`chain_span`, `llm_span`, `embeddings_span`, `traced_tool_span`), `scope.py` (политика `PHOENIX_TRACE_SCOPE`, синхронизация имён `_EXTRACTION_LLM_CHAIN_NAMES`), `instrumentation.py` (OpenAI/LangChain hooks).
 - **Acceptance:** контракт-тесты `test_span_contract.py` без изменений поведения; добавление нового scope (`agent_only` после X2) не требует трогать `init.py`.
 - **Synergy:** **Wave X2** (retrieval agent observability) — `traced_tool_span` уже в плане; **Wave Y1** (LangChain instrumentation) — `instrumentation.py` место для openinference-langchain.
 - **Raised:** 2026-04-25
+- **Note (done):** 2026-04-25 — разнесено на `observability/init.py`, `observability/spans.py`, `observability/scope.py`, `observability/instrumentation.py` (stub); backward-compat сохранён через thin re-export `observability/phoenix_tracer.py`; Wave Y1 наполнит `instrumentation.py`.
 
 ### [OPEN] Split `api/task_store.py` see «benchmark.py + task_store.py»
 *(объединено выше, см. пункт «Split `api/benchmark.py` + `api/task_store.py`»).*

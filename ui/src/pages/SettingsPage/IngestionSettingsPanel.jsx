@@ -6,6 +6,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 
 import { CursorPrimaryButton } from "../../components/common/index.js";
+import { useI18n } from "../../i18n/I18nContext.jsx";
 
 const FIELD_SX = {
   "& .MuiInputBase-root": {
@@ -34,6 +35,7 @@ function IngestionSettingsPanelForm({
   onSave,
   onDirtyChange,
 }) {
+  const { t } = useI18n();
   const [maxMb, setMaxMb] = useState(String(resolved));
 
   const parsed = Number(maxMb);
@@ -65,14 +67,13 @@ function IngestionSettingsPanelForm({
         maxWidth: 560,
       }}
     >
-      <Typography sx={{ fontSize: "0.875rem", fontWeight: 600 }}>Workspace uploads</Typography>
+      <Typography sx={{ fontSize: "0.875rem", fontWeight: 600 }}>{t("settings.ingestion.title")}</Typography>
       <Typography sx={{ marginTop: 1, fontSize: "0.8125rem", color: "rgba(255,255,255,0.58)", lineHeight: 1.6 }}>
-        Maximum size for one PDF, Markdown, or plain-text file when adding a document to a workspace. Values above
-        your reverse proxy limit (for example{" "}
+        {t("settings.ingestion.desc.p1")}{" "}
         <Typography component="span" sx={{ fontFamily: "ui-monospace, monospace", fontSize: "0.78rem" }}>
           client_max_body_size
         </Typography>{" "}
-        in nginx) still fail with HTTP 413 until the proxy is raised to match.
+        {t("settings.ingestion.desc.p2")}
       </Typography>
 
       {saveError ? (
@@ -89,7 +90,7 @@ function IngestionSettingsPanelForm({
       ) : null}
 
       <TextField
-        label="Max file size (MB)"
+        label={t("settings.ingestion.maxFileSizeLabel")}
         type="number"
         value={maxMb}
         onChange={(e) => setMaxMb(e.target.value)}
@@ -99,12 +100,12 @@ function IngestionSettingsPanelForm({
         required
       />
       <FormHelperText sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.75rem", marginTop: 0.75 }}>
-        Allowed range: 1–2048 MB. Default from environment applies until you save here.
+        {t("settings.ingestion.rangeHint")}
       </FormHelperText>
 
       <Box sx={{ marginTop: 2.5, display: "flex", gap: 1.5, flexWrap: "wrap" }}>
         <CursorPrimaryButton type="submit" disabled={saving || !dirty || !inRange}>
-          {saving ? "Saving…" : "Save ingestion settings"}
+          {saving ? t("settings.ingestion.saveSaving") : t("settings.ingestion.saveButton")}
         </CursorPrimaryButton>
       </Box>
     </Box>

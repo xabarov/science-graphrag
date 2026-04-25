@@ -30,6 +30,7 @@ from science_graphrag.api.benchmark import router as benchmark_router
 from science_graphrag.api.idea_assist import router as idea_assist_router
 from science_graphrag.api.ingest_event_bus import BUS
 from science_graphrag.api.ingest_jobs import router as ingest_router
+from science_graphrag.api.ingest.registry import _registry
 from science_graphrag.api.retrieval import GroundedAnswer, answer_query
 from science_graphrag.api.settings import router as settings_router
 from science_graphrag.api.workspace_dedup import router as workspace_dedup_router
@@ -44,6 +45,7 @@ from science_graphrag.storage.qdrant_store import QdrantChunkStore, QdrantWorkEm
 async def _app_lifespan(_app: FastAPI):
     init_tracer_provider()
     BUS.attach_loop(asyncio.get_running_loop())
+    _registry(get_settings()).bootstrap()
     yield
 
 

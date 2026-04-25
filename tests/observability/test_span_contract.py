@@ -9,6 +9,7 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanE
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.vl_pdf import VLPDFProcessor
 from science_graphrag.observability import phoenix_tracer
+from science_graphrag.observability import spans as observability_spans
 from science_graphrag.observability.phoenix_tracer import SpanAttributes, chain_span
 
 
@@ -44,6 +45,7 @@ def _span_fixture(monkeypatch):
     provider.add_span_processor(SimpleSpanProcessor(exporter))
     tracer = provider.get_tracer("test-phoenix")
     monkeypatch.setattr(phoenix_tracer, "get_tracer", lambda name="science-graphrag": tracer)
+    monkeypatch.setattr(observability_spans, "get_tracer", lambda name="science-graphrag": tracer)
     return exporter
 
 

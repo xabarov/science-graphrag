@@ -448,11 +448,11 @@ export default function WorkspacePage() {
                 {t("workspace.header.workspaceGraph")}
               </CursorSmallButton>
               <CursorSmallButton onClick={handleSummarizeWorkspace} disabled={summaryBusy}>
-                {summaryBusy ? "Summarizing..." : "Summarize this workspace"}
+                {summaryBusy ? t("workspace.header.summarizing") : t("workspace.header.summarizeAction")}
               </CursorSmallButton>
               {canUseIdeaAssist ? (
                 <CursorSmallButton onClick={handleGenerateHypotheses} disabled={ideaBusy}>
-                  {ideaBusy ? "Generating..." : "Generate hypotheses"}
+                  {ideaBusy ? t("workspace.header.generatingHypotheses") : t("workspace.header.generateHypotheses")}
                 </CursorSmallButton>
               ) : null}
             </Box>
@@ -501,18 +501,18 @@ export default function WorkspacePage() {
         </>
       )}
       <Dialog open={summaryOpen} onClose={() => setSummaryOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Workspace summary</DialogTitle>
+        <DialogTitle>{t("workspace.summary.dialogTitle")}</DialogTitle>
         <DialogContent>
           <Typography sx={{ whiteSpace: "pre-wrap", fontSize: "0.875rem" }}>
-            {summaryText || "No summary yet."}
+            {summaryText || t("workspace.summary.empty")}
           </Typography>
         </DialogContent>
         <DialogActions>
-          <CursorPrimaryButton onClick={() => setSummaryOpen(false)}>Close</CursorPrimaryButton>
+          <CursorPrimaryButton onClick={() => setSummaryOpen(false)}>{t("workspace.dialog.close")}</CursorPrimaryButton>
         </DialogActions>
       </Dialog>
       <Dialog open={ideaOpen} onClose={() => setIdeaOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>Hypothesis / contradiction assist</DialogTitle>
+        <DialogTitle>{t("workspace.idea.dialogTitle")}</DialogTitle>
         <DialogContent>
           <HypothesisPanel
             hypotheses={ideaResult.hypotheses}
@@ -523,7 +523,7 @@ export default function WorkspacePage() {
           />
         </DialogContent>
         <DialogActions>
-          <CursorPrimaryButton onClick={() => setIdeaOpen(false)}>Close</CursorPrimaryButton>
+          <CursorPrimaryButton onClick={() => setIdeaOpen(false)}>{t("workspace.dialog.close")}</CursorPrimaryButton>
         </DialogActions>
       </Dialog>
     </Box>
