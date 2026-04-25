@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/holdout_deformable_detr_v1",
+  "pack_path": "tests/fixtures/benchmarks/claims/holdout_deformable_detr_v1",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T20:44:32.928709+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "polarity_flips=1, unmatched_a_ratio=0.50 (gate: polarity_flips ≥ 1 OR unmatched_a_ratio ≥ 0.30)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/claims/holdout_deformable_detr_v1/gold.json",
+    "count": 4,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-extracted)",
+    "count": 8,
+    "model": "anthropic/claude-sonnet-4.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:29bebb3dc3f891336110c6a3c201404c6d395acd9682c812b5fa6d19d8a937fb",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 16545,
+      "completion": 920,
+      "total": 17465
+    },
+    "latency_ms": 15326
+  },
+  "summary": {
+    "a_total": 4,
+    "b_total": 8,
+    "matched": 2,
+    "matched_lexical": 2,
+    "matched_embedding": 0,
+    "unmatched_a": 2,
+    "unmatched_b": 6,
+    "field_agreements": {
+      "polarity": {
+        "agreed": 1,
+        "disagreed": 1
+      },
+      "claim_type": {
+        "agreed": 1,
+        "disagreed": 1
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_claim_id": "deformable_detr_10x_faster_convergence",
+      "b_index": 0,
+      "match_score": 0.578,
+      "match_source": "lexical",
+      "a_claim_text_normalized": "Deformable DETR converges roughly ten times faster than the original DETR while achieving better detection performance, particularly on small objects.",
+      "b_claim_text_normalized": "Deformable DETR achieves better detection performance than DETR with 10 times fewer training epochs.",
+      "field_disagreements": [
+        {
+          "field": "claim_type",
+          "a": "performance",
+          "b": "comparison"
+        }
+      ]
+    },
+    {
+      "a_claim_id": "deformable_detr_multiscale_efficient",
+      "b_index": 5,
+      "match_score": 0.381,
+      "match_source": "lexical",
+      "a_claim_text_normalized": "Multi-scale deformable attention naturally handles small objects efficiently without resorting to a separately constructed multi-scale feature pyramid head.",
+      "b_claim_text_normalized": "Adding FPN on top of multi-scale deformable attention does not improve detection performance.",
+      "field_disagreements": [
+        {
+          "field": "polarity",
+          "a": "positive",
+          "b": "negative"
+        }
+      ]
+    }
+  ],
+  "unmatched_a": [
+    {
+      "a_claim_id": "deformable_detr_attention_modules",
+      "a_claim_text_normalized": "Deformable DETR replaces dense attention with deformable attention modules that attend to a small set of sampling points per query, reducing computational complexity.",
+      "a_polarity": "positive",
+      "a_claim_type": "method",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "deformable_detr_global_attention_negative",
+      "a_claim_text_normalized": "Standard global self-attention used in DETR results in slow convergence and quadratic memory cost when applied to multi-scale features.",
+      "a_polarity": "negative",
+      "a_claim_type": "limitation",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "b_index": 1,
+      "b_claim_text_normalized": "DETR requires 500 epochs to converge, which is 10 to 20 times slower than Faster R-CNN.",
+      "b_polarity": "negative",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 2,
+      "b_claim_text_normalized": "The Transformer encoder self-attention in DETR has quadratic computational complexity with respect to the spatial size of feature maps.",
+      "b_polarity": "negative",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 3,
+      "b_claim_text_normalized": "Deformable DETR with iterative bounding box refinement and two-stage paradigm achieves 46.2 AP on COCO 2017 val set in 50 epochs.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 4,
+      "b_claim_text_normalized": "Using multi-scale inputs instead of single-scale inputs improves detection accuracy by 1.7% AP, especially on small objects with 2.9% APS improvement.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 6,
+      "b_claim_text_normalized": "Deformable DETR with ResNeXt-101 and DCN using test-time augmentations achieves 52.3 AP on COCO 2017 test-dev.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 7,
+      "b_claim_text_normalized": "The deformable attention module has linear complexity with spatial size when applied in the encoder, compared to quadratic complexity of standard Transformer attention.",
+      "b_polarity": "positive",
+      "b_claim_type": "method",
+      "comment": "produced by independent extractor B but not in human gold A"
+    }
+  ]
+}

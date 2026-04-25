@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "pack_id": "live_03_yolov3_speed_paper_only",
+  "pack_path": "tests/fixtures/benchmarks/agent_tools_v1/live_03_yolov3_speed_paper_only",
+  "layer": "agent_tools_live",
+  "generated_at_utc": "2026-04-25T20:51:06.354961+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "tool_req_recall=1.00, works=0.00, methods=0.00 (gate)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/agent_tools_v1/live_03_yolov3_speed_paper_only/gold.json",
+    "count": 2,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "question.txt | tool_set=7",
+    "count": 6,
+    "model": "anthropic/claude-sonnet-4.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:b84040b1b1f291d9035fb35e3593c9008bd96077be9a12ab477bf64b680f3d12",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 461,
+      "completion": 187,
+      "total": 648
+    },
+    "latency_ms": 4262
+  },
+  "summary": {
+    "a_total": 2,
+    "b_total": 6,
+    "matched": 1,
+    "matched_lexical": 1,
+    "matched_embedding": 0,
+    "unmatched_a": 1,
+    "unmatched_b": 5,
+    "tool_metrics": {
+      "required_recall": 1.0,
+      "all_recall": 1.0,
+      "missing_required": [],
+      "extra_tools_in_b": [
+        "cypher_query",
+        "entity_search",
+        "final_answer"
+      ]
+    },
+    "works_jaccard": 0.0,
+    "methods_jaccard": 0.0,
+    "answer_token_jaccard": 0.406,
+    "is_negative_case": false,
+    "behavior_agreement": true,
+    "behavior_a": "answer",
+    "behavior_b": "answer"
+  },
+  "matched_pairs": [
+    {
+      "tool_name": "vector_search",
+      "kind": "required_tool_match",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [
+    {
+      "corpus_work_id": "yolov3_realpdf",
+      "kind": "expected_work_missing_in_b"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "tool_name": "cypher_query",
+      "kind": "extra_tool_in_b"
+    },
+    {
+      "tool_name": "entity_search",
+      "kind": "extra_tool_in_b"
+    },
+    {
+      "tool_name": "final_answer",
+      "kind": "extra_tool_in_b"
+    },
+    {
+      "corpus_work_id": "yolov3",
+      "kind": "extra_work_in_b"
+    },
+    {
+      "method_canonical": "yolov3",
+      "kind": "extra_method_in_b"
+    }
+  ]
+}

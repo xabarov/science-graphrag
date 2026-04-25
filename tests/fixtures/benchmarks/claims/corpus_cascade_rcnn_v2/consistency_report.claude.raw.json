@@ -1,0 +1,48 @@
+```json
+{
+  "claims": [
+    {
+      "claim_text_normalized": "Cascade R-CNN achieves 42.8 AP on COCO test-dev, outperforming all single-model detectors by a large margin.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "the Cascade R-CNN is shown to surpass all single-model object detectors on the challenging COCO dataset"
+    },
+    {
+      "claim_text_normalized": "Cascade R-CNN consistently improves over baseline detectors by 2 to 4 AP points regardless of baseline strength.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "the Cascade R-CNN improves on these baselines consistently by 2∼4 points, independently of their strength"
+    },
+    {
+      "claim_text_normalized": "Iterative bounding box regression degrades localization for high-IoU hypotheses when applied multiple times.",
+      "claim_type": "finding",
+      "polarity": "negative",
+      "evidence_quote_short": "performance actually drops. Note the very poor performance of iterative BBox after 3 iterations."
+    },
+    {
+      "claim_text_normalized": "Training a detector with a high IoU threshold alone degrades detection performance due to exponentially fewer positive training samples.",
+      "claim_type": "finding",
+      "polarity": "negative",
+      "evidence_quote_short": "forcing larger IoU thresholds leads to an exponentially smaller numbers of positive training samples... makes the 'high u' training strategy quite prone to overfitting"
+    },
+    {
+      "claim_text_normalized": "The integral loss detector ensemble shows no visible gain over individual classifiers and fails to achieve higher accuracy at most quality levels.",
+      "claim_type": "comparison",
+      "polarity": "negative",
+      "evidence_quote_short": "The ensemble of all classifiers shows no visible gain... the ensemble of (6) fails to achieve higher accuracy at most quality levels"
+    },
+    {
+      "claim_text_normalized": "Each bounding box regressor in Cascade R-CNN performs best for input proposals whose IoU is close to the threshold used during training.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "each bounding box regressor performs best for examples of IoU close to the threshold that the detector was trained"
+    },
+    {
+      "claim_text_normalized": "Cascade R-CNN resampling progressively shifts the hypothesis distribution toward higher IoU, keeping positive example counts roughly constant across stages.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "it is possible to keep the set of positive examples of the successive stages at a roughly constant size, even when the detector quality (IoU threshold) is increased"
+    }
+  ]
+}
+```

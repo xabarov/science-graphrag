@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "pack_id": "contradictions_v1/pair_04_faster_rcnn_vs_detr",
+  "pack_path": "tests/fixtures/benchmarks/contradictions_v1/pair_04_faster_rcnn_vs_detr",
+  "layer": "contradictions_v1",
+  "generated_at_utc": "2026-04-25T20:49:30.708486+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "B confirmed contradiction but contradiction_type differs from gold",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/contradictions_v1/pair_04_faster_rcnn_vs_detr/gold.json",
+    "count": 1,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article_a.md + article_b.md (paired)",
+    "count": 1,
+    "model": "anthropic/claude-sonnet-4.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:8a3f3564cd0759194cf8318af3d84e0d95c764862b2837a98923b9ac24168df5",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 16540,
+      "completion": 267,
+      "total": 16807
+    },
+    "latency_ms": 7583
+  },
+  "summary": {
+    "a_total": 1,
+    "b_total": 1,
+    "matched": 1,
+    "matched_lexical": 1,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "field_agreements": {
+      "contradiction_type": {
+        "agreed": 0,
+        "disagreed": 1
+      },
+      "severity": {
+        "agreed": 1,
+        "disagreed": 0
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "pair_id": "c04_nms_required_vs_set_prediction",
+      "match_score": 0.204,
+      "match_source": "lexical",
+      "claim_a_score": 0.204,
+      "claim_b_score": 0.217,
+      "field_disagreements": [
+        {
+          "field": "contradiction_type",
+          "a": "post_processing",
+          "b": "design_paradigm"
+        }
+      ],
+      "a_claim_a_text": "Non-maximum suppression is required to remove duplicate detections produced by overlapping anchor predictions.",
+      "b_claim_a_text": "Faster R-CNN uses anchor boxes as a key design component for region proposal and detection, treating them as essential references for multi-scale prediction.",
+      "a_claim_b_text": "Bipartite matching between predictions and ground truth removes the need for non-maximum suppression at inference time.",
+      "b_claim_b_text": "DETR removes the need for anchor generation entirely, treating anchors as hand-designed components that encode prior knowledge and complicate the detection pipeline."
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": []
+}

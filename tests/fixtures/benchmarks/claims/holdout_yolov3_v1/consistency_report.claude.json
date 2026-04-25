@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/holdout_yolov3_v1",
+  "pack_path": "tests/fixtures/benchmarks/claims/holdout_yolov3_v1",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T20:45:19.974242+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "polarity_flips=1, unmatched_a_ratio=0.25 (gate: polarity_flips ≥ 1 OR unmatched_a_ratio ≥ 0.30)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/claims/holdout_yolov3_v1/gold.json",
+    "count": 4,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-extracted)",
+    "count": 7,
+    "model": "anthropic/claude-sonnet-4.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:a7d1042af9737ab690c62bf320a1ac7568d329ba07835ff6a68b25bec2834864",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 8199,
+      "completion": 836,
+      "total": 9035
+    },
+    "latency_ms": 20126
+  },
+  "summary": {
+    "a_total": 4,
+    "b_total": 7,
+    "matched": 3,
+    "matched_lexical": 1,
+    "matched_embedding": 2,
+    "unmatched_a": 1,
+    "unmatched_b": 4,
+    "field_agreements": {
+      "polarity": {
+        "agreed": 2,
+        "disagreed": 1
+      },
+      "claim_type": {
+        "agreed": 3,
+        "disagreed": 0
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_claim_id": "yolov3_speed_vs_retinanet",
+      "b_index": 1,
+      "match_score": 0.867,
+      "match_source": "embedding",
+      "a_claim_text_normalized": "On COCO, YOLOv3 achieves an AP at IoU 0.5 comparable to RetinaNet while running roughly 3.8 times faster.",
+      "b_claim_text_normalized": "YOLOv3 achieves 57.9 AP50 in 51 ms compared to RetinaNet's 57.5 AP50 in 198 ms, making it 3.8× faster at similar performance.",
+      "field_disagreements": []
+    },
+    {
+      "a_claim_id": "yolov3_strict_iou_underperform_negative",
+      "b_index": 2,
+      "match_score": 0.756,
+      "match_source": "embedding",
+      "a_claim_text_normalized": "YOLOv3 underperforms RetinaNet on the strict AP at higher IoU thresholds for medium and large objects despite being significantly faster.",
+      "b_claim_text_normalized": "YOLOv3 performance drops significantly as the IOU threshold increases, indicating it struggles to align boxes precisely with objects.",
+      "field_disagreements": []
+    },
+    {
+      "a_claim_id": "yolov3_three_scale_predictions",
+      "b_index": 5,
+      "match_score": 0.641,
+      "match_source": "lexical",
+      "a_claim_text_normalized": "YOLOv3 predicts bounding boxes at three different scales using a feature pyramid built on a Darknet-53 backbone.",
+      "b_claim_text_normalized": "YOLOv3 predicts boxes at 3 different scales using a concept similar to feature pyramid networks.",
+      "field_disagreements": [
+        {
+          "field": "polarity",
+          "a": "positive",
+          "b": "neutral"
+        }
+      ]
+    }
+  ],
+  "unmatched_a": [
+    {
+      "a_claim_id": "yolov3_logistic_per_class",
+      "a_claim_text_normalized": "Independent logistic classifiers for each class allow YOLOv3 to handle multi-label data, replacing the softmax used in earlier YOLO versions.",
+      "a_polarity": "positive",
+      "a_claim_type": "design_choice",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "b_index": 0,
+      "b_claim_text_normalized": "At 320×320, YOLOv3 runs in 22 ms at 28.2 mAP, as accurate as SSD but three times faster.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 3,
+      "b_claim_text_normalized": "Darknet-53 is better than ResNet-101 and 1.5× faster, while achieving similar performance to ResNet-152 at 2× the speed.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 4,
+      "b_claim_text_normalized": "Using focal loss dropped YOLOv3's mAP by about 2 points.",
+      "b_polarity": "negative",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 6,
+      "b_claim_text_normalized": "With multi-scale predictions, YOLOv3 shows improved small object detection performance compared to previous YOLO versions.",
+      "b_polarity": "positive",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    }
+  ]
+}

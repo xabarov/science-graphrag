@@ -1,0 +1,48 @@
+```json
+{
+  "claims": [
+    {
+      "claim_text_normalized": "The essential difference between anchor-based and anchor-free detectors is how positive and negative training samples are defined.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "the essential difference between anchor-based and anchor-free detection is actually how to define positive and negative training samples, which leads to the performance gap between them"
+    },
+    {
+      "claim_text_normalized": "When anchor-based and anchor-free detectors use the same positive/negative sample definition, there is no obvious performance difference regardless of regression starting status.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "there is no obvious difference in the final performance, no matter regressing from a box or a point"
+    },
+    {
+      "claim_text_normalized": "ATSS improves RetinaNet (#A=1) by 2.3% AP by adaptively selecting positive samples based on statistical characteristics of objects.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "it consistently boosts the performance by 2.3% on AP, 2.4% on AP50, 2.9% for AP75, 2.9% for APS, 2.1% for APM and 2.7% for APL"
+    },
+    {
+      "claim_text_normalized": "ATSS achieves state-of-the-art 50.7% AP on MS COCO test-dev without introducing any additional overhead.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "we improve state-of-the-art detectors by a large margin to 50.7% AP without introducing any overhead"
+    },
+    {
+      "claim_text_normalized": "Tiling multiple anchors per location is a useless operation when positive samples are selected appropriately with ATSS.",
+      "claim_type": "finding",
+      "polarity": "negative",
+      "evidence_quote_short": "as long as the positive samples are selected appropriately, no matter how many anchors are tiled at each location, the results are the same"
+    },
+    {
+      "claim_text_normalized": "The ATSS hyperparameter k is robust to variations in the range 7 to 17, making the method nearly hyperparameter-free.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "the proposed method is quite insensitive to the variations of k from 7 to 17"
+    },
+    {
+      "claim_text_normalized": "ATSS with ResNet-101 achieves 43.6% AP on MS COCO test-dev, outperforming Cascade R-CNN with the same backbone.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "our method with ResNet-101 achieves 43.6% AP without any bells and whistles, which is better than all the methods with the same backbone including Cascade R-CNN (42.8% AP)"
+    }
+  ]
+}
+```

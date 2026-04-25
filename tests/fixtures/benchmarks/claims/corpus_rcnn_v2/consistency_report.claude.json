@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/corpus_rcnn_v2",
+  "pack_path": "tests/fixtures/benchmarks/claims/corpus_rcnn_v2",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T20:42:35.778282+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "polarity_flips=0, unmatched_a_ratio=0.75 (gate: polarity_flips ≥ 1 OR unmatched_a_ratio ≥ 0.30)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/claims/corpus_rcnn_v2/gold.json",
+    "count": 4,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-extracted)",
+    "count": 8,
+    "model": "anthropic/claude-sonnet-4.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:674fba380db62797f11afd9845702bcda8f14965687f61406385941ea18bc96b",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 20627,
+      "completion": 955,
+      "total": 21582
+    },
+    "latency_ms": 16729
+  },
+  "summary": {
+    "a_total": 4,
+    "b_total": 8,
+    "matched": 1,
+    "matched_lexical": 1,
+    "matched_embedding": 0,
+    "unmatched_a": 3,
+    "unmatched_b": 7,
+    "field_agreements": {
+      "polarity": {
+        "agreed": 1,
+        "disagreed": 0
+      },
+      "claim_type": {
+        "agreed": 1,
+        "disagreed": 0
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_claim_id": "rcnn_voc_30pct_relative_gain",
+      "b_index": 0,
+      "match_score": 0.657,
+      "match_source": "lexical",
+      "a_claim_text_normalized": "R-CNN improves mean average precision on PASCAL VOC 2010 by more than 30 percent relative to the previous best result.",
+      "b_claim_text_normalized": "R-CNN improves mAP by more than 30% relative to the previous best result on VOC 2012, achieving a mAP of 53.3%.",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [
+    {
+      "a_claim_id": "rcnn_inference_2k_proposals_slow_negative",
+      "a_claim_text_normalized": "R-CNN is slow at inference because it forwards each of approximately two thousand region proposals through the convolutional network independently.",
+      "a_polarity": "negative",
+      "a_claim_type": "limitation",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "rcnn_pretrain_finetune_recipe",
+      "a_claim_text_normalized": "Supervised pre-training on ImageNet classification followed by domain-specific fine-tuning on detection enables training large CNNs with limited labeled detection data.",
+      "a_polarity": "positive",
+      "a_claim_type": "design_choice",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "rcnn_region_proposals_with_cnn_features",
+      "a_claim_text_normalized": "R-CNN combines bottom-up region proposals with rich features extracted by a convolutional neural network for accurate object detection.",
+      "a_polarity": "positive",
+      "a_claim_type": "method",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "b_index": 1,
+      "b_claim_text_normalized": "R-CNN achieves a mAP of 31.4% on ILSVRC2013, outperforming OverFeat which achieved 24.3%.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 2,
+      "b_claim_text_normalized": "Fine-tuning the CNN for detection improves mAP by 8 percentage points.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 3,
+      "b_claim_text_normalized": "R-CNN's mAP of 54% on VOC 2010 substantially exceeds the HOG-based DPM which achieves 33% mAP.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 4,
+      "b_claim_text_normalized": "CNN features from fc7 generalize worse than features from fc6 without fine-tuning, meaning 29% of CNN parameters can be removed without degrading mAP.",
+      "b_polarity": "neutral",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 5,
+      "b_claim_text_normalized": "Bounding-box regression boosts mAP by 3 to 4 points by fixing a large number of mislocalized detections.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 6,
+      "b_claim_text_normalized": "OverFeat is approximately 9 times faster than R-CNN due to shared computation over sliding windows.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 7,
+      "b_claim_text_normalized": "Selective search on ILSVRC val images achieves only 91.6% recall of ground-truth bounding boxes, notably lower than the approximately 98% recall on PASCAL.",
+      "b_polarity": "negative",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    }
+  ]
+}

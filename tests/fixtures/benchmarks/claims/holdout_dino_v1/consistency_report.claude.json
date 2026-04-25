@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/holdout_dino_v1",
+  "pack_path": "tests/fixtures/benchmarks/claims/holdout_dino_v1",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T20:44:55.922887+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "polarity_flips=0, unmatched_a_ratio=0.80 (gate: polarity_flips ≥ 1 OR unmatched_a_ratio ≥ 0.30)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/claims/holdout_dino_v1/gold.json",
+    "count": 5,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-extracted)",
+    "count": 8,
+    "model": "anthropic/claude-sonnet-4.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:4606dd7f50d41d76003bf476477a643b3cecdfebcda80f5dcff004dd1989963d",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 18648,
+      "completion": 929,
+      "total": 19577
+    },
+    "latency_ms": 19198
+  },
+  "summary": {
+    "a_total": 5,
+    "b_total": 8,
+    "matched": 1,
+    "matched_lexical": 0,
+    "matched_embedding": 1,
+    "unmatched_a": 4,
+    "unmatched_b": 7,
+    "field_agreements": {
+      "polarity": {
+        "agreed": 1,
+        "disagreed": 0
+      },
+      "claim_type": {
+        "agreed": 1,
+        "disagreed": 0
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_claim_id": "dino_swinl_63ap",
+      "b_index": 2,
+      "match_score": 0.841,
+      "match_source": "embedding",
+      "a_claim_text_normalized": "DINO achieves around 63 AP on COCO 2017 val with a Swin-L backbone, setting a new state of the art for object detection at the time of publication.",
+      "b_claim_text_normalized": "DINO with SwinL backbone pre-trained on Objects365 achieves 63.2 AP on COCO val2017 and 63.3 AP on test-dev.",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [
+    {
+      "a_claim_id": "dino_classical_pipelines_scaling_negative",
+      "a_claim_text_normalized": "Classical multi-stage detectors do not benefit as much from very large backbones and large-scale pre-training as DETR-style detectors, limiting their ability to scale to the latest state-of-the-art accuracy.",
+      "a_polarity": "negative",
+      "a_claim_type": "comparison",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "dino_detr_scaling_overcomes_classical",
+      "a_claim_text_normalized": "End-to-end DETR-like detectors outperform classical detectors when scaled with proper backbones and pre-training, contrary to earlier results that favored classical pipelines.",
+      "a_polarity": "positive",
+      "a_claim_type": "finding",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "dino_earlier_detr_slow_small_obj_negative",
+      "a_claim_text_normalized": "Earlier DETR-like detectors converge slowly and underperform on small objects, problems addressed by query denoising and mixed query selection in DINO.",
+      "a_polarity": "negative",
+      "a_claim_type": "limitation",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "dino_three_components",
+      "a_claim_text_normalized": "DINO upgrades DETR-style detectors via three pieces: a contrastive denoising training objective, a hybrid query selection used to seed anchors, and a refined two-step look-ahead box update.",
+      "a_polarity": "positive",
+      "a_claim_type": "method",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "b_index": 0,
+      "b_claim_text_normalized": "DINO achieves 49.4 AP in 12 epochs and 51.3 AP in 24 epochs on COCO with a ResNet-50 backbone and multi-scale features.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 1,
+      "b_claim_text_normalized": "DINO outperforms DN-DETR by +6.0 AP in 12 epochs and +2.7 AP in 24 epochs on COCO.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 3,
+      "b_claim_text_normalized": "DINO is the first end-to-end Transformer detector to outperform state-of-the-art models on the COCO leaderboard.",
+      "b_polarity": "positive",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 4,
+      "b_claim_text_normalized": "DINO uses 1/15 the parameters of SwinV2-G while achieving better detection results on COCO.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 5,
+      "b_claim_text_normalized": "Contrastive denoising training improves small object AP by +1.3 over standard DN queries in 12-epoch training with ResNet-50.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 6,
+      "b_claim_text_normalized": "Mixed query selection initializes anchor boxes from encoder output while keeping content queries learnable to encourage spatial prior focus.",
+      "b_polarity": "neutral",
+      "b_claim_type": "method",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 7,
+      "b_claim_text_normalized": "The look forward twice scheme allows layer-i parameters to be influenced by losses from both layer-i and layer-(i+1).",
+      "b_polarity": "neutral",
+      "b_claim_type": "method",
+      "comment": "produced by independent extractor B but not in human gold A"
+    }
+  ]
+}

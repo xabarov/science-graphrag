@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "pack_id": "contradictions_v1/pair_06_hog_human_detection_vs_rcnn",
+  "pack_path": "tests/fixtures/benchmarks/contradictions_v1/pair_06_hog_human_detection_vs_rcnn",
+  "layer": "contradictions_v1",
+  "generated_at_utc": "2026-04-25T20:49:42.913170+00:00",
+  "spot_check_priority": "medium",
+  "spot_check_priority_rationale": "type matches but severity_match=False, worst_claim_text_score=0.16 (gate: severity flip OR text<0.30)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/contradictions_v1/pair_06_hog_human_detection_vs_rcnn/gold.json",
+    "count": 1,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article_a.md + article_b.md (paired)",
+    "count": 1,
+    "model": "anthropic/claude-sonnet-4.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:583e86eda7630a16d51688efca2f94f0a968d05a4a8152ae464c666100bd9aff",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 18476,
+      "completion": 312,
+      "total": 18788
+    },
+    "latency_ms": 10235
+  },
+  "summary": {
+    "a_total": 1,
+    "b_total": 1,
+    "matched": 1,
+    "matched_lexical": 1,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "field_agreements": {
+      "contradiction_type": {
+        "agreed": 1,
+        "disagreed": 0
+      },
+      "severity": {
+        "agreed": 0,
+        "disagreed": 1
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "pair_id": "c06_handcrafted_vs_learned_features",
+      "match_score": 0.156,
+      "match_source": "lexical",
+      "claim_a_score": 0.156,
+      "claim_b_score": 0.167,
+      "field_disagreements": [
+        {
+          "field": "severity",
+          "a": "direct",
+          "b": "nuanced"
+        }
+      ],
+      "a_claim_a_text": "Histograms of oriented gradients capture the edge structure that is sufficient for accurate human and object detection.",
+      "b_claim_a_text": "HOG descriptors use fine orientation sampling (many bins) combined with relatively coarse spatial binning for best human detection performance.",
+      "a_claim_b_text": "Learned convolutional features substantially outperform handcrafted feature representations such as HOG and DPM on object detection.",
+      "b_claim_b_text": "SIFT and HOG are blockwise orientation histograms that can be roughly associated with complex cells in V1, the first cortical area, implying they capture only low-level features insufficient for recognition."
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": []
+}

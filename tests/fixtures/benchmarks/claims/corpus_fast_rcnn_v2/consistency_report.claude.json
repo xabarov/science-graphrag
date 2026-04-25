@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/corpus_fast_rcnn_v2",
+  "pack_path": "tests/fixtures/benchmarks/claims/corpus_fast_rcnn_v2",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T20:40:50.642233+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "polarity_flips=0, unmatched_a_ratio=0.75 (gate: polarity_flips ≥ 1 OR unmatched_a_ratio ≥ 0.30)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/claims/corpus_fast_rcnn_v2/gold.json",
+    "count": 4,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-extracted)",
+    "count": 8,
+    "model": "anthropic/claude-sonnet-4.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:666b81e6964bf9c28a5037d0fc3a17df788e3a5262cc57219eac07e9018c9f5d",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 14690,
+      "completion": 917,
+      "total": 15607
+    },
+    "latency_ms": 15000
+  },
+  "summary": {
+    "a_total": 4,
+    "b_total": 8,
+    "matched": 1,
+    "matched_lexical": 1,
+    "matched_embedding": 0,
+    "unmatched_a": 3,
+    "unmatched_b": 7,
+    "field_agreements": {
+      "polarity": {
+        "agreed": 1,
+        "disagreed": 0
+      },
+      "claim_type": {
+        "agreed": 1,
+        "disagreed": 0
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_claim_id": "fast_rcnn_9x_train_speedup",
+      "b_index": 0,
+      "match_score": 0.554,
+      "match_source": "lexical",
+      "a_claim_text_normalized": "Fast R-CNN trains roughly nine times faster than R-CNN and reaches higher mean average precision on PASCAL VOC.",
+      "b_claim_text_normalized": "Fast R-CNN trains VGG16 9 times faster than R-CNN and is 213 times faster at test-time.",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [
+    {
+      "a_claim_id": "fast_rcnn_rcnn_redundancy_negative",
+      "a_claim_text_normalized": "Region-wise feature extraction in R-CNN is highly redundant because the same convolutional features are recomputed for thousands of overlapping proposals, which Fast R-CNN avoids.",
+      "a_polarity": "negative",
+      "a_claim_type": "comparison",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "fast_rcnn_roi_pooling_shared_features",
+      "a_claim_text_normalized": "ROI pooling extracts a fixed-size feature vector for each region proposal from a shared convolutional feature map, avoiding redundant per-region CNN forward passes.",
+      "a_polarity": "positive",
+      "a_claim_type": "design_choice",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "fast_rcnn_single_stage_multitask",
+      "a_claim_text_normalized": "Fast R-CNN trains the entire network in a single stage using a multi-task loss that jointly optimizes classification and bounding-box regression.",
+      "a_polarity": "positive",
+      "a_claim_type": "method",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "b_index": 1,
+      "b_claim_text_normalized": "Fast R-CNN achieves a mAP of 66.9% on VOC07 compared to 63.1% for SPPnet.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 2,
+      "b_claim_text_normalized": "Multi-task training improves pure classification accuracy by +0.8 to +1.1 mAP points over training for classification alone.",
+      "b_polarity": "positive",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 3,
+      "b_claim_text_normalized": "Freezing conv layers and fine-tuning only fully connected layers decreases VGG16 mAP from 66.9% to 61.4%.",
+      "b_polarity": "negative",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 4,
+      "b_claim_text_normalized": "Truncated SVD reduces detection time by more than 30% with only a 0.3 percentage point drop in mAP.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 5,
+      "b_claim_text_normalized": "Softmax slightly outperforms SVMs for Fast R-CNN across all three network sizes by +0.1 to +0.8 mAP points.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 6,
+      "b_claim_text_normalized": "Average Recall does not correlate well with mAP when the number of proposals per image is varied.",
+      "b_polarity": "negative",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 7,
+      "b_claim_text_normalized": "SPPnet's fine-tuning algorithm cannot update convolutional layers that precede the spatial pyramid pooling, limiting accuracy of very deep networks.",
+      "b_polarity": "negative",
+      "b_claim_type": "limitation",
+      "comment": "produced by independent extractor B but not in human gold A"
+    }
+  ]
+}

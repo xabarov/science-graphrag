@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import re
 from abc import ABC, abstractmethod
@@ -110,14 +111,35 @@ class ExtractorBase(ABC):
         model: str,
         base_url: str,
         dry_run: bool,
+        max_output_tokens_override: int | None = None,
+        reasoning_override: dict[str, Any] | None = None,
     ) -> tuple[ExtractorRunOutput | None, LLMCallSpec]:
-        """Build the prompt, optionally invoke the LLM, return raw + parsed payload."""
+        """Build the prompt, optionally invoke the LLM, return raw + parsed payload.
+
+        ``max_output_tokens_override`` raises the per-extractor ``max_tokens`` ceiling.
+        Required for reasoning-style models (e.g. ``moonshotai/kimi-k2.6``) that spend
+        a large slice of the budget on hidden chain-of-thought before emitting JSON.
+
+        ``reasoning_override`` forwards an OpenRouter ``reasoning`` payload (e.g.
+        ``{"enabled": False}`` to suppress hidden CoT). When ``None`` we leave the
+        spec's default reasoning policy alone.
+        """
 
         spec = self.build_call_spec(pack_dir, model=model, base_url=base_url)
+        if max_output_tokens_override is not None and max_output_tokens_override > spec.max_tokens:
+            spec = dataclasses.replace(spec, max_tokens=max_output_tokens_override)
+        if reasoning_override is not None:
+            spec = dataclasses.replace(spec, reasoning=dict(reasoning_override))
         if dry_run or client is None:
             return None, spec
         result = client.call(spec)
-        structured = self.parse_response(result.content)
+        try:
+            structured = self.parse_response(result.content)
+        except Exception as exc:
+            # Surface the raw body so the CLI can save it for offline inspection
+            # (e.g. when a model returns prose-only or an unsupported JSON shape).
+            setattr(exc, "raw_response", result.content)
+            raise
         run = ExtractorRunOutput(
             raw_response=result.content,
             structured_b=structured,

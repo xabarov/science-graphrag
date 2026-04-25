@@ -154,6 +154,27 @@ def _parse_args() -> argparse.Namespace:
         help="Directory for per-text embedding cache files (one JSON per text+model).",
     )
     p.add_argument(
+        "--max-output-tokens",
+        type=int,
+        default=None,
+        help=(
+            "Raise per-extractor max_tokens to this value (only when bigger than the "
+            "extractor default). Required for reasoning-style models such as "
+            "moonshotai/kimi-k2.6 that consume a large slice on hidden CoT."
+        ),
+    )
+    p.add_argument(
+        "--reasoning-mode",
+        choices=("auto", "disabled", "low", "medium", "high"),
+        default="auto",
+        help=(
+            "Forwarded as OpenRouter ``reasoning`` extra_body. 'auto' leaves the "
+            "provider default in place; 'disabled' suppresses hidden CoT (recommended "
+            "for moonshotai/kimi-k2.6 to avoid token starvation on JSON output); "
+            "low|medium|high set the effort knob."
+        ),
+    )
+    p.add_argument(
         "--promote-validation-status",
         action="store_true",
         help=(
@@ -215,6 +236,16 @@ def main() -> int:
             file=sys.stderr,
         )
 
+    reasoning_override: dict | None
+    if args.reasoning_mode == "auto":
+        reasoning_override = None
+    elif args.reasoning_mode == "disabled":
+        reasoning_override = {"enabled": False}
+    else:
+        reasoning_override = {"effort": args.reasoning_mode}
+    if reasoning_override is not None:
+        print(f"reasoning override: {reasoning_override}", file=sys.stderr)
+
     summary_rows: list[dict] = []
     for pack in packs:
         gold_path = pack / "gold.json"
@@ -238,10 +269,27 @@ def main() -> int:
                 run = extractor.rebuild_run_from_raw(pack, raw_path=raw_path, prior_report=prior)
             else:
                 run, _spec = extractor.run_for_pack(
-                    pack, client=client, model=model, base_url=base_url, dry_run=args.dry_run
+                    pack,
+                    client=client,
+                    model=model,
+                    base_url=base_url,
+                    dry_run=args.dry_run,
+                    max_output_tokens_override=args.max_output_tokens,
+                    reasoning_override=reasoning_override,
                 )
         except Exception as exc:  # pylint: disable=broad-except
-            print(f"  ERROR on {pack.name}: {exc}", file=sys.stderr)
+            # Best-effort: persist the raw LLM body we captured before the parse error so
+            # the failure can be inspected without re-billing the model.
+            captured = getattr(exc, "raw_response", None)
+            if args.save_raw_response and isinstance(captured, str):
+                raw_name = args.report_name.removesuffix(".json") + ".raw.json"
+                (pack / raw_name).write_text(captured + "\n", encoding="utf-8")
+                print(
+                    f"  ERROR on {pack.name}: {exc}  " f"(raw saved to {raw_name} for inspection)",
+                    file=sys.stderr,
+                )
+            else:
+                print(f"  ERROR on {pack.name}: {exc}", file=sys.stderr)
             continue
         report = extractor.build_report(
             pack,

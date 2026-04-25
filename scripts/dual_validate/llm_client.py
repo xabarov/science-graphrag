@@ -10,6 +10,7 @@ import hashlib
 import json
 import time
 from dataclasses import dataclass
+from typing import Any
 
 from openai import APIError, OpenAI, RateLimitError
 
@@ -27,6 +28,13 @@ class LLMCallSpec:
     temperature: float = 0.1
     max_tokens: int = 2048
     response_format: str = "json_object"
+    # OpenRouter ``reasoning`` knob — only emitted when not None. Use one of:
+    #   {"enabled": False}                       — strict no-CoT
+    #   {"effort": "low"|"medium"|"high"}        — bounded CoT effort
+    #   {"max_tokens": <int>}                    — explicit CoT budget
+    # Required for reasoning models such as ``moonshotai/kimi-k2.6`` whose hidden
+    # CoT can starve the JSON output budget when left unbounded.
+    reasoning: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -51,6 +59,7 @@ def prompt_hash(spec: LLMCallSpec) -> str:
             "user_prompt": spec.user_prompt,
             "temperature": spec.temperature,
             "response_format": spec.response_format,
+            "reasoning": spec.reasoning,
         },
         sort_keys=True,
         ensure_ascii=False,
@@ -71,6 +80,12 @@ class DualValidateLLMClient:
         for attempt in range(max_retries):
             t0 = time.perf_counter()
             try:
+                # OpenRouter ``reasoning`` knob travels via ``extra_body`` so that the
+                # OpenAI SDK forwards it untouched. We only emit it when explicitly
+                # requested — otherwise providers fall back to their default behaviour.
+                extra_body: dict[str, Any] | None = None
+                if spec.reasoning is not None:
+                    extra_body = {"reasoning": dict(spec.reasoning)}
                 resp = self._client.chat.completions.create(
                     model=spec.model,
                     messages=[
@@ -80,6 +95,7 @@ class DualValidateLLMClient:
                     temperature=spec.temperature,
                     max_tokens=spec.max_tokens,
                     response_format={"type": spec.response_format},
+                    extra_body=extra_body,
                 )
                 latency_ms = int((time.perf_counter() - t0) * 1000)
                 choice = resp.choices[0]

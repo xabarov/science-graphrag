@@ -1,0 +1,54 @@
+```json
+{
+  "claims": [
+    {
+      "claim_text_normalized": "DINO achieves 49.4 AP in 12 epochs and 51.3 AP in 24 epochs on COCO with a ResNet-50 backbone and multi-scale features.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "DINO achieves 49 .4AP in 12 epochs and 51 .3AP in 24 epochs on COCO with a ResNet-50 backbone and multi-scale features"
+    },
+    {
+      "claim_text_normalized": "DINO outperforms DN-DETR by +6.0 AP in 12 epochs and +2.7 AP in 24 epochs on COCO.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "yielding a significant improvement of +6.0AP and +2.7AP, respectively, compared to DN-DETR, the previous best DETR-like model"
+    },
+    {
+      "claim_text_normalized": "DINO with SwinL backbone pre-trained on Objects365 achieves 63.2 AP on COCO val2017 and 63.3 AP on test-dev.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "DINO achieves the best results of 63 .2AP and 63 .3AP on COCO val2017 and test-dev"
+    },
+    {
+      "claim_text_normalized": "DINO is the first end-to-end Transformer detector to outperform state-of-the-art models on the COCO leaderboard.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "this is the first time that an end-to-end Transformer detector outperforms state-of-the-art (SOTA) models on the COCO leaderboard"
+    },
+    {
+      "claim_text_normalized": "DINO uses 1/15 the parameters of SwinV2-G while achieving better detection results on COCO.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "we use a much smaller model size (1 /15 parameters compared with SwinV2-G [22])"
+    },
+    {
+      "claim_text_normalized": "Contrastive denoising training improves small object AP by +1.3 over standard DN queries in 12-epoch training with ResNet-50.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "CDN queries lead to an improvement of +1 .3 AP over DN queries on small objects in 12 epochs with ResNet-50 and multi-scale features"
+    },
+    {
+      "claim_text_normalized": "Mixed query selection initializes anchor boxes from encoder output while keeping content queries learnable to encourage spatial prior focus.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "we only initialize anchor boxes using the position information associated with the selected top-K features, but leave the content queries static as before"
+    },
+    {
+      "claim_text_normalized": "The look forward twice scheme allows layer-i parameters to be influenced by losses from both layer-i and layer-(i+1).",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "the parameters of layer- i are influenced by losses of both layer- i and layer-(i + 1)"
+    }
+  ]
+}
+```

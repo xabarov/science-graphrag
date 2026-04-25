@@ -1,0 +1,22 @@
+Looking at the YOLO family papers and R-CNN family papers:
+
+YOLO family: yolov1, yolov2_realpdf, yolov3_realpdf, yolox_realpdf
+- yolov1, yolov2, yolov3: Joseph Redmon, Ali Farhadi (and others)
+- yolox: Zheng Ge, Songtao Liu, Feng Wang, Zeming Li, Jian Sun
+
+R-CNN family: rcnn_realpdf, fast_rcnn_realpdf, faster_rcnn_realpdf, mask_rcnn_realpdf
+- R-CNN: Ross Girshick, Jeff Donahue, Trevor Darrell, Jitendra Malik
+- Fast R-CNN: Ross Girshick
+- Faster R-CNN: Shaoqing Ren, Kaiming He, Ross Girshick, Jian Sun
+- Mask R-CNN: Kaiming He, Georgia Gkioxari, Piotr Dollár, Ross Girshick
+
+YOLOX authors include Jian Sun. Faster R-CNN authors also include Jian Sun. So Jian Sun appears in both families.
+
+Ross Girshick appears in R-CNN papers. Does he appear in any YOLO paper? Not directly.
+
+Checking yolox_realpdf more carefully: authors are Zheng Ge, Songtao Liu, Feng Wang, Zeming Li, Jian Sun. Jian Sun is also on Faster R-CNN (Shaoqing Ren, Kaiming He, Ross Girshick, Jian Sun).
+
+{
+  "expected_node_canonical_names": ["Jian Sun"],
+  "rationale": "Jian Sun is a co-author on Faster R-CNN (R-CNN family) and YOLOX (YOLO family), making him the author appearing in both families."
+}

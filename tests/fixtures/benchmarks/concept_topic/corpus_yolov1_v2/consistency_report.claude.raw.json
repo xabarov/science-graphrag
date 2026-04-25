@@ -1,0 +1,141 @@
+```json
+{
+  "labels": [
+    {
+      "concept_id": "region_proposal",
+      "status": "present",
+      "evidence_quote": "More recent approaches like R-CNN use region proposal methods to first generate potential bounding boxes in an image and then run a classifier on these proposed boxes.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "selective_search",
+      "status": "present",
+      "evidence_quote": "Selective Search [35] generates potential bounding boxes, a convolutional network extracts features, an SVM scores the boxes, a linear model adjusts the bounding boxes, and non-max suppression eliminates duplicate detections.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "anchor_based",
+      "status": "absent",
+      "rationale": "The article does not use or mention anchor boxes or predefined anchors; YOLO predicts bounding boxes directly from grid cells without anchor priors."
+    },
+    {
+      "concept_id": "anchor_free",
+      "status": "present",
+      "evidence_quote": "We reframe object detection as a single regression problem, straight from image pixels to bounding box coordinates and class probabilities.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "set_prediction",
+      "status": "absent",
+      "rationale": "The article does not use bipartite matching, Hungarian matching, or direct set prediction; YOLO assigns boxes via highest IOU per grid cell."
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "status": "absent",
+      "rationale": "The article does not use or mention feature pyramids, FPN, or multi-scale feature maps; YOLO uses a single-scale output from its convolutional network."
+    },
+    {
+      "concept_id": "focal_loss",
+      "status": "absent",
+      "rationale": "The article does not mention focal loss or any modulating factor cross-entropy; it uses sum-squared error as its loss function."
+    },
+    {
+      "concept_id": "nms",
+      "status": "present",
+      "evidence_quote": "Non-maximal suppression can be used to fix these multiple detections. While not critical to performance as it is for R-CNN or DPM, non-maximal suppression adds 2-3% in mAP.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "status": "absent",
+      "rationale": "The article does not use or mention transformer architectures, attention mechanisms, or encoder-decoder transformers."
+    },
+    {
+      "concept_id": "roi_pooling",
+      "status": "absent",
+      "rationale": "The article does not use or mention ROI pooling or region-of-interest pooling; YOLO processes the full image in one pass."
+    },
+    {
+      "concept_id": "roi_align",
+      "status": "absent",
+      "rationale": "The article does not use or mention ROIAlign or any variant of region-of-interest alignment."
+    },
+    {
+      "concept_id": "mask_branch",
+      "status": "absent",
+      "rationale": "The article does not include any instance segmentation or mask prediction branch; it focuses solely on bounding box detection."
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "status": "present",
+      "evidence_quote": "A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "status": "present",
+      "evidence_quote": "More recent approaches like R-CNN use region proposal methods to first generate potential bounding boxes in an image and then run a classifier on these proposed boxes.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "keypoint_detection",
+      "status": "absent",
+      "rationale": "The article does not use or mention keypoint detection, corner detection, or paired keypoints."
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "status": "absent",
+      "rationale": "The article does not use ResNet or residual network backbones; it uses a GoogLeNet-inspired custom architecture and VGG-16."
+    },
+    {
+      "concept_id": "backbone_darknet",
+      "status": "present",
+      "evidence_quote": "We use the Darknet framework for all training and inference [26].",
+      "rationale": ""
+    },
+    {
+      "concept_id": "compound_scaling",
+      "status": "absent",
+      "rationale": "The article does not mention compound scaling or joint depth-width-resolution scaling."
+    },
+    {
+      "concept_id": "cascade_iou_progression",
+      "status": "absent",
+      "rationale": "The article does not use cascade detectors or stage-wise IoU threshold progression."
+    },
+    {
+      "concept_id": "centerness",
+      "status": "absent",
+      "rationale": "The article does not include a center-ness branch or center prediction score separate from confidence."
+    },
+    {
+      "concept_id": "iou_loss",
+      "status": "absent",
+      "rationale": "The article uses sum-squared error as its loss function, not IoU loss, GIoU, or DIoU."
+    },
+    {
+      "concept_id": "classical_dpm",
+      "status": "present",
+      "evidence_quote": "Systems like deformable parts models (DPM) use a sliding window approach where the classifier is run at evenly spaced locations over the entire image [10].",
+      "rationale": ""
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "status": "present",
+      "evidence_quote": "Detection pipelines generally start by extracting a set of robust features from input images (Haar [25], SIFT [23], HOG [4], convolutional features [6]).",
+      "rationale": ""
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "status": "present",
+      "evidence_quote": "During training we optimize the following, multi-part loss function:",
+      "rationale": ""
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "status": "absent",
+      "rationale": "The article evaluates on PASCAL VOC 2007 and 2012 datasets only; MS COCO is not mentioned."
+    }
+  ]
+}
+```

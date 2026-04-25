@@ -1,0 +1,54 @@
+```json
+{
+  "claims": [
+    {
+      "claim_text_normalized": "YOLOv2 achieves 78.6 mAP on VOC 2007 at 40 FPS, outperforming Faster R-CNN with ResNet and SSD.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "At 40 FPS, YOLOv2 gets 78.6 mAP, outperforming state-of-the-art methods like Faster R-CNN with ResNet and SSD while still running significantly faster."
+    },
+    {
+      "claim_text_normalized": "YOLO9000 achieves 19.7 mAP on the ImageNet detection validation set despite only having detection data for 44 of the 200 classes.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "YOLO9000 gets 19.7 mAP on the ImageNet detection validation set despite only having detection data for 44 of the 200 classes."
+    },
+    {
+      "claim_text_normalized": "Adding batch normalization to all convolutional layers in YOLO yields more than 2% improvement in mAP.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "By adding batch normalization on all of the convolutional layers in YOLO we get more than 2% improvement in mAP."
+    },
+    {
+      "claim_text_normalized": "Using k-means clustering with IOU distance to generate 5 anchor box priors achieves average IOU of 61.0, comparable to 9 hand-picked anchor boxes with 60.9.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "At only 5 priors the centroids perform similarly to 9 anchor boxes with an average IOU of 61.0 compared to 60.9."
+    },
+    {
+      "claim_text_normalized": "Darknet-19 requires only 5.58 billion operations to process an image and achieves 72.9% top-1 and 91.2% top-5 accuracy on ImageNet.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "Darknet-19 only requires 5.58 billion operations to process an image yet achieves 72.9% top-1 accuracy and 91.2% top-5 accuracy on ImageNet."
+    },
+    {
+      "claim_text_normalized": "YOLO9000 struggles to detect clothing and equipment categories because COCO lacks bounding box labels for those classes.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "COCO does not have bounding box label for any type of clothing, only for person, so YOLO9000 struggles to model categories like \"sunglasses\" or \"swimming trunks\"."
+    },
+    {
+      "claim_text_normalized": "Fine-tuning the classifier at 448×448 resolution before detection training gives an increase of almost 4% mAP.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "This high resolution classification network gives us an increase of almost 4% mAP."
+    },
+    {
+      "claim_text_normalized": "Using dimension clusters with direct bounding box center location prediction improves YOLO by almost 5% over the anchor box version.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "Using dimension clusters along with directly predicting the bounding box center location improves YOLO by almost 5% over the version with anchor boxes."
+    }
+  ]
+}
+```

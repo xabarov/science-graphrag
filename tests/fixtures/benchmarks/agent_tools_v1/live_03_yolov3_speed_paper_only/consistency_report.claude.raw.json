@@ -1,0 +1,12 @@
+{
+  "expected_tool_sequence": [
+    {"tool_name": "entity_search"},
+    {"tool_name": "vector_search"},
+    {"tool_name": "cypher_query"},
+    {"tool_name": "final_answer"}
+  ],
+  "expected_works_corpus_ids": ["yolov3"],
+  "expected_methods_canonical": ["yolov3"],
+  "answer_reference_text": "The YOLOv3 paper reports that at 320×320 input resolution on COCO, YOLOv3 runs at 45 ms (approximately 22 FPS) while achieving 28.2 mAP. This makes it faster than competing methods at comparable accuracy.",
+  "expected_behavior": "answer"
+}

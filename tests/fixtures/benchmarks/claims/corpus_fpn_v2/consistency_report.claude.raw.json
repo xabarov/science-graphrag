@@ -1,0 +1,48 @@
+```json
+{
+  "claims": [
+    {
+      "claim_text_normalized": "FPN improves Average Recall for bounding box proposals by 8.0 points over a strong single-scale Faster R-CNN baseline on ResNets.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "for bounding box proposals, FPN significantly increases the Average Recall (AR) by 8.0 points"
+    },
+    {
+      "claim_text_normalized": "FPN improves COCO-style AP by 2.3 points and PASCAL-style AP by 3.8 points over a strong single-scale Faster R-CNN baseline.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "for object detection, it improves the COCO-style Average Precision (AP) by 2.3 points and PASCAL-style AP by 3.8 points, over a strong single-scale baseline"
+    },
+    {
+      "claim_text_normalized": "Removing the top-down pathway from FPN causes results to fall to the level of the RPN baseline, far below the full FPN.",
+      "claim_type": "finding",
+      "polarity": "negative",
+      "evidence_quote_short": "The results in Table 1(d) are just on par with the RPN baseline and lag far behind ours."
+    },
+    {
+      "claim_text_normalized": "FPN-based Faster R-CNN surpasses all existing single-model competition entries on the COCO detection benchmark without bells and whistles.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "our single-model entry has surpassed these strong, heavily engineered competitors"
+    },
+    {
+      "claim_text_normalized": "FPN-based mask proposal generation outperforms DeepMask, SharpMask, and InstanceFCN by over 8.3 points AR.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "We outperform the accuracy of these approaches by over 8.3 points AR. In particular, we nearly double the accuracy on small objects."
+    },
+    {
+      "claim_text_normalized": "FPN-based Faster R-CNN runs at approximately 6 FPS on a GPU, making it a practical solution for multi-scale object detection.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "our method can run at 6 FPS on a GPU and thus is a practical and accurate solution to multi-scale object detection"
+    },
+    {
+      "claim_text_normalized": "SSD misses the opportunity to reuse higher-resolution feature maps, which are important for detecting small objects.",
+      "claim_type": "finding",
+      "polarity": "negative",
+      "evidence_quote_short": "it misses the opportunity to reuse the higher-resolution maps of the feature hierarchy. We show that these are important for detecting small objects."
+    }
+  ]
+}
+```

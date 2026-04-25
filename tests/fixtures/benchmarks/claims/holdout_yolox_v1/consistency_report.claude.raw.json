@@ -1,0 +1,54 @@
+```json
+{
+  "claims": [
+    {
+      "claim_text_normalized": "YOLOX-L achieves 50.0% AP on COCO at 68.9 FPS on Tesla V100, exceeding YOLOv5-L by 1.8% AP.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "for YOLOX-L with roughly the same amount of parameters as YOLOv4-CSP, YOLOv5-L, we achieve 50.0% AP on COCO at a speed of 68.9 FPS on Tesla V100, exceeding YOLOv5-L by 1.8% AP"
+    },
+    {
+      "claim_text_normalized": "The decoupled head converges much faster than the coupled YOLOv3 head and achieves better final detection performance.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "It is obvious that the decoupled head converges much faster than the YOLOv3 head and achieves better result finally."
+    },
+    {
+      "claim_text_normalized": "SimOTA raises the detector from 45.0% AP to 47.3% AP, outperforming the best ultralytics-YOLOv3 by 3.0% AP.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "SimOTA raises the detector from 45.0% AP to 47.3% AP, higher than the SOTA ultralytics-YOLOv3 by 3.0% AP"
+    },
+    {
+      "claim_text_normalized": "Solving the OT problem via Sinkhorn-Knopp algorithm brings 25% extra training time, making it too expensive for 300-epoch training.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "in practice we found solving OT problem via Sinkhorn-Knopp algorithm brings 25% extra training time, which is quite expensive for training 300 epochs"
+    },
+    {
+      "claim_text_normalized": "The end-to-end NMS-free YOLO option decreases AP by 0.8% with a decoupled head compared to 4.2% with a coupled head.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "the end-to-end property decreases by 4.2% AP with the coupled head, while the decreasing reduces to 0.8% AP for a decoupled head"
+    },
+    {
+      "claim_text_normalized": "YOLOX-Nano with only 0.91M parameters and 1.08G FLOPs achieves 25.3% AP on COCO, surpassing NanoDet by 1.8% AP.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "For YOLOX-Nano with only 0.91M parameters and 1.08G FLOPs, we get 25.3% AP on COCO, surpassing NanoDet by 1.8% AP"
+    },
+    {
+      "claim_text_normalized": "Stronger data augmentation such as MixUp is more helpful for large models but should be weakened for small models like YOLOX-Nano.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "we found that the suitable augmentation strategy varies across different size of models... it is better to weaken the augmentation for small models like YOLOX-Nano"
+    },
+    {
+      "claim_text_normalized": "After using strong data augmentation, ImageNet pre-training is no longer beneficial, so all following models are trained from scratch.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "After using strong data augmentation, we found ImageNet pre-training is no more beneficial, we thus train all the following models from scratch."
+    }
+  ]
+}
+```

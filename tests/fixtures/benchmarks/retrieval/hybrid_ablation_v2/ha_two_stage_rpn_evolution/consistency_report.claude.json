@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "pack_id": "ha_two_stage_rpn_evolution",
+  "pack_path": "tests/fixtures/benchmarks/retrieval/hybrid_ablation_v2/ha_two_stage_rpn_evolution",
+  "layer": "hybrid_ablation_v2",
+  "generated_at_utc": "2026-04-25T20:50:48.062280+00:00",
+  "spot_check_priority": "low",
+  "spot_check_priority_rationale": "accuracy=1.00, f1_relevant=1.00",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/retrieval/hybrid_ablation_v2/ha_two_stage_rpn_evolution/gold.json",
+    "count": 3,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "question.txt | candidates=7",
+    "count": 3,
+    "model": "anthropic/claude-sonnet-4.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:866865cda31e4ff76d87821bf2b12990964d15ae0d5966b3f16279edd0bf98de",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 343,
+      "completion": 186,
+      "total": 529
+    },
+    "latency_ms": 3715
+  },
+  "summary": {
+    "a_total": 3,
+    "b_total": 3,
+    "matched": 7,
+    "matched_lexical": 7,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "candidates_total": 7,
+    "accuracy": 1.0,
+    "metrics_relevant": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "jaccard": 1.0
+    },
+    "rationale_b": "Faster R-CNN introduces the Region Proposal Network (RPN) with end-to-end training and shared convolutional features; Fast R-CNN provides the two-stage detection foundation it builds on; R-FCN extends this paradigm with fully convolutional shared features, while the remaining papers are single-stage or transformer-based detectors unrelated to RPN-based two-stage detection."
+  },
+  "matched_pairs": [
+    {
+      "corpus_work_id": "fast_rcnn_realpdf",
+      "label": "relevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "faster_rcnn_realpdf",
+      "label": "relevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "rfcn_realpdf",
+      "label": "relevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "detr_realpdf",
+      "label": "irrelevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "retinanet_focal_realpdf",
+      "label": "irrelevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "ssd_realpdf",
+      "label": "irrelevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "yolov1",
+      "label": "irrelevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": []
+}

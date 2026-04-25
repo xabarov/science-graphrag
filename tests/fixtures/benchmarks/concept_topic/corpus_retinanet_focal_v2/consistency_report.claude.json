@@ -1,0 +1,276 @@
+{
+  "schema_version": 1,
+  "pack_id": "concept_topic/corpus_retinanet_focal_v2",
+  "pack_path": "tests/fixtures/benchmarks/concept_topic/corpus_retinanet_focal_v2",
+  "layer": "concept_topic_v2",
+  "generated_at_utc": "2026-04-25T20:48:54.081359+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "flips=1, missing_in_b_ratio=0.00 (gate: flips ≥ 1 OR missing_in_b_ratio ≥ 0.40)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/concept_topic/corpus_retinanet_focal_v2/gold.json",
+    "count": 13,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-labelled against frozen 25 concepts)",
+    "count": 25,
+    "model": "anthropic/claude-sonnet-4.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:f3a7a4733b414bbe39f3460dda658870bc39a5ea202068ea065e2f66b8ab6be6",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 16730,
+      "completion": 1721,
+      "total": 18451
+    },
+    "latency_ms": 27496
+  },
+  "summary": {
+    "a_total": 13,
+    "b_total": 25,
+    "matched": 13,
+    "matched_lexical": 13,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 12,
+    "field_agreements": {
+      "status": {
+        "agreed_present": 7,
+        "agreed_absent": 5,
+        "flips": 1
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "concept_id": "focal_loss",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "We propose to add a modulating factor (1−pt)γ to the cross entropy loss, with tunable focusing parameter γ≥ 0. We define the focal loss as: FL(pt) =−(1−pt)γ log(pt).",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "we design a simple one-stage object detector called RetinaNet, named for its dense sampling of object locations in an input image.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "anchor_based",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "Its design features an efficient in-network feature pyramid and use of anchor boxes. We use translation-invariant anchor boxes similar to those in the RPN variant in [20].",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "We adopt the Feature Pyramid Network (FPN) from [20] as the backbone network for RetinaNet. In brief, FPN augments a standard convolutional network with a top-down pathway and lateral connections",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "Following [20], we build FPN on top of the ResNet architecture [16]. We experiment with ResNet-50-FPN and ResNet-101-FPN backbones.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "nms",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "The top predictions from all levels are merged and non-maximum suppression with a threshold of 0.5 is applied to yield the final detections.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "We present experimental results on the bounding box detection track of the challenging COCO benchmark [21].",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "region_proposal",
+      "a_status": "absent",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "absent",
+          "b": "present"
+        }
+      ],
+      "b_evidence_quote": "the first stage generates a sparse set of candidate object locations and the second stage classifies each candidate location as one of the foreground classes or as background",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "anchor_free",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article exclusively uses anchor boxes and does not discuss or employ anchor-free detection methods."
+    },
+    {
+      "concept_id": "set_prediction",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not use bipartite matching, Hungarian matching, or direct set prediction; it relies on IoU-based anchor assignment."
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not use or mention transformer architectures or attention-based encoder-decoder designs."
+    },
+    {
+      "concept_id": "mask_branch",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "RetinaNet does not include a mask prediction branch; it is a bounding box detection model only."
+    },
+    {
+      "concept_id": "compound_scaling",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not discuss compound scaling of depth, width, and resolution jointly."
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": [
+    {
+      "concept_id": "selective_search",
+      "b_status": "present",
+      "b_evidence_quote": "The proposal stage (e.g., Selective Search [35], EdgeBoxes [39], DeepMask [24, 25], RPN [28]) rapidly narrows down the number of candidate object locations to a small number",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "roi_pooling",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not use ROI pooling; RetinaNet is a fully convolutional one-stage detector without region-of-interest pooling.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "roi_align",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "ROIAlign is not used or mentioned in this article; it is a one-stage detector without ROI-based feature extraction.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "b_status": "present",
+      "b_evidence_quote": "The highest accuracy object detectors to date are based on a two-stage approach popularized by R-CNN, where a classifier is applied to a sparse set of candidate object locations.",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "keypoint_detection",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not discuss keypoint detection, corner detection, or paired keypoints.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "backbone_darknet",
+      "b_status": "present",
+      "b_evidence_quote": "YOLOv2 [27] DarkNet-19 [27] 21.6 44.0 19.2 5.0 22.4 35.5",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "cascade_iou_progression",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not use or propose a cascade detector with stage-wise IoU thresholds.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "centerness",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not include a centerness branch or center prediction mechanism.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "iou_loss",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article uses smooth L1 loss for box regression and does not employ IoU loss or GIoU loss.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "classical_dpm",
+      "b_status": "present",
+      "b_evidence_quote": "DPMs [8] helped extend dense detectors to more general object categories and had top results on PASCAL [7] for many years.",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "b_status": "present",
+      "b_evidence_quote": "The introduction of HOG [4] and integral channel features [5] gave rise to effective methods for pedestrian detection.",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "b_status": "present",
+      "b_evidence_quote": "The training loss is the sum the focal loss and the standard smooth L1 loss used for box regression [10].",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    }
+  ]
+}

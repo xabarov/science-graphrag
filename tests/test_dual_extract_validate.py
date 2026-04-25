@@ -935,3 +935,288 @@ def test_agent_tools_live_parse_response_normalises_tool_dicts_and_strings() -> 
     parsed = AgentToolsLiveExtractor().parse_response(raw)
     assert parsed[0]["tool_sequence"] == ["vector_search", "cypher_query", "cite_works"]
     assert parsed[0]["expected_methods_canonical"] == ["focal_loss"]
+
+
+# ---------------------------------------------------------------------------
+# Phase 6.E — triple-vote consensus aggregator + tag-aware paths
+# ---------------------------------------------------------------------------
+
+
+def _write_stub_consistency_report(
+    pack_dir: Path,
+    *,
+    filename: str,
+    layer: str,
+    priority: str,
+    matched_a_ids: list[str],
+    a_total: int,
+    b_total: int,
+    record_key: str = "a_claim_id",
+) -> Path:
+    """Tiny helper: produce a minimal consistency_report.json the consensus reads."""
+
+    payload = {
+        "schema_version": 1,
+        "pack_id": f"{pack_dir.parent.name}/{pack_dir.name}",
+        "pack_path": str(pack_dir),
+        "layer": layer,
+        "generated_at_utc": "2026-04-25T00:00:00+00:00",
+        "spot_check_priority": priority,
+        "spot_check_priority_rationale": "stub",
+        "extractor_a": {"role": "human", "source": "x", "count": a_total},
+        "extractor_b": {"role": "llm", "source": "y", "count": b_total},
+        "summary": {"a_total": a_total, "b_total": b_total, "matched": len(matched_a_ids)},
+        "matched_pairs": [
+            {record_key: aid, "match_score": 0.9, "match_source": "lexical"}
+            for aid in matched_a_ids
+        ],
+        "unmatched_a": [],
+        "unmatched_b": [],
+    }
+    path = pack_dir / filename
+    path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return path
+
+
+def test_triple_vote_priority_majority_conservative_tie() -> None:
+    from scripts.dual_validate.triple_vote_consensus import _priority_majority
+
+    # 2 vs 1 → majority wins
+    winner, _ = _priority_majority(["low", "low", "high"])
+    assert winner == "low"
+    # tie → conservative (higher rank wins)
+    winner, rationale = _priority_majority(["low", "high"])
+    assert winner == "high"
+    assert "conservative" in rationale
+
+
+def test_triple_vote_per_record_consensus_buckets() -> None:
+    from scripts.dual_validate.triple_vote_consensus import (
+        ModelReport,
+        _per_record_consensus,
+    )
+
+    reports = [
+        ModelReport(
+            tag="deepseek",
+            path=Path("a"),
+            priority="high",
+            matched_pair_ids=("c1", "c2"),
+            summary={"a_total": 4},
+        ),
+        ModelReport(
+            tag="kimi",
+            path=Path("b"),
+            priority="medium",
+            matched_pair_ids=("c1", "c3"),
+            summary={"a_total": 4},
+        ),
+        ModelReport(
+            tag="claude",
+            path=Path("c"),
+            priority="low",
+            matched_pair_ids=("c1", "c2", "c3"),
+            summary={"a_total": 4},
+        ),
+    ]
+    out = _per_record_consensus(reports, record_key="a_claim_id")
+    assert out is not None
+    buckets = out["buckets"]
+    # c1 in all three → matched_by_all
+    # c2 in deepseek + claude → matched_by_majority (2 of 3)
+    # c3 in kimi + claude → matched_by_majority
+    assert buckets.get("matched_by_all", 0) == 1
+    assert buckets.get("matched_by_majority", 0) == 2
+    assert out["consensus_matched_count"] == 3
+    assert out["consensus_match_ratio"] == 0.75  # 3 of a_total=4
+
+
+def test_triple_vote_build_consensus_promotes_when_majority_low(tmp_path: Path) -> None:
+    from scripts.dual_validate.triple_vote_consensus import _promote_status, build_consensus
+
+    # Fake pack layout
+    pack_root = tmp_path / "claims"
+    pack_root.mkdir()
+    pack = pack_root / "corpus_stub_v2"
+    pack.mkdir()
+    # gold.json — needed for promotion path
+    (pack / "gold.json").write_text(
+        json.dumps(
+            {
+                "meta": {"validation_status": "draft"},
+                "claims": [{"claim_id": "c1"}, {"claim_id": "c2"}],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    # Three per-model consistency reports.
+    _write_stub_consistency_report(
+        pack,
+        filename="consistency_report.json",  # legacy → deepseek
+        layer="claims_v2",
+        priority="high",
+        matched_a_ids=["c1"],
+        a_total=2,
+        b_total=2,
+    )
+    _write_stub_consistency_report(
+        pack,
+        filename="consistency_report.kimi.json",
+        layer="claims_v2",
+        priority="low",
+        matched_a_ids=["c1", "c2"],
+        a_total=2,
+        b_total=2,
+    )
+    _write_stub_consistency_report(
+        pack,
+        filename="consistency_report.claude.json",
+        layer="claims_v2",
+        priority="low",
+        matched_a_ids=["c1", "c2"],
+        a_total=2,
+        b_total=2,
+    )
+
+    consensus, loaded, missing = build_consensus(
+        pack, layer="claims_v2", tags=["deepseek", "kimi", "claude"], legacy_tag="deepseek"
+    )
+    assert missing == []
+    assert len(loaded) == 3
+    assert consensus["consensus_priority"] == "low"
+    assert consensus["votes_by_priority"] == {"high": 1, "low": 2}
+    assert consensus["per_record_consensus"]["consensus_match_ratio"] == 1.0
+
+    # First promotion writes; second is idempotent.
+    consensus_path = pack / "consensus_report.json"
+    consensus_path.write_text(json.dumps(consensus) + "\n", encoding="utf-8")
+    assert _promote_status(
+        pack / "gold.json",
+        consensus_priority="low",
+        consensus_path=consensus_path,
+        n_models_present=3,
+    )
+    assert not _promote_status(
+        pack / "gold.json",
+        consensus_priority="low",
+        consensus_path=consensus_path,
+        n_models_present=3,
+    )
+    gold = json.loads((pack / "gold.json").read_text())
+    assert gold["meta"]["validation_status"] == "llm_triple_validated"
+    assert gold["meta"]["validation_history"][0]["consensus_priority"] == "low"
+
+
+def test_triple_vote_skips_pack_below_min_models(tmp_path: Path) -> None:
+    from scripts.dual_validate.triple_vote_consensus import build_consensus
+
+    pack = tmp_path / "claims" / "corpus_stub_v2"
+    pack.mkdir(parents=True)
+    _write_stub_consistency_report(
+        pack,
+        filename="consistency_report.json",
+        layer="claims_v2",
+        priority="high",
+        matched_a_ids=["c1"],
+        a_total=2,
+        b_total=2,
+    )
+    consensus, loaded, missing = build_consensus(
+        pack, layer="claims_v2", tags=["deepseek", "kimi", "claude"], legacy_tag="deepseek"
+    )
+    # Only deepseek is present; per_record_consensus ratio drops, but build_consensus
+    # itself does not fail — the CLI is responsible for the min-models gate.
+    assert len(loaded) == 1
+    assert sorted(missing) == ["claude", "kimi"]
+    assert consensus["consensus_priority"] == "high"
+
+
+def test_max_output_tokens_override_only_raises(tmp_path: Path) -> None:
+    """Override should bump small ceilings (claims=2048 → 6144) but never lower a larger one."""
+
+    import dataclasses
+
+    from scripts.dual_validate.extractors import ClaimsV2Extractor
+    from scripts.dual_validate.llm_client import LLMCallSpec
+
+    pack = Path(__file__).resolve().parents[1] / "tests/fixtures/benchmarks/claims/corpus_yolov1_v2"
+    extractor = ClaimsV2Extractor()
+    # dry_run path — no client needed; spec is returned as the second tuple value.
+    _, spec = extractor.run_for_pack(
+        pack,
+        client=None,
+        model="stub",
+        base_url="x",
+        dry_run=True,
+        max_output_tokens_override=6144,
+    )
+    assert spec.max_tokens == 6144
+
+    # Lower-than-default override is a no-op.
+    _, spec_low = extractor.run_for_pack(
+        pack,
+        client=None,
+        model="stub",
+        base_url="x",
+        dry_run=True,
+        max_output_tokens_override=512,
+    )
+    assert spec_low.max_tokens == 2048  # claims_v2 default
+
+
+def test_run_for_pack_preserves_raw_response_on_parse_error() -> None:
+    """The CLI saves raw bodies for offline inspection only when extractors attach them."""
+
+    from scripts.dual_validate.extractors.base import ExtractorBase, parse_json_object_lenient
+
+    # Confirm the new attribute is wired at the parse layer.
+    raw = "this is not json at all"
+    err: Exception | None = None
+    try:
+        parse_json_object_lenient(raw)
+    except ValueError as exc:
+        err = exc
+    assert err is not None
+
+    # Also verify run_for_pack annotates the exception when invoked by the live path.
+    # We simulate by monkey-patching parse_response and feeding a fake client.
+    class _StubClient:
+        class _Result:
+            content = "definitely not json"
+            prompt_hash = "sha256:00"
+            latency_ms = 1
+            finish_reason = "stop"
+            usage_tokens = {"prompt": 1, "completion": 1, "total": 2}
+
+        def call(self, _spec):
+            return self._Result()
+
+    class _ProbeExtractor(ExtractorBase):
+        layer_name = "probe"
+
+        def discover_packs(self, _root):
+            return []
+
+        def build_call_spec(self, _pack, *, model, base_url):
+            from scripts.dual_validate.llm_client import LLMCallSpec
+
+            return LLMCallSpec(
+                model=model,
+                base_url=base_url,
+                system_prompt="s",
+                user_prompt="u",
+                max_tokens=128,
+            )
+
+        def parse_response(self, raw_response):
+            raise ValueError("synthetic parse failure")
+
+        def build_report(self, *_, **__):  # pragma: no cover — unused in this test
+            raise NotImplementedError
+
+    with pytest.raises(ValueError) as exc_info:
+        _ProbeExtractor().run_for_pack(
+            Path("/tmp"), client=_StubClient(), model="stub", base_url="x", dry_run=False
+        )
+    assert getattr(exc_info.value, "raw_response", None) == "definitely not json"

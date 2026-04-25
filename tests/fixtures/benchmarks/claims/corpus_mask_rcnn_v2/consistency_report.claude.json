@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/corpus_mask_rcnn_v2",
+  "pack_path": "tests/fixtures/benchmarks/claims/corpus_mask_rcnn_v2",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T20:42:14.877973+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "polarity_flips=1, unmatched_a_ratio=0.60 (gate: polarity_flips ≥ 1 OR unmatched_a_ratio ≥ 0.30)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/claims/corpus_mask_rcnn_v2/gold.json",
+    "count": 5,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-extracted)",
+    "count": 8,
+    "model": "anthropic/claude-sonnet-4.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:29c75cfb5bc9e5757089be1f55d25405c54daa24456ddf299c012479002d958c",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 19465,
+      "completion": 963,
+      "total": 20428
+    },
+    "latency_ms": 19437
+  },
+  "summary": {
+    "a_total": 5,
+    "b_total": 8,
+    "matched": 2,
+    "matched_lexical": 0,
+    "matched_embedding": 2,
+    "unmatched_a": 3,
+    "unmatched_b": 6,
+    "field_agreements": {
+      "polarity": {
+        "agreed": 1,
+        "disagreed": 1
+      },
+      "claim_type": {
+        "agreed": 2,
+        "disagreed": 0
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_claim_id": "mask_rcnn_decoupled_per_class_sigmoid",
+      "b_index": 2,
+      "match_score": 0.762,
+      "match_source": "embedding",
+      "a_claim_text_normalized": "Predicting per-class binary masks with sigmoid avoids inter-class competition that arises when mask classes are normalized with softmax.",
+      "b_claim_text_normalized": "Decoupling mask and class prediction via per-class binary masks (sigmoid) gives 5.5 points mask AP gain over multinomial masks (softmax).",
+      "field_disagreements": []
+    },
+    {
+      "a_claim_id": "mask_rcnn_parallel_mask_branch",
+      "b_index": 0,
+      "match_score": 0.844,
+      "match_source": "embedding",
+      "a_claim_text_normalized": "Mask R-CNN augments the Faster R-CNN detector with an additional, parallel head that outputs a per-instance binary segmentation mask for each proposal.",
+      "b_claim_text_normalized": "Mask R-CNN extends Faster R-CNN by adding a mask prediction branch in parallel with the classification and bounding box regression branch.",
+      "field_disagreements": [
+        {
+          "field": "polarity",
+          "a": "positive",
+          "b": "neutral"
+        }
+      ]
+    }
+  ],
+  "unmatched_a": [
+    {
+      "a_claim_id": "mask_rcnn_pretraining_dependency_negative",
+      "a_claim_text_normalized": "Detection accuracy of Mask R-CNN drops noticeably without ImageNet pre-training, indicating a dependence on large-scale supervised pre-training of the backbone.",
+      "a_polarity": "negative",
+      "a_claim_type": "limitation",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "mask_rcnn_roialign_quantization_fix",
+      "a_claim_text_normalized": "ROIAlign replaces ROIPool by removing harsh feature quantization, which substantially improves mask localization accuracy.",
+      "a_polarity": "positive",
+      "a_claim_type": "design_choice",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "mask_rcnn_softmax_mask_competition_negative",
+      "a_claim_text_normalized": "Per-class softmax over mask classes induces inter-class competition that degrades mask quality compared to the per-class sigmoid formulation.",
+      "a_polarity": "negative",
+      "a_claim_type": "comparison",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "b_index": 1,
+      "b_claim_text_normalized": "RoIAlign improves mask AP by approximately 3 points over RoIPool with much of the gain at high IoU.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 3,
+      "b_claim_text_normalized": "Mask R-CNN with ResNet-101-FPN achieves 35.7 mask AP on COCO test-dev, outperforming FCIS+++ without bells and whistles.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 4,
+      "b_claim_text_normalized": "FCIS exhibits systematic artifacts on overlapping instances, showing it is challenged by the fundamental difficulty of instance segmentation.",
+      "b_polarity": "negative",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 5,
+      "b_claim_text_normalized": "Using FCNs for mask prediction gives a 2.1 mask AP gain over MLPs because FCNs explicitly encode spatial layout.",
+      "b_polarity": "positive",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 6,
+      "b_claim_text_normalized": "Mask R-CNN achieves 63.1 keypoint AP on COCO test-dev, surpassing the 2016 COCO keypoint competition winner while running at 5 fps.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 7,
+      "b_claim_text_normalized": "Adding the keypoint branch reduces box and mask AP slightly, suggesting keypoint detection does not help the other tasks.",
+      "b_polarity": "negative",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    }
+  ]
+}

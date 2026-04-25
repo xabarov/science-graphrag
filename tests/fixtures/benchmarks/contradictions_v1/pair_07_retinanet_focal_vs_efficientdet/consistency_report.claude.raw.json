@@ -1,0 +1,10 @@
+{
+  "contradiction_found": true,
+  "claim_a_text": "RetinaNet's top result achieves a COCO test-dev AP of 39.1 while running at 5 fps.",
+  "claim_b_text": "EfficientDet reports RetinaNet-R101 (640) achieving 39.9 AP on COCO test-dev.",
+  "claim_a_quote": "our best model, based on a ResNet-101-FPN backbone, achieves a COCO test-dev AP of 39.1 while running at 5 fps",
+  "claim_b_quote": "RetinaNet-R101 (640)[24] 39.9 58.5 43.0 39.8 53M 8.0x 127B 21x 32",
+  "contradiction_type": "scaling",
+  "severity": "nuanced",
+  "rationale": "Article A reports its best RetinaNet (ResNet-101-FPN) achieves 39.1 AP on COCO test-dev, while Article B's results table credits RetinaNet-R101 (640) with 39.9 AP on the same benchmark. This discrepancy likely reflects different training settings or reproductions, creating a nuanced contradiction about the same model's reported peak accuracy."
+}

@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/corpus_cascade_rcnn_v2",
+  "pack_path": "tests/fixtures/benchmarks/claims/corpus_cascade_rcnn_v2",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T20:39:51.138266+00:00",
+  "spot_check_priority": "medium",
+  "spot_check_priority_rationale": "type_flips=3, unmatched_a=0 (gate: type_flips ≥ 1 OR unmatched_a ≥ 1)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/claims/corpus_cascade_rcnn_v2/gold.json",
+    "count": 3,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-extracted)",
+    "count": 7,
+    "model": "anthropic/claude-sonnet-4.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:243044dc4e9ef564d78c71c11a08ee6de4d9cb1ae012c730acbdcd8ca7b6d70c",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 16091,
+      "completion": 716,
+      "total": 16807
+    },
+    "latency_ms": 15275
+  },
+  "summary": {
+    "a_total": 3,
+    "b_total": 7,
+    "matched": 3,
+    "matched_lexical": 0,
+    "matched_embedding": 3,
+    "unmatched_a": 0,
+    "unmatched_b": 4,
+    "field_agreements": {
+      "polarity": {
+        "agreed": 3,
+        "disagreed": 0
+      },
+      "claim_type": {
+        "agreed": 0,
+        "disagreed": 3
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_claim_id": "cascade_rcnn_ap_gain_2_4",
+      "b_index": 1,
+      "match_score": 0.792,
+      "match_source": "embedding",
+      "a_claim_text_normalized": "Cascade R-CNN improves the COCO AP of Faster R-CNN by roughly two to four points across multiple backbones with negligible inference overhead.",
+      "b_claim_text_normalized": "Cascade R-CNN consistently improves over baseline detectors by 2 to 4 AP points regardless of baseline strength.",
+      "field_disagreements": [
+        {
+          "field": "claim_type",
+          "a": "performance",
+          "b": "comparison"
+        }
+      ]
+    },
+    {
+      "a_claim_id": "cascade_rcnn_iou_progression",
+      "b_index": 5,
+      "match_score": 0.796,
+      "match_source": "embedding",
+      "a_claim_text_normalized": "Cascade R-CNN trains a sequence of detectors with progressively higher IoU thresholds, where each stage's regressed boxes serve as proposals for the next.",
+      "b_claim_text_normalized": "Each bounding box regressor in Cascade R-CNN performs best for input proposals whose IoU is close to the threshold used during training.",
+      "field_disagreements": [
+        {
+          "field": "claim_type",
+          "a": "method",
+          "b": "finding"
+        }
+      ]
+    },
+    {
+      "a_claim_id": "cascade_rcnn_quality_paradox_negative",
+      "b_index": 3,
+      "match_score": 0.842,
+      "match_source": "embedding",
+      "a_claim_text_normalized": "A single-IoU detector trained at a high threshold suffers from too few positive samples, while one trained at a low threshold produces noisy detections that limit final accuracy.",
+      "b_claim_text_normalized": "Training a detector with a high IoU threshold alone degrades detection performance due to exponentially fewer positive training samples.",
+      "field_disagreements": [
+        {
+          "field": "claim_type",
+          "a": "limitation",
+          "b": "finding"
+        }
+      ]
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": [
+    {
+      "b_index": 0,
+      "b_claim_text_normalized": "Cascade R-CNN achieves 42.8 AP on COCO test-dev, outperforming all single-model detectors by a large margin.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 2,
+      "b_claim_text_normalized": "Iterative bounding box regression degrades localization for high-IoU hypotheses when applied multiple times.",
+      "b_polarity": "negative",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 4,
+      "b_claim_text_normalized": "The integral loss detector ensemble shows no visible gain over individual classifiers and fails to achieve higher accuracy at most quality levels.",
+      "b_polarity": "negative",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 6,
+      "b_claim_text_normalized": "Cascade R-CNN resampling progressively shifts the hypothesis distribution toward higher IoU, keeping positive example counts roughly constant across stages.",
+      "b_polarity": "positive",
+      "b_claim_type": "method",
+      "comment": "produced by independent extractor B but not in human gold A"
+    }
+  ]
+}

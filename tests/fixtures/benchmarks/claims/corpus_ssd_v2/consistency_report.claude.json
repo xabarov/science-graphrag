@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/corpus_ssd_v2",
+  "pack_path": "tests/fixtures/benchmarks/claims/corpus_ssd_v2",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T20:43:17.067710+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "polarity_flips=0, unmatched_a_ratio=0.75 (gate: polarity_flips ≥ 1 OR unmatched_a_ratio ≥ 0.30)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/claims/corpus_ssd_v2/gold.json",
+    "count": 4,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-extracted)",
+    "count": 8,
+    "model": "anthropic/claude-sonnet-4.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:b84d3d6807106066e04ee5516efbbb98f3cfb268267a1cee0db8ea6785ff1ac9",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 18828,
+      "completion": 830,
+      "total": 19658
+    },
+    "latency_ms": 13935
+  },
+  "summary": {
+    "a_total": 4,
+    "b_total": 8,
+    "matched": 1,
+    "matched_lexical": 1,
+    "matched_embedding": 0,
+    "unmatched_a": 3,
+    "unmatched_b": 7,
+    "field_agreements": {
+      "polarity": {
+        "agreed": 1,
+        "disagreed": 0
+      },
+      "claim_type": {
+        "agreed": 1,
+        "disagreed": 0
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_claim_id": "ssd_300_voc_speed",
+      "b_index": 0,
+      "match_score": 0.545,
+      "match_source": "lexical",
+      "a_claim_text_normalized": "SSD300 reaches around 74 mAP on PASCAL VOC 2007 test at roughly 59 FPS on a Titan X GPU, surpassing YOLO at higher speed.",
+      "b_claim_text_normalized": "SSD300 achieves 74.3% mAP on VOC2007 test at 59 FPS on a Nvidia Titan X.",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [
+    {
+      "a_claim_id": "ssd_default_boxes_multiscale",
+      "a_claim_text_normalized": "SSD predicts category scores and bounding-box offsets relative to a set of default boxes per feature-map location, evaluated across multiple scales of feature maps.",
+      "a_polarity": "positive",
+      "a_claim_type": "method",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "ssd_multiple_feature_maps",
+      "a_claim_text_normalized": "Predicting from feature maps at several different resolutions is critical for handling objects of different sizes within a single forward pass.",
+      "a_polarity": "positive",
+      "a_claim_type": "design_choice",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "ssd_yolo_localization_negative",
+      "a_claim_text_normalized": "YOLO's single-scale grid prediction degrades accuracy on small objects falling near grid boundaries, an issue mitigated by SSD's per-location multi-box predictions across feature maps.",
+      "a_polarity": "negative",
+      "a_claim_type": "comparison",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "b_index": 1,
+      "b_claim_text_normalized": "SSD512 achieves 76.9% mAP on VOC2007, outperforming a comparable Faster R-CNN model.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 2,
+      "b_claim_text_normalized": "SSD has much worse detection performance on smaller objects than on bigger objects.",
+      "b_polarity": "negative",
+      "b_claim_type": "limitation",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 3,
+      "b_claim_text_normalized": "Data augmentation improves SSD mAP by 8.8 percentage points.",
+      "b_polarity": "positive",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 4,
+      "b_claim_text_normalized": "Using multiple output layers at different resolutions is critical, with accuracy dropping monotonically from 74.3 to 62.4 mAP as layers are removed.",
+      "b_polarity": "positive",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 5,
+      "b_claim_text_normalized": "The expansion data augmentation trick yields a consistent increase of 2%–3% mAP across multiple datasets.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 6,
+      "b_claim_text_normalized": "SSD300 is the first real-time detection method to achieve above 70% mAP on PASCAL VOC2007.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 7,
+      "b_claim_text_normalized": "SSD has more confusions with similar object categories than R-CNN, partly because it shares locations for multiple categories.",
+      "b_polarity": "negative",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    }
+  ]
+}

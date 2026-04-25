@@ -1,0 +1,48 @@
+```json
+{
+  "claims": [
+    {
+      "claim_text_normalized": "FCOS with ResNeXt-64x4d-101 achieves 44.7% AP with single-model and single-scale testing.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "FCOS with ResNeXt-64x4d-101 achieves 44.7% in AP with single-model and single-scale testing, surpassing previous one-stage detectors"
+    },
+    {
+      "claim_text_normalized": "The center-ness branch boosts AP from 33.5% to 37.1%, making anchor-free FCOS outperform anchor-based RetinaNet.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "the center-ness branch can boost AP from 33.5% to 37.1%, making anchor-free FCOS outperform anchor-based RetinaNet (35.9%)"
+    },
+    {
+      "claim_text_normalized": "With FPN, the ratio of ambiguous samples is reduced from 17.84% to 3.75% for different-category overlaps.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "the multi-level prediction reduces the ratio of ambiguous samples from 17.84% to 3.75%"
+    },
+    {
+      "claim_text_normalized": "FCOS without FPN achieves a best possible recall of 95.55%, higher than RetinaNet's official implementation BPR of 90.92%.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "only with feature level P4 with stride being 16 (i.e., no FPN), FCOS can already obtain a BPR of 95.55%. The BPR is much higher than the BPR of 90.92% of the anchor-based detector RetinaNet"
+    },
+    {
+      "claim_text_normalized": "FCOS used as RPN improves AR100 by 18% relative and AR1k by 3.4% absolute over RPNs with FPN.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "FCOS further boosts AR100 and AR1k respectively to 52.8% and 60.3%, which are 18% relative improvement for AR100 and 3.4% absolute improvement for AR1k over the RPNs with FPN"
+    },
+    {
+      "claim_text_normalized": "Center-ness computed from the predicted regression vector cannot improve detection performance, making a separate center-ness branch necessary.",
+      "claim_type": "finding",
+      "polarity": "negative",
+      "evidence_quote_short": "the center-ness computed from the regression vector cannot improve the performance and thus the separate center-ness is necessary"
+    },
+    {
+      "claim_text_normalized": "FCOS has 9 times fewer network output variables than anchor-based detectors using 9 anchor boxes per location.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "FCOS has 9× fewer network output variables than the popular anchor-based detectors [15, 24] with 9 anchor boxes per location"
+    }
+  ]
+}
+```

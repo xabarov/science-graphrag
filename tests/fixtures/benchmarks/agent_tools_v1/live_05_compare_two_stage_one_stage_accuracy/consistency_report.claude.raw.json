@@ -1,0 +1,12 @@
+{
+  "expected_tool_sequence": [
+    {"tool_name": "entity_search"},
+    {"tool_name": "vector_search"},
+    {"tool_name": "cite_works"},
+    {"tool_name": "final_answer"}
+  ],
+  "expected_works_corpus_ids": ["faster_rcnn_realpdf", "retinanet_focal_realpdf"],
+  "expected_methods_canonical": ["focal_loss", "region_proposal_network", "feature_pyramid_network", "retina_net"],
+  "answer_reference_text": "Prior to RetinaNet, one-stage detectors like SSD and YOLO were faster than two-stage detectors like Faster R-CNN but consistently less accurate. RetinaNet introduced Focal Loss to address the extreme foreground-background class imbalance during training of dense one-stage detectors, which was identified as the primary reason for their accuracy gap. With Focal Loss, RetinaNet achieved accuracy surpassing all existing two-stage detectors while maintaining the speed advantage of one-stage methods.",
+  "expected_behavior": "answer"
+}

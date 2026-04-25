@@ -1,0 +1,4 @@
+{
+  "expected_node_canonical_names": ["pascal_voc_2007", "pascal_voc_2012", "imagenet", "lvis"],
+  "rationale": "SSD, YOLOv3, and RetinaNet all report results on COCO (MS COCO), PASCAL VOC 2007, and PASCAL VOC 2012; among the candidate datasets listed, the shared evaluation benchmarks that appear across all three papers are PASCAL VOC 2007 and PASCAL VOC 2012, with ImageNet used for backbone pretraining/evaluation in all three."
+}

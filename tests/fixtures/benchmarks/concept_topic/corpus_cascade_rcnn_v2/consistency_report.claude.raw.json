@@ -1,0 +1,143 @@
+```json
+{
+  "labels": [
+    {
+      "concept_id": "region_proposal",
+      "status": "present",
+      "evidence_quote": "the first stage is a proposal sub-network ("H0"), applied to the entire image, to produce preliminary detection hypotheses, known as object proposals.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "selective_search",
+      "status": "present",
+      "evidence_quote": "the majority of the hypotheses produced by a proposal detector, e.g. RPN [27] or selective search [30], have low quality",
+      "rationale": ""
+    },
+    {
+      "concept_id": "anchor_based",
+      "status": "absent",
+      "rationale": "The article does not explicitly discuss anchor boxes or predefined anchors as a concept; it uses RPN implicitly but never discusses anchor-based detection as a concept."
+    },
+    {
+      "concept_id": "anchor_free",
+      "status": "absent",
+      "rationale": "The article does not mention anchor-free detection or per-pixel prediction without anchors."
+    },
+    {
+      "concept_id": "set_prediction",
+      "status": "absent",
+      "rationale": "The article does not mention bipartite matching, Hungarian matching, or direct set prediction."
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "status": "present",
+      "evidence_quote": "FPN [21] detect proposals at multiple output layers, so as to alleviate the scale mismatch between the RPN receptive fields and actual object size",
+      "rationale": ""
+    },
+    {
+      "concept_id": "focal_loss",
+      "status": "present",
+      "evidence_quote": "RetinaNet [22] was proposed to address the extreme foreground-background class imbalance in dense object detection, achieving better results than state-of-the-art two-stage object detectors.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "nms",
+      "status": "absent",
+      "rationale": "The article does not mention non-maximum suppression explicitly anywhere in the text."
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "status": "absent",
+      "rationale": "The article does not mention transformer architectures or attention-based encoder-decoder models."
+    },
+    {
+      "concept_id": "roi_pooling",
+      "status": "absent",
+      "rationale": "The article references region-wise feature extraction generally but does not explicitly mention RoIPool or ROI pooling by name."
+    },
+    {
+      "concept_id": "roi_align",
+      "status": "present",
+      "evidence_quote": "RoIAlign [14] was used for a stronger baseline. This is denoted as FPN+",
+      "rationale": ""
+    },
+    {
+      "concept_id": "mask_branch",
+      "status": "absent",
+      "rationale": "The article mentions Mask R-CNN in comparison but does not use or introduce a mask prediction branch itself."
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "status": "present",
+      "evidence_quote": "Alternatively, one-stage object detection architectures have also become popular, mostly due to their computational efficiency.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "status": "present",
+      "evidence_quote": "the two-stage formulation of the detection problems, by combining a proposal detector and a region-wise classifier has become predominant in the recent past.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "keypoint_detection",
+      "status": "absent",
+      "rationale": "The article does not mention keypoint detection, corner detection, or paired keypoints."
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "status": "present",
+      "evidence_quote": "R-FCN [4] and FPN [21] with ResNet backbone [16]. These baselines have a wide range of detection performances.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "backbone_darknet",
+      "status": "present",
+      "evidence_quote": "YOLOv2 [26] DarkNet-19 21.6 44.0 19.2 5.0 22.4 35.5",
+      "rationale": ""
+    },
+    {
+      "concept_id": "compound_scaling",
+      "status": "absent",
+      "rationale": "The article does not mention compound scaling or joint depth-width-resolution scaling."
+    },
+    {
+      "concept_id": "cascade_iou_progression",
+      "status": "present",
+      "evidence_quote": "It consists of a sequence of detectors trained with increasing IoU thresholds, to be sequentially more selective against close false positives.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "centerness",
+      "status": "absent",
+      "rationale": "The article does not mention a centerness branch or center prediction."
+    },
+    {
+      "concept_id": "iou_loss",
+      "status": "absent",
+      "rationale": "The article uses IoU as a threshold metric but does not use IoU loss, GIoU, or DIoU as a training loss function."
+    },
+    {
+      "concept_id": "classical_dpm",
+      "status": "absent",
+      "rationale": "The article does not mention Deformable Parts Model (DPM) or deformable part-based models."
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "status": "absent",
+      "rationale": "The article does not mention HOG, SIFT, SURF, or other hand-engineered features."
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "status": "present",
+      "evidence_quote": "detection is framed as a multi-task learning problem that combines classification and bounding box regression.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "status": "present",
+      "evidence_quote": "The Cascade R-CNN was evaluated on MS-COCO 2017 [20], which contains ∼ 118k images for training, 5k for validation (val) and ∼ 20k for testing",
+      "rationale": ""
+    }
+  ]
+}
+```

@@ -1,0 +1,54 @@
+```json
+{
+  "claims": [
+    {
+      "claim_text_normalized": "Faster R-CNN with VGG-16 achieves a frame rate of 5 fps on a GPU including all steps.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "our detection system has a frame rate of 5fps (including all steps) on a GPU, while achieving state-of-the-art object detection accuracy"
+    },
+    {
+      "claim_text_normalized": "The RPN with shared convolutional features computes region proposals in approximately 10 ms per image.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "the marginal cost for computing proposals is small (e.g., 10ms per image)"
+    },
+    {
+      "claim_text_normalized": "RPN+VGG with shared features achieves 69.9% mAP on PASCAL VOC 2007 using only 300 proposals, outperforming Selective Search with Fast R-CNN at 66.9%.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "RPN+VGG, shared 300 07 69.9 ... SS 2000 07 66.9"
+    },
+    {
+      "claim_text_normalized": "The two-stage RPN+detection system outperforms a one-stage dense sliding window system by 4.8% mAP.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "the one-stage system has an mAP of 53.9%. This is lower than the two-stage system (58.7%) by 4.8%"
+    },
+    {
+      "claim_text_normalized": "Removing the regression layer from RPN at test time drops mAP to 52.1%, showing that regressed box bounds are critical for proposal quality.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "when the reg layer is removed at test-time (so the proposals become anchor boxes), the mAP drops to 52.1%"
+    },
+    {
+      "claim_text_normalized": "Approximate joint training reduces training time by about 25–50% compared with alternating training while producing close results.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "this solver produces close results, yet reduces the training time by about 25-50% comparing with alternating training"
+    },
+    {
+      "claim_text_normalized": "Detection results are insensitive to the loss balancing parameter λ over a range of two orders of magnitude.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "our result is impacted just marginally (by ~1%) when λ is within a scale of about two orders of magnitude (1 to 100)"
+    },
+    {
+      "claim_text_normalized": "Faster R-CNN and RPN were the basis of 1st-place entries in ILSVRC and COCO 2015 competitions across multiple tracks.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "Faster R-CNN and RPN are the basis of several 1st-place entries in the tracks of ImageNet detection, ImageNet localization, COCO detection, and COCO segmentation"
+    }
+  ]
+}
+```

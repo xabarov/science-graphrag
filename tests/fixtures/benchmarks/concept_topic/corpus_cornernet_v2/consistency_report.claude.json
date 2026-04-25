@@ -1,0 +1,291 @@
+{
+  "schema_version": 1,
+  "pack_id": "concept_topic/corpus_cornernet_v2",
+  "pack_path": "tests/fixtures/benchmarks/concept_topic/corpus_cornernet_v2",
+  "layer": "concept_topic_v2",
+  "generated_at_utc": "2026-04-25T20:46:36.842526+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "flips=4, missing_in_b_ratio=0.00 (gate: flips ≥ 1 OR missing_in_b_ratio ≥ 0.40)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/concept_topic/corpus_cornernet_v2/gold.json",
+    "count": 12,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-labelled against frozen 25 concepts)",
+    "count": 25,
+    "model": "anthropic/claude-sonnet-4.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:964713756fd03e46de5154bc560b1961abdf7848280c30701c792dda17f8aaf5",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 17061,
+      "completion": 1799,
+      "total": 18860
+    },
+    "latency_ms": 26431
+  },
+  "summary": {
+    "a_total": 12,
+    "b_total": 25,
+    "matched": 12,
+    "matched_lexical": 12,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 13,
+    "field_agreements": {
+      "status": {
+        "agreed_present": 5,
+        "agreed_absent": 3,
+        "flips": 4
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "concept_id": "keypoint_detection",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "We detect an object bounding box as a pair of keypoints, the top-left corner and the bottom-right corner, using a single convolution neural network.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "anchor_free",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "we introduce CornerNet, a new one-stage approach to object detection that does away with anchor boxes.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "CornerNet achieves a 42.2% AP on MS COCO, outperforming all existing one-stage detectors.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "nms",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "We first apply non-maximal suppression (NMS) by using a 3×3 max pooling layer on the corner heatmaps.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "CornerNet achieves a 42.2% AP on MS COCO, outperforming all existing one-stage detectors.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "anchor_based",
+      "a_status": "absent",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "absent",
+          "b": "present"
+        }
+      ],
+      "b_evidence_quote": "A common component of state-of-the-art approaches is anchor boxes (Ren et al., 2015; Liu et al., 2016), which are boxes of various sizes and aspect ratios that serve as detection candidates.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "region_proposal",
+      "a_status": "absent",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "absent",
+          "b": "present"
+        }
+      ],
+      "b_evidence_quote": "Faster-RCNN does away low level proposal algorithms by introducing a region proposal network (RPN), which generates proposals from a set of pre-determined candidate boxes",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "set_prediction",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not use bipartite matching, Hungarian matching, or direct set prediction; corners are grouped via associative embeddings, not set prediction."
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not use or mention transformer architectures or attention-based encoder-decoder structures."
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "a_status": "absent",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "absent",
+          "b": "present"
+        }
+      ],
+      "b_evidence_quote": "Two-stage detectors generate a sparse set of regions of interest (RoIs) and classify each of them by a network.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "mask_branch",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not introduce or use a mask prediction branch; it focuses solely on bounding box detection via corner keypoints."
+    },
+    {
+      "concept_id": "roi_pooling",
+      "a_status": "absent",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "absent",
+          "b": "present"
+        }
+      ],
+      "b_evidence_quote": "One-stage detectors are usually more computationally efficient than two-stage detectors... YOLO and SSD have popularized the one-stage approach, which removes the RoI pooling step",
+      "b_rationale": ""
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": [
+    {
+      "concept_id": "selective_search",
+      "b_status": "present",
+      "b_evidence_quote": "R-CNN generates RoIs using a low level vision algorithm (Uijlings et al., 2013; Zitnick and Dollar, 2014).",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "b_status": "present",
+      "b_evidence_quote": "we train a CornerNet in which we replace the hourglass network with FPN (w/ ResNet-101) (Lin et al., 2017), which is more commonly used in state-of-the-art object detectors.",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "focal_loss",
+      "b_status": "present",
+      "b_evidence_quote": "We design a variant of focal loss (Lin et al., 2017): Ldet=−1/N ... we also add our novel variant of focal loss (Lin et al., 2017) to help better train the network.",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "roi_align",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention ROIAlign or RoIAlign anywhere in the text.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "b_status": "present",
+      "b_evidence_quote": "we replace the hourglass network with FPN (w/ ResNet-101) (Lin et al., 2017)",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "backbone_darknet",
+      "b_status": "present",
+      "b_evidence_quote": "YOLOv2 (Redmon and Farhadi, 2016) DarkNet-19 21.6 44.0 19.2 5.0 22.4 35.5",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "compound_scaling",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention compound scaling or joint depth-width-resolution scaling.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "cascade_iou_progression",
+      "b_status": "present",
+      "b_evidence_quote": "Cascade R-CNN (Cai and Vasconcelos, 2017) 38.9 57.8 53.4 46.9 35.8 15.8",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "centerness",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not introduce or use a centerness branch or center prediction mechanism.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "iou_loss",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not use IoU loss, GIoU, or generalized IoU loss; it uses smooth L1 loss for offsets.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "classical_dpm",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention Deformable Parts Model (DPM) or deformable part-based models.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not use or discuss handcrafted visual features such as HOG, SIFT, or SURF.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "b_status": "present",
+      "b_evidence_quote": "We use Adam to optimize the full training loss: L = Ldet + αLpull + βLpush + γLoff",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    }
+  ]
+}

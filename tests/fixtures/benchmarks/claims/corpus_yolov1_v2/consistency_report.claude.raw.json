@@ -1,0 +1,48 @@
+```json
+{
+  "claims": [
+    {
+      "claim_text_normalized": "Fast YOLO processes images at 155 frames per second while achieving more than twice the mAP of other real-time detectors.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "Fast YOLO is the fastest object detection method on PASCAL; as far as we know, it is the fastest extant object detector. With 52.7% mAP, it is more than twice as accurate as prior work on real-time detection."
+    },
+    {
+      "claim_text_normalized": "YOLO makes more localization errors than Fast R-CNN, with localization errors accounting for more of YOLO's errors than all other sources combined.",
+      "claim_type": "finding",
+      "polarity": "negative",
+      "evidence_quote_short": "YOLO struggles to localize objects correctly. Localization errors account for more of YOLO's errors than all other sources combined."
+    },
+    {
+      "claim_text_normalized": "Fast R-CNN is almost 3 times more likely to predict background detections than YOLO.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "Fast R-CNN is almost 3x more likely to predict background detections than YOLO."
+    },
+    {
+      "claim_text_normalized": "Combining YOLO with the best Fast R-CNN model increases mAP from 71.8% to 75.0% on VOC 2007.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "The best Fast R-CNN model achieves a mAP of 71.8% on the VOC 2007 test set. When combined with YOLO, its mAP increases by 3.2% to 75.0%."
+    },
+    {
+      "claim_text_normalized": "YOLO outperforms R-CNN and DPM when generalizing from natural images to artwork domains.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "YOLO has good performance on VOC 2007 and its AP degrades less than other methods when applied to artwork."
+    },
+    {
+      "claim_text_normalized": "YOLO struggles with small objects that appear in groups due to spatial constraints limiting nearby object predictions.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "This spatial constraint limits the number of nearby objects that our model can predict. Our model struggles with small objects that appear in groups, such as flocks of birds."
+    },
+    {
+      "claim_text_normalized": "YOLO frames object detection as a regression problem predicting bounding boxes and class probabilities from full images in a single network evaluation.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation."
+    }
+  ]
+}
+```

@@ -1,0 +1,143 @@
+```json
+{
+  "labels": [
+    {
+      "concept_id": "region_proposal",
+      "status": "present",
+      "evidence_quote": "we introduce novel Region Proposal Networks (RPNs) that share convolutional layers with state-of-the-art object detection networks",
+      "rationale": ""
+    },
+    {
+      "concept_id": "selective_search",
+      "status": "present",
+      "evidence_quote": "Selective Search [4], one of the most popular methods, greedily merges superpixels based on engineered low-level features.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "anchor_based",
+      "status": "present",
+      "evidence_quote": "we introduce novel \"anchor\" boxes that serve as references at multiple scales and aspect ratios.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "anchor_free",
+      "status": "absent",
+      "rationale": "The article introduces and relies on anchor boxes; it does not use or discuss anchor-free detection."
+    },
+    {
+      "concept_id": "set_prediction",
+      "status": "absent",
+      "rationale": "The article does not use bipartite/Hungarian matching or direct set prediction; it uses NMS-based proposal selection."
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "status": "absent",
+      "rationale": "The article explicitly avoids image/feature pyramids, instead using multi-scale anchors on a single-scale feature map."
+    },
+    {
+      "concept_id": "focal_loss",
+      "status": "absent",
+      "rationale": "The article uses smooth L1 and log loss; focal loss is not mentioned."
+    },
+    {
+      "concept_id": "nms",
+      "status": "present",
+      "evidence_quote": "we adopt non-maximum suppression (NMS) on the proposal regions based on their cls scores. We fix the IoU threshold for NMS at 0.7",
+      "rationale": ""
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "status": "absent",
+      "rationale": "The article uses convolutional networks; no transformer encoder-decoder architecture is used or discussed."
+    },
+    {
+      "concept_id": "roi_pooling",
+      "status": "present",
+      "evidence_quote": "The RoI pooling layer [2] in Fast R-CNN accepts the convolutional features and also the predicted bounding boxes as input",
+      "rationale": ""
+    },
+    {
+      "concept_id": "roi_align",
+      "status": "absent",
+      "rationale": "ROIAlign is not mentioned; the article uses RoI pooling from Fast R-CNN."
+    },
+    {
+      "concept_id": "mask_branch",
+      "status": "absent",
+      "rationale": "The article focuses on object detection with bounding boxes; no mask prediction branch is introduced."
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "status": "present",
+      "evidence_quote": "OverFeat is a one-stage, class-specific detection pipeline, and ours is a two-stage cascade consisting of class-agnostic proposals and class-specific detections.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "status": "present",
+      "evidence_quote": "ours is a two-stage cascade consisting of class-agnostic proposals and class-specific detections.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "keypoint_detection",
+      "status": "absent",
+      "rationale": "The article does not discuss keypoint or corner detection."
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "status": "present",
+      "evidence_quote": "RPNs completely learn to propose regions from data, and thus can easily benefit from deeper and more expressive features (such as the 101-layer residual nets adopted in [18]).",
+      "rationale": ""
+    },
+    {
+      "concept_id": "backbone_darknet",
+      "status": "absent",
+      "rationale": "Darknet is not mentioned; the article uses ZF and VGG-16 backbones."
+    },
+    {
+      "concept_id": "compound_scaling",
+      "status": "absent",
+      "rationale": "Compound scaling of depth/width/resolution is not discussed in this article."
+    },
+    {
+      "concept_id": "cascade_iou_progression",
+      "status": "absent",
+      "rationale": "The article does not use stage-wise IoU threshold progression as in Cascade R-CNN."
+    },
+    {
+      "concept_id": "centerness",
+      "status": "absent",
+      "rationale": "Center-ness branch is not mentioned or used in this article."
+    },
+    {
+      "concept_id": "iou_loss",
+      "status": "absent",
+      "rationale": "The article uses smooth L1 regression loss, not IoU/GIoU loss."
+    },
+    {
+      "concept_id": "classical_dpm",
+      "status": "present",
+      "evidence_quote": "The first way is based on image/feature pyramids, e.g., in DPM [8] and CNN-based methods",
+      "rationale": ""
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "status": "present",
+      "evidence_quote": "feature maps (HOG [8] or deep convolutional features [9], [1], [2]) are computed for each scale",
+      "rationale": ""
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "status": "present",
+      "evidence_quote": "we minimize an objective function following the multi-task loss in Fast R-CNN [2]. Our loss function for an image is defined as: L({pi},{ti}) = 1/Ncls ∑ Lcls + λ 1/Nreg ∑ p*i Lreg",
+      "rationale": ""
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "status": "present",
+      "evidence_quote": "We present more results on the Microsoft COCO object detection dataset [12].",
+      "rationale": ""
+    }
+  ]
+}
+```

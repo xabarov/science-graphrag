@@ -1,0 +1,54 @@
+```json
+{
+  "claims": [
+    {
+      "claim_text_normalized": "SSD300 achieves 74.3% mAP on VOC2007 test at 59 FPS on a Nvidia Titan X.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "For 300×300 input, SSD achieves 74.3% mAP on VOC2007 test at 59 FPS on a Nvidia Titan X"
+    },
+    {
+      "claim_text_normalized": "SSD512 achieves 76.9% mAP on VOC2007, outperforming a comparable Faster R-CNN model.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "for 512×512 input, SSD achieves 76.9% mAP, outperforming a comparable state-of-the-art Faster R-CNN model"
+    },
+    {
+      "claim_text_normalized": "SSD has much worse detection performance on smaller objects than on bigger objects.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "SSD is very sensitive to the bounding box size. In other words, it has much worse performance on smaller objects than bigger objects."
+    },
+    {
+      "claim_text_normalized": "Data augmentation improves SSD mAP by 8.8 percentage points.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "Table 2 shows that we can improve 8.8% mAP with this sampling strategy."
+    },
+    {
+      "claim_text_normalized": "Using multiple output layers at different resolutions is critical, with accuracy dropping monotonically from 74.3 to 62.4 mAP as layers are removed.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "Table 3 shows a decrease in accuracy with fewer layers, dropping monotonically from 74.3 to 62.4."
+    },
+    {
+      "claim_text_normalized": "The expansion data augmentation trick yields a consistent increase of 2%–3% mAP across multiple datasets.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "We have seen a consistent increase of 2%-3% mAP across multiple datasets, as shown in Table 6."
+    },
+    {
+      "claim_text_normalized": "SSD300 is the first real-time detection method to achieve above 70% mAP on PASCAL VOC2007.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "SSD300 is the only real-time detection method that can achieve above 70% mAP."
+    },
+    {
+      "claim_text_normalized": "SSD has more confusions with similar object categories than R-CNN, partly because it shares locations for multiple categories.",
+      "claim_type": "finding",
+      "polarity": "negative",
+      "evidence_quote_short": "SSD has more confusions with similar object categories (especially for animals), partly because we share locations for multiple categories."
+    }
+  ]
+}
+```

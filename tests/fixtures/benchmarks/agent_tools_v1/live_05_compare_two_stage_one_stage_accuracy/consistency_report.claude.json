@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "pack_id": "live_05_compare_two_stage_one_stage_accuracy",
+  "pack_path": "tests/fixtures/benchmarks/agent_tools_v1/live_05_compare_two_stage_one_stage_accuracy",
+  "layer": "agent_tools_live",
+  "generated_at_utc": "2026-04-25T20:51:17.464959+00:00",
+  "spot_check_priority": "medium",
+  "spot_check_priority_rationale": "tool_req_recall=1.00, works=1.00, methods=0.25",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/agent_tools_v1/live_05_compare_two_stage_one_stage_accuracy/gold.json",
+    "count": 5,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "question.txt | tool_set=7",
+    "count": 10,
+    "model": "anthropic/claude-sonnet-4.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:be6c537968c5549baa68a2d5efb2e7093abcfabab0bb57958863a3a5bc32c669",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 467,
+      "completion": 266,
+      "total": 733
+    },
+    "latency_ms": 4425
+  },
+  "summary": {
+    "a_total": 5,
+    "b_total": 10,
+    "matched": 4,
+    "matched_lexical": 4,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 6,
+    "tool_metrics": {
+      "required_recall": 1.0,
+      "all_recall": 0.5,
+      "missing_required": [],
+      "extra_tools_in_b": [
+        "cite_works",
+        "entity_search",
+        "final_answer"
+      ]
+    },
+    "works_jaccard": 1.0,
+    "methods_jaccard": 0.25,
+    "answer_token_jaccard": 0.296,
+    "is_negative_case": false,
+    "behavior_agreement": true,
+    "behavior_a": "answer",
+    "behavior_b": "answer"
+  },
+  "matched_pairs": [
+    {
+      "tool_name": "vector_search",
+      "kind": "required_tool_match",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "faster_rcnn_realpdf",
+      "kind": "expected_work_match",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "retinanet_focal_realpdf",
+      "kind": "expected_work_match",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "method_canonical": "focal_loss",
+      "kind": "expected_method_match",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": [
+    {
+      "tool_name": "cite_works",
+      "kind": "extra_tool_in_b"
+    },
+    {
+      "tool_name": "entity_search",
+      "kind": "extra_tool_in_b"
+    },
+    {
+      "tool_name": "final_answer",
+      "kind": "extra_tool_in_b"
+    },
+    {
+      "method_canonical": "feature_pyramid_network",
+      "kind": "extra_method_in_b"
+    },
+    {
+      "method_canonical": "region_proposal_network",
+      "kind": "extra_method_in_b"
+    },
+    {
+      "method_canonical": "retina_net",
+      "kind": "extra_method_in_b"
+    }
+  ]
+}

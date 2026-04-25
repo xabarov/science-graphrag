@@ -1,0 +1,54 @@
+```json
+{
+  "claims": [
+    {
+      "claim_text_normalized": "Mask R-CNN extends Faster R-CNN by adding a mask prediction branch in parallel with the classification and bounding box regression branch.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "Mask R-CNN extends Faster R-CNN by adding a branch for predicting segmentation masks on each Region of Interest (RoI), in parallel with the existing branch for classification and bounding box regression"
+    },
+    {
+      "claim_text_normalized": "RoIAlign improves mask AP by approximately 3 points over RoIPool with much of the gain at high IoU.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "RoIAlign improves AP by about 3 points over RoIPool, with much of the gain coming at high IoU (AP75)"
+    },
+    {
+      "claim_text_normalized": "Decoupling mask and class prediction via per-class binary masks (sigmoid) gives 5.5 points mask AP gain over multinomial masks (softmax).",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "Decoupling via per-class binary masks (sigmoid) gives large gains over multinomial masks (softmax). +5.5 +7.1 +6.4"
+    },
+    {
+      "claim_text_normalized": "Mask R-CNN with ResNet-101-FPN achieves 35.7 mask AP on COCO test-dev, outperforming FCIS+++ without bells and whistles.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "Without bells and whistles, Mask R-CNN with ResNet-101-FPN backbone outperforms FCIS+++ [26], which includes multi-scale train/test, horizontal flip test, and online hard example mining"
+    },
+    {
+      "claim_text_normalized": "FCIS exhibits systematic artifacts on overlapping instances, showing it is challenged by the fundamental difficulty of instance segmentation.",
+      "claim_type": "comparison",
+      "polarity": "negative",
+      "evidence_quote_short": "FCIS exhibits systematic artifacts on overlapping instances and creates spurious edges (Figure 6), showing that it is challenged by the fundamental difficulties of segmenting instances."
+    },
+    {
+      "claim_text_normalized": "Using FCNs for mask prediction gives a 2.1 mask AP gain over MLPs because FCNs explicitly encode spatial layout.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "Using FCNs gives a 2.1 mask AP gain over MLPs. We note that we choose this backbone so that the conv layers of the FCN head are not pre-trained, for a fair comparison with MLP."
+    },
+    {
+      "claim_text_normalized": "Mask R-CNN achieves 63.1 keypoint AP on COCO test-dev, surpassing the 2016 COCO keypoint competition winner while running at 5 fps.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "Mask R-CNN surpasses the winner of the 2016 COCO keypoint competition, and at the same time runs at 5 fps."
+    },
+    {
+      "claim_text_normalized": "Adding the keypoint branch reduces box and mask AP slightly, suggesting keypoint detection does not help the other tasks.",
+      "claim_type": "finding",
+      "polarity": "negative",
+      "evidence_quote_short": "adding the keypoint branch reduces the box/mask AP slightly, suggesting that while keypoint detection benefits from multitask training, it does not in turn help the other tasks."
+    }
+  ]
+}
+```

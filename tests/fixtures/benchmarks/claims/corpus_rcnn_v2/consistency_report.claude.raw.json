@@ -1,0 +1,54 @@
+```json
+{
+  "claims": [
+    {
+      "claim_text_normalized": "R-CNN improves mAP by more than 30% relative to the previous best result on VOC 2012, achieving a mAP of 53.3%.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "improves mean average precision (mAP) by more than 30% relative to the previous best result on VOC 2012—achieving a mAP of 53.3%"
+    },
+    {
+      "claim_text_normalized": "R-CNN achieves a mAP of 31.4% on ILSVRC2013, outperforming OverFeat which achieved 24.3%.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "R-CNN achieves a mAP of 31.4%, which is significantly ahead of the second-best result of 24.3% from OverFeat"
+    },
+    {
+      "claim_text_normalized": "Fine-tuning the CNN for detection improves mAP by 8 percentage points.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "fine-tuning increases mAP by 8.0 percentage points to 54.2%"
+    },
+    {
+      "claim_text_normalized": "R-CNN's mAP of 54% on VOC 2010 substantially exceeds the HOG-based DPM which achieves 33% mAP.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "our system achieves a mAP of 54% on VOC 2010 compared to 33% for the highly-tuned, HOG-based deformable part model (DPM)"
+    },
+    {
+      "claim_text_normalized": "CNN features from fc7 generalize worse than features from fc6 without fine-tuning, meaning 29% of CNN parameters can be removed without degrading mAP.",
+      "claim_type": "finding",
+      "polarity": "neutral",
+      "evidence_quote_short": "features from fc7 generalize worse than features from fc6. This means that 29%, or about 16.8 million, of the CNN's parameters can be removed without degrading mAP"
+    },
+    {
+      "claim_text_normalized": "Bounding-box regression boosts mAP by 3 to 4 points by fixing a large number of mislocalized detections.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "this simple approach fixes a large number of mislocalized detections, boosting mAP by 3 to 4 points"
+    },
+    {
+      "claim_text_normalized": "OverFeat is approximately 9 times faster than R-CNN due to shared computation over sliding windows.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "OverFeat has a significant speed advantage over R-CNN: it is about 9x faster, based on a figure of 2 seconds per image quoted from [34]"
+    },
+    {
+      "claim_text_normalized": "Selective search on ILSVRC val images achieves only 91.6% recall of ground-truth bounding boxes, notably lower than the approximately 98% recall on PASCAL.",
+      "claim_type": "finding",
+      "polarity": "negative",
+      "evidence_quote_short": "selective search resulted in an average of 2403 region proposals per image with a 91.6% recall of all ground-truth bounding boxes... notably lower than in PASCAL, where it is approximately 98%"
+    }
+  ]
+}
+```

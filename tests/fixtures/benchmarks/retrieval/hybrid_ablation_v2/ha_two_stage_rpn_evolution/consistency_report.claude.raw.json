@@ -1,0 +1,5 @@
+{
+  "relevant_corpus_work_ids": ["fast_rcnn_realpdf", "faster_rcnn_realpdf", "rfcn_realpdf"],
+  "irrelevant_corpus_work_ids": ["detr_realpdf", "retinanet_focal_realpdf", "ssd_realpdf", "yolov1"],
+  "rationale": "Faster R-CNN introduces the Region Proposal Network (RPN) with end-to-end training and shared convolutional features; Fast R-CNN provides the two-stage detection foundation it builds on; R-FCN extends this paradigm with fully convolutional shared features, while the remaining papers are single-stage or transformer-based detectors unrelated to RPN-based two-stage detection."
+}

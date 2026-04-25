@@ -1,0 +1,48 @@
+```json
+{
+  "claims": [
+    {
+      "claim_text_normalized": "EfficientDet-D7x achieves state-of-the-art 55.1 AP on COCO test-dev with 77M parameters and 410B FLOPs.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "our single-model single-scale EfficientDet-D7x achieves a new state-of-the-art 55.1 AP on test-dev, outperforming prior art by a large margin in both accuracy (+4 AP) and efficiency (7x fewer FLOPs)"
+    },
+    {
+      "claim_text_normalized": "BiFPN with weighted feature fusion achieves the best accuracy with fewer parameters and FLOPs compared to FPN, PANet, NAS-FPN, and unweighted BiFPN.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "BiFPN (w/ weighted) 44.39 0.88x 0.68x ... Our weighted BiFPN achieves the best accuracy with fewer parameters and FLOPs."
+    },
+    {
+      "claim_text_normalized": "Fast normalized fusion achieves similar accuracy as softmax-based fusion but runs 28% to 31% faster on GPUs.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "our fast fusion approach achieves similar accuracy as softmax-based fusion, but runs 1.26x - 1.31x faster on GPUs"
+    },
+    {
+      "claim_text_normalized": "Replacing the ResNet-50 backbone with EfficientNet-B3 and FPN with BiFPN improves accuracy by about 7 AP while reducing parameters and FLOPs.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "we first replace the backbone with EfficientNet-B3, which improves accuracy by about 3 AP... By further replacing FPN with our proposed BiFPN, we achieve additional 4 AP gain with much fewer parameters and FLOPs"
+    },
+    {
+      "claim_text_normalized": "Compound scaling achieves better accuracy and efficiency than scaling a single dimension such as image size, channels, or number of layers.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "our compound scaling method achieves better efficiency than other methods, suggesting the benefits of jointly scaling by better balancing difference architecture dimensions"
+    },
+    {
+      "claim_text_normalized": "EfficientDet achieves 81.74% mIOU on Pascal VOC 2012 semantic segmentation with 9.8x fewer FLOPs than DeepLabV3+.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "our model achieves 1.7% better accuracy with 9.8x fewer FLOPs than the prior art of DeepLabV3+"
+    },
+    {
+      "claim_text_normalized": "The compound scaling method for EfficientDet is heuristic-based and may not be optimal.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "our compound scaling is heuristic-based and might not be optimal"
+    }
+  ]
+}
+```

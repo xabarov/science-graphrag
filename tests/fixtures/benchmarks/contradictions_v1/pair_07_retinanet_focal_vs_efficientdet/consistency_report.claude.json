@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "pack_id": "contradictions_v1/pair_07_retinanet_focal_vs_efficientdet",
+  "pack_path": "tests/fixtures/benchmarks/contradictions_v1/pair_07_retinanet_focal_vs_efficientdet",
+  "layer": "contradictions_v1",
+  "generated_at_utc": "2026-04-25T20:49:53.079343+00:00",
+  "spot_check_priority": "medium",
+  "spot_check_priority_rationale": "type matches but severity_match=True, worst_claim_text_score=0.04 (gate: severity flip OR text<0.30)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/contradictions_v1/pair_07_retinanet_focal_vs_efficientdet/gold.json",
+    "count": 1,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article_a.md + article_b.md (paired)",
+    "count": 1,
+    "model": "anthropic/claude-sonnet-4.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:003d0756c4b1a8e0f508939f3bdb62606dacb38060747ee5c2a2402b3ec6fbf3",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 19172,
+      "completion": 321,
+      "total": 19493
+    },
+    "latency_ms": 7548
+  },
+  "summary": {
+    "a_total": 1,
+    "b_total": 1,
+    "matched": 1,
+    "matched_lexical": 1,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "field_agreements": {
+      "contradiction_type": {
+        "agreed": 1,
+        "disagreed": 0
+      },
+      "severity": {
+        "agreed": 1,
+        "disagreed": 0
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "pair_id": "c07_depth_scaling_vs_compound_scaling",
+      "match_score": 0.038,
+      "match_source": "lexical",
+      "claim_a_score": 0.038,
+      "claim_b_score": 0.129,
+      "field_disagreements": [],
+      "a_claim_a_text": "Deeper backbones (ResNet-101, ResNeXt) yield substantial accuracy gains over shallower ones for dense object detection.",
+      "b_claim_a_text": "RetinaNet's top result achieves a COCO test-dev AP of 39.1 while running at 5 fps.",
+      "a_claim_b_text": "Joint compound scaling of depth, width, and input resolution is more efficient than scaling depth alone for object detection.",
+      "b_claim_b_text": "EfficientDet reports RetinaNet-R101 (640) achieving 39.9 AP on COCO test-dev."
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": []
+}

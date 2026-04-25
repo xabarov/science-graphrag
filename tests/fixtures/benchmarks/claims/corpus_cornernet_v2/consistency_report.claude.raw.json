@@ -1,0 +1,54 @@
+```json
+{
+  "claims": [
+    {
+      "claim_text_normalized": "CornerNet achieves 42.2% AP on MS COCO, outperforming all existing one-stage detectors.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "CornerNet achieves a 42.2% AP on MS COCO, outperforming all existing one-stage detectors."
+    },
+    {
+      "claim_text_normalized": "Corner pooling improves AP by 2.0% over a network without corner pooling on MS COCO validation.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "Tab. 1 shows that adding corner pooling gives significant improvement: 2.0% on AP, 2.1% on AP50 and 2.1% on AP75."
+    },
+    {
+      "claim_text_normalized": "The main bottleneck of CornerNet is detecting corners, not grouping them.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "using the ground-truth corner heatmaps alone improves the AP from 38.4% to 73.1%, suggesting that the main bottleneck of CornerNet is detecting corners."
+    },
+    {
+      "claim_text_normalized": "CornerNet achieves a much higher AP at 0.9 IoU than other detectors, outperforming Cascade R-CNN + IoU-Net by 3.9%.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "CornerNet achieves a much higher AP at 0.9 IoU than other detectors, outperforming Cascade R-CNN + IoU-Net by 3.9%"
+    },
+    {
+      "claim_text_normalized": "Using the hourglass network backbone outperforms using FPN with ResNet-101 by 8.2% AP in CornerNet.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "CornerNet with hourglass network outperforms CornerNet with FPN by 8.2% AP, and the anchor box based detector with hourglass network by 5.5% AP."
+    },
+    {
+      "claim_text_normalized": "Using an object-dependent radius for penalty reduction outperforms a fixed radius by 2.8% AP on MS COCO validation.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "Object-dependent radius further improves the AP by 2.8%, APm by 2.0% and APl by 5.8%."
+    },
+    {
+      "claim_text_normalized": "Corner pooling is especially helpful for medium and large objects, improving their APs by 2.4% and 3.6% respectively.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "corner pooling is especially helpful for medium and large objects, improving their APs by 2.4% and 3.6% respectively."
+    },
+    {
+      "claim_text_normalized": "The use of anchor boxes requires a very large number of boxes, e.g. more than 40k in DSSD and more than 100k in RetinaNet, creating a huge imbalance between positive and negative anchor boxes.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "we typically need a very large set of anchor boxes, e.g. more than 40k in DSSD and more than 100k in RetinaNet... this creates a huge imbalance between positive and negative anchor boxes and slows down training"
+    }
+  ]
+}
+```

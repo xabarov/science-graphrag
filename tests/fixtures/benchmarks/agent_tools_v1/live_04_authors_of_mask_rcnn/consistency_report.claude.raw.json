@@ -1,0 +1,23 @@
+{
+  "expected_tool_sequence": [
+    {"tool_name": "entity_search"},
+    {"tool_name": "cypher_query"},
+    {"tool_name": "cypher_query"},
+    {"tool_name": "final_answer"}
+  ],
+  "expected_works_corpus_ids": [
+    "mask_rcnn_realpdf",
+    "faster_rcnn",
+    "retinanet_focal_realpdf",
+    "feature_pyramid_networks",
+    "faster_rcnn_realpdf"
+  ],
+  "expected_methods_canonical": [
+    "mask_rcnn",
+    "roi_align",
+    "faster_rcnn",
+    "feature_pyramid_network"
+  ],
+  "answer_reference_text": "Mask R-CNN was authored by Kaiming He, Georgia Gkioxari, Piotr Dollár, and Ross Girshick. Other detection papers in the corpus sharing at least one author include Faster R-CNN (Girshick, He, Dollár et al.), Feature Pyramid Networks (Lin, Dollár, Girshick, He et al.), and RetinaNet/Focal Loss (Lin, Goyal, Girshick, He, Dollár).",
+  "expected_behavior": "answer"
+}

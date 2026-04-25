@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/holdout_yolox_v1",
+  "pack_path": "tests/fixtures/benchmarks/claims/holdout_yolox_v1",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T20:45:40.503417+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "polarity_flips=0, unmatched_a_ratio=0.75 (gate: polarity_flips ≥ 1 OR unmatched_a_ratio ≥ 0.30)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/claims/holdout_yolox_v1/gold.json",
+    "count": 4,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-extracted)",
+    "count": 8,
+    "model": "anthropic/claude-sonnet-4.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:4a6a5467eda190a35b2db2670c5a6e8882ad218c882789b7b8a752ac1046f2b0",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 11677,
+      "completion": 1045,
+      "total": 12722
+    },
+    "latency_ms": 16007
+  },
+  "summary": {
+    "a_total": 4,
+    "b_total": 8,
+    "matched": 1,
+    "matched_lexical": 1,
+    "matched_embedding": 0,
+    "unmatched_a": 3,
+    "unmatched_b": 7,
+    "field_agreements": {
+      "polarity": {
+        "agreed": 1,
+        "disagreed": 0
+      },
+      "claim_type": {
+        "agreed": 1,
+        "disagreed": 0
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_claim_id": "yolox_l_50ap_v100_speed",
+      "b_index": 0,
+      "match_score": 0.707,
+      "match_source": "lexical",
+      "a_claim_text_normalized": "YOLOX-L achieves around 50 AP on COCO at roughly 69 FPS on a Tesla V100, surpassing YOLOv5-L by about 1.8 AP at the same speed.",
+      "b_claim_text_normalized": "YOLOX-L achieves 50.0% AP on COCO at 68.9 FPS on Tesla V100, exceeding YOLOv5-L by 1.8% AP.",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [
+    {
+      "a_claim_id": "yolox_anchor_free_simota",
+      "a_claim_text_normalized": "An anchor-free design combined with SimOTA dynamic label assignment improves YOLO accuracy without anchor box hyperparameter tuning.",
+      "a_polarity": "positive",
+      "a_claim_type": "design_choice",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "yolox_coupled_head_conflict_negative",
+      "a_claim_text_normalized": "Coupled detection heads in earlier YOLO versions create a conflict between classification and localization branches that slows convergence and limits accuracy.",
+      "a_polarity": "negative",
+      "a_claim_type": "limitation",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "yolox_decoupled_head",
+      "a_claim_text_normalized": "YOLOX adopts a decoupled head that separates classification and regression branches, replacing the coupled head used in earlier YOLO versions.",
+      "a_polarity": "positive",
+      "a_claim_type": "method",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "b_index": 1,
+      "b_claim_text_normalized": "The decoupled head converges much faster than the coupled YOLOv3 head and achieves better final detection performance.",
+      "b_polarity": "positive",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 2,
+      "b_claim_text_normalized": "SimOTA raises the detector from 45.0% AP to 47.3% AP, outperforming the best ultralytics-YOLOv3 by 3.0% AP.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 3,
+      "b_claim_text_normalized": "Solving the OT problem via Sinkhorn-Knopp algorithm brings 25% extra training time, making it too expensive for 300-epoch training.",
+      "b_polarity": "negative",
+      "b_claim_type": "limitation",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 4,
+      "b_claim_text_normalized": "The end-to-end NMS-free YOLO option decreases AP by 0.8% with a decoupled head compared to 4.2% with a coupled head.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 5,
+      "b_claim_text_normalized": "YOLOX-Nano with only 0.91M parameters and 1.08G FLOPs achieves 25.3% AP on COCO, surpassing NanoDet by 1.8% AP.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 6,
+      "b_claim_text_normalized": "Stronger data augmentation such as MixUp is more helpful for large models but should be weakened for small models like YOLOX-Nano.",
+      "b_polarity": "positive",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 7,
+      "b_claim_text_normalized": "After using strong data augmentation, ImageNet pre-training is no longer beneficial, so all following models are trained from scratch.",
+      "b_polarity": "positive",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    }
+  ]
+}

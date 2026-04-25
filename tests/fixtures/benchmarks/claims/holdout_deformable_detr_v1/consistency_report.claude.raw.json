@@ -1,0 +1,54 @@
+```json
+{
+  "claims": [
+    {
+      "claim_text_normalized": "Deformable DETR achieves better detection performance than DETR with 10 times fewer training epochs.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "Deformable DETR can achieve better performance (especially on small objects) with 10× less training epochs."
+    },
+    {
+      "claim_text_normalized": "DETR requires 500 epochs to converge, which is 10 to 20 times slower than Faster R-CNN.",
+      "claim_type": "finding",
+      "polarity": "negative",
+      "evidence_quote_short": "DETR needs 500 epochs to converge, which is around 10 to 20 times slower than Faster R-CNN"
+    },
+    {
+      "claim_text_normalized": "The Transformer encoder self-attention in DETR has quadratic computational complexity with respect to the spatial size of feature maps.",
+      "claim_type": "finding",
+      "polarity": "negative",
+      "evidence_quote_short": "The computational complexity of self-attention is of O(H2W2C), which grows quadratically with the spatial size."
+    },
+    {
+      "claim_text_normalized": "Deformable DETR with iterative bounding box refinement and two-stage paradigm achieves 46.2 AP on COCO 2017 val set in 50 epochs.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "++ two-stage Deformable DETR 50 46.2 65.2 50.0 28.8 49.2 61.7 40M 173G 340 19"
+    },
+    {
+      "claim_text_normalized": "Using multi-scale inputs instead of single-scale inputs improves detection accuracy by 1.7% AP, especially on small objects with 2.9% APS improvement.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "Using multi-scale inputs instead of single-scale inputs can effectively improve detection accuracy with 1.7% AP, especially on small objects with 2.9% APS."
+    },
+    {
+      "claim_text_normalized": "Adding FPN on top of multi-scale deformable attention does not improve detection performance.",
+      "claim_type": "finding",
+      "polarity": "negative",
+      "evidence_quote_short": "Because the cross-level feature exchange is already adopted, adding FPNs will not improve the performance."
+    },
+    {
+      "claim_text_normalized": "Deformable DETR with ResNeXt-101 and DCN using test-time augmentations achieves 52.3 AP on COCO 2017 test-dev.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "By using ResNeXt-101 with DCN (Zhu et al., 2019b), the accuracy rises to 50.1 AP. With additional test-time augmentations, the proposed method achieves 52.3 AP."
+    },
+    {
+      "claim_text_normalized": "The deformable attention module has linear complexity with spatial size when applied in the encoder, compared to quadratic complexity of standard Transformer attention.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "When it is applied in DETR encoder, where Nq = HW, the complexity becomes O(HWC2), which is of linear complexity with the spatial size."
+    }
+  ]
+}
+```

@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "pack_id": "idea_assist_v1/live_01_low_light_detector",
+  "pack_path": "tests/fixtures/benchmarks/idea_assist_v1/live_01_low_light_detector",
+  "layer": "idea_assist_live",
+  "generated_at_utc": "2026-04-25T20:50:11.978088+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "low_relevance_in_pool=2, pool=thin",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/idea_assist_v1/live_01_low_light_detector/gold.json",
+    "count": 5,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_reviewer",
+    "source": "gold fixture review (not output generation)",
+    "count": 5,
+    "model": "anthropic/claude-sonnet-4.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:1a25e1f0fee141a1fb76c6ebc82f2f47e9a1a698061e266ae5dbc252631dd2ac",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 946,
+      "completion": 979,
+      "total": 1925
+    },
+    "latency_ms": 18124
+  },
+  "summary": {
+    "a_total": 5,
+    "b_total": 5,
+    "matched": 5,
+    "matched_lexical": 5,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "review": {
+      "pool_sufficiency": "thin",
+      "pool_sufficiency_rationale": "The pool has five claims but only one (focal loss) is strongly relevant; there are no claims about low-light image enhancement, night-time or dark-condition detection benchmarks, data augmentation for illumination, or edge/commodity GPU profiling, leaving the core topic poorly supported.",
+      "forbidden_substrings_quality": "appropriate",
+      "forbidden_substrings_rationale": "The two forbidden phrases are verbatim canonical sentences from the YOLOv1 and RetinaNet papers, appropriately preventing trivial copy-paste from source evidence while still allowing paraphrased discussion.",
+      "reference_hypothesis_quality": "plausible",
+      "reference_hypothesis_rationale": "The hypothesis is technically coherent and specific (YOLOX-Tiny backbone, Jetson Nano, synthetic darkening + gain jitter, focal-loss re-weighting, <0.1 lux target), though the <0.1 lux metric is ambitious and not grounded by any claim in the pool.",
+      "overall_assessment": "needs_revision",
+      "issues": [
+        "Pool lacks any claim directly addressing low-light detection, night-time benchmarks, or illumination-aware methods — the primary topic dimension is unsupported.",
+        "No claims about edge/commodity GPU performance (Jetson Nano or equivalent); V100 and Titan X references do not map well to the 'commodity GPU' constraint.",
+        "Two of five claims (yolov1_localization_error_negative, yolov3_strict_iou_underperform_negative) are low-relevance negatives that do not contribute to the hypothesis or the research gap.",
+        "The <0.1 lux target in the reference hypothesis has no supporting evidence in the pool, making it unverifiable within the fixture.",
+        "Pool size of 5 with only 1 high-relevance claim is insufficient for a multi-faceted topic requiring speed, accuracy, and low-light robustness evidence.",
+        "No claim covers data augmentation strategies (synthetic darkening, gain jitter) mentioned in the reference hypothesis, leaving that component unsupported."
+      ]
+    }
+  },
+  "matched_pairs": [
+    {
+      "claim_id": "yolov1_speed_45_155_fps",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "medium",
+      "b_rationale": "Establishes baseline FPS figures for YOLO-family detectors on commodity GPUs, relevant to the 30+ FPS constraint but dated (Titan X) and not specific to low-light.",
+      "field_disagreements": []
+    },
+    {
+      "claim_id": "yolox_l_50ap_v100_speed",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "medium",
+      "b_rationale": "Provides a concrete speed-accuracy reference for a modern YOLO variant (YOLOX), supporting the feasibility of 30+ FPS targets, though V100 is not a 'commodity' GPU and low-light is not addressed.",
+      "field_disagreements": []
+    },
+    {
+      "claim_id": "yolov1_localization_error_negative",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "low",
+      "b_rationale": "Describes a known weakness of YOLOv1 (localization errors, small objects) that is only tangentially related to low-light robustness and does not directly support the seed topic.",
+      "field_disagreements": [
+        {
+          "field": "relevance",
+          "a": "implicit_high",
+          "b": "low"
+        }
+      ]
+    },
+    {
+      "claim_id": "retinanet_focal_loss_definition",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "high",
+      "b_rationale": "Focal loss is directly referenced in the hypothesis as a mechanism for class re-weighting to improve robustness, making this claim highly relevant to the proposed approach.",
+      "field_disagreements": []
+    },
+    {
+      "claim_id": "yolov3_strict_iou_underperform_negative",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "low",
+      "b_rationale": "Highlights a speed-accuracy trade-off for YOLOv3 vs. RetinaNet at high IoU thresholds, which is only weakly connected to low-light robustness and does not support the core research gap.",
+      "field_disagreements": [
+        {
+          "field": "relevance",
+          "a": "implicit_high",
+          "b": "low"
+        }
+      ]
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": []
+}

@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "pack_id": "idea_assist_v1/live_03_medical_imaging_few_shot",
+  "pack_path": "tests/fixtures/benchmarks/idea_assist_v1/live_03_medical_imaging_few_shot",
+  "layer": "idea_assist_live",
+  "generated_at_utc": "2026-04-25T20:50:28.371295+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "low_relevance_in_pool=2, pool=thin",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/idea_assist_v1/live_03_medical_imaging_few_shot/gold.json",
+    "count": 5,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_reviewer",
+    "source": "gold fixture review (not output generation)",
+    "count": 5,
+    "model": "anthropic/claude-sonnet-4.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:23834a9e5b7dd03e6a45571a7fe83fa7d8dd01aabdb7ba9f4eae24b2bf3f6b0f",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 913,
+      "completion": 840,
+      "total": 1753
+    },
+    "latency_ms": 15566
+  },
+  "summary": {
+    "a_total": 5,
+    "b_total": 5,
+    "matched": 5,
+    "matched_lexical": 5,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "review": {
+      "pool_sufficiency": "thin",
+      "pool_sufficiency_rationale": "Only 2–3 of the 5 claims are meaningfully relevant to the seed topic; there are no claims covering few-shot learning, domain adaptation, self-supervised or contrastive pre-training, or medical imaging specifics, leaving key aspects of the topic unsupported.",
+      "forbidden_substrings_quality": "appropriate",
+      "forbidden_substrings_rationale": "The two forbidden phrases are verbatim definitional sentences from well-known papers that would indicate copying rather than original synthesis, making them reasonable guardrails without being overly restrictive.",
+      "reference_hypothesis_quality": "plausible",
+      "reference_hypothesis_rationale": "The hypothesis is technically coherent and well-scoped—combining Deformable DETR, contrastive pre-training on unlabeled data, and 200-shot fine-tuning is a realistic and novel research direction with measurable success criteria.",
+      "overall_assessment": "needs_revision",
+      "issues": [
+        "Pool is thin: two claims (faster_rcnn_anchor_boxes, rcnn_inference_2k_proposals_slow_negative) are low-relevance and dilute the pool without supporting the seed topic.",
+        "No claims cover few-shot or low-data learning methods (e.g., meta-learning, data augmentation, semi-supervised approaches), which are central to the seed topic.",
+        "No claims address domain adaptation or transfer learning to medical imaging, leaving a major thematic gap.",
+        "No claims mention self-supervised, contrastive, or unsupervised pre-training on unlabeled data, despite this being a key component of the reference hypothesis.",
+        "With only 5 claims and 2 low-relevance ones, the minimum of 2 supporting claims is barely met, risking under-constrained idea generation."
+      ]
+    }
+  },
+  "matched_pairs": [
+    {
+      "claim_id": "mask_rcnn_pretraining_dependency_negative",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "high",
+      "b_rationale": "Directly relevant to the few-shot adaptation scenario: pre-training dependency is a core challenge when adapting to medical imaging with limited labels.",
+      "field_disagreements": []
+    },
+    {
+      "claim_id": "retinanet_focal_loss_definition",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "medium",
+      "b_rationale": "Relevant because polyp detection involves severe foreground-background imbalance, making focal loss a pertinent technique, though it is not specific to low-data or domain-adaptation settings.",
+      "field_disagreements": []
+    },
+    {
+      "claim_id": "deformable_detr_10x_faster_convergence",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "high",
+      "b_rationale": "Directly supports the reference hypothesis and is highly relevant to adapting a general-purpose detector with limited data, since faster convergence is advantageous in low-data regimes.",
+      "field_disagreements": []
+    },
+    {
+      "claim_id": "faster_rcnn_anchor_boxes",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "low",
+      "b_rationale": "Describes a general architectural detail of Faster R-CNN anchor design with no specific connection to few-shot learning, domain adaptation, or medical imaging.",
+      "field_disagreements": [
+        {
+          "field": "relevance",
+          "a": "implicit_high",
+          "b": "low"
+        }
+      ]
+    },
+    {
+      "claim_id": "rcnn_inference_2k_proposals_slow_negative",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "low",
+      "b_rationale": "Describes a historical inefficiency of the original R-CNN that is largely irrelevant to the few-shot medical domain adaptation topic.",
+      "field_disagreements": [
+        {
+          "field": "relevance",
+          "a": "implicit_high",
+          "b": "low"
+        }
+      ]
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": []
+}

@@ -1,0 +1,48 @@
+```json
+{
+  "claims": [
+    {
+      "claim_text_normalized": "At 320×320, YOLOv3 runs in 22 ms at 28.2 mAP, as accurate as SSD but three times faster.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "At 320 × 320 YOLOv3 runs in 22 ms at 28.2 mAP, as accurate as SSD but three times faster."
+    },
+    {
+      "claim_text_normalized": "YOLOv3 achieves 57.9 AP50 in 51 ms compared to RetinaNet's 57.5 AP50 in 198 ms, making it 3.8× faster at similar performance.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "It achieves 57.9 AP50 in 51 ms on a Titan X, compared to 57.5 AP50 in 198 ms by RetinaNet, similar performance but 3.8× faster."
+    },
+    {
+      "claim_text_normalized": "YOLOv3 performance drops significantly as the IOU threshold increases, indicating it struggles to align boxes precisely with objects.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "performance drops significantly as the IOU threshold increases indicating YOLOv3 struggles to get the boxes perfectly aligned with the object."
+    },
+    {
+      "claim_text_normalized": "Darknet-53 is better than ResNet-101 and 1.5× faster, while achieving similar performance to ResNet-152 at 2× the speed.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "Darknet-53 is better than ResNet-101 and 1.5× faster. Darknet-53 has similar performance to ResNet-152 and is 2× faster."
+    },
+    {
+      "claim_text_normalized": "Using focal loss dropped YOLOv3's mAP by about 2 points.",
+      "claim_type": "finding",
+      "polarity": "negative",
+      "evidence_quote_short": "Focal loss. We tried using focal loss. It dropped our mAP about 2 points."
+    },
+    {
+      "claim_text_normalized": "YOLOv3 predicts boxes at 3 different scales using a concept similar to feature pyramid networks.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "YOLOv3 predicts boxes at 3 different scales. Our system extracts features from those scales using a similar concept to feature pyramid networks."
+    },
+    {
+      "claim_text_normalized": "With multi-scale predictions, YOLOv3 shows improved small object detection performance compared to previous YOLO versions.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "In the past YOLO struggled with small objects. However, now we see a reversal in that trend. With the new multi-scale predictions we see YOLOv3 has relatively high APS performance."
+    }
+  ]
+}
+```
