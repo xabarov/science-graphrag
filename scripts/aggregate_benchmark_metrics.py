@@ -61,6 +61,8 @@ DEFAULT_RETRIEVAL_WORKSPACE_SCOPED_LIVE = (
 DEFAULT_RETRIEVAL_JUDGE_PILOT = "eval/results/current-retrieval-judge-pilot.json"
 DEFAULT_RETRIEVAL_JUDGE_HOLDOUT = "eval/results/current-retrieval-judge-holdout.json"
 DEFAULT_RETRIEVAL_HYBRID_ABLATION = "eval/results/current-retrieval-hybrid-ablation.json"
+DEFAULT_RETRIEVAL_HYBRID_ABLATION_LIVE = "eval/results/current-retrieval-hybrid-ablation-live.json"
+DEFAULT_RETRIEVAL_LIVE_CORPUS_HOLDOUT = "eval/results/current-retrieval-live-corpus-holdout.json"
 DEFAULT_RETRIEVAL_MULTIHOP_MINI = "eval/results/current-retrieval-multihop-mini.json"
 DEFAULT_AGENT_TOOLS_MINI = "eval/results/current-agent-tools-mini.json"
 DEFAULT_AGENT_TOOLS_JUDGE = "eval/results/current-agent-tools-judge-pilot.json"
@@ -614,7 +616,9 @@ def _md_retrieval_family_section(rf: dict[str, Any]) -> list[str]:
     _one("workspace_scoped_live (BT2 live stack)", rf.get("workspace_scoped_live") or {})
     _one("judge_pilot (LLM rubric advisory, Wave P)", rf.get("judge_pilot") or {})
     _one("judge_holdout (BT5 weekly holdout)", rf.get("judge_holdout") or {})
+    _one("live_corpus_holdout (BT5 holdout anti-overfit)", rf.get("live_corpus_holdout") or {})
     _one("hybrid_ablation (contract harness, Wave Q)", rf.get("hybrid_ablation") or {})
+    _one("hybrid_ablation_live (BT4 real runner, Wave R)", rf.get("hybrid_ablation_live") or {})
     _one("multihop_mini (2-hop graph precision, Wave Q)", rf.get("multihop_mini") or {})
     lines.append(
         "Promotion roadmap for workspace-scoped + judge → core retrieval gate: "
@@ -900,6 +904,22 @@ def main() -> int:
         ),
     )
     parser.add_argument(
+        "--hybrid-ablation-live-json",
+        type=str,
+        default=DEFAULT_RETRIEVAL_HYBRID_ABLATION_LIVE,
+        help=(
+            "Optional BT4 live hybrid ablation JSON from "
+            "`science-graphrag-retrieval-hybrid-ablation-benchmark --suite --tier hybrid_ablation_v2_pilot` "
+            "(advisory, Wave R)."
+        ),
+    )
+    parser.add_argument(
+        "--retrieval-live-corpus-holdout-json",
+        type=str,
+        default=DEFAULT_RETRIEVAL_LIVE_CORPUS_HOLDOUT,
+        help="Optional BT5 live_corpus_holdout suite JSON (advisory, weekly anti-overfit check).",
+    )
+    parser.add_argument(
         "--retrieval-multihop-json",
         type=str,
         default=DEFAULT_RETRIEVAL_MULTIHOP_MINI,
@@ -962,6 +982,8 @@ def main() -> int:
             "retrieval_judge_pilot": args.retrieval_judge_json,
             "retrieval_judge_holdout": args.retrieval_judge_holdout_json,
             "retrieval_hybrid_ablation": args.hybrid_ablation_json,
+            "retrieval_hybrid_ablation_live": args.hybrid_ablation_live_json,
+            "retrieval_live_corpus_holdout": args.retrieval_live_corpus_holdout_json,
             "retrieval_multihop_mini": args.retrieval_multihop_json,
             "claims_merge_contract": DEFAULT_CLAIMS_MERGE_CONTRACT,
             "claims_mini_suite": DEFAULT_CLAIMS_MINI_SUITE,
@@ -992,6 +1014,10 @@ def main() -> int:
             "judge_pilot": _summarize_retrieval_judge_suite(args.retrieval_judge_json),
             "judge_holdout": _summarize_retrieval_judge_suite(args.retrieval_judge_holdout_json),
             "hybrid_ablation": _summarize_case_metrics_suite(args.hybrid_ablation_json),
+            "hybrid_ablation_live": _summarize_case_metrics_suite(args.hybrid_ablation_live_json),
+            "live_corpus_holdout": _summarize_retrieval_suite(
+                args.retrieval_live_corpus_holdout_json
+            ),
             "multihop_mini": _summarize_multihop_mini_suite(args.retrieval_multihop_json),
         },
         "claims_family": {

@@ -16,14 +16,26 @@
     "strict_pilot_corpus_wide"
   ],
   "live_corpus_mini": [
-    "live_yolov1_intro",
     "live_yolov1_architecture",
     "live_yolov1_training",
-    "live_yolov1_methods_combo",
     "live_corpus_methods_wide"
+  ],
+  "live_corpus_holdout": [
+    "live_yolov1_intro",
+    "live_yolov1_methods_combo"
   ],
   "judge_holdout_v1": [
     "live_yolov1_intro",
     "live_yolov1_methods_combo"
+  ],
+  "hybrid_ablation_v2_pilot": [
+    "ha_anchor_free",
+    "ha_focal_loss",
+    "ha_set_prediction_transformer",
+    "ha_compound_scaling",
+    "ha_keypoint_corner",
+    "ha_classical_handcrafted",
+    "ha_two_stage_rpn_evolution",
+    "ha_iou_loss_quality"
   ]
 }

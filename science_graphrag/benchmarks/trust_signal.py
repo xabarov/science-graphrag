@@ -50,6 +50,8 @@ _GOLD_SUBDIR_BY_MEMBER: Final[dict[str, str | None]] = {
     "judge_pilot": None,
     "judge_holdout": None,
     "hybrid_ablation": "retrieval/hybrid_ablation_v2",
+    "hybrid_ablation_live": "retrieval/hybrid_ablation_v2",
+    "live_corpus_holdout": None,
     "multihop_mini": "retrieval/multihop_v2",
     "claims_merge_contract": "claims",
     "claims_mini": "claims",
@@ -273,6 +275,8 @@ def _consistency_warnings(
             f"{member_id}: suite artifact missing; last infra skip: "
             f"{skip.get('artifact')} ({skip.get('reason')})",
         )
+    if member_id not in _GOLD_SUBDIR_BY_MEMBER and runtime_mode == "live":
+        warnings.append(f"{member_id}: unknown_member_fallback_live")
     summary = block.get("summary") if isinstance(block.get("summary"), dict) else {}
     if summary.get("all_passed") is False and member_id not in {"judge_pilot", "judge_holdout"}:
         fc = sum(1 for c in cases if (c.get("metrics") or {}).get("passed") is False)

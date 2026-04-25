@@ -11,18 +11,19 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 ## Queue
 
 ### [OPEN] Split `scripts/aggregate_benchmark_metrics.py` (BT1 follow-up)
-- **Area:** `scripts/aggregate_benchmark_metrics.py` (~1000 lines after BT1 trust wiring).
-- **Issue:** Summarizers (`_summarize_*`), markdown render (`_md_*`), and CLI `main()` live in one file; hard to review and parallel-edit with BT2–BT12 aggregator deltas.
-- **Proposal:** Extract `scripts/benchmark_aggregator/summarizers.py`, `scripts/benchmark_aggregator/markdown.py`, keep thin CLI in `aggregate_benchmark_metrics.py`; trust/decision glue stays in `science_graphrag/benchmarks/`.
-- **Acceptance:** `aggregate_benchmark_metrics.py` ≤ ~200 lines; `python scripts/aggregate_benchmark_metrics.py` unchanged CLI; pytest for benchmarks + smoke unchanged.
-- **Raised:** 2026-04-26 (post-BT1).
+- **Area:** `scripts/aggregate_benchmark_metrics.py` (~1100 lines after Wave 3 BT4/BT5 additions).
+- **Issue:** Summarizers (`_summarize_*`), markdown render (`_md_*`), CLI `main()`, family logic all live in one file; hard to review and parallel-edit with BT2–BT12 aggregator deltas. File grows with each wave.
+- **Proposal:** Extract modules: `scripts/benchmark_aggregator/summarizers.py` (`_summarize_*`), `scripts/benchmark_aggregator/markdown.py` (`_md_*` + `_render_markdown`), `scripts/benchmark_aggregator/family_retrieval.py` (retrieval family assembly), `scripts/benchmark_aggregator/family_claims.py` (claims/refs/concept). Keep thin CLI in `aggregate_benchmark_metrics.py` (≤ 250 LoC). Trust/decision glue stays in `science_graphrag/benchmarks/`.
+- **Acceptance:** `aggregate_benchmark_metrics.py` ≤ 250 LoC; `python scripts/aggregate_benchmark_metrics.py` unchanged CLI contract; pytest benchmarks + aggregate smoke pass; no file in `scripts/benchmark_aggregator/` exceeds ~400 LoC.
+- **Raised:** 2026-04-26 (post-BT1); updated 2026-04-26 (post-Wave 3, now ~1100 LoC).
 
-### [OPEN] CI: run `aggregate_benchmark_metrics` + enforce `benchmark-trust-baseline` regression
-- **Area:** `.github/workflows/integration-nightly.yml` (and/or `ci.yml`), `tests/benchmarks/test_trust_baseline_regression.py`.
+### [DONE] CI: run `aggregate_benchmark_metrics` + enforce `benchmark-trust-baseline` regression
+- **Area:** `.github/workflows/integration-nightly.yml`, `tests/benchmarks/test_trust_baseline_regression.py`.
 - **Issue:** Regression test no-ops when summary/baseline files are absent; runbook §10 policy is not enforced on every push.
-- **Proposal:** Nightly (or main-branch) step: `python scripts/aggregate_benchmark_metrics.py` then `pytest tests/benchmarks/test_trust_baseline_regression.py -q`; fail job if `advisory_phantom_count` grows vs committed baseline.
+- **Proposal:** Nightly step: `python scripts/aggregate_benchmark_metrics.py` then `pytest tests/benchmarks/test_trust_baseline_regression.py -q`; fail job if `advisory_phantom_count` grows vs committed baseline.
 - **Acceptance:** CI fails on phantom regression with clear log line; baseline updates remain manual commit.
 - **Raised:** 2026-04-26 (post-BT1).
+- **Note (done):** 2026-04-26 (Wave 3) — "Trust baseline regression guard" step added to `integration-nightly.yml`.
 
 ### [OPEN] Migrate dual_validate extractors to instructor (Phase 7 task)
 - **Area:** `scripts/dual_validate/extractors/*.py` (12 extractor'ов), `scripts/dual_validate/llm_client.py` (станет transport-layer), новый `scripts/dual_validate/instructor_client.py`, новый `science_graphrag/llm/instructor_factory.py` (общий backend с `science_graphrag/ingestion/llm/extractor.py:SyncInstructorExtractor`).

@@ -4,264 +4,425 @@
     "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
     "extraction_llm_base_url": "https://openrouter.ai/api/v1",
     "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
-    "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+    "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
     "semantic_extraction_enabled": true
   },
   "summary": {
     "case_count": 6,
     "case_ids": [
-      "ws_pilot_od_chunk_anchor",
-      "ws_pilot_od_methods_overview",
-      "ws_pilot_od_scoped_negative",
-      "ws_pilot_pdf_chunk_anchor",
-      "ws_pilot_pdf_methods_overview",
-      "ws_pilot_pdf_scoped_negative"
+      "ws_full_anchor_free_overview",
+      "ws_full_corpus_negative_unrelated",
+      "ws_two_stage_negative_focal_loss",
+      "ws_two_stage_proposal_evolution",
+      "ws_yolo_negative_mask_segmentation",
+      "ws_yolo_speed_question"
     ],
-    "all_passed": true,
+    "all_passed": false,
     "retrieval_eval": true
   },
   "cases": [
     {
-      "case_id": "ws_pilot_od_chunk_anchor",
-      "question": "Summarize how the unified detection pipeline is framed in the introduction of this paper.",
-      "question_preview": "Summarize how the unified detection pipeline is framed in the introduction of this paper.",
+      "case_id": "ws_full_anchor_free_overview",
+      "question": "Which papers in this corpus pioneer the anchor-free object detection paradigm and what is each one's main contribution?",
+      "question_preview": "Which papers in this corpus pioneer the anchor-free object detection paradigm and what is each one's main contribution?",
       "metrics": {
-        "passed": true,
+        "passed": false,
         "contract_only": false,
-        "hit_count": 1,
-        "min_hit_count": 1,
-        "hit_ok": true,
-        "missing_chunk_fingerprints": [],
-        "work_id_ok": true,
-        "filter_work_id": null,
-        "expected_workspace_scope": true,
-        "workspace_scope_ok": true,
+        "workspace_scoped_live": true,
+        "uuid_aware_mode": false,
+        "hit_count": 0,
         "trace_workspace_matches": true,
+        "forbidden_work_id_violation_count": 0,
+        "forbidden_corpus_work_ids_leaked": [],
         "out_of_scope_citation_work_ids": [],
-        "forbidden_work_ids_leaked": []
+        "forbidden_violation_gate": 0,
+        "missing_required_corpus_work_ids": [
+          "cornernet_realpdf",
+          "fcos_realpdf"
+        ],
+        "expected_citations_min_count": 3,
+        "citation_count_ok": false,
+        "answer_rouge_l": 0.03225806451612903,
+        "abstain_keyword_hit": false,
+        "answer_metric_type": "rouge_l",
+        "workspace_scope_ok": false
       },
       "retrieval_trace": {
-        "hit_count": 1,
         "embedding": {
-          "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
+          "embedding_model": "baai/bge-m3",
+          "vector_dim": 1024,
+          "workspace_id": "ws_full_corpus",
+          "workspace_scope_work_count": 0
         },
+        "hit_count": 0,
         "filter_work_id": null,
-        "workspace_id": "ws-pilot-od",
-        "workspace_scope_work_count": 1
+        "resolved_work_id": null,
+        "qdrant_collection": "chunks",
+        "top_k_requested": 5,
+        "citations_returned": 0,
+        "top_hit_scores": [],
+        "query_preview": "Which papers in this corpus pioneer the anchor-free object detection paradigm and what is each one's main contribution?",
+        "answer_synthesis": {
+          "mode": "deterministic_snippets",
+          "second_stage_llm": false
+        },
+        "retrieval_mode": "vector",
+        "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
+        "degraded": [
+          "no_retrieval_hits"
+        ],
+        "workspace_id": "ws_full_corpus",
+        "workspace_scope_work_count": 0
       },
       "graph_context": {
-        "semantic_available": false,
         "methods": [],
-        "datasets": []
-      },
-      "citations": [
-        {
-          "chunk_fingerprint": "8226cfd0-aae7-568a-81b1-e81d5f93f767",
-          "rank": 1,
-          "excerpt": "stub",
-          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
-        }
-      ],
-      "answer": "mock",
-      "answer_preview": "mock",
-      "wall_clock_seconds": 0.0
-    },
-    {
-      "case_id": "ws_pilot_od_methods_overview",
-      "question": "What methods or architectural blocks does this paper describe for object detection, and how does it position them relative to two-stage detectors?",
-      "question_preview": "What methods or architectural blocks does this paper describe for object detection, and how does it position them relative to two-stage detectors?",
-      "metrics": {
-        "passed": true,
-        "contract_only": false,
-        "hit_count": 1,
-        "min_hit_count": 1,
-        "hit_ok": true,
-        "missing_chunk_fingerprints": [],
-        "work_id_ok": true,
-        "filter_work_id": null,
-        "expected_workspace_scope": true,
-        "workspace_scope_ok": true,
-        "trace_workspace_matches": true,
-        "out_of_scope_citation_work_ids": [],
-        "forbidden_work_ids_leaked": []
-      },
-      "retrieval_trace": {
-        "hit_count": 1,
-        "embedding": {
-          "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
-        },
-        "filter_work_id": null,
-        "workspace_id": "ws-pilot-od",
-        "workspace_scope_work_count": 1
-      },
-      "graph_context": {
+        "datasets": [],
         "semantic_available": false,
-        "methods": [],
-        "datasets": []
+        "context_work_id": null,
+        "degraded": [
+          "no_resolved_work"
+        ],
+        "error": null
       },
       "citations": [],
-      "answer": "mock",
-      "answer_preview": "mock",
-      "wall_clock_seconds": 0.0
+      "answer": "No retrieved chunks; ingest documents or check Qdrant collection.",
+      "answer_preview": "No retrieved chunks; ingest documents or check Qdrant collection.",
+      "wall_clock_seconds": 1.32
     },
     {
-      "case_id": "ws_pilot_od_scoped_negative",
-      "question": "Explain focal loss for dense object detection and how it addresses extreme foreground-background imbalance.",
-      "question_preview": "Explain focal loss for dense object detection and how it addresses extreme foreground-background imbalance.",
+      "case_id": "ws_full_corpus_negative_unrelated",
+      "question": "Which paper in this corpus introduces the BERT model or large language model pre-training for natural language understanding?",
+      "question_preview": "Which paper in this corpus introduces the BERT model or large language model pre-training for natural language understanding?",
       "metrics": {
-        "passed": true,
+        "passed": false,
         "contract_only": false,
-        "hit_count": 1,
-        "min_hit_count": 0,
-        "hit_ok": true,
-        "missing_chunk_fingerprints": [],
-        "work_id_ok": true,
-        "filter_work_id": null,
-        "expected_workspace_scope": true,
-        "workspace_scope_ok": true,
+        "workspace_scoped_live": true,
+        "uuid_aware_mode": false,
+        "hit_count": 0,
         "trace_workspace_matches": true,
+        "forbidden_work_id_violation_count": 0,
+        "forbidden_corpus_work_ids_leaked": [],
         "out_of_scope_citation_work_ids": [],
-        "forbidden_work_ids_leaked": []
+        "forbidden_violation_gate": 0,
+        "missing_required_corpus_work_ids": [],
+        "expected_citations_min_count": 0,
+        "citation_count_ok": true,
+        "answer_rouge_l": null,
+        "abstain_keyword_hit": false,
+        "answer_metric_type": "abstain_keywords",
+        "workspace_scope_ok": true
       },
       "retrieval_trace": {
-        "hit_count": 1,
         "embedding": {
-          "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
+          "embedding_model": "baai/bge-m3",
+          "vector_dim": 1024,
+          "workspace_id": "ws_full_corpus",
+          "workspace_scope_work_count": 0
         },
+        "hit_count": 0,
         "filter_work_id": null,
-        "workspace_id": "ws-pilot-od",
-        "workspace_scope_work_count": 1
+        "resolved_work_id": null,
+        "qdrant_collection": "chunks",
+        "top_k_requested": 5,
+        "citations_returned": 0,
+        "top_hit_scores": [],
+        "query_preview": "Which paper in this corpus introduces the BERT model or large language model pre-training for natural language understanding?",
+        "answer_synthesis": {
+          "mode": "deterministic_snippets",
+          "second_stage_llm": false
+        },
+        "retrieval_mode": "vector",
+        "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
+        "degraded": [
+          "no_retrieval_hits"
+        ],
+        "workspace_id": "ws_full_corpus",
+        "workspace_scope_work_count": 0
       },
       "graph_context": {
-        "semantic_available": false,
         "methods": [],
-        "datasets": []
+        "datasets": [],
+        "semantic_available": false,
+        "context_work_id": null,
+        "degraded": [
+          "no_resolved_work"
+        ],
+        "error": null
       },
       "citations": [],
-      "answer": "mock",
-      "answer_preview": "mock",
-      "wall_clock_seconds": 0.0
+      "answer": "No retrieved chunks; ingest documents or check Qdrant collection.",
+      "answer_preview": "No retrieved chunks; ingest documents or check Qdrant collection.",
+      "wall_clock_seconds": 0.793
     },
     {
-      "case_id": "ws_pilot_pdf_chunk_anchor",
-      "question": "Summarize how the unified detection pipeline is framed in the introduction of this paper.",
-      "question_preview": "Summarize how the unified detection pipeline is framed in the introduction of this paper.",
+      "case_id": "ws_two_stage_negative_focal_loss",
+      "question": "Which paper in this workspace introduces focal loss to address class imbalance?",
+      "question_preview": "Which paper in this workspace introduces focal loss to address class imbalance?",
       "metrics": {
-        "passed": true,
+        "passed": false,
         "contract_only": false,
-        "hit_count": 1,
-        "min_hit_count": 1,
-        "hit_ok": true,
-        "missing_chunk_fingerprints": [],
-        "work_id_ok": true,
-        "filter_work_id": null,
-        "expected_workspace_scope": true,
-        "workspace_scope_ok": true,
+        "workspace_scoped_live": true,
+        "uuid_aware_mode": false,
+        "hit_count": 0,
         "trace_workspace_matches": true,
+        "forbidden_work_id_violation_count": 0,
+        "forbidden_corpus_work_ids_leaked": [],
         "out_of_scope_citation_work_ids": [],
-        "forbidden_work_ids_leaked": []
+        "forbidden_violation_gate": 0,
+        "missing_required_corpus_work_ids": [],
+        "expected_citations_min_count": 0,
+        "citation_count_ok": true,
+        "answer_rouge_l": null,
+        "abstain_keyword_hit": false,
+        "answer_metric_type": "abstain_keywords",
+        "workspace_scope_ok": true
       },
       "retrieval_trace": {
-        "hit_count": 1,
         "embedding": {
-          "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
+          "embedding_model": "baai/bge-m3",
+          "vector_dim": 1024,
+          "workspace_id": "ws_two_stage",
+          "workspace_scope_work_count": 3
         },
+        "hit_count": 0,
         "filter_work_id": null,
-        "workspace_id": "ws-pilot-pdf",
-        "workspace_scope_work_count": 1
+        "resolved_work_id": null,
+        "qdrant_collection": "chunks",
+        "top_k_requested": 5,
+        "citations_returned": 0,
+        "top_hit_scores": [],
+        "query_preview": "Which paper in this workspace introduces focal loss to address class imbalance?",
+        "answer_synthesis": {
+          "mode": "deterministic_snippets",
+          "second_stage_llm": false
+        },
+        "retrieval_mode": "vector",
+        "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
+        "degraded": [
+          "no_retrieval_hits"
+        ],
+        "workspace_id": "ws_two_stage",
+        "workspace_scope_work_count": 3,
+        "workspace_scope_payload_miss": "work_ids_payload"
       },
       "graph_context": {
-        "semantic_available": false,
         "methods": [],
-        "datasets": []
-      },
-      "citations": [
-        {
-          "chunk_fingerprint": "8226cfd0-aae7-568a-81b1-e81d5f93f767",
-          "rank": 1,
-          "excerpt": "stub",
-          "work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
-        }
-      ],
-      "answer": "mock",
-      "answer_preview": "mock",
-      "wall_clock_seconds": 0.0
-    },
-    {
-      "case_id": "ws_pilot_pdf_methods_overview",
-      "question": "What methods or architectural blocks does this paper describe for object detection, and how does it position them relative to two-stage detectors?",
-      "question_preview": "What methods or architectural blocks does this paper describe for object detection, and how does it position them relative to two-stage detectors?",
-      "metrics": {
-        "passed": true,
-        "contract_only": false,
-        "hit_count": 1,
-        "min_hit_count": 1,
-        "hit_ok": true,
-        "missing_chunk_fingerprints": [],
-        "work_id_ok": true,
-        "filter_work_id": null,
-        "expected_workspace_scope": true,
-        "workspace_scope_ok": true,
-        "trace_workspace_matches": true,
-        "out_of_scope_citation_work_ids": [],
-        "forbidden_work_ids_leaked": []
-      },
-      "retrieval_trace": {
-        "hit_count": 1,
-        "embedding": {
-          "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
-        },
-        "filter_work_id": null,
-        "workspace_id": "ws-pilot-pdf",
-        "workspace_scope_work_count": 1
-      },
-      "graph_context": {
+        "datasets": [],
         "semantic_available": false,
-        "methods": [],
-        "datasets": []
+        "context_work_id": null,
+        "degraded": [
+          "no_resolved_work"
+        ],
+        "error": null
       },
       "citations": [],
-      "answer": "mock",
-      "answer_preview": "mock",
-      "wall_clock_seconds": 0.0
+      "answer": "No retrieved chunks; ingest documents or check Qdrant collection.",
+      "answer_preview": "No retrieved chunks; ingest documents or check Qdrant collection.",
+      "wall_clock_seconds": 0.797
     },
     {
-      "case_id": "ws_pilot_pdf_scoped_negative",
-      "question": "Explain focal loss for dense object detection and how it addresses extreme foreground-background imbalance.",
-      "question_preview": "Explain focal loss for dense object detection and how it addresses extreme foreground-background imbalance.",
+      "case_id": "ws_two_stage_proposal_evolution",
+      "question": "How did the region-proposal mechanism evolve across the R-CNN family from R-CNN to Faster R-CNN?",
+      "question_preview": "How did the region-proposal mechanism evolve across the R-CNN family from R-CNN to Faster R-CNN?",
       "metrics": {
-        "passed": true,
+        "passed": false,
         "contract_only": false,
-        "hit_count": 1,
-        "min_hit_count": 0,
-        "hit_ok": true,
-        "missing_chunk_fingerprints": [],
-        "work_id_ok": true,
-        "filter_work_id": null,
-        "expected_workspace_scope": true,
-        "workspace_scope_ok": true,
+        "workspace_scoped_live": true,
+        "uuid_aware_mode": false,
+        "hit_count": 0,
         "trace_workspace_matches": true,
+        "forbidden_work_id_violation_count": 0,
+        "forbidden_corpus_work_ids_leaked": [],
         "out_of_scope_citation_work_ids": [],
-        "forbidden_work_ids_leaked": []
+        "forbidden_violation_gate": 0,
+        "missing_required_corpus_work_ids": [
+          "rcnn_realpdf",
+          "fast_rcnn_realpdf",
+          "faster_rcnn_realpdf"
+        ],
+        "expected_citations_min_count": 3,
+        "citation_count_ok": false,
+        "answer_rouge_l": 0.0,
+        "abstain_keyword_hit": false,
+        "answer_metric_type": "rouge_l",
+        "workspace_scope_ok": false
       },
       "retrieval_trace": {
-        "hit_count": 1,
         "embedding": {
-          "embedding_model": "sentence-transformers/all-MiniLM-L6-v2"
+          "embedding_model": "baai/bge-m3",
+          "vector_dim": 1024,
+          "workspace_id": "ws_two_stage",
+          "workspace_scope_work_count": 3
         },
+        "hit_count": 0,
         "filter_work_id": null,
-        "workspace_id": "ws-pilot-pdf",
-        "workspace_scope_work_count": 1
+        "resolved_work_id": null,
+        "qdrant_collection": "chunks",
+        "top_k_requested": 5,
+        "citations_returned": 0,
+        "top_hit_scores": [],
+        "query_preview": "How did the region-proposal mechanism evolve across the R-CNN family from R-CNN to Faster R-CNN?",
+        "answer_synthesis": {
+          "mode": "deterministic_snippets",
+          "second_stage_llm": false
+        },
+        "retrieval_mode": "vector",
+        "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
+        "degraded": [
+          "no_retrieval_hits"
+        ],
+        "workspace_id": "ws_two_stage",
+        "workspace_scope_work_count": 3,
+        "workspace_scope_payload_miss": "work_ids_payload"
       },
       "graph_context": {
-        "semantic_available": false,
         "methods": [],
-        "datasets": []
+        "datasets": [],
+        "semantic_available": false,
+        "context_work_id": null,
+        "degraded": [
+          "no_resolved_work"
+        ],
+        "error": null
       },
       "citations": [],
-      "answer": "mock",
-      "answer_preview": "mock",
-      "wall_clock_seconds": 0.0
+      "answer": "No retrieved chunks; ingest documents or check Qdrant collection.",
+      "answer_preview": "No retrieved chunks; ingest documents or check Qdrant collection.",
+      "wall_clock_seconds": 0.796
+    },
+    {
+      "case_id": "ws_yolo_negative_mask_segmentation",
+      "question": "Which paper in this workspace introduces the per-instance mask prediction branch for instance segmentation?",
+      "question_preview": "Which paper in this workspace introduces the per-instance mask prediction branch for instance segmentation?",
+      "metrics": {
+        "passed": false,
+        "contract_only": false,
+        "workspace_scoped_live": true,
+        "uuid_aware_mode": false,
+        "hit_count": 0,
+        "trace_workspace_matches": true,
+        "forbidden_work_id_violation_count": 0,
+        "forbidden_corpus_work_ids_leaked": [],
+        "out_of_scope_citation_work_ids": [],
+        "forbidden_violation_gate": 0,
+        "missing_required_corpus_work_ids": [],
+        "expected_citations_min_count": 0,
+        "citation_count_ok": true,
+        "answer_rouge_l": null,
+        "abstain_keyword_hit": false,
+        "answer_metric_type": "abstain_keywords",
+        "workspace_scope_ok": true
+      },
+      "retrieval_trace": {
+        "embedding": {
+          "embedding_model": "baai/bge-m3",
+          "vector_dim": 1024,
+          "workspace_id": "ws_yolo_family",
+          "workspace_scope_work_count": 1
+        },
+        "hit_count": 0,
+        "filter_work_id": null,
+        "resolved_work_id": null,
+        "qdrant_collection": "chunks",
+        "top_k_requested": 5,
+        "citations_returned": 0,
+        "top_hit_scores": [],
+        "query_preview": "Which paper in this workspace introduces the per-instance mask prediction branch for instance segmentation?",
+        "answer_synthesis": {
+          "mode": "deterministic_snippets",
+          "second_stage_llm": false
+        },
+        "retrieval_mode": "vector",
+        "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
+        "degraded": [
+          "no_retrieval_hits"
+        ],
+        "workspace_id": "ws_yolo_family",
+        "workspace_scope_work_count": 1,
+        "workspace_scope_payload_miss": "work_ids_payload"
+      },
+      "graph_context": {
+        "methods": [],
+        "datasets": [],
+        "semantic_available": false,
+        "context_work_id": null,
+        "degraded": [
+          "no_resolved_work"
+        ],
+        "error": null
+      },
+      "citations": [],
+      "answer": "No retrieved chunks; ingest documents or check Qdrant collection.",
+      "answer_preview": "No retrieved chunks; ingest documents or check Qdrant collection.",
+      "wall_clock_seconds": 0.882
+    },
+    {
+      "case_id": "ws_yolo_speed_question",
+      "question": "What real-time speed (FPS) do the YOLO papers report for their base configurations?",
+      "question_preview": "What real-time speed (FPS) do the YOLO papers report for their base configurations?",
+      "metrics": {
+        "passed": false,
+        "contract_only": false,
+        "workspace_scoped_live": true,
+        "uuid_aware_mode": false,
+        "hit_count": 0,
+        "trace_workspace_matches": true,
+        "forbidden_work_id_violation_count": 0,
+        "forbidden_corpus_work_ids_leaked": [],
+        "out_of_scope_citation_work_ids": [],
+        "forbidden_violation_gate": 0,
+        "missing_required_corpus_work_ids": [
+          "yolov1"
+        ],
+        "expected_citations_min_count": 2,
+        "citation_count_ok": false,
+        "answer_rouge_l": 0.0,
+        "abstain_keyword_hit": false,
+        "answer_metric_type": "rouge_l",
+        "workspace_scope_ok": false
+      },
+      "retrieval_trace": {
+        "embedding": {
+          "embedding_model": "baai/bge-m3",
+          "vector_dim": 1024,
+          "workspace_id": "ws_yolo_family",
+          "workspace_scope_work_count": 1
+        },
+        "hit_count": 0,
+        "filter_work_id": null,
+        "resolved_work_id": null,
+        "qdrant_collection": "chunks",
+        "top_k_requested": 5,
+        "citations_returned": 0,
+        "top_hit_scores": [],
+        "query_preview": "What real-time speed (FPS) do the YOLO papers report for their base configurations?",
+        "answer_synthesis": {
+          "mode": "deterministic_snippets",
+          "second_stage_llm": false
+        },
+        "retrieval_mode": "vector",
+        "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
+        "degraded": [
+          "no_retrieval_hits"
+        ],
+        "workspace_id": "ws_yolo_family",
+        "workspace_scope_work_count": 1,
+        "workspace_scope_payload_miss": "work_ids_payload"
+      },
+      "graph_context": {
+        "methods": [],
+        "datasets": [],
+        "semantic_available": false,
+        "context_work_id": null,
+        "degraded": [
+          "no_resolved_work"
+        ],
+        "error": null
+      },
+      "citations": [],
+      "answer": "No retrieved chunks; ingest documents or check Qdrant collection.",
+      "answer_preview": "No retrieved chunks; ingest documents or check Qdrant collection.",
+      "wall_clock_seconds": 0.863
     }
   ]
 }

@@ -129,6 +129,11 @@ jobs:
       - name: Aggregate benchmark metrics summary
         run: python scripts/aggregate_benchmark_metrics.py
 
+      - name: Trust baseline regression guard
+        run: |
+          .venv/bin/python scripts/aggregate_benchmark_metrics.py
+          .venv/bin/pytest tests/benchmarks/test_trust_baseline_regression.py -q
+
       - name: Upload benchmark JSON artifacts
         if: always()
         uses: actions/upload-artifact@v4

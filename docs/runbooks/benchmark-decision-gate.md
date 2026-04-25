@@ -148,7 +148,14 @@ Single-case retest после правок gold (если лежат в `eval/re
 - **14 ночей подряд:** suite `workspace_scoped` зелёная (`summary.all_passed = true`) на зафиксированном пилотном стеке (Neo4j workspaces `ws-pilot-*` + Qdrant `workspace_ids` после `scripts/seed_benchmark_workspaces.py`).
 - **14 ночей подряд:** judge pilot `mean_weighted_score ≥ 4.5/6` в [`eval/results/current-retrieval-judge-pilot.json`](../../eval/results/current-retrieval-judge-pilot.json) (запуск `science-graphrag-retrieval-judge-benchmark` поверх `current-retrieval-live-corpus-mini.json` или согласованного входа).
 
-**Митигация overfit judge:** держать **~30% holdout** кейсов вне nightly snapshot (`eval/results/current-retrieval-judge-holdout.json`, недельный прогон), не подмешивать holdout в текущий judge pilot при тюнинге промпта/модели.
+**Митигация overfit judge (BT5 — Wave 3):**
+
+- `judge_holdout` — **advisory only**, **не входит** в `HARD_BLOCK_MEMBER_KEYS` (только `judge_pilot`).
+- Входной артефакт отличается от pilot: `live_corpus_holdout` tier (2 кейса: `live_yolov1_intro`, `live_yolov1_methods_combo`), **не пересекается** с `live_corpus_mini` (3 кейса).
+- `current-retrieval-judge-holdout.json` генерируется поверх `current-retrieval-live-corpus-holdout.json` (отдельный retrieval-input), не поверх pilot input.
+- Периодичность прогона: **раз в неделю** (не nightly), artifact путь: `eval/results/current-retrieval-judge-holdout.json`.
+- При тюнинге промпта/модели judge'а: не подмешивать holdout кейсы в pilot, не смотреть на holdout score до финального promotion-review.
+- Trust signal для `judge_holdout`: `runtime_mode = "live"` (advisory), phantom не считается.
 
 После выполнения — чеклист в promotion-review, обновление [`benchmark-program-status.md`](benchmark-program-status.md), явное включение lane в `aggregate_benchmark_metrics._decision_gate` (только решение мейнтейнеров).
 

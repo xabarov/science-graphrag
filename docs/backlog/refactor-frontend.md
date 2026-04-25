@@ -171,6 +171,13 @@ Planned structural work under `ui/` (components, routing, state, API client), no
 - **Raised:** 2026-04-25
 - **Note (done):** 2026-04-25 — разнесено на `hooks/useGraphWorkspaceData.js`, `GraphViewModeSwitch.jsx`, `GraphSidePanel.jsx`, `GraphDebugInspector.jsx`; `GraphWorkspacePanel.jsx` оставлен как composition-shell с прежним публичным API.
 
+### [OPEN] Drop `ui/src/services/research/benchmarkSummary.js` shim
+- **Area:** [`ui/src/services/research/benchmarkSummary.js`](../../ui/src/services/research/benchmarkSummary.js), [`ui/src/hooks/useBenchmarkSummary.js`](../../ui/src/hooks/useBenchmarkSummary.js)
+- **Issue:** `benchmarkSummary.js` is a 5-line re-export shim with a single consumer (`useBenchmarkSummary.js`). Adding a layer between the hook and the actual API call creates indirection with no abstraction value.
+- **Proposal:** Inline the import in `useBenchmarkSummary.js` directly and delete `benchmarkSummary.js`.
+- **Acceptance:** `benchmarkSummary.js` removed; `useBenchmarkSummary.js` imports directly from the API service; `npm run lint` green.
+- **Raised:** 2026-04-26 (Wave 3 post-BT5).
+
 ### [OPEN] Benchmark trust drill-in (`TrustSignalPanel` + API slice)
 - **Area:** [`TrustSignalPanel.jsx`](../../ui/src/pages/BenchmarkPage/TrustSignalPanel.jsx), [`benchmark_decision_gate.py`](../../science_graphrag/api/benchmark_decision_gate.py) (optional: extend response), i18n `partBenchmarkPage.js`.
 - **Issue:** API already returns `trust_signal.consistency_warnings`, `validation_status_aggregate`, and `criteria.advisory_individual_failures`; UI only shows decision chip + `runtime_mode` rows — operators cannot drill into failed case_ids without opening raw JSON.

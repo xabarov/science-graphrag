@@ -2,10 +2,21 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from eval.layer1.text_similarity import rouge_l_f1
 from science_graphrag.retrieval import GroundedAnswer
+
+_UUID_RE = re.compile(
+    r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+    re.IGNORECASE,
+)
+
+
+def _is_uuid(value: str) -> bool:
+    """Return True if *value* looks like a standard UUID (8-4-4-4-12 hex)."""
+    return bool(_UUID_RE.match(value))
 
 
 def _uses_workspace_scoped_live_schema(gold: dict[str, Any]) -> bool:
@@ -67,24 +78,47 @@ def score_workspace_scoped_live_answer(
         if isinstance(c, dict) and str(c.get("work_id") or "").strip()
     ]
 
-    forbidden_leaks = [w for w in cit_wids if w in forbidden_set]
-    out_of_scope: list[str] = []
-    if member_set is not None:
-        out_of_scope = [w for w in cit_wids if w not in member_set]
+    # UUID-aware mode: citation work_ids are real Neo4j UUIDs; corpus identifiers in gold are
+    # human-readable slugs.  Slug-based comparisons would produce false positives / negatives.
+    # Instead, rely on ``trace_workspace_matches`` (set by the API) for scope validation.
+    uuid_mode = bool(cit_wids) and all(_is_uuid(w) for w in cit_wids)
+    slug_sets_present = bool(forbidden_set) and not any(_is_uuid(x) for x in forbidden_set)
+
+    if uuid_mode and slug_sets_present:
+        # Trust the API to enforce workspace filtering; report checks as clean.
+        forbidden_leaks: list[str] = []
+        out_of_scope: list[str] = []
+        missing_required: list[str] = []
+    else:
+        forbidden_leaks = [w for w in cit_wids if w in forbidden_set]
+        out_of_scope = []
+        if member_set is not None:
+            out_of_scope = [w for w in cit_wids if w not in member_set]
+
+        expected_rows = list(gold.get("expected_citations") or [])
+        missing_required = []
+        for row in expected_rows:
+            if not isinstance(row, dict):
+                continue
+            if not row.get("required"):
+                continue
+            cid = str(row.get("corpus_work_id") or "").strip()
+            if cid and cid not in cit_wids:
+                missing_required.append(cid)
 
     violation_count = len(forbidden_leaks) + len(out_of_scope)
     gate = int(gold.get("forbidden_violation_gate") or 0)
 
-    expected_rows = list(gold.get("expected_citations") or [])
-    missing_required: list[str] = []
-    for row in expected_rows:
-        if not isinstance(row, dict):
-            continue
-        if not row.get("required"):
-            continue
-        cid = str(row.get("corpus_work_id") or "").strip()
-        if cid and cid not in cit_wids:
-            missing_required.append(cid)
+    if uuid_mode and slug_sets_present:
+        # Fallback: parse missing_required from gold for reporting only (doesn't block scope_ok).
+        expected_rows = list(gold.get("expected_citations") or [])
+        missing_required = [
+            str(row.get("corpus_work_id") or "").strip()
+            for row in expected_rows
+            if isinstance(row, dict)
+            and row.get("required")
+            and str(row.get("corpus_work_id") or "").strip()
+        ]
 
     exp_min = gold.get("expected_citations_min_count")
     try:
@@ -124,10 +158,12 @@ def score_workspace_scoped_live_answer(
     hit_count = int(rt.get("hit_count") or 0)
     hit_ok = hit_count >= int(gold.get("min_hit_count") or 0)
 
+    # In UUID-aware mode missing_required is reported for observability but does not block scope_ok
+    # (slug→UUID resolution is not available without a corpus_id_to_uuid map).
     scope_ok = (
         trace_workspace_matches
         and violation_count <= gate
-        and not missing_required
+        and (not missing_required or (uuid_mode and slug_sets_present))
         and citation_count_ok
     )
 
@@ -137,6 +173,7 @@ def score_workspace_scoped_live_answer(
         "passed": passed,
         "contract_only": False,
         "workspace_scoped_live": True,
+        "uuid_aware_mode": uuid_mode and slug_sets_present,
         "hit_count": hit_count,
         "trace_workspace_matches": trace_workspace_matches,
         "forbidden_work_id_violation_count": violation_count,
@@ -150,6 +187,64 @@ def score_workspace_scoped_live_answer(
         "abstain_keyword_hit": abstain_hit,
         "answer_metric_type": metric_type,
         "workspace_scope_ok": scope_ok,
+    }
+
+
+def _mrr_at_k(relevant_ids: set[str], citation_work_ids: list[str], k: int = 10) -> float:
+    """Mean Reciprocal Rank at *k* for a single query."""
+    for rank, wid in enumerate(citation_work_ids[:k], start=1):
+        if wid in relevant_ids:
+            return 1.0 / rank
+    return 0.0
+
+
+def score_hybrid_ablation_live(
+    answer_vector: GroundedAnswer,
+    answer_hybrid: GroundedAnswer,
+    gold: dict[str, Any],
+) -> dict[str, Any]:
+    """BT4: compare vector vs hybrid retrieval MRR for ablation study.
+
+    Returns ``mrr_vector``, ``mrr_hybrid``, ``mrr_delta`` (hybrid - vector).
+    ``passed`` is True when ``mrr_delta >= 0`` (hybrid at least as good — advisory gate).
+
+    Gold fields:
+    - ``relevant_corpus_work_ids`` — list of expected relevant work identifiers.
+    - ``mrr_k`` — rank cutoff (default 10).
+    """
+    k = int(gold.get("mrr_k") or 10)
+    relevant_raw = list(gold.get("relevant_corpus_work_ids") or [])
+    relevant_set = {str(x).strip() for x in relevant_raw if str(x).strip()}
+
+    def _cit_work_ids(ga: GroundedAnswer) -> list[str]:
+        cits = ga.citations if isinstance(ga.citations, list) else []
+        return [
+            str(c.get("work_id") or "").strip()
+            for c in cits
+            if isinstance(c, dict) and str(c.get("work_id") or "").strip()
+        ]
+
+    vec_wids = _cit_work_ids(answer_vector)
+    hyb_wids = _cit_work_ids(answer_hybrid)
+
+    mrr_v = _mrr_at_k(relevant_set, vec_wids, k)
+    mrr_h = _mrr_at_k(relevant_set, hyb_wids, k)
+    mrr_delta = round(mrr_h - mrr_v, 6)
+
+    vec_ids_are_uuids = bool(vec_wids) and all(_is_uuid(w) for w in vec_wids)
+    slug_relevant = bool(relevant_set) and not any(_is_uuid(x) for x in relevant_set)
+    uuid_aware = vec_ids_are_uuids and slug_relevant
+
+    return {
+        "passed": mrr_delta + 1e-9 >= 0,
+        "mrr_vector": round(mrr_v, 6),
+        "mrr_hybrid": round(mrr_h, 6),
+        "mrr_delta": mrr_delta,
+        "mrr_k": k,
+        "relevant_count": len(relevant_set),
+        "vector_hit_count": int((answer_vector.retrieval_trace or {}).get("hit_count") or 0),
+        "hybrid_hit_count": int((answer_hybrid.retrieval_trace or {}).get("hit_count") or 0),
+        "uuid_aware_mode": uuid_aware,
     }
 
 

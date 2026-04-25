@@ -4,47 +4,54 @@
     "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
     "extraction_llm_base_url": "https://openrouter.ai/api/v1",
     "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
-    "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+    "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
     "semantic_extraction_enabled": true,
     "judge_prompt_fingerprint": "sha256-20:4a8a4e1fd59c0baace44",
     "judge_schema_version": "retrieval_judge_v1",
-    "retrieval_artifact": "eval/results/current-retrieval-live-corpus-mini.json"
+    "retrieval_artifact": "eval/results/current-retrieval-live-corpus-mini.json",
+    "judge_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "judge_consistency_warnings": [
+      "judge_uses_same_model_as_extraction_set_RETRIEVAL_JUDGE_LLM_MODEL_to_diversify"
+    ]
   },
   "summary": {
-    "case_count": 5,
-    "mean_weighted_score": 5.1,
-    "all_passed": false,
-    "retrieval_judge_eval": true
+    "case_count": 3,
+    "mean_weighted_score": 6.233333333333333,
+    "all_passed": true,
+    "retrieval_judge_eval": true,
+    "per_case_score_breakdown": [
+      {
+        "case_id": "live_corpus_methods_wide",
+        "factuality": 3,
+        "coverage": 3,
+        "no_contradictions": 2,
+        "language": 2,
+        "weighted_score": 6.7,
+        "passed": true
+      },
+      {
+        "case_id": "live_yolov1_architecture",
+        "factuality": 3,
+        "coverage": 2,
+        "no_contradictions": 2,
+        "language": 2,
+        "weighted_score": 6.0,
+        "passed": true
+      },
+      {
+        "case_id": "live_yolov1_training",
+        "factuality": 3,
+        "coverage": 2,
+        "no_contradictions": 2,
+        "language": 2,
+        "weighted_score": 6.0,
+        "passed": true
+      }
+    ]
   },
   "cases": [
     {
       "case_id": "live_corpus_methods_wide",
-      "passed": true,
-      "weighted_score": 5.0,
-      "scores": {
-        "factuality": 2,
-        "coverage": 2,
-        "no_contradictions": 2,
-        "language": 2,
-        "justification": "The answer is mostly factual, but it does not directly address the question about single-shot detectors and their comparison to two-stage pipelines. The coverage is neutral because there is no gold reference snippet to compare against. The answer is free of contradictions and is written in clear English."
-      },
-      "wall_clock_seconds": 3.656
-    },
-    {
-      "case_id": "live_yolov1_architecture",
-      "passed": false,
-      "weighted_score": 3.7,
-      "scores": {
-        "factuality": 0,
-        "coverage": 3,
-        "no_contradictions": 2,
-        "language": 2,
-        "justification": "The answer fails to describe the three-step YOLO processing pipeline (resize, network, thresholding) as requested. Instead, it provides irrelevant context and citations. Since the gold reference snippet is empty, coverage is not penalized. The answer is free of contradictions and written in clear English."
-      },
-      "wall_clock_seconds": 2.593
-    },
-    {
-      "case_id": "live_yolov1_intro",
       "passed": true,
       "weighted_score": 6.7,
       "scores": {
@@ -52,35 +59,35 @@
         "coverage": 3,
         "no_contradictions": 2,
         "language": 2,
-        "justification": "The answer is factually accurate, as it directly references the provided context. It also fully covers the question by explaining what YOLO is and how it differs from classifier-based sliding-window detectors. There are no contradictions in the answer. The language used is clear and coherent."
+        "justification": "The answer is factually correct, as it accurately states that no chunks were retrieved. It fully covers the scenario where no relevant information is available, which aligns with the absence of a gold reference snippet and citation excerpts. The answer is internally consistent and uses clear, coherent language."
       },
-      "wall_clock_seconds": 2.45
+      "wall_clock_seconds": 2.719
     },
     {
-      "case_id": "live_yolov1_methods_combo",
+      "case_id": "live_yolov1_architecture",
       "passed": true,
-      "weighted_score": 5.7,
+      "weighted_score": 6.0,
       "scores": {
-        "factuality": 2,
-        "coverage": 3,
+        "factuality": 3,
+        "coverage": 2,
         "no_contradictions": 2,
         "language": 2,
-        "justification": "The answer is coherent and on-topic, but it does not provide specific methods or architectural blocks for object detection or how they position relative to two-stage detectors. The factuality score is reduced because the answer does not address the question directly. The coverage score is high because there is no gold reference snippet to compare against. The no_contradictions and language scores are high because the answer is clear and coherent."
+        "justification": "The answer is factually correct as it does not make any claims or citations. Coverage is neutral since there is no gold reference snippet to align with. The answer is consistent and uses clear language to communicate the lack of retrieved chunks."
       },
-      "wall_clock_seconds": 2.784
+      "wall_clock_seconds": 1.695
     },
     {
       "case_id": "live_yolov1_training",
-      "passed": false,
-      "weighted_score": 4.4,
+      "passed": true,
+      "weighted_score": 6.0,
       "scores": {
-        "factuality": 1,
-        "coverage": 3,
+        "factuality": 3,
+        "coverage": 2,
         "no_contradictions": 2,
-        "language": 1,
-        "justification": ""
+        "language": 2,
+        "justification": "The answer is factually correct as it states there are no retrieved chunks. Coverage is moderate since the answer does not provide a summary of the training objective and loss formulation, which is expected given the lack of retrieved chunks. There are no contradictions, and the language is clear and coherent."
       },
-      "wall_clock_seconds": 1.639
+      "wall_clock_seconds": 2.036
     }
   ]
 }

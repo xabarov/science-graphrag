@@ -8,20 +8,19 @@
     "semantic_extraction_enabled": true
   },
   "summary": {
-    "case_count": 3,
+    "case_count": 2,
     "case_ids": [
-      "live_corpus_methods_wide",
-      "live_yolov1_architecture",
-      "live_yolov1_training"
+      "live_yolov1_intro",
+      "live_yolov1_methods_combo"
     ],
     "all_passed": false,
     "retrieval_eval": true
   },
   "cases": [
     {
-      "case_id": "live_corpus_methods_wide",
-      "question": "Which papers in the corpus discuss single-shot detectors and compare their speed-accuracy trade-offs to two-stage pipelines?",
-      "question_preview": "Which papers in the corpus discuss single-shot detectors and compare their speed-accuracy trade-offs to two-stage pipelines?",
+      "case_id": "live_yolov1_intro",
+      "question": "What is YOLO in one sentence, and how does it differ from classifier-based sliding-window detectors?",
+      "question_preview": "What is YOLO in one sentence, and how does it differ from classifier-based sliding-window detectors?",
       "metrics": {
         "passed": false,
         "contract_only": false,
@@ -29,62 +28,7 @@
         "min_hit_count": 1,
         "hit_ok": false,
         "missing_chunk_fingerprints": [
-          "df9bed2a2f99ad0fc96e803818ed053ee79bdc07c47023efcdf769c358299871",
-          "f3d4f47633a2bd6fce9f7ee409c88082a55441304334a4cf734d9b7763a1dacd"
-        ],
-        "work_id_ok": true,
-        "filter_work_id": null
-      },
-      "retrieval_trace": {
-        "embedding": {
-          "embedding_model": "baai/bge-m3",
-          "vector_dim": 1024
-        },
-        "hit_count": 0,
-        "filter_work_id": null,
-        "resolved_work_id": null,
-        "qdrant_collection": "chunks",
-        "top_k_requested": 10,
-        "citations_returned": 0,
-        "top_hit_scores": [],
-        "query_preview": "Which papers in the corpus discuss single-shot detectors and compare their speed-accuracy trade-offs to two-stage pipelines?",
-        "answer_synthesis": {
-          "mode": "deterministic_snippets",
-          "second_stage_llm": false
-        },
-        "retrieval_mode": "vector",
-        "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
-        "degraded": [
-          "no_retrieval_hits"
-        ]
-      },
-      "graph_context": {
-        "methods": [],
-        "datasets": [],
-        "semantic_available": false,
-        "context_work_id": null,
-        "degraded": [
-          "no_resolved_work"
-        ],
-        "error": null
-      },
-      "citations": [],
-      "answer": "No retrieved chunks; ingest documents or check Qdrant collection.",
-      "answer_preview": "No retrieved chunks; ingest documents or check Qdrant collection.",
-      "wall_clock_seconds": 1.482
-    },
-    {
-      "case_id": "live_yolov1_architecture",
-      "question": "Describe the three-step YOLO processing pipeline (resize, network, thresholding) as stated in this paper.",
-      "question_preview": "Describe the three-step YOLO processing pipeline (resize, network, thresholding) as stated in this paper.",
-      "metrics": {
-        "passed": false,
-        "contract_only": false,
-        "hit_count": 0,
-        "min_hit_count": 1,
-        "hit_ok": false,
-        "missing_chunk_fingerprints": [
-          "105ce800-ba74-5572-95b1-71b3f2e1d035"
+          "8226cfd0-aae7-568a-81b1-e81d5f93f767"
         ],
         "work_id_ok": true,
         "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
@@ -101,7 +45,7 @@
         "top_k_requested": 8,
         "citations_returned": 0,
         "top_hit_scores": [],
-        "query_preview": "Describe the three-step YOLO processing pipeline (resize, network, thresholding) as stated in this paper.",
+        "query_preview": "What is YOLO in one sentence, and how does it differ from classifier-based sliding-window detectors?",
         "answer_synthesis": {
           "mode": "deterministic_snippets",
           "second_stage_llm": false
@@ -125,12 +69,12 @@
       "citations": [],
       "answer": "No retrieved chunks; ingest documents or check Qdrant collection.",
       "answer_preview": "No retrieved chunks; ingest documents or check Qdrant collection.",
-      "wall_clock_seconds": 1.027
+      "wall_clock_seconds": 1.088
     },
     {
-      "case_id": "live_yolov1_training",
-      "question": "Summarize the training objective and loss formulation used in this work, citing the sections where they are defined.",
-      "question_preview": "Summarize the training objective and loss formulation used in this work, citing the sections where they are defined.",
+      "case_id": "live_yolov1_methods_combo",
+      "question": "What methods or architectural blocks does this paper describe for object detection, and how does it position them relative to two-stage detectors?",
+      "question_preview": "What methods or architectural blocks does this paper describe for object detection, and how does it position them relative to two-stage detectors?",
       "metrics": {
         "passed": false,
         "contract_only": false,
@@ -138,7 +82,8 @@
         "min_hit_count": 1,
         "hit_ok": false,
         "missing_chunk_fingerprints": [
-          "4defe8cb-0c85-5e54-a3db-24cc31a6d64e"
+          "7ee12509-2279-5d5d-b450-1607dffde23c",
+          "30091237-ce82-52b7-8f16-efab66d4c2ac"
         ],
         "work_id_ok": true,
         "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
@@ -152,10 +97,10 @@
         "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
         "resolved_work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
         "qdrant_collection": "chunks",
-        "top_k_requested": 6,
+        "top_k_requested": 8,
         "citations_returned": 0,
         "top_hit_scores": [],
-        "query_preview": "Summarize the training objective and loss formulation used in this work, citing the sections where they are defined.",
+        "query_preview": "What methods or architectural blocks does this paper describe for object detection, and how does it position them relative to two-stage detectors?",
         "answer_synthesis": {
           "mode": "deterministic_snippets",
           "second_stage_llm": false
@@ -179,7 +124,7 @@
       "citations": [],
       "answer": "No retrieved chunks; ingest documents or check Qdrant collection.",
       "answer_preview": "No retrieved chunks; ingest documents or check Qdrant collection.",
-      "wall_clock_seconds": 0.9
+      "wall_clock_seconds": 0.751
     }
   ]
 }

@@ -4,16 +4,19 @@
     "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
     "extraction_llm_base_url": "https://openrouter.ai/api/v1",
     "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
-    "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+    "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
     "semantic_extraction_enabled": true,
     "judge_prompt_fingerprint": "sha256-20:4a8a4e1fd59c0baace44",
     "judge_schema_version": "retrieval_judge_v1",
-    "retrieval_artifact": "eval/results/current-retrieval-live-corpus-mini.json",
-    "judge_case_tier": "judge_holdout_v1"
+    "retrieval_artifact": "eval/results/current-retrieval-live-corpus-holdout.json",
+    "judge_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "judge_consistency_warnings": [
+      "judge_uses_same_model_as_extraction_set_RETRIEVAL_JUDGE_LLM_MODEL_to_diversify"
+    ]
   },
   "summary": {
     "case_count": 2,
-    "mean_weighted_score": 6.2,
+    "mean_weighted_score": 6.7,
     "all_passed": true,
     "retrieval_judge_eval": true,
     "per_case_score_breakdown": [
@@ -23,15 +26,17 @@
         "coverage": 3,
         "no_contradictions": 2,
         "language": 2,
-        "weighted": 6.7
+        "weighted_score": 6.7,
+        "passed": true
       },
       {
         "case_id": "live_yolov1_methods_combo",
-        "factuality": 2,
+        "factuality": 3,
         "coverage": 3,
         "no_contradictions": 2,
         "language": 2,
-        "weighted": 5.7
+        "weighted_score": 6.7,
+        "passed": true
       }
     ]
   },
@@ -45,22 +50,22 @@
         "coverage": 3,
         "no_contradictions": 2,
         "language": 2,
-        "justification": "The answer is factually accurate, as it directly references the provided context. It also fully covers the question by explaining what YOLO is and how it differs from classifier-based sliding-window detectors. There are no contradictions in the answer. The language used is clear and coherent."
+        "justification": "The answer is factually correct as it states the lack of retrieved chunks and suggests possible actions. It is fully coherent and consistent, and the language used is clear and appropriate."
       },
-      "wall_clock_seconds": 2.45
+      "wall_clock_seconds": 2.592
     },
     {
       "case_id": "live_yolov1_methods_combo",
       "passed": true,
-      "weighted_score": 5.7,
+      "weighted_score": 6.7,
       "scores": {
-        "factuality": 2,
+        "factuality": 3,
         "coverage": 3,
         "no_contradictions": 2,
         "language": 2,
-        "justification": "The answer is coherent and on-topic, but it does not provide specific methods or architectural blocks for object detection or how they position relative to two-stage detectors. The factuality score is reduced because the answer does not address the question directly. The coverage score is high because there is no gold reference snippet to compare against. The no_contradictions and language scores are high because the answer is clear and coherent."
+        "justification": "The answer is factually correct as it accurately states the lack of retrieved chunks. It fully covers the absence of information by explaining the situation, which aligns with the non-existent gold reference snippet. There are no contradictions in the answer, and the language used is clear and coherent."
       },
-      "wall_clock_seconds": 2.784
+      "wall_clock_seconds": 2.182
     }
   ]
 }

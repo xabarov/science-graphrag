@@ -94,7 +94,7 @@ def test_judge_holdout_artifact_has_per_case_score_breakdown() -> None:
     data = json.loads(p.read_text(encoding="utf-8"))
     br = (data.get("summary") or {}).get("per_case_score_breakdown")
     assert isinstance(br, list) and br
-    assert all("case_id" in row and "weighted" in row for row in br)
+    assert all("case_id" in row and "weighted_score" in row for row in br)
 
 
 def test_detect_runtime_mode_hybrid_synthetic() -> None:
@@ -273,6 +273,18 @@ def test_baseline_snapshot_idempotent(tmp_path: Path) -> None:
     a = json.dumps(trust_baseline_payload(payload), sort_keys=True, ensure_ascii=False)
     b = json.dumps(trust_baseline_payload(payload), sort_keys=True, ensure_ascii=False)
     assert a == b
+
+
+def test_unknown_member_fallbacks_to_live_with_warning() -> None:
+    """A member_id not in _GOLD_SUBDIR_BY_MEMBER returns 'live' with an unknown_member_fallback_live warning."""
+    from science_graphrag.benchmarks.trust_signal import _consistency_warnings
+
+    block: dict = {"run_metadata": {"extraction_llm_model": "some-model"}}
+    cases = [{"case_id": "x", "metrics": {"passed": True}}]
+    mode = detect_runtime_mode("totally_new_member_xyz", block, cases)
+    assert mode == "live"
+    warns = _consistency_warnings("totally_new_member_xyz", block, cases, mode)
+    assert any("unknown_member_fallback_live" in w for w in warns)
 
 
 def test_compute_gate_trust_criteria_wires_judge_hard_block() -> None:
