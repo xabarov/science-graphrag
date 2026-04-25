@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "pack_id": "contradictions_v1/pair_07_retinanet_focal_vs_efficientdet",
+  "pack_path": "tests/fixtures/benchmarks/contradictions_v1/pair_07_retinanet_focal_vs_efficientdet",
+  "layer": "contradictions_v1",
+  "generated_at_utc": "2026-04-25T21:28:14.193562+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "B confirmed contradiction but contradiction_type differs from gold",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/contradictions_v1/pair_07_retinanet_focal_vs_efficientdet/gold.json",
+    "count": 1,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article_a.md + article_b.md (paired)",
+    "count": 1,
+    "model": "deepseek/deepseek-v4-pro",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:b95426531aea2bfdb8268ee16816f64f61d7a385e05f9f7a7d8369a3c956f682",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 17059,
+      "completion": 247,
+      "total": 17306
+    },
+    "latency_ms": 21818
+  },
+  "summary": {
+    "a_total": 1,
+    "b_total": 1,
+    "matched": 1,
+    "matched_lexical": 1,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "field_agreements": {
+      "contradiction_type": {
+        "agreed": 0,
+        "disagreed": 1
+      },
+      "severity": {
+        "agreed": 1,
+        "disagreed": 0
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "pair_id": "c07_depth_scaling_vs_compound_scaling",
+      "match_score": 0.094,
+      "match_source": "lexical",
+      "claim_a_score": 0.094,
+      "claim_b_score": 0.14,
+      "field_disagreements": [
+        {
+          "field": "contradiction_type",
+          "a": "scaling",
+          "b": "design_paradigm"
+        }
+      ],
+      "a_claim_a_text": "Deeper backbones (ResNet-101, ResNeXt) yield substantial accuracy gains over shallower ones for dense object detection.",
+      "b_claim_a_text": "The exact form of the focal loss is not crucial, and other instantiations can achieve similar results.",
+      "a_claim_b_text": "Joint compound scaling of depth, width, and input resolution is more efficient than scaling depth alone for object detection.",
+      "b_claim_b_text": "The precise form of the focal loss is crucial, and EfficientDet specifically uses focal loss with α=0.25 and γ=1.5."
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": []
+}

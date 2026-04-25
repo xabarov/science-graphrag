@@ -1,0 +1,40 @@
+Phase 6.E pass: model=moonshotai/kimi-k2.6 tag=kimi packs=38 max_tokens=12000
+[1/38] claims_v2/corpus_cascade_rcnn_v2: starting
+[2/38] claims_v2/corpus_cornernet_v2: starting
+[3/38] claims_v2/corpus_efficientdet_v2: starting
+[4/38] claims_v2/corpus_fast_rcnn_v2: starting
+[4/38] claims_v2/corpus_fast_rcnn_v2: done in 103.7s, ok=True, rc=0
+[5/38] claims_v2/corpus_faster_rcnn_v2: starting
+[1/38] claims_v2/corpus_cascade_rcnn_v2: done in 127.8s, ok=False, rc=0
+  STDERR tail:
+using model=moonshotai/kimi-k2.6 base_url=https://openrouter.ai/api/v1
+embeddings enabled: model=baai/bge-m3 cache=/home/roman/pyprojects/ML/Prod/science-graphrag/eval/dual_validate/embeddings_cache/baai__bge-m3
+reasoning override: {'effort': 'low'}
+  ERROR on corpus_cascade_rcnn_v2: extractor B response: missing/invalid 'claims' list  (raw saved to consistency_report.kimi.raw.json for inspection)
+[6/38] claims_v2/corpus_fcos_v2: starting
+[6/38] claims_v2/corpus_fcos_v2: done in 81.0s, ok=True, rc=0
+[7/38] claims_v2/corpus_fpn_v2: starting
+[5/38] claims_v2/corpus_faster_rcnn_v2: done in 136.4s, ok=True, rc=0
+[8/38] claims_v2/corpus_mask_rcnn_v2: starting
+[3/38] claims_v2/corpus_efficientdet_v2: done in 349.2s, ok=True, rc=0
+[9/38] claims_v2/corpus_rcnn_v2: starting
+[8/38] claims_v2/corpus_mask_rcnn_v2: done in 113.6s, ok=True, rc=0
+[10/38] claims_v2/corpus_retinanet_focal_v2: starting
+[2/38] claims_v2/corpus_cornernet_v2: done in 382.5s, ok=True, rc=0
+[11/38] claims_v2/corpus_ssd_v2: starting
+[7/38] claims_v2/corpus_fpn_v2: done in 185.5s, ok=True, rc=0
+[12/38] claims_v2/corpus_yolov1_v2: starting
+[9/38] claims_v2/corpus_rcnn_v2: done in 70.0s, ok=True, rc=0
+[13/38] claims_v2/corpus_yolov2_v2: starting
+[12/38] claims_v2/corpus_yolov1_v2: done in 87.1s, ok=True, rc=0
+[14/38] claims_v2/holdout_atss_v1: starting
+[10/38] claims_v2/corpus_retinanet_focal_v2: done in 140.3s, ok=True, rc=0
+[15/38] claims_v2/holdout_deformable_detr_v1: starting
+[13/38] claims_v2/corpus_yolov2_v2: done in 156.0s, ok=True, rc=0
+[16/38] claims_v2/holdout_dino_v1: starting
+[14/38] claims_v2/holdout_atss_v1: done in 115.5s, ok=True, rc=0
+[17/38] claims_v2/holdout_yolov3_v1: starting
+[15/38] claims_v2/holdout_deformable_detr_v1: done in 104.7s, ok=True, rc=0
+[18/38] claims_v2/holdout_yolox_v1: starting
+[11/38] claims_v2/corpus_ssd_v2: done in 222.9s, ok=True, rc=0
+[19/38] concept_topic_v2/corpus_cascade_rcnn_v2: starting

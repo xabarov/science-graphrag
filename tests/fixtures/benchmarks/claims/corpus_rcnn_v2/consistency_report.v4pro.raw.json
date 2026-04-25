@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "R-CNN achieves a mean average precision of 53.7% on PASCAL VOC 2010.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "R-CNN achieves a mean average precision (mAP) of 53.7% on PASCAL VOC 2010."
+    },
+    {
+      "claim_text_normalized": "R-CNN significantly outperforms OverFeat on the ILSVRC2013 detection dataset with a mAP of 31.4% versus 24.3%.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "R-CNN significantly outperforms OverFeat, with a mAP of 31.4% versus 24.3%."
+    },
+    {
+      "claim_text_normalized": "Supervised pre-training on a large auxiliary dataset followed by domain-specific fine-tuning yields a significant performance boost when labeled training data is scarce.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "supervised pre-training on a large auxiliary dataset (ILSVRC), followed by domain-specific fine-tuning on a small dataset (PASCAL), is an effective paradigm for learning high-capacity CNNs when data is scarce."
+    },
+    {
+      "claim_text_normalized": "Fine-tuning for detection improves mAP performance by 8 percentage points.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "fine-tuning for detection improves mAP performance by 8 percentage points."
+    },
+    {
+      "claim_text_normalized": "A simple bounding-box regression method significantly reduces mislocalizations, which are the dominant error mode.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "a simple bounding-box regression method significantly reduces mislocalizations, which are the dominant error mode."
+    },
+    {
+      "claim_text_normalized": "Features from fc7 generalize worse than features from fc6 without fine-tuning.",
+      "claim_type": "finding",
+      "polarity": "negative",
+      "evidence_quote_short": "features from fc7 generalize worse than features from fc6."
+    },
+    {
+      "claim_text_normalized": "R-CNN with the O-Net architecture substantially outperforms R-CNN with T-Net, increasing mAP from 58.5% to 66.0%.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "R-CNN with O-Net substantially outperforms R-CNN with T-Net, increasing mAP from 58.5% to 66.0%."
+    },
+    {
+      "claim_text_normalized": "The forward pass of O-Net takes roughly 7 times longer than T-Net.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "the forward pass of O-Net taking roughly 7 times longer than T-Net."
+    }
+  ]
+}

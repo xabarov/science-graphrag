@@ -1,0 +1,64 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "Adding batch normalization on all convolutional layers in YOLO improves mAP by more than 2%.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "By adding batch normalization on all of the convolutional layers in YOLO we get more than 2% improvement in mAP."
+    },
+    {
+      "claim_text_normalized": "Fine tuning the classification network at 448×448 resolution for 10 epochs on ImageNet increases mAP by almost 4%.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "This high resolution classification network gives us an increase of almost 4% mAP."
+    },
+    {
+      "claim_text_normalized": "Using dimension clusters along with directly predicting the bounding box center location improves YOLO by almost 5% over the version with anchor boxes.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "Using dimension clusters along with directly predicting the bounding box center location improves YOLO by almost 5% over the version with anchor boxes."
+    },
+    {
+      "claim_text_normalized": "YOLOv2 at 40 FPS achieves 78.6 mAP on VOC 2007, outperforming Faster R-CNN with ResNet and SSD while running significantly faster.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "At 40 FPS, YOLOv2 gets 78.6 mAP, outperforming state-of-the-art methods like Faster R-CNN with ResNet and SSD while still running significantly faster."
+    },
+    {
+      "claim_text_normalized": "YOLO9000 achieves 19.7 mAP on the ImageNet detection validation set despite only having detection data for 44 of the 200 classes.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "YOLO9000 gets 19.7 mAP on the ImageNet detection validation set despite only having detection data for 44 of the 200 classes."
+    },
+    {
+      "claim_text_normalized": "YOLO9000 gets 16.0 mAP on the 156 classes not in COCO.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "On the 156 classes not in COCO, YOLO9000 gets 16.0 mAP."
+    },
+    {
+      "claim_text_normalized": "YOLO9000 predicts detections for more than 9000 different object categories and still runs in real-time.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "But YOLO can detect more than just 200 classes; it predicts detections for more than 9000 different object categories. And it still runs in real-time."
+    },
+    {
+      "claim_text_normalized": "The proposed multi-scale training method allows the same YOLOv2 model to run at varying sizes, offering an easy tradeoff between speed and accuracy.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "Using a novel, multi-scale training method the same YOLOv2 model can run at varying sizes, offering an easy tradeoff between speed and accuracy."
+    },
+    {
+      "claim_text_normalized": "YOLO9000 learns new species of animals well but struggles with learning categories like clothing and equipment.",
+      "claim_type": "finding",
+      "polarity": "negative",
+      "evidence_quote_short": "When we analyze YOLO9000’s performance on ImageNet we see it learns new species of animals well but struggles with learning categories like clothing and equipment."
+    },
+    {
+      "claim_text_normalized": "The joint training method allows YOLO9000 to predict detections for object classes that do not have labelled detection data.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "Our joint training allows YOLO9000 to predict detections for object classes that don’t have labelled detection data."
+    }
+  ]
+}

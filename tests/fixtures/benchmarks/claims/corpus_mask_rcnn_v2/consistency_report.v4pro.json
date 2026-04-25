@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/corpus_mask_rcnn_v2",
+  "pack_path": "tests/fixtures/benchmarks/claims/corpus_mask_rcnn_v2",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T21:18:48.336294+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "polarity_flips=1, unmatched_a_ratio=0.60 (gate: polarity_flips ≥ 1 OR unmatched_a_ratio ≥ 0.30)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/claims/corpus_mask_rcnn_v2/gold.json",
+    "count": 5,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-extracted)",
+    "count": 8,
+    "model": "deepseek/deepseek-v4-pro",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:144cd2bc1b101ca4f7df23174a925342d6abf11cc7b04ad56f62bed2a35d57d5",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 17735,
+      "completion": 762,
+      "total": 18497
+    },
+    "latency_ms": 20218
+  },
+  "summary": {
+    "a_total": 5,
+    "b_total": 8,
+    "matched": 2,
+    "matched_lexical": 0,
+    "matched_embedding": 2,
+    "unmatched_a": 3,
+    "unmatched_b": 6,
+    "field_agreements": {
+      "polarity": {
+        "agreed": 1,
+        "disagreed": 1
+      },
+      "claim_type": {
+        "agreed": 1,
+        "disagreed": 1
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_claim_id": "mask_rcnn_parallel_mask_branch",
+      "b_index": 0,
+      "match_score": 0.856,
+      "match_source": "embedding",
+      "a_claim_text_normalized": "Mask R-CNN augments the Faster R-CNN detector with an additional, parallel head that outputs a per-instance binary segmentation mask for each proposal.",
+      "b_claim_text_normalized": "Mask R-CNN extends Faster R-CNN by adding a branch for predicting an object mask in parallel with the existing branch for bounding box recognition.",
+      "field_disagreements": [
+        {
+          "field": "polarity",
+          "a": "positive",
+          "b": "neutral"
+        }
+      ]
+    },
+    {
+      "a_claim_id": "mask_rcnn_roialign_quantization_fix",
+      "b_index": 3,
+      "match_score": 0.765,
+      "match_source": "embedding",
+      "a_claim_text_normalized": "ROIAlign replaces ROIPool by removing harsh feature quantization, which substantially improves mask localization accuracy.",
+      "b_claim_text_normalized": "The proposed RoIAlign layer improves mask accuracy by relative 10% to 50%, showing bigger gains under stricter localization metrics.",
+      "field_disagreements": [
+        {
+          "field": "claim_type",
+          "a": "design_choice",
+          "b": "finding"
+        }
+      ]
+    }
+  ],
+  "unmatched_a": [
+    {
+      "a_claim_id": "mask_rcnn_decoupled_per_class_sigmoid",
+      "a_claim_text_normalized": "Predicting per-class binary masks with sigmoid avoids inter-class competition that arises when mask classes are normalized with softmax.",
+      "a_polarity": "positive",
+      "a_claim_type": "finding",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "mask_rcnn_pretraining_dependency_negative",
+      "a_claim_text_normalized": "Detection accuracy of Mask R-CNN drops noticeably without ImageNet pre-training, indicating a dependence on large-scale supervised pre-training of the backbone.",
+      "a_polarity": "negative",
+      "a_claim_type": "limitation",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "mask_rcnn_softmax_mask_competition_negative",
+      "a_claim_text_normalized": "Per-class softmax over mask classes induces inter-class competition that degrades mask quality compared to the per-class sigmoid formulation.",
+      "a_polarity": "negative",
+      "a_claim_type": "comparison",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "b_index": 1,
+      "b_claim_text_normalized": "Mask R-CNN is simple to train and adds only a small overhead to Faster R-CNN, running at 5 fps.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 2,
+      "b_claim_text_normalized": "Without bells and whistles, Mask R-CNN outperforms all existing, single-model entries on every task, including the COCO 2016 challenge winners.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 4,
+      "b_claim_text_normalized": "Decoupling mask and class prediction by predicting a binary mask for each class independently is essential for good instance segmentation results.",
+      "b_polarity": "positive",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 5,
+      "b_claim_text_normalized": "Using a per-pixel softmax and a multinomial loss couples mask and class prediction and results in a severe loss in mask AP of 5.5 points.",
+      "b_polarity": "negative",
+      "b_claim_type": "limitation",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 6,
+      "b_claim_text_normalized": "Mask R-CNN can be extended to human pose estimation by viewing each keypoint as a one-hot binary mask with minimal modification.",
+      "b_polarity": "neutral",
+      "b_claim_type": "method",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 7,
+      "b_claim_text_normalized": "Mask R-CNN surpasses the winner of the 2016 COCO keypoint competition and runs at 5 fps.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    }
+  ]
+}

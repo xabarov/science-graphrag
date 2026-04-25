@@ -1,0 +1,288 @@
+{
+  "schema_version": 1,
+  "pack_id": "concept_topic/corpus_fcos_v2",
+  "pack_path": "tests/fixtures/benchmarks/concept_topic/corpus_fcos_v2",
+  "layer": "concept_topic_v2",
+  "generated_at_utc": "2026-04-25T21:27:09.185749+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "flips=3, missing_in_b_ratio=0.00 (gate: flips ≥ 1 OR missing_in_b_ratio ≥ 0.40)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/concept_topic/corpus_fcos_v2/gold.json",
+    "count": 13,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-labelled against frozen 25 concepts)",
+    "count": 25,
+    "model": "deepseek/deepseek-v4-pro",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:c47627ea93229dcc416a545a153f0b318f193da34f0d4d0b337c88896c766fba",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 13543,
+      "completion": 1436,
+      "total": 14979
+    },
+    "latency_ms": 29922
+  },
+  "summary": {
+    "a_total": 13,
+    "b_total": 25,
+    "matched": 13,
+    "matched_lexical": 13,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 12,
+    "field_agreements": {
+      "status": {
+        "agreed_present": 7,
+        "agreed_absent": 3,
+        "flips": 3
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "concept_id": "anchor_free",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "our proposed detector FCOS is anchor box free, as well as proposal free",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "centerness",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "we introduce a novel “center-ness” branch (only one layer) to predict the deviation of a pixel to the center",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "We propose a fully convolutional one-stage object detector (FCOS)",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "we make use of five levels of feature maps defined as {P3, P4, P5, P6, P7}",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "ResNet-50 is used as our backbone networks",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "nms",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "the only post-processing non-maximum suppression (NMS)",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "experiments are conducted on the large-scale detection benchmark COCO [16]",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "anchor_based",
+      "a_status": "absent",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "absent",
+          "b": "present"
+        }
+      ],
+      "b_evidence_quote": "all state-of-the-art object detectors such as RetinaNet, SSD, YOLOv3, and Faster R-CNN rely on pre-defined anchor boxes",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "region_proposal",
+      "a_status": "absent",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "absent",
+          "b": "present"
+        }
+      ],
+      "b_evidence_quote": "FCOS can be used as a Region Proposal Networks (RPNs) in two-stage detectors",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "a_status": "absent",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "absent",
+          "b": "present"
+        }
+      ],
+      "b_evidence_quote": "FCOS can be used as a Region Proposal Networks (RPNs) in two-stage detectors",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "set_prediction",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not use bipartite matching, Hungarian matching, or direct set prediction; it uses per-pixel prediction and NMS."
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention transformer architecture, attention encoder-decoder, or any transformer-based object detection."
+    },
+    {
+      "concept_id": "mask_branch",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not include a mask branch or instance segmentation head; it focuses on bounding box detection."
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": [
+    {
+      "concept_id": "selective_search",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention Selective Search or its aliases; it focuses on anchor-based and anchor-free detection.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "focal_loss",
+      "b_status": "present",
+      "b_evidence_quote": "Lcls is focal loss as in [15]",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "roi_pooling",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "ROI pooling is not mentioned; FCOS is a fully convolutional one-stage detector without region-wise pooling.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "roi_align",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "ROIAlign is not used or discussed; the method avoids region-based operations entirely.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "keypoint_detection",
+      "b_status": "present",
+      "b_evidence_quote": "CornerNet detects a pair of corners of a bounding box and groups them",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "backbone_darknet",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "Darknet backbone is not used; the article only employs ResNet, ResNeXt, and HRNet backbones.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "compound_scaling",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "Compound scaling (joint depth-width-resolution scaling) is not mentioned or utilized in the article.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "cascade_iou_progression",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "Cascade IoU progression or cascade R-CNN is not referenced; the detector uses a single IoU threshold for NMS.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "iou_loss",
+      "b_status": "present",
+      "b_evidence_quote": "Lreg is the IOU loss as in UnitBox [32]",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "classical_dpm",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "Deformable Parts Model (DPM) is not mentioned or16 used in the article.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "Handcrafted features like HOG, SIFT, or SURF are not discussed; the method relies on learned CNN features.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "b_status": "present",
+      "b_evidence_quote": "L({pppx,y}, {tttx,y}) = 1/Npos ∑ Lcls(pppx,y, c∗x,y) + λ/Npos ∑ ✶{c∗x,y>0}Lreg(tttx,y, ttt∗x,y)",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    }
+  ]
+}

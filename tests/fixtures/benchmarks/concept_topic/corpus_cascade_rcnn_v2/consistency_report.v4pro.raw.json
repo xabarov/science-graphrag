@@ -1,0 +1,141 @@
+{
+  "labels": [
+    {
+      "concept_id": "region_proposal",
+      "status": "present",
+      "evidence_quote": "introducing a Region Proposal Network (RPN)",
+      "rationale": ""
+    },
+    {
+      "concept_id": "selective_search",
+      "status": "present",
+      "evidence_quote": "selective search [30]",
+      "rationale": ""
+    },
+    {
+      "concept_id": "anchor_based",
+      "status": "absent",
+      "rationale": "The article does not explicitly mention anchor boxes, predefined anchors, or anchor priors."
+    },
+    {
+      "concept_id": "anchor_free",
+      "status": "absent",
+      "rationale": "The article does not discuss anchor-free detection or per-pixel prediction without anchors."
+    },
+    {
+      "concept_id": "set_prediction",
+      "status": "absent",
+      "rationale": "The article does not mention bipartite matching, Hungarian matching, or direct set prediction."
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "status": "present",
+      "evidence_quote": "FPN [21] detect proposals at multiple output layers",
+      "rationale": ""
+    },
+    {
+      "concept_id": "focal_loss",
+      "status": "present",
+      "evidence_quote": "Focal loss for dense object detection",
+      "rationale": ""
+    },
+    {
+      "concept_id": "nms",
+      "status": "absent",
+      "rationale": "The article does not explicitly mention non-maximum suppression or NMS."
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "status": "absent",
+      "rationale": "The article does not mention transformer architecture, attention encoder-decoder, or transformer object detection."
+    },
+    {
+      "concept_id": "roi_pooling",
+      "status": "absent",
+      "rationale": "The article does not explicitly mention ROI pooling, RoIPool, or region-of-interest pooling."
+    },
+    {
+      "concept_id": "roi_align",
+      "status": "present",
+      "evidence_quote": "RoIAlign [14] was used for a stronger baseline.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "mask_branch",
+      "status": "absent",
+      "rationale": "The article does not mention a mask branch, instance segmentation branch, or mask prediction head."
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "status": "present",
+      "evidence_quote": "one-stage object detection architectures",
+      "rationale": ""
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "status": "present",
+      "evidence_quote": "two-stage R-CNN framework",
+      "rationale": ""
+    },
+    {
+      "concept_id": "keypoint_detection",
+      "status": "absent",
+      "rationale": "The article does not mention corner detection, keypoint pairs, or paired keypoints."
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "status": "present",
+      "evidence_quote": "ResNet backbone [16]",
+      "rationale": ""
+    },
+    {
+      "concept_id": "backbone_darknet",
+      "status": "present",
+      "evidence_quote": "DarkNet-19",
+      "rationale": ""
+    },
+    {
+      "concept_id": "compound_scaling",
+      "status": "absent",
+      "rationale": "The article does not mention compound scaling or joint depth-width-resolution scaling."
+    },
+    {
+      "concept_id": "cascade_iou_progression",
+      "status": "present",
+      "evidence_quote": "sequence of detectors trained with increasing IoU thresholds",
+      "rationale": ""
+    },
+    {
+      "concept_id": "centerness",
+      "status": "absent",
+      "rationale": "The article does not mention center-ness, centerness branch, or center prediction."
+    },
+    {
+      "concept_id": "iou_loss",
+      "status": "absent",
+      "rationale": "The article does not mention IoU loss, GIoU, generalized IoU loss, or DIoU."
+    },
+    {
+      "concept_id": "classical_dpm",
+      "status": "absent",
+      "rationale": "The article does not mention Deformable Parts Model, DPM, or deformable part-based model."
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "status": "absent",
+      "rationale": "The article does not mention HOG, SIFT, SURF, or hand-engineered features."
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "status": "present",
+      "evidence_quote": "multi-task learning problem that combines classification and bounding box regression",
+      "rationale": ""
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "status": "present",
+      "evidence_quote": "MS-COCO 2017 [20]",
+      "rationale": ""
+    }
+  ]
+}

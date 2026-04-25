@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "YOLO frames object detection as a single regression problem from image pixels to bounding box coordinates and class probabilities.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "We reframe object detection as a single regression problem, straight from image pixels to bounding box coordinates and class probabilities."
+    },
+    {
+      "claim_text_normalized": "The base YOLO model processes images at 45 frames per second in real-time.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "Our base YOLO model processes images in real-time at 45 frames per second."
+    },
+    {
+      "claim_text_normalized": "Fast YOLO achieves 155 frames per second while attaining double the mAP of other real-time detectors.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "A smaller version of the network, Fast YOLO, processes an astounding 155 frames per second while still achieving double the mAP of other real-time detectors."
+    },
+    {
+      "claim_text_normalized": "YOLO makes less than half the number of background errors compared to Fast R-CNN.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "YOLO makes less than half the number of background errors compared to Fast R-CNN."
+    },
+    {
+      "claim_text_normalized": "YOLO outperforms DPM and R-CNN when generalizing from natural images to artwork.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "It outperforms other detection methods, including DPM and R-CNN, when generalizing from natural images to other domains like artwork."
+    },
+    {
+      "claim_text_normalized": "YOLO struggles to precisely localize some objects, especially small ones.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "While it can quickly identify objects in images it struggles to precisely localize some objects, especially small ones."
+    },
+    {
+      "claim_text_normalized": "Combining YOLO with Fast R-CNN increases mAP by 3.2% to 75.0% on VOC 2007.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "When combined with YOLO, its mAP increases by 3.2% to 75.0%."
+    },
+    {
+      "claim_text_normalized": "YOLO imposes strong spatial constraints that limit the number of nearby objects it can predict.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "This spatial constraint limits the number of nearby objects that our model can predict."
+    }
+  ]
+}

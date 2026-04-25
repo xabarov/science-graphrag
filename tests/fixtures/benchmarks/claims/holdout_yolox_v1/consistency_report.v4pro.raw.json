@@ -1,0 +1,46 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "YOLOX-L achieves 50.0% AP on COCO at 640x640 resolution, outperforming YOLOv5-L by 1.8% AP.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "YOLOX-L achieves 50.0% AP on COCO with 640 × 640 resolution, outperforming the counterpart YOLOv5-L by 1.8% AP."
+    },
+    {
+      "claim_text_normalized": "The decoupled head converges much faster than the YOLOv3 head and achieves a better final result.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "It is obvious that the decoupled head converges much faster than the YOLOv3 head and achieves better result finally."
+    },
+    {
+      "claim_text_normalized": "SimOTA raises the detector from 45.0% AP to 47.3% AP on COCO.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "SimOTA raises the detector from 45.0% AP to 47.3% AP"
+    },
+    {
+      "claim_text_normalized": "YOLOX-Nano has only 0.91M parameters and 1.08G FLOPs.",
+      "claim_type": "dataset",
+      "polarity": "neutral",
+      "evidence_quote_short": "YOLOX-Nano (only 0.91M Parameters and 1.08G FLOPs)"
+    },
+    {
+      "claim_text_normalized": "The end-to-end property decreases by 4.2% AP with the coupled head.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "the end-to-end property decreases by 4.2% AP with the coupled head"
+    },
+    {
+      "claim_text_normalized": "YOLOX-Tiny outperforms YOLOv4-Tiny by 10.1% AP on COCO.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "YOLOX-Tiny 32.8(+10.1)"
+    },
+    {
+      "claim_text_normalized": "ImageNet pre-training is no more beneficial after using strong data augmentation.",
+      "claim_type": "finding",
+      "polarity": "negative",
+      "evidence_quote_short": "we found ImageNet pre-training is no more beneficial"
+    }
+  ]
+}

@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/holdout_deformable_detr_v1",
+  "pack_path": "tests/fixtures/benchmarks/claims/holdout_deformable_detr_v1",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T21:29:16.916465+00:00",
+  "tags_requested": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_present": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_missing": [],
+  "consensus_priority": "high",
+  "consensus_priority_rationale": "votes={'high': 3}; tie_break=majority",
+  "votes_by_priority": {
+    "high": 3
+  },
+  "model_reports": [
+    {
+      "tag": "deepseek",
+      "report_path": "tests/fixtures/benchmarks/claims/holdout_deformable_detr_v1/consistency_report.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 4,
+        "b_total": 8,
+        "matched": 3,
+        "matched_lexical": 3,
+        "matched_embedding": 0,
+        "unmatched_a": 1,
+        "unmatched_b": 5,
+        "field_agreements": {
+          "polarity": {
+            "agreed": 1,
+            "disagreed": 2
+          },
+          "claim_type": {
+            "agreed": 1,
+            "disagreed": 2
+          }
+        }
+      },
+      "matched_pair_count": 3
+    },
+    {
+      "tag": "v4pro",
+      "report_path": "tests/fixtures/benchmarks/claims/holdout_deformable_detr_v1/consistency_report.v4pro.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 4,
+        "b_total": 7,
+        "matched": 3,
+        "matched_lexical": 2,
+        "matched_embedding": 1,
+        "unmatched_a": 1,
+        "unmatched_b": 4,
+        "field_agreements": {
+          "polarity": {
+            "agreed": 1,
+            "disagreed": 2
+          },
+          "claim_type": {
+            "agreed": 1,
+            "disagreed": 2
+          }
+        }
+      },
+      "matched_pair_count": 3
+    },
+    {
+      "tag": "claude",
+      "report_path": "tests/fixtures/benchmarks/claims/holdout_deformable_detr_v1/consistency_report.claude.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 4,
+        "b_total": 8,
+        "matched": 2,
+        "matched_lexical": 2,
+        "matched_embedding": 0,
+        "unmatched_a": 2,
+        "unmatched_b": 6,
+        "field_agreements": {
+          "polarity": {
+            "agreed": 1,
+            "disagreed": 1
+          },
+          "claim_type": {
+            "agreed": 1,
+            "disagreed": 1
+          }
+        }
+      },
+      "matched_pair_count": 2
+    }
+  ],
+  "per_record_consensus": {
+    "id_field": "a_claim_id",
+    "a_total_records": 4,
+    "consensus_matched_count": 3,
+    "consensus_match_ratio": 0.75,
+    "buckets": {
+      "matched_by_all": 2,
+      "matched_by_majority": 1
+    },
+    "records": [
+      {
+        "id": "deformable_detr_10x_faster_convergence",
+        "matched_by": [
+          "deepseek",
+          "v4pro",
+          "claude"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "deformable_detr_attention_modules",
+        "matched_by": [
+          "deepseek",
+          "v4pro"
+        ],
+        "missing_in": [
+          "claude"
+        ],
+        "consensus": "matched_by_majority"
+      },
+      {
+        "id": "deformable_detr_multiscale_efficient",
+        "matched_by": [
+          "deepseek",
+          "v4pro",
+          "claude"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      }
+    ]
+  }
+}

@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/corpus_yolov2_v2",
+  "pack_path": "tests/fixtures/benchmarks/claims/corpus_yolov2_v2",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T21:20:09.070812+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "polarity_flips=0, unmatched_a_ratio=0.60 (gate: polarity_flips ≥ 1 OR unmatched_a_ratio ≥ 0.30)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/claims/corpus_yolov2_v2/gold.json",
+    "count": 5,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-extracted)",
+    "count": 10,
+    "model": "deepseek/deepseek-v4-pro",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:2b0106cefa93ae2af5921273d8c20c73c449ee96a4c95b657397c044c4d23ecf",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 11289,
+      "completion": 942,
+      "total": 12231
+    },
+    "latency_ms": 66550
+  },
+  "summary": {
+    "a_total": 5,
+    "b_total": 10,
+    "matched": 2,
+    "matched_lexical": 1,
+    "matched_embedding": 1,
+    "unmatched_a": 3,
+    "unmatched_b": 8,
+    "field_agreements": {
+      "polarity": {
+        "agreed": 2,
+        "disagreed": 0
+      },
+      "claim_type": {
+        "agreed": 0,
+        "disagreed": 2
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_claim_id": "yolov2_batchnorm_dropout_replace",
+      "b_index": 0,
+      "match_score": 0.698,
+      "match_source": "lexical",
+      "a_claim_text_normalized": "YOLOv2 introduces batch normalization on every convolutional layer and removes dropout, improving mAP by more than two points.",
+      "b_claim_text_normalized": "Adding batch normalization on all convolutional layers in YOLO improves mAP by more than 2%.",
+      "field_disagreements": [
+        {
+          "field": "claim_type",
+          "a": "design_choice",
+          "b": "finding"
+        }
+      ]
+    },
+    {
+      "a_claim_id": "yolov2_yolo9000_joint_training",
+      "b_index": 6,
+      "match_score": 0.834,
+      "match_source": "embedding",
+      "a_claim_text_normalized": "YOLO9000 jointly trains on detection and classification data, enabling detection of more than nine thousand object categories without per-class detection labels.",
+      "b_claim_text_normalized": "YOLO9000 predicts detections for more than 9000 different object categories and still runs in real-time.",
+      "field_disagreements": [
+        {
+          "field": "claim_type",
+          "a": "finding",
+          "b": "performance"
+        }
+      ]
+    }
+  ],
+  "unmatched_a": [
+    {
+      "a_claim_id": "yolov2_dimension_priors_kmeans",
+      "a_claim_text_normalized": "Dimension priors learned by k-means clustering on training boxes replace hand-picked anchor box shapes used in prior detectors.",
+      "a_polarity": "positive",
+      "a_claim_type": "method",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "yolov2_handpicked_anchors_negative",
+      "a_claim_text_normalized": "Hand-picked anchor box shapes do not match the real distribution of training boxes well, limiting the model capacity to learn diverse object proportions.",
+      "a_polarity": "negative",
+      "a_claim_type": "limitation",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "yolov2_yolov1_coarse_grid_negative",
+      "a_claim_text_normalized": "Localization in YOLOv1 is constrained by coarse grid-cell predictions, a limitation that YOLOv2 mitigates through learned anchor priors and a higher-resolution classification step.",
+      "a_polarity": "negative",
+      "a_claim_type": "limitation",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "b_index": 1,
+      "b_claim_text_normalized": "Fine tuning the classification network at 448×448 resolution for 10 epochs on ImageNet increases mAP by almost 4%.",
+      "b_polarity": "positive",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 2,
+      "b_claim_text_normalized": "Using dimension clusters along with directly predicting the bounding box center location improves YOLO by almost 5% over the version with anchor boxes.",
+      "b_polarity": "positive",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 3,
+      "b_claim_text_normalized": "YOLOv2 at 40 FPS achieves 78.6 mAP on VOC 2007, outperforming Faster R-CNN with ResNet and SSD while running significantly faster.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 4,
+      "b_claim_text_normalized": "YOLO9000 achieves 19.7 mAP on the ImageNet detection validation set despite only having detection data for 44 of the 200 classes.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 5,
+      "b_claim_text_normalized": "YOLO9000 gets 16.0 mAP on the 156 classes not in COCO.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 7,
+      "b_claim_text_normalized": "The proposed multi-scale training method allows the same YOLOv2 model to run at varying sizes, offering an easy tradeoff between speed and accuracy.",
+      "b_polarity": "positive",
+      "b_claim_type": "method",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 8,
+      "b_claim_text_normalized": "YOLO9000 learns new species of animals well but struggles with learning categories like clothing and equipment.",
+      "b_polarity": "negative",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 9,
+      "b_claim_text_normalized": "The joint training method allows YOLO9000 to predict detections for object classes that do not have labelled detection data.",
+      "b_polarity": "positive",
+      "b_claim_type": "method",
+      "comment": "produced by independent extractor B but not in human gold A"
+    }
+  ]
+}

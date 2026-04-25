@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "pack_id": "contradictions_v1/pair_06_hog_human_detection_vs_rcnn",
+  "pack_path": "tests/fixtures/benchmarks/contradictions_v1/pair_06_hog_human_detection_vs_rcnn",
+  "layer": "contradictions_v1",
+  "generated_at_utc": "2026-04-25T21:28:20.543630+00:00",
+  "spot_check_priority": "medium",
+  "spot_check_priority_rationale": "type matches but severity_match=False, worst_claim_text_score=0.33 (gate: severity flip OR text<0.30)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/contradictions_v1/pair_06_hog_human_detection_vs_rcnn/gold.json",
+    "count": 1,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article_a.md + article_b.md (paired)",
+    "count": 1,
+    "model": "deepseek/deepseek-v4-pro",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:87674d3c9050d6778abff2f1bbbe0ee2f073e7805775281e40d24e68142d49cc",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 17058,
+      "completion": 262,
+      "total": 17320
+    },
+    "latency_ms": 13599
+  },
+  "summary": {
+    "a_total": 1,
+    "b_total": 1,
+    "matched": 1,
+    "matched_lexical": 1,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "field_agreements": {
+      "contradiction_type": {
+        "agreed": 1,
+        "disagreed": 0
+      },
+      "severity": {
+        "agreed": 0,
+        "disagreed": 1
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "pair_id": "c06_handcrafted_vs_learned_features",
+      "match_score": 0.33,
+      "match_source": "lexical",
+      "claim_a_score": 0.33,
+      "claim_b_score": 0.358,
+      "field_disagreements": [
+        {
+          "field": "severity",
+          "a": "direct",
+          "b": "nuanced"
+        }
+      ],
+      "a_claim_a_text": "Histograms of oriented gradients capture the edge structure that is sufficient for accurate human and object detection.",
+      "b_claim_a_text": "Fine-scale gradients and fine orientation binning are essential for good human detection performance, while coarse spatial binning is sufficient.",
+      "a_claim_b_text": "Learned convolutional features substantially outperform handcrafted feature representations such as HOG and DPM on object detection.",
+      "b_claim_b_text": "High-capacity CNNs with hierarchical, multi-stage learned features dramatically outperform simpler HOG-like features for object detection."
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": []
+}

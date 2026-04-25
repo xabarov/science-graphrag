@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/corpus_efficientdet_v2",
+  "pack_path": "tests/fixtures/benchmarks/claims/corpus_efficientdet_v2",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T21:18:24.315355+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "polarity_flips=1, unmatched_a_ratio=0.60 (gate: polarity_flips ≥ 1 OR unmatched_a_ratio ≥ 0.30)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/claims/corpus_efficientdet_v2/gold.json",
+    "count": 5,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-extracted)",
+    "count": 7,
+    "model": "deepseek/deepseek-v4-pro",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:b55f15597dfa3c8f38837245a73a1fd19d43e787569264b5afe5e76ba0044b5b",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 13442,
+      "completion": 693,
+      "total": 14135
+    },
+    "latency_ms": 17332
+  },
+  "summary": {
+    "a_total": 5,
+    "b_total": 7,
+    "matched": 2,
+    "matched_lexical": 0,
+    "matched_embedding": 2,
+    "unmatched_a": 3,
+    "unmatched_b": 5,
+    "field_agreements": {
+      "polarity": {
+        "agreed": 1,
+        "disagreed": 1
+      },
+      "claim_type": {
+        "agreed": 0,
+        "disagreed": 2
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_claim_id": "efficientdet_compound_scaling",
+      "b_index": 3,
+      "match_score": 0.768,
+      "match_source": "embedding",
+      "a_claim_text_normalized": "A compound scaling rule jointly scales backbone depth, BiFPN width and depth, and input resolution rather than scaling a single dimension in isolation.",
+      "b_claim_text_normalized": "The compound scaling method uniformly scales the resolution, depth, and width for all backbone, feature network, and box/class prediction networks.",
+      "field_disagreements": [
+        {
+          "field": "polarity",
+          "a": "positive",
+          "b": "neutral"
+        },
+        {
+          "field": "claim_type",
+          "a": "design_choice",
+          "b": "method"
+        }
+      ]
+    },
+    {
+      "a_claim_id": "efficientdet_d7_55_ap_efficient",
+      "b_index": 1,
+      "match_score": 0.854,
+      "match_source": "embedding",
+      "a_claim_text_normalized": "EfficientDet-D7 achieves around 55 AP on COCO with significantly fewer FLOPs and parameters than prior detectors at similar accuracy levels.",
+      "b_claim_text_normalized": "EfficientDet-D7x outperforms the previous best detector by 4 AP while being 2.7x smaller and using 7.4x fewer FLOPs.",
+      "field_disagreements": [
+        {
+          "field": "claim_type",
+          "a": "performance",
+          "b": "comparison"
+        }
+      ]
+    }
+  ],
+  "unmatched_a": [
+    {
+      "a_claim_id": "efficientdet_bifpn_weighted",
+      "a_claim_text_normalized": "EfficientDet introduces a Bidirectional Feature Pyramid Network (BiFPN) with weighted feature fusion to combine multi-scale features more effectively than top-down-only pyramids.",
+      "a_polarity": "positive",
+      "a_claim_type": "method",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "efficientdet_single_dim_scaling_negative",
+      "a_claim_text_normalized": "Scaling only network depth, only width, or only input resolution leads to a suboptimal accuracy-efficiency tradeoff compared to compound multi-dimension scaling.",
+      "a_polarity": "negative",
+      "a_claim_type": "comparison",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "efficientdet_throughput_tradeoff_negative",
+      "a_claim_text_normalized": "EfficientDet trades raw GPU latency for parameter and FLOP efficiency, which can disadvantage it on hardware tuned for high-throughput inference of larger but simpler architectures.",
+      "a_polarity": "negative",
+      "a_claim_type": "limitation",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "b_index": 0,
+      "b_claim_text_normalized": "EfficientDet-D7x achieves state-of-the-art 55.1 AP on COCO test-dev with 77M parameters and 410B FLOPs.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 2,
+      "b_claim_text_normalized": "The proposed BiFPN introduces learnable weights to learn the importance of different input features.",
+      "b_polarity": "neutral",
+      "b_claim_type": "method",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 4,
+      "b_claim_text_normalized": "The fast normalized fusion approach achieves similar accuracy as softmax-based fusion but runs up to 30% faster on GPUs.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 5,
+      "b_claim_text_normalized": "EfficientDet models are up to 4.1x faster on GPU and 10.8x faster on CPU than previous detectors.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 6,
+      "b_claim_text_normalized": "The modified EfficientDet-D4 achieves 81.74% mIOU on Pascal VOC 2012 semantic segmentation with 9.8x fewer FLOPs than DeepLabV3+.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    }
+  ]
+}

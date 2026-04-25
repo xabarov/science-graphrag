@@ -1,0 +1,46 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "The essential difference between anchor-based and anchor-free detection is how positive and negative training samples are defined.",
+      "claim_type": "finding",
+      "polarity": "neutral",
+      "evidence_quote_short": "the essential difference between anchor-based and anchor-free detection is actually how to define positive and negative training samples"
+    },
+    {
+      "claim_text_normalized": "When using the same definition of positive and negative samples, there is no obvious performance difference between regressing from a box or a point.",
+      "claim_type": "finding",
+      "polarity": "neutral",
+      "evidence_quote_short": "If they adopt the same definition of positive and negative samples during training, there is no obvious difference in the final performance, no matter regressing from a box or a point."
+    },
+    {
+      "claim_text_normalized": "The proposed Adaptive Training Sample Selection (ATSS) automatically selects positive and negative samples based on statistical characteristics of objects.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "we propose an Adaptive Training Sample Selection (ATSS) to automatically select positive and negative samples according to statistical characteristics of object."
+    },
+    {
+      "claim_text_normalized": "ATSS significantly improves the performance of both anchor-based and anchor-free detectors.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "It significantly improves the performance of anchor-based and anchor-free detectors and bridges the gap between them."
+    },
+    {
+      "claim_text_normalized": "Tiling multiple anchors per location is a useless operation under the proposed ATSS method.",
+      "claim_type": "finding",
+      "polarity": "negative",
+      "evidence_quote_short": "We argue that tiling multiple anchors per location is a useless operation under our proposed method"
+    },
+    {
+      "claim_text_normalized": "The proposed ATSS achieves state-of-the-art 50.7% AP on MS COCO without introducing any overhead.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "With the newly introduced ATSS, we improve state-of-the-art detectors by a large margin to 50.7% AP without introducing any overhead."
+    },
+    {
+      "claim_text_normalized": "The hyperparameter k in ATSS is robust and the method can be nearly regarded as hyperparameter-free.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "the only hyperparameter k is quite robust and the proposed ATSS can be nearly regarded as hyperparameter-free."
+    }
+  ]
+}

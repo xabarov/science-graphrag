@@ -1,0 +1,31 @@
+Phase 6.E pass: model=deepseek/deepseek-v4-pro tag=v4pro packs=15 max_tokens=4096
+[1/15] claims_v2/corpus_rcnn_v2: starting
+[2/15] claims_v2/holdout_atss_v1: starting
+[2/15] claims_v2/holdout_atss_v1: done in 36.2s, ok=True, rc=0
+[3/15] claims_v2/holdout_dino_v1: starting
+[1/15] claims_v2/corpus_rcnn_v2: done in 37.1s, ok=True, rc=0
+[4/15] concept_topic_v2/corpus_cascade_rcnn_v2: starting
+[4/15] concept_topic_v2/corpus_cascade_rcnn_v2: done in 17.5s, ok=True, rc=0
+[5/15] concept_topic_v2/corpus_cornernet_v2: starting
+[3/15] claims_v2/holdout_dino_v1: done in 36.1s, ok=True, rc=0
+[6/15] concept_topic_v2/corpus_detr_v2: starting
+[5/15] concept_topic_v2/corpus_cornernet_v2: done in 41.9s, ok=True, rc=0
+[7/15] concept_topic_v2/corpus_faster_rcnn_v2: starting
+[6/15] concept_topic_v2/corpus_detr_v2: done in 32.4s, ok=True, rc=0
+[8/15] concept_topic_v2/corpus_fcos_v2: starting
+[7/15] concept_topic_v2/corpus_faster_rcnn_v2: done in 20.4s, ok=True, rc=0
+[9/15] concept_topic_v2/corpus_fpn_v2: starting
+[8/15] concept_topic_v2/corpus_fcos_v2: done in 37.1s, ok=True, rc=0
+[10/15] concept_topic_v2/corpus_retinanet_focal_v2: starting
+[9/15] concept_topic_v2/corpus_fpn_v2: done in 29.7s, ok=True, rc=0
+[11/15] concept_topic_v2/corpus_yolov1_v2: starting
+[10/15] concept_topic_v2/corpus_retinanet_focal_v2: done in 26.7s, ok=True, rc=0
+[12/15] contradictions_v1/pair_06_hog_human_detection_vs_rcnn: starting
+[11/15] concept_topic_v2/corpus_yolov1_v2: done in 33.1s, ok=True, rc=0
+[13/15] contradictions_v1/pair_07_retinanet_focal_vs_efficientdet: starting
+[13/15] contradictions_v1/pair_07_retinanet_focal_vs_efficientdet: done in 27.3s, ok=True, rc=0
+[14/15] hybrid_ablation_v2/ha_two_stage_rpn_evolution: starting
+[12/15] contradictions_v1/pair_06_hog_human_detection_vs_rcnn: done in 44.6s, ok=True, rc=0
+[15/15] agent_tools_live/live_05_compare_two_stage_one_stage_accuracy: starting
+[14/15] hybrid_ablation_v2/ha_two_stage_rpn_evolution: done in 7.8s, ok=True, rc=0
+[15/15] agent_tools_live/live_05_compare_two_stage_one_stage_accuracy: done in 8.0s, ok=True, rc=0

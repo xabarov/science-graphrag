@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/holdout_yolov3_v1",
+  "pack_path": "tests/fixtures/benchmarks/claims/holdout_yolov3_v1",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T21:29:16.917453+00:00",
+  "tags_requested": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_present": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_missing": [],
+  "consensus_priority": "high",
+  "consensus_priority_rationale": "votes={'high': 3}; tie_break=majority",
+  "votes_by_priority": {
+    "high": 3
+  },
+  "model_reports": [
+    {
+      "tag": "deepseek",
+      "report_path": "tests/fixtures/benchmarks/claims/holdout_yolov3_v1/consistency_report.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 4,
+        "b_total": 8,
+        "matched": 2,
+        "matched_lexical": 0,
+        "matched_embedding": 2,
+        "unmatched_a": 2,
+        "unmatched_b": 6,
+        "field_agreements": {
+          "polarity": {
+            "agreed": 1,
+            "disagreed": 1
+          },
+          "claim_type": {
+            "agreed": 2,
+            "disagreed": 0
+          }
+        }
+      },
+      "matched_pair_count": 2
+    },
+    {
+      "tag": "v4pro",
+      "report_path": "tests/fixtures/benchmarks/claims/holdout_yolov3_v1/consistency_report.v4pro.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 4,
+        "b_total": 8,
+        "matched": 2,
+        "matched_lexical": 1,
+        "matched_embedding": 1,
+        "unmatched_a": 2,
+        "unmatched_b": 6,
+        "field_agreements": {
+          "polarity": {
+            "agreed": 0,
+            "disagreed": 2
+          },
+          "claim_type": {
+            "agreed": 1,
+            "disagreed": 1
+          }
+        }
+      },
+      "matched_pair_count": 2
+    },
+    {
+      "tag": "claude",
+      "report_path": "tests/fixtures/benchmarks/claims/holdout_yolov3_v1/consistency_report.claude.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 4,
+        "b_total": 7,
+        "matched": 3,
+        "matched_lexical": 1,
+        "matched_embedding": 2,
+        "unmatched_a": 1,
+        "unmatched_b": 4,
+        "field_agreements": {
+          "polarity": {
+            "agreed": 2,
+            "disagreed": 1
+          },
+          "claim_type": {
+            "agreed": 3,
+            "disagreed": 0
+          }
+        }
+      },
+      "matched_pair_count": 3
+    }
+  ],
+  "per_record_consensus": {
+    "id_field": "a_claim_id",
+    "a_total_records": 4,
+    "consensus_matched_count": 2,
+    "consensus_match_ratio": 0.5,
+    "buckets": {
+      "controversial": 2,
+      "matched_by_majority": 1,
+      "matched_by_all": 1
+    },
+    "records": [
+      {
+        "id": "yolov3_logistic_per_class",
+        "matched_by": [
+          "v4pro"
+        ],
+        "missing_in": [
+          "deepseek",
+          "claude"
+        ],
+        "consensus": "controversial"
+      },
+      {
+        "id": "yolov3_speed_vs_retinanet",
+        "matched_by": [
+          "deepseek",
+          "claude"
+        ],
+        "missing_in": [
+          "v4pro"
+        ],
+        "consensus": "matched_by_majority"
+      },
+      {
+        "id": "yolov3_strict_iou_underperform_negative",
+        "matched_by": [
+          "claude"
+        ],
+        "missing_in": [
+          "deepseek",
+          "v4pro"
+        ],
+        "consensus": "controversial"
+      },
+      {
+        "id": "yolov3_three_scale_predictions",
+        "matched_by": [
+          "deepseek",
+          "v4pro",
+          "claude"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      }
+    ]
+  }
+}

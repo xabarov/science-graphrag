@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "pack_id": "contradictions_v1/pair_07_retinanet_focal_vs_efficientdet",
+  "pack_path": "tests/fixtures/benchmarks/contradictions_v1/pair_07_retinanet_focal_vs_efficientdet",
+  "layer": "contradictions_v1",
+  "generated_at_utc": "2026-04-25T21:29:16.999158+00:00",
+  "tags_requested": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_present": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_missing": [],
+  "consensus_priority": "high",
+  "consensus_priority_rationale": "votes={'high': 2, 'medium': 1}; tie_break=majority",
+  "votes_by_priority": {
+    "high": 2,
+    "medium": 1
+  },
+  "model_reports": [
+    {
+      "tag": "deepseek",
+      "report_path": "tests/fixtures/benchmarks/contradictions_v1/pair_07_retinanet_focal_vs_efficientdet/consistency_report.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 1,
+        "b_total": 0,
+        "matched": 0,
+        "matched_lexical": 0,
+        "matched_embedding": 0,
+        "unmatched_a": 1,
+        "unmatched_b": 1,
+        "field_agreements": {
+          "contradiction_type": {
+            "agreed": 0,
+            "disagreed": 0
+          },
+          "severity": {
+            "agreed": 0,
+            "disagreed": 0
+          }
+        }
+      },
+      "matched_pair_count": 0
+    },
+    {
+      "tag": "v4pro",
+      "report_path": "tests/fixtures/benchmarks/contradictions_v1/pair_07_retinanet_focal_vs_efficientdet/consistency_report.v4pro.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 1,
+        "b_total": 1,
+        "matched": 1,
+        "matched_lexical": 1,
+        "matched_embedding": 0,
+        "unmatched_a": 0,
+        "unmatched_b": 0,
+        "field_agreements": {
+          "contradiction_type": {
+            "agreed": 0,
+            "disagreed": 1
+          },
+          "severity": {
+            "agreed": 1,
+            "disagreed": 0
+          }
+        }
+      },
+      "matched_pair_count": 1
+    },
+    {
+      "tag": "claude",
+      "report_path": "tests/fixtures/benchmarks/contradictions_v1/pair_07_retinanet_focal_vs_efficientdet/consistency_report.claude.json",
+      "priority": "medium",
+      "summary": {
+        "a_total": 1,
+        "b_total": 1,
+        "matched": 1,
+        "matched_lexical": 1,
+        "matched_embedding": 0,
+        "unmatched_a": 0,
+        "unmatched_b": 0,
+        "field_agreements": {
+          "contradiction_type": {
+            "agreed": 1,
+            "disagreed": 0
+          },
+          "severity": {
+            "agreed": 1,
+            "disagreed": 0
+          }
+        }
+      },
+      "matched_pair_count": 1
+    }
+  ],
+  "per_record_consensus": {
+    "id_field": "pair_id",
+    "a_total_records": 1,
+    "consensus_matched_count": 1,
+    "consensus_match_ratio": 1.0,
+    "buckets": {
+      "matched_by_majority": 1
+    },
+    "records": [
+      {
+        "id": "c07_depth_scaling_vs_compound_scaling",
+        "matched_by": [
+          "v4pro",
+          "claude"
+        ],
+        "missing_in": [
+          "deepseek"
+        ],
+        "consensus": "matched_by_majority"
+      }
+    ]
+  }
+}

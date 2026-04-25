@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "pack_id": "agent_tools_v1/live_03_yolov3_speed_paper_only",
+  "pack_path": "tests/fixtures/benchmarks/agent_tools_v1/live_03_yolov3_speed_paper_only",
+  "layer": "agent_tools_live",
+  "generated_at_utc": "2026-04-25T21:29:17.185759+00:00",
+  "tags_requested": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_present": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_missing": [],
+  "consensus_priority": "high",
+  "consensus_priority_rationale": "votes={'high': 2, 'medium': 1}; tie_break=majority",
+  "votes_by_priority": {
+    "high": 2,
+    "medium": 1
+  },
+  "model_reports": [
+    {
+      "tag": "deepseek",
+      "report_path": "tests/fixtures/benchmarks/agent_tools_v1/live_03_yolov3_speed_paper_only/consistency_report.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 2,
+        "b_total": 4,
+        "matched": 0,
+        "matched_lexical": 0,
+        "matched_embedding": 0,
+        "unmatched_a": 2,
+        "unmatched_b": 4,
+        "tool_metrics": {
+          "required_recall": 0.0,
+          "all_recall": 0.0,
+          "missing_required": [
+            "vector_search"
+          ],
+          "extra_tools_in_b": [
+            "cite_works",
+            "entity_search"
+          ]
+        },
+        "works_jaccard": 0.0,
+        "methods_jaccard": 0.0,
+        "answer_token_jaccard": 0.303,
+        "is_negative_case": false,
+        "behavior_agreement": true,
+        "behavior_a": "answer",
+        "behavior_b": "answer"
+      },
+      "matched_pair_count": 0
+    },
+    {
+      "tag": "v4pro",
+      "report_path": "tests/fixtures/benchmarks/agent_tools_v1/live_03_yolov3_speed_paper_only/consistency_report.v4pro.json",
+      "priority": "medium",
+      "summary": {
+        "a_total": 2,
+        "b_total": 4,
+        "matched": 1,
+        "matched_lexical": 1,
+        "matched_embedding": 0,
+        "unmatched_a": 1,
+        "unmatched_b": 3,
+        "tool_metrics": {
+          "required_recall": 1.0,
+          "all_recall": 1.0,
+          "missing_required": [],
+          "extra_tools_in_b": [
+            "entity_search",
+            "final_answer"
+          ]
+        },
+        "works_jaccard": 0.0,
+        "methods_jaccard": 1.0,
+        "answer_token_jaccard": 0.48,
+        "is_negative_case": false,
+        "behavior_agreement": true,
+        "behavior_a": "answer",
+        "behavior_b": "answer"
+      },
+      "matched_pair_count": 0
+    },
+    {
+      "tag": "claude",
+      "report_path": "tests/fixtures/benchmarks/agent_tools_v1/live_03_yolov3_speed_paper_only/consistency_report.claude.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 2,
+        "b_total": 6,
+        "matched": 1,
+        "matched_lexical": 1,
+        "matched_embedding": 0,
+        "unmatched_a": 1,
+        "unmatched_b": 5,
+        "tool_metrics": {
+          "required_recall": 1.0,
+          "all_recall": 1.0,
+          "missing_required": [],
+          "extra_tools_in_b": [
+            "cypher_query",
+            "entity_search",
+            "final_answer"
+          ]
+        },
+        "works_jaccard": 0.0,
+        "methods_jaccard": 0.0,
+        "answer_token_jaccard": 0.406,
+        "is_negative_case": false,
+        "behavior_agreement": true,
+        "behavior_a": "answer",
+        "behavior_b": "answer"
+      },
+      "matched_pair_count": 0
+    }
+  ],
+  "per_record_consensus": null
+}

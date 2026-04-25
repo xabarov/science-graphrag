@@ -1,0 +1,46 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "EfficientDet-D7x achieves state-of-the-art 55.1 AP on COCO test-dev with 77M parameters and 410B FLOPs.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "our single-model single-scale EfficientDet-D7x achieves a new state-of-the-art 55.1 AP on test-dev"
+    },
+    {
+      "claim_text_normalized": "EfficientDet-D7x outperforms the previous best detector by 4 AP while being 2.7x smaller and using 7.4x fewer FLOPs.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "outperforming previous best detector [45] by 4 AP while being 2.7x smaller and using 7.4x fewer FLOPs"
+    },
+    {
+      "claim_text_normalized": "The proposed BiFPN introduces learnable weights to learn the importance of different input features.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "we propose a simple yet highly effective weighted bi-directional feature pyramid network (BiFPN), which introduces learnable weights to learn the importance of different input features"
+    },
+    {
+      "claim_text_normalized": "The compound scaling method uniformly scales the resolution, depth, and width for all backbone, feature network, and box/class prediction networks.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "we propose a compound scaling method that uniformly scales the resolution, depth, and width for all backbone, feature network, and box/class prediction networks at the same time"
+    },
+    {
+      "claim_text_normalized": "The fast normalized fusion approach achieves similar accuracy as softmax-based fusion but runs up to 30% faster on GPUs.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "this fast fusion approach has very similar learning behavior and accuracy as the softmax-based fusion, but runs up to 30% faster on GPUs"
+    },
+    {
+      "claim_text_normalized": "EfficientDet models are up to 4.1x faster on GPU and 10.8x faster on CPU than previous detectors.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "EfficientDet models are up to 4.1x faster on GPU and 10.8x faster on CPU"
+    },
+    {
+      "claim_text_normalized": "The modified EfficientDet-D4 achieves 81.74% mIOU on Pascal VOC 2012 semantic segmentation with 9.8x fewer FLOPs than DeepLabV3+.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "our model achieves 1.7% better accuracy with 9.8x fewer FLOPs than the prior art of DeepLabV3+"
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "layer": "idea_assist_live",
+  "tags": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "totals": {
+    "packs_seen": 12,
+    "packs_with_consensus": 3,
+    "consensus_low": 0,
+    "consensus_medium": 0,
+    "consensus_high": 3,
+    "promoted": 0
+  },
+  "results": [
+    {
+      "pack": "live_01_low_light_detector",
+      "n_models_present": 3,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 3
+      },
+      "per_record_match_ratio": 1.0,
+      "promoted": false
+    },
+    {
+      "pack": "live_03_medical_imaging_few_shot",
+      "n_models_present": 3,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 3
+      },
+      "per_record_match_ratio": 1.0,
+      "promoted": false
+    },
+    {
+      "pack": "live_04_realtime_video_streaming_anchor_free",
+      "n_models_present": 3,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 3
+      },
+      "per_record_match_ratio": 1.0,
+      "promoted": false
+    }
+  ]
+}

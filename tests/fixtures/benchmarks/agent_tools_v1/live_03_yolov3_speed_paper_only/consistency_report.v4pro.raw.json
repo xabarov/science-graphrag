@@ -1,0 +1,11 @@
+{
+  "expected_tool_sequence": [
+    {"tool_name": "vector_search"},
+    {"tool_name": "entity_search"},
+    {"tool_name": "final_answer"}
+  ],
+  "expected_works_corpus_ids": ["yolov3"],
+  "expected_methods_canonical": [],
+  "answer_reference_text": "The YOLOv3 paper reports that at 320×320 resolution it runs at 45 FPS on a Titan X, achieving 28.2 mAP on COCO.",
+  "expected_behavior": "answer"
+}

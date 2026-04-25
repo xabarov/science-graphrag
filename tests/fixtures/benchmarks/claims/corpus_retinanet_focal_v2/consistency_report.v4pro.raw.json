@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "The extreme foreground-background class imbalance encountered during training of dense detectors is the central cause of their lower accuracy.",
+      "claim_type": "finding",
+      "polarity": "neutral",
+      "evidence_quote_short": "We discover that the extreme foreground-background class imbalance encountered during training of dense detectors is the central cause."
+    },
+    {
+      "claim_text_normalized": "The proposed Focal Loss reshapes the standard cross entropy loss to down-weight the loss assigned to well-classified examples.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "We propose to address this class imbalance by reshaping the standard cross entropy loss such that it down-weights the loss assigned to well-classified examples."
+    },
+    {
+      "claim_text_normalized": "RetinaNet trained with focal loss matches the speed of previous one-stage detectors while surpassing the accuracy of all existing state-of-the-art two-stage detectors.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "Our results show that when trained with the focal loss, RetinaNet is able to match the speed of previous one-stage detectors while surpassing the accuracy of all existing state-of-the-art two-stage detectors."
+    },
+    {
+      "claim_text_normalized": "Focal Loss with gamma=2 yields a 2.9 AP improvement over the alpha-balanced cross entropy loss.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "With gamma = 2, FL yields a 2.9 AP improvement over the alpha-balanced CE loss."
+    },
+    {
+      "claim_text_normalized": "Encoding the prior probability of detecting an object in the model initialization prevents training divergence.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "simply initializing the last layer of our model such that the prior probability of detecting an object is pi = .01 enables effective learning."
+    },
+    {
+      "claim_text_normalized": "Encoding the prior probability of detecting an object in the model initialization prevents training divergence.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "simply initializing the last layer of our model such that the prior probability of detecting an object is pi = .01 enables effective learning."
+    },
+    {
+      "claim_text_normalized": "Focal Loss outperforms the best variants of online hard example mining by over 3 points AP.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "FL outperforms the best variants of online hard example mining (OHEM) by over 3 points AP."
+    },
+    {
+      "claim_text_normalized": "The exact form of the focal loss is not crucial, and other instantiations can achieve similar results.",
+      "claim_type": "finding",
+      "polarity": "neutral",
+      "evidence_quote_short": "we note that the exact form of the focal loss is not crucial, and we show other instantiations can achieve similar results."
+    }
+  ]
+}

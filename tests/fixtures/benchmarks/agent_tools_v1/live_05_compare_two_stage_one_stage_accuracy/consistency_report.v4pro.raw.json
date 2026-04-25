@@ -1,0 +1,19 @@
+{
+  "expected_tool_sequence": [
+    {"tool_name": "vector_search"},
+    {"tool_name": "entity_search"},
+    {"tool_name": "cite_works"},
+    {"tool_name": "final_answer"}
+  ],
+  "expected_works_corpus_ids": [
+    "faster_rcnn_realpdf",
+    "retinanet_focal_realpdf"
+  ],
+  "expected_methods_canonical": [
+    "region_proposal_network",
+    "focal_loss",
+    "feature_pyramid_network"
+  ],
+  "answer_reference_text": "Faster R-CNN, a two-stage detector, achieved higher accuracy than prior one-stage detectors by using a Region Proposal Network, but RetinaNet demonstrated that a one-stage detector can match or surpass two-stage accuracy by addressing class imbalance with Focal Loss and using a Feature Pyramid Network.",
+  "expected_behavior": "answer"
+}

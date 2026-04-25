@@ -1,0 +1,244 @@
+{
+  "schema_version": 1,
+  "pack_id": "concept_topic/corpus_faster_rcnn_v2",
+  "pack_path": "tests/fixtures/benchmarks/concept_topic/corpus_faster_rcnn_v2",
+  "layer": "concept_topic_v2",
+  "generated_at_utc": "2026-04-25T21:26:44.152940+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "flips=3, missing_in_b_ratio=0.18 (gate: flips ≥ 1 OR missing_in_b_ratio ≥ 0.40)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/concept_topic/corpus_faster_rcnn_v2/gold.json",
+    "count": 17,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-labelled against frozen 25 concepts)",
+    "count": 16,
+    "model": "deepseek/deepseek-v4-pro",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:cd6662bf35979df1d92cbfdd6559a975d3502dbd030f720f74e1148dd5a38539",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 17111,
+      "completion": 885,
+      "total": 17996
+    },
+    "latency_ms": 19863
+  },
+  "summary": {
+    "a_total": 17,
+    "b_total": 16,
+    "matched": 14,
+    "matched_lexical": 14,
+    "matched_embedding": 0,
+    "unmatched_a": 3,
+    "unmatched_b": 2,
+    "field_agreements": {
+      "status": {
+        "agreed_present": 6,
+        "agreed_absent": 5,
+        "flips": 3
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "concept_id": "region_proposal",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "we introduce a Region Proposal Network (RPN) that shares full-image convolutional features with the detection network, thus enabling nearly cost-free region proposals.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "anchor_based",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "we introduce novel “anchor” boxes that serve as references at multiple scales and aspect ratios.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "nms",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "we adopt non-maximum suppression (NMS) on the proposal regions based on their cls scores.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "roi_pooling",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "RoI pooling layer [2] in Fast R-CNN accepts the convolutional features and also the predicted bounding boxes as input",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "we minimize an objective function following the multi-task loss in Fast R-CNN [2].",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "We also report results on the MS COCO dataset [12]",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "anchor_free",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article introduces anchor boxes as a core12:04 pmcomponent and does not describe any anchor-free detection approach."
+    },
+    {
+      "concept_id": "set_prediction",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention bipartite matching, Hungarian matching, or direct set prediction."
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not use a transformer encoder-decoder architecture."
+    },
+    {
+      "concept_id": "focal_loss",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention focal loss or any modulating factor cross-entropy."
+    },
+    {
+      "concept_id": "roi_align",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article uses RoI pooling, not ROI Align."
+    },
+    {
+      "concept_id": "selective_search",
+      "a_status": "absent",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "absent",
+          "b": "present"
+        }
+      ],
+      "b_evidence_quote": "Selective Search [4], one of the most popular methods, greedily merges superpixels based on engineered low-level features.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "classical_dpm",
+      "a_status": "absent",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "absent",
+          "b": "present"
+        }
+      ],
+      "b_evidence_quote": "in DPM [8] and CNN-based methods [9], [1], [2].",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "a_status": "absent",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "absent",
+          "b": "present"
+        }
+      ],
+      "b_evidence_quote": "Selective Search [4] greedily merges superpixels based on engineered low-level features.",
+      "b_rationale": ""
+    }
+  ],
+  "unmatched_a": [
+    {
+      "concept_id": "two_stage_detector",
+      "a_status": "present",
+      "comment": "labelled in human gold A but not produced by extractor B"
+    },
+    {
+      "concept_id": "mask_branch",
+      "a_status": "absent",
+      "comment": "labelled in human gold A but not produced by extractor B"
+    },
+    {
+      "concept_id": "compound_scaling",
+      "a_status": "absent",
+      "comment": "labelled in human gold A but not produced by extractor B"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "concept_id": "feature_pyramid",
+      "b_status": "present",
+      "b_evidence_quote": "Pyramids of images and feature maps are built, and the classifier is run at all scales.",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "iou_loss",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article uses smooth L1 loss for bounding box regression, not IoU-based losses.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    }
+  ]
+}

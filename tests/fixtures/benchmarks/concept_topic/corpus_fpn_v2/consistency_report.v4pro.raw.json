@@ -1,0 +1,154 @@
+{
+  "labels": [
+    {
+      "concept_id": "region_proposal",
+      "status": "present",
+      "evidence_quote": "RPN [29] is a sliding-window class-agnostic object detector.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "selective_search",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention Selective Search or its aliases; it uses RPN for proposals."
+    },
+    {
+      "concept_id": "anchor_based",
+      "status": "present",
+      "evidence_quote": "The object/non-object criterion and bounding box regression target are defined with respect to a set of reference boxes called anchors [29].",
+      "rationale": ""
+    },
+    {
+      "concept_id": "anchor_free",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article explicitly uses anchor boxes and does not discuss anchor-free detection."
+    },
+    {
+      "concept_id": "set_prediction",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "No mention of bipartite matching, Hungarian matching, or direct set prediction."
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "status": "present",
+      "evidence_quote": "This architecture, called a Feature Pyramid Network (FPN), shows significant improvement as a generic feature extractor.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "focal_loss",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "Focal loss is not mentioned; the article uses standard cross-entropy for RPN."
+    },
+    {
+      "concept_id": "nms",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "Non-maximum suppression is not discussed in the article."
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "No transformer architecture or attention encoder-decoder is mentioned."
+    },
+    {
+      "concept_id": "roi_pooling",
+      "status": "present",
+      "evidence_quote": "Fast R-CNN [11] is a region-based object detector in which Region-of-Interest (RoI) pooling is used to extract features.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "roi_align",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "ROIAlign is not mentioned; the article uses standard RoI pooling."
+    },
+    {
+      "concept_id": "mask_branch",
+      "status": "present",
+      "evidence_quote": "On top of each level of the feature pyramid, we apply a small 5×5 MLP to predict 14×14 masks and object scores in a fully convolutional fashion.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": " dátummal The article focuses on two-stage detectors (Faster R-CNN) and does not propose a one-stage detector."
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "status": "present",
+      "evidence_quote": "Using FPN in a basic Faster R-CNN system, our method achieves state-of-the-art single-model results on the COCO detection benchmark.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "keypoint_detection",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "Keypoint detection is not discussed; the article focuses on object detection and segmentation proposals."
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "status": "present",
+      "evidence_quote": "We use the pre-trained ResNet-50 and ResNet-101 models that are publicly available.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "backbone_darknet",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "Darknet backbone is not mentioned; only ResNet is used."
+    },
+    {
+      "concept_id": "compound_scaling",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "Compound scaling is not discussed in the article."
+    },
+    {
+      "concept_id": "cascade_iou_progression",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "Cascade IoU progression is not mentioned."
+    },
+    {
+      "concept_id": "centerness",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "Center-ness branch is not discussed."
+    },
+    {
+      "concept_id": "iou_loss",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "IoU loss variants (GIoU, DIoU) are not mentioned."
+    },
+    {
+      "concept_id": "classical_dpm",
+      "status": "present",
+      "evidence_quote": "They were so critical that object detectors like DPM [7] required dense scale sampling to achieve good results.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "status": "present",
+      "evidence_quote": "HOG features [5], and later SIFT features as well, were computed densely over entire image pyramids.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "status": "present",
+      "evidence_quote": "This is realized by a 3×3 convolutional layer followed by two sibling 1×1 convolutions for classification and regression.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "status": "present",
+      "evidence_quote": "We perform experiments on the 80 category COCO detection dataset [21].",
+      "rationale": ""
+    }
+  ]
+}

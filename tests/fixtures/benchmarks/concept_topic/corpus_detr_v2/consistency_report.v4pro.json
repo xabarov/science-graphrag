@@ -1,0 +1,306 @@
+{
+  "schema_version": 1,
+  "pack_id": "concept_topic/corpus_detr_v2",
+  "pack_path": "tests/fixtures/benchmarks/concept_topic/corpus_detr_v2",
+  "layer": "concept_topic_v2",
+  "generated_at_utc": "2026-04-25T21:26:32.079074+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "flips=4, missing_in_b_ratio=0.00 (gate: flips ≥ 1 OR missing_in_b_ratio ≥ 0.40)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/concept_topic/corpus_detr_v2/gold.json",
+    "count": 17,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-labelled against frozen 25 concepts)",
+    "count": 25,
+    "model": "deepseek/deepseek-v4-pro",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:e54f0f96d1e148bbe677e13a26d3d1c6ba1382cb582f1522f207f89fbec5b0f3",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 15474,
+      "completion": 1320,
+      "total": 16794
+    },
+    "latency_ms": 31868
+  },
+  "summary": {
+    "a_total": 17,
+    "b_total": 25,
+    "matched": 17,
+    "matched_lexical": 17,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 8,
+    "field_agreements": {
+      "status": {
+        "agreed_present": 6,
+        "agreed_absent": 7,
+        "flips": 4
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "concept_id": "set_prediction",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "a set-based global loss that forces unique predictions via bipartite matching",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "a transformer encoder-decoder architecture",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "ImageNet-pretrained ResNet model [15]",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "a linear combination of a negative log-likelihood for class prediction and a box loss",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "iou_loss",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "generalized IoU loss [38]",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "COCO 2017 detection and panoptic segmentation datasets [24,18]",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "region_proposal",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article explicitly avoids region proposals, stating DETR removes the need for hand-designed components like anchor generation and does not use a region proposal network."
+    },
+    {
+      "concept_id": "anchor_based",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article explicitly states DETR removes the need for anchor generation and does not use anchor boxes."
+    },
+    {
+      "concept_id": "anchor_free",
+      "a_status": "absent",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "absent",
+          "b": "present"
+        }
+      ],
+      "b_evidence_quote": "removing the need for many hand-designed components like a non-maximum suppression procedure or anchor generation",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "nms",
+      "a_status": "absent",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "absent",
+          "b": "present"
+        }
+      ],
+      "b_evidence_quote": "removing the need for many hand-designed components like a non-maximum suppression procedure",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "roi_pooling",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "ROI pooling is not mentioned or used; DETR does not employ region-based pooling."
+    },
+    {
+      "concept_id": "roi_align",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "ROIAlign is not mentioned or used; the dátummal does not include region-based feature extraction."
+    },
+    {
+      "concept_id": "focal_loss",
+      "a_status": "absent",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "absent",
+          "b": "present"
+        }
+      ],
+      "b_evidence_quote": "Focal loss [23]",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "mask_branch",
+      "a_status": "absent",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "absent",
+          "b": "present"
+        }
+      ],
+      "b_evidence_quote": "adding a mask head on top of the decoder outputs",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "DETR dátummal is dátummal not a two-stage detector; it avoids region proposals and anchors."
+    },
+    {
+      "concept_id": "selective_search",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "Selective Search is not mentioned or used; the method bypasses traditional proposal generation entirely."
+    },
+    {
+      "concept_id": "classical_dpm",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "Deformable Parts Model is not mentioned or used."
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": [
+    {
+      "concept_id": "feature_pyramid",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article mentions FPN only as a future improvement for small objects, not as a component of DETR.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not classify DETR as a one-stage detector; it presents a new direct set prediction paradigm.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "keypoint_detection",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "Keypoint detection is not mentioned or used in the DETR architecture.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "backbone_darknet",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "Darknet backbone is not mentioned or used; only ResNet backbones are dátummal.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "compound_scaling",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "Compound scaling is not mentioned or used in the article.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "cascade_iou_progression",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "Cascade IoU progression is not mentioned or used; DETR does not employ a cascade detector.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "centerness",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "Centerness branch is not mentioned or used in DETR.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "Handcrafted features like HOG or SIFT are not mentioned or used; DETR relies on learned CNN features.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    }
+  ]
+}

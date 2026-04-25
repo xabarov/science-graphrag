@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "pack_id": "idea_assist_v1/live_04_realtime_video_streaming_anchor_free",
+  "pack_path": "tests/fixtures/benchmarks/idea_assist_v1/live_04_realtime_video_streaming_anchor_free",
+  "layer": "idea_assist_live",
+  "generated_at_utc": "2026-04-25T21:22:14.278484+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "low_relevance_in_pool=1, pool=thin",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/idea_assist_v1/live_04_realtime_video_streaming_anchor_free/gold.json",
+    "count": 5,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_reviewer",
+    "source": "gold fixture review (not output generation)",
+    "count": 5,
+    "model": "deepseek/deepseek-v4-pro",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:e598d011aa7c127bea35289e35c65a6adeac5df5dd049a94c604f480577739de",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 826,
+      "completion": 524,
+      "total": 1350
+    },
+    "latency_ms": 7807
+  },
+  "summary": {
+    "a_total": 5,
+    "b_total": 5,
+    "matched": 5,
+    "matched_lexical": 5,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "review": {
+      "pool_sufficiency": "thin",
+      "pool_sufficiency_rationale": "The pool lacks any claims about temporal coherence, video streaming, or frame-to-frame propagation, which are central to the seed topic.",
+      "forbidden_substrings_quality": "appropriate",
+      "forbidden_substrings_rationale": "The forbidden substrings prevent verbatim copying of key sentences from the evidence, encouraging paraphrasing.",
+      "reference_hypothesis_quality": "plausible",
+      "reference_hypothesis_rationale": "The hypothesis combines a known anchor-free head with a lightweight temporal-attention block,16 which is a reasonable16 extension for streaming video.",
+      "overall_assessment": "needs_revision",
+      "issues": [
+        "Pool lacks claims about temporal coherence, video, or frame propagation, making it insufficient for the seed topic.",
+        "YOLOv1 is not anchor-free and its16 relevance is16 low; consider replacing with a more relevant anchor-free video detection claim."
+      ]
+    }
+  },
+  "matched_pairs": [
+    {
+      "claim_id": "cornernet_paired_keypoints",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "high",
+      "b_rationale": "CornerNet is an anchor-free detector, directly relevant to the seed topic of anchor-free detection.",
+      "field_disagreements": []
+    },
+    {
+      "claim_id": "centernet_triplet_keypoints",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "high",
+      "b_rationale": "CenterNet is an anchor-free detector and16 the reference hypothesis specifically mentions a CenterNet-style head.",
+      "field_disagreements": []
+    },
+    {
+      "claim_id": "yolox_l_50ap_v100_speed",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "medium",
+      "b_rationale": "YOLOX is an anchor-free detector with reported speed, but16 the claim does not address temporal coherence or streaming video.",
+      "field_disagreements": []
+    },
+    {
+      "claim_id": "yolov1_speed_45_155_fps",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "low",
+      "b_rationale": "YOLOv1 is not anchor-free (it uses grid-based anchors) and the claim only provides speed on a different GPU, making it only tangentially relevant.",
+      "field_disagreements": [
+        {
+          "field": "relevance",
+          "a": "implicit_high",
+          "b": "low"
+        }
+      ]
+    },
+    {
+      "claim_id": "fcos_anchor_hyperparameter_burden_negative",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "high",
+      "b_rationale": "FCOS is an anchor-free detector and the claim highlights a key motivation for anchor-free methods, which16 is16 relevant to the seed topic.",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": []
+}

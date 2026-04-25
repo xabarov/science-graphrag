@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "pack_id": "idea_assist_v1/live_03_medical_imaging_few_shot",
+  "pack_path": "tests/fixtures/benchmarks/idea_assist_v1/live_03_medical_imaging_few_shot",
+  "layer": "idea_assist_live",
+  "generated_at_utc": "2026-04-25T21:22:22.815212+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "low_relevance_in_pool=2, pool=thin",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/idea_assist_v1/live_03_medical_imaging_few_shot/gold.json",
+    "count": 5,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_reviewer",
+    "source": "gold fixture review (not output generation)",
+    "count": 5,
+    "model": "deepseek/deepseek-v4-pro",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:598c536c25cf94715c3cf8948e9b09460341e08087f51ca7f1c8a04f4c3de6a9",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 834,
+      "completion": 557,
+      "total": 1391
+    },
+    "latency_ms": 12236
+  },
+  "summary": {
+    "a_total": 5,
+    "b_total": 5,
+    "matched": 5,
+    "matched_lexical": 5,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "review": {
+      "pool_sufficiency": "thin",
+      "pool_sufficiency_rationale": "Only two claims are highly relevant, and16; the pool lacks16; claims on domain adaptation, few-shot learning, or medical imaging specifics.",
+      "forbidden_substrings_quality": "appropriate",
+      "forbidden_substrings_rationale": "The phrases block common verbatim descriptions of well-known architectures, encouraging novel expression.",
+      "reference_hypothesis_quality": "plausible",
+      "reference_hypothesis_rationale": "Combines a fast-converging detector with contrastive pretraining and few-shot fine-tuning,16; a reasonable16; approach for the16; topic.",
+      "overall_assessment": "needs_revision",
+      "issues": [
+        "Pool is thin: only 2 of 5 claims are highly relevant; missing claims on domain adaptation, few-shot learning, or medical imaging.",
+        "Low-relevance claims (faster_rcnn_anchor_boxes, rcnn_inference_2k_proposals_slow_negative) add noise without supporting the16; topic.",
+        "No claim addresses the16; specific constraint of fewer than 200 annotated examples or colonoscopy data."
+      ]
+    }
+  },
+  "matched_pairs": [
+    {
+      "claim_id": "mask_rcnn_pretraining_dependency_negative",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "high",
+      "b_rationale": "Directly informs16; the challenge of adapting detectors with limited data by highlighting pretraining dependence.",
+      "field_disagreements": []
+    },
+    {
+      "claim_id": "retinanet_focal_loss_definition",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "medium",
+      "b_rationale": "Addresses class imbalance, a common issue in medical imaging, but16; not specific to low-data adaptation.",
+      "field_disagreements": []
+    },
+    {
+      "claim_id": "deformable_detr_10x_faster_convergence",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "high",
+      "b_rationale": "Supports the16; reference hypothesis by showing Deformable DETR's efficiency, crucial for few-shot fine-tuning.",
+      "field_disagreements": []
+    },
+    {
+      "claim_id": "faster_rcnn_anchor_boxes",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "low",
+      "b_rationale": "Describes a general detection mechanism with no direct link to domain adaptation or low-data regimes.",
+      "field_disagreements": [
+        {
+          "field": "relevance",
+          "a": "implicit_high",
+          "b": "low"
+        }
+      ]
+    },
+    {
+      "claim_id": "rcnn_inference_2k_proposals_slow_negative",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "low",
+      "b_rationale": "Highlights inference speed of an outdated model, irrelevant to16; the16; topic of few-shot domain adaptation.",
+      "field_disagreements": [
+        {
+          "field": "relevance",
+          "a": "implicit_high",
+          "b": "low"
+        }
+      ]
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": []
+}

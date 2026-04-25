@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/corpus_fast_rcnn_v2",
+  "pack_path": "tests/fixtures/benchmarks/claims/corpus_fast_rcnn_v2",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T21:18:24.266986+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "polarity_flips=0, unmatched_a_ratio=0.50 (gate: polarity_flips ≥ 1 OR unmatched_a_ratio ≥ 0.30)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/claims/corpus_fast_rcnn_v2/gold.json",
+    "count": 4,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-extracted)",
+    "count": 8,
+    "model": "deepseek/deepseek-v4-pro",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:b09c433f7e867c9eebe9e98f654f8fa84c4d2e4c9da030835970c84dd8423d54",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 13110,
+      "completion": 598,
+      "total": 13708
+    },
+    "latency_ms": 16780
+  },
+  "summary": {
+    "a_total": 4,
+    "b_total": 8,
+    "matched": 2,
+    "matched_lexical": 0,
+    "matched_embedding": 2,
+    "unmatched_a": 2,
+    "unmatched_b": 6,
+    "field_agreements": {
+      "polarity": {
+        "agreed": 2,
+        "disagreed": 0
+      },
+      "claim_type": {
+        "agreed": 1,
+        "disagreed": 1
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_claim_id": "fast_rcnn_9x_train_speedup",
+      "b_index": 2,
+      "match_score": 0.781,
+      "match_source": "embedding",
+      "a_claim_text_normalized": "Fast R-CNN trains roughly nine times faster than R-CNN and reaches higher mean average precision on PASCAL VOC.",
+      "b_claim_text_normalized": "Fast R-CNN achieves a higher mAP on PASCAL VOC 2012 compared to R-CNN.",
+      "field_disagreements": [
+        {
+          "field": "claim_type",
+          "a": "performance",
+          "b": "comparison"
+        }
+      ]
+    },
+    {
+      "a_claim_id": "fast_rcnn_single_stage_multitask",
+      "b_index": 3,
+      "match_score": 0.786,
+      "match_source": "embedding",
+      "a_claim_text_normalized": "Fast R-CNN trains the entire network in a single stage using a multi-task loss that jointly optimizes classification and bounding-box regression.",
+      "b_claim_text_normalized": "Fast R-CNN uses a single-stage training algorithm that jointly learns to classify object proposals and refine their spatial locations.",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [
+    {
+      "a_claim_id": "fast_rcnn_rcnn_redundancy_negative",
+      "a_claim_text_normalized": "Region-wise feature extraction in R-CNN is highly redundant because the same convolutional features are recomputed for thousands of overlapping proposals, which Fast R-CNN avoids.",
+      "a_polarity": "negative",
+      "a_claim_type": "comparison",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "fast_rcnn_roi_pooling_shared_features",
+      "a_claim_text_normalized": "ROI pooling extracts a fixed-size feature vector for each region proposal from a shared convolutional feature map, avoiding redundant per-region CNN forward passes.",
+      "a_polarity": "positive",
+      "a_claim_type": "design_choice",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "b_index": 0,
+      "b_claim_text_normalized": "Fast R-CNN trains the very deep VGG16 network 9 times faster than R-CNN.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 1,
+      "b_claim_text_normalized": "Fast R-CNN is 213 times faster at test-time than R-CNN.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 4,
+      "b_claim_text_normalized": "Fast R-CNN does not require disk storage for feature caching.",
+      "b_polarity": "positive",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 5,
+      "b_claim_text_normalized": "Fine-tuning the convolutional layers in VGG16 improves mAP from 61.4% to 66.9%.",
+      "b_polarity": "positive",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 6,
+      "b_claim_text_normalized": "Multi-task training improves pure classification accuracy relative to training for classification alone.",
+      "b_polarity": "positive",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 7,
+      "b_claim_text_normalized": "Increasing the number of object proposals beyond a certain point slightly hurts mAP.",
+      "b_polarity": "negative",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    }
+  ]
+}

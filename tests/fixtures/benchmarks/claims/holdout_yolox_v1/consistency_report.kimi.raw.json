@@ -1,0 +1,46 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "YOLOX switches the YOLO detector to an anchor-free manner.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "We switch the YOLO detector to an anchor-free manner"
+    },
+    {
+      "claim_text_normalized": "YOLOX-L achieves 50.0% AP on COCO at a speed of 68.9 FPS on a Tesla V100.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "we achieve 50.0% AP on COCO at a speed of 68.9 FPS on Tesla V100"
+    },
+    {
+      "claim_text_normalized": "YOLOX-L outperforms YOLOv5-L by 1.8% AP.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "outperforming the counterpart YOLOv5-L by 1.8% AP"
+    },
+    {
+      "claim_text_normalized": "Replacing the YOLO head with a decoupled one greatly improves converging speed.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "Replacing YOLO's head with a decoupled one greatly improves the converging speed"
+    },
+    {
+      "claim_text_normalized": "The end-to-end YOLO variant slightly decreases both performance and inference speed.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "These enable the detector to perform an end-to-end manner, but slightly decreasing the performance and the inference speed, as listed in Tab. 2."
+    },
+    {
+      "claim_text_normalized": "SimOTA raises the detector's AP from 45.0% to 47.3%.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "SimOTA raises the detector from 45.0% AP to 47.3% AP"
+    },
+    {
+      "claim_text_normalized": "YOLOX-Nano outperforms NanoDet by 1.8% AP.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "YOLOX-Tiny and YOLOX-Nano (only 0.91M Parameters and 1.08G FLOPs) outperform the corresponding counterparts YOLOv4-Tiny and NanoDet by 10% AP and 1.8% AP, respectively."
+    }
+  ]
+}

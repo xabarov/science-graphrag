@@ -1,0 +1,10 @@
+{
+  "contradiction_found": true,
+  "claim_a_text": "Fine-scale gradients and fine orientation binning are essential for good human detection performance, while coarse spatial binning is sufficient.",
+  "claim_b_text": "High-capacity CNNs with hierarchical, multi-stage learned features dramatically outperform simpler HOG-like features for object detection.",
+  "claim_a_quote": "fine-scale gradients, fine orientation binning, relatively coarse spatial binning, and high-quality local contrast normalization in overlapping descriptor blocks are all important for good results.",
+  "claim_b_quote": "This paper is the first to show that a CNN can lead to dramatically higher object detection performance on PASCAL VOC as compared to systems based on simpler HOG-like features.",
+  "contradiction_type": "classical_vs_deep",
+  "severity": "nuanced",
+  "rationale": "ARTICLE_A claims that HOG features with fine-scale gradients and fine orientation binning are essential for good performance, while ARTICLE_B claims that CNN features, which are learned hierarchically and not hand-crafted like HOG, dramatically outperform HOG-based systems. This represents a nuanced era-dependent disagreement about whether hand-crafted gradient features or learned deep features are superior for object detection."
+}

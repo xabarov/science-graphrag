@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "The Region Proposal Network (RPN) is a fully convolutional network that simultaneously predicts object bounds and objectness scores at each position.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "An RPN is a fully convolutional network that simultaneously predicts object bounds and objectness scores at each position."
+    },
+    {
+      "claim_text_normalized": "Faster R-CNN with VGG-16 achieves a frame rate of 5fps on a GPU while achieving state-of-the-art object detection accuracy on PASCAL VOC 2007, 2012, and MS COCO datasets with only 300 proposals per image.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "our detection system has a frame rate of 5fps ( including all steps ) on a GPU, while achieving state-of-the-art object detection accuracy on PASCAL VOC 2007, 2012, and MS COCO datasets with only 300 proposals per image."
+    },
+    {
+      "claim_text_normalized": "The RPN shares full-image convolutional features with the detection network, enabling nearly cost-free region proposals.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "we introduce a Region Proposal Network (RPN) that shares full-image convolutional features with the detection network, thus enabling nearly cost-free region proposals."
+    },
+    {
+      "claim_text_normalized": "Using RPN with Fast R-CNN achieves an mAP of 59.9% on PASCAL VOC 2007 with up to 300 proposals, outperforming Selective Search and EdgeBoxes.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "RPN with Fast R-CNN achieves competitive results, with an mAP of 59.9% while using up to 300 proposals."
+    },
+    {
+      "claim_text_normalized": "The anchor-based method is more cost-efficient than image pyramids or filter pyramids for addressing multiple scales and aspect ratios.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "our anchor-based method is built on a pyramid of anchors, which is more cost-efficient."
+    },
+    {
+      "claim_text_normalized": "The RPN alone takes only 10ms computing the additional layers when convolutional features are shared.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "With the convolutional features shared, the RPN alone only takes 10ms computing the additional layers."
+    },
+    {
+      "claim_text_normalized": "The translation-invariant property of anchors reduces the model size compared to MultiBox.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "The translation-invariant property also reduces the model size."
+    },
+    {
+      "claim_text_normalized": "The two-stage Faster R-CNN system outperforms a one-stage dense sliding window system by 4.8% mAP on PASCAL VOC 2007.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "the one-stage system has an mAP of 53.9%. This is lower than the two-stage system (58.7%) by 4.8%."
+    }
+  ]
+}

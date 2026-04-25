@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/corpus_fpn_v2",
+  "pack_path": "tests/fixtures/benchmarks/claims/corpus_fpn_v2",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T21:18:48.044820+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "polarity_flips=0, unmatched_a_ratio=0.75 (gate: polarity_flips ≥ 1 OR unmatched_a_ratio ≥ 0.30)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/claims/corpus_fpn_v2/gold.json",
+    "count": 4,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-extracted)",
+    "count": 8,
+    "model": "deepseek/deepseek-v4-pro",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:1c55fd0059aa210be019e786ef35bea872dd38a489cd3858bd13bb45b104613c",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 13913,
+      "completion": 644,
+      "total": 14557
+    },
+    "latency_ms": 19029
+  },
+  "summary": {
+    "a_total": 4,
+    "b_total": 8,
+    "matched": 1,
+    "matched_lexical": 0,
+    "matched_embedding": 1,
+    "unmatched_a": 3,
+    "unmatched_b": 7,
+    "field_agreements": {
+      "polarity": {
+        "agreed": 1,
+        "disagreed": 0
+      },
+      "claim_type": {
+        "agreed": 0,
+        "disagreed": 1
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_claim_id": "fpn_faster_rcnn_ap_gain",
+      "b_index": 2,
+      "match_score": 0.776,
+      "match_source": "embedding",
+      "a_claim_text_normalized": "Replacing single-scale features with FPN inside Faster R-CNN raises COCO AP by a substantial margin without additional inference cost.",
+      "b_claim_text_normalized": "FPN improves COCO-style Average Precision (AP) by 2.3 points over a strong single-scale baseline of Faster R-CNN on ResNets.",
+      "field_disagreements": [
+        {
+          "field": "claim_type",
+          "a": "performance",
+          "b": "comparison"
+        }
+      ]
+    }
+  ],
+  "unmatched_a": [
+    {
+      "a_claim_id": "fpn_lateral_connections_role",
+      "a_claim_text_normalized": "Lateral connections from the bottom-up pathway preserve high-resolution localization information that the top-down pathway lacks alone.",
+      "a_polarity": "positive",
+      "a_claim_type": "design_choice",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "fpn_single_scale_small_objects_negative",
+      "a_claim_text_normalized": "Single-scale features in detection backbones lead to a substantial drop in accuracy on small objects, which the multi-level pyramid addresses.",
+      "a_polarity": "negative",
+      "a_claim_type": "limitation",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "fpn_topdown_lateral_pyramid",
+      "a_claim_text_normalized": "Feature Pyramid Network constructs a multi-scale feature pyramid with strong semantics at all levels using a top-down pathway and lateral connections from a CNN backbone.",
+      "a_polarity": "positive",
+      "a_claim_type": "method",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "b_index": 0,
+      "b_claim_text_normalized": "Feature Pyramid Networks (FPN) achieve state-of-the-art single-model results on the COCO detection benchmark without bells and whistles.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 1,
+      "b_claim_text_normalized": "FPN significantly increases Average Recall (AR) by 8.0 points for bounding box proposals over a single-scale Faster R-CNN baseline.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 3,
+      "b_claim_text_normalized": "The FPN-based Faster R-CNN system runs at 6 FPS on a GPU.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 4,
+      "b_claim_text_normalized": "FPN can be trained end-to-end with all scales and used consistently at train/test time, which is memory-infeasible with image pyramids.",
+      "b_polarity": "positive",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 5,
+      "b_claim_text_normalized": "Removing top-down connections in FPN significantly degrades accuracy for Fast R-CNN.",
+      "b_polarity": "negative",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 6,
+      "b_claim_text_normalized": "FPN nearly doubles the accuracy on small objects for segmentation proposals compared to existing methods.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 7,
+      "b_claim_text_normalized": "FPN-based mask proposal generation is substantially faster than existing methods based on densely sampled image pyramids.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    }
+  ]
+}

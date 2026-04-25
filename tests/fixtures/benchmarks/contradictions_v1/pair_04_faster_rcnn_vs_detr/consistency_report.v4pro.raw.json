@@ -1,0 +1,10 @@
+{
+  "contradiction_found": true,
+  "claim_a_text": "Faster R-CNN uses a Region Proposal Network (RPN) that relies on pre-defined anchor boxes of multiple scales and aspect ratios to generate region proposals.",
+  "claim_b_text": "DETR removes the need for hand-designed components like anchor generation, instead directly predicting bounding boxes without anchors.",
+  "claim_a_quote": "we introduce novel “anchor” boxes that serve as references at multiple scales and aspect ratios.",
+  "claim_b_quote": "effectively removing the need for many hand-designed components like a non-maximum suppression procedure or anchor generation",
+  "contradiction_type": "architectural",
+  "severity": "direct",
+  "rationale": "Faster R-CNN explicitly relies on anchor boxes as a core architectural component for generating proposals, while DETR claims to eliminate anchor generation entirely, representing a direct design choice contradiction."
+}

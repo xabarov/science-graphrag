@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/holdout_yolov3_v1",
+  "pack_path": "tests/fixtures/benchmarks/claims/holdout_yolov3_v1",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T21:17:13.304785+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "polarity_flips=1, unmatched_a_ratio=0.00 (gate: polarity_flips ≥ 1 OR unmatched_a_ratio ≥ 0.30)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/claims/holdout_yolov3_v1/gold.json",
+    "count": 4,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-extracted)",
+    "count": 8,
+    "model": "moonshotai/kimi-k2.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:099ed3094abd8033165ac787305f72e88ca0a487a862b86e27d372b0b01586ff",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 7301,
+      "completion": 6582,
+      "total": 13883
+    },
+    "latency_ms": 187884
+  },
+  "summary": {
+    "a_total": 4,
+    "b_total": 8,
+    "matched": 4,
+    "matched_lexical": 4,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 4,
+    "field_agreements": {
+      "polarity": {
+        "agreed": 3,
+        "disagreed": 1
+      },
+      "claim_type": {
+        "agreed": 3,
+        "disagreed": 1
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_claim_id": "yolov3_logistic_per_class",
+      "b_index": 0,
+      "match_score": 0.568,
+      "match_source": "lexical",
+      "a_claim_text_normalized": "Independent logistic classifiers for each class allow YOLOv3 to handle multi-label data, replacing the softmax used in earlier YOLO versions.",
+      "b_claim_text_normalized": "YOLOv3 uses independent logistic classifiers instead of softmax for multilabel class prediction.",
+      "field_disagreements": [
+        {
+          "field": "claim_type",
+          "a": "design_choice",
+          "b": "method"
+        }
+      ]
+    },
+    {
+      "a_claim_id": "yolov3_speed_vs_retinanet",
+      "b_index": 4,
+      "match_score": 0.551,
+      "match_source": "lexical",
+      "a_claim_text_normalized": "On COCO, YOLOv3 achieves an AP at IoU 0.5 comparable to RetinaNet while running roughly 3.8 times faster.",
+      "b_claim_text_normalized": "YOLOv3 achieves 57.9 AP50 in 51 ms on a Titan X, comparable to RetinaNet but 3.8 times faster.",
+      "field_disagreements": []
+    },
+    {
+      "a_claim_id": "yolov3_strict_iou_underperform_negative",
+      "b_index": 6,
+      "match_score": 0.5,
+      "match_source": "lexical",
+      "a_claim_text_normalized": "YOLOv3 underperforms RetinaNet on the strict AP at higher IoU thresholds for medium and large objects despite being significantly faster.",
+      "b_claim_text_normalized": "YOLOv3 performance drops significantly as the IOU threshold increases.",
+      "field_disagreements": []
+    },
+    {
+      "a_claim_id": "yolov3_three_scale_predictions",
+      "b_index": 1,
+      "match_score": 0.698,
+      "match_source": "lexical",
+      "a_claim_text_normalized": "YOLOv3 predicts bounding boxes at three different scales using a feature pyramid built on a Darknet-53 backbone.",
+      "b_claim_text_normalized": "YOLOv3 predicts boxes at three different scales using a concept similar to feature pyramid networks.",
+      "field_disagreements": [
+        {
+          "field": "polarity",
+          "a": "positive",
+          "b": "neutral"
+        }
+      ]
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": [
+    {
+      "b_index": 2,
+      "b_claim_text_normalized": "The Darknet-53 backbone performs on par with state-of-the-art classifiers while using fewer floating point operations.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 3,
+      "b_claim_text_normalized": "At 320 by 320 resolution YOLOv3 is as accurate as SSD but three times faster.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 5,
+      "b_claim_text_normalized": "With multi-scale predictions YOLOv3 achieves relatively high performance on small objects.",
+      "b_polarity": "positive",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 7,
+      "b_claim_text_normalized": "Using focal loss dropped YOLOv3's mAP by approximately two points.",
+      "b_polarity": "negative",
+      "b_claim_type": "limitation",
+      "comment": "produced by independent extractor B but not in human gold A"
+    }
+  ]
+}

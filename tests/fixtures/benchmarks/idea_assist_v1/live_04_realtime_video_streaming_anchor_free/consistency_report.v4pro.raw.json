@@ -1,0 +1,40 @@
+{
+  "pool_relevance": [
+    {
+      "claim_id": "cornernet_paired_keypoints",
+      "relevance": "high",
+      "rationale": "CornerNet is an anchor-free detector, directly relevant to the seed topic of anchor-free detection."
+    },
+    {
+      "claim_id": "centernet_triplet_keypoints",
+      "relevance": "high",
+      "rationale": "CenterNet is an anchor-free detector and16 the reference hypothesis specifically mentions a CenterNet-style head."
+    },
+    {
+      "claim_id": "yolox_l_50ap_v100_speed",
+      "relevance": "medium",
+      "rationale": "YOLOX is an anchor-free detector with reported speed, but16 the claim does not address temporal coherence or streaming video."
+    },
+    {
+      "claim_id": "yolov1_speed_45_155_fps",
+      "relevance": "low",
+      "rationale": "YOLOv1 is not anchor-free (it uses grid-based anchors) and the claim only provides speed on a different GPU, making it only tangentially relevant."
+    },
+    {
+      "claim_id": "fcos_anchor_hyperparameter_burden_negative",
+      "relevance": "high",
+      "rationale": "FCOS is an anchor-free detector and the claim highlights a key motivation for anchor-free methods, which16 is16 relevant to the seed topic."
+    }
+  ],
+  "pool_sufficiency": "thin",
+  "pool_sufficiency_rationale": "The pool lacks any claims about temporal coherence, video streaming, or frame-to-frame propagation, which are central to the seed topic.",
+  "forbidden_substrings_quality": "appropriate",
+  "forbidden_substrings_rationale": "The forbidden substrings prevent verbatim copying of key sentences from the evidence, encouraging paraphrasing.",
+  "reference_hypothesis_quality": "plausible",
+  "reference_hypothesis_rationale": "The hypothesis combines a known anchor-free head with a lightweight temporal-attention block,16 which is a reasonable16 extension for streaming video.",
+  "overall_assessment": "needs_revision",
+  "issues": [
+    "Pool lacks claims about temporal coherence, video, or frame propagation, making it insufficient for the seed topic.",
+    "YOLOv1 is not anchor-free and its16 relevance is16 low; consider replacing with a more relevant anchor-free video detection claim."
+  ]
+}

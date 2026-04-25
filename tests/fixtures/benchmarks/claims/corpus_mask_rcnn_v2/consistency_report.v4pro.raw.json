@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "Mask R-CNN extends Faster R-CNN by adding a branch for predicting an object mask in parallel with the existing branch for bounding box recognition.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "The method, called Mask R-CNN, extends Faster R-CNN by adding a branch for predicting an object mask in parallel with the existing branch for bounding box recognition."
+    },
+    {
+      "claim_text_normalized": "Mask R-CNN is simple to train and adds only a small overhead to Faster R-CNN, running at 5 fps.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "Mask R-CNN is simple to train and adds only a small overhead to Faster R-CNN, running at 5 fps."
+    },
+    {
+      "claim_text_normalized": "Without bells and whistles, Mask R-CNN outperforms all existing, single-model entries on every task, including the COCO 2016 challenge winners.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "Without bells and whistles, Mask R-CNN outperforms all existing, single-model entries on every task, including the COCO 2016 challenge winners."
+    },
+    {
+      "claim_text_normalized": "The proposed RoIAlign layer improves mask accuracy by relative 10% to 50%, showing bigger gains under stricter localization metrics.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "RoIAlign has a large impact: it improves mask accuracy by relative 10% to 50%, showing bigger gains under stricter localization metrics."
+    },
+    {
+      "claim_text_normalized": "Decoupling mask and class prediction by predicting a binary mask for each class independently is essential for good instance segmentation results.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "we found it essential to decouple mask and class prediction: we predict a binary mask for each class independently, without competition among classes"
+    },
+    {
+      "claim_text_normalized": "Using a per-pixel softmax and a multinomial loss couples mask and class prediction and results in a severe loss in mask AP of 5.5 points.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "This alternative couples the tasks of mask and class prediction, and results in a severe loss in mask AP (5.5 points)."
+    },
+    {
+      "claim_text_normalized": "Mask R-CNN can be extended to human pose estimation by viewing each keypoint as a one-hot binary mask with minimal modification.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "By viewing each keypoint as a one-hot binary mask, with minimal modification Mask R-CNN can be applied to detect instance-specific poses."
+    },
+    {
+      "claim_text_normalized": "Mask R-CNN surpasses the winner of the 2016 COCO keypoint competition and runs at 5 fps.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "Mask R-CNN surpasses the winner of the 2016 COCO keypoint competition, and at the same time runs at 5 fps."
+    }
+  ]
+}

@@ -1,0 +1,291 @@
+{
+  "schema_version": 1,
+  "pack_id": "concept_topic/corpus_cascade_rcnn_v2",
+  "pack_path": "tests/fixtures/benchmarks/concept_topic/corpus_cascade_rcnn_v2",
+  "layer": "concept_topic_v2",
+  "generated_at_utc": "2026-04-25T21:16:57.229311+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "flips=3, missing_in_b_ratio=0.00 (gate: flips ≥ 1 OR missing_in_b_ratio ≥ 0.40)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/concept_topic/corpus_cascade_rcnn_v2/gold.json",
+    "count": 14,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-labelled against frozen 25 concepts)",
+    "count": 25,
+    "model": "moonshotai/kimi-k2.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:c109888c2c43f5107816c77101a8a84f884aadbac04660fce40760ed8f1437cb",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 15105,
+      "completion": 10401,
+      "total": 25506
+    },
+    "latency_ms": 166662
+  },
+  "summary": {
+    "a_total": 14,
+    "b_total": 25,
+    "matched": 14,
+    "matched_lexical": 14,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 11,
+    "field_agreements": {
+      "status": {
+        "agreed_present": 6,
+        "agreed_absent": 5,
+        "flips": 3
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "concept_id": "cascade_iou_progression",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "It consists of a sequence of detectors trained with increasing IoU thresholds, to be sequentially more selective against close false positives.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "Many of the recently proposed object detectors are based on the two-stage R-CNN framework",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "region_proposal",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "The first stage is a proposal sub-network (“H0”), applied to the entire image, to produce preliminary detection hypotheses, known as object proposals.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "anchor_based",
+      "a_status": "present",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "present",
+          "b": "absent"
+        }
+      ],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention anchor boxes, predefined anchors, or anchor-based detection."
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "while the MS-CNN [1] and FPN [21] detect proposals at multiple output layers",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "nms",
+      "a_status": "present",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "present",
+          "b": "absent"
+        }
+      ],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention non-maximum suppression, NMS, or non-max suppression."
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "detection is framed as a multi-task learning problem that combines classification and bounding box regression",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "a_status": "present",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "The Cascade R-CNN was evaluated on MS-COCO 2017 [20], which contains ∼ 118k images for training",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "anchor_free",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention anchor-free detection or any of its aliases."
+    },
+    {
+      "concept_id": "set_prediction",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention set prediction, bipartite matching, or Hungarian matching."
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention transformer encoder-decoder architectures."
+    },
+    {
+      "concept_id": "focal_loss",
+      "a_status": "absent",
+      "b_status": "present",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [
+        {
+          "field": "status",
+          "a": "absent",
+          "b": "present"
+        }
+      ],
+      "b_evidence_quote": "Focal loss for dense object detection. In ICCV, 2017.",
+      "b_rationale": ""
+    },
+    {
+      "concept_id": "mask_branch",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention a mask branch, mask prediction head, or instance segmentation branch."
+    },
+    {
+      "concept_id": "compound_scaling",
+      "a_status": "absent",
+      "b_status": "absent",
+      "match_score": 1.0,
+      "match_source": "concept_id_exact",
+      "field_disagreements": [],
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention compound scaling or joint depth-width-resolution scaling."
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": [
+    {
+      "concept_id": "selective_search",
+      "b_status": "present",
+      "b_evidence_quote": "e.g. RPN [27] or selective search [30], have low quality",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "roi_pooling",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention ROI pooling, RoIPool, or region-of-interest pooling by name.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "roi_align",
+      "b_status": "present",
+      "b_evidence_quote": "RoIAlign [14] was used for a stronger baseline.",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "b_status": "present",
+      "b_evidence_quote": "Alternatively, one-stage object detection architectures have also become popular",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "keypoint_detection",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention keypoint detection, corner detection, or keypoint pairs.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "b_status": "present",
+      "b_evidence_quote": "FPN [21] with ResNet backbone [16]. These baselines have a wide range of detection performances.",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "backbone_darknet",
+      "b_status": "present",
+      "b_evidence_quote": "YOLOv2 [26] DarkNet-19 21.6 44.0 19.2 5.0 22.4 35.5",
+      "b_rationale": "",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "centerness",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention center-ness, centerness branch, or center prediction.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "iou_loss",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article uses smoothed L1 loss for bounding box regression rather than IoU loss or its variants.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "classical_dpm",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention Deformable Parts Model, DPM, or deformable part-based models.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "b_status": "absent",
+      "b_evidence_quote": "",
+      "b_rationale": "The article does not mention handcrafted visual features such as HOG, SIFT, or SURF.",
+      "comment": "labelled by extractor B but absent from human gold A"
+    }
+  ]
+}

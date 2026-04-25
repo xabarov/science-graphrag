@@ -16,8 +16,10 @@ import argparse
 import json
 import subprocess
 import sys
+import threading
 import time
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -152,6 +154,15 @@ def main() -> int:
             "to suppress hidden CoT and prevent JSON truncation."
         ),
     )
+    p.add_argument(
+        "--parallel",
+        type=int,
+        default=1,
+        help=(
+            "Run up to N packs concurrently via subprocess. Useful for slow reasoning "
+            "models (e.g. kimi-k2.6 ~5min/pack). Default 1 (serial)."
+        ),
+    )
     args = p.parse_args()
 
     found = _find_high_priority_packs(args.fixtures_root)
@@ -184,37 +195,44 @@ def main() -> int:
     )
 
     log_handle = args.log_output.open("a", encoding="utf-8") if args.log_output else None
-    try:
-        for idx, (layer, pack) in enumerate(plan, start=1):
-            layer_flag = LAYER_DIRS[layer][1]
-            cmd = _cli_invocation(
-                pack=pack,
-                layer_flag=layer_flag,
-                model=args.model,
-                report_name=report_name,
-                max_output_tokens=args.max_output_tokens,
-                with_embeddings=args.with_embeddings,
-                reasoning_mode=args.reasoning_mode,
-            )
-            t0 = time.perf_counter()
-            print(f"[{idx}/{len(plan)}] {layer}/{pack.name}: starting", file=sys.stderr, flush=True)
-            proc = subprocess.run(
-                cmd,
-                cwd=ROOT,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                check=False,
-                text=True,
-            )
-            dt = time.perf_counter() - t0
-            ok = proc.returncode == 0 and (pack / report_name).exists()
+    log_lock = threading.Lock()
+
+    def _run_one(idx: int, layer: str, pack: Path) -> dict:
+        layer_flag = LAYER_DIRS[layer][1]
+        cmd = _cli_invocation(
+            pack=pack,
+            layer_flag=layer_flag,
+            model=args.model,
+            report_name=report_name,
+            max_output_tokens=args.max_output_tokens,
+            with_embeddings=args.with_embeddings,
+            reasoning_mode=args.reasoning_mode,
+        )
+        t0 = time.perf_counter()
+        with log_lock:
             print(
-                f"  → done in {dt:.1f}s, ok={ok}, rc={proc.returncode}",
+                f"[{idx}/{len(plan)}] {layer}/{pack.name}: starting",
+                file=sys.stderr,
+                flush=True,
+            )
+        proc = subprocess.run(
+            cmd,
+            cwd=ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+            text=True,
+        )
+        dt = time.perf_counter() - t0
+        ok = proc.returncode == 0 and (pack / report_name).exists()
+        with log_lock:
+            print(
+                f"[{idx}/{len(plan)}] {layer}/{pack.name}: done in {dt:.1f}s, "
+                f"ok={ok}, rc={proc.returncode}",
                 file=sys.stderr,
                 flush=True,
             )
             if not ok:
-                # Surface the last lines of stderr so we can see what failed.
                 tail = "\n".join(proc.stderr.strip().splitlines()[-6:])
                 print(f"  STDERR tail:\n{tail}", file=sys.stderr, flush=True)
             if log_handle is not None:
@@ -233,6 +251,23 @@ def main() -> int:
                     + "\n"
                 )
                 log_handle.flush()
+        return {"layer": layer, "pack": pack.name, "ok": ok, "elapsed_s": dt}
+
+    try:
+        if args.parallel <= 1:
+            for idx, (layer, pack) in enumerate(plan, start=1):
+                _run_one(idx, layer, pack)
+        else:
+            # Subprocess-based parallelism: each worker call sits on its own HTTPS
+            # socket so the GIL is irrelevant; the only contention point is logging,
+            # guarded by ``log_lock`` above.
+            with ThreadPoolExecutor(max_workers=args.parallel) as pool:
+                futures = [
+                    pool.submit(_run_one, idx, layer, pack)
+                    for idx, (layer, pack) in enumerate(plan, start=1)
+                ]
+                for fut in as_completed(futures):
+                    fut.result()
     finally:
         if log_handle is not None:
             log_handle.close()

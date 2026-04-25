@@ -1220,3 +1220,200 @@ def test_run_for_pack_preserves_raw_response_on_parse_error() -> None:
             Path("/tmp"), client=_StubClient(), model="stub", base_url="x", dry_run=False
         )
     assert getattr(exc_info.value, "raw_response", None) == "definitely not json"
+
+
+def test_reasoning_override_threads_into_call_spec(tmp_path: Path) -> None:
+    """``reasoning_override`` should land on the LLMCallSpec passed to the client."""
+
+    from scripts.dual_validate.extractors import ClaimsV2Extractor
+
+    pack = Path(__file__).resolve().parents[1] / "tests/fixtures/benchmarks/claims/corpus_yolov1_v2"
+    extractor = ClaimsV2Extractor()
+
+    # dry_run path returns the spec without invoking the client.
+    _, spec_default = extractor.run_for_pack(
+        pack, client=None, model="stub", base_url="x", dry_run=True
+    )
+    assert spec_default.reasoning is None
+
+    _, spec_off = extractor.run_for_pack(
+        pack,
+        client=None,
+        model="stub",
+        base_url="x",
+        dry_run=True,
+        reasoning_override={"enabled": False},
+    )
+    assert spec_off.reasoning == {"enabled": False}
+
+    _, spec_low = extractor.run_for_pack(
+        pack,
+        client=None,
+        model="stub",
+        base_url="x",
+        dry_run=True,
+        reasoning_override={"effort": "low"},
+    )
+    assert spec_low.reasoning == {"effort": "low"}
+
+
+def test_reasoning_override_changes_prompt_hash() -> None:
+    """The OpenRouter ``reasoning`` payload influences output, so it must shift the hash."""
+
+    from scripts.dual_validate.llm_client import LLMCallSpec, prompt_hash
+
+    base_kwargs = {
+        "model": "moonshotai/kimi-k2.6",
+        "base_url": "https://openrouter.ai/api/v1",
+        "system_prompt": "Output JSON.",
+        "user_prompt": "{}",
+    }
+    h_none = prompt_hash(LLMCallSpec(**base_kwargs))
+    h_off = prompt_hash(LLMCallSpec(**base_kwargs, reasoning={"enabled": False}))
+    h_low = prompt_hash(LLMCallSpec(**base_kwargs, reasoning={"effort": "low"}))
+    assert h_none != h_off != h_low != h_none
+
+
+def test_reasoning_override_emits_extra_body_only_when_set() -> None:
+    """``DualValidateLLMClient`` must omit ``extra_body`` unless reasoning is requested."""
+
+    from scripts.dual_validate.llm_client import DualValidateLLMClient, LLMCallSpec
+
+    captured: list[dict] = []
+
+    class _FakeChatCompletions:
+        def create(self, **kwargs):  # pylint: disable=unused-argument
+            captured.append(kwargs)
+
+            class _Msg:
+                content = "{}"
+
+            class _Choice:
+                message = _Msg()
+                finish_reason = "stop"
+
+            class _Resp:
+                choices = [_Choice()]
+                usage = type(
+                    "u", (), {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2}
+                )()
+
+            return _Resp()
+
+    class _FakeOpenAI:
+        def __init__(self, *_a, **_k):
+            self.chat = type("c", (), {"completions": _FakeChatCompletions()})()
+
+    client = DualValidateLLMClient.__new__(DualValidateLLMClient)
+    client._client = _FakeOpenAI()  # pylint: disable=protected-access
+
+    spec = LLMCallSpec(model="m", base_url="u", system_prompt="s", user_prompt="u", max_tokens=8)
+    client.call(spec)
+    assert captured[-1].get("extra_body") is None
+
+    spec_with = LLMCallSpec(
+        model="m",
+        base_url="u",
+        system_prompt="s",
+        user_prompt="u",
+        max_tokens=8,
+        reasoning={"enabled": False},
+    )
+    client.call(spec_with)
+    assert captured[-1]["extra_body"] == {"reasoning": {"enabled": False}}
+
+
+def test_compute_backoff_uses_hint_when_provided() -> None:
+    """Upstream ``retry_after_seconds`` must dominate exponential growth."""
+
+    from scripts.dual_validate.llm_client import _compute_backoff
+
+    # Hint < exponential floor at attempt 0 (2^0 = 1s) → use max(hint, 1) = 5
+    assert 5.0 <= _compute_backoff(0, hint=5.0) <= 5.5
+    # Hint at attempt 5 dominates capped exponential (cap=30)
+    assert 7.0 <= _compute_backoff(5, hint=7.0) <= 7.5
+    # Without hint, exponential 2^attempt + jitter
+    assert 4.0 <= _compute_backoff(2, hint=None) <= 4.5
+    # Cap kicks in at high attempts
+    assert 30.0 <= _compute_backoff(10, hint=None) <= 30.5
+
+
+def test_extract_retry_after_handles_openrouter_payloads() -> None:
+    """Mine ``retry_after_seconds`` from nested OpenRouter error metadata."""
+
+    from scripts.dual_validate.llm_client import _extract_retry_after
+
+    class _Body:
+        def __init__(self, payload: dict) -> None:
+            self._p = payload
+
+        def json(self) -> dict:
+            return self._p
+
+    class _Exc(Exception):
+        def __init__(self, body) -> None:  # noqa: ANN001
+            self.body = body
+
+    exc_with = _Exc(_Body({"error": {"metadata": {"retry_after_seconds": 3.5}}}))
+    assert _extract_retry_after(exc_with) == 3.5
+
+    exc_str = _Exc(json.dumps({"error": {"metadata": {"retry_after_seconds": 2}}}))
+    assert _extract_retry_after(exc_str) == 2.0
+
+    exc_missing = _Exc(_Body({"error": {"message": "rate limited"}}))
+    assert _extract_retry_after(exc_missing) is None
+
+    exc_empty = _Exc(None)
+    assert _extract_retry_after(exc_empty) is None
+
+
+def test_call_handles_empty_choices_envelope() -> None:
+    """A 200-OK with empty ``choices`` must surface as a retryable RuntimeError."""
+
+    from scripts.dual_validate.llm_client import DualValidateLLMClient, LLMCallSpec
+
+    class _EmptyChoicesResp:
+        choices = None
+        error = {"message": "upstream provider failed"}
+
+    class _FakeChat:
+        calls = 0
+
+        def create(self, **_kwargs):
+            _FakeChat.calls += 1
+            return _EmptyChoicesResp()
+
+    class _FakeOpenAI:
+        def __init__(self, *_a, **_k) -> None:
+            self.chat = type("c", (), {"completions": _FakeChat()})()
+
+    client = DualValidateLLMClient.__new__(DualValidateLLMClient)
+    client._client = _FakeOpenAI()  # pylint: disable=protected-access
+
+    spec = LLMCallSpec(model="m", base_url="u", system_prompt="s", user_prompt="u", max_tokens=8)
+    with pytest.raises(RuntimeError) as exc_info:
+        client.call(spec, max_retries=2)
+    msg = str(exc_info.value)
+    assert "empty choices" in msg
+    assert _FakeChat.calls == 2  # full retry budget exhausted
+
+
+def test_run_phase6e_pass_cli_invocation_emits_reasoning_flag() -> None:
+    """The Phase 6.E driver must forward ``--reasoning-mode`` into each subprocess."""
+
+    from scripts.dual_validate.run_phase6e_pass import _cli_invocation
+
+    cmd = _cli_invocation(
+        pack=Path("/tmp/some_pack"),
+        layer_flag="claims_v2",
+        model="moonshotai/kimi-k2.6",
+        report_name="consistency_report.kimi.json",
+        max_output_tokens=12000,
+        with_embeddings=True,
+        reasoning_mode="low",
+    )
+    assert "--reasoning-mode" in cmd
+    assert cmd[cmd.index("--reasoning-mode") + 1] == "low"
+    assert "--with-embeddings" in cmd
+    assert "--max-output-tokens" in cmd
+    assert cmd[cmd.index("--max-output-tokens") + 1] == "12000"

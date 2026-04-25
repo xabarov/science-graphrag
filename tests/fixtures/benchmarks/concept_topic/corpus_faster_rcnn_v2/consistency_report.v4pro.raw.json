@@ -1,0 +1,100 @@
+{
+  "labels": [
+    {
+      "concept_id": "region_proposal",
+      "status": "present",
+      "evidence_quote": "we introduce a Region Proposal Network (RPN) that shares full-image convolutional features with the detection network, thus enabling nearly cost-free region proposals.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "selective_search",
+      "status": "present",
+      "evidence_quote": "Selective Search [4], one of the most popular methods, greedily merges superpixels based on engineered low-level features.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "anchor_based",
+      "status": "present",
+      "evidence_quote": "we introduce novel “anchor” boxes that serve as references at multiple scales and aspect ratios.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "anchor_free",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article introduces anchor boxes as a core12:04 pmcomponent and does not describe any anchor-free detection approach."
+    },
+    {
+      "concept_id": "set_prediction",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention bipartite matching, Hungarian matching, or direct set prediction."
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "status": "present",
+      "evidence_quote": "Pyramids of images and feature maps are built, and the classifier is run at all scales.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "focal_loss",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention focal loss or any modulating factor cross-entropy."
+    },
+    {
+      "concept_id": "nms",
+      "status": "present",
+      "evidence_quote": "we adopt non-maximum suppression (NMS) on the proposal regions based on their cls scores.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not use a transformer encoder-decoder architecture."
+    },
+    {
+      "concept_id": "roi_pooling",
+      "status": "present",
+      "evidence_quote": "RoI pooling layer [2] in Fast R-CNN accepts the convolutional features and also the predicted bounding boxes as input",
+      "rationale": ""
+    },
+    {
+      "concept_id": "roi_align",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article uses RoI pooling, not ROI Align."
+    },
+    {
+      "concept_id": "classical_dpm",
+      "status": "present",
+      "evidence_quote": "in DPM [8] and CNN-based methods [9], [1], [2].",
+      "rationale": ""
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "status": "present",
+      "evidence_quote": "Selective Search [4] greedily merges superpixels based on engineered low-level features.",
+      "rationale": ""
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "status": "present",
+      "evidence_quote": "we minimize an objective function following the multi-task loss in Fast R-CNN [2].",
+      "rationale": ""
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "status": "present",
+      "evidence_quote": "We also report results on the MS COCO dataset [12]",
+      "rationale": ""
+    },
+    {
+      "concept_id": "iou_loss",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article uses smooth L1 loss for bounding box regression, not IoU-based losses."
+    }
+  ]
+}

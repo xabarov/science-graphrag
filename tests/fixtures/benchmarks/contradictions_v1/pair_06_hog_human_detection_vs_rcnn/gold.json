@@ -2,9 +2,21 @@
   "schema_version": 1,
   "pair_id": "c06_handcrafted_vs_learned_features",
   "meta": {
-    "validation_status": "draft",
+    "validation_status": "llm_triple_validated",
     "needs_human_review": true,
-    "extractor_pass": "single_human_authored_2026-04-25"
+    "extractor_pass": "single_human_authored_2026-04-25",
+    "validation_history": [
+      {
+        "promoted_at_utc": "2026-04-25T21:29:16.998679+00:00",
+        "from_status": "draft",
+        "to_status": "llm_triple_validated",
+        "consensus_priority": "medium",
+        "n_models_present": 3,
+        "consensus_report": "tests/fixtures/benchmarks/contradictions_v1/pair_06_hog_human_detection_vs_rcnn/consensus_report.json",
+        "rule": "auto-promote on Phase 6.E triple-vote consensus (≥2 of N models)"
+      }
+    ],
+    "validation_status_previous": "draft"
   },
   "claim_a": {
     "claim_id": "hog_handcrafted_sufficient",

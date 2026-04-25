@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "Fast R-CNN trains the very deep VGG16 network 9 times faster than R-CNN.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "Fast R-CNN trains the very deep VGG16 network 9× faster than R-CNN"
+    },
+    {
+      "claim_text_normalized": "Fast R-CNN is 213 times faster at test-time than R-CNN.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "is 213× faster at test-time"
+    },
+    {
+      "claim_text_normalized": "Fast R-CNN achieves a higher mAP on PASCAL VOC 2012 compared to R-CNN.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "achieves a higher mAP on PASCAL VOC 2012"
+    },
+    {
+      "claim_text_normalized": "Fast R-CNN uses a single-stage training algorithm that jointly learns to classify object proposals and refine their spatial locations.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "We propose a single-stage training algorithm that jointly learns to classify object proposals and refine their spatial locations."
+    },
+    {
+      "claim_text_normalized": "Fast R-CNN does not require disk storage for feature caching.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "No disk storage is required for feature caching"
+    },
+    {
+      "claim_text_normalized": "Fine-tuning the convolutional layers in VGG16 improves mAP from 61.4% to 66.9%.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "This ablation emulates single-scale SPPnet training and decreases mAP from 66.9% to 61.4%"
+    },
+    {
+      "claim_text_normalized": "Multi-task training improves pure classification accuracy relative to training for classification alone.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "Across all three networks we observe that multi-task training improves pure classification accuracy relative to training for classification alone."
+    },
+    {
+      "claim_text_normalized": "Increasing the number of object proposals beyond a certain point slightly hurts mAP.",
+      "claim_type": "finding",
+      "polarity": "negative",
+      "evidence_quote_short": "We find that mAP rises and then falls slightly as the proposal count increases"
+    }
+  ]
+}

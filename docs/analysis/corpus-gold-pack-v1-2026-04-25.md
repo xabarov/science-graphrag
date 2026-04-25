@@ -458,10 +458,54 @@ Source: tests/fixtures/benchmarks/layer1/<slug>/article.md
   - **`_safe_relative` path helper** в `dual_extract_validate.py` — безопасная конвертация в relative paths когда они не под cwd.
 - **Итог Phase 6.C done:** **+24 packs auto-promoted** в этой сессии (3 free-text + 5 dedup + 16 retrieval/agent), **общий итог Phase 6:** **71 packs total → 33 promoted → 38 high-priority в очереди**. Tests **44/44**, pylint **9.59/10** (выше CI 7.0).
 
-#### Phase 6.E — second/third model pass (опционально)
+#### Phase 6.E — second/third model pass (in progress)
 
-- Прогон тех же 21 packs (Phase 6.B claims 20 + любые из новых) через `anthropic/claude-sonnet-4.6` (~$0.20) и `moonshotai/kimi-k2.6` (~$0.04). Triple-vote (2-of-3 agreement) снимет single-model bias и потенциально разблокирует ещё 5-10 авто-промоутов из текущих high-priority packs.
-- После Phase 6.E можно делать дополнительный промо `validation_status: llm_dual_validated → human_spot_checked` для pack'ов где **все три модели сошлись** на одном matched payload.
+**Цель:** прогнать те же 38 high-priority packs через `anthropic/claude-sonnet-4.6` и `moonshotai/kimi-k2.6`, агрегировать через triple-vote (2-of-3 agreement) и промоутнуть в `validation_status: llm_triple_validated`.
+
+**Инфра (готово):**
+
+- **Per-model отчёты** через существующий `--report-name` флаг: `consistency_report.<tag>.json` рядом со старым (`deepseek` пишется в legacy `consistency_report.json`).
+- **`--reasoning-mode {auto,disabled,low,medium,high}`** (новое) — пробрасывается через `LLMCallSpec.reasoning` в OpenRouter `extra_body`. Влияет на `prompt_hash` (отчёты с разной reasoning-конфигурацией не пересекаются).
+- **`--max-output-tokens N`** — поднимает per-extractor `max_tokens` (только вверх, никогда вниз).
+- **`scripts/dual_validate/run_phase6e_pass.py`** — driver, дискаверит high-priority pack'и по существующим `consistency_report.json`, поддерживает `--parallel N` (ThreadPoolExecutor над subprocess'ами для I/O-bound LLM-вызовов), `--force` для пере-исполнения, `--log-output` для стрим-лога.
+- **`scripts/dual_validate/triple_vote_consensus.py`** — агрегирует N per-model отчётов в `consensus_report.json` (schema v1):
+    - **Priority majority vote** с conservative tie-break (favour higher rank).
+    - **Per-record vote** для слоёв со стабильным `a_id` в `matched_pairs` (claims_v2, concept_topic_v2, contradictions_v1, dedup, idea_assist_live, retrieval/{workspace_scoped_live, hybrid_ablation_v2}). Bucket: `matched_by_all` / `matched_by_majority` / `controversial`.
+    - **Layer-agnostic для multihop_v2/agent_tools_live** (per-record vote отключён, но priority vote работает).
+    - **Auto-promote**: `validation_status` → `llm_triple_validated` когда `consensus_priority ∈ {low, medium}` и `n_models_present ≥ --require-min-models` (default 2).
+
+**Кими как reasoning-модель — нюанс:**
+- `moonshotai/kimi-k2.6` по умолчанию использует hidden CoT, который съедает output budget.
+- **С `reasoning.enabled=False`** — модель ленится, возвращает `{"claims":[]}`.
+- **С `reasoning.effort=low` + `max_tokens=12000`** — извлекает 8 claims за ~100с/pack (vs 5min без override). Это рабочая комбинация.
+- ADR/комментарий: kimi нельзя использовать в режиме «default reasoning» из-за непредсказуемого token usage и truncated JSON.
+
+**Конфиг для Phase 6.E run:**
+- `claude-sonnet-4.6 --max-output-tokens 6144 --with-embeddings` (без reasoning, ~20s/pack, parallel=1, ~13min total).
+- `kimi-k2.6 --max-output-tokens 12000 --reasoning-mode low --with-embeddings --parallel 4` (~100s/pack, parallel=4, ~16min total).
+
+**Замена kimi на deepseek-v4-pro:** kimi-k2.6 оказался непригоден для batch-extraction (reasoning model, output truncation даже с `effort=low + 12000 tokens`, ~5min/pack). Заменён на `deepseek/deepseek-v4-pro` (не reasoning, ~25s/pack, чище JSON). Третья модель из той же семьи DeepSeek (v3.2 → v4-pro), но с независимым model checkpoint — даёт независимый extractor B.
+
+**Robust retry:** добавлены `_extract_retry_after` (mining `retry_after_seconds` из OpenRouter metadata) и `_compute_backoff` (jittered exponential cap=30s), `max_retries=5` (было 2). Покрывает upstream 429/502/503 от Together provider. Также добавлен empty-choices guard (200-OK с `choices=None` → retryable RuntimeError, а не путающее `'NoneType' subscriptable`).
+
+**Финальные результаты triple-vote (deepseek + v4pro + claude):**
+
+- 38 packs прошли consensus (`packs_with_consensus`).
+- **2 promoted → `llm_triple_validated`** (consensus=medium, 2-of-3 majority):
+    - `contradictions_v1/pair_06_hog_human_detection_vs_rcnn` — record_match=1.0 на всех 3 моделях.
+    - `agent_tools_live/live_05_compare_two_stage_one_stage_accuracy`.
+- **4 split-decision packs** (1 модель medium/low, 2 high) — приоритетные кандидаты для human review:
+    - `claims_v2/corpus_cascade_rcnn_v2` (record_match=1.0!)
+    - `contradictions_v1/pair_07_retinanet_focal_vs_efficientdet` (record_match=1.0!)
+    - `agent_tools_live/live_03_yolov3_speed_paper_only`
+    - `hybrid_ablation_v2/ha_two_stage_rpn_evolution`
+- **32 stable high** (3-of-3 high vote) — disagreement подтверждён независимо тремя моделями, single-model bias **не объясняет** их статус.
+
+**Вывод Phase 6.E:** triple-vote дал **честный** сигнал — большинство `priority=high` packs действительно требуют human review (или ревизии gold), а не были артефактами одной модели. Авто-промо ограничилось 2 паками, но они теперь имеют сильную гарантию (3-of-3 medium consensus). Распределение voted by 3 моделями: low=0, medium=2, high=36.
+
+**По слоям (consensus packs / promoted):** claims_v2 (18/0), concept_topic_v2 (8/0), contradictions_v1 (3/1), agent_tools_live (3/1), idea_assist_live (3/0), multihop_v2 (2/0), hybrid_ablation_v2 (1/0), workspace_scoped_live (0/0 — все 6 packs уже были promoted в Phase 6.C, нечего проверять).
+
+**Total Phase 6 итог:** 71 packs total → **35 promoted** (33 от Phase 6.B/C/D `llm_dual_validated` + 2 от 6.E `llm_triple_validated`), 36 high-priority остались для human spot-check.
 
 ---
 

@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "pack_id": "ha_two_stage_rpn_evolution",
+  "pack_path": "tests/fixtures/benchmarks/retrieval/hybrid_ablation_v2/ha_two_stage_rpn_evolution",
+  "layer": "hybrid_ablation_v2",
+  "generated_at_utc": "2026-04-25T21:28:21.986435+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "accuracy=0.71, f1_relevant=0.50 (gate)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/retrieval/hybrid_ablation_v2/ha_two_stage_rpn_evolution/gold.json",
+    "count": 3,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "question.txt | candidates=7",
+    "count": 1,
+    "model": "deepseek/deepseek-v4-pro",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:b44dbca81e5ce7d9995eeb9bd841865f3958eb63ccdb14227d224860ab38bf27",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 293,
+      "completion": 109,
+      "total": 402
+    },
+    "latency_ms": 3596
+  },
+  "summary": {
+    "a_total": 3,
+    "b_total": 1,
+    "matched": 5,
+    "matched_lexical": 5,
+    "matched_embedding": 0,
+    "unmatched_a": 2,
+    "unmatched_b": 0,
+    "candidates_total": 7,
+    "accuracy": 0.714,
+    "metrics_relevant": {
+      "precision": 1.0,
+      "recall": 0.333,
+      "f1": 0.5,
+      "jaccard": 0.333
+    },
+    "rationale_b": "Only Faster R-CNN introduces a Region Proposal Network (RPN) that is trained end-to-end with shared convolutional features for two-stage detection."
+  },
+  "matched_pairs": [
+    {
+      "corpus_work_id": "faster_rcnn_realpdf",
+      "label": "relevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "detr_realpdf",
+      "label": "irrelevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "retinanet_focal_realpdf",
+      "label": "irrelevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "ssd_realpdf",
+      "label": "irrelevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    },
+    {
+      "corpus_work_id": "yolov1",
+      "label": "irrelevant",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [
+    {
+      "corpus_work_id": "fast_rcnn_realpdf",
+      "label_a": "relevant",
+      "label_b": "irrelevant"
+    },
+    {
+      "corpus_work_id": "rfcn_realpdf",
+      "label_a": "relevant",
+      "label_b": "irrelevant"
+    }
+  ],
+  "unmatched_b": []
+}

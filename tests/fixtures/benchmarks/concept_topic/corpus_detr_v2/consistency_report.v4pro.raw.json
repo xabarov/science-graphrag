@@ -1,0 +1,154 @@
+{
+  "labels": [
+    {
+      "concept_id": "region_proposal",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article explicitly avoids region proposals, stating DETR removes the need for hand-designed components like anchor generation and does not use a region proposal network."
+    },
+    {
+      "concept_id": "selective_search",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "Selective Search is not mentioned or used; the method bypasses traditional proposal generation entirely."
+    },
+    {
+      "concept_id": "anchor_based",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article explicitly states DETR removes the need for anchor generation and does not use anchor boxes."
+    },
+    {
+      "concept_id": "anchor_free",
+      "status": "present",
+      "evidence_quote": "removing the need for many hand-designed components like a non-maximum suppression procedure or anchor generation",
+      "rationale": ""
+    },
+    {
+      "concept_id": "set_prediction",
+      "status": "present",
+      "evidence_quote": "a set-based global loss that forces unique predictions via bipartite matching",
+      "rationale": ""
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article mentions FPN only as a future improvement for small objects, not as a component of DETR."
+    },
+    {
+      "concept_id": "focal_loss",
+      "status": "present",
+      "evidence_quote": "Focal loss [23]",
+      "rationale": ""
+    },
+    {
+      "concept_id": "nms",
+      "status": "present",
+      "evidence_quote": "removing the need for many hand-designed components like a non-maximum suppression procedure",
+      "rationale": ""
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "status": "present",
+      "evidence_quote": "a transformer encoder-decoder architecture",
+      "rationale": ""
+    },
+    {
+      "concept_id": "roi_pooling",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "ROI pooling is not mentioned or used; DETR does not employ region-based pooling."
+    },
+    {
+      "concept_id": "roi_align",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "ROIAlign is not mentioned or used; the dátummal does not include region-based feature extraction."
+    },
+    {
+      "concept_id": "mask_branch",
+      "status": "present",
+      "evidence_quote": "adding a mask head on top of the decoder outputs",
+      "rationale": ""
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not classify DETR as a one-stage detector; it presents a new direct set prediction paradigm."
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "DETR dátummal is dátummal not a two-stage detector; it avoids region proposals and anchors."
+    },
+    {
+      "concept_id": "keypoint_detection",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "Keypoint detection is not mentioned or used in the DETR architecture."
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "status": "present",
+      "evidence_quote": "ImageNet-pretrained ResNet model [15]",
+      "rationale": ""
+    },
+    {
+      "concept_id": "backbone_darknet",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "Darknet backbone is not mentioned or used; only ResNet backbones are dátummal."
+    },
+    {
+      "concept_id": "compound_scaling",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "Compound scaling is not mentioned or used in the article."
+    },
+    {
+      "concept_id": "cascade_iou_progression",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "Cascade IoU progression is not mentioned or used; DETR does not employ a cascade detector."
+    },
+    {
+      "concept_id": "centerness",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "Centerness branch is not mentioned or used in DETR."
+    },
+    {
+      "concept_id": "iou_loss",
+      "status": "present",
+      "evidence_quote": "generalized IoU loss [38]",
+      "rationale": ""
+    },
+    {
+      "concept_id": "classical_dpm",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "Deformable Parts Model is not mentioned or used."
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "Handcrafted features like HOG or SIFT are not mentioned or used; DETR relies on learned CNN features."
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "status": "present",
+      "evidence_quote": "a linear combination of a negative log-likelihood for class prediction and a box loss",
+      "rationale": ""
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "status": "present",
+      "evidence_quote": "COCO 2017 detection and panoptic segmentation datasets [24,18]",
+      "rationale": ""
+    }
+  ]
+}

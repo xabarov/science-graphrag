@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import random
 import time
 from dataclasses import dataclass
 from typing import Any
@@ -73,8 +74,13 @@ class DualValidateLLMClient:
     def __init__(self, *, api_key: str, base_url: str, timeout_seconds: float = 120.0) -> None:
         self._client = OpenAI(api_key=api_key, base_url=base_url, timeout=timeout_seconds)
 
-    def call(self, spec: LLMCallSpec, *, max_retries: int = 2) -> LLMCallResult:
-        """Run one chat completion; retry once on transient errors."""
+    def call(self, spec: LLMCallSpec, *, max_retries: int = 5) -> LLMCallResult:
+        """Run one chat completion with jittered exponential backoff on transients.
+
+        Honours OpenRouter ``retry_after_seconds`` metadata when the upstream
+        provider supplies it; otherwise falls back to ``2 ** attempt`` (capped at
+        30s) plus a small random jitter so parallel callers don't synchronise.
+        """
 
         last_err: Exception | None = None
         for attempt in range(max_retries):
@@ -98,7 +104,20 @@ class DualValidateLLMClient:
                     extra_body=extra_body,
                 )
                 latency_ms = int((time.perf_counter() - t0) * 1000)
-                choice = resp.choices[0]
+                # OpenRouter occasionally returns 200-OK envelopes whose ``choices``
+                # are empty/None (provider failure surfaces as ``error`` field instead).
+                # Surface that as a retryable RuntimeError rather than a confusing
+                # ``'NoneType' object is not subscriptable`` from ``resp.choices[0]``.
+                choices = getattr(resp, "choices", None) or []
+                if not choices:
+                    err_field = getattr(resp, "error", None)
+                    last_err = RuntimeError(
+                        f"empty choices from upstream "
+                        f"(provider error={err_field!r}, model={spec.model})"
+                    )
+                    time.sleep(_compute_backoff(attempt, hint=None))
+                    continue
+                choice = choices[0]
                 usage = getattr(resp, "usage", None)
                 tokens = {
                     "prompt": getattr(usage, "prompt_tokens", 0) if usage else 0,
@@ -114,13 +133,48 @@ class DualValidateLLMClient:
                 )
             except RateLimitError as exc:
                 last_err = exc
-                time.sleep(2.0 * (attempt + 1))
+                time.sleep(_compute_backoff(attempt, hint=_extract_retry_after(exc)))
             except APIError as exc:
                 last_err = exc
+                # 5xx responses from upstream providers (Together/etc.) are usually
+                # transient. Treat them like rate limits — back off and retry.
                 if attempt + 1 >= max_retries:
                     break
-                time.sleep(1.5 * (attempt + 1))
+                time.sleep(_compute_backoff(attempt, hint=_extract_retry_after(exc)))
         raise RuntimeError(f"LLM call failed after {max_retries} attempts: {last_err}")
+
+
+def _extract_retry_after(exc: Exception) -> float | None:
+    """Mine ``retry_after_seconds`` out of OpenRouter's nested error metadata."""
+
+    body = getattr(exc, "body", None) or getattr(exc, "response", None)
+    if body is None:
+        return None
+    try:
+        if hasattr(body, "json"):
+            payload = body.json()
+        elif isinstance(body, (bytes, str)):
+            payload = json.loads(body)
+        else:
+            payload = body
+        meta = payload.get("error", {}).get("metadata", {}) if isinstance(payload, dict) else {}
+        ra = meta.get("retry_after_seconds")
+        return float(ra) if ra is not None else None
+    except (json.JSONDecodeError, AttributeError, TypeError, ValueError):
+        return None
+
+
+def _compute_backoff(attempt: int, *, hint: float | None, cap: float = 30.0) -> float:
+    """Exponential backoff (2^attempt) clamped to ``cap`` seconds, plus jitter.
+
+    When the upstream supplied a ``retry_after_seconds`` hint we respect it
+    (with a small jitter) — this avoids hammering a provider that explicitly
+    asked us to wait longer.
+    """
+
+    base = max(hint, 1.0) if hint is not None else min(2.0**attempt, cap)
+    jitter = random.uniform(0.0, 0.5)
+    return base + jitter
 
 
 def resolve_llm_settings(

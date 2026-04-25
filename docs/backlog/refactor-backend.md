@@ -171,6 +171,25 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 - **Итог Phase 6.C:** **51 packs прогнано → 31 auto-promoted в `llm_dual_validated`** (60.8%). Вместе с Phase 6.B/D: **71 total → 33 promoted, 38 high-priority очередь**. Tests 44/44, pylint 9.59/10 (выше CI 7.0).
 - **Raised:** 2026-04-25 → **PARTIAL:** 2026-04-25 → **DONE:** 2026-04-25.
 
+### [DONE] Corpus Gold Pack v1 — Phase 6.E (triple-vote consensus) — 2026-04-25
+- **Area:** `scripts/dual_validate/llm_client.py` (LLMCallSpec.reasoning, `_extract_retry_after`, `_compute_backoff`, max_retries 2→5, empty-choices guard), `scripts/dual_validate/extractors/base.py` (`reasoning_override` в `run_for_pack`), `scripts/dual_extract_validate.py` (`--reasoning-mode {auto,disabled,low,medium,high}`, `--max-output-tokens`), `scripts/dual_validate/run_phase6e_pass.py` (`--reasoning-mode`, `--parallel N` через `ThreadPoolExecutor`), `scripts/dual_validate/triple_vote_consensus.py` (схема `consensus_report.json` v1, majority vote с conservative tie-break, per-record voting для слоёв со стабильным `a_id`, авто-промо в `llm_triple_validated`), `tests/test_dual_extract_validate.py` (8 новых тестов: reasoning thread-through, prompt_hash impact, extra_body emission, CLI flag forwarding, backoff helpers, retry-after extraction, empty-choices guard).
+- **Issue:** single-model `llm_dual_validated` зависим от модельного bias (DeepSeek extractor B vs DeepSeek extractor A — частично коррелированные ошибки). 38 high-priority packs застряли на `priority=high` после Phase 6.B/C/D.
+- **Что сделано:**
+  - **3 модели прогнаны через 38 packs:** `deepseek/deepseek-v3.2` (gold A, legacy `consistency_report.json`), `deepseek/deepseek-v4-pro` (tag `v4pro`), `anthropic/claude-sonnet-4.6` (tag `claude`).
+  - **Kimi заменён на v4-pro:** изначально планировалось использовать `moonshotai/kimi-k2.6` как третью модель; после проб выяснилось — kimi reasoning model, hidden CoT съедает output budget (truncated JSON даже с `effort=low + 12000 tokens`, ~5min/pack). Заменён на `deepseek/deepseek-v4-pro` (~25s/pack, чистый JSON, `reasoning_tokens=0`). Третья модель из той же семьи DeepSeek (v3.2 → v4-pro), но с независимым checkpoint'ом.
+  - **Robust retry:** `_extract_retry_after` mining `retry_after_seconds` из OpenRouter metadata + `_compute_backoff` (jittered exponential cap=30s) + `max_retries=5`. Покрывает upstream 429/502/503 от Together provider (15/38 первых попыток v4-pro упали с rate-limit, retry с parallel=2 закрыл все 15).
+  - **`triple_vote_consensus.py`** — `consensus_report.json` v1 schema, majority vote с conservative tie-break, per-record voting для слоёв со стабильным `a_id`, auto-promote `llm_triple_validated` при `consensus_priority ∈ {low, medium}` и `n_models_present ≥ --require-min-models` (default 2).
+- **Финальные результаты:**
+  - **38 packs** прошли triple-vote consensus.
+  - **2 promoted → `llm_triple_validated`** (consensus=medium, 2-of-3 majority): `contradictions_v1/pair_06_hog_human_detection_vs_rcnn` (record_match=1.0) и `agent_tools_live/live_05_compare_two_stage_one_stage_accuracy`.
+  - **4 split-decision packs** (1 модель medium/low, 2 high) — приоритетные кандидаты для human review.
+  - **32 stable high** (3-of-3 high) — disagreement подтверждён независимо тремя моделями, single-model bias не объясняет.
+  - **Honest signal:** triple-vote показал, что большинство `priority=high` packs действительно требуют human review (или ревизии gold), а не были артефактами одной модели.
+- **Total Phase 6 итог:** 71 packs total → **35 promoted** (33 от Phase 6.B/C/D `llm_dual_validated` + 2 от 6.E `llm_triple_validated`), 36 high-priority остались для human spot-check (4 из них — split-decision priority).
+- **Tests:** 57/57 pass (8 новых: reasoning + retry helpers + CLI). Pylint 9.83/10 на затронутых файлах.
+- **Артефакты:** `eval/dual_validate/consensus/{layer}.json` (8 файлов), `tests/fixtures/benchmarks/.../consensus_report.json` (38 файлов), `tests/fixtures/benchmarks/.../consistency_report.{v4pro,claude}.json` (75 файлов).
+- **Raised:** 2026-04-25 → **DONE:** 2026-04-25.
+
 ### [OPEN] Refactor `scripts/dual_validate/extractors/` — extract common base patterns
 - **Area:** `scripts/dual_validate/extractors/{base.py, claims_v2.py, concept_topic_v2.py, contradictions_v1.py, idea_assist_live.py}`
 - **Issue:** pylint R0801 (`duplicate-code`) флагает 3 повторяющихся блока в 4 extractor'ах: (а) JSON parsing wrapper (теперь решено через `parse_json_object_lenient`, но осталась оболочка `try/except → ValueError("extractor B (...): ...")`), (б) `ExtractorInfo` construction для extractor_b с одинаковыми полями provenance, (в) `summary` dict с `matched_lexical`/`matched_embedding`/`unmatched_*`. Каждый новый extractor добавляет ~30 lines дублирующегося скаффолдинга.

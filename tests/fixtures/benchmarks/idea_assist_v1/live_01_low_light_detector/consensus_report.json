@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "pack_id": "idea_assist_v1/live_01_low_light_detector",
+  "pack_path": "tests/fixtures/benchmarks/idea_assist_v1/live_01_low_light_detector",
+  "layer": "idea_assist_live",
+  "generated_at_utc": "2026-04-25T21:29:17.035389+00:00",
+  "tags_requested": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_present": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_missing": [],
+  "consensus_priority": "high",
+  "consensus_priority_rationale": "votes={'high': 3}; tie_break=majority",
+  "votes_by_priority": {
+    "high": 3
+  },
+  "model_reports": [
+    {
+      "tag": "deepseek",
+      "report_path": "tests/fixtures/benchmarks/idea_assist_v1/live_01_low_light_detector/consistency_report.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 5,
+        "b_total": 5,
+        "matched": 5,
+        "matched_lexical": 5,
+        "matched_embedding": 0,
+        "unmatched_a": 0,
+        "unmatched_b": 0,
+        "review": {
+          "pool_sufficiency": "insufficient",
+          "pool_sufficiency_rationale": "The pool lacks any claims directly about low-light robustness, data augmentation for low-light, or performance on commodity GPUs like Jetson Nano.",
+          "forbidden_substrings_quality": "appropriate",
+          "forbidden_substrings_rationale": "The forbidden phrases are specific, well-known definitions that should be paraphrased, aligning with the goal of avoiding verbatim copying.",
+          "reference_hypothesis_quality": "plausible",
+          "reference_hypothesis_rationale": "The hypothesis logically combines mentioned techniques (focal loss, data augmentation) with a specific low-light and speed target.",
+          "overall_assessment": "needs_revision",
+          "issues": [
+            "Pool lacks direct evidence on low-light robustness or augmentation.",
+            "Pool does not contain claims about performance on target hardware (Jetson Nano)."
+          ]
+        }
+      },
+      "matched_pair_count": 5
+    },
+    {
+      "tag": "v4pro",
+      "report_path": "tests/fixtures/benchmarks/idea_assist_v1/live_01_low_light_detector/consistency_report.v4pro.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 5,
+        "b_total": 5,
+        "matched": 5,
+        "matched_lexical": 5,
+        "matched_embedding": 0,
+        "unmatched_a": 0,
+        "unmatched_b": 0,
+        "review": {
+          "pool_sufficiency": "thin",
+          "pool_sufficiency_rationale": "Only one claim (focal loss) is highly relevant, and the pool lacks any16 evidence on low-light augmentation, Jetson Nano performance, or16 robustness metrics, making it insufficient to support the16 hypothesis.",
+          "forbidden_substrings_quality": "appropriate",
+          "forbidden_substrings_rationale": "The forbidden phrases16 block16 verbatim use of16 key16 definitions from the16 claims,16 encouraging16 paraphrasing and16 novelty.",
+          "reference_hypothesis_quality": "plausible",
+          "reference_hypothesis_rationale": "The hypothesis combines established techniques (focal loss, data augmentation) with a specific hardware target, making it a reasonable16 and testable16 approach.",
+          "overall_assessment": "needs_revision",
+          "issues": [
+            "Pool lacks claims on low-light augmentation, synthetic darkening, or per-channel gain jitter.",
+            "No claims address Jetson Nano performance or 30 FPS on edge devices.",
+            "Only one claim (focal loss) is highly relevant; the rest are tangential or16 outdated.",
+            "Missing evidence on low-light robustness metrics (e.g., miss-rate at <0.1 lux)."
+          ]
+        }
+      },
+      "matched_pair_count": 5
+    },
+    {
+      "tag": "claude",
+      "report_path": "tests/fixtures/benchmarks/idea_assist_v1/live_01_low_light_detector/consistency_report.claude.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 5,
+        "b_total": 5,
+        "matched": 5,
+        "matched_lexical": 5,
+        "matched_embedding": 0,
+        "unmatched_a": 0,
+        "unmatched_b": 0,
+        "review": {
+          "pool_sufficiency": "thin",
+          "pool_sufficiency_rationale": "The pool has five claims but only one (focal loss) is strongly relevant; there are no claims about low-light image enhancement, night-time or dark-condition detection benchmarks, data augmentation for illumination, or edge/commodity GPU profiling, leaving the core topic poorly supported.",
+          "forbidden_substrings_quality": "appropriate",
+          "forbidden_substrings_rationale": "The two forbidden phrases are verbatim canonical sentences from the YOLOv1 and RetinaNet papers, appropriately preventing trivial copy-paste from source evidence while still allowing paraphrased discussion.",
+          "reference_hypothesis_quality": "plausible",
+          "reference_hypothesis_rationale": "The hypothesis is technically coherent and specific (YOLOX-Tiny backbone, Jetson Nano, synthetic darkening + gain jitter, focal-loss re-weighting, <0.1 lux target), though the <0.1 lux metric is ambitious and not grounded by any claim in the pool.",
+          "overall_assessment": "needs_revision",
+          "issues": [
+            "Pool lacks any claim directly addressing low-light detection, night-time benchmarks, or illumination-aware methods — the primary topic dimension is unsupported.",
+            "No claims about edge/commodity GPU performance (Jetson Nano or equivalent); V100 and Titan X references do not map well to the 'commodity GPU' constraint.",
+            "Two of five claims (yolov1_localization_error_negative, yolov3_strict_iou_underperform_negative) are low-relevance negatives that do not contribute to the hypothesis or the research gap.",
+            "The <0.1 lux target in the reference hypothesis has no supporting evidence in the pool, making it unverifiable within the fixture.",
+            "Pool size of 5 with only 1 high-relevance claim is insufficient for a multi-faceted topic requiring speed, accuracy, and low-light robustness evidence.",
+            "No claim covers data augmentation strategies (synthetic darkening, gain jitter) mentioned in the reference hypothesis, leaving that component unsupported."
+          ]
+        }
+      },
+      "matched_pair_count": 5
+    }
+  ],
+  "per_record_consensus": {
+    "id_field": "claim_id",
+    "a_total_records": 5,
+    "consensus_matched_count": 5,
+    "consensus_match_ratio": 1.0,
+    "buckets": {
+      "matched_by_all": 5
+    },
+    "records": [
+      {
+        "id": "retinanet_focal_loss_definition",
+        "matched_by": [
+          "deepseek",
+          "v4pro",
+          "claude"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "yolov1_localization_error_negative",
+        "matched_by": [
+          "deepseek",
+          "v4pro",
+          "claude"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "yolov1_speed_45_155_fps",
+        "matched_by": [
+          "deepseek",
+          "v4pro",
+          "claude"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "yolov3_strict_iou_underperform_negative",
+        "matched_by": [
+          "deepseek",
+          "v4pro",
+          "claude"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "yolox_l_50ap_v100_speed",
+        "matched_by": [
+          "deepseek",
+          "v4pro",
+          "claude"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      }
+    ]
+  }
+}

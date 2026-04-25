@@ -1,0 +1,154 @@
+{
+  "labels": [
+    {
+      "concept_id": "region_proposal",
+      "status": "present",
+      "evidence_quote": "the first stage generates a sparse set of candidate object locations",
+      "rationale": ""
+    },
+    {
+      "concept_id": "selective_search",
+      "status": "present",
+      "evidence_quote": "Selective Search [35]",
+      "rationale": ""
+    },
+    {
+      "concept_id": "anchor_based",
+      "status": "present",
+      "evidence_quote": "use of anchor boxes",
+      "rationale": ""
+    },
+    {
+      "concept_id": "anchor_free",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article explicitly uses anchor boxes and does not mention anchor-free detection."
+    },
+    {
+      "concept_id": "set_prediction",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention bipartite matching, Hungarian matching, or direct set prediction."
+    },
+    {
+      "concept_id": "feature_pyramid",
+      "status": "present",
+      "evidence_quote": "Feature Pyramid Network (FPN) [20]",
+      "rationale": ""
+    },
+    {
+      "concept_id": "focal_loss",
+      "status": "present",
+      "evidence_quote": "Focal Loss",
+      "rationale": ""
+    },
+    {
+      "concept_id": "nms",
+      "status": "present",
+      "evidence_quote": "non-maximum suppression with a threshold of 0.5",
+      "rationale": ""
+    },
+    {
+      "concept_id": "transformer_decoder",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention transformer architecture or attention encoder-decoder."
+    },
+    {
+      "concept_id": "roi_pooling",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention ROI pooling or RoIPool."
+    },
+    {
+      "concept_id": "roi_align",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention ROIAlign or ROI align."
+    },
+    {
+      "concept_id": "mask_branch",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention instance segmentation branch or mask prediction head."
+    },
+    {
+      "concept_id": "one_stage_detector",
+      "status": "present",
+      "evidence_quote": "one-stage detector",
+      "rationale": ""
+    },
+    {
+      "concept_id": "two_stage_detector",
+      "status": "present",
+      "evidence_quote": "two-stage approach",
+      "rationale": ""
+    },
+    {
+      "concept_id": "keypoint_detection",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention corner detection, keypoint pairs, or paired keypoints."
+    },
+    {
+      "concept_id": "backbone_resnet",
+      "status": "present",
+      "evidence_quote": "ResNet-50-FPN",
+      "rationale": ""
+    },
+    {
+      "concept_id": "backbone_darknet",
+      "status": "present",
+      "evidence_quote": "DarkNet-19 [27]",
+      "rationale": ""
+    },
+    {
+      "concept_id": "compound_scaling",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention compound scaling or joint depth-width-resolution scaling."
+    },
+    {
+      "concept_id": "cascade_iou_progression",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention cascade detector, cascade R-CNN, or stage-wise IoU threshold."
+    },
+    {
+      "concept_id": "centerness",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention center-ness branch or center prediction."
+    },
+    {
+      "concept_id": "iou_loss",
+      "status": "absent",
+      "evidence_quote": "",
+      "rationale": "The article does not mention IoU loss, GIoU, or DIoU."
+    },
+    {
+      "concept_id": "classical_dpm",
+      "status": "present",
+      "evidence_quote": "DPMs [8]",
+      "rationale": ""
+    },
+    {
+      "concept_id": "handcrafted_features",
+      "status": "present",
+      "evidence_quote": "HOG [4]",
+      "rationale": ""
+    },
+    {
+      "concept_id": "multi_task_loss",
+      "status": "present",
+      "evidence_quote": "smooth L1 loss used for box regression",
+      "rationale": ""
+    },
+    {
+      "concept_id": "coco_benchmark",
+      "status": "present",
+      "evidence_quote": "COCO benchmark [21]",
+      "rationale": ""
+    }
+  ]
+}

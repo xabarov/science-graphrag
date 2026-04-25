@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "YOLOv3 uses dimension clusters as anchor boxes to predict bounding boxes.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "Following YOLO9000 our system predicts bounding boxes using dimension clusters as anchor boxes [15]."
+    },
+    {
+      "claim_text_normalized": "YOLOv3 predicts an objectness score for each bounding box using logistic regression.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "YOLOv3 predicts an objectness score for each bounding box using logistic regression."
+    },
+    {
+      "claim_text_normalized": "YOLOv3 uses independent logistic classifiers for class prediction instead of a softmax.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "we do not use a softmax as we have found it is unnecessary for good performance, instead we simply use independent logistic classifiers."
+    },
+    {
+      "claim_text_normalized": "YOLOv3 predicts boxes at three different scales using a feature pyramid network-like approach.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "YOLOv3 predicts boxes at 3 different scales. Our system extracts features from those scales using a similar concept to feature pyramid networks [8]."
+    },
+    {
+      "claim_text_normalized": "Darknet-53 performs on par with state-of-the-art classifiers but with fewer floating point operations and more speed.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "Darknet-53 performs on par with state-of-the-art classifiers but with fewer floating point operations and more speed."
+    },
+    {
+      "claim_text_normalized": "YOLOv3 is much better than SSD variants and comparable to state-of-the-art models on the AP50 metric.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "YOLOv3 is much better than SSD variants and comparable to state-of-the-art models on the AP50 metric."
+    },
+    {
+      "claim_text_normalized": "YOLOv3 performance drops significantly as the IOU threshold increases, indicating it struggles to align boxes perfectly with objects.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "performance drops significantly as the IOU threshold increases indicating YOLOv3 struggles to get the boxes perfectly aligned with the object."
+    },
+    {
+      "claim_text_normalized": "Using focal loss dropped YOLOv3's mAP by about 2 points.",
+      "claim_type": "finding",
+      "polarity": "negative",
+      "evidence_quote_short": "We tried using focal loss. It dropped our mAP about 2 points."
+    }
+  ]
+}

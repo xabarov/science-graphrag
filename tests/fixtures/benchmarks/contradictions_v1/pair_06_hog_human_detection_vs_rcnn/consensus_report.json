@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "pack_id": "contradictions_v1/pair_06_hog_human_detection_vs_rcnn",
+  "pack_path": "tests/fixtures/benchmarks/contradictions_v1/pair_06_hog_human_detection_vs_rcnn",
+  "layer": "contradictions_v1",
+  "generated_at_utc": "2026-04-25T21:29:16.997658+00:00",
+  "tags_requested": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_present": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_missing": [],
+  "consensus_priority": "medium",
+  "consensus_priority_rationale": "votes={'high': 1, 'medium': 2}; tie_break=majority",
+  "votes_by_priority": {
+    "high": 1,
+    "medium": 2
+  },
+  "model_reports": [
+    {
+      "tag": "deepseek",
+      "report_path": "tests/fixtures/benchmarks/contradictions_v1/pair_06_hog_human_detection_vs_rcnn/consistency_report.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 1,
+        "b_total": 1,
+        "matched": 1,
+        "matched_lexical": 1,
+        "matched_embedding": 0,
+        "unmatched_a": 0,
+        "unmatched_b": 0,
+        "field_agreements": {
+          "contradiction_type": {
+            "agreed": 0,
+            "disagreed": 1
+          },
+          "severity": {
+            "agreed": 0,
+            "disagreed": 1
+          }
+        }
+      },
+      "matched_pair_count": 1
+    },
+    {
+      "tag": "v4pro",
+      "report_path": "tests/fixtures/benchmarks/contradictions_v1/pair_06_hog_human_detection_vs_rcnn/consistency_report.v4pro.json",
+      "priority": "medium",
+      "summary": {
+        "a_total": 1,
+        "b_total": 1,
+        "matched": 1,
+        "matched_lexical": 1,
+        "matched_embedding": 0,
+        "unmatched_a": 0,
+        "unmatched_b": 0,
+        "field_agreements": {
+          "contradiction_type": {
+            "agreed": 1,
+            "disagreed": 0
+          },
+          "severity": {
+            "agreed": 0,
+            "disagreed": 1
+          }
+        }
+      },
+      "matched_pair_count": 1
+    },
+    {
+      "tag": "claude",
+      "report_path": "tests/fixtures/benchmarks/contradictions_v1/pair_06_hog_human_detection_vs_rcnn/consistency_report.claude.json",
+      "priority": "medium",
+      "summary": {
+        "a_total": 1,
+        "b_total": 1,
+        "matched": 1,
+        "matched_lexical": 1,
+        "matched_embedding": 0,
+        "unmatched_a": 0,
+        "unmatched_b": 0,
+        "field_agreements": {
+          "contradiction_type": {
+            "agreed": 1,
+            "disagreed": 0
+          },
+          "severity": {
+            "agreed": 0,
+            "disagreed": 1
+          }
+        }
+      },
+      "matched_pair_count": 1
+    }
+  ],
+  "per_record_consensus": {
+    "id_field": "pair_id",
+    "a_total_records": 1,
+    "consensus_matched_count": 1,
+    "consensus_match_ratio": 1.0,
+    "buckets": {
+      "matched_by_all": 1
+    },
+    "records": [
+      {
+        "id": "c06_handcrafted_vs_learned_features",
+        "matched_by": [
+          "deepseek",
+          "v4pro",
+          "claude"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      }
+    ]
+  }
+}

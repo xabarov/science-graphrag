@@ -1,0 +1,46 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "Cascade R-CNN is a multi-stage object detection architecture consisting of a sequence of detectors trained with increasing IoU thresholds.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "A multi-stage object detection architecture, the Cascade R-CNN, is proposed to address these problems. It consists of a sequence of detectors trained with increasing IoU thresholds"
+    },
+    {
+      "claim_text_normalized": "The resampling of progressively improved hypotheses in Cascade R-CNN guarantees that all detectors have a positive set of examples of equivalent size, reducing overfitting.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "The resampling of progressively improved hypotheses guarantees that all detectors have a positive set of examples of equivalent size, reducing the overfitting problem."
+    },
+    {
+      "claim_text_normalized": "Cascade R-CNN surpasses all single-model object detectors on the COCO dataset.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "A simple implementation of the Cascade R-CNN is shown to surpass all single-model object detectors on the challenging COCO dataset."
+    },
+    {
+      "claim_text_normalized": "Cascade R-CNN achieves consistent gains independently of the baseline detector strength.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "Experiments also show that the Cascade R-CNN is widely applicable across detector architectures, achieving consistent gains independently of the baseline detector strength."
+    },
+    {
+      "claim_text_normalized": "Increasing the IoU threshold during training can degrade detection performance due to overfitting and inference-time mismatch.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "However, detection performance tends to degrade with increasing the IoU thresholds. Two main factors are responsible for this: 1) overfitting during training, due to exponentially vanishing positive samples, and 2) inference-time mismatch"
+    },
+    {
+      "claim_text_normalized": "The output of a detector trained with a certain IoU threshold is a good distribution for training the next higher quality detector.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "This is motivated by the observation that the output of a detector trained with a certain IoU threshold is a good distribution to train the detector of the next higher IoU threshold."
+    },
+    {
+      "claim_text_normalized": "Cascade R-CNN improves detection performance by about 4 points over the FPN+ baseline on COCO.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "the extension from FPN+ to Cascade R-CNN improved performance by ∼ 4 points."
+    }
+  ]
+}

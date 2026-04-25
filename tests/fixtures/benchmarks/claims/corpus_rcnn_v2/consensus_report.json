@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/corpus_rcnn_v2",
+  "pack_path": "tests/fixtures/benchmarks/claims/corpus_rcnn_v2",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T21:29:16.913313+00:00",
+  "tags_requested": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_present": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_missing": [],
+  "consensus_priority": "high",
+  "consensus_priority_rationale": "votes={'high': 3}; tie_break=majority",
+  "votes_by_priority": {
+    "high": 3
+  },
+  "model_reports": [
+    {
+      "tag": "deepseek",
+      "report_path": "tests/fixtures/benchmarks/claims/corpus_rcnn_v2/consistency_report.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 4,
+        "b_total": 8,
+        "matched": 3,
+        "matched_lexical": 3,
+        "matched_embedding": 0,
+        "unmatched_a": 1,
+        "unmatched_b": 5,
+        "field_agreements": {
+          "polarity": {
+            "agreed": 2,
+            "disagreed": 1
+          },
+          "claim_type": {
+            "agreed": 1,
+            "disagreed": 2
+          }
+        }
+      },
+      "matched_pair_count": 3
+    },
+    {
+      "tag": "v4pro",
+      "report_path": "tests/fixtures/benchmarks/claims/corpus_rcnn_v2/consistency_report.v4pro.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 4,
+        "b_total": 8,
+        "matched": 2,
+        "matched_lexical": 2,
+        "matched_embedding": 0,
+        "unmatched_a": 2,
+        "unmatched_b": 6,
+        "field_agreements": {
+          "polarity": {
+            "agreed": 2,
+            "disagreed": 0
+          },
+          "claim_type": {
+            "agreed": 1,
+            "disagreed": 1
+          }
+        }
+      },
+      "matched_pair_count": 2
+    },
+    {
+      "tag": "claude",
+      "report_path": "tests/fixtures/benchmarks/claims/corpus_rcnn_v2/consistency_report.claude.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 4,
+        "b_total": 8,
+        "matched": 1,
+        "matched_lexical": 1,
+        "matched_embedding": 0,
+        "unmatched_a": 3,
+        "unmatched_b": 7,
+        "field_agreements": {
+          "polarity": {
+            "agreed": 1,
+            "disagreed": 0
+          },
+          "claim_type": {
+            "agreed": 1,
+            "disagreed": 0
+          }
+        }
+      },
+      "matched_pair_count": 1
+    }
+  ],
+  "per_record_consensus": {
+    "id_field": "a_claim_id",
+    "a_total_records": 4,
+    "consensus_matched_count": 2,
+    "consensus_match_ratio": 0.5,
+    "buckets": {
+      "controversial": 1,
+      "matched_by_majority": 1,
+      "matched_by_all": 1
+    },
+    "records": [
+      {
+        "id": "rcnn_inference_2k_proposals_slow_negative",
+        "matched_by": [
+          "deepseek"
+        ],
+        "missing_in": [
+          "v4pro",
+          "claude"
+        ],
+        "consensus": "controversial"
+      },
+      {
+        "id": "rcnn_pretrain_finetune_recipe",
+        "matched_by": [
+          "deepseek",
+          "v4pro"
+        ],
+        "missing_in": [
+          "claude"
+        ],
+        "consensus": "matched_by_majority"
+      },
+      {
+        "id": "rcnn_voc_30pct_relative_gain",
+        "matched_by": [
+          "deepseek",
+          "v4pro",
+          "claude"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      }
+    ]
+  }
+}

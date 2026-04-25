@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "pack_id": "concept_topic/corpus_cascade_rcnn_v2",
+  "pack_path": "tests/fixtures/benchmarks/concept_topic/corpus_cascade_rcnn_v2",
+  "layer": "concept_topic_v2",
+  "generated_at_utc": "2026-04-25T21:29:16.953477+00:00",
+  "tags_requested": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_present": [
+    "deepseek",
+    "v4pro"
+  ],
+  "tags_missing": [
+    "claude"
+  ],
+  "consensus_priority": "high",
+  "consensus_priority_rationale": "votes={'high': 2}; tie_break=majority",
+  "votes_by_priority": {
+    "high": 2
+  },
+  "model_reports": [
+    {
+      "tag": "deepseek",
+      "report_path": "tests/fixtures/benchmarks/concept_topic/corpus_cascade_rcnn_v2/consistency_report.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 14,
+        "b_total": 25,
+        "matched": 14,
+        "matched_lexical": 14,
+        "matched_embedding": 0,
+        "unmatched_a": 0,
+        "unmatched_b": 11,
+        "field_agreements": {
+          "status": {
+            "agreed_present": 6,
+            "agreed_absent": 5,
+            "flips": 3
+          }
+        }
+      },
+      "matched_pair_count": 14
+    },
+    {
+      "tag": "v4pro",
+      "report_path": "tests/fixtures/benchmarks/concept_topic/corpus_cascade_rcnn_v2/consistency_report.v4pro.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 14,
+        "b_total": 25,
+        "matched": 14,
+        "matched_lexical": 14,
+        "matched_embedding": 0,
+        "unmatched_a": 0,
+        "unmatched_b": 11,
+        "field_agreements": {
+          "status": {
+            "agreed_present": 6,
+            "agreed_absent": 5,
+            "flips": 3
+          }
+        }
+      },
+      "matched_pair_count": 14
+    }
+  ],
+  "per_record_consensus": {
+    "id_field": "concept_id",
+    "a_total_records": 14,
+    "consensus_matched_count": 14,
+    "consensus_match_ratio": 1.0,
+    "buckets": {
+      "matched_by_all": 14
+    },
+    "records": [
+      {
+        "id": "anchor_based",
+        "matched_by": [
+          "deepseek",
+          "v4pro"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "anchor_free",
+        "matched_by": [
+          "deepseek",
+          "v4pro"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "cascade_iou_progression",
+        "matched_by": [
+          "deepseek",
+          "v4pro"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "coco_benchmark",
+        "matched_by": [
+          "deepseek",
+          "v4pro"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "compound_scaling",
+        "matched_by": [
+          "deepseek",
+          "v4pro"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "feature_pyramid",
+        "matched_by": [
+          "deepseek",
+          "v4pro"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "focal_loss",
+        "matched_by": [
+          "deepseek",
+          "v4pro"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "mask_branch",
+        "matched_by": [
+          "deepseek",
+          "v4pro"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "multi_task_loss",
+        "matched_by": [
+          "deepseek",
+          "v4pro"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "nms",
+        "matched_by": [
+          "deepseek",
+          "v4pro"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "region_proposal",
+        "matched_by": [
+          "deepseek",
+          "v4pro"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "set_prediction",
+        "matched_by": [
+          "deepseek",
+          "v4pro"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "transformer_decoder",
+        "matched_by": [
+          "deepseek",
+          "v4pro"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "two_stage_detector",
+        "matched_by": [
+          "deepseek",
+          "v4pro"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      }
+    ]
+  }
+}

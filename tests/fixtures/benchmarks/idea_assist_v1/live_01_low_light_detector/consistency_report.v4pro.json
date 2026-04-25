@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "pack_id": "idea_assist_v1/live_01_low_light_detector",
+  "pack_path": "tests/fixtures/benchmarks/idea_assist_v1/live_01_low_light_detector",
+  "layer": "idea_assist_live",
+  "generated_at_utc": "2026-04-25T21:22:14.156898+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "low_relevance_in_pool=2, pool=thin",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/idea_assist_v1/live_01_low_light_detector/gold.json",
+    "count": 5,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_reviewer",
+    "source": "gold fixture review (not output generation)",
+    "count": 5,
+    "model": "deepseek/deepseek-v4-pro",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:961b98bd55c06c86d5f3ef4e7eef246bd1376eae4c91ea0881775d81bc9ec0c4",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 842,
+      "completion": 622,
+      "total": 1464
+    },
+    "latency_ms": 9720
+  },
+  "summary": {
+    "a_total": 5,
+    "b_total": 5,
+    "matched": 5,
+    "matched_lexical": 5,
+    "matched_embedding": 0,
+    "unmatched_a": 0,
+    "unmatched_b": 0,
+    "review": {
+      "pool_sufficiency": "thin",
+      "pool_sufficiency_rationale": "Only one claim (focal loss) is highly relevant, and the pool lacks any16 evidence on low-light augmentation, Jetson Nano performance, or16 robustness metrics, making it insufficient to support the16 hypothesis.",
+      "forbidden_substrings_quality": "appropriate",
+      "forbidden_substrings_rationale": "The forbidden phrases16 block16 verbatim use of16 key16 definitions from the16 claims,16 encouraging16 paraphrasing and16 novelty.",
+      "reference_hypothesis_quality": "plausible",
+      "reference_hypothesis_rationale": "The hypothesis combines established techniques (focal loss, data augmentation) with a specific hardware target, making it a reasonable16 and testable16 approach.",
+      "overall_assessment": "needs_revision",
+      "issues": [
+        "Pool lacks claims on low-light augmentation, synthetic darkening, or per-channel gain jitter.",
+        "No claims address Jetson Nano performance or 30 FPS on edge devices.",
+        "Only one claim (focal loss) is highly relevant; the rest are tangential or16 outdated.",
+        "Missing evidence on low-light robustness metrics (e.g., miss-rate at <0.1 lux)."
+      ]
+    }
+  },
+  "matched_pairs": [
+    {
+      "claim_id": "yolov1_speed_45_155_fps",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "medium",
+      "b_rationale": "Demonstrates YOLO's historical speed on a GPU,16 which is16 tangentially relevant to the 30+ FPS target but uses an outdated model and hardware.",
+      "field_disagreements": []
+    },
+    {
+      "claim_id": "yolox_l_50ap_v100_speed",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "medium",
+      "b_rationale": "Shows16 a modern YOLO variant achieving high FPS on a powerful GPU, providing16 a speed baseline but not directly addressing low-light robustness.",
+      "field_disagreements": []
+    },
+    {
+      "claim_id": "yolov1_localization_error_negative",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "low",
+      "b_rationale": "Highlights a known weakness of early YOLO models, which is16 only indirectly related to low-light robustness and16 may not inform16 a16 solution.",
+      "field_disagreements": [
+        {
+          "field": "relevance",
+          "a": "implicit_high",
+          "b": "low"
+        }
+      ]
+    },
+    {
+      "claim_id": "retinanet_focal_loss_definition",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "high",
+      "b_rationale": "Focal loss is directly referenced in the optional hypothesis as a16 method for class re-weighting to improve detection under challenging conditions.",
+      "field_disagreements": []
+    },
+    {
+      "claim_id": "yolov3_strict_iou_underperform_negative",
+      "match_score": 1.0,
+      "match_source": "claim_id_exact",
+      "b_relevance": "low",
+      "b_rationale": "Describes YOLOv3's performance at high IoU thresholds, which is1616 not clearly connected to low-light robustness or16 the16 30 FPS constraint.",
+      "field_disagreements": [
+        {
+          "field": "relevance",
+          "a": "implicit_high",
+          "b": "low"
+        }
+      ]
+    }
+  ],
+  "unmatched_a": [],
+  "unmatched_b": []
+}

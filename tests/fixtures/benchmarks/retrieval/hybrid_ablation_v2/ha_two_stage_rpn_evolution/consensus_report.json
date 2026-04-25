@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "pack_id": "hybrid_ablation_v2/ha_two_stage_rpn_evolution",
+  "pack_path": "tests/fixtures/benchmarks/retrieval/hybrid_ablation_v2/ha_two_stage_rpn_evolution",
+  "layer": "hybrid_ablation_v2",
+  "generated_at_utc": "2026-04-25T21:29:17.116925+00:00",
+  "tags_requested": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_present": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_missing": [],
+  "consensus_priority": "high",
+  "consensus_priority_rationale": "votes={'high': 2, 'low': 1}; tie_break=majority",
+  "votes_by_priority": {
+    "high": 2,
+    "low": 1
+  },
+  "model_reports": [
+    {
+      "tag": "deepseek",
+      "report_path": "tests/fixtures/benchmarks/retrieval/hybrid_ablation_v2/ha_two_stage_rpn_evolution/consistency_report.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 3,
+        "b_total": 1,
+        "matched": 5,
+        "matched_lexical": 5,
+        "matched_embedding": 0,
+        "unmatched_a": 2,
+        "unmatched_b": 0,
+        "candidates_total": 7,
+        "accuracy": 0.714,
+        "metrics_relevant": {
+          "precision": 1.0,
+          "recall": 0.333,
+          "f1": 0.5,
+          "jaccard": 0.333
+        },
+        "rationale_b": "Faster R-CNN introduces the region proposal network (RPN) with end-to-end training and shared convolutional features for two-stage detection, directly matching the query."
+      },
+      "matched_pair_count": 5
+    },
+    {
+      "tag": "v4pro",
+      "report_path": "tests/fixtures/benchmarks/retrieval/hybrid_ablation_v2/ha_two_stage_rpn_evolution/consistency_report.v4pro.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 3,
+        "b_total": 1,
+        "matched": 5,
+        "matched_lexical": 5,
+        "matched_embedding": 0,
+        "unmatched_a": 2,
+        "unmatched_b": 0,
+        "candidates_total": 7,
+        "accuracy": 0.714,
+        "metrics_relevant": {
+          "precision": 1.0,
+          "recall": 0.333,
+          "f1": 0.5,
+          "jaccard": 0.333
+        },
+        "rationale_b": "Only Faster R-CNN introduces a Region Proposal Network (RPN) that is trained end-to-end with shared convolutional features for two-stage detection."
+      },
+      "matched_pair_count": 5
+    },
+    {
+      "tag": "claude",
+      "report_path": "tests/fixtures/benchmarks/retrieval/hybrid_ablation_v2/ha_two_stage_rpn_evolution/consistency_report.claude.json",
+      "priority": "low",
+      "summary": {
+        "a_total": 3,
+        "b_total": 3,
+        "matched": 7,
+        "matched_lexical": 7,
+        "matched_embedding": 0,
+        "unmatched_a": 0,
+        "unmatched_b": 0,
+        "candidates_total": 7,
+        "accuracy": 1.0,
+        "metrics_relevant": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "jaccard": 1.0
+        },
+        "rationale_b": "Faster R-CNN introduces the Region Proposal Network (RPN) with end-to-end training and shared convolutional features; Fast R-CNN provides the two-stage detection foundation it builds on; R-FCN extends this paradigm with fully convolutional shared features, while the remaining papers are single-stage or transformer-based detectors unrelated to RPN-based two-stage detection."
+      },
+      "matched_pair_count": 7
+    }
+  ],
+  "per_record_consensus": {
+    "id_field": "corpus_work_id",
+    "a_total_records": 3,
+    "consensus_matched_count": 5,
+    "consensus_match_ratio": 1.667,
+    "buckets": {
+      "matched_by_all": 5,
+      "controversial": 2
+    },
+    "records": [
+      {
+        "id": "detr_realpdf",
+        "matched_by": [
+          "deepseek",
+          "v4pro",
+          "claude"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "fast_rcnn_realpdf",
+        "matched_by": [
+          "claude"
+        ],
+        "missing_in": [
+          "deepseek",
+          "v4pro"
+        ],
+        "consensus": "controversial"
+      },
+      {
+        "id": "faster_rcnn_realpdf",
+        "matched_by": [
+          "deepseek",
+          "v4pro",
+          "claude"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "retinanet_focal_realpdf",
+        "matched_by": [
+          "deepseek",
+          "v4pro",
+          "claude"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "rfcn_realpdf",
+        "matched_by": [
+          "claude"
+        ],
+        "missing_in": [
+          "deepseek",
+          "v4pro"
+        ],
+        "consensus": "controversial"
+      },
+      {
+        "id": "ssd_realpdf",
+        "matched_by": [
+          "deepseek",
+          "v4pro",
+          "claude"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "yolov1",
+        "matched_by": [
+          "deepseek",
+          "v4pro",
+          "claude"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      }
+    ]
+  }
+}

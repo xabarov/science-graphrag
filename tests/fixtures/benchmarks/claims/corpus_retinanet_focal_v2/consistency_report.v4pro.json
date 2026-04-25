@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/corpus_retinanet_focal_v2",
+  "pack_path": "tests/fixtures/benchmarks/claims/corpus_retinanet_focal_v2",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T21:19:58.439115+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "polarity_flips=2, unmatched_a_ratio=0.40 (gate: polarity_flips ≥ 1 OR unmatched_a_ratio ≥ 0.30)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/claims/corpus_retinanet_focal_v2/gold.json",
+    "count": 5,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-extracted)",
+    "count": 8,
+    "model": "deepseek/deepseek-v4-pro",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:0d54faa9871919d399bf01c37a3d3286637f36e1a434d7f386205668e810b58f",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 14434,
+      "completion": 697,
+      "total": 15131
+    },
+    "latency_ms": 66464
+  },
+  "summary": {
+    "a_total": 5,
+    "b_total": 8,
+    "matched": 3,
+    "matched_lexical": 3,
+    "matched_embedding": 0,
+    "unmatched_a": 2,
+    "unmatched_b": 5,
+    "field_agreements": {
+      "polarity": {
+        "agreed": 1,
+        "disagreed": 2
+      },
+      "claim_type": {
+        "agreed": 3,
+        "disagreed": 0
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_claim_id": "retinanet_alpha_balanced_alone_negative",
+      "b_index": 3,
+      "match_score": 0.448,
+      "match_source": "lexical",
+      "a_claim_text_normalized": "An alpha-balanced cross-entropy alone is not sufficient to overcome extreme foreground-background imbalance in dense detection, motivating the modulating term that focal loss adds.",
+      "b_claim_text_normalized": "Focal Loss with gamma=2 yields a 2.9 AP improvement over the alpha-balanced cross entropy loss.",
+      "field_disagreements": [
+        {
+          "field": "polarity",
+          "a": "negative",
+          "b": "positive"
+        }
+      ]
+    },
+    {
+      "a_claim_id": "retinanet_focal_loss_definition",
+      "b_index": 1,
+      "match_score": 0.673,
+      "match_source": "lexical",
+      "a_claim_text_normalized": "Focal Loss reshapes the standard cross-entropy by down-weighting the contribution of well-classified examples, allowing effective training under extreme foreground-background class imbalance.",
+      "b_claim_text_normalized": "The proposed Focal Loss reshapes the standard cross entropy loss to down-weight the loss assigned to well-classified examples.",
+      "field_disagreements": []
+    },
+    {
+      "a_claim_id": "retinanet_hard_mining_insufficient",
+      "b_index": 6,
+      "match_score": 0.43,
+      "match_source": "lexical",
+      "a_claim_text_normalized": "Hard negative mining and online hard example mining are insufficient to address the dense one-stage class imbalance that Focal Loss handles by reweighting.",
+      "b_claim_text_normalized": "Focal Loss outperforms the best variants of online hard example mining by over 3 points AP.",
+      "field_disagreements": [
+        {
+          "field": "polarity",
+          "a": "negative",
+          "b": "positive"
+        }
+      ]
+    }
+  ],
+  "unmatched_a": [
+    {
+      "a_claim_id": "retinanet_imbalance_root_cause",
+      "a_claim_text_normalized": "The accuracy gap between one-stage and two-stage detectors is closed by addressing class imbalance with a loss reweighting rather than by adding architectural complexity.",
+      "a_polarity": "positive",
+      "a_claim_type": "finding",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "retinanet_resnet101_fpn_ap",
+      "a_claim_text_normalized": "RetinaNet built on a ResNet-101-FPN backbone reaches roughly 39 AP on COCO test-dev, matching or exceeding two-stage detectors at comparable inference speed.",
+      "a_polarity": "positive",
+      "a_claim_type": "performance",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "b_index": 0,
+      "b_claim_text_normalized": "The extreme foreground-background class imbalance encountered during training of dense detectors is the central cause of their lower accuracy.",
+      "b_polarity": "neutral",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 2,
+      "b_claim_text_normalized": "RetinaNet trained with focal loss matches the speed of previous one-stage detectors while surpassing the accuracy of all existing state-of-the-art two-stage detectors.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 4,
+      "b_claim_text_normalized": "Encoding the prior probability of detecting an object in the model initialization prevents training divergence.",
+      "b_polarity": "positive",
+      "b_claim_type": "method",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 5,
+      "b_claim_text_normalized": "Encoding the prior probability of detecting an object in the model initialization prevents training divergence.",
+      "b_polarity": "positive",
+      "b_claim_type": "method",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 7,
+      "b_claim_text_normalized": "The exact form of the focal loss is not crucial, and other instantiations can achieve similar results.",
+      "b_polarity": "neutral",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    }
+  ]
+}

@@ -1,0 +1,216 @@
+{
+  "layer": "claims_v2",
+  "tags": [
+    "deepseek",
+    "claude"
+  ],
+  "totals": {
+    "packs_seen": 36,
+    "packs_with_consensus": 18,
+    "consensus_low": 0,
+    "consensus_medium": 0,
+    "consensus_high": 18,
+    "promoted": 0
+  },
+  "results": [
+    {
+      "pack": "corpus_cascade_rcnn_v2",
+      "n_models_present": 2,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 1,
+        "medium": 1
+      },
+      "per_record_match_ratio": 0.667,
+      "promoted": false
+    },
+    {
+      "pack": "corpus_cornernet_v2",
+      "n_models_present": 2,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 2
+      },
+      "per_record_match_ratio": 0.0,
+      "promoted": false
+    },
+    {
+      "pack": "corpus_efficientdet_v2",
+      "n_models_present": 2,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 2
+      },
+      "per_record_match_ratio": 0.2,
+      "promoted": false
+    },
+    {
+      "pack": "corpus_fast_rcnn_v2",
+      "n_models_present": 2,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 2
+      },
+      "per_record_match_ratio": 0.25,
+      "promoted": false
+    },
+    {
+      "pack": "corpus_faster_rcnn_v2",
+      "n_models_present": 2,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 2
+      },
+      "per_record_match_ratio": 0.25,
+      "promoted": false
+    },
+    {
+      "pack": "corpus_fcos_v2",
+      "n_models_present": 2,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 2
+      },
+      "per_record_match_ratio": 0.25,
+      "promoted": false
+    },
+    {
+      "pack": "corpus_fpn_v2",
+      "n_models_present": 2,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 2
+      },
+      "per_record_match_ratio": 0.25,
+      "promoted": false
+    },
+    {
+      "pack": "corpus_mask_rcnn_v2",
+      "n_models_present": 2,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 2
+      },
+      "per_record_match_ratio": 0.2,
+      "promoted": false
+    },
+    {
+      "pack": "corpus_rcnn_v2",
+      "n_models_present": 2,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 2
+      },
+      "per_record_match_ratio": 0.25,
+      "promoted": false
+    },
+    {
+      "pack": "corpus_retinanet_focal_v2",
+      "n_models_present": 2,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 2
+      },
+      "per_record_match_ratio": 0.6,
+      "promoted": false
+    },
+    {
+      "pack": "corpus_ssd_v2",
+      "n_models_present": 2,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 2
+      },
+      "per_record_match_ratio": 0.25,
+      "promoted": false
+    },
+    {
+      "pack": "corpus_yolov1_v2",
+      "n_models_present": 2,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 2
+      },
+      "per_record_match_ratio": 0.667,
+      "promoted": false
+    },
+    {
+      "pack": "corpus_yolov2_v2",
+      "n_models_present": 2,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 2
+      },
+      "per_record_match_ratio": 0.2,
+      "promoted": false
+    },
+    {
+      "pack": "holdout_atss_v1",
+      "n_models_present": 2,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 2
+      },
+      "per_record_match_ratio": 0.5,
+      "promoted": false
+    },
+    {
+      "pack": "holdout_deformable_detr_v1",
+      "n_models_present": 2,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 2
+      },
+      "per_record_match_ratio": 0.5,
+      "promoted": false
+    },
+    {
+      "pack": "holdout_dino_v1",
+      "n_models_present": 2,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 2
+      },
+      "per_record_match_ratio": 0.2,
+      "promoted": false
+    },
+    {
+      "pack": "holdout_yolov3_v1",
+      "n_models_present": 2,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 2
+      },
+      "per_record_match_ratio": 0.5,
+      "promoted": false
+    },
+    {
+      "pack": "holdout_yolox_v1",
+      "n_models_present": 2,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 2
+      },
+      "per_record_match_ratio": 0.25,
+      "promoted": false
+    }
+  ]
+}

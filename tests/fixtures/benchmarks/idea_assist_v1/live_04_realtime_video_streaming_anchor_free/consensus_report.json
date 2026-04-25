@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "pack_id": "idea_assist_v1/live_04_realtime_video_streaming_anchor_free",
+  "pack_path": "tests/fixtures/benchmarks/idea_assist_v1/live_04_realtime_video_streaming_anchor_free",
+  "layer": "idea_assist_live",
+  "generated_at_utc": "2026-04-25T21:29:17.037634+00:00",
+  "tags_requested": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_present": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_missing": [],
+  "consensus_priority": "high",
+  "consensus_priority_rationale": "votes={'high': 3}; tie_break=majority",
+  "votes_by_priority": {
+    "high": 3
+  },
+  "model_reports": [
+    {
+      "tag": "deepseek",
+      "report_path": "tests/fixtures/benchmarks/idea_assist_v1/live_04_realtime_video_streaming_anchor_free/consistency_report.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 5,
+        "b_total": 5,
+        "matched": 5,
+        "matched_lexical": 5,
+        "matched_embedding": 0,
+        "unmatched_a": 0,
+        "unmatched_b": 0,
+        "review": {
+          "pool_sufficiency": "thin",
+          "pool_sufficiency_rationale": "The pool includes relevant anchor-free claims but lacks direct evidence on temporal coherence or streaming video optimization.",
+          "forbidden_substrings_quality": "appropriate",
+          "forbidden_substrings_rationale": "The forbidden substrings are specific to key methods (CornerNet, FCOS) to prevent verbatim copying, which is reasonable.",
+          "reference_hypothesis_quality": "plausible",
+          "reference_hypothesis_rationale": "The hypothesis proposes a temporal-attention block for CenterNet, aligning with the seed topic's focus on exploiting temporal coherence in streaming video.",
+          "overall_assessment": "needs_revision",
+          "issues": [
+            "Pool lacks claims on temporal coherence or streaming video methods.",
+            "Supporting claims are insufficient to fully address the seed topic's emphasis on temporal exploitation."
+          ]
+        }
+      },
+      "matched_pair_count": 5
+    },
+    {
+      "tag": "v4pro",
+      "report_path": "tests/fixtures/benchmarks/idea_assist_v1/live_04_realtime_video_streaming_anchor_free/consistency_report.v4pro.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 5,
+        "b_total": 5,
+        "matched": 5,
+        "matched_lexical": 5,
+        "matched_embedding": 0,
+        "unmatched_a": 0,
+        "unmatched_b": 0,
+        "review": {
+          "pool_sufficiency": "thin",
+          "pool_sufficiency_rationale": "The pool lacks any claims about temporal coherence, video streaming, or frame-to-frame propagation, which are central to the seed topic.",
+          "forbidden_substrings_quality": "appropriate",
+          "forbidden_substrings_rationale": "The forbidden substrings prevent verbatim copying of key sentences from the evidence, encouraging paraphrasing.",
+          "reference_hypothesis_quality": "plausible",
+          "reference_hypothesis_rationale": "The hypothesis combines a known anchor-free head with a lightweight temporal-attention block,16 which is a reasonable16 extension for streaming video.",
+          "overall_assessment": "needs_revision",
+          "issues": [
+            "Pool lacks claims about temporal coherence, video, or frame propagation, making it insufficient for the seed topic.",
+            "YOLOv1 is not anchor-free and its16 relevance is16 low; consider replacing with a more relevant anchor-free video detection claim."
+          ]
+        }
+      },
+      "matched_pair_count": 5
+    },
+    {
+      "tag": "claude",
+      "report_path": "tests/fixtures/benchmarks/idea_assist_v1/live_04_realtime_video_streaming_anchor_free/consistency_report.claude.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 5,
+        "b_total": 5,
+        "matched": 5,
+        "matched_lexical": 5,
+        "matched_embedding": 0,
+        "unmatched_a": 0,
+        "unmatched_b": 0,
+        "review": {
+          "pool_sufficiency": "thin",
+          "pool_sufficiency_rationale": "The pool lacks any claims about temporal coherence, video object detection, optical flow, feature propagation, or attention mechanisms across frames, which are central to the seed topic's novelty.",
+          "forbidden_substrings_quality": "appropriate",
+          "forbidden_substrings_rationale": "The two forbidden strings are verbatim sentences from the CornerNet and FCOS papers respectively, appropriately preventing direct copy-paste of evidence into generated ideas.",
+          "reference_hypothesis_quality": "plausible",
+          "reference_hypothesis_rationale": "The hypothesis is technically coherent and specific (CenterNet head + temporal-attention block, concrete FPS target), though the 1.5x FPS gain claim is ambitious and would benefit from a cited baseline to anchor the quantitative target.",
+          "overall_assessment": "needs_revision",
+          "issues": [
+            "Pool contains no claims about video object detection, temporal coherence, or inter-frame feature propagation — the core novelty dimension of the seed topic is unsupported.",
+            "yolov1_speed_45_155_fps is low-relevance and consumes a pool slot without contributing to the anchor-free or temporal-streaming framing.",
+            "No claim covers attention mechanisms, optical flow, or recurrent/memory-based approaches that would ground the temporal-attention block in the reference hypothesis.",
+            "Pool minimum (2) is very low relative to the multi-faceted hypothesis; raising it would improve fixture robustness.",
+            "The quantitative FPS target in the reference hypothesis (1.5x) lacks a supporting claim that establishes the image-based CenterNet baseline speed."
+          ]
+        }
+      },
+      "matched_pair_count": 5
+    }
+  ],
+  "per_record_consensus": {
+    "id_field": "claim_id",
+    "a_total_records": 5,
+    "consensus_matched_count": 5,
+    "consensus_match_ratio": 1.0,
+    "buckets": {
+      "matched_by_all": 5
+    },
+    "records": [
+      {
+        "id": "centernet_triplet_keypoints",
+        "matched_by": [
+          "deepseek",
+          "v4pro",
+          "claude"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "cornernet_paired_keypoints",
+        "matched_by": [
+          "deepseek",
+          "v4pro",
+          "claude"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "fcos_anchor_hyperparameter_burden_negative",
+        "matched_by": [
+          "deepseek",
+          "v4pro",
+          "claude"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "yolov1_speed_45_155_fps",
+        "matched_by": [
+          "deepseek",
+          "v4pro",
+          "claude"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "yolox_l_50ap_v100_speed",
+        "matched_by": [
+          "deepseek",
+          "v4pro",
+          "claude"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      }
+    ]
+  }
+}

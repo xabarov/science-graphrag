@@ -1,0 +1,46 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "Deformable DETR achieves better performance than DETR with 10 times fewer training epochs.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "Deformable DETR can achieve better performance than DETR (especially on small objects) with 10× less training epochs."
+    },
+    {
+      "claim_text_normalized": "The deformable attention module attends to only a small set of key sampling points around a reference point.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "the deformable attention module only attends to a small set of key sampling points around a reference point, regardless of the spatial size of the feature maps"
+    },
+    {
+      "claim_text_normalized": "Deformable DETR has relatively low performance in detecting small objects compared to modern detectors using high-resolution feature maps.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "DETR delivers relatively low performance at detecting small objects."
+    },
+    {
+      "claim_text_normalized": "The multi-scale deformable attention module can naturally aggregate multi-scale feature maps without feature pyramid networks.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "Our proposed multi-scale deformable attention module can naturally aggregate multi-scale feature maps via attention mechanism, without the help of these feature pyramid networks."
+    },
+    {
+      "claim_text_normalized": "Iterative bounding box refinement improves detection performance in Deformable DETR.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "We establish a simple and effective iterative bounding box refinement mechanism to improve detection performance."
+    },
+    {
+      "claim_text_normalized": "The two-stage Deformable DETR variant further improves performance over the single-stage version.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "The proposed variant of two-stage Deformable DETR can further improve the performance."
+    },
+    {
+      "claim_text_normalized": "Deformable DETR has on par FLOPs with Faster R-CNN + FPN and DETR-DC5 but is 1.6 times faster than DETR-DC5.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "Our proposed Deformable DETR has on par FLOPs with Faster R-CNN + FPN and DETR-DC5. But the runtime speed is much faster (1.6×) than DETR-DC5"
+    }
+  ]
+}

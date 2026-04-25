@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "Feature Pyramid Networks (FPN) achieve state-of-the-art single-model results on the COCO detection benchmark without bells and whistles.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "our method achieves state-of-the-art single-model results on the COCO detection benchmark without bells and whistles"
+    },
+    {
+      "claim_text_normalized": "FPN significantly increases Average Recall (AR) by 8.0 points for bounding box proposals over a single-scale Faster R-CNN baseline.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "FPN significantly increases the Average Recall (AR) by 8.0 points"
+    },
+    {
+      "claim_text_normalized": "FPN improves COCO-style Average Precision (AP) by 2.3 points over a strong single-scale baseline of Faster R-CNN on ResNets.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "it improves the COCO-style Average Precision (AP) by 2.3 points"
+    },
+    {
+      "claim_text_normalized": "The FPN-based Faster R-CNN system runs at 6 FPS on a GPU.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "our method can run at 6 FPS on a GPU"
+    },
+    {
+      "claim_text_normalized": "FPN can be trained end-to-end with all scales and used consistently at train/test time, which is memory-infeasible with image pyramids.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "our pyramid structure can be trained end-to-end with all scales and is used consistently at train/test time, which would be memory-infeasible using image pyramids"
+    },
+    {
+      "claim_text_normalized": "Removing top-down connections in FPN significantly degrades accuracy for Fast R-CNN.",
+      "claim_type": "finding",
+      "polarity": "negative",
+      "evidence_quote_short": "removing top-down connections (Table 2(d)) significantly degrades the accuracy"
+    },
+    {
+      "claim_text_normalized": "FPN nearly doubles the accuracy on small objects for segmentation proposals compared to existing methods.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "we nearly double the accuracy on small objects"
+    },
+    {
+      "claim_text_normalized": "FPN-based mask proposal generation is substantially faster than existing methods based on densely sampled image pyramids.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "Our approach, based on FPNs, is substantially faster"
+    }
+  ]
+}

@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/corpus_yolov1_v2",
+  "pack_path": "tests/fixtures/benchmarks/claims/corpus_yolov1_v2",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T21:17:43.057015+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "polarity_flips=1, unmatched_a_ratio=0.33 (gate: polarity_flips ≥ 1 OR unmatched_a_ratio ≥ 0.30)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/claims/corpus_yolov1_v2/gold.json",
+    "count": 6,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-extracted)",
+    "count": 8,
+    "model": "deepseek/deepseek-v4-pro",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:e579f8a3e81af1eaf29913bbc39cc4d6d74c0086e71889babdbc1d4e218764a1",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 12863,
+      "completion": 655,
+      "total": 13518
+    },
+    "latency_ms": 14016
+  },
+  "summary": {
+    "a_total": 6,
+    "b_total": 8,
+    "matched": 4,
+    "matched_lexical": 2,
+    "matched_embedding": 2,
+    "unmatched_a": 2,
+    "unmatched_b": 4,
+    "field_agreements": {
+      "polarity": {
+        "agreed": 3,
+        "disagreed": 1
+      },
+      "claim_type": {
+        "agreed": 3,
+        "disagreed": 1
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_claim_id": "yolov1_artwork_generalization",
+      "b_index": 4,
+      "match_score": 0.774,
+      "match_source": "embedding",
+      "a_claim_text_normalized": "When evaluated on artwork datasets such as Picasso and People-Art, YOLO generalizes better than detectors trained only on natural images.",
+      "b_claim_text_normalized": "YOLO outperforms DPM and R-CNN when generalizing from natural images to artwork.",
+      "field_disagreements": [
+        {
+          "field": "claim_type",
+          "a": "finding",
+          "b": "comparison"
+        }
+      ]
+    },
+    {
+      "a_claim_id": "yolov1_localization_error_negative",
+      "b_index": 5,
+      "match_score": 0.829,
+      "match_source": "embedding",
+      "a_claim_text_normalized": "YOLO produces more localization errors than two-stage detectors and struggles with small objects appearing in groups.",
+      "b_claim_text_normalized": "YOLO struggles to precisely localize some objects, especially small ones.",
+      "field_disagreements": []
+    },
+    {
+      "a_claim_id": "yolov1_speed_45_155_fps",
+      "b_index": 1,
+      "match_score": 0.814,
+      "match_source": "lexical",
+      "a_claim_text_normalized": "The base YOLO model processes images at approximately 45 frames per second on a Titan X GPU, while the Fast YOLO variant reaches around 155 FPS.",
+      "b_claim_text_normalized": "The base YOLO model processes images at 45 frames per second in real-time.",
+      "field_disagreements": []
+    },
+    {
+      "a_claim_id": "yolov1_unified_pipeline",
+      "b_index": 0,
+      "match_score": 0.886,
+      "match_source": "lexical",
+      "a_claim_text_normalized": "YOLO formulates object detection as a single regression problem from raw pixels to bounding box coordinates and class probabilities, using one neural network for the entire task.",
+      "b_claim_text_normalized": "YOLO frames object detection as a single regression problem from image pixels to bounding box coordinates and class probabilities.",
+      "field_disagreements": [
+        {
+          "field": "polarity",
+          "a": "positive",
+          "b": "neutral"
+        }
+      ]
+    }
+  ],
+  "unmatched_a": [
+    {
+      "a_claim_id": "yolov1_grid_based_detection",
+      "a_claim_text_normalized": "Detection is performed by dividing the input image into a fixed grid where each cell predicts a small number of bounding boxes with confidence scores and class probabilities.",
+      "a_polarity": "positive",
+      "a_claim_type": "method",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "yolov1_two_stage_higher_acc_negative",
+      "a_claim_text_normalized": "Two-stage region-based detectors achieve noticeably higher detection accuracy than YOLO, but at the cost of substantially lower inference throughput.",
+      "a_polarity": "negative",
+      "a_claim_type": "comparison",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "b_index": 2,
+      "b_claim_text_normalized": "Fast YOLO achieves 155 frames per second while attaining double the mAP of other real-time detectors.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 3,
+      "b_claim_text_normalized": "YOLO makes less than half the number of background errors compared to Fast R-CNN.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 6,
+      "b_claim_text_normalized": "Combining YOLO with Fast R-CNN increases mAP by 3.2% to 75.0% on VOC 2007.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 7,
+      "b_claim_text_normalized": "YOLO imposes strong spatial constraints that limit the number of nearby objects it can predict.",
+      "b_polarity": "negative",
+      "b_claim_type": "limitation",
+      "comment": "produced by independent extractor B but not in human gold A"
+    }
+  ]
+}

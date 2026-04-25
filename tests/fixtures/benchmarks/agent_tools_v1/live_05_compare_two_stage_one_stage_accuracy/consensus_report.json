@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "pack_id": "agent_tools_v1/live_05_compare_two_stage_one_stage_accuracy",
+  "pack_path": "tests/fixtures/benchmarks/agent_tools_v1/live_05_compare_two_stage_one_stage_accuracy",
+  "layer": "agent_tools_live",
+  "generated_at_utc": "2026-04-25T21:29:17.187341+00:00",
+  "tags_requested": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_present": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_missing": [],
+  "consensus_priority": "medium",
+  "consensus_priority_rationale": "votes={'high': 1, 'medium': 2}; tie_break=majority",
+  "votes_by_priority": {
+    "high": 1,
+    "medium": 2
+  },
+  "model_reports": [
+    {
+      "tag": "deepseek",
+      "report_path": "tests/fixtures/benchmarks/agent_tools_v1/live_05_compare_two_stage_one_stage_accuracy/consistency_report.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 5,
+        "b_total": 7,
+        "matched": 3,
+        "matched_lexical": 3,
+        "matched_embedding": 0,
+        "unmatched_a": 1,
+        "unmatched_b": 4,
+        "tool_metrics": {
+          "required_recall": 0.0,
+          "all_recall": 0.0,
+          "missing_required": [
+            "vector_search"
+          ],
+          "extra_tools_in_b": [
+            "cite_works",
+            "edge_search",
+            "entity_search"
+          ]
+        },
+        "works_jaccard": 1.0,
+        "methods_jaccard": 0.5,
+        "answer_token_jaccard": 0.366,
+        "is_negative_case": false,
+        "behavior_agreement": true,
+        "behavior_a": "answer",
+        "behavior_b": "answer"
+      },
+      "matched_pair_count": 0
+    },
+    {
+      "tag": "v4pro",
+      "report_path": "tests/fixtures/benchmarks/agent_tools_v1/live_05_compare_two_stage_one_stage_accuracy/consistency_report.v4pro.json",
+      "priority": "medium",
+      "summary": {
+        "a_total": 5,
+        "b_total": 9,
+        "matched": 4,
+        "matched_lexical": 4,
+        "matched_embedding": 0,
+        "unmatched_a": 0,
+        "unmatched_b": 5,
+        "tool_metrics": {
+          "required_recall": 1.0,
+          "all_recall": 0.5,
+          "missing_required": [],
+          "extra_tools_in_b": [
+            "cite_works",
+            "entity_search",
+            "final_answer"
+          ]
+        },
+        "works_jaccard": 1.0,
+        "methods_jaccard": 0.333,
+        "answer_token_jaccard": 0.372,
+        "is_negative_case": false,
+        "behavior_agreement": true,
+        "behavior_a": "answer",
+        "behavior_b": "answer"
+      },
+      "matched_pair_count": 0
+    },
+    {
+      "tag": "claude",
+      "report_path": "tests/fixtures/benchmarks/agent_tools_v1/live_05_compare_two_stage_one_stage_accuracy/consistency_report.claude.json",
+      "priority": "medium",
+      "summary": {
+        "a_total": 5,
+        "b_total": 10,
+        "matched": 4,
+        "matched_lexical": 4,
+        "matched_embedding": 0,
+        "unmatched_a": 0,
+        "unmatched_b": 6,
+        "tool_metrics": {
+          "required_recall": 1.0,
+          "all_recall": 0.5,
+          "missing_required": [],
+          "extra_tools_in_b": [
+            "cite_works",
+            "entity_search",
+            "final_answer"
+          ]
+        },
+        "works_jaccard": 1.0,
+        "methods_jaccard": 0.25,
+        "answer_token_jaccard": 0.296,
+        "is_negative_case": false,
+        "behavior_agreement": true,
+        "behavior_a": "answer",
+        "behavior_b": "answer"
+      },
+      "matched_pair_count": 0
+    }
+  ],
+  "per_record_consensus": null
+}

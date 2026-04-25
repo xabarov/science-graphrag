@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "pack_id": "contradictions_v1/pair_04_faster_rcnn_vs_detr",
+  "pack_path": "tests/fixtures/benchmarks/contradictions_v1/pair_04_faster_rcnn_vs_detr",
+  "layer": "contradictions_v1",
+  "generated_at_utc": "2026-04-25T21:29:16.996819+00:00",
+  "tags_requested": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_present": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_missing": [],
+  "consensus_priority": "high",
+  "consensus_priority_rationale": "votes={'high': 3}; tie_break=majority",
+  "votes_by_priority": {
+    "high": 3
+  },
+  "model_reports": [
+    {
+      "tag": "deepseek",
+      "report_path": "tests/fixtures/benchmarks/contradictions_v1/pair_04_faster_rcnn_vs_detr/consistency_report.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 1,
+        "b_total": 1,
+        "matched": 1,
+        "matched_lexical": 1,
+        "matched_embedding": 0,
+        "unmatched_a": 0,
+        "unmatched_b": 0,
+        "field_agreements": {
+          "contradiction_type": {
+            "agreed": 0,
+            "disagreed": 1
+          },
+          "severity": {
+            "agreed": 1,
+            "disagreed": 0
+          }
+        }
+      },
+      "matched_pair_count": 1
+    },
+    {
+      "tag": "v4pro",
+      "report_path": "tests/fixtures/benchmarks/contradictions_v1/pair_04_faster_rcnn_vs_detr/consistency_report.v4pro.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 1,
+        "b_total": 1,
+        "matched": 1,
+        "matched_lexical": 1,
+        "matched_embedding": 0,
+        "unmatched_a": 0,
+        "unmatched_b": 0,
+        "field_agreements": {
+          "contradiction_type": {
+            "agreed": 0,
+            "disagreed": 1
+          },
+          "severity": {
+            "agreed": 1,
+            "disagreed": 0
+          }
+        }
+      },
+      "matched_pair_count": 1
+    },
+    {
+      "tag": "claude",
+      "report_path": "tests/fixtures/benchmarks/contradictions_v1/pair_04_faster_rcnn_vs_detr/consistency_report.claude.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 1,
+        "b_total": 1,
+        "matched": 1,
+        "matched_lexical": 1,
+        "matched_embedding": 0,
+        "unmatched_a": 0,
+        "unmatched_b": 0,
+        "field_agreements": {
+          "contradiction_type": {
+            "agreed": 0,
+            "disagreed": 1
+          },
+          "severity": {
+            "agreed": 1,
+            "disagreed": 0
+          }
+        }
+      },
+      "matched_pair_count": 1
+    }
+  ],
+  "per_record_consensus": {
+    "id_field": "pair_id",
+    "a_total_records": 1,
+    "consensus_matched_count": 1,
+    "consensus_match_ratio": 1.0,
+    "buckets": {
+      "matched_by_all": 1
+    },
+    "records": [
+      {
+        "id": "c04_nms_required_vs_set_prediction",
+        "matched_by": [
+          "deepseek",
+          "v4pro",
+          "claude"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      }
+    ]
+  }
+}

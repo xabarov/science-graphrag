@@ -1,0 +1,108 @@
+{
+  "layer": "concept_topic_v2",
+  "tags": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "totals": {
+    "packs_seen": 16,
+    "packs_with_consensus": 8,
+    "consensus_low": 0,
+    "consensus_medium": 0,
+    "consensus_high": 8,
+    "promoted": 0
+  },
+  "results": [
+    {
+      "pack": "corpus_cascade_rcnn_v2",
+      "n_models_present": 2,
+      "tags_missing": [
+        "claude"
+      ],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 2
+      },
+      "per_record_match_ratio": 1.0,
+      "promoted": false
+    },
+    {
+      "pack": "corpus_cornernet_v2",
+      "n_models_present": 3,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 3
+      },
+      "per_record_match_ratio": 1.0,
+      "promoted": false
+    },
+    {
+      "pack": "corpus_detr_v2",
+      "n_models_present": 3,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 3
+      },
+      "per_record_match_ratio": 1.0,
+      "promoted": false
+    },
+    {
+      "pack": "corpus_faster_rcnn_v2",
+      "n_models_present": 3,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 3
+      },
+      "per_record_match_ratio": 1.0,
+      "promoted": false
+    },
+    {
+      "pack": "corpus_fcos_v2",
+      "n_models_present": 3,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 3
+      },
+      "per_record_match_ratio": 1.0,
+      "promoted": false
+    },
+    {
+      "pack": "corpus_fpn_v2",
+      "n_models_present": 3,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 3
+      },
+      "per_record_match_ratio": 1.0,
+      "promoted": false
+    },
+    {
+      "pack": "corpus_retinanet_focal_v2",
+      "n_models_present": 3,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 3
+      },
+      "per_record_match_ratio": 1.0,
+      "promoted": false
+    },
+    {
+      "pack": "corpus_yolov1_v2",
+      "n_models_present": 3,
+      "tags_missing": [],
+      "consensus_priority": "high",
+      "votes_by_priority": {
+        "high": 3
+      },
+      "per_record_match_ratio": 1.0,
+      "promoted": false
+    }
+  ]
+}

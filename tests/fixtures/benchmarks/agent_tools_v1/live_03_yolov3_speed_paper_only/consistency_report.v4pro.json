@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "pack_id": "live_03_yolov3_speed_paper_only",
+  "pack_path": "tests/fixtures/benchmarks/agent_tools_v1/live_03_yolov3_speed_paper_only",
+  "layer": "agent_tools_live",
+  "generated_at_utc": "2026-04-25T21:22:24.073762+00:00",
+  "spot_check_priority": "medium",
+  "spot_check_priority_rationale": "tool_req_recall=1.00, works=0.00, methods=1.00",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/agent_tools_v1/live_03_yolov3_speed_paper_only/gold.json",
+    "count": 2,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "question.txt | tool_set=7",
+    "count": 4,
+    "model": "deepseek/deepseek-v4-pro",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:d6c38aac6eeb16878de39681572ba08286726802f04de49304c3fac4d4d498d9",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 414,
+      "completion": 121,
+      "total": 535
+    },
+    "latency_ms": 3007
+  },
+  "summary": {
+    "a_total": 2,
+    "b_total": 4,
+    "matched": 1,
+    "matched_lexical": 1,
+    "matched_embedding": 0,
+    "unmatched_a": 1,
+    "unmatched_b": 3,
+    "tool_metrics": {
+      "required_recall": 1.0,
+      "all_recall": 1.0,
+      "missing_required": [],
+      "extra_tools_in_b": [
+        "entity_search",
+        "final_answer"
+      ]
+    },
+    "works_jaccard": 0.0,
+    "methods_jaccard": 1.0,
+    "answer_token_jaccard": 0.48,
+    "is_negative_case": false,
+    "behavior_agreement": true,
+    "behavior_a": "answer",
+    "behavior_b": "answer"
+  },
+  "matched_pairs": [
+    {
+      "tool_name": "vector_search",
+      "kind": "required_tool_match",
+      "match_score": 1.0,
+      "match_source": "set",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [
+    {
+      "corpus_work_id": "yolov3_realpdf",
+      "kind": "expected_work_missing_in_b"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "tool_name": "entity_search",
+      "kind": "extra_tool_in_b"
+    },
+    {
+      "tool_name": "final_answer",
+      "kind": "extra_tool_in_b"
+    },
+    {
+      "corpus_work_id": "yolov3",
+      "kind": "extra_work_in_b"
+    }
+  ]
+}

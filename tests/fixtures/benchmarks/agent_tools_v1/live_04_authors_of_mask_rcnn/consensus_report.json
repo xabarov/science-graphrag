@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "pack_id": "agent_tools_v1/live_04_authors_of_mask_rcnn",
+  "pack_path": "tests/fixtures/benchmarks/agent_tools_v1/live_04_authors_of_mask_rcnn",
+  "layer": "agent_tools_live",
+  "generated_at_utc": "2026-04-25T21:29:17.186285+00:00",
+  "tags_requested": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_present": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_missing": [],
+  "consensus_priority": "high",
+  "consensus_priority_rationale": "votes={'high': 3}; tie_break=majority",
+  "votes_by_priority": {
+    "high": 3
+  },
+  "model_reports": [
+    {
+      "tag": "deepseek",
+      "report_path": "tests/fixtures/benchmarks/agent_tools_v1/live_04_authors_of_mask_rcnn/consistency_report.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 6,
+        "b_total": 11,
+        "matched": 3,
+        "matched_lexical": 3,
+        "matched_embedding": 0,
+        "unmatched_a": 3,
+        "unmatched_b": 8,
+        "tool_metrics": {
+          "required_recall": 0.0,
+          "all_recall": 0.0,
+          "missing_required": [
+            "cypher_query"
+          ],
+          "extra_tools_in_b": [
+            "cite_works",
+            "edge_search",
+            "entity_search"
+          ]
+        },
+        "works_jaccard": 0.5,
+        "methods_jaccard": 0.0,
+        "answer_token_jaccard": 0.333,
+        "is_negative_case": false,
+        "behavior_agreement": true,
+        "behavior_a": "answer",
+        "behavior_b": "answer"
+      },
+      "matched_pair_count": 0
+    },
+    {
+      "tag": "v4pro",
+      "report_path": "tests/fixtures/benchmarks/agent_tools_v1/live_04_authors_of_mask_rcnn/consistency_report.v4pro.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 6,
+        "b_total": 5,
+        "matched": 1,
+        "matched_lexical": 1,
+        "matched_embedding": 0,
+        "unmatched_a": 5,
+        "unmatched_b": 4,
+        "tool_metrics": {
+          "required_recall": 0.0,
+          "all_recall": 0.0,
+          "missing_required": [
+            "cypher_query"
+          ],
+          "extra_tools_in_b": [
+            "edge_search",
+            "entity_search",
+            "final_answer"
+          ]
+        },
+        "works_jaccard": 0.167,
+        "methods_jaccard": 1.0,
+        "answer_token_jaccard": 0.333,
+        "is_negative_case": false,
+        "behavior_agreement": true,
+        "behavior_a": "answer",
+        "behavior_b": "answer"
+      },
+      "matched_pair_count": 0
+    },
+    {
+      "tag": "claude",
+      "report_path": "tests/fixtures/benchmarks/agent_tools_v1/live_04_authors_of_mask_rcnn/consistency_report.claude.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 6,
+        "b_total": 13,
+        "matched": 3,
+        "matched_lexical": 3,
+        "matched_embedding": 0,
+        "unmatched_a": 3,
+        "unmatched_b": 9,
+        "tool_metrics": {
+          "required_recall": 1.0,
+          "all_recall": 1.0,
+          "missing_required": [],
+          "extra_tools_in_b": [
+            "entity_search",
+            "final_answer"
+          ]
+        },
+        "works_jaccard": 0.25,
+        "methods_jaccard": 0.0,
+        "answer_token_jaccard": 0.256,
+        "is_negative_case": false,
+        "behavior_agreement": true,
+        "behavior_a": "answer",
+        "behavior_b": "answer"
+      },
+      "matched_pair_count": 0
+    }
+  ],
+  "per_record_consensus": null
+}

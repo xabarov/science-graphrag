@@ -1,0 +1,14 @@
+{
+  "expected_tool_sequence": [
+    {"tool_name": "entity_search"},
+    {"tool_name": "edge_search"},
+    {"tool_name": "final_answer"}
+  ],
+  "expected_works_corpus_ids": [
+    "mask_rcnn_realpdf",
+    "retinanet_focal_realpdf"
+  ],
+  "expected_methods_canonical": [],
+  "answer_reference_text": "The Mask R-CNN paper is authored by Kaiming He, Georgia Gkioxari, Piotr Dollár, and Ross Girshick. Within the corpus, the RetinaNet paper shares authors Ross Girshick and Piotr Dollár with Mask R-CNN.",
+  "expected_behavior": "answer"
+}

@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "DINO achieves 49.4 AP in 12 epochs on COCO with a ResNet-50 backbone and multi-scale features.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "DINO achieves 49 .4AP in 12 epochs and 51 .3AP in 24 epochs on COCO with a ResNet-50 backbone and multi-scale features"
+    },
+    {
+      "claim_text_normalized": "DINO yields a significant improvement of +6.0 AP compared to DN-DETR in the 12-epoch setting.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "yielding a significant improvement of +6.0AP and +2.7AP, respectively, compared to DN-DETR, the previous best DETR-like model"
+    },
+    {
+      "claim_text_normalized": "DINO obtains the best results on COCO val2017 (63.2 AP) and test-dev (63.3 AP) after pre-training on Objects365 with a SwinL backbone.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "after pre-training on the Objects365 dataset with a SwinL backbone, DINO obtains the best results on both COCO val2017 (63.2AP) and test-dev (63.3AP)"
+    },
+    {
+      "claim_text_normalized": "DINO reduces model size to 1/15 compared to SwinV2-G while achieving better results.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "we reduce the model size to 1/15 compared to SwinV2-G [22]"
+    },
+    {
+      "claim_text_normalized": "Contrastive denoising training helps the model avoid duplicate outputs of the same target.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "The contrastive denoising training helps the model to avoid duplicate outputs of the same target."
+    },
+    {
+      "claim_text_normalized": "Mixed query selection initializes anchor boxes from encoder outputs but keeps content queries learnable.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "we only initialize anchor boxes using the position information associated with the selected top-K features, but leave the content queries static as before"
+    },
+    {
+      "claim_text_normalized": "The look forward twice scheme passes gradients from later decoder layers to earlier layers to improve box prediction.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "we propose a new look forward twice scheme to correct the updated parameters with gradients from later layers"
+    },
+    {
+      "claim_text_normalized": "DINO achieves a new state of the art of 63.3 AP on COCO 2017 test-dev.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "achieved a new state of the art, 63 .3 AP on COCO 2017 test-dev"
+    }
+  ]
+}

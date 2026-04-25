@@ -1,0 +1,135 @@
+Phase 6.E pass: model=deepseek/deepseek-v4-pro tag=v4pro packs=37 max_tokens=4096
+[1/37] claims_v2/corpus_cascade_rcnn_v2: starting
+[2/37] claims_v2/corpus_cornernet_v2: starting
+[3/37] claims_v2/corpus_efficientdet_v2: starting
+[4/37] claims_v2/corpus_fast_rcnn_v2: starting
+[2/37] claims_v2/corpus_cornernet_v2: done in 19.4s, ok=True, rc=0
+[5/37] claims_v2/corpus_faster_rcnn_v2: starting
+[1/37] claims_v2/corpus_cascade_rcnn_v2: done in 19.9s, ok=True, rc=0
+[6/37] claims_v2/corpus_fcos_v2: starting
+[4/37] claims_v2/corpus_fast_rcnn_v2: done in 20.6s, ok=True, rc=0
+[7/37] claims_v2/corpus_fpn_v2: starting
+[3/37] claims_v2/corpus_efficientdet_v2: done in 20.6s, ok=True, rc=0
+[8/37] claims_v2/corpus_mask_rcnn_v2: starting
+[7/37] claims_v2/corpus_fpn_v2: done in 23.8s, ok=True, rc=0
+[9/37] claims_v2/corpus_rcnn_v2: starting
+[8/37] claims_v2/corpus_mask_rcnn_v2: done in 24.0s, ok=True, rc=0
+[10/37] claims_v2/corpus_retinanet_focal_v2: starting
+[6/37] claims_v2/corpus_fcos_v2: done in 25.8s, ok=True, rc=0
+[11/37] claims_v2/corpus_ssd_v2: starting
+[5/37] claims_v2/corpus_faster_rcnn_v2: done in 28.4s, ok=True, rc=0
+[12/37] claims_v2/corpus_yolov2_v2: starting
+[9/37] claims_v2/corpus_rcnn_v2: done in 12.6s, ok=False, rc=0
+  STDERR tail:
+using model=deepseek/deepseek-v4-pro base_url=https://openrouter.ai/api/v1
+embeddings enabled: model=baai/bge-m3 cache=/home/roman/pyprojects/ML/Prod/science-graphrag/eval/dual_validate/embeddings_cache/baai__bge-m3
+  ERROR on corpus_rcnn_v2: LLM call failed after 2 attempts: Error code: 429 - {'error': {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'deepseek/deepseek-v4-pro is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations', 'provider_name': 'Together', 'is_byok': False, 'retry_after_seconds': 1}}, 'user_id': 'user_2yXaYsnZaxDJpQJzGq3xzuJ4Sgx'}
+[13/37] claims_v2/holdout_atss_v1: starting
+[13/37] claims_v2/holdout_atss_v1: done in 12.7s, ok=False, rc=0
+  STDERR tail:
+using model=deepseek/deepseek-v4-pro base_url=https://openrouter.ai/api/v1
+embeddings enabled: model=baai/bge-m3 cache=/home/roman/pyprojects/ML/Prod/science-graphrag/eval/dual_validate/embeddings_cache/baai__bge-m3
+  ERROR on holdout_atss_v1: LLM call failed after 2 attempts: Error code: 429 - {'error': {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'deepseek/deepseek-v4-pro is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations', 'provider_name': 'Together', 'is_byok': False, 'retry_after_seconds': 1}}, 'user_id': 'user_2yXaYsnZaxDJpQJzGq3xzuJ4Sgx'}
+[14/37] claims_v2/holdout_deformable_detr_v1: starting
+[11/37] claims_v2/corpus_ssd_v2: done in 69.0s, ok=True, rc=0
+[15/37] claims_v2/holdout_dino_v1: starting
+[10/37] claims_v2/corpus_retinanet_focal_v2: done in 70.1s, ok=True, rc=0
+[16/37] claims_v2/holdout_yolov3_v1: starting
+[14/37] claims_v2/holdout_deformable_detr_v1: done in 51.6s, ok=True, rc=0
+[17/37] claims_v2/holdout_yolox_v1: starting
+[12/37] claims_v2/corpus_yolov2_v2: done in 77.6s, ok=True, rc=0
+[18/37] concept_topic_v2/corpus_cascade_rcnn_v2: starting
+[15/37] claims_v2/holdout_dino_v1: done in 13.3s, ok=False, rc=0
+  STDERR tail:
+using model=deepseek/deepseek-v4-pro base_url=https://openrouter.ai/api/v1
+embeddings enabled: model=baai/bge-m3 cache=/home/roman/pyprojects/ML/Prod/science-graphrag/eval/dual_validate/embeddings_cache/baai__bge-m3
+  ERROR on holdout_dino_v1: LLM call failed after 2 attempts: Error code: 429 - {'error': {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'deepseek/deepseek-v4-pro is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations', 'provider_name': 'Together', 'is_byok': False, 'retry_after_seconds': 1}}, 'user_id': 'user_2yXaYsnZaxDJpQJzGq3xzuJ4Sgx'}
+[19/37] concept_topic_v2/corpus_cornernet_v2: starting
+[16/37] claims_v2/holdout_yolov3_v1: done in 20.7s, ok=True, rc=0
+[20/37] concept_topic_v2/corpus_detr_v2: starting
+[17/37] claims_v2/holdout_yolox_v1: done in 15.9s, ok=True, rc=0
+[21/37] concept_topic_v2/corpus_faster_rcnn_v2: starting
+[21/37] concept_topic_v2/corpus_faster_rcnn_v2: done in 38.9s, ok=False, rc=0
+  STDERR tail:
+using model=deepseek/deepseek-v4-pro base_url=https://openrouter.ai/api/v1
+embeddings enabled: model=baai/bge-m3 cache=/home/roman/pyprojects/ML/Prod/science-graphrag/eval/dual_validate/embeddings_cache/baai__bge-m3
+  ERROR on corpus_faster_rcnn_v2: LLM call failed after 2 attempts: empty choices from upstream (provider error={'message': 'Provider returned error', 'code': 503}, model=deepseek/deepseek-v4-pro)
+[22/37] concept_topic_v2/corpus_fcos_v2: starting
+[19/37] concept_topic_v2/corpus_cornernet_v2: done in 64.0s, ok=False, rc=0
+  STDERR tail:
+using model=deepseek/deepseek-v4-pro base_url=https://openrouter.ai/api/v1
+embeddings enabled: model=baai/bge-m3 cache=/home/roman/pyprojects/ML/Prod/science-graphrag/eval/dual_validate/embeddings_cache/baai__bge-m3
+  ERROR on corpus_cornernet_v2: LLM call failed after 2 attempts: empty choices from upstream (provider error={'message': 'Provider returned error', 'code': 502}, model=deepseek/deepseek-v4-pro)
+[23/37] concept_topic_v2/corpus_fpn_v2: starting
+[18/37] concept_topic_v2/corpus_cascade_rcnn_v2: done in 67.5s, ok=False, rc=0
+  STDERR tail:
+using model=deepseek/deepseek-v4-pro base_url=https://openrouter.ai/api/v1
+embeddings enabled: model=baai/bge-m3 cache=/home/roman/pyprojects/ML/Prod/science-graphrag/eval/dual_validate/embeddings_cache/baai__bge-m3
+  ERROR on corpus_cascade_rcnn_v2: LLM call failed after 2 attempts: empty choices from upstream (provider error={'message': 'Provider returned error', 'code': 503}, model=deepseek/deepseek-v4-pro)
+[24/37] concept_topic_v2/corpus_retinanet_focal_v2: starting
+[22/37] concept_topic_v2/corpus_fcos_v2: done in 38.7s, ok=False, rc=0
+  STDERR tail:
+using model=deepseek/deepseek-v4-pro base_url=https://openrouter.ai/api/v1
+embeddings enabled: model=baai/bge-m3 cache=/home/roman/pyprojects/ML/Prod/science-graphrag/eval/dual_validate/embeddings_cache/baai__bge-m3
+  ERROR on corpus_fcos_v2: LLM call failed after 2 attempts: empty choices from upstream (provider error={'message': 'Provider returned error', 'code': 503}, model=deepseek/deepseek-v4-pro)
+[25/37] concept_topic_v2/corpus_yolov1_v2: starting
+[20/37] concept_topic_v2/corpus_detr_v2: done in 80.3s, ok=False, rc=0
+  STDERR tail:
+using model=deepseek/deepseek-v4-pro base_url=https://openrouter.ai/api/v1
+embeddings enabled: model=baai/bge-m3 cache=/home/roman/pyprojects/ML/Prod/science-graphrag/eval/dual_validate/embeddings_cache/baai__bge-m3
+  ERROR on corpus_detr_v2: LLM call failed after 2 attempts: empty choices from upstream (provider error={'message': 'Provider returned error', 'code': 503}, model=deepseek/deepseek-v4-pro)
+[26/37] contradictions_v1/pair_04_faster_rcnn_vs_detr: starting
+[25/37] concept_topic_v2/corpus_yolov1_v2: done in 12.6s, ok=False, rc=0
+  STDERR tail:
+using model=deepseek/deepseek-v4-pro base_url=https://openrouter.ai/api/v1
+embeddings enabled: model=baai/bge-m3 cache=/home/roman/pyprojects/ML/Prod/science-graphrag/eval/dual_validate/embeddings_cache/baai__bge-m3
+  ERROR on corpus_yolov1_v2: LLM call failed after 2 attempts: Error code: 503 - {'error': {'message': 'Provider returned error', 'code': 503, 'metadata': {'raw': '{\n  "id": "ogbr6RZ-2dTqGa-9f206652b418118f",\n  "error": {\n    "message": "Service unavailable",\n    "type": "service_unavailable",\n    "param": null,\n    "code": null\n  }\n}', 'provider_name': 'Together', 'is_byok': False, 'retry_after_seconds': 2}}, 'user_id': 'user_2yXaYsnZaxDJpQJzGq3xzuJ4Sgx'}
+[27/37] contradictions_v1/pair_06_hog_human_detection_vs_rcnn: starting
+[26/37] contradictions_v1/pair_04_faster_rcnn_vs_detr: done in 12.7s, ok=True, rc=0
+[28/37] contradictions_v1/pair_07_retinanet_focal_vs_efficientdet: starting
+[27/37] contradictions_v1/pair_06_hog_human_detection_vs_rcnn: done in 12.7s, ok=False, rc=0
+  STDERR tail:
+using model=deepseek/deepseek-v4-pro base_url=https://openrouter.ai/api/v1
+embeddings enabled: model=baai/bge-m3 cache=/home/roman/pyprojects/ML/Prod/science-graphrag/eval/dual_validate/embeddings_cache/baai__bge-m3
+  ERROR on pair_06_hog_human_detection_vs_rcnn: LLM call failed after 2 attempts: Error code: 429 - {'error': {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'deepseek/deepseek-v4-pro is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations', 'provider_name': 'Together', 'is_byok': False}}, 'user_id': 'user_2yXaYsnZaxDJpQJzGq3xzuJ4Sgx'}
+[29/37] idea_assist_live/live_01_low_light_detector: starting
+[28/37] contradictions_v1/pair_07_retinanet_focal_vs_efficientdet: done in 13.4s, ok=False, rc=0
+  STDERR tail:
+using model=deepseek/deepseek-v4-pro base_url=https://openrouter.ai/api/v1
+embeddings enabled: model=baai/bge-m3 cache=/home/roman/pyprojects/ML/Prod/science-graphrag/eval/dual_validate/embeddings_cache/baai__bge-m3
+  ERROR on pair_07_retinanet_focal_vs_efficientdet: LLM call failed after 2 attempts: Error code: 429 - {'error': {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'deepseek/deepseek-v4-pro is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations', 'provider_name': 'Together', 'is_byok': False, 'retry_after_seconds': 1}}, 'user_id': 'user_2yXaYsnZaxDJpQJzGq3xzuJ4Sgx'}
+[30/37] idea_assist_live/live_03_medical_imaging_few_shot: starting
+[24/37] concept_topic_v2/corpus_retinanet_focal_v2: done in 49.3s, ok=False, rc=0
+  STDERR tail:
+using model=deepseek/deepseek-v4-pro base_url=https://openrouter.ai/api/v1
+embeddings enabled: model=baai/bge-m3 cache=/home/roman/pyprojects/ML/Prod/science-graphrag/eval/dual_validate/embeddings_cache/baai__bge-m3
+  ERROR on corpus_retinanet_focal_v2: LLM call failed after 2 attempts: Error code: 429 - {'error': {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'deepseek/deepseek-v4-pro is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations', 'provider_name': 'Together', 'is_byok': False, 'retry_after_seconds': 1}}, 'user_id': 'user_2yXaYsnZaxDJpQJzGq3xzuJ4Sgx'}
+[31/37] idea_assist_live/live_04_realtime_video_streaming_anchor_free: starting
+[23/37] concept_topic_v2/corpus_fpn_v2: done in 51.9s, ok=False, rc=0
+  STDERR tail:
+using model=deepseek/deepseek-v4-pro base_url=https://openrouter.ai/api/v1
+embeddings enabled: model=baai/bge-m3 cache=/home/roman/pyprojects/ML/Prod/science-graphrag/eval/dual_validate/embeddings_cache/baai__bge-m3
+  ERROR on corpus_fpn_v2: LLM call failed after 2 attempts: Error code: 502 - {'error': {'message': 'Provider returned error', 'code': 502, 'metadata': {'raw': '{\n  "id": "ogbr9bj-2dTqGa-9f20669564d5c714",\n  "error": {\n    "message": "Internal server error",\n    "type": "server_error",\n    "param": null,\n    "code": null\n  }\n}', 'provider_name': 'Together', 'is_byok': False, 'retry_after_seconds': 2}}, 'user_id': 'user_2yXaYsnZaxDJpQJzGq3xzuJ4Sgx'}
+[32/37] hybrid_ablation_v2/ha_two_stage_rpn_evolution: starting
+[29/37] idea_assist_live/live_01_low_light_detector: done in 10.3s, ok=True, rc=0
+[33/37] multihop_v2/mh_authors_yolo_intersect_rcnn_family: starting
+[31/37] idea_assist_live/live_04_realtime_video_streaming_anchor_free: done in 8.4s, ok=True, rc=0
+[34/37] multihop_v2/mh_datasets_shared_one_stage_detectors: starting
+[34/37] multihop_v2/mh_datasets_shared_one_stage_detectors: done in 6.3s, ok=True, rc=0
+[35/37] agent_tools_live/live_03_yolov3_speed_paper_only: starting
+[33/37] multihop_v2/mh_authors_yolo_intersect_rcnn_family: done in 6.9s, ok=True, rc=0
+[36/37] agent_tools_live/live_04_authors_of_mask_rcnn: starting
+[32/37] hybrid_ablation_v2/ha_two_stage_rpn_evolution: done in 14.9s, ok=False, rc=0
+  STDERR tail:
+using model=deepseek/deepseek-v4-pro base_url=https://openrouter.ai/api/v1
+embeddings enabled: model=baai/bge-m3 cache=/home/roman/pyprojects/ML/Prod/science-graphrag/eval/dual_validate/embeddings_cache/baai__bge-m3
+  ERROR on ha_two_stage_rpn_evolution: LLM call failed after 2 attempts: Error code: 429 - {'error': {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'deepseek/deepseek-v4-pro is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations', 'provider_name': 'Together', 'is_byok': False}}, 'user_id': 'user_2yXaYsnZaxDJpQJzGq3xzuJ4Sgx'}
+[37/37] agent_tools_live/live_05_compare_two_stage_one_stage_accuracy: starting
+[30/37] idea_assist_live/live_03_medical_imaging_few_shot: done in 17.3s, ok=True, rc=0
+[35/37] agent_tools_live/live_03_yolov3_speed_paper_only: done in 3.5s, ok=True, rc=0
+[36/37] agent_tools_live/live_04_authors_of_mask_rcnn: done in 3.8s, ok=True, rc=0
+[37/37] agent_tools_live/live_05_compare_two_stage_one_stage_accuracy: done in 11.6s, ok=False, rc=0
+  STDERR tail:
+using model=deepseek/deepseek-v4-pro base_url=https://openrouter.ai/api/v1
+embeddings enabled: model=baai/bge-m3 cache=/home/roman/pyprojects/ML/Prod/science-graphrag/eval/dual_validate/embeddings_cache/baai__bge-m3
+  ERROR on live_05_compare_two_stage_one_stage_accuracy: LLM call failed after 2 attempts: Error code: 429 - {'error': {'message': 'Provider returned error', 'code': 429, 'metadata': {'raw': 'deepseek/deepseek-v4-pro is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations', 'provider_name': 'Together', 'is_byok': False}}, 'user_id': 'user_2yXaYsnZaxDJpQJzGq3xzuJ4Sgx'}

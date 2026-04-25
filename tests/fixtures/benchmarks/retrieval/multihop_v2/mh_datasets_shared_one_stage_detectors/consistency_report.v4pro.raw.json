@@ -1,0 +1,4 @@
+{
+  "expected_node_canonical_names": ["pascal_voc_2007", "pascal_voc_2012"],
+  "rationale": "SSD, YOLOv3, and RetinaNet all evaluate on PASCAL VOC 2007 and 2012, making these the shared benchmark datasets."
+}

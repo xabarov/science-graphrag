@@ -1,0 +1,52 @@
+{
+  "claims": [
+    {
+      "claim_text_normalized": "FCOS is an anchor box free and proposal free object detector.",
+      "claim_type": "method",
+      "polarity": "neutral",
+      "evidence_quote_short": "our proposed detector FCOS is anchor box free, as well as proposal free."
+    },
+    {
+      "claim_text_normalized": "FCOS with ResNeXt-64x4d-101 achieves 44.7% AP with single-model and single-scale testing.",
+      "claim_type": "performance",
+      "polarity": "positive",
+      "evidence_quote_short": "FCOS with ResNeXt-64x4d-101 achieves 44.7% in AP with single-model and single-scale testing"
+    },
+    {
+      "claim_text_normalized": "FCOS outperforms RetinaNet with the same backbone ResNet-101-FPN by 2.4% in AP.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "our FCOS outperforms the RetinaNet with the same backbone ResNet-101-FPN by 2.4% in AP"
+    },
+    {
+      "claim_text_normalized": "The center-ness branch improves AP from 33.5% to 37.1%.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "the center-ness branch can boost AP from 33.5% to 37.1%"
+    },
+    {
+      "claim_text_normalized": "Multi-level prediction with FPN reduces the ratio of ambiguous samples from 23.16% to 7.14%.",
+      "claim_type": "finding",
+      "polarity": "positive",
+      "evidence_quote_short": "with FPN, the ratio can be significantly reduced to only 7.14%"
+    },
+    {
+      "claim_text_normalized": "FCOS completely avoids hyper-parameters related to anchor boxes.",
+      "claim_type": "method",
+      "polarity": "positive",
+      "evidence_quote_short": "FCOS completely avoids the complicated computation related to anchor boxes such as calculating overlapping during training."
+    },
+    {
+      "claim_text_normalized": "FCOS as a Region Proposal Network improves AR100 to 52.8% over the baseline RPN with FPN.",
+      "claim_type": "comparison",
+      "polarity": "positive",
+      "evidence_quote_short": "FCOS further boosts AR100 and AR1k respectively to 52.8% and 60.3%"
+    },
+    {
+      "claim_text_normalized": "Detection performance of anchor-based detectors is sensitive to the sizes, aspect ratios and number of anchor boxes.",
+      "claim_type": "limitation",
+      "polarity": "negative",
+      "evidence_quote_short": "detection performance is sensitive to the sizes, aspect ratios and number of anchor boxes."
+    }
+  ]
+}

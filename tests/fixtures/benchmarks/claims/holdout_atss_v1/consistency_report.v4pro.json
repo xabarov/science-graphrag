@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/holdout_atss_v1",
+  "pack_path": "tests/fixtures/benchmarks/claims/holdout_atss_v1",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T21:25:23.508810+00:00",
+  "spot_check_priority": "high",
+  "spot_check_priority_rationale": "polarity_flips=1, unmatched_a_ratio=0.50 (gate: polarity_flips ≥ 1 OR unmatched_a_ratio ≥ 0.30)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/claims/holdout_atss_v1/gold.json",
+    "count": 4,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-extracted)",
+    "count": 7,
+    "model": "deepseek/deepseek-v4-pro",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:9032b30dd53dcfb552182b154482d026aa1ece30aad0aa9ad21eb215a24b22aa",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 15323,
+      "completion": 586,
+      "total": 15909
+    },
+    "latency_ms": 21946
+  },
+  "summary": {
+    "a_total": 4,
+    "b_total": 7,
+    "matched": 2,
+    "matched_lexical": 2,
+    "matched_embedding": 0,
+    "unmatched_a": 2,
+    "unmatched_b": 5,
+    "field_agreements": {
+      "polarity": {
+        "agreed": 1,
+        "disagreed": 1
+      },
+      "claim_type": {
+        "agreed": 2,
+        "disagreed": 0
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_claim_id": "atss_adaptive_sample_selection",
+      "b_index": 2,
+      "match_score": 0.748,
+      "match_source": "lexical",
+      "a_claim_text_normalized": "Adaptive Training Sample Selection automatically selects positive samples for each ground-truth object based on statistical characteristics of candidate boxes.",
+      "b_claim_text_normalized": "The proposed Adaptive Training Sample Selection (ATSS) automatically selects positive and negative samples based on statistical characteristics of objects.",
+      "field_disagreements": []
+    },
+    {
+      "a_claim_id": "atss_essential_difference_finding",
+      "b_index": 0,
+      "match_score": 0.617,
+      "match_source": "lexical",
+      "a_claim_text_normalized": "The core distinction between detectors that rely on anchor boxes and those that do not lies in how positive and negative training samples are defined, not in the architecture itself.",
+      "b_claim_text_normalized": "The essential difference between anchor-based and anchor-free detection is how positive and negative training samples are defined.",
+      "field_disagreements": [
+        {
+          "field": "polarity",
+          "a": "positive",
+          "b": "neutral"
+        }
+      ]
+    }
+  ],
+  "unmatched_a": [
+    {
+      "a_claim_id": "atss_arch_alone_no_advantage_negative",
+      "a_claim_text_normalized": "Architectural choices alone do not explain the historical accuracy gap previously credited to anchor-free designs over anchor-based ones.",
+      "a_polarity": "negative",
+      "a_claim_type": "comparison",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    },
+    {
+      "a_claim_id": "atss_retinanet_matches_fcos",
+      "a_claim_text_normalized": "Applying ATSS sample selection to RetinaNet brings its COCO AP up to that of FCOS, demonstrating that the gap was in label assignment rather than architecture.",
+      "a_polarity": "positive",
+      "a_claim_type": "performance",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "b_index": 1,
+      "b_claim_text_normalized": "When using the same definition of positive and negative samples, there is no obvious performance difference between regressing from a box or a point.",
+      "b_polarity": "neutral",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 3,
+      "b_claim_text_normalized": "ATSS significantly improves the performance of both anchor-based and anchor-free detectors.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 4,
+      "b_claim_text_normalized": "Tiling multiple anchors per location is a useless operation under the proposed ATSS method.",
+      "b_polarity": "negative",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 5,
+      "b_claim_text_normalized": "The proposed ATSS achieves state-of-the-art 50.7% AP on MS COCO without introducing any overhead.",
+      "b_polarity": "positive",
+      "b_claim_type": "performance",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 6,
+      "b_claim_text_normalized": "The hyperparameter k in ATSS is robust and the method can be nearly regarded as hyperparameter-free.",
+      "b_polarity": "positive",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    }
+  ]
+}

@@ -345,9 +345,11 @@ def main() -> int:
     p.add_argument(
         "--tags",
         nargs="+",
-        default=["deepseek", "kimi", "claude"],
+        default=["deepseek", "v4pro", "claude"],
         help="Model tags to vote with. ``deepseek`` reads the legacy "
-        "consistency_report.json; everything else reads consistency_report.<tag>.json.",
+        "consistency_report.json (extractor A — DeepSeek v3.2); everything else "
+        "reads consistency_report.<tag>.json (e.g. v4pro = deepseek-v4-pro, "
+        "claude = claude-sonnet-4.6).",
     )
     p.add_argument(
         "--legacy-tag",

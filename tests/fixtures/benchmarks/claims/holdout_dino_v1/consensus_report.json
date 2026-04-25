@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/holdout_dino_v1",
+  "pack_path": "tests/fixtures/benchmarks/claims/holdout_dino_v1",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T21:29:16.916932+00:00",
+  "tags_requested": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_present": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_missing": [],
+  "consensus_priority": "high",
+  "consensus_priority_rationale": "votes={'high': 3}; tie_break=majority",
+  "votes_by_priority": {
+    "high": 3
+  },
+  "model_reports": [
+    {
+      "tag": "deepseek",
+      "report_path": "tests/fixtures/benchmarks/claims/holdout_dino_v1/consistency_report.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 5,
+        "b_total": 8,
+        "matched": 2,
+        "matched_lexical": 1,
+        "matched_embedding": 1,
+        "unmatched_a": 3,
+        "unmatched_b": 6,
+        "field_agreements": {
+          "polarity": {
+            "agreed": 2,
+            "disagreed": 0
+          },
+          "claim_type": {
+            "agreed": 2,
+            "disagreed": 0
+          }
+        }
+      },
+      "matched_pair_count": 2
+    },
+    {
+      "tag": "v4pro",
+      "report_path": "tests/fixtures/benchmarks/claims/holdout_dino_v1/consistency_report.v4pro.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 5,
+        "b_total": 8,
+        "matched": 1,
+        "matched_lexical": 0,
+        "matched_embedding": 1,
+        "unmatched_a": 4,
+        "unmatched_b": 7,
+        "field_agreements": {
+          "polarity": {
+            "agreed": 1,
+            "disagreed": 0
+          },
+          "claim_type": {
+            "agreed": 1,
+            "disagreed": 0
+          }
+        }
+      },
+      "matched_pair_count": 1
+    },
+    {
+      "tag": "claude",
+      "report_path": "tests/fixtures/benchmarks/claims/holdout_dino_v1/consistency_report.claude.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 5,
+        "b_total": 8,
+        "matched": 1,
+        "matched_lexical": 0,
+        "matched_embedding": 1,
+        "unmatched_a": 4,
+        "unmatched_b": 7,
+        "field_agreements": {
+          "polarity": {
+            "agreed": 1,
+            "disagreed": 0
+          },
+          "claim_type": {
+            "agreed": 1,
+            "disagreed": 0
+          }
+        }
+      },
+      "matched_pair_count": 1
+    }
+  ],
+  "per_record_consensus": {
+    "id_field": "a_claim_id",
+    "a_total_records": 5,
+    "consensus_matched_count": 1,
+    "consensus_match_ratio": 0.2,
+    "buckets": {
+      "matched_by_all": 1,
+      "controversial": 1
+    },
+    "records": [
+      {
+        "id": "dino_swinl_63ap",
+        "matched_by": [
+          "deepseek",
+          "v4pro",
+          "claude"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "dino_three_components",
+        "matched_by": [
+          "deepseek"
+        ],
+        "missing_in": [
+          "v4pro",
+          "claude"
+        ],
+        "consensus": "controversial"
+      }
+    ]
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/corpus_cascade_rcnn_v2",
+  "pack_path": "tests/fixtures/benchmarks/claims/corpus_cascade_rcnn_v2",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T21:29:16.908298+00:00",
+  "tags_requested": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_present": [
+    "deepseek",
+    "v4pro",
+    "claude"
+  ],
+  "tags_missing": [],
+  "consensus_priority": "high",
+  "consensus_priority_rationale": "votes={'high': 2, 'medium': 1}; tie_break=majority",
+  "votes_by_priority": {
+    "high": 2,
+    "medium": 1
+  },
+  "model_reports": [
+    {
+      "tag": "deepseek",
+      "report_path": "tests/fixtures/benchmarks/claims/corpus_cascade_rcnn_v2/consistency_report.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 3,
+        "b_total": 8,
+        "matched": 2,
+        "matched_lexical": 0,
+        "matched_embedding": 2,
+        "unmatched_a": 1,
+        "unmatched_b": 6,
+        "field_agreements": {
+          "polarity": {
+            "agreed": 2,
+            "disagreed": 0
+          },
+          "claim_type": {
+            "agreed": 2,
+            "disagreed": 0
+          }
+        }
+      },
+      "matched_pair_count": 2
+    },
+    {
+      "tag": "v4pro",
+      "report_path": "tests/fixtures/benchmarks/claims/corpus_cascade_rcnn_v2/consistency_report.v4pro.json",
+      "priority": "high",
+      "summary": {
+        "a_total": 3,
+        "b_total": 7,
+        "matched": 2,
+        "matched_lexical": 0,
+        "matched_embedding": 2,
+        "unmatched_a": 1,
+        "unmatched_b": 5,
+        "field_agreements": {
+          "polarity": {
+            "agreed": 1,
+            "disagreed": 1
+          },
+          "claim_type": {
+            "agreed": 2,
+            "disagreed": 0
+          }
+        }
+      },
+      "matched_pair_count": 2
+    },
+    {
+      "tag": "claude",
+      "report_path": "tests/fixtures/benchmarks/claims/corpus_cascade_rcnn_v2/consistency_report.claude.json",
+      "priority": "medium",
+      "summary": {
+        "a_total": 3,
+        "b_total": 7,
+        "matched": 3,
+        "matched_lexical": 0,
+        "matched_embedding": 3,
+        "unmatched_a": 0,
+        "unmatched_b": 4,
+        "field_agreements": {
+          "polarity": {
+            "agreed": 3,
+            "disagreed": 0
+          },
+          "claim_type": {
+            "agreed": 0,
+            "disagreed": 3
+          }
+        }
+      },
+      "matched_pair_count": 3
+    }
+  ],
+  "per_record_consensus": {
+    "id_field": "a_claim_id",
+    "a_total_records": 3,
+    "consensus_matched_count": 3,
+    "consensus_match_ratio": 1.0,
+    "buckets": {
+      "matched_by_majority": 2,
+      "matched_by_all": 1
+    },
+    "records": [
+      {
+        "id": "cascade_rcnn_ap_gain_2_4",
+        "matched_by": [
+          "v4pro",
+          "claude"
+        ],
+        "missing_in": [
+          "deepseek"
+        ],
+        "consensus": "matched_by_majority"
+      },
+      {
+        "id": "cascade_rcnn_iou_progression",
+        "matched_by": [
+          "deepseek",
+          "v4pro",
+          "claude"
+        ],
+        "missing_in": [],
+        "consensus": "matched_by_all"
+      },
+      {
+        "id": "cascade_rcnn_quality_paradox_negative",
+        "matched_by": [
+          "deepseek",
+          "claude"
+        ],
+        "missing_in": [
+          "v4pro"
+        ],
+        "consensus": "matched_by_majority"
+      }
+    ]
+  }
+}

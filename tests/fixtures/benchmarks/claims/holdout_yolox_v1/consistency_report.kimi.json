@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "pack_id": "claims/holdout_yolox_v1",
+  "pack_path": "tests/fixtures/benchmarks/claims/holdout_yolox_v1",
+  "layer": "claims_v2",
+  "generated_at_utc": "2026-04-25T21:16:17.590310+00:00",
+  "spot_check_priority": "medium",
+  "spot_check_priority_rationale": "type_flips=2, unmatched_a=1 (gate: type_flips ≥ 1 OR unmatched_a ≥ 1)",
+  "extractor_a": {
+    "role": "human_authored_existing_gold",
+    "source": "tests/fixtures/benchmarks/claims/holdout_yolox_v1/gold.json",
+    "count": 4,
+    "model": null,
+    "base_url": null,
+    "prompt_hash": null,
+    "raw_response_path": null,
+    "usage_tokens": null,
+    "latency_ms": null
+  },
+  "extractor_b": {
+    "role": "llm_independent_extraction",
+    "source": "article.md (re-extracted)",
+    "count": 7,
+    "model": "moonshotai/kimi-k2.6",
+    "base_url": "https://openrouter.ai/api/v1",
+    "prompt_hash": "sha256:f824dbb8dce8e132ff2a7e64be15e864bf03c6fb5c05eec44ebe9acb38a76775",
+    "raw_response_path": null,
+    "usage_tokens": {
+      "prompt": 10213,
+      "completion": 8193,
+      "total": 18406
+    },
+    "latency_ms": 131182
+  },
+  "summary": {
+    "a_total": 4,
+    "b_total": 7,
+    "matched": 3,
+    "matched_lexical": 2,
+    "matched_embedding": 1,
+    "unmatched_a": 1,
+    "unmatched_b": 4,
+    "field_agreements": {
+      "polarity": {
+        "agreed": 3,
+        "disagreed": 0
+      },
+      "claim_type": {
+        "agreed": 1,
+        "disagreed": 2
+      }
+    }
+  },
+  "matched_pairs": [
+    {
+      "a_claim_id": "yolox_anchor_free_simota",
+      "b_index": 0,
+      "match_score": 0.765,
+      "match_source": "embedding",
+      "a_claim_text_normalized": "An anchor-free design combined with SimOTA dynamic label assignment improves YOLO accuracy without anchor box hyperparameter tuning.",
+      "b_claim_text_normalized": "YOLOX switches the YOLO detector to an anchor-free manner.",
+      "field_disagreements": [
+        {
+          "field": "claim_type",
+          "a": "design_choice",
+          "b": "method"
+        }
+      ]
+    },
+    {
+      "a_claim_id": "yolox_decoupled_head",
+      "b_index": 3,
+      "match_score": 0.378,
+      "match_source": "lexical",
+      "a_claim_text_normalized": "YOLOX adopts a decoupled head that separates classification and regression branches, replacing the coupled head used in earlier YOLO versions.",
+      "b_claim_text_normalized": "Replacing the YOLO head with a decoupled one greatly improves converging speed.",
+      "field_disagreements": [
+        {
+          "field": "claim_type",
+          "a": "method",
+          "b": "finding"
+        }
+      ]
+    },
+    {
+      "a_claim_id": "yolox_l_50ap_v100_speed",
+      "b_index": 1,
+      "match_score": 0.716,
+      "match_source": "lexical",
+      "a_claim_text_normalized": "YOLOX-L achieves around 50 AP on COCO at roughly 69 FPS on a Tesla V100, surpassing YOLOv5-L by about 1.8 AP at the same speed.",
+      "b_claim_text_normalized": "YOLOX-L achieves 50.0% AP on COCO at a speed of 68.9 FPS on a Tesla V100.",
+      "field_disagreements": []
+    }
+  ],
+  "unmatched_a": [
+    {
+      "a_claim_id": "yolox_coupled_head_conflict_negative",
+      "a_claim_text_normalized": "Coupled detection heads in earlier YOLO versions create a conflict between classification and localization branches that slows convergence and limits accuracy.",
+      "a_polarity": "negative",
+      "a_claim_type": "limitation",
+      "comment": "present in human gold A but not produced by independent extractor B"
+    }
+  ],
+  "unmatched_b": [
+    {
+      "b_index": 2,
+      "b_claim_text_normalized": "YOLOX-L outperforms YOLOv5-L by 1.8% AP.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 4,
+      "b_claim_text_normalized": "The end-to-end YOLO variant slightly decreases both performance and inference speed.",
+      "b_polarity": "negative",
+      "b_claim_type": "limitation",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 5,
+      "b_claim_text_normalized": "SimOTA raises the detector's AP from 45.0% to 47.3%.",
+      "b_polarity": "positive",
+      "b_claim_type": "finding",
+      "comment": "produced by independent extractor B but not in human gold A"
+    },
+    {
+      "b_index": 6,
+      "b_claim_text_normalized": "YOLOX-Nano outperforms NanoDet by 1.8% AP.",
+      "b_polarity": "positive",
+      "b_claim_type": "comparison",
+      "comment": "produced by independent extractor B but not in human gold A"
+    }
+  ]
+}
