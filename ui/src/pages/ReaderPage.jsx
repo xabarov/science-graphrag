@@ -109,7 +109,8 @@ export default function ReaderPage() {
       sx={{
         p: 2,
         width: "100%",
-        maxWidth: "none",
+        maxWidth: "100%",
+        minWidth: 0,
         boxSizing: "border-box",
         display: "flex",
         flexDirection: "column",

@@ -100,7 +100,11 @@ class Settings(BaseSettings):
     vl_api_key: str | None = Field(default=None)
     vl_base_url: str = Field(default="https://openrouter.ai/api/v1")
     vl_model: str = Field(default="qwen/qwen3-vl-235b-a22b-instruct")
-    vl_max_pages: int = Field(default=16)
+    vl_max_pages: int = Field(default=0, description="0 = no limit; positive = cap at N pages")
+    vl_max_tokens: int = Field(default=32768, description="max_tokens for VL API response")
+    vl_batch_size: int = Field(
+        default=12, description="Pages per VL API call; 0 = all in one request"
+    )
     vl_dpi: int = Field(default=144)
     reuse_cached_markdown: bool = Field(
         default=True,

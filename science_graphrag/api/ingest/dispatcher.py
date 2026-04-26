@@ -140,11 +140,16 @@ def job_to_dict(rec: IngestJobRecord) -> dict[str, Any]:
     wid = (rec.work_id or "").strip()
     if ws and wid:
         try:
-            from science_graphrag.api.ingest.work_dedup_counts import count_pending_ingest_work_dedup_conflicts
+            from science_graphrag.api.ingest.work_dedup_counts import count_pending_ingest_conflicts
             from science_graphrag.config import get_settings
 
-            out["pending_conflicts_count"] = count_pending_ingest_work_dedup_conflicts(get_settings(), ws, wid)
+            pc = count_pending_ingest_conflicts(get_settings(), ws, wid)
+            out["pending_conflicts"] = pc
+            out["pending_conflicts_count"] = int(
+                pc.get("works", 0) + pc.get("authors", 0) + pc.get("entities", 0)
+            )
         except Exception:  # noqa: BLE001
+            out["pending_conflicts"] = {"works": 0, "authors": 0, "entities": 0}
             out["pending_conflicts_count"] = 0
     if rec.kind == "batch_parent":
         child_jobs: list[dict[str, Any]] = []

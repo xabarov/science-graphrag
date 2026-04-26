@@ -138,8 +138,26 @@ class Neo4jGraphStoreDelegates:
     def list_workspace_authors(self, workspace_id: str) -> list[dict[str, Any]]:
         return reads.list_workspace_authors(self._client, workspace_id)
 
+    def list_work_authors(self, work_id: str) -> list[dict[str, Any]]:
+        return reads.list_work_authors(self._client, work_id)
+
+    def fetch_author_display_name(self, author_id: str) -> str:
+        return reads.fetch_author_display_name(self._client, author_id)
+
     def fetch_author_affiliation_hint(self, author_id: str) -> str:
         return reads.fetch_author_affiliation_hint(self._client, author_id)
+
+    def list_work_institutions(self, work_id: str) -> list[dict[str, Any]]:
+        return reads.list_work_institutions(self._client, work_id)
+
+    def list_work_venues(self, work_id: str) -> list[dict[str, Any]]:
+        return reads.list_work_venues(self._client, work_id)
+
+    def list_work_methods(self, work_id: str) -> list[dict[str, Any]]:
+        return reads.list_work_methods(self._client, work_id)
+
+    def list_work_datasets(self, work_id: str) -> list[dict[str, Any]]:
+        return reads.list_work_datasets(self._client, work_id)
 
     def list_workspace_institutions(self, workspace_id: str) -> list[dict[str, Any]]:
         return reads.list_workspace_institutions(self._client, workspace_id)
@@ -152,6 +170,9 @@ class Neo4jGraphStoreDelegates:
 
     def list_workspace_datasets(self, workspace_id: str) -> list[dict[str, Any]]:
         return reads.list_workspace_datasets(self._client, workspace_id)
+
+    def fetch_entity_display_label(self, entity_type: str, entity_id: str) -> str:
+        return reads.fetch_entity_display_label(self._client, entity_type, entity_id)
 
     def merge_institution_into_canonical(self, keep_id: str, drop_id: str) -> bool:
         return institutions.merge_institution(self._client, keep_id, drop_id, keep_id)

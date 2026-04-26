@@ -12,8 +12,8 @@ from fastapi.testclient import TestClient
 import science_graphrag.api.works.router as works_router_mod
 from science_graphrag.api import benchmark as benchmark_api
 from science_graphrag.api import main as api_main
-from science_graphrag.retrieval import GroundedAnswer
 from science_graphrag.api.task_store import BenchmarkTaskStore, RunPayloadTooLargeError
+from science_graphrag.retrieval import GroundedAnswer
 from science_graphrag.storage.qdrant_store import QdrantChunkStore
 
 
@@ -365,6 +365,36 @@ def test_get_ingest_job_returns_stages(monkeypatch: Any) -> None:
     assert body["stages"][1]["metrics"]["references"] == 4
 
 
+def test_get_ingest_job_includes_pending_conflicts_breakdown(monkeypatch: Any) -> None:
+    import science_graphrag.api.ingest.router as ingest_router
+    from science_graphrag.api.ingest.dto import IngestJobRecord
+
+    job = IngestJobRecord(
+        job_id="33333333-3333-3333-3333-333333333333",
+        workspace_id="ws1",
+        filename="paper.pdf",
+        status="completed",
+        message="Done",
+        work_id="work-1",
+    )
+    monkeypatch.setattr(
+        ingest_router,
+        "_registry",
+        lambda *_args, **_kwargs: type("R", (), {"get": lambda *_a, **_k: job})(),
+    )
+    monkeypatch.setattr(
+        "science_graphrag.api.ingest.work_dedup_counts.count_pending_ingest_conflicts",
+        lambda *_a, **_k: {"works": 1, "authors": 2, "entities": 3},
+    )
+
+    client = _client()
+    res = client.get("/v1/ingest/jobs/33333333-3333-3333-3333-333333333333")
+    assert res.status_code == 200
+    body = res.json()
+    assert body["pending_conflicts"] == {"works": 1, "authors": 2, "entities": 3}
+    assert body["pending_conflicts_count"] == 6
+
+
 def test_ingest_job_events_stream_yields_stage_events(monkeypatch: Any) -> None:
     import science_graphrag.api.ingest.router as ingest_router
     from science_graphrag.api import ingest_jobs as ingest_api
@@ -520,9 +550,7 @@ def test_work_detail_graph_chunks_smoke(monkeypatch: Any) -> None:
 
     monkeypatch.setattr(works_router_mod, "get_work_detail", _fake_get_work_detail)
     monkeypatch.setattr(works_router_mod, "work_chunks", _fake_work_chunks)
-    monkeypatch.setattr(
-        works_router_mod, "work_graph_neighborhood", _fake_work_graph_neighborhood
-    )
+    monkeypatch.setattr(works_router_mod, "work_graph_neighborhood", _fake_work_graph_neighborhood)
     monkeypatch.setattr(works_router_mod, "list_work_claims", lambda *_a, **_k: [])
     client = _client()
 

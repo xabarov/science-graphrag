@@ -32,6 +32,16 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 
 ## Queue
 
+### [OPEN] VL OCR truncation for long PDFs (>16 pages)
+- **Area:** `science_graphrag/ingestion/vl_pdf.py`, `science_graphrag/config.py`
+- **Issue:** `vl_max_pages = 16` (hardcoded default) silently truncates any PDF beyond 16 pages. Confirmed case: Falcon-H1 paper (`work_id=739b528f-f8f1-42b4-b185-35c114986e9d`), 81 pages total — markdown stops at section 2.4.1 (~page 16). Additionally, `max_tokens=12000` is hardcoded in `VLPDFProcessor.pdf_to_markdown()` — even if `vl_max_pages` is raised, the response may be output-truncated. The root architecture: all pages (up to `vl_max_pages`) are sent as a **single request** with all images embedded, which doesn't scale for 40–80+ page papers.
+- **Proposal:**
+  1. **Short-term (config):** Expose `SCIENCE_GRAPHRAG_VL_MAX_TOKENS` in `Settings` (default `32768` or `65536`); raise `SCIENCE_GRAPHRAG_VL_MAX_PAGES` default to `80` (or `0` = unlimited). Update `VLPDFProcessor` to use the setting.
+  2. **Medium-term (batching):** Process pages in batches of N (e.g., 8–12 pages per request), concatenate results. Configurable `vl_batch_size`. Add `vl.pages_total` and `vl.batch_count` to span attributes and `extraction_diagnostics.json`.
+  3. **Diagnostics:** Write `pages_total` and `pages_processed` to `extraction_diagnostics.json` so truncation is detectable without re-reading the PDF.
+- **Acceptance:** An 80-page PDF ingested with defaults produces markdown covering all pages; `extraction_diagnostics.json` includes `pages_total=81`, `pages_processed=81`; no silent truncation at page 16.
+- **Raised:** 2026-04-26
+
 ### [OPEN] Ingest dedup — parity with osint-gr (authors/entities + optional gated pipeline)
 - **Area:** `science_graphrag/dedup/ingest_conflict_check.py`, `work_dedup_engine.py`, author/entity dedup engines, `science_graphrag/ingestion/_pipeline_impl.py`, ingest job DTO / worker state
 - **Issue:** Сейчас при ingest ставится очередь только для **works** (Qdrant summary + при необходимости LLM `_llm_same_work`); в плане фигурировали ещё `AuthorDedupConflict` / `EntityDedupConflict` и более богатый сценарий как в osint (`backend/osint_graphrag/dedup`, KG extract → `ConflictResolver` в `osint-gr/frontend/.../KnowledgeGraphPage`): конфликты на сущностях, сохранение с разрешённым маппингом id, UI **во время** долгой операции, а не только после `completed`.

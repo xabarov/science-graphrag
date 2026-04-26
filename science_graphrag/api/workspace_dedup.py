@@ -251,6 +251,7 @@ def post_author_dedup_scan(
 def get_author_dedup_conflicts(
     workspace_id: str,
     status: str = Query(default="pending"),
+    origin: str | None = Query(default=None, description="Filter by origin (e.g. ingest | scan)"),
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     settings: Settings = Depends(get_settings),
@@ -264,6 +265,8 @@ def get_author_dedup_conflicts(
         q = select(AuthorDedupConflict).where(AuthorDedupConflict.workspace_id == workspace_id)
         if status == "pending":
             q = q.where(AuthorDedupConflict.status == "pending")
+        if origin and str(origin).strip():
+            q = q.where(AuthorDedupConflict.origin == str(origin).strip())
         q = q.order_by(desc(AuthorDedupConflict.created_at)).offset(offset).limit(limit)
         rows = list(session.scalars(q).all())
         items = [
@@ -271,6 +274,8 @@ def get_author_dedup_conflicts(
                 "id": r.id,
                 "author_id_a": r.author_id_a,
                 "author_id_b": r.author_id_b,
+                "author_name_a": stores.neo4j.fetch_author_display_name(r.author_id_a),
+                "author_name_b": stores.neo4j.fetch_author_display_name(r.author_id_b),
                 "similarity_score": r.similarity_score,
                 "check_mode": r.check_mode,
                 "llm_same_author": r.llm_same_author,
@@ -278,6 +283,7 @@ def get_author_dedup_conflicts(
                 "status": r.status,
                 "decision": r.decision,
                 "keep_author_id": r.keep_author_id,
+                "origin": r.origin,
                 "created_at": r.created_at.isoformat() if r.created_at else None,
             }
             for r in rows

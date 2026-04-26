@@ -219,6 +219,32 @@ def list_workspace_authors(client: _Neo4jClient, workspace_id: str) -> list[dict
         return [{"id": str(r["id"]), "full_name": str(r["full_name"] or "")} for r in rows]
 
 
+def list_work_authors(client: _Neo4jClient, work_id: str) -> list[dict[str, Any]]:
+    """Authors linked to a single work (for ingest-time dedup)."""
+    q = """
+    MATCH (:Work {id: $wid})-[:HAS_AUTHORSHIP]->(:Authorship)-[:OF_AUTHOR]->(a:Author)
+    RETURN DISTINCT a.id AS id, coalesce(a.full_name, '') AS full_name
+    """
+    with client.session() as session:
+        rows = session.run(q, wid=str(work_id or "").strip())
+        return [{"id": str(r["id"]), "full_name": str(r["full_name"] or "")} for r in rows]
+
+
+def fetch_author_display_name(client: _Neo4jClient, author_id: str) -> str:
+    q = """
+    MATCH (a:Author {id: $id})
+    RETURN coalesce(a.full_name, a.normalized_name, '') AS name
+    """
+    aid = str(author_id or "").strip()
+    if not aid:
+        return ""
+    with client.session() as session:
+        rec = session.run(q, id=aid).single()
+        if not rec:
+            return ""
+        return str(rec["name"] or "").strip()
+
+
 def fetch_author_affiliation_hint(client: _Neo4jClient, author_id: str) -> str:
     q = """
     MATCH (a:Author {id: $id})<-[:OF_AUTHOR]-(x:Authorship)
@@ -279,6 +305,56 @@ def workspace_get(client: _Neo4jClient, workspace_id: str) -> dict[str, Any] | N
         }
 
 
+def list_work_institutions(client: _Neo4jClient, work_id: str) -> list[dict[str, Any]]:
+    q = """
+    MATCH (:Work {id: $wid})-[:HAS_AUTHORSHIP]->(:Authorship)-[:AFFILIATED_WITH]->(i:Institution)
+    RETURN DISTINCT i.id AS id,
+           coalesce(i.name, '') AS name,
+           coalesce(i.normalized_name, i.name, '') AS normalized_name,
+           coalesce(i.country, '') AS country,
+           coalesce(i.city, '') AS city
+    """
+    with client.session() as session:
+        return [dict(r) for r in session.run(q, wid=str(work_id or "").strip())]
+
+
+def list_work_venues(client: _Neo4jClient, work_id: str) -> list[dict[str, Any]]:
+    q = """
+    MATCH (:Work {id: $wid})-[:PUBLISHED_IN]->(v:Venue)
+    RETURN DISTINCT v.id AS id,
+           coalesce(v.name, '') AS name,
+           coalesce(v.normalized_name, v.name, '') AS normalized_name,
+           coalesce(v.venue_type, '') AS venue_type
+    """
+    with client.session() as session:
+        return [dict(r) for r in session.run(q, wid=str(work_id or "").strip())]
+
+
+def list_work_methods(client: _Neo4jClient, work_id: str) -> list[dict[str, Any]]:
+    q = """
+    MATCH (:Work {id: $wid})-[:USES_METHOD]->(m:Method)
+    RETURN DISTINCT m.id AS id,
+           coalesce(m.name, '') AS name,
+           coalesce(m.normalized_name, m.name, '') AS normalized_name,
+           coalesce(m.aliases, []) AS aliases,
+           coalesce(m.description_short, '') AS description_short
+    """
+    with client.session() as session:
+        return [dict(r) for r in session.run(q, wid=str(work_id or "").strip())]
+
+
+def list_work_datasets(client: _Neo4jClient, work_id: str) -> list[dict[str, Any]]:
+    q = """
+    MATCH (:Work {id: $wid})-[:EVALUATED_ON]->(d:Dataset)
+    RETURN DISTINCT d.id AS id,
+           coalesce(d.name, '') AS name,
+           coalesce(d.normalized_name, d.name, '') AS normalized_name,
+           coalesce(d.aliases, []) AS aliases
+    """
+    with client.session() as session:
+        return [dict(r) for r in session.run(q, wid=str(work_id or "").strip())]
+
+
 def list_workspace_institutions(client: _Neo4jClient, workspace_id: str) -> list[dict[str, Any]]:
     q = """
     MATCH (:Workspace {id: $ws})-[:CONTAINS]->(:Work)-[:HAS_AUTHORSHIP]->(:Authorship)-[:AFFILIATED_WITH]->(i:Institution)
@@ -327,3 +403,26 @@ def list_workspace_datasets(client: _Neo4jClient, workspace_id: str) -> list[dic
     """
     with client.session() as session:
         return [dict(r) for r in session.run(q, ws=workspace_id)]
+
+
+_ENTITY_NODE_LABELS: dict[str, str] = {
+    "institution": "Institution",
+    "venue": "Venue",
+    "method": "Method",
+    "dataset": "Dataset",
+}
+
+
+def fetch_entity_display_label(client: _Neo4jClient, entity_type: str, entity_id: str) -> str:
+    et = str(entity_type or "").strip().lower()
+    label = _ENTITY_NODE_LABELS.get(et)
+    eid = str(entity_id or "").strip()
+    if not label or not eid:
+        return eid
+    q = f"MATCH (n:{label} {{id: $id}}) RETURN coalesce(n.name, n.normalized_name, '') AS name"
+    with client.session() as session:
+        rec = session.run(q, id=eid).single()
+        if not rec:
+            return eid
+        name = str(rec["name"] or "").strip()
+        return name or eid

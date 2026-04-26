@@ -165,6 +165,7 @@ def run_author_dedup_scan(
                         llm_reason=llm_reason,
                         status="pending",
                         fingerprint=fp,
+                        origin="scan",
                     ),
                 )
                 existing_fp.add(fp)

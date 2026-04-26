@@ -9,6 +9,8 @@ import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
 
 import { CursorIconAction } from "../../components/common/index.js";
+import AuthorConflictReviewCard from "../../components/dedup/AuthorConflictReviewCard.jsx";
+import EntityConflictReviewCard from "../../components/dedup/EntityConflictReviewCard.jsx";
 import IngestConflictReviewCard from "../../components/dedup/IngestConflictReviewCard.jsx";
 import WorkspaceDialogs from "./WorkspaceDialogs.jsx";
 import WorkspaceHero from "./WorkspaceHero.jsx";
@@ -32,7 +34,6 @@ export default function WorkspacePage() {
         minHeight: 0,
         display: "flex",
         flexDirection: "column",
-        overflow: "hidden",
       }}
     >
       <WorkspaceHero t={t} vm={vm} />
@@ -91,7 +92,7 @@ export default function WorkspacePage() {
           </Box>
         </Box>
       ) : (
-        <Box sx={{ flex: 1, minHeight: 0, minWidth: 0, overflow: "auto" }}>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
           <WorkspaceLayout
             main={
               <Box>
@@ -104,11 +105,23 @@ export default function WorkspacePage() {
                 />
 
                 {vm.ingestDedupPanelOpen ? (
-                  <IngestConflictReviewCard
-                    workspaceId={vm.workspaceMeta.id}
-                    onDismiss={vm.dismissIngestDedupPanel}
-                    onMerged={vm.refreshWorkspaceMeta}
-                  />
+                  <>
+                    <IngestConflictReviewCard
+                      workspaceId={vm.workspaceMeta.id}
+                      onDismiss={vm.dismissIngestDedupPanel}
+                      onMerged={vm.refreshWorkspaceMeta}
+                    />
+                    <AuthorConflictReviewCard
+                      workspaceId={vm.workspaceMeta.id}
+                      onDismiss={vm.dismissIngestDedupPanel}
+                      onMerged={vm.refreshWorkspaceMeta}
+                    />
+                    <EntityConflictReviewCard
+                      workspaceId={vm.workspaceMeta.id}
+                      onDismiss={vm.dismissIngestDedupPanel}
+                      onMerged={vm.refreshWorkspaceMeta}
+                    />
+                  </>
                 ) : null}
               </Box>
             }

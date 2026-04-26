@@ -4,11 +4,10 @@ import Typography from "@mui/material/Typography";
 
 import { CursorSmallButton } from "../common/index.js";
 import { useI18n } from "../../i18n/I18nContext.jsx";
-import { getWorkDetail } from "../../services/research/works.js";
-import { decideWorkspaceSmartDedupConflict, getWorkspaceSmartDedupConflicts } from "../../utils/workspaceStore.js";
+import { decideWorkspaceAuthorDedupConflict, getWorkspaceAuthorDedupConflicts } from "../../utils/workspaceStore.js";
 
 /**
- * Review queue for work pairs created during ingest (origin=ingest).
+ * Review queue for author pairs created during ingest (origin=ingest).
  *
  * @param {{
  *   workspaceId: string,
@@ -16,11 +15,10 @@ import { decideWorkspaceSmartDedupConflict, getWorkspaceSmartDedupConflicts } fr
  *   onMerged: () => void | Promise<void>,
  * }} props
  */
-export default function IngestConflictReviewCard({ workspaceId, onDismiss, onMerged }) {
+export default function AuthorConflictReviewCard({ workspaceId, onDismiss, onMerged }) {
   const { t } = useI18n();
   const [items, setItems] = useState([]);
   const [idx, setIdx] = useState(0);
-  const [titles, setTitles] = useState({});
   const [busy, setBusy] = useState(false);
   const [loadErr, setLoadErr] = useState("");
 
@@ -28,7 +26,7 @@ export default function IngestConflictReviewCard({ workspaceId, onDismiss, onMer
     if (!workspaceId) return;
     setLoadErr("");
     try {
-      const data = await getWorkspaceSmartDedupConflicts(workspaceId, {
+      const data = await getWorkspaceAuthorDedupConflicts(workspaceId, {
         status: "pending",
         origin: "ingest",
         limit: 50,
@@ -48,35 +46,11 @@ export default function IngestConflictReviewCard({ workspaceId, onDismiss, onMer
   const safeIdx = items.length ? Math.min(idx, items.length - 1) : 0;
   const cur = items.length ? items[safeIdx] : null;
 
-  useEffect(() => {
-    if (!cur) return undefined;
-    let cancelled = false;
-    (async () => {
-      const ids = [cur.work_id_a, cur.work_id_b].filter(Boolean);
-      const fetched = {};
-      for (const wid of ids) {
-        try {
-          const res = await getWorkDetail(wid);
-          const row = res?.data;
-          fetched[wid] = String(row?.title || wid).trim() || wid;
-        } catch {
-          fetched[wid] = wid;
-        }
-      }
-      if (!cancelled) {
-        setTitles((prev) => ({ ...prev, ...fetched }));
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [cur]);
-
   async function act(body) {
     if (!cur || !workspaceId) return;
     setBusy(true);
     try {
-      await decideWorkspaceSmartDedupConflict(workspaceId, cur.id, body);
+      await decideWorkspaceAuthorDedupConflict(workspaceId, cur.id, body);
       await onMerged?.();
       await reload();
     } catch {
@@ -95,7 +69,7 @@ export default function IngestConflictReviewCard({ workspaceId, onDismiss, onMer
           {t("workspace.err.retry")}
         </CursorSmallButton>
         <CursorSmallButton sx={{ mt: 1, ml: 1 }} type="button" onClick={() => onDismiss?.()}>
-          {t("workspace.ingestDedup.dismiss")}
+          {t("workspace.ingestAuthorDedup.dismiss")}
         </CursorSmallButton>
       </Box>
     );
@@ -103,6 +77,8 @@ export default function IngestConflictReviewCard({ workspaceId, onDismiss, onMer
   if (!items.length) return null;
 
   const score = cur?.similarity_score != null ? Number(cur.similarity_score).toFixed(3) : "—";
+  const nameA = String(cur?.author_name_a || cur?.author_id_a || "").trim() || t("workspace.ingestAuthorDedup.loadingNames");
+  const nameB = String(cur?.author_name_b || cur?.author_id_b || "").trim() || t("workspace.ingestAuthorDedup.loadingNames");
 
   return (
     <Box
@@ -115,10 +91,10 @@ export default function IngestConflictReviewCard({ workspaceId, onDismiss, onMer
       }}
     >
       <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: "rgba(255,255,255,0.92)", mb: 0.5 }}>
-        {t("workspace.ingestDedup.title")}
+        {t("workspace.ingestAuthorDedup.title")}
       </Typography>
       <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.5)", mb: 1.25 }}>
-        {t("workspace.ingestDedup.subtitle", {
+        {t("workspace.ingestAuthorDedup.subtitle", {
           current: String(idx + 1),
           total: String(items.length),
           score,
@@ -126,41 +102,29 @@ export default function IngestConflictReviewCard({ workspaceId, onDismiss, onMer
       </Typography>
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1.25 }}>
         <Box sx={{ p: 1, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "#141414" }}>
-          <Typography sx={{ fontSize: "0.65rem", color: "rgba(129,140,248,0.95)", mb: 0.5 }}>{t("workspace.ingestDedup.workA")}</Typography>
-          <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.88)" }}>
-            {titles[cur.work_id_a] || t("workspace.ingestDedup.loadingTitles")}
-          </Typography>
+          <Typography sx={{ fontSize: "0.65rem", color: "rgba(129,140,248,0.95)", mb: 0.5 }}>{t("workspace.ingestAuthorDedup.authorA")}</Typography>
+          <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.88)" }}>{nameA}</Typography>
         </Box>
         <Box sx={{ p: 1, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "#141414" }}>
-          <Typography sx={{ fontSize: "0.65rem", color: "rgba(129,140,248,0.95)", mb: 0.5 }}>{t("workspace.ingestDedup.workB")}</Typography>
-          <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.88)" }}>
-            {titles[cur.work_id_b] || t("workspace.ingestDedup.loadingTitles")}
-          </Typography>
+          <Typography sx={{ fontSize: "0.65rem", color: "rgba(129,140,248,0.95)", mb: 0.5 }}>{t("workspace.ingestAuthorDedup.authorB")}</Typography>
+          <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.88)" }}>{nameB}</Typography>
         </Box>
       </Box>
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mt: 1.25 }}>
-        <CursorSmallButton
-          type="button"
-          disabled={busy}
-          onClick={() => act({ decision: "merge", keep_work_id: cur.work_id_a })}
-        >
-          {t("workspace.ingestDedup.mergeKeepA")}
+        <CursorSmallButton type="button" disabled={busy} onClick={() => act({ decision: "merge_a" })}>
+          {t("workspace.ingestAuthorDedup.mergeKeepA")}
         </CursorSmallButton>
-        <CursorSmallButton
-          type="button"
-          disabled={busy}
-          onClick={() => act({ decision: "merge", keep_work_id: cur.work_id_b })}
-        >
-          {t("workspace.ingestDedup.mergeKeepB")}
+        <CursorSmallButton type="button" disabled={busy} onClick={() => act({ decision: "merge_b" })}>
+          {t("workspace.ingestAuthorDedup.mergeKeepB")}
         </CursorSmallButton>
         <CursorSmallButton type="button" disabled={busy} onClick={() => act({ decision: "keep_separate" })}>
-          {t("workspace.ingestDedup.keepSeparate")}
+          {t("workspace.ingestAuthorDedup.keepSeparate")}
         </CursorSmallButton>
         <CursorSmallButton type="button" disabled={busy} onClick={() => act({ decision: "skip" })}>
-          {t("workspace.ingestDedup.skip")}
+          {t("workspace.ingestAuthorDedup.skip")}
         </CursorSmallButton>
         <CursorSmallButton type="button" disabled={busy} onClick={() => onDismiss?.()}>
-          {t("workspace.ingestDedup.dismiss")}
+          {t("workspace.ingestAuthorDedup.dismiss")}
         </CursorSmallButton>
       </Box>
     </Box>

@@ -45,7 +45,11 @@ from science_graphrag.ingestion.llm.stage_extraction import extract_stages_llm_f
 
 # Backward-compatible name for ``science_graphrag.ingestion.pipeline`` facade re-exports.
 _strip_artifact_header = strip_ingest_artifact_header
+from science_graphrag.dedup.entity_ingest_conflict_check import (
+    enqueue_entity_near_duplicate_conflicts_on_ingest,
+)
 from science_graphrag.dedup.ingest_conflict_check import (
+    enqueue_author_near_duplicate_conflicts_on_ingest,
     enqueue_work_near_duplicate_conflicts_on_ingest,
 )
 from science_graphrag.ingestion.normalize import normalize_text
@@ -271,15 +275,16 @@ def _read_cached_markdown(
 
 def _markdown_from_path(
     path: Path, settings: Settings, *, document_id: str | None = None
-) -> tuple[str, str]:
+) -> tuple[str, str, dict]:
+    """Return (markdown, extraction_mode, vl_stats) where vl_stats may be empty dict."""
     suf = path.suffix.lower()
     if suf != ".pdf":
-        return path.read_text(encoding="utf-8", errors="replace"), "plain-text"
+        return path.read_text(encoding="utf-8", errors="replace"), "plain-text", {}
 
     if settings.reuse_cached_markdown:
         cached = _read_cached_markdown(settings, path, document_id=document_id)
         if cached is not None:
-            return cached
+            return cached[0], cached[1], {}
 
     with chain_span(
         "ingest.parse_pdf.markdown",
@@ -287,12 +292,18 @@ def _markdown_from_path(
     ):
         if settings.use_vl_for_pdf:
             try:
-                markdown = VLPDFProcessor(settings).pdf_to_markdown(path)
-                return markdown, "vl"
+                processor = VLPDFProcessor(settings)
+                markdown = processor.pdf_to_markdown(path)
+                vl_stats = {
+                    "vl_pages_total": processor.last_pages_total,
+                    "vl_pages_processed": processor.last_pages_processed,
+                    "vl_batch_count": processor.last_batch_count,
+                }
+                return markdown, "vl", vl_stats
             except Exception as exc:  # noqa: BLE001
                 log.warning("VL PDF failed for %s: %s; falling back to pypdf", path.name, exc)
 
-        return extract_text_from_pdf(path), "pypdf-fallback"
+        return extract_text_from_pdf(path), "pypdf-fallback", {}
 
 
 _ARXIV_PREFIX_RE = re.compile(r"^arxiv:\s*", re.IGNORECASE)
@@ -644,7 +655,9 @@ def ingest_document(
             session_factory=stage_session_factory,
             publisher=stage_event_publisher,
         ) as st:
-            markdown_text, extraction_mode = _markdown_from_path(path, settings, document_id=doc_id)
+            markdown_text, extraction_mode, vl_stats = _markdown_from_path(
+                path, settings, document_id=doc_id
+            )
             set_span_attributes({"metadata.extraction_mode": extraction_mode})
             st.metric("source_suffix", path.suffix.lower())
             st.metric("extraction_mode", extraction_mode)
@@ -694,6 +707,10 @@ def ingest_document(
                 )
             st.metric("references", len(references))
             st.metric("authorships", len(authorships))
+        if vl_stats:
+            ext_diag.vl_pages_total = vl_stats.get("vl_pages_total")
+            ext_diag.vl_pages_processed = vl_stats.get("vl_pages_processed")
+            ext_diag.vl_batch_count = vl_stats.get("vl_batch_count")
         _write_extraction_diagnostics_json(
             settings=settings,
             document_id=doc_id,
@@ -805,6 +822,32 @@ def ingest_document(
                         confidence_threshold=settings.semantic_graph_confidence_threshold,
                     )
                 st.metric("semantic_claims", len(getattr(semantic, "claims", []) or []))
+
+                if session is not None:
+                    try:
+                        n_author_dedup = enqueue_author_near_duplicate_conflicts_on_ingest(
+                            settings=settings,
+                            session=session,
+                            neo=neo,
+                            workspace_id=workspace_id,
+                            new_work_id=work_id,
+                        )
+                        st.metric("ingest_author_dedup_conflicts_enqueued", n_author_dedup)
+                    except Exception as exc:  # noqa: BLE001
+                        log.warning("ingest_author_dedup_conflict_check_failed: %s", exc)
+                    try:
+                        ent_dedup = enqueue_entity_near_duplicate_conflicts_on_ingest(
+                            session=session,
+                            neo=neo,
+                            workspace_id=workspace_id,
+                            new_work_id=work_id,
+                        )
+                        st.metric(
+                            "ingest_entity_dedup_conflicts_enqueued",
+                            int(sum(int(v) for v in ent_dedup.values())),
+                        )
+                    except Exception as exc:  # noqa: BLE001
+                        log.warning("ingest_entity_dedup_conflict_check_failed: %s", exc)
 
             with stage(
                 job_id,

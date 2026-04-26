@@ -32,6 +32,7 @@ def run_entity_scan(
     merge_pair: Callable[[str, str], bool],
     workspace_id: str | None = None,
     limit: int = 500,
+    conflict_origin: str = "scan",
 ) -> dict[str, int]:
     """Generic pairwise dedup pass for one entity type."""
     if len(entities) < 2:
@@ -84,6 +85,7 @@ def run_entity_scan(
                     check_mode="embedding",
                     fingerprint=fp,
                     workspace_id=workspace_id,
+                    origin=str(conflict_origin or "scan").strip() or "scan",
                 ),
             )
             existing_fp.add(fp)

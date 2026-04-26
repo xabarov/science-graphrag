@@ -86,15 +86,19 @@ export const readerMarkdownProseSx = {
     borderCollapse: "collapse",
     fontSize: "0.8125rem",
     my: 1.5,
+    tableLayout: "fixed",
   },
   "& th, & td": {
     border: "1px solid rgba(255,255,255,0.1)",
     px: 1,
     py: 0.5,
+    wordBreak: "break-word",
+    overflowWrap: "anywhere",
   },
   "& th": { backgroundColor: "rgba(255,255,255,0.04)" },
   "& pre": {
     overflow: "auto",
+    maxWidth: "100%",
     p: 1.25,
     borderRadius: "6px",
     border: "1px solid rgba(255,255,255,0.08)",
@@ -132,7 +136,12 @@ export default function MarkdownViewCore({ markdown = "", "data-testid": dataTes
     <Box
       className="reader-markdown"
       data-testid={dataTestId}
-      sx={readerMarkdownProseSx}
+      sx={{
+        ...readerMarkdownProseSx,
+        maxWidth: "100%",
+        minWidth: 0,
+        overflowX: "auto",
+      }}
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath, remarkBreaks]}

@@ -17,7 +17,9 @@ import {
   startWorkspaceDocumentIngest,
   startWorkspaceBatchIngest,
   getWorkspaceGraphStats,
+  getWorkspaceAuthorDedupConflicts,
   getWorkspaceSmartDedupConflicts,
+  listEntityDedupConflicts,
 } from "../../utils/workspaceStore.js";
 import { isAdminModeEnabled } from "../../components/layout/adminVisibility.js";
 import { persistWorkId, resolveSelectedWorkId } from "./utils/workContext.js";
@@ -178,8 +180,24 @@ export function useWorkspacePageCore() {
     let cancelled = false;
     (async () => {
       try {
-        const data = await getWorkspaceSmartDedupConflicts(id, { status: "pending", origin: "ingest", limit: 1 });
-        if (!cancelled && Array.isArray(data?.items) && data.items.length > 0) {
+        const entityTypes = ["institution", "venue", "method", "dataset"];
+        const [wdata, adata, ...edatas] = await Promise.all([
+          getWorkspaceSmartDedupConflicts(id, { status: "pending", origin: "ingest", limit: 1 }),
+          getWorkspaceAuthorDedupConflicts(id, { status: "pending", origin: "ingest", limit: 1 }),
+          ...entityTypes.map((entityType) =>
+            listEntityDedupConflicts({
+              entityType,
+              workspaceId: id,
+              origin: "ingest",
+              status: "pending",
+              limit: 1,
+            }),
+          ),
+        ]);
+        const hasWork = Array.isArray(wdata?.items) && wdata.items.length > 0;
+        const hasAuthor = Array.isArray(adata?.items) && adata.items.length > 0;
+        const hasEntity = edatas.some((d) => Array.isArray(d?.items) && d.items.length > 0);
+        if (!cancelled && (hasWork || hasAuthor || hasEntity)) {
           setIngestDedupPanelOpen(true);
         }
       } catch {
@@ -230,7 +248,11 @@ export function useWorkspacePageCore() {
     onTerminal: useCallback(
       async (job) => {
         await refreshWorkspaceMeta();
-        const pending = Number(job?.pending_conflicts_count || 0);
+        const pc = job?.pending_conflicts;
+        const pending =
+          pc && typeof pc === "object"
+            ? Number((pc.works || 0) + (pc.authors || 0) + (pc.entities || 0))
+            : Number(job?.pending_conflicts_count || 0);
         if (String(job?.status || "") === "completed" && pending > 0) {
           setIngestDedupPanelOpen(true);
         }

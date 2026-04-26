@@ -316,3 +316,71 @@ export async function decideWorkspaceSmartDedupConflict(workspaceId, conflictId,
   return data;
 }
 
+/**
+ * @param {string} workspaceId
+ * @param {{ status?: string, origin?: string, limit?: number, offset?: number }} [opts]
+ */
+export async function getWorkspaceAuthorDedupConflicts(workspaceId, opts = {}) {
+  const wid = encodeURIComponent(String(workspaceId || "").trim());
+  const params = new URLSearchParams();
+  if (opts.status) params.set("status", String(opts.status));
+  if (opts.origin) params.set("origin", String(opts.origin));
+  if (opts.limit != null) params.set("limit", String(opts.limit));
+  if (opts.offset != null) params.set("offset", String(opts.offset));
+  const q = params.toString();
+  const { data } = await apiClient.get(
+    apiUrl(`/v1/workspaces/${wid}/dedup/authors/conflicts${q ? `?${q}` : ""}`),
+    httpConfig(),
+  );
+  return data;
+}
+
+/**
+ * @param {string} workspaceId
+ * @param {string} conflictId
+ * @param {{ decision: string }} body
+ */
+export async function decideWorkspaceAuthorDedupConflict(workspaceId, conflictId, body) {
+  const ws = encodeURIComponent(String(workspaceId || "").trim());
+  const cid = encodeURIComponent(String(conflictId || "").trim());
+  const { data } = await apiClient.post(
+    apiUrl(`/v1/workspaces/${ws}/dedup/authors/conflicts/${cid}/decide`),
+    body,
+    httpConfig(),
+  );
+  return data;
+}
+
+/**
+ * @param {{ entityType: string, workspaceId?: string, origin?: string, status?: string, limit?: number, offset?: number }} opts
+ */
+export async function listEntityDedupConflicts(opts = {}) {
+  const params = new URLSearchParams();
+  params.set("entity_type", String(opts.entityType || "institution"));
+  if (opts.status) params.set("status", String(opts.status));
+  if (opts.workspaceId) params.set("workspace_id", String(opts.workspaceId));
+  if (opts.origin) params.set("origin", String(opts.origin));
+  if (opts.limit != null) params.set("limit", String(opts.limit));
+  if (opts.offset != null) params.set("offset", String(opts.offset));
+  const { data } = await apiClient.get(apiUrl(`/v1/dedup/entity?${params.toString()}`), httpConfig());
+  return data;
+}
+
+/**
+ * @param {string} conflictId
+ * @param {{ workspaceId?: string, decision: string, keep_entity_id?: string }} body
+ */
+export async function decideEntityDedupConflict(conflictId, body) {
+  const cid = encodeURIComponent(String(conflictId || "").trim());
+  const { workspaceId, ...rest } = body || {};
+  const params = new URLSearchParams();
+  if (workspaceId) params.set("workspace_id", String(workspaceId));
+  const q = params.toString();
+  const { data } = await apiClient.post(
+    apiUrl(`/v1/dedup/entity/${cid}/decide${q ? `?${q}` : ""}`),
+    rest,
+    httpConfig(),
+  );
+  return data;
+}
+

@@ -84,9 +84,13 @@ class IngestJobView(BaseModel):
     stages: list[IngestStageView] = Field(default_factory=list)
     phoenix_trace_id: str | None = None
     progress_pct: float | None = None
+    pending_conflicts: dict[str, int] = Field(
+        default_factory=lambda: {"works": 0, "authors": 0, "entities": 0},
+        description="Pending dedup conflicts with origin=ingest for this job's work_id (by queue kind).",
+    )
     pending_conflicts_count: int = Field(
         default=0,
-        description="Pending work dedup conflicts with origin=ingest involving this job's work_id.",
+        description="Sum of pending_conflicts values (backward compatible aggregate).",
     )
 
 
@@ -125,5 +129,6 @@ def job_record_to_view(rec: IngestJobRecord) -> IngestJobView:
         stages=[IngestStageView(**stage_row) for stage_row in stage_rows],
         phoenix_trace_id=rec.phoenix_trace_id,
         progress_pct=pct,
+        pending_conflicts={"works": 0, "authors": 0, "entities": 0},
         pending_conflicts_count=0,
     )

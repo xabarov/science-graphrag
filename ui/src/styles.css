@@ -5,16 +5,21 @@
 html,
 body {
   height: 100%;
-}
-
-body {
   margin: 0;
 }
 
-/* App shell: keep scroll inside <main>, not on the document (avoids double browser scrollbar). */
+/*
+ * Prevent browser-level scroll. The only scrollbar in the app
+ * is the overflow-y:auto box inside DashboardLayout <main>.
+ * Setting overflow:hidden on html (the document scroll root) is
+ * the most reliable cross-browser way to achieve this.
+ */
+html {
+  overflow: hidden;
+}
+
 #root {
   height: 100%;
-  min-height: 100%;
   display: flex;
   flex-direction: column;
 }

@@ -206,6 +206,7 @@ class AuthorDedupConflict(Base):
     decision: Mapped[str | None] = mapped_column(String(32), nullable=True)
     keep_author_id: Mapped[str | None] = mapped_column(String(256), nullable=True)
     fingerprint: Mapped[str] = mapped_column(String(64), index=True)
+    origin: Mapped[str] = mapped_column(String(32), default="scan", index=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
@@ -234,6 +235,7 @@ class EntityDedupConflict(Base):
     keep_entity_id: Mapped[str | None] = mapped_column(String(256), nullable=True)
     fingerprint: Mapped[str] = mapped_column(String(64), index=True)
     workspace_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
+    origin: Mapped[str] = mapped_column(String(32), default="scan", index=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),

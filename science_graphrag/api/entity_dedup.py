@@ -78,15 +78,25 @@ def run_entity_dedup(
 def list_entity_conflicts(
     entity_type: EntityType,
     status: str = Query(default="pending"),
+    workspace_id: str | None = Query(
+        default=None, description="Filter conflicts scoped to this workspace"
+    ),
+    origin: str | None = Query(default=None, description="Filter by origin (e.g. ingest | scan)"),
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     settings: Settings = Depends(get_settings),
+    stores: StoreRegistry = Depends(get_stores),
 ) -> dict[str, object]:
     factory = _session_factory(settings)
     with factory() as session:
         q = select(EntityDedupConflict).where(EntityDedupConflict.entity_type == entity_type)
         if status != "all":
             q = q.where(EntityDedupConflict.status == status)
+        wsv = (workspace_id or "").strip()
+        if wsv:
+            q = q.where(EntityDedupConflict.workspace_id == wsv)
+        if origin and str(origin).strip():
+            q = q.where(EntityDedupConflict.origin == str(origin).strip())
         q = q.order_by(desc(EntityDedupConflict.created_at)).offset(offset).limit(limit)
         rows = list(session.scalars(q).all())
         items = [
@@ -95,10 +105,18 @@ def list_entity_conflicts(
                 "entity_type": r.entity_type,
                 "entity_id_a": r.entity_id_a,
                 "entity_id_b": r.entity_id_b,
+                "entity_label_a": stores.neo4j.fetch_entity_display_label(
+                    r.entity_type, r.entity_id_a
+                ),
+                "entity_label_b": stores.neo4j.fetch_entity_display_label(
+                    r.entity_type, r.entity_id_b
+                ),
                 "similarity_score": r.similarity_score,
                 "status": r.status,
                 "decision": r.decision,
                 "keep_entity_id": r.keep_entity_id,
+                "workspace_id": r.workspace_id,
+                "origin": r.origin,
                 "created_at": r.created_at.isoformat() if r.created_at else None,
                 "decided_at": r.decided_at.isoformat() if r.decided_at else None,
             }
@@ -111,6 +129,10 @@ def list_entity_conflicts(
 def decide_entity_conflict(
     conflict_id: str,
     body: EntityDedupDecideBody,
+    workspace_id: str | None = Query(
+        default=None,
+        description="When the conflict row has workspace_id set, must match for safety",
+    ),
     settings: Settings = Depends(get_settings),
     stores: StoreRegistry = Depends(get_stores),
 ) -> dict[str, object]:
@@ -121,6 +143,11 @@ def decide_entity_conflict(
             raise HTTPException(status_code=404, detail="conflict_not_found")
         if row.status != "pending":
             raise HTTPException(status_code=400, detail="conflict_already_resolved")
+
+        row_ws = (row.workspace_id or "").strip()
+        req_ws = (workspace_id or "").strip()
+        if row_ws and req_ws and row_ws != req_ws:
+            raise HTTPException(status_code=400, detail="workspace_mismatch")
 
         if body.decision == "skip":
             row.status = "skipped"

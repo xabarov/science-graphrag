@@ -9,7 +9,7 @@ import Drawer from "./Drawer.jsx";
 export default function DashboardLayout() {
   return (
     <WorkspaceContextProvider>
-      <Box sx={{ display: "flex", flex: 1, minHeight: 0, width: "100%", overflow: "hidden" }}>
+      <Box sx={{ display: "flex", flex: 1, minHeight: 0, width: "100%" }}>
         <Drawer />
         <Box
           component="main"
@@ -19,7 +19,6 @@ export default function DashboardLayout() {
             flexDirection: "column",
             minWidth: 0,
             minHeight: 0,
-            overflow: "hidden",
             backgroundColor: "#0a0a0a",
             borderLeft: "1px solid rgba(255, 255, 255, 0.08)",
           }}
@@ -44,9 +43,12 @@ export default function DashboardLayout() {
               flex: 1,
               minHeight: 0,
               minWidth: 0,
-              overflow: "auto",
+              overflowY: "auto",
+              overflowX: "hidden",
               display: "flex",
               flexDirection: "column",
+              scrollPaddingBottom: "24px",
+              pb: { xs: 2, sm: 3 },
             }}
           >
             <Outlet />
