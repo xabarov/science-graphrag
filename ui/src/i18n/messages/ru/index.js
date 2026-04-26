@@ -3,6 +3,7 @@ import partAskPanel from "./partAskPanel.js";
 import partBenchmarkCaseDialog from "./partBenchmarkCaseDialog.js";
 import partBenchmarkPage from "./partBenchmarkPage.js";
 import partBenchmarkTabs from "./partBenchmarkTabs.js";
+import partChat from "./partChat.js";
 import partCommon from "./partCommon.js";
 import partEvidenceBody from "./partEvidenceBody.js";
 import partGraphUi from "./partGraphUi.js";
@@ -26,6 +27,7 @@ export default mergeMessages(
   partWorkspaceTabs,
   partSettings,
   partSession,
+  partChat,
   partAskPanel,
   partGraphUi,
   partReaderBody,

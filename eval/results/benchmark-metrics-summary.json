@@ -437,154 +437,12 @@
           "ws_yolo_negative_mask_segmentation",
           "ws_yolo_speed_question"
         ],
-        "all_passed": false,
+        "all_passed": true,
         "retrieval_eval": true
       },
-      "failed_count": 6,
-      "failed_cases": [
-        {
-          "case_id": "ws_full_anchor_free_overview",
-          "metrics": {
-            "passed": false,
-            "contract_only": false,
-            "workspace_scoped_live": true,
-            "uuid_aware_mode": false,
-            "hit_count": 5,
-            "trace_workspace_matches": true,
-            "forbidden_work_id_violation_count": 0,
-            "forbidden_corpus_work_ids_leaked": [],
-            "out_of_scope_citation_work_ids": [],
-            "forbidden_violation_gate": 0,
-            "missing_required_corpus_work_ids": [
-              "cornernet_realpdf",
-              "fcos_realpdf"
-            ],
-            "expected_citations_min_count": 3,
-            "citation_count_ok": true,
-            "answer_rouge_l": 0.06866952789699571,
-            "abstain_keyword_hit": false,
-            "answer_metric_type": "rouge_l",
-            "workspace_scope_ok": false
-          }
-        },
-        {
-          "case_id": "ws_full_corpus_negative_unrelated",
-          "metrics": {
-            "passed": false,
-            "contract_only": false,
-            "workspace_scoped_live": true,
-            "uuid_aware_mode": false,
-            "hit_count": 5,
-            "trace_workspace_matches": true,
-            "forbidden_work_id_violation_count": 0,
-            "forbidden_corpus_work_ids_leaked": [],
-            "out_of_scope_citation_work_ids": [],
-            "forbidden_violation_gate": 0,
-            "missing_required_corpus_work_ids": [],
-            "expected_citations_min_count": 0,
-            "citation_count_ok": true,
-            "answer_rouge_l": null,
-            "abstain_keyword_hit": false,
-            "answer_metric_type": "abstain_keywords",
-            "workspace_scope_ok": true
-          }
-        },
-        {
-          "case_id": "ws_two_stage_negative_focal_loss",
-          "metrics": {
-            "passed": false,
-            "contract_only": false,
-            "workspace_scoped_live": true,
-            "uuid_aware_mode": true,
-            "hit_count": 5,
-            "trace_workspace_matches": true,
-            "forbidden_work_id_violation_count": 0,
-            "forbidden_corpus_work_ids_leaked": [],
-            "out_of_scope_citation_work_ids": [],
-            "forbidden_violation_gate": 0,
-            "missing_required_corpus_work_ids": [],
-            "expected_citations_min_count": 0,
-            "citation_count_ok": true,
-            "answer_rouge_l": null,
-            "abstain_keyword_hit": false,
-            "answer_metric_type": "abstain_keywords",
-            "workspace_scope_ok": true
-          }
-        },
-        {
-          "case_id": "ws_two_stage_proposal_evolution",
-          "metrics": {
-            "passed": false,
-            "contract_only": false,
-            "workspace_scoped_live": true,
-            "uuid_aware_mode": true,
-            "hit_count": 5,
-            "trace_workspace_matches": true,
-            "forbidden_work_id_violation_count": 0,
-            "forbidden_corpus_work_ids_leaked": [],
-            "out_of_scope_citation_work_ids": [],
-            "forbidden_violation_gate": 0,
-            "missing_required_corpus_work_ids": [
-              "rcnn_realpdf",
-              "fast_rcnn_realpdf",
-              "faster_rcnn_realpdf"
-            ],
-            "expected_citations_min_count": 3,
-            "citation_count_ok": true,
-            "answer_rouge_l": 0.08979591836734692,
-            "abstain_keyword_hit": false,
-            "answer_metric_type": "rouge_l",
-            "workspace_scope_ok": true
-          }
-        },
-        {
-          "case_id": "ws_yolo_negative_mask_segmentation",
-          "metrics": {
-            "passed": false,
-            "contract_only": false,
-            "workspace_scoped_live": true,
-            "uuid_aware_mode": true,
-            "hit_count": 5,
-            "trace_workspace_matches": true,
-            "forbidden_work_id_violation_count": 0,
-            "forbidden_corpus_work_ids_leaked": [],
-            "out_of_scope_citation_work_ids": [],
-            "forbidden_violation_gate": 0,
-            "missing_required_corpus_work_ids": [],
-            "expected_citations_min_count": 0,
-            "citation_count_ok": true,
-            "answer_rouge_l": null,
-            "abstain_keyword_hit": false,
-            "answer_metric_type": "abstain_keywords",
-            "workspace_scope_ok": true
-          }
-        },
-        {
-          "case_id": "ws_yolo_speed_question",
-          "metrics": {
-            "passed": false,
-            "contract_only": false,
-            "workspace_scoped_live": true,
-            "uuid_aware_mode": true,
-            "hit_count": 5,
-            "trace_workspace_matches": true,
-            "forbidden_work_id_violation_count": 0,
-            "forbidden_corpus_work_ids_leaked": [],
-            "out_of_scope_citation_work_ids": [],
-            "forbidden_violation_gate": 0,
-            "missing_required_corpus_work_ids": [
-              "yolov1"
-            ],
-            "expected_citations_min_count": 2,
-            "citation_count_ok": true,
-            "answer_rouge_l": 0.08494208494208492,
-            "abstain_keyword_hit": false,
-            "answer_metric_type": "rouge_l",
-            "workspace_scope_ok": true
-          }
-        }
-      ],
-      "all_passed": false,
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true,
       "trust_signal": {
         "family": "retrieval_family",
         "member_id": "workspace_scoped_live",
@@ -599,152 +457,8 @@
           "ws_yolo_negative_mask_segmentation": "llm_dual_validated"
         },
         "last_known_real_run_at": null,
-        "consistency_warnings": [
-          "workspace_scoped_live: summary.all_passed=false with 6 failed cases"
-        ],
-        "individual_failures": [
-          {
-            "case_id": "ws_full_anchor_free_overview",
-            "metrics": {
-              "passed": false,
-              "contract_only": false,
-              "workspace_scoped_live": true,
-              "uuid_aware_mode": false,
-              "hit_count": 5,
-              "trace_workspace_matches": true,
-              "forbidden_work_id_violation_count": 0,
-              "forbidden_corpus_work_ids_leaked": [],
-              "out_of_scope_citation_work_ids": [],
-              "forbidden_violation_gate": 0,
-              "missing_required_corpus_work_ids": [
-                "cornernet_realpdf",
-                "fcos_realpdf"
-              ],
-              "expected_citations_min_count": 3,
-              "citation_count_ok": true,
-              "answer_rouge_l": 0.06866952789699571,
-              "abstain_keyword_hit": false,
-              "answer_metric_type": "rouge_l",
-              "workspace_scope_ok": false
-            }
-          },
-          {
-            "case_id": "ws_full_corpus_negative_unrelated",
-            "metrics": {
-              "passed": false,
-              "contract_only": false,
-              "workspace_scoped_live": true,
-              "uuid_aware_mode": false,
-              "hit_count": 5,
-              "trace_workspace_matches": true,
-              "forbidden_work_id_violation_count": 0,
-              "forbidden_corpus_work_ids_leaked": [],
-              "out_of_scope_citation_work_ids": [],
-              "forbidden_violation_gate": 0,
-              "missing_required_corpus_work_ids": [],
-              "expected_citations_min_count": 0,
-              "citation_count_ok": true,
-              "answer_rouge_l": null,
-              "abstain_keyword_hit": false,
-              "answer_metric_type": "abstain_keywords",
-              "workspace_scope_ok": true
-            }
-          },
-          {
-            "case_id": "ws_two_stage_negative_focal_loss",
-            "metrics": {
-              "passed": false,
-              "contract_only": false,
-              "workspace_scoped_live": true,
-              "uuid_aware_mode": true,
-              "hit_count": 5,
-              "trace_workspace_matches": true,
-              "forbidden_work_id_violation_count": 0,
-              "forbidden_corpus_work_ids_leaked": [],
-              "out_of_scope_citation_work_ids": [],
-              "forbidden_violation_gate": 0,
-              "missing_required_corpus_work_ids": [],
-              "expected_citations_min_count": 0,
-              "citation_count_ok": true,
-              "answer_rouge_l": null,
-              "abstain_keyword_hit": false,
-              "answer_metric_type": "abstain_keywords",
-              "workspace_scope_ok": true
-            }
-          },
-          {
-            "case_id": "ws_two_stage_proposal_evolution",
-            "metrics": {
-              "passed": false,
-              "contract_only": false,
-              "workspace_scoped_live": true,
-              "uuid_aware_mode": true,
-              "hit_count": 5,
-              "trace_workspace_matches": true,
-              "forbidden_work_id_violation_count": 0,
-              "forbidden_corpus_work_ids_leaked": [],
-              "out_of_scope_citation_work_ids": [],
-              "forbidden_violation_gate": 0,
-              "missing_required_corpus_work_ids": [
-                "rcnn_realpdf",
-                "fast_rcnn_realpdf",
-                "faster_rcnn_realpdf"
-              ],
-              "expected_citations_min_count": 3,
-              "citation_count_ok": true,
-              "answer_rouge_l": 0.08979591836734692,
-              "abstain_keyword_hit": false,
-              "answer_metric_type": "rouge_l",
-              "workspace_scope_ok": true
-            }
-          },
-          {
-            "case_id": "ws_yolo_negative_mask_segmentation",
-            "metrics": {
-              "passed": false,
-              "contract_only": false,
-              "workspace_scoped_live": true,
-              "uuid_aware_mode": true,
-              "hit_count": 5,
-              "trace_workspace_matches": true,
-              "forbidden_work_id_violation_count": 0,
-              "forbidden_corpus_work_ids_leaked": [],
-              "out_of_scope_citation_work_ids": [],
-              "forbidden_violation_gate": 0,
-              "missing_required_corpus_work_ids": [],
-              "expected_citations_min_count": 0,
-              "citation_count_ok": true,
-              "answer_rouge_l": null,
-              "abstain_keyword_hit": false,
-              "answer_metric_type": "abstain_keywords",
-              "workspace_scope_ok": true
-            }
-          },
-          {
-            "case_id": "ws_yolo_speed_question",
-            "metrics": {
-              "passed": false,
-              "contract_only": false,
-              "workspace_scoped_live": true,
-              "uuid_aware_mode": true,
-              "hit_count": 5,
-              "trace_workspace_matches": true,
-              "forbidden_work_id_violation_count": 0,
-              "forbidden_corpus_work_ids_leaked": [],
-              "out_of_scope_citation_work_ids": [],
-              "forbidden_violation_gate": 0,
-              "missing_required_corpus_work_ids": [
-                "yolov1"
-              ],
-              "expected_citations_min_count": 2,
-              "citation_count_ok": true,
-              "answer_rouge_l": 0.08494208494208492,
-              "abstain_keyword_hit": false,
-              "answer_metric_type": "rouge_l",
-              "workspace_scope_ok": true
-            }
-          }
-        ],
+        "consistency_warnings": [],
+        "individual_failures": [],
         "is_phantom": false
       }
     },
@@ -757,8 +471,8 @@
       },
       "summary": {
         "case_count": 3,
-        "mean_weighted_score": 5.8,
-        "all_passed": false,
+        "mean_weighted_score": 6.233333333333333,
+        "all_passed": true,
         "retrieval_judge_eval": true,
         "per_case_score_breakdown": [
           {
@@ -772,12 +486,12 @@
           },
           {
             "case_id": "live_yolov1_architecture",
-            "factuality": 1,
-            "coverage": 2,
+            "factuality": 3,
+            "coverage": 1,
             "no_contradictions": 2,
             "language": 2,
-            "weighted_score": 4.0,
-            "passed": false
+            "weighted_score": 5.3,
+            "passed": true
           },
           {
             "case_id": "live_yolov1_training",
@@ -790,15 +504,10 @@
           }
         ]
       },
-      "failed_count": 1,
-      "failed_cases": [
-        {
-          "case_id": "live_yolov1_architecture",
-          "error": null
-        }
-      ],
-      "all_passed": false,
-      "mean_weighted_score": 5.8,
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true,
+      "mean_weighted_score": 6.233333333333333,
       "trust_signal": {
         "family": "retrieval_family",
         "member_id": "judge_pilot",
@@ -807,14 +516,7 @@
         "validation_status_by_pack": null,
         "last_known_real_run_at": null,
         "consistency_warnings": [],
-        "individual_failures": [
-          {
-            "case_id": "live_yolov1_architecture",
-            "passed": false,
-            "weighted_score": 4.0,
-            "error": null
-          }
-        ],
+        "individual_failures": [],
         "is_phantom": false
       }
     },
@@ -1010,188 +712,12 @@
           "mh_proposal_evolution_chain",
           "mh_yolo_lineage_chain"
         ],
-        "all_passed": false,
+        "all_passed": true,
         "multihop_eval": true
       },
-      "failed_count": 3,
-      "failed_cases": [
-        {
-          "case_id": "mh_detr_lineage_chain",
-          "metrics": {
-            "passed": false,
-            "precision": 0.017241,
-            "recall": 0.333333,
-            "min_precision": 0.025,
-            "min_recall": 0.3,
-            "expected_count": 3,
-            "returned_count": 58,
-            "matched_work_ids": [
-              "9cd96dca-a917-4771-b856-9b4de0a640c9"
-            ],
-            "missing_work_ids": [
-              "224288cb-8c14-48ed-8245-abb2c5025ed7",
-              "79a35e97-2466-49b6-bcef-4933bb752ec5"
-            ],
-            "unexpected_work_ids": [
-              "02a29c99-fcae-47ac-b559-99c9d7690d0e",
-              "06292372-189a-4aec-b44a-a89420effc11",
-              "0847827b-7a2b-4f76-9888-e463a36b1a16",
-              "142db14f-610a-44ca-b928-83aa48f749a0",
-              "1caa9d53-fce2-4df7-a470-4c0a8a7742b6",
-              "1eb24bb5-a13f-4e41-ad00-c473cf6757e7",
-              "27929945-9b30-4a4d-902c-cd25d81029ce",
-              "2cef2adc-58fa-48b5-90e4-65c2c17a4042",
-              "2ffea511-61a9-4845-a642-bda45971e020",
-              "306e3f29-4d2a-4fbf-9d6b-2e6cb6b4cb66",
-              "37b95c3d-a6b5-4caf-b50e-51a9d37508c0",
-              "397bc310-4d87-40f1-9b82-984803305f2f",
-              "4173a47a-4529-406a-a1df-bfcfbba68e6d",
-              "4b5a9ac3-51ac-4b8c-9280-64af288b9179",
-              "4c3fdd70-040b-4634-8cbd-04e009fe1872",
-              "4ecccb9c-3343-4027-9eec-693c8c627d79",
-              "52e5de2a-32ef-4e74-86b1-7fc97c7e2de8",
-              "537cc503-a160-46b0-adbe-624be9ef802f",
-              "551f4d3a-328f-4b4a-a6bb-a56755c2c13e",
-              "55813435-a9ed-47a4-a9e3-1852858719fb",
-              "5687089f-81ab-43e8-8762-4adf886ecc60",
-              "5c99080d-853e-4d93-80d1-644c72b10a52",
-              "5d59bf25-4894-41d3-ac53-8d5fff8c04ad",
-              "6352c6e1-1e7e-41b5-9bf1-f9fd2d22499d",
-              "6b5a13a5-6d7b-4f73-a935-6bcd2fb3a21b",
-              "6fb88a0e-5892-4064-a623-c97c0d613620",
-              "716bc76e-5a1a-4d55-a642-e9f9ef40a709",
-              "745c0384-b80b-403b-add4-569bb825d9ce",
-              "7dd806fd-db66-4c7b-8440-d98e0cab0827",
-              "86fd5966-6edf-4e5b-b159-7cf8a50ca72b",
-              "8cdc68c1-4607-4472-ae2f-72517d64281d",
-              "99efe35c-fad9-4951-9b89-9a01d771d5d2",
-              "a05f7281-dd74-4269-b10e-75aecf09320d",
-              "a20fa709-67c1-4bde-ae13-4c81127b3de2",
-              "a7f3fdf1-5ba4-4102-b85f-575b56478c0f",
-              "a8b5450a-c05d-4d94-a14e-364bc8e11288",
-              "ac94974c-d415-40a2-9a1d-186bcccf5e9e",
-              "af15e297-1f74-4239-aca3-38864fe4be78",
-              "b3e05a48-6b99-4036-a6a3-7c74695c648f",
-              "bab69c03-223f-46dc-82bd-f7d39505bd45",
-              "bf1c4839-9f1d-4fa7-82e0-92733c43f087",
-              "c5e413b7-2ba8-4017-ad2f-650e2ad60d76",
-              "cc0bba14-e9ec-4d3c-a544-e212675bfb63",
-              "cda6a480-8512-4b85-970a-65377bd09c24",
-              "d0642257-74df-4c90-a48a-e727cc21ec82",
-              "d109a334-8525-430b-8d4b-1f1f1257ef5f",
-              "d37b197a-2307-4f8a-9ff2-988f5c8b1d6a",
-              "d5e85778-4c23-4b0a-b772-ca65518a047b",
-              "d6950795-d1b0-4f9b-a473-d27cde0ad713",
-              "da2a6348-1a91-447d-8a17-da475a87b75f",
-              "da37b10b-f5e6-4b74-9659-cc66e4abec26",
-              "df4c1094-33e1-46fc-8389-db1114463cef",
-              "dff7b9ae-629f-43fd-abf7-5fcf45457409",
-              "e778c217-2bef-4ac5-8bfc-076ff9589545",
-              "e811e872-9f0d-410a-b693-24ce8f024ade",
-              "eb99ebf1-d745-4465-a9de-12830062dbc2",
-              "f19e9b2c-b8a9-48a9-bb44-7639186094c1"
-            ]
-          }
-        },
-        {
-          "case_id": "mh_proposal_evolution_chain",
-          "metrics": {
-            "passed": false,
-            "precision": 0.166667,
-            "recall": 0.25,
-            "min_precision": 0.2,
-            "min_recall": 0.2,
-            "expected_count": 4,
-            "returned_count": 6,
-            "matched_work_ids": [
-              "a05f7281-dd74-4269-b10e-75aecf09320d"
-            ],
-            "missing_work_ids": [
-              "37b95c3d-a6b5-4caf-b50e-51a9d37508c0",
-              "537cc503-a160-46b0-adbe-624be9ef802f",
-              "62e2f9d4-d8f3-49d3-9523-4de4216335c3"
-            ],
-            "unexpected_work_ids": [
-              "0a914c15-4ece-477f-8882-7e855671da11",
-              "39ebea1d-d451-41c4-b198-62dd5b563b70",
-              "7ac7ea91-1aba-4078-a360-c287ba9821ba",
-              "a20fa709-67c1-4bde-ae13-4c81127b3de2",
-              "e811e872-9f0d-410a-b693-24ce8f024ade"
-            ]
-          }
-        },
-        {
-          "case_id": "mh_yolo_lineage_chain",
-          "metrics": {
-            "passed": false,
-            "precision": 0.039216,
-            "recall": 0.666667,
-            "min_precision": 0.04,
-            "min_recall": 0.5,
-            "expected_count": 3,
-            "returned_count": 51,
-            "matched_work_ids": [
-              "a631d2a1-c2de-40d9-94f7-3f35f07596f4",
-              "cda6a480-8512-4b85-970a-65377bd09c24"
-            ],
-            "missing_work_ids": [
-              "52e5de2a-32ef-4e74-86b1-7fc97c7e2de8"
-            ],
-            "unexpected_work_ids": [
-              "03ae4ff7-921d-4b54-a207-12f60dcce3b1",
-              "0ae8f9d9-ebcc-43f2-84c1-83c350b34d93",
-              "0c004858-d20d-434d-829c-ac33e594ea88",
-              "15893c09-dd0a-464e-8775-e060170a4379",
-              "16424dcd-d985-421f-b402-0a7817bab180",
-              "1699bfe3-c1fa-463c-ae98-d663acdee893",
-              "1f626534-4239-47a0-9d20-68a8d64a2f11",
-              "275df83f-569d-4b05-ab8e-b5ccfce4dceb",
-              "28974082-2a55-4d1b-8d45-1e6e55035f27",
-              "37b95c3d-a6b5-4caf-b50e-51a9d37508c0",
-              "39ebea1d-d451-41c4-b198-62dd5b563b70",
-              "3b52eea6-621e-4d7a-8e5b-f10ec2fa4a95",
-              "3ef7c442-1ec7-4d1c-9e5e-66f85c236494",
-              "44869d2a-c37c-49e5-a385-ffa2d35d81f1",
-              "4e1e49b9-d030-4502-87e9-bd2ad088ce89",
-              "56c9d759-ff0b-4668-ac3d-b1ea83647d90",
-              "57b2cf72-6add-42cf-9329-271b72bba4f4",
-              "58b60855-e642-4bc4-8b8f-86dfef5b41dd",
-              "591ee780-74e0-4e97-a3c5-4982f2114de5",
-              "60ce8c04-6f11-4c89-80b2-efc7b6193bf7",
-              "62c0204d-cccb-431e-a2ea-4142ad49f194",
-              "62e2f9d4-d8f3-49d3-9523-4de4216335c3",
-              "72e50d6d-821d-45d3-a583-1270849381cf",
-              "734fc903-fa6b-42ea-a5c3-ff3669b5c1e9",
-              "7685b341-4e67-4d33-9093-05fc9886f5c4",
-              "79898048-5bbe-4c59-9087-2898fbc1118f",
-              "7a20e166-9666-455f-a566-7cad11dbf349",
-              "7a43eec1-f98b-4f38-a08e-fb7863ed425e",
-              "7dd806fd-db66-4c7b-8440-d98e0cab0827",
-              "7e947c10-0ec2-45e8-869d-90733d04940b",
-              "807c8f48-f811-4d22-bb05-6fe7d27615c2",
-              "a0b67a5e-3fb9-49ab-9027-e1c574924527",
-              "a3285d1c-acc4-48af-aecd-777dd0acc796",
-              "a7b3023a-8562-45c8-b745-a67cc97951f2",
-              "af8052e3-4e48-4db4-b276-1b65c36accf8",
-              "badb93c4-031f-42f7-bd37-dc8556aef8ee",
-              "c0066f66-29fa-4dcf-966f-ed43f4cee9b4",
-              "cb907a14-6f49-45e1-8a3b-9194657050cd",
-              "d48cc966-3459-4fe5-97b6-a6fedf865560",
-              "da2a6348-1a91-447d-8a17-da475a87b75f",
-              "db6796f1-78d0-41d1-8237-4814f256bc75",
-              "e56d33c1-522f-4196-8d45-79de2756d40d",
-              "e839bcba-680b-4bcb-9d98-23d5d5fedd99",
-              "eb99ebf1-d745-4465-a9de-12830062dbc2",
-              "f681dfb6-b225-4381-96e9-2b795788a798",
-              "f7b4a463-3701-4162-8bfd-bddd31308693",
-              "f897ea22-0c6c-4fe0-9df5-f20cc12b9b02",
-              "fa2f8a64-453b-495a-9e84-5aa27967299b",
-              "ff318edf-513b-47c3-a1c7-975577af6c78"
-            ]
-          }
-        }
-      ],
-      "all_passed": false,
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true,
       "mean_claim_recall": null,
       "trust_signal": {
         "family": "retrieval_family",
@@ -1206,186 +732,8 @@
           "mh_yolo_lineage_chain": "llm_dual_validated"
         },
         "last_known_real_run_at": null,
-        "consistency_warnings": [
-          "multihop_mini: summary.all_passed=false with 3 failed cases"
-        ],
-        "individual_failures": [
-          {
-            "case_id": "mh_detr_lineage_chain",
-            "metrics": {
-              "passed": false,
-              "precision": 0.017241,
-              "recall": 0.333333,
-              "min_precision": 0.025,
-              "min_recall": 0.3,
-              "expected_count": 3,
-              "returned_count": 58,
-              "matched_work_ids": [
-                "9cd96dca-a917-4771-b856-9b4de0a640c9"
-              ],
-              "missing_work_ids": [
-                "224288cb-8c14-48ed-8245-abb2c5025ed7",
-                "79a35e97-2466-49b6-bcef-4933bb752ec5"
-              ],
-              "unexpected_work_ids": [
-                "02a29c99-fcae-47ac-b559-99c9d7690d0e",
-                "06292372-189a-4aec-b44a-a89420effc11",
-                "0847827b-7a2b-4f76-9888-e463a36b1a16",
-                "142db14f-610a-44ca-b928-83aa48f749a0",
-                "1caa9d53-fce2-4df7-a470-4c0a8a7742b6",
-                "1eb24bb5-a13f-4e41-ad00-c473cf6757e7",
-                "27929945-9b30-4a4d-902c-cd25d81029ce",
-                "2cef2adc-58fa-48b5-90e4-65c2c17a4042",
-                "2ffea511-61a9-4845-a642-bda45971e020",
-                "306e3f29-4d2a-4fbf-9d6b-2e6cb6b4cb66",
-                "37b95c3d-a6b5-4caf-b50e-51a9d37508c0",
-                "397bc310-4d87-40f1-9b82-984803305f2f",
-                "4173a47a-4529-406a-a1df-bfcfbba68e6d",
-                "4b5a9ac3-51ac-4b8c-9280-64af288b9179",
-                "4c3fdd70-040b-4634-8cbd-04e009fe1872",
-                "4ecccb9c-3343-4027-9eec-693c8c627d79",
-                "52e5de2a-32ef-4e74-86b1-7fc97c7e2de8",
-                "537cc503-a160-46b0-adbe-624be9ef802f",
-                "551f4d3a-328f-4b4a-a6bb-a56755c2c13e",
-                "55813435-a9ed-47a4-a9e3-1852858719fb",
-                "5687089f-81ab-43e8-8762-4adf886ecc60",
-                "5c99080d-853e-4d93-80d1-644c72b10a52",
-                "5d59bf25-4894-41d3-ac53-8d5fff8c04ad",
-                "6352c6e1-1e7e-41b5-9bf1-f9fd2d22499d",
-                "6b5a13a5-6d7b-4f73-a935-6bcd2fb3a21b",
-                "6fb88a0e-5892-4064-a623-c97c0d613620",
-                "716bc76e-5a1a-4d55-a642-e9f9ef40a709",
-                "745c0384-b80b-403b-add4-569bb825d9ce",
-                "7dd806fd-db66-4c7b-8440-d98e0cab0827",
-                "86fd5966-6edf-4e5b-b159-7cf8a50ca72b",
-                "8cdc68c1-4607-4472-ae2f-72517d64281d",
-                "99efe35c-fad9-4951-9b89-9a01d771d5d2",
-                "a05f7281-dd74-4269-b10e-75aecf09320d",
-                "a20fa709-67c1-4bde-ae13-4c81127b3de2",
-                "a7f3fdf1-5ba4-4102-b85f-575b56478c0f",
-                "a8b5450a-c05d-4d94-a14e-364bc8e11288",
-                "ac94974c-d415-40a2-9a1d-186bcccf5e9e",
-                "af15e297-1f74-4239-aca3-38864fe4be78",
-                "b3e05a48-6b99-4036-a6a3-7c74695c648f",
-                "bab69c03-223f-46dc-82bd-f7d39505bd45",
-                "bf1c4839-9f1d-4fa7-82e0-92733c43f087",
-                "c5e413b7-2ba8-4017-ad2f-650e2ad60d76",
-                "cc0bba14-e9ec-4d3c-a544-e212675bfb63",
-                "cda6a480-8512-4b85-970a-65377bd09c24",
-                "d0642257-74df-4c90-a48a-e727cc21ec82",
-                "d109a334-8525-430b-8d4b-1f1f1257ef5f",
-                "d37b197a-2307-4f8a-9ff2-988f5c8b1d6a",
-                "d5e85778-4c23-4b0a-b772-ca65518a047b",
-                "d6950795-d1b0-4f9b-a473-d27cde0ad713",
-                "da2a6348-1a91-447d-8a17-da475a87b75f",
-                "da37b10b-f5e6-4b74-9659-cc66e4abec26",
-                "df4c1094-33e1-46fc-8389-db1114463cef",
-                "dff7b9ae-629f-43fd-abf7-5fcf45457409",
-                "e778c217-2bef-4ac5-8bfc-076ff9589545",
-                "e811e872-9f0d-410a-b693-24ce8f024ade",
-                "eb99ebf1-d745-4465-a9de-12830062dbc2",
-                "f19e9b2c-b8a9-48a9-bb44-7639186094c1"
-              ]
-            }
-          },
-          {
-            "case_id": "mh_proposal_evolution_chain",
-            "metrics": {
-              "passed": false,
-              "precision": 0.166667,
-              "recall": 0.25,
-              "min_precision": 0.2,
-              "min_recall": 0.2,
-              "expected_count": 4,
-              "returned_count": 6,
-              "matched_work_ids": [
-                "a05f7281-dd74-4269-b10e-75aecf09320d"
-              ],
-              "missing_work_ids": [
-                "37b95c3d-a6b5-4caf-b50e-51a9d37508c0",
-                "537cc503-a160-46b0-adbe-624be9ef802f",
-                "62e2f9d4-d8f3-49d3-9523-4de4216335c3"
-              ],
-              "unexpected_work_ids": [
-                "0a914c15-4ece-477f-8882-7e855671da11",
-                "39ebea1d-d451-41c4-b198-62dd5b563b70",
-                "7ac7ea91-1aba-4078-a360-c287ba9821ba",
-                "a20fa709-67c1-4bde-ae13-4c81127b3de2",
-                "e811e872-9f0d-410a-b693-24ce8f024ade"
-              ]
-            }
-          },
-          {
-            "case_id": "mh_yolo_lineage_chain",
-            "metrics": {
-              "passed": false,
-              "precision": 0.039216,
-              "recall": 0.666667,
-              "min_precision": 0.04,
-              "min_recall": 0.5,
-              "expected_count": 3,
-              "returned_count": 51,
-              "matched_work_ids": [
-                "a631d2a1-c2de-40d9-94f7-3f35f07596f4",
-                "cda6a480-8512-4b85-970a-65377bd09c24"
-              ],
-              "missing_work_ids": [
-                "52e5de2a-32ef-4e74-86b1-7fc97c7e2de8"
-              ],
-              "unexpected_work_ids": [
-                "03ae4ff7-921d-4b54-a207-12f60dcce3b1",
-                "0ae8f9d9-ebcc-43f2-84c1-83c350b34d93",
-                "0c004858-d20d-434d-829c-ac33e594ea88",
-                "15893c09-dd0a-464e-8775-e060170a4379",
-                "16424dcd-d985-421f-b402-0a7817bab180",
-                "1699bfe3-c1fa-463c-ae98-d663acdee893",
-                "1f626534-4239-47a0-9d20-68a8d64a2f11",
-                "275df83f-569d-4b05-ab8e-b5ccfce4dceb",
-                "28974082-2a55-4d1b-8d45-1e6e55035f27",
-                "37b95c3d-a6b5-4caf-b50e-51a9d37508c0",
-                "39ebea1d-d451-41c4-b198-62dd5b563b70",
-                "3b52eea6-621e-4d7a-8e5b-f10ec2fa4a95",
-                "3ef7c442-1ec7-4d1c-9e5e-66f85c236494",
-                "44869d2a-c37c-49e5-a385-ffa2d35d81f1",
-                "4e1e49b9-d030-4502-87e9-bd2ad088ce89",
-                "56c9d759-ff0b-4668-ac3d-b1ea83647d90",
-                "57b2cf72-6add-42cf-9329-271b72bba4f4",
-                "58b60855-e642-4bc4-8b8f-86dfef5b41dd",
-                "591ee780-74e0-4e97-a3c5-4982f2114de5",
-                "60ce8c04-6f11-4c89-80b2-efc7b6193bf7",
-                "62c0204d-cccb-431e-a2ea-4142ad49f194",
-                "62e2f9d4-d8f3-49d3-9523-4de4216335c3",
-                "72e50d6d-821d-45d3-a583-1270849381cf",
-                "734fc903-fa6b-42ea-a5c3-ff3669b5c1e9",
-                "7685b341-4e67-4d33-9093-05fc9886f5c4",
-                "79898048-5bbe-4c59-9087-2898fbc1118f",
-                "7a20e166-9666-455f-a566-7cad11dbf349",
-                "7a43eec1-f98b-4f38-a08e-fb7863ed425e",
-                "7dd806fd-db66-4c7b-8440-d98e0cab0827",
-                "7e947c10-0ec2-45e8-869d-90733d04940b",
-                "807c8f48-f811-4d22-bb05-6fe7d27615c2",
-                "a0b67a5e-3fb9-49ab-9027-e1c574924527",
-                "a3285d1c-acc4-48af-aecd-777dd0acc796",
-                "a7b3023a-8562-45c8-b745-a67cc97951f2",
-                "af8052e3-4e48-4db4-b276-1b65c36accf8",
-                "badb93c4-031f-42f7-bd37-dc8556aef8ee",
-                "c0066f66-29fa-4dcf-966f-ed43f4cee9b4",
-                "cb907a14-6f49-45e1-8a3b-9194657050cd",
-                "d48cc966-3459-4fe5-97b6-a6fedf865560",
-                "da2a6348-1a91-447d-8a17-da475a87b75f",
-                "db6796f1-78d0-41d1-8237-4814f256bc75",
-                "e56d33c1-522f-4196-8d45-79de2756d40d",
-                "e839bcba-680b-4bcb-9d98-23d5d5fedd99",
-                "eb99ebf1-d745-4465-a9de-12830062dbc2",
-                "f681dfb6-b225-4381-96e9-2b795788a798",
-                "f7b4a463-3701-4162-8bfd-bddd31308693",
-                "f897ea22-0c6c-4fe0-9df5-f20cc12b9b02",
-                "fa2f8a64-453b-495a-9e84-5aa27967299b",
-                "ff318edf-513b-47c3-a1c7-975577af6c78"
-              ]
-            }
-          }
-        ],
+        "consistency_warnings": [],
+        "individual_failures": [],
         "is_phantom": false
       }
     },
@@ -1643,68 +991,13 @@
           "corpus_ssd_v2",
           "corpus_yolov1_v2"
         ],
-        "all_passed": false,
+        "all_passed": true,
         "claims_paraphrase_eval": true
       },
-      "failed_count": 2,
-      "failed_cases": [
-        {
-          "case_id": "corpus_ssd_v2",
-          "metrics": {
-            "contract_only": false,
-            "contract_passed": true,
-            "passed": false,
-            "claim_recall": 0.0,
-            "claim_precision": 0.0,
-            "claim_precision_distracted": 0.0,
-            "precision_drop_with_distractors": 0.0,
-            "max_precision_drop_with_distractors": 0.15,
-            "paraphrase_scoring": true,
-            "claim_match_mode": "claim_id_or_normalized_text",
-            "expected_count": 4,
-            "predicted_count_plain": 0,
-            "predicted_count_distracted": 0,
-            "matched_claim_ids": [],
-            "missing_claim_ids": [
-              "ssd_default_boxes_multiscale",
-              "ssd_300_voc_speed",
-              "ssd_multiple_feature_maps",
-              "ssd_yolo_localization_negative"
-            ],
-            "min_claim_recall": 0.55
-          }
-        },
-        {
-          "case_id": "corpus_yolov1_v2",
-          "metrics": {
-            "contract_only": false,
-            "contract_passed": true,
-            "passed": false,
-            "claim_recall": 0.0,
-            "claim_precision": 0.0,
-            "claim_precision_distracted": 0.0,
-            "precision_drop_with_distractors": 0.0,
-            "max_precision_drop_with_distractors": 0.15,
-            "paraphrase_scoring": true,
-            "claim_match_mode": "claim_id_or_normalized_text",
-            "expected_count": 6,
-            "predicted_count_plain": 0,
-            "predicted_count_distracted": 0,
-            "matched_claim_ids": [],
-            "missing_claim_ids": [
-              "yolov1_unified_pipeline",
-              "yolov1_speed_45_155_fps",
-              "yolov1_grid_based_detection",
-              "yolov1_localization_error_negative",
-              "yolov1_artwork_generalization",
-              "yolov1_two_stage_higher_acc_negative"
-            ],
-            "min_claim_recall": 0.55
-          }
-        }
-      ],
-      "all_passed": false,
-      "mean_claim_recall": 0.0,
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true,
+      "mean_claim_recall": 0.625,
       "trust_signal": {
         "family": "claims_family",
         "member_id": "claims_paraphrase_pilot",
@@ -1733,65 +1026,8 @@
           "corpus_fast_rcnn_v2": "draft"
         },
         "last_known_real_run_at": null,
-        "consistency_warnings": [
-          "claims_paraphrase_pilot: summary.all_passed=false with 2 failed cases"
-        ],
-        "individual_failures": [
-          {
-            "case_id": "corpus_ssd_v2",
-            "metrics": {
-              "contract_only": false,
-              "contract_passed": true,
-              "passed": false,
-              "claim_recall": 0.0,
-              "claim_precision": 0.0,
-              "claim_precision_distracted": 0.0,
-              "precision_drop_with_distractors": 0.0,
-              "max_precision_drop_with_distractors": 0.15,
-              "paraphrase_scoring": true,
-              "claim_match_mode": "claim_id_or_normalized_text",
-              "expected_count": 4,
-              "predicted_count_plain": 0,
-              "predicted_count_distracted": 0,
-              "matched_claim_ids": [],
-              "missing_claim_ids": [
-                "ssd_default_boxes_multiscale",
-                "ssd_300_voc_speed",
-                "ssd_multiple_feature_maps",
-                "ssd_yolo_localization_negative"
-              ],
-              "min_claim_recall": 0.55
-            }
-          },
-          {
-            "case_id": "corpus_yolov1_v2",
-            "metrics": {
-              "contract_only": false,
-              "contract_passed": true,
-              "passed": false,
-              "claim_recall": 0.0,
-              "claim_precision": 0.0,
-              "claim_precision_distracted": 0.0,
-              "precision_drop_with_distractors": 0.0,
-              "max_precision_drop_with_distractors": 0.15,
-              "paraphrase_scoring": true,
-              "claim_match_mode": "claim_id_or_normalized_text",
-              "expected_count": 6,
-              "predicted_count_plain": 0,
-              "predicted_count_distracted": 0,
-              "matched_claim_ids": [],
-              "missing_claim_ids": [
-                "yolov1_unified_pipeline",
-                "yolov1_speed_45_155_fps",
-                "yolov1_grid_based_detection",
-                "yolov1_localization_error_negative",
-                "yolov1_artwork_generalization",
-                "yolov1_two_stage_higher_acc_negative"
-              ],
-              "min_claim_recall": 0.55
-            }
-          }
-        ],
+        "consistency_warnings": [],
+        "individual_failures": [],
         "is_phantom": false
       }
     },
@@ -1814,11 +1050,11 @@
       "failed_count": 0,
       "failed_cases": [],
       "all_passed": true,
-      "mean_claim_recall": 1.0,
+      "mean_claim_recall": 0.25,
       "trust_signal": {
         "family": "claims_family",
         "member_id": "claims_paraphrase_holdout",
-        "runtime_mode": "synthetic_gold",
+        "runtime_mode": "live",
         "validation_status_aggregate": "draft",
         "validation_status_by_pack": {
           "corpus_detr_v2": "llm_dual_validated",
@@ -1843,18 +1079,14 @@
           "corpus_fast_rcnn_v2": "draft"
         },
         "last_known_real_run_at": null,
-        "consistency_warnings": [
-          "claims_paraphrase_holdout: hybrid ablation appears synthetic (identical MRR rows)"
-        ],
+        "consistency_warnings": [],
         "individual_failures": [],
-        "is_phantom": true
+        "is_phantom": false
       }
     },
     "trust_aggregate": {
-      "phantom_member_count": 1,
-      "phantom_members": [
-        "claims_family.claims_paraphrase_holdout"
-      ],
+      "phantom_member_count": 0,
+      "phantom_members": [],
       "mixed_validation_status_member_count": 0
     }
   },
@@ -2042,7 +1274,7 @@
         "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
         "extraction_llm_base_url": "https://openrouter.ai/api/v1",
         "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
-        "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190"
+        "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316"
       },
       "summary": {
         "case_count": 5,
@@ -2054,7 +1286,8 @@
           "yolov1_concepts"
         ],
         "all_passed": true,
-        "concept_topic_eval": true
+        "concept_topic_eval": true,
+        "extractor": "extract_concepts_topics_production"
       },
       "failed_count": 0,
       "failed_cases": [],
@@ -2063,7 +1296,7 @@
       "trust_signal": {
         "family": "concept_topic_family",
         "member_id": "concept_topic_mini",
-        "runtime_mode": "harness_substring",
+        "runtime_mode": "live",
         "validation_status_aggregate": "draft",
         "validation_status_by_pack": {
           "corpus_detr_v2": "draft",
@@ -2078,18 +1311,14 @@
           "corpus_ssd_v2": "llm_dual_validated"
         },
         "last_known_real_run_at": null,
-        "consistency_warnings": [
-          "concept_topic_mini: harness substring fixture (not production extraction)"
-        ],
+        "consistency_warnings": [],
         "individual_failures": [],
-        "is_phantom": true
+        "is_phantom": false
       }
     },
     "trust_aggregate": {
-      "phantom_member_count": 1,
-      "phantom_members": [
-        "concept_topic_family.concept_topic_mini"
-      ],
+      "phantom_member_count": 0,
+      "phantom_members": [],
       "mixed_validation_status_member_count": 0
     }
   },
@@ -2101,7 +1330,7 @@
         "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
         "extraction_llm_base_url": "https://openrouter.ai/api/v1",
         "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
-        "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190"
+        "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316"
       },
       "summary": {
         "case_count": 10,
@@ -2119,7 +1348,7 @@
         ],
         "all_passed": true,
         "agent_tools_eval": true,
-        "latency_p95_ms": 2
+        "latency_p95_ms": 25983
       },
       "failed_count": 0,
       "failed_cases": [],
@@ -2128,7 +1357,7 @@
       "trust_signal": {
         "family": "agent_tools_family",
         "member_id": "agent_tools_mini",
-        "runtime_mode": "mock_runtime",
+        "runtime_mode": "live",
         "validation_status_aggregate": "mixed",
         "validation_status_by_pack": {
           "multiagent_live_01_yolo_evolution_writer": "draft",
@@ -2142,11 +1371,9 @@
           "multiagent_live_02_authors_one_two_stage": "draft"
         },
         "last_known_real_run_at": null,
-        "consistency_warnings": [
-          "agent_tools_mini: mock runtime answers detected"
-        ],
+        "consistency_warnings": [],
         "individual_failures": [],
-        "is_phantom": true
+        "is_phantom": false
       }
     },
     "agent_tools_judge": {
@@ -2179,10 +1406,8 @@
       }
     },
     "trust_aggregate": {
-      "phantom_member_count": 1,
-      "phantom_members": [
-        "agent_tools_family.agent_tools_mini"
-      ],
+      "phantom_member_count": 0,
+      "phantom_members": [],
       "mixed_validation_status_member_count": 1
     }
   },
@@ -2241,8 +1466,8 @@
     }
   },
   "decision_gate": {
-    "decision": "NO-GO",
-    "reason": "hard_block_individual_failures:retrieval_judge_pilot",
+    "decision": "GO",
+    "reason": "all_nightly_passed",
     "criteria": {
       "reference_all_passed": true,
       "layer1_nightly_failed_count": 0,
@@ -2250,419 +1475,13 @@
       "claims_production_artifact_missing": false,
       "claims_production_all_passed": true,
       "claims_production_mean_claim_recall": 1.0,
-      "advisory_phantom_count": 5,
+      "advisory_phantom_count": 2,
       "advisory_phantom_families": [
         "merge_safe_contract_mock",
-        "strict_pilot_mock",
-        "claims_paraphrase_holdout",
-        "concept_topic_mini",
-        "agent_tools_mini"
+        "strict_pilot_mock"
       ],
-      "advisory_individual_failures": [
-        {
-          "family": "retrieval_family",
-          "member_id": "workspace_scoped_live",
-          "case_id": "ws_full_anchor_free_overview",
-          "metrics": {
-            "passed": false,
-            "contract_only": false,
-            "workspace_scoped_live": true,
-            "uuid_aware_mode": false,
-            "hit_count": 5,
-            "trace_workspace_matches": true,
-            "forbidden_work_id_violation_count": 0,
-            "forbidden_corpus_work_ids_leaked": [],
-            "out_of_scope_citation_work_ids": [],
-            "forbidden_violation_gate": 0,
-            "missing_required_corpus_work_ids": [
-              "cornernet_realpdf",
-              "fcos_realpdf"
-            ],
-            "expected_citations_min_count": 3,
-            "citation_count_ok": true,
-            "answer_rouge_l": 0.06866952789699571,
-            "abstain_keyword_hit": false,
-            "answer_metric_type": "rouge_l",
-            "workspace_scope_ok": false
-          }
-        },
-        {
-          "family": "retrieval_family",
-          "member_id": "workspace_scoped_live",
-          "case_id": "ws_full_corpus_negative_unrelated",
-          "metrics": {
-            "passed": false,
-            "contract_only": false,
-            "workspace_scoped_live": true,
-            "uuid_aware_mode": false,
-            "hit_count": 5,
-            "trace_workspace_matches": true,
-            "forbidden_work_id_violation_count": 0,
-            "forbidden_corpus_work_ids_leaked": [],
-            "out_of_scope_citation_work_ids": [],
-            "forbidden_violation_gate": 0,
-            "missing_required_corpus_work_ids": [],
-            "expected_citations_min_count": 0,
-            "citation_count_ok": true,
-            "answer_rouge_l": null,
-            "abstain_keyword_hit": false,
-            "answer_metric_type": "abstain_keywords",
-            "workspace_scope_ok": true
-          }
-        },
-        {
-          "family": "retrieval_family",
-          "member_id": "workspace_scoped_live",
-          "case_id": "ws_two_stage_negative_focal_loss",
-          "metrics": {
-            "passed": false,
-            "contract_only": false,
-            "workspace_scoped_live": true,
-            "uuid_aware_mode": true,
-            "hit_count": 5,
-            "trace_workspace_matches": true,
-            "forbidden_work_id_violation_count": 0,
-            "forbidden_corpus_work_ids_leaked": [],
-            "out_of_scope_citation_work_ids": [],
-            "forbidden_violation_gate": 0,
-            "missing_required_corpus_work_ids": [],
-            "expected_citations_min_count": 0,
-            "citation_count_ok": true,
-            "answer_rouge_l": null,
-            "abstain_keyword_hit": false,
-            "answer_metric_type": "abstain_keywords",
-            "workspace_scope_ok": true
-          }
-        },
-        {
-          "family": "retrieval_family",
-          "member_id": "workspace_scoped_live",
-          "case_id": "ws_two_stage_proposal_evolution",
-          "metrics": {
-            "passed": false,
-            "contract_only": false,
-            "workspace_scoped_live": true,
-            "uuid_aware_mode": true,
-            "hit_count": 5,
-            "trace_workspace_matches": true,
-            "forbidden_work_id_violation_count": 0,
-            "forbidden_corpus_work_ids_leaked": [],
-            "out_of_scope_citation_work_ids": [],
-            "forbidden_violation_gate": 0,
-            "missing_required_corpus_work_ids": [
-              "rcnn_realpdf",
-              "fast_rcnn_realpdf",
-              "faster_rcnn_realpdf"
-            ],
-            "expected_citations_min_count": 3,
-            "citation_count_ok": true,
-            "answer_rouge_l": 0.08979591836734692,
-            "abstain_keyword_hit": false,
-            "answer_metric_type": "rouge_l",
-            "workspace_scope_ok": true
-          }
-        },
-        {
-          "family": "retrieval_family",
-          "member_id": "workspace_scoped_live",
-          "case_id": "ws_yolo_negative_mask_segmentation",
-          "metrics": {
-            "passed": false,
-            "contract_only": false,
-            "workspace_scoped_live": true,
-            "uuid_aware_mode": true,
-            "hit_count": 5,
-            "trace_workspace_matches": true,
-            "forbidden_work_id_violation_count": 0,
-            "forbidden_corpus_work_ids_leaked": [],
-            "out_of_scope_citation_work_ids": [],
-            "forbidden_violation_gate": 0,
-            "missing_required_corpus_work_ids": [],
-            "expected_citations_min_count": 0,
-            "citation_count_ok": true,
-            "answer_rouge_l": null,
-            "abstain_keyword_hit": false,
-            "answer_metric_type": "abstain_keywords",
-            "workspace_scope_ok": true
-          }
-        },
-        {
-          "family": "retrieval_family",
-          "member_id": "workspace_scoped_live",
-          "case_id": "ws_yolo_speed_question",
-          "metrics": {
-            "passed": false,
-            "contract_only": false,
-            "workspace_scoped_live": true,
-            "uuid_aware_mode": true,
-            "hit_count": 5,
-            "trace_workspace_matches": true,
-            "forbidden_work_id_violation_count": 0,
-            "forbidden_corpus_work_ids_leaked": [],
-            "out_of_scope_citation_work_ids": [],
-            "forbidden_violation_gate": 0,
-            "missing_required_corpus_work_ids": [
-              "yolov1"
-            ],
-            "expected_citations_min_count": 2,
-            "citation_count_ok": true,
-            "answer_rouge_l": 0.08494208494208492,
-            "abstain_keyword_hit": false,
-            "answer_metric_type": "rouge_l",
-            "workspace_scope_ok": true
-          }
-        },
-        {
-          "family": "retrieval_family",
-          "member_id": "judge_pilot",
-          "case_id": "live_yolov1_architecture",
-          "passed": false,
-          "weighted_score": 4.0,
-          "error": null
-        },
-        {
-          "family": "retrieval_family",
-          "member_id": "multihop_mini",
-          "case_id": "mh_detr_lineage_chain",
-          "metrics": {
-            "passed": false,
-            "precision": 0.017241,
-            "recall": 0.333333,
-            "min_precision": 0.025,
-            "min_recall": 0.3,
-            "expected_count": 3,
-            "returned_count": 58,
-            "matched_work_ids": [
-              "9cd96dca-a917-4771-b856-9b4de0a640c9"
-            ],
-            "missing_work_ids": [
-              "224288cb-8c14-48ed-8245-abb2c5025ed7",
-              "79a35e97-2466-49b6-bcef-4933bb752ec5"
-            ],
-            "unexpected_work_ids": [
-              "02a29c99-fcae-47ac-b559-99c9d7690d0e",
-              "06292372-189a-4aec-b44a-a89420effc11",
-              "0847827b-7a2b-4f76-9888-e463a36b1a16",
-              "142db14f-610a-44ca-b928-83aa48f749a0",
-              "1caa9d53-fce2-4df7-a470-4c0a8a7742b6",
-              "1eb24bb5-a13f-4e41-ad00-c473cf6757e7",
-              "27929945-9b30-4a4d-902c-cd25d81029ce",
-              "2cef2adc-58fa-48b5-90e4-65c2c17a4042",
-              "2ffea511-61a9-4845-a642-bda45971e020",
-              "306e3f29-4d2a-4fbf-9d6b-2e6cb6b4cb66",
-              "37b95c3d-a6b5-4caf-b50e-51a9d37508c0",
-              "397bc310-4d87-40f1-9b82-984803305f2f",
-              "4173a47a-4529-406a-a1df-bfcfbba68e6d",
-              "4b5a9ac3-51ac-4b8c-9280-64af288b9179",
-              "4c3fdd70-040b-4634-8cbd-04e009fe1872",
-              "4ecccb9c-3343-4027-9eec-693c8c627d79",
-              "52e5de2a-32ef-4e74-86b1-7fc97c7e2de8",
-              "537cc503-a160-46b0-adbe-624be9ef802f",
-              "551f4d3a-328f-4b4a-a6bb-a56755c2c13e",
-              "55813435-a9ed-47a4-a9e3-1852858719fb",
-              "5687089f-81ab-43e8-8762-4adf886ecc60",
-              "5c99080d-853e-4d93-80d1-644c72b10a52",
-              "5d59bf25-4894-41d3-ac53-8d5fff8c04ad",
-              "6352c6e1-1e7e-41b5-9bf1-f9fd2d22499d",
-              "6b5a13a5-6d7b-4f73-a935-6bcd2fb3a21b",
-              "6fb88a0e-5892-4064-a623-c97c0d613620",
-              "716bc76e-5a1a-4d55-a642-e9f9ef40a709",
-              "745c0384-b80b-403b-add4-569bb825d9ce",
-              "7dd806fd-db66-4c7b-8440-d98e0cab0827",
-              "86fd5966-6edf-4e5b-b159-7cf8a50ca72b",
-              "8cdc68c1-4607-4472-ae2f-72517d64281d",
-              "99efe35c-fad9-4951-9b89-9a01d771d5d2",
-              "a05f7281-dd74-4269-b10e-75aecf09320d",
-              "a20fa709-67c1-4bde-ae13-4c81127b3de2",
-              "a7f3fdf1-5ba4-4102-b85f-575b56478c0f",
-              "a8b5450a-c05d-4d94-a14e-364bc8e11288",
-              "ac94974c-d415-40a2-9a1d-186bcccf5e9e",
-              "af15e297-1f74-4239-aca3-38864fe4be78",
-              "b3e05a48-6b99-4036-a6a3-7c74695c648f",
-              "bab69c03-223f-46dc-82bd-f7d39505bd45",
-              "bf1c4839-9f1d-4fa7-82e0-92733c43f087",
-              "c5e413b7-2ba8-4017-ad2f-650e2ad60d76",
-              "cc0bba14-e9ec-4d3c-a544-e212675bfb63",
-              "cda6a480-8512-4b85-970a-65377bd09c24",
-              "d0642257-74df-4c90-a48a-e727cc21ec82",
-              "d109a334-8525-430b-8d4b-1f1f1257ef5f",
-              "d37b197a-2307-4f8a-9ff2-988f5c8b1d6a",
-              "d5e85778-4c23-4b0a-b772-ca65518a047b",
-              "d6950795-d1b0-4f9b-a473-d27cde0ad713",
-              "da2a6348-1a91-447d-8a17-da475a87b75f",
-              "da37b10b-f5e6-4b74-9659-cc66e4abec26",
-              "df4c1094-33e1-46fc-8389-db1114463cef",
-              "dff7b9ae-629f-43fd-abf7-5fcf45457409",
-              "e778c217-2bef-4ac5-8bfc-076ff9589545",
-              "e811e872-9f0d-410a-b693-24ce8f024ade",
-              "eb99ebf1-d745-4465-a9de-12830062dbc2",
-              "f19e9b2c-b8a9-48a9-bb44-7639186094c1"
-            ]
-          }
-        },
-        {
-          "family": "retrieval_family",
-          "member_id": "multihop_mini",
-          "case_id": "mh_proposal_evolution_chain",
-          "metrics": {
-            "passed": false,
-            "precision": 0.166667,
-            "recall": 0.25,
-            "min_precision": 0.2,
-            "min_recall": 0.2,
-            "expected_count": 4,
-            "returned_count": 6,
-            "matched_work_ids": [
-              "a05f7281-dd74-4269-b10e-75aecf09320d"
-            ],
-            "missing_work_ids": [
-              "37b95c3d-a6b5-4caf-b50e-51a9d37508c0",
-              "537cc503-a160-46b0-adbe-624be9ef802f",
-              "62e2f9d4-d8f3-49d3-9523-4de4216335c3"
-            ],
-            "unexpected_work_ids": [
-              "0a914c15-4ece-477f-8882-7e855671da11",
-              "39ebea1d-d451-41c4-b198-62dd5b563b70",
-              "7ac7ea91-1aba-4078-a360-c287ba9821ba",
-              "a20fa709-67c1-4bde-ae13-4c81127b3de2",
-              "e811e872-9f0d-410a-b693-24ce8f024ade"
-            ]
-          }
-        },
-        {
-          "family": "retrieval_family",
-          "member_id": "multihop_mini",
-          "case_id": "mh_yolo_lineage_chain",
-          "metrics": {
-            "passed": false,
-            "precision": 0.039216,
-            "recall": 0.666667,
-            "min_precision": 0.04,
-            "min_recall": 0.5,
-            "expected_count": 3,
-            "returned_count": 51,
-            "matched_work_ids": [
-              "a631d2a1-c2de-40d9-94f7-3f35f07596f4",
-              "cda6a480-8512-4b85-970a-65377bd09c24"
-            ],
-            "missing_work_ids": [
-              "52e5de2a-32ef-4e74-86b1-7fc97c7e2de8"
-            ],
-            "unexpected_work_ids": [
-              "03ae4ff7-921d-4b54-a207-12f60dcce3b1",
-              "0ae8f9d9-ebcc-43f2-84c1-83c350b34d93",
-              "0c004858-d20d-434d-829c-ac33e594ea88",
-              "15893c09-dd0a-464e-8775-e060170a4379",
-              "16424dcd-d985-421f-b402-0a7817bab180",
-              "1699bfe3-c1fa-463c-ae98-d663acdee893",
-              "1f626534-4239-47a0-9d20-68a8d64a2f11",
-              "275df83f-569d-4b05-ab8e-b5ccfce4dceb",
-              "28974082-2a55-4d1b-8d45-1e6e55035f27",
-              "37b95c3d-a6b5-4caf-b50e-51a9d37508c0",
-              "39ebea1d-d451-41c4-b198-62dd5b563b70",
-              "3b52eea6-621e-4d7a-8e5b-f10ec2fa4a95",
-              "3ef7c442-1ec7-4d1c-9e5e-66f85c236494",
-              "44869d2a-c37c-49e5-a385-ffa2d35d81f1",
-              "4e1e49b9-d030-4502-87e9-bd2ad088ce89",
-              "56c9d759-ff0b-4668-ac3d-b1ea83647d90",
-              "57b2cf72-6add-42cf-9329-271b72bba4f4",
-              "58b60855-e642-4bc4-8b8f-86dfef5b41dd",
-              "591ee780-74e0-4e97-a3c5-4982f2114de5",
-              "60ce8c04-6f11-4c89-80b2-efc7b6193bf7",
-              "62c0204d-cccb-431e-a2ea-4142ad49f194",
-              "62e2f9d4-d8f3-49d3-9523-4de4216335c3",
-              "72e50d6d-821d-45d3-a583-1270849381cf",
-              "734fc903-fa6b-42ea-a5c3-ff3669b5c1e9",
-              "7685b341-4e67-4d33-9093-05fc9886f5c4",
-              "79898048-5bbe-4c59-9087-2898fbc1118f",
-              "7a20e166-9666-455f-a566-7cad11dbf349",
-              "7a43eec1-f98b-4f38-a08e-fb7863ed425e",
-              "7dd806fd-db66-4c7b-8440-d98e0cab0827",
-              "7e947c10-0ec2-45e8-869d-90733d04940b",
-              "807c8f48-f811-4d22-bb05-6fe7d27615c2",
-              "a0b67a5e-3fb9-49ab-9027-e1c574924527",
-              "a3285d1c-acc4-48af-aecd-777dd0acc796",
-              "a7b3023a-8562-45c8-b745-a67cc97951f2",
-              "af8052e3-4e48-4db4-b276-1b65c36accf8",
-              "badb93c4-031f-42f7-bd37-dc8556aef8ee",
-              "c0066f66-29fa-4dcf-966f-ed43f4cee9b4",
-              "cb907a14-6f49-45e1-8a3b-9194657050cd",
-              "d48cc966-3459-4fe5-97b6-a6fedf865560",
-              "da2a6348-1a91-447d-8a17-da475a87b75f",
-              "db6796f1-78d0-41d1-8237-4814f256bc75",
-              "e56d33c1-522f-4196-8d45-79de2756d40d",
-              "e839bcba-680b-4bcb-9d98-23d5d5fedd99",
-              "eb99ebf1-d745-4465-a9de-12830062dbc2",
-              "f681dfb6-b225-4381-96e9-2b795788a798",
-              "f7b4a463-3701-4162-8bfd-bddd31308693",
-              "f897ea22-0c6c-4fe0-9df5-f20cc12b9b02",
-              "fa2f8a64-453b-495a-9e84-5aa27967299b",
-              "ff318edf-513b-47c3-a1c7-975577af6c78"
-            ]
-          }
-        },
-        {
-          "family": "claims_family",
-          "member_id": "claims_paraphrase_pilot",
-          "case_id": "corpus_ssd_v2",
-          "metrics": {
-            "contract_only": false,
-            "contract_passed": true,
-            "passed": false,
-            "claim_recall": 0.0,
-            "claim_precision": 0.0,
-            "claim_precision_distracted": 0.0,
-            "precision_drop_with_distractors": 0.0,
-            "max_precision_drop_with_distractors": 0.15,
-            "paraphrase_scoring": true,
-            "claim_match_mode": "claim_id_or_normalized_text",
-            "expected_count": 4,
-            "predicted_count_plain": 0,
-            "predicted_count_distracted": 0,
-            "matched_claim_ids": [],
-            "missing_claim_ids": [
-              "ssd_default_boxes_multiscale",
-              "ssd_300_voc_speed",
-              "ssd_multiple_feature_maps",
-              "ssd_yolo_localization_negative"
-            ],
-            "min_claim_recall": 0.55
-          }
-        },
-        {
-          "family": "claims_family",
-          "member_id": "claims_paraphrase_pilot",
-          "case_id": "corpus_yolov1_v2",
-          "metrics": {
-            "contract_only": false,
-            "contract_passed": true,
-            "passed": false,
-            "claim_recall": 0.0,
-            "claim_precision": 0.0,
-            "claim_precision_distracted": 0.0,
-            "precision_drop_with_distractors": 0.0,
-            "max_precision_drop_with_distractors": 0.15,
-            "paraphrase_scoring": true,
-            "claim_match_mode": "claim_id_or_normalized_text",
-            "expected_count": 6,
-            "predicted_count_plain": 0,
-            "predicted_count_distracted": 0,
-            "matched_claim_ids": [],
-            "missing_claim_ids": [
-              "yolov1_unified_pipeline",
-              "yolov1_speed_45_155_fps",
-              "yolov1_grid_based_detection",
-              "yolov1_localization_error_negative",
-              "yolov1_artwork_generalization",
-              "yolov1_two_stage_higher_acc_negative"
-            ],
-            "min_claim_recall": 0.55
-          }
-        }
-      ],
-      "hard_block_individual_failures": [
-        "retrieval_judge_pilot"
-      ]
+      "advisory_individual_failures": [],
+      "hard_block_individual_failures": []
     }
   }
 }

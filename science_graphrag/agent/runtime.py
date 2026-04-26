@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from langchain_core.messages import AIMessage, HumanMessage
 
+from science_graphrag.agent.chat_envelope import build_chat_envelope
 from science_graphrag.agent.graph.supervisor import build_retrieval_graph
 from science_graphrag.agent.graph.tracing import collect_tool_trace
 from science_graphrag.agent.trace import ToolCallTrace
@@ -18,6 +19,15 @@ class AgentRunOutput:
     answer: str
     citations: list[dict[str, Any]]
     tool_trace: list[ToolCallTrace]
+    answer_class: str = "grounded_explanation"
+    evidence_summary: str | None = None
+    warnings: list[str] = field(default_factory=list)
+    inventory: dict[str, Any] | None = None
+    relation_trace: dict[str, Any] | None = None
+    quote_candidates: list[dict[str, Any]] | None = None
+    idea_suggestions: list[dict[str, Any]] | None = None
+    bibliography: dict[str, Any] | None = None
+    debug_events: list[dict[str, Any]] = field(default_factory=list)
 
 
 class RetrievalAgent:
@@ -51,6 +61,7 @@ class RetrievalAgent:
         question: str,
         workspace_id: str | None,
         max_tool_calls: int,
+        answer_class_hint: str | None = None,
     ) -> AgentRunOutput:
         if self._legacy is not None:
             return self._legacy.run(
@@ -59,7 +70,10 @@ class RetrievalAgent:
                 max_tool_calls=max_tool_calls,
             )
         return self._run_langgraph(
-            question=question, workspace_id=workspace_id, max_tool_calls=max_tool_calls
+            question=question,
+            workspace_id=workspace_id,
+            max_tool_calls=max_tool_calls,
+            answer_class_hint=answer_class_hint,
         )
 
     def _run_langgraph(
@@ -68,6 +82,7 @@ class RetrievalAgent:
         question: str,
         workspace_id: str | None,
         max_tool_calls: int,
+        answer_class_hint: str | None = None,
     ) -> AgentRunOutput:
         attrs = {
             "agent.runtime": self._settings.agent_runtime,
@@ -87,6 +102,7 @@ class RetrievalAgent:
                 "specialist_results": {},
                 "current_specialist": None,
                 "routing_log": [],
+                "debug_events": [],
             }
             assert self._graph is not None
             final_state = self._graph.invoke(
@@ -100,10 +116,26 @@ class RetrievalAgent:
                 if isinstance(msg, AIMessage) and not getattr(msg, "tool_calls", None):
                     answer = str(msg.content or "")
                     break
+            envelope = build_chat_envelope(
+                state=final_state,
+                answer=answer,
+                citations=list(final_state.get("citations", [])),
+                tool_trace=trace,
+                answer_class_hint=answer_class_hint,
+            )
             return AgentRunOutput(
                 answer=answer,
                 citations=list(final_state.get("citations", [])),
                 tool_trace=trace,
+                answer_class=str(envelope.get("answer_class") or "grounded_explanation"),
+                evidence_summary=envelope.get("evidence_summary"),
+                warnings=list(envelope.get("warnings") or []),
+                inventory=envelope.get("inventory"),
+                relation_trace=envelope.get("relation_trace"),
+                quote_candidates=envelope.get("quote_candidates"),
+                idea_suggestions=envelope.get("idea_suggestions"),
+                bibliography=envelope.get("bibliography"),
+                debug_events=list(final_state.get("debug_events") or []),
             )
 
 

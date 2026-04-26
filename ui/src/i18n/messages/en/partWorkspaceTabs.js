@@ -6,7 +6,7 @@ export default {
   "wsTab.overview.quickActions": "Quick actions",
   "wsTab.overview.readerTab": "Reader tab",
   "wsTab.overview.graphTab": "Graph tab",
-  "wsTab.overview.askTab": "Ask tab",
+  "wsTab.overview.askTab": "Chat tab",
   "wsTab.overview.evidenceTab": "Evidence tab",
   "wsTab.overview.openGraphFull": "Open graph (full page)",
   "wsTab.overview.graphNote":
@@ -27,7 +27,7 @@ export default {
   "wsTab.graph.openStandalone": "Open standalone Graph",
   "wsTab.graph.jumpReader": "Jump to Reader",
   "wsTab.graph.jumpEvidence": "Jump to Evidence",
-  "wsTab.graph.jumpAsk": "Jump to Ask",
+  "wsTab.graph.jumpAsk": "Open chat",
   "wsTab.graph.subtitle":
     "Graph stays tied to the active work and keeps URL-driven node focus for deep links.",
 

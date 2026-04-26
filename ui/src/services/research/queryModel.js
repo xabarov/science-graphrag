@@ -107,6 +107,14 @@ export function normalizeQueryResponse(raw) {
       citations: [],
       graph_context: { ...EMPTY_GRAPH_CONTEXT },
       retrieval_trace: { ...EMPTY_RETRIEVAL_TRACE },
+      answer_class: null,
+      evidence_summary: null,
+      warnings: [],
+      inventory: null,
+      relation_trace: null,
+      quote_candidates: null,
+      idea_suggestions: null,
+      bibliography: null,
     };
   }
   const gc = raw.graph_context && typeof raw.graph_context === "object" ? raw.graph_context : {};
@@ -133,5 +141,14 @@ export function normalizeQueryResponse(raw) {
       citations_returned: Number.isFinite(Number(rt.citations_returned)) ? Number(rt.citations_returned) : 0,
       degraded: Array.isArray(rt.degraded) ? rt.degraded.map(String) : [],
     },
+    /** Wave A agent chat envelope (optional; from POST /v2/agent/query). */
+    answer_class: raw.answer_class == null ? null : String(raw.answer_class),
+    evidence_summary: raw.evidence_summary == null ? null : String(raw.evidence_summary),
+    warnings: Array.isArray(raw.warnings) ? raw.warnings.map(String) : [],
+    inventory: raw.inventory && typeof raw.inventory === "object" ? raw.inventory : null,
+    relation_trace: raw.relation_trace && typeof raw.relation_trace === "object" ? raw.relation_trace : null,
+    quote_candidates: Array.isArray(raw.quote_candidates) ? raw.quote_candidates : null,
+    idea_suggestions: Array.isArray(raw.idea_suggestions) ? raw.idea_suggestions : null,
+    bibliography: raw.bibliography && typeof raw.bibliography === "object" ? raw.bibliography : null,
   };
 }

@@ -1,6 +1,6 @@
 /** @type {Record<string, string>} */
 export default {
-  "askPanel.chromeTitle": "Ask",
+  "askPanel.chromeTitle": "Chat",
   "askPanel.chromeBody":
     "POST /v1/query (live). Set VITE_API_BASE_URL if the API is not same-origin.",
   "askPanel.chrome.p1": "POST /v1/query (live). Set ",

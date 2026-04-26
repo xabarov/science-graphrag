@@ -58,6 +58,7 @@ def test_agent_state_has_routing_fields() -> None:
     assert "specialist_results" in hints
     assert "current_specialist" in hints
     assert "routing_log" in hints
+    assert "debug_events" in hints
 
 
 def test_score_agent_case_specialist_sequence() -> None:

@@ -1,61 +1,15 @@
 # Master roadmap & refactor plan — 2026-04-25
 
-> Единый план развития science-graphrag, который связывает активные роадмапы из `docs/analysis/` с бэклогом рефакторинга из `docs/backlog/`. Цель — параллельная работа над **продуктовыми волнами** и **структурным долгом** без блокировок и переписывания одних и тех же файлов разными агентами одновременно.
+> Единый план: продуктовые роадмапы в `docs/analysis/` + структурный долг в `docs/backlog/refactor-*.md`. **Для агента/чата:** не загружайте весь файл — прочитайте §1, §2, §5 и **§10**; остальное — по ссылкам из §9. Индекс папки: [`README.md`](./README.md).
 >
-> **Последнее обновление 2026-04-26 ночь:** Wave 4 «Honesty close» закрыта (BT1 + BT2 partial + BT4 + BT5 + BT6 oracle); decision_gate перешёл `NO-GO → CONDITIONAL-GO` (`advisory_phantom_count=9` уменьшено с 12 после введения `trust_signal`). См. §0 «Snapshot 2026-04-26» и §10 «Следующий план действий». Закрытые волны и подробные ретроспективы Раундов 1–5 вынесены в [`_archive/completed-rounds-2026-04-25.md`](_archive/completed-rounds-2026-04-25.md). Исторические анализы — в [`_archive/`](_archive/).  
-> **Обновление 2026-04-26 (день):** BT6 **P0 quote tolerance** (нормализация PDF + 4-уровневая верификация цитат) — **DONE**, зафиксировано в [`wave5-bt6-quote-tolerance-2026-04-26.md`](./wave5-bt6-quote-tolerance-2026-04-26.md) и `docs/backlog/refactor-backend.md` (Completed). Полное закрытие пункта §10.1 **#6** (live `trust_signal` на pilot/holdout) — ещё в работе.  
-> **Обновление 2026-04-27 (инкремент master-roadmap / без правки `.cursor/plans/*`):** зафиксировано в `docs/backlog/` — **Wave X3 producer-side:** `propagate.inject` → Dramatiq `send_with_options` (`science_graphrag/worker/trace_options.py`, `api/ingest/dispatcher.py`, `worker/__init__.py`) + тест `tests/observability/test_worker_trace_propagation.py`. **LX1:** синхронизация `llm_concurrency_extraction_references` ↔ `extraction_llm_references_max_concurrency` + `tests/test_llm_concurrency_config.py`; wiring `build_llm_semaphore_map` в translation — по-прежнему OPEN в бэклоге. **ADR-021 / Фаза 0 (config-only):** в `Settings.merge_osint_gr_compatible_env` hub-id в `embedding_model` (`org/model`) промотируется в `openrouter_embedding_model` + `tests/test_embedding_model_promotion.py`; **не** заменяет drop/recreate Qdrant и re-ingest. **BT6 slice:** `eval/claims/paraphrase_runner.py` пишет per-case `runtime_mode`; `trust_signal.detect_runtime_mode` учитывает явный `runtime_mode` у кейсов `claims_paraphrase_*`. **BT7:** дефолт CLI `--extractor` в `eval/concept_topic/runner.py` выровнен на `production`. **BT10 slice:** `idea_assist_live_runtime` + ранний пустой ответ при `False`; `run_metadata.live_runtime`. **LX2 slice:** SSE stub `api/translation.py`, роутер в `main.py`, Alembic `20260426_0007_work_translations` + ORM `WorkTranslationRecord`, spec `docs/specs/translation-v1.md` (Phoenix / LLM перевод / UI — не закрыты). **Y5 stub:** `science-graphrag-research-langgraph-spike` → `agent/graph/research/spike.py`. **WX5 / H-shell:** см. `docs/backlog/refactor-frontend.md` (WX5 minimal, chip без UUID в label).  
-> **Обновление 2026-04-26 (ADR-021 Phase 0 — ops):** runbook [`docs/runbooks/phase0-bge-m3-qdrant-cutover.md`](../runbooks/phase0-bge-m3-qdrant-cutover.md); CLI `science-graphrag qdrant-recreate-embedding-collections --dry-run`; Qdrant dense collections пересозданы под **1024**; **re-ingest** пилотного корпуса — **завершён** (`ingest-corpus` exit 0, `eval/results/ingest-progress-phase0-bge-m3.jsonl`, лог `ingest-phase0-bge-m3.log`); покрытие chunks: **32** distinct `work_id` (см. `scripts/report_qdrant_work_coverage.py`). **Следующий шаг:** §10.1 п.4 — пересъёмка BT2/BT4/BT5 + `aggregate_benchmark_metrics.py --write-trust-baseline` (см. backlog OPEN «Switch Qdrant…»).
+> **Актуальные даты и merged work:** таблица *Completed* в [`refactor-backend.md`](../backlog/refactor-backend.md) / [`refactor-frontend.md`](../backlog/refactor-frontend.md). Закрытые волны и длинные ретроспективы: [`_archive/completed-rounds-2026-04-25.md`](./_archive/completed-rounds-2026-04-25.md), [`_archive/`](./_archive/).
 
-## 0. Snapshot после Wave 4 — Honesty close (2026-04-26 ночь)
+## 0. Quick status (2026-04-27)
 
-> Эта секция написана **after the fact**, после фактического закрытия Wave 4 на ветке `wave4-honesty-close`. Источник правды: `eval/results/benchmark-trust-baseline.json` + `benchmark-metrics-summary.{json,md}`.
-
-**Что закрыто (вошло в Wave 4):**
-
-- **BT1 — honest `decision_gate`** ✅ DONE.
-  - В `aggregate_benchmark_metrics.py` появились `trust_signal{ runtime_mode, validation_status, paraphrase_match_mode, phantom_count }` для каждого family-member, а в `decision_gate.criteria` — `advisory_phantom_count` + `advisory_individual_failures` + `hard_block_individual_failures`. Объект пишется как в `benchmark-metrics-summary.json`, так и в `benchmark-trust-baseline.json` (snapshot «как сейчас»). Runbook `benchmark-decision-gate.md` обновлён.
-  - Результат: `decision_gate.decision="CONDITIONAL-GO"`, `reason="all_nightly_passed;advisory_phantom_count=9"`. Раньше тут стояло невинное `GO` при `multihop=Connection refused` + `agent_tools_judge=missing_file`. Теперь честно.
-- **BT2 — workspace-scoped retrieval против реального стека** ⚠️ partial.
-  - `_live_answer_fn` поверх реального `answer_query` поднят, gold v2 переведён со static UUID на portable layer1-slug (`filter_work_layer1_slug` + runtime UUID resolution через Neo4j title match — см. `eval/retrieval/work_id_resolve.py`). `current-retrieval-workspace-scoped-live.json` сейчас **6/6 fail**, причём это **honest fail**, а не phantom-green:
-    - 3 кейса в `ws_full_corpus` падают, потому что `seed_benchmark_workspaces.py` для unbounded workspace (`corpus_work_ids: "*"`) не прописывает `workspace_id` в Qdrant payload — backfill для `"*"` отдельным backlog item (`Backfill workspace_id payload for unbounded workspaces`).
-    - 3 кейса в `ws_yolo_*`/`ws_two_stage_*` падают на `missing_required_corpus_work_ids` (cornernet, fcos, rcnn-family) — это **gap в ingestion**, не баг runner'а: пилотный корпус сейчас содержит только 5 paper'ов (yolov1/v2/v3/x + r-cnn) после `ingest-corpus` hang'а на 16-м файле.
-- **BT4 — hybrid ablation на реальном retrieval** ⚠️ partial.
-  - `eval/retrieval/hybrid_ablation_runner.py` теперь делает **live retrieval** в режимах `vector` и `hybrid` (gold v2 запретил pre-cooked `vector_ranked_work_ids`/`hybrid_ranked_work_ids`). 8/8 кейсов **honest fail** — `mrr_delta = 0.0` на всех. Это **negative result, не баг**: на корпусе из 5 paper'ов недостаточно candidate set'ов чтобы hybrid обогнал vector на ≥ 0.05 MRR. Гипотеза не подтверждена этим корпусом — ждём расширения до 20+ paper.
-- **BT5 — judge per-case + holdout** ✅ DONE на текущем корпусе.
-  - `current-retrieval-judge-pilot.json` ✅ all_passed; `current-retrieval-judge-holdout.json` ✅ all_passed (новый артефакт). Per-case gate уже зашит в metrics; rubric LLM на live answer'ах из 5-paper корпуса даёт mean ≥ 4.5.
-- **BT6 — claims paraphrase pilot + holdout** ⚠️ oracle (synthetic_gold) + **P0 production quote gate DONE (2026-04-26)**.
-  - `eval/claims/paraphrase_runner.py` поднят со встроенным **oracle extractor** (deterministic, без LLM); `tests/fixtures/benchmarks/claims/{corpus_*_v2,holdout_*_v1}` подключены к runner'у через `--match-mode dispatcher`. `current-claims-paraphrase-{pilot,holdout}.json` оба зелёные, **но** trust_signal явно помечен `runtime_mode="synthetic_gold"` (распознаётся правилом «`extractor==oracle` → synthetic»). Production extractor (live LLM) — отдельный шаг (см. §10 пункт 6).
-  - **P0 (barrier 1):** нормализация текста для LLM + `strict_normalized` / `fuzzy_normalized` / jaccard в `_quote_accepted` — см. [`wave5-bt6-quote-tolerance-2026-04-26.md`](./wave5-bt6-quote-tolerance-2026-04-26.md); `docs/backlog/refactor-backend.md` → Completed. Остаётся barrier 2 (семантика gold / refresh артефактов под `live`).
-
-**Что появилось как новые backlog item'ы (раскрыты в `docs/backlog/refactor-backend.md`):**
-
-- `[OPEN] Robust ingest orchestration: hard timeout + checkpoint + resume` — прямой блокер расширения корпуса. Без этого `ingest-corpus` снова повиснет на каком-нибудь `Libra R-CNN.pdf` через `httpx` `CLOSE-WAIT` без recovery. Per-file timeout + JSONL манифест прогресса + streaming logging + circuit breaker по 4xx/5xx OpenRouter.
-- `[OPEN] Backfill workspace_id payload for unbounded `ws_full_corpus="*"` workspaces` — `scripts/backfill_workspace_payloads.py` сейчас обходит только `(:Workspace)-[:CONTAINS]->(:Work)` и не тегирует chunks для `"*"`. Прямой блокер 3/6 кейсов `workspace_scoped_live`.
-
-**Decision gate сейчас (2026-04-26 ночь):**
-
-```
-decision_gate.decision = "CONDITIONAL-GO"
-decision_gate.reason   = "all_nightly_passed;advisory_phantom_count=9"
-advisory_phantom_count = 9
-advisory_phantom_families = [
-  merge_safe_contract_mock,    # Wave M; OK by design
-  strict_pilot_mock,           # Wave M; OK by design
-  hybrid_ablation,             # старый contract harness; нужно retire после BT4 stabilization
-  multihop_mini,               # missing artifact; ждёт BT3
-  claims_paraphrase_pilot,     # synthetic_gold (oracle); ждёт production extractor
-  claims_paraphrase_holdout,   # synthetic_gold (oracle); ждёт production extractor
-  concept_topic_mini,          # ждёт BT7 (path A or B)
-  agent_tools_mini,            # mock_runtime; ждёт BT8
-]
-```
-
-**Update 2026-04-27:** `eval/results/current-agent-tools-judge-pilot.json` добавлен (heuristic judge поверх `current-agent-tools-mini.json`); nightly workflow генерирует файл перед `aggregate_benchmark_metrics`; свежий `benchmark-trust-baseline.json`: `advisory_phantom_count=6`, список advisory без `agent_tools_judge` / `missing_file`. Исторический fenced-блок `advisory_phantom_families` выше — снимок Wave 4 ночь; актуальные значения — в [`eval/results/benchmark-trust-baseline.json`](../../eval/results/benchmark-trust-baseline.json).
-
-**Update (same day, Wave 5 ops — после full ingest + seed/backfill + BT re-run):** см. актуальные [`eval/results/benchmark-metrics-summary.md`](../../eval/results/benchmark-metrics-summary.md): **`decision = NO-GO`**, `reason = hard_block_individual_failures:retrieval_judge_pilot` (judge поверх свежего `workspace_scoped_live`: 3/6 per-case pass). Unbounded Qdrant payload для `ws_full_corpus` закрыт — BT2 больше не «молчит» из‑за `workspace_ids`; оставшиеся красные кейсы — **citations / ROUGE / abstain** и смежные метрики. Подробности — §10.1 строки 2–4.
-
-**Светофор (исторический снимок Wave 4 ночь vs сейчас):** `core` (reference, layer1/2 nightly, claims_production) остаётся зелёным; advisory `live` семьи меняются от прогона — смотрите сводку выше, а не только этот блок.
+- **Benchmarks / trust:** `trust_signal` + `decision_gate` в коде (`science_graphrag/benchmarks/decision_gate.py` — порог «>2 неожиданных phantom family» для downgrade с GO). Закрытие Wave 6 (честный GO при двух by-design mock phantoms): [`_archive/wave6-benchmarks-quality-2026-04-26.md`](./_archive/wave6-benchmarks-quality-2026-04-26.md). Оставшиеся BT / продуктовые хвосты — **§10** и [`ontology-benchmarks-trust-audit-2026-04-25.md`](./ontology-benchmarks-trust-audit-2026-04-25.md).
+- **BT6 P0 quote tolerance:** shipped — [`_archive/wave5-bt6-quote-tolerance-2026-04-26.md`](./_archive/wave5-bt6-quote-tolerance-2026-04-26.md); barrier 2 (live `trust_signal`, gold realism) — backlog.
+- **Track A ingest async (Wave U–V–W):** delivered — [`_archive/ingestion-async-pipeline-roadmap-2026-04-25.md`](./_archive/ingestion-async-pipeline-roadmap-2026-04-25.md).
+- **Длинный снимок Wave 4 (Honesty close):** [`_archive/master-roadmap-wave4-honesty-snapshot-2026-04-26.md`](./_archive/master-roadmap-wave4-honesty-snapshot-2026-04-26.md). Актуальные числа по gate — всегда [`eval/results/benchmark-trust-baseline.json`](../../eval/results/benchmark-trust-baseline.json).
 
 ## 1. Принципы
 
@@ -70,10 +24,10 @@ advisory_phantom_families = [
 
 | Трек | Заголовок | Источник | Status | Текущий фронт работ |
 |------|-----------|----------|--------|---------------------|
-| **A** | Ingest async pipeline | [`ingestion-async-pipeline-roadmap-2026-04-25.md`](ingestion-async-pipeline-roadmap-2026-04-25.md) | Wave U/V/W ✅ done | **Закрыт** (трек переходит в фон; CLI worker — в §4.G) |
+| **A** | Ingest async pipeline | [`_archive/ingestion-async-pipeline-roadmap-2026-04-25.md`](./_archive/ingestion-async-pipeline-roadmap-2026-04-25.md) [ARCHIVED] | Wave U/V/W ✅ done | **Закрыт** (трек в архиве; CLI worker — в §4.G) |
 | **B** | LangGraph migration | [`langgraph-migration-plan-2026-04-25.md`](langgraph-migration-plan-2026-04-25.md) + ADR 016/020 | Y1/Y2/Y3/Y4 ✅ done | **Wave Y5** (research spike → LangGraph) → **Y6** (cleanup smolagents) |
 | **C** | Phoenix tracing coverage | [`phoenix-tracing-coverage-2026-04-25.md`](phoenix-tracing-coverage-2026-04-25.md) | X1/X2 ✅ done; **X3 producer inject + worker extract** ✅ partial (2026-04-27) | Остаётся: полный e2e «API → worker span» при необходимости + документация runbook |
-| **D** | Ontology + Benchmarks + IR | [`ontology-benchmarks-roadmap-2026-04-24.md`](ontology-benchmarks-roadmap-2026-04-24.md) + [`ontology-benchmarks-trust-audit-2026-04-25.md`](ontology-benchmarks-trust-audit-2026-04-25.md) | M ✅; **BT1 ✅, BT5 ✅, BT2/BT4/BT6 ⚠️ partial (Wave 4)**; N/O/P/Q/R/S done as scaffold (advisory phantom); T backend done, gold pending | **BT3 (multihop), BT7..BT12** + corpus extension до 16-20 paper, см. §10 |
+| **D** | Ontology + Benchmarks + IR | [`ontology-benchmarks-roadmap-2026-04-24.md`](ontology-benchmarks-roadmap-2026-04-24.md) + [`ontology-benchmarks-trust-audit-2026-04-25.md`](ontology-benchmarks-trust-audit-2026-04-25.md) | M ✅; **BT1 ✅, BT5 ✅, BT3 pilot ✅ (Wave 6)**; **BT2/BT4/BT6 ⚠️** (retrieval quality / live claims); N/O/P/Q/R/S scaffold; T backend done | **BT7..BT12** + corpus / gate hardening, см. §10 |
 | **E** | Graph UX aggregation | [`graph-readability-followup-2026-04-25.md`](graph-readability-followup-2026-04-25.md) + ADR 011/012 | GR1 ✅, GR2 partial (backend done, UI pending), GR3 ✅ with caveats, **GR5 API slice ✅** (`graph_neighborhood`: `cites_in_count` / `cites_out_count` / `authors_count` на центральном `:Work`), GR4 → GR9 (open) | **GR6** → **GR7** → **GR8** → **GR9**; **GR5** backfill Neo4j property + UI badges — при необходимости отдельным PR |
 | **F** | Workspace experience | [`workspace-ux-redesign-2026-04-25.md`](workspace-ux-redesign-2026-04-25.md) | I/J/K1/K2/K3/L1/L2 ✅ done; L3 gated; **WX1 ✅ done (2026-04-26)**; **WX5 minimal (switcher в shell + hero) ✅ 2026-04-27** | **WX2–WX6** (остаток: WX3 mid-pipeline, WX4 follow-up, WX6 compact dialog по продукту) — см. бэклог |
 | **RX** | Reader UX («Чтение») | [`reader-ux-and-translation-roadmap-2026-04-25.md`](reader-ux-and-translation-roadmap-2026-04-25.md) | **RX1 partial ✅ (2026-04-26):** shell + rail meta + auto-PDF + dev-gated advanced; **RX1 remainder:** TOC/trace rail polish → **RX3** | **RX2** (Markdown pipeline) → **RX3** (TOC) → **RX4** (chunks dev-only) → **RX6** (visual polish) → **RX5** (translate UI) → **RX7** (unify shell) |
@@ -147,7 +101,7 @@ advisory_phantom_families = [
 | N (Concept/Topic gold) | scaffold | ✅ `concept_topic_v2` 10 packs / 138 labels (Phase 6.C) | harness substring | ⛔ tautology runner (BT7 path A или B) |
 | O (Claims production) | done | ✅ `claims_v2` 15 pilot + 5 holdout / 85 claims (Phase 6.B/D) | recall=1.0 на тривиальной gold | ⚠️ runner на старом gold (BT6 — переключить) |
 | P (workspace-scoped + judge) | scaffold | ✅ `workspace_scoped_live` 6 packs (Phase 6.C, **all promoted**) | canned answers + judge mean скрывает 2/5 fail | ⛔ runner=contract (BT2) / ⚠️ judge tightening (BT5) |
-| Q (hybrid + indexes + multihop) | indexes done | ✅ `hybrid_ablation_v2` 8 packs + `multihop_v2` 5 packs (Phase 6.C) | hybrid synthetic / multihop broken | ⛔ runners pending (BT3 + BT4) |
+| Q (hybrid + indexes + multihop) | indexes done | ✅ `hybrid_ablation_v2` 8 packs + `multihop_v2` 5 packs (Phase 6.C) | hybrid live honest fail / multihop pilot harness green (Wave 6) | ⛔ BT4 signal; BT3 nightly/CI follow-up |
 | R (agent tools) | endpoint done | ✅ `agent_tools_v1/{live,multiagent_live,adversarial_cypher}` 9 packs (Phase 6.C) | mini=mock_runtime; judge JSON **есть** (heuristic, 2026-04-27) | ⛔ live mini + **BT9** multi-agent fixtures |
 | S (idea-assist) | API done | ✅ `idea_assist_v1/live_*` 4 packs (Phase 6.C) | mini=mock; rubric награждает мок | ⛔ runner + Hypothesis persistence pending (BT10) |
 | T (entity dedup) | 5 pipelines coded | ✅ `dedup/{authors,inst,venues,methods,datasets}_v1` 5 packs / 104 records (Phase 1, **all promoted**) | gold не подключён к runner | ⚠️ runners pending для 5 типов (BT11) |
@@ -269,14 +223,14 @@ advisory_phantom_families = [
 | **R4** | 2026-04-25 | Wave Y3 (`/v2/agent/query` SSE), Wave GR2 backend, G-RetrievalCore, H-AskV2SSE (406 passed) |
 | **R5** | 2026-04-25 | Wave T backend (entity dedup), Wave GR3 (backend + frontend), Wave Y4 (multi-agent supervisor), G-StageExtractionSplit (421 passed) |
 
-### Раунд 6 — Benchmark Trust волна 1 (BT1 + BT2 + BT3 + BT5) — PLANNED
+### Раунд 6 — Benchmark Trust волна 1 (BT1 + BT2 + BT3 + BT5) — **PARTIAL** (BT1/BT5/BT3 pilot ✅)
 
 См. [`ontology-benchmarks-trust-audit-2026-04-25.md`](ontology-benchmarks-trust-audit-2026-04-25.md).
 
-- **A1: BT1** — honest `decision_gate` + `trust_signal` + baseline snapshot.
-- **A2: BT2** — workspace-scoped retrieval `--live-answer` default + 6 живых кейсов + `forbidden_work_id_violation_count`.
-- **A3: BT3** — multihop runner healthcheck + CI nightly Neo4j compose service + архив stale artifact.
-- **A4: BT5** — judge per-case gate + holdout 30% + `per_case_score_breakdown`.
+- **A1: BT1** — ✅ honest `decision_gate` + `trust_signal` + baseline snapshot.
+- **A2: BT2** — workspace-scoped retrieval live; остаётся качество ответов / метрики (см. §10.1 п.4).
+- **A3: BT3** — ✅ pilot `current-retrieval-multihop-mini.json` (Wave 6); остаётся CI/nightly + покрытие `multihop_v2`.
+- **A4: BT5** — ✅ judge per-case gate + holdout + `per_case_score_breakdown`.
 
 > **Назначение:** перевести retrieval/judge advisory family из «зелёный по контракту» в «измеряем по сути». Acceptance: `benchmark-metrics-summary.json` содержит `trust_signal` для каждой family; `decision_gate.criteria` явно показывает `advisory_phantom_count` и `advisory_individual_failures`.
 
@@ -353,12 +307,12 @@ advisory_phantom_families = [
 
 ## 8. Открытые вопросы / риски
 
-1. **OTel propagation в Dramatiq (Wave X3):** не закрыто; добавить как обязательное условие перед merge новых LLM-стадий в воркере.
+1. **OTel propagation в Dramatiq (Wave X3):** producer `inject` + worker middleware есть (`science_graphrag/worker/trace_options.py`, `tests/observability/test_worker_trace_propagation.py`); **полный e2e** «HTTP → enqueue → child span в воркере» на стенде всё ещё без автотеста — см. [`phoenix-tracing-coverage-2026-04-25.md`](./phoenix-tracing-coverage-2026-04-25.md).
 2. **`PHOENIX_TRACE_SCOPE`:** при переименованиях ingest stages обязательно синхронизировать `_EXTRACTION_LLM_CHAIN_NAMES`. Нужен тест регрессии.
 3. **Default `view` в graph (GR9):** opt-in `reader` в UI vs default `reader` на сервере. Зафиксировать в дополнении к ADR 011 до merge GR9.
 4. **`aggregator_threshold` (GR8):** числовое значение per-kind — обсудить до start (предложение в `graph-readability-followup-2026-04-25.md`: AuthorshipReification/Author=4, Work=8).
 5. **Settings-секции для новых волн:** Wave T (entity dedup) расширяет snapshot; LX1 добавляет `llm_concurrency_*`. Делать через G-SettingsSplit.
-6. **`decision_gate.GO` сейчас нечестен** (см. [`ontology-benchmarks-trust-audit-2026-04-25.md`](ontology-benchmarks-trust-audit-2026-04-25.md) §1): ~50% advisory зелёные «по построению». Серия BT (BT1..BT12) закрывает это. До завершения BT1 не публиковать «GO» во внешние коммуникации без оговорки.
+6. **Benchmark honesty:** BT1 дал `trust_signal` / phantom accounting; Wave 6 довела gate до **GO** при двух by-design mock phantoms (см. `_archive/wave6-benchmarks-quality-2026-04-26.md`). Внешне всё равно указывайте версию `benchmark-trust-baseline.json` и оговорку «что ещё в backlog» ([`ontology-benchmarks-trust-audit-2026-04-25.md`](./ontology-benchmarks-trust-audit-2026-04-25.md)).
 7. **Reader cost guardrail для перевода (RX5 + LX2):** перевод полного тела статьи может стоить заметных токенов. До merge **LX2** зафиксировать (a) оценку `~$X` на типичную статью в spec `translation-v1.md`, (b) кнопку Cancel (abort SSE + abort актора), (c) опциональный лимит на роль/workspace owner.
 8. **Шрифт body в Reader (RX6):** научный текст обычно лучше читается серифом, но проект-канон — Inter sans 13 px. Решить до RX6: оставить sans для дисциплины или ввести `Settings → Reader font` (sans / serif).
 9. **Backfill `Work.language` (LX2):** для уже залитых статей язык неизвестен. Без backfill UI в RX5 не покажет чип EN/RU. Выбрать стратегию: фоновый job с rate-limit или кнопка «Detect now» в Reader (RX5 phase B).
@@ -368,7 +322,6 @@ advisory_phantom_families = [
 
 ### Активные роадмапы
 
-- [`ingestion-async-pipeline-roadmap-2026-04-25.md`](ingestion-async-pipeline-roadmap-2026-04-25.md) — Track **A** (Wave U/V/W)
 - [`langgraph-migration-plan-2026-04-25.md`](langgraph-migration-plan-2026-04-25.md) — Track **B** (Wave Y)
 - [`phoenix-tracing-coverage-2026-04-25.md`](phoenix-tracing-coverage-2026-04-25.md) — Track **C** (Wave X)
 - [`ontology-benchmarks-roadmap-2026-04-24.md`](ontology-benchmarks-roadmap-2026-04-24.md) — Track **D** baseline (Wave M–T)
@@ -394,10 +347,15 @@ advisory_phantom_families = [
 
 ### Архив (исторический контекст)
 
-- [`_archive/completed-rounds-2026-04-25.md`](_archive/completed-rounds-2026-04-25.md) — детальный лог Раундов 1–5 с review-замечаниями
-- [`_archive/workspace-experience-gap-2026-04-24.md`](_archive/workspace-experience-gap-2026-04-24.md) — [HISTORICAL] Wave I/J/K/L анализ; продолжение в `workspace-ux-redesign-...`
-- [`_archive/graph-ux-aggregation-roadmap-2026-04-25.md`](_archive/graph-ux-aggregation-roadmap-2026-04-25.md) — [HISTORICAL] Wave GR1–GR5 анализ; продолжение в `graph-readability-followup-...`
-- [`_archive/reference-extraction-llm-agent-tools.md`](_archive/reference-extraction-llm-agent-tools.md) — [HISTORICAL] H2 spike на smolagents; миграция в LangGraph (Wave Y2–Y6)
+- [`_archive/completed-rounds-2026-04-25.md`](./_archive/completed-rounds-2026-04-25.md) — детальный лог Раундов 1–5 с review-замечаниями
+- [`_archive/master-roadmap-wave4-honesty-snapshot-2026-04-26.md`](./_archive/master-roadmap-wave4-honesty-snapshot-2026-04-26.md) — длинный снимок Wave 4 (вынесен из §0 master)
+- [`_archive/wave6-benchmarks-quality-2026-04-26.md`](./_archive/wave6-benchmarks-quality-2026-04-26.md) — Wave 6 benchmarks / gate closure
+- [`_archive/wave5-retrieval-strategy-2026-04-26.md`](./_archive/wave5-retrieval-strategy-2026-04-26.md) — Wave 5 BT2/BT4/BT6 strategy (ADR-021 path A)
+- [`_archive/wave5-bt6-quote-tolerance-2026-04-26.md`](./_archive/wave5-bt6-quote-tolerance-2026-04-26.md) — BT6 P0 quote tolerance (shipped)
+- [`_archive/ingestion-async-pipeline-roadmap-2026-04-25.md`](./_archive/ingestion-async-pipeline-roadmap-2026-04-25.md) — Track **A** Wave U/V/W (ingest async) **[ARCHIVED]**
+- [`_archive/workspace-experience-gap-2026-04-24.md`](./_archive/workspace-experience-gap-2026-04-24.md) — [HISTORICAL] Wave I/J/K/L анализ; продолжение в `workspace-ux-redesign-...`
+- [`_archive/graph-ux-aggregation-roadmap-2026-04-25.md`](./_archive/graph-ux-aggregation-roadmap-2026-04-25.md) — [HISTORICAL] Wave GR1–GR5 анализ; продолжение в `graph-readability-followup-...`
+- [`_archive/reference-extraction-llm-agent-tools.md`](./_archive/reference-extraction-llm-agent-tools.md) — [HISTORICAL] H2 spike на smolagents; миграция в LangGraph (Wave Y2–Y6)
 
 ### Правила
 
@@ -409,9 +367,7 @@ advisory_phantom_families = [
 
 ## 10. Следующий план действий (после Wave 4 — Honesty close, 2026-04-26 ночь)
 
-> Этот раздел — **единственная актуальная точка отсчёта для следующего этапа работы**. Если он расходится с другими разделами — он main; их нужно подтянуть.
->
-> Базовая идея: Wave 4 закрыла bench infra (`trust_signal`, runner'ы для BT2/BT4/BT5/BT6), но обнажила **два прямых блокера**: (а) `ingest-corpus` нестабилен → нельзя расширить корпус → нельзя получить реальный сигнал на BT2/BT4; (б) `ws_full_corpus="*"` не покрыт backfill'ом payloads. Сначала чиним блокеры, потом расширяем корпус, потом снимаем `advisory_phantom_count` оставшимися BT.
+> Этот раздел — **рабочая очерёдность** (при конфликте с §4/§6 — сверяйтесь с backlog и свежими `eval/results/*`). Исторический контекст Wave 4 и ранние блокеры ingest/Qdrant — [`_archive/master-roadmap-wave4-honesty-snapshot-2026-04-26.md`](./_archive/master-roadmap-wave4-honesty-snapshot-2026-04-26.md); п.1–3 таблицы ниже **DONE** (см. метки в строках).
 
 ### 10.1 Очерёдность (явная, по приоритету)
 
@@ -421,8 +377,8 @@ advisory_phantom_families = [
 | **2** | **[DONE 2026-04-26] Backfill `ws_full_corpus="*"`** — в коде уже были `Neo4j ws.unbounded` + `QdrantChunkStore.add_workspace_to_all_chunks`; операторский путь: `scripts/seed_benchmark_workspaces.py` (subprocess → backfill). Проверено: `unbounded_workspace=ws_full_corpus updated_points=<N>`; кейсы `ws_full_*` получают `trace_workspace_matches=true` и ненулевой `hit_count`. Отдельный виртуальный фильтр в `query.py` не понадобился | BE infra | факт: минуты | Блокер «0 hits из-за payload» снят; оставшиеся красные BT2 — ROUGE/citations/abstain (качество retrieval), не scope | `scripts/backfill_workspace_payloads.py`, `scripts/seed_benchmark_workspaces.py`, `docs/runbooks/benchmark-decision-gate.md` (порт API 18787) |
 | **3** | **[DONE 2026-04-26] Full ingest 31 PDF** — пилотный каталог прогнан до конца (`ingest-corpus` exit 0, dedup audit OK); новые блобы частично в `data/blobs_merged` + override `SCIENCE_GRAPHRAG_BLOB_ROOT` при `SKIP_HOST_DOTENV` (см. **§10.1.a**). Исходный scope: cornernet, fcos, fpn, mask_rcnn, retinanet, ssd, faster_rcnn, fast_rcnn (+ остальные из 31-pdf пилота) | data | факт: ~31 мин CPU wall на догон после фикса blob path | BT2/BT4 можно честно переснимать; выровнять `.env` blob path для API | `science_graphrag/config.py` (blob_root env при skip), `scripts/pilot_ingest_cv_corpus.sh`, `scripts/verify_pilot_corpus_against_catalog.py`, `scripts/report_qdrant_work_coverage.py`, `docs/runbooks/ingest-corpus.md`, `eval/results/ingest-progress-wave5.jsonl`, `eval/results/ingest-wave5-full.log` |
 | **4** | **Re-run BT2 + BT4 + BT5** на расширенном корпусе → новый snapshot `benchmark-trust-baseline.json` — **прогон 2026-04-26:** артефакты обновлены (`current-retrieval-workspace-scoped-live.json`, `current-retrieval-hybrid-ablation-live.json`, `current-retrieval-judge-pilot.json`); `aggregate_benchmark_metrics.py --write-trust-baseline`. BT2: 0/6 passed (payload/scope OK, провалы по citations/ROUGE/abstain). BT4: `mrr_delta=0` на пилоте. BT5 judge: 3/6 per-case pass, mean 5.05 → **gate NO-GO** по `hard_block_individual_failures:retrieval_judge_pilot` (ожидаемо до стабилизации ответов / порогов) | bench | факт: один слот | **2026-04-26:** Phase 0 — Qdrant **1024** + **re-ingest bge-m3 завершён** (32 work в chunks) → **нужен новый** прогон **п.4** (BT2/BT4/BT5) и baseline на свежих эмбеддингах. Альтернатива без смены эмбеддингов: §10.3 | `eval/retrieval/{runner,hybrid_ablation_runner}.py`, `eval/results/current-retrieval-*.json`, `eval/results/benchmark-trust-baseline.json`, [`phase0-bge-m3-qdrant-cutover.md`](../runbooks/phase0-bge-m3-qdrant-cutover.md) |
-| **5** | **BT3 — multihop runner** (gold v2 готов, infrastructure_required hard-fail зашит) на поднятом стеке | bench | 1.5–2 дня | `advisory_phantom_count` -1; `multihop_v2` becomes live measure | `eval/retrieval/multihop_runner.py` (новый или существующий — поверх `multihop_v2/` gold), CI nightly Neo4j compose service, runbook |
-| **6** | **[PARTIAL 2026-04-26] BT6 production extractor** — **P0 DONE:** quote gate + chunk/article normalize (`quote_match.py`, 4-level `_quote_accepted`, `article_source.py`); см. [`wave5-bt6-quote-tolerance-2026-04-26.md`](./wave5-bt6-quote-tolerance-2026-04-26.md). **Остаётся:** переключить артефакты на стабильный live-прогон → `trust_signal.runtime_mode="live"` для claims_paraphrase (pilot/holdout); gold realism — backlog в `refactor-backend.md` | bench | 0.5–1 день | `advisory_phantom_count` -2 (claims_paraphrase_pilot + holdout) | `eval/claims/paraphrase_runner.py` (`--extractor production`), `eval/results/current-claims-paraphrase-*.json` |
+| **5** | **[PARTIAL Wave 6] BT3 — multihop** — `current-retrieval-multihop-mini.json` зелёный на пилоте ([`_archive/wave6-benchmarks-quality-2026-04-26.md`](./_archive/wave6-benchmarks-quality-2026-04-26.md)); **остаётся:** CI/nightly Neo4j, расширение покрытия `multihop_v2`, любые regressions | bench | ongoing | Стабильный advisory для multihop family | `eval/retrieval/multihop_runner.py`, CI compose, runbook |
+| **6** | **[PARTIAL 2026-04-26] BT6 production extractor** — **P0 DONE:** quote gate + chunk/article normalize (`quote_match.py`, 4-level `_quote_accepted`, `article_source.py`); см. [`_archive/wave5-bt6-quote-tolerance-2026-04-26.md`](./_archive/wave5-bt6-quote-tolerance-2026-04-26.md). **Остаётся:** переключить артефакты на стабильный live-прогон → `trust_signal.runtime_mode="live"` для claims_paraphrase (pilot/holdout); gold realism — backlog в `refactor-backend.md` | bench | 0.5–1 день | `advisory_phantom_count` -2 (claims_paraphrase_pilot + holdout) | `eval/claims/paraphrase_runner.py` (`--extractor production`), `eval/results/current-claims-paraphrase-*.json` |
 | **7** | **Pivot в продукт — Раунд 8** (WX1 + WX2-FE + WX2-BE + WX5) — пока BT-серия идёт фоном | UX product | 3-5 дней | Закрывает 4 пункта user complaint (контент ужат влево, активный workspace неявен, нет CTA, логи доминируют над прогрессом ingest) | см. §4.F |
 | **8** | **BT7 + BT8 + BT9 + BT10** (concept_topic / agent_tools live + judge / multi-agent / idea_assist live) — дробно, 1 PR в день, фоном к продуктовым раундам | bench | 4–6 дней суммарно | `advisory_phantom_count` → 0 (или osталось только `merge_safe_contract_mock` + `strict_pilot_mock` by design) | см. §4.D BT2..BT12 |
 | **9** | **BT11 (entity dedup × 5 типов) + BT12 (contradictions persistence)** — закрывают Wave T и contradictions edges в графе | bench | 3-4 дня | Wave T полный финал; `:CONTRADICTS` появляется в Neo4j | см. §4.D |

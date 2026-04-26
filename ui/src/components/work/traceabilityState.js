@@ -1,4 +1,5 @@
 import { normalizeWorkspaceTab } from "../../pages/WorkspacePage/utils/workContext.js";
+import { CHAT_PATH } from "../../routes/paths.js";
 
 export const TRACEABILITY_QUERY_KEYS = {
   workId: "work_id",
@@ -90,6 +91,17 @@ export function buildStandaloneTracePath(routePath, workId, extras = {}) {
   const params = buildTraceabilityParams({ workId, ...extras }, { includeTab: false });
   const query = params.toString();
   return query ? `${routePath}?${query}` : routePath;
+}
+
+/**
+ * Standalone chat deep link with optional trace extras (chunk/section/citation/workspace).
+ *
+ * @param {string} workId
+ * @param {Partial<{workspaceId: string, nodeId: string, edgeId: string, chunkFingerprint: string, section: string, citation: string, askSession: string}>} [extras]
+ * @returns {string}
+ */
+export function buildStandaloneChatPath(workId, extras = {}) {
+  return buildStandaloneTracePath(CHAT_PATH, workId, extras);
 }
 
 /**

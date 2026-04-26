@@ -1,4 +1,6 @@
-# Wave 5 — retrieval & BT6 strategy (2026-04-26)
+# [ARCHIVED] Wave 5 — retrieval & BT6 strategy (2026-04-26)
+
+> Superseded for «what’s next» by [`../master-roadmap-and-refactor-plan-2026-04-25.md`](../master-roadmap-and-refactor-plan-2026-04-25.md) §10 and backlog; kept for ADR-021 / Path A context.
 
 ## Decision
 

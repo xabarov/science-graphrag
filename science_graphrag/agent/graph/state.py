@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Annotated, TypedDict
+from operator import add
+from typing import Annotated, Any, TypedDict
 
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
@@ -18,3 +19,4 @@ class AgentState(TypedDict):
     specialist_results: dict[str, list[dict]]
     current_specialist: str | None
     routing_log: list[dict]
+    debug_events: Annotated[list[dict[str, Any]], add]

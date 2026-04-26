@@ -2,10 +2,11 @@
 export default {
   "workspace.paper.loading": "Загрузка статьи…",
   "workspace.paper.noTitle": "(без названия)",
-  "workspace.actions.askWorkspace": "Вопросы по области",
+  "workspace.actions.askWorkspace": "Перейти в чат по области",
 
   "workspace.tooltip.workspaceGraph": "Граф области",
-  "workspace.tooltip.askWorkspace": "Вопросы по области",
+  "workspace.tooltip.chatWorkspace": "Перейти в чат по области",
+  "workspace.tooltip.chatPaper": "Перейти в чат по статье",
   "workspace.tooltip.summarize": "Суммировать рабочую область",
   "workspace.tooltip.generateHypotheses": "Сгенерировать гипотезы",
   "workspace.tooltip.reader": "Чтение (извлечённый текст)",

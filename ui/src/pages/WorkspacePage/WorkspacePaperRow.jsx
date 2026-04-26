@@ -3,19 +3,21 @@ import { Link } from "react-router-dom";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
+import ChatBubbleOutlineOutlinedIcon from "@mui/icons-material/ChatBubbleOutlineOutlined";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import Typography from "@mui/material/Typography";
 
 import { CopyIdButton, CursorIconAction } from "../../components/common/index.js";
 import { useI18n } from "../../i18n/I18nContext.jsx";
-import { workGraphUrl, workReaderUrl } from "./workspacePageUrls.js";
+import { workChatUrl, workGraphUrl, workReaderUrl } from "./workspacePageUrls.js";
 
 /**
  * Dense document row for workspace paper list (IDE-like).
  *
- * @param {{ workId: string, title: string, year?: number | null, doi?: string | null, arxivId?: string | null, loading?: boolean, error?: string | null, selected?: boolean, onRowActivate?: (workId: string) => void, rowRef?: React.Ref<HTMLDivElement | null> | ((el: HTMLDivElement | null) => void) }} props
+ * @param {{ workspaceId?: string, workId: string, title: string, year?: number | null, doi?: string | null, arxivId?: string | null, loading?: boolean, error?: string | null, selected?: boolean, onRowActivate?: (workId: string) => void, rowRef?: React.Ref<HTMLDivElement | null> | ((el: HTMLDivElement | null) => void) }} props
  */
 export default function WorkspacePaperRow({
+  workspaceId = "",
   workId,
   title,
   year,
@@ -114,6 +116,9 @@ export default function WorkspacePaperRow({
           </CursorIconAction>
           <CursorIconAction component={Link} to={workGraphUrl(workId, null)} title={t("workspace.tooltip.workGraph")}>
             <AccountTreeIcon sx={{ fontSize: "1rem" }} />
+          </CursorIconAction>
+          <CursorIconAction component={Link} to={workChatUrl(workId, workspaceId)} title={t("workspace.tooltip.chatPaper")}>
+            <ChatBubbleOutlineOutlinedIcon sx={{ fontSize: "1rem" }} />
           </CursorIconAction>
           <CopyIdButton id={workId} tooltipCopy={t("workspace.tooltip.copyWorkId")} tooltipCopied={t("workspace.tooltip.copied")} />
         </Box>

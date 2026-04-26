@@ -18,7 +18,7 @@
 |----------|-----------|
 | [../adr/016-agent-tool-registry-and-langgraph.md](../adr/016-agent-tool-registry-and-langgraph.md) | Целевая архитектура агента / реестра инструментов |
 | [../specs/agent-tools-v1.md](../specs/agent-tools-v1.md) | Контракт инструментов агента (idea_search, edge_search, …) |
-| [ingestion-async-pipeline-roadmap-2026-04-25.md](ingestion-async-pipeline-roadmap-2026-04-25.md) | Wave U–W: видимость стадий ingest, SSE, Redis/Dramatiq |
+| [`_archive/ingestion-async-pipeline-roadmap-2026-04-25.md`](./_archive/ingestion-async-pipeline-roadmap-2026-04-25.md) [ARCHIVED] | Wave U–W (delivered): стадии ingest, SSE, Redis/Dramatiq |
 | [../specs/frontend-ui-api-contracts-v1.md](../specs/frontend-ui-api-contracts-v1.md) | API контракты UI ↔ backend |
 | [../runbooks/roadmap-next-waves.md](../runbooks/roadmap-next-waves.md) | Сводный список волн (после принятия — добавить Wave X-Phoenix) |
 
@@ -356,7 +356,7 @@ with llm_span("llm.claims_extraction", {"document.id": doc_id, "work.id": work_i
 
 ## 6. Связь с другими волнами
 
-- **Wave U (видимость стадий ingest без новой инфры)** из [ingestion-async-pipeline-roadmap-2026-04-25.md](ingestion-async-pipeline-roadmap-2026-04-25.md): X1.6 (`phoenix_trace_id` в `ingest_jobs`) даёт ему «бесплатно» обратную ссылку из UI на Phoenix. Делать одной волной не нужно, но порядок: X1.6 → Wave U UI.
+- **Wave U (видимость стадий ingest без новой инфры)** из [`_archive/ingestion-async-pipeline-roadmap-2026-04-25.md`](./_archive/ingestion-async-pipeline-roadmap-2026-04-25.md): X1.6 (`phoenix_trace_id` в `ingest_jobs`) даёт ему «бесплатно» обратную ссылку из UI на Phoenix. Делать одной волной не нужно, но порядок: X1.6 → Wave U UI.
 - **Wave W (Redis + Dramatiq)**: при выносе ingest в воркер OTel-контекст не пересекает границу процесса автоматически. На стороне отправителя нужно `inject` контекста в payload Dramatiq message, на стороне воркера — `extract` и `with trace_api.use_span(parent_ctx)`. В X1 это не входит, но **зафиксировать как риск** в Wave W перед стартом.
 - **ADR 016 (LangGraph-style agent)**: когда runtime агента переедет на полноценный планировщик, X2.1 / X2.2 шаблон применим один в один — каждый «node» планировщика становится CHAIN-спаном, каждый tool — TOOL, каждый LLM-вызов — LLM. Хорошо войти в эту волну с уже разметкой X2.
 

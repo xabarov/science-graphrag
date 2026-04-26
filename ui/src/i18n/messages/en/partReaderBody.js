@@ -11,7 +11,7 @@ export default {
   "readerBody.chunksPartial": "Showing first {{shown}} of {{total}} chunks — increase limit in UI if needed.",
   "readerBody.focusedContext": "Focused reading context",
   "readerBody.openedFrom": "Opened from {{summary}}",
-  "readerBody.returnAsk": "Return to Ask",
+  "readerBody.returnAsk": "Return to chat",
   "readerBody.openEvidence": "Open Evidence",
   "readerBody.chunksAdvanced": "Chunks (advanced) — {{count}}",
   "readerBody.chunksTraceHint": "Chunk sources for tracing agent answers (fingerprints and previews).",

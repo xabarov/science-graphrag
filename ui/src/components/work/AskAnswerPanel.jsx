@@ -25,7 +25,6 @@ export function AskAnswerPanel({
   inWorkspace,
   workId,
   workspaceWorkId,
-  retrievalLabVisible,
   retrievalMode,
   agentToolTrace,
   retrievalJsonOpen,
@@ -71,7 +70,7 @@ export function AskAnswerPanel({
 
       <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 2, mb: 0.5 }}>{t("askPanel.retrieval.title")}</Typography>
       <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mb: 0.75 }}>{t("askPanel.retrieval.summary")}</Typography>
-      {retrievalLabVisible && retrievalMode === "agent" ? <AgentToolTrace toolTrace={agentToolTrace} /> : null}
+      {retrievalMode === "agent" ? <AgentToolTrace toolTrace={agentToolTrace} /> : null}
       <Box sx={{ mb: 1 }}>{formatRetrievalSummaryLines(normalized.retrieval_trace).map((line, idx) => <Typography key={idx} sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.65)", lineHeight: 1.45 }}>{line}</Typography>)}</Box>
       <CursorSmallButton type="button" onClick={onToggleRetrievalJson} sx={{ mb: 1 }}>{retrievalJsonOpen ? t("askPanel.toggleJson.hide") : t("askPanel.toggleJson.show")}</CursorSmallButton>
       <Collapse in={retrievalJsonOpen} timeout="auto" unmountOnExit>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
@@ -14,6 +14,7 @@ import OpenInNewOutlinedIcon from "@mui/icons-material/OpenInNewOutlined";
 import { CursorIconAction } from "../../../components/common/index.js";
 import { formatResearchApiError, getWorkDetail } from "../../../services/researchApi.js";
 import { buildWorkspacePath } from "../utils/workContext.js";
+import { workChatUrl } from "../workspacePageUrls.js";
 import { useI18n } from "../../../i18n/I18nContext.jsx";
 
 /**
@@ -21,6 +22,8 @@ import { useI18n } from "../../../i18n/I18nContext.jsx";
  */
 export default function OverviewTab({ workId }) {
   const { t } = useI18n();
+  const [searchParams] = useSearchParams();
+  const workspaceId = (searchParams.get("workspace_id") || "").trim();
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -105,7 +108,7 @@ export default function OverviewTab({ workId }) {
             <CursorIconAction component={Link} to={buildWorkspacePath(workId, "graph")} title={t("wsTab.overview.graphTab")}>
               <AccountTreeOutlinedIcon sx={{ fontSize: "1.05rem" }} />
             </CursorIconAction>
-            <CursorIconAction component={Link} to={buildWorkspacePath(workId, "ask")} title={t("wsTab.overview.askTab")}>
+            <CursorIconAction component={Link} to={workChatUrl(workId, workspaceId)} title={t("wsTab.overview.askTab")}>
               <ChatBubbleOutlineOutlinedIcon sx={{ fontSize: "1.05rem" }} />
             </CursorIconAction>
             <CursorIconAction component={Link} to={buildWorkspacePath(workId, "evidence")} title={t("wsTab.overview.evidenceTab")}>

@@ -10,9 +10,9 @@ from typing import Any
 import typer
 
 from eval.agent_tools.metrics import score_agent_case
-from eval.bench_common import benchmark_run_metadata, run_single_case_json_outputs, run_suite_cli_flow
-from science_graphrag.api.agent import post_agent_query
-from science_graphrag.api.agent import AgentQueryRequest
+from eval.bench_common import run_single_case_json_outputs, run_suite_cli_flow
+from science_graphrag.agent.runtime import build_agent
+from science_graphrag.api.deps import init_store_registry
 from science_graphrag.config import get_settings
 
 
@@ -36,7 +36,17 @@ def discover_agent_case_dirs(fixtures_root: Path, *, tier: str = "agent_tools_mi
 
 
 def _mock_case_report(case_id: str, question: str, *, workspace_id: str | None) -> dict[str, Any]:
-    trace = [{"step": 1, "tool": "idea_search", "args_summary": {"q": question[:40]}, "row_count": 3, "duration_ms": 1, "truncated": False, "error": None}]
+    trace = [
+        {
+            "step": 1,
+            "tool": "idea_search",
+            "args_summary": {"q": question[:40]},
+            "row_count": 3,
+            "duration_ms": 1,
+            "truncated": False,
+            "error": None,
+        }
+    ]
     step = 2
     if workspace_id:
         trace.append(
@@ -79,28 +89,51 @@ def run_agent_case(case_dir: Path, *, mock_runtime: bool = False) -> dict[str, A
         report = _mock_case_report(case_dir.name, question, workspace_id=gold.get("workspace_id"))
     else:
         settings = get_settings()
-        resp = post_agent_query(
-            AgentQueryRequest(
-                question=question,
-                workspace_id=gold.get("workspace_id"),
-                max_tool_calls=int(gold.get("max_calls") or settings.agent_max_tool_calls),
-            ),
-            settings=settings,
-        )
-        report = {
-            "case_id": case_dir.name,
-            "answer": resp.answer,
-            "citations": resp.citations,
-            "tool_trace": resp.tool_trace,
-            "duration_ms": resp.duration_ms,
-        }
+        if not settings.agent_enabled:
+            report = {
+                "case_id": case_dir.name,
+                "answer": "",
+                "citations": [],
+                "tool_trace": [],
+                "duration_ms": 0,
+                "error": "agent_disabled",
+            }
+        else:
+            try:
+                stores = init_store_registry(settings)
+                agent = build_agent(settings=settings, stores=stores)
+                out = agent.run(
+                    question=question,
+                    workspace_id=(str(gold.get("workspace_id") or "").strip() or None),
+                    max_tool_calls=int(gold.get("max_calls") or settings.agent_max_tool_calls),
+                )
+                report = {
+                    "case_id": case_dir.name,
+                    "answer": out.answer,
+                    "citations": out.citations,
+                    "tool_trace": list(out.tool_trace),
+                    "duration_ms": int((perf_counter() - started) * 1000),
+                }
+            except Exception as exc:  # noqa: BLE001 — benchmark must emit JSON
+                report = {
+                    "case_id": case_dir.name,
+                    "answer": "",
+                    "citations": [],
+                    "tool_trace": [],
+                    "duration_ms": int((perf_counter() - started) * 1000),
+                    "error": f"{type(exc).__name__}: {exc}",
+                }
     report["metrics"] = score_agent_case(report, gold)
     report["wall_clock_seconds"] = round(perf_counter() - started, 3)
     return report
 
 
 def _summarize(report: dict[str, Any]) -> str:
-    return f"## {report.get('case_id')} — {'PASS' if (report.get('metrics') or {}).get('passed') else 'FAIL'}\n\n```json\n{json.dumps(report.get('metrics'), indent=2)}\n```"
+    cid = report.get("case_id")
+    passed = bool((report.get("metrics") or {}).get("passed"))
+    status = "PASS" if passed else "FAIL"
+    body = json.dumps(report.get("metrics"), indent=2)
+    return f"## {cid} — {status}\n\n```json\n{body}\n```"
 
 
 def _cli(
@@ -137,7 +170,9 @@ def _cli(
             summary_from_reports=lambda reports: {
                 "all_passed": all(bool((r.get("metrics") or {}).get("passed")) for r in reports),
                 "agent_tools_eval": True,
-                "latency_p95_ms": sorted([int(r.get("duration_ms") or 0) for r in reports])[max(len(reports) - 1, 0)],
+                "latency_p95_ms": sorted([int(r.get("duration_ms") or 0) for r in reports])[
+                    max(len(reports) - 1, 0)
+                ],
             },
         )
         if not bool(payload.get("summary", {}).get("all_passed", False)):

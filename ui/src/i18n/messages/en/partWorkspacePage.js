@@ -2,10 +2,11 @@
 export default {
   "workspace.paper.loading": "Loading paper…",
   "workspace.paper.noTitle": "(no title)",
-  "workspace.actions.askWorkspace": "Ask (workspace)",
+  "workspace.actions.askWorkspace": "Open workspace chat",
 
   "workspace.tooltip.workspaceGraph": "Workspace graph",
-  "workspace.tooltip.askWorkspace": "Ask about this workspace",
+  "workspace.tooltip.chatWorkspace": "Open chat for this workspace",
+  "workspace.tooltip.chatPaper": "Open chat for this paper",
   "workspace.tooltip.summarize": "Summarize this workspace",
   "workspace.tooltip.generateHypotheses": "Generate hypotheses",
   "workspace.tooltip.reader": "Open Reader (extracted text)",

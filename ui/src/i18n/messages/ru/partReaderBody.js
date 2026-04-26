@@ -11,7 +11,7 @@ export default {
   "readerBody.chunksPartial": "Показаны первые {{shown}} из {{total}} чанков — при необходимости увеличьте лимит в UI.",
   "readerBody.focusedContext": "Контекст чтения",
   "readerBody.openedFrom": "Открыто из {{summary}}",
-  "readerBody.returnAsk": "Вернуться ко «Вопросам»",
+  "readerBody.returnAsk": "Вернуться в чат",
   "readerBody.openEvidence": "Открыть доказательства",
   "readerBody.chunksAdvanced": "Чанки (дополнительно) — {{count}}",
   "readerBody.chunksTraceHint": "Источники чанков для трассировки ответов агента (отпечатки и превью).",

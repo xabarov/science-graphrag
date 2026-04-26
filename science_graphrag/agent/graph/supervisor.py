@@ -23,7 +23,7 @@ from science_graphrag.agent.graph.nodes.writer_agent import (
     build_writer_agent_node,
 )
 from science_graphrag.agent.graph.state import AgentState
-from science_graphrag.agent.llm.chat import build_chat_model
+from science_graphrag.agent.llm.chat import build_chat_model, ensure_messages_safe_for_generation
 from science_graphrag.agent.tools import build_tool_registry
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
@@ -59,13 +59,12 @@ def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
                 ],
             }
         specialist_context = str(state.get("specialist_results") or {})
-        response = llm.invoke(
-            [
-                HumanMessage(content=ROUTING_PROMPT),
-                HumanMessage(content=f"specialist_results={specialist_context[:12000]}"),
-                *list(state.get("messages") or []),
-            ]
-        )
+        route_msgs = [
+            HumanMessage(content=ROUTING_PROMPT),
+            HumanMessage(content=f"specialist_results={specialist_context[:12000]}"),
+            *list(state.get("messages") or []),
+        ]
+        response = llm.invoke(ensure_messages_safe_for_generation(route_msgs))
         choice = str(response.content or "").strip().lower()
         if choice not in {RETRIEVAL_SPECIALIST, GRAPH_SPECIALIST, WRITER_SPECIALIST, ROUTE_FINISH}:
             choice = RETRIEVAL_SPECIALIST
@@ -125,7 +124,7 @@ def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
     llm = build_chat_model(settings).bind_tools(tool_registry)
 
     def chat_node(state: AgentState) -> dict:
-        response = llm.invoke(state["messages"])
+        response = llm.invoke(ensure_messages_safe_for_generation(state["messages"]))
         return {"messages": [response]}
 
     def budget_node(state: AgentState) -> dict:

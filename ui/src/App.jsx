@@ -7,7 +7,8 @@ import HomePage from "./pages/HomePage.jsx";
 import AdminEntryPage from "./pages/AdminEntryPage.jsx";
 import WorkspacesPage from "./pages/WorkspacesPage.jsx";
 import ReaderPage from "./pages/ReaderPage.jsx";
-import AskPage from "./pages/AskPage.jsx";
+import ChatPage from "./pages/ChatPage.jsx";
+import LegacyAskRedirect from "./pages/LegacyAskRedirect.jsx";
 import EvidencePage from "./pages/EvidencePage.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
 
@@ -81,7 +82,8 @@ export default function App() {
             </Suspense>
           }
         />
-        <Route path="/ask" element={<AskPage />} />
+        <Route path="/chat" element={<ChatPage />} />
+        <Route path="/ask" element={<LegacyAskRedirect />} />
         <Route path="/evidence" element={<EvidencePage />} />
         <Route path="/admin" element={<AdminRouteShell />}>
           <Route index element={<AdminEntryPage />} />

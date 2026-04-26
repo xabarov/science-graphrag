@@ -22,74 +22,430 @@
         "contract_only": false,
         "contract_passed": true,
         "passed": true,
-        "claim_recall": 1.0,
-        "claim_precision": 1.0,
-        "claim_precision_distracted": 1.0,
+        "claim_recall": 0.25,
+        "claim_precision": 0.07692307692307693,
+        "claim_precision_distracted": 0.1,
         "precision_drop_with_distractors": 0.0,
         "max_precision_drop_with_distractors": 0.15,
         "paraphrase_scoring": true,
         "claim_match_mode": "claim_id_or_normalized_text",
         "expected_count": 4,
-        "predicted_count_plain": 4,
-        "predicted_count_distracted": 4,
+        "predicted_count_plain": 13,
+        "predicted_count_distracted": 10,
         "matched_claim_ids": [
-          "atss_essential_difference_finding",
+          "atss_essential_difference_finding"
+        ],
+        "missing_claim_ids": [
           "atss_adaptive_sample_selection",
           "atss_retinanet_matches_fcos",
           "atss_arch_alone_no_advantage_negative"
         ],
-        "missing_claim_ids": [],
-        "min_claim_recall": 0.55
+        "min_claim_recall": 0.22
       },
       "predictions_plain": [
         {
-          "claim_id": "atss_essential_difference_finding",
-          "claim_text_normalized": "The core distinction between detectors that rely on anchor boxes and those that do not lies in how positive and negative training samples are defined, not in the architecture itself.",
-          "claim_text": "The core distinction between detectors that rely on anchor boxes and those that do not lies in how positive and negative training samples are defined, not in the architecture itself."
+          "claim_id": "8a919e29-8839-52a5-a690-2655b0681335",
+          "claim_text": "The essential difference between anchor-based and anchor-free detection is how to define positive and negative training samples.",
+          "claim_text_normalized": "the essential difference between anchor-based and anchor-free detection is how to define positive and negative training samples.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "dfb533cb-f82c-5d47-a831-eb6748631ba6",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "the essential difference between anchor-based and anchor-free detection is actually how to define positive and negative training samples",
+              "section_path": null
+            }
+          ]
         },
         {
-          "claim_id": "atss_adaptive_sample_selection",
-          "claim_text_normalized": "Adaptive Training Sample Selection automatically selects positive samples for each ground-truth object based on statistical characteristics of candidate boxes.",
-          "claim_text": "Adaptive Training Sample Selection automatically selects positive samples for each ground-truth object based on statistical characteristics of candidate boxes."
+          "claim_id": "d23de0d9-b513-5279-bfee-2634a25fe0e1",
+          "claim_text": "State-of-the-art AP of 50.7% is achieved by applying ATSS without introducing any overhead.",
+          "claim_text_normalized": "state-of-the-art ap of 50.7% is achieved by applying atss without introducing any overhead.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "86c6c458-19dc-55bb-b7bd-95dcf5db744f",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "State-of-the-art AP 50.7% is achieved by applying the newly introduced ATSS without introducing any overhead",
+              "section_path": null
+            }
+          ]
         },
         {
-          "claim_id": "atss_retinanet_matches_fcos",
-          "claim_text_normalized": "Applying ATSS sample selection to RetinaNet brings its COCO AP up to that of FCOS, demonstrating that the gap was in label assignment rather than architecture.",
-          "claim_text": "Applying ATSS sample selection to RetinaNet brings its COCO AP up to that of FCOS, demonstrating that the gap was in label assignment rather than architecture."
+          "claim_id": "c57e1191-ede0-5226-a334-247f06d1dcd0",
+          "claim_text": "The number of anchors tiled per location is a difference between RetinaNet and FCOS.",
+          "claim_text_normalized": "the number of anchors tiled per location is a difference between retinanet and fcos.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "bca202a8-66c9-5998-8d61-b19adb4d623b",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "The number of anchors tiled per location. RetinaNet tiles several anchor boxes per location, while FCOS tiles one anchor point per location.",
+              "section_path": null
+            }
+          ]
         },
         {
-          "claim_id": "atss_arch_alone_no_advantage_negative",
-          "claim_text_normalized": "Architectural choices alone do not explain the historical accuracy gap previously credited to anchor-free designs over anchor-based ones.",
-          "claim_text": "Architectural choices alone do not explain the historical accuracy gap previously credited to anchor-free designs over anchor-based ones."
+          "claim_id": "09ebc237-2777-5e77-a682-74ff1eb1def4",
+          "claim_text": "The regression starting status is not an essential difference between anchor-based and anchor-free detectors.",
+          "claim_text_normalized": "the regression starting status is not an essential difference between anchor-based and anchor-free detectors.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "fcc811f9-75d0-5560-bef2-2942dd33ea80",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "there is no obvious difference in final performance, no matter regressing starting from a point or a box, i.e., 37.0% vs. 36.9% and 37.8% vs. 37.8%",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "eb3a60e6-5f51-5785-b47e-630e74b08fa7",
+          "claim_text": "ATSS uses the sum of mean and standard deviation as the IoU threshold.",
+          "claim_text_normalized": "atss uses the sum of mean and standard deviation as the iou threshold.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "e2745216-5748-5032-8576-e8973e3cf834",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Using the sum of mean and standard deviation as the IoU threshold.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "63ae4f57-ec50-5314-95cb-ba74618893dc",
+          "claim_text": "ATSS limits the positive samples’ center to object.",
+          "claim_text_normalized": "atss limits the positive samples’ center to object.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "bf06b57b-e208-589f-a09b-bf80d349ebad",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Limiting the positive samples’ center to object.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "2534593e-18bb-5d0e-a330-115b49f59539",
+          "claim_text": "The IoU mean of an object is a measure of the suitability of the preset anchors for this object.",
+          "claim_text_normalized": "the iou mean of an object is a measure of the suitability of the preset anchors for this object.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "37d5ce7d-6690-5d44-bc28-bfac44d5f4dd",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "The IoU mean of an object is a measure of the suitability of the preset anchors for this object.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "fe3e508d-4357-5fcc-8859-0319765307bd",
+          "claim_text": "The anchor with a center outside object is a poor candidate and should be excluded.",
+          "claim_text_normalized": "the anchor with a center outside object is a poor candidate and should be excluded.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "8f881ee0-23dc-5492-981f-51206092276a",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "The anchor with a center outside object is a poor candidate and will be predicted by the features outside the object, which is not conducive to training and should be excluded.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "b333a337-0d95-5f6b-ad4d-699cac807d53",
+          "claim_text": "The ImageNet pretrained ResNet-50 with 5-level feature pyramid structure is used as the backbone.",
+          "claim_text_normalized": "the imagenet pretrained resnet-50 with 5-level feature pyramid structure is used as the backbone.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "060e816d-4069-55c0-9efd-cb6f47c0911b",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "We use the ImageNet [49] pretrained ResNet-50 [16] with 5-level feature pyramid structure as the backbone.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "e3b84b16-ee90-582f-a869-8dda432a998a",
+          "claim_text": "The whole network is trained using the Stochastic Gradient Descent (SGD) algorithm for 90K iterations with 0.9 momentum, 0.0001 weight decay and 16 batch size.",
+          "claim_text_normalized": "the whole network is trained using the stochastic gradient descent (sgd) algorithm for 90k iterations with 0.9 momentum, 0.0001 weight decay and 16 batch size.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "8ac123e1-a6a0-5ac9-a043-aaf9ca039a79",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "The whole network is trained using the Stochastic Gradient Descent (SGD) algorithm for 90K iterations with 0.9 momentum, 0.0001 weight decay and 16 batch size.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "e08ff26c-f604-5a7f-a886-6bf3610288df",
+          "claim_text": "A preset score of 0.05 is used to filter out background bounding boxes, and the top 1000 detections per feature pyramid are outputted.",
+          "claim_text_normalized": "a preset score of 0.05 is used to filter out background bounding boxes, and the top 1000 detections per feature pyramid are outputted.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "af9f7f33-2edb-561d-8b9b-c1479e77a733",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "After that, we use the preset score 0.05 to filter out plenty of background bounding boxes, and then output the top 1000 detections per feature pyramid.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "19a09e0a-a275-5790-acac-8683d18b1b77",
+          "claim_text": "FCOS outperforms RetinaNet (#A=1) by a large margin in AP performance on the MS COCO minival subset.",
+          "claim_text_normalized": "fcos outperforms retinanet (#a=1) by a large margin in ap performance on the ms coco minival subset.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "de8d52f7-f271-55d4-8eec-17436f80577c",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "FCOS outperforms RetinaNet (#A=1) by a large margin in AP performance on the MS COCO minival subset, i.e., 37.1% vs. 32.5%",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "44844537-89de-5507-b03a-4636535e122a",
+          "claim_text": "Adding GroupNorm in heads, using GIoU loss function, limiting positive samples in the ground-truth box, introducing the centerness branch, and adding a trainable scalar for each level feature pyramid improve the AP performance of FCOS.",
+          "claim_text_normalized": "adding groupnorm in heads, using giou loss function, limiting positive samples in the ground-truth box, introducing the centerness branch, and adding a trainable scalar for each level feature pyramid improve the ap performance of fcos.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "548a6acd-3f52-5ebe-ac84-f17c2d5fb05c",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "These improvements boost the AP performance of FCOS from 37.1% to 37.8%",
+              "section_path": null
+            }
+          ]
         }
       ],
       "predictions_distracted": [
         {
-          "claim_id": "atss_essential_difference_finding",
-          "claim_text_normalized": "The core distinction between detectors that rely on anchor boxes and those that do not lies in how positive and negative training samples are defined, not in the architecture itself.",
-          "claim_text": "The core distinction between detectors that rely on anchor boxes and those that do not lies in how positive and negative training samples are defined, not in the architecture itself."
+          "claim_id": "8a919e29-8839-52a5-a690-2655b0681335",
+          "claim_text": "The essential difference between anchor-based and anchor-free detection is how to define positive and negative training samples.",
+          "claim_text_normalized": "the essential difference between anchor-based and anchor-free detection is how to define positive and negative training samples.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "dfb533cb-f82c-5d47-a831-eb6748631ba6",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "the essential difference between anchor-based and anchor-free detection is actually how to define positive and negative training samples",
+              "section_path": null
+            }
+          ]
         },
         {
-          "claim_id": "atss_adaptive_sample_selection",
-          "claim_text_normalized": "Adaptive Training Sample Selection automatically selects positive samples for each ground-truth object based on statistical characteristics of candidate boxes.",
-          "claim_text": "Adaptive Training Sample Selection automatically selects positive samples for each ground-truth object based on statistical characteristics of candidate boxes."
+          "claim_id": "d23de0d9-b513-5279-bfee-2634a25fe0e1",
+          "claim_text": "State-of-the-art AP of 50.7% is achieved by applying ATSS without introducing any overhead.",
+          "claim_text_normalized": "state-of-the-art ap of 50.7% is achieved by applying atss without introducing any overhead.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "86c6c458-19dc-55bb-b7bd-95dcf5db744f",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "State-of-the-art AP 50.7% is achieved by applying the newly introduced ATSS without introducing any overhead",
+              "section_path": null
+            }
+          ]
         },
         {
-          "claim_id": "atss_retinanet_matches_fcos",
-          "claim_text_normalized": "Applying ATSS sample selection to RetinaNet brings its COCO AP up to that of FCOS, demonstrating that the gap was in label assignment rather than architecture.",
-          "claim_text": "Applying ATSS sample selection to RetinaNet brings its COCO AP up to that of FCOS, demonstrating that the gap was in label assignment rather than architecture."
+          "claim_id": "c57e1191-ede0-5226-a334-247f06d1dcd0",
+          "claim_text": "The number of anchors tiled per location is a difference between RetinaNet and FCOS.",
+          "claim_text_normalized": "the number of anchors tiled per location is a difference between retinanet and fcos.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "bca202a8-66c9-5998-8d61-b19adb4d623b",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "The number of anchors tiled per location. RetinaNet tiles several anchor boxes per location, while FCOS tiles one anchor point per location.",
+              "section_path": null
+            }
+          ]
         },
         {
-          "claim_id": "atss_arch_alone_no_advantage_negative",
-          "claim_text_normalized": "Architectural choices alone do not explain the historical accuracy gap previously credited to anchor-free designs over anchor-based ones.",
-          "claim_text": "Architectural choices alone do not explain the historical accuracy gap previously credited to anchor-free designs over anchor-based ones."
+          "claim_id": "09ebc237-2777-5e77-a682-74ff1eb1def4",
+          "claim_text": "The regression starting status is not an essential difference between anchor-based and anchor-free detectors.",
+          "claim_text_normalized": "the regression starting status is not an essential difference between anchor-based and anchor-free detectors.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "fcc811f9-75d0-5560-bef2-2942dd33ea80",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "there is no obvious difference in final performance, no matter regressing starting from a point or a box, i.e., 37.0% vs. 36.9% and 37.8% vs. 37.8%",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "eb3a60e6-5f51-5785-b47e-630e74b08fa7",
+          "claim_text": "ATSS uses the sum of mean and standard deviation as the IoU threshold.",
+          "claim_text_normalized": "atss uses the sum of mean and standard deviation as the iou threshold.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "e2745216-5748-5032-8576-e8973e3cf834",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Using the sum of mean and standard deviation as the IoU threshold.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "63ae4f57-ec50-5314-95cb-ba74618893dc",
+          "claim_text": "ATSS limits the positive samples’ center to object.",
+          "claim_text_normalized": "atss limits the positive samples’ center to object.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "bf06b57b-e208-589f-a09b-bf80d349ebad",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Limiting the positive samples’ center to object.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "2534593e-18bb-5d0e-a330-115b49f59539",
+          "claim_text": "The IoU mean of an object is a measure of the suitability of the preset anchors for this object.",
+          "claim_text_normalized": "the iou mean of an object is a measure of the suitability of the preset anchors for this object.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "d02a872e-7192-50f7-8e48-c4f0cf22261c",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "The IoU mean mg of an object is a measure of the suitability of the preset anchors for this object.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "b268a828-a4b1-5034-bebc-3f6f9704cc84",
+          "claim_text": "The IoU standard deviation of an object is a measure of which layers are suitable to detect this object.",
+          "claim_text_normalized": "the iou standard deviation of an object is a measure of which layers are suitable to detect this object.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "e5fffa43-0a95-520d-be35-7f90df9c2559",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "The IoU standard deviation vg of an object is a measure of which layers are suitable to detect this object.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "fe3e508d-4357-5fcc-8859-0319765307bd",
+          "claim_text": "The anchor with a center outside object is a poor candidate and should be excluded.",
+          "claim_text_normalized": "the anchor with a center outside object is a poor candidate and should be excluded.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "8f881ee0-23dc-5492-981f-51206092276a",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "The anchor with a center outside object is a poor candidate and will be predicted by the features outside the object, which is not conducive to training and should be excluded.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "5aa07e92-b158-5576-b742-7a91d364c0f8",
+          "claim_text": "ATSS bridges the gap between anchor-based and anchor-free detectors.",
+          "claim_text_normalized": "atss bridges the gap between anchor-based and anchor-free detectors.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "d0300c66-ffdf-5770-8779-c3054cf9d6f4",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "It bridges the gap between anchor-based and anchor-free detectors.",
+              "section_path": null
+            }
+          ]
         }
       ],
-      "wall_clock_seconds": 0.0,
-      "extractor": "extract_claims_oracle_from_gold",
-      "oracle_predictions": true,
+      "wall_clock_seconds": 53.31,
+      "extractor": "extract_claims_production_path",
+      "oracle_predictions": false,
+      "runtime_mode": "live",
       "distractor_augmented": true,
-      "extraction_llm_enabled": true
+      "extraction_llm_enabled": true,
+      "extraction_diagnostics_plain": {
+        "dropped_claim_count_too_short": 0,
+        "dropped_claim_count_no_evidence": 15,
+        "dropped_claim_count_quote_rejected": 15,
+        "evidence_quote_strict_count": 8,
+        "evidence_quote_strict_normalized_count": 0,
+        "evidence_quote_fuzzy_count": 5,
+        "evidence_quote_jaccard_count": 0,
+        "raw_claims_from_llm": 28,
+        "llm_error_message": null,
+        "llm_raw_response_preview": "{\"claims\": [{\"claim_text\": \"The essential difference between anchor-based and anchor-free detection is how to define positive and negative training samples.\", \"claim_type\": \"methodology\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"the essential difference between anchor-based and anchor-free detection is actually how to define positive and negative training samples\", \"section_path\": null}]}, {\"claim_text\": \"Adaptive Training Sample Selection (ATSS) significantly improves the performance of anchor-based and anchor-free detectors.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"we propose an Adaptive Training Sample Selection (ATSS) to automatically select positive and negative samples according to statistical characteristics of object. It significantly improves the performance of anchor-based and anchor-free detectors\", \"section_path\": null}]}, {\"claim_text\": \"Tiling multiple anchors per location on the image to detect objects is not necessary.\", \"claim_type\": \"methodology\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"a conclusion can be drawn that tiling multiple anchors per location on the image to detect objects is not necessary\", \"section_path\": null}]}, {\"claim_text\": \"State-of-the-art AP of 50.7% is achieved by applying ATSS without introducing any overhead.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"State-of-the-art AP 50.7% is achieved by applying the newly introduced ATSS without introducing any overhead\", \"section_path\": null}]}, {\"claim_text\": \"The number of anchors tiled per location is a difference between RetinaNet and FCOS.\", \"claim_type\": \"methodology\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quo",
+        "claims_benchmark_compact_schema": true
+      },
+      "extraction_diagnostics_distracted": {
+        "dropped_claim_count_too_short": 0,
+        "dropped_claim_count_no_evidence": 18,
+        "dropped_claim_count_quote_rejected": 18,
+        "evidence_quote_strict_count": 4,
+        "evidence_quote_strict_normalized_count": 0,
+        "evidence_quote_fuzzy_count": 6,
+        "evidence_quote_jaccard_count": 0,
+        "raw_claims_from_llm": 28,
+        "llm_error_message": null,
+        "llm_raw_response_preview": "{\"claims\": [{\"claim_text\": \"The essential difference between anchor-based and anchor-free detection is how to define positive and negative training samples.\", \"claim_type\": \"methodology\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"the essential difference between anchor-based and anchor-free detection is actually how to define positive and negative training samples\", \"section_path\": null}]}, {\"claim_text\": \"Adaptive Training Sample Selection (ATSS) significantly improves the performance of anchor-based and anchor-free detectors.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Adaptive Training Sample Selection (ATSS) to automatically select positive and negative samples according to statistical characteristics of object. It significantly improves the performance of anchor-based and anchor-free detectors\", \"section_path\": null}]}, {\"claim_text\": \"Tiling multiple anchors per location on the image to detect objects is not necessary.\", \"claim_type\": \"methodology\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"a conclusion can be drawn that tiling multiple anchors per location on the image to detect objects is not necessary\", \"section_path\": null}]}, {\"claim_text\": \"State-of-the-art AP of 50.7% is achieved by applying ATSS without introducing any overhead.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"State-of-the-art AP 50.7% is achieved by applying the newly introduced ATSS without introducing any overhead\", \"section_path\": null}]}, {\"claim_text\": \"The number of anchors tiled per location is a difference between RetinaNet and FCOS.\", \"claim_type\": \"methodology\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"The numb",
+        "claims_benchmark_compact_schema": true
+      }
     }
   ]
 }

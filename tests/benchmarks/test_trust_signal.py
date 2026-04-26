@@ -232,6 +232,28 @@ def test_decision_gate_clean_state_still_go() -> None:
     assert dg["decision"] == "GO"
 
 
+def test_decision_gate_two_design_phantoms_still_go() -> None:
+    """merge_safe_contract_mock + strict_pilot_mock are expected canned lanes (Wave 6)."""
+    reference = {"all_passed": True}
+    layer1 = {"failed_count": 0}
+    layer2 = {"failed_count": 0}
+    claims_prod = {"all_passed": True, "mean_claim_recall": 0.9}
+    trust = {
+        "advisory_phantom_count": 2,
+        "advisory_phantom_families": ["merge_safe_contract_mock", "strict_pilot_mock"],
+        "advisory_individual_failures": [],
+        "hard_block_individual_failures": [],
+    }
+    dg = evaluate_decision_gate(
+        reference,
+        layer1,
+        layer2,
+        claims_prod,
+        trust_criteria=trust,
+    )
+    assert dg["decision"] == "GO"
+
+
 def test_build_trust_signal_judge_collects_failures() -> None:
     block = {
         "artifact": "x.json",

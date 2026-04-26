@@ -1,8 +1,8 @@
 # Corpus Gold Pack v1 — план benchmark-фикстур поверх 30+ статей (2026-04-25)
 
 **Дата:** 2026-04-25
-**Тип:** plan + spec (living doc до закрытия pack v1)
-**Статус:** active
+**Тип:** plan + spec (история построения фикстур)
+**Статус:** **Phase 0–6 complete** (gold delivered 2026-04-26). Документ остаётся **источником ссылок** для README фикстур и секций §3–§6; актуальная серия runner'ов BT — [`ontology-benchmarks-trust-audit-2026-04-25.md`](./ontology-benchmarks-trust-audit-2026-04-25.md) + [`master-roadmap-and-refactor-plan-2026-04-25.md`](./master-roadmap-and-refactor-plan-2026-04-25.md) §10.
 **Контекст:** [`ontology-benchmarks-trust-audit-2026-04-25.md`](ontology-benchmarks-trust-audit-2026-04-25.md) показал, что ~50% advisory-семейств зелёные «по построению»; почти каждое узкое место — это **отсутствие или слабость gold-фикстуры**, а не runner. Этот документ описывает, как заранее построить «золотой пакет» на базе уже подготовленного корпуса (35+ статей object-detection в `tests/fixtures/benchmarks/layer1/`), чтобы серия BT2..BT12 свелась к «инструментировать готовый gold», а не «исследовать домен на лету».
 **Связь:** см. также `master-roadmap-and-refactor-plan-2026-04-25.md` (Track D), `ontology-benchmarks-roadmap-2026-04-24.md` (Wave M..T).
 

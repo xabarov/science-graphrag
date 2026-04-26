@@ -7,6 +7,6 @@ export default {
   "evidenceBody.answerLinked": "связано с ответом",
   "evidenceBody.openReader": "Открыть в чтении",
   "evidenceBody.openGraph": "Открыть в графе",
-  "evidenceBody.continueAsk": "Продолжить во «Вопросах»",
+  "evidenceBody.continueAsk": "Продолжить в чате",
   "evidenceBody.filterClaimsOnly": "Только чанки с evidence из claims",
 };

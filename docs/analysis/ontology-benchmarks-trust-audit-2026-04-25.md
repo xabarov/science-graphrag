@@ -1,9 +1,9 @@
 # Ontology & Benchmarks — Trust Audit & Follow-up Plan (2026-04-25)
 
-**Дата:** 2026-04-25 (Trust Audit), последнее обновление — 2026-04-26 (ADR-021 **Phase 0 ops:** Qdrant **1024** + runbook + **re-ingest завершён**; далее BT2/BT4/BT5 + baseline — см. backlog OPEN «Switch Qdrant…»); 2026-04-27 — BT6 per-case `runtime_mode` + `trust_signal` на `claims_paraphrase_*` ([`wave5-bt6-quote-tolerance-2026-04-26.md`](./wave5-bt6-quote-tolerance-2026-04-26.md)); ранее 2026-04-26 — P0 quote tolerance в ingestion
+**Дата:** 2026-04-25 (Trust Audit), последнее обновление — 2026-04-27 (BT6 per-case `runtime_mode` + `trust_signal` на `claims_paraphrase_*`; P0 quote tolerance — [`_archive/wave5-bt6-quote-tolerance-2026-04-26.md`](./_archive/wave5-bt6-quote-tolerance-2026-04-26.md)); ADR-021 Phase 0 / BT2-BT5 / Wave 6 gate — см. [`master-roadmap-and-refactor-plan-2026-04-25.md`](./master-roadmap-and-refactor-plan-2026-04-25.md) §0 и §10 + backlog
 **Тип:** review + plan (living doc)
-**Статус:** **Gold side DONE (Phase 0-6 of Corpus Gold Pack v1), runner side: BT1 ✅ + BT5 ✅ + BT2/BT4 ⚠️ partial (Wave 4); BT6 ⚠️ partial** — oracle артефакты + **P0 quote-gate / PDF normalize в коде (2026-04-26)**; полный live `trust_signal` на pilot/holdout без смены gold — OPEN. **BT8 slice (2026-04-27):** `current-agent-tools-judge-pilot.json` больше не `missing_file`. **BT12 slice (2026-04-26):** bench + `merge_work_contradicts` + `contradictions_family` в aggregate; **без** ingest-time `:CONTRADICTS`. **BT3 / остаток BT7..BT11 OPEN**
-**Связанные документы:** [`ontology-benchmarks-roadmap-2026-04-24.md`](ontology-benchmarks-roadmap-2026-04-24.md) (Wave M–T исходный roadmap), [`master-roadmap-and-refactor-plan-2026-04-25.md`](master-roadmap-and-refactor-plan-2026-04-25.md) (мастер-план; **§10 — следующий план действий**), [`corpus-gold-pack-v1-2026-04-25.md`](corpus-gold-pack-v1-2026-04-25.md) (детали gold-side работ Phase 0-6), [`instructor-adoption-dual-validate-2026-04-25.md`](instructor-adoption-dual-validate-2026-04-25.md) (план Phase 7 рефакторинга dual_validate), [`recommended_path.md`](recommended_path.md) (дорожка BT1 → продукт → фоновый BT2..BT12).
+**Статус:** **Gold side DONE (Corpus Gold Pack v1 Phase 0–6).** Runner side: **BT1 ✅**, **BT5 ✅**, **BT3 pilot JSON зелёный (Wave 6)** — см. [`_archive/wave6-benchmarks-quality-2026-04-26.md`](./_archive/wave6-benchmarks-quality-2026-04-26.md); **BT2/BT4** — качество retrieval / `mrr_delta` всё ещё в работе; **BT6** — P0 quote gate ✅ ([`_archive/wave5-bt6-quote-tolerance-2026-04-26.md`](./_archive/wave5-bt6-quote-tolerance-2026-04-26.md)), live `trust_signal` на pilot/holdout + gold realism — OPEN. **BT8 slice:** `current-agent-tools-judge-pilot.json` не `missing_file`. **BT12 slice:** bench + aggregate **без** ingest-time `:CONTRADICTS`. **BT7, BT9–BT11 + хвосты BT2/BT4/BT6/BT12 — OPEN**
+**Связанные документы:** [`ontology-benchmarks-roadmap-2026-04-24.md`](ontology-benchmarks-roadmap-2026-04-24.md) (Wave M–T исходный roadmap), [`master-roadmap-and-refactor-plan-2026-04-25.md`](master-roadmap-and-refactor-plan-2026-04-25.md) (мастер-план; **§10 — очерёдность**), [`corpus-gold-pack-v1-2026-04-25.md`](corpus-gold-pack-v1-2026-04-25.md) (детали gold-side работ Phase 0-6), [`instructor-adoption-dual-validate-2026-04-25.md`](instructor-adoption-dual-validate-2026-04-25.md) (план Phase 7 рефакторинга dual_validate), [`_archive/wave6-benchmarks-quality-2026-04-26.md`](./_archive/wave6-benchmarks-quality-2026-04-26.md) (Wave 6 — gate/phantom policy).
 **Аналог по графу:** [`graph-readability-followup-2026-04-25.md`](graph-readability-followup-2026-04-25.md) (там — UX-аудит, тут — измерительный).
 
 ---
@@ -11,6 +11,8 @@
 ## 0. Snapshot after Gold Pack v1 (2026-04-26)
 
 > Это секция **дописана после Phase 6 closure**, чтобы не приходилось читать весь BT0-блок ниже.
+
+**Post–Wave 6 (2026-04-26):** часть формулировок ниже про «multihop broken / decision_gate врёт» — **исторический** снимок до закрытия BT3 slice и политики phantoms; актуальные артефакты и gate — `eval/results/benchmark-trust-baseline.json` + [`_archive/wave6-benchmarks-quality-2026-04-26.md`](./_archive/wave6-benchmarks-quality-2026-04-26.md).
 
 **Что изменилось с момента первоначального аудита (2026-04-25 утро):**
 

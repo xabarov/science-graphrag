@@ -1,27 +1,23 @@
 import React, { useCallback, useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
+import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
 
 import AskPanel from "../components/work/AskPanel.jsx";
 import { deriveAskScopeKey, sessionExistsInScope } from "../components/work/askSessionState.js";
-import PageHeader from "../components/layout/PageHeader.jsx";
-import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
 import { useWorkspaceContext } from "../components/layout/WorkspaceContext.jsx";
 import { useI18n } from "../i18n/I18nContext.jsx";
 import { persistWorkId } from "./WorkspacePage/utils/workContext.js";
-import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
-
 import { CursorIconAction } from "../components/common/index.js";
 
-/** Standalone Ask entry; workspace tab is the primary UX when a work is selected. */
-export default function AskPage() {
+/** Standalone chat entry — full-height GPT-like layout. */
+export default function ChatPage() {
   const { t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialWorkId = searchParams.get("work_id") || "";
   const workspaceIdFromUrl = (searchParams.get("workspace_id") || "").trim();
   const { activeWorkspaceId, getLastWorkspaceHref } = useWorkspaceContext();
   const askSessionUrl = (searchParams.get("ask_session") || "").trim();
-  const labMode = searchParams.get("lab") === "1";
 
   const effectiveWorkspaceId = useMemo(
     () => workspaceIdFromUrl || (activeWorkspaceId || "").trim(),
@@ -59,15 +55,23 @@ export default function AskPage() {
   const showEmptyCta = !initialWorkId.trim() && !workspaceIdFromUrl && !activeWorkspaceId;
 
   return (
-    <Box sx={{ p: 2, ...mainShellContentSx }}>
-      <PageHeader
-        eyebrow={t("askPage.header.eyebrow")}
-        title={t("askPage.header.title")}
-        description={t("askPage.header.description")}
-      />
+    <Box
+      sx={{
+        flex: 1,
+        minHeight: 0,
+        width: "100%",
+        maxWidth: "100%",
+        boxSizing: "border-box",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        px: 2,
+        pt: 1,
+      }}
+    >
       {showEmptyCta ? (
-        <Box sx={{ mb: 2 }}>
-          <CursorIconAction component={Link} to={getLastWorkspaceHref()} title={t("askPage.empty.openLastWorkspace")}>
+        <Box sx={{ mb: 1, flexShrink: 0 }}>
+          <CursorIconAction component={Link} to={getLastWorkspaceHref()} title={t("chatPage.empty.openLastWorkspace")}>
             <HubOutlinedIcon sx={{ fontSize: "1.15rem" }} />
           </CursorIconAction>
         </Box>
@@ -78,7 +82,7 @@ export default function AskPage() {
         showPageChrome={false}
         urlSessionId={askSessionUrl}
         onUrlSessionIdChange={onAskSessionUrlChange}
-        labMode={labMode}
+        fillAvailableHeight
       />
     </Box>
   );

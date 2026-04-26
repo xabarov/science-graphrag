@@ -61,6 +61,7 @@ export default function EvidenceTab({ workId }) {
       </Box>
       <EvidenceWorkBody
         workId={workId}
+        workspaceId={trace.workspaceId}
         highlightedFingerprint={trace.chunkFingerprint}
         highlightedSection={trace.section}
         citation={trace.citation}

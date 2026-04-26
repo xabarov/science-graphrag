@@ -18,7 +18,7 @@
 | [`../architecture/authorship-neo4j-queries.md`](../architecture/authorship-neo4j-queries.md) | Разделение «онтология vs визуализация» для авторства |
 | [`../specs/graph-ui-plan.md`](../specs/graph-ui-plan.md) | Контракт UI ↔ API + Wave 4.x/5–8 |
 | [`workspace-experience-gap-2026-04-24.md`](workspace-experience-gap-2026-04-24.md) | Анализ workspace-сценариев (Wave I–L) |
-| [`ontology-benchmarks-roadmap-2026-04-24.md`](ontology-benchmarks-roadmap-2026-04-24.md) | План онтологии и индексов (Wave M–T) |
+| [`ontology-benchmarks-roadmap-2026-04-24.md`](../ontology-benchmarks-roadmap-2026-04-24.md) | План онтологии и индексов (Wave M–T) |
 
 ---
 
@@ -71,7 +71,7 @@ b240ca79-6dc1-49ec-90c7-acce907439d1:ash:1
   - бейдж «много цитирований» в инспекторе.
 - **Стабильное `display_name` на `:Author` после канонизации** (Wave T — [`merge-catalog-wave-h.md`](../specs/merge-catalog-wave-h.md)). `full_name` сейчас может расходиться между публикациями.
 - **Стабильное `short_name` / `acronym` на `:Institution` и `:Venue`** (необязательно; можно через alias-таблицу) — UI часто хочет короткое имя, а не «University of California, Berkeley, Department of …».
-- **Индексы / fulltext** уже описаны в [`ontology-benchmarks-roadmap-2026-04-24.md` §6](ontology-benchmarks-roadmap-2026-04-24.md) — здесь не дублируем.
+- **Индексы / fulltext** уже описаны в [`ontology-benchmarks-roadmap-2026-04-24.md` §6](../ontology-benchmarks-roadmap-2026-04-24.md) — здесь не дублируем.
 
 ### 2.3 Что должна делать API-проекция (между Neo4j и UI)
 
@@ -102,7 +102,7 @@ b240ca79-6dc1-49ec-90c7-acce907439d1:ash:1
 | 4 | Подписи рёбер слишком технические (`HAS_AUTHORSHIP`, `OF_AUTHOR`) | API: словарь `display_type` для UI ([ADR 011](../adr/011-graph-live-ux-and-payload.md) уже даёт строку, но 1:1 с `_`→space); расширить до семантичных переводов: `cites`, `is author of`, `affiliated with`, `evaluated on`, `published in` | API | `works.py` `_display_type` (расширить таблицу) |
 | 5 | Контекстные узлы (`Venue`, `Institution`) визуально равны центральным | UI: тонкое стилевое различие («tertiary» tier) + по умолчанию off в `nodeTypesCsv`; легенда показывает «выключено» | UI | `graphCanvasStyle.js`, `WorkspaceGraphToolbar.jsx`, `GraphTypeLegend.jsx` |
 | 6 | Внешние работы не отличаются в инспекторе | UI: бейдж `external` + ссылка «Открыть в новом окружении» уже есть для одного-Work-графа; повторно использовать в edge-инспекторе | UI | `GraphDetailPanel.jsx` |
-| 7 | Дубликаты `:Author` (та же фамилия из разных публикаций) | Backend: dedup `:Author` по `normalized_name` + `orcid` (Wave T в [`ontology-benchmarks-roadmap-2026-04-24.md` §7](ontology-benchmarks-roadmap-2026-04-24.md)); UI: индикатор «возможно тот же автор» при `normalized_name` совпадении до канонизации | DB + API | `neo4j_store.py`, `merge-catalog-wave-h.md` |
+| 7 | Дубликаты `:Author` (та же фамилия из разных публикаций) | Backend: dedup `:Author` по `normalized_name` + `orcid` (Wave T в [`ontology-benchmarks-roadmap-2026-04-24.md` §7](../ontology-benchmarks-roadmap-2026-04-24.md)); UI: индикатор «возможно тот же автор» при `normalized_name` совпадении до канонизации | DB + API | `neo4j_store.py`, `merge-catalog-wave-h.md` |
 | 8 | «Звезда» из `CITES` не структурирована | UI (force layout): группировка по `publication_year` / `venue` / community detection поверх `CITES`; визуально — кластер-кольца | UI | `physics/scienceHybridCommunities.js`, `physics/structuralCommunities.js` |
 | 9 | API возвращает только 200 соседей без приоритизации | API: ранжировать `LIMIT` так, чтобы `Method`/`Dataset` всегда влезли; добавить `meta.skipped_by_kind` | API | `works.py` |
 | 10 | Будущие `Claim`/`Concept`/`ResearchTopic` повторят сценарий «много мелких узлов» | Заранее ввести в API-проекции класс `aggregation_hints` и не плодить на UI special-case-ы | API | `ontology-claims-v1.md`, `013-concept-research-topic-ontology-v1-5.md` |
@@ -194,7 +194,7 @@ b240ca79-6dc1-49ec-90c7-acce907439d1:ash:1
 
 ## 5. План работ — Wave GR1–GR5
 
-Wave «GR» = Graph Readability (отдельный индекс, чтобы не пересекаться с продуктовыми Wave A–T из [roadmap](../roadmap.md) и [ontology-benchmarks-roadmap](ontology-benchmarks-roadmap-2026-04-24.md)). Каждая Wave — отдельный refactor pass.
+Wave «GR» = Graph Readability (отдельный индекс, чтобы не пересекаться с продуктовыми Wave A–T из [roadmap](../roadmap.md) и [ontology-benchmarks-roadmap](../ontology-benchmarks-roadmap-2026-04-24.md)). Каждая Wave — отдельный refactor pass.
 
 ### 5.1 Wave GR1 — `display_label` для всех типов и Authorship-fix (бэкенд, минимальное)
 
@@ -330,7 +330,7 @@ Wave «GR» = Graph Readability (отдельный индекс, чтобы н�
 
 ## 6. Что **не** входит в этот план (явно отложено)
 
-- **`Concept` / `ResearchTopic` визуализация** — дождаться [ADR 013](../adr/013-concept-research-topic-ontology-v1-5.md) production-promotion (Wave N→O в [`ontology-benchmarks-roadmap-2026-04-24.md`](ontology-benchmarks-roadmap-2026-04-24.md)). Когда появятся, агрегация (Wave GR3) переиспользуется как есть.
+- **`Concept` / `ResearchTopic` визуализация** — дождаться [ADR 013](../adr/013-concept-research-topic-ontology-v1-5.md) production-promotion (Wave N→O в [`ontology-benchmarks-roadmap-2026-04-24.md`](../ontology-benchmarks-roadmap-2026-04-24.md)). Когда появятся, агрегация (Wave GR3) переиспользуется как есть.
 - **`Claim` / `Evidence` визуализация** — Wave O production-флаг ([ADR 008](../adr/008-ontology-claims-wave-h.md)); отдельная схема рендера.
 - **GDS-based community detection** — пока force-симуляция справляется; см. [ADR 012](../adr/012-workspace-graph-projection.md).
 - **Server-persisted layout** — оставлено на «когда будет продуктовая надобность» ([graph-ui-plan.md *Layout stack v1*](../specs/graph-ui-plan.md)).

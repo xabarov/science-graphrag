@@ -10,7 +10,7 @@ from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode
 
 from science_graphrag.agent.graph.state import AgentState
-from science_graphrag.agent.llm.chat import build_chat_model
+from science_graphrag.agent.llm.chat import build_chat_model, ensure_messages_safe_for_generation
 from science_graphrag.agent.tools import build_writer_tools
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
@@ -36,13 +36,12 @@ def build_writer_agent_node(stores: StoreRegistry, settings: Settings):
         context_message = HumanMessage(
             content=f"specialist_results={_collect_writer_context(state)}"
         )
-        response = llm.invoke(
-            [
-                HumanMessage(content=SYSTEM_PROMPT),
-                context_message,
-                *list(state.get("messages") or []),
-            ]
-        )
+        base_msgs = [
+            HumanMessage(content=SYSTEM_PROMPT),
+            context_message,
+            *list(state.get("messages") or []),
+        ]
+        response = llm.invoke(ensure_messages_safe_for_generation(base_msgs))
         return {"messages": [response]}
 
     def budget_node(state: AgentState) -> dict:

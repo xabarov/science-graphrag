@@ -8,7 +8,7 @@ import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettin
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
 import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
-import QuestionAnswerOutlinedIcon from "@mui/icons-material/QuestionAnswerOutlined";
+import ChatBubbleOutlineOutlinedIcon from "@mui/icons-material/ChatBubbleOutlineOutlined";
 import FactCheckOutlinedIcon from "@mui/icons-material/FactCheckOutlined";
 import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
@@ -65,7 +65,7 @@ export default function Drawer({ onNavigate }) {
     }
     base.push(
       { to: appendWorkspaceQuery("/graph", wid), label: t("shell.drawer.graph"), icon: <AccountTreeOutlinedIcon /> },
-      { to: appendWorkspaceQuery("/ask", wid), label: t("shell.drawer.ask"), icon: <QuestionAnswerOutlinedIcon /> },
+      { to: appendWorkspaceQuery("/chat", wid), label: t("shell.drawer.chat"), icon: <ChatBubbleOutlineOutlinedIcon /> },
       { to: appendWorkspaceQuery("/evidence", wid), label: t("shell.drawer.evidence"), icon: <FactCheckOutlinedIcon /> },
     );
     return base;

@@ -10,15 +10,16 @@ import { Link } from "react-router-dom";
 
 import { formatResearchApiError, getWorkClaims, getWorkChunks } from "../../services/researchApi.js";
 import { CursorSmallButton } from "../common/index.js";
-import { buildWorkspaceTracePath, describeTraceabilityState } from "./traceabilityState.js";
+import { buildStandaloneChatPath, buildWorkspaceTracePath, describeTraceabilityState } from "./traceabilityState.js";
 import { useI18n } from "../../i18n/I18nContext.jsx";
 
 /**
  * Evidence (chunk fingerprints) for a fixed work_id.
- * @param {{ workId: string, highlightedFingerprint?: string, highlightedSection?: string, citation?: string }} props
+ * @param {{ workId: string, workspaceId?: string, highlightedFingerprint?: string, highlightedSection?: string, citation?: string }} props
  */
 export default function EvidenceWorkBody({
   workId,
+  workspaceId = "",
   highlightedFingerprint = "",
   highlightedSection = "",
   citation = "",
@@ -188,7 +189,8 @@ export default function EvidenceWorkBody({
                 </CursorSmallButton>
                 <CursorSmallButton
                   component={Link}
-                  to={buildWorkspaceTracePath(workId, "ask", {
+                  to={buildStandaloneChatPath(workId, {
+                    workspaceId,
                     chunkFingerprint: fingerprint,
                     section: sectionPath,
                     citation,

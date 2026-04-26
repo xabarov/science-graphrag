@@ -198,6 +198,7 @@ export default function ReaderPage() {
         <Box sx={{ minWidth: 0, display: "flex", flexDirection: "column" }}>
           <ReaderWorkBody
             workId={workId}
+            workspaceId={trace.workspaceId}
             focusedFingerprint={trace.chunkFingerprint}
             focusedSection={trace.section}
             citation={trace.citation}

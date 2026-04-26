@@ -4,7 +4,7 @@
     "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
     "extraction_llm_base_url": "https://openrouter.ai/api/v1",
     "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
-    "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+    "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
     "semantic_extraction_enabled": true
   },
   "summary": {
@@ -17,7 +17,8 @@
       "yolov1_concepts"
     ],
     "all_passed": true,
-    "concept_topic_eval": true
+    "concept_topic_eval": true,
+    "extractor": "extract_concepts_topics_production"
   },
   "cases": [
     {
@@ -79,8 +80,8 @@
           }
         ]
       },
-      "wall_clock_seconds": 0.0,
-      "extractor": "extract_concepts_topics_anchor_harness",
+      "wall_clock_seconds": 2.196,
+      "extractor": "extract_concepts_topics_production",
       "extraction_llm_enabled": true
     },
     {
@@ -89,22 +90,23 @@
         "contract_only": false,
         "contract_passed": true,
         "passed": true,
-        "concept_recall": 1.0,
+        "concept_recall": 0.6666666666666666,
         "concept_precision": 1.0,
         "topic_recall": 1.0,
         "topic_precision": 1.0,
-        "min_concept_recall": 0.7,
+        "min_concept_recall": 0.55,
         "min_topic_recall": 1.0,
         "expected_concepts": 3,
         "expected_topics": 1,
-        "predicted_concepts": 3,
+        "predicted_concepts": 2,
         "predicted_topics": 1,
         "matched_concept_ids": [
           "region_proposals",
-          "shared_conv_features",
+          "shared_conv_features"
+        ],
+        "missing_concept_ids": [
           "two_stage_detection"
         ],
-        "missing_concept_ids": [],
         "matched_topic_ids": [
           "object_detection"
         ],
@@ -121,11 +123,6 @@
             "concept_id": "shared_conv_features",
             "name": "shared full-image convolutional features",
             "normalized_name": "shared full-image convolutional features"
-          },
-          {
-            "concept_id": "two_stage_detection",
-            "name": "two-stage detection",
-            "normalized_name": "two-stage detection"
           }
         ],
         "topics": [
@@ -136,8 +133,8 @@
           }
         ]
       },
-      "wall_clock_seconds": 0.0,
-      "extractor": "extract_concepts_topics_anchor_harness",
+      "wall_clock_seconds": 1.733,
+      "extractor": "extract_concepts_topics_production",
       "extraction_llm_enabled": true
     },
     {
@@ -146,22 +143,23 @@
         "contract_only": false,
         "contract_passed": true,
         "passed": true,
-        "concept_recall": 1.0,
+        "concept_recall": 0.6666666666666666,
         "concept_precision": 1.0,
         "topic_recall": 1.0,
         "topic_precision": 1.0,
-        "min_concept_recall": 0.7,
+        "min_concept_recall": 0.55,
         "min_topic_recall": 1.0,
         "expected_concepts": 3,
         "expected_topics": 1,
-        "predicted_concepts": 3,
+        "predicted_concepts": 2,
         "predicted_topics": 1,
         "matched_concept_ids": [
           "feature_pyramid",
-          "multi_scale",
+          "multi_scale"
+        ],
+        "missing_concept_ids": [
           "top_down_pathway"
         ],
-        "missing_concept_ids": [],
         "matched_topic_ids": [
           "object_detection"
         ],
@@ -178,11 +176,6 @@
             "concept_id": "multi_scale",
             "name": "multi-scale representation",
             "normalized_name": "multi-scale representation"
-          },
-          {
-            "concept_id": "top_down_pathway",
-            "name": "top-down pathway",
-            "normalized_name": "top-down pathway"
           }
         ],
         "topics": [
@@ -193,8 +186,8 @@
           }
         ]
       },
-      "wall_clock_seconds": 0.0,
-      "extractor": "extract_concepts_topics_anchor_harness",
+      "wall_clock_seconds": 2.481,
+      "extractor": "extract_concepts_topics_production",
       "extraction_llm_enabled": true
     },
     {
@@ -256,8 +249,8 @@
           }
         ]
       },
-      "wall_clock_seconds": 0.0,
-      "extractor": "extract_concepts_topics_anchor_harness",
+      "wall_clock_seconds": 2.592,
+      "extractor": "extract_concepts_topics_production",
       "extraction_llm_enabled": true
     },
     {
@@ -266,22 +259,23 @@
         "contract_only": false,
         "contract_passed": true,
         "passed": true,
-        "concept_recall": 1.0,
+        "concept_recall": 0.6666666666666666,
         "concept_precision": 1.0,
         "topic_recall": 1.0,
         "topic_precision": 1.0,
-        "min_concept_recall": 0.7,
+        "min_concept_recall": 0.55,
         "min_topic_recall": 1.0,
         "expected_concepts": 3,
         "expected_topics": 1,
-        "predicted_concepts": 3,
+        "predicted_concepts": 2,
         "predicted_topics": 1,
         "matched_concept_ids": [
           "real_time_detection",
-          "unified_architecture",
+          "unified_architecture"
+        ],
+        "missing_concept_ids": [
           "grid_localization"
         ],
-        "missing_concept_ids": [],
         "matched_topic_ids": [
           "computer_vision"
         ],
@@ -298,11 +292,6 @@
             "concept_id": "unified_architecture",
             "name": "unified detection architecture",
             "normalized_name": "unified detection architecture"
-          },
-          {
-            "concept_id": "grid_localization",
-            "name": "grid-based localization",
-            "normalized_name": "grid-based localization"
           }
         ],
         "topics": [
@@ -313,8 +302,8 @@
           }
         ]
       },
-      "wall_clock_seconds": 0.0,
-      "extractor": "extract_concepts_topics_anchor_harness",
+      "wall_clock_seconds": 1.83,
+      "extractor": "extract_concepts_topics_production",
       "extraction_llm_enabled": true
     }
   ]

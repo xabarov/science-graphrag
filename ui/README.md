@@ -4,6 +4,6 @@
 
 См. [docs/roadmap.md](../docs/roadmap.md) Phase 6.
 
-**Маршруты (основные):** `/` (home), `/workspace`, `/reader`, `/graph`, `/ask`, `/evidence`, `/workspaces` (редирект с `/corpus`), `/benchmark` (benchmark console — dev/QA; см. [frontend-phase6-bridge-backlog.md](../docs/architecture/frontend-phase6-bridge-backlog.md) track A5).
+**Маршруты (основные):** `/` (home), `/workspace`, `/reader`, `/graph`, `/chat` (редирект с `/ask`), `/evidence`, `/workspaces` (редирект с `/corpus`), `/benchmark` (benchmark console — dev/QA; см. [frontend-phase6-bridge-backlog.md](../docs/architecture/frontend-phase6-bridge-backlog.md) track A5).
 
 *Реализация после стабилизации контрактов API и данных.*

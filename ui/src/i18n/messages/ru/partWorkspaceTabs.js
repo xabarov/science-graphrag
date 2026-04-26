@@ -6,7 +6,7 @@ export default {
   "wsTab.overview.quickActions": "Быстрые действия",
   "wsTab.overview.readerTab": "Вкладка «Чтение»",
   "wsTab.overview.graphTab": "Вкладка «Граф»",
-  "wsTab.overview.askTab": "Вкладка «Вопросы»",
+  "wsTab.overview.askTab": "Чат",
   "wsTab.overview.evidenceTab": "Вкладка «Доказательства»",
   "wsTab.overview.openGraphFull": "Граф на отдельной странице",
   "wsTab.overview.graphNote":
@@ -27,7 +27,7 @@ export default {
   "wsTab.graph.openStandalone": "Граф отдельно",
   "wsTab.graph.jumpReader": "К чтению",
   "wsTab.graph.jumpEvidence": "К доказательствам",
-  "wsTab.graph.jumpAsk": "К вопросам",
+  "wsTab.graph.jumpAsk": "Перейти в чат",
   "wsTab.graph.subtitle":
     "Граф привязан к активной работе; фокус узла в URL для глубоких ссылок.",
 

@@ -32,11 +32,9 @@ function newSessionId() {
 function defaultSessionTitle() {
   try {
     const loc = readStoredLocale();
-    const tag = getRuntimeIntlLocale();
-    const date = new Intl.DateTimeFormat(tag, { dateStyle: "medium", timeStyle: "short" }).format(new Date());
-    return translate("ask.session.titleWithDate", loc, { date });
+    return translate("chat.session.defaultTitle", loc);
   } catch {
-    return `Session ${new Date().toISOString().slice(0, 16)}`;
+    return "Chat";
   }
 }
 
@@ -58,7 +56,7 @@ export function deriveAskScopeKey({ locked, scopedWorkId, workspaceId }) {
 
 /**
  * @param {unknown} item
- * @returns {{ id: string, query: string, workId: string, topK: number, answer: string, citationCount: number, mode: string, savedAt: string }}
+ * @returns {{ id: string, query: string, workId: string, topK: number, answer: string, citationCount: number, mode: string, savedAt: string, details: Record<string, unknown> | null }}
  */
 function normalizeTurn(item) {
   const query = String(item?.query || "").trim();
@@ -66,6 +64,9 @@ function normalizeTurn(item) {
   const topK = Number.isFinite(Number(item?.topK)) ? Number(item.topK) : 5;
   const savedAt = item?.savedAt ? String(item.savedAt) : new Date().toISOString();
   const id = `${workId || "global"}::${query.toLowerCase()}`;
+  const rawDetails = item?.details;
+  const details =
+    rawDetails && typeof rawDetails === "object" && !Array.isArray(rawDetails) ? { ...rawDetails } : null;
   return {
     id,
     query,
@@ -75,6 +76,7 @@ function normalizeTurn(item) {
     citationCount: Number.isFinite(Number(item?.citationCount)) ? Number(item.citationCount) : 0,
     mode: String(item?.mode || (workId ? "scoped" : "global")),
     savedAt,
+    details,
   };
 }
 

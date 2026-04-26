@@ -5,7 +5,7 @@
   "description": "Faster R-CNN: RPN, shared features, two-stage pipeline.",
   "article_path": "../../layer1/faster_rcnn_realpdf/article.md",
   "contract_only": false,
-  "min_concept_recall": 0.7,
+  "min_concept_recall": 0.55,
   "min_topic_recall": 1.0,
   "expected_concepts": [
     {

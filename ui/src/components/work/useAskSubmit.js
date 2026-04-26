@@ -1,14 +1,9 @@
-import { useCallback, useRef, useState } from "react";
-import {
-  formatResearchApiError,
-  normalizeQueryResponse,
-  postAgentQuery,
-  postQuery,
-} from "../../services/researchApi.js";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { formatResearchApiError, normalizeQueryResponse, postAgentQuery } from "../../services/researchApi.js";
 import { useAgentStream } from "../../hooks/useAgentStream.js";
 
 /**
- * Orchestrates Ask submit flow: builds request, calls API, updates shell callbacks.
+ * Orchestrates chat submit: streaming agent only (no vector/hybrid UI path).
  *
  * @param {{
  *  workspaceId?: string,
@@ -33,6 +28,8 @@ export function useAskSubmit({
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const abortRef = useRef(null);
+  /** Last normalized payload produced by streaming agent (submit returns it after stream ends). */
+  const lastStreamNormalizedRef = useRef(null);
 
   const { stream: streamAgent, isStreaming, abort: abortStream } = useAgentStream({
     workspaceId,
@@ -53,7 +50,16 @@ export function useAskSubmit({
           citations_returned: citations.length,
           retrieval_policy: "agent_tools_v2",
         },
+        answer_class: event?.answer_class,
+        evidence_summary: event?.evidence_summary,
+        warnings: event?.warnings,
+        inventory: event?.inventory,
+        relation_trace: event?.relation_trace,
+        quote_candidates: event?.quote_candidates,
+        idea_suggestions: event?.idea_suggestions,
+        bibliography: event?.bibliography,
       });
+      lastStreamNormalizedRef.current = normalized;
       onResult?.(normalized);
     },
     onError: (msg) => onError?.(msg),
@@ -67,14 +73,18 @@ export function useAskSubmit({
     },
   });
 
-  const submit = useCallback(
-    async ({ query, topK, retrievalMode, retrievalLabVisible, bodyPreview }) => {
-      if (!String(query || "").trim()) return null;
-      const isAgentMode = retrievalLabVisible && retrievalMode === "agent";
+  useEffect(() => {
+    lastStreamNormalizedRef.current = null;
+  }, [workspaceId]);
 
-      if (isAgentMode && useStreamingAgent) {
+  const submit = useCallback(
+    async ({ query }) => {
+      if (!String(query || "").trim()) return null;
+
+      if (useStreamingAgent) {
+        lastStreamNormalizedRef.current = null;
         await streamAgent({ question: query, maxToolCalls: 8 });
-        return null;
+        return lastStreamNormalizedRef.current;
       }
 
       abortRef.current?.abort?.();
@@ -85,37 +95,27 @@ export function useAskSubmit({
       setIsLoading(true);
       onStart?.();
       try {
-        let normalized;
-        let trace = [];
-
-        if (isAgentMode) {
-          const res = await postAgentQuery(
-            {
-              question: query,
-              workspace_id: workspaceId || null,
-              max_tool_calls: 8,
-            },
-            { signal: controller.signal },
-          );
-          const raw = res.data || {};
-          trace = Array.isArray(raw.tool_trace) ? raw.tool_trace : [];
-          normalized = normalizeQueryResponse({
-            answer: String(raw.answer || ""),
-            citations: Array.isArray(raw.citations) ? raw.citations : [],
-            graph_context: {},
-            retrieval_trace: {
-              retrieval_mode: "agent",
-              hit_count: Array.isArray(raw.citations) ? raw.citations.length : 0,
-              top_k_requested: topK,
-              citations_returned: Array.isArray(raw.citations) ? raw.citations.length : 0,
-              retrieval_policy: "agent_tools_v1",
-            },
-          });
-        } else {
-          const res = await postQuery(bodyPreview, { signal: controller.signal });
-          normalized = normalizeQueryResponse(res.data);
-        }
-
+        const res = await postAgentQuery(
+          {
+            question: query,
+            workspace_id: workspaceId || null,
+            max_tool_calls: 8,
+          },
+          { signal: controller.signal },
+        );
+        const raw = res.data || {};
+        const trace = Array.isArray(raw.tool_trace) ? raw.tool_trace : [];
+        const normalized = normalizeQueryResponse({
+          answer: String(raw.answer || ""),
+          citations: Array.isArray(raw.citations) ? raw.citations : [],
+          graph_context: {},
+          retrieval_trace: {
+            retrieval_mode: "agent",
+            hit_count: Array.isArray(raw.citations) ? raw.citations.length : 0,
+            citations_returned: Array.isArray(raw.citations) ? raw.citations.length : 0,
+            retrieval_policy: "agent_tools_v1",
+          },
+        });
         onToolTrace?.(trace);
         onResult?.(normalized);
         return normalized;
@@ -133,17 +133,7 @@ export function useAskSubmit({
         onFinish?.();
       }
     },
-    [
-      abortStream,
-      onError,
-      onFinish,
-      onResult,
-      onStart,
-      onToolTrace,
-      streamAgent,
-      useStreamingAgent,
-      workspaceId,
-    ],
+    [abortStream, onError, onFinish, onResult, onStart, onToolTrace, streamAgent, useStreamingAgent, workspaceId],
   );
 
   const isActive = isLoading || isStreaming;

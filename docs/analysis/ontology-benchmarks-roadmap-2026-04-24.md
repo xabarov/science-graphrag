@@ -1,7 +1,8 @@
 # Карта развития: онтология, индексы, бенчмарки и retrieval — Wave M–T
 
 **Дата:** 2026-04-24 (история ниже до 2026-04-25; trust-audit вынесен в отдельный документ)
-**Статус:** living working doc; продолжение [_archive/workspace-experience-gap-2026-04-24.md](_archive/workspace-experience-gap-2026-04-24.md) [HISTORICAL] (Wave I–L) и [runbooks/roadmap-next-waves.md](../runbooks/roadmap-next-waves.md) (Wave A–H).
+**Статус:** **large reference** (Wave M–T inventory + §1 status board). Для **актуальной** серии BT / `trust_signal` / gate — читайте [`ontology-benchmarks-trust-audit-2026-04-25.md`](ontology-benchmarks-trust-audit-2026-04-25.md) и [`master-roadmap-and-refactor-plan-2026-04-25.md`](master-roadmap-and-refactor-plan-2026-04-25.md) §10 (не загружайте этот файл целиком в контекст агента без нужды).
+**Связь:** продолжение [_archive/workspace-experience-gap-2026-04-24.md](_archive/workspace-experience-gap-2026-04-24.md) [HISTORICAL] (Wave I–L) и [runbooks/roadmap-next-waves.md](../runbooks/roadmap-next-waves.md) (Wave A–H).
 **Цель:** дать **единый план** на следующий горизонт — продуктовая разработка фич **в связке** с расширением и ужесточением бенчмарков, чтобы любое движение онтологии / retrieval / графа сопровождалось измеримой регрессионной защитой.
 
 > **Trust Audit 2026-04-25 (важно для читателя):** все статусы `[x]` в этом документе означают «код доставлен и формальный contract-test зелёный». Качественный аудит advisory-семей вынесен в [`ontology-benchmarks-trust-audit-2026-04-25.md`](ontology-benchmarks-trust-audit-2026-04-25.md). Часть advisory-зелёных — **mock_runtime / canned answers / substring-harness / synthetic gold**; план починки — серия BT (BT1..BT12) там же. Колонка `runtime_mode` в §1.1 ниже отражает реальную природу артефактов.

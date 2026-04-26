@@ -1,47 +1,125 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { isAdminModeEnabled } from "../layout/adminVisibility.js";
-import WorkIdGlossaryHint from "../layout/WorkIdGlossaryHint.jsx";
-import { buildQueryBody, createAskSession as createAskSessionRequest, formatResearchApiError, getWorks, listAskSessions as listAskSessionsRequest, patchAskSession as patchAskSessionRequest } from "../../services/researchApi.js";
-import { apiSessionsToBundle, entriesToApiTurns, isServerAskSessionId, readAskServerSyncPref, writeAskServerSyncPref } from "./askSessionServerBridge.js";
+import {
+  createAskSession as createAskSessionRequest,
+  formatResearchApiError,
+  getWorkDetail,
+  getWorks,
+  listAskSessions as listAskSessionsRequest,
+  patchAskSession as patchAskSessionRequest,
+} from "../../services/researchApi.js";
+import { apiSessionsToBundle, entriesToApiTurns, isServerAskSessionId, readAskServerSyncPref } from "./askSessionServerBridge.js";
 import { rememberAskHistory } from "./askHistoryState.js";
-import { appendAskSessionTurn, createAskSession, deriveAskScopeKey, getActiveSessionEntries, migrateLegacyAskHistoryToSessions, readAskSessionUi, renameAskSession, replaceScopeBundle, sessionExistsInScope, setActiveAskSession } from "./askSessionState.js";
+import {
+  appendAskSessionTurn,
+  createAskSession,
+  deriveAskScopeKey,
+  getActiveSessionEntries,
+  migrateLegacyAskHistoryToSessions,
+  readAskSessionUi,
+  renameAskSession,
+  replaceScopeBundle,
+  sessionExistsInScope,
+  setActiveAskSession,
+} from "./askSessionState.js";
 import { buildStandaloneTracePath } from "./traceabilityState.js";
 import { persistWorkId } from "../../pages/WorkspacePage/utils/workContext.js";
+import { CHAT_PATH } from "../../routes/paths.js";
 import { useI18n } from "../../i18n/I18nContext.jsx";
-import { AskAnswerPanel } from "./AskAnswerPanel.jsx";
-import { AskSessionControls } from "./AskSessionControls.jsx";
 import { useAskSubmit } from "./useAskSubmit.js";
+import { ChatComposer } from "./ChatComposer.jsx";
+import { ChatMessageThread } from "./ChatMessageThread.jsx";
+import { ChatSessionSidebar } from "./ChatSessionSidebar.jsx";
+import { normalizeWorkListItem } from "./workListLabel.js";
+import { getWorkspace } from "../../utils/workspaceStore.js";
 
-export default function AskPanel({ scopedWorkId = null, initialWorkId = "", showPageChrome = true, workspaceWorkId = null, workspaceId = "", urlSessionId = "", onUrlSessionIdChange, labMode = false }) {
+/** Fixed retrieval depth for API compatibility (no UI control). */
+const ASK_DEFAULT_TOP_K = 5;
+
+export default function AskPanel({
+  scopedWorkId = null,
+  initialWorkId = "",
+  showPageChrome = true,
+  workspaceWorkId = null,
+  workspaceId = "",
+  urlSessionId = "",
+  onUrlSessionIdChange,
+}) {
   const { t } = useI18n();
   const locked = Boolean(scopedWorkId && String(scopedWorkId).trim());
-  const [query, setQuery] = useState("object detection benchmarks");
+  const [query, setQuery] = useState("");
   const [workId, setWorkId] = useState(locked ? String(scopedWorkId).trim() : initialWorkId);
-  const [workOptions, setWorkOptions] = useState([]);
-  const [topK, setTopK] = useState("5");
+  const [workDetailsForChip, setWorkDetailsForChip] = useState(null);
+  const [workspaceSearchOptions, setWorkspaceSearchOptions] = useState([]);
   const [error, setError] = useState(null);
   const [normalized, setNormalized] = useState(null);
   const [history, setHistory] = useState([]);
   const [retrievalJsonOpen, setRetrievalJsonOpen] = useState(false);
   const [sessionTick, setSessionTick] = useState(0);
-  const [sessionTitleDraft, setSessionTitleDraft] = useState("");
-  const [serverSync, setServerSync] = useState(() => readAskServerSyncPref());
-  const [retrievalMode, setRetrievalMode] = useState(() => "vector");
+  /** Server session sync: preference only (no UI toggle); list/patch when enabled. */
+  const [serverSync] = useState(() => readAskServerSyncPref());
   const [agentToolTrace, setAgentToolTrace] = useState([]);
   const [streamEvents, setStreamEvents] = useState([]);
-  const retrievalLabVisible = Boolean(labMode || isAdminModeEnabled());
+  const [pendingUserQuery, setPendingUserQuery] = useState("");
+  const skipHydrateWorkRef = useRef(false);
 
   const scopeKey = useMemo(() => deriveAskScopeKey({ locked, scopedWorkId, workspaceId }), [locked, scopedWorkId, workspaceId]);
   const bumpSessions = useCallback(() => setSessionTick((v) => v + 1), []);
   const { activeId: activeSessionId, sessions: sessionList } = readAskSessionUi(scopeKey, sessionTick);
-  const activeSessionMeta = useMemo(() => sessionList.find((s) => s.id === activeSessionId), [sessionList, activeSessionId]);
   const inWorkspace = Boolean(workspaceWorkId && String(workspaceWorkId).trim());
   const corpusWorkspaceOnly = Boolean(String(workspaceId || "").trim() && !String(workId || "").trim() && !locked);
   const standaloneMode = !inWorkspace && !locked && !corpusWorkspaceOnly;
-  const bodyPreview = useMemo(() => buildQueryBody(query, workId, topK, workspaceId, retrievalLabVisible ? retrievalMode : "vector"), [query, workId, topK, workspaceId, retrievalMode, retrievalLabVisible]);
+
+  const starterPromptKeys = useMemo(() => {
+    if (locked) {
+      return ["chat.thread.prompts.scoped.1", "chat.thread.prompts.scoped.2", "chat.thread.prompts.scoped.3"];
+    }
+    if (inWorkspace) {
+      return ["chat.thread.prompts.workspacePaper.1", "chat.thread.prompts.workspacePaper.2", "chat.thread.prompts.workspacePaper.3"];
+    }
+    if (corpusWorkspaceOnly) {
+      return ["chat.thread.prompts.workspaceCorpus.1", "chat.thread.prompts.workspaceCorpus.2", "chat.thread.prompts.workspaceCorpus.3"];
+    }
+    return ["chat.thread.prompts.standalone.1", "chat.thread.prompts.standalone.2", "chat.thread.prompts.standalone.3"];
+  }, [locked, inWorkspace, corpusWorkspaceOnly]);
+
+  const searchWorks = useCallback(
+    async (q) => {
+      const needle = String(q || "").trim().toLowerCase();
+      if (workspaceId) {
+        if (!needle) return workspaceSearchOptions;
+        return workspaceSearchOptions.filter((item) => {
+          const row = normalizeWorkListItem(item);
+          return [
+            row.title,
+            row.doi,
+            row.arxiv_id,
+            row.venue,
+            row.work_id,
+            row.year != null ? String(row.year) : "",
+          ]
+            .filter(Boolean)
+            .some((part) => String(part).toLowerCase().includes(needle));
+        });
+      }
+      const res = await getWorks({ q: (q || "").trim(), limit: 40, offset: 0 });
+      return res.data?.items || [];
+    },
+    [workspaceId, workspaceSearchOptions],
+  );
+
+  const onArticlePicked = useCallback((item) => {
+    const row = normalizeWorkListItem(item);
+    if (!row.work_id) return;
+    const rich = Boolean(row.title || row.doi || row.arxiv_id || row.venue);
+    if (rich) {
+      skipHydrateWorkRef.current = true;
+      setWorkDetailsForChip(row);
+    }
+    setWorkId(row.work_id);
+  }, []);
 
   const { submit, isLoading } = useAskSubmit({
     workspaceId,
@@ -61,11 +139,6 @@ export default function AskPanel({ scopedWorkId = null, initialWorkId = "", show
     },
     onError: setError,
   });
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSessionTitleDraft(activeSessionMeta?.title || "");
-  }, [activeSessionMeta?.title, activeSessionId]);
 
   useEffect(() => {
     const id = String(urlSessionId || "").trim();
@@ -121,74 +194,147 @@ export default function AskPanel({ scopedWorkId = null, initialWorkId = "", show
     setQuery(recent[0].query);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setWorkId(recent[0].workId);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setTopK(String(recent[0].topK || 5));
   }, [locked, initialWorkId, scopeKey]);
 
   useEffect(() => {
+    if (!workspaceId || locked) {
+      setWorkspaceSearchOptions([]);
+      return undefined;
+    }
     let cancelled = false;
-    getWorks({ limit: 80, offset: 0 })
-      .then((res) => {
-        if (!cancelled) setWorkOptions(res.data?.items || []);
-      })
-      .catch(() => {
-        if (!cancelled) setWorkOptions([]);
-      });
+    (async () => {
+      try {
+        const ws = await getWorkspace(workspaceId);
+        if (cancelled) return;
+        const ids = Array.isArray(ws?.work_ids) ? ws.work_ids.map((x) => String(x || "").trim()).filter(Boolean) : [];
+        if (!ids.length) {
+          setWorkspaceSearchOptions([]);
+          return;
+        }
+        const details = await Promise.all(
+          ids.map(async (wid) => {
+            try {
+              const res = await getWorkDetail(wid);
+              return normalizeWorkListItem(res.data || {}, wid);
+            } catch {
+              return normalizeWorkListItem({ work_id: wid }, wid);
+            }
+          }),
+        );
+        if (!cancelled) setWorkspaceSearchOptions(details);
+      } catch {
+        if (!cancelled) setWorkspaceSearchOptions([]);
+      }
+    })();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [workspaceId, locked]);
+
+  useEffect(() => {
+    const w = String(workId || "").trim();
+    if (!w) {
+      setWorkDetailsForChip(null);
+      return undefined;
+    }
+    if (skipHydrateWorkRef.current) {
+      skipHydrateWorkRef.current = false;
+      return undefined;
+    }
+    let cancelled = false;
+    const tid = setTimeout(() => {
+      getWorkDetail(w)
+        .then((res) => {
+          if (!cancelled) setWorkDetailsForChip(normalizeWorkListItem(res.data || {}, w));
+        })
+        .catch(() => {
+          if (!cancelled) setWorkDetailsForChip(normalizeWorkListItem({ work_id: w }, w));
+        });
+    }, 220);
+    return () => {
+      cancelled = true;
+      clearTimeout(tid);
+    };
+  }, [workId]);
 
   useEffect(() => {
     if (!locked && workId.trim()) persistWorkId(workId);
   }, [locked, workId]);
 
-  const onSubmit = useCallback(async (e) => {
-    e.preventDefault();
-    const nextNormalized = await submit({ query, topK, retrievalMode, retrievalLabVisible, bodyPreview });
-    if (!nextNormalized) return;
-    const queryMode = locked || inWorkspace ? "workspace" : corpusWorkspaceOnly ? "workspace_corpus" : workId ? "scoped" : "global";
-    const turn = { query, workId, topK, answer: nextNormalized.answer, citationCount: nextNormalized.citations.length, mode: queryMode };
-    rememberAskHistory(turn);
-    appendAskSessionTurn(scopeKey, turn);
-    bumpSessions();
-    if (!serverSync) return;
-    const { activeId: sid } = readAskSessionUi(scopeKey);
-    if (sid && isServerAskSessionId(sid)) {
+  const onSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      const q = String(query || "").trim();
+      if (!q) return;
+      setPendingUserQuery(q);
       try {
-        await patchAskSessionRequest(scopeKey, sid, { turns: entriesToApiTurns(getActiveSessionEntries(scopeKey)), active: true });
-      } catch {
-        /* non-fatal */
+        const nextNormalized = await submit({ query });
+        if (!nextNormalized) return;
+        const queryMode = locked || inWorkspace ? "workspace" : corpusWorkspaceOnly ? "workspace_corpus" : workId ? "scoped" : "global";
+        const details = {
+          answer: nextNormalized.answer,
+          citations: nextNormalized.citations,
+          graph_context: nextNormalized.graph_context,
+          retrieval_trace: nextNormalized.retrieval_trace,
+        };
+        const turn = {
+          query,
+          workId,
+          topK: ASK_DEFAULT_TOP_K,
+          answer: nextNormalized.answer,
+          citationCount: nextNormalized.citations.length,
+          mode: queryMode,
+          details,
+        };
+        rememberAskHistory(turn);
+        appendAskSessionTurn(scopeKey, turn);
+        const sid = readAskSessionUi(scopeKey).activeId;
+        const entriesAfter = getActiveSessionEntries(scopeKey);
+        if (sid && entriesAfter.length === 1 && q) {
+          const autoTitle = q.slice(0, 56) + (q.length > 56 ? "…" : "");
+          renameAskSession(scopeKey, sid, autoTitle);
+          if (serverSync && isServerAskSessionId(sid)) {
+            try {
+              await patchAskSessionRequest(scopeKey, sid, { title: autoTitle, active: true });
+            } catch {
+              /* non-fatal */
+            }
+          }
+        }
+        setNormalized(null);
+        setQuery("");
+        bumpSessions();
+        if (!serverSync) return;
+        const { activeId: sid2 } = readAskSessionUi(scopeKey);
+        if (sid2 && isServerAskSessionId(sid2)) {
+          try {
+            await patchAskSessionRequest(scopeKey, sid2, { turns: entriesToApiTurns(getActiveSessionEntries(scopeKey)), active: true });
+          } catch {
+            /* non-fatal */
+          }
+        }
+      } finally {
+        setPendingUserQuery("");
       }
-    }
-  }, [submit, query, topK, retrievalMode, retrievalLabVisible, bodyPreview, locked, inWorkspace, corpusWorkspaceOnly, workId, scopeKey, bumpSessions, serverSync]);
+    },
+    [submit, query, locked, inWorkspace, corpusWorkspaceOnly, workId, scopeKey, bumpSessions, serverSync],
+  );
 
-  const onActiveSessionChange = useCallback(async (sessionId) => {
-    setActiveAskSession(scopeKey, sessionId);
-    bumpSessions();
-    onUrlSessionIdChange?.(sessionId);
-    if (serverSync && sessionId && isServerAskSessionId(sessionId)) {
-      try {
-        await patchAskSessionRequest(scopeKey, sessionId, { active: true });
-      } catch {
-        /* non-fatal */
+  const onActiveSessionChange = useCallback(
+    async (sessionId) => {
+      setActiveAskSession(scopeKey, sessionId);
+      bumpSessions();
+      onUrlSessionIdChange?.(sessionId);
+      if (serverSync && sessionId && isServerAskSessionId(sessionId)) {
+        try {
+          await patchAskSessionRequest(scopeKey, sessionId, { active: true });
+        } catch {
+          /* non-fatal */
+        }
       }
-    }
-  }, [scopeKey, bumpSessions, onUrlSessionIdChange, serverSync]);
-
-  const onSessionTitleCommit = useCallback(async () => {
-    const next = sessionTitleDraft.trim();
-    if (!activeSessionId || !next || next === (activeSessionMeta?.title || "").trim()) return;
-    renameAskSession(scopeKey, activeSessionId, next);
-    bumpSessions();
-    if (serverSync && isServerAskSessionId(activeSessionId)) {
-      try {
-        await patchAskSessionRequest(scopeKey, activeSessionId, { title: next, active: true });
-      } catch {
-        /* non-fatal */
-      }
-    }
-  }, [sessionTitleDraft, activeSessionId, activeSessionMeta?.title, scopeKey, bumpSessions, serverSync]);
+    },
+    [scopeKey, bumpSessions, onUrlSessionIdChange, serverSync],
+  );
 
   const onNewSession = useCallback(async () => {
     if (serverSync) {
@@ -209,14 +355,102 @@ export default function AskPanel({ scopedWorkId = null, initialWorkId = "", show
     if (id) onUrlSessionIdChange?.(id);
   }, [serverSync, scopeKey, bumpSessions, onUrlSessionIdChange]);
 
+  const standaloneChatPath = buildStandaloneTracePath(CHAT_PATH, workId);
+
+  const scopeEyebrow = inWorkspace || locked
+    ? t("askPanel.banner.workspaceScoped")
+    : corpusWorkspaceOnly
+      ? t("askPanel.banner.workspaceCorpusTitle")
+      : t("askPanel.banner.standalone");
+
+  const handleWorkIdChange = useCallback((next) => {
+    setWorkId(next);
+    if (!String(next || "").trim()) setWorkDetailsForChip(null);
+  }, []);
+
   return (
-    <Box sx={{ width: "100%", boxSizing: "border-box" }}>
-      {showPageChrome ? (<><Typography sx={{ fontWeight: 600, mb: 1, color: "rgba(255,255,255,0.9)" }}>{t("askPanel.chromeTitle")}</Typography><Typography sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.8125rem", mb: 2 }}>{t("askPanel.chrome.p1")}<code style={{ color: "rgba(129,140,248,0.95)" }}>VITE_API_BASE_URL</code>{t("askPanel.chrome.p2")}</Typography></>) : (<Box sx={{ mb: 2, p: 1.25, borderRadius: "6px", border: "1px solid rgba(99,102,241,0.2)", backgroundColor: "rgba(99,102,241,0.08)" }}><Typography sx={{ color: "rgba(129,140,248,0.95)", fontSize: "0.75rem", mb: 0.5 }}>{inWorkspace || locked ? t("askPanel.banner.workspaceScoped") : corpusWorkspaceOnly ? t("askPanel.banner.workspaceCorpusTitle") : t("askPanel.banner.standalone")}</Typography><Typography sx={{ color: "rgba(255,255,255,0.78)", fontSize: "0.8125rem" }}>{inWorkspace || locked ? t("askPanel.banner.descWorkspace") : corpusWorkspaceOnly ? t("askPanel.banner.descWorkspaceCorpus") : t("askPanel.banner.descStandalone")}</Typography></Box>)}
-      {!locked && !workId.trim() ? (<Box sx={{ mb: 2, p: 1.5, borderRadius: "6px", border: "1px dashed rgba(255,255,255,0.12)", backgroundColor: "rgba(255,255,255,0.02)" }}><Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)" }}>{t("askPanel.optionalContext.title")}</Typography><Typography sx={{ mt: 0.6, fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)" }}><WorkIdGlossaryHint variant="ask" /></Typography></Box>) : null}
-      {locked ? (<Box sx={{ mb: 2, p: 1.25, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "#1a1a1a" }}><Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)" }}>{t("askPanel.workIdScopeLabel")}</Typography><Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)", fontFamily: "monospace", mt: 0.25 }}>{workId}</Typography></Box>) : null}
-      <AskSessionControls t={t} query={query} onQueryChange={setQuery} workId={workId} onWorkIdChange={setWorkId} workOptions={workOptions} topK={topK} onTopKChange={setTopK} retrievalLabVisible={retrievalLabVisible} retrievalMode={retrievalMode} onRetrievalModeChange={setRetrievalMode} loading={isLoading} onSubmit={onSubmit} inWorkspace={inWorkspace} standaloneAskPath={buildStandaloneTracePath("/ask", workId)} locked={locked} serverSync={serverSync} onServerSyncChange={(next) => { writeAskServerSyncPref(next); setServerSync(next); }} activeSessionId={activeSessionId} sessionList={sessionList} onActiveSessionChange={onActiveSessionChange} sessionTitleDraft={sessionTitleDraft} onSessionTitleDraftChange={setSessionTitleDraft} onSessionTitleCommit={onSessionTitleCommit} onNewSession={onNewSession} history={history} onRestoreFromHistory={(item) => { setQuery(item.query); if (!locked) setWorkId(item.workId); setTopK(String(item.topK)); }} standaloneMode={standaloneMode} onUrlSyncSupported={Boolean(onUrlSessionIdChange)} />
-      {error ? <Alert severity="error" sx={{ mt: 2, fontSize: "0.8125rem" }}>{error}</Alert> : null}
-      <AskAnswerPanel t={t} normalized={normalized} locked={locked} inWorkspace={inWorkspace} workId={workId} workspaceWorkId={workspaceWorkId} retrievalLabVisible={retrievalLabVisible} retrievalMode={retrievalMode} agentToolTrace={agentToolTrace} retrievalJsonOpen={retrievalJsonOpen} onToggleRetrievalJson={() => setRetrievalJsonOpen((v) => !v)} streamEvents={streamEvents} isStreaming={isLoading && streamEvents.length > 0} />
+    <Box
+      sx={{
+        width: "100%",
+        boxSizing: "border-box",
+        display: "flex",
+        flexDirection: "column",
+        minHeight: { xs: "min(100dvh - 140px, 720px)", md: "min(calc(100dvh - 160px), 900px)" },
+        maxHeight: { md: "calc(100dvh - 160px)" },
+      }}
+    >
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" },
+          gap: { xs: 1.5, md: 2 },
+          alignItems: "stretch",
+        }}
+      >
+        <ChatSessionSidebar
+          t={t}
+          sessionList={sessionList}
+          activeSessionId={activeSessionId}
+          onActiveSessionChange={onActiveSessionChange}
+          onNewSession={onNewSession}
+          sx={{ flex: { xs: "0 0 auto", md: "0 0 auto" }, maxHeight: { xs: "min(40vh, 320px)", md: "none" } }}
+        />
+        <Box sx={{ flex: 1, minWidth: 0, minHeight: 0, display: "flex", flexDirection: "column", gap: 0.5 }}>
+          {showPageChrome ? (
+            <>
+              <Typography sx={{ fontWeight: 600, mb: 0.5, color: "rgba(255,255,255,0.9)" }}>{t("askPanel.chromeTitle")}</Typography>
+              <Typography sx={{ color: "rgba(255,255,255,0.55)", fontSize: "0.8125rem", mb: 1 }}>{t("askPanel.chromeBody")}</Typography>
+            </>
+          ) : (
+            <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mb: 0.5, flexShrink: 0 }} noWrap title={scopeEyebrow}>
+              {scopeEyebrow}
+            </Typography>
+          )}
+          <ChatMessageThread
+            t={t}
+            history={history}
+            pendingUserQuery={pendingUserQuery}
+            isLoading={isLoading}
+            streamEvents={streamEvents}
+            liveNormalized={normalized}
+            locked={locked}
+            inWorkspace={inWorkspace}
+            workId={workId}
+            workspaceWorkId={workspaceWorkId}
+            agentToolTrace={agentToolTrace}
+            retrievalJsonOpen={retrievalJsonOpen}
+            onToggleRetrievalJson={() => setRetrievalJsonOpen((v) => !v)}
+            starterPromptKeys={starterPromptKeys}
+            onStarterPrompt={setQuery}
+          />
+          <ChatComposer
+            t={t}
+            query={query}
+            onQueryChange={setQuery}
+            loading={isLoading}
+            onSubmit={onSubmit}
+            inWorkspace={inWorkspace}
+            standaloneChatPath={standaloneChatPath}
+            locked={locked}
+            scopedWorkId={scopedWorkId}
+            workspaceId={workspaceId}
+            workId={workId}
+            onWorkIdChange={handleWorkIdChange}
+            onArticlePicked={onArticlePicked}
+            onWorkSearch={searchWorks}
+            resolvedWork={workDetailsForChip}
+            corpusWorkspaceOnly={corpusWorkspaceOnly}
+            standaloneMode={standaloneMode}
+          />
+        </Box>
+      </Box>
+      {error ? (
+        <Alert severity="error" sx={{ mt: 2, fontSize: "0.8125rem", flexShrink: 0 }}>
+          {error}
+        </Alert>
+      ) : null}
     </Box>
   );
 }

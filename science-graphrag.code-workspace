@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "../osint-gr"
+		},
+		{
+			"path": "../../openclaude"
 		}
 	],
 	"settings": {}

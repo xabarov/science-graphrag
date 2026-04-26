@@ -27,6 +27,7 @@ const PdfViewer = lazy(() => import("./PdfViewer.jsx"));
  *
  * @param {{
  *   workId: string,
+ *   workspaceId?: string,
  *   focusedFingerprint?: string,
  *   focusedSection?: string,
  *   citation?: string,
@@ -35,6 +36,7 @@ const PdfViewer = lazy(() => import("./PdfViewer.jsx"));
  */
 export default function ReaderWorkBody({
   workId,
+  workspaceId = "",
   focusedFingerprint = "",
   focusedSection = "",
   citation = "",
@@ -200,6 +202,7 @@ export default function ReaderWorkBody({
       {showTraceBanner ? (
         <ReaderTraceContextBanner
           workId={workId}
+          workspaceId={workspaceId}
           traceSummary={traceSummary}
           focusedFingerprint={focusedFingerprint}
           focusedSection={focusedSection}

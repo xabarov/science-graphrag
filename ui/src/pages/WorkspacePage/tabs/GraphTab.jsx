@@ -12,6 +12,7 @@ import WorkIdGlossaryHint from "../../../components/layout/WorkIdGlossaryHint.js
 import GraphWorkspacePanel from "../../../components/graph/GraphWorkspacePanel.jsx";
 import { GraphMissingWorkInline } from "../../../components/graph/graphShellStates.jsx";
 import {
+  buildStandaloneChatPath,
   buildStandaloneTracePath,
   buildWorkspaceTracePath,
   mergeTraceabilityParams,
@@ -84,14 +85,13 @@ export default function GraphTab({ workId }) {
         </CursorIconAction>
         <CursorIconAction
           component={Link}
-          to={`/workspace?${mergeTraceabilityParams(searchParams, {
-            workId,
-            tab: "ask",
+          to={buildStandaloneChatPath(workId, {
+            workspaceId: trace.workspaceId,
             nodeId: selectedNodeId,
             chunkFingerprint: trace.chunkFingerprint,
             section: trace.section,
             citation: trace.citation,
-          }).toString()}`}
+          })}
           title={t("wsTab.graph.jumpAsk")}
         >
           <ChatBubbleOutlineOutlinedIcon sx={{ fontSize: "1.05rem" }} />

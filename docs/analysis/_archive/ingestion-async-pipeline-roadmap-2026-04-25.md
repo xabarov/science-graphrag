@@ -1,7 +1,8 @@
 # Карта развития: асинхронный ingest, очередь и видимость стадий — Wave U–W
 
 **Дата:** 2026-04-25
-**Статус:** living working doc; новый infra-трек, не пересекается с benchmark/onthology-волнами M–T из [ontology-benchmarks-roadmap-2026-04-24.md](ontology-benchmarks-roadmap-2026-04-24.md).
+**Статус:** **[ARCHIVED — delivered]** Wave U/V/W shipped; kept for design history. Active coordination: [`../master-roadmap-and-refactor-plan-2026-04-25.md`](../master-roadmap-and-refactor-plan-2026-04-25.md) §4.G / backlog.
+**Связь:** не пересекается с benchmark/ontology-волнами M–T из [ontology-benchmarks-roadmap-2026-04-24.md](../ontology-benchmarks-roadmap-2026-04-24.md).
 **Цель:** убрать две конкретные боли локального стека ingestion (шум polling-логов и нулевая видимость стадии пайплайна) и подготовить почву для масштабирования: вынести долгую работу из процесса API в отдельный воркер на Redis + Dramatiq, перевести прогресс с `polling` на `SSE`, а сам пайплайн разметить явными стадиями с метриками.
 
 **Что внутри:**

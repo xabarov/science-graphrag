@@ -47,6 +47,7 @@ export default function ReaderTab({ workId }) {
       <ReaderClaimsPanel workId={workId} />
       <ReaderWorkBody
         workId={workId}
+        workspaceId={trace.workspaceId}
         focusedFingerprint={trace.chunkFingerprint}
         focusedSection={trace.section}
         citation={trace.citation}

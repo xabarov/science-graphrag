@@ -2,9 +2,28 @@
 
 from __future__ import annotations
 
+from typing import Sequence
+
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_openai import ChatOpenAI
 
 from science_graphrag.config import Settings
+
+# Some OpenRouter / vLLM backends reject requests where the final chat turn is an
+# assistant message while the client sets add_generation_prompt=True (default in
+# LangChain). Nudge with a user turn when subgraphs concatenate full history.
+_GENERATION_SAFE_NUDGE = (
+    "Continue with the next required action (tool calls or final_answer) per your "
+    "specialist instructions."
+)
+
+
+def ensure_messages_safe_for_generation(messages: Sequence[BaseMessage]) -> list[BaseMessage]:
+    """Return a copy of ``messages`` ending with a non-assistant role when needed."""
+    out: list[BaseMessage] = list(messages)
+    if out and isinstance(out[-1], AIMessage):
+        out.append(HumanMessage(content=_GENERATION_SAFE_NUDGE))
+    return out
 
 
 def build_chat_model(

@@ -133,10 +133,10 @@ export default {
   "evidence.devAdvancedTitle": "Advanced: load by work_id",
   "evidence.devAdvancedHint": "Developer / support only. Prefer deep-links from Reader or Ask.",
 
-  "askPage.header.eyebrow": "Ask",
-  "askPage.header.title": "Questions",
+  "askPage.header.eyebrow": "Chat",
+  "askPage.header.title": "Chat",
   "askPage.header.description":
-    "Paper-scoped or global queries. Pick a paper from Workspaces / Workspace, then set work_id below or in the URL.",
+    "Agent chat scoped to one paper or the whole workspace. Pick a paper from the list or the context menu; you can also set work_id in the URL.",
   "askPage.empty.openLastWorkspace": "Open last workspace",
 
   "graph.toolbar.title": "Graph",

@@ -350,6 +350,10 @@ class Settings(BaseSettings):
     agent_supervisor_recursion_limit: int = Field(default=32, ge=4, le=128)
     agent_chat_temperature: float = Field(default=0.0, ge=0.0, le=1.0)
     agent_chat_max_tokens: int = Field(default=1024, ge=64, le=8192)
+    agent_rule_tool_search_enabled: bool = Field(
+        default=True,
+        description="Wave A CH3: rule-based shortlist before bind_tools for specialist subgraphs.",
+    )
 
     gds_enabled: bool = Field(
         default=False,

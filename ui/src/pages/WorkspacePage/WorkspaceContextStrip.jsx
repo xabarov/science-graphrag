@@ -15,7 +15,7 @@ import Typography from "@mui/material/Typography";
 
 import { CopyIdButton, CursorIconAction } from "../../components/common/index.js";
 import WorkIdGlossaryHint from "../../components/layout/WorkIdGlossaryHint.jsx";
-import { workAskUrl, workGraphUrl } from "./workspacePageUrls.js";
+import { workChatUrl, workGraphUrl } from "./workspacePageUrls.js";
 import WorkspaceIngestMenu from "./WorkspaceIngestMenu.jsx";
 
 /**
@@ -44,8 +44,8 @@ export default function WorkspaceContextStrip({ t, vm }) {
           <CursorIconAction
             key="ask"
             component={Link}
-            to={workAskUrl("", vm.workspaceMeta.id)}
-            title={t("workspace.tooltip.askWorkspace")}
+            to={workChatUrl("", vm.workspaceMeta.id)}
+            title={t("workspace.tooltip.chatWorkspace")}
           >
             <QuestionAnswerIcon sx={{ fontSize: "1.05rem" }} />
           </CursorIconAction>,

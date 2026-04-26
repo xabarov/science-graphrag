@@ -4,12 +4,13 @@ import Typography from "@mui/material/Typography";
 import { Link } from "react-router-dom";
 
 import { CursorSmallButton } from "../common/index.js";
-import { buildWorkspaceTracePath } from "./traceabilityState.js";
+import { buildStandaloneChatPath, buildWorkspaceTracePath } from "./traceabilityState.js";
 import { useI18n } from "../../i18n/I18nContext.jsx";
 
 /**
  * @param {{
  *   workId: string,
+ *   workspaceId?: string,
  *   traceSummary: string[],
  *   focusedFingerprint?: string,
  *   focusedSection?: string,
@@ -18,6 +19,7 @@ import { useI18n } from "../../i18n/I18nContext.jsx";
  */
 export default function ReaderTraceContextBanner({
   workId,
+  workspaceId = "",
   traceSummary,
   focusedFingerprint = "",
   focusedSection = "",
@@ -47,7 +49,11 @@ export default function ReaderTraceContextBanner({
         {t("readerBody.openedFrom", { summary: traceSummary.join(" · ") })}
       </Typography>
       <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 1 }}>
-        <CursorSmallButton component={Link} to={buildWorkspaceTracePath(workId, "ask", traceParams)} sx={{ textDecoration: "none" }}>
+        <CursorSmallButton
+          component={Link}
+          to={buildStandaloneChatPath(workId, { workspaceId, ...traceParams })}
+          sx={{ textDecoration: "none" }}
+        >
           {t("readerBody.returnAsk")}
         </CursorSmallButton>
         <CursorSmallButton component={Link} to={buildWorkspaceTracePath(workId, "evidence", traceParams)} sx={{ textDecoration: "none" }}>

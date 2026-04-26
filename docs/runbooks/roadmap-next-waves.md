@@ -215,7 +215,7 @@ Foundation LangGraph/LangChain добавлен без изменения runtim
 
 **Цель:** убрать 2s polling для ingest-progress в UI, перейти на push-модель через SSE, сохранив polling как fallback.
 
-**Источник анализа:** [analysis/ingestion-async-pipeline-roadmap-2026-04-25.md](../analysis/ingestion-async-pipeline-roadmap-2026-04-25.md) §4.
+**Источник анализа (ARCHIVED):** [analysis/_archive/ingestion-async-pipeline-roadmap-2026-04-25.md](../analysis/_archive/ingestion-async-pipeline-roadmap-2026-04-25.md) §4.
 
 1. Backend: `sse-starlette`, in-process `IngestEventBus`, таблица `ingest_job_events` (replay/`Last-Event-ID`), эндпоинт `GET /v1/ingest/jobs/{id}/events`.
 2. Edge: отдельный SSE-friendly `location` в `docker/nginx-web.conf` и `docker/nginx-web.dev.conf` (`proxy_buffering off`, `proxy_read_timeout 1h`).

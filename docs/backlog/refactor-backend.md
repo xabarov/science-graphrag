@@ -14,6 +14,7 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 
 | When | Theme |
 |------|--------|
+| 2026-04-26 | **Wave 6 — benchmarks quality closure:** `decision_gate` **GO** with ≤2 design-only phantom families (`merge_safe_contract_mock`, `strict_pilot_mock`); agent LLM `ensure_messages_safe_for_generation` (OpenRouter `add_generation_prompt` fix); `agent_tools` metrics (subsequence match, ignore `route_to_specialist`); multihop_v2 pilot gold thresholds + `current-retrieval-multihop-mini.json` refresh; `eval/results/benchmark-trust-baseline.json` via `scripts/refresh_benchmark_metrics.sh`. Write-up: [`docs/analysis/_archive/wave6-benchmarks-quality-2026-04-26.md`](../analysis/_archive/wave6-benchmarks-quality-2026-04-26.md). |
 | 2026-04-26 | **ADR-021 Phase 0 (ops slice):** runbook [`docs/runbooks/phase0-bge-m3-qdrant-cutover.md`](../runbooks/phase0-bge-m3-qdrant-cutover.md); `science-graphrag qdrant-recreate-embedding-collections --dry-run`; `describe_embedding_collections_cutover` / `qdrant_embedding_collection_names` in `recreate_embedding_collections.py`. **Operator:** `qdrant-recreate-embedding-collections` (1024) + **`ingest-corpus` завершён** (`ingest-progress-phase0-bge-m3.jsonl`). Дальше: см. OPEN «Switch Qdrant…» — BT2/BT4/BT5 + baseline. |
 | 2026-04-27 | **BT12 — contradictions benchmark in trust rollup:** committed `eval/results/current-contradictions-v1-mini.json` (``python -m eval.contradictions.runner …/contradictions_v1 --suite --materialize`` against a graph with corpus works); `scripts/aggregate_benchmark_metrics.py` + `contradictions_family` / `trust_signal` member `contradictions_v1_mini` (`detect_runtime_mode` → `live`). Ingest-time auto-write of `:CONTRADICTS` remains a separate product decision. |
 | 2026-04-27 | **BT8 slice — `agent_tools_judge` artifact:** committed `eval/results/current-agent-tools-judge-pilot.json` (heuristic `science-graphrag-agent-judge-benchmark` over `current-agent-tools-mini.json`); `.github/workflows/integration-nightly.yml` regenerates before aggregate; `benchmark-trust-baseline.json` refreshed (`advisory_phantom_count` −1 vs missing_file). |
@@ -22,7 +23,7 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 | 2026-04-27 | **ADR-021 config bridge (pre–drop/recreate):** hub-style value in `embedding_model` (`org/model`) promoted to `openrouter_embedding_model` in merge validator so `resolve_embedder` can pick OpenRouter without mis-typing the sentence-transformers slot; test `tests/test_embedding_model_promotion.py`. **Does not** replace Qdrant recreate + corpus re-ingest — см. OPEN «Switch Qdrant…». |
 | 2026-04-27 | **BT6 trust_signal slice (pre–barrier 2 gold):** `eval/claims/paraphrase_runner.py` emits per-case `runtime_mode`; `science_graphrag/benchmarks/trust_signal.py` prefers homogeneous explicit `runtime_mode` on `claims_paraphrase_*` cases; test `tests/benchmarks/test_trust_signal.py::test_detect_runtime_mode_claims_paraphrase_explicit_live`. |
 | 2026-04-26 | **Reader full text vs Qdrant (ADR 022):** canonical artifacts `ingestion/{document_id}/article.md` + `normalized.md`; removed orphan `blob_store.write_text("extracted.txt")`; API `GET /v1/works/{id}/extracted-body`, `ingestion.has_extracted_body` / `work_provenance`, `sources.markdown` + `indexed_chunks`; optional `DocumentRecord.extracted_body_path` deferred. |
-| 2026-04-26 | **BT6 P0 quote tolerance (barrier 1):** `science_graphrag/ingestion/claims/quote_match.py` (NFKC / dashes / nbsp / `×`→`x` / letter–digit spacing + `find_fuzzy_substring`); 4-level `_quote_accepted` + chunk pre-normalize in `extract_claims_llm`; `eval/claims/article_source.read_claims_article`; tests `tests/ingestion/claims/`. Write-up: [`docs/analysis/wave5-bt6-quote-tolerance-2026-04-26.md`](../analysis/wave5-bt6-quote-tolerance-2026-04-26.md). Barrier 2 (gold semantics, `trust_signal live`) — OPEN item ниже. |
+| 2026-04-26 | **BT6 P0 quote tolerance (barrier 1):** `science_graphrag/ingestion/claims/quote_match.py` (NFKC / dashes / nbsp / `×`→`x` / letter–digit spacing + `find_fuzzy_substring`); 4-level `_quote_accepted` + chunk pre-normalize in `extract_claims_llm`; `eval/claims/article_source.read_claims_article`; tests `tests/ingestion/claims/`. Write-up: [`docs/analysis/_archive/wave5-bt6-quote-tolerance-2026-04-26.md`](../analysis/_archive/wave5-bt6-quote-tolerance-2026-04-26.md). Barrier 2 (gold semantics, `trust_signal live`) — OPEN item ниже. |
 | 2026-04-26 | **Ingest robustness:** per-file timeout, JSONL checkpoint + `--resume`, flush logging, OpenRouter/instructor retries; test + runbook. VL-specific timeout deferred (per-file covers batch). |
 | 2026-04-26 | **Unbounded workspaces:** `ws.unbounded`, scope + Qdrant `add_workspace_to_all_chunks`, backfill + runbooks. |
 | 2026-04-26 | **CI:** nightly `aggregate_benchmark_metrics` + trust-baseline regression guard. |
@@ -38,6 +39,13 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 | 2026-04-26 | **isort/black — ingest_jobs + idea_workflow:** пункт беклога закрыт; `black --check` / `isort --check-only` на два файла из корня репозитория — зелёные (полный `science_graphrag/` по-прежнему не гарантирован — отдельный глобальный проход при необходимости). |
 
 ## Queue
+
+### [OPEN] Work dedup hygiene — drift detection after ingest
+- **Area:** `science_graphrag/cli/main.py` (`merge-work`, `repoint-qdrant-work-ids`), ingest pipeline, optional nightly job
+- **Issue:** Title-level duplicate `Work` nodes can reappear after bulk ingest; manual merge was required for BT2 (`scripts/merge_duplicate_works_by_title.py` + audit JSON under `eval/results/`).
+- **Proposal:** Post-ingest Cypher report (dup titles) + WARN metric or CI step when `size(ws)>1` for canonical pilot titles; link runbook from `docs/runbooks/benchmark-decision-gate.md`.
+- **Acceptance:** Documented operator path + either automated alert or weekly scheduled report with non-zero exit when new dup clusters appear.
+- **Raised:** 2026-04-26 (Wave 6 benchmarks roadmap)
 
 ### [OPEN] VL JSON parse error for DN-DETR.pdf (reproducible)
 - **Area:** `science_graphrag/ingestion/vl_pdf.py`, `_call_vl_api`
@@ -79,7 +87,7 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 
 ### [OPEN] BT6 gold realism + optional embedding-soft quote fallback
 - **Area:** `eval/claims/`, `tests/fixtures/benchmarks/claims/`, `science_graphrag/ingestion/claims/quote_match.py`
-- **Issue:** **P0 quote gate (barrier 1) — [DONE 2026-04-26]** (см. Completed выше + [`wave5-bt6-quote-tolerance-2026-04-26.md`](../analysis/wave5-bt6-quote-tolerance-2026-04-26.md)). **Progress (2026-04-27):** per-case `runtime_mode` в `paraphrase_runner` + явный приоритет в `trust_signal` для семейств `claims_paraphrase_*` (см. Completed). Остаётся barrier 2: после P0 PDF-noise barrier снят (`corpus_ssd_v2` + Mistral: 28/28 quotes accepted в одном прогоне), но `claim_recall` на BT6 ограничен **семантикой** gold (`expected_claims[].claim_text_normalized` / `match_mode` vs выход production extractor). Отдельно: часть моделей даёт **truncated** tool JSON до Pydantic (наблюдение: Minimax + distracted body).
+- **Issue:** **P0 quote gate (barrier 1) — [DONE 2026-04-26]** (см. Completed выше + [`_archive/wave5-bt6-quote-tolerance-2026-04-26.md`](../analysis/_archive/wave5-bt6-quote-tolerance-2026-04-26.md)). **Progress (2026-04-27):** per-case `runtime_mode` в `paraphrase_runner` + явный приоритет в `trust_signal` для семейств `claims_paraphrase_*` (см. Completed). Остаётся barrier 2: после P0 PDF-noise barrier снят (`corpus_ssd_v2` + Mistral: 28/28 quotes accepted в одном прогоне), но `claim_recall` на BT6 ограничен **семантикой** gold (`expected_claims[].claim_text_normalized` / `match_mode` vs выход production extractor). Отдельно: часть моделей даёт **truncated** tool JSON до Pydantic (наблюдение: Minimax + distracted body).
 - **Proposal:** (1) Reformulate `expected_claims[].claim_text_normalized` toward achievable paraphrases for the production path; add an `aspirational_v2` tier for abstract “principle” gold without CI gating. (2) Optional level-5 in `_quote_accepted`: sentence-window cosine (τ≈0.85) **only** with `claims_quote_embedding_fallback=true`, **replacing** stored `quote` with the nearest real subspan and `evidence.requires_review=true`.
 - **Acceptance:** BT6 mini / `corpus_ssd_v2` (or `claims_paraphrase_bt6_mini` tier) reaches **≥ 0.55** `claim_recall` on `mistralai/mistral-small-3.2-24b-instruct` with `--extractor production`; distracted lane completes without LLM JSON truncation under the same provider settings used in CI smoke.
 - **Raised:** 2026-04-26 (post P0 quote tolerance).
@@ -281,6 +289,13 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 - **Acceptance:** При параллельных translation-запросах система соблюдает `llm_concurrency_translation`; integration-тест или нагрузочный smoke-check.
 - **Synergy:** LX2 → LX1 → интеграция.
 - **Raised:** 2026-04-26
+
+### [OPEN] Split Wave A workspace/paper LangChain tools module
+- **Area:** [`science_graphrag/agent/tools/workspace_paper_tools.py`](../../science_graphrag/agent/tools/workspace_paper_tools.py)
+- **Issue:** Single module ~470+ lines mixing Neo4j catalog tools, Qdrant quote search, and GOST bibliography wrappers; harder to review and test in isolation.
+- **Proposal:** Extract `workspace_catalog_tools.py`, `paper_quote_tool.py`, `bibliography_gost_tool.py` (or `agent/tools/catalog/`) + thin `__init__` aggregator; keep public `build_workspace_paper_langchain_tools` API stable.
+- **Acceptance:** No file above ~300 lines in that subtree; imports unchanged for `build_retrieval_tools`.
+- **Raised:** 2026-04-26 (Wave A CH2)
 
 <!-- Example:
 ### [OPEN] Example — tighten retrieval module boundaries

@@ -23,3 +23,9 @@
 - Контракты для frontend Phase 6 и **mandatory API happy-path**: [frontend-ui-api-contracts-v1.md](frontend-ui-api-contracts-v1.md).
 
 Черновые идеи промптов — в [idea.md](../idea.md).
+
+## Agent / Chat
+
+| Документ | Стадия |
+|----------|--------|
+| [agent-chat-v1.md](agent-chat-v1.md) | Wave A: `POST /v2/agent/query` envelope + SSE vocabulary |

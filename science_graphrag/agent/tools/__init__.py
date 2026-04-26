@@ -11,14 +11,22 @@ from science_graphrag.agent.tools.summarize_workspace import (
     SummarizeWorkspaceTool,
     _make_summarize_workspace_tool,
 )
+from science_graphrag.agent.tools.workspace_paper_tools import build_workspace_paper_langchain_tools
 from science_graphrag.api.deps import StoreRegistry
-from science_graphrag.config import get_settings
+from science_graphrag.config import Settings, get_settings
 
 
-def build_retrieval_tools(stores: StoreRegistry) -> list[BaseTool]:
-    """Tools for retrieval specialist node."""
-    settings = get_settings()
-    return [
+def build_retrieval_tools(
+    stores: StoreRegistry, settings: Settings | None = None
+) -> list[BaseTool]:
+    """Tools for retrieval specialist node (catalog + semantic + workspace summary)."""
+    settings = settings or get_settings()
+    catalog = build_workspace_paper_langchain_tools(
+        stores.neo4j,
+        stores.qdrant_chunks,
+        settings=settings,
+    )
+    core: list[BaseTool] = [
         _make_idea_search_tool(
             stores.qdrant_chunks,
             stores.qdrant_works,
@@ -26,6 +34,7 @@ def build_retrieval_tools(stores: StoreRegistry) -> list[BaseTool]:
         ),
         _make_summarize_workspace_tool(stores.neo4j),
     ]
+    return catalog + core
 
 
 def build_graph_tools(stores: StoreRegistry) -> list[BaseTool]:

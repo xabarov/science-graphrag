@@ -7,6 +7,6 @@ export default {
   "evidenceBody.answerLinked": "answer-linked",
   "evidenceBody.openReader": "Open in Reader",
   "evidenceBody.openGraph": "Open in Graph",
-  "evidenceBody.continueAsk": "Continue in Ask",
+  "evidenceBody.continueAsk": "Continue in chat",
   "evidenceBody.filterClaimsOnly": "Only chunks with claim evidence",
 };

@@ -46,6 +46,7 @@ export default function WorkspacePaperList({ workspaceId, effectiveWorkIds, pape
         return (
           <WorkspacePaperRow
             key={wid}
+            workspaceId={workspaceId}
             workId={wid}
             title={row?.title || ""}
             year={row?.year}
