@@ -42,7 +42,8 @@ export default function ReaderWorkBody({
 }) {
   const { t } = useI18n();
   const claimsUi = import.meta.env?.VITE_CLAIMS_ENABLED === "true";
-  const { detail, chunks, loading, error, pdfAvailable, viewMode, setViewMode } = useReaderWorkData(workId);
+  const { detail, chunks, extractedBodyPayload, loading, error, pdfAvailable, viewMode, setViewMode } =
+    useReaderWorkData(workId);
   const { chunksOpen, setChunksOpen, orderedItems, combinedMarkdown, isChunkHighlighted } = useReaderChunksState(chunks, {
     focusedFingerprint,
     focusedSection,
@@ -65,13 +66,31 @@ export default function ReaderWorkBody({
 
   const abstractText =
     detail && typeof detail.abstract === "string" && detail.abstract.trim() ? detail.abstract : "";
+  const extractedBodyText =
+    extractedBodyPayload &&
+    extractedBodyPayload.available === true &&
+    typeof extractedBodyPayload.text === "string" &&
+    extractedBodyPayload.text.trim()
+      ? extractedBodyPayload.text.trim()
+      : "";
+  const useExtractedFileAsBody =
+    !loading &&
+    Boolean(chunks) &&
+    !hasEffectiveChunks &&
+    Boolean(extractedBodyText) &&
+    viewMode === "ocr";
   /**
    * When the work has no extracted chunks but ships an abstract, surface the abstract as the
    * markdown body instead of leaving the column empty (otherwise the user has nothing to read
    * unless they switch to PDF). The metadata card hides its abstract toggle in that case.
    */
   const useAbstractAsBody =
-    !loading && Boolean(chunks) && !hasEffectiveChunks && Boolean(abstractText) && viewMode === "markdown";
+    !loading &&
+    Boolean(chunks) &&
+    !hasEffectiveChunks &&
+    !useExtractedFileAsBody &&
+    Boolean(abstractText) &&
+    viewMode === "ocr";
 
   const metaCbRef = useRef(onWorkMetaChange);
   useEffect(() => {
@@ -148,20 +167,29 @@ export default function ReaderWorkBody({
         </Box>
       ) : null}
 
-      {chunks && !loading && viewMode === "markdown" && combinedMarkdown ? (
+      {chunks && !loading && viewMode === "ocr" && combinedMarkdown ? (
         <ReaderMarkdownSourcePanel combinedMarkdown={combinedMarkdown} chunks={chunks} sourceVariant="extracted" />
       ) : null}
 
-      {useAbstractAsBody ? (
+      {useExtractedFileAsBody ? (
         <ReaderMarkdownSourcePanel
-          combinedMarkdown={abstractText}
-          sourceVariant="abstract"
-          hasPdfFallback={pdfAvailable}
-          onOpenPdf={() => setViewMode("pdf")}
+          combinedMarkdown={extractedBodyText}
+          sourceVariant="extractedFile"
+          apiTruncated={extractedBodyPayload?.truncated === true}
         />
       ) : null}
 
-      {chunks && !loading && viewMode === "markdown" && !combinedMarkdown && !useAbstractAsBody && !pdfAvailable ? (
+      {useAbstractAsBody ? (
+        <ReaderMarkdownSourcePanel combinedMarkdown={abstractText} sourceVariant="abstract" />
+      ) : null}
+
+      {chunks &&
+      !loading &&
+      viewMode === "ocr" &&
+      !combinedMarkdown &&
+      !useExtractedFileAsBody &&
+      !useAbstractAsBody &&
+      !pdfAvailable ? (
         <Alert severity="warning" sx={{ mb: 2, fontSize: "0.8125rem" }}>
           {t("readerBody.noExtractedTextOrPdf")}
         </Alert>

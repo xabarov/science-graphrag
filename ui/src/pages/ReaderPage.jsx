@@ -8,7 +8,13 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
-import { CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import FolderOpenIcon from "@mui/icons-material/FolderOpen";
+import HistoryIcon from "@mui/icons-material/History";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+
+import { CursorIconAction } from "../components/common/index.js";
 import { isExplicitAdminMode } from "../components/layout/adminVisibility.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
 import { useI18n } from "../i18n/I18nContext.jsx";
@@ -81,14 +87,14 @@ export default function ReaderPage() {
   const pageDescription = !hasWork ? (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
       <span>{t("readerShell.heroEmptyDesc")}</span>
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center" }}>
-        <CursorPrimaryButton component={Link} to="/workspaces" sx={{ textDecoration: "none" }}>
-          {t("readerShell.openWorkspaces")}
-        </CursorPrimaryButton>
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "center" }}>
+        <CursorIconAction component={Link} to="/workspaces" title={t("readerShell.openWorkspaces")}>
+          <FolderOpenIcon sx={{ fontSize: "1.1rem" }} />
+        </CursorIconAction>
         {lastId ? (
-          <CursorSmallButton type="button" onClick={openLastArticle}>
-            {t("readerShell.openLastArticle")}
-          </CursorSmallButton>
+          <CursorIconAction type="button" title={t("readerShell.openLastArticle")} onClick={openLastArticle}>
+            <HistoryIcon sx={{ fontSize: "1.1rem" }} />
+          </CursorIconAction>
         ) : null}
       </Box>
     </Box>
@@ -110,6 +116,42 @@ export default function ReaderPage() {
       }}
     >
       <PageHeader eyebrow={pageEyebrow} title={pageTitle} description={pageDescription} />
+
+      {hasWork ? (
+        <Box
+          sx={{
+            mb: 1.5,
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 0.75,
+            alignItems: "center",
+            borderBottom: "1px solid rgba(255,255,255,0.06)",
+            pb: 1.25,
+          }}
+        >
+          <CursorIconAction
+            component={Link}
+            to={buildWorkspaceTracePath(workId, "reader", {
+              chunkFingerprint: trace.chunkFingerprint,
+              section: trace.section,
+              citation: trace.citation,
+            })}
+            title={t("reader.openReaderWs")}
+          >
+            <MenuBookIcon sx={{ fontSize: "1.1rem" }} />
+          </CursorIconAction>
+          <CursorIconAction
+            component={Link}
+            to={buildWorkspaceTracePath(workId, "graph", {
+              section: trace.section,
+              citation: trace.citation,
+            })}
+            title={t("reader.openGraphWs")}
+          >
+            <AccountTreeIcon sx={{ fontSize: "1.1rem" }} />
+          </CursorIconAction>
+        </Box>
+      ) : null}
 
       {showDevWorkIdAccordion ? (
         <Accordion
@@ -143,7 +185,9 @@ export default function ReaderPage() {
                   "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)" },
                 }}
               />
-              <CursorPrimaryButton type="submit">{t("readerShell.load")}</CursorPrimaryButton>
+              <CursorIconAction type="submit" title={t("readerShell.load")}>
+                <PlayArrowIcon sx={{ fontSize: "1.15rem" }} />
+              </CursorIconAction>
             </Box>
           </AccordionDetails>
         </Accordion>
@@ -160,32 +204,6 @@ export default function ReaderPage() {
           />
         </Box>
       )}
-
-      {hasWork ? (
-        <Box sx={{ mt: 1.5, display: "flex", flexWrap: "wrap", gap: 1 }}>
-          <CursorSmallButton
-            component={Link}
-            to={buildWorkspaceTracePath(workId, "reader", {
-              chunkFingerprint: trace.chunkFingerprint,
-              section: trace.section,
-              citation: trace.citation,
-            })}
-            sx={{ textDecoration: "none" }}
-          >
-            {t("reader.openReaderWs")}
-          </CursorSmallButton>
-          <CursorSmallButton
-            component={Link}
-            to={buildWorkspaceTracePath(workId, "graph", {
-              section: trace.section,
-              citation: trace.citation,
-            })}
-            sx={{ textDecoration: "none" }}
-          >
-            {t("reader.openGraphWs")}
-          </CursorSmallButton>
-        </Box>
-      ) : null}
     </Box>
   );
 }

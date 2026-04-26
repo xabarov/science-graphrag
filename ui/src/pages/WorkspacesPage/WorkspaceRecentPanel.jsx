@@ -3,7 +3,9 @@ import { Link } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
-import { CursorSmallButton } from "../../components/common/index.js";
+import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
+
+import { CursorIconAction } from "../../components/common/index.js";
 import { useI18n } from "../../i18n/I18nContext.jsx";
 import { buildWorkspacePath } from "../WorkspacePage/utils/workContext.js";
 
@@ -37,9 +39,9 @@ export default function WorkspaceRecentPanel({ recentWorks, fallbackWorkspaceId 
                   </Typography>
                   <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mt: 0.25 }}>{item.workId}</Typography>
                 </Box>
-                <CursorSmallButton component={Link} to={recentOpenPath} sx={{ textDecoration: "none" }}>
-                  {t("workspaces.open")}
-                </CursorSmallButton>
+                <CursorIconAction component={Link} to={recentOpenPath} title={t("workspaces.open")}>
+                  <HubOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+                </CursorIconAction>
               </Box>
             );
           })}

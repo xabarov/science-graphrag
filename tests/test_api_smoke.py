@@ -549,6 +549,33 @@ def test_work_detail_graph_chunks_smoke(monkeypatch: Any) -> None:
     assert claims.json() == {"work_id": "w1", "items": []}
 
 
+def test_work_extracted_body_endpoint_smoke(monkeypatch: Any) -> None:
+    """GET /v1/works/{id}/extracted-body returns JSON from detail helper."""
+
+    def _fake_payload(_settings: Any, _stores: Any, work_id: str) -> dict[str, Any] | None:
+        if work_id == "missing":
+            return None
+        return {
+            "available": True,
+            "work_id": work_id,
+            "document_id": "d1",
+            "source": "normalized",
+            "text": "full-body",
+            "truncated": False,
+            "file_bytes": 9,
+        }
+
+    monkeypatch.setattr(works_router_mod, "get_work_extracted_body_payload", _fake_payload)
+    client = _client()
+    ok = client.get("/v1/works/w1/extracted-body")
+    assert ok.status_code == 200
+    body = ok.json()
+    assert body["available"] is True
+    assert body["text"] == "full-body"
+    nf = client.get("/v1/works/missing/extracted-body")
+    assert nf.status_code == 404
+
+
 def test_get_work_sources_smoke(monkeypatch: Any) -> None:
     """GET /v1/works/{id}/sources returns inventory JSON."""
 

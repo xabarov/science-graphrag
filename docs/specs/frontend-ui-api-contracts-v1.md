@@ -7,7 +7,7 @@ This document defines the minimum backend contracts required to move frontend fr
 Status by endpoint:
 
 - `POST /v1/query`: implemented (source of truth in `science_graphrag/api/main.py`)
-- `GET /v1/works`, `GET /v1/works/{work_id}`, `GET /v1/works/{work_id}/graph`, `GET /v1/works/{work_id}/chunks`: implemented (same module; Neo4j + Qdrant)
+- `GET /v1/works`, `GET /v1/works/{work_id}`, `GET /v1/works/{work_id}/graph`, `GET /v1/works/{work_id}/chunks`, `GET /v1/works/{work_id}/extracted-body`: implemented (same module; Neo4j + Qdrant + ingest artifacts under `artifact_root`)
 - **`/v1/benchmark/*`:** benchmark console UI (`science_graphrag/api/benchmark.py`, runs via `science_graphrag/api/task_store.py`) — **layer-1** и **layer-2** (`family` query/body); не часть обязательного research happy-path ниже. Если задан `SCIENCE_GRAPHRAG_ADMIN_API_KEY`, клиент должен слать заголовок **`X-Admin-Key`** (см. [admin-policy.md](./admin-policy.md)).
 - other niceties below: optional backlog (filters, richer graph projection)
 
@@ -17,9 +17,10 @@ Status by endpoint:
 
 1. **Ingest** одного документа: `science-graphrag ingest path/to/paper.pdf` (или корпус — см. [runbooks/deploy.md](../runbooks/deploy.md)).
 2. **`GET /v1/works`** — список не пустой, выбрать `work_id`.
-3. **`GET /v1/works/{work_id}`** — 200, стабильные поля `work_id`, `ingestion`.
+3. **`GET /v1/works/{work_id}`** — 200, стабильные поля `work_id`, `ingestion` (в т.ч. `has_extracted_body`, `work_provenance`; см. §3).
 4. **`POST /v1/query`** — ответ с `citations` и `retrieval_trace` (допустимы пустые hits при пустом Qdrant, но не 5xx).
 5. **`GET /v1/works/{work_id}/chunks`** — при наличии чанков: ненулевой `total` или согласованный degraded UX в UI.
+6. **`GET /v1/works/{work_id}/extracted-body`** — при успешном ingest: тело текста из артефактов (`normalized.md` / `article.md`) даже если Qdrant пуст (см. ADR 022).
 
 Опционально для полной трассируемости: **`GET /v1/works/{work_id}/graph`** — 200, `semantic_available` согласован с фактом semantic ingest.
 
@@ -173,14 +174,34 @@ Response:
   "ingestion": {
     "document_id": "string | null",
     "has_chunks": true,
-    "has_semantic_layer": true
+    "has_semantic_layer": true,
+    "has_extracted_body": true,
+    "extracted_body_bytes": 120000,
+    "work_provenance": "ingested_document | graph_stub"
   }
 }
 ```
 
+- **`document_id`**: Postgres `documents.id` when this work is linked to an ingested file; otherwise `null` (graph-only / citation stub).
+- **`has_extracted_body`**: `true` when `artifact_root/ingestion/{document_id}/normalized.md` or `article.md` (or legacy slug path) exists on the API host.
+- **`work_provenance`**: `ingested_document` if a document row exists; `graph_stub` if the work exists only in Neo4j without a linked ingest document.
+
+### `GET /v1/works/{work_id}/extracted-body`
+
+Returns JSON (not raw `text/markdown` stream in v1):
+
+| Field | Meaning |
+|-------|---------|
+| `available` | Whether readable body text was found |
+| `reason` | When `available` is false: `no_ingested_document` (no SQL document) or `no_extracted_body` (document exists but no artifact files) |
+| `text` | Full extracted markdown/text (may be truncated) |
+| `source` | `normalized` \| `article` \| `article_legacy` — which file was read |
+| `truncated` | `true` if response hit the server character cap (~1.5M) |
+| `file_bytes` | On-disk file size when `available` |
+
 ### `GET /v1/works/{work_id}/sources` and `GET /v1/works/{work_id}/pdf`
 
-- **`/sources`:** JSON inventory (`pdf`, `markdown` availability) for Reader UI.
+- **`/sources`:** JSON inventory (`pdf`, `markdown` availability) for Reader UI. The `markdown` entry’s **`available`** reflects **on-disk ingest artifacts** (canonical paths under `ingestion/{document_id}/`), not Qdrant chunk count. Optional field **`indexed_chunks`** (integer) reports how many chunk points exist in Qdrant for observability.
 - **`/pdf`:** Streams `application/pdf` from the blob store (`StreamingResponse`). Supports **`Range: bytes=…`** → **206 Partial Content** with `Content-Range` and `Content-Length` for the slice; full file → **200** with `Content-Length`. **`ETag`** + `Accept-Ranges: bytes`; **`If-None-Match`** → **304**. Malformed or unsatisfiable range → **416** with `Content-Range: bytes */{size}`.
 
 ## 4) Work graph neighborhood (implemented)

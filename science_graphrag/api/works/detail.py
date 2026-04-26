@@ -7,8 +7,16 @@ from sqlalchemy import select
 
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
+from science_graphrag.ingestion.artifact_layout import (
+    has_extracted_body_file,
+    resolve_extracted_body_file,
+    strip_ingest_artifact_header,
+)
 from science_graphrag.storage.db import get_engine, init_db, session_factory
 from science_graphrag.storage.models_orm import DocumentRecord
+
+# Hard cap for JSON extracted-body responses (chars after optional header strip).
+_MAX_EXTRACTED_BODY_RESPONSE_CHARS = 1_500_000
 
 
 def _has_semantic_layer_cypher() -> str:
@@ -190,14 +198,25 @@ def get_work_detail(
         "venue": node.get("venue_name"),
         "authors": authors,
         "ingestion": {
-            "document_id": work_id,
+            "document_id": None,
             "has_chunks": False,
             "has_semantic_layer": semantic_ok,
+            "has_extracted_body": False,
+            "extracted_body_bytes": None,
+            "work_provenance": "graph_stub",
         },
     }
     doc_row = resolve_document_for_work(settings, stores, work_id)
     if doc_row is not None:
         out["ingestion"]["document_id"] = doc_row.id
+        out["ingestion"]["work_provenance"] = "ingested_document"
+        art_root = Path(settings.artifact_root)
+        if has_extracted_body_file(art_root, doc_row.id):
+            resolved = resolve_extracted_body_file(art_root, doc_row.id)
+            out["ingestion"]["has_extracted_body"] = True
+            out["ingestion"]["extracted_body_bytes"] = (
+                int(resolved[0].stat().st_size) if resolved else None
+            )
     return out
 
 
@@ -256,6 +275,13 @@ def work_sources_payload(
     except Exception:  # noqa: BLE001
         chunk_total = 0
     doc = resolve_document_for_work(settings, stores, work_id)
+    art_root = Path(settings.artifact_root)
+    has_body_file = bool(doc and has_extracted_body_file(art_root, doc.id))
+    md_size: int | None = None
+    if has_body_file and doc is not None:
+        hit = resolve_extracted_body_file(art_root, doc.id)
+        if hit:
+            md_size = int(hit[0].stat().st_size)
     sources: list[dict[str, Any]] = []
     if doc is not None:
         mime = (doc.mime_type or "").lower()
@@ -277,8 +303,71 @@ def work_sources_payload(
             "repr": "markdown",
             "sha256": None,
             "mime_type": "text/markdown",
-            "size_bytes": None,
-            "available": chunk_total > 0,
-        }
+            "size_bytes": md_size,
+            "available": has_body_file,
+            "indexed_chunks": int(chunk_total),
+        },
     )
     return {"work_id": work_id, "sources": sources}
+
+
+def get_work_extracted_body_payload(
+    settings: Settings,
+    stores: StoreRegistry,
+    work_id: str,
+) -> dict[str, Any] | None:
+    """JSON body for ``GET /v1/works/{work_id}/extracted-body``; ``None`` if work is unknown."""
+
+    if get_work_detail(settings, stores, work_id) is None:
+        return None
+    doc = resolve_document_for_work(settings, stores, work_id)
+    if doc is None:
+        return {
+            "available": False,
+            "reason": "no_ingested_document",
+            "work_id": work_id,
+        }
+    return read_work_extracted_body_dict(
+        settings,
+        work_id=work_id,
+        document_id=str(doc.id),
+        max_chars=_MAX_EXTRACTED_BODY_RESPONSE_CHARS,
+    )
+
+
+def read_work_extracted_body_dict(
+    settings: Settings,
+    *,
+    work_id: str,
+    document_id: str,
+    max_chars: int,
+) -> dict[str, Any]:
+    """Load canonical / legacy ingest markdown for API responses."""
+
+    root = Path(settings.artifact_root)
+    resolved = resolve_extracted_body_file(root, document_id)
+    if not resolved:
+        return {
+            "available": False,
+            "reason": "no_extracted_body",
+            "work_id": work_id,
+            "document_id": document_id,
+        }
+    path, source_label = resolved
+    raw = path.read_text(encoding="utf-8", errors="replace")
+    if source_label in ("article", "article_legacy"):
+        text = strip_ingest_artifact_header(raw)
+    else:
+        text = raw
+    truncated = len(text) > max_chars
+    if truncated:
+        text = text[:max_chars]
+    return {
+        "available": True,
+        "work_id": work_id,
+        "document_id": document_id,
+        "source": source_label,
+        "text": text,
+        "truncated": truncated,
+        "file_bytes": int(path.stat().st_size),
+    }

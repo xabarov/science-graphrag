@@ -3,7 +3,7 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 
-import MarkdownViewCore from "./MarkdownViewCore.jsx";
+import MarkdownViewCore, { preprocessReaderMarkdown } from "./MarkdownViewCore.jsx";
 
 const theme = createTheme({ palette: { mode: "dark" } });
 
@@ -28,5 +28,20 @@ describe("MarkdownViewCore", () => {
     const html = renderMarkdown("~~gone~~");
     expect(html).toContain("del");
     expect(html).toContain("gone");
+  });
+
+  it("treats single newlines as line breaks (remark-breaks) for OCR-style text", () => {
+    const html = renderMarkdown("Line one\nLine two");
+    expect(html).toContain("br");
+    expect(html).toContain("Line one");
+    expect(html).toContain("Line two");
+  });
+
+  it("unwraps outer ```markdown fence so emphasis parses (VL-style payload)", () => {
+    const raw = "```markdown\n\n**Falcon-M1** abstract\n\n```";
+    expect(preprocessReaderMarkdown(raw).trim()).toBe("**Falcon-M1** abstract");
+    const html = renderMarkdown(raw);
+    expect(html).toContain("<strong");
+    expect(html).toContain("Falcon-M1");
   });
 });

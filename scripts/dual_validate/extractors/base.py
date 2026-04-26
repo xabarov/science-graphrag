@@ -103,6 +103,15 @@ class ExtractorBase(ABC):
         matcher (see ``match_records``). Implementations should forward it.
         """
 
+    def _safe_parse_json(self, raw: str, *, context: str = "") -> Any:
+        """Parse LLM JSON with a stable ``extractor B (layer)`` error prefix."""
+
+        suffix = f" [{context}]" if context else ""
+        try:
+            return parse_json_object_lenient(raw)
+        except ValueError as exc:
+            raise ValueError(f"extractor B ({self.layer_name}){suffix}: {exc}") from exc
+
     def run_for_pack(
         self,
         pack_dir: Path,

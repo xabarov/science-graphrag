@@ -5,6 +5,9 @@ export default {
   "readerBody.extractedTitle": "Extracted text (reading view)",
   "readerBody.extractedHint":
     "Concatenated chunk texts in document order (Markdown-style headings from section paths). For chunk fingerprints use Advanced below.",
+  "readerBody.extractedFileTitle": "Extracted article text",
+  "readerBody.extractedFileHint":
+    "Full text from the ingest pipeline (saved with the document). Indexed Qdrant chunks may still be empty — retrieval uses vectors once indexing succeeds. Original pages: PDF mode (toggle above).",
   "readerBody.chunksPartial": "Showing first {{shown}} of {{total}} chunks — increase limit in UI if needed.",
   "readerBody.focusedContext": "Focused reading context",
   "readerBody.openedFrom": "Opened from {{summary}}",
@@ -18,8 +21,8 @@ export default {
     "document_id: {{docId}} · has_chunks: {{hasChunks}} · semantic: {{semantic}}",
   "readerBody.chunkMeta": "{{section}} · fp {{fp}}",
   "readerBody.focusedChip": "focused",
-  "readerBody.viewMarkdown": "Markdown",
-  "readerBody.viewPdf": "PDF",
+  "readerBody.viewOcrTooltip": "Recognized text (VL / OCR pipeline output)",
+  "readerBody.viewPdfTooltip": "Original PDF pages",
   "readerBody.pdfUnavailable": "Original PDF is not available for this work (e.g. ingested from Markdown only).",
   "readerBody.pdfLoadError": "Could not load PDF: {{message}}",
   "readerBody.pdfLoading": "Loading PDF…",
@@ -30,9 +33,12 @@ export default {
   "readerBody.pdfZoomOut": "Zoom out",
   "readerBody.abstractTitle": "Abstract",
   "readerBody.abstractHint":
-    "This work has no indexed chunks yet. The abstract is shown below — open the PDF for the full article or wait for ingest to finish.",
+    "This work has no indexed chunks yet. The abstract is shown below — use PDF mode (toggle above) for the full article or wait for ingest to finish.",
   "readerBody.chunksBackendError": "Chunk index is unavailable ({{code}}). Reading view may be empty until Qdrant is reachable.",
-  "readerBody.openPdf": "Open PDF",
+  "readerBody.readerMarkdownDisplayTruncated":
+    "Text is shortened in this panel for performance — use PDF mode (toggle above) for the full document.",
+  "readerBody.extractedBodyTruncatedApi":
+    "The server response was capped — the on-disk artifact may be longer; use PDF mode to read the full file.",
   "readerBody.noExtractedTextOrPdf": "No extracted chunk text and no original PDF is available for this work (e.g. Markdown-only ingest).",
   "readerBody.showAbstract": "Abstract",
   "readerBody.hideAbstract": "Hide abstract",

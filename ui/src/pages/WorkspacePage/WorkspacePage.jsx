@@ -1,12 +1,15 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Alert from "@mui/material/Alert";
 import Typography from "@mui/material/Typography";
 
-import { CursorPrimaryButton, CursorSmallButton } from "../../components/common/index.js";
-import { mainShellContentSx } from "../../components/layout/mainShellContentSx.js";
-import WorkspaceDedupSection from "./WorkspaceDedupSection.jsx";
+import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
+import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
+import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
+
+import { CursorIconAction } from "../../components/common/index.js";
+import IngestConflictReviewCard from "../../components/dedup/IngestConflictReviewCard.jsx";
 import WorkspaceDialogs from "./WorkspaceDialogs.jsx";
 import WorkspaceHero from "./WorkspaceHero.jsx";
 import WorkspaceLayout from "./WorkspaceLayout.jsx";
@@ -17,17 +20,19 @@ import { useWorkspacePageCore } from "./useWorkspacePageCore.jsx";
 export default function WorkspacePage() {
   const vm = useWorkspacePageCore();
   const { t } = vm;
-  const [sideDedupRefresh, setSideDedupRefresh] = useState(0);
 
   return (
     <Box
       sx={{
         p: { xs: 1.5, sm: 2 },
-        ...mainShellContentSx,
+        width: "100%",
+        maxWidth: "none",
+        boxSizing: "border-box",
         flex: 1,
         minHeight: 0,
         display: "flex",
         flexDirection: "column",
+        overflow: "hidden",
       }}
     >
       <WorkspaceHero t={t} vm={vm} />
@@ -72,21 +77,21 @@ export default function WorkspacePage() {
                 {vm.t("workspace.err.serverHint")}
               </Typography>
             ) : null}
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center" }}>
-              <CursorPrimaryButton type="button" onClick={vm.retryWorkspaceLoad}>
-                {vm.t("workspace.err.retry")}
-              </CursorPrimaryButton>
-              <CursorSmallButton component={Link} to="/workspaces" sx={{ textDecoration: "none" }}>
-                {vm.t("workspace.empty.workspaces")}
-              </CursorSmallButton>
-              <CursorSmallButton component={Link} to="/home" sx={{ textDecoration: "none" }}>
-                {vm.t("workspace.empty.about")}
-              </CursorSmallButton>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "center" }}>
+              <CursorIconAction type="button" title={vm.t("workspace.err.retry")} onClick={vm.retryWorkspaceLoad}>
+                <RefreshOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+              </CursorIconAction>
+              <CursorIconAction component={Link} to="/workspaces" title={vm.t("workspace.empty.workspaces")}>
+                <FolderOpenOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+              </CursorIconAction>
+              <CursorIconAction component={Link} to="/home" title={vm.t("workspace.empty.about")}>
+                <HomeOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+              </CursorIconAction>
             </Box>
           </Box>
         </Box>
       ) : (
-        <Box sx={{ flex: 1, minHeight: 0, minWidth: 0 }}>
+        <Box sx={{ flex: 1, minHeight: 0, minWidth: 0, overflow: "auto" }}>
           <WorkspaceLayout
             main={
               <Box>
@@ -98,13 +103,13 @@ export default function WorkspacePage() {
                   onCardActivate={vm.onCardActivate}
                 />
 
-                <WorkspaceDedupSection
-                  workspaceId={vm.workspaceMeta.id}
-                  onMerged={() => {
-                    void vm.refreshWorkspaceMeta();
-                    setSideDedupRefresh((n) => n + 1);
-                  }}
-                />
+                {vm.ingestDedupPanelOpen ? (
+                  <IngestConflictReviewCard
+                    workspaceId={vm.workspaceMeta.id}
+                    onDismiss={vm.dismissIngestDedupPanel}
+                    onMerged={vm.refreshWorkspaceMeta}
+                  />
+                ) : null}
               </Box>
             }
           side={
@@ -122,7 +127,6 @@ export default function WorkspacePage() {
               addBusy={vm.addBusy}
               onAddWork={vm.handleAddWork}
               addErr={vm.addErr}
-              sideDedupRefresh={sideDedupRefresh}
             />
           }
           />

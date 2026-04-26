@@ -3,7 +3,10 @@ import { Link, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Alert from "@mui/material/Alert";
 
-import { CursorPrimaryButton, CursorSmallButton } from "../../components/common/index.js";
+import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
+import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
+
+import { CursorIconAction } from "../../components/common/index.js";
 import { formatResearchApiError, postAgentQuery, postIdeaAssist } from "../../services/researchApi.js";
 import {
   getActiveWorkspaceId,
@@ -14,6 +17,7 @@ import {
   startWorkspaceDocumentIngest,
   startWorkspaceBatchIngest,
   getWorkspaceGraphStats,
+  getWorkspaceSmartDedupConflicts,
 } from "../../utils/workspaceStore.js";
 import { isAdminModeEnabled } from "../../components/layout/adminVisibility.js";
 import { persistWorkId, resolveSelectedWorkId } from "./utils/workContext.js";
@@ -42,6 +46,7 @@ export function useWorkspacePageCore() {
   const [ingestJobId, setIngestJobId] = useState("");
   const [ingestJob, setIngestJob] = useState(null);
   const [ingestErr, setIngestErr] = useState(null);
+  const [ingestDedupPanelOpen, setIngestDedupPanelOpen] = useState(false);
   const [uploadBusy, setUploadBusy] = useState(false);
   const [graphStats, setGraphStats] = useState(null);
   const [summaryOpen, setSummaryOpen] = useState(false);
@@ -164,6 +169,28 @@ export function useWorkspacePageCore() {
     };
   }, [workspaceMeta.id]);
 
+  useEffect(() => {
+    const id = String(workspaceMeta.id || "").trim();
+    if (!id) {
+      setIngestDedupPanelOpen(false);
+      return undefined;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await getWorkspaceSmartDedupConflicts(id, { status: "pending", origin: "ingest", limit: 1 });
+        if (!cancelled && Array.isArray(data?.items) && data.items.length > 0) {
+          setIngestDedupPanelOpen(true);
+        }
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [workspaceMeta.id]);
+
   const effectiveWorkIds = useMemo(() => {
     const fromWs = Array.isArray(workspaceMeta.work_ids) ? workspaceMeta.work_ids : [];
     if (fromWs.length) return fromWs;
@@ -201,10 +228,15 @@ export function useWorkspacePageCore() {
     enabled: Boolean(ingestJobId),
     onUpdate: useCallback((job) => setIngestJob(job), []),
     onTerminal: useCallback(
-      async () => {
+      async (job) => {
         await refreshWorkspaceMeta();
+        const pending = Number(job?.pending_conflicts_count || 0);
+        if (String(job?.status || "") === "completed" && pending > 0) {
+          setIngestDedupPanelOpen(true);
+        }
         setPersistedIngestJobId(workspaceMeta.id, "");
         setIngestJobId("");
+        setIngestJob(null);
       },
       [refreshWorkspaceMeta, setPersistedIngestJobId, workspaceMeta.id],
     ),
@@ -223,12 +255,14 @@ export function useWorkspacePageCore() {
         <Alert severity="info" sx={{ fontSize: "0.8125rem", mb: 2, backgroundColor: "rgba(99,102,241,0.08)", color: "rgba(255,255,255,0.85)" }}>
           {t("workspace.empty.alert")}
         </Alert>
-        <CursorPrimaryButton component={Link} to="/workspaces" sx={{ textDecoration: "none" }}>
-          {t("workspace.empty.workspaces")}
-        </CursorPrimaryButton>
-        <CursorSmallButton component={Link} to="/home" sx={{ textDecoration: "none", ml: 1 }}>
-          {t("workspace.empty.about")}
-        </CursorSmallButton>
+        <CursorIconAction component={Link} to="/workspaces" title={t("workspace.empty.workspaces")}>
+          <FolderOpenOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+        </CursorIconAction>
+        <Box component="span" sx={{ display: "inline-flex", ml: 0.75 }}>
+          <CursorIconAction component={Link} to="/home" title={t("workspace.empty.about")}>
+            <HomeOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+          </CursorIconAction>
+        </Box>
       </Box>
     ),
     [t],
@@ -356,6 +390,8 @@ export function useWorkspacePageCore() {
     ingestJobId,
     ingestJob,
     ingestErr,
+    ingestDedupPanelOpen,
+    dismissIngestDedupPanel: () => setIngestDedupPanelOpen(false),
     uploadBusy,
     graphStats,
     summaryOpen,

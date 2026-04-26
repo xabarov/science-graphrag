@@ -136,6 +136,16 @@ def start_ingest_job(
 
 def job_to_dict(rec: IngestJobRecord) -> dict[str, Any]:
     out = job_record_to_view(rec).model_dump()
+    ws = (rec.workspace_id or "").strip()
+    wid = (rec.work_id or "").strip()
+    if ws and wid:
+        try:
+            from science_graphrag.api.ingest.work_dedup_counts import count_pending_ingest_work_dedup_conflicts
+            from science_graphrag.config import get_settings
+
+            out["pending_conflicts_count"] = count_pending_ingest_work_dedup_conflicts(get_settings(), ws, wid)
+        except Exception:  # noqa: BLE001
+            out["pending_conflicts_count"] = 0
     if rec.kind == "batch_parent":
         child_jobs: list[dict[str, Any]] = []
         for child_id in rec.child_job_ids:

@@ -12,10 +12,11 @@ export default function WorkspaceLayout({ main, side }) {
         display: "grid",
         gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 2fr) minmax(280px, 1fr)" },
         gap: 2,
-        alignItems: "start",
+        alignItems: "stretch",
+        minHeight: 0,
       }}
     >
-      <Box sx={{ minWidth: 0, order: { xs: 2, lg: 1 } }}>{main}</Box>
+      <Box sx={{ minWidth: 0, order: { xs: 2, lg: 1 }, display: "flex", flexDirection: "column" }}>{main}</Box>
       <Box
         sx={{
           minWidth: 0,
@@ -23,7 +24,7 @@ export default function WorkspaceLayout({ main, side }) {
           position: { lg: "sticky" },
           top: { lg: 12 },
           alignSelf: { lg: "start" },
-          maxHeight: { lg: "calc(100vh - 72px)" },
+          maxHeight: { lg: "min(calc(100dvh - 120px), 100%)" },
           overflowY: { lg: "auto" },
           p: { lg: 1.5 },
           borderRadius: "6px",

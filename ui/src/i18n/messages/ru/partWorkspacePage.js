@@ -2,12 +2,18 @@
 export default {
   "workspace.paper.loading": "Загрузка статьи…",
   "workspace.paper.noTitle": "(без названия)",
-  "workspace.paper.hint":
-    "Откройте «Чтение» для извлечённого текста. Граф, вопросы и сводка по всей области — в шапке страницы.",
-  "workspace.paper.hintSuffix": "Клик по карточке (вне ссылок) фокусирует статью в URL.",
-  "workspace.paper.reader": "Чтение",
-  "workspace.paper.workGraph": "Граф статьи",
   "workspace.actions.askWorkspace": "Вопросы по области",
+
+  "workspace.tooltip.workspaceGraph": "Граф области",
+  "workspace.tooltip.askWorkspace": "Вопросы по области",
+  "workspace.tooltip.summarize": "Суммировать рабочую область",
+  "workspace.tooltip.generateHypotheses": "Сгенерировать гипотезы",
+  "workspace.tooltip.reader": "Чтение (извлечённый текст)",
+  "workspace.tooltip.workGraph": "Граф статьи",
+  "workspace.tooltip.focusPaper": "Фокус на статье в URL",
+  "workspace.tooltip.copyWorkspaceId": "Копировать id области",
+  "workspace.tooltip.copyWorkId": "Копировать id статьи",
+  "workspace.tooltip.copied": "Скопировано",
   "workspace.paper.yearChip": "Год {{year}}",
   "workspace.paper.doiChip": "DOI {{doi}}",
 
@@ -68,8 +74,15 @@ export default {
   "workspace.side.graphTitle": "Снимок графа",
   "workspace.side.graphStatsLine":
     "{{works}} работ · {{authors}} авторов · {{internal}} внутр. цит. · {{external}} внеш. цит.",
-  "workspace.side.dedupTitle": "Умное дедуплицирование",
-  "workspace.side.dedupPendingLine": "Ожидают проверки почти-дубликаты: {{count}}",
-  "workspace.side.dedupPendingUnknown": "Запустите сканирование в блоке ниже, чтобы обновить очередь.",
-  "workspace.side.dedupJump": "Перейти к дедупу",
+
+  "workspace.ingestDedup.title": "Возможный дубликат после загрузки",
+  "workspace.ingestDedup.subtitle": "{{current}} из {{total}} · схожесть {{score}}",
+  "workspace.ingestDedup.workA": "Статья A",
+  "workspace.ingestDedup.workB": "Статья B",
+  "workspace.ingestDedup.mergeKeepA": "Оставить A, слить B",
+  "workspace.ingestDedup.mergeKeepB": "Оставить B, слить A",
+  "workspace.ingestDedup.keepSeparate": "Оставить раздельно",
+  "workspace.ingestDedup.skip": "Пропустить",
+  "workspace.ingestDedup.dismiss": "Скрыть",
+  "workspace.ingestDedup.loadingTitles": "Загрузка…",
 };

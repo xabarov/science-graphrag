@@ -186,6 +186,7 @@ def run_work_dedup_scan(
                     llm_reason=llm_reason,
                     status="pending",
                     fingerprint=fp,
+                    origin="scan",
                 )
                 session.add(row)
                 existing_fp.add(fp)

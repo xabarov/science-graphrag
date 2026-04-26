@@ -3,6 +3,8 @@ import ReactDOM from "react-dom/client";
 import { HashRouter } from "react-router-dom";
 import { CssBaseline, ThemeProvider, createTheme } from "@mui/material";
 
+import Box from "@mui/material/Box";
+
 import App from "./App.jsx";
 import { I18nProvider } from "./i18n/I18nContext.jsx";
 import "./styles.css";
@@ -26,7 +28,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <HashRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <App />
+          <Box sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+            <App />
+          </Box>
         </HashRouter>
       </ThemeProvider>
     </I18nProvider>

@@ -9,20 +9,21 @@ import Typography from "@mui/material/Typography";
  *   title: string,
  *   description?: React.ReactNode,
  *   actions?: React.ReactNode,
+ *   compact?: boolean,
  * }} props
  */
-export default function PageHeader({ eyebrow = "", title, description = "", actions = null }) {
+export default function PageHeader({ eyebrow = "", title, description = "", actions = null, compact = false }) {
   return (
     <Box
       sx={{
-        mb: 2.5,
-        pb: 1.5,
-        borderBottom: "1px solid rgba(255,255,255,0.08)",
+        mb: compact ? 0 : 2.5,
+        pb: compact ? 0 : 1.5,
+        borderBottom: compact ? "none" : "1px solid rgba(255,255,255,0.08)",
         display: "flex",
         flexWrap: "wrap",
         alignItems: "flex-start",
         justifyContent: "space-between",
-        gap: 1.5,
+        gap: compact ? 1 : 1.5,
       }}
     >
       <Box sx={{ minWidth: 0, flex: 1 }}>

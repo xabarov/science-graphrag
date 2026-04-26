@@ -6,7 +6,11 @@ import Tabs from "@mui/material/Tabs";
 import Typography from "@mui/material/Typography";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 
-import { CursorSmallButton } from "../../components/common/index.js";
+import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
+import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
+import OpenInNewOutlinedIcon from "@mui/icons-material/OpenInNewOutlined";
+
+import { CursorIconAction } from "../../components/common/index.js";
 
 import BenchmarkWorkbenchTab from "./BenchmarkWorkbenchTab.jsx";
 import CompareTab from "./CompareTab.jsx";
@@ -63,17 +67,17 @@ export default function BenchmarkPage() {
 
   return (
     <Box>
-      <Box sx={{ px: 2, pt: 0.5, pb: 1.5, display: "flex", flexWrap: "wrap", gap: 1 }}>
-        <CursorSmallButton component={Link} to="/admin" sx={{ textDecoration: "none" }}>
-          {t("benchmarkPage.adminHub")}
-        </CursorSmallButton>
-        <CursorSmallButton component={Link} to="/" sx={{ textDecoration: "none" }}>
-          {t("benchmarkPage.home")}
-        </CursorSmallButton>
+      <Box sx={{ px: 2, pt: 0.5, pb: 1.5, display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+        <CursorIconAction component={Link} to="/admin" title={t("benchmarkPage.adminHub")}>
+          <AdminPanelSettingsOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+        </CursorIconAction>
+        <CursorIconAction component={Link} to="/" title={t("benchmarkPage.home")}>
+          <HomeOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+        </CursorIconAction>
         {showAdminReturn ? (
-          <CursorSmallButton component={Link} to={canonicalAdminPath} sx={{ textDecoration: "none" }}>
-            {t("benchmarkPage.reopenCanonical")}
-          </CursorSmallButton>
+          <CursorIconAction component={Link} to={canonicalAdminPath} title={t("benchmarkPage.reopenCanonical")}>
+            <OpenInNewOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+          </CursorIconAction>
         ) : null}
       </Box>
       <Box sx={{ px: 2, pb: 1.5 }}>

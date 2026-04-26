@@ -6,9 +6,14 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
+import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
+import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
+import PlayArrowOutlinedIcon from "@mui/icons-material/PlayArrowOutlined";
 
-import { CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
+import { CursorIconAction } from "../components/common/index.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
 import { useWorkspaceContext } from "../components/layout/WorkspaceContext.jsx";
 import { isExplicitAdminMode } from "../components/layout/adminVisibility.js";
@@ -85,29 +90,33 @@ export default function EvidencePage() {
             {t("evidence.empty.title")}
           </Typography>
           <Typography sx={{ mt: 0.75, fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)" }}>{t("evidence.empty.body")}</Typography>
-          <Box sx={{ mt: 1.5, display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center" }}>
-            <CursorPrimaryButton component={Link} to="/workspaces" sx={{ textDecoration: "none" }}>
-              {t("readerShell.openWorkspaces")}
-            </CursorPrimaryButton>
-            <CursorPrimaryButton component={Link} to={getLastWorkspaceHref()} sx={{ textDecoration: "none" }}>
-              {t("evidence.openLastWorkspace")}
-            </CursorPrimaryButton>
+          <Box sx={{ mt: 1.5, display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "center" }}>
+            <CursorIconAction component={Link} to="/workspaces" title={t("readerShell.openWorkspaces")}>
+              <FolderOpenOutlinedIcon sx={{ fontSize: "1.15rem" }} />
+            </CursorIconAction>
+            <CursorIconAction component={Link} to={getLastWorkspaceHref()} title={t("evidence.openLastWorkspace")}>
+              <HubOutlinedIcon sx={{ fontSize: "1.15rem" }} />
+            </CursorIconAction>
           </Box>
         </Box>
       ) : null}
 
       {workId.trim() ? (
-        <Box sx={{ mb: 1.5, display: "flex", flexWrap: "wrap", gap: 1 }}>
-          <CursorSmallButton
+        <Box sx={{ mb: 1.5, display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+          <CursorIconAction
             component={Link}
             to={buildWorkspaceTracePath(workId, "reader", traceExtras)}
-            sx={{ textDecoration: "none" }}
+            title={t("reader.openReaderWs")}
           >
-            {t("reader.openReaderWs")}
-          </CursorSmallButton>
-          <CursorSmallButton component={Link} to={buildWorkspaceTracePath(workId, "graph", traceExtras)} sx={{ textDecoration: "none" }}>
-            {t("reader.openGraphWs")}
-          </CursorSmallButton>
+            <MenuBookOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+          </CursorIconAction>
+          <CursorIconAction
+            component={Link}
+            to={buildWorkspaceTracePath(workId, "graph", traceExtras)}
+            title={t("reader.openGraphWs")}
+          >
+            <AccountTreeOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+          </CursorIconAction>
         </Box>
       ) : null}
 
@@ -152,7 +161,9 @@ export default function EvidencePage() {
                   "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)" },
                 }}
               />
-              <CursorPrimaryButton type="submit">{t("reader.load")}</CursorPrimaryButton>
+              <CursorIconAction type="submit" title={t("reader.load")}>
+                <PlayArrowOutlinedIcon sx={{ fontSize: "1.15rem" }} />
+              </CursorIconAction>
             </Box>
           </AccordionDetails>
         </Accordion>

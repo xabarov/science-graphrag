@@ -14,6 +14,12 @@ def test_edge_display_type_semantic() -> None:
     assert edge_display_type("USES_METHOD") == "uses method"
 
 
+def test_edge_display_type_reader_view() -> None:
+    assert edge_display_type("CITES", view="reader") == "references"
+    assert edge_display_type("CITES", view="raw") == "cites"
+    assert edge_display_type("HAS_AUTHORSHIP", view="reader") == "listed as author"
+
+
 def test_edge_display_type_unknown_fallback() -> None:
     assert edge_display_type("SOME_RELATION") == "some relation"
 

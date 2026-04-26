@@ -3,7 +3,14 @@ import { Link, useLocation } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
-import { CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
+import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
+import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
+import AssessmentOutlinedIcon from "@mui/icons-material/AssessmentOutlined";
+import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
+import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
+import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
+
+import { CursorIconAction } from "../components/common/index.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
 import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
 import { isAdminModeEnabled } from "../components/layout/adminVisibility.js";
@@ -44,7 +51,7 @@ function SurfaceCard({ eyebrow, title, description, actions, accent = "default" 
           {description}
         </Typography>
       </Box>
-      <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>{actions}</Box>
+      <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 0.75 }}>{actions}</Box>
     </Box>
   );
 }
@@ -68,13 +75,13 @@ export default function HomePage() {
         description={t("home.header.description")}
         actions={
           <>
-            <CursorSmallButton component={Link} to="/workspaces" sx={{ textDecoration: "none" }}>
-              {t("home.header.workspaces")}
-            </CursorSmallButton>
+            <CursorIconAction component={Link} to="/workspaces" title={t("home.header.workspaces")}>
+              <FolderOpenOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+            </CursorIconAction>
             {adminModeEnabled ? (
-              <CursorSmallButton component={Link} to="/admin" sx={{ textDecoration: "none" }}>
-                {t("home.header.admin")}
-              </CursorSmallButton>
+              <CursorIconAction component={Link} to="/admin" title={t("home.header.admin")}>
+                <AdminPanelSettingsOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+              </CursorIconAction>
             ) : null}
           </>
         }
@@ -90,17 +97,17 @@ export default function HomePage() {
           accent="primary"
           actions={
             <>
-              <CursorPrimaryButton component={Link} to="/workspace" sx={{ textDecoration: "none" }}>
-                {t("home.card.workspace.openWorkspace")}
-              </CursorPrimaryButton>
+              <CursorIconAction component={Link} to="/workspace" title={t("home.card.workspace.openWorkspace")}>
+                <HubOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+              </CursorIconAction>
               {continueTarget ? (
-                <CursorSmallButton component={Link} to={continueTarget.path} sx={{ textDecoration: "none" }}>
-                  {t("home.card.workspace.lastPaper")}
-                </CursorSmallButton>
+                <CursorIconAction component={Link} to={continueTarget.path} title={t("home.card.workspace.lastPaper")}>
+                  <ArticleOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+                </CursorIconAction>
               ) : null}
-              <CursorSmallButton component={Link} to="/workspaces" sx={{ textDecoration: "none" }}>
-                {t("home.card.workspace.browse")}
-              </CursorSmallButton>
+              <CursorIconAction component={Link} to="/workspaces" title={t("home.card.workspace.browse")}>
+                <FolderOpenOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+              </CursorIconAction>
             </>
           }
         />
@@ -111,12 +118,12 @@ export default function HomePage() {
           description={t("home.card.collections.description")}
           actions={
             <>
-              <CursorPrimaryButton component={Link} to="/workspaces" sx={{ textDecoration: "none" }}>
-                {t("home.card.collections.workspaces")}
-              </CursorPrimaryButton>
-              <CursorSmallButton component={Link} to="/reader" sx={{ textDecoration: "none" }}>
-                {t("home.card.collections.reader")}
-              </CursorSmallButton>
+              <CursorIconAction component={Link} to="/workspaces" title={t("home.card.collections.workspaces")}>
+                <FolderOpenOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+              </CursorIconAction>
+              <CursorIconAction component={Link} to="/reader" title={t("home.card.collections.reader")}>
+                <MenuBookOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+              </CursorIconAction>
             </>
           }
         />
@@ -128,12 +135,12 @@ export default function HomePage() {
             description={t("home.card.admin.description")}
             actions={
               <>
-                <CursorPrimaryButton component={Link} to="/admin" sx={{ textDecoration: "none" }}>
-                  {t("home.card.admin.openAdmin")}
-                </CursorPrimaryButton>
-                <CursorSmallButton component={Link} to="/admin/benchmarks" sx={{ textDecoration: "none" }}>
-                  {t("home.card.admin.benchmarks")}
-                </CursorSmallButton>
+                <CursorIconAction component={Link} to="/admin" title={t("home.card.admin.openAdmin")}>
+                  <AdminPanelSettingsOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+                </CursorIconAction>
+                <CursorIconAction component={Link} to="/admin/benchmarks" title={t("home.card.admin.benchmarks")}>
+                  <AssessmentOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+                </CursorIconAction>
               </>
             }
           />
@@ -178,9 +185,13 @@ export default function HomePage() {
                       {item.workId}
                     </Typography>
                   </Box>
-                  <CursorSmallButton component={Link} to={`/workspace?work_id=${encodeURIComponent(item.workId)}`} sx={{ textDecoration: "none" }}>
-                    {t("home.recentWorks.open")}
-                  </CursorSmallButton>
+                  <CursorIconAction
+                    component={Link}
+                    to={`/workspace?work_id=${encodeURIComponent(item.workId)}`}
+                    title={t("home.recentWorks.open")}
+                  >
+                    <HubOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+                  </CursorIconAction>
                 </Box>
               ))}
             </Box>

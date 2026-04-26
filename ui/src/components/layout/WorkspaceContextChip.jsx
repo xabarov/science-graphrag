@@ -3,10 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
+import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import Popover from "@mui/material/Popover";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 
 import { CursorSmallButton } from "../common/index.js";
@@ -48,23 +50,34 @@ export default function WorkspaceContextChip() {
     activeWorkspaceMeta?.name?.trim() ||
     (activeWorkspaceId ? activeWorkspaceId.slice(0, 12) + (activeWorkspaceId.length > 12 ? "…" : "") : t("shell.workspaceChip.none"));
 
+  function shortWorkspaceId(wsId) {
+    const s = String(wsId || "").trim();
+    if (!s) return "";
+    if (s.length <= 14) return s;
+    return `${s.slice(0, 8)}…`;
+  }
+
   return (
     <>
-      <Chip
-        size="small"
-        label={label}
-        onClick={(e) => setAnchorEl(e.currentTarget)}
-        sx={{
-          maxWidth: 220,
-          height: 28,
-          fontWeight: 600,
-          fontSize: "0.75rem",
-          backgroundColor: activeWorkspaceId ? "rgba(99,102,241,0.22)" : "rgba(255,255,255,0.08)",
-          color: "rgba(255,255,255,0.92)",
-          "& .MuiChip-label": { overflow: "hidden", textOverflow: "ellipsis" },
-        }}
-        variant="outlined"
-      />
+      <Tooltip title={activeWorkspaceId ? `${t("shell.workspaceChip.title")}: ${activeWorkspaceId}` : t("shell.workspaceChip.none")}>
+        <Chip
+          size="small"
+          icon={<FolderOpenOutlinedIcon sx={{ fontSize: "1rem !important", color: "rgba(255,255,255,0.75) !important" }} />}
+          label={label}
+          onClick={(e) => setAnchorEl(e.currentTarget)}
+          sx={{
+            maxWidth: 220,
+            height: 28,
+            fontWeight: 600,
+            fontSize: "0.75rem",
+            backgroundColor: activeWorkspaceId ? "rgba(99,102,241,0.22)" : "rgba(255,255,255,0.08)",
+            color: "rgba(255,255,255,0.92)",
+            "& .MuiChip-label": { overflow: "hidden", textOverflow: "ellipsis" },
+            "& .MuiChip-icon": { marginLeft: "6px" },
+          }}
+          variant="outlined"
+        />
+      </Tooltip>
       <Popover
         open={open}
         anchorEl={anchorEl}
@@ -83,6 +96,7 @@ export default function WorkspaceContextChip() {
           {list.map((ws) => (
             <ListItemButton
               key={ws.id}
+              title={ws.id}
               selected={ws.id === activeWorkspaceId}
               onClick={() => {
                 setActiveWorkspace(ws.id);
@@ -91,10 +105,12 @@ export default function WorkspaceContextChip() {
               }}
             >
               <ListItemText
-                primary={ws.name || ws.id}
-                secondary={ws.id}
+                primary={ws.name || shortWorkspaceId(ws.id)}
+                secondary={shortWorkspaceId(ws.id)}
                 primaryTypographyProps={{ sx: { fontSize: "0.8125rem", fontWeight: 600 } }}
-                secondaryTypographyProps={{ sx: { fontSize: "0.65rem", fontFamily: "monospace" } }}
+                secondaryTypographyProps={{
+                  sx: { fontSize: "0.65rem", fontFamily: "monospace", color: "rgba(255,255,255,0.42)" },
+                }}
               />
             </ListItemButton>
           ))}

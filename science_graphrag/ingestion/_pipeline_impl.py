@@ -18,6 +18,11 @@ from tenacity import Retrying, retry, stop_after_attempt, wait_exponential
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.domain.models import ReferenceDraft, WorkDraft
 from science_graphrag.embeddings import resolve_embedder, resolve_embedding_model_label
+from science_graphrag.ingestion.artifact_layout import (
+    canonical_article_md_rel,
+    canonical_normalized_md_rel,
+    strip_ingest_artifact_header,
+)
 from science_graphrag.ingestion.chunking import (
     chunk_document_for_retrieval,
     dedupe_chunks_for_embedding,
@@ -37,6 +42,12 @@ from science_graphrag.ingestion.enrichment.openalex import (
 from science_graphrag.ingestion.enrichment.ror import lookup_ror_id_optional
 from science_graphrag.ingestion.llm.semantic_extraction import extract_semantic_method_dataset
 from science_graphrag.ingestion.llm.stage_extraction import extract_stages_llm_first
+
+# Backward-compatible name for ``science_graphrag.ingestion.pipeline`` facade re-exports.
+_strip_artifact_header = strip_ingest_artifact_header
+from science_graphrag.dedup.ingest_conflict_check import (
+    enqueue_work_near_duplicate_conflicts_on_ingest,
+)
 from science_graphrag.ingestion.normalize import normalize_text
 from science_graphrag.ingestion.pdf import extract_text_from_pdf
 from science_graphrag.ingestion.stage_context import (
@@ -221,24 +232,28 @@ def _canonical_diagnostics_rel(source_path: Path) -> Path:
     return Path("articles") / _article_slug(source_path) / "extraction_diagnostics.json"
 
 
-def _strip_artifact_header(text: str) -> str:
-    lines = text.splitlines()
-    if lines and lines[0].startswith("<!-- ") and "extraction_mode=" in lines[0]:
-        lines = lines[2:] if len(lines) > 1 and lines[1] == "" else lines[1:]
-    return "\n".join(lines)
-
-
-def _read_cached_markdown(settings: Settings, source_path: Path) -> tuple[str, str] | None:
+def _read_cached_markdown(
+    settings: Settings, source_path: Path, *, document_id: str | None = None
+) -> tuple[str, str] | None:
     artifact_root = Path(settings.artifact_root)
+    candidates: list[Path] = []
+    if document_id:
+        candidates.append(artifact_root / canonical_article_md_rel(document_id))
+        candidates.append(artifact_root / canonical_normalized_md_rel(document_id))
     canonical = artifact_root / _canonical_article_rel(source_path)
-    candidates = [canonical]
+    candidates.append(canonical)
     legacy = sorted(
         (artifact_root / "ingestion").glob(f"*/{_article_slug(source_path)}/article.md"),
         key=lambda p: p.stat().st_mtime,
         reverse=True,
     )
     candidates.extend(legacy)
+    seen: set[str] = set()
     for candidate in candidates:
+        key = str(candidate.resolve())
+        if key in seen:
+            continue
+        seen.add(key)
         if not candidate.exists():
             continue
         text = candidate.read_text(encoding="utf-8")
@@ -247,18 +262,22 @@ def _read_cached_markdown(settings: Settings, source_path: Path) -> tuple[str, s
         mode_match = re.search(r"extraction_mode=([a-zA-Z0-9\\-]+)", first_line)
         if mode_match:
             mode = mode_match.group(1)
+        elif candidate.name == "normalized.md":
+            mode = "cached-normalized"
         log.info("Reusing cached article markdown for %s from %s", source_path.name, candidate)
-        return _strip_artifact_header(text), mode
+        return strip_ingest_artifact_header(text), mode
     return None
 
 
-def _markdown_from_path(path: Path, settings: Settings) -> tuple[str, str]:
+def _markdown_from_path(
+    path: Path, settings: Settings, *, document_id: str | None = None
+) -> tuple[str, str]:
     suf = path.suffix.lower()
     if suf != ".pdf":
         return path.read_text(encoding="utf-8", errors="replace"), "plain-text"
 
     if settings.reuse_cached_markdown:
-        cached = _read_cached_markdown(settings, path)
+        cached = _read_cached_markdown(settings, path, document_id=document_id)
         if cached is not None:
             return cached
 
@@ -462,13 +481,15 @@ def _write_markdown_artifact(
     markdown: str,
     extraction_mode: str,
 ) -> Path:
+    """Write canonical ``ingestion/{document_id}/article.md`` plus legacy slug paths."""
     artifact_store = BlobStore(settings.artifact_root)
     slug = _article_slug(source_path)
-    artifact_rel = Path("ingestion") / document_id / slug / "article.md"
+    legacy_rel = Path("ingestion") / document_id / slug / "article.md"
     header = f"<!-- source={source_path.name} extraction_mode={extraction_mode} -->\n\n"
     body = header + markdown
+    artifact_store.write_artifact(canonical_article_md_rel(document_id), body)
     artifact_store.write_artifact(_canonical_article_rel(source_path), body)
-    return artifact_store.write_artifact(artifact_rel, body)
+    return artifact_store.write_artifact(legacy_rel, body)
 
 
 def _write_extraction_diagnostics_json(
@@ -623,7 +644,7 @@ def ingest_document(
             session_factory=stage_session_factory,
             publisher=stage_event_publisher,
         ) as st:
-            markdown_text, extraction_mode = _markdown_from_path(path, settings)
+            markdown_text, extraction_mode = _markdown_from_path(path, settings, document_id=doc_id)
             set_span_attributes({"metadata.extraction_mode": extraction_mode})
             st.metric("source_suffix", path.suffix.lower())
             st.metric("extraction_mode", extraction_mode)
@@ -635,7 +656,10 @@ def ingest_document(
             extraction_mode=extraction_mode,
         )
         normalized = strip_repeated_boilerplate(normalize_text(markdown_text))
-        blob_store.write_text("extracted.txt", normalized)
+        BlobStore(settings.artifact_root).write_artifact(
+            canonical_normalized_md_rel(doc_id),
+            normalized,
+        )
 
         front = front_matter_slice(
             normalized,
@@ -737,6 +761,20 @@ def ingest_document(
                 session_factory=stage_session_factory,
                 publisher=stage_event_publisher,
             ) as st:
+                if session is not None:
+                    try:
+                        n_dedup = enqueue_work_near_duplicate_conflicts_on_ingest(
+                            settings=settings,
+                            session=session,
+                            neo=neo,
+                            workspace_id=workspace_id,
+                            new_work_id=work_id,
+                            draft=draft,
+                            authorships=authorships,
+                        )
+                        st.metric("ingest_dedup_conflicts_enqueued", n_dedup)
+                    except Exception as exc:  # noqa: BLE001
+                        log.warning("ingest_dedup_conflict_check_failed: %s", exc)
                 with chain_span(
                     "ingest.write_graph.upsert_work_layer1",
                     {"db.system": "neo4j", "db.operation": "merge", "writes.count": 1},

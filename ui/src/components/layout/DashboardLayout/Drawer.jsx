@@ -132,10 +132,12 @@ export default function Drawer({ onNavigate }) {
         width: expanded ? 280 : 70,
         backgroundColor: "#141414",
         borderRight: "1px solid rgba(255, 255, 255, 0.08)",
-        minHeight: "100vh",
+        alignSelf: "stretch",
+        minHeight: 0,
         display: "flex",
         flexDirection: "column",
         position: "relative",
+        overflowY: "auto",
       }}
     >
       <Box sx={{ padding: expanded ? 2 : 1.5 }}>

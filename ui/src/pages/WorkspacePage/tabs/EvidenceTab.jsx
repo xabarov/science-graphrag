@@ -4,7 +4,11 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 import EvidenceWorkBody from "../../../components/work/EvidenceWorkBody.jsx";
-import { CursorSmallButton } from "../../../components/common/index.js";
+import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
+
+import { CursorIconAction } from "../../../components/common/index.js";
 import { buildWorkspaceTracePath, readTraceabilityState } from "../../../components/work/traceabilityState.js";
 import { useI18n } from "../../../i18n/I18nContext.jsx";
 
@@ -25,31 +29,35 @@ export default function EvidenceTab({ workId }) {
   return (
     <Box>
       <Typography sx={{ color: "rgba(255,255,255,0.55)", fontSize: "0.8125rem", mb: 2 }}>{t("wsTab.evidence.liveLine")}</Typography>
-      <Box sx={{ mb: 1.5, display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center" }}>
-        <CursorSmallButton
+      <Box sx={{ mb: 1.5, display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "center" }}>
+        <CursorIconAction
           component={Link}
           to={buildWorkspaceTracePath(workId, "reader", {
             chunkFingerprint: trace.chunkFingerprint,
             section: trace.section,
             citation: trace.citation,
           })}
-          sx={{ textDecoration: "none" }}
+          title={t("wsTab.evidence.jumpReader")}
         >
-          {t("wsTab.evidence.jumpReader")}
-        </CursorSmallButton>
-        <CursorSmallButton
+          <MenuBookOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+        </CursorIconAction>
+        <CursorIconAction
           component={Link}
           to={buildWorkspaceTracePath(workId, "graph", {
             section: trace.section,
             citation: trace.citation,
           })}
-          sx={{ textDecoration: "none" }}
+          title={t("wsTab.evidence.jumpGraph")}
         >
-          {t("wsTab.evidence.jumpGraph")}
-        </CursorSmallButton>
-        <CursorSmallButton component={Link} to={`/evidence?work_id=${encodeURIComponent(workId)}`} sx={{ textDecoration: "none" }}>
-          {t("wsTab.evidence.openStandalone")}
-        </CursorSmallButton>
+          <AccountTreeOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+        </CursorIconAction>
+        <CursorIconAction
+          component={Link}
+          to={`/evidence?work_id=${encodeURIComponent(workId)}`}
+          title={t("wsTab.evidence.openStandalone")}
+        >
+          <DescriptionOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+        </CursorIconAction>
       </Box>
       <EvidenceWorkBody
         workId={workId}

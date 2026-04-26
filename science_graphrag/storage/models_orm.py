@@ -158,6 +158,7 @@ class WorkDedupConflict(Base):
     decision: Mapped[str | None] = mapped_column(String(32), nullable=True)
     keep_work_id: Mapped[str | None] = mapped_column(String(256), nullable=True)
     fingerprint: Mapped[str] = mapped_column(String(64), index=True)
+    origin: Mapped[str] = mapped_column(String(32), default="scan", index=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),

@@ -156,15 +156,22 @@ export default function WorkspaceIngestPanel({
               {childJobs.length ? (
                 <Box sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 1 }}>
                   {childJobs.map((cj) => {
-                    const pct = Math.min(
-                      100,
-                      Math.max(
-                        0,
-                        (Number(cj.progress_total) || 0) > 0
-                          ? (100 * (Number(cj.progress_current) || 0)) / Number(cj.progress_total)
-                          : Number(cj.progress_current) || 0,
-                      ),
-                    );
+                    const pctFromBackend =
+                      typeof cj.progress_pct === "number" && Number.isFinite(cj.progress_pct)
+                        ? Math.min(100, Math.max(0, cj.progress_pct * 100))
+                        : null;
+                    const pct =
+                      pctFromBackend != null
+                        ? pctFromBackend
+                        : Math.min(
+                            100,
+                            Math.max(
+                              0,
+                              (Number(cj.progress_total) || 0) > 0
+                                ? (100 * (Number(cj.progress_current) || 0)) / Number(cj.progress_total)
+                                : Number(cj.progress_current) || 0,
+                            ),
+                          );
                     return (
                       <Box key={String(cj.job_id)}>
                         <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.5)", mb: 0.35 }}>

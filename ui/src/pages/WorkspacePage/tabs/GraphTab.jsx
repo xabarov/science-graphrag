@@ -2,7 +2,12 @@ import React from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { CursorSmallButton } from "../../../components/common/index.js";
+import ChatBubbleOutlineOutlinedIcon from "@mui/icons-material/ChatBubbleOutlineOutlined";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
+import OpenInNewOutlinedIcon from "@mui/icons-material/OpenInNewOutlined";
+
+import { CursorIconAction } from "../../../components/common/index.js";
 import WorkIdGlossaryHint from "../../../components/layout/WorkIdGlossaryHint.jsx";
 import GraphWorkspacePanel from "../../../components/graph/GraphWorkspacePanel.jsx";
 import { GraphMissingWorkInline } from "../../../components/graph/graphShellStates.jsx";
@@ -41,8 +46,8 @@ export default function GraphTab({ workId }) {
 
   return (
     <Box>
-      <Box sx={{ mb: 1.5, display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center" }}>
-        <CursorSmallButton
+      <Box sx={{ mb: 1.5, display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "center" }}>
+        <CursorIconAction
           component={Link}
           to={buildStandaloneTracePath("/graph", workId, {
             nodeId: selectedNodeId,
@@ -51,33 +56,33 @@ export default function GraphTab({ workId }) {
             section: trace.section,
             citation: trace.citation,
           })}
-          sx={{ textDecoration: "none" }}
+          title={t("wsTab.graph.openStandalone")}
         >
-          {t("wsTab.graph.openStandalone")}
-        </CursorSmallButton>
-        <CursorSmallButton
+          <OpenInNewOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+        </CursorIconAction>
+        <CursorIconAction
           component={Link}
           to={buildWorkspaceTracePath(workId, "reader", {
             chunkFingerprint: trace.chunkFingerprint,
             section: trace.section,
             citation: trace.citation,
           })}
-          sx={{ textDecoration: "none" }}
+          title={t("wsTab.graph.jumpReader")}
         >
-          {t("wsTab.graph.jumpReader")}
-        </CursorSmallButton>
-        <CursorSmallButton
+          <MenuBookOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+        </CursorIconAction>
+        <CursorIconAction
           component={Link}
           to={buildWorkspaceTracePath(workId, "evidence", {
             chunkFingerprint: trace.chunkFingerprint,
             section: trace.section,
             citation: trace.citation,
           })}
-          sx={{ textDecoration: "none" }}
+          title={t("wsTab.graph.jumpEvidence")}
         >
-          {t("wsTab.graph.jumpEvidence")}
-        </CursorSmallButton>
-        <CursorSmallButton
+          <DescriptionOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+        </CursorIconAction>
+        <CursorIconAction
           component={Link}
           to={`/workspace?${mergeTraceabilityParams(searchParams, {
             workId,
@@ -87,10 +92,10 @@ export default function GraphTab({ workId }) {
             section: trace.section,
             citation: trace.citation,
           }).toString()}`}
-          sx={{ textDecoration: "none" }}
+          title={t("wsTab.graph.jumpAsk")}
         >
-          {t("wsTab.graph.jumpAsk")}
-        </CursorSmallButton>
+          <ChatBubbleOutlineOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+        </CursorIconAction>
       </Box>
 
       <GraphWorkspacePanel

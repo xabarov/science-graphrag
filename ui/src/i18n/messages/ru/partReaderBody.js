@@ -5,6 +5,9 @@ export default {
   "readerBody.extractedTitle": "Извлечённый текст (чтение)",
   "readerBody.extractedHint":
     "Склеенные чанки по порядку документа (заголовки из section_path). Отпечатки чанков — в «Дополнительно» ниже.",
+  "readerBody.extractedFileTitle": "Извлечённый текст статьи",
+  "readerBody.extractedFileHint":
+    "Полный текст из пайплайна ingest (сохранён с документом). Проиндексированных чанков в Qdrant может не быть — векторный поиск заработает после индексации. Оригинал страниц — режим PDF (переключатель выше).",
   "readerBody.chunksPartial": "Показаны первые {{shown}} из {{total}} чанков — при необходимости увеличьте лимит в UI.",
   "readerBody.focusedContext": "Контекст чтения",
   "readerBody.openedFrom": "Открыто из {{summary}}",
@@ -18,8 +21,8 @@ export default {
     "document_id: {{docId}} · has_chunks: {{hasChunks}} · semantic: {{semantic}}",
   "readerBody.chunkMeta": "{{section}} · fp {{fp}}",
   "readerBody.focusedChip": "в фокусе",
-  "readerBody.viewMarkdown": "Markdown",
-  "readerBody.viewPdf": "PDF",
+  "readerBody.viewOcrTooltip": "Распознанный текст (выход пайплайна VL / OCR)",
+  "readerBody.viewPdfTooltip": "Оригинальные страницы PDF",
   "readerBody.pdfUnavailable":
     "Исходный PDF недоступен для этой работы (например, загрузка только в формате Markdown).",
   "readerBody.pdfLoadError": "Не удалось загрузить PDF: {{message}}",
@@ -31,10 +34,13 @@ export default {
   "readerBody.pdfZoomOut": "Мельче",
   "readerBody.abstractTitle": "Аннотация",
   "readerBody.abstractHint":
-    "У статьи пока нет проиндексированных чанков. Это аннотация работы — для полного текста откройте PDF или дождитесь ingest.",
+    "У статьи пока нет проиндексированных чанков. Это аннотация — полный текст в режиме PDF (переключатель выше) или дождитесь ingest.",
   "readerBody.chunksBackendError":
     "Индекс чанков недоступен ({{code}}). Превью текста может быть пустым, пока Qdrant снова не доступен.",
-  "readerBody.openPdf": "Открыть PDF",
+  "readerBody.readerMarkdownDisplayTruncated":
+    "Текст в этой панели сокращён из соображений производительности — полный документ в режиме PDF (переключатель выше).",
+  "readerBody.extractedBodyTruncatedApi":
+    "Ответ API обрезан по лимиту — в артефакте на диске текст может быть длиннее; полный файл откройте в режиме PDF.",
   "readerBody.noExtractedTextOrPdf":
     "Нет извлечённого текста чанков и нет исходного PDF (например, только Markdown при загрузке).",
   "readerBody.showAbstract": "Аннотация",

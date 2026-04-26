@@ -9,7 +9,9 @@ import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
 import { useWorkspaceContext } from "../components/layout/WorkspaceContext.jsx";
 import { useI18n } from "../i18n/I18nContext.jsx";
 import { persistWorkId } from "./WorkspacePage/utils/workContext.js";
-import { CursorPrimaryButton } from "../components/common/index.js";
+import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
+
+import { CursorIconAction } from "../components/common/index.js";
 
 /** Standalone Ask entry; workspace tab is the primary UX when a work is selected. */
 export default function AskPage() {
@@ -65,9 +67,9 @@ export default function AskPage() {
       />
       {showEmptyCta ? (
         <Box sx={{ mb: 2 }}>
-          <CursorPrimaryButton component={Link} to={getLastWorkspaceHref()} sx={{ textDecoration: "none" }}>
-            {t("askPage.empty.openLastWorkspace")}
-          </CursorPrimaryButton>
+          <CursorIconAction component={Link} to={getLastWorkspaceHref()} title={t("askPage.empty.openLastWorkspace")}>
+            <HubOutlinedIcon sx={{ fontSize: "1.15rem" }} />
+          </CursorIconAction>
         </Box>
       ) : null}
       <AskPanel

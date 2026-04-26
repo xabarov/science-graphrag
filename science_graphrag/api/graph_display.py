@@ -36,6 +36,15 @@ EDGE_DISPLAY_TYPE_RAW: dict[str, str] = {
     "CONTRADICTS": "contradicts",
     "MENTIONS": "mentions",
 }
+
+# Reader-oriented phrasing (subset overrides; see backlog graph_display EDGE_DISPLAY_TYPE_READER).
+EDGE_DISPLAY_TYPE_READER: dict[str, str] = {
+    **EDGE_DISPLAY_TYPE_RAW,
+    "CITES": "references",
+    "AUTHORED": "wrote",
+    "HAS_AUTHORSHIP": "listed as author",
+}
+
 PRIORITY_NEIGHBOR_KINDS_DEFAULT: tuple[str, ...] = ("Method", "Dataset", "Work")
 _NODE_KIND_PRIORITY: dict[str, int] = {
     "Work": 0,
@@ -65,9 +74,8 @@ def edge_display_type(rel_type: str, *, view: str = "raw") -> str:
     key = (rel_type or "").strip().upper()
     if not key:
         return "related"
-    mapping = EDGE_DISPLAY_TYPE_RAW
-    if (view or "").strip().lower() == "reader":
-        mapping = EDGE_DISPLAY_TYPE_RAW
+    view_norm = (view or "").strip().lower()
+    mapping = EDGE_DISPLAY_TYPE_READER if view_norm == "reader" else EDGE_DISPLAY_TYPE_RAW
     if key in mapping:
         return mapping[key]
     return key.replace("_", " ").lower()

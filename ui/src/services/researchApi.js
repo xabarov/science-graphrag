@@ -21,6 +21,7 @@ export {
   getWorkSources,
   getWorkDetail,
   getWorkChunks,
+  getWorkExtractedBody,
   getWorkClaims,
 } from "./research/works.js";
 export { getWorkGraph, expandAggregator } from "./research/graph.js";

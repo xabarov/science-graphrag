@@ -48,6 +48,7 @@ export default {
     "Допустимый диапазон: 1–2048 МБ. Значение из окружения действует, пока вы не сохраните настройку здесь.",
   "settings.ingestion.saveSaving": "Сохранение…",
   "settings.ingestion.saveButton": "Сохранить настройки ingestion",
+  "settings.ingestion.saveError": "Не удалось сохранить настройки ingestion.",
 
   "llm.summary.sourceServer": "API-ключ: сохранён на сервере",
   "llm.summary.sourceEnv": "API-ключ: из окружения",

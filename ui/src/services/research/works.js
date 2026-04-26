@@ -38,6 +38,12 @@ export async function getWorkDetail(workId) {
   return apiClient.get(buildApiUrl(`/v1/works/${id}`));
 }
 
+/** GET /v1/works/{work_id}/extracted-body — ingest artifact text (not Qdrant chunk join). */
+export async function getWorkExtractedBody(workId) {
+  const id = encodeURIComponent(String(workId ?? "").trim());
+  return apiClient.get(buildApiUrl(`/v1/works/${id}/extracted-body`));
+}
+
 /** GET /v1/works/{work_id}/chunks */
 export async function getWorkChunks(workId, { limit = 50, offset = 0, section_prefix: sectionPrefix } = {}) {
   const id = encodeURIComponent(String(workId ?? "").trim());

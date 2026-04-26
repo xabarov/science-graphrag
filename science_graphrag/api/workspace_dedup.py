@@ -82,6 +82,7 @@ def get_dedup_scan_job(
 def get_dedup_conflicts(
     workspace_id: str,
     status: str = Query(default="pending", description="pending | all"),
+    origin: str | None = Query(default=None, description="Filter by origin (e.g. ingest | scan)"),
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
     settings: Settings = Depends(get_settings),
@@ -95,6 +96,8 @@ def get_dedup_conflicts(
         q = select(WorkDedupConflict).where(WorkDedupConflict.workspace_id == workspace_id)
         if status == "pending":
             q = q.where(WorkDedupConflict.status == "pending")
+        if origin and str(origin).strip():
+            q = q.where(WorkDedupConflict.origin == str(origin).strip())
         q = q.order_by(desc(WorkDedupConflict.created_at)).offset(offset).limit(limit)
         rows = list(session.scalars(q).all())
         items = [
@@ -110,6 +113,7 @@ def get_dedup_conflicts(
                 "decision": r.decision,
                 "keep_work_id": r.keep_work_id,
                 "fingerprint": r.fingerprint,
+                "origin": getattr(r, "origin", None) or "scan",
                 "created_at": r.created_at.isoformat() if r.created_at else None,
                 "decided_at": r.decided_at.isoformat() if r.decided_at else None,
             }

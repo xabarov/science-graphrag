@@ -3,10 +3,15 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
+import Tooltip from "@mui/material/Tooltip";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import ZoomInIcon from "@mui/icons-material/ZoomIn";
+import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import { Document, Page, pdfjs } from "react-pdf";
 
 import workerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
-import { CursorSmallButton } from "../common/index.js";
+import { CursorIconButton } from "../common/index.js";
 import { useI18n } from "../../i18n/I18nContext.jsx";
 
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
@@ -80,33 +85,63 @@ export default function PdfViewer({ fileUrl }) {
           {t("readerBody.pdfLoadError", { message: loadError })}
         </Alert>
       ) : null}
-      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }}>
-        <CursorSmallButton type="button" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
-          {t("readerBody.pdfPrev")}
-        </CursorSmallButton>
-        <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.55)" }}>
+      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75 }}>
+        <Tooltip title={t("readerBody.pdfPrev")} enterDelay={400}>
+          <span>
+            <CursorIconButton
+              type="button"
+              disabled={page <= 1}
+              aria-label={t("readerBody.pdfPrev")}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              <ChevronLeftIcon sx={{ fontSize: "1.25rem" }} />
+            </CursorIconButton>
+          </span>
+        </Tooltip>
+        <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.55)", minWidth: 72, textAlign: "center" }}>
           {t("readerBody.pdfPageOf", { page: String(page), total: String(numPages || "—") })}
         </Typography>
-        <CursorSmallButton
-          type="button"
-          disabled={!numPages || page >= numPages}
-          onClick={() => setPage((p) => (numPages ? Math.min(numPages, p + 1) : p))}
-        >
-          {t("readerBody.pdfNext")}
-        </CursorSmallButton>
-        <Box sx={{ flex: 1 }} />
-        <CursorSmallButton type="button" onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.1) * 100) / 100))}>
-          {t("readerBody.pdfZoomOut")}
-        </CursorSmallButton>
+        <Tooltip title={t("readerBody.pdfNext")} enterDelay={400}>
+          <span>
+            <CursorIconButton
+              type="button"
+              disabled={!numPages || page >= numPages}
+              aria-label={t("readerBody.pdfNext")}
+              onClick={() => setPage((p) => (numPages ? Math.min(numPages, p + 1) : p))}
+            >
+              <ChevronRightIcon sx={{ fontSize: "1.25rem" }} />
+            </CursorIconButton>
+          </span>
+        </Tooltip>
+        <Box sx={{ flex: 1, minWidth: 8 }} />
+        <Tooltip title={t("readerBody.pdfZoomOut")} enterDelay={400}>
+          <span>
+            <CursorIconButton
+              type="button"
+              aria-label={t("readerBody.pdfZoomOut")}
+              onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.1) * 100) / 100))}
+            >
+              <ZoomOutIcon sx={{ fontSize: "1.1rem" }} />
+            </CursorIconButton>
+          </span>
+        </Tooltip>
         <Typography
-          sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.55)", minWidth: 38, textAlign: "center" }}
+          sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.55)", minWidth: 40, textAlign: "center" }}
           aria-label="zoom"
         >
           {zoomLabel}
         </Typography>
-        <CursorSmallButton type="button" onClick={() => setZoom((z) => Math.min(2.5, Math.round((z + 0.1) * 100) / 100))}>
-          {t("readerBody.pdfZoomIn")}
-        </CursorSmallButton>
+        <Tooltip title={t("readerBody.pdfZoomIn")} enterDelay={400}>
+          <span>
+            <CursorIconButton
+              type="button"
+              aria-label={t("readerBody.pdfZoomIn")}
+              onClick={() => setZoom((z) => Math.min(2.5, Math.round((z + 0.1) * 100) / 100))}
+            >
+              <ZoomInIcon sx={{ fontSize: "1.1rem" }} />
+            </CursorIconButton>
+          </span>
+        </Tooltip>
       </Box>
       <Box
         ref={containerRef}

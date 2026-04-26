@@ -4,7 +4,10 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { Link } from "react-router-dom";
 
-import { CursorSmallButton } from "../components/common/index.js";
+import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
+import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
+
+import { CursorIconAction } from "../components/common/index.js";
 import DiagnosticsSettingsPanel from "./SettingsPage/DiagnosticsSettingsPanel.jsx";
 import IngestionSettingsPanel from "./SettingsPage/IngestionSettingsPanel.jsx";
 import GeneralSettingsPanel from "./SettingsPage/GeneralSettingsPanel.jsx";
@@ -114,7 +117,7 @@ export default function SettingsPage() {
       setSnapshot(next);
       setIngestionDirty(false);
     } catch (error) {
-      setIngestionSaveError(formatResearchApiError(error) || "Failed to save ingestion settings.");
+      setIngestionSaveError(formatResearchApiError(error) || t("settings.ingestion.saveError"));
     } finally {
       setIngestionSaving(false);
     }
@@ -230,13 +233,13 @@ export default function SettingsPage() {
       subheading={`${t("settings.page.subheadingPrefix")}${schema ? t("settings.page.subheadingSchema", { version: schema.version }) : ""}`}
       dirty={dirtyHint || ingestionDirty}
     >
-      <Box sx={{ mb: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
-        <CursorSmallButton component={Link} to="/admin" sx={{ textDecoration: "none" }}>
-          {t("settings.page.adminHub")}
-        </CursorSmallButton>
-        <CursorSmallButton component={Link} to="/" sx={{ textDecoration: "none" }}>
-          {t("settings.page.home")}
-        </CursorSmallButton>
+      <Box sx={{ mb: 2, display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+        <CursorIconAction component={Link} to="/admin" title={t("settings.page.adminHub")}>
+          <AdminPanelSettingsOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+        </CursorIconAction>
+        <CursorIconAction component={Link} to="/" title={t("settings.page.home")}>
+          <HomeOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+        </CursorIconAction>
       </Box>
       {renderSection()}
     </SettingsLayout>

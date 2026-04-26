@@ -48,6 +48,7 @@ export default {
   "settings.ingestion.rangeHint": "Allowed range: 1–2048 MB. Default from environment applies until you save here.",
   "settings.ingestion.saveSaving": "Saving…",
   "settings.ingestion.saveButton": "Save ingestion settings",
+  "settings.ingestion.saveError": "Failed to save ingestion settings.",
 
   "llm.summary.sourceServer": "API key: saved on server",
   "llm.summary.sourceEnv": "API key: from environment",

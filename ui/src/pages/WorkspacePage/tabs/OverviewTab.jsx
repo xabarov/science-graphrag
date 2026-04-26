@@ -5,7 +5,13 @@ import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 
-import { CursorSmallButton } from "../../../components/common/index.js";
+import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
+import ChatBubbleOutlineOutlinedIcon from "@mui/icons-material/ChatBubbleOutlineOutlined";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
+import OpenInNewOutlinedIcon from "@mui/icons-material/OpenInNewOutlined";
+
+import { CursorIconAction } from "../../../components/common/index.js";
 import { formatResearchApiError, getWorkDetail } from "../../../services/researchApi.js";
 import { buildWorkspacePath } from "../utils/workContext.js";
 import { useI18n } from "../../../i18n/I18nContext.jsx";
@@ -92,22 +98,26 @@ export default function OverviewTab({ workId }) {
           </Box>
 
           <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 1 }}>{t("wsTab.overview.quickActions")}</Typography>
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-            <CursorSmallButton component={Link} to={buildWorkspacePath(workId, "reader")} sx={{ textDecoration: "none" }}>
-              {t("wsTab.overview.readerTab")}
-            </CursorSmallButton>
-            <CursorSmallButton component={Link} to={buildWorkspacePath(workId, "graph")} sx={{ textDecoration: "none" }}>
-              {t("wsTab.overview.graphTab")}
-            </CursorSmallButton>
-            <CursorSmallButton component={Link} to={buildWorkspacePath(workId, "ask")} sx={{ textDecoration: "none" }}>
-              {t("wsTab.overview.askTab")}
-            </CursorSmallButton>
-            <CursorSmallButton component={Link} to={buildWorkspacePath(workId, "evidence")} sx={{ textDecoration: "none" }}>
-              {t("wsTab.overview.evidenceTab")}
-            </CursorSmallButton>
-            <CursorSmallButton component={Link} to={`/graph?work_id=${encodeURIComponent(workId)}`} sx={{ textDecoration: "none" }}>
-              {t("wsTab.overview.openGraphFull")}
-            </CursorSmallButton>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+            <CursorIconAction component={Link} to={buildWorkspacePath(workId, "reader")} title={t("wsTab.overview.readerTab")}>
+              <MenuBookOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+            </CursorIconAction>
+            <CursorIconAction component={Link} to={buildWorkspacePath(workId, "graph")} title={t("wsTab.overview.graphTab")}>
+              <AccountTreeOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+            </CursorIconAction>
+            <CursorIconAction component={Link} to={buildWorkspacePath(workId, "ask")} title={t("wsTab.overview.askTab")}>
+              <ChatBubbleOutlineOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+            </CursorIconAction>
+            <CursorIconAction component={Link} to={buildWorkspacePath(workId, "evidence")} title={t("wsTab.overview.evidenceTab")}>
+              <DescriptionOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+            </CursorIconAction>
+            <CursorIconAction
+              component={Link}
+              to={`/graph?work_id=${encodeURIComponent(workId)}`}
+              title={t("wsTab.overview.openGraphFull")}
+            >
+              <OpenInNewOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+            </CursorIconAction>
           </Box>
 
           <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mt: 2 }}>{t("wsTab.overview.graphNote")}</Typography>

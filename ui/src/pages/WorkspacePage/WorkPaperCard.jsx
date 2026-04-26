@@ -1,12 +1,16 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import CenterFocusStrongIcon from "@mui/icons-material/CenterFocusStrong";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
 import Box from "@mui/material/Box";
 import Alert from "@mui/material/Alert";
 import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 
-import { CursorPrimaryButton, CursorSmallButton } from "../../components/common/index.js";
+import { CopyIdButton, CursorIconAction } from "../../components/common/index.js";
+import PageActionToolbar from "../../components/layout/PageActionToolbar.jsx";
 import { useI18n } from "../../i18n/I18nContext.jsx";
 import { workGraphUrl, workReaderUrl } from "./workspacePageUrls.js";
 
@@ -31,7 +35,7 @@ export default function WorkPaperCard({
       ref={cardRef}
       onClick={(e) => {
         if (!onCardActivate) return;
-        if (e.target instanceof Element && e.target.closest("a")) return;
+        if (e.target instanceof Element && e.target.closest("a,button")) return;
         onCardActivate(workId);
       }}
       onKeyDown={(e) => {
@@ -66,12 +70,11 @@ export default function WorkPaperCard({
       ) : null}
       {!loading && !error ? (
         <>
-          <Typography sx={{ fontWeight: 600, fontSize: "0.9375rem", color: "rgba(255,255,255,0.9)" }}>
-            {title || t("workspace.paper.noTitle")}
-          </Typography>
-          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mt: 0.5, fontFamily: "monospace" }}>
-            {workId}
-          </Typography>
+          <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1, minWidth: 0 }}>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.9375rem", color: "rgba(255,255,255,0.9)", minWidth: 0, flex: 1 }}>
+              {title || t("workspace.paper.noTitle")}
+            </Typography>
+          </Box>
           <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 0.75 }}>
             {year != null ? (
               <Chip label={t("workspace.paper.yearChip", { year: String(year) })} size="small" sx={{ height: 22, fontSize: "0.6875rem" }} />
@@ -85,19 +88,41 @@ export default function WorkPaperCard({
             ) : null}
             {arxivId ? <Chip label={`arXiv ${arxivId}`} size="small" sx={{ height: 22, fontSize: "0.6875rem" }} /> : null}
           </Box>
-          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.42)", mt: 1.25 }}>
-            {t("workspace.paper.hint")}{" "}
-            <code style={{ fontSize: "0.7rem" }}>work_id</code>.
-            {onCardActivate ? ` ${t("workspace.paper.hintSuffix")}` : ""}
-          </Typography>
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1.25 }}>
-            <CursorPrimaryButton component={Link} to={workReaderUrl(workId)} sx={{ textDecoration: "none", fontSize: "0.8125rem" }}>
-              {t("workspace.paper.reader")}
-            </CursorPrimaryButton>
-            <CursorSmallButton component={Link} to={workGraphUrl(workId, null)} sx={{ textDecoration: "none" }}>
-              {t("workspace.paper.workGraph")}
-            </CursorSmallButton>
-          </Box>
+          <PageActionToolbar
+            sx={{ mt: 1.25 }}
+            groups={[
+              [
+                <CursorIconAction key="rd" component={Link} to={workReaderUrl(workId)} title={t("workspace.tooltip.reader")}>
+                  <MenuBookIcon sx={{ fontSize: "1.05rem" }} />
+                </CursorIconAction>,
+                <CursorIconAction key="gr" component={Link} to={workGraphUrl(workId, null)} title={t("workspace.tooltip.workGraph")}>
+                  <AccountTreeIcon sx={{ fontSize: "1.05rem" }} />
+                </CursorIconAction>,
+                ...(onCardActivate
+                  ? [
+                      <CursorIconAction
+                        key="fc"
+                        title={t("workspace.tooltip.focusPaper")}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onCardActivate(workId);
+                        }}
+                      >
+                        <CenterFocusStrongIcon sx={{ fontSize: "1.05rem" }} />
+                      </CursorIconAction>,
+                    ]
+                  : []),
+              ],
+            ]}
+            tail={
+              <CopyIdButton
+                id={workId}
+                tooltipCopy={t("workspace.tooltip.copyWorkId")}
+                tooltipCopied={t("workspace.tooltip.copied")}
+              />
+            }
+          />
         </>
       ) : null}
     </Box>

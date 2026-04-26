@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -37,59 +38,43 @@ from science_graphrag.benchmarks.trust_signal import (
     trust_baseline_payload,
 )
 
-ROOT = Path(__file__).resolve().parents[1]
-GOLD_ROOT = ROOT / "tests" / "fixtures" / "benchmarks"
+_SCRIPTS_DIR = Path(__file__).resolve().parent
+if str(_SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS_DIR))
 
-DEFAULT_REFERENCE = (
-    "eval/results/current-reference-layer1-yolov1.json",
-    "eval/results/current-reference-graph-yolov1.json",
-    "eval/results/current-reference-layer2-yolov1-semantic.json",
-)
-DEFAULT_LAYER1_NIGHTLY = "eval/results/current-llm-layer1-nightly-heavy-suite-after-prompt-fix.json"
-DEFAULT_LAYER2_NIGHTLY = "eval/results/current-llm-layer2-nightly-semantic-suite.json"
-DEFAULT_BASELINE_LAYER1 = "eval/results/baseline-llm-layer1-nightly-heavy-suite.json"
-DEFAULT_BASELINE_LAYER2 = "eval/results/baseline-llm-layer2-nightly-semantic-suite.json"
-
-# Retrieval family (advisory — does not change GO / NO-GO; see benchmark-decision-gate.md §8)
-DEFAULT_RETRIEVAL_MERGE_SAFE = "eval/results/current-retrieval-merge-safe-mock.json"
-DEFAULT_RETRIEVAL_STRICT_PILOT = "eval/results/current-retrieval-strict-pilot-mock.json"
-DEFAULT_RETRIEVAL_LIVE_CORPUS_MINI = "eval/results/current-retrieval-live-corpus-mini.json"
-DEFAULT_RETRIEVAL_WORKSPACE_SCOPED = "eval/results/current-retrieval-workspace-scoped.json"
-DEFAULT_RETRIEVAL_WORKSPACE_SCOPED_LIVE = (
-    "eval/results/current-retrieval-workspace-scoped-live.json"
-)
-DEFAULT_RETRIEVAL_JUDGE_PILOT = "eval/results/current-retrieval-judge-pilot.json"
-DEFAULT_RETRIEVAL_JUDGE_HOLDOUT = "eval/results/current-retrieval-judge-holdout.json"
-DEFAULT_RETRIEVAL_HYBRID_ABLATION = "eval/results/current-retrieval-hybrid-ablation.json"
-DEFAULT_RETRIEVAL_HYBRID_ABLATION_LIVE = "eval/results/current-retrieval-hybrid-ablation-live.json"
-DEFAULT_RETRIEVAL_LIVE_CORPUS_HOLDOUT = "eval/results/current-retrieval-live-corpus-holdout.json"
-DEFAULT_RETRIEVAL_MULTIHOP_MINI = "eval/results/current-retrieval-multihop-mini.json"
-DEFAULT_AGENT_TOOLS_MINI = "eval/results/current-agent-tools-mini.json"
-DEFAULT_AGENT_TOOLS_JUDGE = "eval/results/current-agent-tools-judge-pilot.json"
-
-# Claims family (advisory — Wave H1; see ontology-claims-benchmark-v1.md)
-DEFAULT_CLAIMS_MERGE_CONTRACT = "eval/results/current-claims-merge-contract.json"
-DEFAULT_CLAIMS_MINI_SUITE = "eval/results/current-claims-mini-suite.json"
-DEFAULT_CLAIMS_CORPUS_V2_MINI_SUITE = "eval/results/current-claims-corpus-v2-mini.json"
-DEFAULT_CLAIMS_PILOT_SUITE = "eval/results/current-claims-pilot-suite.json"
-DEFAULT_CLAIMS_PRODUCTION_PILOT = "eval/results/current-claims-production-pilot.json"
-DEFAULT_CLAIMS_PARAPHRASE_PILOT = "eval/results/current-claims-paraphrase-pilot.json"
-DEFAULT_CLAIMS_PARAPHRASE_HOLDOUT = "eval/results/current-claims-paraphrase-holdout.json"
-
-DEFAULT_REFERENCES_RESOLUTION_CONTRACT = "eval/results/current-references-resolution-contract.json"
-DEFAULT_REFERENCES_RESOLUTION_MINI = "eval/results/current-references-resolution-mini.json"
-DEFAULT_REFERENCES_RESOLUTION_GRAPH = "eval/results/current-references-resolution-graph.json"
-
-# Concept / ResearchTopic family (advisory — Wave N; see ADR 013)
-DEFAULT_CONCEPT_TOPIC_MINI_SUITE = "eval/results/current-concept-topic-mini.json"
-
-# Optional single-case retests after gold fixes (if present, listed in summary)
-SUPPLEMENTARY_RETESTS = (
-    "eval/results/retest-centernet-after-gold-fix.json",
-    "eval/results/retest-deformable-detr-after-gold-fix.json",
-    "eval/results/retest-fcos-after-gold-fix.json",
-    "eval/results/retest-selective-search-after-gold-fix.json",
-    "eval/results/retest-hog-realpdf-after-gold-fix.json",
+from benchmark_aggregator.paths import (  # noqa: E402
+    DEFAULT_AGENT_TOOLS_JUDGE,
+    DEFAULT_AGENT_TOOLS_MINI,
+    DEFAULT_BASELINE_LAYER1,
+    DEFAULT_BASELINE_LAYER2,
+    DEFAULT_CLAIMS_CORPUS_V2_MINI_SUITE,
+    DEFAULT_CLAIMS_MERGE_CONTRACT,
+    DEFAULT_CLAIMS_MINI_SUITE,
+    DEFAULT_CLAIMS_PARAPHRASE_HOLDOUT,
+    DEFAULT_CLAIMS_PARAPHRASE_PILOT,
+    DEFAULT_CLAIMS_PILOT_SUITE,
+    DEFAULT_CLAIMS_PRODUCTION_PILOT,
+    DEFAULT_CONCEPT_TOPIC_MINI_SUITE,
+    DEFAULT_LAYER1_NIGHTLY,
+    DEFAULT_LAYER2_NIGHTLY,
+    DEFAULT_REFERENCE,
+    DEFAULT_REFERENCES_RESOLUTION_CONTRACT,
+    DEFAULT_REFERENCES_RESOLUTION_GRAPH,
+    DEFAULT_REFERENCES_RESOLUTION_MINI,
+    DEFAULT_RETRIEVAL_HYBRID_ABLATION,
+    DEFAULT_RETRIEVAL_HYBRID_ABLATION_LIVE,
+    DEFAULT_RETRIEVAL_JUDGE_HOLDOUT,
+    DEFAULT_RETRIEVAL_JUDGE_PILOT,
+    DEFAULT_RETRIEVAL_LIVE_CORPUS_HOLDOUT,
+    DEFAULT_RETRIEVAL_LIVE_CORPUS_MINI,
+    DEFAULT_RETRIEVAL_MERGE_SAFE,
+    DEFAULT_RETRIEVAL_MULTIHOP_MINI,
+    DEFAULT_RETRIEVAL_STRICT_PILOT,
+    DEFAULT_RETRIEVAL_WORKSPACE_SCOPED,
+    DEFAULT_RETRIEVAL_WORKSPACE_SCOPED_LIVE,
+    GOLD_ROOT,
+    ROOT,
+    SUPPLEMENTARY_RETESTS,
 )
 
 
@@ -499,7 +484,11 @@ def _finalize_family_trust(family_key: str, family: dict[str, Any]) -> None:
 
         hab_live = family.get("hybrid_ablation_live")
         hab = family.get("hybrid_ablation")
-        if isinstance(hab_live, dict) and isinstance(hab, dict) and hab_live.get("error") != "missing_file":
+        if (
+            isinstance(hab_live, dict)
+            and isinstance(hab, dict)
+            and hab_live.get("error") != "missing_file"
+        ):
             cases_h = _cases_from_block(hab_live)
             if (
                 detect_runtime_mode("hybrid_ablation_live", hab_live, cases_h)

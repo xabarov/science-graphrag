@@ -13,6 +13,7 @@ from science_graphrag.api.settings import get_settings
 from science_graphrag.api.works.chunks import work_chunks
 from science_graphrag.api.works.detail import (
     get_work_detail,
+    get_work_extracted_body_payload,
     list_work_claims,
     list_works,
     work_pdf_blob_path,
@@ -109,6 +110,19 @@ def get_work_by_id(
     if "error" not in chunks:
         detail["ingestion"]["has_chunks"] = int(chunks.get("total", 0)) > 0
     return detail
+
+
+@router.get("/{work_id}/extracted-body")
+def get_work_extracted_body(
+    work_id: str,
+    settings: Settings = Depends(get_settings),
+    stores: StoreRegistry = Depends(get_stores),
+) -> dict[str, Any]:
+    """Full extracted markdown/text from ingest artifacts (not Qdrant chunk join)."""
+    body = get_work_extracted_body_payload(settings, stores, work_id)
+    if body is None:
+        raise HTTPException(status_code=404, detail="work_not_found")
+    return body
 
 
 @router.get("/{work_id}/graph")

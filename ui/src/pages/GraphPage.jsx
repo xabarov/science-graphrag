@@ -8,14 +8,16 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
+import CheckOutlinedIcon from "@mui/icons-material/CheckOutlined";
+import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
+import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import VpnKeyOutlinedIcon from "@mui/icons-material/VpnKeyOutlined";
 
-import { CursorIconButton, CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
+import { CursorIconAction, CursorIconButton } from "../components/common/index.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
 import { useWorkspaceContext } from "../components/layout/WorkspaceContext.jsx";
 import GraphWorkspacePanel from "../components/graph/GraphWorkspacePanel.jsx";
-import DeduplicationPanel from "../components/graph/DeduplicationPanel.jsx";
 import { GraphMissingWorkCallout } from "../components/graph/graphShellStates.jsx";
 import { persistWorkId } from "./WorkspacePage/utils/workContext.js";
 import { mergeTraceabilityParams, readTraceabilityState } from "../components/work/traceabilityState.js";
@@ -208,11 +210,13 @@ export default function GraphPage() {
               "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)" },
             }}
           />
-          <Box sx={{ display: "flex", gap: 1, justifyContent: "flex-end" }}>
-            <CursorSmallButton type="button" onClick={() => setLoadAnchor(null)}>
-              {t("graph.popover.cancel")}
-            </CursorSmallButton>
-            <CursorPrimaryButton type="submit">{t("graph.popover.apply")}</CursorPrimaryButton>
+          <Box sx={{ display: "flex", gap: 0.75, justifyContent: "flex-end" }}>
+            <CursorIconAction type="button" title={t("graph.popover.cancel")} onClick={() => setLoadAnchor(null)}>
+              <CloseOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+            </CursorIconAction>
+            <CursorIconAction type="submit" title={t("graph.popover.apply")}>
+              <CheckOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+            </CursorIconAction>
           </Box>
         </Box>
       </Popover>
@@ -235,9 +239,9 @@ export default function GraphPage() {
             footnote={t("graph.missing.footnote")}
           />
           <Box sx={{ mt: 1.5 }}>
-            <CursorPrimaryButton component={Link} to={getLastWorkspaceHref()} sx={{ textDecoration: "none" }}>
-              {t("graph.openLastWorkspace")}
-            </CursorPrimaryButton>
+            <CursorIconAction component={Link} to={getLastWorkspaceHref()} title={t("graph.openLastWorkspace")}>
+              <HubOutlinedIcon sx={{ fontSize: "1.15rem" }} />
+            </CursorIconAction>
           </Box>
         </Box>
       ) : null}
@@ -265,11 +269,6 @@ export default function GraphPage() {
           }}
         />
       </Box>
-      {effectiveWorkspaceId ? (
-        <Box sx={{ flexShrink: 0, px: 1, pb: 1 }}>
-          <DeduplicationPanel workspaceId={effectiveWorkspaceId} />
-        </Box>
-      ) : null}
     </Box>
   );
 }

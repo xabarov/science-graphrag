@@ -5,7 +5,11 @@ import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import Chip from "@mui/material/Chip";
 
-import { CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
+import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
+import PostAddOutlinedIcon from "@mui/icons-material/PostAddOutlined";
+import RestoreOutlinedIcon from "@mui/icons-material/RestoreOutlined";
+
+import { CursorIconAction } from "../components/common/index.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
 import WorkIdGlossaryHint from "../components/layout/WorkIdGlossaryHint.jsx";
 import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
@@ -293,12 +297,22 @@ export default function WorkspacesPage() {
               {w.work_id}
             </Typography>
           </Box>
-          <CursorPrimaryButton component={Link} to={wsUrl} onClick={() => onOpenWorkspace(w.work_id)} sx={{ textDecoration: "none", fontSize: "0.75rem", minHeight: 28 }}>
-            {t("workspaces.row.workspace")}
-          </CursorPrimaryButton>
-          <CursorSmallButton type="button" onClick={() => handleAddPaperToTarget(w.work_id)} disabled={!tw}>
-            {t("workspaces.row.addToTarget")}
-          </CursorSmallButton>
+          <CursorIconAction
+            component={Link}
+            to={wsUrl}
+            title={t("workspaces.row.workspace")}
+            onClick={() => onOpenWorkspace(w.work_id)}
+          >
+            <HubOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+          </CursorIconAction>
+          <CursorIconAction
+            type="button"
+            title={t("workspaces.row.addToTarget")}
+            onClick={() => handleAddPaperToTarget(w.work_id)}
+            disabled={!tw}
+          >
+            <PostAddOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+          </CursorIconAction>
         </Box>
       );
     }
@@ -328,12 +342,22 @@ export default function WorkspacesPage() {
           ) : null}
         </Box>
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1.25, alignItems: "center" }}>
-          <CursorPrimaryButton component={Link} to={wsUrl} onClick={() => onOpenWorkspace(w.work_id)} sx={{ textDecoration: "none", fontSize: "0.8125rem" }}>
-            {t("workspaces.row.openInWs")}
-          </CursorPrimaryButton>
-          <CursorSmallButton type="button" onClick={() => handleAddPaperToTarget(w.work_id)} disabled={!tw}>
-            {t("workspaces.row.addToTargetWs")}
-          </CursorSmallButton>
+          <CursorIconAction
+            component={Link}
+            to={wsUrl}
+            title={t("workspaces.row.openInWs")}
+            onClick={() => onOpenWorkspace(w.work_id)}
+          >
+            <HubOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+          </CursorIconAction>
+          <CursorIconAction
+            type="button"
+            title={t("workspaces.row.addToTargetWs")}
+            onClick={() => handleAddPaperToTarget(w.work_id)}
+            disabled={!tw}
+          >
+            <PostAddOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+          </CursorIconAction>
         </Box>
       </Box>
     );
@@ -354,9 +378,9 @@ export default function WorkspacesPage() {
         }
         actions={
           continueTarget ? (
-            <CursorSmallButton component={Link} to={continueTarget.path} sx={{ textDecoration: "none" }}>
-              {t("workspaces.continue")}
-            </CursorSmallButton>
+            <CursorIconAction component={Link} to={continueTarget.path} title={t("workspaces.continue")}>
+              <RestoreOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+            </CursorIconAction>
           ) : null
         }
       />

@@ -104,15 +104,16 @@ export default function ReaderWorkDetailCard({
       </Box>
       {hasAbstract ? (
         <Collapse in={abstractOpen} unmountOnExit>
-          <Box sx={{ mt: 1.25, display: "flex", justifyContent: "center" }}>
+          <Box sx={{ mt: 1.25, width: "100%" }}>
             <Typography
               sx={{
                 fontSize: "0.8125rem",
                 color: "rgba(255,255,255,0.78)",
                 whiteSpace: "pre-wrap",
-                maxWidth: "78ch",
                 width: "100%",
-                lineHeight: 1.6,
+                maxWidth: "100%",
+                lineHeight: 1.65,
+                textAlign: "left",
               }}
             >
               {detail.abstract}

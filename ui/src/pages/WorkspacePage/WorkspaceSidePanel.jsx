@@ -1,15 +1,13 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Link from "@mui/material/Link";
 import Typography from "@mui/material/Typography";
 
 import WorkspaceIngestPanel from "./WorkspaceIngestPanel.jsx";
 import { useI18n } from "../../i18n/I18nContext.jsx";
-import { getWorkspaceSmartDedupConflicts } from "../../utils/workspaceStore.js";
 
 /**
- * Sticky right column: upload + graph snapshot + smart-dedup summary (links to main section).
+ * Sticky right column: upload + graph snapshot.
  * @param {{
  *   workspaceId: string,
  *   graphStats: Record<string, unknown> | null,
@@ -24,7 +22,6 @@ import { getWorkspaceSmartDedupConflicts } from "../../utils/workspaceStore.js";
  *   addBusy: boolean,
  *   onAddWork: (e?: React.FormEvent) => void | Promise<void>,
  *   addErr: string | null,
- *   sideDedupRefresh?: number,
  * }} props
  */
 export default function WorkspaceSidePanel({
@@ -41,28 +38,8 @@ export default function WorkspaceSidePanel({
   addBusy,
   onAddWork,
   addErr,
-  sideDedupRefresh = 0,
 }) {
   const { t } = useI18n();
-  const [pendingConflicts, setPendingConflicts] = useState(null);
-
-  const loadPendingCount = useCallback(async () => {
-    if (!workspaceId) return;
-    try {
-      const data = await getWorkspaceSmartDedupConflicts(workspaceId, { status: "pending", limit: 200 });
-      const items = Array.isArray(data?.items) ? data.items : [];
-      setPendingConflicts(items.length);
-    } catch {
-      setPendingConflicts(null);
-    }
-  }, [workspaceId]);
-
-  useEffect(() => {
-    const id = setTimeout(() => {
-      void loadPendingCount();
-    }, 0);
-    return () => clearTimeout(id);
-  }, [loadPendingCount, sideDedupRefresh]);
 
   if (!workspaceId) return null;
 
@@ -110,28 +87,6 @@ export default function WorkspaceSidePanel({
           </Typography>
         </Box>
       ) : null}
-
-      <Box
-        sx={{
-          mt: 2,
-          p: 1.25,
-          borderRadius: "6px",
-          border: "1px solid rgba(255,255,255,0.08)",
-          backgroundColor: "rgba(255,255,255,0.02)",
-        }}
-      >
-        <Typography sx={{ fontSize: "0.75rem", fontWeight: 600, color: "rgba(129,140,248,0.95)", mb: 0.5 }}>
-          {t("workspace.side.dedupTitle")}
-        </Typography>
-        <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.5)", mb: 1, lineHeight: 1.45 }}>
-          {pendingConflicts != null
-            ? t("workspace.side.dedupPendingLine", { count: String(pendingConflicts) })
-            : t("workspace.side.dedupPendingUnknown")}
-        </Typography>
-        <Link href="#workspace-dedup-section" underline="hover" sx={{ fontSize: "0.72rem", color: "rgba(129,140,248,0.95)" }}>
-          {t("workspace.side.dedupJump")}
-        </Link>
-      </Box>
     </>
   );
 }

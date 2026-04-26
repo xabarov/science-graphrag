@@ -2,12 +2,18 @@
 export default {
   "workspace.paper.loading": "Loading paper…",
   "workspace.paper.noTitle": "(no title)",
-  "workspace.paper.hint":
-    "Open Reader for extracted text. Use workspace actions in the header for graph, ask, and summaries across all papers.",
-  "workspace.paper.hintSuffix": "Click the card (outside links) to focus this paper in the URL.",
-  "workspace.paper.reader": "Reader",
-  "workspace.paper.workGraph": "Paper graph",
   "workspace.actions.askWorkspace": "Ask (workspace)",
+
+  "workspace.tooltip.workspaceGraph": "Workspace graph",
+  "workspace.tooltip.askWorkspace": "Ask about this workspace",
+  "workspace.tooltip.summarize": "Summarize this workspace",
+  "workspace.tooltip.generateHypotheses": "Generate hypotheses",
+  "workspace.tooltip.reader": "Open Reader (extracted text)",
+  "workspace.tooltip.workGraph": "Open paper graph",
+  "workspace.tooltip.focusPaper": "Focus this paper in the URL",
+  "workspace.tooltip.copyWorkspaceId": "Copy workspace id",
+  "workspace.tooltip.copyWorkId": "Copy work id",
+  "workspace.tooltip.copied": "Copied",
   "workspace.paper.yearChip": "Year {{year}}",
   "workspace.paper.doiChip": "DOI {{doi}}",
 
@@ -67,8 +73,15 @@ export default {
   "workspace.side.graphTitle": "Graph snapshot",
   "workspace.side.graphStatsLine":
     "{{works}} works · {{authors}} authors · {{internal}} internal cites · {{external}} external cites",
-  "workspace.side.dedupTitle": "Smart dedup",
-  "workspace.side.dedupPendingLine": "Pending near-duplicate reviews: {{count}}",
-  "workspace.side.dedupPendingUnknown": "Run a scan in the section below to refresh the queue.",
-  "workspace.side.dedupJump": "Open dedup section",
+
+  "workspace.ingestDedup.title": "Possible duplicate after upload",
+  "workspace.ingestDedup.subtitle": "{{current}} of {{total}} · similarity {{score}}",
+  "workspace.ingestDedup.workA": "Work A",
+  "workspace.ingestDedup.workB": "Work B",
+  "workspace.ingestDedup.mergeKeepA": "Keep A, merge B",
+  "workspace.ingestDedup.mergeKeepB": "Keep B, merge A",
+  "workspace.ingestDedup.keepSeparate": "Keep separate",
+  "workspace.ingestDedup.skip": "Skip",
+  "workspace.ingestDedup.dismiss": "Dismiss",
+  "workspace.ingestDedup.loadingTitles": "Loading…",
 };

@@ -5,7 +5,12 @@ import { Link } from "react-router-dom";
 
 import PageHeader from "../components/layout/PageHeader.jsx";
 import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
-import { CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
+import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
+import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
+import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
+import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
+
+import { CursorIconAction } from "../components/common/index.js";
 import { isAdminModeEnabled } from "../components/layout/adminVisibility.js";
 import { useI18n } from "../i18n/I18nContext.jsx";
 import { getContinueWorkspaceTarget } from "./HomePage/homeState.js";
@@ -37,22 +42,22 @@ export default function NotFoundPage() {
         <Typography sx={{ mt: 1, fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.55, maxWidth: 700 }}>
           {t("notFound.actions.body")}
         </Typography>
-        <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
-          <CursorPrimaryButton component={Link} to="/" sx={{ textDecoration: "none" }}>
-            {t("notFound.actions.goHome")}
-          </CursorPrimaryButton>
-          <CursorSmallButton component={Link} to="/workspaces" sx={{ textDecoration: "none" }}>
-            {t("notFound.actions.workspaces")}
-          </CursorSmallButton>
+        <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+          <CursorIconAction component={Link} to="/" title={t("notFound.actions.goHome")}>
+            <HomeOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+          </CursorIconAction>
+          <CursorIconAction component={Link} to="/workspaces" title={t("notFound.actions.workspaces")}>
+            <FolderOpenOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+          </CursorIconAction>
           {continueTarget ? (
-            <CursorSmallButton component={Link} to={continueTarget.path} sx={{ textDecoration: "none" }}>
-              {t("notFound.actions.continueWorkspace")}
-            </CursorSmallButton>
+            <CursorIconAction component={Link} to={continueTarget.path} title={t("notFound.actions.continueWorkspace")}>
+              <HubOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+            </CursorIconAction>
           ) : null}
           {adminModeEnabled ? (
-            <CursorSmallButton component={Link} to="/admin" sx={{ textDecoration: "none" }}>
-              {t("notFound.actions.openAdmin")}
-            </CursorSmallButton>
+            <CursorIconAction component={Link} to="/admin" title={t("notFound.actions.openAdmin")}>
+              <AdminPanelSettingsOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+            </CursorIconAction>
           ) : null}
         </Box>
       </Box>

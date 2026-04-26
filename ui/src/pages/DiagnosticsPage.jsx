@@ -4,7 +4,11 @@ import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import { Link } from "react-router-dom";
 
-import { CursorSmallButton } from "../components/common/index.js";
+import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
+import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
+import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
+
+import { CursorIconAction } from "../components/common/index.js";
 import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
 import { useI18n } from "../i18n/I18nContext.jsx";
 import { formatResearchApiError, getHealth, getResearchApiBaseUrl, getWorks } from "../services/researchApi.js";
@@ -58,16 +62,22 @@ export default function DiagnosticsPage() {
         {t("diagnostics.apiBase")} <code style={{ color: "rgba(255,255,255,0.65)" }}>{baseHint}</code>
       </Typography>
 
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
-        <CursorSmallButton type="button" onClick={() => refresh()} disabled={status === "loading"}>
-          {status === "loading" ? t("diagnostics.checking") : t("diagnostics.runChecks")}
-        </CursorSmallButton>
-        <CursorSmallButton component={Link} to="/admin" sx={{ textDecoration: "none" }}>
-          {t("diagnostics.backAdmin")}
-        </CursorSmallButton>
-        <CursorSmallButton component={Link} to="/" sx={{ textDecoration: "none" }}>
-          {t("diagnostics.home")}
-        </CursorSmallButton>
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mb: 2 }}>
+        <CursorIconAction
+          type="button"
+          title={status === "loading" ? t("diagnostics.checking") : t("diagnostics.runChecks")}
+          onClick={() => refresh()}
+          disabled={status === "loading"}
+          busy={status === "loading"}
+        >
+          <RefreshOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+        </CursorIconAction>
+        <CursorIconAction component={Link} to="/admin" title={t("diagnostics.backAdmin")}>
+          <AdminPanelSettingsOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+        </CursorIconAction>
+        <CursorIconAction component={Link} to="/" title={t("diagnostics.home")}>
+          <HomeOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+        </CursorIconAction>
       </Box>
 
       {status === "ok" && payload != null ? (

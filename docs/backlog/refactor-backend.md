@@ -14,6 +14,7 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 
 | When | Theme |
 |------|--------|
+| 2026-04-26 | **Reader full text vs Qdrant (ADR 022):** canonical artifacts `ingestion/{document_id}/article.md` + `normalized.md`; removed orphan `blob_store.write_text("extracted.txt")`; API `GET /v1/works/{id}/extracted-body`, `ingestion.has_extracted_body` / `work_provenance`, `sources.markdown` + `indexed_chunks`; optional `DocumentRecord.extracted_body_path` deferred. |
 | 2026-04-26 | **BT6 P0 quote tolerance (barrier 1):** `science_graphrag/ingestion/claims/quote_match.py` (NFKC / dashes / nbsp / `×`→`x` / letter–digit spacing + `find_fuzzy_substring`); 4-level `_quote_accepted` + chunk pre-normalize in `extract_claims_llm`; `eval/claims/article_source.read_claims_article`; tests `tests/ingestion/claims/`. Write-up: [`docs/analysis/wave5-bt6-quote-tolerance-2026-04-26.md`](../analysis/wave5-bt6-quote-tolerance-2026-04-26.md). Barrier 2 (gold semantics, `trust_signal live`) — OPEN item ниже. |
 | 2026-04-26 | **Ingest robustness:** per-file timeout, JSONL checkpoint + `--resume`, flush logging, OpenRouter/instructor retries; test + runbook. VL-specific timeout deferred (per-file covers batch). |
 | 2026-04-26 | **Unbounded workspaces:** `ws.unbounded`, scope + Qdrant `add_workspace_to_all_chunks`, backfill + runbooks. |
@@ -26,8 +27,24 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 | 2026-04-25 | **DI:** `StoreRegistry` + `get_stores()`; removed `main.py` works shim; `works_router` naming. |
 | 2026-04-25 | **Product waves:** T entity dedup API; Y2 LangGraph ReAct + tests; Y4 multi-agent supervisor + ADR-020. |
 | 2026-04-19 | **Benchmarks:** teacher-gold audit baseline checklist; durable file-backed run snapshots in `task_store`. |
+| 2026-04-26 | **Big plan — ops + benchmarks + eval hygiene (partial):** подтверждены ingest CLI timeout/resume/checkpoint (см. Completed «Ingest robustness»); первый split `scripts/benchmark_aggregator/paths.py` из `aggregate_benchmark_metrics.py`; `EDGE_DISPLAY_TYPE_READER`; `ExtractorBase._safe_parse_json` + `claims_v2`; isort/black на `ingest_jobs`/`idea_workflow` — зелёные. |
+| 2026-04-26 | **isort/black — ingest_jobs + idea_workflow:** пункт беклога закрыт; `black --check` / `isort --check-only` на два файла из корня репозитория — зелёные (полный `science_graphrag/` по-прежнему не гарантирован — отдельный глобальный проход при необходимости). |
 
 ## Queue
+
+### [OPEN] Ingest dedup — parity with osint-gr (authors/entities + optional gated pipeline)
+- **Area:** `science_graphrag/dedup/ingest_conflict_check.py`, `work_dedup_engine.py`, author/entity dedup engines, `science_graphrag/ingestion/_pipeline_impl.py`, ingest job DTO / worker state
+- **Issue:** Сейчас при ingest ставится очередь только для **works** (Qdrant summary + при необходимости LLM `_llm_same_work`); в плане фигурировали ещё `AuthorDedupConflict` / `EntityDedupConflict` и более богатый сценарий как в osint (`backend/osint_graphrag/dedup`, KG extract → `ConflictResolver` в `osint-gr/frontend/.../KnowledgeGraphPage`): конфликты на сущностях, сохранение с разрешённым маппингом id, UI **во время** долгой операции, а не только после `completed`.
+- **Proposal (фазы):** (1) Расширить `ingest_conflict_check`: те же пороги/пайплайны, что scan-дедуп для авторов/сущностей в scope workspace, писать в соответствующие ORM-таблицы с `origin=ingest`. (2) Опционально: стейт job `awaiting_user_decision` + поле `dedup_decision_required` + `POST .../dedup-decision` для возобновления — только если продуктово нужно блокировать merge до решения (иначе оставить post-hoc карточку). (3) Общие хелперы с osint — только где домен совместим (vector + thresholds), без копипасты бизнес-логики OSINT.
+- **Acceptance:** тесты на каждую новую ветку конфликтов; документ в `docs/analysis/` с матрицей «work / author / entity × scan / ingest»; фронт знает, какой тип очереди показывать (или единый агрегированный счётчик с разбивкой).
+- **Raised:** 2026-04-26
+
+### [OPEN] Remove unused workspace smart-dedup HTTP routes (after soak)
+- **Area:** `science_graphrag/api/workspace_dedup.py` и связанные роутеры
+- **Issue:** Фронт больше не дергает scan/merge/candidates из старого graph UI; часть эндпоинтов может быть мёртвой нагрузкой на поддержку и security surface.
+- **Proposal:** После наблюдения в проде — удалить неиспользуемые handlers, оставить conflict list + decision для `IngestConflictReviewCard`; миграции не требуются.
+- **Acceptance:** тесты API обновлены; нет регрессий для CLI/скриптов, если таковые вызывали удалённые пути.
+- **Raised:** 2026-04-26
 
 ### [OPEN] BT6 gold realism + optional embedding-soft quote fallback
 - **Area:** `eval/claims/`, `tests/fixtures/benchmarks/claims/`, `science_graphrag/ingestion/claims/quote_match.py`
@@ -37,6 +54,7 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 - **Raised:** 2026-04-26 (post P0 quote tolerance).
 
 ### [OPEN] Split `scripts/aggregate_benchmark_metrics.py` (BT1 follow-up)
+- **Progress (2026-04-26):** вынесены дефолтные пути артефактов в [`scripts/benchmark_aggregator/paths.py`](../../scripts/benchmark_aggregator/paths.py); основной файл импортирует их через `sys.path` к `scripts/`. Далее — `_summarize_*` / `_md_*` / family modules.
 - **Area:** `scripts/aggregate_benchmark_metrics.py` (~1100 lines after Wave 3 BT4/BT5 additions).
 - **Issue:** Summarizers (`_summarize_*`), markdown render (`_md_*`), CLI `main()`, family logic all live in one file; hard to review and parallel-edit with BT2–BT12 aggregator deltas. File grows with each wave.
 - **Proposal:** Extract modules: `scripts/benchmark_aggregator/summarizers.py` (`_summarize_*`), `scripts/benchmark_aggregator/markdown.py` (`_md_*` + `_render_markdown`), `scripts/benchmark_aggregator/family_retrieval.py` (retrieval family assembly), `scripts/benchmark_aggregator/family_claims.py` (claims/refs/concept). Keep thin CLI in `aggregate_benchmark_metrics.py` (≤ 250 LoC). Trust/decision glue stays in `science_graphrag/benchmarks/`.
@@ -44,6 +62,7 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 - **Raised:** 2026-04-26 (post-BT1); updated 2026-04-26 (post-Wave 3, now ~1100 LoC).
 
 ### [OPEN] Migrate dual_validate extractors to instructor (Phase 7 task)
+- **Progress (2026-04-26):** [`ExtractorBase._safe_parse_json`](../../scripts/dual_validate/extractors/base.py) — единый префикс ошибок; пилот на [`claims_v2.py`](../../scripts/dual_validate/extractors/claims_v2.py). Полная миграция на Instructor — без изменений в этом PR.
 - **Area:** `scripts/dual_validate/extractors/*.py` (12 extractor'ов), `scripts/dual_validate/llm_client.py` (станет transport-layer), новый `scripts/dual_validate/instructor_client.py`, новый `science_graphrag/llm/instructor_factory.py` (общий backend с `science_graphrag/ingestion/llm/extractor.py:SyncInstructorExtractor`).
 - **Issue:** в Phase 6.E мы потеряли несколько packs из-за malformed JSON от Kimi/Claude/v4-pro (truncated, unescaped quotes). Сейчас каждый из 12 extractor'ов вручную дублирует: (a) JSON-схему в prompt, (b) `parse_json_object_lenient` парсинг, (c) post-hoc валидацию полей через `_VALID_TYPES`/`_VALID_POLARITIES`/etc. **`instructor>=1.7.0` уже в deps** и используется в production ingestion (`SyncInstructorExtractor` с `instructor.Maybe`, mode-selection для OpenRouter Qwen3.5).
 - **Proposal:**
@@ -82,12 +101,10 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 - **Raised:** 2026-04-25 (out of scope of Phase 6.D — отдельная сессия)
 
 
-### [OPEN] Fix pre-existing isort/black violations in ingest_jobs and idea_workflow
-- **Area:** `science_graphrag/api/ingest_jobs.py`, `science_graphrag/agent/idea_workflow.py`
-- **Issue:** `isort` and `black --check` fail on these two files (not touched by Round 5; pre-existing).
-- **Proposal:** run `isort` and `black` on those paths from repo root (`.venv/bin/isort`, `.venv/bin/black`).
-- **Acceptance:** `black --check` and `isort --check-only` over `science_graphrag/` report no issues.
-- **Raised:** 2026-04-25 (Round 5 review)
+### [DONE] Fix pre-existing isort/black violations in ingest_jobs and idea_workflow
+- **Note (2026-04-26):** Исторически пункт ссылался на падение `black`/`isort` на двух файлах. Сейчас из корня репозитория: `.venv/bin/black --check science_graphrag/api/ingest_jobs.py science_graphrag/agent/idea_workflow.py` и `.venv/bin/isort --check-only` на те же пути — **зелёные**. Глобальный acceptance «весь `science_graphrag/`» из старого Proposal **не** выполнялся и **вынесен** за scope этого пункта; отдельный глобальный black/isort pass — при отдельном refactor-запросе или CI gate.
+- **Area:** [`ingest_jobs.py`](../../science_graphrag/api/ingest_jobs.py), [`idea_workflow.py`](../../science_graphrag/agent/idea_workflow.py)
+- **Raised:** 2026-04-25 (Round 5 review); **Done:** 2026-04-26
 
 ### [PARTIAL] Graph readability — Wave GR2 node_kind + semantic display_type + prioritized LIMIT
 - **Area:** `science_graphrag/api/graph_display.py`, `science_graphrag/api/works/graph_neighborhood.py`,

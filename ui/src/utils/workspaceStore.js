@@ -228,25 +228,6 @@ export async function getWorkspaceGraphNeighbors(workspaceId, nodeId, opts = {})
   return data;
 }
 
-export async function getWorkspaceDedupCandidates(workspaceId) {
-  const wid = encodeURIComponent(String(workspaceId || "").trim());
-  const { data } = await apiClient.get(apiUrl(`/v1/workspaces/${wid}/deduplication-candidates`), httpConfig());
-  return Array.isArray(data?.items) ? data.items : [];
-}
-
-export async function mergeWorksInWorkspace(workspaceId, keepWorkId, dropWorkId) {
-  const wid = encodeURIComponent(String(workspaceId || "").trim());
-  const { data } = await apiClient.post(
-    apiUrl(`/v1/workspaces/${wid}/merge-works`),
-    {
-      keep_work_id: String(keepWorkId || "").trim(),
-      drop_work_id: String(dropWorkId || "").trim(),
-    },
-    httpConfig(),
-  );
-  return data;
-}
-
 /**
  * Upload PDF / Markdown / plain text into a workspace; returns initial job payload (poll {@link getIngestJob}).
  * @param {string} workspaceId
@@ -298,29 +279,15 @@ export async function getIngestJob(jobId) {
   return data;
 }
 
-/** @param {string} workspaceId */
-export async function startWorkspaceSmartDedupScan(workspaceId) {
-  const wid = encodeURIComponent(String(workspaceId || "").trim());
-  const { data } = await apiClient.post(apiUrl(`/v1/workspaces/${wid}/dedup/scan`), {}, httpConfig());
-  return data;
-}
-
-/** @param {string} workspaceId @param {string} jobId */
-export async function getWorkspaceDedupJob(workspaceId, jobId) {
-  const ws = encodeURIComponent(String(workspaceId || "").trim());
-  const jid = encodeURIComponent(String(jobId || "").trim());
-  const { data } = await apiClient.get(apiUrl(`/v1/workspaces/${ws}/dedup/jobs/${jid}`), httpConfig());
-  return data;
-}
-
 /**
  * @param {string} workspaceId
- * @param {{ status?: string, limit?: number, offset?: number }} [opts]
+ * @param {{ status?: string, origin?: string, limit?: number, offset?: number }} [opts]
  */
 export async function getWorkspaceSmartDedupConflicts(workspaceId, opts = {}) {
   const wid = encodeURIComponent(String(workspaceId || "").trim());
   const params = new URLSearchParams();
   if (opts.status) params.set("status", String(opts.status));
+  if (opts.origin) params.set("origin", String(opts.origin));
   if (opts.limit != null) params.set("limit", String(opts.limit));
   if (opts.offset != null) params.set("offset", String(opts.offset));
   const q = params.toString();
@@ -331,21 +298,21 @@ export async function getWorkspaceSmartDedupConflicts(workspaceId, opts = {}) {
   return data;
 }
 
-/** @param {string} workspaceId @param {string} conflictId @param {string} decision */
-export async function decideWorkspaceSmartDedupConflict(workspaceId, conflictId, decision) {
+/**
+ * @param {string} workspaceId
+ * @param {string} conflictId
+ * @param {string | { decision: string, keep_work_id?: string }} decisionOrBody
+ */
+export async function decideWorkspaceSmartDedupConflict(workspaceId, conflictId, decisionOrBody) {
   const ws = encodeURIComponent(String(workspaceId || "").trim());
   const cid = encodeURIComponent(String(conflictId || "").trim());
+  const body =
+    typeof decisionOrBody === "string" ? { decision: decisionOrBody } : { ...decisionOrBody };
   const { data } = await apiClient.post(
     apiUrl(`/v1/workspaces/${ws}/dedup/conflicts/${cid}/decide`),
-    { decision },
+    body,
     httpConfig(),
   );
   return data;
 }
 
-/** @param {string} workspaceId */
-export async function getWorkspaceDedupAudit(workspaceId) {
-  const wid = encodeURIComponent(String(workspaceId || "").trim());
-  const { data } = await apiClient.get(apiUrl(`/v1/workspaces/${wid}/dedup/audit`), httpConfig());
-  return data;
-}

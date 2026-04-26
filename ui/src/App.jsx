@@ -57,7 +57,8 @@ function LazyRouteFallback() {
 
 export default function App() {
   return (
-    <Routes>
+    <Box sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+      <Routes>
       <Route element={<DashboardLayout />}>
         <Route path="/" element={<Navigate to="/workspaces" replace />} />
         <Route path="/home" element={<HomePage />} />
@@ -114,6 +115,7 @@ export default function App() {
         <Route path="/diagnostics" element={<LegacyAdminRedirect to="/diagnostics" />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
-    </Routes>
+      </Routes>
+    </Box>
   );
 }
