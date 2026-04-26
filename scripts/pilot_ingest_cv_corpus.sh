@@ -8,6 +8,12 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+# Host CLI against docker-compose.dev.yml: `.env` often pins `science:science` for Postgres,
+# while compose defaults to `science:change-me`. Prefer explicit URLs when SKIP_HOST_DOTENV=1.
+export SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV="${SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV:-1}"
+export SCIENCE_GRAPHRAG_DATABASE_URL="${SCIENCE_GRAPHRAG_DATABASE_URL:-postgresql+psycopg://science:change-me@localhost:15432/science_graphrag}"
+export SCIENCE_GRAPHRAG_REDIS_URL="${SCIENCE_GRAPHRAG_REDIS_URL:-redis://localhost:16379/0}"
+
 DEFAULT_CORPUS="${PILOT_CORPUS_DIR:-/home/roman/Documents/ML/CV/object-detection}"
 if [[ ! -d "$DEFAULT_CORPUS" ]]; then
   echo "Corpus directory missing: $DEFAULT_CORPUS" >&2

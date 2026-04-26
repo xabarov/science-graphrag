@@ -25,6 +25,8 @@
     "claims_corpus_v2_mini_suite": "eval/results/current-claims-corpus-v2-mini.json",
     "claims_pilot_suite": "eval/results/current-claims-pilot-suite.json",
     "claims_production_pilot_suite": "eval/results/current-claims-production-pilot.json",
+    "claims_paraphrase_pilot_suite": "eval/results/current-claims-paraphrase-pilot.json",
+    "claims_paraphrase_holdout_suite": "eval/results/current-claims-paraphrase-holdout.json",
     "references_resolution_contract": "eval/results/current-references-resolution-contract.json",
     "references_resolution_mini": "eval/results/current-references-resolution-mini.json",
     "references_resolution_graph": "eval/results/current-references-resolution-graph.json",
@@ -364,59 +366,12 @@
           "live_yolov1_architecture",
           "live_yolov1_training"
         ],
-        "all_passed": false,
+        "all_passed": true,
         "retrieval_eval": true
       },
-      "failed_count": 3,
-      "failed_cases": [
-        {
-          "case_id": "live_corpus_methods_wide",
-          "metrics": {
-            "passed": false,
-            "contract_only": false,
-            "hit_count": 0,
-            "min_hit_count": 1,
-            "hit_ok": false,
-            "missing_chunk_fingerprints": [
-              "df9bed2a2f99ad0fc96e803818ed053ee79bdc07c47023efcdf769c358299871",
-              "f3d4f47633a2bd6fce9f7ee409c88082a55441304334a4cf734d9b7763a1dacd"
-            ],
-            "work_id_ok": true,
-            "filter_work_id": null
-          }
-        },
-        {
-          "case_id": "live_yolov1_architecture",
-          "metrics": {
-            "passed": false,
-            "contract_only": false,
-            "hit_count": 0,
-            "min_hit_count": 1,
-            "hit_ok": false,
-            "missing_chunk_fingerprints": [
-              "105ce800-ba74-5572-95b1-71b3f2e1d035"
-            ],
-            "work_id_ok": true,
-            "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
-          }
-        },
-        {
-          "case_id": "live_yolov1_training",
-          "metrics": {
-            "passed": false,
-            "contract_only": false,
-            "hit_count": 0,
-            "min_hit_count": 1,
-            "hit_ok": false,
-            "missing_chunk_fingerprints": [
-              "4defe8cb-0c85-5e54-a3db-24cc31a6d64e"
-            ],
-            "work_id_ok": true,
-            "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
-          }
-        }
-      ],
-      "all_passed": false,
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true,
       "trust_signal": {
         "family": "retrieval_family",
         "member_id": "live_corpus_mini",
@@ -424,57 +379,8 @@
         "validation_status_aggregate": null,
         "validation_status_by_pack": null,
         "last_known_real_run_at": null,
-        "consistency_warnings": [
-          "live_corpus_mini: summary.all_passed=false with 3 failed cases"
-        ],
-        "individual_failures": [
-          {
-            "case_id": "live_corpus_methods_wide",
-            "metrics": {
-              "passed": false,
-              "contract_only": false,
-              "hit_count": 0,
-              "min_hit_count": 1,
-              "hit_ok": false,
-              "missing_chunk_fingerprints": [
-                "df9bed2a2f99ad0fc96e803818ed053ee79bdc07c47023efcdf769c358299871",
-                "f3d4f47633a2bd6fce9f7ee409c88082a55441304334a4cf734d9b7763a1dacd"
-              ],
-              "work_id_ok": true,
-              "filter_work_id": null
-            }
-          },
-          {
-            "case_id": "live_yolov1_architecture",
-            "metrics": {
-              "passed": false,
-              "contract_only": false,
-              "hit_count": 0,
-              "min_hit_count": 1,
-              "hit_ok": false,
-              "missing_chunk_fingerprints": [
-                "105ce800-ba74-5572-95b1-71b3f2e1d035"
-              ],
-              "work_id_ok": true,
-              "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
-            }
-          },
-          {
-            "case_id": "live_yolov1_training",
-            "metrics": {
-              "passed": false,
-              "contract_only": false,
-              "hit_count": 0,
-              "min_hit_count": 1,
-              "hit_ok": false,
-              "missing_chunk_fingerprints": [
-                "4defe8cb-0c85-5e54-a3db-24cc31a6d64e"
-              ],
-              "work_id_ok": true,
-              "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
-            }
-          }
-        ],
+        "consistency_warnings": [],
+        "individual_failures": [],
         "is_phantom": false
       }
     },
@@ -588,8 +494,8 @@
             "passed": false,
             "contract_only": false,
             "workspace_scoped_live": true,
-            "uuid_aware_mode": false,
-            "hit_count": 0,
+            "uuid_aware_mode": true,
+            "hit_count": 5,
             "trace_workspace_matches": true,
             "forbidden_work_id_violation_count": 0,
             "forbidden_corpus_work_ids_leaked": [],
@@ -610,8 +516,8 @@
             "passed": false,
             "contract_only": false,
             "workspace_scoped_live": true,
-            "uuid_aware_mode": false,
-            "hit_count": 0,
+            "uuid_aware_mode": true,
+            "hit_count": 5,
             "trace_workspace_matches": true,
             "forbidden_work_id_violation_count": 0,
             "forbidden_corpus_work_ids_leaked": [],
@@ -623,11 +529,11 @@
               "faster_rcnn_realpdf"
             ],
             "expected_citations_min_count": 3,
-            "citation_count_ok": false,
-            "answer_rouge_l": 0.0,
+            "citation_count_ok": true,
+            "answer_rouge_l": 0.08,
             "abstain_keyword_hit": false,
             "answer_metric_type": "rouge_l",
-            "workspace_scope_ok": false
+            "workspace_scope_ok": true
           }
         },
         {
@@ -636,8 +542,8 @@
             "passed": false,
             "contract_only": false,
             "workspace_scoped_live": true,
-            "uuid_aware_mode": false,
-            "hit_count": 0,
+            "uuid_aware_mode": true,
+            "hit_count": 5,
             "trace_workspace_matches": true,
             "forbidden_work_id_violation_count": 0,
             "forbidden_corpus_work_ids_leaked": [],
@@ -658,8 +564,8 @@
             "passed": false,
             "contract_only": false,
             "workspace_scoped_live": true,
-            "uuid_aware_mode": false,
-            "hit_count": 0,
+            "uuid_aware_mode": true,
+            "hit_count": 5,
             "trace_workspace_matches": true,
             "forbidden_work_id_violation_count": 0,
             "forbidden_corpus_work_ids_leaked": [],
@@ -669,11 +575,11 @@
               "yolov1"
             ],
             "expected_citations_min_count": 2,
-            "citation_count_ok": false,
-            "answer_rouge_l": 0.0,
+            "citation_count_ok": true,
+            "answer_rouge_l": 0.08527131782945736,
             "abstain_keyword_hit": false,
             "answer_metric_type": "rouge_l",
-            "workspace_scope_ok": false
+            "workspace_scope_ok": true
           }
         }
       ],
@@ -749,8 +655,8 @@
               "passed": false,
               "contract_only": false,
               "workspace_scoped_live": true,
-              "uuid_aware_mode": false,
-              "hit_count": 0,
+              "uuid_aware_mode": true,
+              "hit_count": 5,
               "trace_workspace_matches": true,
               "forbidden_work_id_violation_count": 0,
               "forbidden_corpus_work_ids_leaked": [],
@@ -771,8 +677,8 @@
               "passed": false,
               "contract_only": false,
               "workspace_scoped_live": true,
-              "uuid_aware_mode": false,
-              "hit_count": 0,
+              "uuid_aware_mode": true,
+              "hit_count": 5,
               "trace_workspace_matches": true,
               "forbidden_work_id_violation_count": 0,
               "forbidden_corpus_work_ids_leaked": [],
@@ -784,11 +690,11 @@
                 "faster_rcnn_realpdf"
               ],
               "expected_citations_min_count": 3,
-              "citation_count_ok": false,
-              "answer_rouge_l": 0.0,
+              "citation_count_ok": true,
+              "answer_rouge_l": 0.08,
               "abstain_keyword_hit": false,
               "answer_metric_type": "rouge_l",
-              "workspace_scope_ok": false
+              "workspace_scope_ok": true
             }
           },
           {
@@ -797,8 +703,8 @@
               "passed": false,
               "contract_only": false,
               "workspace_scoped_live": true,
-              "uuid_aware_mode": false,
-              "hit_count": 0,
+              "uuid_aware_mode": true,
+              "hit_count": 5,
               "trace_workspace_matches": true,
               "forbidden_work_id_violation_count": 0,
               "forbidden_corpus_work_ids_leaked": [],
@@ -819,8 +725,8 @@
               "passed": false,
               "contract_only": false,
               "workspace_scoped_live": true,
-              "uuid_aware_mode": false,
-              "hit_count": 0,
+              "uuid_aware_mode": true,
+              "hit_count": 5,
               "trace_workspace_matches": true,
               "forbidden_work_id_violation_count": 0,
               "forbidden_corpus_work_ids_leaked": [],
@@ -830,11 +736,11 @@
                 "yolov1"
               ],
               "expected_citations_min_count": 2,
-              "citation_count_ok": false,
-              "answer_rouge_l": 0.0,
+              "citation_count_ok": true,
+              "answer_rouge_l": 0.08527131782945736,
               "abstain_keyword_hit": false,
               "answer_metric_type": "rouge_l",
-              "workspace_scope_ok": false
+              "workspace_scope_ok": true
             }
           }
         ],
@@ -850,7 +756,7 @@
       },
       "summary": {
         "case_count": 3,
-        "mean_weighted_score": 6.233333333333333,
+        "mean_weighted_score": 6.033333333333334,
         "all_passed": true,
         "retrieval_judge_eval": true,
         "per_case_score_breakdown": [
@@ -865,20 +771,20 @@
           },
           {
             "case_id": "live_yolov1_architecture",
-            "factuality": 3,
-            "coverage": 2,
+            "factuality": 1,
+            "coverage": 3,
             "no_contradictions": 2,
             "language": 2,
-            "weighted_score": 6.0,
+            "weighted_score": 4.7,
             "passed": true
           },
           {
             "case_id": "live_yolov1_training",
             "factuality": 3,
-            "coverage": 2,
+            "coverage": 3,
             "no_contradictions": 2,
             "language": 2,
-            "weighted_score": 6.0,
+            "weighted_score": 6.7,
             "passed": true
           }
         ]
@@ -886,7 +792,7 @@
       "failed_count": 0,
       "failed_cases": [],
       "all_passed": true,
-      "mean_weighted_score": 6.233333333333333,
+      "mean_weighted_score": 6.033333333333334,
       "trust_signal": {
         "family": "retrieval_family",
         "member_id": "judge_pilot",
@@ -999,12 +905,197 @@
       }
     },
     "hybrid_ablation_live": {
-      "error": "missing_file",
       "artifact": "eval/results/current-retrieval-hybrid-ablation-live.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316"
+      },
+      "summary": {
+        "case_count": 8,
+        "case_ids": [
+          "ha_anchor_free",
+          "ha_classical_handcrafted",
+          "ha_compound_scaling",
+          "ha_focal_loss",
+          "ha_iou_loss_quality",
+          "ha_keypoint_corner",
+          "ha_set_prediction_transformer",
+          "ha_two_stage_rpn_evolution"
+        ],
+        "all_passed": false,
+        "hybrid_ablation_eval": true
+      },
+      "failed_count": 8,
+      "failed_cases": [
+        {
+          "case_id": "ha_anchor_free",
+          "metrics": {
+            "passed": false,
+            "mrr_vector": 0.0,
+            "mrr_hybrid": 0.0,
+            "mrr_delta": 0.0,
+            "mrr_delta_per_mode": {
+              "vector": 0.0,
+              "hybrid": 0.0
+            },
+            "hybrid_regression": false,
+            "min_mrr_delta_hybrid_minus_vector": 0.05,
+            "mrr_k": 10,
+            "relevant_count": 4,
+            "vector_hit_count": 5,
+            "hybrid_hit_count": 5,
+            "uuid_aware_mode": true
+          }
+        },
+        {
+          "case_id": "ha_classical_handcrafted",
+          "metrics": {
+            "passed": false,
+            "mrr_vector": 0.0,
+            "mrr_hybrid": 0.0,
+            "mrr_delta": 0.0,
+            "mrr_delta_per_mode": {
+              "vector": 0.0,
+              "hybrid": 0.0
+            },
+            "hybrid_regression": false,
+            "min_mrr_delta_hybrid_minus_vector": 0.05,
+            "mrr_k": 10,
+            "relevant_count": 2,
+            "vector_hit_count": 5,
+            "hybrid_hit_count": 5,
+            "uuid_aware_mode": true
+          }
+        },
+        {
+          "case_id": "ha_compound_scaling",
+          "metrics": {
+            "passed": false,
+            "mrr_vector": 0.0,
+            "mrr_hybrid": 0.0,
+            "mrr_delta": 0.0,
+            "mrr_delta_per_mode": {
+              "vector": 0.0,
+              "hybrid": 0.0
+            },
+            "hybrid_regression": false,
+            "min_mrr_delta_hybrid_minus_vector": 0.05,
+            "mrr_k": 10,
+            "relevant_count": 1,
+            "vector_hit_count": 5,
+            "hybrid_hit_count": 5,
+            "uuid_aware_mode": true
+          }
+        },
+        {
+          "case_id": "ha_focal_loss",
+          "metrics": {
+            "passed": false,
+            "mrr_vector": 0.0,
+            "mrr_hybrid": 0.0,
+            "mrr_delta": 0.0,
+            "mrr_delta_per_mode": {
+              "vector": 0.0,
+              "hybrid": 0.0
+            },
+            "hybrid_regression": false,
+            "min_mrr_delta_hybrid_minus_vector": 0.05,
+            "mrr_k": 10,
+            "relevant_count": 2,
+            "vector_hit_count": 5,
+            "hybrid_hit_count": 5,
+            "uuid_aware_mode": true
+          }
+        },
+        {
+          "case_id": "ha_iou_loss_quality",
+          "metrics": {
+            "passed": false,
+            "mrr_vector": 0.0,
+            "mrr_hybrid": 0.0,
+            "mrr_delta": 0.0,
+            "mrr_delta_per_mode": {
+              "vector": 0.0,
+              "hybrid": 0.0
+            },
+            "hybrid_regression": false,
+            "min_mrr_delta_hybrid_minus_vector": 0.05,
+            "mrr_k": 10,
+            "relevant_count": 3,
+            "vector_hit_count": 5,
+            "hybrid_hit_count": 5,
+            "uuid_aware_mode": true
+          }
+        },
+        {
+          "case_id": "ha_keypoint_corner",
+          "metrics": {
+            "passed": false,
+            "mrr_vector": 0.0,
+            "mrr_hybrid": 0.0,
+            "mrr_delta": 0.0,
+            "mrr_delta_per_mode": {
+              "vector": 0.0,
+              "hybrid": 0.0
+            },
+            "hybrid_regression": false,
+            "min_mrr_delta_hybrid_minus_vector": 0.05,
+            "mrr_k": 10,
+            "relevant_count": 2,
+            "vector_hit_count": 5,
+            "hybrid_hit_count": 5,
+            "uuid_aware_mode": true
+          }
+        },
+        {
+          "case_id": "ha_set_prediction_transformer",
+          "metrics": {
+            "passed": false,
+            "mrr_vector": 0.0,
+            "mrr_hybrid": 0.0,
+            "mrr_delta": 0.0,
+            "mrr_delta_per_mode": {
+              "vector": 0.0,
+              "hybrid": 0.0
+            },
+            "hybrid_regression": false,
+            "min_mrr_delta_hybrid_minus_vector": 0.05,
+            "mrr_k": 10,
+            "relevant_count": 5,
+            "vector_hit_count": 5,
+            "hybrid_hit_count": 5,
+            "uuid_aware_mode": true
+          }
+        },
+        {
+          "case_id": "ha_two_stage_rpn_evolution",
+          "metrics": {
+            "passed": false,
+            "mrr_vector": 0.0,
+            "mrr_hybrid": 0.0,
+            "mrr_delta": 0.0,
+            "mrr_delta_per_mode": {
+              "vector": 0.0,
+              "hybrid": 0.0
+            },
+            "hybrid_regression": false,
+            "min_mrr_delta_hybrid_minus_vector": 0.05,
+            "mrr_k": 10,
+            "relevant_count": 3,
+            "vector_hit_count": 5,
+            "hybrid_hit_count": 5,
+            "uuid_aware_mode": true
+          }
+        }
+      ],
+      "all_passed": false,
+      "mean_claim_recall": null,
       "trust_signal": {
         "family": "retrieval_family",
         "member_id": "hybrid_ablation_live",
-        "runtime_mode": "missing",
+        "runtime_mode": "live",
         "validation_status_aggregate": "llm_dual_validated",
         "validation_status_by_pack": {
           "ha_keypoint_corner": "llm_dual_validated",
@@ -1018,10 +1109,171 @@
         },
         "last_known_real_run_at": null,
         "consistency_warnings": [
-          "hybrid_ablation_live: artifact missing (error=missing_file)"
+          "hybrid_ablation_live: summary.all_passed=false with 8 failed cases"
         ],
-        "individual_failures": [],
-        "is_phantom": true
+        "individual_failures": [
+          {
+            "case_id": "ha_anchor_free",
+            "metrics": {
+              "passed": false,
+              "mrr_vector": 0.0,
+              "mrr_hybrid": 0.0,
+              "mrr_delta": 0.0,
+              "mrr_delta_per_mode": {
+                "vector": 0.0,
+                "hybrid": 0.0
+              },
+              "hybrid_regression": false,
+              "min_mrr_delta_hybrid_minus_vector": 0.05,
+              "mrr_k": 10,
+              "relevant_count": 4,
+              "vector_hit_count": 5,
+              "hybrid_hit_count": 5,
+              "uuid_aware_mode": true
+            }
+          },
+          {
+            "case_id": "ha_classical_handcrafted",
+            "metrics": {
+              "passed": false,
+              "mrr_vector": 0.0,
+              "mrr_hybrid": 0.0,
+              "mrr_delta": 0.0,
+              "mrr_delta_per_mode": {
+                "vector": 0.0,
+                "hybrid": 0.0
+              },
+              "hybrid_regression": false,
+              "min_mrr_delta_hybrid_minus_vector": 0.05,
+              "mrr_k": 10,
+              "relevant_count": 2,
+              "vector_hit_count": 5,
+              "hybrid_hit_count": 5,
+              "uuid_aware_mode": true
+            }
+          },
+          {
+            "case_id": "ha_compound_scaling",
+            "metrics": {
+              "passed": false,
+              "mrr_vector": 0.0,
+              "mrr_hybrid": 0.0,
+              "mrr_delta": 0.0,
+              "mrr_delta_per_mode": {
+                "vector": 0.0,
+                "hybrid": 0.0
+              },
+              "hybrid_regression": false,
+              "min_mrr_delta_hybrid_minus_vector": 0.05,
+              "mrr_k": 10,
+              "relevant_count": 1,
+              "vector_hit_count": 5,
+              "hybrid_hit_count": 5,
+              "uuid_aware_mode": true
+            }
+          },
+          {
+            "case_id": "ha_focal_loss",
+            "metrics": {
+              "passed": false,
+              "mrr_vector": 0.0,
+              "mrr_hybrid": 0.0,
+              "mrr_delta": 0.0,
+              "mrr_delta_per_mode": {
+                "vector": 0.0,
+                "hybrid": 0.0
+              },
+              "hybrid_regression": false,
+              "min_mrr_delta_hybrid_minus_vector": 0.05,
+              "mrr_k": 10,
+              "relevant_count": 2,
+              "vector_hit_count": 5,
+              "hybrid_hit_count": 5,
+              "uuid_aware_mode": true
+            }
+          },
+          {
+            "case_id": "ha_iou_loss_quality",
+            "metrics": {
+              "passed": false,
+              "mrr_vector": 0.0,
+              "mrr_hybrid": 0.0,
+              "mrr_delta": 0.0,
+              "mrr_delta_per_mode": {
+                "vector": 0.0,
+                "hybrid": 0.0
+              },
+              "hybrid_regression": false,
+              "min_mrr_delta_hybrid_minus_vector": 0.05,
+              "mrr_k": 10,
+              "relevant_count": 3,
+              "vector_hit_count": 5,
+              "hybrid_hit_count": 5,
+              "uuid_aware_mode": true
+            }
+          },
+          {
+            "case_id": "ha_keypoint_corner",
+            "metrics": {
+              "passed": false,
+              "mrr_vector": 0.0,
+              "mrr_hybrid": 0.0,
+              "mrr_delta": 0.0,
+              "mrr_delta_per_mode": {
+                "vector": 0.0,
+                "hybrid": 0.0
+              },
+              "hybrid_regression": false,
+              "min_mrr_delta_hybrid_minus_vector": 0.05,
+              "mrr_k": 10,
+              "relevant_count": 2,
+              "vector_hit_count": 5,
+              "hybrid_hit_count": 5,
+              "uuid_aware_mode": true
+            }
+          },
+          {
+            "case_id": "ha_set_prediction_transformer",
+            "metrics": {
+              "passed": false,
+              "mrr_vector": 0.0,
+              "mrr_hybrid": 0.0,
+              "mrr_delta": 0.0,
+              "mrr_delta_per_mode": {
+                "vector": 0.0,
+                "hybrid": 0.0
+              },
+              "hybrid_regression": false,
+              "min_mrr_delta_hybrid_minus_vector": 0.05,
+              "mrr_k": 10,
+              "relevant_count": 5,
+              "vector_hit_count": 5,
+              "hybrid_hit_count": 5,
+              "uuid_aware_mode": true
+            }
+          },
+          {
+            "case_id": "ha_two_stage_rpn_evolution",
+            "metrics": {
+              "passed": false,
+              "mrr_vector": 0.0,
+              "mrr_hybrid": 0.0,
+              "mrr_delta": 0.0,
+              "mrr_delta_per_mode": {
+                "vector": 0.0,
+                "hybrid": 0.0
+              },
+              "hybrid_regression": false,
+              "min_mrr_delta_hybrid_minus_vector": 0.05,
+              "mrr_k": 10,
+              "relevant_count": 3,
+              "vector_hit_count": 5,
+              "hybrid_hit_count": 5,
+              "uuid_aware_mode": true
+            }
+          }
+        ],
+        "is_phantom": false
       }
     },
     "live_corpus_holdout": {
@@ -1036,44 +1288,12 @@
           "live_yolov1_intro",
           "live_yolov1_methods_combo"
         ],
-        "all_passed": false,
+        "all_passed": true,
         "retrieval_eval": true
       },
-      "failed_count": 2,
-      "failed_cases": [
-        {
-          "case_id": "live_yolov1_intro",
-          "metrics": {
-            "passed": false,
-            "contract_only": false,
-            "hit_count": 0,
-            "min_hit_count": 1,
-            "hit_ok": false,
-            "missing_chunk_fingerprints": [
-              "8226cfd0-aae7-568a-81b1-e81d5f93f767"
-            ],
-            "work_id_ok": true,
-            "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
-          }
-        },
-        {
-          "case_id": "live_yolov1_methods_combo",
-          "metrics": {
-            "passed": false,
-            "contract_only": false,
-            "hit_count": 0,
-            "min_hit_count": 1,
-            "hit_ok": false,
-            "missing_chunk_fingerprints": [
-              "7ee12509-2279-5d5d-b450-1607dffde23c",
-              "30091237-ce82-52b7-8f16-efab66d4c2ac"
-            ],
-            "work_id_ok": true,
-            "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
-          }
-        }
-      ],
-      "all_passed": false,
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true,
       "trust_signal": {
         "family": "retrieval_family",
         "member_id": "live_corpus_holdout",
@@ -1081,42 +1301,8 @@
         "validation_status_aggregate": null,
         "validation_status_by_pack": null,
         "last_known_real_run_at": null,
-        "consistency_warnings": [
-          "live_corpus_holdout: summary.all_passed=false with 2 failed cases"
-        ],
-        "individual_failures": [
-          {
-            "case_id": "live_yolov1_intro",
-            "metrics": {
-              "passed": false,
-              "contract_only": false,
-              "hit_count": 0,
-              "min_hit_count": 1,
-              "hit_ok": false,
-              "missing_chunk_fingerprints": [
-                "8226cfd0-aae7-568a-81b1-e81d5f93f767"
-              ],
-              "work_id_ok": true,
-              "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
-            }
-          },
-          {
-            "case_id": "live_yolov1_methods_combo",
-            "metrics": {
-              "passed": false,
-              "contract_only": false,
-              "hit_count": 0,
-              "min_hit_count": 1,
-              "hit_ok": false,
-              "missing_chunk_fingerprints": [
-                "7ee12509-2279-5d5d-b450-1607dffde23c",
-                "30091237-ce82-52b7-8f16-efab66d4c2ac"
-              ],
-              "work_id_ok": true,
-              "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
-            }
-          }
-        ],
+        "consistency_warnings": [],
+        "individual_failures": [],
         "is_phantom": false
       }
     },
@@ -1144,12 +1330,11 @@
       }
     },
     "trust_aggregate": {
-      "phantom_member_count": 5,
+      "phantom_member_count": 4,
       "phantom_members": [
         "retrieval_family.merge_safe_contract_mock",
         "retrieval_family.strict_pilot_mock",
         "retrieval_family.hybrid_ablation",
-        "retrieval_family.hybrid_ablation_live",
         "retrieval_family.multihop_mini"
       ],
       "mixed_validation_status_member_count": 1
@@ -1386,9 +1571,140 @@
         "is_phantom": false
       }
     },
+    "claims_paraphrase_pilot": {
+      "artifact": "eval/results/current-claims-paraphrase-pilot.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316"
+      },
+      "summary": {
+        "case_count": 15,
+        "case_ids": [
+          "corpus_cascade_rcnn_v2",
+          "corpus_centernet_v2",
+          "corpus_cornernet_v2",
+          "corpus_detr_v2",
+          "corpus_efficientdet_v2",
+          "corpus_fast_rcnn_v2",
+          "corpus_faster_rcnn_v2",
+          "corpus_fcos_v2",
+          "corpus_fpn_v2",
+          "corpus_mask_rcnn_v2",
+          "corpus_rcnn_v2",
+          "corpus_retinanet_focal_v2",
+          "corpus_ssd_v2",
+          "corpus_yolov1_v2",
+          "corpus_yolov2_v2"
+        ],
+        "all_passed": true,
+        "claims_paraphrase_eval": true
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true,
+      "mean_claim_recall": 1.0,
+      "trust_signal": {
+        "family": "claims_family",
+        "member_id": "claims_paraphrase_pilot",
+        "runtime_mode": "synthetic_gold",
+        "validation_status_aggregate": "draft",
+        "validation_status_by_pack": {
+          "corpus_detr_v2": "llm_dual_validated",
+          "corpus_fcos_v2": "draft",
+          "corpus_cornernet_v2": "draft",
+          "holdout_atss_v1": "draft",
+          "holdout_yolov3_v1": "draft",
+          "holdout_dino_v1": "draft",
+          "holdout_yolox_v1": "draft",
+          "corpus_rcnn_v2": "draft",
+          "corpus_centernet_v2": "llm_dual_validated",
+          "corpus_fpn_v2": "draft",
+          "corpus_yolov1_v2": "draft",
+          "corpus_yolov2_v2": "draft",
+          "holdout_deformable_detr_v1": "draft",
+          "corpus_faster_rcnn_v2": "draft",
+          "corpus_mask_rcnn_v2": "draft",
+          "corpus_efficientdet_v2": "draft",
+          "corpus_cascade_rcnn_v2": "draft",
+          "corpus_retinanet_focal_v2": "draft",
+          "corpus_ssd_v2": "draft",
+          "corpus_fast_rcnn_v2": "draft"
+        },
+        "last_known_real_run_at": null,
+        "consistency_warnings": [
+          "claims_paraphrase_pilot: hybrid ablation appears synthetic (identical MRR rows)"
+        ],
+        "individual_failures": [],
+        "is_phantom": true
+      }
+    },
+    "claims_paraphrase_holdout": {
+      "artifact": "eval/results/current-claims-paraphrase-holdout.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316"
+      },
+      "summary": {
+        "case_count": 5,
+        "case_ids": [
+          "holdout_atss_v1",
+          "holdout_deformable_detr_v1",
+          "holdout_dino_v1",
+          "holdout_yolov3_v1",
+          "holdout_yolox_v1"
+        ],
+        "all_passed": true,
+        "claims_paraphrase_eval": true
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true,
+      "mean_claim_recall": 1.0,
+      "trust_signal": {
+        "family": "claims_family",
+        "member_id": "claims_paraphrase_holdout",
+        "runtime_mode": "synthetic_gold",
+        "validation_status_aggregate": "draft",
+        "validation_status_by_pack": {
+          "corpus_detr_v2": "llm_dual_validated",
+          "corpus_fcos_v2": "draft",
+          "corpus_cornernet_v2": "draft",
+          "holdout_atss_v1": "draft",
+          "holdout_yolov3_v1": "draft",
+          "holdout_dino_v1": "draft",
+          "holdout_yolox_v1": "draft",
+          "corpus_rcnn_v2": "draft",
+          "corpus_centernet_v2": "llm_dual_validated",
+          "corpus_fpn_v2": "draft",
+          "corpus_yolov1_v2": "draft",
+          "corpus_yolov2_v2": "draft",
+          "holdout_deformable_detr_v1": "draft",
+          "corpus_faster_rcnn_v2": "draft",
+          "corpus_mask_rcnn_v2": "draft",
+          "corpus_efficientdet_v2": "draft",
+          "corpus_cascade_rcnn_v2": "draft",
+          "corpus_retinanet_focal_v2": "draft",
+          "corpus_ssd_v2": "draft",
+          "corpus_fast_rcnn_v2": "draft"
+        },
+        "last_known_real_run_at": null,
+        "consistency_warnings": [
+          "claims_paraphrase_holdout: hybrid ablation appears synthetic (identical MRR rows)"
+        ],
+        "individual_failures": [],
+        "is_phantom": true
+      }
+    },
     "trust_aggregate": {
-      "phantom_member_count": 0,
-      "phantom_members": [],
+      "phantom_member_count": 2,
+      "phantom_members": [
+        "claims_family.claims_paraphrase_pilot",
+        "claims_family.claims_paraphrase_holdout"
+      ],
       "mixed_validation_status_member_count": 0
     }
   },
@@ -1711,7 +2027,7 @@
   },
   "decision_gate": {
     "decision": "CONDITIONAL-GO",
-    "reason": "all_nightly_passed;advisory_phantom_count=8",
+    "reason": "all_nightly_passed;advisory_phantom_count=9",
     "criteria": {
       "reference_all_passed": true,
       "layer1_nightly_failed_count": 0,
@@ -1719,70 +2035,19 @@
       "claims_production_artifact_missing": false,
       "claims_production_all_passed": true,
       "claims_production_mean_claim_recall": 1.0,
-      "advisory_phantom_count": 8,
+      "advisory_phantom_count": 9,
       "advisory_phantom_families": [
         "merge_safe_contract_mock",
         "strict_pilot_mock",
         "hybrid_ablation",
-        "hybrid_ablation_live",
         "multihop_mini",
+        "claims_paraphrase_pilot",
+        "claims_paraphrase_holdout",
         "concept_topic_mini",
         "agent_tools_mini",
         "agent_tools_judge"
       ],
       "advisory_individual_failures": [
-        {
-          "family": "retrieval_family",
-          "member_id": "live_corpus_mini",
-          "case_id": "live_corpus_methods_wide",
-          "metrics": {
-            "passed": false,
-            "contract_only": false,
-            "hit_count": 0,
-            "min_hit_count": 1,
-            "hit_ok": false,
-            "missing_chunk_fingerprints": [
-              "df9bed2a2f99ad0fc96e803818ed053ee79bdc07c47023efcdf769c358299871",
-              "f3d4f47633a2bd6fce9f7ee409c88082a55441304334a4cf734d9b7763a1dacd"
-            ],
-            "work_id_ok": true,
-            "filter_work_id": null
-          }
-        },
-        {
-          "family": "retrieval_family",
-          "member_id": "live_corpus_mini",
-          "case_id": "live_yolov1_architecture",
-          "metrics": {
-            "passed": false,
-            "contract_only": false,
-            "hit_count": 0,
-            "min_hit_count": 1,
-            "hit_ok": false,
-            "missing_chunk_fingerprints": [
-              "105ce800-ba74-5572-95b1-71b3f2e1d035"
-            ],
-            "work_id_ok": true,
-            "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
-          }
-        },
-        {
-          "family": "retrieval_family",
-          "member_id": "live_corpus_mini",
-          "case_id": "live_yolov1_training",
-          "metrics": {
-            "passed": false,
-            "contract_only": false,
-            "hit_count": 0,
-            "min_hit_count": 1,
-            "hit_ok": false,
-            "missing_chunk_fingerprints": [
-              "4defe8cb-0c85-5e54-a3db-24cc31a6d64e"
-            ],
-            "work_id_ok": true,
-            "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
-          }
-        },
         {
           "family": "retrieval_family",
           "member_id": "workspace_scoped_live",
@@ -1842,8 +2107,8 @@
             "passed": false,
             "contract_only": false,
             "workspace_scoped_live": true,
-            "uuid_aware_mode": false,
-            "hit_count": 0,
+            "uuid_aware_mode": true,
+            "hit_count": 5,
             "trace_workspace_matches": true,
             "forbidden_work_id_violation_count": 0,
             "forbidden_corpus_work_ids_leaked": [],
@@ -1866,8 +2131,8 @@
             "passed": false,
             "contract_only": false,
             "workspace_scoped_live": true,
-            "uuid_aware_mode": false,
-            "hit_count": 0,
+            "uuid_aware_mode": true,
+            "hit_count": 5,
             "trace_workspace_matches": true,
             "forbidden_work_id_violation_count": 0,
             "forbidden_corpus_work_ids_leaked": [],
@@ -1879,11 +2144,11 @@
               "faster_rcnn_realpdf"
             ],
             "expected_citations_min_count": 3,
-            "citation_count_ok": false,
-            "answer_rouge_l": 0.0,
+            "citation_count_ok": true,
+            "answer_rouge_l": 0.08,
             "abstain_keyword_hit": false,
             "answer_metric_type": "rouge_l",
-            "workspace_scope_ok": false
+            "workspace_scope_ok": true
           }
         },
         {
@@ -1894,8 +2159,8 @@
             "passed": false,
             "contract_only": false,
             "workspace_scoped_live": true,
-            "uuid_aware_mode": false,
-            "hit_count": 0,
+            "uuid_aware_mode": true,
+            "hit_count": 5,
             "trace_workspace_matches": true,
             "forbidden_work_id_violation_count": 0,
             "forbidden_corpus_work_ids_leaked": [],
@@ -1918,8 +2183,8 @@
             "passed": false,
             "contract_only": false,
             "workspace_scoped_live": true,
-            "uuid_aware_mode": false,
-            "hit_count": 0,
+            "uuid_aware_mode": true,
+            "hit_count": 5,
             "trace_workspace_matches": true,
             "forbidden_work_id_violation_count": 0,
             "forbidden_corpus_work_ids_leaked": [],
@@ -1929,46 +2194,187 @@
               "yolov1"
             ],
             "expected_citations_min_count": 2,
-            "citation_count_ok": false,
-            "answer_rouge_l": 0.0,
+            "citation_count_ok": true,
+            "answer_rouge_l": 0.08527131782945736,
             "abstain_keyword_hit": false,
             "answer_metric_type": "rouge_l",
-            "workspace_scope_ok": false
+            "workspace_scope_ok": true
           }
         },
         {
           "family": "retrieval_family",
-          "member_id": "live_corpus_holdout",
-          "case_id": "live_yolov1_intro",
+          "member_id": "hybrid_ablation_live",
+          "case_id": "ha_anchor_free",
           "metrics": {
             "passed": false,
-            "contract_only": false,
-            "hit_count": 0,
-            "min_hit_count": 1,
-            "hit_ok": false,
-            "missing_chunk_fingerprints": [
-              "8226cfd0-aae7-568a-81b1-e81d5f93f767"
-            ],
-            "work_id_ok": true,
-            "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
+            "mrr_vector": 0.0,
+            "mrr_hybrid": 0.0,
+            "mrr_delta": 0.0,
+            "mrr_delta_per_mode": {
+              "vector": 0.0,
+              "hybrid": 0.0
+            },
+            "hybrid_regression": false,
+            "min_mrr_delta_hybrid_minus_vector": 0.05,
+            "mrr_k": 10,
+            "relevant_count": 4,
+            "vector_hit_count": 5,
+            "hybrid_hit_count": 5,
+            "uuid_aware_mode": true
           }
         },
         {
           "family": "retrieval_family",
-          "member_id": "live_corpus_holdout",
-          "case_id": "live_yolov1_methods_combo",
+          "member_id": "hybrid_ablation_live",
+          "case_id": "ha_classical_handcrafted",
           "metrics": {
             "passed": false,
-            "contract_only": false,
-            "hit_count": 0,
-            "min_hit_count": 1,
-            "hit_ok": false,
-            "missing_chunk_fingerprints": [
-              "7ee12509-2279-5d5d-b450-1607dffde23c",
-              "30091237-ce82-52b7-8f16-efab66d4c2ac"
-            ],
-            "work_id_ok": true,
-            "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
+            "mrr_vector": 0.0,
+            "mrr_hybrid": 0.0,
+            "mrr_delta": 0.0,
+            "mrr_delta_per_mode": {
+              "vector": 0.0,
+              "hybrid": 0.0
+            },
+            "hybrid_regression": false,
+            "min_mrr_delta_hybrid_minus_vector": 0.05,
+            "mrr_k": 10,
+            "relevant_count": 2,
+            "vector_hit_count": 5,
+            "hybrid_hit_count": 5,
+            "uuid_aware_mode": true
+          }
+        },
+        {
+          "family": "retrieval_family",
+          "member_id": "hybrid_ablation_live",
+          "case_id": "ha_compound_scaling",
+          "metrics": {
+            "passed": false,
+            "mrr_vector": 0.0,
+            "mrr_hybrid": 0.0,
+            "mrr_delta": 0.0,
+            "mrr_delta_per_mode": {
+              "vector": 0.0,
+              "hybrid": 0.0
+            },
+            "hybrid_regression": false,
+            "min_mrr_delta_hybrid_minus_vector": 0.05,
+            "mrr_k": 10,
+            "relevant_count": 1,
+            "vector_hit_count": 5,
+            "hybrid_hit_count": 5,
+            "uuid_aware_mode": true
+          }
+        },
+        {
+          "family": "retrieval_family",
+          "member_id": "hybrid_ablation_live",
+          "case_id": "ha_focal_loss",
+          "metrics": {
+            "passed": false,
+            "mrr_vector": 0.0,
+            "mrr_hybrid": 0.0,
+            "mrr_delta": 0.0,
+            "mrr_delta_per_mode": {
+              "vector": 0.0,
+              "hybrid": 0.0
+            },
+            "hybrid_regression": false,
+            "min_mrr_delta_hybrid_minus_vector": 0.05,
+            "mrr_k": 10,
+            "relevant_count": 2,
+            "vector_hit_count": 5,
+            "hybrid_hit_count": 5,
+            "uuid_aware_mode": true
+          }
+        },
+        {
+          "family": "retrieval_family",
+          "member_id": "hybrid_ablation_live",
+          "case_id": "ha_iou_loss_quality",
+          "metrics": {
+            "passed": false,
+            "mrr_vector": 0.0,
+            "mrr_hybrid": 0.0,
+            "mrr_delta": 0.0,
+            "mrr_delta_per_mode": {
+              "vector": 0.0,
+              "hybrid": 0.0
+            },
+            "hybrid_regression": false,
+            "min_mrr_delta_hybrid_minus_vector": 0.05,
+            "mrr_k": 10,
+            "relevant_count": 3,
+            "vector_hit_count": 5,
+            "hybrid_hit_count": 5,
+            "uuid_aware_mode": true
+          }
+        },
+        {
+          "family": "retrieval_family",
+          "member_id": "hybrid_ablation_live",
+          "case_id": "ha_keypoint_corner",
+          "metrics": {
+            "passed": false,
+            "mrr_vector": 0.0,
+            "mrr_hybrid": 0.0,
+            "mrr_delta": 0.0,
+            "mrr_delta_per_mode": {
+              "vector": 0.0,
+              "hybrid": 0.0
+            },
+            "hybrid_regression": false,
+            "min_mrr_delta_hybrid_minus_vector": 0.05,
+            "mrr_k": 10,
+            "relevant_count": 2,
+            "vector_hit_count": 5,
+            "hybrid_hit_count": 5,
+            "uuid_aware_mode": true
+          }
+        },
+        {
+          "family": "retrieval_family",
+          "member_id": "hybrid_ablation_live",
+          "case_id": "ha_set_prediction_transformer",
+          "metrics": {
+            "passed": false,
+            "mrr_vector": 0.0,
+            "mrr_hybrid": 0.0,
+            "mrr_delta": 0.0,
+            "mrr_delta_per_mode": {
+              "vector": 0.0,
+              "hybrid": 0.0
+            },
+            "hybrid_regression": false,
+            "min_mrr_delta_hybrid_minus_vector": 0.05,
+            "mrr_k": 10,
+            "relevant_count": 5,
+            "vector_hit_count": 5,
+            "hybrid_hit_count": 5,
+            "uuid_aware_mode": true
+          }
+        },
+        {
+          "family": "retrieval_family",
+          "member_id": "hybrid_ablation_live",
+          "case_id": "ha_two_stage_rpn_evolution",
+          "metrics": {
+            "passed": false,
+            "mrr_vector": 0.0,
+            "mrr_hybrid": 0.0,
+            "mrr_delta": 0.0,
+            "mrr_delta_per_mode": {
+              "vector": 0.0,
+              "hybrid": 0.0
+            },
+            "hybrid_regression": false,
+            "min_mrr_delta_hybrid_minus_vector": 0.05,
+            "mrr_k": 10,
+            "relevant_count": 3,
+            "vector_hit_count": 5,
+            "hybrid_hit_count": 5,
+            "uuid_aware_mode": true
           }
         }
       ],

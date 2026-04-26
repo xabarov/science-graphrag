@@ -11,8 +11,11 @@ from typing import Any
 import typer
 
 from eval.bench_common import run_single_case_json_outputs, run_suite_cli_flow
+from eval.claims.article_source import read_claims_article
+from eval.claims.discover_cases import discover_claims_case_dirs, load_claims_case_tiers
 from eval.claims.heuristic_extract import extract_claims_anchor_harness
 from eval.claims.metrics import score_claims_extraction
+from eval.claims.paraphrase_flags import gold_expects_paraphrase_row_matching
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.claims.extractor import (
     claim_drafts_to_predictions,
@@ -44,64 +47,6 @@ def extract_claims_production_path(
     return claim_drafts_to_predictions(drafts), diag
 
 
-def _load_claims_case_tiers(fixtures_root: Path) -> dict[str, list[str]] | None:
-    path = fixtures_root / "case_tiers.json"
-    if not path.is_file():
-        return None
-    try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError, TypeError):
-        return None
-    if not isinstance(raw, dict):
-        return None
-    out: dict[str, list[str]] = {}
-    for key, val in raw.items():
-        if isinstance(val, list):
-            out[str(key)] = [str(x) for x in val]
-    return out or None
-
-
-def discover_claims_case_dirs(
-    fixtures_root: Path,
-    *,
-    tier: str = "claims_merge_contract",
-) -> list[Path]:
-    """Subdirectories containing ``article.md`` and ``gold.json``."""
-
-    if not fixtures_root.is_dir():
-        return []
-    tiers: dict[str, list[str]] | None = _load_claims_case_tiers(fixtures_root)
-    allowed: set[str] | None
-    if tier == "all":
-        allowed = None
-    elif tiers is not None:
-        tier_ids = tiers.get(tier)
-        if tier_ids is None:
-            return []
-        allowed = set(tier_ids)
-    else:
-        allowed = None
-
-    out: list[Path] = []
-    for child in sorted(fixtures_root.iterdir()):
-        if not child.is_dir():
-            continue
-        gold_path = child / "gold.json"
-        if not (child / "article.md").is_file() or not gold_path.is_file():
-            continue
-        try:
-            meta = json.loads(gold_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError, TypeError):
-            meta = {}
-        if meta.get("skip_in_suite_cli"):
-            continue
-        cid = child.name
-        if allowed is not None and cid not in allowed:
-            continue
-        out.append(child)
-    return out
-
-
 def run_claims_case(
     case_dir: Path | str,
     *,
@@ -111,9 +56,18 @@ def run_claims_case(
     """Run claims extraction for one fixture directory."""
 
     root = Path(case_dir)
-    article = (root / "article.md").read_text(encoding="utf-8")
+    article = read_claims_article(root)
     gold = json.loads((root / "gold.json").read_text(encoding="utf-8"))
     s = settings or get_settings()
+    if gold_expects_paraphrase_row_matching(gold):
+        from eval.claims.paraphrase_runner import run_claims_paraphrase_case
+
+        return run_claims_paraphrase_case(
+            root,
+            settings=s,
+            extract_fn=extract_fn,
+        )
+
     fn = extract_fn or extract_claims_anchor_harness
 
     started = perf_counter()
@@ -158,7 +112,7 @@ def _run_claims_suite(  # pylint: disable=too-many-arguments
     json_out: Path | None,
     md_out: Path | None,
 ) -> None:
-    tiers_map: dict[str, list[str]] | None = _load_claims_case_tiers(path)
+    tiers_map: dict[str, list[str]] | None = load_claims_case_tiers(path)
     if tier != "all":
         if tiers_map is None:
             typer.echo(f"No case_tiers.json under {path}", err=True)

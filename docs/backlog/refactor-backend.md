@@ -10,6 +10,37 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 
 ## Queue
 
+### [OPEN] Robust ingest orchestration: hard timeout + checkpoint + resume
+- **Area:** `science_graphrag/ingestion/_pipeline_impl.py` (`run_ingest_batch_cli`, `ingest_document`), `science_graphrag/ingestion/llm/extractor.py` (`SyncInstructorExtractor`), `science_graphrag/embeddings/openrouter_provider.py` (`OpenRouterEmbeddingProvider._call_openrouter`), `science_graphrag/ingestion/vl_pdf.py` (PDF→article via VL).
+- **Issue:** В Wave 4 (BT2/BT5 ingest) `science-graphrag ingest-corpus` зависал **на одном файле на 3+ часа** при `0.4% CPU` (TCP к OpenRouter в `CLOSE-WAIT`, никаких exception/exit), батч продвинулся 15/31 и встал. `tee` буферизировал stdout → лог 0 байт. Существующие таймауты: `OpenRouterEmbeddingProvider` httpx=60s, `SyncInstructorExtractor` openai=180s, но они не защищают от silent server hang когда соединение «полусохнет», и не покрывают весь pipeline (VL extractor + dual-validate + claims). Нет `ingest-corpus` checkpoint'а: при таймауте мы теряем прогресс между файлами (Postgres-row остаётся с `work_id=None`, см. 7 «осиротевших» YOLOv1 строк за разные дни).
+- **Proposal:**
+  - **Per-file wall timeout** в `run_ingest_batch_cli` (новый CLI флаг `--per-file-timeout-s`, default 900): обернуть `ingest_document` через `concurrent.futures.ProcessPoolExecutor.submit(...).result(timeout=...)` или хотя бы `signal.alarm` (POSIX). При таймауте — `kill -9`, запись `FAIL_TIMEOUT` в audit и продолжение со следующего файла.
+  - **Checkpoint manifest** `data/artifacts/ingest-corpus-progress.json`: `{path, sha256, status: ok|fail|timeout, document_id?, work_id?, started_at, finished_at}`. CLI флаг `--resume` пропускает `status == ok`. Записываем атомарно (`os.replace`) после каждого файла.
+  - **Streaming logger** в `run_ingest_batch_cli` использовать `logging.StreamHandler(sys.stdout, force_flush=True)` или `print(..., flush=True)`; рекомендация в `scripts/pilot_ingest_cv_corpus.sh` использовать `unbuffer`/`stdbuf -oL` или прямую запись в файл вместо `tee` без флешей.
+  - **httpx retry/circuit-breaker** в `_call_openrouter` и `SyncInstructorExtractor`: при `httpx.ReadTimeout`/`RemoteProtocolError` форсить close+reopen клиента; экспоненциальный backoff с **жёстким верхним пределом** (max_total_seconds=120), после чего raise → пайплайн не висит.
+  - **VL PDF stage**: добавить `timeout_seconds` в `vl_pdf.py` параллельно ingestion timeout.
+- **Acceptance:**
+  - повтор «hung file» сценария → батч продолжает работать, файл помечен как `timeout`, exit code 0 (с `--continue-on-error`);
+  - `ingest-corpus --resume` работает после Ctrl-C: ранее `ok` файлы пропускаются с одной строкой `SKIP resumed=ok`;
+  - `progress.json` валидный JSON после kill-9 родителя (атомарная запись);
+  - tests: новый `tests/ingestion/test_batch_resume_and_timeout.py` (mocked `ingest_document` со sleep>timeout) проходит;
+  - в `docs/runbooks/` обновлена ingest runbook страница с `--per-file-timeout-s`/`--resume`.
+- **Reference:** обнаружено в Wave 4 honesty-close, см. analysis chat 2026-04-26 (process PID 2490711, Postgres `documents` rows с `work_id=None`).
+- **Raised:** 2026-04-26 (Wave 4).
+
+### [OPEN] Backfill workspace_id payload for unbounded `ws_full_corpus="*"` workspaces
+- **Area:** `scripts/backfill_workspace_payloads.py`, `scripts/seed_benchmark_workspaces.py`, `science_graphrag/storage/qdrant.py:add_workspace_to_chunks`.
+- **Issue:** `_workspaces.json` поддерживает `corpus_work_ids: "*"` (см. `ws_full_corpus`). `seed_benchmark_workspaces.py` для такого пакета пропускает CONTAINS-edges (по дизайну: «unbounded»). В результате `backfill_workspace_payloads.py` (который читает только `Workspace-[:CONTAINS]->Work`) **не тегает** ни одного chunk-а как принадлежащий `ws_full_corpus`. Live-кейсы `ws_full_anchor_free_overview` и `ws_full_corpus_negative_unrelated` стабильно дают `hit_count=0`, потому что retrieval-фильтр по `workspace_id == "ws_full_corpus"` ничего не находит. Это уродует Wave 4 honesty close: `workspace_scoped_live` advisory-провал не из-за ответа модели, а из-за отсутствующих payloads.
+- **Proposal:**
+  - В `backfill_workspace_payloads.py` добавить ветку «unbounded»: если `corpus_work_ids == "*"`, тэгать **все** chunks в коллекции `chunks` через `qdrant.add_workspace_to_chunks(work_id=None, workspace_id=ws_id)` (нужно расширить метод: при `work_id is None` — full-collection scroll + payload set).
+  - Вариант B (более чистый): хранить `workspace_id` как массив (`workspace_ids: list[str]`) и у full-corpus workspace это «virtual»-тэг, считаемый на стороне retrieval (без payload-write). Тогда `backfill` не нужен, а retrieval добавляет implicit OR на full-corpus workspaces.
+  - Обновить `scripts/seed_benchmark_workspaces.py`: вместо `corpus=*  no CONTAINS edges` создавать запись Workspace + помечать `meta.unbounded=true`.
+- **Acceptance:**
+  - `ws_full_anchor_free_overview` и `ws_full_corpus_negative_unrelated` дают `hit_count > 0` после `seed + backfill`;
+  - тест `tests/retrieval/test_workspace_scoping.py::test_unbounded_workspace_returns_full_corpus` (новый) проходит;
+  - регрессия: bounded workspaces (`ws_yolo_family`, `ws_two_stage`) продолжают изолировать chunks как раньше.
+- **Raised:** 2026-04-26 (Wave 4 honesty close).
+
 ### [OPEN] Split `scripts/aggregate_benchmark_metrics.py` (BT1 follow-up)
 - **Area:** `scripts/aggregate_benchmark_metrics.py` (~1100 lines after Wave 3 BT4/BT5 additions).
 - **Issue:** Summarizers (`_summarize_*`), markdown render (`_md_*`), CLI `main()`, family logic all live in one file; hard to review and parallel-edit with BT2–BT12 aggregator deltas. File grows with each wave.

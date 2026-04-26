@@ -73,6 +73,8 @@ DEFAULT_CLAIMS_MINI_SUITE = "eval/results/current-claims-mini-suite.json"
 DEFAULT_CLAIMS_CORPUS_V2_MINI_SUITE = "eval/results/current-claims-corpus-v2-mini.json"
 DEFAULT_CLAIMS_PILOT_SUITE = "eval/results/current-claims-pilot-suite.json"
 DEFAULT_CLAIMS_PRODUCTION_PILOT = "eval/results/current-claims-production-pilot.json"
+DEFAULT_CLAIMS_PARAPHRASE_PILOT = "eval/results/current-claims-paraphrase-pilot.json"
+DEFAULT_CLAIMS_PARAPHRASE_HOLDOUT = "eval/results/current-claims-paraphrase-holdout.json"
 
 DEFAULT_REFERENCES_RESOLUTION_CONTRACT = "eval/results/current-references-resolution-contract.json"
 DEFAULT_REFERENCES_RESOLUTION_MINI = "eval/results/current-references-resolution-mini.json"
@@ -477,6 +479,7 @@ def _strip_suite_cases_from_payload(payload: dict[str, Any]) -> None:
             if isinstance(block, dict):
                 block.pop("cases", None)
                 block.pop("_workspace_scoped_delegated_to_live", None)
+                block.pop("_hybrid_ablation_delegated_to_live", None)
                 block.pop("last_infra_skip", None)
 
 
@@ -493,6 +496,18 @@ def _finalize_family_trust(family_key: str, family: dict[str, Any]) -> None:
                 not in PHANTOM_RUNTIME_MODES
             ):
                 ws["_workspace_scoped_delegated_to_live"] = True
+
+        hab_live = family.get("hybrid_ablation_live")
+        hab = family.get("hybrid_ablation")
+        if isinstance(hab_live, dict) and isinstance(hab, dict) and hab_live.get("error") != "missing_file":
+            cases_h = _cases_from_block(hab_live)
+            if (
+                detect_runtime_mode("hybrid_ablation_live", hab_live, cases_h)
+                not in PHANTOM_RUNTIME_MODES
+            ):
+                summ = hab_live.get("summary") if isinstance(hab_live.get("summary"), dict) else {}
+                if bool(summ.get("all_passed")):
+                    hab["_hybrid_ablation_delegated_to_live"] = True
 
     for member_id, block in list(family.items()):
         if member_id in {"role", "trust_aggregate"} or not isinstance(block, dict):
@@ -658,6 +673,8 @@ def _md_claims_family_section(cf: dict[str, Any]) -> list[str]:
     _one("claims_mini", cf.get("claims_mini") or {})
     _one("claims_corpus_v2_mini", cf.get("claims_corpus_v2_mini") or {})
     _one("claims_pilot", cf.get("claims_pilot") or {})
+    _one("claims_paraphrase_pilot (BT6)", cf.get("claims_paraphrase_pilot") or {})
+    _one("claims_paraphrase_holdout (BT6)", cf.get("claims_paraphrase_holdout") or {})
     return lines
 
 
@@ -865,6 +882,25 @@ def main() -> int:
         ),
     )
     parser.add_argument(
+        "--claims-paraphrase-pilot-json",
+        type=str,
+        default=DEFAULT_CLAIMS_PARAPHRASE_PILOT,
+        help=(
+            "Optional BT6 paraphrase pilot JSON from "
+            "`science-graphrag-claims-paraphrase-benchmark --suite --tier claims_pilot_v2` "
+            "(use `--extractor oracle` for wiring smoke without LLM keys; advisory)."
+        ),
+    )
+    parser.add_argument(
+        "--claims-paraphrase-holdout-json",
+        type=str,
+        default=DEFAULT_CLAIMS_PARAPHRASE_HOLDOUT,
+        help=(
+            "Optional BT6 paraphrase holdout JSON from "
+            "`science-graphrag-claims-paraphrase-benchmark --suite --tier claims_holdout_v1` (advisory)."
+        ),
+    )
+    parser.add_argument(
         "--retrieval-workspace-scoped-json",
         type=str,
         default=DEFAULT_RETRIEVAL_WORKSPACE_SCOPED,
@@ -990,6 +1026,8 @@ def main() -> int:
             "claims_corpus_v2_mini_suite": DEFAULT_CLAIMS_CORPUS_V2_MINI_SUITE,
             "claims_pilot_suite": DEFAULT_CLAIMS_PILOT_SUITE,
             "claims_production_pilot_suite": args.claims_production_json,
+            "claims_paraphrase_pilot_suite": args.claims_paraphrase_pilot_json,
+            "claims_paraphrase_holdout_suite": args.claims_paraphrase_holdout_json,
             "references_resolution_contract": DEFAULT_REFERENCES_RESOLUTION_CONTRACT,
             "references_resolution_mini": DEFAULT_REFERENCES_RESOLUTION_MINI,
             "references_resolution_graph": args.refs_graph_json,
@@ -1028,6 +1066,12 @@ def main() -> int:
                 DEFAULT_CLAIMS_CORPUS_V2_MINI_SUITE
             ),
             "claims_pilot": _summarize_case_metrics_suite(DEFAULT_CLAIMS_PILOT_SUITE),
+            "claims_paraphrase_pilot": _summarize_case_metrics_suite(
+                args.claims_paraphrase_pilot_json
+            ),
+            "claims_paraphrase_holdout": _summarize_case_metrics_suite(
+                args.claims_paraphrase_holdout_json
+            ),
         },
         "claims_production_family": {
             "role": "core",

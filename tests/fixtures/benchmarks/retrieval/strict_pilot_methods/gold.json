@@ -1,13 +1,11 @@
 {
   "schema_version": 1,
   "benchmark_suite_tier": "strict_pilot",
-  "description": "Live-captured 2026-04-19 against local dev stack (docker compose): POST /v1/query work-scoped YOLOv1 work; chunk_fingerprints are Qdrant point ids (legacy chunks without payload.chunk_fingerprint).",
-  "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+  "description": "Pilot YOLOv1 methods question; portable gate (slug-resolved work_id, no frozen chunk fingerprints).",
+  "work_id": null,
+  "filter_work_layer1_slug": "yolov1",
   "top_k": 8,
   "min_hit_count": 1,
-  "required_chunk_fingerprints": [
-    "7ee12509-2279-5d5d-b450-1607dffde23c",
-    "30091237-ce82-52b7-8f16-efab66d4c2ac"
-  ],
+  "required_chunk_fingerprints": [],
   "contract_only": false
 }

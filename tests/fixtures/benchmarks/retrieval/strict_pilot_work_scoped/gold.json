@@ -1,12 +1,11 @@
 {
   "schema_version": 1,
   "benchmark_suite_tier": "strict_pilot",
-  "description": "Live-captured 2026-04-19: same pilot work as strict_pilot_methods; loss/training question.",
-  "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+  "description": "Pilot YOLOv1 work-scoped; portable gate (slug-resolved work_id, no frozen chunk fingerprints).",
+  "work_id": null,
+  "filter_work_layer1_slug": "yolov1",
   "top_k": 6,
   "min_hit_count": 1,
-  "required_chunk_fingerprints": [
-    "4defe8cb-0c85-5e54-a3db-24cc31a6d64e"
-  ],
+  "required_chunk_fingerprints": [],
   "contract_only": false
 }

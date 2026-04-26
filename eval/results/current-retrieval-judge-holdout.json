@@ -50,9 +50,9 @@
         "coverage": 3,
         "no_contradictions": 2,
         "language": 2,
-        "justification": "The answer is factually correct as it states the lack of retrieved chunks and suggests possible actions. It is fully coherent and consistent, and the language used is clear and appropriate."
+        "justification": "The answer is factually accurate, as it directly quotes the provided context. It fully covers the question by explaining what YOLO is and how it differs from classifier-based sliding-window detectors. There are no contradictions in the answer. The language used is clear and coherent."
       },
-      "wall_clock_seconds": 2.592
+      "wall_clock_seconds": 2.704
     },
     {
       "case_id": "live_yolov1_methods_combo",
@@ -63,9 +63,9 @@
         "coverage": 3,
         "no_contradictions": 2,
         "language": 2,
-        "justification": "The answer is factually correct as it accurately states the lack of retrieved chunks. It fully covers the absence of information by explaining the situation, which aligns with the non-existent gold reference snippet. There are no contradictions in the answer, and the language used is clear and coherent."
+        "justification": "The answer is factually accurate, as it directly quotes the retrieved context without introducing any invented information. It fully covers the question by describing the YOLO method and its positioning relative to other detectors, even though there is no specific gold reference snippet. The answer is internally consistent and written in clear, coherent English."
       },
-      "wall_clock_seconds": 2.182
+      "wall_clock_seconds": 1.632
     }
   ]
 }

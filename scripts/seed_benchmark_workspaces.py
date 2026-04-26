@@ -26,6 +26,7 @@ from pathlib import Path
 
 from neo4j import GraphDatabase
 
+from eval.retrieval.work_id_resolve import is_uuid_like
 from science_graphrag.config import get_settings
 
 
@@ -92,9 +93,26 @@ def _seed_manifest(
                 if uuid:
                     work_uuids.append(uuid)
                 else:
-                    print(f"skip_missing_work workspace={wid} corpus_slug={slug_s}", file=sys.stderr)
+                    print(
+                        f"skip_missing_work workspace={wid} corpus_slug={slug_s}", file=sys.stderr
+                    )
         else:
-            work_uuids = [str(x).strip() for x in ((meta or {}).get("work_ids") or []) if str(x).strip()]
+            work_uuids = []
+            for ref in (meta or {}).get("work_ids") or []:
+                ref_s = str(ref).strip()
+                if not ref_s:
+                    continue
+                if is_uuid_like(ref_s):
+                    work_uuids.append(ref_s)
+                else:
+                    resolved = _resolve_corpus_slug_to_uuid(ref_s, repo, driver)
+                    if resolved:
+                        work_uuids.append(resolved)
+                    else:
+                        print(
+                            f"skip_unresolved_slug workspace={wid} slug={ref_s}",
+                            file=sys.stderr,
+                        )
 
         for work_uuid in work_uuids:
             with driver.session() as session:
@@ -126,7 +144,9 @@ def main() -> int:
         auth=(settings.neo4j_user, settings.neo4j_password),
     )
     try:
-        pilot_manifest = repo / "tests/fixtures/benchmarks/retrieval/workspace_scoped/_workspaces.json"
+        pilot_manifest = (
+            repo / "tests/fixtures/benchmarks/retrieval/workspace_scoped/_workspaces.json"
+        )
         _seed_manifest(pilot_manifest, driver, repo, use_corpus_ids=False)
 
         live_manifest = (

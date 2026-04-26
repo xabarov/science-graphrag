@@ -87,7 +87,7 @@
       "citations": [],
       "answer": "No retrieved chunks; ingest documents or check Qdrant collection.",
       "answer_preview": "No retrieved chunks; ingest documents or check Qdrant collection.",
-      "wall_clock_seconds": 1.32
+      "wall_clock_seconds": 0.057
     },
     {
       "case_id": "ws_full_corpus_negative_unrelated",
@@ -152,7 +152,7 @@
       "citations": [],
       "answer": "No retrieved chunks; ingest documents or check Qdrant collection.",
       "answer_preview": "No retrieved chunks; ingest documents or check Qdrant collection.",
-      "wall_clock_seconds": 0.793
+      "wall_clock_seconds": 0.037
     },
     {
       "case_id": "ws_two_stage_negative_focal_loss",
@@ -162,8 +162,8 @@
         "passed": false,
         "contract_only": false,
         "workspace_scoped_live": true,
-        "uuid_aware_mode": false,
-        "hit_count": 0,
+        "uuid_aware_mode": true,
+        "hit_count": 5,
         "trace_workspace_matches": true,
         "forbidden_work_id_violation_count": 0,
         "forbidden_corpus_work_ids_leaked": [],
@@ -182,15 +182,21 @@
           "embedding_model": "baai/bge-m3",
           "vector_dim": 1024,
           "workspace_id": "ws_two_stage",
-          "workspace_scope_work_count": 3
+          "workspace_scope_work_count": 5
         },
-        "hit_count": 0,
+        "hit_count": 5,
         "filter_work_id": null,
-        "resolved_work_id": null,
+        "resolved_work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
         "qdrant_collection": "chunks",
         "top_k_requested": 5,
-        "citations_returned": 0,
-        "top_hit_scores": [],
+        "citations_returned": 5,
+        "top_hit_scores": [
+          0.455918,
+          0.43131176,
+          0.4191385,
+          0.43895215,
+          0.4161813
+        ],
         "query_preview": "Which paper in this workspace introduces focal loss to address class imbalance?",
         "answer_synthesis": {
           "mode": "deterministic_snippets",
@@ -198,27 +204,82 @@
         },
         "retrieval_mode": "vector",
         "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
-        "degraded": [
-          "no_retrieval_hits"
-        ],
+        "degraded": [],
         "workspace_id": "ws_two_stage",
-        "workspace_scope_work_count": 3,
-        "workspace_scope_payload_miss": "work_ids_payload"
+        "workspace_scope_work_count": 5
       },
       "graph_context": {
-        "methods": [],
-        "datasets": [],
-        "semantic_available": false,
-        "context_work_id": null,
-        "degraded": [
-          "no_resolved_work"
+        "methods": [
+          "Cascade R-CNN"
         ],
+        "datasets": [
+          "COCO"
+        ],
+        "semantic_available": true,
+        "context_work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
+        "degraded": [],
         "error": null
       },
-      "citations": [],
-      "answer": "No retrieved chunks; ingest documents or check Qdrant collection.",
-      "answer_preview": "No retrieved chunks; ingest documents or check Qdrant collection.",
-      "wall_clock_seconds": 0.797
+      "citations": [
+        {
+          "rank": 1,
+          "score": 0.455918,
+          "work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
+          "document_id": "1238c41e-e303-46e1-a05e-4b11db55f6ac",
+          "chunk_fingerprint": "e0c5a19b51fcd8845a0b069a4c83cc89fe4a635900a270c874b0f10dcf424bfb",
+          "section_path": "Cascade R-CNN: Delving into High Quality Object Detection",
+          "excerpt": "A naïve solution is to develop an ensemble of classifiers, with the architecture of Figure 3 (c), optimized with a loss\n\nL_cls(h(x), y) = Σ L_cls(hu(x), yu), (6)\n\nwhere U is a set of IoU thresholds. This is closely related to the integral loss of [34], in which U = {0.5, 0.55, · · · , 0.75}, designed to fit the evaluation metric of the COCO challenge. By definition, the classifiers need to be ensembled at inference. This solution fails to address the problem that the different losses of (6) operate on different numbers of positives. As shown in the first figure of Figure 4, the set of positive",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 2,
+          "score": 0.43131176,
+          "work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
+          "document_id": "1238c41e-e303-46e1-a05e-4b11db55f6ac",
+          "chunk_fingerprint": "fc65b7e456dfb7282649041b3ccdee158ec50502cbf8095e331875eb880aa21f",
+          "section_path": "Cascade R-CNN: Delving into High Quality Object Detection / 5. Experimental Results",
+          "excerpt": "FPN: Since no source code is publicly available yet for FPN, our implementation details could be different. RoIAlign [14] was used for a stronger baseline. This is denoted as FPN+ and was used in all ablation studies. As usual, ResNet-50 was used for ablation studies, and ResNet-101 for final detection. Training used a learning rate of 0.005 for 120k iterations and 0.0005 for the next 60k iterations, on 8 synchronized GPUs, each holding one image per iteration. 256 RoIs were used per image.\n\n### 5.2. Quality Mismatch\n\nFigure 5 (a) shows the AP curves of three individually trained detectors of ",
+          "chunk_kind": "result",
+          "language": "en"
+        },
+        {
+          "rank": 3,
+          "score": 0.4191385,
+          "work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
+          "document_id": "1238c41e-e303-46e1-a05e-4b11db55f6ac",
+          "chunk_fingerprint": "caf56dccc508ba58c1e39bced24d69addd93866362bc971b47d90ee1d68b0662",
+          "section_path": "Cascade R-CNN: Delving into High Quality Object Detection / 5. Experimental Results / 5.3. Comparison with Iterative BBox and Integral Loss",
+          "excerpt": "### 5.3. Comparison with Iterative BBox and Integral Loss\n\nIn this section, we compare the Cascade R-CNN to iterative BBox and the integral loss detector. Iterative BBox was implemented by applying the FPN+ baseline iteratively, three times. The integral loss detector has the same number of classification heads as the Cascade R-CNN, with U = {0.5, 0.6, 0.7}.\n\n<!-- Table (49, 300, 440, 350) -->\nTable 1. The comparison with iterative BBox and integral loss.\n\n<!-- Table (49, 350, 440, 400) -->\nTable 2. The stage performance of Cascade R-CNN. 1~3 indicates the ensemble of three classifiers on the ",
+          "chunk_kind": "result",
+          "language": "en"
+        },
+        {
+          "rank": 4,
+          "score": 0.43895215,
+          "work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
+          "document_id": "1238c41e-e303-46e1-a05e-4b11db55f6ac",
+          "chunk_fingerprint": "fd99907120963facfe6a1218f45da8d56eb3efab0c5134acb1efc81f110856ce",
+          "section_path": "Cascade R-CNN: Delving into High Quality Object Detection",
+          "excerpt": "[10] S. Gidaris and N. Komodakis. Attend refine repeat: Active box proposal generation via in-out localization. In BMVC, 2016.\n\n[11] R. B. Girshick. Fast R-CNN. In ICCV, pages 1440–1448, 2015.\n\n[12] R. B. Girshick, J. Donahue, T. Darrell, and J. Malik. Rich feature hierarchies for accurate object detection and semantic segmentation. In CVPR, pages 580–587, 2014.\n\n[13] S. Han, J. Pool, J. Tran, and W. J. Dally. Learning both weights and connections for efficient neural network. In NIPS, pages 1135–1143, 2015.\n\n[14] K. He, G. Gkioxari, P. Dollár, and R. Girshick. Mask r-cnn. In ICCV, 2017.\n\n[15]",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 5,
+          "score": 0.4161813,
+          "work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
+          "document_id": "1238c41e-e303-46e1-a05e-4b11db55f6ac",
+          "chunk_fingerprint": "7b9d27bacd60d22188fc7145d6c17fe3697c9b4d742d4a5affb3ef5e28b69361",
+          "section_path": "Cascade R-CNN: Delving into High Quality Object Detection / 5. Experimental Results",
+          "excerpt": "### 5.4. Ablation Experiments\n\nAblation experiments were also performed.\n\nStage-wise Comparison: Table 2 summarizes stage performance. The 1st stage already outperforms the baseline detector, due to the benefits of multi-stage multi-task learning. The 2nd stage improves performance substantially, and the 3rd is equivalent to the 2nd. This differs from the integral loss detector, where the higher IOU classifier is relatively weak. While the former (later) stage is better at low (high) IoU metrics, the ensemble of all classifiers is the best overall.\n\nIoU Thresholds: A preliminary Cascade R-CNN ",
+          "chunk_kind": "result",
+          "language": "en"
+        }
+      ],
+      "answer": "Retrieved context (not LLM-paraphrased): A naïve solution is to develop an ensemble of classifiers, with the architecture of Figure 3 (c), optimized with a loss\n\nL_cls(h(x), y) = Σ L_cls(hu(x), yu), (6)\n\nwhere U is a set of IoU thresholds. This is closely related to the integral loss of [34], in which U = {0.5, 0.55, · · · , 0.75}, designed to fit the evaluation metric of the COCO challenge. By definition, the classifiers need to be ense FPN: Since no source code is publicly available yet for FPN, our implementation details could be different. RoIAlign [14] was used for a stronger baseline. This is denoted as FPN+ and was used in all ablation studies. As usual, ResNet-50 was used for ablation studies, and ResNet-101 for final detection. Training used a learning rate of 0.005 for 120k iterations and 0.0005 for the next 60k iteratio ### 5.3. Comparison with Iterative BBox and Integral Loss\n\nIn this section, we compare the Cascade R-CNN to iterative BBox and the integral loss detector. Iterative BBox was implemented by applying the FPN+ baseline iteratively, three times. The integral loss detector has the same number of classification heads as the Cascade R-CNN, with U = {0.5, 0.6, 0.7}.\n\n<!-- Table (49, 300, 440, 350) -->\nT…",
+      "answer_preview": "Retrieved context (not LLM-paraphrased): A naïve solution is to develop an ensemble of classifiers, with the architecture of Figure 3 (c), optimized with a loss\n\nL_cls(h(x), y) = Σ L_cls(hu(x), yu), (6)\n\nwhere U is a set of IoU thresholds. This is closely related to the integral loss of [34], in which U = {0.5, 0.55, · · · , 0.75}, designed to fit the evaluation metric of the COCO challenge. By de",
+      "wall_clock_seconds": 0.048
     },
     {
       "case_id": "ws_two_stage_proposal_evolution",
@@ -228,8 +289,8 @@
         "passed": false,
         "contract_only": false,
         "workspace_scoped_live": true,
-        "uuid_aware_mode": false,
-        "hit_count": 0,
+        "uuid_aware_mode": true,
+        "hit_count": 5,
         "trace_workspace_matches": true,
         "forbidden_work_id_violation_count": 0,
         "forbidden_corpus_work_ids_leaked": [],
@@ -241,26 +302,32 @@
           "faster_rcnn_realpdf"
         ],
         "expected_citations_min_count": 3,
-        "citation_count_ok": false,
-        "answer_rouge_l": 0.0,
+        "citation_count_ok": true,
+        "answer_rouge_l": 0.08,
         "abstain_keyword_hit": false,
         "answer_metric_type": "rouge_l",
-        "workspace_scope_ok": false
+        "workspace_scope_ok": true
       },
       "retrieval_trace": {
         "embedding": {
           "embedding_model": "baai/bge-m3",
           "vector_dim": 1024,
           "workspace_id": "ws_two_stage",
-          "workspace_scope_work_count": 3
+          "workspace_scope_work_count": 5
         },
-        "hit_count": 0,
+        "hit_count": 5,
         "filter_work_id": null,
-        "resolved_work_id": null,
+        "resolved_work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
         "qdrant_collection": "chunks",
         "top_k_requested": 5,
-        "citations_returned": 0,
-        "top_hit_scores": [],
+        "citations_returned": 5,
+        "top_hit_scores": [
+          0.7074611,
+          0.67866397,
+          0.6398152,
+          0.59723055,
+          0.58361363
+        ],
         "query_preview": "How did the region-proposal mechanism evolve across the R-CNN family from R-CNN to Faster R-CNN?",
         "answer_synthesis": {
           "mode": "deterministic_snippets",
@@ -268,27 +335,82 @@
         },
         "retrieval_mode": "vector",
         "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
-        "degraded": [
-          "no_retrieval_hits"
-        ],
+        "degraded": [],
         "workspace_id": "ws_two_stage",
-        "workspace_scope_work_count": 3,
-        "workspace_scope_payload_miss": "work_ids_payload"
+        "workspace_scope_work_count": 5
       },
       "graph_context": {
-        "methods": [],
-        "datasets": [],
-        "semantic_available": false,
-        "context_work_id": null,
-        "degraded": [
-          "no_resolved_work"
+        "methods": [
+          "Cascade R-CNN"
         ],
+        "datasets": [
+          "COCO"
+        ],
+        "semantic_available": true,
+        "context_work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
+        "degraded": [],
         "error": null
       },
-      "citations": [],
-      "answer": "No retrieved chunks; ingest documents or check Qdrant collection.",
-      "answer_preview": "No retrieved chunks; ingest documents or check Qdrant collection.",
-      "wall_clock_seconds": 0.796
+      "citations": [
+        {
+          "rank": 1,
+          "score": 0.7074611,
+          "work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
+          "document_id": "1238c41e-e303-46e1-a05e-4b11db55f6ac",
+          "chunk_fingerprint": "74fdf6895e170f8892d4a39a4e3c369fd1fe9343cd508377daeef378f0bac93a",
+          "section_path": "Cascade R-CNN: Delving into High Quality Object Detection / 2. Related Work",
+          "excerpt": "## 2. Related Work\n\nDue to the success of the R-CNN [12] architecture, the two-stage formulation of the detection problems, by combining a proposal detector and a region-wise classifier has become predominant in the recent past. To reduce redundant CNN computations in the R-CNN, the SPP-Net [15] and Fast-RCNN [11] introduced the idea of region-wise feature extraction, significantly speeding up the overall detector. Later, the Faster-RCNN [27] achieved further speed-up by introducing a Region Proposal Network (RPN). This architecture has become a leading object detection framework. Some more re",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 2,
+          "score": 0.67866397,
+          "work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
+          "document_id": "1238c41e-e303-46e1-a05e-4b11db55f6ac",
+          "chunk_fingerprint": "b915867bc98ce5b12acbf1d447cf4ab75f4bb891d62132d684b5bc347a45b1a8",
+          "section_path": "Cascade R-CNN: Delving into High Quality Object Detection",
+          "excerpt": "del detectors by a large margin, on the challenging COCO detection task [20], especially under the higher quality evaluation metrics. In addition, the Cascade R-CNN can be built with any two-stage object detector based on the R-CNN framework. We have observed consistent gains (of 2~4 points), at a marginal increase in computation. This gain is independent of the strength of the baseline object detectors. We thus believe that this simple and effective detection architecture can be of interest for many object detection research efforts.\n\n## 2. Related Work\n\nDue to the success of the R-CNN [12] a",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 3,
+          "score": 0.6398152,
+          "work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
+          "document_id": "1238c41e-e303-46e1-a05e-4b11db55f6ac",
+          "chunk_fingerprint": "a304f385b3b41b05f1021769efb84acc71e5abf2f2f2234d0613473f6b0899c0",
+          "section_path": "Cascade R-CNN: Delving into High Quality Object Detection",
+          "excerpt": "<!-- Table (49, 400, 887, 500) -->\nTable 5. Comparison with the state-of-the-art single-model detectors on COCO test-dev. The entries denoted by “*” used bells and whistles at inference.\n\n<!-- Table (49, 500, 887, 600) -->\nTable 6. Detailed comparison on multiple popular baseline object detectors. All speeds are reported per image on a single Titan Xp GPU.\n\nnoted that our FPN+ implementation is better than the original FPN [21], providing a very strong baseline. In addition, the extension from FPN+ to Cascade R-CNN improved performance by ~4 points. The Cascade R-CNN also outperformed all sing",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 4,
+          "score": 0.59723055,
+          "work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
+          "document_id": "1238c41e-e303-46e1-a05e-4b11db55f6ac",
+          "chunk_fingerprint": "91e814aa3714b05803b91c9047cdb874232e74986556ca603244a3938fa917a4",
+          "section_path": "Cascade R-CNN: Delving into High Quality Object Detection / 5. Experimental Results / 5.5. Comparison with the state-of-the-art",
+          "excerpt": "### 5.5. Comparison with the state-of-the-art\n\nThe Cascade R-CNN, based on FPN+ and ResNet-101 backbone, is compared to state-of-the-art single-model object detectors in Table 5. The settings are as described in Section 5.1.1, but a total of 280k training iterations were run and the learning rate dropped at 160k and 240k iterations. The number of RoIs was also increased to 512. The first group of detectors on Table 5 are one-stage detectors, the second group two-stage, and the last group multi-stage (3-stages+RPN for the Cascade R-CNN). All the compared state-of-the-art detectors were trained ",
+          "chunk_kind": "result",
+          "language": "en"
+        },
+        {
+          "rank": 5,
+          "score": 0.58361363,
+          "work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
+          "document_id": "1238c41e-e303-46e1-a05e-4b11db55f6ac",
+          "chunk_fingerprint": "6063750088aa3793a5c3403ea18528287cf263ddfb2cc9ef65c918ec918ce27e",
+          "section_path": "Cascade R-CNN: Delving into High Quality Object Detection / 5. Experimental Results / 5.1. Implementation Details / 5.1.1 Baseline Networks",
+          "excerpt": "#### 5.1.1 Baseline Networks\n\nTo test the versatility of the Cascade R-CNN, experiments were performed with three popular baseline detectors: Faster-RCNN with backbone VGG-Net [29], R-FCN [4] and FPN [21] with ResNet backbone [16]. These baselines have a wide range of detection performances. Unless noted, their default settings were used. End-to-end training was used instead of multi-step training.\n\n<!-- Image (49, 50, 887, 200) -->\nFigure 5. (a) is detection performance of individually trained detectors, with their own proposals (solid curves) or Cascade R-CNN stage proposals (dashed curves),",
+          "chunk_kind": "method",
+          "language": "en"
+        }
+      ],
+      "answer": "Retrieved context (not LLM-paraphrased): ## 2. Related Work\n\nDue to the success of the R-CNN [12] architecture, the two-stage formulation of the detection problems, by combining a proposal detector and a region-wise classifier has become predominant in the recent past. To reduce redundant CNN computations in the R-CNN, the SPP-Net [15] and Fast-RCNN [11] introduced the idea of region-wise feature extraction, significantly speeding up the del detectors by a large margin, on the challenging COCO detection task [20], especially under the higher quality evaluation metrics. In addition, the Cascade R-CNN can be built with any two-stage object detector based on the R-CNN framework. We have observed consistent gains (of 2~4 points), at a marginal increase in computation. This gain is independent of the strength of the baseline object det <!-- Table (49, 400, 887, 500) -->\nTable 5. Comparison with the state-of-the-art single-model detectors on COCO test-dev. The entries denoted by “*” used bells and whistles at inference.\n\n<!-- Table (49, 500, 887, 600) -->\nTable 6. Detailed comparison on multiple popular baseline object detectors. All speeds are reported per image on a single Titan Xp GPU.\n\nnoted that our FPN+ implementation is …",
+      "answer_preview": "Retrieved context (not LLM-paraphrased): ## 2. Related Work\n\nDue to the success of the R-CNN [12] architecture, the two-stage formulation of the detection problems, by combining a proposal detector and a region-wise classifier has become predominant in the recent past. To reduce redundant CNN computations in the R-CNN, the SPP-Net [15] and Fast-RCNN [11] introduced the idea of region-wise feature ",
+      "wall_clock_seconds": 0.052
     },
     {
       "case_id": "ws_yolo_negative_mask_segmentation",
@@ -298,8 +420,8 @@
         "passed": false,
         "contract_only": false,
         "workspace_scoped_live": true,
-        "uuid_aware_mode": false,
-        "hit_count": 0,
+        "uuid_aware_mode": true,
+        "hit_count": 5,
         "trace_workspace_matches": true,
         "forbidden_work_id_violation_count": 0,
         "forbidden_corpus_work_ids_leaked": [],
@@ -318,15 +440,21 @@
           "embedding_model": "baai/bge-m3",
           "vector_dim": 1024,
           "workspace_id": "ws_yolo_family",
-          "workspace_scope_work_count": 1
+          "workspace_scope_work_count": 4
         },
-        "hit_count": 0,
+        "hit_count": 5,
         "filter_work_id": null,
-        "resolved_work_id": null,
+        "resolved_work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
         "qdrant_collection": "chunks",
         "top_k_requested": 5,
-        "citations_returned": 0,
-        "top_hit_scores": [],
+        "citations_returned": 5,
+        "top_hit_scores": [
+          0.54344267,
+          0.51218027,
+          0.50061065,
+          0.48295388,
+          0.48213732
+        ],
         "query_preview": "Which paper in this workspace introduces the per-instance mask prediction branch for instance segmentation?",
         "answer_synthesis": {
           "mode": "deterministic_snippets",
@@ -334,27 +462,84 @@
         },
         "retrieval_mode": "vector",
         "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
-        "degraded": [
-          "no_retrieval_hits"
-        ],
+        "degraded": [],
         "workspace_id": "ws_yolo_family",
-        "workspace_scope_work_count": 1,
-        "workspace_scope_payload_miss": "work_ids_payload"
+        "workspace_scope_work_count": 4
       },
       "graph_context": {
-        "methods": [],
-        "datasets": [],
-        "semantic_available": false,
-        "context_work_id": null,
-        "degraded": [
-          "no_resolved_work"
+        "methods": [
+          "Fast YOLO",
+          "YOLO"
         ],
+        "datasets": [
+          "ImageNet",
+          "PASCAL VOC"
+        ],
+        "semantic_available": true,
+        "context_work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+        "degraded": [],
         "error": null
       },
-      "citations": [],
-      "answer": "No retrieved chunks; ingest documents or check Qdrant collection.",
-      "answer_preview": "No retrieved chunks; ingest documents or check Qdrant collection.",
-      "wall_clock_seconds": 0.882
+      "citations": [
+        {
+          "rank": 1,
+          "score": 0.54344267,
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "document_id": "7d31611c-714f-4a48-84d2-16c3e46bcd93",
+          "chunk_fingerprint": "f952eb7ff8b77ade5123c89ef7533b26be9ca63a279653f1e6622ef42713a1f8",
+          "section_path": "You Only Look Once: Unified, Real-Time Object Detection",
+          "excerpt": "[7] J. Dong, Q. Chen, S. Yan, and A. Yuille. Towards unified object detection and semantic segmentation. In Computer Vision–ECCV 2014, pages 299–314. Springer, 2014. 7\n\n[8] D. Erhan, C. Szegedy, A. Toshev, and D. Anguelov. Scalable object detection using deep neural networks. In Computer Vision and Pattern Recognition (CVPR), 2014 IEEE Conference on, pages 2155–2162. IEEE, 2014. 5, 6\n\n[9] M. Everingham, S. M. A. Eslami, L. Van Gool, C. K. I. Williams, J. Winn, and A. Zisserman. The pascal visual object classes challenge: A retrospective. International Journal of Computer Vision, 111(1):98–136,",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 2,
+          "score": 0.51218027,
+          "work_id": "52e5de2a-32ef-4e74-86b1-7fc97c7e2de8",
+          "document_id": "770eacbc-880b-4645-9233-93722096b877",
+          "chunk_fingerprint": "dda69bd2b2bd15859bc82252ab98688c1a49cedf8acb4598338a54cbe7dc31c5",
+          "section_path": "YOLOX: Exceeding YOLO Series in 2021",
+          "excerpt": "[14] Hei Law and Jia Deng. Cornernet: Detecting objects as paired keypoints. In ECCV, 2018. 1, 3\n\n[15] Mengtian Li, Yuxiong Wang, and Deva Ramanan. Towards streaming perception. In ECCV, 2020. 5, 6\n\n[16] Tsung-Yi Lin, Priya Goyal, Ross Girshick, Kaiming He, and Piotr Dollár. Focal loss for dense object detection. In ICCV, 2017. 2\n\n[17] Tsung-Yi Lin, Michael Maire, Serge Belongie, James Hays, Pietro Perona, Deva Ramanan, Piotr Dollár, and C Lawrence Zitnick. Microsoft coco: Common objects in context. In ECCV, 2014. 2\n\n[18] Songtao Liu, Di Huang, and Yunhong Wang. Learning spatial fusion for sin",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 3,
+          "score": 0.50061065,
+          "work_id": "a631d2a1-c2de-40d9-94f7-3f35f07596f4",
+          "document_id": "d22181ed-a167-4981-a17b-9ca1afe0bab6",
+          "chunk_fingerprint": "3b02bcce00267abb9c42a4500714469d32e4b692c5b077e1be7305de8102bc6e",
+          "section_path": "YOLOv3: An Incremental Improvement",
+          "excerpt": "[7] I. Krasin, T. Duerig, N. Alldrin, V. Ferrari, S. Abu-El-Haija, A. Kuznetsova, H. Rom, J. Uijlings, S. Popov, A. Veit, S. Belongie, V. Gomes, A. Gupta, C. Sun, G. Chechik, D. Cai, Z. Feng, D. Narayanan, and K. Murphy. Openimages: A public dataset for large-scale multi-label and multi-class image classification. *Dataset available from https://github.com/openimages*, 2017. 2\n\n[8] T.-Y. Lin, P. Dollar, R. Girshick, K. He, B. Hariharan, and S. Belongie. Feature pyramid networks for object detection. In *Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition*, pages 2117–",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 4,
+          "score": 0.48295388,
+          "work_id": "cda6a480-8512-4b85-970a-65377bd09c24",
+          "document_id": "bd7a00ba-20df-45a1-9300-055cbeeea0f6",
+          "chunk_fingerprint": "ec92674dde0c356736bc67ae2d017bd65e627ac84ef212087e36e0f347dcd390",
+          "section_path": "YOLO9000: Better, Faster, Stronger",
+          "excerpt": "Using this joint training, YOLO9000 learns to find objects in images using the detection data in COCO and it learns to classify a wide variety of these objects using data from ImageNet.\n\nWe evaluate YOLO9000 on the ImageNet detection task. The detection task for ImageNet shares on 44 object categories with COCO which means that YOLO9000 has only seen classification data for the majority of the test images, not detection data. YOLO9000 gets 19.7 mAP overall with 16.0 mAP on the disjoint 156 object classes that it has never seen any labelled detection data for. This mAP is higher than results ac",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 5,
+          "score": 0.48213732,
+          "work_id": "cda6a480-8512-4b85-970a-65377bd09c24",
+          "document_id": "bd7a00ba-20df-45a1-9300-055cbeeea0f6",
+          "chunk_fingerprint": "01f24060efde0c1640087e2637e28568d0d846c48fed88554045b1d874e69c0e",
+          "section_path": "YOLO9000: Better, Faster, Stronger",
+          "excerpt": "[12] G. A. Miller, R. Beckwith, C. Fellbaum, D. Gross, and K. J. Miller. Introduction to wordnet: An on-line lexical database. International journal of lexicography, 3(4):235–244, 1990. 6\n\n[13] J. Redmon. Darknet: Open source neural networks in c. http://pjreddie.com/darknet/, 2013–2016. 5\n\n[14] J. Redmon, S. Divvala, R. Girshick, and A. Farhadi. You only look once: Unified, real-time object detection. arXiv preprint arXiv:1506.02640, 2015. 4, 5\n\n[15] S. Ren, K. He, R. Girshick, and J. Sun. Faster r-cnn: Towards real-time object detection with region proposal networks. arXiv preprint arXiv:150",
+          "chunk_kind": "body",
+          "language": "en"
+        }
+      ],
+      "answer": "Retrieved context (not LLM-paraphrased): [7] J. Dong, Q. Chen, S. Yan, and A. Yuille. Towards unified object detection and semantic segmentation. In Computer Vision–ECCV 2014, pages 299–314. Springer, 2014. 7\n\n[8] D. Erhan, C. Szegedy, A. Toshev, and D. Anguelov. Scalable object detection using deep neural networks. In Computer Vision and Pattern Recognition (CVPR), 2014 IEEE Conference on, pages 2155–2162. IEEE, 2014. 5, 6\n\n[9] M. Everi [14] Hei Law and Jia Deng. Cornernet: Detecting objects as paired keypoints. In ECCV, 2018. 1, 3\n\n[15] Mengtian Li, Yuxiong Wang, and Deva Ramanan. Towards streaming perception. In ECCV, 2020. 5, 6\n\n[16] Tsung-Yi Lin, Priya Goyal, Ross Girshick, Kaiming He, and Piotr Dollár. Focal loss for dense object detection. In ICCV, 2017. 2\n\n[17] Tsung-Yi Lin, Michael Maire, Serge Belongie, James Hays, Pietr [7] I. Krasin, T. Duerig, N. Alldrin, V. Ferrari, S. Abu-El-Haija, A. Kuznetsova, H. Rom, J. Uijlings, S. Popov, A. Veit, S. Belongie, V. Gomes, A. Gupta, C. Sun, G. Chechik, D. Cai, Z. Feng, D. Narayanan, and K. Murphy. Openimages: A public dataset for large-scale multi-label and multi-class image classification. *Dataset available from https://github.com/openimages*, 2017. 2\n\n[8] T.-Y. Lin, P.…",
+      "answer_preview": "Retrieved context (not LLM-paraphrased): [7] J. Dong, Q. Chen, S. Yan, and A. Yuille. Towards unified object detection and semantic segmentation. In Computer Vision–ECCV 2014, pages 299–314. Springer, 2014. 7\n\n[8] D. Erhan, C. Szegedy, A. Toshev, and D. Anguelov. Scalable object detection using deep neural networks. In Computer Vision and Pattern Recognition (CVPR), 2014 IEEE Conference on, pages ",
+      "wall_clock_seconds": 0.053
     },
     {
       "case_id": "ws_yolo_speed_question",
@@ -364,8 +549,8 @@
         "passed": false,
         "contract_only": false,
         "workspace_scoped_live": true,
-        "uuid_aware_mode": false,
-        "hit_count": 0,
+        "uuid_aware_mode": true,
+        "hit_count": 5,
         "trace_workspace_matches": true,
         "forbidden_work_id_violation_count": 0,
         "forbidden_corpus_work_ids_leaked": [],
@@ -375,26 +560,32 @@
           "yolov1"
         ],
         "expected_citations_min_count": 2,
-        "citation_count_ok": false,
-        "answer_rouge_l": 0.0,
+        "citation_count_ok": true,
+        "answer_rouge_l": 0.08527131782945736,
         "abstain_keyword_hit": false,
         "answer_metric_type": "rouge_l",
-        "workspace_scope_ok": false
+        "workspace_scope_ok": true
       },
       "retrieval_trace": {
         "embedding": {
           "embedding_model": "baai/bge-m3",
           "vector_dim": 1024,
           "workspace_id": "ws_yolo_family",
-          "workspace_scope_work_count": 1
+          "workspace_scope_work_count": 4
         },
-        "hit_count": 0,
+        "hit_count": 5,
         "filter_work_id": null,
-        "resolved_work_id": null,
+        "resolved_work_id": "a631d2a1-c2de-40d9-94f7-3f35f07596f4",
         "qdrant_collection": "chunks",
         "top_k_requested": 5,
-        "citations_returned": 0,
-        "top_hit_scores": [],
+        "citations_returned": 5,
+        "top_hit_scores": [
+          0.65957314,
+          0.64212275,
+          0.6326325,
+          0.6080474,
+          0.6061411
+        ],
         "query_preview": "What real-time speed (FPS) do the YOLO papers report for their base configurations?",
         "answer_synthesis": {
           "mode": "deterministic_snippets",
@@ -402,27 +593,84 @@
         },
         "retrieval_mode": "vector",
         "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
-        "degraded": [
-          "no_retrieval_hits"
-        ],
+        "degraded": [],
         "workspace_id": "ws_yolo_family",
-        "workspace_scope_work_count": 1,
-        "workspace_scope_payload_miss": "work_ids_payload"
+        "workspace_scope_work_count": 4
       },
       "graph_context": {
-        "methods": [],
-        "datasets": [],
-        "semantic_available": false,
-        "context_work_id": null,
-        "degraded": [
-          "no_resolved_work"
+        "methods": [
+          "YOLOv3"
         ],
+        "datasets": [
+          "COCO",
+          "ImageNet",
+          "Open Images Dataset"
+        ],
+        "semantic_available": true,
+        "context_work_id": "a631d2a1-c2de-40d9-94f7-3f35f07596f4",
+        "degraded": [],
         "error": null
       },
-      "citations": [],
-      "answer": "No retrieved chunks; ingest documents or check Qdrant collection.",
-      "answer_preview": "No retrieved chunks; ingest documents or check Qdrant collection.",
-      "wall_clock_seconds": 0.863
+      "citations": [
+        {
+          "rank": 1,
+          "score": 0.65957314,
+          "work_id": "a631d2a1-c2de-40d9-94f7-3f35f07596f4",
+          "document_id": "d22181ed-a167-4981-a17b-9ca1afe0bab6",
+          "chunk_fingerprint": "6771f9c4c1b90336b352860e0fe6fa63a126462b49f105264a49ca01209082fc",
+          "section_path": "YOLOv3: An Incremental Improvement / Abstract",
+          "excerpt": "## Abstract\n\nWe present some updates to YOLO! We made a bunch of little design changes to make it better. We also trained this new network that’s pretty swell. It’s a little bigger than last time but more accurate. It’s still fast though, don’t worry. At $320 \\times 320$ YOLOv3 runs in 22 ms at 28.2 mAP, as accurate as SSD but three times faster. When we look at the old .5 IOU mAP detection metric YOLOv3 is quite good. It achieves 57.9 AP$_{50}$ in 51 ms on a Titan X, compared to 57.5 AP$_{50}$ in 198 ms by RetinaNet, similar performance but 3.8× faster. As always, all the code is online at ht",
+          "chunk_kind": "abstract",
+          "language": "en"
+        },
+        {
+          "rank": 2,
+          "score": 0.64212275,
+          "work_id": "52e5de2a-32ef-4e74-86b1-7fc97c7e2de8",
+          "document_id": "770eacbc-880b-4645-9233-93722096b877",
+          "chunk_fingerprint": "d6a42dca23d9e87098e64e1545ffe6ba2cb6b57fbecd6ab6f1432a034c4144bd",
+          "section_path": "YOLOX: Exceeding YOLO Series in 2021 / Abstract",
+          "excerpt": "## Abstract\n\nIn this report, we present some experienced improvements to YOLO series, forming a new high-performance detector—YOLOX. We switch the YOLO detector to an anchor-free manner and conduct other advanced detection techniques, i.e., a decoupled head and the leading label assignment strategy SimOTA to achieve state-of-the-art results across a large scale range of models: For YOLO-Nano with only 0.91M parameters and 1.08G FLOPs, we get 25.3% AP on COCO, surpassing NanoDet by 1.8% AP; for YOLOv3, one of the most widely used detectors in industry, we boost it to 47.3% AP on COCO, outperfor",
+          "chunk_kind": "abstract",
+          "language": "en"
+        },
+        {
+          "rank": 3,
+          "score": 0.6326325,
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "document_id": "7d31611c-714f-4a48-84d2-16c3e46bcd93",
+          "chunk_fingerprint": "d8e44eaa7e79ef23008a90c3556195d37c02e32df22f638b527d41bc0c6e2304",
+          "section_path": "You Only Look Once: Unified, Real-Time Object Detection / 4. Experiments / 4.1. Comparison to Other Real-Time Systems",
+          "excerpt": "### 4.1. Comparison to Other Real-Time Systems\n\nMany research efforts in object detection focus on making standard detection pipelines fast. [5] [38] [31] [14] [17] [28] However, only Sadeghi et al. actually produce a detection system that runs in real-time (30 frames per second or better) [31]. We compare YOLO to their GPU implementation of DPM which runs either at 30Hz or 100Hz. While the other efforts don’t reach the real-time milestone we also compare their relative mAP and speed to examine the accuracy-performance tradeoffs available in object detection systems.\n\nFast YOLO is the fastest ",
+          "chunk_kind": "result",
+          "language": "en"
+        },
+        {
+          "rank": 4,
+          "score": 0.6080474,
+          "work_id": "cda6a480-8512-4b85-970a-65377bd09c24",
+          "document_id": "bd7a00ba-20df-45a1-9300-055cbeeea0f6",
+          "chunk_fingerprint": "be65535a78e37f60c333bcbfd76c52f97f98c97ae9a705bfe41371867597837c",
+          "section_path": "YOLO9000: Better, Faster, Stronger / Abstract",
+          "excerpt": "## Abstract\n\nWe introduce YOLO9000, a state-of-the-art, real-time object detection system that can detect over 9000 object categories. First we propose various improvements to the YOLO detection method, both novel and drawn from prior work. The improved model, YOLOv2, is state-of-the-art on standard detection tasks like PASCAL VOC and COCO. Using a novel, multi-scale training method the same YOLOv2 model can run at varying sizes, offering an easy tradeoff between speed and accuracy. At 67 FPS, YOLOv2 gets 76.8 mAP on VOC 2007. At 40 FPS, YOLOv2 gets 78.6 mAP, outperforming state-of-the-art met",
+          "chunk_kind": "abstract",
+          "language": "en"
+        },
+        {
+          "rank": 5,
+          "score": 0.6061411,
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "document_id": "7d31611c-714f-4a48-84d2-16c3e46bcd93",
+          "chunk_fingerprint": "cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7",
+          "section_path": "You Only Look Once: Unified, Real-Time Object Detection / Abstract",
+          "excerpt": "## Abstract\n\nWe present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance.\n\nOur unified architecture is extremely fast. Our base YOLO model processes images in r",
+          "chunk_kind": "abstract",
+          "language": "en"
+        }
+      ],
+      "answer": "Retrieved context (not LLM-paraphrased): ## Abstract\n\nWe present some updates to YOLO! We made a bunch of little design changes to make it better. We also trained this new network that’s pretty swell. It’s a little bigger than last time but more accurate. It’s still fast though, don’t worry. At $320 \\times 320$ YOLOv3 runs in 22 ms at 28.2 mAP, as accurate as SSD but three times faster. When we look at the old .5 IOU mAP detection metric ## Abstract\n\nIn this report, we present some experienced improvements to YOLO series, forming a new high-performance detector—YOLOX. We switch the YOLO detector to an anchor-free manner and conduct other advanced detection techniques, i.e., a decoupled head and the leading label assignment strategy SimOTA to achieve state-of-the-art results across a large scale range of models: For YOLO-Nano with  ### 4.1. Comparison to Other Real-Time Systems\n\nMany research efforts in object detection focus on making standard detection pipelines fast. [5] [38] [31] [14] [17] [28] However, only Sadeghi et al. actually produce a detection system that runs in real-time (30 frames per second or better) [31]. We compare YOLO to their GPU implementation of DPM which runs either at 30Hz or 100Hz. While the othe…",
+      "answer_preview": "Retrieved context (not LLM-paraphrased): ## Abstract\n\nWe present some updates to YOLO! We made a bunch of little design changes to make it better. We also trained this new network that’s pretty swell. It’s a little bigger than last time but more accurate. It’s still fast though, don’t worry. At $320 \\times 320$ YOLOv3 runs in 22 ms at 28.2 mAP, as accurate as SSD but three times faster. When we lo",
+      "wall_clock_seconds": 0.049
     }
   ]
 }

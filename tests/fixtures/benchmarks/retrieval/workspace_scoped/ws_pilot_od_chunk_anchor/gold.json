@@ -5,7 +5,7 @@
   "workspace_id": "ws-pilot-od",
   "expected_workspace_scope": true,
   "workspace_member_work_ids": [
-    "437764be-f69e-46f1-9273-fd3197f0c399"
+    "yolov1"
   ],
   "forbidden_work_ids": [
     "deadbeef-dead-4000-8000-000000000001"

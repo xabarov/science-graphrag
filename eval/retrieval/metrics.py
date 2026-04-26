@@ -3,10 +3,15 @@
 from __future__ import annotations
 
 import re
+from pathlib import Path
 from typing import Any
 
 from eval.layer1.text_similarity import rouge_l_f1
+from eval.retrieval.work_id_resolve import expand_workspace_member_work_ids
+from science_graphrag.config import get_settings
 from science_graphrag.retrieval import GroundedAnswer
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 
 _UUID_RE = re.compile(
     r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
@@ -212,7 +217,7 @@ def score_hybrid_ablation_live(
     - ``relevant_corpus_work_ids`` — list of expected relevant work identifiers.
     - ``mrr_k`` — rank cutoff (default 10).
     """
-    k = int(gold.get("mrr_k") or 10)
+    k = int(gold.get("k_for_mrr") or gold.get("mrr_k") or 10)
     relevant_raw = list(gold.get("relevant_corpus_work_ids") or [])
     relevant_set = {str(x).strip() for x in relevant_raw if str(x).strip()}
 
@@ -230,16 +235,27 @@ def score_hybrid_ablation_live(
     mrr_v = _mrr_at_k(relevant_set, vec_wids, k)
     mrr_h = _mrr_at_k(relevant_set, hyb_wids, k)
     mrr_delta = round(mrr_h - mrr_v, 6)
+    hybrid_regression = mrr_delta < -0.02
+    min_delta_raw = gold.get("min_mrr_delta_hybrid_minus_vector")
+    if min_delta_raw is None:
+        min_delta_raw = gold.get("min_mrr_delta")
+    try:
+        min_delta_req = float(min_delta_raw) if min_delta_raw is not None else 0.0
+    except (TypeError, ValueError):
+        min_delta_req = 0.0
 
     vec_ids_are_uuids = bool(vec_wids) and all(_is_uuid(w) for w in vec_wids)
     slug_relevant = bool(relevant_set) and not any(_is_uuid(x) for x in relevant_set)
     uuid_aware = vec_ids_are_uuids and slug_relevant
 
     return {
-        "passed": mrr_delta + 1e-9 >= 0,
+        "passed": mrr_delta + 1e-9 >= min_delta_req,
         "mrr_vector": round(mrr_v, 6),
         "mrr_hybrid": round(mrr_h, 6),
         "mrr_delta": mrr_delta,
+        "mrr_delta_per_mode": {"vector": round(mrr_v, 6), "hybrid": round(mrr_h, 6)},
+        "hybrid_regression": hybrid_regression,
+        "min_mrr_delta_hybrid_minus_vector": min_delta_req,
         "mrr_k": k,
         "relevant_count": len(relevant_set),
         "vector_hit_count": int((answer_vector.retrieval_trace or {}).get("hit_count") or 0),
@@ -297,9 +313,11 @@ def score_retrieval_answer(
 
     exp_scope = bool(gold.get("expected_workspace_scope"))
     ws_gold = str(gold.get("workspace_id") or "").strip()
-    member_set = {
-        str(x).strip() for x in (gold.get("workspace_member_work_ids") or []) if str(x).strip()
-    }
+    member_set = expand_workspace_member_work_ids(
+        list(gold.get("workspace_member_work_ids") or []),
+        repo=_REPO_ROOT,
+        settings=get_settings(),
+    )
     forbidden_set = {
         str(x).strip() for x in (gold.get("forbidden_work_ids") or []) if str(x).strip()
     }

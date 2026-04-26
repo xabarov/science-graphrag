@@ -16,7 +16,7 @@
   },
   "summary": {
     "case_count": 3,
-    "mean_weighted_score": 6.233333333333333,
+    "mean_weighted_score": 6.033333333333334,
     "all_passed": true,
     "retrieval_judge_eval": true,
     "per_case_score_breakdown": [
@@ -31,20 +31,20 @@
       },
       {
         "case_id": "live_yolov1_architecture",
-        "factuality": 3,
-        "coverage": 2,
+        "factuality": 1,
+        "coverage": 3,
         "no_contradictions": 2,
         "language": 2,
-        "weighted_score": 6.0,
+        "weighted_score": 4.7,
         "passed": true
       },
       {
         "case_id": "live_yolov1_training",
         "factuality": 3,
-        "coverage": 2,
+        "coverage": 3,
         "no_contradictions": 2,
         "language": 2,
-        "weighted_score": 6.0,
+        "weighted_score": 6.7,
         "passed": true
       }
     ]
@@ -59,35 +59,35 @@
         "coverage": 3,
         "no_contradictions": 2,
         "language": 2,
-        "justification": "The answer is factually correct, as it accurately states that no chunks were retrieved. It fully covers the scenario where no relevant information is available, which aligns with the absence of a gold reference snippet and citation excerpts. The answer is internally consistent and uses clear, coherent language."
+        "justification": "The answer is factually accurate, as it directly cites relevant excerpts from the retrieved context. It fully covers the question by discussing single-shot detectors and comparing their speed-accuracy trade-offs to two-stage pipelines. There are no contradictions within the answer, and the language used is clear and coherent."
       },
-      "wall_clock_seconds": 2.719
+      "wall_clock_seconds": 1.746
     },
     {
       "case_id": "live_yolov1_architecture",
       "passed": true,
-      "weighted_score": 6.0,
+      "weighted_score": 4.7,
       "scores": {
-        "factuality": 3,
-        "coverage": 2,
+        "factuality": 1,
+        "coverage": 3,
         "no_contradictions": 2,
         "language": 2,
-        "justification": "The answer is factually correct as it does not make any claims or citations. Coverage is neutral since there is no gold reference snippet to align with. The answer is consistent and uses clear language to communicate the lack of retrieved chunks."
+        "justification": "The answer fails to describe the three-step YOLO processing pipeline (resize, network, thresholding) as requested, resulting in a low factuality score. However, the provided context is relevant to the question, so coverage is high. There are no contradictions in the answer, and the language is clear and coherent."
       },
-      "wall_clock_seconds": 1.695
+      "wall_clock_seconds": 1.484
     },
     {
       "case_id": "live_yolov1_training",
       "passed": true,
-      "weighted_score": 6.0,
+      "weighted_score": 6.7,
       "scores": {
         "factuality": 3,
-        "coverage": 2,
+        "coverage": 3,
         "no_contradictions": 2,
         "language": 2,
-        "justification": "The answer is factually correct as it states there are no retrieved chunks. Coverage is moderate since the answer does not provide a summary of the training objective and loss formulation, which is expected given the lack of retrieved chunks. There are no contradictions, and the language is clear and coherent."
+        "justification": "The answer is factually accurate, as it directly quotes the loss function from the provided excerpts. It also mentions the training process from section 2.2, which is relevant to the question. The answer is coherent and well-structured, with no contradictions. The language used is clear and appropriate for the context."
       },
-      "wall_clock_seconds": 2.036
+      "wall_clock_seconds": 1.496
     }
   ]
 }

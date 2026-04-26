@@ -2,7 +2,7 @@
   "schema_version": 1,
   "decision_gate": {
     "decision": "CONDITIONAL-GO",
-    "reason": "all_nightly_passed;advisory_phantom_count=8",
+    "reason": "all_nightly_passed;advisory_phantom_count=9",
     "criteria": {
       "reference_all_passed": true,
       "layer1_nightly_failed_count": 0,
@@ -10,70 +10,19 @@
       "claims_production_artifact_missing": false,
       "claims_production_all_passed": true,
       "claims_production_mean_claim_recall": 1.0,
-      "advisory_phantom_count": 8,
+      "advisory_phantom_count": 9,
       "advisory_phantom_families": [
         "merge_safe_contract_mock",
         "strict_pilot_mock",
         "hybrid_ablation",
-        "hybrid_ablation_live",
         "multihop_mini",
+        "claims_paraphrase_pilot",
+        "claims_paraphrase_holdout",
         "concept_topic_mini",
         "agent_tools_mini",
         "agent_tools_judge"
       ],
       "advisory_individual_failures": [
-        {
-          "family": "retrieval_family",
-          "member_id": "live_corpus_mini",
-          "case_id": "live_corpus_methods_wide",
-          "metrics": {
-            "passed": false,
-            "contract_only": false,
-            "hit_count": 0,
-            "min_hit_count": 1,
-            "hit_ok": false,
-            "missing_chunk_fingerprints": [
-              "df9bed2a2f99ad0fc96e803818ed053ee79bdc07c47023efcdf769c358299871",
-              "f3d4f47633a2bd6fce9f7ee409c88082a55441304334a4cf734d9b7763a1dacd"
-            ],
-            "work_id_ok": true,
-            "filter_work_id": null
-          }
-        },
-        {
-          "family": "retrieval_family",
-          "member_id": "live_corpus_mini",
-          "case_id": "live_yolov1_architecture",
-          "metrics": {
-            "passed": false,
-            "contract_only": false,
-            "hit_count": 0,
-            "min_hit_count": 1,
-            "hit_ok": false,
-            "missing_chunk_fingerprints": [
-              "105ce800-ba74-5572-95b1-71b3f2e1d035"
-            ],
-            "work_id_ok": true,
-            "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
-          }
-        },
-        {
-          "family": "retrieval_family",
-          "member_id": "live_corpus_mini",
-          "case_id": "live_yolov1_training",
-          "metrics": {
-            "passed": false,
-            "contract_only": false,
-            "hit_count": 0,
-            "min_hit_count": 1,
-            "hit_ok": false,
-            "missing_chunk_fingerprints": [
-              "4defe8cb-0c85-5e54-a3db-24cc31a6d64e"
-            ],
-            "work_id_ok": true,
-            "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
-          }
-        },
         {
           "family": "retrieval_family",
           "member_id": "workspace_scoped_live",
@@ -133,8 +82,8 @@
             "passed": false,
             "contract_only": false,
             "workspace_scoped_live": true,
-            "uuid_aware_mode": false,
-            "hit_count": 0,
+            "uuid_aware_mode": true,
+            "hit_count": 5,
             "trace_workspace_matches": true,
             "forbidden_work_id_violation_count": 0,
             "forbidden_corpus_work_ids_leaked": [],
@@ -157,8 +106,8 @@
             "passed": false,
             "contract_only": false,
             "workspace_scoped_live": true,
-            "uuid_aware_mode": false,
-            "hit_count": 0,
+            "uuid_aware_mode": true,
+            "hit_count": 5,
             "trace_workspace_matches": true,
             "forbidden_work_id_violation_count": 0,
             "forbidden_corpus_work_ids_leaked": [],
@@ -170,11 +119,11 @@
               "faster_rcnn_realpdf"
             ],
             "expected_citations_min_count": 3,
-            "citation_count_ok": false,
-            "answer_rouge_l": 0.0,
+            "citation_count_ok": true,
+            "answer_rouge_l": 0.08,
             "abstain_keyword_hit": false,
             "answer_metric_type": "rouge_l",
-            "workspace_scope_ok": false
+            "workspace_scope_ok": true
           }
         },
         {
@@ -185,8 +134,8 @@
             "passed": false,
             "contract_only": false,
             "workspace_scoped_live": true,
-            "uuid_aware_mode": false,
-            "hit_count": 0,
+            "uuid_aware_mode": true,
+            "hit_count": 5,
             "trace_workspace_matches": true,
             "forbidden_work_id_violation_count": 0,
             "forbidden_corpus_work_ids_leaked": [],
@@ -209,8 +158,8 @@
             "passed": false,
             "contract_only": false,
             "workspace_scoped_live": true,
-            "uuid_aware_mode": false,
-            "hit_count": 0,
+            "uuid_aware_mode": true,
+            "hit_count": 5,
             "trace_workspace_matches": true,
             "forbidden_work_id_violation_count": 0,
             "forbidden_corpus_work_ids_leaked": [],
@@ -220,46 +169,187 @@
               "yolov1"
             ],
             "expected_citations_min_count": 2,
-            "citation_count_ok": false,
-            "answer_rouge_l": 0.0,
+            "citation_count_ok": true,
+            "answer_rouge_l": 0.08527131782945736,
             "abstain_keyword_hit": false,
             "answer_metric_type": "rouge_l",
-            "workspace_scope_ok": false
+            "workspace_scope_ok": true
           }
         },
         {
           "family": "retrieval_family",
-          "member_id": "live_corpus_holdout",
-          "case_id": "live_yolov1_intro",
+          "member_id": "hybrid_ablation_live",
+          "case_id": "ha_anchor_free",
           "metrics": {
             "passed": false,
-            "contract_only": false,
-            "hit_count": 0,
-            "min_hit_count": 1,
-            "hit_ok": false,
-            "missing_chunk_fingerprints": [
-              "8226cfd0-aae7-568a-81b1-e81d5f93f767"
-            ],
-            "work_id_ok": true,
-            "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
+            "mrr_vector": 0.0,
+            "mrr_hybrid": 0.0,
+            "mrr_delta": 0.0,
+            "mrr_delta_per_mode": {
+              "vector": 0.0,
+              "hybrid": 0.0
+            },
+            "hybrid_regression": false,
+            "min_mrr_delta_hybrid_minus_vector": 0.05,
+            "mrr_k": 10,
+            "relevant_count": 4,
+            "vector_hit_count": 5,
+            "hybrid_hit_count": 5,
+            "uuid_aware_mode": true
           }
         },
         {
           "family": "retrieval_family",
-          "member_id": "live_corpus_holdout",
-          "case_id": "live_yolov1_methods_combo",
+          "member_id": "hybrid_ablation_live",
+          "case_id": "ha_classical_handcrafted",
           "metrics": {
             "passed": false,
-            "contract_only": false,
-            "hit_count": 0,
-            "min_hit_count": 1,
-            "hit_ok": false,
-            "missing_chunk_fingerprints": [
-              "7ee12509-2279-5d5d-b450-1607dffde23c",
-              "30091237-ce82-52b7-8f16-efab66d4c2ac"
-            ],
-            "work_id_ok": true,
-            "filter_work_id": "437764be-f69e-46f1-9273-fd3197f0c399"
+            "mrr_vector": 0.0,
+            "mrr_hybrid": 0.0,
+            "mrr_delta": 0.0,
+            "mrr_delta_per_mode": {
+              "vector": 0.0,
+              "hybrid": 0.0
+            },
+            "hybrid_regression": false,
+            "min_mrr_delta_hybrid_minus_vector": 0.05,
+            "mrr_k": 10,
+            "relevant_count": 2,
+            "vector_hit_count": 5,
+            "hybrid_hit_count": 5,
+            "uuid_aware_mode": true
+          }
+        },
+        {
+          "family": "retrieval_family",
+          "member_id": "hybrid_ablation_live",
+          "case_id": "ha_compound_scaling",
+          "metrics": {
+            "passed": false,
+            "mrr_vector": 0.0,
+            "mrr_hybrid": 0.0,
+            "mrr_delta": 0.0,
+            "mrr_delta_per_mode": {
+              "vector": 0.0,
+              "hybrid": 0.0
+            },
+            "hybrid_regression": false,
+            "min_mrr_delta_hybrid_minus_vector": 0.05,
+            "mrr_k": 10,
+            "relevant_count": 1,
+            "vector_hit_count": 5,
+            "hybrid_hit_count": 5,
+            "uuid_aware_mode": true
+          }
+        },
+        {
+          "family": "retrieval_family",
+          "member_id": "hybrid_ablation_live",
+          "case_id": "ha_focal_loss",
+          "metrics": {
+            "passed": false,
+            "mrr_vector": 0.0,
+            "mrr_hybrid": 0.0,
+            "mrr_delta": 0.0,
+            "mrr_delta_per_mode": {
+              "vector": 0.0,
+              "hybrid": 0.0
+            },
+            "hybrid_regression": false,
+            "min_mrr_delta_hybrid_minus_vector": 0.05,
+            "mrr_k": 10,
+            "relevant_count": 2,
+            "vector_hit_count": 5,
+            "hybrid_hit_count": 5,
+            "uuid_aware_mode": true
+          }
+        },
+        {
+          "family": "retrieval_family",
+          "member_id": "hybrid_ablation_live",
+          "case_id": "ha_iou_loss_quality",
+          "metrics": {
+            "passed": false,
+            "mrr_vector": 0.0,
+            "mrr_hybrid": 0.0,
+            "mrr_delta": 0.0,
+            "mrr_delta_per_mode": {
+              "vector": 0.0,
+              "hybrid": 0.0
+            },
+            "hybrid_regression": false,
+            "min_mrr_delta_hybrid_minus_vector": 0.05,
+            "mrr_k": 10,
+            "relevant_count": 3,
+            "vector_hit_count": 5,
+            "hybrid_hit_count": 5,
+            "uuid_aware_mode": true
+          }
+        },
+        {
+          "family": "retrieval_family",
+          "member_id": "hybrid_ablation_live",
+          "case_id": "ha_keypoint_corner",
+          "metrics": {
+            "passed": false,
+            "mrr_vector": 0.0,
+            "mrr_hybrid": 0.0,
+            "mrr_delta": 0.0,
+            "mrr_delta_per_mode": {
+              "vector": 0.0,
+              "hybrid": 0.0
+            },
+            "hybrid_regression": false,
+            "min_mrr_delta_hybrid_minus_vector": 0.05,
+            "mrr_k": 10,
+            "relevant_count": 2,
+            "vector_hit_count": 5,
+            "hybrid_hit_count": 5,
+            "uuid_aware_mode": true
+          }
+        },
+        {
+          "family": "retrieval_family",
+          "member_id": "hybrid_ablation_live",
+          "case_id": "ha_set_prediction_transformer",
+          "metrics": {
+            "passed": false,
+            "mrr_vector": 0.0,
+            "mrr_hybrid": 0.0,
+            "mrr_delta": 0.0,
+            "mrr_delta_per_mode": {
+              "vector": 0.0,
+              "hybrid": 0.0
+            },
+            "hybrid_regression": false,
+            "min_mrr_delta_hybrid_minus_vector": 0.05,
+            "mrr_k": 10,
+            "relevant_count": 5,
+            "vector_hit_count": 5,
+            "hybrid_hit_count": 5,
+            "uuid_aware_mode": true
+          }
+        },
+        {
+          "family": "retrieval_family",
+          "member_id": "hybrid_ablation_live",
+          "case_id": "ha_two_stage_rpn_evolution",
+          "metrics": {
+            "passed": false,
+            "mrr_vector": 0.0,
+            "mrr_hybrid": 0.0,
+            "mrr_delta": 0.0,
+            "mrr_delta_per_mode": {
+              "vector": 0.0,
+              "hybrid": 0.0
+            },
+            "hybrid_regression": false,
+            "min_mrr_delta_hybrid_minus_vector": 0.05,
+            "mrr_k": 10,
+            "relevant_count": 3,
+            "vector_hit_count": 5,
+            "hybrid_hit_count": 5,
+            "uuid_aware_mode": true
           }
         }
       ],
@@ -268,19 +358,21 @@
   },
   "trust_aggregate_per_family": {
     "retrieval_family": {
-      "phantom_member_count": 5,
+      "phantom_member_count": 4,
       "phantom_members": [
         "retrieval_family.merge_safe_contract_mock",
         "retrieval_family.strict_pilot_mock",
         "retrieval_family.hybrid_ablation",
-        "retrieval_family.hybrid_ablation_live",
         "retrieval_family.multihop_mini"
       ],
       "mixed_validation_status_member_count": 1
     },
     "claims_family": {
-      "phantom_member_count": 0,
-      "phantom_members": [],
+      "phantom_member_count": 2,
+      "phantom_members": [
+        "claims_family.claims_paraphrase_pilot",
+        "claims_family.claims_paraphrase_holdout"
+      ],
       "mixed_validation_status_member_count": 0
     },
     "claims_production_family": {
@@ -309,13 +401,14 @@
       "mixed_validation_status_member_count": 1
     }
   },
-  "advisory_phantom_count": 8,
+  "advisory_phantom_count": 9,
   "advisory_phantom_families": [
     "merge_safe_contract_mock",
     "strict_pilot_mock",
     "hybrid_ablation",
-    "hybrid_ablation_live",
     "multihop_mini",
+    "claims_paraphrase_pilot",
+    "claims_paraphrase_holdout",
     "concept_topic_mini",
     "agent_tools_mini",
     "agent_tools_judge"

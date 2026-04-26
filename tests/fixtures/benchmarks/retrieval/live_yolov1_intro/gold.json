@@ -1,12 +1,11 @@
 {
   "schema_version": 1,
-  "benchmark_suite_tier": "live_corpus_mini",
-  "description": "Live mini-tier: pilot YOLOv1 work; fingerprint from top citation for intro question (re-captured vs strict_pilot chunk set).",
-  "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+  "benchmark_suite_tier": "live_corpus_holdout",
+  "description": "Live holdout: YOLOv1 intro; portable gate (no frozen chunk fingerprints).",
+  "work_id": null,
+  "filter_work_layer1_slug": "yolov1",
   "top_k": 8,
   "min_hit_count": 1,
-  "required_chunk_fingerprints": [
-    "8226cfd0-aae7-568a-81b1-e81d5f93f767"
-  ],
+  "required_chunk_fingerprints": [],
   "contract_only": false
 }

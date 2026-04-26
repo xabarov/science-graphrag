@@ -13,6 +13,7 @@ import typer
 from eval.bench_common import run_single_case_json_outputs, run_suite_cli_flow
 from eval.retrieval.metrics import score_retrieval_answer
 from eval.retrieval.stack_health import check_api_health, write_skip_artifact
+from eval.retrieval.work_id_resolve import resolve_work_id_from_layer1_slug
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.retrieval import GroundedAnswer, answer_query
 
@@ -208,6 +209,11 @@ def run_retrieval_case(
     s = settings or get_settings()
     fn = answer_fn or answer_query
     work_id, workspace_id, top_k_i, mode_s = _gold_retrieval_params(gold)
+    slug = str(gold.get("filter_work_layer1_slug") or "").strip()
+    if slug:
+        resolved = resolve_work_id_from_layer1_slug(_REPO_ROOT, slug, settings=s)
+        if resolved:
+            work_id = resolved
 
     started = perf_counter()
     ga = fn(

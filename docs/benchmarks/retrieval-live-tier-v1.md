@@ -4,16 +4,16 @@
 
 ## Goal
 
-Provide **5 reproducible questions** against the **signed-off pilot stack** (Neo4j + Qdrant populated from the pilot corpus, including the YOLOv1 work). Unlike `--mock-answer` CI smoke, this tier expects a **live** `answer_query` call and checks **frozen** `required_chunk_fingerprints` (and optional `work_id`).
+Provide **5 reproducible questions** against the **signed-off pilot stack** (Neo4j + Qdrant populated from the pilot corpus, including the YOLOv1 work). Unlike `--mock-answer` CI smoke, this tier expects a **live** `answer_query` call. Work scoping uses portable gold: ``filter_work_layer1_slug`` (e.g. ``yolov1``) resolved to the current Neo4j ``Work.id`` at run time; chunk gates use ``min_hit_count`` (fingerprints are optional / may be empty after re-chunk).
 
 ## Preconditions
 
 1. Docker stack up (`docker compose` per project docs) with Postgres, Neo4j, Qdrant, API.
-2. Pilot corpus ingested so the YOLOv1 work exists with id **`437764be-f69e-46f1-9273-fd3197f0c399`** (same as `strict_pilot_*` captures dated 2026-04-19).
+2. Pilot corpus ingested so the YOLOv1 paper exists in Neo4j (title match for layer1 slug ``yolov1``).
 3. Chunk vectors present in Qdrant for that work (and neighbors for corpus-wide cases).
-4. **No** `--mock-answer`.
+4. **No** `--mock-answer``.
 
-If your local ingest uses different work ids or chunk ids, re-capture fingerprints from `POST /v1/query` responses and update the case `gold.json` files in one PR (document provenance in the commit message).
+Re-ingests change chunk fingerprints; keep ``required_chunk_fingerprints`` empty for portable gates or re-capture from `POST /v1/query` in a dedicated PR.
 
 ## Tier manifest
 

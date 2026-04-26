@@ -58,6 +58,8 @@ _GOLD_SUBDIR_BY_MEMBER: Final[dict[str, str | None]] = {
     "claims_corpus_v2_mini": "claims",
     "claims_pilot": "claims",
     "claims_pilot_production": "claims",
+    "claims_paraphrase_pilot": "claims",
+    "claims_paraphrase_holdout": "claims",
     "refs_merge_contract": "references_resolution",
     "refs_mini": "references_resolution",
     "refs_graph": "references_resolution",
@@ -96,6 +98,9 @@ def detect_runtime_mode(
     """Infer how trustworthy the suite artifact is (phantom vs live)."""
 
     if member_id == "workspace_scoped" and block.get("_workspace_scoped_delegated_to_live"):
+        return "verified_by_sibling_live"
+
+    if member_id == "hybrid_ablation" and block.get("_hybrid_ablation_delegated_to_live"):
         return "verified_by_sibling_live"
 
     if member_id == "multihop_mini":
@@ -167,6 +172,10 @@ def detect_runtime_mode(
 
     if member_id in {"merge_safe_contract_mock", "strict_pilot_mock"}:
         return "canned"
+
+    if member_id in {"claims_paraphrase_pilot", "claims_paraphrase_holdout"} and cases:
+        if all(bool(c.get("oracle_predictions")) for c in cases if isinstance(c, dict)):
+            return "synthetic_gold"
 
     if meta.get("extraction_llm_model") in (None, "", "mock"):
         if cases and member_id.startswith("claims"):

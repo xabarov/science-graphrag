@@ -1,13 +1,10 @@
 {
   "schema_version": 1,
   "benchmark_suite_tier": "live_corpus_mini",
-  "description": "Live mini-tier 2026-04-19: corpus-wide; fingerprints aligned with strict_pilot_corpus_wide.",
+  "description": "Live mini-tier: corpus-wide methods question; portable gate (no frozen chunk fingerprints).",
   "work_id": null,
   "top_k": 10,
   "min_hit_count": 1,
-  "required_chunk_fingerprints": [
-    "df9bed2a2f99ad0fc96e803818ed053ee79bdc07c47023efcdf769c358299871",
-    "f3d4f47633a2bd6fce9f7ee409c88082a55441304334a4cf734d9b7763a1dacd"
-  ],
+  "required_chunk_fingerprints": [],
   "contract_only": false
 }

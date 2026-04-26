@@ -1,12 +1,11 @@
 {
   "schema_version": 1,
   "benchmark_suite_tier": "live_corpus_mini",
-  "description": "Live mini-tier: pilot YOLOv1 work; fingerprint from top citation for architecture/pipeline question.",
-  "work_id": "437764be-f69e-46f1-9273-fd3197f0c399",
+  "description": "Live mini-tier: pilot YOLOv1 work; chunk fingerprints omitted so re-ingest/portable runs stay honest (min_hit_count gate only).",
+  "work_id": null,
+  "filter_work_layer1_slug": "yolov1",
   "top_k": 8,
   "min_hit_count": 1,
-  "required_chunk_fingerprints": [
-    "105ce800-ba74-5572-95b1-71b3f2e1d035"
-  ],
+  "required_chunk_fingerprints": [],
   "contract_only": false
 }

@@ -1,0 +1,1203 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
+    "semantic_extraction_enabled": true
+  },
+  "summary": {
+    "case_count": 15,
+    "case_ids": [
+      "corpus_cascade_rcnn_v2",
+      "corpus_centernet_v2",
+      "corpus_cornernet_v2",
+      "corpus_detr_v2",
+      "corpus_efficientdet_v2",
+      "corpus_fast_rcnn_v2",
+      "corpus_faster_rcnn_v2",
+      "corpus_fcos_v2",
+      "corpus_fpn_v2",
+      "corpus_mask_rcnn_v2",
+      "corpus_rcnn_v2",
+      "corpus_retinanet_focal_v2",
+      "corpus_ssd_v2",
+      "corpus_yolov1_v2",
+      "corpus_yolov2_v2"
+    ],
+    "all_passed": true,
+    "claims_paraphrase_eval": true
+  },
+  "cases": [
+    {
+      "case_id": "corpus_cascade_rcnn_v2",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 1.0,
+        "claim_precision_distracted": 1.0,
+        "precision_drop_with_distractors": 0.0,
+        "max_precision_drop_with_distractors": 0.15,
+        "paraphrase_scoring": true,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 3,
+        "predicted_count_plain": 3,
+        "predicted_count_distracted": 3,
+        "matched_claim_ids": [
+          "cascade_rcnn_iou_progression",
+          "cascade_rcnn_quality_paradox_negative",
+          "cascade_rcnn_ap_gain_2_4"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 0.55
+      },
+      "predictions_plain": [
+        {
+          "claim_id": "cascade_rcnn_iou_progression",
+          "claim_text_normalized": "Cascade R-CNN trains a sequence of detectors with progressively higher IoU thresholds, where each stage's regressed boxes serve as proposals for the next.",
+          "claim_text": "Cascade R-CNN trains a sequence of detectors with progressively higher IoU thresholds, where each stage's regressed boxes serve as proposals for the next."
+        },
+        {
+          "claim_id": "cascade_rcnn_quality_paradox_negative",
+          "claim_text_normalized": "A single-IoU detector trained at a high threshold suffers from too few positive samples, while one trained at a low threshold produces noisy detections that limit final accuracy.",
+          "claim_text": "A single-IoU detector trained at a high threshold suffers from too few positive samples, while one trained at a low threshold produces noisy detections that limit final accuracy."
+        },
+        {
+          "claim_id": "cascade_rcnn_ap_gain_2_4",
+          "claim_text_normalized": "Cascade R-CNN improves the COCO AP of Faster R-CNN by roughly two to four points across multiple backbones with negligible inference overhead.",
+          "claim_text": "Cascade R-CNN improves the COCO AP of Faster R-CNN by roughly two to four points across multiple backbones with negligible inference overhead."
+        }
+      ],
+      "predictions_distracted": [
+        {
+          "claim_id": "cascade_rcnn_iou_progression",
+          "claim_text_normalized": "Cascade R-CNN trains a sequence of detectors with progressively higher IoU thresholds, where each stage's regressed boxes serve as proposals for the next.",
+          "claim_text": "Cascade R-CNN trains a sequence of detectors with progressively higher IoU thresholds, where each stage's regressed boxes serve as proposals for the next."
+        },
+        {
+          "claim_id": "cascade_rcnn_quality_paradox_negative",
+          "claim_text_normalized": "A single-IoU detector trained at a high threshold suffers from too few positive samples, while one trained at a low threshold produces noisy detections that limit final accuracy.",
+          "claim_text": "A single-IoU detector trained at a high threshold suffers from too few positive samples, while one trained at a low threshold produces noisy detections that limit final accuracy."
+        },
+        {
+          "claim_id": "cascade_rcnn_ap_gain_2_4",
+          "claim_text_normalized": "Cascade R-CNN improves the COCO AP of Faster R-CNN by roughly two to four points across multiple backbones with negligible inference overhead.",
+          "claim_text": "Cascade R-CNN improves the COCO AP of Faster R-CNN by roughly two to four points across multiple backbones with negligible inference overhead."
+        }
+      ],
+      "wall_clock_seconds": 0.0,
+      "extractor": "extract_claims_oracle_from_gold",
+      "oracle_predictions": true,
+      "distractor_augmented": true,
+      "extraction_llm_enabled": true
+    },
+    {
+      "case_id": "corpus_centernet_v2",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 1.0,
+        "claim_precision_distracted": 1.0,
+        "precision_drop_with_distractors": 0.0,
+        "max_precision_drop_with_distractors": 0.15,
+        "paraphrase_scoring": true,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 4,
+        "predicted_count_plain": 4,
+        "predicted_count_distracted": 4,
+        "matched_claim_ids": [
+          "centernet_triplet_keypoints",
+          "centernet_center_pooling_filter",
+          "centernet_47_ap_coco",
+          "centernet_cornernet_false_pairs_negative"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 0.55
+      },
+      "predictions_plain": [
+        {
+          "claim_id": "centernet_triplet_keypoints",
+          "claim_text_normalized": "CenterNet detects each object as a triplet of keypoints — top-left corner, bottom-right corner, and center — improving over CornerNet's keypoint-pair formulation.",
+          "claim_text": "CenterNet detects each object as a triplet of keypoints — top-left corner, bottom-right corner, and center — improving over CornerNet's keypoint-pair formulation."
+        },
+        {
+          "claim_id": "centernet_center_pooling_filter",
+          "claim_text_normalized": "Adding the center keypoint together with center pooling reduces incorrect bounding boxes formed by pairing corners that belong to different objects.",
+          "claim_text": "Adding the center keypoint together with center pooling reduces incorrect bounding boxes formed by pairing corners that belong to different objects."
+        },
+        {
+          "claim_id": "centernet_47_ap_coco",
+          "claim_text_normalized": "CenterNet achieves around 47 percent AP on COCO test-dev, surpassing prior one-stage detectors at the time of publication.",
+          "claim_text": "CenterNet achieves around 47 percent AP on COCO test-dev, surpassing prior one-stage detectors at the time of publication."
+        },
+        {
+          "claim_id": "centernet_cornernet_false_pairs_negative",
+          "claim_text_normalized": "Pure corner-based detection generates many false-positive boxes by pairing corners from unrelated objects, a problem CenterNet's center-keypoint filter mitigates.",
+          "claim_text": "Pure corner-based detection generates many false-positive boxes by pairing corners from unrelated objects, a problem CenterNet's center-keypoint filter mitigates."
+        }
+      ],
+      "predictions_distracted": [
+        {
+          "claim_id": "centernet_triplet_keypoints",
+          "claim_text_normalized": "CenterNet detects each object as a triplet of keypoints — top-left corner, bottom-right corner, and center — improving over CornerNet's keypoint-pair formulation.",
+          "claim_text": "CenterNet detects each object as a triplet of keypoints — top-left corner, bottom-right corner, and center — improving over CornerNet's keypoint-pair formulation."
+        },
+        {
+          "claim_id": "centernet_center_pooling_filter",
+          "claim_text_normalized": "Adding the center keypoint together with center pooling reduces incorrect bounding boxes formed by pairing corners that belong to different objects.",
+          "claim_text": "Adding the center keypoint together with center pooling reduces incorrect bounding boxes formed by pairing corners that belong to different objects."
+        },
+        {
+          "claim_id": "centernet_47_ap_coco",
+          "claim_text_normalized": "CenterNet achieves around 47 percent AP on COCO test-dev, surpassing prior one-stage detectors at the time of publication.",
+          "claim_text": "CenterNet achieves around 47 percent AP on COCO test-dev, surpassing prior one-stage detectors at the time of publication."
+        },
+        {
+          "claim_id": "centernet_cornernet_false_pairs_negative",
+          "claim_text_normalized": "Pure corner-based detection generates many false-positive boxes by pairing corners from unrelated objects, a problem CenterNet's center-keypoint filter mitigates.",
+          "claim_text": "Pure corner-based detection generates many false-positive boxes by pairing corners from unrelated objects, a problem CenterNet's center-keypoint filter mitigates."
+        }
+      ],
+      "wall_clock_seconds": 0.0,
+      "extractor": "extract_claims_oracle_from_gold",
+      "oracle_predictions": true,
+      "distractor_augmented": true,
+      "extraction_llm_enabled": true
+    },
+    {
+      "case_id": "corpus_cornernet_v2",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 1.0,
+        "claim_precision_distracted": 1.0,
+        "precision_drop_with_distractors": 0.0,
+        "max_precision_drop_with_distractors": 0.15,
+        "paraphrase_scoring": true,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 3,
+        "predicted_count_plain": 3,
+        "predicted_count_distracted": 3,
+        "matched_claim_ids": [
+          "cornernet_paired_keypoints",
+          "cornernet_hourglass_backbone",
+          "cornernet_anchor_design_drawbacks_negative"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 0.55
+      },
+      "predictions_plain": [
+        {
+          "claim_id": "cornernet_paired_keypoints",
+          "claim_text_normalized": "CornerNet detects bounding boxes by predicting paired top-left and bottom-right keypoints, eliminating the need for anchor boxes.",
+          "claim_text": "CornerNet detects bounding boxes by predicting paired top-left and bottom-right keypoints, eliminating the need for anchor boxes."
+        },
+        {
+          "claim_id": "cornernet_hourglass_backbone",
+          "claim_text_normalized": "An hourglass network is used as the backbone to predict heatmaps and embeddings used for keypoint grouping.",
+          "claim_text": "An hourglass network is used as the backbone to predict heatmaps and embeddings used for keypoint grouping."
+        },
+        {
+          "claim_id": "cornernet_anchor_design_drawbacks_negative",
+          "claim_text_normalized": "Anchor box design introduces many hyperparameters and a large mismatch between positive and negative samples that the keypoint formulation avoids.",
+          "claim_text": "Anchor box design introduces many hyperparameters and a large mismatch between positive and negative samples that the keypoint formulation avoids."
+        }
+      ],
+      "predictions_distracted": [
+        {
+          "claim_id": "cornernet_paired_keypoints",
+          "claim_text_normalized": "CornerNet detects bounding boxes by predicting paired top-left and bottom-right keypoints, eliminating the need for anchor boxes.",
+          "claim_text": "CornerNet detects bounding boxes by predicting paired top-left and bottom-right keypoints, eliminating the need for anchor boxes."
+        },
+        {
+          "claim_id": "cornernet_hourglass_backbone",
+          "claim_text_normalized": "An hourglass network is used as the backbone to predict heatmaps and embeddings used for keypoint grouping.",
+          "claim_text": "An hourglass network is used as the backbone to predict heatmaps and embeddings used for keypoint grouping."
+        },
+        {
+          "claim_id": "cornernet_anchor_design_drawbacks_negative",
+          "claim_text_normalized": "Anchor box design introduces many hyperparameters and a large mismatch between positive and negative samples that the keypoint formulation avoids.",
+          "claim_text": "Anchor box design introduces many hyperparameters and a large mismatch between positive and negative samples that the keypoint formulation avoids."
+        }
+      ],
+      "wall_clock_seconds": 0.0,
+      "extractor": "extract_claims_oracle_from_gold",
+      "oracle_predictions": true,
+      "distractor_augmented": true,
+      "extraction_llm_enabled": true
+    },
+    {
+      "case_id": "corpus_detr_v2",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 1.0,
+        "claim_precision_distracted": 1.0,
+        "precision_drop_with_distractors": 0.0,
+        "max_precision_drop_with_distractors": 0.15,
+        "paraphrase_scoring": true,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 4,
+        "predicted_count_plain": 4,
+        "predicted_count_distracted": 4,
+        "matched_claim_ids": [
+          "detr_set_prediction_pipeline",
+          "detr_bipartite_matching_no_nms",
+          "detr_match_faster_rcnn_large_obj",
+          "detr_small_obj_slow_train_negative"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 0.55
+      },
+      "predictions_plain": [
+        {
+          "claim_id": "detr_set_prediction_pipeline",
+          "claim_text_normalized": "DETR treats detection as predicting an unordered set of objects directly, using a transformer encoder-decoder and dropping hand-crafted components such as anchor boxes and non-maximum suppression.",
+          "claim_text": "DETR treats detection as predicting an unordered set of objects directly, using a transformer encoder-decoder and dropping hand-crafted components such as anchor boxes and non-maximum suppression."
+        },
+        {
+          "claim_id": "detr_bipartite_matching_no_nms",
+          "claim_text_normalized": "Bipartite matching between predicted and ground-truth boxes during training enforces a unique prediction per object, which removes the need for non-maximum suppression at inference.",
+          "claim_text": "Bipartite matching between predicted and ground-truth boxes during training enforces a unique prediction per object, which removes the need for non-maximum suppression at inference."
+        },
+        {
+          "claim_id": "detr_match_faster_rcnn_large_obj",
+          "claim_text_normalized": "DETR matches the performance of a well-tuned Faster R-CNN baseline on COCO, particularly excelling on large objects.",
+          "claim_text": "DETR matches the performance of a well-tuned Faster R-CNN baseline on COCO, particularly excelling on large objects."
+        },
+        {
+          "claim_id": "detr_small_obj_slow_train_negative",
+          "claim_text_normalized": "DETR underperforms on small objects and requires substantially longer training schedules than Faster R-CNN to converge.",
+          "claim_text": "DETR underperforms on small objects and requires substantially longer training schedules than Faster R-CNN to converge."
+        }
+      ],
+      "predictions_distracted": [
+        {
+          "claim_id": "detr_set_prediction_pipeline",
+          "claim_text_normalized": "DETR treats detection as predicting an unordered set of objects directly, using a transformer encoder-decoder and dropping hand-crafted components such as anchor boxes and non-maximum suppression.",
+          "claim_text": "DETR treats detection as predicting an unordered set of objects directly, using a transformer encoder-decoder and dropping hand-crafted components such as anchor boxes and non-maximum suppression."
+        },
+        {
+          "claim_id": "detr_bipartite_matching_no_nms",
+          "claim_text_normalized": "Bipartite matching between predicted and ground-truth boxes during training enforces a unique prediction per object, which removes the need for non-maximum suppression at inference.",
+          "claim_text": "Bipartite matching between predicted and ground-truth boxes during training enforces a unique prediction per object, which removes the need for non-maximum suppression at inference."
+        },
+        {
+          "claim_id": "detr_match_faster_rcnn_large_obj",
+          "claim_text_normalized": "DETR matches the performance of a well-tuned Faster R-CNN baseline on COCO, particularly excelling on large objects.",
+          "claim_text": "DETR matches the performance of a well-tuned Faster R-CNN baseline on COCO, particularly excelling on large objects."
+        },
+        {
+          "claim_id": "detr_small_obj_slow_train_negative",
+          "claim_text_normalized": "DETR underperforms on small objects and requires substantially longer training schedules than Faster R-CNN to converge.",
+          "claim_text": "DETR underperforms on small objects and requires substantially longer training schedules than Faster R-CNN to converge."
+        }
+      ],
+      "wall_clock_seconds": 0.0,
+      "extractor": "extract_claims_oracle_from_gold",
+      "oracle_predictions": true,
+      "distractor_augmented": true,
+      "extraction_llm_enabled": true
+    },
+    {
+      "case_id": "corpus_efficientdet_v2",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 1.0,
+        "claim_precision_distracted": 1.0,
+        "precision_drop_with_distractors": 0.0,
+        "max_precision_drop_with_distractors": 0.15,
+        "paraphrase_scoring": true,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 5,
+        "predicted_count_plain": 5,
+        "predicted_count_distracted": 5,
+        "matched_claim_ids": [
+          "efficientdet_bifpn_weighted",
+          "efficientdet_compound_scaling",
+          "efficientdet_d7_55_ap_efficient",
+          "efficientdet_single_dim_scaling_negative",
+          "efficientdet_throughput_tradeoff_negative"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 0.55
+      },
+      "predictions_plain": [
+        {
+          "claim_id": "efficientdet_bifpn_weighted",
+          "claim_text_normalized": "EfficientDet introduces a Bidirectional Feature Pyramid Network (BiFPN) with weighted feature fusion to combine multi-scale features more effectively than top-down-only pyramids.",
+          "claim_text": "EfficientDet introduces a Bidirectional Feature Pyramid Network (BiFPN) with weighted feature fusion to combine multi-scale features more effectively than top-down-only pyramids."
+        },
+        {
+          "claim_id": "efficientdet_compound_scaling",
+          "claim_text_normalized": "A compound scaling rule jointly scales backbone depth, BiFPN width and depth, and input resolution rather than scaling a single dimension in isolation.",
+          "claim_text": "A compound scaling rule jointly scales backbone depth, BiFPN width and depth, and input resolution rather than scaling a single dimension in isolation."
+        },
+        {
+          "claim_id": "efficientdet_d7_55_ap_efficient",
+          "claim_text_normalized": "EfficientDet-D7 achieves around 55 AP on COCO with significantly fewer FLOPs and parameters than prior detectors at similar accuracy levels.",
+          "claim_text": "EfficientDet-D7 achieves around 55 AP on COCO with significantly fewer FLOPs and parameters than prior detectors at similar accuracy levels."
+        },
+        {
+          "claim_id": "efficientdet_single_dim_scaling_negative",
+          "claim_text_normalized": "Scaling only network depth, only width, or only input resolution leads to a suboptimal accuracy-efficiency tradeoff compared to compound multi-dimension scaling.",
+          "claim_text": "Scaling only network depth, only width, or only input resolution leads to a suboptimal accuracy-efficiency tradeoff compared to compound multi-dimension scaling."
+        },
+        {
+          "claim_id": "efficientdet_throughput_tradeoff_negative",
+          "claim_text_normalized": "EfficientDet trades raw GPU latency for parameter and FLOP efficiency, which can disadvantage it on hardware tuned for high-throughput inference of larger but simpler architectures.",
+          "claim_text": "EfficientDet trades raw GPU latency for parameter and FLOP efficiency, which can disadvantage it on hardware tuned for high-throughput inference of larger but simpler architectures."
+        }
+      ],
+      "predictions_distracted": [
+        {
+          "claim_id": "efficientdet_bifpn_weighted",
+          "claim_text_normalized": "EfficientDet introduces a Bidirectional Feature Pyramid Network (BiFPN) with weighted feature fusion to combine multi-scale features more effectively than top-down-only pyramids.",
+          "claim_text": "EfficientDet introduces a Bidirectional Feature Pyramid Network (BiFPN) with weighted feature fusion to combine multi-scale features more effectively than top-down-only pyramids."
+        },
+        {
+          "claim_id": "efficientdet_compound_scaling",
+          "claim_text_normalized": "A compound scaling rule jointly scales backbone depth, BiFPN width and depth, and input resolution rather than scaling a single dimension in isolation.",
+          "claim_text": "A compound scaling rule jointly scales backbone depth, BiFPN width and depth, and input resolution rather than scaling a single dimension in isolation."
+        },
+        {
+          "claim_id": "efficientdet_d7_55_ap_efficient",
+          "claim_text_normalized": "EfficientDet-D7 achieves around 55 AP on COCO with significantly fewer FLOPs and parameters than prior detectors at similar accuracy levels.",
+          "claim_text": "EfficientDet-D7 achieves around 55 AP on COCO with significantly fewer FLOPs and parameters than prior detectors at similar accuracy levels."
+        },
+        {
+          "claim_id": "efficientdet_single_dim_scaling_negative",
+          "claim_text_normalized": "Scaling only network depth, only width, or only input resolution leads to a suboptimal accuracy-efficiency tradeoff compared to compound multi-dimension scaling.",
+          "claim_text": "Scaling only network depth, only width, or only input resolution leads to a suboptimal accuracy-efficiency tradeoff compared to compound multi-dimension scaling."
+        },
+        {
+          "claim_id": "efficientdet_throughput_tradeoff_negative",
+          "claim_text_normalized": "EfficientDet trades raw GPU latency for parameter and FLOP efficiency, which can disadvantage it on hardware tuned for high-throughput inference of larger but simpler architectures.",
+          "claim_text": "EfficientDet trades raw GPU latency for parameter and FLOP efficiency, which can disadvantage it on hardware tuned for high-throughput inference of larger but simpler architectures."
+        }
+      ],
+      "wall_clock_seconds": 0.0,
+      "extractor": "extract_claims_oracle_from_gold",
+      "oracle_predictions": true,
+      "distractor_augmented": true,
+      "extraction_llm_enabled": true
+    },
+    {
+      "case_id": "corpus_fast_rcnn_v2",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 1.0,
+        "claim_precision_distracted": 1.0,
+        "precision_drop_with_distractors": 0.0,
+        "max_precision_drop_with_distractors": 0.15,
+        "paraphrase_scoring": true,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 4,
+        "predicted_count_plain": 4,
+        "predicted_count_distracted": 4,
+        "matched_claim_ids": [
+          "fast_rcnn_single_stage_multitask",
+          "fast_rcnn_roi_pooling_shared_features",
+          "fast_rcnn_9x_train_speedup",
+          "fast_rcnn_rcnn_redundancy_negative"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 0.55
+      },
+      "predictions_plain": [
+        {
+          "claim_id": "fast_rcnn_single_stage_multitask",
+          "claim_text_normalized": "Fast R-CNN trains the entire network in a single stage using a multi-task loss that jointly optimizes classification and bounding-box regression.",
+          "claim_text": "Fast R-CNN trains the entire network in a single stage using a multi-task loss that jointly optimizes classification and bounding-box regression."
+        },
+        {
+          "claim_id": "fast_rcnn_roi_pooling_shared_features",
+          "claim_text_normalized": "ROI pooling extracts a fixed-size feature vector for each region proposal from a shared convolutional feature map, avoiding redundant per-region CNN forward passes.",
+          "claim_text": "ROI pooling extracts a fixed-size feature vector for each region proposal from a shared convolutional feature map, avoiding redundant per-region CNN forward passes."
+        },
+        {
+          "claim_id": "fast_rcnn_9x_train_speedup",
+          "claim_text_normalized": "Fast R-CNN trains roughly nine times faster than R-CNN and reaches higher mean average precision on PASCAL VOC.",
+          "claim_text": "Fast R-CNN trains roughly nine times faster than R-CNN and reaches higher mean average precision on PASCAL VOC."
+        },
+        {
+          "claim_id": "fast_rcnn_rcnn_redundancy_negative",
+          "claim_text_normalized": "Region-wise feature extraction in R-CNN is highly redundant because the same convolutional features are recomputed for thousands of overlapping proposals, which Fast R-CNN avoids.",
+          "claim_text": "Region-wise feature extraction in R-CNN is highly redundant because the same convolutional features are recomputed for thousands of overlapping proposals, which Fast R-CNN avoids."
+        }
+      ],
+      "predictions_distracted": [
+        {
+          "claim_id": "fast_rcnn_single_stage_multitask",
+          "claim_text_normalized": "Fast R-CNN trains the entire network in a single stage using a multi-task loss that jointly optimizes classification and bounding-box regression.",
+          "claim_text": "Fast R-CNN trains the entire network in a single stage using a multi-task loss that jointly optimizes classification and bounding-box regression."
+        },
+        {
+          "claim_id": "fast_rcnn_roi_pooling_shared_features",
+          "claim_text_normalized": "ROI pooling extracts a fixed-size feature vector for each region proposal from a shared convolutional feature map, avoiding redundant per-region CNN forward passes.",
+          "claim_text": "ROI pooling extracts a fixed-size feature vector for each region proposal from a shared convolutional feature map, avoiding redundant per-region CNN forward passes."
+        },
+        {
+          "claim_id": "fast_rcnn_9x_train_speedup",
+          "claim_text_normalized": "Fast R-CNN trains roughly nine times faster than R-CNN and reaches higher mean average precision on PASCAL VOC.",
+          "claim_text": "Fast R-CNN trains roughly nine times faster than R-CNN and reaches higher mean average precision on PASCAL VOC."
+        },
+        {
+          "claim_id": "fast_rcnn_rcnn_redundancy_negative",
+          "claim_text_normalized": "Region-wise feature extraction in R-CNN is highly redundant because the same convolutional features are recomputed for thousands of overlapping proposals, which Fast R-CNN avoids.",
+          "claim_text": "Region-wise feature extraction in R-CNN is highly redundant because the same convolutional features are recomputed for thousands of overlapping proposals, which Fast R-CNN avoids."
+        }
+      ],
+      "wall_clock_seconds": 0.0,
+      "extractor": "extract_claims_oracle_from_gold",
+      "oracle_predictions": true,
+      "distractor_augmented": true,
+      "extraction_llm_enabled": true
+    },
+    {
+      "case_id": "corpus_faster_rcnn_v2",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 1.0,
+        "claim_precision_distracted": 1.0,
+        "precision_drop_with_distractors": 0.0,
+        "max_precision_drop_with_distractors": 0.15,
+        "paraphrase_scoring": true,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 4,
+        "predicted_count_plain": 4,
+        "predicted_count_distracted": 4,
+        "matched_claim_ids": [
+          "faster_rcnn_rpn_shared_features",
+          "faster_rcnn_speed_5fps_sota",
+          "faster_rcnn_anchor_boxes",
+          "faster_rcnn_selective_search_bottleneck"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 0.55
+      },
+      "predictions_plain": [
+        {
+          "claim_id": "faster_rcnn_rpn_shared_features",
+          "claim_text_normalized": "The proposal network in Faster R-CNN reuses the same convolutional features that the downstream detector relies on, removing the separate proposal-generation cost present in earlier two-stage pipelines.",
+          "claim_text": "The proposal network in Faster R-CNN reuses the same convolutional features that the downstream detector relies on, removing the separate proposal-generation cost present in earlier two-stage pipelines."
+        },
+        {
+          "claim_id": "faster_rcnn_speed_5fps_sota",
+          "claim_text_normalized": "On a single GPU Faster R-CNN reaches roughly five frames per second and still attains leading detection accuracy on PASCAL VOC and MS COCO benchmarks.",
+          "claim_text": "On a single GPU Faster R-CNN reaches roughly five frames per second and still attains leading detection accuracy on PASCAL VOC and MS COCO benchmarks."
+        },
+        {
+          "claim_id": "faster_rcnn_anchor_boxes",
+          "claim_text_normalized": "Reference boxes that span several sizes and aspect ratios are placed at every spatial location, which lets the detector regress objects across a wide range of shapes from a single feature map.",
+          "claim_text": "Reference boxes that span several sizes and aspect ratios are placed at every spatial location, which lets the detector regress objects across a wide range of shapes from a single feature map."
+        },
+        {
+          "claim_id": "faster_rcnn_selective_search_bottleneck",
+          "claim_text_normalized": "Region proposals generated by Selective Search are the dominant runtime cost in earlier two-stage detectors and prevent end-to-end training; integrating an RPN removes this bottleneck.",
+          "claim_text": "Region proposals generated by Selective Search are the dominant runtime cost in earlier two-stage detectors and prevent end-to-end training; integrating an RPN removes this bottleneck."
+        }
+      ],
+      "predictions_distracted": [
+        {
+          "claim_id": "faster_rcnn_rpn_shared_features",
+          "claim_text_normalized": "The proposal network in Faster R-CNN reuses the same convolutional features that the downstream detector relies on, removing the separate proposal-generation cost present in earlier two-stage pipelines.",
+          "claim_text": "The proposal network in Faster R-CNN reuses the same convolutional features that the downstream detector relies on, removing the separate proposal-generation cost present in earlier two-stage pipelines."
+        },
+        {
+          "claim_id": "faster_rcnn_speed_5fps_sota",
+          "claim_text_normalized": "On a single GPU Faster R-CNN reaches roughly five frames per second and still attains leading detection accuracy on PASCAL VOC and MS COCO benchmarks.",
+          "claim_text": "On a single GPU Faster R-CNN reaches roughly five frames per second and still attains leading detection accuracy on PASCAL VOC and MS COCO benchmarks."
+        },
+        {
+          "claim_id": "faster_rcnn_anchor_boxes",
+          "claim_text_normalized": "Reference boxes that span several sizes and aspect ratios are placed at every spatial location, which lets the detector regress objects across a wide range of shapes from a single feature map.",
+          "claim_text": "Reference boxes that span several sizes and aspect ratios are placed at every spatial location, which lets the detector regress objects across a wide range of shapes from a single feature map."
+        },
+        {
+          "claim_id": "faster_rcnn_selective_search_bottleneck",
+          "claim_text_normalized": "Region proposals generated by Selective Search are the dominant runtime cost in earlier two-stage detectors and prevent end-to-end training; integrating an RPN removes this bottleneck.",
+          "claim_text": "Region proposals generated by Selective Search are the dominant runtime cost in earlier two-stage detectors and prevent end-to-end training; integrating an RPN removes this bottleneck."
+        }
+      ],
+      "wall_clock_seconds": 0.0,
+      "extractor": "extract_claims_oracle_from_gold",
+      "oracle_predictions": true,
+      "distractor_augmented": true,
+      "extraction_llm_enabled": true
+    },
+    {
+      "case_id": "corpus_fcos_v2",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 1.0,
+        "claim_precision_distracted": 1.0,
+        "precision_drop_with_distractors": 0.0,
+        "max_precision_drop_with_distractors": 0.15,
+        "paraphrase_scoring": true,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 4,
+        "predicted_count_plain": 4,
+        "predicted_count_distracted": 4,
+        "matched_claim_ids": [
+          "fcos_per_pixel_prediction",
+          "fcos_centerness_branch",
+          "fcos_surpass_retinanet_no_anchors",
+          "fcos_anchor_hyperparameter_burden_negative"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 0.55
+      },
+      "predictions_plain": [
+        {
+          "claim_id": "fcos_per_pixel_prediction",
+          "claim_text_normalized": "FCOS performs object detection in a per-pixel fashion directly on the feature map, predicting class and bounding-box offsets at each location without anchor boxes.",
+          "claim_text": "FCOS performs object detection in a per-pixel fashion directly on the feature map, predicting class and bounding-box offsets at each location without anchor boxes."
+        },
+        {
+          "claim_id": "fcos_centerness_branch",
+          "claim_text_normalized": "A center-ness branch suppresses low-quality predictions far from the object center, recovering accuracy lost by removing anchor heuristics.",
+          "claim_text": "A center-ness branch suppresses low-quality predictions far from the object center, recovering accuracy lost by removing anchor heuristics."
+        },
+        {
+          "claim_id": "fcos_surpass_retinanet_no_anchors",
+          "claim_text_normalized": "FCOS surpasses anchor-based detectors such as RetinaNet on COCO without requiring anchor box hyperparameter tuning.",
+          "claim_text": "FCOS surpasses anchor-based detectors such as RetinaNet on COCO without requiring anchor box hyperparameter tuning."
+        },
+        {
+          "claim_id": "fcos_anchor_hyperparameter_burden_negative",
+          "claim_text_normalized": "Anchor boxes introduce many hyperparameters and a large gap between positive and negative samples that complicates training of dense detectors.",
+          "claim_text": "Anchor boxes introduce many hyperparameters and a large gap between positive and negative samples that complicates training of dense detectors."
+        }
+      ],
+      "predictions_distracted": [
+        {
+          "claim_id": "fcos_per_pixel_prediction",
+          "claim_text_normalized": "FCOS performs object detection in a per-pixel fashion directly on the feature map, predicting class and bounding-box offsets at each location without anchor boxes.",
+          "claim_text": "FCOS performs object detection in a per-pixel fashion directly on the feature map, predicting class and bounding-box offsets at each location without anchor boxes."
+        },
+        {
+          "claim_id": "fcos_centerness_branch",
+          "claim_text_normalized": "A center-ness branch suppresses low-quality predictions far from the object center, recovering accuracy lost by removing anchor heuristics.",
+          "claim_text": "A center-ness branch suppresses low-quality predictions far from the object center, recovering accuracy lost by removing anchor heuristics."
+        },
+        {
+          "claim_id": "fcos_surpass_retinanet_no_anchors",
+          "claim_text_normalized": "FCOS surpasses anchor-based detectors such as RetinaNet on COCO without requiring anchor box hyperparameter tuning.",
+          "claim_text": "FCOS surpasses anchor-based detectors such as RetinaNet on COCO without requiring anchor box hyperparameter tuning."
+        },
+        {
+          "claim_id": "fcos_anchor_hyperparameter_burden_negative",
+          "claim_text_normalized": "Anchor boxes introduce many hyperparameters and a large gap between positive and negative samples that complicates training of dense detectors.",
+          "claim_text": "Anchor boxes introduce many hyperparameters and a large gap between positive and negative samples that complicates training of dense detectors."
+        }
+      ],
+      "wall_clock_seconds": 0.0,
+      "extractor": "extract_claims_oracle_from_gold",
+      "oracle_predictions": true,
+      "distractor_augmented": true,
+      "extraction_llm_enabled": true
+    },
+    {
+      "case_id": "corpus_fpn_v2",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 1.0,
+        "claim_precision_distracted": 1.0,
+        "precision_drop_with_distractors": 0.0,
+        "max_precision_drop_with_distractors": 0.15,
+        "paraphrase_scoring": true,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 4,
+        "predicted_count_plain": 4,
+        "predicted_count_distracted": 4,
+        "matched_claim_ids": [
+          "fpn_topdown_lateral_pyramid",
+          "fpn_lateral_connections_role",
+          "fpn_faster_rcnn_ap_gain",
+          "fpn_single_scale_small_objects_negative"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 0.55
+      },
+      "predictions_plain": [
+        {
+          "claim_id": "fpn_topdown_lateral_pyramid",
+          "claim_text_normalized": "Feature Pyramid Network constructs a multi-scale feature pyramid with strong semantics at all levels using a top-down pathway and lateral connections from a CNN backbone.",
+          "claim_text": "Feature Pyramid Network constructs a multi-scale feature pyramid with strong semantics at all levels using a top-down pathway and lateral connections from a CNN backbone."
+        },
+        {
+          "claim_id": "fpn_lateral_connections_role",
+          "claim_text_normalized": "Lateral connections from the bottom-up pathway preserve high-resolution localization information that the top-down pathway lacks alone.",
+          "claim_text": "Lateral connections from the bottom-up pathway preserve high-resolution localization information that the top-down pathway lacks alone."
+        },
+        {
+          "claim_id": "fpn_faster_rcnn_ap_gain",
+          "claim_text_normalized": "Replacing single-scale features with FPN inside Faster R-CNN raises COCO AP by a substantial margin without additional inference cost.",
+          "claim_text": "Replacing single-scale features with FPN inside Faster R-CNN raises COCO AP by a substantial margin without additional inference cost."
+        },
+        {
+          "claim_id": "fpn_single_scale_small_objects_negative",
+          "claim_text_normalized": "Single-scale features in detection backbones lead to a substantial drop in accuracy on small objects, which the multi-level pyramid addresses.",
+          "claim_text": "Single-scale features in detection backbones lead to a substantial drop in accuracy on small objects, which the multi-level pyramid addresses."
+        }
+      ],
+      "predictions_distracted": [
+        {
+          "claim_id": "fpn_topdown_lateral_pyramid",
+          "claim_text_normalized": "Feature Pyramid Network constructs a multi-scale feature pyramid with strong semantics at all levels using a top-down pathway and lateral connections from a CNN backbone.",
+          "claim_text": "Feature Pyramid Network constructs a multi-scale feature pyramid with strong semantics at all levels using a top-down pathway and lateral connections from a CNN backbone."
+        },
+        {
+          "claim_id": "fpn_lateral_connections_role",
+          "claim_text_normalized": "Lateral connections from the bottom-up pathway preserve high-resolution localization information that the top-down pathway lacks alone.",
+          "claim_text": "Lateral connections from the bottom-up pathway preserve high-resolution localization information that the top-down pathway lacks alone."
+        },
+        {
+          "claim_id": "fpn_faster_rcnn_ap_gain",
+          "claim_text_normalized": "Replacing single-scale features with FPN inside Faster R-CNN raises COCO AP by a substantial margin without additional inference cost.",
+          "claim_text": "Replacing single-scale features with FPN inside Faster R-CNN raises COCO AP by a substantial margin without additional inference cost."
+        },
+        {
+          "claim_id": "fpn_single_scale_small_objects_negative",
+          "claim_text_normalized": "Single-scale features in detection backbones lead to a substantial drop in accuracy on small objects, which the multi-level pyramid addresses.",
+          "claim_text": "Single-scale features in detection backbones lead to a substantial drop in accuracy on small objects, which the multi-level pyramid addresses."
+        }
+      ],
+      "wall_clock_seconds": 0.0,
+      "extractor": "extract_claims_oracle_from_gold",
+      "oracle_predictions": true,
+      "distractor_augmented": true,
+      "extraction_llm_enabled": true
+    },
+    {
+      "case_id": "corpus_mask_rcnn_v2",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 1.0,
+        "claim_precision_distracted": 1.0,
+        "precision_drop_with_distractors": 0.0,
+        "max_precision_drop_with_distractors": 0.15,
+        "paraphrase_scoring": true,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 5,
+        "predicted_count_plain": 5,
+        "predicted_count_distracted": 5,
+        "matched_claim_ids": [
+          "mask_rcnn_parallel_mask_branch",
+          "mask_rcnn_roialign_quantization_fix",
+          "mask_rcnn_decoupled_per_class_sigmoid",
+          "mask_rcnn_softmax_mask_competition_negative",
+          "mask_rcnn_pretraining_dependency_negative"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 0.55
+      },
+      "predictions_plain": [
+        {
+          "claim_id": "mask_rcnn_parallel_mask_branch",
+          "claim_text_normalized": "Mask R-CNN augments the Faster R-CNN detector with an additional, parallel head that outputs a per-instance binary segmentation mask for each proposal.",
+          "claim_text": "Mask R-CNN augments the Faster R-CNN detector with an additional, parallel head that outputs a per-instance binary segmentation mask for each proposal."
+        },
+        {
+          "claim_id": "mask_rcnn_roialign_quantization_fix",
+          "claim_text_normalized": "ROIAlign replaces ROIPool by removing harsh feature quantization, which substantially improves mask localization accuracy.",
+          "claim_text": "ROIAlign replaces ROIPool by removing harsh feature quantization, which substantially improves mask localization accuracy."
+        },
+        {
+          "claim_id": "mask_rcnn_decoupled_per_class_sigmoid",
+          "claim_text_normalized": "Predicting per-class binary masks with sigmoid avoids inter-class competition that arises when mask classes are normalized with softmax.",
+          "claim_text": "Predicting per-class binary masks with sigmoid avoids inter-class competition that arises when mask classes are normalized with softmax."
+        },
+        {
+          "claim_id": "mask_rcnn_softmax_mask_competition_negative",
+          "claim_text_normalized": "Per-class softmax over mask classes induces inter-class competition that degrades mask quality compared to the per-class sigmoid formulation.",
+          "claim_text": "Per-class softmax over mask classes induces inter-class competition that degrades mask quality compared to the per-class sigmoid formulation."
+        },
+        {
+          "claim_id": "mask_rcnn_pretraining_dependency_negative",
+          "claim_text_normalized": "Detection accuracy of Mask R-CNN drops noticeably without ImageNet pre-training, indicating a dependence on large-scale supervised pre-training of the backbone.",
+          "claim_text": "Detection accuracy of Mask R-CNN drops noticeably without ImageNet pre-training, indicating a dependence on large-scale supervised pre-training of the backbone."
+        }
+      ],
+      "predictions_distracted": [
+        {
+          "claim_id": "mask_rcnn_parallel_mask_branch",
+          "claim_text_normalized": "Mask R-CNN augments the Faster R-CNN detector with an additional, parallel head that outputs a per-instance binary segmentation mask for each proposal.",
+          "claim_text": "Mask R-CNN augments the Faster R-CNN detector with an additional, parallel head that outputs a per-instance binary segmentation mask for each proposal."
+        },
+        {
+          "claim_id": "mask_rcnn_roialign_quantization_fix",
+          "claim_text_normalized": "ROIAlign replaces ROIPool by removing harsh feature quantization, which substantially improves mask localization accuracy.",
+          "claim_text": "ROIAlign replaces ROIPool by removing harsh feature quantization, which substantially improves mask localization accuracy."
+        },
+        {
+          "claim_id": "mask_rcnn_decoupled_per_class_sigmoid",
+          "claim_text_normalized": "Predicting per-class binary masks with sigmoid avoids inter-class competition that arises when mask classes are normalized with softmax.",
+          "claim_text": "Predicting per-class binary masks with sigmoid avoids inter-class competition that arises when mask classes are normalized with softmax."
+        },
+        {
+          "claim_id": "mask_rcnn_softmax_mask_competition_negative",
+          "claim_text_normalized": "Per-class softmax over mask classes induces inter-class competition that degrades mask quality compared to the per-class sigmoid formulation.",
+          "claim_text": "Per-class softmax over mask classes induces inter-class competition that degrades mask quality compared to the per-class sigmoid formulation."
+        },
+        {
+          "claim_id": "mask_rcnn_pretraining_dependency_negative",
+          "claim_text_normalized": "Detection accuracy of Mask R-CNN drops noticeably without ImageNet pre-training, indicating a dependence on large-scale supervised pre-training of the backbone.",
+          "claim_text": "Detection accuracy of Mask R-CNN drops noticeably without ImageNet pre-training, indicating a dependence on large-scale supervised pre-training of the backbone."
+        }
+      ],
+      "wall_clock_seconds": 0.0,
+      "extractor": "extract_claims_oracle_from_gold",
+      "oracle_predictions": true,
+      "distractor_augmented": true,
+      "extraction_llm_enabled": true
+    },
+    {
+      "case_id": "corpus_rcnn_v2",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 1.0,
+        "claim_precision_distracted": 1.0,
+        "precision_drop_with_distractors": 0.0,
+        "max_precision_drop_with_distractors": 0.15,
+        "paraphrase_scoring": true,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 4,
+        "predicted_count_plain": 4,
+        "predicted_count_distracted": 4,
+        "matched_claim_ids": [
+          "rcnn_region_proposals_with_cnn_features",
+          "rcnn_pretrain_finetune_recipe",
+          "rcnn_voc_30pct_relative_gain",
+          "rcnn_inference_2k_proposals_slow_negative"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 0.55
+      },
+      "predictions_plain": [
+        {
+          "claim_id": "rcnn_region_proposals_with_cnn_features",
+          "claim_text_normalized": "R-CNN combines bottom-up region proposals with rich features extracted by a convolutional neural network for accurate object detection.",
+          "claim_text": "R-CNN combines bottom-up region proposals with rich features extracted by a convolutional neural network for accurate object detection."
+        },
+        {
+          "claim_id": "rcnn_pretrain_finetune_recipe",
+          "claim_text_normalized": "Supervised pre-training on ImageNet classification followed by domain-specific fine-tuning on detection enables training large CNNs with limited labeled detection data.",
+          "claim_text": "Supervised pre-training on ImageNet classification followed by domain-specific fine-tuning on detection enables training large CNNs with limited labeled detection data."
+        },
+        {
+          "claim_id": "rcnn_voc_30pct_relative_gain",
+          "claim_text_normalized": "R-CNN improves mean average precision on PASCAL VOC 2010 by more than 30 percent relative to the previous best result.",
+          "claim_text": "R-CNN improves mean average precision on PASCAL VOC 2010 by more than 30 percent relative to the previous best result."
+        },
+        {
+          "claim_id": "rcnn_inference_2k_proposals_slow_negative",
+          "claim_text_normalized": "R-CNN is slow at inference because it forwards each of approximately two thousand region proposals through the convolutional network independently.",
+          "claim_text": "R-CNN is slow at inference because it forwards each of approximately two thousand region proposals through the convolutional network independently."
+        }
+      ],
+      "predictions_distracted": [
+        {
+          "claim_id": "rcnn_region_proposals_with_cnn_features",
+          "claim_text_normalized": "R-CNN combines bottom-up region proposals with rich features extracted by a convolutional neural network for accurate object detection.",
+          "claim_text": "R-CNN combines bottom-up region proposals with rich features extracted by a convolutional neural network for accurate object detection."
+        },
+        {
+          "claim_id": "rcnn_pretrain_finetune_recipe",
+          "claim_text_normalized": "Supervised pre-training on ImageNet classification followed by domain-specific fine-tuning on detection enables training large CNNs with limited labeled detection data.",
+          "claim_text": "Supervised pre-training on ImageNet classification followed by domain-specific fine-tuning on detection enables training large CNNs with limited labeled detection data."
+        },
+        {
+          "claim_id": "rcnn_voc_30pct_relative_gain",
+          "claim_text_normalized": "R-CNN improves mean average precision on PASCAL VOC 2010 by more than 30 percent relative to the previous best result.",
+          "claim_text": "R-CNN improves mean average precision on PASCAL VOC 2010 by more than 30 percent relative to the previous best result."
+        },
+        {
+          "claim_id": "rcnn_inference_2k_proposals_slow_negative",
+          "claim_text_normalized": "R-CNN is slow at inference because it forwards each of approximately two thousand region proposals through the convolutional network independently.",
+          "claim_text": "R-CNN is slow at inference because it forwards each of approximately two thousand region proposals through the convolutional network independently."
+        }
+      ],
+      "wall_clock_seconds": 0.0,
+      "extractor": "extract_claims_oracle_from_gold",
+      "oracle_predictions": true,
+      "distractor_augmented": true,
+      "extraction_llm_enabled": true
+    },
+    {
+      "case_id": "corpus_retinanet_focal_v2",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 1.0,
+        "claim_precision_distracted": 1.0,
+        "precision_drop_with_distractors": 0.0,
+        "max_precision_drop_with_distractors": 0.15,
+        "paraphrase_scoring": true,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 5,
+        "predicted_count_plain": 5,
+        "predicted_count_distracted": 5,
+        "matched_claim_ids": [
+          "retinanet_focal_loss_definition",
+          "retinanet_hard_mining_insufficient",
+          "retinanet_resnet101_fpn_ap",
+          "retinanet_imbalance_root_cause",
+          "retinanet_alpha_balanced_alone_negative"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 0.55
+      },
+      "predictions_plain": [
+        {
+          "claim_id": "retinanet_focal_loss_definition",
+          "claim_text_normalized": "Focal Loss reshapes the standard cross-entropy by down-weighting the contribution of well-classified examples, allowing effective training under extreme foreground-background class imbalance.",
+          "claim_text": "Focal Loss reshapes the standard cross-entropy by down-weighting the contribution of well-classified examples, allowing effective training under extreme foreground-background class imbalance."
+        },
+        {
+          "claim_id": "retinanet_hard_mining_insufficient",
+          "claim_text_normalized": "Hard negative mining and online hard example mining are insufficient to address the dense one-stage class imbalance that Focal Loss handles by reweighting.",
+          "claim_text": "Hard negative mining and online hard example mining are insufficient to address the dense one-stage class imbalance that Focal Loss handles by reweighting."
+        },
+        {
+          "claim_id": "retinanet_resnet101_fpn_ap",
+          "claim_text_normalized": "RetinaNet built on a ResNet-101-FPN backbone reaches roughly 39 AP on COCO test-dev, matching or exceeding two-stage detectors at comparable inference speed.",
+          "claim_text": "RetinaNet built on a ResNet-101-FPN backbone reaches roughly 39 AP on COCO test-dev, matching or exceeding two-stage detectors at comparable inference speed."
+        },
+        {
+          "claim_id": "retinanet_imbalance_root_cause",
+          "claim_text_normalized": "The accuracy gap between one-stage and two-stage detectors is closed by addressing class imbalance with a loss reweighting rather than by adding architectural complexity.",
+          "claim_text": "The accuracy gap between one-stage and two-stage detectors is closed by addressing class imbalance with a loss reweighting rather than by adding architectural complexity."
+        },
+        {
+          "claim_id": "retinanet_alpha_balanced_alone_negative",
+          "claim_text_normalized": "An alpha-balanced cross-entropy alone is not sufficient to overcome extreme foreground-background imbalance in dense detection, motivating the modulating term that focal loss adds.",
+          "claim_text": "An alpha-balanced cross-entropy alone is not sufficient to overcome extreme foreground-background imbalance in dense detection, motivating the modulating term that focal loss adds."
+        }
+      ],
+      "predictions_distracted": [
+        {
+          "claim_id": "retinanet_focal_loss_definition",
+          "claim_text_normalized": "Focal Loss reshapes the standard cross-entropy by down-weighting the contribution of well-classified examples, allowing effective training under extreme foreground-background class imbalance.",
+          "claim_text": "Focal Loss reshapes the standard cross-entropy by down-weighting the contribution of well-classified examples, allowing effective training under extreme foreground-background class imbalance."
+        },
+        {
+          "claim_id": "retinanet_hard_mining_insufficient",
+          "claim_text_normalized": "Hard negative mining and online hard example mining are insufficient to address the dense one-stage class imbalance that Focal Loss handles by reweighting.",
+          "claim_text": "Hard negative mining and online hard example mining are insufficient to address the dense one-stage class imbalance that Focal Loss handles by reweighting."
+        },
+        {
+          "claim_id": "retinanet_resnet101_fpn_ap",
+          "claim_text_normalized": "RetinaNet built on a ResNet-101-FPN backbone reaches roughly 39 AP on COCO test-dev, matching or exceeding two-stage detectors at comparable inference speed.",
+          "claim_text": "RetinaNet built on a ResNet-101-FPN backbone reaches roughly 39 AP on COCO test-dev, matching or exceeding two-stage detectors at comparable inference speed."
+        },
+        {
+          "claim_id": "retinanet_imbalance_root_cause",
+          "claim_text_normalized": "The accuracy gap between one-stage and two-stage detectors is closed by addressing class imbalance with a loss reweighting rather than by adding architectural complexity.",
+          "claim_text": "The accuracy gap between one-stage and two-stage detectors is closed by addressing class imbalance with a loss reweighting rather than by adding architectural complexity."
+        },
+        {
+          "claim_id": "retinanet_alpha_balanced_alone_negative",
+          "claim_text_normalized": "An alpha-balanced cross-entropy alone is not sufficient to overcome extreme foreground-background imbalance in dense detection, motivating the modulating term that focal loss adds.",
+          "claim_text": "An alpha-balanced cross-entropy alone is not sufficient to overcome extreme foreground-background imbalance in dense detection, motivating the modulating term that focal loss adds."
+        }
+      ],
+      "wall_clock_seconds": 0.0,
+      "extractor": "extract_claims_oracle_from_gold",
+      "oracle_predictions": true,
+      "distractor_augmented": true,
+      "extraction_llm_enabled": true
+    },
+    {
+      "case_id": "corpus_ssd_v2",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 1.0,
+        "claim_precision_distracted": 1.0,
+        "precision_drop_with_distractors": 0.0,
+        "max_precision_drop_with_distractors": 0.15,
+        "paraphrase_scoring": true,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 4,
+        "predicted_count_plain": 4,
+        "predicted_count_distracted": 4,
+        "matched_claim_ids": [
+          "ssd_default_boxes_multiscale",
+          "ssd_300_voc_speed",
+          "ssd_multiple_feature_maps",
+          "ssd_yolo_localization_negative"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 0.55
+      },
+      "predictions_plain": [
+        {
+          "claim_id": "ssd_default_boxes_multiscale",
+          "claim_text_normalized": "SSD predicts category scores and bounding-box offsets relative to a set of default boxes per feature-map location, evaluated across multiple scales of feature maps.",
+          "claim_text": "SSD predicts category scores and bounding-box offsets relative to a set of default boxes per feature-map location, evaluated across multiple scales of feature maps."
+        },
+        {
+          "claim_id": "ssd_300_voc_speed",
+          "claim_text_normalized": "SSD300 reaches around 74 mAP on PASCAL VOC 2007 test at roughly 59 FPS on a Titan X GPU, surpassing YOLO at higher speed.",
+          "claim_text": "SSD300 reaches around 74 mAP on PASCAL VOC 2007 test at roughly 59 FPS on a Titan X GPU, surpassing YOLO at higher speed."
+        },
+        {
+          "claim_id": "ssd_multiple_feature_maps",
+          "claim_text_normalized": "Predicting from feature maps at several different resolutions is critical for handling objects of different sizes within a single forward pass.",
+          "claim_text": "Predicting from feature maps at several different resolutions is critical for handling objects of different sizes within a single forward pass."
+        },
+        {
+          "claim_id": "ssd_yolo_localization_negative",
+          "claim_text_normalized": "YOLO's single-scale grid prediction degrades accuracy on small objects falling near grid boundaries, an issue mitigated by SSD's per-location multi-box predictions across feature maps.",
+          "claim_text": "YOLO's single-scale grid prediction degrades accuracy on small objects falling near grid boundaries, an issue mitigated by SSD's per-location multi-box predictions across feature maps."
+        }
+      ],
+      "predictions_distracted": [
+        {
+          "claim_id": "ssd_default_boxes_multiscale",
+          "claim_text_normalized": "SSD predicts category scores and bounding-box offsets relative to a set of default boxes per feature-map location, evaluated across multiple scales of feature maps.",
+          "claim_text": "SSD predicts category scores and bounding-box offsets relative to a set of default boxes per feature-map location, evaluated across multiple scales of feature maps."
+        },
+        {
+          "claim_id": "ssd_300_voc_speed",
+          "claim_text_normalized": "SSD300 reaches around 74 mAP on PASCAL VOC 2007 test at roughly 59 FPS on a Titan X GPU, surpassing YOLO at higher speed.",
+          "claim_text": "SSD300 reaches around 74 mAP on PASCAL VOC 2007 test at roughly 59 FPS on a Titan X GPU, surpassing YOLO at higher speed."
+        },
+        {
+          "claim_id": "ssd_multiple_feature_maps",
+          "claim_text_normalized": "Predicting from feature maps at several different resolutions is critical for handling objects of different sizes within a single forward pass.",
+          "claim_text": "Predicting from feature maps at several different resolutions is critical for handling objects of different sizes within a single forward pass."
+        },
+        {
+          "claim_id": "ssd_yolo_localization_negative",
+          "claim_text_normalized": "YOLO's single-scale grid prediction degrades accuracy on small objects falling near grid boundaries, an issue mitigated by SSD's per-location multi-box predictions across feature maps.",
+          "claim_text": "YOLO's single-scale grid prediction degrades accuracy on small objects falling near grid boundaries, an issue mitigated by SSD's per-location multi-box predictions across feature maps."
+        }
+      ],
+      "wall_clock_seconds": 0.0,
+      "extractor": "extract_claims_oracle_from_gold",
+      "oracle_predictions": true,
+      "distractor_augmented": true,
+      "extraction_llm_enabled": true
+    },
+    {
+      "case_id": "corpus_yolov1_v2",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 1.0,
+        "claim_precision_distracted": 1.0,
+        "precision_drop_with_distractors": 0.0,
+        "max_precision_drop_with_distractors": 0.15,
+        "paraphrase_scoring": true,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 6,
+        "predicted_count_plain": 6,
+        "predicted_count_distracted": 6,
+        "matched_claim_ids": [
+          "yolov1_unified_pipeline",
+          "yolov1_speed_45_155_fps",
+          "yolov1_grid_based_detection",
+          "yolov1_localization_error_negative",
+          "yolov1_artwork_generalization",
+          "yolov1_two_stage_higher_acc_negative"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 0.55
+      },
+      "predictions_plain": [
+        {
+          "claim_id": "yolov1_unified_pipeline",
+          "claim_text_normalized": "YOLO formulates object detection as a single regression problem from raw pixels to bounding box coordinates and class probabilities, using one neural network for the entire task.",
+          "claim_text": "YOLO formulates object detection as a single regression problem from raw pixels to bounding box coordinates and class probabilities, using one neural network for the entire task."
+        },
+        {
+          "claim_id": "yolov1_speed_45_155_fps",
+          "claim_text_normalized": "The base YOLO model processes images at approximately 45 frames per second on a Titan X GPU, while the Fast YOLO variant reaches around 155 FPS.",
+          "claim_text": "The base YOLO model processes images at approximately 45 frames per second on a Titan X GPU, while the Fast YOLO variant reaches around 155 FPS."
+        },
+        {
+          "claim_id": "yolov1_grid_based_detection",
+          "claim_text_normalized": "Detection is performed by dividing the input image into a fixed grid where each cell predicts a small number of bounding boxes with confidence scores and class probabilities.",
+          "claim_text": "Detection is performed by dividing the input image into a fixed grid where each cell predicts a small number of bounding boxes with confidence scores and class probabilities."
+        },
+        {
+          "claim_id": "yolov1_localization_error_negative",
+          "claim_text_normalized": "YOLO produces more localization errors than two-stage detectors and struggles with small objects appearing in groups.",
+          "claim_text": "YOLO produces more localization errors than two-stage detectors and struggles with small objects appearing in groups."
+        },
+        {
+          "claim_id": "yolov1_artwork_generalization",
+          "claim_text_normalized": "When evaluated on artwork datasets such as Picasso and People-Art, YOLO generalizes better than detectors trained only on natural images.",
+          "claim_text": "When evaluated on artwork datasets such as Picasso and People-Art, YOLO generalizes better than detectors trained only on natural images."
+        },
+        {
+          "claim_id": "yolov1_two_stage_higher_acc_negative",
+          "claim_text_normalized": "Two-stage region-based detectors achieve noticeably higher detection accuracy than YOLO, but at the cost of substantially lower inference throughput.",
+          "claim_text": "Two-stage region-based detectors achieve noticeably higher detection accuracy than YOLO, but at the cost of substantially lower inference throughput."
+        }
+      ],
+      "predictions_distracted": [
+        {
+          "claim_id": "yolov1_unified_pipeline",
+          "claim_text_normalized": "YOLO formulates object detection as a single regression problem from raw pixels to bounding box coordinates and class probabilities, using one neural network for the entire task.",
+          "claim_text": "YOLO formulates object detection as a single regression problem from raw pixels to bounding box coordinates and class probabilities, using one neural network for the entire task."
+        },
+        {
+          "claim_id": "yolov1_speed_45_155_fps",
+          "claim_text_normalized": "The base YOLO model processes images at approximately 45 frames per second on a Titan X GPU, while the Fast YOLO variant reaches around 155 FPS.",
+          "claim_text": "The base YOLO model processes images at approximately 45 frames per second on a Titan X GPU, while the Fast YOLO variant reaches around 155 FPS."
+        },
+        {
+          "claim_id": "yolov1_grid_based_detection",
+          "claim_text_normalized": "Detection is performed by dividing the input image into a fixed grid where each cell predicts a small number of bounding boxes with confidence scores and class probabilities.",
+          "claim_text": "Detection is performed by dividing the input image into a fixed grid where each cell predicts a small number of bounding boxes with confidence scores and class probabilities."
+        },
+        {
+          "claim_id": "yolov1_localization_error_negative",
+          "claim_text_normalized": "YOLO produces more localization errors than two-stage detectors and struggles with small objects appearing in groups.",
+          "claim_text": "YOLO produces more localization errors than two-stage detectors and struggles with small objects appearing in groups."
+        },
+        {
+          "claim_id": "yolov1_artwork_generalization",
+          "claim_text_normalized": "When evaluated on artwork datasets such as Picasso and People-Art, YOLO generalizes better than detectors trained only on natural images.",
+          "claim_text": "When evaluated on artwork datasets such as Picasso and People-Art, YOLO generalizes better than detectors trained only on natural images."
+        },
+        {
+          "claim_id": "yolov1_two_stage_higher_acc_negative",
+          "claim_text_normalized": "Two-stage region-based detectors achieve noticeably higher detection accuracy than YOLO, but at the cost of substantially lower inference throughput.",
+          "claim_text": "Two-stage region-based detectors achieve noticeably higher detection accuracy than YOLO, but at the cost of substantially lower inference throughput."
+        }
+      ],
+      "wall_clock_seconds": 0.0,
+      "extractor": "extract_claims_oracle_from_gold",
+      "oracle_predictions": true,
+      "distractor_augmented": true,
+      "extraction_llm_enabled": true
+    },
+    {
+      "case_id": "corpus_yolov2_v2",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 1.0,
+        "claim_precision_distracted": 1.0,
+        "precision_drop_with_distractors": 0.0,
+        "max_precision_drop_with_distractors": 0.15,
+        "paraphrase_scoring": true,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 5,
+        "predicted_count_plain": 5,
+        "predicted_count_distracted": 5,
+        "matched_claim_ids": [
+          "yolov2_batchnorm_dropout_replace",
+          "yolov2_dimension_priors_kmeans",
+          "yolov2_yolo9000_joint_training",
+          "yolov2_handpicked_anchors_negative",
+          "yolov2_yolov1_coarse_grid_negative"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 0.55
+      },
+      "predictions_plain": [
+        {
+          "claim_id": "yolov2_batchnorm_dropout_replace",
+          "claim_text_normalized": "YOLOv2 introduces batch normalization on every convolutional layer and removes dropout, improving mAP by more than two points.",
+          "claim_text": "YOLOv2 introduces batch normalization on every convolutional layer and removes dropout, improving mAP by more than two points."
+        },
+        {
+          "claim_id": "yolov2_dimension_priors_kmeans",
+          "claim_text_normalized": "Dimension priors learned by k-means clustering on training boxes replace hand-picked anchor box shapes used in prior detectors.",
+          "claim_text": "Dimension priors learned by k-means clustering on training boxes replace hand-picked anchor box shapes used in prior detectors."
+        },
+        {
+          "claim_id": "yolov2_yolo9000_joint_training",
+          "claim_text_normalized": "YOLO9000 jointly trains on detection and classification data, enabling detection of more than nine thousand object categories without per-class detection labels.",
+          "claim_text": "YOLO9000 jointly trains on detection and classification data, enabling detection of more than nine thousand object categories without per-class detection labels."
+        },
+        {
+          "claim_id": "yolov2_handpicked_anchors_negative",
+          "claim_text_normalized": "Hand-picked anchor box shapes do not match the real distribution of training boxes well, limiting the model capacity to learn diverse object proportions.",
+          "claim_text": "Hand-picked anchor box shapes do not match the real distribution of training boxes well, limiting the model capacity to learn diverse object proportions."
+        },
+        {
+          "claim_id": "yolov2_yolov1_coarse_grid_negative",
+          "claim_text_normalized": "Localization in YOLOv1 is constrained by coarse grid-cell predictions, a limitation that YOLOv2 mitigates through learned anchor priors and a higher-resolution classification step.",
+          "claim_text": "Localization in YOLOv1 is constrained by coarse grid-cell predictions, a limitation that YOLOv2 mitigates through learned anchor priors and a higher-resolution classification step."
+        }
+      ],
+      "predictions_distracted": [
+        {
+          "claim_id": "yolov2_batchnorm_dropout_replace",
+          "claim_text_normalized": "YOLOv2 introduces batch normalization on every convolutional layer and removes dropout, improving mAP by more than two points.",
+          "claim_text": "YOLOv2 introduces batch normalization on every convolutional layer and removes dropout, improving mAP by more than two points."
+        },
+        {
+          "claim_id": "yolov2_dimension_priors_kmeans",
+          "claim_text_normalized": "Dimension priors learned by k-means clustering on training boxes replace hand-picked anchor box shapes used in prior detectors.",
+          "claim_text": "Dimension priors learned by k-means clustering on training boxes replace hand-picked anchor box shapes used in prior detectors."
+        },
+        {
+          "claim_id": "yolov2_yolo9000_joint_training",
+          "claim_text_normalized": "YOLO9000 jointly trains on detection and classification data, enabling detection of more than nine thousand object categories without per-class detection labels.",
+          "claim_text": "YOLO9000 jointly trains on detection and classification data, enabling detection of more than nine thousand object categories without per-class detection labels."
+        },
+        {
+          "claim_id": "yolov2_handpicked_anchors_negative",
+          "claim_text_normalized": "Hand-picked anchor box shapes do not match the real distribution of training boxes well, limiting the model capacity to learn diverse object proportions.",
+          "claim_text": "Hand-picked anchor box shapes do not match the real distribution of training boxes well, limiting the model capacity to learn diverse object proportions."
+        },
+        {
+          "claim_id": "yolov2_yolov1_coarse_grid_negative",
+          "claim_text_normalized": "Localization in YOLOv1 is constrained by coarse grid-cell predictions, a limitation that YOLOv2 mitigates through learned anchor priors and a higher-resolution classification step.",
+          "claim_text": "Localization in YOLOv1 is constrained by coarse grid-cell predictions, a limitation that YOLOv2 mitigates through learned anchor priors and a higher-resolution classification step."
+        }
+      ],
+      "wall_clock_seconds": 0.0,
+      "extractor": "extract_claims_oracle_from_gold",
+      "oracle_predictions": true,
+      "distractor_augmented": true,
+      "extraction_llm_enabled": true
+    }
+  ]
+}

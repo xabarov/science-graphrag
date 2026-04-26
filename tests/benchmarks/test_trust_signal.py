@@ -63,6 +63,15 @@ def test_detect_runtime_mode_multihop_infra_skipped() -> None:
     assert detect_runtime_mode("multihop_mini", block, []) == "infra_skipped"
 
 
+def test_detect_runtime_mode_claims_paraphrase_oracle_synthetic() -> None:
+    cases = [
+        {"case_id": "c1", "oracle_predictions": True, "metrics": {"passed": True}},
+        {"case_id": "c2", "oracle_predictions": True, "metrics": {"passed": True}},
+    ]
+    block: dict = {"run_metadata": {}}
+    assert detect_runtime_mode("claims_paraphrase_pilot", block, cases) == "synthetic_gold"
+
+
 def test_detect_runtime_mode_workspace_verified_by_sibling_live() -> None:
     cases = [
         {"case_id": "a", "retrieval_trace": {"embedding": {"embedding_model": "mock"}}},
