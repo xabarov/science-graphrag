@@ -9,7 +9,7 @@ import logging
 from time import perf_counter
 from typing import Any, AsyncIterator
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, Header
 from langchain_core.messages import AIMessage, ToolMessage
 from pydantic import BaseModel, Field, field_validator
 from sse_starlette.sse import EventSourceResponse
@@ -113,7 +113,6 @@ def _response_from_run(
     trace_dicts = [dict(t) for t in (out.tool_trace or [])]
     run_metadata = {
         "agent_runtime": settings.agent_runtime,
-        "agent_enabled": settings.agent_enabled,
         "agent_max_tool_calls": max_tool_calls,
         "extraction_llm_model": settings.extraction_llm_model,
         "extraction_llm_base_url": settings.extraction_llm_base_url,
@@ -158,9 +157,6 @@ async def post_agent_query_v2(
     stores: StoreRegistry = Depends(get_stores),
 ):
     """POST /v2/agent/query with JSON or SSE output based on Accept."""
-    if not settings.agent_enabled:
-        raise HTTPException(status_code=503, detail="agent_disabled")
-
     workspace_id = (body.workspace_id or "").strip() or None
     max_tool_calls = body.max_tool_calls or settings.agent_max_tool_calls
     wants_sse = "text/event-stream" in (accept or "")
@@ -194,9 +190,27 @@ async def post_agent_query_v2(
     )
     duration_ms = int((perf_counter() - started) * 1000)
     excerpt: str | None = None
+    extra_meta: dict[str, Any] | None = None
     if thread_id:
         raw_sum = str(get_session_for_thread(thread_id).get("session_summary") or "")
         excerpt = raw_sum[:500] if raw_sum.strip() else None
+        ent_sync = get_session_for_thread(thread_id)
+        dcount = len(ent_sync.get("digests") or [])
+        wc_sync = (ent_sync.get("capsules") or {}).get("workspace")
+        cp_sync = build_context_compacted_payload(
+            thread_id=thread_id,
+            session_summary_excerpt=excerpt or "",
+            latest_full_state={"source": "sync_json"},
+            digest_count=dcount,
+            rolling_threshold=settings.agent_compaction_rolling_memory_min_digests,
+            digest_cap=settings.agent_compaction_digest_cap,
+            workspace_id=workspace_id,
+            workspace_capsule_present=isinstance(wc_sync, dict)
+            and bool(str(wc_sync.get("workspace_id") or "").strip()),
+        )
+        comp_sync = cp_sync.get("compaction")
+        if isinstance(comp_sync, dict):
+            extra_meta = {"compaction": comp_sync, "session_digest_count": dcount}
     extra_warnings = ["history_digest_invalid"] if history_digest_invalid else None
     return _response_from_run(
         out,
@@ -205,6 +219,7 @@ async def post_agent_query_v2(
         max_tool_calls=max_tool_calls,
         session_summary_excerpt=excerpt,
         extra_warnings=extra_warnings,
+        extra_run_metadata=extra_meta,
     )
 
 
@@ -268,6 +283,7 @@ async def _stream_agent(
     prev_route_len = 0
     prev_debug_len = 0
     dig = list(history_digest or [])
+    active_subagent_id: str | None = None
 
     attrs: dict[str, Any] = {
         "agent.runtime": settings.agent_runtime,
@@ -328,6 +344,16 @@ async def _stream_agent(
                         routes = list(payload.get("routing_log") or [])
                         if len(routes) > prev_route_len:
                             for entry in routes[prev_route_len:]:
+                                if active_subagent_id:
+                                    yield {
+                                        "data": json.dumps(
+                                            {
+                                                "type": "subagent_finished",
+                                                "subagent_id": active_subagent_id,
+                                            }
+                                        )
+                                    }
+                                    active_subagent_id = None
                                 yield {
                                     "data": json.dumps(
                                         {
@@ -339,6 +365,27 @@ async def _stream_agent(
                                         }
                                     )
                                 }
+                                to_raw = entry.get("to")
+                                to_id = str(to_raw).strip() if to_raw is not None else ""
+                                if not to_id:
+                                    to_id = "specialist"
+                                reason_txt = entry.get("reason")
+                                summary = (
+                                    str(reason_txt)[:200]
+                                    if reason_txt is not None and str(reason_txt).strip()
+                                    else None
+                                )
+                                yield {
+                                    "data": json.dumps(
+                                        {
+                                            "type": "subagent_started",
+                                            "subagent_id": to_id,
+                                            "from": entry.get("from"),
+                                            "summary": summary,
+                                        }
+                                    )
+                                }
+                                active_subagent_id = to_id
                             prev_route_len = len(routes)
                         dev = list(payload.get("debug_events") or [])
                         if len(dev) > prev_debug_len:
@@ -370,6 +417,18 @@ async def _stream_agent(
                                     "args_summary": {k: str(v)[:200] for k, v in args_dict.items()},
                                 }
                                 yield {"data": json.dumps(event_data)}
+                                if active_subagent_id:
+                                    yield {
+                                        "data": json.dumps(
+                                            {
+                                                "type": "subagent_progress",
+                                                "subagent_id": active_subagent_id,
+                                                "step": step,
+                                                "tool": str(tc.get("name") or ""),
+                                                "summary": str(tc.get("name") or ""),
+                                            }
+                                        )
+                                    }
                         elif isinstance(msg, ToolMessage):
                             result_payload: dict[str, Any] = {}
                             error: str | None = None
@@ -416,11 +475,21 @@ async def _stream_agent(
                     "warnings": ([] if workspace_id else ["no_workspace"]),
                 }
 
+            if active_subagent_id:
+                yield {
+                    "data": json.dumps(
+                        {"type": "subagent_finished", "subagent_id": active_subagent_id}
+                    )
+                }
+                active_subagent_id = None
+            yield {"data": json.dumps({"type": "answer_synthesis_started"})}
+
             if citations:
                 yield {
                     "data": json.dumps({"type": "evidence_ready", "citation_count": len(citations)})
                 }
 
+            compact_payload: dict[str, Any] | None = None
             if thread_id:
                 raw_q = question
                 if latest_full_state is not None:
@@ -433,18 +502,27 @@ async def _stream_agent(
                     answer=final_answer,
                     answer_class=str(envelope.get("answer_class") or "grounded_explanation"),
                     tool_trace=trace_for_run,
+                    workspace_id=workspace_id,
                 )
+                ent_post = get_session_for_thread(thread_id)
+                dcount = len(ent_post.get("digests") or [])
+                wc_post = (ent_post.get("capsules") or {}).get("workspace")
                 compact_payload = build_context_compacted_payload(
                     thread_id=thread_id,
                     session_summary_excerpt=(new_sum or "")[:500],
                     latest_full_state=latest_full_state,
+                    digest_count=dcount,
+                    rolling_threshold=settings.agent_compaction_rolling_memory_min_digests,
+                    digest_cap=settings.agent_compaction_digest_cap,
+                    workspace_id=workspace_id,
+                    workspace_capsule_present=isinstance(wc_post, dict)
+                    and bool(str(wc_post.get("workspace_id") or "").strip()),
                 )
                 yield {"data": json.dumps(compact_payload)}
 
             phx = current_otel_trace_id_hex()
             run_meta: dict[str, Any] = {
                 "agent_runtime": settings.agent_runtime,
-                "agent_enabled": settings.agent_enabled,
                 "agent_max_tool_calls": max_tool_calls,
                 "extraction_llm_model": settings.extraction_llm_model,
                 "extraction_llm_base_url": settings.extraction_llm_base_url,
@@ -456,6 +534,12 @@ async def _stream_agent(
             }
             if thread_id:
                 run_meta["thread_id"] = thread_id
+                if compact_payload is not None:
+                    comp = compact_payload.get("compaction")
+                    if isinstance(comp, dict):
+                        run_meta["compaction"] = comp
+                        if isinstance(comp.get("digest_count"), int):
+                            run_meta["session_digest_count"] = comp["digest_count"]
 
             final_warnings = list(envelope.get("warnings") or [])
             if history_digest_invalid and "history_digest_invalid" not in final_warnings:
@@ -485,6 +569,7 @@ async def _stream_agent(
                 "idea_suggestions": envelope.get("idea_suggestions"),
                 "bibliography": envelope.get("bibliography"),
             }
+            yield {"data": json.dumps({"type": "answer_synthesis_finished"})}
             yield {"data": json.dumps(final_event)}
     except Exception as exc:  # noqa: BLE001
         logger.exception("agent v2 stream error")

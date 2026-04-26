@@ -39,12 +39,20 @@ def build_initial_agent_state(
     answer_class_hint: str | None = None,
 ) -> dict[str, Any]:
     """Shared initial state for LangGraph agent runs (API v2 + RetrievalAgent runtime)."""
-    from science_graphrag.agent.context.session_store import format_user_with_memory
+    from science_graphrag.agent.context.session_store import format_user_with_memory, get_session_for_thread
+
+    workspace_capsule = None
+    tid_stripped = (thread_id or "").strip()
+    if tid_stripped:
+        sess = get_session_for_thread(tid_stripped)
+        wc = (sess.get("capsules") or {}).get("workspace")
+        workspace_capsule = wc if isinstance(wc, dict) else None
 
     user_content = format_user_with_memory(
         question=question,
         session_summary=session_summary,
         history_digest=list(history_digest or []),
+        workspace_capsule=workspace_capsule,
     )
     meta: dict[str, Any] = {
         "agent_runtime": agent_runtime,

@@ -1,16 +1,16 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import KeyboardArrowUpRoundedIcon from "@mui/icons-material/KeyboardArrowUpRounded";
 import OpenInNewOutlinedIcon from "@mui/icons-material/OpenInNewOutlined";
 import Box from "@mui/material/Box";
-import FormControl from "@mui/material/FormControl";
 import IconButton from "@mui/material/IconButton";
-import InputLabel from "@mui/material/InputLabel";
+import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 
+import { CursorIconAction } from "../common/index.js";
 import { ChatContextPicker } from "./ChatContextPicker.jsx";
 
 const ANSWER_CLASS_HINT_OPTIONS = [
@@ -76,6 +76,8 @@ export function ChatComposer({
   answerClassHint = "",
   onAnswerClassHintChange,
 }) {
+  const [modeAnchorEl, setModeAnchorEl] = useState(null);
+
   const handleKeyDown = useCallback(
     (e) => {
       if (e.key !== "Enter" || e.shiftKey) return;
@@ -87,6 +89,13 @@ export function ChatComposer({
     },
     [loading, query],
   );
+
+  const selectedAnswerMode = useMemo(
+    () => ANSWER_CLASS_HINT_OPTIONS.find((option) => option.value === String(answerClassHint || "").trim()) || ANSWER_CLASS_HINT_OPTIONS[0],
+    [answerClassHint],
+  );
+  const selectedAnswerModeLabel = t(selectedAnswerMode.labelKey);
+  const answerModeMenuOpen = Boolean(modeAnchorEl);
 
   return (
     <Box
@@ -103,17 +112,17 @@ export function ChatComposer({
     >
       <Box
         sx={{
-          borderRadius: "10px",
-          border: "1px solid rgba(255,255,255,0.14)",
-          backgroundColor: "rgba(0,0,0,0.28)",
+          borderRadius: "6px",
+          border: "1px solid rgba(255,255,255,0.12)",
+          backgroundColor: "#1a1a1a",
           p: 1.1,
           display: "flex",
           flexDirection: "column",
           gap: 0.75,
-          transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+          transition: "border-color 0.15s ease, background-color 0.15s ease",
           "&:focus-within": {
             borderColor: "rgba(99,102,241,0.45)",
-            boxShadow: "0 0 0 1px rgba(99,102,241,0.2)",
+            backgroundColor: "rgba(26,26,26,0.98)",
           },
         }}
       >
@@ -136,26 +145,6 @@ export function ChatComposer({
             standaloneMode={standaloneMode}
           />
         )}
-        <Box sx={{ px: 0.5, display: "flex", alignItems: "center", flexWrap: "wrap", gap: 1 }}>
-          <FormControl size="small" variant="standard" sx={{ minWidth: 168, maxWidth: "100%" }}>
-            <InputLabel id="chat-answer-mode-label" sx={{ fontSize: "0.8125rem" }}>
-              {t("chat.answerMode.label")}
-            </InputLabel>
-            <Select
-              labelId="chat-answer-mode-label"
-              value={answerClassHint || ""}
-              label={t("chat.answerMode.label")}
-              onChange={(e) => onAnswerClassHintChange?.(String(e.target.value))}
-              sx={{ fontSize: "0.8125rem" }}
-            >
-              {ANSWER_CLASS_HINT_OPTIONS.map((o) => (
-                <MenuItem key={o.value || "auto"} value={o.value} sx={{ fontSize: "0.8125rem" }}>
-                  {t(o.labelKey)}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Box>
         <TextField
           placeholder={t("chat.composer.placeholder")}
           value={query}
@@ -170,9 +159,104 @@ export function ChatComposer({
           InputProps={{ disableUnderline: true }}
           sx={{ ...inputSx, px: 0.5 }}
         />
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, flexWrap: "wrap", pr: 0.25 }}>
-          <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.35)", flex: "1 1 140px" }}>{t("chat.composer.enterHint")}</Typography>
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 0.25 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 1,
+            flexWrap: "wrap",
+            pr: 0.25,
+            pt: 0.15,
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.65, flexWrap: "wrap", minWidth: 0, flex: "1 1 240px" }}>
+            <CursorIconAction
+              title={t("chat.answerMode.openMenuAria")}
+              aria-label={t("chat.answerMode.openMenuAria")}
+              onClick={(e) => setModeAnchorEl(e.currentTarget)}
+              sx={
+                selectedAnswerMode.value
+                  ? {
+                      color: "rgba(129,140,248,0.95)",
+                      borderColor: "rgba(99,102,241,0.3)",
+                      backgroundColor: "rgba(99,102,241,0.12)",
+                      "&:hover": {
+                        backgroundColor: "rgba(99,102,241,0.18)",
+                        borderColor: "rgba(99,102,241,0.42)",
+                        color: "rgba(129,140,248,0.98)",
+                      },
+                    }
+                  : null
+              }
+            >
+              <AutoAwesomeOutlinedIcon sx={{ fontSize: "1rem" }} />
+            </CursorIconAction>
+            <Typography
+              sx={{
+                fontSize: "0.72rem",
+                color: selectedAnswerMode.value ? "rgba(129,140,248,0.95)" : "rgba(255,255,255,0.52)",
+                minWidth: 0,
+                maxWidth: "min(260px, 50vw)",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+              title={t("chat.answerMode.currentLabel", { label: selectedAnswerModeLabel })}
+            >
+              {selectedAnswerModeLabel}
+            </Typography>
+            <Menu
+              anchorEl={modeAnchorEl}
+              open={answerModeMenuOpen}
+              onClose={() => setModeAnchorEl(null)}
+              anchorOrigin={{ vertical: "top", horizontal: "left" }}
+              transformOrigin={{ vertical: "bottom", horizontal: "left" }}
+              PaperProps={{
+                sx: {
+                  mt: -0.75,
+                  minWidth: 240,
+                  borderRadius: "6px",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  backgroundColor: "#1a1a1a",
+                  boxShadow: "none",
+                  backgroundImage: "none",
+                },
+              }}
+              MenuListProps={{ "aria-label": t("chat.answerMode.label") }}
+            >
+              {ANSWER_CLASS_HINT_OPTIONS.map((option) => {
+                const selected = option.value === selectedAnswerMode.value;
+                return (
+                  <MenuItem
+                    key={option.value || "auto"}
+                    selected={selected}
+                    onClick={() => {
+                      onAnswerClassHintChange?.(option.value);
+                      setModeAnchorEl(null);
+                    }}
+                    sx={{
+                      fontSize: "0.8125rem",
+                      minHeight: 34,
+                      color: selected ? "rgba(255,255,255,0.94)" : "rgba(255,255,255,0.76)",
+                      "&.Mui-selected": {
+                        backgroundColor: "rgba(99,102,241,0.12)",
+                      },
+                      "&.Mui-selected:hover": {
+                        backgroundColor: "rgba(99,102,241,0.16)",
+                      },
+                    }}
+                  >
+                    {t(option.labelKey)}
+                  </MenuItem>
+                );
+              })}
+            </Menu>
+            <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.35)", flex: "0 1 auto" }}>
+              {t("chat.composer.enterHint")}
+            </Typography>
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 0.35 }}>
             {inWorkspace && !locked ? (
               <IconButton
                 type="button"
@@ -181,7 +265,12 @@ export function ChatComposer({
                 size="small"
                 aria-label={t("chat.composer.openStandaloneAria")}
                 title={t("chat.composer.openStandaloneAria")}
-                sx={{ color: "rgba(255,255,255,0.38)" }}
+                sx={{
+                  color: "rgba(255,255,255,0.38)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: "6px",
+                  "&:hover": { backgroundColor: "rgba(255,255,255,0.04)" },
+                }}
               >
                 <OpenInNewOutlinedIcon sx={{ fontSize: "1rem" }} />
               </IconButton>

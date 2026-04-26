@@ -3,7 +3,7 @@ from __future__ import annotations
 from time import perf_counter
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, Response
 from pydantic import BaseModel, Field
 
 from science_graphrag.agent.runtime import build_agent
@@ -37,8 +37,6 @@ def post_agent_query(
     response.headers["Deprecation"] = "true"
     response.headers["Sunset"] = "2026-07-01"
     response.headers["Link"] = '</v2/agent/query>; rel="successor-version"'
-    if not settings.agent_enabled:
-        raise HTTPException(status_code=503, detail="agent_disabled")
     started = perf_counter()
     agent = build_agent(
         settings=settings,
@@ -57,7 +55,6 @@ def post_agent_query(
         duration_ms=duration_ms,
         run_metadata={
             "agent_runtime": settings.agent_runtime,
-            "agent_enabled": settings.agent_enabled,
             "agent_max_tool_calls": body.max_tool_calls or settings.agent_max_tool_calls,
             "extraction_llm_model": settings.extraction_llm_model,
             "extraction_llm_base_url": settings.extraction_llm_base_url,

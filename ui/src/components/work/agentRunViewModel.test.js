@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   buildSpecialistStreamGroups,
+  collectFormattedStreamLines,
   deriveRunState,
   formatStreamEventOneLine,
   pickLastMeaningfulStreamEvent,
   shouldOfferRunInspector,
+  shouldShowSubagentRail,
 } from "./agentRunViewModel.js";
 
 const MOCK_T = {
@@ -15,6 +17,11 @@ const MOCK_T = {
   "chat.stream.evidenceReady": "E:{{n}}",
   "chat.stream.contextCompacted": "M:{{excerpt}}",
   "chat.stream.warningLine": "W:{{code}}:{{message}}",
+  "chat.stream.subagentStarted": "S+{{id}}",
+  "chat.stream.subagentProgress": "P+{{id}}+{{summary}}",
+  "chat.stream.subagentFinished": "S-{{id}}",
+  "chat.stream.answerSynthesisStarted": "SYN+",
+  "chat.stream.answerSynthesisFinished": "SYN-",
   "chat.stream.toolResultLabel": "TR",
   "chat.stream.rowsLabel": "rows",
   "chat.stream.errorLabel": "err",
@@ -45,6 +52,14 @@ describe("pickLastMeaningfulStreamEvent", () => {
       { type: "evidence_ready", citation_count: 3 },
     ];
     expect(pickLastMeaningfulStreamEvent(events)?.type).toBe("evidence_ready");
+  });
+
+  it("treats answer_synthesis_finished as meaningful", () => {
+    const events = [
+      { type: "intent_classified", answer_class: "a", source: "h" },
+      { type: "answer_synthesis_finished" },
+    ];
+    expect(pickLastMeaningfulStreamEvent(events)?.type).toBe("answer_synthesis_finished");
   });
 });
 
@@ -184,6 +199,58 @@ describe("formatStreamEventOneLine", () => {
     const line = formatStreamEventOneLine(t, { type: "tool_result", tool: "t", row_count: 3 });
     expect(line).toContain("TR");
     expect(line).toContain("rows: 3");
+  });
+
+  it("formats UI-5 subagent and synthesis events", () => {
+    expect(formatStreamEventOneLine(t, { type: "subagent_started", subagent_id: "retrieval" })).toBe("S+retrieval");
+    expect(
+      formatStreamEventOneLine(t, { type: "subagent_progress", subagent_id: "r", summary: "search_chunks" }),
+    ).toBe("P+r+search_chunks");
+    expect(formatStreamEventOneLine(t, { type: "subagent_finished", subagent_id: "r" })).toBe("S-r");
+    expect(formatStreamEventOneLine(t, { type: "answer_synthesis_started" })).toBe("SYN+");
+    expect(formatStreamEventOneLine(t, { type: "answer_synthesis_finished" })).toBe("SYN-");
+  });
+});
+
+describe("collectFormattedStreamLines", () => {
+  it("returns chronological formatted lines capped at limit", () => {
+    const events = Array.from({ length: 30 }, (_, i) => ({
+      type: "intent_classified",
+      answer_class: `c${i}`,
+      source: "h",
+    }));
+    const lines = collectFormattedStreamLines(t, events, 5);
+    expect(lines.length).toBe(5);
+    expect(lines[0]).toContain("c25");
+  });
+});
+
+describe("shouldShowSubagentRail", () => {
+  it("is false for empty stream", () => {
+    expect(shouldShowSubagentRail([])).toBe(false);
+  });
+
+  it("is false when only a short orphan preamble", () => {
+    expect(shouldShowSubagentRail([{ type: "intent_classified", answer_class: "x", source: "h" }])).toBe(false);
+  });
+
+  it("is true when orphan preamble has enough events", () => {
+    expect(
+      shouldShowSubagentRail([
+        { type: "intent_classified", answer_class: "x", source: "h" },
+        { type: "warning", code: "c", message: "m" },
+        { type: "evidence_ready", citation_count: 1 },
+      ]),
+    ).toBe(true);
+  });
+
+  it("is true when specialist_selected exists", () => {
+    expect(
+      shouldShowSubagentRail([
+        { type: "intent_classified", answer_class: "x", source: "h" },
+        { type: "specialist_selected", from: "a", to: "b" },
+      ]),
+    ).toBe(true);
   });
 });
 

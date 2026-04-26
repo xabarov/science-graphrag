@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import React from "react";
 
 import { AgentLiveStatus } from "./AgentLiveStatus.jsx";
@@ -10,7 +10,13 @@ function t(key, vars = {}) {
     {
       "chat.run.liveStripTitle": "Live",
       "chat.stream.thinking": "Thinking…",
-      "chat.stream.intent": "Intent:{{cls}}:{{src}}",
+      "chat.stream.intent": "Intent:{{cls}} ({{src}})",
+      "chat.stream.route": "Route:{{fr}} → {{to}}",
+      "chat.run.liveStatusShowRecent": "Recent lines",
+      "chat.run.liveStatusHideRecent": "Hide lines",
+      "chat.run.liveStatusExpandAria": "Expand recent",
+      "chat.run.liveStatusCollapseAria": "Collapse recent",
+      "chat.run.liveStatusRecentTitle": "Recent",
     }[key] || key;
   Object.entries(vars).forEach(([k, v]) => {
     out = out.split(`{{${k}}}`).join(String(v));
@@ -32,6 +38,26 @@ describe("AgentLiveStatus", () => {
         isActive={false}
       />,
     );
-    expect(screen.getByText("Intent:inventory:h")).toBeTruthy();
+    expect(screen.getByText("Intent:inventory (h)")).toBeTruthy();
+  });
+
+  it("exposes expandable recent lines with aria when multiple events", () => {
+    render(
+      <AgentLiveStatus
+        t={t}
+        streamEvents={[
+          { type: "intent_classified", answer_class: "inventory", source: "h" },
+          { type: "specialist_selected", from: "sup", to: "retrieval", budget_left: 3 },
+        ]}
+        isActive={false}
+      />,
+    );
+    const toggle = screen.getByRole("button", { name: "Expand recent" });
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+    const region = screen.getByRole("region", { name: "Recent" });
+    expect(within(region).getByText("Intent:inventory (h)")).toBeTruthy();
+    expect(within(region).getByText("Route:sup → retrieval")).toBeTruthy();
   });
 });

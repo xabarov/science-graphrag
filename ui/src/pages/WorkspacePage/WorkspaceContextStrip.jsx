@@ -15,8 +15,11 @@ import Typography from "@mui/material/Typography";
 
 import { CopyIdButton, CursorIconAction } from "../../components/common/index.js";
 import {
+  INGEST_PHASE_KEYS,
+  fallbackHumanIngestStageLabel,
   ingestProductPhaseKey,
   ingestStageIdFromRow,
+  ingestStageMessageKey,
   pickActiveIngestStage,
 } from "../../components/ingestion/ingestStripModel.js";
 import WorkIdGlossaryHint from "../../components/layout/WorkIdGlossaryHint.jsx";
@@ -115,6 +118,19 @@ export default function WorkspaceContextStrip({ t, vm }) {
     const starting = Boolean(vm.uploadBusy && !job);
     return { job, stageId, phaseKey, failed, starting };
   }, [hasWs, ingestBusy, vm.ingestJob, vm.uploadBusy]);
+
+  const ingestStageSecondary = useMemo(() => {
+    if (!ingestStrip?.stageId || ingestStrip.starting || ingestStrip.failed) return null;
+    const key = ingestStageMessageKey(ingestStrip.stageId);
+    const tx = t(key);
+    return tx === key ? fallbackHumanIngestStageLabel(ingestStrip.stageId) : tx;
+  }, [ingestStrip, t]);
+
+  const ingestPhaseIdx = useMemo(() => {
+    const pk = ingestStrip?.phaseKey || "preparing_document";
+    const i = INGEST_PHASE_KEYS.indexOf(pk);
+    return i === -1 ? 0 : i;
+  }, [ingestStrip?.phaseKey]);
 
   return (
     <Box
@@ -262,9 +278,9 @@ export default function WorkspaceContextStrip({ t, vm }) {
                     </Typography>
                   ) : null}
                 </Stack>
-                {ingestStrip?.stageId && !ingestStrip.starting && !ingestStrip.failed ? (
+                {ingestStageSecondary && !ingestStrip.starting && !ingestStrip.failed ? (
                   <Typography sx={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.38)" }} noWrap title={ingestStrip.stageId}>
-                    {ingestStrip.stageId.replace(/_/g, " ")}
+                    {ingestStageSecondary}
                   </Typography>
                 ) : ingestStrip?.job?.message && !ingestStrip.starting && !ingestStrip.failed ? (
                   <Typography sx={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.38)" }} noWrap>
@@ -284,6 +300,27 @@ export default function WorkspaceContextStrip({ t, vm }) {
                     },
                   }}
                 />
+                {!ingestStrip?.failed && !ingestStrip?.starting ? (
+                  <Stack direction="row" spacing={0.35} sx={{ mt: 0.4 }} aria-hidden>
+                    {INGEST_PHASE_KEYS.map((pk, i) => {
+                      const done = i < ingestPhaseIdx;
+                      const active = i === ingestPhaseIdx;
+                      return (
+                        <Box
+                          key={pk}
+                          sx={{
+                            flex: 1,
+                            height: 3,
+                            borderRadius: 1,
+                            backgroundColor:
+                              done || active ? "rgba(99,102,241,0.5)" : "rgba(255,255,255,0.06)",
+                            opacity: active ? 1 : done ? 0.85 : 1,
+                          }}
+                        />
+                      );
+                    })}
+                  </Stack>
+                ) : null}
               </Stack>
             </Tooltip>
           </Box>

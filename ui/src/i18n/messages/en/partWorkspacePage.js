@@ -93,6 +93,17 @@ export default {
   "workspace.strip.ingestPhase.building_graph": "Building knowledge graph",
   "workspace.strip.ingestPhase.preparing_search": "Preparing search layer",
   "workspace.strip.ingestPhase.finalizing": "Finalizing",
+  "workspace.strip.ingestStage.unknown": "Processing",
+  "workspace.strip.ingestStage.parse_pdf": "Parsing PDF",
+  "workspace.strip.ingestStage.extract_meta": "Extracting metadata",
+  "workspace.strip.ingestStage.enrich_openalex": "Enriching OpenAlex",
+  "workspace.strip.ingestStage.enrich_ror": "Enriching ROR",
+  "workspace.strip.ingestStage.write_graph": "Writing graph",
+  "workspace.strip.ingestStage.resolve_references": "Resolving references",
+  "workspace.strip.ingestStage.chunk": "Chunking text",
+  "workspace.strip.ingestStage.extract_claims": "Extracting claims",
+  "workspace.strip.ingestStage.embed": "Embedding chunks",
+  "workspace.strip.ingestStage.attach_workspace": "Attaching to workspace",
 
   "workspace.side.graphTitle": "Graph snapshot",
   "workspace.side.graphStatsLine":

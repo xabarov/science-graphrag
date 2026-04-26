@@ -89,40 +89,30 @@ def run_agent_case(case_dir: Path, *, mock_runtime: bool = False) -> dict[str, A
         report = _mock_case_report(case_dir.name, question, workspace_id=gold.get("workspace_id"))
     else:
         settings = get_settings()
-        if not settings.agent_enabled:
+        try:
+            stores = init_store_registry(settings)
+            agent = build_agent(settings=settings, stores=stores)
+            out = agent.run(
+                question=question,
+                workspace_id=(str(gold.get("workspace_id") or "").strip() or None),
+                max_tool_calls=int(gold.get("max_calls") or settings.agent_max_tool_calls),
+            )
+            report = {
+                "case_id": case_dir.name,
+                "answer": out.answer,
+                "citations": out.citations,
+                "tool_trace": list(out.tool_trace),
+                "duration_ms": int((perf_counter() - started) * 1000),
+            }
+        except Exception as exc:  # noqa: BLE001 — benchmark must emit JSON
             report = {
                 "case_id": case_dir.name,
                 "answer": "",
                 "citations": [],
                 "tool_trace": [],
-                "duration_ms": 0,
-                "error": "agent_disabled",
+                "duration_ms": int((perf_counter() - started) * 1000),
+                "error": f"{type(exc).__name__}: {exc}",
             }
-        else:
-            try:
-                stores = init_store_registry(settings)
-                agent = build_agent(settings=settings, stores=stores)
-                out = agent.run(
-                    question=question,
-                    workspace_id=(str(gold.get("workspace_id") or "").strip() or None),
-                    max_tool_calls=int(gold.get("max_calls") or settings.agent_max_tool_calls),
-                )
-                report = {
-                    "case_id": case_dir.name,
-                    "answer": out.answer,
-                    "citations": out.citations,
-                    "tool_trace": list(out.tool_trace),
-                    "duration_ms": int((perf_counter() - started) * 1000),
-                }
-            except Exception as exc:  # noqa: BLE001 — benchmark must emit JSON
-                report = {
-                    "case_id": case_dir.name,
-                    "answer": "",
-                    "citations": [],
-                    "tool_trace": [],
-                    "duration_ms": int((perf_counter() - started) * 1000),
-                    "error": f"{type(exc).__name__}: {exc}",
-                }
     report["metrics"] = score_agent_case(report, gold)
     report["wall_clock_seconds"] = round(perf_counter() - started, 3)
     return report

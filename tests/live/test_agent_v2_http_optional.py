@@ -102,3 +102,24 @@ def test_live_agent_v2_gate_ch4_sse() -> None:
             timeout=_timeout(),
         )
     assert res.ok, res.detail
+
+
+@pytest.mark.skipif(not _base(), reason="AGENT_LIVE_BASE unset")
+@pytest.mark.skipif(
+    (os.environ.get("AGENT_LIVE_GATE_CH4") or "").strip().lower() not in ("1", "true", "yes"),
+    reason="AGENT_LIVE_GATE_CH4 not enabled (set to 1 for CH4 strict gate)",
+)
+def test_live_agent_v2_gate_ch4_sync_json_with_thread() -> None:
+    """Strict CH4: sync JSON with thread_id must include session_init in tool_trace (parity with SSE gate)."""
+    import uuid
+
+    tid = f"pytest_ch4_sync_{uuid.uuid4().hex[:10]}"
+    with httpx.Client(timeout=_timeout()) as client:
+        res = check_agent_v2_sync_json(
+            client,
+            _base(),
+            workspace_id=_workspace(),
+            question=os.environ.get("AGENT_LIVE_QUESTION", "Say hello in one short sentence."),
+            thread_id=tid,
+        )
+    assert res.ok, res.detail

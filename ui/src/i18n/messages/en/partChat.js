@@ -1,6 +1,8 @@
 /** @type {Record<string, string>} */
 export default {
   "chat.session.defaultTitle": "New chat",
+  "chat.sessionMemory.title": "Server session memory",
+  "chat.sessionMemory.compactionKinds": "Compaction layers",
 
   "chatPage.header.eyebrow": "Chat",
   "chatPage.header.title": "Chat",
@@ -73,6 +75,8 @@ export default {
   "chat.typed.ideaSuggestionsTitle": "Idea suggestions",
 
   "chat.answerMode.label": "Answer mode",
+  "chat.answerMode.openMenuAria": "Open answer mode menu",
+  "chat.answerMode.currentLabel": "Answer mode: {{label}}",
   "chat.answerMode.auto": "Auto (heuristic)",
   "chat.answerMode.inventory": "Inventory / catalog",
   "chat.answerMode.fact_lookup": "Fact lookup",
@@ -95,6 +99,11 @@ export default {
   "chat.stream.evidenceReady": "Evidence ready · citations: {{n}}",
   "chat.stream.contextCompacted": "Session updated · {{excerpt}}",
   "chat.stream.warningLine": "{{code}}: {{message}}",
+  "chat.stream.subagentStarted": "Subagent {{id}} started",
+  "chat.stream.subagentProgress": "{{id}} · {{summary}}",
+  "chat.stream.subagentFinished": "Subagent {{id}} finished",
+  "chat.stream.answerSynthesisStarted": "Assembling final answer",
+  "chat.stream.answerSynthesisFinished": "Answer ready",
 
   "chat.run.assistantLabel": "Research agent",
   "chat.run.state.running": "Running",
@@ -108,6 +117,11 @@ export default {
   "chat.run.answerClassChip": "{{cls}}",
   "chat.run.answerSectionTitle": "Answer",
   "chat.run.liveStripTitle": "Live status",
+  "chat.run.liveStatusShowRecent": "Recent status lines",
+  "chat.run.liveStatusHideRecent": "Hide recent lines",
+  "chat.run.liveStatusExpandAria": "Expand recent live status lines",
+  "chat.run.liveStatusCollapseAria": "Collapse recent live status lines",
+  "chat.run.liveStatusRecentTitle": "Recent live status",
   "chat.run.inspectToggleShow": "Inspect run",
   "chat.run.inspectToggleHide": "Hide inspection",
   "chat.run.inspectToggleShowAria": "Expand run inspection",

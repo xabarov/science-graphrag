@@ -69,6 +69,7 @@ export function useAskSubmit({
         session_summary_excerpt: event?.session_summary_excerpt,
         duration_ms: event?.duration_ms,
         phoenix_trace_id: event?.phoenix_trace_id,
+        run_metadata: event?.run_metadata,
       });
       lastStreamNormalizedRef.current = normalized;
       onResult?.(normalized);

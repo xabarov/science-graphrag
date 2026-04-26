@@ -2,6 +2,9 @@
  * Pure helpers for compact ingest strip (product phase + active stage id).
  */
 
+/** Ordered product phases for compact segmented progress UI. */
+export const INGEST_PHASE_KEYS = ["preparing_document", "building_graph", "preparing_search", "finalizing"];
+
 /** @type {Record<string, string>} */
 const STAGE_TO_PHASE = {
   parse_pdf: "preparing_document",
@@ -51,4 +54,29 @@ export function ingestProductPhaseKey(stageId) {
   const sid = String(stageId || "").trim();
   if (!sid) return "preparing_document";
   return STAGE_TO_PHASE[sid] || "preparing_document";
+}
+
+/**
+ * i18n key under `workspace.strip.ingestStage.<stageId>` for human secondary line.
+ *
+ * @param {string} stageId
+ * @returns {string}
+ */
+export function ingestStageMessageKey(stageId) {
+  const sid = String(stageId || "").trim();
+  if (!sid) return "workspace.strip.ingestStage.unknown";
+  if (Object.prototype.hasOwnProperty.call(STAGE_TO_PHASE, sid)) {
+    return `workspace.strip.ingestStage.${sid}`;
+  }
+  return "workspace.strip.ingestStage.unknown";
+}
+
+/**
+ * @param {string} stageId
+ * @returns {string}
+ */
+export function fallbackHumanIngestStageLabel(stageId) {
+  return String(stageId || "")
+    .replace(/_/g, " ")
+    .trim() || "—";
 }

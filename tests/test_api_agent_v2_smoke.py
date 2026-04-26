@@ -48,7 +48,7 @@ def test_v2_sync_json(monkeypatch) -> None:
     monkeypatch.setattr(agent_v2_api, "build_agent", lambda **_kwargs: _FakeAgent())
     test_app = _build_test_app()
     client = TestClient(test_app)
-    client.app.dependency_overrides[get_settings] = lambda: Settings(agent_enabled=True)
+    client.app.dependency_overrides[get_settings] = lambda: Settings()
     client.app.dependency_overrides[get_stores] = lambda: _EMPTY_STORES
     try:
         resp = client.post(
@@ -79,7 +79,7 @@ def test_v2_sse_stream(monkeypatch) -> None:
     )
     test_app = _build_test_app()
     client = TestClient(test_app)
-    client.app.dependency_overrides[get_settings] = lambda: Settings(agent_enabled=True)
+    client.app.dependency_overrides[get_settings] = lambda: Settings()
     client.app.dependency_overrides[get_stores] = lambda: _EMPTY_STORES
     try:
         with client.stream(
@@ -116,7 +116,7 @@ def test_v1_has_deprecation_header(monkeypatch) -> None:
     monkeypatch.setattr(agent_api, "build_agent", lambda **_kwargs: _FakeAgent())
     test_app = _build_test_app()
     client = TestClient(test_app)
-    client.app.dependency_overrides[get_settings] = lambda: Settings(agent_enabled=True)
+    client.app.dependency_overrides[get_settings] = lambda: Settings()
     client.app.dependency_overrides[get_stores] = lambda: _EMPTY_STORES
     try:
         resp = client.post("/v1/agent/query", json={"question": "test"})

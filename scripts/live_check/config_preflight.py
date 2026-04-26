@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Pre-flight: load ``.env`` then validate Settings (LLM key, agent flag, service URLs).
+"""Pre-flight: load ``.env`` then validate Settings (LLM key, service URLs).
 
 Mirrors the operator smoke for long-running jobs: ensures ``extraction_llm_api_key``
 is non-empty after merge rules. Does not open network connections.
@@ -44,7 +44,7 @@ def main() -> int:
     parser.add_argument(
         "--strict",
         action="store_true",
-        help="Exit 1 if extraction_llm_api_key is empty or agent_enabled is false",
+        help="Exit 1 if extraction_llm_api_key is empty",
     )
     parser.add_argument("--json", action="store_true", help="Machine-readable stdout")
     args = parser.parse_args()
@@ -69,7 +69,6 @@ def main() -> int:
         "extraction_llm_api_key_set": key_ok,
         "extraction_llm_base_url": s.extraction_llm_base_url,
         "extraction_llm_model": s.extraction_llm_model,
-        "agent_enabled": s.agent_enabled,
         "agent_runtime": s.agent_runtime,
         "neo4j_uri": _mask(s.neo4j_uri),
         "qdrant_url": str(s.qdrant_url or "")[:80],
@@ -78,16 +77,12 @@ def main() -> int:
         print(json.dumps(row, indent=2, ensure_ascii=False))
     else:
         print(f"extraction_llm_api_key_set: {key_ok}")
-        print(f"agent_enabled: {s.agent_enabled}")
         print(f"extraction_llm_model: {s.extraction_llm_model}")
         print(f"extraction_llm_base_url: {s.extraction_llm_base_url}")
 
     issues: list[str] = []
     if not key_ok:
         issues.append("extraction_llm_api_key_missing")
-    if args.strict and not s.agent_enabled:
-        issues.append("agent_disabled")
-
     if issues:
         if not args.json:
             print("issues:", ", ".join(issues), file=sys.stderr)

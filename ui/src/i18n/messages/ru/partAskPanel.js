@@ -43,6 +43,8 @@ export default {
   "askPanel.retrieval.hybrid": "hybrid",
   "askPanel.retrieval.agent": "agent",
   "askPanel.runQueryLoading": "Запрос…",
+  "askPanel.agentIncompleteTurn":
+    "Выполнение завершилось без сохранённого ответа. Смотрите баннер с ошибкой выше или повторите запрос.",
   "askPanel.runQuery": "Выполнить запрос",
   "askPanel.openStandaloneAsk": "Открыть вопросы отдельно",
   "askPanel.answer.title": "Ответ",

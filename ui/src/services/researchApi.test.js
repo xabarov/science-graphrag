@@ -171,6 +171,7 @@ describe("normalizeQueryResponse (agent v2 envelope)", () => {
       idea_suggestions: [{ title: "Hypothesis A" }],
       duration_ms: 1234,
       phoenix_trace_id: "abc123deadbeef",
+      run_metadata: { compaction: { kinds: ["turn_digest"] }, session_digest_count: 2 },
     });
     expect(n.answer_class).toBe("inventory");
     expect(n.evidence_summary).toBe("3 citation(s)");
@@ -184,6 +185,8 @@ describe("normalizeQueryResponse (agent v2 envelope)", () => {
     expect(n.idea_suggestions?.length).toBe(1);
     expect(n.duration_ms).toBe(1234);
     expect(n.phoenix_trace_id).toBe("abc123deadbeef");
+    expect(n.run_metadata?.compaction?.kinds).toContain("turn_digest");
+    expect(n.run_metadata?.session_digest_count).toBe(2);
   });
 });
 

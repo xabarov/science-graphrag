@@ -10,6 +10,11 @@ const MEANINGFUL_STREAM_TYPES = new Set([
   "specialist_selected",
   "tool_search_result",
   "intent_classified",
+  "subagent_started",
+  "subagent_progress",
+  "subagent_finished",
+  "answer_synthesis_started",
+  "answer_synthesis_finished",
 ]);
 
 /**
@@ -75,7 +80,49 @@ export function formatStreamEventOneLine(t, event) {
       message: String(event.message || "").slice(0, 180),
     });
   }
+  if (type === "subagent_started") {
+    return t("chat.stream.subagentStarted", {
+      id: String(event.subagent_id || event.name || ""),
+    });
+  }
+  if (type === "subagent_progress") {
+    return t("chat.stream.subagentProgress", {
+      id: String(event.subagent_id || ""),
+      summary: String(event.summary || event.tool || "").slice(0, 120),
+    });
+  }
+  if (type === "subagent_finished") {
+    return t("chat.stream.subagentFinished", {
+      id: String(event.subagent_id || ""),
+    });
+  }
+  if (type === "answer_synthesis_started") {
+    return t("chat.stream.answerSynthesisStarted");
+  }
+  if (type === "answer_synthesis_finished") {
+    return t("chat.stream.answerSynthesisFinished");
+  }
   return "";
+}
+
+/**
+ * One formatted line per event (chronological), for expandable live status.
+ *
+ * @param {(key: string, vars?: Record<string, string>) => string} t
+ * @param {unknown[]} events
+ * @param {number} [limit]
+ * @returns {string[]}
+ */
+export function collectFormattedStreamLines(t, events, limit = 24) {
+  if (!Array.isArray(events) || events.length === 0) return [];
+  const lines = [];
+  for (const ev of events) {
+    if (!ev || typeof ev !== "object") continue;
+    const line = formatStreamEventOneLine(t, ev);
+    if (line) lines.push(line);
+  }
+  if (lines.length <= limit) return lines;
+  return lines.slice(-limit);
 }
 
 /**
@@ -130,6 +177,22 @@ export function buildSpecialistStreamGroups(events) {
   }
   flushOrphan();
   return groups.filter((g) => g.events.length > 0);
+}
+
+/**
+ * Hide specialist rail when the stream is only low-signal preamble (no routing yet).
+ *
+ * @param {unknown[]} streamEvents
+ * @returns {boolean}
+ */
+export function shouldShowSubagentRail(streamEvents) {
+  const groups = buildSpecialistStreamGroups(streamEvents);
+  if (groups.length === 0) return false;
+  if (groups.length === 1) {
+    const g = groups[0];
+    if (g.isOrphan && g.events.length <= 2) return false;
+  }
+  return true;
 }
 
 function normalizedHasDegraded(normalized) {

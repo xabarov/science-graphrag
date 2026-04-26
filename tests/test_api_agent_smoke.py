@@ -19,17 +19,6 @@ _EMPTY_STORES = type(
 )()
 
 
-def test_post_agent_query_disabled_by_default() -> None:
-    client = TestClient(app)
-    client.app.dependency_overrides[get_stores] = lambda: _EMPTY_STORES
-    try:
-        res = client.post("/v1/agent/query", json={"question": "hello"})
-    finally:
-        client.app.dependency_overrides.pop(get_stores, None)
-    assert res.status_code == 503
-    assert res.json().get("detail") == "agent_disabled"
-
-
 def test_post_agent_query_enabled_smoke(monkeypatch) -> None:
     from science_graphrag.api import agent as agent_api
 
@@ -44,8 +33,7 @@ def test_post_agent_query_enabled_smoke(monkeypatch) -> None:
 
     monkeypatch.setattr(agent_api, "build_agent", lambda **_kwargs: _FakeAgent())
     client = TestClient(app)
-    # Override dependencies used by FastAPI router.
-    client.app.dependency_overrides[get_settings] = lambda: Settings(agent_enabled=True)
+    client.app.dependency_overrides[get_settings] = lambda: Settings()
     client.app.dependency_overrides[get_stores] = lambda: _EMPTY_STORES
     try:
         res = client.post("/v1/agent/query", json={"question": "hello"})

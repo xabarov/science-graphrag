@@ -27,7 +27,7 @@ def test_sync_json_history_digest_invalid_warning(monkeypatch) -> None:
 
     monkeypatch.setattr(agent_v2_api, "build_agent", lambda **_k: _FakeAgent())
     client = TestClient(_app())
-    client.app.dependency_overrides[get_settings] = lambda: Settings(agent_enabled=True)
+    client.app.dependency_overrides[get_settings] = lambda: Settings()
     client.app.dependency_overrides[get_stores] = lambda: type(
         "_S",
         (),
@@ -94,6 +94,7 @@ def test_sync_json_thread_id_session_init_and_session_summary_excerpt(monkeypatc
                     answer=answer,
                     answer_class="inventory",
                     tool_trace=trace,
+                    workspace_id=workspace_id,
                 )
             env = build_chat_envelope(
                 state=state,
@@ -116,7 +117,7 @@ def test_sync_json_thread_id_session_init_and_session_summary_excerpt(monkeypatc
         clear_session_store_for_tests()
         monkeypatch.setattr(agent_v2_api, "build_agent", lambda **_k: _FakeAgent())
         client = TestClient(_app())
-        client.app.dependency_overrides[get_settings] = lambda: Settings(agent_enabled=True)
+        client.app.dependency_overrides[get_settings] = lambda: Settings()
         client.app.dependency_overrides[get_stores] = lambda: type(
             "_S",
             (),
@@ -145,6 +146,9 @@ def test_sync_json_thread_id_session_init_and_session_summary_excerpt(monkeypatc
     assert "session_init" in tools
     excerpt = data.get("session_summary_excerpt")
     assert excerpt is not None and "How many papers?" in excerpt
+    comp = (data.get("run_metadata") or {}).get("compaction")
+    assert isinstance(comp, dict) and comp.get("kind") == "turn_digest"
+    assert "kinds" in comp
 
 
 def test_sync_json_two_turns_same_thread_accumulates_excerpt(monkeypatch) -> None:
@@ -183,6 +187,7 @@ def test_sync_json_two_turns_same_thread_accumulates_excerpt(monkeypatch) -> Non
                     answer=answer,
                     answer_class="inventory",
                     tool_trace=trace,
+                    workspace_id=workspace_id,
                 )
             env = build_chat_envelope(
                 state=state,
@@ -206,7 +211,7 @@ def test_sync_json_two_turns_same_thread_accumulates_excerpt(monkeypatch) -> Non
         clear_session_store_for_tests()
         monkeypatch.setattr(agent_v2_api, "build_agent", lambda **_k: _FakeAgent())
         client = TestClient(_app())
-        client.app.dependency_overrides[get_settings] = lambda: Settings(agent_enabled=True)
+        client.app.dependency_overrides[get_settings] = lambda: Settings()
         client.app.dependency_overrides[get_stores] = lambda: type(
             "_S",
             (),

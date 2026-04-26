@@ -8,6 +8,7 @@ from science_graphrag.agent.context.post_turn import apply_turn_digest_to_thread
 from science_graphrag.agent.context.session_backend import set_session_memory_backend
 from science_graphrag.agent.context.session_store import (
     clear_session_store_for_tests,
+    format_user_with_memory,
     get_session_for_thread,
     update_session_after_turn,
 )
@@ -97,17 +98,54 @@ class _RecordingBackend:
     """Minimal ``SessionMemoryBackend`` for wiring tests."""
 
     def __init__(self) -> None:
-        self.turns: list[tuple[str, dict[str, Any]]] = []
+        self.turns: list[tuple[str, dict[str, Any], str | None]] = []
 
     def get_session_copy(self, _thread_id: str) -> dict[str, Any]:
-        return {"digests": [], "session_summary": ""}
+        return {"digests": [], "session_summary": "", "capsules": {}}
 
-    def update_after_turn(self, thread_id: str, *, turn_digest: dict[str, Any]) -> str:
-        self.turns.append((thread_id, dict(turn_digest)))
+    def update_after_turn(
+        self, thread_id: str, *, turn_digest: dict[str, Any], workspace_id: str | None = None
+    ) -> str:
+        self.turns.append((thread_id, dict(turn_digest), workspace_id))
         return "ok"
 
     def clear_all(self) -> None:
         self.turns.clear()
+
+
+def test_format_user_with_memory_includes_workspace_capsule() -> None:
+    s = format_user_with_memory(
+        question="List papers",
+        session_summary="",
+        history_digest=[],
+        workspace_capsule={"workspace_id": "w1", "recent_intents": ["prior q"]},
+    )
+    assert "<workspace_capsule>" in s
+    assert "workspace_id=w1" in s
+    assert "prior q" in s
+    assert "List papers" in s
+
+
+def test_workspace_capsule_roundtrip() -> None:
+    try:
+        tid = "t_capsule_ws"
+        update_session_after_turn(
+            tid,
+            turn_digest={
+                "user_intent": "q about papers",
+                "answer_excerpt": "a",
+                "answer_class": "x",
+                "tools_used": [],
+            },
+            workspace_id="ws-uuid-1",
+        )
+        ent = get_session_for_thread(tid)
+        wc = (ent.get("capsules") or {}).get("workspace")
+        assert isinstance(wc, dict)
+        assert wc.get("workspace_id") == "ws-uuid-1"
+        assert "q about papers" in (wc.get("recent_intents") or [])
+    finally:
+        clear_session_store_for_tests()
 
 
 def test_set_session_memory_backend_custom_protocol() -> None:
@@ -120,6 +158,7 @@ def test_set_session_memory_backend_custom_protocol() -> None:
         )
         assert len(rec.turns) == 1
         assert rec.turns[0][0] == "tid_custom"
+        assert rec.turns[0][2] is None
     finally:
         set_session_memory_backend(None)
         clear_session_store_for_tests()

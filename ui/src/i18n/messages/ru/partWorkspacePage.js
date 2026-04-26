@@ -94,6 +94,17 @@ export default {
   "workspace.strip.ingestPhase.building_graph": "Построение графа знаний",
   "workspace.strip.ingestPhase.preparing_search": "Подготовка поискового слоя",
   "workspace.strip.ingestPhase.finalizing": "Завершение",
+  "workspace.strip.ingestStage.unknown": "Обработка",
+  "workspace.strip.ingestStage.parse_pdf": "Разбор PDF",
+  "workspace.strip.ingestStage.extract_meta": "Извлечение метаданных",
+  "workspace.strip.ingestStage.enrich_openalex": "Обогащение OpenAlex",
+  "workspace.strip.ingestStage.enrich_ror": "Обогащение ROR",
+  "workspace.strip.ingestStage.write_graph": "Запись в граф",
+  "workspace.strip.ingestStage.resolve_references": "Разрешение ссылок",
+  "workspace.strip.ingestStage.chunk": "Разбиение на чанки",
+  "workspace.strip.ingestStage.extract_claims": "Извлечение утверждений",
+  "workspace.strip.ingestStage.embed": "Эмбеддинг чанков",
+  "workspace.strip.ingestStage.attach_workspace": "Привязка к области",
 
   "workspace.side.graphTitle": "Снимок графа",
   "workspace.side.graphStatsLine":

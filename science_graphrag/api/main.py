@@ -14,6 +14,7 @@ from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from qdrant_client import QdrantClient
 
+from science_graphrag.agent.context.session_backend import configure_session_memory_backend
 from science_graphrag.api.admin_access import require_admin_if_configured
 from science_graphrag.api.agent import router as agent_router
 from science_graphrag.api.agent_v2 import router as agent_v2_router
@@ -49,6 +50,7 @@ async def _app_lifespan(app: FastAPI):
     init_tracer_provider()
     BUS.attach_loop(asyncio.get_running_loop())
     settings = get_settings()
+    configure_session_memory_backend(settings)
     _registry(settings).bootstrap()
     app.state.stores = init_store_registry(settings)
     _dim = resolve_embedding_dim(settings=settings)
@@ -133,17 +135,6 @@ def idea_search(
     settings: Settings = Depends(get_settings),
     stores: StoreRegistry = Depends(get_stores),
 ) -> dict[str, Any]:
-    if not settings.agent_enabled:
-        kind_list = [k.strip() for k in (kinds or "").split(",") if k.strip()]
-        return {
-            "items": [],
-            "query": q,
-            "kinds": kind_list,
-            "top_k": top_k,
-            "workspace_id": (workspace_id or "").strip() or None,
-            "status": "stub_wave_r",
-        }
-
     from science_graphrag.agent.tools.idea_search import IdeaSearchTool
 
     kind_list = [k.strip() for k in (kinds or "").split(",") if k.strip()]

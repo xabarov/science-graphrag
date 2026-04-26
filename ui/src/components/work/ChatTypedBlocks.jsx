@@ -84,22 +84,22 @@ export function InventoryBlock({ t, inventory }) {
  */
 export function QuoteCandidatesBlock({ t, candidates }) {
   if (!Array.isArray(candidates) || candidates.length === 0) return null;
+  const rows = candidates.slice(0, 12);
   return (
-    <Box sx={{ mt: 1.5 }}>
+    <Box sx={TYPED_BLOCK_OUTER_SX}>
       <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mb: 0.75 }}>{t("chat.typed.quotesTitle")}</Typography>
-      {candidates.slice(0, 12).map((c, i) => {
+      {rows.map((c, i) => {
         const text = String(c?.quote_text || c?.text || c?.snippet || "").slice(0, 800);
         const sec = c?.section != null ? String(c.section) : "";
         const wid = c?.work_id != null ? String(c.work_id) : "";
+        const isLast = i === rows.length - 1;
         return (
           <Box
             key={i}
             sx={{
-              mb: 1,
-              p: 1.25,
-              borderRadius: "6px",
-              border: "1px solid rgba(255,255,255,0.08)",
-              backgroundColor: "rgba(0,0,0,0.22)",
+              mb: isLast ? 0 : 1,
+              pb: isLast ? 0 : 1,
+              borderBottom: isLast ? "none" : "1px solid rgba(255,255,255,0.06)",
             }}
           >
             <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", mb: 0.5 }}>
@@ -183,7 +183,7 @@ export function RelationTraceBlock({ t, relationTrace }) {
   if (keys.length === 0) return null;
   const raw = JSON.stringify(relationTrace, null, 2);
   return (
-    <Box sx={{ mt: 1.5, p: 1.5, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(0,0,0,0.2)" }}>
+    <Box sx={TYPED_BLOCK_OUTER_SX}>
       <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mb: 0.75 }}>{t("chat.typed.relationTraceTitle")}</Typography>
       <Typography component="pre" sx={{ fontSize: "0.7rem", m: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", color: "rgba(255,255,255,0.65)" }}>
         {raw.slice(0, 6000)}
@@ -199,7 +199,7 @@ export function RelationTraceBlock({ t, relationTrace }) {
 export function IdeaSuggestionsBlock({ t, suggestions }) {
   if (!Array.isArray(suggestions) || suggestions.length === 0) return null;
   return (
-    <Box sx={{ mt: 1.5, p: 1.5, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(0,0,0,0.2)" }}>
+    <Box sx={TYPED_BLOCK_OUTER_SX}>
       <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mb: 0.75 }}>{t("chat.typed.ideaSuggestionsTitle")}</Typography>
       {suggestions.slice(0, 12).map((row, i) => (
         <Typography key={i} sx={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.78)", mb: 0.5, whiteSpace: "pre-wrap" }}>

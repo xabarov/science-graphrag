@@ -332,10 +332,6 @@ class Settings(BaseSettings):
     query_answer_llm_max_tokens: int = Field(default=900, ge=64, le=4096)
     query_answer_llm_temperature: float = Field(default=0.0, ge=0.0, le=1.0)
     openrouter_base_url: str = Field(default="https://openrouter.ai/api/v1")
-    agent_enabled: bool = Field(
-        default=False,
-        description="Enable Wave R agent endpoint (/v1/agent/query).",
-    )
     hypothesis_enabled: bool = Field(
         default=False,
         description="Enable Wave S idea-assist endpoint (/v1/agent/idea-assist).",
@@ -362,6 +358,35 @@ class Settings(BaseSettings):
     agent_rule_tool_search_enabled: bool = Field(
         default=True,
         description="Wave A CH3: rule-based shortlist before bind_tools for specialist subgraphs.",
+    )
+    agent_session_memory_backend: str = Field(
+        default="memory",
+        description=(
+            "CH4 persistence: `memory` (process-local dict) or `redis` (shared store via redis_url). "
+            "Falls back to memory if Redis is unreachable at startup."
+        ),
+    )
+    agent_session_redis_key_prefix: str = Field(
+        default="science_graphrag:agent_session:v1",
+        description="Redis key prefix for thread session JSON (one key per thread_id).",
+    )
+    agent_session_redis_ttl_seconds: int = Field(
+        default=604_800,
+        ge=300,
+        le=2_592_000,
+        description="TTL (seconds) for each agent session Redis key; refreshed on every turn.",
+    )
+    agent_compaction_rolling_memory_min_digests: int = Field(
+        default=3,
+        ge=1,
+        le=10,
+        description="CH5: include rolling_memory in context_compacted.kinds after this many digests.",
+    )
+    agent_compaction_digest_cap: int = Field(
+        default=10,
+        ge=3,
+        le=50,
+        description="CH5: digest window size (matches store cap); boundary_candidate when full.",
     )
 
     gds_enabled: bool = Field(

@@ -119,6 +119,7 @@ export function normalizeQueryResponse(raw) {
       session_summary_excerpt: null,
       duration_ms: null,
       phoenix_trace_id: null,
+      run_metadata: null,
     };
   }
   const gc = raw.graph_context && typeof raw.graph_context === "object" ? raw.graph_context : {};
@@ -166,5 +167,6 @@ export function normalizeQueryResponse(raw) {
           ? Math.round(Number(raw.duration_ms))
           : null,
     phoenix_trace_id: raw.phoenix_trace_id == null || raw.phoenix_trace_id === "" ? null : String(raw.phoenix_trace_id),
+    run_metadata: raw.run_metadata && typeof raw.run_metadata === "object" ? raw.run_metadata : null,
   };
 }

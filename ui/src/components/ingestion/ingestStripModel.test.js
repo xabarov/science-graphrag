@@ -1,37 +1,80 @@
 import { describe, expect, it } from "vitest";
+import {
+  INGEST_PHASE_KEYS,
+  fallbackHumanIngestStageLabel,
+  ingestProductPhaseKey,
+  ingestStageIdFromRow,
+  ingestStageMessageKey,
+  pickActiveIngestStage,
+} from "./ingestStripModel.js";
 
-import { ingestProductPhaseKey, ingestStageIdFromRow, pickActiveIngestStage } from "./ingestStripModel.js";
-
-describe("pickActiveIngestStage", () => {
-  it("prefers running stage", () => {
-    const stages = [
-      { name: "parse_pdf", status: "completed" },
-      { name: "embed", status: "running" },
-    ];
-    expect(pickActiveIngestStage(stages)?.name).toBe("embed");
+describe("ingestStageIdFromRow", () => {
+  it("prefers stage field", () => {
+    expect(ingestStageIdFromRow({ stage: "embed", name: "ignored" })).toBe("embed");
   });
 
-  it("falls back to last failed then last row", () => {
-    const stages = [
-      { name: "a", status: "completed" },
-      { name: "b", status: "failed" },
-    ];
-    expect(pickActiveIngestStage(stages)?.name).toBe("b");
+  it("falls back to name", () => {
+    expect(ingestStageIdFromRow({ name: "chunk" })).toBe("chunk");
+  });
+
+  it("returns empty for invalid", () => {
+    expect(ingestStageIdFromRow(null)).toBe("");
   });
 });
 
 describe("ingestProductPhaseKey", () => {
-  it("maps embed to preparing_search", () => {
+  it("maps known stages", () => {
+    expect(ingestProductPhaseKey("parse_pdf")).toBe("preparing_document");
+    expect(ingestProductPhaseKey("write_graph")).toBe("building_graph");
     expect(ingestProductPhaseKey("embed")).toBe("preparing_search");
+    expect(ingestProductPhaseKey("attach_workspace")).toBe("finalizing");
   });
 
-  it("defaults unknown stages to preparing_document", () => {
+  it("defaults unknown to preparing_document", () => {
     expect(ingestProductPhaseKey("unknown_stage")).toBe("preparing_document");
   });
 });
 
-describe("ingestStageIdFromRow", () => {
-  it("prefers stage over name", () => {
-    expect(ingestStageIdFromRow({ stage: "x", name: "y" })).toBe("x");
+describe("ingestStageMessageKey", () => {
+  it("returns keyed path for known pipeline stages", () => {
+    expect(ingestStageMessageKey("embed")).toBe("workspace.strip.ingestStage.embed");
+  });
+
+  it("returns unknown for arbitrary ids", () => {
+    expect(ingestStageMessageKey("custom_vendor_step")).toBe("workspace.strip.ingestStage.unknown");
+  });
+});
+
+describe("fallbackHumanIngestStageLabel", () => {
+  it("replaces underscores", () => {
+    expect(fallbackHumanIngestStageLabel("parse_pdf")).toBe("parse pdf");
+  });
+});
+
+describe("pickActiveIngestStage", () => {
+  it("picks running row", () => {
+    const stages = [
+      { stage: "parse_pdf", status: "completed" },
+      { stage: "embed", status: "running" },
+    ];
+    expect(pickActiveIngestStage(stages)).toEqual(stages[1]);
+  });
+
+  it("prefers last failed", () => {
+    const stages = [
+      { stage: "a", status: "completed" },
+      { stage: "b", status: "failed" },
+    ];
+    expect(pickActiveIngestStage(stages)?.stage).toBe("b");
+  });
+
+  it("returns null for empty", () => {
+    expect(pickActiveIngestStage([])).toBeNull();
+  });
+});
+
+describe("INGEST_PHASE_KEYS", () => {
+  it("has four product phases", () => {
+    expect(INGEST_PHASE_KEYS).toHaveLength(4);
   });
 });

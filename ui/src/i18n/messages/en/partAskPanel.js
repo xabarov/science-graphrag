@@ -44,6 +44,8 @@ export default {
   "askPanel.retrieval.hybrid": "hybrid",
   "askPanel.retrieval.agent": "agent",
   "askPanel.runQueryLoading": "Querying…",
+  "askPanel.agentIncompleteTurn":
+    "The agent run finished without a saved answer. Check the error banner above or try again.",
   "askPanel.runQuery": "Run query",
   "askPanel.openStandaloneAsk": "Open standalone Ask",
   "askPanel.answer.title": "Answer",

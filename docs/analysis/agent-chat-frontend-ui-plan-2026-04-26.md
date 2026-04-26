@@ -1,8 +1,10 @@
 # Agent chat frontend UI/UX implementation plan — 2026-04-26
 
-**Status:** draft  
+**Status:** draft (execution checkpoint **2026-04-26** — см. **§11 Progress** ниже)  
 **Scope:** `ui/` chat experience for agent turns, stream progress, subagent visibility, typed result blocks  
 **Primary context:** `docs/analysis/chat-agent-system-roadmap-2026-04-26.md`, `docs/specs/agent-chat-v1.md`
+
+**Verification follow-up doc:** `docs/analysis/agent-chat-frontend-verification-gaps-next-wave.md` — автотесты волны закрыты; ручной SSE / §12.2 остаются на QA.
 
 ## 1. Why this plan exists
 
@@ -13,7 +15,9 @@ The current research chat already has a usable foundation:
 - `ChatTypedBlocks.jsx` already separates structured results such as inventory, quotes, and bibliography.
 - `useAgentStream.js` already exposes an SSE event stream suitable for richer live UI.
 
-What is still missing is a **product-quality agent chat surface** that makes long-running turns legible and trustworthy:
+**Progress note (2026-04-26):** ниже перечислено целевое состояние плана; **UI-1–UI-4** в коде в основном достигнуты (детали в §11). Остаётся преимущественно **UI-5** (новые SSE-события + бэкенд), расширенная полировка и **ручная** верификация §12.
+
+What was still missing at plan time — **product-quality agent chat surface**:
 
 - the user should immediately see that the system is doing work, not just "thinking";
 - subagent activity should be visible without flooding the thread;
@@ -60,6 +64,43 @@ Two patterns are especially worth adapting:
    - visually separate "process" from "final answer".
 
 The goal is **not** to clone the OSINT UI literally. The goal is to adapt its strongest ideas into the research-workspace chat.
+
+### 3.3 External best-practice synthesis (GPT-style + Cursor-style, 2025-2026)
+
+The chat should now explicitly follow the strongest recurring patterns from:
+
+- Cursor agent/chat guidance and product notes:
+  - [Best practices for coding with agents](https://cursor.com/blog/agent-best-practices)
+  - [Cursor chat tutorial](https://cursorpractice.com/en/cursor-tutorials/getting-started/4-Chat)
+- modern AI composer/input analyses:
+  - [Anatomy of AI Input](https://ibelick.com/anatomy-ai-input)
+  - [AI Chat UI Best Practices](https://thefrontkit.com/blogs/ai-chat-ui-best-practices)
+- ChatGPT app surface guidelines:
+  - [OpenAI Apps SDK UI guidelines](https://developers.openai.com/apps-sdk/concepts/ui-guidelines/)
+
+From these sources, the product requirements for our chat are:
+
+1. The composer must feel like a **single primary canvas** for writing, not a form with several equally loud controls.
+2. Frequently used secondary actions should live in a **compact toolbar below the input**, preferably as icon actions with progressive disclosure.
+3. Less frequent controls must move into **menus/popovers**, not stay exposed as full-width selects inside the composer body.
+4. The UI should preserve **keyboard-first behavior**:
+   - `Enter` sends
+   - `Shift+Enter` inserts newline
+   - menus and actions remain reachable by keyboard
+5. Streaming and composer controls must avoid **layout jumps**; opening a menu should not reflow the whole panel.
+6. The product should reuse the existing **dark minimal visual language** rather than introducing a brighter custom sub-theme for chat only.
+
+**Explicit design direction:** the target style is **GPT-style conversation ergonomics** combined with **Cursor IDE chat/composer compactness**.
+
+That means:
+
+- restrained chrome around the input;
+- context and mode controls as subtle secondary affordances;
+- icon-led lower toolbar;
+- clean message thread with the answer remaining dominant;
+- no bulky form widgets inside the main text-entry zone unless the control is truly primary.
+
+**Current violation to fix immediately:** the `Answer mode` control rendered as a visible select in the composer breaks this style. It should be replaced with a **toolbar icon button below the input** that opens a compact menu, similar to Cursor chat patterns.
 
 ## 4. Product-safe visibility model
 
@@ -175,6 +216,44 @@ For power users, each assistant turn should have a collapsed "Inspect run" area:
 - future `phoenix_trace_id`.
 
 This keeps the primary UI clean while preserving observability.
+
+### 5.6 Composer requirements (hard UX rules)
+
+The composer is the most important control in the whole chat experience and must follow these rules:
+
+1. **Primary zone**
+   - one multiline text field;
+   - no large form labels inside the main writing area;
+   - no stacked dropdowns above the user text unless absolutely required.
+
+2. **Secondary control row below the text field**
+   - icon buttons only for common secondary actions;
+   - concise textual state may appear next to an icon, but the control itself should still be icon-led;
+   - actions should align with GPT/Cursor expectations: mode, context/tools, open standalone, future attach/voice if added later.
+
+3. **Answer mode behavior**
+   - answer mode is a routing hint, not the primary task;
+   - therefore it must be placed behind a compact icon trigger;
+   - clicking the icon opens a small menu/popover anchored to the toolbar;
+   - the current mode may be shown as subtle secondary text next to the icon;
+   - `Auto` remains the default and visually calm state.
+
+4. **Visual hierarchy**
+   - the send action stays visually primary;
+   - toolbar icons stay secondary;
+   - helper text such as keyboard hint stays tertiary.
+
+5. **Menu style**
+   - dark compact popover;
+   - no oversized list rows;
+   - selected mode indicated with restrained highlight only;
+   - menu should feel like a Cursor chat affordance, not a classic enterprise form dropdown.
+
+6. **What to avoid**
+   - full-width `Select` or `TextField` controls for answer mode in the composer chrome;
+   - duplicated controls above and below the input;
+   - mode labels that overpower the actual prompt text area;
+   - bright badges or large pills for secondary routing hints.
 
 ## 6. Visual language
 
@@ -660,7 +739,11 @@ For smaller widths:
 
 ## 11. Implementation phases
 
+**Progress (repo, 2026-04-26):** **[DONE] UI-1**, **[DONE] UI-2**, **[DONE] UI-3** (см. примечания к deliver), **[DONE] UI-4** (базовый chrome; без обязательной иконографии), **[OPEN] UI-5** (опциональные backend-события и парсер).
+
 ### UI-1. Turn shell and shimmer foundation
+
+**Status in repo:** **[DONE]** (2026-04-26)
 
 **Goal:** replace the primitive loading state with a polished agent turn shell.
 
@@ -679,6 +762,8 @@ Acceptance:
 
 ### UI-2. Structured run chrome inside `AskAnswerPanel`
 
+**Status in repo:** **[DONE]** (2026-04-26)
+
 **Goal:** separate live progress, final answer, typed blocks, and inspector.
 
 Deliver:
@@ -695,12 +780,14 @@ Acceptance:
 
 ### UI-3. Subagent rail
 
+**Status in repo:** **[DONE]** (2026-04-26) — rail реализован как **`AgentSubagentRail.jsx`** (реэкспорт **`AgentSpecialistRunStack.jsx`**); отдельного файла **`AgentSubagentCard.jsx`** нет (компакт/expand внутри stack). Модель группировки — **`buildSpecialistStreamGroups`** / **`shouldShowSubagentRail`** в `agentRunViewModel.js`.
+
 **Goal:** make routing and specialist work visible in a beautiful compact form.
 
 Deliver:
 
 - `AgentSubagentRail.jsx`
-- `AgentSubagentCard.jsx`
+- `AgentSubagentCard.jsx` *(в репо: поведение «карточки» встроено в `AgentSpecialistRunStack` / группы; отдельный компонент не введён)*
 - derived frontend model from stream events
 
 Acceptance:
@@ -710,6 +797,8 @@ Acceptance:
 - expanded mode provides useful detail.
 
 ### UI-4. Typed block polish
+
+**Status in repo:** **[DONE]** (базовый слой, 2026-04-26) — общий chrome (`TYPED_BLOCK_OUTER_SX`) для quotes / relation trace / idea suggestions; inventory и bibliography уже были в том же духе. Опциональные иконки и доп. affordances — по желанию позже.
 
 **Goal:** make structured outputs feel like first-class answer sections.
 
@@ -725,6 +814,8 @@ Acceptance:
 - blocks feel integrated into the answer card.
 
 ### UI-5. Event vocabulary upgrade
+
+**Status in repo:** **[OPEN]** — без новых обязательных backend-событий; текущий UI опирается на inference из существующего потока.
 
 **Goal:** improve frontend clarity with product-safe subagent events.
 
@@ -743,13 +834,15 @@ Acceptance:
 
 ### 12.1 Frontend checks
 
-1. `agentStreamParse` tests for new event normalization.
+**Progress (2026-04-26):**
+
+1. `agentStreamParse` tests for new event normalization — **[DONE]** (существующие тесты; новые типы событий под UI-5 — по мере появления в API).
 2. Component tests for:
-   - collapsed and expanded subagent cards;
-   - shimmer live state;
-   - warning/degraded state;
-   - final answer with typed blocks.
-3. manual SSE run against live backend to verify event ordering and perceived smoothness.
+   - collapsed and expanded subagent cards — **[DONE]** (`AgentSpecialistRunStack.test.jsx`, инспектор и тред);
+   - shimmer live state — **[DONE]** (`AgentLiveStatus.test.jsx` + live-поток в `ChatMessageThread` / `AskAnswerPanel` тестах);
+   - warning/degraded state — **[DONE]** (`AskAnswerPanel.test.jsx`);
+   - final answer with typed blocks — **[PARTIAL]** (smoke `ChatTypedBlocks.test.jsx`; нет одного сквозного RTL на «answer + все блоки + citations»).
+3. manual SSE run against live backend to verify event ordering and perceived smoothness — **[OPEN]** (ручной QA).
 
 ### 12.2 UX acceptance scenarios
 
@@ -768,9 +861,11 @@ The following decisions should be made before UI-3:
 3. Should citations remain below typed blocks, or move into a right-aligned expandable evidence drawer later?
 4. Do we want a future "trace" icon linking to Phoenix when `phoenix_trace_id` is present?
 
+**Recorded choice (2026-04-26):** п.2 — **inferred specialist cards first** (`AgentSpecialistRunStack` + `specialist_selected` / группы в `agentRunViewModel.js`). П.1–4 остаются открытыми для следующих итераций.
+
 ## 14. Recommended immediate next step
 
-Start with **UI-1 + UI-2 together**.
+~~Start with **UI-1 + UI-2 together**.~~ **Done in repo (2026-04-26):** UI-1 + UI-2 + последующие фазы до UI-4 доставлены в `ui/`; следующий осмысленный шаг — **UI-5** (по согласованию с бэкендом) и/или **ручная** прогонка §12.1 п.3 и сценариев §12.2.
 
 That gives the biggest visible product improvement with minimal backend dependency:
 

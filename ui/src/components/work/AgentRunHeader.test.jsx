@@ -23,6 +23,21 @@ function renderHeader(runState) {
 }
 
 describe("AgentRunHeader", () => {
+  it("renders state chip for running", () => {
+    renderHeader("running");
+    expect(screen.getByText("chat.run.state.running")).toBeTruthy();
+  });
+
+  it("renders state chip for done", () => {
+    renderHeader("done");
+    expect(screen.getByText("chat.run.state.done")).toBeTruthy();
+  });
+
+  it("renders state chip for warning", () => {
+    renderHeader("warning");
+    expect(screen.getByText("chat.run.state.warning")).toBeTruthy();
+  });
+
   it("renders state chip for degraded", () => {
     renderHeader("degraded");
     expect(screen.getByText("chat.run.state.degraded")).toBeTruthy();

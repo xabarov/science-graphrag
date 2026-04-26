@@ -110,6 +110,7 @@ class RetrievalAgent:
                         answer=out.answer,
                         answer_class=ac,
                         tool_trace=list(out.tool_trace or []),
+                        workspace_id=workspace_id,
                     )
                 return out
             return self._run_langgraph(
@@ -175,6 +176,7 @@ class RetrievalAgent:
                 answer=answer,
                 answer_class=str(envelope.get("answer_class") or "grounded_explanation"),
                 tool_trace=trace,
+                workspace_id=workspace_id,
             )
 
         return AgentRunOutput(

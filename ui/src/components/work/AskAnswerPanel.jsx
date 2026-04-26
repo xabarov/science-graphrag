@@ -11,7 +11,7 @@ import {
   QuoteCandidatesBlock,
   RelationTraceBlock,
 } from "./ChatTypedBlocks.jsx";
-import { deriveRunState } from "./agentRunViewModel.js";
+import { deriveRunState, shouldShowSubagentRail } from "./agentRunViewModel.js";
 import { AgentRunHeader } from "./AgentRunHeader.jsx";
 import { AgentLiveStatus } from "./AgentLiveStatus.jsx";
 import { AgentRunInspector } from "./AgentRunInspector.jsx";
@@ -74,7 +74,7 @@ export function AskAnswerPanel({
         streamEventCount={Array.isArray(streamEvents) ? streamEvents.length : 0}
       />
 
-      {retrievalMode === "agent" && Array.isArray(streamEvents) && streamEvents.length > 0 ? (
+      {retrievalMode === "agent" && shouldShowSubagentRail(streamEvents) ? (
         <AgentSubagentRail t={t} streamEvents={streamEvents} />
       ) : null}
 
@@ -102,6 +102,30 @@ export function AskAnswerPanel({
         <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mb: 1, whiteSpace: "pre-wrap" }}>
           {t("chat.typed.evidenceSummaryLabel")}: {String(normalized.evidence_summary)}
         </Typography>
+      ) : null}
+
+      {!isRunActive && normalized.session_summary_excerpt ? (
+        <Box
+          sx={{
+            mb: 1.25,
+            p: 1,
+            borderRadius: "6px",
+            border: "1px solid rgba(255,255,255,0.08)",
+            backgroundColor: "rgba(255,255,255,0.03)",
+          }}
+        >
+          <Typography sx={{ fontSize: "0.7rem", fontWeight: 600, color: "rgba(255,255,255,0.45)", mb: 0.5 }}>
+            {t("chat.sessionMemory.title")}
+          </Typography>
+          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.65)", whiteSpace: "pre-wrap" }}>
+            {String(normalized.session_summary_excerpt)}
+          </Typography>
+          {normalized.run_metadata?.compaction?.kinds?.length ? (
+            <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.4)", mt: 0.75 }}>
+              {t("chat.sessionMemory.compactionKinds")}: {normalized.run_metadata.compaction.kinds.join(", ")}
+            </Typography>
+          ) : null}
+        </Box>
       ) : null}
 
       <Typography sx={{ fontWeight: 600, fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mb: 0.5 }}>

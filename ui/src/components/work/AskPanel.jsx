@@ -8,6 +8,7 @@ import {
   getWorkDetail,
   getWorks,
   listAskSessions as listAskSessionsRequest,
+  normalizeQueryResponse,
   patchAskSession as patchAskSessionRequest,
 } from "../../services/researchApi.js";
 import { apiSessionsToBundle, entriesToApiTurns, isServerAskSessionId, readAskServerSyncPref } from "./askSessionServerBridge.js";
@@ -68,6 +69,8 @@ export default function AskPanel({
   const [answerClassHint, setAnswerClassHint] = useState("");
   const [pendingUserQuery, setPendingUserQuery] = useState("");
   const skipHydrateWorkRef = useRef(false);
+  /** Last stream error message (React state can lag one frame when submit returns null). */
+  const streamFailureRef = useRef("");
 
   const scopeKey = useMemo(() => deriveAskScopeKey({ locked, scopedWorkId, workspaceId }), [locked, scopedWorkId, workspaceId]);
   const bumpSessions = useCallback(() => setSessionTick((v) => v + 1), []);
@@ -128,6 +131,7 @@ export default function AskPanel({
   const { submit, isLoading } = useAskSubmit({
     workspaceId,
     onStart: () => {
+      streamFailureRef.current = "";
       setError(null);
       setNormalized(null);
       setRetrievalJsonOpen(false);
@@ -140,7 +144,10 @@ export default function AskPanel({
       if (!event || typeof event !== "object") return;
       setStreamEvents((prev) => [...prev, event].slice(-80));
     },
-    onError: setError,
+    onError: (msg) => {
+      streamFailureRef.current = String(msg ?? "").trim();
+      setError(msg);
+    },
   });
 
   useEffect(() => {
@@ -278,11 +285,82 @@ export default function AskPanel({
           historyDigest,
           answerClassHint: String(answerClassHint || "").trim() || null,
         });
-        if (!pack?.normalized) return;
+        const queryMode = locked || inWorkspace ? "workspace" : corpusWorkspaceOnly ? "workspace_corpus" : workId ? "scoped" : "global";
+        if (!pack?.normalized) {
+          const failMsg = String(streamFailureRef.current || "").trim() || t("askPanel.agentIncompleteTurn");
+          streamFailureRef.current = "";
+          const nextNormalized = normalizeQueryResponse({
+            answer: failMsg,
+            citations: [],
+            graph_context: {},
+            retrieval_trace: {},
+            warnings: [],
+          });
+          const persistedStreamEvents = [];
+          const persistedToolTrace = [];
+          const details = {
+            answer: nextNormalized.answer,
+            citations: nextNormalized.citations,
+            graph_context: nextNormalized.graph_context,
+            retrieval_trace: nextNormalized.retrieval_trace,
+            answer_class: nextNormalized.answer_class,
+            evidence_summary: nextNormalized.evidence_summary,
+            warnings: nextNormalized.warnings,
+            inventory: nextNormalized.inventory,
+            relation_trace: nextNormalized.relation_trace,
+            quote_candidates: nextNormalized.quote_candidates,
+            idea_suggestions: nextNormalized.idea_suggestions,
+            bibliography: nextNormalized.bibliography,
+            thread_id: nextNormalized.thread_id ?? null,
+            duration_ms: nextNormalized.duration_ms ?? null,
+            phoenix_trace_id: nextNormalized.phoenix_trace_id ?? null,
+            session_summary_excerpt: nextNormalized.session_summary_excerpt ?? null,
+            run_metadata: nextNormalized.run_metadata ?? null,
+            stream_events: persistedStreamEvents.slice(-80),
+            agent_tool_trace: persistedToolTrace,
+          };
+          const turn = {
+            query,
+            workId,
+            topK: ASK_DEFAULT_TOP_K,
+            answer: failMsg,
+            citationCount: 0,
+            mode: queryMode,
+            details,
+          };
+          rememberAskHistory(turn);
+          appendAskSessionTurn(scopeKey, turn);
+          const sid = readAskSessionUi(scopeKey).activeId;
+          const entriesAfter = getActiveSessionEntries(scopeKey);
+          if (sid && entriesAfter.length === 1 && q) {
+            const autoTitle = q.slice(0, 56) + (q.length > 56 ? "…" : "");
+            renameAskSession(scopeKey, sid, autoTitle);
+            if (serverSync && isServerAskSessionId(sid)) {
+              try {
+                await patchAskSessionRequest(scopeKey, sid, { title: autoTitle, active: true });
+              } catch {
+                /* non-fatal */
+              }
+            }
+          }
+          setNormalized(null);
+          setQuery("");
+          bumpSessions();
+          if (serverSync) {
+            const { activeId: sid2 } = readAskSessionUi(scopeKey);
+            if (sid2 && isServerAskSessionId(sid2)) {
+              try {
+                await patchAskSessionRequest(scopeKey, sid2, { turns: entriesToApiTurns(getActiveSessionEntries(scopeKey)), active: true });
+              } catch {
+                /* non-fatal */
+              }
+            }
+          }
+          return;
+        }
         const nextNormalized = pack.normalized;
         const persistedStreamEvents = Array.isArray(pack.streamEvents) ? pack.streamEvents : [];
         const persistedToolTrace = Array.isArray(pack.agentToolTrace) ? pack.agentToolTrace : [];
-        const queryMode = locked || inWorkspace ? "workspace" : corpusWorkspaceOnly ? "workspace_corpus" : workId ? "scoped" : "global";
         const details = {
           answer: nextNormalized.answer,
           citations: nextNormalized.citations,
@@ -300,6 +378,7 @@ export default function AskPanel({
           duration_ms: nextNormalized.duration_ms ?? null,
           phoenix_trace_id: nextNormalized.phoenix_trace_id ?? null,
           session_summary_excerpt: nextNormalized.session_summary_excerpt ?? null,
+          run_metadata: nextNormalized.run_metadata ?? null,
           stream_events: persistedStreamEvents.slice(-80),
           agent_tool_trace: persistedToolTrace,
         };
@@ -356,6 +435,7 @@ export default function AskPanel({
       scopeKey,
       bumpSessions,
       serverSync,
+      t,
     ],
   );
 

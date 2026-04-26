@@ -1,12 +1,6 @@
+/** @vitest-environment jsdom */
+import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-
-const setStateMock = vi.fn();
-
-vi.mock("react", () => ({
-  useCallback: (fn) => fn,
-  useRef: (value) => ({ current: value }),
-  useState: (initial) => [initial, setStateMock],
-}));
 
 vi.mock("../services/apiClient.js", async (importOriginal) => {
   const actual = await importOriginal();
@@ -27,15 +21,18 @@ describe("useAgentStream", () => {
   it("calls onError when fetch fails", async () => {
     globalThis.fetch.mockRejectedValueOnce(new Error("Network error"));
     const onError = vi.fn();
-    const hook = useAgentStream({
-      onError,
-      onFinalAnswer: vi.fn(),
-      onEvent: vi.fn(),
+    const { result } = renderHook(() =>
+      useAgentStream({
+        onError,
+        onFinalAnswer: vi.fn(),
+        onEvent: vi.fn(),
+      }),
+    );
+    await act(async () => {
+      await result.current.stream({ question: "test" });
     });
-
-    await hook.stream({ question: "test" });
-
     expect(onError).toHaveBeenCalledWith(expect.stringContaining("Network error"));
+    expect(result.current.isStreaming).toBe(false);
   });
 
   it("streams SSE frames and delivers final_answer", async () => {
@@ -56,16 +53,23 @@ describe("useAgentStream", () => {
     });
     const onFinalAnswer = vi.fn();
     const onEvent = vi.fn();
-    const hook = useAgentStream({
-      onError: vi.fn(),
-      onFinalAnswer,
-      onEvent,
+    const onFinish = vi.fn();
+    const { result } = renderHook(() =>
+      useAgentStream({
+        onError: vi.fn(),
+        onFinalAnswer,
+        onEvent,
+        onFinish,
+      }),
+    );
+    expect(result.current.isStreaming).toBe(false);
+    await act(async () => {
+      await result.current.stream({ question: "q" });
     });
-
-    await hook.stream({ question: "q" });
-
     expect(onEvent).toHaveBeenCalled();
     expect(onFinalAnswer).toHaveBeenCalledWith(expect.objectContaining({ answer: "hi", type: "final_answer" }));
+    expect(onFinish).toHaveBeenCalled();
+    expect(result.current.isStreaming).toBe(false);
   });
 
   it("calls onError when non-SSE body is not valid JSON", async () => {
@@ -75,14 +79,16 @@ describe("useAgentStream", () => {
       text: async () => "not-json{",
     });
     const onError = vi.fn();
-    const hook = useAgentStream({
-      onError,
-      onFinalAnswer: vi.fn(),
-      onEvent: vi.fn(),
+    const { result } = renderHook(() =>
+      useAgentStream({
+        onError,
+        onFinalAnswer: vi.fn(),
+        onEvent: vi.fn(),
+      }),
+    );
+    await act(async () => {
+      await result.current.stream({ question: "test" });
     });
-
-    await hook.stream({ question: "test" });
-
     expect(onError).toHaveBeenCalledWith(expect.stringContaining("not valid JSON"));
   });
 
@@ -91,8 +97,16 @@ describe("useAgentStream", () => {
     err.name = "AbortError";
     globalThis.fetch.mockRejectedValueOnce(err);
     const onError = vi.fn();
-    const hook = useAgentStream({ onError, onFinalAnswer: vi.fn(), onEvent: vi.fn() });
-    await hook.stream({ question: "q" });
+    const { result } = renderHook(() =>
+      useAgentStream({
+        onError,
+        onFinalAnswer: vi.fn(),
+        onEvent: vi.fn(),
+      }),
+    );
+    await act(async () => {
+      await result.current.stream({ question: "q" });
+    });
     expect(onError).not.toHaveBeenCalled();
   });
 
@@ -104,14 +118,16 @@ describe("useAgentStream", () => {
       headers: { get: () => "application/json" },
     });
     const onError = vi.fn();
-    const hook = useAgentStream({
-      onError,
-      onFinalAnswer: vi.fn(),
-      onEvent: vi.fn(),
+    const { result } = renderHook(() =>
+      useAgentStream({
+        onError,
+        onFinalAnswer: vi.fn(),
+        onEvent: vi.fn(),
+      }),
+    );
+    await act(async () => {
+      await result.current.stream({ question: "test" });
     });
-
-    await hook.stream({ question: "test" });
-
     expect(onError).toHaveBeenCalledWith(expect.stringContaining("Agent error 503"));
   });
 });

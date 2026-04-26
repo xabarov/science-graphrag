@@ -1,6 +1,8 @@
 /** @type {Record<string, string>} */
 export default {
   "chat.session.defaultTitle": "Новый чат",
+  "chat.sessionMemory.title": "Память сессии на сервере",
+  "chat.sessionMemory.compactionKinds": "Уровни компактации",
 
   "chatPage.header.eyebrow": "Чат",
   "chatPage.header.title": "Чат",
@@ -73,6 +75,8 @@ export default {
   "chat.typed.ideaSuggestionsTitle": "Идеи и гипотезы",
 
   "chat.answerMode.label": "Режим ответа",
+  "chat.answerMode.openMenuAria": "Открыть меню режима ответа",
+  "chat.answerMode.currentLabel": "Режим ответа: {{label}}",
   "chat.answerMode.auto": "Авто (эвристика)",
   "chat.answerMode.inventory": "Список / каталог",
   "chat.answerMode.fact_lookup": "Факт (метаданные)",
@@ -95,6 +99,11 @@ export default {
   "chat.stream.evidenceReady": "Доказательства готовы · цитат: {{n}}",
   "chat.stream.contextCompacted": "Сессия обновлена · {{excerpt}}",
   "chat.stream.warningLine": "{{code}}: {{message}}",
+  "chat.stream.subagentStarted": "Подагент {{id}} запущен",
+  "chat.stream.subagentProgress": "{{id}} · {{summary}}",
+  "chat.stream.subagentFinished": "Подагент {{id}} завершён",
+  "chat.stream.answerSynthesisStarted": "Сборка финального ответа",
+  "chat.stream.answerSynthesisFinished": "Ответ готов",
 
   "chat.run.assistantLabel": "Исследовательский агент",
   "chat.run.state.running": "Выполняется",
@@ -108,6 +117,11 @@ export default {
   "chat.run.answerClassChip": "{{cls}}",
   "chat.run.answerSectionTitle": "Ответ",
   "chat.run.liveStripTitle": "Статус",
+  "chat.run.liveStatusShowRecent": "Недавние строки статуса",
+  "chat.run.liveStatusHideRecent": "Скрыть недавние строки",
+  "chat.run.liveStatusExpandAria": "Показать недавние строки статуса",
+  "chat.run.liveStatusCollapseAria": "Скрыть недавние строки статуса",
+  "chat.run.liveStatusRecentTitle": "Недавний статус",
   "chat.run.inspectToggleShow": "Разбор запуска",
   "chat.run.inspectToggleHide": "Скрыть разбор",
   "chat.run.inspectToggleShowAria": "Показать разбор запуска",

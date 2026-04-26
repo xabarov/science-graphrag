@@ -75,13 +75,6 @@ def check_agent_v2_sync_json(
             json=payload,
             headers={"Accept": "application/json", **_extra_headers()},
         )
-        if r.status_code == 503 and "agent_disabled" in (r.text or ""):
-            return CheckResult(
-                "agent_v2_sync_json",
-                False,
-                "HTTP 503 agent_disabled — enable SCIENCE_GRAPHRAG_AGENT_ENABLED on the server",
-                {"status_code": r.status_code},
-            )
         r.raise_for_status()
         data = r.json()
     except httpx.HTTPStatusError as exc:
@@ -109,6 +102,10 @@ def check_agent_v2_sync_json(
     if thread_id and os.environ.get("AGENT_LIVE_GATE_CH4", "").strip() in ("1", "true", "yes"):
         if "session_init" not in tool_names:
             issues.append("missing_session_init_in_tool_trace")
+        rm = data.get("run_metadata") or {}
+        comp = rm.get("compaction") if isinstance(rm, dict) else None
+        if not isinstance(comp, dict) or "kinds" not in comp:
+            issues.append("missing_compaction_in_run_metadata")
 
     ok = not issues
 
@@ -170,13 +167,6 @@ def check_agent_v2_sse(
             headers={"Accept": "text/event-stream", **_extra_headers()},
             timeout=stream_timeout,
         ) as resp:
-            if resp.status_code == 503:
-                return CheckResult(
-                    "agent_v2_sse",
-                    False,
-                    "HTTP 503 agent_disabled",
-                    {"status_code": 503},
-                )
             resp.raise_for_status()
             for line in resp.iter_lines():
                 events.extend(_parse_sse_lines([line]))
@@ -234,8 +224,6 @@ def check_multi_turn_digest(
             headers={"Accept": "application/json", **_extra_headers()},
             timeout=timeout,
         )
-        if resp1.status_code == 503:
-            return CheckResult("multi_turn_digest", False, "turn1: agent_disabled")
         resp1.raise_for_status()
         data1 = resp1.json()
     except Exception as exc:  # noqa: BLE001

@@ -2,7 +2,7 @@
   "case_id": "chat_context_compaction_v1_smoke",
   "description": "CH5 foundation: context_compacted payload shape (eval smoke, no LLM).",
   "expected_context_compacted_fields": ["type", "thread_id", "session_summary_excerpt", "compaction"],
-  "expected_compaction_keys": ["kind", "trigger"],
+  "expected_compaction_keys": ["kind", "kinds", "trigger", "digest_count", "boundary"],
   "expected_compaction_kind": "turn_digest",
   "valid_triggers": ["post_answer", "post_answer_degraded_stream"]
 }

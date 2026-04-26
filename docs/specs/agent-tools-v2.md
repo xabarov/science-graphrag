@@ -55,7 +55,6 @@ Identical to v1 `AgentQueryResponse`, plus `phoenix_trace_id` field:
   "phoenix_trace_id": "abc123",
   "run_metadata": {
     "agent_runtime": "langgraph_react_v1",
-    "agent_enabled": true,
     "agent_max_tool_calls": 8
   }
 }
@@ -75,6 +74,5 @@ Link: </v2/agent/query>; rel="successor-version"
 
 | Status | Condition                        |
 |--------|----------------------------------|
-| 503    | `agent_enabled=false` in config  |
 | 422    | Validation error in request body |
 | 500    | Unhandled exception              |

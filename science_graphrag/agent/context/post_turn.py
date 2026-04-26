@@ -15,8 +15,9 @@ def apply_turn_digest_to_thread(
     answer: str,
     answer_class: str,
     tool_trace: list[Any],
+    workspace_id: str | None = None,
 ) -> str:
-    """Build turn digest and update in-memory session. Returns new session_summary text."""
+    """Build turn digest and update session backend. Returns new session_summary text."""
     tid = (thread_id or "").strip()
     if not tid:
         return ""
@@ -26,4 +27,4 @@ def apply_turn_digest_to_thread(
         answer_class=answer_class,
         tool_trace=tool_trace,
     )
-    return update_session_after_turn(tid, turn_digest=digest)
+    return update_session_after_turn(tid, turn_digest=digest, workspace_id=workspace_id)

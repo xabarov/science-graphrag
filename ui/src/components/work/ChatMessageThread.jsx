@@ -80,12 +80,16 @@ export function ChatMessageThread({
   const containerRef = useRef(null);
   const endRef = useRef(null);
   const [stickToBottom, setStickToBottom] = useState(true);
+  /** Synchronous pin: must match scroll intent before useLayoutEffect runs (state can lag one frame). */
+  const stickToBottomRef = useRef(true);
 
   const updateStickFromScroll = useCallback(() => {
     const el = containerRef.current;
     if (!el) return;
     const dist = el.scrollHeight - el.scrollTop - el.clientHeight;
-    setStickToBottom(dist < SCROLL_BOTTOM_THRESHOLD_PX);
+    const stick = dist < SCROLL_BOTTOM_THRESHOLD_PX;
+    stickToBottomRef.current = stick;
+    setStickToBottom(stick);
   }, []);
 
   useEffect(() => {
@@ -95,18 +99,23 @@ export function ChatMessageThread({
     return () => el.removeEventListener("scroll", updateStickFromScroll);
   }, [updateStickFromScroll]);
 
-  const scrollToBottom = useCallback((behavior = "auto") => {
-    endRef.current?.scrollIntoView({ block: "end", behavior });
+  const scrollContainerToBottom = useCallback((behavior = "auto") => {
+    const el = containerRef.current;
+    if (!el) return;
+    const top = el.scrollHeight - el.clientHeight;
+    if (behavior === "smooth") {
+      el.scrollTo({ top, behavior: "smooth" });
+    } else {
+      el.scrollTop = top;
+    }
   }, []);
 
   useLayoutEffect(() => {
-    if (pendingUserQuery) {
-      scrollToBottom("auto");
-      return;
-    }
-    if (!stickToBottom) return;
-    scrollToBottom("auto");
-  }, [stickToBottom, scrollToBottom, chronological.length, pendingUserQuery, isLoading, liveNormalized, streamEvents]);
+    const el = containerRef.current;
+    if (!el) return;
+    if (!stickToBottomRef.current) return;
+    scrollContainerToBottom("auto");
+  }, [scrollContainerToBottom, chronological.length, pendingUserQuery, isLoading, liveNormalized, streamEvents]);
 
   const showJump = hasThreadContent && !stickToBottom;
 
@@ -203,7 +212,7 @@ export function ChatMessageThread({
         <Box sx={{ mb: 2.25 }}>
           <ChatUserBubble text={pendingUserQuery} />
           <Box sx={{ display: "flex", justifyContent: "flex-start", pl: 0.5 }}>
-            <Box sx={{ flex: 1, minWidth: 0, maxWidth: "min(880px, 100%)" }}>
+            <Box sx={{ minWidth: 0, maxWidth: "min(880px, 100%)" }}>
               {liveNormalized ? (
                 <AgentAssistantTurnShell sx={{ mt: 1 }}>
                   <AskAnswerPanel
@@ -244,8 +253,9 @@ export function ChatMessageThread({
           type="button"
           size="small"
           onClick={() => {
+            stickToBottomRef.current = true;
             setStickToBottom(true);
-            scrollToBottom("smooth");
+            scrollContainerToBottom("smooth");
           }}
           aria-label={t("chat.thread.jumpBottomAria")}
           title={t("chat.thread.jumpBottomAria")}

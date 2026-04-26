@@ -22,17 +22,17 @@ export function AgentSpecialistRunStack({ t, streamEvents }) {
       <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.42)", mb: 0.5 }}>
         {t("chat.run.specialistRunsTitle")}
       </Typography>
-      {groups.map((g) => (
-        <SpecialistRunGroup key={g.key} t={t} group={g} />
+      {groups.map((g, idx) => (
+        <SpecialistRunGroup key={g.key} t={t} group={g} panelId={`specialist-run-panel-${idx}`} />
       ))}
     </Box>
   );
 }
 
 /**
- * @param {{ t: Function, group: { key: string, from: string, to: string, isOrphan: boolean, events: unknown[] } }} props
+ * @param {{ t: Function, group: { key: string, from: string, to: string, isOrphan: boolean, events: unknown[] }, panelId: string }} props
  */
-function SpecialistRunGroup({ t, group }) {
+function SpecialistRunGroup({ t, group, panelId }) {
   const [open, setOpen] = useState(false);
   const n = group.events.length;
   const label = group.isOrphan
@@ -45,13 +45,28 @@ function SpecialistRunGroup({ t, group }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
+        aria-controls={panelId}
         aria-label={open ? t("chat.run.specialistCollapseAria") : t("chat.run.specialistExpandAria")}
-        sx={{ minHeight: 26, py: 0.25 }}
+        sx={{
+          minHeight: 26,
+          py: 0.25,
+          width: "100%",
+          maxWidth: "100%",
+          justifyContent: "flex-start",
+          "& > .MuiTypography-root": {
+            display: "block",
+            maxWidth: "100%",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            textAlign: "left",
+          },
+        }}
       >
         {open ? t("chat.run.specialistCollapse") : t("chat.run.specialistExpand")} {label}
       </CursorSmallButton>
       <Collapse in={open} timeout="auto" unmountOnExit>
-        <Box sx={{ pl: 0.5, pt: 0.5 }}>
+        <Box id={panelId} role="region" aria-label={t("chat.run.specialistRunsTitle")} sx={{ pl: 0.5, pt: 0.5 }}>
           {group.events.map((ev, idx) => {
             const line = formatStreamEventOneLine(t, ev);
             const type = ev && typeof ev === "object" ? String(ev.type || "") : "";

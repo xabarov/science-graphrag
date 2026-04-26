@@ -1,6 +1,6 @@
 # Agent Chat API v1 (research workspace)
 
-**Status:** implemented — **Wave A** (CH1+CH2+CH3) + **Wave B** (CH4 v1 in-process session: `thread_id`, `history_digest`, turn digest, SSE `context_compacted`, `session_init` in `tool_trace`).  
+**Status:** implemented — **Wave A** (CH1+CH2+CH3) + **Wave B** (CH4 v1 session: `thread_id`, `history_digest`, turn digest, SSE `context_compacted`, `session_init` in `tool_trace`) + **Wave Next** (optional **Redis** session persistence via `SCIENCE_GRAPHRAG_AGENT_SESSION_MEMORY_BACKEND`, CH5 v1 compaction metadata, sync `run_metadata.compaction` parity).  
 **HTTP:** `POST /v2/agent/query`  
 **Modes:** JSON (`Accept: application/json`) or SSE (`Accept: text/event-stream`)
 
@@ -23,7 +23,7 @@
 | `question` | string | yes | User message |
 | `workspace_id` | string \| null | no | Workspace scope for tools |
 | `max_tool_calls` | int \| null | no | 1–30; server default if omitted |
-| `thread_id` | string \| null | no | **CH4:** stable id for server-side session memory (in-memory store); client may use chat session id |
+| `thread_id` | string \| null | no | **CH4:** stable id for server-side session memory (`memory` = process-local dict, `redis` = shared store when configured); client may use chat session id |
 | `history_digest` | string \| list \| null | no | **CH4:** JSON **array** of turn objects, or that array as a JSON string; see §`history_digest` parsing |
 | `answer_class_hint` | string \| null | no | Optional hint for routing/UI; does not force model behavior |
 
@@ -40,7 +40,7 @@ All new fields are **optional** for backward compatibility; clients should treat
 | `phoenix_trace_id` | string \| null | OpenTelemetry trace id (hex) when a span is active |
 | `thread_id` | string \| null | Echo of request `thread_id` when set |
 | `session_summary_excerpt` | string \| null | **CH4:** First ≤500 chars of server `session_summary` after this turn when `thread_id` set; aligns with SSE `context_compacted.session_summary_excerpt` |
-| `run_metadata` | object | Runtime flags, model ids, etc. |
+| `run_metadata` | object | Runtime flags, model ids, etc.; when `thread_id` is set, may include **`compaction`** (CH5 v1: `kind`, `kinds`, `trigger`, `digest_count`, `boundary`) and **`session_digest_count`** |
 | `answer_class` | string | One of `inventory`, `fact_lookup`, `grounded_explanation`, `relation_tracing`, `quote_extraction`, `ideation`, `bibliography_export`, `synthesis` |
 | `evidence_summary` | string \| null | Short human-readable evidence summary |
 | `warnings` | array of string | e.g. `weak_evidence`, `no_workspace`, `history_digest_invalid` |
@@ -57,12 +57,17 @@ Each SSE `data:` line is a JSON object with a `type` field.
 | `type` | When | Payload |
 |--------|------|---------|
 | `intent_classified` | Start of run | `answer_class`, `source` (`heuristic` \| `hint`) |
-| `specialist_selected` | After supervisor routing | `from`, `to`, optional `budget_left` |
+| `specialist_selected` | After supervisor routing | `from`, `to`, optional `budget_left`, optional `reason` |
+| `subagent_started` | Immediately after `specialist_selected` | `subagent_id` (typically specialist id), optional `from`, optional `summary` (short, product-safe) |
+| `subagent_progress` | Optional, after `tool_call` while a subagent is active | `subagent_id`, `step`, `tool`, `summary` |
+| `subagent_finished` | When leaving a subagent (next routing or synthesis) | `subagent_id` |
 | `tool_search_result` | After rule shortlist (CH3) | `specialist`, `tools`, `reason`, `skipped` |
 | `tool_call` | LLM tool call | `step`, `tool`, `args_summary` |
 | `tool_result` | Tool return | `step`, `tool`, `row_count`, `error` |
+| `answer_synthesis_started` | After graph streaming completes, before `evidence_ready` / compaction | empty payload beyond `type` |
 | `evidence_ready` | Before final | `citation_count` |
-| `context_compacted` | After turn digest update (CH4) when `thread_id` is set | `thread_id`, `session_summary_excerpt`, optional **`compaction`** object: `{ "kind": "turn_digest", "trigger": "post_answer" \| "post_answer_degraded_stream" }` (CH5 foundation: `post_answer_degraded_stream` when the graph stream did not yield a final `values` chunk) |
+| `answer_synthesis_finished` | Immediately before `final_answer` | empty payload beyond `type` |
+| `context_compacted` | After turn digest update (CH4) when `thread_id` is set | `thread_id`, `session_summary_excerpt`, **`compaction`**: `{ "kind": "turn_digest", "kinds": string[], "trigger": "post_answer" \| "post_answer_degraded_stream", "digest_count": int, "boundary": { "status": "idle" \| "candidate", ... } }` — `kinds` may include `rolling_memory` (after enough digests) and `workspace_capsule` when a workspace-scoped capsule exists; `post_answer_degraded_stream` when the graph stream did not yield a final `values` chunk |
 | `final_answer` | End | Full envelope fields + legacy `answer`, `citations`, `tool_trace` (includes `session_summary_excerpt` when `thread_id` set) |
 | `warning` | Any time | `code`, `message` |
 | `error` | Fatal | `detail` |

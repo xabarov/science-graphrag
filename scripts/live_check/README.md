@@ -17,8 +17,10 @@ Reusable checks live in [`http_suite.py`](./http_suite.py). They are invoked fro
 
 Set **`AGENT_LIVE_GATE_CH4=1`** to require, on agent v2 calls that pass `thread_id`:
 
-- sync JSON: `session_init` present in `tool_trace`
+- sync JSON: `session_init` present in `tool_trace`, and `run_metadata.compaction` includes **`kinds`** (CH5 parity)
 - SSE: `context_compacted` in the stream **and** `session_init` in the final `tool_trace`
+
+Pytest: `test_live_agent_v2_gate_ch4_sync_json_with_thread` exercises the sync JSON path; `test_live_agent_v2_gate_ch4_sse` exercises SSE.
 
 Use before release or when validating multi-worker / real LLM stacks where in-process tests are insufficient.
 

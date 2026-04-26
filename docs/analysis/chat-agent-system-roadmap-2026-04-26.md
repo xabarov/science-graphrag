@@ -1,6 +1,6 @@
 # Agent chat system roadmap — 2026-04-26
 
-**Статус:** draft / living working doc (трек `CH` — **CH1–CH3: Wave A**; **CH4 + долги CH1–CH3 (частично) + observability-задел: Wave B**, 2026-04-26; см. §11)
+**Статус:** draft / living working doc (трек `CH` — **CH1–CH3: Wave A**; **CH4 + долги CH1–CH3 (частично) + observability-задел: Wave B**, 2026-04-26; **Wave Next: Agent Chat Hardening + CH5 v1**, 2026-04-26; см. §11)
 **Цель:** спроектировать продуктовую агентную систему чата для research-workspace в `science-graphrag`: multi-turn, tool-based, grounded on graph + chunks + workspace context, с понятной эволюцией от текущего `POST /v2/agent/query`.
 
 **Основано на анализе:**
@@ -746,6 +746,15 @@ Research chat быстро упирается в:
 
 **Wave B (2026-04-26):** **CH4 v1** (in-memory session по `thread_id`, `history_digest`, `build_initial_agent_state`, digest после тёрна, SSE `context_compacted`, `session_init` в `tool_trace`) + закрытие части долгов Wave A: расширенные `warnings` в `chat_envelope`, typed-блоки в `AskAnswerPanel` / `ChatTypedBlocks.jsx`, wire `threadId`/`historyDigest` из `AskPanel`/`useAskSubmit`, GOST `event`/`pages`, `filtered_work_ids` + warnings у библиографии, `qdrant_unavailable` у quote-tool, writer + `tool_search` (skip с meta), `tests/test_tool_manifest_sync.py`, расширение `test_tool_search`, smoke фикстуры в CI (`tests/eval/test_chat_wave_a_inventory.py`), `phoenix_trace_id` из активного OTel span. **Не в Wave B:** полный CH5 (capsules, full compact), CH6, CH7, отдельный `eval/chat_*` runner как у agent_tools.
 
+**Wave Next — Agent Chat Hardening + CH5 v1 (2026-04-26, реализовано):**
+1. **Аудит качества:** CH1–CH4 v1 подтверждены in-process тестами; главные риски закрывались persistence, политикой CH5 и live/eval gate — зафиксировано в этом roadmap и в спеке.
+2. **Persisted session memory:** `SCIENCE_GRAPHRAG_AGENT_SESSION_MEMORY_BACKEND=redis` + `RedisSessionMemoryBackend` (TTL, ключ с префиксом), инициализация в `science_graphrag/api/main.py` через `configure_session_memory_backend`; fallback на in-memory при недоступном Redis; Docker Compose для сервиса `api` выставляет `redis` по умолчанию.
+3. **CH5 v1 (compaction policy):** `context_compacted.compaction` расширен полями `kinds` (`turn_digest`, `rolling_memory`, `workspace_capsule` при порогах), `digest_count`, `boundary`; sync JSON — `run_metadata.compaction` + `session_digest_count` для паритета с SSE; **workspace_capsule** (детерминированный артефакт последних intent-ов) подмешивается в первый user-турн через `<workspace_capsule>` в `format_user_with_memory`.
+4. **Quality gate:** `scripts/live_check/http_suite.py` при `AGENT_LIVE_GATE_CH4=1` проверяет и sync JSON с `thread_id` (`run_metadata.compaction.kinds`); pytest `tests/live/test_agent_v2_http_optional.py` — отдельный кейс `test_live_agent_v2_gate_ch4_sync_json_with_thread`; контрактный runner `python -m eval.chat_agent`.
+5. **UI + тесты:** блок «Server session memory» в `AskAnswerPanel`, `run_metadata` в `normalizeQueryResponse`, сохранение `run_metadata` в `AskPanel` details; RTL/`vitest` для `AskAnswerPanel` и `useAskSubmit`.
+
+**Остаётся вне этого slice:** полноценный coordinator-triggered compaction, LLM-capsules, full compact boundary как отдельный продуктовый слой; CH6–CH7; отдельный тяжёлый nightly runner уровня `eval/agent_tools` для chat (сейчас — contract runner + live gate).
+
 ### Wave CH1 — Contracts and answer classes
 
 **Статус:** **DONE (Wave A, 2026-04-26)**; **дополнено Wave B (2026-04-26)** — см. комментарии ниже.
@@ -891,40 +900,40 @@ Research chat быстро упирается в:
 
 ### Wave CH4 — Multi-turn state and session memory
 
-**Статус:** **DONE (v1 in-process, Wave B, 2026-04-26)** — не полный продуктовый persistence; см. комментарии.
+**Статус:** **DONE (Wave B: in-process v1; Wave Next: optional Redis persistence, 2026-04-26)** — см. комментарии.
 
-**Сделано в репо (Wave B v1):**
+**Сделано в репо (Wave B v1 + Wave Next):**
 1. Request: `thread_id`, `history_digest` (JSON-строка или массив dict) — см. [`docs/specs/agent-chat-v1.md`](../specs/agent-chat-v1.md); парсинг в `agent_v2.py`, прокидка в `RetrievalAgent.run()` и в `build_initial_agent_state()`.
-2. `AgentState`: `thread_id`, `session_summary`, `answer_class`, `history_digest`; первое пользовательское сообщение собирается через `format_user_with_memory` (`agent/context/session_store.py`).
-3. После тёрна: `build_turn_digest` + `update_session_after_turn` (in-memory dict по `thread_id`); при SSE — событие `context_compacted`; в `collect_tool_trace` при наличии `thread_id` — шаг `session_init`.
-4. UI: `useAskSubmit` передаёт `threadId` (= `activeSessionId`) и `buildAgentHistoryDigest(history)`; уникальные id тёрнов в `askSessionState.js` (`newTurnId`). Явное поле `backendThreadId` в сессии **не** введено: договорённость «session id = thread id для API».
+2. `AgentState`: `thread_id`, `session_summary`, `answer_class`, `history_digest`; первое пользовательское сообщение собирается через `format_user_with_memory` (`agent/context/session_store.py`); **Wave Next:** при наличии capsule в store — префикс `<workspace_capsule>` (см. `session_backend` / `graph/state.py`).
+3. После тёрна: `build_turn_digest` + `update_session_after_turn` через `SessionMemoryBackend` (**Wave B:** in-process по умолчанию; **Wave Next:** опционально **Redis** с TTL, `configure_session_memory_backend` в `api/main.py`); при SSE — событие `context_compacted`; в `collect_tool_trace` при наличии `thread_id` — шаг `session_init`.
+4. UI: `useAskSubmit` передаёт `threadId` (= `activeSessionId`) и `buildAgentHistoryDigest(history)`; уникальные id тёрнов в `askSessionState.js` (`newTurnId`). Явное поле `backendThreadId` в сессии **не** введено: договорённость «session id = thread id для API». **Wave Next:** блок server session memory в `AskAnswerPanel`, `run_metadata` в `queryModel` / `AskPanel` details; тесты `useAskSubmit`, `ChatMessageThread` (empty state), расширение `AskAnswerPanel` / `researchApi`.
 
-**Основные файлы:** `science_graphrag/agent/graph/state.py`, `science_graphrag/agent/context/*`, `science_graphrag/agent/runtime.py`, `science_graphrag/api/agent_v2.py`, `ui/src/components/work/useAskSubmit.js`, `ui/src/components/work/askSessionState.js`, `ui/src/components/work/AskPanel.jsx`.
+**Основные файлы:** `science_graphrag/agent/graph/state.py`, `science_graphrag/agent/context/*`, `science_graphrag/agent/runtime.py`, `science_graphrag/api/agent_v2.py`, `science_graphrag/api/main.py`, `ui/src/components/work/useAskSubmit.js`, `ui/src/components/work/askSessionState.js`, `ui/src/components/work/AskPanel.jsx`, `ui/src/components/work/AskAnswerPanel.jsx`, `ui/src/services/research/queryModel.js`.
 
-**Тесты:** `tests/test_context_session.py`, правки `tests/test_api_agent_v2_stream_parity.py` (полный state).
+**Тесты:** `tests/test_context_session.py`, `tests/test_session_redis_backend.py` (опционально при Redis), правки `tests/test_api_agent_v2_stream_parity.py`, `tests/test_api_agent_v2_json_thread.py`, `tests/live/test_agent_v2_http_optional.py` (sync CH4 gate), `eval/chat_agent` (`python -m eval.chat_agent`).
 
-**Осталось (не CH4 v1):**
-- Persist session store (Redis/DB), отдельные regression e2e на multi-turn continuity.
-- «Rolling memory» как отдельный артефакт от digest — см. CH5.
+**Осталось (после Wave Next):**
+- Регрессионные e2e multi-turn против **реального** LangGraph+LLM (сейчас сильный слой — in-process + live gate).
+- Альтернативный backend session store (Postgres) при необходимости операционной политики.
 
 **Acceptance (Wave B):**
 1. Follow-up в том же `thread_id` получает префикс `<session_memory>` из серверного store (клиент шлёт тот же id сессии).
 2. Digest — компактный JSON, не сырые tool outputs.
 3. Базовые unit-тесты на store/digest есть; полный e2e multi-turn — впереди.
 
-**Wave C — Chat hardening (post–Wave B, CH5 foundation prep):** синхронизация [`docs/specs/agent-chat-v1.md`](../specs/agent-chat-v1.md) со статусом Wave B; единый контракт `warnings` (в т.ч. библиография) на top-level + в `bibliography`; **частично сделано:** явная политика `history_digest` → `warnings` / SSE `warning` с кодом `history_digest_invalid`; JSON-паритет с SSE по post-turn памяти через поле `session_summary_excerpt` в sync-ответе и в `final_answer`; нормализация входа для rule-based `tool_search` (без шума от `<session_memory>` / digest XML); расширенный regression: `session_init`, `context_compacted`, follow-up в том же `thread_id`, rich envelope parity JSON↔SSE; UI: `evidence_summary`, i18n warnings, SSE `context_compacted` / `warning` / `tool_search_result`, опционально `answerClassHint`; split `workspace_paper_tools.py` по backlog; optional live gate `scripts/live_check/agent_v2_http.py`. **По-прежнему не в этом slice:** persist store, полный CH5 capsules/boundary, CH6–CH7.
+**Wave C — Chat hardening (post–Wave B, CH5 foundation prep):** синхронизация [`docs/specs/agent-chat-v1.md`](../specs/agent-chat-v1.md) со статусом Wave B; единый контракт `warnings` (в т.ч. библиография) на top-level + в `bibliography`; **частично сделано:** явная политика `history_digest` → `warnings` / SSE `warning` с кодом `history_digest_invalid`; JSON-паритет с SSE по post-turn памяти через поле `session_summary_excerpt` в sync-ответе и в `final_answer`; нормализация входа для rule-based `tool_search` (без шума от `<session_memory>` / digest XML); расширенный regression: `session_init`, `context_compacted`, follow-up в том же `thread_id`, rich envelope parity JSON↔SSE; UI: `evidence_summary`, i18n warnings, SSE `context_compacted` / `warning` / `tool_search_result`, опционально `answerClassHint`; split `workspace_paper_tools.py` по backlog; optional live gate `scripts/live_check/agent_v2_http.py`. **Wave Next дополнил:** optional Redis session store, расширенный `compaction` в SSE/sync, UI session memory block, live gate для sync JSON + `run_metadata.compaction`. **По-прежнему не в этом slice:** полный CH5 (LLM/capsules из стора, boundary audit), CH6–CH7.
 
 ### Wave CH5 — Multi-level context compression
 
-**Комментарий (пересечение с Wave B):** пункт **«turn_digest»** частично закрыт в CH4 Wave B (детерминированный digest после тёрна + in-memory rolling `session_summary`). Полный стек CH5 (capsules, full compact boundary, coordinator-triggered compaction, eval `chat_context_compaction_v1`) — **ещё не сделан**.
+**Комментарий (Wave Next v1):** **turn_digest** + rolling summary остаются базой; добавлены **политика `kinds` / `digest_count` / `boundary` в SSE и sync `run_metadata`**, детерминированный **workspace_capsule** в промпте, расширенные smoke/fixtures (`tests/eval/test_chat_context_compaction_smoke.py`) и runner `python -m eval.chat_agent`. **Ещё не сделано:** topic/paper capsules с обращением к сторам, coordinator-triggered compaction, full compact boundary с отдельным audit trail, тяжёлый eval runner на траектории LLM.
 
 **Goal:** добавить обязательный compact stack.
 
-**Сделать:**
-1. `turn_digest` (базовая версия уже в CH4 Wave B — доработать под CH5: триггеры, trace, eval)
-2. `rolling_session_memory`
-3. `workspace/paper/topic capsules`
-4. `full compact boundary` для длинных диалогов
+**Сделать (остаток после Wave Next v1):**
+1. ~~`turn_digest` + триггеры / eval smoke / sync metadata~~ **частично закрыто Wave Next** (см. комментарий выше); дальше — coordinator-triggered digest и артефакты в trace/debug_events по отдельному дизайну.
+2. ~~`rolling_session_memory` как отдельный слой в `compaction.kinds`~~ **минимально закрыто Wave Next** (`rolling_memory` в `kinds` по порогу digest count); расширение семантики — позже.
+3. **workspace/paper/topic capsules** из стора / LLM — **не** сделано (сейчас только детерминированный workspace capsule из intent-ов).
+4. **`full compact boundary`** с audit trail — **не** сделано (есть только `boundary.status: candidate` при заполнении окна digest).
 
 **Основные файлы:**
 1. `science_graphrag/agent/context/` (создан Wave B — расширять)
@@ -1114,13 +1123,13 @@ Research chat быстро упирается в:
 
 **Обновление Wave B (2026-04-26):**
 1. **tool_search:** остаётся **rule-based v1**; LLM/hybrid — отложено (CH9+ / отдельное решение).
-2. **Контракт thread-aware:** канон — **`thread_id` + опциональный `history_digest`** (клиентский компакт последних тёрнов) + серверный **`session_summary`** из in-memory store; полная history по-прежнему не шлётся целиком.
+2. **Контракт thread-aware:** канон — **`thread_id` + опциональный `history_digest`** (клиентский компакт последних тёрнов) + серверный **`session_summary`** из backend store (**Wave B:** in-process; **Wave Next:** опционально Redis при `SCIENCE_GRAPHRAG_AGENT_SESSION_MEMORY_BACKEND=redis`); полная history по-прежнему не шлётся целиком.
 3. **Bibliography:** по-прежнему **детерминированный** GOST + опциональные поля карточки; LLM-fallback не вводился.
 4. **Typed payloads:** в UI и envelope используются **`inventory`, `quote_candidates`, `bibliography`**; **`relation_trace`** в envelope пока не заполняется.
 
 ### Can wait until CH4+
 
-1. Хранить ли `rolling_session_memory` только в памяти/сессии или persist в backend store? **→ Wave B: только in-memory процесса; persist — открыто.**
+1. Хранить ли `rolling_session_memory` только в памяти/сессии или persist в backend store? **→ Wave Next: Redis persistence опционально; по умолчанию локально — `memory`.** Postgres и прочие backend — открыто при продуктовых требованиях.
 2. Насколько глубоко graph specialist должен поддерживать path explanation already in v1?
 3. Стоит ли ideation specialist запускать как side-agent/fork, чтобы не загрязнять основной reasoning loop?
 4. Нужен ли отдельный "reader grounding mode" для вопросов, жёстко ограниченных одной статьёй?
@@ -1134,7 +1143,7 @@ Research chat быстро упирается в:
 1. ~~spec + answer classes;~~ **сделано (Wave A / CH1)**; ~~warnings + typed UI в продукте~~ **частично догнано Wave B**
 2. ~~tool taxonomy;~~ **сделано (Wave A / CH2)**; ~~structured errors / bib warnings / GOST event+pages~~ **Wave B (частично)**
 3. ~~tool manifest/tool search;~~ **сделано (Wave A / CH3)**; ~~writer shortlist + manifest sync test~~ **Wave B**
-4. ~~multi-turn + session memory (v1);~~ **сделано (Wave B / CH4 v1 in-process)** — persist и e2e regression — дальше
-5. compact stack (полный CH5). — **следующий крупный шаг (CH5)** — digest/summary v1 уже задел под это
+4. ~~multi-turn + session memory (v1);~~ **сделано (Wave B / CH4 v1 in-process)**; ~~optional Redis persistence~~ **сделано (Wave Next)** — e2e против реального LLM без моков — дальше
+5. ~~CH5 compaction policy v1 (kinds, capsule, boundary hints)~~ **сделано (Wave Next)**; полный CH5 (LLM capsules, boundary audit, coordinator triggers) — **следующий крупный шаг**
 
 Это даст работающий research chat evolution path, сохраняя совместимость с уже существующими `LangGraph`, `SSE`, `tool_trace` и текущим UI чата.

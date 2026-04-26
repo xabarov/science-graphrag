@@ -448,6 +448,7 @@ def config_check_cmd(
     _line("neo4j_uri", str(s.neo4j_uri))
     _line("qdrant_url", str(s.qdrant_url))
     _line("redis_url", _mask_url(s.redis_url))
+    _line("agent_session_memory_backend", str(s.agent_session_memory_backend))
     skip = os.getenv("SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV", "")
     _line("SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV", skip or "(unset)")
     _line("extraction_llm_enabled", str(bool(s.extraction_llm_enabled)))
