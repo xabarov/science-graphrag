@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from science_graphrag.agent.context.post_turn import apply_turn_digest_to_thread
+from science_graphrag.agent.context.session_backend import set_session_memory_backend
 from science_graphrag.agent.context.session_store import (
     clear_session_store_for_tests,
     get_session_for_thread,
@@ -88,3 +91,35 @@ def test_apply_turn_digest_no_thread_returns_empty() -> None:
         )
         == ""
     )
+
+
+class _RecordingBackend:
+    """Minimal ``SessionMemoryBackend`` for wiring tests."""
+
+    def __init__(self) -> None:
+        self.turns: list[tuple[str, dict[str, Any]]] = []
+
+    def get_session_copy(self, _thread_id: str) -> dict[str, Any]:
+        return {"digests": [], "session_summary": ""}
+
+    def update_after_turn(self, thread_id: str, *, turn_digest: dict[str, Any]) -> str:
+        self.turns.append((thread_id, dict(turn_digest)))
+        return "ok"
+
+    def clear_all(self) -> None:
+        self.turns.clear()
+
+
+def test_set_session_memory_backend_custom_protocol() -> None:
+    rec = _RecordingBackend()
+    set_session_memory_backend(rec)  # type: ignore[arg-type]
+    try:
+        update_session_after_turn(
+            "tid_custom",
+            turn_digest={"user_intent": "u", "answer_excerpt": "a"},
+        )
+        assert len(rec.turns) == 1
+        assert rec.turns[0][0] == "tid_custom"
+    finally:
+        set_session_memory_backend(None)
+        clear_session_store_for_tests()

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
@@ -14,7 +14,13 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 
 import { CopyIdButton, CursorIconAction } from "../../components/common/index.js";
+import {
+  ingestProductPhaseKey,
+  ingestStageIdFromRow,
+  pickActiveIngestStage,
+} from "../../components/ingestion/ingestStripModel.js";
 import WorkIdGlossaryHint from "../../components/layout/WorkIdGlossaryHint.jsx";
+import { ShimmerLabel } from "../../components/work/ShimmerLabel.jsx";
 import { workChatUrl, workGraphUrl } from "./workspacePageUrls.js";
 import WorkspaceIngestMenu from "./WorkspaceIngestMenu.jsx";
 
@@ -96,6 +102,19 @@ export default function WorkspaceContextStrip({ t, vm }) {
       : null;
 
   const progressValue = batchPct != null ? batchPct : singlePct;
+
+  const ingestStrip = useMemo(() => {
+    if (!hasWs || !ingestBusy) return null;
+    const job = vm.ingestJob && typeof vm.ingestJob === "object" ? vm.ingestJob : null;
+    const stages = job && Array.isArray(job.stages) ? job.stages : [];
+    const active = pickActiveIngestStage(stages);
+    const stageId = ingestStageIdFromRow(active);
+    const phaseKey = ingestProductPhaseKey(stageId);
+    const statusLower = job ? String(job.status || "").toLowerCase() : "";
+    const failed = statusLower === "failed";
+    const starting = Boolean(vm.uploadBusy && !job);
+    return { job, stageId, phaseKey, failed, starting };
+  }, [hasWs, ingestBusy, vm.ingestJob, vm.uploadBusy]);
 
   return (
     <Box
@@ -218,29 +237,54 @@ export default function WorkspaceContextStrip({ t, vm }) {
         ) : null}
 
         {hasWs && ingestBusy ? (
-          <Box sx={{ width: { xs: "100%", md: 112 }, flexShrink: 0 }}>
+          <Box sx={{ width: { xs: "100%", md: 260 }, flexShrink: 0, minWidth: 0 }}>
             <Tooltip title={t("workspace.strip.ingestProgressTip")}>
-              {progressValue != null ? (
+              <Stack spacing={0.35}>
+                <Stack direction="row" alignItems="center" justifyContent="space-between" gap={0.5}>
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                    {ingestStrip?.failed ? (
+                      <Typography sx={{ fontSize: "0.72rem", color: "rgba(239,68,68,0.88)", fontWeight: 500 }} noWrap>
+                        {t("workspace.strip.ingestFailed")}
+                      </Typography>
+                    ) : ingestStrip?.starting ? (
+                      <ShimmerLabel component="span" sx={{ fontSize: "0.72rem", fontWeight: 500 }}>
+                        {t("workspace.strip.ingestStarting")}
+                      </ShimmerLabel>
+                    ) : (
+                      <ShimmerLabel component="span" sx={{ fontSize: "0.72rem", fontWeight: 500 }}>
+                        {t(`workspace.strip.ingestPhase.${ingestStrip?.phaseKey || "preparing_document"}`)}
+                      </ShimmerLabel>
+                    )}
+                  </Box>
+                  {progressValue != null ? (
+                    <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.42)", flexShrink: 0 }}>
+                      {`${Math.round(progressValue)}%`}
+                    </Typography>
+                  ) : null}
+                </Stack>
+                {ingestStrip?.stageId && !ingestStrip.starting && !ingestStrip.failed ? (
+                  <Typography sx={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.38)" }} noWrap title={ingestStrip.stageId}>
+                    {ingestStrip.stageId.replace(/_/g, " ")}
+                  </Typography>
+                ) : ingestStrip?.job?.message && !ingestStrip.starting && !ingestStrip.failed ? (
+                  <Typography sx={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.38)" }} noWrap>
+                    {String(ingestStrip.job.message).slice(0, 72)}
+                    {String(ingestStrip.job.message).length > 72 ? "…" : ""}
+                  </Typography>
+                ) : null}
                 <LinearProgress
-                  variant="determinate"
-                  value={progressValue}
+                  variant={progressValue != null ? "determinate" : "indeterminate"}
+                  value={progressValue != null ? progressValue : undefined}
                   sx={{
                     height: 4,
                     borderRadius: 2,
                     backgroundColor: "rgba(255,255,255,0.06)",
-                    "& .MuiLinearProgress-bar": { backgroundColor: "rgba(99,102,241,0.8)" },
+                    "& .MuiLinearProgress-bar": {
+                      backgroundColor: ingestStrip?.failed ? "rgba(239,68,68,0.55)" : "rgba(99,102,241,0.75)",
+                    },
                   }}
                 />
-              ) : (
-                <LinearProgress
-                  sx={{
-                    height: 4,
-                    borderRadius: 2,
-                    backgroundColor: "rgba(255,255,255,0.06)",
-                    "& .MuiLinearProgress-bar": { backgroundColor: "rgba(99,102,241,0.65)" },
-                  }}
-                />
-              )}
+              </Stack>
             </Tooltip>
           </Box>
         ) : null}

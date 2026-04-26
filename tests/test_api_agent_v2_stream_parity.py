@@ -149,6 +149,9 @@ def test_sse_final_tool_trace_matches_collect_tool_trace(monkeypatch) -> None:
     assert "some_work_ids_filtered" in (fa.get("warnings") or [])
     bib = fa.get("bibliography") or {}
     assert bib.get("filtered_work_ids") == ["orphan-id"]
+    rm = fa.get("run_metadata") or {}
+    assert "agent_enabled" in rm
+    assert "extraction_llm_model" in rm
 
 
 def test_sse_context_compacted_and_session_init_with_thread(monkeypatch) -> None:
@@ -190,9 +193,119 @@ def test_sse_context_compacted_and_session_init_with_thread(monkeypatch) -> None
 
     types = [e.get("type") for e in events]
     assert "context_compacted" in types
+    compact = next(e for e in events if e.get("type") == "context_compacted")
+    assert compact.get("compaction", {}).get("kind") == "turn_digest"
+    assert compact.get("compaction", {}).get("trigger") == "post_answer"
     finals = [e for e in events if e.get("type") == "final_answer"]
     assert len(finals) == 1
     trace = finals[0].get("tool_trace") or []
     tools = [t.get("tool") for t in trace if isinstance(t, dict)]
     assert "session_init" in tools
     assert finals[0].get("thread_id") == "thr_sse_parity"
+
+
+def test_sse_history_digest_invalid_warning_and_final(monkeypatch) -> None:
+    """SSE emits warning after intent_classified and history_digest_invalid on final_answer."""
+    from science_graphrag.api import agent_v2 as agent_v2_api
+
+    try:
+        clear_session_store_for_tests()
+        monkeypatch.setattr(agent_v2_api, "build_retrieval_graph", lambda *_a, **_k: _FakeGraph())
+        client = TestClient(_app())
+        client.app.dependency_overrides[get_settings] = lambda: Settings(agent_enabled=True)
+        client.app.dependency_overrides[get_stores] = lambda: type(
+            "_S",
+            (),
+            {
+                "neo4j": None,
+                "qdrant_chunks": None,
+                "qdrant_works": None,
+                "qdrant_claims": None,
+                "blob": None,
+            },
+        )()
+        events = []
+        with client.stream(
+            "POST",
+            "/v2/agent/query",
+            json={
+                "question": "q",
+                "thread_id": "thr_digest_warn",
+                "history_digest": "{not-json",
+            },
+            headers={"Accept": "text/event-stream"},
+        ) as resp:
+            assert resp.status_code == 200
+            for line in resp.iter_lines():
+                if isinstance(line, bytes):
+                    line = line.decode("utf-8")
+                if line.startswith("data:"):
+                    events.append(json.loads(line[5:].strip()))
+    finally:
+        client.app.dependency_overrides.pop(get_settings, None)
+        client.app.dependency_overrides.pop(get_stores, None)
+        clear_session_store_for_tests()
+
+    warns = [e for e in events if e.get("type") == "warning"]
+    assert any(w.get("code") == "history_digest_invalid" for w in warns)
+    finals = [e for e in events if e.get("type") == "final_answer"]
+    assert len(finals) == 1
+    assert "history_digest_invalid" in (finals[0].get("warnings") or [])
+
+
+class _FakeGraphUpdatesOnly:
+    """Stream updates only (no ``values`` chunk) — exercises degraded compaction trigger."""
+
+    async def astream(self, state, config=None, **_kwargs):  # noqa: ARG002
+        assert isinstance(state, dict)
+        yield (
+            "updates",
+            {"n": {"messages": [AIMessage(content="answer without values chunk")]}},
+        )
+
+
+def test_sse_context_compacted_degraded_trigger_without_values(monkeypatch) -> None:
+    """``context_compacted`` uses degraded trigger when graph never yields ``values``."""
+    from science_graphrag.api import agent_v2 as agent_v2_api
+
+    try:
+        clear_session_store_for_tests()
+        monkeypatch.setattr(
+            agent_v2_api, "build_retrieval_graph", lambda *_a, **_k: _FakeGraphUpdatesOnly()
+        )
+        client = TestClient(_app())
+        client.app.dependency_overrides[get_settings] = lambda: Settings(agent_enabled=True)
+        client.app.dependency_overrides[get_stores] = lambda: type(
+            "_S",
+            (),
+            {
+                "neo4j": None,
+                "qdrant_chunks": None,
+                "qdrant_works": None,
+                "qdrant_claims": None,
+                "blob": None,
+            },
+        )()
+        events = []
+        with client.stream(
+            "POST",
+            "/v2/agent/query",
+            json={"question": "q", "thread_id": "thr_no_values"},
+            headers={"Accept": "text/event-stream"},
+        ) as resp:
+            assert resp.status_code == 200
+            for line in resp.iter_lines():
+                if isinstance(line, bytes):
+                    line = line.decode("utf-8")
+                if line.startswith("data:"):
+                    events.append(json.loads(line[5:].strip()))
+    finally:
+        client.app.dependency_overrides.pop(get_settings, None)
+        client.app.dependency_overrides.pop(get_stores, None)
+        clear_session_store_for_tests()
+
+    compact = next((e for e in events if e.get("type") == "context_compacted"), {})
+    assert compact.get("compaction", {}).get("trigger") == "post_answer_degraded_stream"
+    finals = [e for e in events if e.get("type") == "final_answer"]
+    assert len(finals) == 1
+    assert finals[0].get("answer") == "answer without values chunk"

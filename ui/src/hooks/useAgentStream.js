@@ -1,33 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 
 import { buildApiUrl } from "../services/apiClient.js";
-import { parseAgentSseJson } from "../services/agent/agentStreamParse.js";
-
-function flushSseBuffer(buffer, onEvent, onFinalAnswer, onError, onParseError) {
-  const frames = buffer.split("\n\n");
-  const nextBuffer = frames.pop() ?? "";
-
-  for (const frame of frames) {
-    const lines = frame.split("\n");
-    const dataLines = lines
-      .filter((line) => line.startsWith("data:"))
-      .map((line) => line.slice(5).trim())
-      .filter(Boolean);
-    if (dataLines.length === 0) continue;
-
-    const raw = dataLines.join("\n");
-    const event = parseAgentSseJson(raw, { onParseError });
-    if (!event || typeof event !== "object") continue;
-    onEvent?.(event);
-    if (event?.type === "final_answer") {
-      onFinalAnswer?.(event);
-    } else if (event?.type === "error") {
-      onError?.(event?.detail || event?.error || "Stream error");
-    }
-  }
-
-  return nextBuffer;
-}
+import { flushAgentSseEventBuffer } from "../services/agent/agentStreamParse.js";
 
 export function useAgentStream({
   workspaceId = "",
@@ -78,8 +52,15 @@ export function useAgentStream({
 
         const contentType = String(response.headers?.get?.("content-type") || "");
         if (!contentType.includes("text/event-stream")) {
-          const data = await response.json();
-          onFinalAnswer?.(data);
+          const rawText = await response.text();
+          try {
+            const data = rawText ? JSON.parse(rawText) : {};
+            onFinalAnswer?.(data);
+          } catch (parseErr) {
+            onError?.(
+              `Agent response is not valid JSON: ${String(parseErr?.message || parseErr)}${rawText ? ` — ${rawText.slice(0, 200)}` : ""}`,
+            );
+          }
           return;
         }
 
@@ -100,11 +81,21 @@ export function useAgentStream({
             continue;
           }
           buffer += decoder.decode(value, { stream: true });
-          buffer = flushSseBuffer(buffer, onEvent, onFinalAnswer, onError, onMalformedFrame);
+          buffer = flushAgentSseEventBuffer(buffer, {
+            onEvent,
+            onFinalAnswer,
+            onError,
+            onParseError: onMalformedFrame,
+          });
         }
 
         buffer += decoder.decode();
-        flushSseBuffer(buffer, onEvent, onFinalAnswer, onError, onMalformedFrame);
+        flushAgentSseEventBuffer(buffer, {
+          onEvent,
+          onFinalAnswer,
+          onError,
+          onParseError: onMalformedFrame,
+        });
       } catch (err) {
         if (err?.name === "AbortError") return;
         onError?.(String(err?.message || err));

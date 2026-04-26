@@ -190,6 +190,8 @@ def build_chat_envelope(
     evidence_parts: list[str] = []
     if citations:
         evidence_parts.append(f"{len(citations)} citation(s)")
+    elif (answer or "").strip():
+        evidence_parts.append("assistant reply (no citations)")
     if tool_trace:
         evidence_parts.append(f"{len(tool_trace)} trace step(s)")
     evidence_summary = ", ".join(evidence_parts) if evidence_parts else None

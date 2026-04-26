@@ -1,0 +1,9 @@
+{
+  "case_id": "chat_multi_turn_memory_v1_smoke",
+  "description": "CH4 contract anchors for multi-turn memory regression (CI-friendly, no LLM).",
+  "thread_id": "fixture_thread_smoke_1",
+  "expected_warning_codes": ["history_digest_invalid"],
+  "valid_history_digest": [
+    {"user": "What papers?", "assistant": "Two works in workspace."}
+  ]
+}

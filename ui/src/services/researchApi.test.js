@@ -119,6 +119,8 @@ describe("normalizeQueryResponse", () => {
     expect(n.graph_context.degraded).toEqual([]);
     expect(n.retrieval_trace.qdrant_collection).toBe("");
     expect(n.retrieval_trace.degraded).toEqual([]);
+    expect(n.duration_ms).toBeNull();
+    expect(n.phoenix_trace_id).toBeNull();
   });
 
   it("preserves degraded flags and trace fields", () => {
@@ -164,6 +166,11 @@ describe("normalizeQueryResponse (agent v2 envelope)", () => {
       quote_candidates: [{ quote_text: "hi", work_id: "w1" }],
       bibliography: { format: "gost", entries: ["A. B. Title"], filtered_work_ids: ["z"] },
       thread_id: "sess-1",
+      session_summary_excerpt: "Q: hi\nA: bye",
+      relation_trace: { nodes: [{ id: "n1" }] },
+      idea_suggestions: [{ title: "Hypothesis A" }],
+      duration_ms: 1234,
+      phoenix_trace_id: "abc123deadbeef",
     });
     expect(n.answer_class).toBe("inventory");
     expect(n.evidence_summary).toBe("3 citation(s)");
@@ -172,6 +179,11 @@ describe("normalizeQueryResponse (agent v2 envelope)", () => {
     expect(n.quote_candidates?.length).toBe(1);
     expect(n.bibliography?.format).toBe("gost");
     expect(n.thread_id).toBe("sess-1");
+    expect(n.session_summary_excerpt).toBe("Q: hi\nA: bye");
+    expect(n.relation_trace?.nodes?.length).toBe(1);
+    expect(n.idea_suggestions?.length).toBe(1);
+    expect(n.duration_ms).toBe(1234);
+    expect(n.phoenix_trace_id).toBe("abc123deadbeef");
   });
 });
 

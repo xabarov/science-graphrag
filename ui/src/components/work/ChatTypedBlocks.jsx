@@ -3,6 +3,15 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { CursorSmallButton } from "../common/index.js";
 
+/** Shared secondary-card chrome for structured agent answer blocks. */
+export const TYPED_BLOCK_OUTER_SX = {
+  mt: 1.5,
+  p: 1.5,
+  borderRadius: "6px",
+  border: "1px solid rgba(255,255,255,0.08)",
+  backgroundColor: "rgba(0,0,0,0.22)",
+};
+
 /**
  * @param {{ t: (key: string, vars?: Record<string, string>) => string, inventory: Record<string, unknown> | null | undefined }}
  */
@@ -14,7 +23,7 @@ export function InventoryBlock({ t, inventory }) {
 
   if (typeof wc === "number" && !papers && !matches) {
     return (
-      <Box sx={{ mt: 1.5, p: 1.5, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(0,0,0,0.2)" }}>
+      <Box sx={TYPED_BLOCK_OUTER_SX}>
         <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mb: 0.5 }}>{t("chat.typed.inventoryTitle")}</Typography>
         <Typography sx={{ fontSize: "0.8125rem" }}>{t("chat.typed.workCount", { count: String(wc) })}</Typography>
       </Box>
@@ -23,7 +32,7 @@ export function InventoryBlock({ t, inventory }) {
 
   if (papers && papers.length > 0) {
     return (
-      <Box sx={{ mt: 1.5, p: 1.5, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(0,0,0,0.2)" }}>
+      <Box sx={TYPED_BLOCK_OUTER_SX}>
         <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mb: 0.75 }}>{t("chat.typed.papersTitle")}</Typography>
         <Box component="ul" sx={{ m: 0, pl: 2, pr: 0, py: 0 }}>
           {papers.slice(0, 40).map((p, i) => {
@@ -48,7 +57,7 @@ export function InventoryBlock({ t, inventory }) {
 
   if (matches && matches.length > 0) {
     return (
-      <Box sx={{ mt: 1.5, p: 1.5, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(0,0,0,0.2)" }}>
+      <Box sx={TYPED_BLOCK_OUTER_SX}>
         <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mb: 0.75 }}>{t("chat.typed.matchesTitle")}</Typography>
         {matches.slice(0, 20).map((m, i) => (
           <Typography key={i} sx={{ fontSize: "0.75rem", mb: 0.35, color: "rgba(255,255,255,0.7)" }}>
@@ -60,7 +69,7 @@ export function InventoryBlock({ t, inventory }) {
   }
 
   return (
-    <Box sx={{ mt: 1.5, p: 1.5, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(0,0,0,0.2)" }}>
+    <Box sx={TYPED_BLOCK_OUTER_SX}>
       <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mb: 0.5 }}>{t("chat.typed.inventoryTitle")}</Typography>
       <Typography component="pre" sx={{ fontSize: "0.7rem", m: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", color: "rgba(255,255,255,0.6)" }}>
         {JSON.stringify(inventory, null, 2).slice(0, 4000)}
@@ -90,7 +99,7 @@ export function QuoteCandidatesBlock({ t, candidates }) {
               p: 1.25,
               borderRadius: "6px",
               border: "1px solid rgba(255,255,255,0.08)",
-              backgroundColor: "rgba(0,0,0,0.2)",
+              backgroundColor: "rgba(0,0,0,0.22)",
             }}
           >
             <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", mb: 0.5 }}>
@@ -133,7 +142,7 @@ export function BibliographyBlock({ t, bibliography }) {
   const bibWarnings = Array.isArray(bibliography.warnings) ? bibliography.warnings : [];
 
   return (
-    <Box sx={{ mt: 1.5, p: 1.5, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(0,0,0,0.2)" }}>
+    <Box sx={TYPED_BLOCK_OUTER_SX}>
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, mb: 0.75 }}>
         <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)" }}>{t("chat.typed.bibTitle")}</Typography>
         <CursorSmallButton type="button" onClick={onCopy}>
@@ -161,6 +170,42 @@ export function BibliographyBlock({ t, bibliography }) {
           </Box>
         ))}
       </Box>
+    </Box>
+  );
+}
+
+/**
+ * @param {{ t: (key: string, vars?: Record<string, string>) => string, relationTrace: Record<string, unknown> | null | undefined }}
+ */
+export function RelationTraceBlock({ t, relationTrace }) {
+  if (!relationTrace || typeof relationTrace !== "object") return null;
+  const keys = Object.keys(relationTrace);
+  if (keys.length === 0) return null;
+  const raw = JSON.stringify(relationTrace, null, 2);
+  return (
+    <Box sx={{ mt: 1.5, p: 1.5, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(0,0,0,0.2)" }}>
+      <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mb: 0.75 }}>{t("chat.typed.relationTraceTitle")}</Typography>
+      <Typography component="pre" sx={{ fontSize: "0.7rem", m: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", color: "rgba(255,255,255,0.65)" }}>
+        {raw.slice(0, 6000)}
+        {raw.length > 6000 ? "…" : ""}
+      </Typography>
+    </Box>
+  );
+}
+
+/**
+ * @param {{ t: (key: string, vars?: Record<string, string>) => string, suggestions: Array<Record<string, unknown>> | null | undefined }}
+ */
+export function IdeaSuggestionsBlock({ t, suggestions }) {
+  if (!Array.isArray(suggestions) || suggestions.length === 0) return null;
+  return (
+    <Box sx={{ mt: 1.5, p: 1.5, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(0,0,0,0.2)" }}>
+      <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mb: 0.75 }}>{t("chat.typed.ideaSuggestionsTitle")}</Typography>
+      {suggestions.slice(0, 12).map((row, i) => (
+        <Typography key={i} sx={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.78)", mb: 0.5, whiteSpace: "pre-wrap" }}>
+          {typeof row === "string" ? row.slice(0, 800) : JSON.stringify(row).slice(0, 800)}
+        </Typography>
+      ))}
     </Box>
   );
 }

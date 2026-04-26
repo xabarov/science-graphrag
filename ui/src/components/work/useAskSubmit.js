@@ -30,14 +30,21 @@ export function useAskSubmit({
   const abortRef = useRef(null);
   /** Last normalized payload produced by streaming agent (submit returns it after stream ends). */
   const lastStreamNormalizedRef = useRef(null);
+  /** Mirrors stream events for persistence (React state may lag one frame after stream ends). */
+  const streamEventsCaptureRef = useRef([]);
+  const toolTraceCaptureRef = useRef([]);
 
   const { stream: streamAgent, isStreaming, abort: abortStream } = useAgentStream({
     workspaceId,
     onEvent: (event) => {
+      if (event && typeof event === "object") {
+        streamEventsCaptureRef.current = [...streamEventsCaptureRef.current, event].slice(-80);
+      }
       onStreamEvent?.(event);
     },
     onFinalAnswer: (event) => {
       const trace = Array.isArray(event?.tool_trace) ? event.tool_trace : [];
+      toolTraceCaptureRef.current = trace;
       onToolTrace?.(trace);
       const citations = Array.isArray(event?.citations) ? event.citations : [];
       const normalized = normalizeQueryResponse({
@@ -59,6 +66,9 @@ export function useAskSubmit({
         idea_suggestions: event?.idea_suggestions,
         bibliography: event?.bibliography,
         thread_id: event?.thread_id,
+        session_summary_excerpt: event?.session_summary_excerpt,
+        duration_ms: event?.duration_ms,
+        phoenix_trace_id: event?.phoenix_trace_id,
       });
       lastStreamNormalizedRef.current = normalized;
       onResult?.(normalized);
@@ -76,6 +86,8 @@ export function useAskSubmit({
 
   useEffect(() => {
     lastStreamNormalizedRef.current = null;
+    streamEventsCaptureRef.current = [];
+    toolTraceCaptureRef.current = [];
   }, [workspaceId]);
 
   const submit = useCallback(
@@ -84,6 +96,8 @@ export function useAskSubmit({
 
       if (useStreamingAgent) {
         lastStreamNormalizedRef.current = null;
+        streamEventsCaptureRef.current = [];
+        toolTraceCaptureRef.current = [];
         await streamAgent({
           question: query,
           maxToolCalls: 8,
@@ -91,7 +105,13 @@ export function useAskSubmit({
           historyDigest,
           answerClassHint,
         });
-        return lastStreamNormalizedRef.current;
+        const normalized = lastStreamNormalizedRef.current;
+        if (!normalized) return null;
+        return {
+          normalized,
+          streamEvents: [...streamEventsCaptureRef.current],
+          agentToolTrace: [...toolTraceCaptureRef.current],
+        };
       }
 
       abortRef.current?.abort?.();
@@ -127,7 +147,11 @@ export function useAskSubmit({
         });
         onToolTrace?.(trace);
         onResult?.(normalized);
-        return normalized;
+        return {
+          normalized,
+          streamEvents: [],
+          agentToolTrace: trace,
+        };
       } catch (err) {
         if (err?.name === "CanceledError" || err?.name === "AbortError") {
           return null;

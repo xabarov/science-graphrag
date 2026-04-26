@@ -223,6 +223,252 @@ Use three visual tiers:
 
 This is critical; otherwise the stream UI will overpower the answer.
 
+### 6.3 Shared live-progress language for ingest
+
+The same silver shimmer language should also be used for **workspace ingest**, not only for agent chat.
+
+Today the ingest surface in `WorkspaceContextStrip.jsx` is visually reduced to a thin blue progress bar. That communicates "something is busy", but it does **not** communicate:
+
+- what phase the ingest is currently in;
+- whether the current phase is binary or has real sub-progress;
+- how much of the total path is still left;
+- why the bar may appear "stuck" during a long LLM or embedding step.
+
+The goal is to make ingest feel like a **traceable run with phases**, similar to agent chat, while keeping the compact workspace strip calm and low-noise.
+
+#### 6.3.1 Recommended compact ingest strip
+
+Replace the current ultra-thin bar with a compact status block approximately `220px` to `280px` wide.
+
+Recommended anatomy:
+
+1. **Primary live line**
+   - silver shimmer text;
+   - current high-level phase label;
+   - right-aligned overall percentage.
+
+2. **Secondary detail line**
+   - current raw stage label or short humanized summary;
+   - optional sub-progress such as `31 / 82 chunks`.
+
+3. **Thin segmented bar**
+   - phase-weighted overall progress;
+   - subdued separators between major phases;
+   - no bright colors beyond the existing muted accent.
+
+Example compact states:
+
+- `Preparing document` · `18%`
+- `Building knowledge graph` · `47%`
+- `Preparing search layer` · `78%`
+- `Finalizing` · `96%`
+
+Secondary examples:
+
+- `Extracting metadata and references`
+- `Resolving references · 18 / 24`
+- `Embedding chunks · 31 / 82`
+
+#### 6.3.2 Two-level ingest mental model
+
+The ingest pipeline already has many domain stages. The UI should not expose all of them equally at the compact level.
+
+Use two levels:
+
+1. **Product phase** for the compact strip
+2. **Raw stage** for the expanded details card
+
+Recommended product phases:
+
+1. `Preparing document`
+   - `parse_pdf`
+   - `extract_meta`
+
+2. `Building knowledge graph`
+   - `enrich_openalex`
+   - `enrich_ror`
+   - `write_graph`
+   - `resolve_references`
+
+3. `Preparing search layer`
+   - `chunk`
+   - `extract_claims`
+   - `embed`
+
+4. `Finalizing`
+   - `attach_workspace`
+
+This gives users a stable, understandable mental model while still allowing engineering-grade details one click deeper.
+
+#### 6.3.3 Stage-by-stage progress semantics
+
+Not every stage should expose a fake percentage. The UI should distinguish between:
+
+1. **Binary stages**
+   - best represented as `queued / running / completed / failed`;
+   - examples: `enrich_openalex`, `enrich_ror`, `attach_workspace`.
+
+2. **Step-based stages**
+   - better represented through named substeps rather than arbitrary percentages;
+   - examples: `extract_meta`, `write_graph`, `chunk`.
+
+3. **True measurable stages**
+   - should expose real counters when available;
+   - examples:
+     - `parse_pdf` via `processed_pages / total_pages`
+     - `resolve_references` via `linked / total`
+     - `extract_claims` via `processed_chunks / total_chunks` or batch counts
+     - `embed` via `embedded_items / total_items`
+
+This distinction is important. A beautiful but dishonest progress indicator will reduce trust.
+
+#### 6.3.4 Relative time cost across the full path
+
+The backend already computes ingest progress using **historical expected stage duration**, not just number of completed stages. That is the correct direction and should remain the canonical source for the overall percentage.
+
+However, the current weighted-progress behavior treats every running stage as a flat **half-complete stage**. This explains why the blue bar can feel static during a long step and then jump abruptly near the end.
+
+Recommended interpretation for UX:
+
+1. Keep the current weighted overall progress as the fallback.
+2. Upgrade the running-stage contribution from fixed `0.5 * stage_weight` to:
+   - `stage_weight * active_fraction`
+3. Only show sub-progress where `active_fraction` is grounded in real counters.
+
+Approximate relative cost profile to design around:
+
+1. **Low-cost stages**
+   - `enrich_openalex`
+   - `enrich_ror`
+   - `attach_workspace`
+
+2. **Medium-cost stages**
+   - `parse_pdf` for simple text inputs
+   - `resolve_references`
+   - `chunk`
+
+3. **High-cost stages**
+   - `extract_meta`
+   - `write_graph`
+   - `extract_claims`
+   - `embed`
+
+The UI should therefore visually emphasize progress *within* the high-cost stages, because that is where users currently perceive "nothing is happening".
+
+#### 6.3.5 Expanded ingest details card
+
+When the user opens the ingest popover or progress card, show:
+
+1. current product phase;
+2. current raw stage;
+3. overall weighted percentage;
+4. stage list with completed/running/failed states;
+5. stage metrics in humanized form;
+6. logs and warnings below the structured view.
+
+Each raw stage row should support:
+
+- human label;
+- machine stage id in secondary text only if useful;
+- status chip or symbol;
+- optional elapsed / expected time;
+- optional metrics summary.
+
+Examples of good metrics copy:
+
+- `Processed 6 / 14 PDF pages`
+- `Found 24 references`
+- `Linked 18 / 24 references`
+- `Prepared 82 chunks`
+- `Embedded 31 / 82 chunks`
+- `Extracted 12 claims`
+
+#### 6.3.6 Shimmer alignment between chat and ingest
+
+The shimmer pattern should be shared between:
+
+- agent chat live status;
+- subagent active labels;
+- ingest compact live strip;
+- ingest running phase label.
+
+It should *not* be used for:
+
+- large answer paragraphs;
+- completed states;
+- long logs;
+- multiple simultaneous lines in the same compact card.
+
+This keeps a consistent product language: shimmer means **active trustworthy work is happening now**.
+
+The existing `osint-gr` `ShimmerText.jsx` pattern is a good visual base and should be adapted rather than copied literally.
+
+#### 6.3.7 Backend additions that would unlock a much better UI
+
+The current ingest event stream already gives the frontend:
+
+- `snapshot`
+- `stage_started`
+- `stage_finished`
+- `stage_failed`
+- `batch_progress`
+- `terminal`
+
+That is enough for a first improved card, but not enough for a truly honest live percentage inside long stages.
+
+Recommended additions:
+
+1. `stage_progress`
+   - incremental updates while a stage is running;
+   - payload should include `current`, `total`, `unit`, optional message, and metrics.
+
+2. `active_fraction`
+   - explicit `0..1` fraction for the current stage when measurable.
+
+3. `phase`
+   - canonical product phase name in the payload or derivable through a shared mapping.
+
+4. `heartbeat_message`
+   - short product-safe status line for long silent operations.
+
+Example payload:
+
+```json
+{
+  "job_id": "abc",
+  "stage": "embed",
+  "phase": "preparing_search_layer",
+  "status": "running",
+  "current": 31,
+  "total": 82,
+  "unit": "chunks",
+  "active_fraction": 0.378,
+  "message": "Embedding chunks",
+  "metrics": {
+    "embedded_chunks": 31,
+    "total_chunks": 82
+  }
+}
+```
+
+#### 6.3.8 Recommended delivery order for ingest UX
+
+This should be delivered in two waves:
+
+1. **Ingest UI-1: frontend-only polish**
+   - widen the compact ingest area;
+   - replace the lone blue bar with shimmer + phase + percent;
+   - humanize stage names and metrics;
+   - keep current weighted percentage as the fallback.
+
+2. **Ingest UI-2: truthful live sub-progress**
+   - add `stage_progress`;
+   - add measurable `active_fraction`;
+   - compute weighted overall progress using real running-stage completion;
+   - expose phase-aware counters in the expanded card.
+
+This sequence gives an immediate product win without blocking on backend refactors, while still aiming for a genuinely trustworthy progress model.
+
 ## 7. Event-to-UI mapping
 
 The current SSE vocabulary is already sufficient for a first strong UI pass.

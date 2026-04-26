@@ -87,6 +87,12 @@ export default {
   "workspace.strip.statsExternal": "{{count}} ext. cites",
   "workspace.strip.statsExternalTip": "External citations",
   "workspace.strip.ingestProgressTip": "Ingest in progress",
+  "workspace.strip.ingestStarting": "Starting upload…",
+  "workspace.strip.ingestFailed": "Ingest failed",
+  "workspace.strip.ingestPhase.preparing_document": "Preparing document",
+  "workspace.strip.ingestPhase.building_graph": "Building knowledge graph",
+  "workspace.strip.ingestPhase.preparing_search": "Preparing search layer",
+  "workspace.strip.ingestPhase.finalizing": "Finalizing",
 
   "workspace.side.graphTitle": "Graph snapshot",
   "workspace.side.graphStatsLine":

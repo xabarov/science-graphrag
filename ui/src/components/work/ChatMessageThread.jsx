@@ -2,11 +2,13 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
-import CircularProgress from "@mui/material/CircularProgress";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 
 import { AskAnswerPanel } from "./AskAnswerPanel.jsx";
+import { AgentAssistantTurnShell } from "./AgentAssistantTurnShell.jsx";
+import { AgentRunHeader } from "./AgentRunHeader.jsx";
+import { AgentLiveStatus } from "./AgentLiveStatus.jsx";
 
 const SCROLL_BOTTOM_THRESHOLD_PX = 80;
 
@@ -32,7 +34,13 @@ function ChatUserBubble({ text }) {
 /**
  * @param {{
  *   t: (key: string, vars?: Record<string, string>) => string,
- *   history: Array<{ id: string, query: string, workId?: string, answer?: string, details?: Record<string, unknown> | null }>,
+ *   history: Array<{
+ *     id: string,
+ *     query: string,
+ *     workId?: string,
+ *     answer?: string,
+ *     details?: Record<string, unknown> | null,
+ *   }>,
  *   pendingUserQuery: string,
  *   isLoading: boolean,
  *   streamEvents: unknown[],
@@ -161,24 +169,30 @@ export function ChatMessageThread({
           <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
             <Box sx={{ width: "100%", maxWidth: "min(880px, 100%)" }}>
               {entry.details && typeof entry.details === "object" ? (
-                <AskAnswerPanel
-                  t={t}
-                  normalized={entry.details}
-                  locked={locked}
-                  inWorkspace={inWorkspace}
-                  workId={entry.workId || workId}
-                  workspaceWorkId={workspaceWorkId}
-                  retrievalMode="agent"
-                  agentToolTrace={[]}
-                  retrievalJsonOpen={false}
-                  onToggleRetrievalJson={() => {}}
-                  streamEvents={[]}
-                  isStreaming={false}
-                />
+                <AgentAssistantTurnShell sx={{ mt: 1 }}>
+                  <AskAnswerPanel
+                    t={t}
+                    normalized={entry.details}
+                    locked={locked}
+                    inWorkspace={inWorkspace}
+                    workId={entry.workId || workId}
+                    workspaceWorkId={workspaceWorkId}
+                    retrievalMode="agent"
+                    agentToolTrace={
+                      Array.isArray(entry.details?.agent_tool_trace) ? entry.details.agent_tool_trace : []
+                    }
+                    retrievalJsonOpen={false}
+                    onToggleRetrievalJson={() => {}}
+                    streamEvents={
+                      Array.isArray(entry.details?.stream_events) ? entry.details.stream_events : []
+                    }
+                    isRunActive={false}
+                  />
+                </AgentAssistantTurnShell>
               ) : (
-                <Box sx={{ p: 1.5, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "#1a1a1a" }}>
+                <AgentAssistantTurnShell sx={{ mt: 1 }}>
                   <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.82)", whiteSpace: "pre-wrap" }}>{entry.answer || "—"}</Typography>
-                </Box>
+                </AgentAssistantTurnShell>
               )}
             </Box>
           </Box>
@@ -188,26 +202,37 @@ export function ChatMessageThread({
       {pendingUserQuery ? (
         <Box sx={{ mb: 2.25 }}>
           <ChatUserBubble text={pendingUserQuery} />
-          <Box sx={{ display: "flex", justifyContent: "flex-start", alignItems: "flex-start", gap: 1.25, pl: 0.5 }}>
-            {isLoading && !liveNormalized ? <CircularProgress size={18} sx={{ color: "rgba(129,140,248,0.85)", mt: 0.5 }} /> : null}
-            <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Box sx={{ display: "flex", justifyContent: "flex-start", pl: 0.5 }}>
+            <Box sx={{ flex: 1, minWidth: 0, maxWidth: "min(880px, 100%)" }}>
               {liveNormalized ? (
-                <AskAnswerPanel
-                  t={t}
-                  normalized={liveNormalized}
-                  locked={locked}
-                  inWorkspace={inWorkspace}
-                  workId={workId}
-                  workspaceWorkId={workspaceWorkId}
-                  retrievalMode="agent"
-                  agentToolTrace={agentToolTrace}
-                  retrievalJsonOpen={retrievalJsonOpen}
-                  onToggleRetrievalJson={onToggleRetrievalJson}
-                  streamEvents={streamEvents}
-                  isStreaming={isLoading && streamEvents.length > 0}
-                />
+                <AgentAssistantTurnShell sx={{ mt: 1 }}>
+                  <AskAnswerPanel
+                    t={t}
+                    normalized={liveNormalized}
+                    locked={locked}
+                    inWorkspace={inWorkspace}
+                    workId={workId}
+                    workspaceWorkId={workspaceWorkId}
+                    retrievalMode="agent"
+                    agentToolTrace={agentToolTrace}
+                    retrievalJsonOpen={retrievalJsonOpen}
+                    onToggleRetrievalJson={onToggleRetrievalJson}
+                    streamEvents={streamEvents}
+                    isRunActive={isLoading}
+                  />
+                </AgentAssistantTurnShell>
               ) : isLoading ? (
-                <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", pt: 0.25 }}>{t("chat.thread.thinking")}</Typography>
+                <AgentAssistantTurnShell sx={{ mt: 1 }}>
+                  <AgentRunHeader
+                    t={t}
+                    runState="running"
+                    answerClass={null}
+                    citationCount={0}
+                    durationMs={null}
+                    streamEventCount={Array.isArray(streamEvents) ? streamEvents.length : 0}
+                  />
+                  <AgentLiveStatus t={t} streamEvents={streamEvents} isActive />
+                </AgentAssistantTurnShell>
               ) : null}
             </Box>
           </Box>

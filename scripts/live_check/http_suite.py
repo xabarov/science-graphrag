@@ -1,6 +1,8 @@
 """Reusable HTTP checks for a running science-graphrag API (agent v2).
 
 Used by ``scripts/live_check/agent_v2_http.py`` and optional pytest under ``tests/live/``.
+
+Operator notes (env vars, CH4 gate): see ``scripts/live_check/README.md``.
 """
 
 from __future__ import annotations
@@ -104,11 +106,11 @@ def check_agent_v2_sync_json(
     trace = data.get("tool_trace") or []
     tool_names = [x.get("tool") for x in trace if isinstance(x, dict)]
 
-    ok = not issues
     if thread_id and os.environ.get("AGENT_LIVE_GATE_CH4", "").strip() in ("1", "true", "yes"):
         if "session_init" not in tool_names:
             issues.append("missing_session_init_in_tool_trace")
-        ok = not issues
+
+    ok = not issues
 
     return CheckResult(
         "agent_v2_sync_json",

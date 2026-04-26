@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field, field_validator
 from sse_starlette.sse import EventSourceResponse
 
 from science_graphrag.agent.chat_envelope import build_chat_envelope, heuristic_answer_class
+from science_graphrag.agent.context.compaction import build_context_compacted_payload
 from science_graphrag.agent.context.post_turn import apply_turn_digest_to_thread
 from science_graphrag.agent.context.session_store import get_session_for_thread
 from science_graphrag.agent.graph.state import build_initial_agent_state
@@ -30,22 +31,29 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-def _normalize_history_digest_value(raw: object) -> list[dict[str, Any]]:
+def normalize_history_digest_input(raw: object) -> tuple[list[dict[str, Any]], bool]:
+    """Parse client history digest; return (normalized_turn_dicts, invalid).
+
+    ``invalid`` is True when the client clearly sent a non-empty JSON string that
+    is not a JSON array of objects (parse failure, or JSON object/scalar). This
+    surfaces as top-level ``warnings`` / SSE ``warning`` instead of failing silently.
+    """
     if raw is None:
-        return []
+        return [], False
     if isinstance(raw, list):
-        return [x for x in raw if isinstance(x, dict)]
+        return [x for x in raw if isinstance(x, dict)], False
     if isinstance(raw, str):
         s = raw.strip()
         if not s:
-            return []
+            return [], False
         try:
             parsed = json.loads(s)
         except Exception:  # noqa: BLE001
-            return []
+            return [], True
         if isinstance(parsed, list):
-            return [x for x in parsed if isinstance(x, dict)]
-    return []
+            return [x for x in parsed if isinstance(x, dict)], False
+        return [], True
+    return [], False
 
 
 class AgentQueryRequestV2(BaseModel):
@@ -78,6 +86,10 @@ class AgentQueryResponseV2(BaseModel):
     phoenix_trace_id: str | None = None
     run_metadata: dict[str, Any]
     thread_id: str | None = None
+    session_summary_excerpt: str | None = Field(
+        default=None,
+        description="CH4: excerpt of server session_summary after this turn; JSON parity with SSE context_compacted.",
+    )
     answer_class: str | None = None
     evidence_summary: str | None = None
     warnings: list[str] = Field(default_factory=list)
@@ -95,6 +107,8 @@ def _response_from_run(
     settings: Settings,
     max_tool_calls: int,
     extra_run_metadata: dict[str, Any] | None = None,
+    session_summary_excerpt: str | None = None,
+    extra_warnings: list[str] | None = None,
 ) -> AgentQueryResponseV2:
     trace_dicts = [dict(t) for t in (out.tool_trace or [])]
     run_metadata = {
@@ -111,6 +125,11 @@ def _response_from_run(
     tid = getattr(out, "thread_id", None)
     if tid:
         run_metadata["thread_id"] = tid
+    warnings = list(getattr(out, "warnings", None) or [])
+    for w in extra_warnings or []:
+        ws = str(w).strip()
+        if ws and ws not in warnings:
+            warnings.append(ws)
     return AgentQueryResponseV2(
         answer=out.answer,
         citations=out.citations,
@@ -119,9 +138,10 @@ def _response_from_run(
         phoenix_trace_id=getattr(out, "phoenix_trace_id", None),
         run_metadata=run_metadata,
         thread_id=tid,
+        session_summary_excerpt=session_summary_excerpt,
         answer_class=getattr(out, "answer_class", None),
         evidence_summary=getattr(out, "evidence_summary", None),
-        warnings=list(getattr(out, "warnings", None) or []),
+        warnings=warnings,
         inventory=getattr(out, "inventory", None),
         relation_trace=getattr(out, "relation_trace", None),
         quote_candidates=getattr(out, "quote_candidates", None),
@@ -145,7 +165,7 @@ async def post_agent_query_v2(
     max_tool_calls = body.max_tool_calls or settings.agent_max_tool_calls
     wants_sse = "text/event-stream" in (accept or "")
     thread_id = (body.thread_id or "").strip() or None
-    history_digest = _normalize_history_digest_value(body.history_digest)
+    history_digest, history_digest_invalid = normalize_history_digest_input(body.history_digest)
 
     if wants_sse:
         return EventSourceResponse(
@@ -158,6 +178,7 @@ async def post_agent_query_v2(
                 answer_class_hint=body.answer_class_hint,
                 thread_id=thread_id,
                 history_digest=history_digest,
+                history_digest_invalid=history_digest_invalid,
             )
         )
 
@@ -172,8 +193,18 @@ async def post_agent_query_v2(
         history_digest=history_digest,
     )
     duration_ms = int((perf_counter() - started) * 1000)
+    excerpt: str | None = None
+    if thread_id:
+        raw_sum = str(get_session_for_thread(thread_id).get("session_summary") or "")
+        excerpt = raw_sum[:500] if raw_sum.strip() else None
+    extra_warnings = ["history_digest_invalid"] if history_digest_invalid else None
     return _response_from_run(
-        out, duration_ms=duration_ms, settings=settings, max_tool_calls=max_tool_calls
+        out,
+        duration_ms=duration_ms,
+        settings=settings,
+        max_tool_calls=max_tool_calls,
+        session_summary_excerpt=excerpt,
+        extra_warnings=extra_warnings,
     )
 
 
@@ -225,6 +256,7 @@ async def _stream_agent(
     answer_class_hint: str | None,
     thread_id: str | None = None,
     history_digest: list[dict[str, Any]] | None = None,
+    history_digest_invalid: bool = False,
 ) -> AsyncIterator[dict[str, str]]:
     """Emit SSE events from LangGraph chunks."""
     started = perf_counter()
@@ -276,6 +308,17 @@ async def _stream_agent(
                     }
                 )
             }
+
+            if history_digest_invalid:
+                yield {
+                    "data": json.dumps(
+                        {
+                            "type": "warning",
+                            "code": "history_digest_invalid",
+                            "message": "history_digest was not a JSON array of objects; it was ignored",
+                        }
+                    )
+                }
 
             async for chunk in _iter_graph_chunks(graph, initial_state, config):
                 if isinstance(chunk, tuple) and len(chunk) == 2:
@@ -378,10 +421,12 @@ async def _stream_agent(
                     "data": json.dumps({"type": "evidence_ready", "citation_count": len(citations)})
                 }
 
-            if thread_id and latest_full_state is not None:
-                raw_q = (latest_full_state.get("metadata") or {}).get("raw_user_question")
-                if not isinstance(raw_q, str) or not raw_q.strip():
-                    raw_q = question
+            if thread_id:
+                raw_q = question
+                if latest_full_state is not None:
+                    rq = (latest_full_state.get("metadata") or {}).get("raw_user_question")
+                    if isinstance(rq, str) and rq.strip():
+                        raw_q = rq
                 new_sum = apply_turn_digest_to_thread(
                     thread_id=thread_id,
                     raw_user_question=raw_q,
@@ -389,20 +434,20 @@ async def _stream_agent(
                     answer_class=str(envelope.get("answer_class") or "grounded_explanation"),
                     tool_trace=trace_for_run,
                 )
-                yield {
-                    "data": json.dumps(
-                        {
-                            "type": "context_compacted",
-                            "thread_id": thread_id,
-                            "session_summary_excerpt": (new_sum or "")[:500],
-                        }
-                    )
-                }
+                compact_payload = build_context_compacted_payload(
+                    thread_id=thread_id,
+                    session_summary_excerpt=(new_sum or "")[:500],
+                    latest_full_state=latest_full_state,
+                )
+                yield {"data": json.dumps(compact_payload)}
 
             phx = current_otel_trace_id_hex()
             run_meta: dict[str, Any] = {
                 "agent_runtime": settings.agent_runtime,
+                "agent_enabled": settings.agent_enabled,
                 "agent_max_tool_calls": max_tool_calls,
+                "extraction_llm_model": settings.extraction_llm_model,
+                "extraction_llm_base_url": settings.extraction_llm_base_url,
                 "debug_events": (
                     (latest_full_state or {}).get("debug_events", [])[-50:]
                     if isinstance(latest_full_state, dict)
@@ -412,6 +457,15 @@ async def _stream_agent(
             if thread_id:
                 run_meta["thread_id"] = thread_id
 
+            final_warnings = list(envelope.get("warnings") or [])
+            if history_digest_invalid and "history_digest_invalid" not in final_warnings:
+                final_warnings.append("history_digest_invalid")
+
+            summary_excerpt: str | None = None
+            if thread_id:
+                raw_sum = str(get_session_for_thread(thread_id).get("session_summary") or "")
+                summary_excerpt = raw_sum[:500] if raw_sum.strip() else None
+
             final_event = {
                 "type": "final_answer",
                 "answer": final_answer,
@@ -420,10 +474,11 @@ async def _stream_agent(
                 "duration_ms": duration_ms,
                 "phoenix_trace_id": phx,
                 "thread_id": thread_id,
+                "session_summary_excerpt": summary_excerpt,
                 "run_metadata": run_meta,
                 "answer_class": envelope.get("answer_class"),
                 "evidence_summary": envelope.get("evidence_summary"),
-                "warnings": list(envelope.get("warnings") or []),
+                "warnings": final_warnings,
                 "inventory": envelope.get("inventory"),
                 "relation_trace": envelope.get("relation_trace"),
                 "quote_candidates": envelope.get("quote_candidates"),

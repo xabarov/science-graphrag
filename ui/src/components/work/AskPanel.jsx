@@ -272,13 +272,16 @@ export default function AskPanel({
       setPendingUserQuery(q);
       try {
         const historyDigest = buildAgentHistoryDigest(history);
-        const nextNormalized = await submit({
+        const pack = await submit({
           query,
           threadId: activeSessionId || null,
           historyDigest,
           answerClassHint: String(answerClassHint || "").trim() || null,
         });
-        if (!nextNormalized) return;
+        if (!pack?.normalized) return;
+        const nextNormalized = pack.normalized;
+        const persistedStreamEvents = Array.isArray(pack.streamEvents) ? pack.streamEvents : [];
+        const persistedToolTrace = Array.isArray(pack.agentToolTrace) ? pack.agentToolTrace : [];
         const queryMode = locked || inWorkspace ? "workspace" : corpusWorkspaceOnly ? "workspace_corpus" : workId ? "scoped" : "global";
         const details = {
           answer: nextNormalized.answer,
@@ -293,6 +296,12 @@ export default function AskPanel({
           quote_candidates: nextNormalized.quote_candidates,
           idea_suggestions: nextNormalized.idea_suggestions,
           bibliography: nextNormalized.bibliography,
+          thread_id: nextNormalized.thread_id ?? null,
+          duration_ms: nextNormalized.duration_ms ?? null,
+          phoenix_trace_id: nextNormalized.phoenix_trace_id ?? null,
+          session_summary_excerpt: nextNormalized.session_summary_excerpt ?? null,
+          stream_events: persistedStreamEvents.slice(-80),
+          agent_tool_trace: persistedToolTrace,
         };
         const turn = {
           query,

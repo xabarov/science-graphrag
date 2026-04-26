@@ -88,6 +88,12 @@ export default {
   "workspace.strip.statsExternal": "{{count}} внеш. цит.",
   "workspace.strip.statsExternalTip": "Внешние цитирования",
   "workspace.strip.ingestProgressTip": "Идёт загрузка / индексация",
+  "workspace.strip.ingestStarting": "Запуск загрузки…",
+  "workspace.strip.ingestFailed": "Ошибка индексации",
+  "workspace.strip.ingestPhase.preparing_document": "Подготовка документа",
+  "workspace.strip.ingestPhase.building_graph": "Построение графа знаний",
+  "workspace.strip.ingestPhase.preparing_search": "Подготовка поискового слоя",
+  "workspace.strip.ingestPhase.finalizing": "Завершение",
 
   "workspace.side.graphTitle": "Снимок графа",
   "workspace.side.graphStatsLine":

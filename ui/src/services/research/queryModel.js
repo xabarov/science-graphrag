@@ -116,6 +116,9 @@ export function normalizeQueryResponse(raw) {
       idea_suggestions: null,
       bibliography: null,
       thread_id: null,
+      session_summary_excerpt: null,
+      duration_ms: null,
+      phoenix_trace_id: null,
     };
   }
   const gc = raw.graph_context && typeof raw.graph_context === "object" ? raw.graph_context : {};
@@ -152,5 +155,16 @@ export function normalizeQueryResponse(raw) {
     idea_suggestions: Array.isArray(raw.idea_suggestions) ? raw.idea_suggestions : null,
     bibliography: raw.bibliography && typeof raw.bibliography === "object" ? raw.bibliography : null,
     thread_id: raw.thread_id == null ? null : String(raw.thread_id),
+    session_summary_excerpt:
+      raw.session_summary_excerpt == null || String(raw.session_summary_excerpt).trim() === ""
+        ? null
+        : String(raw.session_summary_excerpt),
+    duration_ms:
+      raw.duration_ms == null || raw.duration_ms === ""
+        ? null
+        : Number.isFinite(Number(raw.duration_ms))
+          ? Math.round(Number(raw.duration_ms))
+          : null,
+    phoenix_trace_id: raw.phoenix_trace_id == null || raw.phoenix_trace_id === "" ? null : String(raw.phoenix_trace_id),
   };
 }
