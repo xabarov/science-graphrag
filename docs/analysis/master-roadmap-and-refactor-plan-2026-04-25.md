@@ -407,7 +407,7 @@ hard_block_individual_failures = []
 
 | # | Задача | Тип | Время | Чем разблокирует | Файлы / артефакты |
 |---|--------|-----|-------|------------------|-------------------|
-| **1** | **Robust ingest orchestration** (`docs/backlog/refactor-backend.md` → `[OPEN] Robust ingest orchestration`): per-file timeout + JSONL-checkpoint + streaming logs + circuit breaker по 4xx/5xx OpenRouter | BE infra | 1.5–2 дня | Расширение корпуса до 16-20 paper (нужно для BT2 + BT4 real signal) | `science_graphrag/cli/main.py` (`ingest-corpus`), `science_graphrag/ingestion/_pipeline_impl.py`, `science_graphrag/embeddings/openrouter_provider.py`, `science_graphrag/ingestion/llm/extractor.py`, новый `eval/results/ingest-progress-<run-id>.jsonl` |
+| **1** | **[DONE 2026-04-26] Robust ingest orchestration** (`docs/backlog/refactor-backend.md` → `[OPEN] Robust ingest orchestration`): per-file timeout + JSONL-checkpoint + streaming logs + circuit breaker по 4xx/5xx OpenRouter | BE infra | факт: ~1 день | Разблокирован шаг 3 (расширение корпуса до 16-20 paper для BT2 + BT4 real signal) | `science_graphrag/cli/main.py` (`ingest-corpus`: `--per-file-timeout-s`, `--resume`, `--progress-file`), `science_graphrag/ingestion/_pipeline_impl.py` (timeout/resume/checkpoint), `science_graphrag/embeddings/openrouter_provider.py` (retry/circuit-breaker), `science_graphrag/ingestion/llm/extractor.py` (retry/backoff), `tests/ingestion/test_batch_resume_and_timeout.py`, `docs/runbooks/ingest-corpus.md` |
 | **2** | **Backfill `ws_full_corpus="*"`** (`docs/backlog/refactor-backend.md` → `[OPEN] Backfill workspace_id payload for unbounded workspaces`): расширить `scripts/backfill_workspace_payloads.py` и/или ввести виртуальный фильтр в retrieval | BE infra | 0.5 дня | 3/6 кейсов `workspace_scoped_live` сразу зелёные | `scripts/backfill_workspace_payloads.py`, `science_graphrag/api/query.py` (filter for `corpus_work_ids="*"`), runbook `benchmark-decision-gate.md` |
 | **3** | **Расширение корпуса +10–15 paper** через up-fixed `ingest-corpus`: cornernet, fcos, fpn, mask_rcnn, retinanet, ssd, faster_rcnn, fast_rcnn (и оставшиеся 5–10 из 31-pdf пилота) | data | 1 день (после п. 1) | BT2 даёт **honest** real numbers; BT4 получает шанс на mrr_delta > 0; BT3 multihop становится non-trivial | `scripts/pilot_ingest_cv_corpus.sh`, `tests/fixtures/corpus/CATALOG.md`, `eval/results/ingest-progress-*.jsonl` |
 | **4** | **Re-run BT2 + BT4 + BT5** на расширенном корпусе → новый snapshot `benchmark-trust-baseline.json` | bench | 0.5 дня | `advisory_phantom_count` -2..-4; видим реальный `mrr_delta` для hybrid; `workspace_scoped_live` ≥ 4/6 проходов | `eval/retrieval/{runner,hybrid_ablation_runner}.py`, `eval/results/current-retrieval-*.json`, `eval/results/benchmark-trust-baseline.json` |
@@ -419,6 +419,7 @@ hard_block_individual_failures = []
 
 ### 10.2 Параллелизм и файловые конфликты
 
+- **Update 2026-04-26:** шаг **1** закрыт; текущая активная последовательность — **2 → 3 → 4**.
 - Шаги **1 + 2 + 3** делать **строго последовательно** (1 → 2 → 3 → 4): шаг 3 зависит от шага 1; шаг 4 пишет в те же `current-retrieval-*.json`, что и шаг 5.
 - Шаги **5 + 6** можно параллелить (разные файлы; `multihop_runner` ↔ `paraphrase_runner`).
 - Шаг **7 (pivot WX)** идёт **параллельно с любым из 5/6/8/9** — разные стеки, разные файлы. См. §5 правило конфликтов.
@@ -426,7 +427,7 @@ hard_block_individual_failures = []
 
 ### 10.3 Что **не** делаем сейчас
 
-- Не запускаем `ingest-corpus` без п. 1 (`Robust ingest orchestration`) — снова повиснет.
+- Не запускаем `ingest-corpus` без timeout/resume/checkpoint флагов из п. 1 (в legacy-режиме риск зависания остаётся).
 - Не пишем новый код в `decision_gate.criteria` — структура зафиксирована в Wave 4 (BT1), теперь только потребители (UI, runbook).
 - Не «добиваем» `hybrid_ablation_live` до зелёного через подкрутку gold — это самообман. Либо корпус расширяется (п. 3) и сигнал появляется естественно, либо честно фиксируем «no signal on pilot corpus» и переводим family в `fixture_consistency_only` после 7 ночей `mrr_delta=0` (по аналогии с BT7 path B).
 - Не двигаем `--mock-runtime` артефакты в `eval/results/historic/` молча — каждое такое перемещение должно явно фиксировать `advisory_phantom_count` change в `benchmark-trust-baseline.json` diff.

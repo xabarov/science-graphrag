@@ -10,7 +10,7 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 
 ## Queue
 
-### [OPEN] Robust ingest orchestration: hard timeout + checkpoint + resume
+### [DONE] Robust ingest orchestration: hard timeout + checkpoint + resume
 - **Area:** `science_graphrag/ingestion/_pipeline_impl.py` (`run_ingest_batch_cli`, `ingest_document`), `science_graphrag/ingestion/llm/extractor.py` (`SyncInstructorExtractor`), `science_graphrag/embeddings/openrouter_provider.py` (`OpenRouterEmbeddingProvider._call_openrouter`), `science_graphrag/ingestion/vl_pdf.py` (PDF→article via VL).
 - **Issue:** В Wave 4 (BT2/BT5 ingest) `science-graphrag ingest-corpus` зависал **на одном файле на 3+ часа** при `0.4% CPU` (TCP к OpenRouter в `CLOSE-WAIT`, никаких exception/exit), батч продвинулся 15/31 и встал. `tee` буферизировал stdout → лог 0 байт. Существующие таймауты: `OpenRouterEmbeddingProvider` httpx=60s, `SyncInstructorExtractor` openai=180s, но они не защищают от silent server hang когда соединение «полусохнет», и не покрывают весь pipeline (VL extractor + dual-validate + claims). Нет `ingest-corpus` checkpoint'а: при таймауте мы теряем прогресс между файлами (Postgres-row остаётся с `work_id=None`, см. 7 «осиротевших» YOLOv1 строк за разные дни).
 - **Proposal:**
@@ -27,6 +27,8 @@ Planned structural work for Python packages under this repo (not day-to-day lint
   - в `docs/runbooks/` обновлена ingest runbook страница с `--per-file-timeout-s`/`--resume`.
 - **Reference:** обнаружено в Wave 4 honesty-close, см. analysis chat 2026-04-26 (process PID 2490711, Postgres `documents` rows с `work_id=None`).
 - **Raised:** 2026-04-26 (Wave 4).
+- **Done:** 2026-04-26 — реализованы `--per-file-timeout-s`, `--resume`, `--progress-file`, JSONL checkpoint (atomic write), flush-logging, retry/circuit-breaker в OpenRouter embeddings, retry/backoff в `SyncInstructorExtractor`, тест `tests/ingestion/test_batch_resume_and_timeout.py`, runbook `docs/runbooks/ingest-corpus.md`.
+- **Note:** отдельный timeout внутри `science_graphrag/ingestion/vl_pdf.py` не добавлялся в этом проходе; текущий per-file timeout в `run_ingest_batch_cli` закрывает риск зависания батча на файле.
 
 ### [OPEN] Backfill workspace_id payload for unbounded `ws_full_corpus="*"` workspaces
 - **Area:** `scripts/backfill_workspace_payloads.py`, `scripts/seed_benchmark_workspaces.py`, `science_graphrag/storage/qdrant.py:add_workspace_to_chunks`.
