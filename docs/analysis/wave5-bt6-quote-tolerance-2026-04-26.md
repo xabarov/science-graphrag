@@ -1,5 +1,7 @@
 # BT6 quote tolerance (P0) — 2026-04-26
 
+**Status:** **DONE** (shipped 2026-04-26). Дальнейшая работа по семантике gold и `trust_signal.runtime_mode=live` — в backlog [`refactor-backend.md`](../backlog/refactor-backend.md) → **[OPEN] BT6 gold realism + optional embedding-soft quote fallback**.
+
 ## Goal
 
 Reduce false-negative quote rejection on PDF-derived `article.md` (hyphenation, `×` vs `x`, glued `For300`, footnote markers) without touching `gold.json`. Implementation: [`science_graphrag/ingestion/claims/quote_match.py`](../../science_graphrag/ingestion/claims/quote_match.py), 4-level `_quote_accepted` + normalized chunk input in [`science_graphrag/ingestion/claims/extractor.py`](../../science_graphrag/ingestion/claims/extractor.py), mirrored read path in [`eval/claims/article_source.py`](../../eval/claims/article_source.py).
@@ -33,4 +35,4 @@ Notes:
 
 ## Follow-up (barrier 2)
 
-See backlog: **[OPEN] BT6 gold realism + optional embedding-soft quote fallback** in [`docs/backlog/refactor-backend.md`](../backlog/refactor-backend.md).
+См. backlog: **[OPEN] BT6 gold realism + optional embedding-soft quote fallback** в [`docs/backlog/refactor-backend.md`](../backlog/refactor-backend.md) (в **Completed** той же страницы зафиксирован **BT6 P0 quote tolerance**).
