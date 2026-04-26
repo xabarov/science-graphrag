@@ -4,29 +4,27 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
 
+import { useI18n } from "../../i18n/I18nContext.jsx";
 import { getScienceGraphLegendNodeChipSx, getScienceGraphNodeTypeIcon } from "./graphCanvasStyle.js";
 import { collectGraphTypeLegend } from "./graphTypeLegend.js";
+import { localizeEdgeTypeKey, localizeNodeKind } from "./graphLocalize.js";
 
 const NODE_KIND_GROUPS = [
   {
-    group: "Works",
+    groupKey: "Works",
     kinds: ["Work", "WorkInternal", "WorkExternal"],
-    description: "Research papers",
   },
   {
-    group: "Semantic",
+    groupKey: "Semantic",
     kinds: ["Method", "Dataset"],
-    description: "Methods & Datasets",
   },
   {
-    group: "People",
+    groupKey: "People",
     kinds: ["Author", "AuthorshipReification"],
-    description: "Authors & Authorship",
   },
   {
-    group: "Context",
+    groupKey: "Context",
     kinds: ["Venue", "Institution"],
-    description: "Venues & Institutions",
   },
 ];
 
@@ -35,6 +33,7 @@ const NODE_KIND_GROUPS = [
  * @param {{ graph: { nodes: Array<object>, edges: Array<object> } }} props
  */
 export default function GraphTypeLegend({ graph }) {
+  const { t } = useI18n();
   const { nodeTypes, edgeTypes } = collectGraphTypeLegend(graph);
   const presentKinds = new Set(
     (graph?.nodes || []).map((n) => {
@@ -43,7 +42,7 @@ export default function GraphTypeLegend({ graph }) {
     }),
   );
   const groupedNodeKinds = NODE_KIND_GROUPS.map((entry) => ({
-    ...entry,
+    groupKey: entry.groupKey,
     kinds: entry.kinds.filter((kind) => presentKinds.has(kind)),
   })).filter((entry) => entry.kinds.length > 0);
   if (nodeTypes.length === 0 && edgeTypes.length === 0) {
@@ -68,7 +67,7 @@ export default function GraphTypeLegend({ graph }) {
           mb: 0.75,
         }}
       >
-        Types in view
+        {t("graph.legend.typesInView")}
       </Typography>
       <Box
         sx={{
@@ -80,18 +79,20 @@ export default function GraphTypeLegend({ graph }) {
       >
         {nodeTypes.length > 0 ? (
           <>
-            <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", mr: 0.25 }}>Nodes</Typography>
-            {groupedNodeKinds.map(({ group, kinds }) => (
-              <React.Fragment key={`grp-${group}`}>
+            <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", mr: 0.25 }}>
+              {t("graph.legend.nodes")}
+            </Typography>
+            {groupedNodeKinds.map(({ groupKey, kinds }) => (
+              <React.Fragment key={`grp-${groupKey}`}>
                 <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.45)", mr: 0.25 }}>
-                  {group}
+                  {t(`graph.legend.group.${groupKey}`)}
                 </Typography>
                 {kinds.map((kind) => {
                   const KindIcon = getScienceGraphNodeTypeIcon(kind);
                   const dimInternal = kind === "WorkInternal";
                   return (
                     <Chip
-                      key={`n-${group}-${kind}`}
+                      key={`n-${groupKey}-${kind}`}
                       icon={
                         KindIcon ? (
                           <KindIcon
@@ -103,7 +104,7 @@ export default function GraphTypeLegend({ graph }) {
                           />
                         ) : undefined
                       }
-                      label={kind}
+                      label={localizeNodeKind({ nodeKind: kind, type: kind }, t)}
                       size="small"
                       sx={{
                         ...getScienceGraphLegendNodeChipSx(kind),
@@ -119,13 +120,13 @@ export default function GraphTypeLegend({ graph }) {
         {edgeTypes.length > 0 ? (
           <>
             <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", ml: nodeTypes.length ? 1 : 0, mr: 0.25 }}>
-              Edges
+              {t("graph.legend.edges")}
             </Typography>
             {edgeTypes.map((edgeType) => (
               <Chip
                 key={`e-${edgeType}`}
                 icon={<ArrowForwardIcon sx={{ fontSize: "0.65rem !important", color: "rgba(255,255,255,0.45) !important" }} />}
-                label={edgeType}
+                label={localizeEdgeTypeKey(edgeType, t)}
                 size="small"
                 variant="outlined"
                 sx={{

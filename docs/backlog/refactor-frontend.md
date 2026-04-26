@@ -8,82 +8,21 @@ Planned structural work under `ui/` (components, routing, state, API client), no
 - Execute items in a dedicated **refactor pass** when asked.
 - Prefer small vertical slices (one feature area or one layer, e.g. `services/` only).
 
+## Completed (archive)
+
+Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-contracts`, ADR 006/007, ingestion roadmap).
+
+| When | Theme |
+|------|--------|
+| 2026-04-25 | **Graph:** `GraphCanvasMvp` split (`useGraphCanvasInput`, `graphCanvasDraw`); aggregator rendering + expand; `GraphWorkspacePanel` split (`useGraphWorkspaceData`, side panel, mode switch, debug inspector). |
+| 2026-04-25 | **Ask:** `AskPanel` → `useAskSubmit`, `AskSessionControls`, `AskAnswerPanel` (composition shell). |
+| 2026-04-25 | **Ingest UI:** `IngestStageStepper` + `useJobStream` (SSE) + polling fallback in workspace ingest. |
+| 2026-04-24 | **Workspaces / workspace:** Wave I — `WorkspacesPage` shell + panels; `WorkspacePage` shell + ingest / dedup / paper list extraction. |
+| 2026-04-08 | **Graph standalone:** Waves 5–8 (maximize canvas, `graphPageUrl` / focus / detail width, drag gutter, contract + pointer-capture polish). |
+| 2026-04-08 | **Graph canvas:** Wave 4.2 z-order; Wave 4.3 React Flow mode; Canvas force layout + quadTree/communities (ADR 007). |
+| 2026-04-08 | **API errors:** unified `formatResearchApiError` in `researchApi.js` + tests. |
+
 ## Queue
-
-### [DONE] Graph canvas — Wave 4.2 z-order (labels vs nodes)
-- **Area:** [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx), [`docs/specs/graph-ui-plan.md`](../specs/graph-ui-plan.md)
-- **Issue:** Подписи рёбер и узлы пересекались: edge labels рисовались до дисков узлов и прятались под ними; нужен порядок «hovered/selected сверху».
-- **Proposal:** Переставить этапы отрисовки; сортировки по rank + стабильный tie-break по `id`.
-- **Acceptance:** Спека *Canvas micro-polish (Wave 4.2)*; линт/тесты UI зелёные.
-- **Raised:** 2026-04-08
-- **Note (done):** Реализовано в `GraphCanvasMvp.jsx`; раздел Wave 4.2 в graph-ui-plan.
-
-### [DONE] Graph standalone page — максимизация рабочей области (Wave 5)
-- **Area:** [`GraphPage.jsx`](../../ui/src/pages/GraphPage.jsx), [`DashboardLayout.jsx`](../../ui/src/components/layout/DashboardLayout/DashboardLayout.jsx), [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx), [`GraphTypeLegend.jsx`](../../ui/src/components/graph/GraphTypeLegend.jsx)
-- **Issue:** Канвас графа на `/graph` не заполняет доступную высоту; много вертикального места занимают заголовок, форма `work_id`, алерты, легенда, колонка деталей.
-- **Proposal:** Цепочка flex + `minHeight: 0` от `main`; сворачиваемый chrome страницы; компактные/сворачиваемые алерты и легенда; скрытие колонки деталей; опционально `?compact=1`. См. раздел *Standalone Graph page — workspace maximization* в [`docs/specs/graph-ui-plan.md`](../specs/graph-ui-plan.md).
-- **Acceptance:** В типичном viewport с загруженным `work_id` и режиме Graph канвас занимает большую часть экрана; детали и вторичный UI доступны без потери функций.
-- **Raised:** 2026-04-08
-- **Note (done):** Реализовано: flex-цепочка в `DashboardLayout`, переработка `GraphPage` (chrome + `compact`), standalone-панель с toggles legend/details/alerts.
-
-### [DONE] Graph standalone — focus URL + detail column width (Wave 6)
-- **Area:** [`GraphPage.jsx`](../../ui/src/pages/GraphPage.jsx), [`graphPageUrl.js`](../../ui/src/pages/graphPageUrl.js), [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx), [`docs/specs/graph-ui-plan.md`](../specs/graph-ui-plan.md), [`docs/specs/frontend-ui-api-contracts-v1.md`](../specs/frontend-ui-api-contracts-v1.md)
-- **Issue:** После Wave 5 оставались опциональные URL `focus=1` и настройка ширины колонки деталей; контракт query для `/graph` не был собран в одном месте.
-- **Proposal:** `?focus=1` + сохранение флагов при Load; `focusLayout` в панели; слайдер min-width колонки деталей + `localStorage`; тесты `graphPageUrl`; документация Wave 6 и таблица в frontend-ui-api-contracts.
-- **Acceptance:** Deep link с `focus=1` даёт максимум места канвасу; ширина деталей настраивается и переживает reload; линт/тесты UI зелёные.
-- **Raised:** 2026-04-08
-- **Note (done):** Реализовано: `graphPageUrl.js`, `focusLayout`, слайдер `graphStandaloneDetailMinPx`, раздел Wave 6 в graph-ui-plan и таблица `/graph` в frontend-ui-api-contracts.
-
-### [DONE] Graph standalone — drag-resize gutter graph/detail (Wave 7)
-- **Area:** [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx), [`graphDetailColumnWidth.js`](../../ui/src/components/graph/graphDetailColumnWidth.js), [`docs/specs/graph-ui-plan.md`](../specs/graph-ui-plan.md)
-- **Issue:** После Wave 6 оставался опциональный **drag** сплита между графом и колонкой деталей (slider уже был).
-- **Proposal:** Третья колонка 6px в grid на `md+`, `pointer` resize, общий clamp и ключ `graphStandaloneDetailMinPx`; утилита + тесты.
-- **Acceptance:** На широком layout разделитель тянет ширину деталей в пределах 260–480px, значение синхронно со слайдером и переживает reload.
-- **Raised:** 2026-04-08
-- **Note (done):** Реализовано: `graphDetailColumnWidth.js`, gutter в `GraphWorkspacePanel`, раздел Wave 7 в graph-ui-plan.
-
-### [DONE] Graph standalone — contract doc + gutter drag polish (Wave 8)
-- **Area:** [`frontend-ui-api-contracts-v1.md`](../specs/frontend-ui-api-contracts-v1.md), [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx), [`docs/specs/graph-ui-plan.md`](../specs/graph-ui-plan.md)
-- **Issue:** После Wave 7 в контракте UI не было явной строки про **client-only** `graphStandaloneDetailMinPx` и gutter; drag без pointer capture мог терять события и выделять текст.
-- **Proposal:** Абзац в frontend-ui-api-contracts под `/graph`; `setPointerCapture` + восстановление `cursor`/`user-select` на body при drag; короткий Wave 8 в graph-ui-plan.
-- **Acceptance:** Читатель контракта видит, что ширина деталей не в API; перетаскивание разделителя стабильнее на `md+`.
-- **Raised:** 2026-04-08
-- **Note (done):** Реализовано: параграф в frontend-ui-api-contracts, правка `handleDetailSplitPointerDown`, Wave 8 в graph-ui-plan.
-
-### [DONE] Research API — единый `formatResearchApiError`
-- **Area:** [`researchApi.js`](../../ui/src/services/researchApi.js), страницы/панели с catch от `getWorks` / Ask / graph / settings / benchmarks
-- **Issue:** Повторялся один и тот же разбор `err?.response?.data?.detail` vs `message`.
-- **Proposal:** Экспорт `formatResearchApiError(err)`; вызовы в компонентах и `humanizeLauncherError`; тесты в [`researchApi.test.js`](../../ui/src/services/researchApi.test.js).
-- **Acceptance:** Линт/тесты UI зелёные; поведение сообщений об ошибках не регрессирует (string detail, JSON detail, message).
-- **Raised:** 2026-04-08
-- **Note (done):** Реализовано в `researchApi.js` и заменены дубли в UI.
-
-### [DONE] Graph — Wave 4.3 React Flow POC (library path)
-- **Area:** [`GraphFlowView.jsx`](../../ui/src/components/graph/GraphFlowView.jsx), [`graphFlowAdapter.js`](../../ui/src/components/graph/graphFlowAdapter.js), [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx), [`package.json`](../../ui/package.json) (`@xyflow/react`)
-- **Issue:** Нужна оценка библиотечного рендера графа без смены API-контракта.
-- **Proposal:** Режим **Flow** (третья кнопка рядом с Cards / Graph): те же `normalizeGraphPayload` + `capGraphForUi`, круговые стартовые координаты как у Canvas, выбор узла/ребра, `GraphDetailPanel`.
-- **Acceptance:** ADR 006 обновлён; *Layout stack* в `graph-ui-plan.md`; линт/тесты UI зелёные.
-- **Raised:** 2026-04-08
-- **Note (done):** Реализовано 2026-04-08; по умолчанию по-прежнему Canvas.
-
-### [DONE] Graph layout — Canvas force (QuadTree / communities) + follow-ups
-- **Area:** `ui/src/components/graph/` (`GraphCanvasMvp.jsx`, `physics/`, `graphSimulationAdapter.js`)
-- **Issue:** Нужна была **силовая** раскладка на Canvas по мотивам osint-gr без смены API-контракта.
-- **Proposal:** Реализовано: Circle | Force в `GraphWorkspacePanel`, `useScienceGraphForceSimulation`, ADR 007. Опционально позже: **Sigma** spike, force на **Flow**, углублённый паритет с osint controls.
-- **Acceptance:** ADR 007 + *Layout stack* в `graph-ui-plan.md`; выбор/URL/`GraphDetailPanel`/лимиты сохранены.
-- **Raised:** 2026-04-08
-- **Note (done):** 2026-04-08 — см. [`docs/adr/007-canvas-force-layout-port.md`](../adr/007-canvas-force-layout-port.md). Открытым остаётся сравнение с Sigma / force-flow только при продуктовом запросе (новый пункт при необходимости).
-
-### [DONE] Ingest UI — switch from polling to `useJobStream` (Wave U/V)
-
-- **Area:** [`usePollJob.js`](../../ui/src/hooks/usePollJob.js), [`WorkspacePage/WorkspaceIngestPanel.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceIngestPanel.jsx) (и любые другие места `setInterval`-поллинга `/v1/ingest/jobs/{id}`)
-- **Issue:** UI каждые 2 с дёргает `GET /v1/ingest/jobs/{id}`; пользователь видит фиксированный `message` («Running pipeline (Neo4j / vectors / SQL)…»), стадию пайплайна не понять; access-лог зашумлён.
-- **Proposal:** в две стадии по [docs/analysis/ingestion-async-pipeline-roadmap-2026-04-25.md](../analysis/ingestion-async-pipeline-roadmap-2026-04-25.md):
-  - **Wave U (UI):** компонент `IngestStageStepper` рендерит `job.stages[]` (новое поле `IngestJobView.stages` от backend), polling остаётся.
-  - **Wave V (UI):** хук `useJobStream(jobId, { onEvent, onTerminal, fallbackPollMs })` поверх `EventSource` к `/v1/ingest/jobs/{id}/events`; graceful fallback на `usePollJob` при reconnect-фейлах. `usePollJob` остаётся как named export.
-- **Acceptance:** в WorkspacePage при ingest одного PDF — одно долгое HTTP-соединение `/events` в DevTools вместо периодических `GET /jobs/{id}`; степпер показывает все 10 стадий со статусами и метриками; `npm run lint` / `npm run test` зелёные.
-- **Raised:** 2026-04-25
-- **Note (done):** 2026-04-25 — Wave U + V закрыты: `IngestStageStepper`, `useJobStream`, fallback на polling, и интеграция в `WorkspacePage` доставлены.
 
 ### [OPEN] Graph canvas — Neo4j Browser–grade UX (optional)
 - **Area:** `GraphCanvasMvp.jsx`, при необходимости отдельный hook
@@ -92,23 +31,28 @@ Planned structural work under `ui/` (components, routing, state, API client), no
 - **Acceptance:** N/A до приоритизации.
 - **Raised:** 2026-04-08
 
-### [DONE] Graph canvas — split `GraphCanvasMvp` (input vs physics vs draw)
-- **Area:** [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx)
-- **Issue:** Файл ~1000+ строк: pointer/transform, wiring симуляции и отрисовка canvas в одном модуле; после force/reheat правок рост риска регрессий.
-- **Proposal:** Вынести pointer/pan/drag/select в `useGraphCanvasInput` (или модуль рядом), fit/transform в утилиту/hook, оставить в компоненте только glue + `draw` либо `graphCanvasDraw.js`.
-- **Acceptance:** оркестратор canvas без «god file» (heuristic: &lt;400 строк или явно разделённые слои); поведение drag/pan/force без регрессий; `npm run lint` / `npm run test` зелёные.
-- **Raised:** 2026-04-19
-- **Note (done):** 2026-04-25 (Round 5) — разнесено на `GraphCanvasMvp.jsx` (shell),
-  `hooks/useGraphCanvasInput.js`, `graphCanvasDraw.js`; добавлен рендер агрегатор badge и smoke-test `graphCanvasDraw.test.js`.
+### [OPEN] Graph UI — Neo4j Bloom–inspired overview (counts, edge labels, local find)
+- **Area:** [`GraphTypeLegend.jsx`](../../ui/src/components/graph/GraphTypeLegend.jsx),
+  [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx) / компактная сводка,
+  [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx) + [`graphCanvasDraw.js`](../../ui/src/components/graph/graphCanvasDraw.js),
+  [`partGraphUi.js`](../../ui/src/i18n/messages/en/partGraphUi.js) (EN+RU)
+- **Issue:** По сравнению с Neo4j Bloom «Results overview» у нас нет **чисел по типам** узлов/рёбер в текущем виде; при плотном графе постоянные подписи рёбер на канвасе дают шум; нет **локального поиска** по уже загруженным label в окрестности (Bloom сильнее завязан на поиск как вход).
+- **Proposal:**
+  1. **Сводка состава:** рядом с легендой или внутри неё — счётчики `(N)` по каждому `nodeKind`/`edge.type` в `displayGraph`, плюс одна строка «узлов X · рёбер Y»; опция сортировки чипов **по частоте** vs алфавит.
+  2. **Режимы подписей рёбер:** `all` | `hover/selected only` | скрыть при `edgeCount > threshold` или при `scale < min` (пороги в константах или user pref в `localStorage`).
+  3. **Локальный find:** поле фильтра по `displayLabel`/`label` среди узлов текущего графа (подсветка + опционально «scroll/fit to match»); без Cypher и без нового API — чистый UI-слой.
+  4. **Панель canvas:** визуально сгруппировать fit/zoom/center/restart в один блок (как нижняя панель Bloom), при необходимости вынести хелпер `GraphCanvasViewToolbar.jsx`.
+- **Acceptance:** в workspace/standalone graph видны счётчики по типам для текущего payload; переключатель режима подписей рёбер работает без регрессии выбора ребра; локальный find находит узел по подстроке title; `npm run lint` / `npm run test` зелёные; i18n для новых подписей/подсказок EN+RU.
+- **Synergy:** Дополняет **[OPEN] Graph canvas — Neo4j Browser–grade UX** (там — command bar, контекстное меню и т.д.); не дублирует **Wave GR7** (i18n типов уже есть). Приоритет: после стабилизации WX/graph backlog.
+- **Raised:** 2026-04-26 (обсуждение UI vs Neo4j Bloom/Browser)
 
-### [DONE] Graph UI — Aggregator rendering + expand-on-click
-- **Area:** [`graphCanvasStyle.js`](../../ui/src/components/graph/graphCanvasStyle.js), [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx), [`GraphDetailPanel.jsx`](../../ui/src/components/graph/GraphDetailPanel.jsx), [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx), [`hooks/useGraphWorkspaceData.js`](../../ui/src/components/graph/hooks/useGraphWorkspaceData.js), [`researchApi.js`](../../ui/src/services/researchApi.js)
-- **Note (done):** 2026-04-25 — стиль Aggregator (пунктир), expand по клику в canvas/details, merge раскрытых узлов/рёбер в локальный graph state через `expandAggregator`.
-
-### [OPEN] Graph UI — Wave GR6 use displayType on canvas (closes Wave GR2 frontend gap)
+### [DONE] Graph UI — Wave GR6 use displayType on canvas (closes Wave GR2 frontend gap)
+- **Note (2026-04-26):** `edgeTypeCanvasLabelFromEdge` + opts on `edgeTypeCanvasLabel`; canvas + React Flow labels aligned; tests in `graphCanvasStyle.test.js` / `graphFlowAdapter.test.js`.
 - **Area:** [`graphCanvasDraw.js`](../../ui/src/components/graph/graphCanvasDraw.js),
   [`graphCanvasStyle.js`](../../ui/src/components/graph/graphCanvasStyle.js),
-  [`graphCanvasDraw.test.js`](../../ui/src/components/graph/graphCanvasDraw.test.js)
+  [`graphFlowAdapter.js`](../../ui/src/components/graph/graphFlowAdapter.js),
+  [`graphCanvasStyle.test.js`](../../ui/src/components/graph/graphCanvasStyle.test.js),
+  [`graphFlowAdapter.test.js`](../../ui/src/components/graph/graphFlowAdapter.test.js)
 - **Issue:** Канвас рисует raw `edge.type` (`HAS_AUTHORSHIP`, `OF_AUTHOR`, `CITES`), игнорируя
   `edge.displayType`, который backend GR2 уже возвращает. Боковая панель и React Flow адаптер
   используют `displayType` корректно — на канвасе видны технические Neo4j-метки.
@@ -121,10 +65,14 @@ Planned structural work under `ui/` (components, routing, state, API client), no
   отдельным микро-PR, до Wave GR7 (i18n).
 - **Raised:** 2026-04-25 (см. [`docs/analysis/graph-readability-followup-2026-04-25.md`](../analysis/graph-readability-followup-2026-04-25.md) §2.1)
 
-### [OPEN] Graph UI — Wave GR7 i18n EN/RU for graph edges, node kinds, aggregator labels
+### [DONE] Graph UI — Wave GR7 i18n EN/RU for graph edges, node kinds, aggregator labels
+- **Note (2026-04-26):** `graphLocalize.js` (`localizeEdgeType`, `localizeNodeKind`, `localizeAggregatorTitle`, …);
+  keys in `partGraphUi` EN/RU (`graph.edgeType.*`, `graph.nodeKind.*`, `graph.aggregator.*`, `graph.legend.*`, `graph.detailPanel.*`);
+  canvas `drawLabels` + `GraphCanvasMvp` resolvers; `buildReactFlowEdges` options + `GraphFlowView`; `GraphDetailPanel`, `GraphTypeLegend`.
+  Tests: `graphLocalize.test.js`, `graphFlowAdapter.test.js`, `graphTypeLegend.test.js` (I18nProvider). `npm run lint` / `npm run test` green.
 - **Area:** [`ui/src/i18n/messages/en/partGraphUi.js`](../../ui/src/i18n/messages/en/partGraphUi.js),
   [`ui/src/i18n/messages/ru/partGraphUi.js`](../../ui/src/i18n/messages/ru/partGraphUi.js),
-  новый `ui/src/components/graph/graphLocalize.js`,
+  [`ui/src/components/graph/graphLocalize.js`](../../ui/src/components/graph/graphLocalize.js),
   [`graphCanvasDraw.js`](../../ui/src/components/graph/graphCanvasDraw.js),
   [`graphFlowAdapter.js`](../../ui/src/components/graph/graphFlowAdapter.js),
   [`GraphDetailPanel.jsx`](../../ui/src/components/graph/GraphDetailPanel.jsx),
@@ -142,34 +90,6 @@ Planned structural work under `ui/` (components, routing, state, API client), no
   Опциональная фаза B (backend `display_*_key` поля) — отдельный backend-пункт в
   [`refactor-backend.md`](./refactor-backend.md).
 - **Raised:** 2026-04-25 (см. [`docs/analysis/graph-readability-followup-2026-04-25.md`](../analysis/graph-readability-followup-2026-04-25.md) §2.2)
-
-### [DONE] Workspaces page — split shell vs indexed-works browser (Wave I)
-- **Area:** [`WorkspacesPage.jsx`](../../ui/src/pages/WorkspacesPage.jsx), [`WorkspacesPage/WorkspaceCollectionPanel.jsx`](../../ui/src/pages/WorkspacesPage/WorkspaceCollectionPanel.jsx), [`WorkspacesPage/WorkspaceRecentPanel.jsx`](../../ui/src/pages/WorkspacesPage/WorkspaceRecentPanel.jsx), [`WorkspacesPage/IndexedWorksBrowser.jsx`](../../ui/src/pages/WorkspacesPage/IndexedWorksBrowser.jsx)
-- **Done:** 2026-04-24 — composition shell + extracted panels; `npm run lint` / `npm run test` green.
-
-### [DONE] Workspace page — split upload / dedup / paper list (Wave I)
-- **Area:** [`WorkspacePage/WorkspacePage.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx), [`WorkspaceIngestPanel.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceIngestPanel.jsx), [`WorkspacePaperList.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePaperList.jsx), [`WorkPaperCard.jsx`](../../ui/src/pages/WorkspacePage/WorkPaperCard.jsx), [`WorkspaceDedupSection.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceDedupSection.jsx)
-- **Done:** 2026-04-24 — shell coordinates URL + meta; `npm run lint` / `npm run test` green.
-
-### [DONE] AskPanel decomposition after Wave R agent mode
-- **Area:** [`AskPanel.jsx`](../../ui/src/components/work/AskPanel.jsx), [`AgentToolTrace.jsx`](../../ui/src/components/work/AgentToolTrace.jsx)
-- **Issue:** После добавления `agent` режима в Wave R `AskPanel` остаётся большим модулем с несколькими ответственностями (session state, submit flows, retrieval/agent trace rendering). Файл — 841 строка.
-- **Proposal:** Вынести submit orchestration (`useAskSubmit`), session controls (`AskSessionControls`) и answer sections (`AskAnswerPanel`) в отдельные модули; оставить в `AskPanel` только composition layer.
-- **Acceptance:** Ни один модуль в `ui/src/components/work/` по этому флоу не превышает ~400 строк; `npm run lint` / `npm run test` зелёные.
-- **Synergy:** **Wave Y3** (`/v2/agent/query` SSE) — `useAskSubmit` будет точкой переключения REST→SSE без правки UI-каркаса; **Wave Y4** (multi-agent supervisor) — `AskAnswerPanel` сразу подцепит `routing_log` без раскопок в god-файле.
-- **Raised:** 2026-04-25
-- **Note (done):** 2026-04-25 — разнесено на `useAskSubmit.js` (submit orchestration),
-  `AskSessionControls.jsx` (input + buttons), `AskAnswerPanel.jsx` (answer + citations + trace);
-  `AskPanel.jsx` = composition shell ≤280 строк; Wave Y3 SSE переключается только в `useAskSubmit`.
-
-### [DONE] Split `GraphWorkspacePanel.jsx` (1164) — data hook vs view modes vs debug
-- **Area:** [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx), [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx), [`GraphFlowView.jsx`](../../ui/src/components/graph/GraphFlowView.jsx), [`graphViewState.js`](../../ui/src/components/graph/graphViewState.js), [`mergeWorkspaceRawGraph.js`](../../ui/src/components/graph/mergeWorkspaceRawGraph.js)
-- **Issue:** Файл ≈1164 строки. Совмещает: загрузку/мердж графа, переключение Cards/Canvas/Flow, боковую колонку деталей, drag-resize gutter, легенду, raw JSON inspector, алерты, `formatResearchApiError`.
-- **Proposal:** Вынести `useGraphWorkspaceData` (fetch + merge + retry + кеш neighbors), `GraphViewModeSwitch` (Cards/Canvas/Flow), `GraphDebugInspector` (raw JSON + diagnostic), `GraphSidePanel` (колонка деталей + gutter из существующего `graphDetailColumnWidth.js`); оставить в `GraphWorkspacePanel` только composition + URL state.
-- **Acceptance:** ни один модуль в `components/graph/` не превышает ~500 строк (кроме `GraphCanvasMvp` — отдельный пункт); `npm run lint` / `npm run test` зелёные.
-- **Synergy:** **Wave GR2/GR3/GR4** (агрегаторы + reader view + prioritized LIMIT) — сразу видно, какой компонент трогать; добавление UI для `aggregator_id` expand идёт в `GraphSidePanel` без god-файла; легенда `node_kind` правится отдельно.
-- **Raised:** 2026-04-25
-- **Note (done):** 2026-04-25 — разнесено на `hooks/useGraphWorkspaceData.js`, `GraphViewModeSwitch.jsx`, `GraphSidePanel.jsx`, `GraphDebugInspector.jsx`; `GraphWorkspacePanel.jsx` оставлен как composition-shell с прежним публичным API.
 
 ### [OPEN] Drop `ui/src/services/research/benchmarkSummary.js` shim
 - **Area:** [`ui/src/services/research/benchmarkSummary.js`](../../ui/src/services/research/benchmarkSummary.js), [`ui/src/hooks/useBenchmarkSummary.js`](../../ui/src/hooks/useBenchmarkSummary.js)

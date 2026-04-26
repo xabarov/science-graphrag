@@ -17,8 +17,10 @@ import {
 import "@xyflow/react/dist/style.css";
 
 import { CursorSmallButton } from "../common/index.js";
+import { useI18n } from "../../i18n/I18nContext.jsx";
 import { getScienceGraphNodeStyle } from "./graphCanvasStyle.js";
 import { buildReactFlowEdges, buildReactFlowNodes, getGraphLayoutSignature } from "./graphFlowAdapter.js";
+import { localizeEdgeType } from "./graphLocalize.js";
 
 const MIN_VIEW_HEIGHT = 280;
 const LS_GRAPH_FLOW_MINIMAP = "graphFlowMinimap";
@@ -86,6 +88,8 @@ const NODE_TYPES = { science: ScienceGraphNode };
  * }} props
  */
 function GraphFlowInner({ graph, selectedNodeId, selectedEdgeId = "", onSelectNode, onSelectEdge }) {
+  const { t } = useI18n();
+  const resolveEdgeLabel = useCallback((e) => localizeEdgeType(e, t), [t]);
   const { fitView, zoomTo } = useReactFlow();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -106,8 +110,8 @@ function GraphFlowInner({ graph, selectedNodeId, selectedEdgeId = "", onSelectNo
     [graph, selectedNodeId],
   );
   const nextEdges = useMemo(
-    () => buildReactFlowEdges(graph, selectedEdgeId),
-    [graph, selectedEdgeId],
+    () => buildReactFlowEdges(graph, selectedEdgeId, { resolveEdgeLabel }),
+    [graph, resolveEdgeLabel, selectedEdgeId],
   );
 
   useEffect(() => {

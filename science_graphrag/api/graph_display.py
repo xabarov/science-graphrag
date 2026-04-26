@@ -24,6 +24,8 @@ EDGE_DISPLAY_TYPE_RAW: dict[str, str] = {
     # Content relationships
     "CITES": "cites",
     "PUBLISHED_IN": "published in",
+    # Workspace membership (workspace graph projections)
+    "CONTAINS": "contains",
     # Semantic relationships
     "USES_METHOD": "uses method",
     "EVALUATED_ON": "evaluated on",

@@ -11,6 +11,45 @@
   --progress-file eval/results/ingest-progress-wave5.jsonl
 ```
 
+Optional: use a merged/writable blob tree (same variable the API should use for PDFs):
+
+```bash
+export SCIENCE_GRAPHRAG_BLOB_ROOT="$PWD/data/blobs_merged"
+.venv/bin/science-graphrag ingest-corpus /path/to/corpus \
+  --continue-on-error \
+  --per-file-timeout-s 900 \
+  --progress-file eval/results/ingest-progress-wave5.jsonl
+```
+
+Shell-exported `SCIENCE_GRAPHRAG_BLOB_ROOT` is respected in all modes (with or without `SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV=1`); align `.env` or Compose env for **api/worker** so downloads match ingest.
+
+When re-running the **same** pilot tree after a partial ingest, add `--skip-existing-sha` so files already in `documents` are not re-extracted.
+
+## Pre-flight: PDFs vs catalog (P0 slugs)
+
+Heuristic mapping of filenames to `corpus_work_id` (see `tests/fixtures/corpus/CATALOG.md`):
+
+```bash
+.venv/bin/python scripts/verify_pilot_corpus_against_catalog.py "$PILOT_CORPUS_DIR"
+```
+
+## Post-flight: distinct works in Qdrant (Wave 5 acceptance)
+
+Roadmap target: **≥16** distinct `work_id` values in the configured `chunks` collection.
+
+```bash
+.venv/bin/python scripts/report_qdrant_work_coverage.py --min-works 16
+```
+
+Omit `--min-works` for a read-only report (always exits 0).
+
+**Neo4j (optional):** total `:Work` nodes (includes works without chunks if any):
+
+```cypher
+MATCH (w:Work)
+RETURN count(w) AS work_count;
+```
+
 ## Flags
 
 - `--per-file-timeout-s` — hard wall timeout per file in seconds; `0` disables timeout.
@@ -33,6 +72,43 @@ Use the same `--progress-file` path with `--resume` after interruption:
   --resume \
   --progress-file eval/results/ingest-progress-wave5.jsonl
 ```
+
+## Troubleshooting
+
+### Postgres `password authentication failed` when `.env` disagrees with Docker
+
+`Settings` loads `.env` from the repo root. If `SCIENCE_GRAPHRAG_DATABASE_URL` there uses a password that **does not match** the Postgres volume created by `docker-compose.dev.yml` (default user/password: `science` / `change-me` on host port `15432`), batch ingest fails before the first file.
+
+**Fix (pick one):**
+
+1. Align `.env` with compose defaults for local dev, **or**
+2. Export overrides **after** sourcing `.env`, **or**
+3. Run with `SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV=1` and set storage URLs explicitly in the environment (same pattern as `docker-compose.dev.yml` `api` service). Example:
+
+```bash
+export SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV=1
+export SCIENCE_GRAPHRAG_DATABASE_URL='postgresql+psycopg://science:change-me@localhost:15432/science_graphrag'
+export SCIENCE_GRAPHRAG_REDIS_URL='redis://localhost:16379/0'
+export SCIENCE_GRAPHRAG_NEO4J_URI='bolt://localhost:17687'
+export SCIENCE_GRAPHRAG_QDRANT_URL='http://localhost:16333'
+# Keep MAIN_LLM_API_KEY / OPENROUTER keys in the environment for VL + extraction.
+```
+
+### `PermissionError` on `data/blobs/raw/...`
+
+If some shard dirs are **root-owned** (typical after a root-run Docker bind-mount), `chmod` as a normal user will not help — use `sudo chown -R "$USER:$USER" data/blobs/raw` once, **or** (no sudo) copy readable blobs into a writable tree and point **both** shell and `SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV=1` at it:
+
+```bash
+mkdir -p data/blobs_merged/raw
+rsync -a data/blobs/raw/ data/blobs_merged/raw/
+export SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV=1
+export SCIENCE_GRAPHRAG_BLOB_ROOT="$PWD/data/blobs_merged"
+# …same Postgres/Neo4j/Qdrant overrides as in «Postgres» subsection…
+```
+
+Then run `ingest-corpus` with `--resume`. For day-to-day dev, either keep `SCIENCE_GRAPHRAG_BLOB_ROOT` in `.env` aligned with that tree or merge back after `chown`.
+
+**Docker API (`docker-compose.dev.yml`):** set `SCIENCE_GRAPHRAG_HOST_BLOB_MOUNT=./data/blobs_merged` in `.env` so the `api` / `worker` bind-mount matches the merged tree (same variable as host path; defaults to `./data/blobs`). Restart `api` after changing it.
 
 ## Live log streaming
 

@@ -241,12 +241,14 @@ def extract_claims_llm(
         + _build_user_payload(chunks)
     )
 
+    # Single-chunk BT6 paraphrase runs can exceed 4k completion tokens on verbose models.
+    max_tokens_cap = 16384 if force_benchmark else 8192
     ext = SyncInstructorExtractor(
         api_key=settings.extraction_llm_api_key,
         base_url=settings.extraction_llm_base_url,
         model=settings.extraction_llm_model,
         temperature=settings.extraction_llm_temperature,
-        max_tokens=min(settings.claims_extraction_max_tokens, 8192),
+        max_tokens=min(int(settings.claims_extraction_max_tokens), max_tokens_cap),
         timeout_seconds=settings.extraction_llm_timeout_seconds,
         mode=settings.extraction_llm_mode,
     )

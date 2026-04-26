@@ -53,6 +53,10 @@ export function useScienceGraphForceSimulation(
   const iterationCountRef = useRef(0);
   const communitiesRef = useRef(null);
   const prevSimSigRef = useRef("");
+  /** Latest stable flag for the physics integrator (avoids stale closure while RAF runs). */
+  const isSimStableRef = useRef(isSimulationStable);
+  isSimStableRef.current = isSimulationStable;
+  const prevRepulsionRef = useRef(repulsionStrength);
 
   useEffect(() => {
     if (!enabled || nodes.length === 0) {
@@ -61,6 +65,14 @@ export function useScienceGraphForceSimulation(
         animationRef.current = null;
       }
       return undefined;
+    }
+
+    if (prevRepulsionRef.current !== repulsionStrength) {
+      prevRepulsionRef.current = repulsionStrength;
+      coolingTemperatureRef.current = COOLING_INITIAL_TEMPERATURE;
+      iterationCountRef.current = 0;
+      isSimStableRef.current = false;
+      setIsSimulationStable(false);
     }
 
     if (prevSimSigRef.current !== simulationSignature) {
@@ -309,8 +321,9 @@ export function useScienceGraphForceSimulation(
 
           const coolingFactor = coolingTemperatureRef.current;
 
-          const baseDamping = isSimulationStable && draggedPos ? 0.65 : isSimulationStable ? 0.55 : 0.8;
-          const baseVelocityMultiplier = isSimulationStable && draggedPos ? 0.25 : isSimulationStable ? 0.35 : 0.6;
+          const stable = isSimStableRef.current;
+          const baseDamping = stable && draggedPos ? 0.65 : stable ? 0.55 : 0.8;
+          const baseVelocityMultiplier = stable && draggedPos ? 0.25 : stable ? 0.35 : 0.6;
 
           const dampingFactor = isHighRepulsion ? Math.max(0.7, baseDamping) : baseDamping;
           let velocityMultiplier = isHighRepulsion ? Math.min(1.0, baseVelocityMultiplier * 1.5) : baseVelocityMultiplier;
@@ -382,7 +395,8 @@ export function useScienceGraphForceSimulation(
                 node.vx = 0;
                 node.vy = 0;
               });
-              if (!isSimulationStable) {
+              if (!isSimStableRef.current) {
+                isSimStableRef.current = true;
                 setIsSimulationStable(true);
               }
               return newNodes;

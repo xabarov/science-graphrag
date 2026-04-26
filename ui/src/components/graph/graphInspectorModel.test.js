@@ -13,6 +13,19 @@ describe("graphInspectorModel", () => {
     expect(m.get("a")?.displayLabel).toBe("Paper A");
   });
 
+  it("humanEdgeSummary uses edgeTypeLabel when provided", () => {
+    const graph = normalizeGraphPayload({
+      nodes: [
+        { id: "a", display_label: "Alpha" },
+        { id: "b", display_label: "Beta" },
+      ],
+      edges: [{ id: "e1", source: "a", target: "b", type: "CITES", display_type: "cites" }],
+    });
+    const lookup = buildNodeLookup(graph.nodes);
+    const e = graph.edges[0];
+    expect(humanEdgeSummary(e, lookup, () => "RU-cites")).toBe("Alpha —[RU-cites]→ Beta");
+  });
+
   it("humanEdgeSummary uses API summary when present", () => {
     const graph = normalizeGraphPayload({
       nodes: [

@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from dotenv import load_dotenv
+from dotenv import dotenv_values, load_dotenv
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
 
@@ -12,14 +12,43 @@ from science_graphrag.settings.service import SettingsService
 # override=True: a shell export of MAIN_LLM_API_KEY="" (empty) must not block values from `.env`.
 # Inside Docker, Compose already injects SCIENCE_GRAPHRAG_* (Neo4j/Qdrant hosts); do not let
 # load_dotenv clobber them with host-oriented localhost values from a mounted `.env`.
+# blob_root / artifact_root are runtime-overridable: an operator or agent may set them
+# via shell export for a single ingest run (e.g. SCIENCE_GRAPHRAG_BLOB_ROOT=./blobs_merged).
+# load_dotenv(override=True) below would clobber those shell exports; save them first.
+_RUNTIME_PATH_VARS = ("SCIENCE_GRAPHRAG_BLOB_ROOT", "SCIENCE_GRAPHRAG_ARTIFACT_ROOT")
+_saved_runtime_paths = {k: os.environ[k] for k in _RUNTIME_PATH_VARS if k in os.environ}
+
 _skip_host_dotenv = (
     Path("/.dockerenv").is_file() or os.getenv("SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV") == "1"
 )
 if _skip_host_dotenv:
     # Fill unprefixed keys (MAIN_LLM_*, etc.) from `.env` without clobbering Compose-injected URLs.
     load_dotenv(override=False)
+    # Separately ensure API keys are always available even when the shell has them empty/unset.
+    # `override=False` above preserves Docker-injected service URLs, but means a blank shell
+    # MAIN_LLM_API_KEY would silently block the value from `.env`.  Reading the file directly
+    # and injecting only the missing credential variables avoids this footgun without touching
+    # any service-URL keys (neo4j/qdrant/postgres/redis).
+    _api_key_vars = (
+        "MAIN_LLM_API_KEY",
+        "OPENROUTER_API_KEY",
+        "API_KEY",
+        "MAIN_LLM_BASE_URL",
+        "MAIN_LLM_MODEL",
+        "USE_VL_FOR_PDF",
+    )
+    _env_file_vals = dotenv_values()
+    for _k in _api_key_vars:
+        if _k in _env_file_vals and not os.environ.get(_k):
+            os.environ[_k] = _env_file_vals[_k]
+    del _api_key_vars, _env_file_vals, _k
 else:
     load_dotenv(override=True)
+    # Restore runtime-overridable paths that load_dotenv(override=True) may have clobbered.
+    for _k, _v in _saved_runtime_paths.items():
+        os.environ[_k] = _v
+
+del _saved_runtime_paths
 
 
 class Settings(BaseSettings):
@@ -209,8 +238,8 @@ class Settings(BaseSettings):
     claims_extraction_max_tokens: int = Field(
         default=4096,
         ge=256,
-        le=8192,
-        description="Max completion tokens for claims extraction LLM call.",
+        le=16384,
+        description="Max completion tokens for claims extraction LLM call (BT6 benchmarks may need 8k–16k).",
     )
     qdrant_claims_collection: str = Field(
         default="claims",
@@ -294,7 +323,9 @@ class Settings(BaseSettings):
 
     admin_api_key: str | None = Field(
         default=None,
-        description="If set, benchmark and settings HTTP routers require matching X-Admin-Key header.",
+        description=(
+            "If set, benchmark and settings HTTP routers require matching X-Admin-Key header."
+        ),
     )
 
     @model_validator(mode="before")
@@ -323,6 +354,19 @@ class Settings(BaseSettings):
                 val = os.getenv(envar)
                 if val:
                     data[field] = val
+
+        # blob_root / artifact_root are runtime-overridable paths: an operator may point them
+        # to a different tree for a single ingest run without editing `.env`.  Pydantic's source
+        # order (dotenv > env) would otherwise ignore a shell export.  The module-level code
+        # already restores shell-exported values clobbered by load_dotenv(override=True), so
+        # os.getenv here reliably reflects the operator's intent in all modes (local / Docker).
+        for field, envar in (
+            ("blob_root", "SCIENCE_GRAPHRAG_BLOB_ROOT"),
+            ("artifact_root", "SCIENCE_GRAPHRAG_ARTIFACT_ROOT"),
+        ):
+            val = os.getenv(envar)
+            if val:
+                data[field] = val
 
         if not data.get("vl_api_key"):
             key = os.getenv("MAIN_LLM_API_KEY") or os.getenv("API_KEY")

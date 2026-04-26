@@ -50,5 +50,26 @@ describe("graphFlowAdapter", () => {
     expect(edges[0].sourceHandle).toBe("out");
     expect(edges[0].targetHandle).toBe("in");
     expect(edges[0].selected).toBe(true);
+    expect(edges[0].label).toBe("USES METHOD");
+  });
+
+  it("buildReactFlowEdges uses displayType for label when present", () => {
+    const g = {
+      nodes: graph.nodes,
+      edges: [{ id: "e1", source: "a", target: "b", type: "CITES", displayType: "cites" }],
+    };
+    const edges = buildReactFlowEdges(g, "");
+    expect(edges[0].label).toBe("cites");
+  });
+
+  it("buildReactFlowEdges uses resolveEdgeLabel when provided", () => {
+    const g = {
+      nodes: graph.nodes,
+      edges: [{ id: "e1", source: "a", target: "b", type: "CITES", displayType: "ignored" }],
+    };
+    const edges = buildReactFlowEdges(g, "", {
+      resolveEdgeLabel: () => "RU-cites",
+    });
+    expect(edges[0].label).toBe("RU-cites");
   });
 });

@@ -16,9 +16,22 @@ from eval.bench_common import (
     run_suite_cli_flow,
 )
 from eval.retrieval.stack_health import check_api_health, write_skip_artifact
+from eval.retrieval.work_id_resolve import is_uuid_like, resolve_work_id_from_layer1_slug
 from science_graphrag.config import Settings, get_settings
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _resolve_work_ref(repo: Path, ref: str, *, settings: Settings) -> str:
+    """Use Neo4j UUID for API calls; pass through if already UUID-like."""
+
+    r = str(ref).strip()
+    if not r:
+        return r
+    if is_uuid_like(r):
+        return r
+    uid = resolve_work_id_from_layer1_slug(repo, r, settings=settings)
+    return uid or r
 
 
 def _load_tiers(fixtures_root: Path) -> dict[str, list[str]] | None:
@@ -172,15 +185,18 @@ def run_multihop_case(
             "wall_clock_seconds": 0.0,
             "run_metadata": benchmark_run_metadata(s),
         }
-    center_work_id = str(case.get("center_work_id") or "").strip()
+    s = settings or get_settings()
+    center_raw = str(case.get("center_work_id") or "").strip()
+    center_work_id = _resolve_work_ref(_REPO_ROOT, center_raw, settings=s)
     depth = int(case.get("depth") or 2)
     neighbor_limit = int(case.get("neighbor_limit") or 300)
-    expected = [str(x) for x in (case.get("expected_neighbor_work_ids") or [])]
+    expected = [
+        _resolve_work_ref(_REPO_ROOT, str(x), settings=s)
+        for x in (case.get("expected_neighbor_work_ids") or [])
+    ]
     min_precision = float(case.get("min_precision") or 0.7)
     min_recall = float(case.get("min_recall") or 0.5)
     query_hint = str(case.get("query_hint") or "")
-
-    s = settings or get_settings()
     started = perf_counter()
     request_error: str | None = None
     graph_payload: dict[str, Any] = {}
@@ -193,7 +209,12 @@ def run_multihop_case(
             with httpx.Client(timeout=timeout_seconds) as client:
                 resp = client.get(
                     f"{api_base_url.rstrip('/')}/v1/works/{center_work_id}/graph",
-                    params={"depth": depth, "neighbor_limit": neighbor_limit},
+                    params={
+                        "depth": depth,
+                        "neighbor_limit": neighbor_limit,
+                        # reader view truncates neighbor Works; multihop gold expects Work ids.
+                        "view": "raw",
+                    },
                 )
                 resp.raise_for_status()
                 graph_payload = resp.json()

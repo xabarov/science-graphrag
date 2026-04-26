@@ -134,8 +134,25 @@ export function truncateCanvasLabel(raw, maxLen = NODE_LABEL_MAX) {
 
 /**
  * @param {unknown} edgeType
+ * @param {{ normalizeUnderscores?: boolean }} [opts] When true (default), Neo4j-style `HAS_X` becomes `HAS X`.
+ *   Set false for backend `displayType` strings so literal underscores are preserved.
  * @returns {string}
  */
-export function edgeTypeCanvasLabel(edgeType) {
-  return truncateCanvasLabel(edgeType == null ? "" : String(edgeType).trim(), EDGE_LABEL_MAX);
+export function edgeTypeCanvasLabel(edgeType, opts = {}) {
+  const normalizeUnderscores = opts.normalizeUnderscores !== false;
+  let t = edgeType == null ? "" : String(edgeType).trim();
+  if (normalizeUnderscores) t = t.replace(/_/g, " ");
+  return truncateCanvasLabel(t, EDGE_LABEL_MAX);
+}
+
+/**
+ * Edge label for canvas / React Flow: prefers `displayType`, else `type` with underscore spacing.
+ *
+ * @param {{ displayType?: string, type?: string }} edge
+ * @returns {string}
+ */
+export function edgeTypeCanvasLabelFromEdge(edge) {
+  const displayRaw = edge?.displayType != null ? String(edge.displayType).trim() : "";
+  const resolved = displayRaw || edge?.type;
+  return edgeTypeCanvasLabel(resolved, { normalizeUnderscores: !displayRaw });
 }

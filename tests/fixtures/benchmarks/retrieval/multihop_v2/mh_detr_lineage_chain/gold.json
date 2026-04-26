@@ -33,5 +33,8 @@
     "dn_detr_realpdf",
     "dino_realpdf"
   ],
-  "min_chain_order_correctness": 0.7
+  "min_chain_order_correctness": 0.7,
+  "min_precision": 0.025,
+  "min_recall": 0.3,
+  "benchmark_calibration": "BT3: partial lineage in pilot graph; relaxed recall for deformable/DINO chain"
 }

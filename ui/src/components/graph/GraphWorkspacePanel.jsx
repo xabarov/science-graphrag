@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
@@ -20,6 +20,7 @@ import GraphViewModeSwitch from "./GraphViewModeSwitch.jsx";
 import GraphVisualization from "./GraphVisualization.jsx";
 import { GraphErrorAlert, GraphLoadingInline, GraphMissingWorkInline } from "./graphShellStates.jsx";
 import { deriveInspectorDetail } from "./graphInspectorModel.js";
+import { localizeEdgeType } from "./graphLocalize.js";
 import { capGraphForUi } from "./graphUiLimits.js";
 import { LS_GRAPH_STANDALONE_DETAIL_MIN_PX, readGraphDetailColumnPxStored } from "./graphDetailColumnWidth.js";
 import {
@@ -129,9 +130,10 @@ export default function GraphWorkspacePanel({
     return resolveSelectedNodeId(graph, normalizeGraphNodeId(selectedNodeId));
   }, [graph, selectedNodeId, resolvedSelectedEdgeId]);
   const { displayGraph, capWarnings } = useMemo(() => capGraphForUi(graph, resolvedSelectedNodeId), [graph, resolvedSelectedNodeId]);
+  const edgeTypeLabel = useCallback((e) => localizeEdgeType(e, t), [t]);
   const inspector = useMemo(
-    () => deriveInspectorDetail(displayGraph, resolvedSelectedNodeId, resolvedSelectedEdgeId),
-    [displayGraph, resolvedSelectedNodeId, resolvedSelectedEdgeId],
+    () => deriveInspectorDetail(displayGraph, resolvedSelectedNodeId, resolvedSelectedEdgeId, { edgeTypeLabel }),
+    [displayGraph, edgeTypeLabel, resolvedSelectedNodeId, resolvedSelectedEdgeId],
   );
   const traceSummary = describeTraceabilityState(traceContext);
 

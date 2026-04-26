@@ -19,13 +19,24 @@ alwaysApply: true
 
 ## Pre-flight checklist (до запуска)
 
-1. **API keys видимы внутри окружения процесса.** Если запускаешь через `Shell` с явными env vars — проверь, что `SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV` не выставлен в `1`, либо явно прокинь `MAIN_LLM_API_KEY` (и `OPENROUTER_API_KEY` если нужно). Smoke-check одной строкой:
+1. **API keys видимы внутри окружения процесса.** Smoke-check одной строкой:
 
-   ```bash
-   .venv/bin/python -c "from science_graphrag.config import Settings; s=Settings(); print('main_llm_api_key:', bool(s.main_llm_api_key), 'embeddings:', bool(s.embeddings_api_key))"
-   ```
+ ```bash
+ .venv/bin/python -c "from science_graphrag.config import Settings; s=Settings(); print('extraction_llm_api_key:', bool(s.extraction_llm_api_key), 'vl_api_key:', bool(s.vl_api_key))"
+ ```
 
-   Должно напечатать `True` для нужного канала. Если `False` — НЕ запускать долгую команду.
+ Должно напечатать `True True`. Если что-то `False` — НЕ запускать долгую команду.
+
+ **Если `False` при активном `SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV=1`:**
+ Флаг переключает `load_dotenv(override=False)`, что исторически блокировало загрузку API-ключей из `.env` когда переменная была пуста в shell. После правки `config.py` (2026-04-26) ключи грузятся принудительно — но если smoke-check всё равно `False`, значит:
+ - `MAIN_LLM_API_KEY` отсутствует в `.env` (проверь `grep MAIN_LLM_API_KEY .env`)
+ - или `.env` не найден (команда запускается из неверной CWD — нужно из корня репозитория)
+
+ Быстрый явный fallback при любых сомнениях:
+ ```bash
+ MAIN_LLM_API_KEY=$(grep MAIN_LLM_API_KEY .env | cut -d= -f2-) \
+   science-graphrag ingest-corpus ...
+ ```
 
 2. **Инфраструктура поднята.** Для всего, что трогает Neo4j/Qdrant/Postgres:
 

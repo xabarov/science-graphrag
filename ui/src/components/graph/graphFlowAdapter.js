@@ -4,7 +4,11 @@
  */
 
 import { computeWorldLayout, worldRadiusForNodeCount } from "./graphCanvasTransform.js";
-import { edgeTypeCanvasLabel, truncateCanvasLabel } from "./graphCanvasStyle.js";
+import { edgeTypeCanvasLabelFromEdge, truncateCanvasLabel } from "./graphCanvasStyle.js";
+
+/**
+ * @typedef {{ resolveEdgeLabel?: (edge: object) => string }} BuildReactFlowEdgesOptions
+ */
 
 /**
  * Stable string for topology-only changes (node ids + edge ids and endpoints).
@@ -48,20 +52,23 @@ export function buildReactFlowNodes(graph, selectedNodeId = "") {
 }
 
 /**
- * @param {{ edges: Array<{ id: string, source: string, target: string, type?: string }> }} graph
+ * @param {{ edges: Array<{ id: string, source: string, target: string, type?: string, displayType?: string }> }} graph
  * @param {string} selectedEdgeId
+ * @param {BuildReactFlowEdgesOptions} [options]
  * @returns {import("@xyflow/react").Edge[]}
  */
-export function buildReactFlowEdges(graph, selectedEdgeId = "") {
+export function buildReactFlowEdges(graph, selectedEdgeId = "", options = {}) {
   const edges = Array.isArray(graph?.edges) ? graph.edges : [];
   const sel = String(selectedEdgeId || "").trim();
+  const resolve =
+    typeof options.resolveEdgeLabel === "function" ? options.resolveEdgeLabel : edgeTypeCanvasLabelFromEdge;
   return edges.map((e) => ({
     id: e.id,
     source: e.source,
     target: e.target,
     sourceHandle: "out",
     targetHandle: "in",
-    label: edgeTypeCanvasLabel(e.displayType || e.type),
+    label: resolve(e),
     labelStyle: { fill: "rgba(255,255,255,0.55)", fontSize: 10 },
     labelBgPadding: [2, 4],
     labelBgBorderRadius: 4,

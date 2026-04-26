@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   edgeTypeCanvasLabel,
+  edgeTypeCanvasLabelFromEdge,
   getScienceGraphLegendNodeChipSx,
   getScienceGraphNodeStyle,
   getScienceGraphNodeTypeIcon,
@@ -63,6 +64,32 @@ describe("truncateCanvasLabel", () => {
 describe("edgeTypeCanvasLabel", () => {
   it("passes through short types", () => {
     expect(edgeTypeCanvasLabel("CITES")).toBe("CITES");
+  });
+
+  it("replaces underscores in raw Neo4j-style types by default", () => {
+    expect(edgeTypeCanvasLabel("HAS_AUTHORSHIP")).toBe("HAS AUTHORSHIP");
+  });
+
+  it("preserves underscores for backend display strings when opted out", () => {
+    expect(edgeTypeCanvasLabel("is_author_of", { normalizeUnderscores: false })).toBe("is_author_of");
+  });
+
+  it("passes through spaced display strings when opted out", () => {
+    expect(edgeTypeCanvasLabel("is author of", { normalizeUnderscores: false })).toBe("is author of");
+  });
+});
+
+describe("edgeTypeCanvasLabelFromEdge", () => {
+  it("prefers displayType over raw type", () => {
+    expect(edgeTypeCanvasLabelFromEdge({ displayType: "cites", type: "CITES" })).toBe("cites");
+  });
+
+  it("treats whitespace-only displayType as absent", () => {
+    expect(edgeTypeCanvasLabelFromEdge({ displayType: "   ", type: "CITES" })).toBe("CITES");
+  });
+
+  it("normalizes underscores when falling back to type", () => {
+    expect(edgeTypeCanvasLabelFromEdge({ displayType: "", type: "HAS_AUTHORSHIP" })).toBe("HAS AUTHORSHIP");
   });
 });
 

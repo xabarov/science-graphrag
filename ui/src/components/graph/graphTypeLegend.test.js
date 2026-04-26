@@ -2,6 +2,7 @@ import React from "react";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
+import { I18nProvider } from "../../i18n/I18nContext.jsx";
 import GraphTypeLegend from "./GraphTypeLegend.jsx";
 import { collectGraphTypeLegend, collectGraphTypeLegendByKind } from "./graphTypeLegend.js";
 
@@ -46,15 +47,18 @@ describe("collectGraphTypeLegendByKind", () => {
 describe("GraphTypeLegend SSR smoke", () => {
   it("renders node and edge type labels", () => {
     const html = renderToString(
-      React.createElement(GraphTypeLegend, {
-        graph: {
-          nodes: [{ id: "a", type: "Work", nodeKind: "WorkInternal" }],
-          edges: [{ source: "a", target: "a", type: "cites" }],
-        },
-      }),
+      React.createElement(
+        I18nProvider,
+        null,
+        React.createElement(GraphTypeLegend, {
+          graph: {
+            nodes: [{ id: "a", type: "Work", nodeKind: "WorkInternal" }],
+            edges: [{ source: "a", target: "a", type: "cites" }],
+          },
+        }),
+      ),
     );
-    expect(html).toContain("Work");
-    expect(html).toContain("WorkInternal");
+    expect(html).toContain("Work (internal)");
     expect(html).toContain("Nodes");
     expect(html).toContain("cites");
     expect(html).toContain("Types in view");

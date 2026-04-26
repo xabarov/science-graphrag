@@ -12,7 +12,9 @@ import RestartAltOutlinedIcon from "@mui/icons-material/RestartAltOutlined";
 import ZoomOutMapOutlinedIcon from "@mui/icons-material/ZoomOutMapOutlined";
 
 import { CursorIconButton } from "../common/index.js";
+import { useI18n } from "../../i18n/I18nContext.jsx";
 import { computeFitTransform, computeWorldLayout, screenToWorld, worldRadiusForNodeCount } from "./graphCanvasTransform.js";
+import { localizeAggregatorTitle, localizeEdgeType } from "./graphLocalize.js";
 import { drawEdges, drawLabels, drawNodes } from "./graphCanvasDraw.js";
 import { getGraphLayoutSignature } from "./graphFlowAdapter.js";
 import { buildSimulationState } from "./graphSimulationAdapter.js";
@@ -55,6 +57,13 @@ export default function GraphCanvasMvp({
   onCanvasLayoutModeChange,
   onAggregatorExpand,
 }) {
+  const { t } = useI18n();
+  const resolveEdgeLabel = useCallback((e) => localizeEdgeType(e, t), [t]);
+  const resolveNodeCanvasLabel = useCallback(
+    (node) => (String(node.nodeKind) === "Aggregator" ? localizeAggregatorTitle(node, t) : null),
+    [t],
+  );
+
   const canvasRef = useRef(null);
   const wrapRef = useRef(null);
   const canvasHostRef = useRef(null);
@@ -271,13 +280,29 @@ export default function GraphCanvasMvp({
     );
     drawEdges(ctx, graph.edges, nodeById, positions, transformRef.current, edgeStyleMap);
     drawNodes(ctx, graph.nodes, positions, transformRef.current, nodeStyleMap);
-    drawLabels(ctx, graph.nodes, graph.edges, positions, transformRef.current, { ...nodeStyleMap, ...edgeStyleMap });
-  }, [getPositionsForFrame, getViewportDims, graph.edges, graph.nodes, input.hoveredEdgeId, input.hoveredNodeId, nodeById, selectedEdgeId, selectedNodeId, transform]);
+    drawLabels(ctx, graph.nodes, graph.edges, positions, transformRef.current, { ...nodeStyleMap, ...edgeStyleMap }, {
+      resolveEdgeLabel,
+      resolveNodeCanvasLabel,
+    });
+  }, [
+    getPositionsForFrame,
+    getViewportDims,
+    graph.edges,
+    graph.nodes,
+    input.hoveredEdgeId,
+    input.hoveredNodeId,
+    nodeById,
+    resolveEdgeLabel,
+    resolveNodeCanvasLabel,
+    selectedEdgeId,
+    selectedNodeId,
+    transform,
+  ]);
 
   if (graph.nodes.length === 0) {
     return (
       <Box sx={{ borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "#1a1a1a", minHeight: MIN_CANVAS_HEIGHT, display: "flex", alignItems: "center", justifyContent: "center", p: 2 }}>
-        <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>No nodes to draw on canvas.</Typography>
+        <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>{t("graph.canvas.empty")}</Typography>
       </Box>
     );
   }
@@ -314,41 +339,55 @@ export default function GraphCanvasMvp({
   };
 
   return (
-    <Box ref={wrapRef} component="section" role="region" aria-label="Graph canvas" tabIndex={0} sx={{ width: "100%", flex: 1, minHeight: 0, display: "flex", flexDirection: "column", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden", backgroundColor: "#0a0a0a", outline: "none" }}>
+    <Box
+      ref={wrapRef}
+      component="section"
+      role="region"
+      aria-label={t("graph.canvas.regionAria")}
+      tabIndex={0}
+      sx={{ width: "100%", flex: 1, minHeight: 0, display: "flex", flexDirection: "column", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden", backgroundColor: "#0a0a0a", outline: "none" }}
+    >
       <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75, px: 1, py: 0.5, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75 }}>
-          <Tooltip title="Canvas controls help">
-            <CursorIconButton type="button" aria-label="Canvas controls help">
+          <Tooltip title={t("graph.canvas.helpTooltip")}>
+            <CursorIconButton type="button" aria-label={t("graph.canvas.helpAria")}>
               <InfoOutlinedIcon sx={{ fontSize: "1.05rem" }} />
             </CursorIconButton>
           </Tooltip>
           {layoutMode === "force" ? (
-            <Tooltip title="Repulsion strength (force simulation spacing)">
+            <Tooltip title={t("graph.canvas.repulsionTooltip")}>
               <Box sx={{ width: 128, px: 0.25, cursor: "help" }}>
                 <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5, mb: 0.15 }}>
                   <Typography sx={{ fontSize: "0.58rem", color: "rgba(255,255,255,0.35)", fontFamily: "monospace", letterSpacing: "0.02em" }}>
                     sim
                   </Typography>
                   <Typography sx={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.42)", flex: 1 }}>
-                    Repulsion {Math.round(repulsionPercent)}%
+                    {t("graph.canvas.repulsion", { percent: String(Math.round(repulsionPercent)) })}
                   </Typography>
                 </Box>
-                <Slider size="small" value={repulsionPercent} min={0} max={100} onChange={(_, v) => setRepulsionPercent(v)} aria-label="Force layout repulsion strength" />
+                <Slider
+                  size="small"
+                  value={repulsionPercent}
+                  min={0}
+                  max={100}
+                  onChange={(_, v) => setRepulsionPercent(v)}
+                  aria-label={t("graph.canvas.repulsionAria")}
+                />
               </Box>
             </Tooltip>
           ) : null}
         </Box>
         <Divider orientation="vertical" flexItem sx={{ borderColor: "rgba(255,255,255,0.08)", alignSelf: "stretch", minHeight: 28 }} />
         <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.5 }}>
-          <Tooltip title="Fit graph to view">
-            <CursorIconButton type="button" aria-label="Fit graph to view" onClick={() => applyFit("auto")}>
+          <Tooltip title={t("graph.canvas.fitTooltip")}>
+            <CursorIconButton type="button" aria-label={t("graph.canvas.fitAria")} onClick={() => applyFit("auto")}>
               <FitScreenOutlinedIcon sx={{ fontSize: "1.05rem" }} />
             </CursorIconButton>
           </Tooltip>
-          <Tooltip title="Reset zoom to 1:1 at center">
+          <Tooltip title={t("graph.canvas.resetZoomTooltip")}>
             <CursorIconButton
               type="button"
-              aria-label="Reset zoom to 1:1 at center"
+              aria-label={t("graph.canvas.resetZoomAria")}
               onClick={() => {
                 const { w, h } = getViewportDims();
                 const world = screenToWorld(w / 2, h / 2, transformRef.current.scale, transformRef.current.tx, transformRef.current.ty);
@@ -360,8 +399,8 @@ export default function GraphCanvasMvp({
               <ZoomOutMapOutlinedIcon sx={{ fontSize: "1.05rem" }} />
             </CursorIconButton>
           </Tooltip>
-          <Tooltip title="Center on selected node">
-            <CursorIconButton type="button" aria-label="Center on selected node" onClick={handleCenter} disabled={!selectedNodeId}>
+          <Tooltip title={t("graph.canvas.centerSelectionTooltip")}>
+            <CursorIconButton type="button" aria-label={t("graph.canvas.centerSelectionAria")} onClick={handleCenter} disabled={!selectedNodeId}>
               <CenterFocusStrongOutlinedIcon sx={{ fontSize: "1.05rem" }} />
             </CursorIconButton>
           </Tooltip>
@@ -370,13 +409,13 @@ export default function GraphCanvasMvp({
           <>
             <Divider orientation="vertical" flexItem sx={{ borderColor: "rgba(255,255,255,0.08)", alignSelf: "stretch", minHeight: 28 }} />
             <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.5 }}>
-              <Tooltip title="Restart force layout">
-                <CursorIconButton type="button" aria-label="Restart force layout" onClick={handleRestart}>
+              <Tooltip title={t("graph.canvas.restartForceTooltip")}>
+                <CursorIconButton type="button" aria-label={t("graph.canvas.restartForceAria")} onClick={handleRestart}>
                   <RestartAltOutlinedIcon sx={{ fontSize: "1.05rem" }} />
                 </CursorIconButton>
               </Tooltip>
-              <Tooltip title="Unpin all dragged nodes">
-                <CursorIconButton type="button" aria-label="Unpin all dragged nodes" onClick={handleUnpinAll} disabled={pinnedNodeCount === 0}>
+              <Tooltip title={t("graph.canvas.unpinAllTooltip")}>
+                <CursorIconButton type="button" aria-label={t("graph.canvas.unpinAllAria")} onClick={handleUnpinAll} disabled={pinnedNodeCount === 0}>
                   <LinkOffOutlinedIcon sx={{ fontSize: "1.05rem" }} />
                 </CursorIconButton>
               </Tooltip>

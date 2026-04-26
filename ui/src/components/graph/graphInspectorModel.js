@@ -27,8 +27,9 @@ export function buildNodeLookup(nodes) {
 /**
  * @param {{ source: string, target: string, type?: string, displayType?: string, sourceLabel?: string, targetLabel?: string, summary?: string }} edge
  * @param {Map<string, { displayLabel: string, label: string }>} lookup
+ * @param {(e: object) => string} [edgeTypeLabel] when set, used for the bracket segment instead of backend `displayType`
  */
-export function humanEdgeSummary(edge, lookup) {
+export function humanEdgeSummary(edge, lookup, edgeTypeLabel) {
   if (edge.summary && String(edge.summary).trim()) return String(edge.summary);
   const sl =
     (edge.sourceLabel && String(edge.sourceLabel).trim()) ||
@@ -40,7 +41,10 @@ export function humanEdgeSummary(edge, lookup) {
     lookup.get(edge.target)?.displayLabel ||
     lookup.get(edge.target)?.label ||
     edge.target;
-  const dt = (edge.displayType && String(edge.displayType).trim()) || String(edge.type || "related").replace(/_/g, " ");
+  const dt =
+    typeof edgeTypeLabel === "function"
+      ? edgeTypeLabel(edge)
+      : (edge.displayType && String(edge.displayType).trim()) || String(edge.type || "related").replace(/_/g, " ");
   return `${sl} —[${dt}]→ ${tl}`;
 }
 
@@ -63,6 +67,7 @@ export function edgeOtherEndpoint(edge, selfNodeId) {
  * @param {{ nodes: Array<object>, edges: Array<object> }} graph normalized graph (often display-capped)
  * @param {string} selectedNodeId
  * @param {string} [selectedEdgeId]
+ * @param {{ edgeTypeLabel?: (e: object) => string }} [options]
  * @returns {{
  *   selectedNode: object | null,
  *   selectedEdge: object | null,
@@ -70,13 +75,14 @@ export function edgeOtherEndpoint(edge, selfNodeId) {
  *   relatedEdgeRows: Array<{ edge: object, otherId: string, otherLabel: string, readableLine: string, directionHint: string }>,
  * }}
  */
-export function deriveInspectorDetail(graph, selectedNodeId, selectedEdgeId = "") {
+export function deriveInspectorDetail(graph, selectedNodeId, selectedEdgeId = "", options = {}) {
+  const edgeTypeLabel = typeof options.edgeTypeLabel === "function" ? options.edgeTypeLabel : undefined;
   const base = deriveGraphDetail(graph, selectedNodeId, selectedEdgeId);
   const lookup = buildNodeLookup(graph.nodes || []);
 
   if (base.selectedEdge) {
     const e = base.selectedEdge;
-    const readableLine = humanEdgeSummary(e, lookup);
+    const readableLine = humanEdgeSummary(e, lookup, edgeTypeLabel);
     return {
       selectedNode: null,
       selectedEdge: e,
@@ -95,7 +101,7 @@ export function deriveInspectorDetail(graph, selectedNodeId, selectedEdgeId = ""
       edge: e,
       otherId,
       otherLabel,
-      readableLine: humanEdgeSummary(e, lookup),
+      readableLine: humanEdgeSummary(e, lookup, edgeTypeLabel),
       directionHint: e.direction && String(e.direction).trim() ? String(e.direction) : directionHint,
     };
   });

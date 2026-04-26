@@ -64,5 +64,12 @@
     "holdout_yolox_v1",
     "holdout_dino_v1",
     "holdout_deformable_detr_v1"
+  ],
+  "claims_paraphrase_bt6_mini": [
+    "corpus_yolov1_v2",
+    "corpus_ssd_v2"
+  ],
+  "claims_paraphrase_holdout_mini": [
+    "holdout_atss_v1"
   ]
 }

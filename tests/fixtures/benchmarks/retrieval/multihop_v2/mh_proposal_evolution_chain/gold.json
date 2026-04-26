@@ -34,5 +34,8 @@
     "faster_rcnn_realpdf",
     "mask_rcnn_realpdf"
   ],
-  "min_chain_order_correctness": 0.8
+  "min_chain_order_correctness": 0.8,
+  "min_precision": 0.2,
+  "min_recall": 0.2,
+  "benchmark_calibration": "BT3: R-CNN family neighborhood under raw graph projection (pilot corpus)"
 }

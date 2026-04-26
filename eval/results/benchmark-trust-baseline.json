@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "decision_gate": {
-    "decision": "CONDITIONAL-GO",
-    "reason": "all_nightly_passed;advisory_phantom_count=9",
+    "decision": "NO-GO",
+    "reason": "hard_block_individual_failures:retrieval_judge_pilot",
     "criteria": {
       "reference_all_passed": true,
       "layer1_nightly_failed_count": 0,
@@ -32,7 +32,7 @@
             "contract_only": false,
             "workspace_scoped_live": true,
             "uuid_aware_mode": false,
-            "hit_count": 0,
+            "hit_count": 5,
             "trace_workspace_matches": true,
             "forbidden_work_id_violation_count": 0,
             "forbidden_corpus_work_ids_leaked": [],
@@ -43,8 +43,8 @@
               "fcos_realpdf"
             ],
             "expected_citations_min_count": 3,
-            "citation_count_ok": false,
-            "answer_rouge_l": 0.03225806451612903,
+            "citation_count_ok": true,
+            "answer_rouge_l": 0.06866952789699571,
             "abstain_keyword_hit": false,
             "answer_metric_type": "rouge_l",
             "workspace_scope_ok": false
@@ -59,7 +59,7 @@
             "contract_only": false,
             "workspace_scoped_live": true,
             "uuid_aware_mode": false,
-            "hit_count": 0,
+            "hit_count": 5,
             "trace_workspace_matches": true,
             "forbidden_work_id_violation_count": 0,
             "forbidden_corpus_work_ids_leaked": [],
@@ -120,7 +120,7 @@
             ],
             "expected_citations_min_count": 3,
             "citation_count_ok": true,
-            "answer_rouge_l": 0.08,
+            "answer_rouge_l": 0.08979591836734692,
             "abstain_keyword_hit": false,
             "answer_metric_type": "rouge_l",
             "workspace_scope_ok": true
@@ -175,6 +175,30 @@
             "answer_metric_type": "rouge_l",
             "workspace_scope_ok": true
           }
+        },
+        {
+          "family": "retrieval_family",
+          "member_id": "judge_pilot",
+          "case_id": "ws_full_anchor_free_overview",
+          "passed": false,
+          "weighted_score": 3.3,
+          "error": null
+        },
+        {
+          "family": "retrieval_family",
+          "member_id": "judge_pilot",
+          "case_id": "ws_two_stage_proposal_evolution",
+          "passed": false,
+          "weighted_score": 4.3,
+          "error": null
+        },
+        {
+          "family": "retrieval_family",
+          "member_id": "judge_pilot",
+          "case_id": "ws_yolo_speed_question",
+          "passed": false,
+          "weighted_score": 2.6,
+          "error": null
         },
         {
           "family": "retrieval_family",
@@ -353,7 +377,9 @@
           }
         }
       ],
-      "hard_block_individual_failures": []
+      "hard_block_individual_failures": [
+        "retrieval_judge_pilot"
+      ]
     }
   },
   "trust_aggregate_per_family": {

@@ -123,7 +123,8 @@ services:
       PHOENIX_COLLECTOR_ENDPOINT: http://phoenix:6006/v1/traces
     volumes:
       - .:/app
-      - ./data/blobs:/data/blobs
+      # Host PDF tree mounted at /data/blobs. Set SCIENCE_GRAPHRAG_HOST_BLOB_MOUNT=./data/blobs_merged in .env after rsync merge (ingest-corpus runbook).
+      - ${SCIENCE_GRAPHRAG_HOST_BLOB_MOUNT:-./data/blobs}:/data/blobs
       - ./data/artifacts:/data/artifacts
     depends_on:
       postgres:
@@ -221,7 +222,7 @@ services:
       PHOENIX_COLLECTOR_ENDPOINT: http://phoenix:6006/v1/traces
     volumes:
       - .:/app
-      - ./data/blobs:/data/blobs
+      - ${SCIENCE_GRAPHRAG_HOST_BLOB_MOUNT:-./data/blobs}:/data/blobs
       - ./data/artifacts:/data/artifacts
     depends_on:
       postgres:

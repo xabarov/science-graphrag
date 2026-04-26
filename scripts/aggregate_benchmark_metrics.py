@@ -945,7 +945,7 @@ def main() -> int:
         default=DEFAULT_RETRIEVAL_HYBRID_ABLATION_LIVE,
         help=(
             "Optional BT4 live hybrid ablation JSON from "
-            "`science-graphrag-retrieval-hybrid-ablation-benchmark --suite --tier hybrid_ablation_v2_pilot` "
+            "`science-graphrag-retrieval-hybrid-ablation --suite --tier hybrid_ablation_v2_pilot` "
             "(advisory, Wave R)."
         ),
     )

@@ -8,19 +8,20 @@ import Chip from "@mui/material/Chip";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemText from "@mui/material/ListItemText";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
+import { useI18n } from "../../i18n/I18nContext.jsx";
 import { CursorSmallButton } from "../common/index.js";
-
-/**
- * @param {Record<string, unknown>} props
- */
-function formatPropertyLabel(key) {
-  return String(key)
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
+import {
+  localizeAggregatorSubtitle,
+  localizeAggregatorTitle,
+  localizeDirectionHintTooltip,
+  localizeEdgeType,
+  localizeNodeKind,
+  localizeWorkPropertyKey,
+} from "./graphLocalize.js";
 
 /**
  * @param {unknown} v
@@ -29,6 +30,18 @@ function formatPropertyValue(v) {
   if (v == null) return "—";
   if (typeof v === "object") return JSON.stringify(v);
   return String(v);
+}
+
+/**
+ * @param {string} hint
+ * @param {(k: string) => string} t
+ */
+function localizeDirectionHint(hint, t) {
+  const h = String(hint || "").trim().toLowerCase();
+  if (!h) return "";
+  const key = `graph.detailPanel.direction.${h}`;
+  const out = t(key);
+  return out !== key ? out : hint;
 }
 
 /**
@@ -61,6 +74,7 @@ export default function GraphDetailPanel({
   expandWorkspaceNeighborsBusy = false,
   mode = "embedded",
 }) {
+  const { t } = useI18n();
   const compact = mode === "embedded" || mode === "standalone";
   const [rawOpen, setRawOpen] = useState(false);
   const rows = relatedEdgeRows.length > 0 ? relatedEdgeRows : [];
@@ -68,12 +82,14 @@ export default function GraphDetailPanel({
   const truncated = Boolean(graphMeta?.is_truncated);
   const neighborLimit = graphMeta?.neighbor_limit_applied;
   const neighborCount = graphMeta?.neighbor_match_count;
+  const truncatedLimitClause =
+    neighborLimit != null ? t("graph.detailPanel.truncatedLimitClause", { neighborLimit: String(neighborLimit) }) : "";
 
   return (
     <Box
       component="aside"
       role="region"
-      aria-label="Graph details"
+      aria-label={t("graph.detailPanel.title")}
       sx={{
         borderRadius: "6px",
         border: "1px solid rgba(255,255,255,0.08)",
@@ -87,7 +103,7 @@ export default function GraphDetailPanel({
       }}
     >
       <Typography component="h2" sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 1, flexShrink: 0 }}>
-        Details
+        {t("graph.detailPanel.title")}
       </Typography>
 
       {truncated ? (
@@ -102,12 +118,10 @@ export default function GraphDetailPanel({
           }}
         >
           <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.78)", lineHeight: 1.45 }}>
-            Neighborhood is truncated for performance ({neighborCount != null ? String(neighborCount) : "?"} relationships
-            {neighborLimit != null ? `, showing up to ${neighborLimit}` : ""}). Increase{" "}
-            <Typography component="span" sx={{ fontFamily: "monospace", fontSize: "0.72rem" }}>
-              neighbor_limit
-            </Typography>{" "}
-            on the API query if you need more.
+            {t("graph.detailPanel.truncatedLine", {
+              neighborCount: neighborCount != null ? String(neighborCount) : "?",
+              limitClause: truncatedLimitClause,
+            })}
           </Typography>
         </Box>
       ) : null}
@@ -120,26 +134,28 @@ export default function GraphDetailPanel({
             lineHeight: 1.4,
           }}
         >
-          {mode === "standalone"
-            ? "Click a node or edge on the canvas. Raw JSON: Advanced."
-            : "Select a node or an edge on the graph to see a readable summary. Technical JSON stays under \"Advanced\"."}
+          {mode === "standalone" ? t("graph.detailPanel.emptyStandalone") : t("graph.detailPanel.emptyEmbedded")}
         </Typography>
       ) : null}
 
       <Box sx={{ flex: 1, minHeight: 0, overflow: "auto", pr: 0.25 }}>
         {selectedEdge ? (
           <>
-            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 0.5 }}>Relationship</Typography>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 0.5 }}>{t("graph.detailPanel.relationship")}</Typography>
             <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.88)", lineHeight: 1.45, mb: 1 }}>
               {selectedEdgeReadable ||
-                `${selectedEdge.sourceLabel || selectedEdge.source} —[${selectedEdge.displayType || selectedEdge.type}]→ ${selectedEdge.targetLabel || selectedEdge.target}`}
+                `${selectedEdge.sourceLabel || selectedEdge.source} —[${localizeEdgeType(selectedEdge, t)}]→ ${selectedEdge.targetLabel || selectedEdge.target}`}
             </Typography>
             <Typography sx={{ fontSize: "0.7rem", color: "rgba(129,140,248,0.9)", mb: 0.5 }}>
-              {selectedEdge.displayType || String(selectedEdge.type || "").replace(/_/g, " ") || "related"}
+              {localizeEdgeType(selectedEdge, t)}
             </Typography>
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mb: 1 }}>
-              <CursorSmallButton type="button" onClick={() => onSelectNode?.(selectedEdge.source)}>Open source</CursorSmallButton>
-              <CursorSmallButton type="button" onClick={() => onSelectNode?.(selectedEdge.target)}>Open target</CursorSmallButton>
+              <CursorSmallButton type="button" onClick={() => onSelectNode?.(selectedEdge.source)}>
+                {t("graph.detailPanel.openSource")}
+              </CursorSmallButton>
+              <CursorSmallButton type="button" onClick={() => onSelectNode?.(selectedEdge.target)}>
+                {t("graph.detailPanel.openTarget")}
+              </CursorSmallButton>
             </Box>
             <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.38)", fontFamily: "monospace", wordBreak: "break-all" }}>
               id: {selectedEdge.id}
@@ -151,12 +167,12 @@ export default function GraphDetailPanel({
           <>
             {String(selectedNode.nodeKind) === "Aggregator" ? (
               <Box sx={{ mb: 1.5 }}>
-                <Typography sx={{ fontSize: "0.7rem", color: "rgba(129,140,248,0.92)" }}>Aggregator</Typography>
+                <Typography sx={{ fontSize: "0.7rem", color: "rgba(129,140,248,0.92)" }}>{t("graph.aggregator.badge")}</Typography>
                 <Typography sx={{ fontSize: "0.9375rem", fontWeight: 600, color: "rgba(255,255,255,0.9)", mt: 0.25 }}>
-                  {selectedNode.displayLabel || selectedNode.label}
+                  {localizeAggregatorTitle(selectedNode, t)}
                 </Typography>
                 <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.55)", mt: 0.35 }}>
-                  {String(selectedNode.raw?.aggregation_hints?.aggregator_kind || "").replace(/_/g, " ")}
+                  {localizeAggregatorSubtitle(t)}
                 </Typography>
                 {Array.isArray(selectedNode.raw?.aggregation_hints?.preview_labels) &&
                 selectedNode.raw.aggregation_hints.preview_labels.length > 0 ? (
@@ -176,19 +192,25 @@ export default function GraphDetailPanel({
                   }
                 >
                   {expandWorkspaceNeighborsBusy
-                    ? "Loading…"
-                    : `Expand all (${String(selectedNode.raw?.aggregation_hints?.count || 0)})`}
+                    ? t("graph.aggregator.loading")
+                    : t("graph.aggregator.expandAll", {
+                        count: String(selectedNode.raw?.aggregation_hints?.count || 0),
+                      })}
                 </CursorSmallButton>
               </Box>
             ) : null}
-            <Typography sx={{ fontSize: "0.7rem", color: "rgba(129,140,248,0.92)" }}>
-              {selectedNode.nodeKind || selectedNode.type}
-            </Typography>
-            <Typography sx={{ fontSize: "0.9375rem", fontWeight: 600, color: "rgba(255,255,255,0.9)", mt: 0.25, lineHeight: 1.35 }}>
-              {selectedNode.displayLabel || selectedNode.label}
-            </Typography>
-            {selectedNode.subtitle ? (
-              <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.55)", mt: 0.35 }}>{selectedNode.subtitle}</Typography>
+            {String(selectedNode.nodeKind) !== "Aggregator" ? (
+              <>
+                <Typography sx={{ fontSize: "0.7rem", color: "rgba(129,140,248,0.92)" }}>
+                  {localizeNodeKind(selectedNode, t)}
+                </Typography>
+                <Typography sx={{ fontSize: "0.9375rem", fontWeight: 600, color: "rgba(255,255,255,0.9)", mt: 0.25, lineHeight: 1.35 }}>
+                  {selectedNode.displayLabel || selectedNode.label}
+                </Typography>
+                {selectedNode.subtitle ? (
+                  <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.55)", mt: 0.35 }}>{selectedNode.subtitle}</Typography>
+                ) : null}
+              </>
             ) : null}
 
             {String(selectedNode.type) === "Work" &&
@@ -203,12 +225,12 @@ export default function GraphDetailPanel({
                 ) : null}
                 {selectedNode.internalCiteCount != null ? (
                   <Typography sx={{ fontSize: "0.68rem", color: "rgba(129,140,248,0.85)" }}>
-                    int cites: {String(selectedNode.internalCiteCount)}
+                    {t("graph.detailPanel.intCites", { count: String(selectedNode.internalCiteCount) })}
                   </Typography>
                 ) : null}
                 {selectedNode.externalCiteCount != null ? (
                   <Typography sx={{ fontSize: "0.68rem", color: "rgba(251,191,36,0.85)" }}>
-                    ext cites: {String(selectedNode.externalCiteCount)}
+                    {t("graph.detailPanel.extCites", { count: String(selectedNode.externalCiteCount) })}
                   </Typography>
                 ) : null}
               </Box>
@@ -224,19 +246,21 @@ export default function GraphDetailPanel({
                   onClick={() => onExpandWorkspaceNeighbors()}
                 >
                   {expandWorkspaceNeighborsBusy
-                    ? "Loading…"
-                    : `Expand external neighborhood (+${String(selectedNode.externalCiteCount)})`}
+                    ? t("graph.detailPanel.loading")
+                    : t("graph.detailPanel.expandExternal", { count: String(selectedNode.externalCiteCount) })}
                 </CursorSmallButton>
               </Box>
             ) : null}
 
-            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 2, mb: 0.75 }}>Key properties</Typography>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 2, mb: 0.75 }}>
+              {t("graph.detailPanel.keyProperties")}
+            </Typography>
             {selectedNode.properties && Object.keys(selectedNode.properties).length > 0 ? (
               <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 1 }}>
                 {Object.entries(selectedNode.properties).map(([k, v]) => (
                   <Box key={k} sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, alignItems: "baseline" }}>
                     <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.45)", minWidth: "7rem" }}>
-                      {formatPropertyLabel(k)}
+                      {localizeWorkPropertyKey(k, t)}
                     </Typography>
                     <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.82)", flex: 1, wordBreak: "break-word" }}>
                       {formatPropertyValue(v)}
@@ -245,15 +269,22 @@ export default function GraphDetailPanel({
                 ))}
               </Box>
             ) : (
-              <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.45)", mb: 1 }}>No structured properties on this node.</Typography>
+              <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.45)", mb: 1 }}>
+                {t("graph.detailPanel.noProperties")}
+              </Typography>
             )}
 
-            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 1.5, mb: 0.75 }}>Connections</Typography>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 1.5, mb: 0.75 }}>
+              {t("graph.detailPanel.connections")}
+            </Typography>
             {rows.length === 0 && relatedEdges.length === 0 ? (
-              <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>No connected edges in the current view.</Typography>
+              <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>{t("graph.detailPanel.noEdges")}</Typography>
             ) : rows.length > 0 ? (
               <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-                {rows.map(({ edge, otherLabel, readableLine, directionHint }) => (
+                {rows.map(({ edge, otherLabel, readableLine, directionHint }) => {
+                  const dirLabel = localizeDirectionHint(directionHint, t);
+                  const dirTip = localizeDirectionHintTooltip(directionHint, t);
+                  return (
                   <Box
                     key={edge.id}
                     component="button"
@@ -277,15 +308,29 @@ export default function GraphDetailPanel({
                       },
                     }}
                   >
-                    <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.42)", textTransform: "lowercase" }}>
-                      {directionHint}
-                    </Typography>
+                    {dirTip ? (
+                      <Tooltip title={dirTip} enterDelay={400} placement="top">
+                        <Typography
+                          component="span"
+                          sx={{
+                            display: "block",
+                            fontSize: "0.68rem",
+                            color: "rgba(255,255,255,0.42)",
+                            cursor: "help",
+                          }}
+                        >
+                          {dirLabel}
+                        </Typography>
+                      </Tooltip>
+                    ) : (
+                      <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.42)" }}>{dirLabel}</Typography>
+                    )}
                     <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap", mt: 0.25 }}>
                       <ArrowForwardIcon sx={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.55)" }} aria-hidden />
                       <Chip
                         component="span"
                         size="small"
-                        label={edge.displayType || String(edge.type || "").replace(/_/g, " ") || "—"}
+                        label={localizeEdgeType(edge, t)}
                         sx={{
                           height: 22,
                           fontSize: "0.7rem",
@@ -303,7 +348,8 @@ export default function GraphDetailPanel({
                       {readableLine}
                     </Typography>
                   </Box>
-                ))}
+                  );
+                })}
               </Box>
             ) : (
               <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
@@ -321,7 +367,7 @@ export default function GraphDetailPanel({
                     <Chip
                       component="span"
                       size="small"
-                      label={edge.displayType || edge.type || "—"}
+                      label={localizeEdgeType(edge, t)}
                       sx={{
                         height: 22,
                         fontSize: "0.7rem",
@@ -343,7 +389,7 @@ export default function GraphDetailPanel({
 
             <Box sx={{ mt: 1.5 }}>
               <CursorSmallButton type="button" onClick={() => setRawOpen((v) => !v)} sx={{ mb: 0.5 }}>
-                {rawOpen ? "Hide" : "Show"} advanced (raw JSON)
+                {rawOpen ? t("graph.detailPanel.hideAdvanced") : t("graph.detailPanel.showAdvanced")}
               </CursorSmallButton>
               {rawOpen ? (
                 <Typography
@@ -382,7 +428,9 @@ export default function GraphDetailPanel({
             }}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ fontSize: "1rem", color: "rgba(255,255,255,0.5)" }} />}>
-              <Typography sx={{ fontSize: "0.75rem", fontWeight: 600, color: "rgba(255,255,255,0.65)" }}>Advanced (raw JSON)</Typography>
+              <Typography sx={{ fontSize: "0.75rem", fontWeight: 600, color: "rgba(255,255,255,0.65)" }}>
+                {t("graph.detailPanel.advancedJson")}
+              </Typography>
             </AccordionSummary>
             <AccordionDetails sx={{ pt: 0 }}>
               <Typography

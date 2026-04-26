@@ -1,5 +1,5 @@
 import {
-  edgeTypeCanvasLabel,
+  edgeTypeCanvasLabelFromEdge,
   getScienceGraphNodeStyle,
   truncateCanvasLabel,
 } from "./graphCanvasStyle.js";
@@ -98,8 +98,26 @@ export function drawNodes(ctx, nodes, positions, transform, styleMap = {}) {
   }
 }
 
-export function drawLabels(ctx, nodes, edges, positions, transform, styleMap = {}) {
+/**
+ * @typedef {{
+ *   resolveEdgeLabel?: (edge: object) => string,
+ *   resolveNodeCanvasLabel?: (node: object) => string | null | undefined,
+ * }} DrawLabelOptions
+ */
+
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {Iterable<object>} nodes
+ * @param {Iterable<object>} edges
+ * @param {Map<string, { x: number, y: number }>} positions
+ * @param {{ scale: number, tx: number, ty: number }} transform
+ * @param {Record<string, { selected?: boolean, hovered?: boolean, active?: boolean }>} styleMap
+ * @param {DrawLabelOptions} [drawOptions]
+ */
+export function drawLabels(ctx, nodes, edges, positions, transform, styleMap = {}, drawOptions = {}) {
   const { scale, tx, ty } = transform;
+  const resolveEdge = typeof drawOptions.resolveEdgeLabel === "function" ? drawOptions.resolveEdgeLabel : null;
+  const resolveNode = typeof drawOptions.resolveNodeCanvasLabel === "function" ? drawOptions.resolveNodeCanvasLabel : null;
   ctx.font = EDGE_LABEL_FONT;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -109,7 +127,7 @@ export function drawLabels(ctx, nodes, edges, positions, transform, styleMap = {
     if (!p0w || !p1w) continue;
     const p0 = worldToScreen(p0w.x, p0w.y, scale, tx, ty);
     const p1 = worldToScreen(p1w.x, p1w.y, scale, tx, ty);
-    const elabel = edgeTypeCanvasLabel(edge.type);
+    const elabel = resolveEdge ? resolveEdge(edge) : edgeTypeCanvasLabelFromEdge(edge);
     if (!elabel || elabel === "—") continue;
     const midX = (p0.x + p1.x) / 2;
     const midY = (p0.y + p1.y) / 2;
@@ -131,12 +149,15 @@ export function drawLabels(ctx, nodes, edges, positions, transform, styleMap = {
     if (!pw) continue;
     const p = worldToScreen(pw.x, pw.y, scale, tx, ty);
     const sel = Boolean(styleMap[String(node.id || "")]?.selected);
+    const resolvedNode = resolveNode ? resolveNode(node) : null;
     const rawLabel =
-      node.displayLabel != null && String(node.displayLabel).trim()
-        ? node.displayLabel
-        : node.label != null && String(node.label).trim()
-          ? node.label
-          : node.id;
+      resolvedNode != null && String(resolvedNode).trim()
+        ? String(resolvedNode)
+        : node.displayLabel != null && String(node.displayLabel).trim()
+          ? node.displayLabel
+          : node.label != null && String(node.label).trim()
+            ? node.label
+            : node.id;
     const text = truncateCanvasLabel(rawLabel);
     const metrics = ctx.measureText(text);
     const boxW = metrics.width + 12;

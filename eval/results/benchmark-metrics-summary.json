@@ -448,7 +448,7 @@
             "contract_only": false,
             "workspace_scoped_live": true,
             "uuid_aware_mode": false,
-            "hit_count": 0,
+            "hit_count": 5,
             "trace_workspace_matches": true,
             "forbidden_work_id_violation_count": 0,
             "forbidden_corpus_work_ids_leaked": [],
@@ -459,8 +459,8 @@
               "fcos_realpdf"
             ],
             "expected_citations_min_count": 3,
-            "citation_count_ok": false,
-            "answer_rouge_l": 0.03225806451612903,
+            "citation_count_ok": true,
+            "answer_rouge_l": 0.06866952789699571,
             "abstain_keyword_hit": false,
             "answer_metric_type": "rouge_l",
             "workspace_scope_ok": false
@@ -473,7 +473,7 @@
             "contract_only": false,
             "workspace_scoped_live": true,
             "uuid_aware_mode": false,
-            "hit_count": 0,
+            "hit_count": 5,
             "trace_workspace_matches": true,
             "forbidden_work_id_violation_count": 0,
             "forbidden_corpus_work_ids_leaked": [],
@@ -530,7 +530,7 @@
             ],
             "expected_citations_min_count": 3,
             "citation_count_ok": true,
-            "answer_rouge_l": 0.08,
+            "answer_rouge_l": 0.08979591836734692,
             "abstain_keyword_hit": false,
             "answer_metric_type": "rouge_l",
             "workspace_scope_ok": true
@@ -609,7 +609,7 @@
               "contract_only": false,
               "workspace_scoped_live": true,
               "uuid_aware_mode": false,
-              "hit_count": 0,
+              "hit_count": 5,
               "trace_workspace_matches": true,
               "forbidden_work_id_violation_count": 0,
               "forbidden_corpus_work_ids_leaked": [],
@@ -620,8 +620,8 @@
                 "fcos_realpdf"
               ],
               "expected_citations_min_count": 3,
-              "citation_count_ok": false,
-              "answer_rouge_l": 0.03225806451612903,
+              "citation_count_ok": true,
+              "answer_rouge_l": 0.06866952789699571,
               "abstain_keyword_hit": false,
               "answer_metric_type": "rouge_l",
               "workspace_scope_ok": false
@@ -634,7 +634,7 @@
               "contract_only": false,
               "workspace_scoped_live": true,
               "uuid_aware_mode": false,
-              "hit_count": 0,
+              "hit_count": 5,
               "trace_workspace_matches": true,
               "forbidden_work_id_violation_count": 0,
               "forbidden_corpus_work_ids_leaked": [],
@@ -691,7 +691,7 @@
               ],
               "expected_citations_min_count": 3,
               "citation_count_ok": true,
-              "answer_rouge_l": 0.08,
+              "answer_rouge_l": 0.08979591836734692,
               "abstain_keyword_hit": false,
               "answer_metric_type": "rouge_l",
               "workspace_scope_ok": true
@@ -755,44 +755,84 @@
         "judge_schema_version": "retrieval_judge_v1"
       },
       "summary": {
-        "case_count": 3,
-        "mean_weighted_score": 6.033333333333334,
-        "all_passed": true,
+        "case_count": 6,
+        "mean_weighted_score": 5.05,
+        "all_passed": false,
         "retrieval_judge_eval": true,
         "per_case_score_breakdown": [
           {
-            "case_id": "live_corpus_methods_wide",
-            "factuality": 3,
-            "coverage": 3,
-            "no_contradictions": 2,
-            "language": 2,
-            "weighted_score": 6.7,
-            "passed": true
-          },
-          {
-            "case_id": "live_yolov1_architecture",
+            "case_id": "ws_full_anchor_free_overview",
             "factuality": 1,
-            "coverage": 3,
+            "coverage": 1,
             "no_contradictions": 2,
             "language": 2,
-            "weighted_score": 4.7,
-            "passed": true
+            "weighted_score": 3.3,
+            "passed": false
           },
           {
-            "case_id": "live_yolov1_training",
+            "case_id": "ws_full_corpus_negative_unrelated",
             "factuality": 3,
             "coverage": 3,
             "no_contradictions": 2,
             "language": 2,
             "weighted_score": 6.7,
             "passed": true
+          },
+          {
+            "case_id": "ws_two_stage_negative_focal_loss",
+            "factuality": 3,
+            "coverage": 3,
+            "no_contradictions": 2,
+            "language": 2,
+            "weighted_score": 6.7,
+            "passed": true
+          },
+          {
+            "case_id": "ws_two_stage_proposal_evolution",
+            "factuality": 2,
+            "coverage": 1,
+            "no_contradictions": 2,
+            "language": 2,
+            "weighted_score": 4.3,
+            "passed": false
+          },
+          {
+            "case_id": "ws_yolo_negative_mask_segmentation",
+            "factuality": 3,
+            "coverage": 3,
+            "no_contradictions": 2,
+            "language": 2,
+            "weighted_score": 6.7,
+            "passed": true
+          },
+          {
+            "case_id": "ws_yolo_speed_question",
+            "factuality": 1,
+            "coverage": 0,
+            "no_contradictions": 2,
+            "language": 2,
+            "weighted_score": 2.6,
+            "passed": false
           }
         ]
       },
-      "failed_count": 0,
-      "failed_cases": [],
-      "all_passed": true,
-      "mean_weighted_score": 6.033333333333334,
+      "failed_count": 3,
+      "failed_cases": [
+        {
+          "case_id": "ws_full_anchor_free_overview",
+          "error": null
+        },
+        {
+          "case_id": "ws_two_stage_proposal_evolution",
+          "error": null
+        },
+        {
+          "case_id": "ws_yolo_speed_question",
+          "error": null
+        }
+      ],
+      "all_passed": false,
+      "mean_weighted_score": 5.05,
       "trust_signal": {
         "family": "retrieval_family",
         "member_id": "judge_pilot",
@@ -801,7 +841,26 @@
         "validation_status_by_pack": null,
         "last_known_real_run_at": null,
         "consistency_warnings": [],
-        "individual_failures": [],
+        "individual_failures": [
+          {
+            "case_id": "ws_full_anchor_free_overview",
+            "passed": false,
+            "weighted_score": 3.3,
+            "error": null
+          },
+          {
+            "case_id": "ws_two_stage_proposal_evolution",
+            "passed": false,
+            "weighted_score": 4.3,
+            "error": null
+          },
+          {
+            "case_id": "ws_yolo_speed_question",
+            "passed": false,
+            "weighted_score": 2.6,
+            "error": null
+          }
+        ],
         "is_phantom": false
       }
     },
@@ -2026,8 +2085,8 @@
     }
   },
   "decision_gate": {
-    "decision": "CONDITIONAL-GO",
-    "reason": "all_nightly_passed;advisory_phantom_count=9",
+    "decision": "NO-GO",
+    "reason": "hard_block_individual_failures:retrieval_judge_pilot",
     "criteria": {
       "reference_all_passed": true,
       "layer1_nightly_failed_count": 0,
@@ -2057,7 +2116,7 @@
             "contract_only": false,
             "workspace_scoped_live": true,
             "uuid_aware_mode": false,
-            "hit_count": 0,
+            "hit_count": 5,
             "trace_workspace_matches": true,
             "forbidden_work_id_violation_count": 0,
             "forbidden_corpus_work_ids_leaked": [],
@@ -2068,8 +2127,8 @@
               "fcos_realpdf"
             ],
             "expected_citations_min_count": 3,
-            "citation_count_ok": false,
-            "answer_rouge_l": 0.03225806451612903,
+            "citation_count_ok": true,
+            "answer_rouge_l": 0.06866952789699571,
             "abstain_keyword_hit": false,
             "answer_metric_type": "rouge_l",
             "workspace_scope_ok": false
@@ -2084,7 +2143,7 @@
             "contract_only": false,
             "workspace_scoped_live": true,
             "uuid_aware_mode": false,
-            "hit_count": 0,
+            "hit_count": 5,
             "trace_workspace_matches": true,
             "forbidden_work_id_violation_count": 0,
             "forbidden_corpus_work_ids_leaked": [],
@@ -2145,7 +2204,7 @@
             ],
             "expected_citations_min_count": 3,
             "citation_count_ok": true,
-            "answer_rouge_l": 0.08,
+            "answer_rouge_l": 0.08979591836734692,
             "abstain_keyword_hit": false,
             "answer_metric_type": "rouge_l",
             "workspace_scope_ok": true
@@ -2200,6 +2259,30 @@
             "answer_metric_type": "rouge_l",
             "workspace_scope_ok": true
           }
+        },
+        {
+          "family": "retrieval_family",
+          "member_id": "judge_pilot",
+          "case_id": "ws_full_anchor_free_overview",
+          "passed": false,
+          "weighted_score": 3.3,
+          "error": null
+        },
+        {
+          "family": "retrieval_family",
+          "member_id": "judge_pilot",
+          "case_id": "ws_two_stage_proposal_evolution",
+          "passed": false,
+          "weighted_score": 4.3,
+          "error": null
+        },
+        {
+          "family": "retrieval_family",
+          "member_id": "judge_pilot",
+          "case_id": "ws_yolo_speed_question",
+          "passed": false,
+          "weighted_score": 2.6,
+          "error": null
         },
         {
           "family": "retrieval_family",
@@ -2378,7 +2461,9 @@
           }
         }
       ],
-      "hard_block_individual_failures": []
+      "hard_block_individual_failures": [
+        "retrieval_judge_pilot"
+      ]
     }
   }
 }

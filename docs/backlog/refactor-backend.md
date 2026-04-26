@@ -8,41 +8,25 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 - Execute items in a dedicated **refactor pass** when asked.
 - One theme per pass when possible (e.g. only `retrieval` layer, or only CLI layout).
 
+## Completed (archive)
+
+Summaries only; details lived in prior revisions / runbooks / ADRs.
+
+| When | Theme |
+|------|--------|
+| 2026-04-26 | **Ingest robustness:** per-file timeout, JSONL checkpoint + `--resume`, flush logging, OpenRouter/instructor retries; test + runbook. VL-specific timeout deferred (per-file covers batch). |
+| 2026-04-26 | **Unbounded workspaces:** `ws.unbounded`, scope + Qdrant `add_workspace_to_all_chunks`, backfill + runbooks. |
+| 2026-04-26 | **CI:** nightly `aggregate_benchmark_metrics` + trust-baseline regression guard. |
+| 2026-04-25 | **Corpus Gold v1 + dual_validate:** Phases 1–5 gold fixtures; 6.A–6.E + 6.B/D/C infrastructure (extractors, matcher, embeddings cascade, triple-vote); Phase 1–4 gold summaries folded into fixtures + `eval/dual_validate/`. |
+| 2026-04-25 | **Graph readability GR1/GR3:** display labels; aggregator nodes + expand endpoints (caveats → GR8). |
+| 2026-04-25 | **Ingest async roadmap:** stage timeline / OTel / stepper; Redis + Dramatiq worker; ADR-018 + worker spec (see roadmap for Wave V nuance). |
+| 2026-04-25 | **API/storage splits:** `workspace_graph/`, `neo4j/` package, `ingest/*`, slim `ingest_jobs` shim, `works/`, retrieval core → `science_graphrag/retrieval/`, `pipeline` facade + `_pipeline_impl`, `IngestJobRegistry` lazy bootstrap. |
+| 2026-04-25 | **Observability:** `spans/` split, `phoenix_tracer` modules, span contract preserved. |
+| 2026-04-25 | **DI:** `StoreRegistry` + `get_stores()`; removed `main.py` works shim; `works_router` naming. |
+| 2026-04-25 | **Product waves:** T entity dedup API; Y2 LangGraph ReAct + tests; Y4 multi-agent supervisor + ADR-020. |
+| 2026-04-19 | **Benchmarks:** teacher-gold audit baseline checklist; durable file-backed run snapshots in `task_store`. |
+
 ## Queue
-
-### [DONE] Robust ingest orchestration: hard timeout + checkpoint + resume
-- **Area:** `science_graphrag/ingestion/_pipeline_impl.py` (`run_ingest_batch_cli`, `ingest_document`), `science_graphrag/ingestion/llm/extractor.py` (`SyncInstructorExtractor`), `science_graphrag/embeddings/openrouter_provider.py` (`OpenRouterEmbeddingProvider._call_openrouter`), `science_graphrag/ingestion/vl_pdf.py` (PDF→article via VL).
-- **Issue:** В Wave 4 (BT2/BT5 ingest) `science-graphrag ingest-corpus` зависал **на одном файле на 3+ часа** при `0.4% CPU` (TCP к OpenRouter в `CLOSE-WAIT`, никаких exception/exit), батч продвинулся 15/31 и встал. `tee` буферизировал stdout → лог 0 байт. Существующие таймауты: `OpenRouterEmbeddingProvider` httpx=60s, `SyncInstructorExtractor` openai=180s, но они не защищают от silent server hang когда соединение «полусохнет», и не покрывают весь pipeline (VL extractor + dual-validate + claims). Нет `ingest-corpus` checkpoint'а: при таймауте мы теряем прогресс между файлами (Postgres-row остаётся с `work_id=None`, см. 7 «осиротевших» YOLOv1 строк за разные дни).
-- **Proposal:**
-  - **Per-file wall timeout** в `run_ingest_batch_cli` (новый CLI флаг `--per-file-timeout-s`, default 900): обернуть `ingest_document` через `concurrent.futures.ProcessPoolExecutor.submit(...).result(timeout=...)` или хотя бы `signal.alarm` (POSIX). При таймауте — `kill -9`, запись `FAIL_TIMEOUT` в audit и продолжение со следующего файла.
-  - **Checkpoint manifest** `data/artifacts/ingest-corpus-progress.json`: `{path, sha256, status: ok|fail|timeout, document_id?, work_id?, started_at, finished_at}`. CLI флаг `--resume` пропускает `status == ok`. Записываем атомарно (`os.replace`) после каждого файла.
-  - **Streaming logger** в `run_ingest_batch_cli` использовать `logging.StreamHandler(sys.stdout, force_flush=True)` или `print(..., flush=True)`; рекомендация в `scripts/pilot_ingest_cv_corpus.sh` использовать `unbuffer`/`stdbuf -oL` или прямую запись в файл вместо `tee` без флешей.
-  - **httpx retry/circuit-breaker** в `_call_openrouter` и `SyncInstructorExtractor`: при `httpx.ReadTimeout`/`RemoteProtocolError` форсить close+reopen клиента; экспоненциальный backoff с **жёстким верхним пределом** (max_total_seconds=120), после чего raise → пайплайн не висит.
-  - **VL PDF stage**: добавить `timeout_seconds` в `vl_pdf.py` параллельно ingestion timeout.
-- **Acceptance:**
-  - повтор «hung file» сценария → батч продолжает работать, файл помечен как `timeout`, exit code 0 (с `--continue-on-error`);
-  - `ingest-corpus --resume` работает после Ctrl-C: ранее `ok` файлы пропускаются с одной строкой `SKIP resumed=ok`;
-  - `progress.json` валидный JSON после kill-9 родителя (атомарная запись);
-  - tests: новый `tests/ingestion/test_batch_resume_and_timeout.py` (mocked `ingest_document` со sleep>timeout) проходит;
-  - в `docs/runbooks/` обновлена ingest runbook страница с `--per-file-timeout-s`/`--resume`.
-- **Reference:** обнаружено в Wave 4 honesty-close, см. analysis chat 2026-04-26 (process PID 2490711, Postgres `documents` rows с `work_id=None`).
-- **Raised:** 2026-04-26 (Wave 4).
-- **Done:** 2026-04-26 — реализованы `--per-file-timeout-s`, `--resume`, `--progress-file`, JSONL checkpoint (atomic write), flush-logging, retry/circuit-breaker в OpenRouter embeddings, retry/backoff в `SyncInstructorExtractor`, тест `tests/ingestion/test_batch_resume_and_timeout.py`, runbook `docs/runbooks/ingest-corpus.md`.
-- **Note:** отдельный timeout внутри `science_graphrag/ingestion/vl_pdf.py` не добавлялся в этом проходе; текущий per-file timeout в `run_ingest_batch_cli` закрывает риск зависания батча на файле.
-
-### [DONE] Backfill workspace_id payload for unbounded `ws_full_corpus="*"` workspaces
-- **Area:** `scripts/backfill_workspace_payloads.py`, `scripts/seed_benchmark_workspaces.py`, `science_graphrag/storage/qdrant_store/chunk_store.py`, `science_graphrag/storage/neo4j/reads.py`, `science_graphrag/retrieval/neo4j_context.py`.
-- **Issue:** `_workspaces.json` поддерживает `corpus_work_ids: "*"` (см. `ws_full_corpus`). `seed_benchmark_workspaces.py` для такого пакета пропускает CONTAINS-edges (по дизайну: «unbounded»). В результате `backfill_workspace_payloads.py` (который читает только `Workspace-[:CONTAINS]->Work`) **не тегает** ни одного chunk-а как принадлежащий `ws_full_corpus`. Live-кейсы `ws_full_anchor_free_overview` и `ws_full_corpus_negative_unrelated` стабильно дают `hit_count=0`, потому что retrieval-фильтр по `workspace_id == "ws_full_corpus"` ничего не находит. Это уродует Wave 4 honesty close: `workspace_scoped_live` advisory-провал не из-за ответа модели, а из-за отсутствующих payloads.
-- **Proposal:**
-  - В `backfill_workspace_payloads.py` добавить ветку «unbounded»: если `corpus_work_ids == "*"`, тэгать **все** chunks в коллекции `chunks` через `qdrant.add_workspace_to_chunks(work_id=None, workspace_id=ws_id)` (нужно расширить метод: при `work_id is None` — full-collection scroll + payload set).
-  - Вариант B (более чистый): хранить `workspace_id` как массив (`workspace_ids: list[str]`) и у full-corpus workspace это «virtual»-тэг, считаемый на стороне retrieval (без payload-write). Тогда `backfill` не нужен, а retrieval добавляет implicit OR на full-corpus workspaces.
-  - Обновить `scripts/seed_benchmark_workspaces.py`: вместо `corpus=*  no CONTAINS edges` создавать запись Workspace + помечать `meta.unbounded=true`.
-- **Acceptance:**
-  - `ws_full_anchor_free_overview` и `ws_full_corpus_negative_unrelated` дают `hit_count > 0` после `seed + backfill`;
-  - тест `tests/retrieval/test_workspace_scoping.py::test_unbounded_workspace_returns_full_corpus` (новый) проходит;
-  - регрессия: bounded workspaces (`ws_yolo_family`, `ws_two_stage`) продолжают изолировать chunks как раньше.
-- **Raised:** 2026-04-26 (Wave 4 honesty close).
-- **Done:** 2026-04-26 — Neo4j `ws.unbounded` на seed для `*`, `workspace_list`/`workspace_get` возвращают `unbounded`, `_workspace_scope_work_ids` отдаёт `(None, …)` без раннего обнуления hits в `answer_query`, `QdrantChunkStore.add_workspace_to_all_chunks`, backfill CLI + docs/runbooks.
 
 ### [OPEN] Split `scripts/aggregate_benchmark_metrics.py` (BT1 follow-up)
 - **Area:** `scripts/aggregate_benchmark_metrics.py` (~1100 lines after Wave 3 BT4/BT5 additions).
@@ -50,14 +34,6 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 - **Proposal:** Extract modules: `scripts/benchmark_aggregator/summarizers.py` (`_summarize_*`), `scripts/benchmark_aggregator/markdown.py` (`_md_*` + `_render_markdown`), `scripts/benchmark_aggregator/family_retrieval.py` (retrieval family assembly), `scripts/benchmark_aggregator/family_claims.py` (claims/refs/concept). Keep thin CLI in `aggregate_benchmark_metrics.py` (≤ 250 LoC). Trust/decision glue stays in `science_graphrag/benchmarks/`.
 - **Acceptance:** `aggregate_benchmark_metrics.py` ≤ 250 LoC; `python scripts/aggregate_benchmark_metrics.py` unchanged CLI contract; pytest benchmarks + aggregate smoke pass; no file in `scripts/benchmark_aggregator/` exceeds ~400 LoC.
 - **Raised:** 2026-04-26 (post-BT1); updated 2026-04-26 (post-Wave 3, now ~1100 LoC).
-
-### [DONE] CI: run `aggregate_benchmark_metrics` + enforce `benchmark-trust-baseline` regression
-- **Area:** `.github/workflows/integration-nightly.yml`, `tests/benchmarks/test_trust_baseline_regression.py`.
-- **Issue:** Regression test no-ops when summary/baseline files are absent; runbook §10 policy is not enforced on every push.
-- **Proposal:** Nightly step: `python scripts/aggregate_benchmark_metrics.py` then `pytest tests/benchmarks/test_trust_baseline_regression.py -q`; fail job if `advisory_phantom_count` grows vs committed baseline.
-- **Acceptance:** CI fails on phantom regression with clear log line; baseline updates remain manual commit.
-- **Raised:** 2026-04-26 (post-BT1).
-- **Note (done):** 2026-04-26 (Wave 3) — "Trust baseline regression guard" step added to `integration-nightly.yml`.
 
 ### [OPEN] Migrate dual_validate extractors to instructor (Phase 7 task)
 - **Area:** `scripts/dual_validate/extractors/*.py` (12 extractor'ов), `scripts/dual_validate/llm_client.py` (станет transport-layer), новый `scripts/dual_validate/instructor_client.py`, новый `science_graphrag/llm/instructor_factory.py` (общий backend с `science_graphrag/ingestion/llm/extractor.py:SyncInstructorExtractor`).
@@ -77,186 +53,6 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 - **Estimated effort:** 1-2 дня focused work; не блокирует BT2-BT12, кандидат для следующего refactor pass.
 - **Reference:** полный анализ — `docs/analysis/instructor-adoption-dual-validate-2026-04-25.md`.
 - **Raised:** 2026-04-25.
-
-### [DONE] Corpus Gold Pack v1 — Phase 1 (dedup_5 + relations_v1.json) — 2026-04-25
-- **Area:** `tests/fixtures/benchmarks/dedup/{institutions,venues,methods,datasets}_v1/`, `tests/fixtures/corpus/relations_v1.json`
-- **Result:**
-  - `tests/fixtures/corpus/relations_v1.json` собран: **502 ребра** (cites=78 [29 авто из bibliography + 49 manual для R-CNN/YOLO/DETR family где bibliography parser промахнулся], extends=15, compares_with=12, contradicts=7, shares_author=59 derived, shares_dataset=331 derived). Acceptance ≥ 60 рёбер перевыполнен в 8x.
-  - 4 dedup pack'а собраны по шаблону `authors_v1`: institutions (20 records / 7 clusters / 3 negs — MSR/MSRA/FAIR-Meta/UW/AI2/UCB/Megvii/CUHK + критический negative `MSR vs MSRA`), venues (19 / 7 / 4 — CVPR-2016/ICCV-2017/ECCV-2020/NeurIPS-NIPS-2017/arXiv-CoRR/PAMI/IJCV + year-shift negatives), methods (25 / 7 / 6 — R-CNN/Fast/Faster/Mask/FPN/SSD/DETR/YOLOv1/Focal-Loss + 6 substring-trap negatives), datasets (21 / 6 / 5 — VOC-2007/2012/COCO/ImageNet/ILSVRC/Objects365 + version-shift negatives).
-  - Все 6 файлов проходят валидацию: JSON parse OK, structural integrity OK (cluster.entity_ids ⊆ records, no entity in two clusters, no duplicate entity_id), all `relations_v1.json` work_id refs существуют в `corpus_v1.json`.
-- **Status of `validation_status`:** все pack'и оставлены в `"draft"` (как и authors_v1). Промоут в `"llm_dual_validated"` → `"human_spot_checked"` запланирован в Phase 6 двумя проходами `deepseek/deepseek-v3.2` × `anthropic/claude-sonnet-4.6` (спецификация в плане §6).
-- **Raised:** 2026-04-25 → **DONE:** 2026-04-25.
-
-### [DONE] Corpus Gold Pack v1 — Phase 2 (claims_v2 + holdout) — gold side, 2026-04-25
-- **Area:** `tests/fixtures/benchmarks/claims/corpus_<slug>_v2/`, `tests/fixtures/benchmarks/claims/holdout_<slug>_v1/`, `tests/fixtures/benchmarks/claims/case_tiers.json`
-- **Result (gold-side, what is the responsibility of Phase 2):**
-  - **15 pilot pack'ов** (yolov1, faster_rcnn, retinanet_focal, ssd, mask_rcnn, fpn, centernet, cornernet, detr, cascade_rcnn, efficientdet, fast_rcnn, rcnn, yolov2, fcos) × 3–6 claims = **64 claims**, 31.2% negative.
-  - **5 holdout pack'ов** (atss, yolov3, yolox, dino, deformable_detr — **0 пересечений с pilot** по `corpus_work_id`) × 4–5 claims = **21 claims**, 28.6% negative.
-  - Итого **85 claims**, **30.6% negative** (overall ≥ 30% выполнено), все 6 `claim_type` представлены (method=22, performance=16, limitation=14, comparison=13, design_choice=11, finding=9).
-  - `match_mode`: 72 embedding_sim + 13 rouge_l (нет ни одного `exact` — намеренно, чтобы убить trivial-recall by substring match).
-  - `distractor_strategy.neighboring_paper_paragraphs` задан в каждом case (2–3 соседа по семейству).
-  - **Paraphrase-not-substring проверено:** 0 случаев 8-словного дословного overlap `claim_text_normalized` с `tests/fixtures/benchmarks/layer1/<slug>/article.md` (8 нарушений из первого прохода — переформулированы и перевалидированы).
-  - Tier'ы добавлены в `case_tiers.json`: `claims_pilot_v2` (15 case_id), `claims_holdout_v1` (5 case_id).
-  - README'шки: `tests/fixtures/benchmarks/claims/{README_v2_pilot.md, README_v1_holdout.md}` с полным составом и обоснованием изоляции holdout от pilot.
-- **Status of `validation_status`:** все 20 packs остались в `meta.validation_status: "draft"` с пометкой `extractor_pass: "single_human_authored_2026-04-25"`. Промоут в `"human_spot_checked"` запланирован в Phase 6 (dual-LLM extractor B = `anthropic/claude-sonnet-4.6` против А = текущего человеко-авторского).
-- **Что НЕ сделано (это работа BT6, не Phase 2):**
-  - Расширение `eval/claims/runner.py` под `embedding_sim` / `rouge_l` matching и под distractor injection.
-  - Прогон gold под runner и измерение `mean_claim_recall` (план: 0.6–0.85 на v2 vs 1.0 на v1) и `precision_drop_with_distractors ≤ 0.15`.
-  - Подключение `claims_holdout_v1` к weekly cron — это уровень оркестрации, не gold.
-  - **BT6 entry должен быть открыт отдельно** (см. ниже новый `[OPEN] BT6` или соответствующий раздел в `ontology-benchmarks-roadmap-2026-04-24.md`).
-- **Raised:** 2026-04-25 → **DONE (gold-side):** 2026-04-25.
-
-### [DONE] Corpus Gold Pack v1 — Phase 3 (contradictions_v1 + concept_v2)
-- **Area:** `tests/fixtures/benchmarks/contradictions_v1/pair_<NN>_<slug>/`, `tests/fixtures/benchmarks/concept_topic/{concepts_frozen_v1.json,corpus_<slug>_v2/}`
-- **Issue:** Layer 9 (BT12) и Layer 7 (BT7 путь A) — оба требуют семантического разбора корпуса. Без gold нельзя собрать `:CONTRADICTS` persistence и убить substring-tautology в concept extraction.
-- **Proposal (executed):** 5–7 пар противоречий с прямыми цитатами обеих claim'ов; frozen list ~25 концептов + разметка present/absent для 10 пилотных статей.
-- **Acceptance:** `contradiction_pair_recall ≥ 0.6` advisory (gold-side); concept v2 даёт реалистичный recall 0.5–0.8 (не 1.0) (advisory; runner-side в BT7).
-- **Done summary (2026-04-25):**
-  - **Layer 9 (Contradictions v1):** 7 pairs (`pair_01..07`). Все 6 разрешённых `contradiction_type` представлены: era_shift × 1, design_paradigm × 2, post_processing × 1, architectural × 1, classical_vs_deep × 1, scaling × 1. Severity: direct × 4, nuanced × 3. У каждой пары — `claim_a` + `claim_b` с `corpus_work_id`, `claim_text`, `evidence_quote` (verbatim из `article.md`), `anchor_offset`, `rationale`, `expected_neo4j_pattern`. Pairs синхронизированы с 7 `contradicts` edges из `relations_v1.json` (Phase 1) и развёрнуты в полные case files. Tier `contradictions_pilot_v1` добавлен в `tests/fixtures/benchmarks/contradictions_v1/case_tiers.json`. README с матрицей покрытия.
-  - **Layer 7 (Concept/Topic v2):**
-    - `tests/fixtures/benchmarks/concept_topic/concepts_frozen_v1.json` — 25 канонических концептов с `aliases`, разделены на 6 семейств (proposal/pipeline, stage type, backbones, loss/post-proc, architecture, classical/data).
-    - 10 pilot pack'ов (`corpus_<slug>_v2/gold.json`): yolov1, faster_rcnn, retinanet_focal, ssd, mask_rcnn, fpn, detr, cornernet, fcos, cascade_rcnn.
-    - 138 разметочных лейблов (67 `concepts_present` с evidence_quote + 71 `concepts_absent` с rationale).
-    - 25/25 frozen концептов покрыты ≥ 1 pack'ом.
-    - Tier `concept_topic_pilot_v2` (10 case_id) добавлен в `tests/fixtures/benchmarks/concept_topic/case_tiers.json`.
-    - README с per-pack таблицей и target-band метриками.
-  - **Cross-ref валидация (clean):** 0 unknown `corpus_work_id` (все resolve к `corpus_v1.works ∪ layer1 slugs`), 0 unknown `concept_id` (всё в frozen list), 0 дубликатов в present/absent одной статьи.
-- **Status of `validation_status`:** все 17 packs (7 contradictions + 10 concept_topic + frozen list) остались в `meta.validation_status: "draft"` с пометкой `extractor_pass: "single_human_authored_2026-04-25"`. Промоут в `"human_spot_checked"` запланирован в Phase 6 (dual-LLM extractor B).
-- **Что НЕ сделано (это работа BT12/BT7, не Phase 3):**
-  - **BT12:** runner для contradictions, `:CONTRADICTS` persistence в Neo4j, `contradiction_pair_recall` метрика на pilot tier.
-  - **BT7 Path A:** замена substring-based concept extraction на embedding-based, прогон под gold с реалистичным target band recall 0.5–0.8.
-  - **BT12/BT7 entries должны быть открыты отдельно** (см. `ontology-benchmarks-roadmap-2026-04-24.md` Wave T).
-- **Raised:** 2026-04-25 → **DONE (gold-side):** 2026-04-25.
-
-### [DONE] Corpus Gold Pack v1 — Phase 4 (retrieval: workspace_live + hybrid_v2 + multihop_v2)
-- **Area:** `tests/fixtures/benchmarks/retrieval/{workspace_scoped_live,hybrid_ablation_v2,multihop_v2}/`
-- **Issue:** Все 3 текущих family — phantom-зелёные (canned answer / synthetic ranked / connection refused; см. trust-audit §3.2–3.5). Gold нужен ДО починки runner'ов (BT2/BT3/BT4).
-- **Proposal (executed):** 3 workspaces × 6 кейсов с `forbidden_corpus_work_ids` и `answer_reference_text`; 8 hybrid кейсов с `relevant_corpus_work_ids` (без захардкоженных ranked); 5 multihop кейсов c `expected_chain` и `expected_neo4j_relations_used`.
-- **Acceptance:** все 3 pack'а проходят cross-ref validation (см. ниже); референс-ответы написаны single-human-authored, spot-check запланирован Phase 6.
-- **Done summary (2026-04-25):**
-  - **Layer 2 (workspace_scoped_live, BT2):** `_workspaces.json` с 3 workspaces (`ws_yolo_family` 4 papers, `ws_two_stage` 7 papers, `ws_full_corpus` `*` = 35) + 6 cases (3 positive multi-paper aggregation + 3 negative abstain). У каждого case `forbidden_violation_gate: 0` и `forbidden_corpus_work_ids` — все validated «outside ws» (gate non-vacuous). `answer_metric` = `rouge_l ≥ 0.18..0.20` (positive) или `abstain_keywords` (negative). Tier `workspace_scoped_live_pilot` (6 case_id) добавлен. README с case-таблицей.
-  - **Layer 3 (hybrid_ablation_v2, BT4):** 8 cases (anchor_free, focal_loss, set_prediction_transformer, compound_scaling, keypoint_corner, classical_handcrafted, two_stage_rpn_evolution, iou_loss_quality). 22 `relevant_corpus_work_ids` + 28 `irrelevant_corpus_work_ids` = 50 ground-truth labels. **Phantom-green killer:** `vector_ranked_work_ids` / `hybrid_ranked_work_ids` запрещены в gold v2 (валидация явно gate'ит). `ranked_lists_source: "runner_generated"` обязательно. `min_mrr_delta_hybrid_minus_vector: 0.05`, `k_for_mrr: 10`, `runner_modes: ["vector", "hybrid"]`. Tier `hybrid_ablation_v2_pilot` (8 case_id) добавлен. README с per-case таблицей.
-  - **Layer 4 (multihop_v2, BT3):** 5 cases (3 ordered + 2 unordered). Ordered chains: `mh_proposal_evolution_chain` (5 nodes, 4 hops через CITES+EXTENDS), `mh_yolo_lineage_chain` (4 nodes, 3 hops), `mh_detr_lineage_chain` (4 nodes, 3 hops). Unordered: `mh_authors_yolo_intersect_rcnn_family` (Author kind), `mh_datasets_shared_one_stage_detectors` (Dataset kind). Все chain adjacencies подтверждены `tests/fixtures/corpus/relations_v1.json` (Phase 1 output) — для каждой пары есть CITES или EXTENDS edge. `infrastructure_required: ["neo4j", "qdrant"]` — runner обязан hard-fail (не skip). Tier `multihop_v2_pilot` (5 case_id) добавлен. README с цепочками + edge-проверкой.
-  - **Cross-ref валидация (clean):** 0 unknown `corpus_work_id` (все resolve в `corpus_v1.works ∪ layer1`), 0 leak'ов `vector_ranked_work_ids` / `hybrid_ranked_work_ids` в hybrid v2 (gate), 0 forbidden ids внутри ws (gate non-vacuous), 0 overlap relevant∩irrelevant в hybrid cases.
-- **Status of `validation_status`:** все 19 packs (3 ws + 6 ws cases + 8 ha + 5 mh + 3 README) остались в `meta.validation_status: "draft"` с пометкой `extractor_pass: "single_human_authored_2026-04-25"`. Промоут в `"human_spot_checked"` запланирован в Phase 6 (dual-LLM extractor B).
-- **Что НЕ сделано (это работа BT2/BT3/BT4, не Phase 4):**
-  - **BT2:** runner для workspace boundary + abstain detection + multi-paper aggregation на pilot tier; форсированно ловить leaks через `forbidden_violation_gate`.
-  - **BT3:** runner для multihop с Neo4j hard-fail (не skip), LCS chain order metric, recall/precision unordered set; прогон pilot tier'а.
-  - **BT4:** runner с live Qdrant + BM25 (без захардкоженных ranked); метрика `mrr@10_hybrid - mrr@10_vector ≥ 0.05` per case; прогон pilot tier'а.
-  - **BT2/BT3/BT4 entries должны быть открыты отдельно** (см. `ontology-benchmarks-roadmap-2026-04-24.md` Wave M..N).
-- **Raised:** 2026-04-25 → **DONE (gold-side):** 2026-04-25.
-
-### [DONE] Corpus Gold Pack v1 — Phase 5 (agent_live + multi_agent + idea_live + adversarial cypher) — gold side, 2026-04-25
-- **Area:** `tests/fixtures/benchmarks/agent_tools_v1/{live_*, multiagent_live_*, adversarial_cypher_*}/`, `tests/fixtures/benchmarks/idea_assist_v1/live_*/`
-- **What landed (gold side):**
-  - **6 agent_tools_live cases** (5 positive + 1 negative abstain) — `expected_tool_sequence` с `args_match` (`query_contains_any` + `query_contains_all`), `expected_works_corpus_ids`, `expected_methods_canonical`, `answer_reference_text` + `answer_metric: rouge_l ≥ 0.18..0.20` (positive) или `abstain_keywords` (negative), `cypher_safety_required: 1.0`. Покрывают vector_search, cypher_query (Method, AUTHORED, CONTRADICTS, scoping), cite_works.
-  - **2 multi-agent live cases** — `expected_specialist_sequence` (retrieval/graph/writer) + `allowed_alternative_sequences` + `min_specialist_sequence_match` + `expected_works_corpus_ids` + `expected_authors_canonical`.
-  - **1 adversarial cypher case** — `adversarial_cypher_in_question: true`, текст вопроса содержит `DELETE` и `DROP` (validation подтверждает gate non-vacuous), `cypher_safety_violation_count_gate: 0`, `query_must_not_contain_any: [DELETE, DROP, MERGE, CREATE, SET, LOAD CSV]`.
-  - **4 idea_assist_live cases** — `supporting_claim_id_pool` из 20 реальных claim_id'ов из Phase 2 claims pack (0 unknown при cross-ref валидации против 85 known), `supporting_claim_ids_min: 2`, `forbidden_substrings` (verbatim фразы из `article.md`), `max_rouge_l_against_evidence_quotes: 0.7`, `novelty_must_reference_gap: true`. `reference_hypothesis_optional` только для LLM-judge в Phase 6.
-  - Tiers: `agent_tools_live_pilot` (6), `agent_tools_multiagent_live` (2), `agent_tools_adversarial_cypher` (1), `idea_assist_live_pilot` (4) добавлены в соответствующие `case_tiers.json`. Legacy `agent_tools_mini` / `agent_tools_multiagent` сохранены для backward compat.
-  - README pack'ов: `agent_tools_v1/README_phase5.md`, `idea_assist_v1/README.md` (rationale, схема, cases, метрики для BT8/BT9/BT10).
-- **Phantom-green killers:**
-  - Agent live: `args_match.query_contains_any/all` форсит проверку аргументов tool calls, не только имён инструментов. `expected_works_corpus_ids` + `answer_reference_text` + `rouge_l` форсят measurable citation/answer accuracy. Negative case `live_06_blockchain` тестирует abstain.
-  - Adversarial cypher: validation script верифицирует что `question.txt` реально содержит ≥ 1 forbidden Cypher keyword — иначе gate был бы vacuous.
-  - Idea-assist: `supporting_claim_id_pool` cross-ref'ится с реальными `claim_id` из Phase 2 (любой fake id отлавливается); `forbidden_substrings` блокирует regurgitation paper abstracts; `max_rouge_l ≤ 0.7` блокирует копирование evidence quotes.
-- **Cross-ref валидация:** 0 unknown `corpus_work_id`, 0 unknown `claim_id` в idea_assist pools, schemas корректны (live=v2, multi-agent/adversarial=v1, idea_assist=v2), все tier-файлы консистентны.
-- Все pack'и в `meta.validation_status: "draft"` — финальный промоут через Phase 6.
-- **What remains (runner side, separate BT entries):**
-  - **BT8:** runner для `args_match` enforcement (per-tool `query_contains_any`/`all` matching), citation_recall (`required: true` entries), `cypher_safety_violation_count` гейт = 0; прогон `agent_tools_live_pilot` тира.
-  - **BT9:** runner для specialist_sequence_match с `allowed_alternative_sequences`; прогон `agent_tools_multiagent_live` + `agent_tools_adversarial_cypher` тиров.
-  - **BT10:** runner для idea-assist — `supporting_claim_recall ≥ supporting_claim_ids_min`, `forbidden_substring_count = 0` гейт, `rouge_l_against_evidence ≤ 0.7` гейт, advisory LLM-judge на `novelty_gap_referenced` (Phase 6).
-  - **BT8/BT9/BT10 entries должны быть открыты отдельно** (см. `ontology-benchmarks-roadmap-2026-04-24.md` Wave T-U).
-- **Raised:** 2026-04-25 → **DONE (gold-side):** 2026-04-25.
-
-### [DONE] Corpus Gold Pack v1 — Phase 6.A (dual-validate infrastructure + claims_v2 PoC) — 2026-04-25
-- **Area:** `scripts/dual_validate/`, `scripts/dual_extract_validate.py`, `tests/test_dual_extract_validate.py`, `tests/fixtures/benchmarks/claims/corpus_yolov1_v2/consistency_report.json`
-- **What landed:**
-  - **Framework:** `scripts/dual_validate/{__init__.py, llm_client.py, matcher.py, consistency_report.py, extractors/{base.py, __init__.py, claims_v2.py}}`. `ExtractorBase` abstract + `ClaimsV2Extractor` concrete impl. OpenRouter-compatible `DualValidateLLMClient` (sync OpenAI SDK + retry on RateLimitError/APIError). Algorithmic A/B matcher (Jaccard token overlap, greedy bipartite, default min_score=0.20). Dataclass `ConsistencyReport` schema_v1 (extractor_a/b provenance, matched_pairs, unmatched_a/b, summary с `field_agreements`, `spot_check_priority` ∈ {low, medium, high}).
-  - **CLI:** `scripts/dual_extract_validate.py --layer claims_v2 [--pack PATH] [--model M] [--dry-run] [--save-raw-response]`. API key/base/model resolution mirrors `scripts/teacher_llm_settings.py` (CLI > `benchmark_teacher_*` > `extraction_llm_*`).
-  - **Tests:** `tests/test_dual_extract_validate.py` — 11 unit-тестов (tokenizer, jaccard, greedy bipartite, field-disagreement detection, spot-check priority all 3 branches, schema roundtrip, claims_v2 dry-run, response parsing с enum-coercion, non-JSON rejection). 11/11 passed; pylint 9.95/10.
-  - **PoC прогон:** `corpus_yolov1_v2` × `deepseek/deepseek-v3.2` (28s, 13.5K tokens, $0.04). 4 actionable disagreements найдены: 1 polarity flip + 1 type flip на matched pair'ах, 2 missed claims у extractor B. Spot-check priority `high` (rationale: polarity_flips=1, unmatched_a_ratio=0.33). Отчёт + raw response сохранены рядом с pack'ом.
-- **Validation:** isort/black clean; 11/11 tests passed; реальный LLM прогон работает; `consistency_report.json` корректно структурирован и schema-validated через `validate_report_dict`.
-- **What remains:**
-  - **Phase 6.C:** `extractors/contradictions_v1.py`, `extractors/concept_topic_v2.py`, `extractors/dedup_*.py`, `extractors/multihop_v2.py`, `extractors/workspace_scoped_live.py`, `extractors/hybrid_ablation_v2.py`, `extractors/agent_tools_live.py`, `extractors/idea_assist_live.py` + corresponding test fixtures + прогоны.
-  - **Final acceptance:** Все pack'и Phase 0–5 → `meta.validation_status: "human_spot_checked"`; CI gate на schema validation (`tests/eval/test_gold_schemas.py`).
-- **Raised:** 2026-04-25 → **DONE (6.A):** 2026-04-25.
-
-### [DONE] Corpus Gold Pack v1 — Phase 6.B (full claims_v2 pass + matcher v2) — 2026-04-25
-- **Area:** `scripts/dual_validate/matcher.py`, `scripts/dual_validate/extractors/{base.py, claims_v2.py}`, `scripts/dual_extract_validate.py`, `tests/test_dual_extract_validate.py`, `tests/fixtures/benchmarks/claims/{corpus_*_v2,holdout_*_v1}/consistency_report*.json`, `eval/dual_validate/claims_v2_deepseek_summary.json`
-- **What landed:**
-  - **Full deepseek pass:** все 20 claims pack'ов (15 corpus_*_v2 pilot + 5 holdout_*_v1) → 7 минут wall-time, 300K tokens, ≈$0.06. 20/20 `consistency_report.json` + 20/20 `consistency_report.raw.json` сохранены рядом с `gold.json`.
-  - **Matcher v2:** добавлены `char_ngrams`, `char_jaccard`, `char_overlap_coefficient` (Szymkiewicz–Simpson), `combined_score = max(token_jaccard, char_overlap_4gram)`. `match_records` принимает `scoring: "token" | "combined"` (default = `combined` с `min_score=0.35`). Char-overlap robust к length asymmetry — короткий B-парафраз больше не отваливается от длинного A.
-  - **`--rebuild-from-raw` CLI flag:** пересобирает `consistency_report.json` из сохранённого `.raw.json` без LLM-вызовов. `ExtractorBase.rebuild_run_from_raw()` reuses prior `extractor_b` provenance (model, prompt_hash, latency, usage_tokens) если есть predecessor report. Использован для бесплатного pre/post сравнения матчеров в этой же фазе.
-  - **`ClaimsV2Extractor.discover_packs`:** теперь подбирает и `holdout_*_v1`, не только `corpus_*_v2`.
-  - **Сводка `eval/dual_validate/claims_v2_deepseek_summary.json`:** per-pack metrics + totals + matcher config + notes для будущих экстракторов.
-  - **Test coverage:** 14/14 passed (добавлены `test_char_jaccard_catches_morphology`, `test_combined_scoring_beats_token_on_paraphrase`, `test_claims_v2_rebuild_from_raw`); pylint 9.90/10 (только R0903/R0912/R0914 на CLI/extractor — норма).
-- **Validation:** все 20 reports конформны JSON-schema (validate_report_dict без warnings); rebuild идемпотентен (повторный запуск не меняет content).
-- **Quantitative result:**
-  - global match ratio **41.2% → 50.6% (+23%)** после matcher v2;
-  - 19/20 packs `priority=high`, 1/20 (`corpus_detr_v2`) `priority=medium`;
-  - **10 polarity flips + 14 type flips** на 43 matched pairs — основной сигнал для human spot-check;
-  - 42 unmatched_a (B пропустил), 113 unmatched_b (B сгенерил extra) — temperature=0.1 sampling склонен к более широкой выборке (среднее 7.8 vs наши 4.25 на pack).
-- **Decision (no auto-promo):** **не делаем** `validation_status: draft → llm_dual_validated`. 19/20 high — недостаточный сигнал для авто-промо при текущем recall ceiling. Для промо нужен либо embedding-based matcher (Phase 6.D), либо human review disagreement-листа.
-- **What remains:**
-  - **Phase 6.C:** остальные 8 extractor'ов (contradictions_v1, concept_topic_v2, dedup_*, multihop_v2, workspace_scoped_live, hybrid_ablation_v2, agent_tools_live, idea_assist_live).
-  - **Phase 6.D:** embedding-based scorer (sentence-transformers cosine similarity ≥ 0.7) — снимет потолок recall с 50% до >75%, разблокирует auto-promo `llm_dual_validated`.
-  - **Optional second model pass:** `anthropic/claude-sonnet-4.6` или `moonshotai/kimi-k2.6` как third-party reference на тех же 20 packs; подсветит pack'и где deepseek и claude расходятся (более достоверный сигнал чем single-model).
-- **Raised:** 2026-04-25 → **DONE (6.B):** 2026-04-25.
-
-### [DONE] Corpus Gold Pack v1 — Phase 6.D (embedding cascade matcher с baai/bge-m3) — 2026-04-25
-- **Area:** `science_graphrag/embeddings/{__init__.py, openrouter_provider.py}`, `scripts/dual_validate/{matcher.py, embedding_scorer.py, extractors/base.py, extractors/claims_v2.py}`, `scripts/dual_extract_validate.py`, `tests/test_dual_extract_validate.py`, `eval/dual_validate/claims_v2_bge_m3_summary.json`, `docs/adr/021-openrouter-bge-m3-embeddings.md`
-- **What landed:**
-  - **Reusable provider** `OpenRouterEmbeddingProvider` — sync OpenAI SDK + per-text JSON cache (`eval/dual_validate/embeddings_cache/<model_slug>/`), batching до 64, retry на `RateLimitError/APIError`. Готов к использованию из ingestion (см. ADR-021).
-  - **Cascade matcher** в `scripts/dual_validate/matcher.py`: `lexical ≥ 0.50` → lex без вызова, иначе `embedding ≥ 0.75 AND > lex` → embedding, иначе fallback к lexical с `min_score=0.35`. `Pair.score_source ∈ {"lexical", "embedding"}` для трассировки.
-  - **CLI:** `--with-embeddings --embedding-model baai/bge-m3 --embedding-cache-root eval/.../cache --promote-validation-status` (последний — идемпотентный апдейт `meta.validation_status: draft → llm_dual_validated` для priority∈{low,medium} с записью в `validation_history`).
-  - **Re-run всех 20 claims packs** через `--rebuild-from-raw --with-embeddings` (zero new tokens): recall **50.6% → 58.8%** (lex=28, emb=22). Priority: 0 low / 2 medium / 18 high (vs 0/1/19 в Phase 6.B). **Auto-promoted:** `corpus_centernet_v2`, `corpus_detr_v2`. Сводка `eval/dual_validate/claims_v2_bge_m3_summary.json`.
-  - **Honest assessment:** прирост скромнее прогноза — DeepSeek extractor B часто извлекает claims из других параграфов или делает другую декомпозицию. Это **structural disagreements**, embedding similarity их не закрывает.
-  - **ADR-021** `docs/adr/021-openrouter-bge-m3-embeddings.md` — план миграции production Qdrant с hash-fallback (384-dim) на bge-m3 (1024-dim). Отдельная сессия (см. open entry ниже).
-  - Tests 18/18, pylint 9.68/10.
-- **Raised:** 2026-04-25 → **DONE (6.D):** 2026-04-25.
-
-### [DONE] Corpus Gold Pack v1 — Phase 6.C (per-layer extractors, 8/8 done) — 2026-04-25
-- **Area:** `scripts/dual_validate/extractors/` (12 extractor классов: claims_v2, concept_topic_v2, contradictions_v1, idea_assist_live, dedup_v1×5, retrieval_v1×3, agent_tools_live), `scripts/dual_validate/aggregate_summary.py`, `tests/test_dual_extract_validate.py`, `eval/dual_validate/*_deepseek_summary.json` (12 summaries)
-- **What landed (free-text extractors, 3):**
-  - `ConceptTopicV2Extractor` — closed-set diff против 25 frozen concepts. Полный прогон 10 packs × deepseek: 138/138 matched, **2 promoted** (`mask_rcnn_v2`, `ssd_v2`), 8 high из-за status flips (B нашёл упоминания концептов в related-work, которые человек пропустил).
-  - `ContradictionsV1Extractor` — per-pair бинарная проверка + diff `contradiction_type`/`severity` + claim text similarity (lex+emb cascade). Полный прогон 7 pairs × deepseek + bge-m3: 6/7 matched, **embedding cascade сработал в 2/6 (33%)** — реальная иллюстрация ценности bge-m3. **4 promoted** (2 low + 2 medium), 3 high (B нашёл другую плоскость противоречия).
-  - `IdeaAssistLiveExtractor` — необычный: B-reviewer оценивает gold-pool на адекватность. **1 promoted** (`live_02_aerial`), 3 high.
-- **What landed (dedup × 5):**
-  - `DedupExtractorBase` (≈300 строк) + `DedupAuthorsV1`/`Institutions`/`Venues`/`Methods`/`Datasets` extractors. Один LLM call per layer (≤4K tokens, всего 5 calls на все 5 packs ~1.5 мин).
-  - **ARI metric** через `_pair_counting_metrics` (Hubert-Arabie). Domain-hint в prompt'ах учитывает специфику каждого типа (initial-only formов в авторах, re-branding в инстит-ях, slug variants в methods).
-  - Результаты: ARI **0.88-1.00** (authors=1.00, venues=1.00, methods=0.97, institutions=0.95, datasets=0.88). **Все 5 promoted** (medium из-за частичного покрытия `negative_pairs` — DeepSeek нашёл 3 дополнительных must-not-merge constraint в methods, 1 в institutions).
-- **What landed (retrieval × 3):**
-  - `WorkspaceScopedLiveExtractor` — B классифицирует workspace papers как relevant/forbidden. **6/6 promoted, all low** (3 positive perfect, 3 negative cases с правильным empty list через special-case логику).
-  - `HybridAblationV2Extractor` — B как retrieval-judge классифицирует candidate set. **7/8 promoted** (4 low + 3 medium), 1 high (`ha_two_stage_rpn_evolution` — B пропустил классические RPN-precursors).
-  - `MultihopV2Extractor` — для `ordered_chain` Kendall-style order correctness, для `unordered_set` — Jaccard. **3 chain perfect (3/3 promoted, F1=1.0)**, 2 unordered_set high (`mh_authors_*` — B вернул empty list, `mh_datasets_*` — slug-vs-canonical disagreement).
-- **What landed (agent_tools_live):**
-  - `AgentToolsLiveExtractor` — focus на 6 `live_*` cases. Tool-required-recall + works/methods Jaccard + answer token Jaccard. **3/6 promoted** (1 low + 2 medium + 3 high). Реальный сигнал: B на `live_03` предложил 4 alternative tool sequences (`cypher_query`, `idea_search`, `entity_search`, `cite_works`) вместо одного `vector_search` — gold слишком узкий.
-- **Shared infra:**
-  - **Lenient JSON parser** `parse_json_object_lenient` — применён ко всем 12 extractor'ам.
-  - **Aggregator** `scripts/dual_validate/aggregate_summary.py` — single-pack mode для dedup + multi-pack для всех остальных.
-  - **CATALOG.md inventory loader** в `retrieval_v1.py` — парсит markdown-таблицу с 35 papers (title + year), кэшируется.
-  - **Special negative-case логика** для retrieval/agent_tools_live (a_total=0 + b_empty + no boundary leak → low priority).
-- **Итог Phase 6.C:** **51 packs прогнано → 31 auto-promoted в `llm_dual_validated`** (60.8%). Вместе с Phase 6.B/D: **71 total → 33 promoted, 38 high-priority очередь**. Tests 44/44, pylint 9.59/10 (выше CI 7.0).
-- **Raised:** 2026-04-25 → **PARTIAL:** 2026-04-25 → **DONE:** 2026-04-25.
-
-### [DONE] Corpus Gold Pack v1 — Phase 6.E (triple-vote consensus) — 2026-04-25
-- **Area:** `scripts/dual_validate/llm_client.py` (LLMCallSpec.reasoning, `_extract_retry_after`, `_compute_backoff`, max_retries 2→5, empty-choices guard), `scripts/dual_validate/extractors/base.py` (`reasoning_override` в `run_for_pack`), `scripts/dual_extract_validate.py` (`--reasoning-mode {auto,disabled,low,medium,high}`, `--max-output-tokens`), `scripts/dual_validate/run_phase6e_pass.py` (`--reasoning-mode`, `--parallel N` через `ThreadPoolExecutor`), `scripts/dual_validate/triple_vote_consensus.py` (схема `consensus_report.json` v1, majority vote с conservative tie-break, per-record voting для слоёв со стабильным `a_id`, авто-промо в `llm_triple_validated`), `tests/test_dual_extract_validate.py` (8 новых тестов: reasoning thread-through, prompt_hash impact, extra_body emission, CLI flag forwarding, backoff helpers, retry-after extraction, empty-choices guard).
-- **Issue:** single-model `llm_dual_validated` зависим от модельного bias (DeepSeek extractor B vs DeepSeek extractor A — частично коррелированные ошибки). 38 high-priority packs застряли на `priority=high` после Phase 6.B/C/D.
-- **Что сделано:**
-  - **3 модели прогнаны через 38 packs:** `deepseek/deepseek-v3.2` (gold A, legacy `consistency_report.json`), `deepseek/deepseek-v4-pro` (tag `v4pro`), `anthropic/claude-sonnet-4.6` (tag `claude`).
-  - **Kimi заменён на v4-pro:** изначально планировалось использовать `moonshotai/kimi-k2.6` как третью модель; после проб выяснилось — kimi reasoning model, hidden CoT съедает output budget (truncated JSON даже с `effort=low + 12000 tokens`, ~5min/pack). Заменён на `deepseek/deepseek-v4-pro` (~25s/pack, чистый JSON, `reasoning_tokens=0`). Третья модель из той же семьи DeepSeek (v3.2 → v4-pro), но с независимым checkpoint'ом.
-  - **Robust retry:** `_extract_retry_after` mining `retry_after_seconds` из OpenRouter metadata + `_compute_backoff` (jittered exponential cap=30s) + `max_retries=5`. Покрывает upstream 429/502/503 от Together provider (15/38 первых попыток v4-pro упали с rate-limit, retry с parallel=2 закрыл все 15).
-  - **`triple_vote_consensus.py`** — `consensus_report.json` v1 schema, majority vote с conservative tie-break, per-record voting для слоёв со стабильным `a_id`, auto-promote `llm_triple_validated` при `consensus_priority ∈ {low, medium}` и `n_models_present ≥ --require-min-models` (default 2).
-- **Финальные результаты:**
-  - **38 packs** прошли triple-vote consensus.
-  - **2 promoted → `llm_triple_validated`** (consensus=medium, 2-of-3 majority): `contradictions_v1/pair_06_hog_human_detection_vs_rcnn` (record_match=1.0) и `agent_tools_live/live_05_compare_two_stage_one_stage_accuracy`.
-  - **4 split-decision packs** (1 модель medium/low, 2 high) — приоритетные кандидаты для human review.
-  - **32 stable high** (3-of-3 high) — disagreement подтверждён независимо тремя моделями, single-model bias не объясняет.
-  - **Honest signal:** triple-vote показал, что большинство `priority=high` packs действительно требуют human review (или ревизии gold), а не были артефактами одной модели.
-- **Total Phase 6 итог:** 71 packs total → **35 promoted** (33 от Phase 6.B/C/D `llm_dual_validated` + 2 от 6.E `llm_triple_validated`), 36 high-priority остались для human spot-check (4 из них — split-decision priority).
-- **Tests:** 57/57 pass (8 новых: reasoning + retry helpers + CLI). Pylint 9.83/10 на затронутых файлах.
-- **Артефакты:** `eval/dual_validate/consensus/{layer}.json` (8 файлов), `tests/fixtures/benchmarks/.../consensus_report.json` (38 файлов), `tests/fixtures/benchmarks/.../consistency_report.{v4pro,claude}.json` (75 файлов).
-- **Raised:** 2026-04-25 → **DONE:** 2026-04-25.
 
 ### [OPEN] Refactor `scripts/dual_validate/extractors/` — extract common base patterns
 - **Area:** `scripts/dual_validate/extractors/{base.py, claims_v2.py, concept_topic_v2.py, contradictions_v1.py, idea_assist_live.py}`
@@ -285,18 +81,6 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 - **Acceptance:** `black --check` and `isort --check-only` over `science_graphrag/` report no issues.
 - **Raised:** 2026-04-25 (Round 5 review)
 
-### [DONE] Wave T - Entity dedup pipeline (Institution / Venue / Method / Dataset)
-- **Note (done):** 2026-04-25 - added pipelines for 4 entity types, `EntityDedupConflict` ORM,
-  Neo4j write helpers, Qdrant collection ensure, and unified `/v1/dedup/entity/*` API with tests.
-
-### [DONE] Graph readability — Wave GR1 display labels (Authorship/Author/Institution/Venue)
-- **Area:** `science_graphrag/api/graph_display.py`, `science_graphrag/api/works.py`, `science_graphrag/api/workspace_graph.py`
-- **Issue:** Graph projections leaked technical UUID-like node ids (notably `:Authorship` ids like `...:ash:1`) into `display_label`/`subtitle`, reducing readability.
-- **Proposal:** Introduce shared display helper and enrich Authorship labels from `OF_AUTHOR`/`AFFILIATED_WITH`; apply in all graph endpoints.
-- **Acceptance:** no UUID-like labels in graph node titles/subtitles for core node types; integration + unit tests cover Authorship rendering.
-- **Raised:** 2026-04-25
-- **Note (done):** 2026-04-25 — implemented in GR1 pass with tests for `/v1/works/{id}/graph`, `/v1/workspaces/{id}/graph`, and `/v1/workspaces/{id}/graph/neighbors`.
-
 ### [PARTIAL] Graph readability — Wave GR2 node_kind + semantic display_type + prioritized LIMIT
 - **Area:** `science_graphrag/api/graph_display.py`, `science_graphrag/api/works/graph_neighborhood.py`,
   `science_graphrag/api/workspace_graph/projection.py`
@@ -308,19 +92,6 @@ Planned structural work for Python packages under this repo (not day-to-day lint
   `resolve_node_kind`, `node_kind_priority`, `_enrich_edges_with_display`, `meta.skipped_by_kind` через
   `kind_distribution`). **UI integration не выполнена** — `graphCanvasDraw.js` рисует raw `edge.type`. Закрывается
   Wave GR6 (frontend) — см. [`docs/analysis/graph-readability-followup-2026-04-25.md`](../analysis/graph-readability-followup-2026-04-25.md).
-
-### [DONE] Graph readability — Wave GR3 aggregator nodes + lazy expand endpoint
-- **Area:** `science_graphrag/api/works.py`, `science_graphrag/api/workspace_graph.py`
-- **Issue:** Dense one-kind neighbor stars (authors/cites/institutions) overload graph readability at default limits.
-- **Proposal:** Add `node_kind: Aggregator` projection with `aggregation_hints` and expand endpoint for lazy unfolding.
-- **Acceptance:** oversized neighbor groups collapse into one aggregator node with count/preview and expand on demand.
-- **Raised:** 2026-04-25
-- **Note (done):** 2026-04-25 — добавлены `_apply_aggregators()` для work/workspace payload,
-  `view=reader|raw`, endpoint-ы `GET /v1/works/{id}/graph/expand` и `GET /v1/workspaces/{id}/graph/expand`.
-- **Note (caveat 2026-04-25):** дефолтный порог `AGGREGATOR_THRESHOLD=8` и owner-фильтр `Work` означают,
-  что типичная статья (4–6 авторов) **не** агрегируется. Пользователь по-прежнему видит звезду
-  `:Authorship`-дисков. Закрывается **Wave GR8** (per-kind thresholds + non-Work owners + cap-aware) —
-  см. [`docs/analysis/graph-readability-followup-2026-04-25.md`](../analysis/graph-readability-followup-2026-04-25.md) §2.3.
 
 ### [OPEN] Graph readability — Wave GR8 smarter aggregation defaults (per-kind thresholds, non-Work owners, cap-aware)
 - **Area:** `science_graphrag/api/works/graph_neighborhood.py`,
@@ -370,73 +141,12 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 - **Acceptance:** graph payload includes stable counter properties enabling weighted radius/ranking without extra query passes.
 - **Raised:** 2026-04-25
 
-### [DONE] Ingest pipeline async-redesign (Wave U–W)
-
-- **Area:** `science_graphrag/api/ingest_jobs.py`, `science_graphrag/ingestion/pipeline.py`, `ui/src/hooks/usePollJob.js`, `docker/nginx-web.conf`, `docker-compose.yml`
-- **Issue:** ingest исполняется `threading.Thread` внутри API → рестарт убивает работу; UI поллит `GET /v1/ingest/jobs/{id}` каждые 2 с → access-лог зашумлён; пайплайн не размечен на стадии → видимость нулевая (`message: "Running pipeline (Neo4j / vectors / SQL)…"` минутами).
-- **Proposal:** план в [docs/analysis/ingestion-async-pipeline-roadmap-2026-04-25.md](../analysis/ingestion-async-pipeline-roadmap-2026-04-25.md):
-  - **Wave U** — фильтр polling из uvicorn access-лога; ORM `IngestJobStageOrm` + enum `IngestStage`; контекст-менеджер `stage(...)` с OTel-спанами; UI `IngestStageStepper`.
-  - **Wave V** — `sse-starlette` + `GET /v1/ingest/jobs/{id}/events` с `Last-Event-ID`; nginx SSE-friendly `location`; UI `useJobStream` с graceful fallback на polling.
-  - **Wave W** — ADR + `redis` и `worker` в compose; `dramatiq` actor `ingest_document_actor`; API только enqueue; `IngestEventBus` v2 поверх Redis pub/sub; идемпотентность + compensation sweep; `mark_stale_running_jobs_failed` удаляется.
-- **Acceptance:** см. чеклисты Wave U/V/W в роадмапе. Закрывается тремя независимыми проходами; до Wave W можно держать `[PARTIAL]` после прохождения U или V.
-- **Raised:** 2026-04-25
-- **Note (Wave U done):** 2026-04-25 — stage timeline, OTel stage spans, `IngestStageStepper`, и filtering polling access-log доставлены; Wave V/W остаются открытыми.
-- **Note (done Wave W):** 2026-04-25 — добавлены `redis` + `worker` в compose; создан пакет `science_graphrag/worker/` с `ingest_document_actor`; `IngestEventBus` переведён на Redis pub/sub для live-stream; `threading.Thread` удалён из API ingest-dispatch; принят ADR `018-ingest-worker-redis.md`; добавлена спецификация `docs/specs/ingest-worker-v1.md`; добавлен startup compensation sweep для stale queued jobs.
-
 ### [OPEN] Split idea-assist workflow orchestration (Wave S follow-up)
 - **Area:** `science_graphrag/agent/idea_workflow.py`
 - **Issue:** `idea_workflow.py` reached ~270 lines and now mixes retrieval orchestration, claim querying, LLM prompting, and output normalization in one module.
 - **Proposal:** Extract (1) claim/context collector, (2) LLM schema+prompt builder, and (3) result normalizer into separate modules under `science_graphrag/agent/idea_assist/`.
 - **Acceptance:** orchestrator file <= 180 lines, prompt/schema logic isolated, and unit tests target each submodule independently.
 - **Raised:** 2026-04-25
-
-### [DONE] Split `api/workspace_graph.py` (1214 lines) — projection vs Cypher vs HTTP
-- **Area:** `science_graphrag/api/workspace_graph.py`, `science_graphrag/api/graph_display.py`, `science_graphrag/storage/neo4j_store.py`
-- **Issue:** Файл вырос до ≈1214 строк и совмещает: (1) собственный `GraphDatabase.driver` (раз дополнительный путь к Bolt мимо `Neo4jGraphStore`), (2) Cypher для neighbors/stats/projection, (3) merge member vs external и аннотации membership/cites, (4) FastAPI router + DTO. Сильный hub: импорты сходятся со всех граф-эндпоинтов.
-- **Proposal:** разнести на пакет `api/workspace_graph/`: `cypher.py` (запросы/проекция), `projection.py` (склейка member/external, membership annotations), `router.py` (тонкие хендлеры FastAPI). Доступ к Bolt — только через `Neo4jGraphStore` (или общий driver-фабрику в `storage/`).
-- **Acceptance:** ни один файл в `api/workspace_graph/` не превышает ≈400 строк; нет прямого `GraphDatabase.driver(...)` за пределами `storage/`; тесты `test_workspace_graph_*.py` зелёные без правок поведения.
-- **Note (done):** 2026-04-25 — разнесено на `api/workspace_graph/{cypher.py,projection.py,router.py,__init__.py}` (+ helper-модули), graph-endpoints вынесены из `workspaces.py`, подключены через DI `get_stores()`, backward-compat shim в `api/workspace_graph.py`.
-- **Synergy:** разблокирует **Wave GR2/GR3/GR4** (агрегаторы, `view=reader`, prioritized LIMIT) — каждой волне нужно отдельно править маленькие модули вместо god-файла.
-- **Raised:** 2026-04-25
-
-### [DONE] Split `storage/neo4j_store.py` (1022 lines) by domain or layer
-- **Area:** `science_graphrag/storage/neo4j_store.py`
-- **Issue:** `Neo4jGraphStore` совмещает schema/init, write-операции (works/authorships/semantic/claims/workspace), reads, merge и wipe; сильная связность всех ingest-стадий и API-роутеров.
-- **Proposal:** разнести на пакет `storage/neo4j/`: `client.py` (driver + sessions), `schema.py` (constraints/indexes), `writes/{works,authorships,semantic,claims,workspace}.py`, `reads.py`. Сохранить публичный класс `Neo4jGraphStore` как фасад с прежним API.
-- **Acceptance:** ни один модуль > ≈400 строк; интеграционные тесты `tests/integration/test_full_ingest_integration.py` и юнит-тесты Neo4j зелёные; импорты из `api/*` и `ingestion/*` не меняются.
-- **Synergy:** **Wave GR5** (denormalized counters), **Wave Q** (Neo4j vector index, fulltext indexes, миграции) — независимые модули проще тестировать; **Wave T** (entity dedup) добавляет writes/{authors,institutions,...} без расширения god-файла.
-- **Raised:** 2026-04-25
-- **Note (done):** 2026-04-25 — разнесено на `storage/neo4j/{client,schema,reads,facade}.py` и
-  `storage/neo4j/writes/{works,semantic,claims,dedup,workspace}.py`; `Neo4jGraphStore` оставлен
-  фасадом; backward-compat shim сохранен в `storage/neo4j_store.py`.
-
-### [DONE] Refactor `ingestion/pipeline.py` (976 lines) into stages-with-context facade
-- **Area:** `science_graphrag/ingestion/pipeline.py`, `science_graphrag/ingestion/stages/`, `science_graphrag/ingestion/stage_context.py`
-- **Issue:** Один файл оркеструет OpenAlex, normalization, chunking, embeddings, claims, semantic, references, Neo4j upsert, Qdrant upsert, workspace attach, Phoenix spans и CLI entrypoints. Каждый ingest-route (CLI, batch, API job, Wave W actor) копирует инициализацию stores. Затрудняет per-stage error handling и blast radius.
-- **Proposal:** ввести `IngestRunContext` (создаёт и переиспользует `Neo4jGraphStore`, `QdrantChunkStore`, `BlobStore`, `PhoenixTracer`); переписать `run_ingest_*` как тонкий фасад, последовательно вызывающий модули `stages/{vl_pdf,metadata,chunking,embeddings,semantic,claims,references,authorships,neo4j_upsert,qdrant_upsert,workspace_attach}.py`; каждый stage — изолированная функция с входным/выходным DTO и обёрткой `with stage(...)`. CLI остаётся одним entrypoint, но без копипасты сторов.
-- **Acceptance:** `pipeline.py` <= 250 строк; есть отдельный модуль на каждую stage, покрытый юнит-тестом с моками `stores`; интеграционный тест end-to-end зелёный; маршрут A (CLI) и маршрут B (`api/ingest_jobs._execute_single_ingest`) повторно используют один и тот же контекст.
-- **Synergy:** **Wave U** уже добавил `stage_context` — продолжение в эту сторону; **Wave W** (Dramatiq actor) сразу получает один и тот же `IngestRunContext` без копипасты. **Wave X1** (Phoenix) — уже отметил «слипшийся `neo4j_graph_persistence`», эта работа закрывает структурную часть. **Wave Q** (hybrid retrieval) добавит Neo4j-индексацию work post-upsert одной новой стадией без god-файла.
-- **Raised:** 2026-04-25
-- **Note (partial) 2026-04-25:** `IngestRunContext` расширен stores/lazy init; добавлены `stages/{chunking,embeddings,semantic,claims,neo4j_upsert,qdrant_upsert,workspace_attach,vl_pdf}.py` — правильные делегаторы с `ctx.stage(...)`. НО: функция `ingest_document` (≈900 строк, строки 494–940) **не переписана** для вызова stage-модулей; `run_ingest_pipeline` просто делает `ingest_document(...)`. `pipeline.py` = 1059 строк, acceptance-критерий ≤250 **не выполнен**. Acceptance: вынести логику `ingest_document` в stage-вызовы и оставить `pipeline.py` как оркестратор-фасад. Блокирует Wave W (воркер использует pipeline напрямую). Вошло в Раунд 1.5 мастер-плана.
-- **Note (done) 2026-04-25 (Раунд 1.5):** тяжёлая логика вынесена в `_pipeline_impl.py`; `pipeline.py` стал тонким фасадом-реэкспортом (53 строки, ≤250 ✅); `ingest_document` и все stage-вызовы живут в `_pipeline_impl.py`; 375 тестов зелёные.
-
-### [DONE] Fix `IngestJobRegistry` eager `init_db` — test regression from G-IngestSlim
-- **Area:** `science_graphrag/api/ingest/registry.py`, `science_graphrag/api/main.py` (lifespan)
-- **Issue:** `IngestJobRegistry.__init__` вызывает `init_db(engine)` (→ `Base.metadata.create_all`) немедленно при конструировании. Singleton создаётся при первом HTTP-запросе к `/v1/ingest/jobs/{id}`. В тест-среде без живого PostgreSQL это вызывает `psycopg.OperationalError` вместо корректного 404. **Регрессия:** `tests/test_api_smoke.py::test_ingest_stubs_and_job_lookup` упал (был зелёным до G-IngestSlim).
-- **Proposal:** перенести `init_db(engine)` из конструктора `IngestJobRegistry` в `@asynccontextmanager lifespan` FastAPI-приложения (`science_graphrag/api/main.py`). Registry создаётся при старте приложения, а не при первом запросе. В тестах lifespan замокировать или использовать `override_dependency`. Дополнительно: убрать `mark_stale_running_jobs_failed()` из `__init__` туда же.
-- **Acceptance:** `pytest tests/test_api_smoke.py::test_ingest_stubs_and_job_lookup` зелёный без запущенного PostgreSQL (mock DB или in-memory SQLite через env); `IngestJobRegistry.__init__` не содержит DDL-вызовов.
-- **Raised:** 2026-04-25 (обнаружена при Sprint S1 review)
-- **Synergy:** согласуется с **G-StoreFactory** (Раунд 2) — единая точка init stores в lifespan. Вошло в Раунд 1.5 мастер-плана.
-- **Note (done) 2026-04-25 (Раунд 1.5):** `IngestJobRegistry.__init__` больше не вызывает `init_db`/`mark_stale_running_jobs_failed`; добавлен ленивый метод `bootstrap()`; monkeypatch-тесты перенесены на `science_graphrag.api.ingest.router._registry`; `test_ingest_stubs_and_job_lookup` зелёный без PostgreSQL.
-
-### [DONE] Slim `api/ingest_jobs.py` (846 lines) — registry/worker vs HTTP/SSE
-- **Area:** `science_graphrag/api/ingest_jobs.py`, `science_graphrag/api/ingest_event_bus.py`, будущий `science_graphrag/worker/`
-- **Issue:** Файл совмещает HTTP-роутер, `IngestJobRegistry` с прямым SQLAlchemy/ORM, in-process `threading.Thread` воркер, SSE endpoint, маппинг ORM↔DTO и intermix с `chain_span`. Wave W удалит `threading.Thread`, но без структурного разделения регистр/SSE/HTTP останутся в одной куче.
-- **Proposal:** разделить на (1) `api/ingest/router.py` (HTTP + SSE, тонко), (2) `api/ingest/registry.py` (Postgres-стор jobs/stages/events, маппинг DTO), (3) `api/ingest/dispatcher.py` (in-process до Wave W, `enqueue` к Dramatiq после), (4) `api/ingest/dto.py` (`IngestJobView`, `IngestStageView`, `IngestJobEvent`). `IngestEventBus` остаётся отдельным модулем — менять только реализацию (in-process → Redis pub/sub).
-- **Acceptance:** ни один файл > ≈400 строк; тесты `test_api_smoke` + новые юниты на registry зелёные; **Wave W** меняет только `dispatcher.py` и реализацию `IngestEventBus`.
-- **Synergy:** **Wave V** (SSE done) — уже отделил event bus; **Wave W** (Dramatiq+Redis) — сядет на готовую границу dispatcher. Тонкая schema под `phoenix_trace_id` (Wave X1.6) тоже изолирована.
-- **Raised:** 2026-04-25
-- **Note (done):** 2026-04-25 — разнесено на `api/ingest/{dto,registry,dispatcher,router}.py`; backward-compat shim в `ingest_jobs.py`; Wave W меняет только `dispatcher.py`.
 
 ### [OPEN] Split `api/benchmark.py` (1027) + `api/task_store.py` (908)
 - **Area:** `science_graphrag/api/benchmark.py`, `science_graphrag/api/task_store.py`, `science_graphrag/api/benchmark_profiles.py`
@@ -453,63 +163,6 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 - **Acceptance:** ни один файл > ≈300 строк; новые extractor'ы (Wave N concept/topic gold→production, Wave O claims promotion) добавляются как `prompts/<name>.py` + `heuristics/<name>.py`; юнит-тесты на промпт-схемы.
 - **Synergy:** **Wave N/O** (онтология), **Wave Y2** (LangGraph tool-граф) — общий executor можно потом переключить на `langchain_core` LLM-калл без сноса orchestrator.
 - **Raised:** 2026-04-25
-
-### [DONE] Core/router split for `api/retrieval.py` (682)
-- **Area:** `science_graphrag/api/retrieval.py`, `science_graphrag/api/main.py` (`answer_query`/`GroundedAnswer`)
-- **Issue:** Один файл собирает: query embedding (OpenAI), Qdrant search, Neo4j semantic context, second-stage answer, payload фильтры. Тестировать фрагменты без поднятия всего стека сложно. `api/main.py` отдельно импортирует `answer_query` для собственных хендлеров — двойной entry point.
-- **Proposal:** выделить `science_graphrag/retrieval/` пакет: `query_embedder.py`, `qdrant_search.py`, `neo4j_context.py`, `hybrid_combiner.py` (под Wave Q), `answer.py`. `api/retrieval.py` — тонкий router; `api/main.py` импортирует только из `science_graphrag/retrieval/`.
-- **Acceptance:** core retrieval тестируется юнитами с заглушенными stores; ни один модуль не превышает ≈300 строк.
-- **Synergy:** **Wave Q** (hybrid + RRF + multihop) — добавление новых mode не растягивает router. **Wave R** (`idea_search` как tool) и **Wave Y2** (LangGraph) переиспользуют core напрямую без обхода API. **Wave P** (workspace-scoped + judge) — вынесение фильтра `workspace_ids` в `qdrant_search.py`.
-- **Raised:** 2026-04-25
-- **Note (done):** 2026-04-25 (Round 4) — выделен пакет `science_graphrag/retrieval/` с модулями `query_embedder.py`, `qdrant_search.py`, `neo4j_context.py`, `ranking.py`, `answer.py`; `api/retrieval.py` переведён в thin router; добавлены unit-тесты `tests/retrieval/`; ни один файл retrieval core не превышает 300 строк.
-
-### [DONE] Split `api/works.py` (817) — graph DTO vs vector vs blob
-- **Area:** `science_graphrag/api/works.py`, `science_graphrag/api/graph_display.py`
-- **Issue:** Совмещает list/detail работ, neighborhood payload, чанки из Qdrant, blob/PDF entry, semantic context. Параллельно с `workspace_graph.py` участвует в **Wave GR1–GR5**.
-- **Proposal:** разнести на `api/works/`: `router.py`, `detail.py`, `graph_neighborhood.py` (использует общий `graph_display`), `chunks.py`. Wave GR работает только в `graph_neighborhood.py`.
-- **Acceptance:** ни один файл > ≈400 строк; тесты `tests/test_works_graph_display.py` и smoke зелёные.
-- **Synergy:** **Wave GR2/GR4** — `node_kind`, `view=reader` на одном work правится в одном модуле.
-- **Raised:** 2026-04-25
-- **Note (done):** 2026-04-25 — разнесено на `api/works/{dto,detail,graph_neighborhood,chunks,router}.py`; backward-compat shim оставлен в `api/works.py`; GR2/GR4 могут менять только `graph_neighborhood.py`.
-
-### [DONE] Cleanup `api/main.py` works_api shim + works package __init__ naming conflict
-- **Area:** `science_graphrag/api/main.py`, `science_graphrag/api/works/__init__.py`, `tests/test_api_smoke.py`
-- **Issue:** `works/__init__.py` re-экспортирует `router` (APIRouter instance) под тем же именем, что и submodule `works/router.py`. Это затеняет module-reference: `import science_graphrag.api.works.router` возвращает APIRouter, а не модуль. В `main.py` добавлен shim `works_api = sys.modules["science_graphrag.api.works.router"]`, чтобы тесты могли monkeypatch-ить функции через `api_main.works_api.list_works`. Паттерн хрупкий и неочевидный.
-- **Proposal:** 1) Переименовать re-export в `works/__init__.py` — вместо `router` использовать `works_router` или убрать вовсе (router доступен как `works.router`). 2) Обновить тесты на string-based patching (`monkeypatch.setattr("science_graphrag.api.works.router.list_works", fake)`) или прямой импорт модуля. 3) Удалить shim из `main.py`.
-- **Acceptance:** `main.py` не содержит `sys.modules` hacks; тесты patching прозрачны; `import science_graphrag.api.works.router as m; type(m)` возвращает `<class 'module'>`.
-- **Raised:** 2026-04-25 (обнаружено в Round 2 review)
-- **Synergy:** Удобно объединить с **G-RetrievalCore** (Sprint S4), когда тесты retrieval/works в любом случае рефакторятся.
-- **Note (done):** 2026-04-25 (Round 4) — удалён shim из `api/main.py`; в `api/works/__init__.py` router re-export переименован в `works_router`; тесты переведены на прямой импорт модулей для patching.
-
-### [DONE] Unified Bolt access factory + agent/idea-assist composition root
-- **Area:** `science_graphrag/api/deps.py` (новый, или существующий), `science_graphrag/storage/neo4j_store.py`, `science_graphrag/api/agent.py`, `science_graphrag/api/idea_assist.py`, `science_graphrag/agent/`
-- **Issue:** Паттерн `Neo4jGraphStore(settings.neo4j_uri, ...)` вручную поднимается в десятке мест (`retrieval`, `works`, `idea_assist`, `agent`, `ingest_jobs`, `workspaces`, `workspace_dedup`, `cli`, `pipeline`); `api/workspace_graph.py` дополнительно использует raw `GraphDatabase.driver(...)`. Каждый запрос к agent-эндпоинтам пересоздаёт stores (отмечено в `phoenix-tracing-coverage` как pain). Composition root для idea-assist дублирует agent.
-- **Proposal:** ввести FastAPI dependency `get_stores()` → singleton-фасад `StoreRegistry` (`neo4j`, `qdrant_chunks`, `qdrant_works`, `qdrant_claims`, `blobs`, `postgres_session`); все API роуты и agent/idea-assist берут stores через DI. CLI — через сервис-фабрику. Убрать прямой `GraphDatabase.driver` из `workspace_graph`.
-- **Acceptance:** один источник создания клиентов; тесты могут подменять `StoreRegistry` фикстурой; per-request init Neo4j/Qdrant исчезает в agent-пути.
-- **Note (done):** 2026-04-25 — создан `api/deps.py`: `StoreRegistry` + `get_stores()` + `init/close`; lifecycle в `api/main.py` инициализирует `app.state.stores`; `api/{retrieval,agent,idea_assist,workspaces,workspace_dedup}.py` переключены на `Depends(get_stores)`; `api/{workspace_graph,works}.py` оставлены для Agent 2/3 (Round 2).
-- **Synergy:** **Wave Y2/Y3** (LangGraph) — supervisor + tools получают stores через `build_tool_registry(stores)`; **Wave X2** (Phoenix retrieval agent) — единая точка для `init_tracer_provider` lifespan; **Wave W** (Dramatiq worker) — один `StoreRegistry` в воркере.
-- **Raised:** 2026-04-25
-
-### [DONE] Split `observability/spans.py` (410 lines) — SpanAttributes vs decorators vs helpers
-- **Area:** `science_graphrag/observability/spans.py`
-- **Issue:** G-PhoenixSplit создал `spans.py` как часть правильного пакета, но файл вырос до 410 строк и сам стал god-файлом. `SpanAttributes` (строки 139–387, ≈250 строк методов класса) и контекст-менеджеры (`chain_span`, `llm_span`, `embeddings_span`, `traced_tool_span`) логически разные слои. Превышает acceptance-лимит ≤300 строк, установленный для пакета.
-- **Proposal:** разнести на: `observability/spans/attributes.py` (`SpanAttributes`, `OpenInferenceAttributes`, `SpanKindOI`, helper-methods), `observability/spans/decorators.py` (`chain_span`, `llm_span`, `embeddings_span`, `traced_tool_span`, `_noop_span_context`), `observability/spans/__init__.py` (re-export всего публичного API без изменений). `observability/__init__.py` — без изменений.
-- **Acceptance:** ни один файл в `observability/` не превышает 300 строк; `test_span_contract.py` без правок зелёный; `from science_graphrag.observability.spans import ...` работает через `__init__.py`.
-- **Raised:** 2026-04-25 (обнаружена при Sprint S1 review)
-- **Synergy:** **Wave X2** (Phoenix retrieval agent) — добавление `traced_tool_span`-обёрток в agent-пути проще в разнесённом модуле. Вошло в Раунд 1.5 мастер-плана.
-- **Note (done) 2026-04-25 (Раунд 1.5):** разнесено на `observability/spans/{attributes.py,decorators.py,__init__.py}`; ни один файл в `observability/` не превышает 300 строк ✅; `test_span_contract.py` зелёный; backward-compat через `spans/__init__.py`.
-
-### [DONE] Split `observability/phoenix_tracer.py` (492) — init vs spans vs instrumentation
-- **Area:** `science_graphrag/observability/phoenix_tracer.py`, `science_graphrag/ingestion/stage_context.py`
-- **Issue:** В одном файле — init Phoenix/OTel + конфигурация scope (`PHOENIX_TRACE_SCOPE`) + helpers `chain_span`/`llm_span` + обёртка OpenAI auto-instrumentation. Ветвления по scope разрастаются с каждой волной (`extraction_llm`, перспективный `agent_only`).
-- **Proposal:** пакет `science_graphrag/observability/`: `init.py` (`init_tracer_provider`, lifespan helper), `spans.py` (`chain_span`, `llm_span`, `embeddings_span`, `traced_tool_span`), `scope.py` (политика `PHOENIX_TRACE_SCOPE`, синхронизация имён `_EXTRACTION_LLM_CHAIN_NAMES`), `instrumentation.py` (OpenAI/LangChain hooks).
-- **Acceptance:** контракт-тесты `test_span_contract.py` без изменений поведения; добавление нового scope (`agent_only` после X2) не требует трогать `init.py`.
-- **Synergy:** **Wave X2** (retrieval agent observability) — `traced_tool_span` уже в плане; **Wave Y1** (LangChain instrumentation) — `instrumentation.py` место для openinference-langchain.
-- **Raised:** 2026-04-25
-- **Note (done):** 2026-04-25 — разнесено на `observability/init.py`, `observability/spans.py`, `observability/scope.py`, `observability/instrumentation.py` (stub); backward-compat сохранён через thin re-export `observability/phoenix_tracer.py`; Wave Y1 наполнит `instrumentation.py`.
-
-### [OPEN] Split `api/task_store.py` see «benchmark.py + task_store.py»
-*(объединено выше, см. пункт «Split `api/benchmark.py` + `api/task_store.py`»).*
 
 ### [OPEN] Settings service split (504)
 - **Area:** `science_graphrag/settings/service.py`, `science_graphrag/api/settings.py`
@@ -541,6 +194,28 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 - **Acceptance:** No DB migration started without an operational signal captured in a pilot/ops note; file-backed path remains documented as the default.
 - **Raised:** 2026-04-19
 
+### [OPEN] CLI config-check command (`science-graphrag config-check`)
+- **Area:** `science_graphrag/cli/main.py` (или новый `science_graphrag/cli/config_check.py`)
+- **Issue:** Нет встроенного способа быстро проверить, что Settings видит правильные значения (API-ключи, URL-сервисов, feature flags) — агент и оператор вынуждены писать throwaway-питон, а smoke-check в правиле ломается при рефакторинге полей. Это повторяющийся источник зависших инgestов и потерянного времени (постмортем Wave 4, 2026-04-26).
+- **Proposal:**
+  - Добавить `science-graphrag config-check` (или подкоманду `config check`) который выводит:
+    ```
+    [config-check] extraction_llm_api_key : SET
+    [config-check] vl_api_key             : SET
+    [config-check] embeddings channel     : openrouter (model=baai/bge-m3)
+    [config-check] database_url           : postgresql+psycopg://science:***@localhost:15432/...
+    [config-check] neo4j_uri              : bolt://localhost:17687
+    [config-check] qdrant_url             : http://localhost:16333
+    [config-check] SKIP_HOST_DOTENV       : False
+    [config-check] extraction_llm_enabled : True
+    [config-check] blob_root              : ./data/blobs (exists=True)
+    ```
+  - API-ключи выводятся только как `SET` / `UNSET` (никогда не в открытую).
+  - Exit code 1 если хотя бы один обязательный ключ `UNSET` (чтобы можно было использовать как gate в CI/скриптах).
+  - Обновить smoke-check в `long-running-ops.mdc` на вызов этой команды.
+- **Acceptance:** `science-graphrag config-check` выводит полную диагностику; exit code 1 при пустом extraction_llm_api_key; правило обновлено на эту команду вместо throwaway-питона.
+- **Raised:** 2026-04-26 (постмортем Wave 4 env-var footgun).
+
 <!-- Example:
 ### [OPEN] Example — tighten retrieval module boundaries
 - **Area:** `science_graphrag/api/retrieval.py`, related services
@@ -549,25 +224,3 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 - **Acceptance:** …
 - **Raised:** 2026-04-06
 -->
-
-### [DONE] Audit teacher-gold benchmark fixtures
-- **Area:** `eval/teacher_gold/layer1/`, generation scripts in `scripts/`, benchmark run persistence in `science_graphrag/api/benchmark.py`
-- **Issue:** `teacher_gold` fixtures are partially sparse and can drift from curated gold or persisted run payloads; this creates false negatives in benchmark analysis and makes UI triage harder.
-- **Proposal:** follow [benchmarks/teacher-gold-audit-v1.md](../benchmarks/teacher-gold-audit-v1.md): inventory fields, diff fixtures vs `data/benchmark_runs/*.json` gold payloads, triage, remediation.
-- **Acceptance:** documented audit checklist, prioritized list of suspect cases, and an agreed remediation path for fixture refresh vs. post-processing repair.
-- **Raised:** 2026-04-07
-- **Note (done):** 2026-04-19 — Wave E1 baseline: [teacher-gold-audit-checklist.md](../benchmarks/teacher-gold-audit-checklist.md) extended with layer-2 table + **Audit exit** block; ongoing row-by-row review stays in that checklist until all phases CLOSED.
-
-### [DONE] Durable benchmark run snapshots (UI API)
-- **Area:** `science_graphrag/api/task_store.py`, `data/benchmark_runs/`
-- **Issue:** Earlier bridge backlog called out “durable runs”; runs must survive API restart for dev/QA.
-- **Proposal:** Implemented: `_persist_run_snapshot`, `_load_persisted_runs`, `.summary.json` sidecars; see `BenchmarkTaskStore` docstring.
-- **Acceptance:** Restart API → run list/history still lists completed runs from disk; documented in Phase 6 bridge backlog.
-- **Raised:** 2026-04-06
-- **Note (done):** 2026-04-19 — backlog row closed; optional future work is DB-backed store if file volume becomes a bottleneck.
-
-### [DONE] Wave Y2: LangGraph single-agent ReAct behind v1 endpoint + X2 Phoenix
-- **Note (done):** 2026-04-25 — создан `agent/graph/{state,supervisor,tracing}.py`; `agent/llm/chat.py`; 6 tools переведены на `langchain_core.tools` + `build_tool_registry`; `runtime.py` обертка вокруг LangGraph `graph.invoke`; legacy fallback в `runtime_legacy.py`; `chain_span("agent.query")` + `traced_tool_span`/`embeddings_span` на `idea_search`; добавлены `tests/agent/{test_tools_registry,test_graph_smoke}.py`; v1 endpoint сохранен.
-
-### [DONE] Wave Y4 — Multi-agent supervisor (LangGraph)
-- **Note (done):** 2026-04-25 (Round 5) — добавлены specialists `retrieval_agent`/`graph_agent`/`writer_agent`, LLM-based supervisor routing, расширен `AgentState` (`specialist_results`, `current_specialist`, `routing_log`), добавлен tier `agent_tools_multiagent`, и принят ADR `020-langgraph-supervisor-multiagent.md`.

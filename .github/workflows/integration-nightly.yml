@@ -116,15 +116,17 @@ jobs:
           MAIN_LLM_API_KEY: ${{ secrets.MAIN_LLM_API_KEY }}
         run: science-graphrag-layer1-benchmark tests/fixtures/benchmarks/layer1 --suite --tier nightly_heavy --threshold-profile reporting_skip_f1_gates --json-out eval/results/ci-layer1-nightly-heavy-llm.json
 
-      # BT3: multihop v2 needs API + graph stack; when nothing listens on 8009, writes
-      # ``eval/results/multihop-skipped-*.json`` and exits 0 so aggregate can mark ``infra_skipped``.
+      # BT3: multihop v2 needs live API + Neo4j graph (slug→UUID + view=raw in runner).
+      # CI services have no uvicorn — default 8009 skips and writes ``multihop-skipped-*.json``.
+      # Local/dev: ``--api-base-url http://127.0.0.1:18787`` (docker-compose.dev.yml api port).
       - name: Multihop v2 pilot (skip when API not available)
         run: |
           python -m eval.retrieval.multihop_runner \
             tests/fixtures/benchmarks/retrieval/multihop_v2 \
             --suite --tier multihop_v2_pilot \
             --api-base-url http://127.0.0.1:8009 \
-            --allow-skip-on-infra
+            --allow-skip-on-infra \
+            --json-out eval/results/ci-retrieval-multihop-mini.json
 
       - name: Aggregate benchmark metrics summary
         run: python scripts/aggregate_benchmark_metrics.py
