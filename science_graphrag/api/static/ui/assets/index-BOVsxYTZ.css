@@ -1,0 +1,1 @@
+:root{color-scheme:dark}html,body{height:100%!important;margin:0!important;overflow:hidden!important}#root{position:fixed!important;top:0!important;right:0!important;bottom:0!important;left:0!important;display:flex;flex-direction:column;overflow:hidden!important}:focus-visible{outline:2px solid rgba(129,140,248,.75);outline-offset:2px}:focus:not(:focus-visible){outline:none}

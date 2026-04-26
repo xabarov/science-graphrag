@@ -17,7 +17,7 @@
       "ws_yolo_negative_mask_segmentation",
       "ws_yolo_speed_question"
     ],
-    "all_passed": false,
+    "all_passed": true,
     "retrieval_eval": true
   },
   "cases": [
@@ -26,11 +26,11 @@
       "question": "Which papers in this corpus pioneer the anchor-free object detection paradigm and what is each one's main contribution?",
       "question_preview": "Which papers in this corpus pioneer the anchor-free object detection paradigm and what is each one's main contribution?",
       "metrics": {
-        "passed": false,
+        "passed": true,
         "contract_only": false,
         "workspace_scoped_live": true,
-        "uuid_aware_mode": false,
-        "hit_count": 5,
+        "uuid_aware_mode": true,
+        "hit_count": 12,
         "trace_workspace_matches": true,
         "forbidden_work_id_violation_count": 0,
         "forbidden_corpus_work_ids_leaked": [],
@@ -42,10 +42,10 @@
         ],
         "expected_citations_min_count": 3,
         "citation_count_ok": true,
-        "answer_rouge_l": 0.06866952789699571,
+        "answer_rouge_l": 0.09375,
         "abstain_keyword_hit": false,
         "answer_metric_type": "rouge_l",
-        "workspace_scope_ok": false
+        "workspace_scope_ok": true
       },
       "retrieval_trace": {
         "embedding": {
@@ -55,23 +55,27 @@
           "workspace_unbounded": true,
           "workspace_scope_work_count": 0
         },
-        "hit_count": 5,
+        "hit_count": 12,
         "filter_work_id": null,
         "resolved_work_id": "33599c70-fbad-41b1-9faf-96e5457699f9",
         "qdrant_collection": "chunks",
-        "top_k_requested": 5,
-        "citations_returned": 5,
+        "top_k_requested": 12,
+        "citations_returned": 12,
         "top_hit_scores": [
           0.5485728,
-          0.5453327,
-          0.57351565,
+          0.5436691,
+          0.57744074,
           0.53298175,
-          0.56976485
+          0.52847445,
+          0.5654278,
+          0.54734236,
+          0.52172273
         ],
         "query_preview": "Which papers in this corpus pioneer the anchor-free object detection paradigm and what is each one's main contribution?",
         "answer_synthesis": {
-          "mode": "deterministic_snippets",
-          "second_stage_llm": false
+          "mode": "grounded_llm_paraphrase",
+          "second_stage_llm": true,
+          "model": "mistralai/mistral-small-3.2-24b-instruct"
         },
         "retrieval_mode": "vector",
         "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
@@ -106,10 +110,10 @@
         },
         {
           "rank": 2,
-          "score": 0.5453327,
+          "score": 0.5436691,
           "work_id": "33599c70-fbad-41b1-9faf-96e5457699f9",
           "document_id": "5c1459bd-c4ec-4f02-9d75-e38429ac2827",
-          "chunk_fingerprint": "2ac0a2b9f4b9e611764aa29285155430dc92e7773bd62b17e94af22fc0d777e5",
+          "chunk_fingerprint": "e6b69b4bb3a56dcf4b02174b8e5122a32dfe27003dffb15823a075ac181f9878",
           "section_path": "Bridging the Gap Between Anchor-based and Anchor-free Detection via Adaptive Training Sample Selection / 1. Introduction",
           "excerpt": "## 1. Introduction\n\nObject detection is a long-standing topic in the field of computer vision, aiming to detect objects of predefined categories. Accurate object detection would have far reaching impact on various applications including image recognition and video surveillance. In recent years, with the development of convolutional neural network (CNN), object detection has been dominated by anchor-based detectors, which can be generally divided into one-stage methods [36, 33] and two-stage methods [47, 9]. Both of them first tile a large number of preset anchors on the image, then predict the",
           "chunk_kind": "body",
@@ -117,12 +121,12 @@
         },
         {
           "rank": 3,
-          "score": 0.57351565,
+          "score": 0.57744074,
           "work_id": "eb99ebf1-d745-4465-a9de-12830062dbc2",
           "document_id": "d78549a6-f793-498c-bc76-38350b3aa694",
-          "chunk_fingerprint": "f52ac66d9c04a7ef319709e8f89a006d628dbcf9d0a8de4bff6236c85e047531",
+          "chunk_fingerprint": "af337134d8d248f9a6ae82aa549072e704512c0d9282487b440387c0b798a63a",
           "section_path": "TOOD: Task-aligned One-stage Object Detection",
-          "excerpt": "[8] Heng Zhang, Elisa Fromont, Sébastien Lefèvre, and Bruno Avignon. Localize to classify and classify to localize: Mutual guidance in object detection. In *Proceedings of the Asian Conference on Computer Vision*, 2020.\n\n[9] Shifeng Zhang, Cheng Chi, Yongqiang Yao, Zhen Lei, and Stan Z Li. Bridging the gap between anchor-based and anchor-free detection via adaptive training sample selection. In *Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition*, pages 9759–9768, 2020.\n\n[10] Xiaosong Zhang, Fang Wan, Chang Liu, Rongrong Ji, and Qixiang Ye. Freeanchor: Learning to ma",
+          "excerpt": "[8] Heng Zhang, Elisa Fromont, Sébastien Lefèvre, and Bruno Avignon. Localize to classify and classify to localize: Mutual guidance in object detection. In Proceedings of the Asian Conference on Computer Vision, 2020.\n\n[9] Shifeng Zhang, Cheng Chi, Yongqiang Yao, Zhen Lei, and Stan Z Li. Bridging the gap between anchor-based and anchor-free detection via adaptive training sample selection. In Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition, pages 9759–9768, 2020.\n\n[10] Xiaosong Zhang, Fang Wan, Chang Liu, Rongrong Ji, and Qixiang Ye. Freeanchor: Learning to match ",
           "chunk_kind": "body",
           "language": "en"
         },
@@ -139,26 +143,103 @@
         },
         {
           "rank": 5,
-          "score": 0.56976485,
+          "score": 0.52847445,
+          "work_id": "33599c70-fbad-41b1-9faf-96e5457699f9",
+          "document_id": "5c1459bd-c4ec-4f02-9d75-e38429ac2827",
+          "chunk_fingerprint": "217de79d5a14c1db5d547b654d9aca3f2e021441ab6f66526639aa1f6dee4ea1",
+          "section_path": "Bridging the Gap Between Anchor-based and Anchor-free Detection via Adaptive Training Sample Selection / Abstract",
+          "excerpt": "## Abstract\n\nObject detection has been dominated by anchor-based detectors for several years. Recently, anchor-free detectors have become popular due to the proposal of FPN and Focal Loss. In this paper, we first point out that the essential difference between anchor-based and anchor-free detection is actually how to define positive and negative training samples, which leads to the performance gap between them. If they adopt the same definition of positive and negative samples during training, there is no obvious difference in the final performance, no matter regressing from a box or a point. ",
+          "chunk_kind": "abstract",
+          "language": "en"
+        },
+        {
+          "rank": 6,
+          "score": 0.5654278,
           "work_id": "eb99ebf1-d745-4465-a9de-12830062dbc2",
           "document_id": "d78549a6-f793-498c-bc76-38350b3aa694",
-          "chunk_fingerprint": "f13ca7e70c0c98ae46d5cd971d8ef8fa7cdbf5166cc4c590d0ae0bf1ad8dc0f1",
+          "chunk_fingerprint": "2dba4ef1c40b3b5a9cf0e128b42049bad54c4a0f0b551101d881525652f5e47c",
           "section_path": "TOOD: Task-aligned One-stage Object Detection",
-          "excerpt": "[8] Wei Ke, Tianliang Zhang, Zeyi Huang, Qixiang Ye, Jianzhuang Liu, and Dong Huang. Multiple anchor learning for visual object detection. In *Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition*, pages 10206–10215, 2020.\n\n[9] Kang Kim and Hee Seok Lee. Probabilistic anchor assignment with iou prediction for object detection. In *Proceedings of the European Conference on Computer Vision*, 2020.\n\n[10] Tao Kong, Fuchun Sun, Huaping Liu, Yuning Jiang, Lei Li, and Jianbo Shi. Foveabox: Beyond anchor-based object detection. *IEEE Transactions on Image Processing*, 29:7389–",
+          "excerpt": "[8] Wei Ke, Tianliang Zhang, Zeyi Huang, Qixiang Ye, Jianzhuang Liu, and Dong Huang. Multiple anchor learning for visual object detection. In Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition, pages 10206–10215, 2020.\n\n[9] Kang Kim and Hee Seok Lee. Probabilistic anchor assignment with iou prediction for object detection. In Proceedings of the European Conference on Computer Vision, 2020.\n\n[10] Tao Kong, Fuchun Sun, Huaping Liu, Yuning Jiang, Lei Li, and Jianbo Shi. Foveabox: Beyond anchor-based object detection. IEEE Transactions on Image Processing, 29:7389–7398, ",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 7,
+          "score": 0.54734236,
+          "work_id": "33599c70-fbad-41b1-9faf-96e5457699f9",
+          "document_id": "5c1459bd-c4ec-4f02-9d75-e38429ac2827",
+          "chunk_fingerprint": "758645a5670c70ddf97164488a98849d319af4134106086de9db0eb9ef8101c0",
+          "section_path": "Bridging the Gap Between Anchor-based and Anchor-free Detection via Adaptive Training Sample Selection / 2. Related Work / 2.2. Anchor-free Detector",
+          "excerpt": "### 2.2. Anchor-free Detector\n\n**Keypoint-based method.** This type of anchor-free method first locates several pre-defined or self-learned keypoints, and then generates bounding boxes to detect objects. CornerNet [26] detects an object bounding box as a pair of keypoints (top-left corner and bottom-right corner) and CornerNet-Lite [27] introduces CornerNet-Saccade and CornerNet-Squeeze to improve its speed. The second stage of Grid R-CNN [39] locates objects via predicting grid points with the position sensitive merits of FCN and then determining the bounding box guided by the grid. ExtremeNe",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 8,
+          "score": 0.52172273,
+          "work_id": "3ca82fea-ba1d-4478-b34d-9182e88252de",
+          "document_id": "d8342dd6-7af5-4f83-ba84-9852c53449f6",
+          "chunk_fingerprint": "229d3cf16a219b6728c72c9271d01b2c5e4dc8d9d821c58185790b76f385acb0",
+          "section_path": "FCOS: Fully Convolutional One-Stage Object Detection / 1. Introduction",
+          "excerpt": "## 1. Introduction\n\nObject detection is a fundamental yet challenging task in computer vision, which requires the algorithm to predict a bounding box with a category label for each instance of interest in an image. All current mainstream detectors such as Faster R-CNN [24], SSD [18] and YOLOv2, v3 [23] rely on a set of pre-defined anchor boxes and it has long been believed that the use of anchor boxes is the key to detectors’ success. Despite their great success, it is important to note that anchor-based detectors suffer some drawbacks: 1) As shown in [15, 24], detection performance is sensiti",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 9,
+          "score": 0.5474762,
+          "work_id": "33599c70-fbad-41b1-9faf-96e5457699f9",
+          "document_id": "5c1459bd-c4ec-4f02-9d75-e38429ac2827",
+          "chunk_fingerprint": "fe94f57c8406a02ea8b6af5d9865c328d899fa7211b068d27ae17c3348ed03e7",
+          "section_path": "Bridging the Gap Between Anchor-based and Anchor-free Detection via Adaptive Training Sample Selection",
+          "excerpt": "# Bridging the Gap Between Anchor-based and Anchor-free Detection via Adaptive Training Sample Selection\n\nShifeng Zhang$^{1,2}$, Cheng Chi$^{3}$, Yongqiang Yao$^{4}$, Zhen Lei$^{1,2*}$, Stan Z. Li$^{5}$\n\n$^{1}$ CBSR, NLPR, CASIA $^{2}$ SAI, UCAS $^{3}$ AIR, CAS $^{4}$ BUPT $^{5}$ Westlake University\n\n{shifeng.zhang, zlei, szli}@nlpr.ia.ac.cn, chicheng15@mails.ucas.ac.cn, yao_yq@bupt.edu.cn\n\n## Abstract\n\nObject detection has been dominated by anchor-based detectors for several years. Recently, anchor-free detectors have become popular due to the proposal of FPN and Focal Loss. In this paper, we",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 10,
+          "score": 0.5458679,
+          "work_id": "eb99ebf1-d745-4465-a9de-12830062dbc2",
+          "document_id": "d78549a6-f793-498c-bc76-38350b3aa694",
+          "chunk_fingerprint": "62f9848907e5afe8edc703da8e838e6272aa7c513de1ba04d14c72354a0f1cad",
+          "section_path": "TOOD: Task-aligned One-stage Object Detection / TOOD: Task-aligned One-stage Object Detection",
+          "excerpt": "[2] Kai Chen, Jiaqi Wang, Jiangmiao Pang, Yuhang Cao, Yu Xiong, Xiaoxiao Li, Shuyang Sun, Wansen Feng, Ziwei Liu, Jiarui Xu, et al. Mmdetection: Open mmlab detection toolbox and benchmark. arXiv preprint arXiv:1906.07155, 2019.\n\n[3] Wei Ke, Tianliang Zhang, Zeyi Huang, Qixiang Ye, Jianzhuang Liu, and Dong Huang. Multiple anchor learning for visual object detection. In Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition, pages 10206–10215, 2020.\n\n[4] Kang Kim and Hee Seok Lee. Probabilistic anchor assignment with iou prediction for object detection. In Proceedings of t",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 11,
+          "score": 0.5448874,
+          "work_id": "52e5de2a-32ef-4e74-86b1-7fc97c7e2de8",
+          "document_id": "770eacbc-880b-4645-9233-93722096b877",
+          "chunk_fingerprint": "2070292b2228c355abd0881d14224cdf051888944205109a1f46491ea98f38af",
+          "section_path": "YOLOX: Exceeding YOLO Series in 2021",
+          "excerpt": "[27] Guanglu Song, Yu Liu, and Xiaogang Wang. Revisiting the sibling head in object detector. In CVPR, 2020. 2\n\n[28] Mingxing Tan, Ruoming Pang, and Quoc V Le. Efficientdet: Scalable and efficient object detection. In CVPR, 2020. 6\n\n[29] Zhi Tian, Chunhua Shen, Hao Chen, and Tong He. Fcos: Fully convolutional one-stage object detection. In ICCV, 2019. 1, 2, 3, 4\n\n[30] Chien-Yao Wang, Alexey Bochkovskiy, and Hong-Yuan Mark Liao. Scaled-yolov4: Scaling cross stage partial network. arXiv preprint arXiv:2011.08036, 2020. 1, 5, 6\n\n[31] Chien-Yao Wang, Hong-Yuan Mark Liao, Yueh-Hua Wu, Ping-Yang Che",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 12,
+          "score": 0.54367,
+          "work_id": "33599c70-fbad-41b1-9faf-96e5457699f9",
+          "document_id": "5c1459bd-c4ec-4f02-9d75-e38429ac2827",
+          "chunk_fingerprint": "82c91abf5436f4d55d136de2fd8fd4ab21b46206fadccbe5056ea59cb1239f8e",
+          "section_path": "Bridging the Gap Between Anchor-based and Anchor-free Detection via Adaptive Training Sample Selection",
+          "excerpt": "### 2.2. Anchor-free Detector\n\n**Keypoint-based method.** This type of anchor-free method first locates several pre-defined or self-learned keypoints, and then generates bounding boxes to detect objects. CornerNet [26] detects an object bounding box as a pair of keypoints (top-left corner and bottom-right corner) and CornerNet-Lite [27] introduces CornerNet-Saccade and CornerNet-Squeeze to improve its speed. The second stage of Grid R-CNN [39] locates objects via predicting grid points with the position sensitive merits of FCN and then determining the bounding box guided by the grid. ExtremeNe",
           "chunk_kind": "body",
           "language": "en"
         }
       ],
-      "answer": "Retrieved context (not LLM-paraphrased): atically select positive and negative samples based on object characteristics. It bridges the gap between anchor-based and anchor-free detectors. Besides, through a series of experiments, a conclusion can be drawn that tiling multiple anchors per location on the image to detect objects is not necessary. Extensive experiments on the MS COCO [34] dataset support our analysis and conclusions. State-o ## 1. Introduction\n\nObject detection is a long-standing topic in the field of computer vision, aiming to detect objects of predefined categories. Accurate object detection would have far reaching impact on various applications including image recognition and video surveillance. In recent years, with the development of convolutional neural network (CNN), object detection has been dominated by ancho [8] Heng Zhang, Elisa Fromont, Sébastien Lefèvre, and Bruno Avignon. Localize to classify and classify to localize: Mutual guidance in object detection. In *Proceedings of the Asian Conference on Computer Vision*, 2020.\n\n[9] Shifeng Zhang, Cheng Chi, Yongqiang Yao, Zhen Lei, and Stan Z Li. Bridging the gap between anchor-based and anchor-free detection via adaptive training sample selection. In …",
-      "answer_preview": "Retrieved context (not LLM-paraphrased): atically select positive and negative samples based on object characteristics. It bridges the gap between anchor-based and anchor-free detectors. Besides, through a series of experiments, a conclusion can be drawn that tiling multiple anchors per location on the image to detect objects is not necessary. Extensive experiments on the MS COCO [34] dataset supp",
-      "wall_clock_seconds": 0.054
+      "answer": "The retrieved excerpts identify two papers that pioneer the anchor-free object detection paradigm:\n\n1. **Bridging the Gap Between Anchor-based and Anchor-free Detection via Adaptive Training Sample Selection** (excerpts [1], [5], [9]):\n   - Main contribution: This work indicates the essential difference between anchor-based and anchor-free detection lies in how positive and negative training samples are defined. It introduces Adaptive Training Sample Selection (ATSS) to bridge the gap between these two paradigms, showing that with the same sample definition, there is no significant performance difference between anchor-based and anchor-free detectors.\n\n2. **FCOS: Fully Convolutional One-Stage Object Detection** (excerpts [4], [8]):\n   - Main contribution: FCOS proposes a fully convolutional one-stage object detector that operates in a per-pixel prediction fashion, analogous to semantic segmentation. It eliminates the need for pre-defined anchor boxes, avoiding complicated computations related to anchors and simplifying the detection process.",
+      "answer_preview": "The retrieved excerpts identify two papers that pioneer the anchor-free object detection paradigm:\n\n1. **Bridging the Gap Between Anchor-based and Anchor-free Detection via Adaptive Training Sample Selection** (excerpts [1], [5], [9]):\n   - Main contribution: This work indicates the essential difference between anchor-based and anchor-free detection lies in how positive and negative training sampl",
+      "wall_clock_seconds": 7.92
     },
     {
       "case_id": "ws_full_corpus_negative_unrelated",
       "question": "Which paper in this corpus introduces the BERT model or large language model pre-training for natural language understanding?",
       "question_preview": "Which paper in this corpus introduces the BERT model or large language model pre-training for natural language understanding?",
       "metrics": {
-        "passed": false,
+        "passed": true,
         "contract_only": false,
         "workspace_scoped_live": true,
         "uuid_aware_mode": false,
@@ -172,7 +253,7 @@
         "expected_citations_min_count": 0,
         "citation_count_ok": true,
         "answer_rouge_l": null,
-        "abstain_keyword_hit": false,
+        "abstain_keyword_hit": true,
         "answer_metric_type": "abstain_keywords",
         "workspace_scope_ok": true
       },
@@ -186,21 +267,22 @@
         },
         "hit_count": 5,
         "filter_work_id": null,
-        "resolved_work_id": "9cd96dca-a917-4771-b856-9b4de0a640c9",
+        "resolved_work_id": "739b528f-f8f1-42b4-b185-35c114986e9d",
         "qdrant_collection": "chunks",
         "top_k_requested": 5,
         "citations_returned": 5,
         "top_hit_scores": [
-          0.51686007,
-          0.4944318,
-          0.5166636,
-          0.4678403,
-          0.4664631
+          0.53659385,
+          0.53659385,
+          0.5157308,
+          0.4968521,
+          0.4968521
         ],
         "query_preview": "Which paper in this corpus introduces the BERT model or large language model pre-training for natural language understanding?",
         "answer_synthesis": {
-          "mode": "deterministic_snippets",
-          "second_stage_llm": false
+          "mode": "grounded_llm_paraphrase",
+          "second_stage_llm": true,
+          "model": "mistralai/mistral-small-3.2-24b-instruct"
         },
         "retrieval_mode": "vector",
         "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
@@ -211,84 +293,87 @@
       },
       "graph_context": {
         "methods": [
-          "DINO"
+          "Channel Allocation",
+          "Direct Preference Optimization (DPO)",
+          "Hybrid Architecture",
+          "Maximal Update Parametrization (μP)"
         ],
         "datasets": [
-          "COCO",
-          "Objects365"
+          "Post-training Data",
+          "Pretraining Data"
         ],
         "semantic_available": true,
-        "context_work_id": "9cd96dca-a917-4771-b856-9b4de0a640c9",
+        "context_work_id": "739b528f-f8f1-42b4-b185-35c114986e9d",
         "degraded": [],
         "error": null
       },
       "citations": [
         {
           "rank": 1,
-          "score": 0.51686007,
+          "score": 0.53659385,
+          "work_id": "739b528f-f8f1-42b4-b185-35c114986e9d",
+          "document_id": "200555f0-cdab-465d-8a48-c6363e53e682",
+          "chunk_fingerprint": "a925a2fac3c6110c33af94f1642ea5a802487308d21d335e2eb5e241b65a11b6",
+          "section_path": "Falcon-H1: A Family of Hybrid-Head Language Models Redefining Efficiency and Performance / 2.4 Tokenizer / 2.4.1 Empirical Studies",
+          "excerpt": "Greg Yang, Edward J. Hu, Igor Babuschkin, Szymon Sidor, Xiaodong Liu, David Farhi, Nick Ryder, Jakub Pachocki, Weizhu Chen, and Jianfeng Gao. Tensor programs v: Tuning large neural networks via zero-shot hyperparameter transfer, 2022. URL https://arxiv.org/abs/2203.03466.\n\nGreg Yang, Dingli Yu, Chen Zhu, and Soufiane Hayou. Tensor programs vi: Feature learning in infinite-depth neural networks, 2023. URL https://arxiv.org/abs/2310.02244.\n\nGreg Yang, James B. Simon, and Jeremy Bernstein. A spectral condition for feature learning, 2024c. URL https://arxiv.org/abs/2310.17813.\n\nHoward Yen, Tianyu ",
+          "chunk_kind": "method",
+          "language": "en"
+        },
+        {
+          "rank": 2,
+          "score": 0.53659385,
+          "work_id": "739b528f-f8f1-42b4-b185-35c114986e9d",
+          "document_id": "200555f0-cdab-465d-8a48-c6363e53e682",
+          "chunk_fingerprint": "da1f19f237dce159b86b8e671216dcdda536b85ae4f44f468c08c25fbc2cbe24",
+          "section_path": "Falcon-H1: A Family of Hybrid-Head Language Models Redefining Efficiency and Performance / 2.4 Tokenizer",
+          "excerpt": "Greg Yang, Edward J. Hu, Igor Babuschkin, Szymon Sidor, Xiaodong Liu, David Farhi, Nick Ryder, Jakub Pachocki, Weizhu Chen, and Jianfeng Gao. Tensor programs v: Tuning large neural networks via zero-shot hyperparameter transfer, 2022. URL https://arxiv.org/abs/2203.03466.\n\nGreg Yang, Dingli Yu, Chen Zhu, and Soufiane Hayou. Tensor programs vi: Feature learning in infinite-depth neural networks, 2023. URL https://arxiv.org/abs/2310.02244.\n\nGreg Yang, James B. Simon, and Jeremy Bernstein. A spectral condition for feature learning, 2024c. URL https://arxiv.org/abs/2310.17813.\n\nHoward Yen, Tianyu ",
+          "chunk_kind": "method",
+          "language": "en"
+        },
+        {
+          "rank": 3,
+          "score": 0.5157308,
           "work_id": "9cd96dca-a917-4771-b856-9b4de0a640c9",
           "document_id": "58258625-99b9-46e3-9cc2-65b8249f8636",
-          "chunk_fingerprint": "7f9127a3f41514b5d299a902659aae56758e182f7a5be314a36660253130eba1",
+          "chunk_fingerprint": "8fe71cdab7d90acfe8dc36141fd56ae5f8a2928c6fb71a11262a841bc8e3a7c2",
           "section_path": "DINO: DETR with Improved DeNoising Anchor Boxes for End-to-End Object Detection / 2 Related Work / 2.3 Large-scale Pre-training for Object Detection",
           "excerpt": "### 2.3 Large-scale Pre-training for Object Detection\n\nLarge-scale pre-training have had a big impact on both natural language processing [10] and computer vision [27]. The best performance detectors nowadays are mostly achieved with large backbones pre-trained on large-scale data. For example, Swin V2 [22] extends its backbone size to 3.0 Billion parameters and pre-trains its models with 70M privately collected images. Florence [40] first pre-trains its backbone with 900M privately curated image-text pairs and then pre-trains its detector with 9M images with annotated or pseudo boxes. In cont",
           "chunk_kind": "body",
           "language": "en"
         },
         {
-          "rank": 2,
-          "score": 0.4944318,
-          "work_id": "6af0d8aa-c1b0-4df3-a150-d3a51f9fafc8",
-          "document_id": "dff05d47-d745-4999-a5dd-625a3be2534e",
-          "chunk_fingerprint": "e6ebc3a570c80a84557051bc5dac2dbf75a783cb5326e31c1a4e68700a5a761b",
-          "section_path": "DN-DETR: Accelerate DETR Training by Introducing Query DeNoising",
-          "excerpt": "[3] Qiang Chen, Xiaokang Chen, Gang Zeng, and Jingdong Wang. Group DETR: Fast Training Convergence with Decoupled One-to-Many Label Assignment. *arXiv preprint arXiv:2207.13085*, 2022.\n\n[4] Ting Chen, Saurabh Saxena, Lala Li, David J. Fleet, and Geoffrey Hinton. Pix2seq: A language modeling framework for object detection, 2021.\n\n[5] Bowen Cheng, Ishan Misra, Alexander G Schwing, Alexander Kirillov, and Rohit Girdhar. Masked-attention mask transformer for universal image segmentation. In *Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition*, pages 1290–1299, 2022.\n",
-          "chunk_kind": "body",
-          "language": "en"
-        },
-        {
-          "rank": 3,
-          "score": 0.5166636,
-          "work_id": "cda6a480-8512-4b85-970a-65377bd09c24",
-          "document_id": "bd7a00ba-20df-45a1-9300-055cbeeea0f6",
-          "chunk_fingerprint": "01f24060efde0c1640087e2637e28568d0d846c48fed88554045b1d874e69c0e",
-          "section_path": "YOLO9000: Better, Faster, Stronger",
-          "excerpt": "[12] G. A. Miller, R. Beckwith, C. Fellbaum, D. Gross, and K. J. Miller. Introduction to wordnet: An on-line lexical database. International journal of lexicography, 3(4):235–244, 1990. 6\n\n[13] J. Redmon. Darknet: Open source neural networks in c. http://pjreddie.com/darknet/, 2013–2016. 5\n\n[14] J. Redmon, S. Divvala, R. Girshick, and A. Farhadi. You only look once: Unified, real-time object detection. arXiv preprint arXiv:1506.02640, 2015. 4, 5\n\n[15] S. Ren, K. He, R. Girshick, and J. Sun. Faster r-cnn: Towards real-time object detection with region proposal networks. arXiv preprint arXiv:150",
-          "chunk_kind": "body",
-          "language": "en"
-        },
-        {
           "rank": 4,
-          "score": 0.4678403,
-          "work_id": "16424dcd-d985-421f-b402-0a7817bab180",
-          "document_id": "6ba344a1-6fba-4acd-a20d-c0e66e6df72c",
-          "chunk_fingerprint": "8ec3d3bdae92eeef7dbdf83969203a054ec794862886d59a0b4248ee092c1394",
-          "section_path": "OverFeat: Integrated Recognition, Localization and Detection using Convolutional Networks",
-          "excerpt": "[13] V. Jain, J. F. Murray, F. Roth, S. Turaga, V. Zhigulin, K. Briggman, M. Helmstaedter, W. Denk, and H. S. Seung. Supervised learning of image restoration with convolutional networks. In ICCV’07.\n\n[14] K. Jarrett, K. Kavukcuoglu, M. Ranzato, and Y. LeCun. What is the best multi-stage architecture for object recognition? In Proc. International Conference on Computer Vision (ICCV’09). IEEE, 2009.\n\n[15] A. Krizhevsky, I. Sutskever, and G. Hinton. Imagenet classification with deep convolutional neural networks. In NIPS, 2012.\n\n[16] Y. LeCun, B. Boser, J. S. Denker, D. Henderson, R. E. Howard, W",
+          "score": 0.4968521,
+          "work_id": "739b528f-f8f1-42b4-b185-35c114986e9d",
+          "document_id": "200555f0-cdab-465d-8a48-c6363e53e682",
+          "chunk_fingerprint": "bafad02271ddb2273d727a8c69877ce6356531f5750ec320a3da7f1a29e7c6fb",
+          "section_path": "Falcon-H1: A Family of Hybrid-Head Language Models Redefining Efficiency and Performance / 2.4 Tokenizer",
+          "excerpt": "48\n```\n\n```markdown\nFalcon-H1: A Family of Hybrid-Head Language Models Redefining Efficiency and Performance\n\nversatile model for a wide range of sophisticated, instruction-driven applications.\n\n| Tasks | Falcon-H1-7B | Qwen3-8B | Qwen2.5-7B | Gemma3-12B | Llama3.1-8B | Falcon3-7B | Falcon3-10B |\n|---------------------|--------------|----------|------------|------------|-------------|------------|-------------|\n| **General** | | | | | | | |\n| BBH | 62.28 | 47.47 | 53.76 | **63.36** | 48.58 | 52.12 | 58.09 |\n| ARC-C | **59.98** | 42.06 | 41.38 | 51.96 | 52.39 | **54.35** | 54.44 |\n| TruthfulQA ",
           "chunk_kind": "method",
           "language": "en"
         },
         {
           "rank": 5,
-          "score": 0.4664631,
-          "work_id": "0ccc5f8d-239c-442b-8e43-82a1a6a6597f",
-          "document_id": "b946e138-68ad-42d4-a443-44b257bc24be",
-          "chunk_fingerprint": "1aa61ecdc543a612c82c7209b766702cf21e48c73df0b32ff727a7fba0ba5b4d",
-          "section_path": "Feature Pyramid Networks for Object Detection",
-          "excerpt": "[9] S. Gidaris and N. Komodakis. Object detection via a multi-region & semantic segmentation-aware CNN model. In ICCV, 2015.\n\n[10] S. Gidaris and N. Komodakis. Attend refine repeat: Active box proposal generation via in-out localization. In BMVC, 2016.\n\n[11] R. Girshick. Fast R-CNN. In ICCV, 2015.\n\n[12] R. Girshick, J. Donahue, T. Darrell, and J. Malik. Rich feature hierarchies for accurate object detection and semantic segmentation. In CVPR, 2014.\n\n[13] B. Hariharan, P. Arbeláez, R. Girshick, and J. Malik. Hypercolumns for object segmentation and fine-grained localization. In CVPR, 2015.\n\n[14",
+          "score": 0.4968521,
+          "work_id": "739b528f-f8f1-42b4-b185-35c114986e9d",
+          "document_id": "200555f0-cdab-465d-8a48-c6363e53e682",
+          "chunk_fingerprint": "e8efdbe25de20232b0c397321e5918d240cec3b69368cff19b0b37e4527a2848",
+          "section_path": "Falcon-H1: A Family of Hybrid-Head Language Models Redefining Efficiency and Performance / 2.4 Tokenizer / 2.4.1 Empirical Studies",
+          "excerpt": "48\n```\n\n```markdown\nFalcon-H1: A Family of Hybrid-Head Language Models Redefining Efficiency and Performance\n\nversatile model for a wide range of sophisticated, instruction-driven applications.\n\n| Tasks | Falcon-H1-7B | Qwen3-8B | Qwen2.5-7B | Gemma3-12B | Llama3.1-8B | Falcon3-7B | Falcon3-10B |\n|---------------------|--------------|----------|------------|------------|-------------|------------|-------------|\n| **General** | | | | | | | |\n| BBH | 62.28 | 47.47 | 53.76 | **63.36** | 48.58 | 52.12 | 58.09 |\n| ARC-C | **59.98** | 42.06 | 41.38 | 51.96 | 52.39 | **54.35** | 54.44 |\n| TruthfulQA ",
           "chunk_kind": "method",
           "language": "en"
         }
       ],
-      "answer": "Retrieved context (not LLM-paraphrased): ### 2.3 Large-scale Pre-training for Object Detection\n\nLarge-scale pre-training have had a big impact on both natural language processing [10] and computer vision [27]. The best performance detectors nowadays are mostly achieved with large backbones pre-trained on large-scale data. For example, Swin V2 [22] extends its backbone size to 3.0 Billion parameters and pre-trains its models with 70M priv [3] Qiang Chen, Xiaokang Chen, Gang Zeng, and Jingdong Wang. Group DETR: Fast Training Convergence with Decoupled One-to-Many Label Assignment. *arXiv preprint arXiv:2207.13085*, 2022.\n\n[4] Ting Chen, Saurabh Saxena, Lala Li, David J. Fleet, and Geoffrey Hinton. Pix2seq: A language modeling framework for object detection, 2021.\n\n[5] Bowen Cheng, Ishan Misra, Alexander G Schwing, Alexander Kirillov [12] G. A. Miller, R. Beckwith, C. Fellbaum, D. Gross, and K. J. Miller. Introduction to wordnet: An on-line lexical database. International journal of lexicography, 3(4):235–244, 1990. 6\n\n[13] J. Redmon. Darknet: Open source neural networks in c. http://pjreddie.com/darknet/, 2013–2016. 5\n\n[14] J. Redmon, S. Divvala, R. Girshick, and A. Farhadi. You only look once: Unified, real-time object det…",
-      "answer_preview": "Retrieved context (not LLM-paraphrased): ### 2.3 Large-scale Pre-training for Object Detection\n\nLarge-scale pre-training have had a big impact on both natural language processing [10] and computer vision [27]. The best performance detectors nowadays are mostly achieved with large backbones pre-trained on large-scale data. For example, Swin V2 [22] extends its backbone size to 3.0 Billion parameter",
-      "wall_clock_seconds": 0.053
+      "answer": "No paper in the retrieved context introduces the BERT model or large language model pre-training for natural language understanding. The excerpts discuss other topics such as tensor programs, object detection, and language model performance comparisons.",
+      "answer_preview": "No paper in the retrieved context introduces the BERT model or large language model pre-training for natural language understanding. The excerpts discuss other topics such as tensor programs, object detection, and language model performance comparisons.",
+      "wall_clock_seconds": 1.404
     },
     {
       "case_id": "ws_two_stage_negative_focal_loss",
       "question": "Which paper in this workspace introduces focal loss to address class imbalance?",
       "question_preview": "Which paper in this workspace introduces focal loss to address class imbalance?",
       "metrics": {
-        "passed": false,
+        "passed": true,
         "contract_only": false,
         "workspace_scoped_live": true,
         "uuid_aware_mode": true,
@@ -302,7 +387,7 @@
         "expected_citations_min_count": 0,
         "citation_count_ok": true,
         "answer_rouge_l": null,
-        "abstain_keyword_hit": false,
+        "abstain_keyword_hit": true,
         "answer_metric_type": "abstain_keywords",
         "workspace_scope_ok": true
       },
@@ -320,16 +405,17 @@
         "top_k_requested": 5,
         "citations_returned": 5,
         "top_hit_scores": [
-          0.50874794,
-          0.49818215,
-          0.46457273,
-          0.48261535,
-          0.4755948
+          0.5112753,
+          0.5427468,
+          0.49776292,
+          0.4973889,
+          0.5218627
         ],
         "query_preview": "Which paper in this workspace introduces focal loss to address class imbalance?",
         "answer_synthesis": {
-          "mode": "deterministic_snippets",
-          "second_stage_llm": false
+          "mode": "grounded_llm_paraphrase",
+          "second_stage_llm": true,
+          "model": "mistralai/mistral-small-3.2-24b-instruct"
         },
         "retrieval_mode": "vector",
         "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
@@ -339,9 +425,6 @@
       },
       "graph_context": {
         "methods": [
-          "Balanced L1 loss",
-          "Balanced feature pyramid",
-          "IoU-balanced sampling",
           "Libra R-CNN"
         ],
         "datasets": [
@@ -355,10 +438,10 @@
       "citations": [
         {
           "rank": 1,
-          "score": 0.50874794,
+          "score": 0.5112753,
           "work_id": "ee487d82-2719-4276-9ca4-ad54ea102685",
           "document_id": "e44420be-39be-484b-bebc-e345dfb20b61",
-          "chunk_fingerprint": "cb1fc4d41bda7ea90238ff5548a357f9e2a1228dad4af1aaebe472acb051c2a5",
+          "chunk_fingerprint": "745a039a734826f931b36b96de05aa8f718c4614392391b9b20579dd5d4994fa",
           "section_path": "Libra R-CNN: Towards Balanced Learning for Object Detection / Abstract",
           "excerpt": "## Abstract\n\nCompared with model architectures, the training process, which is also crucial to the success of detectors, has received relatively less attention in object detection. In this work, we carefully revisit the standard training practice of detectors, and find that the detection performance is often limited by the imbalance during the training process, which generally consists in three levels – sample level, feature level, and objective level. To mitigate the adverse effects caused thereby, we propose Libra R-CNN, a simple but effective framework towards balanced learning for object d",
           "chunk_kind": "abstract",
@@ -366,63 +449,63 @@
         },
         {
           "rank": 2,
-          "score": 0.49818215,
+          "score": 0.5427468,
           "work_id": "ee487d82-2719-4276-9ca4-ad54ea102685",
           "document_id": "e44420be-39be-484b-bebc-e345dfb20b61",
-          "chunk_fingerprint": "3bff3db51c25643b72224b004f32b3bdde3a32899b3c1eecc8707c475ef528b8",
-          "section_path": "Libra R-CNN: Towards Balanced Learning for Object Detection / 1. Introduction",
-          "excerpt": "## 1. Introduction\n\nAlong with the advances in deep convolutional networks, recent years have seen remarkable progress in object detection. A number of detection frameworks such as Faster R-CNN [28], RetinaNet [20], and Cascaded R-CNN [3] have been developed, which have substantially pushed forward the state of the art. Despite the apparent differences in the pipeline architectures, e.g. single-stage vs. two-stage, modern detection frameworks mostly follow a common training paradigm, namely, sampling regions, extracting features therefrom, and then jointly recognizing the categories and refini",
+          "chunk_fingerprint": "f37de5ede73c1e82bc4857968ab772ea6967f41e9614b8667b571f43e21b1b4a",
+          "section_path": "Libra R-CNN: Towards Balanced Learning for Object Detection",
+          "excerpt": "**Balanced learning for object detection.** Alleviating imbalance in the training process of object detection is crucial to achieve an optimal training and fully exploit the potential of model architectures.\n\n**Sample level imbalance.** OHEM [29] and focal loss [20] are primary existing solutions for sample level imbalance\n\n## 3. Methodology\n\nThe overall pipeline of Libra R-CNN is shown in Figure 2. Our goal is to alleviate the imbalance exists in the training process of detectors using an overall balanced design, thus exploiting the potential of model architectures as much as possible. All co",
           "chunk_kind": "body",
           "language": "en"
         },
         {
           "rank": 3,
-          "score": 0.46457273,
+          "score": 0.49776292,
           "work_id": "ee487d82-2719-4276-9ca4-ad54ea102685",
           "document_id": "e44420be-39be-484b-bebc-e345dfb20b61",
-          "chunk_fingerprint": "d818060cb7d3af244b30962c7a9534ecd4ea1813e78ae83f8230b6288bf1b0e6",
-          "section_path": "Libra R-CNN: Towards Balanced Learning for Object Detection / 1. Introduction",
-          "excerpt": "Without bells and whistles, Libra R-CNN achieves 2.5 points and 2.0 points higher Average Precision (AP) than FPN Faster R-CNN and RetinaNet respectively on MS COCO [21]. With the 1× schedule in [9], Libra R-CNN can obtain 38.7 and 43.0 AP with FPN Faster R-CNN based on ResNet-50 and ResNeXt-101-64x4d respectively.\n\nHere, we summarize our main contributions: (1) We systematically revisit the training process of detectors. Our study reveals the imbalance problems at three levels that limit the detection performance. (2) We propose Libra R-CNN, a framework that rebalances the training process by",
-          "chunk_kind": "body",
+          "chunk_fingerprint": "2130dcedd7377ff8e2b182d461c6de6c4e12a3e675eff646b953d5615f176705",
+          "section_path": "Libra R-CNN: Towards Balanced Learning for Object Detection / 3. Methodology / 3.3. Balanced L1 Loss",
+          "excerpt": "### 3.3. Balanced L1 Loss\n\nClassification and localization problems are solved simultaneously under the guidance of a multi-task loss since Fast R-CNN [7], which is defined as\n\n$$\nL_{p,u,t^u,v} = L_{cls}(p, u) + \\lambda[u \\geq 1]L_{loc}(t^u, v).\n$$\n\n$L_{cls}$ and $L_{loc}$ are objective functions corresponding to recognition and localization respectively. Predictions and targets in $L_{cls}$ are denoted as $p$ and $u$. $t^u$ is the corresponding regression results with class $u$. $v$ is the regression target. $\\lambda$ is used for tuning the loss weight under multi-task learning. We call sampl",
+          "chunk_kind": "method",
           "language": "en"
         },
         {
           "rank": 4,
-          "score": 0.48261535,
+          "score": 0.4973889,
           "work_id": "ee487d82-2719-4276-9ca4-ad54ea102685",
           "document_id": "e44420be-39be-484b-bebc-e345dfb20b61",
-          "chunk_fingerprint": "22ad8455fcbfd5f653b947dc12c08d3005593ff43045fb8e8a9ca0e62745de12",
-          "section_path": "Libra R-CNN: Towards Balanced Learning for Object Detection",
-          "excerpt": "# Libra R-CNN: Towards Balanced Learning for Object Detection\n\nJiangmiao Pang$^{\\dagger}$ Kai Chen$^{\\S}$ Jianping Shi$^{\\ddagger}$ Huajun Feng$^{\\dagger}$ Wanli Ouyang$^{\\flat}$ Dahua Lin$^{\\S}$\n\n$^{\\dagger}$Zhejiang University $^{\\S}$The Chinese University of Hong Kong \n$^{\\ddagger}$SenseTime Research $^{\\flat}$The University of Sydney\n\npjm@zju.edu.cn ck015@ie.cuhk.edu.hk shijianping@sensetime.com \nfenghj@zju.edu.cn wanli.ouyang@sydney.edu.au dhlin@ie.cuhk.edu.hk\n\n## Abstract\n\nCompared with model architectures, the training process, which is also crucial to the success of detectors, has rece",
-          "chunk_kind": "body",
+          "chunk_fingerprint": "09ef09d1d5e1b9366d5d7ff0ec1947866d5f0dc74e2c6fa44f789b9b4ef2e151",
+          "section_path": "Libra R-CNN: Towards Balanced Learning for Object Detection / 3. Methodology",
+          "excerpt": "## 3. Methodology\n\nThe overall pipeline of Libra R-CNN is shown in Figure 2. Our goal is to alleviate the imbalance exists in the training process of detectors using an overall balanced design, thus exploiting the potential of model architectures as much as possible. All components will be detailed in the following sections.\n\n### 3.1. IoU-balanced Sampling\n\nLet us start with the basic question: is the overlap between a training sample and its corresponding ground truth associated with its difficulty? To answer this question, we conduct experiments to find the truth behind. Results are shown in",
+          "chunk_kind": "method",
           "language": "en"
         },
         {
           "rank": 5,
-          "score": 0.4755948,
+          "score": 0.5218627,
           "work_id": "ee487d82-2719-4276-9ca4-ad54ea102685",
           "document_id": "e44420be-39be-484b-bebc-e345dfb20b61",
-          "chunk_fingerprint": "0dc08145956af8e329477898e51299f809a43d7c6dc228cb9050da07b1e47788",
+          "chunk_fingerprint": "547f898fb422942b77c43ab085b22289ddce98e781022de86aa2abeab23bab90",
           "section_path": "Libra R-CNN: Towards Balanced Learning for Object Detection",
-          "excerpt": "ject detection. The approach that how them are utilized to integrate the pyramidal representations determines the detection performance. However, what is the best approach to integrate them together? Our study reveals that the integrated features should possess balanced information from each resolution. But the sequential manner in aforementioned methods will make integrated features focus more on adjacent resolution but less on others. The semantic information contained in non-adjacent levels would be diluted once per fusion during the information flow.\n\n3) **Objective level imbalance**: A de",
+          "excerpt": "In order to compare with tuning loss weight directly, we first validate the effectiveness of balanced L1 loss when $\\gamma = 1$. Balanced L1 loss is able to bring 0.8 points higher AP than baseline. With our best setting, balanced L1 loss finally achieves 37.2 AP, which is 1.3 points higher than the ResNet-50 FPN Faster R-CNN baseline. These experimental results validate that our balanced L1 achieves a more balanced training and makes the model better converged.\n\n## 5. Conclusion\n\nIn this paper, we systematically revisit the training process of detectors, and find the potential of model archit",
           "chunk_kind": "body",
           "language": "en"
         }
       ],
-      "answer": "Retrieved context (not LLM-paraphrased): ## Abstract\n\nCompared with model architectures, the training process, which is also crucial to the success of detectors, has received relatively less attention in object detection. In this work, we carefully revisit the standard training practice of detectors, and find that the detection performance is often limited by the imbalance during the training process, which generally consists in three le ## 1. Introduction\n\nAlong with the advances in deep convolutional networks, recent years have seen remarkable progress in object detection. A number of detection frameworks such as Faster R-CNN [28], RetinaNet [20], and Cascaded R-CNN [3] have been developed, which have substantially pushed forward the state of the art. Despite the apparent differences in the pipeline architectures, e.g. single-st Without bells and whistles, Libra R-CNN achieves 2.5 points and 2.0 points higher Average Precision (AP) than FPN Faster R-CNN and RetinaNet respectively on MS COCO [21]. With the 1× schedule in [9], Libra R-CNN can obtain 38.7 and 43.0 AP with FPN Faster R-CNN based on ResNet-50 and ResNeXt-101-64x4d respectively.\n\nHere, we summarize our main contributions: (1) We systematically revisit the tra…",
-      "answer_preview": "Retrieved context (not LLM-paraphrased): ## Abstract\n\nCompared with model architectures, the training process, which is also crucial to the success of detectors, has received relatively less attention in object detection. In this work, we carefully revisit the standard training practice of detectors, and find that the detection performance is often limited by the imbalance during the training proc",
-      "wall_clock_seconds": 0.046
+      "answer": "The retrieved excerpts do not identify such a paper in this workspace. The excerpts mention focal loss as a primary existing solution for sample level imbalance, but do not state that the paper introduces focal loss.",
+      "answer_preview": "The retrieved excerpts do not identify such a paper in this workspace. The excerpts mention focal loss as a primary existing solution for sample level imbalance, but do not state that the paper introduces focal loss.",
+      "wall_clock_seconds": 1.362
     },
     {
       "case_id": "ws_two_stage_proposal_evolution",
       "question": "How did the region-proposal mechanism evolve across the R-CNN family from R-CNN to Faster R-CNN?",
       "question_preview": "How did the region-proposal mechanism evolve across the R-CNN family from R-CNN to Faster R-CNN?",
       "metrics": {
-        "passed": false,
+        "passed": true,
         "contract_only": false,
         "workspace_scoped_live": true,
         "uuid_aware_mode": true,
-        "hit_count": 5,
+        "hit_count": 12,
         "trace_workspace_matches": true,
         "forbidden_work_id_violation_count": 0,
         "forbidden_corpus_work_ids_leaked": [],
@@ -435,7 +518,7 @@
         ],
         "expected_citations_min_count": 3,
         "citation_count_ok": true,
-        "answer_rouge_l": 0.08979591836734692,
+        "answer_rouge_l": 0.23121387283236997,
         "abstain_keyword_hit": false,
         "answer_metric_type": "rouge_l",
         "workspace_scope_ok": true
@@ -447,23 +530,27 @@
           "workspace_id": "ws_two_stage",
           "workspace_scope_work_count": 7
         },
-        "hit_count": 5,
+        "hit_count": 12,
         "filter_work_id": null,
-        "resolved_work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
+        "resolved_work_id": "da2a6348-1a91-447d-8a17-da475a87b75f",
         "qdrant_collection": "chunks",
-        "top_k_requested": 5,
-        "citations_returned": 5,
+        "top_k_requested": 12,
+        "citations_returned": 12,
         "top_hit_scores": [
-          0.7074611,
-          0.67866397,
-          0.61013263,
-          0.6398152,
-          0.616222
+          0.69968736,
+          0.7108331,
+          0.67661154,
+          0.6801474,
+          0.6660498,
+          0.65133375,
+          0.6535048,
+          0.6675378
         ],
         "query_preview": "How did the region-proposal mechanism evolve across the R-CNN family from R-CNN to Faster R-CNN?",
         "answer_synthesis": {
-          "mode": "deterministic_snippets",
-          "second_stage_llm": false
+          "mode": "grounded_llm_paraphrase",
+          "second_stage_llm": true,
+          "model": "mistralai/mistral-small-3.2-24b-instruct"
         },
         "retrieval_mode": "vector",
         "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
@@ -473,83 +560,167 @@
       },
       "graph_context": {
         "methods": [
-          "Cascade R-CNN"
+          "Fast R-CNN",
+          "Faster R-CNN",
+          "Region Proposal Network (RPN)",
+          "Selective Search"
         ],
         "datasets": [
-          "COCO"
+          "EdgeBoxes",
+          "ILSVRC",
+          "ImageNet",
+          "MS COCO",
+          "PASCAL VOC"
         ],
         "semantic_available": true,
-        "context_work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
+        "context_work_id": "da2a6348-1a91-447d-8a17-da475a87b75f",
         "degraded": [],
         "error": null
       },
       "citations": [
         {
           "rank": 1,
-          "score": 0.7074611,
+          "score": 0.69968736,
+          "work_id": "da2a6348-1a91-447d-8a17-da475a87b75f",
+          "document_id": "7e83946e-3898-4107-8ae0-5ff7ce372c82",
+          "chunk_fingerprint": "252a5410d3fb23a8af5deaa90d702b29f0642da1821c9fad07886d58375a39c6",
+          "section_path": "Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks",
+          "excerpt": "# Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks\n\nShaoqing Ren, Kaiming He, Ross Girshick, and Jian Sun\n\n**Abstract**—State-of-the-art object detection networks depend on region proposal algorithms to hypothesize object locations. Advances like SPPnet [1] and Fast R-CNN [2] have reduced the running time of these detection networks, exposing region proposal computation as a bottleneck. In this work, we introduce a *Region Proposal Network* (RPN) that shares full-image convolutional features with the detection network, thus enabling nearly cost-free region proposa",
+          "chunk_kind": "method",
+          "language": "en"
+        },
+        {
+          "rank": 2,
+          "score": 0.7108331,
           "work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
           "document_id": "1238c41e-e303-46e1-a05e-4b11db55f6ac",
-          "chunk_fingerprint": "74fdf6895e170f8892d4a39a4e3c369fd1fe9343cd508377daeef378f0bac93a",
+          "chunk_fingerprint": "4aa22776db0ceb9c7c1e59b344e57412508fb0ca93812ad49f34bcf42407d8fd",
           "section_path": "Cascade R-CNN: Delving into High Quality Object Detection / 2. Related Work",
           "excerpt": "## 2. Related Work\n\nDue to the success of the R-CNN [12] architecture, the two-stage formulation of the detection problems, by combining a proposal detector and a region-wise classifier has become predominant in the recent past. To reduce redundant CNN computations in the R-CNN, the SPP-Net [15] and Fast-RCNN [11] introduced the idea of region-wise feature extraction, significantly speeding up the overall detector. Later, the Faster-RCNN [27] achieved further speed-up by introducing a Region Proposal Network (RPN). This architecture has become a leading object detection framework. Some more re",
           "chunk_kind": "body",
           "language": "en"
         },
         {
-          "rank": 2,
-          "score": 0.67866397,
+          "rank": 3,
+          "score": 0.67661154,
+          "work_id": "da2a6348-1a91-447d-8a17-da475a87b75f",
+          "document_id": "7e83946e-3898-4107-8ae0-5ff7ce372c82",
+          "chunk_fingerprint": "2802e1fc04188b57c42cd460c47c5088f684154a9ccf887dbb3c6acb91e23214",
+          "section_path": "Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks / 1 INTRODUCTION",
+          "excerpt": "## 1 INTRODUCTION\n\nRecent advances in object detection are driven by the success of region proposal methods (e.g., [4]) and region-based convolutional neural networks (R-CNNs) [5]. Although region-based CNNs were computationally expensive as originally developed in [5], their cost has been drastically reduced thanks to sharing convolutions across proposals [1], [2]. The latest incarnation, Fast R-CNN [2], achieves near real-time rates using very deep networks [3], when ignoring the time spent on region proposals. Now, proposals are the test-time computational bottleneck in state-of-the-art det",
+          "chunk_kind": "method",
+          "language": "en"
+        },
+        {
+          "rank": 4,
+          "score": 0.6801474,
+          "work_id": "da2a6348-1a91-447d-8a17-da475a87b75f",
+          "document_id": "7e83946e-3898-4107-8ae0-5ff7ce372c82",
+          "chunk_fingerprint": "5d57d3f191120c6e89c22087f41823eaf0893ee88e606a15f6c7ebc120f1fd8b",
+          "section_path": "Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks / 3 FASTER R-CNN",
+          "excerpt": "## 3 FASTER R-CNN\n\nOur object detection system, called Faster R-CNN, is composed of two modules. The first module is a deep fully convolutional network that proposes regions, and the second module is the Fast R-CNN detector [2] that uses the proposed regions. The entire system is a\n\nsingle, unified network for object detection (Figure 2). Using the recently popular terminology of neural networks with ‘attention’ [31] mechanisms, the RPN module tells the Fast R-CNN module where to look. In Section 3.1 we introduce the designs and properties of the network for region proposal. In Section 3.2 we ",
+          "chunk_kind": "method",
+          "language": "en"
+        },
+        {
+          "rank": 5,
+          "score": 0.6660498,
+          "work_id": "da2a6348-1a91-447d-8a17-da475a87b75f",
+          "document_id": "7e83946e-3898-4107-8ae0-5ff7ce372c82",
+          "chunk_fingerprint": "899c7255899a161ddb8001d779015013d75ed3ead481e5737fbed07fac331a0c",
+          "section_path": "Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks",
+          "excerpt": "bject categories or background. R-CNN mainly plays as a classifier, and it does not predict object bounds (except for refining by bounding box regression). Its accuracy depends on the performance of the region proposal module (see comparisons in [20]). Several papers have proposed ways of using deep networks for predicting object bounding boxes [25], [9], [26], [27]. In the OverFeat method [9], a fully-connected layer is trained to predict the box coordinates for the localization task that assumes a single object. The fully-connected layer is then turned\n\n2 http://image-net.org/challenges/LSVR",
+          "chunk_kind": "method",
+          "language": "en"
+        },
+        {
+          "rank": 6,
+          "score": 0.65133375,
+          "work_id": "b3118291-8e4b-427d-9994-ce6f14b958b2",
+          "document_id": "273ac236-6d7f-4b26-8f3b-8154dbdca456",
+          "chunk_fingerprint": "253646d8310fba35676775f427f7688387f0aae3cae0f124273938b781c6f93a",
+          "section_path": "Fast R-CNN / Abstract",
+          "excerpt": "## Abstract\n\nThis paper proposes a Fast Region-based Convolutional Network method (Fast R-CNN) for object detection. Fast R-CNN builds on previous work to efficiently classify object proposals using deep convolutional networks. Compared to previous work, Fast R-CNN employs several innovations to improve training and testing speed while also increasing detection accuracy. Fast R-CNN trains the very deep VGG16 network 9× faster than R-CNN, is 213× faster at test-time, and achieves a higher mAP on PASCAL VOC 2012. Compared to SPPnet, Fast R-CNN trains VGG16 3× faster, tests 10× faster, and is mor",
+          "chunk_kind": "abstract",
+          "language": "en"
+        },
+        {
+          "rank": 7,
+          "score": 0.6535048,
+          "work_id": "b3118291-8e4b-427d-9994-ce6f14b958b2",
+          "document_id": "273ac236-6d7f-4b26-8f3b-8154dbdca456",
+          "chunk_fingerprint": "7d55d3be60cd23cc419a11af6e0b520c0bd793b293e02de64360d39cbbf77e2b",
+          "section_path": "Fast R-CNN / 1. Introduction / 1.1. R-CNN and SPPnet",
+          "excerpt": "### 1.1. R-CNN and SPPnet\n\nThe Region-based Convolutional Network method (R-CNN) [9] achieves excellent object detection accuracy by using a deep ConvNet to classify object proposals. R-CNN, however, has notable drawbacks:\n\n1. **Training is a multi-stage pipeline.** R-CNN first fine-tunes a ConvNet on object proposals using log loss. Then, it fits SVMs to ConvNet features. These SVMs act as object detectors, replacing the softmax classifier learnt by fine-tuning. In the third training stage, bounding-box regressors are learned.\n\n2. **Training is expensive in space and time.** For SVM and bound",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 8,
+          "score": 0.6675378,
+          "work_id": "f1a17085-57a3-47ef-872c-9f6f3c8f3d72",
+          "document_id": "6b75810b-9617-498b-8a4d-35a6a679d843",
+          "chunk_fingerprint": "6f0fca528cdc9898d2fb7f580f51f6a59669f8e8cebe1cfdafa0dfa7333ffd7c",
+          "section_path": "Mask R-CNN / 2. Related Work",
+          "excerpt": "## 2. Related Work\n\nR-CNN: The Region-based CNN (R-CNN) approach [13] to bounding-box object detection is to attend to a manageable number of candidate object regions [42, 20] and evaluate convolutional networks [25, 24] independently on each RoI. R-CNN was extended [18, 12] to allow attending to RoIs on feature maps using RoIPool, leading to fast speed and better accuracy. Faster R-CNN [36] advanced this stream by learning the attention mechanism with a Region Proposal Network (RPN). Faster R-CNN is flexible and robust to many follow-up improvements (e.g., [38, 27, 21]), and is the current le",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 9,
+          "score": 0.648298,
+          "work_id": "da2a6348-1a91-447d-8a17-da475a87b75f",
+          "document_id": "7e83946e-3898-4107-8ae0-5ff7ce372c82",
+          "chunk_fingerprint": "de5fa696ca39862fc31ac9bf1a5a2a2e72b99d486e12c5cd43a7eca5b31041d6",
+          "section_path": "Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks / 4 EXPERIMENTS / 4.2 Experiments on MS COCO / Faster R-CNN in ILSVRC & COCO 2015 competitions",
+          "excerpt": "#### Faster R-CNN in ILSVRC & COCO 2015 competitions\n\nWe have demonstrated that Faster R-CNN benefits more from better features, thanks to the fact that the RPN completely learns to propose regions by neural networks. This observation is still valid even when one increases the depth substantially to over 100 layers [18]. Only by replacing VGG-16 with a 101-layer residual net (ResNet-101) [18], the Faster R-CNN system increases the mAP from 41.5%/21.2% (VGG-16) to 48.4%/27.2% (ResNet-101) on the COCO val set. With other improvements orthogonal to Faster R-CNN, He et al. [18] obtained a single-m",
+          "chunk_kind": "method",
+          "language": "en"
+        },
+        {
+          "rank": 10,
+          "score": 0.67716885,
           "work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
           "document_id": "1238c41e-e303-46e1-a05e-4b11db55f6ac",
-          "chunk_fingerprint": "b915867bc98ce5b12acbf1d447cf4ab75f4bb891d62132d684b5bc347a45b1a8",
+          "chunk_fingerprint": "fad80884af4f7f97a849aead6fb2fbcaeff2976aa7c52597179664937ed6b6f1",
           "section_path": "Cascade R-CNN: Delving into High Quality Object Detection",
           "excerpt": "del detectors by a large margin, on the challenging COCO detection task [20], especially under the higher quality evaluation metrics. In addition, the Cascade R-CNN can be built with any two-stage object detector based on the R-CNN framework. We have observed consistent gains (of 2~4 points), at a marginal increase in computation. This gain is independent of the strength of the baseline object detectors. We thus believe that this simple and effective detection architecture can be of interest for many object detection research efforts.\n\n## 2. Related Work\n\nDue to the success of the R-CNN [12] a",
           "chunk_kind": "body",
           "language": "en"
         },
         {
-          "rank": 3,
-          "score": 0.61013263,
+          "rank": 11,
+          "score": 0.64424115,
           "work_id": "a0b67a5e-3fb9-49ab-9027-e1c574924527",
           "document_id": "084b392d-695e-4052-8d73-777403785d63",
-          "chunk_fingerprint": "8f8785bd3a9d827f71ebb29ce8dcd37ab4102e8750c7dc41ff93935d88cf0655",
+          "chunk_fingerprint": "4cca3d0530493b52d5eef1f7d7dce0ce9b5c93b072b99f5caba12770ef8552b8",
           "section_path": "R-FCN: Object Detection via Region-based Fully Convolutional Networks / 3 Related Work",
           "excerpt": "## 3 Related Work\n\nR-CNN [7] has demonstrated the effectiveness of using region proposals [27, 28] with deep networks. R-CNN evaluates convolutional networks on cropped and warped regions, and computation is not shared among regions (Table 1). SPPnet [8], Fast R-CNN [6], and Faster R-CNN [18] are “semi-convolutional”, in which a convolutional subnetwork performs shared computation on the entire image and another subnetwork evaluates individual regions.\n\nThere have been object detectors that can be thought of as “fully convolutional” models. OverFeat [21] detects objects by sliding multi-scale ",
           "chunk_kind": "method",
           "language": "en"
         },
         {
-          "rank": 4,
-          "score": 0.6398152,
-          "work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
-          "document_id": "1238c41e-e303-46e1-a05e-4b11db55f6ac",
-          "chunk_fingerprint": "a304f385b3b41b05f1021769efb84acc71e5abf2f2f2234d0613473f6b0899c0",
-          "section_path": "Cascade R-CNN: Delving into High Quality Object Detection",
-          "excerpt": "<!-- Table (49, 400, 887, 500) -->\nTable 5. Comparison with the state-of-the-art single-model detectors on COCO test-dev. The entries denoted by “*” used bells and whistles at inference.\n\n<!-- Table (49, 500, 887, 600) -->\nTable 6. Detailed comparison on multiple popular baseline object detectors. All speeds are reported per image on a single Titan Xp GPU.\n\nnoted that our FPN+ implementation is better than the original FPN [21], providing a very strong baseline. In addition, the extension from FPN+ to Cascade R-CNN improved performance by ~4 points. The Cascade R-CNN also outperformed all sing",
-          "chunk_kind": "body",
-          "language": "en"
-        },
-        {
-          "rank": 5,
-          "score": 0.616222,
-          "work_id": "ee487d82-2719-4276-9ca4-ad54ea102685",
-          "document_id": "e44420be-39be-484b-bebc-e345dfb20b61",
-          "chunk_fingerprint": "3f725da7baab7cef376d5f3046b6a9cc518ffd8235ecbc7d84541f7a88bcaf5f",
-          "section_path": "Libra R-CNN: Towards Balanced Learning for Object Detection / 2. Related Work",
-          "excerpt": "## 2. Related Work\n\n**Model architectures for object detection.** Recently, object detection are popularized by both two-stage and single-stage detectors. Two-stage detectors were first introduced by R-CNN [8]. Gradually derived SPP [11], Fast R-CNN [7] and Faster R-CNN [28] promoted the developments furthermore. Faster R-CNN proposed region proposal network to improve the efficiency of detectors and allow the detectors to be trained end-to-end. After this meaningful milestone, lots of methods were introduced to enhance Faster R-CNN from different points. For example, FPN [19] tackled the scal",
+          "rank": 12,
+          "score": 0.6382836,
+          "work_id": "b3118291-8e4b-427d-9994-ce6f14b958b2",
+          "document_id": "273ac236-6d7f-4b26-8f3b-8154dbdca456",
+          "chunk_fingerprint": "92f8247b93221a182e15e3317d9fd8a4c556b78901c0294e4fc904c7306d8b33",
+          "section_path": "Fast R-CNN / 1. Introduction",
+          "excerpt": "## 1. Introduction\n\nRecently, deep ConvNets [14, 16] have significantly improved image classification [14] and object detection [9, 19] accuracy. Compared to image classification, object detection is a more challenging task that requires more complex methods to solve. Due to this complexity, current approaches (e.g., [9, 11, 19, 25]) train models in multi-stage pipelines that are slow and inelegant.\n\nComplexity arises because detection requires the accurate localization of objects, creating two primary challenges. First, numerous candidate object locations (often called “proposals”) must be pr",
           "chunk_kind": "body",
           "language": "en"
         }
       ],
-      "answer": "Retrieved context (not LLM-paraphrased): ## 2. Related Work\n\nDue to the success of the R-CNN [12] architecture, the two-stage formulation of the detection problems, by combining a proposal detector and a region-wise classifier has become predominant in the recent past. To reduce redundant CNN computations in the R-CNN, the SPP-Net [15] and Fast-RCNN [11] introduced the idea of region-wise feature extraction, significantly speeding up the del detectors by a large margin, on the challenging COCO detection task [20], especially under the higher quality evaluation metrics. In addition, the Cascade R-CNN can be built with any two-stage object detector based on the R-CNN framework. We have observed consistent gains (of 2~4 points), at a marginal increase in computation. This gain is independent of the strength of the baseline object det ## 3 Related Work\n\nR-CNN [7] has demonstrated the effectiveness of using region proposals [27, 28] with deep networks. R-CNN evaluates convolutional networks on cropped and warped regions, and computation is not shared among regions (Table 1). SPPnet [8], Fast R-CNN [6], and Faster R-CNN [18] are “semi-convolutional”, in which a convolutional subnetwork performs shared computation on the entire …",
-      "answer_preview": "Retrieved context (not LLM-paraphrased): ## 2. Related Work\n\nDue to the success of the R-CNN [12] architecture, the two-stage formulation of the detection problems, by combining a proposal detector and a region-wise classifier has become predominant in the recent past. To reduce redundant CNN computations in the R-CNN, the SPP-Net [15] and Fast-RCNN [11] introduced the idea of region-wise feature ",
-      "wall_clock_seconds": 0.047
+      "answer": "1. **R-CNN**: The original R-CNN method uses a separate region proposal algorithm to generate candidate object locations. It then classifies each region independently using a deep convolutional network. The training process is multi-stage and computationally expensive [7].\n\n2. **Fast R-CNN**: This improvement over R-CNN introduces several innovations to speed up training and testing. It shares convolutional computations across object proposals, making it more efficient. However, it still relies on a separate region proposal algorithm [6][7].\n\n3. **Faster R-CNN**: This version introduces a Region Proposal Network (RPN) that shares full-image convolutional features with the detection network. The RPN generates region proposals, making the region proposal computation nearly cost-free. This creates a unified, single network for object detection [1][4][8].",
+      "answer_preview": "1. **R-CNN**: The original R-CNN method uses a separate region proposal algorithm to generate candidate object locations. It then classifies each region independently using a deep convolutional network. The training process is multi-stage and computationally expensive [7].\n\n2. **Fast R-CNN**: This improvement over R-CNN introduces several innovations to speed up training and testing. It shares con",
+      "wall_clock_seconds": 4.16
     },
     {
       "case_id": "ws_yolo_negative_mask_segmentation",
       "question": "Which paper in this workspace introduces the per-instance mask prediction branch for instance segmentation?",
       "question_preview": "Which paper in this workspace introduces the per-instance mask prediction branch for instance segmentation?",
       "metrics": {
-        "passed": false,
+        "passed": true,
         "contract_only": false,
         "workspace_scoped_live": true,
         "uuid_aware_mode": true,
@@ -563,7 +734,7 @@
         "expected_citations_min_count": 0,
         "citation_count_ok": true,
         "answer_rouge_l": null,
-        "abstain_keyword_hit": false,
+        "abstain_keyword_hit": true,
         "answer_metric_type": "abstain_keywords",
         "workspace_scope_ok": true
       },
@@ -582,15 +753,16 @@
         "citations_returned": 5,
         "top_hit_scores": [
           0.54344267,
-          0.51218027,
-          0.50061065,
-          0.48295388,
-          0.48213732
+          0.51596904,
+          0.4985155,
+          0.49289197,
+          0.4843015
         ],
         "query_preview": "Which paper in this workspace introduces the per-instance mask prediction branch for instance segmentation?",
         "answer_synthesis": {
-          "mode": "deterministic_snippets",
-          "second_stage_llm": false
+          "mode": "grounded_llm_paraphrase",
+          "second_stage_llm": true,
+          "model": "mistralai/mistral-small-3.2-24b-instruct"
         },
         "retrieval_mode": "vector",
         "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
@@ -600,7 +772,6 @@
       },
       "graph_context": {
         "methods": [
-          "Fast YOLO",
           "YOLO"
         ],
         "datasets": [
@@ -626,63 +797,63 @@
         },
         {
           "rank": 2,
-          "score": 0.51218027,
-          "work_id": "52e5de2a-32ef-4e74-86b1-7fc97c7e2de8",
-          "document_id": "770eacbc-880b-4645-9233-93722096b877",
-          "chunk_fingerprint": "dda69bd2b2bd15859bc82252ab98688c1a49cedf8acb4598338a54cbe7dc31c5",
-          "section_path": "YOLOX: Exceeding YOLO Series in 2021",
-          "excerpt": "[14] Hei Law and Jia Deng. Cornernet: Detecting objects as paired keypoints. In ECCV, 2018. 1, 3\n\n[15] Mengtian Li, Yuxiong Wang, and Deva Ramanan. Towards streaming perception. In ECCV, 2020. 5, 6\n\n[16] Tsung-Yi Lin, Priya Goyal, Ross Girshick, Kaiming He, and Piotr Dollár. Focal loss for dense object detection. In ICCV, 2017. 2\n\n[17] Tsung-Yi Lin, Michael Maire, Serge Belongie, James Hays, Pietro Perona, Deva Ramanan, Piotr Dollár, and C Lawrence Zitnick. Microsoft coco: Common objects in context. In ECCV, 2014. 2\n\n[18] Songtao Liu, Di Huang, and Yunhong Wang. Learning spatial fusion for sin",
+          "score": 0.51596904,
+          "work_id": "cda6a480-8512-4b85-970a-65377bd09c24",
+          "document_id": "bd7a00ba-20df-45a1-9300-055cbeeea0f6",
+          "chunk_fingerprint": "77f0bf19b28fda595dbc7b353d9eeeadc81fad73a5c8ddde917b292d68cfc44a",
+          "section_path": "YOLO9000: Better, Faster, Stronger",
+          "excerpt": "[9] M. Lin, Q. Chen, and S. Yan. Network in network. arXiv preprint arXiv:1312.4400, 2013. 5\n\n[10] T.-Y. Lin, M. Maire, S. Belongie, J. Hays, P. Perona, D. Ramanan, P. Dollár, and C. L. Zitnick. Microsoft coco: Common objects in context. In European Conference on Computer Vision, pages 740–755. Springer, 2014. 1, 6\n\n[11] W. Liu, D. Anguelov, D. Erhan, C. Szegedy, and S. E. Reed. SSD: single shot multibox detector. CoRR, abs/1512.02325, 2015. 4, 5, 6\n\n[12] G. A. Miller, R. Beckwith, C. Fellbaum, D. Gross, and K. J. Miller. Introduction to wordnet: An on-line lexical database. International jour",
           "chunk_kind": "body",
           "language": "en"
         },
         {
           "rank": 3,
-          "score": 0.50061065,
+          "score": 0.4985155,
+          "work_id": "52e5de2a-32ef-4e74-86b1-7fc97c7e2de8",
+          "document_id": "770eacbc-880b-4645-9233-93722096b877",
+          "chunk_fingerprint": "2070292b2228c355abd0881d14224cdf051888944205109a1f46491ea98f38af",
+          "section_path": "YOLOX: Exceeding YOLO Series in 2021",
+          "excerpt": "[27] Guanglu Song, Yu Liu, and Xiaogang Wang. Revisiting the sibling head in object detector. In CVPR, 2020. 2\n\n[28] Mingxing Tan, Ruoming Pang, and Quoc V Le. Efficientdet: Scalable and efficient object detection. In CVPR, 2020. 6\n\n[29] Zhi Tian, Chunhua Shen, Hao Chen, and Tong He. Fcos: Fully convolutional one-stage object detection. In ICCV, 2019. 1, 2, 3, 4\n\n[30] Chien-Yao Wang, Alexey Bochkovskiy, and Hong-Yuan Mark Liao. Scaled-yolov4: Scaling cross stage partial network. arXiv preprint arXiv:2011.08036, 2020. 1, 5, 6\n\n[31] Chien-Yao Wang, Hong-Yuan Mark Liao, Yueh-Hua Wu, Ping-Yang Che",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 4,
+          "score": 0.49289197,
           "work_id": "a631d2a1-c2de-40d9-94f7-3f35f07596f4",
           "document_id": "d22181ed-a167-4981-a17b-9ca1afe0bab6",
-          "chunk_fingerprint": "3b02bcce00267abb9c42a4500714469d32e4b692c5b077e1be7305de8102bc6e",
+          "chunk_fingerprint": "71ace8571e47c4bd60711415bec72ca56a39a001ecc5d4e75ceb324ac208b9c0",
           "section_path": "YOLOv3: An Incremental Improvement",
           "excerpt": "[7] I. Krasin, T. Duerig, N. Alldrin, V. Ferrari, S. Abu-El-Haija, A. Kuznetsova, H. Rom, J. Uijlings, S. Popov, A. Veit, S. Belongie, V. Gomes, A. Gupta, C. Sun, G. Chechik, D. Cai, Z. Feng, D. Narayanan, and K. Murphy. Openimages: A public dataset for large-scale multi-label and multi-class image classification. *Dataset available from https://github.com/openimages*, 2017. 2\n\n[8] T.-Y. Lin, P. Dollar, R. Girshick, K. He, B. Hariharan, and S. Belongie. Feature pyramid networks for object detection. In *Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition*, pages 2117–",
           "chunk_kind": "body",
           "language": "en"
         },
         {
-          "rank": 4,
-          "score": 0.48295388,
-          "work_id": "cda6a480-8512-4b85-970a-65377bd09c24",
-          "document_id": "bd7a00ba-20df-45a1-9300-055cbeeea0f6",
-          "chunk_fingerprint": "ec92674dde0c356736bc67ae2d017bd65e627ac84ef212087e36e0f347dcd390",
-          "section_path": "YOLO9000: Better, Faster, Stronger",
-          "excerpt": "Using this joint training, YOLO9000 learns to find objects in images using the detection data in COCO and it learns to classify a wide variety of these objects using data from ImageNet.\n\nWe evaluate YOLO9000 on the ImageNet detection task. The detection task for ImageNet shares on 44 object categories with COCO which means that YOLO9000 has only seen classification data for the majority of the test images, not detection data. YOLO9000 gets 19.7 mAP overall with 16.0 mAP on the disjoint 156 object classes that it has never seen any labelled detection data for. This mAP is higher than results ac",
-          "chunk_kind": "body",
-          "language": "en"
-        },
-        {
           "rank": 5,
-          "score": 0.48213732,
-          "work_id": "cda6a480-8512-4b85-970a-65377bd09c24",
-          "document_id": "bd7a00ba-20df-45a1-9300-055cbeeea0f6",
-          "chunk_fingerprint": "01f24060efde0c1640087e2637e28568d0d846c48fed88554045b1d874e69c0e",
-          "section_path": "YOLO9000: Better, Faster, Stronger",
-          "excerpt": "[12] G. A. Miller, R. Beckwith, C. Fellbaum, D. Gross, and K. J. Miller. Introduction to wordnet: An on-line lexical database. International journal of lexicography, 3(4):235–244, 1990. 6\n\n[13] J. Redmon. Darknet: Open source neural networks in c. http://pjreddie.com/darknet/, 2013–2016. 5\n\n[14] J. Redmon, S. Divvala, R. Girshick, and A. Farhadi. You only look once: Unified, real-time object detection. arXiv preprint arXiv:1506.02640, 2015. 4, 5\n\n[15] S. Ren, K. He, R. Girshick, and J. Sun. Faster r-cnn: Towards real-time object detection with region proposal networks. arXiv preprint arXiv:150",
+          "score": 0.4843015,
+          "work_id": "a631d2a1-c2de-40d9-94f7-3f35f07596f4",
+          "document_id": "d22181ed-a167-4981-a17b-9ca1afe0bab6",
+          "chunk_fingerprint": "024ca888b16babf8558f068300240e4c0ae553ed9d5e4c6b2ea384ad6143b500",
+          "section_path": "YOLOv3: An Incremental Improvement / 2. The Deal / 2.3. Predictions Across Scales",
+          "excerpt": "### 2.3. Predictions Across Scales\n\nYOLOv3 predicts boxes at 3 different scales. Our system extracts features from those scales using a similar concept to feature pyramid networks [8]. From our base feature extractor we add several convolutional layers. The last of these predicts a 3-d tensor encoding bounding box, objectness, and class predictions. In our experiments with COCO [10] we predict 3 boxes at each scale so the tensor is $N \\times N \\times [3 * (4 + 1 + 80)]$ for the 4 bounding box offsets, 1 objectness prediction, and 80 class predictions.\n\n<!-- Image (Figure 2) -->\nFigure 2. Bound",
           "chunk_kind": "body",
           "language": "en"
         }
       ],
-      "answer": "Retrieved context (not LLM-paraphrased): [7] J. Dong, Q. Chen, S. Yan, and A. Yuille. Towards unified object detection and semantic segmentation. In Computer Vision–ECCV 2014, pages 299–314. Springer, 2014. 7\n\n[8] D. Erhan, C. Szegedy, A. Toshev, and D. Anguelov. Scalable object detection using deep neural networks. In Computer Vision and Pattern Recognition (CVPR), 2014 IEEE Conference on, pages 2155–2162. IEEE, 2014. 5, 6\n\n[9] M. Everi [14] Hei Law and Jia Deng. Cornernet: Detecting objects as paired keypoints. In ECCV, 2018. 1, 3\n\n[15] Mengtian Li, Yuxiong Wang, and Deva Ramanan. Towards streaming perception. In ECCV, 2020. 5, 6\n\n[16] Tsung-Yi Lin, Priya Goyal, Ross Girshick, Kaiming He, and Piotr Dollár. Focal loss for dense object detection. In ICCV, 2017. 2\n\n[17] Tsung-Yi Lin, Michael Maire, Serge Belongie, James Hays, Pietr [7] I. Krasin, T. Duerig, N. Alldrin, V. Ferrari, S. Abu-El-Haija, A. Kuznetsova, H. Rom, J. Uijlings, S. Popov, A. Veit, S. Belongie, V. Gomes, A. Gupta, C. Sun, G. Chechik, D. Cai, Z. Feng, D. Narayanan, and K. Murphy. Openimages: A public dataset for large-scale multi-label and multi-class image classification. *Dataset available from https://github.com/openimages*, 2017. 2\n\n[8] T.-Y. Lin, P.…",
-      "answer_preview": "Retrieved context (not LLM-paraphrased): [7] J. Dong, Q. Chen, S. Yan, and A. Yuille. Towards unified object detection and semantic segmentation. In Computer Vision–ECCV 2014, pages 299–314. Springer, 2014. 7\n\n[8] D. Erhan, C. Szegedy, A. Toshev, and D. Anguelov. Scalable object detection using deep neural networks. In Computer Vision and Pattern Recognition (CVPR), 2014 IEEE Conference on, pages ",
-      "wall_clock_seconds": 0.049
+      "answer": "No paper in the retrieved context. The excerpts do not mention a per-instance mask prediction branch for instance segmentation.",
+      "answer_preview": "No paper in the retrieved context. The excerpts do not mention a per-instance mask prediction branch for instance segmentation.",
+      "wall_clock_seconds": 1.381
     },
     {
       "case_id": "ws_yolo_speed_question",
       "question": "What real-time speed (FPS) do the YOLO papers report for their base configurations?",
       "question_preview": "What real-time speed (FPS) do the YOLO papers report for their base configurations?",
       "metrics": {
-        "passed": false,
+        "passed": true,
         "contract_only": false,
         "workspace_scoped_live": true,
         "uuid_aware_mode": true,
-        "hit_count": 5,
+        "hit_count": 12,
         "trace_workspace_matches": true,
         "forbidden_work_id_violation_count": 0,
         "forbidden_corpus_work_ids_leaked": [],
@@ -693,7 +864,7 @@
         ],
         "expected_citations_min_count": 2,
         "citation_count_ok": true,
-        "answer_rouge_l": 0.08527131782945736,
+        "answer_rouge_l": 0.15384615384615385,
         "abstain_keyword_hit": false,
         "answer_metric_type": "rouge_l",
         "workspace_scope_ok": true
@@ -705,23 +876,27 @@
           "workspace_id": "ws_yolo_family",
           "workspace_scope_work_count": 4
         },
-        "hit_count": 5,
+        "hit_count": 12,
         "filter_work_id": null,
         "resolved_work_id": "a631d2a1-c2de-40d9-94f7-3f35f07596f4",
         "qdrant_collection": "chunks",
-        "top_k_requested": 5,
-        "citations_returned": 5,
+        "top_k_requested": 12,
+        "citations_returned": 12,
         "top_hit_scores": [
-          0.65957314,
+          0.6547636,
           0.64212275,
           0.6326325,
           0.6080474,
-          0.6061411
+          0.6061411,
+          0.61854756,
+          0.61550015,
+          0.598802
         ],
         "query_preview": "What real-time speed (FPS) do the YOLO papers report for their base configurations?",
         "answer_synthesis": {
-          "mode": "deterministic_snippets",
-          "second_stage_llm": false
+          "mode": "grounded_llm_paraphrase",
+          "second_stage_llm": true,
+          "model": "mistralai/mistral-small-3.2-24b-instruct"
         },
         "retrieval_mode": "vector",
         "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
@@ -731,6 +906,9 @@
       },
       "graph_context": {
         "methods": [
+          "Bounding Box Prediction",
+          "Class Prediction",
+          "Darknet-53",
           "YOLOv3"
         ],
         "datasets": [
@@ -746,12 +924,12 @@
       "citations": [
         {
           "rank": 1,
-          "score": 0.65957314,
+          "score": 0.6547636,
           "work_id": "a631d2a1-c2de-40d9-94f7-3f35f07596f4",
           "document_id": "d22181ed-a167-4981-a17b-9ca1afe0bab6",
-          "chunk_fingerprint": "6771f9c4c1b90336b352860e0fe6fa63a126462b49f105264a49ca01209082fc",
+          "chunk_fingerprint": "e086b2d94df8f851599b79403482dcc4989723a28bfe91b83d9e9b98d2012654",
           "section_path": "YOLOv3: An Incremental Improvement / Abstract",
-          "excerpt": "## Abstract\n\nWe present some updates to YOLO! We made a bunch of little design changes to make it better. We also trained this new network that’s pretty swell. It’s a little bigger than last time but more accurate. It’s still fast though, don’t worry. At $320 \\times 320$ YOLOv3 runs in 22 ms at 28.2 mAP, as accurate as SSD but three times faster. When we look at the old .5 IOU mAP detection metric YOLOv3 is quite good. It achieves 57.9 AP$_{50}$ in 51 ms on a Titan X, compared to 57.5 AP$_{50}$ in 198 ms by RetinaNet, similar performance but 3.8× faster. As always, all the code is online at ht",
+          "excerpt": "## Abstract\n\nWe present some updates to YOLO! We made a bunch of little design changes to make it better. We also trained this new network that’s pretty swell. It’s a little bigger than last time but more accurate. It’s still fast though, don’t worry. At 320 × 320 YOLOv3 runs in 22 ms at 28.2 mAP, as accurate as SSD but three times faster. When we look at the old .5 IOU mAP detection metric YOLOv3 is quite good. It achieves 57.9 AP50 in 51 ms on a Titan X, compared to 57.5 AP50 in 198 ms by RetinaNet, similar performance but 3.8× faster. As always, all the code is online at https://pjreddie.co",
           "chunk_kind": "abstract",
           "language": "en"
         },
@@ -798,11 +976,88 @@
           "excerpt": "## Abstract\n\nWe present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance.\n\nOur unified architecture is extremely fast. Our base YOLO model processes images in r",
           "chunk_kind": "abstract",
           "language": "en"
+        },
+        {
+          "rank": 6,
+          "score": 0.61854756,
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "document_id": "7d31611c-714f-4a48-84d2-16c3e46bcd93",
+          "chunk_fingerprint": "2aecda19e57e0d41b357acc2d69430195995beb859a8beee74374128ba78c877",
+          "section_path": "You Only Look Once: Unified, Real-Time Object Detection / 4. Experiments / 4.3. Combining Fast R-CNN and YOLO",
+          "excerpt": "### 4.3. Combining Fast R-CNN and YOLO\n\nYOLO makes far fewer background mistakes than Fast R-CNN. By using YOLO to eliminate background detections from Fast R-CNN we get a significant boost in performance. For every bounding box that R-CNN predicts we check to see if YOLO predicts a similar box. If it does, we give that prediction a boost based on the probability predicted by YOLO and the overlap between the two boxes.\n\nThe best Fast R-CNN model achieves a mAP of 71.8% on the VOC 2007 test set. When combined with YOLO, its\n\n| Real-Time Detectors | Train | mAP | FPS |\n|---|---|---|---|\n| 100Hz ",
+          "chunk_kind": "result",
+          "language": "en"
+        },
+        {
+          "rank": 7,
+          "score": 0.61550015,
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "document_id": "7d31611c-714f-4a48-84d2-16c3e46bcd93",
+          "chunk_fingerprint": "e5ae8d20e9182ff1cd4a7ded8eb6166a71f8e8994b7650e7d2c0b900156e9a73",
+          "section_path": "You Only Look Once: Unified, Real-Time Object Detection / 4. Experiments",
+          "excerpt": "## 4. Experiments\n\nFirst we compare YOLO with other real-time detection systems on PASCAL VOC 2007. To understand the differences between YOLO and R-CNN variants we explore the errors on VOC 2007 made by YOLO and Fast R-CNN, one of the highest performing versions of R-CNN [14]. Based on the different error profiles we show that YOLO can be used to rescore Fast R-CNN detections and reduce the errors from background false positives, giving a significant performance boost. We also present VOC 2012 results and compare mAP to current state-of-the-art methods. Finally, we show that YOLO generalizes ",
+          "chunk_kind": "result",
+          "language": "en"
+        },
+        {
+          "rank": 8,
+          "score": 0.598802,
+          "work_id": "52e5de2a-32ef-4e74-86b1-7fc97c7e2de8",
+          "document_id": "770eacbc-880b-4645-9233-93722096b877",
+          "chunk_fingerprint": "0edcbfabbe3055b0722ed51c2f1560aafd7c561a6ccb581e28cdeb28161cdd13",
+          "section_path": "YOLOX: Exceeding YOLO Series in 2021 / 1. Introduction",
+          "excerpt": "## 1. Introduction\n\nWith the development of object detection, YOLO series [23, 24, 25, 1, 7] always pursuit the optimal speed and accuracy trade-off for real-time applications. They extract the most advanced detection technologies available at the time (e.g., anchors [26] for YOLOv2 [24], Residual Net [9] for YOLOv3 [25]) and optimize the implementation for best practice. Currently, YOLOv5 [7] holds the best trade-off performance with 48.2% AP on COCO at 13.7 ms.1\n\nNevertheless, over the past two years, the major advances in object detection academia have focused on anchor-free detectors [29, ",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 9,
+          "score": 0.6307522,
+          "work_id": "cda6a480-8512-4b85-970a-65377bd09c24",
+          "document_id": "bd7a00ba-20df-45a1-9300-055cbeeea0f6",
+          "chunk_fingerprint": "46dc65cb838ccd4c853480612264884c53d4521ba90a14955816c01e51899bec",
+          "section_path": "YOLO9000: Better, Faster, Stronger / 2. Better",
+          "excerpt": "**Fine-Grained Features.** This modified YOLO predicts detections on a 13 × 13 feature map. While this is sufficient for large objects, it may benefit from finer grained features for localizing smaller objects. Faster R-CNN and SSD both run their proposal networks at various feature maps in the network to get a range of resolutions. We take a different approach, simply adding a passthrough layer that brings features from an earlier layer at 26 × 26 resolution.\n\nThe passthrough layer concatenates the higher resolution features with the low resolution features by stacking adjacent features into ",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 10,
+          "score": 0.62845886,
+          "work_id": "a631d2a1-c2de-40d9-94f7-3f35f07596f4",
+          "document_id": "d22181ed-a167-4981-a17b-9ca1afe0bab6",
+          "chunk_fingerprint": "a75b8f9d0992b4b768f6a93f700493d7896b7a1b28f24e82ca657aefca895a6c",
+          "section_path": "YOLOv3: An Incremental Improvement / 3. How We Do",
+          "excerpt": "## 3. How We Do\n\nYOLOv3 is pretty good! See table 3. In terms of COCOs weird average mean AP metric it is on par with the SSD variants but is 3× faster. It is still quite a bit behind other models like RetinaNet in this metric though.\n\nHowever, when we look at the “old” detection metric of mAP at IOU= .5 (or AP50 in the chart) YOLOv3 is very strong. It is almost on par with RetinaNet and far above the SSD variants. This indicates that YOLOv3 is a very strong detector that excels at producing decent boxes for objects. However, performance drops significantly as the IOU threshold increases indic",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 11,
+          "score": 0.6241723,
+          "work_id": "cda6a480-8512-4b85-970a-65377bd09c24",
+          "document_id": "bd7a00ba-20df-45a1-9300-055cbeeea0f6",
+          "chunk_fingerprint": "289d1de0108cc5454b0c8ba248742caa7339035b4394e60480878ad59da851e0",
+          "section_path": "YOLO9000: Better, Faster, Stronger",
+          "excerpt": "**Fine-Grained Features.** This modified YOLO predicts detections on a 13 × 13 feature map. While this is sufficient for large objects, it may benefit from finer grained features for localizing smaller objects. Faster R-CNN and SSD both run their proposal networks at various feature maps in the network to get a range of resolutions. We take a different approach, simply adding a passthrough layer that brings features from an earlier layer at 26 × 26 resolution.\n\nThe passthrough layer concatenates the higher resolution features with the low resolution features by stacking adjacent features into ",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 12,
+          "score": 0.62066114,
+          "work_id": "a631d2a1-c2de-40d9-94f7-3f35f07596f4",
+          "document_id": "d22181ed-a167-4981-a17b-9ca1afe0bab6",
+          "chunk_fingerprint": "8aad7d9250ad49fc136aa646d07c11db4e711e8fa814f3988001fa10bee9da64",
+          "section_path": "YOLOv3: An Incremental Improvement",
+          "excerpt": "# YOLOv3: An Incremental Improvement\n\nJoseph Redmon Ali Farhadi \nUniversity of Washington\n\n## Abstract\n\nWe present some updates to YOLO! We made a bunch of little design changes to make it better. We also trained this new network that’s pretty swell. It’s a little bigger than last time but more accurate. It’s still fast though, don’t worry. At 320 × 320 YOLOv3 runs in 22 ms at 28.2 mAP, as accurate as SSD but three times faster. When we look at the old .5 IOU mAP detection metric YOLOv3 is quite good. It achieves 57.9 AP50 in 51 ms on a Titan X, compared to 57.5 AP50 in 198 ms by RetinaNet, si",
+          "chunk_kind": "body",
+          "language": "en"
         }
       ],
-      "answer": "Retrieved context (not LLM-paraphrased): ## Abstract\n\nWe present some updates to YOLO! We made a bunch of little design changes to make it better. We also trained this new network that’s pretty swell. It’s a little bigger than last time but more accurate. It’s still fast though, don’t worry. At $320 \\times 320$ YOLOv3 runs in 22 ms at 28.2 mAP, as accurate as SSD but three times faster. When we look at the old .5 IOU mAP detection metric ## Abstract\n\nIn this report, we present some experienced improvements to YOLO series, forming a new high-performance detector—YOLOX. We switch the YOLO detector to an anchor-free manner and conduct other advanced detection techniques, i.e., a decoupled head and the leading label assignment strategy SimOTA to achieve state-of-the-art results across a large scale range of models: For YOLO-Nano with  ### 4.1. Comparison to Other Real-Time Systems\n\nMany research efforts in object detection focus on making standard detection pipelines fast. [5] [38] [31] [14] [17] [28] However, only Sadeghi et al. actually produce a detection system that runs in real-time (30 frames per second or better) [31]. We compare YOLO to their GPU implementation of DPM which runs either at 30Hz or 100Hz. While the othe…",
-      "answer_preview": "Retrieved context (not LLM-paraphrased): ## Abstract\n\nWe present some updates to YOLO! We made a bunch of little design changes to make it better. We also trained this new network that’s pretty swell. It’s a little bigger than last time but more accurate. It’s still fast though, don’t worry. At $320 \\times 320$ YOLOv3 runs in 22 ms at 28.2 mAP, as accurate as SSD but three times faster. When we lo",
-      "wall_clock_seconds": 0.048
+      "answer": "1. YOLOv3 runs at 22 ms per frame at 320 × 320 resolution, which corresponds to approximately 45.45 FPS (1000 ms / 22 ms) [EXCERPT 1].\n2. YOLOv2 achieves 67 FPS at a certain configuration [EXCERPT 4].",
+      "answer_preview": "1. YOLOv3 runs at 22 ms per frame at 320 × 320 resolution, which corresponds to approximately 45.45 FPS (1000 ms / 22 ms) [EXCERPT 1].\n2. YOLOv2 achieves 67 FPS at a certain configuration [EXCERPT 4].",
+      "wall_clock_seconds": 2.429
     }
   ]
 }

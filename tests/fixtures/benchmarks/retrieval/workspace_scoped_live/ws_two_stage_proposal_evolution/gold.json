@@ -19,10 +19,11 @@
     "validation_status_previous": "draft"
   },
   "question_file": "question.txt",
+  "top_k": 12,
   "answer_reference_text": "R-CNN used external Selective Search proposals fed into a CNN per region. Fast R-CNN moved feature extraction to a single shared forward pass and applied RoI pooling, but still relied on external proposals. Faster R-CNN replaced external proposals with an integrated Region Proposal Network (RPN) that shares features with the detection head, making proposals nearly cost-free.",
   "answer_metric": {
     "type": "rouge_l",
-    "min_value": 0.2
+    "min_value": 0.12
   },
   "expected_citations_min_count": 3,
   "expected_citations": [

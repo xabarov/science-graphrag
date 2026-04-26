@@ -65,5 +65,6 @@
     "design_choice": 1,
     "method": 1,
     "comparison": 1
-  }
+  },
+  "min_claim_recall": 0.22
 }

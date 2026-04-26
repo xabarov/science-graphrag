@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from eval.claims.article_source import read_claims_article
@@ -16,6 +17,26 @@ def test_read_claims_article_resolves_layer1_fixture() -> None:
     text = read_claims_article(case)
     assert len(text) > 200
     assert "YOLO" in text or "yolo" in text.lower()
+
+
+def test_read_claims_article_nested_paraphrase_suite_path(tmp_path: Path) -> None:
+    """``source_layer1_fixture`` must resolve when case lives under ``claims/<suite>/``."""
+
+    repo = tmp_path / "repo"
+    repo.mkdir(parents=True)
+    (repo / "pyproject.toml").write_text('[project]\nname="t"\nversion="0"\n', encoding="utf-8")
+    layer = repo / "tests" / "fixtures" / "benchmarks" / "layer1" / "yolov1"
+    layer.mkdir(parents=True)
+    (layer / "article.md").write_text("YOLO unified detection " * 80, encoding="utf-8")
+    case = repo / "tests" / "fixtures" / "benchmarks" / "claims" / "paraphrase_pilot" / "nested_case"
+    case.mkdir(parents=True)
+    (case / "gold.json").write_text(
+        json.dumps({"source_layer1_fixture": "yolov1"}),
+        encoding="utf-8",
+    )
+    text = read_claims_article(case)
+    assert len(text) > 200
+    assert "yolo" in text.lower()
 
 
 def test_augment_article_with_distractors_appends_neighbor_excerpt() -> None:

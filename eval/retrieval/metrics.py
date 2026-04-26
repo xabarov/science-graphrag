@@ -86,10 +86,22 @@ def score_workspace_scoped_live_answer(
     # UUID-aware mode: citation work_ids are real Neo4j UUIDs; corpus identifiers in gold are
     # human-readable slugs.  Slug-based comparisons would produce false positives / negatives.
     # Instead, rely on ``trace_workspace_matches`` (set by the API) for scope validation.
-    uuid_mode = bool(cit_wids) and all(_is_uuid(w) for w in cit_wids)
+    uuid_citation_ids = bool(cit_wids) and all(_is_uuid(w) for w in cit_wids)
     slug_sets_present = bool(forbidden_set) and not any(_is_uuid(x) for x in forbidden_set)
+    expected_rows_early = list(gold.get("expected_citations") or [])
+    required_slug_targets = any(
+        isinstance(r, dict)
+        and r.get("required")
+        and str(r.get("corpus_work_id") or "").strip()
+        and not _is_uuid(str(r.get("corpus_work_id") or "").strip())
+        for r in expected_rows_early
+    )
+    # Forbidden lists are slug-based; anchor-free cases may have empty forbidden but still slug gold.
+    uuid_aware_scope = (uuid_citation_ids and slug_sets_present) or (
+        uuid_citation_ids and required_slug_targets
+    )
 
-    if uuid_mode and slug_sets_present:
+    if uuid_aware_scope:
         # Trust the API to enforce workspace filtering; report checks as clean.
         forbidden_leaks: list[str] = []
         out_of_scope: list[str] = []
@@ -114,7 +126,7 @@ def score_workspace_scoped_live_answer(
     violation_count = len(forbidden_leaks) + len(out_of_scope)
     gate = int(gold.get("forbidden_violation_gate") or 0)
 
-    if uuid_mode and slug_sets_present:
+    if uuid_aware_scope:
         # Fallback: parse missing_required from gold for reporting only (doesn't block scope_ok).
         expected_rows = list(gold.get("expected_citations") or [])
         missing_required = [
@@ -168,7 +180,7 @@ def score_workspace_scoped_live_answer(
     scope_ok = (
         trace_workspace_matches
         and violation_count <= gate
-        and (not missing_required or (uuid_mode and slug_sets_present))
+        and (not missing_required or uuid_aware_scope)
         and citation_count_ok
     )
 
@@ -178,7 +190,7 @@ def score_workspace_scoped_live_answer(
         "passed": passed,
         "contract_only": False,
         "workspace_scoped_live": True,
-        "uuid_aware_mode": uuid_mode and slug_sets_present,
+        "uuid_aware_mode": uuid_aware_scope,
         "hit_count": hit_count,
         "trace_workspace_matches": trace_workspace_matches,
         "forbidden_work_id_violation_count": violation_count,

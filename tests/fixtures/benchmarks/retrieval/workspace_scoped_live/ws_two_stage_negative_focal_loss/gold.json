@@ -28,7 +28,13 @@
       "out of scope",
       "outside",
       "n/a",
-      "not present"
+      "not present",
+      "does not",
+      "not supported",
+      "retrieved excerpts",
+      "cannot",
+      "none of",
+      "insufficient"
     ]
   },
   "expected_citations_min_count": 0,

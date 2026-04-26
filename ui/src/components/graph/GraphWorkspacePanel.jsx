@@ -2,18 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
-import IconButton from "@mui/material/IconButton";
-import InputAdornment from "@mui/material/InputAdornment";
-import TextField from "@mui/material/TextField";
-import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
-import BugReportOutlinedIcon from "@mui/icons-material/BugReportOutlined";
-import ClearIcon from "@mui/icons-material/Clear";
-import MyLocationOutlinedIcon from "@mui/icons-material/MyLocationOutlined";
-import LayersOutlinedIcon from "@mui/icons-material/LayersOutlined";
-import ViewSidebarOutlinedIcon from "@mui/icons-material/ViewSidebarOutlined";
-
-import { CursorIconButton } from "../common/index.js";
 import { useI18n } from "../../i18n/I18nContext.jsx";
 import { describeTraceabilityState } from "../work/traceabilityState.js";
 import GraphCanvasMvp from "./GraphCanvasMvp.jsx";
@@ -42,6 +31,7 @@ const LS_GRAPH_CANVAS_LAYOUT_MODE = "graphCanvasLayoutMode";
 const LS_GRAPH_VIZ_MODE = "graphVizMode";
 const LS_STANDALONE_DETAILS = "graphStandaloneDetailsVisible";
 const LS_STANDALONE_LEGEND = "graphStandaloneLegendOpen";
+const LS_EMBEDDED_LEGEND = "graphEmbeddedLegendOpen";
 
 function readLsMode() {
   if (typeof window === "undefined") return "canvas";
@@ -108,7 +98,9 @@ export default function GraphWorkspacePanel({
   const [vizMode, setVizMode] = useState(() => (standalone ? "canvas" : readLsMode()));
   const [canvasLayoutMode, setCanvasLayoutMode] = useState(() => (standalone ? "force" : readLsLayout()));
   const [detailsVisible, setDetailsVisible] = useState(() => (standalone ? readBoolLs(LS_STANDALONE_DETAILS, !focusLayout) : true));
-  const [legendOpen, setLegendOpen] = useState(() => (standalone ? readBoolLs(LS_STANDALONE_LEGEND, !focusLayout) : true));
+  const [legendOpen, setLegendOpen] = useState(() =>
+    standalone ? readBoolLs(LS_STANDALONE_LEGEND, !focusLayout) : readBoolLs(LS_EMBEDDED_LEGEND, true),
+  );
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(labMode);
   const [detailMinPx, setDetailMinPx] = useState(() => readGraphDetailColumnPxStored());
   const [localFindQuery, setLocalFindQuery] = useState("");
@@ -123,6 +115,7 @@ export default function GraphWorkspacePanel({
   }, [standalone, detailsVisible]);
   useEffect(() => {
     if (standalone) window.localStorage.setItem(LS_STANDALONE_LEGEND, legendOpen ? "1" : "0");
+    else window.localStorage.setItem(LS_EMBEDDED_LEGEND, legendOpen ? "1" : "0");
   }, [standalone, legendOpen]);
   useEffect(() => {
     if (!standalone) window.localStorage.setItem(LS_GRAPH_VIZ_MODE, vizMode);
@@ -185,128 +178,31 @@ export default function GraphWorkspacePanel({
       {error ? <GraphErrorAlert>{error}</GraphErrorAlert> : null}
       {!loading && !error && hasDataTarget ? (
         <>
-          {wsId ? <WorkspaceGraphToolbar workspaceId={wsId} stats={wsGraphStats} value={wsGraphOpts} onChange={setWsGraphOpts} /> : null}
+          <WorkspaceGraphToolbar
+            workspaceId={wsId}
+            stats={wsGraphStats}
+            value={wsGraphOpts}
+            onChange={setWsGraphOpts}
+            canvasMode={effectiveVizMode === "canvas"}
+            localFindQuery={localFindQuery}
+            onLocalFindChange={(e) => setLocalFindQuery(e.target.value)}
+            onLocalFindClear={() => setLocalFindQuery("")}
+            onFocusFirstMatch={focusFirstLocalMatch}
+            localFindFocusDisabled={nodeSearchMatchIds.size === 0}
+            detailsVisible={detailsVisible}
+            legendOpen={legendOpen}
+            diagnosticsOpen={diagnosticsOpen}
+            onToggleDetails={() => setDetailsVisible((v) => !v)}
+            onToggleLegend={() => setLegendOpen((v) => !v)}
+            onToggleDiagnostics={() => setDiagnosticsOpen((v) => !v)}
+            labMode={labMode}
+          />
           {!standalone ? <GraphViewModeSwitch mode={vizMode} onChange={setVizMode} compact={compactLayout} /> : null}
-          <Box sx={{ display: "flex", gap: 0.5, mb: 1, flexWrap: "wrap", alignItems: "center" }}>
-            <Tooltip title={detailsVisible ? t("graph.workspacePanel.tooltipDetailsHide") : t("graph.workspacePanel.tooltipDetailsShow")}>
-              <CursorIconButton
-                type="button"
-                aria-label={t("graph.workspacePanel.ariaToggleDetails")}
-                onClick={() => setDetailsVisible((v) => !v)}
-                sx={{
-                  ...(detailsVisible
-                    ? { borderColor: "rgba(99,102,241,0.35)", color: "rgba(129,140,248,0.95)" }
-                    : { opacity: 0.75 }),
-                }}
-              >
-                <ViewSidebarOutlinedIcon sx={{ fontSize: "1.05rem" }} />
-              </CursorIconButton>
-            </Tooltip>
-            {standalone ? (
-              <Tooltip title={legendOpen ? t("graph.workspacePanel.tooltipLegendHide") : t("graph.workspacePanel.tooltipLegendShow")}>
-                <CursorIconButton
-                  type="button"
-                  aria-label={t("graph.workspacePanel.ariaToggleLegend")}
-                  onClick={() => setLegendOpen((v) => !v)}
-                  sx={{
-                    ...(legendOpen
-                      ? { borderColor: "rgba(99,102,241,0.35)", color: "rgba(129,140,248,0.95)" }
-                      : { opacity: 0.75 }),
-                  }}
-                >
-                  <LayersOutlinedIcon sx={{ fontSize: "1.05rem" }} />
-                </CursorIconButton>
-              </Tooltip>
-            ) : null}
-            {!labMode ? (
-              <Tooltip
-                title={
-                  diagnosticsOpen
-                    ? t("graph.workspacePanel.tooltipDiagnosticsHide")
-                    : t("graph.workspacePanel.tooltipDiagnosticsShow")
-                }
-              >
-                <CursorIconButton
-                  type="button"
-                  aria-label={t("graph.workspacePanel.ariaToggleDiagnostics")}
-                  onClick={() => setDiagnosticsOpen((v) => !v)}
-                  sx={{
-                    ...(diagnosticsOpen
-                      ? { borderColor: "rgba(99,102,241,0.35)", color: "rgba(129,140,248,0.95)" }
-                      : { opacity: 0.75 }),
-                  }}
-                >
-                  <BugReportOutlinedIcon sx={{ fontSize: "1.05rem" }} />
-                </CursorIconButton>
-              </Tooltip>
-            ) : null}
-          </Box>
           {graph.warnings.length > 0 ? <Alert severity="info" sx={{ mb: 1 }}>Graph data was normalized</Alert> : null}
           {capWarnings.length > 0 ? <Alert severity="info" sx={{ mb: 1 }}>Large graph - UI cap is active</Alert> : null}
-          {standalone ? (
-            <Collapse in={legendOpen}>
-              <GraphTypeLegend graph={displayGraph} />
-            </Collapse>
-          ) : (
+          <Collapse in={legendOpen}>
             <GraphTypeLegend graph={displayGraph} />
-          )}
-          {effectiveVizMode === "canvas" ? (
-            <Box sx={{ mb: 1, display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "center" }}>
-              <TextField
-                size="small"
-                variant="outlined"
-                value={localFindQuery}
-                onChange={(e) => setLocalFindQuery(e.target.value)}
-                placeholder={t("graph.localFind.placeholder")}
-                inputProps={{ "aria-label": t("graph.localFind.aria") }}
-                sx={{
-                  minWidth: 200,
-                  flex: "1 1 220px",
-                  maxWidth: 480,
-                  "& .MuiOutlinedInput-root": {
-                    fontSize: "0.8125rem",
-                    backgroundColor: "rgba(255,255,255,0.04)",
-                    color: "rgba(255,255,255,0.9)",
-                  },
-                  "& .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,0.12)" },
-                  "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "rgba(255,255,255,0.18)",
-                  },
-                  "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "rgba(99, 102, 241, 0.5)",
-                    borderWidth: "1px",
-                  },
-                }}
-                InputProps={{
-                  endAdornment: localFindQuery ? (
-                    <InputAdornment position="end">
-                      <IconButton
-                        size="small"
-                        aria-label={t("graph.localFind.clearAria")}
-                        onClick={() => setLocalFindQuery("")}
-                        edge="end"
-                        sx={{ color: "rgba(255,255,255,0.5)" }}
-                      >
-                        <ClearIcon fontSize="small" />
-                      </IconButton>
-                    </InputAdornment>
-                  ) : null,
-                }}
-              />
-              <Tooltip title={t("graph.localFind.focusFirstTooltip")}>
-                <span>
-                  <CursorIconButton
-                    type="button"
-                    aria-label={t("graph.localFind.focusFirst")}
-                    onClick={focusFirstLocalMatch}
-                    disabled={nodeSearchMatchIds.size === 0}
-                  >
-                    <MyLocationOutlinedIcon sx={{ fontSize: "1.05rem" }} />
-                  </CursorIconButton>
-                </span>
-              </Tooltip>
-            </Box>
-          ) : null}
+          </Collapse>
           <Box
             sx={{
               flex: standalone ? 1 : undefined,

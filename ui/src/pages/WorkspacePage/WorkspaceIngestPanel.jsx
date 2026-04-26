@@ -1,14 +1,18 @@
 import React, { useCallback, useState } from "react";
-import Box from "@mui/material/Box";
+import FolderZipOutlinedIcon from "@mui/icons-material/FolderZipOutlined";
+import LibraryAddOutlinedIcon from "@mui/icons-material/LibraryAddOutlined";
+import UploadFileOutlinedIcon from "@mui/icons-material/UploadFileOutlined";
 import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
 import LinearProgress from "@mui/material/LinearProgress";
 import TextField from "@mui/material/TextField";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 
-import { CursorPrimaryButton } from "../../components/common/index.js";
+import { CursorIconButton, CursorSmallButton } from "../../components/common/index.js";
 import IngestProgressCard from "../../components/ingestion/IngestProgressCard.jsx";
 import { useI18n } from "../../i18n/I18nContext.jsx";
 import { collectIngestFilesFromDataTransfer } from "./collectIngestFiles.js";
@@ -26,6 +30,7 @@ import { collectIngestFilesFromDataTransfer } from "./collectIngestFiles.js";
  *   onAddWorkInputChange: (v: string) => void,
  *   addBusy: boolean,
  *   onAddWork: (e?: React.FormEvent) => void | Promise<void>,
+ *   variant?: "default" | "popover",
  * }} props
  */
 export default function WorkspaceIngestPanel({
@@ -40,9 +45,11 @@ export default function WorkspaceIngestPanel({
   onAddWorkInputChange,
   addBusy,
   onAddWork,
+  variant = "default",
 }) {
   const { t } = useI18n();
   const [dragOver, setDragOver] = useState(false);
+  const compact = variant === "popover";
 
   const onDragOver = useCallback((e) => {
     e.preventDefault();
@@ -86,6 +93,7 @@ export default function WorkspaceIngestPanel({
 
   const isParentBatch = String(ingestJob?.kind || "") === "batch_parent";
   const childJobs = Array.isArray(ingestJob?.child_jobs) ? ingestJob.child_jobs : [];
+  const disabledPick = uploadBusy || Boolean(ingestJobId);
 
   return (
     <>
@@ -94,27 +102,33 @@ export default function WorkspaceIngestPanel({
         onDragLeave={onDragLeave}
         onDrop={onDrop}
         sx={{
-          mb: 2,
-          p: 1.5,
+          mb: compact ? 1.25 : 2,
+          p: compact ? 1 : 1.5,
           borderRadius: "6px",
-          border: dragOver ? "1px dashed rgba(129,140,248,0.75)" : "1px solid rgba(99,102,241,0.22)",
-          backgroundColor: dragOver ? "rgba(99,102,241,0.12)" : "rgba(99,102,241,0.06)",
+          border: dragOver ? "1px dashed rgba(129,140,248,0.65)" : "1px solid rgba(255,255,255,0.1)",
+          backgroundColor: dragOver ? "rgba(99,102,241,0.08)" : "rgba(255,255,255,0.02)",
         }}
       >
-        <Typography sx={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.95)", mb: 1 }}>{t("workspace.upload.title")}</Typography>
-        <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.45)", mb: 1.25, lineHeight: 1.45 }}>
+        <Typography sx={{ fontSize: "0.68rem", fontWeight: 600, color: "rgba(255,255,255,0.45)", mb: 0.75 }}>
+          {t("workspace.upload.title")}
+        </Typography>
+        <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.45)", mb: 1, lineHeight: 1.45 }}>
           {t("workspace.upload.desc")}
         </Typography>
-        <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.38)", mb: 1 }}>
+        <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.35)", mb: 1 }}>
           {t("workspace.upload.dropHint")}
         </Typography>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center" }}>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "center" }}>
           <input type="file" accept=".pdf,.md,.txt" hidden id="workspace-ingest-input" onChange={(e) => onUploadDocument(e)} />
-          <label htmlFor="workspace-ingest-input">
-            <CursorPrimaryButton component="span" disabled={uploadBusy || Boolean(ingestJobId)} sx={{ cursor: "pointer" }}>
-              {uploadBusy ? t("workspace.upload.starting") : ingestJobId ? t("workspace.upload.processing") : t("workspace.upload.chooseFile")}
-            </CursorPrimaryButton>
-          </label>
+          <Tooltip title={uploadBusy ? t("workspace.upload.starting") : ingestJobId ? t("workspace.upload.processing") : t("workspace.upload.chooseFile")}>
+            <span>
+              <label htmlFor="workspace-ingest-input">
+                <CursorIconButton component="span" disabled={disabledPick} sx={{ cursor: disabledPick ? "default" : "pointer" }}>
+                  <UploadFileOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+                </CursorIconButton>
+              </label>
+            </span>
+          </Tooltip>
           {onUploadBatch ? (
             <>
               <input
@@ -125,17 +139,25 @@ export default function WorkspaceIngestPanel({
                 id="workspace-ingest-multi"
                 onChange={(e) => void onMultiInputChange(e)}
               />
-              <label htmlFor="workspace-ingest-multi">
-                <CursorPrimaryButton component="span" disabled={uploadBusy || Boolean(ingestJobId)} sx={{ cursor: "pointer" }}>
-                  {t("workspace.upload.chooseMultiple")}
-                </CursorPrimaryButton>
-              </label>
+              <Tooltip title={t("workspace.upload.chooseMultiple")}>
+                <span>
+                  <label htmlFor="workspace-ingest-multi">
+                    <CursorIconButton component="span" disabled={disabledPick} sx={{ cursor: disabledPick ? "default" : "pointer" }}>
+                      <LibraryAddOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+                    </CursorIconButton>
+                  </label>
+                </span>
+              </Tooltip>
               <input type="file" accept=".zip" hidden id="workspace-ingest-zip" onChange={(e) => void onZipInputChange(e)} />
-              <label htmlFor="workspace-ingest-zip">
-                <CursorPrimaryButton component="span" disabled={uploadBusy || Boolean(ingestJobId)} sx={{ cursor: "pointer" }}>
-                  {t("workspace.upload.chooseZip")}
-                </CursorPrimaryButton>
-              </label>
+              <Tooltip title={t("workspace.upload.chooseZip")}>
+                <span>
+                  <label htmlFor="workspace-ingest-zip">
+                    <CursorIconButton component="span" disabled={disabledPick} sx={{ cursor: disabledPick ? "default" : "pointer" }}>
+                      <FolderZipOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+                    </CursorIconButton>
+                  </label>
+                </span>
+              </Tooltip>
             </>
           ) : null}
         </Box>
@@ -237,8 +259,8 @@ export default function WorkspaceIngestPanel({
         defaultExpanded={false}
         disableGutters
         sx={{
-          mb: 2,
-          maxWidth: 560,
+          mb: compact ? 0 : 2,
+          maxWidth: compact ? "none" : 560,
           backgroundColor: "#141414",
           border: "1px solid rgba(255,255,255,0.08)",
           borderRadius: "6px",
@@ -255,15 +277,15 @@ export default function WorkspaceIngestPanel({
               size="small"
               placeholder={t("workspace.advanced.placeholder")}
               sx={{
-                minWidth: 220,
-                flex: "1 1 200px",
+                minWidth: 200,
+                flex: "1 1 180px",
                 "& .MuiInputBase-input": { fontSize: "0.8125rem" },
                 "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)" },
               }}
             />
-            <CursorPrimaryButton type="submit" disabled={addBusy || !addWorkInput.trim()}>
+            <CursorSmallButton type="submit" disabled={addBusy || !addWorkInput.trim()}>
               {t("workspace.advanced.add")}
-            </CursorPrimaryButton>
+            </CursorSmallButton>
           </Box>
         </AccordionDetails>
       </Accordion>

@@ -74,7 +74,19 @@ export default {
   "workspace.advanced.add": "Добавить в область",
 
   "workspace.noPapers":
-    "Пока нет статей. Загрузите файл выше или добавьте work_id из каталога на странице «Рабочие области».",
+    "Пока нет статей. Нажмите «Добавить» (+) на панели, перетащите файлы сюда или добавьте work_id из каталога на странице «Рабочие области».",
+
+  "workspace.strip.addMenuAria": "Добавить статьи в область",
+  "workspace.strip.addMenuTooltip": "Загрузка файлов, zip или по work_id",
+  "workspace.strip.statsWorks": "{{count}} работ",
+  "workspace.strip.statsWorksTip": "Работ в графе области",
+  "workspace.strip.statsAuthors": "{{count}} авторов",
+  "workspace.strip.statsAuthorsTip": "Авторов в графе области",
+  "workspace.strip.statsInternal": "{{count}} внутр. цит.",
+  "workspace.strip.statsInternalTip": "Внутренние цитирования",
+  "workspace.strip.statsExternal": "{{count}} внеш. цит.",
+  "workspace.strip.statsExternalTip": "Внешние цитирования",
+  "workspace.strip.ingestProgressTip": "Идёт загрузка / индексация",
 
   "workspace.side.graphTitle": "Снимок графа",
   "workspace.side.graphStatsLine":

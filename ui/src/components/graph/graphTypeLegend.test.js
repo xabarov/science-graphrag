@@ -113,7 +113,6 @@ describe("GraphTypeLegend SSR smoke", () => {
     expect(html).toContain("(1)");
     expect(html).toContain("Nodes");
     expect(html).toContain("cites");
-    expect(html).toContain("Types in view");
-    expect(html).toContain("1 nodes");
+    expect(html).toContain("1 nodes · 1 edges");
   });
 });

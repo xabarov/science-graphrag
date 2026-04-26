@@ -73,7 +73,19 @@ export default {
   "workspace.advanced.add": "Add to workspace",
 
   "workspace.noPapers":
-    "No papers yet. Upload a file above, or add an existing work_id from the catalog under Workspaces.",
+    "No papers yet. Use Add (+) in the toolbar, drag files here, or add an existing work_id from the catalog under Workspaces.",
+
+  "workspace.strip.addMenuAria": "Add papers to workspace",
+  "workspace.strip.addMenuTooltip": "Upload files, zip, or add by work_id",
+  "workspace.strip.statsWorks": "{{count}} works",
+  "workspace.strip.statsWorksTip": "Works in workspace graph",
+  "workspace.strip.statsAuthors": "{{count}} authors",
+  "workspace.strip.statsAuthorsTip": "Authors in workspace graph",
+  "workspace.strip.statsInternal": "{{count}} int. cites",
+  "workspace.strip.statsInternalTip": "Internal citations",
+  "workspace.strip.statsExternal": "{{count}} ext. cites",
+  "workspace.strip.statsExternalTip": "External citations",
+  "workspace.strip.ingestProgressTip": "Ingest in progress",
 
   "workspace.side.graphTitle": "Graph snapshot",
   "workspace.side.graphStatsLine":

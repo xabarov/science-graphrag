@@ -28,6 +28,9 @@ def work_chunks(
         accumulated.extend(batch)
         if scroll_offset is None or not batch:
             break
+    # Sort by chunk_index (document position) before slicing — Qdrant scroll
+    # returns chunks in internal storage order, which does not match reading order.
+    accumulated.sort(key=lambda r: r.get("chunk_index") or 0)
     slice_rows = accumulated[offset : offset + limit]
     items = [
         {
@@ -35,7 +38,7 @@ def work_chunks(
             "chunk_fingerprint": row.get("chunk_fingerprint"),
             "section_path": row.get("section_path"),
             "text": (row.get("text") or "")[:8000],
-            "order": offset + i,
+            "order": row.get("chunk_index") if row.get("chunk_index") is not None else offset + i,
         }
         for i, row in enumerate(slice_rows)
     ]

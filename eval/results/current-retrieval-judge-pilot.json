@@ -8,47 +8,20 @@
     "semantic_extraction_enabled": true,
     "judge_prompt_fingerprint": "sha256-20:4a8a4e1fd59c0baace44",
     "judge_schema_version": "retrieval_judge_v1",
-    "retrieval_artifact": "eval/results/current-retrieval-workspace-scoped-live.json",
+    "retrieval_artifact": "eval/results/current-retrieval-live-corpus-mini.json",
     "judge_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
     "judge_consistency_warnings": [
       "judge_uses_same_model_as_extraction_set_RETRIEVAL_JUDGE_LLM_MODEL_to_diversify"
     ]
   },
   "summary": {
-    "case_count": 6,
-    "mean_weighted_score": 6.1499999999999995,
+    "case_count": 3,
+    "mean_weighted_score": 6.233333333333333,
     "all_passed": true,
     "retrieval_judge_eval": true,
     "per_case_score_breakdown": [
       {
-        "case_id": "ws_full_anchor_free_overview",
-        "factuality": 2,
-        "coverage": 3,
-        "no_contradictions": 2,
-        "language": 1,
-        "weighted_score": 5.4,
-        "passed": true
-      },
-      {
-        "case_id": "ws_full_corpus_negative_unrelated",
-        "factuality": 2,
-        "coverage": 3,
-        "no_contradictions": 2,
-        "language": 2,
-        "weighted_score": 5.7,
-        "passed": true
-      },
-      {
-        "case_id": "ws_two_stage_negative_focal_loss",
-        "factuality": 2,
-        "coverage": 3,
-        "no_contradictions": 2,
-        "language": 2,
-        "weighted_score": 5.7,
-        "passed": true
-      },
-      {
-        "case_id": "ws_two_stage_proposal_evolution",
+        "case_id": "live_corpus_methods_wide",
         "factuality": 3,
         "coverage": 3,
         "no_contradictions": 2,
@@ -57,16 +30,16 @@
         "passed": true
       },
       {
-        "case_id": "ws_yolo_negative_mask_segmentation",
+        "case_id": "live_yolov1_architecture",
         "factuality": 3,
-        "coverage": 3,
+        "coverage": 1,
         "no_contradictions": 2,
         "language": 2,
-        "weighted_score": 6.7,
+        "weighted_score": 5.3,
         "passed": true
       },
       {
-        "case_id": "ws_yolo_speed_question",
+        "case_id": "live_yolov1_training",
         "factuality": 3,
         "coverage": 3,
         "no_contradictions": 2,
@@ -78,46 +51,7 @@
   },
   "cases": [
     {
-      "case_id": "ws_full_anchor_free_overview",
-      "passed": true,
-      "weighted_score": 5.4,
-      "scores": {
-        "factuality": 2,
-        "coverage": 3,
-        "no_contradictions": 2,
-        "language": 1,
-        "justification": ""
-      },
-      "wall_clock_seconds": 1.613
-    },
-    {
-      "case_id": "ws_full_corpus_negative_unrelated",
-      "passed": true,
-      "weighted_score": 5.7,
-      "scores": {
-        "factuality": 2,
-        "coverage": 3,
-        "no_contradictions": 2,
-        "language": 2,
-        "justification": "The answer is mostly coherent and on-topic, but it does not directly address the question about the BERT model or large language model pre-training for natural language understanding. The retrieved context is about object detection and computer vision, which is not directly relevant to the question. The answer does not provide any specific information about the BERT model or any other large language model pre-training for natural language understanding. Therefore, the factuality score is reduced."
-      },
-      "wall_clock_seconds": 2.25
-    },
-    {
-      "case_id": "ws_two_stage_negative_focal_loss",
-      "passed": true,
-      "weighted_score": 5.7,
-      "scores": {
-        "factuality": 2,
-        "coverage": 3,
-        "no_contradictions": 2,
-        "language": 2,
-        "justification": "The answer is coherent and on-topic, but it does not directly address the question about which paper introduces focal loss to address class imbalance. The retrieved context does not mention focal loss, so the answer does not provide the specific information requested. The answer is factually consistent and well-written, but it does not fully meet the criteria for factuality and coverage due to the lack of direct relevance to the question."
-      },
-      "wall_clock_seconds": 2.14
-    },
-    {
-      "case_id": "ws_two_stage_proposal_evolution",
+      "case_id": "live_corpus_methods_wide",
       "passed": true,
       "weighted_score": 6.7,
       "scores": {
@@ -125,12 +59,25 @@
         "coverage": 3,
         "no_contradictions": 2,
         "language": 2,
-        "justification": "The answer is factually accurate, as it directly cites the provided excerpts without inventing any new information. It fully covers the evolution of the region-proposal mechanism across the R-CNN family, as described in the excerpts. There are no contradictions within the answer. The language is clear and coherent, making it easy to understand the progression from R-CNN to Faster R-CNN."
+        "justification": "The answer is factually accurate as it correctly states that the retrieved excerpts do not support the question. The coverage is high because the answer directly addresses the question by stating the lack of relevant information in the excerpts. There are no contradictions in the answer, and the language is clear and coherent."
       },
-      "wall_clock_seconds": 2.322
+      "wall_clock_seconds": 5.42
     },
     {
-      "case_id": "ws_yolo_negative_mask_segmentation",
+      "case_id": "live_yolov1_architecture",
+      "passed": true,
+      "weighted_score": 5.3,
+      "scores": {
+        "factuality": 3,
+        "coverage": 1,
+        "no_contradictions": 2,
+        "language": 2,
+        "justification": "The answer is factually correct as it accurately states that the excerpts do not describe the three-step YOLO processing pipeline. However, the coverage is low because the answer does not reflect the gold reference snippet, which provides the detailed steps of the pipeline. There are no contradictions in the answer, and the language used is clear and coherent."
+      },
+      "wall_clock_seconds": 3.056
+    },
+    {
+      "case_id": "live_yolov1_training",
       "passed": true,
       "weighted_score": 6.7,
       "scores": {
@@ -138,22 +85,9 @@
         "coverage": 3,
         "no_contradictions": 2,
         "language": 2,
-        "justification": "The answer is factually accurate, as it directly cites the retrieved context without introducing any invented information. The coverage is full because the gold reference snippet is empty, and the answer is coherent and on-topic. There are no contradictions in the answer, and the language is clear and coherent."
+        "justification": "The answer accurately reflects the information provided in the citation excerpts. The loss function and training procedure are detailed as per the excerpts, and there are no contradictions within the answer. The language is clear and coherent."
       },
-      "wall_clock_seconds": 1.573
-    },
-    {
-      "case_id": "ws_yolo_speed_question",
-      "passed": true,
-      "weighted_score": 6.7,
-      "scores": {
-        "factuality": 3,
-        "coverage": 3,
-        "no_contradictions": 2,
-        "language": 2,
-        "justification": "The answer is factually accurate, as it directly quotes the relevant information from the retrieved context. It fully covers the question by providing the real-time speeds (FPS) reported for the base configurations of YOLO papers. There are no contradictions in the answer. The language used is clear and coherent."
-      },
-      "wall_clock_seconds": 1.796
+      "wall_clock_seconds": 3.157
     }
   ]
 }

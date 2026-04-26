@@ -8,6 +8,17 @@ from pathlib import Path
 from science_graphrag.ingestion.claims.quote_match import normalize_text_for_llm
 
 
+def _repo_root_from_case_dir(case_dir: Path) -> Path:
+    """Walk ancestors to find repository root (``pyproject.toml`` + ``tests/fixtures``)."""
+
+    cur = case_dir.resolve()
+    for p in [cur, *cur.parents]:
+        if (p / "pyproject.toml").is_file() and (p / "tests" / "fixtures" / "benchmarks").is_dir():
+            return p
+    # Fallback: typical depth ``.../benchmarks/claims/<suite>/<case>`` → 5 hops to repo root.
+    return cur.parents[5] if len(cur.parents) >= 6 else cur
+
+
 def read_claims_article(case_dir: Path) -> str:
     """Return ``article.md`` from the case dir, or from ``source_layer1_fixture`` under layer1."""
 
@@ -28,8 +39,7 @@ def read_claims_article(case_dir: Path) -> str:
     if not slug:
         return ""
 
-    # case_dir = <repo>/tests/fixtures/benchmarks/claims/<case_id>
-    repo = root.resolve().parents[4]
+    repo = _repo_root_from_case_dir(root)
     layer1_article = repo / "tests" / "fixtures" / "benchmarks" / "layer1" / slug / "article.md"
     if layer1_article.is_file():
         return normalize_text_for_llm(layer1_article.read_text(encoding="utf-8"))

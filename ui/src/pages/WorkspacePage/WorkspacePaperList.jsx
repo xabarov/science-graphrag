@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 import { useI18n } from "../../i18n/I18nContext.jsx";
-import WorkPaperCard from "./WorkPaperCard.jsx";
+import WorkspacePaperRow from "./WorkspacePaperRow.jsx";
 
 /**
  * @param {{
@@ -11,17 +11,17 @@ import WorkPaperCard from "./WorkPaperCard.jsx";
  *   effectiveWorkIds: string[],
  *   papers: Map<string, any>,
  *   selectedWorkId: string,
- *   onCardActivate?: (workId: string) => void,
+ *   onRowActivate?: (workId: string) => void,
  * }} props
  */
-export default function WorkspacePaperList({ workspaceId, effectiveWorkIds, papers, selectedWorkId, onCardActivate }) {
+export default function WorkspacePaperList({ workspaceId, effectiveWorkIds, papers, selectedWorkId, onRowActivate }) {
   const { t } = useI18n();
-  const cardRefs = useRef({});
+  const rowRefs = useRef({});
   const workIdsKey = effectiveWorkIds.join("|");
 
   useEffect(() => {
     if (!selectedWorkId) return undefined;
-    const el = cardRefs.current[selectedWorkId];
+    const el = rowRefs.current[selectedWorkId];
     if (!el) return undefined;
     const raf = window.requestAnimationFrame(() => {
       el.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -32,18 +32,19 @@ export default function WorkspacePaperList({ workspaceId, effectiveWorkIds, pape
   return (
     <Box
       sx={{
-        display: "grid",
-        gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(3, minmax(0, 1fr))" },
-        gap: 1.5,
+        borderRadius: "6px",
+        border: "1px solid rgba(255,255,255,0.08)",
+        backgroundColor: "#141414",
+        overflow: "hidden",
       }}
     >
       {workspaceId && effectiveWorkIds.length === 0 ? (
-        <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>{t("workspace.noPapers")}</Typography>
+        <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)", p: 1.5 }}>{t("workspace.noPapers")}</Typography>
       ) : null}
       {effectiveWorkIds.map((wid) => {
         const row = papers.get(wid);
         return (
-          <WorkPaperCard
+          <WorkspacePaperRow
             key={wid}
             workId={wid}
             title={row?.title || ""}
@@ -53,10 +54,10 @@ export default function WorkspacePaperList({ workspaceId, effectiveWorkIds, pape
             loading={row?.loading}
             error={row?.error}
             selected={Boolean(selectedWorkId) && wid === selectedWorkId}
-            onCardActivate={onCardActivate}
-            cardRef={(el) => {
-              if (el) cardRefs.current[wid] = el;
-              else delete cardRefs.current[wid];
+            onRowActivate={onRowActivate}
+            rowRef={(el) => {
+              if (el) rowRefs.current[wid] = el;
+              else delete rowRefs.current[wid];
             }}
           />
         );

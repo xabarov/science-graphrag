@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Alert from "@mui/material/Alert";
@@ -12,19 +12,44 @@ import { CursorIconAction } from "../../components/common/index.js";
 import AuthorConflictReviewCard from "../../components/dedup/AuthorConflictReviewCard.jsx";
 import EntityConflictReviewCard from "../../components/dedup/EntityConflictReviewCard.jsx";
 import IngestConflictReviewCard from "../../components/dedup/IngestConflictReviewCard.jsx";
+import WorkspaceContextStrip from "./WorkspaceContextStrip.jsx";
 import WorkspaceDialogs from "./WorkspaceDialogs.jsx";
-import WorkspaceHero from "./WorkspaceHero.jsx";
-import WorkspaceLayout from "./WorkspaceLayout.jsx";
 import WorkspacePaperList from "./WorkspacePaperList.jsx";
-import WorkspaceSidePanel from "./WorkspaceSidePanel.jsx";
+import { collectIngestFilesFromDataTransfer } from "./collectIngestFiles.js";
 import { useWorkspacePageCore } from "./useWorkspacePageCore.jsx";
 
 export default function WorkspacePage() {
   const vm = useWorkspacePageCore();
   const { t } = vm;
+  const [dropOver, setDropOver] = useState(false);
+
+  function onDragOverMain(e) {
+    if (!vm.workspaceMeta.id || vm.uploadBusy || vm.ingestJobId) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setDropOver(true);
+  }
+
+  function onDragLeaveMain(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDropOver(false);
+  }
+
+  async function onDropMain(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDropOver(false);
+    if (!vm.workspaceMeta.id || vm.uploadBusy || vm.ingestJobId) return;
+    const files = await collectIngestFilesFromDataTransfer(e.dataTransfer);
+    if (files.length) await vm.handleUploadBatch(files, null);
+  }
 
   return (
     <Box
+      onDragOver={onDragOverMain}
+      onDragLeave={onDragLeaveMain}
+      onDrop={onDropMain}
       sx={{
         p: { xs: 1.5, sm: 2 },
         width: "100%",
@@ -34,9 +59,19 @@ export default function WorkspacePage() {
         minHeight: 0,
         display: "flex",
         flexDirection: "column",
+        outline: dropOver ? "1px dashed rgba(129,140,248,0.55)" : "none",
+        outlineOffset: 2,
+        borderRadius: dropOver ? 1 : 0,
+        transition: "outline 0.12s ease",
       }}
     >
-      <WorkspaceHero t={t} vm={vm} />
+      <WorkspaceContextStrip t={t} vm={vm} />
+
+      {vm.workspaceMeta.id && vm.addErr ? (
+        <Alert severity="warning" sx={{ mb: 1.5, fontSize: "0.8125rem" }}>
+          {vm.addErr}
+        </Alert>
+      ) : null}
 
       {vm.workspaceError && vm.workspaceMeta.id ? (
         <Alert severity="error" sx={{ mb: 2, fontSize: "0.8125rem" }}>
@@ -93,56 +128,33 @@ export default function WorkspacePage() {
         </Box>
       ) : (
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <WorkspaceLayout
-            main={
-              <Box>
-                <WorkspacePaperList
-                  workspaceId={vm.workspaceMeta.id}
-                  effectiveWorkIds={vm.effectiveWorkIds}
-                  papers={vm.papers}
-                  selectedWorkId={vm.selectedWorkId}
-                  onCardActivate={vm.onCardActivate}
-                />
-
-                {vm.ingestDedupPanelOpen ? (
-                  <>
-                    <IngestConflictReviewCard
-                      workspaceId={vm.workspaceMeta.id}
-                      onDismiss={vm.dismissIngestDedupPanel}
-                      onMerged={vm.refreshWorkspaceMeta}
-                    />
-                    <AuthorConflictReviewCard
-                      workspaceId={vm.workspaceMeta.id}
-                      onDismiss={vm.dismissIngestDedupPanel}
-                      onMerged={vm.refreshWorkspaceMeta}
-                    />
-                    <EntityConflictReviewCard
-                      workspaceId={vm.workspaceMeta.id}
-                      onDismiss={vm.dismissIngestDedupPanel}
-                      onMerged={vm.refreshWorkspaceMeta}
-                    />
-                  </>
-                ) : null}
-              </Box>
-            }
-          side={
-            <WorkspaceSidePanel
-              workspaceId={vm.workspaceMeta.id}
-              graphStats={vm.graphStats}
-              uploadBusy={vm.uploadBusy}
-              ingestJobId={vm.ingestJobId}
-              ingestJob={vm.ingestJob}
-              ingestErr={vm.ingestErr}
-              onUploadDocument={vm.handleUploadDocument}
-              onUploadBatch={vm.handleUploadBatch}
-              addWorkInput={vm.addWorkInput}
-              onAddWorkInputChange={vm.setAddWorkInput}
-              addBusy={vm.addBusy}
-              onAddWork={vm.handleAddWork}
-              addErr={vm.addErr}
-            />
-          }
+          <WorkspacePaperList
+            workspaceId={vm.workspaceMeta.id}
+            effectiveWorkIds={vm.effectiveWorkIds}
+            papers={vm.papers}
+            selectedWorkId={vm.selectedWorkId}
+            onRowActivate={vm.onCardActivate}
           />
+
+          {vm.ingestDedupPanelOpen ? (
+            <>
+              <IngestConflictReviewCard
+                workspaceId={vm.workspaceMeta.id}
+                onDismiss={vm.dismissIngestDedupPanel}
+                onMerged={vm.refreshWorkspaceMeta}
+              />
+              <AuthorConflictReviewCard
+                workspaceId={vm.workspaceMeta.id}
+                onDismiss={vm.dismissIngestDedupPanel}
+                onMerged={vm.refreshWorkspaceMeta}
+              />
+              <EntityConflictReviewCard
+                workspaceId={vm.workspaceMeta.id}
+                onDismiss={vm.dismissIngestDedupPanel}
+                onMerged={vm.refreshWorkspaceMeta}
+              />
+            </>
+          ) : null}
         </Box>
       )}
 

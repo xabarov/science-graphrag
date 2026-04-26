@@ -207,6 +207,14 @@ def run_retrieval_case(
     root = Path(case_dir)
     question, gold = _read_retrieval_fixture(root)
     s = settings or get_settings()
+    # BT2 / live tiers need grounded LLM answers for abstain_keywords and judge alignment;
+    # production default keeps this off for latency unless API key is configured.
+    if (
+        s.extraction_llm_api_key
+        and not s.query_answer_llm_enabled
+        and not gold.get("contract_only")
+    ):
+        s = s.model_copy(update={"query_answer_llm_enabled": True})
     fn = answer_fn or answer_query
     work_id, workspace_id, top_k_i, mode_s = _gold_retrieval_params(gold)
     slug = str(gold.get("filter_work_layer1_slug") or "").strip()

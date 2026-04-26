@@ -35,7 +35,14 @@ export default function GraphPage() {
   const trace = readTraceabilityState(searchParams);
   const workId = trace.workId;
   const workspaceId = trace.workspaceId;
-  const effectiveWorkspaceId = (workspaceId || activeWorkspaceId || "").trim();
+  const workspaceIdFromUrl = workspaceId.trim();
+  const workIdTrimmed = workId.trim();
+  // If the URL names a work but omits workspace_id, do not fall back to the shell's active
+  // workspace: useGraphWorkspaceData would load the full workspace graph and ignore work scope
+  // (e.g. Graph link on a paper card uses /graph?work_id=... only).
+  const effectiveWorkspaceId = workIdTrimmed
+    ? workspaceIdFromUrl
+    : workspaceIdFromUrl || String(activeWorkspaceId || "").trim();
   const selectedNodeId = trace.nodeId;
   const selectedEdgeId = trace.edgeId;
   const labMode = searchParams.get("lab") === "1";
@@ -130,29 +137,42 @@ export default function GraphPage() {
       >
         <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.9)" }}>{t("graph.toolbar.title")}</Typography>
         {workId.trim() && !effectiveWorkspaceId ? (
-          <ToggleButtonGroup
-            size="small"
-            exclusive
-            value={graphDepth}
-            onChange={handleStandaloneGraphDepth}
-            sx={{
-              "& .MuiToggleButton-root": {
-                fontSize: "0.7rem",
-                py: 0.25,
-                px: 0.75,
-                color: "rgba(255,255,255,0.55)",
-                borderColor: "rgba(255,255,255,0.12)",
-              },
-              "& .Mui-selected": { color: "rgba(129,140,248,0.95)", backgroundColor: "rgba(99,102,241,0.12)" },
-            }}
-          >
-            <ToggleButton value={1} aria-label={t("graph.standaloneDepth.depth1Aria")}>
-              {t("graph.wsToolbar.depth1")}
-            </ToggleButton>
-            <ToggleButton value={2} aria-label={t("graph.standaloneDepth.depth2Aria")}>
-              {t("graph.wsToolbar.depth2")}
-            </ToggleButton>
-          </ToggleButtonGroup>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
+            <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.45)" }}>{t("graph.wsToolbar.depthLabel")}</Typography>
+            <ToggleButtonGroup
+              size="small"
+              exclusive
+              value={graphDepth}
+              onChange={handleStandaloneGraphDepth}
+              sx={{
+                "& .MuiToggleButton-root": {
+                  fontSize: "0.72rem",
+                  py: 0.15,
+                  px: 0.6,
+                  minWidth: 36,
+                  textTransform: "none",
+                  color: "rgba(255,255,255,0.55)",
+                  borderColor: "rgba(255,255,255,0.12)",
+                },
+                "& .Mui-selected": { color: "rgba(129,140,248,0.95)", backgroundColor: "rgba(99,102,241,0.12)" },
+              }}
+            >
+              <ToggleButton
+                value={1}
+                aria-label={t("graph.standaloneDepth.depth1Aria")}
+                title={t("graph.wsToolbar.depthTooltip1")}
+              >
+                {t("graph.wsToolbar.depthValue1")}
+              </ToggleButton>
+              <ToggleButton
+                value={2}
+                aria-label={t("graph.standaloneDepth.depth2Aria")}
+                title={t("graph.wsToolbar.depthTooltip2")}
+              >
+                {t("graph.wsToolbar.depthValue2")}
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
         ) : null}
         <Box sx={{ flex: 1, minWidth: 8 }} />
         <Tooltip title={t("graph.toolbar.loadTooltip")} placement="bottom">

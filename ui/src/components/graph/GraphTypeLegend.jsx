@@ -117,22 +117,16 @@ export default function GraphTypeLegend({ graph }) {
   return (
     <Box
       sx={{
-        mb: { xs: 1, sm: 1.5 },
-        p: { xs: 0.75, sm: 1 },
+        mb: { xs: 0.75, sm: 1 },
+        p: { xs: 0.5, sm: 0.75 },
         borderRadius: "6px",
         border: "1px solid rgba(255,255,255,0.08)",
         backgroundColor: "rgba(255,255,255,0.02)",
       }}
     >
-      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 0.75, mb: 0.5 }}>
-        <Typography
-          sx={{
-            fontSize: { xs: "0.7rem", sm: "0.75rem" },
-            fontWeight: 600,
-            color: "rgba(255,255,255,0.55)",
-          }}
-        >
-          {t("graph.legend.typesInView")}
+      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 0.75, mb: 0.65 }}>
+        <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.42)", lineHeight: 1.35 }}>
+          {t("graph.legend.overviewSummary", { nodeCount: totalNodes, edgeCount: totalEdges })}
         </Typography>
         <ToggleButtonGroup
           size="small"
@@ -160,9 +154,6 @@ export default function GraphTypeLegend({ graph }) {
           <ToggleButton value="alphabet">{t("graph.legend.sortAlphabet")}</ToggleButton>
         </ToggleButtonGroup>
       </Box>
-      <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.42)", mb: 0.75 }}>
-        {t("graph.legend.overviewSummary", { nodeCount: totalNodes, edgeCount: totalEdges })}
-      </Typography>
       <Box
         sx={{
           display: "flex",

@@ -18,6 +18,12 @@ export default {
   "shell.workspaceChip.manage": "Управление областями",
   "shell.workspaceChip.create": "Создать область",
   "shell.workspaceChip.openCurrent": "Открыть текущую",
+  "shell.workspaceChip.searchPlaceholder": "Фильтр областей…",
+  "shell.workspaceChip.searchAria": "Фильтр по имени или id области",
+  "shell.workspaceChip.searchEmpty": "Нет областей по фильтру.",
+  "shell.workspaceChip.worksCount": "Работ: {{count}}",
+  "shell.workspaceChip.menuButtonTooltip": "Меню рабочей области — выбор, поиск или создание",
+  "shell.workspaceChip.menuButtonAria": "Меню рабочей области — открыть список для смены",
 
   "shell.adminHeader.operationsSurface": "Операционная зона",
   "shell.adminHeader.adminTools": "Админ-инструменты",

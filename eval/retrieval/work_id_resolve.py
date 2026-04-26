@@ -52,11 +52,36 @@ def resolve_work_id_from_layer1_slug(
     )
     try:
         with driver.session() as sess:
-            rec = sess.run(
-                "MATCH (w:Work) WHERE toLower(w.title) = toLower($t) RETURN w.id AS id LIMIT 1",
+            rows = sess.run(
+                "MATCH (w:Work) WHERE toLower(w.title) = toLower($t) RETURN w.id AS id ORDER BY w.id",
                 t=title,
-            ).single()
-            return str(rec["id"]) if rec and rec.get("id") else None
+            ).data()
+            ids = [str(r["id"]) for r in rows if r.get("id")]
+        if not ids:
+            return None
+        if len(ids) == 1:
+            return ids[0]
+        # Prefer the :Work that actually has indexed chunks in Qdrant (duplicate-title guard).
+        try:
+            from science_graphrag.ingestion.embeddings import resolve_embedding_dim
+            from science_graphrag.storage.qdrant_store import QdrantChunkStore
+
+            dim = resolve_embedding_dim(settings=settings)
+            q = QdrantChunkStore(
+                settings.qdrant_url,
+                settings.qdrant_collection,
+                vector_dim=dim,
+            )
+            best: str | None = None
+            best_cnt = -1
+            for wid in ids:
+                cnt = q.count_chunks_for_work(work_id=wid)
+                if cnt > best_cnt or (cnt == best_cnt and (best is None or wid < best)):
+                    best_cnt = cnt
+                    best = wid
+            return best or ids[0]
+        except Exception:  # noqa: BLE001 — resolver must not break benchmarks on Qdrant hiccup
+            return ids[0]
     finally:
         driver.close()
 

@@ -55,7 +55,10 @@ def _load_multihop_case_dict(root: Path) -> dict[str, Any]:
     if q_json.is_file():
         raw = json.loads(q_json.read_text(encoding="utf-8"))
         if isinstance(raw, dict):
-            return raw
+            gv = str(raw.get("graph_view") or "raw").strip().lower()
+            if gv not in {"reader", "raw"}:
+                gv = "raw"
+            return {**raw, "graph_view": gv}
         raise TypeError("question.json must be an object")
     gold_path = root / "gold.json"
     if not gold_path.is_file():
@@ -74,6 +77,9 @@ def _load_multihop_case_dict(root: Path) -> dict[str, Any]:
     qfile = str(gold.get("question_file") or "question.txt")
     q_path = root / qfile
     q_text = q_path.read_text(encoding="utf-8").strip() if q_path.is_file() else ""
+    graph_view = str(gold.get("graph_view") or "raw").strip().lower()
+    if graph_view not in {"reader", "raw"}:
+        graph_view = "raw"
     return {
         "center_work_id": chain[0],
         "expected_neighbor_work_ids": chain[1:],
@@ -82,6 +88,7 @@ def _load_multihop_case_dict(root: Path) -> dict[str, Any]:
         "min_precision": float(gold.get("min_precision") or 0.6),
         "min_recall": float(gold.get("min_recall") or 0.5),
         "query_hint": q_text[:500],
+        "graph_view": graph_view,
     }
 
 
@@ -200,6 +207,9 @@ def run_multihop_case(
     min_precision = float(case.get("min_precision") or 0.7)
     min_recall = float(case.get("min_recall") or 0.5)
     query_hint = str(case.get("query_hint") or "")
+    graph_view = str(case.get("graph_view") or "raw").strip().lower()
+    if graph_view not in {"reader", "raw"}:
+        graph_view = "raw"
     started = perf_counter()
     request_error: str | None = None
     graph_payload: dict[str, Any] = {}
@@ -215,8 +225,7 @@ def run_multihop_case(
                     params={
                         "depth": depth,
                         "neighbor_limit": neighbor_limit,
-                        # reader view truncates neighbor Works; multihop gold expects Work ids.
-                        "view": "raw",
+                        "view": graph_view,
                     },
                 )
                 resp.raise_for_status()

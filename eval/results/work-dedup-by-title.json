@@ -1,0 +1,260 @@
+{
+  "clusters": [
+    {
+      "title_key": "faster r-cnn: towards real-time object detection with region proposal networks",
+      "work_ids": [
+        "a05f7281-dd74-4269-b10e-75aecf09320d",
+        "da2a6348-1a91-447d-8a17-da475a87b75f",
+        "bacce2fb-270a-4f14-bdb7-7733d792a91a"
+      ],
+      "chunk_counts": {
+        "a05f7281-dd74-4269-b10e-75aecf09320d": 0,
+        "da2a6348-1a91-447d-8a17-da475a87b75f": 45,
+        "bacce2fb-270a-4f14-bdb7-7733d792a91a": 0
+      },
+      "keep_id": "da2a6348-1a91-447d-8a17-da475a87b75f",
+      "drop_ids": [
+        "a05f7281-dd74-4269-b10e-75aecf09320d",
+        "bacce2fb-270a-4f14-bdb7-7733d792a91a"
+      ]
+    },
+    {
+      "title_key": "detrs beat yolos on real-time object detection",
+      "work_ids": [
+        "8eb3af0a-5542-4c29-80cf-6ec3dad74287",
+        "b2bd5005-b3c6-4056-bee4-62344654e63e"
+      ],
+      "chunk_counts": {
+        "8eb3af0a-5542-4c29-80cf-6ec3dad74287": 0,
+        "b2bd5005-b3c6-4056-bee4-62344654e63e": 35
+      },
+      "keep_id": "b2bd5005-b3c6-4056-bee4-62344654e63e",
+      "drop_ids": [
+        "8eb3af0a-5542-4c29-80cf-6ec3dad74287"
+      ]
+    },
+    {
+      "title_key": "dn-detr: accelerate detr training by introducing query denoising",
+      "work_ids": [
+        "79a35e97-2466-49b6-bcef-4933bb752ec5",
+        "6af0d8aa-c1b0-4df3-a150-d3a51f9fafc8"
+      ],
+      "chunk_counts": {
+        "79a35e97-2466-49b6-bcef-4933bb752ec5": 15,
+        "6af0d8aa-c1b0-4df3-a150-d3a51f9fafc8": 0
+      },
+      "keep_id": "79a35e97-2466-49b6-bcef-4933bb752ec5",
+      "drop_ids": [
+        "6af0d8aa-c1b0-4df3-a150-d3a51f9fafc8"
+      ]
+    },
+    {
+      "title_key": "end-to-end object detection with transformers",
+      "work_ids": [
+        "0ae8f9d9-ebcc-43f2-84c1-83c350b34d93",
+        "9c940a2e-9bbb-44bd-a67b-3ac8aa732bef"
+      ],
+      "chunk_counts": {
+        "0ae8f9d9-ebcc-43f2-84c1-83c350b34d93": 30,
+        "9c940a2e-9bbb-44bd-a67b-3ac8aa732bef": 0
+      },
+      "keep_id": "0ae8f9d9-ebcc-43f2-84c1-83c350b34d93",
+      "drop_ids": [
+        "9c940a2e-9bbb-44bd-a67b-3ac8aa732bef"
+      ]
+    },
+    {
+      "title_key": "fast r-cnn",
+      "work_ids": [
+        "37b95c3d-a6b5-4caf-b50e-51a9d37508c0",
+        "b3118291-8e4b-427d-9994-ce6f14b958b2"
+      ],
+      "chunk_counts": {
+        "37b95c3d-a6b5-4caf-b50e-51a9d37508c0": 0,
+        "b3118291-8e4b-427d-9994-ce6f14b958b2": 49
+      },
+      "keep_id": "b3118291-8e4b-427d-9994-ce6f14b958b2",
+      "drop_ids": [
+        "37b95c3d-a6b5-4caf-b50e-51a9d37508c0"
+      ]
+    },
+    {
+      "title_key": "generalized focal loss: learning qualified and distributed bounding boxes for dense object detection",
+      "work_ids": [
+        "6bd94d4b-942c-45ee-bb63-6b9c27152517",
+        "d475eb45-2a4c-49ce-b611-bc444d1b8ea4"
+      ],
+      "chunk_counts": {
+        "6bd94d4b-942c-45ee-bb63-6b9c27152517": 0,
+        "d475eb45-2a4c-49ce-b611-bc444d1b8ea4": 7
+      },
+      "keep_id": "d475eb45-2a4c-49ce-b611-bc444d1b8ea4",
+      "drop_ids": [
+        "6bd94d4b-942c-45ee-bb63-6b9c27152517"
+      ]
+    },
+    {
+      "title_key": "histograms of oriented gradients for human detection",
+      "work_ids": [
+        "a3285d1c-acc4-48af-aecd-777dd0acc796",
+        "df668f39-8b87-4ac9-a440-3b79569fee7f"
+      ],
+      "chunk_counts": {
+        "a3285d1c-acc4-48af-aecd-777dd0acc796": 0,
+        "df668f39-8b87-4ac9-a440-3b79569fee7f": 35
+      },
+      "keep_id": "df668f39-8b87-4ac9-a440-3b79569fee7f",
+      "drop_ids": [
+        "a3285d1c-acc4-48af-aecd-777dd0acc796"
+      ]
+    },
+    {
+      "title_key": "mask r-cnn",
+      "work_ids": [
+        "537cc503-a160-46b0-adbe-624be9ef802f",
+        "f1a17085-57a3-47ef-872c-9f6f3c8f3d72"
+      ],
+      "chunk_counts": {
+        "537cc503-a160-46b0-adbe-624be9ef802f": 0,
+        "f1a17085-57a3-47ef-872c-9f6f3c8f3d72": 37
+      },
+      "keep_id": "f1a17085-57a3-47ef-872c-9f6f3c8f3d72",
+      "drop_ids": [
+        "537cc503-a160-46b0-adbe-624be9ef802f"
+      ]
+    },
+    {
+      "title_key": "object detection with discriminatively trained part based models",
+      "work_ids": [
+        "58b60855-e642-4bc4-8b8f-86dfef5b41dd",
+        "62c0204d-cccb-431e-a2ea-4142ad49f194"
+      ],
+      "chunk_counts": {
+        "58b60855-e642-4bc4-8b8f-86dfef5b41dd": 0,
+        "62c0204d-cccb-431e-a2ea-4142ad49f194": 45
+      },
+      "keep_id": "62c0204d-cccb-431e-a2ea-4142ad49f194",
+      "drop_ids": [
+        "58b60855-e642-4bc4-8b8f-86dfef5b41dd"
+      ]
+    },
+    {
+      "title_key": "overfeat: integrated recognition, localization and detection using convolutional networks",
+      "work_ids": [
+        "0a914c15-4ece-477f-8882-7e855671da11",
+        "16424dcd-d985-421f-b402-0a7817bab180"
+      ],
+      "chunk_counts": {
+        "0a914c15-4ece-477f-8882-7e855671da11": 0,
+        "16424dcd-d985-421f-b402-0a7817bab180": 36
+      },
+      "keep_id": "16424dcd-d985-421f-b402-0a7817bab180",
+      "drop_ids": [
+        "0a914c15-4ece-477f-8882-7e855671da11"
+      ]
+    },
+    {
+      "title_key": "rich feature hierarchies for accurate object detection and semantic segmentation",
+      "work_ids": [
+        "62e2f9d4-d8f3-49d3-9523-4de4216335c3",
+        "a43b5b96-742f-499b-a4c3-fbe0c1a4d465"
+      ],
+      "chunk_counts": {
+        "62e2f9d4-d8f3-49d3-9523-4de4216335c3": 0,
+        "a43b5b96-742f-499b-a4c3-fbe0c1a4d465": 56
+      },
+      "keep_id": "a43b5b96-742f-499b-a4c3-fbe0c1a4d465",
+      "drop_ids": [
+        "62e2f9d4-d8f3-49d3-9523-4de4216335c3"
+      ]
+    },
+    {
+      "title_key": "selective search for object recognition",
+      "work_ids": [
+        "479322bc-4b9a-4c6c-b5c6-53dfcc7ed923",
+        "4aa9ec08-c5c8-40f2-805e-df0b0bb73424"
+      ],
+      "chunk_counts": {
+        "479322bc-4b9a-4c6c-b5c6-53dfcc7ed923": 0,
+        "4aa9ec08-c5c8-40f2-805e-df0b0bb73424": 49
+      },
+      "keep_id": "4aa9ec08-c5c8-40f2-805e-df0b0bb73424",
+      "drop_ids": [
+        "479322bc-4b9a-4c6c-b5c6-53dfcc7ed923"
+      ]
+    },
+    {
+      "title_key": "spatial pyramid pooling in deep convolutional networks for visual recognition",
+      "work_ids": [
+        "db6796f1-78d0-41d1-8237-4814f256bc75",
+        "badb93c4-031f-42f7-bd37-dc8556aef8ee"
+      ],
+      "chunk_counts": {
+        "db6796f1-78d0-41d1-8237-4814f256bc75": 51,
+        "badb93c4-031f-42f7-bd37-dc8556aef8ee": 0
+      },
+      "keep_id": "db6796f1-78d0-41d1-8237-4814f256bc75",
+      "drop_ids": [
+        "badb93c4-031f-42f7-bd37-dc8556aef8ee"
+      ]
+    }
+  ],
+  "merge_pairs": [
+    {
+      "keep": "da2a6348-1a91-447d-8a17-da475a87b75f",
+      "drop": "a05f7281-dd74-4269-b10e-75aecf09320d"
+    },
+    {
+      "keep": "da2a6348-1a91-447d-8a17-da475a87b75f",
+      "drop": "bacce2fb-270a-4f14-bdb7-7733d792a91a"
+    },
+    {
+      "keep": "b2bd5005-b3c6-4056-bee4-62344654e63e",
+      "drop": "8eb3af0a-5542-4c29-80cf-6ec3dad74287"
+    },
+    {
+      "keep": "79a35e97-2466-49b6-bcef-4933bb752ec5",
+      "drop": "6af0d8aa-c1b0-4df3-a150-d3a51f9fafc8"
+    },
+    {
+      "keep": "0ae8f9d9-ebcc-43f2-84c1-83c350b34d93",
+      "drop": "9c940a2e-9bbb-44bd-a67b-3ac8aa732bef"
+    },
+    {
+      "keep": "b3118291-8e4b-427d-9994-ce6f14b958b2",
+      "drop": "37b95c3d-a6b5-4caf-b50e-51a9d37508c0"
+    },
+    {
+      "keep": "d475eb45-2a4c-49ce-b611-bc444d1b8ea4",
+      "drop": "6bd94d4b-942c-45ee-bb63-6b9c27152517"
+    },
+    {
+      "keep": "df668f39-8b87-4ac9-a440-3b79569fee7f",
+      "drop": "a3285d1c-acc4-48af-aecd-777dd0acc796"
+    },
+    {
+      "keep": "f1a17085-57a3-47ef-872c-9f6f3c8f3d72",
+      "drop": "537cc503-a160-46b0-adbe-624be9ef802f"
+    },
+    {
+      "keep": "62c0204d-cccb-431e-a2ea-4142ad49f194",
+      "drop": "58b60855-e642-4bc4-8b8f-86dfef5b41dd"
+    },
+    {
+      "keep": "16424dcd-d985-421f-b402-0a7817bab180",
+      "drop": "0a914c15-4ece-477f-8882-7e855671da11"
+    },
+    {
+      "keep": "a43b5b96-742f-499b-a4c3-fbe0c1a4d465",
+      "drop": "62e2f9d4-d8f3-49d3-9523-4de4216335c3"
+    },
+    {
+      "keep": "4aa9ec08-c5c8-40f2-805e-df0b0bb73424",
+      "drop": "479322bc-4b9a-4c6c-b5c6-53dfcc7ed923"
+    },
+    {
+      "keep": "db6796f1-78d0-41d1-8237-4814f256bc75",
+      "drop": "badb93c4-031f-42f7-bd37-dc8556aef8ee"
+    }
+  ]
+}

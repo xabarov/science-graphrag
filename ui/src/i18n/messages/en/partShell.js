@@ -18,6 +18,12 @@ export default {
   "shell.workspaceChip.manage": "Manage workspaces",
   "shell.workspaceChip.create": "Create new",
   "shell.workspaceChip.openCurrent": "Open current",
+  "shell.workspaceChip.searchPlaceholder": "Filter workspaces…",
+  "shell.workspaceChip.searchAria": "Filter workspaces by name or id",
+  "shell.workspaceChip.searchEmpty": "No workspaces match your filter.",
+  "shell.workspaceChip.worksCount": "{{count}} works",
+  "shell.workspaceChip.menuButtonTooltip": "Open workspace menu — switch, search, or create",
+  "shell.workspaceChip.menuButtonAria": "Workspace menu — open list to switch workspace",
 
   "shell.adminHeader.operationsSurface": "Operations surface",
   "shell.adminHeader.adminTools": "Admin tools",

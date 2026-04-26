@@ -80,5 +80,6 @@
     "limitation": 1,
     "finding": 1,
     "comparison": 1
-  }
+  },
+  "min_claim_recall": 0.32
 }

@@ -12,14 +12,15 @@ import typer
 
 from eval.bench_common import run_single_case_json_outputs, run_suite_cli_flow
 from eval.concept_topic.harness_extract import extract_concepts_topics_anchor_harness
+from eval.concept_topic.llm_extract import extract_concepts_topics_llm
 from eval.concept_topic.metrics import score_concept_topic_extraction
 from science_graphrag.config import Settings, get_settings
 
 
-def extract_concepts_topics_production_stub(_article: str, _gold: dict[str, Any]) -> dict[str, Any]:
-    """Placeholder until production LLM extractor exists."""
+def extract_concepts_topics_production(article: str, gold: dict[str, Any]) -> dict[str, Any]:
+    """LLM extraction constrained to expected ids in *gold* (benchmark production lane)."""
 
-    return {"concepts": [], "topics": []}
+    return extract_concepts_topics_llm(article, gold, settings=get_settings())
 
 
 def _load_case_tiers(fixtures_root: Path) -> dict[str, list[str]] | None:
@@ -213,7 +214,7 @@ def _cli(  # pylint: disable=too-many-arguments,too-many-positional-arguments
             extract_concepts_topics_anchor_harness
         )
     elif ext in {"production", "prod", "ingestion"}:
-        extract_fn = extract_concepts_topics_production_stub
+        extract_fn = extract_concepts_topics_production
     else:
         typer.echo(f"Unknown --extractor {extractor!r}; use harness or production.", err=True)
         raise typer.Exit(code=1)

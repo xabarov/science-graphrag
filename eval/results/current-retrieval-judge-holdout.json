@@ -50,9 +50,9 @@
         "coverage": 3,
         "no_contradictions": 2,
         "language": 2,
-        "justification": "The answer is factually accurate, as it directly quotes the provided context. It fully covers the question by explaining what YOLO is and how it differs from classifier-based sliding-window detectors. There are no contradictions in the answer. The language used is clear and coherent."
+        "justification": "The answer is factually accurate, as it directly quotes the provided context. It fully covers the question by explaining YOLO and contrasting it with classifier-based sliding-window detectors. There are no contradictions in the answer. The language is clear and coherent."
       },
-      "wall_clock_seconds": 2.704
+      "wall_clock_seconds": 1.804
     },
     {
       "case_id": "live_yolov1_methods_combo",
@@ -63,9 +63,9 @@
         "coverage": 3,
         "no_contradictions": 2,
         "language": 2,
-        "justification": "The answer is factually accurate, as it directly quotes the retrieved context without introducing any invented information. It fully covers the question by describing the YOLO method and its positioning relative to other detectors, even though there is no specific gold reference snippet. The answer is internally consistent and written in clear, coherent English."
+        "justification": "The answer is a direct copy of the retrieved context, so it scores highly on factuality and language. Since there is no gold reference snippet, coverage is not applicable, and the answer is treated generously. The answer does not contain any contradictions, so it scores highly on no_contradictions."
       },
-      "wall_clock_seconds": 1.632
+      "wall_clock_seconds": 1.702
     }
   ]
 }

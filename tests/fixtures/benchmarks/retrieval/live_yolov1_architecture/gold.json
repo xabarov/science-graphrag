@@ -7,5 +7,6 @@
   "top_k": 8,
   "min_hit_count": 1,
   "required_chunk_fingerprints": [],
-  "contract_only": false
+  "contract_only": false,
+  "answer_reference_text": "YOLOv1 uses a single convolutional network on the full image: (1) resize the input image to 448×448; (2) run a CNN to produce a grid of predictions (bounding boxes and class probabilities per cell); (3) threshold / non-max suppression to form final detections from the grid."
 }

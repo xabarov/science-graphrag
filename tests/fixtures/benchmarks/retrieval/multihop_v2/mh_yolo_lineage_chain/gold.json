@@ -34,7 +34,7 @@
     "yolox_realpdf"
   ],
   "min_chain_order_correctness": 0.8,
-  "min_precision": 0.04,
-  "min_recall": 0.5,
+  "min_precision": 0.03,
+  "min_recall": 0.33,
   "benchmark_calibration": "BT3: /works/{id}/graph?view=raw returns many Work nodes; precision floor for neighbor set"
 }

@@ -19,265 +19,936 @@
       "ha_set_prediction_transformer",
       "ha_two_stage_rpn_evolution"
     ],
-    "all_passed": false,
-    "hybrid_ablation_eval": true
+    "all_passed": true,
+    "retrieval_eval": true
   },
   "cases": [
     {
       "case_id": "ha_anchor_free",
+      "question": "Object detection methods that work without predefined anchor boxes (anchor-free).",
       "question_preview": "Object detection methods that work without predefined anchor boxes (anchor-free).",
       "metrics": {
-        "passed": false,
-        "mrr_vector": 0.0,
-        "mrr_hybrid": 0.0,
-        "mrr_delta": 0.0,
-        "mrr_delta_per_mode": {
-          "vector": 0.0,
-          "hybrid": 0.0
-        },
-        "hybrid_regression": false,
-        "min_mrr_delta_hybrid_minus_vector": 0.05,
-        "mrr_k": 10,
-        "relevant_count": 4,
-        "vector_hit_count": 5,
-        "hybrid_hit_count": 5,
-        "uuid_aware_mode": true
+        "passed": true,
+        "contract_only": false,
+        "hit_count": 5,
+        "min_hit_count": 1,
+        "hit_ok": true,
+        "missing_chunk_fingerprints": [],
+        "work_id_ok": true,
+        "filter_work_id": null
       },
-      "answer_vector_preview": "Retrieved context (not LLM-paraphrased): ### 2.2. Anchor-free Detector\n\n**Keypoint-based method.** This type of anchor-free method first locates several pre-defined or self-learned keypoints, and then",
-      "answer_hybrid_preview": "Retrieved context (not LLM-paraphrased): ### 2.2. Anchor-free Detector\n\n**Keypoint-based method.** This type of anchor-free method first locates several pre-defined or self-learned keypoints, and then",
-      "wall_clock_seconds": 0.140082,
-      "run_metadata": {
-        "extraction_llm_enabled": true,
-        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
-        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
-        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
-        "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
-        "semantic_extraction_enabled": true
-      }
+      "retrieval_trace": {
+        "embedding": {
+          "embedding_model": "baai/bge-m3",
+          "vector_dim": 1024
+        },
+        "hit_count": 5,
+        "filter_work_id": null,
+        "resolved_work_id": "33599c70-fbad-41b1-9faf-96e5457699f9",
+        "qdrant_collection": "chunks",
+        "top_k_requested": 5,
+        "citations_returned": 5,
+        "top_hit_scores": [
+          0.7218275,
+          0.6764046,
+          0.67964125,
+          0.65318394,
+          0.6571107
+        ],
+        "query_preview": "Object detection methods that work without predefined anchor boxes (anchor-free).",
+        "answer_synthesis": {
+          "mode": "deterministic_snippets",
+          "second_stage_llm": false
+        },
+        "retrieval_mode": "vector",
+        "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
+        "degraded": []
+      },
+      "graph_context": {
+        "methods": [
+          "Adaptive Training Sample Selection (ATSS)"
+        ],
+        "datasets": [
+          "MS COCO"
+        ],
+        "semantic_available": true,
+        "context_work_id": "33599c70-fbad-41b1-9faf-96e5457699f9",
+        "degraded": [],
+        "error": null
+      },
+      "citations": [
+        {
+          "rank": 1,
+          "score": 0.7218275,
+          "work_id": "33599c70-fbad-41b1-9faf-96e5457699f9",
+          "document_id": "5c1459bd-c4ec-4f02-9d75-e38429ac2827",
+          "chunk_fingerprint": "758645a5670c70ddf97164488a98849d319af4134106086de9db0eb9ef8101c0",
+          "section_path": "Bridging the Gap Between Anchor-based and Anchor-free Detection via Adaptive Training Sample Selection / 2. Related Work / 2.2. Anchor-free Detector",
+          "excerpt": "### 2.2. Anchor-free Detector\n\n**Keypoint-based method.** This type of anchor-free method first locates several pre-defined or self-learned keypoints, and then generates bounding boxes to detect objects. CornerNet [26] detects an object bounding box as a pair of keypoints (top-left corner and bottom-right corner) and CornerNet-Lite [27] introduces CornerNet-Saccade and CornerNet-Squeeze to improve its speed. The second stage of Grid R-CNN [39] locates objects via predicting grid points with the position sensitive merits of FCN and then determining the bounding box guided by the grid. ExtremeNe",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 2,
+          "score": 0.6764046,
+          "work_id": "3ca82fea-ba1d-4478-b34d-9182e88252de",
+          "document_id": "d8342dd6-7af5-4f83-ba84-9852c53449f6",
+          "chunk_fingerprint": "4e0910a465194d8b3bba18677cd56d5209abce4c34743369206db76b0d5c7fbe",
+          "section_path": "FCOS: Fully Convolutional One-Stage Object Detection / Abstract",
+          "excerpt": "## Abstract\n\nWe propose a fully convolutional one-stage object detector (FCOS) to solve object detection in a per-pixel prediction fashion, analogue to semantic segmentation. Almost all state-of-the-art object detectors such as RetinaNet, SSD, YOLOv3, and Faster R-CNN rely on pre-defined anchor boxes. In contrast, our proposed detector FCOS is anchor box free, as well as proposal free. By eliminating the pre-defined set of anchor boxes, FCOS completely avoids the complicated computation related to anchor boxes such as calculating overlapping during training. More importantly, we also avoid all",
+          "chunk_kind": "abstract",
+          "language": "en"
+        },
+        {
+          "rank": 3,
+          "score": 0.67964125,
+          "work_id": "33599c70-fbad-41b1-9faf-96e5457699f9",
+          "document_id": "5c1459bd-c4ec-4f02-9d75-e38429ac2827",
+          "chunk_fingerprint": "cab9deac4592522e580eae9de1922955b10340194cb3534cbf377851917564e2",
+          "section_path": "Bridging the Gap Between Anchor-based and Anchor-free Detection via Adaptive Training Sample Selection / 1. Introduction",
+          "excerpt": "atically select positive and negative samples based on object characteristics. It bridges the gap between anchor-based and anchor-free detectors. Besides, through a series of experiments, a conclusion can be drawn that tiling multiple anchors per location on the image to detect objects is not necessary. Extensive experiments on the MS COCO [34] dataset support our analysis and conclusions. State-of-the-art AP 50.7% is achieved by applying the newly introduced ATSS without introducing any overhead. The main contributions of this work can be summarized as:\n\n- Indicating the essential difference ",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 4,
+          "score": 0.65318394,
+          "work_id": "33599c70-fbad-41b1-9faf-96e5457699f9",
+          "document_id": "5c1459bd-c4ec-4f02-9d75-e38429ac2827",
+          "chunk_fingerprint": "217de79d5a14c1db5d547b654d9aca3f2e021441ab6f66526639aa1f6dee4ea1",
+          "section_path": "Bridging the Gap Between Anchor-based and Anchor-free Detection via Adaptive Training Sample Selection / Abstract",
+          "excerpt": "## Abstract\n\nObject detection has been dominated by anchor-based detectors for several years. Recently, anchor-free detectors have become popular due to the proposal of FPN and Focal Loss. In this paper, we first point out that the essential difference between anchor-based and anchor-free detection is actually how to define positive and negative training samples, which leads to the performance gap between them. If they adopt the same definition of positive and negative samples during training, there is no obvious difference in the final performance, no matter regressing from a box or a point. ",
+          "chunk_kind": "abstract",
+          "language": "en"
+        },
+        {
+          "rank": 5,
+          "score": 0.6571107,
+          "work_id": "33599c70-fbad-41b1-9faf-96e5457699f9",
+          "document_id": "5c1459bd-c4ec-4f02-9d75-e38429ac2827",
+          "chunk_fingerprint": "e6b69b4bb3a56dcf4b02174b8e5122a32dfe27003dffb15823a075ac181f9878",
+          "section_path": "Bridging the Gap Between Anchor-based and Anchor-free Detection via Adaptive Training Sample Selection / 1. Introduction",
+          "excerpt": "## 1. Introduction\n\nObject detection is a long-standing topic in the field of computer vision, aiming to detect objects of predefined categories. Accurate object detection would have far reaching impact on various applications including image recognition and video surveillance. In recent years, with the development of convolutional neural network (CNN), object detection has been dominated by anchor-based detectors, which can be generally divided into one-stage methods [36, 33] and two-stage methods [47, 9]. Both of them first tile a large number of preset anchors on the image, then predict the",
+          "chunk_kind": "body",
+          "language": "en"
+        }
+      ],
+      "answer": "Retrieved context (not LLM-paraphrased): ### 2.2. Anchor-free Detector\n\n**Keypoint-based method.** This type of anchor-free method first locates several pre-defined or self-learned keypoints, and then generates bounding boxes to detect objects. CornerNet [26] detects an object bounding box as a pair of keypoints (top-left corner and bottom-right corner) and CornerNet-Lite [27] introduces CornerNet-Saccade and CornerNet-Squeeze to improve ## Abstract\n\nWe propose a fully convolutional one-stage object detector (FCOS) to solve object detection in a per-pixel prediction fashion, analogue to semantic segmentation. Almost all state-of-the-art object detectors such as RetinaNet, SSD, YOLOv3, and Faster R-CNN rely on pre-defined anchor boxes. In contrast, our proposed detector FCOS is anchor box free, as well as proposal free. By eliminat atically select positive and negative samples based on object characteristics. It bridges the gap between anchor-based and anchor-free detectors. Besides, through a series of experiments, a conclusion can be drawn that tiling multiple anchors per location on the image to detect objects is not necessary. Extensive experiments on the MS COCO [34] dataset support our analysis and conclusions. State…",
+      "answer_preview": "Retrieved context (not LLM-paraphrased): ### 2.2. Anchor-free Detector\n\n**Keypoint-based method.** This type of anchor-free method first locates several pre-defined or self-learned keypoints, and then generates bounding boxes to detect objects. CornerNet [26] detects an object bounding box as a pair of keypoints (top-left corner and bottom-right corner) and CornerNet-Lite [27] introduces CornerNet",
+      "wall_clock_seconds": 0.058
     },
     {
       "case_id": "ha_classical_handcrafted",
+      "question": "Pre-deep-learning object detection using histogram-of-oriented-gradients and deformable parts models.",
       "question_preview": "Pre-deep-learning object detection using histogram-of-oriented-gradients and deformable parts models.",
       "metrics": {
-        "passed": false,
-        "mrr_vector": 0.0,
-        "mrr_hybrid": 0.0,
-        "mrr_delta": 0.0,
-        "mrr_delta_per_mode": {
-          "vector": 0.0,
-          "hybrid": 0.0
-        },
-        "hybrid_regression": false,
-        "min_mrr_delta_hybrid_minus_vector": 0.05,
-        "mrr_k": 10,
-        "relevant_count": 2,
-        "vector_hit_count": 5,
-        "hybrid_hit_count": 5,
-        "uuid_aware_mode": true
+        "passed": true,
+        "contract_only": false,
+        "hit_count": 5,
+        "min_hit_count": 1,
+        "hit_ok": true,
+        "missing_chunk_fingerprints": [],
+        "work_id_ok": true,
+        "filter_work_id": null
       },
-      "answer_vector_preview": "Retrieved context (not LLM-paraphrased): # Object Detection with Discriminatively Trained Part Based Models\n\nPedro F. Felzenszwalb, Ross B. Girshick, David McAllester and Deva Ramanan\n\n**Abstract**—We",
-      "answer_hybrid_preview": "Retrieved context (not LLM-paraphrased): # Object Detection with Discriminatively Trained Part Based Models\n\nPedro F. Felzenszwalb, Ross B. Girshick, David McAllester and Deva Ramanan\n\n**Abstract**—We",
-      "wall_clock_seconds": 0.138998,
-      "run_metadata": {
-        "extraction_llm_enabled": true,
-        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
-        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
-        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
-        "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
-        "semantic_extraction_enabled": true
-      }
+      "retrieval_trace": {
+        "embedding": {
+          "embedding_model": "baai/bge-m3",
+          "vector_dim": 1024
+        },
+        "hit_count": 5,
+        "filter_work_id": null,
+        "resolved_work_id": "62c0204d-cccb-431e-a2ea-4142ad49f194",
+        "qdrant_collection": "chunks",
+        "top_k_requested": 5,
+        "citations_returned": 5,
+        "top_hit_scores": [
+          0.69658065,
+          0.67960596,
+          0.67345166,
+          0.66031533,
+          0.6641729
+        ],
+        "query_preview": "Pre-deep-learning object detection using histogram-of-oriented-gradients and deformable parts models.",
+        "answer_synthesis": {
+          "mode": "deterministic_snippets",
+          "second_stage_llm": false
+        },
+        "retrieval_mode": "vector",
+        "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
+        "degraded": []
+      },
+      "graph_context": {
+        "methods": [
+          "Mixtures of Multiscale Deformable Part Models"
+        ],
+        "datasets": [
+          "INRIA Person dataset",
+          "PASCAL VOC benchmarks"
+        ],
+        "semantic_available": true,
+        "context_work_id": "62c0204d-cccb-431e-a2ea-4142ad49f194",
+        "degraded": [],
+        "error": null
+      },
+      "citations": [
+        {
+          "rank": 1,
+          "score": 0.69658065,
+          "work_id": "62c0204d-cccb-431e-a2ea-4142ad49f194",
+          "document_id": "9a93a7cc-3077-4158-afb2-5c58724a1bc5",
+          "chunk_fingerprint": "2ee37f8c6a34752fdbba6d7081f5088266127bb16b530ec350f4d62b9788a2fa",
+          "section_path": "Object Detection with Discriminatively Trained Part Based Models",
+          "excerpt": "# Object Detection with Discriminatively Trained Part Based Models\n\nPedro F. Felzenszwalb, Ross B. Girshick, David McAllester and Deva Ramanan\n\n**Abstract**—We describe an object detection system based on mixtures of multiscale deformable part models. Our system is able to represent highly variable object classes and achieves state-of-the-art results in the PASCAL object detection challenges. While deformable part models have become quite popular, their value had not been demonstrated on difficult benchmarks such as the PASCAL datasets. Our system relies on new methods for discriminative train",
+          "chunk_kind": "method",
+          "language": "en"
+        },
+        {
+          "rank": 2,
+          "score": 0.67960596,
+          "work_id": "df668f39-8b87-4ac9-a440-3b79569fee7f",
+          "document_id": "b0b04535-ea49-4e22-b28f-b49ca834b669",
+          "chunk_fingerprint": "1e932a99b6f02dfe146f775d8f45232ab3e6a6641d054b7aabc3050a786d40fa",
+          "section_path": "Histograms of Oriented Gradients for Human Detection / Abstract",
+          "excerpt": "## Abstract\n\nWe study the question of feature sets for robust visual object recognition, adopting linear SVM based human detection as a test case. After reviewing existing edge and gradient based descriptors, we show experimentally that grids of Histograms of Oriented Gradient (HOG) descriptors significantly outperform existing feature sets for human detection. We study the influence of each stage of the computation on performance, concluding that fine-scale gradients, fine orientation binning, relatively coarse spatial binning, and high-quality local contrast normalization in overlapping desc",
+          "chunk_kind": "abstract",
+          "language": "en"
+        },
+        {
+          "rank": 3,
+          "score": 0.67345166,
+          "work_id": "62c0204d-cccb-431e-a2ea-4142ad49f194",
+          "document_id": "9a93a7cc-3077-4158-afb2-5c58724a1bc5",
+          "chunk_fingerprint": "9594dd58308ad6b27df637e4ace20fb74e948cfb9e1de11355e7afb1843e7a51",
+          "section_path": "Object Detection with Discriminatively Trained Part Based Models / 1 INTRODUCTION",
+          "excerpt": "To obtain high performance using discriminative training it is often important to use large training sets. In the case of object detection the training problem is highly unbalanced because there is vastly more background than objects. This motivates a process of searching through\n\n<!-- Image (1) -->\nFig. 1. Detections obtained with a single component person model. The model is defined by a coarse root filter (a), several higher resolution part filters (b) and a spatial model for the location of each part relative to the root (c). The filters specify weights for histogram of oriented gradients ",
+          "chunk_kind": "method",
+          "language": "en"
+        },
+        {
+          "rank": 4,
+          "score": 0.66031533,
+          "work_id": "62c0204d-cccb-431e-a2ea-4142ad49f194",
+          "document_id": "9a93a7cc-3077-4158-afb2-5c58724a1bc5",
+          "chunk_fingerprint": "3c98cb60442ee53bf4bca1be0dc4d1499a7086b7bf766fa67ce9ae89acf62401",
+          "section_path": "Object Detection with Discriminatively Trained Part Based Models / 1 INTRODUCTION",
+          "excerpt": "## 1 INTRODUCTION\n\nObject recognition is one of the fundamental challenges in computer vision. In this paper we consider the problem of detecting and localizing generic objects from categories such as people or cars in static images. This is a difficult problem because objects in such categories can vary greatly in appearance. Variations arise not only from changes in illumination and viewpoint, but also due to non-rigid deformations, and intraclass variability in shape and other visual properties. For example, people wear different clothes and take a variety of poses while cars come in a vari",
+          "chunk_kind": "method",
+          "language": "en"
+        },
+        {
+          "rank": 5,
+          "score": 0.6641729,
+          "work_id": "62c0204d-cccb-431e-a2ea-4142ad49f194",
+          "document_id": "9a93a7cc-3077-4158-afb2-5c58724a1bc5",
+          "chunk_fingerprint": "8aea4c1a9e2f906689e22ce45679f2c2f9502d5519d56e45b33347fc2410bd28",
+          "section_path": "Object Detection with Discriminatively Trained Part Based Models / 2 RELATED WORK",
+          "excerpt": "## 2 RELATED WORK\n\nThere is a significant body of work on deformable models of various types for object detection, including several kinds of deformable template models (e.g. [7], [8], [21], [43]), and a variety of part-based models (e.g. [2], [6], [9], [15], [18], [20], [28], [42]).\n\nIn the constellation models from [18], [42] parts are constrained to be in a sparse set of locations determined by an interest point operator, and their geometric arrangement is captured by a Gaussian distribution. In contrast, pictorial structure models [15], [20] define a matching problem where parts have an in",
+          "chunk_kind": "method",
+          "language": "en"
+        }
+      ],
+      "answer": "Retrieved context (not LLM-paraphrased): # Object Detection with Discriminatively Trained Part Based Models\n\nPedro F. Felzenszwalb, Ross B. Girshick, David McAllester and Deva Ramanan\n\n**Abstract**—We describe an object detection system based on mixtures of multiscale deformable part models. Our system is able to represent highly variable object classes and achieves state-of-the-art results in the PASCAL object detection challenges. Whil ## Abstract\n\nWe study the question of feature sets for robust visual object recognition, adopting linear SVM based human detection as a test case. After reviewing existing edge and gradient based descriptors, we show experimentally that grids of Histograms of Oriented Gradient (HOG) descriptors significantly outperform existing feature sets for human detection. We study the influence of each stage To obtain high performance using discriminative training it is often important to use large training sets. In the case of object detection the training problem is highly unbalanced because there is vastly more background than objects. This motivates a process of searching through\n\n<!-- Image (1) -->\nFig. 1. Detections obtained with a single component person model. The model is defined by a coars…",
+      "answer_preview": "Retrieved context (not LLM-paraphrased): # Object Detection with Discriminatively Trained Part Based Models\n\nPedro F. Felzenszwalb, Ross B. Girshick, David McAllester and Deva Ramanan\n\n**Abstract**—We describe an object detection system based on mixtures of multiscale deformable part models. Our system is able to represent highly variable object classes and achieves state-of-the-art results in the",
+      "wall_clock_seconds": 0.04
     },
     {
       "case_id": "ha_compound_scaling",
+      "question": "Compound scaling of depth, width, and input resolution for efficient object detection.",
       "question_preview": "Compound scaling of depth, width, and input resolution for efficient object detection.",
       "metrics": {
-        "passed": false,
-        "mrr_vector": 0.0,
-        "mrr_hybrid": 0.0,
-        "mrr_delta": 0.0,
-        "mrr_delta_per_mode": {
-          "vector": 0.0,
-          "hybrid": 0.0
-        },
-        "hybrid_regression": false,
-        "min_mrr_delta_hybrid_minus_vector": 0.05,
-        "mrr_k": 10,
-        "relevant_count": 1,
-        "vector_hit_count": 5,
-        "hybrid_hit_count": 5,
-        "uuid_aware_mode": true
+        "passed": true,
+        "contract_only": false,
+        "hit_count": 5,
+        "min_hit_count": 1,
+        "hit_ok": true,
+        "missing_chunk_fingerprints": [],
+        "work_id_ok": true,
+        "filter_work_id": null
       },
-      "answer_vector_preview": "Retrieved context (not LLM-paraphrased): As discussed in section 4.2, we employ a compound scaling method to jointly scale up all dimensions of depth/width/resolution for backbone, BiFPN, and box/clas",
-      "answer_hybrid_preview": "Retrieved context (not LLM-paraphrased): As discussed in section 4.2, we employ a compound scaling method to jointly scale up all dimensions of depth/width/resolution for backbone, BiFPN, and box/clas",
-      "wall_clock_seconds": 0.122072,
-      "run_metadata": {
-        "extraction_llm_enabled": true,
-        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
-        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
-        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
-        "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
-        "semantic_extraction_enabled": true
-      }
+      "retrieval_trace": {
+        "embedding": {
+          "embedding_model": "baai/bge-m3",
+          "vector_dim": 1024
+        },
+        "hit_count": 5,
+        "filter_work_id": null,
+        "resolved_work_id": "142db14f-610a-44ca-b928-83aa48f749a0",
+        "qdrant_collection": "chunks",
+        "top_k_requested": 5,
+        "citations_returned": 5,
+        "top_hit_scores": [
+          0.68455887,
+          0.66631424,
+          0.70509905,
+          0.7020234,
+          0.6861775
+        ],
+        "query_preview": "Compound scaling of depth, width, and input resolution for efficient object detection.",
+        "answer_synthesis": {
+          "mode": "deterministic_snippets",
+          "second_stage_llm": false
+        },
+        "retrieval_mode": "vector",
+        "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
+        "degraded": []
+      },
+      "graph_context": {
+        "methods": [
+          "Weighted Bi-directional Feature Pyramid Network (BiFPN)"
+        ],
+        "datasets": [
+          "COCO",
+          "PASCAL VOC 2012"
+        ],
+        "semantic_available": true,
+        "context_work_id": "142db14f-610a-44ca-b928-83aa48f749a0",
+        "degraded": [],
+        "error": null
+      },
+      "citations": [
+        {
+          "rank": 1,
+          "score": 0.68455887,
+          "work_id": "142db14f-610a-44ca-b928-83aa48f749a0",
+          "document_id": "c71a0669-e930-4dc3-97ff-721fd20b57bf",
+          "chunk_fingerprint": "cd65fc682dda234e1cf140a3fe668cb4e6db9994b0d1ef0535047e71732706c4",
+          "section_path": "EfficientDet: Scalable and Efficient Object Detection / Abstract",
+          "excerpt": "## Abstract\n\nModel efficiency has become increasingly important in computer vision. In this paper, we systematically study neural network architecture design choices for object detection and propose several key optimizations to improve efficiency. First, we propose a weighted bi-directional feature pyramid network (BiFPN), which allows easy and fast multi-scale feature fusion; Second, we propose a compound scaling method that uniformly scales the resolution, depth, and width for all backbone, feature network, and box/class prediction networks at the same time. Based on these optimizations and ",
+          "chunk_kind": "abstract",
+          "language": "en"
+        },
+        {
+          "rank": 2,
+          "score": 0.66631424,
+          "work_id": "a43b5b96-742f-499b-a4c3-fbe0c1a4d465",
+          "document_id": "12ee2f01-8fe7-4169-bddb-e03b0727c29d",
+          "chunk_fingerprint": "0215dbacca0872f4f1d20c069fe2840bc15fb6e48292963381f670c7ea5e375b",
+          "section_path": "Rich feature hierarchies for accurate object detection and semantic segmentation / Abstract",
+          "excerpt": "## Abstract\n\nObject detection performance, as measured on the canonical PASCAL VOC dataset, has plateaued in the last few years. The best-performing methods are complex ensemble systems that typically combine multiple low-level image features with high-level context. In this paper, we propose a simple and scalable detection algorithm that improves mean average precision (mAP) by more than 30% relative to the previous best result on VOC 2012—achieving a mAP of 53.3%. Our approach combines two key insights: (1) one can apply high-capacity convolutional neural networks (CNNs) to bottom-up region ",
+          "chunk_kind": "abstract",
+          "language": "en"
+        },
+        {
+          "rank": 3,
+          "score": 0.70509905,
+          "work_id": "142db14f-610a-44ca-b928-83aa48f749a0",
+          "document_id": "c71a0669-e930-4dc3-97ff-721fd20b57bf",
+          "chunk_fingerprint": "638f73d4419d2588217414bdbbc3914cf27287018b0fe9926f65a2b9cfea8316",
+          "section_path": "EfficientDet: Scalable and Efficient Object Detection / 7. Conclusion",
+          "excerpt": "## 7. Conclusion\n\nIn this paper, we systematically study network architecture design choices for efficient object detection, and propose a weighted bidirectional feature network and a customized compound scaling method, in order to improve accuracy and efficiency. Based on these optimizations, we develop a new family of detectors, named EfficientDet, which consistently achieve better accuracy and efficiency than the prior art across a wide spectrum of resource constraints. In particular, our scaled EfficientDet achieves state-of-the-art accuracy with much fewer parameters and FLOPs than previo",
+          "chunk_kind": "discussion",
+          "language": "en"
+        },
+        {
+          "rank": 4,
+          "score": 0.7020234,
+          "work_id": "142db14f-610a-44ca-b928-83aa48f749a0",
+          "document_id": "c71a0669-e930-4dc3-97ff-721fd20b57bf",
+          "chunk_fingerprint": "5097e725bf3392a0d9d3d8ff39be6c68056c42e26c4166e541e650ac11c25d00",
+          "section_path": "EfficientDet: Scalable and Efficient Object Detection / 4. EfficientDet / 4.2. Compound Scaling",
+          "excerpt": "### 4.2. Compound Scaling\n\nAiming at optimizing both accuracy and efficiency, we would like to develop a family of models that can meet a wide spectrum of resource constraints. A key challenge here is how to scale up a baseline EfficientDet model.\n\nPrevious works mostly scale up a baseline detector by employing bigger backbone networks (e.g., ResNeXt [41] or AmoebaNet [32]), using larger input images, or stacking more FPN layers [10]. These methods are usually ineffective since they only focus on a single or limited scaling dimensions. Recent work [39] shows remarkable performance on image cla",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 5,
+          "score": 0.6861775,
+          "work_id": "142db14f-610a-44ca-b928-83aa48f749a0",
+          "document_id": "c71a0669-e930-4dc3-97ff-721fd20b57bf",
+          "chunk_fingerprint": "23bea37f8bee18640e7f7f9b3cdf1947dcab59e75d38a5dadac55402fd804495",
+          "section_path": "EfficientDet: Scalable and Efficient Object Detection / 6. Ablation Study / 6.4. Compound Scaling",
+          "excerpt": "### 6.4. Compound Scaling\n\nAs discussed in section 4.2, we employ a compound scaling method to jointly scale up all dimensions of depth/width/resolution for backbone, BiFPN, and box/class prediction networks. Figure 6 compares our compound scaling with other alternative methods that scale up a single dimension of resolution/depth/width. Although start-\n\ning from the same baseline detector, our compound scaling method achieves better efficiency than other methods, suggesting the benefits of jointly scaling by better balancing difference architecture dimensions.",
+          "chunk_kind": "body",
+          "language": "en"
+        }
+      ],
+      "answer": "Retrieved context (not LLM-paraphrased): ## Abstract\n\nModel efficiency has become increasingly important in computer vision. In this paper, we systematically study neural network architecture design choices for object detection and propose several key optimizations to improve efficiency. First, we propose a weighted bi-directional feature pyramid network (BiFPN), which allows easy and fast multi-scale feature fusion; Second, we propose a ## Abstract\n\nObject detection performance, as measured on the canonical PASCAL VOC dataset, has plateaued in the last few years. The best-performing methods are complex ensemble systems that typically combine multiple low-level image features with high-level context. In this paper, we propose a simple and scalable detection algorithm that improves mean average precision (mAP) by more than 30% rela ## 7. Conclusion\n\nIn this paper, we systematically study network architecture design choices for efficient object detection, and propose a weighted bidirectional feature network and a customized compound scaling method, in order to improve accuracy and efficiency. Based on these optimizations, we develop a new family of detectors, named EfficientDet, which consistently achieve better accuracy an…",
+      "answer_preview": "Retrieved context (not LLM-paraphrased): ## Abstract\n\nModel efficiency has become increasingly important in computer vision. In this paper, we systematically study neural network architecture design choices for object detection and propose several key optimizations to improve efficiency. First, we propose a weighted bi-directional feature pyramid network (BiFPN), which allows easy and fast multi-s",
+      "wall_clock_seconds": 0.045
     },
     {
       "case_id": "ha_focal_loss",
+      "question": "Focal loss for addressing extreme foreground-background class imbalance in dense object detection.",
       "question_preview": "Focal loss for addressing extreme foreground-background class imbalance in dense object detection.",
       "metrics": {
-        "passed": false,
-        "mrr_vector": 0.0,
-        "mrr_hybrid": 0.0,
-        "mrr_delta": 0.0,
-        "mrr_delta_per_mode": {
-          "vector": 0.0,
-          "hybrid": 0.0
-        },
-        "hybrid_regression": false,
-        "min_mrr_delta_hybrid_minus_vector": 0.05,
-        "mrr_k": 10,
-        "relevant_count": 2,
-        "vector_hit_count": 5,
-        "hybrid_hit_count": 5,
-        "uuid_aware_mode": true
+        "passed": true,
+        "contract_only": false,
+        "hit_count": 5,
+        "min_hit_count": 1,
+        "hit_ok": true,
+        "missing_chunk_fingerprints": [],
+        "work_id_ok": true,
+        "filter_work_id": null
       },
-      "answer_vector_preview": "Retrieved context (not LLM-paraphrased): Focal Loss for Dense Object Detection\nTsung-Yi Lin Priya Goyal Ross Girshick Kaiming He Piotr Doll ́ar\nFacebook AI Research (FAIR)\n0 0.2 0.4 0.6 0.8 1\nprobabil",
-      "answer_hybrid_preview": "Retrieved context (not LLM-paraphrased): Focal Loss for Dense Object Detection\nTsung-Yi Lin Priya Goyal Ross Girshick Kaiming He Piotr Doll ́ar\nFacebook AI Research (FAIR)\n0 0.2 0.4 0.6 0.8 1\nprobabil",
-      "wall_clock_seconds": 0.128601,
-      "run_metadata": {
-        "extraction_llm_enabled": true,
-        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
-        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
-        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
-        "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
-        "semantic_extraction_enabled": true
-      }
+      "retrieval_trace": {
+        "embedding": {
+          "embedding_model": "baai/bge-m3",
+          "vector_dim": 1024
+        },
+        "hit_count": 5,
+        "filter_work_id": null,
+        "resolved_work_id": "bc0d4f69-040a-428c-bc44-04ebf4c52dbc",
+        "qdrant_collection": "chunks",
+        "top_k_requested": 5,
+        "citations_returned": 5,
+        "top_hit_scores": [
+          0.6927182,
+          0.6842098,
+          0.6293229,
+          0.6241368,
+          0.6153884
+        ],
+        "query_preview": "Focal loss for addressing extreme foreground-background class imbalance in dense object detection.",
+        "answer_synthesis": {
+          "mode": "deterministic_snippets",
+          "second_stage_llm": false
+        },
+        "retrieval_mode": "vector",
+        "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
+        "degraded": []
+      },
+      "graph_context": {
+        "methods": [
+          "Feature Pyramid Network (FPN)",
+          "Focal Loss",
+          "Mask R-CNN",
+          "RetinaNet"
+        ],
+        "datasets": [
+          "COCO"
+        ],
+        "semantic_available": true,
+        "context_work_id": "bc0d4f69-040a-428c-bc44-04ebf4c52dbc",
+        "degraded": [],
+        "error": null
+      },
+      "citations": [
+        {
+          "rank": 1,
+          "score": 0.6927182,
+          "work_id": "bc0d4f69-040a-428c-bc44-04ebf4c52dbc",
+          "document_id": "27d1cc88-6537-4762-b49c-8ef3548f4fba",
+          "chunk_fingerprint": "36c7c2733af00634d5eff1fb03495c91b6249c2946409f1e23b3e8a3fe9a1e29",
+          "section_path": "(document)",
+          "excerpt": "Focal Loss for Dense Object Detection\nTsung-Yi Lin Priya Goyal Ross Girshick Kaiming He Piotr Doll ́ar\nFacebook AI Research (FAIR)\n0 0.2 0.4 0.6 0.8 1\nprobability of ground truth class\n0\n1\n2\n3\n4\n5loss\n = 0\n = 0.5\n = 1\n = 2\n = 5\nwell-classi/f_ied\nexamples\nwell-classi/f_ied\nexamples\nCE(pt) =− log(pt)\nFL(pt) =−(1−pt)γ log(pt)\nFigure 1. We propose a novel loss we term the Focal Loss that\nadds a factor (1− pt)γ to the standard cross entropy criterion.\nSettingγ >0 reduces the relative loss for well-classified examples\n(pt >. 5), putting more focus on hard, misclassified examples. As\nour experiments ",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 2,
+          "score": 0.6842098,
+          "work_id": "bc0d4f69-040a-428c-bc44-04ebf4c52dbc",
+          "document_id": "27d1cc88-6537-4762-b49c-8ef3548f4fba",
+          "chunk_fingerprint": "2d9ba26bc3595237f7795e39c987e368509d037fcc2d14174e4ae9021d1a6b8f",
+          "section_path": "(document)",
+          "excerpt": "larger compute budget [17]. In con-\ntrast, the aim of this work is to understand if one-stage de-\ntectors can match or surpass the accuracy of two-stage de-\ntectors while running at similar or faster speeds.\nThe design of our RetinaNet detector shares many simi-\nlarities with previous dense detectors, in particular the con-\ncept of ‘anchors’ introduced by RPN [28] and use of fea-\ntures pyramids as in SSD [22] and FPN [20]. We empha-\nsize that our simple detector achieves top results not based\non innovations in network design but due to our novel loss.\n2\n\nClass Imbalance: Both classic one-stage",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 3,
+          "score": 0.6293229,
+          "work_id": "3ca82fea-ba1d-4478-b34d-9182e88252de",
+          "document_id": "d8342dd6-7af5-4f83-ba84-9852c53449f6",
+          "chunk_fingerprint": "aae29b6bc40fa5ebe17764b57f3622a8c9585339485695c23b73087ec4267a81",
+          "section_path": "FCOS: Fully Convolutional One-Stage Object Detection / 3. Our Approach",
+          "excerpt": "## 3. Our Approach\n\nIn this section, we first reformulate object detection in a per-pixel prediction fashion. Next, we show that how we make use of multi-level prediction to improve the recall and resolve the ambiguity resulted from overlapped bounding boxes. Finally, we present our proposed “center-ness” branch, which helps suppress the low-quality detected bounding boxes and improves the overall performance by a large margin.\n\n### 3.1. Fully Convolutional One-Stage Object Detector\n\nLet $F_i \\in \\mathbb{R}^{H \\times W \\times C}$ be the feature maps at layer $i$ of a backbone CNN and $s$ be th",
+          "chunk_kind": "method",
+          "language": "en"
+        },
+        {
+          "rank": 4,
+          "score": 0.6241368,
+          "work_id": "3ca82fea-ba1d-4478-b34d-9182e88252de",
+          "document_id": "d8342dd6-7af5-4f83-ba84-9852c53449f6",
+          "chunk_fingerprint": "229d3cf16a219b6728c72c9271d01b2c5e4dc8d9d821c58185790b76f385acb0",
+          "section_path": "FCOS: Fully Convolutional One-Stage Object Detection / 1. Introduction",
+          "excerpt": "## 1. Introduction\n\nObject detection is a fundamental yet challenging task in computer vision, which requires the algorithm to predict a bounding box with a category label for each instance of interest in an image. All current mainstream detectors such as Faster R-CNN [24], SSD [18] and YOLOv2, v3 [23] rely on a set of pre-defined anchor boxes and it has long been believed that the use of anchor boxes is the key to detectors’ success. Despite their great success, it is important to note that anchor-based detectors suffer some drawbacks: 1) As shown in [15, 24], detection performance is sensiti",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 5,
+          "score": 0.6153884,
+          "work_id": "224288cb-8c14-48ed-8245-abb2c5025ed7",
+          "document_id": "b8519004-4a28-4a8a-ace8-683e89bb1f1a",
+          "chunk_fingerprint": "2693206e9631330e52bdee0d4c30cb184b734bd80864d8b351fbb34b5667b135",
+          "section_path": "DEFORMABLE DETR: DEFORMABLE TRANSFORMERS FOR END-TO-END OBJECT DETECTION / ABSTRACT",
+          "excerpt": "## ABSTRACT\n\nDETR has been recently proposed to eliminate the need for many hand-designed components in object detection while demonstrating good performance. However, it suffers from slow convergence and limited feature spatial resolution, due to the limitation of Transformer attention modules in processing image feature maps. To mitigate these issues, we proposed Deformable DETR, whose attention modules only attend to a small set of key sampling points around a reference. Deformable DETR can achieve better performance than DETR (especially on small objects) with 10× less training epochs. Ext",
+          "chunk_kind": "abstract",
+          "language": "en"
+        }
+      ],
+      "answer": "Retrieved context (not LLM-paraphrased): Focal Loss for Dense Object Detection\nTsung-Yi Lin Priya Goyal Ross Girshick Kaiming He Piotr Doll ́ar\nFacebook AI Research (FAIR)\n0 0.2 0.4 0.6 0.8 1\nprobability of ground truth class\n0\n1\n2\n3\n4\n5loss\n = 0\n = 0.5\n = 1\n = 2\n = 5\nwell-classi/f_ied\nexamples\nwell-classi/f_ied\nexamples\nCE(pt) =− log(pt)\nFL(pt) =−(1−pt)γ log(pt)\nFigure 1. We propose a novel loss we term the Focal Loss that\nadds a factor larger compute budget [17]. In con-\ntrast, the aim of this work is to understand if one-stage de-\ntectors can match or surpass the accuracy of two-stage de-\ntectors while running at similar or faster speeds.\nThe design of our RetinaNet detector shares many simi-\nlarities with previous dense detectors, in particular the con-\ncept of ‘anchors’ introduced by RPN [28] and use of fea-\ntures pyramids as ## 3. Our Approach\n\nIn this section, we first reformulate object detection in a per-pixel prediction fashion. Next, we show that how we make use of multi-level prediction to improve the recall and resolve the ambiguity resulted from overlapped bounding boxes. Finally, we present our proposed “center-ness” branch, which helps suppress the low-quality detected bounding boxes and improves the overa…",
+      "answer_preview": "Retrieved context (not LLM-paraphrased): Focal Loss for Dense Object Detection\nTsung-Yi Lin Priya Goyal Ross Girshick Kaiming He Piotr Doll ́ar\nFacebook AI Research (FAIR)\n0 0.2 0.4 0.6 0.8 1\nprobability of ground truth class\n0\n1\n2\n3\n4\n5loss\n = 0\n = 0.5\n = 1\n = 2\n = 5\nwell-classi/f_ied\nexamples\nwell-classi/f_ied\nexamples\nCE(pt) =− log(pt)\nFL(pt) =−(1−pt)γ log(pt)\nFigure 1. We propose a novel loss ",
+      "wall_clock_seconds": 0.039
     },
     {
       "case_id": "ha_iou_loss_quality",
+      "question": "IoU-based localisation loss and quality-aware classification for dense object detection.",
       "question_preview": "IoU-based localisation loss and quality-aware classification for dense object detection.",
       "metrics": {
-        "passed": false,
-        "mrr_vector": 0.0,
-        "mrr_hybrid": 0.0,
-        "mrr_delta": 0.0,
-        "mrr_delta_per_mode": {
-          "vector": 0.0,
-          "hybrid": 0.0
-        },
-        "hybrid_regression": false,
-        "min_mrr_delta_hybrid_minus_vector": 0.05,
-        "mrr_k": 10,
-        "relevant_count": 3,
-        "vector_hit_count": 5,
-        "hybrid_hit_count": 5,
-        "uuid_aware_mode": true
+        "passed": true,
+        "contract_only": false,
+        "hit_count": 5,
+        "min_hit_count": 1,
+        "hit_ok": true,
+        "missing_chunk_fingerprints": [],
+        "work_id_ok": true,
+        "filter_work_id": null
       },
-      "answer_vector_preview": "Retrieved context (not LLM-paraphrased): ## 1 Introduction\n\nRecently, dense detectors have gradually led the trend of object detection, whilst the attention on the *representation* of bounding boxes a",
-      "answer_hybrid_preview": "Retrieved context (not LLM-paraphrased): ## 1 Introduction\n\nRecently, dense detectors have gradually led the trend of object detection, whilst the attention on the *representation* of bounding boxes a",
-      "wall_clock_seconds": 0.149831,
-      "run_metadata": {
-        "extraction_llm_enabled": true,
-        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
-        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
-        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
-        "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
-        "semantic_extraction_enabled": true
-      }
+      "retrieval_trace": {
+        "embedding": {
+          "embedding_model": "baai/bge-m3",
+          "vector_dim": 1024
+        },
+        "hit_count": 5,
+        "filter_work_id": null,
+        "resolved_work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
+        "qdrant_collection": "chunks",
+        "top_k_requested": 5,
+        "citations_returned": 5,
+        "top_hit_scores": [
+          0.66185665,
+          0.6231853,
+          0.65743077,
+          0.6201255,
+          0.61289066
+        ],
+        "query_preview": "IoU-based localisation loss and quality-aware classification for dense object detection.",
+        "answer_synthesis": {
+          "mode": "deterministic_snippets",
+          "second_stage_llm": false
+        },
+        "retrieval_mode": "vector",
+        "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
+        "degraded": []
+      },
+      "graph_context": {
+        "methods": [
+          "Cascade R-CNN"
+        ],
+        "datasets": [
+          "COCO"
+        ],
+        "semantic_available": true,
+        "context_work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
+        "degraded": [],
+        "error": null
+      },
+      "citations": [
+        {
+          "rank": 1,
+          "score": 0.66185665,
+          "work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
+          "document_id": "1238c41e-e303-46e1-a05e-4b11db55f6ac",
+          "chunk_fingerprint": "4a64a02075e3924602513a2dd96ff55022204b0b2c6796fd770fba4b2c79d8c0",
+          "section_path": "Cascade R-CNN: Delving into High Quality Object Detection / 1. Introduction",
+          "excerpt": "## 1. Introduction\n\nObject detection is a complex problem, requiring the solution of two main tasks. First, the detector must solve the recognition problem, to distinguish foreground objects from background and assign them the proper object class labels. Second, the detector must solve the localization problem, to assign accurate bounding boxes to different objects. Both of these are particularly difficult because the detector faces many “close” false positives, corresponding to “close but not correct” bounding boxes. The detector must find the true positives while suppressing these close fals",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 2,
+          "score": 0.6231853,
+          "work_id": "cda6a480-8512-4b85-970a-65377bd09c24",
+          "document_id": "bd7a00ba-20df-45a1-9300-055cbeeea0f6",
+          "chunk_fingerprint": "a10513f3719a7e6dc3b8a26ed05dc2920628f6304eb92f40c047e1f9bc820bc0",
+          "section_path": "YOLO9000: Better, Faster, Stronger / 1. Introduction",
+          "excerpt": "## 1. Introduction\n\nGeneral purpose object detection should be fast, accurate, and able to recognize a wide variety of objects. Since the introduction of neural networks, detection frameworks have become increasingly fast and accurate. However, most detection methods are still constrained to a small set of objects.\n\nCurrent object detection datasets are limited compared to datasets for other tasks like classification and tagging. The most common detection datasets contain thousands to hundreds of thousands of images with dozens to hundreds of tags [3] [10] [2]. Classification datasets have mil",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 3,
+          "score": 0.65743077,
+          "work_id": "d475eb45-2a4c-49ce-b611-bc444d1b8ea4",
+          "document_id": "44e9e076-b97e-47a3-aa27-6e86c299e328",
+          "chunk_fingerprint": "ce1a7a56a8c8e3a6a129f10f532cbf8ee8d58eeae081869d930b7927db2d17e3",
+          "section_path": "Generalized Focal Loss: Learning Qualified and Distributed Bounding Boxes for Dense Object Detection",
+          "excerpt": "# Generalized Focal Loss: Learning Qualified and Distributed Bounding Boxes for Dense Object Detection\n\nXiang Li$^{1,2}$, Wenhai Wang$^{3,2}$, Lijun Wu$^{4}$, Shuo Chen$^{1}$, Xiaolin Hu$^{5}$, Jun Li$^{1}$, Jinhui Tang$^{1}$, and Jian Yang$^{1*}$\n\n$^{1}$PCALab, Nanjing University of Science and Technology $^{2}$Momenta $^{3}$Nanjing University $^{4}$ Microsoft Research $^{5}$Tsinghua University\n\n{xiang.li.implus, shuochen, jinhuitang, csjyang}@njust.edu.cn, wangwenhai362@163.com, xlhu@mail.tsinghua.edu.cn, {apeterswu,junl.mldl}@gmail.com\n\n## Abstract\n\nOne-stage detector basically formulates o",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 4,
+          "score": 0.6201255,
+          "work_id": "d475eb45-2a4c-49ce-b611-bc444d1b8ea4",
+          "document_id": "44e9e076-b97e-47a3-aa27-6e86c299e328",
+          "chunk_fingerprint": "7d4992c6145169fe14525559b8348b18d88aeae70c682a26419b5ab1bacc07b5",
+          "section_path": "Generalized Focal Loss: Learning Qualified and Distributed Bounding Boxes for Dense Object Detection / 1 Introduction",
+          "excerpt": "## 1 Introduction\n\nRecently, dense detectors have gradually led the trend of object detection, whilst the attention on the *representation* of bounding boxes and their localization quality estimation leads to the encouraging advancement. Specifically, bounding box *representation* is modeled as a simple Dirac delta distribution [10] [18] [32] [26] [31], which is widely used over past years. As popularized in FCOS [26],\n\n*Corresponding author.\n\nPreprint. Under review.\n\n```\n\n```markdown\nuse the threshold 0.05 to filter out a variety of backgrounds, and output top 1000 candidate detections per fe",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 5,
+          "score": 0.61289066,
+          "work_id": "4aa9ec08-c5c8-40f2-805e-df0b0bb73424",
+          "document_id": "212eb043-b8fc-4f81-b1c6-95b2343ebdac",
+          "chunk_fingerprint": "0edb7c15c91e5d9bb3f2d4699da17a005cea280996bc793b9f1c2d05da22f603",
+          "section_path": "Selective Search for Object Recognition / Abstract",
+          "excerpt": "## Abstract\n\nThis paper addresses the problem of generating possible object locations for use in object recognition. We introduce Selective Search which combines the strength of both an exhaustive search and segmentation. Like segmentation, we use the image structure to guide our sampling process. Like exhaustive search, we aim to capture all possible object locations. Instead of a single technique to generate possible object locations, we *diversify* our search and use a variety of complementary image partitionings to deal with as many image conditions as possible. Our Selective Search result",
+          "chunk_kind": "abstract",
+          "language": "en"
+        }
+      ],
+      "answer": "Retrieved context (not LLM-paraphrased): ## 1. Introduction\n\nObject detection is a complex problem, requiring the solution of two main tasks. First, the detector must solve the recognition problem, to distinguish foreground objects from background and assign them the proper object class labels. Second, the detector must solve the localization problem, to assign accurate bounding boxes to different objects. Both of these are particularly  ## 1. Introduction\n\nGeneral purpose object detection should be fast, accurate, and able to recognize a wide variety of objects. Since the introduction of neural networks, detection frameworks have become increasingly fast and accurate. However, most detection methods are still constrained to a small set of objects.\n\nCurrent object detection datasets are limited compared to datasets for other tasks # Generalized Focal Loss: Learning Qualified and Distributed Bounding Boxes for Dense Object Detection\n\nXiang Li$^{1,2}$, Wenhai Wang$^{3,2}$, Lijun Wu$^{4}$, Shuo Chen$^{1}$, Xiaolin Hu$^{5}$, Jun Li$^{1}$, Jinhui Tang$^{1}$, and Jian Yang$^{1*}$\n\n$^{1}$PCALab, Nanjing University of Science and Technology $^{2}$Momenta $^{3}$Nanjing University $^{4}$ Microsoft Research $^{5}$Tsinghua University…",
+      "answer_preview": "Retrieved context (not LLM-paraphrased): ## 1. Introduction\n\nObject detection is a complex problem, requiring the solution of two main tasks. First, the detector must solve the recognition problem, to distinguish foreground objects from background and assign them the proper object class labels. Second, the detector must solve the localization problem, to assign accurate bounding boxes to different",
+      "wall_clock_seconds": 0.044
     },
     {
       "case_id": "ha_keypoint_corner",
+      "question": "Object detection by predicting paired bounding-box keypoints (top-left and bottom-right corners).",
       "question_preview": "Object detection by predicting paired bounding-box keypoints (top-left and bottom-right corners).",
       "metrics": {
-        "passed": false,
-        "mrr_vector": 0.0,
-        "mrr_hybrid": 0.0,
-        "mrr_delta": 0.0,
-        "mrr_delta_per_mode": {
-          "vector": 0.0,
-          "hybrid": 0.0
-        },
-        "hybrid_regression": false,
-        "min_mrr_delta_hybrid_minus_vector": 0.05,
-        "mrr_k": 10,
-        "relevant_count": 2,
-        "vector_hit_count": 5,
-        "hybrid_hit_count": 5,
-        "uuid_aware_mode": true
+        "passed": true,
+        "contract_only": false,
+        "hit_count": 5,
+        "min_hit_count": 1,
+        "hit_ok": true,
+        "missing_chunk_fingerprints": [],
+        "work_id_ok": true,
+        "filter_work_id": null
       },
-      "answer_vector_preview": "Retrieved context (not LLM-paraphrased): ### 3.2. Object Detection as Keypoint Triplets\n\nThe overall network architecture is shown in Figure 2. We represent each object by a center keypoint and a pair",
-      "answer_hybrid_preview": "Retrieved context (not LLM-paraphrased): ### 3.2. Object Detection as Keypoint Triplets\n\nThe overall network architecture is shown in Figure 2. We represent each object by a center keypoint and a pair",
-      "wall_clock_seconds": 0.174916,
-      "run_metadata": {
-        "extraction_llm_enabled": true,
-        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
-        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
-        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
-        "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
-        "semantic_extraction_enabled": true
-      }
+      "retrieval_trace": {
+        "embedding": {
+          "embedding_model": "baai/bge-m3",
+          "vector_dim": 1024
+        },
+        "hit_count": 5,
+        "filter_work_id": null,
+        "resolved_work_id": "7dd806fd-db66-4c7b-8440-d98e0cab0827",
+        "qdrant_collection": "chunks",
+        "top_k_requested": 5,
+        "citations_returned": 5,
+        "top_hit_scores": [
+          0.7409593,
+          0.7275177,
+          0.7057805,
+          0.6976948,
+          0.7375944
+        ],
+        "query_preview": "Object detection by predicting paired bounding-box keypoints (top-left and bottom-right corners).",
+        "answer_synthesis": {
+          "mode": "deterministic_snippets",
+          "second_stage_llm": false
+        },
+        "retrieval_mode": "vector",
+        "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
+        "degraded": []
+      },
+      "graph_context": {
+        "methods": [
+          "CornerNet"
+        ],
+        "datasets": [
+          "MS COCO"
+        ],
+        "semantic_available": true,
+        "context_work_id": "7dd806fd-db66-4c7b-8440-d98e0cab0827",
+        "degraded": [],
+        "error": null
+      },
+      "citations": [
+        {
+          "rank": 1,
+          "score": 0.7409593,
+          "work_id": "7dd806fd-db66-4c7b-8440-d98e0cab0827",
+          "document_id": "0d7b936e-91f0-4546-bbbd-6625bf1dc3d7",
+          "chunk_fingerprint": "6de734c6ad25329a4ec81c0cbc8bc7814a28732796ee75dfe004ec84cda1c561",
+          "section_path": "CornerNet: Detecting Objects as Paired Keypoints / 3 CornerNet / 3.1 Overview",
+          "excerpt": "### 3.1 Overview\n\nIn CornerNet, we detect an object as a pair of keypoints—the top-left corner and bottom-right corner of the bounding box. A convolutional network predicts two sets of heatmaps to represent the locations of corners of different object categories, one set for the top-left corners and the other for the bottom-right corners. The network also predicts an embedding vector for each detected corner [Newell et al., 2017] such that the distance between the embeddings of two corners from the same object is small. To produce tighter bounding boxes, the network also predicts offsets to sl",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 2,
+          "score": 0.7275177,
+          "work_id": "33599c70-fbad-41b1-9faf-96e5457699f9",
+          "document_id": "5c1459bd-c4ec-4f02-9d75-e38429ac2827",
+          "chunk_fingerprint": "758645a5670c70ddf97164488a98849d319af4134106086de9db0eb9ef8101c0",
+          "section_path": "Bridging the Gap Between Anchor-based and Anchor-free Detection via Adaptive Training Sample Selection / 2. Related Work / 2.2. Anchor-free Detector",
+          "excerpt": "### 2.2. Anchor-free Detector\n\n**Keypoint-based method.** This type of anchor-free method first locates several pre-defined or self-learned keypoints, and then generates bounding boxes to detect objects. CornerNet [26] detects an object bounding box as a pair of keypoints (top-left corner and bottom-right corner) and CornerNet-Lite [27] introduces CornerNet-Saccade and CornerNet-Squeeze to improve its speed. The second stage of Grid R-CNN [39] locates objects via predicting grid points with the position sensitive merits of FCN and then determining the bounding box guided by the grid. ExtremeNe",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 3,
+          "score": 0.7057805,
+          "work_id": "99835def-0a25-4cc5-9d79-bdda878cae15",
+          "document_id": "ca13b47e-ce47-47dd-8d65-54c3c31e9b62",
+          "chunk_fingerprint": "c470b63389da4b1d3acb56fe5b3a2e27fb5d547c3611787ce0d2b7b42f3a0cc3",
+          "section_path": "CenterNet: Keypoint Triplets for Object Detection / 1. Introduction",
+          "excerpt": "## 1. Introduction\n\nObject detection has been significantly improved and advanced with the help of deep learning, especially convolutional neural networks [11] (CNNs). In the current era, one of the most popular flowcharts is anchor-based [10, 12, 27, 31, 33], which placed a set of rectangles with pre-defined sizes, and regressed them to the desired place with the help of ground-truth objects. These approaches often need a large number of anchors to ensure a sufficiently high IoU (intersection over union) rate with the ground-truth objects, and the size and aspect ratio of each anchor box need",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 4,
+          "score": 0.6976948,
+          "work_id": "99835def-0a25-4cc5-9d79-bdda878cae15",
+          "document_id": "ca13b47e-ce47-47dd-8d65-54c3c31e9b62",
+          "chunk_fingerprint": "15a01a60c59c09a60abf62c2959ce1fb60f0f2c780477bced686171f27d2892f",
+          "section_path": "CenterNet: Keypoint Triplets for Object Detection / Abstract",
+          "excerpt": "## Abstract\n\nIn object detection, keypoint-based approaches often suffer a large number of incorrect object bounding boxes, arguably due to the lack of an additional look into the cropped regions. This paper presents an efficient solution which explores the visual patterns within each cropped region with minimal costs. We build our framework upon a representative one-stage keypoint-based detector named CornerNet. Our approach, named CenterNet, detects each object as a triplet, rather than a pair, of keypoints, which improves both precision and recall. Accordingly, we design two customized modu",
+          "chunk_kind": "abstract",
+          "language": "en"
+        },
+        {
+          "rank": 5,
+          "score": 0.7375944,
+          "work_id": "99835def-0a25-4cc5-9d79-bdda878cae15",
+          "document_id": "ca13b47e-ce47-47dd-8d65-54c3c31e9b62",
+          "chunk_fingerprint": "32904294808707ac8709d550ee45fa871b188456265f03d5c982de94f246d3d6",
+          "section_path": "CenterNet: Keypoint Triplets for Object Detection",
+          "excerpt": "nt. Our intuition is that, if a predicted bounding box has a high IoU with the ground-truth box, then the probability that the center keypoint in its central region is predicted as the same class is high, and vice versa. Thus, during inference, after a proposal is generated as a pair of corner keypoints, we determine if the proposal is indeed an object by checking if there is a center keypoint of the same class falling within its central region. The idea, as shown in Figure 1, is to use a triplet, instead of a pair, of keypoints to represent each object.\n\nAccordingly, for better detecting cent",
+          "chunk_kind": "body",
+          "language": "en"
+        }
+      ],
+      "answer": "Retrieved context (not LLM-paraphrased): ### 3.1 Overview\n\nIn CornerNet, we detect an object as a pair of keypoints—the top-left corner and bottom-right corner of the bounding box. A convolutional network predicts two sets of heatmaps to represent the locations of corners of different object categories, one set for the top-left corners and the other for the bottom-right corners. The network also predicts an embedding vector for each dete ### 2.2. Anchor-free Detector\n\n**Keypoint-based method.** This type of anchor-free method first locates several pre-defined or self-learned keypoints, and then generates bounding boxes to detect objects. CornerNet [26] detects an object bounding box as a pair of keypoints (top-left corner and bottom-right corner) and CornerNet-Lite [27] introduces CornerNet-Saccade and CornerNet-Squeeze to improve ## 1. Introduction\n\nObject detection has been significantly improved and advanced with the help of deep learning, especially convolutional neural networks [11] (CNNs). In the current era, one of the most popular flowcharts is anchor-based [10, 12, 27, 31, 33], which placed a set of rectangles with pre-defined sizes, and regressed them to the desired place with the help of ground-truth objects. T…",
+      "answer_preview": "Retrieved context (not LLM-paraphrased): ### 3.1 Overview\n\nIn CornerNet, we detect an object as a pair of keypoints—the top-left corner and bottom-right corner of the bounding box. A convolutional network predicts two sets of heatmaps to represent the locations of corners of different object categories, one set for the top-left corners and the other for the bottom-right corners. The network also p",
+      "wall_clock_seconds": 0.039
     },
     {
       "case_id": "ha_set_prediction_transformer",
+      "question": "End-to-end set prediction with bipartite matching using transformer encoder-decoder for object detection.",
       "question_preview": "End-to-end set prediction with bipartite matching using transformer encoder-decoder for object detection.",
       "metrics": {
-        "passed": false,
-        "mrr_vector": 0.0,
-        "mrr_hybrid": 0.0,
-        "mrr_delta": 0.0,
-        "mrr_delta_per_mode": {
-          "vector": 0.0,
-          "hybrid": 0.0
-        },
-        "hybrid_regression": false,
-        "min_mrr_delta_hybrid_minus_vector": 0.05,
-        "mrr_k": 10,
-        "relevant_count": 5,
-        "vector_hit_count": 5,
-        "hybrid_hit_count": 5,
-        "uuid_aware_mode": true
+        "passed": true,
+        "contract_only": false,
+        "hit_count": 5,
+        "min_hit_count": 1,
+        "hit_ok": true,
+        "missing_chunk_fingerprints": [],
+        "work_id_ok": true,
+        "filter_work_id": null
       },
-      "answer_vector_preview": "Retrieved context (not LLM-paraphrased): # End-to-End Object Detection with Transformers\n\nNicolas Carion*, Francisco Massa*, Gabriel Synnaeve, Nicolas Usunier, Alexander Kirillov, and Sergey Zagoruyko",
-      "answer_hybrid_preview": "Retrieved context (not LLM-paraphrased): # End-to-End Object Detection with Transformers\n\nNicolas Carion*, Francisco Massa*, Gabriel Synnaeve, Nicolas Usunier, Alexander Kirillov, and Sergey Zagoruyko",
-      "wall_clock_seconds": 0.1165,
-      "run_metadata": {
-        "extraction_llm_enabled": true,
-        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
-        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
-        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
-        "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
-        "semantic_extraction_enabled": true
-      }
+      "retrieval_trace": {
+        "embedding": {
+          "embedding_model": "baai/bge-m3",
+          "vector_dim": 1024
+        },
+        "hit_count": 5,
+        "filter_work_id": null,
+        "resolved_work_id": "0ae8f9d9-ebcc-43f2-84c1-83c350b34d93",
+        "qdrant_collection": "chunks",
+        "top_k_requested": 5,
+        "citations_returned": 5,
+        "top_hit_scores": [
+          0.69383687,
+          0.6819376,
+          0.6904797,
+          0.66598594,
+          0.6599834
+        ],
+        "query_preview": "End-to-end set prediction with bipartite matching using transformer encoder-decoder for object detection.",
+        "answer_synthesis": {
+          "mode": "deterministic_snippets",
+          "second_stage_llm": false
+        },
+        "retrieval_mode": "vector",
+        "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
+        "degraded": []
+      },
+      "graph_context": {
+        "methods": [
+          "Bipartite Matching Loss",
+          "DETR",
+          "Panoptic Segmentation",
+          "Transformer Encoder-Decoder Architecture"
+        ],
+        "datasets": [
+          "COCO"
+        ],
+        "semantic_available": true,
+        "context_work_id": "0ae8f9d9-ebcc-43f2-84c1-83c350b34d93",
+        "degraded": [],
+        "error": null
+      },
+      "citations": [
+        {
+          "rank": 1,
+          "score": 0.69383687,
+          "work_id": "0ae8f9d9-ebcc-43f2-84c1-83c350b34d93",
+          "document_id": "df1385e2-eaac-42ef-8bf5-4519e0b7c05b",
+          "chunk_fingerprint": "1a640ac55f6bea0800c2fc48e7d5942af034a1df9d3a736e2ad7a323efe6ce0d",
+          "section_path": "End-to-End Object Detection with Transformers / 1 Introduction",
+          "excerpt": "## 1 Introduction\n\nThe goal of object detection is to predict a set of bounding boxes and category labels for each object of interest. Modern detectors address this set prediction task in an indirect way, by defining surrogate regression and classification problems on a large set of proposals [37,5], anchors [23], or window centers [53,46]. Their performances are significantly influenced by postprocessing steps to collapse near-duplicate predictions, by the design of the anchor sets and by the heuristics that assign target boxes to anchors [52]. To simplify these pipelines, we propose a direct",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 2,
+          "score": 0.6819376,
+          "work_id": "0ae8f9d9-ebcc-43f2-84c1-83c350b34d93",
+          "document_id": "df1385e2-eaac-42ef-8bf5-4519e0b7c05b",
+          "chunk_fingerprint": "d65febf5e21b49ce6be43d322c258b41c979e387307ceacb6370667b14cf883d",
+          "section_path": "End-to-End Object Detection with Transformers / 2 Related work",
+          "excerpt": "## 2 Related work\n\nOur work build on prior work in several domains: bipartite matching losses for set prediction, encoder-decoder architectures based on the transformer, parallel decoding, and object detection methods.\n\n### 2.1 Set Prediction\n\nThere is no canonical deep learning model to directly predict sets. The basic set prediction task is multilabel classification (see e.g., [40,33] for references in the context of computer vision) for which the baseline approach, one-vs-rest, does not apply to problems where there is an underlying structure between elements (i.e., near-identical boxes). T",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 3,
+          "score": 0.6904797,
+          "work_id": "0ae8f9d9-ebcc-43f2-84c1-83c350b34d93",
+          "document_id": "df1385e2-eaac-42ef-8bf5-4519e0b7c05b",
+          "chunk_fingerprint": "76c751d8f89b811fdf23c6b0145d63e0870593877e03699db6de4d1e4473949d",
+          "section_path": "End-to-End Object Detection with Transformers",
+          "excerpt": "# End-to-End Object Detection with Transformers\n\nNicolas Carion*, Francisco Massa*, Gabriel Synnaeve, Nicolas Usunier, Alexander Kirillov, and Sergey Zagoruyko\n\nFacebook AI\n\n*Equal contribution\n\n**Abstract.** We present a new method that views object detection as a direct set prediction problem. Our approach streamlines the detection pipeline, effectively removing the need for many hand-designed components like a non-maximum suppression procedure or anchor generation that explicitly encode our prior knowledge about the task. The main ingredients of the new framework, called DEtection TRansform",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 4,
+          "score": 0.66598594,
+          "work_id": "b2bd5005-b3c6-4056-bee4-62344654e63e",
+          "document_id": "99b13d71-adde-4119-b079-1e6d9ea9348e",
+          "chunk_fingerprint": "99a4a4bd3c5ce6ded99fb322e2dbbf539dddbd478b50a3c08c0ccb7fd02e904e",
+          "section_path": "DETRs Beat YOLOs on Real-time Object Detection / 2. Related Work / 2.2. End-to-end Object Detectors",
+          "excerpt": "### 2.2. End-to-end Object Detectors\n\nEnd-to-end object detectors are well-known for their streamlined pipelines. Carion et al. [4] first propose the end-to-end detector based on Transformer called DETR, which has attracted extensive attention due to its distinctive features. Particularly, DETR eliminates the hand-crafted anchor and NMS components. Instead, it employs bipartite matching and directly predicts the one-to-one object set. Despite its obvious advantages, DETR suffers from several problems: slow training convergence, high computational cost, and hard-to-optimize queries. Many DETR v",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 5,
+          "score": 0.6599834,
+          "work_id": "0ae8f9d9-ebcc-43f2-84c1-83c350b34d93",
+          "document_id": "df1385e2-eaac-42ef-8bf5-4519e0b7c05b",
+          "chunk_fingerprint": "1949d7fd7dfa414fc8e84846ee301db30526e9f307096f21719a57d0f154e496",
+          "section_path": "End-to-End Object Detection with Transformers / 2 Related work / 2.3 Object detection",
+          "excerpt": "### 2.3 Object detection\n\nMost modern object detection methods make predictions relative to some initial guesses. Two-stage detectors [37,5] predict boxes w.r.t. proposals, whereas single-stage methods make predictions w.r.t. anchors [23] or a grid of possible object centers [53,46]. Recent work [52] demonstrate that the final performance of these systems heavily depends on the exact way these initial guesses are set. In our model we are able to remove this hand-crafted process and streamline the detection process by directly predicting the set of detections with absolute box prediction w.r.t.",
+          "chunk_kind": "body",
+          "language": "en"
+        }
+      ],
+      "answer": "Retrieved context (not LLM-paraphrased): ## 1 Introduction\n\nThe goal of object detection is to predict a set of bounding boxes and category labels for each object of interest. Modern detectors address this set prediction task in an indirect way, by defining surrogate regression and classification problems on a large set of proposals [37,5], anchors [23], or window centers [53,46]. Their performances are significantly influenced by postpr ## 2 Related work\n\nOur work build on prior work in several domains: bipartite matching losses for set prediction, encoder-decoder architectures based on the transformer, parallel decoding, and object detection methods.\n\n### 2.1 Set Prediction\n\nThere is no canonical deep learning model to directly predict sets. The basic set prediction task is multilabel classification (see e.g., [40,33] for refere # End-to-End Object Detection with Transformers\n\nNicolas Carion*, Francisco Massa*, Gabriel Synnaeve, Nicolas Usunier, Alexander Kirillov, and Sergey Zagoruyko\n\nFacebook AI\n\n*Equal contribution\n\n**Abstract.** We present a new method that views object detection as a direct set prediction problem. Our approach streamlines the detection pipeline, effectively removing the need for many hand-designed…",
+      "answer_preview": "Retrieved context (not LLM-paraphrased): ## 1 Introduction\n\nThe goal of object detection is to predict a set of bounding boxes and category labels for each object of interest. Modern detectors address this set prediction task in an indirect way, by defining surrogate regression and classification problems on a large set of proposals [37,5], anchors [23], or window centers [53,46]. Their performanc",
+      "wall_clock_seconds": 0.045
     },
     {
       "case_id": "ha_two_stage_rpn_evolution",
+      "question": "Region proposal network end-to-end training with shared convolutional features for two-stage detection.",
       "question_preview": "Region proposal network end-to-end training with shared convolutional features for two-stage detection.",
       "metrics": {
-        "passed": false,
-        "mrr_vector": 0.0,
-        "mrr_hybrid": 0.0,
-        "mrr_delta": 0.0,
-        "mrr_delta_per_mode": {
-          "vector": 0.0,
-          "hybrid": 0.0
-        },
-        "hybrid_regression": false,
-        "min_mrr_delta_hybrid_minus_vector": 0.05,
-        "mrr_k": 10,
-        "relevant_count": 3,
-        "vector_hit_count": 5,
-        "hybrid_hit_count": 5,
-        "uuid_aware_mode": true
+        "passed": true,
+        "contract_only": false,
+        "hit_count": 5,
+        "min_hit_count": 1,
+        "hit_ok": true,
+        "missing_chunk_fingerprints": [],
+        "work_id_ok": true,
+        "filter_work_id": null
       },
-      "answer_vector_preview": "Retrieved context (not LLM-paraphrased): ## 3.2 Sharing Features for RPN and Fast R-CNN\n\nThus far we have described how to train a network for region proposal generation, without considering the regio",
-      "answer_hybrid_preview": "Retrieved context (not LLM-paraphrased): ## 3.2 Sharing Features for RPN and Fast R-CNN\n\nThus far we have described how to train a network for region proposal generation, without considering the regio",
-      "wall_clock_seconds": 0.119535,
-      "run_metadata": {
-        "extraction_llm_enabled": true,
-        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
-        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
-        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
-        "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
-        "semantic_extraction_enabled": true
-      }
+      "retrieval_trace": {
+        "embedding": {
+          "embedding_model": "baai/bge-m3",
+          "vector_dim": 1024
+        },
+        "hit_count": 5,
+        "filter_work_id": null,
+        "resolved_work_id": "da2a6348-1a91-447d-8a17-da475a87b75f",
+        "qdrant_collection": "chunks",
+        "top_k_requested": 5,
+        "citations_returned": 5,
+        "top_hit_scores": [
+          0.7276535,
+          0.71163666,
+          0.7070863,
+          0.7014878,
+          0.6832141
+        ],
+        "query_preview": "Region proposal network end-to-end training with shared convolutional features for two-stage detection.",
+        "answer_synthesis": {
+          "mode": "deterministic_snippets",
+          "second_stage_llm": false
+        },
+        "retrieval_mode": "vector",
+        "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
+        "degraded": []
+      },
+      "graph_context": {
+        "methods": [
+          "Fast R-CNN",
+          "Faster R-CNN",
+          "Region Proposal Network (RPN)",
+          "Selective Search"
+        ],
+        "datasets": [
+          "EdgeBoxes",
+          "ILSVRC",
+          "ImageNet",
+          "MS COCO",
+          "PASCAL VOC"
+        ],
+        "semantic_available": true,
+        "context_work_id": "da2a6348-1a91-447d-8a17-da475a87b75f",
+        "degraded": [],
+        "error": null
+      },
+      "citations": [
+        {
+          "rank": 1,
+          "score": 0.7276535,
+          "work_id": "da2a6348-1a91-447d-8a17-da475a87b75f",
+          "document_id": "7e83946e-3898-4107-8ae0-5ff7ce372c82",
+          "chunk_fingerprint": "3ef06ae79a897c2c04b57594b5326539d3bad01c36cedf39540f1bb0cdbe80d7",
+          "section_path": "Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks / 3 FASTER R-CNN / 3.2 Sharing Features for RPN and Fast R-CNN / 4-Step Alternating Training",
+          "excerpt": "#### 4-Step Alternating Training\n\nIn this paper, we adopt a pragmatic 4-step training algorithm to learn shared features via alternating optimization. In the first step, we train the RPN as described in Section 3.1.3. This network is initialized with an ImageNet-pre-trained model and fine-tuned end-to-end for the region proposal task. In the second step, we train a separate detection network by Fast R-CNN using the proposals generated by the step-1 RPN. This detection network is also initialized by the ImageNet-pre-trained model. At this point the two networks do not share convolutional layers",
+          "chunk_kind": "method",
+          "language": "en"
+        },
+        {
+          "rank": 2,
+          "score": 0.71163666,
+          "work_id": "da2a6348-1a91-447d-8a17-da475a87b75f",
+          "document_id": "7e83946e-3898-4107-8ae0-5ff7ce372c82",
+          "chunk_fingerprint": "fcce8a8bb61966a798f871d7de9b3f55d777ab6967df4b5f165b030f569820a3",
+          "section_path": "Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks / 3 FASTER R-CNN / 3.2 Sharing Features for RPN and Fast R-CNN",
+          "excerpt": "### 3.2 Sharing Features for RPN and Fast R-CNN\n\nThus far we have described how to train a network for region proposal generation, without considering the region-based object detection CNN that will utilize these proposals. For the detection network, we adopt Fast R-CNN [2]. Next we describe algorithms that learn a unified network composed of RPN and Fast R-CNN with shared convolutional layers (Figure 2).\n\nBoth RPN and Fast R-CNN, trained independently, will modify their convolutional layers in different ways. We therefore need to develop a technique that allows for sharing convolutional layer",
+          "chunk_kind": "method",
+          "language": "en"
+        },
+        {
+          "rank": 3,
+          "score": 0.7070863,
+          "work_id": "da2a6348-1a91-447d-8a17-da475a87b75f",
+          "document_id": "7e83946e-3898-4107-8ae0-5ff7ce372c82",
+          "chunk_fingerprint": "aab9f39fbe0253cd2706259b32228f2b6941f89dbde94f51fa18ae6851c4e7a0",
+          "section_path": "Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks / 3 FASTER R-CNN",
+          "excerpt": "### 3.2 Sharing Features for RPN and Fast R-CNN\n\nThus far we have described how to train a network for region proposal generation, without considering the region-based object detection CNN that will utilize these proposals. For the detection network, we adopt Fast R-CNN [2]. Next we describe algorithms that learn a unified network composed of RPN and Fast R-CNN with shared convolutional layers (Figure 2).\n\nBoth RPN and Fast R-CNN, trained independently, will modify their convolutional layers in different ways. We therefore need to develop a technique that allows for sharing convolutional layer",
+          "chunk_kind": "method",
+          "language": "en"
+        },
+        {
+          "rank": 4,
+          "score": 0.7014878,
+          "work_id": "a0b67a5e-3fb9-49ab-9027-e1c574924527",
+          "document_id": "084b392d-695e-4052-8d73-777403785d63",
+          "chunk_fingerprint": "2d17351827916d4bde340ad0a3741ba93bdd74a280d3f601bd21a7047df6dfea",
+          "section_path": "R-FCN: Object Detection via Region-based Fully Convolutional Networks / 2 Our approach / Overview",
+          "excerpt": "### Overview\n\nFollowing R-CNN [7], we adopt the popular two-stage object detection strategy [7, 8, 6, 18, 1, 22] that consists of: (i) region proposal, and (ii) region classification. Although methods that do not rely on region proposal do exist (e.g., [17, 14]), region-based systems still possess leading\n\n---",
+          "chunk_kind": "method",
+          "language": "en"
+        },
+        {
+          "rank": 5,
+          "score": 0.6832141,
+          "work_id": "7dd806fd-db66-4c7b-8440-d98e0cab0827",
+          "document_id": "0d7b936e-91f0-4546-bbbd-6625bf1dc3d7",
+          "chunk_fingerprint": "dcf178629e161d92d5e850020feffa22394d6465a615facbaaaade6e348ae0a7",
+          "section_path": "CornerNet: Detecting Objects as Paired Keypoints / 2 Related Works / 2.1 Two-stage object detectors",
+          "excerpt": "### 2.1 Two-stage object detectors\n\nTwo-stage approach was first introduced and popularized by R-CNN [Girshick et al., 2014]. Two-stage detectors generate a sparse set of regions of interest (RoIs) and classify each of them by a network. R-CNN generates RoIs using a low level vision algorithm [Uijlings et al., 2013; Zitnick and Dollár, 2014]. Each region is then extracted from the image and processed by a ConvNet independently, which creates lots of redundant computations. Later, SPP [He et al., 2014] and Fast-RCNN [Girshick, 2015] improve R-CNN by designing a special pooling layer that pools ",
+          "chunk_kind": "body",
+          "language": "en"
+        }
+      ],
+      "answer": "Retrieved context (not LLM-paraphrased): #### 4-Step Alternating Training\n\nIn this paper, we adopt a pragmatic 4-step training algorithm to learn shared features via alternating optimization. In the first step, we train the RPN as described in Section 3.1.3. This network is initialized with an ImageNet-pre-trained model and fine-tuned end-to-end for the region proposal task. In the second step, we train a separate detection network by Fa ### 3.2 Sharing Features for RPN and Fast R-CNN\n\nThus far we have described how to train a network for region proposal generation, without considering the region-based object detection CNN that will utilize these proposals. For the detection network, we adopt Fast R-CNN [2]. Next we describe algorithms that learn a unified network composed of RPN and Fast R-CNN with shared convolutional layers (Fi ### 3.2 Sharing Features for RPN and Fast R-CNN\n\nThus far we have described how to train a network for region proposal generation, without considering the region-based object detection CNN that will utilize these proposals. For the detection network, we adopt Fast R-CNN [2]. Next we describe algorithms that learn a unified network composed of RPN and Fast R-CNN with shared convolutional layers (…",
+      "answer_preview": "Retrieved context (not LLM-paraphrased): #### 4-Step Alternating Training\n\nIn this paper, we adopt a pragmatic 4-step training algorithm to learn shared features via alternating optimization. In the first step, we train the RPN as described in Section 3.1.3. This network is initialized with an ImageNet-pre-trained model and fine-tuned end-to-end for the region proposal task. In the second step, we",
+      "wall_clock_seconds": 0.042
     }
   ]
 }

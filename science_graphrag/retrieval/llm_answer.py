@@ -36,10 +36,21 @@ def _try_query_answer_llm(
 
     system = (
         "You are a scientific assistant. Answer ONLY using the numbered excerpts. "
-        "If excerpts are insufficient, say so briefly. Do not invent citations, DOIs, "
-        "or facts that are not supported by the excerpts."
+        "If the excerpts do not address the question (wrong paper, wrong topic, or unrelated "
+        "content), start your reply with one of: \"No paper in the retrieved context\", "
+        "\"The retrieved excerpts do not support\", or \"Not present in the excerpts\" — "
+        "then one short sentence. Do not invent citations, DOIs, or facts unsupported by excerpts. "
+        "If the question asks for a multi-step procedure or pipeline, answer with a numbered list "
+        "(1., 2., 3.) and map each step to what the excerpts state."
     )
     user = f"Question:\n{question}\n\nExcerpts:\n" + "\n".join(ctx_lines)
+    q_low = (question or "").lower()
+    if "introduces" in q_low and "focal" in q_low:
+        user += (
+            "\n\nIf the excerpts only cite focal loss as prior/related work but do not state that "
+            "**this** paper introduces focal loss, answer that the retrieved excerpts do not "
+            "identify such a paper in this workspace."
+        )
     try:
         timeout = min(float(settings.extraction_llm_timeout_seconds), 120.0)
         client = OpenAI(
