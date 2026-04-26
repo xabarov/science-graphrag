@@ -23,6 +23,7 @@ Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-co
 | 2026-04-08 | **API errors:** unified `formatResearchApiError` in `researchApi.js` + tests. |
 | 2026-04-26 | **Graph:** Bloom-like overview — type counts + node/edge totals in legend, chip sort frequency/alphabet, canvas edge-label modes (`all` / `interaction` / `adaptive`) + `GraphCanvasViewToolbar`, local node substring search (`graphNodeSearch.js`, `GraphWorkspacePanel`). |
 | 2026-04-26 | **Research API (UI):** `services/research/{errors,meta,queryModel,queryHttp,askSessions,agent,ideaAssist,works,graph}.js` + barrel `researchApi.js`; shim `benchmarkSummary.js` removed (`useBenchmarkSummary` → `benchmarkApi.js`). |
+| 2026-04-26 | **Benchmark UI:** Compare/Run tabs split — `useCompareTab`, `CompareDeltaTable`, `CompareTabSummarySection`, `benchmarkCompareModel` + vitest; `useRunTab`, `RunTabCurrentRunSection`, `runTabCaseToggle`; workbench run panel → `workbench/BenchmarkWorkbenchRunPanel.jsx` (`WorkbenchRunScopedPanel`). |
 
 ## Queue
 
@@ -99,13 +100,14 @@ Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-co
 - **Synergy:** **Round 6 BT2–BT5** — more fields in summary; avoid growing `TrustSignalPanel.jsx` into a god-component.
 - **Raised:** 2026-04-26 (post-BT1).
 
-### [OPEN] Split `BenchmarkPage/CaseDetailDialog.jsx` (790)
+### [DONE] Split `BenchmarkPage/CaseDetailDialog.jsx` (790)
 - **Area:** [`BenchmarkPage/CaseDetailDialog.jsx`](../../ui/src/pages/BenchmarkPage/CaseDetailDialog.jsx), смежные `BenchmarkPage/{CompareTab,RunTab,BenchmarkWorkbenchTab,BenchmarkRunCasesTable}.jsx`
 - **Issue:** Один диалог с превью кейса, таблицами gold vs pred, server preview, ошибками; работает в трёх вкладках. С добавлением новых семейств (`workspace_scoped`, `hybrid_ablation`, `multihop`, `agent_tools`, `idea_assist`) растёт линейно.
 - **Proposal:** Вынести `CasePreviewTable`, `GoldVsPredSection`, `useCaseDetailDialogData` (fetch + ошибки + кеш). Семейство-специфичные превью — в `pages/BenchmarkPage/families/<family>.jsx`.
 - **Acceptance:** ни один файл в `pages/BenchmarkPage/` не превышает ~400 строк; добавление нового семейства бенчмарков требует только нового `families/<name>.jsx` + регистрации.
 - **Synergy:** **Wave M/P/Q/R/S** в `ontology-benchmarks-roadmap` — постоянно добавляются семейства бенчмарков.
 - **Raised:** 2026-04-25
+- **Done note (2026-04-26):** split into `caseDetail/*` (hooks + sections + graph subpanels), `families/registry.js` + `default|layer1|graph`, i18n `partBenchmarkCaseDialog` (EN+RU); shell `CaseDetailDialog.jsx` ~110 lines. Лимит ~400 строк по дереву `BenchmarkPage/` закрыт совместно с пунктом Compare/Run + workbench panel (см. строку в Completed и `[DONE]` Compare/Run ниже).
 
 ### [OPEN] Slim `WorkspacePage.jsx` (530) — extract papers model + dialogs + ingest wiring
 - **Area:** [`WorkspacePage/WorkspacePage.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx), [`WorkspacePage/WorkspaceIngestPanel.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceIngestPanel.jsx), [`WorkspacePage/WorkspaceDedupSection.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceDedupSection.jsx)
@@ -115,7 +117,8 @@ Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-co
 - **Synergy:** разблокирует UI-стороны **Wave S** (hypothesis modal) и расширения **Wave L** (smart dedup) без раздувания shell.
 - **Raised:** 2026-04-25
 
-### [OPEN] Split `ReaderWorkBody.jsx` (485) — chunks list + formatters + claims linking
+### [DONE] Split `ReaderWorkBody.jsx` — chunks list + formatters + claims linking
+- **Note (2026-04-26):** Распил: `readerFormatters.js` + тесты, `useReaderWorkData` / `useReaderChunksState` / `useWorkClaims` / `useReaderClaimsFilters`, презентационные `ReaderWorkDetailCard`, `ReaderMarkdownSourcePanel`, `ReaderPdfModeToggle`, `ReaderTraceContextBanner`, `ReaderChunkListPanel`, `ReaderWorkClaimsSection`, `ReaderClaimsListItems`; `ReaderWorkBody.jsx` ~111 строк; `ReaderClaimsPanel` на общем `useWorkClaims`.
 - **Area:** [`ReaderWorkBody.jsx`](../../ui/src/components/work/ReaderWorkBody.jsx), [`ReaderClaimsPanel.jsx`](../../ui/src/components/work/ReaderClaimsPanel.jsx), [`PdfViewer.jsx`](../../ui/src/components/work/PdfViewer.jsx)
 - **Issue:** Чанки + подсветка + сворачивания + ссылки в graph/ask + слайс `0..4000` в JSX; рост ожидается под Wave O (claims в Reader) и Wave M (страница PDF из цитаты, Wave K2.5).
 - **Proposal:** `useReaderChunksState`, `ReaderChunkList`, `readerFormatters.js`; интеграцию с `ReaderClaimsPanel` оставить через композицию.
@@ -123,9 +126,10 @@ Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-co
 - **Synergy:** **Wave O** (claims production) — UI claims в Reader; **Wave Q/R** (multi-hop, agent answer trace) — кросс-ссылки на работу.
 - **Raised:** 2026-04-25
 
-### [OPEN] Split `BenchmarkPage/CompareTab.jsx` (417) and `RunTab.jsx` (365)
-- **Area:** [`BenchmarkPage/CompareTab.jsx`](../../ui/src/pages/BenchmarkPage/CompareTab.jsx), [`BenchmarkPage/RunTab.jsx`](../../ui/src/pages/BenchmarkPage/RunTab.jsx)
-- **Issue:** Сравнение прогонов / запуск конфигурации — крупные tabs, контейнер логики.
+### [DONE] Split `BenchmarkPage/CompareTab.jsx` and `RunTab.jsx` (+ workbench run panel)
+- **Note (2026-04-26):** Compare: `benchmarkCompareModel.js` (filter + download), `useCompareTab.js`, `CompareDeltaTable.jsx`, `CompareTabSummarySection.jsx`, `benchmarkCompareModel.test.js`; shell `CompareTab.jsx` ~192 lines. Run: `useRunTab.js` (~288), `RunTabCurrentRunSection.jsx`, `runTabCaseToggle.js`; shell `RunTab.jsx` ~97 lines. Workbench: `workbench/BenchmarkWorkbenchRunPanel.jsx` (`WorkbenchRunScopedPanel` ~318 lines), `BenchmarkWorkbenchTab.jsx` ~157 lines (data fetch only).
+- **Area:** [`CompareTab.jsx`](../../ui/src/pages/BenchmarkPage/CompareTab.jsx), [`RunTab.jsx`](../../ui/src/pages/BenchmarkPage/RunTab.jsx), [`BenchmarkWorkbenchTab.jsx`](../../ui/src/pages/BenchmarkPage/BenchmarkWorkbenchTab.jsx), [`workbench/BenchmarkWorkbenchRunPanel.jsx`](../../ui/src/pages/BenchmarkPage/workbench/BenchmarkWorkbenchRunPanel.jsx)
+- **Issue:** Сравнение прогонов / запуск конфигурации — крупные tabs, контейнер логики; workbench держал тяжёлую панель в одном файле с shell.
 - **Proposal:** Вынести `useCompareDeltas`, `DeltaTable`, `useRunLauncher`, `RunConfigForm`. Хранить metric formatting в общем хелпере.
 - **Acceptance:** ни один таб > ≈250 строк.
 - **Synergy:** Облегчит добавление UI для **Wave Q/R/P** ablation и judge-метрик.
@@ -150,12 +154,13 @@ Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-co
 - **Acceptance:** ни один прямой импорт `@mui/material/Button` в `WorkspaceDedupSection`/`WorkDedupReviewDialog`; визуальный паритет с остальными dedup-кнопками; `npm run lint` зелёный.
 - **Raised:** 2026-04-25
 
-### [OPEN] Move `useScienceGraphForceSimulation.js` to `hooks/graph/`
-- **Area:** [`components/graph/physics/useScienceGraphForceSimulation.js`](../../ui/src/components/graph/physics/useScienceGraphForceSimulation.js), [`hooks/`](../../ui/src/hooks/)
+### [DONE] Move `useScienceGraphForceSimulation.js` to `hooks/graph/`
+- **Area:** [`hooks/graph/useScienceGraphForceSimulation.js`](../../ui/src/hooks/graph/useScienceGraphForceSimulation.js), [`hooks/`](../../ui/src/hooks/)
 - **Issue:** ≈425 строк хука лежит в `components/graph/physics/`, рядом со «не-React» утилитами (quadTree, structuralCommunities). В `hooks/` сейчас только `useJobStream`/`usePollJob` — два «места» для сложной async-логики.
 - **Proposal:** Перенести хук в `ui/src/hooks/graph/useScienceGraphForceSimulation.js` (или `hooks/useGraphSimulation.js`); оставить чистые модули physics в `components/graph/physics/`.
 - **Acceptance:** импорт обновлён в `GraphCanvasMvp`; тесты симуляции зелёные.
 - **Raised:** 2026-04-25
+- **Done:** 2026-04-26 — хук в `hooks/graph/`; `physics/` только не-React; прямой импорт из `GraphCanvasMvp`.
 
 ### [OPEN] Workspace UX — Wave WX1 layout & hero (закрывает H-WorkspacePageSlim)
 - **Area:** [`WorkspacePage/WorkspacePage.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx),

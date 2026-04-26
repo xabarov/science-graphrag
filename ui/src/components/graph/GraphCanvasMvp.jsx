@@ -10,7 +10,7 @@ import { drawEdges, drawLabels, drawNodes } from "./graphCanvasDraw.js";
 import { getGraphLayoutSignature } from "./graphFlowAdapter.js";
 import { buildSimulationState } from "./graphSimulationAdapter.js";
 import useGraphCanvasInput from "./hooks/useGraphCanvasInput.js";
-import { useScienceGraphForceSimulation } from "./physics/useScienceGraphForceSimulation.js";
+import { useScienceGraphForceSimulation } from "../../hooks/graph/useScienceGraphForceSimulation.js";
 import { percentToRepulsion, REPULSION_DEFAULT_PERCENT } from "./physics/simConstants.js";
 
 const NODE_RADIUS = 12;

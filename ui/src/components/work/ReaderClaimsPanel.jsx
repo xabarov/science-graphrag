@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
@@ -9,8 +9,9 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
-import { formatResearchApiError, getWorkClaims } from "../../services/researchApi.js";
 import { useI18n } from "../../i18n/I18nContext.jsx";
+import ReaderClaimsListItems from "./ReaderClaimsListItems.jsx";
+import { useWorkClaims } from "./useWorkClaims.js";
 
 function claimsUiEnabled() {
   const v = import.meta.env.VITE_CLAIMS_UI_ENABLED;
@@ -24,38 +25,13 @@ function claimsUiEnabled() {
 export default function ReaderClaimsPanel({ workId }) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const uiEnabled = claimsUiEnabled();
+  const { items, loading, error } = useWorkClaims(workId, {
+    enabled: uiEnabled,
+    fetchPolicy: "immediate",
+  });
 
-  useEffect(() => {
-    if (!claimsUiEnabled() || !workId.trim()) {
-      setItems([]);
-      setError(null);
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await getWorkClaims(workId);
-        if (cancelled) return;
-        setItems(Array.isArray(res.data?.items) ? res.data.items : []);
-      } catch (err) {
-        if (cancelled) return;
-        setError(formatResearchApiError(err));
-        setItems([]);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [workId]);
-
-  if (!claimsUiEnabled()) {
+  if (!uiEnabled) {
     return null;
   }
 
@@ -93,45 +69,7 @@ export default function ReaderClaimsPanel({ workId }) {
         {!loading && !error && items.length === 0 ? (
           <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.45)" }}>{t("wsTab.reader.claimsEmpty")}</Typography>
         ) : null}
-        {!loading &&
-          items.map((cl) => (
-            <Box
-              key={cl.claim_id}
-              sx={{
-                mb: 1.5,
-                pb: 1.5,
-                borderBottom: "1px solid rgba(255,255,255,0.06)",
-                "&:last-child": { borderBottom: "none", pb: 0, mb: 0 },
-              }}
-            >
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "center", mb: 0.5 }}>
-                <Chip label={cl.claim_type || "—"} size="small" sx={{ height: 22, fontSize: "0.68rem" }} />
-                <Chip label={cl.polarity || "—"} size="small" variant="outlined" sx={{ height: 22, fontSize: "0.68rem" }} />
-                <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)" }}>
-                  {t("wsTab.reader.claimConfidence", { v: String(cl.confidence ?? "—") })}
-                </Typography>
-              </Box>
-              <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.82)", mb: 1 }}>{cl.normalized_text}</Typography>
-              {(cl.evidence || []).map((ev, i) => (
-                <Box
-                  key={`${cl.claim_id}-ev-${i}`}
-                  sx={{
-                    mt: 0.75,
-                    pl: 1,
-                    borderLeft: "2px solid rgba(99,102,241,0.35)",
-                  }}
-                >
-                  <Typography sx={{ fontSize: "0.7rem", color: "rgba(129,140,248,0.85)", fontFamily: "monospace" }}>
-                    {ev.chunk_fingerprint || "—"}
-                  </Typography>
-                  {ev.section_path ? (
-                    <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.4)" }}>{ev.section_path}</Typography>
-                  ) : null}
-                  <Typography sx={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.65)", mt: 0.35 }}>{ev.quote}</Typography>
-                </Box>
-              ))}
-            </Box>
-          ))}
+        {!loading && items.length > 0 ? <ReaderClaimsListItems layout="panel" claims={items} /> : null}
       </AccordionDetails>
     </Accordion>
   );

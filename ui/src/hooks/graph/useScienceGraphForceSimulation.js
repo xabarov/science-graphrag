@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 
-import { getScienceDesiredDistance } from "./desiredLinkDistance.js";
-import { getNodeCluster } from "./structuralCommunities.js";
-import { detectScienceHybridCommunities } from "./scienceHybridCommunities.js";
+import { getScienceDesiredDistance } from "../../components/graph/physics/desiredLinkDistance.js";
+import { getNodeCluster } from "../../components/graph/physics/structuralCommunities.js";
+import { detectScienceHybridCommunities } from "../../components/graph/physics/scienceHybridCommunities.js";
 import {
   CANVAS_MARGIN,
   CLUSTER_ATTRACTION_STRENGTH,
@@ -15,17 +15,17 @@ import {
   STABLE_ITERATIONS,
   STABILITY_THRESHOLD,
   USE_COMMUNITY_DETECTION,
-} from "./simConstants.js";
-import { QuadTree } from "./quadTree.js";
-import { fastInvSqrt, fastSqrt, getRepulsionMultiplier } from "./forceUtils.js";
+} from "../../components/graph/physics/simConstants.js";
+import { QuadTree } from "../../components/graph/physics/quadTree.js";
+import { fastInvSqrt, fastSqrt, getRepulsionMultiplier } from "../../components/graph/physics/forceUtils.js";
 
 /**
  * Force-directed simulation (fork of osint-gr useForceSimulation; no OSINT domain).
  *
  * @param {boolean} enabled
- * @param {import("./graphSimulationAdapter.js").SimNode[]} nodes
- * @param {React.Dispatch<React.SetStateAction<import("./graphSimulationAdapter.js").SimNode[]>>} setNodes
- * @param {import("./graphSimulationAdapter.js").SimLink[]} links
+ * @param {import("../../components/graph/graphSimulationAdapter.js").SimNode[]} nodes
+ * @param {React.Dispatch<React.SetStateAction<import("../../components/graph/graphSimulationAdapter.js").SimNode[]>>} setNodes
+ * @param {import("../../components/graph/graphSimulationAdapter.js").SimLink[]} links
  * @param {number} repulsionStrength
  * @param {boolean} isSimulationStable
  * @param {(v: boolean) => void} setIsSimulationStable

@@ -1,5 +1,6 @@
 import { mergeMessages } from "../../mergeMessages.js";
 import partAskPanel from "./partAskPanel.js";
+import partBenchmarkCaseDialog from "./partBenchmarkCaseDialog.js";
 import partBenchmarkPage from "./partBenchmarkPage.js";
 import partBenchmarkTabs from "./partBenchmarkTabs.js";
 import partCommon from "./partCommon.js";
@@ -29,5 +30,6 @@ export default mergeMessages(
   partReaderBody,
   partEvidenceBody,
   partBenchmarkPage,
+  partBenchmarkCaseDialog,
   partBenchmarkTabs,
 );
