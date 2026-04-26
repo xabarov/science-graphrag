@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
-import { useI18n } from "../../i18n/I18nContext.jsx";
+import { useI18n } from "../../i18n/useI18n.js";
 import WorkspacePaperRow from "./WorkspacePaperRow.jsx";
 
 /**

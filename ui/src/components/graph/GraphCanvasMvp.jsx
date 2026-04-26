@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 import GraphCanvasViewToolbar from "./GraphCanvasViewToolbar.jsx";
-import { useI18n } from "../../i18n/I18nContext.jsx";
+import { useI18n } from "../../i18n/useI18n.js";
 import { computeFitTransformForNodeSubset } from "./graphCanvasCamera.js";
 import { computeFitTransform, computeWorldLayout, screenToWorld, worldRadiusForNodeCount } from "./graphCanvasTransform.js";
 import { localizeAggregatorTitle, localizeEdgeType } from "./graphLocalize.js";

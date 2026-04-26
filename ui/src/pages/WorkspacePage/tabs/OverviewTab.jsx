@@ -15,7 +15,7 @@ import { CursorIconAction } from "../../../components/common/index.js";
 import { formatResearchApiError, getWorkDetail } from "../../../services/researchApi.js";
 import { buildWorkspacePath } from "../utils/workContext.js";
 import { workChatUrl } from "../workspacePageUrls.js";
-import { useI18n } from "../../../i18n/I18nContext.jsx";
+import { useI18n } from "../../../i18n/useI18n.js";
 
 /**
  * @param {{ workId: string }} props

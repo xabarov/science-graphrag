@@ -11,7 +11,7 @@ import {
   listBenchmarkRuns,
 } from "../../services/benchmarkApi.js";
 import { CursorButton } from "../../components/common/index.js";
-import { useI18n } from "../../i18n/I18nContext.jsx";
+import { useI18n } from "../../i18n/useI18n.js";
 import { WorkbenchRunScopedPanel } from "./workbench/BenchmarkWorkbenchRunPanel.jsx";
 
 export default function BenchmarkWorkbenchTab({

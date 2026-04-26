@@ -2,6 +2,7 @@
 
 - **Status**: Accepted
 - **Date**: 2026-04-26
+- **Amended**: 2026-04-27 — Reader OCR prefers canonical extracted body when chunks exist; whole-document fence stripping at ingest and API read.
 
 ## Context
 
@@ -11,10 +12,11 @@ The reader UI treated **Qdrant chunk payloads** as the only source of extracted 
 
 1. **Canonical document-scoped artifacts** (under `artifact_root`, relative paths):
    - `ingestion/{document_id}/article.md` — raw VL / PDF extraction (with optional HTML comment header).
-   - `ingestion/{document_id}/normalized.md` — normalized body used for LLM extraction and chunking (`strip_repeated_boilerplate(normalize_text(…))`).
-2. **Full-text reading** for the UI and new **`GET /v1/works/{work_id}/extracted-body`** prefers `normalized.md`, then `article.md` (header stripped when serving from `article.md`). Legacy per-slug paths under `ingestion/{document_id}/{slug}/article.md` remain readable as a fallback until re-ingest.
+   - `ingestion/{document_id}/normalized.md` — normalized body used for LLM extraction and chunking (`strip_repeated_boilerplate(normalize_text(…))`), after stripping a **whole-document** markdown code fence if present (e.g. VL wrapping the entire extraction in `` ```markdown … ``` ``). Raw `article.md` keeps extractor output unchanged for debugging.
+2. **Full-text reading** for the UI and new **`GET /v1/works/{work_id}/extracted-body`** prefers `normalized.md`, then `article.md` (header stripped when serving from `article.md`). Legacy per-slug paths under `ingestion/{document_id}/{slug}/article.md` remain readable as a fallback until re-ingest. The API applies the same whole-document fence strip when serving responses so **already-ingested** artifacts remain readable without mandatory re-ingest.
 3. **Qdrant** remains the source of truth for **vector retrieval**, chunk fingerprints, and citations — not the sole indicator that post-ingest text exists.
 4. **No new SQL column** in v1 of this ADR: `document_id` already keys the artifact directory; optional `DocumentRecord.extracted_body_path` remains a future optimization if multi-artifact policies grow.
+5. **Reader (OCR mode)**: When both indexed chunks and `GET …/extracted-body` are available, the **main reading column** shows the canonical extracted body (artifact-backed). The **chunk list** (advanced panel) still lists Qdrant payloads for traceability, citations, and alignment with retrieval — it is not removed.
 
 ## Consequences
 

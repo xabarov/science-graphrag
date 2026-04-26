@@ -6,7 +6,7 @@ import Tooltip from "@mui/material/Tooltip";
 import DocumentScannerOutlinedIcon from "@mui/icons-material/DocumentScannerOutlined";
 import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
 
-import { useI18n } from "../../i18n/I18nContext.jsx";
+import { useI18n } from "../../i18n/useI18n.js";
 
 /**
  * PDF vs OCR (recognized text) view — icon toggle with tooltips.

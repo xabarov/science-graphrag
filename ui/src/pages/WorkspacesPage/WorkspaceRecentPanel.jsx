@@ -6,7 +6,7 @@ import Typography from "@mui/material/Typography";
 import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
 
 import { CursorIconAction } from "../../components/common/index.js";
-import { useI18n } from "../../i18n/I18nContext.jsx";
+import { useI18n } from "../../i18n/useI18n.js";
 import { buildWorkspacePath } from "../WorkspacePage/utils/workContext.js";
 
 /**

@@ -20,7 +20,7 @@ import {
   sortBenchmarkCases,
   sortOptionsForFamily,
 } from "../benchmarkRunUiHelpers.js";
-import { useI18n } from "../../../i18n/I18nContext.jsx";
+import { useI18n } from "../../../i18n/useI18n.js";
 
 function Panel({ title, children }) {
   return (

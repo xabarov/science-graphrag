@@ -1,0 +1,33 @@
+---
+description: Vite HMR, React Fast Refresh boundaries, long-running fetch (SSE)
+globs: ["ui/**/*.js", "ui/**/*.jsx", "docker/**/*nginx*.conf"]
+---
+
+# Frontend — HMR и Fast Refresh
+
+## Правило границ модулей
+
+- В одном файле **не** смешивать React-компонент (например `*Provider`) и кастомный хук (`use*`).
+- Контекст: `createContext` и экспорт объекта контекста — в отдельном **не-JSX** файле `*ContextInstance.js` (без Fast Refresh на нём). Файл `*Context.jsx` содержит только **один** Provider-компонент.
+- Хук `use*` для этого контекста — в отдельном файле `use*.js`, импортирует контекст из `*ContextInstance.js`.
+
+Иначе Vite + `@vitejs/plugin-react` не может построить React Refresh boundary и падает в **full page reload**, что обрывает долгие `fetch` (SSE агент, ingest stream) через `AbortController`.
+
+## Линт
+
+В [ui/.eslintrc.cjs](ui/.eslintrc.cjs) включено правило `react-refresh/only-export-components` — не отключать без причины; новые context-модули должны проходить его.
+
+## Симптомы в логах (не косметика)
+
+После правок во `ui/`, особенно в context / i18n / layout shell:
+
+```bash
+docker compose -f docker-compose.dev.yml logs ui --tail=300 | rg -i "could not fast refresh|page reload"
+```
+
+- Сообщения вида `Could not Fast Refresh` или частые `[vite] page reload` на модулях из графа чата — **источник багов** для потоковых ответов, а не «шум dev-сервера».
+- Цель после изменений в этой зоне: нет reload из-за несовместимого экспорта; для обычных компонентов — `hmr update`.
+
+## Связь с SSE
+
+Прокси для `/v2/agent/` уже должен иметь `proxy_buffering off` (см. `docker/nginx-web.dev.conf`). Если бэкенд отдаёт `final_answer`, а UI «сбрасывается» за секунды — проверять HMR и Network `(canceled)` **до** поиска бага в Python-агенте.

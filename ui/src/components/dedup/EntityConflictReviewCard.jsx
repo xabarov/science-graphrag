@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 import { CursorSmallButton } from "../common/index.js";
-import { useI18n } from "../../i18n/I18nContext.jsx";
+import { useI18n } from "../../i18n/useI18n.js";
 import { decideEntityDedupConflict, listEntityDedupConflicts } from "../../utils/workspaceStore.js";
 
 const ENTITY_TYPES = ["institution", "venue", "method", "dataset"];

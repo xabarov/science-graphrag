@@ -9,7 +9,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
-import { useI18n } from "../../i18n/I18nContext.jsx";
+import { useI18n } from "../../i18n/useI18n.js";
 import ReaderClaimsListItems from "./ReaderClaimsListItems.jsx";
 import { useWorkClaims } from "./useWorkClaims.js";
 

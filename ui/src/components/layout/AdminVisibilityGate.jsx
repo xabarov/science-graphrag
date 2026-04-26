@@ -4,7 +4,7 @@ import Typography from "@mui/material/Typography";
 import { Link } from "react-router-dom";
 
 import { CursorPrimaryButton, CursorSmallButton } from "../common/index.js";
-import { useI18n } from "../../i18n/I18nContext.jsx";
+import { useI18n } from "../../i18n/useI18n.js";
 
 export default function AdminVisibilityGate() {
   const { t } = useI18n();

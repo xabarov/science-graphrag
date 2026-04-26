@@ -16,7 +16,7 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 
 import { CursorIconButton } from "../common/index.js";
-import { useI18n } from "../../i18n/I18nContext.jsx";
+import { useI18n } from "../../i18n/useI18n.js";
 import GraphNodeTypesMenu from "./toolbar/GraphNodeTypesMenu.jsx";
 import GraphScopeMenu from "./toolbar/GraphScopeMenu.jsx";
 import GraphViewChips from "./toolbar/GraphViewChips.jsx";

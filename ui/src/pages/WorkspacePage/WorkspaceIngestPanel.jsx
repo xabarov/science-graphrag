@@ -14,7 +14,7 @@ import Typography from "@mui/material/Typography";
 
 import { CursorIconButton, CursorSmallButton } from "../../components/common/index.js";
 import IngestProgressCard from "../../components/ingestion/IngestProgressCard.jsx";
-import { useI18n } from "../../i18n/I18nContext.jsx";
+import { useI18n } from "../../i18n/useI18n.js";
 import { collectIngestFilesFromDataTransfer } from "./collectIngestFiles.js";
 
 /**

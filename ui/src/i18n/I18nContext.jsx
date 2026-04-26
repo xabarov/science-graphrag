@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   DEFAULT_LOCALE,
@@ -7,23 +7,10 @@ import {
   htmlLangFor,
   intlLocaleFor,
 } from "./constants.js";
+import { I18nContext } from "./I18nContextInstance.js";
 import { readStoredLocale } from "./readStoredLocale.js";
 import { setRuntimeIntlLocale } from "./runtimeIntlLocale.js";
 import { translate } from "./translate.js";
-
-/** @typedef {import("./constants.js").UiLocale} UiLocale */
-
-/**
- * @typedef {{
- *   locale: UiLocale,
- *   setLocale: (next: UiLocale) => void,
- *   t: (key: string, vars?: Record<string, string | number>) => string,
- *   intlLocale: string,
- * }} I18nValue
- */
-
-/** @type {React.Context<I18nValue | null>} */
-const I18nContext = createContext(null);
 
 export function I18nProvider({ children }) {
   const [locale, setLocaleState] = useState(() => {
@@ -62,13 +49,4 @@ export function I18nProvider({ children }) {
   const value = useMemo(() => ({ locale, setLocale, t, intlLocale }), [locale, setLocale, t, intlLocale]);
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
-}
-
-/** @returns {I18nValue} */
-export function useI18n() {
-  const ctx = useContext(I18nContext);
-  if (!ctx) {
-    throw new Error("useI18n must be used within I18nProvider");
-  }
-  return ctx;
 }

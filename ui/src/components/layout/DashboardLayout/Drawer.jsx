@@ -14,9 +14,9 @@ import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 
 import { CursorIconButton } from "../../common/index.js";
-import { useI18n } from "../../../i18n/I18nContext.jsx";
+import { useI18n } from "../../../i18n/useI18n.js";
 import { isAdminModeEnabled } from "../adminVisibility.js";
-import { useWorkspaceContext } from "../WorkspaceContext.jsx";
+import { useWorkspaceContext } from "../useWorkspaceContext.js";
 import { appendWorkspaceQuery } from "../../../utils/workspaceStore.js";
 import { getLastWorkId } from "../../../pages/WorkspacePage/utils/workContext.js";
 

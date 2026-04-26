@@ -17,7 +17,7 @@ import {
 import "@xyflow/react/dist/style.css";
 
 import { CursorSmallButton } from "../common/index.js";
-import { useI18n } from "../../i18n/I18nContext.jsx";
+import { useI18n } from "../../i18n/useI18n.js";
 import { getScienceGraphNodeStyle } from "./graphCanvasStyle.js";
 import { buildReactFlowEdges, buildReactFlowNodes, getGraphLayoutSignature } from "./graphFlowAdapter.js";
 import { localizeEdgeType } from "./graphLocalize.js";

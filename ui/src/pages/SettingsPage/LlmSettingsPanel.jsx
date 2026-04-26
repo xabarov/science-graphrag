@@ -11,7 +11,7 @@ import {
   CursorDangerButton,
   CursorPrimaryButton,
 } from "../../components/common/index.js";
-import { useI18n } from "../../i18n/I18nContext.jsx";
+import { useI18n } from "../../i18n/useI18n.js";
 import LlmConnectionTestCard from "./LlmConnectionTestCard.jsx";
 
 const FIELD_SX = {

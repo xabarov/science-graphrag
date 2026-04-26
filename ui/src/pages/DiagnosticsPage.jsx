@@ -10,7 +10,7 @@ import RefreshOutlinedIcon from "@mui/icons-material/RefreshOutlined";
 
 import { CursorIconAction } from "../components/common/index.js";
 import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
-import { useI18n } from "../i18n/I18nContext.jsx";
+import { useI18n } from "../i18n/useI18n.js";
 import { formatResearchApiError, getHealth, getResearchApiBaseUrl, getWorks } from "../services/researchApi.js";
 
 export default function DiagnosticsPage() {

@@ -6,7 +6,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 
 import { workPdfUrl } from "../../services/researchApi.js";
 import { describeTraceabilityState } from "./traceabilityState.js";
-import { useI18n } from "../../i18n/I18nContext.jsx";
+import { useI18n } from "../../i18n/useI18n.js";
 import ReaderChunkListPanel from "./ReaderChunkListPanel.jsx";
 import ReaderMarkdownSourcePanel from "./ReaderMarkdownSourcePanel.jsx";
 import ReaderPdfModeToggle from "./ReaderPdfModeToggle.jsx";
@@ -94,6 +94,18 @@ export default function ReaderWorkBody({
     Boolean(abstractText) &&
     viewMode === "ocr";
 
+  /**
+   * ADR 022: full-text reading prefers canonical ingest artifacts (`extracted-body`)
+   * over Qdrant chunk joins when both exist. Chunk list below remains the
+   * index-aligned traceability surface.
+   */
+  const preferCanonicalExtractedBody =
+    !loading &&
+    viewMode === "ocr" &&
+    Boolean(chunks) &&
+    hasEffectiveChunks &&
+    Boolean(extractedBodyText);
+
   const metaCbRef = useRef(onWorkMetaChange);
   useEffect(() => {
     metaCbRef.current = onWorkMetaChange;
@@ -169,7 +181,15 @@ export default function ReaderWorkBody({
         </Box>
       ) : null}
 
-      {chunks && !loading && viewMode === "ocr" && combinedMarkdown ? (
+      {chunks && !loading && viewMode === "ocr" && preferCanonicalExtractedBody ? (
+        <ReaderMarkdownSourcePanel
+          combinedMarkdown={extractedBodyText}
+          sourceVariant="extractedFile"
+          apiTruncated={extractedBodyPayload?.truncated === true}
+        />
+      ) : null}
+
+      {chunks && !loading && viewMode === "ocr" && combinedMarkdown && !preferCanonicalExtractedBody ? (
         <ReaderMarkdownSourcePanel combinedMarkdown={combinedMarkdown} chunks={chunks} sourceVariant="extracted" />
       ) : null}
 
@@ -188,6 +208,7 @@ export default function ReaderWorkBody({
       {chunks &&
       !loading &&
       viewMode === "ocr" &&
+      !preferCanonicalExtractedBody &&
       !combinedMarkdown &&
       !useExtractedFileAsBody &&
       !useAbstractAsBody &&

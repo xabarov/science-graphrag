@@ -14,3 +14,11 @@ cd ui && npm run lint
 ```
 
 Конфигурация ESLint: [ui/.eslintrc.cjs](ui/.eslintrc.cjs).
+
+После правок в `ui/`, особенно в **context / i18n / layout shell** (провайдеры, роутинг), при локальной разработке через `make dev-up` имеет смысл проверить логи Vite на полный reload из-за Fast Refresh:
+
+```bash
+docker compose -f docker-compose.dev.yml logs ui --tail=300 | rg -i "could not fast refresh|page reload"
+```
+
+Пустой вывод (или только ожидаемые `hmr update`) — хороший знак для долгих SSE (`/v2/agent/query`, ingest). Подробнее: [frontend-hmr-and-fast-refresh.mdc](frontend-hmr-and-fast-refresh.mdc).

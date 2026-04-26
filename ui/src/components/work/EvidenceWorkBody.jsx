@@ -11,7 +11,7 @@ import { Link } from "react-router-dom";
 import { formatResearchApiError, getWorkClaims, getWorkChunks } from "../../services/researchApi.js";
 import { CursorSmallButton } from "../common/index.js";
 import { buildStandaloneChatPath, buildWorkspaceTracePath, describeTraceabilityState } from "./traceabilityState.js";
-import { useI18n } from "../../i18n/I18nContext.jsx";
+import { useI18n } from "../../i18n/useI18n.js";
 
 /**
  * Evidence (chunk fingerprints) for a fixed work_id.

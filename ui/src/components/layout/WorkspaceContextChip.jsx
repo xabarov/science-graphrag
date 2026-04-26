@@ -17,10 +17,10 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 
 import { CursorIconButton } from "../common/index.js";
-import { useI18n } from "../../i18n/I18nContext.jsx";
+import { useI18n } from "../../i18n/useI18n.js";
 import { formatResearchApiError } from "../../services/researchApi.js";
 import { createWorkspace, listWorkspaces } from "../../utils/workspaceStore.js";
-import { useWorkspaceContext } from "./WorkspaceContext.jsx";
+import { useWorkspaceContext } from "./useWorkspaceContext.js";
 
 function shortWorkspaceId(wsId) {
   const s = String(wsId || "").trim();

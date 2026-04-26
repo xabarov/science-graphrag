@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 
 import { CursorSmallButton } from "../common/index.js";
 import { buildStandaloneChatPath, buildWorkspaceTracePath } from "./traceabilityState.js";
-import { useI18n } from "../../i18n/I18nContext.jsx";
+import { useI18n } from "../../i18n/useI18n.js";
 
 /**
  * @param {{

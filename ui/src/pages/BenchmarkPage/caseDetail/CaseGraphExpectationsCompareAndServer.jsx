@@ -11,7 +11,7 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
-import { useI18n } from "../../../i18n/I18nContext.jsx";
+import { useI18n } from "../../../i18n/useI18n.js";
 
 const preSideBySideSx = {
   whiteSpace: "pre-wrap",

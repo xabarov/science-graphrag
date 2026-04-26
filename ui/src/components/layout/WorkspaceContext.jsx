@@ -1,14 +1,8 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 
+import { WorkspaceContext } from "./WorkspaceContextInstance.js";
 import { getActiveWorkspaceId, getWorkspace, setActiveWorkspaceId } from "../../utils/workspaceStore.js";
-
-/**
- * @typedef {{ id: string, name?: string, work_ids?: string[] } | null} WorkspaceMeta
- */
-
-/** @type {React.Context<null | { activeWorkspaceId: string | null, activeWorkspaceMeta: WorkspaceMeta, setActiveWorkspace: (id: string) => void, getLastWorkspaceHref: () => string }>} */
-const WorkspaceContext = createContext(null);
 
 export function WorkspaceContextProvider({ children }) {
   const location = useLocation();
@@ -74,12 +68,4 @@ export function WorkspaceContextProvider({ children }) {
   );
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
-}
-
-export function useWorkspaceContext() {
-  const ctx = useContext(WorkspaceContext);
-  if (!ctx) {
-    throw new Error("useWorkspaceContext must be used within WorkspaceContextProvider");
-  }
-  return ctx;
 }

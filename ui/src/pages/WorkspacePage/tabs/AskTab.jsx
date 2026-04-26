@@ -6,7 +6,7 @@ import Typography from "@mui/material/Typography";
 import AskPanel from "../../../components/work/AskPanel.jsx";
 import { sessionExistsInScope } from "../../../components/work/askSessionState.js";
 import { describeTraceabilityState, readTraceabilityState } from "../../../components/work/traceabilityState.js";
-import { useI18n } from "../../../i18n/I18nContext.jsx";
+import { useI18n } from "../../../i18n/useI18n.js";
 
 /**
  * @param {{ workId: string }} props

@@ -3,7 +3,7 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
 import Typography from "@mui/material/Typography";
-import { useI18n } from "../../i18n/I18nContext.jsx";
+import { useI18n } from "../../i18n/useI18n.js";
 import { describeTraceabilityState } from "../work/traceabilityState.js";
 import GraphCanvasMvp from "./GraphCanvasMvp.jsx";
 import GraphDebugInspector from "./GraphDebugInspector.jsx";

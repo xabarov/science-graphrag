@@ -2,7 +2,7 @@ import React from "react";
 import Box from "@mui/material/Box";
 
 import { CursorSmallButton } from "../../../components/common/index.js";
-import { useI18n } from "../../../i18n/I18nContext.jsx";
+import { useI18n } from "../../../i18n/useI18n.js";
 
 export default function CaseGraphExpectationsToolbar({
   snapshotFileRef,

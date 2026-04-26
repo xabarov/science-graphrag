@@ -10,7 +10,7 @@ import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
 
 import { CursorIconAction } from "../../../components/common/index.js";
 import { buildWorkspaceTracePath, readTraceabilityState } from "../../../components/work/traceabilityState.js";
-import { useI18n } from "../../../i18n/I18nContext.jsx";
+import { useI18n } from "../../../i18n/useI18n.js";
 
 /**
  * @param {{ workId: string }} props

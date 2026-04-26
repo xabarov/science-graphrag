@@ -14,7 +14,7 @@ import { CursorIconAction } from "../components/common/index.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
 import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
 import { isAdminModeEnabled } from "../components/layout/adminVisibility.js";
-import { useI18n } from "../i18n/I18nContext.jsx";
+import { useI18n } from "../i18n/useI18n.js";
 import { getHomeStatus } from "./HomePage/homeState.js";
 import { useCorpusEntryState } from "./HomePage/useCorpusEntryState.js";
 

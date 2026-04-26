@@ -42,6 +42,7 @@ from science_graphrag.ingestion.enrichment.openalex import (
 from science_graphrag.ingestion.enrichment.ror import lookup_ror_id_optional
 from science_graphrag.ingestion.llm.semantic_extraction import extract_semantic_method_dataset
 from science_graphrag.ingestion.llm.stage_extraction import extract_stages_llm_first
+from science_graphrag.ingestion.markdown_fence import strip_whole_document_markdown_fence
 
 # Backward-compatible name for ``science_graphrag.ingestion.pipeline`` facade re-exports.
 _strip_artifact_header = strip_ingest_artifact_header
@@ -668,7 +669,9 @@ def ingest_document(
             markdown=markdown_text,
             extraction_mode=extraction_mode,
         )
-        normalized = strip_repeated_boilerplate(normalize_text(markdown_text))
+        normalized = strip_repeated_boilerplate(
+            normalize_text(strip_whole_document_markdown_fence(markdown_text))
+        )
         BlobStore(settings.artifact_root).write_artifact(
             canonical_normalized_md_rel(doc_id),
             normalized,

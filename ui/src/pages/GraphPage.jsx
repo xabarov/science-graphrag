@@ -16,13 +16,13 @@ import VpnKeyOutlinedIcon from "@mui/icons-material/VpnKeyOutlined";
 
 import { CursorIconAction, CursorIconButton } from "../components/common/index.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
-import { useWorkspaceContext } from "../components/layout/WorkspaceContext.jsx";
+import { useWorkspaceContext } from "../components/layout/useWorkspaceContext.js";
 import GraphWorkspacePanel from "../components/graph/GraphWorkspacePanel.jsx";
 import { GraphMissingWorkCallout } from "../components/graph/graphShellStates.jsx";
 import { persistWorkId } from "./WorkspacePage/utils/workContext.js";
 import { mergeTraceabilityParams, readTraceabilityState } from "../components/work/traceabilityState.js";
 import { readGraphPageLayoutFlags, preserveGraphPageOptionalParams } from "./graphPageUrl.js";
-import { useI18n } from "../i18n/I18nContext.jsx";
+import { useI18n } from "../i18n/useI18n.js";
 
 const LS_GRAPH_PAGE_ABOUT = "graphPageAboutOpen";
 

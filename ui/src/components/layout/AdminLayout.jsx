@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import Box from "@mui/material/Box";
 import { Link, Outlet, useLocation } from "react-router-dom";
 
-import { useI18n } from "../../i18n/I18nContext.jsx";
+import { useI18n } from "../../i18n/useI18n.js";
 import PageHeader from "./PageHeader.jsx";
 import { CursorSmallButton } from "../common/index.js";
 import { isAdminModeEnabled } from "./adminVisibility.js";

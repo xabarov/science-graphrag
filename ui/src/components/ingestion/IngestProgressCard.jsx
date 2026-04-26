@@ -7,7 +7,7 @@ import LinearProgress from "@mui/material/LinearProgress";
 import Typography from "@mui/material/Typography";
 
 import IngestStageRow from "./IngestStageRow.jsx";
-import { useI18n } from "../../i18n/I18nContext.jsx";
+import { useI18n } from "../../i18n/useI18n.js";
 
 /**
  * @param {{ ingestJob: object }} props

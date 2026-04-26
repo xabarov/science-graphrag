@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
-import { useI18n } from "../i18n/I18nContext.jsx";
+import { useI18n } from "../i18n/useI18n.js";
 import { getHealth, getWorks } from "../services/researchApi.js";
 
 /** Lightweight read-only probes for the admin hub (no secrets). */

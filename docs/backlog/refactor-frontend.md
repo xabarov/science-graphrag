@@ -33,6 +33,27 @@ Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-co
 
 ## Queue
 
+### [OPEN] AskPanel.jsx — split orchestration + chrome (LOC)
+- **Area:** [`ui/src/components/work/AskPanel.jsx`](../../ui/src/components/work/AskPanel.jsx)
+- **Issue:** В одном файле смешаны workId/scope, i18n, история сессий, синхронизация URL, поиск работ, оркестрация отправки в агента и chrome страницы — рост сложности и риск регрессий.
+- **Proposal:** Вынести `useAskPanelOrchestration` (state + effects), `AskPanelChrome` (заголовок, alerts); оставить `AskPanel` composition shell целевым объёмом порядка ≤250 LOC.
+- **Acceptance:** ни один файл в `ui/src/components/work/` не раздувается выше ~400 LOC без отдельного пункта бэклога; `npm run test` включая `AskAnswerPanel.test.jsx` зелёный.
+- **Raised:** 2026-04-27
+
+### [OPEN] useAgentStream — stable callbacks + abort reason
+- **Area:** [`ui/src/hooks/useAgentStream.js`](../../ui/src/hooks/useAgentStream.js)
+- **Issue:** `stream` в `useCallback` зависит от нескольких колбэков-ссылок; при `AbortController.abort` нет явного различия между навигацией, HMR reload и новым submit для потребителей `onError`.
+- **Proposal:** Паттерн stable callbacks (`useRef` + thin wrapper / `useEvent`), опционально не вызывать `onError` при ожидаемом abort; тест: abort не приводит к ложному «stream ended without final answer» где это нежелательно.
+- **Acceptance:** unit-тест на сценарий abort; контракт документирован в комментарии к хуку.
+- **Raised:** 2026-04-27
+
+### [OPEN] Agent V2 — EN apology fallback on RU workspace inventory query
+- **Area:** [`science_graphrag/api/agent_v2.py`](../../science_graphrag/api/agent_v2.py), цепочка tool selection / system prompt locale
+- **Issue:** Запрос вроде «сколько статей в рабочей области?» с валидным `workspace_id` может вернуть `final_answer` на английском с отказом «no necessary tools» вместо осмысленного ответа по данным области.
+- **Proposal:** Воспроизвести через `curl` SSE; проверить определение языка ответа, intent/inventory path и доступность тулов для подсчёта работ в workspace.
+- **Acceptance:** RU-запрос про объём корпуса области даёт RU-ответ с числом или явным «в области нет работ»; регрессионный тест или зафиксированный benchmark-case по желанию.
+- **Raised:** 2026-04-27
+
 ### [OPEN] Workspace shell — «Research» chip, dropdown noise, пустая зона под карточками
 - **Progress (2026-04-27):** см. Completed (WX5 minimal, empty-state **create workspace** CTA, chip `unnamed`, layout `minHeight`). **2026-04-26:** searchable switcher в popover (фильтр по имени/id), счётчик работ, сортировка, тонкий скролл, компактный футер с иконками — см. [`WorkspaceContextChip.jsx`](../../ui/src/components/layout/WorkspaceContextChip.jsx) (~356 LOC; при refactor-pass вынести строку/панель). **Остаётся:** второй ряд контента под карточками (ingest/dedup/illustration), улучшение копирования id из строки списка.
 - **Area:** [`DashboardLayout`](../../ui/src/components/layout/DashboardLayout/), [`WorkspaceContextChip`](../../ui/src/components/layout/WorkspaceContextChip.jsx) (или аналог триггера «Research»), [`WorkspaceLayout.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceLayout.jsx) / [`WorkspacePage.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx)

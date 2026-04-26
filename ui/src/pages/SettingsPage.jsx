@@ -23,7 +23,7 @@ import {
   updateLlmSettings,
 } from "./SettingsPage/settingsApi.js";
 import { formatResearchApiError } from "../services/researchApi.js";
-import { useI18n } from "../i18n/I18nContext.jsx";
+import { useI18n } from "../i18n/useI18n.js";
 
 function PlaceholderSection({ title, description }) {
   return (

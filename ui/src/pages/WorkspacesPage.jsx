@@ -13,7 +13,7 @@ import { CursorIconAction } from "../components/common/index.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
 import WorkIdGlossaryHint from "../components/layout/WorkIdGlossaryHint.jsx";
 import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
-import { useI18n } from "../i18n/I18nContext.jsx";
+import { useI18n } from "../i18n/useI18n.js";
 import { formatResearchApiError, getWorks } from "../services/researchApi.js";
 import { buildWorkspacePath, persistWorkId } from "./WorkspacePage/utils/workContext.js";
 import { rememberRecentWork } from "./HomePage/homeState.js";

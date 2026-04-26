@@ -9,7 +9,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 
 import { CursorButton } from "../../components/common/index.js";
-import { useI18n } from "../../i18n/I18nContext.jsx";
+import { useI18n } from "../../i18n/useI18n.js";
 import CaseDetailArtifactsSection from "./caseDetail/CaseDetailArtifactsSection.jsx";
 import CaseDetailFixtureTabs from "./caseDetail/CaseDetailFixtureTabs.jsx";
 import CaseDetailStatusSection from "./caseDetail/CaseDetailStatusSection.jsx";

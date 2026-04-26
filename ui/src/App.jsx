@@ -17,7 +17,7 @@ const BenchmarkPage = lazy(() => import("./pages/BenchmarkPage/BenchmarkPage.jsx
 const SettingsPage = lazy(() => import("./pages/SettingsPage.jsx"));
 const DiagnosticsPage = lazy(() => import("./pages/DiagnosticsPage.jsx"));
 const GraphPage = lazy(() => import("./pages/GraphPage.jsx"));
-import { useI18n } from "./i18n/I18nContext.jsx";
+import { useI18n } from "./i18n/useI18n.js";
 import PageHeader from "./components/layout/PageHeader.jsx";
 import DashboardLayout from "./components/layout/DashboardLayout/DashboardLayout.jsx";
 import AdminVisibilityGate from "./components/layout/AdminVisibilityGate.jsx";

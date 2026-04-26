@@ -17,7 +17,7 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import { CursorIconAction } from "../components/common/index.js";
 import { isExplicitAdminMode } from "../components/layout/adminVisibility.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
-import { useI18n } from "../i18n/I18nContext.jsx";
+import { useI18n } from "../i18n/useI18n.js";
 import ReaderWorkBody from "../components/work/ReaderWorkBody.jsx";
 import { getLastWorkId, persistWorkId } from "./WorkspacePage/utils/workContext.js";
 import { buildWorkspaceTracePath, readTraceabilityState } from "../components/work/traceabilityState.js";

@@ -12,7 +12,7 @@ import { Document, Page, pdfjs } from "react-pdf";
 
 import workerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { CursorIconButton } from "../common/index.js";
-import { useI18n } from "../../i18n/I18nContext.jsx";
+import { useI18n } from "../../i18n/useI18n.js";
 
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 

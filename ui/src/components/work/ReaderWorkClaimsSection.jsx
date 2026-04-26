@@ -8,7 +8,7 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 
 import { CursorSmallButton } from "../common/index.js";
-import { useI18n } from "../../i18n/I18nContext.jsx";
+import { useI18n } from "../../i18n/useI18n.js";
 import ReaderClaimsListItems from "./ReaderClaimsListItems.jsx";
 import { useReaderClaimsFilters } from "./useReaderClaimsFilters.js";
 import { useWorkClaims } from "./useWorkClaims.js";

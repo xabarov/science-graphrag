@@ -5,8 +5,8 @@ import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
 
 import AskPanel from "../components/work/AskPanel.jsx";
 import { deriveAskScopeKey, sessionExistsInScope } from "../components/work/askSessionState.js";
-import { useWorkspaceContext } from "../components/layout/WorkspaceContext.jsx";
-import { useI18n } from "../i18n/I18nContext.jsx";
+import { useWorkspaceContext } from "../components/layout/useWorkspaceContext.js";
+import { useI18n } from "../i18n/useI18n.js";
 import { persistWorkId } from "./WorkspacePage/utils/workContext.js";
 import { CursorIconAction } from "../components/common/index.js";
 

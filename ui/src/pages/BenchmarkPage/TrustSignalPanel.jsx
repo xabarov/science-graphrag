@@ -8,7 +8,7 @@ import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 
 import { CursorSmallButton } from "../../components/common/index.js";
-import { useI18n } from "../../i18n/I18nContext.jsx";
+import { useI18n } from "../../i18n/useI18n.js";
 import { useBenchmarkSummary } from "../../hooks/useBenchmarkSummary.js";
 import { formatResearchApiError } from "../../services/researchApi.js";
 

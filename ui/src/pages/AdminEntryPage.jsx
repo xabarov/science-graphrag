@@ -11,7 +11,7 @@ import TroubleshootOutlinedIcon from "@mui/icons-material/TroubleshootOutlined";
 import { CursorIconAction } from "../components/common/index.js";
 import AdminApiStatusStrip from "./AdminApiStatusStrip.jsx";
 import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
-import { useI18n } from "../i18n/I18nContext.jsx";
+import { useI18n } from "../i18n/useI18n.js";
 
 function AdminCard({ title, description, primaryTo, primaryLabel, primaryIcon, secondaryTo, secondaryLabel, secondaryIcon }) {
   return (

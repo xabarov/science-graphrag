@@ -12,6 +12,7 @@ from science_graphrag.ingestion.artifact_layout import (
     resolve_extracted_body_file,
     strip_ingest_artifact_header,
 )
+from science_graphrag.ingestion.markdown_fence import strip_whole_document_markdown_fence
 from science_graphrag.storage.db import get_engine, init_db, session_factory
 from science_graphrag.storage.models_orm import DocumentRecord
 
@@ -359,6 +360,7 @@ def read_work_extracted_body_dict(
         text = strip_ingest_artifact_header(raw)
     else:
         text = raw
+    text = strip_whole_document_markdown_fence(text)
     truncated = len(text) > max_chars
     if truncated:
         text = text[:max_chars]

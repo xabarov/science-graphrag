@@ -15,10 +15,10 @@ import PlayArrowOutlinedIcon from "@mui/icons-material/PlayArrowOutlined";
 
 import { CursorIconAction } from "../components/common/index.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
-import { useWorkspaceContext } from "../components/layout/WorkspaceContext.jsx";
+import { useWorkspaceContext } from "../components/layout/useWorkspaceContext.js";
 import { isExplicitAdminMode } from "../components/layout/adminVisibility.js";
 import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
-import { useI18n } from "../i18n/I18nContext.jsx";
+import { useI18n } from "../i18n/useI18n.js";
 import EvidenceWorkBody from "../components/work/EvidenceWorkBody.jsx";
 import { persistWorkId } from "./WorkspacePage/utils/workContext.js";
 import { buildWorkspaceTracePath, readTraceabilityState } from "../components/work/traceabilityState.js";
