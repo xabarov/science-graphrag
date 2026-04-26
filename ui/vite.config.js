@@ -8,6 +8,8 @@ export default defineConfig({
   server: {
     proxy: {
       "/v1": "http://localhost:8787",
+      /** Agent v2 SSE (`useAgentStream`); required when UI is opened on the Vite port (not only via nginx :8787). */
+      "/v2": "http://localhost:8787",
       "/health": "http://localhost:8787",
     },
   },

@@ -24,6 +24,7 @@ def extract_langgraph_answer(messages: list[Any]) -> tuple[str, list[dict[str, A
     Returns ``(answer, citations_or_none)``. When ``citations_or_none`` is ``None``, keep graph state
     citations; when a list (possibly empty), it replaces citations from ``final_answer`` payload.
     """
+    fallback_tool_args: tuple[str, list[dict[str, Any]] | None] | None = None
     for i in range(len(messages) - 1, -1, -1):
         msg = messages[i]
         if not isinstance(msg, AIMessage):
@@ -31,6 +32,23 @@ def extract_langgraph_answer(messages: list[Any]) -> tuple[str, list[dict[str, A
         for tc in getattr(msg, "tool_calls", None) or []:
             if str(tc.get("name") or "") != "final_answer":
                 continue
+            args = tc.get("args")
+            args_dict = args if isinstance(args, dict) else {}
+            ans_from_args = args_dict.get("answer")
+            if (
+                isinstance(ans_from_args, str)
+                and ans_from_args.strip()
+                and fallback_tool_args is None
+            ):
+                cites_from_args = args_dict.get("citations")
+                fallback_tool_args = (
+                    ans_from_args.strip(),
+                    (
+                        [c for c in cites_from_args if isinstance(c, dict)]
+                        if isinstance(cites_from_args, list)
+                        else []
+                    ),
+                )
             call_id = tc.get("id")
             for follow in messages[i + 1 :]:
                 if not isinstance(follow, ToolMessage):
@@ -52,6 +70,8 @@ def extract_langgraph_answer(messages: list[Any]) -> tuple[str, list[dict[str, A
                     if isinstance(cites, list):
                         return ans.strip(), [c for c in cites if isinstance(c, dict)]
                     return ans.strip(), []
+    if fallback_tool_args is not None:
+        return fallback_tool_args
     for msg in reversed(messages):
         if isinstance(msg, AIMessage) and not getattr(msg, "tool_calls", None):
             return str(msg.content or ""), None

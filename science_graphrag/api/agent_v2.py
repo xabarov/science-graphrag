@@ -21,7 +21,11 @@ from science_graphrag.agent.context.session_store import get_session_for_thread
 from science_graphrag.agent.graph.state import build_initial_agent_state
 from science_graphrag.agent.graph.supervisor import build_retrieval_graph
 from science_graphrag.agent.graph.tracing import collect_tool_trace
-from science_graphrag.agent.runtime import build_agent, current_otel_trace_id_hex
+from science_graphrag.agent.runtime import (
+    build_agent,
+    current_otel_trace_id_hex,
+    extract_langgraph_answer,
+)
 from science_graphrag.api.deps import StoreRegistry, get_stores
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.observability.spans import OpenInferenceAttributes, chain_span
@@ -54,6 +58,75 @@ def normalize_history_digest_input(raw: object) -> tuple[list[dict[str, Any]], b
             return [x for x in parsed if isinstance(x, dict)], False
         return [], True
     return [], False
+
+
+def _looks_like_deferred_topic(question: str) -> bool:
+    """User is setting up the task but says the actual topic will come later."""
+    q = " ".join(str(question or "").lower().split())
+    if not q:
+        return False
+    return any(
+        marker in q
+        for marker in (
+            "следующим сообщением",
+            "следующем сообщении",
+            "следующем запросе",
+            "следующим запросом",
+            "позже сформулирую",
+            "сформулирую позже",
+            "next message",
+            "next prompt",
+        )
+    )
+
+
+def _has_cyrillic(text: str) -> bool:
+    return any("а" <= ch.lower() <= "я" or ch.lower() == "ё" for ch in str(text or ""))
+
+
+def _deferred_topic_answer(question: str) -> str:
+    if _has_cyrillic(question):
+        return (
+            "Хорошо. Пришлите тему следующим сообщением, и я сравню статьи в рабочей области "
+            "по этой теме: выделю совпадения, противоречия и укажу, какие статьи их поддерживают."
+        )
+    return (
+        "Sure. Send the topic in your next message, and I will compare the workspace papers "
+        "around it: agreements, contradictions, and which papers support each point."
+    )
+
+
+def _shortcut_response(
+    *,
+    answer: str,
+    settings: Settings,
+    max_tool_calls: int,
+    duration_ms: int,
+    thread_id: str | None = None,
+    run_metadata: dict[str, Any] | None = None,
+) -> AgentQueryResponseV2:
+    meta = {
+        "agent_runtime": settings.agent_runtime,
+        "agent_max_tool_calls": max_tool_calls,
+        "extraction_llm_model": settings.extraction_llm_model,
+        "extraction_llm_base_url": settings.extraction_llm_base_url,
+    }
+    if run_metadata:
+        meta.update(run_metadata)
+    if thread_id:
+        meta["thread_id"] = thread_id
+    return AgentQueryResponseV2(
+        answer=answer,
+        citations=[],
+        tool_trace=[],
+        duration_ms=duration_ms,
+        phoenix_trace_id=current_otel_trace_id_hex(),
+        run_metadata=meta,
+        thread_id=thread_id,
+        answer_class="synthesis",
+        evidence_summary="clarification requested before retrieval",
+        warnings=[],
+    )
 
 
 class AgentQueryRequestV2(BaseModel):
@@ -162,8 +235,23 @@ async def post_agent_query_v2(
     wants_sse = "text/event-stream" in (accept or "")
     thread_id = (body.thread_id or "").strip() or None
     history_digest, history_digest_invalid = normalize_history_digest_input(body.history_digest)
+    deferred_topic_answer = (
+        _deferred_topic_answer(body.question) if _looks_like_deferred_topic(body.question) else None
+    )
 
     if wants_sse:
+        if deferred_topic_answer:
+            return EventSourceResponse(
+                _stream_shortcut_answer(
+                    settings=settings,
+                    question=body.question,
+                    answer=deferred_topic_answer,
+                    max_tool_calls=max_tool_calls,
+                    workspace_id=workspace_id,
+                    thread_id=thread_id,
+                    reason="deferred_topic_clarification",
+                )
+            )
         return EventSourceResponse(
             _stream_agent(
                 settings=settings,
@@ -179,6 +267,16 @@ async def post_agent_query_v2(
         )
 
     started = perf_counter()
+    if deferred_topic_answer:
+        duration_ms = int((perf_counter() - started) * 1000)
+        return _shortcut_response(
+            answer=deferred_topic_answer,
+            settings=settings,
+            max_tool_calls=max_tool_calls,
+            duration_ms=duration_ms,
+            thread_id=thread_id,
+            run_metadata={"shortcut": "deferred_topic_clarification"},
+        )
     agent = build_agent(settings=settings, stores=stores)
     out = agent.run(
         question=body.question,
@@ -259,6 +357,72 @@ def _iter_update_node_states(chunk: Any) -> list[Any]:
     if isinstance(chunk, dict):
         return list(chunk.values())
     return []
+
+
+async def _stream_shortcut_answer(
+    *,
+    settings: Settings,
+    question: str,
+    answer: str,
+    max_tool_calls: int,
+    workspace_id: str | None,
+    thread_id: str | None = None,
+    reason: str,
+) -> AsyncIterator[dict[str, str]]:
+    """Emit a small SSE response for pre-agent clarifications."""
+    started = perf_counter()
+    yield {
+        "data": json.dumps(
+            {
+                "type": "intent_classified",
+                "answer_class": "synthesis",
+                "source": reason,
+            }
+        )
+    }
+    summary_excerpt: str | None = None
+    if thread_id:
+        new_sum = apply_turn_digest_to_thread(
+            thread_id=thread_id,
+            raw_user_question=question,
+            answer=answer,
+            answer_class="synthesis",
+            tool_trace=[],
+            workspace_id=workspace_id,
+        )
+        summary_excerpt = (new_sum or "")[:500] if str(new_sum or "").strip() else None
+    duration_ms = int((perf_counter() - started) * 1000)
+    yield {"data": json.dumps({"type": "answer_synthesis_started"})}
+    yield {"data": json.dumps({"type": "answer_synthesis_finished"})}
+    yield {
+        "data": json.dumps(
+            {
+                "type": "final_answer",
+                "answer": answer,
+                "citations": [],
+                "tool_trace": [],
+                "duration_ms": duration_ms,
+                "phoenix_trace_id": current_otel_trace_id_hex(),
+                "thread_id": thread_id,
+                "session_summary_excerpt": summary_excerpt,
+                "run_metadata": {
+                    "agent_runtime": settings.agent_runtime,
+                    "agent_max_tool_calls": max_tool_calls,
+                    "extraction_llm_model": settings.extraction_llm_model,
+                    "extraction_llm_base_url": settings.extraction_llm_base_url,
+                    "shortcut": reason,
+                },
+                "answer_class": "synthesis",
+                "evidence_summary": "clarification requested before retrieval",
+                "warnings": [],
+                "inventory": None,
+                "relation_trace": None,
+                "quote_candidates": None,
+                "idea_suggestions": None,
+                "bibliography": None,
+            }
+        )
+    }
 
 
 async def _stream_agent(
@@ -457,6 +621,13 @@ async def _stream_agent(
             trace_for_run: list[Any] = []
             if latest_full_state is not None:
                 trace_for_run = collect_tool_trace(latest_full_state)  # type: ignore[arg-type]
+                state_answer, fa_citations = extract_langgraph_answer(
+                    list(latest_full_state.get("messages") or [])
+                )
+                if state_answer:
+                    final_answer = state_answer
+                if fa_citations is not None:
+                    citations = fa_citations
             trace_list: list[dict[str, Any]] = [dict(t) for t in trace_for_run]
 
             envelope: dict[str, Any] = {}

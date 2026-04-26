@@ -172,6 +172,13 @@ export function useAskPanelOrchestration({
   }, [urlSessionId, scopeKey, bumpSessions, sessionTick]);
 
   useEffect(() => {
+    const id = String(urlSessionId || "").trim();
+    if (!activeSessionId || id === activeSessionId) return;
+    if (id && sessionExistsInScope(scopeKey, id)) return;
+    onUrlSessionIdChange?.(activeSessionId);
+  }, [urlSessionId, activeSessionId, scopeKey, onUrlSessionIdChange]);
+
+  useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setWorkId(locked ? String(scopedWorkId).trim() : initialWorkId || "");
   }, [locked, scopedWorkId, initialWorkId]);

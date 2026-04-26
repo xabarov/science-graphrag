@@ -135,8 +135,12 @@ export function ChatMessageThread({
         flexDirection: "column",
         gap: 0,
         position: "relative",
-        /* With messages: pin block to bottom (composer-adjacent). Empty state: start from top so prompts stay in view. */
-        justifyContent: showEmptyState ? "flex-start" : "flex-end",
+        /*
+         * Keep messages in normal document flow. `justifyContent: flex-end` inside an
+         * overflow container can lay tall threads above the viewport with no usable
+         * scroll range (messages exist in DOM but are visually invisible).
+         */
+        justifyContent: "flex-start",
         alignItems: showEmptyState ? "center" : "stretch",
       }}
     >
@@ -295,7 +299,7 @@ export function ChatMessageThread({
         </IconButton>
       ) : null}
 
-      <Box ref={endRef} sx={{ height: 1, flexShrink: 0, width: "100%" }} />
+      <Box ref={endRef} sx={{ height: "1px", flexShrink: 0, width: "100%" }} />
     </Box>
   );
 }

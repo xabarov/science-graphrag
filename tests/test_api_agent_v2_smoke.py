@@ -101,6 +101,72 @@ def test_v2_sse_stream(monkeypatch) -> None:
     assert "final_answer" in types
 
 
+def test_v2_deferred_topic_shortcuts_sync_without_agent(monkeypatch) -> None:
+    from science_graphrag.api import agent_v2 as agent_v2_api
+
+    def _fail_build_agent(**_kwargs):
+        raise AssertionError("deferred topic should not build the agent")
+
+    monkeypatch.setattr(agent_v2_api, "build_agent", _fail_build_agent)
+    test_app = _build_test_app()
+    client = TestClient(test_app)
+    client.app.dependency_overrides[get_settings] = lambda: Settings()
+    client.app.dependency_overrides[get_stores] = lambda: _EMPTY_STORES
+    try:
+        resp = client.post(
+            "/v2/agent/query",
+            json={
+                "question": "Найди противоречия между статьями по теме, которую я сформулирую следующим сообщением."
+            },
+            headers={"Accept": "application/json"},
+        )
+    finally:
+        client.app.dependency_overrides.pop(get_settings, None)
+        client.app.dependency_overrides.pop(get_stores, None)
+
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+    assert data["answer"].startswith("Хорошо. Пришлите тему")
+    assert data["tool_trace"] == []
+    assert data["run_metadata"]["shortcut"] == "deferred_topic_clarification"
+
+
+def test_v2_deferred_topic_shortcuts_sse_without_graph(monkeypatch) -> None:
+    from science_graphrag.api import agent_v2 as agent_v2_api
+
+    def _fail_build_graph(*_args, **_kwargs):
+        raise AssertionError("deferred topic should not build retrieval graph")
+
+    monkeypatch.setattr(agent_v2_api, "build_retrieval_graph", _fail_build_graph)
+    test_app = _build_test_app()
+    client = TestClient(test_app)
+    client.app.dependency_overrides[get_settings] = lambda: Settings()
+    client.app.dependency_overrides[get_stores] = lambda: _EMPTY_STORES
+    try:
+        with client.stream(
+            "POST",
+            "/v2/agent/query",
+            json={
+                "question": "Найди противоречия между статьями по теме, которую я сформулирую следующим сообщением."
+            },
+            headers={"Accept": "text/event-stream"},
+        ) as resp:
+            assert resp.status_code == 200
+            events = []
+            for line in resp.iter_lines():
+                if line.startswith("data:"):
+                    events.append(json.loads(line[5:].strip()))
+    finally:
+        client.app.dependency_overrides.pop(get_settings, None)
+        client.app.dependency_overrides.pop(get_stores, None)
+
+    finals = [e for e in events if e.get("type") == "final_answer"]
+    assert len(finals) == 1
+    assert finals[0]["answer"].startswith("Хорошо. Пришлите тему")
+    assert finals[0]["tool_trace"] == []
+    assert finals[0]["run_metadata"]["shortcut"] == "deferred_topic_clarification"
+
+
 def test_v1_has_deprecation_header(monkeypatch) -> None:
     from science_graphrag.api import agent as agent_api
 
