@@ -19,6 +19,7 @@ UUID_RE = re.compile(
 EDGE_DISPLAY_TYPE_RAW: dict[str, str] = {
     # Authorship cluster
     "HAS_AUTHORSHIP": "authored by",
+    "AUTHORED": "authored by",
     "OF_AUTHOR": "is author of",
     "AFFILIATED_WITH": "affiliated with",
     # Content relationships

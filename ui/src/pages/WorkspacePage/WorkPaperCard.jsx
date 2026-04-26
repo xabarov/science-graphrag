@@ -8,10 +8,10 @@ import Typography from "@mui/material/Typography";
 
 import { CursorPrimaryButton, CursorSmallButton } from "../../components/common/index.js";
 import { useI18n } from "../../i18n/I18nContext.jsx";
-import { workAskUrl, workEvidenceUrl, workGraphUrl, workReaderUrl } from "./workspacePageUrls.js";
+import { workGraphUrl, workReaderUrl } from "./workspacePageUrls.js";
 
 /**
- * @param {{ workId: string, title: string, year?: number | null, doi?: string | null, arxivId?: string | null, loading?: boolean, error?: string | null, workspaceId?: string, selected?: boolean, onCardActivate?: (workId: string) => void, cardRef?: React.Ref<HTMLDivElement | null> }} props
+ * @param {{ workId: string, title: string, year?: number | null, doi?: string | null, arxivId?: string | null, loading?: boolean, error?: string | null, selected?: boolean, onCardActivate?: (workId: string) => void, cardRef?: React.Ref<HTMLDivElement | null> }} props
  */
 export default function WorkPaperCard({
   workId,
@@ -21,7 +21,6 @@ export default function WorkPaperCard({
   arxivId,
   loading,
   error,
-  workspaceId,
   selected,
   onCardActivate,
   cardRef,
@@ -50,7 +49,6 @@ export default function WorkPaperCard({
         border: selected ? "1px solid rgba(129,140,248,0.55)" : "1px solid rgba(255,255,255,0.08)",
         backgroundColor: selected ? "rgba(99,102,241,0.12)" : "#1a1a1a",
         boxShadow: selected ? "0 0 0 2px rgba(129,140,248,0.35)" : "none",
-        maxWidth: 720,
         cursor: onCardActivate ? "pointer" : "default",
         outline: "none",
       }}
@@ -96,14 +94,8 @@ export default function WorkPaperCard({
             <CursorPrimaryButton component={Link} to={workReaderUrl(workId)} sx={{ textDecoration: "none", fontSize: "0.8125rem" }}>
               {t("workspace.paper.reader")}
             </CursorPrimaryButton>
-            <CursorSmallButton component={Link} to={workGraphUrl(workId, workspaceId)} sx={{ textDecoration: "none" }}>
-              {t("workspace.paper.graph")}
-            </CursorSmallButton>
-            <CursorSmallButton component={Link} to={workAskUrl(workId, workspaceId)} sx={{ textDecoration: "none" }}>
-              {t("workspace.paper.ask")}
-            </CursorSmallButton>
-            <CursorSmallButton component={Link} to={workEvidenceUrl(workId, workspaceId)} sx={{ textDecoration: "none" }}>
-              {t("workspace.paper.evidence")}
+            <CursorSmallButton component={Link} to={workGraphUrl(workId, null)} sx={{ textDecoration: "none" }}>
+              {t("workspace.paper.workGraph")}
             </CursorSmallButton>
           </Box>
         </>

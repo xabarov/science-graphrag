@@ -42,6 +42,7 @@ export default {
   "settings.ingestion.desc.p1":
     "Максимальный размер одного PDF, Markdown- или текстового файла при добавлении документа в рабочую область. Значения выше лимита вашего reverse proxy (например",
   "settings.ingestion.desc.p2": "в nginx) всё равно дадут HTTP 413, пока лимит proxy не повышен до того же уровня.",
+  "settings.ingestion.nginxDirective": "client_max_body_size",
   "settings.ingestion.maxFileSizeLabel": "Максимальный размер файла (МБ)",
   "settings.ingestion.rangeHint":
     "Допустимый диапазон: 1–2048 МБ. Значение из окружения действует, пока вы не сохраните настройку здесь.",

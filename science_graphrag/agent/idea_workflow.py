@@ -121,14 +121,23 @@ class IdeaOrchestrator:
         idea = self._idea_search.run_with_trace(
             step=step,
             trace=trace,
-            args_summary={"q": seed[:120], "workspace_id": workspace_id, "kinds": ["chunk", "work"], "top_k": 10},
+            args_summary={
+                "q": seed[:120],
+                "workspace_id": workspace_id,
+                "kinds": ["chunk", "work"],
+                "top_k": 10,
+            },
             q=seed,
             workspace_id=workspace_id,
             kinds=["chunk", "work"],
             top_k=10,
         )
         step += 1
-        work_ids = [str(item.get("work_id")) for item in (idea.payload.get("items") or []) if item.get("work_id")]
+        work_ids = [
+            str(item.get("work_id"))
+            for item in (idea.payload.get("items") or [])
+            if item.get("work_id")
+        ]
         unique_work_ids = sorted({wid for wid in work_ids if wid})
 
         claim_rows: list[dict[str, Any]] = []
@@ -156,7 +165,9 @@ class IdeaOrchestrator:
                 params={"workspace_id": workspace_id, "work_ids": unique_work_ids},
             )
             step += 1
-            claim_rows = [row for row in (claims_res.payload.get("rows") or []) if isinstance(row, dict)]
+            claim_rows = [
+                row for row in (claims_res.payload.get("rows") or []) if isinstance(row, dict)
+            ]
 
         contradiction_rows: list[dict[str, Any]] = []
         if mode in ("contradictions", "both"):
@@ -165,7 +176,12 @@ class IdeaOrchestrator:
                 rels = self._edge_search.run_with_trace(
                     step=step,
                     trace=trace,
-                    args_summary={"node_id": anchor_work, "rel_types": ["CONTRADICTS"], "direction": "both", "limit": 50},
+                    args_summary={
+                        "node_id": anchor_work,
+                        "rel_types": ["CONTRADICTS"],
+                        "direction": "both",
+                        "limit": 50,
+                    },
                     node_id=anchor_work,
                     rel_types=["CONTRADICTS"],
                     direction="both",
@@ -195,7 +211,9 @@ class IdeaOrchestrator:
                 hypotheses.append(
                     HypothesisCandidate(
                         text=text,
-                        supporting_claim_ids=[str(x).strip() for x in row.supporting_claim_ids if str(x).strip()],
+                        supporting_claim_ids=[
+                            str(x).strip() for x in row.supporting_claim_ids if str(x).strip()
+                        ],
                         novelty_hint=str(row.novelty_hint or "").strip(),
                         evidence_quotes=evidence_quotes,
                     )
@@ -264,7 +282,9 @@ class IdeaOrchestrator:
             },
             ensure_ascii=False,
         )
-        parsed, err = extractor.extract_maybe(_IdeaAssistLLMResponse, system=_IDEA_ASSIST_SYSTEM, user=user)
+        parsed, err = extractor.extract_maybe(
+            _IdeaAssistLLMResponse, system=_IDEA_ASSIST_SYSTEM, user=user
+        )
         if err or parsed is None:
             return _IdeaAssistLLMResponse()
         return parsed

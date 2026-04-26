@@ -6,7 +6,7 @@ export default {
   "readerShell.openWorkspaces": "Open Workspaces",
   "readerShell.openLastArticle": "Open last article",
   "readerShell.advancedTitle": "Advanced",
-  "readerShell.advancedHint": "Load by work UUID (developer or support workflows).",
+  "readerShell.advancedHint": "Load by work UUID (developer or support). Shown when ?dev=1 or admin mode is enabled.",
   "readerShell.workIdLabel": "work_id",
   "readerShell.load": "Load",
   "readerShell.articleEyebrow": "Article",

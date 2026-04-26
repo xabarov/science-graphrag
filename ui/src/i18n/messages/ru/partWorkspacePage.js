@@ -3,12 +3,11 @@ export default {
   "workspace.paper.loading": "Загрузка статьи…",
   "workspace.paper.noTitle": "(без названия)",
   "workspace.paper.hint":
-    "Откройте «Чтение» для извлечённого текста; слева — «Граф», «Вопросы» и «Доказательства» для того же",
+    "Откройте «Чтение» для извлечённого текста. Граф, вопросы и сводка по всей области — в шапке страницы.",
   "workspace.paper.hintSuffix": "Клик по карточке (вне ссылок) фокусирует статью в URL.",
   "workspace.paper.reader": "Чтение",
-  "workspace.paper.graph": "Граф",
-  "workspace.paper.ask": "Вопросы",
-  "workspace.paper.evidence": "Доказательства",
+  "workspace.paper.workGraph": "Граф статьи",
+  "workspace.actions.askWorkspace": "Вопросы по области",
   "workspace.paper.yearChip": "Год {{year}}",
   "workspace.paper.doiChip": "DOI {{doi}}",
 
@@ -49,6 +48,8 @@ export default {
   "workspace.upload.jobLine": "job {{id}} · {{status}}",
   "workspace.upload.newWorkId": "Новый work_id (id статьи):",
   "workspace.upload.dash": "—",
+  "workspace.ingest.progressLabel": "Общий прогресс: {{pct}}%",
+  "workspace.ingest.detailsLogs": "Подробности / логи",
 
   "workspace.advanced.accordion": "Дополнительно: привязать статью по work_id",
   "workspace.advanced.workIdLabel": "work_id",
@@ -57,4 +58,12 @@ export default {
 
   "workspace.noPapers":
     "Пока нет статей. Загрузите файл выше или добавьте work_id из каталога на странице «Рабочие области».",
+
+  "workspace.side.graphTitle": "Снимок графа",
+  "workspace.side.graphStatsLine":
+    "{{works}} работ · {{authors}} авторов · {{internal}} внутр. цит. · {{external}} внеш. цит.",
+  "workspace.side.dedupTitle": "Умное дедуплицирование",
+  "workspace.side.dedupPendingLine": "Ожидают проверки почти-дубликаты: {{count}}",
+  "workspace.side.dedupPendingUnknown": "Запустите сканирование в блоке ниже, чтобы обновить очередь.",
+  "workspace.side.dedupJump": "Перейти к дедупу",
 };

@@ -43,6 +43,7 @@ export default {
   "settings.ingestion.desc.p1":
     "Maximum size for one PDF, Markdown, or plain-text file when adding a document to a workspace. Values above your reverse proxy limit (for example",
   "settings.ingestion.desc.p2": "in nginx) still fail with HTTP 413 until the proxy is raised to match.",
+  "settings.ingestion.nginxDirective": "client_max_body_size",
   "settings.ingestion.maxFileSizeLabel": "Max file size (MB)",
   "settings.ingestion.rangeHint": "Allowed range: 1–2048 MB. Default from environment applies until you save here.",
   "settings.ingestion.saveSaving": "Saving…",

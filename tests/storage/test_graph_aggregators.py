@@ -23,7 +23,7 @@ def test_apply_aggregators_collapses_large_group() -> None:
         }
         for i in range(10)
     ]
-    new_nodes, new_edges = _apply_aggregators(owner_id, nodes, edges, threshold=8)
+    new_nodes, new_edges = _apply_aggregators(owner_id, nodes, edges, global_threshold=8)
     agg_nodes = [n for n in new_nodes if n["node_kind"] == "Aggregator"]
     assert len(agg_nodes) == 1
     assert agg_nodes[0]["aggregation_hints"]["count"] == 10
@@ -42,5 +42,5 @@ def test_apply_aggregators_keeps_small_groups() -> None:
         {"id": f"e-m{i}", "source": "w1", "target": f"m{i+1}", "type": "USES_METHOD"}
         for i in range(3)
     ]
-    new_nodes, _ = _apply_aggregators("w1", nodes, edges, threshold=8)
+    new_nodes, _ = _apply_aggregators("w1", nodes, edges, global_threshold=8)
     assert not any(n["node_kind"] == "Aggregator" for n in new_nodes)

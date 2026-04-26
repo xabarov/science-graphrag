@@ -16,8 +16,8 @@ export default function ReaderShell({ main, rail }) {
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: "minmax(0, 1fr) minmax(260px, 300px)",
-          gap: 2,
+          gridTemplateColumns: "minmax(0, 1fr) minmax(240px, 280px)",
+          gap: 3,
           alignItems: "start",
         }}
       >

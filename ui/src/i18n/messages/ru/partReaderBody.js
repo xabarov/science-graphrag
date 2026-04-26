@@ -11,6 +11,7 @@ export default {
   "readerBody.returnAsk": "Вернуться ко «Вопросам»",
   "readerBody.openEvidence": "Открыть доказательства",
   "readerBody.chunksAdvanced": "Чанки (дополнительно) — {{count}}",
+  "readerBody.chunksTraceHint": "Источники чанков для трассировки ответов агента (отпечатки и превью).",
   "readerBody.hide": "Скрыть",
   "readerBody.show": "Показать",
   "readerBody.ingestionLine":
@@ -30,6 +31,11 @@ export default {
   "readerBody.pdfZoomOut": "Мельче",
   "readerBody.emptyMarkdownTryPdf":
     "В этом превью нет текста чанков — переключитесь на PDF для оригинальных страниц.",
+  "readerBody.openPdf": "Открыть PDF",
+  "readerBody.noExtractedTextOrPdf":
+    "Нет извлечённого текста чанков и нет исходного PDF (например, только Markdown при загрузке).",
+  "readerBody.showAbstract": "Аннотация",
+  "readerBody.hideAbstract": "Скрыть аннотацию",
   "readerBody.claimsTitle": "Утверждения (claims)",
   "readerBody.claimsHint":
     "Извлечённые утверждения с цитатой-доказательством (загрузка по раскрытию). Включите VITE_CLAIMS_ENABLED=true.",

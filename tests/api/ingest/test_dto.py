@@ -28,3 +28,27 @@ def test_ingest_job_view_from_orm() -> None:
     assert view.workspace_id == "ws-1"
     assert view.stages[0].name == "parse_pdf"
     assert view.stages[0].metrics["source_suffix"] == ".pdf"
+
+
+def test_ingest_job_view_progress_pct_weighted() -> None:
+    record = IngestJobRecord(
+        job_id="job-2",
+        workspace_id="ws-1",
+        filename="paper.pdf",
+        status="running",
+        stages=[
+            {
+                "name": "a",
+                "status": "completed",
+                "expected_duration_ms": 1000,
+            },
+            {
+                "name": "b",
+                "status": "running",
+                "expected_duration_ms": 1000,
+            },
+        ],
+    )
+    view = job_record_to_view(record)
+    assert view.progress_pct is not None
+    assert abs(float(view.progress_pct) - 0.75) < 1e-9

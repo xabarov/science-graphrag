@@ -217,3 +217,12 @@ UI: `GET /v1/benchmark/decision-gate-summary` (см. [`frontend-ui-api-contracts
 Файл [`eval/results/benchmark-trust-baseline.json`](../../eval/results/benchmark-trust-baseline.json): `schema_version`, `decision_gate`, `trust_aggregate_per_family`, счётчики phantom в criteria.
 
 **Политика регрессий:** в CI не пересоздавать baseline автоматически; при росте `advisory_phantom_count` относительно закоммиченного baseline — падать шагом проверки (после подключения job в `integration-nightly.yml` / отдельный pytest). Улучшение (меньше phantom) — зелёный diff, baseline обновляют вручную при осознанном «новом полу».
+
+## 11. Wave 5 — политика BT2 / BT4 / BT5 при расширенном корпусе (master §10.3–10.4)
+
+После того как **Qdrant payload** и **scope** для `workspace_scoped_live` честны (см. §8, backfill `ws_full_corpus`), оставшиеся красные кейсы **BT2** почти всегда отражают **качество ответа** (citations / ROUGE / abstain), а не «нулевые hits». Действия:
+
+1. **Не** подкручивать gold, чтобы «зелёнить» judge или retrieval без изменения поведения продукта — это самообман (см. [`master-roadmap-and-refactor-plan-2026-04-25.md`](../analysis/master-roadmap-and-refactor-plan-2026-04-25.md) §10.3).
+2. **BT4 `hybrid_ablation_live`:** если на пилотном корпусе **7 ночей подряд** `mrr_delta = 0` при честном live-прогоне — зафиксировать **negative result** и по политике мейнтейнеров перевести семейство в `fixture_consistency_only` в `aggregate_benchmark_metrics.py` *или* расширить корпус до 20+ работ и переснять сигнал (см. §10.4 п.4 roadmap).
+3. **BT5 judge pilot:** при `hard_block_individual_failures:retrieval_judge_pilot` **NO-GO** ожидаем до стабилизации ответов / порогов / embeddings; holdout (§8.3) остаётся advisory и не разблокирует merge автоматически.
+4. **ADR-021 (bge-m3):** полный cutover embeddings — отдельная сессия (re-ingest, recreate collections); запускать только после явного решения по бюджету и регрессии nightly; см. [`docs/backlog/refactor-backend.md`](../backlog/refactor-backend.md) пункт bge-m3.

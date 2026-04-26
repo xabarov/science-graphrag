@@ -12,6 +12,7 @@ from sqlalchemy import select, text
 
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.stage_context import IngestStage
+from science_graphrag.ingestion.stage_stats import load_mean_stage_duration_ms
 from science_graphrag.storage.db import get_engine, init_db, session_factory
 from science_graphrag.storage.models_orm import IngestJobRecordOrm, IngestJobStageOrm
 
@@ -103,7 +104,9 @@ class IngestJobRegistry:
         )
 
     @staticmethod
-    def _stage_to_dict(row: IngestJobStageOrm) -> dict[str, Any]:
+    def _stage_to_dict(
+        row: IngestJobStageOrm, expected_duration_ms: int | None = None
+    ) -> dict[str, Any]:
         started_iso = row.started_at.isoformat() if row.started_at else None
         finished_iso = row.finished_at.isoformat() if row.finished_at else None
         duration_ms = None
@@ -118,7 +121,7 @@ class IngestJobRegistry:
                     metrics = parsed
             except (json.JSONDecodeError, TypeError, ValueError):
                 metrics = {}
-        return {
+        out: dict[str, Any] = {
             "name": row.stage,
             "status": row.status,
             "started_at": started_iso,
@@ -127,8 +130,18 @@ class IngestJobRegistry:
             "metrics": metrics,
             "error": row.error,
         }
+        if expected_duration_ms is not None:
+            out["expected_duration_ms"] = int(expected_duration_ms)
+        return out
 
-    def _load_job_stages(self, session: Any, job_id: str) -> list[dict[str, Any]]:
+    def _load_job_stages(
+        self,
+        session: Any,
+        job_id: str,
+        *,
+        stage_stats: dict[str, int] | None = None,
+    ) -> list[dict[str, Any]]:
+        stats = stage_stats if stage_stats is not None else load_mean_stage_duration_ms(session)
         stage_rows = (
             session.execute(
                 select(IngestJobStageOrm)
@@ -138,7 +151,10 @@ class IngestJobRegistry:
             .scalars()
             .all()
         )
-        return [self._stage_to_dict(row) for row in stage_rows]
+        return [
+            self._stage_to_dict(row, stats.get(str(row.stage or "").strip()) or None)
+            for row in stage_rows
+        ]
 
     def mark_stale_running_jobs_failed(self) -> None:
         """Mark queued/running jobs as failed after API restart."""
@@ -196,7 +212,8 @@ class IngestJobRegistry:
                 ).scalar_one_or_none()
                 if not row:
                     return None
-                stages = self._load_job_stages(session, job_id)
+                stats = load_mean_stage_duration_ms(session)
+                stages = self._load_job_stages(session, job_id, stage_stats=stats)
                 return self._to_dataclass(row, stages=stages)
 
     def claim_queued_job(self, job_id: str) -> bool:
@@ -258,8 +275,12 @@ class IngestJobRegistry:
                     .scalars()
                     .all()
                 )
+                stats = load_mean_stage_duration_ms(session)
                 return [
-                    self._to_dataclass(row, stages=self._load_job_stages(session, row.job_id))
+                    self._to_dataclass(
+                        row,
+                        stages=self._load_job_stages(session, row.job_id, stage_stats=stats),
+                    )
                     for row in rows
                 ]
 
@@ -278,8 +299,12 @@ class IngestJobRegistry:
                     .scalars()
                     .all()
                 )
+                stats = load_mean_stage_duration_ms(session)
                 return [
-                    self._to_dataclass(row, stages=self._load_job_stages(session, row.job_id))
+                    self._to_dataclass(
+                        row,
+                        stages=self._load_job_stages(session, row.job_id, stage_stats=stats),
+                    )
                     for row in rows
                 ]
 

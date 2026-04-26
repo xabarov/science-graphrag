@@ -8,6 +8,7 @@ export default {
   "common.select": "Выбрать",
   "common.total": "Всего: {{value}}",
   "common.none": "Нет",
+  "common.emDash": "—",
 
   "workIdHint.workspace.p1": "Откройте работу и переключайте вкладки, не теряя контекст.",
   "workIdHint.workspace.p2": "— это id проиндексированной статьи;",

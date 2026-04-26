@@ -33,6 +33,26 @@ export function isAdminModeEnabled() {
 }
 
 /**
+ * True only when admin mode was **explicitly** enabled — either via VITE_ENABLE_ADMIN_SURFACES env
+ * or by localStorage key set to "true". Falls back to false (unlike isAdminModeEnabled which
+ * defaults to true when nothing is configured). Use for dev-only UI panels (Advanced work_id forms).
+ * @returns {boolean}
+ */
+export function isExplicitAdminMode() {
+  let storageValue = null;
+  try {
+    storageValue = window.localStorage.getItem(ADMIN_MODE_STORAGE_KEY);
+  } catch {
+    storageValue = null;
+  }
+  if (storageValue === "true") return true;
+  if (storageValue === "false") return false;
+  const envValue = import.meta.env.VITE_ENABLE_ADMIN_SURFACES;
+  if (typeof envValue === "string") return envValue !== "false";
+  return false; // default: hidden unless explicitly configured
+}
+
+/**
  * @param {string} pathname
  * @returns {boolean}
  */

@@ -206,6 +206,36 @@ class Settings(BaseSettings):
         le=8,
         description="Parallel OpenAI-compatible calls for reference chunks (1 = sequential).",
     )
+    llm_concurrency_default: int = Field(
+        default=4,
+        ge=1,
+        le=32,
+        description="LX1: default async cap for generic LLM bursts (see utils/llm_semaphore.py).",
+    )
+    llm_concurrency_translation: int = Field(
+        default=2,
+        ge=1,
+        le=16,
+        description="LX1/LX2: cap parallel translation SSE workers per API process.",
+    )
+    llm_concurrency_extraction_references: int = Field(
+        default=1,
+        ge=1,
+        le=12,
+        description="LX1: mirrors extraction_llm_references_max_concurrency for unified pools.",
+    )
+    llm_concurrency_claims: int = Field(
+        default=2,
+        ge=1,
+        le=12,
+        description="LX1: cap concurrent claims extraction calls.",
+    )
+    llm_concurrency_summary: int = Field(
+        default=2,
+        ge=1,
+        le=12,
+        description="LX1: cap concurrent workspace summary / hypothesis LLM calls.",
+    )
 
     # Optional: separate credentials for benchmark teacher gold generation (OpenRouter, etc.).
     benchmark_teacher_llm_api_key: str | None = Field(default=None)

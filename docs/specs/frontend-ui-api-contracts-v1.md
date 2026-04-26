@@ -359,3 +359,10 @@ Implementation: [`science_graphrag/api/workspace_graph.py`](../../science_graphr
 - `Ask`: `POST /v1/query`
 - `Evidence`: query citations + chunks lookup by `chunk_fingerprint`
 - `Benchmarks`: `/v1/benchmark/*` (см. §6)
+
+## Ingest job view (WX2-BE)
+
+`GET /v1/ingest/jobs/{job_id}` (`IngestJobView`) дополнительно к `progress_current` / `progress_total` может содержать:
+
+- **`progress_pct`**: `float | null` (0..1) — взвешенный прогресс по стадиям (running = 0.5 веса), чтобы UI рисовал общий бар без «рваных» процентов.
+- **`stages[i].expected_duration_ms`**: `int | null` — средняя длительность стадии по последним успешным jobs (Postgres), подсказка для ETA на фронте.

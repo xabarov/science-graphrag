@@ -91,7 +91,7 @@ export default function WorkspaceDedupSection({ workspaceId, onMerged }) {
   if (!workspaceId) return null;
 
   return (
-    <Box sx={{ mt: 2.5 }}>
+    <Box id="workspace-dedup-section" sx={{ mt: 2.5 }}>
       <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, mb: 1, color: "rgba(129,140,248,0.95)" }}>
         Smart dedup (embeddings + LLM)
       </Typography>

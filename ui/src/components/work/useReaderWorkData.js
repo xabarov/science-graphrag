@@ -64,6 +64,16 @@ export function useReaderWorkData(workId) {
     if (!pdfAvailable && viewMode === "pdf") setViewMode("markdown");
   }, [pdfAvailable, viewMode]);
 
+  /** Prefer PDF when there are no text chunks but an original PDF exists (avoids an empty main column). */
+  useEffect(() => {
+    if (loading || !chunks || !pdfAvailable) return;
+    const totalField = Number(chunks.total);
+    const items = Array.isArray(chunks.items) ? chunks.items : [];
+    const effectiveTotal = Number.isFinite(totalField) && totalField > 0 ? totalField : items.length;
+    if (effectiveTotal === 0) setViewMode("pdf");
+  }, [loading, chunks, pdfAvailable]);
+
+
   return {
     detail,
     chunks,

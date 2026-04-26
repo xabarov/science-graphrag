@@ -124,13 +124,14 @@ export default {
 
   "evidence.header.eyebrow": "Доказательства",
   "evidence.header.title": "Трассируемость",
-  "evidence.header.descBefore": "Цитаты на уровне чанков для",
-  "evidence.header.descMid":
-    ". Откройте статью из рабочей области, затем левую панель или параметры в URL.",
+  "evidence.header.description":
+    "Отпечатки чанков и превью текста для трассировки ответов агента. Откройте из «Чтения» (панель чанков), по ссылке из «Вопросов» или по deep-link с work_id в URL.",
   "evidence.empty.title": "Контекст доказательств не загружен",
   "evidence.empty.body":
-    "Укажите work_id или перейдите из цитаты в «Вопросах» в рабочей области, чтобы открыть доказательства с нужным контекстом.",
+    "Откройте статью из «Рабочих областей» / области, затем «Чтение» или ссылку из цитаты. Для поддержки добавьте ?dev=1 — появится поле work_id.",
   "evidence.openLastWorkspace": "Открыть последнюю область",
+  "evidence.devAdvancedTitle": "Дополнительно: загрузка по work_id",
+  "evidence.devAdvancedHint": "Только для разработки и поддержки. Предпочтительнее deep-link из «Чтения» или «Вопросов».",
 
   "askPage.header.eyebrow": "Вопросы",
   "askPage.header.title": "Вопросы",

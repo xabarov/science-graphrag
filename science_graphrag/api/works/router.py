@@ -118,6 +118,16 @@ def get_work_graph(
     depth: int = Query(default=1, ge=1, le=3),
     prioritize: str | None = Query(default="Method,Dataset,Work"),
     view: str = Query(default="reader", description="reader | raw"),
+    aggregator_threshold: int | None = Query(
+        default=None,
+        ge=2,
+        le=200,
+        description="Optional global override for GR8 neighbor aggregation threshold.",
+    ),
+    aggregator_disabled_kinds: str | None = Query(
+        default=None,
+        description="CSV of neighbor kinds to skip aggregating (e.g. Author,Institution).",
+    ),
     stores: StoreRegistry = Depends(get_stores),
 ) -> dict[str, Any]:
     g = work_graph_neighborhood(
@@ -127,6 +137,8 @@ def get_work_graph(
         depth=depth,
         prioritize=prioritize,
         view=view,
+        aggregator_threshold=aggregator_threshold,
+        aggregator_disabled_kinds=aggregator_disabled_kinds,
     )
     if not g:
         raise HTTPException(status_code=404, detail="work_not_found")

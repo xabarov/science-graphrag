@@ -11,6 +11,7 @@ from dramatiq.middleware import AgeLimit, Retries, TimeLimit
 
 from science_graphrag.api.ingest.registry import _registry
 from science_graphrag.config import get_settings
+from science_graphrag.worker.otel_middleware import OtelTraceMiddleware
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -19,6 +20,7 @@ _broker = RedisBroker(url=settings.redis_url)
 _broker.middleware = [
     mw for mw in _broker.middleware if not isinstance(mw, (Retries, AgeLimit, TimeLimit))
 ]
+_broker.add_middleware(OtelTraceMiddleware())
 _broker.add_middleware(Retries(max_retries=2))
 _broker.add_middleware(AgeLimit(max_age=3 * 60 * 60 * 1000))
 _broker.add_middleware(TimeLimit(time_limit=60 * 60 * 1000))

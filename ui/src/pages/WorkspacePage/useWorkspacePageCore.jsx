@@ -1,0 +1,366 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import Box from "@mui/material/Box";
+import Alert from "@mui/material/Alert";
+
+import { CursorPrimaryButton, CursorSmallButton } from "../../components/common/index.js";
+import { formatResearchApiError, postAgentQuery, postIdeaAssist } from "../../services/researchApi.js";
+import {
+  getActiveWorkspaceId,
+  setActiveWorkspaceId,
+  listWorkspaces,
+  getWorkspace,
+  addWorkToWorkspace,
+  startWorkspaceDocumentIngest,
+  startWorkspaceBatchIngest,
+  getWorkspaceGraphStats,
+} from "../../utils/workspaceStore.js";
+import { isAdminModeEnabled } from "../../components/layout/adminVisibility.js";
+import { persistWorkId, resolveSelectedWorkId } from "./utils/workContext.js";
+import { useI18n } from "../../i18n/I18nContext.jsx";
+import useJobStream from "../../hooks/useJobStream.js";
+import { useWorkspacePapersModel } from "./useWorkspacePapersModel.js";
+
+const INGEST_JOB_STORAGE_PREFIX = "science-graphrag:workspaceIngestJob:";
+
+export function useWorkspacePageCore() {
+  const { t } = useI18n();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const workspaceIdFromUrl = (searchParams.get("workspace_id") || "").trim();
+  const workIdFromUrl = (searchParams.get("work_id") || "").trim();
+
+  const [workspaceMeta, setWorkspaceMeta] = useState({ id: "", name: "", work_ids: [] });
+  const [workspaceLoading, setWorkspaceLoading] = useState(true);
+  const [workspaceError, setWorkspaceError] = useState(null);
+  const [addWorkInput, setAddWorkInput] = useState("");
+  const [addBusy, setAddBusy] = useState(false);
+  const [addErr, setAddErr] = useState(null);
+
+  const [ingestJobId, setIngestJobId] = useState("");
+  const [ingestJob, setIngestJob] = useState(null);
+  const [ingestErr, setIngestErr] = useState(null);
+  const [uploadBusy, setUploadBusy] = useState(false);
+  const [graphStats, setGraphStats] = useState(null);
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  const [summaryBusy, setSummaryBusy] = useState(false);
+  const [summaryText, setSummaryText] = useState("");
+  const [ideaOpen, setIdeaOpen] = useState(false);
+  const [ideaBusy, setIdeaBusy] = useState(false);
+  const [ideaError, setIdeaError] = useState("");
+  const [ideaResult, setIdeaResult] = useState({ hypotheses: [], contradictions: [], toolTrace: [] });
+  const canUseIdeaAssist = useMemo(() => isAdminModeEnabled(), []);
+
+  const refreshWorkspaceMeta = useCallback(async () => {
+    const id = workspaceMeta.id;
+    if (!id) return;
+    try {
+      const ws = await getWorkspace(id);
+      if (ws) setWorkspaceMeta(ws);
+    } catch {
+      /* ignore */
+    }
+  }, [workspaceMeta.id]);
+
+  const setPersistedIngestJobId = useCallback((workspaceId, jobId) => {
+    const ws = String(workspaceId || "").trim();
+    if (!ws) return;
+    const key = `${INGEST_JOB_STORAGE_PREFIX}${ws}`;
+    try {
+      const jid = String(jobId || "").trim();
+      if (jid) window.sessionStorage.setItem(key, jid);
+      else window.sessionStorage.removeItem(key);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const readPersistedIngestJobId = useCallback((workspaceId) => {
+    const ws = String(workspaceId || "").trim();
+    if (!ws) return "";
+    try {
+      return String(window.sessionStorage.getItem(`${INGEST_JOB_STORAGE_PREFIX}${ws}`) || "").trim();
+    } catch {
+      return "";
+    }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setWorkspaceLoading(true);
+      setWorkspaceError(null);
+      try {
+        const list = await listWorkspaces();
+        if (cancelled) return;
+        let activeId = workspaceIdFromUrl || getActiveWorkspaceId();
+        if (!activeId && list.length) activeId = list[0].id;
+        if (!activeId) {
+          setWorkspaceMeta({ id: "", name: "", work_ids: [] });
+          return;
+        }
+        setActiveWorkspaceId(activeId);
+        const ws = await getWorkspace(activeId);
+        if (cancelled) return;
+        if (!ws) {
+          setWorkspaceError(t("workspace.err.notFound"));
+          setWorkspaceMeta({ id: "", name: "", work_ids: [] });
+          return;
+        }
+        setWorkspaceMeta(ws);
+        const restoredJobId = readPersistedIngestJobId(ws.id);
+        if (restoredJobId) setIngestJobId(restoredJobId);
+        const nextParams = new URLSearchParams();
+        nextParams.set("workspace_id", ws.id);
+        const ids = Array.isArray(ws.work_ids) ? ws.work_ids : [];
+        if (ids.length === 1) {
+          nextParams.set("work_id", ids[0]);
+        } else if (workIdFromUrl && ids.includes(workIdFromUrl)) {
+          nextParams.set("work_id", workIdFromUrl);
+        }
+        setSearchParams(nextParams, { replace: true });
+      } catch (e) {
+        if (!cancelled) setWorkspaceError(formatResearchApiError(e));
+      } finally {
+        if (!cancelled) setWorkspaceLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [workspaceIdFromUrl, workIdFromUrl, setSearchParams, t, readPersistedIngestJobId]);
+
+  useEffect(() => {
+    const id = String(workspaceMeta.id || "").trim();
+    if (!id) {
+      setGraphStats(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const s = await getWorkspaceGraphStats(id);
+        if (!cancelled) setGraphStats(s);
+      } catch {
+        if (!cancelled) setGraphStats(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [workspaceMeta.id]);
+
+  const effectiveWorkIds = useMemo(() => {
+    const fromWs = Array.isArray(workspaceMeta.work_ids) ? workspaceMeta.work_ids : [];
+    if (fromWs.length) return fromWs;
+    return [];
+  }, [workspaceMeta.work_ids]);
+
+  const selectedWorkId = useMemo(
+    () => resolveSelectedWorkId({ workIds: effectiveWorkIds, workIdFromUrl }),
+    [effectiveWorkIds, workIdFromUrl],
+  );
+
+  const { papers } = useWorkspacePapersModel({
+    workspaceId: workspaceMeta.id || "",
+    effectiveWorkIds,
+  });
+
+  const setWorkFocusInUrl = useCallback(
+    (wid) => {
+      const w = String(wid || "").trim();
+      if (!workspaceMeta.id || !w) return;
+      const p = new URLSearchParams();
+      p.set("workspace_id", workspaceMeta.id);
+      p.set("work_id", w);
+      setSearchParams(p, { replace: true });
+    },
+    [workspaceMeta.id, setSearchParams],
+  );
+
+  useEffect(() => {
+    if (selectedWorkId) persistWorkId(selectedWorkId);
+  }, [selectedWorkId]);
+
+  useJobStream({
+    jobId: ingestJobId,
+    enabled: Boolean(ingestJobId),
+    onUpdate: useCallback((job) => setIngestJob(job), []),
+    onTerminal: useCallback(
+      async () => {
+        await refreshWorkspaceMeta();
+        setPersistedIngestJobId(workspaceMeta.id, "");
+        setIngestJobId("");
+      },
+      [refreshWorkspaceMeta, setPersistedIngestJobId, workspaceMeta.id],
+    ),
+    onError: useCallback(
+      (err, failCount) => {
+        if (failCount >= 3) setIngestErr(formatResearchApiError(err));
+      },
+      [setIngestErr],
+    ),
+    fallbackPollMs: 2000,
+  });
+
+  const emptyState = useMemo(
+    () => (
+      <Box sx={{ maxWidth: 560, mt: 2 }}>
+        <Alert severity="info" sx={{ fontSize: "0.8125rem", mb: 2, backgroundColor: "rgba(99,102,241,0.08)", color: "rgba(255,255,255,0.85)" }}>
+          {t("workspace.empty.alert")}
+        </Alert>
+        <CursorPrimaryButton component={Link} to="/workspaces" sx={{ textDecoration: "none" }}>
+          {t("workspace.empty.workspaces")}
+        </CursorPrimaryButton>
+        <CursorSmallButton component={Link} to="/home" sx={{ textDecoration: "none", ml: 1 }}>
+          {t("workspace.empty.about")}
+        </CursorSmallButton>
+      </Box>
+    ),
+    [t],
+  );
+
+  async function handleAddWork(e) {
+    e?.preventDefault?.();
+    const raw = addWorkInput.trim();
+    if (!raw || !workspaceMeta.id) return;
+    setAddBusy(true);
+    setAddErr(null);
+    try {
+      await addWorkToWorkspace(workspaceMeta.id, raw);
+      setAddWorkInput("");
+      const ws = await getWorkspace(workspaceMeta.id);
+      if (ws) setWorkspaceMeta(ws);
+    } catch (err) {
+      setAddErr(formatResearchApiError(err));
+    } finally {
+      setAddBusy(false);
+    }
+  }
+
+  async function handleUploadDocument(ev) {
+    const file = ev.target.files?.[0];
+    ev.target.value = "";
+    if (!file || !workspaceMeta.id) return;
+    setUploadBusy(true);
+    setIngestErr(null);
+    try {
+      const job = await startWorkspaceDocumentIngest(workspaceMeta.id, file);
+      const jid = String(job?.job_id || "").trim();
+      if (jid) {
+        setIngestJob(job);
+        setIngestJobId(jid);
+        setPersistedIngestJobId(workspaceMeta.id, jid);
+      }
+    } catch (err) {
+      setIngestErr(formatResearchApiError(err));
+    } finally {
+      setUploadBusy(false);
+    }
+  }
+
+  async function handleUploadBatch(files, archive = null) {
+    if (!workspaceMeta.id) return;
+    const list = Array.isArray(files) ? files.filter(Boolean) : [];
+    if (!list.length && !archive) return;
+    setUploadBusy(true);
+    setIngestErr(null);
+    try {
+      const job = await startWorkspaceBatchIngest(workspaceMeta.id, list, archive);
+      const jid = String(job?.job_id || "").trim();
+      if (jid) {
+        setIngestJob(job);
+        setIngestJobId(jid);
+        setPersistedIngestJobId(workspaceMeta.id, jid);
+      }
+    } catch (err) {
+      setIngestErr(formatResearchApiError(err));
+    } finally {
+      setUploadBusy(false);
+    }
+  }
+
+  const onCardActivate =
+    workspaceMeta.id && effectiveWorkIds.length > 1 ? (wid) => setWorkFocusInUrl(wid) : undefined;
+
+  async function handleSummarizeWorkspace() {
+    if (!workspaceMeta.id) return;
+    setSummaryBusy(true);
+    try {
+      const res = await postAgentQuery({
+        question: "Briefly summarize this workspace: topics, methods, datasets, and key findings.",
+        workspace_id: workspaceMeta.id,
+        max_tool_calls: 8,
+      });
+      setSummaryText(String(res?.data?.answer || ""));
+      setSummaryOpen(true);
+    } catch (err) {
+      setSummaryText(formatResearchApiError(err));
+      setSummaryOpen(true);
+    } finally {
+      setSummaryBusy(false);
+    }
+  }
+
+  async function handleGenerateHypotheses() {
+    if (!workspaceMeta.id || !canUseIdeaAssist) return;
+    setIdeaBusy(true);
+    setIdeaError("");
+    try {
+      const res = await postIdeaAssist({
+        workspace_id: workspaceMeta.id,
+        mode: "both",
+        max_candidates: 3,
+      });
+      const data = res?.data || {};
+      setIdeaResult({
+        hypotheses: Array.isArray(data.hypotheses) ? data.hypotheses : [],
+        contradictions: Array.isArray(data.contradictions) ? data.contradictions : [],
+        toolTrace: Array.isArray(data.tool_trace) ? data.tool_trace : [],
+      });
+      setIdeaOpen(true);
+    } catch (err) {
+      setIdeaResult({ hypotheses: [], contradictions: [], toolTrace: [] });
+      setIdeaError(formatResearchApiError(err));
+      setIdeaOpen(true);
+    } finally {
+      setIdeaBusy(false);
+    }
+  }
+
+  return {
+    t,
+    workspaceMeta,
+    workspaceLoading,
+    workspaceError,
+    addWorkInput,
+    setAddWorkInput,
+    addBusy,
+    addErr,
+    papers,
+    ingestJobId,
+    ingestJob,
+    ingestErr,
+    uploadBusy,
+    graphStats,
+    summaryOpen,
+    setSummaryOpen,
+    summaryBusy,
+    summaryText,
+    ideaOpen,
+    setIdeaOpen,
+    ideaBusy,
+    ideaError,
+    ideaResult,
+    canUseIdeaAssist,
+    effectiveWorkIds,
+    selectedWorkId,
+    refreshWorkspaceMeta,
+    emptyState,
+    handleAddWork,
+    handleUploadDocument,
+    handleUploadBatch,
+    onCardActivate,
+    handleSummarizeWorkspace,
+    handleGenerateHypotheses,
+  };
+}

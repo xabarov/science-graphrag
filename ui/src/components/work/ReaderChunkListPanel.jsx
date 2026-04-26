@@ -25,6 +25,9 @@ export default function ReaderChunkListPanel({ chunks, chunksOpen, setChunksOpen
 
   return (
     <>
+      <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.42)", mb: 1, lineHeight: 1.45 }}>
+        {t("readerBody.chunksTraceHint")}
+      </Typography>
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, mb: 0.5 }}>
         <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem" }}>{t("readerBody.chunksAdvanced", { count: countLabel })}</Typography>
         <CursorSmallButton type="button" onClick={() => setChunksOpen((o) => !o)} sx={{ fontSize: "0.75rem" }}>

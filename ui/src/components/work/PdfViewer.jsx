@@ -31,7 +31,12 @@ export default function PdfViewer({ fileUrl }) {
   }, []);
 
   const onLoadError = useCallback((err) => {
-    setLoadError(err?.message || String(err));
+    const msg = err?.message || String(err);
+    if (import.meta.env?.DEV) {
+      // eslint-disable-next-line no-console -- intentional diagnostics for PDF worker / URL issues
+      console.error("[PdfViewer] load error", err);
+    }
+    setLoadError(msg);
   }, []);
 
   return (

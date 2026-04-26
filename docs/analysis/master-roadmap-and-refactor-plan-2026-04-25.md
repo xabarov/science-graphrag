@@ -73,8 +73,8 @@ hard_block_individual_failures = []
 | **C** | Phoenix tracing coverage | [`phoenix-tracing-coverage-2026-04-25.md`](phoenix-tracing-coverage-2026-04-25.md) | X1/X2 ✅ done | **Wave X3** (worker OTel context propagation в Dramatiq) |
 | **D** | Ontology + Benchmarks + IR | [`ontology-benchmarks-roadmap-2026-04-24.md`](ontology-benchmarks-roadmap-2026-04-24.md) + [`ontology-benchmarks-trust-audit-2026-04-25.md`](ontology-benchmarks-trust-audit-2026-04-25.md) | M ✅; **BT1 ✅, BT5 ✅, BT2/BT4/BT6 ⚠️ partial (Wave 4)**; N/O/P/Q/R/S done as scaffold (advisory phantom); T backend done, gold pending | **BT3 (multihop), BT7..BT12** + corpus extension до 16-20 paper, см. §10 |
 | **E** | Graph UX aggregation | [`graph-readability-followup-2026-04-25.md`](graph-readability-followup-2026-04-25.md) + ADR 011/012 | GR1 ✅, GR2 partial (backend done, UI pending), GR3 ✅ with caveats, GR4 → GR9 (open) | **GR6** (UI canvas displayType) → **GR7** (i18n) → **GR8** (smarter aggregation) → **GR9** (reader view) → **GR5** (counters) |
-| **F** | Workspace experience | [`workspace-ux-redesign-2026-04-25.md`](workspace-ux-redesign-2026-04-25.md) | I/J/K1/K2/K3/L1/L2 ✅ done; L3 gated | **Серия WX1–WX6 (UX redesign) — open** |
-| **RX** | Reader UX («Чтение») | [`reader-ux-and-translation-roadmap-2026-04-25.md`](reader-ux-and-translation-roadmap-2026-04-25.md) | open | **RX1+RX2** (IA + Markdown) → **RX3** (TOC) → **RX4** (chunks dev-only) → **RX6** (visual polish) → **RX5** (translate UI) → **RX7** (unify shell) |
+| **F** | Workspace experience | [`workspace-ux-redesign-2026-04-25.md`](workspace-ux-redesign-2026-04-25.md) | I/J/K1/K2/K3/L1/L2 ✅ done; L3 gated; **WX1 ✅ done (2026-04-26)** | **WX2–WX6** (ingest progress, dedup card, icons, switcher, i18n) — open |
+| **RX** | Reader UX («Чтение») | [`reader-ux-and-translation-roadmap-2026-04-25.md`](reader-ux-and-translation-roadmap-2026-04-25.md) | **RX1 partial ✅ (2026-04-26):** shell + rail meta + auto-PDF + dev-gated advanced; **RX1 remainder:** TOC/trace rail polish → **RX3** | **RX2** (Markdown pipeline) → **RX3** (TOC) → **RX4** (chunks dev-only) → **RX6** (visual polish) → **RX5** (translate UI) → **RX7** (unify shell) |
 | **LX** | LLM concurrency cluster + translation | [`reader-ux-and-translation-roadmap-2026-04-25.md`](reader-ux-and-translation-roadmap-2026-04-25.md) §6 | open | **LX1** (settings cluster) → **LX2** (translation backend) → **LX3** (Settings UI) |
 | **G** | Backend refactor | [`docs/backlog/refactor-backend.md`](../backlog/refactor-backend.md) | mixed | см. §4.G |
 | **H** | Frontend refactor | [`docs/backlog/refactor-frontend.md`](../backlog/refactor-frontend.md) | mixed | см. §4.H |
@@ -101,17 +101,17 @@ hard_block_individual_failures = []
 
    Track E:  (GR1/GR2 backend/GR3 ✅) ── GR6 (UI displayType) ── GR7 (i18n) ── GR8 (smart agg) ── GR9 (reader view) ── GR5 (counters)
 
-   Track F:  (I/J/K/L1-L2 ✅) ── WX1 (layout + hero) ──┬── WX2-FE (ingest progress)
-                                                       ├── WX2-BE (progress_pct)
-                                                       └── WX5 (workspace switcher + CTA)
-                                                                      ↓
-                                                              WX4 (icons sweep)
-                                                                      ↓
-                                                              WX6 (i18n + dedup compact)
-                                                                      ↓
-                                                              WX3-BE (ingest-time dedup decision) ── WX3-FE (IngestDedupCard)
+   Track F:  (I/J/K/L1-L2 ✅) ── WX1 ✅ (2026-04-26: layout + hero + side panel) ──┬── WX2-FE (ingest progress)
+                                                                                  ├── WX2-BE (progress_pct)
+                                                                                  └── WX5 (workspace switcher + CTA)
+                                                                                                 ↓
+                                                                                         WX4 (icons sweep)
+                                                                                                 ↓
+                                                                                         WX6 (i18n + dedup compact)
+                                                                                                 ↓
+                                                                                         WX3-BE (ingest-time dedup decision) ── WX3-FE (IngestDedupCard)
 
-   Track RX: RX1 (IA + layout) ── RX2 (markdown render) ── RX3 (TOC) ── RX4 (chunks dev-only) ── RX6 (visual polish)
+   Track RX: RX1 partial ✅ (2026-04-26) ── RX1 remainder + RX2 (markdown render) ── RX3 (TOC) ── RX4 (chunks dev-only) ── RX6 (visual polish)
                                                                                                           ↓
                                                                                                   (after LX2) RX5 (translate UI)
                                                                                                           ↓
@@ -196,6 +196,8 @@ hard_block_individual_failures = []
 
 **Порядок:** WX1 → (WX2-FE ‖ WX2-BE ‖ WX5) → WX4 → WX6 → (WX3-BE → WX3-FE).
 
+**Статус (2026-04-26):** Wave **WX1** ✅ — `WorkspaceLayout` / `WorkspaceHero` / `WorkspaceSidePanel`, сетка карточек, сняты `maxWidth` у ingest/cards, workspace-level actions в hero (**EF-Cards**). См. [`refactor-frontend.md`](../backlog/refactor-frontend.md) — `[DONE] Workspace UX — Wave WX1`.
+
 ### 4.RX — Reader UX (Wave RX1–RX7)
 
 > Источник: [`reader-ux-and-translation-roadmap-2026-04-25.md`](reader-ux-and-translation-roadmap-2026-04-25.md). Триггер — ревью UI 2026-04-25: страница `/reader` остаётся «дев-инспектором чанков» (TextField на UUID, plain-text вместо Markdown, видимые «чанки» как продуктовый контент, нет TOC, нет перевода EN→RU).
@@ -211,6 +213,8 @@ hard_block_individual_failures = []
 | **RX7** | FE | Unify `ReaderTab` ↔ `ReaderPage` через общий `<ReaderShell mode>`; **закрывает** [`H-ReaderWorkBodySplit`](../backlog/refactor-frontend.md) | `ReaderShell.jsx`, `ReaderPage.jsx`, `WorkspacePage/tabs/ReaderTab.jsx` |
 
 **Порядок:** RX1 + RX2 (один PR) → RX3 → RX4 → RX6 → (после **LX2**) RX5 → RX7.
+
+**Статус (2026-04-26):** Wave **RX1** **частично** ✅ — `ReaderShell` колонки, rail без дубля title (abstract в `Collapse`), auto-PDF при пустых chunks, alerts для пустого markdown, Advanced только `?dev=1`/admin, trace-hint на чанках, `PdfViewer` DEV-диагностика (**EF-Reader**). **Остаётся** для «полного» RX1: TOC + section anchors (**RX3**), унификация meta/trace rail; **RX2** (Markdown pipeline) — отдельным PR по таблице выше.
 
 ### 4.LX — LLM concurrency cluster + translation backend
 
@@ -283,11 +287,11 @@ hard_block_individual_failures = []
 
 > **Назначение:** закрыть оставшиеся advisory-фантомы и Wave T. Acceptance: `decision_gate.GO` валиден при `advisory_phantom_count == 0`; `current-dedup-{authors,institutions,venues,methods,datasets}-mini.json` существуют и зелёные advisory.
 
-### Раунд 8 — Workspace UX redesign волна 1 (WX1 + WX2-FE + WX2-BE + WX5) — PLANNED
+### Раунд 8 — Workspace UX redesign волна 1 (WX1 + WX2-FE + WX2-BE + WX5) — IN PROGRESS (WX1 ✅)
 
 См. [`workspace-ux-redesign-2026-04-25.md`](workspace-ux-redesign-2026-04-25.md).
 
-- **A1: Wave WX1** — `WorkspaceLayout.jsx` + `WorkspaceHero.jsx` + `WorkspaceSidePanel.jsx`; убрать `maxWidth: 560/720`; CSS grid `auto-fit minmax(320px,1fr)`; распилить `WorkspacePage.jsx` (закрывает `H-WorkspacePageSlim`).
+- **A1: Wave WX1** — ✅ **done 2026-04-26** — `WorkspaceLayout.jsx` + `WorkspaceHero.jsx` + `WorkspaceSidePanel.jsx`; убраны `maxWidth: 560/720`; CSS grid карточек (1/2/3 колонки); `WorkspacePage.jsx` slim (~86 LOC) + `useWorkspacePapersModel` / `WorkspaceDialogs` (закрывает `H-WorkspacePageSlim`).
 - **A2: Wave WX2-FE** — `IngestProgressCard` + `IngestStageRow` с MUI-иконками, shimmer, локализация stage names, ETA, свёрнутые «Подробности». **Стартует после WX1 merge.**
 - **A3: Wave WX2-BE** — `IngestJobView.progress_pct`, `IngestJobView.stages[i].expected_duration_ms` (helper `ingestion/stage_stats.py`); обновить `frontend-ui-api-contracts-v1.md`. Параллельно WX1.
 - **A4: Wave WX5** — новый `WorkspaceSwitcher.jsx` (заменяет `WorkspaceContextChip`); inline в `WorkspaceHero` и shell-хедере; явная CTA `+ Новая` на empty-state. **Стартует после WX1 merge.**
@@ -303,11 +307,11 @@ hard_block_individual_failures = []
 
 > **Назначение:** закрыть пункты 5, 6, 7 пользовательской жалобы (нет confirmation card при загрузке дубля, не хватает иконок, EN-only smart-dedup). **Конфликт по `pipeline.py`** (WX3-BE ↔ WX2-BE) → WX3-BE стартует **после** WX2-BE merge (раунд 8).
 
-### Раунд 10 — Reader UX волна 1 + LLM concurrency cluster (RX1 + RX2 + RX3 + LX1) — PLANNED
+### Раунд 10 — Reader UX волна 1 + LLM concurrency cluster (RX1 + RX2 + RX3 + LX1) — IN PROGRESS (RX1 partial ✅)
 
 См. [`reader-ux-and-translation-roadmap-2026-04-25.md`](reader-ux-and-translation-roadmap-2026-04-25.md).
 
-- **A1: Wave RX1** — IA + layout: `ReaderShell`, `ReaderSideRail`, заголовок-название статьи, двухколоночный layout `lg+`.
+- **A1: Wave RX1** — **partial ✅ 2026-04-26** — IA + layout: `ReaderShell`, `ReaderSideRail`, заголовок-название статьи, двухколоночный layout `lg+`, auto-PDF / empty-state, rail abstract collapsed, dev-gated Advanced. **Остаётся:** TOC + финальный rail (**RX3** и доработки RX1).
 - **A2: Wave RX2** — Markdown render: `react-markdown@^9` + `remark-gfm` + `remark-math` + `rehype-katex` + `rehype-highlight` + `rehype-slug`; новый `MarkdownView.jsx` lazy-import. **Стартует после RX1 merge** (общий `ReaderShell`).
 - **A3: Wave RX3** — TOC + section anchors: `ReaderTableOfContents` + `IntersectionObserver`. **Стартует после RX2 merge** (нужны `<h*>` якоря).
 - **A4: Wave LX1** — settings cluster: пять полей `llm_concurrency_*`; `utils/llm_semaphore.py`; миграция `extraction_llm_references_max_concurrency` → alias; `.env.example`. **Параллельно** RX1/RX2/RX3 — backend, разные файлы.

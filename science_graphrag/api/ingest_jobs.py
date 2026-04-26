@@ -8,7 +8,12 @@ from science_graphrag.api.ingest.dispatcher import (
     start_batch_ingest_job,
     start_ingest_job,
 )
-from science_graphrag.api.ingest.dto import IngestJobEvent, IngestJobRecord, IngestJobView, IngestStageView
+from science_graphrag.api.ingest.dto import (
+    IngestJobEvent,
+    IngestJobRecord,
+    IngestJobView,
+    IngestStageView,
+)
 from science_graphrag.api.ingest.registry import IngestJobRegistry, _registry
 from science_graphrag.api.ingest.router import router
 from science_graphrag.api.ingest_event_bus import BUS

@@ -3,12 +3,11 @@ export default {
   "workspace.paper.loading": "Loading paper…",
   "workspace.paper.noTitle": "(no title)",
   "workspace.paper.hint":
-    "Open the reader for extracted text; use the left rail for Graph, Ask, and Evidence with the same",
+    "Open Reader for extracted text. Use workspace actions in the header for graph, ask, and summaries across all papers.",
   "workspace.paper.hintSuffix": "Click the card (outside links) to focus this paper in the URL.",
   "workspace.paper.reader": "Reader",
-  "workspace.paper.graph": "Graph",
-  "workspace.paper.ask": "Ask",
-  "workspace.paper.evidence": "Evidence",
+  "workspace.paper.workGraph": "Paper graph",
+  "workspace.actions.askWorkspace": "Ask (workspace)",
   "workspace.paper.yearChip": "Year {{year}}",
   "workspace.paper.doiChip": "DOI {{doi}}",
 
@@ -48,6 +47,8 @@ export default {
   "workspace.upload.jobLine": "job {{id}} · {{status}}",
   "workspace.upload.newWorkId": "New work_id:",
   "workspace.upload.dash": "—",
+  "workspace.ingest.progressLabel": "Overall progress: {{pct}}%",
+  "workspace.ingest.detailsLogs": "Details / logs",
 
   "workspace.advanced.accordion": "Advanced: add existing work_id",
   "workspace.advanced.workIdLabel": "work_id",
@@ -56,4 +57,12 @@ export default {
 
   "workspace.noPapers":
     "No papers yet. Upload a file above, or add an existing work_id from the catalog under Workspaces.",
+
+  "workspace.side.graphTitle": "Graph snapshot",
+  "workspace.side.graphStatsLine":
+    "{{works}} works · {{authors}} authors · {{internal}} internal cites · {{external}} external cites",
+  "workspace.side.dedupTitle": "Smart dedup",
+  "workspace.side.dedupPendingLine": "Pending near-duplicate reviews: {{count}}",
+  "workspace.side.dedupPendingUnknown": "Run a scan in the section below to refresh the queue.",
+  "workspace.side.dedupJump": "Open dedup section",
 };

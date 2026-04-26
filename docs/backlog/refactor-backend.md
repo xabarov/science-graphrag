@@ -224,6 +224,14 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 - **Acceptance:** `science-graphrag config-check` выводит полную диагностику; exit code 1 при пустом extraction_llm_api_key; правило обновлено на эту команду вместо throwaway-питона.
 - **Raised:** 2026-04-26 (постмортем Wave 4 env-var footgun).
 
+### [OPEN] LX1 integration: wire build_llm_semaphore_map into translation SSE handler
+- **Area:** [`science_graphrag/utils/llm_semaphore.py`](../../science_graphrag/utils/llm_semaphore.py), translation worker/endpoint (LX2 dependency)
+- **Issue:** `build_llm_semaphore_map` создан как фундамент LX1, но ни один production-путь его пока не вызывает. Конкурентность translation/claims/summary LLM-вызовов не ограничена.
+- **Proposal:** В translation SSE endpoint/worker (будущий LX2) передавать `semaphore_map["translation"]` как `asyncio.Semaphore`; аналогично для claims и summary в соответствующих точках.
+- **Acceptance:** При параллельных translation-запросах система соблюдает `llm_concurrency_translation`; integration-тест или нагрузочный smoke-check.
+- **Synergy:** LX2 → LX1 → интеграция.
+- **Raised:** 2026-04-26
+
 <!-- Example:
 ### [OPEN] Example — tighten retrieval module boundaries
 - **Area:** `science_graphrag/api/retrieval.py`, related services

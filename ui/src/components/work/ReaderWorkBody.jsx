@@ -4,6 +4,7 @@ import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 
+import { CursorSmallButton } from "../common/index.js";
 import { workPdfUrl } from "../../services/researchApi.js";
 import { describeTraceabilityState } from "./traceabilityState.js";
 import { useI18n } from "../../i18n/I18nContext.jsx";
@@ -67,7 +68,8 @@ export default function ReaderWorkBody({
     });
   }, [detail?.title, loading, error, onWorkMetaChange]);
 
-  const detailBlock = detail && !loading ? <ReaderWorkDetailCard detail={detail} /> : null;
+  const detailCardDefault = detail && !loading ? <ReaderWorkDetailCard detail={detail} variant="default" /> : null;
+  const detailCardRail = detail && !loading ? <ReaderWorkDetailCard detail={detail} variant="rail" /> : null;
 
   const core = (
     <>
@@ -83,7 +85,7 @@ export default function ReaderWorkBody({
         </Alert>
       ) : null}
 
-      {layoutVariant === "stack" ? detailBlock : null}
+      {layoutVariant === "stack" ? detailCardDefault : null}
 
       {detail && !loading && pdfAvailable ? (
         <ReaderPdfModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
@@ -109,8 +111,22 @@ export default function ReaderWorkBody({
       ) : null}
 
       {chunks && !loading && viewMode === "markdown" && !combinedMarkdown && pdfAvailable ? (
-        <Alert severity="info" sx={{ mb: 2, fontSize: "0.8125rem" }}>
+        <Alert
+          severity="info"
+          sx={{ mb: 2, fontSize: "0.8125rem" }}
+          action={
+            <CursorSmallButton color="inherit" size="small" onClick={() => setViewMode("pdf")}>
+              {t("readerBody.openPdf")}
+            </CursorSmallButton>
+          }
+        >
           {t("readerBody.emptyMarkdownTryPdf")}
+        </Alert>
+      ) : null}
+
+      {chunks && !loading && viewMode === "markdown" && !combinedMarkdown && !pdfAvailable ? (
+        <Alert severity="warning" sx={{ mb: 2, fontSize: "0.8125rem" }}>
+          {t("readerBody.noExtractedTextOrPdf")}
         </Alert>
       ) : null}
 
@@ -138,7 +154,7 @@ export default function ReaderWorkBody({
   );
 
   if (layoutVariant === "readerPage") {
-    return <ReaderShell main={<Box>{core}</Box>} rail={<ReaderSideRail>{detailBlock}</ReaderSideRail>} />;
+    return <ReaderShell main={<Box>{core}</Box>} rail={<ReaderSideRail>{detailCardRail}</ReaderSideRail>} />;
   }
 
   return <Box>{core}</Box>;

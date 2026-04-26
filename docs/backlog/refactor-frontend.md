@@ -114,12 +114,9 @@ Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-co
 - **Raised:** 2026-04-25
 - **Done note (2026-04-26):** split into `caseDetail/*` (hooks + sections + graph subpanels), `families/registry.js` + `default|layer1|graph`, i18n `partBenchmarkCaseDialog` (EN+RU); shell `CaseDetailDialog.jsx` ~110 lines. Лимит ~400 строк по дереву `BenchmarkPage/` закрыт совместно с пунктом Compare/Run + workbench panel (см. строку в Completed и `[DONE]` Compare/Run ниже).
 
-### [OPEN] Slim `WorkspacePage.jsx` (530) — extract papers model + dialogs + ingest wiring
-- **Area:** [`WorkspacePage/WorkspacePage.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx), [`WorkspacePage/WorkspaceIngestPanel.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceIngestPanel.jsx), [`WorkspacePage/WorkspaceDedupSection.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceDedupSection.jsx)
-- **Issue:** После Wave I split осталась оркестрация: URL/meta workspace, work ids, `useJobStream` для ingest, paper cards, дедуп, summary/idea-диалоги. Размер 530 строк, риск регрессий при добавлении hypothesis диалога и новых ingest-сценариев (Wave K2 batch, Wave W actor).
-- **Proposal:** Вынести `useWorkspacePapersModel` (works + meta + sort/filter), `WorkspaceDialogs` (summary, hypothesis, idea-assist), оставить в `WorkspacePage` только URL state + composition.
-- **Acceptance:** `WorkspacePage.jsx` <= 280 строк; `npm run lint` / `npm run test` зелёные.
-- **Synergy:** разблокирует UI-стороны **Wave S** (hypothesis modal) и расширения **Wave L** (smart dedup) без раздувания shell.
+### [DONE] Slim `WorkspacePage.jsx` (530) — extract papers model + dialogs + ingest wiring
+- **Note (2026-04-26):** `useWorkspacePapersModel.js`, `useWorkspacePageCore.js`, `WorkspaceDialogs.jsx`; shell [`WorkspacePage.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx) ~86 строк. `npm run lint` / `npm run test` зелёные.
+- **Area:** [`WorkspacePage/WorkspacePage.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx), [`useWorkspacePageCore.js`](../../ui/src/pages/WorkspacePage/useWorkspacePageCore.js), [`useWorkspacePapersModel.js`](../../ui/src/pages/WorkspacePage/useWorkspacePapersModel.js), [`WorkspaceDialogs.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceDialogs.jsx)
 - **Raised:** 2026-04-25
 
 ### [DONE] Split `ReaderWorkBody.jsx` — chunks list + formatters + claims linking
@@ -168,28 +165,25 @@ Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-co
 - **Raised:** 2026-04-25
 - **Done:** 2026-04-26 — хук в `hooks/graph/`; `physics/` только не-React; прямой импорт из `GraphCanvasMvp`.
 
-### [OPEN] Workspace UX — Wave WX1 layout & hero (закрывает H-WorkspacePageSlim)
-- **Area:** [`WorkspacePage/WorkspacePage.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx),
-  [`WorkspaceIngestPanel.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceIngestPanel.jsx),
-  [`WorkspacePaperList.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePaperList.jsx),
-  [`WorkPaperCard.jsx`](../../ui/src/pages/WorkspacePage/WorkPaperCard.jsx),
-  новые `WorkspaceLayout.jsx`, `WorkspaceHero.jsx`, `WorkspaceSidePanel.jsx`
-- **Issue:** На 1920px viewport контент `WorkspacePage` занимает ≤ 720px ширины
-  (`WorkspaceIngestPanel` `maxWidth: 560`, `WorkPaperCard` `maxWidth: 720`), правые ~60% экрана пустые.
-  «Активный workspace» виден только через `WorkspaceContextChip` 28×220px в правом верхнем углу shell-хедера —
-  пользователь не понимает, в каком корпусе он работает и что куда грузится.
-- **Proposal:** Убрать `maxWidth` из ingest-панели и карточек. `WorkspacePaperList` перевести на CSS grid
-  `repeat(auto-fit, minmax(320px, 1fr))`. Двухколонный body через новый `WorkspaceLayout.jsx`
-  (`grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr)` на md+; single column на xs/sm).
-  Новый `WorkspaceHero.jsx` (90px, `FolderOpenOutlinedIcon` + h1 + counts/age + actions) заменяет блок `PageHeader`
-  на этой странице. `WorkspaceSidePanel.jsx` — правая колонка (compact dedup queue + graph stats + recent activity).
-  План: [`docs/analysis/workspace-ux-redesign-2026-04-25.md`](../analysis/workspace-ux-redesign-2026-04-25.md) §3.1.
-- **Acceptance:** На 1920×1080 контент использует ≥ 1280px (4 колонки карточек); на 1366×768 — 3 колонки;
-  `WorkspaceHero` всегда виден над контентом; `WorkspacePage.jsx` ≤ 280 строк (закрывает существующий пункт
-  `H-WorkspacePageSlim`); `npm run lint` / `npm run test` зелёные.
-- **Synergy:** Закрывает пункт «Slim WorkspacePage.jsx (530)» выше; разблокирует Wave T UI (новые dedup-вкладки)
-  и Wave S+ (hypothesis modal в side panel).
+### [DONE] Workspace UX — Wave WX1 layout & hero (закрывает H-WorkspacePageSlim)
+- **Note (2026-04-26):** [`WorkspaceLayout.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceLayout.jsx), [`WorkspaceHero.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceHero.jsx), [`WorkspaceSidePanel.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceSidePanel.jsx) (ingest + graph snapshot + smart-dedup summary + ссылка `#workspace-dedup-section`); убран `maxWidth` у [`WorkPaperCard.jsx`](../../ui/src/pages/WorkspacePage/WorkPaperCard.jsx) / [`WorkspaceIngestPanel.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceIngestPanel.jsx); [`WorkspacePaperList.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePaperList.jsx) — CSS grid 1/2/3 колонки; i18n `workspace.side.*`; [`WorkspacePage.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx) ~86 строк; [`WorkspaceLayout.test.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceLayout.test.jsx). Опциональные follow-up из первоначального proposal: `FolderOpenOutlinedIcon` в hero, `WorkspaceSwitcher` inline — остаются на **WX4/WX5**.
+- **Area:** см. note
 - **Raised:** 2026-04-25
+
+### [DONE] Wave EF-Cards — workspace vs per-paper actions
+- **Note (2026-04-26):** На [`WorkPaperCard.jsx`](../../ui/src/pages/WorkspacePage/WorkPaperCard.jsx) остались «Чтение» + «Граф статьи»; «Вопросы по области» вынесены в [`WorkspaceHero.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceHero.jsx) (`workAskUrl("", workspace_id)`); i18n `workspace.paper.workGraph`, `workspace.actions.askWorkspace`; подсказка на карточке обновлена.
+- **Area:** `WorkPaperCard.jsx`, `WorkspaceHero.jsx`, [`workspacePageUrls.js`](../../ui/src/pages/WorkspacePage/workspacePageUrls.js), `partWorkspacePage.js` (EN+RU)
+- **Raised:** 2026-04-26
+
+### [DONE] Wave EF-Evidence — `/evidence` без обязательного work_id form
+- **Note (2026-04-26):** [`EvidencePage.jsx`](../../ui/src/pages/EvidencePage.jsx): единый `evidence.header.description`; пустое состояние + CTA Workspaces / last workspace; форма `work_id` только при `?dev=1` или admin mode (accordion); `partPagesCore.js` EN+RU.
+- **Area:** `EvidencePage.jsx`, `partPagesCore.js` (EN+RU)
+- **Raised:** 2026-04-26
+
+### [DONE] Wave EF-Reader — RX1 slice (empty main column, PDF, rail)
+- **Note (2026-04-26):** [`useReaderWorkData.js`](../../ui/src/components/work/useReaderWorkData.js) — авто `viewMode=pdf` при `chunks` пустых и PDF доступен; [`ReaderWorkBody.jsx`](../../ui/src/components/work/ReaderWorkBody.jsx) — Alert + «Открыть PDF», предупреждение без PDF/markdown; [`ReaderShell.jsx`](../../ui/src/components/work/ReaderShell.jsx) — колонки 1fr / 240–280, gap 3; [`ReaderWorkDetailCard.jsx`](../../ui/src/components/work/ReaderWorkDetailCard.jsx) — `variant=rail` без дубля title, abstract в Collapse; [`ReaderPage.jsx`](../../ui/src/pages/ReaderPage.jsx) — Advanced только dev/admin; [`ReaderChunkListPanel.jsx`](../../ui/src/components/work/ReaderChunkListPanel.jsx) — hint трассировки; [`PdfViewer.jsx`](../../ui/src/components/work/PdfViewer.jsx) — `console.error` в DEV; [`PdfViewer.test.jsx`](../../ui/src/components/work/PdfViewer.test.jsx); `partReaderBody.js` / `partReaderShell.js` EN+RU. Полный **RX1** (TOC, unify tabs) — открыто в roadmap.
+- **Area:** см. note
+- **Raised:** 2026-04-26
 
 ### [OPEN] Workspace UX — Wave WX2-FE ingest progress card (shimmer + ETA + i18n stages)
 - **Area:** новые [`ui/src/components/ingestion/IngestProgressCard.jsx`](../../ui/src/components/ingestion/IngestProgressCard.jsx),
@@ -310,6 +304,20 @@ Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-co
 - **Synergy:** Закрывает существующий пункт `H-Cursor*-buttons in dedup` выше; частично закрывает
   `H-i18n-fixes` (часть про Workspace dialogs).
 - **Raised:** 2026-04-25
+
+### [OPEN] Batch child jobs: use progress_pct instead of progress_current/total
+- **Area:** [`ui/src/pages/WorkspacePage/WorkspaceIngestPanel.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceIngestPanel.jsx) (строки 159-165)
+- **Issue:** Дочерние batch-задания рендерят прогресс через `progress_current / progress_total`. После WX2-BE у child-jobs появился `progress_pct` (float 0..1), но он не используется.
+- **Proposal:** В блоке `childJobs.map(...)` добавить fallback: `const pct = typeof cj.progress_pct === "number" && Number.isFinite(cj.progress_pct) ? cj.progress_pct * 100 : ...;` (остальная логика без изменений).
+- **Acceptance:** Child-job progress bar отражает взвешенный прогресс стейджей, если backend его возвращает; lint зелёный.
+- **Raised:** 2026-04-26
+
+### [OPEN] graph_display: EDGE_DISPLAY_TYPE_READER — reader-specific edge labels
+- **Area:** [`science_graphrag/api/graph_display.py`](../../science_graphrag/api/graph_display.py), [`science_graphrag/api/works/graph_neighborhood.py`](../../science_graphrag/api/works/graph_neighborhood.py)
+- **Issue:** `edge_display_type(rel_type, view="reader")` — мёртвая ветка: читает тот же `EDGE_DISPLAY_TYPE_RAW`, что и raw-view. Когда появятся reader-специфичные метки рёбер (например, "AUTHORED" → "authored by" vs "написал"), ветка заглушки не сработает.
+- **Proposal:** Создать `EDGE_DISPLAY_TYPE_READER: dict[str, str]` с переопределёнными или добавленными метками; в `edge_display_type` подставить `mapping = EDGE_DISPLAY_TYPE_READER` для reader-view.
+- **Acceptance:** `edge_display_type("AUTHORED", view="reader")` возвращает значение из reader-словаря; unit-тест.
+- **Raised:** 2026-04-26
 
 ### [OPEN] Frontend wiring for `/v2/agent/query` SSE (Wave Y3 follow-up)
 - **Area:** [`AskPanel.jsx`](../../ui/src/components/work/AskPanel.jsx), [`hooks/useJobStream.js`](../../ui/src/hooks/useJobStream.js) (как референс), новый `hooks/useAgentStream.js`, `services/research/agent.js`

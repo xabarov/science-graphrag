@@ -64,8 +64,8 @@ export default function HypothesisPanel({
                 backgroundColor: "rgba(255,255,255,0.02)",
               }}
             >
-              <Typography sx={{ fontSize: "0.82rem", color: "rgba(255,255,255,0.92)" }}>
-                {idx + 1}. {item?.text || "—"}
+                <Typography sx={{ fontSize: "0.82rem", color: "rgba(255,255,255,0.92)" }}>
+                {idx + 1}. {item?.text || t("common.emDash")}
               </Typography>
               {item?.novelty_hint ? (
                 <Typography sx={{ mt: 0.5, fontSize: "0.74rem", color: "rgba(129,140,248,0.95)" }}>

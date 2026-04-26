@@ -27,6 +27,8 @@ alwaysApply: true
 
  Должно напечатать `True True`. Если что-то `False` — НЕ запускать долгую команду.
 
+ **Альтернатива (рекомендуется):** `.venv/bin/science-graphrag config-check` — печатает `SET`/`UNSET` для ключей, канал embeddings, URL-ы сервисов (с маскировкой пароля в DSN) и завершает с кодом **1**, если `extraction_llm_api_key` пуст (флаг `--no-strict` отключает exit 1).
+
  **Если `False` при активном `SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV=1`:**
  Флаг переключает `load_dotenv(override=False)`, что исторически блокировало загрузку API-ключей из `.env` когда переменная была пуста в shell. После правки `config.py` (2026-04-26) ключи грузятся принудительно — но если smoke-check всё равно `False`, значит:
  - `MAIN_LLM_API_KEY` отсутствует в `.env` (проверь `grep MAIN_LLM_API_KEY .env`)

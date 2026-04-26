@@ -1,12 +1,17 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import Accordion from "@mui/material/Accordion";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import AccordionSummary from "@mui/material/AccordionSummary";
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 import { CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
 import { useWorkspaceContext } from "../components/layout/WorkspaceContext.jsx";
+import { isExplicitAdminMode } from "../components/layout/adminVisibility.js";
 import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
 import { useI18n } from "../i18n/I18nContext.jsx";
 import EvidenceWorkBody from "../components/work/EvidenceWorkBody.jsx";
@@ -18,7 +23,7 @@ export default function EvidencePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initial = searchParams.get("work_id") || "";
   const [workIdInput, setWorkIdInput] = useState(initial);
-  const { activeWorkspaceId, getLastWorkspaceHref } = useWorkspaceContext();
+  const { getLastWorkspaceHref, activeWorkspaceId } = useWorkspaceContext();
 
   const workId = searchParams.get("work_id") || "";
   const trace = readTraceabilityState(searchParams);
@@ -27,6 +32,8 @@ export default function EvidencePage() {
     () => workspaceIdInUrl || trace.workspaceId || (activeWorkspaceId || "").trim(),
     [workspaceIdInUrl, trace.workspaceId, activeWorkspaceId],
   );
+
+  const showDevWorkIdForm = searchParams.get("dev") === "1" || isExplicitAdminMode();
 
   useEffect(() => {
     setWorkIdInput(workId);
@@ -46,6 +53,7 @@ export default function EvidencePage() {
       p.set("work_id", next);
     }
     if (ws) p.set("workspace_id", ws);
+    if (searchParams.get("dev") === "1") p.set("dev", "1");
     setSearchParams(p);
   }
 
@@ -59,37 +67,9 @@ export default function EvidencePage() {
     [trace.chunkFingerprint, trace.section, trace.citation, effectiveWorkspaceId],
   );
 
-  const showEmptyWorkspaceCta = !workId.trim() && !workspaceIdInUrl && !activeWorkspaceId;
-
   return (
     <Box sx={{ p: 2, ...mainShellContentSx }}>
-      <PageHeader
-        eyebrow={t("evidence.header.eyebrow")}
-        title={t("evidence.header.title")}
-        description={
-          <>
-            {t("evidence.header.descBefore")}{" "}
-            <code style={{ color: "rgba(129,140,248,0.95)" }}>work_id</code>
-            {t("evidence.header.descMid")}
-          </>
-        }
-      />
-
-      <Box component="form" onSubmit={applyWorkId} sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}>
-        <TextField
-          label={t("reader.workIdLabel")}
-          value={workIdInput}
-          onChange={(ev) => setWorkIdInput(ev.target.value)}
-          size="small"
-          fullWidth
-          sx={{
-            maxWidth: 480,
-            "& .MuiInputBase-input": { fontSize: "0.8125rem" },
-            "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)" },
-          }}
-        />
-        <CursorPrimaryButton type="submit">{t("reader.load")}</CursorPrimaryButton>
-      </Box>
+      <PageHeader eyebrow={t("evidence.header.eyebrow")} title={t("evidence.header.title")} description={t("evidence.header.description")} />
 
       {!workId.trim() ? (
         <Box
@@ -98,21 +78,24 @@ export default function EvidencePage() {
             borderRadius: "6px",
             border: "1px dashed rgba(255,255,255,0.12)",
             backgroundColor: "rgba(255,255,255,0.02)",
+            mb: 2,
           }}
         >
           <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)" }}>
             {t("evidence.empty.title")}
           </Typography>
           <Typography sx={{ mt: 0.75, fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)" }}>{t("evidence.empty.body")}</Typography>
-          {showEmptyWorkspaceCta ? (
-            <Box sx={{ mt: 1.5 }}>
-              <CursorPrimaryButton component={Link} to={getLastWorkspaceHref()} sx={{ textDecoration: "none" }}>
-                {t("evidence.openLastWorkspace")}
-              </CursorPrimaryButton>
-            </Box>
-          ) : null}
+          <Box sx={{ mt: 1.5, display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center" }}>
+            <CursorPrimaryButton component={Link} to="/workspaces" sx={{ textDecoration: "none" }}>
+              {t("readerShell.openWorkspaces")}
+            </CursorPrimaryButton>
+            <CursorPrimaryButton component={Link} to={getLastWorkspaceHref()} sx={{ textDecoration: "none" }}>
+              {t("evidence.openLastWorkspace")}
+            </CursorPrimaryButton>
+          </Box>
         </Box>
       ) : null}
+
       {workId.trim() ? (
         <Box sx={{ mb: 1.5, display: "flex", flexWrap: "wrap", gap: 1 }}>
           <CursorSmallButton
@@ -135,6 +118,44 @@ export default function EvidencePage() {
           highlightedSection={trace.section}
           citation={trace.citation}
         />
+      ) : null}
+
+      {showDevWorkIdForm ? (
+        <Accordion
+          disableGutters
+          elevation={0}
+          sx={{
+            mt: 2,
+            borderRadius: "6px",
+            border: "1px solid rgba(255,255,255,0.1)",
+            backgroundColor: "rgba(255,255,255,0.02)",
+            "&:before": { display: "none" },
+          }}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: "rgba(255,255,255,0.5)", fontSize: "1.1rem" }} />}>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)" }}>
+              {t("evidence.devAdvancedTitle")}
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails sx={{ pt: 0 }}>
+            <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.42)", mb: 1.5 }}>{t("evidence.devAdvancedHint")}</Typography>
+            <Box component="form" onSubmit={applyWorkId} sx={{ display: "flex", gap: 1, flexWrap: "wrap", alignItems: "flex-start" }}>
+              <TextField
+                label={t("reader.workIdLabel")}
+                value={workIdInput}
+                onChange={(ev) => setWorkIdInput(ev.target.value)}
+                size="small"
+                fullWidth
+                sx={{
+                  maxWidth: 480,
+                  "& .MuiInputBase-input": { fontSize: "0.8125rem" },
+                  "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)" },
+                }}
+              />
+              <CursorPrimaryButton type="submit">{t("reader.load")}</CursorPrimaryButton>
+            </Box>
+          </AccordionDetails>
+        </Accordion>
       ) : null}
     </Box>
   );

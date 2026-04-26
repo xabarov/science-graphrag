@@ -124,12 +124,14 @@ export default {
 
   "evidence.header.eyebrow": "Evidence",
   "evidence.header.title": "Traceability",
-  "evidence.header.descBefore": "Chunk-level citations for a",
-  "evidence.header.descMid": ". Open a paper from Workspace, then use the left rail or URL query.",
+  "evidence.header.description":
+    "Chunk fingerprints and excerpt previews for tracing agent answers. Open from Reader (chunks panel), from Ask citation links, or paste a deep-link that already includes work_id.",
   "evidence.empty.title": "No evidence context loaded",
   "evidence.empty.body":
-    "Load a `work_id` or start from a citation inside Workspace Ask to inspect evidence with the right traceability context.",
+    "Open a paper from Workspaces / Workspace, then use Reader or a citation link. For support workflows, add ?dev=1 to reveal a work_id field.",
   "evidence.openLastWorkspace": "Open last workspace",
+  "evidence.devAdvancedTitle": "Advanced: load by work_id",
+  "evidence.devAdvancedHint": "Developer / support only. Prefer deep-links from Reader or Ask.",
 
   "askPage.header.eyebrow": "Ask",
   "askPage.header.title": "Questions",

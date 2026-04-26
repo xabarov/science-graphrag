@@ -18,6 +18,109 @@ from science_graphrag.api.graph_display import (
 MAX_WORK_GRAPH_NEIGHBORS = 300
 AGGREGATOR_THRESHOLD = 8
 
+# GR8: per-neighbor-kind defaults (Work-owned groups only; global override via query param).
+KIND_AGG_THRESHOLDS: dict[str, int] = {
+    "authorship": 4,
+    "authorshipreification": 4,
+    "author": 4,
+    "institution": 5,
+    "venue": 6,
+    "work": 8,
+    "method": 6,
+    "dataset": 6,
+}
+
+
+def _normalize_kind_key(kind: str) -> str:
+    return str(kind or "").lower().replace(" ", "").replace("_", "")
+
+
+def _parse_aggregator_disabled_kinds(csv: str | None) -> frozenset[str]:
+    if not csv or not str(csv).strip():
+        return frozenset()
+    out: set[str] = set()
+    for part in str(csv).split(","):
+        k = _normalize_kind_key(part)
+        if k:
+            out.add(k)
+    return frozenset(out)
+
+
+def _agg_threshold_for_neighbor(neighbor_kind: str, *, global_override: int | None) -> int:
+    if global_override is not None:
+        return max(2, min(int(global_override), 200))
+    nk = _normalize_kind_key(neighbor_kind)
+    for key, val in KIND_AGG_THRESHOLDS.items():
+        if key in nk:
+            return val
+    return AGGREGATOR_THRESHOLD
+
+
+def collapse_authorship_for_reader_view(
+    nodes: list[dict[str, Any]],
+    edges: list[dict[str, Any]],
+    center_work_id: str,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """GR9: drop :Authorship reification; add virtual Work–[AUTHORED]→ Author edges with ``via`` trace."""
+
+    authorship_ids = {
+        str(n.get("id") or "")
+        for n in nodes
+        if str(n.get("type") or "") == "Authorship"
+        or str(n.get("node_kind") or "") == "AuthorshipReification"
+    }
+    authorship_ids.discard("")
+    if not authorship_ids:
+        return nodes, edges
+
+    work_by_ash: dict[str, str] = {}
+    author_by_ash: dict[str, str] = {}
+    for edge in edges:
+        rt = str(edge.get("type") or "").upper()
+        src_id = str(edge.get("source") or "")
+        tgt_id = str(edge.get("target") or "")
+        if rt == "HAS_AUTHORSHIP" and tgt_id in authorship_ids:
+            work_by_ash[tgt_id] = src_id
+        elif rt == "OF_AUTHOR" and src_id in authorship_ids:
+            author_by_ash[src_id] = tgt_id
+
+    virtual_edges: list[dict[str, Any]] = []
+    node_by_id = {str(n.get("id") or ""): n for n in nodes}
+    seq = 0
+    for ash_id, wid in work_by_ash.items():
+        aid = author_by_ash.get(ash_id)
+        if not aid or not wid:
+            continue
+        n_ash = node_by_id.get(ash_id)
+        props: dict[str, Any] = {}
+        if n_ash:
+            rawp = n_ash.get("properties") or {}
+            for key in ("author_position", "is_corresponding", "raw_affiliation"):
+                if key in rawp and rawp[key] is not None:
+                    props[key] = rawp[key]
+        virtual_edges.append(
+            {
+                "id": _stable_edge_id(wid, "AUTHORED", aid, seq),
+                "source": wid,
+                "target": aid,
+                "type": "AUTHORED",
+                "via": ["HAS_AUTHORSHIP", "OF_AUTHOR"],
+                "properties": props,
+                "direction": "outgoing" if wid == center_work_id else "lateral",
+            }
+        )
+        seq += 1
+
+    new_nodes = [n for n in nodes if str(n.get("id") or "") not in authorship_ids]
+    new_edges = [
+        e
+        for e in edges
+        if str(e.get("source") or "") not in authorship_ids
+        and str(e.get("target") or "") not in authorship_ids
+    ]
+    new_edges.extend(virtual_edges)
+    return new_nodes, new_edges
+
 
 def _has_semantic_layer_cypher() -> str:
     return (
@@ -57,7 +160,9 @@ def _apply_aggregators(
     work_id: str,
     nodes: list[dict[str, Any]],
     edges: list[dict[str, Any]],
-    threshold: int = AGGREGATOR_THRESHOLD,
+    *,
+    global_threshold: int | None = None,
+    disabled_kind_keys: frozenset[str] | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     node_by_id = {str(n.get("id") or ""): n for n in nodes}
     groups: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
@@ -73,6 +178,9 @@ def _apply_aggregators(
             if str(owner.get("type") or "") != "Work":
                 continue
             neighbor_kind = str(neighbor.get("node_kind") or neighbor.get("type") or "Node")
+            nk_key = _normalize_kind_key(neighbor_kind)
+            if disabled_kind_keys and nk_key in disabled_kind_keys:
+                continue
             key = (owner_id, neighbor_kind, edge_type)
             groups.setdefault(key, []).append(edge)
     to_remove_nodes: set[str] = set()
@@ -90,7 +198,8 @@ def _apply_aggregators(
                 continue
             seen_neighbors.add(other)
             uniq_neighbors.append(other)
-        if len(uniq_neighbors) < threshold:
+        thresh = _agg_threshold_for_neighbor(node_kind, global_override=global_threshold)
+        if len(uniq_neighbors) < thresh:
             continue
         preview_labels = []
         for nid in uniq_neighbors[:3]:
@@ -279,6 +388,8 @@ def _work_graph_neighborhood_payload(
     depth: int = 1,
     prioritize: str | None = None,
     view: str = "reader",
+    aggregator_threshold: int | None = None,
+    aggregator_disabled_kinds: str | None = None,
 ) -> dict[str, Any] | None:
     row = session.run(
         """
@@ -421,9 +532,19 @@ def _work_graph_neighborhood_payload(
         if str(e.get("source") or "") in kept_ids and str(e.get("target") or "") in kept_ids
     ]
     enrich_authorship_nodes(session, nodes)
+    vnorm = str(view or "reader").strip().lower()
+    if vnorm == "reader":
+        nodes, edges = collapse_authorship_for_reader_view(nodes, edges, center_id)
+    disabled = _parse_aggregator_disabled_kinds(aggregator_disabled_kinds)
     _enrich_edges_with_display(center_id, nodes, edges)
-    if str(view or "reader").strip().lower() != "raw":
-        nodes, edges = _apply_aggregators(work_id, nodes, edges, threshold=AGGREGATOR_THRESHOLD)
+    if vnorm != "raw":
+        nodes, edges = _apply_aggregators(
+            work_id,
+            nodes,
+            edges,
+            global_threshold=aggregator_threshold,
+            disabled_kind_keys=disabled,
+        )
     truncated = bool(skipped_by_kind) or total_neighbors > hop1_lim
     expansions = ["increase_neighbor_limit"] if truncated else []
     if depth_req > effective_depth:
@@ -456,6 +577,8 @@ def work_graph_neighborhood(
     depth: int = 1,
     prioritize: str | None = None,
     view: str = "reader",
+    aggregator_threshold: int | None = None,
+    aggregator_disabled_kinds: str | None = None,
 ) -> dict[str, Any] | None:
     # Backward compatibility: older callers pass Settings instead of StoreRegistry.
     if not hasattr(stores, "neo4j"):
@@ -471,6 +594,8 @@ def work_graph_neighborhood(
                     depth=depth,
                     prioritize=prioritize,
                     view=view,
+                    aggregator_threshold=aggregator_threshold,
+                    aggregator_disabled_kinds=aggregator_disabled_kinds,
                 )
         finally:
             temp.close()
@@ -482,6 +607,8 @@ def work_graph_neighborhood(
             depth=depth,
             prioritize=prioritize,
             view=view,
+            aggregator_threshold=aggregator_threshold,
+            aggregator_disabled_kinds=aggregator_disabled_kinds,
         )
 
 

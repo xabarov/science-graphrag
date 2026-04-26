@@ -11,6 +11,7 @@ export default {
   "readerBody.returnAsk": "Return to Ask",
   "readerBody.openEvidence": "Open Evidence",
   "readerBody.chunksAdvanced": "Chunks (advanced) — {{count}}",
+  "readerBody.chunksTraceHint": "Chunk sources for tracing agent answers (fingerprints and previews).",
   "readerBody.hide": "Hide",
   "readerBody.show": "Show",
   "readerBody.ingestionLine":
@@ -28,6 +29,10 @@ export default {
   "readerBody.pdfZoomIn": "Zoom in",
   "readerBody.pdfZoomOut": "Zoom out",
   "readerBody.emptyMarkdownTryPdf": "No chunk text in this preview — switch to PDF for the original pages.",
+  "readerBody.openPdf": "Open PDF",
+  "readerBody.noExtractedTextOrPdf": "No extracted chunk text and no original PDF is available for this work (e.g. Markdown-only ingest).",
+  "readerBody.showAbstract": "Abstract",
+  "readerBody.hideAbstract": "Hide abstract",
   "readerBody.claimsTitle": "Claims",
   "readerBody.claimsHint": "Extracted assertions with verbatim evidence (lazy-loaded). Enable with VITE_CLAIMS_ENABLED=true.",
   "readerBody.claimsLoading": "Loading claims…",

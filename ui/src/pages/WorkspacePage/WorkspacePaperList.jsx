@@ -30,7 +30,13 @@ export default function WorkspacePaperList({ workspaceId, effectiveWorkIds, pape
   }, [selectedWorkId, workIdsKey]);
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+    <Box
+      sx={{
+        display: "grid",
+        gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))", xl: "repeat(3, minmax(0, 1fr))" },
+        gap: 1.5,
+      }}
+    >
       {workspaceId && effectiveWorkIds.length === 0 ? (
         <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>{t("workspace.noPapers")}</Typography>
       ) : null}
@@ -46,7 +52,6 @@ export default function WorkspacePaperList({ workspaceId, effectiveWorkIds, pape
             arxivId={row?.arxivId}
             loading={row?.loading}
             error={row?.error}
-            workspaceId={workspaceId}
             selected={Boolean(selectedWorkId) && wid === selectedWorkId}
             onCardActivate={onCardActivate}
             cardRef={(el) => {

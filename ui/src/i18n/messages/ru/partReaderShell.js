@@ -6,7 +6,7 @@ export default {
   "readerShell.openWorkspaces": "Открыть рабочие области",
   "readerShell.openLastArticle": "Открыть последнюю статью",
   "readerShell.advancedTitle": "Дополнительно",
-  "readerShell.advancedHint": "Загрузка по UUID работы (отладка и поддержка).",
+  "readerShell.advancedHint": "Загрузка по UUID работы (отладка и поддержка). Показывается при ?dev=1 или в режиме администратора.",
   "readerShell.workIdLabel": "work_id",
   "readerShell.load": "Загрузить",
   "readerShell.articleEyebrow": "Статья",

@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import typer
 from sqlalchemy import desc, select
 
-from science_graphrag.config import get_settings
+from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
 from science_graphrag.ingestion.pipeline import run_ingest_batch_cli, run_ingest_cli
 from science_graphrag.storage.db import get_engine, init_db, session_factory
@@ -383,6 +384,65 @@ def work_dedup_report_cmd(
         typer.echo(f"- {row.get('dedup_key')}: {row.get('work_ids')}")
     if len(rows) > 200:
         typer.echo(f"... truncated ({len(rows)} total); use --json for full dump.")
+
+
+def _mask_url(url: str) -> str:
+    u = str(url or "").strip()
+    if "@" in u and "://" in u:
+        head, tail = u.split("://", 1)
+        if "@" in tail:
+            creds, host = tail.rsplit("@", 1)
+            if creds:
+                return f"{head}://***@{host}"
+    return u
+
+
+@app.command("config-check")
+def config_check_cmd(
+    strict: bool = typer.Option(
+        True,
+        "--strict/--no-strict",
+        help="Exit 1 if extraction_llm_api_key is unset (recommended before long ingest).",
+    ),
+) -> None:
+    """Print non-secret diagnostics for Settings (operator pre-flight)."""
+
+    s: Settings = get_settings()
+
+    def _line(label: str, value: str) -> None:
+        typer.echo(f"[config-check] {label:40} {value}")
+
+    ex_ok = bool(s.extraction_llm_api_key)
+    vl_ok = bool(s.vl_api_key)
+    _line("extraction_llm_api_key", "SET" if ex_ok else "UNSET")
+    _line("vl_api_key", "SET" if vl_ok else "UNSET")
+    if s.openrouter_embedding_model:
+        _line(
+            "embeddings channel",
+            f"openrouter (model={s.openrouter_embedding_model}, dim={s.openrouter_embedding_dim})",
+        )
+    elif s.embedding_model:
+        _line("embeddings channel", f"local_sentence_transformers ({s.embedding_model})")
+    else:
+        _line(
+            "embeddings channel", "hash_fallback (no embedding_model / openrouter_embedding_model)"
+        )
+    _line("database_url", _mask_url(s.database_url))
+    _line("neo4j_uri", str(s.neo4j_uri))
+    _line("qdrant_url", str(s.qdrant_url))
+    _line("redis_url", _mask_url(s.redis_url))
+    skip = os.getenv("SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV", "")
+    _line("SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV", skip or "(unset)")
+    _line("extraction_llm_enabled", str(bool(s.extraction_llm_enabled)))
+    br = s.blob_root
+    try:
+        exists = br.exists()
+    except OSError:
+        exists = False
+    _line("blob_root", f"{br} (exists={exists})")
+    if strict and not ex_ok:
+        typer.echo("[config-check] FAILED: extraction_llm_api_key UNSET", err=True)
+        raise typer.Exit(code=1)
 
 
 def main() -> None:

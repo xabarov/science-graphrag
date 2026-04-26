@@ -71,7 +71,7 @@ function IngestionSettingsPanelForm({
       <Typography sx={{ marginTop: 1, fontSize: "0.8125rem", color: "rgba(255,255,255,0.58)", lineHeight: 1.6 }}>
         {t("settings.ingestion.desc.p1")}{" "}
         <Typography component="span" sx={{ fontFamily: "ui-monospace, monospace", fontSize: "0.78rem" }}>
-          client_max_body_size
+          {t("settings.ingestion.nginxDirective")}
         </Typography>{" "}
         {t("settings.ingestion.desc.p2")}
       </Typography>

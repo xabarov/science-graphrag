@@ -8,6 +8,7 @@ export default {
   "common.select": "Select",
   "common.total": "Total: {{value}}",
   "common.none": "None",
+  "common.emDash": "—",
 
   "workIdHint.workspace.p1": "Open a work and switch tabs without leaving context.",
   "workIdHint.workspace.p2": "is the indexed paper id; the",

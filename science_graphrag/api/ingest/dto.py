@@ -6,7 +6,9 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+
+from science_graphrag.ingestion.stage_stats import compute_weighted_progress_pct
 
 
 def now_iso() -> str:
@@ -34,14 +36,18 @@ class IngestJobRecord:
     child_job_ids: list[str] = field(default_factory=list)
     stages: list[dict[str, Any]] = field(default_factory=list)
     phoenix_trace_id: str | None = None
+    progress_pct: float | None = None
 
 
 class IngestStageView(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
     name: str
     status: str
     started_at: str | None = None
     finished_at: str | None = None
     duration_ms: int | None = None
+    expected_duration_ms: int | None = None
     metrics: dict[str, Any] = Field(default_factory=dict)
     error: str | None = None
 
@@ -55,6 +61,8 @@ class IngestJobEvent(BaseModel):
 
 class IngestJobView(BaseModel):
     """JSON shape for ingest job polling."""
+
+    model_config = ConfigDict(extra="ignore")
 
     job_id: str
     workspace_id: str
@@ -75,9 +83,23 @@ class IngestJobView(BaseModel):
     child_job_ids: list[str] = Field(default_factory=list)
     stages: list[IngestStageView] = Field(default_factory=list)
     phoenix_trace_id: str | None = None
+    progress_pct: float | None = None
 
 
 def job_record_to_view(rec: IngestJobRecord) -> IngestJobView:
+    stage_rows: list[dict[str, Any]] = [dict(x) for x in rec.stages]
+    weights: dict[str, int] = {}
+    for row in stage_rows:
+        name = str(row.get("name") or "").strip()
+        exp = row.get("expected_duration_ms")
+        if name and exp is not None:
+            try:
+                weights[name] = max(1000, int(exp))
+            except (TypeError, ValueError):
+                pass
+    pct: float | None = None
+    if rec.kind == "single" and stage_rows:
+        pct = compute_weighted_progress_pct(stage_rows, weights)
     return IngestJobView(
         job_id=rec.job_id,
         workspace_id=rec.workspace_id,
@@ -96,6 +118,7 @@ def job_record_to_view(rec: IngestJobRecord) -> IngestJobView:
         kind=rec.kind,
         parent_job_id=rec.parent_job_id,
         child_job_ids=list(rec.child_job_ids),
-        stages=[IngestStageView(**stage_row) for stage_row in rec.stages],
+        stages=[IngestStageView(**stage_row) for stage_row in stage_rows],
         phoenix_trace_id=rec.phoenix_trace_id,
+        progress_pct=pct,
     )
