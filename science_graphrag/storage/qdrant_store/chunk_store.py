@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import uuid
 from typing import TYPE_CHECKING, Any
 
@@ -19,6 +20,8 @@ from qdrant_client.models import (
 
 if TYPE_CHECKING:
     from science_graphrag.ingestion.chunking import DocumentChunk
+
+logger = logging.getLogger(__name__)
 
 
 class QdrantChunkStore:
@@ -150,7 +153,7 @@ class QdrantChunkStore:
         return n_before
 
     def add_workspace_to_chunks(self, *, work_id: str, workspace_id: str) -> int:
-        """Append ``workspace_id`` to payload.workspace_ids for all points of ``work_id`` (idempotent)."""
+        """Idempotent: append workspace_id to payload.workspace_ids for all points of work_id."""
 
         wid = str(workspace_id or "").strip()
         if not wid:
@@ -186,6 +189,58 @@ class QdrantChunkStore:
                     wait=True,
                 )
                 updated += 1
+            if offset is None:
+                break
+        return updated
+
+    def add_workspace_to_all_chunks(
+        self,
+        *,
+        workspace_id: str,
+        progress_log_every: int = 2048,
+    ) -> int:
+        """Append ``workspace_id`` to every point's ``workspace_ids`` (idempotent).
+
+        Used when a Neo4j workspace has full-corpus membership (no ``CONTAINS`` work list).
+        When ``progress_log_every`` > 0, log INFO after that many payload updates.
+        """
+
+        wid = str(workspace_id or "").strip()
+        if not wid:
+            return 0
+        updated = 0
+        offset: int | str | None = None
+        while True:
+            records, offset = self._client.scroll(
+                collection_name=self._collection,
+                limit=256,
+                offset=offset,
+                with_payload=True,
+                with_vectors=False,
+            )
+            if not records:
+                break
+            for rec in records:
+                payload = rec.payload or {}
+                cur = [
+                    str(x).strip() for x in (payload.get("workspace_ids") or []) if str(x).strip()
+                ]
+                if wid in cur:
+                    continue
+                cur.append(wid)
+                self._client.set_payload(
+                    collection_name=self._collection,
+                    payload={"workspace_ids": cur},
+                    points=[rec.id],
+                    wait=True,
+                )
+                updated += 1
+                if progress_log_every > 0 and updated % progress_log_every == 0:
+                    logger.info(
+                        "add_workspace_to_all_chunks progress workspace_id=%s updated=%d",
+                        wid,
+                        updated,
+                    )
             if offset is None:
                 break
         return updated

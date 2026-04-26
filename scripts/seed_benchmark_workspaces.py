@@ -30,6 +30,15 @@ from eval.retrieval.work_id_resolve import is_uuid_like
 from science_graphrag.config import get_settings
 
 
+def _corpus_manifest_is_unbounded(raw: object) -> bool:
+    """True when manifest marks full-corpus workspace (``*`` / ``[\"*\"]`` / one-element ``*``)."""
+    if raw in ("*", ["*"]):
+        return True
+    if isinstance(raw, list) and len(raw) == 1 and str(raw[0]).strip() == "*":
+        return True
+    return False
+
+
 def _resolve_corpus_slug_to_uuid(
     slug: str, repo: Path, driver: GraphDatabase.driver  # type: ignore[type-arg]
 ) -> str | None:
@@ -80,10 +89,21 @@ def _seed_manifest(
             session.run(q_merge, id=wid, name=name)
 
         if use_corpus_ids:
-            raw_ids = list((meta or {}).get("corpus_work_ids") or [])
-            if raw_ids == ["*"] or raw_ids == "*":
+            raw = (meta or {}).get("corpus_work_ids")
+            if _corpus_manifest_is_unbounded(raw):
+                # Full-corpus: no CONTAINS; ws.unbounded drives retrieval + Qdrant backfill.
+                with driver.session() as session:
+                    session.run(
+                        "MATCH (ws:Workspace {id: $id}) SET ws.unbounded = true",
+                        id=wid,
+                    )
                 print(f"workspace_ok id={wid} corpus=* (unbounded; no CONTAINS edges)")
                 continue
+            raw_ids = (
+                list(raw)
+                if isinstance(raw, (list, tuple))
+                else ([str(raw).strip()] if str(raw or "").strip() else [])
+            )
             work_uuids: list[str] = []
             for slug in raw_ids:
                 slug_s = str(slug).strip()
@@ -133,6 +153,11 @@ def _seed_manifest(
                     wid=wid,
                     work=work_uuid,
                 )
+        with driver.session() as session:
+            session.run(
+                "MATCH (ws:Workspace {id: $id}) SET ws.unbounded = false",
+                id=wid,
+            )
         print(f"workspace_ok id={wid} work_count={len(work_uuids)}")
 
 

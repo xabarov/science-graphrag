@@ -30,8 +30,8 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 - **Done:** 2026-04-26 — реализованы `--per-file-timeout-s`, `--resume`, `--progress-file`, JSONL checkpoint (atomic write), flush-logging, retry/circuit-breaker в OpenRouter embeddings, retry/backoff в `SyncInstructorExtractor`, тест `tests/ingestion/test_batch_resume_and_timeout.py`, runbook `docs/runbooks/ingest-corpus.md`.
 - **Note:** отдельный timeout внутри `science_graphrag/ingestion/vl_pdf.py` не добавлялся в этом проходе; текущий per-file timeout в `run_ingest_batch_cli` закрывает риск зависания батча на файле.
 
-### [OPEN] Backfill workspace_id payload for unbounded `ws_full_corpus="*"` workspaces
-- **Area:** `scripts/backfill_workspace_payloads.py`, `scripts/seed_benchmark_workspaces.py`, `science_graphrag/storage/qdrant.py:add_workspace_to_chunks`.
+### [DONE] Backfill workspace_id payload for unbounded `ws_full_corpus="*"` workspaces
+- **Area:** `scripts/backfill_workspace_payloads.py`, `scripts/seed_benchmark_workspaces.py`, `science_graphrag/storage/qdrant_store/chunk_store.py`, `science_graphrag/storage/neo4j/reads.py`, `science_graphrag/retrieval/neo4j_context.py`.
 - **Issue:** `_workspaces.json` поддерживает `corpus_work_ids: "*"` (см. `ws_full_corpus`). `seed_benchmark_workspaces.py` для такого пакета пропускает CONTAINS-edges (по дизайну: «unbounded»). В результате `backfill_workspace_payloads.py` (который читает только `Workspace-[:CONTAINS]->Work`) **не тегает** ни одного chunk-а как принадлежащий `ws_full_corpus`. Live-кейсы `ws_full_anchor_free_overview` и `ws_full_corpus_negative_unrelated` стабильно дают `hit_count=0`, потому что retrieval-фильтр по `workspace_id == "ws_full_corpus"` ничего не находит. Это уродует Wave 4 honesty close: `workspace_scoped_live` advisory-провал не из-за ответа модели, а из-за отсутствующих payloads.
 - **Proposal:**
   - В `backfill_workspace_payloads.py` добавить ветку «unbounded»: если `corpus_work_ids == "*"`, тэгать **все** chunks в коллекции `chunks` через `qdrant.add_workspace_to_chunks(work_id=None, workspace_id=ws_id)` (нужно расширить метод: при `work_id is None` — full-collection scroll + payload set).
@@ -42,6 +42,7 @@ Planned structural work for Python packages under this repo (not day-to-day lint
   - тест `tests/retrieval/test_workspace_scoping.py::test_unbounded_workspace_returns_full_corpus` (новый) проходит;
   - регрессия: bounded workspaces (`ws_yolo_family`, `ws_two_stage`) продолжают изолировать chunks как раньше.
 - **Raised:** 2026-04-26 (Wave 4 honesty close).
+- **Done:** 2026-04-26 — Neo4j `ws.unbounded` на seed для `*`, `workspace_list`/`workspace_get` возвращают `unbounded`, `_workspace_scope_work_ids` отдаёт `(None, …)` без раннего обнуления hits в `answer_query`, `QdrantChunkStore.add_workspace_to_all_chunks`, backfill CLI + docs/runbooks.
 
 ### [OPEN] Split `scripts/aggregate_benchmark_metrics.py` (BT1 follow-up)
 - **Area:** `scripts/aggregate_benchmark_metrics.py` (~1100 lines after Wave 3 BT4/BT5 additions).

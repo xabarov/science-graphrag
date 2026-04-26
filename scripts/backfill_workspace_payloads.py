@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Idempotent: set Qdrant chunk ``workspace_ids`` from Neo4j ``Workspace-[:CONTAINS]->Work`` edges."""
+"""Idempotent: set Qdrant chunk ``workspace_ids`` from Neo4j workspace membership.
+
+- Bounded workspaces: ``Workspace-[:CONTAINS]->Work`` → tag chunks per ``work_id``.
+- Unbounded (``ws.unbounded``): tag **all** points in the chunks collection with that workspace id.
+"""
 
 from __future__ import annotations
 
@@ -28,9 +32,13 @@ def main() -> int:
     wid_filter = (args.workspace_id or "").strip()
     try:
         pairs: list[tuple[str, str]] = []
+        unbounded_ids: list[str] = []
         for ws in neo.workspace_list():
             ws_id = str(ws.get("id") or "").strip()
             if not ws_id or (wid_filter and ws_id != wid_filter):
+                continue
+            if bool(ws.get("unbounded")):
+                unbounded_ids.append(ws_id)
                 continue
             for work_id in ws.get("work_ids") or []:
                 w = str(work_id).strip()
@@ -40,6 +48,9 @@ def main() -> int:
         for work_id, ws_id in pairs:
             total += qdrant.add_workspace_to_chunks(work_id=work_id, workspace_id=ws_id)
         print(f"updated_payload_fields={total} pairs={len(pairs)}")
+        for ws_id in unbounded_ids:
+            n = qdrant.add_workspace_to_all_chunks(workspace_id=ws_id)
+            print(f"unbounded_workspace={ws_id} updated_points={n}")
         return 0
     finally:
         neo.close()

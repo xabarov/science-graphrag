@@ -237,7 +237,8 @@ def workspace_list(client: _Neo4jClient) -> list[dict[str, Any]]:
     MATCH (ws:Workspace)
     OPTIONAL MATCH (ws)-[:CONTAINS]->(w:Work)
     WITH ws, collect(DISTINCT w.id) AS wids
-    RETURN ws.id AS id, ws.name AS name, ws.created_at AS created_at, wids AS work_ids
+    RETURN ws.id AS id, ws.name AS name, ws.created_at AS created_at, wids AS work_ids,
+           coalesce(ws.unbounded, false) AS unbounded
     ORDER BY ws.created_at DESC
     """
     out: list[dict[str, Any]] = []
@@ -250,6 +251,7 @@ def workspace_list(client: _Neo4jClient) -> list[dict[str, Any]]:
                     "name": str(rec["name"] or ""),
                     "created_at": str(rec["created_at"] or ""),
                     "work_ids": wids,
+                    "unbounded": bool(rec["unbounded"]),
                 },
             )
     return out
@@ -260,7 +262,8 @@ def workspace_get(client: _Neo4jClient, workspace_id: str) -> dict[str, Any] | N
     MATCH (ws:Workspace {id: $id})
     OPTIONAL MATCH (ws)-[:CONTAINS]->(w:Work)
     WITH ws, collect(DISTINCT w.id) AS wids
-    RETURN ws.id AS id, ws.name AS name, ws.created_at AS created_at, wids AS work_ids
+    RETURN ws.id AS id, ws.name AS name, ws.created_at AS created_at, wids AS work_ids,
+           coalesce(ws.unbounded, false) AS unbounded
     """
     with client.session() as session:
         rec = session.run(q, id=workspace_id).single()
@@ -272,6 +275,7 @@ def workspace_get(client: _Neo4jClient, workspace_id: str) -> dict[str, Any] | N
             "name": str(rec["name"] or ""),
             "created_at": str(rec["created_at"] or ""),
             "work_ids": wids,
+            "unbounded": bool(rec["unbounded"]),
         }
 
 

@@ -115,5 +115,11 @@ def _workspace_scope_work_ids(
             "workspace_missing": True,
             "workspace_scope_work_count": 0,
         }
+    if bool(row.get("unbounded")):
+        return None, {
+            "workspace_id": wid,
+            "workspace_unbounded": True,
+            "workspace_scope_work_count": 0,
+        }
     work_ids = [str(x) for x in (row.get("work_ids") or []) if x]
     return work_ids, {"workspace_id": wid, "workspace_scope_work_count": len(work_ids)}
