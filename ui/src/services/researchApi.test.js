@@ -150,6 +150,31 @@ describe("normalizeQueryResponse", () => {
   });
 });
 
+describe("normalizeQueryResponse (agent v2 envelope)", () => {
+  it("passes through optional chat fields", () => {
+    const n = normalizeQueryResponse({
+      answer: "x",
+      citations: [],
+      graph_context: {},
+      retrieval_trace: {},
+      answer_class: "inventory",
+      evidence_summary: "3 citation(s)",
+      warnings: ["no_workspace", "some_work_ids_filtered"],
+      inventory: { work_count: 2 },
+      quote_candidates: [{ quote_text: "hi", work_id: "w1" }],
+      bibliography: { format: "gost", entries: ["A. B. Title"], filtered_work_ids: ["z"] },
+      thread_id: "sess-1",
+    });
+    expect(n.answer_class).toBe("inventory");
+    expect(n.evidence_summary).toBe("3 citation(s)");
+    expect(n.warnings).toEqual(["no_workspace", "some_work_ids_filtered"]);
+    expect(n.inventory?.work_count).toBe(2);
+    expect(n.quote_candidates?.length).toBe(1);
+    expect(n.bibliography?.format).toBe("gost");
+    expect(n.thread_id).toBe("sess-1");
+  });
+});
+
 describe("fixture packs (semantic on/off)", () => {
   it("normalizes semantic-on sample", () => {
     const n = normalizeQueryResponse(SAMPLE_QUERY_SEMANTIC_ON);

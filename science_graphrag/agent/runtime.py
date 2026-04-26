@@ -5,12 +5,9 @@ from typing import Any
 
 from langchain_core.messages import AIMessage
 
-from science_graphrag.agent.chat_envelope import build_chat_envelope
-from science_graphrag.agent.context.session_store import (
-    get_session_for_thread,
-    update_session_after_turn,
-)
-from science_graphrag.agent.context.turn_digest import build_turn_digest
+from science_graphrag.agent.chat_envelope import build_chat_envelope, heuristic_answer_class
+from science_graphrag.agent.context.post_turn import apply_turn_digest_to_thread
+from science_graphrag.agent.context.session_store import get_session_for_thread
 from science_graphrag.agent.graph.state import build_initial_agent_state
 from science_graphrag.agent.graph.supervisor import build_retrieval_graph
 from science_graphrag.agent.graph.tracing import collect_tool_trace
@@ -100,11 +97,21 @@ class RetrievalAgent:
                     workspace_id=workspace_id,
                     max_tool_calls=max_tool_calls,
                 )
-                return replace(
+                out = replace(
                     out,
                     phoenix_trace_id=current_otel_trace_id_hex(),
                     thread_id=tid,
                 )
+                if tid:
+                    ac = heuristic_answer_class(question, answer_class_hint)
+                    apply_turn_digest_to_thread(
+                        thread_id=tid,
+                        raw_user_question=question,
+                        answer=out.answer,
+                        answer_class=ac,
+                        tool_trace=list(out.tool_trace or []),
+                    )
+                return out
             return self._run_langgraph(
                 question=question,
                 workspace_id=workspace_id,
@@ -162,13 +169,13 @@ class RetrievalAgent:
         if not isinstance(raw_q, str) or not raw_q.strip():
             raw_q = question
         if thread_id:
-            digest = build_turn_digest(
-                question=raw_q,
+            apply_turn_digest_to_thread(
+                thread_id=thread_id,
+                raw_user_question=raw_q,
                 answer=answer,
                 answer_class=str(envelope.get("answer_class") or "grounded_explanation"),
                 tool_trace=trace,
             )
-            update_session_after_turn(thread_id, turn_digest=digest)
 
         return AgentRunOutput(
             answer=answer,

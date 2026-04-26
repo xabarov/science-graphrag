@@ -1,8 +1,14 @@
 # Agent Chat API v1 (research workspace)
 
-**Status:** implemented (Wave A — CH1+CH2+CH3)  
+**Status:** implemented — **Wave A** (CH1+CH2+CH3) + **Wave B** (CH4 v1 in-process session: `thread_id`, `history_digest`, turn digest, SSE `context_compacted`, `session_init` in `tool_trace`).  
 **HTTP:** `POST /v2/agent/query`  
 **Modes:** JSON (`Accept: application/json`) or SSE (`Accept: text/event-stream`)
+
+## Client contract (what to read where)
+
+- **Always prefer top-level envelope** for trust and UX: `answer_class`, `evidence_summary`, `warnings`, `thread_id`, `phoenix_trace_id`, `tool_trace`, typed blocks `inventory`, `quote_candidates`, `bibliography`, `relation_trace`, `idea_suggestions`.
+- **`bibliography` object** may include `format`, `entries`, `filtered_work_ids`, and tool-local `warnings` (e.g. `some_work_ids_filtered`). Servers **also** surface bibliography filter signals in top-level `warnings` when applicable so clients that only read `warnings` still see them.
+- **SSE-only signals** (`context_compacted`, stream `warning`, `tool_search_result`, etc.) are optional UX; the authoritative answer payload is **`final_answer`** (same shape as JSON response).
 
 ## Request (`AgentQueryRequestV2`)
 
@@ -35,7 +41,7 @@ All new fields are **optional** for backward compatibility; clients should treat
 | `relation_trace` | object \| null | Reserved / sparse in Wave A |
 | `quote_candidates` | array \| null | Quote snippets + work/chunk ids |
 | `idea_suggestions` | array \| null | Reserved for CH7 |
-| `bibliography` | object \| null | `{ "format": "gost", "entries": [...] }` |
+| `bibliography` | object \| null | `{ "format": "gost", "entries": [...] }`; may include `filtered_work_ids` and in-object `warnings` |
 
 ## SSE event vocabulary v1
 

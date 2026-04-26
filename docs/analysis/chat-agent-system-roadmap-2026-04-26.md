@@ -8,6 +8,8 @@
 - агентных паттернов в `osint-gr/backend/osint_graphrag/agents`
 - tool-search, subagent и context-compression паттернов в `openclaude/src`
 
+**Companion doc (frontend/UI):** detailed implementation plan for agent chat presentation, shimmer states, and subagent visibility lives in [`docs/analysis/agent-chat-frontend-ui-plan-2026-04-26.md`](./agent-chat-frontend-ui-plan-2026-04-26.md).
+
 **Почему это нужно:** текущий чат уже имеет SSE, `AgentState`, `tool_trace`, supervisor и specialist nodes, но ещё не является полноценным research chat runtime: API принимает один `question`, инструменты узкие, нет явного tool discovery, нет устойчивого multi-turn memory/compression, а use cases исследователя шире, чем `idea_search + summarize_workspace + cypher`.
 
 ---
@@ -909,6 +911,8 @@ Research chat быстро упирается в:
 1. Follow-up в том же `thread_id` получает префикс `<session_memory>` из серверного store (клиент шлёт тот же id сессии).
 2. Digest — компактный JSON, не сырые tool outputs.
 3. Базовые unit-тесты на store/digest есть; полный e2e multi-turn — впереди.
+
+**Wave C — Chat hardening (post–Wave B, CH5 foundation prep):** синхронизация [`docs/specs/agent-chat-v1.md`](../specs/agent-chat-v1.md) со статусом Wave B; единый контракт `warnings` (в т.ч. библиография) на top-level + в `bibliography`; нормализация входа для rule-based `tool_search` (без шума от `<session_memory>` / digest XML); унификация post-turn session/digest между JSON и SSE; расширенный regression: `session_init`, `context_compacted`, follow-up в том же `thread_id`, rich envelope parity JSON↔SSE; UI: `evidence_summary`, i18n warnings, SSE `context_compacted` / `warning` / `tool_search_result`, опционально `answerClassHint`; split `workspace_paper_tools.py` по backlog; optional live gate `scripts/live_check/agent_v2_http.py`. **По-прежнему не в этом slice:** persist store, полный CH5 capsules/boundary, CH6–CH7.
 
 ### Wave CH5 — Multi-level context compression
 

@@ -180,6 +180,13 @@ def build_chat_envelope(
         quote_candidates=quote_cands,
         warnings=warnings,
     )
+    bib_obj = typed.get("bibliography")
+    if isinstance(bib_obj, dict):
+        for w in bib_obj.get("warnings") or []:
+            if isinstance(w, str) and w.strip() and w not in warnings:
+                warnings.append(w.strip())
+        if bib_obj.get("filtered_work_ids") and "some_work_ids_filtered" not in warnings:
+            warnings.append("some_work_ids_filtered")
     evidence_parts: list[str] = []
     if citations:
         evidence_parts.append(f"{len(citations)} citation(s)")

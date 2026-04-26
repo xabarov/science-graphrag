@@ -22,6 +22,7 @@ if str(_LIVE_PKG) not in sys.path:
     sys.path.insert(0, str(_LIVE_PKG))
 
 from http_suite import (  # noqa: E402  pylint: disable=wrong-import-position,import-error
+    check_agent_v2_sse,
     check_agent_v2_sync_json,
     check_health,
     check_multi_turn_digest,
@@ -74,5 +75,30 @@ def test_live_agent_v2_multi_turn() -> None:
     with httpx.Client(timeout=_timeout()) as client:
         res = check_multi_turn_digest(
             client, _base(), workspace_id=_workspace(), timeout=_timeout()
+        )
+    assert res.ok, res.detail
+
+
+@pytest.mark.skipif(not _base(), reason="AGENT_LIVE_BASE unset")
+@pytest.mark.skipif(
+    (os.environ.get("AGENT_LIVE_GATE_CH4") or "").strip().lower() not in ("1", "true", "yes"),
+    reason="AGENT_LIVE_GATE_CH4 not enabled (set to 1 for CH4 strict gate)",
+)
+def test_live_agent_v2_gate_ch4_sse() -> None:
+    """Strict CH4: SSE stream must include context_compacted and session_init in final trace."""
+    import uuid
+
+    tid = f"pytest_ch4_{uuid.uuid4().hex[:10]}"
+    with httpx.Client(timeout=_timeout()) as client:
+        res = check_agent_v2_sse(
+            client,
+            _base(),
+            workspace_id=_workspace(),
+            question=os.environ.get(
+                "AGENT_LIVE_QUESTION_SSE",
+                "One-sentence summary of what an academic GraphRAG system does.",
+            ),
+            thread_id=tid,
+            timeout=_timeout(),
         )
     assert res.ok, res.detail

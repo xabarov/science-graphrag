@@ -15,11 +15,8 @@ from pydantic import BaseModel, Field, field_validator
 from sse_starlette.sse import EventSourceResponse
 
 from science_graphrag.agent.chat_envelope import build_chat_envelope, heuristic_answer_class
-from science_graphrag.agent.context.session_store import (
-    get_session_for_thread,
-    update_session_after_turn,
-)
-from science_graphrag.agent.context.turn_digest import build_turn_digest
+from science_graphrag.agent.context.post_turn import apply_turn_digest_to_thread
+from science_graphrag.agent.context.session_store import get_session_for_thread
 from science_graphrag.agent.graph.state import build_initial_agent_state
 from science_graphrag.agent.graph.supervisor import build_retrieval_graph
 from science_graphrag.agent.graph.tracing import collect_tool_trace
@@ -385,13 +382,13 @@ async def _stream_agent(
                 raw_q = (latest_full_state.get("metadata") or {}).get("raw_user_question")
                 if not isinstance(raw_q, str) or not raw_q.strip():
                     raw_q = question
-                digest = build_turn_digest(
-                    question=raw_q,
+                new_sum = apply_turn_digest_to_thread(
+                    thread_id=thread_id,
+                    raw_user_question=raw_q,
                     answer=final_answer,
                     answer_class=str(envelope.get("answer_class") or "grounded_explanation"),
                     tool_trace=trace_for_run,
                 )
-                new_sum = update_session_after_turn(thread_id, turn_digest=digest)
                 yield {
                     "data": json.dumps(
                         {

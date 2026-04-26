@@ -101,12 +101,25 @@ def check_agent_v2_sync_json(
     if thread_id and data.get("thread_id") != thread_id:
         issues.append(f"thread_id_mismatch expected={thread_id!r} got={data.get('thread_id')!r}")
 
+    trace = data.get("tool_trace") or []
+    tool_names = [x.get("tool") for x in trace if isinstance(x, dict)]
+
     ok = not issues
+    if thread_id and os.environ.get("AGENT_LIVE_GATE_CH4", "").strip() in ("1", "true", "yes"):
+        if "session_init" not in tool_names:
+            issues.append("missing_session_init_in_tool_trace")
+        ok = not issues
+
     return CheckResult(
         "agent_v2_sync_json",
         ok,
         "; ".join(issues) if issues else "ok",
-        {"duration_ms": data.get("duration_ms"), "warnings": data.get("warnings")},
+        {
+            "duration_ms": data.get("duration_ms"),
+            "warnings": data.get("warnings"),
+            "tools": tool_names,
+            "answer_class": data.get("answer_class"),
+        },
     )
 
 
@@ -183,6 +196,11 @@ def check_agent_v2_sse(
         fa = next((e for e in events if e.get("type") == "final_answer"), {})
         if fa.get("thread_id") != thread_id:
             issues.append(f"final_answer_thread_id_mismatch got={fa.get('thread_id')!r}")
+        if os.environ.get("AGENT_LIVE_GATE_CH4", "").strip() in ("1", "true", "yes"):
+            fa_trace = fa.get("tool_trace") or []
+            fa_tools = [x.get("tool") for x in fa_trace if isinstance(x, dict)]
+            if "session_init" not in fa_tools:
+                issues.append("sse_final_missing_session_init")
 
     ok = not issues
     return CheckResult(
@@ -246,11 +264,25 @@ def check_multi_turn_digest(
             {"turn1_answer_len": len(a1)},
         )
 
+    if os.environ.get("AGENT_LIVE_GATE_CH4", "").strip() in ("1", "true", "yes"):
+        tools = r2.data.get("tools") or []
+        if "session_init" not in tools:
+            return CheckResult(
+                "multi_turn_digest",
+                False,
+                "turn2_missing_session_init",
+                {"thread_id": tid, "turn2_tools": tools},
+            )
+
     return CheckResult(
         "multi_turn_digest",
         True,
         "ok",
-        {"thread_id": tid, "turn2_warnings": r2.data.get("warnings")},
+        {
+            "thread_id": tid,
+            "turn2_warnings": r2.data.get("warnings"),
+            "turn2_tools": r2.data.get("tools"),
+        },
     )
 
 

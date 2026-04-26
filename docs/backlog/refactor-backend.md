@@ -290,12 +290,10 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 - **Synergy:** LX2 → LX1 → интеграция.
 - **Raised:** 2026-04-26
 
-### [OPEN] Split Wave A workspace/paper LangChain tools module
-- **Area:** [`science_graphrag/agent/tools/workspace_paper_tools.py`](../../science_graphrag/agent/tools/workspace_paper_tools.py)
-- **Issue:** Single module ~470+ lines mixing Neo4j catalog tools, Qdrant quote search, and GOST bibliography wrappers; harder to review and test in isolation.
-- **Proposal:** Extract `workspace_catalog_tools.py`, `paper_quote_tool.py`, `bibliography_gost_tool.py` (or `agent/tools/catalog/`) + thin `__init__` aggregator; keep public `build_workspace_paper_langchain_tools` API stable.
-- **Acceptance:** No file above ~300 lines in that subtree; imports unchanged for `build_retrieval_tools`.
-- **Raised:** 2026-04-26 (Wave A CH2)
+### [DONE] Split Wave A workspace/paper LangChain tools module
+- **Note (2026-04-26):** Split into [`workspace_catalog_tools.py`](../../science_graphrag/agent/tools/workspace_catalog_tools.py), [`paper_quote_search_tool.py`](../../science_graphrag/agent/tools/paper_quote_search_tool.py), [`format_bibliography_gost_tool.py`](../../science_graphrag/agent/tools/format_bibliography_gost_tool.py); [`workspace_paper_tools.py`](../../science_graphrag/agent/tools/workspace_paper_tools.py) is thin `build_workspace_paper_langchain_tools` + re-exports.
+- **Area:** `science_graphrag/agent/tools/workspace_paper_tools.py` (facade)
+- **Raised:** 2026-04-26 (Wave A CH2); **Done:** 2026-04-26 (Wave C chat hardening)
 
 <!-- Example:
 ### [OPEN] Example — tighten retrieval module boundaries

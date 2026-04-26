@@ -129,6 +129,9 @@ export function BibliographyBlock({ t, bibliography }) {
 
   if (!bibliography || typeof bibliography !== "object" || entries.length === 0) return null;
 
+  const filtered = Array.isArray(bibliography.filtered_work_ids) ? bibliography.filtered_work_ids : [];
+  const bibWarnings = Array.isArray(bibliography.warnings) ? bibliography.warnings : [];
+
   return (
     <Box sx={{ mt: 1.5, p: 1.5, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "rgba(0,0,0,0.2)" }}>
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, mb: 0.75 }}>
@@ -137,6 +140,20 @@ export function BibliographyBlock({ t, bibliography }) {
           {copied ? t("chat.typed.copied") : t("chat.typed.copyBib")}
         </CursorSmallButton>
       </Box>
+      {bibWarnings.length > 0 ? (
+        <Typography sx={{ fontSize: "0.7rem", color: "rgba(251,191,36,0.9)", mb: 0.75 }}>
+          {bibWarnings.map((w) => String(w)).join(" · ")}
+        </Typography>
+      ) : null}
+      {filtered.length > 0 ? (
+        <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.45)", mb: 0.75, fontFamily: "monospace" }}>
+          {t("chat.typed.filteredWorkIds")}:{" "}
+          {(() => {
+            const joined = filtered.map((id) => String(id)).join(", ");
+            return joined.length > 800 ? `${joined.slice(0, 800)}…` : joined;
+          })()}
+        </Typography>
+      ) : null}
       <Box component="ol" sx={{ m: 0, pl: 2, color: "rgba(255,255,255,0.82)", fontSize: "0.8125rem" }}>
         {entries.map((e, i) => (
           <Box component="li" key={i} sx={{ mb: 0.5 }}>

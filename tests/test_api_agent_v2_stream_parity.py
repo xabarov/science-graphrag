@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
+from science_graphrag.agent.context.session_store import clear_session_store_for_tests
 from science_graphrag.api.agent_v2 import router as agent_v2_router
 from science_graphrag.api.deps import get_stores
 from science_graphrag.config import Settings, get_settings
@@ -73,15 +74,26 @@ class _FakeGraph:
             "citations": [],
             "tool_trace": [],
             "budget_remaining": 7,
-            "metadata": {},
-            "specialist_results": {},
+            "metadata": dict(state.get("metadata") or {}),
+            "specialist_results": {
+                "retrieval_agent": [
+                    {
+                        "bibliography": {
+                            "format": "gost",
+                            "entries": ["Author. Title // Journal. — 2020."],
+                            "filtered_work_ids": ["orphan-id"],
+                            "warnings": ["some_work_ids_filtered"],
+                        }
+                    }
+                ]
+            },
             "current_specialist": None,
             "routing_log": [{"from": "supervisor", "to": "retrieval_agent", "budget_left": 8}],
             "debug_events": [],
             "thread_id": state.get("thread_id"),
-            "session_summary": "",
+            "session_summary": str(state.get("session_summary") or ""),
             "answer_class": None,
-            "history_digest": [],
+            "history_digest": list(state.get("history_digest") or []),
         }
         yield ("values", full)
 
@@ -133,3 +145,54 @@ def test_sse_final_tool_trace_matches_collect_tool_trace(monkeypatch) -> None:
     tools = [t.get("tool") for t in trace if isinstance(t, dict)]
     assert "route_to_specialist" in tools
     assert "idea_search" in tools
+    fa = finals[0]
+    assert "some_work_ids_filtered" in (fa.get("warnings") or [])
+    bib = fa.get("bibliography") or {}
+    assert bib.get("filtered_work_ids") == ["orphan-id"]
+
+
+def test_sse_context_compacted_and_session_init_with_thread(monkeypatch) -> None:
+    from science_graphrag.api import agent_v2 as agent_v2_api
+
+    try:
+        clear_session_store_for_tests()
+        monkeypatch.setattr(agent_v2_api, "build_retrieval_graph", lambda *_a, **_k: _FakeGraph())
+        client = TestClient(_app())
+        client.app.dependency_overrides[get_settings] = lambda: Settings(agent_enabled=True)
+        client.app.dependency_overrides[get_stores] = lambda: type(
+            "_S",
+            (),
+            {
+                "neo4j": None,
+                "qdrant_chunks": None,
+                "qdrant_works": None,
+                "qdrant_claims": None,
+                "blob": None,
+            },
+        )()
+        events = []
+        with client.stream(
+            "POST",
+            "/v2/agent/query",
+            json={"question": "q", "thread_id": "thr_sse_parity"},
+            headers={"Accept": "text/event-stream"},
+        ) as resp:
+            assert resp.status_code == 200
+            for line in resp.iter_lines():
+                if isinstance(line, bytes):
+                    line = line.decode("utf-8")
+                if line.startswith("data:"):
+                    events.append(json.loads(line[5:].strip()))
+    finally:
+        client.app.dependency_overrides.pop(get_settings, None)
+        client.app.dependency_overrides.pop(get_stores, None)
+        clear_session_store_for_tests()
+
+    types = [e.get("type") for e in events]
+    assert "context_compacted" in types
+    finals = [e for e in events if e.get("type") == "final_answer"]
+    assert len(finals) == 1
+    trace = finals[0].get("tool_trace") or []
+    tools = [t.get("tool") for t in trace if isinstance(t, dict)]
+    assert "session_init" in tools
+    assert finals[0].get("thread_id") == "thr_sse_parity"

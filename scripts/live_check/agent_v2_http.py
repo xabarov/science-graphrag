@@ -15,6 +15,10 @@ Environment (optional)::
     AGENT_LIVE_QUESTION       override first sync question
     AGENT_LIVE_QUESTION_T1/T2 multi-turn prompts
     AGENT_LIVE_QUESTION_SSE   SSE-only question
+    AGENT_LIVE_GATE_CH4       set to ``1`` to assert CH4 signals on live stack:
+                              ``session_init`` in JSON ``tool_trace`` (when ``thread_id`` is set),
+                              ``session_init`` in SSE ``final_answer.tool_trace``,
+                              and ``context_compacted`` in the SSE event stream.
 
 Usage::
 

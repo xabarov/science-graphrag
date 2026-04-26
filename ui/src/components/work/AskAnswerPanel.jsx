@@ -14,6 +14,105 @@ import { buildStandaloneTracePath, buildWorkspaceTracePath } from "./traceabilit
 import AgentToolTrace from "./AgentToolTrace.jsx";
 import { BibliographyBlock, InventoryBlock, QuoteCandidatesBlock } from "./ChatTypedBlocks.jsx";
 
+function formatAgentWarning(t, code) {
+  const c = String(code || "").trim();
+  if (!c) return "";
+  const key = `chat.warnings.${c}`;
+  const out = t(key);
+  return out === key ? c : out;
+}
+
+function StreamEventLines({ t, events }) {
+  if (!Array.isArray(events) || events.length === 0) return null;
+  return (
+    <Box sx={{ mb: 1 }}>
+      <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.7rem", display: "block", mb: 0.5 }}>
+        {t("chat.stream.statusTitle")}
+      </Typography>
+      {events.map((event, index) => {
+        const type = String(event?.type || "");
+        const key = `${index}-${type}`;
+        if (type === "tool_call") {
+          return (
+            <Box key={key} sx={{ display: "flex", alignItems: "center", gap: 0.5, py: 0.25, opacity: 0.75 }}>
+              <Typography component="span" sx={{ fontSize: "0.7rem", fontFamily: "monospace", color: "rgba(129,140,248,0.9)" }}>
+                {String(event?.tool || "tool")}
+              </Typography>
+              {event?.args_summary?.query ? (
+                <Typography component="span" sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.5)" }}>
+                  {`"${String(event.args_summary.query).slice(0, 40)}"`}
+                </Typography>
+              ) : null}
+            </Box>
+          );
+        }
+        if (type === "tool_result") {
+          const err = event?.error ? String(event.error) : "";
+          const parts = [
+            `${t("chat.stream.toolResultLabel")}: ${String(event?.tool || "")}`,
+            event?.row_count != null ? `${t("chat.stream.rowsLabel")}: ${String(event.row_count)}` : null,
+            err ? `${t("chat.stream.errorLabel")}: ${err.slice(0, 120)}` : null,
+          ].filter(Boolean);
+          return (
+            <Typography key={key} sx={{ fontSize: "0.68rem", color: err ? "rgba(239,68,68,0.85)" : "rgba(255,255,255,0.45)" }}>
+              {parts.join(" · ")}
+            </Typography>
+          );
+        }
+        if (type === "intent_classified") {
+          return (
+            <Typography key={key} sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.45)" }}>
+              {t("chat.stream.intent", { cls: String(event?.answer_class || ""), src: String(event?.source || "") })}
+            </Typography>
+          );
+        }
+        if (type === "specialist_selected") {
+          return (
+            <Typography key={key} sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.45)" }}>
+              {t("chat.stream.route", { fr: String(event?.from || ""), to: String(event?.to || "") })}
+            </Typography>
+          );
+        }
+        if (type === "tool_search_result") {
+          const reason = String(event?.reason || "");
+          const skipNote = event?.skipped ? ` ${t("chat.stream.shortlistSkipped")}` : "";
+          return (
+            <Typography key={key} sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.45)" }}>
+              {t("chat.stream.toolSearch", { spec: String(event?.specialist || ""), reason: `${reason}${skipNote}` })}
+            </Typography>
+          );
+        }
+        if (type === "evidence_ready") {
+          return (
+            <Typography key={key} sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.45)" }}>
+              {t("chat.stream.evidenceReady", { n: String(event?.citation_count ?? "") })}
+            </Typography>
+          );
+        }
+        if (type === "context_compacted") {
+          const ex = String(event?.session_summary_excerpt || "").slice(0, 200);
+          return (
+            <Typography key={key} sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.45)" }}>
+              {t("chat.stream.contextCompacted", { excerpt: ex })}
+            </Typography>
+          );
+        }
+        if (type === "warning") {
+          return (
+            <Typography key={key} sx={{ fontSize: "0.68rem", color: "rgba(251,191,36,0.9)" }}>
+              {t("chat.stream.warningLine", {
+                code: String(event?.code || ""),
+                message: String(event?.message || "").slice(0, 200),
+              })}
+            </Typography>
+          );
+        }
+        return null;
+      })}
+    </Box>
+  );
+}
+
 function FlagChips({ label, items }) {
   if (!items || items.length === 0) return null;
   return <Box sx={{ mt: 1 }}><Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mb: 0.5 }}>{label}</Typography><Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>{items.map((d) => <Chip key={d} label={d} size="small" sx={{ height: 22, fontSize: "0.75rem" }} />)}</Box></Box>;
@@ -41,20 +140,32 @@ export function AskAnswerPanel({
       <Box component="ul" sx={{ m: 0, mb: 1.25, pl: 2.25, color: "rgba(255,255,255,0.62)", fontSize: "0.75rem", lineHeight: 1.5 }}>
         {buildAskAnswerRationale(normalized, { locked, inWorkspace, formWorkId: workId }).map((line, idx) => <Box component="li" key={idx} sx={{ mb: 0.35 }}>{line}</Box>)}
       </Box>
-      {isStreaming ? <Box sx={{ mb: 1 }}>
-        <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.7rem" }}>Agent thinking...</Typography>
-        {streamEvents.filter((event) => event?.type === "tool_call").map((event, index) => <Box key={`${String(event?.step ?? index)}-${index}`} sx={{ display: "flex", alignItems: "center", gap: 0.5, py: 0.25, opacity: 0.7 }}>
-          <Typography component="span" sx={{ fontSize: "0.7rem", fontFamily: "monospace", color: "rgba(129,140,248,0.9)" }}>{String(event?.tool || "tool")}</Typography>
-          {event?.args_summary?.query ? <Typography component="span" sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.5)" }}>{`"${String(event.args_summary.query).slice(0, 40)}"`}</Typography> : null}
-        </Box>)}
-      </Box> : null}
+      {isStreaming ? (
+        <Box sx={{ mb: 1 }}>
+          <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.7rem", display: "block", mb: 0.5 }}>
+            {t("chat.stream.thinking")}
+          </Typography>
+          <StreamEventLines t={t} events={streamEvents} />
+        </Box>
+      ) : null}
       {Array.isArray(normalized.warnings) && normalized.warnings.length > 0 ? (
         <Alert severity="warning" sx={{ mb: 1, fontSize: "0.75rem", backgroundColor: "rgba(255,255,255,0.04)" }}>
-          {normalized.warnings.map((w) => String(w)).join(" · ")}
+          <Box component="ul" sx={{ m: 0, pl: 2 }}>
+            {normalized.warnings.map((w) => (
+              <Box component="li" key={String(w)} sx={{ mb: 0.25 }}>
+                {formatAgentWarning(t, w)}
+              </Box>
+            ))}
+          </Box>
         </Alert>
       ) : null}
       {normalized.answer_class ? (
         <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.35)", mb: 0.5 }}>{t("chat.typed.answerClass", { cls: String(normalized.answer_class) })}</Typography>
+      ) : null}
+      {normalized.evidence_summary ? (
+        <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mb: 0.75, whiteSpace: "pre-wrap" }}>
+          {t("chat.typed.evidenceSummaryLabel")}: {String(normalized.evidence_summary)}
+        </Typography>
       ) : null}
       <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)", whiteSpace: "pre-wrap" }}>{normalized.answer || t("workspace.upload.dash")}</Typography>
       <InventoryBlock t={t} inventory={normalized.inventory} />

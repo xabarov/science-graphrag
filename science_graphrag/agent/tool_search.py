@@ -2,12 +2,30 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from langchain_core.tools import BaseTool
 
 from science_graphrag.agent.tool_manifest import ToolManifestEntry, manifest_by_name
 from science_graphrag.config import Settings
+
+_SESSION_MEMORY_RE = re.compile(
+    r"<session_memory>.*?</session_memory>\s*",
+    re.DOTALL | re.IGNORECASE,
+)
+_CLIENT_DIGEST_RE = re.compile(
+    r"<client_history_digest>.*?</client_history_digest>\s*",
+    re.DOTALL | re.IGNORECASE,
+)
+
+
+def strip_tool_search_context_wrappers(text: str) -> str:
+    """Strip CH4 memory/digest XML blocks so scoring uses the user's question only."""
+    s = text or ""
+    s = _SESSION_MEMORY_RE.sub("", s)
+    s = _CLIENT_DIGEST_RE.sub("", s)
+    return s.strip()
 
 
 def _norm_question(q: str) -> str:
@@ -70,7 +88,7 @@ def shortlist_tools_for_specialist(
         return tools, {"skipped": True, "reason": "writer_minimal_set"}
 
     by_meta = manifest_by_name()
-    q = _norm_question(question)
+    q = _norm_question(strip_tool_search_context_wrappers(question))
     scored: list[tuple[float, BaseTool]] = []
     for t in tools:
         name = getattr(t, "name", "") or ""

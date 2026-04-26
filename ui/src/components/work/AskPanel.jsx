@@ -64,6 +64,8 @@ export default function AskPanel({
   const [serverSync] = useState(() => readAskServerSyncPref());
   const [agentToolTrace, setAgentToolTrace] = useState([]);
   const [streamEvents, setStreamEvents] = useState([]);
+  /** Optional hint for POST /v2/agent/query (does not force routing). */
+  const [answerClassHint, setAnswerClassHint] = useState("");
   const [pendingUserQuery, setPendingUserQuery] = useState("");
   const skipHydrateWorkRef = useRef(false);
 
@@ -135,9 +137,8 @@ export default function AskPanel({
     onResult: setNormalized,
     onToolTrace: setAgentToolTrace,
     onStreamEvent: (event) => {
-      if (event?.type === "tool_call" || event?.type === "tool_result") {
-        setStreamEvents((prev) => [...prev, event]);
-      }
+      if (!event || typeof event !== "object") return;
+      setStreamEvents((prev) => [...prev, event].slice(-80));
     },
     onError: setError,
   });
@@ -275,6 +276,7 @@ export default function AskPanel({
           query,
           threadId: activeSessionId || null,
           historyDigest,
+          answerClassHint: String(answerClassHint || "").trim() || null,
         });
         if (!nextNormalized) return;
         const queryMode = locked || inWorkspace ? "workspace" : corpusWorkspaceOnly ? "workspace_corpus" : workId ? "scoped" : "global";
@@ -332,7 +334,20 @@ export default function AskPanel({
         setPendingUserQuery("");
       }
     },
-    [submit, query, history, activeSessionId, locked, inWorkspace, corpusWorkspaceOnly, workId, scopeKey, bumpSessions, serverSync],
+    [
+      submit,
+      query,
+      history,
+      activeSessionId,
+      answerClassHint,
+      locked,
+      inWorkspace,
+      corpusWorkspaceOnly,
+      workId,
+      scopeKey,
+      bumpSessions,
+      serverSync,
+    ],
   );
 
   const onActiveSessionChange = useCallback(
@@ -462,6 +477,8 @@ export default function AskPanel({
             resolvedWork={workDetailsForChip}
             corpusWorkspaceOnly={corpusWorkspaceOnly}
             standaloneMode={standaloneMode}
+            answerClassHint={answerClassHint}
+            onAnswerClassHintChange={setAnswerClassHint}
           />
         </Box>
       </Box>

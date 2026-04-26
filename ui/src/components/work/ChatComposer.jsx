@@ -3,11 +3,27 @@ import { Link } from "react-router-dom";
 import KeyboardArrowUpRoundedIcon from "@mui/icons-material/KeyboardArrowUpRounded";
 import OpenInNewOutlinedIcon from "@mui/icons-material/OpenInNewOutlined";
 import Box from "@mui/material/Box";
+import FormControl from "@mui/material/FormControl";
 import IconButton from "@mui/material/IconButton";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 
 import { ChatContextPicker } from "./ChatContextPicker.jsx";
+
+const ANSWER_CLASS_HINT_OPTIONS = [
+  { value: "", labelKey: "chat.answerMode.auto" },
+  { value: "inventory", labelKey: "chat.answerMode.inventory" },
+  { value: "fact_lookup", labelKey: "chat.answerMode.fact_lookup" },
+  { value: "grounded_explanation", labelKey: "chat.answerMode.grounded_explanation" },
+  { value: "relation_tracing", labelKey: "chat.answerMode.relation_tracing" },
+  { value: "quote_extraction", labelKey: "chat.answerMode.quote_extraction" },
+  { value: "ideation", labelKey: "chat.answerMode.ideation" },
+  { value: "bibliography_export", labelKey: "chat.answerMode.bibliography_export" },
+  { value: "synthesis", labelKey: "chat.answerMode.synthesis" },
+];
 
 const inputSx = {
   "& .MuiInputBase-input": { fontSize: "0.8125rem", py: 0.75 },
@@ -35,6 +51,8 @@ const inputSx = {
  *   resolvedWork?: Record<string, unknown> | null,
  *   corpusWorkspaceOnly?: boolean,
  *   standaloneMode?: boolean,
+ *   answerClassHint?: string,
+ *   onAnswerClassHintChange?: (v: string) => void,
  * }} props
  */
 export function ChatComposer({
@@ -55,6 +73,8 @@ export function ChatComposer({
   resolvedWork = null,
   corpusWorkspaceOnly = false,
   standaloneMode = false,
+  answerClassHint = "",
+  onAnswerClassHintChange,
 }) {
   const handleKeyDown = useCallback(
     (e) => {
@@ -116,6 +136,26 @@ export function ChatComposer({
             standaloneMode={standaloneMode}
           />
         )}
+        <Box sx={{ px: 0.5, display: "flex", alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+          <FormControl size="small" variant="standard" sx={{ minWidth: 168, maxWidth: "100%" }}>
+            <InputLabel id="chat-answer-mode-label" sx={{ fontSize: "0.8125rem" }}>
+              {t("chat.answerMode.label")}
+            </InputLabel>
+            <Select
+              labelId="chat-answer-mode-label"
+              value={answerClassHint || ""}
+              label={t("chat.answerMode.label")}
+              onChange={(e) => onAnswerClassHintChange?.(String(e.target.value))}
+              sx={{ fontSize: "0.8125rem" }}
+            >
+              {ANSWER_CLASS_HINT_OPTIONS.map((o) => (
+                <MenuItem key={o.value || "auto"} value={o.value} sx={{ fontSize: "0.8125rem" }}>
+                  {t(o.labelKey)}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
         <TextField
           placeholder={t("chat.composer.placeholder")}
           value={query}

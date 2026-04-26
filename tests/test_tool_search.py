@@ -6,7 +6,10 @@ from unittest.mock import MagicMock
 
 from langchain_core.tools import tool
 
-from science_graphrag.agent.tool_search import shortlist_tools_for_specialist
+from science_graphrag.agent.tool_search import (
+    shortlist_tools_for_specialist,
+    strip_tool_search_context_wrappers,
+)
 from science_graphrag.config import Settings
 
 
@@ -17,6 +20,41 @@ def _named_tool(name: str):
         return {"row_count": 0}
 
     return _t
+
+
+def test_strip_tool_search_context_wrappers_removes_memory_blocks() -> None:
+    raw = (
+        "<session_memory>\nQ: old\nA: ans\n</session_memory>\n"
+        "<client_history_digest>\n[]\n</client_history_digest>\n"
+        "Собери список литературы по ГОСТ"
+    )
+    assert strip_tool_search_context_wrappers(raw).strip() == "Собери список литературы по ГОСТ"
+
+
+def test_shortlist_bibliography_boosts_gost_with_memory_prefix() -> None:
+    from science_graphrag.agent.tools import build_retrieval_tools
+
+    stores = MagicMock()
+    stores.neo4j = MagicMock()
+    stores.qdrant_chunks = MagicMock()
+    stores.qdrant_works = MagicMock()
+    settings = Settings(agent_rule_tool_search_enabled=True)
+    tools = build_retrieval_tools(stores, settings)
+    wrapped = (
+        "<session_memory>\nnoise\n</session_memory>\n"
+        "<client_history_digest>\n[]\n</client_history_digest>\n"
+        "Собери список литературы по ГОСТ"
+    )
+    out, meta = shortlist_tools_for_specialist(
+        tools,
+        question=wrapped,
+        specialist="retrieval_agent",
+        settings=settings,
+        has_workspace=True,
+    )
+    assert meta.get("reason") == "rules"
+    names = {getattr(t, "name", "") for t in out}
+    assert "format_bibliography_gost" in names
 
 
 def test_shortlist_disabled_returns_full() -> None:

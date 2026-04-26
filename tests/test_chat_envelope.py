@@ -158,3 +158,44 @@ def test_graph_only_trace() -> None:
         answer_class_hint="grounded_explanation",
     )
     assert "graph_only" in (env.get("warnings") or [])
+
+
+def test_bibliography_filtered_merges_warnings_to_top_level() -> None:
+    state: AgentState = {
+        "messages": [HumanMessage(content="гост список")],
+        "workspace_id": "ws1",
+        "citations": [{"work_id": "w1"}],
+        "tool_trace": [],
+        "budget_remaining": 5,
+        "metadata": {"raw_user_question": "гост список"},
+        "specialist_results": {
+            "retrieval_agent": [
+                {
+                    "bibliography": {
+                        "format": "gost",
+                        "entries": ["Line 1"],
+                        "filtered_work_ids": ["x"],
+                        "warnings": ["some_work_ids_filtered"],
+                    }
+                }
+            ],
+        },
+        "current_specialist": None,
+        "routing_log": [],
+        "debug_events": [],
+        "thread_id": None,
+        "session_summary": "",
+        "answer_class": None,
+        "history_digest": [],
+    }
+    trace = [{"step": 1, "tool": "format_bibliography_gost", "args_summary": {}, "row_count": 1}]
+    env = build_chat_envelope(
+        state=state,
+        answer="ok",
+        citations=[{"work_id": "w1"}],
+        tool_trace=trace,  # type: ignore[arg-type]
+        answer_class_hint=None,
+    )
+    w = env.get("warnings") or []
+    assert "some_work_ids_filtered" in w
+    assert env.get("bibliography", {}).get("filtered_work_ids") == ["x"]
