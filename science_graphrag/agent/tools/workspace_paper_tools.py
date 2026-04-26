@@ -233,29 +233,40 @@ class PaperQuoteSearchTool(BaseAgentTool):
                 row_count=0,
             )
         k = max(1, min(int(top_k), 16))
-        with traced_tool_span(
-            "tool.paper_quote_search",
-            tool_name="paper_quote_search",
-            tool_parameters={
-                "query": q[:200],
-                "workspace_id": workspace_id or "",
-                "work_id": work_id or "",
-            },
-        ):
-            with embeddings_span(
-                "embedding.agent.paper_quote_search",
-                attributes={"embedding.model_name": self._span_model_label},
+        try:
+            with traced_tool_span(
+                "tool.paper_quote_search",
+                tool_name="paper_quote_search",
+                tool_parameters={
+                    "query": q[:200],
+                    "workspace_id": workspace_id or "",
+                    "work_id": work_id or "",
+                },
             ):
-                qv = self._embedder.embed([q])
-            if isinstance(qv, np.ndarray):
-                vector = qv[0].tolist()
-            else:
-                vector = list(qv[0])
-            hits = self._chunk_store.search_similar(
-                vector=vector,
-                limit=k,
-                workspace_id=(workspace_id or "").strip() or None,
-                work_id=(work_id or "").strip() or None,
+                with embeddings_span(
+                    "embedding.agent.paper_quote_search",
+                    attributes={"embedding.model_name": self._span_model_label},
+                ):
+                    qv = self._embedder.embed([q])
+                if isinstance(qv, np.ndarray):
+                    vector = qv[0].tolist()
+                else:
+                    vector = list(qv[0])
+                hits = self._chunk_store.search_similar(
+                    vector=vector,
+                    limit=k,
+                    workspace_id=(workspace_id or "").strip() or None,
+                    work_id=(work_id or "").strip() or None,
+                )
+        except Exception:  # noqa: BLE001
+            return ToolResult(
+                payload={
+                    "error": "qdrant_unavailable",
+                    "items": [],
+                    "quote_candidates": [],
+                    "row_count": 0,
+                },
+                row_count=0,
             )
         items: list[dict[str, Any]] = []
         quote_candidates: list[dict[str, Any]] = []
@@ -303,17 +314,23 @@ class FormatBibliographyGostTool(BaseAgentTool):
             return err
         assert ws is not None
         allowed = {str(x) for x in (ws.get("work_ids") or []) if x}
+        requested = [str(x).strip() for x in (work_ids or []) if str(x or "").strip()]
+        filtered = [w for w in requested if w not in allowed]
         rows: list[dict[str, Any]] = []
-        for raw in work_ids or []:
-            wid = str(raw or "").strip()
-            if not wid or wid not in allowed:
+        for wid in requested:
+            if wid not in allowed:
                 continue
             card = self._store.fetch_work_bibliography_card(wid)
             if not card:
                 continue
-            authors = [a.get("full_name") or "" for a in self._store.list_work_authors(wid)]
-            venues = self._store.list_work_venues(wid)
-            venue = str(venues[0].get("name") or "") if venues else ""
+            try:
+                authors = [a.get("full_name") or "" for a in self._store.list_work_authors(wid)]
+                venues = self._store.list_work_venues(wid)
+                venue = str(venues[0].get("name") or "") if venues else ""
+            except Exception:  # noqa: BLE001
+                continue
+            event = str(card.get("event") or card.get("venue_type") or "").strip() or None
+            pages = str(card.get("pages") or "").strip() or None
             rows.append(
                 {
                     "title": card.get("title") or "",
@@ -321,12 +338,22 @@ class FormatBibliographyGostTool(BaseAgentTool):
                     "doi": card.get("doi") or "",
                     "authors": authors,
                     "venue": venue or None,
+                    "event": event,
+                    "pages": pages,
                 }
             )
         entries = build_entries_from_work_cards(rows)
+        warn: list[str] = []
+        if filtered:
+            warn.append("some_work_ids_filtered")
         return ToolResult(
             payload={
-                "bibliography": {"format": "gost", "entries": entries},
+                "bibliography": {
+                    "format": "gost",
+                    "entries": entries,
+                    "filtered_work_ids": filtered,
+                },
+                "warnings": warn,
                 "row_count": len(entries),
             },
             row_count=len(entries),

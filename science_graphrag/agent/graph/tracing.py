@@ -89,4 +89,22 @@ def collect_tool_trace(state: AgentState) -> list[ToolCallTrace]:
                 error=None,
             ),
         )
+    tid = state.get("thread_id")
+    if isinstance(tid, str) and tid.strip():
+        traces.insert(
+            0,
+            ToolCallTrace(
+                step=0,
+                tool="session_init",
+                args_summary={
+                    "thread_id": tid[:200],
+                    "has_client_digest": bool(state.get("history_digest")),
+                    "has_session_memory": bool(str(state.get("session_summary") or "").strip()),
+                },
+                row_count=0,
+                duration_ms=0,
+                truncated=False,
+                error=None,
+            ),
+        )
     return traces

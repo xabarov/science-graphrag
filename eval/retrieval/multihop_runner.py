@@ -8,6 +8,7 @@ from time import perf_counter
 from typing import Any
 
 import httpx
+import numpy as np
 import typer
 
 from eval.bench_common import (
@@ -18,6 +19,7 @@ from eval.bench_common import (
 from eval.retrieval.stack_health import check_api_health, write_skip_artifact
 from eval.retrieval.work_id_resolve import is_uuid_like, resolve_work_id_from_layer1_slug
 from science_graphrag.config import Settings, get_settings
+from science_graphrag.ingestion.embeddings import resolve_embedder
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -49,7 +51,7 @@ def _load_tiers(fixtures_root: Path) -> dict[str, list[str]] | None:
 
 
 def _load_multihop_case_dict(root: Path) -> dict[str, Any]:
-    """Load v1 ``question.json`` or derive from multihop v2 ``gold.json`` + ``question.txt`` (ordered_chain)."""
+    """Load ``question.json`` or v2 ``gold.json`` + ``question.txt`` (ordered_chain)."""
 
     q_json = root / "question.json"
     if q_json.is_file():
@@ -71,7 +73,9 @@ def _load_multihop_case_dict(root: Path) -> dict[str, Any]:
             f"multihop case {root.name}: unsupported gold layout "
             "(only ordered_chain from gold without question.json; unordered_set pending)",
         )
-    chain = [str(x).strip() for x in (gold.get("expected_chain_corpus_work_ids") or []) if str(x).strip()]
+    chain = [
+        str(x).strip() for x in (gold.get("expected_chain_corpus_work_ids") or []) if str(x).strip()
+    ]
     if len(chain) < 2:
         raise ValueError(f"multihop case {root.name}: expected_chain_corpus_work_ids too short")
     qfile = str(gold.get("question_file") or "question.txt")
@@ -93,6 +97,8 @@ def _load_multihop_case_dict(root: Path) -> dict[str, Any]:
 
 
 def discover_multihop_cases(fixtures_root: Path, *, tier: str) -> list[Path]:
+    """Return case directories for a tier (see ``case_tiers.json``)."""
+
     tiers = _load_tiers(fixtures_root)
     if tiers:
         tier_case_ids = frozenset(str(x) for x in (tiers.get(tier) or []))
@@ -124,6 +130,70 @@ def discover_multihop_cases(fixtures_root: Path, *, tier: str) -> list[Path]:
             continue
         out.append(child)
     return out
+
+
+def _work_node_text(node: dict[str, Any]) -> str:
+    """Human-readable text for a Work node (title + optional subtitle)."""
+
+    if str(node.get("type") or "").strip() != "Work":
+        return ""
+    parts = [
+        str(node.get("display_label") or node.get("label") or "").strip(),
+        str(node.get("subtitle") or "").strip(),
+    ]
+    pr = node.get("properties")
+    if isinstance(pr, dict):
+        for key in ("title", "venue", "arxiv_id", "doi"):
+            v = pr.get(key)
+            if v:
+                parts.append(str(v).strip())
+    t = " · ".join(p for p in parts if p)
+    return t if t else "work"
+
+
+def _embed_rerank_work_ids(
+    work_ids: list[str],
+    graph_payload: dict[str, Any],
+    query_hint: str,
+    settings: Settings,
+    top_k: int,
+) -> tuple[list[str], dict[str, Any]]:
+    """Keep up to ``top_k`` Work neighbors with highest query embedding similarity."""
+
+    if top_k <= 0 or not work_ids or not (query_hint or "").strip():
+        return work_ids, {"embed_rerank": "skipped", "reason": "empty_input"}
+    by_id: dict[str, dict[str, Any]] = {}
+    for node in graph_payload.get("nodes") or []:
+        if not isinstance(node, dict):
+            continue
+        nid = str(node.get("id") or "").strip()
+        ntype = str(node.get("type") or "").strip()
+        if nid and ntype == "Work":
+            by_id[nid] = node
+    texts: list[str] = []
+    for wid in work_ids:
+        n = by_id.get(wid, {})
+        txt = _work_node_text(n) or wid
+        texts.append(txt[:8000])
+    try:
+        embedder = resolve_embedder(settings)
+        q = embedder.embed([str(query_hint)[:4000]])[0:1, :]
+        m = embedder.embed(texts)
+        if m.size == 0 or q.size == 0:
+            return work_ids, {"embed_rerank": "skipped", "reason": "empty_embedding"}
+        qn = q / np.maximum(np.linalg.norm(q, axis=1, keepdims=True), 1e-12)
+        mn = m / np.maximum(np.linalg.norm(m, axis=1, keepdims=True), 1e-12)
+        sims = (mn @ qn.T).ravel()
+        k = min(int(top_k), len(work_ids))
+        order = np.argsort(-sims)[:k]
+        out = [work_ids[int(i)] for i in order.tolist()]
+        return out, {
+            "embed_rerank": "applied",
+            "top_k": k,
+            "pool_size": len(work_ids),
+        }
+    except Exception as exc:  # noqa: BLE001
+        return work_ids, {"embed_rerank": "error", "detail": str(exc)}
 
 
 def _extract_returned_work_ids(payload: dict[str, Any], *, center_work_id: str) -> list[str]:
@@ -172,13 +242,17 @@ def score_multihop_case(
     }
 
 
-def run_multihop_case(
+def run_multihop_case(  # pylint: disable=too-many-locals
     case_dir: Path | str,
     *,
     api_base_url: str,
     timeout_seconds: float,
     settings: Settings | None = None,
+    embed_rerank: bool = True,
+    rerank_top_k: int = 48,
 ) -> dict[str, Any]:
+    rk = int(rerank_top_k)
+    rk = max(1, min(500, rk))
     root = Path(case_dir)
     try:
         case = _load_multihop_case_dict(root)
@@ -190,7 +264,11 @@ def run_multihop_case(
             "center_work_id": "",
             "depth": 2,
             "neighbor_limit": 300,
-            "metrics": {"passed": False, "request_error": str(exc)},
+            "metrics": {
+                "passed": False,
+                "request_error": str(exc),
+                "embed_rerank": {"embed_rerank": "skipped", "reason": "case_load_error"},
+            },
             "returned_neighbor_work_ids": [],
             "wall_clock_seconds": 0.0,
             "run_metadata": benchmark_run_metadata(s),
@@ -235,14 +313,24 @@ def run_multihop_case(
         except Exception as exc:  # noqa: BLE001
             request_error = str(exc)
 
+    rerank_diag: dict[str, Any] = {"embed_rerank": "skipped"}
     if request_error is None:
         returned_ids = _extract_returned_work_ids(graph_payload, center_work_id=center_work_id)
+        if embed_rerank and (query_hint or "").strip() and returned_ids:
+            returned_ids, rerank_diag = _embed_rerank_work_ids(
+                returned_ids,
+                graph_payload,
+                query_hint,
+                s,
+                top_k=rk,
+            )
     metrics = score_multihop_case(
         expected,
         returned_ids,
         min_precision=min_precision,
         min_recall=min_recall,
     )
+    metrics["embed_rerank"] = rerank_diag
     if request_error:
         metrics["passed"] = False
         metrics["request_error"] = request_error
@@ -268,7 +356,7 @@ def _summarize(report: dict[str, Any]) -> str:
     return f"## {cid} — {status}\n\n```json\n{json.dumps(report.get('metrics'), indent=2)}\n```\n"
 
 
-def _cli(
+def _cli(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     path: Path = typer.Argument(
         ...,
         exists=True,
@@ -287,6 +375,16 @@ def _cli(
         help="Base URL for science-graphrag API (used for /health and graph calls).",
     ),
     timeout_seconds: float = typer.Option(20.0, "--timeout-seconds", help="Per-case HTTP timeout."),
+    embed_rerank: bool = typer.Option(
+        True,
+        "--embed-rerank/--no-embed-rerank",
+        help="Re-rank neighbor Work ids by embedding similarity to query_hint (reduces noise).",
+    ),
+    rerank_top_k: int = typer.Option(
+        48,
+        "--rerank-top-k",
+        help="Keep at most this many neighbors after embedding re-ranking (1–500).",
+    ),
     allow_skip_on_infra: bool = typer.Option(
         False,
         "--allow-skip-on-infra",
@@ -306,6 +404,8 @@ def _cli(
             api_base_url=api_base_url,
             timeout_seconds=timeout_seconds,
             settings=settings,
+            embed_rerank=embed_rerank,
+            rerank_top_k=rerank_top_k,
         )
 
     if suite:

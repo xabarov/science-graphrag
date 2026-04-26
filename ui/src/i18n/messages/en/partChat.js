@@ -57,4 +57,14 @@ export default {
   "chat.thread.prompts.standalone.3": "How should I narrow scope from entire corpus to one paper for deeper inspection?",
   "chat.thread.userFallback": "You",
   "chat.thread.thinking": "Agent is thinking…",
+
+  "chat.typed.answerClass": "Answer class: {{cls}}",
+  "chat.typed.inventoryTitle": "Structured inventory",
+  "chat.typed.papersTitle": "Papers in scope",
+  "chat.typed.matchesTitle": "Matching papers",
+  "chat.typed.workCount": "Works: {{count}}",
+  "chat.typed.quotesTitle": "Quote candidates",
+  "chat.typed.bibTitle": "Bibliography (formatted)",
+  "chat.typed.copyBib": "Copy list",
+  "chat.typed.copied": "Copied",
 };

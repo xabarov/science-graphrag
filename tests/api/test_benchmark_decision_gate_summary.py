@@ -40,7 +40,9 @@ def test_decision_gate_summary_ok(monkeypatch: pytest.MonkeyPatch) -> None:
     assert "retrieval_family" in data["trust_by_family"]
 
 
-def test_decision_gate_summary_404_missing_file(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_decision_gate_summary_404_missing_file(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     missing = tmp_path / "no-summary.json"
 
     def _override() -> Path:

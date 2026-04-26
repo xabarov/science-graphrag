@@ -55,16 +55,18 @@ export function ChatContextPicker({
   const [manualId, setManualId] = useState("");
 
   const summaryLabel = useMemo(() => {
+    const w = String(workId || "").trim();
+    if (w) {
+      const rw = resolvedWork && String(resolvedWork.work_id ?? "").trim() === w ? resolvedWork : null;
+      return formatWorkPrimaryLabel(rw || { work_id: w }, w);
+    }
     if (corpusWorkspaceOnly && String(workspaceId || "").trim()) {
       return t("chat.context.wholeWorkspace");
     }
     if (standaloneMode) {
       return t("chat.context.globalCorpus");
     }
-    const w = String(workId || "").trim();
-    if (!w) return t("chat.context.notSet");
-    const rw = resolvedWork && String(resolvedWork.work_id ?? "").trim() === w ? resolvedWork : null;
-    return formatWorkPrimaryLabel(rw || { work_id: w }, w);
+    return t("chat.context.notSet");
   }, [corpusWorkspaceOnly, standaloneMode, t, workId, workspaceId, resolvedWork]);
 
   const hasWorkspace = Boolean(String(workspaceId || "").trim());

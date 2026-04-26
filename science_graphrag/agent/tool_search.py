@@ -66,6 +66,8 @@ def shortlist_tools_for_specialist(
     """Return possibly narrowed tool list and debug meta for SSE / run_metadata."""
     if not settings.agent_rule_tool_search_enabled:
         return tools, {"skipped": True, "reason": "disabled"}
+    if specialist == "writer_agent":
+        return tools, {"skipped": True, "reason": "writer_minimal_set"}
 
     by_meta = manifest_by_name()
     q = _norm_question(question)

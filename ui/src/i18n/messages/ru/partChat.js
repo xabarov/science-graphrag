@@ -57,4 +57,14 @@ export default {
   "chat.thread.prompts.standalone.3": "Как лучше сузить контекст со всего корпуса до одной статьи для глубокого разбора?",
   "chat.thread.userFallback": "Вы",
   "chat.thread.thinking": "Агент думает…",
+
+  "chat.typed.answerClass": "Класс ответа: {{cls}}",
+  "chat.typed.inventoryTitle": "Структурированный список",
+  "chat.typed.papersTitle": "Статьи в области",
+  "chat.typed.matchesTitle": "Совпадения",
+  "chat.typed.workCount": "Статей: {{count}}",
+  "chat.typed.quotesTitle": "Кандидаты в цитаты",
+  "chat.typed.bibTitle": "Библиография (оформление)",
+  "chat.typed.copyBib": "Скопировать список",
+  "chat.typed.copied": "Скопировано",
 };

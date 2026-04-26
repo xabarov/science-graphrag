@@ -12,6 +12,7 @@ import {
 } from "../../services/researchApi.js";
 import { buildStandaloneTracePath, buildWorkspaceTracePath } from "./traceabilityState.js";
 import AgentToolTrace from "./AgentToolTrace.jsx";
+import { BibliographyBlock, InventoryBlock, QuoteCandidatesBlock } from "./ChatTypedBlocks.jsx";
 
 function FlagChips({ label, items }) {
   if (!items || items.length === 0) return null;
@@ -47,7 +48,18 @@ export function AskAnswerPanel({
           {event?.args_summary?.query ? <Typography component="span" sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.5)" }}>{`"${String(event.args_summary.query).slice(0, 40)}"`}</Typography> : null}
         </Box>)}
       </Box> : null}
+      {Array.isArray(normalized.warnings) && normalized.warnings.length > 0 ? (
+        <Alert severity="warning" sx={{ mb: 1, fontSize: "0.75rem", backgroundColor: "rgba(255,255,255,0.04)" }}>
+          {normalized.warnings.map((w) => String(w)).join(" · ")}
+        </Alert>
+      ) : null}
+      {normalized.answer_class ? (
+        <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.35)", mb: 0.5 }}>{t("chat.typed.answerClass", { cls: String(normalized.answer_class) })}</Typography>
+      ) : null}
       <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)", whiteSpace: "pre-wrap" }}>{normalized.answer || t("workspace.upload.dash")}</Typography>
+      <InventoryBlock t={t} inventory={normalized.inventory} />
+      <QuoteCandidatesBlock t={t} candidates={normalized.quote_candidates} />
+      <BibliographyBlock t={t} bibliography={normalized.bibliography} />
       {normalized.retrieval_trace.degraded.length > 0 || normalized.graph_context.degraded.length > 0 ? <Alert severity="info" sx={{ mt: 1.5, fontSize: "0.8125rem", backgroundColor: "rgba(255,255,255,0.03)" }}>{t("askPanel.answer.degraded")}</Alert> : null}
 
       <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 2, mb: 0.5 }}>{t("askPanel.citations.title")}</Typography>

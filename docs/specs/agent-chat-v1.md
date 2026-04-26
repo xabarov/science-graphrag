@@ -11,8 +11,8 @@
 | `question` | string | yes | User message |
 | `workspace_id` | string \| null | no | Workspace scope for tools |
 | `max_tool_calls` | int \| null | no | 1–30; server default if omitted |
-| `thread_id` | string \| null | no | Reserved for CH4; accepted, ignored in Wave A |
-| `history_digest` | string \| null | no | Reserved for CH4; accepted, ignored in Wave A |
+| `thread_id` | string \| null | no | **CH4:** stable id for server-side session memory (in-memory store); client may use chat session id |
+| `history_digest` | string \| list \| null | no | **CH4:** JSON string or list of `{user, assistant}`-shaped turn dicts (client compact history) |
 | `answer_class_hint` | string \| null | no | Optional hint for routing/UI; does not force model behavior |
 
 ## Response envelope (`AgentQueryResponseV2`)
@@ -25,7 +25,8 @@ All new fields are **optional** for backward compatibility; clients should treat
 | `citations` | array | Citation objects |
 | `tool_trace` | array | `ToolCallTrace`-shaped dicts (includes synthetic `route_to_specialist` from supervisor) |
 | `duration_ms` | int | |
-| `phoenix_trace_id` | string \| null | |
+| `phoenix_trace_id` | string \| null | OpenTelemetry trace id (hex) when a span is active |
+| `thread_id` | string \| null | Echo of request `thread_id` when set |
 | `run_metadata` | object | Runtime flags, model ids, etc. |
 | `answer_class` | string | One of `inventory`, `fact_lookup`, `grounded_explanation`, `relation_tracing`, `quote_extraction`, `ideation`, `bibliography_export`, `synthesis` |
 | `evidence_summary` | string \| null | Short human-readable evidence summary |
@@ -48,7 +49,7 @@ Each SSE `data:` line is a JSON object with a `type` field.
 | `tool_call` | LLM tool call | `step`, `tool`, `args_summary` |
 | `tool_result` | Tool return | `step`, `tool`, `row_count`, `error` |
 | `evidence_ready` | Before final | `citation_count` |
-| `context_compacted` | Reserved CH5 | — |
+| `context_compacted` | After turn digest update (CH4) when `thread_id` is set | `thread_id`, `session_summary_excerpt` |
 | `final_answer` | End | Full envelope fields + legacy `answer`, `citations`, `tool_trace` |
 | `warning` | Any time | `code`, `message` |
 | `error` | Fatal | `detail` |

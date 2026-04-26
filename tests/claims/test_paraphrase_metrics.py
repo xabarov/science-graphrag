@@ -28,7 +28,9 @@ def test_read_claims_article_nested_paraphrase_suite_path(tmp_path: Path) -> Non
     layer = repo / "tests" / "fixtures" / "benchmarks" / "layer1" / "yolov1"
     layer.mkdir(parents=True)
     (layer / "article.md").write_text("YOLO unified detection " * 80, encoding="utf-8")
-    case = repo / "tests" / "fixtures" / "benchmarks" / "claims" / "paraphrase_pilot" / "nested_case"
+    case = (
+        repo / "tests" / "fixtures" / "benchmarks" / "claims" / "paraphrase_pilot" / "nested_case"
+    )
     case.mkdir(parents=True)
     (case / "gold.json").write_text(
         json.dumps({"source_layer1_fixture": "yolov1"}),

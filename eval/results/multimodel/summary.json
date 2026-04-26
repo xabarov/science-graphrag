@@ -1,0 +1,21 @@
+{
+  "models": [
+    "mistralai/mistral-small-3.2-24b-instruct"
+  ],
+  "rows": [
+    {
+      "model": "mistralai/mistral-small-3.2-24b-instruct",
+      "slug": "mistralai_mistral-small-3.2-24b-instruct",
+      "layer1_returncode": 0,
+      "layer2_returncode": 0,
+      "claims_pilot_returncode": null,
+      "claims_holdout_returncode": null,
+      "layer1_failed_count": 0,
+      "layer2_failed_count": 0,
+      "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+      "claims_pilot_mean_recall": null,
+      "claims_holdout_mean_recall": null
+    }
+  ],
+  "note": "Populated from eval/results/current-llm-layer1-nightly-heavy-suite.json and current-llm-layer2-nightly-semantic-suite.json (run_metadata). Re-run scripts/run_multimodel_benchmark.py to add more models and claims paraphrase tiers."
+}

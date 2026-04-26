@@ -24,6 +24,10 @@ ANSWER_CLASSES = frozenset(
 def _last_user_question(state: AgentState | dict[str, Any]) -> str:
     from langchain_core.messages import HumanMessage
 
+    meta = state.get("metadata") or {}
+    raw = meta.get("raw_user_question")
+    if isinstance(raw, str) and raw.strip():
+        return raw
     for msg in reversed(list(state.get("messages") or [])):
         if isinstance(msg, HumanMessage):
             return str(msg.content or "")
@@ -109,6 +113,47 @@ def infer_class_from_trace(tool_names: set[str]) -> str | None:
     return None
 
 
+def _append_evidence_warnings(
+    *,
+    answer_class: str,
+    citations: list[dict[str, Any]],
+    tool_names: set[str],
+    quote_candidates: list[dict[str, Any]],
+    warnings: list[str],
+) -> None:
+    """Best-effort evidence sufficiency flags (B-5, aligned with spec)."""
+    if answer_class == "quote_extraction" and not quote_candidates:
+        warnings.append("no_quote_found")
+    if len(citations) < 1 and answer_class in (
+        "grounded_explanation",
+        "synthesis",
+        "ideation",
+    ):
+        warnings.append("weak_evidence")
+
+    core = {
+        t
+        for t in tool_names
+        if t
+        not in (
+            "session_init",
+            "route_to_specialist",
+            "final_answer",
+        )
+    }
+    graph_tools = core & {"cypher_query", "entity_search", "edge_search"}
+    vectorish = core & {
+        "idea_search",
+        "summarize_workspace",
+        "paper_quote_search",
+    }
+    if graph_tools and not vectorish:
+        if "graph_only" not in warnings:
+            warnings.append("graph_only")
+    if vectorish and not graph_tools and answer_class == "relation_tracing" and core:
+        warnings.append("text_only")
+
+
 def build_chat_envelope(
     *,
     state: AgentState | dict[str, Any],
@@ -127,16 +172,24 @@ def build_chat_envelope(
     warnings: list[str] = []
     if not (state.get("workspace_id") or "").strip():
         warnings.append("no_workspace")
+    quote_cands = list(typed.get("quote_candidates") or [])
+    _append_evidence_warnings(
+        answer_class=answer_class,
+        citations=citations,
+        tool_names=names,
+        quote_candidates=quote_cands,
+        warnings=warnings,
+    )
     evidence_parts: list[str] = []
     if citations:
         evidence_parts.append(f"{len(citations)} citation(s)")
     if tool_trace:
         evidence_parts.append(f"{len(tool_trace)} trace step(s)")
     evidence_summary = ", ".join(evidence_parts) if evidence_parts else None
-    out = {
+    out: dict[str, Any] = {
         "answer_class": answer_class,
         "evidence_summary": evidence_summary,
-        "warnings": warnings,
+        "warnings": list(dict.fromkeys(warnings)),
     }
     out.update(typed)
     return out

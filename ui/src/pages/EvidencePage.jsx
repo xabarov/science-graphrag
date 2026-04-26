@@ -73,7 +73,7 @@ export default function EvidencePage() {
   );
 
   return (
-    <Box sx={{ p: 2, ...mainShellContentSx }}>
+    <Box sx={{ p: 2, ...mainShellContentSx, maxWidth: "100%" }}>
       <PageHeader eyebrow={t("evidence.header.eyebrow")} title={t("evidence.header.title")} description={t("evidence.header.description")} />
 
       {!workId.trim() ? (

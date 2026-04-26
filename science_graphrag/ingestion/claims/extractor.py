@@ -256,6 +256,12 @@ Same as full extraction: a self-contained scientific assertion supported by a ve
 from the chunk text — not generic paper description. Include quantitative results, architecture
 choices, dataset names, and comparisons **when each has its own quote**.
 
+## Paraphrase-friendly wording (BT6)
+Some benchmark rows use **permuted or paraphrased** gold phrasing. For each real scientific
+assertion, still attach a **verbatim** `quote`, but the `claim_text` should state the
+underlying claim clearly — you may rephrase the paper *as long as the meaning matches the
+quoted span*. Do **not** invent facts not grounded in the quote.
+
 ## Output shape
 Return JSON matching the tool schema: `claims` array of objects with
 `claim_text`, `claim_type`, `polarity`, `confidence`, and `evidence` (length 1).

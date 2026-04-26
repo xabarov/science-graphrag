@@ -9,7 +9,9 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 
 from science_graphrag.config import Settings
-from science_graphrag.dedup.ingest_conflict_check import enqueue_work_near_duplicate_conflicts_on_ingest
+from science_graphrag.dedup.ingest_conflict_check import (
+    enqueue_work_near_duplicate_conflicts_on_ingest,
+)
 from science_graphrag.domain.models import AuthorshipDraft, WorkDraft
 from science_graphrag.storage.models_orm import Base, WorkDedupConflict
 
@@ -45,7 +47,9 @@ def test_enqueue_inserts_ingest_origin_on_high_similarity(sqlite_session):
             qi = MagicMock()
             qi.search_similar_works.return_value = [{"work_id": "w-old", "score": 0.96}]
             qc.return_value = qi
-            with patch("science_graphrag.dedup.ingest_conflict_check.resolve_embedding_dim", return_value=4):
+            with patch(
+                "science_graphrag.dedup.ingest_conflict_check.resolve_embedding_dim", return_value=4
+            ):
                 n = enqueue_work_near_duplicate_conflicts_on_ingest(
                     settings=settings,
                     session=sqlite_session,
@@ -85,7 +89,9 @@ def test_enqueue_idempotent_same_fingerprint(sqlite_session):
             qi = MagicMock()
             qi.search_similar_works.return_value = [{"work_id": "w-old", "score": 0.96}]
             qc.return_value = qi
-            with patch("science_graphrag.dedup.ingest_conflict_check.resolve_embedding_dim", return_value=4):
+            with patch(
+                "science_graphrag.dedup.ingest_conflict_check.resolve_embedding_dim", return_value=4
+            ):
                 n1 = enqueue_work_near_duplicate_conflicts_on_ingest(
                     settings=settings,
                     session=sqlite_session,

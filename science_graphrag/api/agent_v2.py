@@ -10,33 +10,67 @@ from time import perf_counter
 from typing import Any, AsyncIterator
 
 from fastapi import APIRouter, Depends, Header, HTTPException
-from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
-from pydantic import BaseModel, Field
+from langchain_core.messages import AIMessage, ToolMessage
+from pydantic import BaseModel, Field, field_validator
 from sse_starlette.sse import EventSourceResponse
 
 from science_graphrag.agent.chat_envelope import build_chat_envelope, heuristic_answer_class
+from science_graphrag.agent.context.session_store import (
+    get_session_for_thread,
+    update_session_after_turn,
+)
+from science_graphrag.agent.context.turn_digest import build_turn_digest
+from science_graphrag.agent.graph.state import build_initial_agent_state
 from science_graphrag.agent.graph.supervisor import build_retrieval_graph
 from science_graphrag.agent.graph.tracing import collect_tool_trace
-from science_graphrag.agent.runtime import build_agent
+from science_graphrag.agent.runtime import build_agent, current_otel_trace_id_hex
 from science_graphrag.api.deps import StoreRegistry, get_stores
 from science_graphrag.config import Settings, get_settings
-from science_graphrag.observability.spans import chain_span
+from science_graphrag.observability.spans import OpenInferenceAttributes, chain_span
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 
+def _normalize_history_digest_value(raw: object) -> list[dict[str, Any]]:
+    if raw is None:
+        return []
+    if isinstance(raw, list):
+        return [x for x in raw if isinstance(x, dict)]
+    if isinstance(raw, str):
+        s = raw.strip()
+        if not s:
+            return []
+        try:
+            parsed = json.loads(s)
+        except Exception:  # noqa: BLE001
+            return []
+        if isinstance(parsed, list):
+            return [x for x in parsed if isinstance(x, dict)]
+    return []
+
+
 class AgentQueryRequestV2(BaseModel):
     question: str = Field(..., min_length=1)
     workspace_id: str | None = None
     max_tool_calls: int | None = Field(default=None, ge=1, le=30)
-    thread_id: str | None = Field(default=None, description="Reserved for CH4 multi-turn.")
-    history_digest: str | None = Field(default=None, description="Reserved for CH4.")
+    thread_id: str | None = Field(
+        default=None, description="CH4: stable id for server-side session memory."
+    )
+    history_digest: str | list[dict[str, Any]] | None = Field(
+        default=None,
+        description="CH4: JSON string or list of compact turn dicts from the client.",
+    )
     answer_class_hint: str | None = Field(
         default=None,
         description="Optional hint for answer_class / UI (does not force tool routing).",
     )
+
+    @field_validator("history_digest", mode="before")
+    @classmethod
+    def _coerce_history_digest(cls, v: object) -> object:
+        return v
 
 
 class AgentQueryResponseV2(BaseModel):
@@ -46,6 +80,7 @@ class AgentQueryResponseV2(BaseModel):
     duration_ms: int
     phoenix_trace_id: str | None = None
     run_metadata: dict[str, Any]
+    thread_id: str | None = None
     answer_class: str | None = None
     evidence_summary: str | None = None
     warnings: list[str] = Field(default_factory=list)
@@ -76,13 +111,17 @@ def _response_from_run(
         run_metadata.update(extra_run_metadata)
     if getattr(out, "debug_events", None):
         run_metadata["debug_events"] = list(out.debug_events)[-50:]
+    tid = getattr(out, "thread_id", None)
+    if tid:
+        run_metadata["thread_id"] = tid
     return AgentQueryResponseV2(
         answer=out.answer,
         citations=out.citations,
         tool_trace=trace_dicts,
         duration_ms=duration_ms,
-        phoenix_trace_id=None,
+        phoenix_trace_id=getattr(out, "phoenix_trace_id", None),
         run_metadata=run_metadata,
+        thread_id=tid,
         answer_class=getattr(out, "answer_class", None),
         evidence_summary=getattr(out, "evidence_summary", None),
         warnings=list(getattr(out, "warnings", None) or []),
@@ -108,6 +147,8 @@ async def post_agent_query_v2(
     workspace_id = (body.workspace_id or "").strip() or None
     max_tool_calls = body.max_tool_calls or settings.agent_max_tool_calls
     wants_sse = "text/event-stream" in (accept or "")
+    thread_id = (body.thread_id or "").strip() or None
+    history_digest = _normalize_history_digest_value(body.history_digest)
 
     if wants_sse:
         return EventSourceResponse(
@@ -118,6 +159,8 @@ async def post_agent_query_v2(
                 workspace_id=workspace_id,
                 max_tool_calls=max_tool_calls,
                 answer_class_hint=body.answer_class_hint,
+                thread_id=thread_id,
+                history_digest=history_digest,
             )
         )
 
@@ -128,6 +171,8 @@ async def post_agent_query_v2(
         workspace_id=workspace_id,
         max_tool_calls=max_tool_calls,
         answer_class_hint=body.answer_class_hint,
+        thread_id=thread_id,
+        history_digest=history_digest,
     )
     duration_ms = int((perf_counter() - started) * 1000)
     return _response_from_run(
@@ -181,6 +226,8 @@ async def _stream_agent(
     workspace_id: str | None,
     max_tool_calls: int,
     answer_class_hint: str | None,
+    thread_id: str | None = None,
+    history_digest: list[dict[str, Any]] | None = None,
 ) -> AsyncIterator[dict[str, str]]:
     """Emit SSE events from LangGraph chunks."""
     started = perf_counter()
@@ -191,29 +238,35 @@ async def _stream_agent(
     latest_full_state: dict[str, Any] | None = None
     prev_route_len = 0
     prev_debug_len = 0
+    dig = list(history_digest or [])
 
-    attrs = {
+    attrs: dict[str, Any] = {
         "agent.runtime": settings.agent_runtime,
         "agent.max_tool_calls": max_tool_calls,
         "user.id": workspace_id or "",
         "input.value": question[:500],
     }
+    if thread_id:
+        attrs[OpenInferenceAttributes.SESSION_ID] = thread_id
 
     try:
         with chain_span("agent.query", attrs):
             graph = build_retrieval_graph(stores, settings)
-            initial_state = {
-                "messages": [HumanMessage(content=question)],
-                "workspace_id": workspace_id,
-                "citations": [],
-                "tool_trace": [],
-                "budget_remaining": max_tool_calls,
-                "metadata": {"agent_runtime": settings.agent_runtime},
-                "specialist_results": {},
-                "current_specialist": None,
-                "routing_log": [],
-                "debug_events": [],
-            }
+            session_summary = ""
+            if thread_id:
+                session_summary = str(
+                    get_session_for_thread(thread_id).get("session_summary") or ""
+                )
+            initial_state = build_initial_agent_state(
+                question=question,
+                workspace_id=workspace_id,
+                max_tool_calls=max_tool_calls,
+                agent_runtime=settings.agent_runtime,
+                thread_id=thread_id,
+                history_digest=dig,
+                session_summary=session_summary,
+                answer_class_hint=answer_class_hint,
+            )
             config = {"recursion_limit": settings.agent_supervisor_recursion_limit}
 
             hint_class = heuristic_answer_class(question, answer_class_hint)
@@ -302,11 +355,10 @@ async def _stream_agent(
 
             duration_ms = int((perf_counter() - started) * 1000)
 
-            trace_list: list[dict[str, Any]]
+            trace_for_run: list[Any] = []
             if latest_full_state is not None:
-                trace_list = [dict(t) for t in collect_tool_trace(latest_full_state)]  # type: ignore[arg-type]
-            else:
-                trace_list = []
+                trace_for_run = collect_tool_trace(latest_full_state)  # type: ignore[arg-type]
+            trace_list: list[dict[str, Any]] = [dict(t) for t in trace_for_run]
 
             envelope: dict[str, Any] = {}
             if latest_full_state is not None:
@@ -314,7 +366,7 @@ async def _stream_agent(
                     state=latest_full_state,  # type: ignore[arg-type]
                     answer=final_answer,
                     citations=citations,
-                    tool_trace=collect_tool_trace(latest_full_state),  # type: ignore[arg-type]
+                    tool_trace=trace_for_run,  # type: ignore[arg-type]
                     answer_class_hint=answer_class_hint,
                 )
             else:
@@ -329,22 +381,49 @@ async def _stream_agent(
                     "data": json.dumps({"type": "evidence_ready", "citation_count": len(citations)})
                 }
 
+            if thread_id and latest_full_state is not None:
+                raw_q = (latest_full_state.get("metadata") or {}).get("raw_user_question")
+                if not isinstance(raw_q, str) or not raw_q.strip():
+                    raw_q = question
+                digest = build_turn_digest(
+                    question=raw_q,
+                    answer=final_answer,
+                    answer_class=str(envelope.get("answer_class") or "grounded_explanation"),
+                    tool_trace=trace_for_run,
+                )
+                new_sum = update_session_after_turn(thread_id, turn_digest=digest)
+                yield {
+                    "data": json.dumps(
+                        {
+                            "type": "context_compacted",
+                            "thread_id": thread_id,
+                            "session_summary_excerpt": (new_sum or "")[:500],
+                        }
+                    )
+                }
+
+            phx = current_otel_trace_id_hex()
+            run_meta: dict[str, Any] = {
+                "agent_runtime": settings.agent_runtime,
+                "agent_max_tool_calls": max_tool_calls,
+                "debug_events": (
+                    (latest_full_state or {}).get("debug_events", [])[-50:]
+                    if isinstance(latest_full_state, dict)
+                    else []
+                ),
+            }
+            if thread_id:
+                run_meta["thread_id"] = thread_id
+
             final_event = {
                 "type": "final_answer",
                 "answer": final_answer,
                 "citations": citations,
                 "tool_trace": trace_list,
                 "duration_ms": duration_ms,
-                "phoenix_trace_id": None,
-                "run_metadata": {
-                    "agent_runtime": settings.agent_runtime,
-                    "agent_max_tool_calls": max_tool_calls,
-                    "debug_events": (
-                        (latest_full_state or {}).get("debug_events", [])[-50:]
-                        if isinstance(latest_full_state, dict)
-                        else []
-                    ),
-                },
+                "phoenix_trace_id": phx,
+                "thread_id": thread_id,
+                "run_metadata": run_meta,
                 "answer_class": envelope.get("answer_class"),
                 "evidence_summary": envelope.get("evidence_summary"),
                 "warnings": list(envelope.get("warnings") or []),

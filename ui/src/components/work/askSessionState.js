@@ -29,6 +29,17 @@ function newSessionId() {
   return `s_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function newTurnId() {
+  try {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+  } catch {
+    /* ignore */
+  }
+  return `t_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
 function defaultSessionTitle() {
   try {
     const loc = readStoredLocale();
@@ -42,6 +53,20 @@ function defaultSessionTitle() {
  * @param {{ locked: boolean, scopedWorkId?: string | null, workspaceId?: string | null }} ctx
  * @returns {string}
  */
+/**
+ * Build compact client history for CH4 `history_digest` (oldest → newest, capped).
+ * @param {Array<{ query?: string, answer?: string }>} entries
+ * @returns {Array<{ user: string, assistant: string }> | null}
+ */
+export function buildAgentHistoryDigest(entries) {
+  if (!Array.isArray(entries) || entries.length === 0) return null;
+  const oldestFirst = [...entries].reverse();
+  return oldestFirst.slice(-12).map((e) => ({
+    user: String(e?.query || "").slice(0, 500),
+    assistant: String(e?.answer || "").slice(0, 400),
+  }));
+}
+
 export function deriveAskScopeKey({ locked, scopedWorkId, workspaceId }) {
   const wid = String(scopedWorkId || "").trim();
   if (locked && wid) {
@@ -63,7 +88,7 @@ function normalizeTurn(item) {
   const workId = String(item?.workId || "").trim();
   const topK = Number.isFinite(Number(item?.topK)) ? Number(item.topK) : 5;
   const savedAt = item?.savedAt ? String(item.savedAt) : new Date().toISOString();
-  const id = `${workId || "global"}::${query.toLowerCase()}`;
+  const id = String(item?.id || "").trim() || newTurnId();
   const rawDetails = item?.details;
   const details =
     rawDetails && typeof rawDetails === "object" && !Array.isArray(rawDetails) ? { ...rawDetails } : null;

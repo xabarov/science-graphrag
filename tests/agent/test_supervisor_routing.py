@@ -46,6 +46,7 @@ def test_supervisor_routes_to_retrieval_agent(monkeypatch) -> None:
     settings.agent_max_tool_calls = 8
     settings.agent_runtime = "langgraph_supervisor_v1"
     settings.agent_supervisor_recursion_limit = 12
+    settings.agent_semantic_query_fast_route = False
 
     graph = build_supervisor_graph(stores, settings)
     assert graph is not None
@@ -59,6 +60,10 @@ def test_agent_state_has_routing_fields() -> None:
     assert "current_specialist" in hints
     assert "routing_log" in hints
     assert "debug_events" in hints
+    assert "thread_id" in hints
+    assert "session_summary" in hints
+    assert "answer_class" in hints
+    assert "history_digest" in hints
 
 
 def test_score_agent_case_specialist_sequence() -> None:

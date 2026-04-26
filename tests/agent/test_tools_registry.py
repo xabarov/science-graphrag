@@ -16,12 +16,15 @@ def _fake_stores() -> MagicMock:
     return stores
 
 
-def test_build_tool_registry_returns_six_tools() -> None:
+def test_build_tool_registry_includes_core_and_catalog_tools() -> None:
     tools = build_tool_registry(_fake_stores())
-    assert len(tools) == 6
+    # graph (3) + catalog/semantic/bib (8) + idea_search + summarize + final_answer
+    assert len(tools) == 14
     tool_names = {tool.name for tool in tools}
     assert "cypher_query" in tool_names
     assert "idea_search" in tool_names
+    assert "workspace_list_papers" in tool_names
+    assert "format_bibliography_gost" in tool_names
 
 
 def test_cypher_query_tool_rejects_write() -> None:

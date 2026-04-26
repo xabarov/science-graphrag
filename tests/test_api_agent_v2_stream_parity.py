@@ -78,6 +78,10 @@ class _FakeGraph:
             "current_specialist": None,
             "routing_log": [{"from": "supervisor", "to": "retrieval_agent", "budget_left": 8}],
             "debug_events": [],
+            "thread_id": state.get("thread_id"),
+            "session_summary": "",
+            "answer_class": None,
+            "history_digest": [],
         }
         yield ("values", full)
 

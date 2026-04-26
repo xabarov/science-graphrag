@@ -346,6 +346,15 @@ class Settings(BaseSettings):
     )
     agent_runtime: str = Field(default="langgraph_supervisor_v1")
     agent_max_tool_calls: int = Field(default=8, ge=1, le=30)
+    agent_semantic_query_fast_route: bool = Field(
+        default=False,
+        description=(
+            "When true, the LangGraph supervisor may route the first turn to retrieval_agent "
+            "without an extra LLM routing call when the user message matches a semantic-only "
+            "heuristic (no graph-intent keywords). Reduces latency; enable explicitly for prod "
+            "after validating your scenario mix."
+        ),
+    )
     agent_step_timeout_seconds: float = Field(default=30.0, ge=1.0, le=180.0)
     agent_supervisor_recursion_limit: int = Field(default=32, ge=4, le=128)
     agent_chat_temperature: float = Field(default=0.0, ge=0.0, le=1.0)

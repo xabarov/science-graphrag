@@ -1,6 +1,6 @@
 # Agent chat system roadmap — 2026-04-26
 
-**Статус:** draft / living working doc (трек `CH` — **CH1–CH3 закрыты в Wave A**, 2026-04-26; см. §11)
+**Статус:** draft / living working doc (трек `CH` — **CH1–CH3: Wave A**; **CH4 + долги CH1–CH3 (частично) + observability-задел: Wave B**, 2026-04-26; см. §11)
 **Цель:** спроектировать продуктовую агентную систему чата для research-workspace в `science-graphrag`: multi-turn, tool-based, grounded on graph + chunks + workspace context, с понятной эволюцией от текущего `POST /v2/agent/query`.
 
 **Основано на анализе:**
@@ -24,6 +24,18 @@
 6. быть наблюдаемым и проверяемым через trace/events/evals.
 
 **Ключевой принцип:** orchestration должна быть **agent-friendly**, но инструменты должны быть **domain-shaped**, а не "one raw search tool does everything".
+
+### 1.1 Доверие через тесты (в том числе live API)
+
+Агентная система без **хорошего набора тестов** не заслуживает доверия: поведение недетерминировано, контракт API и envelope эволюционируют, а регрессии в маршрутизации, туллинге и multi-turn легко прячутся за «вроде отвечает».
+
+Нужен **многослойный контроль качества**:
+
+1. **Юнит- и контракт-тесты** (envelope, `tool_trace`, manifest/sync, digest/session, парсинг SSE на фронте) — быстрый feedback в CI, без реального LLM.
+2. **In-process API** (`TestClient`, моки графа) — паритет JSON/SSE и форма ответа без поднятого сервера.
+3. **Поверх live API с реальным агентом** (поднятый backend, Neo4j/Qdrant по необходимости, настоящий `POST /v2/agent/query`) — иначе нет уверенности, что цепочка «LLM → tools → сторы → ответ» не сломана моками и что multi-turn/SSE ведут себя как в проде. Такие прогоны осознанно дороже: их держат **опционально** (отдельный job, переменная окружения, ручной gate перед релизом), но **полностью от них отказываться нельзя**, если продукту нужен операционный уровень доверия.
+
+В репозитории задел: `scripts/live_check/` (pre-flight конфига + HTTP-проверки к поднятому API), опциональные pytest под `tests/live/` при `AGENT_LIVE_BASE`. Их следует развивать по мере усложнения чата (сценарии, фикстурный workspace, пороговые проверки `tool_trace`).
 
 ---
 
@@ -728,20 +740,27 @@ Research chat быстро упирается в:
 
 Ниже предлагается отдельный трек `CH` (Chat Agent).
 
-**Wave A (2026-04-26):** реализованы **CH1 + CH2 + CH3** одним пластом. Канон контракта: [`docs/specs/agent-chat-v1.md`](../specs/agent-chat-v1.md). Стартовые фикстуры/заготовки: `tests/fixtures/benchmarks/chat_wave_a/`. Рефакторинг крупного `workspace_paper_tools.py` вынесен в `docs/backlog/refactor-backend.md` (после ~470 LOC). Далее по плану: **CH4** multi-turn, **CH5** compression, …
+**Wave A (2026-04-26):** реализованы **CH1 + CH2 + CH3** одним пластом. Канон контракта: [`docs/specs/agent-chat-v1.md`](../specs/agent-chat-v1.md). Стартовые фикстуры: `tests/fixtures/benchmarks/chat_wave_a/`. Рефакторинг крупного `workspace_paper_tools.py` — в `docs/backlog/refactor-backend.md`.
+
+**Wave B (2026-04-26):** **CH4 v1** (in-memory session по `thread_id`, `history_digest`, `build_initial_agent_state`, digest после тёрна, SSE `context_compacted`, `session_init` в `tool_trace`) + закрытие части долгов Wave A: расширенные `warnings` в `chat_envelope`, typed-блоки в `AskAnswerPanel` / `ChatTypedBlocks.jsx`, wire `threadId`/`historyDigest` из `AskPanel`/`useAskSubmit`, GOST `event`/`pages`, `filtered_work_ids` + warnings у библиографии, `qdrant_unavailable` у quote-tool, writer + `tool_search` (skip с meta), `tests/test_tool_manifest_sync.py`, расширение `test_tool_search`, smoke фикстуры в CI (`tests/eval/test_chat_wave_a_inventory.py`), `phoenix_trace_id` из активного OTel span. **Не в Wave B:** полный CH5 (capsules, full compact), CH6, CH7, отдельный `eval/chat_*` runner как у agent_tools.
 
 ### Wave CH1 — Contracts and answer classes
 
-**Статус:** **DONE (Wave A, 2026-04-26).**
+**Статус:** **DONE (Wave A, 2026-04-26)**; **дополнено Wave B (2026-04-26)** — см. комментарии ниже.
 
 **Сделано в репо (кратко):**
 - Спека: [`docs/specs/agent-chat-v1.md`](../specs/agent-chat-v1.md) (request/response, SSE vocabulary, optional typed payloads).
 - API: `science_graphrag/api/agent_v2.py` — optional `thread_id` / `history_digest` (резерв), `answer_class_hint`; в ответе `answer_class`, `evidence_summary`, `warnings`, `inventory` / `quote_candidates` / `bibliography` и др.; SSE: `intent_classified`, `specialist_selected`, `tool_search_result`, `evidence_ready`, плюс существующие `tool_call` / `tool_result` / `final_answer` / `error`.
 - Паритет **sync JSON ↔ SSE** для `tool_trace`: финальный стрим использует `collect_tool_trace` (как JSON-путь), со стримом `stream_mode=["updates","values"]` в `langgraph`.
 - Envelope: `science_graphrag/agent/chat_envelope.py` + наполнение в `science_graphrag/agent/runtime.py` (`AgentRunOutput`).
-- UI: `ui/src/services/agent/agentStreamParse.js`, `ui/src/hooks/useAgentStream.js`, `ui/src/services/research/queryModel.js` (`normalizeQueryResponse` пробрасывает поля), `useAskSubmit.js` — **отдельный богатый рендер typed blocks в `ChatMessageThread` не требуется** для обратной совместимости; при необходимости UX — отдельный PR.
+- UI: `ui/src/services/agent/agentStreamParse.js`, `ui/src/hooks/useAgentStream.js`, `ui/src/services/research/queryModel.js` (`normalizeQueryResponse` пробрасывает поля), `useAskSubmit.js`.
 
-**Тесты:** `tests/test_api_agent_v2_stream_parity.py`, `ui/src/services/agent/agentStreamParse.test.js`, `tests/test_chat_envelope.py`.
+**Wave B — догон CH1 (комментарий):**
+- В `build_chat_envelope` добавлены предупреждения: `weak_evidence`, `no_quote_found`, `graph_only`, `text_only` (плюс `no_workspace`); тесты расширены в `tests/test_chat_envelope.py`.
+- Typed UI: `ui/src/components/work/ChatTypedBlocks.jsx` + секции в `AskAnswerPanel.jsx`; в `AskPanel` в `details` тёрна сохраняются `inventory` / `quote_candidates` / `bibliography` / `warnings` для истории в `ChatMessageThread`.
+- **`relation_trace` / `idea_suggestions`** по-прежнему не заполняются в envelope (заготовка под CH6/CH7).
+
+**Тесты:** `tests/test_api_agent_v2_stream_parity.py`, `ui/src/services/agent/agentStreamParse.test.js`, `tests/test_chat_envelope.py` (расширен Wave B). Дополнительно к §1.1: опциональные live-прогоны — `scripts/live_check/agent_v2_http.py`, `tests/live/test_agent_v2_http_optional.py` (при заданном `AGENT_LIVE_BASE`).
 
 **Goal:** зафиксировать продуктовый контракт нового research chat.
 
@@ -775,7 +794,7 @@ Research chat быстро упирается в:
 
 ### Wave CH2 — Tool taxonomy v1
 
-**Статус:** **DONE (Wave A, 2026-04-26).**
+**Статус:** **DONE (Wave A, 2026-04-26)**; **частично усилено Wave B** — см. комментарии.
 
 **Сделано в репо (кратко):**
 - Каталог / papers: `workspace_overview`, `workspace_list_papers`, `paper_lookup`, `paper_metadata`, `paper_authors`, `paper_counts` в `science_graphrag/agent/tools/workspace_paper_tools.py` (сборка через `build_workspace_paper_langchain_tools`); подключение в `build_retrieval_tools` (`science_graphrag/agent/tools/__init__.py`).
@@ -785,6 +804,11 @@ Research chat быстро упирается в:
 - `tool_trace` / `ToolCallTrace` — совместимы с существующими eval-метриками; новые имена тулов — в логике shortlist/кэша подграфов.
 
 **Тесты / заметка:** `tests/test_tool_search.py` (косвенно покрывает наличие `format_bibliography_gost` в наборе). Отдельный глубокий e2e «без cypher» — на усмотрение ночных/ручных прогонов.
+
+**Wave B — догон CH2 (комментарий):**
+- `paper_quote_search`: при сбое эмбеддинга/Qdrant — payload с `error: "qdrant_unavailable"`, без падения графа.
+- `format_bibliography_gost`: в ответе `bibliography.filtered_work_ids`, `warnings` при отфильтрованных `work_id`; GOST-строка расширена полями `event`, `pages` (см. `agent/bibliography/gost.py`, `tests/test_bibliography_gost.py`).
+- Осталось из долга Wave A: **не** обёрнуты все Neo4j-вызовы в остальных catalog-tools в единый `try/except` (как у quote); лимиты по-прежнему захардкожены; разбиение `workspace_paper_tools.py` — backlog.
 
 **Goal:** уйти от "6 generic tools" к продуктовой research taxonomy.
 
@@ -819,7 +843,7 @@ Research chat быстро упирается в:
 
 ### Wave CH3 — Tool manifest and tool search
 
-**Статус:** **DONE (Wave A, 2026-04-26).** (rule-based v1, не LLM-discovery)
+**Статус:** **DONE (Wave A, 2026-04-26)** (rule-based v1, не LLM-discovery); **дополнено Wave B** — см. комментарии.
 
 **Сделано в репо (кратко):**
 - `science_graphrag/agent/tool_manifest.py` — метаданные (`family`, `tags`, `risk`, `scope`, `specialist`, `requires_workspace`) для тулов Wave A.
@@ -828,7 +852,12 @@ Research chat быстро упирается в:
 - Rollout: `SCIENCE_GRAPHRAG_AGENT_RULE_TOOL_SEARCH_ENABLED` в `science_graphrag/config.py` (см. `.env.example`); при `false` — полный набор тулов у специалиста.
 - `supervisor.py` не дорабатывался отдельно под CH3: маршрутизация по-прежнему LLM-токеном; «координация shortlist» перенесена внутрь specialist nodes (см. acceptance roadmap: прагматичный срез).
 
-**Тесты:** `tests/test_tool_search.py`.
+**Wave B — догон CH3 (комментарий):**
+- `writer_agent`: вызов `shortlist_tools_for_specialist` + `debug_events` с `tool_search_result` (для `writer_agent` — `reason: writer_minimal_set`, один `final_answer`).
+- **Анти-дрейф:** `tests/test_tool_manifest_sync.py` — имена из `build_tool_registry` совпадают с `TOOL_MANIFEST` (14 тулов; обновлён `tests/agent/test_tools_registry.py`).
+- `test_tool_search.py` расширен (writer skip, graph/retrieval edge cases). Магические пороги в `tool_search.py` **не** вынесены в конфиг (остаётся долгом).
+
+**Тесты:** `tests/test_tool_search.py`, `tests/test_tool_manifest_sync.py`.
 
 **Goal:** внедрить deferred tool loading.
 
@@ -860,37 +889,41 @@ Research chat быстро упирается в:
 
 ### Wave CH4 — Multi-turn state and session memory
 
-**Goal:** сделать backend truly chat-aware.
+**Статус:** **DONE (v1 in-process, Wave B, 2026-04-26)** — не полный продуктовый persistence; см. комментарии.
 
-**Сделать:**
-1. request принимает `thread` или `history_digest`;
-2. `AgentState` расширяется session-level fields;
-3. `turn_digest` и `rolling_session_memory`;
-4. UI session state синхронизируется с backend contract.
+**Сделано в репо (Wave B v1):**
+1. Request: `thread_id`, `history_digest` (JSON-строка или массив dict) — см. [`docs/specs/agent-chat-v1.md`](../specs/agent-chat-v1.md); парсинг в `agent_v2.py`, прокидка в `RetrievalAgent.run()` и в `build_initial_agent_state()`.
+2. `AgentState`: `thread_id`, `session_summary`, `answer_class`, `history_digest`; первое пользовательское сообщение собирается через `format_user_with_memory` (`agent/context/session_store.py`).
+3. После тёрна: `build_turn_digest` + `update_session_after_turn` (in-memory dict по `thread_id`); при SSE — событие `context_compacted`; в `collect_tool_trace` при наличии `thread_id` — шаг `session_init`.
+4. UI: `useAskSubmit` передаёт `threadId` (= `activeSessionId`) и `buildAgentHistoryDigest(history)`; уникальные id тёрнов в `askSessionState.js` (`newTurnId`). Явное поле `backendThreadId` в сессии **не** введено: договорённость «session id = thread id для API».
 
-**Основные файлы:**
-1. `science_graphrag/agent/graph/state.py`
-2. `science_graphrag/api/agent_v2.py`
-3. `ui/src/components/work/askSessionState.js`
-4. `ui/src/components/work/ChatSessionSidebar.jsx`
+**Основные файлы:** `science_graphrag/agent/graph/state.py`, `science_graphrag/agent/context/*`, `science_graphrag/agent/runtime.py`, `science_graphrag/api/agent_v2.py`, `ui/src/components/work/useAskSubmit.js`, `ui/src/components/work/askSessionState.js`, `ui/src/components/work/AskPanel.jsx`.
 
-**Acceptance:**
-1. follow-up вопросы работают без повторной полной формулировки;
-2. session memory не дублирует сырые tool outputs;
-3. есть regression tests на multi-turn continuity.
+**Тесты:** `tests/test_context_session.py`, правки `tests/test_api_agent_v2_stream_parity.py` (полный state).
+
+**Осталось (не CH4 v1):**
+- Persist session store (Redis/DB), отдельные regression e2e на multi-turn continuity.
+- «Rolling memory» как отдельный артефакт от digest — см. CH5.
+
+**Acceptance (Wave B):**
+1. Follow-up в том же `thread_id` получает префикс `<session_memory>` из серверного store (клиент шлёт тот же id сессии).
+2. Digest — компактный JSON, не сырые tool outputs.
+3. Базовые unit-тесты на store/digest есть; полный e2e multi-turn — впереди.
 
 ### Wave CH5 — Multi-level context compression
+
+**Комментарий (пересечение с Wave B):** пункт **«turn_digest»** частично закрыт в CH4 Wave B (детерминированный digest после тёрна + in-memory rolling `session_summary`). Полный стек CH5 (capsules, full compact boundary, coordinator-triggered compaction, eval `chat_context_compaction_v1`) — **ещё не сделан**.
 
 **Goal:** добавить обязательный compact stack.
 
 **Сделать:**
-1. `turn_digest`
+1. `turn_digest` (базовая версия уже в CH4 Wave B — доработать под CH5: триггеры, trace, eval)
 2. `rolling_session_memory`
 3. `workspace/paper/topic capsules`
 4. `full compact boundary` для длинных диалогов
 
 **Основные файлы:**
-1. новый `science_graphrag/agent/context/`
+1. `science_graphrag/agent/context/` (создан Wave B — расширять)
 2. `science_graphrag/agent/graph/supervisor.py`
 3. `science_graphrag/agent/llm/chat.py`
 
@@ -942,13 +975,15 @@ Research chat быстро упирается в:
 
 ### Wave CH8 — Bibliography and exports
 
+**Комментарий (Wave B):** GOST formatter и explicit `bibliography` в API уже были (CH2/A); Wave B добавил **UI** (список + копирование в `BibliographyBlock`), предупреждения по filtered ids, расширение строки GOST. **Не сделано:** reading queue builder, отдельный benchmark `chat_bibliography_gost_v1`.
+
 **Goal:** закрыть "собери мне литературу" продуктово.
 
 **Сделать:**
-1. GOST formatter;
+1. GOST formatter (есть + доработки Wave B — см. CH2); дальше — книги/тома и т.д. по продукту
 2. reading queue builder;
-3. explicit bibliography payload in API;
-4. copy/export affordances in UI.
+3. explicit bibliography payload in API (**есть** в envelope; при необходимости — расширить схему)
+4. copy/export affordances in UI (**частично Wave B:** копирование списка в `BibliographyBlock`)
 
 **Основные файлы:**
 1. новые formatter/export modules
@@ -1073,14 +1108,15 @@ Research chat быстро упирается в:
 
 **Снято / частично снято (Wave A, 2026-04-26):** для первой поставки зафиксирован **rule-based** `tool_search` (см. `science_graphrag/agent/tool_search.py`); thread/history в запросе — **optional + reserved** (`docs/specs/agent-chat-v1.md`); GOST-форматирование в агенте — **детерминированное** (`agent/bibliography/gost.py` + tool); набор typed payloads в CH1 согласован со спекой (ideation payload — заготовка под CH7).
 
-1. Должен ли `tool_search` быть rule-based, hybrid, или LLM-based уже в первой версии? Посмотри как в openclaude. Нам нужны лучшие практики
-2. Какой минимальный thread-aware request contract считаем каноническим: полная history, digests, или гибрид?
-3. Должен ли bibliography formatter быть чисто deterministic или LLM-assisted fallback допустим?
-4. Какие typed payloads обязательны уже в CH1: `inventory`, `quote_candidates`, `bibliography`, `relation_trace`?
+**Обновление Wave B (2026-04-26):**
+1. **tool_search:** остаётся **rule-based v1**; LLM/hybrid — отложено (CH9+ / отдельное решение).
+2. **Контракт thread-aware:** канон — **`thread_id` + опциональный `history_digest`** (клиентский компакт последних тёрнов) + серверный **`session_summary`** из in-memory store; полная history по-прежнему не шлётся целиком.
+3. **Bibliography:** по-прежнему **детерминированный** GOST + опциональные поля карточки; LLM-fallback не вводился.
+4. **Typed payloads:** в UI и envelope используются **`inventory`, `quote_candidates`, `bibliography`**; **`relation_trace`** в envelope пока не заполняется.
 
 ### Can wait until CH4+
 
-1. Хранить ли `rolling_session_memory` только в памяти/сессии или persist в backend store?
+1. Хранить ли `rolling_session_memory` только в памяти/сессии или persist в backend store? **→ Wave B: только in-memory процесса; persist — открыто.**
 2. Насколько глубоко graph specialist должен поддерживать path explanation already in v1?
 3. Стоит ли ideation specialist запускать как side-agent/fork, чтобы не загрязнять основной reasoning loop?
 4. Нужен ли отдельный "reader grounding mode" для вопросов, жёстко ограниченных одной статьёй?
@@ -1091,10 +1127,10 @@ Research chat быстро упирается в:
 
 Следующий практический шаг: **не начинать с "полного multi-agent rewrite"**, а открыть серию небольших PR/волн:
 
-1. ~~spec + answer classes;~~ **сделано (Wave A / CH1)**
-2. ~~tool taxonomy;~~ **сделано (Wave A / CH2)**
-3. ~~tool manifest/tool search;~~ **сделано (Wave A / CH3)**
-4. multi-turn + session memory; — **следующий крупный шаг (CH4)**
-5. compact stack. — **CH5**
+1. ~~spec + answer classes;~~ **сделано (Wave A / CH1)**; ~~warnings + typed UI в продукте~~ **частично догнано Wave B**
+2. ~~tool taxonomy;~~ **сделано (Wave A / CH2)**; ~~structured errors / bib warnings / GOST event+pages~~ **Wave B (частично)**
+3. ~~tool manifest/tool search;~~ **сделано (Wave A / CH3)**; ~~writer shortlist + manifest sync test~~ **Wave B**
+4. ~~multi-turn + session memory (v1);~~ **сделано (Wave B / CH4 v1 in-process)** — persist и e2e regression — дальше
+5. compact stack (полный CH5). — **следующий крупный шаг (CH5)** — digest/summary v1 уже задел под это
 
 Это даст работающий research chat evolution path, сохраняя совместимость с уже существующими `LangGraph`, `SSE`, `tool_trace` и текущим UI чата.

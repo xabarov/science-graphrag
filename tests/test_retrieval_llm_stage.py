@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from science_graphrag.retrieval.answer import _try_query_answer_llm
 from science_graphrag.config import Settings
+from science_graphrag.retrieval.answer import _try_query_answer_llm
 
 
 def test_try_query_answer_llm_disabled() -> None:

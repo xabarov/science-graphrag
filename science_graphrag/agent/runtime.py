@@ -1,17 +1,34 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage
 
 from science_graphrag.agent.chat_envelope import build_chat_envelope
+from science_graphrag.agent.context.session_store import (
+    get_session_for_thread,
+    update_session_after_turn,
+)
+from science_graphrag.agent.context.turn_digest import build_turn_digest
+from science_graphrag.agent.graph.state import build_initial_agent_state
 from science_graphrag.agent.graph.supervisor import build_retrieval_graph
 from science_graphrag.agent.graph.tracing import collect_tool_trace
 from science_graphrag.agent.trace import ToolCallTrace
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
-from science_graphrag.observability.spans import chain_span
+from science_graphrag.observability.spans import OpenInferenceAttributes, chain_span
+
+
+def current_otel_trace_id_hex() -> str | None:
+    try:
+        from opentelemetry import trace as trace_api
+    except Exception:  # noqa: BLE001
+        return None
+    sc = trace_api.get_current_span().get_span_context()
+    if sc.is_valid:
+        return format(sc.trace_id, "032x")
+    return None
 
 
 @dataclass
@@ -28,6 +45,8 @@ class AgentRunOutput:
     idea_suggestions: list[dict[str, Any]] | None = None
     bibliography: dict[str, Any] | None = None
     debug_events: list[dict[str, Any]] = field(default_factory=list)
+    phoenix_trace_id: str | None = None
+    thread_id: str | None = None
 
 
 class RetrievalAgent:
@@ -62,19 +81,38 @@ class RetrievalAgent:
         workspace_id: str | None,
         max_tool_calls: int,
         answer_class_hint: str | None = None,
+        thread_id: str | None = None,
+        history_digest: list[dict[str, Any]] | None = None,
     ) -> AgentRunOutput:
-        if self._legacy is not None:
-            return self._legacy.run(
+        tid = (thread_id or "").strip() or None
+        attrs: dict[str, Any] = {
+            "agent.runtime": self._settings.agent_runtime,
+            "agent.max_tool_calls": max_tool_calls or self._settings.agent_max_tool_calls,
+            "user.id": workspace_id or "",
+            "input.value": question[:500],
+        }
+        if tid:
+            attrs[OpenInferenceAttributes.SESSION_ID] = tid
+        with chain_span("agent.query", attrs):
+            if self._legacy is not None:
+                out = self._legacy.run(
+                    question=question,
+                    workspace_id=workspace_id,
+                    max_tool_calls=max_tool_calls,
+                )
+                return replace(
+                    out,
+                    phoenix_trace_id=current_otel_trace_id_hex(),
+                    thread_id=tid,
+                )
+            return self._run_langgraph(
                 question=question,
                 workspace_id=workspace_id,
                 max_tool_calls=max_tool_calls,
+                answer_class_hint=answer_class_hint,
+                thread_id=tid,
+                history_digest=history_digest,
             )
-        return self._run_langgraph(
-            question=question,
-            workspace_id=workspace_id,
-            max_tool_calls=max_tool_calls,
-            answer_class_hint=answer_class_hint,
-        )
 
     def _run_langgraph(
         self,
@@ -83,60 +121,71 @@ class RetrievalAgent:
         workspace_id: str | None,
         max_tool_calls: int,
         answer_class_hint: str | None = None,
+        thread_id: str | None = None,
+        history_digest: list[dict[str, Any]] | None = None,
     ) -> AgentRunOutput:
-        attrs = {
-            "agent.runtime": self._settings.agent_runtime,
-            "agent.max_tool_calls": max_tool_calls or self._settings.agent_max_tool_calls,
-            "user.id": workspace_id or "",
-            "input.value": question[:500],
-        }
-        with chain_span("agent.query", attrs):
-            budget = max_tool_calls or self._settings.agent_max_tool_calls
-            initial_state = {
-                "messages": [HumanMessage(content=question)],
-                "workspace_id": workspace_id,
-                "citations": [],
-                "tool_trace": [],
-                "budget_remaining": budget,
-                "metadata": {"agent_runtime": self._settings.agent_runtime},
-                "specialist_results": {},
-                "current_specialist": None,
-                "routing_log": [],
-                "debug_events": [],
-            }
-            assert self._graph is not None
-            final_state = self._graph.invoke(
-                initial_state,
-                config={"recursion_limit": self._settings.agent_supervisor_recursion_limit},
-            )
-            messages = final_state.get("messages", [])
-            trace = collect_tool_trace(final_state)
-            answer = ""
-            for msg in reversed(messages):
-                if isinstance(msg, AIMessage) and not getattr(msg, "tool_calls", None):
-                    answer = str(msg.content or "")
-                    break
-            envelope = build_chat_envelope(
-                state=final_state,
+        budget = max_tool_calls or self._settings.agent_max_tool_calls
+        session_summary = ""
+        if thread_id:
+            session_summary = str(get_session_for_thread(thread_id).get("session_summary") or "")
+
+        initial_state = build_initial_agent_state(
+            question=question,
+            workspace_id=workspace_id,
+            max_tool_calls=budget,
+            agent_runtime=self._settings.agent_runtime,
+            thread_id=thread_id,
+            history_digest=history_digest,
+            session_summary=session_summary,
+            answer_class_hint=answer_class_hint,
+        )
+        assert self._graph is not None
+        final_state = self._graph.invoke(
+            initial_state,
+            config={"recursion_limit": self._settings.agent_supervisor_recursion_limit},
+        )
+        messages = final_state.get("messages", [])
+        trace = collect_tool_trace(final_state)
+        answer = ""
+        for msg in reversed(messages):
+            if isinstance(msg, AIMessage) and not getattr(msg, "tool_calls", None):
+                answer = str(msg.content or "")
+                break
+        envelope = build_chat_envelope(
+            state=final_state,
+            answer=answer,
+            citations=list(final_state.get("citations", [])),
+            tool_trace=trace,
+            answer_class_hint=answer_class_hint,
+        )
+        raw_q = (final_state.get("metadata") or {}).get("raw_user_question")
+        if not isinstance(raw_q, str) or not raw_q.strip():
+            raw_q = question
+        if thread_id:
+            digest = build_turn_digest(
+                question=raw_q,
                 answer=answer,
-                citations=list(final_state.get("citations", [])),
-                tool_trace=trace,
-                answer_class_hint=answer_class_hint,
-            )
-            return AgentRunOutput(
-                answer=answer,
-                citations=list(final_state.get("citations", [])),
-                tool_trace=trace,
                 answer_class=str(envelope.get("answer_class") or "grounded_explanation"),
-                evidence_summary=envelope.get("evidence_summary"),
-                warnings=list(envelope.get("warnings") or []),
-                inventory=envelope.get("inventory"),
-                relation_trace=envelope.get("relation_trace"),
-                quote_candidates=envelope.get("quote_candidates"),
-                idea_suggestions=envelope.get("idea_suggestions"),
-                bibliography=envelope.get("bibliography"),
-                debug_events=list(final_state.get("debug_events") or []),
+                tool_trace=trace,
             )
+            update_session_after_turn(thread_id, turn_digest=digest)
+
+        return AgentRunOutput(
+            answer=answer,
+            citations=list(final_state.get("citations", [])),
+            tool_trace=trace,
+            answer_class=str(envelope.get("answer_class") or "grounded_explanation"),
+            evidence_summary=envelope.get("evidence_summary"),
+            warnings=list(envelope.get("warnings") or []),
+            inventory=envelope.get("inventory"),
+            relation_trace=envelope.get("relation_trace"),
+            quote_candidates=envelope.get("quote_candidates"),
+            idea_suggestions=envelope.get("idea_suggestions"),
+            bibliography=envelope.get("bibliography"),
+            debug_events=list(final_state.get("debug_events") or []),
+            phoenix_trace_id=current_otel_trace_id_hex(),
+            thread_id=thread_id,
+        )
 
 
 def build_agent(

@@ -136,4 +136,5 @@ testpaths = ["tests"]
 pythonpath = ["."]
 markers = [
     "integration: requires Docker services (Neo4j, Postgres, Qdrant)",
+    "live_api: requires running HTTP API (set AGENT_LIVE_BASE)",
 ]

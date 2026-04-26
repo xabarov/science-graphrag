@@ -52,3 +52,56 @@ def test_shortlist_bibliography_boosts_gost_tool() -> None:
     assert meta.get("reason") == "rules"
     names = {getattr(t, "name", "") for t in out}
     assert "format_bibliography_gost" in names
+
+
+def test_writer_shortlist_is_skipped_minimal() -> None:
+    tools = [_named_tool("final_answer")]
+    settings = Settings(agent_rule_tool_search_enabled=True)
+    out, meta = shortlist_tools_for_specialist(
+        tools,
+        question="Synthesize the answer with citations",
+        specialist="writer_agent",
+        settings=settings,
+        has_workspace=True,
+    )
+    assert len(out) == 1
+    assert meta.get("reason") == "writer_minimal_set"
+    assert meta.get("skipped") is True
+
+
+def test_graph_agent_shortlist_includes_cypher_for_graph_question() -> None:
+    from science_graphrag.agent.tools import build_graph_tools
+
+    stores = MagicMock()
+    tools = build_graph_tools(stores)
+    settings = Settings(agent_rule_tool_search_enabled=True)
+    out, meta = shortlist_tools_for_specialist(
+        tools,
+        question="cypher neo4j path between entity A and B in the graph",
+        specialist="graph_agent",
+        settings=settings,
+        has_workspace=True,
+    )
+    names = {getattr(t, "name", "") for t in out}
+    assert "cypher_query" in names
+    assert meta.get("reason") in ("rules", "fallback_full")
+
+
+def test_retrieval_low_signal_returns_full() -> None:
+    from science_graphrag.agent.tools import build_retrieval_tools
+
+    stores = MagicMock()
+    stores.neo4j = MagicMock()
+    stores.qdrant_chunks = MagicMock()
+    stores.qdrant_works = MagicMock()
+    settings = Settings(agent_rule_tool_search_enabled=True)
+    tools = build_retrieval_tools(stores, settings)
+    out, meta = shortlist_tools_for_specialist(
+        tools,
+        question="a",
+        specialist="retrieval_agent",
+        settings=settings,
+        has_workspace=True,
+    )
+    # Very short / low-signal questions fall back to full tool set
+    assert meta.get("reason") in ("low_signal", "fallback_full") or len(out) == len(tools)

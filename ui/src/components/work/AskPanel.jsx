@@ -14,6 +14,7 @@ import { apiSessionsToBundle, entriesToApiTurns, isServerAskSessionId, readAskSe
 import { rememberAskHistory } from "./askHistoryState.js";
 import {
   appendAskSessionTurn,
+  buildAgentHistoryDigest,
   createAskSession,
   deriveAskScopeKey,
   getActiveSessionEntries,
@@ -46,6 +47,7 @@ export default function AskPanel({
   workspaceId = "",
   urlSessionId = "",
   onUrlSessionIdChange,
+  fillAvailableHeight = false,
 }) {
   const { t } = useI18n();
   const locked = Boolean(scopedWorkId && String(scopedWorkId).trim());
@@ -268,7 +270,12 @@ export default function AskPanel({
       if (!q) return;
       setPendingUserQuery(q);
       try {
-        const nextNormalized = await submit({ query });
+        const historyDigest = buildAgentHistoryDigest(history);
+        const nextNormalized = await submit({
+          query,
+          threadId: activeSessionId || null,
+          historyDigest,
+        });
         if (!nextNormalized) return;
         const queryMode = locked || inWorkspace ? "workspace" : corpusWorkspaceOnly ? "workspace_corpus" : workId ? "scoped" : "global";
         const details = {
@@ -276,6 +283,14 @@ export default function AskPanel({
           citations: nextNormalized.citations,
           graph_context: nextNormalized.graph_context,
           retrieval_trace: nextNormalized.retrieval_trace,
+          answer_class: nextNormalized.answer_class,
+          evidence_summary: nextNormalized.evidence_summary,
+          warnings: nextNormalized.warnings,
+          inventory: nextNormalized.inventory,
+          relation_trace: nextNormalized.relation_trace,
+          quote_candidates: nextNormalized.quote_candidates,
+          idea_suggestions: nextNormalized.idea_suggestions,
+          bibliography: nextNormalized.bibliography,
         };
         const turn = {
           query,
@@ -317,7 +332,7 @@ export default function AskPanel({
         setPendingUserQuery("");
       }
     },
-    [submit, query, locked, inWorkspace, corpusWorkspaceOnly, workId, scopeKey, bumpSessions, serverSync],
+    [submit, query, history, activeSessionId, locked, inWorkspace, corpusWorkspaceOnly, workId, scopeKey, bumpSessions, serverSync],
   );
 
   const onActiveSessionChange = useCallback(
@@ -375,8 +390,12 @@ export default function AskPanel({
         boxSizing: "border-box",
         display: "flex",
         flexDirection: "column",
-        minHeight: { xs: "min(100dvh - 140px, 720px)", md: "min(calc(100dvh - 160px), 900px)" },
-        maxHeight: { md: "calc(100dvh - 160px)" },
+        ...(fillAvailableHeight
+          ? { flex: 1, minHeight: 0, height: "100%" }
+          : {
+              minHeight: { xs: "min(100dvh - 140px, 720px)", md: "min(calc(100dvh - 160px), 900px)" },
+              maxHeight: { md: "calc(100dvh - 160px)" },
+            }),
       }}
     >
       <Box

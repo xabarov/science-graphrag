@@ -29,6 +29,41 @@ from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
 
 ROUTE_FINISH = "finish"
+_GRAPH_INTENT_HINTS: tuple[str, ...] = (
+    "lineage",
+    "chain of papers",
+    "who cited",
+    "cites whom",
+    "citation chain",
+    "predecessor",
+    "successor",
+    "related version",
+    "contradict",
+    "neo4j",
+    "cypher",
+    "graph traversal",
+    "compare these papers",
+    "which paper influenced",
+)
+
+
+def _first_user_plain_question(state: AgentState) -> str:
+    meta = state.get("metadata") or {}
+    raw = meta.get("raw_user_question")
+    if isinstance(raw, str) and raw.strip():
+        return raw.strip()
+    for msg in reversed(state.get("messages") or []):
+        content = getattr(msg, "content", None)
+        if isinstance(content, str) and content.strip():
+            return content.strip()
+    return ""
+
+
+def _graph_intent_heuristic(text: str) -> bool:
+    t = text.lower()
+    return any(h in t for h in _GRAPH_INTENT_HINTS)
+
+
 ROUTING_PROMPT = """You are a supervisor for scholarly research agents.
 Available specialists:
 - retrieval_agent: semantic search in papers and workspace summaries
@@ -58,6 +93,22 @@ def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
                     {"from": "supervisor", "to": WRITER_SPECIALIST, "reason": "budget_exhausted"},
                 ],
             }
+        if settings.agent_semantic_query_fast_route:
+            prior = list(state.get("routing_log") or [])
+            if not prior:
+                uq = _first_user_plain_question(state)
+                if uq and not _graph_intent_heuristic(uq):
+                    return {
+                        "current_specialist": RETRIEVAL_SPECIALIST,
+                        "routing_log": [
+                            {
+                                "from": "supervisor",
+                                "to": RETRIEVAL_SPECIALIST,
+                                "reason": "semantic_fast_route",
+                                "budget_left": budget,
+                            },
+                        ],
+                    }
         specialist_context = str(state.get("specialist_results") or {})
         route_msgs = [
             HumanMessage(content=ROUTING_PROMPT),

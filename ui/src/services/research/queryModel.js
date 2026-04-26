@@ -115,6 +115,7 @@ export function normalizeQueryResponse(raw) {
       quote_candidates: null,
       idea_suggestions: null,
       bibliography: null,
+      thread_id: null,
     };
   }
   const gc = raw.graph_context && typeof raw.graph_context === "object" ? raw.graph_context : {};
@@ -150,5 +151,6 @@ export function normalizeQueryResponse(raw) {
     quote_candidates: Array.isArray(raw.quote_candidates) ? raw.quote_candidates : null,
     idea_suggestions: Array.isArray(raw.idea_suggestions) ? raw.idea_suggestions : null,
     bibliography: raw.bibliography && typeof raw.bibliography === "object" ? raw.bibliography : null,
+    thread_id: raw.thread_id == null ? null : String(raw.thread_id),
   };
 }
