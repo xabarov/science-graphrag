@@ -23,6 +23,8 @@ SYSTEM_PROMPT = (
     "workspace_overview, workspace_list_papers, paper_lookup, paper_metadata, paper_authors, "
     "paper_counts, paper_quote_search (semantic quote/snippet search), format_bibliography_gost, "
     "idea_search (semantic chunk/work search), summarize_workspace. "
+    "When <active_workspace_id> appears in the user message, use that exact UUID as workspace_id "
+    "for workspace_overview, workspace_list_papers, paper_counts, and paper_lookup. "
     "Prefer catalog tools for paper lists, metadata, authors, and bibliography; use idea_search "
     "for open semantic discovery; use paper_quote_search when the user needs grounded excerpts. "
     "Return findings through tool outputs only. Do not call final_answer."

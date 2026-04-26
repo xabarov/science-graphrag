@@ -1,8 +1,12 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { buildApiUrl } from "../services/apiClient.js";
 import { flushAgentSseEventBuffer } from "../services/agent/agentStreamParse.js";
 
+/**
+ * Streams POST /v2/agent/query (SSE). Callback props are read from refs so ``stream`` stays
+ * stable when parent re-renders and only ``workspaceId`` should recreate the fetch function.
+ */
 export function useAgentStream({
   workspaceId = "",
   onEvent,
@@ -17,6 +21,25 @@ export function useAgentStream({
   /** True after any `onFinalAnswer` delivery for the current stream (SSE or JSON). */
   const sawFinalAnswerRef = useRef(false);
 
+  const cbRef = useRef({
+    onEvent,
+    onFinalAnswer,
+    onError,
+    onStart,
+    onFinish,
+    onMalformedFrame,
+  });
+  useEffect(() => {
+    cbRef.current = {
+      onEvent,
+      onFinalAnswer,
+      onError,
+      onStart,
+      onFinish,
+      onMalformedFrame,
+    };
+  }, [onEvent, onFinalAnswer, onError, onStart, onFinish, onMalformedFrame]);
+
   const stream = useCallback(
     async ({ question, maxToolCalls = 8, answerClassHint = null, threadId = null, historyDigest = null }) => {
       if (!String(question || "").trim()) return;
@@ -27,7 +50,7 @@ export function useAgentStream({
 
       setIsStreaming(true);
       sawFinalAnswerRef.current = false;
-      onStart?.();
+      cbRef.current.onStart?.();
 
       try {
         const response = await fetch(buildApiUrl("/v2/agent/query"), {
@@ -49,7 +72,7 @@ export function useAgentStream({
 
         if (!response.ok) {
           const errText = await response.text().catch(() => "Unknown error");
-          onError?.(`Agent error ${response.status}: ${errText}`);
+          cbRef.current.onError?.(`Agent error ${response.status}: ${errText}`);
           return;
         }
 
@@ -59,9 +82,9 @@ export function useAgentStream({
           try {
             const data = rawText ? JSON.parse(rawText) : {};
             sawFinalAnswerRef.current = true;
-            onFinalAnswer?.(data);
+            cbRef.current.onFinalAnswer?.(data);
           } catch (parseErr) {
-            onError?.(
+            cbRef.current.onError?.(
               `Agent response is not valid JSON: ${String(parseErr?.message || parseErr)}${rawText ? ` — ${rawText.slice(0, 200)}` : ""}`,
             );
           }
@@ -69,7 +92,7 @@ export function useAgentStream({
         }
 
         if (!response.body || typeof response.body.getReader !== "function") {
-          onError?.("Agent stream is unavailable in this browser");
+          cbRef.current.onError?.("Agent stream is unavailable in this browser");
           return;
         }
 
@@ -78,16 +101,16 @@ export function useAgentStream({
         let buffer = "";
         let streamEmittedError = false;
         const sseHandlers = {
-          onEvent,
+          onEvent: (ev) => cbRef.current.onEvent?.(ev),
           onFinalAnswer: (ev) => {
             sawFinalAnswerRef.current = true;
-            onFinalAnswer?.(ev);
+            cbRef.current.onFinalAnswer?.(ev);
           },
           onError: (msg) => {
             streamEmittedError = true;
-            onError?.(msg);
+            cbRef.current.onError?.(msg);
           },
-          onParseError: onMalformedFrame,
+          onParseError: (err) => cbRef.current.onMalformedFrame?.(err),
         };
 
         let keepReading = true;
@@ -105,20 +128,20 @@ export function useAgentStream({
         flushAgentSseEventBuffer(buffer, sseHandlers);
 
         if (!sawFinalAnswerRef.current && !controller.signal.aborted && !streamEmittedError) {
-          onError?.("Stream ended before a final answer was received.");
+          cbRef.current.onError?.("Stream ended before a final answer was received.");
         }
       } catch (err) {
         if (err?.name === "AbortError") return;
-        onError?.(String(err?.message || err));
+        cbRef.current.onError?.(String(err?.message || err));
       } finally {
         if (abortRef.current === controller) {
           abortRef.current = null;
         }
         setIsStreaming(false);
-        onFinish?.();
+        cbRef.current.onFinish?.();
       }
     },
-    [workspaceId, onEvent, onFinalAnswer, onError, onStart, onFinish, onMalformedFrame],
+    [workspaceId],
   );
 
   const abort = useCallback(() => {

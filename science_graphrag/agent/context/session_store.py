@@ -36,12 +36,20 @@ def format_user_with_memory(
     session_summary: str,
     history_digest: list[dict[str, Any]],
     workspace_capsule: dict[str, Any] | None = None,
+    active_workspace_id: str | None = None,
 ) -> str:
-    """Build the first user message, optionally prefixing server/client memory (CH4+CH5)."""
+    """Build the first user message, optionally prefixing server/client memory (CH4+CH5).
+
+    ``active_workspace_id`` is the API request workspace scope (always inject when set) so
+    tool-calling models see the UUID even before a thread workspace capsule exists.
+    """
     parts: list[str] = []
     ss = (session_summary or "").strip()
     if ss:
         parts.append(f"<session_memory>\n{ss}\n</session_memory>")
+    aw = str(active_workspace_id or "").strip()
+    if aw:
+        parts.append(f"<active_workspace_id>\n{aw}\n</active_workspace_id>")
     wc = workspace_capsule if isinstance(workspace_capsule, dict) else None
     wid = str(wc.get("workspace_id") or "").strip() if wc else ""
     if wid:

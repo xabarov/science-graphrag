@@ -22,6 +22,11 @@ def _named_tool(name: str):
     return _t
 
 
+def test_strip_tool_search_context_wrappers_removes_active_workspace_id() -> None:
+    raw = "<active_workspace_id>\nws-uuid-1\n</active_workspace_id>\nсколько статей"
+    assert strip_tool_search_context_wrappers(raw).strip() == "сколько статей"
+
+
 def test_strip_tool_search_context_wrappers_removes_memory_blocks() -> None:
     raw = (
         "<session_memory>\nQ: old\nA: ans\n</session_memory>\n"

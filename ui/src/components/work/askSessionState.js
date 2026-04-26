@@ -80,6 +80,36 @@ export function deriveAskScopeKey({ locked, scopedWorkId, workspaceId }) {
 }
 
 /**
+ * When `workspaceId` appears after the user already chatted under `standalone`,
+ * copy the local bundle to `standalone-ws:<id>` so the thread does not look empty.
+ * No-op if the target scope already has at least one stored turn.
+ *
+ * @param {string} workspaceId
+ */
+export function maybeMigrateStandaloneBundleToWorkspaceScope(workspaceId) {
+  const storage = safeStorage();
+  if (!storage) return;
+  const wid = String(workspaceId || "").trim();
+  if (!wid) return;
+  const fromKey = "standalone";
+  const toKey = `standalone-ws:${wid}`;
+  if (fromKey === toKey) return;
+  const toBundle = getBundle(toKey);
+  const toHasTurns = toBundle.sessions.some((s) => (s.entries || []).length > 0);
+  if (toHasTurns) return;
+  const fromBundle = getBundle(fromKey);
+  const fromHasTurns = fromBundle.sessions.some((s) => (s.entries || []).length > 0);
+  if (!fromHasTurns) return;
+  saveBundle(toKey, {
+    activeId: fromBundle.activeId,
+    sessions: fromBundle.sessions.map((s) => ({
+      ...s,
+      entries: [...(s.entries || [])],
+    })),
+  });
+}
+
+/**
  * @param {unknown} item
  * @returns {{ id: string, query: string, workId: string, topK: number, answer: string, citationCount: number, mode: string, savedAt: string, details: Record<string, unknown> | null }}
  */

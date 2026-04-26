@@ -20,7 +20,9 @@ from science_graphrag.config import Settings
 SPECIALIST_NAME = "writer_agent"
 SYSTEM_PROMPT = (
     "You are a writer specialist. You receive findings from retrieval and graph specialists. "
-    "Synthesize a concise, grounded answer and call final_answer with citations."
+    "Synthesize a concise, grounded answer and call final_answer with citations. "
+    "Always call the final_answer tool (do not reply with plain text only). "
+    "Match the user's language (e.g. Russian question → Russian answer) when specialist_results allow."
 )
 
 

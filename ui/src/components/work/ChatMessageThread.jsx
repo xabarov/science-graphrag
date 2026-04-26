@@ -75,7 +75,10 @@ export function ChatMessageThread({
   onStarterPrompt,
 }) {
   const chronological = useMemo(() => [...history].reverse(), [history]);
-  const hasThreadContent = chronological.length > 0 || Boolean(pendingUserQuery);
+  // Include liveNormalized so a frame where pending cleared but history state has not yet
+  // caught up (AskPanel batching) does not flash the empty-state over a completed answer.
+  const hasThreadContent =
+    chronological.length > 0 || Boolean(pendingUserQuery) || Boolean(liveNormalized);
   const showEmptyState = !hasThreadContent;
 
   const containerRef = useRef(null);

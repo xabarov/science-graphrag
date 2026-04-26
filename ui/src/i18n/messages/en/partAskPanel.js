@@ -44,6 +44,7 @@ export default {
   "askPanel.retrieval.hybrid": "hybrid",
   "askPanel.retrieval.agent": "agent",
   "askPanel.runQueryLoading": "Querying…",
+  "askPanel.agentStreamingHint": "Agent is working — first tokens may take 20–40s.",
   "askPanel.agentIncompleteTurn":
     "No answer was saved. Read the red error under the chat header if present, or try again.",
   "askPanel.runQuery": "Run query",

@@ -4,7 +4,6 @@ import Box from "@mui/material/Box";
 import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
 
 import AskPanel from "../components/work/AskPanel.jsx";
-import { deriveAskScopeKey, sessionExistsInScope } from "../components/work/askSessionState.js";
 import { useWorkspaceContext } from "../components/layout/useWorkspaceContext.js";
 import { useI18n } from "../i18n/useI18n.js";
 import { persistWorkId } from "./WorkspacePage/utils/workContext.js";
@@ -24,11 +23,6 @@ export default function ChatPage() {
     [workspaceIdFromUrl, activeWorkspaceId],
   );
 
-  const askSessionScopeKey = useMemo(
-    () => deriveAskScopeKey({ locked: false, scopedWorkId: null, workspaceId: effectiveWorkspaceId }),
-    [effectiveWorkspaceId],
-  );
-
   const onAskSessionUrlChange = useCallback(
     (sessionId) => {
       const p = new URLSearchParams(searchParams);
@@ -43,14 +37,15 @@ export default function ChatPage() {
     if (initialWorkId.trim()) persistWorkId(initialWorkId);
   }, [initialWorkId]);
 
+  /** Keep `workspace_id` in the URL once shell knows it — stabilizes ask scope vs late `activeWorkspaceId`. */
   useEffect(() => {
-    if (!askSessionUrl) return;
-    if (!sessionExistsInScope(askSessionScopeKey, askSessionUrl)) {
-      const p = new URLSearchParams(searchParams);
-      p.delete("ask_session");
-      setSearchParams(p, { replace: true });
-    }
-  }, [askSessionUrl, askSessionScopeKey, searchParams, setSearchParams]);
+    const fromUrl = workspaceIdFromUrl.trim();
+    const active = (activeWorkspaceId || "").trim();
+    if (fromUrl || !active) return;
+    const p = new URLSearchParams(searchParams);
+    p.set("workspace_id", active);
+    setSearchParams(p, { replace: true });
+  }, [workspaceIdFromUrl, activeWorkspaceId, searchParams, setSearchParams]);
 
   const showEmptyCta = !initialWorkId.trim() && !workspaceIdFromUrl && !activeWorkspaceId;
 

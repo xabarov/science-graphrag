@@ -43,6 +43,7 @@ export default {
   "askPanel.retrieval.hybrid": "hybrid",
   "askPanel.retrieval.agent": "agent",
   "askPanel.runQueryLoading": "Запрос…",
+  "askPanel.agentStreamingHint": "Агент обрабатывает запрос — первый ответ может занять 20–40 с.",
   "askPanel.agentIncompleteTurn":
     "Ответ не сохранён. Если видите красную строку ошибки под заголовком чата — прочитайте её; иначе повторите запрос.",
   "askPanel.runQuery": "Выполнить запрос",

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field, replace
 from typing import Any
 
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, ToolMessage
 
 from science_graphrag.agent.chat_envelope import build_chat_envelope, heuristic_answer_class
 from science_graphrag.agent.context.post_turn import apply_turn_digest_to_thread
@@ -15,6 +16,46 @@ from science_graphrag.agent.trace import ToolCallTrace
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
 from science_graphrag.observability.spans import OpenInferenceAttributes, chain_span
+
+
+def extract_langgraph_answer(messages: list[Any]) -> tuple[str, list[dict[str, Any]] | None]:
+    """Prefer ``final_answer`` tool JSON over a bare assistant string (avoids losing structured output).
+
+    Returns ``(answer, citations_or_none)``. When ``citations_or_none`` is ``None``, keep graph state
+    citations; when a list (possibly empty), it replaces citations from ``final_answer`` payload.
+    """
+    for i in range(len(messages) - 1, -1, -1):
+        msg = messages[i]
+        if not isinstance(msg, AIMessage):
+            continue
+        for tc in getattr(msg, "tool_calls", None) or []:
+            if str(tc.get("name") or "") != "final_answer":
+                continue
+            call_id = tc.get("id")
+            for follow in messages[i + 1 :]:
+                if not isinstance(follow, ToolMessage):
+                    continue
+                if getattr(follow, "tool_call_id", None) != call_id:
+                    continue
+                raw = follow.content
+                if not isinstance(raw, str):
+                    continue
+                try:
+                    data = json.loads(raw)
+                except Exception:  # noqa: BLE001
+                    continue
+                if not isinstance(data, dict):
+                    continue
+                ans = data.get("answer")
+                if isinstance(ans, str) and ans.strip():
+                    cites = data.get("citations")
+                    if isinstance(cites, list):
+                        return ans.strip(), [c for c in cites if isinstance(c, dict)]
+                    return ans.strip(), []
+    for msg in reversed(messages):
+        if isinstance(msg, AIMessage) and not getattr(msg, "tool_calls", None):
+            return str(msg.content or ""), None
+    return "", None
 
 
 def current_otel_trace_id_hex() -> str | None:
@@ -152,17 +193,16 @@ class RetrievalAgent:
             initial_state,
             config={"recursion_limit": self._settings.agent_supervisor_recursion_limit},
         )
-        messages = final_state.get("messages", [])
+        messages = list(final_state.get("messages", []))
         trace = collect_tool_trace(final_state)
-        answer = ""
-        for msg in reversed(messages):
-            if isinstance(msg, AIMessage) and not getattr(msg, "tool_calls", None):
-                answer = str(msg.content or "")
-                break
+        answer, fa_citations = extract_langgraph_answer(messages)
+        citations = list(final_state.get("citations", []))
+        if fa_citations is not None:
+            citations = fa_citations
         envelope = build_chat_envelope(
             state=final_state,
             answer=answer,
-            citations=list(final_state.get("citations", [])),
+            citations=citations,
             tool_trace=trace,
             answer_class_hint=answer_class_hint,
         )

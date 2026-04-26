@@ -113,6 +113,19 @@ class _RecordingBackend:
         self.turns.clear()
 
 
+def test_format_user_with_memory_includes_active_workspace_id() -> None:
+    s = format_user_with_memory(
+        question="Сколько статей?",
+        session_summary="",
+        history_digest=[],
+        workspace_capsule=None,
+        active_workspace_id="ws-uuid-9",
+    )
+    assert "<active_workspace_id>" in s
+    assert "ws-uuid-9" in s
+    assert "Сколько статей?" in s
+
+
 def test_format_user_with_memory_includes_workspace_capsule() -> None:
     s = format_user_with_memory(
         question="List papers",

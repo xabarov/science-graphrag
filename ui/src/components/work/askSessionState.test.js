@@ -1,6 +1,50 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { buildAgentHistoryDigest } from "./askSessionState.js";
+import {
+  appendAskSessionTurn,
+  buildAgentHistoryDigest,
+  getActiveSessionEntries,
+  maybeMigrateStandaloneBundleToWorkspaceScope,
+} from "./askSessionState.js";
+
+describe("maybeMigrateStandaloneBundleToWorkspaceScope", () => {
+  beforeEach(() => {
+    const store = {};
+    vi.stubGlobal("window", {
+      localStorage: {
+        getItem: (key) => (key in store ? store[key] : null),
+        setItem: (key, value) => {
+          store[key] = String(value);
+        },
+        removeItem: (key) => {
+          delete store[key];
+        },
+        clear: () => {
+          Object.keys(store).forEach((k) => {
+            delete store[k];
+          });
+        },
+      },
+    });
+  });
+
+  it("copies standalone turns into standalone-ws when target has no turns", () => {
+    appendAskSessionTurn("standalone", { query: "hello", workId: "", topK: 5 });
+    maybeMigrateStandaloneBundleToWorkspaceScope("ws-abc");
+    const moved = getActiveSessionEntries("standalone-ws:ws-abc");
+    expect(moved.length).toBe(1);
+    expect(moved[0].query).toBe("hello");
+  });
+
+  it("does not overwrite workspace scope that already has turns", () => {
+    appendAskSessionTurn("standalone", { query: "from-standalone", workId: "", topK: 5 });
+    appendAskSessionTurn("standalone-ws:ws-x", { query: "already-here", workId: "", topK: 5 });
+    maybeMigrateStandaloneBundleToWorkspaceScope("ws-x");
+    const ws = getActiveSessionEntries("standalone-ws:ws-x");
+    expect(ws.some((e) => e.query === "already-here")).toBe(true);
+    expect(ws.some((e) => e.query === "from-standalone")).toBe(false);
+  });
+});
 
 describe("buildAgentHistoryDigest", () => {
   it("returns null for empty input", () => {

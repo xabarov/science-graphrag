@@ -85,8 +85,9 @@ export function useAskSubmit({
     },
   });
 
+  /** Do not clear `lastStreamNormalizedRef` here — workspace can resolve mid-flight (ChatPage) and
+   *  race the `await streamAgent` continuation; only reset capture buffers between workspaces. */
   useEffect(() => {
-    lastStreamNormalizedRef.current = null;
     streamEventsCaptureRef.current = [];
     toolTraceCaptureRef.current = [];
   }, [workspaceId]);

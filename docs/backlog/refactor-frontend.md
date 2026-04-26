@@ -29,18 +29,13 @@ Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-co
 | 2026-04-27 | **WX5 minimal + shell polish:** [`WorkspaceSwitcher.jsx`](../../ui/src/components/layout/WorkspaceSwitcher.jsx) (re-export chip) в [`DashboardLayout.jsx`](../../ui/src/components/layout/DashboardLayout/DashboardLayout.jsx) и [`WorkspaceHero.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceHero.jsx); i18n `workspace.hero.switchWorkspaceHint` (EN/RU); chip label без UUID — `shell.workspaceChip.unnamed` когда нет имени ([`WorkspaceContextChip.jsx`](../../ui/src/components/layout/WorkspaceContextChip.jsx)); `WorkspaceLayout` — больший `minHeight` grid + flex main. |
 | 2026-04-27 | **WX5 empty-state CTA:** кнопка «Новая область» / `workspace.empty.createWorkspace` + `createWorkspace()` и синхрон URL `workspace_id` в [`useWorkspacePageCore.jsx`](../../ui/src/pages/WorkspacePage/useWorkspacePageCore.jsx) empty-state; i18n EN/RU в `partWorkspacePage.js`. |
 | 2026-04-27 | **Graph GR-UX1 — command bar:** единая панель [`WorkspaceGraphToolbar.jsx`](../../ui/src/components/graph/WorkspaceGraphToolbar.jsx) — `GraphScopeMenu` / `GraphNodeTypesMenu` / `GraphViewChips` в `toolbar/`, глубина `1°/2°`, тултипы stats, локальный поиск + чипы «Детали / Легенда / Диагностика» в одной строке; [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx) — `Collapse` легенды + `graphEmbeddedLegendOpen`; [`GraphTypeLegend.jsx`](../../ui/src/components/graph/GraphTypeLegend.jsx) — компактный header (overview + sort); [`GraphPage.jsx`](../../ui/src/pages/GraphPage.jsx) — standalone depth как `1°/2°`; i18n `partGraphUi` EN+RU; vitest [`WorkspaceGraphToolbar.test.jsx`](../../ui/src/components/graph/WorkspaceGraphToolbar.test.jsx). |
+| 2026-04-27 | **Ask:** `AskPanel` → [`useAskPanelOrchestration.js`](../../ui/src/components/work/useAskPanelOrchestration.js) + [`AskPanelChrome.jsx`](../../ui/src/components/work/AskPanelChrome.jsx); shell-only [`AskPanel.jsx`](../../ui/src/components/work/AskPanel.jsx). |
 | 2026-04-26 | **Graph standalone — scope bugfix:** кнопка «Граф» на [`WorkPaperCard`](../../ui/src/pages/WorkspacePage/WorkPaperCard.jsx) ведёт на `/graph?work_id=…` без `workspace_id`; [`GraphPage.jsx`](../../ui/src/pages/GraphPage.jsx) больше не подставляет `activeWorkspaceId` в этом случае — иначе [`useGraphWorkspaceData`](../../ui/src/components/graph/hooks/useGraphWorkspaceData.js) грузил полный workspace graph и игнорировал работу. |
 
 ## Queue
 
-### [OPEN] AskPanel.jsx — split orchestration + chrome (LOC)
-- **Area:** [`ui/src/components/work/AskPanel.jsx`](../../ui/src/components/work/AskPanel.jsx)
-- **Issue:** В одном файле смешаны workId/scope, i18n, история сессий, синхронизация URL, поиск работ, оркестрация отправки в агента и chrome страницы — рост сложности и риск регрессий.
-- **Proposal:** Вынести `useAskPanelOrchestration` (state + effects), `AskPanelChrome` (заголовок, alerts); оставить `AskPanel` composition shell целевым объёмом порядка ≤250 LOC.
-- **Acceptance:** ни один файл в `ui/src/components/work/` не раздувается выше ~400 LOC без отдельного пункта бэклога; `npm run test` включая `AskAnswerPanel.test.jsx` зелёный.
-- **Raised:** 2026-04-27
-
 ### [OPEN] useAgentStream — stable callbacks + abort reason
+- **Progress (2026-04-27):** колбэки вынесены в `useRef` + `useEffect`; `stream` стабилен при смене identity колбэков (зависит только от `workspace_id`). Тесты: `useAgentStream.test.js` (rerender + latest `onError`). **Остаётся:** различать причины `AbortError` (навигация / новый submit) для `onError` и «stream ended without final answer».
 - **Area:** [`ui/src/hooks/useAgentStream.js`](../../ui/src/hooks/useAgentStream.js)
 - **Issue:** `stream` в `useCallback` зависит от нескольких колбэков-ссылок; при `AbortController.abort` нет явного различия между навигацией, HMR reload и новым submit для потребителей `onError`.
 - **Proposal:** Паттерн stable callbacks (`useRef` + thin wrapper / `useEvent`), опционально не вызывать `onError` при ожидаемом abort; тест: abort не приводит к ложному «stream ended without final answer» где это нежелательно.
@@ -48,6 +43,7 @@ Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-co
 - **Raised:** 2026-04-27
 
 ### [OPEN] Agent V2 — EN apology fallback on RU workspace inventory query
+- **Progress (2026-04-27):** в user message всегда подмешивается `<active_workspace_id>` из API; `extract_langgraph_answer` берёт текст из tool `final_answer`; усилены промпты retrieval/writer; RU-хинты в `tool_search` / `heuristic_answer_class`. **Остаётся:** прогон `curl`/e2e на реальном workspace и при необходимости принудительный первый tool-call.
 - **Area:** [`science_graphrag/api/agent_v2.py`](../../science_graphrag/api/agent_v2.py), цепочка tool selection / system prompt locale
 - **Issue:** Запрос вроде «сколько статей в рабочей области?» с валидным `workspace_id` может вернуть `final_answer` на английском с отказом «no necessary tools» вместо осмысленного ответа по данным области.
 - **Proposal:** Воспроизвести через `curl` SSE; проверить определение языка ответа, intent/inventory path и доступность тулов для подсчёта работ в workspace.

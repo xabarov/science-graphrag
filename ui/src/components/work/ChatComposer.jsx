@@ -53,6 +53,7 @@ const inputSx = {
  *   standaloneMode?: boolean,
  *   answerClassHint?: string,
  *   onAnswerClassHintChange?: (v: string) => void,
+ *   streamingHint?: string,
  * }} props
  */
 export function ChatComposer({
@@ -75,6 +76,7 @@ export function ChatComposer({
   standaloneMode = false,
   answerClassHint = "",
   onAnswerClassHintChange,
+  streamingHint = "",
 }) {
   const [modeAnchorEl, setModeAnchorEl] = useState(null);
 
@@ -145,6 +147,9 @@ export function ChatComposer({
             standaloneMode={standaloneMode}
           />
         )}
+        {loading && streamingHint ? (
+          <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.45)", px: 0.5 }}>{streamingHint}</Typography>
+        ) : null}
         <TextField
           placeholder={t("chat.composer.placeholder")}
           value={query}

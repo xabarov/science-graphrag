@@ -43,7 +43,17 @@ def heuristic_answer_class(question: str, hint: str | None) -> str:
     if any(x in q for x in ("цитат", "quote", "passage", "snippet", "где написано")):
         return "quote_extraction"
     if any(
-        x in q for x in ("how many", "сколько", "список стат", "papers in", "works in workspace")
+        x in q
+        for x in (
+            "how many",
+            "сколько",
+            "список стат",
+            "стать",
+            "работ в",
+            "работ в области",
+            "papers in",
+            "works in workspace",
+        )
     ):
         return "inventory"
     if any(x in q for x in ("связ", "path", "cites", "cypher", "graph", "entity")):

@@ -140,6 +140,49 @@ describe("useAgentStream", () => {
     expect(onError).not.toHaveBeenCalled();
   });
 
+  it("keeps stream identity when callback props change", () => {
+    const onErrorA = vi.fn();
+    const onErrorB = vi.fn();
+    const { result, rerender } = renderHook(
+      ({ oe }) =>
+        useAgentStream({
+          onError: oe,
+          onFinalAnswer: vi.fn(),
+          onEvent: vi.fn(),
+        }),
+      { initialProps: { oe: onErrorA } },
+    );
+    const first = result.current.stream;
+    rerender({ oe: onErrorB });
+    expect(result.current.stream).toBe(first);
+  });
+
+  it("uses latest onError after rerender", async () => {
+    const onError1 = vi.fn();
+    const onError2 = vi.fn();
+    const { result, rerender } = renderHook(
+      ({ oe }) =>
+        useAgentStream({
+          onError: oe,
+          onFinalAnswer: vi.fn(),
+          onEvent: vi.fn(),
+        }),
+      { initialProps: { oe: onError1 } },
+    );
+    rerender({ oe: onError2 });
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: false,
+      status: 503,
+      text: async () => "unavailable",
+      headers: { get: () => "application/json" },
+    });
+    await act(async () => {
+      await result.current.stream({ question: "q" });
+    });
+    expect(onError1).not.toHaveBeenCalled();
+    expect(onError2).toHaveBeenCalledWith(expect.stringContaining("Agent error 503"));
+  });
+
   it("calls onError for non-ok response", async () => {
     globalThis.fetch.mockResolvedValueOnce({
       ok: false,

@@ -18,6 +18,10 @@ _CLIENT_DIGEST_RE = re.compile(
     r"<client_history_digest>.*?</client_history_digest>\s*",
     re.DOTALL | re.IGNORECASE,
 )
+_ACTIVE_WS_ID_RE = re.compile(
+    r"<active_workspace_id>.*?</active_workspace_id>\s*",
+    re.DOTALL | re.IGNORECASE,
+)
 
 
 def strip_tool_search_context_wrappers(text: str) -> str:
@@ -25,6 +29,7 @@ def strip_tool_search_context_wrappers(text: str) -> str:
     s = text or ""
     s = _SESSION_MEMORY_RE.sub("", s)
     s = _CLIENT_DIGEST_RE.sub("", s)
+    s = _ACTIVE_WS_ID_RE.sub("", s)
     return s.strip()
 
 
@@ -49,9 +54,28 @@ def _score_tool(meta: ToolManifestEntry, q: str, *, has_workspace: bool) -> floa
     ):
         score += 5.0
     if meta.family == "catalog" and any(
-        x in q for x in ("paper", "work", "стат", "workspace", "how many", "list")
+        x in q
+        for x in (
+            "paper",
+            "work",
+            "стат",
+            "workspace",
+            "how many",
+            "list",
+            "сколько",
+            "список",
+            "работ",
+            "област",
+            "корпус",
+            "стать",
+        )
     ):
         score += 1.5
+    if meta.name in ("workspace_overview", "workspace_list_papers", "paper_counts") and any(
+        x in q
+        for x in ("сколько", "how many", "count", "список", "област", "стат", "корпус", "работ")
+    ):
+        score += 4.0
     if meta.name == "paper_quote_search" and any(
         x in q for x in ("quote", "цитат", "passage", "snippet", "where")
     ):
