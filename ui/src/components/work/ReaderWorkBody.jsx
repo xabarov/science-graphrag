@@ -1,18 +1,15 @@
-import React, { lazy, Suspense, useEffect, useRef } from "react";
+import React, { lazy, Suspense, useEffect, useMemo, useRef } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 
-import { CursorSmallButton } from "../common/index.js";
 import { workPdfUrl } from "../../services/researchApi.js";
 import { describeTraceabilityState } from "./traceabilityState.js";
 import { useI18n } from "../../i18n/I18nContext.jsx";
 import ReaderChunkListPanel from "./ReaderChunkListPanel.jsx";
 import ReaderMarkdownSourcePanel from "./ReaderMarkdownSourcePanel.jsx";
 import ReaderPdfModeToggle from "./ReaderPdfModeToggle.jsx";
-import ReaderShell from "./ReaderShell.jsx";
-import ReaderSideRail from "./ReaderSideRail.jsx";
 import ReaderTraceContextBanner from "./ReaderTraceContextBanner.jsx";
 import ReaderWorkClaimsSection from "./ReaderWorkClaimsSection.jsx";
 import ReaderWorkDetailCard from "./ReaderWorkDetailCard.jsx";
@@ -23,12 +20,16 @@ const PdfViewer = lazy(() => import("./PdfViewer.jsx"));
 
 /**
  * Reader content for a fixed work_id (used by Reader tab and standalone Reader page).
+ *
+ * Layout: single column. Article metadata + abstract live in one compact card
+ * above the body so the article text or PDF stays the focal point; chunks
+ * advanced panel only appears when there are chunks to show.
+ *
  * @param {{
  *   workId: string,
  *   focusedFingerprint?: string,
  *   focusedSection?: string,
  *   citation?: string,
- *   layoutVariant?: "stack" | "readerPage",
  *   onWorkMetaChange?: (meta: { title: string, loading: boolean, error: string }) => void,
  * }} props
  */
@@ -37,7 +38,6 @@ export default function ReaderWorkBody({
   focusedFingerprint = "",
   focusedSection = "",
   citation = "",
-  layoutVariant = "stack",
   onWorkMetaChange,
 }) {
   const { t } = useI18n();
@@ -52,6 +52,26 @@ export default function ReaderWorkBody({
     section: focusedSection,
     citation,
   });
+
+  const hasEffectiveChunks = useMemo(() => {
+    if (!chunks || loading) return false;
+    const items = Array.isArray(chunks.items) ? chunks.items : [];
+    const totalField = Number(chunks.total);
+    const effectiveTotal = Number.isFinite(totalField) && totalField > 0 ? totalField : items.length;
+    return effectiveTotal > 0;
+  }, [chunks, loading]);
+
+  const chunksBackendError = !loading && chunks && typeof chunks.error === "string" && chunks.error.trim() ? chunks.error.trim() : "";
+
+  const abstractText =
+    detail && typeof detail.abstract === "string" && detail.abstract.trim() ? detail.abstract : "";
+  /**
+   * When the work has no extracted chunks but ships an abstract, surface the abstract as the
+   * markdown body instead of leaving the column empty (otherwise the user has nothing to read
+   * unless they switch to PDF). The metadata card hides its abstract toggle in that case.
+   */
+  const useAbstractAsBody =
+    !loading && Boolean(chunks) && !hasEffectiveChunks && Boolean(abstractText) && viewMode === "markdown";
 
   const metaCbRef = useRef(onWorkMetaChange);
   useEffect(() => {
@@ -68,11 +88,27 @@ export default function ReaderWorkBody({
     });
   }, [detail?.title, loading, error, onWorkMetaChange]);
 
-  const detailCardDefault = detail && !loading ? <ReaderWorkDetailCard detail={detail} variant="default" /> : null;
-  const detailCardRail = detail && !loading ? <ReaderWorkDetailCard detail={detail} variant="rail" /> : null;
+  /**
+   * Reader page already shows the title in the page header, so the metadata
+   * card hides it; the workspace tab still renders the heading separately.
+   * When the abstract is rendered as the body, the toggle in the card is
+   * hidden to avoid showing the same text twice.
+   */
+  const detailCard =
+    detail && !loading ? (
+      <ReaderWorkDetailCard
+        key={workId}
+        detail={detail}
+        defaultAbstractExpanded={false}
+        hideAbstract={useAbstractAsBody}
+      />
+    ) : null;
 
-  const core = (
-    <>
+  const showTraceBanner = traceSummary.length > 0;
+  const showChunksPanel = Boolean(chunks) && !loading && hasEffectiveChunks;
+
+  return (
+    <Box sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
       {loading ? (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 2 }}>
           <CircularProgress size={22} sx={{ color: "rgba(129,140,248,0.9)" }} />
@@ -85,7 +121,13 @@ export default function ReaderWorkBody({
         </Alert>
       ) : null}
 
-      {layoutVariant === "stack" ? detailCardDefault : null}
+      {chunksBackendError ? (
+        <Alert severity="warning" sx={{ mb: 2, fontSize: "0.8125rem" }}>
+          {t("readerBody.chunksBackendError", { code: chunksBackendError })}
+        </Alert>
+      ) : null}
+
+      {detailCard}
 
       {detail && !loading && pdfAvailable ? (
         <ReaderPdfModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
@@ -107,24 +149,19 @@ export default function ReaderWorkBody({
       ) : null}
 
       {chunks && !loading && viewMode === "markdown" && combinedMarkdown ? (
-        <ReaderMarkdownSourcePanel combinedMarkdown={combinedMarkdown} chunks={chunks} />
+        <ReaderMarkdownSourcePanel combinedMarkdown={combinedMarkdown} chunks={chunks} sourceVariant="extracted" />
       ) : null}
 
-      {chunks && !loading && viewMode === "markdown" && !combinedMarkdown && pdfAvailable ? (
-        <Alert
-          severity="info"
-          sx={{ mb: 2, fontSize: "0.8125rem" }}
-          action={
-            <CursorSmallButton color="inherit" size="small" onClick={() => setViewMode("pdf")}>
-              {t("readerBody.openPdf")}
-            </CursorSmallButton>
-          }
-        >
-          {t("readerBody.emptyMarkdownTryPdf")}
-        </Alert>
+      {useAbstractAsBody ? (
+        <ReaderMarkdownSourcePanel
+          combinedMarkdown={abstractText}
+          sourceVariant="abstract"
+          hasPdfFallback={pdfAvailable}
+          onOpenPdf={() => setViewMode("pdf")}
+        />
       ) : null}
 
-      {chunks && !loading && viewMode === "markdown" && !combinedMarkdown && !pdfAvailable ? (
+      {chunks && !loading && viewMode === "markdown" && !combinedMarkdown && !useAbstractAsBody && !pdfAvailable ? (
         <Alert severity="warning" sx={{ mb: 2, fontSize: "0.8125rem" }}>
           {t("readerBody.noExtractedTextOrPdf")}
         </Alert>
@@ -132,30 +169,25 @@ export default function ReaderWorkBody({
 
       {claimsUi && detail && !loading ? <ReaderWorkClaimsSection workId={workId} /> : null}
 
-      {chunks && !loading ? (
-        <>
-          <ReaderTraceContextBanner
-            workId={workId}
-            traceSummary={traceSummary}
-            focusedFingerprint={focusedFingerprint}
-            focusedSection={focusedSection}
-            citation={citation}
-          />
-          <ReaderChunkListPanel
-            chunks={chunks}
-            chunksOpen={chunksOpen}
-            setChunksOpen={setChunksOpen}
-            orderedItems={orderedItems}
-            isChunkHighlighted={isChunkHighlighted}
-          />
-        </>
+      {showTraceBanner ? (
+        <ReaderTraceContextBanner
+          workId={workId}
+          traceSummary={traceSummary}
+          focusedFingerprint={focusedFingerprint}
+          focusedSection={focusedSection}
+          citation={citation}
+        />
       ) : null}
-    </>
+
+      {showChunksPanel ? (
+        <ReaderChunkListPanel
+          chunks={chunks}
+          chunksOpen={chunksOpen}
+          setChunksOpen={setChunksOpen}
+          orderedItems={orderedItems}
+          isChunkHighlighted={isChunkHighlighted}
+        />
+      ) : null}
+    </Box>
   );
-
-  if (layoutVariant === "readerPage") {
-    return <ReaderShell main={<Box>{core}</Box>} rail={<ReaderSideRail>{detailCardRail}</ReaderSideRail>} />;
-  }
-
-  return <Box>{core}</Box>;
 }

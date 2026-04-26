@@ -11,6 +11,4 @@ export default {
   "readerShell.load": "Load",
   "readerShell.articleEyebrow": "Article",
   "readerShell.loadingTitle": "Loading…",
-  "readerShell.tocSectionTitle": "On this page",
-  "readerShell.tocPlaceholder": "Section outline will appear here in a future update.",
 };

@@ -28,7 +28,10 @@ export default {
   "readerBody.pdfPageOf": "Page {{page}} / {{total}}",
   "readerBody.pdfZoomIn": "Zoom in",
   "readerBody.pdfZoomOut": "Zoom out",
-  "readerBody.emptyMarkdownTryPdf": "No chunk text in this preview — switch to PDF for the original pages.",
+  "readerBody.abstractTitle": "Abstract",
+  "readerBody.abstractHint":
+    "This work has no indexed chunks yet. The abstract is shown below — open the PDF for the full article or wait for ingest to finish.",
+  "readerBody.chunksBackendError": "Chunk index is unavailable ({{code}}). Reading view may be empty until Qdrant is reachable.",
   "readerBody.openPdf": "Open PDF",
   "readerBody.noExtractedTextOrPdf": "No extracted chunk text and no original PDF is available for this work (e.g. Markdown-only ingest).",
   "readerBody.showAbstract": "Abstract",

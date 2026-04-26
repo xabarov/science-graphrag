@@ -12,6 +12,12 @@ export default {
   "workspace.paper.doiChip": "DOI {{doi}}",
 
   "workspace.err.notFound": "Workspace not found.",
+  "workspace.err.serverHintInline":
+    "(Server error — the API proxy or backend may be down; check API logs and that services are healthy.)",
+  "workspace.err.loadTitle": "Could not load workspace data",
+  "workspace.err.serverHint":
+    "HTTP 5xx usually means the research API is unreachable, crashed, or timed out behind a reverse proxy. Confirm the stack is up (e.g. docker compose) and try again.",
+  "workspace.err.retry": "Retry",
   "workspace.empty.alert":
     "No workspace yet. Create one under Workspaces, then upload a PDF / text or attach an existing indexed work_id.",
   "workspace.empty.workspaces": "Workspaces",

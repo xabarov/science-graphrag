@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useLayoutEffect, useRef, useState } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -14,6 +14,9 @@ pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
+/** Horizontal padding inside the scroll container; subtracted from page width. */
+const PDF_HORIZONTAL_PADDING = 16;
+
 /**
  * @param {{ fileUrl: string }} props
  */
@@ -21,8 +24,19 @@ export default function PdfViewer({ fileUrl }) {
   const { t } = useI18n();
   const [numPages, setNumPages] = useState(0);
   const [page, setPage] = useState(1);
-  const [scale, setScale] = useState(1.1);
+  const [zoom, setZoom] = useState(1);
   const [loadError, setLoadError] = useState(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const [prevFileUrl, setPrevFileUrl] = useState(fileUrl);
+  const containerRef = useRef(null);
+
+  if (prevFileUrl !== fileUrl) {
+    setPrevFileUrl(fileUrl);
+    setZoom(1);
+    setPage(1);
+    setNumPages(0);
+    setLoadError(null);
+  }
 
   const onLoadSuccess = useCallback((info) => {
     setLoadError(null);
@@ -39,8 +53,28 @@ export default function PdfViewer({ fileUrl }) {
     setLoadError(msg);
   }, []);
 
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el) return undefined;
+    const measure = () => {
+      const inner = Math.max(0, el.clientWidth - PDF_HORIZONTAL_PADDING);
+      setContainerWidth(inner);
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return undefined;
+    const obs = new ResizeObserver(measure);
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  /** Hard caps protect very wide screens from giant pages and very narrow ones from rendering at 0px. */
+  const baseWidth = containerWidth > 0 ? Math.min(1280, Math.max(280, containerWidth)) : 0;
+  const pageWidth = baseWidth > 0 ? Math.round(baseWidth * zoom) : 0;
+
+  const zoomLabel = `${Math.round(zoom * 100)}%`;
+
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0 }}>
       {loadError ? (
         <Alert severity="warning" sx={{ fontSize: "0.8125rem" }}>
           {t("readerBody.pdfLoadError", { message: loadError })}
@@ -60,21 +94,32 @@ export default function PdfViewer({ fileUrl }) {
         >
           {t("readerBody.pdfNext")}
         </CursorSmallButton>
-        <CursorSmallButton type="button" onClick={() => setScale((s) => Math.min(2.2, Math.round((s + 0.15) * 100) / 100))}>
-          {t("readerBody.pdfZoomIn")}
-        </CursorSmallButton>
-        <CursorSmallButton type="button" onClick={() => setScale((s) => Math.max(0.6, Math.round((s - 0.15) * 100) / 100))}>
+        <Box sx={{ flex: 1 }} />
+        <CursorSmallButton type="button" onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.1) * 100) / 100))}>
           {t("readerBody.pdfZoomOut")}
+        </CursorSmallButton>
+        <Typography
+          sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.55)", minWidth: 38, textAlign: "center" }}
+          aria-label="zoom"
+        >
+          {zoomLabel}
+        </Typography>
+        <CursorSmallButton type="button" onClick={() => setZoom((z) => Math.min(2.5, Math.round((z + 0.1) * 100) / 100))}>
+          {t("readerBody.pdfZoomIn")}
         </CursorSmallButton>
       </Box>
       <Box
+        ref={containerRef}
         sx={{
-          maxHeight: "min(65vh, 640px)",
+          maxHeight: "calc(100vh - 260px)",
+          minHeight: 480,
           overflow: "auto",
           border: "1px solid rgba(255,255,255,0.08)",
           borderRadius: "6px",
-          backgroundColor: "#2a2a2a",
+          backgroundColor: "#1c1c1c",
           p: 1,
+          display: "flex",
+          justifyContent: "center",
         }}
       >
         <Document
@@ -88,7 +133,9 @@ export default function PdfViewer({ fileUrl }) {
             </Box>
           }
         >
-          {numPages ? <Page pageNumber={page} scale={scale} renderAnnotationLayer renderTextLayer /> : null}
+          {numPages && pageWidth > 0 ? (
+            <Page pageNumber={page} width={pageWidth} renderAnnotationLayer renderTextLayer />
+          ) : null}
         </Document>
       </Box>
     </Box>

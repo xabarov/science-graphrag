@@ -32,6 +32,9 @@ export function useWorkspacePageCore() {
   const [workspaceMeta, setWorkspaceMeta] = useState({ id: "", name: "", work_ids: [] });
   const [workspaceLoading, setWorkspaceLoading] = useState(true);
   const [workspaceError, setWorkspaceError] = useState(null);
+  /** True when last workspace load failed with HTTP 5xx (e.g. 502) — drives server-specific recovery copy. */
+  const [workspaceErrorIsServer, setWorkspaceErrorIsServer] = useState(false);
+  const [workspaceLoadNonce, setWorkspaceLoadNonce] = useState(0);
   const [addWorkInput, setAddWorkInput] = useState("");
   const [addBusy, setAddBusy] = useState(false);
   const [addErr, setAddErr] = useState(null);
@@ -89,6 +92,7 @@ export function useWorkspacePageCore() {
     (async () => {
       setWorkspaceLoading(true);
       setWorkspaceError(null);
+      setWorkspaceErrorIsServer(false);
       try {
         const list = await listWorkspaces();
         if (cancelled) return;
@@ -119,7 +123,14 @@ export function useWorkspacePageCore() {
         }
         setSearchParams(nextParams, { replace: true });
       } catch (e) {
-        if (!cancelled) setWorkspaceError(formatResearchApiError(e));
+        if (!cancelled) {
+          const status = e?.response?.status;
+          const server = typeof status === "number" && status >= 500;
+          setWorkspaceErrorIsServer(server);
+          const base = formatResearchApiError(e);
+          const suffix = server ? ` ${t("workspace.err.serverHintInline")}` : "";
+          setWorkspaceError(`${base}${suffix}`.trim());
+        }
       } finally {
         if (!cancelled) setWorkspaceLoading(false);
       }
@@ -127,7 +138,11 @@ export function useWorkspacePageCore() {
     return () => {
       cancelled = true;
     };
-  }, [workspaceIdFromUrl, workIdFromUrl, setSearchParams, t, readPersistedIngestJobId]);
+  }, [workspaceIdFromUrl, workIdFromUrl, workspaceLoadNonce, setSearchParams, t, readPersistedIngestJobId]);
+
+  const retryWorkspaceLoad = useCallback(() => {
+    setWorkspaceLoadNonce((n) => n + 1);
+  }, []);
 
   useEffect(() => {
     const id = String(workspaceMeta.id || "").trim();
@@ -332,6 +347,7 @@ export function useWorkspacePageCore() {
     workspaceMeta,
     workspaceLoading,
     workspaceError,
+    workspaceErrorIsServer,
     addWorkInput,
     setAddWorkInput,
     addBusy,
@@ -362,5 +378,6 @@ export function useWorkspacePageCore() {
     onCardActivate,
     handleSummarizeWorkspace,
     handleGenerateHypotheses,
+    retryWorkspaceLoad,
   };
 }

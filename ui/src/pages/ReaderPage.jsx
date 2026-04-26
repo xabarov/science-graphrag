@@ -11,7 +11,6 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { CursorPrimaryButton, CursorSmallButton } from "../components/common/index.js";
 import { isExplicitAdminMode } from "../components/layout/adminVisibility.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
-import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
 import { useI18n } from "../i18n/I18nContext.jsx";
 import ReaderWorkBody from "../components/work/ReaderWorkBody.jsx";
 import { getLastWorkId, persistWorkId } from "./WorkspacePage/utils/workContext.js";
@@ -100,7 +99,16 @@ export default function ReaderPage() {
   );
 
   return (
-    <Box sx={{ p: 2, ...mainShellContentSx }}>
+    <Box
+      sx={{
+        p: 2,
+        width: "100%",
+        maxWidth: "none",
+        boxSizing: "border-box",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <PageHeader eyebrow={pageEyebrow} title={pageTitle} description={pageDescription} />
 
       {showDevWorkIdAccordion ? (
@@ -142,14 +150,15 @@ export default function ReaderPage() {
       ) : null}
 
       {!hasWork ? null : (
-        <ReaderWorkBody
-          workId={workId}
-          focusedFingerprint={trace.chunkFingerprint}
-          focusedSection={trace.section}
-          citation={trace.citation}
-          layoutVariant="readerPage"
-          onWorkMetaChange={handleWorkMetaChange}
-        />
+        <Box sx={{ minWidth: 0, display: "flex", flexDirection: "column" }}>
+          <ReaderWorkBody
+            workId={workId}
+            focusedFingerprint={trace.chunkFingerprint}
+            focusedSection={trace.section}
+            citation={trace.citation}
+            onWorkMetaChange={handleWorkMetaChange}
+          />
+        </Box>
       )}
 
       {hasWork ? (

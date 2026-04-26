@@ -185,6 +185,25 @@ Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-co
 - **Area:** см. note
 - **Raised:** 2026-04-26
 
+### [DONE] Wave EF-Reader — RX1 cleanup (single-column reader, PDF responsive width)
+- **Note (2026-04-26):** Пользовательское ревью UX страницы `/reader` показало регрессию исходного RX1 slice: правый rail (`ReaderShell` + `ReaderSideRail` + `ReaderWorkDetailCard variant="rail"`) дублировал аннотацию, которую в основной колонке заодно показывал `ReaderMarkdownSourcePanel sourceVariant="abstract"` (fallback, когда `chunks.total === 0`). PDF в этом layout сжимался до ~50–60 % колонки из-за `Page scale={1.1}` без width-fitting; пустой блок `Чанки (дополнительно) — 0` оставлял большое пустое поле под viewer'ом. Решение: одноколоночный layout. [`ReaderWorkBody.jsx`](../../ui/src/components/work/ReaderWorkBody.jsx) — убран `layoutVariant`, всегда single column, fallback abstract panel удалён, `ReaderChunkListPanel` и chunks hint скрыты при `!hasEffectiveChunks`. [`ReaderWorkDetailCard.jsx`](../../ui/src/components/work/ReaderWorkDetailCard.jsx) — единый компактный card: метастрока (year · DOI · arXiv) + collapsible-кнопка `Аннотация` (collapsed по умолчанию, аннотация ограничена `maxWidth: 78ch`). [`ReaderMarkdownSourcePanel.jsx`](../../ui/src/components/work/ReaderMarkdownSourcePanel.jsx) — единственный вариант («extracted»), измеренный читательский measure 78ch, увеличенный viewport (`maxHeight: calc(100vh - 280px)`). [`PdfViewer.jsx`](../../ui/src/components/work/PdfViewer.jsx) — `ResizeObserver` + `Page width={…}` (responsive ширина по контейнеру с capов 280–1280 px), zoom-controls со счётчиком процентов, single-source-of-truth сброс zoom/page при смене `fileUrl` через render-time state-reset; viewer фиксируется в центре, `maxHeight: calc(100vh - 260px)`, `minHeight: 480`. [`ReaderPage.jsx`](../../ui/src/pages/ReaderPage.jsx) — без `flex: 1` на body (контент даёт натуральную высоту, исчезает пустое поле снизу). [`ReaderShell.jsx`](../../ui/src/components/work/ReaderShell.jsx), [`ReaderSideRail.jsx`](../../ui/src/components/work/ReaderSideRail.jsx) удалены; ключи `readerShell.tocSection*`, `readerBody.abstractFallback*` (EN+RU) вычищены. `npm run lint` / `vitest run` (208 тестов) / `npm run build` зелёные.
+- **Area:** см. note
+- **Raised:** 2026-04-26
+
+### [OPEN] Wave EF-Reader — RX2 reading affordances (TOC, language banner, copy-id)
+- **Area:** новые `ReaderToc.jsx` (или встраивание в header), `ReaderLanguageBanner.jsx`, `ReaderCopyWorkIdButton.jsx`;
+  [`ReaderWorkDetailCard.jsx`](../../ui/src/components/work/ReaderWorkDetailCard.jsx),
+  [`ReaderPage.jsx`](../../ui/src/pages/ReaderPage.jsx),
+  [`ReaderTab.jsx`](../../ui/src/pages/WorkspacePage/tabs/ReaderTab.jsx)
+- **Issue:** После RX1 cleanup страница «Чтение» одноколоночная, но без навигации по разделам (TOC), без явного индикатора языка статьи (для будущей кнопки перевода) и без ergonomic copy-кнопки `work_id`. Длинные статьи (`Page width = container width`, ~1000 px) дают comfortable measure только при принудительной 78ch — но без TOC прыгать по секциям трудно. Roadmap RX1 (`docs/analysis/reader-ux-and-translation-roadmap-2026-04-25.md` §1.4–§1.6) предполагает левую/правую полоску либо overlay TOC.
+- **Proposal:**
+  1. `ReaderToc.jsx` строит дерево из `chunks[].section_path`, рендерит как right-side `position: sticky` panel при `lg+` (collapsible button под header при `<lg`); клик по узлу делает `scrollIntoView` соответствующего markdown-блока (нужно расставить anchor-id из `section_path` в `MarkdownView` / `ReaderMarkdownSourcePanel`).
+  2. `ReaderLanguageBanner.jsx` — компактная плашка под `ReaderWorkDetailCard` с `detail.language` (когда backend начнёт отдавать), placeholder при `auto/unknown`; кнопки `Перевести аннотацию / Перевести статью` (отключены до Wave LX-2 backend).
+  3. `ReaderCopyWorkIdButton.jsx` — мелкая `IconButton` (small caps `work_id`) рядом с метастрокой; копирует `workId` в clipboard.
+  4. Объединить `ReaderTab` + `ReaderPage` через общий контент-компонент: один и тот же layout, разные обвязки header'ом.
+- **Acceptance:** `npm run lint` / `vitest run` (новые тесты на `ReaderToc` парсинг section_path) / `npm run build` зелёные; на ноутбуке (1440×900) видны header + TOC + body без горизонтального скролла; в workspace-табе `Reader` тот же body без дубликации детальной шапки.
+- **Raised:** 2026-04-26
+
 ### [OPEN] Workspace UX — Wave WX2-FE ingest progress card (shimmer + ETA + i18n stages)
 - **Area:** новые [`ui/src/components/ingestion/IngestProgressCard.jsx`](../../ui/src/components/ingestion/IngestProgressCard.jsx),
   [`IngestStageRow.jsx`](../../ui/src/components/ingestion/IngestStageRow.jsx);

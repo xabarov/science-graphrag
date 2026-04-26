@@ -12,6 +12,12 @@ export default {
   "workspace.paper.doiChip": "DOI {{doi}}",
 
   "workspace.err.notFound": "Рабочая область не найдена.",
+  "workspace.err.serverHintInline":
+    "(Ошибка сервера — возможно, недоступен API или бэкенд; проверьте логи и состояние сервисов.)",
+  "workspace.err.loadTitle": "Не удалось загрузить данные рабочей области",
+  "workspace.err.serverHint":
+    "Коды HTTP 5xx обычно означают, что research API недоступен, упал или отвалился по таймауту за reverse proxy. Убедитесь, что стек запущен (например docker compose), и повторите попытку.",
+  "workspace.err.retry": "Повторить",
   "workspace.empty.alert":
     "Пока нет рабочей области. Создайте её в списке «Рабочие области», затем загрузите PDF или текст либо привяжите существующий идентификатор статьи (work_id).",
   "workspace.empty.workspaces": "Рабочие области",

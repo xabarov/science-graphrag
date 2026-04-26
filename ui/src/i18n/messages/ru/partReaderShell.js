@@ -11,6 +11,4 @@ export default {
   "readerShell.load": "Загрузить",
   "readerShell.articleEyebrow": "Статья",
   "readerShell.loadingTitle": "Загрузка…",
-  "readerShell.tocSectionTitle": "На странице",
-  "readerShell.tocPlaceholder": "Оглавление разделов появится здесь в следующей версии.",
 };

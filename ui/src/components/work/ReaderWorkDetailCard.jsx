@@ -2,56 +2,123 @@ import React, { useState } from "react";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
 import Typography from "@mui/material/Typography";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
-import { CursorSmallButton } from "../common/index.js";
 import { useI18n } from "../../i18n/I18nContext.jsx";
 
 /**
- * @param {{ detail: Record<string, unknown>, variant?: "default" | "rail" }} props
+ * Compact work metadata card shown above the article body.
+ * Abstract is collapsed by default so the reader stays focused on the
+ * extracted text or PDF; toggle expands it inline. When the abstract is
+ * already shown elsewhere (as the body fallback for chunkless works),
+ * pass `hideAbstract` so the toggle is not duplicated.
+ *
+ * Re-syncs the toggle when the underlying work changes (`detail` identity)
+ * or the default-expanded hint flips, using the "render-time state reset"
+ * pattern so we avoid setState-in-effect cascades.
+ *
+ * @param {{
+ *   detail: Record<string, unknown>,
+ *   defaultAbstractExpanded?: boolean,
+ *   hideAbstract?: boolean,
+ * }} props
  */
-export default function ReaderWorkDetailCard({ detail, variant = "default" }) {
+export default function ReaderWorkDetailCard({
+  detail,
+  defaultAbstractExpanded = false,
+  hideAbstract = false,
+}) {
   const { t } = useI18n();
-  const [abstractOpen, setAbstractOpen] = useState(false);
+  const [abstractOpen, setAbstractOpen] = useState(Boolean(defaultAbstractExpanded));
+  const [syncKey, setSyncKey] = useState(() => ({ detail, defaultAbstractExpanded }));
+
+  if (syncKey.detail !== detail || syncKey.defaultAbstractExpanded !== defaultAbstractExpanded) {
+    setSyncKey({ detail, defaultAbstractExpanded });
+    setAbstractOpen(Boolean(defaultAbstractExpanded));
+  }
+
   if (!detail) return null;
 
-  const isRail = variant === "rail";
+  const metaParts = [];
+  if (detail.year != null) metaParts.push(String(detail.year));
+  if (detail.doi) metaParts.push(`DOI ${detail.doi}`);
+  if (detail.arxiv_id) metaParts.push(`arXiv ${detail.arxiv_id}`);
+  const metaLine = metaParts.join(" · ");
+
+  const hasAbstract = !hideAbstract && typeof detail.abstract === "string" && detail.abstract.trim().length > 0;
+  const showCard = metaLine.length > 0 || hasAbstract;
+  if (!showCard) return null;
 
   return (
-    <Box sx={{ mb: 2, p: 1.5, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "#1a1a1a" }}>
-      {!isRail ? (
-        <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem" }}>{detail.title || t("readerBody.noTitle")}</Typography>
-      ) : null}
-      <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mt: isRail ? 0 : 0.5 }}>
-        {detail.year != null ? `${detail.year} · ` : ""}
-        {detail.doi ? `DOI ${detail.doi} · ` : ""}
-        {detail.arxiv_id ? `arXiv ${detail.arxiv_id}` : ""}
-      </Typography>
-      {detail.abstract ? (
-        isRail ? (
-          <Box sx={{ mt: 1 }}>
-            <CursorSmallButton type="button" size="small" onClick={() => setAbstractOpen((o) => !o)} sx={{ mb: 0.5 }}>
-              {abstractOpen ? t("readerBody.hideAbstract") : t("readerBody.showAbstract")}
-            </CursorSmallButton>
-            <Collapse in={abstractOpen}>
-              <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.75)", mt: 0.5, whiteSpace: "pre-wrap" }}>
-                {detail.abstract}
-              </Typography>
-            </Collapse>
+    <Box
+      sx={{
+        mb: 2,
+        p: 1.5,
+        borderRadius: "6px",
+        border: "1px solid rgba(255,255,255,0.08)",
+        backgroundColor: "#1a1a1a",
+      }}
+    >
+      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1.5, rowGap: 0.5 }}>
+        {metaLine ? (
+          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.55)" }}>{metaLine}</Typography>
+        ) : null}
+        {hasAbstract ? (
+          <Box
+            component="button"
+            type="button"
+            onClick={() => setAbstractOpen((o) => !o)}
+            aria-expanded={abstractOpen}
+            sx={{
+              ml: metaLine ? "auto" : 0,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 0.5,
+              background: "transparent",
+              border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: "6px",
+              color: "rgba(255,255,255,0.75)",
+              cursor: "pointer",
+              fontSize: "0.75rem",
+              fontFamily: "inherit",
+              padding: "2px 8px",
+              transition: "all 0.15s ease",
+              "&:hover": {
+                borderColor: "rgba(255,255,255,0.2)",
+                color: "rgba(255,255,255,0.92)",
+                background: "rgba(255,255,255,0.04)",
+              },
+              "&:active": { transform: "scale(0.98)" },
+            }}
+          >
+            {abstractOpen ? t("readerBody.hideAbstract") : t("readerBody.showAbstract")}
+            <ExpandMoreIcon
+              sx={{
+                fontSize: "1rem",
+                transition: "transform 0.15s ease",
+                transform: abstractOpen ? "rotate(180deg)" : "rotate(0deg)",
+              }}
+            />
           </Box>
-        ) : (
-          <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.75)", mt: 1, whiteSpace: "pre-wrap" }}>
-            {detail.abstract}
-          </Typography>
-        )
-      ) : null}
-      {detail.ingestion ? (
-        <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mt: 1 }}>
-          {t("readerBody.ingestionLine", {
-            docId: String(detail.ingestion.document_id ?? ""),
-            hasChunks: String(detail.ingestion.has_chunks),
-            semantic: String(detail.ingestion.has_semantic_layer),
-          })}
-        </Typography>
+        ) : null}
+      </Box>
+      {hasAbstract ? (
+        <Collapse in={abstractOpen} unmountOnExit>
+          <Box sx={{ mt: 1.25, display: "flex", justifyContent: "center" }}>
+            <Typography
+              sx={{
+                fontSize: "0.8125rem",
+                color: "rgba(255,255,255,0.78)",
+                whiteSpace: "pre-wrap",
+                maxWidth: "78ch",
+                width: "100%",
+                lineHeight: 1.6,
+              }}
+            >
+              {detail.abstract}
+            </Typography>
+          </Box>
+        </Collapse>
       ) : null}
     </Box>
   );

@@ -29,8 +29,11 @@ export default {
   "readerBody.pdfPageOf": "Страница {{page}} / {{total}}",
   "readerBody.pdfZoomIn": "Крупнее",
   "readerBody.pdfZoomOut": "Мельче",
-  "readerBody.emptyMarkdownTryPdf":
-    "В этом превью нет текста чанков — переключитесь на PDF для оригинальных страниц.",
+  "readerBody.abstractTitle": "Аннотация",
+  "readerBody.abstractHint":
+    "У статьи пока нет проиндексированных чанков. Это аннотация работы — для полного текста откройте PDF или дождитесь ingest.",
+  "readerBody.chunksBackendError":
+    "Индекс чанков недоступен ({{code}}). Превью текста может быть пустым, пока Qdrant снова не доступен.",
   "readerBody.openPdf": "Открыть PDF",
   "readerBody.noExtractedTextOrPdf":
     "Нет извлечённого текста чанков и нет исходного PDF (например, только Markdown при загрузке).",
