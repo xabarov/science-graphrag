@@ -4,6 +4,7 @@ import Typography from "@mui/material/Typography";
 
 import GraphCanvasViewToolbar from "./GraphCanvasViewToolbar.jsx";
 import { useI18n } from "../../i18n/I18nContext.jsx";
+import { computeFitTransformForNodeSubset } from "./graphCanvasCamera.js";
 import { computeFitTransform, computeWorldLayout, screenToWorld, worldRadiusForNodeCount } from "./graphCanvasTransform.js";
 import { localizeAggregatorTitle, localizeEdgeType } from "./graphLocalize.js";
 import { drawEdges, drawLabels, drawNodes } from "./graphCanvasDraw.js";
@@ -366,6 +367,21 @@ export default function GraphCanvasMvp({
     transform,
   ]);
 
+  const handleCanvasDoubleClick = useCallback(
+    (ev) => {
+      ev.preventDefault();
+      if (graph.nodes.length === 0 || !selectedNodeId) return;
+      const { w, h } = getViewportDims();
+      const positions = getPositionsForFrame();
+      const nextRaw = computeFitTransformForNodeSubset(positions, [selectedNodeId], w, h, NODE_RADIUS, FIT_PADDING);
+      if (!nextRaw) return;
+      const next = clampFitTransform(nextRaw);
+      transformRef.current = next;
+      setTransform(next);
+    },
+    [getPositionsForFrame, getViewportDims, graph.nodes.length, selectedNodeId, setTransform],
+  );
+
   if (graph.nodes.length === 0) {
     return (
       <Box sx={{ borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "#1a1a1a", minHeight: MIN_CANVAS_HEIGHT, display: "flex", alignItems: "center", justifyContent: "center", p: 2 }}>
@@ -427,6 +443,7 @@ export default function GraphCanvasMvp({
           onPointerLeave={input.handlePointerLeave}
           onPointerUp={input.handlePointerUp}
           onPointerCancel={input.handlePointerUp}
+          onDoubleClick={handleCanvasDoubleClick}
           style={{ display: "block", width: "100%", height: "100%", cursor: input.canvasCursor, touchAction: "none", verticalAlign: "top" }}
         />
       </Box>

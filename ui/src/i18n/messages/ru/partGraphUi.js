@@ -133,10 +133,12 @@ export default {
   "graph.workProperty.language": "Язык",
   "graph.workProperty.year": "Год",
 
-  "graph.canvas.regionAria": "Холст графа",
+  "graph.canvas.regionAria": "Холст графа. Двойной щелчок по холсту — вписать вид в выбранный узел.",
   "graph.canvas.empty": "Нет узлов для отображения на холсте.",
-  "graph.canvas.helpTooltip": "Справка по управлению холстом",
-  "graph.canvas.helpAria": "Справка по управлению холстом",
+  "graph.canvas.helpTooltip":
+    "Справка по управлению холстом: колёсико — масштаб, перетаскивание — панорама. Двойной щелчок по холсту — вписать вид в выбранный узел.",
+  "graph.canvas.helpAria":
+    "Управление холстом: масштаб колёсиком, панорама перетаскиванием, двойной щелчок — вписать вид в выбранный узел.",
   "graph.canvas.fitTooltip": "Вписать граф в вид",
   "graph.canvas.fitAria": "Вписать граф в вид",
   "graph.canvas.resetZoomTooltip": "Сбросить масштаб 1:1 к центру",

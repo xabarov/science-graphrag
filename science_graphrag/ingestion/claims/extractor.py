@@ -19,6 +19,11 @@ from science_graphrag.ingestion.claims.models import (
     stable_claim_id,
     stable_evidence_id,
 )
+from science_graphrag.ingestion.claims.quote_match import (
+    find_fuzzy_substring,
+    normalize_text_for_llm,
+    normalize_text_for_match,
+)
 from science_graphrag.ingestion.llm.extractor import SyncInstructorExtractor
 from science_graphrag.utils.project_logging import get_logger
 
@@ -141,11 +146,12 @@ def _quote_accepted(
     chunk_text: str,
     *,
     soft_jaccard_min: float = 0.72,
+    fuzzy_min_ratio: float = 0.85,
 ) -> tuple[bool, str]:
     """
-    Return (accepted, mode) where mode is ``strict``, ``jaccard``, or ``none``.
+    Return (accepted, mode).
 
-    Soft path accepts near-verbatim quotes (common with smaller chat models).
+    Modes: ``strict``, ``strict_normalized``, ``fuzzy_normalized``, ``jaccard``, ``none``.
     """
 
     q = " ".join(str(quote or "").split())
@@ -153,6 +159,12 @@ def _quote_accepted(
         return False, "none"
     if _quote_verified_strict(quote, chunk_text):
         return True, "strict"
+    qn = normalize_text_for_match(quote)
+    cn = normalize_text_for_match(chunk_text)
+    if len(qn) >= 8 and qn in cn:
+        return True, "strict_normalized"
+    if find_fuzzy_substring(qn, cn, min_ratio=fuzzy_min_ratio) is not None:
+        return True, "fuzzy_normalized"
     if (
         len(_tokens_claim(quote)) >= 3
         and _quote_token_jaccard(quote, chunk_text) >= soft_jaccard_min
@@ -252,7 +264,7 @@ If the excerpt has no supportable claims, return `"claims": []`.
 """
 
 
-def extract_claims_llm(
+def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too-many-statements,too-many-nested-blocks
     chunks: list[dict[str, Any]],
     work_id: str,
     settings: Settings,
@@ -279,6 +291,8 @@ def extract_claims_llm(
         dropped_claim_count_no_evidence=0,
         dropped_claim_count_quote_rejected=0,
         evidence_quote_strict_count=0,
+        evidence_quote_strict_normalized_count=0,
+        evidence_quote_fuzzy_count=0,
         evidence_quote_jaccard_count=0,
         raw_claims_from_llm=0,
         llm_error_message=None,
@@ -295,13 +309,18 @@ def extract_claims_llm(
     if not chunks:
         return []
 
-    lookup = _chunk_lookup(chunks)
+    chunks_norm: list[dict[str, Any]] = [
+        {**ch, "text": normalize_text_for_llm(ch.get("text") or "")}
+        for ch in (chunks or [])
+        if isinstance(ch, dict)
+    ]
+    lookup = _chunk_lookup(chunks_norm)
     payload_max = 26_000 if force_benchmark else 28_000
     user = (
         "Work id (opaque): "
         + str(work_id)
         + "\n\nExtract claims from the following chunks:\n\n"
-        + _build_user_payload(chunks, max_chars=payload_max)
+        + _build_user_payload(chunks_norm, max_chars=payload_max)
     )
 
     # Single-chunk BT6 paraphrase runs can exceed 4k completion tokens on verbose models.
@@ -382,6 +401,17 @@ def extract_claims_llm(
                 if qmode == "strict":
                     diagnostics["evidence_quote_strict_count"] = (
                         int(diagnostics.get("evidence_quote_strict_count") or 0) + 1
+                    )
+                elif qmode == "strict_normalized":
+                    diagnostics["evidence_quote_strict_normalized_count"] = (
+                        int(
+                            diagnostics.get("evidence_quote_strict_normalized_count") or 0,
+                        )
+                        + 1
+                    )
+                elif qmode == "fuzzy_normalized":
+                    diagnostics["evidence_quote_fuzzy_count"] = (
+                        int(diagnostics.get("evidence_quote_fuzzy_count") or 0) + 1
                     )
                 elif qmode == "jaccard":
                     diagnostics["evidence_quote_jaccard_count"] = (

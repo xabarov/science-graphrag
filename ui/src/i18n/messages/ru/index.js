@@ -8,6 +8,7 @@ import partEvidenceBody from "./partEvidenceBody.js";
 import partGraphUi from "./partGraphUi.js";
 import partPagesCore from "./partPagesCore.js";
 import partReaderBody from "./partReaderBody.js";
+import partReaderShell from "./partReaderShell.js";
 import partSession from "./partSession.js";
 import partSettings from "./partSettings.js";
 import partShell from "./partShell.js";
@@ -28,6 +29,7 @@ export default mergeMessages(
   partAskPanel,
   partGraphUi,
   partReaderBody,
+  partReaderShell,
   partEvidenceBody,
   partBenchmarkPage,
   partBenchmarkCaseDialog,

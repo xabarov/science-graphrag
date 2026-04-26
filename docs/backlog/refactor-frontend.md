@@ -27,12 +27,17 @@ Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-co
 
 ## Queue
 
-### [OPEN] Graph canvas — Neo4j Browser–grade UX (optional)
-- **Area:** `GraphCanvasMvp.jsx`, при необходимости отдельный hook
-- **Issue:** Сделано: force restart, unpin, +/- / 0 keyboard zoom/fit, tooltips. В Neo4j Browser ещё есть command bar, стили рёбер по типу, инспектор запросов, контекстное меню, экспорт — не требуются для read-only neighborhood v1.
-- **Proposal:** По продукту — контекстное меню узла, легенда типов рёбер на canvas, double-click fit selection; не раздувать MVP без запроса.
-- **Acceptance:** N/A до приоритизации.
-- **Raised:** 2026-04-08
+### [DONE] Graph canvas — Neo4j Browser–grade UX (slice: double-click fit selection)
+- **Note (2026-04-26):** `graphCanvasCamera.js` (`buildPositionSubset`, `computeFitTransformForNodeSubset`) + `graphCanvasCamera.test.js`; `GraphCanvasMvp.jsx` — `onDoubleClick` на canvas вписывает вид в bbox текущего `selectedNodeId` (как full fit, с тем же `NODE_RADIUS` / padding / `MIN_FIT_SCALE`). i18n: `graph.canvas.helpTooltip`, `helpAria`, `regionAria` (EN+RU). Мультивыделение — когда появится на уровне workspace, прокинуть iterable id в тот же helper.
+- **Area:** [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx), [`graphCanvasCamera.js`](../../ui/src/components/graph/graphCanvasCamera.js), [`partGraphUi.js`](../../ui/src/i18n/messages/en/partGraphUi.js) (EN+RU)
+- **Raised:** 2026-04-08; closed slice 2026-04-26
+
+### [OPEN] Graph canvas — Neo4j Browser–grade UX (optional follow-ups)
+- **Area:** `GraphCanvasMvp.jsx` / рядом hooks
+- **Issue:** В Neo4j Browser ещё есть command bar, стили рёбер по типу, инспектор запросов, контекстное меню, экспорт — не требуются для read-only neighborhood v1.
+- **Proposal:** Отдельными маленькими PR: (1) контекстное меню узла (ПКМ): минимум Fit / Center / Copy id; (2) компактная легенда типов рёбер на canvas, согласованная с `GraphTypeLegend`, без поломки режимов подписей рёбер.
+- **Acceptance:** по пункту; `npm run lint` / `npm run test` в `ui/`.
+- **Raised:** 2026-04-26
 
 ### [DONE] Graph UI — Neo4j Bloom–inspired overview (counts, edge labels, local find)
 - **Note (2026-04-26):** Счётчики по `nodeKind` / типу рёбер + строка «узлов / рёбер», сортировка чипов frequency vs alphabet (`graphTypeLegend.js`, `GraphTypeLegend.jsx`). Подписи рёбер на canvas: режимы `all` \| `interaction` \| `adaptive`, `shouldDrawCanvasEdgeLabel` + константы в `graphCanvasDraw.js`, persist режима в `localStorage`, i18n `graph.canvas.edgeLabels.*`, тулбар `GraphCanvasViewToolbar.jsx`. Локальный поиск: `graphNodeSearch.js`, интеграция в `GraphWorkspacePanel.jsx`. Тесты: `graphTypeLegend.test.js`, `graphCanvasDraw.test.js`, `graphNodeSearch.test.js`. `GraphCanvasMvp.jsx` остаётся крупным — опциональный follow-up slim.
@@ -147,8 +152,9 @@ Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-co
 - **Acceptance:** ESLint i18n-проверка зелёная (если включена); ручной аудит не находит литералов в этих компонентах; `npm run lint` зелёный.
 - **Raised:** 2026-04-25
 
-### [OPEN] Switch dedup dialogs to `Cursor*` button family
-- **Area:** [`WorkspacePage/WorkspaceDedupSection.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceDedupSection.jsx), [`WorkDedupReviewDialog.jsx`](../../ui/src/components/graph/WorkDedupReviewDialog.jsx)
+### [DONE] Switch dedup dialogs to `Cursor*` button family
+- **Note (2026-04-26):** `WorkspaceDedupSection` / `WorkDedupReviewDialog` уже на `Cursor*`; строка Review → `CursorSmallButton` для паритета с `DeduplicationPanel`; прямых `@mui/material/Button` в этих модулях нет.
+- **Area:** [`WorkspacePage/WorkspaceDedupSection.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceDedupSection.jsx), [`graph/dedup/WorkDedupReviewDialog.jsx`](../../ui/src/components/graph/dedup/WorkDedupReviewDialog.jsx)
 - **Issue:** Прямое использование MUI `Button` вместо `CursorButton` / `CursorPrimaryButton` / `CursorDangerButton` — расходится с дизайн-каноном (см. `.cursorrules` в osint-gr и общая дисциплина проекта).
 - **Proposal:** Заменить импорты на `Cursor*` варианты из `components/common`; учесть варианты `contained/outlined/text`.
 - **Acceptance:** ни один прямой импорт `@mui/material/Button` в `WorkspaceDedupSection`/`WorkDedupReviewDialog`; визуальный паритет с остальными dedup-кнопками; `npm run lint` зелёный.

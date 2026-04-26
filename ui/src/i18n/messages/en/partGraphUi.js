@@ -133,10 +133,12 @@ export default {
   "graph.workProperty.language": "Language",
   "graph.workProperty.year": "Year",
 
-  "graph.canvas.regionAria": "Graph canvas",
+  "graph.canvas.regionAria": "Graph canvas. Double-click the canvas to zoom the view to the selected node.",
   "graph.canvas.empty": "No nodes to draw on canvas.",
-  "graph.canvas.helpTooltip": "Canvas controls help",
-  "graph.canvas.helpAria": "Canvas controls help",
+  "graph.canvas.helpTooltip":
+    "Canvas controls help. Wheel zooms, drag pans. Double-click the canvas to fit the view to the selected node.",
+  "graph.canvas.helpAria":
+    "Canvas controls: wheel zoom, drag pan, double-click canvas to fit the selected node.",
   "graph.canvas.fitTooltip": "Fit graph to view",
   "graph.canvas.fitAria": "Fit graph to view",
   "graph.canvas.resetZoomTooltip": "Reset zoom to 1:1 at center",

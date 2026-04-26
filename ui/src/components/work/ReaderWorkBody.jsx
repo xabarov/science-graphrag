@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from "react";
+import React, { lazy, Suspense, useEffect, useRef } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
@@ -10,6 +10,8 @@ import { useI18n } from "../../i18n/I18nContext.jsx";
 import ReaderChunkListPanel from "./ReaderChunkListPanel.jsx";
 import ReaderMarkdownSourcePanel from "./ReaderMarkdownSourcePanel.jsx";
 import ReaderPdfModeToggle from "./ReaderPdfModeToggle.jsx";
+import ReaderShell from "./ReaderShell.jsx";
+import ReaderSideRail from "./ReaderSideRail.jsx";
 import ReaderTraceContextBanner from "./ReaderTraceContextBanner.jsx";
 import ReaderWorkClaimsSection from "./ReaderWorkClaimsSection.jsx";
 import ReaderWorkDetailCard from "./ReaderWorkDetailCard.jsx";
@@ -20,13 +22,22 @@ const PdfViewer = lazy(() => import("./PdfViewer.jsx"));
 
 /**
  * Reader content for a fixed work_id (used by Reader tab and standalone Reader page).
- * @param {{ workId: string, focusedFingerprint?: string, focusedSection?: string, citation?: string }} props
+ * @param {{
+ *   workId: string,
+ *   focusedFingerprint?: string,
+ *   focusedSection?: string,
+ *   citation?: string,
+ *   layoutVariant?: "stack" | "readerPage",
+ *   onWorkMetaChange?: (meta: { title: string, loading: boolean, error: string }) => void,
+ * }} props
  */
 export default function ReaderWorkBody({
   workId,
   focusedFingerprint = "",
   focusedSection = "",
   citation = "",
+  layoutVariant = "stack",
+  onWorkMetaChange,
 }) {
   const { t } = useI18n();
   const claimsUi = import.meta.env?.VITE_CLAIMS_ENABLED === "true";
@@ -41,8 +52,25 @@ export default function ReaderWorkBody({
     citation,
   });
 
-  return (
-    <Box>
+  const metaCbRef = useRef(onWorkMetaChange);
+  useEffect(() => {
+    metaCbRef.current = onWorkMetaChange;
+  }, [onWorkMetaChange]);
+
+  useEffect(() => {
+    if (!onWorkMetaChange) return;
+    const title = detail?.title != null ? String(detail.title) : "";
+    metaCbRef.current?.({
+      title,
+      loading,
+      error: error || "",
+    });
+  }, [detail?.title, loading, error, onWorkMetaChange]);
+
+  const detailBlock = detail && !loading ? <ReaderWorkDetailCard detail={detail} /> : null;
+
+  const core = (
+    <>
       {loading ? (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 2 }}>
           <CircularProgress size={22} sx={{ color: "rgba(129,140,248,0.9)" }} />
@@ -55,7 +83,7 @@ export default function ReaderWorkBody({
         </Alert>
       ) : null}
 
-      {detail && !loading ? <ReaderWorkDetailCard detail={detail} /> : null}
+      {layoutVariant === "stack" ? detailBlock : null}
 
       {detail && !loading && pdfAvailable ? (
         <ReaderPdfModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
@@ -106,6 +134,12 @@ export default function ReaderWorkBody({
           />
         </>
       ) : null}
-    </Box>
+    </>
   );
+
+  if (layoutVariant === "readerPage") {
+    return <ReaderShell main={<Box>{core}</Box>} rail={<ReaderSideRail>{detailBlock}</ReaderSideRail>} />;
+  }
+
+  return <Box>{core}</Box>;
 }

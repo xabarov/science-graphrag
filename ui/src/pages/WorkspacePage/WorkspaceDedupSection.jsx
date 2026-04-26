@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { CursorButton } from "../../components/common/index.js";
+import { CursorButton, CursorSmallButton } from "../../components/common/index.js";
 
 import DeduplicationPanel from "../../components/graph/DeduplicationPanel.jsx";
 import WorkDedupReviewDialog from "../../components/graph/dedup/WorkDedupReviewDialog.jsx";
@@ -129,15 +129,14 @@ export default function WorkspaceDedupSection({ workspaceId, onMerged }) {
                 {String(c.work_id_a).slice(0, 10)}… ↔ {String(c.work_id_b).slice(0, 10)}… · sim{" "}
                 {Number(c.similarity_score).toFixed(3)}
               </Typography>
-              <CursorButton
-                size="small"
+              <CursorSmallButton
                 onClick={() => {
                   setActiveConflict(c);
                   setDialogOpen(true);
                 }}
               >
                 Review
-              </CursorButton>
+              </CursorSmallButton>
             </Box>
           ))}
         </Box>

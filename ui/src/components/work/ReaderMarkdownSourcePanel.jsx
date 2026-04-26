@@ -4,6 +4,7 @@ import Typography from "@mui/material/Typography";
 
 import { useI18n } from "../../i18n/I18nContext.jsx";
 import { READER_COMBINED_MARKDOWN_MAX_CHARS, truncateWithEllipsis } from "./readerFormatters.js";
+import MarkdownView from "./MarkdownView.jsx";
 
 /**
  * @param {{ combinedMarkdown: string, chunks: { total?: number, items?: unknown[] } | null }} props
@@ -28,7 +29,7 @@ export default function ReaderMarkdownSourcePanel({ combinedMarkdown, chunks }) 
           backgroundColor: "#0a0a0a",
         }}
       >
-        <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.82)", whiteSpace: "pre-wrap" }}>{displayText}</Typography>
+        <MarkdownView markdown={displayText} data-testid="reader-markdown-body" />
       </Box>
       {showPartial ? (
         <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.38)", mt: 0.75 }}>

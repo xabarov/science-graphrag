@@ -28,6 +28,13 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 
 ## Queue
 
+### [OPEN] BT6 gold realism + optional embedding-soft quote fallback
+- **Area:** `eval/claims/`, `tests/fixtures/benchmarks/claims/`, `science_graphrag/ingestion/claims/quote_match.py`
+- **Issue:** After P0 (NFKC + dash/nbsp + `×`→`x` + letter/digit boundary + 4-level quote gate + normalized chunk input), PDF noise barrier is largely removed (`corpus_ssd_v2` + Mistral: 28/28 quotes accepted). `claim_recall` on BT6 is still capped by **semantic** alignment between `expected_claims[].claim_text_normalized` / `match_mode` and what the production extractor emits (barrier 2). Some models still emit tool JSON that **truncates** before Pydantic validation (Minimax + distracted body in one observed run).
+- **Proposal:** (1) Reformulate `expected_claims[].claim_text_normalized` toward achievable paraphrases for the production path; add an `aspirational_v2` tier for abstract “principle” gold without CI gating. (2) Optional level-5 in `_quote_accepted`: sentence-window cosine (τ≈0.85) **only** with `claims_quote_embedding_fallback=true`, **replacing** stored `quote` with the nearest real subspan and `evidence.requires_review=true`.
+- **Acceptance:** BT6 mini / `corpus_ssd_v2` (or `claims_paraphrase_bt6_mini` tier) reaches **≥ 0.55** `claim_recall` on `mistralai/mistral-small-3.2-24b-instruct` with `--extractor production`; distracted lane completes without LLM JSON truncation under the same provider settings used in CI smoke.
+- **Raised:** 2026-04-26 (post P0 quote tolerance).
+
 ### [OPEN] Split `scripts/aggregate_benchmark_metrics.py` (BT1 follow-up)
 - **Area:** `scripts/aggregate_benchmark_metrics.py` (~1100 lines after Wave 3 BT4/BT5 additions).
 - **Issue:** Summarizers (`_summarize_*`), markdown render (`_md_*`), CLI `main()`, family logic all live in one file; hard to review and parallel-edit with BT2–BT12 aggregator deltas. File grows with each wave.

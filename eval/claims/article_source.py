@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from science_graphrag.ingestion.claims.quote_match import normalize_text_for_llm
+
 
 def read_claims_article(case_dir: Path) -> str:
     """Return ``article.md`` from the case dir, or from ``source_layer1_fixture`` under layer1."""
@@ -12,7 +14,7 @@ def read_claims_article(case_dir: Path) -> str:
     root = Path(case_dir)
     local = root / "article.md"
     if local.is_file():
-        return local.read_text(encoding="utf-8").strip()
+        return normalize_text_for_llm(local.read_text(encoding="utf-8"))
 
     gold_path = root / "gold.json"
     if not gold_path.is_file():
@@ -30,7 +32,7 @@ def read_claims_article(case_dir: Path) -> str:
     repo = root.resolve().parents[4]
     layer1_article = repo / "tests" / "fixtures" / "benchmarks" / "layer1" / slug / "article.md"
     if layer1_article.is_file():
-        return layer1_article.read_text(encoding="utf-8").strip()
+        return normalize_text_for_llm(layer1_article.read_text(encoding="utf-8"))
     return ""
 
 
