@@ -48,7 +48,7 @@ export default function WorkspaceContextChip() {
 
   const label =
     activeWorkspaceMeta?.name?.trim() ||
-    (activeWorkspaceId ? activeWorkspaceId.slice(0, 12) + (activeWorkspaceId.length > 12 ? "…" : "") : t("shell.workspaceChip.none"));
+    (activeWorkspaceId ? t("shell.workspaceChip.unnamed") : t("shell.workspaceChip.none"));
 
   function shortWorkspaceId(wsId) {
     const s = String(wsId || "").trim();

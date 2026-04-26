@@ -33,6 +33,7 @@ from science_graphrag.api.ingest_event_bus import BUS
 from science_graphrag.api.ingest_jobs import router as ingest_router
 from science_graphrag.api.retrieval import router as retrieval_router
 from science_graphrag.api.settings import router as settings_router
+from science_graphrag.api.translation import router as translation_router
 from science_graphrag.api.works import works_router
 from science_graphrag.api.workspace_dedup import router as workspace_dedup_router
 from science_graphrag.api.workspace_graph import router as workspace_graph_router
@@ -94,6 +95,7 @@ app.include_router(ingest_router, prefix="/v1")
 app.include_router(agent_router, prefix="/v1")
 app.include_router(agent_v2_router, prefix="/v2")
 app.include_router(idea_assist_router, prefix="/v1")
+app.include_router(translation_router, prefix="/v1")
 app.include_router(retrieval_router, prefix="/v1")
 app.include_router(works_router)
 

@@ -1,6 +1,6 @@
 # BT6 quote tolerance (P0) — 2026-04-26
 
-**Status:** **DONE** (shipped 2026-04-26). Дальнейшая работа по семантике gold и `trust_signal.runtime_mode=live` — в backlog [`refactor-backend.md`](../backlog/refactor-backend.md) → **[OPEN] BT6 gold realism + optional embedding-soft quote fallback**.
+**Status:** **DONE** (shipped 2026-04-26). Дальнейшая работа по семантике gold и `trust_signal.runtime_mode=live` — в backlog [`refactor-backend.md`](../backlog/refactor-backend.md) → **[OPEN] BT6 gold realism + optional embedding-soft quote fallback**. **Progress 2026-04-27:** per-case `runtime_mode` в `eval/claims/paraphrase_runner.py` + приоритет явного режима в `trust_signal` для `claims_paraphrase_*` (не снимает barrier 2 по gold / refresh артефактов).
 
 ## Goal
 

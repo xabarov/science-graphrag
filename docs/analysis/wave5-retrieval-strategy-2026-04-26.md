@@ -3,7 +3,7 @@
 ## Decision
 
 1. **BT2 / BT4 signal (Path A vs Path B from master roadmap §10.3)**  
-   **Primary:** **Path A** — follow [`docs/backlog/refactor-backend.md`](../backlog/refactor-backend.md) **ADR-021** (OpenRouter `baai/bge-m3`, collection vector size, re-embed, reingest). This is the honest way to get non-zero hybrid MRR and better workspace-scoped citations without loosening gold.  
+   **Primary:** **Path A** — follow [`docs/backlog/refactor-backend.md`](../backlog/refactor-backend.md) **ADR-021** (OpenRouter `baai/bge-m3`, collection vector size, re-embed, reingest). This is the honest way to get non-zero hybrid MRR and better workspace-scoped citations without loosening gold. **Ops slice (2026-04-26):** runbook [`docs/runbooks/phase0-bge-m3-qdrant-cutover.md`](../runbooks/phase0-bge-m3-qdrant-cutover.md), `qdrant-recreate-embedding-collections` at **1024**, pilot `ingest-corpus` in flight (`ingest-progress-phase0-bge-m3.jsonl`) — then re-run BT2/BT4 suites and refresh `benchmark-trust-baseline.json`.  
    **Fallback:** **Path B** — after **7 nightly** runs logging `mrr_delta` in CI or operator notes, if delta stays 0, promote `hybrid_ablation_live` to `fixture_consistency_only` in `scripts/aggregate_benchmark_metrics.py` **with an explicit `benchmark-trust-baseline.json` diff** (per §10.3).
 
 2. **BT6 claims paraphrase — production extractor**  

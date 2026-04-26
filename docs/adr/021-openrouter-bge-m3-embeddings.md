@@ -4,6 +4,8 @@
 
 Accepted — 2026-04-25 (implemented in code: `SCIENCE_GRAPHRAG_OPENROUTER_EMBEDDING_MODEL`, `resolve_embedder`, CLI `qdrant-recreate-embedding-collections`)
 
+**Implementation note (2026-04-26):** CI and fresh clones keep `openrouter_embedding_model` **unset** so `resolve_embedder` falls back to `HashEmbeddingProvider` (384-dim) without network. Production / benchmark hosts set `SCIENCE_GRAPHRAG_OPENROUTER_EMBEDDING_MODEL=baai/bge-m3` and `SCIENCE_GRAPHRAG_OPENROUTER_EMBEDDING_DIM=1024`, then run `science-graphrag qdrant-recreate-embedding-collections` and re-ingest per §Migration plan.
+
 ## Context
 
 Current production state (audited 2026-04-25):
@@ -84,8 +86,10 @@ Current production state (audited 2026-04-25):
 
 ## Migration plan (ops)
 
+Step-by-step runbook (dry-run, recreate, ingest, benchmarks): [`docs/runbooks/phase0-bge-m3-qdrant-cutover.md`](../runbooks/phase0-bge-m3-qdrant-cutover.md).
+
 1. Set `SCIENCE_GRAPHRAG_OPENROUTER_EMBEDDING_MODEL` / `_DIM` in `.env` (see `.env.example`).
-2. Run **`science-graphrag qdrant-recreate-embedding-collections`** (drops and recreates
+2. Run **`science-graphrag qdrant-recreate-embedding-collections --dry-run`**, then without `--dry-run` (drops and recreates
    chunks, work_embeddings, claims, author_embeddings, entity dedup collections).
 3. Reingest corpus / `scripts/backfill_work_embeddings.py` as needed.
 4. Rerun BT1–BT5 retrieval benchmarks.

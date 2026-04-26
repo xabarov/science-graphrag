@@ -6,7 +6,7 @@ import Box from "@mui/material/Box";
 import LinearProgress from "@mui/material/LinearProgress";
 import Typography from "@mui/material/Typography";
 
-import IngestStageStepper from "./IngestStageStepper.jsx";
+import IngestStageRow from "./IngestStageRow.jsx";
 import { useI18n } from "../../i18n/I18nContext.jsx";
 
 /**
@@ -43,7 +43,13 @@ export default function IngestProgressCard({ ingestJob }) {
       />
       {Array.isArray(ingestJob.stages) && ingestJob.stages.length ? (
         <Box sx={{ mt: 1.25 }}>
-          <IngestStageStepper stages={ingestJob.stages} />
+          {ingestJob.stages.map((st, idx) => {
+            const active =
+              String(st?.status || "").toLowerCase() === "running" ||
+              (idx === ingestJob.stages.length - 1 &&
+                !ingestJob.stages.some((s) => String(s?.status || "").toLowerCase() === "running"));
+            return <IngestStageRow key={`${st?.stage || idx}`} stage={st} active={Boolean(active)} />;
+          })}
         </Box>
       ) : null}
       {ingestJob.work_id ? (

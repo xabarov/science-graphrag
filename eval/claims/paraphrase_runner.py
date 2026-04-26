@@ -16,6 +16,7 @@ from eval.claims.discover_cases import discover_claims_case_dirs
 from eval.claims.distractor_article import augment_article_with_distractors
 from eval.claims.metrics import score_claims_paraphrase_extraction
 from eval.claims.oracle_extract import extract_claims_oracle_from_gold
+from science_graphrag.benchmarks.trust_signal import RuntimeMode
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.claims.extractor import (
     claim_drafts_to_predictions,
@@ -52,7 +53,10 @@ def run_claims_paraphrase_case(
     settings: Settings | None = None,
     extract_fn: Callable[[str, dict[str, Any]], list[dict[str, Any]]] | None = None,
 ) -> dict[str, Any]:
-    """Run extractor on plain + distracted article; score with ``score_claims_paraphrase_extraction``."""
+    """Run extractor on plain + distracted article.
+
+    Scores with ``score_claims_paraphrase_extraction``.
+    """
 
     root = Path(case_dir)
     article = read_claims_article(root)
@@ -86,6 +90,16 @@ def run_claims_paraphrase_case(
 
     elapsed = perf_counter() - started
     metrics = score_claims_paraphrase_extraction(preds_plain, preds_dist, gold, settings=s)
+    oracle = getattr(fn, "__name__", "") == "extract_claims_oracle_from_gold"
+    runtime_mode: RuntimeMode
+    if oracle:
+        runtime_mode = "synthetic_gold"
+    elif fn is extract_claims_production_path and s.extraction_llm_enabled:
+        runtime_mode = "live"
+    elif fn is extract_claims_stub:
+        runtime_mode = "mock_runtime"
+    else:
+        runtime_mode = "harness_substring"
     out: dict[str, Any] = {
         "case_id": root.name,
         "metrics": metrics,
@@ -93,7 +107,8 @@ def run_claims_paraphrase_case(
         "predictions_distracted": preds_dist,
         "wall_clock_seconds": round(elapsed, 3),
         "extractor": getattr(fn, "__name__", str(fn)),
-        "oracle_predictions": getattr(fn, "__name__", "") == "extract_claims_oracle_from_gold",
+        "oracle_predictions": oracle,
+        "runtime_mode": runtime_mode,
         "distractor_augmented": did_aug,
         "extraction_llm_enabled": s.extraction_llm_enabled,
     }
@@ -136,7 +151,10 @@ def _cli(
     extractor: str = typer.Option(
         "production",
         "--extractor",
-        help='Claims extractor: "production" (LLM), "harness" (anchor), or "oracle" (gold-only smoke).',
+        help=(
+            'Claims extractor: "production" (LLM), "harness" (anchor), '
+            'or "oracle" (gold-only smoke).'
+        ),
     ),
     json_out: Path | None = typer.Option(None, "--json-out"),
     md_out: Path | None = typer.Option(None, "--md-out"),

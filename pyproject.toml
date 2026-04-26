@@ -70,12 +70,15 @@ science-graphrag-claims-paraphrase-benchmark = "eval.claims.paraphrase_runner:ma
 science-graphrag-concept-topic-benchmark = "eval.concept_topic.runner:main"
 science-graphrag-retrieval-hybrid-ablation = "eval.retrieval.hybrid_ablation_runner:main"
 science-graphrag-retrieval-multihop-benchmark = "eval.retrieval.multihop_runner:main"
+science-graphrag-entity-dedup-benchmark = "eval.dedup.runner:main"
+science-graphrag-contradictions-benchmark = "eval.contradictions.runner:main"
 science-graphrag-dedup-v1-benchmark = "eval.dedup_v1.runner:cli"
 science-graphrag-references-resolution-benchmark = "eval.references_resolution.runner:main"
 science-graphrag-agent-benchmark = "eval.agent_tools.runner:main"
 science-graphrag-agent-judge-benchmark = "eval.agent_tools.judge:main"
 science-graphrag-benchmark-compare = "eval.report_compare:main"
 science-graphrag-api = "science_graphrag.api.main:main"
+science-graphrag-research-langgraph-spike = "science_graphrag.agent.graph.research.spike:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["science_graphrag", "eval"]

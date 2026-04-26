@@ -14,6 +14,7 @@ export default {
   "shell.drawer.operations": "Operations",
   "shell.workspaceChip.title": "Active workspace",
   "shell.workspaceChip.none": "No workspace",
+  "shell.workspaceChip.unnamed": "Unnamed workspace",
   "shell.workspaceChip.manage": "Manage workspaces",
   "shell.workspaceChip.create": "Create new",
   "shell.workspaceChip.openCurrent": "Open current",

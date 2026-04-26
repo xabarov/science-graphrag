@@ -128,6 +128,12 @@ jobs:
             --allow-skip-on-infra \
             --json-out eval/results/ci-retrieval-multihop-mini.json
 
+      # BT8: advisory judge over committed agent_tools mini (heuristic; no extra LLM calls).
+      - name: Agent tools judge pilot (from current-agent-tools-mini.json)
+        run: |
+          science-graphrag-agent-judge-benchmark eval/results/current-agent-tools-mini.json \
+            --json-out eval/results/current-agent-tools-judge-pilot.json
+
       - name: Aggregate benchmark metrics summary
         run: python scripts/aggregate_benchmark_metrics.py
 

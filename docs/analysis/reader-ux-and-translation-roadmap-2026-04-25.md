@@ -417,6 +417,8 @@ Settings: ничего.
 
 > **Цель:** установить единые правила, как любая новая LLM-операция (перевод, summary, idea-assist re-run, claims rerun, future agent calls) ограничивается по конкуренции и берёт credentials. Прекратить плодить `*_max_concurrency`-поля по фичам.
 
+> **Статус 2026-04-27:** реализован **partial slice** — см. §11 и `docs/backlog/refactor-backend.md` (Completed + OPEN «LX1 integration…»). Полный acceptance §6.1–6.2 (приоритетный resolver двух legacy ключей, UI Settings, реальный перевод + Phoenix) — **не** закрыт.
+
 ### 6.1 Wave LX1 — settings cluster `llm_concurrency_*`
 
 **Что:**
@@ -594,7 +596,7 @@ Settings: ничего.
 
 ### Backend (`docs/backlog/refactor-backend.md`)
 
-* **[OPEN] LX1** — settings cluster `llm_concurrency_*` + `utils/llm_semaphore.py`; alias-миграция legacy ключа.
-* **[OPEN] LX2** — `science_graphrag/translation/` package + `api/translation.py` + Postgres `work_translations` + Phoenix spans + spec `docs/specs/translation-v1.md`.
+* **[PARTIAL 2026-04-27] LX1** — поля `llm_concurrency_*` + `utils/llm_semaphore.py` уже в репозитории; добавлены: синхронизация legacy `extraction_llm_references_max_concurrency` ↔ `llm_concurrency_extraction_references` в `Settings` + `tests/test_llm_concurrency_config.py`. **Остаётся OPEN:** подключить `build_llm_semaphore_map` к реальным LLM-путям (см. бэклог «LX1 integration…»); приоритет двух ключей при конфликте + Settings UI — по §6.1/6.3.
+* **[PARTIAL 2026-04-27] LX2** — **есть:** `science_graphrag/api/translation.py` (SSE stub), router в `main.py`, Alembic `20260426_0007_work_translations`, ORM `WorkTranslationRecord`, `docs/specs/translation-v1.md`, заглушка-пакет `science_graphrag/translation/__init__.py`. **Остаётся OPEN:** `translation/{detector,translator,cache,runner}.py`, реальные ответы, Phoenix spans, language-detect ingest stage по §6.2.
 * **[OPEN] LX3** — Settings UI snapshot extension (opt).
 * **[OPEN] Stage in pipeline: language detection** — добавить шаг в `ingestion/pipeline.py` (Stage X) + backfill script (`scripts/backfill_work_language.py`).

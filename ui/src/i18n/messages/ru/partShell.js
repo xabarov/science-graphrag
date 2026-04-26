@@ -14,6 +14,7 @@ export default {
   "shell.drawer.operations": "Операции",
   "shell.workspaceChip.title": "Активная рабочая область",
   "shell.workspaceChip.none": "Область не выбрана",
+  "shell.workspaceChip.unnamed": "Без названия",
   "shell.workspaceChip.manage": "Управление областями",
   "shell.workspaceChip.create": "Создать область",
   "shell.workspaceChip.openCurrent": "Открыть текущую",

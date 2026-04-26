@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import json
+import logging
 from time import perf_counter
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
+from sqlalchemy.exc import SQLAlchemyError
 
 from science_graphrag.agent.idea_workflow import IdeaOrchestrator
 from science_graphrag.agent.tools import (
@@ -16,8 +19,11 @@ from science_graphrag.agent.tools import (
 )
 from science_graphrag.api.deps import StoreRegistry, get_stores
 from science_graphrag.config import Settings, get_settings
+from science_graphrag.storage.db import get_engine, session_factory
+from science_graphrag.storage.models_orm import WorkspaceHypothesisRecord
 
 router = APIRouter()
+log = logging.getLogger(__name__)
 
 IdeaAssistMode = Literal["hypotheses", "contradictions", "both"]
 
@@ -59,6 +65,22 @@ def post_idea_assist(
     if not settings.hypothesis_enabled:
         raise HTTPException(status_code=503, detail="hypothesis_disabled")
     started = perf_counter()
+    if not settings.idea_assist_live_runtime:
+        duration_ms = int((perf_counter() - started) * 1000)
+        return IdeaAssistResponse(
+            hypotheses=[],
+            contradictions=[],
+            tool_trace=[],
+            duration_ms=duration_ms,
+            run_metadata={
+                "advisory_only": True,
+                "live_runtime": False,
+                "wave": "S",
+                "mode": body.mode,
+                "max_candidates": body.max_candidates,
+                "note": "idea_assist_live_runtime disabled; skipped orchestrator",
+            },
+        )
     orchestrator = IdeaOrchestrator(
         settings=settings,
         idea_search=IdeaSearchTool(
@@ -78,6 +100,29 @@ def post_idea_assist(
         max_candidates=body.max_candidates,
     )
     duration_ms = int((perf_counter() - started) * 1000)
+    try:
+        engine = get_engine(settings.database_url)
+        sess_maker = session_factory(engine)
+        with sess_maker() as session:
+            for row in out.hypotheses:
+                session.add(
+                    WorkspaceHypothesisRecord(
+                        workspace_id=body.workspace_id.strip(),
+                        text=row.text,
+                        payload_json=json.dumps(
+                            {
+                                "supporting_claim_ids": row.supporting_claim_ids,
+                                "novelty_hint": row.novelty_hint,
+                                "evidence_quotes": row.evidence_quotes,
+                            },
+                            ensure_ascii=False,
+                        ),
+                    )
+                )
+            session.commit()
+    except SQLAlchemyError as exc:
+        log.warning("idea_assist hypothesis persist skipped: %s", exc)
+
     return IdeaAssistResponse(
         hypotheses=[
             HypothesisCandidateOut(
@@ -100,6 +145,7 @@ def post_idea_assist(
         duration_ms=duration_ms,
         run_metadata={
             "advisory_only": True,
+            "live_runtime": True,
             "wave": "S",
             "mode": body.mode,
             "max_candidates": body.max_candidates,

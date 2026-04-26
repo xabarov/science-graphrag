@@ -44,4 +44,12 @@ describe("MarkdownViewCore", () => {
     expect(html).toContain("<strong");
     expect(html).toContain("Falcon-M1");
   });
+
+  it("strips uniform 4-space indent so VL dumps are not one big code block", () => {
+    const raw = "    **bold** here\n    second line";
+    expect(preprocessReaderMarkdown(raw).trim()).toBe("**bold** here\nsecond line");
+    const html = renderMarkdown(raw);
+    expect(html).toContain("<strong");
+    expect(html).not.toContain("<pre>");
+  });
 });

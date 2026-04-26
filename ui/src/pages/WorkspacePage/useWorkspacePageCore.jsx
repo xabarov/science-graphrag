@@ -6,13 +6,14 @@ import Alert from "@mui/material/Alert";
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 
-import { CursorIconAction } from "../../components/common/index.js";
+import { CursorIconAction, CursorPrimaryButton } from "../../components/common/index.js";
 import { formatResearchApiError, postAgentQuery, postIdeaAssist } from "../../services/researchApi.js";
 import {
   getActiveWorkspaceId,
   setActiveWorkspaceId,
   listWorkspaces,
   getWorkspace,
+  createWorkspace,
   addWorkToWorkspace,
   startWorkspaceDocumentIngest,
   startWorkspaceBatchIngest,
@@ -41,6 +42,8 @@ export function useWorkspacePageCore() {
   /** True when last workspace load failed with HTTP 5xx (e.g. 502) — drives server-specific recovery copy. */
   const [workspaceErrorIsServer, setWorkspaceErrorIsServer] = useState(false);
   const [workspaceLoadNonce, setWorkspaceLoadNonce] = useState(0);
+  const [emptyCreateBusy, setEmptyCreateBusy] = useState(false);
+  const [emptyCreateErr, setEmptyCreateErr] = useState(null);
   const [addWorkInput, setAddWorkInput] = useState("");
   const [addBusy, setAddBusy] = useState(false);
   const [addErr, setAddErr] = useState(null);
@@ -271,23 +274,51 @@ export function useWorkspacePageCore() {
     fallbackPollMs: 2000,
   });
 
+  const handleEmptyCreateWorkspace = useCallback(async () => {
+    setEmptyCreateErr(null);
+    setEmptyCreateBusy(true);
+    try {
+      const row = await createWorkspace("Workspace");
+      if (row?.id) {
+        setActiveWorkspaceId(row.id);
+        const next = new URLSearchParams();
+        next.set("workspace_id", row.id);
+        setSearchParams(next, { replace: true });
+      }
+    } catch (err) {
+      setEmptyCreateErr(formatResearchApiError(err));
+    } finally {
+      setEmptyCreateBusy(false);
+    }
+  }, [setSearchParams]);
+
   const emptyState = useMemo(
     () => (
       <Box sx={{ maxWidth: 560, mt: 2 }}>
         <Alert severity="info" sx={{ fontSize: "0.8125rem", mb: 2, backgroundColor: "rgba(99,102,241,0.08)", color: "rgba(255,255,255,0.85)" }}>
           {t("workspace.empty.alert")}
         </Alert>
-        <CursorIconAction component={Link} to="/workspaces" title={t("workspace.empty.workspaces")}>
-          <FolderOpenOutlinedIcon sx={{ fontSize: "1.1rem" }} />
-        </CursorIconAction>
-        <Box component="span" sx={{ display: "inline-flex", ml: 0.75 }}>
-          <CursorIconAction component={Link} to="/home" title={t("workspace.empty.about")}>
-            <HomeOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center", mb: emptyCreateErr ? 1 : 0 }}>
+          <CursorPrimaryButton type="button" disabled={emptyCreateBusy} onClick={() => void handleEmptyCreateWorkspace()}>
+            {t("workspace.empty.createWorkspace")}
+          </CursorPrimaryButton>
+          <CursorIconAction component={Link} to="/workspaces" title={t("workspace.empty.workspaces")}>
+            <FolderOpenOutlinedIcon sx={{ fontSize: "1.1rem" }} />
           </CursorIconAction>
+          <Box component="span" sx={{ display: "inline-flex" }}>
+            <CursorIconAction component={Link} to="/home" title={t("workspace.empty.about")}>
+              <HomeOutlinedIcon sx={{ fontSize: "1.1rem" }} />
+            </CursorIconAction>
+          </Box>
         </Box>
+        {emptyCreateErr ? (
+          <Alert severity="error" sx={{ fontSize: "0.8125rem", mt: 1 }}>
+            {emptyCreateErr}
+          </Alert>
+        ) : null}
       </Box>
     ),
-    [t],
+    [t, emptyCreateBusy, emptyCreateErr, handleEmptyCreateWorkspace],
   );
 
   async function handleAddWork(e) {

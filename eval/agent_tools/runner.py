@@ -107,11 +107,21 @@ def _cli(
     path: Path = typer.Argument(..., exists=True, readable=True),
     suite: bool = typer.Option(False, "--suite"),
     tier: str = typer.Option("agent_tools_mini", "--tier"),
-    mock_runtime: bool = typer.Option(False, "--mock-runtime"),
+    live_runtime: bool = typer.Option(
+        True,
+        "--live-runtime/--no-live-runtime",
+        help="Default: call production agent stack. Use --no-live-runtime for deterministic mock.",
+    ),
+    mock_runtime: bool = typer.Option(
+        False,
+        "--mock-runtime",
+        help="Deprecated alias for --no-live-runtime (mock answers).",
+    ),
     json_out: Path | None = typer.Option(None, "--json-out"),
     md_out: Path | None = typer.Option(None, "--md-out"),
 ) -> None:
     settings = get_settings()
+    use_mock = mock_runtime or (not live_runtime)
     if suite:
         cases = discover_agent_case_dirs(path, tier=tier)
         if not cases:
@@ -120,7 +130,7 @@ def _cli(
             title="Agent tools benchmark suite",
             cases=cases,
             settings=settings,
-            run_one=lambda p: run_agent_case(p, mock_runtime=mock_runtime),
+            run_one=lambda p: run_agent_case(p, mock_runtime=use_mock),
             summarize=_summarize,
             json_out=json_out,
             md_out=md_out,
@@ -133,7 +143,7 @@ def _cli(
         if not bool(payload.get("summary", {}).get("all_passed", False)):
             raise typer.Exit(code=1)
         return
-    report = run_agent_case(path, mock_runtime=mock_runtime)
+    report = run_agent_case(path, mock_runtime=use_mock)
     run_single_case_json_outputs(
         report=report,
         settings=settings,

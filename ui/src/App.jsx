@@ -57,7 +57,7 @@ function LazyRouteFallback() {
 
 export default function App() {
   return (
-    <Box sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+    <Box sx={{ flex: 1, minHeight: 0, height: "100%", display: "flex", flexDirection: "column" }}>
       <Routes>
       <Route element={<DashboardLayout />}>
         <Route path="/" element={<Navigate to="/workspaces" replace />} />

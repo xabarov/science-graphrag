@@ -13,10 +13,20 @@ export default function WorkspaceLayout({ main, side }) {
         gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 2fr) minmax(280px, 1fr)" },
         gap: 2,
         alignItems: "stretch",
-        minHeight: 0,
+        minHeight: { xs: "min(72dvh, 720px)", lg: "min(70dvh, 820px)" },
       }}
     >
-      <Box sx={{ minWidth: 0, order: { xs: 2, lg: 1 }, display: "flex", flexDirection: "column" }}>{main}</Box>
+      <Box
+        sx={{
+          minWidth: 0,
+          order: { xs: 2, lg: 1 },
+          display: "flex",
+          flexDirection: "column",
+          minHeight: 0,
+        }}
+      >
+        {main}
+      </Box>
       <Box
         sx={{
           minWidth: 0,

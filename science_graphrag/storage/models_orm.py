@@ -214,6 +214,41 @@ class AuthorDedupConflict(Base):
     decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
+class WorkspaceHypothesisRecord(Base):
+    """Persisted idea-assist hypotheses (BT10)."""
+
+    __tablename__ = "workspace_hypotheses"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    workspace_id: Mapped[str] = mapped_column(String(128), index=True)
+    text: Mapped[str] = mapped_column(Text)
+    payload_json: Mapped[str] = mapped_column(Text, default="{}")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+    )
+
+
+class WorkTranslationRecord(Base):
+    """Cached work field translations (LX2)."""
+
+    __tablename__ = "work_translations"
+    __table_args__ = (
+        UniqueConstraint("work_id", "locale", "field", name="uq_work_translation_key"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    work_id: Mapped[str] = mapped_column(String(256), index=True)
+    locale: Mapped[str] = mapped_column(String(32))
+    field: Mapped[str] = mapped_column(String(32))
+    text: Mapped[str] = mapped_column(Text)
+    model: Mapped[str | None] = mapped_column(String(256), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+    )
+
+
 class EntityDedupConflict(Base):
     """Unified Postgres review queue for all entity types (Wave T)."""
 

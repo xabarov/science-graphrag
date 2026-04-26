@@ -12,6 +12,7 @@ from dramatiq.middleware import AgeLimit, Retries, TimeLimit
 from science_graphrag.api.ingest.registry import _registry
 from science_graphrag.config import get_settings
 from science_graphrag.worker.otel_middleware import OtelTraceMiddleware
+from science_graphrag.worker.trace_options import dramatiq_otel_options
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -36,7 +37,11 @@ def run_compensation_sweep() -> None:
     cutoff = datetime.now(UTC) - timedelta(seconds=60)
     for job in registry.list_stale_queued_jobs(before=cutoff):
         logger.info("Compensation sweep: re-enqueue job_id=%s", job.job_id)
-        ingest_document_actor.send(job.job_id)
+        otel_opts = dramatiq_otel_options()
+        if otel_opts:
+            ingest_document_actor.send_with_options(args=(job.job_id,), **otel_opts)
+        else:
+            ingest_document_actor.send(job.job_id)
 
 
 def run() -> None:

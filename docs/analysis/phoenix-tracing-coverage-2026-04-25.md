@@ -2,6 +2,7 @@
 
 **Дата:** 2026-04-25
 **Статус:** living working doc; новый трек observability, не пересекается с волнами ingest-async (U–W) и benchmark-onthology (M–T).
+**Update 2026-04-27 (Wave X3 — Dramatiq boundary):** на стороне **producer** (`enqueue_ingest_job`, compensation sweep в `science_graphrag/worker/__init__.py`) добавлен `opentelemetry.propagate.inject` → non-empty carrier уходит в Dramatiq `message.options`; воркер по-прежнему поднимает контекст в `OtelTraceMiddleware.before_process_message`. Код: `science_graphrag/worker/trace_options.py`. Тесты: `tests/observability/test_worker_trace_propagation.py` (в т.ч. inject под активным span). **Не доказано автотестом:** полный e2e «HTTP request → enqueue → worker span как child» на живом Redis/Phoenix — проверять на стенде.
 **Цель:** оценить, насколько удобно сегодня смотреть трейсы по двум основным пайплайнам (ingestion и IR/retrieval agent), зафиксировать what good looks like для Phoenix/OpenInference, перечислить конкретные пробелы и оформить план работ с чеклистом, который можно брать в работу сразу.
 
 **Контекст триггера:** в Phoenix → `Settings → Models` загружены кастомные модели c ценами:

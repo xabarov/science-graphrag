@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import { Outlet } from "react-router-dom";
 
 import { WorkspaceContextProvider } from "../WorkspaceContext.jsx";
-import WorkspaceContextChip from "../WorkspaceContextChip.jsx";
+import WorkspaceSwitcher from "../WorkspaceSwitcher.jsx";
 import Drawer from "./Drawer.jsx";
 
 export default function DashboardLayout() {
@@ -36,7 +36,7 @@ export default function DashboardLayout() {
               flexShrink: 0,
             }}
           >
-            <WorkspaceContextChip />
+            <WorkspaceSwitcher />
           </Box>
           <Box
             sx={{

@@ -13,7 +13,8 @@ Authoritative inputs (defaults) match docs/runbooks/benchmark-decision-gate.md.
 Optional retrieval + hybrid/multihop ablation + claims + claims production pilot + references_resolution
 + concept_topic graph JSON lanes are listed in ``benchmark-decision-gate.md`` §8 and summarized under
 ``retrieval_family`` / ``claims_family`` / ``claims_production_family`` /
-``references_resolution_family`` / ``concept_topic_family`` when the default artifact paths exist.
+``references_resolution_family`` / ``concept_topic_family`` / ``contradictions_family``
+when the default artifact paths exist.
 **Claims production pilot** is part of the **core** ``decision_gate`` (Wave O promotion).
 Retrieval ``workspace_scoped`` + ``judge_pilot`` blocks remain **advisory** (Wave P).
 """
@@ -55,6 +56,7 @@ from benchmark_aggregator.paths import (  # noqa: E402
     DEFAULT_CLAIMS_PILOT_SUITE,
     DEFAULT_CLAIMS_PRODUCTION_PILOT,
     DEFAULT_CONCEPT_TOPIC_MINI_SUITE,
+    DEFAULT_CONTRADICTIONS_V1_MINI_SUITE,
     DEFAULT_LAYER1_NIGHTLY,
     DEFAULT_LAYER2_NIGHTLY,
     DEFAULT_REFERENCE,
@@ -456,6 +458,7 @@ def _strip_suite_cases_from_payload(payload: dict[str, Any]) -> None:
         "references_resolution_family",
         "concept_topic_family",
         "agent_tools_family",
+        "contradictions_family",
     ):
         fam = payload.get(fam_key)
         if not isinstance(fam, dict):
@@ -772,6 +775,29 @@ def _md_baseline_deltas_section(deltas: dict[str, Any]) -> list[str]:
     ]
 
 
+def _md_contradictions_family_section(cf: dict[str, Any]) -> list[str]:
+    lines = [
+        "## Contradictions family (advisory)",
+        "",
+        "Wave 9 / BT12 — verify ``:CONTRADICTS`` edges for ``contradictions_v1`` gold pairs.",
+        "",
+    ]
+    role = (cf.get("role") or "advisory") if isinstance(cf, dict) else "advisory"
+    lines.append(f"- **role**: `{role}`")
+    lines.append("")
+    block = (cf.get("contradictions_v1_mini") or {}) if isinstance(cf, dict) else {}
+    lines.append("### contradictions_v1_mini")
+    lines.append("")
+    if block.get("error"):
+        lines.append(f"- **status**: missing artifact `{block.get('artifact')}`")
+    else:
+        lines.append(f"- artifact: `{block.get('artifact')}`")
+        lines.append(f"- all_passed: **{block.get('all_passed')}**")
+        lines.append(f"- failed_count: **{block.get('failed_count')}**")
+    lines.append("")
+    return lines
+
+
 def _md_agent_tools_family_section(af: dict[str, Any]) -> list[str]:
     lines = [
         "## Agent tools family (advisory)",
@@ -823,6 +849,7 @@ def _render_markdown(payload: dict[str, Any]) -> str:
         ),
         *_md_concept_topic_family_section(payload.get("concept_topic_family") or {}),
         *_md_agent_tools_family_section(payload.get("agent_tools_family") or {}),
+        *_md_contradictions_family_section(payload.get("contradictions_family") or {}),
         *_md_baseline_deltas_section(payload.get("deltas") or {}),
     ]
     return "\n".join(parts)
@@ -966,6 +993,16 @@ def main() -> int:
         help="Optional Wave R judge JSON from science-graphrag-agent-judge-benchmark.",
     )
     parser.add_argument(
+        "--contradictions-v1-json",
+        type=str,
+        default=DEFAULT_CONTRADICTIONS_V1_MINI_SUITE,
+        help=(
+            "Optional BT12 suite JSON from "
+            "`python -m eval.contradictions.runner tests/fixtures/benchmarks/contradictions_v1 "
+            "--suite [--materialize]` (advisory)."
+        ),
+    )
+    parser.add_argument(
         "--write-trust-baseline",
         type=Path,
         default=None,
@@ -1023,6 +1060,7 @@ def main() -> int:
             "concept_topic_mini_suite": args.concept_topic_json,
             "agent_tools_mini_suite": args.agent_tools_json,
             "agent_tools_judge_suite": args.agent_judge_json,
+            "contradictions_v1_mini_suite": args.contradictions_v1_json,
         },
         "reference": reference,
         "layer1_nightly": layer1,
@@ -1083,6 +1121,10 @@ def main() -> int:
             "agent_tools_mini": _summarize_case_metrics_suite(args.agent_tools_json),
             "agent_tools_judge": _summarize_retrieval_judge_suite(args.agent_judge_json),
         },
+        "contradictions_family": {
+            "role": "advisory",
+            "contradictions_v1_mini": _summarize_case_metrics_suite(args.contradictions_v1_json),
+        },
     }
 
     _finalize_family_trust("retrieval_family", payload["retrieval_family"])
@@ -1091,6 +1133,7 @@ def main() -> int:
     _finalize_family_trust("references_resolution_family", payload["references_resolution_family"])
     _finalize_family_trust("concept_topic_family", payload["concept_topic_family"])
     _finalize_family_trust("agent_tools_family", payload["agent_tools_family"])
+    _finalize_family_trust("contradictions_family", payload["contradictions_family"])
 
     trust_criteria = compute_gate_trust_criteria(
         retrieval_family=payload["retrieval_family"],
@@ -1099,6 +1142,7 @@ def main() -> int:
         references_resolution_family=payload["references_resolution_family"],
         concept_topic_family=payload["concept_topic_family"],
         agent_tools_family=payload["agent_tools_family"],
+        contradictions_family=payload["contradictions_family"],
     )
     payload["decision_gate"] = evaluate_decision_gate(
         reference,

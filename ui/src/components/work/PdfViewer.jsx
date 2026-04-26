@@ -146,9 +146,7 @@ export default function PdfViewer({ fileUrl }) {
       <Box
         ref={containerRef}
         sx={{
-          maxHeight: "calc(100vh - 260px)",
           minHeight: 480,
-          overflow: "auto",
           border: "1px solid rgba(255,255,255,0.08)",
           borderRadius: "6px",
           backgroundColor: "#1c1c1c",

@@ -1,8 +1,8 @@
 # Ontology & Benchmarks — Trust Audit & Follow-up Plan (2026-04-25)
 
-**Дата:** 2026-04-25 (Trust Audit), последнее обновление — 2026-04-26 день (BT6 P0 quote tolerance в ingestion; см. [`wave5-bt6-quote-tolerance-2026-04-26.md`](./wave5-bt6-quote-tolerance-2026-04-26.md))
+**Дата:** 2026-04-25 (Trust Audit), последнее обновление — 2026-04-26 (ADR-021 **Phase 0 ops:** Qdrant **1024** recreate + runbook [`phase0-bge-m3-qdrant-cutover.md`](../runbooks/phase0-bge-m3-qdrant-cutover.md); re-ingest в прогрессе; см. backlog OPEN «Switch Qdrant…»); 2026-04-27 — BT6 per-case `runtime_mode` + `trust_signal` на `claims_paraphrase_*` ([`wave5-bt6-quote-tolerance-2026-04-26.md`](./wave5-bt6-quote-tolerance-2026-04-26.md)); ранее 2026-04-26 — P0 quote tolerance в ingestion
 **Тип:** review + plan (living doc)
-**Статус:** **Gold side DONE (Phase 0-6 of Corpus Gold Pack v1), runner side: BT1 ✅ + BT5 ✅ + BT2/BT4 ⚠️ partial (Wave 4); BT6 ⚠️ partial** — oracle артефакты + **P0 quote-gate / PDF normalize в коде (2026-04-26)**; полный live `trust_signal` на pilot/holdout без смены gold — OPEN. **BT3 / BT7..BT12 OPEN**
+**Статус:** **Gold side DONE (Phase 0-6 of Corpus Gold Pack v1), runner side: BT1 ✅ + BT5 ✅ + BT2/BT4 ⚠️ partial (Wave 4); BT6 ⚠️ partial** — oracle артефакты + **P0 quote-gate / PDF normalize в коде (2026-04-26)**; полный live `trust_signal` на pilot/holdout без смены gold — OPEN. **BT8 slice (2026-04-27):** `current-agent-tools-judge-pilot.json` больше не `missing_file`. **BT12 slice (2026-04-26):** bench + `merge_work_contradicts` + `contradictions_family` в aggregate; **без** ingest-time `:CONTRADICTS`. **BT3 / остаток BT7..BT11 OPEN**
 **Связанные документы:** [`ontology-benchmarks-roadmap-2026-04-24.md`](ontology-benchmarks-roadmap-2026-04-24.md) (Wave M–T исходный roadmap), [`master-roadmap-and-refactor-plan-2026-04-25.md`](master-roadmap-and-refactor-plan-2026-04-25.md) (мастер-план; **§10 — следующий план действий**), [`corpus-gold-pack-v1-2026-04-25.md`](corpus-gold-pack-v1-2026-04-25.md) (детали gold-side работ Phase 0-6), [`instructor-adoption-dual-validate-2026-04-25.md`](instructor-adoption-dual-validate-2026-04-25.md) (план Phase 7 рефакторинга dual_validate), [`recommended_path.md`](recommended_path.md) (дорожка BT1 → продукт → фоновый BT2..BT12).
 **Аналог по графу:** [`graph-readability-followup-2026-04-25.md`](graph-readability-followup-2026-04-25.md) (там — UX-аудит, тут — измерительный).
 
@@ -95,11 +95,13 @@ advisory_phantom_families:
   - claims_paraphrase_holdout       # synthetic_gold (oracle); ждёт production
   - concept_topic_mini              # ждёт BT7 (path A или B)
   - agent_tools_mini                # mock_runtime; ждёт BT8
-  - agent_tools_judge               # missing artifact; ждёт BT8
+  - agent_tools_judge               # Wave 4 snapshot: missing artifact (исправлено 2026-04-27 — см. Update ниже)
 
 hard_block_individual_failures = []
 advisory_individual_failures   = 14   # 6 (workspace_scoped_live) + 8 (hybrid_ablation_live)
 ```
+
+**Update 2026-04-27:** блок выше — **исторический снимок Wave 4** (для сравнения с таблицей «до/после»). Актуальные `advisory_phantom_count` и список phantom-семей см. в [`eval/results/benchmark-trust-baseline.json`](../../eval/results/benchmark-trust-baseline.json) после nightly: `agent_tools_judge` больше не `missing_file` (`current-agent-tools-judge-pilot.json` в репо + CI regenerate); `trust_signal.runtime_mode` для judge-блока — `live` (fallback в `detect_runtime_mode`), при этом **качество** judge всё ещё ограничено mock-ответами в `agent_tools_mini` до завершения остатка **BT8**.
 
 **Сравнение с до-Wave-4:**
 
@@ -143,7 +145,7 @@ advisory_individual_failures   = 14   # 6 (workspace_scoped_live) + 8 (hybrid_ab
 | **O (Claims production)** | LLM-extractor, Qdrant `claims`, promotion в **core** | Production extractor работает, `mean_claim_recall=1.0` на 10 кейсах. **Но**: gold — короткие single-sentence «claims», а вход для LLM — chunk, в котором эта же фраза присутствует дословно. `llm_raw_response_preview` показывает, что модель буквально возвращает один и тот же предложение. Нет distractor-чанков, нет проверки `polarity`/`claim_type`/precision. | ⚠️ recall=1.0 — корректно, но «как у harness», без holdout / contradictions / extracted-not-quoted gold |
 | **P (workspace-scoped retrieval + judge)** | 6 кейсов scope + judge ≥ 4.5 | `workspace_scoped` runner — **canned answer** (`_canned_answer_fn`): не запускает Qdrant, синтезирует answer="mock" и citations из `gold.json`. Реально проверяется только **формат**: что `retrieval_trace.workspace_id` есть и `citations` ⊂ workspace. Judge pilot — **2 из 5 кейсов FAIL** (`live_yolov1_architecture` 3.7, `live_yolov1_training` 4.4 < 4.5), но `mean=5.1` всё ещё проходит overall gate. | ⛔ scope correctness — это контракт payload, не retrieval / ⚠️ judge — частично реальный, но aggregate-маска скрывает регрессы |
 | **Q (hybrid + indexes + multihop)** | Neo4j индексы, Qdrant `works`, hybrid mode, multihop endpoint | Индексы добавлены и применяются. Hybrid ablation — **синтетика**: gold содержит готовые `vector_ranked_work_ids` и `hybrid_ranked_work_ids`, runner просто считает MRR от хардкоженых списков. Hybrid против vector тут улучшается **по построению**. Multihop mini — **все 5 кейсов FAIL** с `[Errno 111] Connection refused` (Neo4j не поднят при последнем прогоне). | ⛔ hybrid_ablation — paper-exercise / ⛔ multihop — broken artifact / ✅ индексы — реальные |
-| **R (agent tools + multi-agent metrics)** | 6 tools, agent endpoint, mini benchmark | Артефакт `current-agent-tools-mini.json` сделан с `--mock-runtime`: ответы `"mock answer"`, `duration_ms=1`. Это **smoke-проверка структуры trace**, не агента. `agent_tools_judge` — `error: "missing_file"`. После Y4 (multi-agent supervisor) добавлен `_specialist_sequence_match`, но fixtures `agent_tools_multiagent` пусты. | ⛔ agent_tools_mini — mock / ⛔ judge — отсутствует / ⛔ multi-agent — нет fixtures |
+| **R (agent tools + multi-agent metrics)** | 6 tools, agent endpoint, mini benchmark | Артефакт `current-agent-tools-mini.json` сделан с `--mock-runtime`: ответы `"mock answer"`, `duration_ms=1`. Это **smoke-проверка структуры trace**, не агента. **`agent_tools_judge` (2026-04-27):** `current-agent-tools-judge-pilot.json` присутствует (heuristic / nightly regenerate); это **не** снимает mock с mini. После Y4 (multi-agent supervisor) добавлен `_specialist_sequence_match`, но fixtures `agent_tools_multiagent` пусты. | ⛔ agent_tools_mini — mock / ⚠️ judge — файл есть, сигнал слабый (над mock mini) / ⛔ multi-agent — нет fixtures |
 | **S (idea-assist rubric)** | 8 mini cases + judge ≥ 4.0 | Runner поддерживает `--mock-runtime` и в результатах `current-idea-assist-mini.json` (см. summary `mean_rubric_score=6.0`) — это **исключительно mock**: захардкоженный кандидат `"Synthetic benchmark hypothesis candidate."` (41 char ≥ 40), `novelty_hint`, `evidence_quotes`, `supporting_claim_ids` — все непустые. Метрика `_score_no_plagiarism` награждает за длину текста ≥ 40 символов. **Mock проходит rubric by construction.** Real-mode (`post_idea_assist`) существует, но артефакт-current не запускался по нему. | ⛔ rubric measures fixture, not the workflow |
 | **T (entity dedup полная)** | 5 типов dedup pipeline + bench | Backend есть: `science_graphrag/dedup/{author,institution,venue,method,dataset}_pipeline.py`, ADR 019, миграции. **Бенчмарк** для entity-dedup НЕ написан — `eval/dedup_v1/` есть только для **Work** и работает на **heuristic matcher** (не LLM). Тесты `tests/dedup/test_entity_pipelines.py` — это smoke на `embed_text`, не на pipeline. | ⚠️ код есть, метрик precision/recall на gold нет ни для одного из 5 типов |
 
@@ -168,7 +170,7 @@ advisory-фантомы (зелёные by construction):
   ⛔ retrieval multihop_mini (last run: connection refused, 0/5)
   ⛔ concept_topic_mini (substring harness on own gold)
   ⛔ agent_tools_mini (--mock-runtime)
-  ⛔ agent_tools_judge (missing artifact)
+  ⚠️ agent_tools_judge (артефакт есть, 2026-04-27; judge поверх mock mini — не полноценный агентный сигнал)
   ⛔ idea_assist_mini (--mock-runtime, rubric awards mock)
   ⛔ entity dedup (Author/Institution/Venue/Method/Dataset) — нет фикстур
 ```
@@ -223,7 +225,7 @@ advisory-фантомы (зелёные by construction):
 - 10 кейсов, `latency_p95_ms=2`, `tool_trace[*].duration_ms=1`, `answer="mock answer"`.
 - Получено через `--mock-runtime` (см. `eval/agent_tools/runner.py::_mock_case_report`).
 - Метрики `tool_call_correctness` / `cypher_safety` на mock-выходе ничего не значат.
-- `agent_tools_judge` — отсутствует (`error: "missing_file"`).
+- **`agent_tools_judge` (2026-04-27):** `current-agent-tools-judge-pilot.json` в репо; раньше было `error: "missing_file"`. Сигнал всё ещё **ограничен** mock-выходом mini (см. остаток **BT8**).
 - Wave Y4 (multi-agent supervisor) добавил `_specialist_sequence_match`, но `agent_tools_multiagent` fixtures **не созданы**.
 
 ### 3.7 `current-concept-topic-mini.json` (Wave N, advisory)
@@ -360,7 +362,7 @@ flowchart LR
 
 > **Статус:** **gold N/A (infra task). Wave 4 status: ✅ DONE (2026-04-26 ночь).** `aggregate_benchmark_metrics.py` пишет `trust_signal` per family-member + `advisory_phantom_count` + `advisory_individual_failures` + `hard_block_individual_failures` в `decision_gate.criteria`. Snapshot в `eval/results/benchmark-trust-baseline.json` зафиксирован как «как было после Wave 4». `decision_gate.decision` перешёл с ложно-зелёного `GO` на честный `CONDITIONAL-GO`. Runbook `benchmark-decision-gate.md` обновлён.
 
-**Проблема:** `decision_gate.decision = "GO"` при `multihop_mini.failed_count=5`, `judge_pilot.failed_count=2`, `agent_tools_judge.error=missing_file`, `workspace_scoped` на canned answers. Reason `all_nightly_passed` формально верен, но скрывает деградации.
+**Проблема (исторически до BT1 + BT8 slice):** `decision_gate.decision = "GO"` при `multihop_mini.failed_count=5`, `judge_pilot.failed_count=2`, `agent_tools_judge.error=missing_file`, `workspace_scoped` на canned answers. Reason `all_nightly_passed` формально верен, но скрывает деградации. **2026-04-27:** `missing_file` для `agent_tools_judge` снят.
 
 **Изменения:**
 1. В `aggregate_benchmark_metrics.py` ввести **`trust_signal`** объект для каждой advisory family:
@@ -499,16 +501,16 @@ flowchart LR
 
 ### BT8 — Agent tools: реальный runtime + tool-trace gold
 
-> **Статус:** **gold ✅ ready** (`agent_tools_v1/{live_*, adversarial_cypher_*}/`, 6 live + 1 adversarial cypher case с реальными `DELETE`/`DROP` в вопросе и `cypher_safety_violation_count_gate: 0`; `args_match.query_contains_any/_all` — substring matchers на args, не только tool-name). 3/6 promoted в Phase 6.C. **Runner pending.** ~2 дня: `--live-runtime` default + agent_tools_judge artifact.
+> **Статус:** **gold ✅ ready** (`agent_tools_v1/{live_*, adversarial_cypher_*}/`, 6 live + 1 adversarial cypher case с реальными `DELETE`/`DROP` в вопросе и `cypher_safety_violation_count_gate: 0`; `args_match.query_contains_any/_all` — substring matchers на args, не только tool-name). 3/6 promoted в Phase 6.C. **Runner: частично.** **Сделано 2026-04-27:** committed `current-agent-tools-judge-pilot.json` + nightly regenerate перед aggregate. **Остаётся:** перегенерировать **`current-agent-tools-mini.json`** на live stack в CI (runner CLI уже default `--live-runtime`; закоммиченный mini может оставаться mock-снимком) + LLM/content-aware judge поверх live trace.
 
-**Проблема:** `agent_tools_mini` собран с `--mock-runtime`; `agent_tools_judge` отсутствует.
+**Проблема:** `agent_tools_mini` собран с `--mock-runtime`; judge-артефакт раньше отсутствовал — **файл закрыт**, но mock mini всё ещё ограничивает смысл метрик.
 
 **Изменения:**
 1. **Default `--live-runtime`** для CI nightly агентских бенчмарков; `--mock-runtime` оставить только для unit-тестов.
 2. CI шаг поднимает локальный стек (Neo4j + Qdrant) перед прогоном.
 3. Gold расширить: `expected_tool_sequence` с **substring-matchers** на args (e.g. `args_match.query_contains: "USES_METHOD"`), не только tool-name.
 4. Новый артефакт `current-agent-tools-mini-live.json` на real runtime.
-5. Добавить **`agent_tools_judge_pilot`** артефакт (5 кейсов: вопрос → final_answer → judge rubric «coverage / factuality / cited works present in trace»). Это закрывает `error: "missing_file"` и реально оценивает качество ответа.
+5. **`agent_tools_judge_pilot`:** baseline heuristic-артефакт есть; дальше — rubric по **live** final_answer/trace (не только поверх mock mini).
 6. Метрика `cypher_safety` гарантировать на 100% через unit-тесты с adversarial Cypher (10 атак: `CALL`, `MERGE`, `SET`, `LOAD CSV`, `CREATE`, `DELETE`, etc.).
 
 **Acceptance:**
@@ -582,18 +584,18 @@ flowchart LR
 
 ### BT12 — Contradictions persistence + bench
 
-> **Статус:** **gold ✅ ready** (`contradictions_v1/`, 7 pairs, все 6 `contradiction_type`, оба `severity`, `expected_neo4j_pattern` у каждой пары + sync с 7 `contradicts` edges из `relations_v1.json`). 4/7 promoted в Phase 6.C; **embedding cascade сработал в 2/6 = 33% матчей** — реальная иллюстрация ценности bge-m3 на этом слое. **Runner + Neo4j-persistence pending.** ~2-3 дня.
+> **Статус:** **gold ✅ ready** (`contradictions_v1/`, 7 pairs, все 6 `contradiction_type`, оба `severity`, `expected_neo4j_pattern` у каждой пары + sync с 7 `contradicts` edges из `relations_v1.json`). 4/7 promoted в Phase 6.C; **embedding cascade сработал в 2/6 = 33% матчей** — реальная иллюстрация ценности bge-m3 на этом слое. **Сделано 2026-04-26:** `eval/contradictions/runner.py` + `merge_work_contradicts` (`writes/contradictions.py`) + facade delegate; committed `eval/results/current-contradictions-v1-mini.json`; `contradictions_family` / `trust_signal.contradictions_v1_mini` в `aggregate_benchmark_metrics.py`. **Остаётся:** ingest-time запись `:CONTRADICTS` (и/или `contradiction_detector.py` из плана ниже) + продуктовый cross-paper synthesis.
 
-**Проблема:** `idea_workflow` возвращает `contradictions: [...]`, но не пишет `:CONTRADICTS` в граф; нет cross-paper synthesis измерения.
+**Проблема:** `idea_workflow` возвращает `contradictions: [...]`, но **по-прежнему** не пишет `:CONTRADICTS` в граф из ingestion; измерение — через bench + operator `--materialize`.
 
-**Изменения:**
-1. `Neo4jGraphStore.upsert_contradiction(claim_a_id, claim_b_id, evidence_pair_ids, detector="llm")`.
-2. `science_graphrag/ingestion/claims/contradiction_detector.py` (на claims-Qdrant: для каждого `Claim` ищем nearest neighbours противоположной `polarity`; LLM подтверждает).
-3. Bench `tests/fixtures/benchmarks/contradictions_v1/` — 5 кейсов («Claim A: X улучшает на 5%», «Claim B: X не улучшает»; gold = ожидаемая `:CONTRADICTS` пара).
-4. Metric: contradiction_pair_recall.
-5. Acceptance: 3/5 advisory, отдельный артефакт.
+**Изменения (исторический план; пункты 1/3 частично закрыты иначе):**
+1. `Neo4jGraphStore.merge_work_contradicts` (work_id_a/b) — **сделано** в `writes/contradictions.py` + delegate.
+2. `science_graphrag/ingestion/claims/contradiction_detector.py` (на claims-Qdrant: для каждого `Claim` ищем nearest neighbours противоположной `polarity`; LLM подтверждает) — **OPEN**.
+3. Bench `tests/fixtures/benchmarks/contradictions_v1/` — **7 pairs**, артефакт `current-contradictions-v1-mini.json`.
+4. Metric: `passed` per pair в runner; при необходимости — `contradiction_pair_recall`.
+5. Acceptance: advisory green на committed артефакте после `materialize` на графе с corpus works.
 
-**Файлы:** `science_graphrag/storage/neo4j/writes/contradictions.py`, `science_graphrag/ingestion/claims/contradiction_detector.py`, `eval/contradictions/runner.py`, `tests/fixtures/benchmarks/contradictions_v1/*`.
+**Файлы:** `science_graphrag/storage/neo4j/writes/contradictions.py`, `science_graphrag/storage/neo4j/facade_delegates.py`, `eval/contradictions/runner.py`, `scripts/aggregate_benchmark_metrics.py`, `tests/fixtures/benchmarks/contradictions_v1/*`; **будущее:** `science_graphrag/ingestion/claims/contradiction_detector.py`.
 
 ---
 

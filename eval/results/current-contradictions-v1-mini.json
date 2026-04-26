@@ -1,0 +1,152 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
+    "semantic_extraction_enabled": true
+  },
+  "summary": {
+    "case_count": 7,
+    "case_ids": [
+      "pair_01_faster_rcnn_vs_retinanet_focal",
+      "pair_02_faster_rcnn_vs_fcos",
+      "pair_03_faster_rcnn_vs_cornernet",
+      "pair_04_faster_rcnn_vs_detr",
+      "pair_05_rcnn_vs_faster_rcnn",
+      "pair_06_hog_human_detection_vs_rcnn",
+      "pair_07_retinanet_focal_vs_efficientdet"
+    ],
+    "all_passed": true,
+    "contradictions_eval": true
+  },
+  "cases": [
+    {
+      "case_id": "pair_01_faster_rcnn_vs_retinanet_focal",
+      "work_id_a": "a05f7281-dd74-4269-b10e-75aecf09320d",
+      "work_id_b": "bc0d4f69-040a-428c-bc44-04ebf4c52dbc",
+      "subtype": "era_shift",
+      "metrics": {
+        "passed": true,
+        "materialized": true
+      },
+      "run_metadata": {
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "pair_02_faster_rcnn_vs_fcos",
+      "work_id_a": "a05f7281-dd74-4269-b10e-75aecf09320d",
+      "work_id_b": "3ca82fea-ba1d-4478-b34d-9182e88252de",
+      "subtype": "design_paradigm",
+      "metrics": {
+        "passed": true,
+        "materialized": true
+      },
+      "run_metadata": {
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "pair_03_faster_rcnn_vs_cornernet",
+      "work_id_a": "a05f7281-dd74-4269-b10e-75aecf09320d",
+      "work_id_b": "7dd806fd-db66-4c7b-8440-d98e0cab0827",
+      "subtype": "design_paradigm",
+      "metrics": {
+        "passed": true,
+        "materialized": true
+      },
+      "run_metadata": {
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "pair_04_faster_rcnn_vs_detr",
+      "work_id_a": "a05f7281-dd74-4269-b10e-75aecf09320d",
+      "work_id_b": "0ae8f9d9-ebcc-43f2-84c1-83c350b34d93",
+      "subtype": "post_processing",
+      "metrics": {
+        "passed": true,
+        "materialized": true
+      },
+      "run_metadata": {
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "pair_05_rcnn_vs_faster_rcnn",
+      "work_id_a": "62e2f9d4-d8f3-49d3-9523-4de4216335c3",
+      "work_id_b": "a05f7281-dd74-4269-b10e-75aecf09320d",
+      "subtype": "architectural",
+      "metrics": {
+        "passed": true,
+        "materialized": true
+      },
+      "run_metadata": {
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "pair_06_hog_human_detection_vs_rcnn",
+      "work_id_a": "a3285d1c-acc4-48af-aecd-777dd0acc796",
+      "work_id_b": "62e2f9d4-d8f3-49d3-9523-4de4216335c3",
+      "subtype": "classical_vs_deep",
+      "metrics": {
+        "passed": true,
+        "materialized": true
+      },
+      "run_metadata": {
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "pair_07_retinanet_focal_vs_efficientdet",
+      "work_id_a": "bc0d4f69-040a-428c-bc44-04ebf4c52dbc",
+      "work_id_b": "142db14f-610a-44ca-b928-83aa48f749a0",
+      "subtype": "scaling",
+      "metrics": {
+        "passed": true,
+        "materialized": true
+      },
+      "run_metadata": {
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
+        "semantic_extraction_enabled": true
+      }
+    }
+  ]
+}

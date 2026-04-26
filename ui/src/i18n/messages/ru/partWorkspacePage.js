@@ -27,6 +27,7 @@ export default {
   "workspace.empty.alert":
     "Пока нет рабочей области. Создайте её в списке «Рабочие области», затем загрузите PDF или текст либо привяжите существующий идентификатор статьи (work_id).",
   "workspace.empty.workspaces": "Рабочие области",
+  "workspace.empty.createWorkspace": "Новая область",
   "workspace.empty.about": "О приложении",
 
   "workspace.header.eyebrow": "Рабочая область",
@@ -42,6 +43,8 @@ export default {
   "workspace.header.generateHypotheses": "Сгенерировать гипотезы",
   "workspace.header.graphStatsLine":
     "Граф: {{works}} работ · {{authors}} авторов · {{internal}} внутр. цит. · {{external}} внеш. цит.",
+  "workspace.hero.switchWorkspaceHint":
+    "Выберите рабочую область в меню выше или создайте новую, чтобы прикрепить статьи.",
   "workspace.summary.dialogTitle": "Сводка по рабочей области",
   "workspace.summary.empty": "Сводки пока нет.",
   "workspace.idea.dialogTitle": "Помощник гипотез и противоречий",
@@ -61,6 +64,8 @@ export default {
   "workspace.upload.newWorkId": "Новый work_id (id статьи):",
   "workspace.upload.dash": "—",
   "workspace.ingest.progressLabel": "Общий прогресс: {{pct}}%",
+  "workspace.ingest.stageUnknown": "стадия",
+  "workspace.ingest.stageEtaSeconds": "~{{sec}} с",
   "workspace.ingest.detailsLogs": "Подробности / логи",
 
   "workspace.advanced.accordion": "Дополнительно: привязать статью по work_id",

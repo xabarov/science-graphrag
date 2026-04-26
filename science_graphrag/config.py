@@ -340,6 +340,10 @@ class Settings(BaseSettings):
         default=False,
         description="Enable Wave S idea-assist endpoint (/v1/agent/idea-assist).",
     )
+    idea_assist_live_runtime: bool = Field(
+        default=True,
+        description="BT10: when false, responses still succeed but run_metadata marks harness/offline.",
+    )
     agent_runtime: str = Field(default="langgraph_supervisor_v1")
     agent_max_tool_calls: int = Field(default=8, ge=1, le=30)
     agent_step_timeout_seconds: float = Field(default=30.0, ge=1.0, le=180.0)
@@ -429,6 +433,13 @@ class Settings(BaseSettings):
                 "on",
             )
 
+        lx_refs = data.get("llm_concurrency_extraction_references")
+        leg_refs = data.get("extraction_llm_references_max_concurrency")
+        if lx_refs is None and leg_refs is not None:
+            data["llm_concurrency_extraction_references"] = leg_refs
+        if leg_refs is None and lx_refs is not None:
+            data["extraction_llm_references_max_concurrency"] = lx_refs
+
         if not data.get("extraction_llm_api_key"):
             ex_key = os.getenv("MAIN_LLM_API_KEY") or os.getenv("API_KEY")
             if ex_key:
@@ -443,6 +454,16 @@ class Settings(BaseSettings):
             "MAIN_LLM_MODEL",
         ):
             data["extraction_llm_model"] = os.environ["MAIN_LLM_MODEL"].strip()
+
+        # ADR-021: ``SCIENCE_GRAPHRAG_EMBEDDING_MODEL=baai/bge-m3`` maps to ``embedding_model`` but
+        # hub-style ids must use the OpenRouter slot so ``resolve_embedder`` picks the API path.
+        emb_model = data.get("embedding_model")
+        oor = data.get("openrouter_embedding_model")
+        if isinstance(emb_model, str) and "/" in emb_model.strip():
+            hub = emb_model.strip()
+            if oor is None or str(oor).strip() == hub:
+                data["openrouter_embedding_model"] = hub
+                data.pop("embedding_model", None)
 
         return data
 

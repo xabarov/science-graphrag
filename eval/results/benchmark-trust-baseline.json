@@ -2,7 +2,7 @@
   "schema_version": 1,
   "decision_gate": {
     "decision": "CONDITIONAL-GO",
-    "reason": "all_nightly_passed;advisory_phantom_count=8",
+    "reason": "all_nightly_passed;advisory_phantom_count=6",
     "criteria": {
       "reference_all_passed": true,
       "layer1_nightly_failed_count": 0,
@@ -10,16 +10,14 @@
       "claims_production_artifact_missing": false,
       "claims_production_all_passed": true,
       "claims_production_mean_claim_recall": 1.0,
-      "advisory_phantom_count": 8,
+      "advisory_phantom_count": 6,
       "advisory_phantom_families": [
         "merge_safe_contract_mock",
         "strict_pilot_mock",
         "hybrid_ablation",
-        "claims_paraphrase_pilot",
         "claims_paraphrase_holdout",
         "concept_topic_mini",
-        "agent_tools_mini",
-        "agent_tools_judge"
+        "agent_tools_mini"
       ],
       "advisory_individual_failures": [
         {
@@ -350,6 +348,64 @@
             "hybrid_hit_count": 5,
             "uuid_aware_mode": true
           }
+        },
+        {
+          "family": "claims_family",
+          "member_id": "claims_paraphrase_pilot",
+          "case_id": "corpus_ssd_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.0,
+            "claim_precision": 0.0,
+            "claim_precision_distracted": 0.0,
+            "precision_drop_with_distractors": 0.0,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 4,
+            "predicted_count_plain": 0,
+            "predicted_count_distracted": 0,
+            "matched_claim_ids": [],
+            "missing_claim_ids": [
+              "ssd_default_boxes_multiscale",
+              "ssd_300_voc_speed",
+              "ssd_multiple_feature_maps",
+              "ssd_yolo_localization_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "family": "claims_family",
+          "member_id": "claims_paraphrase_pilot",
+          "case_id": "corpus_yolov1_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.0,
+            "claim_precision": 0.0,
+            "claim_precision_distracted": 0.0,
+            "precision_drop_with_distractors": 0.0,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 6,
+            "predicted_count_plain": 0,
+            "predicted_count_distracted": 0,
+            "matched_claim_ids": [],
+            "missing_claim_ids": [
+              "yolov1_unified_pipeline",
+              "yolov1_speed_45_155_fps",
+              "yolov1_grid_based_detection",
+              "yolov1_localization_error_negative",
+              "yolov1_artwork_generalization",
+              "yolov1_two_stage_higher_acc_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
         }
       ],
       "hard_block_individual_failures": []
@@ -366,9 +422,8 @@
       "mixed_validation_status_member_count": 1
     },
     "claims_family": {
-      "phantom_member_count": 2,
+      "phantom_member_count": 1,
       "phantom_members": [
-        "claims_family.claims_paraphrase_pilot",
         "claims_family.claims_paraphrase_holdout"
       ],
       "mixed_validation_status_member_count": 0
@@ -391,23 +446,20 @@
       "mixed_validation_status_member_count": 0
     },
     "agent_tools_family": {
-      "phantom_member_count": 2,
+      "phantom_member_count": 1,
       "phantom_members": [
-        "agent_tools_family.agent_tools_mini",
-        "agent_tools_family.agent_tools_judge"
+        "agent_tools_family.agent_tools_mini"
       ],
       "mixed_validation_status_member_count": 1
     }
   },
-  "advisory_phantom_count": 8,
+  "advisory_phantom_count": 6,
   "advisory_phantom_families": [
     "merge_safe_contract_mock",
     "strict_pilot_mock",
     "hybrid_ablation",
-    "claims_paraphrase_pilot",
     "claims_paraphrase_holdout",
     "concept_topic_mini",
-    "agent_tools_mini",
-    "agent_tools_judge"
+    "agent_tools_mini"
   ]
 }

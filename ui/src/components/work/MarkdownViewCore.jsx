@@ -29,9 +29,26 @@ export function unwrapOuterMarkdownCodeFence(source) {
   if (end <= start) return source;
   const first = lines[start].trim().replace(/^\uFEFF/, "");
   const last = lines[end].trim();
-  if (!/^```[\w+-]*$/.test(first) || last !== "```") return source;
+  if (!/^```[\w+-]*\s*$/.test(first) || last !== "```") return source;
   const inner = lines.slice(start + 1, end).join("\n");
   return inner.length ? inner : source;
+}
+
+/**
+ * VL PDF dumps often indent every line with 4+ spaces. In CommonMark that turns the
+ * whole document into an indented code block, so `**bold**` stays literal in <pre>.
+ * Strip one uniform block of 4 leading spaces per line when every non-empty line has it.
+ *
+ * @param {string} source
+ * @returns {string}
+ */
+export function stripUniformFourSpaceIndent(source) {
+  if (source == null || typeof source !== "string") return "";
+  const lines = source.replace(/\r\n/g, "\n").split("\n");
+  const nonempty = lines.filter((l) => l.trim().length > 0);
+  if (nonempty.length === 0) return source;
+  if (!nonempty.every((l) => /^ {4}/.test(l))) return source;
+  return lines.map((l) => (l.startsWith("    ") ? l.slice(4) : l)).join("\n");
 }
 
 /**
@@ -42,6 +59,11 @@ export function preprocessReaderMarkdown(source) {
   if (source == null || typeof source !== "string") return "";
   let t = source.replace(/\r\n/g, "\n").replace(/\r/g, "\n").replace(/\u00a0/g, " ");
   t = unwrapOuterMarkdownCodeFence(t);
+  for (let i = 0; i < 64; i += 1) {
+    const next = stripUniformFourSpaceIndent(t);
+    if (next === t) break;
+    t = next;
+  }
   return t.trimEnd();
 }
 

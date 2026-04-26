@@ -28,7 +28,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <HashRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <Box sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+          <Box sx={{ flex: 1, minHeight: 0, height: "100%", display: "flex", flexDirection: "column" }}>
             <App />
           </Box>
         </HashRouter>

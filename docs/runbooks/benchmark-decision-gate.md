@@ -186,7 +186,7 @@ Single-case retest после правок gold (если лежат в `eval/re
 | `hybrid_ablation` | `extraction_llm_model is null` и идентичные triples MRR по всем кейсам | да → `synthetic_gold` |
 | `concept_topic_mini` | v1 mini harness (substring) | да → `harness_substring` |
 | `judge_pilot` | всегда живой judge | нет → `live` |
-| `agent_tools_judge` | `error == missing_file` | да → `missing` |
+| `agent_tools_judge` | `error == missing_file` → `missing` (**phantom**); иначе при непустом `run_metadata.extraction_llm_model` и не `"mock"` → `live` (**не phantom**; смысл метрик всё равно зависит от того, live ли `agent_tools_mini`) | см. условие слева |
 
 `validation_status_aggregate` строится по большинству `meta.validation_status` из `tests/fixtures/benchmarks/**/gold.json` для соответствующего поддерева (≥80% одного статуса, иначе `mixed`).
 

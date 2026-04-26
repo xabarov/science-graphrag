@@ -26,11 +26,13 @@ Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-co
 | 2026-04-26 | **Benchmark UI:** Compare/Run tabs split — `useCompareTab`, `CompareDeltaTable`, `CompareTabSummarySection`, `benchmarkCompareModel` + vitest; `useRunTab`, `RunTabCurrentRunSection`, `runTabCaseToggle`; workbench run panel → `workbench/BenchmarkWorkbenchRunPanel.jsx` (`WorkbenchRunScopedPanel`). |
 | 2026-04-26 | **Workspace UX + ingest dedup (full-stack slice):** full-width `WorkspacePage`; `PageActionToolbar` / `CursorIconAction` / `CopyIdButton` in hero and cards; side panel без smart-dedup poll; удалены `WorkspaceDedupSection`, `DeduplicationPanel`, `WorkDedupReviewDialog`; `IngestConflictReviewCard` + `pending_conflicts_count` на ingest job; икон-действия на Home / Workspaces / Graph / Benchmark / Settings / Diagnostics / Evidence / Admin entry / NotFound / workspace tabs. |
 | 2026-04-26 | **Big plan slice (master roadmap phases 0/2/4/5/8 partial):** `scripts/benchmark_aggregator/paths.py` + import из `aggregate_benchmark_metrics.py`; child batch `progress_pct` в `WorkspaceIngestPanel.jsx`; `WorkspaceLayout` stretch + minHeight; `WorkspaceContextChip` (иконка папки, короткий id в списке, title на строке); `EDGE_DISPLAY_TYPE_READER` + тест; `ExtractorBase._safe_parse_json` + `claims_v2`; i18n `settings.ingestion.saveError`; `.env.example` ссылка на ADR-021; `/v2/agent/query` SSE — закрыт пунктом ниже. |
+| 2026-04-27 | **WX5 minimal + shell polish:** [`WorkspaceSwitcher.jsx`](../../ui/src/components/layout/WorkspaceSwitcher.jsx) (re-export chip) в [`DashboardLayout.jsx`](../../ui/src/components/layout/DashboardLayout/DashboardLayout.jsx) и [`WorkspaceHero.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceHero.jsx); i18n `workspace.hero.switchWorkspaceHint` (EN/RU); chip label без UUID — `shell.workspaceChip.unnamed` когда нет имени ([`WorkspaceContextChip.jsx`](../../ui/src/components/layout/WorkspaceContextChip.jsx)); `WorkspaceLayout` — больший `minHeight` grid + flex main. |
+| 2026-04-27 | **WX5 empty-state CTA:** кнопка «Новая область» / `workspace.empty.createWorkspace` + `createWorkspace()` и синхрон URL `workspace_id` в [`useWorkspacePageCore.jsx`](../../ui/src/pages/WorkspacePage/useWorkspacePageCore.jsx) empty-state; i18n EN/RU в `partWorkspacePage.js`. |
 
 ## Queue
 
 ### [OPEN] Workspace shell — «Research» chip, dropdown noise, пустая зона под карточками
-- **Progress (2026-04-26):** [`WorkspaceContextChip`](../../ui/src/components/layout/WorkspaceContextChip.jsx) — иконка папки, tooltip с полным id на чипе, в списке короткий id + `title` на строке; [`WorkspaceLayout`](../../ui/src/pages/WorkspacePage/WorkspaceLayout.jsx) — `alignItems: stretch`, `minHeight` на grid, main — flex column. Остаётся: WX5 switcher, второй ряд контента под карточками, копирование id из dropdown.
+- **Progress (2026-04-27):** см. Completed (WX5 minimal, empty-state **create workspace** CTA, chip `unnamed`, layout `minHeight`). **Остаётся:** второй ряд контента под карточками (ingest/dedup/illustration), улучшение копирования id из dropdown, searchable switcher в popover.
 - **Area:** [`DashboardLayout`](../../ui/src/components/layout/DashboardLayout/), [`WorkspaceContextChip`](../../ui/src/components/layout/WorkspaceContextChip.jsx) (или аналог триггера «Research»), [`WorkspaceLayout.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceLayout.jsx) / [`WorkspacePage.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx)
 - **Issue:** Чип в углу слабо аффордирует «смена области»; в списке под именем длинный UUID — визуальный шум (мы уже убрали id с hero, но chip всё ещё дублирует низкоуровневый id). Под сеткой карточек остаётся большая пустая область — layout не тянет main на высоту viewport / нет явного второго ряда контента (ingest progress, dedup, пустой state illustration).
 - **Proposal:** (1) Заменить или дополнить чип: иконка области + короткое имя без UUID в основной строке (id в tooltip / «Копировать id»). (2) Рассмотреть `WorkspaceSwitcher` из backlog WX5 как primary entry. (3) Main column: `flex: 1` + `minHeight` / placeholder или закрепить `IngestConflictReviewCard` / ingest stepper внизу колонки при наличии событий.
@@ -271,29 +273,20 @@ Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-co
 - **Acceptance:** единый визуальный язык с остальным приложением без потери ясности для upload.
 - **Raised:** 2026-04-26
 
-### [OPEN] Workspace UX — Wave WX5 workspace switcher + create CTA
-- **Area:** новый [`ui/src/components/layout/WorkspaceSwitcher.jsx`](../../ui/src/components/layout/WorkspaceSwitcher.jsx);
-  [`DashboardLayout.jsx`](../../ui/src/components/layout/DashboardLayout/DashboardLayout.jsx);
-  [`WorkspaceContextChip.jsx`](../../ui/src/components/layout/WorkspaceContextChip.jsx) (deprecate/remove);
-  [`WorkspaceHero.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceHero.jsx) (из WX1);
-  [`WorkspacePage.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx) (новый empty state)
-- **Issue:** «Создать новую workspace» доступно только внутри `WorkspaceContextChip` `Popover` (28×220px chip
-  в правом верхнем углу shell-хедера, малозаметен) или на отдельной странице `/workspaces`. На самой `/workspace`
-  без активной области показывается info-`Alert` с ссылкой `/workspaces` — пользователь должен покинуть страницу.
-- **Proposal:** Расширить `WorkspaceContextChip` в полноценный `WorkspaceSwitcher.jsx`:
-  триггер — `Button` h36 с `FolderOpenOutlinedIcon` слева и `ExpandMoreOutlinedIcon` справа;
-  popover с searchable списком (search-поле сверху, цветной «аватар» от id, badge `{count}`);
-  footer-пиктограммы: `+ Новая` / `⚙ Управлять` / `↗ Открыть текущую`;
-  empty state триггера — `Выбрать область` с пунктирной обводкой и subtle pulse animation.
-  Использовать switcher и в shell-хедере, и inline в `WorkspaceHero`.
-  Empty state в `WorkspacePage.jsx`: большой блок с CTA `+ Новая рабочая область` (создаёт `Workspace N` через
-  `createWorkspace` и редиректит) + secondary `Открыть существующую` (открывает switcher popover).
-  План: [`docs/analysis/workspace-ux-redesign-2026-04-25.md`](../analysis/workspace-ux-redesign-2026-04-25.md) §3.4 + §3.5.
-- **Acceptance:** На `/workspace` без активной области виден большой CTA «+ Новая»; клик создаёт workspace и
-  редиректит на её URL; имя workspace в `WorkspaceHero` кликабельно, открывает switcher; switcher доступен
-  в shell-хедере на любой странице; `npm run lint` / `npm run test` зелёные.
-- **Synergy:** Зависит от WX1 (нужен `WorkspaceHero`).
-- **Raised:** 2026-04-25
+### [DONE] Workspace UX — Wave WX5 workspace switcher (minimal v1)
+- **Note (2026-04-27):** Реализован **minimal slice** из roadmap: [`WorkspaceSwitcher.jsx`](../../ui/src/components/layout/WorkspaceSwitcher.jsx) подключён в [`DashboardLayout.jsx`](../../ui/src/components/layout/DashboardLayout/DashboardLayout.jsx) (shell) и в [`WorkspaceHero.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceHero.jsx) (toolbar при активной области + строка подсказки при отсутствии области); тот же компонент технически реэкспортирует `WorkspaceContextChip` (Popover с «Создать» / «Управление» сохранён). **Не реализовано** относительно исходного proposal: searchable список, dashed empty-trigger, отдельный megatron empty-state на [`WorkspacePage.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx) — приоритизировать в follow-up если UX-метрики потребуют.
+- **Area:** как выше + i18n `workspace.hero.switchWorkspaceHint`, `shell.workspaceChip.unnamed`
+- **Acceptance (факт v1):** switcher виден в shell и в hero; без активной области — подсказка + доступ к созданию через существующий popover; `npm run lint` зелёный на затронутых файлах.
+- **Synergy:** WX1 ✅
+- **Raised:** 2026-04-25; **Done:** 2026-04-27 (minimal)
+
+### [OPEN] Workspace UX — Wave WX5 follow-up (searchable list + richer switcher)
+- **Area:** [`WorkspaceSwitcher.jsx`](../../ui/src/components/layout/WorkspaceSwitcher.jsx) (реальная обёртка вместо re-export), [`WorkspaceContextChip.jsx`](../../ui/src/components/layout/WorkspaceContextChip.jsx)
+- **Progress (2026-04-27):** on-page **«New workspace»** (`workspace.empty.createWorkspace`) в empty-state [`useWorkspacePageCore.jsx`](../../ui/src/pages/WorkspacePage/useWorkspacePageCore.jsx) — создаёт область и обновляет `workspace_id` в URL.
+- **Issue:** Список областей в popover по-прежнему не searchable; триггер — старый Chip, не отдельная кнопка h36 из исходного макета.
+- **Proposal:** Вынести разметку из `WorkspaceContextChip` в составной `WorkspaceSwitcher` (или расширить chip props); empty state блок на `WorkspacePage` по [`workspace-ux-redesign-2026-04-25.md`](../analysis/workspace-ux-redesign-2026-04-25.md) §3.5.
+- **Acceptance:** как в старом OPEN WX5 (megatron CTA + search) **или** осознанно сузить продуктовый scope и обновить ADR/workspace doc.
+- **Raised:** 2026-04-27
 
 ### [DONE] Workspace UX — Wave WX6 superseded (ingest conflict card replaces smart-dedup surface)
 - **Note (2026-04-26):** `WorkspaceDedupSection` / `WorkDedupReviewDialog` / graph `DeduplicationPanel` удалены; очередь конфликтов — через smart-dedup API + `IngestConflictReviewCard` (i18n `workspace.ingestDedup.*`). Опциональный отдельный `DedupQueueDialog` не требуется для текущего продукта.

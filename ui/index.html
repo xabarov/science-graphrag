@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
     <title>science-graphrag — Benchmarks</title>
+    <style>
+      /* Inline scroll-root reset: applied before any imported CSS / MUI CssBaseline
+         so the document can never produce its own scrollbar. */
+      html, body { height: 100%; margin: 0; overflow: hidden; }
+      #root { position: fixed; inset: 0; overflow: hidden; display: flex; flex-direction: column; }
+    </style>
   </head>
   <body>
     <div id="root"></div>

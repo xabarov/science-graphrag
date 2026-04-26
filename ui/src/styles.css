@@ -4,24 +4,22 @@
 
 html,
 body {
-  height: 100%;
-  margin: 0;
+  height: 100% !important;
+  margin: 0 !important;
+  overflow: hidden !important;
 }
 
 /*
- * Prevent browser-level scroll. The only scrollbar in the app
- * is the overflow-y:auto box inside DashboardLayout <main>.
- * Setting overflow:hidden on html (the document scroll root) is
- * the most reliable cross-browser way to achieve this.
+ * Pin the app to the visual viewport so nothing can grow the document
+ * (avoids the browser scrollbar on the window edge). Scroll only inside
+ * DashboardLayout's <main> outlet region.
  */
-html {
-  overflow: hidden;
-}
-
 #root {
-  height: 100%;
+  position: fixed !important;
+  inset: 0 !important;
   display: flex;
   flex-direction: column;
+  overflow: hidden !important;
 }
 
 /* Keyboard focus visibility (Phase 7 a11y) */

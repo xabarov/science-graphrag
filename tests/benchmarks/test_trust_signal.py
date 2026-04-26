@@ -44,6 +44,12 @@ def test_detect_runtime_mode_agent_mock() -> None:
     assert detect_runtime_mode("agent_tools_mini", block, cases) == "mock_runtime"
 
 
+def test_detect_runtime_mode_contradictions_v1_mini_live() -> None:
+    cases = [{"case_id": "pair_01", "metrics": {"passed": True}}]
+    block: dict = {"run_metadata": {}}
+    assert detect_runtime_mode("contradictions_v1_mini", block, cases) == "live"
+
+
 def test_detect_runtime_mode_multihop_broken() -> None:
     cases = [
         {
@@ -70,6 +76,15 @@ def test_detect_runtime_mode_claims_paraphrase_oracle_synthetic() -> None:
     ]
     block: dict = {"run_metadata": {}}
     assert detect_runtime_mode("claims_paraphrase_pilot", block, cases) == "synthetic_gold"
+
+
+def test_detect_runtime_mode_claims_paraphrase_explicit_live() -> None:
+    cases = [
+        {"case_id": "c1", "runtime_mode": "live", "oracle_predictions": False},
+        {"case_id": "c2", "runtime_mode": "live", "oracle_predictions": False},
+    ]
+    block: dict = {"run_metadata": {}}
+    assert detect_runtime_mode("claims_paraphrase_holdout", block, cases) == "live"
 
 
 def test_detect_runtime_mode_workspace_verified_by_sibling_live() -> None:
@@ -314,5 +329,6 @@ def test_compute_gate_trust_criteria_wires_judge_hard_block() -> None:
         references_resolution_family=empty,
         concept_topic_family=empty,
         agent_tools_family=empty,
+        contradictions_family=empty,
     )
     assert "retrieval_judge_pilot" in crit["hard_block_individual_failures"]

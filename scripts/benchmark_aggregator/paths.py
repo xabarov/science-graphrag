@@ -47,6 +47,8 @@ DEFAULT_REFERENCES_RESOLUTION_GRAPH = "eval/results/current-references-resolutio
 
 DEFAULT_CONCEPT_TOPIC_MINI_SUITE = "eval/results/current-concept-topic-mini.json"
 
+DEFAULT_CONTRADICTIONS_V1_MINI_SUITE = "eval/results/current-contradictions-v1-mini.json"
+
 SUPPLEMENTARY_RETESTS = (
     "eval/results/retest-centernet-after-gold-fix.json",
     "eval/results/retest-deformable-detr-after-gold-fix.json",

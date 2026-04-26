@@ -1,0 +1,71 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
+    "semantic_extraction_enabled": true,
+    "judge_prompt_fingerprint": "sha256-20:d3c2b207458ebbc39dde",
+    "judge_schema_version": "agent_tools_judge_v1",
+    "agent_tools_artifact": "eval/results/current-agent-tools-mini.json"
+  },
+  "summary": {
+    "case_count": 10,
+    "mean_weighted_score": 4.8,
+    "all_passed": true,
+    "agent_tools_judge_eval": true
+  },
+  "cases": [
+    {
+      "case_id": "agent_case_01",
+      "weighted_score": 4.8,
+      "passed": true
+    },
+    {
+      "case_id": "agent_case_02",
+      "weighted_score": 4.8,
+      "passed": true
+    },
+    {
+      "case_id": "agent_case_03",
+      "weighted_score": 4.8,
+      "passed": true
+    },
+    {
+      "case_id": "agent_case_04",
+      "weighted_score": 4.8,
+      "passed": true
+    },
+    {
+      "case_id": "agent_case_05",
+      "weighted_score": 4.8,
+      "passed": true
+    },
+    {
+      "case_id": "agent_case_06",
+      "weighted_score": 4.8,
+      "passed": true
+    },
+    {
+      "case_id": "agent_case_07",
+      "weighted_score": 4.8,
+      "passed": true
+    },
+    {
+      "case_id": "agent_case_08",
+      "weighted_score": 4.8,
+      "passed": true
+    },
+    {
+      "case_id": "agent_case_09",
+      "weighted_score": 4.8,
+      "passed": true
+    },
+    {
+      "case_id": "agent_case_10",
+      "weighted_score": 4.8,
+      "passed": true
+    }
+  ]
+}

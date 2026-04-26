@@ -2,6 +2,8 @@
 
 `science-graphrag ingest-corpus` now supports per-file timeout and resume checkpointing.
 
+After a **Qdrant embedding cutover** (drop/recreate collections at a new vector size), you must re-ingest — see [`phase0-bge-m3-qdrant-cutover.md`](phase0-bge-m3-qdrant-cutover.md).
+
 ## Recommended command
 
 ```bash

@@ -44,8 +44,13 @@ def _queued_blob_path(*, settings: Settings, job_id: str, filename: str) -> Path
 def enqueue_ingest_job(job_id: str) -> None:
     """Enqueue ingest job to Dramatiq worker."""
     from science_graphrag.worker.actor import ingest_document_actor
+    from science_graphrag.worker.trace_options import dramatiq_otel_options
 
-    ingest_document_actor.send(job_id)
+    otel_opts = dramatiq_otel_options()
+    if otel_opts:
+        ingest_document_actor.send_with_options(args=(job_id,), **otel_opts)
+    else:
+        ingest_document_actor.send(job_id)
 
 
 def start_batch_ingest_job(

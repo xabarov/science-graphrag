@@ -27,6 +27,7 @@ export default {
   "workspace.empty.alert":
     "No workspace yet. Create one under Workspaces, then upload a PDF / text or attach an existing indexed work_id.",
   "workspace.empty.workspaces": "Workspaces",
+  "workspace.empty.createWorkspace": "New workspace",
   "workspace.empty.about": "About",
 
   "workspace.header.eyebrow": "Workspace",
@@ -42,6 +43,8 @@ export default {
   "workspace.header.generateHypotheses": "Generate hypotheses",
   "workspace.header.graphStatsLine":
     "Graph: {{works}} works · {{authors}} authors · {{internal}} internal cites · {{external}} external cites",
+  "workspace.hero.switchWorkspaceHint":
+    "Choose a workspace from the menu above or create a new one to attach papers.",
   "workspace.summary.dialogTitle": "Workspace summary",
   "workspace.summary.empty": "No summary yet.",
   "workspace.idea.dialogTitle": "Hypothesis / contradiction assist",
@@ -60,6 +63,8 @@ export default {
   "workspace.upload.newWorkId": "New work_id:",
   "workspace.upload.dash": "—",
   "workspace.ingest.progressLabel": "Overall progress: {{pct}}%",
+  "workspace.ingest.stageUnknown": "stage",
+  "workspace.ingest.stageEtaSeconds": "~{{sec}}s",
   "workspace.ingest.detailsLogs": "Details / logs",
 
   "workspace.advanced.accordion": "Advanced: add existing work_id",

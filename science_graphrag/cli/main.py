@@ -19,6 +19,9 @@ from science_graphrag.storage.qdrant_store import (
     recreate_all_embedding_collections,
     recreate_qdrant_chunk_collection,
 )
+from science_graphrag.storage.qdrant_store.recreate_embedding_collections import (
+    describe_embedding_collections_cutover,
+)
 
 app = typer.Typer(no_args_is_help=True, help="science-graphrag CLI")
 
@@ -220,10 +223,24 @@ def qdrant_recreate_collection_cmd() -> None:
 
 
 @app.command("qdrant-recreate-embedding-collections")
-def qdrant_recreate_embedding_collections_cmd() -> None:
-    """Drop and recreate all dense-vector Qdrant collections (chunks, works, claims, authors, entities)."""
+def qdrant_recreate_embedding_collections_cmd(
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Resolve vector_dim and print target collection names; do not delete or create.",
+    ),
+) -> None:
+    """Drop and recreate dense-vector Qdrant collections (chunks, work/claim/author/entity)."""
 
     s = get_settings()
+    if dry_run:
+        dim, targets, existing = describe_embedding_collections_cutover(s)
+        typer.echo(f"Qdrant dry-run: vector_dim={dim} url={s.qdrant_url!r}")
+        for name in sorted(targets):
+            typer.echo(f"  - {name}  (exists_now={name in existing})")
+        typer.echo("No collections were modified. Omit --dry-run to drop+recreate.")
+        return
+
     dim = recreate_all_embedding_collections(s)
     typer.echo(
         f"Qdrant: recreated embedding collections with vector_dim={dim} "

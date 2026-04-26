@@ -16,9 +16,7 @@ from eval.concept_topic.metrics import score_concept_topic_extraction
 from science_graphrag.config import Settings, get_settings
 
 
-def extract_concepts_topics_production_stub(
-    _article: str, _gold: dict[str, Any]
-) -> dict[str, Any]:
+def extract_concepts_topics_production_stub(_article: str, _gold: dict[str, Any]) -> dict[str, Any]:
     """Placeholder until production LLM extractor exists."""
 
     return {"concepts": [], "topics": []}
@@ -180,6 +178,7 @@ def _run_concept_topic_suite(
         summary_from_reports=lambda reports: {
             "all_passed": all(_report_passed(r) for r in reports),
             "concept_topic_eval": True,
+            "extractor": (reports[0].get("extractor") if reports else None),
         },
     )
     if not bool(payload.get("summary", {}).get("all_passed", True)):
@@ -200,15 +199,15 @@ def _cli(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         help="Suite tier from case_tiers.json (e.g. concept_topic_merge_contract, concept_topic_mini).",
     ),
     extractor: str = typer.Option(
-        "harness",
+        "production",
         "--extractor",
-        help='Extractor: "harness" (anchor phrases), "production" (stub; returns empty).',
+        help='Extractor: "production" (LLM / stub when disabled), "harness" (anchor phrases).',
     ),
     json_out: Path | None = typer.Option(None, "--json-out", help="Write JSON report path"),
     md_out: Path | None = typer.Option(None, "--md-out", help="Write Markdown summary path"),
 ) -> None:
     settings = get_settings()
-    ext = str(extractor or "harness").strip().lower()
+    ext = str(extractor or "production").strip().lower()
     if ext in {"harness", "anchor", "anchor_harness"}:
         extract_fn: Callable[[str, dict[str, Any]], dict[str, Any]] = (
             extract_concepts_topics_anchor_harness

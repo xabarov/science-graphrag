@@ -6,9 +6,11 @@ import LightbulbOutlinedIcon from "@mui/icons-material/LightbulbOutlined";
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
+import Typography from "@mui/material/Typography";
 
 import { CopyIdButton, CursorIconAction } from "../../components/common/index.js";
 import PageHeader from "../../components/layout/PageHeader.jsx";
+import WorkspaceSwitcher from "../../components/layout/WorkspaceSwitcher.jsx";
 import PageActionToolbar from "../../components/layout/PageActionToolbar.jsx";
 import WorkIdGlossaryHint from "../../components/layout/WorkIdGlossaryHint.jsx";
 import { workAskUrl, workGraphUrl } from "./workspacePageUrls.js";
@@ -117,14 +119,26 @@ export default function WorkspaceHero({ t, vm }) {
         <PageActionToolbar
           groups={actionGroups}
           tail={
-            <CopyIdButton
-              id={vm.workspaceMeta.id}
-              tooltipCopy={t("workspace.tooltip.copyWorkspaceId")}
-              tooltipCopied={t("workspace.tooltip.copied")}
-            />
+            <>
+              <Box sx={{ display: "inline-flex", alignItems: "center", mr: 1 }}>
+                <WorkspaceSwitcher />
+              </Box>
+              <CopyIdButton
+                id={vm.workspaceMeta.id}
+                tooltipCopy={t("workspace.tooltip.copyWorkspaceId")}
+                tooltipCopied={t("workspace.tooltip.copied")}
+              />
+            </>
           }
         />
-      ) : null}
+      ) : (
+        <Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+          <WorkspaceSwitcher />
+          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)" }}>
+            {t("workspace.hero.switchWorkspaceHint")}
+          </Typography>
+        </Box>
+      )}
     </Box>
   );
 }

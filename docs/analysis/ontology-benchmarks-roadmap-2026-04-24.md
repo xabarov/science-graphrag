@@ -59,11 +59,11 @@
 | Advisory | References resolution (refs_mini / contract / graph_stub) | 3+1 | `synthetic` | **✓** при recall/precision 1.00, через **synthetic predictions** в gold; нет live resolver поверх Neo4j. ⚠️ |
 | Advisory | Concept/Topic mini (5 кейсов) | mini | **`harness_substring`** | Extractor `harness_extract.py` ищет `anchor_phrase` из gold в тексте → всегда зелёное by construction. ⛔ phantom — закрывается **BT7** |
 | Advisory | Agent tools mini (10 кейсов) | mini | **`mock_runtime`** | `--mock-runtime`: `latency_p95_ms=2`, `answer="mock answer"`. ⛔ phantom — закрывается **BT8** |
-| Advisory | Agent tools judge | pilot | **`missing`** | Артефакт `current-agent-tools-judge-pilot.json` отсутствует (`error: "missing_file"`). ⛔ закрывается **BT8** |
+| Advisory | Agent tools judge | pilot | **`live`** (heuristic) | `current-agent-tools-judge-pilot.json` коммит + nightly regenerate (2026-04-27); judge — эвристика над `current-agent-tools-mini.json`, **без** отдельного LLM. ⚠️ не снимает `mock_runtime` у mini; полный **BT8** — ещё live `agent_tools_mini` + стабильный nightly. |
 | Advisory | Agent tools multi-agent | mini | **`no_fixtures`** | После Wave Y4 supervisor добавлен `_specialist_sequence_match`, но `agent_tools_multiagent` fixtures не созданы. ⛔ закрывается **BT9** |
 | Advisory | Idea-assist mini (8 кейсов) | mini | **`mock_runtime`** | `--mock-runtime`: захардкоженный кандидат `"Synthetic benchmark hypothesis candidate."` (41 char ≥ 40 порога), все rubric-метрики проходят by construction. ⛔ phantom — закрывается **BT10** |
 | — | Entity dedup (Author/Inst/Venue/Method/Dataset) | — | **`no_fixtures`** | Pipeline-код есть; `dedup_v1/` фикстуры только для Work + heuristic matcher. Для остальных 5 типов precision/recall не измеряется. ⚠️ закрывается **BT11** |
-| — | Contradictions | — | **`no_persistence`** | `idea_workflow` возвращает `contradictions[]` payload, но `:CONTRADICTS` в Neo4j не пишется; bench отсутствует. ⛔ закрывается **BT12** |
+| — | Contradictions | — | **`live`** (bench) | **2026-04-26:** `eval/contradictions/runner.py` + `merge_work_contradicts` + `current-contradictions-v1-mini.json` + `contradictions_family` в aggregate; operator `--materialize`. Ingest-time `:CONTRADICTS` из `idea_workflow` — **ещё нет** (остаток **BT12** / продукт) |
 
 ### 1.2 Где сильный сигнал, а где «зелень — это контракт, а не качество»
 
@@ -93,7 +93,7 @@
 
 - **Multihop `mh_*`.** 5/5 fail с `Connection refused` — Neo4j не был поднят при последнем прогоне. Артефакт stale, агрегатор не блокирует. Закрывается **BT3**.
 - **Judge `judge_pilot`.** `mean=5.1 ≥ 4.5` overall PASS, но `live_yolov1_architecture` (3.7) и `live_yolov1_training` (4.4) **fail per-case**. Закрывается **BT5** (per-case gate).
-- **Agent tools judge.** Артефакт missing (`error: "missing_file"`). Закрывается **BT8**.
+- **Agent tools judge.** ~~Артефакт missing~~ **исправлено 2026-04-27:** `current-agent-tools-judge-pilot.json` (heuristic judge поверх `current-agent-tools-mini.json` + nightly regenerate). Полный **BT8** — ещё live `agent_tools_mini` (без `--mock-runtime` по умолчанию) + осмысленный LLM-rubric judge по live trace.
 
 ### 1.3 Декларативные дыры (ничего не измеряется)
 

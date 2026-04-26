@@ -32,7 +32,8 @@
     "references_resolution_graph": "eval/results/current-references-resolution-graph.json",
     "concept_topic_mini_suite": "eval/results/current-concept-topic-mini.json",
     "agent_tools_mini_suite": "eval/results/current-agent-tools-mini.json",
-    "agent_tools_judge_suite": "eval/results/current-agent-tools-judge-pilot.json"
+    "agent_tools_judge_suite": "eval/results/current-agent-tools-judge-pilot.json",
+    "contradictions_v1_mini_suite": "eval/results/current-contradictions-v1-mini.json"
   },
   "reference": {
     "all_passed": true,
@@ -1628,17 +1629,72 @@
           "corpus_ssd_v2",
           "corpus_yolov1_v2"
         ],
-        "all_passed": true,
+        "all_passed": false,
         "claims_paraphrase_eval": true
       },
-      "failed_count": 0,
-      "failed_cases": [],
-      "all_passed": true,
-      "mean_claim_recall": 1.0,
+      "failed_count": 2,
+      "failed_cases": [
+        {
+          "case_id": "corpus_ssd_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.0,
+            "claim_precision": 0.0,
+            "claim_precision_distracted": 0.0,
+            "precision_drop_with_distractors": 0.0,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 4,
+            "predicted_count_plain": 0,
+            "predicted_count_distracted": 0,
+            "matched_claim_ids": [],
+            "missing_claim_ids": [
+              "ssd_default_boxes_multiscale",
+              "ssd_300_voc_speed",
+              "ssd_multiple_feature_maps",
+              "ssd_yolo_localization_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "case_id": "corpus_yolov1_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.0,
+            "claim_precision": 0.0,
+            "claim_precision_distracted": 0.0,
+            "precision_drop_with_distractors": 0.0,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 6,
+            "predicted_count_plain": 0,
+            "predicted_count_distracted": 0,
+            "matched_claim_ids": [],
+            "missing_claim_ids": [
+              "yolov1_unified_pipeline",
+              "yolov1_speed_45_155_fps",
+              "yolov1_grid_based_detection",
+              "yolov1_localization_error_negative",
+              "yolov1_artwork_generalization",
+              "yolov1_two_stage_higher_acc_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        }
+      ],
+      "all_passed": false,
+      "mean_claim_recall": 0.0,
       "trust_signal": {
         "family": "claims_family",
         "member_id": "claims_paraphrase_pilot",
-        "runtime_mode": "synthetic_gold",
+        "runtime_mode": "live",
         "validation_status_aggregate": "draft",
         "validation_status_by_pack": {
           "corpus_detr_v2": "llm_dual_validated",
@@ -1664,10 +1720,65 @@
         },
         "last_known_real_run_at": null,
         "consistency_warnings": [
-          "claims_paraphrase_pilot: hybrid ablation appears synthetic (identical MRR rows)"
+          "claims_paraphrase_pilot: summary.all_passed=false with 2 failed cases"
         ],
-        "individual_failures": [],
-        "is_phantom": true
+        "individual_failures": [
+          {
+            "case_id": "corpus_ssd_v2",
+            "metrics": {
+              "contract_only": false,
+              "contract_passed": true,
+              "passed": false,
+              "claim_recall": 0.0,
+              "claim_precision": 0.0,
+              "claim_precision_distracted": 0.0,
+              "precision_drop_with_distractors": 0.0,
+              "max_precision_drop_with_distractors": 0.15,
+              "paraphrase_scoring": true,
+              "claim_match_mode": "claim_id_or_normalized_text",
+              "expected_count": 4,
+              "predicted_count_plain": 0,
+              "predicted_count_distracted": 0,
+              "matched_claim_ids": [],
+              "missing_claim_ids": [
+                "ssd_default_boxes_multiscale",
+                "ssd_300_voc_speed",
+                "ssd_multiple_feature_maps",
+                "ssd_yolo_localization_negative"
+              ],
+              "min_claim_recall": 0.55
+            }
+          },
+          {
+            "case_id": "corpus_yolov1_v2",
+            "metrics": {
+              "contract_only": false,
+              "contract_passed": true,
+              "passed": false,
+              "claim_recall": 0.0,
+              "claim_precision": 0.0,
+              "claim_precision_distracted": 0.0,
+              "precision_drop_with_distractors": 0.0,
+              "max_precision_drop_with_distractors": 0.15,
+              "paraphrase_scoring": true,
+              "claim_match_mode": "claim_id_or_normalized_text",
+              "expected_count": 6,
+              "predicted_count_plain": 0,
+              "predicted_count_distracted": 0,
+              "matched_claim_ids": [],
+              "missing_claim_ids": [
+                "yolov1_unified_pipeline",
+                "yolov1_speed_45_155_fps",
+                "yolov1_grid_based_detection",
+                "yolov1_localization_error_negative",
+                "yolov1_artwork_generalization",
+                "yolov1_two_stage_higher_acc_negative"
+              ],
+              "min_claim_recall": 0.55
+            }
+          }
+        ],
+        "is_phantom": false
       }
     },
     "claims_paraphrase_holdout": {
@@ -1726,9 +1837,8 @@
       }
     },
     "trust_aggregate": {
-      "phantom_member_count": 2,
+      "phantom_member_count": 1,
       "phantom_members": [
-        "claims_family.claims_paraphrase_pilot",
         "claims_family.claims_paraphrase_holdout"
       ],
       "mixed_validation_status_member_count": 0
@@ -2026,34 +2136,99 @@
       }
     },
     "agent_tools_judge": {
-      "error": "missing_file",
       "artifact": "eval/results/current-agent-tools-judge-pilot.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "judge_prompt_fingerprint": "sha256-20:d3c2b207458ebbc39dde",
+        "judge_schema_version": "agent_tools_judge_v1"
+      },
+      "summary": {
+        "case_count": 10,
+        "mean_weighted_score": 4.8,
+        "all_passed": true,
+        "agent_tools_judge_eval": true
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true,
+      "mean_weighted_score": 4.8,
       "trust_signal": {
         "family": "agent_tools_family",
         "member_id": "agent_tools_judge",
-        "runtime_mode": "missing",
+        "runtime_mode": "live",
         "validation_status_aggregate": null,
         "validation_status_by_pack": null,
         "last_known_real_run_at": null,
-        "consistency_warnings": [
-          "agent_tools_judge: artifact missing (error=missing_file)"
-        ],
+        "consistency_warnings": [],
         "individual_failures": [],
-        "is_phantom": true
+        "is_phantom": false
       }
     },
     "trust_aggregate": {
-      "phantom_member_count": 2,
+      "phantom_member_count": 1,
       "phantom_members": [
-        "agent_tools_family.agent_tools_mini",
-        "agent_tools_family.agent_tools_judge"
+        "agent_tools_family.agent_tools_mini"
       ],
+      "mixed_validation_status_member_count": 1
+    }
+  },
+  "contradictions_family": {
+    "role": "advisory",
+    "contradictions_v1_mini": {
+      "artifact": "eval/results/current-contradictions-v1-mini.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316"
+      },
+      "summary": {
+        "case_count": 7,
+        "case_ids": [
+          "pair_01_faster_rcnn_vs_retinanet_focal",
+          "pair_02_faster_rcnn_vs_fcos",
+          "pair_03_faster_rcnn_vs_cornernet",
+          "pair_04_faster_rcnn_vs_detr",
+          "pair_05_rcnn_vs_faster_rcnn",
+          "pair_06_hog_human_detection_vs_rcnn",
+          "pair_07_retinanet_focal_vs_efficientdet"
+        ],
+        "all_passed": true,
+        "contradictions_eval": true
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true,
+      "mean_claim_recall": null,
+      "trust_signal": {
+        "family": "contradictions_family",
+        "member_id": "contradictions_v1_mini",
+        "runtime_mode": "live",
+        "validation_status_aggregate": "mixed",
+        "validation_status_by_pack": {
+          "pair_05_rcnn_vs_faster_rcnn": "llm_dual_validated",
+          "pair_07_retinanet_focal_vs_efficientdet": "draft",
+          "pair_02_faster_rcnn_vs_fcos": "llm_dual_validated",
+          "pair_04_faster_rcnn_vs_detr": "draft",
+          "pair_01_faster_rcnn_vs_retinanet_focal": "llm_dual_validated",
+          "pair_06_hog_human_detection_vs_rcnn": "llm_triple_validated",
+          "pair_03_faster_rcnn_vs_cornernet": "llm_dual_validated"
+        },
+        "last_known_real_run_at": null,
+        "consistency_warnings": [],
+        "individual_failures": [],
+        "is_phantom": false
+      }
+    },
+    "trust_aggregate": {
+      "phantom_member_count": 0,
+      "phantom_members": [],
       "mixed_validation_status_member_count": 1
     }
   },
   "decision_gate": {
     "decision": "CONDITIONAL-GO",
-    "reason": "all_nightly_passed;advisory_phantom_count=8",
+    "reason": "all_nightly_passed;advisory_phantom_count=6",
     "criteria": {
       "reference_all_passed": true,
       "layer1_nightly_failed_count": 0,
@@ -2061,16 +2236,14 @@
       "claims_production_artifact_missing": false,
       "claims_production_all_passed": true,
       "claims_production_mean_claim_recall": 1.0,
-      "advisory_phantom_count": 8,
+      "advisory_phantom_count": 6,
       "advisory_phantom_families": [
         "merge_safe_contract_mock",
         "strict_pilot_mock",
         "hybrid_ablation",
-        "claims_paraphrase_pilot",
         "claims_paraphrase_holdout",
         "concept_topic_mini",
-        "agent_tools_mini",
-        "agent_tools_judge"
+        "agent_tools_mini"
       ],
       "advisory_individual_failures": [
         {
@@ -2400,6 +2573,64 @@
             "vector_hit_count": 5,
             "hybrid_hit_count": 5,
             "uuid_aware_mode": true
+          }
+        },
+        {
+          "family": "claims_family",
+          "member_id": "claims_paraphrase_pilot",
+          "case_id": "corpus_ssd_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.0,
+            "claim_precision": 0.0,
+            "claim_precision_distracted": 0.0,
+            "precision_drop_with_distractors": 0.0,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 4,
+            "predicted_count_plain": 0,
+            "predicted_count_distracted": 0,
+            "matched_claim_ids": [],
+            "missing_claim_ids": [
+              "ssd_default_boxes_multiscale",
+              "ssd_300_voc_speed",
+              "ssd_multiple_feature_maps",
+              "ssd_yolo_localization_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "family": "claims_family",
+          "member_id": "claims_paraphrase_pilot",
+          "case_id": "corpus_yolov1_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.0,
+            "claim_precision": 0.0,
+            "claim_precision_distracted": 0.0,
+            "precision_drop_with_distractors": 0.0,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 6,
+            "predicted_count_plain": 0,
+            "predicted_count_distracted": 0,
+            "matched_claim_ids": [],
+            "missing_claim_ids": [
+              "yolov1_unified_pipeline",
+              "yolov1_speed_45_155_fps",
+              "yolov1_grid_based_detection",
+              "yolov1_localization_error_negative",
+              "yolov1_artwork_generalization",
+              "yolov1_two_stage_higher_acc_negative"
+            ],
+            "min_claim_recall": 0.55
           }
         }
       ],

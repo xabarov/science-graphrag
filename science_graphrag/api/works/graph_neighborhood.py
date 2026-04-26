@@ -405,10 +405,22 @@ def _work_graph_neighborhood_payload(
     ).single()
     if not row:
         return None
+    counts_row = session.run(
+        """
+        MATCH (w:Work {id: $id})
+        OPTIONAL MATCH (wi:Work)-[:CITES]->(w)
+        OPTIONAL MATCH (w)-[:CITES]->(wo:Work)
+        OPTIONAL MATCH (w)-[:HAS_AUTHORSHIP]->(:Authorship)-[:OF_AUTHOR]->(auth:Author)
+        RETURN count(DISTINCT wi) AS cites_in_count,
+               count(DISTINCT wo) AS cites_out_count,
+               count(DISTINCT auth) AS authors_count
+        """,
+        id=work_id,
+    ).single()
     nodes: list[dict[str, Any]] = []
     edges: list[dict[str, Any]] = []
     center_id = str(row["wid"])
-    cprops = {}
+    cprops: dict[str, Any] = {}
     for k, v in (
         ("publication_year", row.get("wyear")),
         ("doi", str(row.get("wdoi") or "").strip()),
@@ -417,6 +429,10 @@ def _work_graph_neighborhood_payload(
     ):
         if v:
             cprops[k] = v
+    if counts_row:
+        cprops["cites_in_count"] = int(counts_row.get("cites_in_count") or 0)
+        cprops["cites_out_count"] = int(counts_row.get("cites_out_count") or 0)
+        cprops["authors_count"] = int(counts_row.get("authors_count") or 0)
     cr = compute_node_display("Work", str(row.get("wtitle") or "").strip(), cprops)
     nodes.append(
         {

@@ -66,6 +66,7 @@ _GOLD_SUBDIR_BY_MEMBER: Final[dict[str, str | None]] = {
     "concept_topic_mini": "concept_topic",
     "agent_tools_mini": "agent_tools_v1",
     "agent_tools_judge": None,
+    "contradictions_v1_mini": "contradictions_v1",
 }
 
 
@@ -118,9 +119,16 @@ def detect_runtime_mode(
 
     if member_id == "concept_topic_mini":
         extractor = str(meta.get("extractor") or meta.get("extractor_kind") or "").lower()
-        if "harness" in extractor:
+        summ = block.get("summary") if isinstance(block.get("summary"), dict) else {}
+        if isinstance(summ, dict) and not extractor:
+            extractor = str(summ.get("extractor") or "").lower()
+        if not extractor and cases:
+            extractor = str((cases[0] or {}).get("extractor") or "").lower()
+        if "harness" in extractor or "anchor" in extractor:
             return "harness_substring"
-        # v1 mini suite is harness substring tautology until BT7 production path.
+        if "production" in extractor or "prod" in extractor:
+            return "live"
+        # Default harness until an explicit production extractor is wired.
         return "harness_substring"
 
     if member_id == "agent_tools_mini" and cases:
@@ -137,6 +145,10 @@ def detect_runtime_mode(
                         break
         if mockish >= max(1, (len(cases) + 1) // 2):
             return "mock_runtime"
+        return "live"
+
+    if member_id == "contradictions_v1_mini" and cases:
+        # Neo4j relationship verification (BT12); not a mock-runtime suite.
         return "live"
 
     if member_id == "multihop_mini" and cases:
@@ -174,6 +186,19 @@ def detect_runtime_mode(
         return "canned"
 
     if member_id in {"claims_paraphrase_pilot", "claims_paraphrase_holdout"} and cases:
+        modes = {str(c.get("runtime_mode") or "") for c in cases if isinstance(c, dict)}
+        modes.discard("")
+        if len(modes) == 1:
+            only = next(iter(modes))
+            if only in {
+                "live",
+                "synthetic_gold",
+                "mock_runtime",
+                "harness_substring",
+                "canned",
+                "unknown",
+            }:
+                return only  # type: ignore[return-value]
         if all(bool(c.get("oracle_predictions")) for c in cases if isinstance(c, dict)):
             return "synthetic_gold"
 
@@ -360,6 +385,7 @@ def trust_baseline_payload(full_summary: dict[str, Any]) -> dict[str, Any]:
         "references_resolution_family",
         "concept_topic_family",
         "agent_tools_family",
+        "contradictions_family",
     ):
         block = full_summary.get(fname)
         if isinstance(block, dict):
@@ -383,6 +409,7 @@ def compute_gate_trust_criteria(
     references_resolution_family: dict[str, Any],
     concept_topic_family: dict[str, Any],
     agent_tools_family: dict[str, Any],
+    contradictions_family: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Derive phantom counts, phantom member labels, and hard-block family hits."""
 
@@ -417,6 +444,7 @@ def compute_gate_trust_criteria(
     walk("references_resolution_family", references_resolution_family)
     walk("concept_topic_family", concept_topic_family)
     walk("agent_tools_family", agent_tools_family)
+    walk("contradictions_family", contradictions_family or {"role": "advisory"})
 
     # Future: claims_production_holdout when artifact exists
     cp_block = claims_production_family.get("claims_pilot_production")

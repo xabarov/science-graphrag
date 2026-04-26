@@ -9,6 +9,7 @@ from science_graphrag.domain.semantic_models import SemanticExtractionV1
 from science_graphrag.storage.neo4j import reads
 from science_graphrag.storage.neo4j.writes import (
     claims,
+    contradictions,
     dedup,
     institutions,
     semantic,
@@ -38,6 +39,17 @@ class Neo4jGraphStoreDelegates:
 
     def work_exists(self, work_id: str) -> bool:
         return reads.work_exists(self._client, work_id)
+
+    def merge_work_contradicts(
+        self,
+        work_id_a: str,
+        work_id_b: str,
+        *,
+        subtype: str = "unspecified",
+    ) -> None:
+        contradictions.merge_work_contradicts(
+            self._client, work_id_a, work_id_b, subtype=subtype
+        )
 
     def work_has_incoming_cites(self, work_id: str) -> bool:
         return reads.work_has_incoming_cites(self._client, work_id)

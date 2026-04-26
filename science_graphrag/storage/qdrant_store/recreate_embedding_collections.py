@@ -16,6 +16,29 @@ from science_graphrag.storage.qdrant_store.entity_collections import (
 from science_graphrag.storage.qdrant_store.work_embeddings import QdrantWorkEmbeddingStore
 
 
+def qdrant_embedding_collection_names(settings: Settings) -> frozenset[str]:
+    """All Qdrant collection names managed by ``recreate_all_embedding_collections``."""
+
+    return frozenset(
+        {
+            settings.qdrant_collection,
+            settings.qdrant_work_embeddings_collection,
+            settings.qdrant_claims_collection,
+            settings.qdrant_author_embeddings_collection,
+            *ENTITY_DEDUP_COLLECTION_NAMES,
+        }
+    )
+
+
+def describe_embedding_collections_cutover(settings: Settings) -> tuple[int, frozenset[str], set[str]]:
+    """Return ``(vector_dim, target_names, existing_names_in_qdrant)`` without mutating Qdrant."""
+
+    dim = resolve_embedding_dim(settings=settings)
+    client = QdrantClient(url=settings.qdrant_url, check_compatibility=False)
+    existing = {c.name for c in client.get_collections().collections}
+    return dim, qdrant_embedding_collection_names(settings), existing
+
+
 def recreate_all_embedding_collections(settings: Settings) -> int:
     """Delete named collections if present, then create empty ones with ``resolve_embedding_dim``.
 
@@ -25,13 +48,7 @@ def recreate_all_embedding_collections(settings: Settings) -> int:
     dim = resolve_embedding_dim(settings=settings)
     client = QdrantClient(url=settings.qdrant_url, check_compatibility=False)
     existing = {c.name for c in client.get_collections().collections}
-    targets = {
-        settings.qdrant_collection,
-        settings.qdrant_work_embeddings_collection,
-        settings.qdrant_claims_collection,
-        settings.qdrant_author_embeddings_collection,
-        *ENTITY_DEDUP_COLLECTION_NAMES,
-    }
+    targets = qdrant_embedding_collection_names(settings)
     for name in targets:
         if name in existing:
             client.delete_collection(collection_name=name)
