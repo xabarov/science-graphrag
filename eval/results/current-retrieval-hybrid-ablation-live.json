@@ -45,7 +45,7 @@
       },
       "answer_vector_preview": "Retrieved context (not LLM-paraphrased): ### 2.2. Anchor-free Detector\n\n**Keypoint-based method.** This type of anchor-free method first locates several pre-defined or self-learned keypoints, and then",
       "answer_hybrid_preview": "Retrieved context (not LLM-paraphrased): ### 2.2. Anchor-free Detector\n\n**Keypoint-based method.** This type of anchor-free method first locates several pre-defined or self-learned keypoints, and then",
-      "wall_clock_seconds": 0.136726,
+      "wall_clock_seconds": 0.140082,
       "run_metadata": {
         "extraction_llm_enabled": true,
         "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
@@ -77,7 +77,7 @@
       },
       "answer_vector_preview": "Retrieved context (not LLM-paraphrased): # Object Detection with Discriminatively Trained Part Based Models\n\nPedro F. Felzenszwalb, Ross B. Girshick, David McAllester and Deva Ramanan\n\n**Abstract**—We",
       "answer_hybrid_preview": "Retrieved context (not LLM-paraphrased): # Object Detection with Discriminatively Trained Part Based Models\n\nPedro F. Felzenszwalb, Ross B. Girshick, David McAllester and Deva Ramanan\n\n**Abstract**—We",
-      "wall_clock_seconds": 0.124689,
+      "wall_clock_seconds": 0.138998,
       "run_metadata": {
         "extraction_llm_enabled": true,
         "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
@@ -109,7 +109,7 @@
       },
       "answer_vector_preview": "Retrieved context (not LLM-paraphrased): As discussed in section 4.2, we employ a compound scaling method to jointly scale up all dimensions of depth/width/resolution for backbone, BiFPN, and box/clas",
       "answer_hybrid_preview": "Retrieved context (not LLM-paraphrased): As discussed in section 4.2, we employ a compound scaling method to jointly scale up all dimensions of depth/width/resolution for backbone, BiFPN, and box/clas",
-      "wall_clock_seconds": 0.136214,
+      "wall_clock_seconds": 0.122072,
       "run_metadata": {
         "extraction_llm_enabled": true,
         "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
@@ -141,7 +141,7 @@
       },
       "answer_vector_preview": "Retrieved context (not LLM-paraphrased): Focal Loss for Dense Object Detection\nTsung-Yi Lin Priya Goyal Ross Girshick Kaiming He Piotr Doll ́ar\nFacebook AI Research (FAIR)\n0 0.2 0.4 0.6 0.8 1\nprobabil",
       "answer_hybrid_preview": "Retrieved context (not LLM-paraphrased): Focal Loss for Dense Object Detection\nTsung-Yi Lin Priya Goyal Ross Girshick Kaiming He Piotr Doll ́ar\nFacebook AI Research (FAIR)\n0 0.2 0.4 0.6 0.8 1\nprobabil",
-      "wall_clock_seconds": 0.142633,
+      "wall_clock_seconds": 0.128601,
       "run_metadata": {
         "extraction_llm_enabled": true,
         "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
@@ -173,7 +173,7 @@
       },
       "answer_vector_preview": "Retrieved context (not LLM-paraphrased): ## 1 Introduction\n\nRecently, dense detectors have gradually led the trend of object detection, whilst the attention on the *representation* of bounding boxes a",
       "answer_hybrid_preview": "Retrieved context (not LLM-paraphrased): ## 1 Introduction\n\nRecently, dense detectors have gradually led the trend of object detection, whilst the attention on the *representation* of bounding boxes a",
-      "wall_clock_seconds": 0.145977,
+      "wall_clock_seconds": 0.149831,
       "run_metadata": {
         "extraction_llm_enabled": true,
         "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
@@ -205,7 +205,7 @@
       },
       "answer_vector_preview": "Retrieved context (not LLM-paraphrased): ### 3.2. Object Detection as Keypoint Triplets\n\nThe overall network architecture is shown in Figure 2. We represent each object by a center keypoint and a pair",
       "answer_hybrid_preview": "Retrieved context (not LLM-paraphrased): ### 3.2. Object Detection as Keypoint Triplets\n\nThe overall network architecture is shown in Figure 2. We represent each object by a center keypoint and a pair",
-      "wall_clock_seconds": 0.1734,
+      "wall_clock_seconds": 0.174916,
       "run_metadata": {
         "extraction_llm_enabled": true,
         "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
@@ -237,7 +237,7 @@
       },
       "answer_vector_preview": "Retrieved context (not LLM-paraphrased): # End-to-End Object Detection with Transformers\n\nNicolas Carion*, Francisco Massa*, Gabriel Synnaeve, Nicolas Usunier, Alexander Kirillov, and Sergey Zagoruyko",
       "answer_hybrid_preview": "Retrieved context (not LLM-paraphrased): # End-to-End Object Detection with Transformers\n\nNicolas Carion*, Francisco Massa*, Gabriel Synnaeve, Nicolas Usunier, Alexander Kirillov, and Sergey Zagoruyko",
-      "wall_clock_seconds": 0.129901,
+      "wall_clock_seconds": 0.1165,
       "run_metadata": {
         "extraction_llm_enabled": true,
         "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
@@ -269,7 +269,7 @@
       },
       "answer_vector_preview": "Retrieved context (not LLM-paraphrased): ## 3.2 Sharing Features for RPN and Fast R-CNN\n\nThus far we have described how to train a network for region proposal generation, without considering the regio",
       "answer_hybrid_preview": "Retrieved context (not LLM-paraphrased): ## 3.2 Sharing Features for RPN and Fast R-CNN\n\nThus far we have described how to train a network for region proposal generation, without considering the regio",
-      "wall_clock_seconds": 0.124404,
+      "wall_clock_seconds": 0.119535,
       "run_metadata": {
         "extraction_llm_enabled": true,
         "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",

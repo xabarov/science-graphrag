@@ -46,6 +46,13 @@ describe("getScienceGraphNodeStyle", () => {
     expect(outer.lineWidth).toBeLessThanOrEqual(inner.lineWidth);
     expect(outer.fill).not.toBe(inner.fill);
   });
+
+  it("searchDim softens fill when not selected or hovered", () => {
+    const base = getScienceGraphNodeStyle("Work", {});
+    const dim = getScienceGraphNodeStyle("Work", { searchDim: true });
+    expect(dim.fill).not.toBe(base.fill);
+    expect(dim.lineWidth).toBeLessThanOrEqual(base.lineWidth);
+  });
 });
 
 describe("truncateCanvasLabel", () => {

@@ -87,7 +87,10 @@ def _load_multihop_case_dict(root: Path) -> dict[str, Any]:
 
 def discover_multihop_cases(fixtures_root: Path, *, tier: str) -> list[Path]:
     tiers = _load_tiers(fixtures_root)
-    allowed = set(tiers.get(tier) or []) if tiers else None
+    if tiers:
+        tier_case_ids = frozenset(str(x) for x in (tiers.get(tier) or []))
+    else:
+        tier_case_ids = None
     out: list[Path] = []
     for child in sorted(fixtures_root.iterdir()):
         if not child.is_dir():
@@ -110,7 +113,7 @@ def discover_multihop_cases(fixtures_root: Path, *, tier: str) -> list[Path]:
                 continue
         elif not has_q_json:
             continue
-        if allowed is not None and child.name not in allowed:
+        if tier_case_ids is not None and child.name not in tier_case_ids:
             continue
         out.append(child)
     return out

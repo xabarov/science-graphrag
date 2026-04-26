@@ -230,7 +230,7 @@ hard_block_individual_failures = []
 * **G-SettingsSplit** (`settings/service.py` 504 строки) — нужен для расширения snapshot полями `entity_dedup_*` (Wave T) и `llm_concurrency_*` (LX1/LX3).
 * **G-WorkspaceDedupSplit** + **G-BenchmarkSplit** + **G-TaskStoreSplit** — перед серией BT (BT1 trust_signal в UI) и закрытием Wave T.
 * **H-BenchmarkCaseDetailSplit** + **H-CompareTab/RunTab Split** — перед публикацией `trust_signal` в UI.
-* **H-ServicesSplit** + **H-MoveForceSimulation** — фоном.
+* **H-ServicesSplit** — фаза 1 закрыта (2026-04-26): barrel `researchApi.js` + `ui/src/services/research/*`; отдельные `dedup.js` / `settings.js` / `benchmarks.js` — при росте клиентских вызовов (см. `refactor-frontend.md`). **H-MoveForceSimulation** — фоном.
 
 ## 5. Правило файловых конфликтов
 

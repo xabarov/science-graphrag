@@ -1,17 +1,8 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Box from "@mui/material/Box";
-import Divider from "@mui/material/Divider";
-import Slider from "@mui/material/Slider";
-import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
-import CenterFocusStrongOutlinedIcon from "@mui/icons-material/CenterFocusStrongOutlined";
-import FitScreenOutlinedIcon from "@mui/icons-material/FitScreenOutlined";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import LinkOffOutlinedIcon from "@mui/icons-material/LinkOffOutlined";
-import RestartAltOutlinedIcon from "@mui/icons-material/RestartAltOutlined";
-import ZoomOutMapOutlinedIcon from "@mui/icons-material/ZoomOutMapOutlined";
 
-import { CursorIconButton } from "../common/index.js";
+import GraphCanvasViewToolbar from "./GraphCanvasViewToolbar.jsx";
 import { useI18n } from "../../i18n/I18nContext.jsx";
 import { computeFitTransform, computeWorldLayout, screenToWorld, worldRadiusForNodeCount } from "./graphCanvasTransform.js";
 import { localizeAggregatorTitle, localizeEdgeType } from "./graphLocalize.js";
@@ -28,8 +19,21 @@ const MIN_CANVAS_HEIGHT = 280;
 const MIN_FIT_SCALE = 0.11;
 const FORCE_RESTART_JITTER_WORLD = 56;
 const LS_GRAPH_CANVAS_REPULSION = "graphCanvasRepulsionPercent";
+const LS_GRAPH_CANVAS_EDGE_LABEL_MODE = "graphCanvasEdgeLabelMode";
 const MIN_SCALE = 0.06;
 const MAX_SCALE = 8;
+
+/** @returns {"all" | "interaction" | "adaptive"} */
+function readEdgeLabelModeStored() {
+  if (typeof window === "undefined") return "adaptive";
+  try {
+    const v = window.localStorage.getItem(LS_GRAPH_CANVAS_EDGE_LABEL_MODE);
+    if (v === "all" || v === "interaction" || v === "adaptive") return v;
+  } catch {
+    /* ignore */
+  }
+  return "adaptive";
+}
 
 function clampFitTransform(fit) {
   return { ...fit, scale: Math.max(fit.scale, MIN_FIT_SCALE) };
@@ -56,6 +60,13 @@ export default function GraphCanvasMvp({
   layoutMode = "circle",
   onCanvasLayoutModeChange,
   onAggregatorExpand,
+  /** When non-empty and query is active, nodes not in this Set are drawn dimmed (local find). */
+  searchMatchIds = null,
+  /** Non-empty trimmed string enables search dimming on canvas. */
+  searchQuery = "",
+  /** Increment to center viewport on this node id without requiring prior selection. */
+  centerRequestNonce = 0,
+  centerRequestNodeId = "",
 }) {
   const { t } = useI18n();
   const resolveEdgeLabel = useCallback((e) => localizeEdgeType(e, t), [t]);
@@ -80,6 +91,7 @@ export default function GraphCanvasMvp({
   const [simLinks, setSimLinks] = useState([]);
   const [isSimulationStable, setIsSimulationStable] = useState(false);
   const [repulsionPercent, setRepulsionPercent] = useState(() => readRepulsionPercentStored());
+  const [edgeLabelMode, setEdgeLabelMode] = useState(() => readEdgeLabelModeStored());
   const [forceSimRunNonce, setForceSimRunNonce] = useState(0);
   const [physicsReheatNonce, setPhysicsReheatNonce] = useState(0);
   const [pinnedNodeCount, setPinnedNodeCount] = useState(0);
@@ -92,6 +104,13 @@ export default function GraphCanvasMvp({
   const repulsionStrength = useMemo(() => percentToRepulsion(repulsionPercent), [repulsionPercent]);
   const layoutWorldRadius = useMemo(() => worldRadiusForNodeCount(graph.nodes.length), [graph.nodes.length]);
   const nodeById = useMemo(() => new Map(graph.nodes.map((n) => [n.id, n])), [graph.nodes]);
+  const searchTrim = useMemo(() => ((searchQuery != null && String(searchQuery).trim()) || ""), [searchQuery]);
+  const searchActive = searchTrim.length > 0;
+  const searchMatchSet = useMemo(() => {
+    if (searchMatchIds instanceof Set) return searchMatchIds;
+    if (Array.isArray(searchMatchIds)) return new Set(searchMatchIds);
+    return new Set();
+  }, [searchMatchIds]);
   const canvasSize = useMemo(
     () => ({ width: Math.max(1, hostSize.width || 1), height: Math.max(MIN_CANVAS_HEIGHT, hostSize.height || MIN_CANVAS_HEIGHT) }),
     [hostSize.height, hostSize.width],
@@ -237,6 +256,42 @@ export default function GraphCanvasMvp({
   }, [repulsionPercent]);
 
   useEffect(() => {
+    try {
+      window.localStorage.setItem(LS_GRAPH_CANVAS_EDGE_LABEL_MODE, edgeLabelMode);
+    } catch {
+      /* ignore */
+    }
+  }, [edgeLabelMode]);
+
+  const centerViewportOnNode = useCallback(
+    (nodeId) => {
+      if (!nodeId) return;
+      const positions = getPositionsForFrame();
+      const pw = positions.get(nodeId);
+      if (!pw) return;
+      const { w, h } = getViewportDims();
+      const scale = transformRef.current.scale;
+      const next = { scale, tx: w / 2 - pw.x * scale, ty: h / 2 - pw.y * scale };
+      transformRef.current = next;
+      setTransform(next);
+    },
+    [getPositionsForFrame, getViewportDims],
+  );
+
+  const handleToolbarResetZoom = useCallback(() => {
+    const { w, h } = getViewportDims();
+    const world = screenToWorld(w / 2, h / 2, transformRef.current.scale, transformRef.current.tx, transformRef.current.ty);
+    const next = { scale: 1, tx: w / 2 - world.x, ty: h / 2 - world.y };
+    transformRef.current = next;
+    setTransform(next);
+  }, [getViewportDims]);
+
+  useEffect(() => {
+    if (!centerRequestNonce || !centerRequestNodeId) return;
+    centerViewportOnNode(centerRequestNodeId);
+  }, [centerRequestNonce, centerRequestNodeId, centerViewportOnNode]);
+
+  useEffect(() => {
     const el = canvasRef.current;
     if (!el) return undefined;
     const onWheel = (event) => {
@@ -273,7 +328,14 @@ export default function GraphCanvasMvp({
     const positions = getPositionsForFrame();
     positionsRef.current = positions;
     const nodeStyleMap = Object.fromEntries(
-      graph.nodes.map((node) => [node.id, { selected: node.id === selectedNodeId, hovered: !selectedNodeId && node.id === input.hoveredNodeId }]),
+      graph.nodes.map((node) => [
+        node.id,
+        {
+          selected: node.id === selectedNodeId,
+          hovered: !selectedNodeId && node.id === input.hoveredNodeId,
+          searchDim: searchActive && !searchMatchSet.has(node.id),
+        },
+      ]),
     );
     const edgeStyleMap = Object.fromEntries(
       graph.edges.map((edge) => [edge.id, { active: edge.id === selectedEdgeId || edge.id === input.hoveredEdgeId }]),
@@ -283,8 +345,11 @@ export default function GraphCanvasMvp({
     drawLabels(ctx, graph.nodes, graph.edges, positions, transformRef.current, { ...nodeStyleMap, ...edgeStyleMap }, {
       resolveEdgeLabel,
       resolveNodeCanvasLabel,
+      edgeLabelMode,
+      edgeCountForAdaptive: graph.edges.length,
     });
   }, [
+    edgeLabelMode,
     getPositionsForFrame,
     getViewportDims,
     graph.edges,
@@ -294,6 +359,8 @@ export default function GraphCanvasMvp({
     nodeById,
     resolveEdgeLabel,
     resolveNodeCanvasLabel,
+    searchActive,
+    searchMatchSet,
     selectedEdgeId,
     selectedNodeId,
     transform,
@@ -326,17 +393,7 @@ export default function GraphCanvasMvp({
     setPinnedNodeCount(0);
     setIsSimulationStable(false);
   };
-  const handleCenter = () => {
-    if (!selectedNodeId) return;
-    const positions = getPositionsForFrame();
-    const pw = positions.get(selectedNodeId);
-    if (!pw) return;
-    const { w, h } = getViewportDims();
-    const scale = transformRef.current.scale;
-    const next = { scale, tx: w / 2 - pw.x * scale, ty: h / 2 - pw.y * scale };
-    transformRef.current = next;
-    setTransform(next);
-  };
+  const handleCenter = () => centerViewportOnNode(selectedNodeId);
 
   return (
     <Box
@@ -347,83 +404,21 @@ export default function GraphCanvasMvp({
       tabIndex={0}
       sx={{ width: "100%", flex: 1, minHeight: 0, display: "flex", flexDirection: "column", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden", backgroundColor: "#0a0a0a", outline: "none" }}
     >
-      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75, px: 1, py: 0.5, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75 }}>
-          <Tooltip title={t("graph.canvas.helpTooltip")}>
-            <CursorIconButton type="button" aria-label={t("graph.canvas.helpAria")}>
-              <InfoOutlinedIcon sx={{ fontSize: "1.05rem" }} />
-            </CursorIconButton>
-          </Tooltip>
-          {layoutMode === "force" ? (
-            <Tooltip title={t("graph.canvas.repulsionTooltip")}>
-              <Box sx={{ width: 128, px: 0.25, cursor: "help" }}>
-                <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5, mb: 0.15 }}>
-                  <Typography sx={{ fontSize: "0.58rem", color: "rgba(255,255,255,0.35)", fontFamily: "monospace", letterSpacing: "0.02em" }}>
-                    sim
-                  </Typography>
-                  <Typography sx={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.42)", flex: 1 }}>
-                    {t("graph.canvas.repulsion", { percent: String(Math.round(repulsionPercent)) })}
-                  </Typography>
-                </Box>
-                <Slider
-                  size="small"
-                  value={repulsionPercent}
-                  min={0}
-                  max={100}
-                  onChange={(_, v) => setRepulsionPercent(v)}
-                  aria-label={t("graph.canvas.repulsionAria")}
-                />
-              </Box>
-            </Tooltip>
-          ) : null}
-        </Box>
-        <Divider orientation="vertical" flexItem sx={{ borderColor: "rgba(255,255,255,0.08)", alignSelf: "stretch", minHeight: 28 }} />
-        <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.5 }}>
-          <Tooltip title={t("graph.canvas.fitTooltip")}>
-            <CursorIconButton type="button" aria-label={t("graph.canvas.fitAria")} onClick={() => applyFit("auto")}>
-              <FitScreenOutlinedIcon sx={{ fontSize: "1.05rem" }} />
-            </CursorIconButton>
-          </Tooltip>
-          <Tooltip title={t("graph.canvas.resetZoomTooltip")}>
-            <CursorIconButton
-              type="button"
-              aria-label={t("graph.canvas.resetZoomAria")}
-              onClick={() => {
-                const { w, h } = getViewportDims();
-                const world = screenToWorld(w / 2, h / 2, transformRef.current.scale, transformRef.current.tx, transformRef.current.ty);
-                const next = { scale: 1, tx: w / 2 - world.x, ty: h / 2 - world.y };
-                transformRef.current = next;
-                setTransform(next);
-              }}
-            >
-              <ZoomOutMapOutlinedIcon sx={{ fontSize: "1.05rem" }} />
-            </CursorIconButton>
-          </Tooltip>
-          <Tooltip title={t("graph.canvas.centerSelectionTooltip")}>
-            <CursorIconButton type="button" aria-label={t("graph.canvas.centerSelectionAria")} onClick={handleCenter} disabled={!selectedNodeId}>
-              <CenterFocusStrongOutlinedIcon sx={{ fontSize: "1.05rem" }} />
-            </CursorIconButton>
-          </Tooltip>
-        </Box>
-        {layoutMode === "force" ? (
-          <>
-            <Divider orientation="vertical" flexItem sx={{ borderColor: "rgba(255,255,255,0.08)", alignSelf: "stretch", minHeight: 28 }} />
-            <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.5 }}>
-              <Tooltip title={t("graph.canvas.restartForceTooltip")}>
-                <CursorIconButton type="button" aria-label={t("graph.canvas.restartForceAria")} onClick={handleRestart}>
-                  <RestartAltOutlinedIcon sx={{ fontSize: "1.05rem" }} />
-                </CursorIconButton>
-              </Tooltip>
-              <Tooltip title={t("graph.canvas.unpinAllTooltip")}>
-                <CursorIconButton type="button" aria-label={t("graph.canvas.unpinAllAria")} onClick={handleUnpinAll} disabled={pinnedNodeCount === 0}>
-                  <LinkOffOutlinedIcon sx={{ fontSize: "1.05rem" }} />
-                </CursorIconButton>
-              </Tooltip>
-            </Box>
-          </>
-        ) : null}
-        <Box sx={{ flex: 1, minWidth: 8 }} />
-      </Box>
+      <GraphCanvasViewToolbar
+        t={t}
+        layoutMode={layoutMode}
+        repulsionPercent={repulsionPercent}
+        onRepulsionChange={setRepulsionPercent}
+        edgeLabelMode={edgeLabelMode}
+        onEdgeLabelModeChange={setEdgeLabelMode}
+        onFit={() => applyFit("auto")}
+        onResetZoom={handleToolbarResetZoom}
+        onCenterSelection={handleCenter}
+        centerSelectionDisabled={!selectedNodeId}
+        onRestartForce={handleRestart}
+        onUnpinAll={handleUnpinAll}
+        unpinDisabled={pinnedNodeCount === 0}
+      />
       <Box ref={canvasHostRef} sx={{ flex: 1, minHeight: MIN_CANVAS_HEIGHT, position: "relative" }}>
         <canvas
           ref={canvasRef}

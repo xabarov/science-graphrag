@@ -8,9 +8,13 @@ vi.mock("react", () => ({
   useState: (initial) => [initial, setStateMock],
 }));
 
-vi.mock("../services/researchApi.js", () => ({
-  buildApiUrl: (path) => `http://localhost:8000${path}`,
-}));
+vi.mock("../services/apiClient.js", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    buildApiUrl: (path) => `http://localhost:8000${path}`,
+  };
+});
 
 const { useAgentStream } = await import("./useAgentStream.js");
 

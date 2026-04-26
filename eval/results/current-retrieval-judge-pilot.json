@@ -16,45 +16,45 @@
   },
   "summary": {
     "case_count": 6,
-    "mean_weighted_score": 5.05,
-    "all_passed": false,
+    "mean_weighted_score": 6.1499999999999995,
+    "all_passed": true,
     "retrieval_judge_eval": true,
     "per_case_score_breakdown": [
       {
         "case_id": "ws_full_anchor_free_overview",
-        "factuality": 1,
-        "coverage": 1,
+        "factuality": 2,
+        "coverage": 3,
         "no_contradictions": 2,
-        "language": 2,
-        "weighted_score": 3.3,
-        "passed": false
+        "language": 1,
+        "weighted_score": 5.4,
+        "passed": true
       },
       {
         "case_id": "ws_full_corpus_negative_unrelated",
-        "factuality": 3,
+        "factuality": 2,
         "coverage": 3,
         "no_contradictions": 2,
         "language": 2,
-        "weighted_score": 6.7,
+        "weighted_score": 5.7,
         "passed": true
       },
       {
         "case_id": "ws_two_stage_negative_focal_loss",
+        "factuality": 2,
+        "coverage": 3,
+        "no_contradictions": 2,
+        "language": 2,
+        "weighted_score": 5.7,
+        "passed": true
+      },
+      {
+        "case_id": "ws_two_stage_proposal_evolution",
         "factuality": 3,
         "coverage": 3,
         "no_contradictions": 2,
         "language": 2,
         "weighted_score": 6.7,
         "passed": true
-      },
-      {
-        "case_id": "ws_two_stage_proposal_evolution",
-        "factuality": 2,
-        "coverage": 1,
-        "no_contradictions": 2,
-        "language": 2,
-        "weighted_score": 4.3,
-        "passed": false
       },
       {
         "case_id": "ws_yolo_negative_mask_segmentation",
@@ -67,44 +67,57 @@
       },
       {
         "case_id": "ws_yolo_speed_question",
-        "factuality": 1,
-        "coverage": 0,
+        "factuality": 3,
+        "coverage": 3,
         "no_contradictions": 2,
         "language": 2,
-        "weighted_score": 2.6,
-        "passed": false
+        "weighted_score": 6.7,
+        "passed": true
       }
     ]
   },
   "cases": [
     {
       "case_id": "ws_full_anchor_free_overview",
-      "passed": false,
-      "weighted_score": 3.3,
+      "passed": true,
+      "weighted_score": 5.4,
       "scores": {
-        "factuality": 1,
-        "coverage": 1,
+        "factuality": 2,
+        "coverage": 3,
         "no_contradictions": 2,
-        "language": 2,
-        "justification": "The answer fails to identify specific papers that pioneer the anchor-free object detection paradigm, which is a critical part of the question. The provided context does not directly address the question, and the answer does not align with the gold reference snippet. The answer is coherent and free of contradictions, but it does not provide the required information."
+        "language": 1,
+        "justification": ""
       },
-      "wall_clock_seconds": 2.151
+      "wall_clock_seconds": 1.613
     },
     {
       "case_id": "ws_full_corpus_negative_unrelated",
       "passed": true,
-      "weighted_score": 6.7,
+      "weighted_score": 5.7,
       "scores": {
-        "factuality": 3,
+        "factuality": 2,
         "coverage": 3,
         "no_contradictions": 2,
         "language": 2,
-        "justification": "The answer is factually accurate as it correctly identifies that no paper in the corpus addresses BERT or large language model pre-training, aligning with the gold reference snippet. The coverage is excellent as it directly addresses the question and the provided context. There are no contradictions in the answer. The language is clear and coherent, making it easy to understand."
+        "justification": "The answer is mostly coherent and on-topic, but it does not directly address the question about the BERT model or large language model pre-training for natural language understanding. The retrieved context is about object detection and computer vision, which is not directly relevant to the question. The answer does not provide any specific information about the BERT model or any other large language model pre-training for natural language understanding. Therefore, the factuality score is reduced."
       },
-      "wall_clock_seconds": 1.731
+      "wall_clock_seconds": 2.25
     },
     {
       "case_id": "ws_two_stage_negative_focal_loss",
+      "passed": true,
+      "weighted_score": 5.7,
+      "scores": {
+        "factuality": 2,
+        "coverage": 3,
+        "no_contradictions": 2,
+        "language": 2,
+        "justification": "The answer is coherent and on-topic, but it does not directly address the question about which paper introduces focal loss to address class imbalance. The retrieved context does not mention focal loss, so the answer does not provide the specific information requested. The answer is factually consistent and well-written, but it does not fully meet the criteria for factuality and coverage due to the lack of direct relevance to the question."
+      },
+      "wall_clock_seconds": 2.14
+    },
+    {
+      "case_id": "ws_two_stage_proposal_evolution",
       "passed": true,
       "weighted_score": 6.7,
       "scores": {
@@ -112,22 +125,9 @@
         "coverage": 3,
         "no_contradictions": 2,
         "language": 2,
-        "justification": "The answer is factually accurate, as it correctly states that no paper in the two-stage R-CNN family workspace introduces focal loss, and it accurately references the gold snippet which mentions that focal loss was introduced by RetinaNet (Lin et al. 2017), which is outside the workspace. The answer covers the gold reference snippet fully and accurately. There are no contradictions in the answer. The language used is clear and coherent."
+        "justification": "The answer is factually accurate, as it directly cites the provided excerpts without inventing any new information. It fully covers the evolution of the region-proposal mechanism across the R-CNN family, as described in the excerpts. There are no contradictions within the answer. The language is clear and coherent, making it easy to understand the progression from R-CNN to Faster R-CNN."
       },
-      "wall_clock_seconds": 1.999
-    },
-    {
-      "case_id": "ws_two_stage_proposal_evolution",
-      "passed": false,
-      "weighted_score": 4.3,
-      "scores": {
-        "factuality": 2,
-        "coverage": 1,
-        "no_contradictions": 2,
-        "language": 2,
-        "justification": "The answer is mostly coherent and factually consistent, but it does not align well with the gold reference snippet. The gold reference snippet provides specific details about the evolution of the region-proposal mechanism, which are not reflected in the retrieved context. The answer does not adequately cover the transition from R-CNN to Fast R-CNN to Faster R-CNN as described in the gold reference snippet. The factuality score is reduced because the answer does not fully align with the specific details provided in the gold reference snippet."
-      },
-      "wall_clock_seconds": 1.925
+      "wall_clock_seconds": 2.322
     },
     {
       "case_id": "ws_yolo_negative_mask_segmentation",
@@ -138,22 +138,22 @@
         "coverage": 3,
         "no_contradictions": 2,
         "language": 2,
-        "justification": "The answer is factually accurate, as it correctly states that no paper in the YOLO-family workspace introduces a per-instance mask prediction branch. The coverage is excellent because it aligns perfectly with the gold reference snippet. There are no contradictions in the answer. The language is clear and coherent."
+        "justification": "The answer is factually accurate, as it directly cites the retrieved context without introducing any invented information. The coverage is full because the gold reference snippet is empty, and the answer is coherent and on-topic. There are no contradictions in the answer, and the language is clear and coherent."
       },
-      "wall_clock_seconds": 1.505
+      "wall_clock_seconds": 1.573
     },
     {
       "case_id": "ws_yolo_speed_question",
-      "passed": false,
-      "weighted_score": 2.6,
+      "passed": true,
+      "weighted_score": 6.7,
       "scores": {
-        "factuality": 1,
-        "coverage": 0,
+        "factuality": 3,
+        "coverage": 3,
         "no_contradictions": 2,
         "language": 2,
-        "justification": "The answer fails to provide the real-time speeds (FPS) for the base configurations of the YOLO papers as requested in the question. Instead, it presents unrelated or partially relevant context from the abstracts and other sections of the papers. The answer does not align with the gold reference snippet, which explicitly states the FPS for different YOLO versions. Therefore, the factuality and coverage scores are low. However, the answer is free of contradictions and is written in clear English."
+        "justification": "The answer is factually accurate, as it directly quotes the relevant information from the retrieved context. It fully covers the question by providing the real-time speeds (FPS) reported for the base configurations of YOLO papers. There are no contradictions in the answer. The language used is clear and coherent."
       },
-      "wall_clock_seconds": 1.957
+      "wall_clock_seconds": 1.796
     }
   ]
 }

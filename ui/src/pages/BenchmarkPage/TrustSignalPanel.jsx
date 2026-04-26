@@ -12,59 +12,10 @@ import { useI18n } from "../../i18n/I18nContext.jsx";
 import { useBenchmarkSummary } from "../../hooks/useBenchmarkSummary.js";
 import { formatResearchApiError } from "../../services/researchApi.js";
 
-/**
- * Flatten trust_by_family payload into table rows (exported for unit tests).
- * @param {Record<string, { members?: Record<string, object> }>} trustByFamily
- * @returns {Array<{ familyKey: string, memberId: string, runtimeMode: string, isPhantom: boolean }>}
- */
-export function buildTrustRows(trustByFamily) {
-  const rows = [];
-  if (!trustByFamily || typeof trustByFamily !== "object") return rows;
-  for (const [familyKey, fam] of Object.entries(trustByFamily)) {
-    const members = fam?.members && typeof fam.members === "object" ? fam.members : {};
-    for (const [memberId, ts] of Object.entries(members)) {
-      if (ts && typeof ts === "object") {
-        rows.push({
-          familyKey,
-          memberId,
-          runtimeMode: String(ts.runtime_mode || ""),
-          isPhantom: Boolean(ts.is_phantom),
-        });
-      }
-    }
-  }
-  return rows;
-}
+import TrustSignalDrillIn from "./TrustSignalDrillIn.jsx";
+import { buildTrustRows, decisionChipSx } from "./trustSignalDrillInHelpers.js";
 
-/** @param {string} decision */
-export function decisionChipSx(decision) {
-  const d = String(decision || "").toUpperCase();
-  if (d.includes("NO-GO")) {
-    return {
-      backgroundColor: "rgba(239, 68, 68, 0.12)",
-      border: "1px solid rgba(239, 68, 68, 0.25)",
-      color: "rgba(239, 68, 68, 0.95)",
-      fontWeight: 600,
-      fontSize: "0.75rem",
-    };
-  }
-  if (d.includes("CONDITIONAL")) {
-    return {
-      backgroundColor: "rgba(255,255,255,0.06)",
-      border: "1px solid rgba(255,255,255,0.12)",
-      color: "rgba(255,255,255,0.85)",
-      fontWeight: 600,
-      fontSize: "0.75rem",
-    };
-  }
-  return {
-    backgroundColor: "rgba(99, 102, 241, 0.15)",
-    border: "1px solid rgba(99, 102, 241, 0.3)",
-    color: "rgba(129, 140, 248, 0.95)",
-    fontWeight: 600,
-    fontSize: "0.75rem",
-  };
-}
+export { buildTrustRows, decisionChipSx };
 
 export default function TrustSignalPanel() {
   const { t } = useI18n();
@@ -123,7 +74,11 @@ export default function TrustSignalPanel() {
         <Typography sx={{ flex: 1, minWidth: 0, color: "rgba(255,255,255,0.6)", fontSize: "0.75rem" }}>
           {data.reason}
         </Typography>
-        <IconButton size="small" onClick={() => setExpanded((v) => !v)} aria-label="toggle trust details">
+        <IconButton
+          size="small"
+          onClick={() => setExpanded((v) => !v)}
+          aria-label={t("benchmarkPage.trustSignal.toggleDetailsAria")}
+        >
           {expanded ? <ExpandLess /> : <ExpandMore />}
         </IconButton>
         <CursorSmallButton size="small" onClick={() => void reload()}>
@@ -134,38 +89,54 @@ export default function TrustSignalPanel() {
         {t("benchmarkPage.trustSignal.phantomCount", { count: phantomCount })}
       </Typography>
       <Collapse in={expanded}>
-        <Box sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 0.5, maxHeight: 220, overflow: "auto" }}>
-          {rows.map((r) => (
-            <Box
-              key={`${r.familyKey}.${r.memberId}`}
-              sx={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 0.75,
-                alignItems: "center",
-                fontSize: "0.75rem",
-                borderTop: "1px solid rgba(255,255,255,0.06)",
-                pt: 0.5,
-              }}
-            >
-              <Typography sx={{ color: "rgba(255,255,255,0.75)", fontFamily: "monospace" }}>
-                {r.familyKey}.{r.memberId}
-              </Typography>
-              <Chip
-                label={r.runtimeMode}
-                size="small"
+        <Box sx={{ mt: 1, display: "flex", flexDirection: "column", maxHeight: 420, overflow: "auto" }}>
+          <TrustSignalDrillIn criteria={data.criteria} trustByFamily={data.trust_by_family} t={t} />
+          <Typography
+            sx={{
+              mt: 0.5,
+              mb: 0.5,
+              color: "rgba(255,255,255,0.7)",
+              fontSize: "0.7rem",
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: "0.04em",
+            }}
+          >
+            {t("benchmarkPage.trustDrillIn.sectionSuiteMembers")}
+          </Typography>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+            {rows.map((r) => (
+              <Box
+                key={`${r.familyKey}.${r.memberId}`}
                 sx={{
-                  height: 22,
-                  fontSize: "0.7rem",
-                  backgroundColor: r.isPhantom ? "rgba(239, 68, 68, 0.12)" : "rgba(99, 102, 241, 0.12)",
-                  border: r.isPhantom
-                    ? "1px solid rgba(239, 68, 68, 0.2)"
-                    : "1px solid rgba(99, 102, 241, 0.25)",
-                  color: r.isPhantom ? "rgba(239, 68, 68, 0.9)" : "rgba(129, 140, 248, 0.95)",
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 0.75,
+                  alignItems: "center",
+                  fontSize: "0.75rem",
+                  borderTop: "1px solid rgba(255,255,255,0.06)",
+                  pt: 0.5,
                 }}
-              />
-            </Box>
-          ))}
+              >
+                <Typography sx={{ color: "rgba(255,255,255,0.75)", fontFamily: "monospace" }}>
+                  {r.familyKey}.{r.memberId}
+                </Typography>
+                <Chip
+                  label={r.runtimeMode}
+                  size="small"
+                  sx={{
+                    height: 22,
+                    fontSize: "0.7rem",
+                    backgroundColor: r.isPhantom ? "rgba(239, 68, 68, 0.12)" : "rgba(99, 102, 241, 0.12)",
+                    border: r.isPhantom
+                      ? "1px solid rgba(239, 68, 68, 0.2)"
+                      : "1px solid rgba(99, 102, 241, 0.25)",
+                    color: r.isPhantom ? "rgba(239, 68, 68, 0.9)" : "rgba(129, 140, 248, 0.95)",
+                  }}
+                />
+              </Box>
+            ))}
+          </Box>
         </Box>
       </Collapse>
     </Box>

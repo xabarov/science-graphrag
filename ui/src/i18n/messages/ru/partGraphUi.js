@@ -75,12 +75,23 @@ export default {
   "graph.aggregator.badge": "Сводка",
 
   "graph.legend.typesInView": "Типы на экране",
+  "graph.legend.overviewSummary": "{{nodeCount}} узлов · {{edgeCount}} рёбер",
+  "graph.legend.sortFrequency": "По числу",
+  "graph.legend.sortAlphabet": "А–Я",
+  "graph.legend.sortAria": "Сортировка чипов легенды",
   "graph.legend.nodes": "Узлы",
   "graph.legend.edges": "Связи",
   "graph.legend.group.Works": "Работы",
   "graph.legend.group.Semantic": "Семантика",
   "graph.legend.group.People": "Люди",
   "graph.legend.group.Context": "Контекст",
+  "graph.legend.group.Other": "Прочее",
+
+  "graph.localFind.placeholder": "Фильтр узлов на экране…",
+  "graph.localFind.aria": "Фильтр загруженных узлов по названию или id",
+  "graph.localFind.focusFirst": "К первому совпадению",
+  "graph.localFind.focusFirstTooltip": "Выбрать первый подходящий узел и центрировать холст на нём",
+  "graph.localFind.clearAria": "Сбросить фильтр",
 
   "graph.detailPanel.title": "Детали",
   "graph.detailPanel.relationship": "Связь",
@@ -140,6 +151,15 @@ export default {
   "graph.canvas.repulsion": "Отталкивание {{percent}}%",
   "graph.canvas.repulsionTooltip": "Сила отталкивания (разрежение симуляции)",
   "graph.canvas.repulsionAria": "Сила отталкивания раскладки",
+
+  "graph.canvas.edgeLabels.modeAria": "Подписи рёбер на холсте",
+  "graph.canvas.edgeLabels.all": "Все",
+  "graph.canvas.edgeLabels.interaction": "Наведение",
+  "graph.canvas.edgeLabels.adaptive": "Авто",
+  "graph.canvas.edgeLabels.tooltipAll": "Подпись у каждого ребра",
+  "graph.canvas.edgeLabels.tooltipInteraction": "Подпись только при наведении или если ребро выбрано",
+  "graph.canvas.edgeLabels.tooltipAdaptive":
+    "При крупном масштабе и малом числе рёбер — все подписи; иначе только при наведении или выборе",
 
   "dedup.title": "Проверка дубликатов статей (в текущей области)",
   "dedup.intro":

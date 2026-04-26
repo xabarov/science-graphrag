@@ -75,12 +75,23 @@ export default {
   "graph.aggregator.badge": "Aggregator",
 
   "graph.legend.typesInView": "Types in view",
+  "graph.legend.overviewSummary": "{{nodeCount}} nodes · {{edgeCount}} edges",
+  "graph.legend.sortFrequency": "By count",
+  "graph.legend.sortAlphabet": "A–Z",
+  "graph.legend.sortAria": "Sort legend chips",
   "graph.legend.nodes": "Nodes",
   "graph.legend.edges": "Edges",
   "graph.legend.group.Works": "Works",
   "graph.legend.group.Semantic": "Semantic",
   "graph.legend.group.People": "People",
   "graph.legend.group.Context": "Context",
+  "graph.legend.group.Other": "Other",
+
+  "graph.localFind.placeholder": "Filter nodes in view…",
+  "graph.localFind.aria": "Filter loaded graph nodes by title or id",
+  "graph.localFind.focusFirst": "Center on first match",
+  "graph.localFind.focusFirstTooltip": "Select the first matching node and center the canvas on it",
+  "graph.localFind.clearAria": "Clear filter",
 
   "graph.detailPanel.title": "Details",
   "graph.detailPanel.relationship": "Relationship",
@@ -140,6 +151,15 @@ export default {
   "graph.canvas.repulsion": "Repulsion {{percent}}%",
   "graph.canvas.repulsionTooltip": "Repulsion strength (force simulation spacing)",
   "graph.canvas.repulsionAria": "Force layout repulsion strength",
+
+  "graph.canvas.edgeLabels.modeAria": "Edge label visibility on canvas",
+  "graph.canvas.edgeLabels.all": "All",
+  "graph.canvas.edgeLabels.interaction": "Hover",
+  "graph.canvas.edgeLabels.adaptive": "Auto",
+  "graph.canvas.edgeLabels.tooltipAll": "Show labels on every edge",
+  "graph.canvas.edgeLabels.tooltipInteraction": "Show edge labels only when hovering or the edge is selected",
+  "graph.canvas.edgeLabels.tooltipAdaptive":
+    "Show all labels when zoomed in with few edges; otherwise only on hover or when selected",
 
   "dedup.title": "Review duplicate papers (workspace scope)",
   "dedup.intro":

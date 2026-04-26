@@ -2,9 +2,14 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
+import IconButton from "@mui/material/IconButton";
+import InputAdornment from "@mui/material/InputAdornment";
+import TextField from "@mui/material/TextField";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import BugReportOutlinedIcon from "@mui/icons-material/BugReportOutlined";
+import ClearIcon from "@mui/icons-material/Clear";
+import MyLocationOutlinedIcon from "@mui/icons-material/MyLocationOutlined";
 import LayersOutlinedIcon from "@mui/icons-material/LayersOutlined";
 import ViewSidebarOutlinedIcon from "@mui/icons-material/ViewSidebarOutlined";
 
@@ -21,6 +26,7 @@ import GraphVisualization from "./GraphVisualization.jsx";
 import { GraphErrorAlert, GraphLoadingInline, GraphMissingWorkInline } from "./graphShellStates.jsx";
 import { deriveInspectorDetail } from "./graphInspectorModel.js";
 import { localizeEdgeType } from "./graphLocalize.js";
+import { filterNodeIdsBySearchSubstring, firstMatchingNodeIdInOrder } from "./graphNodeSearch.js";
 import { capGraphForUi } from "./graphUiLimits.js";
 import { LS_GRAPH_STANDALONE_DETAIL_MIN_PX, readGraphDetailColumnPxStored } from "./graphDetailColumnWidth.js";
 import {
@@ -105,6 +111,9 @@ export default function GraphWorkspacePanel({
   const [legendOpen, setLegendOpen] = useState(() => (standalone ? readBoolLs(LS_STANDALONE_LEGEND, !focusLayout) : true));
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(labMode);
   const [detailMinPx, setDetailMinPx] = useState(() => readGraphDetailColumnPxStored());
+  const [localFindQuery, setLocalFindQuery] = useState("");
+  const [centerCanvasNonce, setCenterCanvasNonce] = useState(0);
+  const [centerCanvasNodeId, setCenterCanvasNodeId] = useState("");
 
   useEffect(() => {
     if (standalone) window.localStorage.setItem(LS_GRAPH_STANDALONE_DETAIL_MIN_PX, String(detailMinPx));
@@ -135,6 +144,18 @@ export default function GraphWorkspacePanel({
     () => deriveInspectorDetail(displayGraph, resolvedSelectedNodeId, resolvedSelectedEdgeId, { edgeTypeLabel }),
     [displayGraph, edgeTypeLabel, resolvedSelectedNodeId, resolvedSelectedEdgeId],
   );
+  const nodeSearchMatchIds = useMemo(
+    () => filterNodeIdsBySearchSubstring(displayGraph.nodes, localFindQuery),
+    [displayGraph.nodes, localFindQuery],
+  );
+  const focusFirstLocalMatch = useCallback(() => {
+    const first = firstMatchingNodeIdInOrder(displayGraph.nodes, nodeSearchMatchIds);
+    if (!first) return;
+    onSelectEdge?.("");
+    onSelectNode?.(first);
+    setCenterCanvasNodeId(first);
+    setCenterCanvasNonce((n) => n + 1);
+  }, [displayGraph.nodes, nodeSearchMatchIds, onSelectEdge, onSelectNode]);
   const traceSummary = describeTraceabilityState(traceContext);
 
   useEffect(() => {
@@ -229,6 +250,63 @@ export default function GraphWorkspacePanel({
           ) : (
             <GraphTypeLegend graph={displayGraph} />
           )}
+          {effectiveVizMode === "canvas" ? (
+            <Box sx={{ mb: 1, display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "center" }}>
+              <TextField
+                size="small"
+                variant="outlined"
+                value={localFindQuery}
+                onChange={(e) => setLocalFindQuery(e.target.value)}
+                placeholder={t("graph.localFind.placeholder")}
+                inputProps={{ "aria-label": t("graph.localFind.aria") }}
+                sx={{
+                  minWidth: 200,
+                  flex: "1 1 220px",
+                  maxWidth: 480,
+                  "& .MuiOutlinedInput-root": {
+                    fontSize: "0.8125rem",
+                    backgroundColor: "rgba(255,255,255,0.04)",
+                    color: "rgba(255,255,255,0.9)",
+                  },
+                  "& .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,0.12)" },
+                  "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(255,255,255,0.18)",
+                  },
+                  "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(99, 102, 241, 0.5)",
+                    borderWidth: "1px",
+                  },
+                }}
+                InputProps={{
+                  endAdornment: localFindQuery ? (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        aria-label={t("graph.localFind.clearAria")}
+                        onClick={() => setLocalFindQuery("")}
+                        edge="end"
+                        sx={{ color: "rgba(255,255,255,0.5)" }}
+                      >
+                        <ClearIcon fontSize="small" />
+                      </IconButton>
+                    </InputAdornment>
+                  ) : null,
+                }}
+              />
+              <Tooltip title={t("graph.localFind.focusFirstTooltip")}>
+                <span>
+                  <CursorIconButton
+                    type="button"
+                    aria-label={t("graph.localFind.focusFirst")}
+                    onClick={focusFirstLocalMatch}
+                    disabled={nodeSearchMatchIds.size === 0}
+                  >
+                    <MyLocationOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+                  </CursorIconButton>
+                </span>
+              </Tooltip>
+            </Box>
+          ) : null}
           <Box
             sx={{
               flex: standalone ? 1 : undefined,
@@ -261,6 +339,10 @@ export default function GraphWorkspacePanel({
                   onSelectNode={(id) => { onSelectEdge?.(""); onSelectNode?.(id); }}
                   onSelectEdge={(id) => { onSelectNode?.(""); onSelectEdge?.(id); }}
                   onAggregatorExpand={(_, expandEndpoint) => expandAggregatorNode(expandEndpoint)}
+                  searchQuery={localFindQuery}
+                  searchMatchIds={nodeSearchMatchIds}
+                  centerRequestNonce={centerCanvasNonce}
+                  centerRequestNodeId={centerCanvasNodeId}
                 />
               )}
             </Box>

@@ -4,7 +4,12 @@ import { describe, expect, it } from "vitest";
 
 import { I18nProvider } from "../../i18n/I18nContext.jsx";
 import GraphTypeLegend from "./GraphTypeLegend.jsx";
-import { collectGraphTypeLegend, collectGraphTypeLegendByKind } from "./graphTypeLegend.js";
+import {
+  collectGraphComposition,
+  collectGraphTypeLegend,
+  collectGraphTypeLegendByKind,
+  sortLegendKinds,
+} from "./graphTypeLegend.js";
 
 describe("collectGraphTypeLegend", () => {
   it("returns sorted unique types with defaults", () => {
@@ -16,6 +21,14 @@ describe("collectGraphTypeLegend", () => {
     expect(edgeTypes).toEqual(["cites", "mentions"]);
   });
 
+  it("prefers nodeKind over type for node key", () => {
+    const { nodeTypes } = collectGraphTypeLegend({
+      nodes: [{ type: "Work", nodeKind: "WorkInternal" }, { type: "Work", nodeKind: "WorkExternal" }],
+      edges: [],
+    });
+    expect(nodeTypes).toEqual(["WorkExternal", "WorkInternal"]);
+  });
+
   it("uses Node and edge fallbacks for missing types", () => {
     const { nodeTypes, edgeTypes } = collectGraphTypeLegend({
       nodes: [{}],
@@ -23,6 +36,44 @@ describe("collectGraphTypeLegend", () => {
     });
     expect(nodeTypes).toEqual(["Node"]);
     expect(edgeTypes).toEqual(["edge"]);
+  });
+});
+
+describe("collectGraphComposition", () => {
+  it("counts nodes by legend kind key and edges by type", () => {
+    const c = collectGraphComposition({
+      nodes: [
+        { nodeKind: "Author" },
+        { nodeKind: "Author" },
+        { type: "Work" },
+      ],
+      edges: [{ type: "CITES" }, { type: "CITES" }, { type: "MENTIONS" }],
+    });
+    expect(c.totalNodes).toBe(3);
+    expect(c.totalEdges).toBe(3);
+    expect(c.nodeKindCounts.get("Author")).toBe(2);
+    expect(c.nodeKindCounts.get("Work")).toBe(1);
+    expect(c.edgeTypeCounts.get("CITES")).toBe(2);
+    expect(c.edgeTypeCounts.get("MENTIONS")).toBe(1);
+  });
+});
+
+describe("sortLegendKinds", () => {
+  it("sorts by frequency descending then alphabetically", () => {
+    const counts = new Map([
+      ["A", 1],
+      ["B", 5],
+      ["C", 5],
+    ]);
+    expect(sortLegendKinds(["A", "B", "C"], counts, "frequency")).toEqual(["B", "C", "A"]);
+  });
+
+  it("sorts alphabetically", () => {
+    const counts = new Map([
+      ["Z", 99],
+      ["A", 1],
+    ]);
+    expect(sortLegendKinds(["Z", "A"], counts, "alphabet")).toEqual(["A", "Z"]);
   });
 });
 
@@ -45,7 +96,7 @@ describe("collectGraphTypeLegendByKind", () => {
 });
 
 describe("GraphTypeLegend SSR smoke", () => {
-  it("renders node and edge type labels", () => {
+  it("renders node and edge type labels with counts", () => {
     const html = renderToString(
       React.createElement(
         I18nProvider,
@@ -59,8 +110,10 @@ describe("GraphTypeLegend SSR smoke", () => {
       ),
     );
     expect(html).toContain("Work (internal)");
+    expect(html).toContain("(1)");
     expect(html).toContain("Nodes");
     expect(html).toContain("cites");
     expect(html).toContain("Types in view");
+    expect(html).toContain("1 nodes");
   });
 });

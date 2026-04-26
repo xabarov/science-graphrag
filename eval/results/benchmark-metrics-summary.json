@@ -756,45 +756,45 @@
       },
       "summary": {
         "case_count": 6,
-        "mean_weighted_score": 5.05,
-        "all_passed": false,
+        "mean_weighted_score": 6.1499999999999995,
+        "all_passed": true,
         "retrieval_judge_eval": true,
         "per_case_score_breakdown": [
           {
             "case_id": "ws_full_anchor_free_overview",
-            "factuality": 1,
-            "coverage": 1,
+            "factuality": 2,
+            "coverage": 3,
             "no_contradictions": 2,
-            "language": 2,
-            "weighted_score": 3.3,
-            "passed": false
+            "language": 1,
+            "weighted_score": 5.4,
+            "passed": true
           },
           {
             "case_id": "ws_full_corpus_negative_unrelated",
-            "factuality": 3,
+            "factuality": 2,
             "coverage": 3,
             "no_contradictions": 2,
             "language": 2,
-            "weighted_score": 6.7,
+            "weighted_score": 5.7,
             "passed": true
           },
           {
             "case_id": "ws_two_stage_negative_focal_loss",
+            "factuality": 2,
+            "coverage": 3,
+            "no_contradictions": 2,
+            "language": 2,
+            "weighted_score": 5.7,
+            "passed": true
+          },
+          {
+            "case_id": "ws_two_stage_proposal_evolution",
             "factuality": 3,
             "coverage": 3,
             "no_contradictions": 2,
             "language": 2,
             "weighted_score": 6.7,
             "passed": true
-          },
-          {
-            "case_id": "ws_two_stage_proposal_evolution",
-            "factuality": 2,
-            "coverage": 1,
-            "no_contradictions": 2,
-            "language": 2,
-            "weighted_score": 4.3,
-            "passed": false
           },
           {
             "case_id": "ws_yolo_negative_mask_segmentation",
@@ -807,32 +807,19 @@
           },
           {
             "case_id": "ws_yolo_speed_question",
-            "factuality": 1,
-            "coverage": 0,
+            "factuality": 3,
+            "coverage": 3,
             "no_contradictions": 2,
             "language": 2,
-            "weighted_score": 2.6,
-            "passed": false
+            "weighted_score": 6.7,
+            "passed": true
           }
         ]
       },
-      "failed_count": 3,
-      "failed_cases": [
-        {
-          "case_id": "ws_full_anchor_free_overview",
-          "error": null
-        },
-        {
-          "case_id": "ws_two_stage_proposal_evolution",
-          "error": null
-        },
-        {
-          "case_id": "ws_yolo_speed_question",
-          "error": null
-        }
-      ],
-      "all_passed": false,
-      "mean_weighted_score": 5.05,
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true,
+      "mean_weighted_score": 6.1499999999999995,
       "trust_signal": {
         "family": "retrieval_family",
         "member_id": "judge_pilot",
@@ -841,26 +828,7 @@
         "validation_status_by_pack": null,
         "last_known_real_run_at": null,
         "consistency_warnings": [],
-        "individual_failures": [
-          {
-            "case_id": "ws_full_anchor_free_overview",
-            "passed": false,
-            "weighted_score": 3.3,
-            "error": null
-          },
-          {
-            "case_id": "ws_two_stage_proposal_evolution",
-            "passed": false,
-            "weighted_score": 4.3,
-            "error": null
-          },
-          {
-            "case_id": "ws_yolo_speed_question",
-            "passed": false,
-            "weighted_score": 2.6,
-            "error": null
-          }
-        ],
+        "individual_failures": [],
         "is_phantom": false
       }
     },
@@ -1366,12 +1334,31 @@
       }
     },
     "multihop_mini": {
-      "error": "missing_file",
       "artifact": "eval/results/current-retrieval-multihop-mini.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316"
+      },
+      "summary": {
+        "case_count": 3,
+        "case_ids": [
+          "mh_detr_lineage_chain",
+          "mh_proposal_evolution_chain",
+          "mh_yolo_lineage_chain"
+        ],
+        "all_passed": true,
+        "multihop_eval": true
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true,
+      "mean_claim_recall": null,
       "trust_signal": {
         "family": "retrieval_family",
         "member_id": "multihop_mini",
-        "runtime_mode": "missing",
+        "runtime_mode": "live",
         "validation_status_aggregate": "mixed",
         "validation_status_by_pack": {
           "mh_authors_yolo_intersect_rcnn_family": "draft",
@@ -1381,20 +1368,17 @@
           "mh_yolo_lineage_chain": "llm_dual_validated"
         },
         "last_known_real_run_at": null,
-        "consistency_warnings": [
-          "multihop_mini: artifact missing (error=missing_file)"
-        ],
+        "consistency_warnings": [],
         "individual_failures": [],
-        "is_phantom": true
+        "is_phantom": false
       }
     },
     "trust_aggregate": {
-      "phantom_member_count": 4,
+      "phantom_member_count": 3,
       "phantom_members": [
         "retrieval_family.merge_safe_contract_mock",
         "retrieval_family.strict_pilot_mock",
-        "retrieval_family.hybrid_ablation",
-        "retrieval_family.multihop_mini"
+        "retrieval_family.hybrid_ablation"
       ],
       "mixed_validation_status_member_count": 1
     }
@@ -1639,23 +1623,10 @@
         "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316"
       },
       "summary": {
-        "case_count": 15,
+        "case_count": 2,
         "case_ids": [
-          "corpus_cascade_rcnn_v2",
-          "corpus_centernet_v2",
-          "corpus_cornernet_v2",
-          "corpus_detr_v2",
-          "corpus_efficientdet_v2",
-          "corpus_fast_rcnn_v2",
-          "corpus_faster_rcnn_v2",
-          "corpus_fcos_v2",
-          "corpus_fpn_v2",
-          "corpus_mask_rcnn_v2",
-          "corpus_rcnn_v2",
-          "corpus_retinanet_focal_v2",
           "corpus_ssd_v2",
-          "corpus_yolov1_v2",
-          "corpus_yolov2_v2"
+          "corpus_yolov1_v2"
         ],
         "all_passed": true,
         "claims_paraphrase_eval": true
@@ -1708,13 +1679,9 @@
         "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316"
       },
       "summary": {
-        "case_count": 5,
+        "case_count": 1,
         "case_ids": [
-          "holdout_atss_v1",
-          "holdout_deformable_detr_v1",
-          "holdout_dino_v1",
-          "holdout_yolov3_v1",
-          "holdout_yolox_v1"
+          "holdout_atss_v1"
         ],
         "all_passed": true,
         "claims_paraphrase_eval": true
@@ -2085,8 +2052,8 @@
     }
   },
   "decision_gate": {
-    "decision": "NO-GO",
-    "reason": "hard_block_individual_failures:retrieval_judge_pilot",
+    "decision": "CONDITIONAL-GO",
+    "reason": "all_nightly_passed;advisory_phantom_count=8",
     "criteria": {
       "reference_all_passed": true,
       "layer1_nightly_failed_count": 0,
@@ -2094,12 +2061,11 @@
       "claims_production_artifact_missing": false,
       "claims_production_all_passed": true,
       "claims_production_mean_claim_recall": 1.0,
-      "advisory_phantom_count": 9,
+      "advisory_phantom_count": 8,
       "advisory_phantom_families": [
         "merge_safe_contract_mock",
         "strict_pilot_mock",
         "hybrid_ablation",
-        "multihop_mini",
         "claims_paraphrase_pilot",
         "claims_paraphrase_holdout",
         "concept_topic_mini",
@@ -2259,30 +2225,6 @@
             "answer_metric_type": "rouge_l",
             "workspace_scope_ok": true
           }
-        },
-        {
-          "family": "retrieval_family",
-          "member_id": "judge_pilot",
-          "case_id": "ws_full_anchor_free_overview",
-          "passed": false,
-          "weighted_score": 3.3,
-          "error": null
-        },
-        {
-          "family": "retrieval_family",
-          "member_id": "judge_pilot",
-          "case_id": "ws_two_stage_proposal_evolution",
-          "passed": false,
-          "weighted_score": 4.3,
-          "error": null
-        },
-        {
-          "family": "retrieval_family",
-          "member_id": "judge_pilot",
-          "case_id": "ws_yolo_speed_question",
-          "passed": false,
-          "weighted_score": 2.6,
-          "error": null
         },
         {
           "family": "retrieval_family",
@@ -2461,9 +2403,7 @@
           }
         }
       ],
-      "hard_block_individual_failures": [
-        "retrieval_judge_pilot"
-      ]
+      "hard_block_individual_failures": []
     }
   }
 }

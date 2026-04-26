@@ -69,17 +69,26 @@ export function getScienceGraphLegendNodeChipSx(nodeType) {
 
 /**
  * @param {unknown} nodeType
- * @param {{ selected?: boolean, hovered?: boolean, workspaceMembership?: string, nodeKind?: string }} [opts]
+ * @param {{ selected?: boolean, hovered?: boolean, workspaceMembership?: string, nodeKind?: string, searchDim?: boolean }} [opts]
  * @returns {{ fill: string, stroke: string, lineWidth: number, strokeDash?: number[] }}
  */
 export function getScienceGraphNodeStyle(nodeType, opts = {}) {
   if (String(opts.nodeKind || "") === "Aggregator") {
-    return {
+    const base = {
       fill: "rgba(99, 102, 241, 0.12)",
       stroke: "rgba(99, 102, 241, 0.6)",
       lineWidth: 1.5,
       strokeDash: [6, 3],
     };
+    if (opts.searchDim && !opts.selected && !opts.hovered) {
+      return {
+        ...base,
+        fill: "rgba(99, 102, 241, 0.05)",
+        stroke: "rgba(99, 102, 241, 0.22)",
+        lineWidth: 1,
+      };
+    }
+    return base;
   }
   const selected = Boolean(opts.selected);
   const hovered = Boolean(opts.hovered);
@@ -111,6 +120,13 @@ export function getScienceGraphNodeStyle(nodeType, opts = {}) {
       fill: fillBase,
       stroke: "rgba(255, 255, 255, 0.55)",
       lineWidth: 1.75,
+    };
+  }
+  if (opts.searchDim) {
+    return {
+      fill: ext ? dim(dim(fillBase)) : "rgba(255,255,255,0.05)",
+      stroke: "rgba(255,255,255,0.12)",
+      lineWidth: 1,
     };
   }
   return { fill: fillBase, stroke: strokeBase, lineWidth: lwBase };

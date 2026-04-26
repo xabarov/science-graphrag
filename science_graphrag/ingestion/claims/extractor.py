@@ -61,6 +61,45 @@ class _ClaimsLLMResponse(BaseModel):
     claims: list[_ClaimLLM] = Field(default_factory=list)
 
 
+class _EvidenceLLMBenchmark(BaseModel):
+    chunk_fingerprint: str = Field(
+        default="",
+        max_length=512,
+        description="Exact chunk_fingerprint value from the CHUNK header above.",
+    )
+    quote: str = Field(
+        default="",
+        max_length=480,
+        description="Verbatim substring from chunk text; keep ≤480 chars (benchmark cap).",
+    )
+    section_path: str | None = Field(default=None, max_length=512)
+
+
+class _ClaimLLMBenchmark(BaseModel):
+    claim_text: str = Field(
+        default="",
+        max_length=400,
+        description="Concise scientific assertion (benchmark: ≤400 chars).",
+    )
+    claim_type: str = Field(default="mechanism", max_length=64)
+    polarity: str = Field(default="neutral", max_length=32)
+    confidence: float = Field(default=0.7, ge=0.0, le=1.0)
+    evidence: list[_EvidenceLLMBenchmark] = Field(
+        default_factory=list,
+        min_length=1,
+        max_length=1,
+        description="Exactly one evidence row with a verbatim quote.",
+    )
+
+
+class _ClaimsLLMResponseBenchmark(BaseModel):
+    claims: list[_ClaimLLMBenchmark] = Field(
+        default_factory=list,
+        max_length=28,
+        description="At most 28 claims; keeps tool JSON small for eval/BT6.",
+    )
+
+
 def _chunk_lookup(chunks: list[dict[str, Any]]) -> dict[str, str]:
     out: dict[str, str] = {}
     for ch in chunks:
@@ -190,6 +229,28 @@ Return ONLY valid JSON in this exact shape:
 - If no genuine claim can be supported by a verbatim quote, return { "claims": [] }.
 """
 
+_SYSTEM_BENCHMARK = """You extract scientific claims for an **automated benchmark** (BT6 / eval).
+
+## Hard limits (enforced by the response schema)
+- **At most 28** claims total — emit **as many distinct, supportable claims as the text allows**,
+  up to this cap (typical CV paper excerpts: many claims).
+- **Exactly one** evidence object per claim (one verbatim `quote`).
+- Keep `claim_text` short; keep each `quote` **≤ 480 characters** (copy a contiguous span only).
+- Skip **near-duplicate** assertions and empty meta-lines; do **not** stop after one or two claims
+  when the excerpt clearly supports more (that fails benchmark coverage).
+
+## What counts as a claim
+Same as full extraction: a self-contained scientific assertion supported by a verbatim quote
+from the chunk text — not generic paper description. Include quantitative results, architecture
+choices, dataset names, and comparisons **when each has its own quote**.
+
+## Output shape
+Return JSON matching the tool schema: `claims` array of objects with
+`claim_text`, `claim_type`, `polarity`, `confidence`, and `evidence` (length 1).
+
+If the excerpt has no supportable claims, return `"claims": []`.
+"""
+
 
 def extract_claims_llm(
     chunks: list[dict[str, Any]],
@@ -222,6 +283,7 @@ def extract_claims_llm(
         raw_claims_from_llm=0,
         llm_error_message=None,
         llm_raw_response_preview=None,
+        claims_benchmark_compact_schema=bool(force_benchmark),
     )
 
     if not force_benchmark and not settings.claims_extraction_enabled:
@@ -234,11 +296,12 @@ def extract_claims_llm(
         return []
 
     lookup = _chunk_lookup(chunks)
+    payload_max = 26_000 if force_benchmark else 28_000
     user = (
         "Work id (opaque): "
         + str(work_id)
         + "\n\nExtract claims from the following chunks:\n\n"
-        + _build_user_payload(chunks)
+        + _build_user_payload(chunks, max_chars=payload_max)
     )
 
     # Single-chunk BT6 paraphrase runs can exceed 4k completion tokens on verbose models.
@@ -252,7 +315,14 @@ def extract_claims_llm(
         timeout_seconds=settings.extraction_llm_timeout_seconds,
         mode=settings.extraction_llm_mode,
     )
-    parsed, err = ext.extract_maybe(_ClaimsLLMResponse, system=_SYSTEM, user=user)
+    if force_benchmark:
+        parsed, err = ext.extract_maybe(
+            _ClaimsLLMResponseBenchmark,
+            system=_SYSTEM_BENCHMARK,
+            user=user,
+        )
+    else:
+        parsed, err = ext.extract_maybe(_ClaimsLLMResponse, system=_SYSTEM, user=user)
     if err or parsed is None:
         log.warning("claims_extraction: LLM failed: %s", err)
         _diag(llm_error_message=str(err) if err else "parsed_none")

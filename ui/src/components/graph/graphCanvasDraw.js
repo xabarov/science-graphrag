@@ -15,6 +15,35 @@ const ARROW_HEAD_LEN = 7;
 const ARROW_HEAD_HW = 4;
 const EDGE_HOVER_THRESHOLD_PX = 8;
 
+/**
+ * When edge count exceeds this or scale is below {@link EDGE_LABEL_ADAPTIVE_MIN_SCALE},
+ * adaptive mode shows edge labels only for hover/selected edges. Values are tunable.
+ */
+export const EDGE_LABEL_ADAPTIVE_MAX_EDGES = 72;
+
+/** Below this screen scale (1 = 1px per world unit before pan), adaptive mode treats the view as zoomed out. */
+export const EDGE_LABEL_ADAPTIVE_MIN_SCALE = 0.32;
+
+/**
+ * Whether to paint an edge's mid-label on canvas (node labels are unaffected).
+ *
+ * @param {"all" | "interaction" | "adaptive"} mode
+ * @param {{ active?: boolean }} edgeStyle merged style for the edge id
+ * @param {{ scale: number }} transform current pan/zoom
+ * @param {number} edgeCount total edges in the current graph (for adaptive density)
+ * @returns {boolean}
+ */
+export function shouldDrawCanvasEdgeLabel(mode, edgeStyle, transform, edgeCount) {
+  const active = Boolean(edgeStyle?.active);
+  if (mode === "all") return true;
+  if (mode === "interaction") return active;
+  const dense =
+    Number(edgeCount) > EDGE_LABEL_ADAPTIVE_MAX_EDGES ||
+    (transform && Number(transform.scale) < EDGE_LABEL_ADAPTIVE_MIN_SCALE);
+  if (dense) return active;
+  return true;
+}
+
 export function drawEdges(ctx, edges, nodeMap, positions, transform, styleMap = {}) {
   const { scale, tx, ty } = transform;
   for (const edge of edges) {
@@ -76,6 +105,7 @@ export function drawNodes(ctx, nodes, positions, transform, styleMap = {}) {
       hovered: Boolean(styleMap[String(node.id || "")]?.hovered),
       workspaceMembership: node.workspaceMembership,
       nodeKind: node.nodeKind,
+      searchDim: Boolean(styleMap[String(node.id || "")]?.searchDim),
     });
     ctx.beginPath();
     ctx.arc(p.x, p.y, NODE_RADIUS, 0, 2 * Math.PI);
@@ -102,6 +132,8 @@ export function drawNodes(ctx, nodes, positions, transform, styleMap = {}) {
  * @typedef {{
  *   resolveEdgeLabel?: (edge: object) => string,
  *   resolveNodeCanvasLabel?: (node: object) => string | null | undefined,
+ *   edgeLabelMode?: "all" | "interaction" | "adaptive",
+ *   edgeCountForAdaptive?: number,
  * }} DrawLabelOptions
  */
 
@@ -118,15 +150,27 @@ export function drawLabels(ctx, nodes, edges, positions, transform, styleMap = {
   const { scale, tx, ty } = transform;
   const resolveEdge = typeof drawOptions.resolveEdgeLabel === "function" ? drawOptions.resolveEdgeLabel : null;
   const resolveNode = typeof drawOptions.resolveNodeCanvasLabel === "function" ? drawOptions.resolveNodeCanvasLabel : null;
+  const edgeLabelMode = drawOptions.edgeLabelMode === "interaction" || drawOptions.edgeLabelMode === "adaptive"
+    ? drawOptions.edgeLabelMode
+    : "all";
+  const edgeList = Array.isArray(edges) ? edges : [...edges];
+  const edgeCountForAdaptive =
+    typeof drawOptions.edgeCountForAdaptive === "number" && Number.isFinite(drawOptions.edgeCountForAdaptive)
+      ? drawOptions.edgeCountForAdaptive
+      : edgeList.length;
   ctx.font = EDGE_LABEL_FONT;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  for (const edge of edges) {
+  for (const edge of edgeList) {
     const p0w = positions.get(edge.source);
     const p1w = positions.get(edge.target);
     if (!p0w || !p1w) continue;
     const p0 = worldToScreen(p0w.x, p0w.y, scale, tx, ty);
     const p1 = worldToScreen(p1w.x, p1w.y, scale, tx, ty);
+    const edgeId = String(edge.id || "");
+    if (!shouldDrawCanvasEdgeLabel(edgeLabelMode, styleMap[edgeId] || {}, transform, edgeCountForAdaptive)) {
+      continue;
+    }
     const elabel = resolveEdge ? resolveEdge(edge) : edgeTypeCanvasLabelFromEdge(edge);
     if (!elabel || elabel === "—") continue;
     const midX = (p0.x + p1.x) / 2;

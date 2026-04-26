@@ -21,6 +21,8 @@ Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-co
 | 2026-04-08 | **Graph standalone:** Waves 5–8 (maximize canvas, `graphPageUrl` / focus / detail width, drag gutter, contract + pointer-capture polish). |
 | 2026-04-08 | **Graph canvas:** Wave 4.2 z-order; Wave 4.3 React Flow mode; Canvas force layout + quadTree/communities (ADR 007). |
 | 2026-04-08 | **API errors:** unified `formatResearchApiError` in `researchApi.js` + tests. |
+| 2026-04-26 | **Graph:** Bloom-like overview — type counts + node/edge totals in legend, chip sort frequency/alphabet, canvas edge-label modes (`all` / `interaction` / `adaptive`) + `GraphCanvasViewToolbar`, local node substring search (`graphNodeSearch.js`, `GraphWorkspacePanel`). |
+| 2026-04-26 | **Research API (UI):** `services/research/{errors,meta,queryModel,queryHttp,askSessions,agent,ideaAssist,works,graph}.js` + barrel `researchApi.js`; shim `benchmarkSummary.js` removed (`useBenchmarkSummary` → `benchmarkApi.js`). |
 
 ## Queue
 
@@ -31,19 +33,13 @@ Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-co
 - **Acceptance:** N/A до приоритизации.
 - **Raised:** 2026-04-08
 
-### [OPEN] Graph UI — Neo4j Bloom–inspired overview (counts, edge labels, local find)
+### [DONE] Graph UI — Neo4j Bloom–inspired overview (counts, edge labels, local find)
+- **Note (2026-04-26):** Счётчики по `nodeKind` / типу рёбер + строка «узлов / рёбер», сортировка чипов frequency vs alphabet (`graphTypeLegend.js`, `GraphTypeLegend.jsx`). Подписи рёбер на canvas: режимы `all` \| `interaction` \| `adaptive`, `shouldDrawCanvasEdgeLabel` + константы в `graphCanvasDraw.js`, persist режима в `localStorage`, i18n `graph.canvas.edgeLabels.*`, тулбар `GraphCanvasViewToolbar.jsx`. Локальный поиск: `graphNodeSearch.js`, интеграция в `GraphWorkspacePanel.jsx`. Тесты: `graphTypeLegend.test.js`, `graphCanvasDraw.test.js`, `graphNodeSearch.test.js`. `GraphCanvasMvp.jsx` остаётся крупным — опциональный follow-up slim.
 - **Area:** [`GraphTypeLegend.jsx`](../../ui/src/components/graph/GraphTypeLegend.jsx),
-  [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx) / компактная сводка,
-  [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx) + [`graphCanvasDraw.js`](../../ui/src/components/graph/graphCanvasDraw.js),
+  [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx),
+  [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx), [`graphCanvasDraw.js`](../../ui/src/components/graph/graphCanvasDraw.js),
+  [`GraphCanvasViewToolbar.jsx`](../../ui/src/components/graph/GraphCanvasViewToolbar.jsx), [`graphNodeSearch.js`](../../ui/src/components/graph/graphNodeSearch.js),
   [`partGraphUi.js`](../../ui/src/i18n/messages/en/partGraphUi.js) (EN+RU)
-- **Issue:** По сравнению с Neo4j Bloom «Results overview» у нас нет **чисел по типам** узлов/рёбер в текущем виде; при плотном графе постоянные подписи рёбер на канвасе дают шум; нет **локального поиска** по уже загруженным label в окрестности (Bloom сильнее завязан на поиск как вход).
-- **Proposal:**
-  1. **Сводка состава:** рядом с легендой или внутри неё — счётчики `(N)` по каждому `nodeKind`/`edge.type` в `displayGraph`, плюс одна строка «узлов X · рёбер Y»; опция сортировки чипов **по частоте** vs алфавит.
-  2. **Режимы подписей рёбер:** `all` | `hover/selected only` | скрыть при `edgeCount > threshold` или при `scale < min` (пороги в константах или user pref в `localStorage`).
-  3. **Локальный find:** поле фильтра по `displayLabel`/`label` среди узлов текущего графа (подсветка + опционально «scroll/fit to match»); без Cypher и без нового API — чистый UI-слой.
-  4. **Панель canvas:** визуально сгруппировать fit/zoom/center/restart в один блок (как нижняя панель Bloom), при необходимости вынести хелпер `GraphCanvasViewToolbar.jsx`.
-- **Acceptance:** в workspace/standalone graph видны счётчики по типам для текущего payload; переключатель режима подписей рёбер работает без регрессии выбора ребра; локальный find находит узел по подстроке title; `npm run lint` / `npm run test` зелёные; i18n для новых подписей/подсказок EN+RU.
-- **Synergy:** Дополняет **[OPEN] Graph canvas — Neo4j Browser–grade UX** (там — command bar, контекстное меню и т.д.); не дублирует **Wave GR7** (i18n типов уже есть). Приоритет: после стабилизации WX/graph backlog.
 - **Raised:** 2026-04-26 (обсуждение UI vs Neo4j Bloom/Browser)
 
 ### [DONE] Graph UI — Wave GR6 use displayType on canvas (closes Wave GR2 frontend gap)
@@ -91,14 +87,11 @@ Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-co
   [`refactor-backend.md`](./refactor-backend.md).
 - **Raised:** 2026-04-25 (см. [`docs/analysis/graph-readability-followup-2026-04-25.md`](../analysis/graph-readability-followup-2026-04-25.md) §2.2)
 
-### [OPEN] Drop `ui/src/services/research/benchmarkSummary.js` shim
-- **Area:** [`ui/src/services/research/benchmarkSummary.js`](../../ui/src/services/research/benchmarkSummary.js), [`ui/src/hooks/useBenchmarkSummary.js`](../../ui/src/hooks/useBenchmarkSummary.js)
-- **Issue:** `benchmarkSummary.js` is a 5-line re-export shim with a single consumer (`useBenchmarkSummary.js`). Adding a layer between the hook and the actual API call creates indirection with no abstraction value.
-- **Proposal:** Inline the import in `useBenchmarkSummary.js` directly and delete `benchmarkSummary.js`.
-- **Acceptance:** `benchmarkSummary.js` removed; `useBenchmarkSummary.js` imports directly from the API service; `npm run lint` green.
-- **Raised:** 2026-04-26 (Wave 3 post-BT5).
+### [DONE] Drop `ui/src/services/research/benchmarkSummary.js` shim
+- **Note (2026-04-26):** Файл shim удалён; [`useBenchmarkSummary.js`](../../ui/src/hooks/useBenchmarkSummary.js) вызывает [`fetchDecisionGateSummary`](../../ui/src/services/benchmarkApi.js) из `services/benchmarkApi.js`.
 
-### [OPEN] Benchmark trust drill-in (`TrustSignalPanel` + API slice)
+### [DONE] Benchmark trust drill-in (`TrustSignalPanel` + API slice)
+- **Note (2026-04-26):** `TrustSignalDrillIn.jsx` + `trustSignalDrillInHelpers.js` + list/table subcomponents; i18n `benchmarkPage.trustDrillIn.*` + `benchmarkPage.trustSignal.toggleDetailsAria` EN/RU; vitest для хелперов и drill-in.
 - **Area:** [`TrustSignalPanel.jsx`](../../ui/src/pages/BenchmarkPage/TrustSignalPanel.jsx), [`benchmark_decision_gate.py`](../../science_graphrag/api/benchmark_decision_gate.py) (optional: extend response), i18n `partBenchmarkPage.js`.
 - **Issue:** API already returns `trust_signal.consistency_warnings`, `validation_status_aggregate`, and `criteria.advisory_individual_failures`; UI only shows decision chip + `runtime_mode` rows — operators cannot drill into failed case_ids without opening raw JSON.
 - **Proposal:** Expandable rows or secondary panel: show `consistency_warnings`, `validation_status_aggregate`, and a compact table for `criteria.advisory_individual_failures` (case_id, family.member); extract presentational helpers to `TrustSignalDrillIn.jsx` when file approaches ~250 lines.
@@ -138,13 +131,10 @@ Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-co
 - **Synergy:** Облегчит добавление UI для **Wave Q/R/P** ablation и judge-метрик.
 - **Raised:** 2026-04-25
 
-### [OPEN] Услoвный split `services/researchApi.js` (305) by domain modules
-- **Area:** [`services/researchApi.js`](../../ui/src/services/researchApi.js)
-- **Issue:** Текущий «один файл — все эндпоинты» (works, graph, ask, settings, agent, idea-assist) растёт линейно. После Wave Y3 добавится агент v2 SSE; после Wave T — больше dedup-эндпоинтов; после Wave M — judge-метрики.
-- **Proposal:** Сегментировать на `services/research/{works,graph,ask,agent,ideaAssist,dedup,settings,benchmarks}.js`, оставить `services/researchApi.js` как barrel-export для обратной совместимости. `formatResearchApiError` — в `services/research/errors.js`.
-- **Acceptance:** ни один сервис-модуль > ~150 строк; импорты в существующих компонентах продолжают работать через barrel-re-export.
-- **Synergy:** **Wave Y3** (agent v2 SSE), **Wave T** (entity dedup), **Wave M/P** (judge endpoints).
-- **Raised:** 2026-04-25
+### [DONE] Условный split `services/researchApi.js` by domain modules
+- **Note (2026-04-26):** Barrel [`researchApi.js`](../../ui/src/services/researchApi.js) реэкспортирует `research/{errors,meta,queryModel,queryHttp,askSessions,agent,ideaAssist,works,graph}.js`; `formatResearchApiError` в `errors.js`; крупнейший модуль `queryModel.js` ~137 строк. Отдельные `dedup.js` / `settings.js` / `benchmarks.js` — вынести при росте клиентских вызовов (см. прежний Proposal).
+- **Area:** [`services/researchApi.js`](../../ui/src/services/researchApi.js), [`ui/src/services/research/`](../../ui/src/services/research/)
+- **Raised:** 2026-04-25 (закрыто 2026-04-26)
 
 ### [OPEN] i18n hardcoded copy: HypothesisPanel, IngestionSettings, Workspace dialogs
 - **Area:** [`HypothesisPanel.jsx`](../../ui/src/components/work/HypothesisPanel.jsx), [`pages/SettingsPage/IngestionSettingsPanel.jsx`](../../ui/src/pages/SettingsPage/IngestionSettingsPanel.jsx), [`WorkspacePage/WorkspacePage.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx)

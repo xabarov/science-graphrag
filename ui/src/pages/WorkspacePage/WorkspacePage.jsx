@@ -396,7 +396,18 @@ export default function WorkspacePage() {
 
   return (
     <Box sx={{ p: { xs: 1.5, sm: 2 }, ...mainShellContentSx }}>
-      <PageHeader
+      {/* WX1: hero rail (Round 8) — visible above fold on wide layouts */}
+      <Box
+        sx={{
+          mb: 2,
+          p: { xs: 1.5, md: 2 },
+          borderRadius: "6px",
+          border: "1px solid rgba(255,255,255,0.08)",
+          backgroundColor: "#1a1a1a",
+          minHeight: { lg: 120 },
+        }}
+      >
+        <PageHeader
         eyebrow={t("workspace.header.eyebrow")}
         title={workspaceMeta.name || t("workspace.header.titleFallback")}
         description={
@@ -458,7 +469,8 @@ export default function WorkspacePage() {
             </Box>
           ) : null
         }
-      />
+        />
+      </Box>
 
       {workspaceError ? (
         <Alert severity="error" sx={{ mb: 2, fontSize: "0.8125rem" }}>
@@ -469,36 +481,64 @@ export default function WorkspacePage() {
       {!workspaceLoading && !workspaceMeta.id ? (
         emptyState
       ) : (
-        <>
-          <WorkspaceIngestPanel
-            workspaceId={workspaceMeta.id}
-            uploadBusy={uploadBusy}
-            ingestJobId={ingestJobId}
-            ingestJob={ingestJob}
-            ingestErr={ingestErr}
-            onUploadDocument={handleUploadDocument}
-            onUploadBatch={handleUploadBatch}
-            addWorkInput={addWorkInput}
-            onAddWorkInputChange={setAddWorkInput}
-            addBusy={addBusy}
-            onAddWork={handleAddWork}
-          />
-          {addErr ? (
-            <Alert severity="warning" sx={{ mb: 2, fontSize: "0.8125rem" }}>
-              {addErr}
-            </Alert>
-          ) : null}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", lg: "row" },
+            alignItems: "stretch",
+            gap: 2,
+          }}
+        >
+          {/* Main column: papers + dedup; flex grows so at 1920×1080 the paper lane is wide (WX1). */}
+          <Box sx={{ order: { xs: 2, lg: 1 }, flex: 1, minWidth: 0 }}>
+            <WorkspacePaperList
+              workspaceId={workspaceMeta.id}
+              effectiveWorkIds={effectiveWorkIds}
+              papers={papers}
+              selectedWorkId={selectedWorkId}
+              onCardActivate={onCardActivate}
+            />
 
-          <WorkspacePaperList
-            workspaceId={workspaceMeta.id}
-            effectiveWorkIds={effectiveWorkIds}
-            papers={papers}
-            selectedWorkId={selectedWorkId}
-            onCardActivate={onCardActivate}
-          />
+            <WorkspaceDedupSection workspaceId={workspaceMeta.id} onMerged={() => refreshWorkspaceMeta()} />
+          </Box>
 
-          <WorkspaceDedupSection workspaceId={workspaceMeta.id} onMerged={() => refreshWorkspaceMeta()} />
-        </>
+          {/* Side rail: ingest above papers on mobile; sticky right on lg */}
+          <Box
+            sx={{
+              order: { xs: 1, lg: 2 },
+              width: { lg: 300, xl: 320 },
+              flexShrink: 0,
+              alignSelf: { lg: "flex-start" },
+              position: { lg: "sticky" },
+              top: { lg: 12 },
+              maxHeight: { lg: "calc(100vh - 72px)" },
+              overflowY: { lg: "auto" },
+              p: { lg: 1.5 },
+              borderRadius: "6px",
+              border: { lg: "1px solid rgba(255,255,255,0.08)" },
+              backgroundColor: { lg: "#1a1a1a" },
+            }}
+          >
+            <WorkspaceIngestPanel
+              workspaceId={workspaceMeta.id}
+              uploadBusy={uploadBusy}
+              ingestJobId={ingestJobId}
+              ingestJob={ingestJob}
+              ingestErr={ingestErr}
+              onUploadDocument={handleUploadDocument}
+              onUploadBatch={handleUploadBatch}
+              addWorkInput={addWorkInput}
+              onAddWorkInputChange={setAddWorkInput}
+              addBusy={addBusy}
+              onAddWork={handleAddWork}
+            />
+            {addErr ? (
+              <Alert severity="warning" sx={{ mt: 1.5, fontSize: "0.8125rem" }}>
+                {addErr}
+              </Alert>
+            ) : null}
+          </Box>
+        </Box>
       )}
       <Dialog open={summaryOpen} onClose={() => setSummaryOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>{t("workspace.summary.dialogTitle")}</DialogTitle>
