@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import json
 import re
+import signal
 import uuid
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -142,6 +145,63 @@ def discover_corpus_files(directory: Path) -> list[Path]:
         if path.is_file() and path.suffix.lower() in CORPUS_SUPPORTED_SUFFIXES:
             found.append(path)
     return found
+
+
+def _default_progress_file() -> Path:
+    run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    return Path("eval/results") / f"ingest-progress-{run_id}.jsonl"
+
+
+def _load_progress(path: Path) -> dict[str, str]:
+    if not path.exists():
+        return {}
+    rows: dict[str, str] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            payload = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(payload, dict):
+            continue
+        raw_path = payload.get("path")
+        status = payload.get("status")
+        if not isinstance(raw_path, str) or not isinstance(status, str):
+            continue
+        rows[raw_path] = status
+    return rows
+
+
+def _append_progress(path: Path, entry: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    existing = path.read_text(encoding="utf-8") if path.exists() else ""
+    line = json.dumps(entry, ensure_ascii=False) + "\n"
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(existing + line, encoding="utf-8")
+    tmp.replace(path)
+
+
+@contextmanager
+def _file_timeout(seconds: int):
+    if seconds <= 0:
+        yield
+        return
+    if not hasattr(signal, "SIGALRM"):
+        yield
+        return
+
+    def _handler(_sig, _frame):
+        raise TimeoutError(f"ingest_document exceeded {seconds}s")
+
+    previous = signal.signal(signal.SIGALRM, _handler)
+    signal.alarm(seconds)
+    try:
+        yield
+    finally:
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, previous)
 
 
 def _slug(value: str) -> str:
@@ -942,6 +1002,9 @@ def run_ingest_batch_cli(
     settings: Settings | None = None,
     skip_existing_sha: bool = False,
     force_new_document: bool = False,
+    per_file_timeout_s: int = 900,
+    resume: bool = False,
+    progress_file: Path | None = None,
 ) -> list[dict[str, Any]]:
     """
     Ingest every ``.pdf`` / ``.md`` / ``.txt`` under ``directory`` (recursive).
@@ -959,54 +1022,148 @@ def run_ingest_batch_cli(
     paths = discover_corpus_files(directory)
     if not paths:
         log.warning("No ingestible files under %s", directory)
-        print("No .pdf/.md/.txt files found.")
+        print("No .pdf/.md/.txt files found.", flush=True)
         return []
+
+    progress_path = progress_file or _default_progress_file()
+    progress_by_path = _load_progress(progress_path) if resume else {}
 
     rows: list[dict[str, Any]] = []
     for path in paths:
+        resolved_path = str(path.resolve())
+        if resume and progress_by_path.get(resolved_path) == "ok":
+            rows.append(
+                {
+                    "path": resolved_path,
+                    "document_id": None,
+                    "work_id": None,
+                    "error": None,
+                    "skipped_duplicate": False,
+                    "status": "skip",
+                },
+            )
+            print(f"SKIP resumed=ok path={path}", flush=True)
+            continue
+
+        started_at = datetime.now(UTC)
         try:
             with factory() as db_session:
                 with db_session.begin():
-                    doc_id, work_id = ingest_document(
-                        path,
-                        settings=s,
-                        session=db_session,
-                        skip_existing_sha=skip_existing_sha,
-                        force_new_document=force_new_document,
-                    )
+                    with _file_timeout(per_file_timeout_s):
+                        doc_id, work_id = ingest_document(
+                            path,
+                            settings=s,
+                            session=db_session,
+                            skip_existing_sha=skip_existing_sha,
+                            force_new_document=force_new_document,
+                        )
+            finished_at = datetime.now(UTC)
             rows.append(
                 {
-                    "path": str(path.resolve()),
+                    "path": resolved_path,
                     "document_id": doc_id,
                     "work_id": work_id,
                     "error": None,
                     "skipped_duplicate": False,
+                    "status": "ok",
                 },
             )
-            print(f"OK path={path} document_id={doc_id} work_id={work_id}")
-        except SkippedDuplicateIngestError as dup:
-            rows.append(
+            _append_progress(
+                progress_path,
                 {
-                    "path": str(path.resolve()),
-                    "document_id": dup.document_id,
-                    "work_id": None,
+                    "path": resolved_path,
+                    "sha256": None,
+                    "status": "ok",
+                    "document_id": doc_id,
+                    "work_id": work_id,
+                    "started_at": started_at.isoformat(),
+                    "finished_at": finished_at.isoformat(),
                     "error": None,
-                    "skipped_duplicate": True,
                 },
             )
-            print(f"SKIP duplicate-sha path={path} document_id={dup.document_id}")
-        except Exception as exc:  # noqa: BLE001
-            log.exception("Ingest failed for %s", path)
+            print(f"OK path={path} document_id={doc_id} work_id={work_id}", flush=True)
+        except TimeoutError as exc:
+            log.exception("Ingest timeout for %s", path)
+            finished_at = datetime.now(UTC)
             rows.append(
                 {
-                    "path": str(path.resolve()),
+                    "path": resolved_path,
                     "document_id": None,
                     "work_id": None,
                     "error": str(exc),
                     "skipped_duplicate": False,
+                    "status": "timeout",
                 },
             )
-            print(f"FAIL path={path} error={exc}")
+            _append_progress(
+                progress_path,
+                {
+                    "path": resolved_path,
+                    "sha256": None,
+                    "status": "timeout",
+                    "document_id": None,
+                    "work_id": None,
+                    "started_at": started_at.isoformat(),
+                    "finished_at": finished_at.isoformat(),
+                    "error": str(exc),
+                },
+            )
+            print(f"FAIL_TIMEOUT path={path} error={exc}", flush=True)
+            if not continue_on_error:
+                break
+        except SkippedDuplicateIngestError as dup:
+            finished_at = datetime.now(UTC)
+            rows.append(
+                {
+                    "path": resolved_path,
+                    "document_id": dup.document_id,
+                    "work_id": None,
+                    "error": None,
+                    "skipped_duplicate": True,
+                    "status": "skip",
+                },
+            )
+            _append_progress(
+                progress_path,
+                {
+                    "path": resolved_path,
+                    "sha256": dup.sha256,
+                    "status": "skip",
+                    "document_id": dup.document_id,
+                    "work_id": None,
+                    "started_at": started_at.isoformat(),
+                    "finished_at": finished_at.isoformat(),
+                    "error": None,
+                },
+            )
+            print(f"SKIP duplicate-sha path={path} document_id={dup.document_id}", flush=True)
+        except Exception as exc:  # noqa: BLE001
+            log.exception("Ingest failed for %s", path)
+            finished_at = datetime.now(UTC)
+            rows.append(
+                {
+                    "path": resolved_path,
+                    "document_id": None,
+                    "work_id": None,
+                    "error": str(exc),
+                    "skipped_duplicate": False,
+                    "status": "fail",
+                },
+            )
+            _append_progress(
+                progress_path,
+                {
+                    "path": resolved_path,
+                    "sha256": None,
+                    "status": "fail",
+                    "document_id": None,
+                    "work_id": None,
+                    "started_at": started_at.isoformat(),
+                    "finished_at": finished_at.isoformat(),
+                    "error": str(exc),
+                },
+            )
+            print(f"FAIL path={path} error={exc}", flush=True)
             if not continue_on_error:
                 break
 
@@ -1016,14 +1173,18 @@ def run_ingest_batch_cli(
     finally:
         neo.close()
 
-    print("\n--- Work dedup audit (Neo4j) ---")
+    print("\n--- Work dedup audit (Neo4j) ---", flush=True)
     if not violations:
-        print("OK: no duplicate Work clusters by doi / openalex_id / fingerprint / arxiv_id")
+        print(
+            "OK: no duplicate Work clusters by doi / openalex_id / fingerprint / arxiv_id",
+            flush=True,
+        )
     else:
-        print(f"Found {len(violations)} duplicate cluster(s):")
+        print(f"Found {len(violations)} duplicate cluster(s):", flush=True)
         for item in violations:
             print(
                 f"  [{item['kind']}] key={item['dedup_key']!r} " f"work_ids={item['work_ids']}",
+                flush=True,
             )
     return rows
 

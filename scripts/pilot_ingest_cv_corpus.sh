@@ -45,5 +45,9 @@ if [[ "${PILOT_DRY_RUN:-0}" == "1" ]]; then
 fi
 
 echo "Starting ingest-corpus …"
+# Prefer line-buffered output so progress logs appear immediately:
+#   stdbuf -oL .venv/bin/science-graphrag ingest-corpus "$DEFAULT_CORPUS" | tee ingest.log
+# or with expect's unbuffer:
+#   unbuffer .venv/bin/science-graphrag ingest-corpus "$DEFAULT_CORPUS" | tee ingest.log
 .venv/bin/science-graphrag ingest-corpus "$DEFAULT_CORPUS"
 echo "Done. Review dedup audit above; merge duplicates per docs/runbooks/deploy.md if needed."

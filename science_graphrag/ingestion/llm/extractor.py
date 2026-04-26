@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import json
+import time
 from typing import Any, TypeVar
 
+import httpx
 import instructor
-from openai import OpenAI
+from openai import APIConnectionError, APIError, OpenAI, RateLimitError
 from pydantic import BaseModel
 
 from science_graphrag.observability.phoenix_tracer import SpanAttributes, set_span_error
@@ -116,6 +118,17 @@ class SyncInstructorExtractor:
             return fallback_message
         return ""
 
+    @staticmethod
+    def _api_status(exc: APIError) -> int | None:
+        status_code = getattr(exc, "status_code", None)
+        if isinstance(status_code, int):
+            return status_code
+        response = getattr(exc, "response", None)
+        code = getattr(response, "status_code", None)
+        if isinstance(code, int):
+            return code
+        return None
+
     def extract_maybe(
         self,
         response_model: type[T],
@@ -154,22 +167,105 @@ class SyncInstructorExtractor:
             }
         )
 
-        try:
-            create_kwargs: dict[str, Any] = {
-                "model": self.model,
-                "temperature": self.temperature,
-                "max_tokens": self.max_tokens,
-                "response_model": instructor.Maybe(response_model),
-                "messages": messages,
-            }
-            if self._extra_body is not None:
-                create_kwargs["extra_body"] = self._extra_body
-            result = self._client.chat.completions.create(
-                **create_kwargs,
-            )
-        except Exception as exc:  # noqa: BLE001
-            set_span_error(exc)
-            error_text = f"{type(exc).__name__}: {exc}"
+        create_kwargs: dict[str, Any] = {
+            "model": self.model,
+            "temperature": self.temperature,
+            "max_tokens": self.max_tokens,
+            "response_model": instructor.Maybe(response_model),
+            "messages": messages,
+        }
+        if self._extra_body is not None:
+            create_kwargs["extra_body"] = self._extra_body
+
+        result = None
+        total_wait = 0.0
+        for attempt in range(3):
+            try:
+                result = self._client.chat.completions.create(**create_kwargs)
+                break
+            except RateLimitError as exc:
+                wait_s = getattr(exc, "retry_after", None)
+                if not isinstance(wait_s, (int, float)):
+                    wait_s = 10.0
+                total_wait += float(wait_s)
+                if attempt >= 1 or total_wait > 30.0:
+                    set_span_error(exc)
+                    error_text = f"{type(exc).__name__}: {exc}"
+                    SpanAttributes.set_output({"error": error_text})
+                    SpanAttributes.set_llm_output_messages(
+                        [{"role": "assistant", "content": error_text}]
+                    )
+                    SpanAttributes.set_llm_token_counts_from_text(
+                        prompt_text=prompt_text,
+                        completion_text=error_text,
+                        usage_source="estimated_error",
+                    )
+                    return None, error_text
+                time.sleep(float(wait_s))
+            except (httpx.ReadTimeout, httpx.RemoteProtocolError, APIConnectionError) as exc:
+                wait_s = float(2 ** (attempt + 1))
+                total_wait += wait_s
+                if attempt >= 1 or total_wait > 30.0:
+                    set_span_error(exc)
+                    error_text = f"{type(exc).__name__}: {exc}"
+                    SpanAttributes.set_output({"error": error_text})
+                    SpanAttributes.set_llm_output_messages(
+                        [{"role": "assistant", "content": error_text}]
+                    )
+                    SpanAttributes.set_llm_token_counts_from_text(
+                        prompt_text=prompt_text,
+                        completion_text=error_text,
+                        usage_source="estimated_error",
+                    )
+                    return None, error_text
+                time.sleep(wait_s)
+            except APIError as exc:
+                status = self._api_status(exc)
+                if status is not None and 400 <= status < 500 and status != 429:
+                    set_span_error(exc)
+                    error_text = f"{type(exc).__name__}: {exc}"
+                    SpanAttributes.set_output({"error": error_text})
+                    SpanAttributes.set_llm_output_messages(
+                        [{"role": "assistant", "content": error_text}]
+                    )
+                    SpanAttributes.set_llm_token_counts_from_text(
+                        prompt_text=prompt_text,
+                        completion_text=error_text,
+                        usage_source="estimated_error",
+                    )
+                    return None, error_text
+                wait_s = float(2 ** (attempt + 1))
+                total_wait += wait_s
+                if attempt >= 1 or total_wait > 30.0:
+                    set_span_error(exc)
+                    error_text = f"{type(exc).__name__}: {exc}"
+                    SpanAttributes.set_output({"error": error_text})
+                    SpanAttributes.set_llm_output_messages(
+                        [{"role": "assistant", "content": error_text}]
+                    )
+                    SpanAttributes.set_llm_token_counts_from_text(
+                        prompt_text=prompt_text,
+                        completion_text=error_text,
+                        usage_source="estimated_error",
+                    )
+                    return None, error_text
+                time.sleep(wait_s)
+            except Exception as exc:  # noqa: BLE001
+                set_span_error(exc)
+                error_text = f"{type(exc).__name__}: {exc}"
+                SpanAttributes.set_output({"error": error_text})
+                SpanAttributes.set_llm_output_messages(
+                    [{"role": "assistant", "content": error_text}]
+                )
+                SpanAttributes.set_llm_token_counts_from_text(
+                    prompt_text=prompt_text,
+                    completion_text=error_text,
+                    usage_source="estimated_error",
+                )
+                return None, f"{type(exc).__name__}: {exc}"
+
+        if result is None:
+            error_text = "llm_retry_budget_exhausted"
             SpanAttributes.set_output({"error": error_text})
             SpanAttributes.set_llm_output_messages([{"role": "assistant", "content": error_text}])
             SpanAttributes.set_llm_token_counts_from_text(
@@ -177,7 +273,7 @@ class SyncInstructorExtractor:
                 completion_text=error_text,
                 usage_source="estimated_error",
             )
-            return None, f"{type(exc).__name__}: {exc}"
+            return None, error_text
 
         if getattr(result, "error", False):
             error_text = str(getattr(result, "message", None) or "llm_maybe_error")

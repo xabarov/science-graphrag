@@ -28,6 +28,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
+import httpx
 import numpy as np
 from openai import APIError, OpenAI, RateLimitError
 
@@ -127,15 +128,29 @@ class OpenRouterEmbeddingProvider:
 
     def __init__(self, config: OpenRouterEmbeddingSettings) -> None:
         self._config = config
-        self._client = OpenAI(
-            api_key=config.api_key,
-            base_url=config.base_url,
-            timeout=config.timeout_seconds,
-        )
+        self._client = self._build_client()
         self._mem_cache: dict[str, list[float]] = {}
         self._dim: int | None = None
         self._cache_dir = config.cache_root / _model_slug(config.model)
         self._cache_dir.mkdir(parents=True, exist_ok=True)
+
+    def _build_client(self) -> OpenAI:
+        return OpenAI(
+            api_key=self._config.api_key,
+            base_url=self._config.base_url,
+            timeout=self._config.timeout_seconds,
+        )
+
+    @staticmethod
+    def _api_status(exc: APIError) -> int | None:
+        status_code = getattr(exc, "status_code", None)
+        if isinstance(status_code, int):
+            return status_code
+        response = getattr(exc, "response", None)
+        code = getattr(response, "status_code", None)
+        if isinstance(code, int):
+            return code
+        return None
 
     @property
     def dim(self) -> int:
@@ -174,9 +189,17 @@ class OpenRouterEmbeddingProvider:
             encoding="utf-8",
         )
 
-    def _call_openrouter(self, batch: list[str], *, max_retries: int = 2) -> list[list[float]]:
+    def _call_openrouter(
+        self, batch: list[str], *, max_total_seconds: float = 120.0
+    ) -> list[list[float]]:
         last_err: Exception | None = None
-        for attempt in range(max_retries):
+        attempt = 0
+        started = time.monotonic()
+        while True:
+            attempt += 1
+            elapsed = time.monotonic() - started
+            if elapsed > max_total_seconds:
+                break
             try:
                 resp = self._client.embeddings.create(
                     model=self._config.model,
@@ -186,10 +209,25 @@ class OpenRouterEmbeddingProvider:
                 return [list(d.embedding) for d in resp.data]
             except RateLimitError as exc:
                 last_err = exc
-                time.sleep(2.0 * (attempt + 1))
+                retry_after = getattr(exc, "retry_after", None)
+                if not isinstance(retry_after, (int, float)):
+                    retry_after = min(60.0, float(2**attempt))
+                time.sleep(float(retry_after))
             except APIError as exc:
                 last_err = exc
-                time.sleep(0.5 * (attempt + 1))
+                status = self._api_status(exc)
+                if status is not None and 400 <= status < 500 and status != 429:
+                    raise RuntimeError(
+                        f"OpenRouter embeddings non-retryable HTTP {status}: {exc}"
+                    ) from exc
+                if status is not None and status >= 500:
+                    time.sleep(min(4.0, float(2 ** (attempt - 1))))
+                    continue
+                time.sleep(1.0)
+            except (httpx.ReadTimeout, httpx.RemoteProtocolError) as exc:
+                last_err = exc
+                self._client = self._build_client()
+                time.sleep(min(2.0, float(attempt)))
         raise RuntimeError(f"OpenRouter embeddings failed after retries: {last_err}")
 
     def embed(self, texts: list[str]) -> np.ndarray:

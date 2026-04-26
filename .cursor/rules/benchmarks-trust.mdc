@@ -1,0 +1,112 @@
+---
+description: Бенчмарки — portable IDs в gold, честный trust_signal, hard fail вместо silent skip
+globs: ["eval/**", "scripts/aggregate*.py", "scripts/seed_benchmark*.py", "scripts/backfill_*.py", "tests/fixtures/benchmarks/**", "science_graphrag/benchmarks/**", "tests/benchmarks/**"]
+---
+
+# Benchmarks — trust signal & gold fixtures
+
+> Источник правила — Trust Audit (`docs/analysis/ontology-benchmarks-trust-audit-2026-04-25.md`) + постмортем Wave 4. Главные грабли:
+> 1. UUID `work_id` в gold ломал портабельность фикстур — пришлось писать `eval/retrieval/work_id_resolve.py` после факта.
+> 2. `decision_gate` был ложно-зелёным месяцами на canned/mock/synthetic артефактах.
+> 3. `backfill_workspace_payloads.py` молча игнорировал `ws_full_corpus="*"` — 3/6 фейлов в `workspace_scoped_live` без явного предупреждения.
+
+## 1. Gold fixtures — никаких сгенерированных UUID
+
+В `tests/fixtures/benchmarks/**/gold.json` и `_workspaces.json` использовать **portable идентификаторы**:
+
+- `filter_work_layer1_slug: "yolov1"` — slug из `tests/fixtures/corpus/CATALOG.md` / `corpus_v1.json`
+- `canonical_title` или `doi` — для Work
+- canonical author / institution / venue / method / dataset name — для dedup
+- `case_id` (slug-style, lowercase + underscore) — для случаев
+
+Runtime UUID resolution делает runner через Neo4j title match (см. образец: `eval/retrieval/work_id_resolve.py`, функция `resolve_work_id_from_layer1_slug`).
+
+**Запрещено:**
+
+- Захардкоженные `work_id: "<uuid>"` в gold — они умирают при первой переразметке Neo4j (`docker compose down -v`).
+- `relevant_work_ids: ["<uuid>", "<uuid>"]` — заменить на `relevant_work_layer1_slugs`.
+- Smoke-test, который проверяет UUID-валидность gold (вместо resolve-to-Neo4j) — это тавтология.
+
+## 2. `runtime_mode` обязателен и не обходим
+
+Каждый bench runner **обязан** прокидывать `trust_signal.runtime_mode` в свой `current-*.json`. Допустимые значения (см. `science_graphrag/benchmarks/trust_signal.py`):
+
+| Значение | Когда применять |
+|----------|-----------------|
+| `live` | Реальный API call к LLM/embedding + поднятый Neo4j+Qdrant+Postgres |
+| `canned` | Ответы из gold (`_canned_answer_fn`); **только для contract smoke**, не для качества |
+| `mock_runtime` | `--mock-runtime` flag активен; никогда не qualifies as "passed" в decision_gate |
+| `synthetic_gold` | Gold сам определяет результат (substring harness, deterministic oracle, pre-cooked rankings) |
+| `phantom` | Артефакт отсутствует, infrastructure refused, missing_file — explicit failure mode |
+
+**Дефолт при сомнении — `phantom`, не `live`.** Лучше явный fail чем ложно-зелёный.
+
+## 3. Oracle / deterministic extractor → `synthetic_gold`
+
+Если runner поддерживает `--extractor oracle` или `--mock-runtime` или `--canned-answer` — он **обязан** проставлять соответствующий `runtime_mode` в `trust_signal`. Правило зашито в `science_graphrag/benchmarks/trust_signal.py` и **не должно** быть обходимо через флаги типа `--force-live-mark`.
+
+Тесты для trust_signal классификации лежат в `tests/benchmarks/test_trust_signal.py` — расширять при добавлении новых runtime_mode.
+
+## 4. Hard fail на отсутствии инфраструктуры
+
+Bench runner, которому нужен Neo4j/Qdrant/Postgres (любой `live` режим, multihop, workspace_scoped_live, hybrid_ablation_live, agent_tools_live, idea_assist_live, claims_production):
+
+- На старте делает `healthcheck` (1 ping per service); если сервис недоступен — **exit non-zero и НЕ записывает `current-*.json`** (или записывает с `runtime_mode="phantom"` + `infrastructure_required` list).
+- НЕ пишет `Connection refused` exception как case-level failure внутри валидного артефакта (это создаёт ложное впечатление «прогон состоялся»).
+
+В gold v2 это закреплено через `infrastructure_required: ["neo4j", "qdrant"]` — runner обязан читать это поле и hard-fail'ить, а не silent-skip.
+
+## 5. Backfill / seed скрипты — explicit логирование skipped
+
+`scripts/backfill_*.py`, `scripts/seed_benchmark_*.py` и подобные **обязаны** в конце прогона печатать summary:
+
+```text
+processed: 12
+skipped: 3
+  - workspace ws_full_corpus skipped (corpus_work_ids="*", unbounded; not implemented)
+  - workspace ws_legacy skipped (no chunks in Qdrant for any of 5 work_ids)
+  - workspace ws_authors skipped (no Neo4j label match for layer1_slug=...)
+errors: 0
+```
+
+Это позволяет немедленно увидеть «3 skipped» и понять, почему follow-up benchmark падает на 3/N кейсах. Молчаливые skip'ы запрещены — каждый skipped → reason в stdout.
+
+Edge cases, на которые обязательно тест в `tests/scripts/`:
+
+- `corpus_work_ids: "*"` (unbounded workspace)
+- empty `corpus_work_ids: []`
+- malformed/unknown layer1_slug
+- workspace без `:CONTAINS` edges
+
+## 6. Aggregator (`scripts/aggregate_benchmark_metrics.py`) — что должно быть в JSON
+
+Каждое поле, которое раньше было «зелёным по построению», должно теперь явно показываться в `decision_gate.criteria`:
+
+- `advisory_phantom_count` — счётчик family-members с `runtime_mode in {canned, mock_runtime, synthetic_gold, phantom}`.
+- `advisory_phantom_families` — список member-имён.
+- `advisory_individual_failures` — список `{family, member_id, case_id, metrics}` для cases с `passed=false`, **даже если** family-mean проходит overall gate.
+- `hard_block_individual_failures` — то же самое, но для core gate (reference / layer1 nightly / layer2 nightly / claims_production).
+- `trust_aggregate_per_family` — per-family `phantom_member_count` + `phantom_members` + `mixed_validation_status_member_count`.
+
+Эти поля должны попадать как в `eval/results/benchmark-metrics-summary.json`, так и в `eval/results/benchmark-trust-baseline.json` (snapshot для diff next time).
+
+Любое silent сокрытие фейлов в aggregator (e.g. «ой, родитель family зелёный — не пишем individual fails») — регрессия trust audit и должна быть покрыта тестом в `tests/benchmarks/`.
+
+## 7. Acceptance перед мерджем нового runner'а
+
+Чек-лист в commit message / PR description:
+
+- [ ] `trust_signal.runtime_mode` прокинут и тестирован.
+- [ ] gold не содержит UUID, только portable IDs (slug/title/doi/canonical name).
+- [ ] hard fail на missing infrastructure (если требуется) — не silent skip.
+- [ ] backfill/seed скрипты, которые runner трогает, логируют skipped с reason.
+- [ ] `aggregate_benchmark_metrics.py` знает про новый artifact (member registered).
+- [ ] `tests/benchmarks/test_trust_signal.py` расширен на новый runtime_mode (если это новый extractor type).
+- [ ] runbook `docs/runbooks/benchmark-decision-gate.md` обновлён.
+
+## Связи
+
+- План бенчмарков: `docs/analysis/ontology-benchmarks-trust-audit-2026-04-25.md` (BT1..BT12).
+- Текущий decision_gate snapshot: `eval/results/benchmark-trust-baseline.json`.
+- Runbook: `docs/runbooks/benchmark-decision-gate.md`.
+- Roadmap §10 (следующие действия): `docs/analysis/master-roadmap-and-refactor-plan-2026-04-25.md`.

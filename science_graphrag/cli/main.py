@@ -286,6 +286,22 @@ def ingest_corpus_cmd(
         "--force-new-document",
         help="Never reuse document_id by sha256 (new row per file run).",
     ),
+    per_file_timeout_s: int = typer.Option(
+        900,
+        "--per-file-timeout-s",
+        min=0,
+        help="Hard wall timeout (seconds) per file; 0 disables timeout.",
+    ),
+    resume: bool = typer.Option(
+        False,
+        "--resume/--no-resume",
+        help="Skip files with status=ok in progress JSONL.",
+    ),
+    progress_file: Path | None = typer.Option(
+        None,
+        "--progress-file",
+        help="Path to ingest progress JSONL checkpoint file.",
+    ),
 ) -> None:
     """Batch-ingest a corpus directory and print Work-level dedup audit for Neo4j."""
 
@@ -294,6 +310,9 @@ def ingest_corpus_cmd(
         continue_on_error=continue_on_error,
         skip_existing_sha=skip_existing_sha,
         force_new_document=force_new_document,
+        per_file_timeout_s=per_file_timeout_s,
+        resume=resume,
+        progress_file=progress_file,
     )
 
 

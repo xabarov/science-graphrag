@@ -1,9 +1,9 @@
 # Ontology & Benchmarks — Trust Audit & Follow-up Plan (2026-04-25)
 
-**Дата:** 2026-04-25 (Trust Audit), последнее обновление — 2026-04-26 после Phase 6 closure
+**Дата:** 2026-04-25 (Trust Audit), последнее обновление — 2026-04-26 ночь после Wave 4 «Honesty close»
 **Тип:** review + plan (living doc)
-**Статус:** **Gold side DONE (Phase 0-6 of Corpus Gold Pack v1), runner side OPEN (BT1-BT12)**
-**Связанные документы:** [`ontology-benchmarks-roadmap-2026-04-24.md`](ontology-benchmarks-roadmap-2026-04-24.md) (Wave M–T исходный roadmap), [`master-roadmap-and-refactor-plan-2026-04-25.md`](master-roadmap-and-refactor-plan-2026-04-25.md) (мастер-план), [`corpus-gold-pack-v1-2026-04-25.md`](corpus-gold-pack-v1-2026-04-25.md) (детали gold-side работ Phase 0-6), [`instructor-adoption-dual-validate-2026-04-25.md`](instructor-adoption-dual-validate-2026-04-25.md) (план Phase 7 рефакторинга dual_validate).
+**Статус:** **Gold side DONE (Phase 0-6 of Corpus Gold Pack v1), runner side: BT1 ✅ + BT5 ✅ + BT2/BT4/BT6 ⚠️ partial (Wave 4); BT3 / BT7..BT12 OPEN**
+**Связанные документы:** [`ontology-benchmarks-roadmap-2026-04-24.md`](ontology-benchmarks-roadmap-2026-04-24.md) (Wave M–T исходный roadmap), [`master-roadmap-and-refactor-plan-2026-04-25.md`](master-roadmap-and-refactor-plan-2026-04-25.md) (мастер-план; **§10 — следующий план действий**), [`corpus-gold-pack-v1-2026-04-25.md`](corpus-gold-pack-v1-2026-04-25.md) (детали gold-side работ Phase 0-6), [`instructor-adoption-dual-validate-2026-04-25.md`](instructor-adoption-dual-validate-2026-04-25.md) (план Phase 7 рефакторинга dual_validate), [`recommended_path.md`](recommended_path.md) (дорожка BT1 → продукт → фоновый BT2..BT12).
 **Аналог по графу:** [`graph-readability-followup-2026-04-25.md`](graph-readability-followup-2026-04-25.md) (там — UX-аудит, тут — измерительный).
 
 ---
@@ -55,7 +55,66 @@ phantom-зелёные на runner-level (ВСЁ ЕЩЁ):
 2. **BT2..BT12 (real runners)** — каждый теперь **1-2 дня** вместо «1-3 дня + придумать gold», потому что gold уже валидирован. Можно делать параллельно (см. file conflict matrix).
 3. **Phase 7 (Instructor refactor)** — opportunistic, не блокирует BT-серию, см. [`instructor-adoption-dual-validate-2026-04-25.md`](instructor-adoption-dual-validate-2026-04-25.md).
 
-**Дальнейшая структура документа:** §1-§4 — исходный аудит (2026-04-25 утро), оставлен для контекста. §5 — план BT1-BT12 (BT0 в нём заменён на ссылку на закрывшую его серию Phase 0-6). §6-§9 — изменения в других документах, acceptance, ссылки.
+**Дальнейшая структура документа:** §0.1 — snapshot Wave 4 (что закрылось ночью 2026-04-26). §1-§4 — исходный аудит (2026-04-25 утро), оставлен для контекста. §5 — план BT1-BT12 (BT0 в нём заменён на ссылку на закрывшую его серию Phase 0-6; **BT1/BT2/BT4/BT5/BT6 теперь имеют `Wave 4 status:` пометки**). §6-§9 — изменения в других документах, acceptance, ссылки.
+
+---
+
+## 0.1 Snapshot после Wave 4 — Honesty close (2026-04-26 ночь)
+
+> Эта секция фиксирует фактические артефакты Wave 4 (`eval/results/benchmark-trust-baseline.json`, `current-retrieval-*.json`, `current-claims-paraphrase-*.json`). Если она расходится с §5 BT-блоками — она main; пометки `Wave 4 status:` в каждом BT-блоке также в синхроне с этой секцией.
+
+**Что закрыто:**
+
+| BT | Статус после Wave 4 | Артефакт | Honest result |
+|----|--------------------|----------|---------------|
+| **BT1** | ✅ DONE | `benchmark-trust-baseline.json`, `benchmark-metrics-summary.{json,md}` | `decision_gate.criteria` теперь содержит `advisory_phantom_count`, `advisory_individual_failures`, `hard_block_individual_failures`; per-family `trust_signal { runtime_mode, validation_status, paraphrase_match_mode, phantom_count }`. `decision="CONDITIONAL-GO"`, `reason="all_nightly_passed;advisory_phantom_count=9"` (раньше был ложно-зелёный `GO`). |
+| **BT2** | ⚠️ partial — runner живой, gold v2 portable, 6/6 honest fail | `current-retrieval-workspace-scoped-live.json` | Two failure modes: (a) 3 кейса `ws_full_corpus` падают на `hit_count=0` потому что `seed_benchmark_workspaces.py` не пишет `workspace_id` в Qdrant payload для unbounded `"*"` workspace (backlog item); (b) 3 кейса `ws_yolo*`/`ws_two_stage*` падают на `missing_required_corpus_work_ids` — corpus содержит только 5 paper'ов после ingest hang'а (нужно расширение). **Не phantom**: `trace_workspace_matches=true`, `forbidden_work_id_violation_count=0` для всех 6 кейсов. |
+| **BT4** | ⚠️ partial — runner живой, mrr_delta=0 на пилоте | `current-retrieval-hybrid-ablation-live.json` | 8/8 honest fail — `mrr_vector=mrr_hybrid=0.0` на всех 8 кейсах. Это **negative result**: на корпусе 5 paper'ов недостаточно candidate set'ов чтобы hybrid дал ≥ 0.05 MRR delta. Гипотеза «hybrid > vector by 0.05» не подтверждена этим корпусом — ждём расширения до 16-20 paper или явного renaming family в `fixture_consistency_only`. Pre-cooked `vector_ranked_work_ids`/`hybrid_ranked_work_ids` запрещены, runner делает live retrieval (`ranked_lists_source="runner_generated"`). |
+| **BT5** | ✅ DONE на текущем корпусе | `current-retrieval-judge-{pilot,holdout}.json` | Per-case gate в metrics; rubric LLM на live answer'ах из 5-paper корпуса даёт mean ≥ 4.5 с per-case `min_individual_weighted_score=4.0`. Holdout 30% (новый артефакт) тоже зелёный. |
+| **BT6** | ⚠️ oracle (synthetic_gold), production extractor pending | `current-claims-paraphrase-{pilot,holdout}.json` | `eval/claims/paraphrase_runner.py` поднят с `--extractor oracle` (deterministic, без LLM); gold v2 packs (`claims/corpus_*_v2/` 15 pilot + `holdout_*_v1/` 5 holdout = 85 claims) подключены через `--match-mode dispatcher`. Оба артефакта зелёные, **но** trust_signal явно `runtime_mode="synthetic_gold"` (правило: `extractor==oracle → synthetic_gold`). Production LLM extractor — отдельный шаг (см. master roadmap §10 пункт 6). |
+
+**Что НЕ закрылось / стало явным блокером:**
+
+- **`workspace_scoped_live` 3/6 phantom-blocker:** `ws_full_corpus="*"` не покрыт `backfill_workspace_payloads.py` — chunks для `(:Workspace {full=true})` не получают `workspace_id` в Qdrant payload. Прямой backlog item: `[OPEN] Backfill workspace_id payload for unbounded ws_full_corpus="*" workspaces`. ~0.5 дня.
+- **`workspace_scoped_live` 3/6 corpus-gap:** в Qdrant `chunks` сейчас 5 ingested papers (yolov1/v2/v3/x + r-cnn) — этого мало для cornernet/fcos/rcnn-family вопросов. Прямой блокер: `[OPEN] Robust ingest orchestration: hard timeout + checkpoint + resume` — без него `ingest-corpus` снова повиснет (история: 16-й файл `Libra R-CNN.pdf`, `httpx CLOSE-WAIT`). ~1.5-2 дня.
+- **`hybrid_ablation_live` 8/8 zero signal:** не баг runner'а, а свойство пилотного корпуса. Решение: расширить корпус до 16-20 paper (см. master §10 пункт 3). Если после расширения `mrr_delta` остаётся 0 на 7 ночах — переименовать family в `fixture_consistency_only` явно (по аналогии с BT7 path B).
+
+**Decision gate сейчас (полная картина):**
+
+```text
+decision_gate.decision = "CONDITIONAL-GO"
+decision_gate.reason   = "all_nightly_passed;advisory_phantom_count=9"
+
+advisory_phantom_count = 9
+advisory_phantom_families:
+  - merge_safe_contract_mock        # Wave M; OK by design (mock contract suite)
+  - strict_pilot_mock               # Wave M; OK by design
+  - hybrid_ablation                 # старый contract harness; retire после BT4 stabilization
+  - multihop_mini                   # missing artifact; ждёт BT3
+  - claims_paraphrase_pilot         # synthetic_gold (oracle); ждёт production
+  - claims_paraphrase_holdout       # synthetic_gold (oracle); ждёт production
+  - concept_topic_mini              # ждёт BT7 (path A или B)
+  - agent_tools_mini                # mock_runtime; ждёт BT8
+  - agent_tools_judge               # missing artifact; ждёт BT8
+
+hard_block_individual_failures = []
+advisory_individual_failures   = 14   # 6 (workspace_scoped_live) + 8 (hybrid_ablation_live)
+```
+
+**Сравнение с до-Wave-4:**
+
+| Метрика | До Wave 4 | После Wave 4 |
+|---------|-----------|--------------|
+| `decision` | `GO` (ложно-зелёный) | `CONDITIONAL-GO` (честно) |
+| `reason` | `all_nightly_passed` | `all_nightly_passed;advisory_phantom_count=9` |
+| `trust_signal` per family | ❌ нет в JSON | ✅ есть |
+| `advisory_phantom_count` | ❌ нет в JSON | 9 (видно) |
+| `advisory_individual_failures` | ❌ скрыты под mean | 14 (видно по case_id) |
+| Live retrieval артефакты | 0 | 4 (`live_corpus_{mini,holdout}`, `judge_{pilot,holdout}`) |
+| Honest live fail артефакты | 0 | 2 (`workspace_scoped_live`, `hybrid_ablation_live`) |
+| Live ingested papers в Qdrant | 0 (только graph-eval-* collections) | 5 (yolov1/v2/v3/x + r-cnn) |
+
+**Что делать дальше:** см. [`master-roadmap-and-refactor-plan-2026-04-25.md`](master-roadmap-and-refactor-plan-2026-04-25.md) §10 — единственный актуальный план следующих действий. Краткая выжимка: `Robust ingest orchestration` → `Backfill ws_full_corpus="*"` → расширение корпуса до 16-20 paper → re-run BT2/BT4/BT5 → BT3 multihop + BT6 production extractor → BT7..BT12 фоном к продуктовому Раунду 8 (WX1+WX2+WX5).
 
 ---
 
@@ -299,7 +358,7 @@ flowchart LR
 
 ### BT1 — Honest `decision_gate`
 
-> **Статус:** **gold N/A (это infra-задача), runner pending.** Самый дешёвый high-leverage PR серии после Phase 6 — теперь `trust_signal` объект может прямо ссылаться на `validation_status` из существующих gold-пакетов (e.g. `llm_dual_validated`/`llm_triple_validated`/`draft`). ~0.5-1 день.
+> **Статус:** **gold N/A (infra task). Wave 4 status: ✅ DONE (2026-04-26 ночь).** `aggregate_benchmark_metrics.py` пишет `trust_signal` per family-member + `advisory_phantom_count` + `advisory_individual_failures` + `hard_block_individual_failures` в `decision_gate.criteria`. Snapshot в `eval/results/benchmark-trust-baseline.json` зафиксирован как «как было после Wave 4». `decision_gate.decision` перешёл с ложно-зелёного `GO` на честный `CONDITIONAL-GO`. Runbook `benchmark-decision-gate.md` обновлён.
 
 **Проблема:** `decision_gate.decision = "GO"` при `multihop_mini.failed_count=5`, `judge_pilot.failed_count=2`, `agent_tools_judge.error=missing_file`, `workspace_scoped` на canned answers. Reason `all_nightly_passed` формально верен, но скрывает деградации.
 
@@ -323,7 +382,7 @@ flowchart LR
 
 ### BT2 — Workspace-scoped retrieval против реального стека
 
-> **Статус:** **gold ✅ ready** (`tests/fixtures/benchmarks/retrieval/workspace_scoped_live/`, 6 packs, **ВСЕ 6 promoted в Phase 6.C**, `forbidden_corpus_work_ids` валидирован non-vacuous). **Runner pending.** ~1-2 дня: `_live_answer_fn` поверх реального `answer_query` с поднятым Qdrant+Neo4j.
+> **Статус:** **gold ✅ ready** (`tests/fixtures/benchmarks/retrieval/workspace_scoped_live/`, 6 packs, **ВСЕ 6 promoted в Phase 6.C**, `forbidden_corpus_work_ids` валидирован non-vacuous). **Wave 4 status: ⚠️ partial DONE.** `_live_answer_fn` поверх реального `answer_query` поднят, gold v2 переведён со static UUID на portable `filter_work_layer1_slug` + runtime UUID resolution через Neo4j title match (`eval/retrieval/work_id_resolve.py`). `current-retrieval-workspace-scoped-live.json` сейчас 6/6 honest fail: 3 кейса `ws_full_corpus` падают из-за отсутствия backfill для `"*"` (backlog `[OPEN] Backfill workspace_id payload for unbounded workspaces`); 3 кейса `ws_yolo*`/`ws_two_stage*` падают на `missing_required_corpus_work_ids` потому что в Qdrant chunks пока 5 paper'ов после ingest hang. **Не phantom**: `forbidden_work_id_violation_count=0`, `trace_workspace_matches=true`. Полная победа BT2 — после `Robust ingest orchestration` + расширения корпуса (см. master roadmap §10).
 
 **Проблема:** `_canned_answer_fn` в `eval/retrieval/runner.py` рисует ответ из gold.
 
@@ -359,7 +418,7 @@ flowchart LR
 
 ### BT4 — Hybrid ablation: реальный Qdrant retrieval вместо синтетического gold
 
-> **Статус:** **gold ✅ ready** (`hybrid_ablation_v2/`, 8 packs / 50 labels, 7 promoted, 1 high-priority `ha_two_stage_rpn_evolution` подтверждён 3-моделями). Pre-cooked `vector_ranked_work_ids`/`hybrid_ranked_work_ids` запрещены в gold v2 (validation gate); `ranked_lists_source: "runner_generated"` — runner обязан live retrieval. **Runner pending.** ~1-2 дня.
+> **Статус:** **gold ✅ ready** (`hybrid_ablation_v2/`, 8 packs / 50 labels, 7 promoted, 1 high-priority `ha_two_stage_rpn_evolution` подтверждён 3-моделями). Pre-cooked `vector_ranked_work_ids`/`hybrid_ranked_work_ids` запрещены в gold v2; `ranked_lists_source: "runner_generated"`. **Wave 4 status: ⚠️ partial DONE — runner живой, но zero-signal на текущем корпусе.** `eval/retrieval/hybrid_ablation_runner.py` делает live retrieval в режимах `vector` и `hybrid`; `current-retrieval-hybrid-ablation-live.json` 8/8 honest fail с `mrr_vector=mrr_hybrid=0.0` на всех кейсах. Это **negative result**: на корпусе из 5 paper'ов недостаточно candidate set'ов чтобы вычислить смысловой `mrr_delta`. Решение — расширить корпус до 16-20 paper (master roadmap §10 пункт 3); если после расширения `mrr_delta` остаётся 0 на 7 ночах → переименовать family в `fixture_consistency_only` явно (по аналогии с BT7 path B).
 
 **Проблема:** `gold.json` ha_NN содержит pre-cooked `vector_ranked_work_ids` / `hybrid_ranked_work_ids`.
 
@@ -377,7 +436,7 @@ flowchart LR
 
 ### BT5 — Retrieval judge: per-case gate + holdout
 
-> **Статус:** **gold side N/A** (judge — это rubric LLM, не fixture-bound). **Runner-tightening pending.** ~0.5-1 день: per-case gate `min_individual_weighted_score=4.0`, holdout 30%.
+> **Статус:** **gold side N/A** (judge — это rubric LLM, не fixture-bound). **Wave 4 status: ✅ DONE на текущем корпусе.** Per-case gate `min_individual_weighted_score=4.0` зашит в `eval/retrieval/judge_metrics.py`; новый артефакт `current-retrieval-judge-holdout.json` (BT5 holdout 30%) собран. Оба `judge_pilot` и `judge_holdout` `all_passed` на live answer'ах из 5-paper корпуса. Когда корпус расширится — re-run и вшить per-case breakdown в `decision_gate.criteria.judge_individual_failures`.
 
 **Проблема:** `mean_weighted_score=5.1` ≥ 4.5 проходит overall, но 2/5 кейсов фактически fail.
 
@@ -394,7 +453,7 @@ flowchart LR
 
 ### BT6 — Claims production gold harden + holdout
 
-> **Статус:** **gold ✅ ready** (`claims/corpus_<slug>_v2/` 15 pilot + `holdout_<slug>_v1/` 5 holdout = 85 claims, 30.6% negative; **paraphrase verified ≤ 8-word overlap** с `article.md`; 18/20 high после triple-vote — это **подтверждённые extractor-disagreements**, реальный сигнал). **Runner pending.** ~1-2 дня: переключить runner на новый gold + добавить distractor chunks + holdout-lane.
+> **Статус:** **gold ✅ ready** (`claims/corpus_<slug>_v2/` 15 pilot + `holdout_<slug>_v1/` 5 holdout = 85 claims, 30.6% negative; paraphrase verified ≤ 8-word overlap; 18/20 high после triple-vote). **Wave 4 status: ⚠️ oracle (synthetic_gold) DONE; production extractor pending.** `eval/claims/paraphrase_runner.py` поднят с `--match-mode {exact,embedding_sim,rouge_l}` диспетчером и `--extractor {oracle,production}`. Oracle прогон `claims_paraphrase_{pilot,holdout}` зелёный, **но** trust_signal явно `runtime_mode="synthetic_gold"` (правило: `extractor==oracle`). Production live LLM прогон — отдельный шаг, ждёт `Robust ingest orchestration` чтобы не повторить hang истории (см. master roadmap §10 пункт 6).
 
 **Проблема:** `mean_claim_recall=1.0` потому что extractor возвращает ту же фразу, что в `expected_claims`, и она дословно есть в `article_text`. Production extractor «доказан» на тривиальных задачах.
 

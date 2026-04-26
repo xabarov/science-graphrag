@@ -1,0 +1,80 @@
+---
+description: Долгие CLI/ingest/benchmark — pre-flight, heartbeat, recovery
+alwaysApply: true
+---
+
+# Long-running operations (ingest, benchmarks, dual_validate)
+
+> Источник правила — постмортем Wave 4 (2026-04-26): `ingest-corpus` повис на 16-м файле на `httpx CLOSE-WAIT` ≈ 3 часа из-за отсутствия pre-flight проверки `MAIN_LLM_API_KEY` (был перекрыт `SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV=1`), отсутствия per-file timeout, отсутствия heartbeat и отсутствия checkpoint. См. `docs/analysis/master-roadmap-and-refactor-plan-2026-04-25.md` §0 и backlog `[OPEN] Robust ingest orchestration`.
+
+## Когда применять
+
+Любая команда, которая ожидаемо работает > 60 секунд и/или ходит в LLM/embedding API:
+
+- `science-graphrag ingest-corpus` / `science-graphrag ingest`
+- `science-graphrag-*-benchmark` (claims, retrieval, agent_tools, idea_assist, dedup, ...)
+- `scripts/dual_validate/*.py` и `scripts/dual_extract_validate.py`
+- `scripts/pilot_ingest_cv_corpus.sh`, `scripts/seed_benchmark_workspaces.py`, `scripts/backfill_*.py`
+- `scripts/aggregate_benchmark_metrics.py` (особенно с `--write-trust-baseline`)
+
+## Pre-flight checklist (до запуска)
+
+1. **API keys видимы внутри окружения процесса.** Если запускаешь через `Shell` с явными env vars — проверь, что `SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV` не выставлен в `1`, либо явно прокинь `MAIN_LLM_API_KEY` (и `OPENROUTER_API_KEY` если нужно). Smoke-check одной строкой:
+
+   ```bash
+   .venv/bin/python -c "from science_graphrag.config import Settings; s=Settings(); print('main_llm_api_key:', bool(s.main_llm_api_key), 'embeddings:', bool(s.embeddings_api_key))"
+   ```
+
+   Должно напечатать `True` для нужного канала. Если `False` — НЕ запускать долгую команду.
+
+2. **Инфраструктура поднята.** Для всего, что трогает Neo4j/Qdrant/Postgres:
+
+   ```bash
+   docker compose ps --format 'table {{.Service}}\t{{.Status}}'
+   ```
+
+   Все сервисы должны быть `running (healthy)`. Если какой-то `unhealthy` или `restarting` — ingest/benchmark упадёт молча или повиснет.
+
+3. **Console-script зарегистрирован.** Если ты только что правил `[project.scripts]` в `pyproject.toml` или добавил новый runner — обязательно:
+
+   ```bash
+   .venv/bin/pip install -e . --quiet
+   ```
+
+   Проверка: `command -v science-graphrag-<имя>` должен вернуть путь в `.venv/bin/`. Без этого новый CLI не найдётся в `$PATH`.
+
+## Запуск (правила выполнения)
+
+1. **Только в фоне через `block_until_ms: 0`** для всего что > 60s. Никогда не `block_until_ms: 600000` ради «дождаться» — заблокирует turn и ты потеряешь возможность реагировать на hang.
+
+2. **One-shot smoke check через 30-60s после старта.** Прочитать `terminals/<id>.txt` и убедиться что:
+   - процесс не упал сразу с tracebackом;
+   - есть прогресс-вывод (не пустой stdout / не висит на одной строке без обновлений > 60s);
+   - если запустил `ingest-corpus` — видно строку про первый файл.
+
+3. **Использовать `AwaitShell` для close-monitoring** только если задача требует мониторинга (см. описание `AwaitShell`): training, ingest, dual_validate batch на 20+ packs, large data transfers. Для коротких benchmark runs (< 5 мин) — fire-and-forget, end-of-turn notification достаточно.
+
+## Hang detection и recovery
+
+**Признаки зависания** (любой из них = вмешаться):
+
+- `terminals/<id>.txt` не обновлялся > 5 минут на команде, которая ожидаемо логирует прогресс.
+- `lsof -i -nP -p <PID> 2>/dev/null | rg CLOSE-WAIT` показывает много CLOSE-WAIT соединений (LLM API закрыл socket, клиент не прочитал).
+- `ps -o etime= -p <PID>` показывает время > expected_runtime × 2 без вывода.
+
+**Действия при hang** (в порядке):
+
+1. Прочитать tail terminal-файла (последние 30 строк) — на каком этапе встал.
+2. Проверить `lsof` для PID на CLOSE-WAIT (см. выше).
+3. **Не ждать дальше** — `kill -9 <PID>` (для python с зависшим httpx — SIGTERM не помогает).
+4. Записать в backlog (`docs/backlog/refactor-backend.md` или текущий план в `docs/analysis/`) **что именно** повисло (стадия, файл, симптомы) — чтобы следующая итерация добавила timeout/checkpoint в правильное место.
+5. Если есть JSONL-checkpoint — попробовать `--resume` (когда появится; до этого — узкий повторный прогон только на пропавших файлах).
+
+## После killed/aborted background shell
+
+- В собственных заметках помечать `task_id` как «manually killed at <reason>» — чтобы next-iteration не путался с end-of-turn notification про этот же task.
+- Не запускать ту же команду повторно без устранения причины hang'а (иначе повторится).
+
+## Что считается «правильным» долгим CLI (целевое состояние)
+
+Любая новая долгая операция должна на старте печатать manifest и далее логировать прогресс не реже 1 раз/минуту даже на «тихих» стадиях. Если её нужно обернуть watcher script'ом — открыть backlog item и сделать. См. `docs/backlog/refactor-backend.md` → `[OPEN] Robust ingest orchestration: hard timeout + checkpoint + resume`.
