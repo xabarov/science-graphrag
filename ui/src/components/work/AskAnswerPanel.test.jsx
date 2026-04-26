@@ -142,9 +142,9 @@ describe("AskAnswerPanel", () => {
     expect(screen.getByText(/turn_digest/)).toBeTruthy();
   });
 
-  it("renders composed final answer with typed blocks and citations", () => {
+  it("renders composed final answer with typed blocks and citations", async () => {
     const normalized = normalizeQueryResponse({
-      answer: "Composed answer body",
+      answer: "## Composed title\n\n**Composed** answer body",
       citations: [
         {
           work_id: "work-1",
@@ -183,7 +183,9 @@ describe("AskAnswerPanel", () => {
       </MemoryRouter>,
     );
     const root = within(screen.getByTestId("ask-composed-root"));
-    expect(root.getByText("Composed answer body")).toBeTruthy();
+    expect(await root.findByRole("heading", { name: "Composed title" })).toBeTruthy();
+    expect(root.getByText("Composed")).toBeTruthy();
+    expect(root.getByText(/answer body/)).toBeTruthy();
     expect(root.getByText("chat.typed.inventoryTitle")).toBeTruthy();
     expect(root.getByText("chat.typed.quotesTitle")).toBeTruthy();
     expect(root.getByText("askPanel.citations.title")).toBeTruthy();

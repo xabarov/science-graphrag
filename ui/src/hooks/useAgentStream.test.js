@@ -72,6 +72,36 @@ describe("useAgentStream", () => {
     expect(result.current.isStreaming).toBe(false);
   });
 
+  it("calls onError when SSE ends without final_answer", async () => {
+    const enc = new TextEncoder();
+    const sse = 'data: {"type":"intent_classified","answer_class":"inventory","source":"heuristic"}\n\n';
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(enc.encode(sse));
+        controller.close();
+      },
+    });
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      headers: { get: (h) => (String(h).toLowerCase() === "content-type" ? "text/event-stream" : null) },
+      body: stream,
+    });
+    const onError = vi.fn();
+    const onFinalAnswer = vi.fn();
+    const { result } = renderHook(() =>
+      useAgentStream({
+        onError,
+        onFinalAnswer,
+        onEvent: vi.fn(),
+      }),
+    );
+    await act(async () => {
+      await result.current.stream({ question: "q" });
+    });
+    expect(onFinalAnswer).not.toHaveBeenCalled();
+    expect(onError).toHaveBeenCalledWith("Stream ended before a final answer was received.");
+  });
+
   it("calls onError when non-SSE body is not valid JSON", async () => {
     globalThis.fetch.mockResolvedValueOnce({
       ok: true,

@@ -16,6 +16,7 @@ import { AgentRunHeader } from "./AgentRunHeader.jsx";
 import { AgentLiveStatus } from "./AgentLiveStatus.jsx";
 import { AgentRunInspector } from "./AgentRunInspector.jsx";
 import { AgentSubagentRail } from "./AgentSubagentRail.jsx";
+import MarkdownView from "./MarkdownView.jsx";
 
 function formatAgentWarning(t, code) {
   const c = String(code || "").trim();
@@ -59,6 +60,7 @@ export function AskAnswerPanel({
 
   const { runState } = deriveRunState({ normalized, isRunActive, streamEvents });
   const citations = Array.isArray(normalized.citations) ? normalized.citations : [];
+  const answerText = String(normalized.answer || "").trim();
   const hasDegraded =
     (Array.isArray(normalized?.retrieval_trace?.degraded) && normalized.retrieval_trace.degraded.length > 0) ||
     (Array.isArray(normalized?.graph_context?.degraded) && normalized.graph_context.degraded.length > 0);
@@ -131,9 +133,26 @@ export function AskAnswerPanel({
       <Typography sx={{ fontWeight: 600, fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mb: 0.5 }}>
         {t("chat.run.answerSectionTitle")}
       </Typography>
-      <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.88)", whiteSpace: "pre-wrap", mb: 1.25 }}>
-        {normalized.answer || t("workspace.upload.dash")}
-      </Typography>
+      {answerText ? (
+        <Box
+          sx={{
+            mb: 1.25,
+            "& .reader-markdown": {
+              fontSize: "0.8125rem",
+              lineHeight: 1.6,
+            },
+            "& .reader-markdown p:last-of-type": {
+              mb: 0,
+            },
+          }}
+        >
+          <MarkdownView markdown={answerText} data-testid="ask-answer-markdown" />
+        </Box>
+      ) : (
+        <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.88)", whiteSpace: "pre-wrap", mb: 1.25 }}>
+          {t("workspace.upload.dash")}
+        </Typography>
+      )}
 
       <InventoryBlock t={t} inventory={normalized.inventory} />
       <QuoteCandidatesBlock t={t} candidates={normalized.quote_candidates} />

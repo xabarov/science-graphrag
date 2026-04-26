@@ -65,4 +65,17 @@ describe("flushAgentSseEventBuffer", () => {
     flushAgentSseEventBuffer('data: {"type":"error","detail":"boom"}\n\n', { onError });
     expect(onError).toHaveBeenCalledWith("boom");
   });
+
+  it("parses sse_starlette CRLF frame delimiters", () => {
+    const onEvent = vi.fn();
+    const onFinalAnswer = vi.fn();
+    const crlfFrame =
+      'data: {"type":"intent_classified","answer_class":"x","source":"heuristic"}\r\n\r\n' +
+      'data: {"type":"final_answer","answer":"hi","citations":[],"tool_trace":[]}\r\n\r\n';
+    const rest = flushAgentSseEventBuffer(`${crlfFrame}data: {`, { onEvent, onFinalAnswer });
+    expect(onEvent).toHaveBeenCalledTimes(2);
+    expect(onFinalAnswer).toHaveBeenCalledTimes(1);
+    expect(onFinalAnswer).toHaveBeenCalledWith(expect.objectContaining({ type: "final_answer", answer: "hi" }));
+    expect(rest).toBe("data: {");
+  });
 });

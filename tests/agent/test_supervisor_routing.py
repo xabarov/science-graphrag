@@ -3,7 +3,7 @@ from __future__ import annotations
 import typing
 from unittest.mock import MagicMock
 
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
 
 def test_supervisor_routes_to_retrieval_agent(monkeypatch) -> None:
@@ -50,6 +50,70 @@ def test_supervisor_routes_to_retrieval_agent(monkeypatch) -> None:
 
     graph = build_supervisor_graph(stores, settings)
     assert graph is not None
+
+
+def test_supervisor_router_prompt_excludes_tool_transcript(monkeypatch) -> None:
+    captured_messages = []
+
+    class _CapturingRouter:
+        def invoke(self, messages):
+            captured_messages.append(list(messages))
+            return AIMessage(content="writer_agent")
+
+    class _FakeSpecialist:
+        def bind_tools(self, _tools):
+            return self
+
+        def invoke(self, _messages):
+            return AIMessage(content="done", tool_calls=[])
+
+    monkeypatch.setattr(
+        "science_graphrag.agent.graph.supervisor.build_chat_model",
+        lambda settings: _CapturingRouter(),
+    )
+    monkeypatch.setattr(
+        "science_graphrag.agent.graph.nodes.retrieval_agent.build_chat_model",
+        lambda settings: _FakeSpecialist(),
+    )
+    monkeypatch.setattr(
+        "science_graphrag.agent.graph.nodes.graph_agent.build_chat_model",
+        lambda settings: _FakeSpecialist(),
+    )
+    monkeypatch.setattr(
+        "science_graphrag.agent.graph.nodes.writer_agent.build_chat_model",
+        lambda settings: _FakeSpecialist(),
+    )
+
+    from science_graphrag.agent.graph.supervisor import _build_supervisor_route_messages
+
+    state = {
+        "messages": [
+            HumanMessage(content="How is paper A related to paper B?"),
+            AIMessage(
+                content="",
+                tool_calls=[
+                    {
+                        "name": "entity_search",
+                        "args": {"query": "paper A"},
+                        "id": "call_1",
+                        "type": "tool_call",
+                    }
+                ],
+            ),
+            ToolMessage(content='{"row_count": 1}', tool_call_id="call_1", name="entity_search"),
+        ],
+        "metadata": {"raw_user_question": "How is paper A related to paper B?"},
+        "specialist_results": {"graph_agent": [{"path_count": 1}]},
+    }
+    route_messages = _build_supervisor_route_messages(state)
+    response = _CapturingRouter().invoke(route_messages)
+
+    assert response.content == "writer_agent"
+    assert captured_messages
+    sent = captured_messages[0]
+    assert all(isinstance(msg, HumanMessage) for msg in sent)
+    assert len(sent) == 3
+    assert "specialist_results" in sent[-1].content
 
 
 def test_agent_state_has_routing_fields() -> None:

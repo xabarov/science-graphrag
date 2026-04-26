@@ -24,13 +24,17 @@ export function parseAgentSseJson(raw, opts = {}) {
  * }} handlers
  * @returns {string} trailing incomplete buffer
  */
+/** SSE frame delimiter: LF LF (some servers) or CRLF CRLF (sse_starlette default). */
+const SSE_FRAME_SPLIT = /\r?\n\r?\n/;
+
 export function flushAgentSseEventBuffer(buffer, handlers = {}) {
   const { onEvent, onFinalAnswer, onError, onParseError } = handlers;
-  const frames = buffer.split("\n\n");
+  const frames = buffer.split(SSE_FRAME_SPLIT);
   const nextBuffer = frames.pop() ?? "";
 
   for (const frame of frames) {
-    const lines = frame.split("\n");
+    if (!String(frame).trim()) continue;
+    const lines = frame.split(/\r?\n/);
     const dataLines = lines
       .filter((line) => line.startsWith("data:"))
       .map((line) => line.slice(5).trim())

@@ -17,6 +17,35 @@ export function sortChunksByOrder(items) {
 }
 
 /**
+ * OCR/VL chunking can leak whole-document markdown wrappers into chunk text:
+ * the first chunk may start with ```markdown and a later chunk may end with ```.
+ * Strip only those edge wrappers so the combined reader body renders as prose,
+ * while keeping legitimate fenced code blocks inside the chunk intact.
+ *
+ * @param {unknown} text
+ * @returns {string}
+ */
+function normalizeChunkMarkdownText(text) {
+  if (text == null || typeof text !== "string") return "";
+  const normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  let lines = normalized.split("\n");
+
+  while (lines.length > 0 && lines[0].trim() === "") lines = lines.slice(1);
+  while (lines.length > 0 && lines[lines.length - 1].trim() === "") lines = lines.slice(0, -1);
+
+  if (lines.length > 0 && /^```markdown\s*$/i.test(lines[0].trim())) {
+    lines = lines.slice(1);
+    while (lines.length > 0 && lines[0].trim() === "") lines = lines.slice(1);
+  }
+  if (lines.length > 0 && /^```\s*$/.test(lines[lines.length - 1].trim())) {
+    lines = lines.slice(0, -1);
+    while (lines.length > 0 && lines[lines.length - 1].trim() === "") lines = lines.slice(0, -1);
+  }
+
+  return lines.join("\n");
+}
+
+/**
  * Build one plain-text/markdown-ish document from chunk rows (sorted by order).
  * @param {unknown} items
  * @returns {string}
@@ -27,7 +56,8 @@ export function buildCombinedMarkdownFromChunks(items) {
   return sorted
     .map((ch) => {
       const head = ch?.section_path ? `## ${ch.section_path}\n\n` : "";
-      return `${head}${ch?.text || ""}`.trim();
+      const text = normalizeChunkMarkdownText(ch?.text || "");
+      return `${head}${text}`.trim();
     })
     .filter(Boolean)
     .join("\n\n---\n\n");

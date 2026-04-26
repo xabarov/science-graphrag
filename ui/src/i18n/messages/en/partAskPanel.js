@@ -45,7 +45,7 @@ export default {
   "askPanel.retrieval.agent": "agent",
   "askPanel.runQueryLoading": "Querying…",
   "askPanel.agentIncompleteTurn":
-    "The agent run finished without a saved answer. Check the error banner above or try again.",
+    "No answer was saved. Read the red error under the chat header if present, or try again.",
   "askPanel.runQuery": "Run query",
   "askPanel.openStandaloneAsk": "Open standalone Ask",
   "askPanel.answer.title": "Answer",

@@ -64,6 +64,17 @@ def _graph_intent_heuristic(text: str) -> bool:
     return any(h in t for h in _GRAPH_INTENT_HINTS)
 
 
+def _build_supervisor_route_messages(state: AgentState) -> list[HumanMessage]:
+    """Build a provider-safe routing prompt without replaying tool-call transcripts."""
+    specialist_context = str(state.get("specialist_results") or {})
+    user_question = _first_user_plain_question(state)
+    return [
+        HumanMessage(content=ROUTING_PROMPT),
+        HumanMessage(content=f"user_question={user_question[:4000]}"),
+        HumanMessage(content=f"specialist_results={specialist_context[:12000]}"),
+    ]
+
+
 ROUTING_PROMPT = """You are a supervisor for scholarly research agents.
 Available specialists:
 - retrieval_agent: semantic search in papers and workspace summaries
@@ -109,12 +120,7 @@ def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
                             },
                         ],
                     }
-        specialist_context = str(state.get("specialist_results") or {})
-        route_msgs = [
-            HumanMessage(content=ROUTING_PROMPT),
-            HumanMessage(content=f"specialist_results={specialist_context[:12000]}"),
-            *list(state.get("messages") or []),
-        ]
+        route_msgs = _build_supervisor_route_messages(state)
         response = llm.invoke(ensure_messages_safe_for_generation(route_msgs))
         choice = str(response.content or "").strip().lower()
         if choice not in {RETRIEVAL_SPECIALIST, GRAPH_SPECIALIST, WRITER_SPECIALIST, ROUTE_FINISH}:

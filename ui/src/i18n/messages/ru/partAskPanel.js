@@ -44,7 +44,7 @@ export default {
   "askPanel.retrieval.agent": "agent",
   "askPanel.runQueryLoading": "Запрос…",
   "askPanel.agentIncompleteTurn":
-    "Выполнение завершилось без сохранённого ответа. Смотрите баннер с ошибкой выше или повторите запрос.",
+    "Ответ не сохранён. Если видите красную строку ошибки под заголовком чата — прочитайте её; иначе повторите запрос.",
   "askPanel.runQuery": "Выполнить запрос",
   "askPanel.openStandaloneAsk": "Открыть вопросы отдельно",
   "askPanel.answer.title": "Ответ",

@@ -9,6 +9,7 @@ import { AskAnswerPanel } from "./AskAnswerPanel.jsx";
 import { AgentAssistantTurnShell } from "./AgentAssistantTurnShell.jsx";
 import { AgentRunHeader } from "./AgentRunHeader.jsx";
 import { AgentLiveStatus } from "./AgentLiveStatus.jsx";
+import MarkdownView from "./MarkdownView.jsx";
 
 const SCROLL_BOTTOM_THRESHOLD_PX = 80;
 
@@ -131,7 +132,8 @@ export function ChatMessageThread({
         flexDirection: "column",
         gap: 0,
         position: "relative",
-        justifyContent: showEmptyState ? "flex-end" : "flex-start",
+        /* With messages: pin block to bottom (composer-adjacent). Empty state: start from top so prompts stay in view. */
+        justifyContent: showEmptyState ? "flex-start" : "flex-end",
         alignItems: showEmptyState ? "center" : "stretch",
       }}
     >
@@ -200,7 +202,23 @@ export function ChatMessageThread({
                 </AgentAssistantTurnShell>
               ) : (
                 <AgentAssistantTurnShell sx={{ mt: 1 }}>
-                  <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.82)", whiteSpace: "pre-wrap" }}>{entry.answer || "—"}</Typography>
+                  {String(entry.answer || "").trim() ? (
+                    <Box
+                      sx={{
+                        "& .reader-markdown": {
+                          fontSize: "0.8125rem",
+                          lineHeight: 1.6,
+                        },
+                        "& .reader-markdown p:last-of-type": {
+                          mb: 0,
+                        },
+                      }}
+                    >
+                      <MarkdownView markdown={String(entry.answer)} />
+                    </Box>
+                  ) : (
+                    <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.82)", whiteSpace: "pre-wrap" }}>—</Typography>
+                  )}
                 </AgentAssistantTurnShell>
               )}
             </Box>

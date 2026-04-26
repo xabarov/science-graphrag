@@ -287,8 +287,12 @@ export default function AskPanel({
         });
         const queryMode = locked || inWorkspace ? "workspace" : corpusWorkspaceOnly ? "workspace_corpus" : workId ? "scoped" : "global";
         if (!pack?.normalized) {
-          const failMsg = String(streamFailureRef.current || "").trim() || t("askPanel.agentIncompleteTurn");
+          const rawFail = String(streamFailureRef.current || "").trim();
           streamFailureRef.current = "";
+          const failMsg = rawFail || t("askPanel.agentIncompleteTurn");
+          if (!rawFail) {
+            setError(failMsg);
+          }
           const nextNormalized = normalizeQueryResponse({
             answer: failMsg,
             citations: [],
@@ -531,6 +535,11 @@ export default function AskPanel({
               {scopeEyebrow}
             </Typography>
           )}
+          {error ? (
+            <Alert severity="error" sx={{ fontSize: "0.8125rem", flexShrink: 0, py: 0.5 }}>
+              {error}
+            </Alert>
+          ) : null}
           <ChatMessageThread
             t={t}
             history={history}
@@ -571,11 +580,6 @@ export default function AskPanel({
           />
         </Box>
       </Box>
-      {error ? (
-        <Alert severity="error" sx={{ mt: 2, fontSize: "0.8125rem", flexShrink: 0 }}>
-          {error}
-        </Alert>
-      ) : null}
     </Box>
   );
 }

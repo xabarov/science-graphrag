@@ -53,6 +53,16 @@ describe("buildCombinedMarkdownFromChunks", () => {
     ];
     expect(buildCombinedMarkdownFromChunks(items)).toBe("Real");
   });
+
+  it("strips leaked whole-document markdown fences at chunk edges", () => {
+    const items = [
+      { order: 0, section_path: "(preamble)", text: "```markdown\n# Title\n\nIntro" },
+      { order: 1, section_path: "Body", text: "More text\n```" },
+    ];
+    expect(buildCombinedMarkdownFromChunks(items)).toBe(
+      "## (preamble)\n\n# Title\n\nIntro\n\n---\n\n## Body\n\nMore text",
+    );
+  });
 });
 
 describe("truncateWithEllipsis", () => {

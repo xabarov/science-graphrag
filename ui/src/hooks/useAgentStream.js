@@ -14,6 +14,8 @@ export function useAgentStream({
 }) {
   const [isStreaming, setIsStreaming] = useState(false);
   const abortRef = useRef(null);
+  /** True after any `onFinalAnswer` delivery for the current stream (SSE or JSON). */
+  const sawFinalAnswerRef = useRef(false);
 
   const stream = useCallback(
     async ({ question, maxToolCalls = 8, answerClassHint = null, threadId = null, historyDigest = null }) => {
@@ -24,6 +26,7 @@ export function useAgentStream({
       abortRef.current = controller;
 
       setIsStreaming(true);
+      sawFinalAnswerRef.current = false;
       onStart?.();
 
       try {
@@ -55,6 +58,7 @@ export function useAgentStream({
           const rawText = await response.text();
           try {
             const data = rawText ? JSON.parse(rawText) : {};
+            sawFinalAnswerRef.current = true;
             onFinalAnswer?.(data);
           } catch (parseErr) {
             onError?.(
@@ -72,6 +76,19 @@ export function useAgentStream({
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = "";
+        let streamEmittedError = false;
+        const sseHandlers = {
+          onEvent,
+          onFinalAnswer: (ev) => {
+            sawFinalAnswerRef.current = true;
+            onFinalAnswer?.(ev);
+          },
+          onError: (msg) => {
+            streamEmittedError = true;
+            onError?.(msg);
+          },
+          onParseError: onMalformedFrame,
+        };
 
         let keepReading = true;
         while (keepReading) {
@@ -81,21 +98,15 @@ export function useAgentStream({
             continue;
           }
           buffer += decoder.decode(value, { stream: true });
-          buffer = flushAgentSseEventBuffer(buffer, {
-            onEvent,
-            onFinalAnswer,
-            onError,
-            onParseError: onMalformedFrame,
-          });
+          buffer = flushAgentSseEventBuffer(buffer, sseHandlers);
         }
 
         buffer += decoder.decode();
-        flushAgentSseEventBuffer(buffer, {
-          onEvent,
-          onFinalAnswer,
-          onError,
-          onParseError: onMalformedFrame,
-        });
+        flushAgentSseEventBuffer(buffer, sseHandlers);
+
+        if (!sawFinalAnswerRef.current && !controller.signal.aborted && !streamEmittedError) {
+          onError?.("Stream ended before a final answer was received.");
+        }
       } catch (err) {
         if (err?.name === "AbortError") return;
         onError?.(String(err?.message || err));
