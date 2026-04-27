@@ -49,6 +49,8 @@ export default {
   "benchmarkPage.runLab.grouped.variants": "Варианты (профили моделей)",
   "benchmarkPage.runLab.grouped.preview": "Дочерних прогонов: {{count}}",
   "benchmarkPage.runLab.grouped.previewEmpty": "Выберите хотя бы один эксперимент и один профиль.",
+  "benchmarkPage.runLab.grouped.errorNoJobs": "Выберите хотя бы один UI-эксперимент и один профиль модели.",
+  "benchmarkPage.runLab.grouped.errorBatchFailed": "Не удалось запустить пакет.",
   "benchmarkPage.runLab.grouped.more": "ещё",
   "benchmarkPage.runLab.grouped.dismissError": "Скрыть",
   "benchmarkPage.runLab.grouped.startBatch": "Запустить пакет",
