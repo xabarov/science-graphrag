@@ -79,6 +79,24 @@ Optional: **work title embeddings** in Neo4j (if you use that index) after chunk
 
 (Only if your deployment relies on that script; many paths embed during ingest.)
 
+## Embeddings preflight + per-document Qdrant resume
+
+If OpenRouter returns **no successful provider** for embeddings (HTTP 200 with `data: null` / 404 in payload), full ingest still **commits Postgres + Neo4j through claims** before the embed stage; use:
+
+```bash
+# Fail fast before a long corpus run (optional)
+.venv/bin/science-graphrag config-check --embeddings-preflight
+.venv/bin/science-graphrag ingest-corpus /path/to/corpus --embeddings-preflight …
+```
+
+To **re-run only Qdrant** for one `documents.id` (requires `normalized.md` under `artifact_root` and `work_id` on the row):
+
+```bash
+.venv/bin/science-graphrag ingest-resume-embed <document_uuid>
+```
+
+Checkpoint JSON on `documents.ingest_checkpoint_json` records `embed` stage status (`failed_retryable` vs `completed`). Claims vectors in Qdrant are **not** rebuilt by `ingest-resume-embed` (use full re-ingest for claims+Neo4j repair).
+
 ## Step 4 — Benchmarks and trust snapshot
 
 After the corpus is back in Qdrant:

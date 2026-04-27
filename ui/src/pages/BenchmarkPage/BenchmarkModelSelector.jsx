@@ -5,6 +5,7 @@ import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import { listBenchmarkModels } from "../../services/benchmarkApi.js";
 
@@ -16,6 +17,7 @@ export default function BenchmarkModelSelector({
   onCustomModelIdChange,
   onModelsLoaded,
 }) {
+  const tk = useTheme().appTokens;
   const [payload, setPayload] = useState(null);
   const [error, setError] = useState(null);
 
@@ -84,7 +86,7 @@ export default function BenchmarkModelSelector({
               variant="outlined"
             />
           </Box>
-          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.6)" }}>
+          <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary }}>
             {selected.supports_custom_model_id
               ? "This profile supports overriding the model id."
               : "This profile uses its preset or environment-backed model id."}
@@ -93,7 +95,7 @@ export default function BenchmarkModelSelector({
       ) : null}
 
       {error ? (
-        <Typography sx={{ fontSize: "0.75rem", color: "rgba(239, 68, 68, 0.9)" }}>{error}</Typography>
+        <Typography sx={{ fontSize: "0.75rem", color: tk.state.dangerFg }}>{error}</Typography>
       ) : null}
     </Box>
   );

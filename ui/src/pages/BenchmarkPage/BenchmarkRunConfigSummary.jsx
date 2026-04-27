@@ -1,22 +1,24 @@
 import React from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 function SummaryItem({ label, value }) {
+  const tk = useTheme().appTokens;
   return (
     <Box
       sx={{
-        border: "1px solid rgba(255,255,255,0.08)",
+        border: `1px solid ${tk.border.default}`,
         borderRadius: 1.5,
-        backgroundColor: "#1a1a1a",
+        backgroundColor: tk.surface.panel,
         padding: 1,
         minWidth: 0,
       }}
     >
-      <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.55)", mb: 0.25 }}>
+      <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted, mb: 0.25 }}>
         {label}
       </Typography>
-      <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.9)", wordBreak: "break-word" }}>
+      <Typography sx={{ fontSize: "0.8125rem", color: tk.text.primary, wordBreak: "break-word" }}>
         {value || "—"}
       </Typography>
     </Box>
@@ -24,13 +26,14 @@ function SummaryItem({ label, value }) {
 }
 
 export default function BenchmarkRunConfigSummary({ summary, title = "Execution summary" }) {
+  const tk = useTheme().appTokens;
   if (!summary) return null;
   return (
     <Box
       sx={{
-        border: "1px solid rgba(255,255,255,0.08)",
+        border: `1px solid ${tk.border.default}`,
         borderRadius: 1.5,
-        backgroundColor: "#1a1a1a",
+        backgroundColor: tk.surface.panel,
         padding: 1.5,
       }}
     >

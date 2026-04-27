@@ -18,6 +18,7 @@ import { getCaseDetailFamilyConfig } from "./families/registry.js";
 
 export default function CaseDetailDialog({ open, caseId, family = "layer1", onClose }) {
   const theme = useTheme();
+  const tk = theme.appTokens;
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
   const { t } = useI18n();
@@ -71,7 +72,7 @@ export default function CaseDetailDialog({ open, caseId, family = "layer1", onCl
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
           <Box>
             <Typography sx={{ fontWeight: 700 }}>{t("benchmark.caseDialog.title")}</Typography>
-            <Typography sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.8125rem" }}>
+            <Typography sx={{ color: tk.text.secondary, fontSize: "0.8125rem" }}>
               {t("benchmark.caseDialog.subtitleCaseId", { id: caseId || "-" })}
             </Typography>
           </Box>

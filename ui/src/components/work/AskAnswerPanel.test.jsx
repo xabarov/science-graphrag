@@ -1,13 +1,14 @@
 /** @vitest-environment jsdom */
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { ThemeProvider } from "@mui/material/styles";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 
 import { normalizeQueryResponse } from "../../services/researchApi.js";
+import { buildAppTheme } from "../../theme/buildAppTheme.js";
 import { AskAnswerPanel } from "./AskAnswerPanel.jsx";
 
-const theme = createTheme();
+const theme = buildAppTheme("dark");
 
 afterEach(() => {
   cleanup();

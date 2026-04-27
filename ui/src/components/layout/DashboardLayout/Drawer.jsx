@@ -98,6 +98,8 @@ export default function Drawer({ onNavigate }) {
     }
   }
 
+  const tk = theme.appTokens;
+
   function renderNavItem(item) {
     const active = itemActive(location, item.to);
     const content = (
@@ -113,9 +115,9 @@ export default function Drawer({ onNavigate }) {
           padding: expanded ? "10px 12px" : "10px 0",
           borderRadius: 2,
           textDecoration: "none",
-          color: "rgba(255,255,255,0.9)",
-          background: active ? "rgba(99, 102, 241, 0.15)" : "transparent",
-          "&:hover": { background: "rgba(255, 255, 255, 0.04)" },
+          color: tk.text.primary,
+          background: active ? tk.accent.softBg : "transparent",
+          "&:hover": { background: tk.control.navItemHoverBg },
         }}
       >
         <Box sx={{ fontSize: "1.4rem", display: "flex", alignItems: "center" }}>{item.icon}</Box>
@@ -135,8 +137,8 @@ export default function Drawer({ onNavigate }) {
     <Box
       sx={{
         width: expanded ? 280 : 70,
-        backgroundColor: "#141414",
-        borderRight: "1px solid rgba(255, 255, 255, 0.08)",
+        backgroundColor: tk.surface.sidebar,
+        borderRight: `1px solid ${tk.border.default}`,
         alignSelf: "stretch",
         minHeight: 0,
         display: "flex",
@@ -179,7 +181,7 @@ export default function Drawer({ onNavigate }) {
       <Box sx={{ padding: expanded ? 1 : 1 }}>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>{userMenu.map(renderNavItem)}</Box>
 
-        {adminMenu.length > 0 ? <Divider sx={{ my: 1.5, borderColor: "rgba(255,255,255,0.08)" }} /> : null}
+        {adminMenu.length > 0 ? <Divider sx={{ my: 1.5, borderColor: tk.border.default }} /> : null}
 
         {expanded && adminMenu.length > 0 ? (
           <Typography
@@ -187,7 +189,7 @@ export default function Drawer({ onNavigate }) {
               fontSize: "0.6875rem",
               fontWeight: 600,
               letterSpacing: "0.02em",
-              color: "rgba(255,255,255,0.28)",
+              color: tk.text.faint,
               px: 1.5,
               mb: 0.5,
             }}

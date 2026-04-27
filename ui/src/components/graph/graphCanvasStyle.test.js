@@ -23,6 +23,11 @@ describe("getScienceGraphNodeStyle", () => {
     expect(sel.stroke).toContain("255");
   });
 
+  it("selected stroke switches to slate on light appearance", () => {
+    const sel = getScienceGraphNodeStyle("Dataset", { selected: true, appearance: "light" });
+    expect(sel.stroke).toContain("15,23,42");
+  });
+
   it("hovered state strengthens stroke when not selected", () => {
     const base = getScienceGraphNodeStyle("Work", {});
     const hov = getScienceGraphNodeStyle("Work", { hovered: true });
@@ -122,5 +127,10 @@ describe("getScienceGraphLegendNodeChipSx", () => {
     const sx = getScienceGraphLegendNodeChipSx("X");
     expect(sx.backgroundColor).toBeTruthy();
     expect(sx.border).toContain("255");
+  });
+
+  it("light appearance uses dark chip label color", () => {
+    const sx = getScienceGraphLegendNodeChipSx("Work", { appearance: "light" });
+    expect(sx.color).toContain("15,23,42");
   });
 });

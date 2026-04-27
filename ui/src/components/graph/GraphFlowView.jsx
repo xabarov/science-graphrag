@@ -1,6 +1,7 @@
 import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 import {
   Background,
   Controls,
@@ -37,20 +38,14 @@ function readMinimapPreference() {
 }
 
 /**
- * @param {import("@xyflow/react").Node} node
- * @returns {string}
- */
-function minimapNodeColor(node) {
-  const st = getScienceGraphNodeStyle(node?.data?.nodeType, {});
-  return st.fill || "rgba(255,255,255,0.12)";
-}
-
-/**
  * Custom node: type-colored chip (parity with {@link GraphCanvasMvp}).
  * @param {import("@xyflow/react").NodeProps<{ label: string, nodeType?: string }>} props
  */
 const ScienceGraphNode = memo(function ScienceGraphNode({ data, selected }) {
-  const st = getScienceGraphNodeStyle(data.nodeType, { selected });
+  const theme = useTheme();
+  const appearance = theme.palette.mode === "light" ? "light" : "dark";
+  const st = getScienceGraphNodeStyle(data.nodeType, { selected, appearance });
+  const fg = appearance === "light" ? "rgba(15,23,42,0.9)" : "rgba(255,255,255,0.88)";
   return (
     <div
       style={{
@@ -58,7 +53,7 @@ const ScienceGraphNode = memo(function ScienceGraphNode({ data, selected }) {
         borderRadius: 8,
         border: `${st.lineWidth}px solid ${st.stroke}`,
         backgroundColor: st.fill,
-        color: "rgba(255,255,255,0.88)",
+        color: fg,
         fontSize: 11,
         fontWeight: 600,
         minWidth: 40,
@@ -89,6 +84,16 @@ const NODE_TYPES = { science: ScienceGraphNode };
  */
 function GraphFlowInner({ graph, selectedNodeId, selectedEdgeId = "", onSelectNode, onSelectEdge }) {
   const { t } = useI18n();
+  const theme = useTheme();
+  const tk = theme.appTokens;
+  const appearance = theme.palette.mode === "light" ? "light" : "dark";
+  const minimapNodeColor = useCallback(
+    (node) => {
+      const st = getScienceGraphNodeStyle(node?.data?.nodeType, { appearance });
+      return st.fill || tk.border.default;
+    },
+    [appearance, tk.border.default],
+  );
   const resolveEdgeLabel = useCallback((e) => localizeEdgeType(e, t), [t]);
   const { fitView, zoomTo } = useReactFlow();
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -288,7 +293,7 @@ function GraphFlowInner({ graph, selectedNodeId, selectedEdgeId = "", onSelectNo
             proOptions={{ hideAttribution: true }}
             aria-label="Interactive graph: pan and zoom; click a node or edge to select it."
           >
-            <Background color="rgba(255,255,255,0.06)" gap={20} />
+            <Background color={tk.border.default} gap={20} />
             <Controls showInteractive={false} />
             {showMinimap ? (
               <MiniMap
@@ -297,10 +302,10 @@ function GraphFlowInner({ graph, selectedNodeId, selectedEdgeId = "", onSelectNo
                 zoomable
                 nodeStrokeWidth={2}
                 nodeColor={minimapNodeColor}
-                maskColor="rgba(10, 10, 10, 0.72)"
+                maskColor={appearance === "light" ? "rgba(248,250,252,0.72)" : "rgba(10, 10, 10, 0.72)"}
                 style={{
-                  backgroundColor: "#141414",
-                  border: "1px solid rgba(255,255,255,0.1)",
+                  backgroundColor: tk.surface.sidebar,
+                  border: `1px solid ${tk.border.strong}`,
                   borderRadius: 6,
                 }}
               />
@@ -319,6 +324,7 @@ export default function GraphFlowView({
   onSelectNode,
   onSelectEdge,
 }) {
+  const tk = useTheme().appTokens;
   const nodeCount = Array.isArray(graph?.nodes) ? graph.nodes.length : 0;
   if (nodeCount === 0) {
     return (
@@ -328,8 +334,8 @@ export default function GraphFlowView({
         aria-label="Graph flow"
         sx={{
           borderRadius: "6px",
-          border: "1px solid rgba(255,255,255,0.08)",
-          backgroundColor: "#1a1a1a",
+          border: `1px solid ${tk.border.default}`,
+          backgroundColor: tk.surface.panel,
           minHeight: MIN_VIEW_HEIGHT,
           display: "flex",
           alignItems: "center",
@@ -337,7 +343,7 @@ export default function GraphFlowView({
           p: 2,
         }}
       >
-        <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>No nodes to show in Flow view.</Typography>
+        <Typography sx={{ fontSize: "0.8125rem", color: tk.text.secondary }}>No nodes to show in Flow view.</Typography>
       </Box>
     );
   }

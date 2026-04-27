@@ -86,7 +86,14 @@ def _norm(q: str) -> str:
 
 def _graph_intent_heuristic(text: str) -> bool:
     t = text.lower()
-    return any(h in t for h in _GRAPH_INTENT_HINTS)
+    if any(h in t for h in _GRAPH_INTENT_HINTS):
+        return True
+    # Citation / influence questions without explicit "cypher" tokens (roadmap relation_tracing).
+    if "cite" in t and any(w in t for w in ("paper", "work", "article", "workspace", "who", "whom")):
+        return True
+    if "citation" in t and any(w in t for w in ("paper", "work", "graph", "link", "chain")):
+        return True
+    return False
 
 
 def explicit_research_signal(q_norm: str, answer_class_hint: str | None) -> bool:
@@ -140,7 +147,16 @@ def narrow_deterministic_classify(
             if answer_class_hint and answer_class_hint in ANSWER_CLASSES
             else "grounded_explanation"
         )
-        return ("research_task", "allow_tools", "retrieval_agent", "explicit_research_signal", sac)
+        route: RouteHint = (
+            "graph_agent"
+            if (
+                answer_class_hint == "relation_tracing"
+                or sac == "relation_tracing"
+                or _graph_intent_heuristic(q_norm)
+            )
+            else "retrieval_agent"
+        )
+        return ("research_task", "allow_tools", route, "explicit_research_signal", sac)
     return None
 
 
@@ -198,4 +214,13 @@ def rules_v0_classify(
         if answer_class_hint and answer_class_hint in ANSWER_CLASSES
         else "grounded_explanation"
     )
-    return ("research_task", "allow_tools", "retrieval_agent", "default_research_assumption", sac)
+    route_tail: RouteHint = (
+        "graph_agent"
+        if (
+            answer_class_hint == "relation_tracing"
+            or sac == "relation_tracing"
+            or _graph_intent_heuristic(q_norm)
+        )
+        else "retrieval_agent"
+    )
+    return ("research_task", "allow_tools", route_tail, "default_research_assumption", sac)

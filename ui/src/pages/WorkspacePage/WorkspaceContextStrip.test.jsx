@@ -1,5 +1,5 @@
 /** @vitest-environment jsdom */
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { ThemeProvider } from "@mui/material/styles";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import React from "react";
@@ -7,7 +7,9 @@ import { MemoryRouter } from "react-router-dom";
 
 import WorkspaceContextStrip from "./WorkspaceContextStrip.jsx";
 
-const theme = createTheme({ palette: { mode: "dark" } });
+import { buildAppTheme } from "../../theme/buildAppTheme.js";
+
+const theme = buildAppTheme("dark");
 
 function t(key) {
   const map = {

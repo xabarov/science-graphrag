@@ -156,8 +156,7 @@ def test_ingest_persists_document_to_postgres(tmp_path: Path) -> None:
     )
 
     with factory() as db_session:
-        with db_session.begin():
-            doc_id, work_id = ingest_document(md, settings=settings, session=db_session)
+        doc_id, work_id = ingest_document(md, settings=settings, session=db_session)
 
     with factory() as read_session:
         row = read_session.execute(

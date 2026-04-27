@@ -6,33 +6,19 @@ import InputAdornment from "@mui/material/InputAdornment";
 import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import {
   CursorDangerButton,
   CursorPrimaryButton,
 } from "../../components/common/index.js";
 import { useI18n } from "../../i18n/useI18n.js";
+import {
+  outlinedAppTextFieldSx,
+  settingsAlertMutedSx,
+  settingsCardSx,
+} from "../../theme/settingsFormSx.js";
 import LlmConnectionTestCard from "./LlmConnectionTestCard.jsx";
-
-const FIELD_SX = {
-  "& .MuiInputBase-root": {
-    fontSize: "0.8125rem",
-    backgroundColor: "rgba(255,255,255,0.02)",
-  },
-  "& .MuiOutlinedInput-notchedOutline": {
-    borderColor: "rgba(255,255,255,0.12)",
-  },
-  "& .MuiInputBase-root:hover .MuiOutlinedInput-notchedOutline": {
-    borderColor: "rgba(255,255,255,0.18)",
-  },
-  "& .MuiInputBase-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
-    borderColor: "rgba(99, 102, 241, 0.5)",
-  },
-  "& .MuiInputLabel-root": {
-    fontSize: "0.8125rem",
-    color: "rgba(255,255,255,0.6)",
-  },
-};
 
 function providerSummary(llm, t) {
   const bits = [];
@@ -95,6 +81,11 @@ export default function LlmSettingsPanel({
   onDirtyChange,
 }) {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
+  const fieldSx = useMemo(() => outlinedAppTextFieldSx(tk), [tk]);
+  const cardSx = useMemo(() => settingsCardSx(tk), [tk]);
+  const alertMutedSx = useMemo(() => settingsAlertMutedSx(tk), [tk]);
+
   const [baseUrl, setBaseUrl] = useState(llm?.base_url || "");
   const [model, setModel] = useState(llm?.model || "");
   const [temperature, setTemperature] = useState(String(llm?.temperature ?? 0));
@@ -169,14 +160,12 @@ export default function LlmSettingsPanel({
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
       <Box
         sx={{
-          border: "1px solid rgba(255,255,255,0.08)",
-          backgroundColor: "#1a1a1a",
-          borderRadius: 1.5,
+          ...cardSx,
           padding: 2,
         }}
       >
-        <Typography sx={{ fontSize: "0.875rem", fontWeight: 600 }}>{t("llm.panel.title")}</Typography>
-        <Typography sx={{ marginTop: 0.75, fontSize: "0.75rem", color: "rgba(255,255,255,0.58)", lineHeight: 1.5 }}>
+        <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: tk.text.primary }}>{t("llm.panel.title")}</Typography>
+        <Typography sx={{ marginTop: 0.75, fontSize: "0.75rem", color: tk.text.secondary, lineHeight: 1.5 }}>
           {providerSummary(llm, t)}
         </Typography>
 
@@ -193,7 +182,7 @@ export default function LlmSettingsPanel({
             size="small"
             value={baseUrl}
             onChange={(e) => setBaseUrl(e.target.value)}
-            sx={FIELD_SX}
+            sx={fieldSx}
             fullWidth
           />
           <TextField
@@ -201,7 +190,7 @@ export default function LlmSettingsPanel({
             size="small"
             value={model}
             onChange={(e) => setModel(e.target.value)}
-            sx={FIELD_SX}
+            sx={fieldSx}
             fullWidth
           />
           <TextField
@@ -210,7 +199,7 @@ export default function LlmSettingsPanel({
             type="number"
             value={temperature}
             onChange={(e) => setTemperature(e.target.value)}
-            sx={FIELD_SX}
+            sx={fieldSx}
             fullWidth
           />
           <TextField
@@ -219,7 +208,7 @@ export default function LlmSettingsPanel({
             type="number"
             value={timeoutSeconds}
             onChange={(e) => setTimeoutSeconds(e.target.value)}
-            sx={FIELD_SX}
+            sx={fieldSx}
             fullWidth
             InputProps={{
               endAdornment: <InputAdornment position="end">{t("llm.field.secondsSuffix")}</InputAdornment>,
@@ -230,17 +219,15 @@ export default function LlmSettingsPanel({
 
       <Box
         sx={{
-          border: "1px solid rgba(255,255,255,0.08)",
-          backgroundColor: "#1a1a1a",
-          borderRadius: 1.5,
+          ...cardSx,
           padding: 2,
         }}
       >
-        <Typography sx={{ fontSize: "0.875rem", fontWeight: 600 }}>{t("llm.credentials.title")}</Typography>
-        <Typography sx={{ marginTop: 0.75, fontSize: "0.75rem", color: "rgba(255,255,255,0.58)", lineHeight: 1.5 }}>
+        <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: tk.text.primary }}>{t("llm.credentials.title")}</Typography>
+        <Typography sx={{ marginTop: 0.75, fontSize: "0.75rem", color: tk.text.secondary, lineHeight: 1.5 }}>
           {t("llm.credentials.blurbLead")}
         </Typography>
-        <Typography sx={{ marginTop: 0.5, fontSize: "0.72rem", color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>
+        <Typography sx={{ marginTop: 0.5, fontSize: "0.72rem", color: tk.text.muted, lineHeight: 1.5 }}>
           {credentialsBlurbSecond}
         </Typography>
 
@@ -248,20 +235,17 @@ export default function LlmSettingsPanel({
           severity={alertSev}
           sx={{
             marginTop: 2,
-            backgroundColor: "rgba(255,255,255,0.03)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            color: "rgba(255,255,255,0.85)",
-            "& .MuiAlert-icon": { color: "inherit" },
+            ...alertMutedSx,
           }}
         >
           <Typography sx={{ fontSize: "0.75rem" }}>{alertBody.primary}</Typography>
           {alertBody.hint ? (
-            <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.62)", marginTop: 0.75 }}>
+            <Typography sx={{ fontSize: "0.72rem", color: tk.text.secondary, marginTop: 0.75 }}>
               {alertBody.hint}
             </Typography>
           ) : null}
           {(llm?.status?.last_updated_at || llm?.status?.last_updated_by) && hasSavedSecret ? (
-            <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.55)", marginTop: 0.75 }}>
+            <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted, marginTop: 0.75 }}>
               {[llm?.status?.last_updated_by, llm?.status?.last_updated_at].filter(Boolean).join(" • ")}
             </Typography>
           ) : null}
@@ -269,7 +253,7 @@ export default function LlmSettingsPanel({
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, marginTop: 2 }}>
           <Switch checked={replaceKey} onChange={(e) => setReplaceKey(e.target.checked)} />
-          <Typography sx={{ fontSize: "0.8125rem" }}>
+          <Typography sx={{ fontSize: "0.8125rem", color: tk.text.primary }}>
             {hasSavedSecret ? t("llm.credentials.replaceSwitch") : t("llm.credentials.setSwitch")}
           </Typography>
         </Box>
@@ -282,13 +266,13 @@ export default function LlmSettingsPanel({
               type={revealDraftKey ? "text" : "password"}
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              sx={FIELD_SX}
+              sx={fieldSx}
               fullWidth
             />
-            <FormHelperText sx={{ color: "rgba(255,255,255,0.55)" }}>{replaceHelper}</FormHelperText>
+            <FormHelperText sx={{ color: tk.text.muted }}>{replaceHelper}</FormHelperText>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, marginTop: 1 }}>
               <Switch checked={revealDraftKey} onChange={(e) => setRevealDraftKey(e.target.checked)} />
-              <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.65)" }}>
+              <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary }}>
                 {t("llm.credentials.revealDraft")}
               </Typography>
             </Box>
@@ -309,8 +293,7 @@ export default function LlmSettingsPanel({
             severity="error"
             sx={{
               marginTop: 2,
-              backgroundColor: "rgba(255,255,255,0.03)",
-              border: "1px solid rgba(255,255,255,0.08)",
+              ...alertMutedSx,
             }}
           >
             <Typography sx={{ fontSize: "0.75rem" }}>{saveError}</Typography>

@@ -1,0 +1,17 @@
+{
+  "case_id": "bibliography_gost_strict",
+  "eval_tier": "strict",
+  "roadmap_ref": "strict-tier bibliography_export + typed envelope",
+  "workspace_id": "ws-pilot-od",
+  "answer_class_hint": "bibliography_export",
+  "question": "Составь список литературы по ГОСТ для всех работ в этой рабочей области.",
+  "expect": {
+    "answer_classes_allowed": ["bibliography_export"],
+    "tools_any_of": ["format_bibliography_gost", "workspace_list_papers"],
+    "require_typed_bibliography": true,
+    "require_phoenix_trace_id": true,
+    "require_tool_trace": true,
+    "min_non_final_tool_calls": 1,
+    "max_tool_trace_errors": 0
+  }
+}

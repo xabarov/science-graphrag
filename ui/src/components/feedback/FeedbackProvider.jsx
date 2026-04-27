@@ -3,10 +3,12 @@ import Box from "@mui/material/Box";
 import Snackbar from "@mui/material/Snackbar";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import { CursorButton, CursorDangerButton, CursorPrimaryButton } from "../common/index.js";
 import { FeedbackContext } from "./FeedbackContext.js";
 import { FeedbackShell } from "./FeedbackShell.jsx";
+import { outlinedAppTextFieldSx } from "../../theme/settingsFormSx.js";
 
 /** @typedef {{ dialogInstanceId: string, kind: "confirm", title: string, body?: string, confirmLabel?: string, cancelLabel?: string, variant?: "danger" | "default", resolve: (v: boolean) => void }} ConfirmItem */
 /** @typedef {{ dialogInstanceId: string, kind: "prompt", title: string, description?: string, label?: string, defaultValue?: string, confirmLabel?: string, cancelLabel?: string, requiredMessage?: string, validate?: (value: string) => string | null, resolve: (v: string | null) => void }} PromptItem */
@@ -18,6 +20,9 @@ function nextDialogInstanceId() {
 
 /** Prompt dialog fields; remounted via `key={dialog.dialogInstanceId}` when a new prompt opens. */
 function PromptDialogBody({ dialog, onResolve, onShellClose }) {
+  const tk = useTheme().appTokens;
+  const fieldSx = useMemo(() => outlinedAppTextFieldSx(tk), [tk]);
+
   const [promptValue, setPromptValue] = useState(() => String(dialog.defaultValue ?? ""));
   const [promptError, setPromptError] = useState("");
 
@@ -51,7 +56,7 @@ function PromptDialogBody({ dialog, onResolve, onShellClose }) {
       aria-describedby="feedback-prompt-desc"
       actions={
         <>
-          <CursorButton type="button" size="small" onClick={() => onResolve(null)} sx={{ color: "rgba(255,255,255,0.7)" }}>
+          <CursorButton type="button" size="small" onClick={() => onResolve(null)} sx={{ color: tk.text.secondary }}>
             {cancelLabel}
           </CursorButton>
           <CursorPrimaryButton type="button" size="small" onClick={submit}>
@@ -62,7 +67,7 @@ function PromptDialogBody({ dialog, onResolve, onShellClose }) {
     >
       <Box id="feedback-prompt-desc" sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
         {dialog.description ? (
-          <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)" }}>{dialog.description}</Typography>
+          <Typography sx={{ fontSize: "0.8125rem", color: tk.text.muted }}>{dialog.description}</Typography>
         ) : null}
         <TextField
           label={dialog.label || undefined}
@@ -84,9 +89,8 @@ function PromptDialogBody({ dialog, onResolve, onShellClose }) {
             }
           }}
           sx={{
+            ...fieldSx,
             "& .MuiInputBase-input": { fontSize: "0.8125rem" },
-            "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)" },
-            "& .MuiFormHelperText-root": { fontSize: "0.75rem" },
           }}
         />
       </Box>
@@ -95,6 +99,8 @@ function PromptDialogBody({ dialog, onResolve, onShellClose }) {
 }
 
 function FeedbackDialogStack({ dialog, onResolve }) {
+  const tk = useTheme().appTokens;
+
   if (!dialog) return null;
 
   const handleShellClose = (_event, reason) => {
@@ -117,7 +123,7 @@ function FeedbackDialogStack({ dialog, onResolve }) {
         aria-describedby={dialog.body ? "feedback-confirm-desc" : undefined}
         actions={
           <>
-            <CursorButton type="button" size="small" onClick={() => onResolve(false)} sx={{ color: "rgba(255,255,255,0.7)" }}>
+            <CursorButton type="button" size="small" onClick={() => onResolve(false)} sx={{ color: tk.text.secondary }}>
               {cancelLabel}
             </CursorButton>
             {variant === "danger" ? (
@@ -148,6 +154,31 @@ function FeedbackDialogStack({ dialog, onResolve }) {
   }
 
   return null;
+}
+
+function ThemedSnackbar({ open, onClose, message }) {
+  const theme = useTheme();
+  const tk = theme.appTokens;
+  return (
+    <Snackbar
+      open={open}
+      onClose={onClose}
+      autoHideDuration={2600}
+      message={message}
+      anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      slotProps={{
+        content: {
+          sx: {
+            backgroundColor: tk.surface.panel,
+            border: `1px solid ${tk.border.default}`,
+            color: tk.text.primary,
+            fontSize: "0.8125rem",
+            boxShadow: theme.shadows[8],
+          },
+        },
+      }}
+    />
+  );
 }
 
 export function FeedbackProvider({ children }) {
@@ -220,23 +251,7 @@ export function FeedbackProvider({ children }) {
     <FeedbackContext.Provider value={api}>
       {children}
       <FeedbackDialogStack dialog={dialog} onResolve={resolveAndAdvance} />
-      <Snackbar
-        open={toast.open}
-        onClose={onToastClose}
-        autoHideDuration={2600}
-        message={toast.message}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-        slotProps={{
-          content: {
-            sx: {
-              backgroundColor: "rgba(26,26,26,0.96)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              color: "rgba(255,255,255,0.88)",
-              fontSize: "0.8125rem",
-            },
-          },
-        }}
-      />
+      <ThemedSnackbar open={toast.open} onClose={onToastClose} message={toast.message} />
     </FeedbackContext.Provider>
   );
 }

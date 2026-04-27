@@ -361,6 +361,15 @@ class Settings(BaseSettings):
         ),
     )
     agent_supervisor_recursion_limit: int = Field(default=32, ge=4, le=128)
+    agent_supervisor_max_rounds: int = Field(
+        default=10,
+        ge=2,
+        le=32,
+        description=(
+            "Hard cap on supervisor routing decisions (entries in routing_log with from=supervisor) "
+            "before forcing writer_agent to avoid endless specialist ping-pong."
+        ),
+    )
     agent_chat_temperature: float = Field(default=0.0, ge=0.0, le=1.0)
     agent_chat_max_tokens: int = Field(default=1024, ge=64, le=8192)
     agent_rule_tool_search_enabled: bool = Field(

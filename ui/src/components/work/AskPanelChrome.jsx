@@ -1,9 +1,10 @@
 import React from "react";
 import DeleteSweepOutlinedIcon from "@mui/icons-material/DeleteSweepOutlined";
-import { InlineNotice } from "../feedback/index.js";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
+import { InlineNotice } from "../feedback/index.js";
 import { CursorSmallButton } from "../common/index.js";
 
 /**
@@ -19,16 +20,17 @@ import { CursorSmallButton } from "../common/index.js";
  * }} props
  */
 export function AskPanelChrome({ showPageChrome, t, scopeEyebrow, error, onClearChatClick, clearChatDisabled = false }) {
+  const tk = useTheme().appTokens;
   return (
     <>
       {showPageChrome ? (
         <>
-          <Typography sx={{ fontWeight: 600, mb: 0.5, color: "rgba(255,255,255,0.9)" }}>{t("askPanel.chromeTitle")}</Typography>
-          <Typography sx={{ color: "rgba(255,255,255,0.55)", fontSize: "0.8125rem", mb: 1 }}>{t("askPanel.chromeBody")}</Typography>
+          <Typography sx={{ fontWeight: 600, mb: 0.5, color: tk.text.primary }}>{t("askPanel.chromeTitle")}</Typography>
+          <Typography sx={{ color: tk.text.secondary, fontSize: "0.8125rem", mb: 1 }}>{t("askPanel.chromeBody")}</Typography>
         </>
       ) : (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5, flexShrink: 0, minWidth: 0 }}>
-          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", flex: 1, minWidth: 0 }} noWrap title={scopeEyebrow}>
+          <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary, flex: 1, minWidth: 0 }} noWrap title={scopeEyebrow}>
             {scopeEyebrow}
           </Typography>
           {onClearChatClick ? (

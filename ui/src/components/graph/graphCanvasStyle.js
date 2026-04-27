@@ -22,7 +22,13 @@ const NODE_TYPE_STYLES = {
   Institution: { fill: "rgba(244, 114, 182, 0.12)", stroke: "rgba(251, 207, 232, 0.42)" },
 };
 
-const DEFAULT_NODE_STYLE = { fill: "rgba(255,255,255,0.08)", stroke: "rgba(255,255,255,0.2)" };
+const DEFAULT_NODE_STYLE_DARK = { fill: "rgba(255,255,255,0.08)", stroke: "rgba(255,255,255,0.2)" };
+const DEFAULT_NODE_STYLE_LIGHT = { fill: "rgba(15,23,42,0.08)", stroke: "rgba(15,23,42,0.28)" };
+
+/** @param {{ appearance?: string }} [opts] */
+function isLightCanvas(opts) {
+  return String(opts?.appearance || "dark") === "light";
+}
 
 /**
  * MUI icon component per graph node kind / type (toolbar, legend, chips).
@@ -53,26 +59,42 @@ export function getScienceGraphNodeTypeIcon(nodeType) {
 /**
  * MUI `sx` fragment for legend Chips so node type colors match the canvas (base, non-selected).
  * @param {unknown} nodeType
+ * @param {{ appearance?: "light" | "dark" }} [opts]
  * @returns {object}
  */
-export function getScienceGraphLegendNodeChipSx(nodeType) {
+export function getScienceGraphLegendNodeChipSx(nodeType, opts = {}) {
+  const light = isLightCanvas(opts);
   const key = nodeType == null ? "" : String(nodeType).trim();
-  const base = NODE_TYPE_STYLES[key] || DEFAULT_NODE_STYLE;
+  const base = NODE_TYPE_STYLES[key] || (light ? DEFAULT_NODE_STYLE_LIGHT : DEFAULT_NODE_STYLE_DARK);
   return {
     height: 22,
     fontSize: "0.75rem",
     backgroundColor: base.fill,
     border: `1px solid ${base.stroke}`,
-    color: "rgba(255,255,255,0.82)",
+    color: light ? "rgba(15,23,42,0.88)" : "rgba(255,255,255,0.82)",
   };
 }
 
 /**
  * @param {unknown} nodeType
- * @param {{ selected?: boolean, hovered?: boolean, workspaceMembership?: string, nodeKind?: string, searchDim?: boolean }} [opts]
+ * @param {{
+ *   selected?: boolean,
+ *   hovered?: boolean,
+ *   workspaceMembership?: string,
+ *   nodeKind?: string,
+ *   searchDim?: boolean,
+ *   appearance?: "light" | "dark",
+ * }} [opts]
  * @returns {{ fill: string, stroke: string, lineWidth: number, strokeDash?: number[] }}
  */
 export function getScienceGraphNodeStyle(nodeType, opts = {}) {
+  const light = isLightCanvas(opts);
+  const defaultNode = light ? DEFAULT_NODE_STYLE_LIGHT : DEFAULT_NODE_STYLE_DARK;
+  const selStroke = light ? "rgba(15,23,42,0.88)" : "rgba(255, 255, 255, 0.88)";
+  const hovStroke = light ? "rgba(15,23,42,0.5)" : "rgba(255, 255, 255, 0.55)";
+  const dimFill = light ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.05)";
+  const dimStroke = light ? "rgba(15,23,42,0.16)" : "rgba(255,255,255,0.12)";
+
   if (String(opts.nodeKind || "") === "Aggregator") {
     const base = {
       fill: "rgba(99, 102, 241, 0.12)",
@@ -93,7 +115,7 @@ export function getScienceGraphNodeStyle(nodeType, opts = {}) {
   const selected = Boolean(opts.selected);
   const hovered = Boolean(opts.hovered);
   const key = nodeType == null ? "" : String(nodeType).trim();
-  const base = NODE_TYPE_STYLES[key] || DEFAULT_NODE_STYLE;
+  const base = NODE_TYPE_STYLES[key] || defaultNode;
   const ext = String(opts.workspaceMembership || "").toLowerCase() === "external";
   const dim = (rgba) => {
     const m = String(rgba).match(/rgba?\(([^)]+)\)/);
@@ -111,21 +133,21 @@ export function getScienceGraphNodeStyle(nodeType, opts = {}) {
   if (selected) {
     return {
       fill: "rgba(99, 102, 241, 0.36)",
-      stroke: "rgba(255, 255, 255, 0.88)",
+      stroke: selStroke,
       lineWidth: 2,
     };
   }
   if (hovered) {
     return {
       fill: fillBase,
-      stroke: "rgba(255, 255, 255, 0.55)",
+      stroke: hovStroke,
       lineWidth: 1.75,
     };
   }
   if (opts.searchDim) {
     return {
-      fill: ext ? dim(dim(fillBase)) : "rgba(255,255,255,0.05)",
-      stroke: "rgba(255,255,255,0.12)",
+      fill: ext ? dim(dim(fillBase)) : dimFill,
+      stroke: dimStroke,
       lineWidth: 1,
     };
   }

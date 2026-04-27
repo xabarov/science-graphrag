@@ -22,6 +22,7 @@ from science_graphrag.agent.graph.nodes.writer_agent import SPECIALIST_NAME as W
 from science_graphrag.agent.graph.nodes.writer_agent import (
     build_writer_agent_node,
 )
+from science_graphrag.agent.coordination.deterministic import _graph_intent_heuristic
 from science_graphrag.agent.graph.state import AgentState
 from science_graphrag.agent.llm.chat import build_chat_model, ensure_messages_safe_for_generation
 from science_graphrag.agent.tools import build_tool_registry
@@ -30,22 +31,6 @@ from science_graphrag.config import Settings
 from science_graphrag.observability.spans import add_span_event, chain_span
 
 ROUTE_FINISH = "finish"
-_GRAPH_INTENT_HINTS: tuple[str, ...] = (
-    "lineage",
-    "chain of papers",
-    "who cited",
-    "cites whom",
-    "citation chain",
-    "predecessor",
-    "successor",
-    "related version",
-    "contradict",
-    "neo4j",
-    "cypher",
-    "graph traversal",
-    "compare these papers",
-    "which paper influenced",
-)
 
 
 def _turn_tool_policy(state: AgentState) -> str:
@@ -68,11 +53,6 @@ def _first_user_plain_question(state: AgentState) -> str:
         if isinstance(content, str) and content.strip():
             return content.strip()
     return ""
-
-
-def _graph_intent_heuristic(text: str) -> bool:
-    t = text.lower()
-    return any(h in t for h in _GRAPH_INTENT_HINTS)
 
 
 def _build_supervisor_route_messages(state: AgentState) -> list[HumanMessage]:
@@ -134,10 +114,46 @@ def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
                     {"from": "supervisor", "to": WRITER_SPECIALIST, "reason": "budget_exhausted"},
                 ],
             }
-        if settings.agent_semantic_query_fast_route:
-            if not prior:
+        meta = state.get("metadata") or {}
+        tp = meta.get("turn_policy") if isinstance(meta.get("turn_policy"), dict) else {}
+        route_hint = str(tp.get("route_hint") or "").strip()
+        ans_cls = str(state.get("answer_class") or "").strip()
+
+        # First hop: honor coordinator route_hint (single source of truth with TurnPolicy).
+        if not prior and tool_policy == "allow_tools":
+            if route_hint == GRAPH_SPECIALIST or ans_cls == "relation_tracing":
+                reason = (
+                    "coordinator_route_hint"
+                    if route_hint == GRAPH_SPECIALIST
+                    else "answer_class_relation_tracing"
+                )
+                return {
+                    "current_specialist": GRAPH_SPECIALIST,
+                    "routing_log": [
+                        {
+                            "from": "supervisor",
+                            "to": GRAPH_SPECIALIST,
+                            "reason": reason,
+                            "route_hint": route_hint or None,
+                            "budget_left": budget,
+                        },
+                    ],
+                }
+            if route_hint == WRITER_SPECIALIST:
+                return {
+                    "current_specialist": WRITER_SPECIALIST,
+                    "routing_log": [
+                        {
+                            "from": "supervisor",
+                            "to": WRITER_SPECIALIST,
+                            "reason": "coordinator_route_hint",
+                            "budget_left": budget,
+                        },
+                    ],
+                }
+            if route_hint == RETRIEVAL_SPECIALIST and settings.agent_semantic_query_fast_route:
                 uq = _first_user_plain_question(state)
-                if tool_policy == "allow_tools" and uq and not _graph_intent_heuristic(uq):
+                if uq and not _graph_intent_heuristic(uq):
                     return {
                         "current_specialist": RETRIEVAL_SPECIALIST,
                         "routing_log": [
@@ -149,6 +165,24 @@ def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
                             },
                         ],
                     }
+
+        max_rounds = int(settings.agent_supervisor_max_rounds)
+        sup_hops = len([x for x in prior if isinstance(x, dict) and x.get("from") == "supervisor"])
+        if sup_hops >= max_rounds > 0:
+            return {
+                "current_specialist": WRITER_SPECIALIST,
+                "routing_log": [
+                    *list(state.get("routing_log") or []),
+                    {
+                        "from": "supervisor",
+                        "to": WRITER_SPECIALIST,
+                        "reason": "supervisor_round_cap",
+                        "budget_left": budget,
+                        "supervisor_hops": sup_hops,
+                    },
+                ],
+            }
+
         route_msgs = _build_supervisor_route_messages(state)
         with chain_span(
             "agent.supervisor.route_llm",

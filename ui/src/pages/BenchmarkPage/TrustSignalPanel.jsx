@@ -4,6 +4,7 @@ import Chip from "@mui/material/Chip";
 import Collapse from "@mui/material/Collapse";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 
@@ -19,6 +20,7 @@ export { buildTrustRows, decisionChipSx };
 
 export default function TrustSignalPanel() {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
   const { data, error, loading, reload } = useBenchmarkSummary();
   const [expanded, setExpanded] = useState(true);
 
@@ -32,7 +34,7 @@ export default function TrustSignalPanel() {
   if (loading) {
     return (
       <Box sx={{ px: 2, pb: 1 }}>
-        <Typography sx={{ color: "rgba(255,255,255,0.55)", fontSize: "0.8125rem" }}>
+        <Typography sx={{ color: tk.text.muted, fontSize: "0.8125rem" }}>
           {t("benchmarkPage.trustSignal.loading")}
         </Typography>
       </Box>
@@ -43,7 +45,7 @@ export default function TrustSignalPanel() {
     const is404 = error?.response?.status === 404;
     return (
       <Box sx={{ px: 2, pb: 1 }}>
-        <Typography sx={{ color: "rgba(239, 68, 68, 0.85)", fontSize: "0.8125rem" }}>
+        <Typography sx={{ color: tk.state.dangerFg, fontSize: "0.8125rem" }}>
           {is404 ? t("benchmarkPage.trustSignal.missingSummary") : formatResearchApiError(error)}
         </Typography>
         <CursorSmallButton size="small" onClick={() => void reload()} sx={{ mt: 0.5 }}>
@@ -62,16 +64,16 @@ export default function TrustSignalPanel() {
       sx={{
         mx: 2,
         mb: 1.5,
-        border: "1px solid rgba(255,255,255,0.08)",
+        border: `1px solid ${tk.border.default}`,
         borderRadius: 1,
-        backgroundColor: "#1a1a1a",
+        backgroundColor: tk.surface.panel,
         px: 1.5,
         py: 1,
       }}
     >
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-        <Chip label={data.decision} size="small" sx={decisionChipSx(data.decision)} />
-        <Typography sx={{ flex: 1, minWidth: 0, color: "rgba(255,255,255,0.6)", fontSize: "0.75rem" }}>
+        <Chip label={data.decision} size="small" sx={decisionChipSx(data.decision, tk)} />
+        <Typography sx={{ flex: 1, minWidth: 0, color: tk.text.secondary, fontSize: "0.75rem" }}>
           {data.reason}
         </Typography>
         <IconButton
@@ -85,7 +87,7 @@ export default function TrustSignalPanel() {
           {t("benchmarkPage.trustSignal.refresh")}
         </CursorSmallButton>
       </Box>
-      <Typography sx={{ mt: 0.5, color: "rgba(255,255,255,0.45)", fontSize: "0.7rem" }}>
+      <Typography sx={{ mt: 0.5, color: tk.text.muted, fontSize: "0.7rem" }}>
         {t("benchmarkPage.trustSignal.phantomCount", { count: phantomCount })}
       </Typography>
       <Collapse in={expanded}>
@@ -95,7 +97,7 @@ export default function TrustSignalPanel() {
             sx={{
               mt: 0.5,
               mb: 0.5,
-              color: "rgba(255,255,255,0.7)",
+              color: tk.text.secondary,
               fontSize: "0.7rem",
               fontWeight: 600,
               textTransform: "uppercase",
@@ -114,11 +116,11 @@ export default function TrustSignalPanel() {
                   gap: 0.75,
                   alignItems: "center",
                   fontSize: "0.75rem",
-                  borderTop: "1px solid rgba(255,255,255,0.06)",
+                  borderTop: `1px solid ${tk.border.default}`,
                   pt: 0.5,
                 }}
               >
-                <Typography sx={{ color: "rgba(255,255,255,0.75)", fontFamily: "monospace" }}>
+                <Typography sx={{ color: tk.text.secondary, fontFamily: "monospace" }}>
                   {r.familyKey}.{r.memberId}
                 </Typography>
                 <Chip
@@ -127,11 +129,9 @@ export default function TrustSignalPanel() {
                   sx={{
                     height: 22,
                     fontSize: "0.7rem",
-                    backgroundColor: r.isPhantom ? "rgba(239, 68, 68, 0.12)" : "rgba(99, 102, 241, 0.12)",
-                    border: r.isPhantom
-                      ? "1px solid rgba(239, 68, 68, 0.2)"
-                      : "1px solid rgba(99, 102, 241, 0.25)",
-                    color: r.isPhantom ? "rgba(239, 68, 68, 0.9)" : "rgba(129, 140, 248, 0.95)",
+                    backgroundColor: r.isPhantom ? tk.state.dangerBg : tk.accent.chipReadyBg,
+                    border: r.isPhantom ? `1px solid ${tk.state.dangerBorder}` : `1px solid ${tk.accent.softBorder}`,
+                    color: r.isPhantom ? tk.state.dangerFg : tk.accent.chipReadyFg,
                   }}
                 />
               </Box>

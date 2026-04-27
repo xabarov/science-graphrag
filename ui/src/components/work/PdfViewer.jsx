@@ -4,6 +4,7 @@ import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
 import Tooltip from "@mui/material/Tooltip";
+import { useTheme } from "@mui/material/styles";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
@@ -27,6 +28,7 @@ const PDF_HORIZONTAL_PADDING = 16;
  */
 export default function PdfViewer({ fileUrl }) {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
   const [numPages, setNumPages] = useState(0);
   const [page, setPage] = useState(1);
   const [zoom, setZoom] = useState(1);
@@ -98,7 +100,7 @@ export default function PdfViewer({ fileUrl }) {
             </CursorIconButton>
           </span>
         </Tooltip>
-        <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.55)", minWidth: 72, textAlign: "center" }}>
+        <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary, minWidth: 72, textAlign: "center" }}>
           {t("readerBody.pdfPageOf", { page: String(page), total: String(numPages || "—") })}
         </Typography>
         <Tooltip title={t("readerBody.pdfNext")} enterDelay={400}>
@@ -126,7 +128,7 @@ export default function PdfViewer({ fileUrl }) {
           </span>
         </Tooltip>
         <Typography
-          sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.55)", minWidth: 40, textAlign: "center" }}
+          sx={{ fontSize: "0.72rem", color: tk.text.secondary, minWidth: 40, textAlign: "center" }}
           aria-label="zoom"
         >
           {zoomLabel}
@@ -147,9 +149,9 @@ export default function PdfViewer({ fileUrl }) {
         ref={containerRef}
         sx={{
           minHeight: 480,
-          border: "1px solid rgba(255,255,255,0.08)",
+          border: `1px solid ${tk.border.default}`,
           borderRadius: "6px",
-          backgroundColor: "#1c1c1c",
+          backgroundColor: tk.surface.panelAlt,
           p: 1,
           display: "flex",
           justifyContent: "center",
@@ -162,7 +164,7 @@ export default function PdfViewer({ fileUrl }) {
           loading={
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 3, px: 2 }}>
               <CircularProgress size={22} />
-              <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>{t("readerBody.pdfLoading")}</Typography>
+              <Typography sx={{ fontSize: "0.8125rem", color: tk.text.secondary }}>{t("readerBody.pdfLoading")}</Typography>
             </Box>
           }
         >

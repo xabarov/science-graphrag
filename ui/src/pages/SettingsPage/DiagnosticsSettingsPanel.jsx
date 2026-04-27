@@ -1,14 +1,16 @@
 import React from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import { useI18n } from "../../i18n/useI18n.js";
 
 function Row({ label, value }) {
+  const tk = useTheme().appTokens;
   return (
-    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, py: 0.75, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-      <Typography sx={{ minWidth: 140, fontSize: "0.75rem", color: "rgba(255,255,255,0.5)" }}>{label}</Typography>
-      <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.88)", fontFamily: "ui-monospace, monospace" }}>
+    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, py: 0.75, borderBottom: `1px solid ${tk.border.default}` }}>
+      <Typography sx={{ minWidth: 140, fontSize: "0.75rem", color: tk.text.faint }}>{label}</Typography>
+      <Typography sx={{ fontSize: "0.8125rem", color: tk.text.primary, fontFamily: "ui-monospace, monospace" }}>
         {value ?? "—"}
       </Typography>
     </Box>
@@ -17,20 +19,21 @@ function Row({ label, value }) {
 
 export default function DiagnosticsSettingsPanel({ diagnostics }) {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
   const d = diagnostics || {};
 
   return (
     <Box
       sx={{
-        border: "1px solid rgba(255,255,255,0.08)",
-        backgroundColor: "#1a1a1a",
+        border: `1px solid ${tk.border.default}`,
+        backgroundColor: tk.surface.panel,
         borderRadius: 1.5,
         padding: 2.5,
         maxWidth: 640,
       }}
     >
       <Typography sx={{ fontSize: "0.875rem", fontWeight: 600 }}>{t("settings.diagnostics.title")}</Typography>
-      <Typography sx={{ marginTop: 1, fontSize: "0.8125rem", color: "rgba(255,255,255,0.58)", lineHeight: 1.6 }}>
+      <Typography sx={{ marginTop: 1, fontSize: "0.8125rem", color: tk.text.secondary, lineHeight: 1.6 }}>
         {t("settings.diagnostics.intro")}
       </Typography>
       <Box sx={{ marginTop: 2 }}>

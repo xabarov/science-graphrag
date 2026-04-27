@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Chip from "@mui/material/Chip";
+import { useTheme } from "@mui/material/styles";
 import { InlineNotice, useFeedback } from "../components/feedback/index.js";
 
 import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
@@ -35,6 +36,7 @@ const PAGE_SIZE = 40;
 
 export default function WorkspacesPage() {
   const { t, intlLocale } = useI18n();
+  const tk = useTheme().appTokens;
   const { confirm } = useFeedback();
   const [q, setQ] = useState("");
   const [lastSearch, setLastSearch] = useState("");
@@ -272,15 +274,15 @@ export default function WorkspacesPage() {
             py: 1,
             px: 1.25,
             borderRadius: "6px",
-            border: "1px solid rgba(255,255,255,0.08)",
-            backgroundColor: "#1a1a1a",
+            border: `1px solid ${tk.border.default}`,
+            backgroundColor: tk.surface.panel,
           }}
         >
           <Box sx={{ flex: "1 1 200px", minWidth: 0 }}>
-            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.9)" }} noWrap>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: tk.text.primary }} noWrap>
               {w.title || t("workspaces.row.noTitle")}
             </Typography>
-            <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.45)" }} noWrap>
+            <Typography sx={{ fontSize: "0.7rem", color: tk.text.muted }} noWrap>
               {w.year != null ? `${w.year} · ` : ""}
               {w.work_id}
             </Typography>
@@ -310,14 +312,14 @@ export default function WorkspacesPage() {
         sx={{
           p: 1.75,
           borderRadius: "6px",
-          border: "1px solid rgba(255,255,255,0.08)",
-          backgroundColor: "#1a1a1a",
+          border: `1px solid ${tk.border.default}`,
+          backgroundColor: tk.surface.panel,
         }}
       >
-        <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.9)" }}>
+        <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: tk.text.primary }}>
           {w.title || t("workspaces.row.noTitle")}
         </Typography>
-        <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mt: 0.5 }}>
+        <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary, mt: 0.5 }}>
           {w.year != null ? `${w.year} · ` : ""}
           {w.work_id}
         </Typography>
@@ -355,7 +357,7 @@ export default function WorkspacesPage() {
         eyebrow={t("workspaces.header.eyebrow")}
         title={t("workspaces.header.title")}
         description={
-          <Typography sx={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.62)", lineHeight: 1.55 }}>
+          <Typography sx={{ fontSize: "0.875rem", color: tk.text.secondary, lineHeight: 1.55 }}>
             {t("workspaces.header.desc")}
           </Typography>
         }

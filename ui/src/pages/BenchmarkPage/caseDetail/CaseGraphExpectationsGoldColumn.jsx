@@ -10,6 +10,7 @@ import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { useTheme } from "@mui/material/styles";
 
 import { useI18n } from "../../../i18n/useI18n.js";
 
@@ -19,6 +20,7 @@ export default function CaseGraphExpectationsGoldColumn({
   expectationRangeRows,
 }) {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
@@ -26,7 +28,7 @@ export default function CaseGraphExpectationsGoldColumn({
         {t("benchmark.caseDialog.goldGraphExpectationsTitle")}
       </Typography>
       {expectationRangeRows.length ? (
-        <Box sx={{ border: "1px solid rgba(255,255,255,0.08)", borderRadius: 1.5, overflow: "hidden" }}>
+        <Box sx={{ border: `1px solid ${tk.border.default}`, borderRadius: 1.5, overflow: "hidden" }}>
           <Table size="small">
             <TableHead>
               <TableRow>
@@ -38,7 +40,7 @@ export default function CaseGraphExpectationsGoldColumn({
             <TableBody>
               {expectationRangeRows.map((row) => (
                 <TableRow key={row.label}>
-                  <TableCell sx={{ color: "rgba(255,255,255,0.75)" }}>{row.label}</TableCell>
+                  <TableCell sx={{ color: tk.text.secondary }}>{row.label}</TableCell>
                   <TableCell>{String(row.low)}</TableCell>
                   <TableCell>{String(row.high)}</TableCell>
                 </TableRow>
@@ -65,7 +67,7 @@ export default function CaseGraphExpectationsGoldColumn({
               count: graphExpectations.expected_cited_arxiv_ids.length,
             })}
           </Typography>
-          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.55)", wordBreak: "break-word" }}>
+          <Typography sx={{ fontSize: "0.75rem", color: tk.text.muted, wordBreak: "break-word" }}>
             {graphExpectations.expected_cited_arxiv_ids.join(", ")}
           </Typography>
         </Box>
@@ -81,12 +83,12 @@ export default function CaseGraphExpectationsGoldColumn({
             sx={{
               whiteSpace: "pre-wrap",
               wordBreak: "break-word",
-              border: "1px solid rgba(255,255,255,0.08)",
+              border: `1px solid ${tk.border.default}`,
               borderRadius: 2,
               padding: 2,
               maxHeight: 320,
               overflow: "auto",
-              background: "rgba(255,255,255,0.02)",
+              background: tk.control.outlinedBg,
               fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
               fontSize: "12px",
             }}

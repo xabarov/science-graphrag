@@ -238,3 +238,55 @@ def test_envelope_no_tools_turn_policy_ignores_trace_inventory() -> None:
     )
     assert env.get("answer_class") == "chat"
     assert env.get("inventory") is None
+
+
+def test_collect_typed_payloads_bibliography_gost_without_entries() -> None:
+    from science_graphrag.agent.chat_envelope import collect_typed_payloads
+
+    state: AgentState = {
+        "messages": [],
+        "workspace_id": "ws1",
+        "citations": [],
+        "tool_trace": [],
+        "budget_remaining": 8,
+        "metadata": {},
+        "specialist_results": {
+            "retrieval_agent": [
+                {"bibliography": {"format": "gost", "entries": [], "warnings": ["no_works"]}}
+            ]
+        },
+        "current_specialist": None,
+        "routing_log": [],
+        "debug_events": [],
+        "thread_id": None,
+        "session_summary": "",
+        "answer_class": None,
+        "history_digest": [],
+    }
+    typed = collect_typed_payloads(state)
+    assert typed.get("bibliography", {}).get("format") == "gost"
+
+
+def test_collect_typed_payloads_merges_relation_trace() -> None:
+    from science_graphrag.agent.chat_envelope import collect_typed_payloads
+
+    state: AgentState = {
+        "messages": [],
+        "workspace_id": "ws1",
+        "citations": [],
+        "tool_trace": [],
+        "budget_remaining": 8,
+        "metadata": {},
+        "specialist_results": {
+            "graph_agent": [{"relation_trace": {"edges": [{"type": "CITES"}]}}],
+        },
+        "current_specialist": None,
+        "routing_log": [],
+        "debug_events": [],
+        "thread_id": None,
+        "session_summary": "",
+        "answer_class": None,
+        "history_digest": [],
+    }
+    typed = collect_typed_payloads(state)
+    assert typed.get("relation_trace", {}).get("edges")

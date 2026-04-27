@@ -8,6 +8,7 @@ import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import { CursorButton, CursorPrimaryButton } from "../../components/common/index.js";
 import CompareDeltaTable from "./CompareDeltaTable.jsx";
@@ -41,10 +42,11 @@ export default function CompareTab({ onOpenWorkbench }) {
     unchangedFiltered,
   } = useCompareTab();
 
+  const tk = useTheme().appTokens;
   return (
     <Box sx={{ padding: 2 }}>
       <Typography sx={{ fontWeight: 600, mb: 2 }}>Compare runs</Typography>
-      <Typography sx={{ color: "rgba(255,255,255,0.55)", fontSize: "0.8125rem", mb: 2 }}>
+      <Typography sx={{ color: tk.text.muted, fontSize: "0.8125rem", mb: 2 }}>
         Baseline is the reference (older) run; Current is the candidate (newer). Only cases with status ok and metrics
         are compared. Benchmark family must match between runs.
       </Typography>
@@ -93,7 +95,7 @@ export default function CompareTab({ onOpenWorkbench }) {
       </Box>
 
       {error ? (
-        <Typography sx={{ color: "rgba(239,68,68,0.9)", mb: 2 }} role="alert">
+        <Typography sx={{ color: tk.state.dangerFg, mb: 2 }} role="alert">
           {typeof error === "string" ? error : JSON.stringify(error)}
         </Typography>
       ) : null}
@@ -107,7 +109,7 @@ export default function CompareTab({ onOpenWorkbench }) {
             component="pre"
             sx={{
               fontSize: "11px",
-              color: "rgba(255,255,255,0.75)",
+              color: tk.text.secondary,
               whiteSpace: "pre-wrap",
               wordBreak: "break-word",
             }}
@@ -125,10 +127,10 @@ export default function CompareTab({ onOpenWorkbench }) {
             flexWrap: "wrap",
             gap: 1.5,
             alignItems: "center",
-            border: "1px solid rgba(255,255,255,0.08)",
+            border: `1px solid ${tk.border.default}`,
             borderRadius: 1.5,
             p: 1.5,
-            backgroundColor: "#1a1a1a",
+            backgroundColor: tk.surface.panel,
           }}
         >
           <TextField
@@ -151,7 +153,7 @@ export default function CompareTab({ onOpenWorkbench }) {
                 size="small"
                 checked={showUnchanged}
                 onChange={(e) => setShowUnchanged(e.target.checked)}
-                sx={{ color: "rgba(255,255,255,0.5)" }}
+                sx={{ color: tk.text.muted }}
               />
             }
             label={<Typography sx={{ fontSize: "0.8125rem" }}>Show unchanged rows</Typography>}

@@ -113,12 +113,15 @@ def build_retrieval_agent_node(stores: StoreRegistry, settings: Settings):
         all_tools = build_retrieval_tools(stores, settings)
         question = _last_user_text(state)
         has_ws = bool((state.get("workspace_id") or "").strip())
+        ac = state.get("answer_class")
+        answer_class = str(ac).strip() if isinstance(ac, str) and ac.strip() else None
         tools, meta = shortlist_tools_for_specialist(
             all_tools,
             question=question,
             specialist=SPECIALIST_NAME,
             settings=settings,
             has_workspace=has_ws,
+            answer_class=answer_class,
         )
         compiled = _cached_subgraph(tools)
         next_state = compiled.invoke(state)

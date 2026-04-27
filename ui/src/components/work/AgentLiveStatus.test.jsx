@@ -2,8 +2,16 @@
 import { describe, expect, it } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import React from "react";
+import { ThemeProvider } from "@mui/material/styles";
 
+import { buildAppTheme } from "../../theme/buildAppTheme.js";
 import { AgentLiveStatus } from "./AgentLiveStatus.jsx";
+
+const theme = buildAppTheme("dark");
+
+function renderWithTheme(ui) {
+  return render(<ThemeProvider theme={theme}>{ui}</ThemeProvider>);
+}
 
 function t(key, vars = {}) {
   let out =
@@ -26,12 +34,12 @@ function t(key, vars = {}) {
 
 describe("AgentLiveStatus", () => {
   it("shows shimmer when active and no meaningful events yet", () => {
-    render(<AgentLiveStatus t={t} streamEvents={[]} isActive />);
+    renderWithTheme(<AgentLiveStatus t={t} streamEvents={[]} isActive />);
     expect(screen.getByText("Thinking…")).toBeTruthy();
   });
 
   it("shows last meaningful stream line when inactive", () => {
-    render(
+    renderWithTheme(
       <AgentLiveStatus
         t={t}
         streamEvents={[{ type: "intent_classified", answer_class: "inventory", source: "h" }]}
@@ -42,7 +50,7 @@ describe("AgentLiveStatus", () => {
   });
 
   it("exposes expandable recent lines with aria when multiple events", () => {
-    render(
+    renderWithTheme(
       <AgentLiveStatus
         t={t}
         streamEvents={[

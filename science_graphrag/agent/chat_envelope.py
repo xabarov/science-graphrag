@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from science_graphrag.agent.graph.state import AgentState
 from science_graphrag.agent.trace import ToolCallTrace
+
+if TYPE_CHECKING:
+    from science_graphrag.agent.graph.state import AgentState
 
 ANSWER_CLASSES = frozenset(
     {
@@ -82,11 +84,22 @@ def _merge_inventory(acc: dict[str, Any], fragment: dict[str, Any]) -> None:
             acc[key] = val
 
 
+def _bibliography_payload_acceptable(bib: dict[str, Any]) -> bool:
+    """Treat GOST-shaped blocks as typed even when entries are empty or deferred."""
+    if bib.get("entries"):
+        return True
+    if str(bib.get("format") or "").strip().lower() == "gost":
+        return True
+    lines = bib.get("lines")
+    return isinstance(lines, list) and bool(lines)
+
+
 def collect_typed_payloads(state: AgentState | dict[str, Any]) -> dict[str, Any]:
     """Scan specialist tool JSON payloads for typed blocks."""
     inventory: dict[str, Any] = {}
     quote_candidates: list[dict[str, Any]] = []
     bibliography: dict[str, Any] | None = None
+    relation_trace: dict[str, Any] = {}
     specialist_results = state.get("specialist_results") or {}
     for _spec, payloads in specialist_results.items():
         for payload in payloads or []:
@@ -99,8 +112,11 @@ def collect_typed_payloads(state: AgentState | dict[str, Any]) -> dict[str, Any]
             if isinstance(qc, list):
                 quote_candidates.extend(qc)
             bib = payload.get("bibliography")
-            if isinstance(bib, dict) and bib.get("entries"):
+            if isinstance(bib, dict) and _bibliography_payload_acceptable(bib):
                 bibliography = bib
+            rt = payload.get("relation_trace")
+            if isinstance(rt, dict) and rt:
+                relation_trace.update(rt)
     out: dict[str, Any] = {}
     if inventory:
         out["inventory"] = inventory
@@ -108,6 +124,8 @@ def collect_typed_payloads(state: AgentState | dict[str, Any]) -> dict[str, Any]
         out["quote_candidates"] = quote_candidates[:50]
     if bibliography:
         out["bibliography"] = bibliography
+    if relation_trace:
+        out["relation_trace"] = relation_trace
     return out
 
 

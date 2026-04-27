@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import { useI18n } from "../i18n/useI18n.js";
 import { getHealth, getWorks } from "../services/researchApi.js";
@@ -8,6 +9,7 @@ import { getHealth, getWorks } from "../services/researchApi.js";
 /** Lightweight read-only probes for the admin hub (no secrets). */
 export default function AdminApiStatusStrip() {
   const { t, locale } = useI18n();
+  const tk = useTheme().appTokens;
   const [row, setRow] = useState(null);
 
   useEffect(() => {
@@ -42,7 +44,7 @@ export default function AdminApiStatusStrip() {
 
   if (!row) {
     return (
-      <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mb: 2 }}>
+      <Typography sx={{ fontSize: "0.75rem", color: tk.text.muted, mb: 2 }}>
         {t("adminApi.loading")}
       </Typography>
     );
@@ -63,23 +65,23 @@ export default function AdminApiStatusStrip() {
         sx={{
           p: 1.25,
           borderRadius: "6px",
-          border: "1px solid rgba(255,255,255,0.08)",
-          backgroundColor: "#141414",
+          border: `1px solid ${tk.border.default}`,
+          backgroundColor: tk.surface.sidebar,
         }}
       >
-        <Typography sx={{ fontSize: "0.6875rem", color: "rgba(255,255,255,0.45)", mb: 0.5 }}>{t("adminApi.health")}</Typography>
-        <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)", fontFamily: "monospace" }}>{row.healthLabel}</Typography>
+        <Typography sx={{ fontSize: "0.6875rem", color: tk.text.muted, mb: 0.5 }}>{t("adminApi.health")}</Typography>
+        <Typography sx={{ fontSize: "0.8125rem", color: tk.text.primary, fontFamily: "monospace" }}>{row.healthLabel}</Typography>
       </Box>
       <Box
         sx={{
           p: 1.25,
           borderRadius: "6px",
-          border: "1px solid rgba(255,255,255,0.08)",
-          backgroundColor: "#141414",
+          border: `1px solid ${tk.border.default}`,
+          backgroundColor: tk.surface.sidebar,
         }}
       >
-        <Typography sx={{ fontSize: "0.6875rem", color: "rgba(255,255,255,0.45)", mb: 0.5 }}>{t("adminApi.works")}</Typography>
-        <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)", fontFamily: "monospace" }}>{row.worksLabel}</Typography>
+        <Typography sx={{ fontSize: "0.6875rem", color: tk.text.muted, mb: 0.5 }}>{t("adminApi.works")}</Typography>
+        <Typography sx={{ fontSize: "0.8125rem", color: tk.text.primary, fontFamily: "monospace" }}>{row.worksLabel}</Typography>
       </Box>
     </Box>
   );

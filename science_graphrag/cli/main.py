@@ -10,6 +10,7 @@ from sqlalchemy import desc, select
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
 from science_graphrag.ingestion.pipeline import run_ingest_batch_cli, run_ingest_cli
+from science_graphrag.ingestion.resume_ingest import resume_document_embed_phase
 from science_graphrag.storage.db import get_engine, init_db, session_factory
 from science_graphrag.storage.models_orm import WorkDedupMergeLog
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
@@ -43,6 +44,29 @@ def neo4j_wipe_cmd() -> None:
     typer.echo("Neo4j database wiped.")
 
 
+@app.command("ingest-resume-embed")
+def ingest_resume_embed_cmd(
+    document_id: str = typer.Argument(..., help="documents.id (UUID) with artifacts + work_id"),
+) -> None:
+    """Re-run Qdrant embedding stage only (recovery after OpenRouter/embed failures)."""
+
+    s = get_settings()
+    engine = get_engine(s.database_url)
+    init_db(engine)
+    factory = session_factory(engine)
+    with factory() as session:
+        work_id = resume_document_embed_phase(
+            document_id=document_id.strip(),
+            settings=s,
+            session=session,
+            ingest_workspace_ids=None,
+            job_id=None,
+            stage_session_factory=None,
+            stage_event_publisher=None,
+        )
+    typer.echo(f"OK document_id={document_id} work_id={work_id}")
+
+
 @app.command("ingest")
 def ingest_cmd(
     path: Path = typer.Argument(
@@ -61,12 +85,18 @@ def ingest_cmd(
         "--force-new-document",
         help="Always allocate a new document_id (no sha256 reuse in SQL).",
     ),
+    embeddings_preflight: bool = typer.Option(
+        False,
+        "--embeddings-preflight/--no-embeddings-preflight",
+        help="Probe embeddings API once before ingest (OpenRouter when configured).",
+    ),
 ) -> None:
     """Run Phase 1 ingestion pipeline for one document."""
     run_ingest_cli(
         path,
         skip_existing_sha=skip_existing_sha,
         force_new_document=force_new_document,
+        embeddings_preflight=embeddings_preflight,
     )
 
 
@@ -320,6 +350,11 @@ def ingest_corpus_cmd(
         "--progress-file",
         help="Path to ingest progress JSONL checkpoint file.",
     ),
+    embeddings_preflight: bool = typer.Option(
+        False,
+        "--embeddings-preflight/--no-embeddings-preflight",
+        help="Call embeddings API once before scanning files (OpenRouter channel only).",
+    ),
 ) -> None:
     """Batch-ingest a corpus directory and print Work-level dedup audit for Neo4j."""
 
@@ -331,6 +366,7 @@ def ingest_corpus_cmd(
         per_file_timeout_s=per_file_timeout_s,
         resume=resume,
         progress_file=progress_file,
+        embeddings_preflight=embeddings_preflight,
     )
 
 
@@ -421,6 +457,11 @@ def config_check_cmd(
         "--strict/--no-strict",
         help="Exit 1 if extraction_llm_api_key is unset (recommended before long ingest).",
     ),
+    embeddings_preflight: bool = typer.Option(
+        False,
+        "--embeddings-preflight/--no-embeddings-preflight",
+        help="After printing settings, call embeddings once (fails fast on OpenRouter outages).",
+    ),
 ) -> None:
     """Print non-secret diagnostics for Settings (operator pre-flight)."""
 
@@ -461,6 +502,15 @@ def config_check_cmd(
     if strict and not ex_ok:
         typer.echo("[config-check] FAILED: extraction_llm_api_key UNSET", err=True)
         raise typer.Exit(code=1)
+    if embeddings_preflight:
+        from science_graphrag.embeddings.preflight import probe_embeddings
+
+        try:
+            probe_embeddings(s)
+            typer.echo("[config-check] embeddings preflight: OK")
+        except Exception as exc:  # noqa: BLE001
+            typer.echo(f"[config-check] embeddings preflight: FAILED ({exc!s})", err=True)
+            raise typer.Exit(code=1) from exc
 
 
 def main() -> None:

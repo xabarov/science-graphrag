@@ -1,5 +1,6 @@
 import React from "react";
 import Box from "@mui/material/Box";
+import { useTheme } from "@mui/material/styles";
 import { Outlet } from "react-router-dom";
 
 import { WorkspaceContextProvider } from "../WorkspaceContext.jsx";
@@ -7,6 +8,7 @@ import WorkspaceSwitcher from "../WorkspaceSwitcher.jsx";
 import Drawer from "./Drawer.jsx";
 
 export default function DashboardLayout() {
+  const tk = useTheme().appTokens;
   return (
     <WorkspaceContextProvider>
       <Box sx={{ display: "flex", flex: 1, minHeight: 0, width: "100%" }}>
@@ -19,8 +21,8 @@ export default function DashboardLayout() {
             flexDirection: "column",
             minWidth: 0,
             minHeight: 0,
-            backgroundColor: "#0a0a0a",
-            borderLeft: "1px solid rgba(255, 255, 255, 0.08)",
+            backgroundColor: tk.surface.app,
+            borderLeft: `1px solid ${tk.border.default}`,
           }}
         >
           <Box
@@ -31,7 +33,7 @@ export default function DashboardLayout() {
               gap: 1,
               px: { xs: 1.5, sm: 2 },
               py: 1,
-              borderBottom: "1px solid rgba(255,255,255,0.06)",
+              borderBottom: `1px solid ${tk.border.default}`,
               minHeight: 48,
               flexShrink: 0,
             }}

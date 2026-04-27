@@ -12,6 +12,7 @@ import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Chip from "@mui/material/Chip";
+import { useTheme } from "@mui/material/styles";
 
 import { deleteBenchmarkRun, listBenchmarkRuns } from "../../services/benchmarkApi.js";
 import ResultsDialog from "./ResultsDialog.jsx";
@@ -27,6 +28,7 @@ function _statusChip(status) {
 }
 
 export default function ResultsTab({ onOpenWorkbench }) {
+  const tk = useTheme().appTokens;
   const [runsPayload, setRunsPayload] = useState(null);
   const [error, setError] = useState(null);
   const [selectedRunId, setSelectedRunId] = useState(null);
@@ -120,7 +122,7 @@ export default function ResultsTab({ onOpenWorkbench }) {
       </Box>
 
       {items.length === 0 ? (
-        <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>
+        <Typography sx={{ color: tk.text.secondary }}>
           No runs yet. Go to the Launch tab to start one.
         </Typography>
       ) : (
@@ -167,10 +169,10 @@ export default function ResultsTab({ onOpenWorkbench }) {
                     <TableCell>
                       {r.progress.completed}/{r.progress.total} ({pct.toFixed(1)}%)
                     </TableCell>
-                    <TableCell sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.75)" }}>
+                    <TableCell sx={{ fontSize: "0.75rem", color: tk.text.secondary }}>
                       {configCell || "default"}
                     </TableCell>
-                    <TableCell sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.75)" }}>{metricsCell}</TableCell>
+                    <TableCell sx={{ fontSize: "0.75rem", color: tk.text.secondary }}>{metricsCell}</TableCell>
                     <TableCell align="right">
                       <CursorButton
                         onClick={() => {

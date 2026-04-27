@@ -1,5 +1,6 @@
 import React from "react";
 import Box from "@mui/material/Box";
+import { useTheme } from "@mui/material/styles";
 
 /**
  * Dense horizontal toolbar for icon actions (researcher workflow).
@@ -14,6 +15,7 @@ import Box from "@mui/material/Box";
  * Either pass `groups` as array of rows of nodes, or `children` as a flat row.
  */
 export default function PageActionToolbar({ children, groups, tail, sx }) {
+  const tk = useTheme().appTokens;
   const rows = groups && groups.length > 0 ? groups : children ? [React.Children.toArray(children).filter(Boolean)] : [];
 
   return (
@@ -36,7 +38,7 @@ export default function PageActionToolbar({ children, groups, tail, sx }) {
               sx={{
                 width: "1px",
                 height: 22,
-                bgcolor: "rgba(255,255,255,0.12)",
+                bgcolor: tk.border.strong,
                 alignSelf: "center",
                 mx: 0.25,
               }}

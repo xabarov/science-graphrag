@@ -20,11 +20,27 @@ from science_graphrag.api.deps import close_store_registry, init_store_registry
 from science_graphrag.config import get_settings
 
 
-def discover_roadmap_case_files(fixtures_root: Path) -> list[Path]:
-    cases = fixtures_root / "cases"
-    if not cases.is_dir():
-        return []
-    return sorted(p for p in cases.glob("*.json") if p.is_file())
+def _is_transient_llm_failure(exc: BaseException) -> bool:
+    """One retry for flaky provider / gateway errors during long suites."""
+
+    text = f"{type(exc).__name__}:{exc!s}".lower()
+    return any(x in text for x in ("502", "503", "504", "429", "timeout", "connection reset"))
+
+
+def discover_roadmap_case_files(fixtures_root: Path, tier: str = "baseline") -> list[Path]:
+    """Return roadmap JSON cases. ``tier`` = baseline (``cases/``), strict (``cases_strict/``), or all."""
+
+    t = (tier or "baseline").strip().lower()
+    out: list[Path] = []
+    baseline_dir = fixtures_root / "cases"
+    strict_dir = fixtures_root / "cases_strict"
+    if t in ("baseline", "all") and baseline_dir.is_dir():
+        out.extend(sorted(p for p in baseline_dir.glob("*.json") if p.is_file()))
+    if t in ("strict", "all") and strict_dir.is_dir():
+        out.extend(sorted(p for p in strict_dir.glob("*.json") if p.is_file()))
+    if t not in ("baseline", "strict", "all") and baseline_dir.is_dir():
+        out.extend(sorted(p for p in baseline_dir.glob("*.json") if p.is_file()))
+    return out
 
 
 def _output_to_dict(out: AgentRunOutput) -> dict[str, Any]:
@@ -87,12 +103,22 @@ def _mock_report(
     ac = "inventory"
     if isinstance(allowed, list) and allowed:
         ac = str(allowed[0])
+    expect = gold.get("expect") if isinstance(gold.get("expect"), dict) else {}
+    bib = None
+    if expect.get("require_typed_bibliography"):
+        bib = {"format": "gost", "entries": [{"stub": "mock-bibliography-entry"}]}
+    rt = None
+    if expect.get("require_relation_trace"):
+        rt = {"edges": [{"type": "CITES", "from": "mock-a", "to": "mock-b"}]}
+
     out = AgentRunOutput(
         answer="mock",
         citations=[],
         tool_trace=trace,  # type: ignore[arg-type]
         answer_class=ac,
         phoenix_trace_id="0" * 32,
+        bibliography=bib,
+        relation_trace=rt,
     )
     od = _output_to_dict(out)
     return {
@@ -145,46 +171,61 @@ def run_roadmap_case(case_path: Path, *, mock_runtime: bool = False) -> dict[str
         }
     else:
         settings = get_settings()
-        try:
-            stores = init_store_registry(settings)
-            agent = build_agent(settings=settings, stores=stores)
-            thread_id = str(gold.get("thread_id") or "").strip() or f"roadmap-{uuid.uuid4().hex}"
-            max_tool = (
-                int(max_calls) if max_calls is not None else int(settings.agent_max_tool_calls)
-            )
-            turn_reports: list[dict[str, Any]] = []
-            last_out: AgentRunOutput | None = None
-            for q in turns_in:
-                last_out = agent.run(
-                    question=q,
-                    workspace_id=workspace_id,
-                    max_tool_calls=max_tool,
-                    answer_class_hint=hint_s,
-                    thread_id=thread_id if len(turns_in) > 1 else None,
+        report: dict[str, Any] | None = None
+        for attempt in range(2):
+            try:
+                stores = init_store_registry(settings)
+                agent = build_agent(settings=settings, stores=stores)
+                thread_id = (
+                    str(gold.get("thread_id") or "").strip() or f"roadmap-{uuid.uuid4().hex}"
                 )
-                turn_reports.append({"question": q, "output": _output_to_dict(last_out)})
-            assert last_out is not None
-            merged_trace: list[dict[str, Any]] = []
-            for tr in turn_reports:
-                merged_trace.extend(list((tr.get("output") or {}).get("tool_trace") or []))
+                max_tool = (
+                    int(max_calls) if max_calls is not None else int(settings.agent_max_tool_calls)
+                )
+                turn_reports = []
+                last_out: AgentRunOutput | None = None
+                for q in turns_in:
+                    last_out = agent.run(
+                        question=q,
+                        workspace_id=workspace_id,
+                        max_tool_calls=max_tool,
+                        answer_class_hint=hint_s,
+                        thread_id=thread_id if len(turns_in) > 1 else None,
+                    )
+                    turn_reports.append({"question": q, "output": _output_to_dict(last_out)})
+                assert last_out is not None
+                merged_trace: list[dict[str, Any]] = []
+                for tr in turn_reports:
+                    merged_trace.extend(list((tr.get("output") or {}).get("tool_trace") or []))
+                report = {
+                    "case_id": case_id,
+                    "workspace_id": workspace_id,
+                    "thread_id": thread_id if len(turns_in) > 1 else None,
+                    "turns": turn_reports,
+                    "final_output": _output_to_dict(last_out),
+                    "tool_trace": merged_trace,
+                    "duration_ms": int((perf_counter() - started) * 1000),
+                }
+                break
+            except Exception as exc:  # noqa: BLE001
+                if attempt == 0 and _is_transient_llm_failure(exc):
+                    continue
+                report = {
+                    "case_id": case_id,
+                    "error": f"{type(exc).__name__}: {exc}",
+                    "tool_trace": [],
+                    "duration_ms": int((perf_counter() - started) * 1000),
+                }
+                break
+            finally:
+                close_store_registry()
+        if report is None:
             report = {
                 "case_id": case_id,
-                "workspace_id": workspace_id,
-                "thread_id": thread_id if len(turns_in) > 1 else None,
-                "turns": turn_reports,
-                "final_output": _output_to_dict(last_out),
-                "tool_trace": merged_trace,
-                "duration_ms": int((perf_counter() - started) * 1000),
-            }
-        except Exception as exc:  # noqa: BLE001
-            report = {
-                "case_id": case_id,
-                "error": f"{type(exc).__name__}: {exc}",
+                "error": "internal_error:empty_report_after_retries",
                 "tool_trace": [],
                 "duration_ms": int((perf_counter() - started) * 1000),
             }
-        finally:
-            close_store_registry()
 
     report["metrics"] = score_roadmap_case(report, gold)
     report["wall_clock_seconds"] = round(perf_counter() - started, 3)
@@ -256,7 +297,14 @@ def _cli(
     mock_runtime: bool = typer.Option(False, "--mock-runtime"),
     fetch_phoenix: bool = typer.Option(False, "--fetch-phoenix"),
     case_filter: str | None = typer.Option(None, "--case"),
+    tier: str = typer.Option("baseline", "--tier", help="baseline | strict | all"),
 ) -> None:
+    # Live harness needs real OTel spans for ``phoenix_trace_id``; ``extraction_llm`` scope no-ops
+    # agent chains (see ``science_graphrag/observability/spans/decorators.py``).
+    trace_scope_before = os.environ.get("PHOENIX_TRACE_SCOPE")
+    if not mock_runtime:
+        os.environ["PHOENIX_TRACE_SCOPE"] = "full"
+
     settings = get_settings()
     manifest_path = fixtures / "baseline_workspace_manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -284,7 +332,7 @@ def _cli(
         if st == "blocked":
             raise typer.Exit(code=3)
 
-    case_files = discover_roadmap_case_files(fixtures)
+    case_files = discover_roadmap_case_files(fixtures, tier=tier)
     if case_filter:
         case_files = [p for p in case_files if p.stem == case_filter or p.name == case_filter]
     if not case_files:
@@ -300,12 +348,14 @@ def _cli(
     summary = {
         "schema_version": 1,
         "suite": "chat_agent_roadmap",
+        "eval_tier": tier,
         "fixtures": str(fixtures),
         "workspace_id": workspace_id,
         "benchmark_run_metadata": benchmark_run_metadata(settings),
         "environment": {
             "PHOENIX_UI_BASE_URL": os.getenv("PHOENIX_UI_BASE_URL"),
             "PHOENIX_TRACE_SCOPE": os.getenv("PHOENIX_TRACE_SCOPE"),
+            "PHOENIX_TRACE_SCOPE_before_harness": trace_scope_before,
         },
         "workspace_audit": (audit_blob or {}).get("workspace_audit"),
         "all_passed": all(bool((r.get("metrics") or {}).get("passed")) for r in reports),

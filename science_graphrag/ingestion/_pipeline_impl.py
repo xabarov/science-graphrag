@@ -53,11 +53,20 @@ from science_graphrag.dedup.ingest_conflict_check import (
     enqueue_author_near_duplicate_conflicts_on_ingest,
     enqueue_work_near_duplicate_conflicts_on_ingest,
 )
+from science_graphrag.embeddings.errors import EmbeddingCallError, EmbeddingNonRetryableHttpError
+from science_graphrag.ingestion.checkpoint import (
+    default_checkpoint,
+    mark_stage_completed,
+    mark_stage_failed,
+    parse_checkpoint,
+    serialize_checkpoint,
+)
 from science_graphrag.ingestion.normalize import normalize_text
 from science_graphrag.ingestion.pdf import extract_text_from_pdf
 from science_graphrag.ingestion.stage_context import (
     IngestRunContext,
     IngestStage,
+    StageHandle,
     build_ingest_run_context,
     stage,
 )
@@ -584,6 +593,134 @@ def run_ingest_from_job(
     )
 
 
+def _sql_commit_if_session(session: Session | None) -> None:
+    """Commit SQL work at orchestration boundaries (embed vs graph split)."""
+    if session is not None:
+        session.commit()
+
+
+def run_ingest_embed_qdrant_phase(
+    *,
+    settings: Settings,
+    document_id: str,
+    work_id: str,
+    doc_chunks: list[Any],
+    claim_rows: list[Any],
+    authorships: list[Any],
+    draft: WorkDraft,
+    ingest_workspace_ids: list[str] | None,
+    st: StageHandle,
+    reused_doc: bool,
+) -> None:
+    """Vectorize chunks + work summary and upsert Qdrant (after Neo4j is closed)."""
+
+    embedder = resolve_embedder(settings)
+    chunk_texts = [c.text for c in doc_chunks]
+    embedding_model = resolve_embedding_model_label(settings)
+    with embeddings_span(
+        "ingest.embed.vectorize_chunks",
+        {
+            "embedding.model_name": embedding_model,
+            "embedding.dim": embedder.dim,
+            "embedding.input_count": len(chunk_texts),
+        },
+    ):
+        vectors = embedder.embed(chunk_texts)
+    first_author = ""
+    if authorships:
+        ordered_auth = sorted(authorships, key=lambda x: x.author_position or 0)
+        first_author = (ordered_auth[0].author_raw_name or "").strip()
+    summary_text = f"{draft.title or ''}\n{draft.abstract or ''}\n{first_author}"[:8000]
+    with embeddings_span(
+        "ingest.embed.vectorize_work_summary",
+        {
+            "embedding.model_name": embedding_model,
+            "embedding.dim": embedder.dim,
+            "embedding.input_count": 1,
+        },
+    ):
+        w_summary_vec = embedder.embed([summary_text])[0]
+    qw = QdrantWorkEmbeddingStore(
+        settings.qdrant_url,
+        settings.qdrant_work_embeddings_collection,
+        vector_dim=embedder.dim,
+    )
+    _retry_call(
+        qw.upsert_work_summary,
+        work_id=work_id,
+        vector=w_summary_vec,
+        embedding_model=embedding_model,
+        workspace_ids=ingest_workspace_ids or [],
+        title=draft.title,
+        publication_year=draft.publication_year,
+        doi=draft.doi,
+        arxiv_id=draft.arxiv_id,
+        first_author_normalized=first_author,
+        embedding_kind="work_summary_v1",
+    )
+    q = QdrantChunkStore(
+        settings.qdrant_url,
+        settings.qdrant_collection,
+        vector_dim=embedder.dim,
+    )
+    removed = _retry_call(q.delete_points_by_document_id, document_id=document_id)
+    if removed and reused_doc:
+        log.info(
+            "qdrant removed %s point(s) before re-ingest document_id=%s",
+            removed,
+            document_id,
+        )
+    with chain_span(
+        "ingest.embed.qdrant_chunks",
+        {
+            "chunks": len(doc_chunks),
+            "embedding": embedding_model,
+            "db.system": "qdrant",
+            "db.collection.name": settings.qdrant_collection,
+            "db.operation": "upsert",
+            "vector.dim": embedder.dim,
+            "vector.count": len(vectors),
+        },
+    ):
+        _retry_call(
+            q.upsert_document_chunks,
+            work_id=work_id,
+            document_id=document_id,
+            document_chunks=doc_chunks,
+            vectors=vectors,
+            embedding_model=embedding_model,
+            workspace_ids=ingest_workspace_ids or [],
+        )
+    if settings.claims_extraction_enabled and claim_rows:
+        with chain_span(
+            "ingest.embed.qdrant_claims",
+            {
+                "claims": len(claim_rows),
+                "embedding": embedding_model,
+                "db.system": "qdrant",
+                "db.collection.name": settings.qdrant_claims_collection,
+                "db.operation": "upsert",
+                "vector.dim": embedder.dim,
+                "vector.count": len(claim_rows),
+            },
+        ):
+            qc = QdrantClaimsStore(
+                settings.qdrant_url,
+                settings.qdrant_claims_collection,
+                vector_dim=embedder.dim,
+            )
+            _retry_call(qc.delete_points_by_work_id, work_id=work_id)
+            _retry_call(
+                qc.upsert_claims,
+                work_id=work_id,
+                claims=claim_rows,
+                embedder=embedder,
+                embedding_model=embedding_model,
+            )
+    st.metric("chunks", len(doc_chunks))
+    st.metric("embedding_dim", embedder.dim)
+
+
 def ingest_document(
     path: Path,
     *,
@@ -639,6 +776,11 @@ def ingest_document(
         root_attrs[OpenInferenceAttributes.USER_ID] = str(workspace_id)
         root_attrs["metadata.workspace_id"] = str(workspace_id)
     with chain_span("ingest_document", root_attrs):
+        ckpt: dict[str, Any] = default_checkpoint()
+        if session is not None and reused_doc:
+            prev_doc = session.get(DocumentRecord, doc_id)
+            if prev_doc is not None and prev_doc.ingest_checkpoint_json:
+                ckpt = parse_checkpoint(prev_doc.ingest_checkpoint_json)
         if session is not None and job_id:
             trace_ctx = trace_api.get_current_span().get_span_context()
             if trace_ctx.trace_id:
@@ -934,123 +1076,16 @@ def ingest_document(
                 else:
                     st.metric("claims_extraction_enabled", 0)
 
-            with stage(
-                job_id,
-                IngestStage.EMBED,
-                session_factory=stage_session_factory,
-                publisher=stage_event_publisher,
-            ) as st:
-                embedder = resolve_embedder(settings)
-                chunk_texts = [c.text for c in doc_chunks]
-                embedding_model = resolve_embedding_model_label(settings)
-                with embeddings_span(
-                    "ingest.embed.vectorize_chunks",
-                    {
-                        "embedding.model_name": embedding_model,
-                        "embedding.dim": embedder.dim,
-                        "embedding.input_count": len(chunk_texts),
-                    },
-                ):
-                    vectors = embedder.embed(chunk_texts)
-                first_author = ""
-                if authorships:
-                    ordered_auth = sorted(authorships, key=lambda x: x.author_position or 0)
-                    first_author = (ordered_auth[0].author_raw_name or "").strip()
-                summary_text = f"{draft.title or ''}\n{draft.abstract or ''}\n{first_author}"[:8000]
-                with embeddings_span(
-                    "ingest.embed.vectorize_work_summary",
-                    {
-                        "embedding.model_name": embedding_model,
-                        "embedding.dim": embedder.dim,
-                        "embedding.input_count": 1,
-                    },
-                ):
-                    w_summary_vec = embedder.embed([summary_text])[0]
-                qw = QdrantWorkEmbeddingStore(
-                    settings.qdrant_url,
-                    settings.qdrant_work_embeddings_collection,
-                    vector_dim=embedder.dim,
-                )
-                _retry_call(
-                    qw.upsert_work_summary,
-                    work_id=work_id,
-                    vector=w_summary_vec,
-                    embedding_model=embedding_model,
-                    workspace_ids=ingest_workspace_ids or [],
-                    title=draft.title,
-                    publication_year=draft.publication_year,
-                    doi=draft.doi,
-                    arxiv_id=draft.arxiv_id,
-                    first_author_normalized=first_author,
-                    embedding_kind="work_summary_v1",
-                )
-                q = QdrantChunkStore(
-                    settings.qdrant_url,
-                    settings.qdrant_collection,
-                    vector_dim=embedder.dim,
-                )
-                removed = _retry_call(q.delete_points_by_document_id, document_id=doc_id)
-                if removed and reused_doc:
-                    log.info(
-                        "qdrant removed %s point(s) before re-ingest document_id=%s",
-                        removed,
-                        doc_id,
-                    )
-                with chain_span(
-                    "ingest.embed.qdrant_chunks",
-                    {
-                        "chunks": len(doc_chunks),
-                        "embedding": embedding_model,
-                        "db.system": "qdrant",
-                        "db.collection.name": settings.qdrant_collection,
-                        "db.operation": "upsert",
-                        "vector.dim": embedder.dim,
-                        "vector.count": len(vectors),
-                    },
-                ):
-                    _retry_call(
-                        q.upsert_document_chunks,
-                        work_id=work_id,
-                        document_id=doc_id,
-                        document_chunks=doc_chunks,
-                        vectors=vectors,
-                        embedding_model=embedding_model,
-                        workspace_ids=ingest_workspace_ids or [],
-                    )
-                if settings.claims_extraction_enabled and claim_rows:
-                    with chain_span(
-                        "ingest.embed.qdrant_claims",
-                        {
-                            "claims": len(claim_rows),
-                            "embedding": embedding_model,
-                            "db.system": "qdrant",
-                            "db.collection.name": settings.qdrant_claims_collection,
-                            "db.operation": "upsert",
-                            "vector.dim": embedder.dim,
-                            "vector.count": len(claim_rows),
-                        },
-                    ):
-                        qc = QdrantClaimsStore(
-                            settings.qdrant_url,
-                            settings.qdrant_claims_collection,
-                            vector_dim=embedder.dim,
-                        )
-                        _retry_call(qc.delete_points_by_work_id, work_id=work_id)
-                        _retry_call(
-                            qc.upsert_claims,
-                            work_id=work_id,
-                            claims=claim_rows,
-                            embedder=embedder,
-                            embedding_model=embedding_model,
-                        )
-                st.metric("chunks", len(doc_chunks))
-                st.metric("embedding_dim", embedder.dim)
         finally:
             neo.close()
 
+        mark_stage_completed(ckpt, IngestStage.EXTRACT_CLAIMS)
+
+        ingest_run: IngestionRunRecord | None = None
         if session is not None:
             now = datetime.now(UTC)
             mime = f"application/{path.suffix.lower().lstrip('.') or 'octet-stream'}"
+            serialized_ckpt = serialize_checkpoint(ckpt)
             if reused_doc:
                 existing = session.get(DocumentRecord, doc_id)
                 if existing is not None:
@@ -1058,6 +1093,7 @@ def ingest_document(
                     existing.mime_type = mime
                     existing.sha256 = sha
                     existing.work_id = work_id
+                    existing.ingest_checkpoint_json = serialized_ckpt
             else:
                 session.add(
                     DocumentRecord(
@@ -1066,15 +1102,70 @@ def ingest_document(
                         source_path=str(path.resolve()),
                         mime_type=mime,
                         work_id=work_id,
+                        ingest_checkpoint_json=serialized_ckpt,
                     ),
                 )
-            session.add(
-                IngestionRunRecord(
-                    document_id=doc_id,
-                    status="completed",
-                    finished_at=now,
-                ),
+            ingest_run = IngestionRunRecord(
+                document_id=doc_id,
+                status="running",
+                started_at=now,
+                finished_at=None,
             )
+            session.add(ingest_run)
+            session.flush()
+            _sql_commit_if_session(session)
+
+        try:
+            with stage(
+                job_id,
+                IngestStage.EMBED,
+                session_factory=stage_session_factory,
+                publisher=stage_event_publisher,
+            ) as st:
+                run_ingest_embed_qdrant_phase(
+                    settings=settings,
+                    document_id=doc_id,
+                    work_id=work_id,
+                    doc_chunks=doc_chunks,
+                    claim_rows=claim_rows,
+                    authorships=authorships,
+                    draft=draft,
+                    ingest_workspace_ids=ingest_workspace_ids,
+                    st=st,
+                    reused_doc=reused_doc,
+                )
+        except Exception as embed_exc:
+            if session is not None:
+                retryable = True
+                if isinstance(embed_exc, EmbeddingNonRetryableHttpError):
+                    retryable = False
+                elif isinstance(embed_exc, EmbeddingCallError):
+                    retryable = embed_exc.retryable
+                mark_stage_failed(
+                    ckpt,
+                    IngestStage.EMBED,
+                    error=str(embed_exc),
+                    retryable=retryable,
+                )
+                row = session.get(DocumentRecord, doc_id)
+                if row is not None:
+                    row.ingest_checkpoint_json = serialize_checkpoint(ckpt)
+                if ingest_run is not None:
+                    ingest_run.status = "failed_retryable" if retryable else "failed_terminal"
+                    ingest_run.error_message = str(embed_exc)[:8000]
+                    ingest_run.finished_at = datetime.now(UTC)
+                _sql_commit_if_session(session)
+            raise
+        mark_stage_completed(ckpt, IngestStage.EMBED)
+        if session is not None:
+            finished = datetime.now(UTC)
+            if ingest_run is not None:
+                ingest_run.status = "completed"
+                ingest_run.finished_at = finished
+            row = session.get(DocumentRecord, doc_id)
+            if row is not None:
+                row.ingest_checkpoint_json = serialize_checkpoint(ckpt)
+            _sql_commit_if_session(session)
 
         return doc_id, work_id
 
@@ -1089,6 +1180,7 @@ def run_ingest_batch_cli(
     per_file_timeout_s: int = 900,
     resume: bool = False,
     progress_file: Path | None = None,
+    embeddings_preflight: bool = False,
 ) -> list[dict[str, Any]]:
     """
     Ingest every ``.pdf`` / ``.md`` / ``.txt`` under ``directory`` (recursive).
@@ -1100,6 +1192,10 @@ def run_ingest_batch_cli(
     configure_logging()
     init_tracer_provider()
     s = settings or get_settings()
+    if embeddings_preflight:
+        from science_graphrag.embeddings.preflight import probe_embeddings
+
+        probe_embeddings(s)
     engine = get_engine(s.database_url)
     init_db(engine)
     factory = session_factory(engine)
@@ -1132,15 +1228,14 @@ def run_ingest_batch_cli(
         started_at = datetime.now(UTC)
         try:
             with factory() as db_session:
-                with db_session.begin():
-                    with _file_timeout(per_file_timeout_s):
-                        doc_id, work_id = ingest_document(
-                            path,
-                            settings=s,
-                            session=db_session,
-                            skip_existing_sha=skip_existing_sha,
-                            force_new_document=force_new_document,
-                        )
+                with _file_timeout(per_file_timeout_s):
+                    doc_id, work_id = ingest_document(
+                        path,
+                        settings=s,
+                        session=db_session,
+                        skip_existing_sha=skip_existing_sha,
+                        force_new_document=force_new_document,
+                    )
             finished_at = datetime.now(UTC)
             rows.append(
                 {
@@ -1278,23 +1373,27 @@ def run_ingest_cli(
     *,
     skip_existing_sha: bool = False,
     force_new_document: bool = False,
+    embeddings_preflight: bool = False,
 ) -> None:
     configure_logging()
     init_tracer_provider()
     s = get_settings()
+    if embeddings_preflight:
+        from science_graphrag.embeddings.preflight import probe_embeddings
+
+        probe_embeddings(s)
     engine = get_engine(s.database_url)
     init_db(engine)
     factory = session_factory(engine)
     with factory() as session:
         try:
-            with session.begin():
-                doc_id, work_id = ingest_document(
-                    path,
-                    settings=s,
-                    session=session,
-                    skip_existing_sha=skip_existing_sha,
-                    force_new_document=force_new_document,
-                )
+            doc_id, work_id = ingest_document(
+                path,
+                settings=s,
+                session=session,
+                skip_existing_sha=skip_existing_sha,
+                force_new_document=force_new_document,
+            )
             print(f"document_id={doc_id} work_id={work_id}")
         except SkippedDuplicateIngestError as dup:
             print(f"SKIP duplicate sha256={dup.sha256} document_id={dup.document_id}")

@@ -1,12 +1,14 @@
 /** @vitest-environment jsdom */
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { ThemeProvider } from "@mui/material/styles";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
+import { buildAppTheme } from "../../theme/buildAppTheme.js";
 import { FeedbackProvider } from "./FeedbackProvider.jsx";
 import { useFeedback } from "./useFeedback.js";
 
-const theme = createTheme();
+const themeDark = buildAppTheme("dark");
+const themeLight = buildAppTheme("light");
 
 function ConfirmHarness() {
   const { confirm, showToast } = useFeedback();
@@ -58,7 +60,7 @@ afterEach(() => {
 describe("FeedbackProvider", () => {
   it("confirm resolves true and shows toast", async () => {
     render(
-      <ThemeProvider theme={theme}>
+      <ThemeProvider theme={themeDark}>
         <FeedbackProvider>
           <ConfirmHarness />
         </FeedbackProvider>
@@ -74,7 +76,7 @@ describe("FeedbackProvider", () => {
 
   it("prompt returns trimmed value when valid", async () => {
     render(
-      <ThemeProvider theme={theme}>
+      <ThemeProvider theme={themeDark}>
         <FeedbackProvider>
           <PromptHarness />
         </FeedbackProvider>
@@ -86,6 +88,22 @@ describe("FeedbackProvider", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
     await waitFor(() => {
       expect(screen.getByText("prompt:trimmed")).toBeTruthy();
+    });
+  });
+
+  it("confirm and toast work in light theme (tokenized overlays)", async () => {
+    render(
+      <ThemeProvider theme={themeLight}>
+        <FeedbackProvider>
+          <ConfirmHarness />
+        </FeedbackProvider>
+      </ThemeProvider>,
+    );
+    fireEvent.click(screen.getByText("open-confirm"));
+    expect(await screen.findByText("Confirm body")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Do it" }));
+    await waitFor(() => {
+      expect(screen.getByText("confirmed")).toBeTruthy();
     });
   });
 });

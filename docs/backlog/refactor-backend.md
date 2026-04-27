@@ -40,6 +40,13 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 
 ## Queue
 
+### [OPEN] Ingest resume — claims + Neo4j selective rebuild
+- **Area:** `science_graphrag/ingestion/resume_ingest.py`, `science_graphrag/ingestion/_pipeline_impl.py`
+- **Issue:** `ingest-resume-embed` only repopulates chunk + work-summary vectors in Qdrant; it does not re-extract claims or refresh `CITES` titles when those stages were skipped or half-written.
+- **Proposal:** Add optional `--stages claims,references` (or separate CLI) that reuses `normalized.md` + Neo4j `work_id`, re-runs LLM stages with idempotent upserts, and aligns checkpoint keys.
+- **Acceptance:** Integration test on a fixture document that forces embed failure then resumes claims+embed without duplicating layer1 Work nodes.
+- **Raised:** 2026-04-27 (stage-safe ingest follow-up)
+
 ### [OPEN] Work dedup hygiene — drift detection after ingest
 - **Area:** `science_graphrag/cli/main.py` (`merge-work`, `repoint-qdrant-work-ids`), ingest pipeline, optional nightly job
 - **Issue:** Title-level duplicate `Work` nodes can reappear after bulk ingest; manual merge was required for BT2 (`scripts/merge_duplicate_works_by_title.py` + audit JSON under `eval/results/`).

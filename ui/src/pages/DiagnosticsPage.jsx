@@ -2,6 +2,7 @@ import React, { useCallback, useState } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
+import { useTheme } from "@mui/material/styles";
 import { Link } from "react-router-dom";
 
 import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
@@ -15,6 +16,7 @@ import { formatResearchApiError, getHealth, getResearchApiBaseUrl, getWorks } fr
 
 export default function DiagnosticsPage() {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
   const [status, setStatus] = useState("idle");
   const [payload, setPayload] = useState(null);
   const [error, setError] = useState(null);
@@ -54,12 +56,15 @@ export default function DiagnosticsPage() {
 
   return (
     <Box sx={{ p: { xs: 1.5, sm: 2 }, ...mainShellContentSx }}>
-      <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: "rgba(255,255,255,0.9)", mb: 1 }}>{t("diagnostics.title")}</Typography>
-      <Typography sx={{ color: "rgba(255,255,255,0.55)", fontSize: "0.8125rem", mb: 2 }}>
+      <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: tk.text.primary, mb: 1 }}>{t("diagnostics.title")}</Typography>
+      <Typography sx={{ color: tk.text.secondary, fontSize: "0.8125rem", mb: 2 }}>
         {t("diagnostics.intro")}
       </Typography>
-      <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.75rem", mb: 2 }}>
-        {t("diagnostics.apiBase")} <code style={{ color: "rgba(255,255,255,0.65)" }}>{baseHint}</code>
+      <Typography sx={{ color: tk.text.muted, fontSize: "0.75rem", mb: 2 }}>
+        {t("diagnostics.apiBase")}{" "}
+        <Box component="code" sx={{ color: tk.text.secondary, fontFamily: "ui-monospace, monospace" }}>
+          {baseHint}
+        </Box>
       </Typography>
 
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mb: 2 }}>
@@ -97,10 +102,10 @@ export default function DiagnosticsPage() {
             m: 0,
             p: 1.5,
             borderRadius: "6px",
-            border: "1px solid rgba(255,255,255,0.08)",
-            backgroundColor: "rgba(0,0,0,0.25)",
+            border: `1px solid ${tk.border.default}`,
+            backgroundColor: tk.surface.code,
             fontSize: "0.75rem",
-            color: "rgba(255,255,255,0.65)",
+            color: tk.text.secondary,
             overflow: "auto",
           }}
         >

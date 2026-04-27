@@ -44,7 +44,21 @@ export function shouldDrawCanvasEdgeLabel(mode, edgeStyle, transform, edgeCount)
   return true;
 }
 
-export function drawEdges(ctx, edges, nodeMap, positions, transform, styleMap = {}) {
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {object[]} edges
+ * @param {Map<string, object>} nodeMap
+ * @param {Map<string, { x: number, y: number }>} positions
+ * @param {{ scale: number, tx: number, ty: number }} transform
+ * @param {Record<string, { active?: boolean }>} [styleMap]
+ * @param {{ appearance?: "light" | "dark" }} [drawOpts]
+ */
+export function drawEdges(ctx, edges, nodeMap, positions, transform, styleMap = {}, drawOpts = {}) {
+  const light = String(drawOpts.appearance || "dark") === "light";
+  const edgeActive = light ? "rgba(15,23,42,0.42)" : "rgba(255,255,255,0.38)";
+  const edgeExt = light ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.08)";
+  const edgeNorm = light ? "rgba(15,23,42,0.2)" : "rgba(255,255,255,0.12)";
+  const arrowFill = light ? "rgba(15,23,42,0.32)" : "rgba(255,255,255,0.2)";
   const { scale, tx, ty } = transform;
   for (const edge of edges) {
     const p0w = positions.get(edge.source);
@@ -53,7 +67,7 @@ export function drawEdges(ctx, edges, nodeMap, positions, transform, styleMap = 
     const p0 = worldToScreen(p0w.x, p0w.y, scale, tx, ty);
     const p1 = worldToScreen(p1w.x, p1w.y, scale, tx, ty);
     const edgeStyle = styleMap[String(edge.id || "")] || {};
-    const edgeActive = Boolean(edgeStyle.active);
+    const edgeActiveBool = Boolean(edgeStyle.active);
     const n0 = nodeMap.get(edge.source);
     const n1 = nodeMap.get(edge.target);
     const extEdge =
@@ -61,12 +75,8 @@ export function drawEdges(ctx, edges, nodeMap, positions, transform, styleMap = 
       String(n1?.workspaceMembership || "").toLowerCase() === "external";
     ctx.setLineDash(extEdge ? [5, 4] : []);
     const clipped = clipSegmentByDiscInsets(p0, p1, NODE_RADIUS, NODE_RADIUS);
-    ctx.strokeStyle = edgeActive
-      ? "rgba(255,255,255,0.38)"
-      : extEdge
-        ? "rgba(255,255,255,0.08)"
-        : "rgba(255,255,255,0.12)";
-    ctx.lineWidth = edgeActive ? 1.75 : 1;
+    ctx.strokeStyle = edgeActiveBool ? edgeActive : extEdge ? edgeExt : edgeNorm;
+    ctx.lineWidth = edgeActiveBool ? 1.75 : 1;
     if (clipped) {
       const { ax, ay, bx, by, ux, uy } = clipped;
       const lineEndX = bx - ux * ARROW_HEAD_LEN;
@@ -82,7 +92,7 @@ export function drawEdges(ctx, edges, nodeMap, positions, transform, styleMap = 
       ctx.lineTo(lineEndX + px * ARROW_HEAD_HW, lineEndY + py * ARROW_HEAD_HW);
       ctx.lineTo(lineEndX - px * ARROW_HEAD_HW, lineEndY - py * ARROW_HEAD_HW);
       ctx.closePath();
-      ctx.fillStyle = edgeActive ? "rgba(255,255,255,0.38)" : "rgba(255,255,255,0.2)";
+      ctx.fillStyle = edgeActiveBool ? edgeActive : arrowFill;
       ctx.fill();
     } else {
       ctx.beginPath();
@@ -94,7 +104,8 @@ export function drawEdges(ctx, edges, nodeMap, positions, transform, styleMap = 
   ctx.setLineDash([]);
 }
 
-export function drawNodes(ctx, nodes, positions, transform, styleMap = {}) {
+export function drawNodes(ctx, nodes, positions, transform, styleMap = {}, drawOpts = {}) {
+  const appearance = String(drawOpts.appearance || "dark") === "light" ? "light" : "dark";
   const { scale, tx, ty } = transform;
   for (const node of nodes) {
     const pw = positions.get(node.id);
@@ -106,6 +117,7 @@ export function drawNodes(ctx, nodes, positions, transform, styleMap = {}) {
       workspaceMembership: node.workspaceMembership,
       nodeKind: node.nodeKind,
       searchDim: Boolean(styleMap[String(node.id || "")]?.searchDim),
+      appearance,
     });
     ctx.beginPath();
     ctx.arc(p.x, p.y, NODE_RADIUS, 0, 2 * Math.PI);
@@ -134,6 +146,7 @@ export function drawNodes(ctx, nodes, positions, transform, styleMap = {}) {
  *   resolveNodeCanvasLabel?: (node: object) => string | null | undefined,
  *   edgeLabelMode?: "all" | "interaction" | "adaptive",
  *   edgeCountForAdaptive?: number,
+ *   appearance?: "light" | "dark",
  * }} DrawLabelOptions
  */
 
@@ -147,6 +160,17 @@ export function drawNodes(ctx, nodes, positions, transform, styleMap = {}) {
  * @param {DrawLabelOptions} [drawOptions]
  */
 export function drawLabels(ctx, nodes, edges, positions, transform, styleMap = {}, drawOptions = {}) {
+  const light = String(drawOptions.appearance || "dark") === "light";
+  const edgeBoxActive = light ? "rgba(248,250,252,0.98)" : "rgba(40, 40, 40, 0.96)";
+  const edgeBoxIdle = light ? "rgba(255,255,255,0.96)" : "rgba(26, 26, 26, 0.94)";
+  const edgeStrokeActive = light ? "rgba(15,23,42,0.22)" : "rgba(255, 255, 255, 0.2)";
+  const edgeStrokeIdle = light ? "rgba(15,23,42,0.12)" : "rgba(255, 255, 255, 0.08)";
+  const edgeTextActive = light ? "rgba(15,23,42,0.88)" : "rgba(255, 255, 255, 0.82)";
+  const edgeTextIdle = light ? "rgba(15,23,42,0.62)" : "rgba(255, 255, 255, 0.62)";
+  const nodeBoxFill = light ? "rgba(255,255,255,0.96)" : "rgba(26, 26, 26, 0.95)";
+  const nodeBoxStroke = light ? "rgba(15,23,42,0.12)" : "rgba(255, 255, 255, 0.08)";
+  const nodeTextSel = light ? "rgba(15,23,42,0.92)" : "rgba(255, 255, 255, 0.92)";
+  const nodeTextIdle = light ? "rgba(15,23,42,0.82)" : "rgba(255, 255, 255, 0.82)";
   const { scale, tx, ty } = transform;
   const resolveEdge = typeof drawOptions.resolveEdgeLabel === "function" ? drawOptions.resolveEdgeLabel : null;
   const resolveNode = typeof drawOptions.resolveNodeCanvasLabel === "function" ? drawOptions.resolveNodeCanvasLabel : null;
@@ -179,12 +203,12 @@ export function drawLabels(ctx, nodes, edges, positions, transform, styleMap = {
     const bw = metrics.width + 8;
     const bh = 16;
     const active = Boolean(styleMap[String(edge.id || "")]?.active);
-    ctx.fillStyle = active ? "rgba(40, 40, 40, 0.96)" : "rgba(26, 26, 26, 0.94)";
+    ctx.fillStyle = active ? edgeBoxActive : edgeBoxIdle;
     ctx.fillRect(midX - bw / 2, midY - bh / 2, bw, bh);
-    ctx.strokeStyle = active ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.08)";
+    ctx.strokeStyle = active ? edgeStrokeActive : edgeStrokeIdle;
     ctx.lineWidth = 1;
     ctx.strokeRect(midX - bw / 2, midY - bh / 2, bw, bh);
-    ctx.fillStyle = active ? "rgba(255, 255, 255, 0.82)" : "rgba(255, 255, 255, 0.62)";
+    ctx.fillStyle = active ? edgeTextActive : edgeTextIdle;
     ctx.fillText(elabel, midX, midY);
   }
   ctx.font = LABEL_FONT;
@@ -208,12 +232,12 @@ export function drawLabels(ctx, nodes, edges, positions, transform, styleMap = {
     const boxH = 20;
     const boxTop = p.y + NODE_RADIUS + 4;
     const midY = boxTop + boxH / 2;
-    ctx.fillStyle = "rgba(26, 26, 26, 0.95)";
+    ctx.fillStyle = nodeBoxFill;
     ctx.fillRect(p.x - boxW / 2, boxTop, boxW, boxH);
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+    ctx.strokeStyle = nodeBoxStroke;
     ctx.lineWidth = 1;
     ctx.strokeRect(p.x - boxW / 2, boxTop, boxW, boxH);
-    ctx.fillStyle = sel ? "rgba(255, 255, 255, 0.92)" : "rgba(255, 255, 255, 0.82)";
+    ctx.fillStyle = sel ? nodeTextSel : nodeTextIdle;
     ctx.fillText(text, p.x, midY);
   }
 }

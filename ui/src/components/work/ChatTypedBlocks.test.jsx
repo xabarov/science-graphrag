@@ -1,11 +1,12 @@
 /** @vitest-environment jsdom */
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { ThemeProvider } from "@mui/material/styles";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import { buildAppTheme } from "../../theme/buildAppTheme.js";
 import { IdeaSuggestionsBlock, QuoteCandidatesBlock, RelationTraceBlock } from "./ChatTypedBlocks.jsx";
 
-const theme = createTheme();
+const theme = buildAppTheme("dark");
 
 function t(key) {
   return key;

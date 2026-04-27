@@ -9,6 +9,7 @@ import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
+import { useTheme } from "@mui/material/styles";
 
 import { listBenchmarkCases } from "../../services/benchmarkApi.js";
 import { CursorButton } from "../../components/common/index.js";
@@ -20,6 +21,7 @@ function _normalizeTier(v) {
 }
 
 export default function CasesTab() {
+  const tk = useTheme().appTokens;
   const [family, setFamily] = useState("layer1");
   const [tier, setTier] = useState("merge_safe");
   const [q, setQ] = useState("");
@@ -103,17 +105,17 @@ export default function CasesTab() {
       </Box>
 
       {error && (
-        <Typography sx={{ color: "rgba(239, 68, 68, 0.9)", mb: 1 }} role="alert">
+        <Typography sx={{ color: tk.state.dangerFg, mb: 1 }} role="alert">
           {error}
         </Typography>
       )}
 
-      <Typography sx={{ color: "rgba(255,255,255,0.6)", mb: 1 }}>
+      <Typography sx={{ color: tk.text.secondary, mb: 1 }}>
         Total: {total}
       </Typography>
 
       {items.length === 0 ? (
-        <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>No cases found.</Typography>
+        <Typography sx={{ color: tk.text.secondary }}>No cases found.</Typography>
       ) : (
         <Table size="small">
           <TableHead>

@@ -33,11 +33,13 @@ from science_graphrag.ingestion._pipeline_impl import (
     ingest_document,
     run_ingest_batch_cli,
     run_ingest_cli,
+    run_ingest_embed_qdrant_phase,
     run_ingest_from_file,
     run_ingest_from_job,
     run_ingest_pipeline,
     uuid,
 )
+from science_graphrag.ingestion.resume_ingest import resume_document_embed_phase
 
 __all__ = [
     "CORPUS_SUPPORTED_SUFFIXES",
@@ -46,8 +48,10 @@ __all__ = [
     "SkippedDuplicateIngestError",
     "discover_corpus_files",
     "ingest_document",
+    "resume_document_embed_phase",
     "run_ingest_batch_cli",
     "run_ingest_cli",
+    "run_ingest_embed_qdrant_phase",
     "run_ingest_from_file",
     "run_ingest_from_job",
     "run_ingest_pipeline",

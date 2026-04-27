@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import { useI18n } from "../../../i18n/useI18n.js";
 import {
@@ -22,6 +23,7 @@ export default function CaseGraphExpectationsPanel({
   detail,
 }) {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
   const {
     snapshotJson,
     snapshotLoadError,
@@ -79,7 +81,7 @@ export default function CaseGraphExpectationsPanel({
 
   return (
     <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 2 }}>
-      <Typography sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.8125rem" }}>
+      <Typography sx={{ color: tk.text.secondary, fontSize: "0.8125rem" }}>
         {t("benchmark.caseDialog.graphIntro")}
       </Typography>
 
@@ -94,7 +96,7 @@ export default function CaseGraphExpectationsPanel({
       />
 
       {snapshotLoadError ? (
-        <Typography sx={{ color: "rgba(239,68,68,0.9)", fontSize: "0.8125rem" }} role="alert">
+        <Typography sx={{ color: tk.state.dangerFg, fontSize: "0.8125rem" }} role="alert">
           {snapshotLoadError}
         </Typography>
       ) : null}

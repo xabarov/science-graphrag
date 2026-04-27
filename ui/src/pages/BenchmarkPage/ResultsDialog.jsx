@@ -15,6 +15,7 @@ import BenchmarkRunCasesTable from "./BenchmarkRunCasesTable.jsx";
 
 export default function ResultsDialog({ open, runId, onClose, onOpenWorkbench }) {
   const theme = useTheme();
+  const tk = theme.appTokens;
   const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
   const [runDetail, setRunDetail] = useState(null);
   const [hasFullDetail, setHasFullDetail] = useState(false);
@@ -89,7 +90,7 @@ export default function ResultsDialog({ open, runId, onClose, onOpenWorkbench })
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
           <Box>
             <Typography sx={{ fontWeight: 700 }}>Run details</Typography>
-            <Typography sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.8125rem" }}>
+            <Typography sx={{ color: tk.text.secondary, fontSize: "0.8125rem" }}>
               run_id: {runId ? runId : "-"}
             </Typography>
           </Box>
@@ -100,16 +101,16 @@ export default function ResultsDialog({ open, runId, onClose, onOpenWorkbench })
       </DialogTitle>
       <DialogContent dividers>
         {error && (
-          <Typography sx={{ color: "rgba(239, 68, 68, 0.9)", mb: 1 }} role="alert">
+          <Typography sx={{ color: tk.state.dangerFg, mb: 1 }} role="alert">
             {error}
           </Typography>
         )}
 
-        {loading && <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>Loading...</Typography>}
+        {loading && <Typography sx={{ color: tk.text.secondary }}>Loading...</Typography>}
 
         {runDetail && !hasFullDetail ? (
           <Box sx={{ mb: 2, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }}>
-            <Typography sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.8125rem" }}>
+            <Typography sx={{ color: tk.text.secondary, fontSize: "0.8125rem" }}>
               Compact summary (no per-case result blobs). Load full run for complete JSON if needed.
             </Typography>
             {runDetail.full_run_blocked ? (
@@ -125,18 +126,18 @@ export default function ResultsDialog({ open, runId, onClose, onOpenWorkbench })
         ) : null}
 
         {runDetail && hasFullDetail ? (
-          <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.75rem", mb: 1 }}>
+          <Typography sx={{ color: tk.text.muted, fontSize: "0.75rem", mb: 1 }}>
             Full run payload loaded.
           </Typography>
         ) : null}
 
         {runDetail && terminalSummary && (
           <Box sx={{ mb: 2, display: "flex", flexDirection: "column", gap: 2 }}>
-            <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>
+            <Typography sx={{ color: tk.text.secondary }}>
               status: {runDetail.status} | completed: {runDetail.progress?.completed ?? 0}/{runDetail.progress?.total ?? 0}{" "}
               ({(runDetail.progress?.percent ?? 0).toFixed(1)}%)
             </Typography>
-            <Typography sx={{ mt: 0.5, color: "rgba(255,255,255,0.6)" }}>
+            <Typography sx={{ mt: 0.5, color: tk.text.secondary }}>
               family: {benchmarkFamily}
               {benchmarkFamily === "layer2"
                 ? ` | avg layer2 recall ratio: ${terminalSummary.avg_layer2_recall_ratio.toFixed(3)}`

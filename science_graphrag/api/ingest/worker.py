@@ -144,19 +144,18 @@ def _execute_single_ingest(job_id: str, temp_path: Path, settings: Settings) -> 
             ws_tag = _ingest_workspace_tag(job.workspace_id)
             try:
                 with factory() as session:
-                    with session.begin():
-                        doc_id, work_id = ingest_document(
-                            temp_path,
-                            settings=settings,
-                            session=session,
-                            skip_existing_sha=False,
-                            force_new_document=False,
-                            ingest_workspace_ids=ws_tag,
-                            job_id=job_id,
-                            parent_job_id=job.parent_job_id,
-                            stage_session_factory=registry._session_factory,  # noqa: SLF001
-                            stage_event_publisher=stage_publisher,
-                        )
+                    doc_id, work_id = ingest_document(
+                        temp_path,
+                        settings=settings,
+                        session=session,
+                        skip_existing_sha=False,
+                        force_new_document=False,
+                        ingest_workspace_ids=ws_tag,
+                        job_id=job_id,
+                        parent_job_id=job.parent_job_id,
+                        stage_session_factory=registry._session_factory,  # noqa: SLF001
+                        stage_event_publisher=stage_publisher,
+                    )
             except SkippedDuplicateIngestError as dup:
                 skipped = True
                 doc_id = dup.document_id

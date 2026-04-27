@@ -64,6 +64,18 @@ export function resolveEffectiveAppearanceMode(preference, prefersDark = prefers
 }
 
 /**
+ * Resolves effective light/dark from a raw localStorage string, matching
+ * `index.html` inline boot (roadmap §10.5) and {@link readAppearancePreference} + {@link resolveEffectiveAppearanceMode}.
+ *
+ * @param {string | null | undefined} rawStored
+ * @param {boolean} prefersDarkMatches
+ * @returns {"dark"|"light"}
+ */
+export function resolveEffectiveFromStoredRaw(rawStored, prefersDarkMatches) {
+  return resolveEffectiveAppearanceMode(normalizeAppearancePreference(rawStored), prefersDarkMatches);
+}
+
+/**
  * @param {"dark"|"light"} effective
  */
 export function applyDocumentColorScheme(effective) {

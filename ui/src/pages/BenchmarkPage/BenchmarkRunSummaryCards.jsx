@@ -1,24 +1,22 @@
 import React from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 function SummaryCard({ label, value, tone = "default" }) {
+  const tk = useTheme().appTokens;
   const accent =
-    tone === "danger"
-      ? "rgba(239, 68, 68, 0.8)"
-      : tone === "primary"
-        ? "rgba(129, 140, 248, 0.95)"
-        : "rgba(255,255,255,0.9)";
+    tone === "danger" ? tk.state.dangerFg : tone === "primary" ? tk.accent.fg : tk.text.primary;
   return (
     <Box
       sx={{
-        border: "1px solid rgba(255,255,255,0.08)",
+        border: `1px solid ${tk.border.default}`,
         borderRadius: 1.5,
         padding: 1.5,
-        backgroundColor: "#1a1a1a",
+        backgroundColor: tk.surface.panel,
       }}
     >
-      <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.6)" }}>{label}</Typography>
+      <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary }}>{label}</Typography>
       <Typography sx={{ fontWeight: 600, color: accent }}>{value}</Typography>
     </Box>
   );

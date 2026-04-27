@@ -255,6 +255,12 @@ science-graphrag-chat-agent-roadmap \
 
 Артефакты: `summary.json` / `summary.md`, `workspace_audit.json`, per-case `cases/<case_id>/case_result.json` + `trace_audit.json`.
 
+**Заметки по окружению:**
+
+- Если в `.env` стоит `PHOENIX_TRACE_SCOPE=extraction_llm`, live harness **временно** переключает процесс на `full`, иначе `phoenix_trace_id` будет пустым (см. `summary.json` → `environment.PHOENIX_TRACE_SCOPE_before_harness`).
+- При отсутствии `ws-pilot-od` в Neo4j выполните `scripts/seed_benchmark_workspaces.py`, затем повторите audit.
+- Один автоматический **retry** кейса при транзиентных 502/503/504/429/timeout от провайдера LLM.
+
 ## Compare baseline vs current
 
 Для benchmark-driven цикла используйте comparator (падает при regressions):

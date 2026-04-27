@@ -1,8 +1,10 @@
 import React from "react";
 import { renderToString } from "react-dom/server";
+import { ThemeProvider } from "@mui/material/styles";
 import { describe, expect, it } from "vitest";
 
 import { I18nProvider } from "../../i18n/I18nContext.jsx";
+import { buildAppTheme } from "../../theme/buildAppTheme.js";
 import GraphTypeLegend from "./GraphTypeLegend.jsx";
 import {
   collectGraphComposition,
@@ -97,16 +99,21 @@ describe("collectGraphTypeLegendByKind", () => {
 
 describe("GraphTypeLegend SSR smoke", () => {
   it("renders node and edge type labels with counts", () => {
+    const theme = buildAppTheme("dark");
     const html = renderToString(
       React.createElement(
-        I18nProvider,
-        null,
-        React.createElement(GraphTypeLegend, {
-          graph: {
-            nodes: [{ id: "a", type: "Work", nodeKind: "WorkInternal" }],
-            edges: [{ source: "a", target: "a", type: "cites" }],
-          },
-        }),
+        ThemeProvider,
+        { theme },
+        React.createElement(
+          I18nProvider,
+          null,
+          React.createElement(GraphTypeLegend, {
+            graph: {
+              nodes: [{ id: "a", type: "Work", nodeKind: "WorkInternal" }],
+              edges: [{ source: "a", target: "a", type: "cites" }],
+            },
+          }),
+        ),
       ),
     );
     expect(html).toContain("Work (internal)");

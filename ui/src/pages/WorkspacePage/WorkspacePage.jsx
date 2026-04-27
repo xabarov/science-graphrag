@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Alert from "@mui/material/Alert";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
@@ -21,6 +22,7 @@ import { useWorkspacePageCore } from "./useWorkspacePageCore.jsx";
 export default function WorkspacePage() {
   const vm = useWorkspacePageCore();
   const { t } = vm;
+  const tk = useTheme().appTokens;
   const [dropOver, setDropOver] = useState(false);
 
   function onDragOverMain(e) {
@@ -59,7 +61,7 @@ export default function WorkspacePage() {
         minHeight: 0,
         display: "flex",
         flexDirection: "column",
-        outline: dropOver ? "1px dashed rgba(129,140,248,0.55)" : "none",
+        outline: dropOver ? `1px dashed ${tk.accent.softBorder}` : "none",
         outlineOffset: 2,
         borderRadius: dropOver ? 1 : 0,
         transition: "outline 0.12s ease",
@@ -98,18 +100,18 @@ export default function WorkspacePage() {
               width: "100%",
               p: 2.5,
               borderRadius: "6px",
-              border: "1px solid rgba(255,255,255,0.1)",
-              backgroundColor: "#141414",
+              border: `1px solid ${tk.border.strong}`,
+              backgroundColor: tk.surface.sidebar,
             }}
           >
-            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.88)", mb: 1.5 }}>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: tk.text.primary, mb: 1.5 }}>
               {vm.t("workspace.err.loadTitle")}
             </Typography>
             <Alert severity="error" sx={{ mb: 2, fontSize: "0.8125rem" }}>
               {vm.workspaceError}
             </Alert>
             {vm.workspaceErrorIsServer ? (
-              <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mb: 2, lineHeight: 1.55 }}>
+              <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary, mb: 2, lineHeight: 1.55 }}>
                 {vm.t("workspace.err.serverHint")}
               </Typography>
             ) : null}

@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { ThemeProvider } from "@mui/material/styles";
 
 import { I18nProvider } from "../../i18n/I18nContext.jsx";
+import { buildAppTheme } from "../../theme/buildAppTheme.js";
 
 vi.mock("react-pdf", () => ({
   Document: ({ children, loading }) =>
@@ -12,7 +13,7 @@ vi.mock("react-pdf", () => ({
   pdfjs: { GlobalWorkerOptions: { workerSrc: "" } },
 }));
 
-const theme = createTheme({ palette: { mode: "dark" } });
+const theme = buildAppTheme("dark");
 
 describe("PdfViewer", () => {
   it("renders document shell with mocked react-pdf", async () => {

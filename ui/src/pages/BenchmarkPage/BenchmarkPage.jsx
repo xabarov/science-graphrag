@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 
 import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
@@ -24,6 +25,7 @@ const TAB_BY_NAME = { launch: 0, workbench: 1, results: 2, compare: 3, cases: 4 
 
 export default function BenchmarkPage() {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const [tabIdx, setTabIdx] = useState(0);
@@ -85,10 +87,10 @@ export default function BenchmarkPage() {
           severity="info"
           sx={{
             fontSize: "0.8125rem",
-            backgroundColor: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            color: "rgba(255,255,255,0.9)",
-            "& .MuiAlert-icon": { color: "rgba(129, 140, 248, 0.95)" },
+            backgroundColor: tk.surface.subtle,
+            border: `1px solid ${tk.border.default}`,
+            color: tk.text.primary,
+            "& .MuiAlert-icon": { color: tk.accent.fg },
           }}
         >
           <Typography component="div" variant="body2" sx={{ fontSize: "0.8125rem", lineHeight: 1.5 }}>
@@ -97,7 +99,7 @@ export default function BenchmarkPage() {
         </Alert>
       </Box>
       <TrustSignalPanel />
-      <Box sx={{ padding: 2, borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+      <Box sx={{ padding: 2, borderBottom: `1px solid ${tk.border.default}` }}>
         <Tabs
           value={tabIdx}
           onChange={(e, v) => setTabIdx(v)}
@@ -106,7 +108,7 @@ export default function BenchmarkPage() {
           variant="scrollable"
           sx={{
             "& .MuiTab-root:focus-visible": {
-              outline: "2px solid rgba(129, 140, 248, 0.75)",
+              outline: `2px solid ${tk.accent.fg}`,
               outlineOffset: 2,
             },
           }}

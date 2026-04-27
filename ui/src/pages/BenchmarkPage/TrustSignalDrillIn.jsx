@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import TrustAdvisoryFailuresTable from "./TrustAdvisoryFailuresTable.jsx";
 import TrustConsistencyWarningsList from "./TrustConsistencyWarningsList.jsx";
@@ -11,20 +12,20 @@ import {
   collectValidationStatusRows,
 } from "./trustSignalDrillInHelpers.js";
 
-const sectionTitleSx = {
-  color: "rgba(255,255,255,0.7)",
-  fontSize: "0.7rem",
-  fontWeight: 600,
-  textTransform: "uppercase",
-  letterSpacing: "0.04em",
-  mb: 0.5,
-};
-
 /**
  * Decision-gate drill-in: consistency warnings, validation_status_aggregate per member, advisory failures.
  * @param {{ criteria?: Record<string, unknown>, trustByFamily?: Record<string, unknown>, t: (key: string) => string }} props
  */
 export default function TrustSignalDrillIn({ criteria, trustByFamily, t }) {
+  const tk = useTheme().appTokens;
+  const sectionTitleSx = {
+    color: tk.text.secondary,
+    fontSize: "0.7rem",
+    fontWeight: 600,
+    textTransform: "uppercase",
+    letterSpacing: "0.04em",
+    mb: 0.5,
+  };
   const warningLines = useMemo(() => collectConsistencyWarningLines(trustByFamily), [trustByFamily]);
   const validationRows = useMemo(() => collectValidationStatusRows(trustByFamily), [trustByFamily]);
   const advisoryRows = useMemo(() => collectAdvisoryFailureRows(criteria), [criteria]);

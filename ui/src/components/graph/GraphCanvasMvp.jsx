@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import GraphCanvasViewToolbar from "./GraphCanvasViewToolbar.jsx";
 import { useI18n } from "../../i18n/useI18n.js";
@@ -70,6 +71,9 @@ export default function GraphCanvasMvp({
   centerRequestNodeId = "",
 }) {
   const { t } = useI18n();
+  const theme = useTheme();
+  const appearance = theme.palette.mode === "light" ? "light" : "dark";
+  const canvasBg = theme.appTokens.surface.app;
   const resolveEdgeLabel = useCallback((e) => localizeEdgeType(e, t), [t]);
   const resolveNodeCanvasLabel = useCallback(
     (node) => (String(node.nodeKind) === "Aggregator" ? localizeAggregatorTitle(node, t) : null),
@@ -324,7 +328,7 @@ export default function GraphCanvasMvp({
     canvas.height = Math.floor(h * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = "#0a0a0a";
+    ctx.fillStyle = canvasBg;
     ctx.fillRect(0, 0, w, h);
     const positions = getPositionsForFrame();
     positionsRef.current = positions;
@@ -341,15 +345,19 @@ export default function GraphCanvasMvp({
     const edgeStyleMap = Object.fromEntries(
       graph.edges.map((edge) => [edge.id, { active: edge.id === selectedEdgeId || edge.id === input.hoveredEdgeId }]),
     );
-    drawEdges(ctx, graph.edges, nodeById, positions, transformRef.current, edgeStyleMap);
-    drawNodes(ctx, graph.nodes, positions, transformRef.current, nodeStyleMap);
+    const drawOpts = { appearance };
+    drawEdges(ctx, graph.edges, nodeById, positions, transformRef.current, edgeStyleMap, drawOpts);
+    drawNodes(ctx, graph.nodes, positions, transformRef.current, nodeStyleMap, drawOpts);
     drawLabels(ctx, graph.nodes, graph.edges, positions, transformRef.current, { ...nodeStyleMap, ...edgeStyleMap }, {
       resolveEdgeLabel,
       resolveNodeCanvasLabel,
       edgeLabelMode,
       edgeCountForAdaptive: graph.edges.length,
+      appearance,
     });
   }, [
+    appearance,
+    canvasBg,
     edgeLabelMode,
     getPositionsForFrame,
     getViewportDims,

@@ -8,6 +8,7 @@ import {
   normalizeAppearancePreference,
   readAppearancePreference,
   resolveEffectiveAppearanceMode,
+  resolveEffectiveFromStoredRaw,
   writeAppearancePreference,
 } from "./appearanceMode.js";
 
@@ -75,6 +76,23 @@ describe("localStorage integration", () => {
   it("invalid stored value normalizes to system on read", () => {
     store[APPEARANCE_STORAGE_KEY] = "bogus";
     expect(readAppearancePreference()).toBe("system");
+  });
+});
+
+describe("resolveEffectiveFromStoredRaw (index.html boot parity)", () => {
+  /** Mirrors inline logic in ui/index.html (trim + valid set) for regression checks. */
+  function inlineBootEffective(raw, prefersDark) {
+    const s = raw == null ? "" : String(raw).trim();
+    const pref = s === "dark" || s === "light" || s === "system" ? s : "system";
+    return pref === "dark" ? "dark" : pref === "light" ? "light" : prefersDark ? "dark" : "light";
+  }
+
+  it("matches index.html inline script for sample raw values", () => {
+    for (const prefersDark of [true, false]) {
+      for (const raw of [null, "", "bogus", "system", "dark", "light", "  dark  "]) {
+        expect(resolveEffectiveFromStoredRaw(raw, prefersDark)).toBe(inlineBootEffective(raw, prefersDark));
+      }
+    }
   });
 });
 

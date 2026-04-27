@@ -1,0 +1,930 @@
+{
+  "case_spec": {
+    "case_id": "relation_cites",
+    "roadmap_ref": "§2.1 item 3 / §2.3 relation_tracing",
+    "workspace_id": "ws-pilot-od",
+    "answer_class_hint": "relation_tracing",
+    "question": "What papers in this workspace cite other papers? Describe one citation link you can verify from the graph.",
+    "expect": {
+      "answer_classes_allowed": [
+        "relation_tracing",
+        "grounded_explanation"
+      ],
+      "strict_answer_class": false,
+      "tools_any_of": [
+        "cypher_query",
+        "edge_search",
+        "entity_search",
+        "paper_lookup",
+        "workspace_list_papers"
+      ],
+      "tools_none_of": [],
+      "require_phoenix_trace_id": true,
+      "require_tool_trace": true,
+      "min_non_final_tool_calls": 1
+    }
+  },
+  "run": {
+    "case_id": "relation_cites",
+    "workspace_id": "ws-pilot-od",
+    "thread_id": null,
+    "turns": [
+      {
+        "question": "What papers in this workspace cite other papers? Describe one citation link you can verify from the graph.",
+        "output": {
+          "answer": "",
+          "citations": [],
+          "tool_trace": [
+            {
+              "step": 0,
+              "tool": "coordinator_gate",
+              "args_summary": {
+                "conversation_intent": "research_task",
+                "tool_policy": "allow_tools",
+                "route_hint": "retrieval_agent",
+                "reason": "explicit_research_signal",
+                "suggested_answer_class": "relation_tracing",
+                "confidence": "1.0",
+                "classifier": "deterministic"
+              },
+              "row_count": 0,
+              "duration_ms": 5,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": -1,
+              "tool": "route_to_specialist",
+              "args_summary": {
+                "from": "supervisor",
+                "to": "retrieval_agent",
+                "budget_left": 8
+              },
+              "row_count": 0,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": -1,
+              "tool": "route_to_specialist",
+              "args_summary": {
+                "from": "supervisor",
+                "to": "graph_agent",
+                "budget_left": 6
+              },
+              "row_count": 0,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": -1,
+              "tool": "route_to_specialist",
+              "args_summary": {
+                "from": "supervisor",
+                "to": "graph_agent",
+                "budget_left": 5
+              },
+              "row_count": 0,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": -1,
+              "tool": "route_to_specialist",
+              "args_summary": {
+                "from": "supervisor",
+                "to": "graph_agent",
+                "budget_left": 4
+              },
+              "row_count": 0,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": -1,
+              "tool": "route_to_specialist",
+              "args_summary": {
+                "from": "supervisor",
+                "to": "graph_agent",
+                "budget_left": 3
+              },
+              "row_count": 0,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": -1,
+              "tool": "route_to_specialist",
+              "args_summary": {
+                "from": "supervisor",
+                "to": "graph_agent",
+                "budget_left": 2
+              },
+              "row_count": 0,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": -1,
+              "tool": "route_to_specialist",
+              "args_summary": {
+                "from": "supervisor",
+                "to": "graph_agent",
+                "budget_left": 1
+              },
+              "row_count": 0,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": -1,
+              "tool": "route_to_specialist",
+              "args_summary": {
+                "from": "supervisor",
+                "to": "writer_agent",
+                "reason": "budget_exhausted"
+              },
+              "row_count": 0,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": 1,
+              "tool": "workspace_list_papers",
+              "args_summary": {
+                "workspace_id": "ws-pilot-od"
+              },
+              "row_count": 1,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            }
+          ],
+          "answer_class": "inventory",
+          "evidence_summary": "10 trace step(s)",
+          "warnings": [],
+          "inventory": {
+            "papers": [
+              {
+                "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+                "title": "You Only Look Once: Unified, Real-Time Object Detection",
+                "year": null,
+                "doi": ""
+              }
+            ]
+          },
+          "relation_trace": null,
+          "quote_candidates": null,
+          "idea_suggestions": null,
+          "bibliography": null,
+          "debug_events": [
+            {
+              "conversation_intent": "research_task",
+              "tool_policy": "allow_tools",
+              "route_hint": "retrieval_agent",
+              "reason": "explicit_research_signal",
+              "suggested_answer_class": "relation_tracing",
+              "confidence": 1.0,
+              "classifier": "deterministic",
+              "type": "intent_classified",
+              "source": "coordinator_gate_v0",
+              "answer_class": "relation_tracing"
+            },
+            {
+              "type": "tool_search_result",
+              "specialist": "retrieval_agent",
+              "tools": [
+                "workspace_list_papers",
+                "paper_lookup",
+                "idea_search",
+                "summarize_workspace"
+              ],
+              "reason": "rules",
+              "top_score": 5.5,
+              "skipped": false
+            },
+            {
+              "type": "tool_search_result",
+              "specialist": "graph_agent",
+              "tools": [
+                "cypher_query",
+                "entity_search",
+                "edge_search"
+              ],
+              "reason": "rules",
+              "top_score": 4.5,
+              "skipped": false
+            },
+            {
+              "type": "tool_search_result",
+              "specialist": "graph_agent",
+              "tools": [
+                "cypher_query",
+                "entity_search",
+                "edge_search"
+              ],
+              "reason": "rules",
+              "top_score": 4.5,
+              "skipped": false
+            },
+            {
+              "type": "tool_search_result",
+              "specialist": "graph_agent",
+              "tools": [
+                "cypher_query",
+                "entity_search",
+                "edge_search"
+              ],
+              "reason": "rules",
+              "top_score": 4.5,
+              "skipped": false
+            },
+            {
+              "type": "tool_search_result",
+              "specialist": "graph_agent",
+              "tools": [
+                "cypher_query",
+                "entity_search",
+                "edge_search"
+              ],
+              "reason": "rules",
+              "top_score": 4.5,
+              "skipped": false
+            },
+            {
+              "type": "tool_search_result",
+              "specialist": "graph_agent",
+              "tools": [
+                "cypher_query",
+                "entity_search",
+                "edge_search"
+              ],
+              "reason": "rules",
+              "top_score": 4.5,
+              "skipped": false
+            },
+            {
+              "type": "tool_search_result",
+              "specialist": "graph_agent",
+              "tools": [
+                "cypher_query",
+                "entity_search",
+                "edge_search"
+              ],
+              "reason": "rules",
+              "top_score": 4.5,
+              "skipped": false
+            },
+            {
+              "type": "tool_search_result",
+              "specialist": "writer_agent",
+              "tools": null,
+              "reason": "writer_minimal_set",
+              "top_score": null,
+              "skipped": true,
+              "writer_mode": "normal"
+            }
+          ],
+          "phoenix_trace_id": "c6ea4c935bb4859dd580eb1288caeb1f",
+          "thread_id": null
+        }
+      }
+    ],
+    "final_output": {
+      "answer": "",
+      "citations": [],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "conversation_intent": "research_task",
+            "tool_policy": "allow_tools",
+            "route_hint": "retrieval_agent",
+            "reason": "explicit_research_signal",
+            "suggested_answer_class": "relation_tracing",
+            "confidence": "1.0",
+            "classifier": "deterministic"
+          },
+          "row_count": 0,
+          "duration_ms": 5,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": -1,
+          "tool": "route_to_specialist",
+          "args_summary": {
+            "from": "supervisor",
+            "to": "retrieval_agent",
+            "budget_left": 8
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": -1,
+          "tool": "route_to_specialist",
+          "args_summary": {
+            "from": "supervisor",
+            "to": "graph_agent",
+            "budget_left": 6
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": -1,
+          "tool": "route_to_specialist",
+          "args_summary": {
+            "from": "supervisor",
+            "to": "graph_agent",
+            "budget_left": 5
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": -1,
+          "tool": "route_to_specialist",
+          "args_summary": {
+            "from": "supervisor",
+            "to": "graph_agent",
+            "budget_left": 4
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": -1,
+          "tool": "route_to_specialist",
+          "args_summary": {
+            "from": "supervisor",
+            "to": "graph_agent",
+            "budget_left": 3
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": -1,
+          "tool": "route_to_specialist",
+          "args_summary": {
+            "from": "supervisor",
+            "to": "graph_agent",
+            "budget_left": 2
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": -1,
+          "tool": "route_to_specialist",
+          "args_summary": {
+            "from": "supervisor",
+            "to": "graph_agent",
+            "budget_left": 1
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": -1,
+          "tool": "route_to_specialist",
+          "args_summary": {
+            "from": "supervisor",
+            "to": "writer_agent",
+            "reason": "budget_exhausted"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_list_papers",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "answer_class": "inventory",
+      "evidence_summary": "10 trace step(s)",
+      "warnings": [],
+      "inventory": {
+        "papers": [
+          {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "title": "You Only Look Once: Unified, Real-Time Object Detection",
+            "year": null,
+            "doi": ""
+          }
+        ]
+      },
+      "relation_trace": null,
+      "quote_candidates": null,
+      "idea_suggestions": null,
+      "bibliography": null,
+      "debug_events": [
+        {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "explicit_research_signal",
+          "suggested_answer_class": "relation_tracing",
+          "confidence": 1.0,
+          "classifier": "deterministic",
+          "type": "intent_classified",
+          "source": "coordinator_gate_v0",
+          "answer_class": "relation_tracing"
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "retrieval_agent",
+          "tools": [
+            "workspace_list_papers",
+            "paper_lookup",
+            "idea_search",
+            "summarize_workspace"
+          ],
+          "reason": "rules",
+          "top_score": 5.5,
+          "skipped": false
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "graph_agent",
+          "tools": [
+            "cypher_query",
+            "entity_search",
+            "edge_search"
+          ],
+          "reason": "rules",
+          "top_score": 4.5,
+          "skipped": false
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "graph_agent",
+          "tools": [
+            "cypher_query",
+            "entity_search",
+            "edge_search"
+          ],
+          "reason": "rules",
+          "top_score": 4.5,
+          "skipped": false
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "graph_agent",
+          "tools": [
+            "cypher_query",
+            "entity_search",
+            "edge_search"
+          ],
+          "reason": "rules",
+          "top_score": 4.5,
+          "skipped": false
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "graph_agent",
+          "tools": [
+            "cypher_query",
+            "entity_search",
+            "edge_search"
+          ],
+          "reason": "rules",
+          "top_score": 4.5,
+          "skipped": false
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "graph_agent",
+          "tools": [
+            "cypher_query",
+            "entity_search",
+            "edge_search"
+          ],
+          "reason": "rules",
+          "top_score": 4.5,
+          "skipped": false
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "graph_agent",
+          "tools": [
+            "cypher_query",
+            "entity_search",
+            "edge_search"
+          ],
+          "reason": "rules",
+          "top_score": 4.5,
+          "skipped": false
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "writer_agent",
+          "tools": null,
+          "reason": "writer_minimal_set",
+          "top_score": null,
+          "skipped": true,
+          "writer_mode": "normal"
+        }
+      ],
+      "phoenix_trace_id": "c6ea4c935bb4859dd580eb1288caeb1f",
+      "thread_id": null
+    },
+    "tool_trace": [
+      {
+        "step": 0,
+        "tool": "coordinator_gate",
+        "args_summary": {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "explicit_research_signal",
+          "suggested_answer_class": "relation_tracing",
+          "confidence": "1.0",
+          "classifier": "deterministic"
+        },
+        "row_count": 0,
+        "duration_ms": 5,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "retrieval_agent",
+          "budget_left": 8
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "graph_agent",
+          "budget_left": 6
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "graph_agent",
+          "budget_left": 5
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "graph_agent",
+          "budget_left": 4
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "graph_agent",
+          "budget_left": 3
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "graph_agent",
+          "budget_left": 2
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "graph_agent",
+          "budget_left": 1
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "writer_agent",
+          "reason": "budget_exhausted"
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 1,
+        "tool": "workspace_list_papers",
+        "args_summary": {
+          "workspace_id": "ws-pilot-od"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      }
+    ],
+    "duration_ms": 13218,
+    "metrics": {
+      "passed": true,
+      "reasons": [
+        "soft:answer_class:inventory_not_in_['relation_tracing', 'grounded_explanation']"
+      ],
+      "diagnostics": {
+        "tool_call_count": 10,
+        "non_final_tool_call_count": 10,
+        "first_non_final_tool": "coordinator_gate",
+        "unique_tools": [
+          "coordinator_gate",
+          "route_to_specialist",
+          "workspace_list_papers"
+        ],
+        "repeated_non_final_tools": [
+          "route_to_specialist"
+        ],
+        "citation_count": 0,
+        "citations_missing_work_id": 0,
+        "answer_class": "inventory",
+        "phoenix_trace_id_present": true,
+        "warnings_count": 0,
+        "has_bibliography_block": false,
+        "bibliography_entry_count": 0,
+        "bibliography_filtered_work_ids_count": 0,
+        "has_inventory_block": true,
+        "has_quote_candidates": false,
+        "has_relation_trace": false,
+        "has_idea_suggestions": false
+      }
+    },
+    "wall_clock_seconds": 13.219,
+    "case_path": "tests/fixtures/benchmarks/chat_agent_roadmap/cases/05_relation_cites.json"
+  },
+  "trace_audit": {
+    "case_id": "relation_cites",
+    "phoenix_trace_id": "c6ea4c935bb4859dd580eb1288caeb1f",
+    "phoenix_ui_hint": "http://127.0.0.1:16006/traces/c6ea4c935bb4859dd580eb1288caeb1f",
+    "tool_trace": [
+      {
+        "step": 0,
+        "tool": "coordinator_gate",
+        "args_summary": {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "explicit_research_signal",
+          "suggested_answer_class": "relation_tracing",
+          "confidence": "1.0",
+          "classifier": "deterministic"
+        },
+        "row_count": 0,
+        "duration_ms": 5,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "retrieval_agent",
+          "budget_left": 8
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "graph_agent",
+          "budget_left": 6
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "graph_agent",
+          "budget_left": 5
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "graph_agent",
+          "budget_left": 4
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "graph_agent",
+          "budget_left": 3
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "graph_agent",
+          "budget_left": 2
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "graph_agent",
+          "budget_left": 1
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "writer_agent",
+          "reason": "budget_exhausted"
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 1,
+        "tool": "workspace_list_papers",
+        "args_summary": {
+          "workspace_id": "ws-pilot-od"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      }
+    ],
+    "diagnostics": {
+      "tool_call_count": 10,
+      "non_final_tool_call_count": 10,
+      "first_non_final_tool": "coordinator_gate",
+      "unique_tools": [
+        "coordinator_gate",
+        "route_to_specialist",
+        "workspace_list_papers"
+      ],
+      "repeated_non_final_tools": [
+        "route_to_specialist"
+      ],
+      "citation_count": 0,
+      "citations_missing_work_id": 0,
+      "answer_class": "inventory",
+      "phoenix_trace_id_present": true,
+      "warnings_count": 0,
+      "has_bibliography_block": false,
+      "bibliography_entry_count": 0,
+      "bibliography_filtered_work_ids_count": 0,
+      "has_inventory_block": true,
+      "has_quote_candidates": false,
+      "has_relation_trace": false,
+      "has_idea_suggestions": false
+    },
+    "metrics": {
+      "passed": true,
+      "reasons": [
+        "soft:answer_class:inventory_not_in_['relation_tracing', 'grounded_explanation']"
+      ],
+      "diagnostics": {
+        "tool_call_count": 10,
+        "non_final_tool_call_count": 10,
+        "first_non_final_tool": "coordinator_gate",
+        "unique_tools": [
+          "coordinator_gate",
+          "route_to_specialist",
+          "workspace_list_papers"
+        ],
+        "repeated_non_final_tools": [
+          "route_to_specialist"
+        ],
+        "citation_count": 0,
+        "citations_missing_work_id": 0,
+        "answer_class": "inventory",
+        "phoenix_trace_id_present": true,
+        "warnings_count": 0,
+        "has_bibliography_block": false,
+        "bibliography_entry_count": 0,
+        "bibliography_filtered_work_ids_count": 0,
+        "has_inventory_block": true,
+        "has_quote_candidates": false,
+        "has_relation_trace": false,
+        "has_idea_suggestions": false
+      }
+    }
+  }
+}

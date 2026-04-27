@@ -1,4 +1,5 @@
 import React, { useMemo, useCallback } from "react";
+import { useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Tabs from "@mui/material/Tabs";
@@ -11,19 +12,6 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useI18n } from "../../../i18n/useI18n.js";
 import CaseGraphExpectationsPanel from "./CaseGraphExpectationsPanel.jsx";
 
-const articlePreSx = {
-  whiteSpace: "pre-wrap",
-  wordBreak: "break-word",
-  border: "1px solid rgba(255,255,255,0.08)",
-  borderRadius: 2,
-  padding: 2,
-  maxHeight: 520,
-  overflow: "auto",
-  background: "rgba(255,255,255,0.02)",
-  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-  fontSize: "12px",
-};
-
 export default function CaseDetailFixtureTabs({
   open,
   caseId,
@@ -35,6 +23,22 @@ export default function CaseDetailFixtureTabs({
   goldTabLabel,
 }) {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
+  const articlePreSx = useMemo(
+    () => ({
+      whiteSpace: "pre-wrap",
+      wordBreak: "break-word",
+      border: `1px solid ${tk.border.default}`,
+      borderRadius: 2,
+      padding: 2,
+      maxHeight: 520,
+      overflow: "auto",
+      background: tk.control.outlinedBg,
+      fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+      fontSize: "12px",
+    }),
+    [tk],
+  );
 
   const jsonString = useMemo(() => {
     if (!detail?.gold) return "";
@@ -72,7 +76,7 @@ export default function CaseDetailFixtureTabs({
 
       {activeTabIdx === 0 && (
         <Box sx={{ mt: 2 }}>
-          <Typography sx={{ color: "rgba(255,255,255,0.6)", mb: 1 }}>
+          <Typography sx={{ color: tk.text.secondary, mb: 1 }}>
             {t("benchmark.caseDialog.articlePreviewHint")}
           </Typography>
           <Box component="pre" sx={articlePreSx}>
@@ -83,7 +87,7 @@ export default function CaseDetailFixtureTabs({
 
       {activeTabIdx === 1 && (
         <Box sx={{ mt: 2 }}>
-          <Typography sx={{ color: "rgba(255,255,255,0.6)", mb: 1 }}>
+          <Typography sx={{ color: tk.text.secondary, mb: 1 }}>
             {t("benchmark.caseDialog.goldPayloadHint")}
           </Typography>
           <Accordion defaultExpanded={true}>

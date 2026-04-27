@@ -1,12 +1,13 @@
 /** @vitest-environment jsdom */
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { ThemeProvider } from "@mui/material/styles";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 
+import { buildAppTheme } from "../../theme/buildAppTheme.js";
 import { ChatComposer } from "./ChatComposer.jsx";
 
-const theme = createTheme();
+const theme = buildAppTheme("dark");
 
 afterEach(() => {
   cleanup();

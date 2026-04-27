@@ -1,6 +1,6 @@
 # Chat agent roadmap — benchmark workspace + trace audit (2026-04-27)
 
-**Статус:** evidence capture v1 (harness + pre-flight audit + artifact layout).  
+**Статус:** evidence capture v1 + **live baseline** `eval/results/chat-agent-roadmap-live-2026-04-27` (2026-04-27, all cases green).  
 **Companion:** [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md), [`eval/README.md`](../../eval/README.md).
 
 ## 1. Baseline benchmark workspace
@@ -17,6 +17,14 @@
 - встроенный шаг в `science-graphrag-chat-agent-roadmap` (по умолчанию **не** `--skip-audit`).
 
 Статусы: `ready` | `degraded` | `blocked`. При `blocked` runner завершается с кодом **3** (не путать с fail метрик кейса = **1**).
+
+Если audit возвращает `workspace_not_found_in_neo4j`, один раз выполните идемпотентный сид из корня репозитория:
+
+```bash
+.venv/bin/python scripts/seed_benchmark_workspaces.py
+```
+
+(поднимает `ws-pilot-od` и др. из `tests/fixtures/benchmarks/retrieval/workspace_scoped/_workspaces.json`, затем `backfill_workspace_payloads` для Qdrant).
 
 ## 2. Harness и артефакты
 
@@ -39,7 +47,11 @@ Suite-level:
 - `summary.json` / `summary.md`
 - `workspace_audit.json` (если audit не пропущен)
 
-### 2.1 Mock sample (CI-friendly)
+### 2.2 Phoenix scope в live harness
+
+В `.env` часто задают `PHOENIX_TRACE_SCOPE=extraction_llm` (ingest-only спаны). Тогда **все** `chain_span` вне белого списка становятся noop и `phoenix_trace_id` в ответе агента пустой — harness **принудительно** выставляет `PHOENIX_TRACE_SCOPE=full` на время процесса CLI (в `summary.json` → `environment.PHOENIX_TRACE_SCOPE_before_harness`).
+
+### 2.3 Mock sample (CI-friendly)
 
 Детерминированный прогон без LLM и без стора:
 
@@ -51,6 +63,18 @@ science-graphrag-chat-agent-roadmap \
 ```
 
 Закоммиченный пример выхода: `eval/results/chat-agent-roadmap-mock-2026-04-27/` (генерируется командой выше).
+
+### 2.4 Live baseline (OpenRouter + локальные сторы)
+
+Команда (после `seed_benchmark_workspaces` при необходимости):
+
+```bash
+science-graphrag-chat-agent-roadmap \
+  --fixtures tests/fixtures/benchmarks/chat_agent_roadmap \
+  --out eval/results/chat-agent-roadmap-live-2026-04-27
+```
+
+Артефакты: каталог выше; `summary.json` с `all_passed: true` на прогоне 2026-04-27.
 
 ## 3. Suite coverage vs roadmap §2 / §2.3
 
@@ -94,20 +118,36 @@ science-graphrag-chat-agent-roadmap \
 
 Флаг `--fetch-phoenix` вызывает best-effort GET к нескольким путям Phoenix UI/API (`PHOENIX_UI_BASE_URL`, default `http://127.0.0.1:16006`). Результат **не гарантирован** между версиями Phoenix — это дополнительный артефакт, а не gate CI.
 
-## 5. Findings (mock / structural only)
+## 5. Findings
 
-На **mock-runtime** LLM-траектории нет; подтверждается только:
+### 5.1 Mock / CI
 
-- wiring runner → метрики → артефакты;
-- parametrize по всем кейсам в pytest (`tests/eval/test_chat_agent_roadmap_metrics.py`).
+На **mock-runtime** LLM-траектории нет; подтверждается wiring runner → метрики → артефакты и pytest `tests/eval/test_chat_agent_roadmap_metrics.py`.
 
-**Live findings** нужно записывать сюда после прогона на `ready` workspace (не автогенерировать в CI без ключей).
+### 5.2 Live baseline (`eval/results/chat-agent-roadmap-live-2026-04-27`)
 
-### 5.1 Рекомендованный remediation backlog (плейсхолдер)
+**Workspace audit:** `ready` — одна работа YOLOv1, 4 автора, 34 исходящих `CITES`, 36 чанков в Qdrant с `workspace_ids`.
 
-1. После первого live suite: сузить `tools_any_of` там, где агент стабильно выбирает один инструмент.
-2. Добавить optional **strict** tier JSON рядом с текущими кейсами для nightly.
-3. Расширить `trace_audit` ссылкой на конкретный project в Phoenix, если используется не default UI path.
+**Модель (metadata suite):** `mistralai/mistral-small-3.2-24b-instruct` @ OpenRouter (см. `summary.json` → `benchmark_run_metadata`).
+
+| case_id | Metrics gate | Уникальные tools (кроме служебных маршрутов) | Phoenix id (prefix) | Классификация trace vs intent |
+|---------|--------------|-----------------------------------------------|---------------------|--------------------------------|
+| `inventory_papers` | PASS | `workspace_list_papers` | `8f33d9aa33b7` | **OK** — inventory + list. |
+| `authors_fact_lookup` | PASS | `paper_lookup`, `paper_counts`, `paper_authors` | `8b8593efeb28` | **OK** — fact lookup stack. |
+| `bibliography_gost` | PASS | `summarize_workspace`, `format_bibliography_gost` | `fd8c6734480e` | **OK** — GOST formatter вызван. |
+| `quote_detection` | PASS | `paper_quote_search` | `6ec40693db9a` | **OK** — quote tool. |
+| `relation_cites` | PASS (soft) | `workspace_list_papers` (после серии `route_to_specialist`, в т.ч. попытка `graph_agent`, затем **budget_exhausted** → writer) | `c6ea4c935bb4` | **Agent logic (soft)** — вопрос про граф/cites, финальный `answer_class` = `inventory`, доменных graph tools нет в `tool_trace`; бюджет шагов исчерпан до полезного graph-вызова. Gate зелёный из‑за `strict_answer_class: false`. Для nightly: strict answer class и/или отдельный strict-tier кейс. |
+| `ideation_workspace` | PASS | `idea_search`, `paper_lookup`, `paper_quote_search` | `c78e97aeb284` | **OK** — идеи + обзор источников. |
+| `multi_turn_clarify` | PASS | `workspace_list_papers`, `paper_authors`, `session_init` | `8dd43d4c6aee` | **OK** — multi-turn + session. |
+
+**Инфраструктура:** на одном из прогонов OpenRouter вернул **502** с телом `BadRequestError` на кейсе `relation_cites`; в harness добавлен **один повтор** при транзиентных кодах (502/503/504/429/timeout). После фикса `PHOENIX_TRACE_SCOPE` полный suite стабильно зелёный.
+
+### 5.3 Рекомендованный remediation backlog
+
+1. **Relation tracing:** усилить маршрутизацию/промпт или gold (`strict_answer_class`, обязательный `cypher_query`/`edge_search`) для вопросов про citations/graph — см. строку `relation_cites` выше.
+2. Сузить `tools_any_of` там, где траектория уже стабильна (inventory, bibliography).
+3. Optional **strict** tier JSON для nightly поверх текущих «мягких» кейсов.
+4. Расширить `trace_audit` project-specific URL в Phoenix при нестандартном deployment.
 
 ## 6. Reproducibility
 

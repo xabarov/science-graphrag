@@ -1,0 +1,827 @@
+{
+  "case_spec": {
+    "case_id": "ideation_workspace",
+    "roadmap_ref": "§2.1 item 6",
+    "workspace_id": "ws-pilot-od",
+    "answer_class_hint": "ideation",
+    "question": "Suggest one concrete follow-up experiment idea grounded in the themes of papers in this workspace.",
+    "expect": {
+      "answer_classes_allowed": [
+        "ideation",
+        "grounded_explanation"
+      ],
+      "strict_answer_class": false,
+      "tools_any_of": [
+        "idea_search",
+        "summarize_workspace",
+        "workspace_list_papers",
+        "paper_lookup"
+      ],
+      "tools_none_of": [],
+      "require_phoenix_trace_id": true,
+      "require_tool_trace": true,
+      "min_non_final_tool_calls": 1
+    }
+  },
+  "run": {
+    "case_id": "ideation_workspace",
+    "workspace_id": "ws-pilot-od",
+    "thread_id": null,
+    "turns": [
+      {
+        "question": "Suggest one concrete follow-up experiment idea grounded in the themes of papers in this workspace.",
+        "output": {
+          "answer": "Based on the themes of the papers in this workspace, particularly the focus on object detection and real-time performance, a concrete follow-up experiment idea could be:\n\n**Experiment Idea:**\nConduct a comparative study of YOLO's performance on diverse datasets, including the Picasso Dataset and the People-Art Dataset, to evaluate its generalization capabilities. This experiment could involve training YOLO on these datasets and comparing its detection accuracy and real-time performance against other state-of-the-art object detection models. Additionally, you could explore the impact of different training parameters, such as batch size and number of epochs, on the model's performance.\n\n**Citation:**\nRedmon, J., Divvala, S., Girshick, R., & Farhadi, A. (2016). You only look once: Unified, real-time object detection. In Proceedings of the IEEE conference on computer vision and pattern recognition (pp. 779-788).",
+          "citations": [
+            {
+              "title": "You Only Look Once: Unified, Real-Time Object Detection",
+              "year": 2016,
+              "authors": [
+                "Redmon, J.",
+                "Divvala, S.",
+                "Girshick, R.",
+                "Farhadi, A."
+              ]
+            }
+          ],
+          "tool_trace": [
+            {
+              "step": 0,
+              "tool": "coordinator_gate",
+              "args_summary": {
+                "conversation_intent": "research_task",
+                "tool_policy": "allow_tools",
+                "route_hint": "retrieval_agent",
+                "reason": "explicit_research_signal",
+                "suggested_answer_class": "ideation",
+                "confidence": "1.0",
+                "classifier": "deterministic"
+              },
+              "row_count": 0,
+              "duration_ms": 6,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": -1,
+              "tool": "route_to_specialist",
+              "args_summary": {
+                "from": "supervisor",
+                "to": "retrieval_agent",
+                "budget_left": 8
+              },
+              "row_count": 0,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": -1,
+              "tool": "route_to_specialist",
+              "args_summary": {
+                "from": "supervisor",
+                "to": "writer_agent",
+                "budget_left": 1
+              },
+              "row_count": 0,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": 1,
+              "tool": "idea_search",
+              "args_summary": {
+                "query": "experiment ideas",
+                "kinds": "['work']",
+                "workspace_id": "ws-pilot-od"
+              },
+              "row_count": 0,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": 2,
+              "tool": "idea_search",
+              "args_summary": {
+                "query": "experiment ideas",
+                "kinds": "['chunk']",
+                "workspace_id": "ws-pilot-od"
+              },
+              "row_count": 5,
+              "duration_ms": 0,
+              "truncated": true,
+              "error": null
+            },
+            {
+              "step": 3,
+              "tool": "paper_lookup",
+              "args_summary": {
+                "workspace_id": "ws-pilot-od",
+                "query": "YOLO",
+                "limit": "1"
+              },
+              "row_count": 1,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": 4,
+              "tool": "paper_quote_search",
+              "args_summary": {
+                "workspace_id": "ws-pilot-od",
+                "query": "experiment ideas",
+                "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+              },
+              "row_count": null,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": "Error: paper_quote_search is not a valid tool, try one of [workspace_list_papers, paper_lookup, idea_search, summarize_workspace]."
+            },
+            {
+              "step": 5,
+              "tool": "idea_search",
+              "args_summary": {
+                "query": "experiment ideas",
+                "kinds": "['work']",
+                "workspace_id": "ws-pilot-od"
+              },
+              "row_count": 0,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": 6,
+              "tool": "idea_search",
+              "args_summary": {
+                "query": "experiment ideas",
+                "kinds": "['chunk']",
+                "workspace_id": "ws-pilot-od"
+              },
+              "row_count": 5,
+              "duration_ms": 0,
+              "truncated": true,
+              "error": null
+            },
+            {
+              "step": 7,
+              "tool": "final_answer",
+              "args_summary": {
+                "answer": "Based on the themes of the papers in this workspace, particularly the focus on object detection and real-time performance, a concrete follow-up experiment idea could be:\n\n**Experiment Idea:**\nConduct ",
+                "citations": "[{'title': 'You Only Look Once: Unified, Real-Time Object Detection', 'year': 2016, 'authors': ['Redmon, J.', 'Divvala, S.', 'Girshick, R.', 'Farhadi, A.']}]"
+              },
+              "row_count": null,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            }
+          ],
+          "answer_class": "quote_extraction",
+          "evidence_summary": "1 citation(s), 10 trace step(s)",
+          "warnings": [
+            "no_quote_found"
+          ],
+          "inventory": {
+            "paper_matches": [
+              {
+                "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+                "score": 1.5993027687072754,
+                "title": "You Only Look Once: Unified, Real-Time Object Detection",
+                "year": null
+              }
+            ]
+          },
+          "relation_trace": null,
+          "quote_candidates": null,
+          "idea_suggestions": null,
+          "bibliography": null,
+          "debug_events": [
+            {
+              "conversation_intent": "research_task",
+              "tool_policy": "allow_tools",
+              "route_hint": "retrieval_agent",
+              "reason": "explicit_research_signal",
+              "suggested_answer_class": "ideation",
+              "confidence": 1.0,
+              "classifier": "deterministic",
+              "type": "intent_classified",
+              "source": "coordinator_gate_v0",
+              "answer_class": "ideation"
+            },
+            {
+              "type": "tool_search_result",
+              "specialist": "retrieval_agent",
+              "tools": [
+                "workspace_list_papers",
+                "paper_lookup",
+                "idea_search",
+                "summarize_workspace"
+              ],
+              "reason": "rules",
+              "top_score": 5.5,
+              "skipped": false
+            },
+            {
+              "type": "tool_search_result",
+              "specialist": "writer_agent",
+              "tools": null,
+              "reason": "writer_minimal_set",
+              "top_score": null,
+              "skipped": true,
+              "writer_mode": "normal"
+            }
+          ],
+          "phoenix_trace_id": "c78e97aeb284f2952efbbb5d22368340",
+          "thread_id": null
+        }
+      }
+    ],
+    "final_output": {
+      "answer": "Based on the themes of the papers in this workspace, particularly the focus on object detection and real-time performance, a concrete follow-up experiment idea could be:\n\n**Experiment Idea:**\nConduct a comparative study of YOLO's performance on diverse datasets, including the Picasso Dataset and the People-Art Dataset, to evaluate its generalization capabilities. This experiment could involve training YOLO on these datasets and comparing its detection accuracy and real-time performance against other state-of-the-art object detection models. Additionally, you could explore the impact of different training parameters, such as batch size and number of epochs, on the model's performance.\n\n**Citation:**\nRedmon, J., Divvala, S., Girshick, R., & Farhadi, A. (2016). You only look once: Unified, real-time object detection. In Proceedings of the IEEE conference on computer vision and pattern recognition (pp. 779-788).",
+      "citations": [
+        {
+          "title": "You Only Look Once: Unified, Real-Time Object Detection",
+          "year": 2016,
+          "authors": [
+            "Redmon, J.",
+            "Divvala, S.",
+            "Girshick, R.",
+            "Farhadi, A."
+          ]
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "conversation_intent": "research_task",
+            "tool_policy": "allow_tools",
+            "route_hint": "retrieval_agent",
+            "reason": "explicit_research_signal",
+            "suggested_answer_class": "ideation",
+            "confidence": "1.0",
+            "classifier": "deterministic"
+          },
+          "row_count": 0,
+          "duration_ms": 6,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": -1,
+          "tool": "route_to_specialist",
+          "args_summary": {
+            "from": "supervisor",
+            "to": "retrieval_agent",
+            "budget_left": 8
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": -1,
+          "tool": "route_to_specialist",
+          "args_summary": {
+            "from": "supervisor",
+            "to": "writer_agent",
+            "budget_left": 1
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "idea_search",
+          "args_summary": {
+            "query": "experiment ideas",
+            "kinds": "['work']",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "idea_search",
+          "args_summary": {
+            "query": "experiment ideas",
+            "kinds": "['chunk']",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_lookup",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "query": "YOLO",
+            "limit": "1"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "query": "experiment ideas",
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": null,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": "Error: paper_quote_search is not a valid tool, try one of [workspace_list_papers, paper_lookup, idea_search, summarize_workspace]."
+        },
+        {
+          "step": 5,
+          "tool": "idea_search",
+          "args_summary": {
+            "query": "experiment ideas",
+            "kinds": "['work']",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "idea_search",
+          "args_summary": {
+            "query": "experiment ideas",
+            "kinds": "['chunk']",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 7,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "Based on the themes of the papers in this workspace, particularly the focus on object detection and real-time performance, a concrete follow-up experiment idea could be:\n\n**Experiment Idea:**\nConduct ",
+            "citations": "[{'title': 'You Only Look Once: Unified, Real-Time Object Detection', 'year': 2016, 'authors': ['Redmon, J.', 'Divvala, S.', 'Girshick, R.', 'Farhadi, A.']}]"
+          },
+          "row_count": null,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "answer_class": "quote_extraction",
+      "evidence_summary": "1 citation(s), 10 trace step(s)",
+      "warnings": [
+        "no_quote_found"
+      ],
+      "inventory": {
+        "paper_matches": [
+          {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "score": 1.5993027687072754,
+            "title": "You Only Look Once: Unified, Real-Time Object Detection",
+            "year": null
+          }
+        ]
+      },
+      "relation_trace": null,
+      "quote_candidates": null,
+      "idea_suggestions": null,
+      "bibliography": null,
+      "debug_events": [
+        {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "explicit_research_signal",
+          "suggested_answer_class": "ideation",
+          "confidence": 1.0,
+          "classifier": "deterministic",
+          "type": "intent_classified",
+          "source": "coordinator_gate_v0",
+          "answer_class": "ideation"
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "retrieval_agent",
+          "tools": [
+            "workspace_list_papers",
+            "paper_lookup",
+            "idea_search",
+            "summarize_workspace"
+          ],
+          "reason": "rules",
+          "top_score": 5.5,
+          "skipped": false
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "writer_agent",
+          "tools": null,
+          "reason": "writer_minimal_set",
+          "top_score": null,
+          "skipped": true,
+          "writer_mode": "normal"
+        }
+      ],
+      "phoenix_trace_id": "c78e97aeb284f2952efbbb5d22368340",
+      "thread_id": null
+    },
+    "tool_trace": [
+      {
+        "step": 0,
+        "tool": "coordinator_gate",
+        "args_summary": {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "explicit_research_signal",
+          "suggested_answer_class": "ideation",
+          "confidence": "1.0",
+          "classifier": "deterministic"
+        },
+        "row_count": 0,
+        "duration_ms": 6,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "retrieval_agent",
+          "budget_left": 8
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "writer_agent",
+          "budget_left": 1
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 1,
+        "tool": "idea_search",
+        "args_summary": {
+          "query": "experiment ideas",
+          "kinds": "['work']",
+          "workspace_id": "ws-pilot-od"
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 2,
+        "tool": "idea_search",
+        "args_summary": {
+          "query": "experiment ideas",
+          "kinds": "['chunk']",
+          "workspace_id": "ws-pilot-od"
+        },
+        "row_count": 5,
+        "duration_ms": 0,
+        "truncated": true,
+        "error": null
+      },
+      {
+        "step": 3,
+        "tool": "paper_lookup",
+        "args_summary": {
+          "workspace_id": "ws-pilot-od",
+          "query": "YOLO",
+          "limit": "1"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 4,
+        "tool": "paper_quote_search",
+        "args_summary": {
+          "workspace_id": "ws-pilot-od",
+          "query": "experiment ideas",
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+        },
+        "row_count": null,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": "Error: paper_quote_search is not a valid tool, try one of [workspace_list_papers, paper_lookup, idea_search, summarize_workspace]."
+      },
+      {
+        "step": 5,
+        "tool": "idea_search",
+        "args_summary": {
+          "query": "experiment ideas",
+          "kinds": "['work']",
+          "workspace_id": "ws-pilot-od"
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 6,
+        "tool": "idea_search",
+        "args_summary": {
+          "query": "experiment ideas",
+          "kinds": "['chunk']",
+          "workspace_id": "ws-pilot-od"
+        },
+        "row_count": 5,
+        "duration_ms": 0,
+        "truncated": true,
+        "error": null
+      },
+      {
+        "step": 7,
+        "tool": "final_answer",
+        "args_summary": {
+          "answer": "Based on the themes of the papers in this workspace, particularly the focus on object detection and real-time performance, a concrete follow-up experiment idea could be:\n\n**Experiment Idea:**\nConduct ",
+          "citations": "[{'title': 'You Only Look Once: Unified, Real-Time Object Detection', 'year': 2016, 'authors': ['Redmon, J.', 'Divvala, S.', 'Girshick, R.', 'Farhadi, A.']}]"
+        },
+        "row_count": null,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      }
+    ],
+    "duration_ms": 12444,
+    "metrics": {
+      "passed": true,
+      "reasons": [
+        "soft:answer_class:quote_extraction_not_in_['ideation', 'grounded_explanation']"
+      ],
+      "diagnostics": {
+        "tool_call_count": 10,
+        "non_final_tool_call_count": 9,
+        "first_non_final_tool": "coordinator_gate",
+        "unique_tools": [
+          "coordinator_gate",
+          "final_answer",
+          "idea_search",
+          "paper_lookup",
+          "paper_quote_search",
+          "route_to_specialist"
+        ],
+        "repeated_non_final_tools": [
+          "route_to_specialist",
+          "idea_search"
+        ],
+        "citation_count": 1,
+        "citations_missing_work_id": 1,
+        "answer_class": "quote_extraction",
+        "phoenix_trace_id_present": true,
+        "warnings_count": 1,
+        "has_bibliography_block": false,
+        "bibliography_entry_count": 0,
+        "bibliography_filtered_work_ids_count": 0,
+        "has_inventory_block": true,
+        "has_quote_candidates": false,
+        "has_relation_trace": false,
+        "has_idea_suggestions": false
+      }
+    },
+    "wall_clock_seconds": 12.444,
+    "case_path": "tests/fixtures/benchmarks/chat_agent_roadmap/cases/06_ideation_workspace.json"
+  },
+  "trace_audit": {
+    "case_id": "ideation_workspace",
+    "phoenix_trace_id": "c78e97aeb284f2952efbbb5d22368340",
+    "phoenix_ui_hint": "http://127.0.0.1:16006/traces/c78e97aeb284f2952efbbb5d22368340",
+    "tool_trace": [
+      {
+        "step": 0,
+        "tool": "coordinator_gate",
+        "args_summary": {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "explicit_research_signal",
+          "suggested_answer_class": "ideation",
+          "confidence": "1.0",
+          "classifier": "deterministic"
+        },
+        "row_count": 0,
+        "duration_ms": 6,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "retrieval_agent",
+          "budget_left": 8
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "writer_agent",
+          "budget_left": 1
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 1,
+        "tool": "idea_search",
+        "args_summary": {
+          "query": "experiment ideas",
+          "kinds": "['work']",
+          "workspace_id": "ws-pilot-od"
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 2,
+        "tool": "idea_search",
+        "args_summary": {
+          "query": "experiment ideas",
+          "kinds": "['chunk']",
+          "workspace_id": "ws-pilot-od"
+        },
+        "row_count": 5,
+        "duration_ms": 0,
+        "truncated": true,
+        "error": null
+      },
+      {
+        "step": 3,
+        "tool": "paper_lookup",
+        "args_summary": {
+          "workspace_id": "ws-pilot-od",
+          "query": "YOLO",
+          "limit": "1"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 4,
+        "tool": "paper_quote_search",
+        "args_summary": {
+          "workspace_id": "ws-pilot-od",
+          "query": "experiment ideas",
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+        },
+        "row_count": null,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": "Error: paper_quote_search is not a valid tool, try one of [workspace_list_papers, paper_lookup, idea_search, summarize_workspace]."
+      },
+      {
+        "step": 5,
+        "tool": "idea_search",
+        "args_summary": {
+          "query": "experiment ideas",
+          "kinds": "['work']",
+          "workspace_id": "ws-pilot-od"
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 6,
+        "tool": "idea_search",
+        "args_summary": {
+          "query": "experiment ideas",
+          "kinds": "['chunk']",
+          "workspace_id": "ws-pilot-od"
+        },
+        "row_count": 5,
+        "duration_ms": 0,
+        "truncated": true,
+        "error": null
+      },
+      {
+        "step": 7,
+        "tool": "final_answer",
+        "args_summary": {
+          "answer": "Based on the themes of the papers in this workspace, particularly the focus on object detection and real-time performance, a concrete follow-up experiment idea could be:\n\n**Experiment Idea:**\nConduct ",
+          "citations": "[{'title': 'You Only Look Once: Unified, Real-Time Object Detection', 'year': 2016, 'authors': ['Redmon, J.', 'Divvala, S.', 'Girshick, R.', 'Farhadi, A.']}]"
+        },
+        "row_count": null,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      }
+    ],
+    "diagnostics": {
+      "tool_call_count": 10,
+      "non_final_tool_call_count": 9,
+      "first_non_final_tool": "coordinator_gate",
+      "unique_tools": [
+        "coordinator_gate",
+        "final_answer",
+        "idea_search",
+        "paper_lookup",
+        "paper_quote_search",
+        "route_to_specialist"
+      ],
+      "repeated_non_final_tools": [
+        "route_to_specialist",
+        "idea_search"
+      ],
+      "citation_count": 1,
+      "citations_missing_work_id": 1,
+      "answer_class": "quote_extraction",
+      "phoenix_trace_id_present": true,
+      "warnings_count": 1,
+      "has_bibliography_block": false,
+      "bibliography_entry_count": 0,
+      "bibliography_filtered_work_ids_count": 0,
+      "has_inventory_block": true,
+      "has_quote_candidates": false,
+      "has_relation_trace": false,
+      "has_idea_suggestions": false
+    },
+    "metrics": {
+      "passed": true,
+      "reasons": [
+        "soft:answer_class:quote_extraction_not_in_['ideation', 'grounded_explanation']"
+      ],
+      "diagnostics": {
+        "tool_call_count": 10,
+        "non_final_tool_call_count": 9,
+        "first_non_final_tool": "coordinator_gate",
+        "unique_tools": [
+          "coordinator_gate",
+          "final_answer",
+          "idea_search",
+          "paper_lookup",
+          "paper_quote_search",
+          "route_to_specialist"
+        ],
+        "repeated_non_final_tools": [
+          "route_to_specialist",
+          "idea_search"
+        ],
+        "citation_count": 1,
+        "citations_missing_work_id": 1,
+        "answer_class": "quote_extraction",
+        "phoenix_trace_id_present": true,
+        "warnings_count": 1,
+        "has_bibliography_block": false,
+        "bibliography_entry_count": 0,
+        "bibliography_filtered_work_ids_count": 0,
+        "has_inventory_block": true,
+        "has_quote_candidates": false,
+        "has_relation_trace": false,
+        "has_idea_suggestions": false
+      }
+    }
+  }
+}

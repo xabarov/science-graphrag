@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import {
   getBenchmarkRunCaseDetail,
@@ -21,6 +22,7 @@ export default function BenchmarkWorkbenchTab({
   onSelectCase,
 }) {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
   const [runsPayload, setRunsPayload] = useState(null);
   const [runDetail, setRunDetail] = useState(null);
   const [caseDetail, setCaseDetail] = useState(null);
@@ -134,15 +136,15 @@ export default function BenchmarkWorkbenchTab({
       </Box>
 
       {error ? (
-        <Typography sx={{ color: "rgba(239,68,68,0.9)", mb: 2 }} role="alert">
+        <Typography sx={{ color: tk.state.dangerFg, mb: 2 }} role="alert">
           {error}
         </Typography>
       ) : null}
 
       {!selectedRunId ? (
-        <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>{t("benchmark.workbench.pickRun")}</Typography>
+        <Typography sx={{ color: tk.text.secondary }}>{t("benchmark.workbench.pickRun")}</Typography>
       ) : !runDetail ? (
-        <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>{t("benchmark.workbench.loadingRun")}</Typography>
+        <Typography sx={{ color: tk.text.secondary }}>{t("benchmark.workbench.loadingRun")}</Typography>
       ) : (
         <WorkbenchRunScopedPanel
           key={selectedRunId}

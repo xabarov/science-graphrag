@@ -5,8 +5,10 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import FormGroup from "@mui/material/FormGroup";
 import Radio from "@mui/material/Radio";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 function ScopeCard({ title, subtitle, active, children, onClick }) {
+  const tk = useTheme().appTokens;
   return (
     <Box
       role="button"
@@ -16,9 +18,9 @@ function ScopeCard({ title, subtitle, active, children, onClick }) {
         if (e.key === "Enter" || e.key === " ") onClick?.();
       }}
       sx={{
-        border: "1px solid rgba(255,255,255,0.08)",
+        border: `1px solid ${tk.border.default}`,
         borderRadius: 1.5,
-        backgroundColor: active ? "rgba(99, 102, 241, 0.12)" : "#1a1a1a",
+        backgroundColor: active ? tk.accent.chipReadyBg : tk.surface.panel,
         padding: 1.25,
         cursor: "pointer",
         minHeight: 120,
@@ -27,7 +29,7 @@ function ScopeCard({ title, subtitle, active, children, onClick }) {
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
         <Box>
           <Typography sx={{ fontWeight: 600 }}>{title}</Typography>
-          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.55)" }}>{subtitle}</Typography>
+          <Typography sx={{ fontSize: "0.75rem", color: tk.text.muted }}>{subtitle}</Typography>
         </Box>
         <Radio checked={active} size="small" />
       </Box>
@@ -46,6 +48,7 @@ export default function BenchmarkRunScopeSelector({
   onScopeChange,
   onToggleCase,
 }) {
+  const tk = useTheme().appTokens;
   const selectedSet = new Set(selectedCaseIds || []);
   return (
     <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
@@ -57,10 +60,10 @@ export default function BenchmarkRunScopeSelector({
       >
         <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
           <Box>
-            <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", mb: 0.5 }}>
+            <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary, mb: 0.5 }}>
               merge_safe
             </Typography>
-            <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.75rem", mb: 0.5 }}>
+            <Typography sx={{ color: tk.text.muted, fontSize: "0.75rem", mb: 0.5 }}>
               {loadingCases ? "loading..." : `${mergeSafeCases.length} cases`}
             </Typography>
             <FormGroup>
@@ -80,10 +83,10 @@ export default function BenchmarkRunScopeSelector({
             </FormGroup>
           </Box>
           <Box>
-            <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", mb: 0.5 }}>
+            <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary, mb: 0.5 }}>
               {nightlyLabel}
             </Typography>
-            <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.75rem", mb: 0.5 }}>
+            <Typography sx={{ color: tk.text.muted, fontSize: "0.75rem", mb: 0.5 }}>
               {loadingCases ? "loading..." : `${nightlyCases.length} cases`}
             </Typography>
             <FormGroup>

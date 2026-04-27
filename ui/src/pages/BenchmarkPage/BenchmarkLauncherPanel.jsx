@@ -4,6 +4,7 @@ import Collapse from "@mui/material/Collapse";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import { CursorButton, CursorPrimaryButton } from "../../components/common/index.js";
 import BenchmarkAdvancedModelOptions from "./BenchmarkAdvancedModelOptions.jsx";
@@ -27,6 +28,7 @@ export default function BenchmarkLauncherPanel({
   onToggleCase,
   onStartRun,
 }) {
+  const tk = useTheme().appTokens;
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const isGraphCatalog = benchmarkFamily === "graph";
   const canRunSelected = (familyPrefs?.launcherScope || "selected") !== "selected" || (familyPrefs?.selectedCaseIds?.length || 0) > 0;
@@ -34,9 +36,9 @@ export default function BenchmarkLauncherPanel({
   return (
     <Box
       sx={{
-        border: "1px solid rgba(255,255,255,0.08)",
+        border: `1px solid ${tk.border.default}`,
         borderRadius: 1.5,
-        backgroundColor: "#141414",
+        backgroundColor: tk.surface.sidebar,
         padding: 1.5,
         display: "flex",
         flexDirection: "column",
@@ -60,7 +62,7 @@ export default function BenchmarkLauncherPanel({
       </Box>
 
       {isGraphCatalog ? (
-        <Typography sx={{ color: "rgba(255,255,255,0.55)", fontSize: "0.8125rem" }}>
+        <Typography sx={{ color: tk.text.muted, fontSize: "0.8125rem" }}>
           Graph benchmark execution remains CLI-first. You can browse cases here, but runs must be started from the CLI.
         </Typography>
       ) : null}
@@ -73,7 +75,7 @@ export default function BenchmarkLauncherPanel({
         }}
       >
         <Box>
-          <Typography sx={{ color: "rgba(255,255,255,0.6)", mb: 0.5, fontSize: "0.75rem" }}>
+          <Typography sx={{ color: tk.text.secondary, mb: 0.5, fontSize: "0.75rem" }}>
             Model profile
           </Typography>
           <BenchmarkModelSelector
@@ -87,7 +89,7 @@ export default function BenchmarkLauncherPanel({
         </Box>
 
         <Box>
-          <Typography sx={{ color: "rgba(255,255,255,0.6)", mb: 0.5, fontSize: "0.75rem" }}>
+          <Typography sx={{ color: tk.text.secondary, mb: 0.5, fontSize: "0.75rem" }}>
             Gold source
           </Typography>
           <Select
@@ -103,7 +105,7 @@ export default function BenchmarkLauncherPanel({
         </Box>
 
         <Box>
-          <Typography sx={{ color: "rgba(255,255,255,0.6)", mb: 0.5, fontSize: "0.75rem" }}>
+          <Typography sx={{ color: tk.text.secondary, mb: 0.5, fontSize: "0.75rem" }}>
             Threshold profile
           </Typography>
           <Select
@@ -120,7 +122,7 @@ export default function BenchmarkLauncherPanel({
       </Box>
 
       {modelMeta ? (
-        <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.75rem" }}>
+        <Typography sx={{ color: tk.text.muted, fontSize: "0.75rem" }}>
           Effective defaults: role {modelMeta.role || "generic"} | model {modelMeta.model_id || "from environment"} | gold{" "}
           {modelMeta.default_gold_source || "curated_gold"} | threshold {modelMeta.default_threshold_profile || "from_gold"}
         </Typography>
@@ -155,7 +157,7 @@ export default function BenchmarkLauncherPanel({
       {validationErrors?.length ? (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
           {validationErrors.map((message) => (
-            <Typography key={message} sx={{ color: "rgba(239,68,68,0.9)", fontSize: "0.75rem" }} role="alert">
+            <Typography key={message} sx={{ color: tk.state.dangerFg, fontSize: "0.75rem" }} role="alert">
               {message}
             </Typography>
           ))}

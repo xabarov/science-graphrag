@@ -2,6 +2,8 @@
  * Trust / decision-gate summary helpers (BT1 drill-in + member strip).
  */
 
+import { APP_TOKENS_FALLBACK_DARK } from "../../theme/buildAppTheme.js";
+
 /**
  * Flatten trust_by_family payload into table rows (exported for unit tests).
  * @param {Record<string, { members?: Record<string, object> }>} trustByFamily
@@ -26,31 +28,34 @@ export function buildTrustRows(trustByFamily) {
   return rows;
 }
 
-/** @param {string} decision */
-export function decisionChipSx(decision) {
+/**
+ * @param {string} decision
+ * @param {import("../../theme/appTokensTypes.js").AppTokens} [tk]
+ */
+export function decisionChipSx(decision, tk = APP_TOKENS_FALLBACK_DARK) {
   const d = String(decision || "").toUpperCase();
   if (d.includes("NO-GO")) {
     return {
-      backgroundColor: "rgba(239, 68, 68, 0.12)",
-      border: "1px solid rgba(239, 68, 68, 0.25)",
-      color: "rgba(239, 68, 68, 0.95)",
+      backgroundColor: tk.state.dangerBg,
+      border: `1px solid ${tk.state.dangerBorder}`,
+      color: tk.state.dangerFg,
       fontWeight: 600,
       fontSize: "0.75rem",
     };
   }
   if (d.includes("CONDITIONAL")) {
     return {
-      backgroundColor: "rgba(255,255,255,0.06)",
-      border: "1px solid rgba(255,255,255,0.12)",
-      color: "rgba(255,255,255,0.85)",
+      backgroundColor: tk.control.chipMutedBg,
+      border: `1px solid ${tk.border.strong}`,
+      color: tk.text.primary,
       fontWeight: 600,
       fontSize: "0.75rem",
     };
   }
   return {
-    backgroundColor: "rgba(99, 102, 241, 0.15)",
-    border: "1px solid rgba(99, 102, 241, 0.3)",
-    color: "rgba(129, 140, 248, 0.95)",
+    backgroundColor: tk.accent.softBg,
+    border: `1px solid ${tk.accent.softBorder}`,
+    color: tk.accent.fg,
     fontWeight: 600,
     fontSize: "0.75rem",
   };

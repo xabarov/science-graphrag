@@ -11,6 +11,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import { CursorIconAction } from "../common/index.js";
 import { useFeedback } from "../feedback/index.js";
@@ -73,6 +74,7 @@ function extractTurnMetadata(entry) {
 }
 
 function ChatUserBubble({ text }) {
+  const tk = useTheme().appTokens;
   return (
     <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 1.5 }}>
       <Box
@@ -81,11 +83,11 @@ function ChatUserBubble({ text }) {
           px: 1.25,
           py: 1,
           borderRadius: "6px",
-          backgroundColor: "rgba(99,102,241,0.12)",
-          border: "1px solid rgba(99,102,241,0.22)",
+          backgroundColor: tk.accent.chipReadyBg,
+          border: `1px solid ${tk.accent.softBorder}`,
         }}
       >
-        <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.88)", whiteSpace: "pre-wrap" }}>{text}</Typography>
+        <Typography sx={{ fontSize: "0.8125rem", color: tk.text.primary, whiteSpace: "pre-wrap" }}>{text}</Typography>
       </Box>
     </Box>
   );
@@ -150,6 +152,7 @@ export function ChatMessageThread({
   deleteDisabled = false,
 }) {
   const { confirm } = useFeedback();
+  const tk = useTheme().appTokens;
   const chronological = useMemo(() => [...history].reverse(), [history]);
   const streamForThisChat = Boolean(
     streamingTarget &&
@@ -250,8 +253,8 @@ export function ChatMessageThread({
             mx: "auto",
           }}
         >
-          <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: "rgba(255,255,255,0.82)", mb: 0.5 }}>{t("chat.thread.emptyTitle")}</Typography>
-          <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.48)", mb: 1.25, lineHeight: 1.45 }}>{t("chat.thread.emptySubtitle")}</Typography>
+          <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: tk.text.primary, mb: 0.5 }}>{t("chat.thread.emptyTitle")}</Typography>
+          <Typography sx={{ fontSize: "0.8125rem", color: tk.text.muted, mb: 1.25, lineHeight: 1.45 }}>{t("chat.thread.emptySubtitle")}</Typography>
           {starterPromptKeys.length > 0 && onStarterPrompt ? (
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
               {starterPromptKeys.map((key) => (
@@ -263,13 +266,13 @@ export function ChatMessageThread({
                   sx={{
                     height: 26,
                     borderRadius: "6px",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    backgroundColor: "rgba(255,255,255,0.04)",
-                    color: "rgba(255,255,255,0.78)",
+                    border: `1px solid ${tk.border.strong}`,
+                    backgroundColor: tk.surface.subtle,
+                    color: tk.text.primary,
                     fontSize: "0.75rem",
                     maxWidth: "100%",
                     "& .MuiChip-label": { px: 1, whiteSpace: "normal", textAlign: "left" },
-                    "&:hover": { backgroundColor: "rgba(99,102,241,0.1)", borderColor: "rgba(99,102,241,0.25)" },
+                    "&:hover": { backgroundColor: tk.accent.chipReadyBg, borderColor: tk.accent.softBorder },
                   }}
                 />
               ))}
@@ -338,7 +341,7 @@ export function ChatMessageThread({
                       <MarkdownView markdown={String(entry.answer)} />
                     </Box>
                   ) : (
-                    <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.82)", whiteSpace: "pre-wrap" }}>—</Typography>
+                    <Typography sx={{ fontSize: "0.8125rem", color: tk.text.primary, whiteSpace: "pre-wrap" }}>—</Typography>
                   )}
                 </AgentAssistantTurnShell>
               )}
@@ -439,15 +442,15 @@ export function ChatMessageThread({
         slotProps={{
           paper: {
             sx: {
-              backgroundColor: "#1a1a1a",
-              border: "1px solid rgba(255,255,255,0.08)",
+              backgroundColor: tk.surface.panel,
+              border: `1px solid ${tk.border.default}`,
               borderRadius: "6px",
               minWidth: { xs: 300, sm: 420 },
             },
           },
         }}
       >
-        <DialogTitle sx={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.9)" }}>{t("chat.thread.meta.title")}</DialogTitle>
+        <DialogTitle sx={{ fontSize: "0.9rem", color: tk.text.primary }}>{t("chat.thread.meta.title")}</DialogTitle>
         <DialogContent sx={{ pt: "8px !important" }}>
           <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1 }}>
             {[
@@ -456,10 +459,10 @@ export function ChatMessageThread({
               { label: t("chat.thread.meta.tokensPerSecond"), value: formatMetricValue(meta.tokensPerSecond, { digits: 1 }), bar: meta.tokensPerSecond },
               { label: t("chat.thread.meta.costUsd"), value: formatMetricValue(meta.costUsd, { digits: 5 }), bar: meta.costUsd },
             ].map((row) => (
-              <Box key={row.label} sx={{ p: 1, border: "1px solid rgba(255,255,255,0.08)", borderRadius: "6px", backgroundColor: "rgba(255,255,255,0.02)" }}>
-                <Typography sx={{ fontSize: "0.69rem", color: "rgba(255,255,255,0.55)" }}>{row.label}</Typography>
-                <Typography sx={{ fontSize: "0.86rem", color: "rgba(255,255,255,0.9)", fontWeight: 600 }}>{row.value}</Typography>
-                <Box sx={{ mt: 0.6, height: 4, borderRadius: 6, backgroundColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
+              <Box key={row.label} sx={{ p: 1, border: `1px solid ${tk.border.default}`, borderRadius: "6px", backgroundColor: tk.control.outlinedBg }}>
+                <Typography sx={{ fontSize: "0.69rem", color: tk.text.secondary }}>{row.label}</Typography>
+                <Typography sx={{ fontSize: "0.86rem", color: tk.text.primary, fontWeight: 600 }}>{row.value}</Typography>
+                <Box sx={{ mt: 0.6, height: 4, borderRadius: 6, backgroundColor: tk.border.default, overflow: "hidden" }}>
                   <Box
                     sx={{
                       width: `${Math.min(100, Math.max(0, (((row.bar ?? 0) / maxMetaBar) * 100))) || 0}%`,
@@ -472,20 +475,20 @@ export function ChatMessageThread({
             ))}
           </Box>
           <Box sx={{ mt: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0.5 }}>
-            <Typography sx={{ fontSize: "0.76rem", color: "rgba(255,255,255,0.68)" }}>
+            <Typography sx={{ fontSize: "0.76rem", color: tk.text.secondary }}>
               {t("chat.thread.meta.promptTokens")}: {formatMetricValue(meta.promptTokens)}
             </Typography>
-            <Typography sx={{ fontSize: "0.76rem", color: "rgba(255,255,255,0.68)" }}>
+            <Typography sx={{ fontSize: "0.76rem", color: tk.text.secondary }}>
               {t("chat.thread.meta.completionTokens")}: {formatMetricValue(meta.completionTokens)}
             </Typography>
-            <Typography sx={{ fontSize: "0.76rem", color: "rgba(255,255,255,0.68)" }}>
+            <Typography sx={{ fontSize: "0.76rem", color: tk.text.secondary }}>
               {t("chat.thread.meta.events")}: {formatMetricValue(meta.eventsCount)}
             </Typography>
-            <Typography sx={{ fontSize: "0.76rem", color: "rgba(255,255,255,0.68)" }}>
+            <Typography sx={{ fontSize: "0.76rem", color: tk.text.secondary }}>
               {t("chat.thread.meta.citations")}: {formatMetricValue(meta.citationCount)}
             </Typography>
           </Box>
-          <Typography sx={{ mt: 0.8, fontSize: "0.76rem", color: "rgba(255,255,255,0.68)" }}>
+          <Typography sx={{ mt: 0.8, fontSize: "0.76rem", color: tk.text.secondary }}>
             {t("chat.thread.meta.answerClass")}: {meta.answerClass || "—"}
           </Typography>
         </DialogContent>
@@ -507,10 +510,10 @@ export function ChatMessageThread({
             right: 4,
             bottom: 8,
             zIndex: 2,
-            border: "1px solid rgba(255,255,255,0.12)",
-            backgroundColor: "rgba(26,26,26,0.92)",
-            color: "rgba(255,255,255,0.75)",
-            "&:hover": { backgroundColor: "rgba(99,102,241,0.15)" },
+            border: `1px solid ${tk.border.strong}`,
+            backgroundColor: tk.surface.panel,
+            color: tk.text.secondary,
+            "&:hover": { backgroundColor: tk.accent.softBg },
           }}
         >
           <KeyboardArrowDownRoundedIcon sx={{ fontSize: "1.15rem" }} />

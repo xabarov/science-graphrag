@@ -1,17 +1,19 @@
 import React from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 /**
  * @param {{ lines: string[], t: (key: string) => string }} props
  */
 export default function TrustConsistencyWarningsList({ lines, t }) {
+  const tk = useTheme().appTokens;
   if (!lines?.length) return null;
   return (
     <Box>
       <Typography
         sx={{
-          color: "rgba(255,255,255,0.7)",
+          color: tk.text.secondary,
           fontSize: "0.7rem",
           fontWeight: 600,
           textTransform: "uppercase",
@@ -26,7 +28,7 @@ export default function TrustConsistencyWarningsList({ lines, t }) {
         sx={{
           m: 0,
           pl: 2,
-          color: "rgba(255,255,255,0.78)",
+          color: tk.text.primary,
           fontSize: "0.75rem",
           lineHeight: 1.45,
         }}

@@ -1,10 +1,43 @@
 /* Effective color scheme is set by inline boot in index.html and AppearanceProvider (data-color-scheme on <html>). */
 html[data-color-scheme="dark"] {
   color-scheme: dark;
+  scrollbar-color: #2a2a2a #0a0a0a;
 }
 
 html[data-color-scheme="light"] {
   color-scheme: light;
+  scrollbar-color: #cbd5e1 #f5f7fb;
+}
+
+/* WebKit scrollbars inside app surfaces (main outlet, panels) */
+html[data-color-scheme="dark"] *::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+html[data-color-scheme="dark"] *::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+html[data-color-scheme="dark"] *::-webkit-scrollbar-thumb {
+  background: #2a2a2a;
+  border-radius: 4px;
+}
+html[data-color-scheme="dark"] *::-webkit-scrollbar-thumb:hover {
+  background: #3a3a3a;
+}
+
+html[data-color-scheme="light"] *::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+html[data-color-scheme="light"] *::-webkit-scrollbar-track {
+  background: #f5f7fb;
+}
+html[data-color-scheme="light"] *::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+html[data-color-scheme="light"] *::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 html,

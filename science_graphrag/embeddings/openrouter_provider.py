@@ -26,13 +26,72 @@ import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
 
 import httpx
 import numpy as np
 from openai import APIError, OpenAI, RateLimitError
 
 from science_graphrag.config import Settings
+from science_graphrag.embeddings.errors import (
+    EmbeddingEmptyPayloadError,
+    EmbeddingNonRetryableHttpError,
+    EmbeddingPartialPayloadError,
+    EmbeddingProviderUnavailableError,
+)
+
+
+def _openrouter_error_from_dump(dump: dict[str, Any] | None) -> tuple[int | None, str | None]:
+    if not dump or not isinstance(dump, dict):
+        return None, None
+    err = dump.get("error")
+    if not isinstance(err, dict):
+        return None, None
+    code = err.get("code")
+    code_i: int | None = None
+    if isinstance(code, int):
+        code_i = code
+    elif isinstance(code, str) and code.isdigit():
+        code_i = int(code)
+    msg = err.get("message")
+    msg_s = str(msg) if msg is not None else None
+    return code_i, msg_s
+
+
+def _raise_for_bad_embedding_payload(
+    resp: object,
+    *,
+    batch_len: int,
+    data: object | None,
+) -> None:
+    """Raise typed :class:`EmbeddingCallError` subclasses for empty / provider errors."""
+    dump: dict[str, Any] | None = None
+    try:
+        if hasattr(resp, "model_dump"):
+            raw = resp.model_dump()
+            dump = raw if isinstance(raw, dict) else None
+    except Exception:  # noqa: BLE001
+        dump = None
+    code_i, msg = _openrouter_error_from_dump(dump)
+    preview = _safe_response_preview(resp)
+    if data is None:
+        if code_i == 404 or (msg and "no successful provider" in msg.lower()):
+            raise EmbeddingProviderUnavailableError(
+                f"OpenRouter embeddings: no successful provider responses "
+                f"(batch={batch_len}): {preview}"
+            ) from None
+        raise EmbeddingEmptyPayloadError(
+            f"OpenRouter embeddings returned no data for {batch_len} inputs: {preview}"
+        ) from None
+    if not isinstance(data, list):
+        raise EmbeddingEmptyPayloadError(
+            f"OpenRouter embeddings ``data`` is not a list (batch={batch_len}): {preview}"
+        ) from None
+    if len(data) != batch_len:
+        raise EmbeddingPartialPayloadError(
+            f"OpenRouter embeddings length mismatch: got {len(data)} items for {batch_len} inputs; "
+            f"{preview}"
+        ) from None
 
 
 def _safe_response_preview(resp: object, *, limit: int = 500) -> str:
@@ -238,19 +297,18 @@ class OpenRouterEmbeddingProvider:
                     encoding_format="float",
                 )
                 data = getattr(resp, "data", None)
-                if data is None:
-                    raise RuntimeError(
-                        "OpenRouter embeddings returned no data "
-                        f"for {len(batch)} inputs: {_safe_response_preview(resp)}"
+                if data is None or not isinstance(data, list) or len(data) != len(batch):
+                    _raise_for_bad_embedding_payload(
+                        resp, batch_len=len(batch), data=data if isinstance(data, list) else data
                     )
                 vectors: list[list[float]] = []
                 for idx, item in enumerate(data):
                     embedding = getattr(item, "embedding", None)
                     if embedding is None:
-                        raise RuntimeError(
+                        raise EmbeddingEmptyPayloadError(
                             "OpenRouter embeddings item missing embedding "
                             f"at index={idx}: {_safe_response_preview(resp)}"
-                        )
+                        ) from None
                     vectors.append(list(embedding))
                 return vectors
             except RateLimitError as exc:
@@ -263,8 +321,9 @@ class OpenRouterEmbeddingProvider:
                 last_err = exc
                 status = self._api_status(exc)
                 if status is not None and 400 <= status < 500 and status != 429:
-                    raise RuntimeError(
-                        f"OpenRouter embeddings non-retryable HTTP {status}: {exc}"
+                    raise EmbeddingNonRetryableHttpError(
+                        f"OpenRouter embeddings HTTP {status}: {exc}",
+                        status_code=status,
                     ) from exc
                 if status is not None and status >= 500:
                     time.sleep(min(4.0, float(2 ** (attempt - 1))))

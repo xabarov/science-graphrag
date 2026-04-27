@@ -2,6 +2,7 @@ import React from "react";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 export default function BenchmarkAdvancedModelOptions({
   baseUrlOverride,
@@ -9,6 +10,7 @@ export default function BenchmarkAdvancedModelOptions({
   onBaseUrlOverrideChange,
   onApiKeyEnvNameChange,
 }) {
+  const tk = useTheme().appTokens;
   return (
     <Box
       sx={{
@@ -35,7 +37,7 @@ export default function BenchmarkAdvancedModelOptions({
         sx={{
           gridColumn: "1 / -1",
           fontSize: "0.75rem",
-          color: "rgba(255,255,255,0.55)",
+          color: tk.text.muted,
         }}
       >
         The UI only sends the environment variable name. Secrets stay on the backend host.

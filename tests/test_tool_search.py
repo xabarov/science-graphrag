@@ -130,6 +130,36 @@ def test_graph_agent_shortlist_includes_cypher_for_graph_question() -> None:
     assert meta.get("reason") in ("rules", "fallback_full")
 
 
+def test_retrieval_shortlist_always_includes_core_catalog_when_rules() -> None:
+    from science_graphrag.agent.tools import build_retrieval_tools
+
+    stores = MagicMock()
+    stores.neo4j = MagicMock()
+    stores.qdrant_chunks = MagicMock()
+    stores.qdrant_works = MagicMock()
+    settings = Settings(agent_rule_tool_search_enabled=True)
+    tools = build_retrieval_tools(stores, settings)
+    out, meta = shortlist_tools_for_specialist(
+        tools,
+        question="how many papers in this workspace",
+        specialist="retrieval_agent",
+        settings=settings,
+        has_workspace=True,
+        answer_class="inventory",
+    )
+    assert meta.get("reason") == "rules"
+    names = {getattr(t, "name", "") for t in out}
+    for core in (
+        "workspace_overview",
+        "workspace_list_papers",
+        "paper_lookup",
+        "paper_metadata",
+        "paper_authors",
+        "paper_counts",
+    ):
+        assert core in names, f"missing {core}"
+
+
 def test_retrieval_low_signal_returns_full() -> None:
     from science_graphrag.agent.tools import build_retrieval_tools
 

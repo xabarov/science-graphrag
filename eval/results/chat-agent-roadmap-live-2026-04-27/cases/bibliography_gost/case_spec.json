@@ -1,0 +1,23 @@
+{
+  "case_id": "bibliography_gost",
+  "roadmap_ref": "§2.1 item 7 / §2.3 export",
+  "workspace_id": "ws-pilot-od",
+  "answer_class_hint": "bibliography_export",
+  "question": "Составь список литературы по ГОСТ для всех работ в этой рабочей области.",
+  "expect": {
+    "answer_classes_allowed": [
+      "bibliography_export",
+      "grounded_explanation"
+    ],
+    "strict_answer_class": false,
+    "tools_any_of": [
+      "format_bibliography_gost",
+      "workspace_list_papers",
+      "paper_metadata"
+    ],
+    "tools_none_of": [],
+    "require_phoenix_trace_id": true,
+    "require_tool_trace": true,
+    "min_non_final_tool_calls": 1
+  }
+}

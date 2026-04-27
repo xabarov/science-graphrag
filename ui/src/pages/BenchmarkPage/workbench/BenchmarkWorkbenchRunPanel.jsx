@@ -10,6 +10,7 @@ import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import MetricsCard from "../../../components/MetricsCard.jsx";
 import { getBenchmarkRunCasesPage } from "../../../services/benchmarkApi.js";
@@ -23,12 +24,13 @@ import {
 import { useI18n } from "../../../i18n/useI18n.js";
 
 function Panel({ title, children }) {
+  const tk = useTheme().appTokens;
   return (
     <Box
       sx={{
-        border: "1px solid rgba(255,255,255,0.08)",
+        border: `1px solid ${tk.border.default}`,
         borderRadius: 1.5,
-        backgroundColor: "#1a1a1a",
+        backgroundColor: tk.surface.panel,
         padding: 1.5,
         minHeight: 220,
       }}
@@ -40,6 +42,7 @@ function Panel({ title, children }) {
 }
 
 function JsonBlock({ value }) {
+  const tk = useTheme().appTokens;
   return (
     <Box
       component="pre"
@@ -51,7 +54,7 @@ function JsonBlock({ value }) {
         margin: 0,
         fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
         fontSize: "12px",
-        color: "rgba(255,255,255,0.85)",
+        color: tk.text.primary,
       }}
     >
       {JSON.stringify(value, null, 2)}
@@ -69,6 +72,7 @@ const CASES_PAGE_SIZE = 500;
 /** Filters + case list reset via `key={runId}` on the parent. */
 export function WorkbenchRunScopedPanel({ runDetail, caseDetail, selectedCaseId, onSelectCase }) {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
   const runId = runDetail?.run_id;
   const casesTotal = runDetail?.cases_total ?? 0;
   const [loadedCases, setLoadedCases] = useState(() => runDetail?.cases ?? []);
@@ -206,14 +210,13 @@ export function WorkbenchRunScopedPanel({ runDetail, caseDetail, selectedCaseId,
                   padding: 1,
                   borderRadius: 1,
                   cursor: "pointer",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  backgroundColor:
-                    selectedCaseId === item.case_id ? "rgba(99, 102, 241, 0.15)" : "transparent",
-                  "&:hover": { backgroundColor: "rgba(255,255,255,0.04)" },
+                  border: `1px solid ${tk.border.default}`,
+                  backgroundColor: selectedCaseId === item.case_id ? tk.accent.softBg : "transparent",
+                  "&:hover": { backgroundColor: tk.control.navItemHoverBg },
                 }}
               >
                 <Typography sx={{ fontSize: "0.8125rem", fontWeight: 500 }}>{item.case_id}</Typography>
-                <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.6)" }}>
+                <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary }}>
                   {item.status}
                   {item?.summary?.failed_checks?.length
                     ? ` | ${item.summary.failed_checks.join(", ")}`
@@ -234,7 +237,7 @@ export function WorkbenchRunScopedPanel({ runDetail, caseDetail, selectedCaseId,
               </Box>
             ) : null}
             {casesPageError ? (
-              <Typography sx={{ color: "rgba(239,68,68,0.9)", fontSize: "0.75rem", pt: 0.5 }} role="alert">
+              <Typography sx={{ color: tk.state.dangerFg, fontSize: "0.75rem", pt: 0.5 }} role="alert">
                 {casesPageError}
               </Typography>
             ) : null}
@@ -245,7 +248,7 @@ export function WorkbenchRunScopedPanel({ runDetail, caseDetail, selectedCaseId,
           <Panel title={t("benchmark.workbench.sourceArticle")}>
             {caseDetail ? (
               <>
-                <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", mb: 1 }}>
+                <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary, mb: 1 }}>
                   {t("benchmark.workbench.sections")}{" "}
                   {(caseDetail.article?.sections || []).map((item) => item.label).join(", ") || t("workspace.upload.dash")}
                 </Typography>
@@ -259,13 +262,14 @@ export function WorkbenchRunScopedPanel({ runDetail, caseDetail, selectedCaseId,
                     margin: 0,
                     fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
                     fontSize: "12px",
+                    color: tk.text.primary,
                   }}
                 >
                   {caseDetail.article?.raw_markdown || ""}
                 </Box>
               </>
             ) : (
-              <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>{t("benchmark.workbench.selectCase")}</Typography>
+              <Typography sx={{ color: tk.text.secondary }}>{t("benchmark.workbench.selectCase")}</Typography>
             )}
           </Panel>
 
@@ -308,7 +312,7 @@ export function WorkbenchRunScopedPanel({ runDetail, caseDetail, selectedCaseId,
                 </TableBody>
               </Table>
             ) : (
-              <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>{t("benchmark.workbench.noDiff")}</Typography>
+              <Typography sx={{ color: tk.text.secondary }}>{t("benchmark.workbench.noDiff")}</Typography>
             )}
           </Panel>
         </Box>

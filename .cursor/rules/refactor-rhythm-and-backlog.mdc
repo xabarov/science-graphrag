@@ -16,6 +16,13 @@ alwaysApply: true
 - **Backend (Python, layout under repo root):** `docs/backlog/refactor-backend.md`
 - **Frontend (ui/):** `docs/backlog/refactor-frontend.md`
 
+## If you notice an architectural problem during scoped work
+
+- Do not silently ignore it, even if it is outside the user's immediate request.
+- Briefly tell the user what the problem is, why it is risky, and whether you are fixing it now or deferring it.
+- If the issue is not fixed in the current turn, add or extend a concrete item in the appropriate refactor backlog file.
+- Prefer specific debt reports (layering leak, oversized module, duplicated orchestration, unstable API boundary, mixed responsibilities) over vague “could be cleaner” comments.
+
 **Entry format (copy block per item):**
 
 ```markdown

@@ -2,7 +2,12 @@
  * Client helpers for workspace API + active workspace pointer in localStorage.
  */
 
-import { apiClient, buildApiUrl, DEFAULT_TIMEOUT_MS } from "../services/apiClient.js";
+import {
+  apiClient,
+  buildApiUrl,
+  DEFAULT_TIMEOUT_MS,
+  EXTENDED_READ_TIMEOUT_MS,
+} from "../services/apiClient.js";
 import { formatResearchApiError } from "../services/researchApi.js";
 
 const ACTIVE_WORKSPACE_KEY = "science-graphrag:activeWorkspaceId";
@@ -13,6 +18,11 @@ const INGEST_BATCH_TIMEOUT_MS = 600_000;
 
 function httpConfig(extra = {}) {
   return { timeout: DEFAULT_TIMEOUT_MS, ...extra };
+}
+
+/** Workspace list/detail/graph/dedup reads hit Neo4j — allow more than default axios 25s. */
+function workspaceReadConfig(extra = {}) {
+  return { timeout: EXTENDED_READ_TIMEOUT_MS, ...extra };
 }
 
 function apiUrl(pathWithQuery) {
@@ -74,7 +84,7 @@ export function getLastWorkspaceHref() {
  * @returns {Promise<Array<{ id: string, name: string, created_at?: string, work_ids: string[] }>>}
  */
 export async function listWorkspaces() {
-  const { data } = await apiClient.get(apiUrl("/v1/workspaces"), httpConfig());
+  const { data } = await apiClient.get(apiUrl("/v1/workspaces"), workspaceReadConfig());
   const items = Array.isArray(data?.items) ? data.items : [];
   return items;
 }
@@ -87,7 +97,7 @@ export async function getWorkspace(id) {
   const wid = encodeURIComponent(String(id || "").trim());
   if (!wid) return null;
   try {
-    const { data } = await apiClient.get(apiUrl(`/v1/workspaces/${wid}`), httpConfig());
+    const { data } = await apiClient.get(apiUrl(`/v1/workspaces/${wid}`), workspaceReadConfig());
     return data;
   } catch (e) {
     if (e?.response?.status === 404) return null;
@@ -191,7 +201,10 @@ export async function getWorkspaceGraph(workspaceId, opts = {}) {
     params.set("prioritize", String(opts.prioritize).trim());
   }
   const q = params.toString();
-  const { data } = await apiClient.get(apiUrl(`/v1/workspaces/${wid}/graph${q ? `?${q}` : ""}`), httpConfig());
+  const { data } = await apiClient.get(
+    apiUrl(`/v1/workspaces/${wid}/graph${q ? `?${q}` : ""}`),
+    workspaceReadConfig(),
+  );
   return data;
 }
 
@@ -201,7 +214,7 @@ export async function getWorkspaceGraph(workspaceId, opts = {}) {
  */
 export async function getWorkspaceGraphStats(workspaceId) {
   const wid = encodeURIComponent(String(workspaceId || "").trim());
-  const { data } = await apiClient.get(apiUrl(`/v1/workspaces/${wid}/graph/stats`), httpConfig());
+  const { data } = await apiClient.get(apiUrl(`/v1/workspaces/${wid}/graph/stats`), workspaceReadConfig());
   return data;
 }
 
@@ -224,7 +237,10 @@ export async function getWorkspaceGraphNeighbors(workspaceId, nodeId, opts = {})
     params.set("prioritize", String(opts.prioritize).trim());
   }
   const q = params.toString();
-  const { data } = await apiClient.get(apiUrl(`/v1/workspaces/${wid}/graph/neighbors?${q}`), httpConfig());
+  const { data } = await apiClient.get(
+    apiUrl(`/v1/workspaces/${wid}/graph/neighbors?${q}`),
+    workspaceReadConfig(),
+  );
   return data;
 }
 
@@ -275,7 +291,7 @@ export async function startWorkspaceBatchIngest(workspaceId, files, archive = nu
  */
 export async function getIngestJob(jobId) {
   const id = encodeURIComponent(String(jobId || "").trim());
-  const { data } = await apiClient.get(apiUrl(`/v1/ingest/jobs/${id}`), httpConfig());
+  const { data } = await apiClient.get(apiUrl(`/v1/ingest/jobs/${id}`), workspaceReadConfig());
   return data;
 }
 
@@ -293,7 +309,7 @@ export async function getWorkspaceSmartDedupConflicts(workspaceId, opts = {}) {
   const q = params.toString();
   const { data } = await apiClient.get(
     apiUrl(`/v1/workspaces/${wid}/dedup/conflicts${q ? `?${q}` : ""}`),
-    httpConfig(),
+    workspaceReadConfig(),
   );
   return data;
 }
@@ -330,7 +346,7 @@ export async function getWorkspaceAuthorDedupConflicts(workspaceId, opts = {}) {
   const q = params.toString();
   const { data } = await apiClient.get(
     apiUrl(`/v1/workspaces/${wid}/dedup/authors/conflicts${q ? `?${q}` : ""}`),
-    httpConfig(),
+    workspaceReadConfig(),
   );
   return data;
 }
@@ -362,7 +378,10 @@ export async function listEntityDedupConflicts(opts = {}) {
   if (opts.origin) params.set("origin", String(opts.origin));
   if (opts.limit != null) params.set("limit", String(opts.limit));
   if (opts.offset != null) params.set("offset", String(opts.offset));
-  const { data } = await apiClient.get(apiUrl(`/v1/dedup/entity?${params.toString()}`), httpConfig());
+  const { data } = await apiClient.get(
+    apiUrl(`/v1/dedup/entity?${params.toString()}`),
+    workspaceReadConfig(),
+  );
   return data;
 }
 

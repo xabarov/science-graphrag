@@ -1,4 +1,8 @@
-import { apiClient, buildApiUrl } from "../apiClient.js";
+import { apiClient, buildApiUrl, EXTENDED_READ_TIMEOUT_MS } from "../apiClient.js";
+
+function readOpts() {
+  return { timeout: EXTENDED_READ_TIMEOUT_MS };
+}
 
 /** GET /v1/works */
 export async function getWorks({
@@ -17,7 +21,7 @@ export async function getWorks({
   if (yearMax != null && Number.isFinite(Number(yearMax))) params.set("year_max", String(yearMax));
   if (hasSemantic === true) params.set("has_semantic", "true");
   if (hasSemantic === false) params.set("has_semantic", "false");
-  return apiClient.get(buildApiUrl(`/v1/works?${params.toString()}`));
+  return apiClient.get(buildApiUrl(`/v1/works?${params.toString()}`), readOpts());
 }
 
 /** Absolute URL for GET /v1/works/{work_id}/pdf (for react-pdf ``file`` prop). */
@@ -29,19 +33,19 @@ export function workPdfUrl(workId) {
 /** GET /v1/works/{work_id}/sources */
 export async function getWorkSources(workId) {
   const id = encodeURIComponent(String(workId ?? "").trim());
-  return apiClient.get(buildApiUrl(`/v1/works/${id}/sources`));
+  return apiClient.get(buildApiUrl(`/v1/works/${id}/sources`), readOpts());
 }
 
 /** GET /v1/works/{work_id} */
 export async function getWorkDetail(workId) {
   const id = encodeURIComponent(String(workId ?? "").trim());
-  return apiClient.get(buildApiUrl(`/v1/works/${id}`));
+  return apiClient.get(buildApiUrl(`/v1/works/${id}`), readOpts());
 }
 
 /** GET /v1/works/{work_id}/extracted-body — ingest artifact text (not Qdrant chunk join). */
 export async function getWorkExtractedBody(workId) {
   const id = encodeURIComponent(String(workId ?? "").trim());
-  return apiClient.get(buildApiUrl(`/v1/works/${id}/extracted-body`));
+  return apiClient.get(buildApiUrl(`/v1/works/${id}/extracted-body`), readOpts());
 }
 
 /** GET /v1/works/{work_id}/chunks */
@@ -53,11 +57,11 @@ export async function getWorkChunks(workId, { limit = 50, offset = 0, section_pr
   if (sectionPrefix != null && String(sectionPrefix).trim() !== "") {
     params.set("section_prefix", String(sectionPrefix).trim());
   }
-  return apiClient.get(buildApiUrl(`/v1/works/${id}/chunks?${params.toString()}`));
+  return apiClient.get(buildApiUrl(`/v1/works/${id}/chunks?${params.toString()}`), readOpts());
 }
 
 /** GET /v1/works/{work_id}/claims */
 export async function getWorkClaims(workId) {
   const id = encodeURIComponent(String(workId ?? "").trim());
-  return apiClient.get(buildApiUrl(`/v1/works/${id}/claims`));
+  return apiClient.get(buildApiUrl(`/v1/works/${id}/claims`), readOpts());
 }

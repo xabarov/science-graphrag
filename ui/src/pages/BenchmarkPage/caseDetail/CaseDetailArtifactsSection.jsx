@@ -7,6 +7,7 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
+import { useTheme } from "@mui/material/styles";
 
 import { useI18n } from "../../../i18n/useI18n.js";
 
@@ -18,6 +19,7 @@ export default function CaseDetailArtifactsSection({
   onClose,
 }) {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
   const navigate = useNavigate();
 
   if (!artifacts) return null;
@@ -29,7 +31,7 @@ export default function CaseDetailArtifactsSection({
 
   return (
     <Box sx={{ mb: 2, display: "flex", flexDirection: "column", gap: 1 }}>
-      <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.6)" }}>
+      <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary }}>
         {t("benchmark.caseDialog.artifactsHeading")}
       </Typography>
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "center" }}>

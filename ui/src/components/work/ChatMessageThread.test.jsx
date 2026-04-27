@@ -1,10 +1,13 @@
 /** @vitest-environment jsdom */
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { ThemeProvider } from "@mui/material/styles";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { buildAppTheme } from "../../theme/buildAppTheme.js";
 import { FeedbackProvider } from "../feedback/FeedbackProvider.jsx";
 import { ChatMessageThread } from "./ChatMessageThread.jsx";
+
+const theme = buildAppTheme("dark");
 
 beforeEach(() => {
   Element.prototype.scrollIntoView = vi.fn();
@@ -14,8 +17,6 @@ afterEach(() => {
   vi.restoreAllMocks();
   cleanup();
 });
-
-const theme = createTheme();
 
 const baseProps = {
   t: (k) => k,

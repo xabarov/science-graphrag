@@ -1,17 +1,6 @@
-import React from "react";
+import React, { useMemo } from "react";
 import Alert from "@mui/material/Alert";
-
-const baseSx = {
-  fontSize: "0.8125rem",
-  py: 0.5,
-  backgroundColor: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(255,255,255,0.08)",
-  color: "rgba(255,255,255,0.88)",
-  "& .MuiAlert-icon": {
-    color: "inherit",
-    opacity: 0.85,
-  },
-};
+import { useTheme } from "@mui/material/styles";
 
 /**
  * Inline status / error / warning aligned with app chrome.
@@ -23,6 +12,21 @@ const baseSx = {
  * }} props
  */
 export function InlineNotice({ severity = "warning", children, sx, ...rest }) {
+  const tk = useTheme().appTokens;
+  const baseSx = useMemo(
+    () => ({
+      fontSize: "0.8125rem",
+      py: 0.5,
+      backgroundColor: tk.surface.subtle,
+      border: `1px solid ${tk.border.default}`,
+      color: tk.text.primary,
+      "& .MuiAlert-icon": {
+        color: "inherit",
+        opacity: 0.85,
+      },
+    }),
+    [tk],
+  );
   return (
     <Alert severity={severity} sx={{ ...baseSx, ...(sx || {}) }} {...rest}>
       {children}

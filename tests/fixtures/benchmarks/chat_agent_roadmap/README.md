@@ -5,6 +5,12 @@ Canonical **benchmark-backed workspace** for chat-agent use-case runs (see
 
 This workspace id matches retrieval and agent-tools benchmarks (`ws-pilot-od`).
 
+If Neo4j returns `workspace_not_found` during audit, run once (idempotent):
+
+```bash
+.venv/bin/python scripts/seed_benchmark_workspaces.py
+```
+
 ## Layout
 
 - `baseline_workspace_manifest.json` — stable id, description, links to related benchmark gold.

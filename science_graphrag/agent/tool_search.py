@@ -37,7 +37,45 @@ def _norm_question(q: str) -> str:
     return (q or "").strip().lower()
 
 
-def _score_tool(meta: ToolManifestEntry, q: str, *, has_workspace: bool) -> float:
+_RETRIEVAL_CORE_CATALOG = (
+    "workspace_overview",
+    "workspace_list_papers",
+    "paper_lookup",
+    "paper_metadata",
+    "paper_authors",
+    "paper_counts",
+)
+
+
+def _answer_class_tool_boost(meta: ToolManifestEntry, answer_class: str | None) -> float:
+    """Bias shortlist toward tools that match coordinator / envelope answer class."""
+    if not answer_class:
+        return 0.0
+    ac = answer_class
+    name = meta.name
+    boost = 0.0
+    if ac == "fact_lookup" and name in ("paper_authors", "paper_metadata", "paper_lookup"):
+        boost += 3.5
+    if ac == "bibliography_export" and name == "format_bibliography_gost":
+        boost += 5.0
+    if ac == "quote_extraction" and name == "paper_quote_search":
+        boost += 5.0
+    if ac == "relation_tracing" and meta.family == "graph":
+        boost += 3.5
+    if ac == "inventory" and name in ("workspace_overview", "workspace_list_papers", "paper_counts"):
+        boost += 3.5
+    if ac == "ideation" and name in ("idea_search", "summarize_workspace"):
+        boost += 2.5
+    return boost
+
+
+def _score_tool(
+    meta: ToolManifestEntry,
+    q: str,
+    *,
+    has_workspace: bool,
+    answer_class: str | None = None,
+) -> float:
     if meta.requires_workspace and not has_workspace:
         return -1.0
     score = 0.0
@@ -94,6 +132,7 @@ def _score_tool(meta: ToolManifestEntry, q: str, *, has_workspace: bool) -> floa
         score += 4.0
     if meta.name == "final_answer":
         score += 0.1
+    score += _answer_class_tool_boost(meta, answer_class)
     return score
 
 
@@ -104,6 +143,7 @@ def shortlist_tools_for_specialist(
     specialist: str,
     settings: Settings,
     has_workspace: bool,
+    answer_class: str | None = None,
 ) -> tuple[list[BaseTool], dict[str, Any]]:
     """Return possibly narrowed tool list and debug meta for SSE / run_metadata."""
     if not settings.agent_rule_tool_search_enabled:
@@ -119,7 +159,7 @@ def shortlist_tools_for_specialist(
         meta = by_meta.get(name)
         if meta is None or meta.specialist not in (None, specialist):
             continue
-        s = _score_tool(meta, q, has_workspace=has_workspace)
+        s = _score_tool(meta, q, has_workspace=has_workspace, answer_class=answer_class)
         if s < 0:
             continue
         scored.append((s, t))
@@ -137,6 +177,12 @@ def shortlist_tools_for_specialist(
     if specialist == "retrieval_agent":
         have = {getattr(t, "name", "") for t in picked}
         for extra in ("idea_search", "summarize_workspace"):
+            if extra not in have:
+                hit = next((t for t in tools if getattr(t, "name", "") == extra), None)
+                if hit is not None:
+                    picked.append(hit)
+                    have.add(extra)
+        for extra in _RETRIEVAL_CORE_CATALOG:
             if extra not in have:
                 hit = next((t for t in tools if getattr(t, "name", "") == extra), None)
                 if hit is not None:

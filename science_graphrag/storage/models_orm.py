@@ -24,6 +24,8 @@ class DocumentRecord(Base):
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
     )
+    # JSON: see ``science_graphrag.ingestion.checkpoint`` (stage-safe ingest / resume).
+    ingest_checkpoint_json: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class IngestionRunRecord(Base):

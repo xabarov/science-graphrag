@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useMemo } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import { CursorButton } from "../../components/common/index.js";
+import { settingsAlertMutedSx, settingsCardSx } from "../../theme/settingsFormSx.js";
 
 function toneForResult(result) {
   if (!result) return "info";
@@ -19,19 +21,20 @@ export default function LlmConnectionTestCard({
   onTestSaved,
   onTestDraft,
 }) {
+  const tk = useTheme().appTokens;
+  const cardSx = useMemo(() => settingsCardSx(tk), [tk]);
+  const alertMutedSx = useMemo(() => settingsAlertMutedSx(tk), [tk]);
   const tone = toneForResult(result);
 
   return (
     <Box
       sx={{
-        border: "1px solid rgba(255,255,255,0.08)",
-        backgroundColor: "#1a1a1a",
-        borderRadius: 1.5,
+        ...cardSx,
         padding: 2,
       }}
     >
-      <Typography sx={{ fontSize: "0.875rem", fontWeight: 600 }}>Connection test</Typography>
-      <Typography sx={{ marginTop: 0.75, fontSize: "0.75rem", color: "rgba(255,255,255,0.58)", lineHeight: 1.5 }}>
+      <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: tk.text.primary }}>Connection test</Typography>
+      <Typography sx={{ marginTop: 0.75, fontSize: "0.75rem", color: tk.text.secondary, lineHeight: 1.5 }}>
         Runs a minimal provider call and expects a simple OK response. Test output is not persisted.
       </Typography>
 
@@ -49,10 +52,7 @@ export default function LlmConnectionTestCard({
           severity={tone}
           sx={{
             marginTop: 2,
-            backgroundColor: "rgba(255,255,255,0.03)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            color: "rgba(255,255,255,0.85)",
-            "& .MuiAlert-icon": { color: "inherit" },
+            ...alertMutedSx,
           }}
         >
           <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600 }}>
@@ -62,8 +62,8 @@ export default function LlmConnectionTestCard({
                 ? "Unexpected response"
                 : result.error_kind || "Connection error"}
           </Typography>
-          <Typography sx={{ fontSize: "0.75rem", marginTop: 0.5 }}>{result.message}</Typography>
-          <Typography sx={{ fontSize: "0.75rem", marginTop: 1, color: "rgba(255,255,255,0.6)" }}>
+          <Typography sx={{ fontSize: "0.75rem", marginTop: 0.5, color: tk.text.primary }}>{result.message}</Typography>
+          <Typography sx={{ fontSize: "0.75rem", marginTop: 1, color: tk.text.secondary }}>
             {[
               result.resolved?.base_url ? `Base URL: ${result.resolved.base_url}` : null,
               result.resolved?.model ? `Model: ${result.resolved.model}` : null,

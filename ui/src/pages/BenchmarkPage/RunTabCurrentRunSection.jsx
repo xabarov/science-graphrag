@@ -2,6 +2,7 @@ import React from "react";
 import Box from "@mui/material/Box";
 import LinearProgress from "@mui/material/LinearProgress";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import { CursorButton } from "../../components/common/index.js";
 import BenchmarkRunConfigSummary from "./BenchmarkRunConfigSummary.jsx";
@@ -31,19 +32,23 @@ export default function RunTabCurrentRunSection({
   onSwitchToResults,
   terminalStatuses,
 }) {
+  const tk = useTheme().appTokens;
   return (
     <>
       <Typography sx={{ fontWeight: 600, mb: 1 }}>{t("benchmark.run.currentRun")}</Typography>
       {!runId ? (
-        <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>{t("benchmark.run.emptyRun")}</Typography>
+        <Typography sx={{ color: tk.text.secondary }}>{t("benchmark.run.emptyRun")}</Typography>
       ) : (
         <Box>
-          <Typography sx={{ color: "rgba(255,255,255,0.6)", mb: 1 }}>
-            {t("benchmark.run.runId")} <span style={{ color: "rgba(255,255,255,0.9)" }}>{runId}</span>
+          <Typography sx={{ color: tk.text.secondary, mb: 1 }}>
+            {t("benchmark.run.runId")}{" "}
+            <Box component="span" sx={{ color: tk.text.primary }}>
+              {runId}
+            </Box>
           </Typography>
 
           <LinearProgress variant="determinate" value={progressPercent} />
-          <Typography sx={{ color: "rgba(255,255,255,0.6)", mt: 1 }}>
+          <Typography sx={{ color: tk.text.secondary, mt: 1 }}>
             {t("benchmark.run.progressLine", {
               done: String(progressCompleted),
               total: String(progressTotal),
@@ -56,15 +61,15 @@ export default function RunTabCurrentRunSection({
           {run && (
             <Box sx={{ mt: 1, display: "flex", gap: 2, flexWrap: "wrap" }}>
               {(run.benchmark_family || "layer1") === "layer2" ? (
-                <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>
+                <Typography sx={{ color: tk.text.secondary }}>
                   {t("benchmark.run.metricLayer2", { v: (summary.avg_layer2_recall_ratio ?? 0).toFixed(3) })}
                 </Typography>
               ) : (
                 <>
-                  <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>
+                  <Typography sx={{ color: tk.text.secondary }}>
                     {t("benchmark.run.metricNames", { v: (summary.avg_names_f1 ?? 0).toFixed(3) })}
                   </Typography>
-                  <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>
+                  <Typography sx={{ color: tk.text.secondary }}>
                     {t("benchmark.run.metricArxiv", { v: (summary.avg_sample_arxiv_f1 ?? 0).toFixed(3) })}
                   </Typography>
                 </>

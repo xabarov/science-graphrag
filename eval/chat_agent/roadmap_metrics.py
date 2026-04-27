@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections import Counter
 from typing import Any
 
+_GRAPH_TOOL_NAMES = frozenset({"cypher_query", "entity_search", "edge_search"})
+
 
 def _tool_names(trace: list[dict[str, Any]]) -> list[str]:
     out: list[str] = []
@@ -23,22 +25,48 @@ def derive_diagnostics(report: dict[str, Any]) -> dict[str, Any]:
     non_final = [n for n in names if n != "final_answer"]
     counts = Counter(names)
     repeated = [n for n, c in counts.items() if c > 1 and n != "final_answer"]
-    cites = report.get("citations") or []
+    cites = report.get("citations")
+    if cites is None:
+        cites = (report.get("final_output") or {}).get("citations")
+    cites_list = cites if isinstance(cites, list) else []
     out = report.get("final_output") or report
+    bib = out.get("bibliography") if isinstance(out.get("bibliography"), dict) else {}
+    filtered = bib.get("filtered_work_ids") if isinstance(bib, dict) else None
+    filtered_n = len(filtered) if isinstance(filtered, list) else 0
+    entries = bib.get("entries") if isinstance(bib, dict) else None
+    bib_entry_n = len(entries) if isinstance(entries, list) else 0
+    budget_exhausted = any(
+        str((s.get("args_summary") or {}).get("reason") or "").strip().lower() == "budget_exhausted"
+        for s in trace
+        if isinstance(s, dict)
+    )
+    tool_trace_error_count = sum(
+        1
+        for s in trace
+        if isinstance(s, dict) and s.get("error") not in (None, "", False, 0)
+    )
     return {
         "tool_call_count": len(names),
         "non_final_tool_call_count": len(non_final),
+        "first_non_final_tool": non_final[0] if non_final else None,
         "unique_tools": sorted(set(names)),
         "repeated_non_final_tools": repeated,
-        "citation_count": len(cites) if isinstance(cites, list) else 0,
+        "citation_count": len(cites_list),
+        "citations_missing_work_id": sum(
+            1 for c in cites_list if isinstance(c, dict) and not str(c.get("work_id") or "").strip()
+        ),
         "answer_class": out.get("answer_class"),
         "phoenix_trace_id_present": bool(out.get("phoenix_trace_id")),
         "warnings_count": len(out.get("warnings") or []),
         "has_bibliography_block": bool(out.get("bibliography")),
+        "bibliography_entry_count": bib_entry_n,
+        "bibliography_filtered_work_ids_count": filtered_n,
         "has_inventory_block": bool(out.get("inventory")),
         "has_quote_candidates": bool(out.get("quote_candidates")),
         "has_relation_trace": bool(out.get("relation_trace")),
         "has_idea_suggestions": bool(out.get("idea_suggestions")),
+        "budget_exhausted_in_trace": budget_exhausted,
+        "tool_trace_error_count": tool_trace_error_count,
     }
 
 
@@ -83,6 +111,8 @@ def score_roadmap_case(report: dict[str, Any], gold: dict[str, Any]) -> dict[str
             reasons.append(f"tools_none_of:forbidden_present_{bad}")
 
     strict_cls = bool(expect.get("strict_answer_class"))
+    if str(gold.get("eval_tier") or "").lower() == "strict" and "strict_answer_class" not in expect:
+        strict_cls = True
     allowed = expect.get("answer_classes_allowed") or []
     if allowed:
         ac = str((report.get("final_output") or report).get("answer_class") or "")
@@ -92,6 +122,34 @@ def score_roadmap_case(report: dict[str, Any], gold: dict[str, Any]) -> dict[str
                 reasons.append(msg)
             else:
                 reasons.append(f"soft:{msg}")
+
+    if expect.get("require_graph_tool"):
+        if not (_GRAPH_TOOL_NAMES & set(names)):
+            reasons.append("require_graph_tool:missing_graph_specialist_tool")
+
+    final_out = report.get("final_output") or report
+    if expect.get("require_typed_bibliography"):
+        ob = final_out.get("bibliography") if isinstance(final_out.get("bibliography"), dict) else {}
+        bib_ok = bool(ob.get("entries")) or str(ob.get("format") or "").strip().lower() == "gost" or (
+            isinstance(ob.get("lines"), list) and bool(ob.get("lines"))
+        )
+        if not bib_ok:
+            reasons.append("require_typed_bibliography:missing_or_empty")
+
+    if expect.get("require_relation_trace"):
+        rt = final_out.get("relation_trace")
+        if not isinstance(rt, dict) or not rt:
+            reasons.append("require_relation_trace:missing_or_empty")
+
+    max_err = expect.get("max_tool_trace_errors")
+    if isinstance(max_err, int) and max_err >= 0:
+        err_n = sum(
+            1
+            for s in trace
+            if isinstance(s, dict) and s.get("error") not in (None, "", False, 0)
+        )
+        if err_n > max_err:
+            reasons.append(f"max_tool_trace_errors:want_at_most_{max_err}_got_{err_n}")
 
     hard = [r for r in reasons if not str(r).startswith("soft:")]
     passed = len(hard) == 0

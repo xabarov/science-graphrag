@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useMemo } from "react";
+import { useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Accordion from "@mui/material/Accordion";
@@ -13,20 +14,6 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 import { useI18n } from "../../../i18n/useI18n.js";
 
-const preSideBySideSx = {
-  whiteSpace: "pre-wrap",
-  wordBreak: "break-word",
-  border: "1px solid rgba(255,255,255,0.08)",
-  borderRadius: 2,
-  padding: 1.5,
-  maxHeight: 320,
-  overflow: "auto",
-  background: "rgba(255,255,255,0.02)",
-  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-  fontSize: "11px",
-  margin: 0,
-};
-
 export default function CaseGraphExpectationsCompareAndServer({
   snapshotJson,
   graphExpectationsJson,
@@ -36,6 +23,23 @@ export default function CaseGraphExpectationsCompareAndServer({
   serverPreview,
 }) {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
+  const preSideBySideSx = useMemo(
+    () => ({
+      whiteSpace: "pre-wrap",
+      wordBreak: "break-word",
+      border: `1px solid ${tk.border.default}`,
+      borderRadius: 2,
+      padding: 1.5,
+      maxHeight: 320,
+      overflow: "auto",
+      background: tk.control.outlinedBg,
+      fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+      fontSize: "11px",
+      margin: 0,
+    }),
+    [tk],
+  );
 
   return (
     <>
@@ -56,7 +60,7 @@ export default function CaseGraphExpectationsCompareAndServer({
               }}
             >
               <Box>
-                <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.5)", mb: 0.5 }}>
+                <Typography sx={{ fontSize: "0.7rem", color: tk.text.faint, mb: 0.5 }}>
                   {t("benchmark.caseDialog.caseGoldLabel")}
                 </Typography>
                 <Box component="pre" sx={preSideBySideSx}>
@@ -64,7 +68,7 @@ export default function CaseGraphExpectationsCompareAndServer({
                 </Box>
               </Box>
               <Box>
-                <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.5)", mb: 0.5 }}>
+                <Typography sx={{ fontSize: "0.7rem", color: tk.text.faint, mb: 0.5 }}>
                   {t("benchmark.caseDialog.snapshotEmbeddedGoldLabel")}
                 </Typography>
                 <Box component="pre" sx={preSideBySideSx}>
@@ -81,7 +85,7 @@ export default function CaseGraphExpectationsCompareAndServer({
       {graphCompare.arxivNotes.length ? (
         <Box>
           {graphCompare.arxivNotes.map((line, idx) => (
-            <Typography key={idx} sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.65)", mb: 0.5 }}>
+            <Typography key={idx} sx={{ fontSize: "0.75rem", color: tk.text.secondary, mb: 0.5 }}>
               {line}
             </Typography>
           ))}
@@ -89,7 +93,7 @@ export default function CaseGraphExpectationsCompareAndServer({
       ) : null}
 
       {graphCompare.rows.length ? (
-        <Box sx={{ border: "1px solid rgba(255,255,255,0.08)", borderRadius: 1.5, overflow: "hidden" }}>
+        <Box sx={{ border: `1px solid ${tk.border.default}`, borderRadius: 1.5, overflow: "hidden" }}>
           <Typography sx={{ px: 1.5, py: 1, fontWeight: 600, fontSize: "0.8125rem" }}>
             {t("benchmark.caseDialog.snapshotVsExpectationsTitle")}
           </Typography>
@@ -108,7 +112,7 @@ export default function CaseGraphExpectationsCompareAndServer({
                   <TableCell>{row.field}</TableCell>
                   <TableCell>{row.snapshot}</TableCell>
                   <TableCell>{row.expected}</TableCell>
-                  <TableCell sx={{ color: row.ok ? "rgba(129,140,248,0.95)" : "rgba(239,68,68,0.9)" }}>
+                  <TableCell sx={{ color: row.ok ? tk.accent.fg : tk.state.dangerFg }}>
                     {row.ok ? t("benchmark.caseDialog.tableOkYes") : t("benchmark.caseDialog.tableOkNo")}
                   </TableCell>
                 </TableRow>
@@ -119,7 +123,7 @@ export default function CaseGraphExpectationsCompareAndServer({
       ) : null}
 
       {serverPreviewError ? (
-        <Typography sx={{ color: "rgba(239,68,68,0.9)", fontSize: "0.8125rem" }} role="alert">
+        <Typography sx={{ color: tk.state.dangerFg, fontSize: "0.8125rem" }} role="alert">
           {serverPreviewError}
         </Typography>
       ) : null}
@@ -130,7 +134,7 @@ export default function CaseGraphExpectationsCompareAndServer({
             {t("benchmark.caseDialog.serverPreviewArxivNotes")}
           </Typography>
           {serverPreview.arxiv_notes.map((line, idx) => (
-            <Typography key={idx} sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.65)", mb: 0.5 }}>
+            <Typography key={idx} sx={{ fontSize: "0.75rem", color: tk.text.secondary, mb: 0.5 }}>
               {line}
             </Typography>
           ))}
@@ -138,7 +142,7 @@ export default function CaseGraphExpectationsCompareAndServer({
       ) : null}
 
       {serverPreview?.rows?.length ? (
-        <Box sx={{ border: "1px solid rgba(99,102,241,0.25)", borderRadius: 1.5, overflow: "hidden" }}>
+        <Box sx={{ border: `1px solid ${tk.accent.softBorder}`, borderRadius: 1.5, overflow: "hidden" }}>
           <Typography sx={{ px: 1.5, py: 1, fontWeight: 600, fontSize: "0.8125rem" }}>
             {t("benchmark.caseDialog.serverPreviewRangeChecks")}
           </Typography>
@@ -157,7 +161,7 @@ export default function CaseGraphExpectationsCompareAndServer({
                   <TableCell>{row.field}</TableCell>
                   <TableCell>{row.snapshot}</TableCell>
                   <TableCell>{row.expected}</TableCell>
-                  <TableCell sx={{ color: row.ok ? "rgba(129,140,248,0.95)" : "rgba(239,68,68,0.9)" }}>
+                  <TableCell sx={{ color: row.ok ? tk.accent.fg : tk.state.dangerFg }}>
                     {row.ok ? t("benchmark.caseDialog.tableOkYes") : t("benchmark.caseDialog.tableOkNo")}
                   </TableCell>
                 </TableRow>

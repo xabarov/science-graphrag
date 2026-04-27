@@ -3,11 +3,12 @@ import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
+import { useTheme } from "@mui/material/styles";
 
 import { feedbackDialogPaperSx } from "./dialogPaperSx.js";
 
 /**
- * Reusable dark dialog shell (title + body + actions).
+ * Reusable dialog shell (title + body + actions).
  *
  * @param {{
  *   open: boolean,
@@ -30,6 +31,8 @@ export function FeedbackShell({
   "aria-labelledby": ariaLabelledBy,
   "aria-describedby": ariaDescribedBy,
 }) {
+  const theme = useTheme();
+  const tk = theme.appTokens;
   const labelledBy = ariaLabelledBy || titleId;
   return (
     <Dialog
@@ -39,17 +42,14 @@ export function FeedbackShell({
       aria-describedby={ariaDescribedBy}
       slotProps={{
         paper: {
-          sx: feedbackDialogPaperSx,
+          sx: feedbackDialogPaperSx(theme),
         },
       }}
     >
-      <DialogTitle id={titleId} sx={{ fontSize: "0.9375rem", fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>
+      <DialogTitle id={titleId} sx={{ fontSize: "0.9375rem", fontWeight: 600, color: tk.text.primary }}>
         {title}
       </DialogTitle>
-      <DialogContent
-        {...(ariaDescribedBy ? { id: ariaDescribedBy } : {})}
-        sx={{ color: "rgba(255,255,255,0.65)", fontSize: "0.8125rem" }}
-      >
+      <DialogContent {...(ariaDescribedBy ? { id: ariaDescribedBy } : {})} sx={{ color: tk.text.secondary, fontSize: "0.8125rem" }}>
         {children}
       </DialogContent>
       <DialogActions sx={{ px: 2, pb: 1.5, gap: 1 }}>{actions}</DialogActions>

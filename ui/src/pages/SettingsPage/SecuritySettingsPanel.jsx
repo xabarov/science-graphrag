@@ -1,12 +1,18 @@
-import React from "react";
+import React, { useMemo } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import { useI18n } from "../../i18n/useI18n.js";
+import { settingsAlertMutedSx, settingsCardSx } from "../../theme/settingsFormSx.js";
 
 export default function SecuritySettingsPanel({ security }) {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
+  const cardSx = useMemo(() => settingsCardSx(tk), [tk]);
+  const alertMutedSx = useMemo(() => settingsAlertMutedSx(tk), [tk]);
+
   const s = security || {};
   const adminOn = Boolean(s.admin_api_key_configured);
   const settingsAuth = Boolean(s.settings_auth_required);
@@ -14,15 +20,13 @@ export default function SecuritySettingsPanel({ security }) {
   return (
     <Box
       sx={{
-        border: "1px solid rgba(255,255,255,0.08)",
-        backgroundColor: "#1a1a1a",
-        borderRadius: 1.5,
+        ...cardSx,
         padding: 2.5,
         maxWidth: 640,
       }}
     >
-      <Typography sx={{ fontSize: "0.875rem", fontWeight: 600 }}>{t("settings.security.title")}</Typography>
-      <Typography sx={{ marginTop: 1, fontSize: "0.8125rem", color: "rgba(255,255,255,0.58)", lineHeight: 1.6 }}>
+      <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: tk.text.primary }}>{t("settings.security.title")}</Typography>
+      <Typography sx={{ marginTop: 1, fontSize: "0.8125rem", color: tk.text.secondary, lineHeight: 1.6 }}>
         {t("settings.security.intro")}
       </Typography>
 
@@ -30,16 +34,13 @@ export default function SecuritySettingsPanel({ security }) {
         severity="info"
         sx={{
           marginTop: 2,
-          backgroundColor: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          color: "rgba(255,255,255,0.85)",
-          "& .MuiAlert-icon": { color: "inherit" },
+          ...alertMutedSx,
         }}
       >
-        <Typography sx={{ fontSize: "0.8125rem", lineHeight: 1.55 }}>
+        <Typography sx={{ fontSize: "0.8125rem", lineHeight: 1.55, color: tk.text.primary }}>
           {t("settings.security.adminKeyLine", { state: adminOn ? t("settings.security.on") : t("settings.security.off") })}
         </Typography>
-        <Typography sx={{ fontSize: "0.8125rem", lineHeight: 1.55, marginTop: 1 }}>
+        <Typography sx={{ fontSize: "0.8125rem", lineHeight: 1.55, marginTop: 1, color: tk.text.primary }}>
           {settingsAuth
             ? t("settings.security.settingsBearerOn")
             : t("settings.security.settingsBearerOff")}

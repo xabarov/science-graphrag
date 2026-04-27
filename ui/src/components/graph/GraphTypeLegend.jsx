@@ -5,6 +5,7 @@ import Chip from "@mui/material/Chip";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import { useI18n } from "../../i18n/useI18n.js";
 import { getScienceGraphLegendNodeChipSx, getScienceGraphNodeTypeIcon } from "./graphCanvasStyle.js";
@@ -42,6 +43,9 @@ const NODE_KIND_GROUPS = [
  */
 export default function GraphTypeLegend({ graph }) {
   const { t } = useI18n();
+  const theme = useTheme();
+  const tk = theme.appTokens;
+  const appearance = theme.palette.mode === "light" ? "light" : "dark";
   const [chipSort, setChipSort] = useState(/** @type {"frequency" | "alphabet"} */ ("frequency"));
   const composition = useMemo(() => collectGraphComposition(graph), [graph]);
   const { nodeTypes, edgeTypes } = useMemo(() => collectGraphTypeLegend(graph), [graph]);
@@ -107,7 +111,7 @@ export default function GraphTypeLegend({ graph }) {
         label={`${baseLabel} (${count})`}
         size="small"
         sx={{
-          ...getScienceGraphLegendNodeChipSx(kind),
+          ...getScienceGraphLegendNodeChipSx(kind, { appearance }),
           "& .MuiChip-icon": { marginLeft: "6px" },
         }}
       />
@@ -120,12 +124,12 @@ export default function GraphTypeLegend({ graph }) {
         mb: { xs: 0.75, sm: 1 },
         p: { xs: 0.5, sm: 0.75 },
         borderRadius: "6px",
-        border: "1px solid rgba(255,255,255,0.08)",
-        backgroundColor: "rgba(255,255,255,0.02)",
+        border: `1px solid ${tk.border.default}`,
+        backgroundColor: tk.control.outlinedBg,
       }}
     >
       <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 0.75, mb: 0.65 }}>
-        <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.42)", lineHeight: 1.35 }}>
+        <Typography sx={{ fontSize: "0.68rem", color: tk.text.faint, lineHeight: 1.35 }}>
           {t("graph.legend.overviewSummary", { nodeCount: totalNodes, edgeCount: totalEdges })}
         </Typography>
         <ToggleButtonGroup
@@ -141,12 +145,12 @@ export default function GraphTypeLegend({ graph }) {
               px: 0.75,
               minWidth: 0,
               textTransform: "none",
-              color: "rgba(255,255,255,0.5)",
-              borderColor: "rgba(255,255,255,0.12)",
+              color: tk.text.secondary,
+              borderColor: tk.border.strong,
             },
             "& .MuiToggleButton-root.Mui-selected": {
-              color: "rgba(129, 140, 248, 0.95)",
-              backgroundColor: "rgba(99, 102, 241, 0.12)",
+              color: tk.accent.fg,
+              backgroundColor: tk.accent.chipReadyBg,
             },
           }}
         >
@@ -164,12 +168,12 @@ export default function GraphTypeLegend({ graph }) {
       >
         {nodeTypes.length > 0 ? (
           <>
-            <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", mr: 0.25 }}>
+            <Typography sx={{ fontSize: "0.7rem", color: tk.text.faint, mr: 0.25 }}>
               {t("graph.legend.nodes")}
             </Typography>
             {groupedNodeKinds.map(({ groupKey, kinds }) => (
               <React.Fragment key={`grp-${groupKey}`}>
-                <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.45)", mr: 0.25 }}>
+                <Typography sx={{ fontSize: "0.68rem", color: tk.text.muted, mr: 0.25 }}>
                   {t(`graph.legend.group.${groupKey}`)}
                 </Typography>
                 {kinds.map((kind) => renderNodeChip(kind, groupKey))}
@@ -177,7 +181,7 @@ export default function GraphTypeLegend({ graph }) {
             ))}
             {otherKinds.length > 0 ? (
               <React.Fragment key="grp-Other">
-                <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.45)", mr: 0.25 }}>
+                <Typography sx={{ fontSize: "0.68rem", color: tk.text.muted, mr: 0.25 }}>
                   {t("graph.legend.group.Other")}
                 </Typography>
                 {otherKinds.map((kind) => renderNodeChip(kind, "Other"))}
@@ -187,7 +191,7 @@ export default function GraphTypeLegend({ graph }) {
         ) : null}
         {sortedEdgeTypes.length > 0 ? (
           <>
-            <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", ml: nodeTypes.length ? 1 : 0, mr: 0.25 }}>
+            <Typography sx={{ fontSize: "0.7rem", color: tk.text.faint, ml: nodeTypes.length ? 1 : 0, mr: 0.25 }}>
               {t("graph.legend.edges")}
             </Typography>
             {sortedEdgeTypes.map((edgeType) => {
@@ -195,15 +199,15 @@ export default function GraphTypeLegend({ graph }) {
               return (
                 <Chip
                   key={`e-${edgeType}`}
-                  icon={<ArrowForwardIcon sx={{ fontSize: "0.65rem !important", color: "rgba(255,255,255,0.45) !important" }} />}
+                  icon={<ArrowForwardIcon sx={{ fontSize: "0.65rem !important", color: `${tk.text.muted} !important` }} />}
                   label={`${localizeEdgeTypeKey(edgeType, t)} (${ec})`}
                   size="small"
                   variant="outlined"
                   sx={{
                     height: 22,
                     fontSize: "0.75rem",
-                    borderColor: "rgba(255,255,255,0.14)",
-                    color: "rgba(255,255,255,0.65)",
+                    borderColor: tk.border.strong,
+                    color: tk.text.secondary,
                     "& .MuiChip-icon": { marginLeft: "6px" },
                   }}
                 />

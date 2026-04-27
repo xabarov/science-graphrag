@@ -6,29 +6,15 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import { CursorPrimaryButton } from "../../components/common/index.js";
 import { useI18n } from "../../i18n/useI18n.js";
-
-const FIELD_SX = {
-  "& .MuiInputBase-root": {
-    fontSize: "0.8125rem",
-    backgroundColor: "rgba(255,255,255,0.02)",
-  },
-  "& .MuiOutlinedInput-notchedOutline": {
-    borderColor: "rgba(255,255,255,0.12)",
-  },
-  "& .MuiInputBase-root:hover .MuiOutlinedInput-notchedOutline": {
-    borderColor: "rgba(255,255,255,0.18)",
-  },
-  "& .MuiInputBase-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
-    borderColor: "rgba(99, 102, 241, 0.5)",
-  },
-  "& .MuiInputLabel-root": {
-    fontSize: "0.8125rem",
-    color: "rgba(255,255,255,0.6)",
-  },
-};
+import {
+  outlinedAppTextFieldSx,
+  settingsCardSx,
+  settingsNestedInsetSx,
+} from "../../theme/settingsFormSx.js";
 
 function IngestionSettingsPanelForm({
   resolved,
@@ -39,6 +25,11 @@ function IngestionSettingsPanelForm({
   onDirtyChange,
 }) {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
+  const fieldSx = useMemo(() => outlinedAppTextFieldSx(tk), [tk]);
+  const cardSx = useMemo(() => settingsCardSx(tk), [tk]);
+  const nestedSx = useMemo(() => settingsNestedInsetSx(tk), [tk]);
+
   const [maxMb, setMaxMb] = useState(String(resolved));
   const [claimsEnabled, setClaimsEnabled] = useState(Boolean(claimsExtractionEnabled));
 
@@ -69,17 +60,15 @@ function IngestionSettingsPanelForm({
       component="form"
       onSubmit={handleSubmit}
       sx={{
-        border: "1px solid rgba(255,255,255,0.08)",
-        backgroundColor: "#1a1a1a",
-        borderRadius: 1.5,
+        ...cardSx,
         padding: 2.5,
         maxWidth: 560,
       }}
     >
-      <Typography sx={{ fontSize: "0.875rem", fontWeight: 600 }}>{t("settings.ingestion.title")}</Typography>
-      <Typography sx={{ marginTop: 1, fontSize: "0.8125rem", color: "rgba(255,255,255,0.58)", lineHeight: 1.6 }}>
+      <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: tk.text.primary }}>{t("settings.ingestion.title")}</Typography>
+      <Typography sx={{ marginTop: 1, fontSize: "0.8125rem", color: tk.text.secondary, lineHeight: 1.6 }}>
         {t("settings.ingestion.desc.p1")}{" "}
-        <Typography component="span" sx={{ fontFamily: "ui-monospace, monospace", fontSize: "0.78rem" }}>
+        <Typography component="span" sx={{ fontFamily: "ui-monospace, monospace", fontSize: "0.78rem", color: tk.text.primary }}>
           {t("settings.ingestion.nginxDirective")}
         </Typography>{" "}
         {t("settings.ingestion.desc.p2")}
@@ -90,11 +79,11 @@ function IngestionSettingsPanelForm({
           severity="error"
           sx={{
             marginTop: 2,
-            backgroundColor: "rgba(255,255,255,0.03)",
-            border: "1px solid rgba(255,255,255,0.08)",
+            backgroundColor: tk.surface.subtle,
+            border: `1px solid ${tk.border.default}`,
           }}
         >
-          <Typography sx={{ fontSize: "0.8125rem" }}>{saveError}</Typography>
+          <Typography sx={{ fontSize: "0.8125rem", color: tk.text.primary }}>{saveError}</Typography>
         </Alert>
       ) : null}
 
@@ -104,11 +93,11 @@ function IngestionSettingsPanelForm({
         value={maxMb}
         onChange={(e) => setMaxMb(e.target.value)}
         fullWidth
-        sx={{ ...FIELD_SX, marginTop: 2.5 }}
+        sx={{ ...fieldSx, marginTop: 2.5 }}
         inputProps={{ min: 1, max: 2048, step: 1 }}
         required
       />
-      <FormHelperText sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.75rem", marginTop: 0.75 }}>
+      <FormHelperText sx={{ color: tk.text.muted, fontSize: "0.75rem", marginTop: 0.75 }}>
         {t("settings.ingestion.rangeHint")}
       </FormHelperText>
 
@@ -116,9 +105,7 @@ function IngestionSettingsPanelForm({
         sx={{
           marginTop: 2.5,
           padding: 1.5,
-          borderRadius: 1.5,
-          border: "1px solid rgba(255,255,255,0.08)",
-          backgroundColor: "rgba(255,255,255,0.02)",
+          ...nestedSx,
         }}
       >
         <FormControlLabel
@@ -135,11 +122,11 @@ function IngestionSettingsPanelForm({
             margin: 0,
             "& .MuiFormControlLabel-label": {
               fontSize: "0.8125rem",
-              color: "rgba(255,255,255,0.88)",
+              color: tk.text.primary,
             },
           }}
         />
-        <FormHelperText sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.75rem", marginTop: 0.5 }}>
+        <FormHelperText sx={{ color: tk.text.muted, fontSize: "0.75rem", marginTop: 0.5 }}>
           {t("settings.ingestion.claimsToggleHint")}
         </FormHelperText>
       </Box>

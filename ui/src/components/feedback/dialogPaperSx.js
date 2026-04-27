@@ -1,6 +1,12 @@
-/** Shared MUI Dialog `Paper` styles for feedback modals (dark, compact). */
-export const feedbackDialogPaperSx = {
-  backgroundColor: "#1a1a1a",
-  border: "1px solid rgba(255,255,255,0.08)",
-  borderRadius: "6px",
-};
+/**
+ * @param {import("@mui/material/styles").Theme} theme
+ * @returns {import("@mui/material/styles").SxProps<import("@mui/material/styles").Theme>}
+ */
+export function feedbackDialogPaperSx(theme) {
+  const tk = theme.appTokens;
+  return {
+    backgroundColor: tk.surface.panel,
+    border: `1px solid ${tk.border.default}`,
+    borderRadius: "6px",
+  };
+}

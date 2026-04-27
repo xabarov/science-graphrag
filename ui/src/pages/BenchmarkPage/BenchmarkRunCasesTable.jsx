@@ -10,6 +10,7 @@ import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import { getBenchmarkRunCasesPage } from "../../services/benchmarkApi.js";
 import { CursorButton, CursorSmallButton } from "../../components/common/index.js";
@@ -23,6 +24,7 @@ import {
 const PAGE_SIZE = 100;
 
 export default function BenchmarkRunCasesTable({ run, onOpenWorkbench }) {
+  const tk = useTheme().appTokens;
   const rid = run?.run_id;
   const isPaginated = run?.cases_paginated === true;
   const totalFromRun = run?.cases_total ?? 0;
@@ -106,22 +108,22 @@ export default function BenchmarkRunCasesTable({ run, onOpenWorkbench }) {
   const hasMore = isPaginated && nextOffset < totalFromRun;
 
   if (!cases.length && isPaginated && pageLoading) {
-    return <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>Loading cases…</Typography>;
+    return <Typography sx={{ color: tk.text.secondary }}>Loading cases…</Typography>;
   }
 
   if (!cases.length) {
-    return <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>No cases in this run.</Typography>;
+    return <Typography sx={{ color: tk.text.secondary }}>No cases in this run.</Typography>;
   }
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
       {isPaginated ? (
-        <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.8125rem" }}>
+        <Typography sx={{ color: tk.text.muted, fontSize: "0.8125rem" }}>
           Large run: showing {cases.length} of {totalFromRun} cases (paginated). Filters apply to loaded rows only.
         </Typography>
       ) : null}
       {pageError ? (
-        <Typography sx={{ color: "rgba(239,68,68,0.9)", fontSize: "0.8125rem" }} role="alert">
+        <Typography sx={{ color: tk.state.dangerFg, fontSize: "0.8125rem" }} role="alert">
           {pageError}
         </Typography>
       ) : null}
@@ -193,7 +195,7 @@ export default function BenchmarkRunCasesTable({ run, onOpenWorkbench }) {
         ) : null}
       </Box>
 
-      <Box sx={{ border: "1px solid rgba(255,255,255,0.08)", borderRadius: 1.5, overflow: "hidden" }}>
+      <Box sx={{ border: `1px solid ${tk.border.default}`, borderRadius: 1.5, overflow: "hidden" }}>
         <Table size="small">
           <TableHead>
             <TableRow>
@@ -216,7 +218,7 @@ export default function BenchmarkRunCasesTable({ run, onOpenWorkbench }) {
                   <TableCell sx={{ wordBreak: "break-word" }}>{item.case_id}</TableCell>
                   <TableCell>{item.status}</TableCell>
                   <TableCell>{summaryText}</TableCell>
-                  <TableCell sx={{ maxWidth: 280, color: "rgba(255,255,255,0.6)" }}>
+                  <TableCell sx={{ maxWidth: 280, color: tk.text.secondary }}>
                     {failedChecks.length ? failedChecks.join(", ") : "—"}
                   </TableCell>
                   <TableCell align="right">

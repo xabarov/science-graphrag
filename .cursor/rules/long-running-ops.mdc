@@ -29,6 +29,10 @@ alwaysApply: true
 
  **Альтернатива (рекомендуется):** `.venv/bin/science-graphrag config-check` — печатает `SET`/`UNSET` для ключей, канал embeddings, URL-ы сервисов (с маскировкой пароля в DSN) и завершает с кодом **1**, если `extraction_llm_api_key` пуст (флаг `--no-strict` отключает exit 1).
 
+ **Embeddings (OpenRouter):** перед долгим `ingest-corpus` можно вызвать один probe-запрос:  
+ `.venv/bin/science-graphrag config-check --embeddings-preflight` или `ingest-corpus … --embeddings-preflight`.  
+ После сбоя embed без порчи layer1 — `science-graphrag ingest-resume-embed <document_id>` (см. `docs/runbooks/phase0-bge-m3-qdrant-cutover.md`).
+
  **Если `False` при активном `SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV=1`:**
  Флаг переключает `load_dotenv(override=False)`, что исторически блокировало загрузку API-ключей из `.env` когда переменная была пуста в shell. После правки `config.py` (2026-04-26) ключи грузятся принудительно — но если smoke-check всё равно `False`, значит:
  - `MAIN_LLM_API_KEY` отсутствует в `.env` (проверь `grep MAIN_LLM_API_KEY .env`)
