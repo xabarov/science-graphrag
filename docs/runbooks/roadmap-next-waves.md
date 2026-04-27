@@ -27,7 +27,7 @@ Foundation LangGraph/LangChain добавлен без изменения runtim
 
 ## Wave A — Phase 4: decision gate до устойчивого GO
 
-Без ключей LLM в `.env` (`MAIN_LLM_API_KEY` / `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*`) шаги 2–3 пропускаются; сводка агрегатора всё равно строится по последним закоммиченным `eval/results/current-*.json`.
+Без ключей LLM в `.env` (`SCIENCE_GRAPHRAG_EXTRACTION_LLM_*`) шаги 2–3 пропускаются; сводка агрегатора всё равно строится по последним закоммиченным `eval/results/current-*.json`.
 
 1. Поднять зависимости при необходимости: `docker compose up -d` (без `sudo`, см. roadmap).
 2. Перепрогон с LLM:
@@ -76,7 +76,7 @@ Foundation LangGraph/LangChain добавлен без изменения runtim
 
 **Цель:** закрыть остаток **CONDITIONAL-GO** пилота и укрепить ночные прогоны.
 
-1. **Nightly LLM layer-1:** при наличии `MAIN_LLM_API_KEY` в GitHub secrets — прогон `science-graphrag-layer1-benchmark … --tier nightly_heavy` в `.github/workflows/integration-nightly.yml` (добавлено 2026-04-19).
+1. **Nightly LLM layer-1:** при наличии секрета `MAIN_LLM_API_KEY` в GitHub (пробрасывается в `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY`) — прогон `science-graphrag-layer1-benchmark … --tier nightly_heavy` в `.github/workflows/integration-nightly.yml` (добавлено 2026-04-19).
 2. **Graph suite:** уже есть ingest+graph кейсы на nightly; при необходимости расширить артефакты `eval/results/ci-*.json` и upload.
 3. **Teacher-gold audit:** следовать [benchmarks/teacher-gold-audit-v1.md](../benchmarks/teacher-gold-audit-v1.md).
 4. **Benchmark run persistence:** снимки прогонов в `data/benchmark_runs/` + восстановление после рестарта API (`science_graphrag/api/task_store.py`).

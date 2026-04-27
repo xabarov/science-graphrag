@@ -143,8 +143,9 @@ def _parse_args() -> argparse.Namespace:
         type=str,
         default=None,
         help=(
-            "Embedding model id on OpenRouter (default: $EMBEDDING_MODEL "
-            "or 'baai/bge-m3'). Only consulted when --with-embeddings is set."
+            "Embedding model id on OpenRouter (default: from Settings "
+            "`openrouter_embedding_model` or 'baai/bge-m3'). Only consulted when "
+            "--with-embeddings is set."
         ),
     )
     p.add_argument(

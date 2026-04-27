@@ -642,7 +642,7 @@ Wave M и N можно вести параллельно; Wave P зависит 
 1. Реализовать `science_graphrag/ingestion/claims/extractor.py`: вход — chunks работы, выход — список `ClaimDraft` (text, polarity, claim_type, evidence_chunks). Под флагом `SCIENCE_GRAPHRAG_CLAIMS_EXTRACTION_ENABLED` (по умолчанию off).
 2. `Neo4jGraphStore.upsert_claim_with_evidence` — `Claim`, `Evidence`, `SUPPORTED_BY`, `ANCHORED_IN`.
 3. Qdrant collection `claims` с payload по §6.2.
-4. CLI flag `science-graphrag-claims-benchmark --extractor production`; запускать parallel в nightly при `MAIN_LLM_API_KEY`.
+4. CLI flag `science-graphrag-claims-benchmark --extractor production`; запускать parallel в nightly при `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY` (в CI из секрета `MAIN_LLM_API_KEY`).
 5. Promotion: после 7 ночей `claims_pilot` recall ≥ 0.8 при production extractor — обновить `aggregate_benchmark_metrics.py` (claims в core), `decision_gate.md`.
 
 **Frontend:**
@@ -741,7 +741,7 @@ Wave M и N можно вести параллельно; Wave P зависит 
 1. ADR 016 «Agent tool registry для retrieval (read-only)».
 2. `science_graphrag/agent/tools/` — 6 tools из §5.2 (cypher_query, entity_search, edge_search, idea_search, summarize_workspace, final_answer).
 3. **Cypher safety:** parser + allowlist (`Work`/`Author`/...), запрет `WRITE` clauses через grammar check; cap `LIMIT 200`, timeout 5s.
-4. Агент: smolagents `ToolCallingAgent` (по референсу [_archive/reference-extraction-llm-agent-tools.md](_archive/reference-extraction-llm-agent-tools.md) [HISTORICAL]) — простой ReAct loop, model = `MAIN_LLM_*`.
+4. Агент: smolagents `ToolCallingAgent` (по референсу [_archive/reference-extraction-llm-agent-tools.md](_archive/reference-extraction-llm-agent-tools.md) [HISTORICAL]) — простой ReAct loop, model из `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*`.
 5. API: `POST /v1/agent/query` — `{question, workspace_id?, max_tool_calls=8}` → `{answer, tool_trace[], citations[], duration_ms}`.
 6. Bench `tests/fixtures/benchmarks/agent_tools_v1/` — 10 кейсов с `expected_tool_sequence` (см. §5.2); CLI `science-graphrag-agent-benchmark`.
 7. Метрики из §5.2: `tool_call_correctness`, `tool_budget_ok`, `cypher_safety = 1.0`, `answer_grounded`, `answer_judge_score`, `latency_p95`.

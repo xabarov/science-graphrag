@@ -7,10 +7,14 @@ import {
   filterBenchmarkCompareDeltaRows,
 } from "./benchmarkCompareModel.js";
 
-export function useCompareTab() {
+/**
+ * @param {{ initialBaselineId?: string | null, initialCurrentId?: string | null }} [opts]
+ */
+export function useCompareTab(opts = {}) {
+  const { initialBaselineId = "", initialCurrentId = "" } = opts;
   const [runsPayload, setRunsPayload] = useState(null);
-  const [baselineId, setBaselineId] = useState("");
-  const [currentId, setCurrentId] = useState("");
+  const [baselineId, setBaselineId] = useState(initialBaselineId || "");
+  const [currentId, setCurrentId] = useState(initialCurrentId || "");
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -39,6 +43,13 @@ export function useCompareTab() {
   }, [refreshRuns]);
 
   const items = runsPayload?.items || [];
+
+  useEffect(() => {
+    setBaselineId(initialBaselineId ? String(initialBaselineId) : "");
+    setCurrentId(initialCurrentId ? String(initialCurrentId) : "");
+    setResult(null);
+    setError(null);
+  }, [initialBaselineId, initialCurrentId]);
 
   async function runCompare() {
     if (!baselineId || !currentId) return;

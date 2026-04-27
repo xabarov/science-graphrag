@@ -11,8 +11,7 @@ Operational notes for ingesting the **10–50 PDF** pilot corpus in the computer
 
 Set in `.env` or the shell (see [science_graphrag/config.py](../../science_graphrag/config.py) for full list):
 
-- **Main / shared LLM:** `MAIN_LLM_API_KEY` and related `MAIN_LLM_*` (model, base URL) as used by the CLI.
-- **Extraction LLM (Layer 1 + semantic):** `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY`, `SCIENCE_GRAPHRAG_EXTRACTION_LLM_BASE_URL`, `SCIENCE_GRAPHRAG_EXTRACTION_LLM_MODEL`, or rely on merge rules that fall back to `MAIN_LLM_*` / `API_KEY` per [deploy.md](deploy.md).
+- **Extraction LLM (Layer 1 + semantic):** `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY`, `SCIENCE_GRAPHRAG_EXTRACTION_LLM_BASE_URL`, `SCIENCE_GRAPHRAG_EXTRACTION_LLM_MODEL` (see [deploy.md](deploy.md)).
 - **Semantic stage toggle:** `SCIENCE_GRAPHRAG_SEMANTIC_EXTRACTION_ENABLED` (default on when an LLM is configured).
 - **Stores:** `SCIENCE_GRAPHRAG_DATABASE_URL`, Neo4j and Qdrant URLs/collection as in [deploy.md](deploy.md).
 

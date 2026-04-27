@@ -23,10 +23,7 @@ if TYPE_CHECKING:
 
 _LLM_SECRET_KEY = "llm.api_key"
 
-_LLM_ENV_KEY_HINT = (
-    "SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY (legacy: MAIN_LLM_API_KEY / "
-    "OPENROUTER_API_KEY / API_KEY — see science_graphrag.env_aliases)"
-)
+_LLM_ENV_KEY_HINT = "SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY (and related SCIENCE_GRAPHRAG_EXTRACTION_LLM_* vars)"
 
 
 def _settings_auth_required() -> bool:

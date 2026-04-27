@@ -31,7 +31,7 @@ export default function BenchmarkAdvancedModelOptions({
         label="API key env var"
         value={apiKeyEnvName || ""}
         onChange={(e) => onApiKeyEnvNameChange?.(e.target.value)}
-        placeholder="OPENROUTER_API_KEY"
+        placeholder="SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY"
       />
       <Typography
         sx={{

@@ -38,11 +38,6 @@ from science_graphrag.embeddings.errors import (
     EmbeddingPartialPayloadError,
     EmbeddingProviderUnavailableError,
 )
-from science_graphrag.env_aliases import (
-    resolve_openrouter_embedding_api_key_for_eval,
-    resolve_openrouter_embedding_base_url_for_eval,
-    resolve_openrouter_embedding_model_for_eval,
-)
 
 
 def _openrouter_error_from_dump(dump: dict[str, Any] | None) -> tuple[int | None, str | None]:
@@ -153,33 +148,38 @@ def resolve_openrouter_embedding_settings(
 ) -> OpenRouterEmbeddingSettings:
     """Resolve API key / base URL / model for eval/dual_validate OpenRouter embeddings.
 
-    API key / base URL: CLI > ``Settings`` benchmark teacher / extraction LLM fields >
-    legacy chain from :mod:`science_graphrag.env_aliases` (``MAIN_LLM_*``,
-    ``OPENROUTER_API_KEY``, ``API_KEY``, ``BASE_URL``).
+    Precedence: CLI overrides > ``Settings`` fields only (canonical ``SCIENCE_GRAPHRAG_*`` env).
 
-    Model: CLI > ``Settings.openrouter_embedding_model`` >
-    ``SCIENCE_GRAPHRAG_OPENROUTER_EMBEDDING_MODEL`` > ``EMBEDDING_MODEL`` > default.
+    - API key: CLI > ``benchmark_teacher_llm_api_key`` > ``extraction_llm_api_key``
+    - Base URL: CLI > ``benchmark_teacher_llm_base_url`` > ``extraction_llm_base_url`` >
+      default ``https://openrouter.ai/api/v1``
+    - Model: CLI > ``openrouter_embedding_model`` > default ``baai/bge-m3``
     """
 
-    api_key = resolve_openrouter_embedding_api_key_for_eval(
-        settings=settings,
-        cli_api_key=cli_api_key or "",
-    )
-    base_url = resolve_openrouter_embedding_base_url_for_eval(
-        settings=settings,
-        cli_base_url=cli_base_url or "",
-    )
-    model = resolve_openrouter_embedding_model_for_eval(
-        settings=settings,
-        cli_model=cli_model or "",
-    )
+    api_key = (cli_api_key or "").strip()
+    base_url = (cli_base_url or "").strip()
+    model = (cli_model or "").strip()
+    if settings is not None:
+        if not api_key:
+            api_key = (
+                settings.benchmark_teacher_llm_api_key or settings.extraction_llm_api_key or ""
+            ).strip()
+        if not base_url:
+            base_url = (
+                settings.benchmark_teacher_llm_base_url or settings.extraction_llm_base_url or ""
+            ).strip()
+        if not model:
+            model = (settings.openrouter_embedding_model or "").strip()
+    if not base_url:
+        base_url = "https://openrouter.ai/api/v1"
+    if not model:
+        model = "baai/bge-m3"
 
     if not api_key:
         raise RuntimeError(
             "OpenRouter embedding API key not configured "
             "(set --api-key, SCIENCE_GRAPHRAG_BENCHMARK_TEACHER_LLM_API_KEY, "
-            "SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY, MAIN_LLM_API_KEY, OPENROUTER_API_KEY, "
-            "or API_KEY)."
+            "or SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY in Settings / environment)."
         )
 
     root = cache_root or Path("eval/dual_validate/embeddings_cache")

@@ -208,7 +208,7 @@ def resolve_llm_settings(
     )
     if not api:
         raise RuntimeError(
-            "No API key found (set MAIN_LLM_API_KEY / "
+            "No API key found (set SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY / "
             "SCIENCE_GRAPHRAG_BENCHMARK_TEACHER_LLM_API_KEY or pass --api-key)."
         )
     return api, base, model

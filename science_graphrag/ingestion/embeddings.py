@@ -1,12 +1,30 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 from typing import TYPE_CHECKING, Protocol
 
 import numpy as np
 
 if TYPE_CHECKING:
     from science_graphrag.config import Settings
+
+logger = logging.getLogger(__name__)
+
+
+def _api_key_str(val: object) -> str:
+    """Return stripped key only for real strings (MagicMock is treated as absent)."""
+
+    if isinstance(val, str):
+        return val.strip()
+    return ""
+
+
+def _openrouter_embeddings_credentials_ok(settings: Settings) -> bool:
+    return bool(
+        _api_key_str(settings.benchmark_teacher_llm_api_key)
+        or _api_key_str(settings.extraction_llm_api_key)
+    )
 
 
 class EmbeddingProvider(Protocol):
@@ -43,7 +61,7 @@ def resolve_embedding_dim(
     """
 
     if settings is not None:
-        if settings.openrouter_embedding_model:
+        if settings.openrouter_embedding_model and _openrouter_embeddings_credentials_ok(settings):
             return int(settings.openrouter_embedding_dim)
         embedding_model = settings.embedding_model
 
@@ -84,13 +102,19 @@ def resolve_embedder(settings: Settings) -> EmbeddingProvider:
     )
 
     if settings.openrouter_embedding_model:
-        cfg = resolve_openrouter_embedding_settings(
-            settings=settings,
-            cli_model=settings.openrouter_embedding_model,
-            cache_root=settings.openrouter_embedding_cache_root,
-            vector_dim_hint=settings.openrouter_embedding_dim,
+        if _openrouter_embeddings_credentials_ok(settings):
+            cfg = resolve_openrouter_embedding_settings(
+                settings=settings,
+                cli_model=settings.openrouter_embedding_model,
+                cache_root=settings.openrouter_embedding_cache_root,
+                vector_dim_hint=settings.openrouter_embedding_dim,
+            )
+            return OpenRouterEmbeddingProvider(cfg)
+        logger.warning(
+            "openrouter_embedding_model=%r set but no extraction/teacher API key; "
+            "using hash embeddings (offline/CI-safe).",
+            settings.openrouter_embedding_model,
         )
-        return OpenRouterEmbeddingProvider(cfg)
     if settings.embedding_model:
         st = try_sentence_transformer(settings.embedding_model)
         if st is not None:
@@ -101,6 +125,8 @@ def resolve_embedder(settings: Settings) -> EmbeddingProvider:
 def resolve_embedding_model_label(settings: Settings) -> str:
     """Stable label stored in Qdrant payloads and retrieval traces."""
 
-    if settings.openrouter_embedding_model:
+    if settings.openrouter_embedding_model and _openrouter_embeddings_credentials_ok(settings):
         return settings.openrouter_embedding_model
-    return settings.embedding_model or "hash-deterministic"
+    if settings.embedding_model:
+        return settings.embedding_model
+    return "hash-deterministic"

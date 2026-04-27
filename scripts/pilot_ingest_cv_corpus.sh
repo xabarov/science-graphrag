@@ -21,8 +21,9 @@ fi
 
 # Host CLI against docker-compose.dev.yml: `.env` often pins `science:science` for Postgres,
 # while compose defaults to `science:change-me`. Prefer explicit URLs when SKIP_HOST_DOTENV=1.
-# IMPORTANT: if SKIP_HOST_DOTENV=1, export MAIN_LLM_API_KEY / OPENROUTER_API_KEY in the shell
-# so extraction + VL PDF stages do not hang with empty keys (see docs/runbooks/ingest-corpus.md).
+# IMPORTANT: if SKIP_HOST_DOTENV=1, set SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY (and VL if used)
+# in `.env` or export them in the shell so extraction + VL PDF stages do not hang with empty keys
+# (see docs/runbooks/ingest-corpus.md).
 export SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV="${SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV:-1}"
 export SCIENCE_GRAPHRAG_DATABASE_URL="${SCIENCE_GRAPHRAG_DATABASE_URL:-postgresql+psycopg://science:change-me@localhost:15432/science_graphrag}"
 export SCIENCE_GRAPHRAG_REDIS_URL="${SCIENCE_GRAPHRAG_REDIS_URL:-redis://localhost:16379/0}"

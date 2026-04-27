@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Run Layer-1, Layer-2, and claims paraphrase benchmarks for multiple LLMs and aggregate.
 
-Sets MAIN_LLM_MODEL (and mirrors to extraction) per model slug, invokes console scripts
+Sets SCIENCE_GRAPHRAG_EXTRACTION_LLM_MODEL per model slug, invokes console scripts
 via subprocess, writes JSON per model, and a summary table JSON.
 
 Usage (from repo root, with API keys in env / .env)::
@@ -151,14 +151,10 @@ def main(  # pylint: disable=too-many-locals,too-many-arguments,too-many-positio
         slug = _slug_model(model)
         sub = out_dir / slug
         sub.mkdir(parents=True, exist_ok=True)
-        sub_env = {**os.environ, "MAIN_LLM_MODEL": model}
-        if (
-            not sub_env.get("MAIN_LLM_API_KEY")
-            and not sub_env.get("OPENROUTER_API_KEY")
-            and not sub_env.get("API_KEY")
-        ):
+        sub_env = {**os.environ, "SCIENCE_GRAPHRAG_EXTRACTION_LLM_MODEL": model}
+        if not (sub_env.get("SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY") or "").strip():
             typer.echo(
-                "Warning: MAIN_LLM_API_KEY / OPENROUTER_API_KEY / API_KEY not set; runs may fail.",
+                "Warning: SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY not set; runs may fail.",
                 err=True,
             )
 

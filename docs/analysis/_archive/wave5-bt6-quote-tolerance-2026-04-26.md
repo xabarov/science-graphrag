@@ -8,7 +8,7 @@ Reduce false-negative quote rejection on PDF-derived `article.md` (hyphenation, 
 
 ## Case: `corpus_ssd_v2`
 
-Command (single case dir, default extraction model from `Settings` unless `MAIN_LLM_MODEL` is set):
+Command (single case dir, default extraction model from `Settings` / `SCIENCE_GRAPHRAG_EXTRACTION_LLM_MODEL`):
 
 ```bash
 .venv/bin/science-graphrag-claims-paraphrase-benchmark \

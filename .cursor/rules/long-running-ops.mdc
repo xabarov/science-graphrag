@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Long-running operations (ingest, benchmarks, dual_validate)
 
-> Источник правила — постмортем Wave 4 (2026-04-26): `ingest-corpus` повис на 16-м файле на `httpx CLOSE-WAIT` ≈ 3 часа из-за отсутствия pre-flight проверки `MAIN_LLM_API_KEY` (был перекрыт `SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV=1`), отсутствия per-file timeout, отсутствия heartbeat и отсутствия checkpoint. См. `docs/analysis/master-roadmap-and-refactor-plan-2026-04-25.md` §0 и backlog `[OPEN] Robust ingest orchestration`.
+> Источник правила — постмортем Wave 4 (2026-04-26): `ingest-corpus` повис на 16-м файле на `httpx CLOSE-WAIT` ≈ 3 часа из-за отсутствия pre-flight проверки `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY` (был перекрыт `SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV=1`), отсутствия per-file timeout, отсутствия heartbeat и отсутствия checkpoint. См. `docs/analysis/master-roadmap-and-refactor-plan-2026-04-25.md` §0 и backlog `[OPEN] Robust ingest orchestration`.
 
 ## Когда применять
 
@@ -34,13 +34,13 @@ alwaysApply: true
  После сбоя embed без порчи layer1 — `science-graphrag ingest-resume-embed <document_id>` (см. `docs/runbooks/phase0-bge-m3-qdrant-cutover.md`).
 
  **Если `False` при активном `SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV=1`:**
- Флаг переключает `load_dotenv(override=False)`, что исторически блокировало загрузку API-ключей из `.env` когда переменная была пуста в shell. После правки `config.py` (2026-04-26) ключи грузятся принудительно — но если smoke-check всё равно `False`, значит:
- - `MAIN_LLM_API_KEY` отсутствует в `.env` (проверь `grep MAIN_LLM_API_KEY .env`)
+ Флаг переключает `load_dotenv(override=False)`, что исторически блокировало загрузку API-ключей из `.env` когда переменная была пуста в shell. После правки `config.py` ключи с префиксом `SCIENCE_GRAPHRAG_*` подхватываются из файла `.env` — но если smoke-check всё равно `False`, значит:
+ - `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY` отсутствует в `.env` (проверь `grep SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY .env`)
  - или `.env` не найден (команда запускается из неверной CWD — нужно из корня репозитория)
 
  Быстрый явный fallback при любых сомнениях:
  ```bash
- MAIN_LLM_API_KEY=$(grep MAIN_LLM_API_KEY .env | cut -d= -f2-) \
+ SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY=$(grep SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY .env | cut -d= -f2-) \
    science-graphrag ingest-corpus ...
  ```
 

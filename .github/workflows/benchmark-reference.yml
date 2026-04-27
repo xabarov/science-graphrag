@@ -1,5 +1,5 @@
 # Reference quality lane: mandatory LLM benchmark contract on YOLOv1.
-# This workflow fails fast when MAIN_LLM_API_KEY is not configured.
+# This workflow fails fast when SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY is not configured.
 name: Benchmark Reference
 
 on:
@@ -37,17 +37,17 @@ jobs:
       SCIENCE_GRAPHRAG_NEO4J_PASSWORD: sciencegraphrag
       SCIENCE_GRAPHRAG_QDRANT_URL: http://qdrant:6333
       SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED: "true"
-      MAIN_LLM_BASE_URL: https://openrouter.ai/api/v1
-      MAIN_LLM_MODEL: mistralai/mistral-small-3.2-24b-instruct
-      MAIN_LLM_API_KEY: ${{ secrets.MAIN_LLM_API_KEY }}
+      SCIENCE_GRAPHRAG_EXTRACTION_LLM_BASE_URL: https://openrouter.ai/api/v1
+      SCIENCE_GRAPHRAG_EXTRACTION_LLM_MODEL: mistralai/mistral-small-3.2-24b-instruct
+      SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY: ${{ secrets.MAIN_LLM_API_KEY }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Require MAIN_LLM_API_KEY secret
+      - name: Require extraction LLM API key (GitHub secret MAIN_LLM_API_KEY)
         run: |
-          if [ -z "${MAIN_LLM_API_KEY}" ]; then
-            echo "MAIN_LLM_API_KEY is required for benchmark reference lane" >&2
+          if [ -z "${SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY}" ]; then
+            echo "Set repository secret MAIN_LLM_API_KEY (mapped to SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY) for benchmark reference lane" >&2
             exit 1
           fi
 

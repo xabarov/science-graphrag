@@ -510,7 +510,7 @@ Wave I — обязательное предусловие: без global worksp
 
 Самая большая по объёму. Три под-волны: L1 — `Work`, L2 — `Author`, L3 — `Institution / Venue`. Делать строго в порядке (graph contracts добавляются постепенно).
 
-**ADR-014 (Wave L):** «Embedding + LLM dedup pipeline для scholarly entities» — [docs/adr/014-work-dedup-smart-wave-l.md](../adr/014-work-dedup-smart-wave-l.md) (расширяет [ADR 010](../adr/010-work-dedup-review-queue.md)). Решает: review queue в Postgres, пороги, LLM (`extraction_llm_*` / `MAIN_LLM_*`), audit merge.
+**ADR-014 (Wave L):** «Embedding + LLM dedup pipeline для scholarly entities» — [docs/adr/014-work-dedup-smart-wave-l.md](../adr/014-work-dedup-smart-wave-l.md) (расширяет [ADR 010](../adr/010-work-dedup-review-queue.md)). Решает: review queue в Postgres, пороги, LLM (`SCIENCE_GRAPHRAG_EXTRACTION_LLM_*`), audit merge.
 
 **Спека:** [work-dedup-pipeline-v2.md](../specs/work-dedup-pipeline-v2.md) — расширение [work-dedup-queue-v1.md](../specs/work-dedup-queue-v1.md); контракт API, статусы, fingerprint idempotence.
 

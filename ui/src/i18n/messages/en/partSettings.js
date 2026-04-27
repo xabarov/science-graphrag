@@ -14,7 +14,7 @@ export default {
     "System follows your OS/browser color scheme. Appearance is stored separately from language (key ui.appearanceMode).",
   "settings.general.note": "No server round-trip; each browser keeps its own choice.",
   "settings.general.envDoc":
-    "Server-side secrets and defaults: see the repository file .env.example (SCIENCE_GRAPHRAG_* and merged MAIN_LLM_* keys).",
+    "Server-side secrets and defaults: see the repository file .env.example (SCIENCE_GRAPHRAG_* keys).",
 
   "settings.diagnostics.title": "Diagnostics",
   "settings.diagnostics.intro": "Read-only runtime identity for support and debugging.",

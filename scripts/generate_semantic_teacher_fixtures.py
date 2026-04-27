@@ -109,7 +109,8 @@ def main() -> int:
     if not settings.extraction_llm_api_key:
         print(
             "error: no API key (use --api-key or "
-            "SCIENCE_GRAPHRAG_BENCHMARK_TEACHER_LLM_API_KEY / MAIN_LLM_API_KEY)",
+            "SCIENCE_GRAPHRAG_BENCHMARK_TEACHER_LLM_API_KEY / "
+            "SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY)",
             file=sys.stderr,
         )
         return 1

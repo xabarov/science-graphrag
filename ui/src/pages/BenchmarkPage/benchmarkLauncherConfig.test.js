@@ -58,7 +58,7 @@ describe("buildRunPayload", () => {
         goldSource: "teacher_gold",
         thresholdProfile: "student_mistral",
         baseUrlOverride: "https://example.com/v1",
-        apiKeyEnvName: "OPENROUTER_API_KEY",
+        apiKeyEnvName: "SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY",
       }),
     ).toEqual({
       family: "layer1",
@@ -69,7 +69,7 @@ describe("buildRunPayload", () => {
       gold_source: "teacher_gold",
       threshold_profile: "student_mistral",
       base_url_override: "https://example.com/v1",
-      api_key_env_name: "OPENROUTER_API_KEY",
+      api_key_env_name: "SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY",
     });
   });
 

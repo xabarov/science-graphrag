@@ -1,6 +1,6 @@
 # Benchmark panel: research-first redesign plan (2026-04-27)
 
-**Status:** proposed product/UX analysis and phased implementation plan. **Phase 0 + Phase 1 are implemented in the UI** (see section **Implementation status (agent handoff)** below the front matter).
+**Status:** proposed product/UX analysis and phased implementation plan. **Phase 0, Phase 1, and the Phase 2 client slice (grouped/batch Run Lab + catalog entry)** are implemented in the UI (see **Implementation status (agent handoff)**). **Phase 3+** (Analysis matrix, metric normalization, backend `run-group` if needed) remains open.
 
 **Primary goal:** redesign the benchmark panel so it supports the benchmark program that the final report actually argues for: **run one experiment or a batch, compare model/method variants, and read the resulting metrics without needing to mentally translate internal QA machinery**.
 
@@ -21,11 +21,11 @@
 
 ## Implementation status (agent handoff)
 
-**Last updated:** 2026-04-27.
+**Last updated:** 2026-04-27 (Phase 2 client slice documented).
 
 ### Done: Phase 0 + Phase 1 (UI)
 
-The following matches **section 10** (`Phase 0`, `Phase 1`) in this document. Treat everything below **Phase 2** as not yet product-complete unless noted.
+The following matches **section 10** (`Phase 0`, `Phase 1`). See the next subsection for **Phase 2**.
 
 | Area | Where in code / docs |
 |------|------------------------|
@@ -39,13 +39,30 @@ The following matches **section 10** (`Phase 0`, `Phase 1`) in this document. Tr
 | Entry links aligned | [`ui/src/pages/BenchmarkPage/caseDetail/CaseDetailArtifactsSection.jsx`](../../ui/src/pages/BenchmarkPage/caseDetail/CaseDetailArtifactsSection.jsx) (`tab=analysis&analysisView=workbench&run=…`), [`ui/src/pages/AdminEntryPage.jsx`](../../ui/src/pages/AdminEntryPage.jsx) (secondary benchmarks link). |
 | Tests | [`ui/src/pages/BenchmarkPage/experimentCatalog.test.js`](../../ui/src/pages/BenchmarkPage/experimentCatalog.test.js); [`ui/src/routeCompatibility.test.js`](../../ui/src/routeCompatibility.test.js) extended for canonical benchmark query preservation. |
 
-### Notes for the **next** agent (Phase 2+)
+### Done: Phase 2 — client slice (UI, 2026-04-27)
 
-1. **Run Lab vs catalog:** `RunTab` + [`benchmarkLauncherConfig.js`](../../ui/src/pages/BenchmarkPage/benchmarkLauncherConfig.js) remain **family-first** (`layer1` / `layer2` / `graph`). Catalog rows describe experiments but **do not yet drive launcher presets** (no `?experiment=…` → family/scope). Phase 2 “run builder for one experiment + one variant” should wire optional query or launcher prefs from `experimentCatalog` ids.
-2. **CLI-only rows:** Retrieval / claims / agent experiments are **documentation + navigation** in UI; runs still come from existing API/CLI workflows — no new `experiment_id` on runs until you add backend follow-up from section 10 optional notes.
-3. **Backlog:** [`docs/backlog/refactor-frontend.md`](../../docs/backlog/refactor-frontend.md) item *Benchmark panel — separate experiment product from trust/admin console* is partially addressed by this slice; update or split when Phase 2 (batch/matrix) lands.
-4. **Phase 3 wording:** Analysis tab already groups Results / Compare / Workbench — the remaining “no hopping” gap is **matrix / variant-first summaries**, not tab presence.
-5. **Trust:** Still loaded via [`useBenchmarkSummary`](../../ui/src/hooks/useBenchmarkSummary.js) inside TrustSignalPanel; only **placement** changed. If product wants trust on other tabs, reuse the same panel in a small diagnostics slot rather than duplicating fetch logic.
+Matches **section 10 — Phase 2** deliverables **except** true “matrix as analysis artifact” (that is **Phase 3**) and **except** a backend `run-group` API (still optional). Grouped runs are **sequential child `runBenchmark` calls** in the browser, not a server-side batch job.
+
+| Area | Where in code / docs |
+|------|------------------------|
+| Run Lab query model | `experimentCatalog.js`: `parseRunLabQueryFromSearchParams`, `RUN_MODE_GROUPED`, helpers for `experiment` / `runMode` / `pack` on **Run Lab** URL. |
+| Catalog → Run Lab entry | `BenchmarkExperimentsTab.jsx`, `BenchmarkOverviewTab.jsx` — CTAs merge preset + `tab=run-lab` (+ optional `pack`, `runMode=grouped`). |
+| Launcher preset from experiment | [`useRunTab.js`](../../ui/src/pages/BenchmarkPage/useRunTab.js) — effect applies `getLauncherPresetForExperiment(experimentId)` into `launcherPrefs` when `?experiment=` is present (with de-dupe ref by experiment+pack). **Single-run UI is still family-shaped** (`BenchmarkLauncherPanel`); preset only maps catalog row → family + scope. |
+| Grouped batch UI + orchestration | [`RunLabGroupedExecutionPanel.jsx`](../../ui/src/pages/BenchmarkPage/RunLabGroupedExecutionPanel.jsx), [`useBenchmarkRunGroup.js`](../../ui/src/pages/BenchmarkPage/useBenchmarkRunGroup.js) (polling, finalize, handoff), [`benchmarkRunGroup.js`](../../ui/src/pages/BenchmarkPage/benchmarkRunGroup.js) (jobs payload, `aggregateGroupStatus`, LS keys). |
+| Single vs grouped wiring | [`RunTab.jsx`](../../ui/src/pages/BenchmarkPage/RunTab.jsx), [`RunTabCurrentRunSection.jsx`](../../ui/src/pages/BenchmarkPage/RunTabCurrentRunSection.jsx), [`BenchmarkLauncherPanel.jsx`](../../ui/src/pages/BenchmarkPage/BenchmarkLauncherPanel.jsx) (`startRunDisabled` when `runMode=grouped`). |
+| Analysis handoff for a group | `BenchmarkPage.jsx` — `onOpenAnalysisWithGroup(runIds)` merges `run` + `runs` query params so Compare/Results can consume multiple IDs where supported. |
+| Persistence | `benchmarkRunGroup.js`: `benchmark:lastRunGroup`, recent compare setups (`loadRecentCompareSetups` / `pushRecentCompareSetup`); on finalize, `benchmark:lastRunId` is set to the **first child `runId` in UI order** (job order) for continuity with single-run deep links. |
+| Tests | [`benchmarkRunGroup.test.js`](../../ui/src/pages/BenchmarkPage/benchmarkRunGroup.test.js) alongside extended `experimentCatalog.test.js`. |
+
+### Notes for the **next** agent (Phase 3+ and gaps)
+
+1. **Phase 2 is “done” for UI orchestration, not for product-complete matrix reading.** Users can start a Cartesian batch (experiments × model profiles) and see per-child progress; there is **no** experiment×variant score matrix on Analysis yet — that is **Phase 3** (section 10).
+2. **Single-run Run Lab remains family-centric under the hood** (`benchmarkLauncherConfig` / `BenchmarkLauncherPanel`). Catalog + `?experiment=` only **seeds** `launcherPrefs` (family + scope). A future pass can rephrase the launcher as “one experiment card” without removing family from the API payload builder.
+3. **CLI-only catalog rows** are unchanged: UI documents and deep-links; no `experiment_id` persisted on run records until backend chooses to add it (section 9.2 / Phase 2 backend follow-up).
+4. **Optional backend `run-group`:** if sequential browser starts become fragile (rate limits, tab closed mid-batch, audit), implement server-side batch + idempotent group id per section 10 Phase 2 “Backend follow-up”; then thin the frontend loop in `useBenchmarkRunGroup`.
+5. **Backlog:** [`docs/backlog/refactor-frontend.md`](../../docs/backlog/refactor-frontend.md) — *Benchmark panel* item: Phase 2 slice is landed; next meaningful update is when **Phase 3** matrix / normalized metrics exist or backend group API is scoped.
+6. **Phase 3 wording (unchanged intent):** Analysis still composes legacy tabs; **variant-first summaries** and “no hopping” remain the main open UX gap.
+7. **Trust:** still [`useBenchmarkSummary`](../../ui/src/hooks/useBenchmarkSummary.js) + `TrustSignalPanel`; placement only. Reuse panel in diagnostics slots if needed elsewhere.
 
 ---
 
@@ -683,28 +700,28 @@ Deliverables:
 
 Exit criteria:
 
-- a user can arrive at the page and immediately see what can be run and compared. **Met** at a landing level; deep compare/matrix is **Phase 2–3**.
+- a user can arrive at the page and immediately see what can be run and compared. **Met** at a landing level; **grouped batch run** is first-class in Run Lab (2026-04-27); **aggregate matrix / variant-first Analysis** remains **Phase 3**.
 
 ## Phase 2 — Run Lab with batch/matrix execution
 
-**Status: NOT STARTED (next vertical slice per section 11).**
+**Status: DONE — client/UI slice (2026-04-27).** Not done: server-side run group API; full “matrix” as a **read** surface (defer to Phase 3).
 
 Goal: support single-run and grouped-run workflows explicitly.
 
 Deliverables:
 
-1. run builder for one experiment + one variant;
-2. batch builder for many experiments and/or many variants;
-3. grouped progress model in the UI;
-4. localStorage persistence for recent compare setups.
+1. run builder for one experiment + one variant; **Partially done:** `?experiment=` + catalog CTAs apply launcher preset (`family` + `launcherScope`) via `useRunTab`; the visible launcher is still the legacy family panel — acceptable bridge until Phase 3/5 copy pass.
+2. batch builder for many experiments and/or many variants; **Done:** grouped mode — multi-select experiments × model profiles, `buildGroupJobs` / `startGroupBatch` in [`useBenchmarkRunGroup.js`](../../ui/src/pages/BenchmarkPage/useBenchmarkRunGroup.js).
+3. grouped progress model in the UI; **Done:** child rows, aggregate status, sequential start with per-child errors, polling until terminal states (`BENCHMARK_TERMINAL_RUN_STATUSES`).
+4. localStorage persistence for recent compare setups. **Done:** recent setups + `benchmark:lastRunGroup` in [`benchmarkRunGroup.js`](../../ui/src/pages/BenchmarkPage/benchmarkRunGroup.js).
 
 Backend follow-up:
 
-- optional `run-group` API if the current child-run orchestration becomes too frontend-heavy.
+- optional `run-group` API if the current child-run orchestration becomes too frontend-heavy — **still open**; frontend currently chains `runBenchmark` per child.
 
 Exit criteria:
 
-- "run one benchmark" and "run a compare batch" both feel first-class.
+- "run one benchmark" and "run a compare batch" both feel first-class. **Mostly met** for batch; single-run is first-class for operators already using the family launcher, and improved for catalog-driven entry via experiment preset.
 
 ## Phase 3 — Analysis-first comparison
 
@@ -759,9 +776,9 @@ Exit criteria:
 If only one vertical slice should happen first, do this:
 
 1. **Phase 0 + Phase 1** — **done in UI (2026-04-27);** see **Implementation status (agent handoff)** at the top of this doc for paths and caveats.
-2. **Phase 2** for grouped execution
-3. **Phase 3** for model comparison
-4. **Phase 4** for case clarity
+2. **Phase 2 (grouped/batch Run Lab)** — **done in UI (2026-04-27)** as client orchestration; see Phase 2 table + “Notes for the next agent” at the top. Optional backend `run-group` still TBD.
+3. **Phase 3** for model / variant comparison matrix and Analysis-first summaries (next vertical slice per product priority).
+4. **Phase 4** for case clarity.
 
 Why this order:
 

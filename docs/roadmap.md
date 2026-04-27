@@ -259,7 +259,7 @@ flowchart LR
 
 **Dev/QA:** визуальная консоль бенчмарков (`/benchmark` в `ui/`, API `/v1/benchmark/*`) — **основной** интерфейс для просмотра `article.md`, эталона (`gold`) и сравнения с выводом модели **наряду с CLI** и [benchmark-decision-gate](runbooks/benchmark-decision-gate.md); не заменяет воспроизводимые прогоны и агрегатор метрик. См. Phase 6 и [architecture/frontend-phase6-bridge-backlog.md](architecture/frontend-phase6-bridge-backlog.md) (`A5`, `B4`).
 
-**Политика: бенчмарки с LLM как эталон качества.** Локальные и ручные регрессионные прогоны, по которым судят о качестве извлечения (метаданные, ссылки, семантический слой) и о содержимом Neo4j после ingest, следует выполнять **с включённым LLM** (`SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED=true`, ключ и base URL в `.env` — см. [eval/README.md](../eval/README.md), `MAIN_LLM_*` / `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*`). Прогон **без** LLM остаётся для быстрых эвристик и merge CI; его метрики и граф **не** считаются эталоном поведения в продакшене.
+**Политика: бенчмарки с LLM как эталон качества.** Локальные и ручные регрессионные прогоны, по которым судят о качестве извлечения (метаданные, ссылки, семантический слой) и о содержимом Neo4j после ingest, следует выполнять **с включённым LLM** (`SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED=true`, ключ и base URL в `.env` — см. [eval/README.md](../eval/README.md), только `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*`). Прогон **без** LLM остаётся для быстрых эвристик и merge CI; его метрики и граф **не** считаются эталоном поведения в продакшене.
 
 **Уже есть:**
 
@@ -275,7 +275,7 @@ flowchart LR
 
 **Дальше (backlog Phase 4, приоритет):**
 
-1. **Nightly+:** при наличии `MAIN_LLM_API_KEY` в GitHub secrets nightly запускает **layer-2 `nightly_semantic`** и **layer-1 `nightly_heavy`** (обновлено 2026-04-19, `.github/workflows/integration-nightly.yml`). Полный graph suite с живым OpenAlex остаётся advisory.
+1. **Nightly+:** при наличии секрета `MAIN_LLM_API_KEY` в GitHub (пробрасывается в `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY`) nightly запускает **layer-2 `nightly_semantic`** и **layer-1 `nightly_heavy`** (обновлено 2026-04-19, `.github/workflows/integration-nightly.yml`). Полный graph suite с живым OpenAlex остаётся advisory.
 2. **Graph suite в CI:** тяжёлый шаг; либо отдельный job на nightly, либо один лёгкий кейс без OpenAlex на merge (на nightly уже есть `yolov1` + `retinanet_focal_realpdf` graph benchmarks без LLM).
 3. **Gold для real-pdf:** заполнить `authorships[]` и при необходимости ужесточить `graph_expectations` под прогон **с включённым LLM** (отдельный job).
 4. Новые **families** и gold по мере Phase 2+ — [benchmarks/benchmark-expansion-v1.md](benchmarks/benchmark-expansion-v1.md).

@@ -101,8 +101,8 @@ export default function BenchmarkPage() {
       setSelectedRunId(first);
       window.localStorage.setItem("benchmark:lastRunId", first);
       setTabIdx(3);
-      setAnalysisView("results");
-      let merged = mergeBenchmarkTabIntoSearchParams(searchParams, 3, "results");
+      setAnalysisView(runIds.length > 1 ? "compare" : "results");
+      let merged = mergeBenchmarkTabIntoSearchParams(searchParams, 3, runIds.length > 1 ? "compare" : "results");
       merged.set("run", first);
       if (runIds.length > 1) merged.set("runs", runIds.join(","));
       else merged.delete("runs");
@@ -246,6 +246,7 @@ export default function BenchmarkPage() {
           selectedCaseId={selectedCaseId}
           onSelectRun={handleSelectRun}
           onSelectCase={handleSelectCase}
+          searchParams={searchParams}
         />
       ) : null}
       {tabIdx === 4 ? <CasesTab /> : null}

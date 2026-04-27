@@ -6,15 +6,12 @@ from dotenv import dotenv_values, load_dotenv
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
 
-from science_graphrag.env_aliases import (
-    resolve_legacy_main_llm_model,
-    resolve_legacy_shared_api_key,
-    resolve_legacy_shared_base_url,
-)
 from science_graphrag.settings.service import SettingsService
 
-# Unprefixed keys (MAIN_LLM_*, PHOENIX_*, etc.) must be visible to os.getenv for merge validators.
-# override=True: a shell export of MAIN_LLM_API_KEY="" (empty) must not block values from `.env`.
+# Unprefixed keys used by third-party tooling (e.g. PHOENIX_*) may still be read via os.getenv
+# outside Settings. For SCIENCE_GRAPHRAG_* fields, pydantic-settings loads `.env` before process env.
+# override=True: a shell export of SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY="" (empty) must not
+# block values from `.env`.
 # Inside Docker, Compose already injects SCIENCE_GRAPHRAG_* (Neo4j/Qdrant hosts); do not let
 # load_dotenv clobber them with host-oriented localhost values from a mounted `.env`.
 # blob_root / artifact_root are runtime-overridable: an operator or agent may set them
@@ -27,20 +24,22 @@ _skip_host_dotenv = (
     Path("/.dockerenv").is_file() or os.getenv("SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV") == "1"
 )
 if _skip_host_dotenv:
-    # Fill unprefixed keys (MAIN_LLM_*, etc.) from `.env` without clobbering Compose-injected URLs.
+    # Load `.env` without clobbering Compose-injected service URLs.
     load_dotenv(override=False)
-    # Separately ensure API keys are always available even when the shell has them empty/unset.
-    # `override=False` above preserves Docker-injected service URLs, but means a blank shell
-    # MAIN_LLM_API_KEY would silently block the value from `.env`.  Reading the file directly
-    # and injecting only the missing credential variables avoids this footgun without touching
-    # any service-URL keys (neo4j/qdrant/postgres/redis).
+    # Separately ensure canonical LLM/VL credential vars from `.env` are visible when the shell
+    # exported them empty (override=False would otherwise leave os.environ blocking dotenv).
     _api_key_vars = (
-        "MAIN_LLM_API_KEY",
-        "OPENROUTER_API_KEY",
-        "API_KEY",
-        "MAIN_LLM_BASE_URL",
-        "MAIN_LLM_MODEL",
-        "USE_VL_FOR_PDF",
+        "SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY",
+        "SCIENCE_GRAPHRAG_EXTRACTION_LLM_BASE_URL",
+        "SCIENCE_GRAPHRAG_EXTRACTION_LLM_MODEL",
+        "SCIENCE_GRAPHRAG_VL_API_KEY",
+        "SCIENCE_GRAPHRAG_VL_BASE_URL",
+        "SCIENCE_GRAPHRAG_VL_MODEL",
+        "SCIENCE_GRAPHRAG_USE_VL_FOR_PDF",
+        "SCIENCE_GRAPHRAG_OPENROUTER_EMBEDDING_MODEL",
+        "SCIENCE_GRAPHRAG_BENCHMARK_TEACHER_LLM_API_KEY",
+        "SCIENCE_GRAPHRAG_BENCHMARK_TEACHER_LLM_BASE_URL",
+        "SCIENCE_GRAPHRAG_BENCHMARK_TEACHER_LLM_MODEL",
     )
     _env_file_vals = dotenv_values()
     for _k in _api_key_vars:
@@ -132,8 +131,8 @@ class Settings(BaseSettings):
         default=None,
         description=(
             "If set, use OpenAI-compatible POST /v1/embeddings via OpenRouter "
-            "(same credentials as MAIN_LLM_* / extraction LLM). Overrides sentence-transformers "
-            "when both are set."
+            "(same credentials as extraction / benchmark-teacher LLM settings). "
+            "Overrides sentence-transformers when both are set."
         ),
     )
     openrouter_embedding_dim: int = Field(
@@ -477,11 +476,8 @@ class Settings(BaseSettings):
 
     @model_validator(mode="before")
     @classmethod
-    def merge_osint_gr_compatible_env(cls, data: Any) -> Any:
-        """
-        Reuse osint-gr-style env without SCIENCE_GRAPHRAG_ prefix when explicit
-        SCIENCE_GRAPHRAG_* keys are absent.
-        """
+    def merge_runtime_env_overrides(cls, data: Any) -> Any:
+        """Apply Docker / operator overrides that must win over mounted `.env` files."""
         if not isinstance(data, dict):
             return data
 
@@ -515,53 +511,12 @@ class Settings(BaseSettings):
             if val:
                 data[field] = val
 
-        if not data.get("vl_api_key"):
-            key = resolve_legacy_shared_api_key()
-            if key:
-                data["vl_api_key"] = key
-
-        _legacy_base = resolve_legacy_shared_base_url()
-        if os.getenv("SCIENCE_GRAPHRAG_VL_BASE_URL") is None and _legacy_base:
-            data["vl_base_url"] = _legacy_base.rstrip("/")
-
-        if os.getenv("SCIENCE_GRAPHRAG_VL_MODEL") is None:
-            main_model = resolve_legacy_main_llm_model() or ""
-            if main_model and ("vl" in main_model.lower() or "vision" in main_model.lower()):
-                data["vl_model"] = main_model
-
-        if (
-            os.getenv("SCIENCE_GRAPHRAG_USE_VL_FOR_PDF") is None
-            and os.getenv(
-                "USE_VL_FOR_PDF",
-            )
-            is not None
-        ):
-            data["use_vl_for_pdf"] = os.getenv("USE_VL_FOR_PDF", "true").lower() in (
-                "1",
-                "true",
-                "yes",
-                "on",
-            )
-
         lx_refs = data.get("llm_concurrency_extraction_references")
         leg_refs = data.get("extraction_llm_references_max_concurrency")
         if lx_refs is None and leg_refs is not None:
             data["llm_concurrency_extraction_references"] = leg_refs
         if leg_refs is None and lx_refs is not None:
             data["extraction_llm_references_max_concurrency"] = lx_refs
-
-        if not data.get("extraction_llm_api_key"):
-            ex_key = resolve_legacy_shared_api_key()
-            if ex_key:
-                data["extraction_llm_api_key"] = ex_key
-
-        if os.getenv("SCIENCE_GRAPHRAG_EXTRACTION_LLM_BASE_URL") is None and _legacy_base:
-            data["extraction_llm_base_url"] = _legacy_base.strip().rstrip("/")
-
-        if os.getenv("SCIENCE_GRAPHRAG_EXTRACTION_LLM_MODEL") is None:
-            _main_model = resolve_legacy_main_llm_model()
-            if _main_model:
-                data["extraction_llm_model"] = _main_model
 
         # ADR-021: ``SCIENCE_GRAPHRAG_EMBEDDING_MODEL=baai/bge-m3`` maps to ``embedding_model`` but
         # hub-style ids must use the OpenRouter slot so ``resolve_embedder`` picks the API path.

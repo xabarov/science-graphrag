@@ -15,7 +15,7 @@ import CompareDeltaTable from "./CompareDeltaTable.jsx";
 import CompareTabSummarySection from "./CompareTabSummarySection.jsx";
 import { useCompareTab } from "./useCompareTab.js";
 
-export default function CompareTab({ onOpenWorkbench }) {
+export default function CompareTab({ onOpenWorkbench, initialBaselineId, initialCurrentId }) {
   const {
     items,
     baselineId,
@@ -40,7 +40,7 @@ export default function CompareTab({ onOpenWorkbench }) {
     regressionsFiltered,
     improvementsFiltered,
     unchangedFiltered,
-  } = useCompareTab();
+  } = useCompareTab({ initialBaselineId, initialCurrentId });
 
   const tk = useTheme().appTokens;
   return (

@@ -32,8 +32,6 @@ def test_build_ingestion_extractor_presets_max_tokens() -> None:
 
 
 def test_build_ingestion_extractor_requires_api_key(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("MAIN_LLM_API_KEY", raising=False)
-    monkeypatch.delenv("API_KEY", raising=False)
     s = Settings(extraction_llm_api_key="")
     with pytest.raises(ValueError, match="extraction_llm_api_key"):
         build_ingestion_extractor(s, IngestionExtractorPreset.METADATA)

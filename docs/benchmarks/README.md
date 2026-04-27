@@ -33,7 +33,7 @@
 
 **Claims extractor / holdout:** [`../runbooks/benchmark-claims-extractor-policy.md`](../runbooks/benchmark-claims-extractor-policy.md). **References resolution graph stub lane:** [`../runbooks/benchmark-references-resolution-graph-lane.md`](../runbooks/benchmark-references-resolution-graph-lane.md).
 
-**Reference quality lane (LLM-on):** `.github/workflows/benchmark-reference.yml` — обязательный YOLOv1 benchmark contract (`layer1 + graph + layer2`) с `MAIN_LLM_API_KEY`.
+**Reference quality lane (LLM-on):** `.github/workflows/benchmark-reference.yml` — обязательный YOLOv1 benchmark contract (`layer1 + graph + layer2`) с `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY` (в CI из секрета `MAIN_LLM_API_KEY`).
 Runbook: [docs/runbooks/benchmark-driven-dev-loop.md](../runbooks/benchmark-driven-dev-loop.md).
 
 **Тиры кейсов:** [`tests/fixtures/benchmarks/layer1/case_tiers.json`](../../tests/fixtures/benchmarks/layer1/case_tiers.json) — `merge_safe` vs `nightly_heavy`; CLI `--tier …` у layer1/graph раннеров. Layer-2: [`tests/fixtures/benchmarks/layer2/case_tiers.json`](../../tests/fixtures/benchmarks/layer2/case_tiers.json).

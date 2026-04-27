@@ -64,8 +64,6 @@ jobs:
         env:
           SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED: "false"
           SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY: ""
-          API_KEY: ""
-          MAIN_LLM_API_KEY: ""
         run: |
           python -m eval.retrieval.runner tests/fixtures/benchmarks/retrieval --suite --mock-answer \
             --json-out eval/results/ci-retrieval-merge-safe-mock.json
@@ -76,24 +74,18 @@ jobs:
         env:
           SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED: "false"
           SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY: ""
-          API_KEY: ""
-          MAIN_LLM_API_KEY: ""
         run: science-graphrag-layer1-benchmark tests/fixtures/benchmarks/layer1 --suite --json-out eval/results/ci-layer1-suite.json
 
       - name: Graph benchmark — yolov1 (ingest + Neo4j snapshot)
         env:
           SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED: "false"
           SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY: ""
-          API_KEY: ""
-          MAIN_LLM_API_KEY: ""
         run: science-graphrag-graph-benchmark tests/fixtures/benchmarks/layer1/yolov1 --json-out eval/results/ci-graph-yolov1.json
 
       - name: Graph benchmark — retinanet_focal_realpdf (ingest + Neo4j snapshot)
         env:
           SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED: "false"
           SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY: ""
-          API_KEY: ""
-          MAIN_LLM_API_KEY: ""
         run: science-graphrag-graph-benchmark tests/fixtures/benchmarks/layer1/retinanet_focal_realpdf --json-out eval/results/ci-graph-retinanet.json
 
       - name: Layer-2 semantic benchmark suite (merge_safe, no LLM)
@@ -101,22 +93,20 @@ jobs:
           SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED: "false"
           SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY: ""
           SCIENCE_GRAPHRAG_SEMANTIC_EXTRACTION_ENABLED: "true"
-          API_KEY: ""
-          MAIN_LLM_API_KEY: ""
         run: science-graphrag-layer2-benchmark tests/fixtures/benchmarks/layer2 --suite --tier merge_safe --json-out eval/results/ci-layer2-suite.json
 
       - name: Layer-2 nightly_semantic (optional, needs MAIN_LLM_API_KEY secret)
         if: ${{ secrets.MAIN_LLM_API_KEY != '' }}
         env:
           SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED: "true"
-          MAIN_LLM_API_KEY: ${{ secrets.MAIN_LLM_API_KEY }}
+          SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY: ${{ secrets.MAIN_LLM_API_KEY }}
         run: science-graphrag-layer2-benchmark tests/fixtures/benchmarks/layer2 --suite --tier nightly_semantic --json-out eval/results/ci-layer2-nightly-semantic.json
 
       - name: Layer-1 nightly_heavy (optional, needs MAIN_LLM_API_KEY secret)
         if: ${{ secrets.MAIN_LLM_API_KEY != '' }}
         env:
           SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED: "true"
-          MAIN_LLM_API_KEY: ${{ secrets.MAIN_LLM_API_KEY }}
+          SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY: ${{ secrets.MAIN_LLM_API_KEY }}
         run: science-graphrag-layer1-benchmark tests/fixtures/benchmarks/layer1 --suite --tier nightly_heavy --threshold-profile reporting_skip_f1_gates --json-out eval/results/ci-layer1-nightly-heavy-llm.json
 
       # BT3: multihop v2 needs live API + Neo4j graph (slug→UUID + view=raw in runner).

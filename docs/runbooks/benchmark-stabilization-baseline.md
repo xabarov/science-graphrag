@@ -48,7 +48,7 @@ curl -s -X POST http://127.0.0.1:8787/v1/query \
 
 ## 5. LLM для benchmark
 
-См. [`eval/README.md`](../../eval/README.md): ключи `MAIN_LLM_API_KEY` или `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY`, `SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED=true`.
+См. [`eval/README.md`](../../eval/README.md): `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY`, `SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED=true`.
 
 Reference lane (эталон YOLOv1): [`.github/workflows/benchmark-reference.yml`](../../.github/workflows/benchmark-reference.yml).
 

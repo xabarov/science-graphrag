@@ -10,7 +10,7 @@ Operational sequence to move dense-vector stores from **384-dim hash** (or legac
    docker compose ps --format 'table {{.Service}}\t{{.Status}}'
    ```
 
-2. **API keys in the process environment** — embeddings use the same OpenRouter-compatible credentials as extraction (`MAIN_LLM_API_KEY` / `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY` + base URL). Smoke:
+2. **API keys in the process environment** — embeddings use the same OpenRouter-compatible credentials as extraction (`SCIENCE_GRAPHRAG_EXTRACTION_LLM_*` or `SCIENCE_GRAPHRAG_BENCHMARK_TEACHER_LLM_*`). Smoke:
 
    ```bash
    .venv/bin/science-graphrag config-check --no-strict
@@ -27,7 +27,7 @@ Operational sequence to move dense-vector stores from **384-dim hash** (or legac
    # SCIENCE_GRAPHRAG_OPENROUTER_EMBEDDING_CACHE_ROOT=./data/embeddings_cache
    ```
 
-   If you mistakenly set `SCIENCE_GRAPHRAG_EMBEDDING_MODEL=org/model` (hub id), `Settings.merge_osint_gr_compatible_env` promotes that into `openrouter_embedding_model` so `resolve_embedder` still picks OpenRouter (see `tests/test_embedding_model_promotion.py`).
+   If you mistakenly set `SCIENCE_GRAPHRAG_EMBEDDING_MODEL=org/model` (hub id), `Settings.merge_runtime_env_overrides` promotes that into `openrouter_embedding_model` so `resolve_embedder` still picks OpenRouter (see `tests/test_embedding_model_promotion.py`).
 
 ## Step 1 — Dry-run (no deletes)
 

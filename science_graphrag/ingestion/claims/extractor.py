@@ -207,6 +207,46 @@ def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too
         )
         return rows, primary_err, used_compact
 
+    def _extract_batch_recursive(
+        batch_chunks: list[dict[str, Any]],
+        *,
+        batch_label: str,
+    ) -> tuple[list[Any], list[str], list[dict[str, Any]], bool]:
+        batch_rows, batch_err, used_compact = _extract_batch(batch_chunks)
+        preview_row = {
+            "batch_index": batch_label,
+            "chunks": len(batch_chunks),
+            "claims": len(batch_rows),
+            "used_compact_fallback": bool(used_compact),
+            "error": batch_err,
+        }
+        if batch_err and not batch_rows and len(batch_chunks) > 1:
+            log.warning(
+                "claims_extraction: batch failed for work_id=%s batch=%s chunks=%s; "
+                "retrying split sub-batches",
+                work_id,
+                batch_label,
+                len(batch_chunks),
+            )
+            mid = max(1, len(batch_chunks) // 2)
+            left_rows, left_errors, left_preview, left_compact = _extract_batch_recursive(
+                batch_chunks[:mid],
+                batch_label=f"{batch_label}a",
+            )
+            right_rows, right_errors, right_preview, right_compact = _extract_batch_recursive(
+                batch_chunks[mid:],
+                batch_label=f"{batch_label}b",
+            )
+            preview_row["split_retry"] = True
+            return (
+                left_rows + right_rows,
+                left_errors + right_errors,
+                [preview_row, *left_preview, *right_preview],
+                bool(used_compact or left_compact or right_compact),
+            )
+        errors = [f"batch {batch_label}: {batch_err}"] if batch_err and not batch_rows else []
+        return batch_rows, errors, [preview_row], bool(used_compact)
+
     parsed_claim_rows: list[Any] = []
     if force_benchmark:
         user_bm = _user_payload(chunks_norm, max_chars=payload_max)
@@ -249,7 +289,10 @@ def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too
         batch_errors: list[str] = []
         raw_preview: dict[str, Any] = {"batches": []}
         for idx, batch in enumerate(chunk_batches, start=1):
-            batch_rows, batch_err, used_compact = _extract_batch(batch)
+            batch_rows, batch_errs, batch_preview, used_compact = _extract_batch_recursive(
+                batch,
+                batch_label=str(idx),
+            )
             if used_compact:
                 log.warning(
                     "claims_extraction: full schema failed for work_id=%s "
@@ -261,19 +304,19 @@ def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too
                 if diagnostics is not None:
                     diagnostics.claims_compact_fallback_used = True
                     if not diagnostics.claims_compact_fallback_reason:
-                        diagnostics.claims_compact_fallback_reason = str(batch_err or "parsed_none")
-            if batch_err and not batch_rows:
-                batch_errors.append(f"batch {idx}/{len(chunk_batches)}: {batch_err}")
+                        compact_reason = next(
+                            (
+                                str(item.get("error") or "").strip()
+                                for item in batch_preview
+                                if item.get("used_compact_fallback")
+                                and str(item.get("error") or "").strip()
+                            ),
+                            "parsed_none",
+                        )
+                        diagnostics.claims_compact_fallback_reason = compact_reason
+            batch_errors.extend(batch_errs)
             parsed_claim_rows.extend(batch_rows)
-            raw_preview["batches"].append(
-                {
-                    "batch_index": idx,
-                    "chunks": len(batch),
-                    "claims": len(batch_rows),
-                    "used_compact_fallback": bool(used_compact),
-                    "error": batch_err,
-                }
-            )
+            raw_preview["batches"].extend(batch_preview)
         if diagnostics is not None:
             diagnostics.raw_claims_from_llm = len(parsed_claim_rows)
             diagnostics.llm_raw_response_preview = json.dumps(raw_preview, ensure_ascii=False)[

@@ -9,7 +9,7 @@ description: Безопасный запуск долгого ingest или corp
 
 Источник скилла — постмортем Wave 4 (2026-04-26): `ingest-corpus` повис на 16-м файле `Libra R-CNN.pdf` ≈ 3 часа из-за **четырёх** независимых причин:
 
-1. `SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV=1` перекрыл `MAIN_LLM_API_KEY` из `.env` — LLM-запросы шли «без ключа», ловили upstream 401, retry с экспонентой не помогал.
+1. `SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV=1` перекрыл ключи LLM из `.env` — LLM-запросы шли «без ключа», ловили upstream 401, retry с экспонентой не помогал.
 2. У `httpx` клиента не было выставленного `connect_timeout` для кейса CLOSE-WAIT — socket остался в полузакрытом состоянии без recovery.
 3. У ingest-pipeline нет per-file timeout — один зависший файл блокирует весь прогон.
 4. Нет JSONL-checkpoint — после kill пришлось вручную определять, какие файлы успели обработаться.
@@ -30,16 +30,16 @@ Backlog item на структурное решение: `docs/backlog/refactor-
 ### 1.1 API keys видимы внутри окружения процесса
 
 ```bash
-.venv/bin/python -c "from science_graphrag.config import Settings; s=Settings(); print('main_llm:', bool(s.main_llm_api_key), 'embeddings:', bool(s.embeddings_api_key), 'judge:', bool(s.judge_llm_api_key))"
+.venv/bin/python -c "from science_graphrag.config import Settings; s=Settings(); print('extraction_llm_api_key:', bool(s.extraction_llm_api_key), 'vl_api_key:', bool(s.vl_api_key))"
 ```
 
-Должно напечатать `True` для нужных каналов. Если хоть один `False`:
+Должно напечатать `True True` для ingest с LLM+VL. Если что-то `False`:
 
-- Проверить `.env` (`grep -E "MAIN_LLM_API_KEY|EMBEDDINGS_API_KEY|OPENROUTER_API_KEY" .env`).
-- Если в env присутствует `SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV=1` — **снять или явно прокинуть ключи** при запуске:
+- Проверить `.env` (`grep SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY .env` и при VL — `SCIENCE_GRAPHRAG_VL_API_KEY`).
+- Если в env присутствует `SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV=1` — ключи должны быть в `.env` с префиксом `SCIENCE_GRAPHRAG_*` или явно экспортированы в shell.
 
   ```bash
-  MAIN_LLM_API_KEY=<key> .venv/bin/science-graphrag ingest-corpus ...
+  SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY=<key> .venv/bin/science-graphrag ingest-corpus ...
   ```
 
 - НИКОГДА не запускай долгий CLI пока этот smoke-check не зелёный.

@@ -474,10 +474,6 @@ def config_check_cmd(
     vl_ok = bool(s.vl_api_key)
     _line("extraction_llm_api_key", "SET" if ex_ok else "UNSET")
     _line("vl_api_key", "SET" if vl_ok else "UNSET")
-    _line("legacy MAIN_LLM_API_KEY", "SET" if os.getenv("MAIN_LLM_API_KEY") else "UNSET")
-    _line("legacy OPENROUTER_API_KEY", "SET" if os.getenv("OPENROUTER_API_KEY") else "UNSET")
-    _line("legacy API_KEY", "SET" if os.getenv("API_KEY") else "UNSET")
-    _line("legacy BASE_URL", "SET" if os.getenv("BASE_URL") else "UNSET")
     if s.openrouter_embedding_model:
         _line(
             "embeddings channel",

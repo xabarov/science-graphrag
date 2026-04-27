@@ -26,13 +26,13 @@
 
 | Режим | Переменные |
 |-------|------------|
-| **Без LLM** (детерминированные эвристики, подходит для CI без ключей) | `SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED=false` и пустые `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY`, `MAIN_LLM_API_KEY`, `OPENROUTER_API_KEY`, `API_KEY`. |
-| **С LLM** (извлечение layer-1 и semantic ближе к продакшену) | Задайте ключ: `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY` или legacy-цепочку `MAIN_LLM_API_KEY` → `OPENROUTER_API_KEY` → `API_KEY` (см. `science_graphrag/env_aliases.py`); base URL — `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*` или `MAIN_LLM_BASE_URL` / `BASE_URL`; модель — `SCIENCE_GRAPHRAG_EXTRACTION_LLM_MODEL` или `MAIN_LLM_MODEL`. |
+| **Без LLM** (детерминированные эвристики, подходит для CI без ключей) | `SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED=false` и пустой `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY`. |
+| **С LLM** (извлечение layer-1 и semantic ближе к продакшену) | `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY`, при необходимости `SCIENCE_GRAPHRAG_EXTRACTION_LLM_BASE_URL` и `SCIENCE_GRAPHRAG_EXTRACTION_LLM_MODEL`. |
 
 **Эталонные прогоны (см. [roadmap Phase 4](../docs/roadmap.md)):** всегда включайте LLM для оценки качества и Neo4j после ingest.
 
 1. В **`.env`** задайте `SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED=true`. Для `get_settings()` значения из **`.env` перекрывают** одноимённые переменные процесса (чтобы локальный `.env` не проигрывал устаревшему `export …=false` в shell).
-2. Ключ: канон `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY` или legacy (`MAIN_LLM_API_KEY`, `OPENROUTER_API_KEY`, `API_KEY`); base/model — префиксные поля либо `MAIN_LLM_BASE_URL` / `BASE_URL`, `MAIN_LLM_MODEL`.
+2. Ключ и URL/модель: только `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*`.
 3. Чтобы **выключить** LLM при том же `.env` с `true`, поменяйте флаг **в `.env`** или временно закомментируйте строку; одна только переменная в shell больше не перебивает `.env` (в CI секретного `.env` нет — там по-прежнему задаётся `SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED=false` в workflow).
 
 Семантическая стадия (ontology v1) управляется `SCIENCE_GRAPHRAG_SEMANTIC_EXTRACTION_ENABLED` (по умолчанию включена, если LLM доступен).
@@ -80,7 +80,7 @@ science-graphrag-claims-benchmark tests/fixtures/benchmarks/claims --suite --tie
   --json-out eval/results/current-claims-corpus-v2-mini.json
 science-graphrag-claims-benchmark tests/fixtures/benchmarks/claims --suite --tier claims_pilot \
   --json-out eval/results/current-claims-pilot-suite.json
-# Wave O: production LLM lane (requires MAIN_LLM_* / extraction LLM key); advisory artifact for aggregator
+# Wave O: production LLM lane (requires SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY); advisory artifact for aggregator
 science-graphrag-claims-benchmark tests/fixtures/benchmarks/claims --suite --tier claims_pilot \
   --extractor production \
   --json-out eval/results/current-claims-production-pilot.json
@@ -129,7 +129,7 @@ SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED=false \
 
 Тиры: `tests/fixtures/benchmarks/layer1/case_tiers.json`. Альтернатива: `python -m eval.layer1.runner …`.
 
-**Authoritative nightly (`nightly_heavy`) + сводка gate** — после правок `gold.json` переснимите JSON и агрегатор (нужен LLM, см. `EXTRACTION_LLM_*` / `MAIN_LLM_*`):
+**Authoritative nightly (`nightly_heavy`) + сводка gate** — после правок `gold.json` переснимите JSON и агрегатор (нужен LLM, см. `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*`):
 
 ```bash
 science-graphrag-layer1-benchmark tests/fixtures/benchmarks/layer1 \
@@ -214,7 +214,7 @@ SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED=false \
 science-graphrag-layer2-benchmark tests/fixtures/benchmarks/layer2 --suite --tier nightly_semantic
 ```
 
-В GitHub Actions (workflow **Integration**) шаг `Layer-2 nightly_semantic` выполняется **только если** в secrets репозитория задан `MAIN_LLM_API_KEY`; иначе шаг пропускается.
+В GitHub Actions (workflow **Integration**) шаг `Layer-2 nightly_semantic` выполняется **только если** в secrets репозитория задан `MAIN_LLM_API_KEY` (он пробрасывается в `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY`); иначе шаг пропускается.
 
 ## Chat agent — roadmap use-case harness
 
@@ -391,7 +391,7 @@ science-graphrag-benchmark-compare \
 
 ## Teacher gold (DeepSeek) vs student (Mistral) — автоматический эталон
 
-Переменные (опционально, в `.env`): `SCIENCE_GRAPHRAG_BENCHMARK_TEACHER_LLM_API_KEY`, `SCIENCE_GRAPHRAG_BENCHMARK_TEACHER_LLM_BASE_URL`, `SCIENCE_GRAPHRAG_BENCHMARK_TEACHER_LLM_MODEL` (иначе берутся `--api-key` / `--model` или `EXTRACTION_LLM_*` / `MAIN_LLM_*`).
+Переменные (опционально, в `.env`): `SCIENCE_GRAPHRAG_BENCHMARK_TEACHER_LLM_API_KEY`, `SCIENCE_GRAPHRAG_BENCHMARK_TEACHER_LLM_BASE_URL`, `SCIENCE_GRAPHRAG_BENCHMARK_TEACHER_LLM_MODEL` (иначе берутся `--api-key` / `--model` или `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*`).
 
 1. Сгенерировать `gold_teacher.json` по корпусу (нужен ключ учителя):
 

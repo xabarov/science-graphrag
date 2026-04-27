@@ -23,7 +23,7 @@
 
 - **Unit:** dedup, normalize, document slices, section-aware chunking, эвристики стадий (`pytest tests/`).
 - **Integration (опционально):** `pytest -m integration` при поднятом стеке (Postgres + Neo4j + Qdrant, см. `docker-compose.yml` или GitHub `integration-nightly.yml`); `tests/integration/` — см. [graph-level-eval-v1.md](graph-level-eval-v1.md) (merge vs nightly).
-- **Reference lane (LLM-on):** workflow `benchmark-reference.yml` запускает обязательный YOLOv1-контракт (`layer1 + graph + layer2`) с `MAIN_LLM_API_KEY`.
+- **Reference lane (LLM-on):** workflow `benchmark-reference.yml` запускает обязательный YOLOv1-контракт (`layer1 + graph + layer2`) с `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY` (в CI из секрета `MAIN_LLM_API_KEY`).
 
 ## Benchmark-driven contract
 

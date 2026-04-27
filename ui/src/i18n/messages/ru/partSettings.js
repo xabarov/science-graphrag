@@ -14,7 +14,7 @@ export default {
     "«Как в системе» следует за цветовой схемой ОС/браузера. Оформление хранится отдельно от языка (ключ ui.appearanceMode).",
   "settings.general.note": "Без запроса к серверу; выбор хранится отдельно в каждом браузере.",
   "settings.general.envDoc":
-    "Секреты и значения по умолчанию на сервере: см. файл репозитория .env.example (SCIENCE_GRAPHRAG_* и объединение с MAIN_LLM_*).",
+    "Секреты и значения по умолчанию на сервере: см. файл репозитория .env.example (SCIENCE_GRAPHRAG_*).",
 
   "settings.diagnostics.title": "Диагностика",
   "settings.diagnostics.intro": "Только чтение: версия и окружение для поддержки.",

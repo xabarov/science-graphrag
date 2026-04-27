@@ -7,7 +7,7 @@
 
 **Контекст триггера:** в Phoenix → `Settings → Models` загружены кастомные модели c ценами:
 
-- `mistralai/mistral-small-3.2-24b-instruct` (через OpenRouter) — `MAIN_LLM_MODEL`, она же `extraction_llm_model` (метаданные / authorships / references / claims / semantic).
+- `mistralai/mistral-small-3.2-24b-instruct` (через OpenRouter) — `SCIENCE_GRAPHRAG_EXTRACTION_LLM_MODEL` / `extraction_llm_model` (метаданные / authorships / references / claims / semantic).
 - `qwen/qwen3-vl-235b-a22b-instruct` (через OpenRouter) — `SCIENCE_GRAPHRAG_VL_MODEL`, используется в VL-извлечении PDF → Markdown.
 
 Чтобы Phoenix корректно атрибутировал стоимость и метрики, спаны должны быть **LLM-кинда** и нести `llm.model_name`/`llm.provider`/`llm.token_count.*`. Сейчас это выполнено лишь частично — см. §3.

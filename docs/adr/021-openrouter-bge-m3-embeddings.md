@@ -14,8 +14,8 @@ Current production state (audited 2026-04-25):
   `datasets`, `authors`, `venues`, `institutions`) are created with
   `vector_size = 384` and populated by the deterministic `HashEmbeddingProvider`
   fallback in `science_graphrag/ingestion/embeddings.py`.
-- `SCIENCE_GRAPHRAG_EMBEDDING_MODEL` is **not set** in `.env`; `EMBEDDING_MODEL`
-  is set but the Python code reads only the `SCIENCE_GRAPHRAG_*` variant.
+- `SCIENCE_GRAPHRAG_EMBEDDING_MODEL` is **not set** in `.env` for the audited hosts;
+  only prefixed `SCIENCE_GRAPHRAG_*` keys are read by `Settings`.
 - Net effect: vector search across the corpus runs on 956 hash-vectors, which
   explains the volatility and "phantom-green" behaviour seen in BT2 (workspace
   retrieval) and BT4 (hybrid ablation) audits.
@@ -38,10 +38,8 @@ Current production state (audited 2026-04-25):
    `baai/bge-m3`). Declared width: **`SCIENCE_GRAPHRAG_OPENROUTER_EMBEDDING_DIM`**
    (default 1024 for `baai/bge-m3`). Disk cache root:
    **`SCIENCE_GRAPHRAG_OPENROUTER_EMBEDDING_CACHE_ROOT`** (default `./data/embeddings_cache`).
-   Credentials / base URL follow `resolve_openrouter_embedding_settings` and
-   `science_graphrag.env_aliases` (same as LLM: `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*`,
-   or legacy `MAIN_LLM_API_KEY` / `OPENROUTER_API_KEY` / `API_KEY` and
-   `MAIN_LLM_BASE_URL` / `BASE_URL`).
+   Credentials / base URL follow `resolve_openrouter_embedding_settings` (same as
+   LLM: `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*` or `SCIENCE_GRAPHRAG_BENCHMARK_TEACHER_LLM_*`).
 3. Keep **`SCIENCE_GRAPHRAG_EMBEDDING_MODEL`** for **sentence-transformers** only
    (local HuggingFace ids). Selection order in `resolve_embedder`: OpenRouter if
    `openrouter_embedding_model` is set; else sentence-transformers if the model
