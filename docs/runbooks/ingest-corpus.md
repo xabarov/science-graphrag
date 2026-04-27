@@ -103,7 +103,8 @@ export SCIENCE_GRAPHRAG_DATABASE_URL='postgresql+psycopg://science:change-me@loc
 export SCIENCE_GRAPHRAG_REDIS_URL='redis://localhost:16379/0'
 export SCIENCE_GRAPHRAG_NEO4J_URI='bolt://localhost:17687'
 export SCIENCE_GRAPHRAG_QDRANT_URL='http://localhost:16333'
-# Keep MAIN_LLM_API_KEY / OPENROUTER keys in the environment for VL + extraction.
+# Keep LLM credentials in the environment for VL + extraction (canonical
+# SCIENCE_GRAPHRAG_* keys or legacy MAIN_LLM_API_KEY / OPENROUTER_API_KEY / API_KEY).
 ```
 
 ### `PermissionError` on `data/blobs/raw/...`

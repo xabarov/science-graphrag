@@ -44,7 +44,7 @@ python -m venv .venv
 
 - проверьте `SCIENCE_GRAPHRAG_OPENALEX_MAILTO`;
 - если у вас нестандартные локальные порты или внешние сервисы, поправьте `SCIENCE_GRAPHRAG_DATABASE_URL`, `SCIENCE_GRAPHRAG_NEO4J_URI`, `SCIENCE_GRAPHRAG_QDRANT_URL`, `SCIENCE_GRAPHRAG_REDIS_URL`;
-- если хотите LLM/VL extraction, задайте `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*` и/или `SCIENCE_GRAPHRAG_VL_*`, либо совместимые `MAIN_LLM_*`.
+- если хотите LLM/VL extraction, задайте `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*` и/или `SCIENCE_GRAPHRAG_VL_*`, либо совместимые legacy-алиасы (`MAIN_LLM_*`, `OPENROUTER_API_KEY`, `API_KEY` — см. ниже).
 
 Быстрая диагностика конфига:
 
@@ -115,8 +115,8 @@ make dev-ui-restart
 | Группа | Что обычно нужно сделать |
 |--------|---------------------------|
 | Обязательно проверить | `SCIENCE_GRAPHRAG_OPENALEX_MAILTO`, storage/connectivity переменные, путь к blobs/artifacts при нестандартном окружении |
-| Часто нужно для реальной работы | `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*`, `SCIENCE_GRAPHRAG_VL_*`, либо fallback `MAIN_LLM_*` |
-| Опционально | embeddings channel, Phoenix, agent runtime, claims extraction, chunking engine |
+| Часто нужно для реальной работы | **Канон:** `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*`, `SCIENCE_GRAPHRAG_VL_*`. **Legacy (osint-gr):** `MAIN_LLM_API_KEY` / `OPENROUTER_API_KEY` / `API_KEY`, `MAIN_LLM_BASE_URL` или `BASE_URL`, `MAIN_LLM_MODEL` — одна цепочка приоритетов в [`science_graphrag/env_aliases.py`](science_graphrag/env_aliases.py) и merge в [`science_graphrag/config.py`](science_graphrag/config.py). |
+| Опционально | **Embeddings:** `SCIENCE_GRAPHRAG_OPENROUTER_EMBEDDING_MODEL` / `_DIM` / `_CACHE_ROOT` (OpenRouter), либо локально `SCIENCE_GRAPHRAG_EMBEDDING_MODEL` (sentence-transformers); для eval/dual_validate допускается unprefixed `EMBEDDING_MODEL`. Phoenix, agent runtime, claims, chunking — см. `.env.example`. |
 | Только для UI | `ui/.env.local`, прежде всего `VITE_API_BASE_URL` если UI открыт не через тот же origin |
 
 ### Storage и connectivity
@@ -134,18 +134,19 @@ make dev-ui-restart
 
 ### LLM и VL
 
-Для extraction и PDF-to-Markdown доступны два слоя настроек:
+**Канон (рекомендуется):** `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*`, `SCIENCE_GRAPHRAG_VL_*`.
 
-- префиксные переменные проекта: `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*`, `SCIENCE_GRAPHRAG_VL_*`;
-- совместимые fallback-переменные: `MAIN_LLM_API_KEY`, `MAIN_LLM_BASE_URL`, `MAIN_LLM_MODEL`, `API_KEY`.
+**Legacy (совместимость с osint-gr, без префикса):** общий API-ключ для OpenRouter-compatible клиентов разрешается в фиксированном порядке: `MAIN_LLM_API_KEY` → `OPENROUTER_API_KEY` → `API_KEY`. Base URL: `MAIN_LLM_BASE_URL` → `BASE_URL`. Модель extraction из legacy: `MAIN_LLM_MODEL` (для VL — только если в имени есть `vl` / `vision`).
 
 Ключевые сценарии:
 
-- `SCIENCE_GRAPHRAG_VL_*` - vision-language конвертация PDF в Markdown;
-- `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*` - metadata/references/claims extraction;
-- `MAIN_LLM_*` - совместимый fallback, если префиксные переменные не заданы.
+- `SCIENCE_GRAPHRAG_VL_*` — vision-language конвертация PDF в Markdown;
+- `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*` — metadata/references/claims extraction;
+- legacy-цепочка — если соответствующие префиксные поля не заданы в окружении, см. [`science_graphrag/env_aliases.py`](science_graphrag/env_aliases.py) и `Settings.merge_osint_gr_compatible_env` в [science_graphrag/config.py](science_graphrag/config.py).
 
-Реальные merge-правила и fallback-логика описаны в [science_graphrag/config.py](science_graphrag/config.py).
+**Docker / compose:** при `SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV=1` (в т.ч. в `docker-compose.dev.yml`) корневой `.env` не перетирает URL сервисов из Compose; подробнее — [docs/runbooks/ingest-corpus.md](docs/runbooks/ingest-corpus.md).
+
+Диагностика: `science-graphrag config-check` печатает SET/UNSET для ключей и для legacy-переменных выше.
 
 ### UI-конфиг
 

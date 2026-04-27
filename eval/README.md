@@ -26,13 +26,13 @@
 
 | Режим | Переменные |
 |-------|------------|
-| **Без LLM** (детерминированные эвристики, подходит для CI без ключей) | `SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED=false` и пустые `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY`, `MAIN_LLM_API_KEY`, `API_KEY`. |
-| **С LLM** (извлечение layer-1 и semantic ближе к продакшену) | Задайте ключ: `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY` или `MAIN_LLM_API_KEY`; при необходимости `SCIENCE_GRAPHRAG_EXTRACTION_LLM_BASE_URL` / `MAIN_LLM_BASE_URL`, модель — `SCIENCE_GRAPHRAG_EXTRACTION_LLM_MODEL`. |
+| **Без LLM** (детерминированные эвристики, подходит для CI без ключей) | `SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED=false` и пустые `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY`, `MAIN_LLM_API_KEY`, `OPENROUTER_API_KEY`, `API_KEY`. |
+| **С LLM** (извлечение layer-1 и semantic ближе к продакшену) | Задайте ключ: `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY` или legacy-цепочку `MAIN_LLM_API_KEY` → `OPENROUTER_API_KEY` → `API_KEY` (см. `science_graphrag/env_aliases.py`); base URL — `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*` или `MAIN_LLM_BASE_URL` / `BASE_URL`; модель — `SCIENCE_GRAPHRAG_EXTRACTION_LLM_MODEL` или `MAIN_LLM_MODEL`. |
 
 **Эталонные прогоны (см. [roadmap Phase 4](../docs/roadmap.md)):** всегда включайте LLM для оценки качества и Neo4j после ingest.
 
 1. В **`.env`** задайте `SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED=true`. Для `get_settings()` значения из **`.env` перекрывают** одноимённые переменные процесса (чтобы локальный `.env` не проигрывал устаревшему `export …=false` в shell).
-2. Ключ: `MAIN_LLM_API_KEY` и при необходимости `MAIN_LLM_BASE_URL` / `MAIN_LLM_MODEL`, либо дублируйте как `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*`.
+2. Ключ: канон `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY` или legacy (`MAIN_LLM_API_KEY`, `OPENROUTER_API_KEY`, `API_KEY`); base/model — префиксные поля либо `MAIN_LLM_BASE_URL` / `BASE_URL`, `MAIN_LLM_MODEL`.
 3. Чтобы **выключить** LLM при том же `.env` с `true`, поменяйте флаг **в `.env`** или временно закомментируйте строку; одна только переменная в shell больше не перебивает `.env` (в CI секретного `.env` нет — там по-прежнему задаётся `SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED=false` в workflow).
 
 Семантическая стадия (ontology v1) управляется `SCIENCE_GRAPHRAG_SEMANTIC_EXTRACTION_ENABLED` (по умолчанию включена, если LLM доступен).

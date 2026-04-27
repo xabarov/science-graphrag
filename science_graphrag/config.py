@@ -6,6 +6,11 @@ from dotenv import dotenv_values, load_dotenv
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
 
+from science_graphrag.env_aliases import (
+    resolve_legacy_main_llm_model,
+    resolve_legacy_shared_api_key,
+    resolve_legacy_shared_base_url,
+)
 from science_graphrag.settings.service import SettingsService
 
 # Unprefixed keys (MAIN_LLM_*, PHOENIX_*, etc.) must be visible to os.getenv for merge validators.
@@ -511,16 +516,17 @@ class Settings(BaseSettings):
                 data[field] = val
 
         if not data.get("vl_api_key"):
-            key = os.getenv("MAIN_LLM_API_KEY") or os.getenv("API_KEY")
+            key = resolve_legacy_shared_api_key()
             if key:
                 data["vl_api_key"] = key
 
-        if os.getenv("SCIENCE_GRAPHRAG_VL_BASE_URL") is None and os.getenv("MAIN_LLM_BASE_URL"):
-            data["vl_base_url"] = os.environ["MAIN_LLM_BASE_URL"].strip().rstrip("/")
+        _legacy_base = resolve_legacy_shared_base_url()
+        if os.getenv("SCIENCE_GRAPHRAG_VL_BASE_URL") is None and _legacy_base:
+            data["vl_base_url"] = _legacy_base.rstrip("/")
 
-        if os.getenv("SCIENCE_GRAPHRAG_VL_MODEL") is None and os.getenv("MAIN_LLM_MODEL"):
-            main_model = os.environ["MAIN_LLM_MODEL"].strip()
-            if "vl" in main_model.lower() or "vision" in main_model.lower():
+        if os.getenv("SCIENCE_GRAPHRAG_VL_MODEL") is None:
+            main_model = resolve_legacy_main_llm_model() or ""
+            if main_model and ("vl" in main_model.lower() or "vision" in main_model.lower()):
                 data["vl_model"] = main_model
 
         if (
@@ -545,19 +551,17 @@ class Settings(BaseSettings):
             data["extraction_llm_references_max_concurrency"] = lx_refs
 
         if not data.get("extraction_llm_api_key"):
-            ex_key = os.getenv("MAIN_LLM_API_KEY") or os.getenv("API_KEY")
+            ex_key = resolve_legacy_shared_api_key()
             if ex_key:
                 data["extraction_llm_api_key"] = ex_key
 
-        if os.getenv("SCIENCE_GRAPHRAG_EXTRACTION_LLM_BASE_URL") is None and os.getenv(
-            "MAIN_LLM_BASE_URL",
-        ):
-            data["extraction_llm_base_url"] = os.environ["MAIN_LLM_BASE_URL"].strip().rstrip("/")
+        if os.getenv("SCIENCE_GRAPHRAG_EXTRACTION_LLM_BASE_URL") is None and _legacy_base:
+            data["extraction_llm_base_url"] = _legacy_base.strip().rstrip("/")
 
-        if os.getenv("SCIENCE_GRAPHRAG_EXTRACTION_LLM_MODEL") is None and os.getenv(
-            "MAIN_LLM_MODEL",
-        ):
-            data["extraction_llm_model"] = os.environ["MAIN_LLM_MODEL"].strip()
+        if os.getenv("SCIENCE_GRAPHRAG_EXTRACTION_LLM_MODEL") is None:
+            _main_model = resolve_legacy_main_llm_model()
+            if _main_model:
+                data["extraction_llm_model"] = _main_model
 
         # ADR-021: ``SCIENCE_GRAPHRAG_EMBEDDING_MODEL=baai/bge-m3`` maps to ``embedding_model`` but
         # hub-style ids must use the OpenRouter slot so ``resolve_embedder`` picks the API path.

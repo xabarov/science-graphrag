@@ -38,8 +38,10 @@ Current production state (audited 2026-04-25):
    `baai/bge-m3`). Declared width: **`SCIENCE_GRAPHRAG_OPENROUTER_EMBEDDING_DIM`**
    (default 1024 for `baai/bge-m3`). Disk cache root:
    **`SCIENCE_GRAPHRAG_OPENROUTER_EMBEDDING_CACHE_ROOT`** (default `./data/embeddings_cache`).
-   Credentials / base URL follow `resolve_openrouter_embedding_settings` (same as
-   LLM: `MAIN_LLM_API_KEY`, `MAIN_LLM_BASE_URL`, or `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*`).
+   Credentials / base URL follow `resolve_openrouter_embedding_settings` and
+   `science_graphrag.env_aliases` (same as LLM: `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*`,
+   or legacy `MAIN_LLM_API_KEY` / `OPENROUTER_API_KEY` / `API_KEY` and
+   `MAIN_LLM_BASE_URL` / `BASE_URL`).
 3. Keep **`SCIENCE_GRAPHRAG_EMBEDDING_MODEL`** for **sentence-transformers** only
    (local HuggingFace ids). Selection order in `resolve_embedder`: OpenRouter if
    `openrouter_embedding_model` is set; else sentence-transformers if the model

@@ -152,9 +152,13 @@ def main(  # pylint: disable=too-many-locals,too-many-arguments,too-many-positio
         sub = out_dir / slug
         sub.mkdir(parents=True, exist_ok=True)
         sub_env = {**os.environ, "MAIN_LLM_MODEL": model}
-        if not sub_env.get("MAIN_LLM_API_KEY") and not sub_env.get("API_KEY"):
+        if (
+            not sub_env.get("MAIN_LLM_API_KEY")
+            and not sub_env.get("OPENROUTER_API_KEY")
+            and not sub_env.get("API_KEY")
+        ):
             typer.echo(
-                "Warning: MAIN_LLM_API_KEY / API_KEY not set; runs may fail.",
+                "Warning: MAIN_LLM_API_KEY / OPENROUTER_API_KEY / API_KEY not set; runs may fail.",
                 err=True,
             )
 

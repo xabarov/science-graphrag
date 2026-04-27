@@ -57,6 +57,11 @@ export default {
   "benchmarkPage.runLab.grouped.openAnalysis": "Открыть анализ (группа)",
   "benchmarkPage.runLab.groupProgress.title": "Прогресс группы",
   "benchmarkPage.runLab.groupProgress.aggregate": "Сводка: {{status}}",
+  "benchmarkPage.runLab.groupStatus.idle": "ожидание",
+  "benchmarkPage.runLab.groupStatus.running": "выполняется",
+  "benchmarkPage.runLab.groupStatus.completed": "завершено",
+  "benchmarkPage.runLab.groupStatus.failed": "ошибка",
+  "benchmarkPage.runLab.groupStatus.partial": "частично",
   "benchmarkPage.runLab.groupProgress.useRun": "Этот прогон",
   "benchmarkPage.runLab.groupProgress.singleHidden":
     "Пока активна группа, блок одного прогона скрыт. Переключитесь в «Один прогон» для обычного лаунчера.",

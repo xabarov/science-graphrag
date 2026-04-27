@@ -20,6 +20,9 @@ export const LS_LAST_RUN_GROUP = "benchmark:lastRunGroup";
 export const LS_RECENT_COMPARE_SETUPS = "benchmark:recentCompareSetups";
 const MAX_RECENT = 8;
 
+/** Terminal statuses for benchmark runs (single + grouped polling). */
+export const BENCHMARK_TERMINAL_RUN_STATUSES = Object.freeze(["completed", "failed", "cancelled"]);
+
 /**
  * @typedef {object} GroupJob
  * @property {string} experimentId
@@ -185,7 +188,7 @@ export function createRunGroupId() {
  * @param {GroupChildRun[]} children
  * @param {readonly string[]} terminalStatuses
  */
-export function aggregateGroupStatus(children, terminalStatuses) {
+export function aggregateGroupStatus(children, terminalStatuses = BENCHMARK_TERMINAL_RUN_STATUSES) {
   const term = new Set(terminalStatuses);
   if (!children.length) return "idle";
   const withId = children.filter((c) => c.runId);

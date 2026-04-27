@@ -18,7 +18,7 @@
 ## Configuration
 
 - Copy `.env.example` to `.env` if present, or set `SCIENCE_GRAPHRAG_*` variables (see [science_graphrag/config.py](../../science_graphrag/config.py)).
-- Extraction LLM keys: `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*` or reuse `MAIN_LLM_*` / `API_KEY` per settings merge rules.
+- Extraction LLM keys: canonical `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*` or legacy chain `MAIN_LLM_API_KEY` → `OPENROUTER_API_KEY` → `API_KEY` (and base URL `MAIN_LLM_BASE_URL` / `BASE_URL`) per `science_graphrag/env_aliases.py` + `Settings.merge_osint_gr_compatible_env`.
 - **Semantic stage**: `SCIENCE_GRAPHRAG_SEMANTIC_EXTRACTION_ENABLED` (default on when LLM available).
 
 ## Compose

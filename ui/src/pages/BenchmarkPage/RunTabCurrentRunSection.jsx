@@ -45,6 +45,11 @@ export default function RunTabCurrentRunSection({
 }) {
   const tk = useTheme().appTokens;
   const hasGroup = Boolean(groupProgress?.children?.length);
+  const rawAggregate = groupProgress?.aggregateStatus;
+  const aggregateI18nKey = rawAggregate ? `benchmarkPage.runLab.groupStatus.${rawAggregate}` : null;
+  const aggregateTranslated = aggregateI18nKey ? t(aggregateI18nKey) : null;
+  const aggregateLabel =
+    rawAggregate && aggregateTranslated && aggregateTranslated !== aggregateI18nKey ? aggregateTranslated : rawAggregate || "—";
 
   return (
     <>
@@ -52,7 +57,7 @@ export default function RunTabCurrentRunSection({
         <Box sx={{ mb: 3 }}>
           <Typography sx={{ fontWeight: 600, mb: 1 }}>{t("benchmarkPage.runLab.groupProgress.title")}</Typography>
           <Typography sx={{ color: tk.text.secondary, fontSize: "0.75rem", mb: 1 }}>
-            {t("benchmarkPage.runLab.groupProgress.aggregate", { status: groupProgress.aggregateStatus || "—" })}
+            {t("benchmarkPage.runLab.groupProgress.aggregate", { status: aggregateLabel })}
           </Typography>
           {groupProgress.groupId ? (
             <Typography sx={{ color: tk.text.muted, fontSize: "0.68rem", fontFamily: "monospace", mb: 1 }}>

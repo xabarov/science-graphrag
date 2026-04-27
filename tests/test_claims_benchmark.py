@@ -26,6 +26,7 @@ def test_production_claims_extractor_matches_ingestion_stub(
     for key in (
         "SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY",
         "MAIN_LLM_API_KEY",
+        "OPENROUTER_API_KEY",
         "API_KEY",
     ):
         monkeypatch.delenv(key, raising=False)
