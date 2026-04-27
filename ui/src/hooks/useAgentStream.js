@@ -107,6 +107,7 @@ export function useAgentStream({
             cbRef.current.onFinalAnswer?.(ev);
           },
           onError: (msg) => {
+            if (sawFinalAnswerRef.current) return;
             streamEmittedError = true;
             cbRef.current.onError?.(msg);
           },

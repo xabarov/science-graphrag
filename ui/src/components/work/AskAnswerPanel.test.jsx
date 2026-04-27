@@ -108,6 +108,107 @@ describe("AskAnswerPanel", () => {
     expect(screen.getByText("askPanel.answer.degraded")).toBeTruthy();
   });
 
+  it("hides answer section title while run is active with no answer text", () => {
+    const normalized = normalizeQueryResponse({
+      answer: "",
+      citations: [],
+      graph_context: {},
+      retrieval_trace: {},
+    });
+    render(
+      <MemoryRouter>
+        <ThemeProvider theme={theme}>
+          <AskAnswerPanel
+            t={(k) => k}
+            normalized={normalized}
+            locked={false}
+            inWorkspace={false}
+            workId=""
+            workspaceWorkId={null}
+            retrievalMode="agent"
+            agentToolTrace={[]}
+            retrievalJsonOpen={false}
+            onToggleRetrievalJson={() => {}}
+            streamEvents={[{ type: "product_step", code: "searching_literature", tool: "idea_search" }]}
+            isRunActive
+          />
+        </ThemeProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.queryByText("chat.run.answerSectionTitle")).toBeNull();
+    expect(screen.queryByTestId("ask-answer-markdown")).toBeNull();
+  });
+
+  it("hides citations block while run is active and there are no citations yet", () => {
+    const normalized = normalizeQueryResponse({
+      answer: "",
+      citations: [],
+      graph_context: {},
+      retrieval_trace: {},
+    });
+    render(
+      <MemoryRouter>
+        <ThemeProvider theme={theme}>
+          <AskAnswerPanel
+            t={(k) => k}
+            normalized={normalized}
+            locked={false}
+            inWorkspace={false}
+            workId=""
+            workspaceWorkId={null}
+            retrievalMode="agent"
+            agentToolTrace={[]}
+            retrievalJsonOpen={false}
+            onToggleRetrievalJson={() => {}}
+            streamEvents={[]}
+            isRunActive
+          />
+        </ThemeProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.queryByText("askPanel.citations.title")).toBeNull();
+  });
+
+  it("shows post-run headline from last stream event after run completes", () => {
+    const t2 = (k, vars = {}) => {
+      const m = {
+        "chat.run.productStep.searching_literature": "Searching works…",
+      };
+      let out = m[k] ?? k;
+      Object.entries(vars || {}).forEach(([kk, v]) => {
+        out = out.split(`{{${kk}}}`).join(String(v));
+      });
+      return out;
+    };
+    const normalized = normalizeQueryResponse({
+      answer: "Final",
+      citations: [],
+      graph_context: {},
+      retrieval_trace: {},
+    });
+    render(
+      <MemoryRouter>
+        <ThemeProvider theme={theme}>
+          <AskAnswerPanel
+            t={t2}
+            normalized={normalized}
+            locked={false}
+            inWorkspace={false}
+            workId=""
+            workspaceWorkId={null}
+            retrievalMode="agent"
+            agentToolTrace={[]}
+            retrievalJsonOpen={false}
+            onToggleRetrievalJson={() => {}}
+            streamEvents={[{ type: "product_step", code: "searching_literature", tool: "idea_search" }]}
+            isRunActive={false}
+          />
+        </ThemeProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.getByTestId("post-run-stream-summary").textContent).toContain("Searching works");
+  });
+
   it("shows server session memory when excerpt present after run", () => {
     const normalized = normalizeQueryResponse({
       answer: "A",
@@ -141,6 +242,7 @@ describe("AskAnswerPanel", () => {
     expect(screen.getByText("chat.sessionMemory.title")).toBeTruthy();
     expect(screen.getByText(/Q: prior/)).toBeTruthy();
     expect(screen.getByText(/turn_digest/)).toBeTruthy();
+    expect(screen.getByText(/rolling_memory/)).toBeTruthy();
   });
 
   it("renders composed final answer with typed blocks and citations", async () => {

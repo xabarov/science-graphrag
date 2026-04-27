@@ -14,6 +14,9 @@
 | [`ontology-benchmarks-roadmap-2026-04-24.md`](./ontology-benchmarks-roadmap-2026-04-24.md) | Wave M–T inventory (large); trust-audit is the live BT plan |
 | [`langgraph-migration-plan-2026-04-25.md`](./langgraph-migration-plan-2026-04-25.md) | Y5/Y6 LangGraph vs smolagents |
 | [`phoenix-tracing-coverage-2026-04-25.md`](./phoenix-tracing-coverage-2026-04-25.md) | Phoenix / OTel gaps + Wave X |
+| [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md) | **Agent chat (canonical, slim):** текущий single-graph runtime, отложенный multi-specialist split, **будущие** `tool_search` + context compaction — детальная история: [`_archive/chat-agent-system-roadmap-full-2026-04-26.md`](./_archive/chat-agent-system-roadmap-full-2026-04-26.md) |
+| [`agent-chat-frontend-ui-plan-2026-04-26.md`](./agent-chat-frontend-ui-plan-2026-04-26.md) | Agent chat UI/UX (`ui/` run chrome, rail, typed blocks) |
+| [`chat-agent-roadmap-trace-audit-2026-04-27.md`](./chat-agent-roadmap-trace-audit-2026-04-27.md) | Chat-agent eval harness + Phoenix trace audit (`ws-pilot-od`) |
 | [`chat-agent-od-workspace-restoration-and-eval-plan-2026-04-27.md`](./chat-agent-od-workspace-restoration-and-eval-plan-2026-04-27.md) | OD chat-agent proving ground: workspace restoration + trusted eval scenarios |
 | [`graph-readability-followup-2026-04-25.md`](./graph-readability-followup-2026-04-25.md) | GR6–GR9 graph UX |
 | [`light-theme-roadmap-2026-04-27.md`](./light-theme-roadmap-2026-04-27.md) | UI appearance system: light theme concept, tokenization, rollout phases |
@@ -24,6 +27,6 @@
 | [`corpus-gold-pack-v1-2026-04-25.md`](./corpus-gold-pack-v1-2026-04-25.md) | Gold pack phases 0–6 (complete); fixture authors still cite it |
 | [`dedup-ingest-parity-matrix-2026-04-26.md`](./dedup-ingest-parity-matrix-2026-04-26.md) | Dedup queues matrix (scan vs ingest) |
 
-**Archive:** [`_archive/`](./_archive/) — completed waves (e.g. Wave 4 snapshot, Wave 5–6 write-ups, ingest U–W roadmap), historical UX notes, smolagents spike doc, [`corpus-gold-pack-v1-phase-log-2026-04-25.md`](./_archive/corpus-gold-pack-v1-phase-log-2026-04-25.md) (full Phase 0–6.E execution log moved out of the living corpus gold doc).
+**Archive:** [`_archive/`](./_archive/) — completed waves (e.g. Wave 4 snapshot, Wave 5–6 write-ups, ingest U–W roadmap), historical UX notes, smolagents spike doc, [`corpus-gold-pack-v1-phase-log-2026-04-25.md`](./_archive/corpus-gold-pack-v1-phase-log-2026-04-25.md) (full Phase 0–6.E execution log moved out of the living corpus gold doc), **full** pre-slim chat system roadmap [`chat-agent-system-roadmap-full-2026-04-26.md`](./_archive/chat-agent-system-roadmap-full-2026-04-26.md), archived frontend verification checklist [`agent-chat-frontend-verification-gaps-next-wave-2026-04-26.md`](./_archive/agent-chat-frontend-verification-gaps-next-wave-2026-04-26.md).
 
 **Backlog (structural debt):** [`../backlog/refactor-backend.md`](../backlog/refactor-backend.md), [`../backlog/refactor-frontend.md`](../backlog/refactor-frontend.md).

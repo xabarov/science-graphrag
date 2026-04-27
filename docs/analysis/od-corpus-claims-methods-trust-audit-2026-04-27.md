@@ -106,7 +106,7 @@ So retrieval/graph-adjacent chunk indexing for **this** workspace is **healthy**
 
 ## 4. Benchmark trust mapping (plan §4)
 
-Cross-reference: [`ontology-benchmarks-trust-audit-2026-04-25.md`](./ontology-benchmarks-trust-audit-2026-04-25.md), [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md).
+Cross-reference: [`ontology-benchmarks-trust-audit-2026-04-25.md`](./ontology-benchmarks-trust-audit-2026-04-25.md), [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md) (slim product canon; deep historical roadmap: [`_archive/chat-agent-system-roadmap-full-2026-04-26.md`](./_archive/chat-agent-system-roadmap-full-2026-04-26.md)).
 
 | Area | Impact of this audit |
 |------|----------------------|

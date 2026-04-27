@@ -76,6 +76,11 @@ class RunRecord:
     error_message: str | None = None
     run_config: dict[str, Any] = field(default_factory=dict)
     cases: dict[str, RunCaseRecord] = field(default_factory=dict)
+    # Phase 3: optional S3 pointer + size; slim restore uses list_aggregate_override.
+    full_run_object_key: str | None = None
+    full_run_json_bytes: int | None = None
+    full_payload_hydrated: bool = False
+    list_aggregate_override: dict[str, Any] | None = None
 
     def progress_counts(self) -> dict[str, int]:
         """Return total/completed counters for the UI progress bar."""

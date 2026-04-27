@@ -17,9 +17,9 @@ import { CursorIconAction } from "../common/index.js";
 import { useFeedback } from "../feedback/index.js";
 import { AskAnswerPanel } from "./AskAnswerPanel.jsx";
 import { AgentAssistantTurnShell } from "./AgentAssistantTurnShell.jsx";
-import { deriveProgressHint } from "./agentRunViewModel.js";
 import { AgentRunHeader } from "./AgentRunHeader.jsx";
 import { AgentLiveStatus } from "./AgentLiveStatus.jsx";
+import { deriveHeaderProgressHint } from "./agentRunViewModel.js";
 import MarkdownView from "./MarkdownView.jsx";
 
 const SCROLL_BOTTOM_THRESHOLD_PX = 80;
@@ -403,10 +403,10 @@ export function ChatMessageThread({
       {pendingUserQuery && streamForThisChat ? (
         <Box sx={{ mb: 2.25 }}>
           <ChatUserBubble text={pendingUserQuery} />
-          <Box sx={{ display: "flex", justifyContent: "flex-start", pl: 0.5 }}>
+          <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
             <Box sx={{ minWidth: 0, maxWidth: "min(880px, 100%)" }}>
               {liveNormalized ? (
-                <AgentAssistantTurnShell sx={{ mt: 1 }}>
+                <AgentAssistantTurnShell dense sx={{ mt: 1 }}>
                   <AskAnswerPanel
                     t={t}
                     normalized={liveNormalized}
@@ -424,16 +424,16 @@ export function ChatMessageThread({
                   />
                 </AgentAssistantTurnShell>
               ) : isLoading ? (
-                <AgentAssistantTurnShell sx={{ mt: 1 }}>
+                <AgentAssistantTurnShell dense sx={{ mt: 1 }}>
                   <AgentRunHeader
                     t={t}
                     runState="running"
                     answerClass={null}
                     citationCount={0}
                     durationMs={null}
-                    progressHint={deriveProgressHint(t, streamEvents, true)}
+                    progressHint={deriveHeaderProgressHint(t, streamEvents, true)}
                   />
-                  <AgentLiveStatus t={t} streamEvents={streamEvents} isActive />
+                  <AgentLiveStatus t={t} streamEvents={streamEvents} isActive embedded />
                 </AgentAssistantTurnShell>
               ) : null}
             </Box>

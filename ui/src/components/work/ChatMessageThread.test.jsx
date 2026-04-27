@@ -3,6 +3,9 @@ import { ThemeProvider } from "@mui/material/styles";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { MemoryRouter } from "react-router-dom";
+
+import { normalizeQueryResponse } from "../../services/researchApi.js";
 import { buildAppTheme } from "../../theme/buildAppTheme.js";
 import { FeedbackProvider } from "../feedback/FeedbackProvider.jsx";
 import { ChatMessageThread } from "./ChatMessageThread.jsx";
@@ -39,9 +42,11 @@ const baseProps = {
 
 function renderThread(ui) {
   return render(
-    <ThemeProvider theme={theme}>
-      <FeedbackProvider>{ui}</FeedbackProvider>
-    </ThemeProvider>,
+    <MemoryRouter>
+      <ThemeProvider theme={theme}>
+        <FeedbackProvider>{ui}</FeedbackProvider>
+      </ThemeProvider>
+    </MemoryRouter>,
   );
 }
 
@@ -74,6 +79,28 @@ describe("ChatMessageThread", () => {
       />,
     );
     expect(screen.getByText("hello")).toBeTruthy();
+  });
+
+  it("hides empty answer chrome while streaming pending assistant turn", () => {
+    const live = normalizeQueryResponse({
+      answer: "",
+      citations: [],
+      graph_context: {},
+      retrieval_trace: {},
+    });
+    renderThread(
+      <ChatMessageThread
+        {...baseProps}
+        pendingUserQuery="question"
+        isLoading
+        streamingTarget={{ scopeKey: "scope-a", sessionId: "sess-1" }}
+        liveNormalized={live}
+        streamEvents={[{ type: "product_step", code: "searching_literature", tool: "idea_search" }]}
+      />,
+    );
+    expect(screen.queryByText("chat.run.answerSectionTitle")).toBeNull();
+    expect(screen.queryByTestId("ask-answer-markdown")).toBeNull();
+    expect(screen.queryByText("askPanel.citations.title")).toBeNull();
   });
 
   it("renders copy and restart actions for saved turns", async () => {

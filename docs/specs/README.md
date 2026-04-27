@@ -28,4 +28,5 @@
 
 | Документ | Стадия |
 |----------|--------|
-| [agent-chat-v1.md](agent-chat-v1.md) | Wave A: `POST /v2/agent/query` envelope + SSE vocabulary |
+| [agent-chat-v1.md](agent-chat-v1.md) | `POST /v2/agent/query` — envelope + SSE vocabulary (волны CH* в спеке — метки поставки, не отдельные продукты) |
+| [Анализ: slim roadmap](../analysis/chat-agent-system-roadmap-2026-04-26.md) | Продуктовый канон: упрощённый LangGraph-чат, будущие `tool_search` + compaction; [полный архив](../analysis/_archive/chat-agent-system-roadmap-full-2026-04-26.md) |

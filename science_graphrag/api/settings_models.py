@@ -6,6 +6,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field, HttpUrl
 
+from science_graphrag.api.settings_llm_runtime_patch import LlmRuntimeOverridesPatch
+
 
 class SettingsSnapshotResponse(BaseModel):
     sections: list[dict[str, Any]]
@@ -48,6 +50,10 @@ class UpdateLlmSettingsRequest(BaseModel):
     temperature: float = Field(default=0.0, ge=0.0, le=2.0)
     timeout_seconds: float = Field(default=180.0, ge=1.0, le=900.0)
     api_key: str | None = Field(default=None, min_length=1, max_length=4096)
+    runtime_overrides: LlmRuntimeOverridesPatch | None = Field(
+        default=None,
+        description="Optional LLM concurrency, agent, and dedup timeout overrides (Phase 3).",
+    )
 
 
 class TestLlmConnectionRequest(BaseModel):

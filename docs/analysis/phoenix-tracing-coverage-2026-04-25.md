@@ -21,7 +21,7 @@
 | [`_archive/ingestion-async-pipeline-roadmap-2026-04-25.md`](./_archive/ingestion-async-pipeline-roadmap-2026-04-25.md) [ARCHIVED] | Wave U–W (delivered): стадии ingest, SSE, Redis/Dramatiq |
 | [../specs/frontend-ui-api-contracts-v1.md](../specs/frontend-ui-api-contracts-v1.md) | API контракты UI ↔ backend |
 | [../runbooks/roadmap-next-waves.md](../runbooks/roadmap-next-waves.md) | Сводный список волн (после принятия — добавить Wave X-Phoenix) |
-| [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md) | Целевой research chat runtime, CH waves, observability/evals |
+| [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md) | Agent chat: **slim** канон (runtime + evals); CH waves / длинная taxonomy — [`_archive/chat-agent-system-roadmap-full-2026-04-26.md`](./_archive/chat-agent-system-roadmap-full-2026-04-26.md) |
 | [`chat-agent-roadmap-trace-audit-2026-04-27.md`](./chat-agent-roadmap-trace-audit-2026-04-27.md) | Live harness, baseline workspace, per-case `phoenix_trace_id` и trace audit |
 | [`phoenix-closeout-evidence-2026-04-27.md`](./phoenix-closeout-evidence-2026-04-27.md) | Закрытие Wave X: live REST/UI evidence + команды воспроизведения |
 | [`../architecture/observability-phoenix.md`](../architecture/observability-phoenix.md) | Краткий контракт имён и обязательных OTel/OpenInference атрибутов |

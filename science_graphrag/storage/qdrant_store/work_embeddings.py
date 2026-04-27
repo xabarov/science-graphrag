@@ -59,6 +59,11 @@ class QdrantWorkEmbeddingStore:
         if not wid:
             return
         vec = vector.tolist() if hasattr(vector, "tolist") else list(vector)
+        if len(vec) != self._vector_dim:
+            raise ValueError(
+                f"Qdrant work_summary vector dim mismatch for collection {self._collection!r}: "
+                f"got {len(vec)}, expected {self._vector_dim}."
+            )
         ws_ids = [str(x).strip() for x in (workspace_ids or []) if str(x).strip()]
         pid = self.point_id_for_work(wid)
         payload: dict[str, Any] = {

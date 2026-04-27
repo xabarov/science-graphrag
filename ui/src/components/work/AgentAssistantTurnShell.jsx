@@ -5,15 +5,15 @@ import { useTheme } from "@mui/material/styles";
 /**
  * Outer card for a single assistant turn (aligned with research workspace chat chrome).
  *
- * @param {{ children: React.ReactNode, sx?: object }} props
+ * @param {{ children: React.ReactNode, sx?: object, dense?: boolean }} props
  */
-export function AgentAssistantTurnShell({ children, sx = {} }) {
+export function AgentAssistantTurnShell({ children, sx = {}, dense = false }) {
   const tk = useTheme().appTokens;
   return (
     <Box
       sx={{
         width: "100%",
-        p: 2,
+        p: dense ? 1.25 : 2,
         borderRadius: "6px",
         border: `1px solid ${tk.border.default}`,
         backgroundColor: tk.surface.panel,

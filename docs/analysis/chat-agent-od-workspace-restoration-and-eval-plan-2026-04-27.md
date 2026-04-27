@@ -23,7 +23,7 @@
 
 ## 1. Why this document exists
 
-The chat-agent roadmap already defines the **runtime architecture**, tool taxonomy, answer classes, and Phoenix requirements. What is still missing is a single execution plan for the **object-detection proving ground**:
+The slim [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md) fixes the **current** single-graph runtime and future tracks (`tool_search`, context compaction). **Research use cases / answer-class vocabulary** for scenarios still follow the product sections of the archived full roadmap and `docs/specs/agent-chat-v1.md`. What is still missing here is a single execution plan for the **object-detection proving ground**:
 
 1. how to restore the OD workspace to a state where evidence-heavy chat use cases are meaningful;
 2. how to define a curated set of **10-15 trusted agent scenarios**;

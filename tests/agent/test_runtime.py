@@ -83,7 +83,7 @@ def test_build_agent_and_run_smoke(monkeypatch) -> None:
         lambda _settings: _FakeWriterLLM(),
     )
 
-    settings = Settings()
+    settings = Settings(agent_runtime="langgraph_supervisor_v1")
     agent = build_agent(
         settings=settings,
         stores=type(

@@ -347,3 +347,84 @@ def test_get_run_raises_when_case_count_over_limit(
     assert slim.get("full_run_block_reason") == FULL_RUN_BLOCK_DETAIL
     with pytest.raises(RunPayloadTooLargeError):
         store.get_run(run_id)
+
+
+def test_task_store_remote_full_payload_roundtrip_in_memory(tmp_path: Path) -> None:
+    """Remote persistence path without real S3 (ThreadPoolExecutor breaks moto patching)."""
+
+    class _MemoryRemotePersistence:
+        """Minimal S3-shaped persistence for Phase 3 task_store tests."""
+
+        remote_full_payloads = True
+
+        def __init__(self) -> None:
+            self._objects: dict[str, str] = {}
+
+        def put_full_json(self, run_id: str, json_text: str) -> str | None:
+            key = f"science-benchmarks/runs/{run_id}/full.json"
+            self._objects[key] = json_text
+            return key
+
+        def get_full_json(self, run_id: str, *, object_key: str | None = None) -> str | None:
+            key = (object_key or "").strip() or f"science-benchmarks/runs/{run_id}/full.json"
+            return self._objects.get(key)
+
+        def delete_full_json(self, run_id: str, *, object_key: str | None = None) -> None:
+            key = (object_key or "").strip() or f"science-benchmarks/runs/{run_id}/full.json"
+            self._objects.pop(key, None)
+
+        def close(self) -> None:
+            return None
+
+    def _fake_layer1_runner(
+        fixture_dir: Path,
+        *,
+        settings,
+        external_gold_root=None,
+        gold_filename: str = "gold.json",
+        threshold_profile: str | None = None,
+    ) -> dict[str, Any]:
+        del external_gold_root, gold_filename, threshold_profile
+        return {
+            "case_id": fixture_dir.name,
+            "metrics": {
+                "contract": {"passed": True, "checks": {}},
+                "authorships": {"names_f1": 1.0},
+                "references": {"sample_arxiv_f1": 1.0, "sample_doi_f1": 1.0},
+            },
+            "predicted": {},
+            "gold": {},
+            "diagnostics": {},
+        }
+
+    persistence = _MemoryRemotePersistence()
+    hist = tmp_path / "benchmark_runs"
+    hist.mkdir(parents=True, exist_ok=True)
+    store = BenchmarkTaskStore(
+        max_workers=1,
+        history_dir=hist,
+        layer1_runner=_fake_layer1_runner,
+        persistence=persistence,
+    )
+    run_id = store.create_run(
+        case_ids=["yolov1"],
+        label="remote-persist",
+        benchmark_family="layer1",
+        run_config={"model_profile": "env_default", "gold_source": "curated_gold"},
+    )
+    _wait_for_terminal(store, run_id)
+    assert not (hist / f"{run_id}.json").is_file()
+    summary = json.loads((hist / f"{run_id}.summary.json").read_text(encoding="utf-8"))
+    assert summary.get("full_run_object_key")
+    assert summary.get("full_run_json_bytes")
+
+    restored = BenchmarkTaskStore(
+        max_workers=1,
+        history_dir=hist,
+        layer1_runner=_fake_layer1_runner,
+        persistence=persistence,
+    )
+    full = restored.get_run(run_id)
+    assert full is not None
+    assert full["status"] == "completed"
+    assert full["label"] == "remote-persist"

@@ -15,11 +15,16 @@ from eval.chat_agent.od_claims_gap_audit import (
     render_od_claims_gap_audit_markdown,
 )
 from eval.chat_agent.od_cli_support import build_od_workspace_manifest_live
+from science_graphrag.artifacts.diagnostic_object_sink import (
+    default_local_diagnostics_dir,
+    write_diagnostic_json,
+)
+from science_graphrag.config import get_settings
 
 
 def _default_out_json() -> Path:
     ts = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-    return Path("eval/results") / f"od-claims-gap-audit-{ts}.json"
+    return default_local_diagnostics_dir("od") / f"od-claims-gap-audit-{ts}.json"
 
 
 def _load_manifest(path: Path) -> dict[str, Any]:
@@ -79,15 +84,21 @@ def main() -> int:
     audit = build_od_claims_gap_audit(manifest, ingest_progress_paths=progress_paths)
     audit["source_manifest_path"] = str(args.manifest) if args.manifest else None
 
-    out_json.parent.mkdir(parents=True, exist_ok=True)
-    out_json.write_text(json.dumps(audit, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    settings = get_settings()
+    written = write_diagnostic_json(
+        out_json.name,
+        audit,
+        settings=settings,
+        kind="od",
+        local_path=out_json,
+    )
 
     if args.out_md:
         args.out_md.parent.mkdir(parents=True, exist_ok=True)
         args.out_md.write_text(render_od_claims_gap_audit_markdown(audit), encoding="utf-8")
 
     summ = audit.get("summary") or {}
-    print(json.dumps({"written": str(out_json), "summary": summ}, indent=2))
+    print(json.dumps({"written": written, "summary": summ}, indent=2))
 
     missing = int(
         summ.get("work_count_missing_claims") or summ.get("work_count_missing_neo4j_claims") or 0

@@ -14,7 +14,7 @@ If Neo4j returns `workspace_not_found` during audit, run once (idempotent):
 ## Layout
 
 - `baseline_workspace_manifest.json` — stable id, description, links to related benchmark gold.
-- `cases/*.json` — one file per use-case from `docs/analysis/chat-agent-system-roadmap-2026-04-26.md`.
+- `cases/*.json` — curated use cases (see slim roadmap + trace-audit doc; historical mapping to full roadmap §2 in `docs/analysis/_archive/chat-agent-system-roadmap-full-2026-04-26.md`).
 
 ## Runner
 

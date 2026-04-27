@@ -43,6 +43,13 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 
 Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies here).
 
+### [OPEN] Phase 5B — per-model / tenant-fairness quota (post–Redis ZSET v1)
+- **Area:** `science_graphrag/llm/redis_quota.py`, `pool_limits.py`, `config.py`, settings schema
+- **Issue:** Phase 5 v1 enforces one global cap per logical pool; no per-model keys, no tenant/workspace fairness, no lease heartbeat (see `docs/analysis/llm-distributed-quota-phase5b-advanced-scope.md`).
+- **Proposal:** Separate ADR + Redis key design if product requires it; optional lease refresh task; avoid hot-key regressions.
+- **Acceptance:** Documented policy + integration tests for chosen fairness model; no silent over-cap beyond documented v1 lease semantics.
+- **Raised:** 2026-04-27
+
 ### [OPEN] Ingest resume — claims + Neo4j selective rebuild
 - **Area:** `science_graphrag/ingestion/resume_ingest.py`, `science_graphrag/ingestion/_pipeline_impl.py`
 - **Issue:** `ingest-resume-embed` only repopulates chunk + work-summary vectors in Qdrant; it does not re-extract claims or refresh `CITES` titles when those stages were skipped or half-written.

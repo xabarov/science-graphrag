@@ -10,6 +10,18 @@ from langchain_openai import ChatOpenAI
 from science_graphrag.config import Settings
 
 
+def agent_chat_transport_max_attempts(settings: Settings) -> int:
+    """Upper bound on HTTP attempts for one agent chat ``invoke`` (1 + LangChain max_retries)."""
+
+    return max(1, int(settings.agent_chat_max_retries) + 1)
+
+
+def agent_classifier_transport_max_attempts(settings: Settings) -> int:
+    """Upper bound on HTTP attempts for classifier ``invoke``."""
+
+    return max(1, int(settings.agent_classifier_max_retries) + 1)
+
+
 def effective_chat_llm_model(settings: Settings) -> str:
     """Model id for research chat; optional ``chat_llm_model`` overrides extraction default."""
     override = (getattr(settings, "chat_llm_model", None) or "").strip()
@@ -41,8 +53,11 @@ def build_chat_model(
     temperature: float | None = None,
     max_tokens: int | None = None,
     timeout_seconds: float | None = None,
+    max_retries: int | None = None,
 ) -> ChatOpenAI:
     """Build ChatOpenAI client pointing to OpenRouter-compatible endpoint."""
+    retries = int(settings.agent_chat_max_retries) if max_retries is None else int(max_retries)
+    retries = max(0, min(2, retries))
     return ChatOpenAI(
         model=effective_chat_llm_model(settings),
         api_key=settings.extraction_llm_api_key,
@@ -54,4 +69,5 @@ def build_chat_model(
             if timeout_seconds is not None
             else settings.extraction_llm_timeout_seconds
         ),
+        max_retries=retries,
     )

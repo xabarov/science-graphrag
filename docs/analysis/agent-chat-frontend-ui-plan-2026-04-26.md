@@ -1,10 +1,10 @@
 # Agent chat frontend UI/UX implementation plan — 2026-04-26
 
-**Status:** draft (execution checkpoint **2026-04-26** — см. **§11 Progress** ниже)  
+**Status:** draft; **architecture baseline (2026-04-27):** упрощённый single-graph agent (см. slim [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md)); этот документ описывает **UI/UX** поверх существующего SSE.  
 **Scope:** `ui/` chat experience for agent turns, stream progress, subagent visibility, typed result blocks  
-**Primary context:** `docs/analysis/chat-agent-system-roadmap-2026-04-26.md`, `docs/specs/agent-chat-v1.md`
+**Primary context:** [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md), `docs/specs/agent-chat-v1.md`
 
-**Verification follow-up doc:** `docs/analysis/agent-chat-frontend-verification-gaps-next-wave.md` — автотесты волны закрыты; ручной SSE / §12.2 остаются на QA. **Shipped UI phases (table):** [`completed-work-snapshot.md`](./completed-work-snapshot.md#agent-chat-frontend-ui).
+**Verification:** автотесты волны 2026-04-26 закрыты; ручной SSE / §12.2 — см. stub → [`agent-chat-frontend-verification-gaps-next-wave.md`](./agent-chat-frontend-verification-gaps-next-wave.md). **Shipped UI phases (table):** [`completed-work-snapshot.md`](./completed-work-snapshot.md#agent-chat-frontend-ui).
 
 ## 1. Why this plan exists
 
@@ -15,7 +15,7 @@ The current research chat already has a usable foundation:
 - `ChatTypedBlocks.jsx` already separates structured results such as inventory, quotes, and bibliography.
 - `useAgentStream.js` already exposes an SSE event stream suitable for richer live UI.
 
-**Progress note (2026-04-26):** ниже перечислено целевое состояние плана; **UI-1–UI-4** в коде в основном достигнуты (детали в §11). Остаётся преимущественно **UI-5** (новые SSE-события + бэкенд), расширенная полировка и **ручная** верификация §12.
+**Progress note:** **UI-1–UI-4** доставлены; **UI-5** частично закрыт совместными правками бэкенда (`product_step`, synthesis events) и view-model (см. §11). Ниже сохранены продуктовые цели §2–§10; **ручная** верификация §12 — по stub verification doc.
 
 What was still missing at plan time — **product-quality agent chat surface**:
 
@@ -739,7 +739,7 @@ For smaller widths:
 
 ## 11. Implementation phases
 
-**Progress (repo, 2026-04-26):** **[DONE] UI-1** … **[OPEN] UI-5** — сводная таблица и якоря: [`completed-work-snapshot.md`](./completed-work-snapshot.md#agent-chat-frontend-ui). Развёрнутые goal/deliver/acceptance для **UI-1–UI-4** сжаты (2026-04-27): продуктовые цели остаются в §2–§10; перечень файлов — в таблице snapshot.
+**Progress (repo):** **[DONE] UI-1 … UI-4**; **UI-5 — частично (2026-04-27):** в потоке уже есть `product_step`, `answer_synthesis_*`, улучшенный live/final narrative (`agentRunViewModel`, embedded `AgentLiveStatus`); полный отказ от inference под все типы шагов **не** заявлен. Сводная таблица: [`completed-work-snapshot.md`](./completed-work-snapshot.md#agent-chat-frontend-ui).
 
 ### UI-1 … UI-4 (shipped 2026-04-26)
 
@@ -752,20 +752,11 @@ For smaller widths:
 
 ### UI-5. Event vocabulary upgrade
 
-**Status in repo:** **[OPEN]** — без новых обязательных backend-событий; текущий UI опирается на inference из существующего потока.
+**Status in repo:** **PARTIAL** — бэкенд шлёт `product_step` (в т.ч. `using_tool` для немапленных инструментов), synthesis-события; фронт строит headline/chips/post-run summary из view-model. Опциональные **дополнительные** типы событий (отдельные state-машины subagent) остаются на усмотрение.
 
-**Goal:** improve frontend clarity with product-safe subagent events.
+**Goal:** меньше «угадывания» из сырых `tool_call`, больше продуктовых строк.
 
-Deliver:
-
-- optional backend event additions;
-- parser and model updates;
-- richer subagent progress summaries.
-
-Acceptance:
-
-- the UI no longer has to infer too much from generic tool calls;
-- subagent states map directly to explicit event semantics.
+**Оставшийся scope (не блокер):** новые узкие SSE-типы только там, где inference реально даёт шум; обновление `agentStreamParse` + тестов под каждый новый контракт.
 
 ## 12. Verification plan
 
@@ -804,7 +795,7 @@ The following decisions should be made before UI-3:
 
 ## 14. Recommended immediate next step
 
-~~Start with **UI-1 + UI-2 together**.~~ **Done in repo (2026-04-26):** UI-1 + UI-2 + последующие фазы до UI-4 доставлены в `ui/`; следующий осмысленный шаг — **UI-5** (по согласованию с бэкендом) и/или **ручная** прогонка §12.1 п.3 и сценариев §12.2.
+**Done in repo:** UI-1 … UI-4; **UI-5** частично закрыт совместными правками API + `agentRunViewModel` / live polish. Следующий шаг — точечные события по необходимости и **ручная** прогонка §12.1 п.3 / §12.2 (см. verification stub).
 
 That gives the biggest visible product improvement with minimal backend dependency:
 

@@ -345,7 +345,7 @@ def cmd_suite(
     fixture_root: Path = typer.Option(Path("tests/fixtures/benchmarks/layer1")),
     output_path: Path | None = typer.Option(
         None,
-        help="Defaults to eval/results/refs_agent_suite_<utc_timestamp>.json",
+        help="Defaults to data/diagnostics/eval/refs_agent_suite_<utc_timestamp>.json",
     ),
     max_steps: int = typer.Option(14, help="Max agent steps per case (1–30)."),
     tier: str = typer.Option(
@@ -385,10 +385,14 @@ def cmd_suite(
 
     from eval.layer1.spec import Layer1GoldSpec
 
+    from science_graphrag.artifacts.benchmark_paths import REPO_ROOT
+
     out_path = output_path
     if out_path is None:
         ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-        out_path = Path(f"eval/results/refs_agent_suite_{ts}.json")
+        base = REPO_ROOT / "data" / "diagnostics" / "eval"
+        base.mkdir(parents=True, exist_ok=True)
+        out_path = base / f"refs_agent_suite_{ts}.json"
 
     t_cli = time.perf_counter()
     rows: list[dict[str, object]] = []

@@ -1,5 +1,10 @@
 /**
  * Presentation-only helpers for agent chat run chrome (no transport changes).
+ *
+ * Live UX phases (rollout / fallback):
+ * - Primary: `buildLiveStatusPresentation` headline + optional activity chips while streaming.
+ * - Secondary: safe explanation lines (reason/summary only; no raw tool args).
+ * - Fallback: if explanations are disabled or empty, inspector + recent lines still carry detail.
  */
 
 /** Product-facing stream signals only (tool_call/tool_result stay in inspector). */
@@ -19,6 +24,53 @@ const MEANINGFUL_STREAM_TYPES = new Set([
 ]);
 
 /**
+ * Taxonomy for live UX: what belongs in the main headline vs chips vs inspector-only.
+ * @typedef {'primary' | 'secondary' | 'debug'} LiveStreamKind
+ */
+
+/** @type {Record<string, LiveStreamKind>} */
+export const LIVE_STREAM_TAXONOMY = {
+  product_step: "primary",
+  warning: "primary",
+  evidence_ready: "primary",
+  context_compacted: "primary",
+  specialist_selected: "primary",
+  tool_search_result: "primary",
+  intent_classified: "primary",
+  subagent_started: "primary",
+  subagent_progress: "secondary",
+  subagent_finished: "primary",
+  answer_synthesis_started: "primary",
+  answer_synthesis_finished: "primary",
+  tool_call: "secondary",
+  tool_result: "debug",
+  error: "debug",
+};
+
+/**
+ * @param {string} type
+ * @returns {LiveStreamKind}
+ */
+export function liveStreamKindForType(type) {
+  const k = String(type || "").trim();
+  return LIVE_STREAM_TAXONOMY[k] || "debug";
+}
+
+/**
+ * User-facing tool label (i18n). Falls back to a generic pattern for unknown tools.
+ *
+ * @param {(key: string, vars?: Record<string, string>) => string} t
+ * @param {string} toolName
+ * @returns {string}
+ */
+export function mapToolNameToUserLabel(t, toolName) {
+  const tool = String(toolName || "").trim() || "tool";
+  const key = `chat.run.toolLabel.${tool}`;
+  const out = t(key);
+  return out === key ? t("chat.run.toolLabel.generic", { tool }) : out;
+}
+
+/**
  * @param {unknown[]} events
  * @returns {Record<string, unknown> | null}
  */
@@ -34,6 +86,20 @@ export function pickLastMeaningfulStreamEvent(events) {
 }
 
 /**
+ * @param {unknown[]} events
+ * @returns {Record<string, unknown> | null}
+ */
+export function pickLastToolCallEvent(events) {
+  if (!Array.isArray(events) || events.length === 0) return null;
+  for (let i = events.length - 1; i >= 0; i -= 1) {
+    const ev = events[i];
+    if (!ev || typeof ev !== "object") continue;
+    if (String(ev.type || "") === "tool_call") return ev;
+  }
+  return null;
+}
+
+/**
  * @param {(key: string, vars?: Record<string, string>) => string} t
  * @param {Record<string, unknown> | null} event
  * @returns {string}
@@ -43,15 +109,19 @@ export function formatStreamEventOneLine(t, event) {
   const type = String(event.type || "");
   if (type === "tool_call") {
     const tool = String(event.tool || "tool");
-    const q = event.args_summary && typeof event.args_summary === "object" && event.args_summary.query != null
-      ? String(event.args_summary.query).slice(0, 48)
-      : "";
-    return q ? t("chat.run.live.toolCallQuery", { tool, q: `"${q}${q.length >= 48 ? "…" : ""}"` }) : t("chat.run.live.toolCall", { tool });
+    const q =
+      event.args_summary && typeof event.args_summary === "object" && event.args_summary.query != null
+        ? String(event.args_summary.query).slice(0, 48)
+        : "";
+    const label = mapToolNameToUserLabel(t, tool);
+    return q
+      ? t("chat.run.live.toolCallQuery", { tool: label, q: `"${q}${q.length >= 48 ? "…" : ""}"` })
+      : t("chat.run.live.toolCall", { tool: label });
   }
   if (type === "tool_result") {
     const err = event.error ? String(event.error) : "";
     const parts = [
-      `${t("chat.stream.toolResultLabel")}: ${String(event.tool || "")}`,
+      `${t("chat.stream.toolResultLabel")}: ${mapToolNameToUserLabel(t, String(event.tool || ""))}`,
       event.row_count != null ? `${t("chat.stream.rowsLabel")}: ${String(event.row_count)}` : null,
       err ? `${t("chat.stream.errorLabel")}: ${err.slice(0, 100)}` : null,
     ].filter(Boolean);
@@ -87,9 +157,13 @@ export function formatStreamEventOneLine(t, event) {
     });
   }
   if (type === "subagent_progress") {
+    const rawSummary = String(event.summary || event.tool || "");
+    const tool = String(event.tool || "");
+    const summary =
+      tool && rawSummary === tool ? mapToolNameToUserLabel(t, tool) : rawSummary.slice(0, 120);
     return t("chat.stream.subagentProgress", {
       id: String(event.subagent_id || ""),
-      summary: String(event.summary || event.tool || "").slice(0, 120),
+      summary,
     });
   }
   if (type === "subagent_finished") {
@@ -105,6 +179,10 @@ export function formatStreamEventOneLine(t, event) {
   }
   if (type === "product_step") {
     const code = String(event.code || "");
+    if (code === "using_tool") {
+      const tool = String(event.tool || "").trim() || "tool";
+      return t("chat.run.productStep.using_tool", { tool: mapToolNameToUserLabel(t, tool) });
+    }
     const key = `chat.run.productStep.${code}`;
     const out = t(key);
     return out === key ? code : out;
@@ -125,6 +203,11 @@ export function deriveProgressHint(t, streamEvents, isRunActive) {
   const ev = pickLastMeaningfulStreamEvent(streamEvents);
   const line = formatStreamEventOneLine(t, ev);
   if (line) return line;
+  const tc = pickLastToolCallEvent(streamEvents);
+  if (tc) {
+    const toolLine = formatStreamEventOneLine(t, tc);
+    if (toolLine) return toolLine;
+  }
   return t("chat.run.progressWorking");
 }
 
@@ -146,6 +229,167 @@ export function collectFormattedStreamLines(t, events, limit = 24) {
   }
   if (lines.length <= limit) return lines;
   return lines.slice(-limit);
+}
+
+/**
+ * @param {unknown[]} events
+ * @param {number} [maxChips]
+ * @returns {string[]}
+ */
+export function collectRecentToolNamesForChips(events, maxChips = 4) {
+  if (!Array.isArray(events) || events.length === 0) return [];
+  /** @type {string[]} */
+  const ordered = [];
+  for (const ev of events) {
+    if (!ev || typeof ev !== "object") continue;
+    if (String(ev.type || "") !== "tool_call") continue;
+    const name = String(ev.tool || "").trim();
+    if (!name) continue;
+    ordered.push(name);
+  }
+  if (ordered.length === 0) return [];
+  const tail = ordered.slice(-12);
+  /** @type {string[]} */
+  const out = [];
+  for (let i = tail.length - 1; i >= 0 && out.length < maxChips; i -= 1) {
+    const n = tail[i];
+    if (!out.includes(n)) out.push(n);
+  }
+  return out;
+}
+
+/**
+ * Safe, short "how it is working" lines (no raw args_summary, no debug_events).
+ *
+ * @param {(key: string, vars?: Record<string, string>) => string} t
+ * @param {unknown[]} events
+ * @param {number} [maxLines]
+ * @returns {string[]}
+ */
+export function collectSafeExplanationLines(t, events, maxLines = 6) {
+  if (!Array.isArray(events) || events.length === 0) return [];
+  /** @type {string[]} */
+  const raw = [];
+  for (const ev of events) {
+    if (!ev || typeof ev !== "object") continue;
+    const type = String(ev.type || "");
+    if (type === "specialist_selected") {
+      const reason = String(ev.reason || "").trim();
+      if (reason) {
+        raw.push(t("chat.run.liveExplain.routeReason", { reason: reason.slice(0, 160) }));
+      }
+    } else if (type === "intent_classified") {
+      const reason = String(ev.reason || "").trim();
+      if (reason) {
+        raw.push(
+          t("chat.run.liveExplain.intentReason", {
+            cls: String(ev.answer_class || ""),
+            reason: reason.slice(0, 160),
+          }),
+        );
+      }
+    } else if (type === "subagent_started") {
+      const summary = String(ev.summary || "").trim();
+      if (summary) {
+        raw.push(
+          t("chat.run.liveExplain.subagentSummary", {
+            id: String(ev.subagent_id || ""),
+            summary: summary.slice(0, 160),
+          }),
+        );
+      }
+    }
+  }
+  const tail = raw.slice(-maxLines * 2);
+  /** @type {string[]} */
+  const deduped = [];
+  for (const line of tail) {
+    if (deduped.length && deduped[deduped.length - 1] === line) continue;
+    deduped.push(line);
+  }
+  return deduped.slice(-maxLines);
+}
+
+/**
+ * @typedef {{
+ *   headline: string,
+ *   activityChips: Array<{ tool: string, label: string }>,
+ *   explanations: string[],
+ *   recentLines: string[],
+ *   showRecentToggle: boolean,
+ *   showExplainToggle: boolean,
+ * }} LiveStatusPresentation
+ */
+
+/**
+ * Single source of truth for the live-run card (headline, chips, explanations, recent list).
+ *
+ * @param {(key: string, vars?: Record<string, string>) => string} t
+ * @param {unknown[]} streamEvents
+ * @param {boolean} isRunActive
+ * @returns {LiveStatusPresentation}
+ */
+export function buildLiveStatusPresentation(t, streamEvents, isRunActive) {
+  const list = Array.isArray(streamEvents) ? streamEvents : [];
+  const meaningful = pickLastMeaningfulStreamEvent(list);
+  let headline = meaningful ? formatStreamEventOneLine(t, meaningful) : "";
+  if (!headline) {
+    const tc = pickLastToolCallEvent(list);
+    headline = tc ? formatStreamEventOneLine(t, tc) : "";
+  }
+  const toolNames = isRunActive ? collectRecentToolNamesForChips(list, 4) : [];
+  let activityChips = toolNames.map((tool) => ({ tool, label: mapToolNameToUserLabel(t, tool) }));
+  if (headline) {
+    activityChips = activityChips.filter((chip) => chip.label.trim() !== headline.trim());
+  }
+  const explanations = isRunActive ? collectSafeExplanationLines(t, list, 6) : [];
+
+  const allLines = collectFormattedStreamLines(t, list, 32);
+  const recentLines = headline ? allLines.filter((line) => line !== headline) : allLines;
+
+  const rawCount = list.filter((e) => e && typeof e === "object").length;
+  const showRecentToggle = rawCount >= 2 && recentLines.length > 0;
+  const showExplainToggle = explanations.length > 0;
+
+  if (!isRunActive && !headline) {
+    return {
+      headline: "",
+      activityChips: [],
+      explanations: [],
+      recentLines: [],
+      showRecentToggle: false,
+      showExplainToggle: false,
+    };
+  }
+
+  return {
+    headline,
+    activityChips,
+    explanations,
+    recentLines,
+    showRecentToggle,
+    showExplainToggle,
+  };
+}
+
+/**
+ * Compact header hint while streaming: avoids duplicating the same line as the live card headline.
+ *
+ * @param {(key: string, vars?: Record<string, string>) => string} t
+ * @param {unknown[]} streamEvents
+ * @param {boolean} isRunActive
+ * @returns {string}
+ */
+export function deriveHeaderProgressHint(t, streamEvents, isRunActive) {
+  if (!isRunActive) return "";
+  const pres = buildLiveStatusPresentation(t, streamEvents, true);
+  const hint = deriveProgressHint(t, streamEvents, true);
+  if (pres.headline && hint && pres.headline.trim() === hint.trim()) {
+    return t("chat.run.progressWorking");
+  }
+  if (hint) return hint;
+  if (!pres.headline) return t("chat.run.progressWorking");
+  return "";
 }
 
 /**
@@ -245,7 +489,9 @@ function streamHasErrorEvent(streamEvents) {
  */
 export function deriveRunState({ normalized, isRunActive, streamEvents = [] }) {
   const warnings = normalized && Array.isArray(normalized.warnings) ? normalized.warnings : [];
-  const streamWarnings = Array.isArray(streamEvents) ? streamEvents.filter((e) => e && typeof e === "object" && e.type === "warning").length : 0;
+  const streamWarnings = Array.isArray(streamEvents)
+    ? streamEvents.filter((e) => e && typeof e === "object" && e.type === "warning").length
+    : 0;
   if (isRunActive) return { runState: "running", streamWarningCount: streamWarnings };
   if (streamHasErrorEvent(streamEvents)) return { runState: "failed", streamWarningCount: streamWarnings };
   if (warnings.length > 0 || streamWarnings > 0) return { runState: "warning", streamWarningCount: streamWarnings };

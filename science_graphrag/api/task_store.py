@@ -3,6 +3,9 @@
 Persisted run JSON paths match ``science_graphrag.artifacts.run_layout`` /
 ``RUN_HISTORY_DESCRIPTOR`` (``data/benchmark_runs``, legacy ``data/benchmark_run_history``).
 
+Full run payloads may live in S3 when ``SCIENCE_GRAPHRAG_BENCHMARK_RUNS_OBJECT_STORAGE`` is enabled;
+compact ``*.summary.json`` files remain on local disk.
+
 This module provides a minimal background execution layer for the UI:
 - create a run (set of case_ids)
 - execute cases concurrently in a ThreadPoolExecutor
@@ -14,6 +17,7 @@ Note: cancellation is "best-effort" (can't interrupt a running case extraction).
 from __future__ import annotations
 
 import json
+import logging
 import uuid
 from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
@@ -43,6 +47,12 @@ from science_graphrag.artifacts.run_layout import (
     default_benchmark_run_history_legacy_dir,
     default_benchmark_runs_dir,
 )
+from science_graphrag.storage.benchmark_run_persistence import (
+    BenchmarkRunPersistencePort,
+    LocalBenchmarkRunPersistence,
+)
+
+logger = logging.getLogger(__name__)
 
 # Mutable module-level limits (tests monkeypatch these attributes).
 _SUMMARY_CASES_INLINE_MAX = SUMMARY_CASES_INLINE_MAX
@@ -60,6 +70,7 @@ class BenchmarkTaskStore:
         history_dir: Path | None = None,
         layer1_runner=run_layer1_case,
         layer2_runner=run_layer2_case,
+        persistence: BenchmarkRunPersistencePort | None = None,
     ) -> None:
         """Initialize the executor + the in-memory run registry."""
         self._runs: dict[str, RunRecord] = {}
@@ -68,7 +79,14 @@ class BenchmarkTaskStore:
         self._history_dir_override = history_dir
         self._layer1_runner = layer1_runner
         self._layer2_runner = layer2_runner
+        hist = self._history_dir()
+        self._persistence = persistence or LocalBenchmarkRunPersistence(hist)
         self._load_persisted_runs()
+
+    def set_persistence(self, persistence: BenchmarkRunPersistencePort) -> None:
+        """Attach app-level persistence (S3 or local) after ``init_store_registry``."""
+        with self._lock:
+            self._persistence = persistence
 
     def create_run(
         self,
@@ -162,17 +180,14 @@ class BenchmarkTaskStore:
         except OSError:
             paths.sort(key=str, reverse=True)
         paths = paths[: max(0, max_files)]
-        for path in paths:
-            try:
-                payload = json.loads(path.read_text(encoding="utf-8"))
-            except (OSError, json.JSONDecodeError, TypeError):
-                continue
+
+        def _scan_payload(payload: dict[str, Any], *, run_id_hint: str) -> dict[str, Any] | None:
             if payload.get("status") != RunStatus.COMPLETED:
-                continue
+                return None
             pfam = (payload.get("benchmark_family") or "layer1").strip().lower()
             if pfam != fam:
-                continue
-            run_id = str(payload.get("run_id") or path.stem)
+                return None
+            run_id = str(payload.get("run_id") or run_id_hint)
             for row in payload.get("cases") or []:
                 if not isinstance(row, dict):
                     continue
@@ -183,7 +198,47 @@ class BenchmarkTaskStore:
                     "completed_at": payload.get("completed_at"),
                     "status": row.get("status"),
                 }
+            return None
+
+        for path in paths:
+            try:
+                payload = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError, TypeError):
+                continue
+            name = path.name
+            if name.endswith(".summary.json"):
+                rid = name[: -len(".summary.json")]
+                hit = _scan_payload(payload, run_id_hint=rid)
+                if hit:
+                    return hit
+                continue
+            rid = path.stem
+            hit = _scan_payload(payload, run_id_hint=rid)
+            if hit:
+                return hit
         return None
+
+    def _hydrate_from_remote_if_needed(self, run_id: str) -> None:
+        """Load full JSON from persistence when the run was restored from a slim summary."""
+        key_holder: tuple[str | None, str | None] | None = None
+        with self._lock:
+            rec = self._runs.get(run_id)
+            if not rec or not rec.full_run_object_key or rec.full_payload_hydrated:
+                return
+            key_holder = (rec.run_id, rec.full_run_object_key)
+        rid, obj_key = key_holder
+        raw = self._persistence.get_full_json(rid, object_key=obj_key)
+        if not raw:
+            return
+        try:
+            payload = json.loads(raw)
+        except (json.JSONDecodeError, TypeError):
+            return
+        with self._lock:
+            rec2 = self._runs.get(run_id)
+            if not rec2 or rec2.full_payload_hydrated:
+                return
+            bench_ser.merge_full_payload_into_rec(rec2, payload)
 
     def get_run(self, run_id: str) -> dict[str, Any] | None:
         """Get a full run detail (metrics/predicted/gold per case).
@@ -191,6 +246,7 @@ class BenchmarkTaskStore:
         Raises:
             RunPayloadTooLargeError: Run exceeds case-count or on-disk size limits.
         """
+        self._hydrate_from_remote_if_needed(run_id)
         with self._lock:
             rec = self._runs.get(run_id)
             if not rec:
@@ -213,6 +269,10 @@ class BenchmarkTaskStore:
             summary = bench_ser.run_to_summary_dict(
                 rec, inline_cases_limit=_SUMMARY_CASES_INLINE_MAX
             )
+            if rec.full_run_object_key:
+                summary["full_run_object_key"] = rec.full_run_object_key
+            if rec.full_run_json_bytes is not None:
+                summary["full_run_json_bytes"] = rec.full_run_json_bytes
             main_path = self._persisted_main_json_path(run_id)
             bench_ser.annotate_full_run_guard(
                 summary,
@@ -229,16 +289,17 @@ class BenchmarkTaskStore:
             alt = leg / f"{run_id}.json"
             main_path = alt if alt.is_file() else main_path
         sidecar = hist / f"{run_id}.summary.json"
-        if sidecar.is_file() and main_path.is_file():
+        if sidecar.is_file():
             try:
                 summary = json.loads(sidecar.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError, TypeError):
                 summary = None
             if isinstance(summary, dict) and summary.get("run_id") == run_id:
+                eff_main = main_path if main_path.is_file() else None
                 bench_ser.annotate_full_run_guard(
                     summary,
                     rec=None,
-                    main_json_path=main_path,
+                    main_json_path=eff_main,
                     max_case_ids=_FULL_RUN_MAX_CASE_IDS,
                     max_file_bytes=_FULL_RUN_MAX_FILE_BYTES,
                 )
@@ -272,6 +333,7 @@ class BenchmarkTaskStore:
         """Return a page of slim case rows (no ``result`` blobs) for large runs."""
         if offset < 0 or limit < 1:
             return None
+        self._hydrate_from_remote_if_needed(run_id)
         with self._lock:
             rec = self._runs.get(run_id)
         if rec:
@@ -316,37 +378,81 @@ class BenchmarkTaskStore:
         """Legacy on-disk run history directory (read / migrate only)."""
         return default_benchmark_run_history_legacy_dir()
 
-    def _load_persisted_runs(self) -> None:
+    def _load_persisted_runs(self) -> None:  # pylint: disable=too-many-branches
         """Restore persisted runs on process startup."""
-        paths = list(self._history_dir().glob("*.json"))
-        legacy_dir = self._legacy_history_dir()
-        if legacy_dir != self._history_dir() and legacy_dir.is_dir():
-            paths.extend(legacy_dir.glob("*.json"))
         restored: dict[str, RunRecord] = {}
-        for path in sorted(paths):
-            if path.name.endswith(".summary.json"):
+        seen: set[str] = set()
+        dirs: list[Path] = [self._history_dir()]
+        legacy_dir = self._legacy_history_dir()
+        if legacy_dir.resolve() != dirs[0].resolve() and legacy_dir.is_dir():
+            dirs.append(legacy_dir)
+
+        for d in dirs:
+            if not d.is_dir():
                 continue
-            try:
-                payload = json.loads(path.read_text(encoding="utf-8"))
-                rec = bench_ser.run_from_dict(payload)
-            except (OSError, json.JSONDecodeError, TypeError, ValueError):
+            for path in sorted(d.glob("*.json")):
+                if path.name.endswith(".summary.json"):
+                    continue
+                rid = path.stem
+                if rid in seen:
+                    continue
+                try:
+                    payload = json.loads(path.read_text(encoding="utf-8"))
+                    rec = bench_ser.run_from_dict(payload)
+                except (OSError, json.JSONDecodeError, TypeError, ValueError):
+                    continue
+                restored[rid] = rec
+                seen.add(rid)
+
+        for d in dirs:
+            if not d.is_dir():
                 continue
-            restored[rec.run_id] = rec
+            for path in sorted(d.glob("*.summary.json")):
+                rid = path.name[: -len(".summary.json")]
+                if rid in seen:
+                    continue
+                try:
+                    summary_payload = json.loads(path.read_text(encoding="utf-8"))
+                    rec = bench_ser.run_from_summary_payload(summary_payload)
+                except (OSError, json.JSONDecodeError, TypeError, ValueError):
+                    continue
+                if not rec.run_id or rec.run_id != rid:
+                    continue
+                restored[rid] = rec
+                seen.add(rid)
+
         if restored:
             self._runs.update(restored)
 
     def _persist_run_snapshot(self, rec: RunRecord) -> None:
-        """Write run payload to disk (survives API restart)."""
+        """Write run payload via persistence + local summary sidecar."""
         try:
             hist = self._history_dir()
             payload = bench_ser.run_to_full_api_dict(rec)
-            path = hist / f"{rec.run_id}.json"
-            path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
+            payload_txt = json.dumps(payload, indent=2, default=str)
+            obj_key = self._persistence.put_full_json(rec.run_id, payload_txt)
+            if obj_key:
+                rec.full_run_object_key = obj_key
+                rec.full_run_json_bytes = len(payload_txt.encode("utf-8"))
+                local_full = hist / f"{rec.run_id}.json"
+                try:
+                    if local_full.is_file():
+                        local_full.unlink()
+                except OSError:
+                    pass
+            else:
+                rec.full_run_object_key = None
+                rec.full_run_json_bytes = None
+            main_path = hist / f"{rec.run_id}.json"
+            main_for_guard = main_path if main_path.is_file() else None
             slim = bench_ser.run_to_summary_dict(rec, inline_cases_limit=_SUMMARY_CASES_INLINE_MAX)
+            if obj_key:
+                slim["full_run_object_key"] = obj_key
+                slim["full_run_json_bytes"] = len(payload_txt.encode("utf-8"))
             bench_ser.annotate_full_run_guard(
                 slim,
                 rec=rec,
-                main_json_path=path,
+                main_json_path=main_for_guard,
                 max_case_ids=_FULL_RUN_MAX_CASE_IDS,
                 max_file_bytes=_FULL_RUN_MAX_FILE_BYTES,
             )
@@ -354,13 +460,35 @@ class BenchmarkTaskStore:
                 json.dumps(slim, indent=2, default=str),
                 encoding="utf-8",
             )
-        except OSError:
-            pass
+        except Exception:  # noqa: BLE001 — disk, boto ClientError, JSON
+            logger.exception(
+                "benchmark run snapshot persist failed run_id=%s",
+                rec.run_id,
+            )
 
     def _delete_persisted_run(self, run_id: str) -> None:
+        hist = self._history_dir()
+        sum_path = hist / f"{run_id}.summary.json"
+        obj_key: str | None = None
+        if sum_path.is_file():
+            try:
+                data = json.loads(sum_path.read_text(encoding="utf-8"))
+                raw = data.get("full_run_object_key")
+                if isinstance(raw, str) and raw.strip():
+                    obj_key = raw.strip()
+            except (OSError, json.JSONDecodeError, TypeError):
+                pass
+        try:
+            self._persistence.delete_full_json(run_id, object_key=obj_key)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "benchmark run delete remote payload failed run_id=%s: %s",
+                run_id,
+                exc,
+            )
         for path in (
-            self._history_dir() / f"{run_id}.json",
-            self._history_dir() / f"{run_id}.summary.json",
+            hist / f"{run_id}.json",
+            hist / f"{run_id}.summary.json",
             self._legacy_history_dir() / f"{run_id}.json",
         ):
             try:
@@ -458,3 +586,8 @@ class BenchmarkTaskStore:
 
 
 task_store = BenchmarkTaskStore(max_workers=2)
+
+
+def attach_benchmark_run_persistence(port: BenchmarkRunPersistencePort) -> None:
+    """Wire global ``task_store`` to app registry persistence (API lifespan)."""
+    task_store.set_persistence(port)

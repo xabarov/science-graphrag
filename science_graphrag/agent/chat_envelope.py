@@ -192,6 +192,8 @@ def build_chat_envelope(
     citations: list[dict[str, Any]],
     tool_trace: list[ToolCallTrace],
     answer_class_hint: str | None = None,
+    extra_warnings: list[str] | None = None,
+    extra_product_markers: list[str] | None = None,
 ) -> dict[str, Any]:
     """Build optional envelope fields for API v2."""
     question = _last_user_question(state)
@@ -268,6 +270,16 @@ def build_chat_envelope(
     if tool_trace:
         evidence_parts.append(f"{len(tool_trace)} trace step(s)")
     evidence_summary = ", ".join(evidence_parts) if evidence_parts else None
+    if extra_warnings:
+        for w in extra_warnings:
+            ws = str(w).strip()
+            if ws and ws not in warnings:
+                warnings.append(ws)
+    if extra_product_markers:
+        for m in extra_product_markers:
+            ms = str(m).strip()
+            if ms and ms not in product_markers:
+                product_markers.append(ms)
     out: dict[str, Any] = {
         "answer_class": answer_class,
         "evidence_summary": evidence_summary,

@@ -30,7 +30,7 @@
 
 ## Agent chat frontend UI
 
-**Plan:** [`agent-chat-frontend-ui-plan-2026-04-26.md`](./agent-chat-frontend-ui-plan-2026-04-26.md).
+**Plan:** [`agent-chat-frontend-ui-plan-2026-04-26.md`](./agent-chat-frontend-ui-plan-2026-04-26.md). **System roadmap (slim):** [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md) — упрощённая архитектура + будущие треки `tool_search` / compaction; полный старый текст в [`_archive/chat-agent-system-roadmap-full-2026-04-26.md`](./_archive/chat-agent-system-roadmap-full-2026-04-26.md).
 
 | Phase | Status |
 |-------|--------|
@@ -38,9 +38,9 @@
 | **UI-2** | **DONE** — `AskAnswerPanel` run chrome + collapsed inspector. |
 | **UI-3** | **DONE** — subagent rail (`AgentSubagentRail` / `AgentSpecialistRunStack`, `buildSpecialistStreamGroups` / `shouldShowSubagentRail` in `agentRunViewModel.js`). |
 | **UI-4** | **DONE** — typed block chrome (`TYPED_BLOCK_OUTER_SX` / `ChatTypedBlocks.jsx`). |
-| **UI-5** | **OPEN** — explicit backend event vocabulary + parser (optional). |
+| **UI-5** | **PARTIAL** — `product_step` / synthesis SSE + view-model headline/dedup/post-run line; дальнейшие типы событий — по необходимости (см. UI plan §11). |
 
-**Tests (§12.1):** stream parse / subagent cards / shimmer / warnings — **DONE**; full answer + all typed blocks RTL — partial; manual SSE — OPEN.
+**Tests (§12.1):** stream parse / subagent cards / shimmer / warnings — **DONE**; full answer + all typed blocks RTL — partial; manual SSE — OPEN (чеклист: [`agent-chat-frontend-verification-gaps-next-wave.md`](./agent-chat-frontend-verification-gaps-next-wave.md)).
 
 **Evidence IA (2026-04-27):** **DONE** — primary sidebar no longer links to `/evidence`; canonical inspection URLs use **`buildStandaloneEvidencePath`**; citations and Reader trace banner open `/evidence` with optional `workspace_id`; legacy unmounted tabs `OverviewTab` / `GraphTab` / `EvidenceTab` removed. See recorded choice in [`agent-chat-frontend-ui-plan-2026-04-26.md`](./agent-chat-frontend-ui-plan-2026-04-26.md) and Phase 5 notes in [`../specs/ui-ux-master-plan.md`](../specs/ui-ux-master-plan.md).
 

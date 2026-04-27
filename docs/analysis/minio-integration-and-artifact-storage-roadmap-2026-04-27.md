@@ -441,13 +441,15 @@ Acceptance:
 
 ### Phase 1 — raw blob and ingest queue cutover
 
+**Status:** done (implementation in repo; validate with smoke runbook).
+
 **Goal:** make upload/worker flow multi-host safe.
 
 Work:
 
-- replace local `_ingest_queue` file dependency with object storage;
-- keep job metadata and claim/terminal state in Postgres;
-- update worker to fetch queued source object by key.
+- [x] replace local `_ingest_queue` file dependency with object storage;
+- [x] keep job metadata and claim/terminal state in Postgres;
+- [x] update worker to fetch queued source object by key.
 
 Files involved:
 
@@ -458,18 +460,22 @@ Files involved:
 
 Acceptance:
 
-- API and worker can run on separate hosts without a shared filesystem;
-- job recovery after API restart does not depend on host-local queue files.
+- [x] API and worker can run on separate hosts without a shared filesystem;
+- [x] job recovery after API restart does not depend on host-local queue files.
+
+**Implementation note (Phase 1 landed):** `build_ingest_queue_store` → `LocalIngestQueueStore` / `S3IngestQueueStore` in [`science_graphrag/storage/ingest_queue_store.py`](../../science_graphrag/storage/ingest_queue_store.py); dispatcher `_persist_queued_payload` writes logical keys to Postgres (`queued_source_object_key`). Worker [`science_graphrag/worker/actor.py`](../../science_graphrag/worker/actor.py) materializes queue bytes via `get_to_path` when the key is set (temp file), else legacy `_ingest_queue` path. Content-addressed raw uploads: `build_raw_blob_store` → [`science_graphrag/storage/raw_blob_store.py`](../../science_graphrag/storage/raw_blob_store.py). Automated moto coverage: [`tests/storage/test_object_storage_moto.py`](../../tests/storage/test_object_storage_moto.py). Smoke checklist: [`docs/runbooks/object-storage-phase1-2-smoke.md`](../runbooks/object-storage-phase1-2-smoke.md).
 
 ### Phase 2 — ingest artifact cutover
+
+**Status:** done (implementation in repo; validate with smoke runbook).
 
 **Goal:** move canonical document artifacts to object storage without changing reader semantics.
 
 Work:
 
-- back `artifact_root` with object storage;
-- preserve document-scoped paths from `artifact_layout.py`;
-- adapt readers/endpoints to fetch through storage abstraction.
+- [x] back `artifact_root` with object storage;
+- [x] preserve document-scoped paths from `artifact_layout.py`;
+- [x] adapt readers/endpoints to fetch through storage abstraction.
 
 Files involved:
 
@@ -479,8 +485,10 @@ Files involved:
 
 Acceptance:
 
-- extracted-body API works across hosts;
-- resume/re-embed flows still resolve `normalized.md` correctly.
+- [x] extracted-body API works across hosts;
+- [x] resume/re-embed flows still resolve `normalized.md` correctly.
+
+**Implementation note (Phase 2 landed):** `build_artifact_store` in [`science_graphrag/storage/s3_artifact_store.py`](../../science_graphrag/storage/s3_artifact_store.py) returns `LocalFilesystemArtifactStore` or `S3ArtifactStore` (S3 + local mirror under `Settings.artifact_root`); wired in [`science_graphrag/api/deps.py`](../../science_graphrag/api/deps.py). Same helper used from ingestion and resume paths. Test: `test_s3_artifact_store_read_stat_without_local_mirror` in [`tests/storage/test_object_storage_moto.py`](../../tests/storage/test_object_storage_moto.py). Reader contract: [`docs/adr/022-reader-extracted-body-vs-qdrant-chunks.md`](../adr/022-reader-extracted-body-vs-qdrant-chunks.md). Smoke: [`docs/runbooks/object-storage-phase1-2-smoke.md`](../runbooks/object-storage-phase1-2-smoke.md).
 
 ### Phase 3 — benchmark runtime artifact cutover
 
@@ -505,20 +513,46 @@ Acceptance:
 - `eval/results/` contains only canonical/report-facing artifacts;
 - large live artifacts are referenced via manifest/object key.
 
+**Implementation note (Phase 3 landed, 2026-04-27):**
+
+- **UI benchmark runs:** `BenchmarkRunPersistencePort` + `LocalBenchmarkRunPersistence` / `S3BenchmarkRunPersistence` in `science_graphrag/storage/benchmark_run_persistence.py`; object keys in `science_graphrag/storage/benchmark_object_keys.py`. `StoreRegistry.benchmark_runs` in `science_graphrag/api/deps.py`; app lifespan wires persistence via `attach_benchmark_run_persistence` in `science_graphrag/api/main.py`. `task_store` writes full JSON to S3 when `SCIENCE_GRAPHRAG_BENCHMARK_RUNS_OBJECT_STORAGE=true` (requires `SCIENCE_GRAPHRAG_OBJECT_STORAGE_ENABLED` and S3 credentials); compact `*.summary.json` stay under `data/benchmark_runs/` with `full_run_object_key` / `full_run_json_bytes`. Startup restore prefers on-disk full `*.json` when present, else slim `*.summary.json` + lazy hydrate on `get_run` / `get_run_cases_page`. Serialization updates in `science_graphrag/api/task_benchmark_serializers.py` / `task_benchmark_models.py`. Tests: `tests/test_benchmark_task_store.py`, `tests/storage/test_benchmark_run_persistence_moto.py`.
+- **Config:** `benchmark_runs_object_storage`, `diagnostics_object_storage`, `s3_benchmark_runs_key_prefix`, `s3_diagnostics_key_prefix` on `Settings` (`science_graphrag/config.py`); documented in `.env.example`.
+- **CLI / OD / chat-agent diagnostics:** `science_graphrag/artifacts/diagnostic_object_sink.py` — optional S3 upload when `diagnostics_object_storage` is on; default local sink `data/diagnostics/<kind>/` (gitignored). Defaults moved off `eval/results/` for: `eval/chat_agent/od_claims_backfill.py` (`default_result_path`), `scripts/chat_agent_od_*.py`, `eval/chat_agent/roadmap_runner.py` (`--out`), `scripts/experiment_references_smolagents_spike.py`, `scripts/run_references_benchmark.py`. Per-case S3 keys `chat_agent_case_result_object_key` exist for future trace writers; Typer lane runners still take `--json-out` (often `eval/results/` for **canonical** gate JSON — see inventory).
+- **Migration:** `scripts/sync_benchmark_runs_to_s3.py` uploads existing `data/benchmark_runs/<id>.json` and patches `*.summary.json` with object key (`--dry-run` supported).
+- **Taxonomy:** `StoragePolicy.OBJECT_STORE` in `science_graphrag/artifacts/taxonomy.py`; `RUN_HISTORY_DESCRIPTOR` policy updated in `science_graphrag/artifacts/run_layout.py`.
+- **Operator docs (Phase 3 tail):** [`docs/runbooks/eval-heavy-artifacts-inventory.md`](../runbooks/eval-heavy-artifacts-inventory.md), [`docs/runbooks/eval-results-curation.md`](../runbooks/eval-results-curation.md), `scripts/list_eval_results_large.py`.
+- **Explicitly unchanged in this slice:** `scripts/aggregate_benchmark_metrics.py` and `scripts/benchmark_aggregator/paths.py` remain the compact file-based gate layer per roadmap §10.4; historical files under `eval/results/` are not auto-deleted (curation stays manual).
+
 ### Phase 4 — retention, lifecycle, and exports
+
+**Status:** done (2026-04-27).
 
 **Goal:** make storage operationally manageable.
 
 Work:
 
-- add TTL/retention classes for diagnostic artifacts;
-- define promotion path from runtime object -> review summary -> canonical artifact if needed;
-- add export helpers for evidence packages.
+- [x] add TTL/retention classes for diagnostic artifacts;
+- [x] define promotion path from runtime object -> review summary -> canonical artifact if needed;
+- [x] add export helpers for evidence packages.
 
 Acceptance:
 
-- stale diagnostic runs expire cleanly;
-- promoted artifacts are explicit and reviewable.
+- [x] stale diagnostic runs expire cleanly;
+- [x] promoted artifacts are explicit and reviewable.
+
+**Implementation note (Phase 4 landed, 2026-04-27):**
+
+- **Retention tags:** `RetentionClass` and `s3_put_object_retention_kwargs` in `science_graphrag/artifacts/retention.py`; wired into `diagnostic_object_sink` S3 `put_object` and `S3BenchmarkRunPersistence.put_full_json`. Settings: `object_storage_diagnostics_retention_days`, `object_storage_benchmark_full_retention_days` in `science_graphrag/config.py` (0 = omit `retention_hint_days` tag).
+- **Runbooks / ADR:** `docs/runbooks/minio-object-lifecycle-phase4.md`, `docs/adr/024-artifact-promotion-and-retention-phase4.md`.
+- **Scripts:** `scripts/gc_object_storage.py` (`--dry-run` / `--execute`, `--fix-benchmark-summaries`; exit code **2** if S3 `delete_objects` returns errors), `scripts/export_evidence_bundle.py`, `scripts/promote_object_for_review.py` (`--commit-path` + `--i-confirm-git-write`). Shared check: `science_graphrag/storage/cli_preflight.py`.
+- **Libraries:** `science_graphrag/artifacts/promotion.py` (segment-based sensitive-key redaction, path redaction, strip stale `_promotion_meta` before re-promote), `science_graphrag/storage/object_storage_gc.py` (empty-bucket guard, `delete_objects` error aggregation), `science_graphrag/storage/evidence_bundle.py` (safe zip entry names, no `..` segments). Tests: `tests/storage/test_phase4_object_lifecycle_moto.py`, `tests/artifacts/test_promotion.py`, `tests/artifacts/test_retention_s3_kwargs.py`, `tests/storage/test_cli_preflight.py`.
+
+**Implementation note (integration ingest + Qdrant isolation, 2026-04-27):**
+
+- **Issue:** Live integration ingest could fail Qdrant upsert with **vector dim mismatch** (e.g. collection schema 1024 vs offline hash vectors 384) when tests only randomized `qdrant_collection` but left `qdrant_work_embeddings_collection` at the shared default (`work_embeddings`), which may already exist for OpenRouter-backed runs.
+- **Test fix:** `tests/integration/test_full_ingest_integration.py` uses `_isolated_offline_ingest_settings()` — unique `qdrant_collection`, `qdrant_work_embeddings_collection`, `qdrant_claims_collection`, and `qdrant_author_embeddings_collection` per run, plus `get_settings().model_copy(update=...)` to clear OpenRouter/LLM keys and embedding model fields while preserving service URLs from the operator environment.
+- **Runtime guard:** `QdrantChunkStore` / `QdrantWorkEmbeddingStore` raise a clear `ValueError` if batch / vector length ≠ configured `vector_dim` before calling Qdrant. Regression: `tests/storage/test_qdrant_vector_dim_guard.py`.
+- **Verification (final closure):** `pytest tests/integration/test_full_ingest_integration.py -m integration` (requires Neo4j + Qdrant + Postgres where applicable); moto storage suites `tests/storage/test_object_storage_moto.py`, `tests/storage/test_benchmark_run_persistence_moto.py`, `tests/storage/test_phase4_object_lifecycle_moto.py`; optional live MinIO `pytest tests/integration/test_minio_object_storage_e2e.py -m integration` when MinIO is configured.
 
 ---
 

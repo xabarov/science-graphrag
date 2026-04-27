@@ -46,6 +46,7 @@ embed = [
 ]
 dev = [
     "black>=24.0",
+    "fakeredis[lua]>=2.23.0",
     "isort>=5.13",
     "moto[s3]>=5.0",
     "pylint>=3.0",
@@ -143,4 +144,5 @@ pythonpath = ["."]
 markers = [
     "integration: requires Docker services (Neo4j, Postgres, Qdrant)",
     "live_api: requires running HTTP API (set AGENT_LIVE_BASE)",
+    "minio_e2e: requires real S3/MinIO (SCIENCE_GRAPHRAG_MINIO_E2E=1 and object storage env)",
 ]

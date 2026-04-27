@@ -1024,14 +1024,41 @@
     #slide-7.slide {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 6px;
+      overflow: hidden;
+      padding: 18px 28px 16px;
+      max-width: 100%;
+    }
+
+    #slide-7 .defense-metrics-tables > .defense-table-wrap {
+      min-height: 0;
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    #slide-7 h2 {
+      font-size: clamp(34px, 3.4vw, 48px);
+      line-height: 1.02;
+    }
+
+    #slide-7 .sublead,
+    #slide-7 .defense-slide7-sublead {
+      font-size: clamp(16px, 1.15vw, 18px);
+      line-height: 1.3;
+      max-width: 100%;
     }
 
     #slide-7 .defense-metrics-hero {
       flex: 1;
       min-height: 0;
-      padding: 22px 26px 20px;
-      border-radius: 26px;
+      min-width: 0;
+      width: 100%;
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 10px 12px 8px;
+      border-radius: 22px;
       border: 1px solid rgba(22, 27, 34, 0.08);
       background:
         linear-gradient(165deg, rgba(255, 255, 255, 0.97), rgba(252, 247, 240, 0.96)),
@@ -1042,17 +1069,32 @@
     }
 
     #slide-7 .defense-metrics-tables {
-      gap: 20px;
-      align-items: stretch;
+      flex: 1;
+      min-height: 0;
+      min-width: 0;
+      width: 100%;
+      gap: 10px;
+      align-items: start;
+      overflow: hidden;
     }
 
     #slide-7 .defense-table-wrap {
-      align-items: stretch;
+      align-items: flex-start;
+      align-self: start;
+      min-height: 0;
+      min-width: 0;
+      max-width: 100%;
+      overflow-x: hidden;
+      overflow-y: visible;
     }
 
     #slide-7 table.defense-table {
       table-layout: fixed;
-      font-size: 17px;
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      align-self: flex-start;
+      font-size: clamp(17px, min(1.38vw, 1.85vh), 21px);
       line-height: 1.34;
       border: 1px solid rgba(22, 27, 34, 0.1);
       border-radius: 20px;
@@ -1064,30 +1106,70 @@
 
     #slide-7 table.defense-table caption {
       font-family: "Palatino Linotype", "Book Antiqua", Palatino, "URW Palladio L", serif;
-      font-size: 21px;
+      font-size: clamp(17px, 1.22vw, 21px);
       font-weight: 700;
       letter-spacing: -0.02em;
-      line-height: 1.2;
+      line-height: 1.22;
       color: #121820;
-      padding: 16px 18px 14px;
+      padding: 6px 11px 5px;
       margin: 0;
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(255, 252, 248, 0.5));
       border-bottom: 1px solid rgba(22, 27, 34, 0.07);
     }
 
     #slide-7 table.defense-table thead th {
-      font-size: 11px;
-      padding: 12px 16px;
+      font-size: clamp(11px, 0.95vw, 13px);
+      letter-spacing: 0.05em;
+      padding: 5px 9px;
+      line-height: 1.22;
       background: linear-gradient(180deg, rgba(142, 59, 46, 0.11), rgba(142, 59, 46, 0.06));
     }
 
-    #slide-7 table.defense-table thead th:first-child {
-      width: 40%;
+    #slide-7 .defense-table-wrap:first-child table.defense-table thead th:first-child {
+      width: 32%;
+    }
+
+    #slide-7 .defense-table-wrap:first-child table.defense-table thead th:last-child {
+      width: 68%;
+    }
+
+    #slide-7 .defense-table-wrap:last-child table.defense-table thead th:first-child {
+      width: 58%;
+    }
+
+    #slide-7 .defense-table-wrap:last-child table.defense-table thead th:last-child {
+      width: 42%;
+    }
+
+    #slide-7 table.defense-table th,
+    #slide-7 table.defense-table td {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      hyphens: auto;
     }
 
     #slide-7 table.defense-table td {
-      padding: 12px 16px;
+      padding: 5px 9px 6px;
+      vertical-align: top;
       border-bottom: 1px solid rgba(22, 27, 34, 0.055);
+    }
+
+    #slide-7 table.defense-table code {
+      padding: 0.06em 0.32em;
+      border-radius: 5px;
+      font-size: 0.96em;
+      word-break: break-word;
+    }
+
+    #slide-7 .defense-cell-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      text-align: left;
+    }
+
+    #slide-7 .defense-cell-stack > div {
+      margin: 0;
     }
 
     #slide-7 table.defense-table td:first-child {
@@ -1115,6 +1197,32 @@
 
     #slide-7 table.defense-table tbody tr:hover td:first-child {
       background: rgba(20, 46, 85, 0.05);
+    }
+
+    #slide-7 .defense-metrics-glossary {
+      flex-shrink: 0;
+      margin-top: 4px;
+      padding-top: 7px;
+      border-top: 1px solid rgba(22, 27, 34, 0.09);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 14px;
+      font-size: clamp(12.5px, 1.02vw, 15px);
+      line-height: 1.32;
+      color: #3a4a5d;
+    }
+
+    #slide-7 .defense-metrics-glossary p {
+      margin: 0;
+    }
+
+    #slide-7 .defense-metrics-glossary p:first-child {
+      grid-column: 1 / -1;
+    }
+
+    #slide-7 .defense-metrics-glossary code {
+      font-size: 0.93em;
+      padding: 0.04em 0.28em;
     }
 
     #slide-6 .demo-layout {
@@ -1232,6 +1340,14 @@
 
       #slide-7 .defense-metrics-hero {
         padding: 18px 20px;
+      }
+
+      #slide-7 .defense-metrics-glossary {
+        grid-template-columns: 1fr;
+      }
+
+      #slide-7.slide {
+        overflow: visible;
       }
 
       .tech-grid {
@@ -1547,9 +1663,9 @@
     <section class="slide" id="slide-7">
       <div class="slide-tag">Результаты и выводы</div>
       <h2>Основные результаты и выводы</h2>
-      <p class="sublead">
-        Агрегаты из итогового отчёта (§4.1 — прогоны, §4.0 — macro по слотам, 2026-04-26). Извлечение:
-        <code>mistralai/mistral-small-3.2-24b-instruct</code>.
+      <p class="sublead defense-slide7-sublead">
+        Сводка по итоговому отчёту: <strong>§4.1</strong> (прогоны) и <strong>§4.0</strong> (macro по слотам), 2026-04-26.
+        Модель извлечения слоёв: <code>mistralai/mistral-small-3.2-24b-instruct</code>. Расшифровка метрик — блок под таблицами.
       </p>
       <div class="defense-metrics-hero">
       <div class="defense-metrics-tables">
@@ -1563,10 +1679,6 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td><code>workspace_scoped_live</code></td>
-                <td>6/6, <code>forbidden_violation_count</code> = 0</td>
-              </tr>
               <tr>
                 <td><code>hybrid_ablation_live</code></td>
                 <td><code>hit_count</code> = 5/5 на каждом кейсе; верхние scores 0.65–0.74</td>
@@ -1584,7 +1696,14 @@
               </tr>
               <tr>
                 <td><code>agent_tools_live</code></td>
-                <td>10/10; <code>latency_p95</code> = 25 983 ms; судья <strong>4.8/6</strong></td>
+                <td class="defense-cell-stack">
+                  <div>
+                    <strong>Формальные проверки suite:</strong> 10 из 10 кейсов — автоматический чеклист сценария без
+                    провалов (ни один кейс не «падает» на порогах).
+                  </div>
+                  <div><strong>p95 задержка ответа:</strong> ≈26 с (<code>latency_p95</code> в отчёте).</div>
+                  <div><strong>LLM-судья ответа:</strong> в среднем <strong>4.8</strong> из 6.</div>
+                </td>
               </tr>
               <tr>
                 <td>Graph <strong>CITES</strong> (Neo4j)</td>
@@ -1608,6 +1727,22 @@
             </thead>
             <tbody>
               <tr>
+                <td>Заголовок — token multiset F1</td>
+                <td>1.000</td>
+              </tr>
+              <tr>
+                <td>Заголовок — ROUGE-L</td>
+                <td>1.000</td>
+              </tr>
+              <tr>
+                <td>Abstract vs gold prefix — ROUGE-L</td>
+                <td>0.119</td>
+              </tr>
+              <tr>
+                <td>Abstract — token containment к префиксу</td>
+                <td>0.926</td>
+              </tr>
+              <tr>
                 <td>Методы (L2) — P / R / F1</td>
                 <td>0.617 / 0.680 / 0.601</td>
               </tr>
@@ -1618,10 +1753,6 @@
               <tr>
                 <td>Ссылки: gold arXiv — P / R / F1</td>
                 <td>0.949 / 0.967 / 0.957</td>
-              </tr>
-              <tr>
-                <td>Имена авторов — P / R / F1</td>
-                <td>0.981 / 0.981 / 0.981</td>
               </tr>
               <tr>
                 <td>Утверждения paraphrase, пилот — P / R / F1</td>
@@ -1639,6 +1770,37 @@
           </table>
         </div>
       </div>
+      <div class="defense-metrics-glossary" aria-label="Краткие определения метрик">
+        <p>
+          Справа <strong>P / R / F1</strong> — precision / recall / F1 по множествам (для L2 — мягкое совпадение).
+          <strong>ROUGE-L</strong> — согласованность через longest common subsequence с эталоном (заголовок, префикс abstract);
+          <strong>containment</strong> — доля токенов эталонного префикса, покрытых извлечённым abstract; с тройкой P/R/F1 не
+          смешиваем.
+        </p>
+        <p>
+          <code>hit_count</code> (например <strong>5/5</strong>) — сколько ожидаемых работ из эталона оказалось в топ-<code>K</code>
+          выдачи retrieval по кейсу.
+        </p>
+        <p>
+          <code>latency_p95</code> — 95-й перцентиль времени ответа по кейсам; для <code>agent_tools_live</code> в отчёте ≈
+          <strong>26 с</strong>.
+        </p>
+        <p>
+          LLM-as-judge — автоматическая оценка ответа по шкале <strong>1–6</strong>; для <code>agent_tools_live</code> среднее
+          <strong>4.8</strong>.
+        </p>
+        <p>
+          <code>metrics.passed=false</code> — у кейса не выполнен бинарный порог suite (отдельно от macro F1 по слотам).
+        </p>
+        <p>
+          <code>graph_expectations</code> — в Layer-1 задан эталон рёбер <strong>CITES</strong>; по 11 таким кейсам
+          считается macro P/R/F1 материализации в Neo4j.
+        </p>
+        <p>
+          Имена, аффилиации, DOI-ссылки и др. слоты из §4.0 на слайде сокращены; полная таблица — в отчёте и
+          <code>extraction-entity-metrics-for-report.json</code>.
+        </p>
+      </div>
       </div>
       <div class="slide-number">07</div>
     </section>
@@ -1652,7 +1814,11 @@
           <ul>
             <li>Построен сквозной контур GraphRAG поверх реального корпуса статей.</li>
             <li>Граф и гибридный retrieval дают интерпретируемые цепочки и цитаты.</li>
-            <li>Агентный runtime с supervisor согласован с архитектурой хранилищ.</li>
+            <li>
+              Агентный runtime согласован с хранилищами: в проде по умолчанию — один ReAct-агент с инструментами
+              (<code>langgraph_research_v1</code>); multi-specialist supervisor (retrieval / graph / writer) остаётся
+              отдельным режимом (<code>langgraph_supervisor_v1</code>).
+            </li>
             <li>Benchmark-оценка разделяет сильные стороны и слабые места (например claims).</li>
           </ul>
         </div>
@@ -1663,6 +1829,17 @@
             <li>Latency end-to-end пока высокий для интерактивного UX.</li>
             <li>Корпус и домен ограничены — обобщение за пределами набора статей осторожно.</li>
             <li>Многошаговый graph retrieval: recall есть, precision требует улучшений.</li>
+            <li>
+              Чат в проде по умолчанию — <strong>single-agent ReAct</strong> с общим набором инструментов
+              (<code>langgraph_research_v1</code> в <code>Settings</code>). Режим
+              <strong>supervisor → субагенты</strong> retrieval / graph / writer (<code>langgraph_supervisor_v1</code>,
+              токены маршрута, <code>routing_log</code>) сохранён, но это не основной путь.
+            </li>
+            <li>
+              Ранний акцент на мультиагентной политике и отдельных специалистах частично сменён упрощением ради
+              стабильности и стоимости шага — расхождение с изначальной подачей нужно явно закладывать в roadmap и в
+              расширение бенчмарка под оба runtime.
+            </li>
           </ul>
         </div>
       </div>
@@ -1682,7 +1859,16 @@
             <li>Улучшить claims extraction на строгом эталоне.</li>
             <li>Поднять precision многошагового graph retrieval.</li>
             <li>Снизить latency для пользовательского интерфейса.</li>
-            <li>Расширить корпус за пределы object detection.</li>
+            <li>
+              Расширить benchmark: больше кейсов, сценариев и регрессионных прогонов (в т.ч. под разные
+              <code>agent_runtime</code>).
+            </li>
+            <li>
+              Исследовать архитектуру агентской системы: когда снова нужен supervisor с политикой субагентов, а когда
+              достаточно single-agent ReAct; формализовать критерии переключения и наблюдаемость
+              (<code>routing_log</code>, SSE-события).
+            </li>
+            <li>Расширить корпус и домены за пределы текущего набора (в т.ч. за object detection).</li>
           </ul>
         </div>
       </div>

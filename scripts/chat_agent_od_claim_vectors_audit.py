@@ -14,6 +14,10 @@ from eval.chat_agent.od_claim_vectors_audit import (
 from eval.chat_agent.od_claims_backfill import load_json_object, read_jsonl_rows
 from eval.chat_agent.od_cli_support import build_od_workspace_manifest_live
 from science_graphrag.api.deps import close_store_registry, init_store_registry
+from science_graphrag.artifacts.diagnostic_object_sink import (
+    default_local_diagnostics_dir,
+    write_diagnostic_json,
+)
 from science_graphrag.config import get_settings
 
 
@@ -45,13 +49,13 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--out-json",
         type=Path,
-        default=Path("eval/results/od-claim-vectors-audit-latest.json"),
+        default=default_local_diagnostics_dir("od") / "od-claim-vectors-audit-latest.json",
         help="Machine-readable audit path.",
     )
     parser.add_argument(
         "--out-md",
         type=Path,
-        default=Path("eval/results/od-claim-vectors-audit-latest.md"),
+        default=default_local_diagnostics_dir("od") / "od-claim-vectors-audit-latest.md",
         help="Human-readable audit path.",
     )
     return parser
@@ -82,15 +86,20 @@ def main() -> int:
     finally:
         close_store_registry()
 
-    args.out_json.parent.mkdir(parents=True, exist_ok=True)
-    args.out_json.write_text(json.dumps(audit, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    written_json = write_diagnostic_json(
+        args.out_json.name,
+        audit,
+        settings=settings,
+        kind="od",
+        local_path=args.out_json,
+    )
     args.out_md.parent.mkdir(parents=True, exist_ok=True)
     args.out_md.write_text(render_od_claim_vectors_audit_markdown(audit), encoding="utf-8")
     print(
         json.dumps(
             {
-                "written_json": str(args.out_json),
-                "written_md": str(args.out_md),
+                "written_json": written_json,
+                "written_md": str(args.out_md.resolve()),
                 "summary": audit.get("summary"),
             },
             indent=2,

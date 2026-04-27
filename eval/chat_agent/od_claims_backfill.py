@@ -206,7 +206,9 @@ def scroll_all_chunks_for_work(qdrant_chunks: Any, *, work_id: str) -> list[dict
     out: list[dict[str, Any]] = []
     offset: int | str | None = None
     while True:
-        batch, offset = qdrant_chunks.scroll_chunks_for_work(work_id=work_id, limit=256, offset=offset)
+        batch, offset = qdrant_chunks.scroll_chunks_for_work(
+            work_id=work_id, limit=256, offset=offset
+        )
         out.extend(batch)
         if offset is None:
             break
@@ -279,9 +281,7 @@ def load_live_claims_as_drafts(neo: Any, *, work_id: str) -> list[ClaimDraft]:
                     chunk_fingerprint=fingerprint,
                     quote=quote,
                     section_path=(
-                        str(ev.get("section_path"))
-                        if ev.get("section_path") is not None
-                        else None
+                        str(ev.get("section_path")) if ev.get("section_path") is not None else None
                     ),
                 )
             )
@@ -321,10 +321,12 @@ def upsert_claim_vectors_for_work(
 
 
 def default_result_path(*, prefix: str) -> Path:
-    """Timestamped result path under ``eval/results``."""
+    """Timestamped JSONL under ``data/diagnostics/od`` (Phase 3: avoid heavy paths in eval/results)."""
+    from science_graphrag.artifacts.diagnostic_object_sink import default_local_diagnostics_dir
+
     ts = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     stem = prefix.strip().strip("-")
-    return Path("eval/results") / f"{stem}-{ts}.jsonl"
+    return default_local_diagnostics_dir("od") / f"{stem}-{ts}.jsonl"
 
 
 def resolve_workspace_id_for_row(

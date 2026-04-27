@@ -1,4 +1,8 @@
-"""Repo-relative layout for UI benchmark run snapshots (runtime, local disk)."""
+"""Repo-relative layout for UI benchmark run snapshots.
+
+Compact ``*.summary.json`` files stay under ``data/benchmark_runs``; full ``*.json`` may live in
+S3 when ``SCIENCE_GRAPHRAG_BENCHMARK_RUNS_OBJECT_STORAGE`` is enabled (Phase 3).
+"""
 
 from __future__ import annotations
 
@@ -19,7 +23,7 @@ RUN_HISTORY_DESCRIPTOR = ArtifactDescriptor(
     logical_id="run_history.ui_benchmark_snapshots",
     artifact_class=ArtifactClass.RUNTIME,
     family=ArtifactFamily.RUN_HISTORY,
-    policy=StoragePolicy.LOCAL_RUNTIME,
+    policy=StoragePolicy.OBJECT_STORE,
     default_repo_relative=str(RUN_HISTORY_PRIMARY_REL).replace("\\", "/"),
     committable=False,
 )

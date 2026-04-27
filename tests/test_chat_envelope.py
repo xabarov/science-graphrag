@@ -297,3 +297,36 @@ def test_infer_class_from_trace_prefers_relation_over_inventory() -> None:
 
     names = {"workspace_overview", "entity_search"}
     assert infer_class_from_trace(names) == "relation_tracing"
+
+
+def test_build_chat_envelope_extra_warnings_and_markers() -> None:
+    state: AgentState = {
+        "messages": [HumanMessage(content="q")],
+        "workspace_id": "ws1",
+        "citations": [],
+        "tool_trace": [],
+        "budget_remaining": 5,
+        "metadata": {"raw_user_question": "q"},
+        "specialist_results": {},
+        "current_specialist": None,
+        "routing_log": [],
+        "debug_events": [],
+        "thread_id": None,
+        "session_summary": "",
+        "answer_class": None,
+        "history_digest": [],
+    }
+    env = build_chat_envelope(
+        state=state,
+        answer="ok",
+        citations=[{"work_id": "w1"}],
+        tool_trace=[{"step": 1, "tool": "idea_search", "args_summary": {}, "row_count": 1}],
+        answer_class_hint=None,
+        extra_warnings=["agent_turn_deadline_exceeded", "partial_after_deadline"],
+        extra_product_markers=["partial_after_deadline"],
+    )
+    warns = list(env.get("warnings") or [])
+    assert "agent_turn_deadline_exceeded" in warns
+    assert "partial_after_deadline" in warns
+    markers = list(env.get("product_markers") or [])
+    assert "partial_after_deadline" in markers

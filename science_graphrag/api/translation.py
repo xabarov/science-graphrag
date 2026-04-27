@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
+import time
 from collections.abc import AsyncIterator
 
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
 from science_graphrag.config import get_settings
+from science_graphrag.llm import redis_quota
 from science_graphrag.utils.llm_semaphore import get_llm_async_semaphore_map
 
 router = APIRouter(tags=["translation"])
@@ -29,8 +32,31 @@ async def _translation_sse_gated(*, work_id: str, field: str) -> AsyncIterator[b
     settings = get_settings()
     sem = get_llm_async_semaphore_map(settings)["translation"]
     async with sem:
-        async for chunk in _sse_stub(work_id=work_id, field=field):
-            yield chunk
+        dist_token: str | None = None
+        try:
+            if settings.llm_distributed_quota_enabled:
+                t0 = time.perf_counter()
+                dist_token = await asyncio.to_thread(
+                    redis_quota.acquire_slot_blocking,
+                    settings,
+                    "translation",
+                )
+                wait_ms = (time.perf_counter() - t0) * 1000.0
+                redis_quota.emit_distributed_quota_acquire_finished(
+                    "translation",
+                    wait_ms=wait_ms,
+                    dist_token=dist_token,
+                )
+            async for chunk in _sse_stub(work_id=work_id, field=field):
+                yield chunk
+        finally:
+            if dist_token:
+                await asyncio.to_thread(
+                    redis_quota.release_token,
+                    settings,
+                    "translation",
+                    dist_token,
+                )
 
 
 @router.post("/works/{work_id}/translate/abstract")

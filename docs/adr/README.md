@@ -37,5 +37,7 @@
 | [021](021-openrouter-bge-m3-embeddings.md) | OpenRouter `baai/bge-m3` as canonical remote embeddings (Qdrant + dedup) |
 | [022](022-reader-extracted-body-vs-qdrant-chunks.md) | Reader: canonical ingest artifacts for full text; Qdrant chunks for retrieval only |
 | [023](023-method-ontology-v2-rich-description-and-canonicalization.md) | Method v2: rich description, MethodEvidence, ingest canonicalization, graph merge |
+| [024](024-artifact-promotion-and-retention-phase4.md) | Phase 4: object retention tags, promotion to reviewable JSON, evidence export / GC |
+| [025](025-llm-distributed-quota-redis.md) | Phase 5: optional Redis-backed global LLM concurrency quota across workers |
 
 Новые ADR нумеровать по порядку (`001-...`, `002-...`); при отмене пометить как Superseded и сослаться на замену.

@@ -271,6 +271,7 @@ class RetrievalAgent:
             initial_state,
             config=cfg,
             timeout_seconds=float(self._settings.agent_step_timeout_seconds),
+            settings=self._settings,
         )
         messages = list(final_state.get("messages", []))
         trace = collect_tool_trace(final_state)

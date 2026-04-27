@@ -11,6 +11,7 @@ from typing import cast
 import typer
 
 from eval.references_harness.runner import Mode, run_suite, write_summary
+from science_graphrag.artifacts.benchmark_paths import REPO_ROOT
 from science_graphrag.config import get_settings
 
 app = typer.Typer(add_completion=False, help="References benchmark harness (ref_gpt5.4_thoughts).")
@@ -25,7 +26,10 @@ def _tier_case_ids(tier_key: str) -> list[str]:
 @app.command()
 def main(
     fixture_root: Path = typer.Option(Path("tests/fixtures/benchmarks/layer1")),
-    output_dir: Path = typer.Option(Path("eval/results/refs_bench")),
+    output_dir: Path = typer.Option(
+        REPO_ROOT / "data" / "diagnostics" / "eval" / "refs_bench",
+        help="Default under data/diagnostics/eval/ (not eval/results/).",
+    ),
     tier: str = typer.Option(
         "references_benchmark_v1",
         "--tier",

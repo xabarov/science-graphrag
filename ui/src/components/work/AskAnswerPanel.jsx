@@ -17,7 +17,12 @@ import {
   QuoteCandidatesBlock,
   RelationTraceBlock,
 } from "./ChatTypedBlocks.jsx";
-import { deriveProgressHint, deriveRunState, shouldShowSubagentRail } from "./agentRunViewModel.js";
+import {
+  buildLiveStatusPresentation,
+  deriveHeaderProgressHint,
+  deriveRunState,
+  shouldShowSubagentRail,
+} from "./agentRunViewModel.js";
 import { AgentRunHeader } from "./AgentRunHeader.jsx";
 import { AgentLiveStatus } from "./AgentLiveStatus.jsx";
 import { AgentRunInspector } from "./AgentRunInspector.jsx";
@@ -30,6 +35,25 @@ function formatAgentWarning(t, code) {
   const key = `chat.warnings.${c}`;
   const out = t(key);
   return out === key ? c : out;
+}
+
+/**
+ * @param {(key: string, vars?: Record<string, string>) => string} t
+ * @param {string[]} kinds
+ * @returns {string}
+ */
+function formatCompactionKindsLine(t, kinds) {
+  if (!Array.isArray(kinds) || kinds.length === 0) return "";
+  return kinds
+    .map((raw) => {
+      const k = String(raw || "").trim();
+      if (!k) return "";
+      const key = `chat.sessionMemory.compactionKind.${k}`;
+      const out = t(key);
+      return out === key ? k : out;
+    })
+    .filter(Boolean)
+    .join(", ");
 }
 
 /**
@@ -90,14 +114,14 @@ export function AskAnswerPanel({
         answerClass={normalized.answer_class}
         citationCount={citations.length}
         durationMs={normalized.duration_ms}
-        progressHint={deriveProgressHint(t, streamEvents, isRunActive)}
+        progressHint={deriveHeaderProgressHint(t, streamEvents, isRunActive)}
       />
 
       {retrievalMode === "agent" && shouldShowSubagentRail(streamEvents) ? (
         <AgentSubagentRail t={t} streamEvents={streamEvents} />
       ) : null}
 
-      {isRunActive ? <AgentLiveStatus t={t} streamEvents={streamEvents} isActive /> : null}
+      {isRunActive ? <AgentLiveStatus t={t} streamEvents={streamEvents} isActive embedded /> : null}
 
       {warningsList.length > 0 ? (
         <Alert
@@ -149,76 +173,104 @@ export function AskAnswerPanel({
         </Box>
       ) : null}
 
-      {!isRunActive && normalized.session_summary_excerpt ? (
-        <Box
-          sx={{
-            mb: 1.25,
-            p: 1,
-            borderRadius: "6px",
-            border: `1px solid ${tk.border.default}`,
-            backgroundColor: tk.surface.panelAlt,
-          }}
-        >
-          <Typography sx={{ fontSize: "0.7rem", fontWeight: 600, color: tk.text.muted, mb: 0.5 }}>
-            {t("chat.sessionMemory.title")}
+      {!isRunActive && Array.isArray(streamEvents) && streamEvents.length > 0 ? (() => {
+        const postRun = buildLiveStatusPresentation(t, streamEvents, false);
+        if (!postRun.headline) return null;
+        return (
+          <Typography
+            data-testid="post-run-stream-summary"
+            sx={{ fontSize: "0.75rem", color: tk.text.muted, mb: 1, lineHeight: 1.45 }}
+          >
+            {postRun.headline}
           </Typography>
-          <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary, whiteSpace: "pre-wrap" }}>
-            {String(normalized.session_summary_excerpt)}
+        );
+      })() : null}
+
+      {!isRunActive ? (
+        <>
+          <Typography sx={{ fontWeight: 600, fontSize: "0.75rem", color: tk.text.muted, mb: 0.5 }}>
+            {t("chat.run.answerSectionTitle")}
           </Typography>
-          {normalized.run_metadata?.compaction?.kinds?.length ? (
-            <Typography sx={{ fontSize: "0.68rem", color: tk.text.faint, mt: 0.75 }}>
-              {t("chat.sessionMemory.compactionKinds")}: {normalized.run_metadata.compaction.kinds.join(", ")}
+          {answerText ? (
+            <Box
+              sx={{
+                mb: 1.25,
+                "& .reader-markdown": {
+                  fontSize: "0.8125rem",
+                  lineHeight: 1.6,
+                },
+                "& .reader-markdown p:last-of-type": {
+                  mb: 0,
+                },
+              }}
+            >
+              <MarkdownView markdown={answerText} data-testid="ask-answer-markdown" />
+            </Box>
+          ) : (
+            <Typography sx={{ fontSize: "0.8125rem", color: tk.text.primary, whiteSpace: "pre-wrap", mb: 1.25 }}>
+              {t("workspace.upload.dash")}
             </Typography>
-          ) : null}
-        </Box>
+          )}
+        </>
+      ) : answerText ? (
+        <>
+          <Typography sx={{ fontWeight: 600, fontSize: "0.75rem", color: tk.text.muted, mb: 0.5 }}>
+            {t("chat.run.answerSectionTitle")}
+          </Typography>
+          <Box
+            sx={{
+              mb: 1.25,
+              "& .reader-markdown": {
+                fontSize: "0.8125rem",
+                lineHeight: 1.6,
+              },
+              "& .reader-markdown p:last-of-type": {
+                mb: 0,
+              },
+            }}
+          >
+            <MarkdownView markdown={answerText} data-testid="ask-answer-markdown" />
+          </Box>
+        </>
       ) : null}
 
-      <Typography sx={{ fontWeight: 600, fontSize: "0.75rem", color: tk.text.muted, mb: 0.5 }}>
-        {t("chat.run.answerSectionTitle")}
-      </Typography>
-      {answerText ? (
-        <Box
-          sx={{
-            mb: 1.25,
-            "& .reader-markdown": {
-              fontSize: "0.8125rem",
-              lineHeight: 1.6,
-            },
-            "& .reader-markdown p:last-of-type": {
-              mb: 0,
-            },
-          }}
-        >
-          <MarkdownView markdown={answerText} data-testid="ask-answer-markdown" />
-        </Box>
-      ) : (
-        <Typography sx={{ fontSize: "0.8125rem", color: tk.text.primary, whiteSpace: "pre-wrap", mb: 1.25 }}>
-          {t("workspace.upload.dash")}
-        </Typography>
-      )}
+      {!isRunActive ? (
+        <>
+          <InventoryBlock t={t} inventory={normalized.inventory} />
+          <QuoteCandidatesBlock t={t} candidates={normalized.quote_candidates} />
+          <BibliographyBlock t={t} bibliography={normalized.bibliography} />
+          <RelationTraceBlock t={t} relationTrace={normalized.relation_trace} />
+          <IdeaSuggestionsBlock t={t} suggestions={normalized.idea_suggestions} />
+        </>
+      ) : null}
 
-      <InventoryBlock t={t} inventory={normalized.inventory} />
-      <QuoteCandidatesBlock t={t} candidates={normalized.quote_candidates} />
-      <BibliographyBlock t={t} bibliography={normalized.bibliography} />
-      <RelationTraceBlock t={t} relationTrace={normalized.relation_trace} />
-      <IdeaSuggestionsBlock t={t} suggestions={normalized.idea_suggestions} />
-
-      <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 2, mb: 0.5, color: tk.text.primary }}>
-        {t("askPanel.citations.title")}
-      </Typography>
-      {citations.length === 0 ? (
-        <Typography sx={{ fontSize: "0.8125rem", color: tk.text.secondary }}>{t("askPanel.citations.none")}</Typography>
-      ) : (
-        citations.map((c, i) => {
+      {!isRunActive || citations.length > 0 ? (
+        <>
+          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 2, mb: 0.5, color: tk.text.primary }}>
+            {t("askPanel.citations.title")}
+          </Typography>
+          {citations.length === 0 ? (
+            <Typography sx={{ fontSize: "0.8125rem", color: tk.text.secondary }}>{t("askPanel.citations.none")}</Typography>
+          ) : (
+            citations.map((c, i) => {
           const wid = c.work_id != null ? String(c.work_id) : "";
           const chunkFingerprint = c.chunk_fingerprint != null ? String(c.chunk_fingerprint) : "";
           const sectionPath = c.section_path != null ? String(c.section_path) : "";
           const citationIndex = String(i + 1);
           const sameAsWorkspace = inWorkspace && wid && wid === String(workspaceWorkId).trim();
+          const rank =
+            c.rank != null && String(c.rank).trim() !== ""
+              ? String(c.rank)
+              : c.citation_index != null && String(c.citation_index).trim() !== ""
+                ? String(c.citation_index)
+                : String(i + 1);
+          const rawScore = c.score ?? c.relevance ?? c.retrieval_score ?? c.similarity;
+          const numScore = rawScore != null && String(rawScore).trim() !== "" ? Number(rawScore) : NaN;
+          const score = Number.isFinite(numScore) ? String(numScore) : t("workspace.upload.dash");
           return (
             <Box key={i} sx={{ mb: 1, fontSize: "0.8125rem", color: tk.text.secondary }}>
               <Typography sx={{ fontSize: "0.8125rem", color: tk.text.primary }}>
-                {t("askPanel.citation.line", { rank: String(c.rank), score: String(c.score), work: wid || t("askPanel.citation.noWork") })}
+                {t("askPanel.citation.line", { rank, score, work: wid || t("askPanel.citation.noWork") })}
               </Typography>
               <Typography sx={{ fontSize: "0.75rem", color: tk.text.muted, mt: 0.25 }}>
                 {t("askPanel.chunkLabel")} {String(c.chunk_fingerprint ?? t("workspace.upload.dash"))}
@@ -288,8 +340,35 @@ export function AskAnswerPanel({
               </Box>
             </Box>
           );
-        })
-      )}
+            })
+          )}
+        </>
+      ) : null}
+
+      {!isRunActive && normalized.session_summary_excerpt ? (
+        <Box
+          sx={{
+            mt: 1.5,
+            mb: 1.25,
+            p: 1,
+            borderRadius: "6px",
+            border: `1px solid ${tk.border.default}`,
+            backgroundColor: tk.surface.subtle,
+          }}
+        >
+          <Typography sx={{ fontSize: "0.68rem", fontWeight: 600, color: tk.text.muted, mb: 0.5, letterSpacing: "0.02em" }}>
+            {t("chat.sessionMemory.title")}
+          </Typography>
+          <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary, whiteSpace: "pre-wrap" }}>
+            {String(normalized.session_summary_excerpt)}
+          </Typography>
+          {normalized.run_metadata?.compaction?.kinds?.length ? (
+            <Typography sx={{ fontSize: "0.65rem", color: tk.text.faint, mt: 0.75 }}>
+              {t("chat.sessionMemory.compactionKinds")}: {formatCompactionKindsLine(t, normalized.run_metadata.compaction.kinds)}
+            </Typography>
+          ) : null}
+        </Box>
+      ) : null}
 
       <AgentRunInspector
         t={t}

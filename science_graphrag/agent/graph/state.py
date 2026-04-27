@@ -63,7 +63,9 @@ def build_initial_agent_state(
     if rt == "langgraph_research_v1":
         from science_graphrag.agent.chat_envelope import heuristic_answer_class
         from science_graphrag.agent.prompts.research_chat_system import RESEARCH_CHAT_SYSTEM_PROMPT
+        from science_graphrag.config import get_settings as _gs
 
+        _deadline_s = float(_gs().agent_step_timeout_seconds)
         meta = {
             "agent_runtime": agent_runtime,
             "raw_user_question": question,
@@ -73,6 +75,8 @@ def build_initial_agent_state(
                 "suggested_answer_class": heuristic_answer_class(question, answer_class_hint),
             },
             "coordinator_latency_ms": 0,
+            "agent_response_deadline_perf_start": perf_counter(),
+            "agent_response_deadline_seconds": _deadline_s,
         }
         if thread_id:
             meta["thread_id"] = thread_id
@@ -116,6 +120,8 @@ def build_initial_agent_state(
         "raw_user_question": question,
         "turn_policy": turn_policy.to_dict(),
         "coordinator_latency_ms": coordinator_ms,
+        "agent_response_deadline_perf_start": perf_counter(),
+        "agent_response_deadline_seconds": float(get_settings().agent_step_timeout_seconds),
     }
     if thread_id:
         meta["thread_id"] = thread_id

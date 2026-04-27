@@ -21,6 +21,7 @@ def _stores(
         qdrant_claims=MagicMock(),
         blob=MagicMock(),
         artifacts=MagicMock(),
+        benchmark_runs=MagicMock(),
     )
 
 
@@ -94,6 +95,7 @@ def test_remove_purged_when_isolated(monkeypatch: pytest.MonkeyPatch) -> None:
         qdrant_claims=claims,
         blob=MagicMock(),
         artifacts=MagicMock(),
+        benchmark_runs=MagicMock(),
     )
     settings = Settings()
     monkeypatch.setattr(

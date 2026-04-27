@@ -120,6 +120,8 @@ export function normalizeQueryResponse(raw) {
       duration_ms: null,
       phoenix_trace_id: null,
       run_metadata: null,
+      product_path: null,
+      product_markers: [],
     };
   }
   const gc = raw.graph_context && typeof raw.graph_context === "object" ? raw.graph_context : {};

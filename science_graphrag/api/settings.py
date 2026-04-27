@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from science_graphrag.api.auth import require_settings_access
 from science_graphrag.api.settings_models import (
@@ -58,7 +58,14 @@ def patch_llm_settings(
     }
     if "chat_model" in raw:
         kwargs["chat_model"] = body.chat_model
-    snapshot = _SETTINGS_SERVICE.update_llm_settings(**kwargs)
+    if body.runtime_overrides is not None:
+        adv = body.runtime_overrides.model_dump(exclude_unset=True, exclude_none=True)
+        if adv:
+            kwargs["advanced_patch"] = adv
+    try:
+        snapshot = _SETTINGS_SERVICE.update_llm_settings(**kwargs)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     return SettingsSnapshotResponse(
         sections=snapshot.sections,
         llm=snapshot.llm,

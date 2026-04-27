@@ -51,6 +51,11 @@ class QdrantChunkStore:
     ) -> None:
         if len(chunks) != len(vectors):
             raise ValueError("chunks and vectors length mismatch")
+        if vectors.size and int(vectors.shape[1]) != self._vector_dim:
+            raise ValueError(
+                f"Qdrant chunk vector dim mismatch for collection {self._collection!r}: "
+                f"got {int(vectors.shape[1])}, expected {self._vector_dim}."
+            )
         points: list[PointStruct] = []
         for idx, (text, vec) in enumerate(zip(chunks, vectors, strict=True)):
             pid = str(uuid.uuid5(uuid.NAMESPACE_URL, f"{document_id}:{idx}"))
@@ -88,6 +93,11 @@ class QdrantChunkStore:
 
         if len(document_chunks) != len(vectors):
             raise ValueError("document_chunks and vectors length mismatch")
+        if vectors.size and int(vectors.shape[1]) != self._vector_dim:
+            raise ValueError(
+                f"Qdrant chunk vector dim mismatch for collection {self._collection!r}: "
+                f"got {int(vectors.shape[1])}, expected {self._vector_dim}."
+            )
         points: list[PointStruct] = []
         for ch, vec in zip(document_chunks, vectors, strict=True):
             pid = str(

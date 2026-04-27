@@ -332,6 +332,15 @@
 - [`workspace-ux-redesign-2026-04-25.md`](workspace-ux-redesign-2026-04-25.md) — Track **F** (Wave WX1–WX6)
 - [`reader-ux-and-translation-roadmap-2026-04-25.md`](reader-ux-and-translation-roadmap-2026-04-25.md) — Track **RX** (Wave RX1–RX7) + Track **LX** (Wave LX1–LX3)
 
+### Research agent / chat (продуктовый канон)
+
+- [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md) — **slim:** текущий single-graph runtime, отложенный multi-specialist split, будущие `tool_search` + compaction; полная предыстория: [`_archive/chat-agent-system-roadmap-full-2026-04-26.md`](./_archive/chat-agent-system-roadmap-full-2026-04-26.md)
+- [`agent-chat-frontend-ui-plan-2026-04-26.md`](./agent-chat-frontend-ui-plan-2026-04-26.md) — UI/UX run chrome, rail, typed blocks
+- [`chat-agent-roadmap-trace-audit-2026-04-27.md`](./chat-agent-roadmap-trace-audit-2026-04-27.md) — eval harness + Phoenix checklist (`ws-pilot-od`)
+- [`chat-agent-od-workspace-restoration-and-eval-plan-2026-04-27.md`](./chat-agent-od-workspace-restoration-and-eval-plan-2026-04-27.md) — OD proving ground
+- [`agent-chat-prod-rollout-2026-04-27.md`](./agent-chat-prod-rollout-2026-04-27.md) — флаги coordinator / semantic fast-route / legacy runtime
+- [`docs/specs/agent-chat-v1.md`](../specs/agent-chat-v1.md) — HTTP/SSE контракт
+
 ### Бэклог рефакторинга
 
 - [`docs/backlog/refactor-backend.md`](../backlog/refactor-backend.md)

@@ -74,8 +74,17 @@ def test_settings_schema_endpoint_smoke() -> None:
     res = client.get("/v1/settings/schema")
     assert res.status_code == 200
     payload = res.json()
-    assert payload["version"] >= 1
+    assert int(payload["version"]) >= 5
     assert payload["sections"][0]["id"] == "llm"
+    llm = next(s for s in payload["sections"] if s["id"] == "llm")
+    llm_field_ids = {f["id"] for f in llm["fields"]}
+    for fid in (
+        "llm_distributed_quota_enabled",
+        "llm_distributed_quota_key_prefix",
+        "llm_distributed_quota_acquire_timeout_seconds",
+        "llm_distributed_quota_lease_seconds",
+    ):
+        assert fid in llm_field_ids
     section_ids = {s["id"] for s in payload["sections"]}
     assert "ingestion" in section_ids
     ingest = next(s for s in payload["sections"] if s["id"] == "ingestion")
@@ -93,6 +102,17 @@ def test_settings_snapshot_endpoint_smoke() -> None:
     assert "status" in payload["llm"]
     assert "effective" in payload["llm"]
     assert "ingestion" in payload
+    assert "advanced_controls" in payload["llm"]
+    assert "recommended_advanced" in payload["llm"]
+    assert "llm_concurrency_default" in payload["llm"]["advanced_controls"]
+    ac = payload["llm"]["advanced_controls"]
+    for fid in (
+        "llm_distributed_quota_enabled",
+        "llm_distributed_quota_key_prefix",
+        "llm_distributed_quota_acquire_timeout_seconds",
+        "llm_distributed_quota_lease_seconds",
+    ):
+        assert fid in ac
     assert payload["ingestion"]["effective"]["resolved_max_file_size_mb"] >= 1
     assert "diagnostics" in payload and "app_version" in payload["diagnostics"]
     assert "security" in payload and "settings_auth_required" in payload["security"]
@@ -192,6 +212,78 @@ def test_settings_llm_patch_and_delete_secret_smoke(tmp_path: Path, monkeypatch:
     else:
         assert deleted["llm"]["status"]["configured"] is True
     assert "ingestion" in deleted
+
+
+def test_settings_llm_patch_distributed_quota_runtime_fields(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    """PATCH /v1/settings/llm accepts Phase 5 distributed quota runtime overrides."""
+
+    from science_graphrag.api import settings as settings_api
+    from science_graphrag.settings.repository import SettingsRepository
+    from science_graphrag.settings.secrets import SecretStore
+    from science_graphrag.settings.service import SettingsService
+
+    service = SettingsService(
+        repo_root=tmp_path,
+        repository=SettingsRepository(tmp_path),
+        secret_store=SecretStore(tmp_path),
+    )
+    monkeypatch.setattr(settings_api, "_SETTINGS_SERVICE", service)
+
+    client = _client()
+    patch_res = client.patch(
+        "/v1/settings/llm",
+        json={
+            "base_url": "https://openrouter.ai/api/v1",
+            "model": "mistralai/mistral-small-3.2-24b-instruct",
+            "temperature": 0.1,
+            "timeout_seconds": 120,
+            "api_key": "sk-demo-secret",
+            "runtime_overrides": {
+                "llm_distributed_quota_enabled": True,
+                "llm_distributed_quota_key_prefix": "api_smoke:quota:v1",
+                "llm_distributed_quota_acquire_timeout_seconds": 45.0,
+                "llm_distributed_quota_lease_seconds": 180,
+            },
+        },
+    )
+    assert patch_res.status_code == 200
+    body = patch_res.json()
+    ac = body["llm"]["advanced_controls"]
+    assert ac["llm_distributed_quota_enabled"]["effective"] is True
+    assert ac["llm_distributed_quota_key_prefix"]["effective"] == "api_smoke:quota:v1"
+    assert ac["llm_distributed_quota_acquire_timeout_seconds"]["effective"] == 45.0
+    assert ac["llm_distributed_quota_lease_seconds"]["effective"] == 180
+
+
+def test_settings_llm_patch_runtime_overrides_422(tmp_path: Path, monkeypatch: Any) -> None:
+    """Invalid classifier vs transport combination returns 422."""
+
+    from science_graphrag.api import settings as settings_api
+    from science_graphrag.settings.repository import SettingsRepository
+    from science_graphrag.settings.secrets import SecretStore
+    from science_graphrag.settings.service import SettingsService
+
+    service = SettingsService(
+        repo_root=tmp_path,
+        repository=SettingsRepository(tmp_path),
+        secret_store=SecretStore(tmp_path),
+    )
+    monkeypatch.setattr(settings_api, "_SETTINGS_SERVICE", service)
+
+    client = _client()
+    res = client.patch(
+        "/v1/settings/llm",
+        json={
+            "base_url": "https://openrouter.ai/api/v1",
+            "model": "m",
+            "temperature": 0.0,
+            "timeout_seconds": 30.0,
+            "runtime_overrides": {"agent_turn_policy_classifier_timeout_seconds": 120.0},
+        },
+    )
+    assert res.status_code == 422
 
 
 def test_workspace_upload_rejects_oversized_file(monkeypatch: Any) -> None:

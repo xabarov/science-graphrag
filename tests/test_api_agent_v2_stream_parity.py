@@ -98,6 +98,80 @@ class _FakeGraph:
         yield ("values", full)
 
 
+class _FakeGraphUnmappedTool:
+    """Emits a tool_call whose name is not in _product_step_code_for_tool mapping (uses using_tool)."""
+
+    async def astream(self, state, config=None, **kwargs):  # noqa: ARG002
+        human = state["messages"][0]
+        tc_id = "call-unmapped"
+        tool_name = "non_mapped_agent_tool_xyz"
+        yield (
+            "updates",
+            {
+                "n": {
+                    "messages": [
+                        AIMessage(
+                            content="",
+                            tool_calls=[
+                                {
+                                    "name": tool_name,
+                                    "args": {"q": "x"},
+                                    "id": tc_id,
+                                    "type": "tool",
+                                }
+                            ],
+                        )
+                    ]
+                }
+            },
+        )
+        yield (
+            "updates",
+            {
+                "n": {
+                    "messages": [
+                        ToolMessage(
+                            content=json.dumps({"row_count": 0}),
+                            tool_call_id=tc_id,
+                            name=tool_name,
+                        )
+                    ]
+                }
+            },
+        )
+        yield (
+            "updates",
+            {"n": {"messages": [AIMessage(content="done unmapped")]}},
+        )
+        full = {
+            "messages": [
+                human,
+                AIMessage(
+                    content="",
+                    tool_calls=[
+                        {"name": tool_name, "args": {"q": "x"}, "id": tc_id, "type": "tool"}
+                    ],
+                ),
+                ToolMessage(content=json.dumps({"row_count": 0}), tool_call_id=tc_id, name=tool_name),
+                AIMessage(content="done unmapped"),
+            ],
+            "workspace_id": state.get("workspace_id"),
+            "citations": [],
+            "tool_trace": [],
+            "budget_remaining": 7,
+            "metadata": dict(state.get("metadata") or {}),
+            "specialist_results": {},
+            "current_specialist": None,
+            "routing_log": [],
+            "debug_events": [],
+            "thread_id": state.get("thread_id"),
+            "session_summary": str(state.get("session_summary") or ""),
+            "answer_class": None,
+            "history_digest": list(state.get("history_digest") or []),
+        }
+        yield ("values", full)
+
+
 class _FakeGraphFinalAnswerToolOnly:
     """Writer calls the structured final_answer tool and never emits plain assistant text."""
 
@@ -149,15 +223,8 @@ def _app() -> FastAPI:
     return app
 
 
-def test_sse_final_tool_trace_matches_collect_tool_trace(monkeypatch) -> None:
-    from science_graphrag.api import agent_v2 as agent_v2_api
-
-    monkeypatch.setattr(agent_v2_api, "build_retrieval_graph", lambda *_a, **_k: _FakeGraph())
-    client = TestClient(_app())
-    client.app.dependency_overrides[get_settings] = lambda: Settings(
-        agent_runtime="langgraph_supervisor_v1"
-    )
-    client.app.dependency_overrides[get_stores] = lambda: type(
+def _fake_store_registry() -> object:
+    return type(
         "_S",
         (),
         {
@@ -168,12 +235,32 @@ def test_sse_final_tool_trace_matches_collect_tool_trace(monkeypatch) -> None:
             "blob": None,
         },
     )()
+
+
+def _collect_agent_sse_events(
+    monkeypatch,
+    graph_factory: type,
+    *,
+    question: str = "q",
+    agent_runtime: str = "langgraph_supervisor_v1",
+    extra_json: dict | None = None,
+) -> list[dict]:
+    """Stream POST /v2/agent/query and return parsed ``data:`` JSON objects (integration helper)."""
+    from science_graphrag.api import agent_v2 as agent_v2_api
+
+    monkeypatch.setattr(agent_v2_api, "build_retrieval_graph", lambda *_a, **_k: graph_factory())
+    client = TestClient(_app())
+    client.app.dependency_overrides[get_settings] = lambda: Settings(agent_runtime=agent_runtime)
+    client.app.dependency_overrides[get_stores] = _fake_store_registry
+    payload: dict = {"question": question}
+    if extra_json:
+        payload.update(extra_json)
     try:
-        events = []
+        events: list[dict] = []
         with client.stream(
             "POST",
             "/v2/agent/query",
-            json={"question": "q"},
+            json=payload,
             headers={"Accept": "text/event-stream"},
         ) as resp:
             assert resp.status_code == 200
@@ -182,9 +269,49 @@ def test_sse_final_tool_trace_matches_collect_tool_trace(monkeypatch) -> None:
                     line = line.decode("utf-8")
                 if line.startswith("data:"):
                     events.append(json.loads(line[5:].strip()))
+        return events
     finally:
         client.app.dependency_overrides.pop(get_settings, None)
         client.app.dependency_overrides.pop(get_stores, None)
+
+
+def test_sse_emits_product_step_using_tool_for_unmapped_tools(monkeypatch) -> None:
+    """Unmapped non-meta tools emit product_step with code using_tool (UI i18n headline)."""
+    events = _collect_agent_sse_events(monkeypatch, _FakeGraphUnmappedTool)
+    ps = [
+        e
+        for e in events
+        if e.get("type") == "product_step"
+        and e.get("code") == "using_tool"
+        and e.get("tool") == "non_mapped_agent_tool_xyz"
+    ]
+    assert ps, "expected using_tool product_step for unmapped tool"
+
+
+def test_sse_reasoning_live_status_emits_product_step_after_idea_search(monkeypatch) -> None:
+    """SSE contract for UI live headline: mapped tools emit product_step right after tool_call."""
+    events = _collect_agent_sse_events(monkeypatch, _FakeGraph)
+    tool_idxs = [
+        i
+        for i, e in enumerate(events)
+        if e.get("type") == "tool_call" and e.get("tool") == "idea_search"
+    ]
+    assert tool_idxs, "expected idea_search tool_call in SSE"
+    ps_events = [
+        e
+        for e in events
+        if e.get("type") == "product_step"
+        and e.get("code") == "searching_literature"
+        and e.get("tool") == "idea_search"
+    ]
+    assert (
+        ps_events
+    ), "expected product_step searching_literature for idea_search (UI headline source)"
+    assert events.index(ps_events[0]) > tool_idxs[0]
+
+
+def test_sse_final_tool_trace_matches_collect_tool_trace(monkeypatch) -> None:
+    events = _collect_agent_sse_events(monkeypatch, _FakeGraph)
 
     types = [e.get("type") for e in events]
     assert "intent_classified" in types

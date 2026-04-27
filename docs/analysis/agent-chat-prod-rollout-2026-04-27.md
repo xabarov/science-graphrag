@@ -19,3 +19,5 @@ Tune `SCIENCE_GRAPHRAG_AGENT_TURN_POLICY_CONFIDENCE_THRESHOLD` using staging tra
 ## Metrics (logs)
 
 Successful SSE runs emit a structured log record `agent_query_completed` with `agent_metrics` payload (`duration_ms`, `classifier`, `tool_policy`, `conversation_intent`, flags). Ship these to your log aggregator for p95 / error-rate dashboards.
+
+**Architecture context:** [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md) (slim canonical: simplified graph + future `tool_search` / compaction).

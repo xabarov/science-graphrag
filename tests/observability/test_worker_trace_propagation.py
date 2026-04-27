@@ -7,7 +7,10 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
-from science_graphrag.agent.graph.invoke_timeout import invoke_graph_with_deadline
+from science_graphrag.agent.graph.invoke_timeout import (
+    invoke_graph_with_deadline,
+    reset_agent_graph_executor_for_tests,
+)
 from science_graphrag.observability import phoenix_tracer
 from science_graphrag.observability import spans as observability_spans
 from science_graphrag.observability.spans import chain_span
@@ -49,8 +52,11 @@ def test_invoke_graph_with_deadline_preserves_otel_parent_context(monkeypatch) -
             with chain_span("agent.worker.child"):
                 return {"ok": True}
 
-    with chain_span("agent.query"):
-        result = invoke_graph_with_deadline(_FakeGraph(), {}, config={}, timeout_seconds=2)
+    try:
+        with chain_span("agent.query"):
+            result = invoke_graph_with_deadline(_FakeGraph(), {}, config={}, timeout_seconds=2)
+    finally:
+        reset_agent_graph_executor_for_tests()
 
     assert result == {"ok": True}
     spans = exporter.get_finished_spans()

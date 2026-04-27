@@ -22,6 +22,10 @@ from eval.chat_agent.roadmap_metrics import score_roadmap_case
 from eval.chat_agent.workspace_audit import audit_workspace_readiness
 from science_graphrag.agent.runtime import AgentRunOutput, build_agent
 from science_graphrag.api.deps import close_store_registry, init_store_registry
+from science_graphrag.artifacts.diagnostic_object_sink import (
+    default_local_diagnostics_dir,
+    write_diagnostic_json,
+)
 from science_graphrag.config import get_settings
 
 
@@ -318,7 +322,10 @@ def _cli(
         file_okay=False,
         readable=True,
     ),
-    out: Path = typer.Option(Path("eval/results/chat-agent-roadmap-latest"), "--out"),
+    out: Path = typer.Option(
+        default_local_diagnostics_dir("chat_agent") / "chat-agent-roadmap-latest",
+        "--out",
+    ),
     skip_audit: bool = typer.Option(False, "--skip-audit"),
     mock_runtime: bool = typer.Option(False, "--mock-runtime"),
     fetch_phoenix: bool = typer.Option(False, "--fetch-phoenix"),
@@ -350,9 +357,13 @@ def _cli(
             }
         finally:
             close_store_registry()
-        (out / "workspace_audit.json").write_text(
-            json.dumps(audit_blob, indent=2, ensure_ascii=False) + "\n",
-            encoding="utf-8",
+        audit_path = out / "workspace_audit.json"
+        write_diagnostic_json(
+            audit_path.name,
+            audit_blob,
+            settings=settings,
+            kind="chat_agent",
+            local_path=audit_path,
         )
         st = str((audit_blob.get("workspace_audit") or {}).get("status") or "")
         if st == "blocked":

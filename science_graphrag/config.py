@@ -118,6 +118,41 @@ class Settings(BaseSettings):
             "diagnostics). Same bucket as Phase 1 raw/queue; distinct prefix per roadmap §7.2."
         ),
     )
+    benchmark_runs_object_storage: bool = Field(
+        default=False,
+        description=(
+            "Phase 3: persist full UI benchmark run JSON in S3 under s3_benchmark_runs_key_prefix; "
+            "keep compact *.summary.json on local disk. Requires object_storage_enabled."
+        ),
+    )
+    diagnostics_object_storage: bool = Field(
+        default=False,
+        description=(
+            "Phase 3: optional CLI/eval heavy diagnostics (OD, chat-agent traces) upload to S3 "
+            "under s3_diagnostics_key_prefix when object_storage_enabled."
+        ),
+    )
+    s3_benchmark_runs_key_prefix: str = Field(
+        default="science-benchmarks",
+        description="Object key prefix inside s3_bucket for UI benchmark run full.json payloads.",
+    )
+    s3_diagnostics_key_prefix: str = Field(
+        default="science-diagnostics",
+        description="Object key prefix for OD/chat-agent diagnostic dumps (CLI scripts).",
+    )
+    object_storage_diagnostics_retention_days: int = Field(
+        default=30,
+        ge=0,
+        description=(
+            "Phase 4: optional hint (object tag/metadata) for diagnostic S3 objects; "
+            "GC scripts may use this with LastModified. 0 = omit hint tag."
+        ),
+    )
+    object_storage_benchmark_full_retention_days: int = Field(
+        default=90,
+        ge=0,
+        description=("Phase 4: optional hint for benchmark full.json in S3; 0 = omit hint tag."),
+    )
     database_url: str = Field(
         default="postgresql+psycopg://science:science@localhost:15432/science_graphrag",
     )
@@ -331,6 +366,36 @@ class Settings(BaseSettings):
         le=12,
         description="Phase 2: cap concurrent grounded query-answer LLM calls per process.",
     )
+    llm_distributed_quota_enabled: bool = Field(
+        default=False,
+        description=(
+            "Phase 5: when true, enforce the same per-pool LLM concurrency cap globally via Redis "
+            "(see science_graphrag.llm.redis_quota) in addition to process-local semaphores."
+        ),
+    )
+    llm_distributed_quota_key_prefix: str = Field(
+        default="science_graphrag:llm_quota:v1",
+        min_length=1,
+        max_length=200,
+        description="Redis key prefix for distributed LLM quota ZSETs (must be safe for Redis keys).",
+    )
+    llm_distributed_quota_acquire_timeout_seconds: float = Field(
+        default=60.0,
+        ge=1.0,
+        le=600.0,
+        description="Max wall-clock wait for a distributed LLM slot before failing the request.",
+    )
+    llm_distributed_quota_lease_seconds: int = Field(
+        default=420,
+        ge=30,
+        le=3600,
+        description=(
+            "TTL for each distributed slot lease in Redis (ms score = now + lease); "
+            "covers stalled/killed workers without manual cleanup. "
+            "v1 does not refresh leases during a long LLM call—set comfortably above worst-case "
+            "call duration or accept rare hidden over-cap when a lease expires before the call ends."
+        ),
+    )
 
     # Optional: separate credentials for benchmark teacher gold generation (OpenRouter, etc.).
     benchmark_teacher_llm_api_key: str | None = Field(default=None)
@@ -508,6 +573,39 @@ class Settings(BaseSettings):
         le=120.0,
         description="HTTP timeout for coordinator LLM classifier calls.",
     )
+    agent_chat_max_retries: int = Field(
+        default=1,
+        ge=0,
+        le=2,
+        description=(
+            "LangChain ChatOpenAI max_retries for agent chat / supervisor routing LLM calls "
+            "(retries after failed HTTP). Lower reduces post-deadline tail load."
+        ),
+    )
+    agent_classifier_max_retries: int = Field(
+        default=0,
+        ge=0,
+        le=2,
+        description="LangChain max_retries for turn-policy classifier LLM calls only.",
+    )
+    agent_graph_invoke_max_workers: int = Field(
+        default=0,
+        ge=0,
+        le=32,
+        description=(
+            "ThreadPoolExecutor max_workers for sync LangGraph invoke with response deadline. "
+            "0 = auto: min(16, max(4, (cpu_count or 2) * 2)). Non-zero overrides auto."
+        ),
+    )
+    agent_min_llm_hop_reserve_seconds: float = Field(
+        default=9.0,
+        ge=1.0,
+        le=120.0,
+        description=(
+            "Wall-clock reserve (seconds) before starting another agent LLM hop when the turn "
+            "response deadline is almost exhausted (cooperative cutoff)."
+        ),
+    )
     agent_session_memory_backend: str = Field(
         default="memory",
         description=(
@@ -624,6 +722,12 @@ class Settings(BaseSettings):
                 raise ValueError(
                     "object_storage_enabled requires non-empty "
                     + ", ".join(f"SCIENCE_GRAPHRAG_{m.upper()}" for m in missing)
+                )
+        if self.benchmark_runs_object_storage or self.diagnostics_object_storage:
+            if not self.object_storage_enabled:
+                raise ValueError(
+                    "benchmark_runs_object_storage and diagnostics_object_storage require "
+                    "object_storage_enabled=true with valid S3 credentials"
                 )
         return self
 

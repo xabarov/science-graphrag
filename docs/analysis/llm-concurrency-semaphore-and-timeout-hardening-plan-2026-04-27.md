@@ -1,6 +1,6 @@
 # LLM concurrency, semaphore, and timeout hardening plan (2026-04-27)
 
-**Status:** proposed phased hardening and architecture plan.
+**Status:** phased hardening plan (Phases 2–4 implemented in-repo; Phase 5 v1 distributed quota implemented — see Phase 5 section below).
 
 **Primary goal:** make LLM concurrency control and timeout behavior consistent, enforceable, observable, and configurable from the settings UI for both:
 
@@ -28,9 +28,9 @@ The recommended target model has four layers:
 2. **Two timeout layers** for every important LLM path:
    - **transport timeout** for one HTTP request;
    - **operation deadline** for the whole logical step, including retries and fallbacks.
-3. **Process-local enforcement now, optional distributed limit later**:
-   - start with per-process semaphores / capacity limiters;
-   - leave room for Redis-backed global quotas later if multi-worker scaling requires it.
+3. **Process-local enforcement plus optional distributed limit**:
+   - per-process semaphores / capacity limiters (Phases 2–3);
+   - optional Redis-backed **global** quotas (Phase 5 v1 — ADR [025-llm-distributed-quota-redis.md](../adr/025-llm-distributed-quota-redis.md)).
 4. **Settings UI support** for advanced LLM controls:
    - operator-facing knobs for semaphore sizes and deadlines;
    - separate groups for ingestion and agent runtime;
@@ -575,6 +575,19 @@ This is important because ingestion load is operationally very different from in
 
 **Goal:** expose the new controls safely to operators.
 
+**Status (implementation): done (variant A, 2026-04-27).** Runtime overrides for fields that already exist on `Settings` are persisted as flat keys in the runtime `llm` JSON (same attribute names as env), merged via `SettingsService.build_runtime_settings()` → `Settings.model_copy(update=...)`. Ingestion-specific concurrency is editable in the LLM advanced panel (not moved to `PATCH /settings/ingestion` in v1).
+
+**Delivered**
+
+- **Backend:** `science_graphrag/settings/llm_advanced_fields.py` (keys, clamp, recommended defaults from `Settings` fields, cross-field validation); `SettingsService` snapshot adds `llm.advanced_controls` (per-key `persisted` / `effective`), `llm.recommended_advanced`, `non_secret_overrides` extended; `work_dedup.effective` reflects merged dedup LLM timeouts. `GET /v1/settings/schema` version **4** with grouped advanced field descriptors. `PATCH /v1/settings/llm` accepts optional nested `runtime_overrides` (`science_graphrag/api/settings_llm_runtime_patch.py`); invalid classifier vs transport or step vs classifier → **422**.
+- **Frontend:** `ui/src/pages/SettingsPage/LlmSettingsPanel.jsx` — provider card unchanged; collapsible advanced section (concurrency / deadlines / agent runtime); restore from `recommended_advanced`; client-side validation (transport timeout, finite numerics, classifier ≤ transport, step ≥ classifier); draft connection test still uses form `timeout_seconds`. i18n: `ui/src/i18n/messages/en|ru/partSettings.js`.
+- **Tests:** `tests/test_chat_llm_settings.py` (roundtrip + regression that provider-only PATCH keeps advanced); `tests/test_api_smoke.py` (snapshot keys, `runtime_overrides` 422).
+
+**Deferred (not variant A / later phases)**
+
+- Separate persisted **ingestion operation deadline** and **retry budget** knobs (§4.1); dedicated `PATCH /settings/ingestion` fields for references/claims/semantic concurrency only (§6.5) — optional follow-up.
+- **“High fan-out”** helper copy in UI (§6.2) — can be added as short `FormHelperText` under pool fields.
+
 ### Backend
 
 1. Extend `SettingsSnapshotResponse`, `SettingsSchemaResponse`, and runtime snapshot building.
@@ -596,11 +609,14 @@ This is important because ingestion load is operationally very different from in
 ### Acceptance
 
 - an operator can configure timeout and concurrency without touching env files;
-- UI validation prevents obviously invalid combinations.
+- UI validation prevents obviously invalid combinations;
+- **Variant A scope:** pool sizes, shared extraction transport timeout, agent step / classifier timeouts, dedup LLM timeouts, and agent runtime flags via `runtime_overrides`. Separate ingestion operation deadline, retry budget in settings UI, and ingestion-only PATCH for pool fields are deferred (see **Deferred** above).
 
 ## Phase 4: Agent timeout containment and worker hygiene
 
 **Goal:** reduce post-timeout load leakage in the agent runtime.
+
+**Status (implementation): done (2026-04-27).** True upstream cancellation is still out of scope; this phase tightens process-local containment, retries, cooperative cutoffs, and observability.
 
 ### Changes
 
@@ -609,26 +625,47 @@ This is important because ingestion load is operationally very different from in
 3. Add stronger observability for “deadline returned to user but upstream still running”.
 4. Optionally move expensive agent turns to cancellable subprocess/job isolation if needed.
 
+### Delivered
+
+- **Retries:** `Settings.agent_chat_max_retries`, `agent_classifier_max_retries`; `build_chat_model(..., max_retries=...)`; classifier uses dedicated retries; agent graph spans use `agent_chat_transport_max_attempts(settings)` instead of ingestion `EXTRACT_MAYBE_*` ([`science_graphrag/agent/llm/chat.py`](../science_graphrag/agent/llm/chat.py), nodes + [`supervisor.py`](../science_graphrag/agent/graph/supervisor.py), [`llm_turn_classifier.py`](../science_graphrag/agent/coordination/llm_turn_classifier.py)).
+- **Graph thread pool:** `agent_graph_invoke_max_workers` (0 = auto); lazy `ThreadPoolExecutor` in [`invoke_timeout.py`](../science_graphrag/agent/graph/invoke_timeout.py); one-time WARNING if effective size differs from an already-created pool; [`runtime.py`](../science_graphrag/agent/runtime.py) passes `settings`.
+- **Cooperative cutoff:** `agent_min_llm_hop_reserve_seconds`; `react_chat_response_budget_cutoff` in retrieval/graph `chat_node` ([`react_edges.py`](../science_graphrag/agent/graph/react_edges.py), specialist nodes).
+- **Post-deadline observability:** `Future.add_done_callback` → span event `agent.graph_invoke_finished_after_response_deadline`, process counter, optional hook, INFO log (logging failures swallowed in callback); [`docs/runbooks/agent-chat-v2.md`](../runbooks/agent-chat-v2.md) updated.
+- **Settings / UI / PATCH:** keys in [`llm_advanced_fields.py`](../science_graphrag/settings/llm_advanced_fields.py), [`settings_llm_runtime_patch.py`](../science_graphrag/api/settings_llm_runtime_patch.py), UI [`llmRuntimeOverrideKeys.js`](../ui/src/pages/SettingsPage/llmRuntimeOverrideKeys.js), i18n; `.env.example` lines for Phase 4.
+- **Spike (no prod wiring):** [`docs/analysis/agent-graph-subprocess-isolation-spike-2026-04-27.md`](agent-graph-subprocess-isolation-spike-2026-04-27.md).
+
 ### Acceptance
 
 - timed-out agent turns no longer create significant uncontrolled background pressure;
 - provider usage after user-visible deadline becomes measurable and rare.
 
+**Evidence:** lower LangChain `max_retries` on agent paths; bounded concurrent `invoke` threads; cooperative skip of further LLM hops near wall-clock end; measurable `lag_seconds` after response deadline (logs / span event / `graph_invoke_completed_after_deadline_total()`). Residual provider tail remains possible until true cancel or subprocess isolation (Phase 4 spike).
+
 ## Phase 5: Optional multi-worker / distributed quotas
 
 **Goal:** coordinate limits across multiple API workers or hosts.
 
-This phase is optional and only needed if one-process limits are no longer enough.
+**Status (implementation): Phase 5 v1 done (2026-04-27).** Optional Redis **ZSET lease** registry (not a separate integer counter); cluster-wide cap matches the same `llm_concurrency_*` numeric limits as process-local pools. Translation SSE and sync `llm_pool_slot` paths share observability events (`llm.distributed_quota.acquire_finished`, `llm.distributed_quota.fail_open`).
 
-### Changes
+### Delivered (v1)
 
-- Redis-backed token bucket / lease-based quota;
-- per-provider and per-model limits;
-- workspace- or tenant-level fairness if needed later.
+- **Core:** [`science_graphrag/llm/redis_quota.py`](../science_graphrag/llm/redis_quota.py), [`science_graphrag/llm/concurrency.py`](../science_graphrag/llm/concurrency.py), [`science_graphrag/llm/pool_limits.py`](../science_graphrag/llm/pool_limits.py); settings in [`config.py`](../science_graphrag/config.py), [`settings/llm_advanced_fields.py`](../science_graphrag/settings/llm_advanced_fields.py), API patch in [`api/settings_llm_runtime_patch.py`](../science_graphrag/api/settings_llm_runtime_patch.py).
+- **Async parity:** [`api/translation.py`](../science_graphrag/api/translation.py) acquires/releases distributed quota in a thread pool and emits the same acquire-finished span contract as sync paths.
+- **Fail-open:** Redis client or `EVAL` errors → proceed without global cap; span `llm.distributed_quota.fail_open` + WARNING logs.
+- **Settings UI / i18n:** advanced group + operator copy in [`ui/src/pages/SettingsPage/LlmSettingsPanel.jsx`](../ui/src/pages/SettingsPage/LlmSettingsPanel.jsx).
+- **Tests:** unit + integration-style (`tests/llm/test_redis_distributed_llm_quota*.py`), API smoke for schema/snapshot/PATCH (`tests/test_api_smoke.py`), translation route (`tests/api/test_translation_distributed_quota.py`).
 
-### Acceptance
+### Residual risks (v1)
 
-- concurrency is controlled across workers, not only inside one process.
+- **Lease TTL:** no mid-call lease refresh; a call longer than `llm_distributed_quota_lease_seconds` can allow another worker to acquire (documented in ADR, runbook, and Settings field description).
+
+### Deferred (Phase 5B)
+
+- Per-provider / **per-model** global keys; **workspace- or tenant-level fairness**; lease heartbeat — see [`llm-distributed-quota-phase5b-advanced-scope.md`](llm-distributed-quota-phase5b-advanced-scope.md).
+
+### Acceptance (v1)
+
+- With live Redis and `llm_distributed_quota_enabled`, aggregate concurrency for a pool does not exceed the configured cap across worker-like contexts; with Redis errors, requests remain available (fail-open) and traces show fail-open.
 
 ---
 

@@ -13,10 +13,65 @@ from sqlalchemy import create_engine, select, text
 from sqlalchemy.orm import sessionmaker
 
 from science_graphrag.config import Settings, get_settings
+from science_graphrag.ingestion.embeddings import resolve_embedder, resolve_embedding_dim
 from science_graphrag.ingestion.pipeline import ingest_document, run_ingest_batch_cli
 from science_graphrag.storage.db import init_db
 from science_graphrag.storage.models_orm import DocumentRecord
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
+
+
+def _isolated_offline_ingest_settings(tmp_path: Path, *, suffix: str) -> Settings:
+    """
+    Settings for live ingest integration without touching shared Qdrant embedding collections.
+
+    Ingest writes chunk vectors to ``qdrant_collection`` and work-summary vectors to
+    ``qdrant_work_embeddings_collection``. If only the chunk collection is unique but work
+    vectors still target the default ``work_embeddings``, a pre-existing collection may have
+    been created for OpenRouter (e.g. 1024) while offline ingest uses hash vectors (384) —
+    Qdrant then rejects upserts with a dim mismatch.
+
+    Constructing ``Settings(extraction_llm_api_key=None, ...)`` is unreliable here because
+    pydantic-settings merges init, then ``.env``, then process env (see
+    ``settings_customise_sources`` in ``science_graphrag/config.py``), so explicit constructor
+    kwargs can be overwritten.
+    ``get_settings().model_copy(update=...)`` keeps Neo4j/Qdrant/Postgres URLs from the operator
+    environment while forcing offline embeddings and per-run Qdrant collection names.
+    """
+
+    root = tmp_path / "data"
+    safe = "".join(c for c in suffix if c.isalnum()) or uuid.uuid4().hex[:12]
+    base = get_settings()
+    return base.model_copy(
+        update={
+            "extraction_llm_api_key": None,
+            "benchmark_teacher_llm_api_key": None,
+            "openrouter_embedding_model": None,
+            "embedding_model": None,
+            "extraction_llm_enabled": False,
+            "artifact_root": root / "artifacts",
+            "blob_root": root / "blobs",
+            "qdrant_collection": f"itest-{safe}-chunks",
+            "qdrant_work_embeddings_collection": f"itest-{safe}-work",
+            "qdrant_claims_collection": f"itest-{safe}-claims",
+            "qdrant_author_embeddings_collection": f"itest-{safe}-author",
+            "reuse_cached_markdown": False,
+        },
+    )
+
+
+def test_isolated_offline_ingest_settings_hash_embeddings_and_unique_qdrant_collections(
+    tmp_path: Path,
+) -> None:
+    """Regression guard: integration ingest must not share prod-like Qdrant collection names."""
+
+    suf = uuid.uuid4().hex[:12]
+    settings = _isolated_offline_ingest_settings(tmp_path, suffix=suf)
+    assert settings.qdrant_collection == f"itest-{suf}-chunks"
+    assert settings.qdrant_work_embeddings_collection == f"itest-{suf}-work"
+    assert settings.qdrant_claims_collection == f"itest-{suf}-claims"
+    assert settings.qdrant_author_embeddings_collection == f"itest-{suf}-author"
+    assert resolve_embedding_dim(settings=settings) == 384
+    assert resolve_embedder(settings).dim == 384
 
 
 def _services_available() -> bool:
@@ -53,73 +108,78 @@ def _full_stack_available() -> bool:
 
 @pytest.mark.integration
 def test_full_ingest_writes_work_node(tmp_path: Path) -> None:
+    """Ingest creates a :Work in Neo4j and does not introduce dedup violations for that work."""
     if not _services_available():
         pytest.skip("Neo4j or Qdrant not reachable (integration)")
 
-    coll = f"itest-{uuid.uuid4().hex[:12]}"
-    root = tmp_path / "data"
-    settings = Settings(
-        extraction_llm_api_key=None,
-        extraction_llm_enabled=False,
-        artifact_root=root / "artifacts",
-        blob_root=root / "blobs",
-        qdrant_collection=coll,
-        reuse_cached_markdown=False,
-    )
-    md = tmp_path / "tiny_integration.md"
-    md.write_text(
-        "\n".join(
-            [
-                "# Tiny Integration Title",
-                "",
-                "## Abstract",
-                "",
-                "We validate ingest end-to-end.",
-                "",
-                "## References",
-                "",
-                "[1] A. Author. Sample. Nature 2020. 10.1000/182.",
-                "",
-            ],
-        ),
-        encoding="utf-8",
-    )
-
-    _doc_id, work_id = ingest_document(md, settings=settings, session=None)
-
-    driver = GraphDatabase.driver(
-        settings.neo4j_uri,
-        auth=(settings.neo4j_user, settings.neo4j_password),
-    )
+    suf = uuid.uuid4().hex[:12]
+    settings = _isolated_offline_ingest_settings(tmp_path, suffix=suf)
+    client = QdrantClient(url=settings.qdrant_url, check_compatibility=False)
     try:
-        with driver.session() as session:
-            row = session.run(
-                "MATCH (w:Work {id: $id}) RETURN w.title AS t",
-                id=work_id,
-            ).single()
-            assert row is not None
-            assert row["t"] is not None
-            neo_audit = Neo4jGraphStore(
-                settings.neo4j_uri,
-                settings.neo4j_user,
-                settings.neo4j_password,
-            )
-            try:
-                violations = neo_audit.find_work_dedup_violations()
-            finally:
-                neo_audit.close()
-    finally:
-        driver.close()
+        md = tmp_path / "tiny_integration.md"
+        md.write_text(
+            "\n".join(
+                [
+                    "# Tiny Integration Title",
+                    "",
+                    "## Abstract",
+                    "",
+                    "We validate ingest end-to-end.",
+                    "",
+                    "## References",
+                    "",
+                    "[1] A. Author. Sample. Nature 2020. 10.1000/182.",
+                    "",
+                ],
+            ),
+            encoding="utf-8",
+        )
 
-    assert isinstance(violations, list)
-    # Integration environment can contain historical violations from prior runs.
-    # This test only fails when the newly ingested work participates in a violation.
-    violations_for_new_work = [
-        v for v in violations if work_id in {str(x) for x in (v.get("work_ids") or [])}
-    ]
-    assert (
-        not violations_for_new_work
-    ), f"new work entered dedup violations: {violations_for_new_work}"
+        _doc_id, work_id = ingest_document(md, settings=settings, session=None)
+
+        driver = GraphDatabase.driver(
+            settings.neo4j_uri,
+            auth=(settings.neo4j_user, settings.neo4j_password),
+        )
+        try:
+            with driver.session() as session:
+                row = session.run(
+                    "MATCH (w:Work {id: $id}) RETURN w.title AS t",
+                    id=work_id,
+                ).single()
+                assert row is not None
+                assert row["t"] is not None
+                neo_audit = Neo4jGraphStore(
+                    settings.neo4j_uri,
+                    settings.neo4j_user,
+                    settings.neo4j_password,
+                )
+                try:
+                    violations = neo_audit.find_work_dedup_violations()
+                finally:
+                    neo_audit.close()
+        finally:
+            driver.close()
+
+        assert isinstance(violations, list)
+        # Integration environment can contain historical violations from prior runs.
+        # This test only fails when the newly ingested work participates in a violation.
+        violations_for_new_work = [
+            v for v in violations if work_id in {str(x) for x in (v.get("work_ids") or [])}
+        ]
+        assert (
+            not violations_for_new_work
+        ), f"new work entered dedup violations: {violations_for_new_work}"
+    finally:
+        for name in (
+            settings.qdrant_collection,
+            settings.qdrant_work_embeddings_collection,
+        ):
+            try:
+                client.delete_collection(collection_name=name)
+            except Exception:  # noqa: BLE001
+                pass
+        client.close()
 
 
 @pytest.mark.integration
@@ -128,16 +188,9 @@ def test_full_ingest_qdrant_chunk_payload_contract(tmp_path: Path) -> None:
     if not _services_available():
         pytest.skip("Neo4j or Qdrant not reachable (integration)")
 
-    coll = f"itest-payload-{uuid.uuid4().hex[:12]}"
-    root = tmp_path / "data"
-    settings = Settings(
-        extraction_llm_api_key=None,
-        extraction_llm_enabled=False,
-        artifact_root=root / "artifacts",
-        blob_root=root / "blobs",
-        qdrant_collection=coll,
-        reuse_cached_markdown=False,
-    )
+    suf = f"payload{uuid.uuid4().hex[:12]}"
+    settings = _isolated_offline_ingest_settings(tmp_path, suffix=suf)
+    coll = settings.qdrant_collection
     md_path = tmp_path / "qdrant_payload.md"
     md_path.write_text(
         "\n".join(
@@ -184,30 +237,23 @@ def test_full_ingest_qdrant_chunk_payload_contract(tmp_path: Path) -> None:
             assert payload.get("work_id") == work_id
             assert isinstance(payload.get("text"), str) and payload.get("text")
     finally:
-        try:
-            client.delete_collection(collection_name=coll)
-        except Exception:  # noqa: BLE001
-            pass
-
-
-def _integration_settings(tmp_path: Path, *, qdrant_suffix: str) -> Settings:
-    root = tmp_path / "data"
-    return Settings(
-        extraction_llm_api_key=None,
-        extraction_llm_enabled=False,
-        artifact_root=root / "artifacts",
-        blob_root=root / "blobs",
-        qdrant_collection=f"itest-{qdrant_suffix}",
-        reuse_cached_markdown=False,
-    )
+        for name in (
+            coll,
+            settings.qdrant_work_embeddings_collection,
+        ):
+            try:
+                client.delete_collection(collection_name=name)
+            except Exception:  # noqa: BLE001
+                pass
 
 
 @pytest.mark.integration
 def test_ingest_persists_document_to_postgres(tmp_path: Path) -> None:
+    """Ingest with a DB session persists ``DocumentRecord`` to Postgres."""
     if not _full_stack_available():
         pytest.skip("Neo4j, Qdrant, or Postgres not reachable (integration)")
 
-    settings = _integration_settings(tmp_path, qdrant_suffix=uuid.uuid4().hex[:12])
+    settings = _isolated_offline_ingest_settings(tmp_path, suffix=uuid.uuid4().hex[:12])
     engine = create_engine(settings.database_url, pool_pre_ping=True)
     init_db(engine)
     factory = sessionmaker(bind=engine)
@@ -246,6 +292,7 @@ def test_ingest_persists_document_to_postgres(tmp_path: Path) -> None:
 
 @pytest.mark.integration
 def test_ingest_corpus_batch_two_files(tmp_path: Path) -> None:
+    """Batch CLI ingest persists two markdown files with distinct document ids."""
     if not _full_stack_available():
         pytest.skip("Neo4j, Qdrant, or Postgres not reachable (integration)")
 
@@ -276,29 +323,33 @@ def test_ingest_corpus_batch_two_files(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    root = tmp_path / "data"
-    settings = Settings(
-        extraction_llm_api_key=None,
-        extraction_llm_enabled=False,
-        artifact_root=root / "artifacts",
-        blob_root=root / "blobs",
-        qdrant_collection=f"itest-corpus-{uuid.uuid4().hex[:12]}",
-        reuse_cached_markdown=False,
-    )
+    settings = _isolated_offline_ingest_settings(tmp_path, suffix=f"corpus{uuid.uuid4().hex[:12]}")
     engine = create_engine(settings.database_url, pool_pre_ping=True)
     init_db(engine)
 
-    rows = run_ingest_batch_cli(corpus, continue_on_error=False, settings=settings)
-    assert len(rows) == 2
-    assert all(r.get("error") is None for r in rows)
-    doc_ids = [r["document_id"] for r in rows]
-    assert len(doc_ids) == 2
-    assert len(set(doc_ids)) == 2
+    q_client = QdrantClient(url=settings.qdrant_url, check_compatibility=False)
+    try:
+        rows = run_ingest_batch_cli(corpus, continue_on_error=False, settings=settings)
+        assert len(rows) == 2
+        assert all(r.get("error") is None for r in rows)
+        doc_ids = [r["document_id"] for r in rows]
+        assert len(doc_ids) == 2
+        assert len(set(doc_ids)) == 2
 
-    factory = sessionmaker(bind=engine)
-    with factory() as read_session:
-        for did in doc_ids:
-            row = read_session.execute(
-                select(DocumentRecord).where(DocumentRecord.id == did)
-            ).scalar_one_or_none()
-            assert row is not None
+        factory = sessionmaker(bind=engine)
+        with factory() as read_session:
+            for did in doc_ids:
+                row = read_session.execute(
+                    select(DocumentRecord).where(DocumentRecord.id == did)
+                ).scalar_one_or_none()
+                assert row is not None
+    finally:
+        for name in (
+            settings.qdrant_collection,
+            settings.qdrant_work_embeddings_collection,
+        ):
+            try:
+                q_client.delete_collection(collection_name=name)
+            except Exception:  # noqa: BLE001
+                pass
+        q_client.close()

@@ -68,6 +68,7 @@ def test_remove_from_workspace_purge_blocked_keeps_incoming_cites_edge() -> None
             qdrant_claims=MagicMock(),
             blob=MagicMock(),
             artifacts=MagicMock(),
+            benchmark_runs=MagicMock(),
         )
         out = remove_work_from_workspace_result(
             stores,

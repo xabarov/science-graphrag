@@ -37,6 +37,7 @@ from science_graphrag.api.ingest_event_bus import BUS
 from science_graphrag.api.ingest_jobs import router as ingest_router
 from science_graphrag.api.retrieval import router as retrieval_router
 from science_graphrag.api.settings import router as settings_router
+from science_graphrag.api.task_store import attach_benchmark_run_persistence
 from science_graphrag.api.translation import router as translation_router
 from science_graphrag.api.works import works_router
 from science_graphrag.api.workspace_dedup import router as workspace_dedup_router
@@ -56,6 +57,7 @@ async def _app_lifespan(app: FastAPI):
     configure_session_memory_backend(settings)
     _registry(settings).bootstrap()
     app.state.stores = init_store_registry(settings)
+    attach_benchmark_run_persistence(app.state.stores.benchmark_runs)
     _dim = resolve_embedding_dim(settings=settings)
     ensure_entity_dedup_collections(
         QdrantClient(url=settings.qdrant_url, check_compatibility=False),

@@ -407,6 +407,7 @@ async def post_agent_query_v2(
             answer_class="synthesis",
             evidence_summary="deadline exceeded",
             warnings=["agent_turn_deadline_exceeded"],
+            product_markers=["agent_turn_deadline_exceeded"],
         )
     duration_ms = int((perf_counter() - started) * 1000)
     excerpt: str | None = None
@@ -600,6 +601,7 @@ async def _stream_agent(
     citations: list[dict[str, Any]] = []
     seen_messages: set[int] = set()
     latest_full_state: dict[str, Any] | None = None
+    salvaged_after_deadline = False
     prev_route_len = 0
     prev_debug_len = 0
     dig = list(history_digest or [])
@@ -751,14 +753,24 @@ async def _stream_agent(
                                         },
                                     }
                                     yield {"data": json.dumps(event_data)}
-                                    if settings.agent_runtime == "langgraph_research_v1":
-                                        psc = _product_step_code_for_tool(tool_name)
-                                        if psc and tool_name not in _META_TOOL_NAMES:
+                                    psc = _product_step_code_for_tool(tool_name)
+                                    if tool_name not in _META_TOOL_NAMES:
+                                        if psc:
                                             yield {
                                                 "data": json.dumps(
                                                     {
                                                         "type": "product_step",
                                                         "code": psc,
+                                                        "tool": tool_name,
+                                                    }
+                                                )
+                                            }
+                                        else:
+                                            yield {
+                                                "data": json.dumps(
+                                                    {
+                                                        "type": "product_step",
+                                                        "code": "using_tool",
                                                         "tool": tool_name,
                                                     }
                                                 )
@@ -813,16 +825,39 @@ async def _stream_agent(
                         "deadline_kind": "response_only",
                     },
                 )
+                salvaged = False
+                if latest_full_state is not None:
+                    msgs = list(latest_full_state.get("messages") or [])
+                    state_answer, fa_citations = extract_langgraph_answer(msgs)
+                    if (state_answer or "").strip():
+                        salvaged = True
+                        final_answer = str(state_answer).strip()
+                        if fa_citations is not None:
+                            citations = list(fa_citations)
+                if not salvaged:
+                    yield {
+                        "data": json.dumps(
+                            {
+                                "type": "error",
+                                "detail": str(exc),
+                                "code": "agent_turn_deadline_exceeded",
+                            }
+                        )
+                    }
+                    return
+                salvaged_after_deadline = True
                 yield {
                     "data": json.dumps(
                         {
-                            "type": "error",
-                            "detail": str(exc),
+                            "type": "warning",
                             "code": "agent_turn_deadline_exceeded",
+                            "message": (
+                                "The assistant hit the per-turn time limit after producing an answer; "
+                                "treat this turn as partially finalized."
+                            ),
                         }
                     )
                 }
-                return
 
             duration_ms = int((perf_counter() - started) * 1000)
 
@@ -840,13 +875,20 @@ async def _stream_agent(
 
             envelope: dict[str, Any] = {}
             if latest_full_state is not None:
-                envelope = build_chat_envelope(
-                    state=latest_full_state,  # type: ignore[arg-type]
-                    answer=final_answer,
-                    citations=citations,
-                    tool_trace=trace_for_run,  # type: ignore[arg-type]
-                    answer_class_hint=answer_class_hint,
-                )
+                env_kw: dict[str, Any] = {
+                    "state": latest_full_state,
+                    "answer": final_answer,
+                    "citations": citations,
+                    "tool_trace": trace_for_run,
+                    "answer_class_hint": answer_class_hint,
+                }
+                if salvaged_after_deadline:
+                    env_kw["extra_warnings"] = [
+                        "agent_turn_deadline_exceeded",
+                        "partial_after_deadline",
+                    ]
+                    env_kw["extra_product_markers"] = ["partial_after_deadline"]
+                envelope = build_chat_envelope(**env_kw)  # type: ignore[arg-type]
             else:
                 envelope = {
                     "answer_class": heuristic_answer_class(question, answer_class_hint),
@@ -912,6 +954,8 @@ async def _stream_agent(
                     else []
                 ),
             }
+            if salvaged_after_deadline:
+                run_meta["salvaged_after_deadline"] = True
             if thread_id:
                 run_meta["thread_id"] = thread_id
                 if compact_payload is not None:

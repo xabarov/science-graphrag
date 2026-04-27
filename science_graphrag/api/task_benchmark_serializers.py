@@ -90,11 +90,17 @@ def full_run_blocked(
     *,
     max_case_ids: int | None = None,
     max_file_bytes: int | None = None,
+    persisted_size_bytes: int | None = None,
 ) -> bool:
     """Return True if the run must not be returned as a single giant JSON payload."""
     case_limit = FULL_RUN_MAX_CASE_IDS if max_case_ids is None else max_case_ids
     file_limit = FULL_RUN_MAX_FILE_BYTES if max_file_bytes is None else max_file_bytes
     if len(rec.case_ids) > case_limit:
+        return True
+    sz = persisted_size_bytes
+    if sz is None and rec.full_run_json_bytes is not None:
+        sz = int(rec.full_run_json_bytes)
+    if sz is not None and sz > file_limit:
         return True
     if main_json_path is not None and main_json_path.is_file():
         try:
@@ -141,6 +147,13 @@ def annotate_full_run_guard(
                         reason = FULL_RUN_BLOCK_DETAIL
                 except OSError:
                     pass
+        if reason is None:
+            psize = summary.get("full_run_json_bytes")
+            try:
+                if psize is not None and int(psize) > file_limit:
+                    reason = FULL_RUN_BLOCK_DETAIL
+            except (TypeError, ValueError):
+                pass
     summary["full_run_blocked"] = reason is not None
     summary["full_run_block_reason"] = reason
 
@@ -178,6 +191,72 @@ def run_from_dict(payload: dict[str, Any]) -> RunRecord:
         rec.completed_at = rec.completed_at or now_iso()
         rec.error_message = rec.error_message or "run_interrupted_after_api_restart"
     return rec
+
+
+def run_from_summary_payload(payload: dict[str, Any]) -> RunRecord:
+    """Rebuild :class:`RunRecord` from a persisted ``*.summary.json`` (often slim cases)."""
+    case_rows = [r for r in (payload.get("cases") or []) if isinstance(r, dict)]
+    case_ids = [str(r.get("case_id")) for r in case_rows if r.get("case_id")]
+    rec = RunRecord(
+        run_id=str(payload.get("run_id") or ""),
+        label=payload.get("label"),
+        case_ids=case_ids,
+        benchmark_family=(payload.get("benchmark_family") or "layer1"),
+        status=payload.get("status") or RunStatus.COMPLETED,
+        created_at=payload.get("created_at") or now_iso(),
+        started_at=payload.get("started_at"),
+        completed_at=payload.get("completed_at"),
+        cancel_requested=bool(payload.get("cancel_requested")),
+        error_message=payload.get("error_message"),
+        run_config=dict(payload.get("run_config") or {}),
+    )
+    inner_summary = payload.get("summary")
+    if isinstance(inner_summary, dict):
+        rec.list_aggregate_override = dict(inner_summary)
+    key = payload.get("full_run_object_key")
+    if isinstance(key, str) and key.strip():
+        rec.full_run_object_key = key.strip()
+    fsize = payload.get("full_run_json_bytes")
+    if fsize is not None:
+        try:
+            rec.full_run_json_bytes = int(fsize)
+        except (TypeError, ValueError):
+            pass
+    for row in case_rows:
+        case_id = row.get("case_id")
+        if not case_id or row.get("status") == "pending":
+            continue
+        res = row.get("result") if isinstance(row.get("result"), dict) else None
+        rec.cases[str(case_id)] = RunCaseRecord(
+            case_id=str(case_id),
+            status=str(row.get("status") or "pending"),
+            result=res,
+            error_message=row.get("error_message"),
+            finished_at=row.get("finished_at"),
+        )
+    if rec.status in (RunStatus.QUEUED, RunStatus.RUNNING):
+        rec.status = RunStatus.FAILED
+        rec.completed_at = rec.completed_at or now_iso()
+        rec.error_message = rec.error_message or "run_interrupted_after_api_restart"
+    has_any_result = any(c.result for c in rec.cases.values())
+    rec.full_payload_hydrated = (not bool(rec.full_run_object_key)) and (
+        has_any_result or not rec.case_ids
+    )
+    return rec
+
+
+def merge_full_payload_into_rec(rec: RunRecord, payload: dict[str, Any]) -> None:
+    """Replace case rows and status from a full persisted/API run dict."""
+    merged = run_from_dict(payload)
+    rec.case_ids = merged.case_ids
+    rec.status = merged.status
+    rec.started_at = merged.started_at
+    rec.completed_at = merged.completed_at
+    rec.error_message = merged.error_message
+    rec.cancel_requested = merged.cancel_requested
+    rec.cases = merged.cases
+    rec.full_payload_hydrated = True
+    rec.list_aggregate_override = None
 
 
 def slim_case_row(cid: str, case_rec: RunCaseRecord | None) -> dict[str, Any]:
@@ -282,6 +361,11 @@ def run_to_summary_dict(rec: RunRecord, *, inline_cases_limit: int) -> dict[str,
     """Like full dict but omits per-case ``result``; optionally omits ``cases`` when huge."""
     counts = rec.progress_counts()
     total = counts["total"]
+    inner_summary = (
+        dict(rec.list_aggregate_override)
+        if rec.list_aggregate_override is not None
+        else run_aggregate_summary(rec)
+    )
     base: dict[str, Any] = {
         "run_id": rec.run_id,
         "label": rec.label,
@@ -299,7 +383,7 @@ def run_to_summary_dict(rec: RunRecord, *, inline_cases_limit: int) -> dict[str,
                 (counts["completed"] / counts["total"] * 100.0) if counts["total"] else 0.0
             ),
         },
-        "summary": run_aggregate_summary(rec),
+        "summary": inner_summary,
     }
     if total > inline_cases_limit:
         base["cases"] = []
@@ -379,6 +463,25 @@ def persisted_payload_to_cases_page(
 def run_summary_list_row(rec: RunRecord) -> dict[str, Any]:
     """Serialize a compact run row for the runs list."""
     counts = rec.progress_counts()
+    if rec.list_aggregate_override is not None:
+        return {
+            "run_id": rec.run_id,
+            "label": rec.label,
+            "benchmark_family": rec.benchmark_family,
+            "status": rec.status,
+            "created_at": rec.created_at,
+            "started_at": rec.started_at,
+            "completed_at": rec.completed_at,
+            "run_config": public_run_config(rec.run_config),
+            "progress": {
+                "total": counts["total"],
+                "completed": counts["completed"],
+                "percent": (
+                    (counts["completed"] / counts["total"] * 100.0) if counts["total"] else 0.0
+                ),
+            },
+            "summary": dict(rec.list_aggregate_override),
+        }
     return {
         "run_id": rec.run_id,
         "label": rec.label,

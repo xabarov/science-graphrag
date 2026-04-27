@@ -1,6 +1,9 @@
 # Chat agent roadmap — benchmark workspace + trace audit (2026-04-27)
 
 **Статус:** evidence capture v1 + **live baseline** `eval/results/chat-agent-roadmap-live-2026-04-27` (2026-04-27, baseline cases green). Обновлено после сверки Phoenix: наличие `phoenix_trace_id` уже доказано, но качество agent span tree ещё не является gate.
+
+**Архитектурный baseline:** продукт на **упрощённом** LangGraph (`supervisor` → specialists as nodes, не отдельный swarm из шести subgraphs); системные цели и будущие треки (`tool_search`, compaction) — в slim [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md).
+
 **Companion:** [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md), [`phoenix-tracing-coverage-2026-04-25.md`](./phoenix-tracing-coverage-2026-04-25.md), [`eval/README.md`](../../eval/README.md).
 
 ## 1. Baseline benchmark workspace

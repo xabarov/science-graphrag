@@ -34,6 +34,7 @@ class StoragePolicy(str, Enum):
     GIT_TRACKED = "git_tracked"
     LOCAL_RUNTIME = "local_runtime"
     OBJECT_BACKED_LATER = "object_backed_later"
+    OBJECT_STORE = "object_store"
     DB_AUTHORITATIVE = "db_authoritative"
 
 

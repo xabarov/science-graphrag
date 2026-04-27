@@ -10,10 +10,12 @@ from typing import Any, Literal
 from langchain_core.messages import HumanMessage
 
 from science_graphrag.agent.chat_envelope import ANSWER_CLASSES
-from science_graphrag.agent.llm.chat import build_chat_model
+from science_graphrag.agent.llm.chat import (
+    agent_classifier_transport_max_attempts,
+    build_chat_model,
+)
 from science_graphrag.llm.concurrency import invoke_chat_gated
 from science_graphrag.config import Settings
-from science_graphrag.ingestion.llm.extractor import EXTRACT_MAYBE_MAX_INNER_ATTEMPTS
 from science_graphrag.observability.spans import (
     SpanAttributes,
     add_span_event,
@@ -176,7 +178,9 @@ def llm_classify_turn_policy(  # pylint: disable=too-many-locals
             temperature=0.0,
             max_tokens=min(384, settings.agent_chat_max_tokens),
             timeout_seconds=classifier_timeout,
+            max_retries=int(settings.agent_classifier_max_retries),
         )
+        max_attempts = agent_classifier_transport_max_attempts(settings)
         with chain_span(
             "agent.turn_policy",
             {
@@ -193,9 +197,9 @@ def llm_classify_turn_policy(  # pylint: disable=too-many-locals
                         retry_extra_budget=0,
                         operation_deadline_seconds=min(
                             120.0,
-                            classifier_timeout * float(EXTRACT_MAYBE_MAX_INNER_ATTEMPTS),
+                            classifier_timeout * float(max_attempts),
                         ),
-                        transport_max_attempts=EXTRACT_MAYBE_MAX_INNER_ATTEMPTS,
+                        transport_max_attempts=max_attempts,
                     ),
                     "llm.invocation_name": "agent_turn_policy_classifier",
                 },

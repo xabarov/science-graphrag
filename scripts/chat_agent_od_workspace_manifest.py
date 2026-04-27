@@ -12,11 +12,16 @@ from typing import Any
 
 from eval.chat_agent.od_cli_support import build_od_workspace_manifest_live
 from eval.chat_agent.od_workspace_manifest import render_od_workspace_manifest_markdown
+from science_graphrag.artifacts.diagnostic_object_sink import (
+    default_local_diagnostics_dir,
+    write_diagnostic_json,
+)
+from science_graphrag.config import get_settings
 
 
 def _default_out_json() -> Path:
     ts = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-    return Path("eval/results") / f"od-workspace-manifest-{ts}.json"
+    return default_local_diagnostics_dir("od") / f"od-workspace-manifest-{ts}.json"
 
 
 def main() -> int:
@@ -55,8 +60,14 @@ def main() -> int:
         "artifact_written_at": datetime.now(UTC).isoformat(),
     }
 
-    out_json.parent.mkdir(parents=True, exist_ok=True)
-    out_json.write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    settings = get_settings()
+    written = write_diagnostic_json(
+        out_json.name,
+        summary,
+        settings=settings,
+        kind="od",
+        local_path=out_json,
+    )
 
     if args.out_md:
         args.out_md.parent.mkdir(parents=True, exist_ok=True)
@@ -66,7 +77,7 @@ def main() -> int:
     print(
         json.dumps(
             {
-                "written": str(out_json),
+                "written": written,
                 "work_count": wc,
                 "workspace_id": summary.get("workspace_id"),
             },

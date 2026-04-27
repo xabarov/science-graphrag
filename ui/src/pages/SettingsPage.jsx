@@ -165,6 +165,7 @@ export default function SettingsPage() {
       return (
         <LlmSettingsPanel
           llm={snapshot?.llm}
+          schema={schema}
           saving={saving}
           testing={testing}
           saveError={saveError}

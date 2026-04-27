@@ -70,6 +70,8 @@ export function useAskSubmit({
         duration_ms: event?.duration_ms,
         phoenix_trace_id: event?.phoenix_trace_id,
         run_metadata: event?.run_metadata,
+        product_path: event?.product_path,
+        product_markers: event?.product_markers,
       });
       lastStreamNormalizedRef.current = normalized;
       onResult?.(normalized);
@@ -108,7 +110,6 @@ export function useAskSubmit({
           answerClassHint,
         });
         const normalized = lastStreamNormalizedRef.current;
-        if (!normalized) return null;
         return {
           normalized,
           streamEvents: [...streamEventsCaptureRef.current],

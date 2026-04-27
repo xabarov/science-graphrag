@@ -13,8 +13,17 @@ from threading import Lock
 from typing import TYPE_CHECKING, Any
 
 from openai import OpenAI
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
+from science_graphrag.settings.llm_advanced_fields import (
+    LLM_ADVANCED_RUNTIME_KEYS,
+    advanced_effective_map,
+    advanced_schema_fields,
+    clamp_advanced_field,
+    merge_llm_advanced_into_overrides,
+    recommended_advanced_values,
+    validate_merged_runtime_settings,
+)
 from science_graphrag.settings.repository import SettingsRepository
 from science_graphrag.settings.secrets import SecretStore
 
@@ -50,7 +59,9 @@ def _build_diagnostics_snapshot() -> dict[str, Any]:
     )
     return {
         "app_version": app_version or "unknown",
-        "python_version": f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}",
+        "python_version": (
+            f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+        ),
         "in_docker": Path("/.dockerenv").is_file(),
         "git_commit": git_commit,
     }
@@ -77,6 +88,37 @@ def _mask_secret(value: str | None) -> str | None:
 
 def _runtime_settings_root(repo_root: Path) -> Path:
     return repo_root / "data" / "settings"
+
+
+def _resolve_ingestion_fields(
+    ingestion_cfg: dict[str, Any], base_settings: Settings
+) -> tuple[int, bool]:
+    """Return resolved upload MB and claims flag (same rules as snapshot)."""
+
+    raw_upload_mb = ingestion_cfg.get("max_file_size_mb")
+    try:
+        persisted_upload_mb = int(raw_upload_mb) if raw_upload_mb is not None else None
+    except (TypeError, ValueError):
+        persisted_upload_mb = None
+    if persisted_upload_mb is not None:
+        persisted_upload_mb = max(1, min(2048, persisted_upload_mb))
+    raw_claims_enabled = ingestion_cfg.get("claims_extraction_enabled")
+    if isinstance(raw_claims_enabled, bool):
+        persisted_claims_enabled = raw_claims_enabled
+    else:
+        persisted_claims_enabled = None
+    resolved_upload_mb = (
+        persisted_upload_mb
+        if persisted_upload_mb is not None
+        else int(base_settings.workspace_upload_max_file_size_mb)
+    )
+    resolved_upload_mb = max(1, min(2048, resolved_upload_mb))
+    resolved_claims_enabled = (
+        persisted_claims_enabled
+        if persisted_claims_enabled is not None
+        else bool(base_settings.claims_extraction_enabled)
+    )
+    return resolved_upload_mb, resolved_claims_enabled
 
 
 class LlmTestDraft(BaseModel):
@@ -121,6 +163,48 @@ class SettingsService:
         self._secret_store = secret_store or SecretStore(root_dir)
         self._lock = Lock()
 
+    def _non_secret_overrides_dict(
+        self,
+        base_settings: Settings,
+        *,
+        llm: dict[str, Any],
+        ingestion_cfg: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Build the same overlay dict as ``get_snapshot`` uses for ``model_copy``."""
+
+        timeout_seconds = llm.get("timeout_seconds")
+        if timeout_seconds is None:
+            timeout_seconds = base_settings.extraction_llm_timeout_seconds
+
+        persisted_chat = str(llm.get("chat_model") or "").strip()
+        env_chat = str(base_settings.chat_llm_model or "").strip()
+
+        resolved_upload_mb, resolved_claims_enabled = _resolve_ingestion_fields(
+            ingestion_cfg, base_settings
+        )
+
+        non_secret_overrides: dict[str, Any] = {
+            "extraction_llm_base_url": llm.get("base_url") or base_settings.extraction_llm_base_url,
+            "extraction_llm_model": llm.get("model") or base_settings.extraction_llm_model,
+            "extraction_llm_temperature": llm.get(
+                "temperature", base_settings.extraction_llm_temperature
+            ),
+            "extraction_llm_timeout_seconds": timeout_seconds,
+        }
+        if "enabled" in llm:
+            non_secret_overrides["extraction_llm_enabled"] = bool(llm["enabled"])
+        chat_override = persisted_chat or env_chat
+        if chat_override:
+            non_secret_overrides["chat_llm_model"] = chat_override
+        non_secret_overrides["workspace_upload_max_file_size_mb"] = resolved_upload_mb
+        non_secret_overrides["claims_extraction_enabled"] = resolved_claims_enabled
+        merge_llm_advanced_into_overrides(
+            non_secret_overrides,
+            llm=llm,
+            base=base_settings,
+        )
+        return non_secret_overrides
+
     def build_runtime_settings(self, base_settings: Settings) -> Settings:
         """Overlay persisted runtime overrides onto env-derived settings."""
         overrides = self.get_snapshot(base_settings).non_secret_overrides
@@ -132,7 +216,7 @@ class SettingsService:
             return base_settings
         return base_settings.model_copy(update=payload)
 
-    def get_snapshot(self, base_settings: Settings) -> SettingsSnapshot:
+    def get_snapshot(self, base_settings: Settings) -> SettingsSnapshot:  # pylint: disable=too-many-locals
         """Return a masked UI-facing snapshot of runtime settings."""
         persisted = self._repository.load()
         llm = dict(persisted.get("llm") or {})
@@ -193,28 +277,15 @@ class SettingsService:
             },
         }
 
-        raw_upload_mb = ingestion_cfg.get("max_file_size_mb")
-        try:
-            persisted_upload_mb = int(raw_upload_mb) if raw_upload_mb is not None else None
-        except (TypeError, ValueError):
-            persisted_upload_mb = None
-        if persisted_upload_mb is not None:
-            persisted_upload_mb = max(1, min(2048, persisted_upload_mb))
-        raw_claims_enabled = ingestion_cfg.get("claims_extraction_enabled")
-        if isinstance(raw_claims_enabled, bool):
-            persisted_claims_enabled = raw_claims_enabled
-        else:
-            persisted_claims_enabled = None
-        resolved_upload_mb = (
-            persisted_upload_mb
-            if persisted_upload_mb is not None
-            else int(base_settings.workspace_upload_max_file_size_mb)
-        )
-        resolved_upload_mb = max(1, min(2048, resolved_upload_mb))
-        resolved_claims_enabled = (
-            persisted_claims_enabled
-            if persisted_claims_enabled is not None
-            else bool(base_settings.claims_extraction_enabled)
+        adv_eff = advanced_effective_map(llm, base_settings)
+        llm_snapshot["advanced_controls"] = {
+            k: {"persisted": llm[k] if k in llm else None, "effective": adv_eff[k]}
+            for k in LLM_ADVANCED_RUNTIME_KEYS
+        }
+        llm_snapshot["recommended_advanced"] = recommended_advanced_values()
+
+        resolved_upload_mb, resolved_claims_enabled = _resolve_ingestion_fields(
+            ingestion_cfg, base_settings
         )
 
         ingestion_snapshot = {
@@ -233,18 +304,28 @@ class SettingsService:
         diagnostics_snapshot = _build_diagnostics_snapshot()
         security_snapshot = _build_security_snapshot(base_settings)
 
+        non_secret_overrides = self._non_secret_overrides_dict(
+            base_settings,
+            llm=llm,
+            ingestion_cfg=ingestion_cfg,
+        )
+        merged_settings = base_settings.model_copy(update=non_secret_overrides)
+
+        q_work = base_settings.qdrant_work_embeddings_collection
+        q_author = base_settings.qdrant_author_embeddings_collection
         work_dedup_snapshot = {
             "effective": {
-                "qdrant_work_embeddings_collection": base_settings.qdrant_work_embeddings_collection,
-                "qdrant_author_embeddings_collection": base_settings.qdrant_author_embeddings_collection,
+                "qdrant_work_embeddings_collection": q_work,
+                "qdrant_author_embeddings_collection": q_author,
                 "work_dedup_sim_low": float(base_settings.work_dedup_sim_low),
                 "work_dedup_sim_high": float(base_settings.work_dedup_sim_high),
                 "work_dedup_max_candidates": int(base_settings.work_dedup_max_candidates),
                 "work_dedup_llm_mode": str(base_settings.work_dedup_llm_mode),
-                "work_dedup_llm_timeout_s": float(base_settings.work_dedup_llm_timeout_s),
+                "work_dedup_llm_timeout_s": float(merged_settings.work_dedup_llm_timeout_s),
                 "author_dedup_sim_low": float(base_settings.author_dedup_sim_low),
                 "author_dedup_sim_high": float(base_settings.author_dedup_sim_high),
                 "author_dedup_max_candidates": int(base_settings.author_dedup_max_candidates),
+                "author_dedup_llm_timeout_s": float(merged_settings.author_dedup_llm_timeout_s),
             }
         }
 
@@ -271,13 +352,17 @@ class SettingsService:
                 "id": "storage",
                 "label": "Storage & Integrations",
                 "status": "coming_soon",
-                "description": "Neo4j, Qdrant, Postgres, OpenAlex, and external integration settings.",
+                "description": (
+                    "Neo4j, Qdrant, Postgres, OpenAlex, and external integration settings."
+                ),
             },
             {
                 "id": "benchmark",
                 "label": "Benchmark",
                 "status": "coming_soon",
-                "description": "Teacher/student defaults and benchmark-specific execution knobs.",
+                "description": (
+                    "Teacher/student defaults and benchmark-specific execution knobs."
+                ),
             },
             {
                 "id": "security",
@@ -293,22 +378,6 @@ class SettingsService:
             },
         ]
 
-        non_secret_overrides = {
-            "extraction_llm_base_url": llm.get("base_url") or base_settings.extraction_llm_base_url,
-            "extraction_llm_model": llm.get("model") or base_settings.extraction_llm_model,
-            "extraction_llm_temperature": llm.get(
-                "temperature", base_settings.extraction_llm_temperature
-            ),
-            "extraction_llm_timeout_seconds": timeout_seconds,
-        }
-        if "enabled" in llm:
-            non_secret_overrides["extraction_llm_enabled"] = bool(llm["enabled"])
-        chat_override = persisted_chat or env_chat
-        if chat_override:
-            non_secret_overrides["chat_llm_model"] = chat_override
-        non_secret_overrides["workspace_upload_max_file_size_mb"] = resolved_upload_mb
-        non_secret_overrides["claims_extraction_enabled"] = resolved_claims_enabled
-
         return SettingsSnapshot(
             non_secret_overrides=non_secret_overrides,
             llm=llm_snapshot,
@@ -321,36 +390,57 @@ class SettingsService:
 
     def get_schema(self) -> dict[str, Any]:
         """Return a UI-friendly schema so future sections can extend the page safely."""
+        llm_fields: list[dict[str, Any]] = [
+            {"id": "base_url", "type": "url", "required": True, "group": "llm_provider"},
+            {"id": "model", "type": "string", "required": True, "group": "llm_provider"},
+            {
+                "id": "chat_model",
+                "type": "string",
+                "required": False,
+                "group": "llm_provider",
+                "description": (
+                    "Research chat model override; empty uses env "
+                    "SCIENCE_GRAPHRAG_CHAT_LLM_MODEL or extraction model."
+                ),
+            },
+            {
+                "id": "temperature",
+                "type": "number",
+                "required": True,
+                "min": 0.0,
+                "max": 2.0,
+                "group": "llm_provider",
+            },
+            {
+                "id": "timeout_seconds",
+                "type": "number",
+                "required": True,
+                "min": 1.0,
+                "max": 900.0,
+                "group": "llm_provider",
+                "description": (
+                    "Shared extraction/provider HTTP transport timeout "
+                    "(extraction_llm_timeout_seconds)."
+                ),
+            },
+            {"id": "api_key", "type": "secret", "required": False, "group": "llm_provider"},
+            {
+                "id": "runtime_overrides",
+                "type": "object",
+                "required": False,
+                "group": "llm_provider",
+                "description": (
+                    "Nested map of advanced LLM runtime limits (same keys as Settings)."
+                ),
+            },
+        ]
+        llm_fields.extend(advanced_schema_fields())
         return {
-            "version": 3,
+            "version": 5,
             "sections": [
                 {
                     "id": "llm",
-                    "fields": [
-                        {"id": "base_url", "type": "url", "required": True},
-                        {"id": "model", "type": "string", "required": True},
-                        {
-                            "id": "chat_model",
-                            "type": "string",
-                            "required": False,
-                            "description": "Research chat model override; empty uses env SCIENCE_GRAPHRAG_CHAT_LLM_MODEL or extraction model.",
-                        },
-                        {
-                            "id": "temperature",
-                            "type": "number",
-                            "required": True,
-                            "min": 0.0,
-                            "max": 2.0,
-                        },
-                        {
-                            "id": "timeout_seconds",
-                            "type": "number",
-                            "required": True,
-                            "min": 1.0,
-                            "max": 900.0,
-                        },
-                        {"id": "api_key", "type": "secret", "required": False},
-                    ],
+                    "fields": llm_fields,
                 },
                 {
                     "id": "ingestion",
@@ -372,7 +462,7 @@ class SettingsService:
             ],
         }
 
-    def update_llm_settings(
+    def update_llm_settings(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         *,
         base_settings: Settings,
@@ -383,6 +473,7 @@ class SettingsService:
         actor: str,
         api_key: str | None = None,
         chat_model: Any = _UNSET_CHAT_MODEL,
+        advanced_patch: dict[str, Any] | None = None,
     ) -> SettingsSnapshot:
         """Persist editable LLM config and optionally replace the managed secret."""
         with self._lock:
@@ -407,6 +498,19 @@ class SettingsService:
                     llm["chat_model"] = cm
                 else:
                     llm.pop("chat_model", None)
+            if advanced_patch:
+                for key, raw in advanced_patch.items():
+                    if key in LLM_ADVANCED_RUNTIME_KEYS:
+                        llm[key] = clamp_advanced_field(key, raw, base_settings)
+            ingestion_cfg = dict(payload.get("ingestion") or {})
+            merged_non_secret = self._non_secret_overrides_dict(
+                base_settings,
+                llm=llm,
+                ingestion_cfg=ingestion_cfg,
+            )
+            validate_merged_runtime_settings(
+                base_settings.model_copy(update=merged_non_secret),
+            )
             payload["llm"] = llm
             self._repository.save(payload)
             if api_key is not None:
@@ -445,7 +549,7 @@ class SettingsService:
             self._secret_store.delete_secret(_LLM_SECRET_KEY)
         return self.get_snapshot(base_settings)
 
-    def test_llm_connection(
+    def test_llm_connection(  # pylint: disable=too-many-locals
         self,
         *,
         base_settings: Settings,
@@ -482,7 +586,9 @@ class SettingsService:
             return {
                 "status": "error",
                 "error_kind": "missing_api_key",
-                "message": "API key is not configured on the server and was not provided in the draft.",
+                "message": (
+                    "API key is not configured on the server and was not provided in the draft."
+                ),
                 "resolved": {
                     "base_url": base_url,
                     "model": model,

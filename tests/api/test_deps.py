@@ -22,6 +22,7 @@ def test_store_registry_fields() -> None:
         qdrant_claims=object(),  # type: ignore[arg-type]
         blob=object(),  # type: ignore[arg-type]
         artifacts=object(),  # type: ignore[arg-type]
+        benchmark_runs=object(),  # type: ignore[arg-type]
     )
     assert registry.neo4j is not None
     assert registry.qdrant_chunks is not None
@@ -29,6 +30,7 @@ def test_store_registry_fields() -> None:
     assert registry.qdrant_claims is not None
     assert registry.blob is not None
     assert registry.artifacts is not None
+    assert registry.benchmark_runs is not None
 
 
 def test_init_close_cycle(monkeypatch: Any) -> None:
@@ -44,12 +46,28 @@ def test_init_close_cycle(monkeypatch: Any) -> None:
     class _FakeBlob:
         pass
 
+    class _FakeBenchRuns:
+        remote_full_payloads = False
+
+        def put_full_json(self, *_a, **_k):
+            return None
+
+        def get_full_json(self, *_a, **_k):
+            return None
+
+        def delete_full_json(self, *_a, **_k):
+            return None
+
+        def close(self) -> None:
+            return None
+
     monkeypatch.setattr(deps, "Neo4jGraphStore", lambda *_a, **_k: _FakeNeo4j())
     monkeypatch.setattr(deps, "QdrantChunkStore", lambda *_a, **_k: _FakeQdrant())
     monkeypatch.setattr(deps, "QdrantWorkEmbeddingStore", lambda *_a, **_k: _FakeQdrant())
     monkeypatch.setattr(deps, "QdrantClaimsStore", lambda *_a, **_k: _FakeQdrant())
     monkeypatch.setattr(deps, "build_raw_blob_store", lambda *_a, **_k: _FakeBlob())
     monkeypatch.setattr(deps, "build_artifact_store", lambda *_a, **_k: _FakeBlob())
+    monkeypatch.setattr(deps, "build_benchmark_run_persistence", lambda *_a, **_k: _FakeBenchRuns())
     monkeypatch.setattr(deps, "resolve_embedding_dim", lambda **_k: 64)
 
     settings = SimpleNamespace(

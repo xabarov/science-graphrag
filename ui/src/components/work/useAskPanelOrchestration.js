@@ -375,8 +375,8 @@ export function useAskPanelOrchestration({
             retrieval_trace: {},
             warnings: [],
           });
-          const persistedStreamEvents = [];
-          const persistedToolTrace = [];
+          const persistedStreamEvents = Array.isArray(pack?.streamEvents) ? pack.streamEvents : [];
+          const persistedToolTrace = Array.isArray(pack?.agentToolTrace) ? pack.agentToolTrace : [];
           const details = {
             answer: nextNormalized.answer,
             citations: nextNormalized.citations,
@@ -395,6 +395,8 @@ export function useAskPanelOrchestration({
             phoenix_trace_id: nextNormalized.phoenix_trace_id ?? null,
             session_summary_excerpt: nextNormalized.session_summary_excerpt ?? null,
             run_metadata: nextNormalized.run_metadata ?? null,
+            product_path: nextNormalized.product_path ?? null,
+            product_markers: Array.isArray(nextNormalized.product_markers) ? nextNormalized.product_markers : [],
             stream_events: persistedStreamEvents.slice(-80),
             agent_tool_trace: persistedToolTrace,
           };
@@ -469,6 +471,8 @@ export function useAskPanelOrchestration({
           phoenix_trace_id: nextNormalized.phoenix_trace_id ?? null,
           session_summary_excerpt: nextNormalized.session_summary_excerpt ?? null,
           run_metadata: nextNormalized.run_metadata ?? null,
+          product_path: nextNormalized.product_path ?? null,
+          product_markers: Array.isArray(nextNormalized.product_markers) ? nextNormalized.product_markers : [],
           stream_events: persistedStreamEvents.slice(-80),
           agent_tool_trace: persistedToolTrace,
         };

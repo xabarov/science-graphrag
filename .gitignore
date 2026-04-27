@@ -220,3 +220,6 @@ node_modules/
 
 # Eval: local embedding cache (dual_validate)
 eval/dual_validate/embeddings_cache/
+
+# Phase 3: CLI / eval heavy diagnostics (default sink; canonical suites stay in eval/results)
+data/diagnostics/
