@@ -264,7 +264,7 @@ EN-only, нет `useI18n`. Должно жить в `partWorkspacePage.js` об�
 - **header**: иконка `UploadFileOutlinedIcon` + filename + size; справа — `CursorIconButton` Cancel (если backend поддерживает) и Hide;
 - **target row**: «Цель: {workspace_name} · {work_count} статей» — отвечает на вопрос пользователя «куда грузится»;
 - **общий progress**: `LinearProgress determinate` высотой 6px, цвет `rgba(99,102,241,0.85)`, значение = `weighted average` стадий (вес стадии — `expected_duration_ms` из контракта `IngestJobView.stages[i].expected_duration_ms`, **новое поле backend**);
-- **stage list**: каждая строка с MUI-иконкой (см. §1.6), локализованным именем (`t("ingest.stage.vl_extract")`), длительностью (если завершена) или `shimmer` для активной (`@keyframes scienceGraphragShimmer { 0% { background-position: -200px 0; } 100% { background-position: 200px 0; } }` на полупрозрачном `linear-gradient`);
+- **stage list**: каждая строка с MUI-иконкой (см. §1.6), локализованным именем (`t("ingest.stage.vl_extract")`), длительностью (если завершена) или `shimmer` для активной (`@keyframes sciGraphShimmer { 0% { background-position: -200px 0; } 100% { background-position: 200px 0; } }` на полупрозрачном `linear-gradient`);
 - **ETA** — простая формула: `sum(remaining_stage_expected_duration_ms) - elapsed_in_current_stage`;
 - **Подробности** — accordion свёрнут по умолчанию, внутри — `ingestJob.logs` `<pre>` (для разработчиков и admin-режима).
 

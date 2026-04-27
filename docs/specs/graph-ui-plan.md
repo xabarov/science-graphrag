@@ -1,4 +1,4 @@
-# Graph UI plan (science-graphrag)
+# Graph UI plan (SciGraph)
 
 Companion to **Phase 4** in [`ui-ux-master-plan.md`](./ui-ux-master-plan.md). This doc fixes the **API ↔ UI contract** and targets for canvas work (Phases 4.1–4.4).
 
@@ -111,7 +111,7 @@ For **Phase 4 UI**, the shipped **v1** (circle layout + raw Canvas, ADR above) m
 
 ## Reference implementation (osint-gr)
 
-Use for **patterns**, not copy-paste of product logic. The osint-gr graph stacks **force simulation**, **spatial acceleration**, and **canvas drawing**; science-graphrag ships **circle** by default and an optional **force** canvas mode built from the same patterns (see *Parity* below).
+Use for **patterns**, not copy-paste of product logic. The osint-gr graph stacks **force simulation**, **spatial acceleration**, and **canvas drawing**; SciGraph ships **circle** by default and an optional **force** canvas mode built from the same patterns (see *Parity* below).
 
 | Topic | Path (repo `osint-gr`) | Why open it |
 |-------|-------------------------|-------------|

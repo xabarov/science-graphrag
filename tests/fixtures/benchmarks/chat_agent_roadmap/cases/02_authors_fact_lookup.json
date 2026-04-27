@@ -1,0 +1,16 @@
+{
+  "case_id": "authors_fact_lookup",
+  "roadmap_ref": "§2.1 item 4",
+  "workspace_id": "ws-pilot-od",
+  "answer_class_hint": "fact_lookup",
+  "question": "Who are the authors of the main object-detection paper in this workspace?",
+  "expect": {
+    "answer_classes_allowed": ["fact_lookup", "grounded_explanation"],
+    "strict_answer_class": false,
+    "tools_any_of": ["paper_authors", "paper_metadata", "paper_lookup", "workspace_list_papers"],
+    "tools_none_of": [],
+    "require_phoenix_trace_id": true,
+    "require_tool_trace": true,
+    "min_non_final_tool_calls": 1
+  }
+}

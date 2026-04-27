@@ -65,6 +65,36 @@ def work_has_incoming_cites(client: _Neo4jClient, work_id: str) -> bool:
         return bool(rec and int(rec["n"]) > 0)
 
 
+def count_work_outgoing_cites(client: _Neo4jClient, work_id: str) -> int:
+    """Count ``(:Work)-[:CITES]->(:Work)`` edges originating from this work."""
+
+    wid = str(work_id or "").strip()
+    if not wid:
+        return 0
+    q = """
+    MATCH (w:Work {id: $id})-[:CITES]->(t:Work)
+    RETURN count(t) AS n
+    """
+    with client.session() as session:
+        rec = session.run(q, id=wid).single()
+        return int(rec["n"]) if rec else 0
+
+
+def count_work_workspace_memberships(client: _Neo4jClient, work_id: str) -> int:
+    """Count ``(Workspace)-[:CONTAINS]->(Work)`` edges for this work id."""
+
+    wid = str(work_id or "").strip()
+    if not wid:
+        return 0
+    q = """
+    MATCH (:Workspace)-[:CONTAINS]->(w:Work {id: $id})
+    RETURN count(*) AS n
+    """
+    with client.session() as session:
+        rec = session.run(q, id=wid).single()
+        return int(rec["n"]) if rec else 0
+
+
 def find_work_dedup_violations(client: _Neo4jClient) -> list[dict[str, Any]]:
     """Return clusters where multiple :Work nodes share the same dedup key."""
     queries: list[tuple[str, str]] = [

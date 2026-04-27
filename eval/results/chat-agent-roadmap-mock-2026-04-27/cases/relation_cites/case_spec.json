@@ -1,0 +1,25 @@
+{
+  "case_id": "relation_cites",
+  "roadmap_ref": "§2.1 item 3 / §2.3 relation_tracing",
+  "workspace_id": "ws-pilot-od",
+  "answer_class_hint": "relation_tracing",
+  "question": "What papers in this workspace cite other papers? Describe one citation link you can verify from the graph.",
+  "expect": {
+    "answer_classes_allowed": [
+      "relation_tracing",
+      "grounded_explanation"
+    ],
+    "strict_answer_class": false,
+    "tools_any_of": [
+      "cypher_query",
+      "edge_search",
+      "entity_search",
+      "paper_lookup",
+      "workspace_list_papers"
+    ],
+    "tools_none_of": [],
+    "require_phoenix_trace_id": true,
+    "require_tool_trace": true,
+    "min_non_final_tool_calls": 1
+  }
+}

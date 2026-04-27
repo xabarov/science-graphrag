@@ -19,6 +19,7 @@ def test_neo4j_graph_store_has_all_public_methods() -> None:
         "find_work_id_by_arxiv",
         "work_exists",
         "work_has_incoming_cites",
+        "count_work_workspace_memberships",
         "upsert_work_layer1",
         "merge_cites",
         "merge_related_version",

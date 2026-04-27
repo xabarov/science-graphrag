@@ -134,6 +134,7 @@ export default function WorkspacePage() {
             papers={vm.papers}
             selectedWorkId={vm.selectedWorkId}
             onRowActivate={vm.onCardActivate}
+            onRemoveWork={vm.handleRemovePaper}
           />
 
           {vm.ingestDedupPanelOpen ? (

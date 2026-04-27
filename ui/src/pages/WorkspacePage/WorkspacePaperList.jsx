@@ -12,9 +12,17 @@ import WorkspacePaperRow from "./WorkspacePaperRow.jsx";
  *   papers: Map<string, any>,
  *   selectedWorkId: string,
  *   onRowActivate?: (workId: string) => void,
+ *   onRemoveWork?: (workId: string) => void,
  * }} props
  */
-export default function WorkspacePaperList({ workspaceId, effectiveWorkIds, papers, selectedWorkId, onRowActivate }) {
+export default function WorkspacePaperList({
+  workspaceId,
+  effectiveWorkIds,
+  papers,
+  selectedWorkId,
+  onRowActivate,
+  onRemoveWork,
+}) {
   const { t } = useI18n();
   const rowRefs = useRef({});
   const workIdsKey = effectiveWorkIds.join("|");
@@ -56,6 +64,7 @@ export default function WorkspacePaperList({ workspaceId, effectiveWorkIds, pape
             error={row?.error}
             selected={Boolean(selectedWorkId) && wid === selectedWorkId}
             onRowActivate={onRowActivate}
+            onRemoveWork={onRemoveWork}
             rowRef={(el) => {
               if (el) rowRefs.current[wid] = el;
               else delete rowRefs.current[wid];

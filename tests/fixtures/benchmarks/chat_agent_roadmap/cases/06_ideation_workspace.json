@@ -1,0 +1,16 @@
+{
+  "case_id": "ideation_workspace",
+  "roadmap_ref": "§2.1 item 6",
+  "workspace_id": "ws-pilot-od",
+  "answer_class_hint": "ideation",
+  "question": "Suggest one concrete follow-up experiment idea grounded in the themes of papers in this workspace.",
+  "expect": {
+    "answer_classes_allowed": ["ideation", "grounded_explanation"],
+    "strict_answer_class": false,
+    "tools_any_of": ["idea_search", "summarize_workspace", "workspace_list_papers", "paper_lookup"],
+    "tools_none_of": [],
+    "require_phoenix_trace_id": true,
+    "require_tool_trace": true,
+    "min_non_final_tool_calls": 1
+  }
+}

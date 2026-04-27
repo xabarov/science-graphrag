@@ -1,0 +1,235 @@
+{
+  "case_spec": {
+    "case_id": "bibliography_gost",
+    "roadmap_ref": "§2.1 item 7 / §2.3 export",
+    "workspace_id": "ws-pilot-od",
+    "answer_class_hint": "bibliography_export",
+    "question": "Составь список литературы по ГОСТ для всех работ в этой рабочей области.",
+    "expect": {
+      "answer_classes_allowed": [
+        "bibliography_export",
+        "grounded_explanation"
+      ],
+      "strict_answer_class": false,
+      "tools_any_of": [
+        "format_bibliography_gost",
+        "workspace_list_papers",
+        "paper_metadata"
+      ],
+      "tools_none_of": [],
+      "require_phoenix_trace_id": true,
+      "require_tool_trace": true,
+      "min_non_final_tool_calls": 1
+    }
+  },
+  "run": {
+    "case_id": "bibliography_gost",
+    "question": "Составь список литературы по ГОСТ для всех работ в этой рабочей области.",
+    "workspace_id": "ws-pilot-od",
+    "turns": [
+      {
+        "question": "Составь список литературы по ГОСТ для всех работ в этой рабочей области.",
+        "output": {
+          "answer": "mock",
+          "citations": [],
+          "tool_trace": [
+            {
+              "step": 1,
+              "tool": "format_bibliography_gost",
+              "args_summary": {
+                "workspace_id": "ws-pilot-od"
+              },
+              "row_count": 1,
+              "duration_ms": 1,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": 2,
+              "tool": "final_answer",
+              "args_summary": {
+                "answer_chars": 20
+              },
+              "row_count": 1,
+              "duration_ms": 1,
+              "truncated": false,
+              "error": null
+            }
+          ],
+          "answer_class": "bibliography_export",
+          "evidence_summary": null,
+          "warnings": [],
+          "inventory": null,
+          "relation_trace": null,
+          "quote_candidates": null,
+          "idea_suggestions": null,
+          "bibliography": null,
+          "debug_events": [],
+          "phoenix_trace_id": "00000000000000000000000000000000",
+          "thread_id": null
+        }
+      }
+    ],
+    "final_output": {
+      "answer": "mock",
+      "citations": [],
+      "tool_trace": [
+        {
+          "step": 1,
+          "tool": "format_bibliography_gost",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 1,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer_chars": 20
+          },
+          "row_count": 1,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "answer_class": "bibliography_export",
+      "evidence_summary": null,
+      "warnings": [],
+      "inventory": null,
+      "relation_trace": null,
+      "quote_candidates": null,
+      "idea_suggestions": null,
+      "bibliography": null,
+      "debug_events": [],
+      "phoenix_trace_id": "00000000000000000000000000000000",
+      "thread_id": null
+    },
+    "tool_trace": [
+      {
+        "step": 1,
+        "tool": "format_bibliography_gost",
+        "args_summary": {
+          "workspace_id": "ws-pilot-od"
+        },
+        "row_count": 1,
+        "duration_ms": 1,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 2,
+        "tool": "final_answer",
+        "args_summary": {
+          "answer_chars": 20
+        },
+        "row_count": 1,
+        "duration_ms": 1,
+        "truncated": false,
+        "error": null
+      }
+    ],
+    "duration_ms": 2,
+    "metrics": {
+      "passed": true,
+      "reasons": [
+        "ok"
+      ],
+      "diagnostics": {
+        "tool_call_count": 2,
+        "non_final_tool_call_count": 1,
+        "unique_tools": [
+          "final_answer",
+          "format_bibliography_gost"
+        ],
+        "repeated_non_final_tools": [],
+        "citation_count": 0,
+        "answer_class": "bibliography_export",
+        "phoenix_trace_id_present": true,
+        "warnings_count": 0,
+        "has_bibliography_block": false,
+        "has_inventory_block": false,
+        "has_quote_candidates": false,
+        "has_relation_trace": false,
+        "has_idea_suggestions": false
+      }
+    },
+    "wall_clock_seconds": 0.0,
+    "case_path": "tests/fixtures/benchmarks/chat_agent_roadmap/cases/03_bibliography_gost.json"
+  },
+  "trace_audit": {
+    "case_id": "bibliography_gost",
+    "phoenix_trace_id": "00000000000000000000000000000000",
+    "phoenix_ui_hint": "http://127.0.0.1:16006/traces/00000000000000000000000000000000",
+    "tool_trace": [
+      {
+        "step": 1,
+        "tool": "format_bibliography_gost",
+        "args_summary": {
+          "workspace_id": "ws-pilot-od"
+        },
+        "row_count": 1,
+        "duration_ms": 1,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 2,
+        "tool": "final_answer",
+        "args_summary": {
+          "answer_chars": 20
+        },
+        "row_count": 1,
+        "duration_ms": 1,
+        "truncated": false,
+        "error": null
+      }
+    ],
+    "diagnostics": {
+      "tool_call_count": 2,
+      "non_final_tool_call_count": 1,
+      "unique_tools": [
+        "final_answer",
+        "format_bibliography_gost"
+      ],
+      "repeated_non_final_tools": [],
+      "citation_count": 0,
+      "answer_class": "bibliography_export",
+      "phoenix_trace_id_present": true,
+      "warnings_count": 0,
+      "has_bibliography_block": false,
+      "has_inventory_block": false,
+      "has_quote_candidates": false,
+      "has_relation_trace": false,
+      "has_idea_suggestions": false
+    },
+    "metrics": {
+      "passed": true,
+      "reasons": [
+        "ok"
+      ],
+      "diagnostics": {
+        "tool_call_count": 2,
+        "non_final_tool_call_count": 1,
+        "unique_tools": [
+          "final_answer",
+          "format_bibliography_gost"
+        ],
+        "repeated_non_final_tools": [],
+        "citation_count": 0,
+        "answer_class": "bibliography_export",
+        "phoenix_trace_id_present": true,
+        "warnings_count": 0,
+        "has_bibliography_block": false,
+        "has_inventory_block": false,
+        "has_quote_candidates": false,
+        "has_relation_trace": false,
+        "has_idea_suggestions": false
+      }
+    }
+  }
+}

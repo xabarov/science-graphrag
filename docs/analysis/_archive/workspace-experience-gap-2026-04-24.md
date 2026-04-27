@@ -97,14 +97,14 @@ flowchart LR
 
 **Что в коде:**
 
-- Активный `workspaceId` хранится в `localStorage` (`science-graphrag:activeWorkspaceId`) — [`utils/workspaceStore.js`](../../ui/src/utils/workspaceStore.js).
+- Активный `workspaceId` хранится в `localStorage` (`SciGraph:activeWorkspaceId`) — [`utils/workspaceStore.js`](../../ui/src/utils/workspaceStore.js).
 - Только [`WorkspacePage`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx) автоматически восстанавливает его при заходе без `?workspace_id=`.
 - Sidebar-пункт **Workspaces** ведёт на `/workspaces` (страница списка), а не на «последний открытый workspace».
 - Sidebar-пункты **Graph/Ask/Evidence** не докручивают `workspace_id` ни из URL, ни из `localStorage` — пользователь падает в empty state и должен либо ввести `work_id`, либо вернуться через карточку статьи.
 
 **Куда хотим:** active workspace = объект первого класса в shell. Sidebar ведёт *в текущий workspace*; workspaces switcher вынесен в верхнюю панель/header (как chip + popover). Все user-facing страницы знают про active workspace и могут scope'ить запросы по нему.
 
-**Референс из osint-gr:** `getLastWorkspaceHref()` + `lastActiveCaseId` в `localStorage` ([`CaseWorkspacePage/utils/workspaceNavigation.js`](../../../osint-gr/frontend/src/pages/CaseWorkspacePage/utils/workspaceNavigation.js) — навигация по последнему case'у; chip с `caseId` в верхней панели). Адаптируем 1-к-1 на science-graphrag terms.
+**Референс из osint-gr:** `getLastWorkspaceHref()` + `lastActiveCaseId` в `localStorage` ([`CaseWorkspacePage/utils/workspaceNavigation.js`](../../../osint-gr/frontend/src/pages/CaseWorkspacePage/utils/workspaceNavigation.js) — навигация по последнему case'у; chip с `caseId` в верхней панели). Адаптируем 1-к-1 на SciGraph terms.
 
 ### 3.2 Workspaces list занимает мало места
 

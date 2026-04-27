@@ -2,7 +2,7 @@
 
 ## Context
 
-`science-graphrag` already has a narrow Phase 5 API MVP:
+`SciGraph` already has a narrow Phase 5 API MVP:
 
 - `GET /health`
 - `POST /v1/query`

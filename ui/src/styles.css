@@ -1,5 +1,10 @@
-:root {
+/* Effective color scheme is set by inline boot in index.html and AppearanceProvider (data-color-scheme on <html>). */
+html[data-color-scheme="dark"] {
   color-scheme: dark;
+}
+
+html[data-color-scheme="light"] {
+  color-scheme: light;
 }
 
 html,
@@ -23,8 +28,13 @@ body {
 }
 
 /* Keyboard focus visibility (Phase 7 a11y) */
-:focus-visible {
+html[data-color-scheme="dark"] :focus-visible {
   outline: 2px solid rgba(129, 140, 248, 0.75);
+  outline-offset: 2px;
+}
+
+html[data-color-scheme="light"] :focus-visible {
+  outline: 2px solid rgba(79, 70, 229, 0.55);
   outline-offset: 2px;
 }
 

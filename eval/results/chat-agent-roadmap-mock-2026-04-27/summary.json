@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "suite": "chat_agent_roadmap",
+  "fixtures": "tests/fixtures/benchmarks/chat_agent_roadmap",
+  "workspace_id": "ws-pilot-od",
+  "benchmark_run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
+    "semantic_extraction_enabled": true
+  },
+  "environment": {
+    "PHOENIX_UI_BASE_URL": null,
+    "PHOENIX_TRACE_SCOPE": "extraction_llm"
+  },
+  "workspace_audit": null,
+  "all_passed": true,
+  "cases": [
+    {
+      "case_id": "inventory_papers",
+      "passed": true,
+      "duration_ms": 2
+    },
+    {
+      "case_id": "authors_fact_lookup",
+      "passed": true,
+      "duration_ms": 2
+    },
+    {
+      "case_id": "bibliography_gost",
+      "passed": true,
+      "duration_ms": 2
+    },
+    {
+      "case_id": "quote_detection",
+      "passed": true,
+      "duration_ms": 2
+    },
+    {
+      "case_id": "relation_cites",
+      "passed": true,
+      "duration_ms": 2
+    },
+    {
+      "case_id": "ideation_workspace",
+      "passed": true,
+      "duration_ms": 2
+    },
+    {
+      "case_id": "multi_turn_clarify",
+      "passed": true,
+      "duration_ms": 2
+    }
+  ]
+}

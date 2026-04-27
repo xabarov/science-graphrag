@@ -1,10 +1,10 @@
 # Agent chat system roadmap — 2026-04-26
 
 **Статус:** draft / living working doc (трек `CH` — **CH1–CH3: Wave A**; **CH4 + долги CH1–CH3 (частично) + observability-задел: Wave B**, 2026-04-26; **Wave Next: Agent Chat Hardening + CH5 v1**, 2026-04-26; см. §11)
-**Цель:** спроектировать продуктовую агентную систему чата для research-workspace в `science-graphrag`: multi-turn, tool-based, grounded on graph + chunks + workspace context, с понятной эволюцией от текущего `POST /v2/agent/query`.
+**Цель:** спроектировать продуктовую агентную систему чата для research-workspace в `SciGraph`: multi-turn, tool-based, grounded on graph + chunks + workspace context, с понятной эволюцией от текущего `POST /v2/agent/query`.
 
 **Основано на анализе:**
-- текущего runtime и UI чата в `science-graphrag`
+- текущего runtime и UI чата в `SciGraph`
 - агентных паттернов в `osint-gr/backend/osint_graphrag/agents`
 - tool-search, subagent и context-compression паттернов в `openclaude/src`
 
@@ -90,7 +90,7 @@
 
 ## 3. Current state snapshot
 
-### 3.1 Что уже есть в `science-graphrag`
+### 3.1 Что уже есть в `SciGraph`
 
 1. `POST /v2/agent/query` уже умеет sync JSON и SSE.
 2. `science_graphrag/agent/graph/state.py` уже содержит `messages`, `workspace_id`, `citations`, `tool_trace`, `budget_remaining`, `specialist_results`, `routing_log`.
@@ -736,6 +736,16 @@ Research chat быстро упирается в:
 9. `chat_tool_selection_v1`
 10. `chat_context_compaction_v1`
 
+### 10.4 Benchmark workspace baseline (chat regression)
+
+Для chat-agent регрессии и Phoenix-audit зафиксирована **одна** эталонная benchmark-backed область:
+
+- **`ws-pilot-od`** — manifest: `tests/fixtures/benchmarks/chat_agent_roadmap/baseline_workspace_manifest.json`.
+
+Перед live suite: **workspace readiness audit** (наличие `Work`, авторов, исходящих `CITES`, чанков в Qdrant и `workspace_ids` на чанках). Реализация: `scripts/chat_agent_workspace_readiness_audit.py` / `eval/chat_agent/workspace_audit.py`.
+
+Roadmap-aligned кейсы и артефакты прогона: `science-graphrag-chat-agent-roadmap` (см. [`eval/README.md`](../../eval/README.md), [`docs/analysis/chat-agent-roadmap-trace-audit-2026-04-27.md`](./chat-agent-roadmap-trace-audit-2026-04-27.md)).
+
 ---
 
 ## 11. Implementation roadmap
@@ -744,7 +754,7 @@ Research chat быстро упирается в:
 
 **Wave A (2026-04-26):** реализованы **CH1 + CH2 + CH3** одним пластом. Канон контракта: [`docs/specs/agent-chat-v1.md`](../specs/agent-chat-v1.md). Стартовые фикстуры: `tests/fixtures/benchmarks/chat_wave_a/`. Рефакторинг крупного `workspace_paper_tools.py` — в `docs/backlog/refactor-backend.md`.
 
-**Wave B (2026-04-26):** **CH4 v1** (in-memory session по `thread_id`, `history_digest`, `build_initial_agent_state`, digest после тёрна, SSE `context_compacted`, `session_init` в `tool_trace`) + закрытие части долгов Wave A: расширенные `warnings` в `chat_envelope`, typed-блоки в `AskAnswerPanel` / `ChatTypedBlocks.jsx`, wire `threadId`/`historyDigest` из `AskPanel`/`useAskSubmit`, GOST `event`/`pages`, `filtered_work_ids` + warnings у библиографии, `qdrant_unavailable` у quote-tool, writer + `tool_search` (skip с meta), `tests/test_tool_manifest_sync.py`, расширение `test_tool_search`, smoke фикстуры в CI (`tests/eval/test_chat_wave_a_inventory.py`), `phoenix_trace_id` из активного OTel span. **Не в Wave B:** полный CH5 (capsules, full compact), CH6, CH7, отдельный `eval/chat_*` runner как у agent_tools.
+**Wave B (2026-04-26):** **CH4 v1** (in-memory session по `thread_id`, `history_digest`, `build_initial_agent_state`, digest после тёрна, SSE `context_compacted`, `session_init` в `tool_trace`) + закрытие части долгов Wave A: расширенные `warnings` в `chat_envelope`, typed-блоки в `AskAnswerPanel` / `ChatTypedBlocks.jsx`, wire `threadId`/`historyDigest` из `AskPanel`/`useAskSubmit`, GOST `event`/`pages`, `filtered_work_ids` + warnings у библиографии, `qdrant_unavailable` у quote-tool, writer + `tool_search` (skip с meta), `tests/test_tool_manifest_sync.py`, расширение `test_tool_search`, smoke фикстуры в CI (`tests/eval/test_chat_wave_a_inventory.py`), `phoenix_trace_id` из активного OTel span. **Не в Wave B:** полный CH5 (capsules, full compact), CH6, CH7. **Update 2026-04-27:** добавлен отдельный roadmap harness `science_graphrag-chat-agent-roadmap` (`eval/chat_agent/roadmap_runner.py`), эталонная область **`ws-pilot-od`**, pre-flight audit Neo4j+Qdrant (`eval/chat_agent/workspace_audit.py`, `scripts/chat_agent_workspace_readiness_audit.py`), per-case артефакты и отчёт [`docs/analysis/chat-agent-roadmap-trace-audit-2026-04-27.md`](./chat-agent-roadmap-trace-audit-2026-04-27.md).
 
 **Wave Next — Agent Chat Hardening + CH5 v1 (2026-04-26, реализовано):**
 1. **Аудит качества:** CH1–CH4 v1 подтверждены in-process тестами; главные риски закрывались persistence, политикой CH5 и live/eval gate — зафиксировано в этом roadmap и в спеке.
@@ -753,7 +763,7 @@ Research chat быстро упирается в:
 4. **Quality gate:** `scripts/live_check/http_suite.py` при `AGENT_LIVE_GATE_CH4=1` проверяет и sync JSON с `thread_id` (`run_metadata.compaction.kinds`); pytest `tests/live/test_agent_v2_http_optional.py` — отдельный кейс `test_live_agent_v2_gate_ch4_sync_json_with_thread`; контрактный runner `python -m eval.chat_agent`.
 5. **UI + тесты:** блок «Server session memory» в `AskAnswerPanel`, `run_metadata` в `normalizeQueryResponse`, сохранение `run_metadata` в `AskPanel` details; RTL/`vitest` для `AskAnswerPanel` и `useAskSubmit`.
 
-**Остаётся вне этого slice:** полноценный coordinator-triggered compaction, LLM-capsules, full compact boundary как отдельный продуктовый слой; CH6–CH7; отдельный тяжёлый nightly runner уровня `eval/agent_tools` для chat (сейчас — contract runner + live gate).
+**Остаётся вне этого slice:** полноценный coordinator-triggered compaction, LLM-capsules, full compact boundary как отдельный продуктовый слой; CH6–CH7. **Прогресс 2026-04-27:** первый **use-case** runner поверх контрактного `eval/chat_agent` — `science-graphrag-chat-agent-roadmap` (см. trace-audit doc); полноценный nightly «как agent_tools» по-прежнему опционален и расширяется отдельно.
 
 **Update 2026-04-27 — Coordinator Gate v0 + target direction:** после инцидента «`привет` → список статей» добавлен первый явный coordinator-seam: `TurnPolicy` / `classify_turn_policy` в `science_graphrag/agent/coordination/turn_policy.py`, `coordinator_gate` в `tool_trace`, `intent_classified` в SSE/debug events, `chat` / `clarification` answer classes, no-tools/direct writer path и safe fallback `invalid router output -> writer_agent` вместо `retrieval_agent`. Это **не целевое состояние intent routing**: текущие regex/rule hints считаются временным guardrail v0 для очевидных случаев (greeting/meta/ambiguous short turn), а не попыткой покрыть язык списками фраз. Целевой следующий шаг — сохранить интерфейс `TurnPolicy`, но заменить keyword-heavy реализацию на hybrid/LLM `TurnPolicyClassifier` со structured output, confidence, eval-набором и safe fallback to clarification.
 
@@ -1016,6 +1026,9 @@ Research chat быстро упирается в:
 
 **Goal:** сделать систему управляемой, честной и release-ready.
 
+**Сделано (2026-04-27, v0):**
+- Эталонная область + pre-flight audit + roadmap harness с сохранением `tool_trace` / `phoenix_trace_id` и suite summary — см. §10.4 и [`chat-agent-roadmap-trace-audit-2026-04-27.md`](./chat-agent-roadmap-trace-audit-2026-04-27.md).
+
 **Сделать:**
 1. benchmark families CH;
 2. trace dashboards for agent chat;
@@ -1029,6 +1042,7 @@ Research chat быстро упирается в:
 2. honest downgrade rules работают;
 3. rollout можно включать по feature flag;
 4. coordinator gate не деградирует в словарь ключевых фраз: новые языковые варианты закрываются evals + classifier behavior, а не бесконечным расширением regex.
+5. **baseline workspace + harness:** один задокументированный `workspace_id` для chat regression; pre-flight audit не даёт suite стартовать на `blocked`; для каждого curated кейса сохраняются артефакты, достаточные для сопоставления с Phoenix (см. trace-audit checklist §4).
 
 ---
 

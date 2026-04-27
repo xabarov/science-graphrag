@@ -216,6 +216,45 @@ science-graphrag-layer2-benchmark tests/fixtures/benchmarks/layer2 --suite --tie
 
 В GitHub Actions (workflow **Integration**) шаг `Layer-2 nightly_semantic` выполняется **только если** в secrets репозитория задан `MAIN_LLM_API_KEY`; иначе шаг пропускается.
 
+## Chat agent — roadmap use-case harness
+
+- Код: `eval/chat_agent/roadmap_runner.py`, `roadmap_metrics.py`, `workspace_audit.py`.
+- Фикстуры: `tests/fixtures/benchmarks/chat_agent_roadmap/` (`baseline_workspace_manifest.json`, `cases/*.json`).
+- Эталонная область: **`ws-pilot-od`** (тот же pilot OD, что и retrieval `workspace_scoped` / agent-tools).
+
+Pre-flight Neo4j + Qdrant audit (рекомендуется перед live suite):
+
+```bash
+.venv/bin/python scripts/chat_agent_workspace_readiness_audit.py \
+  --manifest tests/fixtures/benchmarks/chat_agent_roadmap/baseline_workspace_manifest.json \
+  --out-json eval/results/chat-agent-roadmap-workspace-audit.json \
+  --out-md eval/results/chat-agent-roadmap-workspace-audit.md
+```
+
+Roadmap suite (детерминированный mock — подходит для CI без LLM):
+
+```bash
+science-graphrag-chat-agent-roadmap \
+  --fixtures tests/fixtures/benchmarks/chat_agent_roadmap \
+  --out eval/results/chat-agent-roadmap-mock-latest \
+  --skip-audit --mock-runtime
+```
+
+Live прогон (ключи LLM + Neo4j + Qdrant; audit падает с кодом 3 при `blocked`):
+
+```bash
+science-graphrag-chat-agent-roadmap \
+  --fixtures tests/fixtures/benchmarks/chat_agent_roadmap \
+  --out eval/results/chat-agent-roadmap-live-latest
+# опционально: снимок HTTP к Phoenix UI (best-effort)
+science-graphrag-chat-agent-roadmap \
+  --fixtures tests/fixtures/benchmarks/chat_agent_roadmap \
+  --out eval/results/chat-agent-roadmap-live-latest \
+  --fetch-phoenix
+```
+
+Артефакты: `summary.json` / `summary.md`, `workspace_audit.json`, per-case `cases/<case_id>/case_result.json` + `trace_audit.json`.
+
 ## Compare baseline vs current
 
 Для benchmark-driven цикла используйте comparator (падает при regressions):

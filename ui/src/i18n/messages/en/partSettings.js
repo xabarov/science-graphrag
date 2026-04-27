@@ -2,10 +2,16 @@
 export default {
   "settings.general.title": "General",
   "settings.general.intro":
-    "Application-wide preferences. Interface language applies immediately and is stored in this browser (localStorage).",
+    "Application-wide preferences. Interface language and appearance apply immediately and are stored in this browser (localStorage).",
   "settings.general.languageLabel": "Interface language",
   "settings.general.languageEnglish": "English",
   "settings.general.languageRussian": "Russian",
+  "settings.general.appearanceLabel": "Appearance",
+  "settings.general.appearanceDark": "Dark",
+  "settings.general.appearanceLight": "Light",
+  "settings.general.appearanceSystem": "System",
+  "settings.general.appearanceNote":
+    "System follows your OS/browser color scheme. Appearance is stored separately from language (key ui.appearanceMode).",
   "settings.general.note": "No server round-trip; each browser keeps its own choice.",
   "settings.general.envDoc":
     "Server-side secrets and defaults: see the repository file .env.example (SCIENCE_GRAPHRAG_* and merged MAIN_LLM_* keys).",

@@ -1,0 +1,71 @@
+{
+  "case_id": "authors_fact_lookup",
+  "phoenix_trace_id": "00000000000000000000000000000000",
+  "phoenix_ui_hint": "http://127.0.0.1:16006/traces/00000000000000000000000000000000",
+  "tool_trace": [
+    {
+      "step": 1,
+      "tool": "paper_authors",
+      "args_summary": {
+        "workspace_id": "ws-pilot-od"
+      },
+      "row_count": 1,
+      "duration_ms": 1,
+      "truncated": false,
+      "error": null
+    },
+    {
+      "step": 2,
+      "tool": "final_answer",
+      "args_summary": {
+        "answer_chars": 20
+      },
+      "row_count": 1,
+      "duration_ms": 1,
+      "truncated": false,
+      "error": null
+    }
+  ],
+  "diagnostics": {
+    "tool_call_count": 2,
+    "non_final_tool_call_count": 1,
+    "unique_tools": [
+      "final_answer",
+      "paper_authors"
+    ],
+    "repeated_non_final_tools": [],
+    "citation_count": 0,
+    "answer_class": "fact_lookup",
+    "phoenix_trace_id_present": true,
+    "warnings_count": 0,
+    "has_bibliography_block": false,
+    "has_inventory_block": false,
+    "has_quote_candidates": false,
+    "has_relation_trace": false,
+    "has_idea_suggestions": false
+  },
+  "metrics": {
+    "passed": true,
+    "reasons": [
+      "ok"
+    ],
+    "diagnostics": {
+      "tool_call_count": 2,
+      "non_final_tool_call_count": 1,
+      "unique_tools": [
+        "final_answer",
+        "paper_authors"
+      ],
+      "repeated_non_final_tools": [],
+      "citation_count": 0,
+      "answer_class": "fact_lookup",
+      "phoenix_trace_id_present": true,
+      "warnings_count": 0,
+      "has_bibliography_block": false,
+      "has_inventory_block": false,
+      "has_quote_candidates": false,
+      "has_relation_trace": false,
+      "has_idea_suggestions": false
+    }
+  }
+}

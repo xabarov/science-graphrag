@@ -1,0 +1,236 @@
+{
+  "case_spec": {
+    "case_id": "quote_detection",
+    "roadmap_ref": "§2.1 item 5",
+    "workspace_id": "ws-pilot-od",
+    "answer_class_hint": "quote_extraction",
+    "question": "Find a short quote from a paper in this workspace that discusses object detection or real-time inference.",
+    "expect": {
+      "answer_classes_allowed": [
+        "quote_extraction",
+        "grounded_explanation"
+      ],
+      "strict_answer_class": false,
+      "tools_any_of": [
+        "paper_quote_search",
+        "paper_lookup",
+        "workspace_list_papers",
+        "idea_search"
+      ],
+      "tools_none_of": [],
+      "require_phoenix_trace_id": true,
+      "require_tool_trace": true,
+      "min_non_final_tool_calls": 1
+    }
+  },
+  "run": {
+    "case_id": "quote_detection",
+    "question": "Find a short quote from a paper in this workspace that discusses object detection or real-time inference.",
+    "workspace_id": "ws-pilot-od",
+    "turns": [
+      {
+        "question": "Find a short quote from a paper in this workspace that discusses object detection or real-time inference.",
+        "output": {
+          "answer": "mock",
+          "citations": [],
+          "tool_trace": [
+            {
+              "step": 1,
+              "tool": "paper_quote_search",
+              "args_summary": {
+                "workspace_id": "ws-pilot-od"
+              },
+              "row_count": 1,
+              "duration_ms": 1,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": 2,
+              "tool": "final_answer",
+              "args_summary": {
+                "answer_chars": 20
+              },
+              "row_count": 1,
+              "duration_ms": 1,
+              "truncated": false,
+              "error": null
+            }
+          ],
+          "answer_class": "quote_extraction",
+          "evidence_summary": null,
+          "warnings": [],
+          "inventory": null,
+          "relation_trace": null,
+          "quote_candidates": null,
+          "idea_suggestions": null,
+          "bibliography": null,
+          "debug_events": [],
+          "phoenix_trace_id": "00000000000000000000000000000000",
+          "thread_id": null
+        }
+      }
+    ],
+    "final_output": {
+      "answer": "mock",
+      "citations": [],
+      "tool_trace": [
+        {
+          "step": 1,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 1,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer_chars": 20
+          },
+          "row_count": 1,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "answer_class": "quote_extraction",
+      "evidence_summary": null,
+      "warnings": [],
+      "inventory": null,
+      "relation_trace": null,
+      "quote_candidates": null,
+      "idea_suggestions": null,
+      "bibliography": null,
+      "debug_events": [],
+      "phoenix_trace_id": "00000000000000000000000000000000",
+      "thread_id": null
+    },
+    "tool_trace": [
+      {
+        "step": 1,
+        "tool": "paper_quote_search",
+        "args_summary": {
+          "workspace_id": "ws-pilot-od"
+        },
+        "row_count": 1,
+        "duration_ms": 1,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 2,
+        "tool": "final_answer",
+        "args_summary": {
+          "answer_chars": 20
+        },
+        "row_count": 1,
+        "duration_ms": 1,
+        "truncated": false,
+        "error": null
+      }
+    ],
+    "duration_ms": 2,
+    "metrics": {
+      "passed": true,
+      "reasons": [
+        "ok"
+      ],
+      "diagnostics": {
+        "tool_call_count": 2,
+        "non_final_tool_call_count": 1,
+        "unique_tools": [
+          "final_answer",
+          "paper_quote_search"
+        ],
+        "repeated_non_final_tools": [],
+        "citation_count": 0,
+        "answer_class": "quote_extraction",
+        "phoenix_trace_id_present": true,
+        "warnings_count": 0,
+        "has_bibliography_block": false,
+        "has_inventory_block": false,
+        "has_quote_candidates": false,
+        "has_relation_trace": false,
+        "has_idea_suggestions": false
+      }
+    },
+    "wall_clock_seconds": 0.0,
+    "case_path": "tests/fixtures/benchmarks/chat_agent_roadmap/cases/04_quote_detection.json"
+  },
+  "trace_audit": {
+    "case_id": "quote_detection",
+    "phoenix_trace_id": "00000000000000000000000000000000",
+    "phoenix_ui_hint": "http://127.0.0.1:16006/traces/00000000000000000000000000000000",
+    "tool_trace": [
+      {
+        "step": 1,
+        "tool": "paper_quote_search",
+        "args_summary": {
+          "workspace_id": "ws-pilot-od"
+        },
+        "row_count": 1,
+        "duration_ms": 1,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 2,
+        "tool": "final_answer",
+        "args_summary": {
+          "answer_chars": 20
+        },
+        "row_count": 1,
+        "duration_ms": 1,
+        "truncated": false,
+        "error": null
+      }
+    ],
+    "diagnostics": {
+      "tool_call_count": 2,
+      "non_final_tool_call_count": 1,
+      "unique_tools": [
+        "final_answer",
+        "paper_quote_search"
+      ],
+      "repeated_non_final_tools": [],
+      "citation_count": 0,
+      "answer_class": "quote_extraction",
+      "phoenix_trace_id_present": true,
+      "warnings_count": 0,
+      "has_bibliography_block": false,
+      "has_inventory_block": false,
+      "has_quote_candidates": false,
+      "has_relation_trace": false,
+      "has_idea_suggestions": false
+    },
+    "metrics": {
+      "passed": true,
+      "reasons": [
+        "ok"
+      ],
+      "diagnostics": {
+        "tool_call_count": 2,
+        "non_final_tool_call_count": 1,
+        "unique_tools": [
+          "final_answer",
+          "paper_quote_search"
+        ],
+        "repeated_non_final_tools": [],
+        "citation_count": 0,
+        "answer_class": "quote_extraction",
+        "phoenix_trace_id_present": true,
+        "warnings_count": 0,
+        "has_bibliography_block": false,
+        "has_inventory_block": false,
+        "has_quote_candidates": false,
+        "has_relation_trace": false,
+        "has_idea_suggestions": false
+      }
+    }
+  }
+}

@@ -133,7 +133,7 @@
   * Toggle Markdown / PDF → `Article` / `PictureAsPdf` сразу читается визуально.
   * Кнопки «Open Reader (workspace)», «Open Graph» — без иконок `OpenInFull` / `AccountTree`.
   * Карточка деталей не имеет статус-бейджа (semantic / has_chunks) — есть только сухая строка `document_id: ... · has_chunks: true · semantic: true`.
-* Карточки используют разнобой `borderRadius: "6px"` в одних местах, `4px` в `Markdown box` — в проекте принято **строго `6px`** и плоский дизайн без теней (см. cursor-rules для osint-gr; в science-graphrag дисциплина та же).
+* Карточки используют разнобой `borderRadius: "6px"` в одних местах, `4px` в `Markdown box` — в проекте принято **строго `6px`** и плоский дизайн без теней (см. cursor-rules для osint-gr; в SciGraph дисциплина та же).
 * Заголовок статьи — `fontWeight: 600, fontSize: "0.8125rem"` (13 px). Для **главного объекта страницы** это слишком мелко — должен быть 18–22 px (`H1` визуально).
 
 ### 1.6 Нет перевода с EN на RU (и обратно)

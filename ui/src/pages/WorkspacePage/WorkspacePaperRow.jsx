@@ -4,6 +4,7 @@ import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
 import ChatBubbleOutlineOutlinedIcon from "@mui/icons-material/ChatBubbleOutlineOutlined";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import Typography from "@mui/material/Typography";
 
@@ -14,7 +15,7 @@ import { workChatUrl, workGraphUrl, workReaderUrl } from "./workspacePageUrls.js
 /**
  * Dense document row for workspace paper list (IDE-like).
  *
- * @param {{ workspaceId?: string, workId: string, title: string, year?: number | null, doi?: string | null, arxivId?: string | null, loading?: boolean, error?: string | null, selected?: boolean, onRowActivate?: (workId: string) => void, rowRef?: React.Ref<HTMLDivElement | null> | ((el: HTMLDivElement | null) => void) }} props
+ * @param {{ workspaceId?: string, workId: string, title: string, year?: number | null, doi?: string | null, arxivId?: string | null, loading?: boolean, error?: string | null, selected?: boolean, onRowActivate?: (workId: string) => void, onRemoveWork?: (workId: string) => void, rowRef?: React.Ref<HTMLDivElement | null> | ((el: HTMLDivElement | null) => void) }} props
  */
 export default function WorkspacePaperRow({
   workspaceId = "",
@@ -27,6 +28,7 @@ export default function WorkspacePaperRow({
   error,
   selected,
   onRowActivate,
+  onRemoveWork,
   rowRef = null,
 }) {
   const { t } = useI18n();
@@ -120,6 +122,20 @@ export default function WorkspacePaperRow({
           <CursorIconAction component={Link} to={workChatUrl(workId, workspaceId)} title={t("workspace.tooltip.chatPaper")}>
             <ChatBubbleOutlineOutlinedIcon sx={{ fontSize: "1rem" }} />
           </CursorIconAction>
+          {onRemoveWork ? (
+            <CursorIconAction
+              type="button"
+              title={t("workspace.removePaper.tooltip")}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onRemoveWork(workId);
+              }}
+              sx={{ color: "rgba(239,68,68,0.75)" }}
+            >
+              <DeleteOutlineOutlinedIcon sx={{ fontSize: "1rem" }} />
+            </CursorIconAction>
+          ) : null}
           <CopyIdButton id={workId} tooltipCopy={t("workspace.tooltip.copyWorkId")} tooltipCopied={t("workspace.tooltip.copied")} />
         </Box>
       ) : null}

@@ -47,12 +47,16 @@ class Neo4jGraphStoreDelegates:
         *,
         subtype: str = "unspecified",
     ) -> None:
-        contradictions.merge_work_contradicts(
-            self._client, work_id_a, work_id_b, subtype=subtype
-        )
+        contradictions.merge_work_contradicts(self._client, work_id_a, work_id_b, subtype=subtype)
 
     def work_has_incoming_cites(self, work_id: str) -> bool:
         return reads.work_has_incoming_cites(self._client, work_id)
+
+    def count_work_outgoing_cites(self, work_id: str) -> int:
+        return reads.count_work_outgoing_cites(self._client, work_id)
+
+    def count_work_workspace_memberships(self, work_id: str) -> int:
+        return reads.count_work_workspace_memberships(self._client, work_id)
 
     def detach_delete_work_if_no_incoming_cites(self, work_id: str) -> bool:
         return works.detach_delete_work_if_no_incoming_cites(self._client, work_id)

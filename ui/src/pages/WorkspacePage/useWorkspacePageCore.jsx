@@ -7,6 +7,7 @@ import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 
 import { CursorIconAction, CursorPrimaryButton } from "../../components/common/index.js";
+import { useFeedback } from "../../components/feedback/index.js";
 import { formatResearchApiError, postAgentQuery, postIdeaAssist } from "../../services/researchApi.js";
 import {
   getActiveWorkspaceId,
@@ -15,6 +16,7 @@ import {
   getWorkspace,
   createWorkspace,
   addWorkToWorkspace,
+  removeWorkFromWorkspace,
   startWorkspaceDocumentIngest,
   startWorkspaceBatchIngest,
   getWorkspaceGraphStats,
@@ -32,6 +34,7 @@ const INGEST_JOB_STORAGE_PREFIX = "science-graphrag:workspaceIngestJob:";
 
 export function useWorkspacePageCore() {
   const { t } = useI18n();
+  const { confirm, showToast } = useFeedback();
   const [searchParams, setSearchParams] = useSearchParams();
   const workspaceIdFromUrl = (searchParams.get("workspace_id") || "").trim();
   const workIdFromUrl = (searchParams.get("work_id") || "").trim();
@@ -172,7 +175,7 @@ export function useWorkspacePageCore() {
     return () => {
       cancelled = true;
     };
-  }, [workspaceMeta.id]);
+  }, [workspaceMeta.id, workspaceMeta.work_ids]);
 
   useEffect(() => {
     const id = String(workspaceMeta.id || "").trim();
@@ -381,6 +384,65 @@ export function useWorkspacePageCore() {
     }
   }
 
+  const handleRemovePaper = useCallback(
+    async (workId) => {
+      const wid = String(workId || "").trim();
+      const wsv = String(workspaceMeta.id || "").trim();
+      if (!wid || !wsv) return;
+      const ok = await confirm({
+        title: t("workspace.removePaper.confirmTitle"),
+        body: t("workspace.removePaper.confirmBody"),
+        variant: "danger",
+        confirmLabel: t("workspace.removePaper.confirm"),
+        cancelLabel: t("chat.clear.cancel"),
+      });
+      if (!ok) return;
+      try {
+        const data = await removeWorkFromWorkspace(wsv, wid);
+        const ws = data?.workspace;
+        const status = String(data?.removal_status || "detached_only");
+        if (ws) setWorkspaceMeta(ws);
+        else await refreshWorkspaceMeta();
+
+        const nextList = Array.isArray(ws?.work_ids) ? ws.work_ids : [];
+        const focusBefore = String(selectedWorkId || workIdFromUrl || "").trim();
+        const p = new URLSearchParams();
+        p.set("workspace_id", wsv);
+        if (nextList.length === 1) {
+          p.set("work_id", String(nextList[0]));
+        } else if (nextList.length > 1) {
+          const keep =
+            focusBefore && focusBefore !== wid && nextList.includes(focusBefore)
+              ? focusBefore
+              : String(nextList[0] || "");
+          if (keep) p.set("work_id", keep);
+        }
+        setSearchParams(p, { replace: true });
+
+        const toastKey =
+          status === "purged"
+            ? "workspace.removePaper.toastPurged"
+            : status === "purge_blocked_by_incoming_cites"
+              ? "workspace.removePaper.toastPurgeBlocked"
+              : "workspace.removePaper.toastDetached";
+        showToast(t(toastKey));
+      } catch (err) {
+        showToast(formatResearchApiError(err));
+      }
+    },
+    [
+      workspaceMeta.id,
+      confirm,
+      showToast,
+      t,
+      setWorkspaceMeta,
+      refreshWorkspaceMeta,
+      setSearchParams,
+      selectedWorkId,
+      workIdFromUrl,
+    ],
+  );
+
   const onCardActivate =
     workspaceMeta.id && effectiveWorkIds.length > 1 ? (wid) => setWorkFocusInUrl(wid) : undefined;
 
@@ -465,6 +527,7 @@ export function useWorkspacePageCore() {
     handleUploadDocument,
     handleUploadBatch,
     onCardActivate,
+    handleRemovePaper,
     handleSummarizeWorkspace,
     handleGenerateHypotheses,
     retryWorkspaceLoad,

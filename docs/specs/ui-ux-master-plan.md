@@ -1,4 +1,4 @@
-# UI/UX Master Plan For science-graphrag
+# UI/UX Master Plan For SciGraph
 
 Дата: `2026-04-07`
 
@@ -6,7 +6,7 @@
 
 ## Цель
 
-Подготовить для `science-graphrag` целостный UI/UX-план, который:
+Подготовить для `SciGraph` целостный UI/UX-план, который:
 
 - переводит текущий MVP из набора технических экранов в продуктовую исследовательскую среду;
 - заранее разделяет опыт `admin / operator` и обычного `user / researcher`;
@@ -17,7 +17,7 @@
 
 ## Контекст
 
-Сейчас `science-graphrag` уже имеет базовые страницы:
+Сейчас `SciGraph` уже имеет базовые страницы:
 
 - `ui/src/App.jsx`
 - `ui/src/components/layout/DashboardLayout/DashboardLayout.jsx`
@@ -92,7 +92,7 @@
 
 ## Главный продуктовый тезис
 
-`science-graphrag` должен стать не набором отдельных утилит, а двумя связанными поверхностями:
+`SciGraph` должен стать не набором отдельных утилит, а двумя связанными поверхностями:
 
 1. `Research surface` для обычного пользователя.
 2. `Operations surface` для admin / evaluator / platform owner.
@@ -667,7 +667,7 @@ Checklist:
   - `../../../osint-gr/frontend/src/components/features/graphVisualization/hooks/useCanvasEvents.js` — hit-test, zoom/pan (часть переносится в Phase 4.3).
   - `../../../osint-gr/frontend/src/components/features/graphVisualization/hooks/useCanvasResize.js` — `ResizeObserver` / размер контейнера.
   - `../../../osint-gr/frontend/src/components/features/graphVisualization/components/GraphControls.jsx` — паттерн панели управления (упрощённо: fit / reset).
-- **Не тащить без нужды:** `KnowledgeGraphContext`, сохранение в БД, чат, модалки редактирования — в science-graphrag другой домен (`work_id`, read-only граф из API).
+- **Не тащить без нужды:** `KnowledgeGraphContext`, сохранение в БД, чат, модалки редактирования — в SciGraph другой домен (`work_id`, read-only граф из API).
 
 #### Phase 4.3 — Навигация и устойчивость
 
@@ -921,7 +921,7 @@ JSON можно оставлять:
 
 ## Приложение: текущие опорные файлы
 
-### science-graphrag
+### SciGraph
 
 - `ui/src/App.jsx`
 - `ui/src/components/layout/DashboardLayout/DashboardLayout.jsx`

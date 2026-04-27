@@ -26,7 +26,7 @@ Coverage of **near-duplicate review queues** by domain object, how conflicts are
 
 ## Relation to osint-gr
 
-osint-gr blocks persistence until conflicts are resolved (Redis task metadata + `resolve-conflicts`). science-graphrag uses a **post-hoc queue**: ingest completes; the workspace page shows review cards when `pending_conflicts` / prefetch detects pending ingest-origin rows.
+osint-gr blocks persistence until conflicts are resolved (Redis task metadata + `resolve-conflicts`). SciGraph uses a **post-hoc queue**: ingest completes; the workspace page shows review cards when `pending_conflicts` / prefetch detects pending ingest-origin rows.
 
 ## Migrations
 

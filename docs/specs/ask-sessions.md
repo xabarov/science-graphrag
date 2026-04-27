@@ -15,7 +15,7 @@ Local-only named **sessions** partition Ask history by **scope** so workspace an
 - **New session** creates an empty session and makes it active.
 - **Rename** updates the title of the active session.
 - **Switch session** via dropdown; **Recent** list shows the last **3** turns of the **active** session only.
-- Legacy flat list in `science-graphrag:askHistory` is still updated by `rememberAskHistory` for backward compatibility and tests; first open of a scope may **import** legacy entries into one session titled `Imported` when no sessions exist yet.
+- Legacy flat list in `SciGraph:askHistory` is still updated by `rememberAskHistory` for backward compatibility and tests; first open of a scope may **import** legacy entries into one session titled `Imported` when no sessions exist yet.
 
 ## URL: `ask_session`
 

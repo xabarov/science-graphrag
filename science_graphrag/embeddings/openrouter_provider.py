@@ -35,6 +35,37 @@ from openai import APIError, OpenAI, RateLimitError
 from science_graphrag.config import Settings
 
 
+def _safe_response_preview(resp: object, *, limit: int = 500) -> str:
+    """Best-effort compact preview for broken OpenAI-compatible embedding responses."""
+    pieces: list[str] = []
+    data = getattr(resp, "data", None)
+    if data is None:
+        pieces.append("data=None")
+    else:
+        pieces.append(f"data_type={type(data).__name__}")
+        try:
+            pieces.append(f"data_len={len(data)}")
+        except TypeError:
+            pass
+    model = getattr(resp, "model", None)
+    if model:
+        pieces.append(f"model={model}")
+    usage = getattr(resp, "usage", None)
+    if usage is not None:
+        pieces.append(f"usage={usage!r}")
+    try:
+        dump = resp.model_dump() if hasattr(resp, "model_dump") else None
+    except Exception:  # noqa: BLE001
+        dump = None
+    if dump is not None:
+        try:
+            raw = json.dumps(dump, ensure_ascii=False, default=str)
+        except TypeError:
+            raw = repr(dump)
+        pieces.append(f"payload={raw[:limit]}")
+    return " | ".join(pieces)[:limit]
+
+
 @dataclass(frozen=True)
 class OpenRouterEmbeddingSettings:
     """Resolved credentials + model for an OpenRouter embeddings call."""
@@ -206,7 +237,22 @@ class OpenRouterEmbeddingProvider:
                     input=batch,
                     encoding_format="float",
                 )
-                return [list(d.embedding) for d in resp.data]
+                data = getattr(resp, "data", None)
+                if data is None:
+                    raise RuntimeError(
+                        "OpenRouter embeddings returned no data "
+                        f"for {len(batch)} inputs: {_safe_response_preview(resp)}"
+                    )
+                vectors: list[list[float]] = []
+                for idx, item in enumerate(data):
+                    embedding = getattr(item, "embedding", None)
+                    if embedding is None:
+                        raise RuntimeError(
+                            "OpenRouter embeddings item missing embedding "
+                            f"at index={idx}: {_safe_response_preview(resp)}"
+                        )
+                    vectors.append(list(embedding))
+                return vectors
             except RateLimitError as exc:
                 last_err = exc
                 retry_after = getattr(exc, "retry_after", None)

@@ -43,7 +43,7 @@ What was still missing at plan time — **product-quality agent chat surface**:
 
 ## 3. Design references to reuse
 
-### 3.1 From `science-graphrag`
+### 3.1 From `SciGraph`
 
 - Keep the existing thread layout, spacing, chips, and border rhythm from `ChatMessageThread.jsx`.
 - Keep typed answer sections from `ChatTypedBlocks.jsx`, but make them visually subordinate to the final answer card.

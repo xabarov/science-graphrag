@@ -193,6 +193,47 @@ class QdrantChunkStore:
                 break
         return updated
 
+    def remove_workspace_from_chunks(self, *, work_id: str, workspace_id: str) -> int:
+        """Remove ``workspace_id`` from payload.workspace_ids for all points of work_id (idempotent)."""
+
+        wid = str(workspace_id or "").strip()
+        if not wid:
+            return 0
+        flt = Filter(
+            must=[FieldCondition(key="work_id", match=MatchValue(value=work_id))],
+        )
+        updated = 0
+        offset: int | str | None = None
+        while True:
+            records, offset = self._client.scroll(
+                collection_name=self._collection,
+                scroll_filter=flt,
+                limit=256,
+                offset=offset,
+                with_payload=True,
+                with_vectors=False,
+            )
+            if not records:
+                break
+            for rec in records:
+                payload = rec.payload or {}
+                cur = [
+                    str(x).strip() for x in (payload.get("workspace_ids") or []) if str(x).strip()
+                ]
+                if wid not in cur:
+                    continue
+                nxt = [x for x in cur if x != wid]
+                self._client.set_payload(
+                    collection_name=self._collection,
+                    payload={"workspace_ids": nxt},
+                    points=[rec.id],
+                    wait=True,
+                )
+                updated += 1
+            if offset is None:
+                break
+        return updated
+
     def add_workspace_to_all_chunks(
         self,
         *,
@@ -375,6 +416,26 @@ class QdrantChunkStore:
 
         flt = Filter(
             must=[FieldCondition(key="work_id", match=MatchValue(value=work_id))],
+        )
+        res = self._client.count(
+            collection_name=self._collection,
+            count_filter=flt,
+            exact=True,
+        )
+        return int(res.count)
+
+    def count_chunks_for_workspace_work(self, *, workspace_id: str, work_id: str) -> int:
+        """Count chunk points scoped to a workspace (payload.workspace_ids contains workspace_id)."""
+
+        ws = (workspace_id or "").strip()
+        wid = (work_id or "").strip()
+        if not ws or not wid:
+            return 0
+        flt = Filter(
+            must=[
+                FieldCondition(key="work_id", match=MatchValue(value=wid)),
+                FieldCondition(key="workspace_ids", match=MatchAny(any=[ws])),
+            ],
         )
         res = self._client.count(
             collection_name=self._collection,

@@ -112,6 +112,37 @@ class QdrantWorkEmbeddingStore:
         )
         return True
 
+    def remove_workspace_from_work_point(self, *, work_id: str, workspace_id: str) -> bool:
+        """Remove workspace_id from payload.workspace_ids on the work summary point (idempotent)."""
+
+        ws = str(workspace_id or "").strip()
+        if not ws:
+            return False
+        pid = self.point_id_for_work(work_id)
+        try:
+            pts = self._client.retrieve(
+                collection_name=self._collection,
+                ids=[pid],
+                with_payload=True,
+                with_vectors=False,
+            )
+        except Exception:  # noqa: BLE001
+            return False
+        if not pts:
+            return False
+        payload = pts[0].payload or {}
+        cur = [str(x).strip() for x in (payload.get("workspace_ids") or []) if str(x).strip()]
+        if ws not in cur:
+            return False
+        nxt = [x for x in cur if x != ws]
+        self._client.set_payload(
+            collection_name=self._collection,
+            payload={"workspace_ids": nxt},
+            points=[pid],
+            wait=True,
+        )
+        return True
+
     def delete_by_work_id(self, *, work_id: str) -> int:
         pid = self.point_id_for_work(work_id)
         try:

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "workspace_id": "ws-pilot-od",
+  "display_name": "Pilot OD (benchmark)",
+  "description": "Object-detection pilot workspace used across retrieval workspace_scoped and agent_tools_v1 benchmarks. Canonical baseline for chat-agent roadmap regression until a dedicated seeded workspace is added.",
+  "related_benchmark_refs": [
+    "tests/fixtures/benchmarks/retrieval/workspace_scoped/ws_pilot_od_methods_overview/gold.json",
+    "tests/fixtures/benchmarks/agent_tools_v1/agent_case_05/gold.json"
+  ],
+  "notes": [
+    "Work membership is defined in Neo4j (:Workspace {id})-[:CONTAINS]->(:Work).",
+    "Run scripts/chat_agent_workspace_readiness_audit.py before long agent suites."
+  ]
+}

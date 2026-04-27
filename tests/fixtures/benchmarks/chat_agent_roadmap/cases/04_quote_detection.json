@@ -1,0 +1,16 @@
+{
+  "case_id": "quote_detection",
+  "roadmap_ref": "§2.1 item 5",
+  "workspace_id": "ws-pilot-od",
+  "answer_class_hint": "quote_extraction",
+  "question": "Find a short quote from a paper in this workspace that discusses object detection or real-time inference.",
+  "expect": {
+    "answer_classes_allowed": ["quote_extraction", "grounded_explanation"],
+    "strict_answer_class": false,
+    "tools_any_of": ["paper_quote_search", "paper_lookup", "workspace_list_papers", "idea_search"],
+    "tools_none_of": [],
+    "require_phoenix_trace_id": true,
+    "require_tool_trace": true,
+    "min_non_final_tool_calls": 1
+  }
+}

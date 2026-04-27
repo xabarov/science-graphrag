@@ -18,6 +18,11 @@ from science_graphrag.api.ingest_jobs import (
     start_batch_ingest_job,
     start_ingest_job,
 )
+from science_graphrag.api.workspace_work_removal import (
+    WORK_NOT_IN_WORKSPACE,
+    WORKSPACE_NOT_FOUND,
+    remove_work_from_workspace_result,
+)
 from science_graphrag.config import Settings, get_settings
 
 router = APIRouter(prefix="/workspaces", tags=["workspaces"])
@@ -158,14 +163,23 @@ def remove_work_from_workspace(
     workspace_id: str,
     work_id: str,
     stores: StoreRegistry = Depends(get_stores),
+    settings: Settings = Depends(get_settings),
 ) -> dict[str, Any]:
-    neo = stores.neo4j
-    if not neo.workspace_get(workspace_id):
-        raise HTTPException(status_code=404, detail="workspace_not_found")
-    neo.workspace_remove_work(workspace_id, work_id)
-    ws = neo.workspace_get(workspace_id)
-    assert ws is not None
-    return ws
+    try:
+        return remove_work_from_workspace_result(
+            stores,
+            settings=settings,
+            workspace_id=workspace_id,
+            work_id=work_id,
+        )
+    except KeyError as exc:
+        if exc.args and exc.args[0] == WORKSPACE_NOT_FOUND:
+            raise HTTPException(status_code=404, detail="workspace_not_found") from exc
+        raise
+    except ValueError as exc:
+        if exc.args and exc.args[0] == WORK_NOT_IN_WORKSPACE:
+            raise HTTPException(status_code=400, detail="work_not_in_workspace") from exc
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.get("/{workspace_id}/deduplication-candidates")

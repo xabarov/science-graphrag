@@ -15,6 +15,15 @@ export default {
   "workspace.tooltip.copyWorkspaceId": "Copy workspace id",
   "workspace.tooltip.copyWorkId": "Copy work id",
   "workspace.tooltip.copied": "Copied",
+  "workspace.removePaper.tooltip": "Remove paper from this workspace",
+  "workspace.removePaper.confirmTitle": "Remove paper from workspace?",
+  "workspace.removePaper.confirmBody":
+    "The paper will be removed from this workspace. If it is not used elsewhere and is safe to delete, related index data may be removed.",
+  "workspace.removePaper.confirm": "Remove",
+  "workspace.removePaper.toastDetached": "Paper removed from this workspace.",
+  "workspace.removePaper.toastPurgeBlocked":
+    "Paper removed from this workspace. Global delete was skipped because other works cite it.",
+  "workspace.removePaper.toastPurged": "Paper removed and unused data was deleted from the system.",
   "workspace.paper.yearChip": "Year {{year}}",
   "workspace.paper.doiChip": "DOI {{doi}}",
 

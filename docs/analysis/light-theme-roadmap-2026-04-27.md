@@ -1,6 +1,6 @@
 # Light theme roadmap — 2026-04-27
 
-**Status:** draft  
+**Status:** draft — **LT0 (visual contract + inventory) complete as of §10**  
 **Scope:** `ui/` application shell, shared components, page surfaces, graph/reader/chat, settings entry point for theme preference  
 **Primary context:** `ui/src/main.jsx`, `ui/src/styles.css`, `ui/src/components/common/index.jsx`, `ui/src/components/layout/DashboardLayout/Drawer.jsx`, `ui/src/components/layout/DashboardLayout/DashboardLayout.jsx`, `ui/src/components/work/MarkdownViewCore.jsx`, `ui/src/components/work/PdfViewer.jsx`, `ui/src/components/graph/graphCanvasStyle.js`
 
@@ -188,7 +188,9 @@ Only after this layer is stable should page-level migration begin.
 
 **Goal:** define the minimum viable light-theme system before editing dozens of files.
 
-Tasks:
+**Completion:** deliverables for this phase are recorded in **§10** (inventory, LT1 token table, normative contracts, LT1 scope boundary, hand-off checklist).
+
+Tasks (all addressed in §10):
 
 1. Inventory existing dark literals in shared shell and top-traffic pages.
 2. Define the initial semantic token map for dark and light.
@@ -369,3 +371,131 @@ If we start implementation next, the first slice should be:
 4. only then begin page-level conversion.
 
 That first slice is small enough to review safely and large enough to prove the architectural direction.
+
+## 10. LT0 completion — visual contract, inventory, and LT1 hand-off
+
+This section closes **Phase LT0** from §5: it is the authoritative reference for anyone starting **LT1** implementation.
+
+### 10.1 Inventory methodology
+
+**Scope:** `ui/src/**/*.js`, `ui/src/**/*.jsx`, `ui/src/**/*.css`.
+
+**Heuristic grep** (dark-only literals that must become semantic or palette-driven in later phases):
+
+- hex surfaces: `#0a0a0a`, `#141414`, `#1a1a1a`, `#1c1c1c`;
+- white-channel borders/text on dark: `rgba(255, 255, 255, …)` (covers most `sx` borders, muted text, and translucent fills).
+
+**Result (audit date: 2026-04-27):** **133 files** under `ui/src` match at least one of the patterns above.
+
+**Limitations of this inventory:**
+
+- It **does not** list files that only use accent RGBA (e.g. indigo) on top of MUI defaults; LT1 should still align `palette` / components with `appTokens`.
+- It **does not** capture third-party CSS (e.g. highlight.js, KaTeX, react-pdf layers) beyond what our components wrap.
+
+### 10.2 Grouping by semantic token family
+
+Use this map when migrating literals → `theme.appTokens` (or derived CSS variables).
+
+| Family | Typical literals / patterns in repo | Primary `appTokens` keys (LT1 minimum) |
+|--------|-------------------------------------|----------------------------------------|
+| **Surface — app canvas** | `#0a0a0a` (main, sticky headers) | `surface.app` |
+| **Surface — sidebar** | `#141414` (`Drawer`) | `surface.sidebar` |
+| **Surface — panel / card** | `#1a1a1a`, sticky headers, cards | `surface.panel`, `surface.panelAlt` |
+| **Surface — nested / viewer** | `#1c1c1c` (`PdfViewer` chrome), `#0a0a0a` in code blocks | `surface.code`, `surface.panelAlt` |
+| **Border** | `rgba(255,255,255,0.06–0.18)` | `border.default`, `border.strong` |
+| **Text** | `rgba(255,255,255,0.35–0.95)` | `text.primary`, `text.secondary`, `text.muted` |
+| **Accent** | `rgba(99,102,241,…)`, `rgba(129,140,248,…)` | `accent.softBg`, `accent.softBorder`, `accent.fg` |
+| **Danger** | `rgba(239,68,68,…)` | `state.dangerFg`, `state.dangerBg`, `state.dangerBorder` |
+| **Graph** | `graphCanvasStyle.js`, `graphCanvasDraw.js`, toolbar/legend | `graph.*` (separate table; **LT4**, not LT1) |
+
+### 10.3 Migration tier order (for LT1/LT2 planning)
+
+Order reduces merge risk and avoids “dark islands” after the first PR:
+
+| Tier | Area | Representative paths |
+|------|------|-------------------------|
+| **T0** | Bootstrap / global | `ui/src/main.jsx`, `ui/src/styles.css` |
+| **T1** | Shared primitives | `ui/src/components/common/index.jsx`, `ui/src/components/common/CursorIconAction.jsx`, `ui/src/components/feedback/dialogPaperSx.js`, `ui/src/components/feedback/InlineNotice.jsx`, `FeedbackShell` / `FeedbackProvider` |
+| **T2** | App shell | `ui/src/components/layout/DashboardLayout/Drawer.jsx`, `DashboardLayout.jsx`, `PageHeader.jsx`, `SettingsLayout.jsx`, `SettingsSectionNav.jsx` |
+| **T3** | Primary journeys | Chat: `ChatComposer.jsx`, `ChatMessageThread.jsx`, `AskAnswerPanel.jsx`; Workspaces: `WorkspacesPage.jsx` and `WorkspacesPage/*`; Reader: `ReaderPage.jsx`, `MarkdownViewCore.jsx`, `PdfViewer.jsx` |
+| **T4** | Long tail | `pages/BenchmarkPage/**`, `AdminEntryPage.jsx`, `DiagnosticsPage.jsx`, graph detail panels beyond shell |
+
+**LT1 code scope (recommended):** T0 + T1 + **minimal** T2 (enough shell to validate switching) + settings UI for appearance + i18n EN/RU. **Do not** attempt T4 in the same PR as LT1.
+
+### 10.4 Normative — theme modes and persistence
+
+These rules are **locked** for LT1; do not introduce alternate storage without updating this doc.
+
+| Item | Decision |
+|------|----------|
+| **User-selectable values** | `dark`, `light`, `system` |
+| **Effective runtime mode** | `dark` or `light` only (resolved from `system` + `prefers-color-scheme`) |
+| **Storage** | Browser only; key **`ui.appearanceMode`** (values: `dark` \| `light` \| `system`). No `/v1/settings` dependency for appearance. |
+| **UI entry** | `GeneralSettingsPanel` (alongside locale), EN+RU strings. |
+| **Source of truth for colors** | `theme.appTokens` on the MUI theme object. CSS variables, if any, are **derived** from `appTokens` at the app root for third-party CSS — not a second token definition. |
+
+### 10.5 Normative — first paint (no theme flash)
+
+**Problem:** With `system` or saved `light`, the first paint must not briefly show `dark` (or vice versa) before React runs.
+
+**Required behavior:**
+
+1. **Before** `ReactDOM.createRoot(…).render(…)`, read `localStorage.getItem('ui.appearanceMode')` (treat missing/invalid as `system` or product default — recommend default **`system`** to respect OS).
+2. Resolve **effective** mode: if stored value is `system`, use `window.matchMedia('(prefers-color-scheme: dark)').matches` → `dark` else `light`.
+3. Apply to the document root immediately:
+   - `document.documentElement.dataset.colorScheme = '<effective>'` (or equivalent single attribute used consistently);
+   - `document.documentElement.style.colorScheme = '<effective>'` so native scrollbars/form controls match;
+   - optionally set a minimal class on `<html>` for legacy CSS if needed before LT2 removes hard-coded literals from `styles.css`.
+4. React `ThemeProvider` must use the **same** resolved effective mode on first render (re-read storage or consume a tiny shared resolver module used by both the boot snippet and `main.jsx`).
+
+**Implementation note:** In Vite, the most reliable approach is a **small inline `<script>` in `index.html`** that runs before module load, **or** a synchronous top-of-`main.jsx` block before any async imports. Pick one; document it in the LT1 PR.
+
+### 10.6 LT1 minimal `appTokens` table (dark + light)
+
+These are the **minimum** keys LT1 should define so T0–T2 can stop using raw hex/white RGBA. Exact hex values for light may be tuned visually; light column matches §3.3 direction.
+
+| Token | Dark (current intent) | Light (first pass) |
+|-------|------------------------|---------------------|
+| `surface.app` | `#0a0a0a` | `#f5f7fb` |
+| `surface.sidebar` | `#141414` | `#eef2f7` |
+| `surface.panel` | `#1a1a1a` | `#ffffff` |
+| `surface.panelAlt` | `#1a1a1a` / `#1c1c1c` | `#f8fafc` |
+| `surface.code` | `#0a0a0a` (pre blocks) | `#f1f5f9` |
+| `border.default` | `rgba(255,255,255,0.08)` | `rgba(15,23,42,0.10)` |
+| `border.strong` | `rgba(255,255,255,0.12)` | `rgba(15,23,42,0.14)` |
+| `text.primary` | `rgba(255,255,255,0.9)` | `rgba(15,23,42,0.92)` |
+| `text.secondary` | `rgba(255,255,255,0.6)` | `rgba(15,23,42,0.62)` |
+| `text.muted` | `rgba(255,255,255,0.45)` | `rgba(15,23,42,0.48)` |
+| `text.accent` | `rgba(129,140,248,0.95)` | `rgba(79,70,229,0.88)` |
+| `accent.softBg` | `rgba(99,102,241,0.15)` | `rgba(99,102,241,0.10)` |
+| `accent.softBorder` | `rgba(99,102,241,0.3)` | `rgba(99,102,241,0.22)` |
+| `state.dangerFg` | `rgba(239,68,68,0.8)` | `rgba(185,28,28,0.92)` |
+| `state.dangerBg` | `rgba(239,68,68,0.08)` | `rgba(239,68,68,0.08)` |
+| `state.dangerBorder` | `rgba(239,68,68,0.2)` | `rgba(239,68,68,0.22)` |
+
+**Code highlighting (LT0 decision for LT3):** keep `github-dark.min.css` for dark effective mode; for light effective mode, LT3 must switch to a **light** stylesheet (e.g. `github.min.css`) or a single custom tokenized stylesheet — **not** in LT1 unless scoped to markdown only.
+
+### 10.7 High-risk subsystems — explicit LT1 boundary
+
+The following are **out of scope for the first LT1 PR** (token plumbing + appearance switch only). They stay on the roadmap as LT3/LT4 unless a regression forces a minimal stub.
+
+| Subsystem | Risk | Phase |
+|-----------|------|--------|
+| **Markdown + highlight.js** | Dark prose + `github-dark` on light background | **LT3** |
+| **PDF viewer** | Dark frame, react-pdf text/annotation layers vs page background | **LT3** |
+| **Graph canvas** | `graphCanvasStyle.js` stroke/fill math assumes dark canvas | **LT4** |
+| **Native / browser chrome** | `color-scheme`, scrollbars, focus ring in `styles.css` | **LT1** must set correctly; **full** polish with all edge cases — **LT5** |
+| **Benchmark / admin tail** | 133-file grep hits include many benchmark pages | **LT4** |
+
+### 10.8 LT0 exit checklist (hand-off to LT1)
+
+- [x] **Inventory:** 133 `ui/src` files with dark hex / `rgba(255,255,255,…)` literals (§10.1).
+- [x] **Semantic map:** literals grouped into families and `appTokens` keys (§10.2).
+- [x] **Migration order:** tiers T0–T4 (§10.3).
+- [x] **Modes + storage:** `dark` \| `light` \| `system`, key `ui.appearanceMode`, browser-only (§10.4).
+- [x] **First paint contract:** resolve effective mode before React paint (§10.5).
+- [x] **LT1 minimal token table:** dark + light columns (§10.6).
+- [x] **Highlight strategy:** dark vs light stylesheet decision deferred to LT3 (§10.6).
+- [x] **LT1 scope boundary:** markdown/PDF/graph/tail explicitly excluded from first code PR (§10.7).
+
+**Next step:** implement **§5 Phase LT1** using §10.4–§10.6 as the contract; migrate T0→T2 first; then proceed to LT2/LT3 per §5.

@@ -4,7 +4,7 @@
 
 ## Предусловия
 
-- Репозиторий: корень `science-graphrag`, активирован `.venv`.
+- Репозиторий: корень клона `science-graphrag`, активирован `.venv`.
 - Для **live retrieval** (`live_corpus_mini`): подняты Postgres, Neo4j, Qdrant, API; пилотный корпус заингестирован (work id YOLOv1 совпадает с `strict_pilot_*` / `live_*` gold).
 - Для **claims**: только файловые фикстуры, LLM не нужен (v1 anchor harness).
 - Для **references_resolution**: только `gold.json` + deterministic `synthetic_predictions` (без Neo4j) до wiring graph resolver.

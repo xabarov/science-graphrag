@@ -2,7 +2,7 @@
 
 Backlog is split into two synchronized tracks: frontend shell and backend bridge endpoints.
 
-**Референс по форме (osint-gr):** страница просмотра и запуска бенчмарков и сопутствующий контур — `frontend/src/pages/BenchmarkPage/` (UI), `backend/tests/bench/` (фикстуры/генерация вокруг кейсов), `backend/osint_graphrag/utils/bench/` (утилиты). В science-graphrag аналог — маршрут `/benchmark` в `ui/`, HTTP-слой `science_graphrag/api/benchmark.py`, исполнение прогонов `science_graphrag/api/task_store.py`, эталонные кейсы под CLI — `tests/fixtures/benchmarks/` и `eval/README.md`.
+**Референс по форме (osint-gr):** страница просмотра и запуска бенчмарков и сопутствующий контур — `frontend/src/pages/BenchmarkPage/` (UI), `backend/tests/bench/` (фикстуры/генерация вокруг кейсов), `backend/osint_graphrag/utils/bench/` (утилиты). В SciGraph аналог — маршрут `/benchmark` в `ui/`, HTTP-слой `science_graphrag/api/benchmark.py`, исполнение прогонов `science_graphrag/api/task_store.py`, эталонные кейсы под CLI — `tests/fixtures/benchmarks/` и `eval/README.md`.
 
 ## Track A: frontend shell backlog
 

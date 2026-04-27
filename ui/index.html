@@ -14,6 +14,27 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      (function () {
+        var KEY = "ui.appearanceMode";
+        var raw = null;
+        try {
+          raw = localStorage.getItem(KEY);
+        } catch (e) {
+          raw = null;
+        }
+        var pref = raw === "dark" || raw === "light" || raw === "system" ? raw : "system";
+        var dark = false;
+        try {
+          dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        } catch (e2) {
+          dark = false;
+        }
+        var eff = pref === "dark" ? "dark" : pref === "light" ? "light" : dark ? "dark" : "light";
+        document.documentElement.dataset.colorScheme = eff;
+        document.documentElement.style.colorScheme = eff;
+      })();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

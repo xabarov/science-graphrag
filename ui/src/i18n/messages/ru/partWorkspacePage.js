@@ -15,6 +15,15 @@ export default {
   "workspace.tooltip.copyWorkspaceId": "Копировать id области",
   "workspace.tooltip.copyWorkId": "Копировать id статьи",
   "workspace.tooltip.copied": "Скопировано",
+  "workspace.removePaper.tooltip": "Убрать статью из этой рабочей области",
+  "workspace.removePaper.confirmTitle": "Убрать статью из области?",
+  "workspace.removePaper.confirmBody":
+    "Статья будет удалена из этой рабочей области. Если она нигде больше не используется и на неё нет входящих ссылок цитирования, связанные данные в индексе могут быть удалены.",
+  "workspace.removePaper.confirm": "Убрать",
+  "workspace.removePaper.toastDetached": "Статья убрана из этой рабочей области.",
+  "workspace.removePaper.toastPurgeBlocked":
+    "Статья убрана из области. Полное удаление из системы пропущено: на неё ссылаются другие статьи.",
+  "workspace.removePaper.toastPurged": "Статья убрана из области; неиспользуемые данные удалены из системы.",
   "workspace.paper.yearChip": "Год {{year}}",
   "workspace.paper.doiChip": "DOI {{doi}}",
 
