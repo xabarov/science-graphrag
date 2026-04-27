@@ -127,6 +127,31 @@ def test_transient_llm_failure_detection() -> None:
     assert not _is_transient_llm_failure(ValueError("invalid json"))
 
 
+def test_require_observability_match_only_when_reliable() -> None:
+    gold = {"expect": {"require_observability_match": True, "require_phoenix_trace_id": True}}
+    base = {
+        "tool_trace": [{"tool": "workspace_list_papers"}, {"tool": "final_answer"}],
+        "final_output": {"phoenix_trace_id": "a" * 32, "answer_class": "inventory"},
+    }
+    unreliable = {
+        **base,
+        "observability": {
+            "observability_passed": False,
+            "observability_match_reliable": False,
+        },
+    }
+    assert score_roadmap_case(unreliable, gold)["passed"] is True
+
+    reliable_fail = {
+        **base,
+        "observability": {
+            "observability_passed": False,
+            "observability_match_reliable": True,
+        },
+    }
+    assert score_roadmap_case(reliable_fail, gold)["passed"] is False
+
+
 def test_derive_diagnostics() -> None:
     report = {
         "tool_trace": [

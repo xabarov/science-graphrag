@@ -6,6 +6,7 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 import CenterFocusStrongOutlinedIcon from "@mui/icons-material/CenterFocusStrongOutlined";
 import FitScreenOutlinedIcon from "@mui/icons-material/FitScreenOutlined";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
@@ -51,8 +52,9 @@ export default function GraphCanvasViewToolbar({
   onUnpinAll,
   unpinDisabled,
 }) {
+  const tk = useTheme().appTokens;
   return (
-    <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75, px: 1, py: 0.5, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+    <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75, px: 1, py: 0.5, borderBottom: `1px solid ${tk.border.default}` }}>
       <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75 }}>
         <Tooltip title={t("graph.canvas.helpTooltip")}>
           <CursorIconButton type="button" aria-label={t("graph.canvas.helpAria")}>
@@ -63,10 +65,10 @@ export default function GraphCanvasViewToolbar({
           <Tooltip title={t("graph.canvas.repulsionTooltip")}>
             <Box sx={{ width: 128, px: 0.25, cursor: "help" }}>
               <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5, mb: 0.15 }}>
-                <Typography sx={{ fontSize: "0.58rem", color: "rgba(255,255,255,0.35)", fontFamily: "monospace", letterSpacing: "0.02em" }}>
+                <Typography sx={{ fontSize: "0.58rem", color: tk.text.faint, fontFamily: "monospace", letterSpacing: "0.02em" }}>
                   sim
                 </Typography>
-                <Typography sx={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.42)", flex: 1 }}>
+                <Typography sx={{ fontSize: "0.65rem", color: tk.text.muted, flex: 1 }}>
                   {t("graph.canvas.repulsion", { percent: String(Math.round(repulsionPercent)) })}
                 </Typography>
               </Box>
@@ -82,7 +84,7 @@ export default function GraphCanvasViewToolbar({
           </Tooltip>
         ) : null}
       </Box>
-      <Divider orientation="vertical" flexItem sx={{ borderColor: "rgba(255,255,255,0.08)", alignSelf: "stretch", minHeight: 28 }} />
+      <Divider orientation="vertical" flexItem sx={{ borderColor: tk.border.default, alignSelf: "stretch", minHeight: 28 }} />
       <ToggleButtonGroup
         size="small"
         value={edgeLabelMode}
@@ -96,12 +98,12 @@ export default function GraphCanvasViewToolbar({
             px: 0.5,
             minWidth: 0,
             textTransform: "none",
-            color: "rgba(255,255,255,0.5)",
-            borderColor: "rgba(255,255,255,0.12)",
+            color: tk.text.muted,
+            borderColor: tk.border.strong,
           },
           "& .MuiToggleButton-root.Mui-selected": {
-            color: "rgba(129, 140, 248, 0.95)",
-            backgroundColor: "rgba(99, 102, 241, 0.12)",
+            color: tk.accent.fg,
+            backgroundColor: tk.accent.chipReadyBg,
           },
         }}
       >
@@ -115,7 +117,7 @@ export default function GraphCanvasViewToolbar({
           {t("graph.canvas.edgeLabels.adaptive")}
         </ToggleButton>
       </ToggleButtonGroup>
-      <Divider orientation="vertical" flexItem sx={{ borderColor: "rgba(255,255,255,0.08)", alignSelf: "stretch", minHeight: 28 }} />
+      <Divider orientation="vertical" flexItem sx={{ borderColor: tk.border.default, alignSelf: "stretch", minHeight: 28 }} />
       <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.5 }}>
         <Tooltip title={t("graph.canvas.fitTooltip")}>
           <CursorIconButton type="button" aria-label={t("graph.canvas.fitAria")} onClick={onFit}>
@@ -135,7 +137,7 @@ export default function GraphCanvasViewToolbar({
       </Box>
       {layoutMode === "force" ? (
         <>
-          <Divider orientation="vertical" flexItem sx={{ borderColor: "rgba(255,255,255,0.08)", alignSelf: "stretch", minHeight: 28 }} />
+          <Divider orientation="vertical" flexItem sx={{ borderColor: tk.border.default, alignSelf: "stretch", minHeight: 28 }} />
           <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.5 }}>
             <Tooltip title={t("graph.canvas.restartForceTooltip")}>
               <CursorIconButton type="button" aria-label={t("graph.canvas.restartForceAria")} onClick={onRestartForce}>

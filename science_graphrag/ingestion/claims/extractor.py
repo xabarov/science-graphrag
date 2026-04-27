@@ -269,6 +269,10 @@ Return JSON matching the tool schema: `claims` array of objects with
 If the excerpt has no supportable claims, return `"claims": []`.
 """
 
+_PRODUCTION_BATCH_TRIGGER_CHUNKS = 8
+_PRODUCTION_BATCH_SIZE = 6
+_PRODUCTION_BATCH_MAX_CHARS = 8_000
+
 
 def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too-many-statements,too-many-nested-blocks
     chunks: list[dict[str, Any]],
@@ -304,6 +308,8 @@ def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too
         llm_error_message=None,
         llm_raw_response_preview=None,
         claims_benchmark_compact_schema=bool(force_benchmark),
+        claims_compact_fallback_used=False,
+        claims_compact_fallback_reason=None,
     )
 
     if not force_benchmark and not settings.claims_extraction_enabled:
@@ -322,12 +328,34 @@ def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too
     ]
     lookup = _chunk_lookup(chunks_norm)
     payload_max = 26_000 if force_benchmark else 28_000
-    user = (
-        "Work id (opaque): "
-        + str(work_id)
-        + "\n\nExtract claims from the following chunks:\n\n"
-        + _build_user_payload(chunks_norm, max_chars=payload_max)
-    )
+
+    def _user_payload(batch_chunks: list[dict[str, Any]], *, max_chars: int) -> str:
+        return (
+            "Work id (opaque): "
+            + str(work_id)
+            + "\n\nExtract claims from the following chunks:\n\n"
+            + _build_user_payload(batch_chunks, max_chars=max_chars)
+        )
+
+    def _extract_batch(
+        batch_chunks: list[dict[str, Any]],
+    ) -> tuple[list[Any], str | None, bool]:
+        user_payload = _user_payload(batch_chunks, max_chars=payload_max)
+        parsed, err = ext.extract_maybe(_ClaimsLLMResponse, system=_SYSTEM, user=user_payload)
+        if err or parsed is None:
+            compact_user = _user_payload(batch_chunks, max_chars=_PRODUCTION_BATCH_MAX_CHARS)
+            fallback_parsed, fallback_err = ext.extract_maybe(
+                _ClaimsLLMResponseBenchmark,
+                system=_SYSTEM_BENCHMARK,
+                user=compact_user,
+            )
+            if fallback_err is None and fallback_parsed is not None:
+                return list(fallback_parsed.claims), str(err or "parsed_none"), True
+            err_parts = [str(err or "parsed_none")]
+            if fallback_err:
+                err_parts.append(f"compact_fallback_failed: {fallback_err}")
+            return [], "; ".join(err_parts), False
+        return list(parsed.claims), None, False
 
     # Single-chunk BT6 paraphrase runs can exceed 4k completion tokens on verbose models.
     max_tokens_cap = 16384 if force_benchmark else 8192
@@ -340,29 +368,74 @@ def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too
         timeout_seconds=settings.extraction_llm_timeout_seconds,
         mode=settings.extraction_llm_mode,
     )
+    parsed_claim_rows: list[Any] = []
     if force_benchmark:
         parsed, err = ext.extract_maybe(
             _ClaimsLLMResponseBenchmark,
             system=_SYSTEM_BENCHMARK,
-            user=user,
+            user=_user_payload(chunks_norm, max_chars=payload_max),
         )
-    else:
-        parsed, err = ext.extract_maybe(_ClaimsLLMResponse, system=_SYSTEM, user=user)
-    if err or parsed is None:
-        log.warning("claims_extraction: LLM failed: %s", err)
-        _diag(llm_error_message=str(err) if err else "parsed_none")
-        return []
-
-    if parsed is not None:
         try:
             raw_dump = json.dumps(parsed.model_dump(mode="json"), ensure_ascii=False)
             _diag(llm_raw_response_preview=raw_dump[:2000])
-            _diag(raw_claims_from_llm=len(parsed.claims))
+            parsed_claim_rows = list(parsed.claims)
+            _diag(raw_claims_from_llm=len(parsed_claim_rows))
         except (TypeError, ValueError, AttributeError):
             _diag(llm_raw_response_preview="(unserializable response)")
+    else:
+        chunk_batches = (
+            [chunks_norm]
+            if len(chunks_norm) <= _PRODUCTION_BATCH_TRIGGER_CHUNKS
+            else [
+                chunks_norm[i : i + _PRODUCTION_BATCH_SIZE]
+                for i in range(0, len(chunks_norm), _PRODUCTION_BATCH_SIZE)
+            ]
+        )
+        batch_errors: list[str] = []
+        raw_preview: dict[str, Any] = {"batches": []}
+        for idx, batch in enumerate(chunk_batches, start=1):
+            batch_rows, batch_err, used_compact = _extract_batch(batch)
+            if used_compact:
+                log.warning(
+                    "claims_extraction: full schema failed for work_id=%s batch=%s/%s; using compact fallback",
+                    work_id,
+                    idx,
+                    len(chunk_batches),
+                )
+                _diag(
+                    claims_compact_fallback_used=True,
+                    claims_compact_fallback_reason=(
+                        str(batch_err or "parsed_none")
+                        if not diagnostics or not diagnostics.get("claims_compact_fallback_reason")
+                        else diagnostics.get("claims_compact_fallback_reason")
+                    ),
+                )
+            if batch_err and not batch_rows:
+                batch_errors.append(f"batch {idx}/{len(chunk_batches)}: {batch_err}")
+            parsed_claim_rows.extend(batch_rows)
+            raw_preview["batches"].append(
+                {
+                    "batch_index": idx,
+                    "chunks": len(batch),
+                    "claims": len(batch_rows),
+                    "used_compact_fallback": bool(used_compact),
+                    "error": batch_err,
+                }
+            )
+        _diag(
+            raw_claims_from_llm=len(parsed_claim_rows),
+            llm_raw_response_preview=json.dumps(raw_preview, ensure_ascii=False)[:2000],
+        )
+        if batch_errors and not parsed_claim_rows:
+            err = "; ".join(batch_errors)
+            log.warning("claims_extraction: LLM failed: %s", err)
+            _diag(llm_error_message=err)
+            return []
+        if batch_errors:
+            _diag(llm_error_message="partial_batch_failures: " + "; ".join(batch_errors[:3]))
 
     out: list[ClaimDraft] = []
-    for row in parsed.claims:
+    for row in parsed_claim_rows:
         text = str(row.claim_text or "").strip()
         if len(text) < 10:
             if diagnostics is not None:

@@ -4,6 +4,7 @@ from langchain_core.tools import BaseTool, tool
 from pydantic import BaseModel, Field
 
 from science_graphrag.agent.tools.base import BaseAgentTool, ToolResult
+from science_graphrag.agent.tools.trace_wrappers import run_tool_result_with_span
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 
 
@@ -33,7 +34,15 @@ def _make_entity_search_tool(store: Neo4jGraphStore) -> BaseTool:
     @tool("entity_search", args_schema=EntitySearchArgs, return_direct=False)
     def entity_search_tool(kind: str = "work", query: str = "", limit: int = 10) -> dict:
         """Search knowledge-graph entities by fulltext index."""
-        result = runtime_tool.run(kind=kind, q=query, limit=limit)
+        result = run_tool_result_with_span(
+            tool_name="entity_search",
+            tool_parameters={
+                "kind": kind,
+                "query": query[:240],
+                "limit": limit,
+            },
+            fn=lambda: runtime_tool.run(kind=kind, q=query, limit=limit),
+        )
         payload = dict(result.payload)
         payload.setdefault("row_count", result.row_count)
         payload.setdefault("truncated", result.truncated)

@@ -66,6 +66,25 @@ export function AgentRunInspector({
 
   const rationale = buildAskAnswerRationale(normalized, { locked, inWorkspace, formWorkId: workId });
   const rt = normalized.retrieval_trace && typeof normalized.retrieval_trace === "object" ? normalized.retrieval_trace : {};
+  const phoenixUiBase =
+    typeof import.meta.env?.VITE_PHOENIX_UI_BASE_URL === "string"
+      ? import.meta.env.VITE_PHOENIX_UI_BASE_URL.trim()
+      : "";
+  const phoenixProjectId =
+    typeof import.meta.env?.VITE_PHOENIX_PROJECT_ID === "string" &&
+    import.meta.env.VITE_PHOENIX_PROJECT_ID.trim()
+      ? import.meta.env.VITE_PHOENIX_PROJECT_ID.trim()
+      : "science-graphrag";
+  const phoenixTraceId =
+    normalized.phoenix_trace_id != null && String(normalized.phoenix_trace_id).trim()
+      ? String(normalized.phoenix_trace_id).trim()
+      : "";
+  const phoenixTraceUrl =
+    phoenixUiBase && phoenixTraceId
+      ? `${phoenixUiBase.replace(/\/$/, "")}/projects/${encodeURIComponent(
+          phoenixProjectId,
+        )}/traces/${encodeURIComponent(phoenixTraceId)}`
+      : "";
 
   return (
     <Box sx={{ mt: 1.5, pt: 1, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
@@ -164,9 +183,28 @@ export function AgentRunInspector({
             </Typography>
           </Collapse>
 
-          {normalized.phoenix_trace_id ? (
+          {phoenixTraceUrl ? (
+            <Typography
+              component="a"
+              href={phoenixTraceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={t("chat.run.openPhoenixAria")}
+              sx={{
+                display: "inline-block",
+                fontSize: "0.72rem",
+                color: "rgba(129, 140, 248, 0.95)",
+                mt: 1,
+                textDecoration: "none",
+                borderBottom: "1px solid rgba(99, 102, 241, 0.35)",
+                "&:hover": { borderBottomColor: "rgba(129, 140, 248, 0.7)" },
+              }}
+            >
+              {t("chat.run.openPhoenix")}
+            </Typography>
+          ) : phoenixTraceId ? (
             <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.35)", mt: 1, fontFamily: "monospace" }}>
-              {t("chat.run.phoenixTraceHint", { id: String(normalized.phoenix_trace_id).slice(0, 24) })}
+              {t("chat.run.phoenixTraceHint", { id: phoenixTraceId.slice(0, 24) })}
             </Typography>
           ) : null}
         </Box>

@@ -290,3 +290,10 @@ def test_collect_typed_payloads_merges_relation_trace() -> None:
     }
     typed = collect_typed_payloads(state)
     assert typed.get("relation_trace", {}).get("edges")
+
+
+def test_infer_class_from_trace_prefers_relation_over_inventory() -> None:
+    from science_graphrag.agent.chat_envelope import infer_class_from_trace
+
+    names = {"workspace_overview", "entity_search"}
+    assert infer_class_from_trace(names) == "relation_tracing"

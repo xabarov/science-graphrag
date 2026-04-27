@@ -16,12 +16,16 @@ from science_graphrag.agent.tool_search import shortlist_tools_for_specialist
 from science_graphrag.agent.tools import build_graph_tools
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
+from science_graphrag.observability.spans import llm_span
 
 SPECIALIST_NAME = "graph_agent"
 SYSTEM_PROMPT = (
-    "You are a graph specialist. Use cypher_query (advanced, read-only), entity_search and "
-    "edge_search to retrieve structured graph facts and relationships. Prefer entity_search / "
-    "edge_search over raw cypher when possible. Return findings through tool outputs."
+    "You are a graph specialist. Use entity_search / edge_search first for graph facts and "
+    "relations; use cypher_query only when needed as an advanced fallback. "
+    "IMPORTANT: allowed node labels are Work, Author, Authorship, Institution, Venue, Method, "
+    "Dataset, Workspace, Claim, Evidence, Concept, ResearchTopic. Never use label Paper. "
+    "Only callable tools in this specialist are cypher_query, entity_search, edge_search; never call "
+    "paper_* or workspace_* tools here. Return findings through tool outputs only."
 )
 
 
@@ -50,11 +54,15 @@ def _compile_graph_subgraph(tools: list[BaseTool], settings: Settings, system_pr
     llm = build_chat_model(settings).bind_tools(tools)
 
     def chat_node(state: AgentState) -> dict:
-        response = llm.invoke(
-            ensure_messages_safe_for_generation(
-                [HumanMessage(content=system_prompt), *list(state.get("messages") or [])]
+        with llm_span(
+            "llm.agent.graph_specialist",
+            {"llm.invocation_name": "agent_graph_specialist"},
+        ):
+            response = llm.invoke(
+                ensure_messages_safe_for_generation(
+                    [HumanMessage(content=system_prompt), *list(state.get("messages") or [])]
+                )
             )
-        )
         return {"messages": [response]}
 
     def budget_node(state: AgentState) -> dict:

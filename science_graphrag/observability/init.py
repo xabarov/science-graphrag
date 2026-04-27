@@ -1,3 +1,14 @@
+"""Tracer registration for Phoenix (OTLP) + optional auto-instrumentation.
+
+**Manual vs automatic LLM spans (agent chat):**
+
+- ``setup_langchain_instrumentation()`` enables OpenInference LangChain hooks (LangGraph included).
+- Domain contract spans (``agent.query``, ``tool.*``, ``retrieval.*``, explicit ``llm.agent.*``)
+  are **hand-authored** in the agent runtime for stable naming and attributes.
+- OpenAI auto-instrumentation is optional (``PHOENIX_OPENAI_AUTO_INSTRUMENTATION``); disable if it
+  duplicates ``llm_span`` noise. See ``docs/architecture/observability-phoenix.md``.
+"""
+
 from __future__ import annotations
 
 import importlib

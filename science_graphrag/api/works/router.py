@@ -15,11 +15,17 @@ from science_graphrag.api.works.detail import (
     get_work_detail,
     get_work_extracted_body_payload,
     list_work_claims,
+    list_work_summaries_by_ids,
     list_works,
     work_pdf_blob_path,
     work_sources_payload,
 )
-from science_graphrag.api.works.dto import WorkClaimsResponse, WorkListResponse
+from science_graphrag.api.works.dto import (
+    WorkClaimsResponse,
+    WorkIdsBatchBody,
+    WorkListResponse,
+    WorkSummaryBatchResponse,
+)
 from science_graphrag.api.works.graph_neighborhood import (
     expand_work_aggregator,
     work_graph_neighborhood,
@@ -97,6 +103,25 @@ def get_works_list(
     return WorkListResponse(items=items, total=total)
 
 
+@router.post("/batch-summary", response_model=WorkSummaryBatchResponse)
+def post_works_batch_summary(
+    body: WorkIdsBatchBody,
+    stores: StoreRegistry = Depends(get_stores),
+) -> WorkSummaryBatchResponse:
+    """Resolve title/year/doi/arxiv for many works in one Neo4j query (workspace list)."""
+
+    seen: set[str] = set()
+    deduped: list[str] = []
+    for raw in body.work_ids:
+        wid = str(raw or "").strip()
+        if not wid or wid in seen:
+            continue
+        seen.add(wid)
+        deduped.append(wid)
+    items = list_work_summaries_by_ids(stores, deduped)
+    return WorkSummaryBatchResponse(items=items)
+
+
 @router.get("/{work_id}")
 def get_work_by_id(
     work_id: str,
@@ -142,6 +167,11 @@ def get_work_graph(
         default=None,
         description="CSV of neighbor kinds to skip aggregating (e.g. Author,Institution).",
     ),
+    include_claims: bool = Query(
+        default=False,
+        description="Include capped Claim nodes linked from the center Work (HAS_CLAIM edges).",
+    ),
+    claims_limit: int = Query(default=24, ge=1, le=120),
     stores: StoreRegistry = Depends(get_stores),
 ) -> dict[str, Any]:
     g = work_graph_neighborhood(
@@ -153,6 +183,8 @@ def get_work_graph(
         view=view,
         aggregator_threshold=aggregator_threshold,
         aggregator_disabled_kinds=aggregator_disabled_kinds,
+        include_claims=include_claims,
+        claims_limit=claims_limit,
     )
     if not g:
         raise HTTPException(status_code=404, detail="work_not_found")

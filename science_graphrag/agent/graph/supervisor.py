@@ -28,7 +28,7 @@ from science_graphrag.agent.llm.chat import build_chat_model, ensure_messages_sa
 from science_graphrag.agent.tools import build_tool_registry
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
-from science_graphrag.observability.spans import add_span_event, chain_span
+from science_graphrag.observability.spans import add_span_event, chain_span, llm_span
 
 ROUTE_FINISH = "finish"
 
@@ -185,10 +185,14 @@ def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
 
         route_msgs = _build_supervisor_route_messages(state)
         with chain_span(
-            "agent.supervisor.route_llm",
+            "agent.supervisor.route",
             {"agent.budget_remaining": budget},
         ):
-            response = llm.invoke(ensure_messages_safe_for_generation(route_msgs))
+            with llm_span(
+                "llm.agent.supervisor_route",
+                {"llm.invocation_name": "agent_supervisor_route"},
+            ):
+                response = llm.invoke(ensure_messages_safe_for_generation(route_msgs))
         choice = str(response.content or "").strip().lower()
         if choice not in {RETRIEVAL_SPECIALIST, GRAPH_SPECIALIST, WRITER_SPECIALIST, ROUTE_FINISH}:
             # Old unsafe default was retrieval; prefer writer on non-exact route tokens.
@@ -197,6 +201,10 @@ def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
                 {"token": choice[:80]},
             )
             choice = WRITER_SPECIALIST
+        add_span_event(
+            "agent.supervisor.route_selected",
+            {"to": choice, "budget_left": budget},
+        )
         return {
             "current_specialist": choice,
             "routing_log": [

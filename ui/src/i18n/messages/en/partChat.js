@@ -168,6 +168,8 @@ export default {
   "chat.run.live.toolCall": "{{tool}}",
   "chat.run.live.toolCallQuery": "{{tool}} · {{q}}",
   "chat.run.phoenixTraceHint": "Trace id: {{id}}…",
+  "chat.run.openPhoenix": "Open trace in Phoenix",
+  "chat.run.openPhoenixAria": "Open this run's trace in Phoenix UI (new tab)",
   "chat.run.specialistRunsTitle": "Specialist runs",
   "chat.run.specialistExpandAria": "Expand specialist run details",
   "chat.run.specialistCollapseAria": "Collapse specialist run details",

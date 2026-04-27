@@ -12,7 +12,7 @@ from langchain_core.messages import HumanMessage
 from science_graphrag.agent.chat_envelope import ANSWER_CLASSES
 from science_graphrag.agent.llm.chat import build_chat_model
 from science_graphrag.config import Settings
-from science_graphrag.observability.spans import chain_span
+from science_graphrag.observability.spans import add_span_event, chain_span, llm_span
 
 logger = logging.getLogger(__name__)
 
@@ -170,19 +170,38 @@ def llm_classify_turn_policy(  # pylint: disable=too-many-locals
             timeout_seconds=settings.agent_turn_policy_classifier_timeout_seconds,
         )
         with chain_span(
-            "agent.turn_policy.llm",
+            "agent.turn_policy",
             {
                 "agent.turn_policy.classifier": str(settings.agent_turn_policy_classifier or ""),
             },
         ):
-            resp = llm.invoke(messages)
+            with llm_span(
+                "llm.agent.turn_policy",
+                {"llm.invocation_name": "agent_turn_policy_classifier"},
+            ):
+                resp = llm.invoke(messages)
         content = str(getattr(resp, "content", "") or "")
         parsed = _extract_json_object(content)
         if not parsed:
+            add_span_event(
+                "agent.turn_policy.parse_failed",
+                {"reason": "no_json_object", "content_chars": str(len(content))},
+            )
             return None
         norm = _normalize_policy_dict(parsed)
         if not norm:
+            add_span_event("agent.turn_policy.parse_failed", {"reason": "normalize_failed"})
             return None
+        add_span_event(
+            "agent.turn_policy.parsed",
+            {
+                "conversation_intent": str(norm["conversation_intent"]),
+                "tool_policy": str(norm["tool_policy"]),
+                "route_hint": str(norm["route_hint"]),
+                "confidence": float(norm["confidence"]),
+                "suggested_answer_class": str(norm["suggested_answer_class"]),
+            },
+        )
         return (
             norm["conversation_intent"],  # type: ignore[return-value]
             norm["tool_policy"],  # type: ignore[return-value]

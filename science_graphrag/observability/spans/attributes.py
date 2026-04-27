@@ -248,3 +248,103 @@ class SpanAttributes:
     @staticmethod
     def set_tool_parameters(parameters: dict[str, Any] | list[Any] | str) -> None:
         set_span_attribute("tool.parameters", SpanAttributes._safe_json(parameters))
+
+    @staticmethod
+    def preview_text(text: str | None, *, max_chars: int = 400) -> str:
+        """Truncate free text for span attributes (no secrets, minimal corpus leakage)."""
+
+        if not text:
+            return ""
+        s = str(text).strip()
+        if len(s) <= max_chars:
+            return s
+        return s[:max_chars] + "...[truncated]"
+
+    @staticmethod
+    def tool_result_preview(
+        *,
+        row_count: int | None = None,
+        truncated: bool = False,
+        preview: dict[str, Any] | None = None,
+        error: str | None = None,
+    ) -> dict[str, Any]:
+        """Structured short output for TOOL spans."""
+
+        out: dict[str, Any] = {}
+        if row_count is not None:
+            out["row_count"] = row_count
+        out["truncated"] = bool(truncated)
+        if error:
+            out["error"] = SpanAttributes.preview_text(error, max_chars=500)
+        if preview:
+            out["preview"] = preview
+        return out
+
+    @staticmethod
+    def set_embedding_agent_attrs(
+        model_name: str,
+        *,
+        dim: int | None = None,
+        input_count: int = 1,
+        backend: str | None = None,
+    ) -> None:
+        """Standard EMBEDDING attributes for agent-side query embedding."""
+
+        set_span_attribute("embedding.model_name", model_name)
+        set_span_attribute("embedding.input_count", int(max(0, input_count)))
+        if dim is not None:
+            set_span_attribute("embedding.dim", int(dim))
+        if backend:
+            set_span_attribute("embedding.backend", str(backend))
+
+    @staticmethod
+    def set_retrieval_qdrant_context(
+        *,
+        collection_name: str | None,
+        top_k: int | None = None,
+        workspace_id: str | None = None,
+        work_id: str | None = None,
+        query_preview: str | None = None,
+    ) -> None:
+        set_span_attribute("db.system", "qdrant")
+        if collection_name:
+            set_span_attribute("db.collection.name", str(collection_name))
+        if top_k is not None:
+            set_span_attribute("retrieval.top_k", int(top_k))
+        if workspace_id:
+            set_span_attribute("metadata.workspace_id", str(workspace_id))
+        if work_id:
+            set_span_attribute("metadata.work_id", str(work_id))
+        if query_preview:
+            set_span_attribute("retrieval.query", SpanAttributes.preview_text(query_preview, max_chars=240))
+
+    @staticmethod
+    def set_retrieval_documents(hits: list[dict[str, Any]], *, max_docs: int = 24) -> None:
+        """Flat OpenInference-style retrieval.documents.{i}.* from normalized hit dicts.
+
+        Each hit may include: id, score, content (snippet), work_id, kind.
+        """
+
+        for i, hit in enumerate(hits[:max_docs]):
+            prefix = f"retrieval.documents.{i}.document"
+            doc_id = hit.get("id") or hit.get("chunk_fingerprint") or hit.get("chunk_id")
+            if doc_id is not None:
+                set_span_attribute(f"{prefix}.id", str(doc_id))
+            score = hit.get("score")
+            if score is not None:
+                try:
+                    set_span_attribute(f"{prefix}.score", float(score))
+                except (TypeError, ValueError):
+                    set_span_attribute(f"{prefix}.score", str(score))
+            content = hit.get("content") or hit.get("snippet") or hit.get("text")
+            if content is not None:
+                set_span_attribute(
+                    f"{prefix}.content",
+                    SpanAttributes.preview_text(str(content), max_chars=320),
+                )
+            wid = hit.get("work_id")
+            if wid is not None:
+                set_span_attribute(f"retrieval.documents.{i}.metadata.work_id", str(wid))
+            kind = hit.get("kind")
+            if kind is not None:
+                set_span_attribute(f"retrieval.documents.{i}.metadata.kind", str(kind))

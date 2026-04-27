@@ -20,6 +20,7 @@ export {
   workPdfUrl,
   getWorkSources,
   getWorkDetail,
+  postWorksBatchSummary,
   getWorkChunks,
   getWorkExtractedBody,
   getWorkClaims,

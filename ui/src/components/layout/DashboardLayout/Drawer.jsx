@@ -147,7 +147,13 @@ export default function Drawer({ onNavigate }) {
         overflowY: "auto",
       }}
     >
-      <Box sx={{ padding: expanded ? 2 : 1.5 }}>
+      <Box
+        sx={{
+          px: expanded ? 2 : 1.5,
+          pt: expanded ? 2 : 1.25,
+          pb: expanded ? 1.25 : 1,
+        }}
+      >
         {expanded ? (
           <Box
             component="img"
@@ -155,9 +161,11 @@ export default function Drawer({ onNavigate }) {
             alt={t("shell.drawer.brand")}
             sx={{
               display: "block",
-              width: "100%",
-              maxWidth: 214,
-              height: "auto",
+              width: "auto",
+              maxWidth: "100%",
+              height: 30,
+              objectFit: "contain",
+              objectPosition: "left center",
             }}
           />
         ) : (
@@ -168,8 +176,8 @@ export default function Drawer({ onNavigate }) {
               alt={t("shell.drawer.brand")}
               sx={{
                 display: "block",
-                width: 32,
-                height: 32,
+                width: 24,
+                height: 24,
                 objectFit: "contain",
                 objectPosition: "left center",
               }}
@@ -178,7 +186,7 @@ export default function Drawer({ onNavigate }) {
         )}
       </Box>
 
-      <Box sx={{ padding: expanded ? 1 : 1 }}>
+      <Box sx={{ pt: 1.25, px: 1, pb: 1 }}>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>{userMenu.map(renderNavItem)}</Box>
 
         {adminMenu.length > 0 ? <Divider sx={{ my: 1.5, borderColor: tk.border.default }} /> : null}

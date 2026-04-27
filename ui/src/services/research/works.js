@@ -42,6 +42,12 @@ export async function getWorkDetail(workId) {
   return apiClient.get(buildApiUrl(`/v1/works/${id}`), readOpts());
 }
 
+/** POST /v1/works/batch-summary — title/year/doi/arxiv for many works (one Neo4j query; workspace list). */
+export async function postWorksBatchSummary(workIds) {
+  const ids = Array.isArray(workIds) ? workIds.map((x) => String(x ?? "").trim()).filter(Boolean) : [];
+  return apiClient.post(buildApiUrl("/v1/works/batch-summary"), { work_ids: ids }, readOpts());
+}
+
 /** GET /v1/works/{work_id}/extracted-body — ingest artifact text (not Qdrant chunk join). */
 export async function getWorkExtractedBody(workId) {
   const id = encodeURIComponent(String(workId ?? "").trim());

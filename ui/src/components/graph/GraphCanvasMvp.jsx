@@ -72,8 +72,9 @@ export default function GraphCanvasMvp({
 }) {
   const { t } = useI18n();
   const theme = useTheme();
+  const tk = theme.appTokens;
   const appearance = theme.palette.mode === "light" ? "light" : "dark";
-  const canvasBg = theme.appTokens.surface.app;
+  const canvasBg = tk.surface.app;
   const resolveEdgeLabel = useCallback((e) => localizeEdgeType(e, t), [t]);
   const resolveNodeCanvasLabel = useCallback(
     (node) => (String(node.nodeKind) === "Aggregator" ? localizeAggregatorTitle(node, t) : null),
@@ -392,8 +393,8 @@ export default function GraphCanvasMvp({
 
   if (graph.nodes.length === 0) {
     return (
-      <Box sx={{ borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "#1a1a1a", minHeight: MIN_CANVAS_HEIGHT, display: "flex", alignItems: "center", justifyContent: "center", p: 2 }}>
-        <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>{t("graph.canvas.empty")}</Typography>
+      <Box sx={{ borderRadius: "6px", border: `1px solid ${tk.border.default}`, backgroundColor: tk.surface.panel, minHeight: MIN_CANVAS_HEIGHT, display: "flex", alignItems: "center", justifyContent: "center", p: 2 }}>
+        <Typography sx={{ fontSize: "0.8125rem", color: tk.text.muted }}>{t("graph.canvas.empty")}</Typography>
       </Box>
     );
   }
@@ -426,7 +427,7 @@ export default function GraphCanvasMvp({
       role="region"
       aria-label={t("graph.canvas.regionAria")}
       tabIndex={0}
-      sx={{ width: "100%", flex: 1, minHeight: 0, display: "flex", flexDirection: "column", borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden", backgroundColor: "#0a0a0a", outline: "none" }}
+      sx={{ width: "100%", flex: 1, minHeight: 0, display: "flex", flexDirection: "column", borderRadius: "6px", border: `1px solid ${tk.border.default}`, overflow: "hidden", backgroundColor: tk.surface.panel, outline: "none" }}
     >
       <GraphCanvasViewToolbar
         t={t}

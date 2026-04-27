@@ -1,7 +1,7 @@
 {
   "case_id": "bibliography_gost",
-  "phoenix_trace_id": "b936c9bc1d6f181412394516f549a806",
-  "phoenix_ui_hint": "http://127.0.0.1:16006/traces/b936c9bc1d6f181412394516f549a806",
+  "phoenix_trace_id": "80c944ab0e9fa2c6060271620ff8254f",
+  "phoenix_ui_hint": "http://127.0.0.1:16006/traces/80c944ab0e9fa2c6060271620ff8254f",
   "tool_trace": [
     {
       "step": 0,
@@ -63,7 +63,7 @@
       "tool": "workspace_list_papers",
       "args_summary": {
         "workspace_id": "ws-pilot-od",
-        "limit": "20"
+        "limit": "50"
       },
       "row_count": 1,
       "duration_ms": 0,
@@ -87,9 +87,9 @@
       "tool": "final_answer",
       "args_summary": {
         "answer": "Список литературы по ГОСТ для всех работ в рабочей области:\n- Али Фархади, Сантош Диввала, Росс Гиршик, Джозеф Редмон. You Only Look Once: Unified, Real-Time Object Detection.",
-        "citations": "[]"
+        "citations": "[{'entry': 'Ali Farhadi, Santosh Divvala, Ross Girshick, Joseph Redmon You Only Look Once: Unified, Real-Time Object Detection.'}]"
       },
-      "row_count": 0,
+      "row_count": 1,
       "duration_ms": 0,
       "truncated": false,
       "error": null
@@ -110,8 +110,8 @@
       "route_to_specialist",
       "format_bibliography_gost"
     ],
-    "citation_count": 0,
-    "citations_missing_work_id": 0,
+    "citation_count": 1,
+    "citations_missing_work_id": 1,
     "answer_class": "bibliography_export",
     "phoenix_trace_id_present": true,
     "warnings_count": 0,
@@ -145,8 +145,8 @@
         "route_to_specialist",
         "format_bibliography_gost"
       ],
-      "citation_count": 0,
-      "citations_missing_work_id": 0,
+      "citation_count": 1,
+      "citations_missing_work_id": 1,
       "answer_class": "bibliography_export",
       "phoenix_trace_id_present": true,
       "warnings_count": 0,
@@ -163,7 +163,7 @@
   },
   "phoenix_http_snapshot": {
     "ok": true,
-    "url": "http://127.0.0.1:16006/arize-phoenix-api/v1/traces/b936c9bc1d6f181412394516f549a806",
+    "url": "http://127.0.0.1:16006/arize-phoenix-api/v1/traces/80c944ab0e9fa2c6060271620ff8254f",
     "payload": {
       "raw": "<!DOCTYPE html>\n<html>\n  <head>\n    <title>Phoenix</title>\n    <link rel=\"icon\" href=\"/favicon.ico\" type=\"image/x-icon\"></link>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"title\" content=\"Arize Phoenix\" />\n    <meta name=\"description\" content=\"AI Observability & Evaluation\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <meta property=\"og:title\" content=\"Arize Phoenix\" />\n    <meta property=\"og:description\" content=\"AI Observability & Evaluation\" />\n    <meta property=\"og:image\" content=\"https://raw.githubusercontent.com/Arize-ai/phoenix-assets/main/images/socal/social-preview-horizontal.jpg\" />\n    <meta name=\"theme-color\" content=\"#ffffff\" />\n    \n    <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n    <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n    <link href=\"https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap\" rel=\"stylesheet\">\n    \n    <link rel=\"stylesheet\" href=\"/assets/vendor-CAy9C7li.css\">\n  <script src=\"/modernizr.js\"></script>\n    \n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script>(function() {\n      Object.defineProperty(window, \"Config\", {\n          // Place any server-side injected config here\n          // injected into the client before React runs\n          value: Object.freeze({\n              basename: \"\",\n              platformVersion: \"13.20.0\",\n              authenticationEnabled: Boolean(\"False\" == \"True\"),\n              oAuth2Idps: [],\n              basicAuthDisabled: Boolean(\"False\" == \"True\"),\n              ldapEnabled: Boolean(\"False\" == \"True\"),\n              ldapManualUserCreationEnabled: Boolean(\"False\" == \"True\"),\n              managementUrl: null,\n              supportEmail: null,\n              hasDbThreshold: Boolean(\"False\" == \"True\"),\n              allowExternalResources: Boolean(\"True\" == \"True\"),\n              authErrorMessages: {},\n          }),\n          writable: false\n      });\n  })()</script>\n    <img referrerpolicy=\"no-referrer-when-downgrade\" src=\"https://static.scarf.sh/a.png?x-pxid=98877b05-7d80-493e-ab95-97c104785d1e\" style=\"position:absolute;width:0;height:0\" />\n    <link rel=\"modulepreload\" href=\"/assets/rolldown-runtime-DD-Z-9HO.js\">\n    <link rel=\"modulepreload\" href=\"/assets/vendor-codemirror-CROkc6HV.js\">\n    <link rel=\"modulepreload\" href=\"/assets/vendor-ai-sdk-react-BePEedZt.js\">\n    <link rel=\"modulepreload\" href=\"/assets/vendor-recharts-C26oZurC.js\">\n    <link rel=\"modulepreload\" href=\"/assets/vendor-shiki-DmwBzjbx.js\">\n    <link rel=\"modulepreload\" href=\"/assets/vendor-streamdown-D485D3QJ.js\">\n    <link rel=\"modulepreload\" href=\"/assets/vendor-BXiYgoZU.js\">\n    <script type=\"module\" src=\"/assets/index-D9IrZuFd.js\"></script>\n    </body>\n</html>"
     }

@@ -41,10 +41,11 @@ def derive_diagnostics(report: dict[str, Any]) -> dict[str, Any]:
         if isinstance(s, dict)
     )
     tool_trace_error_count = sum(
-        1
-        for s in trace
-        if isinstance(s, dict) and s.get("error") not in (None, "", False, 0)
+        1 for s in trace if isinstance(s, dict) and s.get("error") not in (None, "", False, 0)
     )
+    obs = report.get("observability") if isinstance(report.get("observability"), dict) else {}
+    obs_reliable = bool(obs.get("observability_match_reliable"))
+    obs_passed = bool(obs.get("observability_passed", True))
     return {
         "tool_call_count": len(names),
         "non_final_tool_call_count": len(non_final),
@@ -67,6 +68,13 @@ def derive_diagnostics(report: dict[str, Any]) -> dict[str, Any]:
         "has_idea_suggestions": bool(out.get("idea_suggestions")),
         "budget_exhausted_in_trace": budget_exhausted,
         "tool_trace_error_count": tool_trace_error_count,
+        "observability_passed": obs_passed,
+        "observability_match_reliable": obs_reliable,
+        "phoenix_payload_valid": bool(obs.get("phoenix_payload_valid")),
+        "phoenix_payload_kind": obs.get("phoenix_payload_kind"),
+        "missing_tool_spans": list(obs.get("missing_tool_spans") or []),
+        "missing_retriever_spans": list(obs.get("missing_retriever_spans") or []),
+        "expected_span_names": list(obs.get("expected_span_names") or []),
     }
 
 
@@ -129,9 +137,13 @@ def score_roadmap_case(report: dict[str, Any], gold: dict[str, Any]) -> dict[str
 
     final_out = report.get("final_output") or report
     if expect.get("require_typed_bibliography"):
-        ob = final_out.get("bibliography") if isinstance(final_out.get("bibliography"), dict) else {}
-        bib_ok = bool(ob.get("entries")) or str(ob.get("format") or "").strip().lower() == "gost" or (
-            isinstance(ob.get("lines"), list) and bool(ob.get("lines"))
+        ob = (
+            final_out.get("bibliography") if isinstance(final_out.get("bibliography"), dict) else {}
+        )
+        bib_ok = (
+            bool(ob.get("entries"))
+            or str(ob.get("format") or "").strip().lower() == "gost"
+            or (isinstance(ob.get("lines"), list) and bool(ob.get("lines")))
         )
         if not bib_ok:
             reasons.append("require_typed_bibliography:missing_or_empty")
@@ -144,12 +156,19 @@ def score_roadmap_case(report: dict[str, Any], gold: dict[str, Any]) -> dict[str
     max_err = expect.get("max_tool_trace_errors")
     if isinstance(max_err, int) and max_err >= 0:
         err_n = sum(
-            1
-            for s in trace
-            if isinstance(s, dict) and s.get("error") not in (None, "", False, 0)
+            1 for s in trace if isinstance(s, dict) and s.get("error") not in (None, "", False, 0)
         )
         if err_n > max_err:
             reasons.append(f"max_tool_trace_errors:want_at_most_{max_err}_got_{err_n}")
+
+    if expect.get("require_observability_match"):
+        diag = derive_diagnostics(report)
+        if bool(diag.get("observability_match_reliable")) and not bool(
+            diag.get("observability_passed", True)
+        ):
+            reasons.append(
+                "observability_match:phoenix_snapshot_missing_expected_tool_or_retriever_spans"
+            )
 
     hard = [r for r in reasons if not str(r).startswith("soft:")]
     passed = len(hard) == 0

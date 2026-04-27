@@ -1,6 +1,6 @@
 # Agent chat system roadmap — 2026-04-26
 
-**Статус:** draft / living working doc (трек `CH` — **CH1–CH3: Wave A**; **CH4 + долги CH1–CH3 (частично) + observability-задел: Wave B**, 2026-04-26; **Wave Next: Agent Chat Hardening + CH5 v1**, 2026-04-26; см. §11)
+**Статус:** draft / living working doc (трек `CH` — **CH1–CH3: Wave A**; **CH4 + долги CH1–CH3 (частично) + observability-задел: Wave B**, 2026-04-26; **Wave Next: Agent Chat Hardening + CH5 v1**, 2026-04-26; **Phoenix agent tracing plan refreshed 2026-04-27**, см. §10/§11)
 **Цель:** спроектировать продуктовую агентную систему чата для research-workspace в `SciGraph`: multi-turn, tool-based, grounded on graph + chunks + workspace context, с понятной эволюцией от текущего `POST /v2/agent/query`.
 
 **Основано на анализе:**
@@ -698,7 +698,12 @@ Research chat быстро упирается в:
 
 ### 10.1 Required traceability
 
-Каждый turn должен фиксировать:
+Каждый turn должен фиксировать **два уровня traceability**:
+
+1. **Product/API trace (`tool_trace`, SSE/debug events, envelope):** компактный, стабильный контракт для UI/evals.
+2. **Phoenix/OpenTelemetry trace:** техническое дерево latency/token/tool/retrieval спанов для отладки, стоимости и регрессий.
+
+Минимальный API/eval слой:
 
 1. selected answer class
 2. selected specialist
@@ -706,6 +711,18 @@ Research chat быстро упирается в:
 4. compact events
 5. evidence ids used in final answer
 6. warnings like `weak_evidence`, `graph_only`, `text_only`, `no_quote_found`
+
+Минимальный Phoenix слой:
+
+1. `agent.query` — один CHAIN root на user turn; `session.id = thread_id`, `user.id = workspace_id`, `agent.runtime`, `agent.max_tool_calls`.
+2. `agent.turn_policy` / `agent.supervisor.route` / `agent.specialist.<name>` — CHAIN-спаны для routing decisions, budget, confidence/fallback.
+3. `llm.agent.*` — LLM-спаны для classifier/supervisor/writer с `llm.model_name` и token counts; CHAIN-спаны не должны сами нести `llm.*`.
+4. `tool.<tool_name>` — TOOL-спан для каждого domain tool из `tool_trace`, с `tool.parameters`, `row_count`, `truncated`, error/status.
+5. `retrieval.qdrant.<tool_name>` — RETRIEVER-спан для semantic/quote search, с `retrieval.documents.*` и Qdrant collection/filter metadata.
+6. `embedding.agent.<tool_name>` — EMBEDDING-спан для query embedding, отдельно от retrieval.
+7. root/span output содержит только короткий summary (`answer_class`, `tool_call_count`, `warning_codes`, `citation_count`), без сырых длинных prompt/chunk payload.
+
+`tool_trace` и Phoenix не заменяют друг друга: `tool_trace` нужен для продукта и deterministic eval, Phoenix — для объяснения latency/cost/retrieval/LLM дерева. Для release-quality observability они должны коррелировать по именам tools и ошибкам.
 
 ### 10.2 UI stream events
 
@@ -745,6 +762,21 @@ Research chat быстро упирается в:
 Перед live suite: **workspace readiness audit** (наличие `Work`, авторов, исходящих `CITES`, чанков в Qdrant и `workspace_ids` на чанках). Реализация: `scripts/chat_agent_workspace_readiness_audit.py` / `eval/chat_agent/workspace_audit.py`.
 
 Roadmap-aligned кейсы и артефакты прогона: `science-graphrag-chat-agent-roadmap` (см. [`eval/README.md`](../../eval/README.md), [`docs/analysis/chat-agent-roadmap-trace-audit-2026-04-27.md`](./chat-agent-roadmap-trace-audit-2026-04-27.md)).
+
+### 10.5 Phoenix agent tracing status
+
+Актуальный companion по Phoenix: [`phoenix-tracing-coverage-2026-04-25.md`](./phoenix-tracing-coverage-2026-04-25.md).
+
+Текущее состояние (2026-04-27):
+
+1. Есть `agent.query`, `phoenix_trace_id`, `session.id` от `thread_id`, `PHOENIX_TRACE_SCOPE=full` в live harness.
+2. Есть частичная ручная разметка TOOL/EMBEDDING (`idea_search`, `paper_quote_search`).
+3. Нет полного TOOL coverage для всех domain tools.
+4. Нет RETRIEVER-спанов с `retrieval.documents.*` для Qdrant search.
+5. LLM attribution для supervisor/classifier надо подтвердить тестом или закрепить ручными `llm.agent.*` spans.
+6. `trace_audit.json` пока gate'ит наличие `phoenix_trace_id`, но не форму span tree.
+
+Следующий observability milestone перед расширением specialists: закрыть X2.2–X2.9 из Phoenix companion, чтобы CH6/CH7 не умножали неинструментированные ветки.
 
 ---
 
@@ -1028,6 +1060,7 @@ Roadmap-aligned кейсы и артефакты прогона: `science-graphr
 
 **Сделано (2026-04-27, v0):**
 - Эталонная область + pre-flight audit + roadmap harness с сохранением `tool_trace` / `phoenix_trace_id` и suite summary — см. §10.4 и [`chat-agent-roadmap-trace-audit-2026-04-27.md`](./chat-agent-roadmap-trace-audit-2026-04-27.md).
+- Root `agent.query` + `phoenix_trace_id` уже дают корреляцию live case → Phoenix; это baseline observability, не финальное качество span tree.
 
 **Сделать:**
 1. benchmark families CH;
@@ -1036,6 +1069,8 @@ Roadmap-aligned кейсы и артефакты прогона: `science-graphr
 4. nightly smoke on selected researcher queries;
 5. UX polish stream events / warnings / partial answers.
 6. **Coordinator intent evals:** отдельный набор кейсов для `TurnPolicy` / classifier (`small_talk`, `meta`, `ambiguous`, `inventory`, `quote`, `relation`, `bibliography`, `ideation`) с обязательными проверками `tool_policy`, `answer_class`, `route_hint`, отсутствия tool calls на `no_tools` и safe fallback при невалидном structured output.
+7. **Phoenix span tree gate:** закрыть X2.2–X2.9 — TOOL-спаны для всех domain tools, RETRIEVER для Qdrant search, LLM attribution для supervisor/classifier/writer, deterministic `InMemorySpanExporter` smoke и best-effort Phoenix snapshot.
+8. **Trace correlation metrics:** в roadmap runner добавить diagnostics уровня observability: `tool_trace_vs_span_match`, `missing_tool_spans`, `missing_retriever_spans`, `missing_llm_token_attrs`.
 
 **Acceptance:**
 1. видно, где agent hallucinated or lacked evidence;
@@ -1043,6 +1078,7 @@ Roadmap-aligned кейсы и артефакты прогона: `science-graphr
 3. rollout можно включать по feature flag;
 4. coordinator gate не деградирует в словарь ключевых фраз: новые языковые варианты закрываются evals + classifier behavior, а не бесконечным расширением regex.
 5. **baseline workspace + harness:** один задокументированный `workspace_id` для chat regression; pre-flight audit не даёт suite стартовать на `blocked`; для каждого curated кейса сохраняются артефакты, достаточные для сопоставления с Phoenix (см. trace-audit checklist §4).
+6. **Phoenix observability:** answer-quality PASS и observability PASS разделены; live baseline может быть зелёным по метрикам ответа, но красным по span coverage.
 
 ---
 
@@ -1058,19 +1094,21 @@ Roadmap-aligned кейсы и артефакты прогона: `science-graphr
 4. **CH4** multi-turn state
 5. **CH5** compression
 6. **CH5.5 / Coordinator Gate hybridization**: заменить `TurnPolicy` v0 regex/rules на hybrid/LLM classifier with structured output + evals, сохранив no-tools/direct writer path and safe fallbacks
-7. **CH6** specialist split
-8. **CH8** bibliography
-9. **CH7** grounded ideation
-10. **CH9** eval hardening
+7. **CH5.6 / Phoenix Agent Tracing**: закрыть X2 best-practice span tree до расширения specialist graph, чтобы новые ветки сразу наследовали наблюдаемость
+8. **CH6** specialist split
+9. **CH8** bibliography
+10. **CH7** grounded ideation
+11. **CH9** eval hardening
 
 Почему так:
 
 1. без CH1-CH3 система останется "чатом вокруг старых tools";
 2. без CH4-CH5 не получится длинный research dialogue;
 3. без hybrid coordinator gate новые specialists будут получать те же ложные входы (`small_talk` / `ambiguous` / meta turns) и воспроизводить старый дефект на новом уровне;
-4. bibliography легче делать после catalog/retrieval tool layer;
-5. ideation стоит поднимать только когда уже есть grounding and memory;
-6. eval/hardening должны сопровождать всё, но как отдельная closing wave удобно собрать в CH9.
+4. без Phoenix Agent Tracing specialist split усложнит отладку: появятся новые ветки, но не будет видно, где потерялись tool/retriever/LLM шаги;
+5. bibliography легче делать после catalog/retrieval tool layer;
+6. ideation стоит поднимать только когда уже есть grounding and memory;
+7. eval/hardening должны сопровождать всё, но как отдельная closing wave удобно собрать в CH9.
 
 ---
 
@@ -1138,6 +1176,10 @@ Roadmap-aligned кейсы и артефакты прогона: `science-graphr
 
 **Coordinator — first-class runtime role, но не keyword dictionary.** `TurnPolicy` остаётся стабильным интерфейсом (`conversation_intent`, `answer_class`, `tool_policy`, `route_hint`, `reason/confidence`), а regex/rule implementation допускается только как narrow deterministic guardrail. Целевой coordinator — hybrid: deterministic prefilters for obvious cases, structured LLM classifier for ambiguous/research intent, eval-governed rollout, safe fallback to clarification rather than retrieval.
 
+### Decision H
+
+**Phoenix trace tree — release artifact, а не optional debug.** Для agent chat недостаточно вернуть `phoenix_trace_id`: в Phoenix должен быть читаемый turn-level trace `agent.query → policy/supervisor/specialist → tool/retriever/LLM`, коррелирующий с `tool_trace`. Новые specialists и tools принимаются только с observability contract или явным backlog item.
+
 ---
 
 ## 15. Open questions
@@ -1152,6 +1194,7 @@ Roadmap-aligned кейсы и артефакты прогона: `science-graphr
 3. **Bibliography:** по-прежнему **детерминированный** GOST + опциональные поля карточки; LLM-fallback не вводился.
 4. **Typed payloads:** в UI и envelope используются **`inventory`, `quote_candidates`, `bibliography`**; **`relation_trace`** в envelope пока не заполняется.
 5. **Coordinator gate:** `TurnPolicy` v0 уже отделил no-tools/clarify/allow-tools от specialist routing, но реализация на regex/rules не должна становиться постоянной. Открыто: structured-output schema, confidence threshold, fallback policy, cost/latency model and eval gates for hybrid/LLM classifier.
+6. **Phoenix agent tracing:** `agent.query` / `phoenix_trace_id` есть, но остаются открыты X2.2–X2.9: полный TOOL coverage, RETRIEVER spans, LLM attribution tests, trace-audit gate.
 
 ### Can wait until CH4+
 
@@ -1172,5 +1215,6 @@ Roadmap-aligned кейсы и артефакты прогона: `science-graphr
 4. ~~multi-turn + session memory (v1);~~ **сделано (Wave B / CH4 v1 in-process)**; ~~optional Redis persistence~~ **сделано (Wave Next)** — e2e против реального LLM без моков — дальше
 5. ~~CH5 compaction policy v1 (kinds, capsule, boundary hints)~~ **сделано (Wave Next)**; полный CH5 (LLM capsules, boundary audit, coordinator triggers) — **следующий крупный шаг**
 6. **Coordinator Gate hybridization:** `TurnPolicy` v0 уже создал нужный seam, но следующий практический шаг — убрать keyword-heavy intent routing из роли основного механизма: добавить structured-output classifier, confidence, eval runner and rollout flag, сохранив no-tools writer path and safe fallback to clarification.
+7. **Phoenix Agent Tracing:** перед CH6 закрыть span tree contract: all-domain TOOL wrapper, RETRIEVER for Qdrant, LLM attribution tests, `tool_trace`↔Phoenix audit.
 
-Это даст работающий research chat evolution path, сохраняя совместимость с уже существующими `LangGraph`, `SSE`, `tool_trace` и текущим UI чата.
+Это даст работающий research chat evolution path, сохраняя совместимость с уже существующими `LangGraph`, `SSE`, `tool_trace`, Phoenix и текущим UI чата.

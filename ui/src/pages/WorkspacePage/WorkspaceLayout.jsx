@@ -1,11 +1,13 @@
 import React from "react";
 import Box from "@mui/material/Box";
+import { useTheme } from "@mui/material/styles";
 
 /**
  * Two-column workspace body: main (papers + dedup) / side (ingest + stats).
  * @param {{ main: React.ReactNode, side: React.ReactNode }} props
  */
 export default function WorkspaceLayout({ main, side }) {
+  const tk = useTheme().appTokens;
   return (
     <Box
       sx={{
@@ -38,8 +40,8 @@ export default function WorkspaceLayout({ main, side }) {
           overflowY: { lg: "auto" },
           p: { lg: 1.5 },
           borderRadius: "6px",
-          border: { lg: "1px solid rgba(255,255,255,0.08)" },
-          backgroundColor: { lg: "#1a1a1a" },
+          border: { lg: `1px solid ${tk.border.default}` },
+          backgroundColor: { lg: tk.surface.panel },
         }}
       >
         {side}

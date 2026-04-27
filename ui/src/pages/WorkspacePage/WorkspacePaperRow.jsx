@@ -7,6 +7,7 @@ import ChatBubbleOutlineOutlinedIcon from "@mui/icons-material/ChatBubbleOutline
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import { CopyIdButton, CursorIconAction } from "../../components/common/index.js";
 import { useI18n } from "../../i18n/useI18n.js";
@@ -32,6 +33,7 @@ export default function WorkspacePaperRow({
   rowRef = null,
 }) {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
   const interactive = Boolean(onRowActivate);
 
   const metaParts = [];
@@ -65,14 +67,14 @@ export default function WorkspacePaperRow({
         py: 1,
         px: 1.25,
         minHeight: 48,
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
-        borderLeft: selected ? "2px solid rgba(129,140,248,0.85)" : "2px solid transparent",
-        backgroundColor: selected ? "rgba(99,102,241,0.08)" : "transparent",
+        borderBottom: `1px solid ${tk.border.default}`,
+        borderLeft: selected ? `2px solid ${tk.accent.fg}` : "2px solid transparent",
+        backgroundColor: selected ? tk.accent.softBg : "transparent",
         cursor: interactive ? "pointer" : "default",
         outline: "none",
         transition: "background-color 0.12s ease, border-color 0.12s ease",
         "&:hover": {
-          backgroundColor: selected ? "rgba(99,102,241,0.1)" : "rgba(255,255,255,0.03)",
+          backgroundColor: selected ? tk.accent.emphasisHoverBg : tk.control.navItemHoverBg,
         },
         "&:hover .workspace-paper-row-actions": { opacity: 1 },
         "&:last-of-type": { borderBottom: "none" },
@@ -81,27 +83,27 @@ export default function WorkspacePaperRow({
       <Box sx={{ minWidth: 0, flex: 1 }}>
         {loading ? (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <CircularProgress size={16} sx={{ color: "rgba(129,140,248,0.9)" }} />
-            <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>{t("workspace.paper.loading")}</Typography>
+            <CircularProgress size={16} sx={{ color: tk.accent.fg }} />
+            <Typography sx={{ fontSize: "0.8125rem", color: tk.text.muted }}>{t("workspace.paper.loading")}</Typography>
           </Box>
         ) : null}
         {error ? (
-          <Typography sx={{ fontSize: "0.75rem", color: "rgba(239,68,68,0.85)", lineHeight: 1.4 }}>{error}</Typography>
+          <Typography sx={{ fontSize: "0.75rem", color: tk.state.dangerFg, lineHeight: 1.4 }}>{error}</Typography>
         ) : null}
         {!loading && !error ? (
           <>
-            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.9)", lineHeight: 1.35 }} noWrap title={title || ""}>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: tk.text.primary, lineHeight: 1.35 }} noWrap title={title || ""}>
               {title || t("workspace.paper.noTitle")}
             </Typography>
             {metaLine ? (
-              <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.42)", mt: 0.35 }} noWrap title={metaLine}>
+              <Typography sx={{ fontSize: "0.68rem", color: tk.text.faint, mt: 0.35 }} noWrap title={metaLine}>
                 {metaLine}
               </Typography>
             ) : null}
           </>
         ) : null}
       </Box>
-      {!loading && !error ? (
+      {!error ? (
         <Box
           className="workspace-paper-row-actions"
           sx={{
@@ -131,7 +133,7 @@ export default function WorkspacePaperRow({
                 e.stopPropagation();
                 onRemoveWork(workId);
               }}
-              sx={{ color: "rgba(239,68,68,0.75)" }}
+              sx={{ color: tk.state.dangerFg }}
             >
               <DeleteOutlineOutlinedIcon sx={{ fontSize: "1rem" }} />
             </CursorIconAction>

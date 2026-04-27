@@ -1,0 +1,1008 @@
+{
+  "case_spec": {
+    "case_id": "relation_cites_strict",
+    "eval_tier": "strict",
+    "roadmap_ref": "strict-tier relation_tracing / graph tools",
+    "workspace_id": "ws-pilot-od",
+    "answer_class_hint": "relation_tracing",
+    "question": "What papers in this workspace cite other papers? Describe one citation link you can verify from the graph.",
+    "expect": {
+      "answer_classes_allowed": [
+        "relation_tracing"
+      ],
+      "tools_any_of": [
+        "entity_search",
+        "edge_search",
+        "cypher_query"
+      ],
+      "require_graph_tool": true,
+      "require_phoenix_trace_id": true,
+      "require_tool_trace": true,
+      "min_non_final_tool_calls": 1,
+      "max_tool_trace_errors": 0
+    }
+  },
+  "run": {
+    "case_id": "relation_cites_strict",
+    "workspace_id": "ws-pilot-od",
+    "thread_id": null,
+    "turns": [
+      {
+        "question": "What papers in this workspace cite other papers? Describe one citation link you can verify from the graph.",
+        "output": {
+          "answer": "I'm sorry, but I currently don't have the necessary tools to assist with that. Let's focus on what I can help with! How can I assist you today?",
+          "citations": [],
+          "tool_trace": [
+            {
+              "step": 0,
+              "tool": "coordinator_gate",
+              "args_summary": {
+                "conversation_intent": "research_task",
+                "tool_policy": "allow_tools",
+                "route_hint": "graph_agent",
+                "reason": "explicit_research_signal",
+                "suggested_answer_class": "relation_tracing",
+                "confidence": "1.0",
+                "classifier": "deterministic"
+              },
+              "row_count": 0,
+              "duration_ms": 6,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": -1,
+              "tool": "route_to_specialist",
+              "args_summary": {
+                "from": "supervisor",
+                "to": "graph_agent",
+                "reason": "coordinator_route_hint",
+                "route_hint": "graph_agent",
+                "budget_left": 8
+              },
+              "row_count": 0,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": -1,
+              "tool": "route_to_specialist",
+              "args_summary": {
+                "from": "supervisor",
+                "to": "retrieval_agent",
+                "budget_left": 6
+              },
+              "row_count": 0,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": -1,
+              "tool": "route_to_specialist",
+              "args_summary": {
+                "from": "supervisor",
+                "to": "graph_agent",
+                "budget_left": 3
+              },
+              "row_count": 0,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": -1,
+              "tool": "route_to_specialist",
+              "args_summary": {
+                "from": "supervisor",
+                "to": "writer_agent",
+                "reason": "budget_exhausted"
+              },
+              "row_count": 0,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": 1,
+              "tool": "entity_search",
+              "args_summary": {
+                "query": "ws-pilot-od",
+                "kind": "workspace"
+              },
+              "row_count": 0,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": 2,
+              "tool": "edge_search",
+              "args_summary": {
+                "node_id": "ws-pilot-od",
+                "rel_types": "['CONTAINS']",
+                "direction": "out"
+              },
+              "row_count": 0,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": 3,
+              "tool": "edge_search",
+              "args_summary": {
+                "node_id": "ws-pilot-od",
+                "rel_types": "['CITES']",
+                "direction": "out"
+              },
+              "row_count": 0,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": 4,
+              "tool": "workspace_list_papers",
+              "args_summary": {
+                "workspace_id": "ws-pilot-od"
+              },
+              "row_count": 1,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": 5,
+              "tool": "paper_metadata",
+              "args_summary": {
+                "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+              },
+              "row_count": 1,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": 6,
+              "tool": "edge_search",
+              "args_summary": {
+                "node_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+                "rel_types": "['CITES']",
+                "direction": "out"
+              },
+              "row_count": 34,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": 7,
+              "tool": "paper_metadata",
+              "args_summary": {
+                "work_id": "807c8f48-f811-4d22-bb05-6fe7d27615c2"
+              },
+              "row_count": null,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": "Error: paper_metadata is not a valid tool, try one of [cypher_query, entity_search, edge_search]."
+            },
+            {
+              "step": 8,
+              "tool": "paper_metadata",
+              "args_summary": {
+                "work_id": "807c8f48-f811-4d22-bb05-6fe7d27615c2"
+              },
+              "row_count": null,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            }
+          ],
+          "answer_class": "relation_tracing",
+          "evidence_summary": "assistant reply (no citations), 13 trace step(s)",
+          "warnings": [
+            "graph_only"
+          ],
+          "inventory": {
+            "papers": [
+              {
+                "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+                "title": "You Only Look Once: Unified, Real-Time Object Detection",
+                "year": null,
+                "doi": ""
+              }
+            ]
+          },
+          "relation_trace": null,
+          "quote_candidates": null,
+          "idea_suggestions": null,
+          "bibliography": null,
+          "debug_events": [
+            {
+              "conversation_intent": "research_task",
+              "tool_policy": "allow_tools",
+              "route_hint": "graph_agent",
+              "reason": "explicit_research_signal",
+              "suggested_answer_class": "relation_tracing",
+              "confidence": 1.0,
+              "classifier": "deterministic",
+              "type": "intent_classified",
+              "source": "coordinator_gate_v0",
+              "answer_class": "relation_tracing"
+            },
+            {
+              "type": "tool_search_result",
+              "specialist": "graph_agent",
+              "tools": [
+                "cypher_query",
+                "entity_search",
+                "edge_search"
+              ],
+              "reason": "rules",
+              "top_score": 8.0,
+              "skipped": false
+            },
+            {
+              "type": "tool_search_result",
+              "specialist": "retrieval_agent",
+              "tools": [
+                "workspace_list_papers",
+                "paper_lookup",
+                "idea_search",
+                "summarize_workspace",
+                "workspace_overview",
+                "paper_metadata",
+                "paper_authors",
+                "paper_counts"
+              ],
+              "reason": "rules",
+              "top_score": 5.5,
+              "skipped": false
+            },
+            {
+              "type": "tool_search_result",
+              "specialist": "graph_agent",
+              "tools": [
+                "cypher_query",
+                "entity_search",
+                "edge_search"
+              ],
+              "reason": "rules",
+              "top_score": 8.0,
+              "skipped": false
+            },
+            {
+              "type": "tool_search_result",
+              "specialist": "writer_agent",
+              "tools": null,
+              "reason": "writer_minimal_set",
+              "top_score": null,
+              "skipped": true,
+              "writer_mode": "normal"
+            }
+          ],
+          "phoenix_trace_id": "f04ab6572bdff8fe5a65374b6d01e0b5",
+          "thread_id": null
+        }
+      }
+    ],
+    "final_output": {
+      "answer": "I'm sorry, but I currently don't have the necessary tools to assist with that. Let's focus on what I can help with! How can I assist you today?",
+      "citations": [],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "conversation_intent": "research_task",
+            "tool_policy": "allow_tools",
+            "route_hint": "graph_agent",
+            "reason": "explicit_research_signal",
+            "suggested_answer_class": "relation_tracing",
+            "confidence": "1.0",
+            "classifier": "deterministic"
+          },
+          "row_count": 0,
+          "duration_ms": 6,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": -1,
+          "tool": "route_to_specialist",
+          "args_summary": {
+            "from": "supervisor",
+            "to": "graph_agent",
+            "reason": "coordinator_route_hint",
+            "route_hint": "graph_agent",
+            "budget_left": 8
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": -1,
+          "tool": "route_to_specialist",
+          "args_summary": {
+            "from": "supervisor",
+            "to": "retrieval_agent",
+            "budget_left": 6
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": -1,
+          "tool": "route_to_specialist",
+          "args_summary": {
+            "from": "supervisor",
+            "to": "graph_agent",
+            "budget_left": 3
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": -1,
+          "tool": "route_to_specialist",
+          "args_summary": {
+            "from": "supervisor",
+            "to": "writer_agent",
+            "reason": "budget_exhausted"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "entity_search",
+          "args_summary": {
+            "query": "ws-pilot-od",
+            "kind": "workspace"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "edge_search",
+          "args_summary": {
+            "node_id": "ws-pilot-od",
+            "rel_types": "['CONTAINS']",
+            "direction": "out"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "edge_search",
+          "args_summary": {
+            "node_id": "ws-pilot-od",
+            "rel_types": "['CITES']",
+            "direction": "out"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "workspace_list_papers",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_metadata",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "edge_search",
+          "args_summary": {
+            "node_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "rel_types": "['CITES']",
+            "direction": "out"
+          },
+          "row_count": 34,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 7,
+          "tool": "paper_metadata",
+          "args_summary": {
+            "work_id": "807c8f48-f811-4d22-bb05-6fe7d27615c2"
+          },
+          "row_count": null,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": "Error: paper_metadata is not a valid tool, try one of [cypher_query, entity_search, edge_search]."
+        },
+        {
+          "step": 8,
+          "tool": "paper_metadata",
+          "args_summary": {
+            "work_id": "807c8f48-f811-4d22-bb05-6fe7d27615c2"
+          },
+          "row_count": null,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "answer_class": "relation_tracing",
+      "evidence_summary": "assistant reply (no citations), 13 trace step(s)",
+      "warnings": [
+        "graph_only"
+      ],
+      "inventory": {
+        "papers": [
+          {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "title": "You Only Look Once: Unified, Real-Time Object Detection",
+            "year": null,
+            "doi": ""
+          }
+        ]
+      },
+      "relation_trace": null,
+      "quote_candidates": null,
+      "idea_suggestions": null,
+      "bibliography": null,
+      "debug_events": [
+        {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "graph_agent",
+          "reason": "explicit_research_signal",
+          "suggested_answer_class": "relation_tracing",
+          "confidence": 1.0,
+          "classifier": "deterministic",
+          "type": "intent_classified",
+          "source": "coordinator_gate_v0",
+          "answer_class": "relation_tracing"
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "graph_agent",
+          "tools": [
+            "cypher_query",
+            "entity_search",
+            "edge_search"
+          ],
+          "reason": "rules",
+          "top_score": 8.0,
+          "skipped": false
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "retrieval_agent",
+          "tools": [
+            "workspace_list_papers",
+            "paper_lookup",
+            "idea_search",
+            "summarize_workspace",
+            "workspace_overview",
+            "paper_metadata",
+            "paper_authors",
+            "paper_counts"
+          ],
+          "reason": "rules",
+          "top_score": 5.5,
+          "skipped": false
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "graph_agent",
+          "tools": [
+            "cypher_query",
+            "entity_search",
+            "edge_search"
+          ],
+          "reason": "rules",
+          "top_score": 8.0,
+          "skipped": false
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "writer_agent",
+          "tools": null,
+          "reason": "writer_minimal_set",
+          "top_score": null,
+          "skipped": true,
+          "writer_mode": "normal"
+        }
+      ],
+      "phoenix_trace_id": "f04ab6572bdff8fe5a65374b6d01e0b5",
+      "thread_id": null
+    },
+    "tool_trace": [
+      {
+        "step": 0,
+        "tool": "coordinator_gate",
+        "args_summary": {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "graph_agent",
+          "reason": "explicit_research_signal",
+          "suggested_answer_class": "relation_tracing",
+          "confidence": "1.0",
+          "classifier": "deterministic"
+        },
+        "row_count": 0,
+        "duration_ms": 6,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "graph_agent",
+          "reason": "coordinator_route_hint",
+          "route_hint": "graph_agent",
+          "budget_left": 8
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "retrieval_agent",
+          "budget_left": 6
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "graph_agent",
+          "budget_left": 3
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "writer_agent",
+          "reason": "budget_exhausted"
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 1,
+        "tool": "entity_search",
+        "args_summary": {
+          "query": "ws-pilot-od",
+          "kind": "workspace"
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 2,
+        "tool": "edge_search",
+        "args_summary": {
+          "node_id": "ws-pilot-od",
+          "rel_types": "['CONTAINS']",
+          "direction": "out"
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 3,
+        "tool": "edge_search",
+        "args_summary": {
+          "node_id": "ws-pilot-od",
+          "rel_types": "['CITES']",
+          "direction": "out"
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 4,
+        "tool": "workspace_list_papers",
+        "args_summary": {
+          "workspace_id": "ws-pilot-od"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 5,
+        "tool": "paper_metadata",
+        "args_summary": {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 6,
+        "tool": "edge_search",
+        "args_summary": {
+          "node_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "rel_types": "['CITES']",
+          "direction": "out"
+        },
+        "row_count": 34,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 7,
+        "tool": "paper_metadata",
+        "args_summary": {
+          "work_id": "807c8f48-f811-4d22-bb05-6fe7d27615c2"
+        },
+        "row_count": null,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": "Error: paper_metadata is not a valid tool, try one of [cypher_query, entity_search, edge_search]."
+      },
+      {
+        "step": 8,
+        "tool": "paper_metadata",
+        "args_summary": {
+          "work_id": "807c8f48-f811-4d22-bb05-6fe7d27615c2"
+        },
+        "row_count": null,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      }
+    ],
+    "duration_ms": 18236,
+    "metrics": {
+      "passed": false,
+      "reasons": [
+        "max_tool_trace_errors:want_at_most_0_got_1"
+      ],
+      "diagnostics": {
+        "tool_call_count": 13,
+        "non_final_tool_call_count": 13,
+        "first_non_final_tool": "coordinator_gate",
+        "unique_tools": [
+          "coordinator_gate",
+          "edge_search",
+          "entity_search",
+          "paper_metadata",
+          "route_to_specialist",
+          "workspace_list_papers"
+        ],
+        "repeated_non_final_tools": [
+          "route_to_specialist",
+          "edge_search",
+          "paper_metadata"
+        ],
+        "citation_count": 0,
+        "citations_missing_work_id": 0,
+        "answer_class": "relation_tracing",
+        "phoenix_trace_id_present": true,
+        "warnings_count": 1,
+        "has_bibliography_block": false,
+        "bibliography_entry_count": 0,
+        "bibliography_filtered_work_ids_count": 0,
+        "has_inventory_block": true,
+        "has_quote_candidates": false,
+        "has_relation_trace": false,
+        "has_idea_suggestions": false,
+        "budget_exhausted_in_trace": true,
+        "tool_trace_error_count": 1
+      }
+    },
+    "wall_clock_seconds": 18.237,
+    "case_path": "tests/fixtures/benchmarks/chat_agent_roadmap/cases_strict/01_relation_cites_strict.json"
+  },
+  "trace_audit": {
+    "case_id": "relation_cites_strict",
+    "phoenix_trace_id": "f04ab6572bdff8fe5a65374b6d01e0b5",
+    "phoenix_ui_hint": "http://127.0.0.1:16006/traces/f04ab6572bdff8fe5a65374b6d01e0b5",
+    "tool_trace": [
+      {
+        "step": 0,
+        "tool": "coordinator_gate",
+        "args_summary": {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "graph_agent",
+          "reason": "explicit_research_signal",
+          "suggested_answer_class": "relation_tracing",
+          "confidence": "1.0",
+          "classifier": "deterministic"
+        },
+        "row_count": 0,
+        "duration_ms": 6,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "graph_agent",
+          "reason": "coordinator_route_hint",
+          "route_hint": "graph_agent",
+          "budget_left": 8
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "retrieval_agent",
+          "budget_left": 6
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "graph_agent",
+          "budget_left": 3
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "writer_agent",
+          "reason": "budget_exhausted"
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 1,
+        "tool": "entity_search",
+        "args_summary": {
+          "query": "ws-pilot-od",
+          "kind": "workspace"
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 2,
+        "tool": "edge_search",
+        "args_summary": {
+          "node_id": "ws-pilot-od",
+          "rel_types": "['CONTAINS']",
+          "direction": "out"
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 3,
+        "tool": "edge_search",
+        "args_summary": {
+          "node_id": "ws-pilot-od",
+          "rel_types": "['CITES']",
+          "direction": "out"
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 4,
+        "tool": "workspace_list_papers",
+        "args_summary": {
+          "workspace_id": "ws-pilot-od"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 5,
+        "tool": "paper_metadata",
+        "args_summary": {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 6,
+        "tool": "edge_search",
+        "args_summary": {
+          "node_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "rel_types": "['CITES']",
+          "direction": "out"
+        },
+        "row_count": 34,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 7,
+        "tool": "paper_metadata",
+        "args_summary": {
+          "work_id": "807c8f48-f811-4d22-bb05-6fe7d27615c2"
+        },
+        "row_count": null,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": "Error: paper_metadata is not a valid tool, try one of [cypher_query, entity_search, edge_search]."
+      },
+      {
+        "step": 8,
+        "tool": "paper_metadata",
+        "args_summary": {
+          "work_id": "807c8f48-f811-4d22-bb05-6fe7d27615c2"
+        },
+        "row_count": null,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      }
+    ],
+    "diagnostics": {
+      "tool_call_count": 13,
+      "non_final_tool_call_count": 13,
+      "first_non_final_tool": "coordinator_gate",
+      "unique_tools": [
+        "coordinator_gate",
+        "edge_search",
+        "entity_search",
+        "paper_metadata",
+        "route_to_specialist",
+        "workspace_list_papers"
+      ],
+      "repeated_non_final_tools": [
+        "route_to_specialist",
+        "edge_search",
+        "paper_metadata"
+      ],
+      "citation_count": 0,
+      "citations_missing_work_id": 0,
+      "answer_class": "relation_tracing",
+      "phoenix_trace_id_present": true,
+      "warnings_count": 1,
+      "has_bibliography_block": false,
+      "bibliography_entry_count": 0,
+      "bibliography_filtered_work_ids_count": 0,
+      "has_inventory_block": true,
+      "has_quote_candidates": false,
+      "has_relation_trace": false,
+      "has_idea_suggestions": false,
+      "budget_exhausted_in_trace": true,
+      "tool_trace_error_count": 1
+    },
+    "metrics": {
+      "passed": false,
+      "reasons": [
+        "max_tool_trace_errors:want_at_most_0_got_1"
+      ],
+      "diagnostics": {
+        "tool_call_count": 13,
+        "non_final_tool_call_count": 13,
+        "first_non_final_tool": "coordinator_gate",
+        "unique_tools": [
+          "coordinator_gate",
+          "edge_search",
+          "entity_search",
+          "paper_metadata",
+          "route_to_specialist",
+          "workspace_list_papers"
+        ],
+        "repeated_non_final_tools": [
+          "route_to_specialist",
+          "edge_search",
+          "paper_metadata"
+        ],
+        "citation_count": 0,
+        "citations_missing_work_id": 0,
+        "answer_class": "relation_tracing",
+        "phoenix_trace_id_present": true,
+        "warnings_count": 1,
+        "has_bibliography_block": false,
+        "bibliography_entry_count": 0,
+        "bibliography_filtered_work_ids_count": 0,
+        "has_inventory_block": true,
+        "has_quote_candidates": false,
+        "has_relation_trace": false,
+        "has_idea_suggestions": false,
+        "budget_exhausted_in_trace": true,
+        "tool_trace_error_count": 1
+      }
+    },
+    "phoenix_http_snapshot": {
+      "ok": true,
+      "url": "http://127.0.0.1:16006/arize-phoenix-api/v1/traces/f04ab6572bdff8fe5a65374b6d01e0b5",
+      "payload": {
+        "raw": "<!DOCTYPE html>\n<html>\n  <head>\n    <title>Phoenix</title>\n    <link rel=\"icon\" href=\"/favicon.ico\" type=\"image/x-icon\"></link>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"title\" content=\"Arize Phoenix\" />\n    <meta name=\"description\" content=\"AI Observability & Evaluation\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <meta property=\"og:title\" content=\"Arize Phoenix\" />\n    <meta property=\"og:description\" content=\"AI Observability & Evaluation\" />\n    <meta property=\"og:image\" content=\"https://raw.githubusercontent.com/Arize-ai/phoenix-assets/main/images/socal/social-preview-horizontal.jpg\" />\n    <meta name=\"theme-color\" content=\"#ffffff\" />\n    \n    <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n    <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n    <link href=\"https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap\" rel=\"stylesheet\">\n    \n    <link rel=\"stylesheet\" href=\"/assets/vendor-CAy9C7li.css\">\n  <script src=\"/modernizr.js\"></script>\n    \n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script>(function() {\n      Object.defineProperty(window, \"Config\", {\n          // Place any server-side injected config here\n          // injected into the client before React runs\n          value: Object.freeze({\n              basename: \"\",\n              platformVersion: \"13.20.0\",\n              authenticationEnabled: Boolean(\"False\" == \"True\"),\n              oAuth2Idps: [],\n              basicAuthDisabled: Boolean(\"False\" == \"True\"),\n              ldapEnabled: Boolean(\"False\" == \"True\"),\n              ldapManualUserCreationEnabled: Boolean(\"False\" == \"True\"),\n              managementUrl: null,\n              supportEmail: null,\n              hasDbThreshold: Boolean(\"False\" == \"True\"),\n              allowExternalResources: Boolean(\"True\" == \"True\"),\n              authErrorMessages: {},\n          }),\n          writable: false\n      });\n  })()</script>\n    <img referrerpolicy=\"no-referrer-when-downgrade\" src=\"https://static.scarf.sh/a.png?x-pxid=98877b05-7d80-493e-ab95-97c104785d1e\" style=\"position:absolute;width:0;height:0\" />\n    <link rel=\"modulepreload\" href=\"/assets/rolldown-runtime-DD-Z-9HO.js\">\n    <link rel=\"modulepreload\" href=\"/assets/vendor-codemirror-CROkc6HV.js\">\n    <link rel=\"modulepreload\" href=\"/assets/vendor-ai-sdk-react-BePEedZt.js\">\n    <link rel=\"modulepreload\" href=\"/assets/vendor-recharts-C26oZurC.js\">\n    <link rel=\"modulepreload\" href=\"/assets/vendor-shiki-DmwBzjbx.js\">\n    <link rel=\"modulepreload\" href=\"/assets/vendor-streamdown-D485D3QJ.js\">\n    <link rel=\"modulepreload\" href=\"/assets/vendor-BXiYgoZU.js\">\n    <script type=\"module\" src=\"/assets/index-D9IrZuFd.js\"></script>\n    </body>\n</html>"
+      }
+    }
+  }
+}

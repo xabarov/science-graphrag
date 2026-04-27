@@ -90,32 +90,44 @@ def _seed_manifest(
 
         if use_corpus_ids:
             raw = (meta or {}).get("corpus_work_ids")
-            if _corpus_manifest_is_unbounded(raw):
-                # Full-corpus: no CONTAINS; ws.unbounded drives retrieval + Qdrant backfill.
-                with driver.session() as session:
-                    session.run(
-                        "MATCH (ws:Workspace {id: $id}) SET ws.unbounded = true",
-                        id=wid,
-                    )
-                print(f"workspace_ok id={wid} corpus=* (unbounded; no CONTAINS edges)")
-                continue
-            raw_ids = (
-                list(raw)
-                if isinstance(raw, (list, tuple))
-                else ([str(raw).strip()] if str(raw or "").strip() else [])
-            )
             work_uuids: list[str] = []
-            for slug in raw_ids:
-                slug_s = str(slug).strip()
-                if not slug_s:
-                    continue
-                uuid = _resolve_corpus_slug_to_uuid(slug_s, repo, driver)
-                if uuid:
-                    work_uuids.append(uuid)
+            if _corpus_manifest_is_unbounded(raw):
+                materialize = bool((meta or {}).get("materialize_all_works"))
+                if materialize:
+                    with driver.session() as session:
+                        rows = session.run("MATCH (w:Work) RETURN w.id AS id").data()
+                    work_uuids = [
+                        str(r.get("id") or "").strip() for r in rows if str(r.get("id") or "").strip()
+                    ]
+                    with driver.session() as session:
+                        session.run("MATCH (ws:Workspace {id: $id}) SET ws.unbounded = false", id=wid)
+                    print(f"workspace_ok id={wid} corpus=* materialized_all_works={len(work_uuids)}")
                 else:
-                    print(
-                        f"skip_missing_work workspace={wid} corpus_slug={slug_s}", file=sys.stderr
-                    )
+                    # Full-corpus: no CONTAINS; ws.unbounded drives retrieval + Qdrant backfill.
+                    with driver.session() as session:
+                        session.run(
+                            "MATCH (ws:Workspace {id: $id}) SET ws.unbounded = true",
+                            id=wid,
+                        )
+                    print(f"workspace_ok id={wid} corpus=* (unbounded; no CONTAINS edges)")
+                    continue
+            else:
+                raw_ids = (
+                    list(raw)
+                    if isinstance(raw, (list, tuple))
+                    else ([str(raw).strip()] if str(raw or "").strip() else [])
+                )
+                for slug in raw_ids:
+                    slug_s = str(slug).strip()
+                    if not slug_s:
+                        continue
+                    uuid = _resolve_corpus_slug_to_uuid(slug_s, repo, driver)
+                    if uuid:
+                        work_uuids.append(uuid)
+                    else:
+                        print(
+                            f"skip_missing_work workspace={wid} corpus_slug={slug_s}", file=sys.stderr
+                        )
         else:
             work_uuids = []
             for ref in (meta or {}).get("work_ids") or []:

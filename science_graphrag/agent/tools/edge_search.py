@@ -6,6 +6,7 @@ from langchain_core.tools import BaseTool, tool
 from pydantic import BaseModel, Field
 
 from science_graphrag.agent.tools.base import BaseAgentTool, ToolResult
+from science_graphrag.agent.tools.trace_wrappers import run_tool_result_with_span
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 
 
@@ -65,11 +66,20 @@ def _make_edge_search_tool(store: Neo4jGraphStore) -> BaseTool:
         limit: int = 50,
     ) -> dict[str, Any]:
         """Search neighboring graph edges for a work node."""
-        result = runtime_tool.run(
-            node_id=node_id,
-            rel_types=rel_types,
-            direction=direction,
-            limit=limit,
+        result = run_tool_result_with_span(
+            tool_name="edge_search",
+            tool_parameters={
+                "node_id": node_id,
+                "rel_types": list(rel_types or [])[:12],
+                "direction": direction,
+                "limit": limit,
+            },
+            fn=lambda: runtime_tool.run(
+                node_id=node_id,
+                rel_types=rel_types,
+                direction=direction,
+                limit=limit,
+            ),
         )
         payload = dict(result.payload)
         payload.setdefault("row_count", result.row_count)

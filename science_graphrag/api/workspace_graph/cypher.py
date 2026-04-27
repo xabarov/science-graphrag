@@ -15,6 +15,7 @@ from science_graphrag.api.workspace_graph._cypher_projection import (
     build_from_depth2_rows,
     run_projection_rows,
 )
+from science_graphrag.api.workspace_graph.claims_projection import build_claim_graph_slice_for_workspace
 from science_graphrag.api.workspace_graph.projection import (
     annotate_membership_and_cites,
     apply_workspace_aggregators,
@@ -95,11 +96,18 @@ def project_workspace_graph(
     external_min_internal_citers: int = 0,
     prioritize: str | None = None,
     view: str = "reader",
+    include_claims: bool = False,
+    claims_per_work: int = 12,
+    claims_max_total: int = 120,
 ) -> dict[str, Any] | None:
     mode_norm = (mode or "inner_only").strip().lower()
     depth_eff = 2 if int(depth) >= 2 else 1
     cap = min(MAX_NEIGHBORS_CAP, max(1, min(int(neighbor_limit), 2000)))
     types_list = parse_node_types_csv(node_types)
+    claims_slice_meta: dict[str, Any] = {
+        "include_claims": bool(include_claims),
+        "claims_included": False,
+    }
     with neo4j_store.session() as session:
         row = session.run(
             "MATCH (ws:Workspace {id: $wid}) OPTIONAL MATCH (ws)-[:CONTAINS]->(w:Work) "
@@ -123,6 +131,12 @@ def project_workspace_graph(
             enrich_edges_workspace(nodes, edges)
             inc, exc = annotate_membership_and_cites(nodes, edges, iws)
             apply_workspace_node_kind(nodes)
+            if include_claims:
+                claims_slice_meta = {
+                    "include_claims": True,
+                    "claims_included": False,
+                    "claims_disabled_reason": "union_1hop_mode",
+                }
             out["meta"] = {
                 **dict(out.get("meta") or {}),
                 "graph_scope": "workspace_v2",
@@ -139,6 +153,7 @@ def project_workspace_graph(
                 "source_work_ids": internal_ids,
                 "gds_used": False,
                 "gds_runtime_available": gds_avail,
+                **claims_slice_meta,
             }
             return out
         if not internal_ids:
@@ -164,6 +179,7 @@ def project_workspace_graph(
                     "available_expansions": ["add_works"],
                     "gds_used": False,
                     "gds_runtime_available": gds_avail,
+                    **claims_slice_meta,
                 },
             }
         semantic_only = mode_norm == "semantic_layer"
@@ -229,6 +245,19 @@ def project_workspace_graph(
             nodes, edges = filter_external_works_by_min_citers(
                 nodes, edges, iws, external_min_internal_citers
             )
+        if include_claims:
+            cn, ce, cmeta = build_claim_graph_slice_for_workspace(
+                session,
+                workspace_id,
+                claims_per_work=max(1, min(int(claims_per_work), 80)),
+                max_claims_total=max(1, min(int(claims_max_total), 500)),
+            )
+            nodes, edges = merge_nodes_edges_lists(nodes, edges, cn, ce)
+            claims_slice_meta = {
+                "include_claims": True,
+                "claims_included": True,
+                **cmeta,
+            }
         enrich_authorship_nodes(session, nodes)
     enrich_edges_workspace(nodes, edges)
     inc_n, exc_n = annotate_membership_and_cites(nodes, edges, iws)
@@ -266,6 +295,7 @@ def project_workspace_graph(
             "available_expansions": expansions,
             "gds_used": gds_used,
             "gds_runtime_available": gds_avail,
+            **claims_slice_meta,
         },
     }
 

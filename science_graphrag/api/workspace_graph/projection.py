@@ -11,7 +11,7 @@ from science_graphrag.api.graph_display import (
 )
 
 ALLOWED_NODE_TYPES = frozenset(
-    {"Work", "Author", "Method", "Dataset", "Venue", "Institution", "Authorship"}
+    {"Work", "Author", "Method", "Dataset", "Venue", "Institution", "Authorship", "Claim"}
 )
 AGGREGATOR_THRESHOLD = 8
 
@@ -61,7 +61,7 @@ def merge_graph_payloads(payloads: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def _primary_label(labels: list[Any]) -> str:
-    order = ["Work", "Author", "Method", "Dataset", "Venue", "Institution", "Authorship"]
+    order = ["Work", "Author", "Method", "Dataset", "Venue", "Institution", "Authorship", "Claim", "Evidence"]
     labs = [str(x) for x in (labels or [])]
     for item in order:
         if item in labs:
@@ -80,7 +80,14 @@ def node_dict_from_neo(node: Any) -> dict[str, Any] | None:
     if not nid:
         return None
     ntype = _primary_label(list(node.labels))
-    raw_title = str(props.get("title") or props.get("name") or props.get("full_name") or "").strip()
+    raw_title = str(
+        props.get("title")
+        or props.get("name")
+        or props.get("full_name")
+        or props.get("normalized_text")
+        or props.get("text")
+        or ""
+    ).strip()
     center_props: dict[str, Any] = {}
     if props.get("publication_year") is not None:
         center_props["publication_year"] = props["publication_year"]
@@ -96,6 +103,10 @@ def node_dict_from_neo(node: Any) -> dict[str, Any] | None:
         center_props["venue_type"] = str(props["venue_type"]).strip()[:120]
     if props.get("issn"):
         center_props["issn"] = str(props["issn"]).strip()[:64]
+    if ntype == "Claim":
+        for key in ("claim_type", "polarity", "confidence"):
+            if props.get(key) is not None:
+                center_props[key] = props[key]
     rendered = compute_node_display(ntype, raw_title, center_props)
     label = str(rendered["display_label"])
     subtitle = str(rendered["subtitle"])
@@ -280,6 +291,8 @@ def apply_workspace_aggregators(
         src = str(edge.get("source") or "")
         tgt = str(edge.get("target") or "")
         edge_type = str(edge.get("type") or "")
+        if edge_type.upper() == "HAS_CLAIM":
+            continue
         for owner_id, other_id in ((src, tgt), (tgt, src)):
             owner = node_by_id.get(owner_id)
             other = node_by_id.get(other_id)

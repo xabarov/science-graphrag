@@ -31,7 +31,7 @@
       {
         "question": "Who are the authors of the main object-detection paper in this workspace?",
         "output": {
-          "answer": "The authors of the main object-detection paper in the workspace are Ali Farhadi, Santosh Divvala, Ross Girshick, and Joseph Redmon.",
+          "answer": "The authors of the main object-detection paper in this workspace are Ali Farhadi, Santosh Divvala, Ross Girshick, and Joseph Redmon.",
           "citations": [
             {
               "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
@@ -126,7 +126,7 @@
               "step": 3,
               "tool": "final_answer",
               "args_summary": {
-                "answer": "The authors of the main object-detection paper in the workspace are Ali Farhadi, Santosh Divvala, Ross Girshick, and Joseph Redmon.",
+                "answer": "The authors of the main object-detection paper in this workspace are Ali Farhadi, Santosh Divvala, Ross Girshick, and Joseph Redmon.",
                 "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'authors': [{'id': 'd18576c3-572c-56cb-b92f-726daa81aefe', 'full_name': 'Ali Farhadi'}, {'id': '98fe6eca-0bad-56aa-a75b-c048a4b62159', 'full_name':"
               },
               "row_count": 1,
@@ -212,13 +212,13 @@
               "writer_mode": "normal"
             }
           ],
-          "phoenix_trace_id": "f20a49170162f6e41957c782fe71ccd3",
+          "phoenix_trace_id": "86a3d59c2f0ff6b6592129611f529762",
           "thread_id": null
         }
       }
     ],
     "final_output": {
-      "answer": "The authors of the main object-detection paper in the workspace are Ali Farhadi, Santosh Divvala, Ross Girshick, and Joseph Redmon.",
+      "answer": "The authors of the main object-detection paper in this workspace are Ali Farhadi, Santosh Divvala, Ross Girshick, and Joseph Redmon.",
       "citations": [
         {
           "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
@@ -313,7 +313,7 @@
           "step": 3,
           "tool": "final_answer",
           "args_summary": {
-            "answer": "The authors of the main object-detection paper in the workspace are Ali Farhadi, Santosh Divvala, Ross Girshick, and Joseph Redmon.",
+            "answer": "The authors of the main object-detection paper in this workspace are Ali Farhadi, Santosh Divvala, Ross Girshick, and Joseph Redmon.",
             "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'authors': [{'id': 'd18576c3-572c-56cb-b92f-726daa81aefe', 'full_name': 'Ali Farhadi'}, {'id': '98fe6eca-0bad-56aa-a75b-c048a4b62159', 'full_name':"
           },
           "row_count": 1,
@@ -399,7 +399,7 @@
           "writer_mode": "normal"
         }
       ],
-      "phoenix_trace_id": "f20a49170162f6e41957c782fe71ccd3",
+      "phoenix_trace_id": "86a3d59c2f0ff6b6592129611f529762",
       "thread_id": null
     },
     "tool_trace": [
@@ -473,7 +473,7 @@
         "step": 3,
         "tool": "final_answer",
         "args_summary": {
-          "answer": "The authors of the main object-detection paper in the workspace are Ali Farhadi, Santosh Divvala, Ross Girshick, and Joseph Redmon.",
+          "answer": "The authors of the main object-detection paper in this workspace are Ali Farhadi, Santosh Divvala, Ross Girshick, and Joseph Redmon.",
           "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'authors': [{'id': 'd18576c3-572c-56cb-b92f-726daa81aefe', 'full_name': 'Ali Farhadi'}, {'id': '98fe6eca-0bad-56aa-a75b-c048a4b62159', 'full_name':"
         },
         "row_count": 1,
@@ -482,7 +482,7 @@
         "error": null
       }
     ],
-    "duration_ms": 8885,
+    "duration_ms": 9122,
     "metrics": {
       "passed": true,
       "reasons": [
@@ -518,13 +518,13 @@
         "tool_trace_error_count": 0
       }
     },
-    "wall_clock_seconds": 8.885,
+    "wall_clock_seconds": 9.123,
     "case_path": "tests/fixtures/benchmarks/chat_agent_roadmap/cases/02_authors_fact_lookup.json"
   },
   "trace_audit": {
     "case_id": "authors_fact_lookup",
-    "phoenix_trace_id": "f20a49170162f6e41957c782fe71ccd3",
-    "phoenix_ui_hint": "http://127.0.0.1:16006/traces/f20a49170162f6e41957c782fe71ccd3",
+    "phoenix_trace_id": "86a3d59c2f0ff6b6592129611f529762",
+    "phoenix_ui_hint": "http://127.0.0.1:16006/traces/86a3d59c2f0ff6b6592129611f529762",
     "tool_trace": [
       {
         "step": 0,
@@ -596,7 +596,7 @@
         "step": 3,
         "tool": "final_answer",
         "args_summary": {
-          "answer": "The authors of the main object-detection paper in the workspace are Ali Farhadi, Santosh Divvala, Ross Girshick, and Joseph Redmon.",
+          "answer": "The authors of the main object-detection paper in this workspace are Ali Farhadi, Santosh Divvala, Ross Girshick, and Joseph Redmon.",
           "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'authors': [{'id': 'd18576c3-572c-56cb-b92f-726daa81aefe', 'full_name': 'Ali Farhadi'}, {'id': '98fe6eca-0bad-56aa-a75b-c048a4b62159', 'full_name':"
         },
         "row_count": 1,
@@ -671,7 +671,7 @@
     },
     "phoenix_http_snapshot": {
       "ok": true,
-      "url": "http://127.0.0.1:16006/arize-phoenix-api/v1/traces/f20a49170162f6e41957c782fe71ccd3",
+      "url": "http://127.0.0.1:16006/arize-phoenix-api/v1/traces/86a3d59c2f0ff6b6592129611f529762",
       "payload": {
         "raw": "<!DOCTYPE html>\n<html>\n  <head>\n    <title>Phoenix</title>\n    <link rel=\"icon\" href=\"/favicon.ico\" type=\"image/x-icon\"></link>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"title\" content=\"Arize Phoenix\" />\n    <meta name=\"description\" content=\"AI Observability & Evaluation\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <meta property=\"og:title\" content=\"Arize Phoenix\" />\n    <meta property=\"og:description\" content=\"AI Observability & Evaluation\" />\n    <meta property=\"og:image\" content=\"https://raw.githubusercontent.com/Arize-ai/phoenix-assets/main/images/socal/social-preview-horizontal.jpg\" />\n    <meta name=\"theme-color\" content=\"#ffffff\" />\n    \n    <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n    <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n    <link href=\"https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap\" rel=\"stylesheet\">\n    \n    <link rel=\"stylesheet\" href=\"/assets/vendor-CAy9C7li.css\">\n  <script src=\"/modernizr.js\"></script>\n    \n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script>(function() {\n      Object.defineProperty(window, \"Config\", {\n          // Place any server-side injected config here\n          // injected into the client before React runs\n          value: Object.freeze({\n              basename: \"\",\n              platformVersion: \"13.20.0\",\n              authenticationEnabled: Boolean(\"False\" == \"True\"),\n              oAuth2Idps: [],\n              basicAuthDisabled: Boolean(\"False\" == \"True\"),\n              ldapEnabled: Boolean(\"False\" == \"True\"),\n              ldapManualUserCreationEnabled: Boolean(\"False\" == \"True\"),\n              managementUrl: null,\n              supportEmail: null,\n              hasDbThreshold: Boolean(\"False\" == \"True\"),\n              allowExternalResources: Boolean(\"True\" == \"True\"),\n              authErrorMessages: {},\n          }),\n          writable: false\n      });\n  })()</script>\n    <img referrerpolicy=\"no-referrer-when-downgrade\" src=\"https://static.scarf.sh/a.png?x-pxid=98877b05-7d80-493e-ab95-97c104785d1e\" style=\"position:absolute;width:0;height:0\" />\n    <link rel=\"modulepreload\" href=\"/assets/rolldown-runtime-DD-Z-9HO.js\">\n    <link rel=\"modulepreload\" href=\"/assets/vendor-codemirror-CROkc6HV.js\">\n    <link rel=\"modulepreload\" href=\"/assets/vendor-ai-sdk-react-BePEedZt.js\">\n    <link rel=\"modulepreload\" href=\"/assets/vendor-recharts-C26oZurC.js\">\n    <link rel=\"modulepreload\" href=\"/assets/vendor-shiki-DmwBzjbx.js\">\n    <link rel=\"modulepreload\" href=\"/assets/vendor-streamdown-D485D3QJ.js\">\n    <link rel=\"modulepreload\" href=\"/assets/vendor-BXiYgoZU.js\">\n    <script type=\"module\" src=\"/assets/index-D9IrZuFd.js\"></script>\n    </body>\n</html>"
       }

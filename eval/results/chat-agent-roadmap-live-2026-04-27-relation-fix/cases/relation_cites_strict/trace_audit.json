@@ -1,0 +1,14 @@
+{
+  "case_id": "relation_cites_strict",
+  "phoenix_trace_id": null,
+  "phoenix_ui_hint": null,
+  "tool_trace": [],
+  "diagnostics": {},
+  "metrics": {
+    "passed": false,
+    "reasons": [
+      "runtime_error:ValueError: {'message': 'Provider returned error', 'code': 400}"
+    ],
+    "diagnostics": {}
+  }
+}

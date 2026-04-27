@@ -7,10 +7,12 @@ from langchain_core.tools import BaseTool, tool
 from pydantic import BaseModel, Field
 
 from science_graphrag.agent.tools.base import BaseAgentTool, ToolResult
+from science_graphrag.agent.tools.trace_wrappers import run_tool_result_with_span
 from science_graphrag.config import Settings
 from science_graphrag.embeddings import resolve_embedder, resolve_embedding_model_label
-from science_graphrag.observability.spans import traced_tool_span
-from science_graphrag.observability.spans.decorators import embeddings_span
+from science_graphrag.ingestion.embeddings import resolve_embedding_dim
+from science_graphrag.observability.spans import SpanAttributes, set_span_attribute, set_span_error
+from science_graphrag.observability.spans.decorators import embeddings_span, retriever_span
 from science_graphrag.storage.qdrant_store import QdrantChunkStore, QdrantWorkEmbeddingStore
 
 
@@ -26,6 +28,7 @@ class IdeaSearchTool(BaseAgentTool):
     ) -> None:
         self._chunk_store = chunk_store
         self._work_store = work_store
+        self._settings = settings
         self._embedder = resolve_embedder(settings)
         span_label = resolve_embedding_model_label(settings)
         if not settings.openrouter_embedding_model and not settings.embedding_model:
@@ -40,53 +43,92 @@ class IdeaSearchTool(BaseAgentTool):
         workspace_id: str | None = None,
         top_k: int = 5,
     ) -> ToolResult:
-        with traced_tool_span(
-            "tool.idea_search",
-            tool_name="idea_search",
-            tool_parameters={"query": q[:200], "workspace_id": workspace_id or "", "top_k": top_k},
-        ):
-            k = max(1, min(int(top_k), 24))
-            with embeddings_span(
-                "embedding.agent.idea_search",
-                attributes={"embedding.model_name": self._span_model_label},
-            ):
-                qv = self._embedder.embed([q])
-            if isinstance(qv, np.ndarray):
-                vector = qv[0].tolist()
-            else:
-                vector = list(qv[0])
-            req_kinds = {str(x).strip().lower() for x in (kinds or ["chunk"])}
-            items: list[dict[str, Any]] = []
-            if "chunk" in req_kinds:
-                for hit in self._chunk_store.search_similar(
-                    vector=vector, limit=k, workspace_id=workspace_id
-                ):
-                    items.append(
-                        {
-                            "kind": "chunk",
-                            "id": hit.get("id"),
-                            "score": hit.get("score"),
-                            "work_id": hit.get("work_id"),
-                            "snippet": str(hit.get("text") or "")[:240],
-                        }
-                    )
-            if "work" in req_kinds and self._work_store is not None and workspace_id:
-                for hit in self._work_store.search_similar_works(
-                    vector=vector, workspace_id=workspace_id, limit=k
-                ):
-                    items.append(
-                        {
-                            "kind": "work",
-                            "id": hit.get("work_id"),
-                            "score": hit.get("score"),
-                            "work_id": hit.get("work_id"),
-                            "snippet": "",
-                        }
-                    )
-            items = sorted(items, key=lambda x: float(x.get("score") or 0.0), reverse=True)[:k]
-            return ToolResult(
-                payload={"items": items}, row_count=len(items), truncated=len(items) >= k
+        k = max(1, min(int(top_k), 24))
+        req_kinds = {str(x).strip().lower() for x in (kinds or ["chunk"])}
+        dim = resolve_embedding_dim(settings=self._settings)
+
+        with embeddings_span("embedding.agent.idea_search"):
+            SpanAttributes.set_embedding_agent_attrs(
+                self._span_model_label,
+                dim=dim,
+                input_count=1,
             )
+            qv = self._embedder.embed([q])
+        if isinstance(qv, np.ndarray):
+            vector = qv[0].tolist()
+        else:
+            vector = list(qv[0])
+
+        items: list[dict[str, Any]] = []
+        retrieval_docs: list[dict[str, Any]] = []
+
+        with retriever_span("retrieval.qdrant.idea_search"):
+            SpanAttributes.set_retrieval_qdrant_context(
+                collection_name=self._settings.qdrant_collection,
+                top_k=k,
+                workspace_id=workspace_id or None,
+                query_preview=q,
+            )
+            try:
+                if "chunk" in req_kinds:
+                    for hit in self._chunk_store.search_similar(
+                        vector=vector, limit=k, workspace_id=workspace_id
+                    ):
+                        snippet = str(hit.get("text") or "")[:240]
+                        wid = hit.get("work_id")
+                        items.append(
+                            {
+                                "kind": "chunk",
+                                "id": hit.get("id"),
+                                "score": hit.get("score"),
+                                "work_id": wid,
+                                "snippet": snippet,
+                            }
+                        )
+                        retrieval_docs.append(
+                            {
+                                "id": hit.get("id"),
+                                "score": hit.get("score"),
+                                "snippet": snippet,
+                                "work_id": wid,
+                                "kind": "chunk",
+                            }
+                        )
+                if "work" in req_kinds and self._work_store is not None and workspace_id:
+                    set_span_attribute(
+                        "db.collection.works",
+                        self._settings.qdrant_work_embeddings_collection,
+                    )
+                    for hit in self._work_store.search_similar_works(
+                        vector=vector, workspace_id=workspace_id, limit=k
+                    ):
+                        wid = hit.get("work_id")
+                        items.append(
+                            {
+                                "kind": "work",
+                                "id": wid,
+                                "score": hit.get("score"),
+                                "work_id": wid,
+                                "snippet": "",
+                            }
+                        )
+                        retrieval_docs.append(
+                            {
+                                "id": wid,
+                                "score": hit.get("score"),
+                                "snippet": "",
+                                "work_id": wid,
+                                "kind": "work",
+                            }
+                        )
+            except Exception as exc:  # noqa: BLE001
+                set_span_error(exc)
+                raise
+
+            SpanAttributes.set_retrieval_documents(retrieval_docs)
+
+        items = sorted(items, key=lambda x: float(x.get("score") or 0.0), reverse=True)[:k]
+        return ToolResult(payload={"items": items}, row_count=len(items), truncated=len(items) >= k)
 
 
 class IdeaSearchArgs(BaseModel):
@@ -114,7 +156,17 @@ def _make_idea_search_tool(
         top_k: int = 5,
     ) -> dict[str, Any]:
         """Search similar chunks and works using embedding retrieval."""
-        result = runtime_tool.run(q=query, kinds=kinds, workspace_id=workspace_id, top_k=top_k)
+        result = run_tool_result_with_span(
+            tool_name="idea_search",
+            tool_parameters={
+                "query": query[:200],
+                "workspace_id": workspace_id or "",
+                "top_k": top_k,
+            },
+            fn=lambda: runtime_tool.run(
+                q=query, kinds=kinds, workspace_id=workspace_id, top_k=top_k
+            ),
+        )
         payload = dict(result.payload)
         payload.setdefault("row_count", result.row_count)
         payload.setdefault("truncated", result.truncated)

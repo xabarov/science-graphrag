@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 import { useI18n } from "../../i18n/useI18n.js";
@@ -29,6 +30,7 @@ export default function ReaderWorkDetailCard({
   hideAbstract = false,
 }) {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
   const [abstractOpen, setAbstractOpen] = useState(Boolean(defaultAbstractExpanded));
   const [syncKey, setSyncKey] = useState(() => ({ detail, defaultAbstractExpanded }));
 
@@ -55,13 +57,13 @@ export default function ReaderWorkDetailCard({
         mb: 2,
         p: 1.5,
         borderRadius: "6px",
-        border: "1px solid rgba(255,255,255,0.08)",
-        backgroundColor: "#1a1a1a",
+        border: `1px solid ${tk.border.default}`,
+        backgroundColor: tk.surface.panel,
       }}
     >
       <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1.5, rowGap: 0.5 }}>
         {metaLine ? (
-          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.55)" }}>{metaLine}</Typography>
+          <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary }}>{metaLine}</Typography>
         ) : null}
         {hasAbstract ? (
           <Box
@@ -74,19 +76,19 @@ export default function ReaderWorkDetailCard({
               display: "inline-flex",
               alignItems: "center",
               gap: 0.5,
-              background: "transparent",
-              border: "1px solid rgba(255,255,255,0.12)",
+              background: tk.control.outlinedBg,
+              border: `1px solid ${tk.border.strong}`,
               borderRadius: "6px",
-              color: "rgba(255,255,255,0.75)",
+              color: tk.text.secondary,
               cursor: "pointer",
               fontSize: "0.75rem",
               fontFamily: "inherit",
               padding: "2px 8px",
               transition: "all 0.15s ease",
               "&:hover": {
-                borderColor: "rgba(255,255,255,0.2)",
-                color: "rgba(255,255,255,0.92)",
-                background: "rgba(255,255,255,0.04)",
+                borderColor: tk.control.outlinedBorderHover,
+                color: tk.text.primary,
+                background: tk.control.outlinedBgHover,
               },
               "&:active": { transform: "scale(0.98)" },
             }}
@@ -108,7 +110,7 @@ export default function ReaderWorkDetailCard({
             <Typography
               sx={{
                 fontSize: "0.8125rem",
-                color: "rgba(255,255,255,0.78)",
+                color: tk.text.primary,
                 whiteSpace: "pre-wrap",
                 width: "100%",
                 maxWidth: "100%",

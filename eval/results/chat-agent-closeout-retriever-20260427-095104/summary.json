@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "suite": "chat_agent_roadmap",
+  "eval_tier": "baseline",
+  "fixtures": "tests/fixtures/benchmarks/chat_agent_roadmap",
+  "workspace_id": "ws-pilot-od",
+  "benchmark_run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
+    "semantic_extraction_enabled": true
+  },
+  "environment": {
+    "PHOENIX_UI_BASE_URL": "http://127.0.0.1:16006",
+    "PHOENIX_PROJECT_ID": null,
+    "PHOENIX_PROJECT_NAME": "science-graphrag",
+    "phoenix_project_resolved": "science-graphrag",
+    "PHOENIX_TRACE_SCOPE": "full",
+    "PHOENIX_TRACE_SCOPE_before_harness": "extraction_llm"
+  },
+  "workspace_audit": {
+    "workspace_id": "ws-pilot-od",
+    "workspace_name": "Pilot: Object Detection (YOLOv1)",
+    "work_ids": [
+      "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+    ],
+    "work_count": 1,
+    "status": "ready",
+    "work_reports": [
+      {
+        "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+        "neo4j_work_exists": true,
+        "author_rows": 4,
+        "outgoing_cites_count": 34,
+        "qdrant_chunk_points_total": 36,
+        "qdrant_chunk_points_workspace_scoped": 36,
+        "flags": []
+      }
+    ]
+  },
+  "all_passed": true,
+  "cases": [
+    {
+      "case_id": "quote_detection",
+      "passed": true,
+      "observability_passed": true,
+      "duration_ms": 12155
+    }
+  ]
+}

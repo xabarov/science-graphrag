@@ -134,6 +134,26 @@ def embeddings_span(name: str, attributes: dict[str, Any] | None = None):
 
 
 @contextmanager
+def retriever_span(name: str, attributes: dict[str, Any] | None = None):
+    """OpenInference RETRIEVER span for vector/lexical retrieval (e.g. Qdrant)."""
+
+    if is_extraction_llm_scope() and name not in _EXTRACTION_LLM_CHAIN_NAMES:
+        with _noop_span_context():
+            yield None
+        return
+    with _runtime_tracer().start_as_current_span(name, kind=SpanKind.CLIENT) as span:
+        span.set_attribute(OpenInferenceAttributes.SPAN_KIND, SpanKindOI.RETRIEVER)
+        if attributes:
+            set_span_attributes(attributes)
+        try:
+            yield span
+        except Exception as exc:
+            span.set_status(Status(StatusCode.ERROR, str(exc)))
+            span.record_exception(exc)
+            raise
+
+
+@contextmanager
 def traced_tool_span(
     name: str,
     *,

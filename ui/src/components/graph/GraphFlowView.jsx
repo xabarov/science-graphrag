@@ -218,14 +218,14 @@ function GraphFlowInner({ graph, selectedNodeId, selectedEdgeId = "", onSelectNo
         display: "flex",
         flexDirection: "column",
         borderRadius: "6px",
-        border: "1px solid rgba(255,255,255,0.08)",
+        border: `1px solid ${tk.border.default}`,
         overflow: "hidden",
-        backgroundColor: "#0a0a0a",
+        backgroundColor: tk.surface.panel,
         position: "relative",
         outline: "none",
         alignSelf: "stretch",
         "&:focus-visible": {
-          boxShadow: "0 0 0 1px rgba(99, 102, 241, 0.5)",
+          boxShadow: `0 0 0 1px ${tk.accent.softBorder}`,
         },
       }}
     >
@@ -247,7 +247,7 @@ function GraphFlowInner({ graph, selectedNodeId, selectedEdgeId = "", onSelectNo
         {live}
       </Typography>
       <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1, px: 1.5, pt: 1, pb: 0.5, flexShrink: 0 }}>
-        <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", flex: "1 1 140px" }}>
+        <Typography sx={{ fontSize: "0.75rem", color: tk.text.muted, flex: "1 1 140px" }}>
           Wheel zooms · drag to pan · click node or edge · Escape clears selection (focus panel first). Same URL selection as
           Canvas.
         </Typography>

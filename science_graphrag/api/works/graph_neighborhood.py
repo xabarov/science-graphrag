@@ -6,6 +6,8 @@ from typing import Any
 from neo4j import Session as Neo4jSession
 
 from science_graphrag.api.deps import StoreRegistry
+from science_graphrag.api.workspace_graph.claims_projection import build_claim_graph_slice_for_work
+from science_graphrag.api.workspace_graph.projection import merge_nodes_edges_lists
 from science_graphrag.api.graph_display import (
     compute_node_display,
     edge_display_type,
@@ -170,6 +172,8 @@ def _apply_aggregators(
         src_id = str(edge.get("source") or "")
         tgt_id = str(edge.get("target") or "")
         edge_type = str(edge.get("type") or "")
+        if edge_type.upper() == "HAS_CLAIM":
+            continue
         for owner_id, neighbor_id in ((src_id, tgt_id), (tgt_id, src_id)):
             owner = node_by_id.get(owner_id)
             neighbor = node_by_id.get(neighbor_id)
@@ -390,6 +394,8 @@ def _work_graph_neighborhood_payload(
     view: str = "reader",
     aggregator_threshold: int | None = None,
     aggregator_disabled_kinds: str | None = None,
+    include_claims: bool = False,
+    claims_limit: int = 24,
 ) -> dict[str, Any] | None:
     row = session.run(
         """
@@ -547,6 +553,15 @@ def _work_graph_neighborhood_payload(
         for e in edges
         if str(e.get("source") or "") in kept_ids and str(e.get("target") or "") in kept_ids
     ]
+    claims_meta: dict[str, Any] = {"include_claims": bool(include_claims), "claims_included": False}
+    if include_claims:
+        cn, ce, cm = build_claim_graph_slice_for_work(
+            session,
+            work_id,
+            claims_limit=max(1, min(int(claims_limit), 120)),
+        )
+        nodes, edges = merge_nodes_edges_lists(nodes, edges, cn, ce)
+        claims_meta = {"include_claims": True, "claims_included": True, **cm}
     enrich_authorship_nodes(session, nodes)
     vnorm = str(view or "reader").strip().lower()
     if vnorm == "reader":
@@ -581,6 +596,7 @@ def _work_graph_neighborhood_payload(
             "is_truncated": truncated,
             "skipped_by_kind": skipped_by_kind if skipped_by_kind else {},
             "available_expansions": expansions,
+            **claims_meta,
         },
     }
 
@@ -595,6 +611,8 @@ def work_graph_neighborhood(
     view: str = "reader",
     aggregator_threshold: int | None = None,
     aggregator_disabled_kinds: str | None = None,
+    include_claims: bool = False,
+    claims_limit: int = 24,
 ) -> dict[str, Any] | None:
     # Backward compatibility: older callers pass Settings instead of StoreRegistry.
     if not hasattr(stores, "neo4j"):
@@ -612,6 +630,8 @@ def work_graph_neighborhood(
                     view=view,
                     aggregator_threshold=aggregator_threshold,
                     aggregator_disabled_kinds=aggregator_disabled_kinds,
+                    include_claims=include_claims,
+                    claims_limit=claims_limit,
                 )
         finally:
             temp.close()
@@ -625,6 +645,8 @@ def work_graph_neighborhood(
             view=view,
             aggregator_threshold=aggregator_threshold,
             aggregator_disabled_kinds=aggregator_disabled_kinds,
+            include_claims=include_claims,
+            claims_limit=claims_limit,
         )
 
 

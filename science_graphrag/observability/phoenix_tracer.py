@@ -13,6 +13,7 @@ from science_graphrag.observability import (  # noqa: F401
     init_tracer_provider,
     llm_span,
     phoenix_trace_scope,
+    retriever_span,
     set_span_attribute,
     set_span_attributes,
     set_span_error,

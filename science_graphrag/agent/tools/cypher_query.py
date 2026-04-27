@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 from science_graphrag.agent.cypher_safety import validate_readonly_cypher
 from science_graphrag.agent.tools.base import BaseAgentTool, ToolResult
+from science_graphrag.agent.tools.trace_wrappers import run_tool_result_with_span
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 
 
@@ -51,7 +52,14 @@ def _make_cypher_query_tool(store: Neo4jGraphStore, *, max_rows: int = 200) -> B
     @tool("cypher_query", args_schema=CypherQueryArgs, return_direct=False)
     def cypher_query_tool(query: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         """Execute a read-only Cypher query against the knowledge graph."""
-        result = runtime_tool.run(query=query, params=params)
+        result = run_tool_result_with_span(
+            tool_name="cypher_query",
+            tool_parameters={
+                "query": query[:400],
+                "params_keys": sorted(list((params or {}).keys()))[:20],
+            },
+            fn=lambda: runtime_tool.run(query=query, params=params),
+        )
         payload = dict(result.payload)
         payload.setdefault("row_count", result.row_count)
         payload.setdefault("truncated", result.truncated)

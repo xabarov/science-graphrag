@@ -6,13 +6,20 @@ _PHOENIX_TRACE_SCOPE_FULL = "full"
 _PHOENIX_TRACE_SCOPE_EXTRACTION_LLM = "extraction_llm"
 
 _EXTRACTION_LLM_CHAIN_NAMES = frozenset(
-    {"ingest_document", "ingest.extract_meta.metadata_and_refs"}
+    {
+        "ingest_document",
+        "ingest.extract_meta.metadata_and_refs",
+        # Claims stage parent (child ``llm.claims_extraction`` is allowlisted separately).
+        "ingest.extract_claims.llm",
+    }
 )
 _EXTRACTION_LLM_MANUAL_LLM_NAMES = frozenset(
     {
         "llm.metadata_extraction",
         "llm.authorships_extraction",
         "llm.references_extraction",
+        "llm.claims_extraction",
+        "llm.vl_pdf",
     }
 )
 

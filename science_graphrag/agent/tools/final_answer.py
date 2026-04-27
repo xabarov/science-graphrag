@@ -4,6 +4,7 @@ from langchain_core.tools import BaseTool, tool
 from pydantic import BaseModel, Field
 
 from science_graphrag.agent.tools.base import BaseAgentTool, ToolResult
+from science_graphrag.agent.tools.trace_wrappers import run_tool_result_with_span
 
 
 class FinalAnswerTool(BaseAgentTool):
@@ -30,7 +31,14 @@ def _make_final_answer_tool() -> BaseTool:
     @tool("final_answer", args_schema=FinalAnswerArgs, return_direct=True)
     def final_answer_tool(answer: str, citations: list[dict] | None = None) -> dict:
         """Finalize answer payload for API response."""
-        result = runtime_tool.run(answer=answer, citations=citations)
+        result = run_tool_result_with_span(
+            tool_name="final_answer",
+            tool_parameters={
+                "answer_chars": len(answer or ""),
+                "citations_count": len(citations or []),
+            },
+            fn=lambda: runtime_tool.run(answer=answer, citations=citations),
+        )
         payload = dict(result.payload)
         payload.setdefault("row_count", result.row_count)
         payload.setdefault("truncated", result.truncated)

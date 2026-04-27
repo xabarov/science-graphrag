@@ -1,0 +1,23 @@
+{
+  "case_id": "relation_cites_strict",
+  "eval_tier": "strict",
+  "roadmap_ref": "strict-tier relation_tracing / graph tools",
+  "workspace_id": "ws-pilot-od",
+  "answer_class_hint": "relation_tracing",
+  "question": "What papers in this workspace cite other papers? Describe one citation link you can verify from the graph.",
+  "expect": {
+    "answer_classes_allowed": [
+      "relation_tracing"
+    ],
+    "tools_any_of": [
+      "entity_search",
+      "edge_search",
+      "cypher_query"
+    ],
+    "require_graph_tool": true,
+    "require_phoenix_trace_id": true,
+    "require_tool_trace": true,
+    "min_non_final_tool_calls": 1,
+    "max_tool_trace_errors": 0
+  }
+}

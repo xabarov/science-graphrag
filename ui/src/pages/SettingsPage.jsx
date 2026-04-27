@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 import { Link } from "react-router-dom";
 
 import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
@@ -26,17 +27,18 @@ import { formatResearchApiError } from "../services/researchApi.js";
 import { useI18n } from "../i18n/useI18n.js";
 
 function PlaceholderSection({ title, description }) {
+  const tk = useTheme().appTokens;
   return (
     <Box
       sx={{
-        border: "1px solid rgba(255,255,255,0.08)",
-        backgroundColor: "#1a1a1a",
+        border: `1px solid ${tk.border.default}`,
+        backgroundColor: tk.surface.panel,
         borderRadius: 1.5,
         padding: 2.5,
       }}
     >
-      <Typography sx={{ fontSize: "0.875rem", fontWeight: 600 }}>{title}</Typography>
-      <Typography sx={{ marginTop: 1, fontSize: "0.8125rem", color: "rgba(255,255,255,0.58)", lineHeight: 1.6 }}>
+      <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: tk.text.primary }}>{title}</Typography>
+      <Typography sx={{ marginTop: 1, fontSize: "0.8125rem", color: tk.text.secondary, lineHeight: 1.6 }}>
         {description}
       </Typography>
     </Box>
@@ -45,6 +47,7 @@ function PlaceholderSection({ title, description }) {
 
 export default function SettingsPage() {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
   const [snapshot, setSnapshot] = useState(null);
   const [schema, setSchema] = useState(null);
   const [activeSectionId, setActiveSectionId] = useState("llm");
@@ -201,9 +204,7 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <Box sx={{ padding: 3 }}>
-        <Typography sx={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.65)" }}>
-          {t("settings.page.loading")}
-        </Typography>
+        <Typography sx={{ fontSize: "0.875rem", color: tk.text.muted }}>{t("settings.page.loading")}</Typography>
       </Box>
     );
   }
@@ -214,11 +215,13 @@ export default function SettingsPage() {
         <Alert
           severity="error"
           sx={{
-            backgroundColor: "rgba(255,255,255,0.03)",
-            border: "1px solid rgba(255,255,255,0.08)",
+            backgroundColor: tk.control.outlinedBg,
+            border: `1px solid ${tk.border.default}`,
+            color: tk.text.primary,
+            "& .MuiAlert-icon": { color: tk.state.dangerFg },
           }}
         >
-          <Typography sx={{ fontSize: "0.8125rem" }}>{loadError}</Typography>
+          <Typography sx={{ fontSize: "0.8125rem", color: tk.text.primary }}>{loadError}</Typography>
         </Alert>
       </Box>
     );

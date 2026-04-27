@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "suite": "chat_agent_roadmap",
+  "eval_tier": "all",
+  "fixtures": "tests/fixtures/benchmarks/chat_agent_roadmap",
+  "workspace_id": "ws-pilot-od",
+  "benchmark_run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
+    "semantic_extraction_enabled": true
+  },
+  "environment": {
+    "PHOENIX_UI_BASE_URL": null,
+    "PHOENIX_TRACE_SCOPE": "full",
+    "PHOENIX_TRACE_SCOPE_before_harness": "extraction_llm"
+  },
+  "workspace_audit": {
+    "workspace_id": "ws-pilot-od",
+    "workspace_name": "Pilot: Object Detection (YOLOv1)",
+    "work_ids": [
+      "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+    ],
+    "work_count": 1,
+    "status": "ready",
+    "work_reports": [
+      {
+        "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+        "neo4j_work_exists": true,
+        "author_rows": 4,
+        "outgoing_cites_count": 34,
+        "qdrant_chunk_points_total": 36,
+        "qdrant_chunk_points_workspace_scoped": 36,
+        "flags": []
+      }
+    ]
+  },
+  "all_passed": false,
+  "cases": [
+    {
+      "case_id": "inventory_papers",
+      "passed": true,
+      "duration_ms": 7298
+    },
+    {
+      "case_id": "authors_fact_lookup",
+      "passed": true,
+      "duration_ms": 9122
+    },
+    {
+      "case_id": "bibliography_gost",
+      "passed": true,
+      "duration_ms": 6759
+    },
+    {
+      "case_id": "quote_detection",
+      "passed": true,
+      "duration_ms": 16560
+    },
+    {
+      "case_id": "relation_cites",
+      "passed": true,
+      "duration_ms": 11932
+    },
+    {
+      "case_id": "ideation_workspace",
+      "passed": true,
+      "duration_ms": 15281
+    },
+    {
+      "case_id": "multi_turn_clarify",
+      "passed": true,
+      "duration_ms": 12074
+    },
+    {
+      "case_id": "relation_cites_strict",
+      "passed": false,
+      "duration_ms": 10965
+    },
+    {
+      "case_id": "bibliography_gost_strict",
+      "passed": true,
+      "duration_ms": 9018
+    },
+    {
+      "case_id": "authors_fact_lookup_strict",
+      "passed": true,
+      "duration_ms": 12736
+    }
+  ]
+}

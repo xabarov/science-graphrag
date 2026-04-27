@@ -4,6 +4,7 @@ from langchain_core.tools import BaseTool, tool
 from pydantic import BaseModel, Field
 
 from science_graphrag.agent.tools.base import BaseAgentTool, ToolResult
+from science_graphrag.agent.tools.trace_wrappers import run_tool_result_with_span
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 
 
@@ -44,7 +45,11 @@ def _make_summarize_workspace_tool(store: Neo4jGraphStore) -> BaseTool:
         workspace_id: str, top_n_works: int = 8
     ) -> dict[str, str | list[str] | int]:
         """Summarize workspace composition and sample work ids."""
-        result = runtime_tool.run(workspace_id=workspace_id, top_n_works=top_n_works)
+        result = run_tool_result_with_span(
+            tool_name="summarize_workspace",
+            tool_parameters={"workspace_id": workspace_id, "top_n_works": top_n_works},
+            fn=lambda: runtime_tool.run(workspace_id=workspace_id, top_n_works=top_n_works),
+        )
         payload = dict(result.payload)
         payload.setdefault("row_count", result.row_count)
         payload.setdefault("truncated", result.truncated)

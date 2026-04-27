@@ -35,6 +35,7 @@ EDGE_DISPLAY_TYPE_RAW: dict[str, str] = {
     "SUPPORTS": "supports",
     "CONTRADICTS": "contradicts",
     "MENTIONS": "mentions",
+    "HAS_CLAIM": "has claim",
 }
 
 # Reader-oriented phrasing (subset overrides; see backlog graph_display EDGE_DISPLAY_TYPE_READER).
@@ -57,6 +58,8 @@ _NODE_KIND_PRIORITY: dict[str, int] = {
     "Venue": 5,
     "Institution": 5,
     "Aggregator": 6,
+    "Claim": 7,
+    "Evidence": 7,
 }
 
 
@@ -157,6 +160,13 @@ def compute_node_display(
     elif node_type in {"Method", "Dataset"}:
         display_label = display_label or f"Unnamed {node_type.lower()}"
         subtitle = node_type
+    elif node_type == "Claim":
+        body = _clean_label(str(p.get("normalized_text") or p.get("text") or raw_label or ""))
+        display_label = (body[:180] if body else "") or "Claim"
+        pol = _clean_label(str(p.get("polarity") or ""))
+        ct = _clean_label(str(p.get("claim_type") or ""))
+        bits = [b for b in (ct, pol) if b]
+        subtitle = ("Claim · " + " · ".join(bits)) if bits else "Claim"
     elif node_type == "Authorship":
         extra = authorship_extra or {}
         position = extra.get("author_position")

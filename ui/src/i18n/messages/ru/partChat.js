@@ -168,6 +168,8 @@ export default {
   "chat.run.live.toolCall": "{{tool}}",
   "chat.run.live.toolCallQuery": "{{tool}} · {{q}}",
   "chat.run.phoenixTraceHint": "Идентификатор трейса: {{id}}…",
+  "chat.run.openPhoenix": "Открыть трейс в Phoenix",
+  "chat.run.openPhoenixAria": "Открыть трейс этого запуска в Phoenix (новая вкладка)",
   "chat.run.specialistRunsTitle": "Запуски специалистов",
   "chat.run.specialistExpandAria": "Развернуть детали запуска специалиста",
   "chat.run.specialistCollapseAria": "Свернуть детали запуска специалиста",

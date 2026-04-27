@@ -134,12 +134,13 @@ def infer_class_from_trace(tool_names: set[str]) -> str | None:
         return "bibliography_export"
     if "paper_quote_search" in tool_names:
         return "quote_extraction"
+    # Relation tracing has higher precedence than inventory/fact_lookup when graph tools are present.
+    if {"entity_search", "edge_search", "cypher_query"} & tool_names:
+        return "relation_tracing"
     if {"workspace_overview", "workspace_list_papers", "paper_counts"} & tool_names:
         return "inventory"
     if "paper_authors" in tool_names or "paper_metadata" in tool_names:
         return "fact_lookup"
-    if {"entity_search", "edge_search", "cypher_query"} & tool_names:
-        return "relation_tracing"
     return None
 
 

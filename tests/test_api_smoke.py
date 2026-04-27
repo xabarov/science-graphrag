@@ -513,6 +513,37 @@ def test_works_list_endpoint_smoke(monkeypatch: Any) -> None:
     assert payload["items"][0]["work_id"] == "w1"
 
 
+def test_work_batch_summary_smoke(monkeypatch: Any) -> None:
+    """POST /v1/works/batch-summary dedupes ids and returns lightweight summaries."""
+
+    def _fake_list_work_summaries_by_ids(_stores: Any, work_ids: list[str]) -> list[dict[str, Any]]:
+        return [
+            {
+                "work_id": wid,
+                "title": f"T-{wid}",
+                "year": 2020,
+                "doi": None,
+                "arxiv_id": "2401.00001" if wid == "w2" else None,
+            }
+            for wid in work_ids
+        ]
+
+    monkeypatch.setattr(
+        works_router_mod, "list_work_summaries_by_ids", _fake_list_work_summaries_by_ids
+    )
+    client = _client()
+    res = client.post("/v1/works/batch-summary", json={"work_ids": ["w1", "w1", "w2"]})
+    assert res.status_code == 200
+    body = res.json()
+    assert len(body["items"]) == 2
+    by = {x["work_id"]: x for x in body["items"]}
+    assert by["w1"]["title"] == "T-w1"
+    assert by["w2"]["arxiv_id"] == "2401.00001"
+
+    empty = client.post("/v1/works/batch-summary", json={"work_ids": []})
+    assert empty.status_code == 422
+
+
 def test_work_detail_graph_chunks_smoke(monkeypatch: Any) -> None:
     """Work detail, graph, and chunks endpoints accept stable response shapes."""
 

@@ -12,8 +12,13 @@ from typing import Any
 import typer
 
 from eval.bench_common import benchmark_run_metadata
-from eval.chat_agent.phoenix_export import phoenix_ui_trace_url, try_fetch_phoenix_spans
-from eval.chat_agent.roadmap_metrics import derive_diagnostics, score_roadmap_case
+from eval.chat_agent.observability_audit import build_observability_trace_audit
+from eval.chat_agent.phoenix_export import (
+    phoenix_project_identifier,
+    phoenix_ui_trace_url,
+    try_fetch_phoenix_spans,
+)
+from eval.chat_agent.roadmap_metrics import score_roadmap_case
 from eval.chat_agent.workspace_audit import audit_workspace_readiness
 from science_graphrag.agent.runtime import AgentRunOutput, build_agent
 from science_graphrag.api.deps import close_store_registry, init_store_registry
@@ -28,7 +33,10 @@ def _is_transient_llm_failure(exc: BaseException) -> bool:
 
 
 def discover_roadmap_case_files(fixtures_root: Path, tier: str = "baseline") -> list[Path]:
-    """Return roadmap JSON cases. ``tier`` = baseline (``cases/``), strict (``cases_strict/``), or all."""
+    """Return roadmap JSON cases.
+
+    ``tier`` = baseline (``cases/``), strict (``cases_strict/``), or all.
+    """
 
     t = (tier or "baseline").strip().lower()
     out: list[Path] = []
@@ -249,7 +257,7 @@ def write_case_artifacts(
     )
     final = report.get("final_output") or report
     tid = final.get("phoenix_trace_id") if isinstance(final, dict) else None
-    trace_audit = {
+    trace_audit: dict[str, Any] = {
         "case_id": case_id,
         "phoenix_trace_id": tid,
         "phoenix_ui_hint": phoenix_ui_trace_url(trace_id=tid) if tid else None,
@@ -258,7 +266,25 @@ def write_case_artifacts(
         "metrics": report.get("metrics"),
     }
     if fetch_phoenix and tid:
-        trace_audit["phoenix_http_snapshot"] = try_fetch_phoenix_spans(tid)
+        session_hint = final.get("thread_id") if isinstance(final, dict) else None
+        trace_audit["phoenix_http_snapshot"] = try_fetch_phoenix_spans(
+            tid,
+            session_id=str(session_hint).strip() if session_hint else None,
+        )
+    tool_tr = [x for x in (report.get("tool_trace") or []) if isinstance(x, dict)]
+    obs = build_observability_trace_audit(
+        tool_trace=tool_tr,
+        phoenix_http_snapshot=(
+            trace_audit.get("phoenix_http_snapshot")
+            if isinstance(trace_audit.get("phoenix_http_snapshot"), dict)
+            else None
+        ),
+    )
+    trace_audit["observability"] = obs
+    report["observability"] = obs
+    report["metrics"] = score_roadmap_case(report, gold)
+    trace_audit["diagnostics"] = (report.get("metrics") or {}).get("diagnostics")
+    trace_audit["metrics"] = report.get("metrics")
 
     (case_dir / "trace_audit.json").write_text(
         json.dumps(trace_audit, indent=2, ensure_ascii=False) + "\n",
@@ -354,6 +380,9 @@ def _cli(
         "benchmark_run_metadata": benchmark_run_metadata(settings),
         "environment": {
             "PHOENIX_UI_BASE_URL": os.getenv("PHOENIX_UI_BASE_URL"),
+            "PHOENIX_PROJECT_ID": os.getenv("PHOENIX_PROJECT_ID"),
+            "PHOENIX_PROJECT_NAME": os.getenv("PHOENIX_PROJECT_NAME"),
+            "phoenix_project_resolved": phoenix_project_identifier(),
             "PHOENIX_TRACE_SCOPE": os.getenv("PHOENIX_TRACE_SCOPE"),
             "PHOENIX_TRACE_SCOPE_before_harness": trace_scope_before,
         },
@@ -363,6 +392,11 @@ def _cli(
             {
                 "case_id": r.get("case_id"),
                 "passed": bool((r.get("metrics") or {}).get("passed")),
+                "observability_passed": bool(
+                    ((r.get("metrics") or {}).get("diagnostics") or {}).get(
+                        "observability_passed", True
+                    )
+                ),
                 "duration_ms": r.get("duration_ms"),
             }
             for r in reports

@@ -15,9 +15,11 @@ import Popover from "@mui/material/Popover";
 import TextField from "@mui/material/TextField";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import { CursorIconButton } from "../common/index.js";
 import { useI18n } from "../../i18n/useI18n.js";
+import { outlinedAppTextFieldSx } from "../../theme/settingsFormSx.js";
 import { formatResearchApiError } from "../../services/researchApi.js";
 import { createWorkspace, listWorkspaces } from "../../utils/workspaceStore.js";
 import { useWorkspaceContext } from "./useWorkspaceContext.js";
@@ -37,6 +39,7 @@ function workIdsLen(ws) {
  * @param {{ ws: { id: string, name?: string, work_ids?: string[], created_at?: string }, activeWorkspaceId: string | null, onPick: (id: string) => void, t: (k: string, v?: Record<string, string | number>) => string }} props
  */
 function WorkspaceRow({ ws, activeWorkspaceId, onPick, t }) {
+  const tk = useTheme().appTokens;
   const name = (ws.name || "").trim();
   const primary = name || shortWorkspaceId(ws.id);
   const showIdSubline = Boolean(name);
@@ -55,16 +58,19 @@ function WorkspaceRow({ ws, activeWorkspaceId, onPick, t }) {
         gap: 1,
         borderRadius: 1,
         "&.Mui-selected": {
-          backgroundColor: "rgba(99, 102, 241, 0.15)",
+          backgroundColor: tk.accent.softBg,
         },
         "&.Mui-selected:hover": {
-          backgroundColor: "rgba(99, 102, 241, 0.22)",
+          backgroundColor: tk.accent.emphasisHoverBg,
+        },
+        "&:hover": {
+          backgroundColor: tk.control.navItemHoverBg,
         },
       }}
     >
-      <FolderOpenOutlinedIcon sx={{ fontSize: "1.125rem", color: "rgba(255,255,255,0.5)", mt: 0.125, flexShrink: 0 }} />
+      <FolderOpenOutlinedIcon sx={{ fontSize: "1.125rem", color: tk.text.muted, mt: 0.125, flexShrink: 0 }} />
       <Box sx={{ minWidth: 0, flex: 1 }}>
-        <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, color: "rgba(255,255,255,0.92)", lineHeight: 1.25 }} noWrap>
+        <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, color: tk.text.primary, lineHeight: 1.25 }} noWrap>
           {primary}
         </Typography>
         {showIdSubline ? (
@@ -73,7 +79,7 @@ function WorkspaceRow({ ws, activeWorkspaceId, onPick, t }) {
             sx={{
               fontSize: "0.65rem",
               fontFamily: "ui-monospace, monospace",
-              color: "rgba(255,255,255,0.42)",
+              color: tk.text.faint,
               mt: 0.25,
             }}
             noWrap
@@ -87,7 +93,7 @@ function WorkspaceRow({ ws, activeWorkspaceId, onPick, t }) {
           flexShrink: 0,
           fontSize: "0.6875rem",
           fontWeight: 500,
-          color: "rgba(255,255,255,0.38)",
+          color: tk.text.faint,
           mt: 0.125,
           maxWidth: "5.5rem",
           textAlign: "right",
@@ -103,6 +109,8 @@ function WorkspaceRow({ ws, activeWorkspaceId, onPick, t }) {
 
 export default function WorkspaceContextChip() {
   const { t } = useI18n();
+  const theme = useTheme();
+  const tk = theme.appTokens;
   const navigate = useNavigate();
   const { activeWorkspaceId, activeWorkspaceMeta, setActiveWorkspace, getLastWorkspaceHref } = useWorkspaceContext();
   const [anchorEl, setAnchorEl] = useState(null);
@@ -112,6 +120,53 @@ export default function WorkspaceContextChip() {
   const searchInputRef = useRef(null);
 
   const open = Boolean(anchorEl);
+  const isLight = theme.palette.mode === "light";
+
+  const searchFieldSx = useMemo(
+    () => ({
+      ...outlinedAppTextFieldSx(tk),
+      mb: 1,
+      "& .MuiOutlinedInput-root": {
+        fontSize: "0.8125rem",
+        borderRadius: "8px",
+        backgroundColor: tk.control.outlinedBg,
+      },
+      "& .MuiOutlinedInput-notchedOutline": {
+        borderColor: tk.border.strong,
+      },
+      "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
+        borderColor: tk.control.outlinedBorderHover,
+      },
+      "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
+        borderColor: "rgba(99, 102, 241, 0.5)",
+        borderWidth: 1,
+      },
+    }),
+    [tk],
+  );
+
+  const listScrollSx = useMemo(
+    () => ({
+      py: 0,
+      maxHeight: 260,
+      overflowY: "auto",
+      scrollbarWidth: "thin",
+      scrollbarColor: isLight ? "#cbd5e1 #f5f7fb" : "#2a2a2a #0a0a0a",
+      "&::-webkit-scrollbar": { width: 8 },
+      "&::-webkit-scrollbar-track": {
+        backgroundColor: isLight ? "#f5f7fb" : "#0a0a0a",
+        borderRadius: 4,
+      },
+      "&::-webkit-scrollbar-thumb": {
+        backgroundColor: isLight ? "#cbd5e1" : "#2a2a2a",
+        borderRadius: 4,
+      },
+      "&::-webkit-scrollbar-thumb:hover": {
+        backgroundColor: isLight ? "#94a3b8" : "#3a3a3a",
+      },
+    }),
+    [isLight],
+  );
 
   const refreshList = useCallback(async () => {
     setListErr(null);
@@ -186,26 +241,9 @@ export default function WorkspaceContextChip() {
     activeWorkspaceMeta?.name?.trim() ||
     (activeWorkspaceId ? t("shell.workspaceChip.unnamed") : t("shell.workspaceChip.none"));
 
-  const listScrollSx = {
-    py: 0,
-    maxHeight: 260,
-    overflowY: "auto",
-    scrollbarWidth: "thin",
-    scrollbarColor: "#2a2a2a #0a0a0a",
-    "&::-webkit-scrollbar": { width: 8 },
-    "&::-webkit-scrollbar-track": { backgroundColor: "#0a0a0a", borderRadius: 4 },
-    "&::-webkit-scrollbar-thumb": {
-      backgroundColor: "#2a2a2a",
-      borderRadius: 4,
-    },
-    "&::-webkit-scrollbar-thumb:hover": {
-      backgroundColor: "#3a3a3a",
-    },
-  };
-
   const menuTooltip = (
     <Box component="span" sx={{ display: "block", maxWidth: 280 }}>
-      <Box component="span" sx={{ display: "block", lineHeight: 1.35 }}>
+      <Box component="span" sx={{ display: "block", lineHeight: 1.35, color: tk.text.primary }}>
         {t("shell.workspaceChip.menuButtonTooltip")}
       </Box>
       {activeWorkspaceId ? (
@@ -216,14 +254,14 @@ export default function WorkspaceContextChip() {
             mt: 0.5,
             fontFamily: "ui-monospace, monospace",
             fontSize: "0.65rem",
-            color: "rgba(255,255,255,0.72)",
+            color: tk.text.secondary,
             wordBreak: "break-all",
           }}
         >
           {activeWorkspaceId}
         </Box>
       ) : (
-        <Box component="span" sx={{ display: "block", mt: 0.5, fontSize: "0.7rem", color: "rgba(255,255,255,0.55)" }}>
+        <Box component="span" sx={{ display: "block", mt: 0.5, fontSize: "0.7rem", color: tk.text.muted }}>
           {t("shell.workspaceChip.none")}
         </Box>
       )}
@@ -251,26 +289,26 @@ export default function WorkspaceContextChip() {
             maxWidth: 268,
             borderRadius: "6px",
             border: "1px solid",
-            borderColor: activeWorkspaceId ? "rgba(99,102,241,0.38)" : "rgba(255,255,255,0.12)",
-            backgroundColor: activeWorkspaceId ? "rgba(99,102,241,0.18)" : "rgba(255,255,255,0.05)",
-            color: "rgba(255,255,255,0.92)",
+            borderColor: activeWorkspaceId ? tk.accent.softBorder : tk.border.strong,
+            backgroundColor: activeWorkspaceId ? tk.accent.softBg : tk.control.outlinedBg,
+            color: tk.text.primary,
             fontSize: "0.75rem",
             fontWeight: 600,
             textAlign: "left",
             transition: "border-color 0.15s ease, background-color 0.15s ease",
             "&:hover": {
-              backgroundColor: activeWorkspaceId ? "rgba(99,102,241,0.26)" : "rgba(255,255,255,0.08)",
-              borderColor: activeWorkspaceId ? "rgba(99,102,241,0.5)" : "rgba(255,255,255,0.18)",
+              backgroundColor: activeWorkspaceId ? tk.accent.emphasisHoverBg : tk.control.outlinedBgHover,
+              borderColor: activeWorkspaceId ? tk.accent.emphasisHoverBorder : tk.control.outlinedBorderHover,
             },
             "&:active": {
               transform: "scale(0.98)",
             },
             "&:hover .workspace-switcher-chevron": {
-              color: "rgba(255,255,255,0.68)",
+              color: tk.text.secondary,
             },
           }}
         >
-          <FolderOpenOutlinedIcon sx={{ fontSize: "1rem", color: "rgba(255,255,255,0.72)", flexShrink: 0 }} />
+          <FolderOpenOutlinedIcon sx={{ fontSize: "1rem", color: tk.text.secondary, flexShrink: 0 }} />
           <Typography
             component="span"
             sx={{
@@ -279,6 +317,7 @@ export default function WorkspaceContextChip() {
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
+              color: "inherit",
             }}
           >
             {label}
@@ -288,7 +327,7 @@ export default function WorkspaceContextChip() {
             sx={{
               flexShrink: 0,
               fontSize: "1.125rem",
-              color: "rgba(255,255,255,0.45)",
+              color: tk.text.muted,
               transition: "transform 0.2s ease, color 0.15s ease",
               transform: open ? "rotate(-180deg)" : "none",
             }}
@@ -308,15 +347,15 @@ export default function WorkspaceContextChip() {
               maxWidth: 400,
               p: 1.25,
               mt: 0.75,
-              backgroundColor: "#1a1a1a",
-              border: "1px solid rgba(255,255,255,0.08)",
+              backgroundColor: tk.surface.panel,
+              border: `1px solid ${tk.border.default}`,
               borderRadius: "10px",
-              boxShadow: "0 10px 40px rgba(0,0,0,0.55)",
+              boxShadow: theme.shadows[12],
             },
           },
         }}
       >
-        <Typography sx={{ fontSize: "0.6875rem", fontWeight: 700, color: "rgba(255,255,255,0.45)", px: 0.5, pb: 0.75 }}>
+        <Typography sx={{ fontSize: "0.6875rem", fontWeight: 700, color: tk.text.muted, px: 0.5, pb: 0.75 }}>
           {t("shell.workspaceChip.title")}
         </Typography>
         <TextField
@@ -331,31 +370,14 @@ export default function WorkspaceContextChip() {
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchOutlinedIcon sx={{ fontSize: "1.1rem", color: "rgba(255,255,255,0.45)" }} />
+                <SearchOutlinedIcon sx={{ fontSize: "1.1rem", color: tk.text.muted }} />
               </InputAdornment>
             ),
           }}
-          sx={{
-            mb: 1,
-            "& .MuiOutlinedInput-root": {
-              fontSize: "0.8125rem",
-              borderRadius: "8px",
-              backgroundColor: "rgba(255,255,255,0.04)",
-            },
-            "& .MuiOutlinedInput-notchedOutline": {
-              borderColor: "rgba(255,255,255,0.12)",
-            },
-            "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
-              borderColor: "rgba(255,255,255,0.18)",
-            },
-            "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
-              borderColor: "rgba(99, 102, 241, 0.5)",
-              borderWidth: 1,
-            },
-          }}
+          sx={searchFieldSx}
         />
         {listErr ? (
-          <Typography sx={{ fontSize: "0.75rem", color: "error.light", px: 0.5, py: 0.5 }}>{listErr}</Typography>
+          <Typography sx={{ fontSize: "0.75rem", color: "error.main", px: 0.5, py: 0.5 }}>{listErr}</Typography>
         ) : null}
         <List dense disablePadding sx={listScrollSx}>
           {filteredList.map((ws) => (
@@ -363,7 +385,7 @@ export default function WorkspaceContextChip() {
           ))}
         </List>
         {!listErr && searchQuery.trim() && sortedList.length > 0 && filteredList.length === 0 ? (
-          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.42)", px: 0.75, py: 1 }}>
+          <Typography sx={{ fontSize: "0.75rem", color: tk.text.faint, px: 0.75, py: 1 }}>
             {t("shell.workspaceChip.searchEmpty")}
           </Typography>
         ) : null}
@@ -377,7 +399,7 @@ export default function WorkspaceContextChip() {
             gap: 0.5,
             pt: 1,
             mt: 0.5,
-            borderTop: "1px solid rgba(255,255,255,0.08)",
+            borderTop: `1px solid ${tk.border.default}`,
             overflowX: "auto",
           }}
         >

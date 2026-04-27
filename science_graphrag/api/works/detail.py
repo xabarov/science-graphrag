@@ -146,6 +146,38 @@ def list_works(
         return items, int(total)
 
 
+def list_work_summaries_by_ids(
+    stores: StoreRegistry,
+    work_ids: list[str],
+) -> list[dict[str, Any]]:
+    """Lightweight titles/metadata for many works in one Neo4j round-trip (no SQL/Qdrant)."""
+
+    ids = [str(x).strip() for x in work_ids if str(x).strip()]
+    if not ids:
+        return []
+    q = """
+    UNWIND $ids AS wid
+    OPTIONAL MATCH (w:Work {id: wid})
+    RETURN wid AS work_id,
+           coalesce(w.title, '') AS title,
+           w.publication_year AS year,
+           w.doi AS doi,
+           w.arxiv_id AS arxiv_id
+    """
+    with stores.neo4j.session() as session:
+        rows = list(session.run(q, ids=ids))
+    return [
+        {
+            "work_id": str(rec["work_id"] or ""),
+            "title": str(rec["title"] or ""),
+            "year": rec["year"],
+            "doi": rec["doi"],
+            "arxiv_id": rec["arxiv_id"],
+        }
+        for rec in rows
+    ]
+
+
 def get_work_detail(
     settings: Settings,
     stores: StoreRegistry,

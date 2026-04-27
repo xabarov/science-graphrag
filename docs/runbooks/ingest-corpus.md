@@ -27,6 +27,16 @@ Shell-exported `SCIENCE_GRAPHRAG_BLOB_ROOT` is respected in all modes (with or w
 
 When re-running the **same** pilot tree after a partial ingest, add `--skip-existing-sha` so files already in `documents` are not re-extracted.
 
+**Claims caveat:** `--skip-existing-sha` skips the whole pipeline for matching PDFs, so **claims are not refreshed** for those documents. If chunks already exist in Qdrant but Neo4j has no (or stale) claims, use the claims-only helper instead of a full re-ingest:
+
+```bash
+.venv/bin/python scripts/backfill_workspace_claims.py \
+  --workspace-id "<WORKSPACE_UUID>" \
+  --progress-file eval/results/claims-backfill.jsonl
+```
+
+Add `--resume` to continue after interruption. See the script docstring for `--force-all` and dry-run.
+
 ## Pre-flight: PDFs vs catalog (P0 slugs)
 
 Heuristic mapping of filenames to `corpus_work_id` (see `tests/fixtures/corpus/CATALOG.md`):

@@ -34,6 +34,12 @@
       "name": "Full pilot object-detection corpus",
       "corpus_work_ids": "*",
       "seed_command_hint": "scripts/seed_benchmark_workspaces.py --pack ws_full_corpus"
+    },
+    "ws_object_detection_all": {
+      "name": "Object Detection (all articles)",
+      "corpus_work_ids": "*",
+      "materialize_all_works": true,
+      "seed_command_hint": "scripts/seed_benchmark_workspaces.py --pack ws_object_detection_all"
     }
   }
 }

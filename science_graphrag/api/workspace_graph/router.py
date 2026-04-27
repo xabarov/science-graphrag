@@ -27,11 +27,17 @@ def get_workspace_graph(
     external_min_internal_citers: int = Query(default=0, ge=0, le=50),
     node_types: str | None = Query(
         default=None,
-        description="Comma-separated: Work,Author,Method,Dataset,Venue,Institution,Authorship",
+        description="Comma-separated: Work,Author,Method,Dataset,Venue,Institution,Authorship,Claim",
     ),
     prioritize: str | None = Query(default="Method,Dataset,Work"),
     view: str = Query(default="reader", description="reader | raw"),
     neighbor_limit: int = Query(default=200, ge=1, le=2000),
+    include_claims: bool = Query(
+        default=False,
+        description="Attach capped Claim nodes + Work-[:HAS_CLAIM]->Claim (ignored in union_1hop mode).",
+    ),
+    claims_per_work: int = Query(default=12, ge=1, le=80),
+    claims_max_total: int = Query(default=120, ge=1, le=500),
     settings: Settings = Depends(get_settings),
     stores: StoreRegistry = Depends(get_stores),
 ) -> dict[str, Any]:
@@ -47,6 +53,9 @@ def get_workspace_graph(
         external_min_internal_citers=external_min_internal_citers,
         prioritize=prioritize,
         view=view,
+        include_claims=include_claims,
+        claims_per_work=claims_per_work,
+        claims_max_total=claims_max_total,
     )
     if graph is None:
         raise HTTPException(status_code=404, detail="workspace_not_found")

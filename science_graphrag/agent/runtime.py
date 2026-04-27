@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import uuid
 from dataclasses import dataclass, field, replace
 from typing import Any
 
@@ -16,7 +17,34 @@ from science_graphrag.agent.graph.tracing import collect_tool_trace
 from science_graphrag.agent.trace import ToolCallTrace
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
-from science_graphrag.observability.spans import OpenInferenceAttributes, chain_span
+from science_graphrag.observability.spans import (
+    OpenInferenceAttributes,
+    SpanAttributes,
+    chain_span,
+)
+from science_graphrag.observability.spans.decorators import MIME_TYPE_JSON
+
+
+def _agent_query_output_summary(
+    *,
+    answer_class: str,
+    tool_trace: list[ToolCallTrace],
+    warnings: list[str],
+    citations: list[dict[str, Any]],
+    routing_log: list[dict[str, Any]] | None,
+    budget_exhausted_hint: bool | None = None,
+) -> dict[str, Any]:
+    routing = routing_log or []
+    budget_exhausted = bool(budget_exhausted_hint) or any(
+        isinstance(x, dict) and str(x.get("reason") or "") == "budget_exhausted" for x in routing
+    )
+    return {
+        "answer_class": answer_class,
+        "tool_call_count": len(tool_trace),
+        "warning_codes": [str(w) for w in warnings][:24],
+        "citation_count": len(citations),
+        "budget_exhausted": budget_exhausted,
+    }
 
 
 def extract_langgraph_answer(messages: list[Any]) -> tuple[str, list[dict[str, Any]] | None]:
@@ -144,14 +172,18 @@ class RetrievalAgent:
         history_digest: list[dict[str, Any]] | None = None,
     ) -> AgentRunOutput:
         tid = (thread_id or "").strip() or None
+        session_id = tid or str(uuid.uuid4())
         attrs: dict[str, Any] = {
             "agent.runtime": self._settings.agent_runtime,
             "agent.max_tool_calls": max_tool_calls or self._settings.agent_max_tool_calls,
             "user.id": workspace_id or "",
             "input.value": question[:500],
+            OpenInferenceAttributes.SESSION_ID: session_id,
         }
-        if tid:
-            attrs[OpenInferenceAttributes.SESSION_ID] = tid
+        if answer_class_hint:
+            attrs["agent.answer_class_hint"] = str(answer_class_hint)[:120]
+        if not tid:
+            attrs["metadata.agent.request_id"] = session_id
         with chain_span("agent.query", attrs):
             if self._legacy is not None:
                 out = self._legacy.run(
@@ -163,6 +195,16 @@ class RetrievalAgent:
                     out,
                     phoenix_trace_id=current_otel_trace_id_hex(),
                     thread_id=tid,
+                )
+                SpanAttributes.set_output(
+                    _agent_query_output_summary(
+                        answer_class=out.answer_class,
+                        tool_trace=list(out.tool_trace or []),
+                        warnings=list(out.warnings or []),
+                        citations=list(out.citations or []),
+                        routing_log=None,
+                    ),
+                    mime_type=MIME_TYPE_JSON,
                 )
                 if tid:
                     ac = heuristic_answer_class(question, answer_class_hint)
@@ -243,11 +285,28 @@ class RetrievalAgent:
                 workspace_id=workspace_id,
             )
 
+        ac = str(envelope.get("answer_class") or "grounded_explanation")
+        raw_routing = final_state.get("routing_log")
+        routing_log: list[dict[str, Any]] = (
+            [x for x in raw_routing if isinstance(x, dict)] if isinstance(raw_routing, list) else []
+        )
+
+        SpanAttributes.set_output(
+            _agent_query_output_summary(
+                answer_class=ac,
+                tool_trace=trace,
+                warnings=list(envelope.get("warnings") or []),
+                citations=citations,
+                routing_log=routing_log,
+            ),
+            mime_type=MIME_TYPE_JSON,
+        )
+
         return AgentRunOutput(
             answer=answer,
             citations=citations,
             tool_trace=trace,
-            answer_class=str(envelope.get("answer_class") or "grounded_explanation"),
+            answer_class=ac,
             evidence_summary=envelope.get("evidence_summary"),
             warnings=list(envelope.get("warnings") or []),
             inventory=envelope.get("inventory"),

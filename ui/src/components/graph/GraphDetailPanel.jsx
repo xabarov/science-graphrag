@@ -11,6 +11,7 @@ import ListItemText from "@mui/material/ListItemText";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { useTheme } from "@mui/material/styles";
 
 import { useI18n } from "../../i18n/useI18n.js";
 import { CursorSmallButton } from "../common/index.js";
@@ -75,6 +76,7 @@ export default function GraphDetailPanel({
   mode = "embedded",
 }) {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
   const compact = mode === "embedded" || mode === "standalone";
   const [rawOpen, setRawOpen] = useState(false);
   const rows = relatedEdgeRows.length > 0 ? relatedEdgeRows : [];
@@ -92,8 +94,8 @@ export default function GraphDetailPanel({
       aria-label={t("graph.detailPanel.title")}
       sx={{
         borderRadius: "6px",
-        border: "1px solid rgba(255,255,255,0.08)",
-        backgroundColor: "#1a1a1a",
+        border: `1px solid ${tk.border.default}`,
+        backgroundColor: tk.surface.panel,
         p: compact ? 1.5 : 2,
         flex: 1,
         minHeight: mode === "standalone" ? 0 : compact ? 280 : 360,
@@ -102,7 +104,7 @@ export default function GraphDetailPanel({
         overflow: "hidden",
       }}
     >
-      <Typography component="h2" sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 1, flexShrink: 0 }}>
+      <Typography component="h2" sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 1, flexShrink: 0, color: tk.text.primary }}>
         {t("graph.detailPanel.title")}
       </Typography>
 
@@ -112,12 +114,12 @@ export default function GraphDetailPanel({
             mb: 1,
             p: 1,
             borderRadius: "6px",
-            border: "1px solid rgba(99,102,241,0.25)",
-            backgroundColor: "rgba(99,102,241,0.08)",
+            border: `1px solid ${tk.accent.softBorder}`,
+            backgroundColor: tk.accent.softBg,
             flexShrink: 0,
           }}
         >
-          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.78)", lineHeight: 1.45 }}>
+          <Typography sx={{ fontSize: "0.75rem", color: tk.text.primary, lineHeight: 1.45 }}>
             {t("graph.detailPanel.truncatedLine", {
               neighborCount: neighborCount != null ? String(neighborCount) : "?",
               limitClause: truncatedLimitClause,
@@ -130,7 +132,7 @@ export default function GraphDetailPanel({
         <Typography
           sx={{
             fontSize: mode === "standalone" ? "0.75rem" : "0.8125rem",
-            color: "rgba(255,255,255,0.45)",
+            color: tk.text.muted,
             lineHeight: 1.4,
           }}
         >
@@ -141,12 +143,12 @@ export default function GraphDetailPanel({
       <Box sx={{ flex: 1, minHeight: 0, overflow: "auto", pr: 0.25 }}>
         {selectedEdge ? (
           <>
-            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 0.5 }}>{t("graph.detailPanel.relationship")}</Typography>
-            <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.88)", lineHeight: 1.45, mb: 1 }}>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 0.5, color: tk.text.primary }}>{t("graph.detailPanel.relationship")}</Typography>
+            <Typography sx={{ fontSize: "0.8125rem", color: tk.text.primary, lineHeight: 1.45, mb: 1 }}>
               {selectedEdgeReadable ||
                 `${selectedEdge.sourceLabel || selectedEdge.source} —[${localizeEdgeType(selectedEdge, t)}]→ ${selectedEdge.targetLabel || selectedEdge.target}`}
             </Typography>
-            <Typography sx={{ fontSize: "0.7rem", color: "rgba(129,140,248,0.9)", mb: 0.5 }}>
+            <Typography sx={{ fontSize: "0.7rem", color: tk.text.accent, mb: 0.5 }}>
               {localizeEdgeType(selectedEdge, t)}
             </Typography>
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mb: 1 }}>
@@ -157,7 +159,7 @@ export default function GraphDetailPanel({
                 {t("graph.detailPanel.openTarget")}
               </CursorSmallButton>
             </Box>
-            <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.38)", fontFamily: "monospace", wordBreak: "break-all" }}>
+            <Typography sx={{ fontSize: "0.7rem", color: tk.text.faint, fontFamily: "monospace", wordBreak: "break-all" }}>
               id: {selectedEdge.id}
             </Typography>
           </>
@@ -167,11 +169,11 @@ export default function GraphDetailPanel({
           <>
             {String(selectedNode.nodeKind) === "Aggregator" ? (
               <Box sx={{ mb: 1.5 }}>
-                <Typography sx={{ fontSize: "0.7rem", color: "rgba(129,140,248,0.92)" }}>{t("graph.aggregator.badge")}</Typography>
-                <Typography sx={{ fontSize: "0.9375rem", fontWeight: 600, color: "rgba(255,255,255,0.9)", mt: 0.25 }}>
+                <Typography sx={{ fontSize: "0.7rem", color: tk.text.accent }}>{t("graph.aggregator.badge")}</Typography>
+                <Typography sx={{ fontSize: "0.9375rem", fontWeight: 600, color: tk.text.primary, mt: 0.25 }}>
                   {localizeAggregatorTitle(selectedNode, t)}
                 </Typography>
-                <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.55)", mt: 0.35 }}>
+                <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary, mt: 0.35 }}>
                   {localizeAggregatorSubtitle(t)}
                 </Typography>
                 {Array.isArray(selectedNode.raw?.aggregation_hints?.preview_labels) &&
@@ -179,7 +181,7 @@ export default function GraphDetailPanel({
                   <List dense sx={{ py: 0.5 }}>
                     {selectedNode.raw.aggregation_hints.preview_labels.map((label) => (
                       <ListItem key={String(label)} sx={{ px: 0 }}>
-                        <ListItemText primary={String(label)} />
+                        <ListItemText primary={String(label)} primaryTypographyProps={{ sx: { color: tk.text.primary } }} />
                       </ListItem>
                     ))}
                   </List>
@@ -201,14 +203,14 @@ export default function GraphDetailPanel({
             ) : null}
             {String(selectedNode.nodeKind) !== "Aggregator" ? (
               <>
-                <Typography sx={{ fontSize: "0.7rem", color: "rgba(129,140,248,0.92)" }}>
+                <Typography sx={{ fontSize: "0.7rem", color: tk.text.accent }}>
                   {localizeNodeKind(selectedNode, t)}
                 </Typography>
-                <Typography sx={{ fontSize: "0.9375rem", fontWeight: 600, color: "rgba(255,255,255,0.9)", mt: 0.25, lineHeight: 1.35 }}>
+                <Typography sx={{ fontSize: "0.9375rem", fontWeight: 600, color: tk.text.primary, mt: 0.25, lineHeight: 1.35 }}>
                   {selectedNode.displayLabel || selectedNode.label}
                 </Typography>
                 {selectedNode.subtitle ? (
-                  <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.55)", mt: 0.35 }}>{selectedNode.subtitle}</Typography>
+                  <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary, mt: 0.35 }}>{selectedNode.subtitle}</Typography>
                 ) : null}
               </>
             ) : null}
@@ -219,12 +221,12 @@ export default function GraphDetailPanel({
               selectedNode.externalCiteCount != null) ? (
               <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "center" }}>
                 {selectedNode.workspaceMembership ? (
-                  <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.5)", fontFamily: "monospace" }}>
+                  <Typography sx={{ fontSize: "0.68rem", color: tk.text.muted, fontFamily: "monospace" }}>
                     {String(selectedNode.workspaceMembership)}
                   </Typography>
                 ) : null}
                 {selectedNode.internalCiteCount != null ? (
-                  <Typography sx={{ fontSize: "0.68rem", color: "rgba(129,140,248,0.85)" }}>
+                  <Typography sx={{ fontSize: "0.68rem", color: tk.text.accent }}>
                     {t("graph.detailPanel.intCites", { count: String(selectedNode.internalCiteCount) })}
                   </Typography>
                 ) : null}
@@ -252,33 +254,33 @@ export default function GraphDetailPanel({
               </Box>
             ) : null}
 
-            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 2, mb: 0.75 }}>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 2, mb: 0.75, color: tk.text.primary }}>
               {t("graph.detailPanel.keyProperties")}
             </Typography>
             {selectedNode.properties && Object.keys(selectedNode.properties).length > 0 ? (
               <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 1 }}>
                 {Object.entries(selectedNode.properties).map(([k, v]) => (
                   <Box key={k} sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, alignItems: "baseline" }}>
-                    <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.45)", minWidth: "7rem" }}>
+                    <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted, minWidth: "7rem" }}>
                       {localizeWorkPropertyKey(k, t)}
                     </Typography>
-                    <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.82)", flex: 1, wordBreak: "break-word" }}>
+                    <Typography sx={{ fontSize: "0.8125rem", color: tk.text.primary, flex: 1, wordBreak: "break-word" }}>
                       {formatPropertyValue(v)}
                     </Typography>
                   </Box>
                 ))}
               </Box>
             ) : (
-              <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.45)", mb: 1 }}>
+              <Typography sx={{ fontSize: "0.8125rem", color: tk.text.muted, mb: 1 }}>
                 {t("graph.detailPanel.noProperties")}
               </Typography>
             )}
 
-            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 1.5, mb: 0.75 }}>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 1.5, mb: 0.75, color: tk.text.primary }}>
               {t("graph.detailPanel.connections")}
             </Typography>
             {rows.length === 0 && relatedEdges.length === 0 ? (
-              <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>{t("graph.detailPanel.noEdges")}</Typography>
+              <Typography sx={{ fontSize: "0.8125rem", color: tk.text.muted }}>{t("graph.detailPanel.noEdges")}</Typography>
             ) : rows.length > 0 ? (
               <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
                 {rows.map(({ edge, otherLabel, readableLine, directionHint }) => {
@@ -298,13 +300,13 @@ export default function GraphDetailPanel({
                       cursor: "pointer",
                       p: 1,
                       borderRadius: "6px",
-                      backgroundColor: "#141414",
-                      border: "1px solid rgba(255,255,255,0.08)",
+                      backgroundColor: tk.surface.sidebar,
+                      border: `1px solid ${tk.border.default}`,
                       color: "inherit",
                       font: "inherit",
                       "&:hover": {
-                        borderColor: "rgba(99,102,241,0.35)",
-                        backgroundColor: "rgba(99,102,241,0.06)",
+                        borderColor: tk.accent.emphasisHoverBorder,
+                        backgroundColor: tk.accent.softBg,
                       },
                     }}
                   >
@@ -315,7 +317,7 @@ export default function GraphDetailPanel({
                           sx={{
                             display: "block",
                             fontSize: "0.68rem",
-                            color: "rgba(255,255,255,0.42)",
+                            color: tk.text.faint,
                             cursor: "help",
                           }}
                         >
@@ -323,10 +325,10 @@ export default function GraphDetailPanel({
                         </Typography>
                       </Tooltip>
                     ) : (
-                      <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.42)" }}>{dirLabel}</Typography>
+                      <Typography sx={{ fontSize: "0.68rem", color: tk.text.faint }}>{dirLabel}</Typography>
                     )}
                     <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap", mt: 0.25 }}>
-                      <ArrowForwardIcon sx={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.55)" }} aria-hidden />
+                      <ArrowForwardIcon sx={{ fontSize: "0.75rem", color: tk.text.accent }} aria-hidden />
                       <Chip
                         component="span"
                         size="small"
@@ -334,17 +336,17 @@ export default function GraphDetailPanel({
                         sx={{
                           height: 22,
                           fontSize: "0.7rem",
-                          border: "1px solid rgba(129,140,248,0.35)",
-                          backgroundColor: "rgba(99,102,241,0.12)",
-                          color: "rgba(129,140,248,0.95)",
+                          border: `1px solid ${tk.accent.softBorder}`,
+                          backgroundColor: tk.accent.chipReadyBg,
+                          color: tk.accent.chipReadyFg,
                           "& .MuiChip-label": { px: 0.75 },
                         }}
                       />
                     </Box>
-                    <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.86)", mt: 0.35, lineHeight: 1.4 }}>
+                    <Typography sx={{ fontSize: "0.8125rem", color: tk.text.primary, mt: 0.35, lineHeight: 1.4 }}>
                       → {otherLabel}
                     </Typography>
-                    <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.48)", mt: 0.35, lineHeight: 1.35 }}>
+                    <Typography sx={{ fontSize: "0.7rem", color: tk.text.secondary, mt: 0.35, lineHeight: 1.35 }}>
                       {readableLine}
                     </Typography>
                   </Box>
@@ -363,7 +365,7 @@ export default function GraphDetailPanel({
                     }}
                     sx={{ justifyContent: "flex-start", textAlign: "left", height: "auto", py: 0.75, alignItems: "center", gap: 0.75 }}
                   >
-                    <ArrowForwardIcon sx={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.55)", flexShrink: 0 }} aria-hidden />
+                    <ArrowForwardIcon sx={{ fontSize: "0.75rem", color: tk.text.accent, flexShrink: 0 }} aria-hidden />
                     <Chip
                       component="span"
                       size="small"
@@ -371,15 +373,15 @@ export default function GraphDetailPanel({
                       sx={{
                         height: 22,
                         fontSize: "0.7rem",
-                        border: "1px solid rgba(129,140,248,0.35)",
-                        backgroundColor: "rgba(99,102,241,0.12)",
-                        color: "rgba(129,140,248,0.95)",
+                        border: `1px solid ${tk.accent.softBorder}`,
+                        backgroundColor: tk.accent.chipReadyBg,
+                        color: tk.accent.chipReadyFg,
                         flexShrink: 0,
                         verticalAlign: "middle",
                         "& .MuiChip-label": { px: 0.75 },
                       }}
                     />
-                    <Typography component="span" sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.75)", textAlign: "left" }}>
+                    <Typography component="span" sx={{ fontSize: "0.75rem", color: tk.text.secondary, textAlign: "left" }}>
                       {edge.source} → {edge.target}
                     </Typography>
                   </CursorSmallButton>
@@ -398,10 +400,10 @@ export default function GraphDetailPanel({
                     m: 0,
                     p: 1.25,
                     borderRadius: "6px",
-                    backgroundColor: "#141414",
-                    border: "1px solid rgba(255,255,255,0.06)",
+                    backgroundColor: tk.surface.code,
+                    border: `1px solid ${tk.border.default}`,
                     fontSize: "0.72rem",
-                    color: "rgba(255,255,255,0.65)",
+                    color: tk.text.secondary,
                     overflow: "auto",
                     maxHeight: compact ? 200 : 280,
                     whiteSpace: "pre-wrap",
@@ -422,13 +424,13 @@ export default function GraphDetailPanel({
             sx={{
               mt: 1.5,
               backgroundColor: "transparent",
-              border: "1px solid rgba(255,255,255,0.08)",
+              border: `1px solid ${tk.border.default}`,
               borderRadius: "6px",
               "&:before": { display: "none" },
             }}
           >
-            <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ fontSize: "1rem", color: "rgba(255,255,255,0.5)" }} />}>
-              <Typography sx={{ fontSize: "0.75rem", fontWeight: 600, color: "rgba(255,255,255,0.65)" }}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ fontSize: "1rem", color: tk.text.muted }} />}>
+              <Typography sx={{ fontSize: "0.75rem", fontWeight: 600, color: tk.text.secondary }}>
                 {t("graph.detailPanel.advancedJson")}
               </Typography>
             </AccordionSummary>
@@ -439,10 +441,10 @@ export default function GraphDetailPanel({
                   m: 0,
                   p: 1.25,
                   borderRadius: "6px",
-                  backgroundColor: "#141414",
-                  border: "1px solid rgba(255,255,255,0.06)",
+                  backgroundColor: tk.surface.code,
+                  border: `1px solid ${tk.border.default}`,
                   fontSize: "0.72rem",
-                  color: "rgba(255,255,255,0.65)",
+                  color: tk.text.secondary,
                   overflow: "auto",
                   maxHeight: compact ? 200 : 280,
                   whiteSpace: "pre-wrap",

@@ -16,6 +16,7 @@ from science_graphrag.agent.tool_search import shortlist_tools_for_specialist
 from science_graphrag.agent.tools import build_writer_tools
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
+from science_graphrag.observability.spans import llm_span
 
 SPECIALIST_NAME = "writer_agent"
 SYSTEM_PROMPT = (
@@ -86,7 +87,11 @@ def _compile_writer_subgraph(tools: list[BaseTool], settings: Settings, *, mode:
             context_message,
             *list(state.get("messages") or []),
         ]
-        response = llm.invoke(ensure_messages_safe_for_generation(base_msgs))
+        with llm_span(
+            "llm.agent.writer",
+            {"llm.invocation_name": "agent_writer_specialist"},
+        ):
+            response = llm.invoke(ensure_messages_safe_for_generation(base_msgs))
         return {"messages": [response]}
 
     def budget_node(state: AgentState) -> dict:

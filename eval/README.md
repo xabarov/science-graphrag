@@ -246,12 +246,14 @@ Live прогон (ключи LLM + Neo4j + Qdrant; audit падает с код
 science-graphrag-chat-agent-roadmap \
   --fixtures tests/fixtures/benchmarks/chat_agent_roadmap \
   --out eval/results/chat-agent-roadmap-live-latest
-# опционально: снимок HTTP к Phoenix UI (best-effort)
+# опционально: снимок HTTP к Phoenix REST (Phoenix 13.x project-aware; best-effort)
 science-graphrag-chat-agent-roadmap \
   --fixtures tests/fixtures/benchmarks/chat_agent_roadmap \
   --out eval/results/chat-agent-roadmap-live-latest \
   --fetch-phoenix
 ```
+
+Для `--fetch-phoenix` задайте **`PHOENIX_UI_BASE_URL`** (база веб-UI Phoenix, тот же хост, что и REST, например `http://127.0.0.1:6006`) и при необходимости **`PHOENIX_PROJECT_ID`** / **`PHOENIX_PROJECT_NAME`** — идентификатор проекта в URL `GET /v1/projects/{id}/…` (по умолчанию совпадает с именем проекта OTLP: `science-graphrag`, см. `eval/chat_agent/phoenix_export.py`).
 
 Артефакты: `summary.json` / `summary.md`, `workspace_audit.json`, per-case `cases/<case_id>/case_result.json` + `trace_audit.json`.
 

@@ -1,0 +1,33 @@
+{
+  "case_id": "multi_turn_clarify",
+  "roadmap_ref": "§2 multi-turn / clarification",
+  "workspace_id": "ws-pilot-od",
+  "answer_class_hint": "inventory",
+  "turns": [
+    {
+      "question": "List the papers in this workspace (titles only)."
+    },
+    {
+      "question": "For the first paper you listed, who are the authors?"
+    }
+  ],
+  "expect": {
+    "answer_classes_allowed": [
+      "fact_lookup",
+      "inventory",
+      "grounded_explanation"
+    ],
+    "strict_answer_class": false,
+    "tools_any_of": [
+      "workspace_list_papers",
+      "paper_authors",
+      "paper_metadata",
+      "paper_lookup",
+      "workspace_overview"
+    ],
+    "tools_none_of": [],
+    "require_phoenix_trace_id": true,
+    "require_tool_trace": true,
+    "min_non_final_tool_calls": 2
+  }
+}

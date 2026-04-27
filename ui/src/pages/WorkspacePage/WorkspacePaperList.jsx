@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import { useI18n } from "../../i18n/useI18n.js";
 import WorkspacePaperRow from "./WorkspacePaperRow.jsx";
@@ -24,6 +25,7 @@ export default function WorkspacePaperList({
   onRemoveWork,
 }) {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
   const rowRefs = useRef({});
   const workIdsKey = effectiveWorkIds.join("|");
 
@@ -41,13 +43,13 @@ export default function WorkspacePaperList({
     <Box
       sx={{
         borderRadius: "6px",
-        border: "1px solid rgba(255,255,255,0.08)",
-        backgroundColor: "#141414",
+        border: `1px solid ${tk.border.default}`,
+        backgroundColor: tk.surface.sidebar,
         overflow: "hidden",
       }}
     >
       {workspaceId && effectiveWorkIds.length === 0 ? (
-        <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)", p: 1.5 }}>{t("workspace.noPapers")}</Typography>
+        <Typography sx={{ fontSize: "0.8125rem", color: tk.text.muted, p: 1.5 }}>{t("workspace.noPapers")}</Typography>
       ) : null}
       {effectiveWorkIds.map((wid) => {
         const row = papers.get(wid);

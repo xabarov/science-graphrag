@@ -16,6 +16,7 @@ from science_graphrag.agent.tool_search import shortlist_tools_for_specialist
 from science_graphrag.agent.tools import build_retrieval_tools
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
+from science_graphrag.observability.spans import llm_span
 
 SPECIALIST_NAME = "retrieval_agent"
 SYSTEM_PROMPT = (
@@ -59,11 +60,15 @@ def _compile_react_subgraph(tools: list[BaseTool], settings: Settings, system_pr
     llm = build_chat_model(settings).bind_tools(tools)
 
     def chat_node(state: AgentState) -> dict:
-        response = llm.invoke(
-            ensure_messages_safe_for_generation(
-                [HumanMessage(content=system_prompt), *list(state.get("messages") or [])]
+        with llm_span(
+            "llm.agent.retrieval_specialist",
+            {"llm.invocation_name": "agent_retrieval_specialist"},
+        ):
+            response = llm.invoke(
+                ensure_messages_safe_for_generation(
+                    [HumanMessage(content=system_prompt), *list(state.get("messages") or [])]
+                )
             )
-        )
         return {"messages": [response]}
 
     def budget_node(state: AgentState) -> dict:

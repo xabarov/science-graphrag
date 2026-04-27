@@ -6,11 +6,13 @@ import asyncio
 import inspect
 import json
 import logging
+from collections.abc import AsyncIterator
 from time import perf_counter
-from typing import Any, AsyncIterator
+from typing import Any
 
 from fastapi import APIRouter, Depends, Header
 from langchain_core.messages import AIMessage, ToolMessage
+from opentelemetry import context as otel_context
 from pydantic import BaseModel, Field, field_validator
 from sse_starlette.sse import EventSourceResponse
 
@@ -193,7 +195,10 @@ class AgentQueryResponseV2(BaseModel):
     thread_id: str | None = None
     session_summary_excerpt: str | None = Field(
         default=None,
-        description="CH4: excerpt of server session_summary after this turn; JSON parity with SSE context_compacted.",
+        description=(
+            "CH4: excerpt of server session_summary after this turn; "
+            "JSON parity with SSE context_compacted."
+        ),
     )
     answer_class: str | None = None
     evidence_summary: str | None = None
@@ -418,11 +423,17 @@ async def _iter_graph_chunks(
             yield chunk
         return
 
+    parent_ctx = otel_context.get_current()
+
     def _collect_sync_chunks() -> list[Any]:
-        out: list[Any] = []
-        for chunk in graph.stream(initial_state, config=config):
-            out.append(chunk)
-        return out
+        token = otel_context.attach(parent_ctx)
+        try:
+            out: list[Any] = []
+            for chunk in graph.stream(initial_state, config=config):
+                out.append(chunk)
+            return out
+        finally:
+            otel_context.detach(token)
 
     if deadline_seconds and deadline_seconds > 0:
         try:
@@ -583,7 +594,10 @@ async def _stream_agent(
                         {
                             "type": "warning",
                             "code": "history_digest_invalid",
-                            "message": "history_digest was not a JSON array of objects; it was ignored",
+                            "message": (
+                                "history_digest was not a JSON array of objects; "
+                                "it was ignored"
+                            ),
                         }
                     )
                 }

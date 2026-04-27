@@ -1,0 +1,54 @@
+{
+  "case_spec": {
+    "case_id": "relation_cites_strict",
+    "eval_tier": "strict",
+    "roadmap_ref": "strict-tier relation_tracing / graph tools",
+    "workspace_id": "ws-pilot-od",
+    "answer_class_hint": "relation_tracing",
+    "question": "What papers in this workspace cite other papers? Describe one citation link you can verify from the graph.",
+    "expect": {
+      "answer_classes_allowed": [
+        "relation_tracing"
+      ],
+      "tools_any_of": [
+        "entity_search",
+        "edge_search",
+        "cypher_query"
+      ],
+      "require_graph_tool": true,
+      "require_phoenix_trace_id": true,
+      "require_tool_trace": true,
+      "min_non_final_tool_calls": 1,
+      "max_tool_trace_errors": 0
+    }
+  },
+  "run": {
+    "case_id": "relation_cites_strict",
+    "error": "ValueError: {'message': 'Provider returned error', 'code': 400}",
+    "tool_trace": [],
+    "duration_ms": 4985,
+    "metrics": {
+      "passed": false,
+      "reasons": [
+        "runtime_error:ValueError: {'message': 'Provider returned error', 'code': 400}"
+      ],
+      "diagnostics": {}
+    },
+    "wall_clock_seconds": 4.985,
+    "case_path": "tests/fixtures/benchmarks/chat_agent_roadmap/cases_strict/01_relation_cites_strict.json"
+  },
+  "trace_audit": {
+    "case_id": "relation_cites_strict",
+    "phoenix_trace_id": null,
+    "phoenix_ui_hint": null,
+    "tool_trace": [],
+    "diagnostics": {},
+    "metrics": {
+      "passed": false,
+      "reasons": [
+        "runtime_error:ValueError: {'message': 'Provider returned error', 'code': 400}"
+      ],
+      "diagnostics": {}
+    }
+  }
+}

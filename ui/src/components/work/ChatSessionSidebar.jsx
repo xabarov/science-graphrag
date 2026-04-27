@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import AddCommentOutlinedIcon from "@mui/icons-material/AddCommentOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import Box from "@mui/material/Box";
@@ -7,6 +7,7 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import { CursorIconAction } from "../common/index.js";
 
@@ -30,24 +31,38 @@ export function ChatSessionSidebar({
   onDeleteSessionRequest,
   sx,
 }) {
+  const tk = useTheme().appTokens;
+  const rootSx = useMemo(
+    () => ({
+      width: { xs: "100%", md: 260 },
+      flexShrink: 0,
+      minHeight: 0,
+      height: { md: "100%" },
+      display: "flex",
+      flexDirection: "column",
+      borderRadius: "6px",
+      border: `1px solid ${tk.border.default}`,
+      backgroundColor: tk.surface.panelAlt,
+      overflow: "hidden",
+      ...sx,
+    }),
+    [tk, sx],
+  );
+
   return (
-    <Box
-      sx={{
-        width: { xs: "100%", md: 260 },
-        flexShrink: 0,
-        minHeight: 0,
-        height: { md: "100%" },
-        display: "flex",
-        flexDirection: "column",
-        borderRadius: "6px",
-        border: "1px solid rgba(255,255,255,0.06)",
-        backgroundColor: "rgba(18,18,18,0.65)",
-        overflow: "hidden",
-        ...sx,
-      }}
-    >
-      <Box sx={{ p: 1.1, borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, flexShrink: 0 }}>
-        <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.78)" }}>{t("chat.sidebar.title")}</Typography>
+    <Box sx={rootSx}>
+      <Box
+        sx={{
+          p: 1.1,
+          borderBottom: `1px solid ${tk.border.default}`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 1,
+          flexShrink: 0,
+        }}
+      >
+        <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: tk.text.primary }}>{t("chat.sidebar.title")}</Typography>
         <CursorIconAction type="button" aria-label={t("chat.sidebar.newChatAria")} title={t("chat.sidebar.newChatAria")} onClick={onNewSession}>
           <AddCommentOutlinedIcon sx={{ fontSize: "1.15rem" }} />
         </CursorIconAction>
@@ -55,7 +70,7 @@ export function ChatSessionSidebar({
       <List dense disablePadding sx={{ flex: 1, overflowY: "auto", py: 0.5, minHeight: 0 }}>
         {sessionList.length === 0 ? (
           <Box sx={{ px: 1.5, py: 2 }}>
-            <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.38)" }}>{t("chat.sidebar.empty")}</Typography>
+            <Typography sx={{ fontSize: "0.75rem", color: tk.text.faint }}>{t("chat.sidebar.empty")}</Typography>
           </Box>
         ) : (
           sessionList.map((s) => (
@@ -85,7 +100,7 @@ export function ChatSessionSidebar({
               }
               sx={{
                 alignItems: "stretch",
-                borderBottom: "1px solid rgba(255,255,255,0.04)",
+                borderBottom: `1px solid ${tk.border.default}`,
                 "&:last-of-type": { borderBottom: "none" },
               }}
             >
@@ -97,15 +112,16 @@ export function ChatSessionSidebar({
                   py: 1,
                   px: 1.15,
                   pr: onDeleteSessionRequest ? 5 : 1.15,
-                  "&.Mui-selected": { backgroundColor: "rgba(99,102,241,0.08)" },
-                  "&:hover": { backgroundColor: "rgba(255,255,255,0.03)" },
+                  "&.Mui-selected": { backgroundColor: tk.accent.softBg },
+                  "&.Mui-selected:hover": { backgroundColor: tk.accent.emphasisHoverBg },
+                  "&:hover": { backgroundColor: tk.control.navItemHoverBg },
                 }}
               >
                 <ListItemText
                   primary={s.title}
                   secondary={Array.isArray(s.entries) && s.entries[0]?.query ? String(s.entries[0].query) : ""}
-                  primaryTypographyProps={{ noWrap: true, sx: { fontSize: "0.8125rem", color: "rgba(255,255,255,0.82)" } }}
-                  secondaryTypographyProps={{ noWrap: true, sx: { fontSize: "0.68rem", color: "rgba(255,255,255,0.36)", mt: 0.25 } }}
+                  primaryTypographyProps={{ noWrap: true, sx: { fontSize: "0.8125rem", color: tk.text.primary } }}
+                  secondaryTypographyProps={{ noWrap: true, sx: { fontSize: "0.68rem", color: tk.text.faint, mt: 0.25 } }}
                 />
               </ListItemButton>
             </ListItem>

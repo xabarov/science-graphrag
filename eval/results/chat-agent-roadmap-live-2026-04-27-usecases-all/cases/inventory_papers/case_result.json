@@ -24,31 +24,519 @@
   },
   "run": {
     "case_id": "inventory_papers",
-    "error": "ValueError: {'message': 'Provider returned error', 'code': 400}",
-    "tool_trace": [],
-    "duration_ms": 6144,
-    "metrics": {
-      "passed": false,
-      "reasons": [
-        "runtime_error:ValueError: {'message': 'Provider returned error', 'code': 400}"
+    "workspace_id": "ws-pilot-od",
+    "thread_id": null,
+    "turns": [
+      {
+        "question": "How many papers are in this workspace? List their titles briefly.",
+        "output": {
+          "answer": "",
+          "citations": [],
+          "tool_trace": [
+            {
+              "step": 0,
+              "tool": "coordinator_gate",
+              "args_summary": {
+                "conversation_intent": "research_task",
+                "tool_policy": "allow_tools",
+                "route_hint": "retrieval_agent",
+                "reason": "explicit_research_signal",
+                "suggested_answer_class": "inventory",
+                "confidence": "1.0",
+                "classifier": "deterministic"
+              },
+              "row_count": 0,
+              "duration_ms": 7,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": -1,
+              "tool": "route_to_specialist",
+              "args_summary": {
+                "from": "supervisor",
+                "to": "retrieval_agent",
+                "budget_left": 8
+              },
+              "row_count": 0,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": -1,
+              "tool": "route_to_specialist",
+              "args_summary": {
+                "from": "supervisor",
+                "to": "writer_agent",
+                "budget_left": 6
+              },
+              "row_count": 0,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": 1,
+              "tool": "paper_counts",
+              "args_summary": {
+                "workspace_id": "ws-pilot-od"
+              },
+              "row_count": 1,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            },
+            {
+              "step": 2,
+              "tool": "workspace_list_papers",
+              "args_summary": {
+                "workspace_id": "ws-pilot-od"
+              },
+              "row_count": 1,
+              "duration_ms": 0,
+              "truncated": false,
+              "error": null
+            }
+          ],
+          "answer_class": "inventory",
+          "evidence_summary": "5 trace step(s)",
+          "warnings": [],
+          "inventory": {
+            "work_count": 1,
+            "papers": [
+              {
+                "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+                "title": "You Only Look Once: Unified, Real-Time Object Detection",
+                "year": null,
+                "doi": ""
+              }
+            ]
+          },
+          "relation_trace": null,
+          "quote_candidates": null,
+          "idea_suggestions": null,
+          "bibliography": null,
+          "debug_events": [
+            {
+              "conversation_intent": "research_task",
+              "tool_policy": "allow_tools",
+              "route_hint": "retrieval_agent",
+              "reason": "explicit_research_signal",
+              "suggested_answer_class": "inventory",
+              "confidence": 1.0,
+              "classifier": "deterministic",
+              "type": "intent_classified",
+              "source": "coordinator_gate_v0",
+              "answer_class": "inventory"
+            },
+            {
+              "type": "tool_search_result",
+              "specialist": "retrieval_agent",
+              "tools": [
+                "workspace_list_papers",
+                "idea_search",
+                "summarize_workspace",
+                "workspace_overview",
+                "paper_lookup",
+                "paper_metadata",
+                "paper_authors",
+                "paper_counts"
+              ],
+              "reason": "rules",
+              "top_score": 15.0,
+              "skipped": false
+            },
+            {
+              "type": "tool_search_result",
+              "specialist": "writer_agent",
+              "tools": null,
+              "reason": "writer_minimal_set",
+              "top_score": null,
+              "skipped": true,
+              "writer_mode": "normal"
+            }
+          ],
+          "phoenix_trace_id": "165f01102b8c57f7241d5e0444eb21a5",
+          "thread_id": null
+        }
+      }
+    ],
+    "final_output": {
+      "answer": "",
+      "citations": [],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "conversation_intent": "research_task",
+            "tool_policy": "allow_tools",
+            "route_hint": "retrieval_agent",
+            "reason": "explicit_research_signal",
+            "suggested_answer_class": "inventory",
+            "confidence": "1.0",
+            "classifier": "deterministic"
+          },
+          "row_count": 0,
+          "duration_ms": 7,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": -1,
+          "tool": "route_to_specialist",
+          "args_summary": {
+            "from": "supervisor",
+            "to": "retrieval_agent",
+            "budget_left": 8
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": -1,
+          "tool": "route_to_specialist",
+          "args_summary": {
+            "from": "supervisor",
+            "to": "writer_agent",
+            "budget_left": 6
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "paper_counts",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "workspace_list_papers",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
       ],
-      "diagnostics": {}
+      "answer_class": "inventory",
+      "evidence_summary": "5 trace step(s)",
+      "warnings": [],
+      "inventory": {
+        "work_count": 1,
+        "papers": [
+          {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "title": "You Only Look Once: Unified, Real-Time Object Detection",
+            "year": null,
+            "doi": ""
+          }
+        ]
+      },
+      "relation_trace": null,
+      "quote_candidates": null,
+      "idea_suggestions": null,
+      "bibliography": null,
+      "debug_events": [
+        {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "explicit_research_signal",
+          "suggested_answer_class": "inventory",
+          "confidence": 1.0,
+          "classifier": "deterministic",
+          "type": "intent_classified",
+          "source": "coordinator_gate_v0",
+          "answer_class": "inventory"
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "retrieval_agent",
+          "tools": [
+            "workspace_list_papers",
+            "idea_search",
+            "summarize_workspace",
+            "workspace_overview",
+            "paper_lookup",
+            "paper_metadata",
+            "paper_authors",
+            "paper_counts"
+          ],
+          "reason": "rules",
+          "top_score": 15.0,
+          "skipped": false
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "writer_agent",
+          "tools": null,
+          "reason": "writer_minimal_set",
+          "top_score": null,
+          "skipped": true,
+          "writer_mode": "normal"
+        }
+      ],
+      "phoenix_trace_id": "165f01102b8c57f7241d5e0444eb21a5",
+      "thread_id": null
     },
-    "wall_clock_seconds": 6.145,
+    "tool_trace": [
+      {
+        "step": 0,
+        "tool": "coordinator_gate",
+        "args_summary": {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "explicit_research_signal",
+          "suggested_answer_class": "inventory",
+          "confidence": "1.0",
+          "classifier": "deterministic"
+        },
+        "row_count": 0,
+        "duration_ms": 7,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "retrieval_agent",
+          "budget_left": 8
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "writer_agent",
+          "budget_left": 6
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 1,
+        "tool": "paper_counts",
+        "args_summary": {
+          "workspace_id": "ws-pilot-od"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 2,
+        "tool": "workspace_list_papers",
+        "args_summary": {
+          "workspace_id": "ws-pilot-od"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      }
+    ],
+    "duration_ms": 7298,
+    "metrics": {
+      "passed": true,
+      "reasons": [
+        "ok"
+      ],
+      "diagnostics": {
+        "tool_call_count": 5,
+        "non_final_tool_call_count": 5,
+        "first_non_final_tool": "coordinator_gate",
+        "unique_tools": [
+          "coordinator_gate",
+          "paper_counts",
+          "route_to_specialist",
+          "workspace_list_papers"
+        ],
+        "repeated_non_final_tools": [
+          "route_to_specialist"
+        ],
+        "citation_count": 0,
+        "citations_missing_work_id": 0,
+        "answer_class": "inventory",
+        "phoenix_trace_id_present": true,
+        "warnings_count": 0,
+        "has_bibliography_block": false,
+        "bibliography_entry_count": 0,
+        "bibliography_filtered_work_ids_count": 0,
+        "has_inventory_block": true,
+        "has_quote_candidates": false,
+        "has_relation_trace": false,
+        "has_idea_suggestions": false,
+        "budget_exhausted_in_trace": false,
+        "tool_trace_error_count": 0
+      }
+    },
+    "wall_clock_seconds": 7.299,
     "case_path": "tests/fixtures/benchmarks/chat_agent_roadmap/cases/01_inventory_papers.json"
   },
   "trace_audit": {
     "case_id": "inventory_papers",
-    "phoenix_trace_id": null,
-    "phoenix_ui_hint": null,
-    "tool_trace": [],
-    "diagnostics": {},
-    "metrics": {
-      "passed": false,
-      "reasons": [
-        "runtime_error:ValueError: {'message': 'Provider returned error', 'code': 400}"
+    "phoenix_trace_id": "165f01102b8c57f7241d5e0444eb21a5",
+    "phoenix_ui_hint": "http://127.0.0.1:16006/traces/165f01102b8c57f7241d5e0444eb21a5",
+    "tool_trace": [
+      {
+        "step": 0,
+        "tool": "coordinator_gate",
+        "args_summary": {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "explicit_research_signal",
+          "suggested_answer_class": "inventory",
+          "confidence": "1.0",
+          "classifier": "deterministic"
+        },
+        "row_count": 0,
+        "duration_ms": 7,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "retrieval_agent",
+          "budget_left": 8
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "writer_agent",
+          "budget_left": 6
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 1,
+        "tool": "paper_counts",
+        "args_summary": {
+          "workspace_id": "ws-pilot-od"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 2,
+        "tool": "workspace_list_papers",
+        "args_summary": {
+          "workspace_id": "ws-pilot-od"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      }
+    ],
+    "diagnostics": {
+      "tool_call_count": 5,
+      "non_final_tool_call_count": 5,
+      "first_non_final_tool": "coordinator_gate",
+      "unique_tools": [
+        "coordinator_gate",
+        "paper_counts",
+        "route_to_specialist",
+        "workspace_list_papers"
       ],
-      "diagnostics": {}
+      "repeated_non_final_tools": [
+        "route_to_specialist"
+      ],
+      "citation_count": 0,
+      "citations_missing_work_id": 0,
+      "answer_class": "inventory",
+      "phoenix_trace_id_present": true,
+      "warnings_count": 0,
+      "has_bibliography_block": false,
+      "bibliography_entry_count": 0,
+      "bibliography_filtered_work_ids_count": 0,
+      "has_inventory_block": true,
+      "has_quote_candidates": false,
+      "has_relation_trace": false,
+      "has_idea_suggestions": false,
+      "budget_exhausted_in_trace": false,
+      "tool_trace_error_count": 0
+    },
+    "metrics": {
+      "passed": true,
+      "reasons": [
+        "ok"
+      ],
+      "diagnostics": {
+        "tool_call_count": 5,
+        "non_final_tool_call_count": 5,
+        "first_non_final_tool": "coordinator_gate",
+        "unique_tools": [
+          "coordinator_gate",
+          "paper_counts",
+          "route_to_specialist",
+          "workspace_list_papers"
+        ],
+        "repeated_non_final_tools": [
+          "route_to_specialist"
+        ],
+        "citation_count": 0,
+        "citations_missing_work_id": 0,
+        "answer_class": "inventory",
+        "phoenix_trace_id_present": true,
+        "warnings_count": 0,
+        "has_bibliography_block": false,
+        "bibliography_entry_count": 0,
+        "bibliography_filtered_work_ids_count": 0,
+        "has_inventory_block": true,
+        "has_quote_candidates": false,
+        "has_relation_trace": false,
+        "has_idea_suggestions": false,
+        "budget_exhausted_in_trace": false,
+        "tool_trace_error_count": 0
+      }
+    },
+    "phoenix_http_snapshot": {
+      "ok": true,
+      "url": "http://127.0.0.1:16006/arize-phoenix-api/v1/traces/165f01102b8c57f7241d5e0444eb21a5",
+      "payload": {
+        "raw": "<!DOCTYPE html>\n<html>\n  <head>\n    <title>Phoenix</title>\n    <link rel=\"icon\" href=\"/favicon.ico\" type=\"image/x-icon\"></link>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"title\" content=\"Arize Phoenix\" />\n    <meta name=\"description\" content=\"AI Observability & Evaluation\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <meta property=\"og:title\" content=\"Arize Phoenix\" />\n    <meta property=\"og:description\" content=\"AI Observability & Evaluation\" />\n    <meta property=\"og:image\" content=\"https://raw.githubusercontent.com/Arize-ai/phoenix-assets/main/images/socal/social-preview-horizontal.jpg\" />\n    <meta name=\"theme-color\" content=\"#ffffff\" />\n    \n    <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n    <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n    <link href=\"https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap\" rel=\"stylesheet\">\n    \n    <link rel=\"stylesheet\" href=\"/assets/vendor-CAy9C7li.css\">\n  <script src=\"/modernizr.js\"></script>\n    \n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script>(function() {\n      Object.defineProperty(window, \"Config\", {\n          // Place any server-side injected config here\n          // injected into the client before React runs\n          value: Object.freeze({\n              basename: \"\",\n              platformVersion: \"13.20.0\",\n              authenticationEnabled: Boolean(\"False\" == \"True\"),\n              oAuth2Idps: [],\n              basicAuthDisabled: Boolean(\"False\" == \"True\"),\n              ldapEnabled: Boolean(\"False\" == \"True\"),\n              ldapManualUserCreationEnabled: Boolean(\"False\" == \"True\"),\n              managementUrl: null,\n              supportEmail: null,\n              hasDbThreshold: Boolean(\"False\" == \"True\"),\n              allowExternalResources: Boolean(\"True\" == \"True\"),\n              authErrorMessages: {},\n          }),\n          writable: false\n      });\n  })()</script>\n    <img referrerpolicy=\"no-referrer-when-downgrade\" src=\"https://static.scarf.sh/a.png?x-pxid=98877b05-7d80-493e-ab95-97c104785d1e\" style=\"position:absolute;width:0;height:0\" />\n    <link rel=\"modulepreload\" href=\"/assets/rolldown-runtime-DD-Z-9HO.js\">\n    <link rel=\"modulepreload\" href=\"/assets/vendor-codemirror-CROkc6HV.js\">\n    <link rel=\"modulepreload\" href=\"/assets/vendor-ai-sdk-react-BePEedZt.js\">\n    <link rel=\"modulepreload\" href=\"/assets/vendor-recharts-C26oZurC.js\">\n    <link rel=\"modulepreload\" href=\"/assets/vendor-shiki-DmwBzjbx.js\">\n    <link rel=\"modulepreload\" href=\"/assets/vendor-streamdown-D485D3QJ.js\">\n    <link rel=\"modulepreload\" href=\"/assets/vendor-BXiYgoZU.js\">\n    <script type=\"module\" src=\"/assets/index-D9IrZuFd.js\"></script>\n    </body>\n</html>"
+      }
     }
   }
 }

@@ -226,10 +226,7 @@ export function useWorkspacePageCore() {
     [effectiveWorkIds, workIdFromUrl],
   );
 
-  const { papers } = useWorkspacePapersModel({
-    workspaceId: workspaceMeta.id || "",
-    effectiveWorkIds,
-  });
+  const { papers } = useWorkspacePapersModel({ effectiveWorkIds });
 
   const setWorkFocusInUrl = useCallback(
     (wid) => {
