@@ -15,6 +15,26 @@ export default {
   "graph.workspacePanel.tooltipDiagnosticsHide": "Hide diagnostics JSON",
   "graph.workspacePanel.tooltipDiagnosticsShow": "Show diagnostics JSON",
 
+  "graph.layerCounts.server": "Server: {{n}} nodes · {{e}} edges",
+  "graph.layerCounts.projected": "Projected: {{n}} · {{e}}",
+  "graph.layerCounts.visible": "Visible (Nodes menu): {{n}} · {{e}}",
+  "graph.layerCounts.display": "On screen (UI cap): {{n}} · {{e}}",
+
+  "graph.wsToolbar.nodesMenuButtonLabel": "Nodes · {{typesOn}}/{{typesTotal}}{{extras}}",
+  "graph.wsToolbar.nodesMenuButtonTooltip":
+    "Choose which loaded node types are shown (including external cited works). The server graph is always loaded in full; this only affects the canvas.",
+  "graph.wsToolbar.nodesMenuPopoverTitle": "Nodes",
+  "graph.wsToolbar.nodesMenuPopoverHint":
+    "The backend returns a full neighborhood; use this menu to hide categories client-side for readability.",
+  "graph.wsToolbar.nodesSectionTypes": "Node types",
+  "graph.wsToolbar.nodesSectionExtensions": "Extensions",
+  "graph.wsToolbar.extensionExternalCites": "External cites",
+  "graph.wsToolbar.extensionExternalCitesDesc": "Show cited works outside the workspace (membership=external).",
+  "graph.wsToolbar.extensionClaims": "Claims",
+  "graph.wsToolbar.extensionClaimsDesc": "Load and allow claim nodes to appear when their type checkbox is enabled.",
+  "graph.wsToolbar.nodesExtraExtShort": "ext",
+  "graph.wsToolbar.nodesExtraClaimsShort": "claims",
+
   "graph.wsToolbar.title": "Workspace graph",
   "graph.wsToolbar.modeInner": "Inner",
   "graph.wsToolbar.modeUnion1hop": "Union 1-hop",
@@ -39,10 +59,11 @@ export default {
     "Include works outside the workspace that your papers cite (only when each has ≥2 internal inbound citations)",
   "graph.wsToolbar.includeClaimsLabel": "Claims",
   "graph.wsToolbar.includeClaimsTooltip":
-    "Show extracted claims linked to works (capped server-side; not available in Union 1-hop workspace mode).",
+    "The server loads linked claims when available; use the Nodes menu to show or hide claim nodes in the canvas.",
   "graph.wsToolbar.nodeTypesSummary": "Nodes: {{selected}}/{{total}}",
   "graph.wsToolbar.nodeTypesPopoverTitle": "Which entities to show",
-  "graph.wsToolbar.nodeTypesButtonTooltip": "Choose node types for the graph query",
+  "graph.wsToolbar.nodeTypesButtonTooltip": "Choose visible node types (client-side filter)",
+  "graph.wsToolbar.nodeTypeDesc.Claim": "Extracted claims linked to papers in the loaded graph",
   "graph.wsToolbar.nodeTypeDesc.Work": "Scientific papers",
   "graph.wsToolbar.nodeTypeDesc.Author": "Researchers and co-authors",
   "graph.wsToolbar.nodeTypeDesc.Method": "Algorithms and approaches",

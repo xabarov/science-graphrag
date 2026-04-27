@@ -182,7 +182,7 @@ export async function getWorkspaceGraph(workspaceId, opts = {}) {
   const wid = encodeURIComponent(String(workspaceId || "").trim());
   const params = new URLSearchParams();
   if (opts.neighborLimit != null && Number.isFinite(Number(opts.neighborLimit))) {
-    params.set("neighbor_limit", String(Math.min(2000, Math.max(1, Math.floor(Number(opts.neighborLimit))))));
+    params.set("neighbor_limit", String(Math.max(1, Math.floor(Number(opts.neighborLimit)))));
   }
   if (opts.mode != null && String(opts.mode).trim()) {
     params.set("mode", String(opts.mode).trim());
@@ -207,11 +207,11 @@ export async function getWorkspaceGraph(workspaceId, opts = {}) {
     params.set("include_claims", "true");
   }
   if (opts.claimsPerWork != null && Number.isFinite(Number(opts.claimsPerWork))) {
-    const v = Math.min(80, Math.max(1, Math.floor(Number(opts.claimsPerWork))));
+    const v = Math.max(1, Math.floor(Number(opts.claimsPerWork)));
     params.set("claims_per_work", String(v));
   }
   if (opts.claimsMaxTotal != null && Number.isFinite(Number(opts.claimsMaxTotal))) {
-    const v = Math.min(500, Math.max(1, Math.floor(Number(opts.claimsMaxTotal))));
+    const v = Math.max(1, Math.floor(Number(opts.claimsMaxTotal)));
     params.set("claims_max_total", String(v));
   }
   const q = params.toString();

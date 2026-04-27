@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
@@ -14,20 +14,12 @@ import GraphTypeLegend from "./GraphTypeLegend.jsx";
 import GraphViewModeSwitch from "./GraphViewModeSwitch.jsx";
 import GraphVisualization from "./GraphVisualization.jsx";
 import { GraphErrorAlert, GraphLoadingInline, GraphMissingWorkInline } from "./graphShellStates.jsx";
-import { projectAuthorSemanticGraph } from "./authorSemanticProjection.js";
-import { deriveInspectorDetail } from "./graphInspectorModel.js";
-import { localizeEdgeType } from "./graphLocalize.js";
-import { filterNodeIdsBySearchSubstring, firstMatchingNodeIdInOrder } from "./graphNodeSearch.js";
-import { capGraphForUi } from "./graphUiLimits.js";
+import { firstMatchingNodeIdInOrder } from "./graphNodeSearch.js";
 import { LS_GRAPH_STANDALONE_DETAIL_MIN_PX, readGraphDetailColumnPxStored } from "./graphDetailColumnWidth.js";
-import {
-  normalizeGraphEdgeId,
-  normalizeGraphNodeId,
-  resolveSelectedEdgeId,
-  resolveSelectedNodeId,
-} from "./graphViewState.js";
 import WorkspaceGraphToolbar from "./WorkspaceGraphToolbar.jsx";
 import { useGraphWorkspaceData } from "./hooks/useGraphWorkspaceData.js";
+import { useGraphSelectionReconcile } from "./hooks/useGraphSelectionReconcile.js";
+import { useGraphWorkspaceProjection } from "./hooks/useGraphWorkspaceProjection.js";
 
 const LS_GRAPH_CANVAS_LAYOUT_MODE = "graphCanvasLayoutMode";
 const LS_GRAPH_VIZ_MODE = "graphVizMode";
@@ -72,6 +64,7 @@ export default function GraphWorkspacePanel({
   onSelectNode,
   selectedEdgeId = "",
   onSelectEdge,
+  onReconcileSelection,
   mode = "embedded",
   title = "Graph",
   subtitle = null,
@@ -89,14 +82,13 @@ export default function GraphWorkspacePanel({
     graph,
     loading,
     error,
-    wsGraphOpts,
-    setWsGraphOpts,
+    graphVisibility,
+    setGraphVisibility,
     wsGraphStats,
     fetchNeighbors,
     expandNeighborsBusy,
     expandAggregatorNode,
-  } =
-    useGraphWorkspaceData(workspaceId, workId, { standaloneWorkGraphDepth });
+  } = useGraphWorkspaceData(workspaceId, workId, { standaloneWorkGraphDepth });
 
   const [vizMode, setVizMode] = useState(() => (standalone ? "canvas" : readLsMode()));
   const [canvasLayoutMode, setCanvasLayoutMode] = useState(() => (standalone ? "force" : readLsLayout()));
@@ -129,50 +121,59 @@ export default function GraphWorkspacePanel({
 
   const effectiveVizMode = standalone ? "canvas" : vizMode;
   const effectiveCanvasLayout = standalone ? "force" : canvasLayoutMode;
-  const projectedGraph = useMemo(() => projectAuthorSemanticGraph(graph), [graph]);
-  const resolvedSelectedEdgeId = useMemo(
-    () => resolveSelectedEdgeId(projectedGraph, normalizeGraphEdgeId(selectedEdgeId)),
-    [projectedGraph, selectedEdgeId],
+  const {
+    projectedGraph,
+    visibleGraph,
+    visibilityStats,
+    projectedResolvedNodeId,
+    resolvedSelectedNodeId,
+    resolvedSelectedEdgeId,
+    displayGraph,
+    capWarnings,
+    inspector,
+    nodeSearchMatchIds,
+  } = useGraphWorkspaceProjection({
+    graph,
+    graphVisibility,
+    selectedNodeId,
+    selectedEdgeId,
+    localFindQuery,
+    t,
+  });
+
+  useGraphSelectionReconcile({
+    selectedNodeId,
+    selectedEdgeId,
+    resolvedSelectedNodeId,
+    resolvedSelectedEdgeId,
+    onReconcile: onReconcileSelection,
+  });
+  const openDetailsOnSelection = useCallback(() => {
+    if (!detailsVisible) setDetailsVisible(true);
+  }, [detailsVisible]);
+  const handleSelectNode = useCallback(
+    (id) => {
+      if (String(id || "").trim()) openDetailsOnSelection();
+      onSelectNode?.(id);
+    },
+    [onSelectNode, openDetailsOnSelection],
   );
-  const resolvedSelectedNodeId = useMemo(() => {
-    if (resolvedSelectedEdgeId) return "";
-    return resolveSelectedNodeId(projectedGraph, normalizeGraphNodeId(selectedNodeId));
-  }, [projectedGraph, selectedNodeId, resolvedSelectedEdgeId]);
-  const { displayGraph, capWarnings } = useMemo(
-    () => capGraphForUi(projectedGraph, resolvedSelectedNodeId),
-    [projectedGraph, resolvedSelectedNodeId],
-  );
-  const edgeTypeLabel = useCallback((e) => localizeEdgeType(e, t), [t]);
-  const inspector = useMemo(
-    () => deriveInspectorDetail(projectedGraph, resolvedSelectedNodeId, resolvedSelectedEdgeId, { edgeTypeLabel }),
-    [projectedGraph, edgeTypeLabel, resolvedSelectedNodeId, resolvedSelectedEdgeId],
-  );
-  const nodeSearchMatchIds = useMemo(
-    () => filterNodeIdsBySearchSubstring(displayGraph.nodes, localFindQuery),
-    [displayGraph.nodes, localFindQuery],
+  const handleSelectEdge = useCallback(
+    (id) => {
+      if (String(id || "").trim()) openDetailsOnSelection();
+      onSelectEdge?.(id);
+    },
+    [onSelectEdge, openDetailsOnSelection],
   );
   const focusFirstLocalMatch = useCallback(() => {
     const first = firstMatchingNodeIdInOrder(displayGraph.nodes, nodeSearchMatchIds);
     if (!first) return;
-    onSelectEdge?.("");
+    openDetailsOnSelection();
     onSelectNode?.(first);
     setCenterCanvasNodeId(first);
     setCenterCanvasNonce((n) => n + 1);
-  }, [displayGraph.nodes, nodeSearchMatchIds, onSelectEdge, onSelectNode]);
+  }, [displayGraph.nodes, nodeSearchMatchIds, onSelectNode, openDetailsOnSelection]);
   const traceSummary = describeTraceabilityState(traceContext);
-
-  useEffect(() => {
-    if (resolvedSelectedNodeId && resolvedSelectedNodeId !== normalizeGraphNodeId(selectedNodeId)) onSelectNode?.(resolvedSelectedNodeId);
-  }, [resolvedSelectedNodeId, selectedNodeId, onSelectNode]);
-  useEffect(() => {
-    if (normalizeGraphEdgeId(selectedEdgeId) && !resolvedSelectedEdgeId) onSelectEdge?.("");
-  }, [selectedEdgeId, resolvedSelectedEdgeId, onSelectEdge]);
-  useEffect(() => {
-    if (resolvedSelectedEdgeId && normalizeGraphNodeId(selectedNodeId)) onSelectNode?.("");
-  }, [resolvedSelectedEdgeId, selectedNodeId, onSelectNode]);
-  useEffect(() => {
-    if (resolvedSelectedNodeId && normalizeGraphEdgeId(selectedEdgeId)) onSelectEdge?.("");
-  }, [resolvedSelectedNodeId, selectedEdgeId, onSelectEdge]);
 
   const workIdTrim = String(workId || "").trim();
   const hasDataTarget = workIdTrim || String(workspaceId || "").trim();
@@ -193,8 +194,8 @@ export default function GraphWorkspacePanel({
             workspaceId={wsId}
             contextWorkId={workIdTrim}
             stats={wsGraphStats}
-            value={wsGraphOpts}
-            onChange={setWsGraphOpts}
+            visibility={graphVisibility}
+            onVisibilityChange={setGraphVisibility}
             canvasMode={effectiveVizMode === "canvas"}
             localFindQuery={localFindQuery}
             onLocalFindChange={(e) => setLocalFindQuery(e.target.value)}
@@ -228,14 +229,14 @@ export default function GraphWorkspacePanel({
           >
             <Box sx={{ minWidth: 0, minHeight: standalone ? 0 : { xs: 280, md: isEmbedded ? 400 : 500 }, display: "flex", flexDirection: "column" }}>
               {effectiveVizMode === "cards" ? (
-                <GraphVisualization graph={displayGraph} selectedNodeId={resolvedSelectedNodeId} onSelectNode={(id) => { onSelectEdge?.(""); onSelectNode?.(id); }} mode={mode} />
+                <GraphVisualization graph={displayGraph} selectedNodeId={resolvedSelectedNodeId} onSelectNode={handleSelectNode} mode={mode} />
               ) : effectiveVizMode === "flow" ? (
                 <GraphFlowView
                   graph={displayGraph}
                   selectedNodeId={resolvedSelectedNodeId}
                   selectedEdgeId={resolvedSelectedEdgeId}
-                  onSelectNode={(id) => { onSelectEdge?.(""); onSelectNode?.(id); }}
-                  onSelectEdge={(id) => { onSelectNode?.(""); onSelectEdge?.(id); }}
+                  onSelectNode={handleSelectNode}
+                  onSelectEdge={handleSelectEdge}
                 />
               ) : (
                 <GraphCanvasMvp
@@ -244,8 +245,8 @@ export default function GraphWorkspacePanel({
                   onCanvasLayoutModeChange={standalone ? undefined : setCanvasLayoutMode}
                   selectedNodeId={resolvedSelectedNodeId}
                   selectedEdgeId={resolvedSelectedEdgeId}
-                  onSelectNode={(id) => { onSelectEdge?.(""); onSelectNode?.(id); }}
-                  onSelectEdge={(id) => { onSelectNode?.(""); onSelectEdge?.(id); }}
+                  onSelectNode={handleSelectNode}
+                  onSelectEdge={handleSelectEdge}
                   onAggregatorExpand={(_, expandEndpoint) => expandAggregatorNode(expandEndpoint)}
                   searchQuery={localFindQuery}
                   searchMatchIds={nodeSearchMatchIds}
@@ -277,9 +278,19 @@ export default function GraphWorkspacePanel({
               onWidthChange={setDetailMinPx}
             />
           </Box>
-          <Box sx={{ mt: 1, display: "flex", gap: 1 }}>
-            <Typography sx={{ fontSize: "0.75rem", color: tk.text.muted }}>nodes: {projectedGraph.nodeCount}</Typography>
-            <Typography sx={{ fontSize: "0.75rem", color: tk.text.muted }}>edges: {projectedGraph.edgeCount}</Typography>
+          <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 1, columnGap: 1.5, rowGap: 0.5 }}>
+            <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted }}>
+              {t("graph.layerCounts.server", { n: String(graph.nodeCount), e: String(graph.edgeCount) })}
+            </Typography>
+            <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted }}>
+              {t("graph.layerCounts.projected", { n: String(projectedGraph.nodeCount), e: String(projectedGraph.edgeCount) })}
+            </Typography>
+            <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted }}>
+              {t("graph.layerCounts.visible", { n: String(visibleGraph.nodeCount), e: String(visibleGraph.edgeCount) })}
+            </Typography>
+            <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted }}>
+              {t("graph.layerCounts.display", { n: String(displayGraph.nodeCount), e: String(displayGraph.edgeCount) })}
+            </Typography>
           </Box>
           {traceSummary.length > 0 ? <Alert severity="info" sx={{ mt: 1 }}>Opened from traceability context: {traceSummary.join(" · ")}</Alert> : null}
           {projectedGraph.nodeCount === 0 ? <Alert severity="info" sx={{ mt: 1 }}>This response has no nodes yet.</Alert> : null}
@@ -291,9 +302,25 @@ export default function GraphWorkspacePanel({
                 work_id: projectedGraph.workId,
                 meta: projectedGraph.meta,
                 selected_node_id: resolvedSelectedNodeId,
+                selected_node_id_projected: projectedResolvedNodeId,
                 selected_edge_id: resolvedSelectedEdgeId,
-                node_count: projectedGraph.nodeCount,
-                edge_count: projectedGraph.edgeCount,
+                counts: {
+                  normalized_server: { nodes: graph.nodeCount, edges: graph.edgeCount },
+                  projected: { nodes: projectedGraph.nodeCount, edges: projectedGraph.edgeCount },
+                  visible_after_nodes_filter: { nodes: visibleGraph.nodeCount, edges: visibleGraph.edgeCount },
+                  display_after_ui_cap: { nodes: displayGraph.nodeCount, edges: displayGraph.edgeCount },
+                },
+                visibility_filter: {
+                  types: graphVisibility.types,
+                  show_external_works: graphVisibility.showExternalWorks,
+                  show_claims: Array.isArray(graphVisibility.types) && graphVisibility.types.includes("Claim"),
+                  hidden_nodes_by_type: visibilityStats.hiddenNodesByType,
+                  hidden_nodes_as_external: visibilityStats.hiddenNodesAsExternal,
+                  hidden_nodes_as_claims_extension: visibilityStats.hiddenNodesAsClaims,
+                  hidden_edges_due_to_nodes: visibilityStats.hiddenEdges,
+                },
+                hidden_nodes_ui_cap_estimate: Math.max(0, visibleGraph.nodeCount - displayGraph.nodeCount),
+                hidden_edges_ui_cap_estimate: Math.max(0, visibleGraph.edgeCount - displayGraph.edgeCount),
                 warnings: projectedGraph.warnings,
                 ui_cap_warnings: capWarnings,
               }}

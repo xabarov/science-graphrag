@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import { deriveInspectorDetail } from "./graphInspectorModel.js";
 import { normalizeGraphPayload } from "./graphViewState.js";
-import { capGraphForUi, GRAPH_UI_MAX_EDGES, GRAPH_UI_MAX_NODES } from "./graphUiLimits.js";
+import { capGraphForUi } from "./graphUiLimits.js";
 
 describe("graphUiLimits", () => {
-  it("returns same graph reference when under caps (stable for selection re-renders)", () => {
+  it("returns same graph reference and no warnings", () => {
     const graph = {
       nodes: [{ id: "a" }, { id: "b" }],
       edges: [{ source: "a", target: "b" }],
@@ -17,27 +17,51 @@ describe("graphUiLimits", () => {
     expect(displayGraph.edges).toHaveLength(1);
   });
 
-  it("truncates nodes and warns", () => {
-    const nodes = Array.from({ length: GRAPH_UI_MAX_NODES + 10 }, (_, i) => ({ id: `n${i}` }));
+  it("does not truncate large node sets", () => {
+    const nodes = Array.from({ length: 500 }, (_, i) => ({ id: `n${i}` }));
     const graph = { nodes, edges: [] };
     const { displayGraph, capWarnings } = capGraphForUi(graph);
-    expect(displayGraph.nodes).toHaveLength(GRAPH_UI_MAX_NODES);
-    expect(capWarnings.some((w) => w.includes("Performance cap"))).toBe(true);
+    expect(displayGraph.nodes).toHaveLength(500);
+    expect(capWarnings).toHaveLength(0);
   });
 
-  it("truncates edges after node cap and warns on edge cap", () => {
+  it("does not truncate large edge sets", () => {
     const nodes = Array.from({ length: 5 }, (_, i) => ({ id: `n${i}` }));
-    const edges = Array.from({ length: GRAPH_UI_MAX_EDGES + 5 }, (_, i) => ({
+    const edges = Array.from({ length: 700 }, (_, i) => ({
       source: "n0",
       target: `n${1 + (i % 4)}`,
     }));
     const graph = { nodes, edges };
     const { displayGraph, capWarnings } = capGraphForUi(graph);
-    expect(displayGraph.edges.length).toBeLessThanOrEqual(GRAPH_UI_MAX_EDGES);
-    expect(capWarnings.length).toBeGreaterThanOrEqual(1);
+    expect(displayGraph.edges).toHaveLength(700);
+    expect(capWarnings).toHaveLength(0);
   });
 
-  it("inspector author rows need full graph: cap can drop Work and AUTHORED edges", () => {
+  it("keeps connected author-work pair in full graph", () => {
+    const filler = Array.from({ length: 200 }, (_, i) => ({ id: `n${i}`, type: "Work" }));
+    const graph = {
+      nodes: [...filler, { id: "a1", type: "Author" }, { id: "w1", type: "Work" }],
+      edges: [{ id: "e1", source: "w1", target: "a1", type: "AUTHORED" }],
+    };
+    const { displayGraph } = capGraphForUi(graph, "");
+    expect(displayGraph.nodes.some((n) => n.id === "a1")).toBe(true);
+    expect(displayGraph.nodes.some((n) => n.id === "w1")).toBe(true);
+    expect(displayGraph.edges).toHaveLength(1);
+  });
+
+  it("keeps preferred connected node and its neighborhood when explicitly selected", () => {
+    const filler = Array.from({ length: 200 }, (_, i) => ({ id: `n${i}`, type: "Work" }));
+    const graph = {
+      nodes: [...filler, { id: "a1", type: "Author" }, { id: "w1", type: "Work" }],
+      edges: [{ id: "e1", source: "w1", target: "a1", type: "AUTHORED" }],
+    };
+    const { displayGraph } = capGraphForUi(graph, "a1");
+    expect(displayGraph.nodes.some((n) => n.id === "a1")).toBe(true);
+    expect(displayGraph.nodes.some((n) => n.id === "w1")).toBe(true);
+    expect(displayGraph.edges).toHaveLength(1);
+  });
+
+  it("inspector author rows still need the underlying full graph shape", () => {
     const full = normalizeGraphPayload({
       nodes: [
         { id: "w1", type: "Work", label: "Paper", node_kind: "Work" },
@@ -49,14 +73,5 @@ describe("graphUiLimits", () => {
     expect(deriveInspectorDetail(full, "a1", "").authorAuthoredWorks).toHaveLength(1);
     const { displayGraph } = capGraphForUi({ ...full, nodes: [full.nodes[1]], edges: [] }, "a1");
     expect(deriveInspectorDetail(displayGraph, "a1", "").authorAuthoredWorks).toHaveLength(0);
-  });
-
-  it("keeps preferred node id inside the node cap when possible", () => {
-    const nodes = Array.from({ length: GRAPH_UI_MAX_NODES + 3 }, (_, i) => ({ id: `n${i}` }));
-    const graph = { nodes, edges: [] };
-    const preferred = `n${GRAPH_UI_MAX_NODES + 1}`;
-    const { displayGraph, capWarnings } = capGraphForUi(graph, preferred);
-    expect(capWarnings.length).toBeGreaterThan(0);
-    expect(displayGraph.nodes.some((n) => n.id === preferred)).toBe(true);
   });
 });

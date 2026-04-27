@@ -32,7 +32,6 @@ from science_graphrag.api.workspace_graph.projection import (
 from science_graphrag.config import Settings
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 
-MAX_NEIGHBORS_CAP = 300
 SEMANTIC_REL_TYPES_LIST = sorted(
     {"USES_METHOD", "EVALUATED_ON", "HAS_AUTHORSHIP", "OF_AUTHOR", "AFFILIATED_WITH"}
 )
@@ -92,17 +91,17 @@ def project_workspace_graph(
     depth: int = 1,
     include_external: bool = False,
     node_types: str | None = None,
-    neighbor_limit: int = 200,
+    neighbor_limit: int | None = None,
     external_min_internal_citers: int = 0,
     prioritize: str | None = None,
     view: str = "reader",
     include_claims: bool = False,
-    claims_per_work: int = 12,
-    claims_max_total: int = 120,
+    claims_per_work: int | None = None,
+    claims_max_total: int | None = None,
 ) -> dict[str, Any] | None:
     mode_norm = (mode or "inner_only").strip().lower()
     depth_eff = 2 if int(depth) >= 2 else 1
-    cap = min(MAX_NEIGHBORS_CAP, max(1, min(int(neighbor_limit), 2000)))
+    cap = None if neighbor_limit is None else max(1, int(neighbor_limit))
     types_list = parse_node_types_csv(node_types)
     claims_slice_meta: dict[str, Any] = {
         "include_claims": bool(include_claims),
@@ -223,7 +222,7 @@ def project_workspace_graph(
                         session,
                         workspace_id=workspace_id,
                         internal_ids=internal_ids,
-                        cap=max(30, cap // 2),
+                    cap=max(30, (cap or max(30, len(internal_ids) * 4)) // 2),
                     )
                     nodes, edges = merge_nodes_edges_lists(nodes, edges, an, ae)
                     truncated = truncated or atr
@@ -249,8 +248,8 @@ def project_workspace_graph(
             cn, ce, cmeta = build_claim_graph_slice_for_workspace(
                 session,
                 workspace_id,
-                claims_per_work=max(1, min(int(claims_per_work), 80)),
-                max_claims_total=max(1, min(int(claims_max_total), 500)),
+                claims_per_work=None if claims_per_work is None else max(1, int(claims_per_work)),
+                max_claims_total=None if claims_max_total is None else max(1, int(claims_max_total)),
             )
             nodes, edges = merge_nodes_edges_lists(nodes, edges, cn, ce)
             claims_slice_meta = {
@@ -365,7 +364,7 @@ def workspace_graph_neighbors(
     nid = (node_id or "").strip()
     if not nid:
         return None
-    lim = max(1, min(int(limit), MAX_NEIGHBORS_CAP))
+    lim = max(1, int(limit))
     depth_req = max(1, min(int(depth), 2))
     hop1_lim = lim if depth_req <= 1 else max(1, lim // 2)
     hop2_lim = max(1, lim - hop1_lim) if depth_req >= 2 else 0

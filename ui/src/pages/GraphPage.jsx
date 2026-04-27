@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
@@ -6,8 +6,6 @@ import Popover from "@mui/material/Popover";
 import TextField from "@mui/material/TextField";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
-import ToggleButton from "@mui/material/ToggleButton";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import CheckOutlinedIcon from "@mui/icons-material/CheckOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
@@ -20,7 +18,12 @@ import { useWorkspaceContext } from "../components/layout/useWorkspaceContext.js
 import GraphWorkspacePanel from "../components/graph/GraphWorkspacePanel.jsx";
 import { GraphMissingWorkCallout } from "../components/graph/graphShellStates.jsx";
 import { persistWorkId } from "./WorkspacePage/utils/workContext.js";
-import { mergeTraceabilityParams, readTraceabilityState } from "../components/work/traceabilityState.js";
+import {
+  mergeTraceabilityStateWithHashSelection,
+  readTraceabilityState,
+  replaceHashTraceabilitySelection,
+} from "../components/work/traceabilityState.js";
+import { useHashTraceabilityGraphSelection } from "../components/work/useHashTraceabilityGraphSelection.js";
 import { readGraphPageLayoutFlags, preserveGraphPageOptionalParams } from "./graphPageUrl.js";
 import { useI18n } from "../i18n/useI18n.js";
 
@@ -32,7 +35,9 @@ export default function GraphPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initial = searchParams.get("work_id") || "";
   const [workIdInput, setWorkIdInput] = useState(initial);
-  const trace = readTraceabilityState(searchParams);
+  const traceRouter = useMemo(() => readTraceabilityState(searchParams), [searchParams]);
+  const hashSel = useHashTraceabilityGraphSelection();
+  const trace = useMemo(() => mergeTraceabilityStateWithHashSelection(traceRouter, hashSel), [traceRouter, hashSel]);
   const workId = trace.workId;
   const workspaceId = trace.workspaceId;
   const workspaceIdFromUrl = workspaceId.trim();
@@ -43,10 +48,28 @@ export default function GraphPage() {
   const effectiveWorkspaceId = workIdTrimmed
     ? workspaceIdFromUrl
     : workspaceIdFromUrl || String(activeWorkspaceId || "").trim();
-  const selectedNodeId = trace.nodeId;
-  const selectedEdgeId = trace.edgeId;
+  const graphTargetKey = `${workIdTrimmed}|${effectiveWorkspaceId}`;
+  const [selectedTrace, setSelectedTrace] = useState(() => ({
+    targetKey: graphTargetKey,
+    nodeId: trace.nodeId,
+    edgeId: trace.edgeId,
+  }));
+
+  useEffect(() => {
+    // Sync local selection with URL/hash when scope or deep link changes (replaceState bypasses Router).
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional URL↔state sync
+    setSelectedTrace((prev) => {
+      if (prev.targetKey !== graphTargetKey) {
+        return { targetKey: graphTargetKey, nodeId: trace.nodeId, edgeId: trace.edgeId };
+      }
+      if (prev.nodeId === trace.nodeId && prev.edgeId === trace.edgeId) return prev;
+      return { ...prev, nodeId: trace.nodeId, edgeId: trace.edgeId };
+    });
+  }, [graphTargetKey, trace.nodeId, trace.edgeId]);
+
+  const selectedNodeId = selectedTrace.targetKey === graphTargetKey ? selectedTrace.nodeId : trace.nodeId;
+  const selectedEdgeId = selectedTrace.targetKey === graphTargetKey ? selectedTrace.edgeId : trace.edgeId;
   const labMode = searchParams.get("lab") === "1";
-  const graphDepth = searchParams.get("graph_depth") === "2" ? 2 : 1;
   const { compact, focus, compactLayout } = readGraphPageLayoutFlags(searchParams);
   const chromeDense = compact || focus;
 
@@ -90,22 +113,24 @@ export default function GraphPage() {
     setLoadAnchor(null);
   }
 
+  const handleReconcileSelection = useCallback(
+    ({ nodeId, edgeId }) => {
+      setSelectedTrace({ targetKey: graphTargetKey, nodeId, edgeId });
+      replaceHashTraceabilitySelection({ nodeId, edgeId });
+    },
+    [graphTargetKey],
+  );
+
   function handleSelectNode(nodeId) {
-    const params = mergeTraceabilityParams(searchParams, { nodeId, edgeId: "" });
-    setSearchParams(params, { replace: false });
+    const next = String(nodeId || "").trim();
+    setSelectedTrace({ targetKey: graphTargetKey, nodeId: next, edgeId: "" });
+    replaceHashTraceabilitySelection({ nodeId: next, edgeId: "" });
   }
 
   function handleSelectEdge(edgeId) {
-    const params = mergeTraceabilityParams(searchParams, { edgeId, nodeId: "" });
-    setSearchParams(params, { replace: false });
-  }
-
-  function handleStandaloneGraphDepth(_ev, nextDepth) {
-    if (nextDepth == null) return;
-    const params = new URLSearchParams(searchParams);
-    if (nextDepth === 2) params.set("graph_depth", "2");
-    else params.delete("graph_depth");
-    setSearchParams(params, { replace: true });
+    const next = String(edgeId || "").trim();
+    setSelectedTrace({ targetKey: graphTargetKey, nodeId: "", edgeId: next });
+    replaceHashTraceabilitySelection({ nodeId: "", edgeId: next });
   }
 
   return (
@@ -136,44 +161,6 @@ export default function GraphPage() {
         }}
       >
         <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.9)" }}>{t("graph.toolbar.title")}</Typography>
-        {workId.trim() && !effectiveWorkspaceId ? (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flexWrap: "wrap" }}>
-            <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.45)" }}>{t("graph.wsToolbar.depthLabel")}</Typography>
-            <ToggleButtonGroup
-              size="small"
-              exclusive
-              value={graphDepth}
-              onChange={handleStandaloneGraphDepth}
-              sx={{
-                "& .MuiToggleButton-root": {
-                  fontSize: "0.72rem",
-                  py: 0.15,
-                  px: 0.6,
-                  minWidth: 36,
-                  textTransform: "none",
-                  color: "rgba(255,255,255,0.55)",
-                  borderColor: "rgba(255,255,255,0.12)",
-                },
-                "& .Mui-selected": { color: "rgba(129,140,248,0.95)", backgroundColor: "rgba(99,102,241,0.12)" },
-              }}
-            >
-              <ToggleButton
-                value={1}
-                aria-label={t("graph.standaloneDepth.depth1Aria")}
-                title={t("graph.wsToolbar.depthTooltip1")}
-              >
-                {t("graph.wsToolbar.depthValue1")}
-              </ToggleButton>
-              <ToggleButton
-                value={2}
-                aria-label={t("graph.standaloneDepth.depth2Aria")}
-                title={t("graph.wsToolbar.depthTooltip2")}
-              >
-                {t("graph.wsToolbar.depthValue2")}
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </Box>
-        ) : null}
         <Box sx={{ flex: 1, minWidth: 8 }} />
         <Tooltip title={t("graph.toolbar.loadTooltip")} placement="bottom">
           <CursorIconButton
@@ -274,11 +261,11 @@ export default function GraphPage() {
           onSelectNode={handleSelectNode}
           selectedEdgeId={selectedEdgeId}
           onSelectEdge={handleSelectEdge}
+          onReconcileSelection={handleReconcileSelection}
           mode="standalone"
           compactLayout={compactLayout}
           focusLayout={focus}
           labMode={labMode}
-          standaloneWorkGraphDepth={graphDepth}
           title=""
           subtitle={null}
           traceContext={{

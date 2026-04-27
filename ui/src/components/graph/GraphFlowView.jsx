@@ -21,6 +21,7 @@ import { CursorSmallButton } from "../common/index.js";
 import { useI18n } from "../../i18n/useI18n.js";
 import { getScienceGraphNodeStyle } from "./graphCanvasStyle.js";
 import { buildReactFlowEdges, buildReactFlowNodes, getGraphLayoutSignature } from "./graphFlowAdapter.js";
+import { graphTelemetryEmit } from "./graphTelemetry.js";
 import { localizeEdgeType } from "./graphLocalize.js";
 
 const MIN_VIEW_HEIGHT = 280;
@@ -125,6 +126,7 @@ function GraphFlowInner({ graph, selectedNodeId, selectedEdgeId = "", onSelectNo
   }, [nextEdges, nextNodes, setEdges, setNodes]);
 
   useEffect(() => {
+    graphTelemetryEmit("reactFlowFitView", { layoutSignature });
     const id = window.requestAnimationFrame(() => {
       void fitView({ padding: 0.2, duration: 200 });
     });
@@ -165,18 +167,16 @@ function GraphFlowInner({ graph, selectedNodeId, selectedEdgeId = "", onSelectNo
 
   const onNodeClick = useCallback(
     (_evt, node) => {
-      onSelectEdge?.("");
       onSelectNode?.(node.id);
     },
-    [onSelectEdge, onSelectNode],
+    [onSelectNode],
   );
 
   const onEdgeClick = useCallback(
     (_evt, edge) => {
-      onSelectNode?.("");
       onSelectEdge?.(edge.id);
     },
-    [onSelectEdge, onSelectNode],
+    [onSelectEdge],
   );
 
   const onPaneClick = useCallback(() => {

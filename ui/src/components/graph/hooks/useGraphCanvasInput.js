@@ -181,7 +181,7 @@ export default function useGraphCanvasInput({
           fixedNodesRef.current.add(nodeId);
           setPinnedNodeCount(fixedNodesRef.current.size);
         }
-        if (!moved) onNodeClick?.(nodeId);
+        if (!moved) queueMicrotask(() => onNodeClick?.(nodeId));
         queueHoverPick(ev.clientX, ev.clientY);
         return;
       }
@@ -200,15 +200,15 @@ export default function useGraphCanvasInput({
         const posMap = getPositionsForFrame();
         const nodeId = hitTestNodeScreen(x, y, graph.nodes, posMap, transformRef.current, resolveNodeCanvasLabel);
         if (nodeId) {
-          onNodeClick?.(nodeId);
+          queueMicrotask(() => onNodeClick?.(nodeId));
           return;
         }
         const edgeId = hitTestClosestEdgeId(x, y, graph.edges, posMap, transformRef.current);
         if (edgeId) {
-          onEdgeClick?.(edgeId);
+          queueMicrotask(() => onEdgeClick?.(edgeId));
           return;
         }
-        onCanvasClick?.();
+        queueMicrotask(() => onCanvasClick?.());
       } else {
         queueHoverPick(ev.clientX, ev.clientY);
       }

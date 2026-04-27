@@ -5,7 +5,9 @@ import { describe, expect, it } from "vitest";
 
 import { I18nProvider } from "../../i18n/I18nContext.jsx";
 import { buildAppTheme } from "../../theme/buildAppTheme.js";
-import WorkspaceGraphToolbar, { graphToolbarLocalStorageKey } from "./WorkspaceGraphToolbar.jsx";
+import { defaultGraphVisibility } from "./graphVisibilityFilter.js";
+import { graphVisibilityLocalStorageKey } from "./hooks/useGraphWorkspaceData.js";
+import WorkspaceGraphToolbar from "./WorkspaceGraphToolbar.jsx";
 
 const ssrTheme = buildAppTheme("dark");
 
@@ -17,39 +19,32 @@ function withProviders(node) {
   );
 }
 
-const defaultValue = {
-  mode: "inner_only",
-  depth: 1,
-  includeExternal: false,
-  nodeTypesCsv: "Work,Author",
-  externalMinInternalCiters: 0,
-  includeClaims: false,
-};
+const defaultVisibility = defaultGraphVisibility();
 
-describe("WorkspaceGraphToolbar storage keys", () => {
-  it("matches per-workspace persist contract (Wave J)", () => {
-    const wid = "ws-abc";
-    expect(graphToolbarLocalStorageKey(wid, "Mode")).toBe("workspaceGraphMode:ws-abc");
-    expect(graphToolbarLocalStorageKey(wid, "Depth")).toBe("workspaceGraphDepth:ws-abc");
-    expect(graphToolbarLocalStorageKey(wid, "IncludeExternal")).toBe("workspaceGraphIncludeExternal:ws-abc");
-    expect(graphToolbarLocalStorageKey(wid, "NodeTypes")).toBe("workspaceGraphNodeTypes:ws-abc");
-    expect(graphToolbarLocalStorageKey(wid, "IncludeClaims")).toBe("workspaceGraphIncludeClaims:ws-abc");
+describe("graphVisibilityLocalStorageKey", () => {
+  it("uses v1 workspace key", () => {
+    expect(graphVisibilityLocalStorageKey("ws-abc", "")).toBe("workspaceGraphVisibility:v1:ws-abc");
   });
-
+  it("uses v1 standalone work key when workspace empty", () => {
+    expect(graphVisibilityLocalStorageKey("", "w-1")).toBe("graphWorkVisibility:v1:w-1");
+  });
+  it("prefers workspace id when both set", () => {
+    expect(graphVisibilityLocalStorageKey("ws-x", "w-1")).toBe("workspaceGraphVisibility:v1:ws-x");
+  });
   it("trims workspace id", () => {
-    expect(graphToolbarLocalStorageKey("  x  ", "Mode")).toBe("workspaceGraphMode:x");
+    expect(graphVisibilityLocalStorageKey("  x  ", "")).toBe("workspaceGraphVisibility:v1:x");
   });
 });
 
 describe("WorkspaceGraphToolbar render (SSR smoke)", () => {
-  it("renders workspace filters, depth 1°, nodes summary, and view chips (en)", () => {
+  it("renders Nodes menu, view chips, and stats (en workspace)", () => {
     const html = renderToString(
       withProviders(
         <WorkspaceGraphToolbar
           workspaceId="ws-1"
           stats={{ works_count: 3, authors_count: 10, external_citations: 34 }}
-          value={defaultValue}
-          onChange={() => {}}
+          visibility={defaultVisibility}
+          onVisibilityChange={() => {}}
           canvasMode
           localFindQuery=""
           onLocalFindChange={() => {}}
@@ -67,10 +62,9 @@ describe("WorkspaceGraphToolbar render (SSR smoke)", () => {
       ),
     );
     expect(html).toContain("Workspace graph");
-    expect(html).toContain("Scope:");
-    expect(html).toContain("Inner");
-    expect(html).toContain("1°");
-    expect(html).toContain("Nodes: 2/6");
+    expect(html).toContain("Nodes ·");
+    expect(html).not.toContain("Scope:");
+    expect(html).not.toContain("Depth");
     expect(html).toContain("Details");
     expect(html).toContain("Legend");
     expect(html).toContain("Diagnostics");
@@ -83,8 +77,8 @@ describe("WorkspaceGraphToolbar render (SSR smoke)", () => {
         <WorkspaceGraphToolbar
           workspaceId="ws-1"
           stats={null}
-          value={defaultValue}
-          onChange={() => {}}
+          visibility={defaultVisibility}
+          onVisibilityChange={() => {}}
           canvasMode={false}
           labMode
         />,
@@ -99,8 +93,8 @@ describe("WorkspaceGraphToolbar render (SSR smoke)", () => {
         <WorkspaceGraphToolbar
           workspaceId=""
           stats={null}
-          value={defaultValue}
-          onChange={() => {}}
+          visibility={defaultVisibility}
+          onVisibilityChange={() => {}}
           canvasMode={false}
           labMode={false}
         />,
@@ -110,20 +104,21 @@ describe("WorkspaceGraphToolbar render (SSR smoke)", () => {
     expect(html).not.toContain("Workspace graph");
   });
 
-  it("shows claims toggle for standalone work graph when contextWorkId set", () => {
+  it("renders Nodes menu for standalone work graph when contextWorkId set", () => {
     const html = renderToString(
       withProviders(
         <WorkspaceGraphToolbar
           workspaceId=""
           contextWorkId="w-uuid-1"
           stats={null}
-          value={{ ...defaultValue, includeClaims: true }}
-          onChange={() => {}}
+          visibility={{ ...defaultVisibility, types: [...defaultVisibility.types, "Claim"] }}
+          onVisibilityChange={() => {}}
           canvasMode={false}
           labMode={false}
         />,
       ),
     );
-    expect(html).toContain("Claims");
+    expect(html).toContain("Nodes ·");
+    expect(html).not.toContain("Workspace graph");
   });
 });

@@ -31,13 +31,25 @@ def get_workspace_graph(
     ),
     prioritize: str | None = Query(default="Method,Dataset,Work"),
     view: str = Query(default="reader", description="reader | raw"),
-    neighbor_limit: int = Query(default=200, ge=1, le=2000),
+    neighbor_limit: int | None = Query(
+        default=None,
+        ge=1,
+        description="Optional projection cap; omit for uncapped workspace graph.",
+    ),
     include_claims: bool = Query(
         default=False,
         description="Attach capped Claim nodes + Work-[:HAS_CLAIM]->Claim (ignored in union_1hop mode).",
     ),
-    claims_per_work: int = Query(default=12, ge=1, le=80),
-    claims_max_total: int = Query(default=120, ge=1, le=500),
+    claims_per_work: int | None = Query(
+        default=None,
+        ge=1,
+        description="Optional per-work claims cap; omit for uncapped claim slices.",
+    ),
+    claims_max_total: int | None = Query(
+        default=None,
+        ge=1,
+        description="Optional total claims cap; omit for uncapped claim slices.",
+    ),
     settings: Settings = Depends(get_settings),
     stores: StoreRegistry = Depends(get_stores),
 ) -> dict[str, Any]:

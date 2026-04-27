@@ -15,6 +15,27 @@ export default {
   "graph.workspacePanel.tooltipDiagnosticsHide": "Скрыть JSON диагностики",
   "graph.workspacePanel.tooltipDiagnosticsShow": "Показать JSON диагностики",
 
+  "graph.layerCounts.server": "Сервер: {{n}} узл. · {{e}} рёбер",
+  "graph.layerCounts.projected": "Проекция: {{n}} · {{e}}",
+  "graph.layerCounts.visible": "Видимо (меню «Узлы»): {{n}} · {{e}}",
+  "graph.layerCounts.display": "На экране (лимит UI): {{n}} · {{e}}",
+
+  "graph.wsToolbar.nodesMenuButtonLabel": "Узлы · {{typesOn}}/{{typesTotal}}{{extras}}",
+  "graph.wsToolbar.nodesMenuButtonTooltip":
+    "Выберите типы узлов для отображения (включая внешние процитированные работы). Полный граф с сервера загружается всегда; здесь только клиентский фильтр.",
+  "graph.wsToolbar.nodesMenuPopoverTitle": "Узлы",
+  "graph.wsToolbar.nodesMenuPopoverHint":
+    "Бэкенд отдаёт полную окрестность; это меню скрывает категории только в интерфейсе для читаемости.",
+  "graph.wsToolbar.nodesSectionTypes": "Типы узлов",
+  "graph.wsToolbar.nodesSectionExtensions": "Расширения",
+  "graph.wsToolbar.extensionExternalCites": "Внешние цитаты",
+  "graph.wsToolbar.extensionExternalCitesDesc": "Показывать процитированные вне области работы (membership=external).",
+  "graph.wsToolbar.extensionClaims": "Утверждения (claims)",
+  "graph.wsToolbar.extensionClaimsDesc":
+    "Разрешить узлы утверждений: при включении можно отметить тип «Утверждение» в списке выше.",
+  "graph.wsToolbar.nodesExtraExtShort": "внеш.",
+  "graph.wsToolbar.nodesExtraClaimsShort": "утв.",
+
   "graph.wsToolbar.title": "Граф рабочей области",
   "graph.wsToolbar.modeInner": "Внутренний",
   "graph.wsToolbar.modeUnion1hop": "Объединение +1",
@@ -37,12 +58,13 @@ export default {
   "graph.wsToolbar.externalLabel": "Внешние цитаты",
   "graph.wsToolbar.externalTooltip":
     "Показать работы вне области, на которые ссылаются ваши статьи (только при ≥2 внутренних ссылках на каждую)",
-  "graph.wsToolbar.includeClaimsLabel": "Claims",
+  "graph.wsToolbar.includeClaimsLabel": "Утверждения (claims)",
   "graph.wsToolbar.includeClaimsTooltip":
-    "Показать извлечённые claims, привязанные к работам (лимит на сервере; режим Union 1-hop не поддерживает).",
+    "Показать извлечённые утверждения (claims), привязанные к работам. Полный набор загружается с сервера; отображение — в меню «Узлы».",
   "graph.wsToolbar.nodeTypesSummary": "Узлы: {{selected}}/{{total}}",
   "graph.wsToolbar.nodeTypesPopoverTitle": "Какие сущности показывать",
-  "graph.wsToolbar.nodeTypesButtonTooltip": "Выберите типы узлов для запроса графа",
+  "graph.wsToolbar.nodeTypesButtonTooltip": "Выбор видимых типов узлов (фильтр на клиенте)",
+  "graph.wsToolbar.nodeTypeDesc.Claim": "Извлечённые утверждения по статьям в загруженном графе",
   "graph.wsToolbar.nodeTypeDesc.Work": "Научные статьи",
   "graph.wsToolbar.nodeTypeDesc.Author": "Учёные и соавторы",
   "graph.wsToolbar.nodeTypeDesc.Method": "Алгоритмы и подходы",
@@ -68,7 +90,7 @@ export default {
   "graph.wsToolbar.nodeType.Dataset": "Датасет",
   "graph.wsToolbar.nodeType.Venue": "Площадка",
   "graph.wsToolbar.nodeType.Institution": "Организация",
-  "graph.wsToolbar.nodeType.Claim": "Claim",
+  "graph.wsToolbar.nodeType.Claim": "Утверждение",
 
   "graph.edgeType.HAS_AUTHORSHIP": "написана",
   "graph.edgeType.AUTHORED": "написал(а)",
@@ -83,7 +105,7 @@ export default {
   "graph.edgeType.SUPPORTS": "поддерживает",
   "graph.edgeType.CONTRADICTS": "противоречит",
   "graph.edgeType.MENTIONS": "упоминает",
-  "graph.edgeType.HAS_CLAIM": "содержит claim",
+  "graph.edgeType.HAS_CLAIM": "содержит утверждение",
   "graph.edgeType.AGGREGATED": "свернутая окрестность",
   "graph.edgeType.EDGE": "связь",
   "graph.edgeType._other": "{{type}}",
@@ -94,7 +116,7 @@ export default {
   "graph.nodeKind.AuthorshipReification": "Авторство",
   "graph.nodeKind.Authorship": "Авторство",
   "graph.nodeKind.Node": "Узел",
-  "graph.nodeKind.Claim": "Claim",
+  "graph.nodeKind.Claim": "Утверждение",
 
   "graph.aggregator.subtitleExpand": "Нажмите, чтобы развернуть",
   "graph.aggregator.kind.author_of_work": "{{count}} авторов работы",

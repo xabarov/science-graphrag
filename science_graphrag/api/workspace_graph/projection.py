@@ -298,6 +298,9 @@ def apply_workspace_aggregators(
     threshold: int = AGGREGATOR_THRESHOLD,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     node_by_id = {str(n.get("id") or ""): n for n in nodes}
+    # Keep authorship structures explicit in the backend payload: the frontend reader projection
+    # collapses them into Work->Author edges and would otherwise leave orphan Author nodes.
+    non_aggregated_kinds = {"Author", "Authorship", "AuthorshipReification"}
     groups: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
     for edge in edges:
         src = str(edge.get("source") or "")
@@ -311,6 +314,8 @@ def apply_workspace_aggregators(
             if not owner or not other or str(owner.get("type") or "") != "Work":
                 continue
             other_kind = str(other.get("node_kind") or other.get("type") or "Node")
+            if other_kind in non_aggregated_kinds:
+                continue
             groups.setdefault((owner_id, other_kind, edge_type), []).append(edge)
     remove_nodes: set[str] = set()
     remove_edges: set[str] = set()

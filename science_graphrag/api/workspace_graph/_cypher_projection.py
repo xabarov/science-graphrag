@@ -14,21 +14,24 @@ def run_projection_rows(
     session: Any,
     query: str,
     params_base: dict[str, Any],
-    cap: int,
+    cap: int | None,
     prioritize: str | None,
     extract_taken: str,
 ) -> list[Any]:
     priority_types = parse_priority_csv(prioritize)
+    query_has_limit = "LIMIT $lim" in query
+    query_run = f"{query} LIMIT $lim" if cap is not None and not query_has_limit else query
     params_primary = {
         **params_base,
         "preferPriority": True,
         "priorityTypes": list(priority_types),
         "excludeEmpty": True,
         "excludeIds": [],
-        "lim": cap,
     }
-    primary_rows = list(session.run(query, **params_primary))
-    primary_take = min(len(primary_rows), max(cap // 2, cap - 50))
+    if cap is not None:
+        params_primary["lim"] = cap
+    primary_rows = list(session.run(query_run, **params_primary))
+    primary_take = len(primary_rows) if cap is None else min(len(primary_rows), max(cap // 2, cap - 50))
     selected_rows = primary_rows[:primary_take]
     taken_ids: set[str] = set()
     for rec in selected_rows:
@@ -37,20 +40,22 @@ def run_projection_rows(
             node_id = str(dict(node).get("id") or node.element_id)
             if node_id:
                 taken_ids.add(node_id)
-    rest_lim = max(0, cap - len(selected_rows))
-    if rest_lim > 0:
+    rest_lim = None if cap is None else max(0, cap - len(selected_rows))
+    if rest_lim is None or rest_lim > 0:
+        params_secondary = {
+            **params_base,
+            "preferPriority": False,
+            "priorityTypes": list(priority_types),
+            "excludeEmpty": not bool(taken_ids),
+            "excludeIds": list(taken_ids),
+        }
+        if rest_lim is not None:
+            params_secondary["lim"] = rest_lim
         selected_rows.extend(
             list(
                 session.run(
-                    query,
-                    **{
-                        **params_base,
-                        "preferPriority": False,
-                        "priorityTypes": list(priority_types),
-                        "excludeEmpty": not bool(taken_ids),
-                        "excludeIds": list(taken_ids),
-                        "lim": rest_lim,
-                    },
+                    query_run,
+                    **params_secondary,
                 )
             )
         )
@@ -64,7 +69,7 @@ def build_from_depth1_rows(
     include_external: bool,
     node_types: list[str] | None,
     semantic_only: bool,
-    cap: int,
+    cap: int | None,
     prioritize: str | None,
     ignore_node_type_filter: bool,
     semantic_rel_types: list[str],
@@ -82,7 +87,7 @@ def build_from_depth1_rows(
         "AND (($preferPriority AND any(l IN labels(b) WHERE l IN $priorityTypes)) "
         "OR ((NOT $preferPriority) AND NOT any(l IN labels(b) WHERE l IN $priorityTypes))) "
         "AND ($excludeEmpty OR NOT coalesce(b.id, toString(elementId(b))) IN $excludeIds) "
-        f"{sem_clause}RETURN DISTINCT a, r, b LIMIT $lim"
+        f"{sem_clause}RETURN DISTINCT a, r, b"
     )
     rows = run_projection_rows(
         session,
@@ -111,7 +116,7 @@ def build_from_depth1_rows(
         if na and nb and rel is not None:
             edge = edge_dict_from_rel(a, b, rel, len(edges_by_key))
             edges_by_key[edge_key(edge["source"], edge["type"], edge["target"])] = edge
-    return list(nodes_by_id.values()), list(edges_by_key.values()), len(rows) >= cap
+    return list(nodes_by_id.values()), list(edges_by_key.values()), False if cap is None else len(rows) >= cap
 
 
 def build_from_depth2_rows(
@@ -121,7 +126,7 @@ def build_from_depth2_rows(
     include_external: bool,
     node_types: list[str] | None,
     semantic_only: bool,
-    cap: int,
+    cap: int | None,
     prioritize: str | None,
     ignore_node_type_filter: bool,
     semantic_rel_types: list[str],
@@ -140,9 +145,9 @@ def build_from_depth2_rows(
         "AND (($preferPriority AND any(l IN labels(b) WHERE l IN $priorityTypes)) "
         "OR ((NOT $preferPriority) AND NOT any(l IN labels(b) WHERE l IN $priorityTypes))) "
         "AND ($excludeEmpty OR NOT coalesce(b.id, toString(elementId(b))) IN $excludeIds) "
-        f"{sem_clause}RETURN DISTINCT a, r1, m, r2, b LIMIT $lim"
+        f"{sem_clause}RETURN DISTINCT a, r1, m, r2, b"
     )
-    lim = max(1, cap // 2)
+    lim = None if cap is None else max(1, cap // 2)
     rows = run_projection_rows(
         session,
         query,
@@ -171,4 +176,4 @@ def build_from_depth2_rows(
         if m is not None and b is not None and r2 is not None:
             e2 = edge_dict_from_rel(m, b, r2, len(edges_by_key))
             edges_by_key[edge_key(e2["source"], e2["type"], e2["target"])] = e2
-    return list(nodes_by_id.values()), list(edges_by_key.values()), len(rows) >= lim
+    return list(nodes_by_id.values()), list(edges_by_key.values()), False if lim is None else len(rows) >= lim

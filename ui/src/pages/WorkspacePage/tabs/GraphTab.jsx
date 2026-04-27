@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -15,9 +15,11 @@ import {
   buildStandaloneChatPath,
   buildStandaloneTracePath,
   buildWorkspaceTracePath,
-  mergeTraceabilityParams,
+  mergeTraceabilityStateWithHashSelection,
   readTraceabilityState,
+  replaceHashTraceabilitySelection,
 } from "../../../components/work/traceabilityState.js";
+import { useHashTraceabilityGraphSelection } from "../../../components/work/useHashTraceabilityGraphSelection.js";
 import { useI18n } from "../../../i18n/useI18n.js";
 
 /**
@@ -25,24 +27,54 @@ import { useI18n } from "../../../i18n/useI18n.js";
  */
 export default function GraphTab({ workId }) {
   const { t } = useI18n();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const trace = readTraceabilityState(searchParams);
-  const selectedNodeId = trace.nodeId;
-  const selectedEdgeId = trace.edgeId;
+  const [searchParams] = useSearchParams();
+  const traceRouter = useMemo(() => readTraceabilityState(searchParams), [searchParams]);
+  const hashSel = useHashTraceabilityGraphSelection();
+  const trace = useMemo(() => mergeTraceabilityStateWithHashSelection(traceRouter, hashSel), [traceRouter, hashSel]);
+  const graphTargetKey = String(workId || "").trim();
+  const [selectedTrace, setSelectedTrace] = useState(() => ({
+    targetKey: graphTargetKey,
+    nodeId: trace.nodeId,
+    edgeId: trace.edgeId,
+  }));
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional URL↔state sync
+    setSelectedTrace((prev) => {
+      if (prev.targetKey !== graphTargetKey) {
+        return { targetKey: graphTargetKey, nodeId: trace.nodeId, edgeId: trace.edgeId };
+      }
+      if (prev.nodeId === trace.nodeId && prev.edgeId === trace.edgeId) return prev;
+      return { ...prev, nodeId: trace.nodeId, edgeId: trace.edgeId };
+    });
+  }, [graphTargetKey, trace.nodeId, trace.edgeId]);
+
+  const selectedNodeId = selectedTrace.targetKey === graphTargetKey ? selectedTrace.nodeId : trace.nodeId;
+  const selectedEdgeId = selectedTrace.targetKey === graphTargetKey ? selectedTrace.edgeId : trace.edgeId;
   const labMode = searchParams.get("lab") === "1";
 
-  if (!workId.trim()) {
-    return <GraphMissingWorkInline message={t("wsTab.graph.pickWork")} />;
-  }
+  const handleReconcileSelection = useCallback(
+    ({ nodeId, edgeId }) => {
+      setSelectedTrace({ targetKey: graphTargetKey, nodeId, edgeId });
+      replaceHashTraceabilitySelection({ nodeId, edgeId });
+    },
+    [graphTargetKey],
+  );
 
   function handleSelectNode(nodeId) {
-    const params = mergeTraceabilityParams(searchParams, { nodeId, edgeId: "" });
-    setSearchParams(params, { replace: false });
+    const next = String(nodeId || "").trim();
+    setSelectedTrace({ targetKey: graphTargetKey, nodeId: next, edgeId: "" });
+    replaceHashTraceabilitySelection({ nodeId: next, edgeId: "" });
   }
 
   function handleSelectEdge(edgeId) {
-    const params = mergeTraceabilityParams(searchParams, { edgeId, nodeId: "" });
-    setSearchParams(params, { replace: false });
+    const next = String(edgeId || "").trim();
+    setSelectedTrace({ targetKey: graphTargetKey, nodeId: "", edgeId: next });
+    replaceHashTraceabilitySelection({ nodeId: "", edgeId: next });
+  }
+
+  if (!workId.trim()) {
+    return <GraphMissingWorkInline message={t("wsTab.graph.pickWork")} />;
   }
 
   return (
@@ -104,6 +136,7 @@ export default function GraphTab({ workId }) {
         onSelectNode={handleSelectNode}
         selectedEdgeId={selectedEdgeId}
         onSelectEdge={handleSelectEdge}
+        onReconcileSelection={handleReconcileSelection}
         mode="embedded"
         labMode={labMode}
         title={t("workspace.header.workspaceGraph")}

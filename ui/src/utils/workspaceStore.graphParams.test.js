@@ -28,4 +28,21 @@ describe("getWorkspaceGraph query params", () => {
     expect(url).toContain("external_min_internal_citers=2");
     expect(url).toContain("neighbor_limit=120");
   });
+
+  it("supports full workspace graph request without node_types", async () => {
+    const spy = vi.spyOn(apiClient, "get").mockResolvedValue({ data: { nodes: [], edges: [], meta: {} } });
+    await getWorkspaceGraph("ws-1", {
+      neighborLimit: 200,
+      mode: "full",
+      depth: 2,
+      includeExternal: true,
+      includeClaims: true,
+    });
+    const url = spy.mock.calls[0][0];
+    expect(url).toContain("mode=full");
+    expect(url).toContain("depth=2");
+    expect(url).toContain("include_external=true");
+    expect(url).toContain("include_claims=true");
+    expect(url).not.toContain("node_types=");
+  });
 });

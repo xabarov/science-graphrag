@@ -1,6 +1,9 @@
 import { normalizeWorkspaceTab } from "../../pages/WorkspacePage/utils/workContext.js";
 import { CHAT_PATH } from "../../routes/paths.js";
 
+/** Dispatched after {@link replaceHashTraceabilitySelection} so HashRouter consumers re-read the hash. */
+export const TRACEABILITY_HASH_SELECTION_EVENT = "science-graphrag:traceability-hash-selection";
+
 export const TRACEABILITY_QUERY_KEYS = {
   workId: "work_id",
   workspaceId: "workspace_id",
@@ -24,6 +27,41 @@ function trimOrEmpty(value) {
  * @param {URLSearchParams | { get: (key: string) => string | null }} searchParams
  * @returns {{workId: string, workspaceId: string, tab: string, nodeId: string, edgeId: string, chunkFingerprint: string, section: string, citation: string, askSession: string}}
  */
+/**
+ * Read graph selection (`node`, `edge`) from the current `window.location.hash` query.
+ * Used when selection is updated via `history.replaceState` (React Router may lag).
+ *
+ * @returns {{ nodeId: string, edgeId: string, hashHasQuery: boolean }}
+ */
+export function readTraceabilityGraphSelectionFromHash() {
+  if (typeof window === "undefined") {
+    return { nodeId: "", edgeId: "", hashHasQuery: false };
+  }
+  const hash = window.location.hash || "#/";
+  const queryAt = hash.indexOf("?");
+  if (queryAt < 0) {
+    return { nodeId: "", edgeId: "", hashHasQuery: false };
+  }
+  const params = new URLSearchParams(hash.slice(queryAt + 1));
+  return {
+    nodeId: trimOrEmpty(params.get(TRACEABILITY_QUERY_KEYS.nodeId)),
+    edgeId: trimOrEmpty(params.get(TRACEABILITY_QUERY_KEYS.edgeId)),
+    hashHasQuery: true,
+  };
+}
+
+/**
+ * Prefer hash query for graph `node` / `edge` when the hash carries a query string
+ * (selection updated via replaceState).
+ *
+ * @param {ReturnType<typeof readTraceabilityState>} routerState
+ * @param {{ nodeId: string, edgeId: string, hashHasQuery: boolean }} hashSelection
+ */
+export function mergeTraceabilityStateWithHashSelection(routerState, hashSelection) {
+  if (!hashSelection.hashHasQuery) return routerState;
+  return { ...routerState, nodeId: hashSelection.nodeId, edgeId: hashSelection.edgeId };
+}
+
 export function readTraceabilityState(searchParams) {
   return {
     workId: trimOrEmpty(searchParams.get(TRACEABILITY_QUERY_KEYS.workId)),
@@ -113,6 +151,40 @@ export function buildStandaloneChatPath(workId, extras = {}) {
 export function mergeTraceabilityParams(searchParams, updates = {}, options = {}) {
   const current = readTraceabilityState(searchParams);
   return buildTraceabilityParams({ ...current, ...updates }, options);
+}
+
+/**
+ * Update only graph selection params in the current hash URL without notifying React Router.
+ *
+ * Canvas selection is high-frequency UI state. Pushing it through `setSearchParams`
+ * turns every click into route navigation and can remount/rebuild graph views.
+ *
+ * @param {Partial<{nodeId: string, edgeId: string}>} updates
+ */
+export function replaceHashTraceabilitySelection(updates = {}) {
+  if (typeof window === "undefined") return;
+  const hash = window.location.hash || "#/";
+  const queryAt = hash.indexOf("?");
+  const routeHash = queryAt >= 0 ? hash.slice(0, queryAt) : hash;
+  const params = new URLSearchParams(queryAt >= 0 ? hash.slice(queryAt + 1) : "");
+  if (Object.prototype.hasOwnProperty.call(updates, "nodeId")) {
+    const nodeId = trimOrEmpty(updates.nodeId);
+    if (nodeId) params.set(TRACEABILITY_QUERY_KEYS.nodeId, nodeId);
+    else params.delete(TRACEABILITY_QUERY_KEYS.nodeId);
+  }
+  if (Object.prototype.hasOwnProperty.call(updates, "edgeId")) {
+    const edgeId = trimOrEmpty(updates.edgeId);
+    if (edgeId) params.set(TRACEABILITY_QUERY_KEYS.edgeId, edgeId);
+    else params.delete(TRACEABILITY_QUERY_KEYS.edgeId);
+  }
+  const qs = params.toString();
+  const nextHash = `${routeHash || "#/"}${qs ? `?${qs}` : ""}`;
+  window.history.replaceState(window.history.state, "", `${window.location.pathname}${window.location.search}${nextHash}`);
+  try {
+    window.dispatchEvent(new CustomEvent(TRACEABILITY_HASH_SELECTION_EVENT));
+  } catch {
+    /* ignore */
+  }
 }
 
 /**

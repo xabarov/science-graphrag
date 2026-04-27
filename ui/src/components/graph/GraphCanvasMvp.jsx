@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
@@ -12,6 +12,7 @@ import { drawEdges, drawLabels, drawNodes } from "./graphCanvasDraw.js";
 import { getGraphLayoutSignature } from "./graphFlowAdapter.js";
 import { buildSimulationState } from "./graphSimulationAdapter.js";
 import useGraphCanvasInput from "./hooks/useGraphCanvasInput.js";
+import { useGraphCanvasTopologyReseed } from "./hooks/useGraphCanvasTopologyReseed.js";
 import { useScienceGraphForceSimulation } from "../../hooks/graph/useScienceGraphForceSimulation.js";
 import { percentToRepulsion, REPULSION_DEFAULT_PERCENT } from "./physics/simConstants.js";
 
@@ -162,10 +163,9 @@ export default function GraphCanvasMvp({
         if (expandUrl) onAggregatorExpand?.(clickedNode, expandUrl);
         return;
       }
-      onSelectEdge?.("");
       onSelectNode?.(nodeId);
     },
-    [nodeById, onAggregatorExpand, onSelectEdge, onSelectNode],
+    [nodeById, onAggregatorExpand, onSelectNode],
   );
 
   const input = useGraphCanvasInput({
@@ -175,7 +175,6 @@ export default function GraphCanvasMvp({
     setTransform,
     onNodeClick,
     onEdgeClick: (edgeId) => {
-      onSelectNode?.("");
       onSelectEdge?.(edgeId);
     },
     onCanvasClick: () => {
@@ -210,22 +209,21 @@ export default function GraphCanvasMvp({
     simulationSignature,
   );
 
-  useLayoutEffect(() => {
-    const built = buildSimulationState(graph);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- topology re-seed is intentional
-    setSimNodes(built.nodes);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- topology re-seed is intentional
-    setSimLinks(built.links);
-    fixedNodesRef.current.clear();
-    draggedNodePositionRef.current = null;
-    setPinnedNodeCount(0);
-    setIsSimulationStable(false);
-    setForceSimRunNonce(0);
-    setPhysicsReheatNonce(0);
-    positionsRef.current = new Map(built.nodes.map((n) => [n.id, { x: n.x, y: n.y }]));
-    if (layoutMode === "force" && built.nodes.length > 0) applyFit("force");
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-seed on topologySignature only; omit graph so selection/new object identity does not reset sim
-  }, [topologySignature, layoutMode, applyFit]);
+  useGraphCanvasTopologyReseed({
+    topologySignature,
+    layoutMode,
+    graph,
+    applyFit,
+    setSimNodes,
+    setSimLinks,
+    setPinnedNodeCount,
+    fixedNodesRef,
+    draggedNodePositionRef,
+    setIsSimulationStable,
+    setForceSimRunNonce,
+    setPhysicsReheatNonce,
+    positionsRef,
+  });
 
   useEffect(() => {
     const prev = prevLayoutModeRef.current;

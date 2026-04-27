@@ -1,3 +1,6 @@
+/**
+ * @vitest-environment jsdom
+ */
 import { describe, expect, it } from "vitest";
 
 import {
@@ -6,6 +9,8 @@ import {
   buildWorkspaceTracePath,
   describeTraceabilityState,
   mergeTraceabilityParams,
+  mergeTraceabilityStateWithHashSelection,
+  readTraceabilityGraphSelectionFromHash,
   readTraceabilityState,
 } from "./traceabilityState.js";
 
@@ -59,6 +64,30 @@ describe("traceabilityState", () => {
       { nodeId: "n2", citation: "3" },
     );
     expect(merged.toString()).toBe("work_id=w1&tab=graph&node=n2&citation=3");
+  });
+
+  it("reads graph selection from location hash query", () => {
+    const prev = window.location.hash;
+    window.location.hash = "#/graph?work_id=w1&node=n9&edge=e2";
+    expect(readTraceabilityGraphSelectionFromHash()).toEqual({
+      nodeId: "n9",
+      edgeId: "e2",
+      hashHasQuery: true,
+    });
+    window.location.hash = prev;
+  });
+
+  it("mergeTraceabilityStateWithHashSelection prefers hash node and edge when hash has query", () => {
+    const prev = window.location.hash;
+    window.location.hash = "#/workspace?work_id=w1&tab=graph&node=fromHash";
+    const router = readTraceabilityState(
+      new URLSearchParams("work_id=w1&tab=graph&node=staleRouter"),
+    );
+    const fromHash = readTraceabilityGraphSelectionFromHash();
+    const merged = mergeTraceabilityStateWithHashSelection(router, fromHash);
+    expect(merged.nodeId).toBe("fromHash");
+    expect(merged.workId).toBe("w1");
+    window.location.hash = prev;
   });
 
   it("describes focus context for UI banners", () => {

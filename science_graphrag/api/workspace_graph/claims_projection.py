@@ -35,13 +35,13 @@ def build_claim_graph_slice_for_workspace(
     session: Any,
     workspace_id: str,
     *,
-    claims_per_work: int,
-    max_claims_total: int,
+    claims_per_work: int | None,
+    max_claims_total: int | None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
     """Build Claim nodes + synthetic Work-[:HAS_CLAIM]->Claim edges (capped)."""
 
-    per_work = max(1, min(int(claims_per_work), 80))
-    max_total = max(1, min(int(max_claims_total), 500))
+    per_work = None if claims_per_work is None else max(1, int(claims_per_work))
+    max_total = None if max_claims_total is None else max(1, int(max_claims_total))
 
     rows = _claim_rows_for_workspace(session, workspace_id)
     grouped: dict[str, list[Any]] = defaultdict(list)
@@ -59,12 +59,16 @@ def build_claim_graph_slice_for_workspace(
     truncated = False
 
     for work_id in sorted(grouped.keys()):
-        if total >= max_total:
+        if max_total is not None and total >= max_total:
             truncated = True
             break
         claims = grouped[work_id]
         claims_sorted = sorted(claims, key=lambda n: str(dict(n).get("id") or n.element_id))
-        budget = min(per_work, max_total - total)
+        budget = len(claims_sorted)
+        if per_work is not None:
+            budget = min(budget, per_work)
+        if max_total is not None:
+            budget = min(budget, max_total - total)
         for claim in claims_sorted[:budget]:
             nd = node_dict_from_neo(claim)
             if not nd:
@@ -74,7 +78,7 @@ def build_claim_graph_slice_for_workspace(
             edges.append(edge_dict_from_ids(work_id, cid, "HAS_CLAIM", seq))
             seq += 1
             total += 1
-            if total >= max_total:
+            if max_total is not None and total >= max_total:
                 truncated = True
                 break
 

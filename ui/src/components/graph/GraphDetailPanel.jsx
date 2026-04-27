@@ -454,10 +454,7 @@ export default function GraphDetailPanel({
                     key={edge.id}
                     component="button"
                     type="button"
-                    onClick={() => {
-                      onSelectNode?.("");
-                      onSelectEdge?.(edge.id);
-                    }}
+                    onClick={() => onSelectEdge?.(edge.id)}
                     sx={{
                       textAlign: "left",
                       cursor: "pointer",
@@ -522,10 +519,7 @@ export default function GraphDetailPanel({
                   <CursorSmallButton
                     key={edge.id}
                     type="button"
-                    onClick={() => {
-                      onSelectNode?.("");
-                      onSelectEdge?.(edge.id);
-                    }}
+                    onClick={() => onSelectEdge?.(edge.id)}
                     sx={{ justifyContent: "flex-start", textAlign: "left", height: "auto", py: 0.75, alignItems: "center", gap: 0.75 }}
                   >
                     <ArrowForwardIcon sx={{ fontSize: "0.75rem", color: tk.text.accent, flexShrink: 0 }} aria-hidden />
