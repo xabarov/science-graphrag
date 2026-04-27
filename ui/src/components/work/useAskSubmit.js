@@ -183,5 +183,15 @@ export function useAskSubmit({
 
   const isActive = isLoading || isStreaming;
 
-  return { submit, isLoading: isActive, abortRef };
+  const abort = useCallback(() => {
+    abortStream();
+    try {
+      abortRef.current?.abort?.();
+    } catch {
+      /* ignore */
+    }
+    abortRef.current = null;
+  }, [abortStream]);
+
+  return { submit, isLoading: isActive, abortRef, abort };
 }

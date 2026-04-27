@@ -80,6 +80,14 @@ def _count_unmatched_preds(pred_tokens: set[str], golds: set[str]) -> int:
     return sum(1 for p in pred_tokens if not any(_gold_matches_pred_token(g, p) for g in golds))
 
 
+def _f1_from_pr(precision: float, recall: float) -> float:
+    """Harmonic mean of precision and recall (standard F1)."""
+
+    if precision + recall <= 0.0:
+        return 0.0
+    return (2.0 * precision * recall) / (precision + recall)
+
+
 @dataclass
 class SemanticMetrics:
     precision_methods: float
@@ -92,13 +100,29 @@ class SemanticMetrics:
     notes: str
 
     def to_json_dict(self) -> dict[str, Any]:
+        recall_methods = (
+            self.recall_methods_num / self.recall_methods_denom
+            if self.recall_methods_denom
+            else 0.0
+        )
+        recall_datasets = (
+            self.recall_datasets_num / self.recall_datasets_denom
+            if self.recall_datasets_denom
+            else 0.0
+        )
+        methods_f1 = _f1_from_pr(self.precision_methods, recall_methods)
+        datasets_f1 = _f1_from_pr(self.precision_datasets, recall_datasets)
         return {
             "precision_methods": self.precision_methods,
+            "recall_methods": recall_methods,
             "recall_methods_num": self.recall_methods_num,
             "recall_methods_denom": self.recall_methods_denom,
+            "methods_f1": methods_f1,
             "precision_datasets": self.precision_datasets,
+            "recall_datasets": recall_datasets,
             "recall_datasets_num": self.recall_datasets_num,
             "recall_datasets_denom": self.recall_datasets_denom,
+            "datasets_f1": datasets_f1,
             "passed": self.passed,
             "notes": self.notes,
         }

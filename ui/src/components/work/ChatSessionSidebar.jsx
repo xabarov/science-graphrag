@@ -1,7 +1,9 @@
 import React from "react";
 import AddCommentOutlinedIcon from "@mui/icons-material/AddCommentOutlined";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import Box from "@mui/material/Box";
 import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
@@ -15,10 +17,19 @@ import { CursorIconAction } from "../common/index.js";
  *   activeSessionId: string | null,
  *   onActiveSessionChange: (id: string) => void,
  *   onNewSession: () => void,
+ *   onDeleteSessionRequest?: (session: { id: string, title: string, updatedAt?: string, entries?: unknown[] }) => void | Promise<void>,
  *   sx?: object,
  * }} props
  */
-export function ChatSessionSidebar({ t, sessionList, activeSessionId, onActiveSessionChange, onNewSession, sx }) {
+export function ChatSessionSidebar({
+  t,
+  sessionList,
+  activeSessionId,
+  onActiveSessionChange,
+  onNewSession,
+  onDeleteSessionRequest,
+  sx,
+}) {
   return (
     <Box
       sx={{
@@ -48,25 +59,56 @@ export function ChatSessionSidebar({ t, sessionList, activeSessionId, onActiveSe
           </Box>
         ) : (
           sessionList.map((s) => (
-            <ListItemButton
+            <ListItem
               key={s.id}
-              selected={s.id === activeSessionId}
-              onClick={() => onActiveSessionChange(s.id)}
+              disablePadding
+              secondaryAction={
+                onDeleteSessionRequest ? (
+                  <Box
+                    component="span"
+                    sx={{ display: "inline-flex", alignItems: "center", pr: 0.5 }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <CursorIconAction
+                      type="button"
+                      aria-label={t("chat.sidebar.deleteAria")}
+                      title={t("chat.sidebar.deleteAria")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteSessionRequest(s);
+                      }}
+                    >
+                      <DeleteOutlineOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+                    </CursorIconAction>
+                  </Box>
+                ) : null
+              }
               sx={{
-                alignItems: "flex-start",
-                py: 1,
-                px: 1.15,
-                "&.Mui-selected": { backgroundColor: "rgba(99,102,241,0.08)" },
-                "&:hover": { backgroundColor: "rgba(255,255,255,0.03)" },
+                alignItems: "stretch",
+                borderBottom: "1px solid rgba(255,255,255,0.04)",
+                "&:last-of-type": { borderBottom: "none" },
               }}
             >
-              <ListItemText
-                primary={s.title}
-                secondary={Array.isArray(s.entries) && s.entries[0]?.query ? String(s.entries[0].query) : ""}
-                primaryTypographyProps={{ noWrap: true, sx: { fontSize: "0.8125rem", color: "rgba(255,255,255,0.82)" } }}
-                secondaryTypographyProps={{ noWrap: true, sx: { fontSize: "0.68rem", color: "rgba(255,255,255,0.36)", mt: 0.25 } }}
-              />
-            </ListItemButton>
+              <ListItemButton
+                selected={s.id === activeSessionId}
+                onClick={() => onActiveSessionChange(s.id)}
+                sx={{
+                  alignItems: "flex-start",
+                  py: 1,
+                  px: 1.15,
+                  pr: onDeleteSessionRequest ? 5 : 1.15,
+                  "&.Mui-selected": { backgroundColor: "rgba(99,102,241,0.08)" },
+                  "&:hover": { backgroundColor: "rgba(255,255,255,0.03)" },
+                }}
+              >
+                <ListItemText
+                  primary={s.title}
+                  secondary={Array.isArray(s.entries) && s.entries[0]?.query ? String(s.entries[0].query) : ""}
+                  primaryTypographyProps={{ noWrap: true, sx: { fontSize: "0.8125rem", color: "rgba(255,255,255,0.82)" } }}
+                  secondaryTypographyProps={{ noWrap: true, sx: { fontSize: "0.68rem", color: "rgba(255,255,255,0.36)", mt: 0.25 } }}
+                />
+              </ListItemButton>
+            </ListItem>
           ))
         )}
       </List>

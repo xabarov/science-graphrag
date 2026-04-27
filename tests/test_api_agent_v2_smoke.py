@@ -101,6 +101,45 @@ def test_v2_sse_stream(monkeypatch) -> None:
     assert "final_answer" in types
 
 
+def test_v2_sse_stream_formats_provider_valueerror(monkeypatch) -> None:
+    from science_graphrag.api import agent_v2 as agent_v2_api
+
+    class _BrokenGraph:
+        async def astream(self, _state, config=None):  # noqa: ARG002
+            # Must yield once so ``astream`` is an async generator (not a plain coroutine).
+            yield {"chat": {"messages": []}}
+            raise ValueError({"message": "Provider returned error", "code": 403})
+
+    monkeypatch.setattr(
+        agent_v2_api, "build_retrieval_graph", lambda *_args, **_kwargs: _BrokenGraph()
+    )
+    test_app = _build_test_app()
+    client = TestClient(test_app)
+    client.app.dependency_overrides[get_settings] = lambda: Settings()
+    client.app.dependency_overrides[get_stores] = lambda: _EMPTY_STORES
+    try:
+        with client.stream(
+            "POST",
+            "/v2/agent/query",
+            json={"question": "What is BERT?"},
+            headers={"Accept": "text/event-stream"},
+        ) as resp:
+            assert resp.status_code == 200
+            events = []
+            for line in resp.iter_lines():
+                if line.startswith("data:"):
+                    events.append(json.loads(line[5:].strip()))
+    finally:
+        client.app.dependency_overrides.pop(get_settings, None)
+        client.app.dependency_overrides.pop(get_stores, None)
+
+    errs = [e for e in events if e.get("type") == "error"]
+    assert len(errs) == 1
+    assert "403" in errs[0]["detail"]
+    assert "Upstream LLM" in errs[0]["detail"]
+    assert errs[0].get("provider_code") == 403
+
+
 def test_v2_deferred_topic_shortcuts_sync_without_agent(monkeypatch) -> None:
     from science_graphrag.api import agent_v2 as agent_v2_api
 

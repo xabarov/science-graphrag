@@ -11,8 +11,10 @@
 | Reference layer-1 | [`eval/results/current-reference-layer1-yolov1.json`](../../eval/results/current-reference-layer1-yolov1.json) | — (core reference, не advisory) |
 | Reference graph | [`eval/results/current-reference-graph-yolov1.json`](../../eval/results/current-reference-graph-yolov1.json) | — |
 | Reference layer-2 semantic | [`eval/results/current-reference-layer2-yolov1-semantic.json`](../../eval/results/current-reference-layer2-yolov1-semantic.json) | — |
-| Nightly layer-1 (`nightly_heavy`) | [`eval/results/current-llm-layer1-nightly-heavy-suite-after-prompt-fix.json`](../../eval/results/current-llm-layer1-nightly-heavy-suite-after-prompt-fix.json) | — |
+| Nightly layer-1 (`nightly_heavy`) | [`eval/results/current-llm-layer1-nightly-heavy-suite.json`](../../eval/results/current-llm-layer1-nightly-heavy-suite.json) | — |
 | Nightly layer-2 (`nightly_semantic`) | [`eval/results/current-llm-layer2-nightly-semantic-suite.json`](../../eval/results/current-llm-layer2-nightly-semantic-suite.json) | — |
+
+Исторический артефакт `current-llm-layer1-nightly-heavy-suite-after-prompt-fix.json` может сохраняться локально как копия сравнения; **агрегатор по умолчанию** (`scripts/benchmark_aggregator/paths.py`) указывает на `current-llm-layer1-nightly-heavy-suite.json`.
 
 Для сравнения с предыдущим зафиксированным baseline в репозитории:
 
@@ -35,7 +37,7 @@
 .venv/bin/science-graphrag-layer1-benchmark tests/fixtures/benchmarks/layer1 \
   --suite --tier nightly_heavy \
   --threshold-profile reporting_skip_f1_gates \
-  --json-out eval/results/current-llm-layer1-nightly-heavy-suite-after-prompt-fix.json
+  --json-out eval/results/current-llm-layer1-nightly-heavy-suite.json
 .venv/bin/python scripts/aggregate_benchmark_metrics.py
 .venv/bin/python scripts/generate_benchmark_metrics_tables.py
 ```

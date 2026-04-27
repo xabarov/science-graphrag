@@ -1,22 +1,23 @@
 /**
- * Copy text to the system clipboard. Returns true on success.
+ * Copy plain text to the clipboard (async API with execCommand fallback).
+ *
  * @param {string} text
  * @returns {Promise<boolean>}
  */
 export async function copyToClipboard(text) {
-  if (!text) return false;
+  const s = String(text ?? "");
+  if (!s) return false;
   try {
-    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text);
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(s);
       return true;
     }
   } catch {
-    // fall through to execCommand
+    /* fall through */
   }
   try {
-    if (typeof document === "undefined") return false;
     const ta = document.createElement("textarea");
-    ta.value = text;
+    ta.value = s;
     ta.setAttribute("readonly", "");
     ta.style.position = "fixed";
     ta.style.left = "-9999px";
@@ -24,7 +25,7 @@ export async function copyToClipboard(text) {
     ta.select();
     const ok = document.execCommand("copy");
     document.body.removeChild(ta);
-    return ok;
+    return Boolean(ok);
   } catch {
     return false;
   }

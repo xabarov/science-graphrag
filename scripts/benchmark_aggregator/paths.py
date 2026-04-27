@@ -12,7 +12,8 @@ DEFAULT_REFERENCE = (
     "eval/results/current-reference-graph-yolov1.json",
     "eval/results/current-reference-layer2-yolov1-semantic.json",
 )
-DEFAULT_LAYER1_NIGHTLY = "eval/results/current-llm-layer1-nightly-heavy-suite-after-prompt-fix.json"
+# Canonical nightly L1 artifact for aggregate + report tooling (full suite JSON).
+DEFAULT_LAYER1_NIGHTLY = "eval/results/current-llm-layer1-nightly-heavy-suite.json"
 DEFAULT_LAYER2_NIGHTLY = "eval/results/current-llm-layer2-nightly-semantic-suite.json"
 DEFAULT_BASELINE_LAYER1 = "eval/results/baseline-llm-layer1-nightly-heavy-suite.json"
 DEFAULT_BASELINE_LAYER2 = "eval/results/baseline-llm-layer2-nightly-semantic-suite.json"
@@ -38,8 +39,9 @@ DEFAULT_CLAIMS_MINI_SUITE = "eval/results/current-claims-mini-suite.json"
 DEFAULT_CLAIMS_CORPUS_V2_MINI_SUITE = "eval/results/current-claims-corpus-v2-mini.json"
 DEFAULT_CLAIMS_PILOT_SUITE = "eval/results/current-claims-pilot-suite.json"
 DEFAULT_CLAIMS_PRODUCTION_PILOT = "eval/results/current-claims-production-pilot.json"
-DEFAULT_CLAIMS_PARAPHRASE_PILOT = "eval/results/current-claims-paraphrase-pilot.json"
-DEFAULT_CLAIMS_PARAPHRASE_HOLDOUT = "eval/results/current-claims-paraphrase-holdout.json"
+# Full-tier LLM paraphrase suites (`claims_pilot_v2` / `claims_holdout_v1`); mini/oracle lanes stay under `current-claims-paraphrase-*.json`.
+DEFAULT_CLAIMS_PARAPHRASE_PILOT = "eval/results/current-llm-claims-paraphrase-pilot.json"
+DEFAULT_CLAIMS_PARAPHRASE_HOLDOUT = "eval/results/current-llm-claims-paraphrase-holdout.json"
 
 DEFAULT_REFERENCES_RESOLUTION_CONTRACT = "eval/results/current-references-resolution-contract.json"
 DEFAULT_REFERENCES_RESOLUTION_MINI = "eval/results/current-references-resolution-mini.json"

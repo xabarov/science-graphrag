@@ -1,6 +1,9 @@
 import React from "react";
 import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
 
+import { CursorButton, CursorDangerButton } from "../common/index.js";
+import { FeedbackShell, useFeedback } from "../feedback/index.js";
 import { ChatComposer } from "./ChatComposer.jsx";
 import { ChatMessageThread } from "./ChatMessageThread.jsx";
 import { ChatSessionSidebar } from "./ChatSessionSidebar.jsx";
@@ -18,6 +21,7 @@ export default function AskPanel({
   onUrlSessionIdChange,
   fillAvailableHeight = false,
 }) {
+  const { confirm } = useFeedback();
   const o = useAskPanelOrchestration({
     scopedWorkId,
     initialWorkId,
@@ -26,6 +30,21 @@ export default function AskPanel({
     urlSessionId,
     onUrlSessionIdChange,
   });
+
+  const handleDeleteSessionRequest = async (session) => {
+    const n = Array.isArray(session?.entries) ? session.entries.length : 0;
+    if (n > 0) {
+      const ok = await confirm({
+        title: o.t("chat.sidebar.deleteDialogTitle"),
+        body: o.t("chat.sidebar.deleteConfirm"),
+        variant: "danger",
+        confirmLabel: o.t("chat.sidebar.deleteConfirmButton"),
+        cancelLabel: o.t("chat.clear.cancel"),
+      });
+      if (!ok) return;
+    }
+    void o.onDeleteSession(session.id);
+  };
 
   return (
     <Box
@@ -58,12 +77,23 @@ export default function AskPanel({
           activeSessionId={o.activeSessionId}
           onActiveSessionChange={o.onActiveSessionChange}
           onNewSession={o.onNewSession}
+          onDeleteSessionRequest={handleDeleteSessionRequest}
           sx={{ flex: { xs: "0 0 auto", md: "0 0 auto" }, maxHeight: { xs: "min(40vh, 320px)", md: "none" } }}
         />
         <Box sx={{ flex: 1, minWidth: 0, minHeight: 0, display: "flex", flexDirection: "column", gap: 0.5 }}>
-          <AskPanelChrome showPageChrome={showPageChrome} t={o.t} scopeEyebrow={o.scopeEyebrow} error={o.error} />
+          <AskPanelChrome
+            showPageChrome={showPageChrome}
+            t={o.t}
+            scopeEyebrow={o.scopeEyebrow}
+            error={o.error}
+            onClearChatClick={showPageChrome ? undefined : o.openClearChatDialog}
+            clearChatDisabled={o.isLoading}
+          />
           <ChatMessageThread
             t={o.t}
+            scopeKey={o.scopeKey}
+            activeSessionId={o.activeSessionId}
+            streamingTarget={o.streamingTarget}
             history={o.history}
             pendingUserQuery={o.pendingUserQuery}
             isLoading={o.isLoading}
@@ -78,6 +108,10 @@ export default function AskPanel({
             onToggleRetrievalJson={() => o.setRetrievalJsonOpen((v) => !v)}
             starterPromptKeys={o.starterPromptKeys}
             onStarterPrompt={o.setQuery}
+            onCopyUserText={o.onCopyUserText}
+            onRestartFromTurn={o.onRestartFromTurn}
+            onCopyAssistantEntry={o.onCopyAssistantEntry}
+            restartDisabled={o.isLoading}
           />
           <ChatComposer
             t={o.t}
@@ -103,6 +137,28 @@ export default function AskPanel({
           />
         </Box>
       </Box>
+
+      <FeedbackShell
+        open={o.clearChatDialogOpen}
+        onClose={() => o.setClearChatDialogOpen(false)}
+        title={o.t("chat.clear.dialogTitle")}
+        titleId="chat-clear-dialog-title"
+        aria-describedby="chat-clear-dialog-desc"
+        actions={
+          <>
+            <CursorButton type="button" size="small" onClick={() => o.setClearChatDialogOpen(false)} sx={{ color: "rgba(255,255,255,0.7)" }}>
+              {o.t("chat.clear.cancel")}
+            </CursorButton>
+            <CursorDangerButton type="button" size="small" disabled={o.isLoading} onClick={() => void o.onClearChat()}>
+              {o.t("chat.clear.confirm")}
+            </CursorDangerButton>
+          </>
+        }
+      >
+        <Typography id="chat-clear-dialog-desc" component="span" sx={{ display: "block" }}>
+          {o.t("chat.clear.dialogBody")}
+        </Typography>
+      </FeedbackShell>
     </Box>
   );
 }

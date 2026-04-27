@@ -289,6 +289,144 @@ export function appendAskSessionTurn(scopeKey, entry) {
 
 /**
  * @param {string} scopeKey
+ * @param {string} sessionId
+ * @returns {Array<{ id: string, query: string, workId: string, topK: number, answer: string, citationCount: number, mode: string, savedAt: string, details?: Record<string, unknown> | null }>}
+ */
+export function getAskSessionEntries(scopeKey, sessionId) {
+  const bundle = getBundle(scopeKey);
+  const sid = String(sessionId || "").trim();
+  if (!sid) return [];
+  const session = bundle.sessions.find((s) => s.id === sid);
+  if (!session || !Array.isArray(session.entries)) return [];
+  return [...session.entries];
+}
+
+/**
+ * Append a turn to a specific session (not necessarily the active one). Used after async agent
+ * completes so a mid-flight sidebar switch does not write the answer into the wrong thread.
+ *
+ * @param {string} scopeKey
+ * @param {string} sessionId
+ * @param {{ query: string, workId?: string, topK?: number | string, answer?: string, citationCount?: number, mode?: string, savedAt?: string, details?: Record<string, unknown> | null }} entry
+ */
+export function appendAskSessionTurnToSession(scopeKey, sessionId, entry) {
+  const storage = safeStorage();
+  if (!storage) return;
+  const sid = String(sessionId || "").trim();
+  if (!sid) return;
+  const bundle = getBundle(scopeKey);
+  if (!bundle.sessions.some((s) => s.id === sid)) return;
+  const turn = normalizeTurn(entry);
+  if (!turn.query) return;
+  const sessions = bundle.sessions.map((s) => {
+    if (s.id !== sid) return s;
+    const nextEntries = [turn, ...s.entries.filter((e) => e.id !== turn.id)].slice(0, ASK_SESSION_MAX_TURNS);
+    return { ...s, entries: nextEntries, updatedAt: new Date().toISOString() };
+  });
+  saveBundle(scopeKey, { activeId: bundle.activeId, sessions });
+}
+
+/**
+ * Clear all turns for a session (entries newest-first in storage).
+ *
+ * @param {string} scopeKey
+ * @param {string} sessionId
+ */
+export function clearAskSessionEntries(scopeKey, sessionId) {
+  const storage = safeStorage();
+  if (!storage) return;
+  const sid = String(sessionId || "").trim();
+  if (!sid) return;
+  const bundle = getBundle(scopeKey);
+  if (!bundle.sessions.some((s) => s.id === sid)) return;
+  const now = new Date().toISOString();
+  const sessions = bundle.sessions.map((s) => (s.id === sid ? { ...s, entries: [], updatedAt: now } : s));
+  saveBundle(scopeKey, { activeId: bundle.activeId, sessions });
+}
+
+/**
+ * Remove the given turn and every turn newer than it (entries are stored newest-first:
+ * index 0 = latest). Used for "restart from this user message".
+ *
+ * @param {string} scopeKey
+ * @param {string} sessionId
+ * @param {string} turnId
+ */
+export function truncateAskSessionFromTurn(scopeKey, sessionId, turnId) {
+  const storage = safeStorage();
+  if (!storage) return;
+  const sid = String(sessionId || "").trim();
+  const tid = String(turnId || "").trim();
+  if (!sid || !tid) return;
+  const entries = getAskSessionEntries(scopeKey, sessionId);
+  const idx = entries.findIndex((e) => e.id === tid);
+  if (idx < 0) return;
+  const kept = entries.slice(idx + 1);
+  const bundle = getBundle(scopeKey);
+  if (!bundle.sessions.some((s) => s.id === sid)) return;
+  const now = new Date().toISOString();
+  const sessions = bundle.sessions.map((s) => (s.id === sid ? { ...s, entries: kept, updatedAt: now } : s));
+  saveBundle(scopeKey, { activeId: bundle.activeId, sessions });
+}
+
+/**
+ * Remove a single turn from a session (entries are stored newest-first).
+ *
+ * @param {string} scopeKey
+ * @param {string} sessionId
+ * @param {string} turnId
+ */
+export function removeAskSessionTurn(scopeKey, sessionId, turnId) {
+  const storage = safeStorage();
+  if (!storage) return;
+  const sid = String(sessionId || "").trim();
+  const tid = String(turnId || "").trim();
+  if (!sid || !tid) return;
+  const bundle = getBundle(scopeKey);
+  if (!bundle.sessions.some((s) => s.id === sid)) return;
+  const now = new Date().toISOString();
+  const sessions = bundle.sessions.map((s) => {
+    if (s.id !== sid) return s;
+    const nextEntries = (s.entries || []).filter((e) => String(e?.id || "") !== tid);
+    return { ...s, entries: nextEntries, updatedAt: now };
+  });
+  saveBundle(scopeKey, { activeId: bundle.activeId, sessions });
+}
+
+/**
+ * Remove a session from the scope bundle. If active session was removed, pick another or create one.
+ *
+ * @param {string} scopeKey
+ * @param {string} sessionId
+ * @returns {{ nextActiveId: string | null, createdFallback: boolean }}
+ */
+export function removeAskSession(scopeKey, sessionId) {
+  const storage = safeStorage();
+  const sid = String(sessionId || "").trim();
+  if (!storage || !sid) return { nextActiveId: null, createdFallback: false };
+  const bundle = getBundle(scopeKey);
+  const filtered = bundle.sessions.filter((s) => s.id !== sid);
+  let nextActiveId = bundle.activeId === sid ? null : bundle.activeId;
+  let createdFallback = false;
+  if (filtered.length === 0) {
+    const id = newSessionId();
+    const now = new Date().toISOString();
+    saveBundle(scopeKey, {
+      activeId: id,
+      sessions: [{ id, title: defaultSessionTitle(), updatedAt: now, entries: [] }],
+    });
+    createdFallback = true;
+    return { nextActiveId: id, createdFallback };
+  }
+  if (nextActiveId == null || !filtered.some((s) => s.id === nextActiveId)) {
+    nextActiveId = filtered[0].id;
+  }
+  saveBundle(scopeKey, { activeId: nextActiveId, sessions: filtered });
+  return { nextActiveId, createdFallback };
+}
+
+/**
+ * @param {string} scopeKey
  * @param {string} [title]
  * @returns {string} new session id
  */

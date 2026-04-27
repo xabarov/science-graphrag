@@ -35,6 +35,27 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def _format_agent_stream_error(exc: BaseException) -> str:
+    """Map common LangChain/OpenRouter failures to a short SSE/UI-facing message."""
+    if isinstance(exc, ValueError) and exc.args:
+        arg0 = exc.args[0]
+        if isinstance(arg0, dict):
+            msg = str(arg0.get("message") or "provider error").strip()
+            code = arg0.get("code")
+            meta = arg0.get("metadata")
+            raw_hint = ""
+            if isinstance(meta, dict):
+                raw = meta.get("raw")
+                if isinstance(raw, str) and raw.strip():
+                    raw_hint = f" — {raw.strip()[:280]}"
+            if code is not None:
+                return f"Upstream LLM rejected the request (code {code}): {msg}{raw_hint}"
+            return f"Upstream LLM error: {msg}{raw_hint}"
+        if isinstance(arg0, str) and arg0.strip():
+            return arg0.strip()
+    return str(exc)
+
+
 def normalize_history_digest_input(raw: object) -> tuple[list[dict[str, Any]], bool]:
     """Parse client history digest; return (normalized_turn_dicts, invalid).
 
@@ -744,4 +765,14 @@ async def _stream_agent(
             yield {"data": json.dumps(final_event)}
     except Exception as exc:  # noqa: BLE001
         logger.exception("agent v2 stream error")
-        yield {"data": json.dumps({"type": "error", "detail": str(exc)})}
+        detail = _format_agent_stream_error(exc)
+        err_payload: dict[str, Any] = {
+            "type": "error",
+            "detail": detail,
+            "code": "agent_runtime_error",
+        }
+        if isinstance(exc, ValueError) and exc.args and isinstance(exc.args[0], dict):
+            prov_code = exc.args[0].get("code")
+            if prov_code is not None:
+                err_payload["provider_code"] = prov_code
+        yield {"data": json.dumps(err_payload)}

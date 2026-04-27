@@ -2,8 +2,9 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import Alert from "@mui/material/Alert";
+import { InlineNotice, useFeedback } from "../components/feedback/index.js";
 import Chip from "@mui/material/Chip";
+import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
 
 import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
 import PostAddOutlinedIcon from "@mui/icons-material/PostAddOutlined";
@@ -24,18 +25,20 @@ import {
   deleteWorkspaceApi,
   getActiveWorkspaceId,
   listWorkspaces,
-  mergeWorkspacesApi,
   renameWorkspace,
   setActiveWorkspaceId,
 } from "../utils/workspaceStore.js";
 import IndexedWorksBrowser from "./WorkspacesPage/IndexedWorksBrowser.jsx";
+import WorkspaceActionBar from "./WorkspacesPage/WorkspaceActionBar.jsx";
 import WorkspaceCollectionPanel from "./WorkspacesPage/WorkspaceCollectionPanel.jsx";
+import WorkspaceOverviewStats from "./WorkspacesPage/WorkspaceOverviewStats.jsx";
 import WorkspaceRecentPanel from "./WorkspacesPage/WorkspaceRecentPanel.jsx";
 
 const PAGE_SIZE = 40;
 
 export default function WorkspacesPage() {
   const { t, intlLocale } = useI18n();
+  const { confirm } = useFeedback();
   const [q, setQ] = useState("");
   const [lastSearch, setLastSearch] = useState("");
   const [items, setItems] = useState([]);
@@ -54,9 +57,6 @@ export default function WorkspacesPage() {
   const [wsError, setWsError] = useState(null);
   const [newWsName, setNewWsName] = useState(() => t("workspaces.defaultNewName"));
   const [targetWorkspaceId, setTargetWorkspaceId] = useState("");
-  const [mergeKeep, setMergeKeep] = useState("");
-  const [mergeDrop, setMergeDrop] = useState("");
-  const [mergeBusy, setMergeBusy] = useState(false);
 
   const { recentWorks, continueTarget, refreshCorpusEntryState } = useCorpusEntryState({ recentLimit: 4 });
 
@@ -176,7 +176,14 @@ export default function WorkspacesPage() {
   }
 
   async function handleDeleteWorkspace(id) {
-    if (!window.confirm(t("workspaces.confirmDelete"))) return;
+    const ok = await confirm({
+      title: t("workspaces.deleteDialogTitle"),
+      body: t("workspaces.confirmDelete"),
+      variant: "danger",
+      confirmLabel: t("workspaces.delete"),
+      cancelLabel: t("chat.clear.cancel"),
+    });
+    if (!ok) return;
     setWsError(null);
     try {
       await deleteWorkspaceApi(id);
@@ -208,22 +215,6 @@ export default function WorkspacesPage() {
       await loadWorkspaces();
     } catch (e) {
       setWsError(formatResearchApiError(e));
-    }
-  }
-
-  async function handleMergeWorkspaces() {
-    if (!mergeKeep.trim() || !mergeDrop.trim()) return;
-    setMergeBusy(true);
-    setWsError(null);
-    try {
-      await mergeWorkspacesApi(mergeKeep.trim(), mergeDrop.trim());
-      setMergeKeep("");
-      setMergeDrop("");
-      await loadWorkspaces();
-    } catch (e) {
-      setWsError(formatResearchApiError(e));
-    } finally {
-      setMergeBusy(false);
     }
   }
 
@@ -269,6 +260,40 @@ export default function WorkspacesPage() {
 
   const canLoadMore = !loading && items.length < total;
   const tw = targetWorkspaceId;
+  const totalAttachedWorks = useMemo(
+    () => workspaces.reduce((sum, ws) => sum + (Array.isArray(ws.work_ids) ? ws.work_ids.length : 0), 0),
+    [workspaces],
+  );
+  const activeTargetWorkspace = useMemo(
+    () => workspaces.find((ws) => ws.id === targetWorkspaceId) || null,
+    [workspaces, targetWorkspaceId],
+  );
+  const overviewStats = useMemo(
+    () => [
+      {
+        id: "workspaces",
+        kind: "workspaces",
+        label: t("workspaces.overview.workspaces.label"),
+        value: t("workspaces.overview.workspaces.value", { count: workspaces.length }),
+        hint: t("workspaces.overview.workspaces.hint"),
+      },
+      {
+        id: "target",
+        kind: "target",
+        label: t("workspaces.overview.target.label"),
+        value: activeTargetWorkspace ? activeTargetWorkspace.name || activeTargetWorkspace.id : t("workspaces.stats.targetNone"),
+        hint: activeTargetWorkspace ? t("workspaces.overview.target.hintReady") : t("workspaces.overview.target.hintEmpty"),
+      },
+      {
+        id: "recent",
+        kind: "recent",
+        label: t("workspaces.overview.recent.label"),
+        value: t("workspaces.overview.recent.value", { count: recentWorks.length }),
+        hint: continueTarget ? t("workspaces.overview.recent.hintContinue") : t("workspaces.overview.recent.hintEmpty"),
+      },
+    ],
+    [activeTargetWorkspace, continueTarget, recentWorks.length, t, workspaces.length],
+  );
 
   function renderWorkRow(w) {
     const wsUrl = tw ? buildWorkspacePath(w.work_id, "overview", { workspaceId: tw }) : buildWorkspacePath(w.work_id);
@@ -364,16 +389,28 @@ export default function WorkspacesPage() {
   }
 
   return (
-    <Box sx={{ p: { xs: 1.5, sm: 2 }, ...mainShellContentSx }}>
+    <Box sx={{ p: { xs: 1.5, sm: 2 }, ...mainShellContentSx, maxWidth: "100%" }}>
+      <input id="workspace-import-input" type="file" accept="application/json" hidden onChange={onImportWorkspaces} />
       <PageHeader
         eyebrow={t("workspaces.header.eyebrow")}
         title={t("workspaces.header.title")}
         description={
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
-            <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.62)", lineHeight: 1.55 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+            <Typography sx={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.66)", lineHeight: 1.55 }}>
               {t("workspaces.header.desc")}
             </Typography>
-            <WorkIdGlossaryHint variant="corpus" />
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+              <Chip
+                icon={<FolderOpenOutlinedIcon sx={{ fontSize: "0.95rem !important" }} />}
+                label={t("workspaces.header.chipPrimary")}
+                size="small"
+                sx={{ height: 24, fontSize: "0.6875rem" }}
+              />
+              <Chip label={t("workspaces.header.chipSecondary")} size="small" sx={{ height: 24, fontSize: "0.6875rem" }} />
+            </Box>
+            <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.48)", lineHeight: 1.55 }}>
+              <WorkIdGlossaryHint variant="corpus" />
+            </Typography>
           </Box>
         }
         actions={
@@ -386,30 +423,34 @@ export default function WorkspacesPage() {
       />
 
       {wsError ? (
-        <Alert severity="warning" sx={{ mb: 2, fontSize: "0.8125rem" }}>
+        <InlineNotice severity="warning" sx={{ mb: 2 }}>
           {wsError}
-        </Alert>
+        </InlineNotice>
       ) : null}
+
+      <WorkspaceActionBar
+        workspaces={workspaces}
+        wsLoading={wsLoading}
+        newWsName={newWsName}
+        onNewWsNameChange={setNewWsName}
+        onCreateWorkspace={handleCreateWorkspace}
+        targetWorkspaceId={targetWorkspaceId}
+        onTargetWorkspaceChange={setTargetWorkspaceId}
+        totalAttachedWorks={totalAttachedWorks}
+        exportWorkspacesJson={exportWorkspacesJson}
+        onImportClick={() => document.getElementById("workspace-import-input")?.click()}
+      />
+
+      <WorkspaceOverviewStats stats={overviewStats} />
 
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 1.5, mb: 2.5 }}>
         <WorkspaceCollectionPanel
           workspaces={workspaces}
           wsLoading={wsLoading}
-          newWsName={newWsName}
-          onNewWsNameChange={setNewWsName}
-          onCreateWorkspace={handleCreateWorkspace}
           targetWorkspaceId={targetWorkspaceId}
           onTargetWorkspaceChange={setTargetWorkspaceId}
           onRenameWorkspace={handleRenameWorkspace}
           onDeleteWorkspace={handleDeleteWorkspace}
-          mergeKeep={mergeKeep}
-          mergeDrop={mergeDrop}
-          mergeBusy={mergeBusy}
-          onMergeKeepChange={setMergeKeep}
-          onMergeDropChange={setMergeDrop}
-          onMergeWorkspaces={handleMergeWorkspaces}
-          exportWorkspacesJson={exportWorkspacesJson}
-          onImportWorkspaces={onImportWorkspaces}
         />
         <WorkspaceRecentPanel recentWorks={recentWorks} fallbackWorkspaceId={tw} />
       </Box>

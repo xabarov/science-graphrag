@@ -2,17 +2,20 @@ import React from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
-import Alert from "@mui/material/Alert";
+import { InlineNotice } from "../../components/feedback/index.js";
 import CircularProgress from "@mui/material/CircularProgress";
 import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
+import Chip from "@mui/material/Chip";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
+import ExpandMoreOutlinedIcon from "@mui/icons-material/ExpandMoreOutlined";
+import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 
-import { CursorPrimaryButton } from "../../components/common/index.js";
+import { CursorIconAction, CursorPrimaryButton } from "../../components/common/index.js";
 import { useI18n } from "../../i18n/useI18n.js";
 
 /**
@@ -79,55 +82,97 @@ export default function IndexedWorksBrowser({
         "&:before": { display: "none" },
       }}
     >
-      <AccordionSummary sx={{ fontSize: "0.8125rem", fontWeight: 600, color: "rgba(255,255,255,0.85)" }}>
-        {t("workspaces.accordion.title")}
+      <AccordionSummary
+        expandIcon={<ExpandMoreOutlinedIcon sx={{ color: "rgba(255,255,255,0.55)" }} />}
+        sx={{ px: 1.5, py: 0.35 }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, width: "100%" }}>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>
+              {t("workspaces.accordion.title")}
+            </Typography>
+            <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mt: 0.4 }}>
+              {t("workspaces.accordion.desc")}
+            </Typography>
+          </Box>
+          <Chip label={t("workspaces.totalIndex", { total })} size="small" sx={{ height: 24, fontSize: "0.6875rem", flexShrink: 0 }} />
+        </Box>
       </AccordionSummary>
-      <AccordionDetails sx={{ pt: 0 }}>
-        <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.75)", mb: 1 }}>
-          {t("workspaces.indexed.title")}
-        </Typography>
-
-        <Box component="form" onSubmit={onSearch} sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2, alignItems: "flex-start" }}>
-          <TextField
-            label={t("workspaces.search.label")}
-            value={q}
-            onChange={(ev) => onQChange(ev.target.value)}
-            size="small"
+      <AccordionDetails sx={{ pt: 0, px: 1.5, pb: 1.5 }}>
+        <Box component="form" onSubmit={onSearch} sx={{ mb: 1.5 }}>
+          <Box
             sx={{
-              minWidth: { xs: "100%", sm: 240 },
-              flex: { xs: "1 1 100%", sm: "0 1 auto" },
-              "& .MuiInputBase-input": { fontSize: "0.8125rem" },
-              "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)" },
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 1.3fr) minmax(0, 1fr)" },
+              gap: 1,
+              alignItems: "stretch",
             }}
-          />
-          <CursorPrimaryButton type="submit" disabled={loading}>
-            {t("workspaces.search.submit")}
-          </CursorPrimaryButton>
-          <FormControl size="small" sx={{ minWidth: 140 }}>
-            <InputLabel id="ws-sort">{t("workspaces.sort.label")}</InputLabel>
-            <Select labelId="ws-sort" label={t("workspaces.sort.label")} value={sortBy} onChange={(e) => onSortByChange(e.target.value)}>
-              <MenuItem value="api">{t("workspaces.sort.api")}</MenuItem>
-              <MenuItem value="title">{t("workspaces.sort.titleAz")}</MenuItem>
-              <MenuItem value="year_desc">{t("workspaces.sort.yearNewest")}</MenuItem>
-            </Select>
-          </FormControl>
-          <FormControl size="small" sx={{ minWidth: 140 }}>
-            <InputLabel id="ws-view">{t("workspaces.view.label")}</InputLabel>
-            <Select labelId="ws-view" label={t("workspaces.view.label")} value={viewDensity} onChange={(e) => onViewDensityChange(e.target.value)}>
-              <MenuItem value="cards">{t("workspaces.view.cards")}</MenuItem>
-              <MenuItem value="compact">{t("workspaces.view.compact")}</MenuItem>
-            </Select>
-          </FormControl>
-          <FormControl size="small" sx={{ minWidth: 160 }}>
-            <InputLabel id="ws-sem">{t("workspaces.semantic.label")}</InputLabel>
-            <Select labelId="ws-sem" label={t("workspaces.semantic.label")} value={semanticFilter} onChange={(e) => onSemanticFilterChange(e.target.value)}>
-              <MenuItem value="all">{t("workspaces.semantic.all")}</MenuItem>
-              <MenuItem value="ready">{t("workspaces.semantic.ready")}</MenuItem>
-              <MenuItem value="not_ready">{t("workspaces.semantic.notReady")}</MenuItem>
-            </Select>
-          </FormControl>
-          <TextField label={t("workspaces.yearMin")} value={yearMin} onChange={(e) => onYearMinChange(e.target.value)} size="small" type="number" sx={{ width: 100 }} />
-          <TextField label={t("workspaces.yearMax")} value={yearMax} onChange={(e) => onYearMaxChange(e.target.value)} size="small" type="number" sx={{ width: 100 }} />
+          >
+            <Box
+              sx={{
+                display: "flex",
+                gap: 0.75,
+                alignItems: "center",
+                minWidth: 0,
+                p: 0.75,
+                borderRadius: "6px",
+                border: "1px solid rgba(255,255,255,0.08)",
+                backgroundColor: "rgba(255,255,255,0.02)",
+              }}
+            >
+              <TextField
+                label={t("workspaces.search.label")}
+                value={q}
+                onChange={(ev) => onQChange(ev.target.value)}
+                size="small"
+                fullWidth
+                sx={{
+                  minWidth: 0,
+                  "& .MuiInputBase-input": { fontSize: "0.8125rem" },
+                  "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)" },
+                }}
+              />
+              <CursorIconAction type="submit" title={t("workspaces.search.submit")} disabled={loading}>
+                <SearchOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+              </CursorIconAction>
+            </Box>
+
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", xl: "repeat(4, minmax(0, 1fr))" },
+                gap: 1,
+              }}
+            >
+              <FormControl size="small" sx={{ minWidth: 0 }}>
+                <InputLabel id="ws-sort">{t("workspaces.sort.label")}</InputLabel>
+                <Select labelId="ws-sort" label={t("workspaces.sort.label")} value={sortBy} onChange={(e) => onSortByChange(e.target.value)}>
+                  <MenuItem value="api">{t("workspaces.sort.api")}</MenuItem>
+                  <MenuItem value="title">{t("workspaces.sort.titleAz")}</MenuItem>
+                  <MenuItem value="year_desc">{t("workspaces.sort.yearNewest")}</MenuItem>
+                </Select>
+              </FormControl>
+              <FormControl size="small" sx={{ minWidth: 0 }}>
+                <InputLabel id="ws-view">{t("workspaces.view.label")}</InputLabel>
+                <Select labelId="ws-view" label={t("workspaces.view.label")} value={viewDensity} onChange={(e) => onViewDensityChange(e.target.value)}>
+                  <MenuItem value="cards">{t("workspaces.view.cards")}</MenuItem>
+                  <MenuItem value="compact">{t("workspaces.view.compact")}</MenuItem>
+                </Select>
+              </FormControl>
+              <FormControl size="small" sx={{ minWidth: 0 }}>
+                <InputLabel id="ws-sem">{t("workspaces.semantic.label")}</InputLabel>
+                <Select labelId="ws-sem" label={t("workspaces.semantic.label")} value={semanticFilter} onChange={(e) => onSemanticFilterChange(e.target.value)}>
+                  <MenuItem value="all">{t("workspaces.semantic.all")}</MenuItem>
+                  <MenuItem value="ready">{t("workspaces.semantic.ready")}</MenuItem>
+                  <MenuItem value="not_ready">{t("workspaces.semantic.notReady")}</MenuItem>
+                </Select>
+              </FormControl>
+              <Box sx={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 1 }}>
+                <TextField label={t("workspaces.yearMin")} value={yearMin} onChange={(e) => onYearMinChange(e.target.value)} size="small" type="number" sx={{ minWidth: 0 }} />
+                <TextField label={t("workspaces.yearMax")} value={yearMax} onChange={(e) => onYearMaxChange(e.target.value)} size="small" type="number" sx={{ minWidth: 0 }} />
+              </Box>
+            </Box>
+          </Box>
         </Box>
 
         {loading && (
@@ -137,9 +182,9 @@ export default function IndexedWorksBrowser({
           </Box>
         )}
         {error && (
-          <Alert severity="error" sx={{ mb: 2, fontSize: "0.8125rem" }}>
+          <InlineNotice severity="error" sx={{ mb: 2 }}>
             {error}
-          </Alert>
+          </InlineNotice>
         )}
 
         {!loading && !error && (
@@ -149,7 +194,21 @@ export default function IndexedWorksBrowser({
           </Typography>
         )}
 
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>{sortedItems.map(renderWorkRow)}</Box>
+        {!loading && !error && sortedItems.length === 0 ? (
+          <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)", py: 1 }}>
+            {t("workspaces.indexed.empty")}
+          </Typography>
+        ) : (
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: viewDensity === "cards" ? { xs: "1fr", lg: "repeat(2, minmax(0, 1fr))" } : "1fr",
+              gap: 1,
+            }}
+          >
+            {sortedItems.map(renderWorkRow)}
+          </Box>
+        )}
 
         {!loading && !error && canLoadMore ? (
           <Box sx={{ mt: 2 }}>

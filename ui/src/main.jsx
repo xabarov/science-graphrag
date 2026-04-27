@@ -6,6 +6,7 @@ import { CssBaseline, ThemeProvider, createTheme } from "@mui/material";
 import Box from "@mui/material/Box";
 
 import App from "./App.jsx";
+import { FeedbackProvider } from "./components/feedback/index.js";
 import { I18nProvider } from "./i18n/I18nContext.jsx";
 import "./styles.css";
 
@@ -26,12 +27,14 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <I18nProvider>
       <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <HashRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <Box sx={{ flex: 1, minHeight: 0, height: "100%", display: "flex", flexDirection: "column" }}>
-            <App />
-          </Box>
-        </HashRouter>
+        <FeedbackProvider>
+          <CssBaseline />
+          <HashRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <Box sx={{ flex: 1, minHeight: 0, height: "100%", display: "flex", flexDirection: "column" }}>
+              <App />
+            </Box>
+          </HashRouter>
+        </FeedbackProvider>
       </ThemeProvider>
     </I18nProvider>
   </React.StrictMode>,

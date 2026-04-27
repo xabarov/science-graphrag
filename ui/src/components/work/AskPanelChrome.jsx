@@ -1,6 +1,10 @@
 import React from "react";
-import Alert from "@mui/material/Alert";
+import DeleteSweepOutlinedIcon from "@mui/icons-material/DeleteSweepOutlined";
+import { InlineNotice } from "../feedback/index.js";
+import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+
+import { CursorSmallButton } from "../common/index.js";
 
 /**
  * Page chrome (title/body) or compact chat eyebrow + submit/stream errors.
@@ -10,9 +14,11 @@ import Typography from "@mui/material/Typography";
  *   t: (key: string, vars?: Record<string, string>) => string,
  *   scopeEyebrow: string,
  *   error: string | null,
+ *   onClearChatClick?: () => void,
+ *   clearChatDisabled?: boolean,
  * }} props
  */
-export function AskPanelChrome({ showPageChrome, t, scopeEyebrow, error }) {
+export function AskPanelChrome({ showPageChrome, t, scopeEyebrow, error, onClearChatClick, clearChatDisabled = false }) {
   return (
     <>
       {showPageChrome ? (
@@ -21,14 +27,29 @@ export function AskPanelChrome({ showPageChrome, t, scopeEyebrow, error }) {
           <Typography sx={{ color: "rgba(255,255,255,0.55)", fontSize: "0.8125rem", mb: 1 }}>{t("askPanel.chromeBody")}</Typography>
         </>
       ) : (
-        <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mb: 0.5, flexShrink: 0 }} noWrap title={scopeEyebrow}>
-          {scopeEyebrow}
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5, flexShrink: 0, minWidth: 0 }}>
+          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", flex: 1, minWidth: 0 }} noWrap title={scopeEyebrow}>
+            {scopeEyebrow}
+          </Typography>
+          {onClearChatClick ? (
+            <CursorSmallButton
+              type="button"
+              disabled={clearChatDisabled}
+              aria-label={t("chat.clear.openAria")}
+              title={t("chat.clear.openAria")}
+              startIcon={<DeleteSweepOutlinedIcon sx={{ fontSize: "1rem !important" }} />}
+              onClick={onClearChatClick}
+              sx={{ flexShrink: 0, py: 0.25, minHeight: 28 }}
+            >
+              {t("chat.clear.button")}
+            </CursorSmallButton>
+          ) : null}
+        </Box>
       )}
       {error ? (
-        <Alert severity="error" sx={{ fontSize: "0.8125rem", flexShrink: 0, py: 0.5 }}>
+        <InlineNotice severity="error" sx={{ flexShrink: 0 }}>
           {error}
-        </Alert>
+        </InlineNotice>
       ) : null}
     </>
   );

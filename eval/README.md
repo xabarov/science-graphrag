@@ -135,7 +135,7 @@ SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED=false \
 science-graphrag-layer1-benchmark tests/fixtures/benchmarks/layer1 \
   --suite --tier nightly_heavy \
   --threshold-profile reporting_skip_f1_gates \
-  --json-out eval/results/current-llm-layer1-nightly-heavy-suite-after-prompt-fix.json
+  --json-out eval/results/current-llm-layer1-nightly-heavy-suite.json
 python scripts/aggregate_benchmark_metrics.py
 python scripts/generate_benchmark_metrics_tables.py
 ```

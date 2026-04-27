@@ -5,7 +5,7 @@
       "eval/results/current-reference-graph-yolov1.json",
       "eval/results/current-reference-layer2-yolov1-semantic.json"
     ],
-    "layer1_nightly": "eval/results/current-llm-layer1-nightly-heavy-suite-after-prompt-fix.json",
+    "layer1_nightly": "eval/results/current-llm-layer1-nightly-heavy-suite.json",
     "layer2_nightly": "eval/results/current-llm-layer2-nightly-semantic-suite.json",
     "baseline_layer1": "eval/results/baseline-llm-layer1-nightly-heavy-suite.json",
     "baseline_layer2": "eval/results/baseline-llm-layer2-nightly-semantic-suite.json",
@@ -25,8 +25,8 @@
     "claims_corpus_v2_mini_suite": "eval/results/current-claims-corpus-v2-mini.json",
     "claims_pilot_suite": "eval/results/current-claims-pilot-suite.json",
     "claims_production_pilot_suite": "eval/results/current-claims-production-pilot.json",
-    "claims_paraphrase_pilot_suite": "eval/results/current-claims-paraphrase-pilot.json",
-    "claims_paraphrase_holdout_suite": "eval/results/current-claims-paraphrase-holdout.json",
+    "claims_paraphrase_pilot_suite": "eval/results/current-llm-claims-paraphrase-pilot.json",
+    "claims_paraphrase_holdout_suite": "eval/results/current-llm-claims-paraphrase-holdout.json",
     "references_resolution_contract": "eval/results/current-references-resolution-contract.json",
     "references_resolution_mini": "eval/results/current-references-resolution-mini.json",
     "references_resolution_graph": "eval/results/current-references-resolution-graph.json",
@@ -80,12 +80,12 @@
     ]
   },
   "layer1_nightly": {
-    "artifact": "eval/results/current-llm-layer1-nightly-heavy-suite-after-prompt-fix.json",
+    "artifact": "eval/results/current-llm-layer1-nightly-heavy-suite.json",
     "run_metadata": {
       "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
       "extraction_llm_base_url": "https://openrouter.ai/api/v1",
       "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
-      "semantic_prompt_fingerprint": "sha256-20:7dccc10f9cebac9ef190",
+      "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
       "semantic_extraction_enabled": true
     },
     "summary": {
@@ -122,10 +122,55 @@
         "yolov3_realpdf",
         "yolox_realpdf"
       ],
-      "all_passed": true
+      "all_passed": false
     },
-    "failed_count": 0,
-    "failed_cases": [],
+    "failed_count": 4,
+    "failed_cases": [
+      {
+        "case_id": "atss_realpdf",
+        "checks": {
+          "title_match_required": true,
+          "min_authorship_names_f1": true,
+          "reference_count_in_expected_range": true,
+          "min_sample_arxiv_f1": false,
+          "min_abstract_prefix_containment": true
+        },
+        "classification": "unknown"
+      },
+      {
+        "case_id": "detr_realpdf",
+        "checks": {
+          "title_match_required": true,
+          "min_authorship_names_f1": true,
+          "reference_count_in_expected_range": false,
+          "min_sample_arxiv_f1": true,
+          "min_abstract_prefix_containment": true
+        },
+        "classification": "benchmark_gold_references"
+      },
+      {
+        "case_id": "detrs_realpdf",
+        "checks": {
+          "title_match_required": true,
+          "min_authorship_names_f1": true,
+          "reference_count_in_expected_range": false,
+          "min_sample_arxiv_f1": true,
+          "min_abstract_prefix_containment": true
+        },
+        "classification": "benchmark_gold_references"
+      },
+      {
+        "case_id": "efficientdet_realpdf",
+        "checks": {
+          "title_match_required": true,
+          "min_authorship_names_f1": false,
+          "reference_count_in_expected_range": true,
+          "min_sample_arxiv_f1": true,
+          "min_abstract_prefix_containment": true
+        },
+        "classification": "unknown"
+      }
+    ],
     "source_histogram": {
       "metadata_source": {
         "llm": 30
@@ -134,12 +179,15 @@
         "llm": 30
       },
       "references_source": {
-        "hybrid": 29,
-        "llm": 1
+        "hybrid": 28,
+        "llm": 2
       }
     },
-    "references_llm_failed_events": 6,
-    "failure_class_histogram": {}
+    "references_llm_failed_events": 0,
+    "failure_class_histogram": {
+      "unknown": 2,
+      "benchmark_gold_references": 2
+    }
   },
   "layer2_nightly": {
     "artifact": "eval/results/current-llm-layer2-nightly-semantic-suite.json",
@@ -187,18 +235,18 @@
       ],
       "all_passed": false
     },
-    "failed_count": 9,
+    "failed_count": 6,
     "failed_cases": [
       {
         "case_id": "cascade_rcnn_semantic",
-        "notes": "dataset_recall_below_min=0.500<0.600; method_tp=1/4; dataset_tp=1/2",
-        "extraction_notes": "The paper discusses various related works and baseline methods but does not claim them as contributions. Only the Cascade R-CNN method and COCO dataset are explicitly mentioned as significant to the paper's contributions.",
+        "notes": "dataset_recall_below_min=0.500<0.600; method_tp=2/4; dataset_tp=1/2",
+        "extraction_notes": null,
         "classification": "benchmark_gold_or_metrics"
       },
       {
         "case_id": "dn_detr_semantic",
         "notes": "dataset_recall_below_min=0.500<0.600; method_tp=3/4; dataset_tp=1/2",
-        "extraction_notes": "Extracted methods and datasets based on the provided paper. Relations were not explicitly mentioned in the text.",
+        "extraction_notes": "Extracted methods, datasets, and relations based on the provided article body. The article discusses the DN-DETR method and its evaluation on the COCO dataset.",
         "classification": "benchmark_gold_or_metrics"
       },
       {
@@ -208,20 +256,8 @@
         "classification": "benchmark_gold_or_metrics"
       },
       {
-        "case_id": "faster_rcnn_semantic",
-        "notes": "dataset_recall_below_min=0.500<0.600; method_tp=2/3; dataset_tp=1/2",
-        "extraction_notes": "The paper mentions several datasets and methods, but I have focused on the most relevant ones as per the instructions. The evidence quotes are kept under 120 characters.",
-        "classification": "benchmark_gold_or_metrics"
-      },
-      {
-        "case_id": "hog_semantic",
-        "notes": "dataset_recall_below_min=0.000<0.600; method_tp=1/3; dataset_tp=0/1",
-        "extraction_notes": "The paper discusses various methods and datasets but focuses primarily on the HOG descriptors and the MIT pedestrian database. The relations are inferred based on the context provided in the paper.",
-        "classification": "benchmark_gold_or_metrics"
-      },
-      {
         "case_id": "mask_rcnn_semantic",
-        "notes": "dataset_recall_below_min=0.333<0.600; method_tp=2/6; dataset_tp=1/3",
+        "notes": "dataset_recall_below_min=0.333<0.600; method_tp=1/6; dataset_tp=1/3",
         "extraction_notes": null,
         "classification": "benchmark_gold_or_metrics"
       },
@@ -236,16 +272,10 @@
         "notes": "dataset_recall_below_min=0.000<0.600; method_tp=3/3; dataset_tp=0/1",
         "extraction_notes": null,
         "classification": "benchmark_gold_or_metrics"
-      },
-      {
-        "case_id": "selective_search_semantic",
-        "notes": "dataset_recall_below_min=0.000<0.600; method_tp=1/2; dataset_tp=0/1",
-        "extraction_notes": null,
-        "classification": "benchmark_gold_or_metrics"
       }
     ],
     "failure_class_histogram": {
-      "benchmark_gold_or_metrics": 9
+      "benchmark_gold_or_metrics": 6
     }
   },
   "deltas": {
@@ -270,13 +300,16 @@
         "yolov2_realpdf",
         "yolox_realpdf"
       ],
-      "current_failed": [],
-      "resolved": [
+      "current_failed": [
         "atss_realpdf",
+        "detr_realpdf",
+        "detrs_realpdf",
+        "efficientdet_realpdf"
+      ],
+      "resolved": [
         "cascade_rcnn_realpdf",
         "cornernet_realpdf",
         "deformable_detr_realpdf",
-        "detrs_realpdf",
         "dino_realpdf",
         "dn_detr_realpdf",
         "faster_rcnn_realpdf",
@@ -291,7 +324,10 @@
         "yolov2_realpdf",
         "yolox_realpdf"
       ],
-      "new_regressions": []
+      "new_regressions": [
+        "detr_realpdf",
+        "efficientdet_realpdf"
+      ]
     },
     "layer2_nightly_vs_baseline": {
       "baseline_failed": [
@@ -307,17 +343,15 @@
         "cascade_rcnn_semantic",
         "dn_detr_semantic",
         "efficientdet_semantic",
-        "faster_rcnn_semantic",
-        "hog_semantic",
         "mask_rcnn_semantic",
         "retinanet_semantic",
-        "rfcn_semantic",
-        "selective_search_semantic"
+        "rfcn_semantic"
       ],
       "resolved": [
         "detrs_semantic",
         "fpn_semantic",
         "gfl_semantic",
+        "hog_semantic",
         "part_based_models_semantic",
         "tood_semantic",
         "yolov2_semantic"
@@ -326,11 +360,9 @@
         "cascade_rcnn_semantic",
         "dn_detr_semantic",
         "efficientdet_semantic",
-        "faster_rcnn_semantic",
         "mask_rcnn_semantic",
         "retinanet_semantic",
-        "rfcn_semantic",
-        "selective_search_semantic"
+        "rfcn_semantic"
       ]
     }
   },
@@ -1053,7 +1085,7 @@
       }
     },
     "claims_paraphrase_pilot": {
-      "artifact": "eval/results/current-claims-paraphrase-pilot.json",
+      "artifact": "eval/results/current-llm-claims-paraphrase-pilot.json",
       "run_metadata": {
         "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
         "extraction_llm_base_url": "https://openrouter.ai/api/v1",
@@ -1061,18 +1093,329 @@
         "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316"
       },
       "summary": {
-        "case_count": 2,
+        "case_count": 15,
         "case_ids": [
+          "corpus_cascade_rcnn_v2",
+          "corpus_centernet_v2",
+          "corpus_cornernet_v2",
+          "corpus_detr_v2",
+          "corpus_efficientdet_v2",
+          "corpus_fast_rcnn_v2",
+          "corpus_faster_rcnn_v2",
+          "corpus_fcos_v2",
+          "corpus_fpn_v2",
+          "corpus_mask_rcnn_v2",
+          "corpus_rcnn_v2",
+          "corpus_retinanet_focal_v2",
           "corpus_ssd_v2",
-          "corpus_yolov1_v2"
+          "corpus_yolov1_v2",
+          "corpus_yolov2_v2"
         ],
-        "all_passed": true,
+        "all_passed": false,
         "claims_paraphrase_eval": true
       },
-      "failed_count": 0,
-      "failed_cases": [],
-      "all_passed": true,
-      "mean_claim_recall": 0.625,
+      "failed_count": 11,
+      "failed_cases": [
+        {
+          "case_id": "corpus_centernet_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.5,
+            "claim_precision": 0.18181818181818182,
+            "claim_precision_distracted": 0.14285714285714285,
+            "precision_drop_with_distractors": 0.038961038961038974,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 4,
+            "predicted_count_plain": 11,
+            "predicted_count_distracted": 7,
+            "matched_claim_ids": [
+              "centernet_triplet_keypoints",
+              "centernet_47_ap_coco"
+            ],
+            "missing_claim_ids": [
+              "centernet_center_pooling_filter",
+              "centernet_cornernet_false_pairs_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "case_id": "corpus_cornernet_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.0,
+            "claim_precision": 0.0,
+            "claim_precision_distracted": 0.17647058823529413,
+            "precision_drop_with_distractors": 0.0,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 3,
+            "predicted_count_plain": 0,
+            "predicted_count_distracted": 17,
+            "matched_claim_ids": [],
+            "missing_claim_ids": [
+              "cornernet_paired_keypoints",
+              "cornernet_hourglass_backbone",
+              "cornernet_anchor_design_drawbacks_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "case_id": "corpus_detr_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.5,
+            "claim_precision": 0.35714285714285715,
+            "claim_precision_distracted": 0.23529411764705882,
+            "precision_drop_with_distractors": 0.12184873949579833,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 4,
+            "predicted_count_plain": 14,
+            "predicted_count_distracted": 17,
+            "matched_claim_ids": [
+              "detr_set_prediction_pipeline",
+              "detr_match_faster_rcnn_large_obj"
+            ],
+            "missing_claim_ids": [
+              "detr_bipartite_matching_no_nms",
+              "detr_small_obj_slow_train_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "case_id": "corpus_efficientdet_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.0,
+            "claim_precision": 0.0,
+            "claim_precision_distracted": 0.0,
+            "precision_drop_with_distractors": 0.0,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 5,
+            "predicted_count_plain": 0,
+            "predicted_count_distracted": 0,
+            "matched_claim_ids": [],
+            "missing_claim_ids": [
+              "efficientdet_bifpn_weighted",
+              "efficientdet_compound_scaling",
+              "efficientdet_d7_55_ap_efficient",
+              "efficientdet_single_dim_scaling_negative",
+              "efficientdet_throughput_tradeoff_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "case_id": "corpus_faster_rcnn_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.0,
+            "claim_precision": 0.0,
+            "claim_precision_distracted": 0.0,
+            "precision_drop_with_distractors": 0.0,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 4,
+            "predicted_count_plain": 17,
+            "predicted_count_distracted": 6,
+            "matched_claim_ids": [],
+            "missing_claim_ids": [
+              "faster_rcnn_rpn_shared_features",
+              "faster_rcnn_speed_5fps_sota",
+              "faster_rcnn_anchor_boxes",
+              "faster_rcnn_selective_search_bottleneck"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "case_id": "corpus_fcos_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.25,
+            "claim_precision": 0.07142857142857142,
+            "claim_precision_distracted": 0.21428571428571427,
+            "precision_drop_with_distractors": 0.0,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 4,
+            "predicted_count_plain": 14,
+            "predicted_count_distracted": 14,
+            "matched_claim_ids": [
+              "fcos_per_pixel_prediction"
+            ],
+            "missing_claim_ids": [
+              "fcos_centerness_branch",
+              "fcos_surpass_retinanet_no_anchors",
+              "fcos_anchor_hyperparameter_burden_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "case_id": "corpus_fpn_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.25,
+            "claim_precision": 0.07142857142857142,
+            "claim_precision_distracted": 0.0,
+            "precision_drop_with_distractors": 0.07142857142857142,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 4,
+            "predicted_count_plain": 14,
+            "predicted_count_distracted": 0,
+            "matched_claim_ids": [
+              "fpn_topdown_lateral_pyramid"
+            ],
+            "missing_claim_ids": [
+              "fpn_lateral_connections_role",
+              "fpn_faster_rcnn_ap_gain",
+              "fpn_single_scale_small_objects_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "case_id": "corpus_mask_rcnn_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.4,
+            "claim_precision": 0.2,
+            "claim_precision_distracted": 0.1875,
+            "precision_drop_with_distractors": 0.012500000000000011,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 5,
+            "predicted_count_plain": 15,
+            "predicted_count_distracted": 16,
+            "matched_claim_ids": [
+              "mask_rcnn_parallel_mask_branch",
+              "mask_rcnn_roialign_quantization_fix"
+            ],
+            "missing_claim_ids": [
+              "mask_rcnn_decoupled_per_class_sigmoid",
+              "mask_rcnn_softmax_mask_competition_negative",
+              "mask_rcnn_pretraining_dependency_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "case_id": "corpus_rcnn_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.25,
+            "claim_precision": 0.058823529411764705,
+            "claim_precision_distracted": 0.07692307692307693,
+            "precision_drop_with_distractors": 0.0,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 4,
+            "predicted_count_plain": 17,
+            "predicted_count_distracted": 13,
+            "matched_claim_ids": [
+              "rcnn_voc_30pct_relative_gain"
+            ],
+            "missing_claim_ids": [
+              "rcnn_region_proposals_with_cnn_features",
+              "rcnn_pretrain_finetune_recipe",
+              "rcnn_inference_2k_proposals_slow_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "case_id": "corpus_retinanet_focal_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.4,
+            "claim_precision": 0.11764705882352941,
+            "claim_precision_distracted": 0.1,
+            "precision_drop_with_distractors": 0.017647058823529405,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 5,
+            "predicted_count_plain": 17,
+            "predicted_count_distracted": 10,
+            "matched_claim_ids": [
+              "retinanet_focal_loss_definition",
+              "retinanet_imbalance_root_cause"
+            ],
+            "missing_claim_ids": [
+              "retinanet_hard_mining_insufficient",
+              "retinanet_resnet101_fpn_ap",
+              "retinanet_alpha_balanced_alone_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "case_id": "corpus_yolov2_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.2,
+            "claim_precision": 0.058823529411764705,
+            "claim_precision_distracted": 0.05555555555555555,
+            "precision_drop_with_distractors": 0.0032679738562091526,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 5,
+            "predicted_count_plain": 17,
+            "predicted_count_distracted": 18,
+            "matched_claim_ids": [
+              "yolov2_batchnorm_dropout_replace"
+            ],
+            "missing_claim_ids": [
+              "yolov2_dimension_priors_kmeans",
+              "yolov2_yolo9000_joint_training",
+              "yolov2_handpicked_anchors_negative",
+              "yolov2_yolov1_coarse_grid_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        }
+      ],
+      "all_passed": false,
+      "mean_claim_recall": 0.3333333333333333,
       "trust_signal": {
         "family": "claims_family",
         "member_id": "claims_paraphrase_pilot",
@@ -1101,13 +1444,313 @@
           "corpus_fast_rcnn_v2": "draft"
         },
         "last_known_real_run_at": null,
-        "consistency_warnings": [],
-        "individual_failures": [],
+        "consistency_warnings": [
+          "claims_paraphrase_pilot: summary.all_passed=false with 11 failed cases"
+        ],
+        "individual_failures": [
+          {
+            "case_id": "corpus_centernet_v2",
+            "metrics": {
+              "contract_only": false,
+              "contract_passed": true,
+              "passed": false,
+              "claim_recall": 0.5,
+              "claim_precision": 0.18181818181818182,
+              "claim_precision_distracted": 0.14285714285714285,
+              "precision_drop_with_distractors": 0.038961038961038974,
+              "max_precision_drop_with_distractors": 0.15,
+              "paraphrase_scoring": true,
+              "claim_match_mode": "claim_id_or_normalized_text",
+              "expected_count": 4,
+              "predicted_count_plain": 11,
+              "predicted_count_distracted": 7,
+              "matched_claim_ids": [
+                "centernet_triplet_keypoints",
+                "centernet_47_ap_coco"
+              ],
+              "missing_claim_ids": [
+                "centernet_center_pooling_filter",
+                "centernet_cornernet_false_pairs_negative"
+              ],
+              "min_claim_recall": 0.55
+            }
+          },
+          {
+            "case_id": "corpus_cornernet_v2",
+            "metrics": {
+              "contract_only": false,
+              "contract_passed": true,
+              "passed": false,
+              "claim_recall": 0.0,
+              "claim_precision": 0.0,
+              "claim_precision_distracted": 0.17647058823529413,
+              "precision_drop_with_distractors": 0.0,
+              "max_precision_drop_with_distractors": 0.15,
+              "paraphrase_scoring": true,
+              "claim_match_mode": "claim_id_or_normalized_text",
+              "expected_count": 3,
+              "predicted_count_plain": 0,
+              "predicted_count_distracted": 17,
+              "matched_claim_ids": [],
+              "missing_claim_ids": [
+                "cornernet_paired_keypoints",
+                "cornernet_hourglass_backbone",
+                "cornernet_anchor_design_drawbacks_negative"
+              ],
+              "min_claim_recall": 0.55
+            }
+          },
+          {
+            "case_id": "corpus_detr_v2",
+            "metrics": {
+              "contract_only": false,
+              "contract_passed": true,
+              "passed": false,
+              "claim_recall": 0.5,
+              "claim_precision": 0.35714285714285715,
+              "claim_precision_distracted": 0.23529411764705882,
+              "precision_drop_with_distractors": 0.12184873949579833,
+              "max_precision_drop_with_distractors": 0.15,
+              "paraphrase_scoring": true,
+              "claim_match_mode": "claim_id_or_normalized_text",
+              "expected_count": 4,
+              "predicted_count_plain": 14,
+              "predicted_count_distracted": 17,
+              "matched_claim_ids": [
+                "detr_set_prediction_pipeline",
+                "detr_match_faster_rcnn_large_obj"
+              ],
+              "missing_claim_ids": [
+                "detr_bipartite_matching_no_nms",
+                "detr_small_obj_slow_train_negative"
+              ],
+              "min_claim_recall": 0.55
+            }
+          },
+          {
+            "case_id": "corpus_efficientdet_v2",
+            "metrics": {
+              "contract_only": false,
+              "contract_passed": true,
+              "passed": false,
+              "claim_recall": 0.0,
+              "claim_precision": 0.0,
+              "claim_precision_distracted": 0.0,
+              "precision_drop_with_distractors": 0.0,
+              "max_precision_drop_with_distractors": 0.15,
+              "paraphrase_scoring": true,
+              "claim_match_mode": "claim_id_or_normalized_text",
+              "expected_count": 5,
+              "predicted_count_plain": 0,
+              "predicted_count_distracted": 0,
+              "matched_claim_ids": [],
+              "missing_claim_ids": [
+                "efficientdet_bifpn_weighted",
+                "efficientdet_compound_scaling",
+                "efficientdet_d7_55_ap_efficient",
+                "efficientdet_single_dim_scaling_negative",
+                "efficientdet_throughput_tradeoff_negative"
+              ],
+              "min_claim_recall": 0.55
+            }
+          },
+          {
+            "case_id": "corpus_faster_rcnn_v2",
+            "metrics": {
+              "contract_only": false,
+              "contract_passed": true,
+              "passed": false,
+              "claim_recall": 0.0,
+              "claim_precision": 0.0,
+              "claim_precision_distracted": 0.0,
+              "precision_drop_with_distractors": 0.0,
+              "max_precision_drop_with_distractors": 0.15,
+              "paraphrase_scoring": true,
+              "claim_match_mode": "claim_id_or_normalized_text",
+              "expected_count": 4,
+              "predicted_count_plain": 17,
+              "predicted_count_distracted": 6,
+              "matched_claim_ids": [],
+              "missing_claim_ids": [
+                "faster_rcnn_rpn_shared_features",
+                "faster_rcnn_speed_5fps_sota",
+                "faster_rcnn_anchor_boxes",
+                "faster_rcnn_selective_search_bottleneck"
+              ],
+              "min_claim_recall": 0.55
+            }
+          },
+          {
+            "case_id": "corpus_fcos_v2",
+            "metrics": {
+              "contract_only": false,
+              "contract_passed": true,
+              "passed": false,
+              "claim_recall": 0.25,
+              "claim_precision": 0.07142857142857142,
+              "claim_precision_distracted": 0.21428571428571427,
+              "precision_drop_with_distractors": 0.0,
+              "max_precision_drop_with_distractors": 0.15,
+              "paraphrase_scoring": true,
+              "claim_match_mode": "claim_id_or_normalized_text",
+              "expected_count": 4,
+              "predicted_count_plain": 14,
+              "predicted_count_distracted": 14,
+              "matched_claim_ids": [
+                "fcos_per_pixel_prediction"
+              ],
+              "missing_claim_ids": [
+                "fcos_centerness_branch",
+                "fcos_surpass_retinanet_no_anchors",
+                "fcos_anchor_hyperparameter_burden_negative"
+              ],
+              "min_claim_recall": 0.55
+            }
+          },
+          {
+            "case_id": "corpus_fpn_v2",
+            "metrics": {
+              "contract_only": false,
+              "contract_passed": true,
+              "passed": false,
+              "claim_recall": 0.25,
+              "claim_precision": 0.07142857142857142,
+              "claim_precision_distracted": 0.0,
+              "precision_drop_with_distractors": 0.07142857142857142,
+              "max_precision_drop_with_distractors": 0.15,
+              "paraphrase_scoring": true,
+              "claim_match_mode": "claim_id_or_normalized_text",
+              "expected_count": 4,
+              "predicted_count_plain": 14,
+              "predicted_count_distracted": 0,
+              "matched_claim_ids": [
+                "fpn_topdown_lateral_pyramid"
+              ],
+              "missing_claim_ids": [
+                "fpn_lateral_connections_role",
+                "fpn_faster_rcnn_ap_gain",
+                "fpn_single_scale_small_objects_negative"
+              ],
+              "min_claim_recall": 0.55
+            }
+          },
+          {
+            "case_id": "corpus_mask_rcnn_v2",
+            "metrics": {
+              "contract_only": false,
+              "contract_passed": true,
+              "passed": false,
+              "claim_recall": 0.4,
+              "claim_precision": 0.2,
+              "claim_precision_distracted": 0.1875,
+              "precision_drop_with_distractors": 0.012500000000000011,
+              "max_precision_drop_with_distractors": 0.15,
+              "paraphrase_scoring": true,
+              "claim_match_mode": "claim_id_or_normalized_text",
+              "expected_count": 5,
+              "predicted_count_plain": 15,
+              "predicted_count_distracted": 16,
+              "matched_claim_ids": [
+                "mask_rcnn_parallel_mask_branch",
+                "mask_rcnn_roialign_quantization_fix"
+              ],
+              "missing_claim_ids": [
+                "mask_rcnn_decoupled_per_class_sigmoid",
+                "mask_rcnn_softmax_mask_competition_negative",
+                "mask_rcnn_pretraining_dependency_negative"
+              ],
+              "min_claim_recall": 0.55
+            }
+          },
+          {
+            "case_id": "corpus_rcnn_v2",
+            "metrics": {
+              "contract_only": false,
+              "contract_passed": true,
+              "passed": false,
+              "claim_recall": 0.25,
+              "claim_precision": 0.058823529411764705,
+              "claim_precision_distracted": 0.07692307692307693,
+              "precision_drop_with_distractors": 0.0,
+              "max_precision_drop_with_distractors": 0.15,
+              "paraphrase_scoring": true,
+              "claim_match_mode": "claim_id_or_normalized_text",
+              "expected_count": 4,
+              "predicted_count_plain": 17,
+              "predicted_count_distracted": 13,
+              "matched_claim_ids": [
+                "rcnn_voc_30pct_relative_gain"
+              ],
+              "missing_claim_ids": [
+                "rcnn_region_proposals_with_cnn_features",
+                "rcnn_pretrain_finetune_recipe",
+                "rcnn_inference_2k_proposals_slow_negative"
+              ],
+              "min_claim_recall": 0.55
+            }
+          },
+          {
+            "case_id": "corpus_retinanet_focal_v2",
+            "metrics": {
+              "contract_only": false,
+              "contract_passed": true,
+              "passed": false,
+              "claim_recall": 0.4,
+              "claim_precision": 0.11764705882352941,
+              "claim_precision_distracted": 0.1,
+              "precision_drop_with_distractors": 0.017647058823529405,
+              "max_precision_drop_with_distractors": 0.15,
+              "paraphrase_scoring": true,
+              "claim_match_mode": "claim_id_or_normalized_text",
+              "expected_count": 5,
+              "predicted_count_plain": 17,
+              "predicted_count_distracted": 10,
+              "matched_claim_ids": [
+                "retinanet_focal_loss_definition",
+                "retinanet_imbalance_root_cause"
+              ],
+              "missing_claim_ids": [
+                "retinanet_hard_mining_insufficient",
+                "retinanet_resnet101_fpn_ap",
+                "retinanet_alpha_balanced_alone_negative"
+              ],
+              "min_claim_recall": 0.55
+            }
+          },
+          {
+            "case_id": "corpus_yolov2_v2",
+            "metrics": {
+              "contract_only": false,
+              "contract_passed": true,
+              "passed": false,
+              "claim_recall": 0.2,
+              "claim_precision": 0.058823529411764705,
+              "claim_precision_distracted": 0.05555555555555555,
+              "precision_drop_with_distractors": 0.0032679738562091526,
+              "max_precision_drop_with_distractors": 0.15,
+              "paraphrase_scoring": true,
+              "claim_match_mode": "claim_id_or_normalized_text",
+              "expected_count": 5,
+              "predicted_count_plain": 17,
+              "predicted_count_distracted": 18,
+              "matched_claim_ids": [
+                "yolov2_batchnorm_dropout_replace"
+              ],
+              "missing_claim_ids": [
+                "yolov2_dimension_priors_kmeans",
+                "yolov2_yolo9000_joint_training",
+                "yolov2_handpicked_anchors_negative",
+                "yolov2_yolov1_coarse_grid_negative"
+              ],
+              "min_claim_recall": 0.55
+            }
+          }
+        ],
         "is_phantom": false
       }
     },
     "claims_paraphrase_holdout": {
-      "artifact": "eval/results/current-claims-paraphrase-holdout.json",
+      "artifact": "eval/results/current-llm-claims-paraphrase-holdout.json",
       "run_metadata": {
         "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
         "extraction_llm_base_url": "https://openrouter.ai/api/v1",
@@ -1115,16 +1758,129 @@
         "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316"
       },
       "summary": {
-        "case_count": 1,
+        "case_count": 5,
         "case_ids": [
-          "holdout_atss_v1"
+          "holdout_atss_v1",
+          "holdout_deformable_detr_v1",
+          "holdout_dino_v1",
+          "holdout_yolov3_v1",
+          "holdout_yolox_v1"
         ],
-        "all_passed": true,
+        "all_passed": false,
         "claims_paraphrase_eval": true
       },
-      "failed_count": 0,
-      "failed_cases": [],
-      "all_passed": true,
+      "failed_count": 4,
+      "failed_cases": [
+        {
+          "case_id": "holdout_deformable_detr_v1",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.25,
+            "claim_precision": 0.42857142857142855,
+            "claim_precision_distracted": 0.42105263157894735,
+            "precision_drop_with_distractors": 0.007518796992481203,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 4,
+            "predicted_count_plain": 21,
+            "predicted_count_distracted": 19,
+            "matched_claim_ids": [
+              "deformable_detr_attention_modules"
+            ],
+            "missing_claim_ids": [
+              "deformable_detr_10x_faster_convergence",
+              "deformable_detr_multiscale_efficient",
+              "deformable_detr_global_attention_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "case_id": "holdout_dino_v1",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.0,
+            "claim_precision": 0.0,
+            "claim_precision_distracted": 0.0,
+            "precision_drop_with_distractors": 0.0,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 5,
+            "predicted_count_plain": 21,
+            "predicted_count_distracted": 18,
+            "matched_claim_ids": [],
+            "missing_claim_ids": [
+              "dino_three_components",
+              "dino_swinl_63ap",
+              "dino_detr_scaling_overcomes_classical",
+              "dino_earlier_detr_slow_small_obj_negative",
+              "dino_classical_pipelines_scaling_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "case_id": "holdout_yolov3_v1",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.5,
+            "claim_precision": 0.13043478260869565,
+            "claim_precision_distracted": 0.25,
+            "precision_drop_with_distractors": 0.0,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 4,
+            "predicted_count_plain": 23,
+            "predicted_count_distracted": 28,
+            "matched_claim_ids": [
+              "yolov3_three_scale_predictions",
+              "yolov3_strict_iou_underperform_negative"
+            ],
+            "missing_claim_ids": [
+              "yolov3_logistic_per_class",
+              "yolov3_speed_vs_retinanet"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "case_id": "holdout_yolox_v1",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.25,
+            "claim_precision": 0.07142857142857142,
+            "claim_precision_distracted": 0.06666666666666667,
+            "precision_drop_with_distractors": 0.004761904761904759,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 4,
+            "predicted_count_plain": 14,
+            "predicted_count_distracted": 15,
+            "matched_claim_ids": [
+              "yolox_decoupled_head"
+            ],
+            "missing_claim_ids": [
+              "yolox_anchor_free_simota",
+              "yolox_l_50ap_v100_speed",
+              "yolox_coupled_head_conflict_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        }
+      ],
+      "all_passed": false,
       "mean_claim_recall": 0.25,
       "trust_signal": {
         "family": "claims_family",
@@ -1154,8 +1910,119 @@
           "corpus_fast_rcnn_v2": "draft"
         },
         "last_known_real_run_at": null,
-        "consistency_warnings": [],
-        "individual_failures": [],
+        "consistency_warnings": [
+          "claims_paraphrase_holdout: summary.all_passed=false with 4 failed cases"
+        ],
+        "individual_failures": [
+          {
+            "case_id": "holdout_deformable_detr_v1",
+            "metrics": {
+              "contract_only": false,
+              "contract_passed": true,
+              "passed": false,
+              "claim_recall": 0.25,
+              "claim_precision": 0.42857142857142855,
+              "claim_precision_distracted": 0.42105263157894735,
+              "precision_drop_with_distractors": 0.007518796992481203,
+              "max_precision_drop_with_distractors": 0.15,
+              "paraphrase_scoring": true,
+              "claim_match_mode": "claim_id_or_normalized_text",
+              "expected_count": 4,
+              "predicted_count_plain": 21,
+              "predicted_count_distracted": 19,
+              "matched_claim_ids": [
+                "deformable_detr_attention_modules"
+              ],
+              "missing_claim_ids": [
+                "deformable_detr_10x_faster_convergence",
+                "deformable_detr_multiscale_efficient",
+                "deformable_detr_global_attention_negative"
+              ],
+              "min_claim_recall": 0.55
+            }
+          },
+          {
+            "case_id": "holdout_dino_v1",
+            "metrics": {
+              "contract_only": false,
+              "contract_passed": true,
+              "passed": false,
+              "claim_recall": 0.0,
+              "claim_precision": 0.0,
+              "claim_precision_distracted": 0.0,
+              "precision_drop_with_distractors": 0.0,
+              "max_precision_drop_with_distractors": 0.15,
+              "paraphrase_scoring": true,
+              "claim_match_mode": "claim_id_or_normalized_text",
+              "expected_count": 5,
+              "predicted_count_plain": 21,
+              "predicted_count_distracted": 18,
+              "matched_claim_ids": [],
+              "missing_claim_ids": [
+                "dino_three_components",
+                "dino_swinl_63ap",
+                "dino_detr_scaling_overcomes_classical",
+                "dino_earlier_detr_slow_small_obj_negative",
+                "dino_classical_pipelines_scaling_negative"
+              ],
+              "min_claim_recall": 0.55
+            }
+          },
+          {
+            "case_id": "holdout_yolov3_v1",
+            "metrics": {
+              "contract_only": false,
+              "contract_passed": true,
+              "passed": false,
+              "claim_recall": 0.5,
+              "claim_precision": 0.13043478260869565,
+              "claim_precision_distracted": 0.25,
+              "precision_drop_with_distractors": 0.0,
+              "max_precision_drop_with_distractors": 0.15,
+              "paraphrase_scoring": true,
+              "claim_match_mode": "claim_id_or_normalized_text",
+              "expected_count": 4,
+              "predicted_count_plain": 23,
+              "predicted_count_distracted": 28,
+              "matched_claim_ids": [
+                "yolov3_three_scale_predictions",
+                "yolov3_strict_iou_underperform_negative"
+              ],
+              "missing_claim_ids": [
+                "yolov3_logistic_per_class",
+                "yolov3_speed_vs_retinanet"
+              ],
+              "min_claim_recall": 0.55
+            }
+          },
+          {
+            "case_id": "holdout_yolox_v1",
+            "metrics": {
+              "contract_only": false,
+              "contract_passed": true,
+              "passed": false,
+              "claim_recall": 0.25,
+              "claim_precision": 0.07142857142857142,
+              "claim_precision_distracted": 0.06666666666666667,
+              "precision_drop_with_distractors": 0.004761904761904759,
+              "max_precision_drop_with_distractors": 0.15,
+              "paraphrase_scoring": true,
+              "claim_match_mode": "claim_id_or_normalized_text",
+              "expected_count": 4,
+              "predicted_count_plain": 14,
+              "predicted_count_distracted": 15,
+              "matched_claim_ids": [
+                "yolox_decoupled_head"
+              ],
+              "missing_claim_ids": [
+                "yolox_anchor_free_simota",
+                "yolox_l_50ap_v100_speed",
+                "yolox_coupled_head_conflict_negative"
+              ],
+              "min_claim_recall": 0.55
+            }
+          }
+        ],
         "is_phantom": false
       }
     },
@@ -1545,8 +2412,8 @@
     "reason": "reference_ok_nightly_has_residual_failures_document_in_gate_report",
     "criteria": {
       "reference_all_passed": true,
-      "layer1_nightly_failed_count": 0,
-      "layer2_nightly_failed_count": 9,
+      "layer1_nightly_failed_count": 4,
+      "layer2_nightly_failed_count": 6,
       "claims_production_artifact_missing": false,
       "claims_production_all_passed": true,
       "claims_production_mean_claim_recall": 1.0,
@@ -1555,7 +2422,443 @@
         "merge_safe_contract_mock",
         "strict_pilot_mock"
       ],
-      "advisory_individual_failures": [],
+      "advisory_individual_failures": [
+        {
+          "family": "claims_family",
+          "member_id": "claims_paraphrase_pilot",
+          "case_id": "corpus_centernet_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.5,
+            "claim_precision": 0.18181818181818182,
+            "claim_precision_distracted": 0.14285714285714285,
+            "precision_drop_with_distractors": 0.038961038961038974,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 4,
+            "predicted_count_plain": 11,
+            "predicted_count_distracted": 7,
+            "matched_claim_ids": [
+              "centernet_triplet_keypoints",
+              "centernet_47_ap_coco"
+            ],
+            "missing_claim_ids": [
+              "centernet_center_pooling_filter",
+              "centernet_cornernet_false_pairs_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "family": "claims_family",
+          "member_id": "claims_paraphrase_pilot",
+          "case_id": "corpus_cornernet_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.0,
+            "claim_precision": 0.0,
+            "claim_precision_distracted": 0.17647058823529413,
+            "precision_drop_with_distractors": 0.0,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 3,
+            "predicted_count_plain": 0,
+            "predicted_count_distracted": 17,
+            "matched_claim_ids": [],
+            "missing_claim_ids": [
+              "cornernet_paired_keypoints",
+              "cornernet_hourglass_backbone",
+              "cornernet_anchor_design_drawbacks_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "family": "claims_family",
+          "member_id": "claims_paraphrase_pilot",
+          "case_id": "corpus_detr_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.5,
+            "claim_precision": 0.35714285714285715,
+            "claim_precision_distracted": 0.23529411764705882,
+            "precision_drop_with_distractors": 0.12184873949579833,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 4,
+            "predicted_count_plain": 14,
+            "predicted_count_distracted": 17,
+            "matched_claim_ids": [
+              "detr_set_prediction_pipeline",
+              "detr_match_faster_rcnn_large_obj"
+            ],
+            "missing_claim_ids": [
+              "detr_bipartite_matching_no_nms",
+              "detr_small_obj_slow_train_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "family": "claims_family",
+          "member_id": "claims_paraphrase_pilot",
+          "case_id": "corpus_efficientdet_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.0,
+            "claim_precision": 0.0,
+            "claim_precision_distracted": 0.0,
+            "precision_drop_with_distractors": 0.0,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 5,
+            "predicted_count_plain": 0,
+            "predicted_count_distracted": 0,
+            "matched_claim_ids": [],
+            "missing_claim_ids": [
+              "efficientdet_bifpn_weighted",
+              "efficientdet_compound_scaling",
+              "efficientdet_d7_55_ap_efficient",
+              "efficientdet_single_dim_scaling_negative",
+              "efficientdet_throughput_tradeoff_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "family": "claims_family",
+          "member_id": "claims_paraphrase_pilot",
+          "case_id": "corpus_faster_rcnn_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.0,
+            "claim_precision": 0.0,
+            "claim_precision_distracted": 0.0,
+            "precision_drop_with_distractors": 0.0,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 4,
+            "predicted_count_plain": 17,
+            "predicted_count_distracted": 6,
+            "matched_claim_ids": [],
+            "missing_claim_ids": [
+              "faster_rcnn_rpn_shared_features",
+              "faster_rcnn_speed_5fps_sota",
+              "faster_rcnn_anchor_boxes",
+              "faster_rcnn_selective_search_bottleneck"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "family": "claims_family",
+          "member_id": "claims_paraphrase_pilot",
+          "case_id": "corpus_fcos_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.25,
+            "claim_precision": 0.07142857142857142,
+            "claim_precision_distracted": 0.21428571428571427,
+            "precision_drop_with_distractors": 0.0,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 4,
+            "predicted_count_plain": 14,
+            "predicted_count_distracted": 14,
+            "matched_claim_ids": [
+              "fcos_per_pixel_prediction"
+            ],
+            "missing_claim_ids": [
+              "fcos_centerness_branch",
+              "fcos_surpass_retinanet_no_anchors",
+              "fcos_anchor_hyperparameter_burden_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "family": "claims_family",
+          "member_id": "claims_paraphrase_pilot",
+          "case_id": "corpus_fpn_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.25,
+            "claim_precision": 0.07142857142857142,
+            "claim_precision_distracted": 0.0,
+            "precision_drop_with_distractors": 0.07142857142857142,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 4,
+            "predicted_count_plain": 14,
+            "predicted_count_distracted": 0,
+            "matched_claim_ids": [
+              "fpn_topdown_lateral_pyramid"
+            ],
+            "missing_claim_ids": [
+              "fpn_lateral_connections_role",
+              "fpn_faster_rcnn_ap_gain",
+              "fpn_single_scale_small_objects_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "family": "claims_family",
+          "member_id": "claims_paraphrase_pilot",
+          "case_id": "corpus_mask_rcnn_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.4,
+            "claim_precision": 0.2,
+            "claim_precision_distracted": 0.1875,
+            "precision_drop_with_distractors": 0.012500000000000011,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 5,
+            "predicted_count_plain": 15,
+            "predicted_count_distracted": 16,
+            "matched_claim_ids": [
+              "mask_rcnn_parallel_mask_branch",
+              "mask_rcnn_roialign_quantization_fix"
+            ],
+            "missing_claim_ids": [
+              "mask_rcnn_decoupled_per_class_sigmoid",
+              "mask_rcnn_softmax_mask_competition_negative",
+              "mask_rcnn_pretraining_dependency_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "family": "claims_family",
+          "member_id": "claims_paraphrase_pilot",
+          "case_id": "corpus_rcnn_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.25,
+            "claim_precision": 0.058823529411764705,
+            "claim_precision_distracted": 0.07692307692307693,
+            "precision_drop_with_distractors": 0.0,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 4,
+            "predicted_count_plain": 17,
+            "predicted_count_distracted": 13,
+            "matched_claim_ids": [
+              "rcnn_voc_30pct_relative_gain"
+            ],
+            "missing_claim_ids": [
+              "rcnn_region_proposals_with_cnn_features",
+              "rcnn_pretrain_finetune_recipe",
+              "rcnn_inference_2k_proposals_slow_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "family": "claims_family",
+          "member_id": "claims_paraphrase_pilot",
+          "case_id": "corpus_retinanet_focal_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.4,
+            "claim_precision": 0.11764705882352941,
+            "claim_precision_distracted": 0.1,
+            "precision_drop_with_distractors": 0.017647058823529405,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 5,
+            "predicted_count_plain": 17,
+            "predicted_count_distracted": 10,
+            "matched_claim_ids": [
+              "retinanet_focal_loss_definition",
+              "retinanet_imbalance_root_cause"
+            ],
+            "missing_claim_ids": [
+              "retinanet_hard_mining_insufficient",
+              "retinanet_resnet101_fpn_ap",
+              "retinanet_alpha_balanced_alone_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "family": "claims_family",
+          "member_id": "claims_paraphrase_pilot",
+          "case_id": "corpus_yolov2_v2",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.2,
+            "claim_precision": 0.058823529411764705,
+            "claim_precision_distracted": 0.05555555555555555,
+            "precision_drop_with_distractors": 0.0032679738562091526,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 5,
+            "predicted_count_plain": 17,
+            "predicted_count_distracted": 18,
+            "matched_claim_ids": [
+              "yolov2_batchnorm_dropout_replace"
+            ],
+            "missing_claim_ids": [
+              "yolov2_dimension_priors_kmeans",
+              "yolov2_yolo9000_joint_training",
+              "yolov2_handpicked_anchors_negative",
+              "yolov2_yolov1_coarse_grid_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "family": "claims_family",
+          "member_id": "claims_paraphrase_holdout",
+          "case_id": "holdout_deformable_detr_v1",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.25,
+            "claim_precision": 0.42857142857142855,
+            "claim_precision_distracted": 0.42105263157894735,
+            "precision_drop_with_distractors": 0.007518796992481203,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 4,
+            "predicted_count_plain": 21,
+            "predicted_count_distracted": 19,
+            "matched_claim_ids": [
+              "deformable_detr_attention_modules"
+            ],
+            "missing_claim_ids": [
+              "deformable_detr_10x_faster_convergence",
+              "deformable_detr_multiscale_efficient",
+              "deformable_detr_global_attention_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "family": "claims_family",
+          "member_id": "claims_paraphrase_holdout",
+          "case_id": "holdout_dino_v1",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.0,
+            "claim_precision": 0.0,
+            "claim_precision_distracted": 0.0,
+            "precision_drop_with_distractors": 0.0,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 5,
+            "predicted_count_plain": 21,
+            "predicted_count_distracted": 18,
+            "matched_claim_ids": [],
+            "missing_claim_ids": [
+              "dino_three_components",
+              "dino_swinl_63ap",
+              "dino_detr_scaling_overcomes_classical",
+              "dino_earlier_detr_slow_small_obj_negative",
+              "dino_classical_pipelines_scaling_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "family": "claims_family",
+          "member_id": "claims_paraphrase_holdout",
+          "case_id": "holdout_yolov3_v1",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.5,
+            "claim_precision": 0.13043478260869565,
+            "claim_precision_distracted": 0.25,
+            "precision_drop_with_distractors": 0.0,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 4,
+            "predicted_count_plain": 23,
+            "predicted_count_distracted": 28,
+            "matched_claim_ids": [
+              "yolov3_three_scale_predictions",
+              "yolov3_strict_iou_underperform_negative"
+            ],
+            "missing_claim_ids": [
+              "yolov3_logistic_per_class",
+              "yolov3_speed_vs_retinanet"
+            ],
+            "min_claim_recall": 0.55
+          }
+        },
+        {
+          "family": "claims_family",
+          "member_id": "claims_paraphrase_holdout",
+          "case_id": "holdout_yolox_v1",
+          "metrics": {
+            "contract_only": false,
+            "contract_passed": true,
+            "passed": false,
+            "claim_recall": 0.25,
+            "claim_precision": 0.07142857142857142,
+            "claim_precision_distracted": 0.06666666666666667,
+            "precision_drop_with_distractors": 0.004761904761904759,
+            "max_precision_drop_with_distractors": 0.15,
+            "paraphrase_scoring": true,
+            "claim_match_mode": "claim_id_or_normalized_text",
+            "expected_count": 4,
+            "predicted_count_plain": 14,
+            "predicted_count_distracted": 15,
+            "matched_claim_ids": [
+              "yolox_decoupled_head"
+            ],
+            "missing_claim_ids": [
+              "yolox_anchor_free_simota",
+              "yolox_l_50ap_v100_speed",
+              "yolox_coupled_head_conflict_negative"
+            ],
+            "min_claim_recall": 0.55
+          }
+        }
+      ],
       "hard_block_individual_failures": []
     }
   }

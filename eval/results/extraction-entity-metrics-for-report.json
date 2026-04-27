@@ -1,0 +1,190 @@
+{
+  "inputs": {
+    "layer1": "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/current-llm-layer1-nightly-heavy-suite.json",
+    "layer2": "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/current-llm-layer2-nightly-semantic-suite.json",
+    "claims_pilot": "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/current-llm-claims-paraphrase-pilot.json",
+    "claims_holdout": "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/current-llm-claims-paraphrase-holdout.json"
+  },
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
+    "semantic_extraction_enabled": true
+  },
+  "slots": [
+    {
+      "slot_id": "work_title_token_f1",
+      "label": "Work title ( multiset token F1 )",
+      "metric_family": "similarity",
+      "n_cases_with_value": {
+        "score": 30
+      },
+      "macro_mean": {
+        "score": 1.0
+      }
+    },
+    {
+      "slot_id": "work_title_rouge_l",
+      "label": "Work title ( ROUGE-L F1 )",
+      "metric_family": "similarity",
+      "n_cases_with_value": {
+        "score": 30
+      },
+      "macro_mean": {
+        "score": 1.0
+      }
+    },
+    {
+      "slot_id": "work_abstract_rouge_l",
+      "label": "Work abstract vs gold prefix ( ROUGE-L F1 )",
+      "metric_family": "similarity",
+      "n_cases_with_value": {
+        "score": 30
+      },
+      "macro_mean": {
+        "score": 0.1185672182858728
+      }
+    },
+    {
+      "slot_id": "work_abstract_prefix_containment",
+      "label": "Work abstract ( token containment vs prefix )",
+      "metric_family": "similarity",
+      "n_cases_with_value": {
+        "score": 30
+      },
+      "macro_mean": {
+        "score": 0.9260894660894661
+      }
+    },
+    {
+      "slot_id": "author_names",
+      "label": "Author names ( multiset P/R/F1 )",
+      "metric_family": "prf1",
+      "n_cases_with_value": {
+        "precision": 30,
+        "recall": 30,
+        "f1": 30
+      },
+      "macro_mean": {
+        "precision": 0.9805555555555556,
+        "recall": 0.9805555555555556,
+        "f1": 0.9805555555555556
+      }
+    },
+    {
+      "slot_id": "affiliations",
+      "label": "Affiliations ( multiset P/R/F1 )",
+      "metric_family": "prf1",
+      "n_cases_with_value": {
+        "precision": 30,
+        "recall": 30,
+        "f1": 30
+      },
+      "macro_mean": {
+        "precision": 0.9666666666666667,
+        "recall": 0.9416666666666667,
+        "f1": 0.9507936507936509
+      }
+    },
+    {
+      "slot_id": "references_sample_arxiv",
+      "label": "References — gold sample arXiv ids ( multiset P/R/F1 )",
+      "metric_family": "prf1",
+      "n_cases_with_value": {
+        "precision": 30,
+        "recall": 30,
+        "f1": 30
+      },
+      "macro_mean": {
+        "precision": 0.9487681159420289,
+        "recall": 0.9666666666666667,
+        "f1": 0.9569682330551895
+      }
+    },
+    {
+      "slot_id": "references_sample_doi",
+      "label": "References — gold sample DOIs ( multiset P/R/F1 )",
+      "metric_family": "prf1",
+      "n_cases_with_value": {
+        "precision": 30,
+        "recall": 30,
+        "f1": 30
+      },
+      "macro_mean": {
+        "precision": 0.9333333333333333,
+        "recall": 0.9333333333333333,
+        "f1": 0.9333333333333333
+      }
+    },
+    {
+      "slot_id": "methods",
+      "label": "Methods ( soft name/alias match P/R/F1 )",
+      "metric_family": "prf1",
+      "n_cases_with_value": {
+        "precision": 31,
+        "recall": 31,
+        "f1": 31
+      },
+      "macro_mean": {
+        "precision": 0.6172043010752688,
+        "recall": 0.6801075268817204,
+        "f1": 0.6011008704557091
+      }
+    },
+    {
+      "slot_id": "datasets",
+      "label": "Datasets ( soft name/alias match P/R/F1 )",
+      "metric_family": "prf1",
+      "n_cases_with_value": {
+        "precision": 31,
+        "recall": 31,
+        "f1": 31
+      },
+      "macro_mean": {
+        "precision": 0.7897849462365591,
+        "recall": 0.8790322580645161,
+        "f1": 0.7920890937019969
+      }
+    },
+    {
+      "slot_id": "claims_paraphrase_pilot",
+      "label": "Claims paraphrase ( pilot ) — claim-level P/R/F1",
+      "metric_family": "prf1",
+      "n_cases_with_value": {
+        "precision": 15,
+        "recall": 15,
+        "f1": 15
+      },
+      "macro_mean": {
+        "precision": 0.13625681508034448,
+        "recall": 0.3333333333333333,
+        "f1": 0.18798840535682643
+      }
+    },
+    {
+      "slot_id": "claims_paraphrase_holdout",
+      "label": "Claims paraphrase ( holdout ) — claim-level P/R/F1",
+      "metric_family": "prf1",
+      "n_cases_with_value": {
+        "precision": 5,
+        "recall": 5,
+        "f1": 5
+      },
+      "macro_mean": {
+        "precision": 0.1414715719063545,
+        "recall": 0.25,
+        "f1": 0.1502888390685978
+      }
+    }
+  ],
+  "notes": {
+    "aggregation": "macro_mean_over_cases_skipping_null_metrics",
+    "graph_expectations": {
+      "layer1_cases_with_gold": 30,
+      "cases_with_nonempty_expected_cited_arxiv": 25,
+      "note": "Neo4j-level CITES / cited_arxiv F1 is produced by `science-graphrag-graph-benchmark`, not embedded in layer1 suite JSON."
+    }
+  }
+}

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   createAskSession as createAskSessionRequest,
+  deleteAskSession as deleteAskSessionRequest,
   formatResearchApiError,
   getWorkDetail,
   getWorks,
@@ -17,20 +18,27 @@ import { apiSessionsToBundle, entriesToApiTurns, isServerAskSessionId, readAskSe
 import { rememberAskHistory } from "./askHistoryState.js";
 import {
   appendAskSessionTurn,
+  appendAskSessionTurnToSession,
   buildAgentHistoryDigest,
   createAskSession,
   deriveAskScopeKey,
   getActiveSessionEntries,
+  getAskSessionEntries,
   migrateLegacyAskHistoryToSessions,
   maybeMigrateStandaloneBundleToWorkspaceScope,
   readAskSessionUi,
+  removeAskSession,
+  removeAskSessionTurn,
   renameAskSession,
   replaceScopeBundle,
   sessionExistsInScope,
   setActiveAskSession,
+  truncateAskSessionFromTurn,
 } from "./askSessionState.js";
 import { buildStandaloneTracePath } from "./traceabilityState.js";
 import { useAskSubmit } from "./useAskSubmit.js";
+import { copyToClipboard } from "../../utils/copyToClipboard.js";
+import { useFeedback } from "../feedback/index.js";
 import { normalizeWorkListItem } from "./workListLabel.js";
 
 /** Fixed retrieval depth for API compatibility (no UI control). */
@@ -57,6 +65,7 @@ export function useAskPanelOrchestration({
   onUrlSessionIdChange,
 }) {
   const { t } = useI18n();
+  const { showToast } = useFeedback();
   const locked = Boolean(scopedWorkId && String(scopedWorkId).trim());
   const [query, setQuery] = useState("");
   const [workId, setWorkId] = useState(locked ? String(scopedWorkId).trim() : initialWorkId);
@@ -72,8 +81,48 @@ export function useAskPanelOrchestration({
   const [streamEvents, setStreamEvents] = useState([]);
   const [answerClassHint, setAnswerClassHint] = useState("");
   const [pendingUserQuery, setPendingUserQuery] = useState("");
+  /** While a run is in flight: scope + session the submit belongs to (survives sidebar switches). */
+  const [streamingTarget, setStreamingTarget] = useState(null);
+  const [clearChatDialogOpen, setClearChatDialogOpen] = useState(false);
   const skipHydrateWorkRef = useRef(false);
   const streamFailureRef = useRef("");
+
+  const formatAgentUiError = useCallback(
+    (msg) => {
+      const s = String(msg || "").trim();
+      if (!s) return t("askPanel.agentIncompleteTurn");
+      if (/\(code 403\)/.test(s) || (/403/.test(s) && /Upstream LLM/i.test(s))) return t("chat.errors.llmForbidden");
+      if (/\(code 401\)/.test(s) || (/401/.test(s) && /Upstream LLM/i.test(s))) return t("chat.errors.llmUnauthorized");
+      return s;
+    },
+    [t],
+  );
+
+  const onCopyUserText = useCallback(
+    async (text) => {
+      const ok = await copyToClipboard(String(text || ""));
+      showToast(t(ok ? "chat.copy.success" : "chat.copy.failed"));
+    },
+    [showToast, t],
+  );
+
+  const onCopyAssistantEntry = useCallback(
+    async (entry) => {
+      let plain = "";
+      if (entry?.details && typeof entry.details === "object") {
+        plain = String(entry.details.answer ?? "");
+      } else {
+        plain = String(entry?.answer ?? "");
+      }
+      const ok = await copyToClipboard(plain);
+      showToast(t(ok ? "chat.copy.success" : "chat.copy.failed"));
+    },
+    [showToast, t],
+  );
+
+  const openClearChatDialog = useCallback(() => {
+    setClearChatDialogOpen(true);
+  }, []);
 
   const scopeKey = useMemo(() => deriveAskScopeKey({ locked, scopedWorkId, workspaceId }), [locked, scopedWorkId, workspaceId]);
   /**
@@ -138,7 +187,7 @@ export function useAskPanelOrchestration({
     setWorkId(row.work_id);
   }, []);
 
-  const { submit, isLoading } = useAskSubmit({
+  const { submit, isLoading, abort } = useAskSubmit({
     workspaceId,
     onStart: () => {
       streamFailureRef.current = "";
@@ -155,8 +204,9 @@ export function useAskPanelOrchestration({
       setStreamEvents((prev) => [...prev, event].slice(-80));
     },
     onError: (msg) => {
-      streamFailureRef.current = String(msg ?? "").trim();
-      setError(msg);
+      const formatted = formatAgentUiError(msg);
+      streamFailureRef.current = formatted;
+      setError(formatted);
     },
   });
 
@@ -292,23 +342,28 @@ export function useAskPanelOrchestration({
     if (!locked && workId.trim()) persistWorkId(workId);
   }, [locked, workId]);
 
-  const onSubmit = useCallback(
-    async (e) => {
-      e.preventDefault();
-      const q = String(query || "").trim();
+  const performAgentSubmit = useCallback(
+    async (queryText, { workIdForTurn } = {}) => {
+      const q = String(queryText || "").trim();
       if (!q) return;
+      const turnWorkId = workIdForTurn != null ? String(workIdForTurn).trim() : String(workId || "").trim();
+      const submitSk = scopeKeyRef.current;
+      const submitSid = String(activeSessionId || "").trim();
+      setStreamingTarget({ scopeKey: submitSk, sessionId: submitSid });
       setPendingUserQuery(q);
       try {
-        const historyDigest = buildAgentHistoryDigest(history);
+        const historyForDigest = submitSid ? getAskSessionEntries(submitSk, submitSid) : getActiveSessionEntries(submitSk);
+        const historyDigest = buildAgentHistoryDigest(historyForDigest);
         const pack = await submit({
-          query,
-          threadId: activeSessionId || null,
+          query: q,
+          threadId: submitSid || null,
           historyDigest,
           answerClassHint: String(answerClassHint || "").trim() || null,
         });
-        const queryMode = locked || inWorkspace ? "workspace" : corpusWorkspaceOnly ? "workspace_corpus" : workId ? "scoped" : "global";
+        const queryMode =
+          locked || inWorkspace ? "workspace" : corpusWorkspaceOnly ? "workspace_corpus" : turnWorkId ? "scoped" : "global";
         if (!pack?.normalized) {
-          const sk = scopeKeyRef.current;
+          const sk = submitSk;
           const rawFail = String(streamFailureRef.current || "").trim();
           streamFailureRef.current = "";
           const failMsg = rawFail || t("askPanel.agentIncompleteTurn");
@@ -344,8 +399,8 @@ export function useAskPanelOrchestration({
             agent_tool_trace: persistedToolTrace,
           };
           const turn = {
-            query,
-            workId,
+            query: q,
+            workId: turnWorkId,
             topK: ASK_DEFAULT_TOP_K,
             answer: failMsg,
             citationCount: 0,
@@ -353,16 +408,24 @@ export function useAskPanelOrchestration({
             details,
           };
           rememberAskHistory(turn);
-          appendAskSessionTurn(sk, turn);
-          setHistory(getActiveSessionEntries(sk));
-          const sid = readAskSessionUi(sk).activeId;
-          const entriesAfter = getActiveSessionEntries(sk);
-          if (sid && entriesAfter.length === 1 && q) {
+          if (submitSid) {
+            appendAskSessionTurnToSession(sk, submitSid, turn);
+          } else {
+            appendAskSessionTurn(sk, turn);
+          }
+          const currentSk = scopeKeyRef.current;
+          const { activeId: currentActive } = readAskSessionUi(currentSk);
+          const viewingThisRun = currentSk === sk && String(currentActive || "") === submitSid;
+          if (viewingThisRun) {
+            setHistory(submitSid ? getAskSessionEntries(sk, submitSid) : getActiveSessionEntries(sk));
+          }
+          const entriesAfter = submitSid ? getAskSessionEntries(sk, submitSid) : getActiveSessionEntries(sk);
+          if (submitSid && entriesAfter.length === 1 && q) {
             const autoTitle = q.slice(0, 56) + (q.length > 56 ? "…" : "");
-            renameAskSession(sk, sid, autoTitle);
-            if (serverSync && isServerAskSessionId(sid)) {
+            renameAskSession(sk, submitSid, autoTitle);
+            if (serverSync && isServerAskSessionId(submitSid)) {
               try {
-                await patchAskSessionRequest(sk, sid, { title: autoTitle, active: true });
+                await patchAskSessionRequest(sk, submitSid, { title: autoTitle, active: viewingThisRun });
               } catch {
                 /* non-fatal */
               }
@@ -371,19 +434,20 @@ export function useAskPanelOrchestration({
           setNormalized(null);
           setQuery("");
           bumpSessions();
-          if (serverSync) {
-            const { activeId: sid2 } = readAskSessionUi(sk);
-            if (sid2 && isServerAskSessionId(sid2)) {
-              try {
-                await patchAskSessionRequest(sk, sid2, { turns: entriesToApiTurns(getActiveSessionEntries(sk)), active: true });
-              } catch {
-                /* non-fatal */
-              }
+          if (serverSync && submitSid && isServerAskSessionId(submitSid)) {
+            const activeNow = String(readAskSessionUi(sk).activeId || "");
+            try {
+              await patchAskSessionRequest(sk, submitSid, {
+                turns: entriesToApiTurns(entriesAfter),
+                active: activeNow === submitSid,
+              });
+            } catch {
+              /* non-fatal */
             }
           }
           return;
         }
-        const sk = scopeKeyRef.current;
+        const sk = submitSk;
         const nextNormalized = pack.normalized;
         const persistedStreamEvents = Array.isArray(pack.streamEvents) ? pack.streamEvents : [];
         const persistedToolTrace = Array.isArray(pack.agentToolTrace) ? pack.agentToolTrace : [];
@@ -409,8 +473,8 @@ export function useAskPanelOrchestration({
           agent_tool_trace: persistedToolTrace,
         };
         const turn = {
-          query,
-          workId,
+          query: q,
+          workId: turnWorkId,
           topK: ASK_DEFAULT_TOP_K,
           answer: nextNormalized.answer,
           citationCount: nextNormalized.citations.length,
@@ -418,16 +482,24 @@ export function useAskPanelOrchestration({
           details,
         };
         rememberAskHistory(turn);
-        appendAskSessionTurn(sk, turn);
-        setHistory(getActiveSessionEntries(sk));
-        const sid = readAskSessionUi(sk).activeId;
-        const entriesAfter = getActiveSessionEntries(sk);
-        if (sid && entriesAfter.length === 1 && q) {
+        if (submitSid) {
+          appendAskSessionTurnToSession(sk, submitSid, turn);
+        } else {
+          appendAskSessionTurn(sk, turn);
+        }
+        const currentSk = scopeKeyRef.current;
+        const { activeId: currentActive } = readAskSessionUi(currentSk);
+        const viewingThisRun = currentSk === sk && String(currentActive || "") === submitSid;
+        if (viewingThisRun) {
+          setHistory(submitSid ? getAskSessionEntries(sk, submitSid) : getActiveSessionEntries(sk));
+        }
+        const entriesAfter = submitSid ? getAskSessionEntries(sk, submitSid) : getActiveSessionEntries(sk);
+        if (submitSid && entriesAfter.length === 1 && q) {
           const autoTitle = q.slice(0, 56) + (q.length > 56 ? "…" : "");
-          renameAskSession(sk, sid, autoTitle);
-          if (serverSync && isServerAskSessionId(sid)) {
+          renameAskSession(sk, submitSid, autoTitle);
+          if (serverSync && isServerAskSessionId(submitSid)) {
             try {
-              await patchAskSessionRequest(sk, sid, { title: autoTitle, active: true });
+              await patchAskSessionRequest(sk, submitSid, { title: autoTitle, active: viewingThisRun });
             } catch {
               /* non-fatal */
             }
@@ -437,32 +509,166 @@ export function useAskPanelOrchestration({
         setQuery("");
         bumpSessions();
         if (!serverSync) return;
-        const { activeId: sid2 } = readAskSessionUi(sk);
-        if (sid2 && isServerAskSessionId(sid2)) {
+        if (submitSid && isServerAskSessionId(submitSid)) {
+          const activeNow = String(readAskSessionUi(sk).activeId || "");
           try {
-            await patchAskSessionRequest(sk, sid2, { turns: entriesToApiTurns(getActiveSessionEntries(sk)), active: true });
+            await patchAskSessionRequest(sk, submitSid, {
+              turns: entriesToApiTurns(entriesAfter),
+              active: activeNow === submitSid,
+            });
           } catch {
             /* non-fatal */
           }
         }
       } finally {
         setPendingUserQuery("");
+        setStreamingTarget(null);
       }
     },
     [
       submit,
-      query,
-      history,
+      workId,
       activeSessionId,
       answerClassHint,
       locked,
       inWorkspace,
       corpusWorkspaceOnly,
-      workId,
       bumpSessions,
       serverSync,
       t,
     ],
+  );
+
+  const onSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      await performAgentSubmit(String(query || "").trim());
+    },
+    [query, performAgentSubmit],
+  );
+
+  const onRestartFromTurn = useCallback(
+    async (turnId) => {
+      if (isLoading) abort();
+      const sk = scopeKeyRef.current;
+      const sid = String(activeSessionId || "").trim();
+      const tid = String(turnId || "").trim();
+      if (!sid || !tid) return;
+      const before = getAskSessionEntries(sk, sid);
+      const entry = before.find((e) => e.id === tid);
+      if (!entry || !String(entry.query || "").trim()) return;
+      truncateAskSessionFromTurn(sk, sid, tid);
+      bumpSessions();
+      setHistory(getAskSessionEntries(sk, sid));
+      if (serverSync && isServerAskSessionId(sid)) {
+        try {
+          await patchAskSessionRequest(sk, sid, {
+            turns: entriesToApiTurns(getAskSessionEntries(sk, sid)),
+            active: true,
+          });
+        } catch {
+          /* non-fatal */
+        }
+      }
+      setWorkId(String(entry.workId || "").trim());
+      setQuery(String(entry.query || "").trim());
+      await performAgentSubmit(String(entry.query || "").trim(), { workIdForTurn: entry.workId });
+    },
+    [abort, activeSessionId, bumpSessions, isLoading, performAgentSubmit, serverSync],
+  );
+
+  const onClearChat = useCallback(async () => {
+    abort();
+    setClearChatDialogOpen(false);
+    const sk = scopeKeyRef.current;
+    const oldId = String(readAskSessionUi(sk).activeId || "");
+    try {
+      if (serverSync) {
+        if (oldId && isServerAskSessionId(oldId)) {
+          try {
+            await deleteAskSessionRequest(sk, oldId);
+          } catch {
+            /* non-fatal: session may only exist locally */
+          }
+        }
+        await createAskSessionRequest(sk, {});
+        const res = await listAskSessionsRequest(sk);
+        replaceScopeBundle(sk, apiSessionsToBundle(res.data));
+        bumpSessions();
+        const aid = res.data?.active_session_id;
+        if (aid) onUrlSessionIdChange?.(String(aid));
+      } else {
+        createAskSession(sk);
+        bumpSessions();
+        const afterId = String(readAskSessionUi(sk).activeId || "");
+        if (oldId && oldId !== afterId) removeAskSession(sk, oldId);
+        bumpSessions();
+        const next = String(readAskSessionUi(sk).activeId || "");
+        if (next) onUrlSessionIdChange?.(next);
+      }
+      setHistory(getActiveSessionEntries(scopeKeyRef.current));
+      setQuery("");
+      setNormalized(null);
+      setError(null);
+    } catch (err) {
+      setError(formatResearchApiError(err));
+    }
+  }, [abort, bumpSessions, onUrlSessionIdChange, serverSync]);
+
+  const onDeleteSession = useCallback(
+    async (sessionId) => {
+      abort();
+      const sk = scopeKeyRef.current;
+      const sid = String(sessionId || "").trim();
+      if (!sid) return;
+      try {
+        if (serverSync && isServerAskSessionId(sid)) {
+          await deleteAskSessionRequest(sk, sid);
+          const res = await listAskSessionsRequest(sk);
+          replaceScopeBundle(sk, apiSessionsToBundle(res.data));
+          bumpSessions();
+          const aid = res.data?.active_session_id;
+          if (aid) onUrlSessionIdChange?.(String(aid));
+        } else {
+          const { nextActiveId } = removeAskSession(sk, sid);
+          bumpSessions();
+          if (nextActiveId) onUrlSessionIdChange?.(String(nextActiveId));
+        }
+        setHistory(getActiveSessionEntries(scopeKeyRef.current));
+        setQuery("");
+        setNormalized(null);
+      } catch (err) {
+        setError(formatResearchApiError(err));
+      }
+    },
+    [abort, bumpSessions, onUrlSessionIdChange, serverSync],
+  );
+
+  const onDeleteTurn = useCallback(
+    async (turnId) => {
+      if (isLoading) abort();
+      const sk = scopeKeyRef.current;
+      const sid = String(activeSessionId || "").trim();
+      const tid = String(turnId || "").trim();
+      if (!sid || !tid) return;
+      const before = getAskSessionEntries(sk, sid);
+      if (!before.some((e) => e.id === tid)) return;
+      removeAskSessionTurn(sk, sid, tid);
+      const after = getAskSessionEntries(sk, sid);
+      bumpSessions();
+      setHistory(after);
+      if (serverSync && isServerAskSessionId(sid)) {
+        try {
+          await patchAskSessionRequest(sk, sid, {
+            turns: entriesToApiTurns(after),
+            active: true,
+          });
+        } catch {
+          /* non-fatal */
+        }
+      }
+    },
+    [abort, activeSessionId, bumpSessions, isLoading, serverSync],
   );
 
   const onActiveSessionChange = useCallback(
@@ -515,13 +721,19 @@ export function useAskPanelOrchestration({
     if (!String(next || "").trim()) setWorkDetailsForChip(null);
   }, []);
 
-  const streamingHint = useMemo(() => (isLoading ? t("askPanel.agentStreamingHint") : ""), [isLoading, t]);
+  const streamingHint = useMemo(() => {
+    if (!isLoading || !streamingTarget) return "";
+    if (streamingTarget.scopeKey !== scopeKey) return "";
+    if (String(streamingTarget.sessionId || "") !== String(activeSessionId || "")) return "";
+    return t("askPanel.agentStreamingHint");
+  }, [isLoading, streamingTarget, scopeKey, activeSessionId, t]);
 
   return {
     t,
     locked,
     scopedWorkId,
     workspaceId,
+    scopeKey,
     workspaceWorkId,
     query,
     setQuery,
@@ -539,14 +751,25 @@ export function useAskPanelOrchestration({
     answerClassHint,
     setAnswerClassHint,
     pendingUserQuery,
+    streamingTarget,
     inWorkspace,
     corpusWorkspaceOnly,
     standaloneMode,
     starterPromptKeys,
     isLoading,
+    abort,
     onSubmit,
     onActiveSessionChange,
     onNewSession,
+    onRestartFromTurn,
+    onClearChat,
+    openClearChatDialog,
+    clearChatDialogOpen,
+    setClearChatDialogOpen,
+    onDeleteSession,
+    onDeleteTurn,
+    onCopyUserText,
+    onCopyAssistantEntry,
     searchWorks,
     onArticlePicked,
     handleWorkIdChange,

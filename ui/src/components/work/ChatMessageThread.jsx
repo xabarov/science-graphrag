@@ -1,10 +1,19 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import BarChartOutlinedIcon from "@mui/icons-material/BarChartOutlined";
+import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
+import ReplayOutlinedIcon from "@mui/icons-material/ReplayOutlined";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
+import Dialog from "@mui/material/Dialog";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 
+import { CursorIconAction } from "../common/index.js";
+import { useFeedback } from "../feedback/index.js";
 import { AskAnswerPanel } from "./AskAnswerPanel.jsx";
 import { AgentAssistantTurnShell } from "./AgentAssistantTurnShell.jsx";
 import { AgentRunHeader } from "./AgentRunHeader.jsx";
@@ -12,6 +21,56 @@ import { AgentLiveStatus } from "./AgentLiveStatus.jsx";
 import MarkdownView from "./MarkdownView.jsx";
 
 const SCROLL_BOTTOM_THRESHOLD_PX = 80;
+
+function toFiniteNumber(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function pickNumber(...vals) {
+  for (const v of vals) {
+    const n = toFiniteNumber(v);
+    if (n != null) return n;
+  }
+  return null;
+}
+
+function formatMetricValue(value, { unit = "", digits = 0 } = {}) {
+  const n = toFiniteNumber(value);
+  if (n == null) return "—";
+  return `${n.toLocaleString(undefined, { maximumFractionDigits: digits })}${unit}`;
+}
+
+function extractTurnMetadata(entry) {
+  const details = entry?.details && typeof entry.details === "object" ? entry.details : {};
+  const runMeta = details.run_metadata && typeof details.run_metadata === "object" ? details.run_metadata : {};
+  const usage = runMeta.usage && typeof runMeta.usage === "object" ? runMeta.usage : {};
+  const promptTokens = pickNumber(usage.prompt_tokens, usage.input_tokens, runMeta.prompt_tokens);
+  const completionTokens = pickNumber(usage.completion_tokens, usage.output_tokens, runMeta.completion_tokens);
+  const totalTokens = pickNumber(
+    usage.total_tokens,
+    runMeta.total_tokens,
+    runMeta.token_count,
+    promptTokens != null && completionTokens != null ? promptTokens + completionTokens : null,
+  );
+  const durationMs = pickNumber(details.duration_ms, runMeta.duration_ms);
+  const tokensPerSecond = pickNumber(usage.tokens_per_second, usage.tps, runMeta.tokens_per_second, runMeta.tps);
+  const costUsd = pickNumber(usage.cost_usd, usage.usd_cost, runMeta.cost_usd, runMeta.usd_cost);
+  const eventsCount = Array.isArray(details.stream_events) ? details.stream_events.length : 0;
+  const citationCount = Array.isArray(details.citations) ? details.citations.length : pickNumber(entry?.citationCount) || 0;
+  const answerClass = String(details.answer_class || "").trim();
+  return {
+    durationMs,
+    totalTokens,
+    promptTokens,
+    completionTokens,
+    tokensPerSecond,
+    costUsd,
+    eventsCount,
+    citationCount,
+    answerClass,
+  };
+}
 
 function ChatUserBubble({ text }) {
   return (
@@ -35,6 +94,9 @@ function ChatUserBubble({ text }) {
 /**
  * @param {{
  *   t: (key: string, vars?: Record<string, string>) => string,
+ *   scopeKey: string,
+ *   activeSessionId: string | null,
+ *   streamingTarget: { scopeKey: string, sessionId: string } | null,
  *   history: Array<{
  *     id: string,
  *     query: string,
@@ -55,10 +117,18 @@ function ChatUserBubble({ text }) {
  *   onToggleRetrievalJson: () => void,
  *   starterPromptKeys?: string[],
  *   onStarterPrompt?: (text: string) => void,
+ *   onRestartFromTurn?: (turnId: string) => void | Promise<void>,
+ *   onCopyAssistantEntry?: (entry: unknown) => void | Promise<void>,
+ *   onDeleteTurn?: (turnId: string) => void | Promise<void>,
+ *   restartDisabled?: boolean,
+ *   deleteDisabled?: boolean,
  * }} props
  */
 export function ChatMessageThread({
   t,
+  scopeKey,
+  activeSessionId,
+  streamingTarget,
   history,
   pendingUserQuery,
   isLoading,
@@ -73,12 +143,25 @@ export function ChatMessageThread({
   onToggleRetrievalJson,
   starterPromptKeys = [],
   onStarterPrompt,
+  onRestartFromTurn,
+  onCopyAssistantEntry,
+  onDeleteTurn,
+  restartDisabled = false,
+  deleteDisabled = false,
 }) {
+  const { confirm } = useFeedback();
   const chronological = useMemo(() => [...history].reverse(), [history]);
+  const streamForThisChat = Boolean(
+    streamingTarget &&
+      streamingTarget.scopeKey === scopeKey &&
+      String(streamingTarget.sessionId || "") === String(activeSessionId || ""),
+  );
   // Include liveNormalized so a frame where pending cleared but history state has not yet
   // caught up (AskPanel batching) does not flash the empty-state over a completed answer.
   const hasThreadContent =
-    chronological.length > 0 || Boolean(pendingUserQuery) || Boolean(liveNormalized);
+    chronological.length > 0 ||
+    (Boolean(pendingUserQuery) && streamForThisChat) ||
+    (Boolean(liveNormalized) && streamForThisChat);
   const showEmptyState = !hasThreadContent;
 
   const containerRef = useRef(null);
@@ -119,9 +202,23 @@ export function ChatMessageThread({
     if (!el) return;
     if (!stickToBottomRef.current) return;
     scrollContainerToBottom("auto");
-  }, [scrollContainerToBottom, chronological.length, pendingUserQuery, isLoading, liveNormalized, streamEvents]);
+  }, [
+    scrollContainerToBottom,
+    chronological.length,
+    pendingUserQuery,
+    isLoading,
+    liveNormalized,
+    streamEvents,
+    streamForThisChat,
+  ]);
 
   const showJump = hasThreadContent && !stickToBottom;
+  const [metaEntry, setMetaEntry] = useState(null);
+  const meta = useMemo(() => extractTurnMetadata(metaEntry), [metaEntry]);
+  const maxMetaBar = useMemo(() => {
+    const vals = [meta.durationMs, meta.totalTokens, meta.tokensPerSecond, meta.costUsd].map((v) => (v == null ? 0 : Math.abs(v)));
+    return Math.max(...vals, 1);
+  }, [meta]);
 
   return (
     <Box
@@ -182,10 +279,27 @@ export function ChatMessageThread({
       ) : null}
 
       {chronological.map((entry) => (
-        <Box key={entry.id} sx={{ mb: 2.25 }}>
+        <Box
+          key={entry.id}
+          sx={{
+            mb: 2.25,
+            "& .turn-actions": {
+              opacity: 0,
+              transform: "translateY(-2px)",
+              transition: "opacity 0.15s ease, transform 0.15s ease",
+            },
+            "&:hover .turn-actions, &:focus-within .turn-actions": {
+              opacity: 1,
+              transform: "translateY(0)",
+            },
+            "@media (hover: none)": {
+              "& .turn-actions": { opacity: 1, transform: "none" },
+            },
+          }}
+        >
           <ChatUserBubble text={entry.query} />
           <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
-            <Box sx={{ width: "100%", maxWidth: "min(880px, 100%)" }}>
+            <Box sx={{ position: "relative", width: "100%", maxWidth: "min(880px, 100%)" }}>
               {entry.details && typeof entry.details === "object" ? (
                 <AgentAssistantTurnShell sx={{ mt: 1 }}>
                   <AskAnswerPanel
@@ -228,12 +342,58 @@ export function ChatMessageThread({
                   )}
                 </AgentAssistantTurnShell>
               )}
+              <Box className="turn-actions" sx={{ mt: 0.6, display: "flex", alignItems: "center", gap: 0.35 }}>
+                <CursorIconAction
+                  type="button"
+                  disabled={restartDisabled}
+                  aria-label={t("chat.thread.actions.retryAria")}
+                  title={t("chat.thread.actions.retryAria")}
+                  onClick={() => void onRestartFromTurn?.(entry.id)}
+                >
+                  <ReplayOutlinedIcon sx={{ fontSize: "1rem" }} />
+                </CursorIconAction>
+                <CursorIconAction
+                  type="button"
+                  aria-label={t("chat.thread.actions.copyAria")}
+                  title={t("chat.thread.actions.copyAria")}
+                  onClick={() => void onCopyAssistantEntry?.(entry)}
+                >
+                  <ContentCopyOutlinedIcon sx={{ fontSize: "1rem" }} />
+                </CursorIconAction>
+                <CursorIconAction
+                  type="button"
+                  aria-label={t("chat.thread.actions.metadataAria")}
+                  title={t("chat.thread.actions.metadataAria")}
+                  onClick={() => setMetaEntry(entry)}
+                >
+                  <BarChartOutlinedIcon sx={{ fontSize: "1rem" }} />
+                </CursorIconAction>
+                <CursorIconAction
+                  type="button"
+                  disabled={deleteDisabled}
+                  aria-label={t("chat.thread.actions.deleteAria")}
+                  title={t("chat.thread.actions.deleteAria")}
+                  onClick={async () => {
+                    const ok = await confirm({
+                      title: t("chat.thread.deleteTurnDialogTitle"),
+                      body: t("chat.thread.deleteTurnConfirm"),
+                      variant: "danger",
+                      confirmLabel: t("chat.sidebar.deleteConfirmButton"),
+                      cancelLabel: t("chat.clear.cancel"),
+                    });
+                    if (!ok) return;
+                    void onDeleteTurn?.(entry.id);
+                  }}
+                >
+                  <DeleteOutlineOutlinedIcon sx={{ fontSize: "1rem" }} />
+                </CursorIconAction>
+              </Box>
             </Box>
           </Box>
         </Box>
       ))}
 
-      {pendingUserQuery ? (
+      {pendingUserQuery && streamForThisChat ? (
         <Box sx={{ mb: 2.25 }}>
           <ChatUserBubble text={pendingUserQuery} />
           <Box sx={{ display: "flex", justifyContent: "flex-start", pl: 0.5 }}>
@@ -272,6 +432,64 @@ export function ChatMessageThread({
           </Box>
         </Box>
       ) : null}
+
+      <Dialog
+        open={Boolean(metaEntry)}
+        onClose={() => setMetaEntry(null)}
+        slotProps={{
+          paper: {
+            sx: {
+              backgroundColor: "#1a1a1a",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: "6px",
+              minWidth: { xs: 300, sm: 420 },
+            },
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.9)" }}>{t("chat.thread.meta.title")}</DialogTitle>
+        <DialogContent sx={{ pt: "8px !important" }}>
+          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1 }}>
+            {[
+              { label: t("chat.thread.meta.durationMs"), value: formatMetricValue(meta.durationMs, { unit: " ms" }), bar: meta.durationMs },
+              { label: t("chat.thread.meta.totalTokens"), value: formatMetricValue(meta.totalTokens), bar: meta.totalTokens },
+              { label: t("chat.thread.meta.tokensPerSecond"), value: formatMetricValue(meta.tokensPerSecond, { digits: 1 }), bar: meta.tokensPerSecond },
+              { label: t("chat.thread.meta.costUsd"), value: formatMetricValue(meta.costUsd, { digits: 5 }), bar: meta.costUsd },
+            ].map((row) => (
+              <Box key={row.label} sx={{ p: 1, border: "1px solid rgba(255,255,255,0.08)", borderRadius: "6px", backgroundColor: "rgba(255,255,255,0.02)" }}>
+                <Typography sx={{ fontSize: "0.69rem", color: "rgba(255,255,255,0.55)" }}>{row.label}</Typography>
+                <Typography sx={{ fontSize: "0.86rem", color: "rgba(255,255,255,0.9)", fontWeight: 600 }}>{row.value}</Typography>
+                <Box sx={{ mt: 0.6, height: 4, borderRadius: 6, backgroundColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
+                  <Box
+                    sx={{
+                      width: `${Math.min(100, Math.max(0, (((row.bar ?? 0) / maxMetaBar) * 100))) || 0}%`,
+                      height: "100%",
+                      backgroundColor: "rgba(99,102,241,0.65)",
+                    }}
+                  />
+                </Box>
+              </Box>
+            ))}
+          </Box>
+          <Box sx={{ mt: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0.5 }}>
+            <Typography sx={{ fontSize: "0.76rem", color: "rgba(255,255,255,0.68)" }}>
+              {t("chat.thread.meta.promptTokens")}: {formatMetricValue(meta.promptTokens)}
+            </Typography>
+            <Typography sx={{ fontSize: "0.76rem", color: "rgba(255,255,255,0.68)" }}>
+              {t("chat.thread.meta.completionTokens")}: {formatMetricValue(meta.completionTokens)}
+            </Typography>
+            <Typography sx={{ fontSize: "0.76rem", color: "rgba(255,255,255,0.68)" }}>
+              {t("chat.thread.meta.events")}: {formatMetricValue(meta.eventsCount)}
+            </Typography>
+            <Typography sx={{ fontSize: "0.76rem", color: "rgba(255,255,255,0.68)" }}>
+              {t("chat.thread.meta.citations")}: {formatMetricValue(meta.citationCount)}
+            </Typography>
+          </Box>
+          <Typography sx={{ mt: 0.8, fontSize: "0.76rem", color: "rgba(255,255,255,0.68)" }}>
+            {t("chat.thread.meta.answerClass")}: {meta.answerClass || "—"}
+          </Typography>
+        </DialogContent>
+      </Dialog>
 
       {showJump ? (
         <IconButton

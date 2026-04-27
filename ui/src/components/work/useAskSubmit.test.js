@@ -71,6 +71,18 @@ describe("useAskSubmit", () => {
     expect(norm.run_metadata?.compaction?.kinds).toContain("turn_digest");
   });
 
+  it("exposes abort with submit hook", async () => {
+    const { useAskSubmit } = await import("./useAskSubmit.js");
+    const { result } = renderHook(() =>
+      useAskSubmit({
+        workspaceId: "ws-1",
+        onResult: vi.fn(),
+        useStreamingAgent: true,
+      }),
+    );
+    expect(typeof result.current.abort).toBe("function");
+  });
+
   it("caps captured stream events at 80", async () => {
     streamScenario = "many_events";
     const { useAskSubmit } = await import("./useAskSubmit.js");
