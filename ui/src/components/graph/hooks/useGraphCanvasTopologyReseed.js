@@ -1,10 +1,17 @@
-import { useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 import { graphTelemetryEmit } from "../graphTelemetry.js";
 import { buildSimulationState } from "../graphSimulationAdapter.js";
 
 /**
- * Re-seed force simulation when topology changes (signature-driven).
+ * Re-seed force simulation strictly when topology changes (signature-driven).
+ *
+ * IMPORTANT: deps must NOT include `applyFit`, `graph`, or `layoutMode`. They
+ * are read via refs so that re-seeding never fires from incidental identity
+ * changes (e.g. ResizeObserver bumping `hostSize` and rebuilding the
+ * `applyFit` callback) or from `layoutMode` flips on click in circle mode.
+ * Re-seeding is destructive (clears pins, resets stability, refits camera)
+ * and must be reserved for actual topology mutations.
  *
  * @param {{
  *   topologySignature: string,
@@ -37,8 +44,18 @@ export function useGraphCanvasTopologyReseed({
   setPhysicsReheatNonce,
   positionsRef,
 }) {
+  const graphRef = useRef(graph);
+  const applyFitRef = useRef(applyFit);
+  const layoutModeRef = useRef(layoutMode);
+  useEffect(() => {
+    graphRef.current = graph;
+    applyFitRef.current = applyFit;
+    layoutModeRef.current = layoutMode;
+  });
+
   useLayoutEffect(() => {
-    const built = buildSimulationState(graph);
+    const currentGraph = graphRef.current;
+    const built = buildSimulationState(currentGraph);
     graphTelemetryEmit("simReseed", {
       topologySignature,
       nodeCount: built.nodes.length,
@@ -55,8 +72,10 @@ export function useGraphCanvasTopologyReseed({
     setForceSimRunNonce(0);
     setPhysicsReheatNonce(0);
     positionsRef.current = new Map(built.nodes.map((n) => [n.id, { x: n.x, y: n.y }]));
-    if (layoutMode === "force" && built.nodes.length > 0) applyFit("force");
-    // Re-seed only when topologySignature changes; `graph` is read for buildSimulationState but omitted from deps so new object identity without topology change does not reset sim.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional
-  }, [topologySignature, layoutMode, applyFit]);
+    if (layoutModeRef.current === "force" && built.nodes.length > 0) {
+      applyFitRef.current?.("force");
+    }
+    // Strict dep: re-seed ONLY when topology signature changes. graph/layoutMode/applyFit are accessed via refs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional, see hook docstring
+  }, [topologySignature]);
 }

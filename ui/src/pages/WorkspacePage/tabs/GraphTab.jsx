@@ -152,7 +152,6 @@ export default function GraphTab({ workId }) {
           chunkFingerprint: trace.chunkFingerprint,
           section: trace.section,
           citation: trace.citation,
-          edgeId: selectedEdgeId,
         }}
       />
     </Box>

@@ -272,7 +272,6 @@ export default function GraphPage() {
             chunkFingerprint: trace.chunkFingerprint,
             section: trace.section,
             citation: trace.citation,
-            edgeId: selectedEdgeId,
           }}
         />
       </Box>

@@ -225,19 +225,33 @@ export default function GraphCanvasMvp({
     positionsRef,
   });
 
+  const applyFitRef = useRef(applyFit);
+  useEffect(() => {
+    applyFitRef.current = applyFit;
+  });
+
   useEffect(() => {
     const prev = prevLayoutModeRef.current;
     prevLayoutModeRef.current = layoutMode;
-    if (prev === "force" && layoutMode === "circle") requestAnimationFrame(() => applyFit("circle"));
-  }, [layoutMode, applyFit]);
+    if (prev === layoutMode) return;
+    if (prev === "force" && layoutMode === "circle") {
+      requestAnimationFrame(() => applyFitRef.current?.("circle"));
+    } else if (prev === "circle" && layoutMode === "force") {
+      requestAnimationFrame(() => applyFitRef.current?.("force"));
+    }
+  }, [layoutMode]);
 
   useEffect(() => {
     transformRef.current = transform;
   }, [transform]);
 
+  // Re-fit camera in non-force layouts strictly when topology changes (not when
+  // applyFit identity is rebuilt by a viewport resize / details panel toggle).
   useEffect(() => {
-    if (layoutMode !== "force") requestAnimationFrame(() => applyFit("circle"));
-  }, [graph.nodes, layoutMode, applyFit]);
+    if (layoutMode !== "force") {
+      requestAnimationFrame(() => applyFitRef.current?.("circle"));
+    }
+  }, [topologySignature, layoutMode]);
 
   useEffect(() => {
     const host = canvasHostRef.current;
