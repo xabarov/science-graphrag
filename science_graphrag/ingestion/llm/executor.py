@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 from pydantic import BaseModel
 
-from science_graphrag.observability.phoenix_tracer import llm_span
+from science_graphrag.observability.phoenix_tracer import SpanAttributes, llm_span
 
 if TYPE_CHECKING:
     from science_graphrag.ingestion.llm.extractor import SyncInstructorExtractor
@@ -27,20 +27,40 @@ def run_extraction(  # pylint: disable=too-many-arguments
     document_id: str = "",
     source_name: str = "",
     timeout_seconds: float = 60.0,
+    transport_timeout_seconds: float | None = None,
+    pool_name: str = "ingestion",
+    timeout_contract: str = "transport_only",
+    operation_deadline_seconds: float | None = None,
+    response_deadline_seconds: float | None = None,
     system_prompt: str = "",
     retries: int = MAX_RETRIES,
 ) -> tuple[T | None, str | None]:
     """Execute one extraction call with bounded retries."""
 
+    t_transport = (
+        float(transport_timeout_seconds)
+        if transport_timeout_seconds is not None
+        else float(getattr(extractor, "transport_timeout_seconds", timeout_seconds))
+    )
     attempts = max(1, retries + 1)
     last_err: str | None = None
     for attempt in range(1, attempts + 1):
+        policy = SpanAttributes.llm_runtime_policy_attributes(
+            pool_name=pool_name,
+            transport_timeout_seconds=t_transport,
+            timeout_contract=timeout_contract,
+            retry_extra_budget=max(0, int(retries)),
+            operation_deadline_seconds=operation_deadline_seconds,
+            response_deadline_seconds=response_deadline_seconds,
+        )
         attrs = {
+            **policy,
             "document.id": document_id,
             "document.source_name": source_name,
             "extraction.stage": stage_name,
             "extraction.attempt": attempt,
-            "extraction.timeout_seconds": timeout_seconds,
+            # Legacy key: must match real HTTP transport timeout (Phase 0 truthfulness).
+            "extraction.timeout_seconds": t_transport,
         }
         with llm_span(f"llm.{stage_name}", attrs):
             parsed, err = extractor.extract_maybe(schema, system=system_prompt, user=prompt)
@@ -82,6 +102,8 @@ def run_claims_extraction_with_compact_fallback(  # pylint: disable=too-many-arg
         document_id=document_id,
         source_name=source_name,
         timeout_seconds=timeout_seconds,
+        transport_timeout_seconds=timeout_seconds,
+        pool_name="claims",
         system_prompt=primary_system,
         retries=retries_primary,
     )
@@ -96,6 +118,8 @@ def run_claims_extraction_with_compact_fallback(  # pylint: disable=too-many-arg
         document_id=document_id,
         source_name=source_name,
         timeout_seconds=timeout_seconds,
+        transport_timeout_seconds=timeout_seconds,
+        pool_name="claims",
         system_prompt=compact_system,
         retries=retries_compact,
     )

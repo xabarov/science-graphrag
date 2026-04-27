@@ -64,6 +64,27 @@ Every LLM span must include:
 
 If provider usage is missing, estimate token counts via text fallback and set `llm.usage_source=estimated`.
 
+### LLM runtime policy (timeouts, pools, contracts)
+
+Production LLM spans SHOULD include the following **runtime policy** attributes (Phase 0 truthfulness; see `docs/analysis/llm-concurrency-semaphore-and-timeout-hardening-plan-2026-04-27.md` §Phase 0):
+
+| Attribute | Meaning |
+|-----------|---------|
+| `llm.pool_name` | Logical concurrency pool / traffic class (e.g. `metadata`, `references`, `claims`, `semantic`, `dedup`, `agent_classifier`, `agent_chat`, `query_answer`, `idea_assist`, `vl_pdf`). Present even before real semaphore wiring. |
+| `llm.transport_timeout_seconds` | Per-request HTTP / client timeout for a single provider call. |
+| `llm.operation_deadline_seconds` | Wall-clock budget for the whole logical step **only when** a real outer deadline exists and is enforced (Phase 1+). Omit if N/A. |
+| `llm.response_deadline_seconds` | User-visible wait cap that may return without cancelling upstream work (agent graph invoke / SSE). Omit on pure ingestion LLM calls. |
+| `llm.retry_budget` | Extra attempts allowed by the **caller-owned** outer retry loop (e.g. `run_extraction(retries=…)`), not inner transport retries inside `SyncInstructorExtractor`. |
+| `llm.transport_max_attempts` | Optional: max attempts for a dedicated HTTP helper (e.g. VL `post_chat_completions_json`). |
+| `llm.timeout_contract` | One of: `transport_only`, `transport_plus_deadline`, `response_deadline_only`, `unknown`. |
+
+**Semantics:**
+
+- **Transport timeout** bounds a single outbound request; retries can still extend wall time unless an operation deadline exists.
+- **Response deadline** (`response_deadline_only`): the API stops waiting for the user turn; the LangGraph worker thread or provider may still run (see `science_graphrag/agent/graph/invoke_timeout.py` and `docs/runbooks/agent-chat-v2.md`). This is **not** full cancellation.
+
+Ingest spans may keep legacy `extraction.timeout_seconds`; it MUST match the real transport timeout for that call (same numeric value as `llm.transport_timeout_seconds` when both are set).
+
 ### DB/HTTP spans
 
 - OpenAlex lookup: `http.request.method`, `http.url`, `openalex.doi`, `openalex.found`
@@ -83,6 +104,7 @@ If provider usage is missing, estimate token counts via text fallback and set `l
 - `session.id` = `thread_id` when present; otherwise optional `metadata.request_id` for grouping
 - `user.id` = `workspace_id` (may be empty)
 - `agent.runtime`, `agent.max_tool_calls`, optional `agent.answer_class_hint`
+- `agent.response_deadline_seconds` — wall-clock cap for returning a response for one turn (`Settings.agent_step_timeout_seconds`); **does not** guarantee upstream LLM/tool cancellation (`agent.response_deadline_enforces_upstream_cancel=false`).
 - `input.value` — truncated user question (no full history blobs)
 - Root **output** (after run): JSON summary only — `answer_class`, `tool_call_count`, `warning_codes`, `citation_count`, `budget_exhausted` — via `output.value` / safe JSON helper
 

@@ -6,10 +6,11 @@ from typing import Any
 from sqlalchemy import select
 
 from science_graphrag.api.deps import StoreRegistry
+from science_graphrag.artifacts.local_store import LocalFilesystemArtifactStore
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.artifact_layout import (
-    has_extracted_body_file,
-    resolve_extracted_body_file,
+    has_extracted_body_store,
+    resolve_extracted_body_relative,
     strip_ingest_artifact_header,
 )
 from science_graphrag.ingestion.markdown_fence import strip_whole_document_markdown_fence
@@ -243,12 +244,11 @@ def get_work_detail(
     if doc_row is not None:
         out["ingestion"]["document_id"] = doc_row.id
         out["ingestion"]["work_provenance"] = "ingested_document"
-        art_root = Path(settings.artifact_root)
-        if has_extracted_body_file(art_root, doc_row.id):
-            resolved = resolve_extracted_body_file(art_root, doc_row.id)
+        if has_extracted_body_store(stores.artifacts, doc_row.id):
+            resolved = resolve_extracted_body_relative(stores.artifacts, doc_row.id)
             out["ingestion"]["has_extracted_body"] = True
             out["ingestion"]["extracted_body_bytes"] = (
-                int(resolved[0].stat().st_size) if resolved else None
+                int(stores.artifacts.stat_st_size(resolved[0])) if resolved else None
             )
     return out
 
@@ -308,13 +308,12 @@ def work_sources_payload(
     except Exception:  # noqa: BLE001
         chunk_total = 0
     doc = resolve_document_for_work(settings, stores, work_id)
-    art_root = Path(settings.artifact_root)
-    has_body_file = bool(doc and has_extracted_body_file(art_root, doc.id))
+    has_body_file = bool(doc and has_extracted_body_store(stores.artifacts, doc.id))
     md_size: int | None = None
     if has_body_file and doc is not None:
-        hit = resolve_extracted_body_file(art_root, doc.id)
+        hit = resolve_extracted_body_relative(stores.artifacts, doc.id)
         if hit:
-            md_size = int(hit[0].stat().st_size)
+            md_size = int(stores.artifacts.stat_st_size(hit[0]))
     sources: list[dict[str, Any]] = []
     if doc is not None:
         mime = (doc.mime_type or "").lower()
@@ -365,6 +364,7 @@ def get_work_extracted_body_payload(
         work_id=work_id,
         document_id=str(doc.id),
         max_chars=_MAX_EXTRACTED_BODY_RESPONSE_CHARS,
+        artifact_store=stores.artifacts,
     )
 
 
@@ -374,11 +374,12 @@ def read_work_extracted_body_dict(
     work_id: str,
     document_id: str,
     max_chars: int,
+    artifact_store: LocalFilesystemArtifactStore | None = None,
 ) -> dict[str, Any]:
     """Load canonical / legacy ingest markdown for API responses."""
 
-    root = Path(settings.artifact_root)
-    resolved = resolve_extracted_body_file(root, document_id)
+    store = artifact_store or LocalFilesystemArtifactStore(Path(settings.artifact_root))
+    resolved = resolve_extracted_body_relative(store, document_id)
     if not resolved:
         return {
             "available": False,
@@ -386,8 +387,8 @@ def read_work_extracted_body_dict(
             "work_id": work_id,
             "document_id": document_id,
         }
-    path, source_label = resolved
-    raw = path.read_text(encoding="utf-8", errors="replace")
+    rel, source_label = resolved
+    raw = store.read_text(rel, encoding="utf-8", errors="replace")
     if source_label in ("article", "article_legacy"):
         text = strip_ingest_artifact_header(raw)
     else:
@@ -403,5 +404,5 @@ def read_work_extracted_body_dict(
         "source": source_label,
         "text": text,
         "truncated": truncated,
-        "file_bytes": int(path.stat().st_size),
+        "file_bytes": int(store.stat_st_size(rel)),
     }

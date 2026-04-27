@@ -8,6 +8,7 @@ import { useI18n } from "../../i18n/useI18n.js";
 import { computeFitTransformForNodeSubset } from "./graphCanvasCamera.js";
 import { computeFitTransform, computeWorldLayout, screenToWorld, worldRadiusForNodeCount } from "./graphCanvasTransform.js";
 import { localizeAggregatorTitle, localizeEdgeType } from "./graphLocalize.js";
+import { drawCommunityHulls } from "./graphCanvasDrawCommunityHulls.js";
 import { drawEdges, drawLabels, drawNodes } from "./graphCanvasDraw.js";
 import { getGraphLayoutSignature } from "./graphFlowAdapter.js";
 import { buildSimulationState } from "./graphSimulationAdapter.js";
@@ -15,6 +16,7 @@ import useGraphCanvasInput from "./hooks/useGraphCanvasInput.js";
 import { useGraphCanvasTopologyReseed } from "./hooks/useGraphCanvasTopologyReseed.js";
 import { useScienceGraphForceSimulation } from "../../hooks/graph/useScienceGraphForceSimulation.js";
 import { percentToRepulsion, REPULSION_DEFAULT_PERCENT } from "./physics/simConstants.js";
+import { buildCommunityColorStyleMap, sortedCommunitiesByCount } from "./physics/communityPalette.js";
 
 const NODE_RADIUS = 12;
 const FIT_PADDING = 40;
@@ -25,6 +27,8 @@ const LS_GRAPH_CANVAS_REPULSION = "graphCanvasRepulsionPercent";
 const LS_GRAPH_CANVAS_EDGE_LABEL_MODE = "graphCanvasEdgeLabelMode";
 const MIN_SCALE = 0.06;
 const MAX_SCALE = 8;
+
+const EMPTY_COMMUNITY_MAP = new Map();
 
 /** @returns {"all" | "interaction" | "adaptive"} */
 function readEdgeLabelModeStored() {
@@ -70,6 +74,11 @@ export default function GraphCanvasMvp({
   /** Increment to center viewport on this node id without requiring prior selection. */
   centerRequestNonce = 0,
   centerRequestNodeId = "",
+  graphColorBy = "type",
+  onGraphColorByChange,
+  graphCommunityHulls = false,
+  onGraphCommunityHullsChange,
+  nodeCommunityMap = EMPTY_COMMUNITY_MAP,
 }) {
   const { t } = useI18n();
   const theme = useTheme();
@@ -79,6 +88,11 @@ export default function GraphCanvasMvp({
   const resolveEdgeLabel = useCallback((e) => localizeEdgeType(e, t), [t]);
   const resolveNodeCanvasLabel = useCallback(
     (node) => (String(node.nodeKind) === "Aggregator" ? localizeAggregatorTitle(node, t) : null),
+    [t],
+  );
+
+  const formatCommunityHullLabel = useCallback(
+    (rankOneBased, nodeCount) => t("graph.community.hullLabel", { rank: rankOneBased, count: nodeCount }),
     [t],
   );
 
@@ -118,6 +132,19 @@ export default function GraphCanvasMvp({
     if (Array.isArray(searchMatchIds)) return new Set(searchMatchIds);
     return new Set();
   }, [searchMatchIds]);
+
+  const communityColorStyleMap = useMemo(
+    () => buildCommunityColorStyleMap(nodeCommunityMap, appearance),
+    [nodeCommunityMap, appearance],
+  );
+
+  const communityRanks = useMemo(() => {
+    const sorted = sortedCommunitiesByCount(nodeCommunityMap);
+    const m = new Map();
+    sorted.forEach((row, i) => m.set(row.id, i));
+    return m;
+  }, [nodeCommunityMap]);
+
   const canvasSize = useMemo(
     () => ({ width: Math.max(1, hostSize.width || 1), height: Math.max(MIN_CANVAS_HEIGHT, hostSize.height || MIN_CANVAS_HEIGHT) }),
     [hostSize.height, hostSize.width],
@@ -193,6 +220,10 @@ export default function GraphCanvasMvp({
     fixedNodesRef,
     setPinnedNodeCount,
     resolveNodeCanvasLabel,
+    graphColorBy,
+    selectedNodeId,
+    searchActive,
+    searchMatchSet,
   });
 
   useScienceGraphForceSimulation(
@@ -358,7 +389,19 @@ export default function GraphCanvasMvp({
     const edgeStyleMap = Object.fromEntries(
       graph.edges.map((edge) => [edge.id, { active: edge.id === selectedEdgeId || edge.id === input.hoveredEdgeId }]),
     );
-    const drawOpts = { appearance };
+    const drawOpts = {
+      appearance,
+      colorBy: graphColorBy,
+      nodeCommunityMap,
+      communityColorStyleMap,
+    };
+    if (graphColorBy === "community" && graphCommunityHulls) {
+      drawCommunityHulls(ctx, graph.nodes, positions, transformRef.current, nodeCommunityMap, communityColorStyleMap, {
+        appearance,
+        communityRanks,
+        formatHullLabel: formatCommunityHullLabel,
+      });
+    }
     drawEdges(ctx, graph.edges, nodeById, positions, transformRef.current, edgeStyleMap, drawOpts);
     drawNodes(ctx, graph.nodes, positions, transformRef.current, nodeStyleMap, drawOpts);
     drawLabels(ctx, graph.nodes, graph.edges, positions, transformRef.current, { ...nodeStyleMap, ...edgeStyleMap }, {
@@ -367,11 +410,21 @@ export default function GraphCanvasMvp({
       edgeLabelMode,
       edgeCountForAdaptive: graph.edges.length,
       appearance,
+      colorBy: graphColorBy,
+      nodeCountForAdaptive: graph.nodes.length,
+      searchActive,
+      searchMatchSet,
     });
   }, [
     appearance,
     canvasBg,
+    communityColorStyleMap,
+    communityRanks,
+    formatCommunityHullLabel,
     edgeLabelMode,
+    graphColorBy,
+    graphCommunityHulls,
+    nodeCommunityMap,
     getPositionsForFrame,
     getViewportDims,
     graph.edges,
@@ -446,6 +499,10 @@ export default function GraphCanvasMvp({
         layoutMode={layoutMode}
         repulsionPercent={repulsionPercent}
         onRepulsionChange={setRepulsionPercent}
+        graphColorBy={graphColorBy}
+        onGraphColorByChange={onGraphColorByChange || (() => {})}
+        graphCommunityHulls={graphCommunityHulls}
+        onGraphCommunityHullsChange={onGraphCommunityHullsChange || (() => {})}
         edgeLabelMode={edgeLabelMode}
         onEdgeLabelModeChange={setEdgeLabelMode}
         onFit={() => applyFit("auto")}

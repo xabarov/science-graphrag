@@ -1,0 +1,10 @@
+{
+  "model": "google/gemini-3.1-flash-image-preview",
+  "generated_at_epoch": 1777314225,
+  "jobs": [
+    {
+      "slug": "slide-02-plan-motif",
+      "filename_base": "slide-02-plan-motif"
+    }
+  ]
+}

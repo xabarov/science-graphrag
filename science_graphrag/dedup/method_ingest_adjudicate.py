@@ -72,6 +72,7 @@ def adjudicate_method_pair_llm(
         timeout_seconds=min(45.0, float(settings.extraction_llm_timeout_seconds)),
         mode=settings.extraction_llm_mode,
     )
+    transport_s = min(45.0, float(settings.extraction_llm_timeout_seconds))
     parsed, err = run_extraction(
         extractor,
         user,
@@ -80,7 +81,9 @@ def adjudicate_method_pair_llm(
         document_id="",
         system_prompt=_SYSTEM,
         retries=0,
-        timeout_seconds=min(45.0, float(settings.extraction_llm_timeout_seconds)),
+        timeout_seconds=transport_s,
+        transport_timeout_seconds=transport_s,
+        pool_name="dedup",
     )
     if err or parsed is None:
         log.warning("method ingest adjudication failed: %s", err)

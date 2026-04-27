@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { buildReactFlowEdges, buildReactFlowNodes, getGraphLayoutSignature } from "./graphFlowAdapter.js";
+import {
+  buildReactFlowEdges,
+  buildReactFlowNodes,
+  getGraphCommunityDetectionSignature,
+  getGraphLayoutSignature,
+} from "./graphFlowAdapter.js";
 
 describe("getGraphLayoutSignature", () => {
   it("changes when topology changes, not when unrelated fields change", () => {
@@ -18,6 +23,26 @@ describe("getGraphLayoutSignature", () => {
       edges: [{ id: "e1", source: "a", target: "b" }],
     };
     expect(getGraphLayoutSignature(g1)).not.toBe(getGraphLayoutSignature(g3));
+  });
+});
+
+describe("getGraphCommunityDetectionSignature", () => {
+  it("changes when edge type changes (community LPA depends on it)", () => {
+    const g1 = {
+      nodes: [{ id: "a", type: "Work" }],
+      edges: [{ id: "e1", source: "a", target: "a", type: "X" }],
+    };
+    const g2 = {
+      nodes: [{ id: "a", type: "Work" }],
+      edges: [{ id: "e1", source: "a", target: "a", type: "Y" }],
+    };
+    expect(getGraphCommunityDetectionSignature(g1)).not.toBe(getGraphCommunityDetectionSignature(g2));
+  });
+
+  it("changes when node workspaceMembership changes", () => {
+    const g1 = { nodes: [{ id: "a", type: "Work", workspaceMembership: "internal" }], edges: [] };
+    const g2 = { nodes: [{ id: "a", type: "Work", workspaceMembership: "external" }], edges: [] };
+    expect(getGraphCommunityDetectionSignature(g1)).not.toBe(getGraphCommunityDetectionSignature(g2));
   });
 });
 

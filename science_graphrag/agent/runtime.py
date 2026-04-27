@@ -173,12 +173,15 @@ class RetrievalAgent:
     ) -> AgentRunOutput:
         tid = (thread_id or "").strip() or None
         session_id = tid or str(uuid.uuid4())
+        deadline_s = float(self._settings.agent_step_timeout_seconds)
         attrs: dict[str, Any] = {
             "agent.runtime": self._settings.agent_runtime,
             "agent.max_tool_calls": max_tool_calls or self._settings.agent_max_tool_calls,
             "user.id": workspace_id or "",
             "input.value": question[:500],
             OpenInferenceAttributes.SESSION_ID: session_id,
+            "agent.response_deadline_seconds": deadline_s,
+            "agent.response_deadline_enforces_upstream_cancel": False,
         }
         if answer_class_hint:
             attrs["agent.answer_class_hint"] = str(answer_class_hint)[:120]

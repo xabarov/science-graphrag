@@ -12,7 +12,12 @@ from langchain_core.messages import HumanMessage
 from science_graphrag.agent.chat_envelope import ANSWER_CLASSES
 from science_graphrag.agent.llm.chat import build_chat_model
 from science_graphrag.config import Settings
-from science_graphrag.observability.spans import add_span_event, chain_span, llm_span
+from science_graphrag.observability.spans import (
+    SpanAttributes,
+    add_span_event,
+    chain_span,
+    llm_span,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -177,7 +182,17 @@ def llm_classify_turn_policy(  # pylint: disable=too-many-locals
         ):
             with llm_span(
                 "llm.agent.turn_policy",
-                {"llm.invocation_name": "agent_turn_policy_classifier"},
+                {
+                    **SpanAttributes.llm_runtime_policy_attributes(
+                        pool_name="agent_classifier",
+                        transport_timeout_seconds=float(
+                            settings.agent_turn_policy_classifier_timeout_seconds
+                        ),
+                        timeout_contract="transport_only",
+                        retry_extra_budget=0,
+                    ),
+                    "llm.invocation_name": "agent_turn_policy_classifier",
+                },
             ):
                 resp = llm.invoke(messages)
         content = str(getattr(resp, "content", "") or "")

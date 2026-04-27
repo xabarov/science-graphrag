@@ -172,12 +172,14 @@ export default function CompareTab({ onOpenWorkbench, initialBaselineId, initial
             rows={regressionsFiltered}
             onOpenCase={onOpenWorkbench}
             currentRunId={result.current_run_id}
+            baselineRunId={baselineId}
           />
           <CompareDeltaTable
             title="Improvements"
             rows={improvementsFiltered}
             onOpenCase={onOpenWorkbench}
             currentRunId={result.current_run_id}
+            baselineRunId={baselineId}
           />
           {showUnchanged ? (
             <CompareDeltaTable
@@ -185,6 +187,7 @@ export default function CompareTab({ onOpenWorkbench, initialBaselineId, initial
               rows={unchangedFiltered}
               onOpenCase={onOpenWorkbench}
               currentRunId={result.current_run_id}
+              baselineRunId={baselineId}
             />
           ) : null}
         </>

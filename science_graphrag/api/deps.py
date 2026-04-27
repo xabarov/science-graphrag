@@ -5,6 +5,7 @@ from typing import Any
 
 from fastapi import Depends, Request
 
+from science_graphrag.artifacts.local_store import LocalFilesystemArtifactStore
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
 from science_graphrag.storage.blobs import BlobStore
@@ -22,6 +23,7 @@ class StoreRegistry:
     qdrant_works: QdrantWorkEmbeddingStore
     qdrant_claims: QdrantClaimsStore
     blob: BlobStore
+    artifacts: LocalFilesystemArtifactStore
 
     def close(self) -> None:
         for store in (
@@ -30,6 +32,7 @@ class StoreRegistry:
             self.qdrant_works,
             self.qdrant_claims,
             self.blob,
+            self.artifacts,
         ):
             closer = getattr(store, "close", None)
             if callable(closer):
@@ -64,6 +67,7 @@ def init_store_registry(settings: Settings) -> StoreRegistry:
             vector_dim=dim,
         ),
         blob=BlobStore(settings.blob_root),
+        artifacts=LocalFilesystemArtifactStore(settings.artifact_root),
     )
     return _registry
 
@@ -100,7 +104,7 @@ def get_neo4j_store(stores: StoreRegistry = Depends(get_stores)) -> Neo4jGraphSt
 def build_store_registry_for_tests(**overrides: Any) -> StoreRegistry:
     """Helper constructor for tests with optional field overrides."""
 
-    required = {"neo4j", "qdrant_chunks", "qdrant_works", "qdrant_claims", "blob"}
+    required = {"neo4j", "qdrant_chunks", "qdrant_works", "qdrant_claims", "blob", "artifacts"}
     missing = required.difference(overrides)
     if missing:
         raise ValueError(f"Missing required overrides: {sorted(missing)}")

@@ -36,6 +36,10 @@ from science_graphrag.api.task_benchmark_models import (
     RunStatus,
     now_iso,
 )
+from science_graphrag.artifacts.run_layout import (
+    default_benchmark_run_history_legacy_dir,
+    default_benchmark_runs_dir,
+)
 
 # Mutable module-level limits (tests monkeypatch these attributes).
 _SUMMARY_CASES_INLINE_MAX = SUMMARY_CASES_INLINE_MAX
@@ -301,15 +305,12 @@ class BenchmarkTaskStore:
         """Directory for durable run JSON snapshots."""
         if self._history_dir_override is not None:
             d = self._history_dir_override
-        else:
-            repo_root = Path(__file__).resolve().parents[2]
-            d = repo_root / "data" / "benchmark_runs"
-        d.mkdir(parents=True, exist_ok=True)
-        return d
+            d.mkdir(parents=True, exist_ok=True)
+            return d
+        return default_benchmark_runs_dir()
 
     def _legacy_history_dir(self) -> Path:
-        repo_root = Path(__file__).resolve().parents[2]
-        return repo_root / "data" / "benchmark_run_history"
+        return default_benchmark_run_history_legacy_dir()
 
     def _load_persisted_runs(self) -> None:
         """Restore persisted runs on process startup."""

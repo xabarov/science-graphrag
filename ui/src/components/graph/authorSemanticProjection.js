@@ -108,6 +108,37 @@ function pickAuthorshipEdgeProps(props) {
 }
 
 /**
+ * Workspace graphs often stop at Work -> Authorship on the backend 1-hop projection.
+ * When the explicit Author node is absent, use the enriched Authorship label as an
+ * author-like fallback so the UI can still show/filter "Author" nodes.
+ *
+ * @param {object} node
+ * @returns {object}
+ */
+function synthesizeAuthorFromAuthorship(node) {
+  const n = node && typeof node === "object" ? /** @type {Record<string, unknown>} */ (node) : {};
+  const baseLabel = String(n.displayLabel || n.label || "").trim();
+  const authorLabel = baseLabel.replace(/\s*\(#\d+\)\s*$/u, "").trim() || "Author";
+  const subtitle = String(n.subtitle || "").trim() || "Author";
+  const raw = n.raw && typeof n.raw === "object" ? /** @type {Record<string, unknown>} */ (n.raw) : {};
+  return {
+    ...n,
+    type: "Author",
+    nodeKind: "Author",
+    label: authorLabel,
+    displayLabel: authorLabel,
+    subtitle,
+    raw: {
+      ...raw,
+      type: "Author",
+      node_kind: "Author",
+      synthesized_from: "Authorship",
+      synthesized_display_label: baseLabel,
+    },
+  };
+}
+
+/**
  * Returns a shallow-copied graph with author internals collapsed.
  *
  * @param {{
@@ -167,6 +198,18 @@ export function projectAuthorSemanticGraph(graph) {
       if (authorshipIds.has(s)) authorByAsh.set(s, t);
       else if (authorshipIds.has(t)) authorByAsh.set(t, s);
     }
+  }
+
+  /** @type {Map<string, object>} */
+  const synthesizedAuthorNodes = new Map();
+  for (const ashId of authorshipIds) {
+    if (authorByAsh.has(ashId)) continue;
+    const ashNode = nodeById.get(ashId);
+    if (!ashNode || typeof ashNode !== "object") continue;
+    const synthesized = synthesizeAuthorFromAuthorship(ashNode);
+    synthesizedAuthorNodes.set(ashId, synthesized);
+    authorByAsh.set(ashId, ashId);
+    nodeById.set(ashId, synthesized);
   }
 
   /** @type {Set<string>} */
@@ -333,12 +376,15 @@ export function projectAuthorSemanticGraph(graph) {
     );
   }
 
-  const keptNodes = nodesIn.filter((n) => {
-    if (!n || typeof n !== "object" || n.id == null) return false;
+  const keptNodes = nodesIn.flatMap((n) => {
+    if (!n || typeof n !== "object" || n.id == null) return [];
     const id = String(n.id);
-    if (authorAggIds.has(id)) return false;
-    if (authorshipIds.has(id)) return false;
-    return true;
+    if (authorAggIds.has(id)) return [];
+    if (authorshipIds.has(id)) {
+      const synthesized = synthesizedAuthorNodes.get(id);
+      return synthesized ? [synthesized] : [];
+    }
+    return [n];
   });
 
   const keptEdges = edgesIn.filter((e) => {

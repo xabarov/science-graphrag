@@ -71,6 +71,8 @@ def _semantic_llm_bundle_attempts(
             document_id=document_id,
             system_prompt=system_prompt,
             retries=0,
+            transport_timeout_seconds=float(settings.extraction_llm_timeout_seconds),
+            pool_name="semantic",
         )
         if parsed is not None and not err:
             diag = SemanticExtractionLLMDiagnostics(

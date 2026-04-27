@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "../../openclaude"
+		},
+		{
+			"path": "../../../work/calc_safe_distances"
 		}
 	],
 	"settings": {}

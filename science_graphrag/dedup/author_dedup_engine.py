@@ -10,6 +10,7 @@ from science_graphrag.dedup.prompts import SYSTEM_SAME_AUTHOR, USER_SAME_AUTHOR_
 from science_graphrag.embeddings import resolve_embedder, resolve_embedding_model_label
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
 from science_graphrag.ingestion.llm.extractor import SyncInstructorExtractor
+from science_graphrag.observability.phoenix_tracer import SpanAttributes, llm_span
 from science_graphrag.storage.models_orm import AuthorDedupConflict
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 from science_graphrag.storage.qdrant_store import QdrantAuthorEmbeddingStore
@@ -42,7 +43,20 @@ def _llm_same_author(
         timeout_seconds=float(settings.author_dedup_llm_timeout_s),
         mode=settings.extraction_llm_mode,
     )
-    parsed, err = ext.extract_maybe(SameAuthorJudgment, system=SYSTEM_SAME_AUTHOR, user=user)
+    transport_s = float(settings.author_dedup_llm_timeout_s)
+    with llm_span(
+        "llm.dedup.same_author",
+        {
+            **SpanAttributes.llm_runtime_policy_attributes(
+                pool_name="dedup",
+                transport_timeout_seconds=transport_s,
+                timeout_contract="transport_only",
+                retry_extra_budget=0,
+            ),
+            "dedup.judgment": "same_author",
+        },
+    ):
+        parsed, err = ext.extract_maybe(SameAuthorJudgment, system=SYSTEM_SAME_AUTHOR, user=user)
     if err or parsed is None:
         log.warning("author_dedup_llm: %s", err)
         return None, err

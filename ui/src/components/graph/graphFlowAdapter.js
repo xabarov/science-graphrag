@@ -26,6 +26,39 @@ export function getGraphLayoutSignature(graph) {
 }
 
 /**
+ * Stable key for client-side community detection (topology + node role fields + edge types).
+ * Unlike {@link getGraphLayoutSignature}, edge `type` and node `type` / `workspaceMembership` affect the result.
+ *
+ * @param {{ nodes?: Array<object>, edges?: Array<object> }} graph
+ * @returns {string}
+ */
+export function getGraphCommunityDetectionSignature(graph) {
+  const nodes = Array.isArray(graph?.nodes) ? graph.nodes : [];
+  const edges = Array.isArray(graph?.edges) ? graph.edges : [];
+  const topo = getGraphLayoutSignature({ nodes, edges });
+  const nodeMeta = [...nodes]
+    .map((n) => {
+      const id = n?.id != null ? String(n.id) : "";
+      const typ = n?.type != null ? String(n.type) : "";
+      const wsm = n?.workspaceMembership != null ? String(n.workspaceMembership).trim().toLowerCase() : "";
+      return `${id}:${typ}:${wsm}`;
+    })
+    .sort((a, b) => a.localeCompare(b))
+    .join("\0");
+  const edgeMeta = [...edges]
+    .map((e) => {
+      const id = e?.id != null ? String(e.id) : "";
+      const s = e?.source != null ? String(e.source) : "";
+      const t = e?.target != null ? String(e.target) : "";
+      const typ = e?.type != null ? String(e.type) : "";
+      return `${id}:${s}->${t}:${typ}`;
+    })
+    .sort((a, b) => a.localeCompare(b))
+    .join("\0");
+  return `${topo}\0${nodeMeta}\0${edgeMeta}`;
+}
+
+/**
  * @param {{ nodes: Array<{ id: string, label?: string, type?: string }> }} graph
  * @param {string} selectedNodeId
  * @returns {import("@xyflow/react").Node[]}

@@ -100,9 +100,17 @@ class VLPDFProcessor:  # pylint: disable=too-few-public-methods
         total_prompt_tokens = 0
         total_completion_tokens = 0
 
+        vl_transport_s = 300.0
         with llm_span(
             "llm.vl_pdf",
             {
+                **SpanAttributes.llm_runtime_policy_attributes(
+                    pool_name="vl_pdf",
+                    transport_timeout_seconds=vl_transport_s,
+                    timeout_contract="transport_only",
+                    retry_extra_budget=2,
+                    transport_max_attempts=3,
+                ),
                 "vl.model": self.settings.vl_model,
                 "vl.base_url": self.settings.vl_base_url,
                 "pdf.path": str(path),
@@ -141,8 +149,7 @@ class VLPDFProcessor:  # pylint: disable=too-few-public-methods
                     {
                         "role": "user",
                         "content": (
-                            f"<{len(all_pages)} page(s) in {len(batches)} "
-                            "batch(es)> + VL prompt"
+                            f"<{len(all_pages)} page(s) in {len(batches)} " "batch(es)> + VL prompt"
                         ),
                     }
                 ]

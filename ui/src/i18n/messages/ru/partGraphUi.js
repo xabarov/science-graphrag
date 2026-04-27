@@ -259,4 +259,33 @@ export default {
   "graph.canvas.edgeLabels.tooltipInteraction": "Подпись только при наведении или если ребро выбрано",
   "graph.canvas.edgeLabels.tooltipAdaptive":
     "При крупном масштабе и малом числе рёбер — все подписи; иначе только при наведении или выборе",
+
+  "graph.canvas.toolbarSectionColor": "Цвет",
+  "graph.canvas.toolbarSectionLabels": "Подписи",
+  "graph.canvas.toolbarSectionView": "Вид",
+  "graph.canvas.toolbarCommunityFillHint": "Заливка = кластер",
+  "graph.canvas.toolbarCommunityModeBadge": "Кластеры",
+  "graph.canvas.toolbarCommunityModeBadgeTooltip":
+    "Цвета на холсте — клиентские сообщества на видимом графе, а не типы сущностей. Легенда: топ сообществ; блок типов — только справка.",
+
+  "graph.community.colorByAria": "Раскраска заливки узлов на холсте",
+  "graph.community.colorByType": "По типу",
+  "graph.community.colorByCluster": "По кластеру",
+  "graph.community.colorByTypeTooltip": "Заливка по типу сущности (по умолчанию)",
+  "graph.community.colorByClusterTooltip": "Заливка по клиентским кластерам сообществ",
+  "graph.community.toggleHulls": "Контуры (hull)",
+  "graph.community.toggleHullsTooltip": "Полупрозрачные выпуклые оболочки за узлами для каждого сообщества",
+  "graph.community.toggleHullsAria": "Переключить контуры сообществ",
+  "graph.community.legendTitle": "Сообщества ({{count}})",
+  "graph.community.legendPreviewSep": " · ",
+  "graph.community.legendItem.label": "{{count}} узл. — {{previews}}",
+  "graph.community.legendItem.withRank": "№{{rank}} · {{count}} узл. — {{previews}}",
+  "graph.community.legendSemanticsHint":
+    "Цвет заливки — кластеры на этом графе; типы сущностей ниже справочные и в этом режиме не задают цвет.",
+  "graph.community.legendClusterListHint":
+    "В списке — топ-{{topN}} сообществ по размеру на видимом графе. Заливка hull ослабляется, где области пересекаются.",
+  "graph.community.typesLegendToggle": "Типы сущностей и рёбер (справка)",
+  "graph.community.legendMoreRows":
+    "Не в списке: ещё {{count}} кластеров сверх топ-{{topN}}. Тот же №, что у подписей hull при включённых контурах.",
+  "graph.community.hullLabel": "Кластер №{{rank}} · {{count}}",
 };

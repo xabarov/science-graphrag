@@ -54,6 +54,8 @@ Reference lane (эталон YOLOv1): [`.github/workflows/benchmark-reference.ym
 
 ## 6. Артефакты прогонов
 
+Канонические относительные пути и logical id для gate/aggregator: пакет `science_graphrag/artifacts/` (`benchmark_paths`, `benchmark_registry`); шим для скриптов — `scripts/benchmark_aggregator/paths.py`.
+
 JSON-отчёты складывать в `eval/results/` с понятными именами, например:
 
 - `eval/results/baseline-reference-layer1-yolov1.json`

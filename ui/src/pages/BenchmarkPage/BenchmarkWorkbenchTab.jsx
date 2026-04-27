@@ -1,32 +1,45 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Box from "@mui/material/Box";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
-import {
-  getBenchmarkRunCaseDetail,
-  getBenchmarkRunCasesPage,
-  getBenchmarkRunSummary,
-  listBenchmarkRuns,
-} from "../../services/benchmarkApi.js";
+import { getBenchmarkRunCasesPage, getBenchmarkRunSummary, listBenchmarkRuns } from "../../services/benchmarkApi.js";
 import { CursorButton } from "../../components/common/index.js";
 import { useI18n } from "../../i18n/useI18n.js";
+import BenchmarkCaseInspectorShell from "./caseInspector/BenchmarkCaseInspectorShell.jsx";
+import { useBenchmarkCaseInspectorData } from "./caseInspector/useBenchmarkCaseInspectorData.js";
 import { WorkbenchRunScopedPanel } from "./workbench/BenchmarkWorkbenchRunPanel.jsx";
 
+/**
+ * @param {object} props
+ * @param {string | null} props.selectedRunId
+ * @param {string | null} props.selectedCaseId
+ * @param {(runId: string | null) => void} [props.onSelectRun]
+ * @param {(caseId: string | null) => void} [props.onSelectCase]
+ * @param {string} [props.caseFamily]
+ * @param {{ baselineRunId: string, metric: string } | null} [props.compareContext]
+ */
 export default function BenchmarkWorkbenchTab({
   selectedRunId,
   selectedCaseId,
   onSelectRun,
   onSelectCase,
+  caseFamily = "layer1",
+  compareContext = null,
 }) {
   const { t } = useI18n();
   const tk = useTheme().appTokens;
   const [runsPayload, setRunsPayload] = useState(null);
   const [runDetail, setRunDetail] = useState(null);
-  const [caseDetail, setCaseDetail] = useState(null);
-  const [error, setError] = useState(null);
+  const [runsError, setRunsError] = useState(null);
+  const inspector = useBenchmarkCaseInspectorData({
+    selectedRunId,
+    selectedCaseId,
+    caseFamily: (caseFamily || "layer1").trim().toLowerCase(),
+  });
+
   const selectedCaseIdRef = useRef(selectedCaseId);
   useEffect(() => {
     selectedCaseIdRef.current = selectedCaseId;
@@ -39,7 +52,7 @@ export default function BenchmarkWorkbenchTab({
         const resp = await listBenchmarkRuns();
         if (!cancelled) setRunsPayload(resp);
       } catch (e) {
-        if (!cancelled) setError(e?.message || "failed_to_load_runs");
+        if (!cancelled) setRunsError(e?.message || "failed_to_load_runs");
       }
     }
     loadRuns();
@@ -80,7 +93,7 @@ export default function BenchmarkWorkbenchTab({
         const firstCase = payload?.cases?.[0]?.case_id || null;
         if (firstCase && !selectedCaseIdRef.current) onSelectCase?.(firstCase);
       } catch (e) {
-        if (!cancelled) setError(e?.message || "failed_to_load_run");
+        if (!cancelled) setRunsError(e?.message || "failed_to_load_run");
       }
     }
     loadRunDetail();
@@ -89,27 +102,18 @@ export default function BenchmarkWorkbenchTab({
     };
   }, [selectedRunId, onSelectCase]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function loadCaseDetail() {
-      if (!selectedRunId || !selectedCaseId) {
-        setCaseDetail(null);
-        return;
-      }
-      try {
-        const resp = await getBenchmarkRunCaseDetail(selectedRunId, selectedCaseId);
-        if (!cancelled) setCaseDetail(resp?.data || resp);
-      } catch (e) {
-        if (!cancelled) setError(e?.message || "failed_to_load_case_detail");
-      }
-    }
-    loadCaseDetail();
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedRunId, selectedCaseId]);
-
   const runItems = runsPayload?.items || [];
+  const fixtureOnly = Boolean(!selectedRunId && selectedCaseId);
+  const showRunPanel = Boolean(selectedRunId && runDetail);
+
+  const openRunFromEvidence = useCallback(
+    (rid) => {
+      if (rid) onSelectRun?.(rid);
+    },
+    [onSelectRun],
+  );
+
+  const combinedError = runsError || inspector.error;
 
   return (
     <Box sx={{ padding: 2 }}>
@@ -135,25 +139,46 @@ export default function BenchmarkWorkbenchTab({
         <CursorButton onClick={() => window.location.reload()}>{t("benchmark.workbench.reload")}</CursorButton>
       </Box>
 
-      {error ? (
+      {combinedError ? (
         <Typography sx={{ color: tk.state.dangerFg, mb: 2 }} role="alert">
-          {error}
+          {combinedError}
         </Typography>
       ) : null}
 
-      {!selectedRunId ? (
+      {!selectedRunId && !selectedCaseId ? (
         <Typography sx={{ color: tk.text.secondary }}>{t("benchmark.workbench.pickRun")}</Typography>
-      ) : !runDetail ? (
+      ) : null}
+
+      {fixtureOnly ? (
+        <BenchmarkCaseInspectorShell
+          mode="fixture"
+          family={(caseFamily || "layer1").trim().toLowerCase()}
+          caseId={selectedCaseId}
+          caseDetail={inspector.caseDetail}
+          fixtureDetail={inspector.fixtureDetail}
+          compareContext={null}
+          loading={inspector.loading}
+          onOpenRun={openRunFromEvidence}
+        />
+      ) : null}
+
+      {selectedRunId && !runDetail ? (
         <Typography sx={{ color: tk.text.secondary }}>{t("benchmark.workbench.loadingRun")}</Typography>
-      ) : (
+      ) : null}
+
+      {showRunPanel ? (
         <WorkbenchRunScopedPanel
           key={selectedRunId}
           runDetail={runDetail}
-          caseDetail={caseDetail}
+          caseDetail={inspector.caseDetail}
           selectedCaseId={selectedCaseId}
           onSelectCase={onSelectCase}
+          compareContext={compareContext}
+          inspectorLoading={inspector.loading}
+          onOpenRunFromEvidence={openRunFromEvidence}
+          fixtureDetail={inspector.fixtureDetail}
         />
-      )}
+      ) : null}
     </Box>
   );
 }

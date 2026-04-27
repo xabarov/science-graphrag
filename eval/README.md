@@ -6,6 +6,8 @@
 
 Стабилизация benchmark + API: [docs/runbooks/benchmark-stabilization-baseline.md](../docs/runbooks/benchmark-stabilization-baseline.md), [docs/runbooks/benchmark-stabilization-triage.md](../docs/runbooks/benchmark-stabilization-triage.md), [docs/runbooks/benchmark-decision-gate.md](../docs/runbooks/benchmark-decision-gate.md).
 
+**Phase 0 — artifact registry:** канонические пути `eval/results/*.json` и стабильные logical id заданы в пакете `science_graphrag/artifacts/` (`benchmark_paths`, `benchmark_registry`, `BenchmarkLogicalId`). Скрипты по-прежнему импортируют `scripts/benchmark_aggregator/paths.py`, который реэкспортирует те же константы из пакета.
+
 **Docker dev (`make dev-up`):** после смены переменных окружения в `docker-compose.dev.yml` пересоберите только API: `make dev-recreate-api` (или `docker compose -f docker-compose.dev.yml up -d api --force-recreate`).
 
 **Reference gate:** перед массовыми правками gold/метрик убедитесь, что эталон **YOLOv1** (три `baseline-reference-*-yolov1*.json`) зелёный; см. раздел 6.1 в runbook baseline.

@@ -46,6 +46,7 @@ from science_graphrag.ingestion.markdown_fence import strip_whole_document_markd
 
 # Backward-compatible name for ``science_graphrag.ingestion.pipeline`` facade re-exports.
 _strip_artifact_header = strip_ingest_artifact_header
+from science_graphrag.artifacts.local_store import LocalFilesystemArtifactStore
 from science_graphrag.dedup.entity_ingest_conflict_check import (
     enqueue_entity_near_duplicate_conflicts_on_ingest,
 )
@@ -249,15 +250,15 @@ def _canonical_diagnostics_rel(source_path: Path) -> Path:
 def _read_cached_markdown(
     settings: Settings, source_path: Path, *, document_id: str | None = None
 ) -> tuple[str, str] | None:
-    artifact_root = Path(settings.artifact_root)
+    store = LocalFilesystemArtifactStore(Path(settings.artifact_root))
     candidates: list[Path] = []
     if document_id:
-        candidates.append(artifact_root / canonical_article_md_rel(document_id))
-        candidates.append(artifact_root / canonical_normalized_md_rel(document_id))
-    canonical = artifact_root / _canonical_article_rel(source_path)
+        candidates.append(store.absolute(canonical_article_md_rel(document_id)))
+        candidates.append(store.absolute(canonical_normalized_md_rel(document_id)))
+    canonical = store.absolute(_canonical_article_rel(source_path))
     candidates.append(canonical)
     legacy = sorted(
-        (artifact_root / "ingestion").glob(f"*/{_article_slug(source_path)}/article.md"),
+        store.glob_under(f"ingestion/*/{_article_slug(source_path)}/article.md"),
         key=lambda p: p.stat().st_mtime,
         reverse=True,
     )
@@ -503,14 +504,14 @@ def _write_markdown_artifact(
     extraction_mode: str,
 ) -> Path:
     """Write canonical ``ingestion/{document_id}/article.md`` plus legacy slug paths."""
-    artifact_store = BlobStore(settings.artifact_root)
+    artifact_store = LocalFilesystemArtifactStore(Path(settings.artifact_root))
     slug = _article_slug(source_path)
     legacy_rel = Path("ingestion") / document_id / slug / "article.md"
     header = f"<!-- source={source_path.name} extraction_mode={extraction_mode} -->\n\n"
     body = header + markdown
-    artifact_store.write_artifact(canonical_article_md_rel(document_id), body)
-    artifact_store.write_artifact(_canonical_article_rel(source_path), body)
-    return artifact_store.write_artifact(legacy_rel, body)
+    artifact_store.write_text(canonical_article_md_rel(document_id), body)
+    artifact_store.write_text(_canonical_article_rel(source_path), body)
+    return artifact_store.write_text(legacy_rel, body)
 
 
 def _write_extraction_diagnostics_json(
@@ -520,11 +521,11 @@ def _write_extraction_diagnostics_json(
     source_path: Path,
     diagnostics_json: str,
 ) -> Path:
-    artifact_store = BlobStore(settings.artifact_root)
+    artifact_store = LocalFilesystemArtifactStore(Path(settings.artifact_root))
     slug = _article_slug(source_path)
     artifact_rel = Path("ingestion") / document_id / slug / "extraction_diagnostics.json"
-    artifact_store.write_artifact(_canonical_diagnostics_rel(source_path), diagnostics_json)
-    return artifact_store.write_artifact(artifact_rel, diagnostics_json)
+    artifact_store.write_text(_canonical_diagnostics_rel(source_path), diagnostics_json)
+    return artifact_store.write_text(artifact_rel, diagnostics_json)
 
 
 def run_ingest_pipeline(ctx: IngestRunContext, source: IngestSource) -> IngestResult:
@@ -814,7 +815,7 @@ def ingest_document(
         normalized = strip_repeated_boilerplate(
             normalize_text(strip_whole_document_markdown_fence(markdown_text))
         )
-        BlobStore(settings.artifact_root).write_artifact(
+        LocalFilesystemArtifactStore(Path(settings.artifact_root)).write_text(
             canonical_normalized_md_rel(doc_id),
             normalized,
         )

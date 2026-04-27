@@ -1,14 +1,18 @@
 import React, { useMemo, useState } from "react";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
+import Collapse from "@mui/material/Collapse";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
 import { useI18n } from "../../i18n/useI18n.js";
-import { getScienceGraphLegendNodeChipSx, getScienceGraphNodeTypeIcon } from "./graphCanvasStyle.js";
+import { buildCommunityLegendRows } from "./graphCommunityLegend.js";
+import { buildCommunityColorStyleMap, sortedCommunitiesByCount } from "./physics/communityPalette.js";
+import { getScienceGraphLegendNodeChipSx, getScienceGraphNodeTypeIcon, truncateCanvasLabel } from "./graphCanvasStyle.js";
 import {
   collectGraphComposition,
   collectGraphTypeLegend,
@@ -17,6 +21,8 @@ import {
   sortLegendKinds,
 } from "./graphTypeLegend.js";
 import { localizeEdgeTypeKey, localizeNodeKind } from "./graphLocalize.js";
+
+const COMMUNITY_LEGEND_TOP_N = 12;
 
 const NODE_KIND_GROUPS = [
   {
@@ -37,16 +43,70 @@ const NODE_KIND_GROUPS = [
   },
 ];
 
+const EMPTY_COMMUNITY_MAP = new Map();
+
+/**
+ * Collapsible entity-type chips when canvas uses community fill (starts collapsed).
+ * Remount with `key` when toggling color mode so the default stays collapsed.
+ * @param {{ tk: object, t: (k: string, v?: object) => string, children: React.ReactNode }} props
+ */
+function CommunityTypesLegendCollapse({ tk, t, children }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Box sx={{ mb: 0.5, opacity: 0.9 }}>
+      <Box
+        onClick={() => setOpen((v) => !v)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setOpen((v) => !v);
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-expanded={open}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 0.35,
+          cursor: "pointer",
+          userSelect: "none",
+        }}
+      >
+        <ExpandMoreIcon
+          sx={{
+            fontSize: "1.05rem",
+            color: tk.text.muted,
+            transform: open ? "rotate(180deg)" : "rotate(0deg)",
+            transition: "transform 0.18s ease",
+          }}
+        />
+        <Typography sx={{ fontSize: "0.68rem", color: tk.text.muted, fontWeight: 500 }}>
+          {t("graph.community.typesLegendToggle")}
+        </Typography>
+      </Box>
+      <Collapse in={open}>
+        <Box sx={{ opacity: 0.92, "& .MuiChip-root": { opacity: 0.92 } }}>{children}</Box>
+      </Collapse>
+    </Box>
+  );
+}
+
 /**
  * Compact legend of node and edge types in the current display graph.
- * @param {{ graph: { nodes: Array<object>, edges: Array<object> } }} props
+ * @param {{
+ *   graph: { nodes: Array<object>, edges: Array<object> },
+ *   colorBy?: "type" | "community",
+ *   nodeCommunityMap?: Map<string, string>,
+ * }} props
  */
-export default function GraphTypeLegend({ graph }) {
+export default function GraphTypeLegend({ graph, colorBy = "type", nodeCommunityMap = EMPTY_COMMUNITY_MAP }) {
   const { t } = useI18n();
   const theme = useTheme();
   const tk = theme.appTokens;
   const appearance = theme.palette.mode === "light" ? "light" : "dark";
   const [chipSort, setChipSort] = useState(/** @type {"frequency" | "alphabet"} */ ("frequency"));
+  const [communityLegendOpen, setCommunityLegendOpen] = useState(true);
   const composition = useMemo(() => collectGraphComposition(graph), [graph]);
   const { nodeTypes, edgeTypes } = useMemo(() => collectGraphTypeLegend(graph), [graph]);
   const { nodeKindCounts, edgeTypeCounts, totalNodes, totalEdges } = composition;
@@ -85,6 +145,25 @@ export default function GraphTypeLegend({ graph }) {
     [edgeTypes, edgeTypeCounts, chipSort],
   );
 
+  const communityMap = nodeCommunityMap instanceof Map ? nodeCommunityMap : EMPTY_COMMUNITY_MAP;
+
+  const communityColorStyleMap = useMemo(
+    () => buildCommunityColorStyleMap(communityMap, appearance),
+    [communityMap, appearance],
+  );
+
+  const totalCommunityCount = useMemo(() => sortedCommunitiesByCount(communityMap).length, [communityMap]);
+
+  const communityRows = useMemo(() => {
+    if (colorBy !== "community" || communityMap.size === 0) return [];
+    return buildCommunityLegendRows(graph, communityMap, { topN: COMMUNITY_LEGEND_TOP_N, previewsPerCommunity: 3 });
+  }, [colorBy, communityMap, graph]);
+
+  const communityLegendMoreCount = useMemo(() => {
+    if (colorBy !== "community") return 0;
+    return Math.max(0, totalCommunityCount - COMMUNITY_LEGEND_TOP_N);
+  }, [colorBy, totalCommunityCount]);
+
   if (nodeTypes.length === 0 && edgeTypes.length === 0) {
     return null;
   }
@@ -117,6 +196,67 @@ export default function GraphTypeLegend({ graph }) {
       />
     );
   };
+
+  const typeAndEdgeChips = (
+    <Box
+      sx={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: { xs: 0.5, sm: 0.75 },
+        alignItems: "center",
+      }}
+    >
+      {nodeTypes.length > 0 ? (
+        <>
+          <Typography sx={{ fontSize: "0.7rem", color: tk.text.muted, mr: 0.25 }}>
+            {t("graph.legend.nodes")}
+          </Typography>
+          {groupedNodeKinds.map(({ groupKey, kinds }) => (
+            <React.Fragment key={`grp-${groupKey}`}>
+              <Typography sx={{ fontSize: "0.68rem", color: tk.text.muted, mr: 0.25 }}>
+                {t(`graph.legend.group.${groupKey}`)}
+              </Typography>
+              {kinds.map((kind) => renderNodeChip(kind, groupKey))}
+            </React.Fragment>
+          ))}
+          {otherKinds.length > 0 ? (
+            <React.Fragment key="grp-Other">
+              <Typography sx={{ fontSize: "0.68rem", color: tk.text.muted, mr: 0.25 }}>
+                {t("graph.legend.group.Other")}
+              </Typography>
+              {otherKinds.map((kind) => renderNodeChip(kind, "Other"))}
+            </React.Fragment>
+          ) : null}
+        </>
+      ) : null}
+      {sortedEdgeTypes.length > 0 ? (
+        <>
+          <Typography sx={{ fontSize: "0.7rem", color: tk.text.muted, ml: nodeTypes.length ? 1 : 0, mr: 0.25 }}>
+            {t("graph.legend.edges")}
+          </Typography>
+          {sortedEdgeTypes.map((edgeType) => {
+            const ec = edgeTypeCounts.get(edgeType) ?? 0;
+            return (
+              <Chip
+                key={`e-${edgeType}`}
+                icon={<ArrowForwardIcon sx={{ fontSize: "0.65rem !important", color: `${tk.text.muted} !important` }} />}
+                label={`${localizeEdgeTypeKey(edgeType, t)} (${ec})`}
+                size="small"
+                variant="outlined"
+                sx={{
+                  height: 22,
+                  fontSize: "0.75rem",
+                  borderColor: tk.border.strong,
+                  color: tk.text.secondary,
+                  "& .MuiChip-icon": { marginLeft: "6px" },
+                }}
+              />
+            );
+          })}
+        </>
+      ) : null}
+    </Box>
+  );
 
   return (
     <Box
@@ -158,64 +298,103 @@ export default function GraphTypeLegend({ graph }) {
           <ToggleButton value="alphabet">{t("graph.legend.sortAlphabet")}</ToggleButton>
         </ToggleButtonGroup>
       </Box>
-      <Box
-        sx={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: { xs: 0.5, sm: 0.75 },
-          alignItems: "center",
-        }}
-      >
-        {nodeTypes.length > 0 ? (
-          <>
-            <Typography sx={{ fontSize: "0.7rem", color: tk.text.muted, mr: 0.25 }}>
-              {t("graph.legend.nodes")}
+      {colorBy === "community" ? (
+        <Box
+          sx={{
+            mb: 0.55,
+            pl: 0.75,
+            borderLeft: `2px solid ${tk.accent.softBorder}`,
+          }}
+        >
+          <Typography sx={{ fontSize: "0.65rem", color: tk.text.muted, lineHeight: 1.42 }}>
+            {t("graph.community.legendSemanticsHint")}
+          </Typography>
+        </Box>
+      ) : null}
+      {colorBy === "community" ? (
+        <CommunityTypesLegendCollapse key="community-types-legend" tk={tk} t={t}>
+          {typeAndEdgeChips}
+        </CommunityTypesLegendCollapse>
+      ) : (
+        typeAndEdgeChips
+      )}
+      {colorBy === "community" && totalCommunityCount > 0 ? (
+        <Box sx={{ mt: 0.75, pt: 0.65, borderTop: `1px solid ${tk.border.default}` }}>
+          <Box
+            onClick={() => setCommunityLegendOpen((v) => !v)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setCommunityLegendOpen((v) => !v);
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            aria-expanded={communityLegendOpen}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 0.35,
+              cursor: "pointer",
+              userSelect: "none",
+              mb: communityLegendOpen ? 0.5 : 0,
+            }}
+          >
+            <ExpandMoreIcon
+              sx={{
+                fontSize: "1.1rem",
+                color: tk.text.muted,
+                transform: communityLegendOpen ? "rotate(180deg)" : "rotate(0deg)",
+                transition: "transform 0.18s ease",
+              }}
+            />
+            <Typography sx={{ fontSize: "0.7rem", color: tk.text.muted, fontWeight: 600 }}>
+              {t("graph.community.legendTitle", { count: totalCommunityCount })}
             </Typography>
-            {groupedNodeKinds.map(({ groupKey, kinds }) => (
-              <React.Fragment key={`grp-${groupKey}`}>
-                <Typography sx={{ fontSize: "0.68rem", color: tk.text.muted, mr: 0.25 }}>
-                  {t(`graph.legend.group.${groupKey}`)}
+          </Box>
+          <Collapse in={communityLegendOpen}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.45 }}>
+              <Typography sx={{ fontSize: "0.62rem", color: tk.text.faint, lineHeight: 1.42, mb: 0.1 }}>
+                {t("graph.community.legendClusterListHint", { topN: COMMUNITY_LEGEND_TOP_N })}
+              </Typography>
+              {communityRows.map((row) => {
+                const cs = communityColorStyleMap.get(row.communityId) || {};
+                const previews = row.previews.map((p) => truncateCanvasLabel(p, 22)).join(t("graph.community.legendPreviewSep"));
+                return (
+                  <Box
+                    key={`c-${row.communityId}`}
+                    sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.5, rowGap: 0.25 }}
+                  >
+                    <Box
+                      aria-hidden
+                      sx={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: "50%",
+                        flexShrink: 0,
+                        backgroundColor: cs.fill || "rgba(148,163,184,0.35)",
+                        border: `1px solid ${cs.stroke || tk.border.strong}`,
+                      }}
+                    />
+                    <Typography sx={{ fontSize: "0.68rem", color: tk.text.secondary, lineHeight: 1.35 }}>
+                      {t("graph.community.legendItem.withRank", {
+                        rank: row.rankOneBased,
+                        count: row.count,
+                        previews,
+                      })}
+                    </Typography>
+                  </Box>
+                );
+              })}
+              {communityLegendMoreCount > 0 ? (
+                <Typography sx={{ fontSize: "0.65rem", color: tk.text.faint, fontStyle: "italic", mt: 0.15, lineHeight: 1.45 }}>
+                  {t("graph.community.legendMoreRows", { count: communityLegendMoreCount, topN: COMMUNITY_LEGEND_TOP_N })}
                 </Typography>
-                {kinds.map((kind) => renderNodeChip(kind, groupKey))}
-              </React.Fragment>
-            ))}
-            {otherKinds.length > 0 ? (
-              <React.Fragment key="grp-Other">
-                <Typography sx={{ fontSize: "0.68rem", color: tk.text.muted, mr: 0.25 }}>
-                  {t("graph.legend.group.Other")}
-                </Typography>
-                {otherKinds.map((kind) => renderNodeChip(kind, "Other"))}
-              </React.Fragment>
-            ) : null}
-          </>
-        ) : null}
-        {sortedEdgeTypes.length > 0 ? (
-          <>
-            <Typography sx={{ fontSize: "0.7rem", color: tk.text.muted, ml: nodeTypes.length ? 1 : 0, mr: 0.25 }}>
-              {t("graph.legend.edges")}
-            </Typography>
-            {sortedEdgeTypes.map((edgeType) => {
-              const ec = edgeTypeCounts.get(edgeType) ?? 0;
-              return (
-                <Chip
-                  key={`e-${edgeType}`}
-                  icon={<ArrowForwardIcon sx={{ fontSize: "0.65rem !important", color: `${tk.text.muted} !important` }} />}
-                  label={`${localizeEdgeTypeKey(edgeType, t)} (${ec})`}
-                  size="small"
-                  variant="outlined"
-                  sx={{
-                    height: 22,
-                    fontSize: "0.75rem",
-                    borderColor: tk.border.strong,
-                    color: tk.text.secondary,
-                    "& .MuiChip-icon": { marginLeft: "6px" },
-                  }}
-                />
-              );
-            })}
-          </>
-        ) : null}
-      </Box>
+              ) : null}
+            </Box>
+          </Collapse>
+        </Box>
+      ) : null}
     </Box>
   );
 }

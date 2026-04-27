@@ -1482,6 +1482,11 @@ def test_benchmark_run_case_detail_smoke(monkeypatch: Any) -> None:
     assert payload["gold"]["source"] == "teacher_gold"
     assert payload["article"]["raw_markdown"]
     assert "metadata_rows" in payload["comparison"]
+    assert "highlights" in payload
+    assert payload["highlights"].get("headline")
+    assert isinstance(payload["highlights"].get("issues"), list)
+    assert "evidence_links" in payload
+    assert isinstance(payload["evidence_links"], list)
 
 
 def test_mandatory_happy_path_sequence_smoke(monkeypatch: Any) -> None:

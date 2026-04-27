@@ -258,4 +258,33 @@ export default {
   "graph.canvas.edgeLabels.tooltipInteraction": "Show edge labels only when hovering or the edge is selected",
   "graph.canvas.edgeLabels.tooltipAdaptive":
     "Show all labels when zoomed in with few edges; otherwise only on hover or when selected",
+
+  "graph.canvas.toolbarSectionColor": "Color",
+  "graph.canvas.toolbarSectionLabels": "Labels",
+  "graph.canvas.toolbarSectionView": "View",
+  "graph.canvas.toolbarCommunityFillHint": "Fill = cluster",
+  "graph.canvas.toolbarCommunityModeBadge": "Clusters",
+  "graph.canvas.toolbarCommunityModeBadgeTooltip":
+    "Canvas colors show client-side communities on the visible graph, not entity types. Use the legend for top clusters and the type section as reference only.",
+
+  "graph.community.colorByAria": "Canvas node fill coloring",
+  "graph.community.colorByType": "By type",
+  "graph.community.colorByCluster": "By cluster",
+  "graph.community.colorByTypeTooltip": "Fill nodes by entity kind (default)",
+  "graph.community.colorByClusterTooltip": "Fill nodes by client-side community clusters",
+  "graph.community.toggleHulls": "Hull outlines",
+  "graph.community.toggleHullsTooltip": "Draw soft convex hulls behind nodes for each community",
+  "graph.community.toggleHullsAria": "Toggle community hull outlines",
+  "graph.community.legendTitle": "Communities ({{count}})",
+  "graph.community.legendPreviewSep": " · ",
+  "graph.community.legendItem.label": "{{count}} nodes — {{previews}}",
+  "graph.community.legendItem.withRank": "#{{rank}} · {{count}} nodes — {{previews}}",
+  "graph.community.legendSemanticsHint":
+    "Fill colors are clusters on this canvas; entity kinds are listed separately and do not drive fill in this mode.",
+  "graph.community.legendClusterListHint":
+    "List shows the top {{topN}} communities by size on the visible graph. Hull tints soften where regions overlap.",
+  "graph.community.typesLegendToggle": "Entity types & edge kinds (reference)",
+  "graph.community.legendMoreRows":
+    "Not listed: +{{count}} clusters beyond the top {{topN}}. Same # as hull center labels when outlines are on.",
+  "graph.community.hullLabel": "Cluster #{{rank}} · {{count}}",
 };

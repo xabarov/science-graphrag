@@ -21,12 +21,14 @@ def test_store_registry_fields() -> None:
         qdrant_works=object(),  # type: ignore[arg-type]
         qdrant_claims=object(),  # type: ignore[arg-type]
         blob=object(),  # type: ignore[arg-type]
+        artifacts=object(),  # type: ignore[arg-type]
     )
     assert registry.neo4j is not None
     assert registry.qdrant_chunks is not None
     assert registry.qdrant_works is not None
     assert registry.qdrant_claims is not None
     assert registry.blob is not None
+    assert registry.artifacts is not None
 
 
 def test_init_close_cycle(monkeypatch: Any) -> None:
@@ -47,6 +49,7 @@ def test_init_close_cycle(monkeypatch: Any) -> None:
     monkeypatch.setattr(deps, "QdrantWorkEmbeddingStore", lambda *_a, **_k: _FakeQdrant())
     monkeypatch.setattr(deps, "QdrantClaimsStore", lambda *_a, **_k: _FakeQdrant())
     monkeypatch.setattr(deps, "BlobStore", lambda *_a, **_k: _FakeBlob())
+    monkeypatch.setattr(deps, "LocalFilesystemArtifactStore", lambda *_a, **_k: _FakeBlob())
     monkeypatch.setattr(deps, "resolve_embedding_dim", lambda **_k: 64)
 
     settings = SimpleNamespace(
@@ -61,6 +64,7 @@ def test_init_close_cycle(monkeypatch: Any) -> None:
         openrouter_embedding_model=None,
         openrouter_embedding_dim=1024,
         blob_root="data/blobs",
+        artifact_root="data/artifacts",
     )
 
     deps.close_store_registry()

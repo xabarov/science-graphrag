@@ -31,7 +31,11 @@ from science_graphrag.agent.runtime import (
 )
 from science_graphrag.api.deps import StoreRegistry, get_stores
 from science_graphrag.config import Settings, get_settings
-from science_graphrag.observability.spans import OpenInferenceAttributes, chain_span
+from science_graphrag.observability.spans import (
+    OpenInferenceAttributes,
+    add_span_event,
+    chain_span,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -330,6 +334,14 @@ async def post_agent_query_v2(
             "agent v2 sync deadline exceeded timeout=%s",
             getattr(exc, "timeout_seconds", None),
         )
+        add_span_event(
+            "agent.response_deadline_exceeded",
+            {
+                "timeout_seconds": float(getattr(exc, "timeout_seconds", 0) or 0),
+                "worker_may_continue": True,
+                "deadline_kind": "response_only",
+            },
+        )
         meta = {
             "agent_runtime": settings.agent_runtime,
             "agent_max_tool_calls": max_tool_calls,
@@ -337,6 +349,9 @@ async def post_agent_query_v2(
             "extraction_llm_base_url": settings.extraction_llm_base_url,
             "agent_turn_deadline_exceeded": True,
             "agent_step_timeout_seconds": settings.agent_step_timeout_seconds,
+            "agent_response_deadline_seconds": float(settings.agent_step_timeout_seconds),
+            "agent_response_deadline_enforces_upstream_cancel": False,
+            "agent_worker_may_continue_after_deadline": True,
         }
         if thread_id:
             meta["thread_id"] = thread_id
@@ -553,11 +568,14 @@ async def _stream_agent(
     dig = list(history_digest or [])
     active_subagent_id: str | None = None
 
+    deadline_s = float(settings.agent_step_timeout_seconds)
     attrs: dict[str, Any] = {
         "agent.runtime": settings.agent_runtime,
         "agent.max_tool_calls": max_tool_calls,
         "user.id": workspace_id or "",
         "input.value": question[:500],
+        "agent.response_deadline_seconds": deadline_s,
+        "agent.response_deadline_enforces_upstream_cancel": False,
     }
     if thread_id:
         attrs[OpenInferenceAttributes.SESSION_ID] = thread_id
@@ -595,8 +613,7 @@ async def _stream_agent(
                             "type": "warning",
                             "code": "history_digest_invalid",
                             "message": (
-                                "history_digest was not a JSON array of objects; "
-                                "it was ignored"
+                                "history_digest was not a JSON array of objects; " "it was ignored"
                             ),
                         }
                     )
@@ -872,6 +889,14 @@ async def _stream_agent(
         logger.warning(
             "agent v2 stream deadline exceeded timeout=%s",
             getattr(exc, "timeout_seconds", None),
+        )
+        add_span_event(
+            "agent.response_deadline_exceeded",
+            {
+                "timeout_seconds": float(getattr(exc, "timeout_seconds", 0) or 0),
+                "worker_may_continue": True,
+                "deadline_kind": "response_only",
+            },
         )
         yield {
             "data": json.dumps(

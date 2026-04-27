@@ -69,6 +69,7 @@ def _extract_references_chunk(
     document_id: str,
     source_name: str,
     titles_enabled: bool,
+    transport_timeout_s: float,
 ) -> tuple[list[Any], dict[str, Any], str | None]:
     response_model = ReferencesLLM if titles_enabled else ReferenceIdsOnlyLLM
     parsed, err = run_extraction(
@@ -80,6 +81,8 @@ def _extract_references_chunk(
         source_name=source_name,
         system_prompt=meta_prompts.SYSTEM_FENCE + ref_prompts.SYSTEM_SUFFIX,
         retries=0,
+        transport_timeout_seconds=transport_timeout_s,
+        pool_name="references",
     )
     detail: dict[str, Any] = {
         "chunk_index": chunk_idx,
@@ -150,6 +153,8 @@ def extract_stages_llm_first(
         system_prompt=meta_prompts.SYSTEM_FENCE
         + " Focus on title/abstract/venue/year/DOI/arXiv."
         + meta_prompts.SYSTEM_META_NORMALIZE,
+        transport_timeout_seconds=float(settings.extraction_llm_timeout_seconds),
+        pool_name="metadata",
     )
     diag.metadata_extraction_seconds = perf_counter() - meta_t0
     draft = work_from_llm(parsed_meta) if parsed_meta else None
@@ -170,6 +175,8 @@ def extract_stages_llm_first(
         document_id=document_id,
         source_name=source_name,
         system_prompt=meta_prompts.SYSTEM_FENCE + auth_prompts.SYSTEM_SUFFIX,
+        transport_timeout_seconds=float(settings.extraction_llm_timeout_seconds),
+        pool_name="metadata",
     )
     diag.authorships_extraction_seconds = perf_counter() - auth_t0
     authorships = authorships_from_llm(parsed_auth) if parsed_auth else []
@@ -212,6 +219,7 @@ def extract_stages_llm_first(
                 document_id=document_id,
                 source_name=source_name,
                 titles_enabled=settings.extraction_llm_reference_titles_enabled,
+                transport_timeout_s=float(settings.extraction_llm_timeout_seconds),
             )
             diag.reference_chunk_details.append(detail)
             items.extend(got)
@@ -233,6 +241,7 @@ def extract_stages_llm_first(
                     document_id=document_id,
                     source_name=source_name,
                     titles_enabled=settings.extraction_llm_reference_titles_enabled,
+                    transport_timeout_s=float(settings.extraction_llm_timeout_seconds),
                 ): i
                 for i, (chunk, group) in enumerate(zip(chunks, entry_groups, strict=False), start=1)
             }

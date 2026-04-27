@@ -437,6 +437,8 @@ Acceptance:
 - new code writes through a storage seam, not directly through ad-hoc path strings;
 - docs and runners use the same class vocabulary.
 
+**Implementation note (Phase 0 landed):** taxonomy enums and `ArtifactDescriptor` live in `science_graphrag/artifacts/taxonomy.py`; benchmark default paths + `BenchmarkLogicalId` + `BENCHMARK_REGISTRY` in `science_graphrag/artifacts/benchmark_paths.py` and `benchmark_registry.py` (scripts re-export via `scripts/benchmark_aggregator/paths.py`); deterministic ingest artifacts use `LocalFilesystemArtifactStore` in `science_graphrag/artifacts/local_store.py`, wired as `StoreRegistry.artifacts` in `science_graphrag/api/deps.py` (readers in `api/works/detail.py`, writers in `ingestion/_pipeline_impl.py`); UI run snapshots resolve via `science_graphrag/artifacts/run_layout.py`. Tests: `tests/artifacts/`.
+
 ### Phase 1 — raw blob and ingest queue cutover
 
 **Goal:** make upload/worker flow multi-host safe.

@@ -11,7 +11,7 @@ import { useTheme } from "@mui/material/styles";
 import { CursorSmallButton } from "../../components/common/index.js";
 import { BENCHMARK_COMPARE_TABLE_CAP } from "./benchmarkCompareModel.js";
 
-export default function CompareDeltaTable({ title, rows, onOpenCase, currentRunId }) {
+export default function CompareDeltaTable({ title, rows, onOpenCase, currentRunId, baselineRunId = null }) {
   const tk = useTheme().appTokens;
   if (!rows?.length) {
     return (
@@ -47,7 +47,16 @@ export default function CompareDeltaTable({ title, rows, onOpenCase, currentRunI
                 </TableCell>
                 <TableCell align="right">
                   {onOpenCase && currentRunId ? (
-                    <CursorSmallButton onClick={() => onOpenCase(currentRunId, row.case_id)}>Workbench</CursorSmallButton>
+                    <CursorSmallButton
+                      onClick={() =>
+                        onOpenCase(currentRunId, row.case_id, {
+                          baselineRunId: baselineRunId || undefined,
+                          metric: row.metric,
+                        })
+                      }
+                    >
+                      Workbench
+                    </CursorSmallButton>
                   ) : null}
                 </TableCell>
               </TableRow>

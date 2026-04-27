@@ -1,0 +1,646 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - navigation [ref=e4]:
+      - 'link "version: 13.20.0" [ref=e5] [cursor=pointer]':
+        - /url: /
+        - img [ref=e6]
+        - img [ref=e32]
+      - generic [ref=e34]:
+        - list [ref=e35]:
+          - listitem [ref=e36]:
+            - button "Tracing 2" [ref=e37]:
+              - link "Tracing 2" [ref=e38] [cursor=pointer]:
+                - /url: /projects
+                - img [ref=e40]
+                - generic [ref=e42]: Tracing
+                - generic [ref=e43]: "2"
+          - listitem [ref=e44]:
+            - button "Datasets & Experiments 0" [ref=e45]:
+              - link "Datasets & Experiments 0" [ref=e46] [cursor=pointer]:
+                - /url: /datasets
+                - img [ref=e48]
+                - generic [ref=e52]: Datasets & Experiments
+                - generic [ref=e53]: "0"
+          - listitem [ref=e54]:
+            - button "Playground" [ref=e55]:
+              - link "Playground" [ref=e56] [cursor=pointer]:
+                - /url: /playground
+                - img [ref=e58]
+                - generic [ref=e64]: Playground
+          - listitem [ref=e65]:
+            - button "Evaluators 0" [ref=e66]:
+              - link "Evaluators 0" [ref=e67] [cursor=pointer]:
+                - /url: /evaluators
+                - img [ref=e69]
+                - generic [ref=e75]: Evaluators
+                - generic [ref=e76]: "0"
+          - listitem [ref=e77]:
+            - button "Prompts 0" [ref=e78]:
+              - link "Prompts 0" [ref=e79] [cursor=pointer]:
+                - /url: /prompts
+                - img [ref=e81]
+                - generic [ref=e89]: Prompts
+                - generic [ref=e90]: "0"
+          - listitem [ref=e91]:
+            - button "REST API" [ref=e92]:
+              - link "REST API" [ref=e93] [cursor=pointer]:
+                - /url: /apis/rest
+                - img [ref=e95]
+                - generic [ref=e101]: REST API
+          - listitem [ref=e102]:
+            - button "GraphQL" [ref=e103]:
+              - link "GraphQL" [ref=e104] [cursor=pointer]:
+                - /url: /apis/graphql
+                - img [ref=e106]
+                - generic [ref=e114]: GraphQL
+        - list [ref=e115]:
+          - listitem [ref=e116]:
+            - button "Star on GitHub 9.5k" [ref=e117] [cursor=pointer]:
+              - img [ref=e119]
+              - generic [ref=e123]: Star on GitHub
+              - generic [ref=e124]: 9.5k
+          - listitem [ref=e125]:
+            - button "Settings" [ref=e126]:
+              - link "Settings" [ref=e127] [cursor=pointer]:
+                - /url: /settings/general
+                - img [ref=e129]
+                - generic [ref=e135]: Settings
+          - listitem [ref=e136]:
+            - button "Documentation" [ref=e137] [cursor=pointer]:
+              - img [ref=e139]
+              - generic [ref=e144]: Documentation
+          - listitem [ref=e145]:
+            - button "Support" [ref=e146]:
+              - link "Support" [ref=e147] [cursor=pointer]:
+                - /url: /support
+                - img [ref=e149]
+                - generic [ref=e157]: Support
+          - listitem [ref=e158]:
+            - button "Dark" [ref=e159] [cursor=pointer]:
+              - img [ref=e161]
+              - generic [ref=e163]: Dark
+          - listitem [ref=e164]:
+            - button "Profile" [ref=e165]:
+              - link "Profile" [ref=e166] [cursor=pointer]:
+                - /url: /profile
+                - img [ref=e168]
+                - generic [ref=e174]: Profile
+    - generic [ref=e175]:
+      - navigation [ref=e176]:
+        - button "Collapse side" [ref=e177] [cursor=pointer]:
+          - img [ref=e179]
+        - list "Breadcrumbs" [ref=e183]:
+          - listitem [ref=e184]:
+            - link "Projects" [ref=e186] [cursor=pointer]:
+              - /url: /projects
+            - img [ref=e188]
+          - listitem [ref=e193]:
+            - generic [ref=e194]:
+              - link "science-graphrag" [ref=e195]:
+                - /url: /projects/UHJvamVjdDoy
+              - button "Copy" [ref=e196] [cursor=pointer]:
+                - img [ref=e198]
+      - main [ref=e204]:
+        - generic [ref=e206]:
+          - generic [ref=e208]:
+            - generic [ref=e209]:
+              - heading "Total Traces" [level=3] [ref=e210]
+              - generic [ref=e211]: 1,314
+            - generic [ref=e212]:
+              - heading "Total Cost" [level=3] [ref=e213]
+              - button "$0.43" [ref=e214]
+            - generic [ref=e215]:
+              - heading "Latency P50" [level=3] [ref=e216]
+              - generic [ref=e217]:
+                - img [ref=e220]
+                - generic [ref=e226]: 5s
+            - generic [ref=e227]:
+              - heading "Latency P99" [level=3] [ref=e228]
+              - generic [ref=e229]:
+                - img [ref=e232]
+                - generic [ref=e238]: 9m 6s
+          - generic [ref=e240]:
+            - generic [ref=e241] [cursor=pointer]:
+              - switch "Stream" [checked] [ref=e243]
+              - text: Stream
+            - button "Last 7 Days" [ref=e245] [cursor=pointer]:
+              - img [ref=e247]
+              - generic [ref=e254]: Last 7 Days
+              - img [ref=e256]
+        - generic [ref=e259]:
+          - tablist [ref=e260]:
+            - tab "Spans" [ref=e261]
+            - tab "Traces" [selected] [ref=e262]
+            - tab "Sessions" [ref=e263]
+            - tab "Metrics" [ref=e264]
+            - tab "Config" [ref=e265]
+          - tabpanel "Traces" [ref=e266]:
+            - generic [ref=e267]:
+              - generic [ref=e269]:
+                - generic [ref=e271]:
+                  - img [ref=e273]
+                  - textbox [ref=e281]:
+                    - generic [ref=e282]
+                  - button [ref=e283] [cursor=pointer]:
+                    - img [ref=e285]
+                - button "Columns" [ref=e290] [cursor=pointer]:
+                  - generic [ref=e291]:
+                    - img [ref=e293]
+                    - text: Columns
+                  - img [ref=e296]
+              - table [ref=e300]:
+                - rowgroup [ref=e301]:
+                  - row "status Expand all rows kind name input output Annotations start time latency total tokens total cost" [ref=e302]:
+                    - columnheader [ref=e303]
+                    - columnheader "status" [ref=e314]
+                    - columnheader "Expand all rows kind" [ref=e318]
+                    - columnheader "name" [ref=e330]
+                    - columnheader "input" [ref=e334]
+                    - columnheader "output" [ref=e338]
+                    - columnheader "Annotations" [ref=e342]
+                    - columnheader "start time" [ref=e357]
+                    - columnheader "latency" [ref=e361]
+                    - columnheader "total tokens" [ref=e365]
+                    - columnheader "total cost" [ref=e369]
+                - rowgroup [ref=e373]:
+                  - 'row "UNSET llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"claims\": [{\"claim_text\": \"The RPN shares convolutional layers with a Fast R-CNN object detectio... -- 27/04/2026, 09:14:02 pm 16s 7,648 <$0.01" [ref=e374] [cursor=pointer]':
+                    - cell [ref=e375]
+                    - cell "UNSET" [ref=e383]
+                    - cell "llm" [ref=e391]
+                    - cell "llm.claims_extraction" [ref=e396]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e399]'
+                    - 'cell "{\"claims\": [{\"claim_text\": \"The RPN shares convolutional layers with a Fast R-CNN object detectio..." [ref=e400]'
+                    - cell "--" [ref=e401]
+                    - cell "27/04/2026, 09:14:02 pm" [ref=e403]
+                    - cell "16s" [ref=e405]
+                    - cell "7,648" [ref=e416]
+                    - cell "<$0.01" [ref=e424]
+                  - 'row "UNSET llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"claims\": [{\"claim_text\": \"R-CNN does not predict object bounds except for refining by bounding ... -- 27/04/2026, 09:13:58 pm 4.1s 4,236 <$0.01" [ref=e427] [cursor=pointer]':
+                    - cell [ref=e428]
+                    - cell "UNSET" [ref=e436]
+                    - cell "llm" [ref=e444]
+                    - cell "llm.claims_extraction" [ref=e449]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e452]'
+                    - 'cell "{\"claims\": [{\"claim_text\": \"R-CNN does not predict object bounds except for refining by bounding ..." [ref=e453]'
+                    - cell "--" [ref=e454]
+                    - cell "27/04/2026, 09:13:58 pm" [ref=e456]
+                    - cell "4.1s" [ref=e458]
+                    - cell "4,236" [ref=e469]
+                    - cell "<$0.01" [ref=e477]
+                  - 'row "UNSET llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"claims\": [{\"claim_text\": \"The RPN shares convolutional features with the detection network, ena... -- 27/04/2026, 09:13:45 pm 12.3s 4,302 <$0.01" [ref=e480] [cursor=pointer]':
+                    - cell [ref=e481]
+                    - cell "UNSET" [ref=e489]
+                    - cell "llm" [ref=e497]
+                    - cell "llm.claims_extraction" [ref=e502]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e505]'
+                    - 'cell "{\"claims\": [{\"claim_text\": \"The RPN shares convolutional features with the detection network, ena..." [ref=e506]'
+                    - cell "--" [ref=e507]
+                    - cell "27/04/2026, 09:13:45 pm" [ref=e509]
+                    - cell "12.3s" [ref=e511]
+                    - cell "4,302" [ref=e522]
+                    - cell "<$0.01" [ref=e530]
+                  - 'row "UNSET llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"claims\": [{\"claim_text\": \"Using RPN+VGG, the result is 68.5% for unshared features, slightly hi... -- 27/04/2026, 09:13:30 pm 15.3s 3,423 <$0.01" [ref=e533] [cursor=pointer]':
+                    - cell [ref=e534]
+                    - cell "UNSET" [ref=e542]
+                    - cell "llm" [ref=e550]
+                    - cell "llm.claims_extraction" [ref=e555]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e558]'
+                    - 'cell "{\"claims\": [{\"claim_text\": \"Using RPN+VGG, the result is 68.5% for unshared features, slightly hi..." [ref=e559]'
+                    - cell "--" [ref=e560]
+                    - cell "27/04/2026, 09:13:30 pm" [ref=e562]
+                    - cell "15.3s" [ref=e564]
+                    - cell "3,423" [ref=e575]
+                    - cell "<$0.01" [ref=e583]
+                  - 'row "OK Expand row chain LangGraph {\"messages\": [{\"type\": \"human\", \"data\": {\"content\": \"<active_workspace_id>\\nws-pilot-od\\n</active... {\"messages\": [{\"type\": \"human\", \"data\": {\"content\": \"<active_workspace_id>\\nws-pilot-od\\n</active... -- 27/04/2026, 09:12:39 pm 26.3s 1,873 <$0.01" [ref=e586] [cursor=pointer]':
+                    - cell [ref=e587]
+                    - cell "OK" [ref=e595]
+                    - cell "Expand row chain" [ref=e600]
+                    - cell "LangGraph" [ref=e612]
+                    - 'cell "{\"messages\": [{\"type\": \"human\", \"data\": {\"content\": \"<active_workspace_id>\\nws-pilot-od\\n</active..." [ref=e615]'
+                    - 'cell "{\"messages\": [{\"type\": \"human\", \"data\": {\"content\": \"<active_workspace_id>\\nws-pilot-od\\n</active..." [ref=e616]'
+                    - cell "--" [ref=e617]
+                    - cell "27/04/2026, 09:12:39 pm" [ref=e619]
+                    - cell "26.3s" [ref=e621]
+                    - cell "1,873" [ref=e632]
+                    - cell "<$0.01" [ref=e640]
+                  - 'row "ERROR llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"error\": \"InstructorRetryException: <failed_attempts>\\n\\n<generation number=\\\"1\\\">\\n<exception>\\... -- 27/04/2026, 09:11:15 pm 1m 5,852 <$0.01" [ref=e643] [cursor=pointer]':
+                    - cell [ref=e644]
+                    - cell "ERROR" [ref=e652]
+                    - cell "llm" [ref=e661]
+                    - cell "llm.claims_extraction" [ref=e666]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e669]'
+                    - 'cell "{\"error\": \"InstructorRetryException: <failed_attempts>\\n\\n<generation number=\\\"1\\\">\\n<exception>\\..." [ref=e670]'
+                    - cell "--" [ref=e671]
+                    - cell "27/04/2026, 09:11:15 pm" [ref=e673]
+                    - cell "1m" [ref=e675]
+                    - cell "5,852" [ref=e686]
+                    - cell "<$0.01" [ref=e694]
+                  - 'row "OK Expand row chain LangGraph {\"messages\": [{\"type\": \"human\", \"data\": {\"content\": \"<active_workspace_id>\\n2678c5f1-1b31-4aac-92... {\"messages\": [{\"type\": \"human\", \"data\": {\"content\": \"<active_workspace_id>\\n2678c5f1-1b31-4aac-92... -- 27/04/2026, 09:09:24 pm 23.8s 2,022 <$0.01" [ref=e697] [cursor=pointer]':
+                    - cell [ref=e698]
+                    - cell "OK" [ref=e706]
+                    - cell "Expand row chain" [ref=e711]
+                    - cell "LangGraph" [ref=e723]
+                    - 'cell "{\"messages\": [{\"type\": \"human\", \"data\": {\"content\": \"<active_workspace_id>\\n2678c5f1-1b31-4aac-92..." [ref=e726]'
+                    - 'cell "{\"messages\": [{\"type\": \"human\", \"data\": {\"content\": \"<active_workspace_id>\\n2678c5f1-1b31-4aac-92..." [ref=e727]'
+                    - cell "--" [ref=e728]
+                    - cell "27/04/2026, 09:09:24 pm" [ref=e730]
+                    - cell "23.8s" [ref=e732]
+                    - cell "2,022" [ref=e743]
+                    - cell "<$0.01" [ref=e751]
+                  - 'row "ERROR llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"error\": \"InstructorRetryException: <failed_attempts>\\n\\n<generation number=\\\"1\\\">\\n<exception>\\... -- 27/04/2026, 09:07:38 pm 2m 18s 11,503 <$0.01" [ref=e754] [cursor=pointer]':
+                    - cell [ref=e755]
+                    - cell "ERROR" [ref=e763]
+                    - cell "llm" [ref=e772]
+                    - cell "llm.claims_extraction" [ref=e777]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e780]'
+                    - 'cell "{\"error\": \"InstructorRetryException: <failed_attempts>\\n\\n<generation number=\\\"1\\\">\\n<exception>\\..." [ref=e781]'
+                    - cell "--" [ref=e782]
+                    - cell "27/04/2026, 09:07:38 pm" [ref=e784]
+                    - cell "2m 18s" [ref=e786]
+                    - cell "11,503" [ref=e797]
+                    - cell "<$0.01" [ref=e805]
+                  - 'row "UNSET llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"claims\": [{\"claim_text\": \"The major problem of centerness is that its definition leads to unexp... -- 27/04/2026, 09:06:57 pm 40.9s 7,113 <$0.01" [ref=e808] [cursor=pointer]':
+                    - cell [ref=e809]
+                    - cell "UNSET" [ref=e817]
+                    - cell "llm" [ref=e825]
+                    - cell "llm.claims_extraction" [ref=e830]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e833]'
+                    - 'cell "{\"claims\": [{\"claim_text\": \"The major problem of centerness is that its definition leads to unexp..." [ref=e834]'
+                    - cell "--" [ref=e835]
+                    - cell "27/04/2026, 09:06:57 pm" [ref=e837]
+                    - cell "40.9s" [ref=e839]
+                    - cell "7,113" [ref=e850]
+                    - cell "<$0.01" [ref=e858]
+                  - 'row "ERROR llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"error\": \"InstructorRetryException: <failed_attempts>\\n\\n<generation number=\\\"1\\\">\\n<exception>\\... -- 27/04/2026, 09:05:07 pm 1m 17s 7,508 <$0.01" [ref=e861] [cursor=pointer]':
+                    - cell [ref=e862]
+                    - cell "ERROR" [ref=e870]
+                    - cell "llm" [ref=e879]
+                    - cell "llm.claims_extraction" [ref=e884]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e887]'
+                    - 'cell "{\"error\": \"InstructorRetryException: <failed_attempts>\\n\\n<generation number=\\\"1\\\">\\n<exception>\\..." [ref=e888]'
+                    - cell "--" [ref=e889]
+                    - cell "27/04/2026, 09:05:07 pm" [ref=e891]
+                    - cell "1m 17s" [ref=e893]
+                    - cell "7,508" [ref=e904]
+                    - cell "<$0.01" [ref=e912]
+                  - 'row "UNSET llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"claims\": [{\"claim_text\": \"Using a Gaussian kernel SVM increases performance by about 3% at 10-4... -- 27/04/2026, 09:04:21 pm 46.5s 7,677 <$0.01" [ref=e915] [cursor=pointer]':
+                    - cell [ref=e916]
+                    - cell "UNSET" [ref=e924]
+                    - cell "llm" [ref=e932]
+                    - cell "llm.claims_extraction" [ref=e937]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e940]'
+                    - 'cell "{\"claims\": [{\"claim_text\": \"Using a Gaussian kernel SVM increases performance by about 3% at 10-4..." [ref=e941]'
+                    - cell "--" [ref=e942]
+                    - cell "27/04/2026, 09:04:21 pm" [ref=e944]
+                    - cell "46.5s" [ref=e946]
+                    - cell "7,677" [ref=e957]
+                    - cell "<$0.01" [ref=e965]
+                  - 'row "UNSET llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"claims\": [{\"claim_text\": \"The best detectors achieve essentially perfect results on the MIT ped... -- 27/04/2026, 09:03:33 pm 47.3s 8,296 <$0.01" [ref=e968] [cursor=pointer]':
+                    - cell [ref=e969]
+                    - cell "UNSET" [ref=e977]
+                    - cell "llm" [ref=e985]
+                    - cell "llm.claims_extraction" [ref=e990]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e993]'
+                    - 'cell "{\"claims\": [{\"claim_text\": \"The best detectors achieve essentially perfect results on the MIT ped..." [ref=e994]'
+                    - cell "--" [ref=e995]
+                    - cell "27/04/2026, 09:03:33 pm" [ref=e997]
+                    - cell "47.3s" [ref=e999]
+                    - cell "8,296" [ref=e1010]
+                    - cell "<$0.01" [ref=e1018]
+                  - 'row "UNSET llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"claims\": [{\"claim_text\": \"RGB and LAB colour spaces give comparable results, but restricting to... -- 27/04/2026, 09:02:51 pm 42s 9,273 <$0.01" [ref=e1021] [cursor=pointer]':
+                    - cell [ref=e1022]
+                    - cell "UNSET" [ref=e1030]
+                    - cell "llm" [ref=e1038]
+                    - cell "llm.claims_extraction" [ref=e1043]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e1046]'
+                    - 'cell "{\"claims\": [{\"claim_text\": \"RGB and LAB colour spaces give comparable results, but restricting to..." [ref=e1047]'
+                    - cell "--" [ref=e1048]
+                    - cell "27/04/2026, 09:02:51 pm" [ref=e1050]
+                    - cell "42s" [ref=e1052]
+                    - cell "9,273" [ref=e1063]
+                    - cell "<$0.01" [ref=e1071]
+                  - 'row "UNSET llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"claims\": [{\"claim_text\": \"The use of orientation histograms has many precursors but it only rea... -- 27/04/2026, 09:01:28 pm 1m 22s 10,129 <$0.01" [ref=e1074] [cursor=pointer]':
+                    - cell [ref=e1075]
+                    - cell "UNSET" [ref=e1083]
+                    - cell "llm" [ref=e1091]
+                    - cell "llm.claims_extraction" [ref=e1096]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e1099]'
+                    - 'cell "{\"claims\": [{\"claim_text\": \"The use of orientation histograms has many precursors but it only rea..." [ref=e1100]'
+                    - cell "--" [ref=e1101]
+                    - cell "27/04/2026, 09:01:28 pm" [ref=e1103]
+                    - cell "1m 22s" [ref=e1105]
+                    - cell "10,129" [ref=e1116]
+                    - cell "<$0.01" [ref=e1124]
+                  - 'row "UNSET llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"claims\": [{\"claim_text\": \"The method is based on evaluating well-normalized local histograms of... -- 27/04/2026, 09:01:00 pm 27.9s 6,572 <$0.01" [ref=e1127] [cursor=pointer]':
+                    - cell [ref=e1128]
+                    - cell "UNSET" [ref=e1136]
+                    - cell "llm" [ref=e1144]
+                    - cell "llm.claims_extraction" [ref=e1149]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e1152]'
+                    - 'cell "{\"claims\": [{\"claim_text\": \"The method is based on evaluating well-normalized local histograms of..." [ref=e1153]'
+                    - cell "--" [ref=e1154]
+                    - cell "27/04/2026, 09:01:00 pm" [ref=e1156]
+                    - cell "27.9s" [ref=e1158]
+                    - cell "6,572" [ref=e1169]
+                    - cell "<$0.01" [ref=e1177]
+                  - 'row "UNSET llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"claims\": [{\"claim_text\": \"The overlapping grid reduces false positive rates by more than an ord... -- 27/04/2026, 08:59:53 pm 1m 7s 8,095 <$0.01" [ref=e1180] [cursor=pointer]':
+                    - cell [ref=e1181]
+                    - cell "UNSET" [ref=e1189]
+                    - cell "llm" [ref=e1197]
+                    - cell "llm.claims_extraction" [ref=e1202]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e1205]'
+                    - 'cell "{\"claims\": [{\"claim_text\": \"The overlapping grid reduces false positive rates by more than an ord..." [ref=e1206]'
+                    - cell "--" [ref=e1207]
+                    - cell "27/04/2026, 08:59:53 pm" [ref=e1209]
+                    - cell "1m 7s" [ref=e1211]
+                    - cell "8,095" [ref=e1222]
+                    - cell "<$0.01" [ref=e1230]
+                  - 'row "ERROR llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"error\": \"InstructorRetryException: <failed_attempts>\\n\\n<generation number=\\\"1\\\">\\n<exception>\\... -- 27/04/2026, 08:58:18 pm 51.2s 9,029 <$0.01" [ref=e1233] [cursor=pointer]':
+                    - cell [ref=e1234]
+                    - cell "ERROR" [ref=e1242]
+                    - cell "llm" [ref=e1251]
+                    - cell "llm.claims_extraction" [ref=e1256]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e1259]'
+                    - 'cell "{\"error\": \"InstructorRetryException: <failed_attempts>\\n\\n<generation number=\\\"1\\\">\\n<exception>\\..." [ref=e1260]'
+                    - cell "--" [ref=e1261]
+                    - cell "27/04/2026, 08:58:18 pm" [ref=e1263]
+                    - cell "51.2s" [ref=e1265]
+                    - cell "9,029" [ref=e1276]
+                    - cell "<$0.01" [ref=e1284]
+                  - 'row "ERROR llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"error\": \"InstructorRetryException: <failed_attempts>\\n\\n<generation number=\\\"1\\\">\\n<exception>\\... -- 27/04/2026, 08:57:14 pm 45.1s 8,804 <$0.01" [ref=e1287] [cursor=pointer]':
+                    - cell [ref=e1288]
+                    - cell "ERROR" [ref=e1296]
+                    - cell "llm" [ref=e1305]
+                    - cell "llm.claims_extraction" [ref=e1310]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e1313]'
+                    - 'cell "{\"error\": \"InstructorRetryException: <failed_attempts>\\n\\n<generation number=\\\"1\\\">\\n<exception>\\..." [ref=e1314]'
+                    - cell "--" [ref=e1315]
+                    - cell "27/04/2026, 08:57:14 pm" [ref=e1317]
+                    - cell "45.1s" [ref=e1319]
+                    - cell "8,804" [ref=e1330]
+                    - cell "<$0.01" [ref=e1338]
+                  - 'row "ERROR llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"error\": \"InstructorRetryException: <failed_attempts>\\n\\n<generation number=\\\"1\\\">\\n<exception>\\... -- 27/04/2026, 08:56:08 pm 49.7s 6,702 <$0.01" [ref=e1341] [cursor=pointer]':
+                    - cell [ref=e1342]
+                    - cell "ERROR" [ref=e1350]
+                    - cell "llm" [ref=e1359]
+                    - cell "llm.claims_extraction" [ref=e1364]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e1367]'
+                    - 'cell "{\"error\": \"InstructorRetryException: <failed_attempts>\\n\\n<generation number=\\\"1\\\">\\n<exception>\\..." [ref=e1368]'
+                    - cell "--" [ref=e1369]
+                    - cell "27/04/2026, 08:56:08 pm" [ref=e1371]
+                    - cell "49.7s" [ref=e1373]
+                    - cell "6,702" [ref=e1384]
+                    - cell "<$0.01" [ref=e1392]
+                  - 'row "UNSET llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"claims\": [{\"claim_text\": \"Libra R-CNN achieves 38.7 AP with ResNet-50, which is 2.5 points high... -- 27/04/2026, 08:55:26 pm 42s 7,857 <$0.01" [ref=e1395] [cursor=pointer]':
+                    - cell [ref=e1396]
+                    - cell "UNSET" [ref=e1404]
+                    - cell "llm" [ref=e1412]
+                    - cell "llm.claims_extraction" [ref=e1417]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e1420]'
+                    - 'cell "{\"claims\": [{\"claim_text\": \"Libra R-CNN achieves 38.7 AP with ResNet-50, which is 2.5 points high..." [ref=e1421]'
+                    - cell "--" [ref=e1422]
+                    - cell "27/04/2026, 08:55:26 pm" [ref=e1424]
+                    - cell "42s" [ref=e1426]
+                    - cell "7,857" [ref=e1437]
+                    - cell "<$0.01" [ref=e1445]
+                  - 'row "UNSET llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"claims\": [{\"claim_text\": \"Tuning loss weight only improves the result by 0.5 points, and the re... -- 27/04/2026, 08:55:17 pm 9s 2,890 <$0.01" [ref=e1448] [cursor=pointer]':
+                    - cell [ref=e1449]
+                    - cell "UNSET" [ref=e1457]
+                    - cell "llm" [ref=e1465]
+                    - cell "llm.claims_extraction" [ref=e1470]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e1473]'
+                    - 'cell "{\"claims\": [{\"claim_text\": \"Tuning loss weight only improves the result by 0.5 points, and the re..." [ref=e1474]'
+                    - cell "--" [ref=e1475]
+                    - cell "27/04/2026, 08:55:17 pm" [ref=e1477]
+                    - cell "9s" [ref=e1479]
+                    - cell "2,890" [ref=e1490]
+                    - cell "<$0.01" [ref=e1498]
+                  - 'row "ERROR llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"error\": \"InstructorRetryException: <failed_attempts>\\n\\n<generation number=\\\"1\\\">\\n<exception>\\... -- 27/04/2026, 08:53:43 pm 55.2s 6,722 <$0.01" [ref=e1501] [cursor=pointer]':
+                    - cell [ref=e1502]
+                    - cell "ERROR" [ref=e1510]
+                    - cell "llm" [ref=e1519]
+                    - cell "llm.claims_extraction" [ref=e1524]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e1527]'
+                    - 'cell "{\"error\": \"InstructorRetryException: <failed_attempts>\\n\\n<generation number=\\\"1\\\">\\n<exception>\\..." [ref=e1528]'
+                    - cell "--" [ref=e1529]
+                    - cell "27/04/2026, 08:53:43 pm" [ref=e1531]
+                    - cell "55.2s" [ref=e1533]
+                    - cell "6,722" [ref=e1544]
+                    - cell "<$0.01" [ref=e1552]
+                  - 'row "ERROR llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"error\": \"InstructorRetryException: <failed_attempts>\\n\\n<generation number=\\\"1\\\">\\n<exception>\\... -- 27/04/2026, 08:52:09 pm 56.2s 9,160 <$0.01" [ref=e1555] [cursor=pointer]':
+                    - cell [ref=e1556]
+                    - cell "ERROR" [ref=e1564]
+                    - cell "llm" [ref=e1573]
+                    - cell "llm.claims_extraction" [ref=e1578]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e1581]'
+                    - 'cell "{\"error\": \"InstructorRetryException: <failed_attempts>\\n\\n<generation number=\\\"1\\\">\\n<exception>\\..." [ref=e1582]'
+                    - cell "--" [ref=e1583]
+                    - cell "27/04/2026, 08:52:09 pm" [ref=e1585]
+                    - cell "56.2s" [ref=e1587]
+                    - cell "9,160" [ref=e1598]
+                    - cell "<$0.01" [ref=e1606]
+                  - 'row "UNSET llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"claims\": [{\"claim_text\": \"More than 60% hard negatives have an overlap greater than 0.05, but r... -- 27/04/2026, 08:51:35 pm 33.8s 7,413 <$0.01" [ref=e1609] [cursor=pointer]':
+                    - cell [ref=e1610]
+                    - cell "UNSET" [ref=e1618]
+                    - cell "llm" [ref=e1626]
+                    - cell "llm.claims_extraction" [ref=e1631]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e1634]'
+                    - 'cell "{\"claims\": [{\"claim_text\": \"More than 60% hard negatives have an overlap greater than 0.05, but r..." [ref=e1635]'
+                    - cell "--" [ref=e1636]
+                    - cell "27/04/2026, 08:51:35 pm" [ref=e1638]
+                    - cell "33.8s" [ref=e1640]
+                    - cell "7,413" [ref=e1651]
+                    - cell "<$0.01" [ref=e1659]
+                  - 'row "UNSET llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"claims\": []} -- 27/04/2026, 08:51:34 pm 691ms 1,937 <$0.01" [ref=e1662] [cursor=pointer]':
+                    - cell [ref=e1663]
+                    - cell "UNSET" [ref=e1671]
+                    - cell "llm" [ref=e1679]
+                    - cell "llm.claims_extraction" [ref=e1684]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e1687]'
+                    - 'cell "{\"claims\": []}" [ref=e1688]'
+                    - cell "--" [ref=e1689]
+                    - cell "27/04/2026, 08:51:34 pm" [ref=e1691]
+                    - cell "691ms" [ref=e1693]
+                    - cell "1,937" [ref=e1704]
+                    - cell "<$0.01" [ref=e1712]
+                  - 'row "ERROR llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"error\": \"InstructorRetryException: <failed_attempts>\\n\\n<generation number=\\\"1\\\">\\n<exception>\\... -- 27/04/2026, 08:49:44 pm 1m 8,250 <$0.01" [ref=e1715] [cursor=pointer]':
+                    - cell [ref=e1716]
+                    - cell "ERROR" [ref=e1724]
+                    - cell "llm" [ref=e1733]
+                    - cell "llm.claims_extraction" [ref=e1738]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e1741]'
+                    - 'cell "{\"error\": \"InstructorRetryException: <failed_attempts>\\n\\n<generation number=\\\"1\\\">\\n<exception>\\..." [ref=e1742]'
+                    - cell "--" [ref=e1743]
+                    - cell "27/04/2026, 08:49:44 pm" [ref=e1745]
+                    - cell "1m" [ref=e1747]
+                    - cell "8,250" [ref=e1758]
+                    - cell "<$0.01" [ref=e1766]
+                  - 'row "UNSET llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"claims\": [{\"claim_text\": \"Libra R-CNN integrates three novel components: IoU-balanced sampling,... -- 27/04/2026, 08:49:41 pm 3.1s 6,361 <$0.01" [ref=e1769] [cursor=pointer]':
+                    - cell [ref=e1770]
+                    - cell "UNSET" [ref=e1778]
+                    - cell "llm" [ref=e1786]
+                    - cell "llm.claims_extraction" [ref=e1791]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e1794]'
+                    - 'cell "{\"claims\": [{\"claim_text\": \"Libra R-CNN integrates three novel components: IoU-balanced sampling,..." [ref=e1795]'
+                    - cell "--" [ref=e1796]
+                    - cell "27/04/2026, 08:49:41 pm" [ref=e1798]
+                    - cell "3.1s" [ref=e1800]
+                    - cell "6,361" [ref=e1811]
+                    - cell "<$0.01" [ref=e1819]
+                  - 'row "ERROR llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"error\": \"InstructorRetryException: <failed_attempts>\\n\\n<generation number=\\\"1\\\">\\n<exception>\\... -- 27/04/2026, 08:48:41 pm 39s 8,683 <$0.01" [ref=e1822] [cursor=pointer]':
+                    - cell [ref=e1823]
+                    - cell "ERROR" [ref=e1831]
+                    - cell "llm" [ref=e1840]
+                    - cell "llm.claims_extraction" [ref=e1845]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e1848]'
+                    - 'cell "{\"error\": \"InstructorRetryException: <failed_attempts>\\n\\n<generation number=\\\"1\\\">\\n<exception>\\..." [ref=e1849]'
+                    - cell "--" [ref=e1850]
+                    - cell "27/04/2026, 08:48:41 pm" [ref=e1852]
+                    - cell "39s" [ref=e1854]
+                    - cell "8,683" [ref=e1865]
+                    - cell "<$0.01" [ref=e1873]
+                  - 'row "UNSET llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"claims\": [{\"claim_text\": \"Mask R-CNN extends Faster R-CNN by adding a branch for predicting an ... -- 27/04/2026, 08:48:10 pm 30.4s 4,578 <$0.01" [ref=e1876] [cursor=pointer]':
+                    - cell [ref=e1877]
+                    - cell "UNSET" [ref=e1885]
+                    - cell "llm" [ref=e1893]
+                    - cell "llm.claims_extraction" [ref=e1898]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e1901]'
+                    - 'cell "{\"claims\": [{\"claim_text\": \"Mask R-CNN extends Faster R-CNN by adding a branch for predicting an ..." [ref=e1902]'
+                    - cell "--" [ref=e1903]
+                    - cell "27/04/2026, 08:48:10 pm" [ref=e1905]
+                    - cell "30.4s" [ref=e1907]
+                    - cell "4,578" [ref=e1918]
+                    - cell "<$0.01" [ref=e1926]
+                  - 'row "ERROR llm llm.claims_extraction {\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A... {\"error\": \"InstructorRetryException: <failed_attempts>\\n\\n<generation number=\\\"1\\\">\\n<exception>\\... -- 27/04/2026, 08:47:05 pm 43.9s 9,352 <$0.01" [ref=e1929] [cursor=pointer]':
+                    - cell [ref=e1930]
+                    - cell "ERROR" [ref=e1938]
+                    - cell "llm" [ref=e1947]
+                    - cell "llm.claims_extraction" [ref=e1952]
+                    - 'cell "{\"response_model\": \"ClaimsLLMResponse\", \"messages\": [{\"role\": \"system\", \"content\": \"You extract A..." [ref=e1955]'
+                    - 'cell "{\"error\": \"InstructorRetryException: <failed_attempts>\\n\\n<generation number=\\\"1\\\">\\n<exception>\\..." [ref=e1956]'
+                    - cell "--" [ref=e1957]
+                    - cell "27/04/2026, 08:47:05 pm" [ref=e1959]
+                    - cell "43.9s" [ref=e1961]
+                    - cell "9,352" [ref=e1972]
+                    - cell "<$0.01" [ref=e1980]
+  - img
+  - generic [ref=e1984]:
+    - button "Dismiss" [ref=e1986]
+    - dialog [active] [ref=e1987]:
+      - generic [ref=e1988]:
+        - generic [ref=e1990]:
+          - generic [ref=e1991]:
+            - generic [ref=e1993]:
+              - button "Next trace" [ref=e1994] [cursor=pointer]:
+                - img [ref=e1996]
+              - button "Previous trace" [disabled] [ref=e2001]:
+                - img [ref=e2003]
+            - generic [ref=e2008]:
+              - heading "Trace" [level=3] [ref=e2009]
+              - generic [ref=e2010]:
+                - img [ref=e2012]
+                - generic [ref=e2015]: 646fec014d00716dac8fe6e5d20200d8
+              - button [ref=e2017] [cursor=pointer]:
+                - img [ref=e2019]
+          - generic [ref=e2021]:
+            - button "Share" [ref=e2022] [cursor=pointer]:
+              - img [ref=e2024]
+              - text: Share
+            - button [ref=e2029] [cursor=pointer]:
+              - img [ref=e2031]
+        - main [ref=e2036]:
+          - generic [ref=e2038]:
+            - generic [ref=e2039]:
+              - heading "Trace Status" [level=3] [ref=e2040]
+              - generic [ref=e2042]:
+                - generic "UNSET" [ref=e2043]:
+                  - img [ref=e2044]
+                - generic [ref=e2050]: UNSET
+            - generic [ref=e2051]:
+              - heading "Total Cost" [level=3] [ref=e2052]
+              - button "<$0.01" [ref=e2053]
+            - generic [ref=e2054]:
+              - heading "Latency" [level=3] [ref=e2055]
+              - generic [ref=e2057]:
+                - img [ref=e2060]
+                - generic [ref=e2066]: 11.8s
+            - link "View Session" [ref=e2068] [cursor=pointer]:
+              - /url: /projects/UHJvamVjdDoy/sessions/UHJvamVjdFNlc3Npb246OQ==
+          - generic [ref=e2069]:
+            - generic [ref=e2074]:
+              - generic [ref=e2076]:
+                - heading "Trace" [level=3] [ref=e2077]
+                - generic [ref=e2078]:
+                  - button "Collapse all" [ref=e2079] [cursor=pointer]:
+                    - img [ref=e2081]
+                  - button "Hide metrics in trace tree" [ref=e2083] [cursor=pointer]:
+                    - img [ref=e2085]
+              - list [ref=e2088]:
+                - generic [ref=e2089]:
+                  - button "chain agent.query" [ref=e2090] [cursor=pointer]:
+                    - generic [ref=e2091]
+                  - list [ref=e2106]:
+                    - listitem [ref=e2107]
+                    - listitem [ref=e3285]
+                    - listitem [ref=e3318]
+                    - listitem [ref=e3331]
+                    - listitem [ref=e3380]
+                    - listitem [ref=e3393]
+                    - listitem [ref=e3406]
+                    - listitem [ref=e3419]
+                    - listitem [ref=e3432]
+                    - listitem [ref=e3445]
+                    - listitem [ref=e3478]
+                    - listitem [ref=e3491]
+                    - listitem [ref=e3504]
+            - separator [ref=e3516]
+            - generic [ref=e3520]:
+              - generic [ref=e3523]:
+                - generic [ref=e3525]:
+                  - generic [ref=e3527]:
+                    - generic [ref=e3528]
+                    - generic [ref=e3539]
+                  - generic [ref=e3557]:
+                    - link:
+                      - /url: /playground/spans/U3BhbjoxMzc4OQ==
+                    - button [ref=e3558] [cursor=pointer]
+                    - button [pressed] [ref=e3564] [cursor=pointer]
+                    - button [ref=e3573] [cursor=pointer]
+                - generic [ref=e3577]:
+                  - tablist [ref=e3578]:
+                    - tab "Info" [selected] [ref=e3579]
+                    - tab "Annotations 0" [ref=e3580]
+                    - tab "Attributes" [ref=e3582]
+                    - tab "Events 2" [ref=e3583]
+                  - tabpanel "Info" [ref=e3585]:
+                    - generic [ref=e3589]
+              - separator [ref=e3697]
+              - generic [ref=e3700]:
+                - button "Annotation Summary s" [disabled] [ref=e3701]:
+                  - img [ref=e3703]
+                  - generic [ref=e3708]:
+                    - generic [ref=e3709]: Annotation Summary
+                    - generic [ref=e3710]: s
+                - separator [ref=e3712]
+                - button "Edit Annotations e" [ref=e3713]:
+                  - img [ref=e3715]
+                  - generic [ref=e3720]:
+                    - generic [ref=e3721]: Edit Annotations
+                    - generic [ref=e3722]: e
+                - generic [ref=e3727]:
+                  - button "Add Annotation" [ref=e3730] [cursor=pointer]:
+                    - img [ref=e3732]
+                    - text: Annotation
+                  - generic [ref=e3741]: No annotation configurations for this project.
+                - separator [ref=e3742]
+                - button "Notes n" [ref=e3743]:
+                  - img [ref=e3745]
+                  - generic [ref=e3750]:
+                    - generic [ref=e3751]: Notes
+                    - generic [ref=e3752]: "n"
+                - generic [ref=e3756]:
+                  - list [ref=e3757]
+                  - generic [ref=e3759]:
+                    - textbox "Message input" [ref=e3761]:
+                      - /placeholder: Add a note
+                    - button "Send" [disabled] [ref=e3762]

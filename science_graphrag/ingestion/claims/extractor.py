@@ -258,6 +258,8 @@ def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too
             document_id=str(work_id),
             source_name=str(work_id),
             timeout_seconds=float(settings.extraction_llm_timeout_seconds),
+            transport_timeout_seconds=float(settings.extraction_llm_timeout_seconds),
+            pool_name="claims",
             system_prompt=claims_prompts.SYSTEM_BENCHMARK,
             retries=0,
         )

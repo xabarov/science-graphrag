@@ -8,6 +8,7 @@ from langchain_core.messages import HumanMessage
 from langgraph.graph import END, StateGraph
 from langgraph.prebuilt import ToolNode
 
+from science_graphrag.agent.coordination.deterministic import _graph_intent_heuristic
 from science_graphrag.agent.graph.nodes.graph_agent import SPECIALIST_NAME as GRAPH_SPECIALIST
 from science_graphrag.agent.graph.nodes.graph_agent import (
     build_graph_agent_node,
@@ -22,13 +23,17 @@ from science_graphrag.agent.graph.nodes.writer_agent import SPECIALIST_NAME as W
 from science_graphrag.agent.graph.nodes.writer_agent import (
     build_writer_agent_node,
 )
-from science_graphrag.agent.coordination.deterministic import _graph_intent_heuristic
 from science_graphrag.agent.graph.state import AgentState
 from science_graphrag.agent.llm.chat import build_chat_model, ensure_messages_safe_for_generation
 from science_graphrag.agent.tools import build_tool_registry
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
-from science_graphrag.observability.spans import add_span_event, chain_span, llm_span
+from science_graphrag.observability.spans import (
+    SpanAttributes,
+    add_span_event,
+    chain_span,
+    llm_span,
+)
 
 ROUTE_FINISH = "finish"
 
@@ -190,7 +195,15 @@ def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
         ):
             with llm_span(
                 "llm.agent.supervisor_route",
-                {"llm.invocation_name": "agent_supervisor_route"},
+                {
+                    **SpanAttributes.llm_runtime_policy_attributes(
+                        pool_name="agent_chat",
+                        transport_timeout_seconds=float(settings.extraction_llm_timeout_seconds),
+                        timeout_contract="transport_only",
+                        retry_extra_budget=0,
+                    ),
+                    "llm.invocation_name": "agent_supervisor_route",
+                },
             ):
                 response = llm.invoke(ensure_messages_safe_for_generation(route_msgs))
         choice = str(response.content or "").strip().lower()
@@ -261,7 +274,17 @@ def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
     llm = build_chat_model(settings).bind_tools(tool_registry)
 
     def chat_node(state: AgentState) -> dict:
-        response = llm.invoke(ensure_messages_safe_for_generation(state["messages"]))
+        with llm_span(
+            "llm.agent.react_turn",
+            {"llm.invocation_name": "agent_single_react"},
+        ):
+            SpanAttributes.set_llm_runtime_policy(
+                pool_name="agent_chat",
+                transport_timeout_seconds=float(settings.extraction_llm_timeout_seconds),
+                timeout_contract="transport_only",
+                retry_extra_budget=0,
+            )
+            response = llm.invoke(ensure_messages_safe_for_generation(state["messages"]))
         return {"messages": [response]}
 
     def budget_node(state: AgentState) -> dict:

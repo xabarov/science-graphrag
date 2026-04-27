@@ -4,15 +4,9 @@ import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
-import MetricsCard from "../../../components/MetricsCard.jsx";
 import { getBenchmarkRunCasesPage } from "../../../services/benchmarkApi.js";
 import { CursorButton } from "../../../components/common/index.js";
 import {
@@ -22,6 +16,7 @@ import {
   sortOptionsForFamily,
 } from "../benchmarkRunUiHelpers.js";
 import { useI18n } from "../../../i18n/useI18n.js";
+import BenchmarkCaseInspectorShell from "../caseInspector/BenchmarkCaseInspectorShell.jsx";
 
 function Panel({ title, children }) {
   const tk = useTheme().appTokens;
@@ -41,36 +36,29 @@ function Panel({ title, children }) {
   );
 }
 
-function JsonBlock({ value }) {
-  const tk = useTheme().appTokens;
-  return (
-    <Box
-      component="pre"
-      sx={{
-        whiteSpace: "pre-wrap",
-        wordBreak: "break-word",
-        maxHeight: 360,
-        overflow: "auto",
-        margin: 0,
-        fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-        fontSize: "12px",
-        color: tk.text.primary,
-      }}
-    >
-      {JSON.stringify(value, null, 2)}
-    </Box>
-  );
-}
-
-function formatComparisonCellValue(value, fallback = null) {
-  const resolved = value !== undefined ? value : fallback;
-  return JSON.stringify(resolved);
-}
-
 const CASES_PAGE_SIZE = 500;
 
-/** Filters + case list reset via `key={runId}` on the parent. */
-export function WorkbenchRunScopedPanel({ runDetail, caseDetail, selectedCaseId, onSelectCase }) {
+/**
+ * @param {object} props
+ * @param {Record<string, unknown>} props.runDetail
+ * @param {Record<string, unknown> | null} props.caseDetail
+ * @param {string | null} props.selectedCaseId
+ * @param {(caseId: string) => void} [props.onSelectCase]
+ * @param {{ baselineRunId: string, metric: string } | null} [props.compareContext]
+ * @param {boolean} [props.inspectorLoading]
+ * @param {(runId: string) => void} [props.onOpenRunFromEvidence]
+ * @param {Record<string, unknown> | null} [props.fixtureDetail]
+ */
+export function WorkbenchRunScopedPanel({
+  runDetail,
+  caseDetail,
+  selectedCaseId,
+  onSelectCase,
+  compareContext = null,
+  inspectorLoading = false,
+  onOpenRunFromEvidence,
+  fixtureDetail = null,
+}) {
   const { t } = useI18n();
   const tk = useTheme().appTokens;
   const runId = runDetail?.run_id;
@@ -119,11 +107,6 @@ export function WorkbenchRunScopedPanel({ runDetail, caseDetail, selectedCaseId,
     return sortBenchmarkCases(filtered, sortKey, sortDir);
   }, [failureMode, rawCases, selectedChecks, sortKey, sortDir]);
   const sortOptions = sortOptionsForFamily(family);
-
-  const comparisonRows =
-    caseDetail?.comparison?.metadata_rows ||
-    caseDetail?.comparison?.method_rows ||
-    [];
 
   return (
     <>
@@ -194,7 +177,7 @@ export function WorkbenchRunScopedPanel({ runDetail, caseDetail, selectedCaseId,
         ) : null}
       </Box>
 
-      <Box sx={{ display: "grid", gridTemplateColumns: "280px minmax(0, 1fr) minmax(0, 1fr)", gap: 2 }}>
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "280px minmax(0, 1fr)" }, gap: 2 }}>
         <Panel title={t("benchmark.workbench.panelCases")}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
             {caseRows.map((item) => (
@@ -218,9 +201,7 @@ export function WorkbenchRunScopedPanel({ runDetail, caseDetail, selectedCaseId,
                 <Typography sx={{ fontSize: "0.8125rem", fontWeight: 500 }}>{item.case_id}</Typography>
                 <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary }}>
                   {item.status}
-                  {item?.summary?.failed_checks?.length
-                    ? ` | ${item.summary.failed_checks.join(", ")}`
-                    : ""}
+                  {item?.summary?.failed_checks?.length ? ` | ${item.summary.failed_checks.join(", ")}` : ""}
                 </Typography>
               </Box>
             ))}
@@ -244,78 +225,16 @@ export function WorkbenchRunScopedPanel({ runDetail, caseDetail, selectedCaseId,
           </Box>
         </Panel>
 
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <Panel title={t("benchmark.workbench.sourceArticle")}>
-            {caseDetail ? (
-              <>
-                <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary, mb: 1 }}>
-                  {t("benchmark.workbench.sections")}{" "}
-                  {(caseDetail.article?.sections || []).map((item) => item.label).join(", ") || t("workspace.upload.dash")}
-                </Typography>
-                <Box
-                  component="pre"
-                  sx={{
-                    whiteSpace: "pre-wrap",
-                    wordBreak: "break-word",
-                    maxHeight: 420,
-                    overflow: "auto",
-                    margin: 0,
-                    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-                    fontSize: "12px",
-                    color: tk.text.primary,
-                  }}
-                >
-                  {caseDetail.article?.raw_markdown || ""}
-                </Box>
-              </>
-            ) : (
-              <Typography sx={{ color: tk.text.secondary }}>{t("benchmark.workbench.selectCase")}</Typography>
-            )}
-          </Panel>
-
-          <Panel title={t("benchmark.workbench.goldPayload")}>
-            {caseDetail ? <JsonBlock value={caseDetail.gold?.payload || {}} /> : null}
-          </Panel>
-        </Box>
-
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <Panel title={t("benchmark.workbench.metrics")}>
-            {caseDetail ? <MetricsCard metrics={caseDetail.metrics || {}} /> : null}
-          </Panel>
-
-          <Panel title={t("benchmark.workbench.prediction")}>
-            {caseDetail ? <JsonBlock value={caseDetail.predicted?.payload || {}} /> : null}
-          </Panel>
-
-          <Panel title={t("benchmark.workbench.diff")}>
-            {comparisonRows.length ? (
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>{t("benchmark.workbench.diffColField")}</TableCell>
-                    <TableCell>{t("benchmark.workbench.diffColGold")}</TableCell>
-                    <TableCell>{t("benchmark.workbench.diffColPred")}</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {comparisonRows.map((row, idx) => (
-                    <TableRow key={`${row.field || row.value || "row"}-${idx}`}>
-                      <TableCell>{row.field || row.value || "-"}</TableCell>
-                      <TableCell sx={{ maxWidth: 180, wordBreak: "break-word" }}>
-                        {formatComparisonCellValue(row.gold_value, row.source)}
-                      </TableCell>
-                      <TableCell sx={{ maxWidth: 180, wordBreak: "break-word" }}>
-                        {formatComparisonCellValue(row.predicted_value, row.status ?? "-")}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <Typography sx={{ color: tk.text.secondary }}>{t("benchmark.workbench.noDiff")}</Typography>
-            )}
-          </Panel>
-        </Box>
+        <BenchmarkCaseInspectorShell
+          mode="run"
+          family={family}
+          caseId={selectedCaseId}
+          caseDetail={caseDetail}
+          fixtureDetail={fixtureDetail}
+          compareContext={compareContext}
+          loading={inspectorLoading}
+          onOpenRun={(rid) => onOpenRunFromEvidence?.(rid)}
+        />
       </Box>
     </>
   );

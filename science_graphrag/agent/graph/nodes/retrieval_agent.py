@@ -16,7 +16,7 @@ from science_graphrag.agent.tool_search import shortlist_tools_for_specialist
 from science_graphrag.agent.tools import build_retrieval_tools
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
-from science_graphrag.observability.spans import llm_span
+from science_graphrag.observability.spans import SpanAttributes, llm_span
 
 SPECIALIST_NAME = "retrieval_agent"
 SYSTEM_PROMPT = (
@@ -64,6 +64,12 @@ def _compile_react_subgraph(tools: list[BaseTool], settings: Settings, system_pr
             "llm.agent.retrieval_specialist",
             {"llm.invocation_name": "agent_retrieval_specialist"},
         ):
+            SpanAttributes.set_llm_runtime_policy(
+                pool_name="agent_chat",
+                transport_timeout_seconds=float(settings.extraction_llm_timeout_seconds),
+                timeout_contract="transport_only",
+                retry_extra_budget=0,
+            )
             response = llm.invoke(
                 ensure_messages_safe_for_generation(
                     [HumanMessage(content=system_prompt), *list(state.get("messages") or [])]

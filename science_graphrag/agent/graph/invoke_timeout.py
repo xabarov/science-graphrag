@@ -15,6 +15,7 @@ from typing import Any
 from opentelemetry import context as otel_context
 
 from science_graphrag.agent.graph.errors import AgentGraphDeadlineExceeded
+from science_graphrag.observability.spans.decorators import add_span_event
 
 _MAX_WORKERS = min(16, max(4, (os.cpu_count() or 2) * 2))
 _AGENT_GRAPH_POOL = ThreadPoolExecutor(max_workers=_MAX_WORKERS, thread_name_prefix="agent_graph")
@@ -59,6 +60,14 @@ def invoke_graph_with_deadline(
     try:
         return fut.result(timeout=timeout_seconds)
     except FuturesTimeoutError as exc:
+        add_span_event(
+            "agent.graph_invoke_deadline_exceeded",
+            {
+                "timeout_seconds": float(timeout_seconds),
+                "worker_may_continue": True,
+                "deadline_kind": "response_only",
+            },
+        )
         raise AgentGraphDeadlineExceeded(
             timeout_seconds=timeout_seconds,
             message=f"LangGraph invoke exceeded {timeout_seconds}s",

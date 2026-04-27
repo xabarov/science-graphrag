@@ -64,6 +64,12 @@ export default function BenchmarkPage() {
       const c = searchParams.get("case");
       setSelectedCaseId(c || null);
     }
+    const runParam = searchParams.get("run");
+    const workbenchFixtureFirst =
+      tabIndex === 3 && av === "workbench" && Boolean(searchParams.get("case")) && !runParam;
+    if (workbenchFixtureFirst) {
+      setSelectedRunId(null);
+    }
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [searchParams]);
 
@@ -111,8 +117,13 @@ export default function BenchmarkPage() {
     [searchParams, setSearchParams],
   );
 
+  /**
+   * @param {string | null} runId
+   * @param {string | null} [caseId]
+   * @param {{ caseFamily?: string | null, compareBaselineRunId?: string | null, compareMetric?: string | null }} [opts]
+   */
   const openWorkbench = useCallback(
-    (runId, caseId = null) => {
+    (runId, caseId = null, opts = {}) => {
       if (runId) {
         setSelectedRunId(runId);
         window.localStorage.setItem("benchmark:lastRunId", runId);
@@ -127,6 +138,40 @@ export default function BenchmarkPage() {
       else merged.delete("run");
       if (caseId) merged.set("case", caseId);
       else merged.delete("case");
+
+      if (runId) {
+        merged.delete("caseFamily");
+      } else if (caseId && opts.caseFamily) {
+        merged.set("caseFamily", opts.caseFamily);
+      } else if (!caseId) {
+        merged.delete("caseFamily");
+      }
+
+      if (opts.compareBaselineRunId && opts.compareMetric) {
+        merged.set("cmpBaseline", opts.compareBaselineRunId);
+        merged.set("cmpMetric", encodeURIComponent(String(opts.compareMetric)));
+      } else {
+        merged.delete("cmpBaseline");
+        merged.delete("cmpMetric");
+      }
+      setSearchParams(merged, { replace: true });
+    },
+    [searchParams, setSearchParams],
+  );
+
+  const openCaseFromCatalog = useCallback(
+    (catalogCaseId, family) => {
+      if (!catalogCaseId) return;
+      setSelectedRunId(null);
+      setSelectedCaseId(catalogCaseId);
+      setTabIdx(3);
+      setAnalysisView("workbench");
+      const merged = mergeBenchmarkTabIntoSearchParams(searchParams, 3, "workbench");
+      merged.delete("run");
+      merged.set("case", catalogCaseId);
+      merged.set("caseFamily", family || "layer1");
+      merged.delete("cmpBaseline");
+      merged.delete("cmpMetric");
       setSearchParams(merged, { replace: true });
     },
     [searchParams, setSearchParams],
@@ -149,6 +194,8 @@ export default function BenchmarkPage() {
       const next = new URLSearchParams(searchParams.toString());
       if (runId) next.set("run", runId);
       else next.delete("run");
+      next.delete("cmpBaseline");
+      next.delete("cmpMetric");
       // Clearing run implies no meaningful case selection in URL or state.
       if (!runId) {
         next.delete("case");
@@ -165,6 +212,8 @@ export default function BenchmarkPage() {
       const next = new URLSearchParams(searchParams.toString());
       if (caseId) next.set("case", caseId);
       else next.delete("case");
+      next.delete("cmpBaseline");
+      next.delete("cmpMetric");
       setSearchParams(next, { replace: true });
     },
     [searchParams, setSearchParams],
@@ -249,7 +298,7 @@ export default function BenchmarkPage() {
           searchParams={searchParams}
         />
       ) : null}
-      {tabIdx === 4 ? <CasesTab /> : null}
+      {tabIdx === 4 ? <CasesTab onOpenCaseInWorkbench={openCaseFromCatalog} /> : null}
     </Box>
   );
 }

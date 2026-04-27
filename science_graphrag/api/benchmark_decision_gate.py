@@ -9,17 +9,15 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
+from science_graphrag.artifacts.benchmark_paths import benchmark_metrics_summary_path
+
 router = APIRouter(tags=["benchmark"])
-
-
-def _repo_root() -> Path:
-    return Path(__file__).resolve().parents[2]
 
 
 def default_benchmark_summary_path() -> Path:
     """Path to ``benchmark-metrics-summary.json`` (overridable in tests)."""
 
-    return _repo_root() / "eval" / "results" / "benchmark-metrics-summary.json"
+    return benchmark_metrics_summary_path()
 
 
 def _extract_trust_public(summary: dict[str, Any]) -> dict[str, Any]:

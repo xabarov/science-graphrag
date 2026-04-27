@@ -17,6 +17,7 @@ from science_graphrag.agent.tools import (
 from science_graphrag.agent.trace import ToolCallTrace
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.llm.extractor import SyncInstructorExtractor
+from science_graphrag.observability.phoenix_tracer import SpanAttributes, llm_span
 
 IdeaAssistMode = Literal["hypotheses", "contradictions", "both"]
 
@@ -270,6 +271,7 @@ class IdeaOrchestrator:
             timeout_seconds=self._settings.extraction_llm_timeout_seconds,
             mode=self._settings.extraction_llm_mode,
         )
+        transport_s = float(self._settings.extraction_llm_timeout_seconds)
         claims_preview = claims[:80]
         user = json.dumps(
             {
@@ -282,9 +284,20 @@ class IdeaOrchestrator:
             },
             ensure_ascii=False,
         )
-        parsed, err = extractor.extract_maybe(
-            _IdeaAssistLLMResponse, system=_IDEA_ASSIST_SYSTEM, user=user
-        )
+        with llm_span(
+            "llm.idea_assist",
+            {
+                **SpanAttributes.llm_runtime_policy_attributes(
+                    pool_name="idea_assist",
+                    transport_timeout_seconds=transport_s,
+                    timeout_contract="transport_only",
+                    retry_extra_budget=0,
+                ),
+            },
+        ):
+            parsed, err = extractor.extract_maybe(
+                _IdeaAssistLLMResponse, system=_IDEA_ASSIST_SYSTEM, user=user
+            )
         if err or parsed is None:
             return _IdeaAssistLLMResponse()
         return parsed

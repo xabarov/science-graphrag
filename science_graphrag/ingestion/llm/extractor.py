@@ -39,9 +39,16 @@ class SyncInstructorExtractor:
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
+        self._transport_timeout_seconds = float(timeout_seconds)
         self.mode = mode.strip().lower()
         self._extra_body = self._build_extra_body()
         self._client = instructor.from_openai(raw, mode=self._resolve_mode())
+
+    @property
+    def transport_timeout_seconds(self) -> float:
+        """HTTP transport timeout configured on the underlying OpenAI client."""
+
+        return self._transport_timeout_seconds
 
     def _is_openrouter_qwen35_397b(self) -> bool:
         return self.base_url.startswith("https://openrouter.ai/api") and (

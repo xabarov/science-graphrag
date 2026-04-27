@@ -71,6 +71,34 @@ describe("authorSemanticProjection", () => {
     expect(authored[0].raw?.properties?.author_position).toBe(1);
   });
 
+  it("synthesizes Author nodes from Authorship when explicit Author nodes are absent", () => {
+    const g = normalizeGraphPayload({
+      nodes: [
+        { id: "w1", type: "Work", label: "SSD", node_kind: "Work" },
+        {
+          id: "ash1",
+          type: "Authorship",
+          label: "Alice (#1)",
+          display_label: "Alice (#1)",
+          subtitle: "Author #1 · IBM Research",
+          node_kind: "Authorship",
+          properties: { author_position: 1 },
+        },
+      ],
+      edges: [{ id: "e1", source: "w1", target: "ash1", type: "HAS_AUTHORSHIP" }],
+      meta: {},
+    });
+    const p = projectAuthorSemanticGraph(g);
+    expect(p.nodes.map((n) => ({ id: n.id, type: n.type, label: n.displayLabel }))).toEqual([
+      { id: "w1", type: "Work", label: "SSD" },
+      { id: "ash1", type: "Author", label: "Alice" },
+    ]);
+    const authored = p.edges.filter((e) => String(e.type).toUpperCase() === "AUTHORED");
+    expect(authored).toHaveLength(1);
+    expect(authored[0].source).toBe("w1");
+    expect(authored[0].target).toBe("ash1");
+  });
+
   it("bridges Authorship AFFILIATED_WITH to Author–Institution", () => {
     const g = normalizeGraphPayload({
       nodes: [

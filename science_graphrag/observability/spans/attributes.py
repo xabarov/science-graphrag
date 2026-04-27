@@ -10,11 +10,70 @@ from science_graphrag.observability.spans.decorators import (
     MIME_TYPE_TEXT,
     OpenInferenceAttributes,
     set_span_attribute,
+    set_span_attributes,
 )
 
 
 class SpanAttributes:
     """Helpers for OpenInference-compatible Phoenix attributes."""
+
+    @staticmethod
+    def llm_runtime_policy_attributes(
+        *,
+        pool_name: str,
+        transport_timeout_seconds: float,
+        timeout_contract: str,
+        retry_extra_budget: int = 0,
+        operation_deadline_seconds: float | None = None,
+        response_deadline_seconds: float | None = None,
+        transport_max_attempts: int | None = None,
+    ) -> dict[str, Any]:
+        """
+        Canonical LLM runtime policy fields for Phase 0 observability.
+
+        ``retry_extra_budget`` is the number of *additional* attempts allowed by the
+        caller-owned outer retry loop (e.g. ``run_extraction(retries=...)``), not inner
+        transport retries inside ``SyncInstructorExtractor.extract_maybe``.
+        """
+
+        out: dict[str, Any] = {
+            "llm.pool_name": str(pool_name),
+            "llm.transport_timeout_seconds": float(transport_timeout_seconds),
+            "llm.timeout_contract": str(timeout_contract),
+            "llm.retry_budget": int(retry_extra_budget),
+        }
+        if operation_deadline_seconds is not None:
+            out["llm.operation_deadline_seconds"] = float(operation_deadline_seconds)
+        if response_deadline_seconds is not None:
+            out["llm.response_deadline_seconds"] = float(response_deadline_seconds)
+        if transport_max_attempts is not None:
+            out["llm.transport_max_attempts"] = int(transport_max_attempts)
+        return out
+
+    @staticmethod
+    def set_llm_runtime_policy(
+        *,
+        pool_name: str,
+        transport_timeout_seconds: float,
+        timeout_contract: str,
+        retry_extra_budget: int = 0,
+        operation_deadline_seconds: float | None = None,
+        response_deadline_seconds: float | None = None,
+        transport_max_attempts: int | None = None,
+    ) -> None:
+        """Apply :meth:`llm_runtime_policy_attributes` to the current span."""
+
+        set_span_attributes(
+            SpanAttributes.llm_runtime_policy_attributes(
+                pool_name=pool_name,
+                transport_timeout_seconds=transport_timeout_seconds,
+                timeout_contract=timeout_contract,
+                retry_extra_budget=retry_extra_budget,
+                operation_deadline_seconds=operation_deadline_seconds,
+                response_deadline_seconds=response_deadline_seconds,
+                transport_max_attempts=transport_max_attempts,
+            ),
+        )
 
     @staticmethod
     def _system_from_model(model: str | None) -> str | None:
@@ -316,7 +375,9 @@ class SpanAttributes:
         if work_id:
             set_span_attribute("metadata.work_id", str(work_id))
         if query_preview:
-            set_span_attribute("retrieval.query", SpanAttributes.preview_text(query_preview, max_chars=240))
+            set_span_attribute(
+                "retrieval.query", SpanAttributes.preview_text(query_preview, max_chars=240)
+            )
 
     @staticmethod
     def set_retrieval_documents(hits: list[dict[str, Any]], *, max_docs: int = 24) -> None:

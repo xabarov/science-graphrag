@@ -122,4 +122,39 @@ describe("GraphTypeLegend SSR smoke", () => {
     expect(html).toContain("cites");
     expect(html).toContain("1 nodes · 1 edges");
   });
+
+  it("renders community legend when colorBy=community", () => {
+    const theme = buildAppTheme("dark");
+    const nodeCommunityMap = new Map([
+      ["a", "sem:clusterA"],
+      ["b", "sem:clusterA"],
+    ]);
+    const html = renderToString(
+      React.createElement(
+        ThemeProvider,
+        { theme },
+        React.createElement(
+          I18nProvider,
+          null,
+          React.createElement(GraphTypeLegend, {
+            graph: {
+              nodes: [
+                { id: "a", type: "Work", nodeKind: "WorkInternal", displayLabel: "Paper A" },
+                { id: "b", type: "Work", nodeKind: "WorkInternal", displayLabel: "Paper B" },
+              ],
+              edges: [{ id: "e1", source: "a", target: "b", type: "CITES" }],
+            },
+            colorBy: "community",
+            nodeCommunityMap,
+          }),
+        ),
+      ),
+    );
+    expect(html).toContain("Communities (1)");
+    expect(html).toContain("2 nodes");
+    expect(html).toContain("#1");
+    expect(html).toContain("Entity types");
+    expect(html).toContain("top 12");
+    expect(html).toContain("overlap");
+  });
 });

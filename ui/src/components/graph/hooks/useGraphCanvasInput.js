@@ -24,6 +24,10 @@ export default function useGraphCanvasInput({
   fixedNodesRef,
   setPinnedNodeCount,
   resolveNodeCanvasLabel,
+  graphColorBy = "type",
+  selectedNodeId = "",
+  searchActive = false,
+  searchMatchSet = null,
 }) {
   const [hoveredNodeId, setHoveredNodeId] = useState("");
   const [hoveredEdgeId, setHoveredEdgeId] = useState("");
@@ -49,7 +53,14 @@ export default function useGraphCanvasInput({
         const ly = hoverClientRef.current.y - rect.top;
         const posMap = getPositionsForFrame();
         const nodeId =
-          hitTestNodeScreen(lx, ly, graph.nodes, posMap, transformRef.current, resolveNodeCanvasLabel) || "";
+          hitTestNodeScreen(lx, ly, graph.nodes, posMap, transformRef.current, resolveNodeCanvasLabel, {
+            colorBy: graphColorBy,
+            nodeCount: graph.nodes.length,
+            searchActive,
+            searchMatchSet: searchMatchSet instanceof Set ? searchMatchSet : null,
+            selectedNodeId,
+            hoveredNodeId,
+          }) || "";
         if (nodeId) {
           setHoveredNodeId((prev) => (prev === nodeId ? prev : nodeId));
           setHoveredEdgeId("");
@@ -62,7 +73,19 @@ export default function useGraphCanvasInput({
         setCanvasCursor(edgeId ? "pointer" : "grab");
       });
     },
-    [canvasRef, getPositionsForFrame, graph.edges, graph.nodes, resolveNodeCanvasLabel, transformRef],
+    [
+      canvasRef,
+      getPositionsForFrame,
+      graph.edges,
+      graph.nodes,
+      graphColorBy,
+      hoveredNodeId,
+      resolveNodeCanvasLabel,
+      searchActive,
+      searchMatchSet,
+      selectedNodeId,
+      transformRef,
+    ],
   );
 
   const handlePointerDown = useCallback(
@@ -76,7 +99,14 @@ export default function useGraphCanvasInput({
       const { scale, tx, ty } = transformRef.current;
       if (simNodes.length > 0) {
         const posMap = getPositionsForFrame();
-        const nodeId = hitTestNodeScreen(x, y, graph.nodes, posMap, transformRef.current, resolveNodeCanvasLabel);
+        const nodeId = hitTestNodeScreen(x, y, graph.nodes, posMap, transformRef.current, resolveNodeCanvasLabel, {
+          colorBy: graphColorBy,
+          nodeCount: graph.nodes.length,
+          searchActive,
+          searchMatchSet: searchMatchSet instanceof Set ? searchMatchSet : null,
+          selectedNodeId,
+          hoveredNodeId,
+        });
         if (nodeId) {
           if (layoutMode === "circle" && onCanvasLayoutModeChange) flushSync(() => onCanvasLayoutModeChange("force"));
           const world = screenToWorld(x, y, scale, tx, ty);
@@ -95,9 +125,14 @@ export default function useGraphCanvasInput({
       draggedNodePositionRef,
       getPositionsForFrame,
       graph.nodes,
+      graphColorBy,
+      hoveredNodeId,
       layoutMode,
       onCanvasLayoutModeChange,
       resolveNodeCanvasLabel,
+      searchActive,
+      searchMatchSet,
+      selectedNodeId,
       setSimNodes,
       simNodes.length,
       transformRef,
@@ -198,7 +233,14 @@ export default function useGraphCanvasInput({
         const x = ev.clientX - rect.left;
         const y = ev.clientY - rect.top;
         const posMap = getPositionsForFrame();
-        const nodeId = hitTestNodeScreen(x, y, graph.nodes, posMap, transformRef.current, resolveNodeCanvasLabel);
+        const nodeId = hitTestNodeScreen(x, y, graph.nodes, posMap, transformRef.current, resolveNodeCanvasLabel, {
+          colorBy: graphColorBy,
+          nodeCount: graph.nodes.length,
+          searchActive,
+          searchMatchSet: searchMatchSet instanceof Set ? searchMatchSet : null,
+          selectedNodeId,
+          hoveredNodeId,
+        });
         if (nodeId) {
           queueMicrotask(() => onNodeClick?.(nodeId));
           return;
@@ -221,12 +263,17 @@ export default function useGraphCanvasInput({
       getPositionsForFrame,
       graph.edges,
       graph.nodes,
+      graphColorBy,
+      hoveredNodeId,
       isSimulationStable,
       onCanvasClick,
       onEdgeClick,
       onNodeClick,
       queueHoverPick,
       resolveNodeCanvasLabel,
+      searchActive,
+      searchMatchSet,
+      selectedNodeId,
       setIsSimulationStable,
       setPinnedNodeCount,
       transformRef,

@@ -20,7 +20,7 @@ import { ANALYSIS_VIEWS, normalizeAnalysisView } from "./experimentCatalog.js";
  * @param {object} props
  * @param {"results"|"compare"|"workbench"} props.analysisView
  * @param {(view: "results"|"compare"|"workbench") => void} props.onAnalysisViewChange
- * @param {(runId: string, caseId?: string | null) => void} props.onOpenWorkbench
+ * @param {(runId: string, caseId?: string | null, opts?: { caseFamily?: string | null, compareBaselineRunId?: string | null, compareMetric?: string | null }) => void} props.onOpenWorkbench
  * @param {string | null} props.selectedRunId
  * @param {string | null} props.selectedCaseId
  * @param {(runId: string | null) => void} props.onSelectRun
@@ -81,6 +81,23 @@ export default function BenchmarkAnalysisTab({
     return selectedRow.variants.find((item) => item.variantId === selectedVariantId) || selectedRow.variants[0] || null;
   }, [selectedRow, selectedVariantId]);
 
+  const compareContext = useMemo(() => {
+    const b = searchParams.get("cmpBaseline");
+    const mRaw = searchParams.get("cmpMetric");
+    if (!b || !mRaw) return null;
+    try {
+      return { baselineRunId: b, metric: decodeURIComponent(mRaw) };
+    } catch {
+      return { baselineRunId: b, metric: mRaw };
+    }
+  }, [searchParams]);
+
+  const caseFamilyParam = useMemo(() => {
+    const f = (searchParams.get("caseFamily") || "layer1").trim().toLowerCase();
+    if (f === "layer1" || f === "layer2" || f === "graph") return f;
+    return "layer1";
+  }, [searchParams]);
+
   const comparePair = useMemo(() => {
     const baseline = selectedRow?.variants?.find((item) => item.isBaseline && item.runId) || null;
     const current = selectedCell?.runId && selectedCell.variantId !== baseline?.variantId ? selectedCell : null;
@@ -139,10 +156,10 @@ export default function BenchmarkAnalysisTab({
         compareLoading={compareLoading}
         compareError={compareError}
         compareCurrentRunId={comparePair?.currentRunId || null}
-        onOpenWorkbench={(runId, caseId = null) => {
+        onOpenWorkbench={(runId, caseId = null, opts) => {
           onSelectRun?.(runId);
           onSelectCase?.(caseId);
-          onOpenWorkbench(runId, caseId);
+          onOpenWorkbench(runId, caseId, opts);
         }}
         onOpenCompare={() => onAnalysisViewChange("compare")}
         onOpenResults={() => onAnalysisViewChange("results")}
@@ -201,6 +218,8 @@ export default function BenchmarkAnalysisTab({
           selectedCaseId={selectedCaseId}
           onSelectRun={onSelectRun}
           onSelectCase={onSelectCase}
+          caseFamily={caseFamilyParam}
+          compareContext={compareContext}
         />
       ) : null}
     </Box>

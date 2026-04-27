@@ -31,6 +31,8 @@ def test_extraction_llm_scope_allows_ingest_llm_and_vl(monkeypatch) -> None:
         pass
     with llm_span("llm.metadata_extraction"):
         pass
+    with llm_span("llm.semantic_method_dataset"):
+        pass
     with chain_span("ingest.extract_claims.llm"):
         pass
     with llm_span("llm.agent.writer"):
@@ -43,4 +45,5 @@ def test_extraction_llm_scope_allows_ingest_llm_and_vl(monkeypatch) -> None:
     assert "llm.vl_pdf" in names
     assert "llm.claims_extraction" in names
     assert "llm.metadata_extraction" in names
+    assert "llm.semantic_method_dataset" in names
     assert "llm.agent.writer" not in names

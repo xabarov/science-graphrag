@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
@@ -20,12 +20,15 @@ import WorkspaceGraphToolbar from "./WorkspaceGraphToolbar.jsx";
 import { useGraphWorkspaceData } from "./hooks/useGraphWorkspaceData.js";
 import { useGraphSelectionReconcile } from "./hooks/useGraphSelectionReconcile.js";
 import { useGraphWorkspaceProjection } from "./hooks/useGraphWorkspaceProjection.js";
+import { detectCommunitiesForUi } from "./physics/structuralCommunities.js";
 
 const LS_GRAPH_CANVAS_LAYOUT_MODE = "graphCanvasLayoutMode";
 const LS_GRAPH_VIZ_MODE = "graphVizMode";
 const LS_STANDALONE_DETAILS = "graphStandaloneDetailsVisible";
 const LS_STANDALONE_LEGEND = "graphStandaloneLegendOpen";
 const LS_EMBEDDED_LEGEND = "graphEmbeddedLegendOpen";
+const LS_GRAPH_CANVAS_COLOR_BY = "graphCanvasColorBy";
+const LS_GRAPH_CANVAS_COMMUNITY_HULLS = "graphCanvasCommunityHulls";
 
 function readLsMode() {
   if (typeof window === "undefined") return "canvas";
@@ -55,6 +58,18 @@ function readBoolLs(key, fallback) {
   } catch {
     return fallback;
   }
+}
+
+/** @returns {"type" | "community"} */
+function readGraphColorByStored() {
+  if (typeof window === "undefined") return "type";
+  try {
+    const v = window.localStorage.getItem(LS_GRAPH_CANVAS_COLOR_BY);
+    if (v === "type" || v === "community") return v;
+  } catch {
+    /* ignore */
+  }
+  return "type";
 }
 
 export default function GraphWorkspacePanel({
@@ -100,6 +115,8 @@ export default function GraphWorkspacePanel({
   const [localFindQuery, setLocalFindQuery] = useState("");
   const [centerCanvasNonce, setCenterCanvasNonce] = useState(0);
   const [centerCanvasNodeId, setCenterCanvasNodeId] = useState("");
+  const [graphColorBy, setGraphColorBy] = useState(() => readGraphColorByStored());
+  const [graphCommunityHulls, setGraphCommunityHulls] = useState(() => readBoolLs(LS_GRAPH_CANVAS_COMMUNITY_HULLS, false));
 
   useEffect(() => {
     if (standalone) window.localStorage.setItem(LS_GRAPH_STANDALONE_DETAIL_MIN_PX, String(detailMinPx));
@@ -118,8 +135,22 @@ export default function GraphWorkspacePanel({
     if (!standalone) window.localStorage.setItem(LS_GRAPH_CANVAS_LAYOUT_MODE, canvasLayoutMode);
   }, [standalone, canvasLayoutMode]);
 
-  const effectiveVizMode = standalone ? "canvas" : vizMode;
-  const effectiveCanvasLayout = standalone ? "force" : canvasLayoutMode;
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(LS_GRAPH_CANVAS_COLOR_BY, graphColorBy);
+    } catch {
+      /* ignore */
+    }
+  }, [graphColorBy]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(LS_GRAPH_CANVAS_COMMUNITY_HULLS, graphCommunityHulls ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  }, [graphCommunityHulls]);
+
   const {
     projectedGraph,
     visibleGraph,
@@ -139,6 +170,34 @@ export default function GraphWorkspacePanel({
     localFindQuery,
     t,
   });
+
+  const effectiveVizMode = standalone ? "canvas" : vizMode;
+  const effectiveCanvasLayout = standalone ? "force" : canvasLayoutMode;
+
+  const displayGraphNodes = displayGraph?.nodes;
+  const displayGraphEdges = displayGraph?.edges;
+
+  const nodeCommunityMap = useMemo(() => {
+    const nodes = displayGraphNodes || [];
+    const edges = displayGraphEdges || [];
+    if (!nodes.length) return new Map();
+    const simNodes = nodes.map((n) => ({
+      id: n.id,
+      type: n.type == null ? "Node" : String(n.type),
+      workspaceMembership: n.workspaceMembership == null ? "" : String(n.workspaceMembership).trim().toLowerCase(),
+    }));
+    const simLinks = edges.map((e) => ({
+      source: e.source,
+      target: e.target,
+      type: e.type == null ? "edge" : String(e.type),
+    }));
+    return detectCommunitiesForUi(simNodes, simLinks);
+  }, [displayGraphNodes, displayGraphEdges]);
+
+  const handleGraphColorByChange = useCallback((v) => {
+    setGraphColorBy(v);
+    if (v === "type") setGraphCommunityHulls(false);
+  }, []);
 
   useGraphSelectionReconcile({
     selectedNodeId,
@@ -213,7 +272,7 @@ export default function GraphWorkspacePanel({
           {projectedGraph.warnings.length > 0 ? <Alert severity="info" sx={{ mb: 1 }}>Graph data was normalized</Alert> : null}
           {capWarnings.length > 0 ? <Alert severity="info" sx={{ mb: 1 }}>Large graph - UI cap is active</Alert> : null}
           <Collapse in={legendOpen}>
-            <GraphTypeLegend graph={displayGraph} />
+            <GraphTypeLegend graph={displayGraph} colorBy={graphColorBy} nodeCommunityMap={nodeCommunityMap} />
           </Collapse>
           <Box
             sx={{
@@ -251,6 +310,11 @@ export default function GraphWorkspacePanel({
                   searchMatchIds={nodeSearchMatchIds}
                   centerRequestNonce={centerCanvasNonce}
                   centerRequestNodeId={centerCanvasNodeId}
+                  graphColorBy={graphColorBy}
+                  onGraphColorByChange={handleGraphColorByChange}
+                  graphCommunityHulls={graphCommunityHulls}
+                  onGraphCommunityHullsChange={setGraphCommunityHulls}
+                  nodeCommunityMap={nodeCommunityMap}
                 />
               )}
             </Box>

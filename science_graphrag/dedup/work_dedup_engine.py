@@ -11,6 +11,7 @@ from science_graphrag.dedup.fingerprints import work_pair_fingerprint
 from science_graphrag.dedup.prompts import SYSTEM_SAME_WORK, USER_SAME_WORK_TEMPLATE
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
 from science_graphrag.ingestion.llm.extractor import SyncInstructorExtractor
+from science_graphrag.observability.phoenix_tracer import SpanAttributes, llm_span
 from science_graphrag.storage.models_orm import WorkDedupConflict
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 from science_graphrag.storage.qdrant_store import QdrantWorkEmbeddingStore
@@ -74,7 +75,20 @@ def _llm_same_work(
         timeout_seconds=float(settings.work_dedup_llm_timeout_s),
         mode=settings.extraction_llm_mode,
     )
-    parsed, err = ext.extract_maybe(SameWorkJudgment, system=SYSTEM_SAME_WORK, user=user)
+    transport_s = float(settings.work_dedup_llm_timeout_s)
+    with llm_span(
+        "llm.dedup.same_work",
+        {
+            **SpanAttributes.llm_runtime_policy_attributes(
+                pool_name="dedup",
+                transport_timeout_seconds=transport_s,
+                timeout_contract="transport_only",
+                retry_extra_budget=0,
+            ),
+            "dedup.judgment": "same_work",
+        },
+    ):
+        parsed, err = ext.extract_maybe(SameWorkJudgment, system=SYSTEM_SAME_WORK, user=user)
     if err or parsed is None:
         log.warning("work_dedup_llm: %s", err)
         return None, err

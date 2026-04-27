@@ -6,6 +6,21 @@ import {
 import { clipSegmentByDiscInsets, distancePointToSegment } from "./graphCanvasGeometry.js";
 import { worldToScreen } from "./graphCanvasTransform.js";
 
+/**
+ * @param {string} stroke
+ * @returns {string}
+ */
+export function strokeAtHalfAlpha(stroke) {
+  const m = String(stroke).match(/rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d.]+)\s*\)/i);
+  if (m) {
+    const a = Math.min(1, (parseFloat(m[4]) || 0.5) * 0.5);
+    return `rgba(${m[1]}, ${m[2]}, ${m[3]}, ${a})`;
+  }
+  const m2 = String(stroke).match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i);
+  if (m2) return `rgba(${m2[1]}, ${m2[2]}, ${m2[3]}, 0.5)`;
+  return stroke;
+}
+
 const LABEL_FONT =
   '600 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif';
 const EDGE_LABEL_FONT =
@@ -23,6 +38,48 @@ export const EDGE_LABEL_ADAPTIVE_MAX_EDGES = 72;
 
 /** Below this screen scale (1 = 1px per world unit before pan), adaptive mode treats the view as zoomed out. */
 export const EDGE_LABEL_ADAPTIVE_MIN_SCALE = 0.32;
+
+/** When node count exceeds this or scale is below {@link NODE_LABEL_ADAPTIVE_MIN_SCALE}, community-mode node labels are gated. */
+export const NODE_LABEL_ADAPTIVE_MAX_NODES = 56;
+
+/** Below this scale, community-mode hides most node labels (selected/hovered/search hits still show). */
+export const NODE_LABEL_ADAPTIVE_MIN_SCALE = 0.34;
+
+/**
+ * Whether to draw a node's canvas label box in community color mode under density / search rules.
+ *
+ * @param {{
+ *   colorBy?: "type" | "community",
+ *   transform?: { scale?: number },
+ *   nodeCount?: number,
+ *   searchActive?: boolean,
+ *   searchMatchSet?: Set<string> | null,
+ *   nodeId?: string,
+ *   styleEntry?: { selected?: boolean, hovered?: boolean, searchDim?: boolean },
+ * }} opts
+ * @returns {boolean}
+ */
+export function shouldDrawCanvasNodeLabel(opts) {
+  const colorBy = opts.colorBy === "community" ? "community" : "type";
+  if (colorBy !== "community") return true;
+  const id = String(opts.nodeId ?? "");
+  const sm = opts.styleEntry || {};
+  if (sm.selected || sm.hovered) return true;
+
+  const scale = opts.transform && Number.isFinite(Number(opts.transform.scale)) ? Number(opts.transform.scale) : 1;
+  const n = typeof opts.nodeCount === "number" && Number.isFinite(opts.nodeCount) ? opts.nodeCount : 0;
+  const dense = n > NODE_LABEL_ADAPTIVE_MAX_NODES || scale < NODE_LABEL_ADAPTIVE_MIN_SCALE;
+  const searchActive = Boolean(opts.searchActive);
+  const set = opts.searchMatchSet instanceof Set ? opts.searchMatchSet : null;
+
+  if (searchActive) {
+    const inSearch = set ? set.has(id) : false;
+    if (sm.searchDim || !inSearch) return false;
+    return true;
+  }
+  if (dense) return false;
+  return true;
+}
 
 /**
  * Whether to paint an edge's mid-label on canvas (node labels are unaffected).
@@ -106,24 +163,41 @@ export function drawEdges(ctx, edges, nodeMap, positions, transform, styleMap = 
 
 export function drawNodes(ctx, nodes, positions, transform, styleMap = {}, drawOpts = {}) {
   const appearance = String(drawOpts.appearance || "dark") === "light" ? "light" : "dark";
+  const colorBy = drawOpts.colorBy === "community" ? "community" : "type";
+  const nodeCommunityMap = drawOpts.nodeCommunityMap instanceof Map ? drawOpts.nodeCommunityMap : null;
+  const communityColorStyleMap =
+    drawOpts.communityColorStyleMap instanceof Map ? drawOpts.communityColorStyleMap : null;
   const { scale, tx, ty } = transform;
   for (const node of nodes) {
     const pw = positions.get(node.id);
     if (!pw) continue;
     const p = worldToScreen(pw.x, pw.y, scale, tx, ty);
+    const sid = String(node.id || "");
+    const sm = styleMap[sid] || {};
     const style = getScienceGraphNodeStyle(node.type, {
-      selected: Boolean(styleMap[String(node.id || "")]?.selected),
-      hovered: Boolean(styleMap[String(node.id || "")]?.hovered),
+      selected: Boolean(sm.selected),
+      hovered: Boolean(sm.hovered),
       workspaceMembership: node.workspaceMembership,
       nodeKind: node.nodeKind,
-      searchDim: Boolean(styleMap[String(node.id || "")]?.searchDim),
+      searchDim: Boolean(sm.searchDim),
       appearance,
     });
+    let fillStyle = style.fill;
+    let strokeStyle = style.stroke;
+    const skipCommunityFill = Boolean(sm.selected || sm.hovered || sm.searchDim);
+    if (colorBy === "community" && nodeCommunityMap && communityColorStyleMap && !skipCommunityFill) {
+      const cid = nodeCommunityMap.get(sid);
+      if (cid != null) {
+        const cs = communityColorStyleMap.get(String(cid));
+        if (cs?.fill) fillStyle = cs.fill;
+        strokeStyle = strokeAtHalfAlpha(style.stroke);
+      }
+    }
     ctx.beginPath();
     ctx.arc(p.x, p.y, NODE_RADIUS, 0, 2 * Math.PI);
-    ctx.fillStyle = style.fill;
+    ctx.fillStyle = fillStyle;
     ctx.fill();
-    ctx.strokeStyle = style.stroke;
+    ctx.strokeStyle = strokeStyle;
     ctx.lineWidth = style.lineWidth;
     if (Array.isArray(style.strokeDash) && style.strokeDash.length > 0) ctx.setLineDash(style.strokeDash);
     ctx.stroke();
@@ -147,6 +221,10 @@ export function drawNodes(ctx, nodes, positions, transform, styleMap = {}, drawO
  *   edgeLabelMode?: "all" | "interaction" | "adaptive",
  *   edgeCountForAdaptive?: number,
  *   appearance?: "light" | "dark",
+ *   colorBy?: "type" | "community",
+ *   nodeCountForAdaptive?: number,
+ *   searchActive?: boolean,
+ *   searchMatchSet?: Set<string> | null,
  * }} DrawLabelOptions
  */
 
@@ -182,6 +260,13 @@ export function drawLabels(ctx, nodes, edges, positions, transform, styleMap = {
     typeof drawOptions.edgeCountForAdaptive === "number" && Number.isFinite(drawOptions.edgeCountForAdaptive)
       ? drawOptions.edgeCountForAdaptive
       : edgeList.length;
+  const colorBy = drawOptions.colorBy === "community" ? "community" : "type";
+  const nodeCountForAdaptive =
+    typeof drawOptions.nodeCountForAdaptive === "number" && Number.isFinite(drawOptions.nodeCountForAdaptive)
+      ? drawOptions.nodeCountForAdaptive
+      : (Array.isArray(nodes) ? nodes.length : [...nodes].length);
+  const searchActive = Boolean(drawOptions.searchActive);
+  const searchMatchSet = drawOptions.searchMatchSet instanceof Set ? drawOptions.searchMatchSet : null;
   ctx.font = EDGE_LABEL_FONT;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -216,7 +301,22 @@ export function drawLabels(ctx, nodes, edges, positions, transform, styleMap = {
     const pw = positions.get(node.id);
     if (!pw) continue;
     const p = worldToScreen(pw.x, pw.y, scale, tx, ty);
-    const sel = Boolean(styleMap[String(node.id || "")]?.selected);
+    const sid = String(node.id || "");
+    const sm = styleMap[sid] || {};
+    const sel = Boolean(sm.selected);
+    if (
+      !shouldDrawCanvasNodeLabel({
+        colorBy,
+        transform,
+        nodeCount: nodeCountForAdaptive,
+        searchActive,
+        searchMatchSet,
+        nodeId: sid,
+        styleEntry: sm,
+      })
+    ) {
+      continue;
+    }
     const resolvedNode = resolveNode ? resolveNode(node) : null;
     const rawLabel =
       resolvedNode != null && String(resolvedNode).trim()
@@ -262,12 +362,29 @@ export function hitTestNode(worldX, worldY, nodeMap, positions) {
  * @param {Map<string, { x: number, y: number }>} positions
  * @param {{ scale: number, tx: number, ty: number }} transform
  * @param {(node: object) => string | null | undefined} [resolveNodeLabel]
+ * @param {{
+ *   colorBy?: "type" | "community",
+ *   nodeCount?: number,
+ *   searchActive?: boolean,
+ *   searchMatchSet?: Set<string> | null,
+ *   selectedNodeId?: string,
+ *   hoveredNodeId?: string,
+ * }} [nodeLabelHitOpts]
  * @returns {string} node id or ""
  */
-export function hitTestNodeScreen(lx, ly, nodes, positions, transform, resolveNodeLabel) {
+export function hitTestNodeScreen(lx, ly, nodes, positions, transform, resolveNodeLabel, nodeLabelHitOpts = {}) {
   const { scale, tx, ty } = transform;
   const list = Array.isArray(nodes) ? [...nodes] : [...nodes];
   const resolveNode = typeof resolveNodeLabel === "function" ? resolveNodeLabel : null;
+  const colorBy = nodeLabelHitOpts.colorBy === "community" ? "community" : "type";
+  const nodeCount =
+    typeof nodeLabelHitOpts.nodeCount === "number" && Number.isFinite(nodeLabelHitOpts.nodeCount)
+      ? nodeLabelHitOpts.nodeCount
+      : list.length;
+  const searchActive = Boolean(nodeLabelHitOpts.searchActive);
+  const searchMatchSet = nodeLabelHitOpts.searchMatchSet instanceof Set ? nodeLabelHitOpts.searchMatchSet : null;
+  const selectedNodeId = nodeLabelHitOpts.selectedNodeId != null ? String(nodeLabelHitOpts.selectedNodeId) : "";
+  const hoveredNodeId = nodeLabelHitOpts.hoveredNodeId != null ? String(nodeLabelHitOpts.hoveredNodeId) : "";
   for (let i = list.length - 1; i >= 0; i -= 1) {
     const node = list[i];
     const pw = positions.get(node.id);
@@ -276,6 +393,25 @@ export function hitTestNodeScreen(lx, ly, nodes, positions, transform, resolveNo
     const cdx = lx - p.x;
     const cdy = ly - p.y;
     if (cdx * cdx + cdy * cdy <= NODE_RADIUS * NODE_RADIUS) return String(node.id);
+    const sid = String(node.id || "");
+    const styleEntry = {
+      selected: sid === selectedNodeId,
+      hovered: !selectedNodeId && sid === hoveredNodeId,
+      searchDim: searchActive && searchMatchSet && !searchMatchSet.has(sid),
+    };
+    if (
+      !shouldDrawCanvasNodeLabel({
+        colorBy,
+        transform,
+        nodeCount,
+        searchActive,
+        searchMatchSet,
+        nodeId: sid,
+        styleEntry,
+      })
+    ) {
+      continue;
+    }
     const resolvedNode = resolveNode ? resolveNode(node) : null;
     const rawLabel =
       resolvedNode != null && String(resolvedNode).trim()

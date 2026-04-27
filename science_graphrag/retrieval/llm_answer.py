@@ -7,6 +7,7 @@ from typing import Any
 from openai import OpenAI
 
 from science_graphrag.config import Settings
+from science_graphrag.observability.phoenix_tracer import SpanAttributes, llm_span
 
 
 def _try_query_answer_llm(
@@ -37,8 +38,8 @@ def _try_query_answer_llm(
     system = (
         "You are a scientific assistant. Answer ONLY using the numbered excerpts. "
         "If the excerpts do not address the question (wrong paper, wrong topic, or unrelated "
-        "content), start your reply with one of: \"No paper in the retrieved context\", "
-        "\"The retrieved excerpts do not support\", or \"Not present in the excerpts\" — "
+        'content), start your reply with one of: "No paper in the retrieved context", '
+        '"The retrieved excerpts do not support", or "Not present in the excerpts" — '
         "then one short sentence. Do not invent citations, DOIs, or facts unsupported by excerpts. "
         "If the question asks for a multi-step procedure or pipeline, answer with a numbered list "
         "(1., 2., 3.) and map each step to what the excerpts state."
@@ -53,20 +54,31 @@ def _try_query_answer_llm(
         )
     try:
         timeout = min(float(settings.extraction_llm_timeout_seconds), 120.0)
-        client = OpenAI(
-            api_key=api_key,
-            base_url=settings.extraction_llm_base_url,
-            timeout=timeout,
-        )
-        resp = client.chat.completions.create(
-            model=settings.extraction_llm_model,
-            temperature=float(settings.query_answer_llm_temperature),
-            max_tokens=int(settings.query_answer_llm_max_tokens),
-            messages=[
-                {"role": "system", "content": system},
-                {"role": "user", "content": user},
-            ],
-        )
+        with llm_span(
+            "llm.query_answer",
+            {
+                **SpanAttributes.llm_runtime_policy_attributes(
+                    pool_name="query_answer",
+                    transport_timeout_seconds=float(timeout),
+                    timeout_contract="transport_only",
+                    retry_extra_budget=0,
+                ),
+            },
+        ):
+            client = OpenAI(
+                api_key=api_key,
+                base_url=settings.extraction_llm_base_url,
+                timeout=timeout,
+            )
+            resp = client.chat.completions.create(
+                model=settings.extraction_llm_model,
+                temperature=float(settings.query_answer_llm_temperature),
+                max_tokens=int(settings.query_answer_llm_max_tokens),
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user},
+                ],
+            )
         text = (resp.choices[0].message.content or "").strip()
         if not text:
             return None, {"error": "empty_llm_response"}

@@ -76,6 +76,7 @@ def test_unbounded_workspace_returns_full_corpus() -> None:
         qdrant_works=MagicMock(),
         qdrant_claims=MagicMock(),
         blob=MagicMock(),
+        artifacts=MagicMock(),
     )
     hits = [
         {

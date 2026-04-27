@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NLP Advanced Defense Slides</title>
+  <style>
+    :root {
+      --bg: #f4efe6;
+      --paper: #fbf8f2;
+      --paper-strong: #fffdf8;
+      --ink: #161b22;
+      --ink-soft: #4e5968;
+      --accent: #8e3b2e;
+      --accent-soft: rgba(142, 59, 46, 0.1);
+      --line: rgba(22, 27, 34, 0.12);
+      --shadow: 0 28px 60px rgba(33, 32, 28, 0.12);
+      --radius: 28px;
+      --slide-width: 1440px;
+      --slide-height: 810px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: "Avenir Next", "Segoe UI", "Liberation Sans", sans-serif;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.15)),
+        radial-gradient(circle at top left, rgba(142, 59, 46, 0.08), transparent 30%),
+        linear-gradient(var(--line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--line) 1px, transparent 1px),
+        var(--bg);
+      background-size: auto, auto, 32px 32px, 32px 32px, auto;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    code {
+      padding: 0.18em 0.5em;
+      border-radius: 999px;
+      background: rgba(22, 27, 34, 0.06);
+      font-size: 0.9em;
+      color: #243041;
+      font-family: "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono", monospace;
+    }
+
+    .deck {
+      width: 100vw;
+      height: 100vh;
+      padding: 28px 24px;
+      display: flex;
+      gap: 24px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: 24px;
+      overscroll-behavior-x: contain;
+      overscroll-behavior-y: none;
+    }
+
+    .deck-header {
+      position: fixed;
+      top: 12px;
+      left: 0;
+      right: 0;
+      z-index: 20;
+      display: flex;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .deck::-webkit-scrollbar {
+      display: none;
+    }
+
+    .deck-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      max-width: min(96vw, 1100px);
+      padding: 12px 16px;
+      border: 1px solid rgba(22, 27, 34, 0.08);
+      border-radius: 999px;
+      background: rgba(251, 248, 242, 0.9);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+      pointer-events: auto;
+    }
+
+    .deck-nav a {
+      text-decoration: none;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      padding: 7px 12px;
+      border-radius: 999px;
+      transition: background-color 0.18s ease, color 0.18s ease;
+    }
+
+    .deck-nav a:hover {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .slide {
+      position: relative;
+      flex: 0 0 calc(100vw - 48px);
+      width: calc(100vw - 48px);
+      height: calc(100vh - 56px);
+      padding: 52px 58px;
+      background: linear-gradient(180deg, var(--paper-strong), var(--paper));
+      border: 1px solid rgba(22, 27, 34, 0.08);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: auto;
+      display: grid;
+      gap: 28px;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+    }
+
+    .slide::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 100% 0%, rgba(142, 59, 46, 0.12), transparent 24%),
+        radial-gradient(circle at 0% 100%, rgba(20, 46, 85, 0.08), transparent 18%);
+      pointer-events: none;
+    }
+
+    .slide > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .slide-tag {
+      font-size: 13px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      font-family: "Palatino Linotype", "Book Antiqua", Palatino, "URW Palladio L", serif;
+      font-weight: 700;
+      line-height: 0.96;
+      letter-spacing: -0.03em;
+    }
+
+    h1 {
+      font-size: clamp(62px, 6.3vw, 102px);
+      max-width: 1060px;
+    }
+
+    h2 {
+      font-size: clamp(38px, 4vw, 58px);
+    }
+
+    h3 {
+      font-size: 24px;
+    }
+
+    p {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.42;
+      color: var(--ink-soft);
+    }
+
+    ul,
+    ol {
+      margin: 0;
+      padding-left: 24px;
+      color: var(--ink);
+      font-size: 23px;
+      line-height: 1.42;
+    }
+
+    li + li {
+      margin-top: 10px;
+    }
+
+    .muted {
+      color: var(--ink-soft);
+    }
+
+    .lead {
+      font-size: 26px;
+      max-width: 980px;
+      color: #273242;
+    }
+
+    .sublead {
+      max-width: 900px;
+      font-size: 20px;
+    }
+
+    .meta-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      font-size: 18px;
+      color: var(--ink-soft);
+    }
+
+    .accent-line {
+      width: 180px;
+      height: 6px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent), rgba(142, 59, 46, 0.12));
+    }
+
+    .title-layout {
+      display: grid;
+      grid-template-columns: 1.45fr 1.1fr;
+      gap: 34px;
+      align-items: center;
+      min-height: calc(100% - 220px);
+    }
+
+    .title-panel {
+      display: grid;
+      gap: 22px;
+      align-content: center;
+      padding-right: 24px;
+    }
+
+    .side-note,
+    .paper-card,
+    .metric-card,
+    .placeholder,
+    .tech-card,
+    .callout,
+    .summary-box,
+    .artifact-card {
+      border-radius: 24px;
+      border: 1px solid rgba(22, 27, 34, 0.09);
+      background: rgba(255, 255, 255, 0.72);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    .side-note {
+      min-height: 240px;
+      padding: 34px 36px;
+      align-self: center;
+      display: grid;
+      gap: 18px;
+      align-content: center;
+      background:
+        linear-gradient(180deg, rgba(255, 250, 240, 0.95), rgba(252, 246, 237, 0.95));
+    }
+
+    .side-note p {
+      font-size: 24px;
+      line-height: 1.4;
+    }
+
+    .title-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+      align-self: end;
+    }
+
+    .title-chip {
+      min-height: 184px;
+      padding: 30px 32px;
+      border-radius: 22px;
+      border: 1px solid rgba(22, 27, 34, 0.08);
+      background: rgba(255, 255, 255, 0.76);
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+
+    .title-chip .chip-label {
+      font-size: 14px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .title-chip p {
+      font-size: 24px;
+      color: #2a394b;
+      line-height: 1.35;
+    }
+
+    .plan-layout,
+    .two-col,
+    .three-col,
+    .results-grid,
+    .artifact-grid,
+    .footer-grid {
+      display: grid;
+      gap: 22px;
+    }
+
+    .plan-layout {
+      grid-template-columns: 0.95fr 1.05fr;
+      align-items: stretch;
+    }
+
+    .plan-list {
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+
+    .plan-item {
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      gap: 14px;
+      align-items: center;
+      padding: 18px 22px;
+      border-radius: 22px;
+      border: 1px solid rgba(22, 27, 34, 0.08);
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    .plan-item strong {
+      font-size: 30px;
+      font-family: "Palatino Linotype", "Book Antiqua", Palatino, "URW Palladio L", serif;
+      color: var(--accent);
+    }
+
+    .plan-item span {
+      font-size: 24px;
+      line-height: 1.25;
+    }
+
+    .callout {
+      padding: 26px 28px;
+      background:
+        linear-gradient(180deg, rgba(142, 59, 46, 0.09), rgba(142, 59, 46, 0.04)),
+        rgba(255, 255, 255, 0.8);
+      display: grid;
+      gap: 12px;
+      align-content: center;
+    }
+
+    .callout .eyebrow {
+      font-size: 13px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .callout p {
+      font-size: 22px;
+      color: #213041;
+    }
+
+    .two-col {
+      grid-template-columns: 1.15fr 0.85fr;
+      align-items: start;
+    }
+
+    .three-col {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .paper-card {
+      padding: 24px 26px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .paper-card p,
+    .paper-card li {
+      font-size: 20px;
+    }
+
+    .inline-flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .flow-chip {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(22, 27, 34, 0.05);
+      border: 1px solid rgba(22, 27, 34, 0.1);
+      font-size: 15px;
+      letter-spacing: 0.04em;
+      color: #273242;
+    }
+
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+    }
+
+    .tech-card {
+      padding: 20px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .tech-card h3 {
+      font-size: 22px;
+    }
+
+    .tech-card ul {
+      padding-left: 18px;
+      font-size: 18px;
+    }
+
+    .placeholder {
+      position: relative;
+      padding: 24px;
+      min-height: 240px;
+      display: grid;
+      gap: 10px;
+      align-content: center;
+      background:
+        linear-gradient(135deg, rgba(142, 59, 46, 0.08), rgba(20, 46, 85, 0.04)),
+        rgba(255, 255, 255, 0.66);
+      overflow: hidden;
+    }
+
+    .placeholder::after {
+      content: "";
+      position: absolute;
+      inset: 16px;
+      border: 2px dashed rgba(142, 59, 46, 0.25);
+      border-radius: 18px;
+      pointer-events: none;
+    }
+
+    .placeholder.large {
+      min-height: 360px;
+    }
+
+    .placeholder .label {
+      font-size: 13px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .placeholder strong {
+      font-size: 30px;
+      line-height: 1.06;
+      max-width: 720px;
+      font-family: "Palatino Linotype", "Book Antiqua", Palatino, "URW Palladio L", serif;
+    }
+
+    .placeholder p,
+    .placeholder li {
+      font-size: 18px;
+      color: #314155;
+    }
+
+    .results-grid {
+      grid-template-columns: 1.1fr 0.9fr;
+      align-items: start;
+    }
+
+    .metrics-panel {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .metric-card {
+      padding: 22px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .metric-card .metric-label {
+      font-size: 13px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .metric-card .metric-value {
+      font-size: 42px;
+      line-height: 0.98;
+      font-family: "Palatino Linotype", "Book Antiqua", Palatino, "URW Palladio L", serif;
+    }
+
+    .metric-card p {
+      font-size: 18px;
+    }
+
+    .artifact-grid {
+      grid-template-columns: 1.05fr 0.95fr;
+    }
+
+    .artifact-card {
+      padding: 22px 24px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .artifact-card code,
+    .artifact-card .path {
+      display: inline-block;
+      width: fit-content;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(22, 27, 34, 0.05);
+      font-size: 15px;
+      color: #253143;
+    }
+
+    .artifact-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .artifact-list div {
+      font-size: 19px;
+      color: #273242;
+    }
+
+    .split-note {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .phase-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .phase-card {
+      padding: 18px 20px;
+      border-radius: 20px;
+      border: 1px solid rgba(22, 27, 34, 0.08);
+      background: rgba(255, 255, 255, 0.68);
+      display: grid;
+      gap: 10px;
+    }
+
+    .phase-card .phase-label {
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .phase-card p {
+      font-size: 18px;
+      color: #2d3d50;
+    }
+
+    .summary-box {
+      padding: 20px 22px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .summary-box p,
+    .summary-box li {
+      font-size: 19px;
+    }
+
+    .visual-frame {
+      padding: 18px;
+      border-radius: 24px;
+      border: 1px solid rgba(22, 27, 34, 0.09);
+      background: rgba(255, 255, 255, 0.76);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 280px;
+    }
+
+    .visual-frame img {
+      display: block;
+      width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 18px;
+      border: 1px solid rgba(22, 27, 34, 0.08);
+      background: white;
+    }
+
+    .artifact-stack {
+      display: grid;
+      gap: 16px;
+    }
+
+    .artifact-block {
+      padding: 20px 22px;
+      border-radius: 22px;
+      border: 1px solid rgba(22, 27, 34, 0.08);
+      background: rgba(255, 255, 255, 0.76);
+      display: grid;
+      gap: 10px;
+    }
+
+    .artifact-block h3 {
+      font-size: 22px;
+    }
+
+    .artifact-block p,
+    .artifact-block li {
+      font-size: 18px;
+      color: #29384a;
+    }
+
+    .artifact-path-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .artifact-path-list code {
+      width: fit-content;
+    }
+
+    .demo-stage {
+      display: grid;
+      gap: 18px;
+      align-content: start;
+    }
+
+    .demo-card {
+      padding: 22px 24px;
+      border-radius: 24px;
+      border: 1px solid rgba(22, 27, 34, 0.08);
+      background: rgba(255, 255, 255, 0.76);
+      display: grid;
+      gap: 14px;
+    }
+
+    .demo-card p,
+    .demo-card li {
+      font-size: 18px;
+      color: #29384a;
+    }
+
+    .demo-query {
+      font-size: 24px;
+      line-height: 1.3;
+      color: #1f2c3d;
+      font-family: "Palatino Linotype", "Book Antiqua", Palatino, "URW Palladio L", serif;
+    }
+
+    .demo-layout {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .video-frame {
+      min-height: 390px;
+    }
+
+    .quote {
+      padding: 18px 20px;
+      border-left: 4px solid var(--accent);
+      background: rgba(142, 59, 46, 0.05);
+      font-size: 20px;
+      line-height: 1.42;
+      color: #223245;
+    }
+
+    .footer-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .footer-card {
+      padding: 24px;
+      border-radius: 24px;
+      border: 1px solid rgba(22, 27, 34, 0.08);
+      background: rgba(255, 255, 255, 0.72);
+      display: grid;
+      gap: 14px;
+    }
+
+    .footer-card h3 {
+      font-size: 28px;
+    }
+
+    .footer-card ul {
+      font-size: 20px;
+    }
+
+    .footer-mini {
+      font-size: 18px;
+      color: var(--ink-soft);
+    }
+
+    #slide-2 .plan-layout,
+    #slide-3 .two-col,
+    #slide-6 .artifact-grid,
+    #slide-8 .demo-layout,
+    #slide-9 .footer-grid {
+      align-items: stretch;
+    }
+
+    #slide-2 .plan-item {
+      min-height: 86px;
+      padding: 24px 26px;
+    }
+
+    #slide-2 .plan-item strong {
+      font-size: 36px;
+    }
+
+    #slide-2 .plan-item span {
+      font-size: 26px;
+    }
+
+    #slide-2 .visual-frame {
+      min-height: 420px;
+    }
+
+    #slide-2 .quote {
+      min-height: 136px;
+      display: grid;
+      align-content: center;
+      font-size: 23px;
+    }
+
+    #slide-3 .paper-card {
+      min-height: 300px;
+      padding: 30px 32px;
+    }
+
+    #slide-3 .paper-card h3 {
+      font-size: 28px;
+    }
+
+    #slide-3 .paper-card p,
+    #slide-3 .paper-card li {
+      font-size: 22px;
+      line-height: 1.42;
+    }
+
+    #slide-3 .flow-chip {
+      padding: 12px 16px;
+      font-size: 16px;
+    }
+
+    #slide-3 .callout {
+      min-height: 180px;
+      padding: 34px 36px;
+    }
+
+    #slide-3 .callout p {
+      font-size: 24px;
+    }
+
+    #slide-6 .artifact-block {
+      min-height: 190px;
+      padding: 26px 28px;
+    }
+
+    #slide-6 .artifact-block h3 {
+      font-size: 26px;
+    }
+
+    #slide-6 .artifact-block p,
+    #slide-6 .artifact-block li {
+      font-size: 20px;
+      line-height: 1.4;
+    }
+
+    #slide-6 .callout {
+      min-height: 140px;
+      padding: 30px 34px;
+    }
+
+    #slide-6 .callout p {
+      font-size: 23px;
+    }
+
+    #slide-8 .demo-card,
+    #slide-8 .paper-card {
+      min-height: 220px;
+      padding: 28px 30px;
+    }
+
+    #slide-8 .video-frame {
+      min-height: 320px;
+    }
+
+    #slide-8 .paper-card h3 {
+      font-size: 28px;
+    }
+
+    #slide-8 .paper-card p,
+    #slide-8 .paper-card li {
+      font-size: 21px;
+    }
+
+    #slide-8 .quote {
+      min-height: 120px;
+      display: grid;
+      align-content: center;
+      font-size: 22px;
+    }
+
+    #slide-9 .footer-card,
+    #slide-9 .summary-box {
+      min-height: 240px;
+      padding: 30px 32px;
+    }
+
+    #slide-9 .footer-card h3,
+    #slide-9 .summary-box h3 {
+      font-size: 30px;
+    }
+
+    #slide-9 .footer-card ul,
+    #slide-9 .summary-box ul,
+    #slide-9 .summary-box p {
+      font-size: 21px;
+      line-height: 1.42;
+    }
+
+    .slide-number {
+      position: absolute;
+      right: 30px;
+      bottom: 20px;
+      font-size: 15px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(22, 27, 34, 0.42);
+    }
+
+    @media (max-width: 1200px) {
+      body {
+        overflow: auto;
+      }
+
+      .deck {
+        width: 100%;
+        height: auto;
+        display: block;
+        overflow: visible;
+        padding: 28px 24px 120px;
+      }
+
+      .slide {
+        width: 100%;
+        height: auto;
+        flex: none;
+        padding: 40px 34px;
+        margin: 0 auto 28px;
+      }
+
+      .title-layout,
+      .plan-layout,
+      .two-col,
+      .results-grid,
+      .artifact-grid,
+      .demo-layout,
+      .footer-grid,
+      .split-note,
+      .phase-grid,
+      .title-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .tech-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .three-col,
+      .metrics-panel {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .deck {
+        padding-inline: 12px;
+      }
+
+      .slide {
+        padding: 28px 22px 54px;
+        border-radius: 24px;
+      }
+
+      .tech-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .plan-item {
+        grid-template-columns: 52px 1fr;
+      }
+
+      p,
+      ul,
+      ol {
+        font-size: 18px;
+      }
+    }
+
+    @media print {
+      body {
+        background: white;
+        overflow: visible;
+      }
+
+      .deck {
+        padding: 0;
+        display: block;
+        overflow: visible;
+        height: auto;
+        width: 100%;
+      }
+
+      .deck-header {
+        display: none;
+      }
+
+      .slide {
+        width: 100%;
+        min-height: 100vh;
+        height: auto;
+        flex: none;
+        margin: 0;
+        border-radius: 0;
+        box-shadow: none;
+        border: none;
+        page-break-after: always;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck">
+    <div class="deck-header">
+      <nav class="deck-nav" aria-label="Навигация по слайдам">
+        <a href="#slide-1">01</a>
+        <a href="#slide-2">02</a>
+        <a href="#slide-3">03</a>
+        <a href="#slide-4">04</a>
+        <a href="#slide-5">05</a>
+        <a href="#slide-6">06</a>
+        <a href="#slide-7">07</a>
+        <a href="#slide-8">08</a>
+        <a href="#slide-9">09</a>
+      </nav>
+    </div>
+
+    <section class="slide" id="slide-1">
+      <div class="title-layout">
+        <div class="title-panel">
+          <div class="slide-tag">NLP. Advanced</div>
+          <h1>Интеллектуальная система поддержки научного исследования на основе GraphRAG</h1>
+          <div class="accent-line"></div>
+          <p class="lead">
+            GraphRAG, агентный поиск и проверяемые ответы по научным статьям.
+          </p>
+          <div class="meta-line">
+            <span>Роман</span>
+            <span>Итоговый проект</span>
+            <span>Репозиторий: <strong><code>science-graphrag</code></strong></span>
+          </div>
+        </div>
+        <aside class="side-note">
+          <div class="slide-tag">Фокус защиты</div>
+          <p>
+            Не просто RAG над документами, а исследовательская система, где важны
+            структура знаний, цитаты, трассируемость и честная оценка качества.
+          </p>
+          <p class="muted">
+            Основной narrative: <strong>система реализована</strong>,
+            <strong>GraphRAG здесь оправдан</strong>, <strong>метрики не декоративны</strong>.
+          </p>
+        </aside>
+      </div>
+      <div class="title-strip">
+        <div class="title-chip">
+          <div class="chip-label">Problem</div>
+          <p>Нужен не просто RAG, а исследовательский инструмент с графовой структурой и цитатами.</p>
+        </div>
+        <div class="title-chip">
+          <div class="chip-label">System</div>
+          <p>Corpus ingestion, knowledge graph, retrieval, supervisor-based runtime и проверяемые ответы.</p>
+        </div>
+        <div class="title-chip">
+          <div class="chip-label">Result</div>
+          <p>Рабочая GraphRAG-система и честная benchmark-оценка, которая не скрывает ограничения.</p>
+        </div>
+      </div>
+      <div class="slide-number">01</div>
+    </section>
+
+    <section class="slide" id="slide-2">
+      <div class="slide-tag">Структура выступления</div>
+      <h2>План защиты</h2>
+      <div class="plan-layout">
+        <div class="plan-list">
+          <div class="plan-item">
+            <strong>01</strong>
+            <span>Цель и задачи проекта</span>
+          </div>
+          <div class="plan-item">
+            <strong>02</strong>
+            <span>Какие технологии использовались</span>
+          </div>
+          <div class="plan-item">
+            <strong>03</strong>
+            <span>Что получилось: архитектура, продукт, результаты, демо</span>
+          </div>
+          <div class="plan-item">
+            <strong>04</strong>
+            <span>Выводы и ограничения</span>
+          </div>
+          <div class="plan-item">
+            <strong>05</strong>
+            <span>Вопросы и дальнейшее развитие</span>
+          </div>
+        </div>
+        <div class="visual-frame">
+          <img src="assets/defense/slide-02-plan-motif.jpg" alt="Декоративный visual в теме GraphRAG для слайда с планом защиты" />
+        </div>
+      </div>
+      <div class="quote">
+        Центральная часть защиты: показать не только идею, но и то, что система
+        существует как рабочий инженерный объект с архитектурой, результатами и демо.
+      </div>
+      <div class="slide-number">02</div>
+    </section>
+
+    <section class="slide" id="slide-3">
+      <div class="slide-tag">Постановка задачи</div>
+      <h2>Цель и задачи проекта</h2>
+      <div class="two-col">
+        <div class="paper-card">
+          <h3>Цель</h3>
+          <p>
+            Построить сквозную систему для исследователя, работающего с
+            ограниченным, но содержательно связанным корпусом научных статей,
+            которая не только ищет релевантные фрагменты, но и использует
+            структуру графа знаний.
+          </p>
+          <div class="inline-flow" aria-label="Ключевая цепочка проекта">
+            <div class="flow-chip">ingest</div>
+            <div class="flow-chip">graph</div>
+            <div class="flow-chip">retrieval</div>
+            <div class="flow-chip">answer with citations</div>
+            <div class="flow-chip">evaluation</div>
+          </div>
+        </div>
+        <div class="paper-card">
+          <h3>Задачи</h3>
+          <ol>
+            <li>Преобразовать статьи в структурированное представление.</li>
+            <li>Извлекать сущности и связи для графа знаний.</li>
+            <li>Поддержать и обычный retrieval, и графовые запросы.</li>
+            <li>Синтезировать ответы с обязательными цитатами.</li>
+            <li>Оценивать систему так, чтобы метрики отражали реальное качество.</li>
+          </ol>
+        </div>
+      </div>
+      <div class="callout">
+        <div class="eyebrow">Ключевой тезис</div>
+        <p>
+          Проект решает не одну задачу поиска, а целую цепочку:
+          от ingest и построения графа до ответа с цитатами и системы честной оценки.
+        </p>
+      </div>
+      <div class="slide-number">03</div>
+    </section>
+
+    <section class="slide" id="slide-4">
+      <div class="slide-tag">Технологический стек</div>
+      <h2>Какие технологии использовались</h2>
+      <p class="sublead">
+        Стек выбран не ради сложности: каждая технология закрывает отдельный слой системы.
+        Именно сочетание <strong>PostgreSQL + Neo4j + Qdrant + supervisor</strong> делает
+        проект GraphRAG-системой, а не обычным RAG-приложением.
+      </p>
+      <div class="two-col">
+        <div class="summary-box">
+          <h3>Ключевые слои системы</h3>
+          <ul>
+            <li><strong>Backend и runtime:</strong> Python, FastAPI, orchestration / supervisor.</li>
+            <li><strong>Хранилища:</strong> PostgreSQL, Neo4j, Qdrant.</li>
+            <li><strong>NLP pipeline:</strong> extraction, embeddings, retrieval, graph query, answer generation.</li>
+            <li><strong>UI и наблюдаемость:</strong> React UI, traces, logs, metrics.</li>
+            <li><strong>Оценка качества:</strong> P / R / F1, ROUGE-L, latency_p95 и retrieval metrics.</li>
+          </ul>
+        </div>
+        <div class="visual-frame">
+          <img src="assets/defense/slide-04-tech-stack.png" alt="Инфографика технологического стека GraphRAG-системы" />
+        </div>
+      </div>
+      <div class="quote">
+        Ключевая инженерная идея здесь не в одной библиотеке, а в сочетании трёх хранилищ,
+        extraction pipeline и supervisor-based runtime поверх уже подготовленных данных.
+      </div>
+      <div class="slide-number">04</div>
+    </section>
+
+    <section class="slide" id="slide-5">
+      <div class="slide-tag">Главный инженерный результат</div>
+      <h2>Архитектура системы</h2>
+      <div class="two-col">
+        <div class="visual-frame">
+          <img src="assets/defense/slide-05-architecture.jpg" alt="Архитектурная схема с разделением offline ingest и online chat runtime" />
+        </div>
+        <div class="summary-box">
+          <h3>Почему архитектура устроена именно так</h3>
+          <ul>
+            <li><strong>Ingest</strong> и <strong>chat runtime</strong> разделены по времени и по смыслу.</li>
+            <li><strong>PostgreSQL</strong> хранит операционное состояние и артефакты конвейера.</li>
+            <li><strong>Neo4j</strong> нужен для графа знаний и структурных запросов.</li>
+            <li><strong>Qdrant</strong> отвечает за семантический поиск по фрагментам.</li>
+            <li><strong>Supervisor</strong> работает только в runtime и маршрутизирует запрос между агентами.</li>
+            <li>Агенты не общаются напрямую друг с другом, а работают через supervisor.</li>
+            <li><strong>Authorship</strong> выделен в отдельный узел для корректной модели авторства.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="quote">
+        Главный инженерный результат проекта — связанная архитектура из двух контуров:
+        ingest-конвейер отдельно готовит данные, а чатовый runtime работает поверх уже построенных хранилищ.
+      </div>
+      <div class="slide-number">05</div>
+    </section>
+
+    <section class="slide" id="slide-6">
+      <div class="slide-tag">Реализация</div>
+      <h2>Что реализовано в проекте</h2>
+      <div class="artifact-grid">
+        <div class="artifact-stack">
+          <div class="artifact-block">
+            <h3>Core runtime</h3>
+            <p>Supervisor и специализированные узлы агентного контура.</p>
+            <div class="artifact-path-list">
+              <code>science_graphrag/agent/graph/supervisor.py</code>
+              <code>science_graphrag/agent/graph/nodes/</code>
+            </div>
+          </div>
+          <div class="artifact-block">
+            <h3>Data и ingestion</h3>
+            <p>Конвейер подготовки корпуса и слой графового хранения.</p>
+            <div class="artifact-path-list">
+              <code>science_graphrag/ingestion/</code>
+              <code>science_graphrag/storage/neo4j/</code>
+            </div>
+          </div>
+          <div class="artifact-block">
+            <h3>Evaluation tooling</h3>
+            <p>Benchmark-инфраструктура и decision gate для честной оценки.</p>
+            <div class="artifact-path-list">
+              <code>science_graphrag/benchmarks/decision_gate.py</code>
+              <code>eval/agent_tools/</code>
+              <code>eval/retrieval/</code>
+              <code>eval/claims/</code>
+            </div>
+          </div>
+        </div>
+        <div class="artifact-stack">
+          <div class="artifact-block">
+            <h3>Архитектурные документы</h3>
+            <div class="artifact-path-list">
+              <code>docs/architecture/phase-1-backbone.md</code>
+              <code>docs/architecture/observability-phoenix.md</code>
+              <code>docs/adr/020-langgraph-supervisor-multiagent.md</code>
+            </div>
+          </div>
+          <div class="artifact-block">
+            <h3>Что важно показать</h3>
+            <ul>
+              <li>Это полноценный software project, а не один ноутбук с экспериментами.</li>
+              <li>Есть отдельные runtime, ingestion, storage и evaluation слои.</li>
+              <li>Есть документация архитектурных решений, а не только код.</li>
+              <li>Проект поддерживает воспроизводимые benchmark-артефакты.</li>
+            </ul>
+          </div>
+          <div class="artifact-block">
+            <h3>Что можно показать устно</h3>
+            <ul>
+              <li>Supervisor и agent routing.</li>
+              <li>Neo4j / Qdrant / Postgres как разные роли хранения.</li>
+              <li>Контур оценки и benchmark-артефакты.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="callout">
+        <div class="eyebrow">Что важно донести устно</div>
+        <p>
+          Это не одна notebook-эксперименталка, а полноценный software project:
+          ingest, graph storage, supervisor, benchmark-инфраструктура, UI и API.
+        </p>
+      </div>
+      <div class="slide-number">06</div>
+    </section>
+
+    <section class="slide" id="slide-7">
+      <div class="slide-tag">Главные цифры</div>
+      <h2>Основные результаты</h2>
+      <div class="results-grid">
+        <div class="visual-frame">
+          <img src="assets/defense/slide-07-metrics.jpg" alt="Сводный визуал по ключевым метрикам проекта" />
+        </div>
+        <div class="summary-box">
+          <h3>Как это интерпретировать</h3>
+          <ul>
+            <li>Система умеет извлекать структуру для GraphRAG.</li>
+            <li>Retrieval стабильно работает на реальном корпусе.</li>
+            <li>Граф помогает восстанавливать цепочки развития методов.</li>
+            <li>Полный агентный контур уже работает как единая система.</li>
+          </ul>
+          <div class="quote">
+            Важно: слабые результаты по <strong>claims paraphrase</strong> здесь не скрываются.
+            Это не минус презентации, а показатель честной оценки.
+          </div>
+        </div>
+      </div>
+      <div class="split-note">
+        <div class="summary-box">
+          <h3>Ещё две цифры, которые можно озвучить</h3>
+          <ul>
+            <li><strong>multihop recall ≈ 0.667</strong></li>
+            <li><strong>latency p95 ≈ 25 983 ms</strong></li>
+          </ul>
+        </div>
+        <div class="summary-box">
+          <h3>Почему это убедительно</h3>
+          <p>
+            Важно, что слабые результаты по <strong>claims paraphrase</strong> тоже остаются в отчёте.
+            Это показывает, что benchmark отделяет простые случаи от сложных и не маскирует ограничения.
+          </p>
+        </div>
+      </div>
+      <div class="slide-number">07</div>
+    </section>
+
+    <section class="slide" id="slide-8">
+      <div class="slide-tag">Практическая демонстрация</div>
+      <h2>Демонстрация системы</h2>
+      <div class="demo-layout">
+        <div class="demo-stage">
+          <div class="demo-card">
+            <div class="slide-tag">Пример вопроса</div>
+            <div class="demo-query">
+              Какие работы образуют цепочку развития метода и чем они отличаются друг от друга?
+            </div>
+          </div>
+          <div class="demo-card video-frame">
+            <div class="slide-tag">Записанное demo</div>
+            <p>
+              Здесь будет короткое видео на 60-90 секунд или stop-frame из записи:
+              <strong>вопрос → retrieval / graph traversal → answer with citations</strong>.
+            </p>
+            <div class="inline-flow">
+              <div class="flow-chip">query</div>
+              <div class="flow-chip">retrieval</div>
+              <div class="flow-chip">graph</div>
+              <div class="flow-chip">citations</div>
+              <div class="flow-chip">final answer</div>
+            </div>
+          </div>
+        </div>
+        <div class="paper-card">
+          <h3>Что показать в демо</h3>
+          <ol>
+            <li>Пользователь задаёт исследовательский вопрос по корпусу статей.</li>
+            <li>Supervisor выбирает retrieval и/или graph traversal по типу запроса.</li>
+            <li>Система возвращает ответ с цитатами и опорой на найденные источники.</li>
+            <li>При необходимости показывается trace или структура маршрута.</li>
+          </ol>
+          <h3>Почему этот слайд важен</h3>
+          <p>
+            Он связывает архитектуру и метрики с реальным пользовательским сценарием
+            и доказывает, что проект работает не только на бумаге.
+          </p>
+        </div>
+      </div>
+      <div class="quote">
+        Здесь желательно показывать не весь продукт, а один убедительный сценарий:
+        так защита останется сфокусированной, а демо не превратится в экскурсию по интерфейсу.
+      </div>
+      <div class="slide-number">08</div>
+    </section>
+
+    <section class="slide" id="slide-9">
+      <div class="slide-tag">Финальный слайд</div>
+      <h2>Выводы</h2>
+      <div class="footer-grid">
+        <div class="footer-card">
+          <h3>Что удалось</h3>
+          <ul>
+            <li>Построена рабочая GraphRAG-система для научного корпуса.</li>
+            <li>Показана польза графа и специализированных агентов.</li>
+            <li>Получены измеримые результаты на реальном корпусе статей.</li>
+            <li>Выстроена честная benchmark-оценка, не скрывающая слабые места.</li>
+          </ul>
+        </div>
+        <div class="footer-card">
+          <h3>Что дальше</h3>
+          <ul>
+            <li>Улучшить claims extraction на строгом эталоне.</li>
+            <li>Поднять precision многошагового graph retrieval.</li>
+            <li>Снизить latency для пользовательского интерфейса.</li>
+            <li>Расширить корпус за пределы object detection.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-grid">
+        <div class="summary-box">
+          <h3>Личная рефлексия — заполнить перед финальной версией</h3>
+          <ul>
+            <li>Сколько времени занял проект.</li>
+            <li>Насколько полезным он оказался по шкале 1-10.</li>
+            <li>Что далось легче всего.</li>
+            <li>Что было самым трудным.</li>
+          </ul>
+        </div>
+        <div class="summary-box">
+          <h3>Финальный тезис</h3>
+          <p>
+            Проект ценен не только тем, что в нём реализован GraphRAG-конвейер,
+            но и тем, что он показывает зрелый подход к оценке качества:
+            сильные результаты видны, а ограничения не прячутся.
+          </p>
+          <p class="footer-mini">
+            После заполнения личной рефлексии этот слайд уже можно использовать как
+            финальный closing slide на защите.
+          </p>
+        </div>
+      </div>
+      <div class="slide-number">09</div>
+    </section>
+  </div>
+  <script>
+    (function () {
+      const deck = document.querySelector('.deck');
+      if (!deck) return;
+
+      const slideWidth = () => window.innerWidth - 48;
+
+      deck.addEventListener(
+        'wheel',
+        (event) => {
+          if (window.innerWidth <= 1200) return;
+          if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+          event.preventDefault();
+          deck.scrollBy({ left: event.deltaY, behavior: 'smooth' });
+        },
+        { passive: false }
+      );
+
+      window.addEventListener('keydown', (event) => {
+        if (window.innerWidth <= 1200) return;
+        if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+
+        if (event.key === 'ArrowRight' || event.key === 'PageDown' || event.key === ' ') {
+          event.preventDefault();
+          deck.scrollBy({ left: slideWidth(), behavior: 'smooth' });
+        }
+
+        if (event.key === 'ArrowLeft' || event.key === 'PageUp') {
+          event.preventDefault();
+          deck.scrollBy({ left: -slideWidth(), behavior: 'smooth' });
+        }
+
+        if (event.key === 'Home') {
+          event.preventDefault();
+          deck.scrollTo({ left: 0, behavior: 'smooth' });
+        }
+
+        if (event.key === 'End') {
+          event.preventDefault();
+          deck.scrollTo({ left: deck.scrollWidth, behavior: 'smooth' });
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -12,7 +12,8 @@ import TableRow from "@mui/material/TableRow";
 import { useTheme } from "@mui/material/styles";
 
 import { listBenchmarkCases } from "../../services/benchmarkApi.js";
-import { CursorButton } from "../../components/common/index.js";
+import { CursorButton, CursorSmallButton } from "../../components/common/index.js";
+import { useI18n } from "../../i18n/useI18n.js";
 import CaseDetailDialog from "./CaseDetailDialog.jsx";
 
 function _normalizeTier(v) {
@@ -20,7 +21,11 @@ function _normalizeTier(v) {
   return v;
 }
 
-export default function CasesTab() {
+/**
+ * @param {{ onOpenCaseInWorkbench?: (caseId: string, family: string) => void }} props
+ */
+export default function CasesTab({ onOpenCaseInWorkbench }) {
+  const { t } = useI18n();
   const tk = useTheme().appTokens;
   const [family, setFamily] = useState("layer1");
   const [tier, setTier] = useState("merge_safe");
@@ -63,7 +68,7 @@ export default function CasesTab() {
   return (
     <Box sx={{ padding: 2 }}>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap", mb: 2 }}>
-        <Typography sx={{ fontWeight: 600 }}>Cases</Typography>
+        <Typography sx={{ fontWeight: 600 }}>{t("benchmarkPage.tab.cases")}</Typography>
         <Select
           size="small"
           value={family}
@@ -141,14 +146,23 @@ export default function CasesTab() {
                   <TableCell>{c.has_graph_expectations ? "yes" : "no"}</TableCell>
                 )}
                 <TableCell align="right">
-                  <CursorButton
-                    onClick={() => {
-                      setSelectedCaseId(c.case_id);
-                      setDialogOpen(true);
-                    }}
-                  >
-                    Preview
-                  </CursorButton>
+                  <Box sx={{ display: "inline-flex", gap: 0.75, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                    <CursorButton
+                      onClick={() => {
+                        setSelectedCaseId(c.case_id);
+                        setDialogOpen(true);
+                      }}
+                    >
+                      {t("benchmark.cases.preview")}
+                    </CursorButton>
+                    {onOpenCaseInWorkbench ? (
+                      <CursorSmallButton
+                        onClick={() => onOpenCaseInWorkbench(c.case_id, family)}
+                      >
+                        {t("benchmark.cases.openInspector")}
+                      </CursorSmallButton>
+                    ) : null}
+                  </Box>
                 </TableCell>
               </TableRow>
             ))}

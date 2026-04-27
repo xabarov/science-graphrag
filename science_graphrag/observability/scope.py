@@ -18,6 +18,7 @@ _EXTRACTION_LLM_MANUAL_LLM_NAMES = frozenset(
         "llm.metadata_extraction",
         "llm.authorships_extraction",
         "llm.references_extraction",
+        "llm.semantic_method_dataset",
         "llm.claims_extraction",
         "llm.vl_pdf",
     }

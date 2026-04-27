@@ -222,7 +222,7 @@ export default function BenchmarkRunCasesTable({ run, onOpenWorkbench }) {
                     {failedChecks.length ? failedChecks.join(", ") : "—"}
                   </TableCell>
                   <TableCell align="right">
-                    <CursorSmallButton onClick={() => onOpenWorkbench?.(item.case_id)}>
+                    <CursorSmallButton onClick={() => onOpenWorkbench?.(rid, item.case_id)}>
                       Open workbench
                     </CursorSmallButton>
                   </TableCell>

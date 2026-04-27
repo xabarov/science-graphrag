@@ -16,7 +16,7 @@ from science_graphrag.agent.tool_search import shortlist_tools_for_specialist
 from science_graphrag.agent.tools import build_writer_tools
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
-from science_graphrag.observability.spans import llm_span
+from science_graphrag.observability.spans import SpanAttributes, llm_span
 
 SPECIALIST_NAME = "writer_agent"
 SYSTEM_PROMPT = (
@@ -91,6 +91,12 @@ def _compile_writer_subgraph(tools: list[BaseTool], settings: Settings, *, mode:
             "llm.agent.writer",
             {"llm.invocation_name": "agent_writer_specialist"},
         ):
+            SpanAttributes.set_llm_runtime_policy(
+                pool_name="agent_chat",
+                transport_timeout_seconds=float(settings.extraction_llm_timeout_seconds),
+                timeout_contract="transport_only",
+                retry_extra_budget=0,
+            )
             response = llm.invoke(ensure_messages_safe_for_generation(base_msgs))
         return {"messages": [response]}
 

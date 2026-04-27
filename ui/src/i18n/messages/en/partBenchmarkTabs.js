@@ -114,4 +114,41 @@ export default {
   "benchmark.workbench.diffColPred": "predicted / status",
   "benchmark.workbench.noDiff": "No diff rows for this case yet.",
   "benchmark.workbench.loadMoreTpl": "Load more ({{loaded}} / {{total}})",
+
+  "benchmark.cases.preview": "Preview",
+  "benchmark.cases.openInspector": "Open inspector",
+
+  "benchmark.inspector.title": "Case inspector",
+  "benchmark.inspector.loading": "Loading case…",
+  "benchmark.inspector.fixtureHeadline": "Fixture catalog view — open a run (or use last completed run) to see predictions and automated diffs.",
+  "benchmark.inspector.compareBanner":
+    "Opened from compare: metric {{metric}} vs baseline run {{baseline}}… — current run is the candidate.",
+  "benchmark.inspector.raw.toggle": "Raw payloads (article, gold, prediction, diff, diagnostics)",
+  "benchmark.inspector.evidence.title": "Evidence & paths",
+  "benchmark.inspector.evidence.empty": "No artifact pointers available.",
+  "benchmark.inspector.evidence.lastRun": "Last completed run (hint)",
+  "benchmark.inspector.evidence.openRun": "Open run {{id}}…",
+
+  "benchmark.inspector.layer1.title": "Layer-1 extraction",
+  "benchmark.inspector.layer1.metadataMismatches": "Metadata fields differing from gold: {{fields}}",
+  "benchmark.inspector.layer1.metadataAligned": "Work metadata matches gold for compared fields.",
+
+  "benchmark.inspector.layer2.title": "Layer-2 semantic",
+  "benchmark.inspector.layer2.missCount": "missing methods {{count}}",
+  "benchmark.inspector.layer2.extraCount": "extra methods {{count}}",
+  "benchmark.inspector.layer2.missSample": "Missing (sample)",
+
+  "benchmark.inspector.graph.title": "Graph expectations",
+  "benchmark.inspector.graph.noExpectations": "No graph_expectations block in gold for this case.",
+
+  "benchmark.inspector.issue.failedChecks": "Failed checks: {{list}}",
+  "benchmark.inspector.issue.caseStatus": "Case status {{status}} — {{message}}",
+  "benchmark.inspector.issue.metadataMismatch": "Metadata mismatch on field “{{field}}”",
+  "benchmark.inspector.issue.authorshipMismatch": "Authorship mismatch at position {{pos}}",
+  "benchmark.inspector.issue.referenceMismatch": "Reference mismatch on “{{field}}”",
+  "benchmark.inspector.issue.layer2MissMethods": "Missing gold methods (count {{count}})",
+  "benchmark.inspector.issue.layer2ExtraMethods": "Extra predicted methods (count {{count}})",
+  "benchmark.inspector.issue.layer2MissDatasets": "Missing gold datasets (count {{count}})",
+  "benchmark.inspector.issue.layer2ExtraDatasets": "Extra predicted datasets (count {{count}})",
+  "benchmark.inspector.issue.diagnosticsHint": "Diagnostics snapshot attached (sources / counts).",
 };

@@ -114,4 +114,42 @@ export default {
   "benchmark.workbench.diffColPred": "predicted / status",
   "benchmark.workbench.noDiff": "Для этого кейса пока нет строк diff.",
   "benchmark.workbench.loadMoreTpl": "Загрузить ещё ({{loaded}} / {{total}})",
+
+  "benchmark.cases.preview": "Просмотр",
+  "benchmark.cases.openInspector": "Открыть инспектор",
+
+  "benchmark.inspector.title": "Инспектор кейса",
+  "benchmark.inspector.loading": "Загрузка кейса…",
+  "benchmark.inspector.fixtureHeadline":
+    "Каталог фикстур — откройте прогон (или последний завершённый) чтобы увидеть предсказания и автоматический diff.",
+  "benchmark.inspector.compareBanner":
+    "Переход из сравнения: метрика {{metric}} относительно baseline {{baseline}}… — текущий прогон — кандидат.",
+  "benchmark.inspector.raw.toggle": "Сырые данные (статья, gold, предсказание, diff, diagnostics)",
+  "benchmark.inspector.evidence.title": "Артефакты и пути",
+  "benchmark.inspector.evidence.empty": "Нет доступных путей к артефактам.",
+  "benchmark.inspector.evidence.lastRun": "Последний завершённый прогон (подсказка)",
+  "benchmark.inspector.evidence.openRun": "Открыть прогон {{id}}…",
+
+  "benchmark.inspector.layer1.title": "Layer-1 извлечение",
+  "benchmark.inspector.layer1.metadataMismatches": "Поля метаданных, расходящиеся с gold: {{fields}}",
+  "benchmark.inspector.layer1.metadataAligned": "Метаданные work совпадают с gold по сравниваемым полям.",
+
+  "benchmark.inspector.layer2.title": "Layer-2 семантика",
+  "benchmark.inspector.layer2.missCount": "пропущено методов {{count}}",
+  "benchmark.inspector.layer2.extraCount": "лишних методов {{count}}",
+  "benchmark.inspector.layer2.missSample": "Пропуски (пример)",
+
+  "benchmark.inspector.graph.title": "Graph expectations",
+  "benchmark.inspector.graph.noExpectations": "В gold нет блока graph_expectations для этого кейса.",
+
+  "benchmark.inspector.issue.failedChecks": "Упавшие проверки: {{list}}",
+  "benchmark.inspector.issue.caseStatus": "Статус кейса {{status}} — {{message}}",
+  "benchmark.inspector.issue.metadataMismatch": "Расхождение метаданных в поле «{{field}}»",
+  "benchmark.inspector.issue.authorshipMismatch": "Расхождение авторов на позиции {{pos}}",
+  "benchmark.inspector.issue.referenceMismatch": "Расхождение ссылок в «{{field}}»",
+  "benchmark.inspector.issue.layer2MissMethods": "Отсутствуют gold-методы (кол-во {{count}})",
+  "benchmark.inspector.issue.layer2ExtraMethods": "Лишние предсказанные методы (кол-во {{count}})",
+  "benchmark.inspector.issue.layer2MissDatasets": "Отсутствуют gold-датасеты (кол-во {{count}})",
+  "benchmark.inspector.issue.layer2ExtraDatasets": "Лишние предсказанные датасеты (кол-во {{count}})",
+  "benchmark.inspector.issue.diagnosticsHint": "Добавлен срез diagnostics (источники / счётчики).",
 };

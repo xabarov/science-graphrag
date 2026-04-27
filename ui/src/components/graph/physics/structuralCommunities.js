@@ -3,6 +3,115 @@
  * No OSINT-specific hybrid / personId logic.
  */
 
+import { detectScienceHybridCommunities } from "./scienceHybridCommunities.js";
+
+/** Edge types used for thematic LPA inside {@link detectCommunitiesForUi}. */
+export const LPA_TOPIC_EDGE_TYPES = new Set(["USES_METHOD", "EVALUATED_ON", "CITES", "PUBLISHED_IN"]);
+
+const DEFAULT_LPA_SPLIT_RATIO = 0.3;
+
+/**
+ * @param {Array<{ source: string, target: string, type?: string }>} links
+ * @returns {Array<{ source: string, target: string }>}
+ */
+export function filterTopicLinksForLpa(links) {
+  const out = [];
+  (links || []).forEach((l) => {
+    const t = l.type == null ? "" : String(l.type);
+    if (LPA_TOPIC_EDGE_TYPES.has(t)) {
+      out.push({ source: String(l.source), target: String(l.target) });
+    }
+  });
+  return out;
+}
+
+/**
+ * Hybrid authorship clusters + optional LPA split on thematic edges (Wave GR-COM-1).
+ *
+ * @param {Array<{ id: string, type?: string, workspaceMembership?: string }>} nodes
+ * @param {Array<{ source: string, target: string, type?: string }>} links
+ * @param {{ maxLpaIterations?: number, lpaSplitRatio?: number }} [options]
+ * @returns {Map<string, string>} nodeId -> stable UI community id
+ */
+export function detectCommunitiesForUi(nodes, links, options = {}) {
+  const maxLpaIterations = Number.isFinite(options.maxLpaIterations) ? options.maxLpaIterations : 10;
+  const lpaSplitRatio =
+    typeof options.lpaSplitRatio === "number" && options.lpaSplitRatio >= 0 && options.lpaSplitRatio <= 1
+      ? options.lpaSplitRatio
+      : DEFAULT_LPA_SPLIT_RATIO;
+
+  if (!Array.isArray(nodes) || nodes.length === 0) return new Map();
+
+  const hybrid = detectScienceHybridCommunities(nodes, links);
+  const topicLinks = filterTopicLinksForLpa(links);
+  const lpaNodes = nodes.map((n) => ({ id: String(n.id) }));
+  const lpaLabels = detectCommunities(lpaNodes, topicLinks, maxLpaIterations);
+
+  const nodeIds = nodes.map((n) => String(n.id));
+  const idSet = new Set(nodeIds);
+
+  /** @type {Map<string, Set<string>>} */
+  const hybridMembers = new Map();
+  nodeIds.forEach((id) => {
+    const h = hybrid.get(id) != null ? String(hybrid.get(id)) : id;
+    if (!hybridMembers.has(h)) hybridMembers.set(h, new Set());
+    hybridMembers.get(h).add(id);
+  });
+
+  /** @type {Map<string, number>} */
+  const topicEdgeCountInGroup = new Map();
+  topicLinks.forEach((l) => {
+    if (!idSet.has(l.source) || !idSet.has(l.target)) return;
+    const h0 = String(hybrid.get(l.source) ?? l.source);
+    const h1 = String(hybrid.get(l.target) ?? l.target);
+    if (h0 !== h1) return;
+    topicEdgeCountInGroup.set(h0, (topicEdgeCountInGroup.get(h0) || 0) + 1);
+  });
+
+  const out = new Map();
+
+  hybridMembers.forEach((memberSet, hybridId) => {
+    const members = [...memberSet].sort((a, b) => a.localeCompare(b));
+    const size = members.length;
+    if (size === 0) return;
+
+    const internalTopicEdges = topicEdgeCountInGroup.get(hybridId) || 0;
+    if (internalTopicEdges === 0) {
+      members.forEach((id) => out.set(id, hybridId));
+      return;
+    }
+
+    const labelCounts = new Map();
+    members.forEach((id) => {
+      const lab = String(lpaLabels.get(id) ?? id);
+      labelCounts.set(lab, (labelCounts.get(lab) || 0) + 1);
+    });
+
+    const rankedLabels = [...labelCounts.entries()].sort(
+      (a, b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0])),
+    );
+    const pluralityLabel = rankedLabels.length > 0 ? String(rankedLabels[0][0]) : String(members[0]);
+
+    let diff = 0;
+    members.forEach((id) => {
+      const lab = String(lpaLabels.get(id) ?? id);
+      if (lab !== pluralityLabel) diff += 1;
+    });
+    const ratio = size > 0 ? diff / size : 0;
+
+    if (ratio > lpaSplitRatio) {
+      members.forEach((id) => {
+        const lab = String(lpaLabels.get(id) ?? id);
+        out.set(id, `${hybridId}\u0001lpa\u0001${lab}`);
+      });
+    } else {
+      members.forEach((id) => out.set(id, hybridId));
+    }
+  });
+
+  return out;
+}
+
 /**
  * @param {Array<{ id: string }>} nodes
  * @param {Array<{ source: string, target: string }>} links
