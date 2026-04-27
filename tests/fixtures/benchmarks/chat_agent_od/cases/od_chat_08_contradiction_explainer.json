@@ -1,0 +1,35 @@
+{
+  "case_id": "od_chat_08_contradiction_explainer",
+  "workspace_id": "2678c5f1-1b31-4aac-92c9-6bd0f4472b23",
+  "lane_compatibility": "rich_od",
+  "query": "Which papers in this workspace disagree on whether dense anchor grids are still necessary for competitive accuracy vs anchor-free designs? Summarize the disagreement with claim-level or quote-level evidence.",
+  "answer_classes_allowed": ["synthesis", "quote_extraction"],
+  "requires_chunks": true,
+  "requires_neo4j_claims": true,
+  "requires_qdrant_claim_vectors": true,
+  "requires_methods": true,
+  "requires_contradictions": true,
+  "tools_any_of": ["idea_search", "cypher_query", "edge_search", "paper_quote_search", "paper_lookup", "entity_search"],
+  "tools_must_not_use": [],
+  "min_citation_count": 2,
+  "typed_payload_expected": ["citations", "quote_candidates", "relation_trace"],
+  "trace_expectations": {
+    "require_phoenix_trace_id": true,
+    "require_tool_trace": true,
+    "min_non_final_tool_calls": 2,
+    "require_graph_tool": true
+  },
+  "manual_review_focus": [
+    "Do not pass on Qdrant claim vectors alone: verify contradiction evidence exists in graph/chunks.",
+    "Did the agent abstain honestly if opposing evidence is incomplete?"
+  ],
+  "expect": {
+    "answer_classes_allowed": ["synthesis", "quote_extraction"],
+    "strict_answer_class": false,
+    "tools_any_of": ["idea_search", "cypher_query", "edge_search", "paper_quote_search", "paper_lookup", "entity_search"],
+    "require_graph_tool": true,
+    "require_phoenix_trace_id": true,
+    "require_tool_trace": true,
+    "min_non_final_tool_calls": 2
+  }
+}

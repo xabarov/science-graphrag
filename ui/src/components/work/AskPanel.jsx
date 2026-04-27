@@ -103,6 +103,7 @@ export default function AskPanel({
             inWorkspace={o.inWorkspace}
             workId={o.workId}
             workspaceWorkId={workspaceWorkId}
+            workspaceId={workspaceId}
             agentToolTrace={o.agentToolTrace}
             retrievalJsonOpen={o.retrievalJsonOpen}
             onToggleRetrievalJson={() => o.setRetrievalJsonOpen((v) => !v)}

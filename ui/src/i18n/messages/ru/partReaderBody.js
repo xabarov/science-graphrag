@@ -12,7 +12,7 @@ export default {
   "readerBody.focusedContext": "Контекст чтения",
   "readerBody.openedFrom": "Открыто из {{summary}}",
   "readerBody.returnAsk": "Вернуться в чат",
-  "readerBody.openEvidence": "Открыть доказательства",
+  "readerBody.openEvidence": "Просмотр чанков",
   "readerBody.chunksAdvanced": "Чанки (дополнительно) — {{count}}",
   "readerBody.chunksTraceHint": "Источники чанков для трассировки ответов агента (отпечатки и превью).",
   "readerBody.hide": "Скрыть",

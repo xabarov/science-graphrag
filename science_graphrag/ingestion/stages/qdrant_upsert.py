@@ -64,4 +64,5 @@ def run_qdrant_upsert(
             claims=claim_rows,
             embedder=embedder,
             embedding_model=emb_label,
+            workspace_ids=ctx.ingest_workspace_ids,
         )

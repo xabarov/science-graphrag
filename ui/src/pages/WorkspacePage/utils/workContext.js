@@ -15,7 +15,8 @@
 export const LAST_WORK_ID_KEY = "science-graphrag:lastWorkId";
 export const LAST_WORK_TAB_KEY = "science-graphrag:lastWorkspaceTab";
 
-export const WORKSPACE_TAB_SLUGS = ["overview", "reader", "graph", "ask", "evidence"];
+/** Workspace URL `tab=` values still parsed for backward compatibility; `evidence` is not a workspace shell tab (use `/evidence`). */
+export const WORKSPACE_TAB_SLUGS = ["overview", "reader", "graph", "ask"];
 
 /**
  * @param {string} tab

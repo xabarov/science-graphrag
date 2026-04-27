@@ -50,7 +50,7 @@ Manual verification for the Home / Corpus / entry-experience wave.
 - Confirm deep links to `Workspace` still work after the `/` route change.
 - Confirm there are no dead-end states after opening `Workspace` without a selected work.
 - Open an unknown route and confirm the 404 page offers `Home`, `Corpus`, `Continue workspace` (when available), and `Admin` only when admin mode is enabled.
-- Confirm `Reader`, `Graph`, `Ask`, and `Evidence` now use the same top-level header pattern and no longer look like isolated debug wrappers.
+- Confirm `Reader`, `Graph`, `Chat`, and standalone `/evidence` use the same top-level header pattern and no longer look like isolated debug wrappers (Evidence is not a primary sidebar item; reach it from citations or Reader trace).
 
 ## Ask and Evidence flow
 
@@ -61,7 +61,7 @@ Manual verification for the Home / Corpus / entry-experience wave.
 - In **Ask session**, create a **New session**, rename it via **Session title** (blur to save), switch **Session** dropdown, and confirm **Recent in this session** only shows turns for the active session.
 - Open **Workspace → Ask** for a work and confirm sessions are separate from standalone `/ask` (different scope).
 - Copy the URL while on Ask with a selected session and confirm **`ask_session=`** is present; reload and land on the same session; switch to another workspace tab and confirm `ask_session` is stripped from the query string.
-- From an answer citation, jump into `Workspace`, `Reader`, `Evidence`, and `Graph` and confirm traceability context is preserved.
+- From an answer citation, jump into `Workspace`, `Reader`, `/evidence` (chunk inspection), and `Graph` and confirm traceability context is preserved (`workspace_id` + chunk fingerprint where applicable).
 - On **Workspace → Graph**, narrow the viewport below the `md` breakpoint and confirm the graph/cards column stacks above the detail panel without unusable horizontal scroll.
 - From `Reader` or `Evidence`, confirm there is a clear path back into `Ask` to continue the question flow.
 - Trigger a degraded response fixture or low-context answer and confirm the degraded-state copy is visible and understandable.

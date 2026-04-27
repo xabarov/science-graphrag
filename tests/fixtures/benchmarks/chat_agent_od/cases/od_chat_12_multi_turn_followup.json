@@ -1,0 +1,41 @@
+{
+  "case_id": "od_chat_12_multi_turn_followup",
+  "workspace_id": "2678c5f1-1b31-4aac-92c9-6bd0f4472b23",
+  "baseline_workspace_id": "ws-pilot-od",
+  "lane_compatibility": "both",
+  "turns": [
+    {
+      "question": "List up to 8 papers in this workspace that discuss one-stage object detectors."
+    },
+    {
+      "question": "From that list, pick one paper and explain in 5 bullets how it defines its training objective, with chunk-backed quotes for each bullet."
+    }
+  ],
+  "answer_classes_allowed": ["inventory", "grounded_explanation"],
+  "requires_chunks": true,
+  "requires_neo4j_claims": false,
+  "requires_qdrant_claim_vectors": false,
+  "requires_methods": false,
+  "requires_contradictions": false,
+  "tools_any_of": ["workspace_list_papers", "idea_search", "paper_quote_search", "paper_lookup"],
+  "tools_must_not_use": [],
+  "min_citation_count": 2,
+  "typed_payload_expected": ["inventory", "quote_candidates", "citations"],
+  "trace_expectations": {
+    "require_phoenix_trace_id": true,
+    "require_tool_trace": true,
+    "min_non_final_tool_calls": 2
+  },
+  "manual_review_focus": [
+    "Did turn 2 actually narrow using thread context vs re-querying unrelated papers?",
+    "Per-turn tool_trace: redundant oscillation between turns?"
+  ],
+  "expect": {
+    "answer_classes_allowed": ["inventory", "grounded_explanation"],
+    "strict_answer_class": false,
+    "tools_any_of": ["workspace_list_papers", "idea_search", "paper_quote_search", "paper_lookup"],
+    "require_phoenix_trace_id": true,
+    "require_tool_trace": true,
+    "min_non_final_tool_calls": 2
+  }
+}

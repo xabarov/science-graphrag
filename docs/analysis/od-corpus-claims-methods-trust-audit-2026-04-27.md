@@ -184,8 +184,19 @@ WHERE work_id = ANY(:wids::text[]);
 
 ---
 
+## 7. Post-restore follow-up (PR C)
+
+After operators complete **Task 3–4** (claims backfill + claim vectors + vectors audit), record the factual closeout in:
+
+- [`od-corpus-claims-methods-post-restore-closeout-2026-04-27.md`](./od-corpus-claims-methods-post-restore-closeout-2026-04-27.md)
+
+That companion doc lists **canonical `eval/results/*-latest.*` inputs** and replaces the pre-repair narrative with live metrics — do not infer post-repair state from this file alone.
+
+---
+
 ## Document history
 
 | Date | Action |
 |------|--------|
 | 2026-04-27 | Initial audit from live Neo4j/Postgres/Qdrant (see sections 0–2). |
+| 2026-04-27 | §7 link to post-restore closeout template (PR C Task 5). |

@@ -296,6 +296,78 @@ science-graphrag-chat-agent-roadmap \
 
 Код: `eval/chat_agent/od_data_collector.py`, `od_workspace_manifest.py`, `od_claims_gap_audit.py`. Дальше по плану — **PR B** (claims-only backfill + векторы в Qdrant).
 
+### Rich OD workspace — claims restore + claim vectors audit (PR B)
+
+`PR B` чинит данные, а не только диагностирует их. Последовательность рассчитана на узкий restore-path по affected works без слепого full re-ingest всего workspace.
+
+1. **Task 3 — claims-only backfill** (таргетинг по manifest / gap audit, JSONL per-work outcomes, `unknown` только через явный opt-in):
+
+```bash
+.venv/bin/python scripts/backfill_od_workspace_claims.py \
+  --manifest eval/results/od-workspace-manifest-latest.json \
+  --gap-audit eval/results/od-claims-gap-audit-latest.json \
+  --out-jsonl eval/results/od-claims-backfill-latest.jsonl
+```
+
+Опции:
+- `--allow-unknown` — включить conservative `unknown` works;
+- `--resume-from <jsonl>` — пропустить уже успешно восстановленные `work_id`;
+- `--work-id <id>` / `--work-list <file>` — сузить прогон до конкретного подмножества;
+- `--workspace-id <UUID>` — live fallback, если frozen manifest ещё не сохранён.
+
+2. **Task 4 — claim vectors backfill** (rehydrate existing Neo4j claims, затем targeted upsert в Qdrant `claims`):
+
+```bash
+.venv/bin/python scripts/backfill_od_workspace_claim_vectors.py \
+  --manifest eval/results/od-workspace-manifest-latest.json \
+  --gap-audit eval/results/od-claims-gap-audit-latest.json \
+  --task3-progress eval/results/od-claims-backfill-latest.jsonl \
+  --out-jsonl eval/results/od-claim-vectors-backfill-latest.jsonl
+```
+
+Примечания:
+- runner автоматически добирает `claims_embed_missing` works из Task 2;
+- `--force-all` пересобирает claim vectors даже если они уже есть;
+- payload claim vectors теперь включает `workspace_ids`, чтобы workspace-scoped retrieval можно было проверять явно.
+
+3. **Verification audit — проверить состояние коллекции `claims` после backfill**:
+
+```bash
+.venv/bin/python scripts/chat_agent_od_claim_vectors_audit.py \
+  --manifest eval/results/od-workspace-manifest-latest.json \
+  --task3-progress eval/results/od-claims-backfill-latest.jsonl \
+  --out-json eval/results/od-claim-vectors-audit-latest.json \
+  --out-md eval/results/od-claim-vectors-audit-latest.md
+```
+
+Смысл audit:
+- подтвердить, что `claims` collection больше не пустая;
+- сравнить per-work `neo4j_claim_count` vs `qdrant_claim_vector_count`;
+- проверить workspace-scoped payload contract;
+- зафиксировать, какие claim-heavy scenario families уже можно считать unblocked.
+
+Код: `eval/chat_agent/od_claims_backfill.py`, `eval/chat_agent/od_claim_vectors_audit.py`, `scripts/backfill_od_workspace_claims.py`, `scripts/backfill_od_workspace_claim_vectors.py`, `scripts/chat_agent_od_claim_vectors_audit.py`.
+
+### Rich OD workspace — post-restore audit + OD scenario specs (PR C)
+
+**Task 5** — factual closeout after PR B: use **live** artifacts only (not the pre-repair trust audit in isolation).
+
+| Role | Path (convention) |
+|------|-------------------|
+| Manifest | `eval/results/od-workspace-manifest-latest.json` |
+| Gap audit | `eval/results/od-claims-gap-audit-latest.json` |
+| Task 3 JSONL | `eval/results/od-claims-backfill-latest.jsonl` |
+| Task 4 JSONL | `eval/results/od-claim-vectors-backfill-latest.jsonl` |
+| Vectors audit | `eval/results/od-claim-vectors-audit-latest.json`, `.md` |
+
+**Closeout doc:** [`docs/analysis/od-corpus-claims-methods-post-restore-closeout-2026-04-27.md`](../docs/analysis/od-corpus-claims-methods-post-restore-closeout-2026-04-27.md) — executive verdict, readiness table, scenario-family copy-out, per-case readiness for the 12 OD specs.
+
+**Task 6** — curated OD chat scenario specs (reviewable JSON, separate from `chat_agent_roadmap` until Task 7 wires a runner):
+
+- [`tests/fixtures/benchmarks/chat_agent_od/README.md`](../tests/fixtures/benchmarks/chat_agent_od/README.md)
+- [`tests/fixtures/benchmarks/chat_agent_od/cases/`](../tests/fixtures/benchmarks/chat_agent_od/cases/) — 12 files `od_chat_01` … `od_chat_12`
+- Contract smoke: `pytest tests/eval/test_chat_agent_od_case_specs.py`
+
 ## Compare baseline vs current
 
 Для benchmark-driven цикла используйте comparator (падает при regressions):

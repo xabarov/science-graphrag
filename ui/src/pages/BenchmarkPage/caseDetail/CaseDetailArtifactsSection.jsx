@@ -87,7 +87,9 @@ export default function CaseDetailArtifactsSection({
             onClick={() => {
               const rid = artifacts.last_run_hints?.run_id;
               if (rid) {
-                navigate(`/benchmark?tab=workbench&run=${encodeURIComponent(String(rid))}`);
+                navigate(
+                  `/benchmark?tab=analysis&analysisView=workbench&run=${encodeURIComponent(String(rid))}`,
+                );
                 onClose?.();
               }
             }}

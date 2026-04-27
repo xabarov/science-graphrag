@@ -18,11 +18,15 @@ import { buildTrustRows, decisionChipSx } from "./trustSignalDrillInHelpers.js";
 
 export { buildTrustRows, decisionChipSx };
 
-export default function TrustSignalPanel() {
+/**
+ * @param {object} [props]
+ * @param {boolean} [props.defaultExpanded] When false, details start collapsed (e.g. Overview diagnostics).
+ */
+export default function TrustSignalPanel({ defaultExpanded = true } = {}) {
   const { t } = useI18n();
   const tk = useTheme().appTokens;
   const { data, error, loading, reload } = useBenchmarkSummary();
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(defaultExpanded);
 
   const rows = useMemo(() => buildTrustRows(data?.trust_by_family), [data]);
 

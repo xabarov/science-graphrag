@@ -1,0 +1,35 @@
+{
+  "case_id": "od_chat_11_bibliography_export",
+  "workspace_id": "2678c5f1-1b31-4aac-92c9-6bd0f4472b23",
+  "baseline_workspace_id": "ws-pilot-od",
+  "lane_compatibility": "both",
+  "query": "Build a GOST-style bibliography for all papers in this workspace that mention 'instance segmentation' in title or abstract metadata. If metadata is incomplete, say so and include what you can verify from chunks.",
+  "answer_classes_allowed": ["bibliography_export"],
+  "requires_chunks": true,
+  "requires_neo4j_claims": false,
+  "requires_qdrant_claim_vectors": false,
+  "requires_methods": false,
+  "requires_contradictions": false,
+  "tools_any_of": ["workspace_list_papers", "paper_lookup", "format_bibliography_gost", "idea_search"],
+  "tools_must_not_use": [],
+  "min_citation_count": 0,
+  "typed_payload_expected": ["bibliography", "citations"],
+  "trace_expectations": {
+    "require_phoenix_trace_id": true,
+    "require_tool_trace": true,
+    "min_non_final_tool_calls": 1
+  },
+  "manual_review_focus": [
+    "Was format_bibliography_gost used or equivalent typed bibliography emitted?",
+    "Were missing metadata cases explicitly called out?"
+  ],
+  "expect": {
+    "answer_classes_allowed": ["bibliography_export"],
+    "strict_answer_class": false,
+    "tools_any_of": ["workspace_list_papers", "paper_lookup", "format_bibliography_gost", "idea_search"],
+    "require_typed_bibliography": true,
+    "require_phoenix_trace_id": true,
+    "require_tool_trace": true,
+    "min_non_final_tool_calls": 1
+  }
+}

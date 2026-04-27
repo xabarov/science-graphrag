@@ -123,7 +123,7 @@ export default function EvidencePage() {
       {workId.trim() ? (
         <EvidenceWorkBody
           workId={workId}
-          workspaceId={trace.workspaceId}
+          workspaceId={effectiveWorkspaceId}
           highlightedFingerprint={trace.chunkFingerprint}
           highlightedSection={trace.section}
           citation={trace.citation}

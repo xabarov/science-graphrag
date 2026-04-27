@@ -8,9 +8,9 @@ export default {
   "askPanel.banner.workspaceScoped": "Workspace-scoped research",
   "askPanel.banner.standalone": "Standalone research",
   "askPanel.banner.descWorkspace":
-    "Question is scoped to the active work. Use citations below to jump into evidence, reader context, and graph context without losing `work_id`.",
+    "Question is scoped to the active work. Use citations below to open Reader, chunk inspection (/evidence), or Graph without losing `work_id`.",
   "askPanel.banner.descStandalone":
-    "Ask across the corpus or pick one paper first. Use the answer actions below to move into evidence, reader context, or graph context when you need deeper inspection.",
+    "Ask across the corpus or pick one paper first. Use citation actions for Reader, chunk inspection (/evidence), or Graph when you need deeper inspection.",
   "askPanel.banner.workspaceCorpusTitle": "Workspace corpus scope",
   "askPanel.banner.descWorkspaceCorpus":
     "Questions are limited to papers in the active workspace (no single work_id). Add an optional work_id below to narrow further.",
@@ -59,11 +59,11 @@ export default {
   "askPanel.citation.noWork": "no work context",
   "askPanel.chunkLabel": "chunk",
   "askPanel.openReader": "Open Reader",
-  "askPanel.openEvidence": "Open Evidence",
+  "askPanel.openEvidence": "Inspect chunks",
   "askPanel.openGraph": "Open Graph",
   "askPanel.openInWorkspace": "Open in Workspace",
   "askPanel.standaloneReader": "Standalone Reader",
-  "askPanel.standaloneEvidence": "Standalone Evidence",
+  "askPanel.standaloneEvidence": "Inspect chunks (standalone)",
   "askPanel.standaloneGraph": "Standalone Graph",
   "askPanel.graphContext.title": "Graph context",
   "askPanel.graphContext.body":

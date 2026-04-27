@@ -15,8 +15,9 @@ All routes below render inside [`DashboardLayout`](../../ui/src/components/layou
 | `/workspace` | Workspace command center (`?workspace_id=` + optional `work_id`); drawer label **Workspace** opens last/active workspace |
 | `/reader` | Standalone reader |
 | `/graph` | Standalone graph (sidebar adds `?workspace_id=` when active) |
-| `/ask` | Standalone Ask (same; `POST /v1/query` may send `workspace_id` for corpus-scoped retrieval) |
-| `/evidence` | Standalone evidence (preserve `workspace_id` in trace links when present) |
+| `/chat` | Standalone agent chat (canonical; sidebar label **Chat**) |
+| `/ask` | Legacy alias → redirects to `/chat` (see `LegacyAskRedirect.jsx`) |
+| `/evidence` | Chunk inspection / traceability (deep links from Chat citations or Reader; not a primary sidebar item) |
 
 ## Admin surfaces (nested + visibility gate)
 

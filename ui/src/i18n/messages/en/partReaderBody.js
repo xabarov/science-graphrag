@@ -12,7 +12,7 @@ export default {
   "readerBody.focusedContext": "Focused reading context",
   "readerBody.openedFrom": "Opened from {{summary}}",
   "readerBody.returnAsk": "Return to chat",
-  "readerBody.openEvidence": "Open Evidence",
+  "readerBody.openEvidence": "Inspect chunks",
   "readerBody.chunksAdvanced": "Chunks (advanced) — {{count}}",
   "readerBody.chunksTraceHint": "Chunk sources for tracing agent answers (fingerprints and previews).",
   "readerBody.hide": "Hide",

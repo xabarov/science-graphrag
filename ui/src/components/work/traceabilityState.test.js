@@ -4,6 +4,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildStandaloneEvidencePath,
   buildStandaloneTracePath,
   buildTraceabilityParams,
   buildWorkspaceTracePath,
@@ -58,6 +59,9 @@ describe("traceabilityState", () => {
   it("builds standalone trace path without tab and merges updates", () => {
     expect(buildStandaloneTracePath("/reader", "w1", { chunkFingerprint: "fp1" })).toBe(
       "/reader?work_id=w1&chunk_fingerprint=fp1",
+    );
+    expect(buildStandaloneEvidencePath("w1", { workspaceId: "ws-9", chunkFingerprint: "fp1" })).toBe(
+      "/evidence?work_id=w1&workspace_id=ws-9&chunk_fingerprint=fp1",
     );
     const merged = mergeTraceabilityParams(
       new URLSearchParams("work_id=w1&tab=graph&node=n1"),

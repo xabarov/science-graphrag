@@ -87,7 +87,7 @@ export default {
   "chat.thread.prompts.scoped.3": "What are the limitations and threats to validity mentioned here?",
   "chat.thread.prompts.workspacePaper.1": "What claims in this paper are best supported by evidence in the workspace?",
   "chat.thread.prompts.workspacePaper.2": "Compare this paper's approach to related work you can find in citations.",
-  "chat.thread.prompts.workspacePaper.3": "List open questions I should verify next in evidence view.",
+  "chat.thread.prompts.workspacePaper.3": "List open questions I should verify next using chunk inspection or Reader.",
   "chat.thread.prompts.workspaceCorpus.1": "Which papers in this workspace are most relevant to transfer learning for CV?",
   "chat.thread.prompts.workspaceCorpus.2": "Give a short survey of evaluation benchmarks used across these papers.",
   "chat.thread.prompts.workspaceCorpus.3": "Find contradictions or disagreements between papers on a topic I name next.",

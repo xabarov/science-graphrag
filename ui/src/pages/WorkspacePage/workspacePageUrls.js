@@ -1,3 +1,4 @@
+import { buildStandaloneEvidencePath } from "../../components/work/traceabilityState.js";
 import { CHAT_PATH } from "../../routes/paths.js";
 
 /** @param {string} workId */
@@ -30,9 +31,8 @@ export function workAskUrl(workId, workspaceId) {
 
 /** @param {string} workId @param {string | null | undefined} workspaceId */
 export function workEvidenceUrl(workId, workspaceId) {
-  const p = new URLSearchParams();
-  if (workId && String(workId).trim()) p.set("work_id", String(workId).trim());
-  if (workspaceId && String(workspaceId).trim()) p.set("workspace_id", String(workspaceId).trim());
-  const qs = p.toString();
-  return qs ? `/evidence?${qs}` : "/evidence";
+  const wid = workId && String(workId).trim() ? String(workId).trim() : "";
+  if (!wid) return "/evidence";
+  const ws = workspaceId && String(workspaceId).trim() ? String(workspaceId).trim() : "";
+  return buildStandaloneEvidencePath(wid, ws ? { workspaceId: ws } : {});
 }

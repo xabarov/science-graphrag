@@ -1,0 +1,34 @@
+{
+  "case_id": "od_chat_04_quote_grounding",
+  "workspace_id": "2678c5f1-1b31-4aac-92c9-6bd0f4472b23",
+  "baseline_workspace_id": "ws-pilot-od",
+  "lane_compatibility": "both",
+  "query": "Pick one paper in this workspace that discusses focal loss (or imbalance between foreground/background in training). Find a short verbatim quote from retrieved chunks that supports that theme. Return quote + work_id + location hint.",
+  "answer_classes_allowed": ["quote_extraction"],
+  "requires_chunks": true,
+  "requires_neo4j_claims": false,
+  "requires_qdrant_claim_vectors": false,
+  "requires_methods": false,
+  "requires_contradictions": false,
+  "tools_any_of": ["idea_search", "paper_lookup", "paper_quote_search"],
+  "tools_must_not_use": [],
+  "min_citation_count": 1,
+  "typed_payload_expected": ["quote_candidates", "citations"],
+  "trace_expectations": {
+    "require_phoenix_trace_id": true,
+    "require_tool_trace": true,
+    "min_non_final_tool_calls": 1
+  },
+  "manual_review_focus": [
+    "Is the quote actually present in retrieved chunks?",
+    "Did the agent abstain if the paper is missing from the lane workspace?"
+  ],
+  "expect": {
+    "answer_classes_allowed": ["quote_extraction"],
+    "strict_answer_class": false,
+    "tools_any_of": ["idea_search", "paper_lookup", "paper_quote_search"],
+    "require_phoenix_trace_id": true,
+    "require_tool_trace": true,
+    "min_non_final_tool_calls": 1
+  }
+}

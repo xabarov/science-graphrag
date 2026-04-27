@@ -87,7 +87,7 @@ export default {
   "chat.thread.prompts.scoped.3": "Какие ограничения и угрозы валидности указаны в статье?",
   "chat.thread.prompts.workspacePaper.1": "Какие утверждения статьи лучше всего подкреплены доказательствами в области?",
   "chat.thread.prompts.workspacePaper.2": "Сравни подход этой статьи с близкими работами, которые видны по цитатам.",
-  "chat.thread.prompts.workspacePaper.3": "Составь список вопросов, которые стоит проверить дальше во вкладке evidence.",
+  "chat.thread.prompts.workspacePaper.3": "Составь список вопросов, которые стоит проверить дальше через просмотр чанков или «Чтение».",
   "chat.thread.prompts.workspaceCorpus.1": "Какие статьи в этой области наиболее релевантны transfer learning в CV?",
   "chat.thread.prompts.workspaceCorpus.2": "Краткий обзор бенчмарков оценки, встречающихся в статьях этой области.",
   "chat.thread.prompts.workspaceCorpus.3": "Найди противоречия между статьями по теме, которую я сформулирую следующим сообщением.",

@@ -34,7 +34,7 @@ Use for a **narrow scientific subdomain** before widening scope. This document i
 
 - [x] **Compose + mini ingest:** `docker compose up -d`; `science-graphrag ingest-corpus` on a 2-PDF smoke directory completed successfully; Neo4j dedup audit reported OK for that run.
 - [x] **API smoke:** `tests/test_api_smoke.py` includes mandatory-path sequence + `/v1/benchmark/cases` list (merge CI).
-- [x] **UI live surfaces:** `ui/` Workspace / Reader / Graph / Evidence use `GET /v1/works*` against the configured API (same-origin or `VITE_API_BASE_URL`); Ask links citations to Reader/Evidence when `work_id` is present.
+- [x] **UI live surfaces:** `ui/` Workspace / Reader / Graph / Chat and standalone `/evidence` use `GET /v1/works*` against the configured API (same-origin or `VITE_API_BASE_URL`); Ask links citations to Reader and chunk inspection (`/evidence`) when `work_id` is present.
 - [x] **Citation structure spot-check (N=5 fixed probes):** with API up, run `BASE=http://127.0.0.1:8787 ./scripts/pilot_spot_check.sh` (or `.venv/bin/python scripts/pilot_spot_check.py`). Pass = every probe has `work_id` and (`chunk_fingerprint` or `document_id`); `second_stage_llm` false when present. Legacy citations without `chunk_fingerprint` surface as warnings only.
 
 ## Product checks

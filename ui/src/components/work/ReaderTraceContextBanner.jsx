@@ -4,7 +4,7 @@ import Typography from "@mui/material/Typography";
 import { Link } from "react-router-dom";
 
 import { CursorSmallButton } from "../common/index.js";
-import { buildStandaloneChatPath, buildWorkspaceTracePath } from "./traceabilityState.js";
+import { buildStandaloneChatPath, buildStandaloneEvidencePath } from "./traceabilityState.js";
 import { useI18n } from "../../i18n/useI18n.js";
 
 /**
@@ -56,7 +56,11 @@ export default function ReaderTraceContextBanner({
         >
           {t("readerBody.returnAsk")}
         </CursorSmallButton>
-        <CursorSmallButton component={Link} to={buildWorkspaceTracePath(workId, "evidence", traceParams)} sx={{ textDecoration: "none" }}>
+        <CursorSmallButton
+          component={Link}
+          to={buildStandaloneEvidencePath(workId, { workspaceId, ...traceParams })}
+          sx={{ textDecoration: "none" }}
+        >
           {t("readerBody.openEvidence")}
         </CursorSmallButton>
       </Box>

@@ -1,0 +1,1336 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-27T14:59:39.356955+00:00",
+  "workspace_id": "2678c5f1-1b31-4aac-92c9-6bd0f4472b23",
+  "workspace_name": "Object Detection (clean ingested + claims)",
+  "lane": "rich_od",
+  "ingest_progress_sources": [],
+  "summary": {
+    "work_count_total": 31,
+    "work_count_missing_claims": 28,
+    "work_count_missing_neo4j_claims": 28,
+    "by_classification_missing_claims_only": {
+      "unknown": 28
+    },
+    "unknown_count_missing_claims_only": 28
+  },
+  "work_reports": [
+    {
+      "work_id": "a631d2a1-c2de-40d9-94f7-3f35f07596f4",
+      "neo4j_work_exists": true,
+      "author_rows": 2,
+      "outgoing_cites_count": 21,
+      "qdrant_chunk_points_total": 20,
+      "qdrant_chunk_points_workspace_scoped": 20,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "YOLOv3: An Incremental Improvement",
+      "document_ids": [
+        "d22181ed-a167-4981-a17b-9ca1afe0bab6"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/YOLOv3.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "d22181ed-a167-4981-a17b-9ca1afe0bab6",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/YOLOv3.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 1,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=20; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "a631d2a1-c2de-40d9-94f7-3f35f07596f4",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 20,
+        "neo4j_method_count": 1
+      }
+    },
+    {
+      "work_id": "cda6a480-8512-4b85-970a-65377bd09c24",
+      "neo4j_work_exists": true,
+      "author_rows": 2,
+      "outgoing_cites_count": 16,
+      "qdrant_chunk_points_total": 21,
+      "qdrant_chunk_points_workspace_scoped": 21,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "YOLO9000: Better, Faster, Stronger",
+      "document_ids": [
+        "bd7a00ba-20df-45a1-9300-055cbeeea0f6"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/YOLOv2.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "bd7a00ba-20df-45a1-9300-055cbeeea0f6",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/YOLOv2.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 1,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=21; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "cda6a480-8512-4b85-970a-65377bd09c24",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 21,
+        "neo4j_method_count": 1
+      }
+    },
+    {
+      "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+      "neo4j_work_exists": true,
+      "author_rows": 4,
+      "outgoing_cites_count": 34,
+      "qdrant_chunk_points_total": 36,
+      "qdrant_chunk_points_workspace_scoped": 36,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "You Only Look Once: Unified, Real-Time Object Detection",
+      "document_ids": [
+        "7d31611c-714f-4a48-84d2-16c3e46bcd93",
+        "dcd903df-d2c0-49ef-897c-cf69f4ba30e5"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/YOLOv1.pdf",
+        "/tmp/ingest-66e463b0-fd6d-454a-ab26-cfda7f7fa850.md"
+      ],
+      "documents": [
+        {
+          "document_id": "dcd903df-d2c0-49ef-897c-cf69f4ba30e5",
+          "source_path": "/tmp/ingest-66e463b0-fd6d-454a-ab26-cfda7f7fa850.md",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        },
+        {
+          "document_id": "7d31611c-714f-4a48-84d2-16c3e46bcd93",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/YOLOv1.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 1,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=36; documents=2; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 36,
+        "neo4j_method_count": 1
+      }
+    },
+    {
+      "work_id": "52e5de2a-32ef-4e74-86b1-7fc97c7e2de8",
+      "neo4j_work_exists": true,
+      "author_rows": 5,
+      "outgoing_cites_count": 12,
+      "qdrant_chunk_points_total": 24,
+      "qdrant_chunk_points_workspace_scoped": 24,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "YOLOX: Exceeding YOLO Series in 2021",
+      "document_ids": [
+        "770eacbc-880b-4645-9233-93722096b877"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/YOLOX.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "770eacbc-880b-4645-9233-93722096b877",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/YOLOX.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 3,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=24; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "52e5de2a-32ef-4e74-86b1-7fc97c7e2de8",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 24,
+        "neo4j_method_count": 3
+      }
+    },
+    {
+      "work_id": "eb99ebf1-d745-4465-a9de-12830062dbc2",
+      "neo4j_work_exists": true,
+      "author_rows": 5,
+      "outgoing_cites_count": 5,
+      "qdrant_chunk_points_total": 41,
+      "qdrant_chunk_points_workspace_scoped": 41,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "Task-aligned One-stage Object Detection",
+      "document_ids": [
+        "d78549a6-f793-498c-bc76-38350b3aa694"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/TOOD.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "d78549a6-f793-498c-bc76-38350b3aa694",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/TOOD.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 4,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=41; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "eb99ebf1-d745-4465-a9de-12830062dbc2",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 41,
+        "neo4j_method_count": 4
+      }
+    },
+    {
+      "work_id": "4aa9ec08-c5c8-40f2-805e-df0b0bb73424",
+      "neo4j_work_exists": true,
+      "author_rows": 4,
+      "outgoing_cites_count": 8,
+      "qdrant_chunk_points_total": 49,
+      "qdrant_chunk_points_workspace_scoped": 49,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "Selective Search for Object Recognition",
+      "document_ids": [
+        "212eb043-b8fc-4f81-b1c6-95b2343ebdac"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/Selective Search for Object Recognition.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "212eb043-b8fc-4f81-b1c6-95b2343ebdac",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/Selective Search for Object Recognition.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 3,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=49; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "4aa9ec08-c5c8-40f2-805e-df0b0bb73424",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 49,
+        "neo4j_method_count": 3
+      }
+    },
+    {
+      "work_id": "e811e872-9f0d-410a-b693-24ce8f024ade",
+      "neo4j_work_exists": true,
+      "author_rows": 7,
+      "outgoing_cites_count": 6,
+      "qdrant_chunk_points_total": 17,
+      "qdrant_chunk_points_workspace_scoped": 17,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "SSD: Single Shot MultiBox Detector",
+      "document_ids": [
+        "38b47869-d845-4ed0-9a63-1adc49498f87"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/SSD.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "38b47869-d845-4ed0-9a63-1adc49498f87",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/SSD.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 4,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=17; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "e811e872-9f0d-410a-b693-24ce8f024ade",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 17,
+        "neo4j_method_count": 4
+      }
+    },
+    {
+      "work_id": "db6796f1-78d0-41d1-8237-4814f256bc75",
+      "neo4j_work_exists": true,
+      "author_rows": 4,
+      "outgoing_cites_count": 11,
+      "qdrant_chunk_points_total": 51,
+      "qdrant_chunk_points_workspace_scoped": 51,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "Spatial Pyramid Pooling in Deep Convolutional Networks for Visual Recognition",
+      "document_ids": [
+        "7e063b1e-2494-4bb5-a2fa-b52fbb3006d3"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/SPPNet.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "7e063b1e-2494-4bb5-a2fa-b52fbb3006d3",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/SPPNet.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 4,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=51; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "db6796f1-78d0-41d1-8237-4814f256bc75",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 51,
+        "neo4j_method_count": 4
+      }
+    },
+    {
+      "work_id": "bc0d4f69-040a-428c-bc44-04ebf4c52dbc",
+      "neo4j_work_exists": true,
+      "author_rows": 5,
+      "outgoing_cites_count": 2,
+      "qdrant_chunk_points_total": 10,
+      "qdrant_chunk_points_workspace_scoped": 10,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "Focal Loss for Dense Object Detection",
+      "document_ids": [
+        "27d1cc88-6537-4762-b49c-8ef3548f4fba"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/RetinaNet.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "27d1cc88-6537-4762-b49c-8ef3548f4fba",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/RetinaNet.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 4,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=10; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "bc0d4f69-040a-428c-bc44-04ebf4c52dbc",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 10,
+        "neo4j_method_count": 4
+      }
+    },
+    {
+      "work_id": "a0b67a5e-3fb9-49ab-9027-e1c574924527",
+      "neo4j_work_exists": true,
+      "author_rows": 4,
+      "outgoing_cites_count": 3,
+      "qdrant_chunk_points_total": 48,
+      "qdrant_chunk_points_workspace_scoped": 48,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "R-FCN: Object Detection via Region-based Fully Convolutional Networks",
+      "document_ids": [
+        "084b392d-695e-4052-8d73-777403785d63"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/R-FCN.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "084b392d-695e-4052-8d73-777403785d63",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/R-FCN.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 3,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=48; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "a0b67a5e-3fb9-49ab-9027-e1c574924527",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 48,
+        "neo4j_method_count": 3
+      }
+    },
+    {
+      "work_id": "a43b5b96-742f-499b-a4c3-fbe0c1a4d465",
+      "neo4j_work_exists": true,
+      "author_rows": 4,
+      "outgoing_cites_count": 1,
+      "qdrant_chunk_points_total": 56,
+      "qdrant_chunk_points_workspace_scoped": 56,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "Rich feature hierarchies for accurate object detection and semantic segmentation",
+      "document_ids": [
+        "12ee2f01-8fe7-4169-bddb-e03b0727c29d"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/R-CNN.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "12ee2f01-8fe7-4169-bddb-e03b0727c29d",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/R-CNN.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 1,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=56; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "a43b5b96-742f-499b-a4c3-fbe0c1a4d465",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 56,
+        "neo4j_method_count": 1
+      }
+    },
+    {
+      "work_id": "16424dcd-d985-421f-b402-0a7817bab180",
+      "neo4j_work_exists": true,
+      "author_rows": 6,
+      "outgoing_cites_count": 1,
+      "qdrant_chunk_points_total": 36,
+      "qdrant_chunk_points_workspace_scoped": 36,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "OverFeat: Integrated Recognition, Localization and Detection using Convolutional Networks",
+      "document_ids": [
+        "6ba344a1-6fba-4acd-a20d-c0e66e6df72c"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/OverFeat.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "6ba344a1-6fba-4acd-a20d-c0e66e6df72c",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/OverFeat.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 6,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=36; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "16424dcd-d985-421f-b402-0a7817bab180",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 36,
+        "neo4j_method_count": 6
+      }
+    },
+    {
+      "work_id": "62c0204d-cccb-431e-a2ea-4142ad49f194",
+      "neo4j_work_exists": true,
+      "author_rows": 4,
+      "outgoing_cites_count": 5,
+      "qdrant_chunk_points_total": 45,
+      "qdrant_chunk_points_workspace_scoped": 45,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "Object Detection with Discriminatively Trained Part Based Models",
+      "document_ids": [
+        "9a93a7cc-3077-4158-afb2-5c58724a1bc5"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/Object Detection with Discriminatively Trained Part-Based Models.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "9a93a7cc-3077-4158-afb2-5c58724a1bc5",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/Object Detection with Discriminatively Trained Part-Based Models.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 1,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=45; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "62c0204d-cccb-431e-a2ea-4142ad49f194",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 45,
+        "neo4j_method_count": 1
+      }
+    },
+    {
+      "work_id": "f1a17085-57a3-47ef-872c-9f6f3c8f3d72",
+      "neo4j_work_exists": true,
+      "author_rows": 4,
+      "outgoing_cites_count": 8,
+      "qdrant_chunk_points_total": 37,
+      "qdrant_chunk_points_workspace_scoped": 37,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "Mask R-CNN",
+      "document_ids": [
+        "6b75810b-9617-498b-8a4d-35a6a679d843"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/Mask R-CNN.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "6b75810b-9617-498b-8a4d-35a6a679d843",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/Mask R-CNN.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 4,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=37; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "f1a17085-57a3-47ef-872c-9f6f3c8f3d72",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 37,
+        "neo4j_method_count": 4
+      }
+    },
+    {
+      "work_id": "ee487d82-2719-4276-9ca4-ad54ea102685",
+      "neo4j_work_exists": true,
+      "author_rows": 6,
+      "outgoing_cites_count": 5,
+      "qdrant_chunk_points_total": 30,
+      "qdrant_chunk_points_workspace_scoped": 30,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "Libra R-CNN: Towards Balanced Learning for Object Detection",
+      "document_ids": [
+        "e44420be-39be-484b-bebc-e345dfb20b61"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/Libra R-CNN.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "e44420be-39be-484b-bebc-e345dfb20b61",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/Libra R-CNN.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 1,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=30; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "ee487d82-2719-4276-9ca4-ad54ea102685",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 30,
+        "neo4j_method_count": 1
+      }
+    },
+    {
+      "work_id": "df668f39-8b87-4ac9-a440-3b79569fee7f",
+      "neo4j_work_exists": true,
+      "author_rows": 2,
+      "outgoing_cites_count": 0,
+      "qdrant_chunk_points_total": 35,
+      "qdrant_chunk_points_workspace_scoped": 35,
+      "flags": [
+        "no_outgoing_cites",
+        "no_neo4j_claims"
+      ],
+      "work_title": "Histograms of Oriented Gradients for Human Detection",
+      "document_ids": [
+        "b0b04535-ea49-4e22-b28f-b49ca834b669"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/Histograms of Oriented Gradients for Human Detection.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "b0b04535-ea49-4e22-b28f-b49ca834b669",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/Histograms of Oriented Gradients for Human Detection.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 1,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=35; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "df668f39-8b87-4ac9-a440-3b79569fee7f",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 35,
+        "neo4j_method_count": 1
+      }
+    },
+    {
+      "work_id": "d475eb45-2a4c-49ce-b611-bc444d1b8ea4",
+      "neo4j_work_exists": true,
+      "author_rows": 8,
+      "outgoing_cites_count": 6,
+      "qdrant_chunk_points_total": 7,
+      "qdrant_chunk_points_workspace_scoped": 7,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "Generalized Focal Loss: Learning Qualified and Distributed Bounding Boxes for Dense Object Detection",
+      "document_ids": [
+        "44e9e076-b97e-47a3-aa27-6e86c299e328"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/GFL.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "44e9e076-b97e-47a3-aa27-6e86c299e328",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/GFL.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 4,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=7; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "d475eb45-2a4c-49ce-b611-bc444d1b8ea4",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 7,
+        "neo4j_method_count": 4
+      }
+    },
+    {
+      "work_id": "da2a6348-1a91-447d-8a17-da475a87b75f",
+      "neo4j_work_exists": true,
+      "author_rows": 4,
+      "outgoing_cites_count": 5,
+      "qdrant_chunk_points_total": 45,
+      "qdrant_chunk_points_workspace_scoped": 45,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "Faster R-CNN: Towards Real-Time Object Detection with Region Proposal Networks",
+      "document_ids": [
+        "7e83946e-3898-4107-8ae0-5ff7ce372c82"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/Faster R-CNN.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "7e83946e-3898-4107-8ae0-5ff7ce372c82",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/Faster R-CNN.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 4,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=45; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "da2a6348-1a91-447d-8a17-da475a87b75f",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 45,
+        "neo4j_method_count": 4
+      }
+    },
+    {
+      "work_id": "b3118291-8e4b-427d-9994-ce6f14b958b2",
+      "neo4j_work_exists": true,
+      "author_rows": 1,
+      "outgoing_cites_count": 2,
+      "qdrant_chunk_points_total": 49,
+      "qdrant_chunk_points_workspace_scoped": 49,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "Fast R-CNN",
+      "document_ids": [
+        "273ac236-6d7f-4b26-8f3b-8154dbdca456"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/Fast R-CNN.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "273ac236-6d7f-4b26-8f3b-8154dbdca456",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/Fast R-CNN.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 1,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=49; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "b3118291-8e4b-427d-9994-ce6f14b958b2",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 49,
+        "neo4j_method_count": 1
+      }
+    },
+    {
+      "work_id": "0ccc5f8d-239c-442b-8e43-82a1a6a6597f",
+      "neo4j_work_exists": true,
+      "author_rows": 6,
+      "outgoing_cites_count": 1,
+      "qdrant_chunk_points_total": 39,
+      "qdrant_chunk_points_workspace_scoped": 39,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "Feature Pyramid Networks for Object Detection",
+      "document_ids": [
+        "b946e138-68ad-42d4-a443-44b257bc24be"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/FPN.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "b946e138-68ad-42d4-a443-44b257bc24be",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/FPN.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 4,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=39; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "0ccc5f8d-239c-442b-8e43-82a1a6a6597f",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 39,
+        "neo4j_method_count": 4
+      }
+    },
+    {
+      "work_id": "3ca82fea-ba1d-4478-b34d-9182e88252de",
+      "neo4j_work_exists": true,
+      "author_rows": 4,
+      "outgoing_cites_count": 3,
+      "qdrant_chunk_points_total": 38,
+      "qdrant_chunk_points_workspace_scoped": 38,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "FCOS: Fully Convolutional One-Stage Object Detection",
+      "document_ids": [
+        "d8342dd6-7af5-4f83-ba84-9852c53449f6"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/FCOS.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "d8342dd6-7af5-4f83-ba84-9852c53449f6",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/FCOS.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 1,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=38; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "3ca82fea-ba1d-4478-b34d-9182e88252de",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 38,
+        "neo4j_method_count": 1
+      }
+    },
+    {
+      "work_id": "142db14f-610a-44ca-b928-83aa48f749a0",
+      "neo4j_work_exists": true,
+      "author_rows": 3,
+      "outgoing_cites_count": 4,
+      "qdrant_chunk_points_total": 36,
+      "qdrant_chunk_points_workspace_scoped": 36,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "EfficientDet: Scalable and Efficient Object Detection",
+      "document_ids": [
+        "c71a0669-e930-4dc3-97ff-721fd20b57bf"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/EfficientDet.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "c71a0669-e930-4dc3-97ff-721fd20b57bf",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/EfficientDet.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 1,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=36; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "142db14f-610a-44ca-b928-83aa48f749a0",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 36,
+        "neo4j_method_count": 1
+      }
+    },
+    {
+      "work_id": "224288cb-8c14-48ed-8245-abb2c5025ed7",
+      "neo4j_work_exists": true,
+      "author_rows": 6,
+      "outgoing_cites_count": 12,
+      "qdrant_chunk_points_total": 53,
+      "qdrant_chunk_points_workspace_scoped": 53,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "DEFORMABLE DETR: DEFORMABLE TRANSFORMERS FOR END-TO-END OBJECT DETECTION",
+      "document_ids": [
+        "b8519004-4a28-4a8a-ace8-683e89bb1f1a"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/Deformable DETR.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "b8519004-4a28-4a8a-ace8-683e89bb1f1a",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/Deformable DETR.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 4,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=53; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "224288cb-8c14-48ed-8245-abb2c5025ed7",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 53,
+        "neo4j_method_count": 4
+      }
+    },
+    {
+      "work_id": "79a35e97-2466-49b6-bcef-4933bb752ec5",
+      "neo4j_work_exists": true,
+      "author_rows": 6,
+      "outgoing_cites_count": 8,
+      "qdrant_chunk_points_total": 15,
+      "qdrant_chunk_points_workspace_scoped": 15,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "DN-DETR: Accelerate DETR Training by Introducing Query DeNoising",
+      "document_ids": [
+        "dff05d47-d745-4999-a5dd-625a3be2534e"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/DN-DETR.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "dff05d47-d745-4999-a5dd-625a3be2534e",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/DN-DETR.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 1,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=15; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "79a35e97-2466-49b6-bcef-4933bb752ec5",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 15,
+        "neo4j_method_count": 1
+      }
+    },
+    {
+      "work_id": "9cd96dca-a917-4771-b856-9b4de0a640c9",
+      "neo4j_work_exists": true,
+      "author_rows": 8,
+      "outgoing_cites_count": 26,
+      "qdrant_chunk_points_total": 56,
+      "qdrant_chunk_points_workspace_scoped": 56,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "DINO: DETR with Improved DeNoising Anchor Boxes for End-to-End Object Detection",
+      "document_ids": [
+        "58258625-99b9-46e3-9cc2-65b8249f8636"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/DINO.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "58258625-99b9-46e3-9cc2-65b8249f8636",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/DINO.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 1,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=56; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "9cd96dca-a917-4771-b856-9b4de0a640c9",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 56,
+        "neo4j_method_count": 1
+      }
+    },
+    {
+      "work_id": "b2bd5005-b3c6-4056-bee4-62344654e63e",
+      "neo4j_work_exists": true,
+      "author_rows": 8,
+      "outgoing_cites_count": 12,
+      "qdrant_chunk_points_total": 35,
+      "qdrant_chunk_points_workspace_scoped": 35,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "DETRs Beat YOLOs on Real-time Object Detection",
+      "document_ids": [
+        "99b13d71-adde-4119-b079-1e6d9ea9348e"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/DETRs.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "99b13d71-adde-4119-b079-1e6d9ea9348e",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/DETRs.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 1,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=35; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "b2bd5005-b3c6-4056-bee4-62344654e63e",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 35,
+        "neo4j_method_count": 1
+      }
+    },
+    {
+      "work_id": "0ae8f9d9-ebcc-43f2-84c1-83c350b34d93",
+      "neo4j_work_exists": true,
+      "author_rows": 6,
+      "outgoing_cites_count": 49,
+      "qdrant_chunk_points_total": 30,
+      "qdrant_chunk_points_workspace_scoped": 30,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "End-to-End Object Detection with Transformers",
+      "document_ids": [
+        "df1385e2-eaac-42ef-8bf5-4519e0b7c05b"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/DETR.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "df1385e2-eaac-42ef-8bf5-4519e0b7c05b",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/DETR.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 4,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=30; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "0ae8f9d9-ebcc-43f2-84c1-83c350b34d93",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 30,
+        "neo4j_method_count": 4
+      }
+    },
+    {
+      "work_id": "7dd806fd-db66-4c7b-8440-d98e0cab0827",
+      "neo4j_work_exists": true,
+      "author_rows": 2,
+      "outgoing_cites_count": 23,
+      "qdrant_chunk_points_total": 36,
+      "qdrant_chunk_points_workspace_scoped": 36,
+      "flags": [
+        "no_neo4j_claims"
+      ],
+      "work_title": "CornerNet: Detecting Objects as Paired Keypoints",
+      "document_ids": [
+        "0d7b936e-91f0-4546-bbbd-6625bf1dc3d7"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/CornerNet.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "0d7b936e-91f0-4546-bbbd-6625bf1dc3d7",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/CornerNet.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 0,
+      "neo4j_method_count": 1,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "unknown",
+      "claims_gap_classification_reason": "Insufficient persisted signals to distinguish stage skip vs extraction vs write paths. neo4j_claim_count=0; qdrant_claim_vector_count=0; chunks=36; documents=1; checkpoint_signals_extract=none; checkpoint_signals_embed=none",
+      "claims_gap_evidence": {
+        "work_id": "7dd806fd-db66-4c7b-8440-d98e0cab0827",
+        "neo4j_claim_count": 0,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 36,
+        "neo4j_method_count": 1
+      }
+    },
+    {
+      "work_id": "99835def-0a25-4cc5-9d79-bdda878cae15",
+      "neo4j_work_exists": true,
+      "author_rows": 6,
+      "outgoing_cites_count": 6,
+      "qdrant_chunk_points_total": 42,
+      "qdrant_chunk_points_workspace_scoped": 42,
+      "flags": [
+        "neo_claims_without_qdrant_vectors"
+      ],
+      "work_title": "CenterNet: Keypoint Triplets for Object Detection",
+      "document_ids": [
+        "ca13b47e-ce47-47dd-8d65-54c3c31e9b62"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/CenterNet.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "ca13b47e-ce47-47dd-8d65-54c3c31e9b62",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/CenterNet.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 71,
+      "neo4j_method_count": 1,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "claims_embed_missing",
+      "claims_gap_classification_reason": "Neo4j has claims but Qdrant claims collection has zero vectors for this work_id.",
+      "claims_gap_evidence": {
+        "work_id": "99835def-0a25-4cc5-9d79-bdda878cae15",
+        "neo4j_claim_count": 71,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 42,
+        "neo4j_method_count": 1
+      }
+    },
+    {
+      "work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
+      "neo4j_work_exists": true,
+      "author_rows": 2,
+      "outgoing_cites_count": 3,
+      "qdrant_chunk_points_total": 17,
+      "qdrant_chunk_points_workspace_scoped": 17,
+      "flags": [
+        "neo_claims_without_qdrant_vectors"
+      ],
+      "work_title": "Cascade R-CNN: Delving into High Quality Object Detection",
+      "document_ids": [
+        "1238c41e-e303-46e1-a05e-4b11db55f6ac"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/Cascade R-CNN.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "1238c41e-e303-46e1-a05e-4b11db55f6ac",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/Cascade R-CNN.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 29,
+      "neo4j_method_count": 1,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "claims_embed_missing",
+      "claims_gap_classification_reason": "Neo4j has claims but Qdrant claims collection has zero vectors for this work_id.",
+      "claims_gap_evidence": {
+        "work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
+        "neo4j_claim_count": 29,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 17,
+        "neo4j_method_count": 1
+      }
+    },
+    {
+      "work_id": "33599c70-fbad-41b1-9faf-96e5457699f9",
+      "neo4j_work_exists": true,
+      "author_rows": 5,
+      "outgoing_cites_count": 0,
+      "qdrant_chunk_points_total": 42,
+      "qdrant_chunk_points_workspace_scoped": 42,
+      "flags": [
+        "no_outgoing_cites",
+        "neo_claims_without_qdrant_vectors"
+      ],
+      "work_title": "Bridging the Gap Between Anchor-based and Anchor-free Detection via Adaptive Training Sample Selection",
+      "document_ids": [
+        "5c1459bd-c4ec-4f02-9d75-e38429ac2827"
+      ],
+      "source_paths": [
+        "/home/roman/Documents/ML/CV/object-detection/ATSS.pdf"
+      ],
+      "documents": [
+        {
+          "document_id": "5c1459bd-c4ec-4f02-9d75-e38429ac2827",
+          "source_path": "/home/roman/Documents/ML/CV/object-detection/ATSS.pdf",
+          "ingest_checkpoint_json": null,
+          "checkpoint": {
+            "version": 1,
+            "last_completed": null,
+            "stages": {}
+          }
+        }
+      ],
+      "neo4j_claim_count": 47,
+      "neo4j_method_count": 1,
+      "qdrant_claim_vector_count": 0,
+      "claims_gap_classification": "claims_embed_missing",
+      "claims_gap_classification_reason": "Neo4j has claims but Qdrant claims collection has zero vectors for this work_id.",
+      "claims_gap_evidence": {
+        "work_id": "33599c70-fbad-41b1-9faf-96e5457699f9",
+        "neo4j_claim_count": 47,
+        "qdrant_claim_vector_count": 0,
+        "qdrant_chunk_points_total": 42,
+        "neo4j_method_count": 1
+      }
+    }
+  ],
+  "source_manifest_path": "eval/results/od-workspace-manifest-latest.json"
+}

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Tab from "@mui/material/Tab";
@@ -12,23 +12,23 @@ import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import OpenInNewOutlinedIcon from "@mui/icons-material/OpenInNewOutlined";
 
 import { CursorIconAction } from "../../components/common/index.js";
-
-import BenchmarkWorkbenchTab from "./BenchmarkWorkbenchTab.jsx";
-import CompareTab from "./CompareTab.jsx";
-import RunTab from "./RunTab.jsx";
-import ResultsTab from "./ResultsTab.jsx";
-import CasesTab from "./CasesTab.jsx";
-import TrustSignalPanel from "./TrustSignalPanel.jsx";
 import { useI18n } from "../../i18n/useI18n.js";
 
-const TAB_BY_NAME = { launch: 0, workbench: 1, results: 2, compare: 3, cases: 4 };
+import BenchmarkAnalysisTab from "./BenchmarkAnalysisTab.jsx";
+import BenchmarkExperimentsTab from "./BenchmarkExperimentsTab.jsx";
+import BenchmarkOverviewTab from "./BenchmarkOverviewTab.jsx";
+import CasesTab from "./CasesTab.jsx";
+import RunTab from "./RunTab.jsx";
+
+import { mergeBenchmarkTabIntoSearchParams, normalizeAnalysisView, parseBenchmarkTabQuery } from "./experimentCatalog.js";
 
 export default function BenchmarkPage() {
   const { t } = useI18n();
   const tk = useTheme().appTokens;
   const location = useLocation();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [tabIdx, setTabIdx] = useState(0);
+  const [analysisView, setAnalysisView] = useState(/** @type {"results"|"compare"|"workbench"} */ ("results"));
   const [selectedRunId, setSelectedRunId] = useState(() => window.localStorage.getItem("benchmark:lastRunId") || null);
   const [selectedCaseId, setSelectedCaseId] = useState(null);
   const canonicalAdminPath = useMemo(() => {
@@ -38,34 +38,108 @@ export default function BenchmarkPage() {
   const showAdminReturn = location.pathname !== "/admin/benchmarks";
 
   useEffect(() => {
-    /* eslint-disable react-hooks/set-state-in-effect -- sync shell from /benchmark? query (external nav) */
+    /* eslint-disable react-hooks/set-state-in-effect -- sync shell from URL (external nav / back) */
     const tabParam = searchParams.get("tab");
-    const run = searchParams.get("run");
-    const c = searchParams.get("case");
-    if (tabParam != null && tabParam !== "") {
-      const n = Number(tabParam);
-      if (!Number.isNaN(n) && n >= 0 && n <= 4) {
-        setTabIdx(n);
-      } else if (TAB_BY_NAME[tabParam] != null) {
-        setTabIdx(TAB_BY_NAME[tabParam]);
+    const avParam = searchParams.get("analysisView");
+    const { tabIndex, analysisView: av } = parseBenchmarkTabQuery(tabParam, avParam);
+    setTabIdx(tabIndex);
+    setAnalysisView(av);
+    // Only overwrite run/case from URL when those keys are present so we do not wipe
+    // `lastRunId` rehydration on first paint (`?tab=overview` with no `run` param).
+    if (searchParams.has("run")) {
+      const run = searchParams.get("run");
+      if (run) {
+        setSelectedRunId(run);
+        window.localStorage.setItem("benchmark:lastRunId", run);
+      } else {
+        setSelectedRunId(null);
       }
     }
-    if (run) {
-      setSelectedRunId(run);
-      window.localStorage.setItem("benchmark:lastRunId", run);
+    if (searchParams.has("case")) {
+      const c = searchParams.get("case");
+      setSelectedCaseId(c || null);
     }
-    if (c) setSelectedCaseId(c);
     /* eslint-enable react-hooks/set-state-in-effect */
   }, [searchParams]);
 
-  function openWorkbench(runId, caseId = null) {
-    if (runId) {
+  const onNavigate = useCallback(
+    (opts) => {
+      const nextIdx = opts.tabIndex;
+      let nextAv = /** @type {"results"|"compare"|"workbench"} */ ("results");
+      if (nextIdx === 3) {
+        nextAv =
+          opts.analysisView != null ? normalizeAnalysisView(opts.analysisView) : normalizeAnalysisView(analysisView);
+        setAnalysisView(nextAv);
+      }
+      setTabIdx(nextIdx);
+      const merged = mergeBenchmarkTabIntoSearchParams(
+        searchParams,
+        nextIdx,
+        nextIdx === 3 ? nextAv : "results",
+      );
+      setSearchParams(merged, { replace: true });
+    },
+    [analysisView, searchParams, setSearchParams],
+  );
+
+  const openWorkbench = useCallback(
+    (runId, caseId = null) => {
+      if (runId) {
+        setSelectedRunId(runId);
+        window.localStorage.setItem("benchmark:lastRunId", runId);
+      } else {
+        setSelectedRunId(null);
+      }
+      setSelectedCaseId(caseId);
+      setTabIdx(3);
+      setAnalysisView("workbench");
+      const merged = mergeBenchmarkTabIntoSearchParams(searchParams, 3, "workbench");
+      if (runId) merged.set("run", runId);
+      else merged.delete("run");
+      if (caseId) merged.set("case", caseId);
+      else merged.delete("case");
+      setSearchParams(merged, { replace: true });
+    },
+    [searchParams, setSearchParams],
+  );
+
+  const setAnalysisViewInUrl = useCallback(
+    (view) => {
+      const v = normalizeAnalysisView(view);
+      setAnalysisView(v);
+      const merged = mergeBenchmarkTabIntoSearchParams(searchParams, 3, v);
+      setSearchParams(merged, { replace: true });
+    },
+    [searchParams, setSearchParams],
+  );
+
+  const handleSelectRun = useCallback(
+    (runId) => {
       setSelectedRunId(runId);
-      window.localStorage.setItem("benchmark:lastRunId", runId);
-    }
-    setSelectedCaseId(caseId);
-    setTabIdx(1);
-  }
+      if (runId) window.localStorage.setItem("benchmark:lastRunId", runId);
+      const next = new URLSearchParams(searchParams.toString());
+      if (runId) next.set("run", runId);
+      else next.delete("run");
+      // Clearing run implies no meaningful case selection in URL or state.
+      if (!runId) {
+        next.delete("case");
+        setSelectedCaseId(null);
+      }
+      setSearchParams(next, { replace: true });
+    },
+    [searchParams, setSearchParams],
+  );
+
+  const handleSelectCase = useCallback(
+    (caseId) => {
+      setSelectedCaseId(caseId);
+      const next = new URLSearchParams(searchParams.toString());
+      if (caseId) next.set("case", caseId);
+      else next.delete("case");
+      setSearchParams(next, { replace: true });
+    },
+    [searchParams, setSearchParams],
+  );
 
   return (
     <Box>
@@ -82,7 +156,7 @@ export default function BenchmarkPage() {
           </CursorIconAction>
         ) : null}
       </Box>
-      <Box sx={{ px: 2, pb: 1.5 }}>
+      <Box sx={{ px: 2, pb: 1 }}>
         <Alert
           severity="info"
           sx={{
@@ -98,11 +172,16 @@ export default function BenchmarkPage() {
           </Typography>
         </Alert>
       </Box>
-      <TrustSignalPanel />
+      <Box sx={{ px: 2, pb: 1 }}>
+        <Typography sx={{ fontWeight: 600, fontSize: "0.9375rem", color: tk.text.primary }}>{t("benchmarkPage.pageTitle")}</Typography>
+        <Typography sx={{ mt: 0.35, fontSize: "0.8125rem", color: tk.text.secondary, lineHeight: 1.55, maxWidth: 960 }}>
+          {t("benchmarkPage.pageSubtitle")}
+        </Typography>
+      </Box>
       <Box sx={{ padding: 2, borderBottom: `1px solid ${tk.border.default}` }}>
         <Tabs
           value={tabIdx}
-          onChange={(e, v) => setTabIdx(v)}
+          onChange={(e, v) => onNavigate({ tabIndex: v })}
           textColor="inherit"
           indicatorColor="secondary"
           variant="scrollable"
@@ -113,27 +192,29 @@ export default function BenchmarkPage() {
             },
           }}
         >
-          <Tab label={t("benchmarkPage.tab.launch")} />
-          <Tab label={t("benchmarkPage.tab.workbench")} />
-          <Tab label={t("benchmarkPage.tab.results")} />
-          <Tab label={t("benchmarkPage.tab.compare")} />
+          <Tab label={t("benchmarkPage.tab.overview")} />
+          <Tab label={t("benchmarkPage.tab.experiments")} />
+          <Tab label={t("benchmarkPage.tab.runLab")} />
+          <Tab label={t("benchmarkPage.tab.analysis")} />
           <Tab label={t("benchmarkPage.tab.cases")} />
         </Tabs>
       </Box>
 
-      {tabIdx === 0 && <RunTab onSwitchToResults={() => setTabIdx(2)} />}
-      {tabIdx === 1 && (
-        <BenchmarkWorkbenchTab
+      {tabIdx === 0 ? <BenchmarkOverviewTab onNavigate={onNavigate} onOpenWorkbench={openWorkbench} /> : null}
+      {tabIdx === 1 ? <BenchmarkExperimentsTab onNavigate={onNavigate} /> : null}
+      {tabIdx === 2 ? <RunTab onSwitchToResults={() => onNavigate({ tabIndex: 3, analysisView: "results" })} /> : null}
+      {tabIdx === 3 ? (
+        <BenchmarkAnalysisTab
+          analysisView={analysisView}
+          onAnalysisViewChange={setAnalysisViewInUrl}
+          onOpenWorkbench={openWorkbench}
           selectedRunId={selectedRunId}
           selectedCaseId={selectedCaseId}
-          onSelectRun={setSelectedRunId}
-          onSelectCase={setSelectedCaseId}
+          onSelectRun={handleSelectRun}
+          onSelectCase={handleSelectCase}
         />
-      )}
-      {tabIdx === 2 && <ResultsTab onOpenWorkbench={openWorkbench} />}
-      {tabIdx === 3 && <CompareTab onOpenWorkbench={openWorkbench} />}
-      {tabIdx === 4 && <CasesTab />}
+      ) : null}
+      {tabIdx === 4 ? <CasesTab /> : null}
     </Box>
   );
 }
-

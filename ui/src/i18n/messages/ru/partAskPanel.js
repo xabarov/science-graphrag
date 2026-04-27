@@ -8,9 +8,9 @@ export default {
   "askPanel.banner.workspaceScoped": "Исследование в рамках рабочей области",
   "askPanel.banner.standalone": "Автономный режим",
   "askPanel.banner.descWorkspace":
-    "Вопрос привязан к активной статье. По цитатам ниже — в доказательства, чтение и граф без потери work_id.",
+    "Вопрос привязан к активной статье. По цитатам ниже — в «Чтение», просмотр чанков (/evidence) и «Граф» без потери work_id.",
   "askPanel.banner.descStandalone":
-    "Вопрос по корпусу или к одной статье. Действия ответа ведут в доказательства, чтение или граф для углублённого просмотра.",
+    "Вопрос по корпусу или к одной статье. Действия у цитат ведут в «Чтение», просмотр чанков (/evidence) или «Граф» для углублённого просмотра.",
   "askPanel.banner.workspaceCorpusTitle": "Область: корпус рабочей области",
   "askPanel.banner.descWorkspaceCorpus":
     "Ответы ограничены статьями активной области (без одного work_id). Укажите work_id ниже, чтобы сузить выборку.",
@@ -58,11 +58,11 @@ export default {
   "askPanel.citation.noWork": "нет контекста статьи",
   "askPanel.chunkLabel": "чанк",
   "askPanel.openReader": "Открыть чтение",
-  "askPanel.openEvidence": "Открыть доказательства",
+  "askPanel.openEvidence": "Просмотр чанков",
   "askPanel.openGraph": "Открыть граф",
   "askPanel.openInWorkspace": "Открыть в рабочей области",
   "askPanel.standaloneReader": "Чтение отдельно",
-  "askPanel.standaloneEvidence": "Доказательства отдельно",
+  "askPanel.standaloneEvidence": "Просмотр чанков (отдельно)",
   "askPanel.standaloneGraph": "Граф отдельно",
   "askPanel.graphContext.title": "Контекст графа",
   "askPanel.graphContext.body":

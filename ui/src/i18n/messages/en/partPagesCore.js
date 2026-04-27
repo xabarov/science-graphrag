@@ -2,11 +2,12 @@
 export default {
   "glossary.workspace.p1": "Open a work and switch tabs without leaving context.",
   "glossary.workspace.p2": "is the indexed paper id; the",
-  "glossary.workspace.p3": "ties Reader, Graph, Ask, and Evidence to that paper.",
+  "glossary.workspace.p3": "ties Reader, Graph, Chat, and chunk inspection (/evidence) to that paper.",
   "glossary.workspace.session": "workspace session",
 
   "glossary.corpus.p1": "Browse indexed works",
-  "glossary.corpus.p2": "Each row is a work_id in the corpus; open a work in Workspace for a full session (reader, ask, evidence, graph).",
+  "glossary.corpus.p2":
+    "Each row is a work_id in the corpus; open a work in Workspace for a full session (reader, chat, chunk inspection at /evidence, graph).",
 
   "glossary.ask.p1": "scopes the question to one indexed paper when you pick it from the corpus or paste an id. Leave empty for corpus-wide retrieval.",
 
@@ -122,10 +123,10 @@ export default {
   "reader.openReaderWs": "Open Reader in workspace",
   "reader.openGraphWs": "Open Graph in workspace",
 
-  "evidence.header.eyebrow": "Evidence",
+  "evidence.header.eyebrow": "Sources",
   "evidence.header.title": "Traceability",
   "evidence.header.description":
-    "Chunk fingerprints and excerpt previews for tracing agent answers. Open from Reader (chunks panel), from Ask citation links, or paste a deep-link that already includes work_id.",
+    "Chunk fingerprints and excerpt previews for auditing agent answers. Not a primary nav item: open from Chat citations, Reader trace, or paste a deep-link with work_id (optionally workspace_id).",
   "evidence.empty.title": "No evidence context loaded",
   "evidence.empty.body":
     "Open a paper from Workspaces / Workspace, then use Reader or a citation link. For support workflows, add ?dev=1 to reveal a work_id field.",

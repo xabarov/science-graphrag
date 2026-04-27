@@ -114,6 +114,7 @@ function ChatUserBubble({ text }) {
  *   inWorkspace: boolean,
  *   workId: string,
  *   workspaceWorkId: string | null,
+ *   workspaceId?: string,
  *   agentToolTrace: unknown[],
  *   retrievalJsonOpen: boolean,
  *   onToggleRetrievalJson: () => void,
@@ -140,6 +141,7 @@ export function ChatMessageThread({
   inWorkspace,
   workId,
   workspaceWorkId,
+  workspaceId = "",
   agentToolTrace,
   retrievalJsonOpen,
   onToggleRetrievalJson,
@@ -312,6 +314,7 @@ export function ChatMessageThread({
                     inWorkspace={inWorkspace}
                     workId={entry.workId || workId}
                     workspaceWorkId={workspaceWorkId}
+                    workspaceId={workspaceId}
                     retrievalMode="agent"
                     agentToolTrace={
                       Array.isArray(entry.details?.agent_tool_trace) ? entry.details.agent_tool_trace : []
@@ -410,6 +413,7 @@ export function ChatMessageThread({
                     inWorkspace={inWorkspace}
                     workId={workId}
                     workspaceWorkId={workspaceWorkId}
+                    workspaceId={workspaceId}
                     retrievalMode="agent"
                     agentToolTrace={agentToolTrace}
                     retrievalJsonOpen={retrievalJsonOpen}

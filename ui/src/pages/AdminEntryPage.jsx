@@ -55,7 +55,7 @@ export default function AdminEntryPage() {
           primaryTo="/admin/benchmarks"
           primaryLabel={t("adminEntry.card.benchmarks.primary")}
           primaryIcon={<AssessmentOutlinedIcon sx={{ fontSize: "1.1rem" }} />}
-          secondaryTo="/admin/benchmarks?tab=workbench"
+          secondaryTo="/admin/benchmarks?tab=analysis&analysisView=workbench"
           secondaryLabel={t("adminEntry.card.benchmarks.secondary")}
           secondaryIcon={<ScienceOutlinedIcon sx={{ fontSize: "1.1rem" }} />}
         />

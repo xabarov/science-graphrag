@@ -6,7 +6,6 @@ export default {
   "shell.drawer.workspace": "Рабочая область",
   "shell.drawer.graph": "Граф",
   "shell.drawer.chat": "Чат",
-  "shell.drawer.evidence": "Доказательства",
   "shell.drawer.reader": "Чтение",
   "shell.drawer.admin": "Админ",
   "shell.drawer.benchmarks": "Бенчмарки",

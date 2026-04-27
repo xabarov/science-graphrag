@@ -10,6 +10,7 @@ from qdrant_client.models import (
     Distance,
     FieldCondition,
     Filter,
+    MatchAny,
     MatchValue,
     PointStruct,
     VectorParams,
@@ -47,6 +48,43 @@ class QdrantClaimsStore:
         res = self._client.count(collection_name=self._collection, count_filter=flt, exact=True)
         return int(res.count)
 
+    def count_points_for_workspace_work(self, *, workspace_id: str, work_id: str) -> int:
+        """Exact count for one ``work_id`` scoped to a workspace payload filter."""
+        ws = str(workspace_id or "").strip()
+        wid = str(work_id or "").strip()
+        if not ws or not wid:
+            return 0
+        flt = Filter(
+            must=[
+                FieldCondition(key="work_id", match=MatchValue(value=wid)),
+                FieldCondition(key="workspace_ids", match=MatchAny(any=[ws])),
+            ]
+        )
+        res = self._client.count(collection_name=self._collection, count_filter=flt, exact=True)
+        return int(res.count)
+
+    def scroll_points_payload_only(
+        self,
+        *,
+        work_id: str,
+        limit: int = 50,
+        offset: int | str | None = None,
+    ) -> tuple[list[dict[str, Any]], int | str | None]:
+        """List claim payloads for one work without vectors."""
+        flt = self._work_id_filter(work_id=work_id)
+        records, next_offset = self._client.scroll(
+            collection_name=self._collection,
+            scroll_filter=flt,
+            limit=limit,
+            offset=offset,
+            with_payload=True,
+            with_vectors=False,
+        )
+        out: list[dict[str, Any]] = []
+        for rec in records:
+            out.append(dict(rec.payload or {}))
+        return out, next_offset
+
     def delete_points_by_work_id(self, *, work_id: str) -> int:
         """Delete all claim points for ``work_id``; return count deleted."""
         flt = self._work_id_filter(work_id=work_id)
@@ -64,6 +102,7 @@ class QdrantClaimsStore:
         claims: list[ClaimDraft],
         embedder: EmbeddingProvider,
         embedding_model: str,
+        workspace_ids: list[str] | None = None,
     ) -> None:
         """Embed claim texts and upsert points into the claims collection."""
         if not claims:
@@ -72,6 +111,13 @@ class QdrantClaimsStore:
         vectors = embedder.embed(texts)
         if len(vectors) != len(claims):
             raise ValueError("claims embedding length mismatch")
+        normalized_workspace_ids = sorted(
+            {
+                str(workspace_id).strip()
+                for workspace_id in (workspace_ids or [])
+                if str(workspace_id).strip()
+            }
+        )
         points: list[PointStruct] = []
         for claim, vec in zip(claims, vectors, strict=True):
             pid = str(uuid.uuid5(uuid.NAMESPACE_URL, f"claim_point:{claim.claim_id}"))
@@ -86,6 +132,7 @@ class QdrantClaimsStore:
                 "topics": [],
                 "embedding_model": embedding_model,
                 "embedding_kind": "claim_normalized_v1",
+                "workspace_ids": normalized_workspace_ids,
             }
             points.append(PointStruct(id=pid, vector=vec.tolist(), payload=payload))
         self._client.upsert(collection_name=self._collection, points=points)

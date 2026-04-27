@@ -800,6 +800,8 @@ The following decisions should be made before UI-3:
 
 **Recorded choice (2026-04-26):** п.2 — **inferred specialist cards first** (`AgentSpecialistRunStack` + `specialist_selected` / группы в `agentRunViewModel.js`). П.1–4 остаются открытыми для следующих итераций.
 
+**Recorded choice (2026-04-27):** **Evidence / chunk inspection** — не primary navigation entry; канонические deep links на аудит чанков ведут на standalone **`/evidence`** (`buildStandaloneEvidencePath` в `ui/src/components/work/traceabilityState.js`), а основной продуктовый слой доказательств остаётся в **Chat** (citations, `evidence_summary`, typed blocks, свёрнутый **Inspect run**). Legacy `workspace?tab=evidence` больше не считается валидным режимом shell (`WORKSPACE_TAB_SLUGS` без `evidence`).
+
 ## 14. Recommended immediate next step
 
 ~~Start with **UI-1 + UI-2 together**.~~ **Done in repo (2026-04-26):** UI-1 + UI-2 + последующие фазы до UI-4 доставлены в `ui/`; следующий осмысленный шаг — **UI-5** (по согласованию с бэкендом) и/или **ручная** прогонка §12.1 п.3 и сценариев §12.2.

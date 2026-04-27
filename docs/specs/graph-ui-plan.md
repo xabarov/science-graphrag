@@ -83,7 +83,7 @@ Any canvas or graph library should consume the **normalized** graph (or a thin m
 
 ### Phase 4.4 (polish and Graph Lab)
 
-- **Shared states:** [`graphShellStates.jsx`](../../ui/src/components/graph/graphShellStates.jsx) — consistent empty/loading/error copy and styles for [`GraphPage.jsx`](../../ui/src/pages/GraphPage.jsx), [`GraphTab.jsx`](../../ui/src/pages/WorkspacePage/tabs/GraphTab.jsx), and the panel.
+- **Shared states:** [`graphShellStates.jsx`](../../ui/src/components/graph/graphShellStates.jsx) — consistent empty/loading/error copy and styles for [`GraphPage.jsx`](../../ui/src/pages/GraphPage.jsx) and the workspace graph panel.
 - **Legend:** [`GraphTypeLegend.jsx`](../../ui/src/components/graph/GraphTypeLegend.jsx) under the Cards/Graph toggle.
 - **Graph Lab:** query flag `lab=1` on `/graph` or workspace graph tab — diagnostics JSON expanded by default; otherwise hidden behind **Show diagnostics** (`Collapse`).
 - **Layout source of truth:** circle positions and fit/zoom math live in [`graphCanvasTransform.js`](../../ui/src/components/graph/graphCanvasTransform.js) (used by `GraphCanvasMvp`); unit tests in `graphCanvasTransform.test.js`. Ring **radius scales with node count** (`worldRadiusForNodeCount`) so dense 1-hop neighborhoods stay readable after **Fit**.

@@ -1,0 +1,36 @@
+{
+  "case_id": "od_chat_05_relation_citation_path",
+  "workspace_id": "2678c5f1-1b31-4aac-92c9-6bd0f4472b23",
+  "baseline_workspace_id": "ws-pilot-od",
+  "lane_compatibility": "both",
+  "query": "Pick two distinct papers in this workspace that are connected through at least one citation or clear lineage edge in the graph. Describe one concrete path (work → edge type → work) you can verify from tool results.",
+  "answer_classes_allowed": ["relation_tracing", "grounded_explanation"],
+  "requires_chunks": false,
+  "requires_neo4j_claims": false,
+  "requires_qdrant_claim_vectors": false,
+  "requires_methods": false,
+  "requires_contradictions": false,
+  "tools_any_of": ["cypher_query", "edge_search", "entity_search", "paper_lookup", "workspace_list_papers"],
+  "tools_must_not_use": [],
+  "min_citation_count": 1,
+  "typed_payload_expected": ["relation_trace", "citations"],
+  "trace_expectations": {
+    "require_phoenix_trace_id": true,
+    "require_tool_trace": true,
+    "min_non_final_tool_calls": 1,
+    "require_graph_tool": true
+  },
+  "manual_review_focus": [
+    "Were cited edges actually present in tool results?",
+    "Did the answer avoid stitching papers outside the workspace without saying so?"
+  ],
+  "expect": {
+    "answer_classes_allowed": ["relation_tracing", "grounded_explanation"],
+    "strict_answer_class": false,
+    "tools_any_of": ["cypher_query", "edge_search", "entity_search", "paper_lookup", "workspace_list_papers"],
+    "require_graph_tool": true,
+    "require_phoenix_trace_id": true,
+    "require_tool_trace": true,
+    "min_non_final_tool_calls": 1
+  }
+}

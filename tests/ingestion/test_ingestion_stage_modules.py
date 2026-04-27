@@ -117,6 +117,7 @@ def test_run_embeddings(monkeypatch) -> None:
 def test_run_qdrant_upsert(monkeypatch) -> None:
     ctx = _DummyCtx()
     calls = {"chunk": 0, "work": 0, "claims": 0}
+    claims_kwargs = {}
 
     class _QChunk:
         def __init__(self, *_args, **_kwargs):
@@ -144,6 +145,7 @@ def test_run_qdrant_upsert(monkeypatch) -> None:
 
         def upsert_claims(self, **_kwargs):
             calls["claims"] += 1
+            claims_kwargs.update(_kwargs)
 
     monkeypatch.setattr("science_graphrag.ingestion.stages.qdrant_upsert.QdrantChunkStore", _QChunk)
     monkeypatch.setattr(
@@ -167,6 +169,7 @@ def test_run_qdrant_upsert(monkeypatch) -> None:
     assert calls["chunk"] == 2
     assert calls["work"] == 1
     assert calls["claims"] == 2
+    assert claims_kwargs["workspace_ids"] == ["ws-1"]
 
 
 def test_run_workspace_attach() -> None:

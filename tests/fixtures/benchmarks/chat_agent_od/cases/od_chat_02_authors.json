@@ -1,0 +1,36 @@
+{
+  "case_id": "od_chat_02_authors",
+  "workspace_id": "2678c5f1-1b31-4aac-92c9-6bd0f4472b23",
+  "baseline_workspace_id": "ws-pilot-od",
+  "lane_compatibility": "both",
+  "query": "Pick one well-known paper in this workspace. Who are its authors, and what else did those authors contribute inside this same workspace (co-authorship or shared papers)?",
+  "answer_classes_allowed": ["fact_lookup", "relation_tracing"],
+  "requires_chunks": false,
+  "requires_neo4j_claims": false,
+  "requires_qdrant_claim_vectors": false,
+  "requires_methods": false,
+  "requires_contradictions": false,
+  "tools_any_of": ["paper_lookup", "entity_search", "cypher_query", "workspace_list_papers"],
+  "tools_must_not_use": [],
+  "min_citation_count": 1,
+  "typed_payload_expected": ["citations", "relation_trace"],
+  "trace_expectations": {
+    "require_phoenix_trace_id": true,
+    "require_tool_trace": true,
+    "min_non_final_tool_calls": 1,
+    "require_graph_tool": true
+  },
+  "manual_review_focus": [
+    "Were author facts grounded in graph or authoritative work metadata?",
+    "Did the trace show how cross-paper links inside the workspace were found?"
+  ],
+  "expect": {
+    "answer_classes_allowed": ["fact_lookup", "relation_tracing"],
+    "strict_answer_class": false,
+    "tools_any_of": ["paper_lookup", "entity_search", "cypher_query", "workspace_list_papers"],
+    "require_graph_tool": true,
+    "require_phoenix_trace_id": true,
+    "require_tool_trace": true,
+    "min_non_final_tool_calls": 1
+  }
+}

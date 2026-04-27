@@ -367,6 +367,8 @@ Manual review questions per case:
 6. Did the final answer rely on evidence actually seen in the trace?
 7. Did the run degrade honestly when evidence was weak?
 
+**UI cross-check (product):** for human review of chunk-level grounding, use the standalone **`/evidence`** deep link from Chat citations or Reader trace (canonical builder: `buildStandaloneEvidencePath` in `ui/src/components/work/traceabilityState.js`); workspace shell does not host a separate Evidence tab.
+
 ### 6.4 Promotion policy
 
 The OD suite should not jump directly into a blocking gate.
@@ -480,6 +482,7 @@ This plan is succeeding when all of the following are true:
 |------|--------|
 | 2026-04-27 | Initial plan linking OD workspace restoration, trusted chat-agent scenarios, ontology upgrades, ingestion modernization, and Phoenix trace review. |
 | 2026-04-27 | §12.1: PR A closure notes (Task 1–2 shipped paths, classifier caveats, `qdrant_collection` vs legacy `qdrant_chunks_collection`). |
+| 2026-04-27 | §12.2: PR B shipped (Task 3–4): OD claims-only + claim-vector runners, `workspace_ids` on claim payloads, vectors audit CLI; operator flow in `eval/README.md`. |
 
 ---
 
@@ -496,7 +499,7 @@ Below is the recommended **implementation-sized** backlog for the next execution
 | Shared snapshot (Neo4j + Qdrant chunks/claims + Postgres `documents` + parsed checkpoint) | [`eval/chat_agent/od_data_collector.py`](../../eval/chat_agent/od_data_collector.py) | Per-work field `work_title` (not only `title`). Chunks collection: `_resolve_qdrant_chunks_collection` in backfill / `qdrant_chunks_collection_name` here — **`Settings` only defines `qdrant_collection`**; a non-existent `qdrant_chunks_collection` attr must fall back to it (PR A fixed [`scripts/backfill_workspace_claims.py`](../../scripts/backfill_workspace_claims.py) accordingly). |
 | Manifest JSON + MD | [`eval/chat_agent/od_workspace_manifest.py`](../../eval/chat_agent/od_workspace_manifest.py), CLI [`scripts/chat_agent_od_workspace_manifest.py`](../../scripts/chat_agent_od_workspace_manifest.py) | Writes `eval/results/od-workspace-manifest-<UTC>.json`. Does **not** exit non-zero on `degraded` workspace audit — goal is freeze facts, not gate CI. |
 | Gap audit JSON + MD | [`eval/chat_agent/od_claims_gap_audit.py`](../../eval/chat_agent/od_claims_gap_audit.py), CLI [`scripts/chat_agent_od_claims_gap_audit.py`](../../scripts/chat_agent_od_claims_gap_audit.py) | Output `eval/results/od-claims-gap-audit-<UTC>.json`. Summary includes `work_count_missing_claims` and `work_count_missing_neo4j_claims` (same integer). Per-work: `claims_gap_classification`, `claims_gap_classification_reason`, `claims_gap_evidence`. |
-| Store helper | [`science_graphrag/storage/qdrant_claims_store.py`](../../science_graphrag/storage/qdrant_claims_store.py) | `count_points_for_work` for read-only audits (no delete). |
+| Store helper | [`science_graphrag/storage/qdrant_claims_store.py`](../../science_graphrag/storage/qdrant_claims_store.py) | `count_points_for_work` for read-only audits (no delete). PR B extended this store: `workspace_ids` in claim vector payload, `count_points_for_workspace_work`, `scroll_points_payload_only`; ingestion passes `workspace_ids` from `run_qdrant_upsert` (see §12.2). |
 | Eval docs | [`eval/README.md`](../../eval/README.md) | Section “Rich OD workspace — freeze manifest + claims gap audit”. |
 
 **Commands (from repo root, `.venv`):**
@@ -523,6 +526,28 @@ Below is the recommended **implementation-sized** backlog for the next execution
 - `manifest.claims_extraction_enabled` is the **current** `Settings` flag at manifest generation time, not a historical per-document proof.
 
 **Tests:** [`tests/eval/test_od_claims_gap_audit.py`](../../tests/eval/test_od_claims_gap_audit.py) — unit tests for `classify_od_claims_gap` only (no Docker).
+
+### 12.2 PR B — shipped implementation (Task 3 + Task 4)
+
+**Status:** implemented in-repo (2026-04-27). PR C (post-restore audit + scenario specs) should consume **live** manifests/audits after operators run Task 3–4 on the target workspace, not assume the pre-repair trust-audit snapshot alone.
+
+| Piece | Location | Notes for follow-up |
+|-------|----------|---------------------|
+| Shared selection + Neo4j/Qdrant helpers | [`eval/chat_agent/od_claims_backfill.py`](../../eval/chat_agent/od_claims_backfill.py) | Task 3 targets: gap-audit classes `claims_stage_not_run`, `claims_extraction_failed`, `claims_write_failed`; optional `--allow-unknown`. Manifest-only fallback: all works with `neo4j_claim_count == 0`. Task 4 targets: `claims_embed_missing` + Task 3 JSONL rows with `status=ok`, or manifest fallback `neo4j > 0` and `qdrant == 0`. `resolve_workspace_id_for_row`: CLI → row → manifest → gap-audit top-level `workspace_id` (fixes gap-only runs with empty row `workspace_id`). |
+| Task 3 CLI | [`scripts/backfill_od_workspace_claims.py`](../../scripts/backfill_od_workspace_claims.py) | JSONL per work: `claims_before`, `claims_extracted`, `claims_written`, `chunk_count`, `status` (`ok` / `skipped` / `error`), `reason` (`dry_run`, `no_qdrant_chunks`, `resume_skip`, …). `--resume-from` skips only prior `status=ok` work_ids; **resume skips are also logged** as JSONL rows (`reason=resume_skip`) for traceability. Refuses run if `claims_extraction_enabled=false` or extraction API key unset. |
+| Task 4 vector CLI | [`scripts/backfill_od_workspace_claim_vectors.py`](../../scripts/backfill_od_workspace_claim_vectors.py) | Rehydrates Neo4j → `ClaimDraft` via `list_work_claims` (no LLM). `--force-all` rebuilds vectors. Classification column uses a pre-built map from gap audit (no O(n²) scan per work). |
+| Vectors audit (library) | [`eval/chat_agent/od_claim_vectors_audit.py`](../../eval/chat_agent/od_claim_vectors_audit.py) | Compares manifest counts with `count_points_for_workspace_work` for workspace payload contract. `scenario_families_*` is a **heuristic** gate (claim-semantic / quote / contradiction retrieval) — tighten when PR D adds runner dependency flags. |
+| Vectors audit (CLI) | [`scripts/chat_agent_od_claim_vectors_audit.py`](../../scripts/chat_agent_od_claim_vectors_audit.py) | If `--manifest` is passed **without** `--workspace-id`, manifest is used only to read `workspace_id`; **per-work metrics are always live** from `build_od_workspace_manifest_live` + store registry (frozen file counts are not trusted for post-repair verification). |
+| Ingestion alignment | [`science_graphrag/ingestion/stages/qdrant_upsert.py`](../../science_graphrag/ingestion/stages/qdrant_upsert.py) | Passes `ctx.ingest_workspace_ids` into `QdrantClaimsStore.upsert_claims`. |
+| Tests | [`tests/eval/test_od_claims_backfill.py`](../../tests/eval/test_od_claims_backfill.py), [`tests/eval/test_od_claim_vectors_audit.py`](../../tests/eval/test_od_claim_vectors_audit.py), [`tests/test_qdrant_claims_store.py`](../../tests/test_qdrant_claims_store.py), [`tests/ingestion/test_ingestion_stage_modules.py`](../../tests/ingestion/test_ingestion_stage_modules.py) | Unit-only; run: `pytest tests/eval/test_od_claims_backfill.py tests/eval/test_od_claim_vectors_audit.py tests/test_qdrant_claims_store.py tests/ingestion/test_ingestion_stage_modules.py`. |
+
+**Operator command sequence (see also [`eval/README.md`](../../eval/README.md) § Rich OD PR B):** Task 1 manifest → Task 2 gap audit → Task 3 `od-claims-backfill-*.jsonl` → Task 4 `od-claim-vectors-backfill-*.jsonl` → `chat_agent_od_claim_vectors_audit.py`. Long runs: `.cursor/rules/long-running-ops.mdc` (keys, Docker health).
+
+**Known gaps / debt (explicit, do not “paper over”):**
+
+- Task 3 still **does not** update Postgres `ingest_checkpoint_json`; gap-audit correlation with future ingests may drift until a dedicated “checkpoint reconcile” or full re-ingest path exists (see backlog ideas in `docs/backlog/refactor-backend.md` if you add an item).
+- `list_work_claims` + `load_live_claims_as_drafts` is a **rehydration** path: evidence rows without non-empty `quote` are dropped from drafts (vector upsert still runs on claim text). If you need bit-perfect parity with extraction-time drafts, add a Neo4j reader that preserves empty-quote evidence or re-run LLM extraction for that work.
+- Old claim points in Qdrant **before** PR B may lack `workspace_ids`; after backfill, new points have them — audit compares total vs workspace-scoped counts to surface legacy payloads.
 
 ### Task 1 — Freeze the rich OD workspace manifest
 
@@ -588,6 +613,8 @@ Below is the recommended **implementation-sized** backlog for the next execution
 
 ### Task 3 — Claims-only backfill runner for affected works
 
+> **Done (PR B):** see §12.2. CLI [`scripts/backfill_od_workspace_claims.py`](../../scripts/backfill_od_workspace_claims.py); core helpers in [`eval/chat_agent/od_claims_backfill.py`](../../eval/chat_agent/od_claims_backfill.py).
+
 **Goal:** create a narrow repair path for OD without forcing a blind full re-ingest of all 31 works.
 
 **Deliverable:**
@@ -614,6 +641,8 @@ Below is the recommended **implementation-sized** backlog for the next execution
 
 ### Task 4 — Claims vector backfill and verification
 
+> **Done (PR B):** see §12.2. Vector backfill [`scripts/backfill_od_workspace_claim_vectors.py`](../../scripts/backfill_od_workspace_claim_vectors.py); audit library [`eval/chat_agent/od_claim_vectors_audit.py`](../../eval/chat_agent/od_claim_vectors_audit.py); audit CLI [`scripts/chat_agent_od_claim_vectors_audit.py`](../../scripts/chat_agent_od_claim_vectors_audit.py). Claim payload contract: `workspace_ids` in [`science_graphrag/storage/qdrant_claims_store.py`](../../science_graphrag/storage/qdrant_claims_store.py).
+
 **Goal:** ensure the `claims` Qdrant collection becomes usable for claim-semantic chat scenarios.
 
 **Deliverable:**
@@ -637,6 +666,8 @@ Below is the recommended **implementation-sized** backlog for the next execution
 
 ### Task 5 — Post-restore OD workspace audit
 
+> **Status (PR C, 2026-04-27):** companion closeout + artifact registry — [`od-corpus-claims-methods-post-restore-closeout-2026-04-27.md`](./od-corpus-claims-methods-post-restore-closeout-2026-04-27.md); pre-repair audit links to it from §7 in [`od-corpus-claims-methods-trust-audit-2026-04-27.md`](./od-corpus-claims-methods-trust-audit-2026-04-27.md). Operator fills TBD tables after live Task 3–4 outputs under `eval/results/od-*-latest.*`.
+
 **Goal:** replace the current “damaged workspace” audit with a post-repair factual snapshot.
 
 **Deliverable:**
@@ -659,6 +690,8 @@ Below is the recommended **implementation-sized** backlog for the next execution
 3. any remaining blockers are explicit.
 
 ### Task 6 — Author the first 12 OD scenario specs
+
+> **Status (PR C, 2026-04-27):** 12 specs + README + structural test — [`tests/fixtures/benchmarks/chat_agent_od/`](../../tests/fixtures/benchmarks/chat_agent_od), [`tests/eval/test_chat_agent_od_case_specs.py`](../../tests/eval/test_chat_agent_od_case_specs.py). Runner enforcement remains **Task 7**.
 
 **Goal:** turn the scenario list from §5 into concrete fixture files.
 
@@ -752,6 +785,6 @@ Below is the recommended **implementation-sized** backlog for the next execution
 ### Suggested split into PR-sized slices
 
 1. **PR A:** Task 1 + Task 2 — **shipped** (implementation notes: §12.1)
-2. **PR B:** Task 3 + Task 4
+2. **PR B:** Task 3 + Task 4 — **shipped** (implementation notes: §12.2)
 3. **PR C:** Task 5 + Task 6
 4. **PR D:** Task 7 + Task 8

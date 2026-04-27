@@ -31,6 +31,11 @@ describe("workContext", () => {
     expect(normalizeWorkspaceTab("GRAPH")).toBe("graph");
   });
 
+  it("maps legacy evidence tab slug to overview (evidence uses standalone /evidence route)", () => {
+    expect(WORKSPACE_TAB_SLUGS).not.toContain("evidence");
+    expect(normalizeWorkspaceTab("evidence")).toBe("overview");
+  });
+
   it("builds workspace path with work id (no tab)", () => {
     expect(buildWorkspacePath("w1", "graph")).toBe("/workspace?work_id=w1");
     expect(buildWorkspacePath("", "graph")).toBe("/workspace");

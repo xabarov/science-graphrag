@@ -1,0 +1,34 @@
+{
+  "case_id": "od_chat_01_inventory",
+  "workspace_id": "2678c5f1-1b31-4aac-92c9-6bd0f4472b23",
+  "baseline_workspace_id": "ws-pilot-od",
+  "lane_compatibility": "both",
+  "query": "List papers in this workspace grouped loosely by era or detector family (two-stage vs one-stage vs transformer-era). Keep each line to title + one short tag.",
+  "answer_classes_allowed": ["inventory"],
+  "requires_chunks": false,
+  "requires_neo4j_claims": false,
+  "requires_qdrant_claim_vectors": false,
+  "requires_methods": false,
+  "requires_contradictions": false,
+  "tools_any_of": ["workspace_list_papers", "workspace_overview", "paper_counts", "paper_lookup"],
+  "tools_must_not_use": [],
+  "min_citation_count": 0,
+  "typed_payload_expected": ["inventory", "citations"],
+  "trace_expectations": {
+    "require_phoenix_trace_id": true,
+    "require_tool_trace": true,
+    "min_non_final_tool_calls": 1
+  },
+  "manual_review_focus": [
+    "Was membership complete vs workspace CONTAINS?",
+    "Did the answer avoid inventing papers not in the workspace?"
+  ],
+  "expect": {
+    "answer_classes_allowed": ["inventory"],
+    "strict_answer_class": false,
+    "tools_any_of": ["workspace_list_papers", "workspace_overview", "paper_counts", "paper_lookup"],
+    "require_phoenix_trace_id": true,
+    "require_tool_trace": true,
+    "min_non_final_tool_calls": 1
+  }
+}

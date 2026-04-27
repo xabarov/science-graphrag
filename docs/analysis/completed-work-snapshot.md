@@ -42,6 +42,8 @@
 
 **Tests (§12.1):** stream parse / subagent cards / shimmer / warnings — **DONE**; full answer + all typed blocks RTL — partial; manual SSE — OPEN.
 
+**Evidence IA (2026-04-27):** **DONE** — primary sidebar no longer links to `/evidence`; canonical inspection URLs use **`buildStandaloneEvidencePath`**; citations and Reader trace banner open `/evidence` with optional `workspace_id`; legacy unmounted tabs `OverviewTab` / `GraphTab` / `EvidenceTab` removed. See recorded choice in [`agent-chat-frontend-ui-plan-2026-04-26.md`](./agent-chat-frontend-ui-plan-2026-04-26.md) and Phase 5 notes in [`../specs/ui-ux-master-plan.md`](../specs/ui-ux-master-plan.md).
+
 ---
 
 ## Workspace graph P0

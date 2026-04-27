@@ -14,6 +14,9 @@ describe("routeCompatibility", () => {
 
   it("preserves query params when redirecting legacy admin routes", () => {
     expect(buildLegacyAdminRedirectTarget("/benchmark", "?tab=workbench")).toBe("/admin/benchmarks?tab=workbench");
+    expect(buildLegacyAdminRedirectTarget("/benchmark", "?tab=analysis&analysisView=workbench&run=r1")).toBe(
+      "/admin/benchmarks?tab=analysis&analysisView=workbench&run=r1",
+    );
     expect(buildLegacyAdminRedirectTarget("/settings", "")).toBe("/admin/settings");
     expect(buildLegacyAdminRedirectTarget("/diagnostics", "?from=home")).toBe("/admin/diagnostics?from=home");
   });

@@ -10,6 +10,11 @@
 - **`bibliography` object** may include `format`, `entries`, `filtered_work_ids`, and tool-local `warnings` (e.g. `some_work_ids_filtered`). Servers **also** surface bibliography filter signals in top-level `warnings` when applicable so clients that only read `warnings` still see them.
 - **SSE stream extras** (`context_compacted`, `tool_search_result`, mid-run `warning`, etc.) are optional UX; the authoritative answer payload is **`final_answer`** (same shape as sync JSON). **JSON parity:** when `thread_id` is set, sync JSON includes `session_summary_excerpt` (post-turn server memory excerpt), matching the excerpt carried on SSE `context_compacted` / `final_answer`.
 
+### UI traceability (product, 2026-04-27)
+
+- **Chunk inspection** for trust / QA is the standalone route **`/evidence`** with query params `work_id`, optional `workspace_id`, and trace fields (`chunk_fingerprint`, `section`, `citation`). The React helper is **`buildStandaloneEvidencePath`** in `ui/src/components/work/traceabilityState.js`.
+- **Do not** treat `?tab=evidence` on `/workspace` as a live workspace-shell mode; workspace shell is a paper list; chat-first evidence lives in **`AskAnswerPanel`** (citations, `evidence_summary`, typed blocks, **Inspect run**).
+
 ### `history_digest` parsing
 
 - Accepted shapes: **JSON array of objects** as a **list** in the JSON body, or the same array **serialized as a JSON string** in the body.

@@ -1,0 +1,33 @@
+{
+  "case_id": "od_chat_06_temporal_evolution",
+  "workspace_id": "2678c5f1-1b31-4aac-92c9-6bd0f4472b23",
+  "lane_compatibility": "rich_od",
+  "query": "How did the dominant story for object detection evolve from R-CNN-era two-stage detectors toward transformer-era detectors inside this workspace? Give a compact timeline with 4–6 milestones grounded in specific papers.",
+  "answer_classes_allowed": ["synthesis"],
+  "requires_chunks": true,
+  "requires_neo4j_claims": false,
+  "requires_qdrant_claim_vectors": false,
+  "requires_methods": false,
+  "requires_contradictions": false,
+  "tools_any_of": ["idea_search", "paper_lookup", "cypher_query", "edge_search", "workspace_list_papers"],
+  "tools_must_not_use": [],
+  "min_citation_count": 3,
+  "typed_payload_expected": ["citations", "relation_trace"],
+  "trace_expectations": {
+    "require_phoenix_trace_id": true,
+    "require_tool_trace": true,
+    "min_non_final_tool_calls": 2
+  },
+  "manual_review_focus": [
+    "Is the timeline supported by retrieved evidence, not model parametric knowledge alone?",
+    "Did routing avoid collapsing into a single generic summary without paper anchors?"
+  ],
+  "expect": {
+    "answer_classes_allowed": ["synthesis"],
+    "strict_answer_class": false,
+    "tools_any_of": ["idea_search", "paper_lookup", "cypher_query", "edge_search", "workspace_list_papers"],
+    "require_phoenix_trace_id": true,
+    "require_tool_trace": true,
+    "min_non_final_tool_calls": 2
+  }
+}

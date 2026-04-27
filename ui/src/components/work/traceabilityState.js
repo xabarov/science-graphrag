@@ -132,6 +132,19 @@ export function buildStandaloneTracePath(routePath, workId, extras = {}) {
 }
 
 /**
+ * Canonical URL for chunk-level evidence inspection (standalone `/evidence`).
+ * Prefer this over {@link buildWorkspaceTracePath} with `tab: "evidence"` because the workspace
+ * shell is a paper list; tools (Reader, Graph, Chat, Evidence) live as top-level routes.
+ *
+ * @param {string} workId
+ * @param {Partial<{workspaceId: string, nodeId: string, edgeId: string, chunkFingerprint: string, section: string, citation: string}>} [extras]
+ * @returns {string}
+ */
+export function buildStandaloneEvidencePath(workId, extras = {}) {
+  return buildStandaloneTracePath("/evidence", workId, extras);
+}
+
+/**
  * Standalone chat deep link with optional trace extras (chunk/section/citation/workspace).
  *
  * @param {string} workId

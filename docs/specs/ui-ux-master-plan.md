@@ -217,7 +217,7 @@ flowchart LR
 - позже `Compare`
 - позже `Notes`
 
-Это ключевая идея. Вместо отдельных равноправных top-level страниц `Reader / Graph / Evidence / Ask` нужно перейти к модели:
+Это ключевая идея. Вместо отдельных равноправных top-level страниц `Reader / Graph / Chat (+ /evidence для аудита чанков)` нужно перейти к модели:
 
 - эти экраны существуют как самостоятельные точки входа;
 - но основное повседневное использование происходит через единый `Workspace` по выбранной работе.
@@ -230,10 +230,8 @@ flowchart LR
 - `/corpus`
 - `/workspace`
 - `/workspace/:workId` или `/workspace?work_id=...`
-- `/workspace?work_id=...&tab=reader`
-- `/workspace?work_id=...&tab=graph`
-- `/workspace?work_id=...&tab=evidence`
-- `/ask`
+- **Текущий shell:** вкладки reader/graph/chat **не** монтируются внутри `/workspace` (список работ + инструменты в левом nav). Query `tab=` для `reader` / `graph` / `ask` по-прежнему нормализуется в URL-парсере, но **`tab=evidence` схлопывается в `overview`** — аудит чанков только на **`/evidence`**.
+- `/chat` (канонический чат; `/ask` → редирект на `/chat`)
 - `/graph`
 - `/evidence`
 
@@ -247,7 +245,7 @@ flowchart LR
 
 ### Принцип
 
-`/graph`, `/ask`, `/evidence` остаются как самостоятельные прямые экраны, но:
+`/graph`, `/chat`, `/evidence` остаются как самостоятельные прямые экраны, но:
 
 - из `Corpus` и `Workspace` пользователь обычно попадает в них уже с выбранным `work_id`;
 - приложение должно уметь удерживать и восстанавливать текущий контекст работы;
@@ -490,19 +488,17 @@ Admin-инструменты должны быть:
 
 - `ui/src/pages/HomePage.jsx`
 - `ui/src/pages/CorpusPage.jsx`
-- `ui/src/pages/WorkspacePage/WorkspacePage.jsx`
-- `ui/src/pages/WorkspacePage/tabs/OverviewTab.jsx`
-- `ui/src/pages/WorkspacePage/tabs/ReaderTab.jsx`
-- `ui/src/pages/WorkspacePage/tabs/GraphTab.jsx`
-- `ui/src/pages/WorkspacePage/tabs/AskTab.jsx`
-- `ui/src/pages/WorkspacePage/tabs/EvidenceTab.jsx`
+- `ui/src/pages/WorkspacePage/WorkspacePage.jsx` (paper list shell; tools in left nav)
+- `ui/src/pages/ReaderPage.jsx`, `GraphPage.jsx`, `ChatPage` / `AskPage.jsx`, `EvidencePage.jsx` — **direct-entry** маршруты и основной UX
 - `ui/src/pages/AdminPage.jsx`
 - `ui/src/pages/DiagnosticsPage.jsx`
 
+**Удалено как неиспользуемый legacy (2026-04-27):** `WorkspacePage/tabs/{OverviewTab,GraphTab,EvidenceTab}.jsx` — в актуальном shell не монтировались; `ReaderTab.jsx` / `AskTab.jsx` остаются в дереве только как неподключённые заготовки до отдельного решения.
+
 Возможно:
 
-- текущие `ReaderPage.jsx`, `GraphPage.jsx`, `AskPage.jsx`, `EvidencePage.jsx` остаются как direct-entry wrappers;
-- но основная логика переезжает в reusable workspace tabs / shared panels.
+- дальнейшая консолидация shared panels между standalone страницами и workspace;
+- явное удаление оставшихся неподключённых `tabs/*` после аудита импортов.
 
 ## Фазы реализации
 
@@ -721,6 +717,7 @@ Checklist:
 - Продолжение потока: «Return to Ask» / «Continue in Ask» в `ui/src/components/work/ReaderWorkBody.jsx` и `ui/src/components/work/EvidenceWorkBody.jsx`.
 - Тесты: `ui/src/components/work/askHistoryState.test.js`, `ui/src/components/work/askSessionState.test.js`, `ui/src/components/work/askFlowCompatibility.test.js`, `ui/src/components/work/traceabilityState.test.js` (в т.ч. `ask_session`).
 - Ручная проверка: `docs/checklists/ui-entry-wave-checklist.md` (секция Ask and Evidence flow + explanation + sessions).
+- **Evidence / chunk inspection (2026-04-27):** канонический маршрут аудита чанков — standalone `/evidence` через `buildStandaloneEvidencePath` в `ui/src/components/work/traceabilityState.js`; пункт **Evidence** убран из primary sidebar (`Drawer.jsx`), чтобы не конкурировать с chat-first UX; ссылки из Chat / Reader ведут на `/evidence` с сохранением `workspace_id` + trace query.
 - Следующий шаг — при необходимости **серверный persistence**, удаление/экспорт сессий или более глубокий narrative.
 
 Цель:

@@ -1,13 +1,21 @@
 import { describe, expect, it } from "vitest";
 
 import { deriveAskScopeKey } from "./askSessionState.js";
-import { buildStandaloneTracePath, buildWorkspaceTracePath, describeTraceabilityState } from "./traceabilityState.js";
+import {
+  buildStandaloneEvidencePath,
+  buildStandaloneTracePath,
+  buildWorkspaceTracePath,
+  describeTraceabilityState,
+} from "./traceabilityState.js";
 import { buildQueryBody, normalizeQueryResponse } from "../../services/researchApi.js";
 
 describe("askFlowCompatibility", () => {
   it("keeps standalone ask links free of workspace tab params", () => {
     expect(buildStandaloneTracePath("/chat", "w1")).toBe("/chat?work_id=w1");
     expect(buildStandaloneTracePath("/evidence", "w1", { chunkFingerprint: "fp-1", citation: "2" })).toBe(
+      "/evidence?work_id=w1&chunk_fingerprint=fp-1&citation=2",
+    );
+    expect(buildStandaloneEvidencePath("w1", { chunkFingerprint: "fp-1", citation: "2" })).toBe(
       "/evidence?work_id=w1&chunk_fingerprint=fp-1&citation=2",
     );
   });

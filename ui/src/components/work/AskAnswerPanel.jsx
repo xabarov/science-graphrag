@@ -5,7 +5,11 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
-import { buildStandaloneTracePath, buildWorkspaceTracePath } from "./traceabilityState.js";
+import {
+  buildStandaloneEvidencePath,
+  buildStandaloneTracePath,
+  buildWorkspaceTracePath,
+} from "./traceabilityState.js";
 import {
   BibliographyBlock,
   IdeaSuggestionsBlock,
@@ -36,6 +40,7 @@ function formatAgentWarning(t, code) {
  *   inWorkspace: boolean,
  *   workId: string,
  *   workspaceWorkId: string | null,
+ *   workspaceId?: string,
  *   retrievalMode: string,
  *   agentToolTrace: unknown[],
  *   retrievalJsonOpen: boolean,
@@ -51,6 +56,7 @@ export function AskAnswerPanel({
   inWorkspace,
   workId,
   workspaceWorkId,
+  workspaceId = "",
   retrievalMode,
   agentToolTrace,
   retrievalJsonOpen,
@@ -63,10 +69,18 @@ export function AskAnswerPanel({
 
   const { runState } = deriveRunState({ normalized, isRunActive, streamEvents });
   const citations = Array.isArray(normalized.citations) ? normalized.citations : [];
+  const warningsList = Array.isArray(normalized.warnings) ? normalized.warnings : [];
+  const hasWeakEvidence = warningsList.includes("weak_evidence");
   const answerText = String(normalized.answer || "").trim();
   const hasDegraded =
     (Array.isArray(normalized?.retrieval_trace?.degraded) && normalized.retrieval_trace.degraded.length > 0) ||
     (Array.isArray(normalized?.graph_context?.degraded) && normalized.graph_context.degraded.length > 0);
+  const wsForTrace = String(workspaceId || "").trim();
+
+  function citationTraceExtras(chunkFingerprint, sectionPath, citationIndex) {
+    const base = { chunkFingerprint, section: sectionPath, citation: citationIndex };
+    return wsForTrace ? { ...base, workspaceId: wsForTrace } : base;
+  }
 
   return (
     <Box>
@@ -85,10 +99,23 @@ export function AskAnswerPanel({
 
       {isRunActive ? <AgentLiveStatus t={t} streamEvents={streamEvents} isActive /> : null}
 
-      {Array.isArray(normalized.warnings) && normalized.warnings.length > 0 ? (
-        <Alert severity="warning" sx={{ mb: 1, fontSize: "0.75rem", backgroundColor: tk.surface.subtle }}>
+      {warningsList.length > 0 ? (
+        <Alert
+          severity="warning"
+          variant={hasWeakEvidence ? "outlined" : "standard"}
+          sx={{
+            mb: 1,
+            fontSize: "0.75rem",
+            ...(hasWeakEvidence
+              ? {
+                  backgroundColor: "rgba(251, 191, 36, 0.06)",
+                  borderColor: "rgba(251, 191, 36, 0.42)",
+                }
+              : { backgroundColor: tk.surface.subtle }),
+          }}
+        >
           <Box component="ul" sx={{ m: 0, pl: 2 }}>
-            {normalized.warnings.map((w) => (
+            {warningsList.map((w) => (
               <Box component="li" key={String(w)} sx={{ mb: 0.25 }}>
                 {formatAgentWarning(t, w)}
               </Box>
@@ -104,9 +131,22 @@ export function AskAnswerPanel({
       ) : null}
 
       {normalized.evidence_summary ? (
-        <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary, mb: 1, whiteSpace: "pre-wrap" }}>
-          {t("chat.typed.evidenceSummaryLabel")}: {String(normalized.evidence_summary)}
-        </Typography>
+        <Box
+          sx={{
+            mb: 1.25,
+            p: 1,
+            borderRadius: "6px",
+            border: `1px solid ${tk.border.default}`,
+            backgroundColor: tk.surface.panelAlt,
+          }}
+        >
+          <Typography sx={{ fontSize: "0.7rem", fontWeight: 600, color: tk.text.muted, mb: 0.35 }}>
+            {t("chat.typed.evidenceSummaryLabel")}
+          </Typography>
+          <Typography sx={{ fontSize: "0.8125rem", color: tk.text.secondary, whiteSpace: "pre-wrap" }}>
+            {String(normalized.evidence_summary)}
+          </Typography>
+        </Box>
       ) : null}
 
       {!isRunActive && normalized.session_summary_excerpt ? (
@@ -188,19 +228,23 @@ export function AskAnswerPanel({
                   {sameAsWorkspace ? (
                     <>
                       <Link
-                        to={buildWorkspaceTracePath(wid, "reader", { chunkFingerprint, section: sectionPath, citation: citationIndex })}
+                        to={buildWorkspaceTracePath(wid, "reader", {
+                          ...citationTraceExtras(chunkFingerprint, sectionPath, citationIndex),
+                        })}
                         style={{ fontSize: "0.75rem", color: tk.text.accent }}
                       >
                         {t("askPanel.openReader")}
                       </Link>
                       <Link
-                        to={buildWorkspaceTracePath(wid, "evidence", { chunkFingerprint, section: sectionPath, citation: citationIndex })}
+                        to={buildStandaloneEvidencePath(wid, citationTraceExtras(chunkFingerprint, sectionPath, citationIndex))}
                         style={{ fontSize: "0.75rem", color: tk.text.accent }}
                       >
                         {t("askPanel.openEvidence")}
                       </Link>
                       <Link
-                        to={buildWorkspaceTracePath(wid, "graph", { chunkFingerprint, section: sectionPath, citation: citationIndex })}
+                        to={buildWorkspaceTracePath(wid, "graph", {
+                          ...citationTraceExtras(chunkFingerprint, sectionPath, citationIndex),
+                        })}
                         style={{ fontSize: "0.75rem", color: tk.text.accent }}
                       >
                         {t("askPanel.openGraph")}
@@ -209,25 +253,27 @@ export function AskAnswerPanel({
                   ) : (
                     <>
                       <Link
-                        to={buildWorkspaceTracePath(wid, "reader", { chunkFingerprint, section: sectionPath, citation: citationIndex })}
+                        to={buildWorkspaceTracePath(wid, "reader", {
+                          ...citationTraceExtras(chunkFingerprint, sectionPath, citationIndex),
+                        })}
                         style={{ fontSize: "0.75rem", color: tk.text.accent }}
                       >
                         {t("askPanel.openInWorkspace")}
                       </Link>
                       <Link
-                        to={buildStandaloneTracePath("/reader", wid, { chunkFingerprint, section: sectionPath, citation: citationIndex })}
+                        to={buildStandaloneTracePath("/reader", wid, citationTraceExtras(chunkFingerprint, sectionPath, citationIndex))}
                         style={{ fontSize: "0.75rem", color: tk.text.muted }}
                       >
                         {t("askPanel.standaloneReader")}
                       </Link>
                       <Link
-                        to={buildStandaloneTracePath("/evidence", wid, { chunkFingerprint, section: sectionPath, citation: citationIndex })}
+                        to={buildStandaloneEvidencePath(wid, citationTraceExtras(chunkFingerprint, sectionPath, citationIndex))}
                         style={{ fontSize: "0.75rem", color: tk.text.muted }}
                       >
                         {t("askPanel.standaloneEvidence")}
                       </Link>
                       <Link
-                        to={buildStandaloneTracePath("/graph", wid, { chunkFingerprint, section: sectionPath, citation: citationIndex })}
+                        to={buildStandaloneTracePath("/graph", wid, citationTraceExtras(chunkFingerprint, sectionPath, citationIndex))}
                         style={{ fontSize: "0.75rem", color: tk.text.muted }}
                       >
                         {t("askPanel.standaloneGraph")}

@@ -7,7 +7,6 @@ export default {
   "wsTab.overview.readerTab": "Вкладка «Чтение»",
   "wsTab.overview.graphTab": "Вкладка «Граф»",
   "wsTab.overview.askTab": "Чат",
-  "wsTab.overview.evidenceTab": "Вкладка «Доказательства»",
   "wsTab.overview.openGraphFull": "Граф на отдельной странице",
   "wsTab.overview.graphNote":
     "Граф доступен внутри рабочей области и дублируется отдельным маршрутом для углублённого просмотра.",
@@ -26,7 +25,6 @@ export default {
   "wsTab.graph.pickWork": "Выберите статью из корпуса для контекста графа.",
   "wsTab.graph.openStandalone": "Граф отдельно",
   "wsTab.graph.jumpReader": "К чтению",
-  "wsTab.graph.jumpEvidence": "К доказательствам",
   "wsTab.graph.jumpAsk": "Перейти в чат",
   "wsTab.graph.subtitle":
     "Граф привязан к активной работе; фокус узла в URL для глубоких ссылок.",
@@ -34,11 +32,4 @@ export default {
   "wsTab.ask.pickWork": "Выберите статью из корпуса, чтобы привязать вопросы к ней.",
   "wsTab.ask.researchContext": "Контекст работы со статьёй",
   "wsTab.ask.contextLine": "Продолжить текущий сценарий вопросов из {{summary}}.",
-
-  "wsTab.evidence.pickWork": "Выберите статью из корпуса для отпечатков чанков.",
-  "wsTab.evidence.liveLine":
-    "Живые отпечатки чанков (GET /v1/works/{work_id}/chunks). Сверяйте с цитатами в «Вопросах».",
-  "wsTab.evidence.jumpReader": "К чтению",
-  "wsTab.evidence.jumpGraph": "К графу",
-  "wsTab.evidence.openStandalone": "Доказательства отдельно",
 };
