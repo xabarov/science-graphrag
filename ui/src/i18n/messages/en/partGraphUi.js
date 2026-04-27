@@ -37,6 +37,9 @@ export default {
   "graph.wsToolbar.externalLabel": "External cites",
   "graph.wsToolbar.externalTooltip":
     "Include works outside the workspace that your papers cite (only when each has ≥2 internal inbound citations)",
+  "graph.wsToolbar.includeClaimsLabel": "Claims",
+  "graph.wsToolbar.includeClaimsTooltip":
+    "Show extracted claims linked to works (capped server-side; not available in Union 1-hop workspace mode).",
   "graph.wsToolbar.nodeTypesSummary": "Nodes: {{selected}}/{{total}}",
   "graph.wsToolbar.nodeTypesPopoverTitle": "Which entities to show",
   "graph.wsToolbar.nodeTypesButtonTooltip": "Choose node types for the graph query",
@@ -65,6 +68,7 @@ export default {
   "graph.wsToolbar.nodeType.Dataset": "Dataset",
   "graph.wsToolbar.nodeType.Venue": "Venue",
   "graph.wsToolbar.nodeType.Institution": "Institution",
+  "graph.wsToolbar.nodeType.Claim": "Claim",
 
   "graph.edgeType.HAS_AUTHORSHIP": "authored by",
   "graph.edgeType.OF_AUTHOR": "is author of",
@@ -78,6 +82,7 @@ export default {
   "graph.edgeType.SUPPORTS": "supports",
   "graph.edgeType.CONTRADICTS": "contradicts",
   "graph.edgeType.MENTIONS": "mentions",
+  "graph.edgeType.HAS_CLAIM": "has claim",
   "graph.edgeType.AGGREGATED": "aggregated neighborhood",
   "graph.edgeType.EDGE": "edge",
   "graph.edgeType._other": "{{type}}",
@@ -88,6 +93,7 @@ export default {
   "graph.nodeKind.AuthorshipReification": "Authorship",
   "graph.nodeKind.Authorship": "Authorship",
   "graph.nodeKind.Node": "Node",
+  "graph.nodeKind.Claim": "Claim",
 
   "graph.aggregator.subtitleExpand": "Click to expand",
   "graph.aggregator.kind.author_of_work": "{{count}} authors of work",

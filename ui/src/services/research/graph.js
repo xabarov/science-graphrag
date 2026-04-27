@@ -3,7 +3,13 @@ import { apiClient, buildApiUrl } from "../apiClient.js";
 /**
  * GET /v1/works/{work_id}/graph
  * @param {string} workId
- * @param {{ neighborLimit?: number, depth?: number, view?: "reader" | "raw" }} [options]
+ * @param {{
+ *   neighborLimit?: number,
+ *   depth?: number,
+ *   view?: "reader" | "raw",
+ *   includeClaims?: boolean,
+ *   claimsLimit?: number,
+ * }} [options]
  */
 export async function getWorkGraph(workId, options = {}) {
   const id = encodeURIComponent(String(workId ?? "").trim());
@@ -21,6 +27,13 @@ export async function getWorkGraph(workId, options = {}) {
   }
   if (options.view && (options.view === "reader" || options.view === "raw")) {
     params.set("view", options.view);
+  }
+  if (options.includeClaims === true) {
+    params.set("include_claims", "true");
+  }
+  if (options.claimsLimit != null && Number.isFinite(Number(options.claimsLimit))) {
+    const v = Math.min(120, Math.max(1, Math.floor(Number(options.claimsLimit))));
+    params.set("claims_limit", String(v));
   }
   const q = params.toString();
   return apiClient.get(buildApiUrl(`/v1/works/${id}/graph${q ? `?${q}` : ""}`));

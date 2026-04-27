@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useMemo } from "react";
 import BugReportOutlinedIcon from "@mui/icons-material/BugReportOutlined";
 import LayersOutlinedIcon from "@mui/icons-material/LayersOutlined";
 import ViewSidebarOutlinedIcon from "@mui/icons-material/ViewSidebarOutlined";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Tooltip from "@mui/material/Tooltip";
+import { useTheme } from "@mui/material/styles";
 
 /**
  * @param {{
@@ -30,20 +31,24 @@ export default function GraphViewChips({
   showDiagnosticsChip,
   t,
 }) {
-  const chipSx = (active) => ({
-    height: 26,
-    fontSize: "0.72rem",
-    fontWeight: 500,
-    textTransform: "none",
-    borderColor: active ? "rgba(99,102,241,0.45)" : "rgba(255,255,255,0.12)",
-    color: active ? "rgba(129,140,248,0.95)" : "rgba(255,255,255,0.65)",
-    backgroundColor: active ? "rgba(99,102,241,0.12)" : "transparent",
-    "& .MuiChip-icon": { color: "inherit" },
-    "&:hover": {
-      borderColor: active ? "rgba(99,102,241,0.55)" : "rgba(255,255,255,0.18)",
-      backgroundColor: active ? "rgba(99,102,241,0.16)" : "rgba(255,255,255,0.04)",
-    },
-  });
+  const tk = useTheme().appTokens;
+  const chipSx = useMemo(
+    () => (active) => ({
+      height: 26,
+      fontSize: "0.72rem",
+      fontWeight: 500,
+      textTransform: "none",
+      borderColor: active ? tk.accent.emphasisHoverBorder : tk.border.strong,
+      color: active ? tk.accent.fg : tk.text.secondary,
+      backgroundColor: active ? tk.accent.chipReadyBg : "transparent",
+      "& .MuiChip-icon": { color: "inherit" },
+      "&:hover": {
+        borderColor: active ? tk.accent.emphasisHoverBorder : tk.control.outlinedBorderHover,
+        backgroundColor: active ? tk.accent.emphasisHoverBg : tk.control.outlinedBgHover,
+      },
+    }),
+    [tk],
+  );
 
   return (
     <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, alignItems: "center" }}>

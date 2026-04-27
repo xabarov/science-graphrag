@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo } from "react";
 import ClearIcon from "@mui/icons-material/Clear";
+import FactCheckOutlinedIcon from "@mui/icons-material/FactCheckOutlined";
 import MyLocationOutlinedIcon from "@mui/icons-material/MyLocationOutlined";
 import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
 import Box from "@mui/material/Box";
@@ -14,9 +15,11 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import { CursorIconButton } from "../common/index.js";
 import { useI18n } from "../../i18n/useI18n.js";
+import { outlinedAppTextFieldSx } from "../../theme/settingsFormSx.js";
 import GraphNodeTypesMenu from "./toolbar/GraphNodeTypesMenu.jsx";
 import GraphScopeMenu from "./toolbar/GraphScopeMenu.jsx";
 import GraphViewChips from "./toolbar/GraphViewChips.jsx";
@@ -60,6 +63,7 @@ function writeLs(workspaceId, key, value) {
  *     includeExternal: boolean,
  *     nodeTypesCsv: string,
  *     externalMinInternalCiters: number,
+ *     includeClaims?: boolean,
  *   },
  *   onChange: (next: {
  *     mode: string,
@@ -67,7 +71,9 @@ function writeLs(workspaceId, key, value) {
  *     includeExternal: boolean,
  *     nodeTypesCsv: string,
  *     externalMinInternalCiters: number,
+ *     includeClaims?: boolean,
  *   }) => void,
+ *   contextWorkId?: string,
  *   canvasMode?: boolean,
  *   localFindQuery?: string,
  *   onLocalFindChange?: (ev: import("react").ChangeEvent<HTMLInputElement>) => void,
@@ -85,6 +91,7 @@ function writeLs(workspaceId, key, value) {
  */
 export default function WorkspaceGraphToolbar({
   workspaceId = "",
+  contextWorkId = "",
   stats,
   value,
   onChange,
@@ -103,8 +110,11 @@ export default function WorkspaceGraphToolbar({
   labMode = false,
 }) {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
   const wid = String(workspaceId || "").trim();
+  const ctxWork = String(contextWorkId || "").trim();
   const filtersEnabled = Boolean(wid);
+  const claimsToggleEnabled = filtersEnabled || Boolean(ctxWork);
 
   const chipTypes = useMemo(() => {
     if (!filtersEnabled) return new Set(NODE_TYPE_OPTIONS);
@@ -153,6 +163,22 @@ export default function WorkspaceGraphToolbar({
     [onChange, value, wid],
   );
 
+  const persistIncludeClaims = useCallback(
+    (includeClaims) => {
+      if (wid) {
+        writeLs(wid, "IncludeClaims", includeClaims ? "1" : "0");
+      } else if (ctxWork) {
+        try {
+          window.localStorage.setItem(`graphWorkIncludeClaims:${ctxWork}`, includeClaims ? "1" : "0");
+        } catch {
+          /* ignore */
+        }
+      }
+      onChange({ ...value, includeClaims });
+    },
+    [onChange, value, wid, ctxWork],
+  );
+
   const toggleType = useCallback(
     (typeKey) => {
       const n = new Set(chipTypes);
@@ -197,21 +223,36 @@ export default function WorkspaceGraphToolbar({
     return out;
   }, [filtersEnabled, stats, t]);
 
-  const miniToggleSx = {
-    "& .MuiToggleButton-root": {
-      fontSize: "0.72rem",
-      py: 0.15,
-      px: 0.6,
-      minWidth: 36,
-      textTransform: "none",
-      color: "rgba(255,255,255,0.55)",
-      borderColor: "rgba(255,255,255,0.12)",
-    },
-    "& .MuiToggleButton-root.Mui-selected": {
-      color: "rgba(129,140,248,0.95)",
-      backgroundColor: "rgba(99,102,241,0.12)",
-    },
-  };
+  const miniToggleSx = useMemo(
+    () => ({
+      "& .MuiToggleButton-root": {
+        fontSize: "0.72rem",
+        py: 0.15,
+        px: 0.6,
+        minWidth: 36,
+        textTransform: "none",
+        color: tk.text.muted,
+        borderColor: tk.border.strong,
+      },
+      "& .MuiToggleButton-root.Mui-selected": {
+        color: tk.accent.fg,
+        backgroundColor: tk.accent.chipReadyBg,
+      },
+    }),
+    [tk.accent.chipReadyBg, tk.accent.fg, tk.border.strong, tk.text.muted],
+  );
+
+  const localFindFieldSx = useMemo(() => {
+    const field = outlinedAppTextFieldSx(tk);
+    return {
+      minWidth: 160,
+      flex: "1 1 180px",
+      maxWidth: 360,
+      ...field,
+      "& .MuiOutlinedInput-root": { ...field["& .MuiOutlinedInput-root"], fontSize: "0.8125rem" },
+      "& .MuiOutlinedInput-input": { color: tk.text.primary },
+    };
+  }, [tk]);
 
   return (
     <Box
@@ -219,12 +260,12 @@ export default function WorkspaceGraphToolbar({
         mb: 1.5,
         p: 1,
         borderRadius: 1,
-        border: "1px solid rgba(255,255,255,0.08)",
-        backgroundColor: "rgba(255,255,255,0.02)",
+        border: `1px solid ${tk.border.default}`,
+        backgroundColor: tk.surface.panelAlt,
       }}
     >
       {filtersEnabled ? (
-        <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.45)", width: "100%", mb: 0.75 }}>
+        <Typography sx={{ fontSize: "0.68rem", color: tk.text.muted, width: "100%", mb: 0.75 }}>
           {t("graph.wsToolbar.title")}
         </Typography>
       ) : null}
@@ -232,9 +273,9 @@ export default function WorkspaceGraphToolbar({
         {filtersEnabled ? (
           <>
             <GraphScopeMenu value={value.mode} onChange={persistMode} t={t} />
-            <Divider orientation="vertical" flexItem sx={{ borderColor: "rgba(255,255,255,0.08)", alignSelf: "stretch", minHeight: 28 }} />
+            <Divider orientation="vertical" flexItem sx={{ borderColor: tk.border.default, alignSelf: "stretch", minHeight: 28 }} />
             <Stack direction="row" alignItems="center" gap={0.5} sx={{ flexShrink: 0 }}>
-              <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.45)", mr: 0.25 }}>
+              <Typography sx={{ fontSize: "0.7rem", color: tk.text.muted, mr: 0.25 }}>
                 {t("graph.wsToolbar.depthLabel")}
               </Typography>
               <ToggleButtonGroup
@@ -260,7 +301,7 @@ export default function WorkspaceGraphToolbar({
                 </ToggleButton>
               </ToggleButtonGroup>
             </Stack>
-            <Divider orientation="vertical" flexItem sx={{ borderColor: "rgba(255,255,255,0.08)", alignSelf: "stretch", minHeight: 28 }} />
+            <Divider orientation="vertical" flexItem sx={{ borderColor: tk.border.default, alignSelf: "stretch", minHeight: 28 }} />
             <Tooltip title={t("graph.wsToolbar.externalTooltip")}>
               <FormControlLabel
                 control={
@@ -272,8 +313,8 @@ export default function WorkspaceGraphToolbar({
                 }
                 label={
                   <Stack direction="row" alignItems="center" gap={0.35} component="span">
-                    <PublicOutlinedIcon sx={{ fontSize: "1rem", color: "rgba(255,255,255,0.55)" }} />
-                    <Typography component="span" sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.75)" }}>
+                    <PublicOutlinedIcon sx={{ fontSize: "1rem", color: tk.text.secondary }} />
+                    <Typography component="span" sx={{ fontSize: "0.75rem", color: tk.text.secondary }}>
                       {t("graph.wsToolbar.externalLabel")}
                     </Typography>
                   </Stack>
@@ -281,13 +322,41 @@ export default function WorkspaceGraphToolbar({
                 sx={{ mr: 0 }}
               />
             </Tooltip>
-            <Divider orientation="vertical" flexItem sx={{ borderColor: "rgba(255,255,255,0.08)", alignSelf: "stretch", minHeight: 28 }} />
+            <Divider orientation="vertical" flexItem sx={{ borderColor: tk.border.default, alignSelf: "stretch", minHeight: 28 }} />
             <GraphNodeTypesMenu selectedSet={chipTypes} onToggleType={toggleType} t={t} />
           </>
         ) : null}
 
+        {claimsToggleEnabled ? (
+          <>
+            {filtersEnabled ? (
+              <Divider orientation="vertical" flexItem sx={{ borderColor: tk.border.default, alignSelf: "stretch", minHeight: 28 }} />
+            ) : null}
+            <Tooltip title={t("graph.wsToolbar.includeClaimsTooltip")}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    size="small"
+                    checked={Boolean(value.includeClaims)}
+                    onChange={(e) => persistIncludeClaims(e.target.checked)}
+                  />
+                }
+                label={
+                  <Stack direction="row" alignItems="center" gap={0.35} component="span">
+                    <FactCheckOutlinedIcon sx={{ fontSize: "1rem", color: tk.text.secondary }} />
+                    <Typography component="span" sx={{ fontSize: "0.75rem", color: tk.text.secondary }}>
+                      {t("graph.wsToolbar.includeClaimsLabel")}
+                    </Typography>
+                  </Stack>
+                }
+                sx={{ mr: 0 }}
+              />
+            </Tooltip>
+          </>
+        ) : null}
+
         {filtersEnabled && canvasMode ? (
-          <Divider orientation="vertical" flexItem sx={{ borderColor: "rgba(255,255,255,0.08)", alignSelf: "stretch", minHeight: 28 }} />
+          <Divider orientation="vertical" flexItem sx={{ borderColor: tk.border.default, alignSelf: "stretch", minHeight: 28 }} />
         ) : null}
 
         {canvasMode && onLocalFindChange ? (
@@ -299,24 +368,7 @@ export default function WorkspaceGraphToolbar({
               onChange={onLocalFindChange}
               placeholder={t("graph.localFind.placeholder")}
               inputProps={{ "aria-label": t("graph.localFind.aria") }}
-              sx={{
-                minWidth: 160,
-                flex: "1 1 180px",
-                maxWidth: 360,
-                "& .MuiOutlinedInput-root": {
-                  fontSize: "0.8125rem",
-                  backgroundColor: "rgba(255,255,255,0.04)",
-                  color: "rgba(255,255,255,0.9)",
-                },
-                "& .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,0.12)" },
-                "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "rgba(255,255,255,0.18)",
-                },
-                "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "rgba(99, 102, 241, 0.5)",
-                  borderWidth: "1px",
-                },
-              }}
+              sx={localFindFieldSx}
               InputProps={{
                 endAdornment: localFindQuery && onLocalFindClear ? (
                   <InputAdornment position="end">
@@ -325,7 +377,7 @@ export default function WorkspaceGraphToolbar({
                       aria-label={t("graph.localFind.clearAria")}
                       onClick={onLocalFindClear}
                       edge="end"
-                      sx={{ color: "rgba(255,255,255,0.5)" }}
+                      sx={{ color: tk.text.muted }}
                     >
                       <ClearIcon fontSize="small" />
                     </IconButton>
@@ -351,7 +403,7 @@ export default function WorkspaceGraphToolbar({
         ) : null}
 
         {filtersEnabled || canvasMode ? (
-          <Divider orientation="vertical" flexItem sx={{ borderColor: "rgba(255,255,255,0.08)", alignSelf: "stretch", minHeight: 28 }} />
+          <Divider orientation="vertical" flexItem sx={{ borderColor: tk.border.default, alignSelf: "stretch", minHeight: 28 }} />
         ) : null}
         <GraphViewChips
           detailsVisible={detailsVisible}
@@ -370,7 +422,7 @@ export default function WorkspaceGraphToolbar({
             component="span"
             sx={{
               fontSize: "0.72rem",
-              color: "rgba(255,255,255,0.5)",
+              color: tk.text.muted,
               ml: { xs: 0, md: "auto" },
               flexShrink: 0,
               width: { xs: "100%", md: "auto" },

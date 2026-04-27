@@ -9,17 +9,22 @@ import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
 import OpenInNewOutlinedIcon from "@mui/icons-material/OpenInNewOutlined";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import PsychologyOutlinedIcon from "@mui/icons-material/PsychologyOutlined";
+import FactCheckOutlinedIcon from "@mui/icons-material/FactCheckOutlined";
 import StorageOutlinedIcon from "@mui/icons-material/StorageOutlined";
 
 /** @type {Record<string, { fill: string, stroke: string }>} */
 const NODE_TYPE_STYLES = {
   Work: { fill: "rgba(99, 102, 241, 0.22)", stroke: "rgba(129, 140, 248, 0.55)" },
+  /** Same family as Work so legend chips are not stuck on dark-theme default fill. */
+  WorkInternal: { fill: "rgba(99, 102, 241, 0.22)", stroke: "rgba(129, 140, 248, 0.55)" },
+  WorkExternal: { fill: "rgba(56, 189, 248, 0.16)", stroke: "rgba(14, 165, 233, 0.5)" },
   Method: { fill: "rgba(34, 197, 94, 0.18)", stroke: "rgba(74, 222, 128, 0.48)" },
   Dataset: { fill: "rgba(251, 191, 36, 0.14)", stroke: "rgba(252, 211, 77, 0.5)" },
   Author: { fill: "rgba(168, 85, 247, 0.2)", stroke: "rgba(196, 181, 253, 0.48)" },
   Authorship: { fill: "rgba(148, 163, 184, 0.16)", stroke: "rgba(203, 213, 225, 0.38)" },
   Venue: { fill: "rgba(56, 189, 248, 0.14)", stroke: "rgba(125, 211, 252, 0.48)" },
   Institution: { fill: "rgba(244, 114, 182, 0.12)", stroke: "rgba(251, 207, 232, 0.42)" },
+  Claim: { fill: "rgba(251, 146, 60, 0.16)", stroke: "rgba(253, 186, 116, 0.5)" },
 };
 
 const DEFAULT_NODE_STYLE_DARK = { fill: "rgba(255,255,255,0.08)", stroke: "rgba(255,255,255,0.2)" };
@@ -45,6 +50,7 @@ export const NODE_TYPE_ICON_MAP = {
   Dataset: StorageOutlinedIcon,
   Venue: MenuBookOutlinedIcon,
   Institution: AccountBalanceOutlinedIcon,
+  Claim: FactCheckOutlinedIcon,
 };
 
 /**

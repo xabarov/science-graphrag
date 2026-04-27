@@ -25,7 +25,7 @@ const NODE_KIND_GROUPS = [
   },
   {
     groupKey: "Semantic",
-    kinds: ["Method", "Dataset"],
+    kinds: ["Method", "Dataset", "Claim"],
   },
   {
     groupKey: "People",
@@ -129,7 +129,7 @@ export default function GraphTypeLegend({ graph }) {
       }}
     >
       <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 0.75, mb: 0.65 }}>
-        <Typography sx={{ fontSize: "0.68rem", color: tk.text.faint, lineHeight: 1.35 }}>
+        <Typography sx={{ fontSize: "0.68rem", color: tk.text.muted, lineHeight: 1.35 }}>
           {t("graph.legend.overviewSummary", { nodeCount: totalNodes, edgeCount: totalEdges })}
         </Typography>
         <ToggleButtonGroup
@@ -168,7 +168,7 @@ export default function GraphTypeLegend({ graph }) {
       >
         {nodeTypes.length > 0 ? (
           <>
-            <Typography sx={{ fontSize: "0.7rem", color: tk.text.faint, mr: 0.25 }}>
+            <Typography sx={{ fontSize: "0.7rem", color: tk.text.muted, mr: 0.25 }}>
               {t("graph.legend.nodes")}
             </Typography>
             {groupedNodeKinds.map(({ groupKey, kinds }) => (
@@ -191,7 +191,7 @@ export default function GraphTypeLegend({ graph }) {
         ) : null}
         {sortedEdgeTypes.length > 0 ? (
           <>
-            <Typography sx={{ fontSize: "0.7rem", color: tk.text.faint, ml: nodeTypes.length ? 1 : 0, mr: 0.25 }}>
+            <Typography sx={{ fontSize: "0.7rem", color: tk.text.muted, ml: nodeTypes.length ? 1 : 0, mr: 0.25 }}>
               {t("graph.legend.edges")}
             </Typography>
             {sortedEdgeTypes.map((edgeType) => {

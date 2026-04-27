@@ -7,6 +7,7 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Popover from "@mui/material/Popover";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import { CursorButton } from "../../common/index.js";
 import { getScienceGraphNodeTypeIcon } from "../graphCanvasStyle.js";
@@ -21,6 +22,7 @@ const NODE_TYPE_OPTIONS = /** @type {const} */ (["Work", "Author", "Method", "Da
  * }} props
  */
 export default function GraphNodeTypesMenu({ selectedSet, onToggleType, t }) {
+  const tk = useTheme().appTokens;
   const [anchor, setAnchor] = useState(null);
   const open = Boolean(anchor);
   const total = NODE_TYPE_OPTIONS.length;
@@ -47,8 +49,8 @@ export default function GraphNodeTypesMenu({ selectedSet, onToggleType, t }) {
               py: 0.35,
               px: 0.75,
               textTransform: "none",
-              borderColor: "rgba(255,255,255,0.12)",
-              color: "rgba(255,255,255,0.85)",
+              borderColor: tk.border.strong,
+              color: tk.text.primary,
               minWidth: 0,
             }}
           >
@@ -70,13 +72,13 @@ export default function GraphNodeTypesMenu({ selectedSet, onToggleType, t }) {
               p: 1.25,
               minWidth: 280,
               maxWidth: 360,
-              backgroundColor: "#1a1a1a",
-              border: "1px solid rgba(255,255,255,0.08)",
+              backgroundColor: tk.surface.panel,
+              border: `1px solid ${tk.border.default}`,
             },
           },
         }}
       >
-        <Typography sx={{ fontSize: "0.75rem", fontWeight: 600, color: "rgba(255,255,255,0.55)", mb: 1 }}>
+        <Typography sx={{ fontSize: "0.75rem", fontWeight: 600, color: tk.text.muted, mb: 1 }}>
           {t("graph.wsToolbar.nodeTypesPopoverTitle")}
         </Typography>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}>
@@ -91,17 +93,17 @@ export default function GraphNodeTypesMenu({ selectedSet, onToggleType, t }) {
                     size="small"
                     checked={checked}
                     onChange={() => onToggleType(nodeType)}
-                    sx={{ py: 0.25, color: "rgba(255,255,255,0.45)", "&.Mui-checked": { color: "rgba(129,140,248,0.95)" } }}
+                    sx={{ py: 0.25, color: tk.text.muted, "&.Mui-checked": { color: tk.accent.fg } }}
                   />
                 }
                 label={
                   <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0.75, minWidth: 0 }}>
-                    {TypeIcon ? <TypeIcon sx={{ fontSize: "1.05rem", color: "rgba(255,255,255,0.65)", mt: 0.15 }} /> : null}
+                    {TypeIcon ? <TypeIcon sx={{ fontSize: "1.05rem", color: tk.text.secondary, mt: 0.15 }} /> : null}
                     <Box sx={{ minWidth: 0 }}>
-                      <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.88)", lineHeight: 1.2 }}>
+                      <Typography sx={{ fontSize: "0.8125rem", color: tk.text.primary, lineHeight: 1.2 }}>
                         {t(`graph.wsToolbar.nodeType.${nodeType}`)}
                       </Typography>
-                      <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.42)", mt: 0.2, lineHeight: 1.3 }}>
+                      <Typography sx={{ fontSize: "0.68rem", color: tk.text.faint, mt: 0.2, lineHeight: 1.3 }}>
                         {t(`graph.wsToolbar.nodeTypeDesc.${nodeType}`)}
                       </Typography>
                     </Box>

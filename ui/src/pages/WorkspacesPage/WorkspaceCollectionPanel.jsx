@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 import CircularProgress from "@mui/material/CircularProgress";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
@@ -39,6 +40,7 @@ export default function WorkspaceCollectionPanel({
   onDeleteWorkspace,
 }) {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
   const { prompt } = useFeedback();
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [menuWorkspaceId, setMenuWorkspaceId] = useState(null);
@@ -56,18 +58,22 @@ export default function WorkspaceCollectionPanel({
   const menuWorkspace = workspaces.find((w) => w.id === menuWorkspaceId) || null;
 
   return (
-    <Box sx={{ p: 1.5, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.08)", backgroundColor: "#141414" }}>
+    <Box sx={{ p: 1.5, borderRadius: "6px", border: `1px solid ${tk.border.default}`, backgroundColor: tk.surface.sidebar }}>
       <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 1, mb: 1 }}>
-        <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>{t("workspaces.wsPanel.title")}</Typography>
-        <Chip label={t("workspaces.wsPanel.total", { count: workspaces.length })} size="small" sx={{ height: 22, fontSize: "0.6875rem" }} />
+        <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, color: tk.text.primary }}>{t("workspaces.wsPanel.title")}</Typography>
+        <Chip
+          label={t("workspaces.wsPanel.total", { count: workspaces.length })}
+          size="small"
+          sx={{ height: 22, fontSize: "0.6875rem", border: `1px solid ${tk.border.default}`, color: tk.text.secondary, backgroundColor: tk.surface.panel }}
+        />
       </Box>
       {wsLoading ? (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <CircularProgress size={20} />
-          <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)" }}>{t("workspaces.loading")}</Typography>
+          <Typography sx={{ fontSize: "0.8125rem", color: tk.text.muted }}>{t("workspaces.loading")}</Typography>
         </Box>
       ) : workspaces.length === 0 ? (
-        <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.62)" }}>{t("workspaces.emptyWs")}</Typography>
+        <Typography sx={{ fontSize: "0.8125rem", color: tk.text.secondary }}>{t("workspaces.emptyWs")}</Typography>
       ) : (
         <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", xl: "repeat(2, minmax(0, 1fr))" }, gap: 1 }}>
           {workspaces.map((ws) => (
@@ -77,8 +83,8 @@ export default function WorkspaceCollectionPanel({
                 p: 1.25,
                 borderRadius: "6px",
                 border:
-                  ws.id === targetWorkspaceId ? "1px solid rgba(99,102,241,0.35)" : "1px solid rgba(255,255,255,0.08)",
-                backgroundColor: ws.id === targetWorkspaceId ? "rgba(99,102,241,0.08)" : "#1a1a1a",
+                  ws.id === targetWorkspaceId ? `1px solid ${tk.accent.softBorder}` : `1px solid ${tk.border.default}`,
+                backgroundColor: ws.id === targetWorkspaceId ? tk.accent.softBg : tk.surface.panel,
                 transition: "border-color 0.15s ease, background-color 0.15s ease",
               }}
             >
@@ -92,22 +98,22 @@ export default function WorkspaceCollectionPanel({
                       display: "inline-flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      border: ws.id === targetWorkspaceId ? "1px solid rgba(99,102,241,0.26)" : "1px solid rgba(255,255,255,0.08)",
-                      backgroundColor: ws.id === targetWorkspaceId ? "rgba(99,102,241,0.14)" : "rgba(255,255,255,0.03)",
-                      color: ws.id === targetWorkspaceId ? "rgba(129,140,248,0.95)" : "rgba(255,255,255,0.62)",
+                      border: ws.id === targetWorkspaceId ? `1px solid ${tk.accent.softBorder}` : `1px solid ${tk.border.default}`,
+                      backgroundColor: ws.id === targetWorkspaceId ? tk.accent.emphasisHoverBg : tk.control.outlinedBg,
+                      color: ws.id === targetWorkspaceId ? tk.accent.fg : tk.text.secondary,
                       flexShrink: 0,
                     }}
                   >
                     <LayersOutlinedIcon sx={{ fontSize: "0.95rem" }} />
                   </Box>
                   <Box sx={{ minWidth: 0 }}>
-                    <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: "rgba(255,255,255,0.92)" }} noWrap>
+                    <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: tk.text.primary }} noWrap>
                       {ws.name || ws.id}
                     </Typography>
                     <Typography
                       sx={{
                         fontSize: "0.68rem",
-                        color: "rgba(255,255,255,0.38)",
+                        color: tk.text.faint,
                         fontFamily: "monospace",
                         mt: 0.25,
                       }}
@@ -133,7 +139,11 @@ export default function WorkspaceCollectionPanel({
                 </Box>
               </Box>
               <Box sx={{ mt: 0.85, display: "flex", flexWrap: "wrap", gap: 0.6, alignItems: "center" }}>
-                <Chip label={t("workspaces.papersCount", { count: (ws.work_ids || []).length })} size="small" sx={{ height: 22, fontSize: "0.6875rem" }} />
+                <Chip
+                  label={t("workspaces.papersCount", { count: (ws.work_ids || []).length })}
+                  size="small"
+                  sx={{ height: 22, fontSize: "0.6875rem", border: `1px solid ${tk.border.default}`, color: tk.text.secondary, backgroundColor: tk.surface.panelAlt }}
+                />
                 {ws.id === targetWorkspaceId ? (
                   <Chip
                     label={t("workspaces.targetSelected")}
@@ -141,9 +151,9 @@ export default function WorkspaceCollectionPanel({
                     sx={{
                       height: 22,
                       fontSize: "0.6875rem",
-                      backgroundColor: "rgba(99,102,241,0.18)",
-                      color: "rgba(129,140,248,0.95)",
-                      border: "1px solid rgba(99,102,241,0.28)",
+                      backgroundColor: tk.accent.chipReadyBg,
+                      color: tk.accent.chipReadyFg,
+                      border: `1px solid ${tk.accent.softBorder}`,
                     }}
                   />
                 ) : null}
@@ -153,7 +163,20 @@ export default function WorkspaceCollectionPanel({
         </Box>
       )}
 
-      <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={closeMenu} anchorOrigin={{ vertical: "bottom", horizontal: "right" }}>
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={closeMenu}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        slotProps={{
+          paper: {
+            sx: {
+              backgroundColor: tk.surface.panel,
+              border: `1px solid ${tk.border.default}`,
+            },
+          },
+        }}
+      >
         <MenuItem
           disabled={!menuWorkspace}
           onClick={async () => {
@@ -183,7 +206,7 @@ export default function WorkspaceCollectionPanel({
             closeMenu();
             onDeleteWorkspace(id);
           }}
-          sx={{ color: "rgba(239,68,68,0.85)" }}
+          sx={{ color: tk.state.dangerFg }}
         >
           {t("workspaces.delete")}
         </MenuItem>

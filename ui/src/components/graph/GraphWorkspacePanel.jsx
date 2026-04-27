@@ -3,6 +3,7 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 import { useI18n } from "../../i18n/useI18n.js";
 import { describeTraceabilityState } from "../work/traceabilityState.js";
 import GraphCanvasMvp from "./GraphCanvasMvp.jsx";
@@ -80,6 +81,7 @@ export default function GraphWorkspacePanel({
   standaloneWorkGraphDepth = 1,
 }) {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
   const standalone = mode === "standalone";
   const {
     wsId,
@@ -164,13 +166,14 @@ export default function GraphWorkspacePanel({
     if (resolvedSelectedNodeId && normalizeGraphEdgeId(selectedEdgeId)) onSelectEdge?.("");
   }, [resolvedSelectedNodeId, selectedEdgeId, onSelectEdge]);
 
-  const hasDataTarget = workId.trim() || String(workspaceId || "").trim();
+  const workIdTrim = String(workId || "").trim();
+  const hasDataTarget = workIdTrim || String(workspaceId || "").trim();
   const isEmbedded = mode === "embedded";
 
   return (
     <Box sx={standalone ? { flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" } : {}}>
       <Box sx={{ mb: standalone ? 1 : 2 }}>
-        <Typography sx={{ fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>{title}</Typography>
+        <Typography sx={{ fontWeight: 600, color: tk.text.primary }}>{title}</Typography>
         {subtitle ? <Box sx={{ mt: 0.5 }}>{subtitle}</Box> : null}
       </Box>
       {!hasDataTarget ? <GraphMissingWorkInline message={t("graph.workspacePanel.emptyHint")} /> : null}
@@ -180,6 +183,7 @@ export default function GraphWorkspacePanel({
         <>
           <WorkspaceGraphToolbar
             workspaceId={wsId}
+            contextWorkId={workIdTrim}
             stats={wsGraphStats}
             value={wsGraphOpts}
             onChange={setWsGraphOpts}
@@ -265,8 +269,8 @@ export default function GraphWorkspacePanel({
             />
           </Box>
           <Box sx={{ mt: 1, display: "flex", gap: 1 }}>
-            <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.65)" }}>nodes: {graph.nodeCount}</Typography>
-            <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.65)" }}>edges: {graph.edgeCount}</Typography>
+            <Typography sx={{ fontSize: "0.75rem", color: tk.text.muted }}>nodes: {graph.nodeCount}</Typography>
+            <Typography sx={{ fontSize: "0.75rem", color: tk.text.muted }}>edges: {graph.edgeCount}</Typography>
           </Box>
           {traceSummary.length > 0 ? <Alert severity="info" sx={{ mt: 1 }}>Opened from traceability context: {traceSummary.join(" · ")}</Alert> : null}
           {graph.nodeCount === 0 ? <Alert severity="info" sx={{ mt: 1 }}>This response has no nodes yet.</Alert> : null}

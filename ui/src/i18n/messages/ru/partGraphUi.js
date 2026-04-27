@@ -37,6 +37,9 @@ export default {
   "graph.wsToolbar.externalLabel": "Внешние цитаты",
   "graph.wsToolbar.externalTooltip":
     "Показать работы вне области, на которые ссылаются ваши статьи (только при ≥2 внутренних ссылках на каждую)",
+  "graph.wsToolbar.includeClaimsLabel": "Claims",
+  "graph.wsToolbar.includeClaimsTooltip":
+    "Показать извлечённые claims, привязанные к работам (лимит на сервере; режим Union 1-hop не поддерживает).",
   "graph.wsToolbar.nodeTypesSummary": "Узлы: {{selected}}/{{total}}",
   "graph.wsToolbar.nodeTypesPopoverTitle": "Какие сущности показывать",
   "graph.wsToolbar.nodeTypesButtonTooltip": "Выберите типы узлов для запроса графа",
@@ -65,6 +68,7 @@ export default {
   "graph.wsToolbar.nodeType.Dataset": "Датасет",
   "graph.wsToolbar.nodeType.Venue": "Площадка",
   "graph.wsToolbar.nodeType.Institution": "Организация",
+  "graph.wsToolbar.nodeType.Claim": "Claim",
 
   "graph.edgeType.HAS_AUTHORSHIP": "написана",
   "graph.edgeType.OF_AUTHOR": "является автором",
@@ -78,6 +82,7 @@ export default {
   "graph.edgeType.SUPPORTS": "поддерживает",
   "graph.edgeType.CONTRADICTS": "противоречит",
   "graph.edgeType.MENTIONS": "упоминает",
+  "graph.edgeType.HAS_CLAIM": "содержит claim",
   "graph.edgeType.AGGREGATED": "свернутая окрестность",
   "graph.edgeType.EDGE": "связь",
   "graph.edgeType._other": "{{type}}",
@@ -88,6 +93,7 @@ export default {
   "graph.nodeKind.AuthorshipReification": "Авторство",
   "graph.nodeKind.Authorship": "Авторство",
   "graph.nodeKind.Node": "Узел",
+  "graph.nodeKind.Claim": "Claim",
 
   "graph.aggregator.subtitleExpand": "Нажмите, чтобы развернуть",
   "graph.aggregator.kind.author_of_work": "{{count}} авторов работы",

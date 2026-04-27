@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 import TextField from "@mui/material/TextField";
 import { InlineNotice } from "../../components/feedback/index.js";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -72,6 +73,7 @@ export default function IndexedWorksBrowser({
   renderWorkRow,
 }) {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
   const [extraFiltersOpen, setExtraFiltersOpen] = useState(false);
 
   const extraFiltersActive =
@@ -83,28 +85,28 @@ export default function IndexedWorksBrowser({
       disableGutters
       sx={{
         mb: 2,
-        backgroundColor: "#141414",
-        border: "1px solid rgba(255,255,255,0.08)",
+        backgroundColor: tk.surface.sidebar,
+        border: `1px solid ${tk.border.default}`,
         borderRadius: "6px",
         "&:before": { display: "none" },
       }}
     >
       <AccordionSummary
-        expandIcon={<ExpandMoreOutlinedIcon sx={{ color: "rgba(255,255,255,0.55)" }} />}
+        expandIcon={<ExpandMoreOutlinedIcon sx={{ color: tk.text.muted }} />}
         sx={{ px: 1.5, py: 0.75, minHeight: 44, "& .MuiAccordionSummary-content": { my: 0.5, alignItems: "center" } }}
       >
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, width: "100%", minWidth: 0 }}>
-          <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, color: "rgba(255,255,255,0.9)", flex: 1, minWidth: 0 }} noWrap>
+          <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, color: tk.text.primary, flex: 1, minWidth: 0 }} noWrap>
             {t("workspaces.accordion.title")}
           </Typography>
           <Chip label={t("workspaces.totalIndex", { total })} size="small" sx={{ height: 22, fontSize: "0.6875rem", flexShrink: 0 }} />
         </Box>
       </AccordionSummary>
       <AccordionDetails sx={{ pt: 0, px: 1.5, pb: 1.5 }}>
-        <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.45)", lineHeight: 1.45, mb: 1 }}>
+        <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted, lineHeight: 1.45, mb: 1 }}>
           <WorkIdGlossaryHint variant="corpus" />
         </Typography>
-        <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.48)", mb: 1.25 }}>{t("workspaces.accordion.desc")}</Typography>
+        <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary, mb: 1.25 }}>{t("workspaces.accordion.desc")}</Typography>
 
         <Box component="form" onSubmit={onSearch} sx={{ mb: 1.25 }}>
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center" }}>
@@ -118,7 +120,7 @@ export default function IndexedWorksBrowser({
                 minWidth: 160,
                 maxWidth: { sm: 420 },
                 "& .MuiInputBase-input": { fontSize: "0.8125rem" },
-                "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)" },
+                "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: tk.text.secondary },
               }}
             />
             <CursorIconAction type="submit" title={t("workspaces.search.submit")} disabled={loading}>
@@ -138,7 +140,7 @@ export default function IndexedWorksBrowser({
               onClick={() => setExtraFiltersOpen((o) => !o)}
               sx={
                 extraFiltersActive && !extraFiltersOpen
-                  ? { borderColor: "rgba(99,102,241,0.35)", color: "rgba(129,140,248,0.95)" }
+                  ? { borderColor: tk.accent.softBorder, color: tk.accent.fg }
                   : undefined
               }
             >
@@ -154,7 +156,7 @@ export default function IndexedWorksBrowser({
                 gap: 1,
                 mt: 1,
                 pt: 1,
-                borderTop: "1px solid rgba(255,255,255,0.06)",
+                borderTop: `1px solid ${tk.border.default}`,
               }}
             >
               <FormControl size="small" sx={{ minWidth: 0 }}>
@@ -182,8 +184,8 @@ export default function IndexedWorksBrowser({
 
         {loading && (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 2 }}>
-            <CircularProgress size={22} sx={{ color: "rgba(129,140,248,0.9)" }} />
-            <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>{t("workspaces.loadingWorks")}</Typography>
+            <CircularProgress size={22} sx={{ color: tk.accent.fg }} />
+            <Typography sx={{ fontSize: "0.8125rem", color: tk.text.muted }}>{t("workspaces.loadingWorks")}</Typography>
           </Box>
         )}
         {error && (
@@ -193,14 +195,14 @@ export default function IndexedWorksBrowser({
         )}
 
         {!loading && !error && (
-          <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.45)", mb: 1 }}>
+          <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted, mb: 1 }}>
             {t("workspaces.totalIndex", { total })}
             {items.length < total ? t("workspaces.loadedPartial", { loaded: items.length }) : null}
           </Typography>
         )}
 
         {!loading && !error && sortedItems.length === 0 ? (
-          <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)", py: 1 }}>
+          <Typography sx={{ fontSize: "0.8125rem", color: tk.text.muted, py: 1 }}>
             {t("workspaces.indexed.empty")}
           </Typography>
         ) : (

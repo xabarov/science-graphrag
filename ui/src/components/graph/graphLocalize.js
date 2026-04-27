@@ -50,6 +50,7 @@ const NODE_KIND_CANON = new Map(
     aggregator: "Aggregator",
     authorshipreification: "AuthorshipReification",
     authorship: "Authorship",
+    claim: "Claim",
     node: "Node",
   }),
 );

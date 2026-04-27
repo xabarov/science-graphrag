@@ -11,6 +11,7 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import { CursorButton } from "../../common/index.js";
 
@@ -31,6 +32,7 @@ const MODE_ICONS = {
  * }} props
  */
 export default function GraphScopeMenu({ value, onChange, t }) {
+  const tk = useTheme().appTokens;
   const [anchor, setAnchor] = useState(null);
   const open = Boolean(anchor);
 
@@ -63,8 +65,8 @@ export default function GraphScopeMenu({ value, onChange, t }) {
               py: 0.35,
               px: 0.85,
               textTransform: "none",
-              borderColor: "rgba(255,255,255,0.12)",
-              color: "rgba(255,255,255,0.85)",
+              borderColor: tk.border.strong,
+              color: tk.text.primary,
               minWidth: 0,
               maxWidth: { xs: "100%", sm: 280 },
             }}
@@ -84,8 +86,8 @@ export default function GraphScopeMenu({ value, onChange, t }) {
             sx: {
               minWidth: 260,
               maxWidth: 340,
-              backgroundColor: "#1a1a1a",
-              border: "1px solid rgba(255,255,255,0.08)",
+              backgroundColor: tk.surface.panel,
+              border: `1px solid ${tk.border.default}`,
             },
           },
         }}
@@ -105,16 +107,16 @@ export default function GraphScopeMenu({ value, onChange, t }) {
               sx={{ py: 1, alignItems: "flex-start" }}
             >
               <ListItemIcon sx={{ minWidth: 36, mt: 0.25 }}>
-                <Icon sx={{ fontSize: "1.15rem", color: "rgba(255,255,255,0.75)" }} />
+                <Icon sx={{ fontSize: "1.15rem", color: tk.text.secondary }} />
               </ListItemIcon>
               <ListItemText
                 primary={
-                  <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>
+                  <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, color: tk.text.primary }}>
                     {modeLabel(mode)}
                   </Typography>
                 }
                 secondary={
-                  <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.45)", mt: 0.25, lineHeight: 1.35 }}>
+                  <Typography sx={{ fontSize: "0.7rem", color: tk.text.muted, mt: 0.25, lineHeight: 1.35 }}>
                     {t(`graph.wsToolbar.scopeDesc.${mode}`)}
                   </Typography>
                 }

@@ -23,6 +23,7 @@ const defaultValue = {
   includeExternal: false,
   nodeTypesCsv: "Work,Author",
   externalMinInternalCiters: 0,
+  includeClaims: false,
 };
 
 describe("WorkspaceGraphToolbar storage keys", () => {
@@ -32,6 +33,7 @@ describe("WorkspaceGraphToolbar storage keys", () => {
     expect(graphToolbarLocalStorageKey(wid, "Depth")).toBe("workspaceGraphDepth:ws-abc");
     expect(graphToolbarLocalStorageKey(wid, "IncludeExternal")).toBe("workspaceGraphIncludeExternal:ws-abc");
     expect(graphToolbarLocalStorageKey(wid, "NodeTypes")).toBe("workspaceGraphNodeTypes:ws-abc");
+    expect(graphToolbarLocalStorageKey(wid, "IncludeClaims")).toBe("workspaceGraphIncludeClaims:ws-abc");
   });
 
   it("trims workspace id", () => {
@@ -106,5 +108,22 @@ describe("WorkspaceGraphToolbar render (SSR smoke)", () => {
     );
     expect(html).toContain("Details");
     expect(html).not.toContain("Workspace graph");
+  });
+
+  it("shows claims toggle for standalone work graph when contextWorkId set", () => {
+    const html = renderToString(
+      withProviders(
+        <WorkspaceGraphToolbar
+          workspaceId=""
+          contextWorkId="w-uuid-1"
+          stats={null}
+          value={{ ...defaultValue, includeClaims: true }}
+          onChange={() => {}}
+          canvasMode={false}
+          labMode={false}
+        />,
+      ),
+    );
+    expect(html).toContain("Claims");
   });
 });

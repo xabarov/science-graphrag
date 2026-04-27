@@ -173,6 +173,9 @@ export async function mergeWorkspacesApi(keepWorkspaceId, dropWorkspaceId) {
  *   nodeTypes?: string,
  *   externalMinInternalCiters?: number,
  *   prioritize?: string,
+ *   includeClaims?: boolean,
+ *   claimsPerWork?: number,
+ *   claimsMaxTotal?: number,
  * }} [opts]
  */
 export async function getWorkspaceGraph(workspaceId, opts = {}) {
@@ -199,6 +202,17 @@ export async function getWorkspaceGraph(workspaceId, opts = {}) {
   }
   if (opts.prioritize != null && String(opts.prioritize).trim()) {
     params.set("prioritize", String(opts.prioritize).trim());
+  }
+  if (opts.includeClaims === true) {
+    params.set("include_claims", "true");
+  }
+  if (opts.claimsPerWork != null && Number.isFinite(Number(opts.claimsPerWork))) {
+    const v = Math.min(80, Math.max(1, Math.floor(Number(opts.claimsPerWork))));
+    params.set("claims_per_work", String(v));
+  }
+  if (opts.claimsMaxTotal != null && Number.isFinite(Number(opts.claimsMaxTotal))) {
+    const v = Math.min(500, Math.max(1, Math.floor(Number(opts.claimsMaxTotal))));
+    params.set("claims_max_total", String(v));
   }
   const q = params.toString();
   const { data } = await apiClient.get(

@@ -1,6 +1,7 @@
 import React, { useLayoutEffect, useMemo, useRef } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 /**
  * Lightweight graph overview without extra dependencies.
@@ -13,6 +14,7 @@ import Typography from "@mui/material/Typography";
  * }} props
  */
 export default function GraphVisualization({ graph, selectedNodeId, onSelectNode, mode = "embedded" }) {
+  const tk = useTheme().appTokens;
   const compact = mode === "embedded";
   const itemRefs = useRef(/** @type {Array<HTMLElement | null>} */ ([]));
 
@@ -59,12 +61,12 @@ export default function GraphVisualization({ graph, selectedNodeId, onSelectNode
       aria-label="Graph node map"
       sx={{
         borderRadius: "6px",
-        border: "1px solid rgba(255,255,255,0.08)",
-        backgroundColor: "#1a1a1a",
+        border: `1px solid ${tk.border.default}`,
+        backgroundColor: tk.surface.panel,
         p: compact ? 1.5 : 2,
       }}
     >
-      <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", mb: 1 }}>
+      <Typography sx={{ fontSize: "0.75rem", color: tk.text.muted, mb: 1 }}>
         Node map. Select a node to inspect related edges and raw payload. Use arrow keys to move between nodes.
       </Typography>
 
@@ -91,24 +93,24 @@ export default function GraphVisualization({ graph, selectedNodeId, onSelectNode
                 p: 1.25,
                 borderRadius: "6px",
                 cursor: "pointer",
-                border: active ? "1px solid rgba(99, 102, 241, 0.42)" : "1px solid rgba(255,255,255,0.08)",
-                backgroundColor: active ? "rgba(99, 102, 241, 0.12)" : "#141414",
+                border: active ? `1px solid ${tk.accent.emphasisHoverBorder}` : `1px solid ${tk.border.default}`,
+                backgroundColor: active ? tk.accent.chipReadyBg : tk.surface.sidebar,
                 transition: "all 0.15s ease",
                 outline: "none",
                 "&:focus-visible": {
-                  boxShadow: "0 0 0 1px rgba(99, 102, 241, 0.5)",
+                  boxShadow: `0 0 0 1px ${tk.accent.softBorder}`,
                 },
                 "&:hover": {
-                  borderColor: "rgba(255,255,255,0.18)",
-                  backgroundColor: active ? "rgba(99, 102, 241, 0.14)" : "rgba(255,255,255,0.04)",
+                  borderColor: tk.control.outlinedBorderHover,
+                  backgroundColor: active ? tk.accent.emphasisHoverBg : tk.control.outlinedBgHover,
                 },
               }}
             >
-              <Typography sx={{ fontSize: "0.75rem", color: "rgba(129,140,248,0.92)", mb: 0.5 }}>{node.type}</Typography>
-              <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.88)", fontWeight: 600, lineHeight: 1.35 }}>
+              <Typography sx={{ fontSize: "0.75rem", color: tk.text.accent, mb: 0.5 }}>{node.type}</Typography>
+              <Typography sx={{ fontSize: "0.8125rem", color: tk.text.primary, fontWeight: 600, lineHeight: 1.35 }}>
                 {headline}
               </Typography>
-              <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mt: 0.5, fontFamily: "monospace", wordBreak: "break-word" }}>
+              <Typography sx={{ fontSize: "0.75rem", color: tk.text.muted, mt: 0.5, fontFamily: "monospace", wordBreak: "break-word" }}>
                 {node.id}
               </Typography>
             </Box>

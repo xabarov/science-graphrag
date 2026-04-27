@@ -34,27 +34,44 @@ function mergeWorkspaceRawGraph(base, extra) {
   };
 }
 
-function readWsGraphOptsFromLs(workspaceId) {
+function readWsGraphOptsFromLs(workspaceId, workId = "") {
   const id = String(workspaceId || "").trim();
+  const wf = String(workId || "").trim();
   const fallback = {
     mode: "inner_only",
     depth: 1,
     includeExternal: false,
     nodeTypesCsv: "Work,Author",
     externalMinInternalCiters: 0,
+    includeClaims: false,
   };
-  if (!id || typeof window === "undefined") return fallback;
+  if (typeof window === "undefined") return fallback;
   try {
-    const modeRaw = window.localStorage.getItem(`workspaceGraphMode:${id}`) || "inner_only";
-    const mode = ["inner_only", "union_1hop", "semantic_layer", "full"].includes(modeRaw) ? modeRaw : "inner_only";
-    const d = parseInt(window.localStorage.getItem(`workspaceGraphDepth:${id}`) || "1", 10);
-    const depth = d === 2 ? 2 : 1;
-    const includeExternal = window.localStorage.getItem(`workspaceGraphIncludeExternal:${id}`) === "1";
-    const nodeTypesCsv = window.localStorage.getItem(`workspaceGraphNodeTypes:${id}`) || "Work,Author";
-    return { mode, depth, includeExternal, nodeTypesCsv, externalMinInternalCiters: includeExternal ? 2 : 0 };
+    if (id) {
+      const modeRaw = window.localStorage.getItem(`workspaceGraphMode:${id}`) || "inner_only";
+      const mode = ["inner_only", "union_1hop", "semantic_layer", "full"].includes(modeRaw) ? modeRaw : "inner_only";
+      const d = parseInt(window.localStorage.getItem(`workspaceGraphDepth:${id}`) || "1", 10);
+      const depth = d === 2 ? 2 : 1;
+      const includeExternal = window.localStorage.getItem(`workspaceGraphIncludeExternal:${id}`) === "1";
+      const nodeTypesCsv = window.localStorage.getItem(`workspaceGraphNodeTypes:${id}`) || "Work,Author";
+      const includeClaims = window.localStorage.getItem(`workspaceGraphIncludeClaims:${id}`) === "1";
+      return {
+        mode,
+        depth,
+        includeExternal,
+        nodeTypesCsv,
+        externalMinInternalCiters: includeExternal ? 2 : 0,
+        includeClaims,
+      };
+    }
+    if (wf) {
+      const includeClaims = window.localStorage.getItem(`graphWorkIncludeClaims:${wf}`) === "1";
+      return { ...fallback, includeClaims };
+    }
   } catch {
     return fallback;
   }
+  return fallback;
 }
 
 export function useGraphWorkspaceData(workspaceId, workId, options = {}) {
@@ -63,17 +80,17 @@ export function useGraphWorkspaceData(workspaceId, workId, options = {}) {
   const [graph, setGraph] = useState(() => normalizeGraphPayload(null));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [wsGraphOpts, setWsGraphOpts] = useState(() => readWsGraphOptsFromLs(wsId));
+  const [wsGraphOpts, setWsGraphOpts] = useState(() => readWsGraphOptsFromLs(wsId, workIdNorm));
   const [wsGraphStats, setWsGraphStats] = useState(null);
   const [workspaceGraphRaw, setWorkspaceGraphRaw] = useState(null);
   const [expandNeighborsBusy, setExpandNeighborsBusy] = useState(false);
   const [neighborCache, setNeighborCache] = useState(() => new Set());
 
   useEffect(() => {
-    setWsGraphOpts(readWsGraphOptsFromLs(wsId));
+    setWsGraphOpts(readWsGraphOptsFromLs(wsId, workIdNorm));
     setWorkspaceGraphRaw(null);
     setNeighborCache(new Set());
-  }, [wsId]);
+  }, [wsId, workIdNorm]);
 
   useEffect(() => {
     if (!wsId) {
@@ -117,6 +134,7 @@ export function useGraphWorkspaceData(workspaceId, workId, options = {}) {
             includeExternal: wsGraphOpts.includeExternal,
             nodeTypes: wsGraphOpts.nodeTypesCsv,
             externalMinInternalCiters: wsGraphOpts.externalMinInternalCiters,
+            includeClaims: Boolean(wsGraphOpts.includeClaims),
           });
           if (cancelled) return;
           setWorkspaceGraphRaw(raw);
@@ -124,7 +142,11 @@ export function useGraphWorkspaceData(workspaceId, workId, options = {}) {
         } else {
           setNeighborCache(new Set());
           const depth = options.standaloneWorkGraphDepth === 2 ? 2 : 1;
-          const raw = await getWorkGraph(w, { depth, view: "reader" });
+          const raw = await getWorkGraph(w, {
+            depth,
+            view: "reader",
+            includeClaims: Boolean(wsGraphOpts.includeClaims),
+          });
           if (cancelled) return;
           setWorkspaceGraphRaw(raw.data);
           normalized = normalizeGraphPayload(raw.data);

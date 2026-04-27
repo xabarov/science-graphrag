@@ -1,5 +1,6 @@
 import React, { useCallback } from "react";
 import Box from "@mui/material/Box";
+import { useTheme } from "@mui/material/styles";
 
 import GraphDetailPanel from "./GraphDetailPanel.jsx";
 import { clampGraphDetailColumnPx } from "./graphDetailColumnWidth.js";
@@ -22,6 +23,7 @@ export default function GraphSidePanel({
   width,
   onWidthChange,
 }) {
+  const tk = useTheme().appTokens;
   const handleResizeStart = useCallback(
     (e) => {
       if (e.button !== 0) return;
@@ -74,8 +76,8 @@ export default function GraphSidePanel({
             alignSelf: "stretch",
             touchAction: "none",
             borderRadius: "2px",
-            backgroundColor: "rgba(255,255,255,0.06)",
-            "&:hover": { backgroundColor: "rgba(255,255,255,0.12)" },
+            backgroundColor: tk.control.chipMutedBg,
+            "&:hover": { backgroundColor: tk.border.strong },
           }}
           role="separator"
           aria-orientation="vertical"

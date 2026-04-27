@@ -7,6 +7,7 @@ import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 import UploadFileOutlinedIcon from "@mui/icons-material/UploadFileOutlined";
@@ -40,6 +41,7 @@ export default function WorkspaceActionBar({
   onImportClick,
 }) {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
 
   function handleTargetChange(nextId) {
     onTargetWorkspaceChange(nextId);
@@ -58,11 +60,11 @@ export default function WorkspaceActionBar({
         gap: 1,
         p: { xs: 1, sm: 1.1 },
         borderRadius: "6px",
-        border: "1px solid rgba(255,255,255,0.08)",
-        backgroundColor: "#141414",
+        border: `1px solid ${tk.border.default}`,
+        backgroundColor: tk.surface.sidebar,
       }}
     >
-      {wsLoading ? <CircularProgress size={18} sx={{ color: "rgba(129,140,248,0.95)", flexShrink: 0 }} /> : null}
+      {wsLoading ? <CircularProgress size={18} sx={{ color: tk.accent.fg, flexShrink: 0 }} /> : null}
 
       <Box
         component="form"
@@ -113,7 +115,7 @@ export default function WorkspaceActionBar({
           </Select>
         </FormControl>
       ) : (
-        <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.48)", flex: "1 1 auto" }}>
+        <Typography sx={{ fontSize: "0.75rem", color: tk.text.muted, flex: "1 1 auto" }}>
           {t("workspaces.targetHint")}
         </Typography>
       )}

@@ -6,8 +6,6 @@ from typing import Any
 from neo4j import Session as Neo4jSession
 
 from science_graphrag.api.deps import StoreRegistry
-from science_graphrag.api.workspace_graph.claims_projection import build_claim_graph_slice_for_work
-from science_graphrag.api.workspace_graph.projection import merge_nodes_edges_lists
 from science_graphrag.api.graph_display import (
     compute_node_display,
     edge_display_type,
@@ -16,6 +14,8 @@ from science_graphrag.api.graph_display import (
     parse_priority_csv,
     resolve_node_kind,
 )
+from science_graphrag.api.workspace_graph.claims_projection import build_claim_graph_slice_for_work
+from science_graphrag.api.workspace_graph.projection import merge_nodes_edges_lists
 
 MAX_WORK_GRAPH_NEIGHBORS = 300
 AGGREGATOR_THRESHOLD = 8
