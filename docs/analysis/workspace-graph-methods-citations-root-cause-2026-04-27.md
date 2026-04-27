@@ -1,5 +1,7 @@
 # Workspace graph: methods, external citations, «Untitled work» — root cause and action plan (2026-04-27)
 
+**Completed-work index:** [`completed-work-snapshot.md`](./completed-work-snapshot.md#workspace-graph-p0) (P0 shipped).
+
 **Context:** Graph tab with **methods display** enabled; user observes many internal papers **without green Method nodes**, few **purple citation** edges (~16 / 31 papers), and many targets labeled **«Untitled work»**.
 
 **Conclusion up front:** This is **primarily a projection + depth contract mismatch between the UI and Neo4j**, compounded by **reference ingestion creating minimal `:Work` stubs** without a resolvable title. It is **not** «workspace was loaded wrong» (membership is fine) and **not** intentional benchmark fraud — nightly metrics use **different** artifacts (layer1 `gold.json`, graph fixtures) than this **interactive** workspace graph API.

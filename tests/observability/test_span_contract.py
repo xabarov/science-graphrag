@@ -51,7 +51,10 @@ def _span_fixture(monkeypatch):
 
 def test_vl_llm_span_has_model_and_token_contract(monkeypatch) -> None:
     exporter = _span_fixture(monkeypatch)
-    monkeypatch.setattr("science_graphrag.ingestion.vl_pdf.httpx.Client", _FakeClient)
+    monkeypatch.setattr(
+        "science_graphrag.ingestion.llm.raw_openai_transport.httpx.Client",
+        _FakeClient,
+    )
     monkeypatch.setattr(
         VLPDFProcessor, "_pdf_pages", lambda self, _p: [object(), object()]
     )  # noqa: ARG005

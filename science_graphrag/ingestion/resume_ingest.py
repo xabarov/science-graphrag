@@ -20,7 +20,7 @@ from science_graphrag.ingestion.checkpoint import (
     serialize_checkpoint,
 )
 from science_graphrag.ingestion.chunking import (
-    chunk_document_for_retrieval,
+    chunk_document_for_retrieval_from_settings,
     dedupe_chunks_for_embedding,
 )
 from science_graphrag.ingestion.stage_context import IngestStage, stage
@@ -84,11 +84,7 @@ def resume_document_embed_phase(
     normalized = norm_path.read_text(encoding="utf-8")
 
     doc_chunks = dedupe_chunks_for_embedding(
-        chunk_document_for_retrieval(
-            normalized,
-            target_tokens=settings.chunk_target_tokens,
-            overlap_tokens=settings.chunk_overlap_tokens,
-        ),
+        chunk_document_for_retrieval_from_settings(normalized, settings),
     )
     draft = minimal_work_draft_from_normalized_markdown(normalized)
     ckpt = parse_checkpoint(row.ingest_checkpoint_json)

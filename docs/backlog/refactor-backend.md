@@ -35,10 +35,12 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 | 2026-04-25 | **DI:** `StoreRegistry` + `get_stores()`; removed `main.py` works shim; `works_router` naming. |
 | 2026-04-25 | **Product waves:** T entity dedup API; Y2 LangGraph ReAct + tests; Y4 multi-agent supervisor + ADR-020. |
 | 2026-04-19 | **Benchmarks:** teacher-gold audit baseline checklist; durable file-backed run snapshots in `task_store`. |
-| 2026-04-26 | **Big plan — ops + benchmarks + eval hygiene (partial):** подтверждены ingest CLI timeout/resume/checkpoint (см. Completed «Ingest robustness»); первый split `scripts/benchmark_aggregator/paths.py` из `aggregate_benchmark_metrics.py`; `EDGE_DISPLAY_TYPE_READER`; `ExtractorBase._safe_parse_json` + `claims_v2`; isort/black на `ingest_jobs`/`idea_workflow` — зелёные. |
-| 2026-04-26 | **isort/black — ingest_jobs + idea_workflow:** пункт беклога закрыт; `black --check` / `isort --check-only` на два файла из корня репозитория — зелёные (полный `science_graphrag/` по-прежнему не гарантирован — отдельный глобальный проход при необходимости). |
+| 2026-04-26 | **Big plan partial + quality gates:** ingest CLI timeout/resume/checkpoint (см. «Ingest robustness»); `scripts/benchmark_aggregator/paths.py`; `EDGE_DISPLAY_TYPE_READER` + test; `ExtractorBase._safe_parse_json` + `claims_v2`; **isort/black** зелёные на `science_graphrag/api/ingest_jobs.py` и `science_graphrag/agent/idea_workflow.py` (не весь пакет `science_graphrag/` — отдельный глобальный проход при необходимости). |
+| 2026-04-26 | **Wave A LangChain tools:** split into `workspace_catalog_tools.py`, `paper_quote_search_tool.py`, `format_bibliography_gost_tool.py`; facade `workspace_paper_tools.py` (`build_workspace_paper_langchain_tools` + re-exports). |
 
 ## Queue
+
+Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies here).
 
 ### [OPEN] Ingest resume — claims + Neo4j selective rebuild
 - **Area:** `science_graphrag/ingestion/resume_ingest.py`, `science_graphrag/ingestion/_pipeline_impl.py`
@@ -148,12 +150,6 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 - **Risks:** hard cutover (не A/B, нельзя rollback без re-ingest); outbound network dependency на OpenRouter в ingestion path (раньше было self-contained); retrieval gates могут сдвинуться.
 - **Raised:** 2026-04-25 (out of scope of Phase 6.D — отдельная сессия)
 
-
-### [DONE] Fix pre-existing isort/black violations in ingest_jobs and idea_workflow
-- **Note (2026-04-26):** Исторически пункт ссылался на падение `black`/`isort` на двух файлах. Сейчас из корня репозитория: `.venv/bin/black --check science_graphrag/api/ingest_jobs.py science_graphrag/agent/idea_workflow.py` и `.venv/bin/isort --check-only` на те же пути — **зелёные**. Глобальный acceptance «весь `science_graphrag/`» из старого Proposal **не** выполнялся и **вынесен** за scope этого пункта; отдельный глобальный black/isort pass — при отдельном refactor-запросе или CI gate.
-- **Area:** [`ingest_jobs.py`](../../science_graphrag/api/ingest_jobs.py), [`idea_workflow.py`](../../science_graphrag/agent/idea_workflow.py)
-- **Raised:** 2026-04-25 (Round 5 review); **Done:** 2026-04-26
-
 ### [PARTIAL] Graph readability — Wave GR2 node_kind + semantic display_type + prioritized LIMIT
 - **Area:** `science_graphrag/api/graph_display.py`, `science_graphrag/api/works/graph_neighborhood.py`,
   `science_graphrag/api/workspace_graph/projection.py`
@@ -234,6 +230,14 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 - **Issue:** LLM-first путь смешивает orchestration (`ThreadPoolExecutor`), Pydantic-схемы, промпты, heuristic fallback и связку со stage-модулями metadata/authorships/references. Дубли регексов/промптов с `semantic_extraction.py`. Перепиливается каждый раз при новом extractor (claims, concept/topic — Wave N/O).
 - **Proposal:** ввести `science_graphrag/ingestion/llm/` подпакет с: `prompts/<call_name>.py` (текстовые промпты + Pydantic-схема), `executor.py` (общий вызов через instructor/LangChain, span-discipline), `orchestrator.py` (LLM + heuristics + fallback политика), `heuristics/<call_name>.py`. `semantic_extraction.py` использует тот же executor и тот же стиль `prompts/`.
 - **Acceptance:** ни один файл > ≈300 строк; новые extractor'ы (Wave N concept/topic gold→production, Wave O claims promotion) добавляются как `prompts/<name>.py` + `heuristics/<name>.py`; юнит-тесты на промпт-схемы.
+
+### [OPEN] Standardize ingestion LLM seams around structured executor
+- **Area:** `science_graphrag/ingestion/llm/`, `science_graphrag/ingestion/claims/extractor.py`, `science_graphrag/ingestion/vl_pdf.py`, `science_graphrag/ingestion/_pipeline_impl.py`
+- **Issue:** production ingestion использует три разных паттерна LLM-вызова. Metadata/authorships/references/semantic уже идут через `SyncInstructorExtractor` + shared `run_extraction`, но claims по-прежнему вызывает `extract_maybe(...)` напрямую, держит локальные Pydantic-схемы и ad-hoc diagnostics dict; VL PDF path оправданно не использует Instructor, но дублирует transport/timeout/observability policy. В итоге retry/span/error contract и test surface отличаются между стадиями одной ingestion pipeline.
+- **Proposal:** (1) перевести claims на тот же structured seam: shared schema modules + `run_extraction(...)`/standardized executor policy + typed diagnostics; (2) ввести extractor factory/presets из `Settings` вместо ручной сборки `SyncInstructorExtractor` в каждом call-site; (3) для VL не тащить Instructor, а вынести общий low-level transport/telemetry seam для non-structured calls; (4) зафиксировать матрицу `stage -> seam` в architecture/docs и tests.
+- **Acceptance:** все production stages вида `text/chunks -> typed structured object` используют shared Pydantic schema modules и единый executor contract; claims больше не содержит bespoke direct-call protocol поверх `extract_maybe(...)`; создание extraction clients централизовано; diagnostics vocabulary выровнен между metadata/semantic/claims; VL path использует общий transport helper без дублирования timeout/error handling.
+- **Reference:** `docs/analysis/ingestion-llm-architecture-and-instructor-standardization-2026-04-27.md`
+- **Raised:** 2026-04-27
 - **Synergy:** **Wave N/O** (онтология), **Wave Y2** (LangGraph tool-граф) — общий executor можно потом переключить на `langchain_core` LLM-калл без сноса orchestrator.
 - **Raised:** 2026-04-25
 
@@ -296,11 +300,6 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 - **Acceptance:** При параллельных translation-запросах система соблюдает `llm_concurrency_translation`; integration-тест или нагрузочный smoke-check.
 - **Synergy:** LX2 → LX1 → интеграция.
 - **Raised:** 2026-04-26
-
-### [DONE] Split Wave A workspace/paper LangChain tools module
-- **Note (2026-04-26):** Split into [`workspace_catalog_tools.py`](../../science_graphrag/agent/tools/workspace_catalog_tools.py), [`paper_quote_search_tool.py`](../../science_graphrag/agent/tools/paper_quote_search_tool.py), [`format_bibliography_gost_tool.py`](../../science_graphrag/agent/tools/format_bibliography_gost_tool.py); [`workspace_paper_tools.py`](../../science_graphrag/agent/tools/workspace_paper_tools.py) is thin `build_workspace_paper_langchain_tools` + re-exports.
-- **Area:** `science_graphrag/agent/tools/workspace_paper_tools.py` (facade)
-- **Raised:** 2026-04-26 (Wave A CH2); **Done:** 2026-04-26 (Wave C chat hardening)
 
 <!-- Example:
 ### [OPEN] Example — tighten retrieval module boundaries

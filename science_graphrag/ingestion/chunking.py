@@ -2,12 +2,20 @@
 
 from __future__ import annotations
 
+import functools
 import hashlib
 import re
 import unicodedata
 from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from science_graphrag.config import Settings
 
 _HEADING_RE = re.compile(r"^(#{1,6})\s+(.+)$", re.MULTILINE)
+
+_CHUNKING_ENGINES = frozenset({"legacy", "chonkie_recursive"})
+DEFAULT_CHUNKING_ENGINE = "chonkie_recursive"
 
 
 def approx_tokens(text: str) -> int:
@@ -186,29 +194,169 @@ def _chunk_section_body(  # pylint: disable=too-many-arguments,too-many-locals,t
     return chunks, global_idx
 
 
+@functools.lru_cache(maxsize=32)
+def _cached_chonkie_recursive_chunker(
+    recipe: str,
+    lang: str,
+    chunk_size: int,
+    min_chars: int,
+) -> Any:
+    """Build a cached RecursiveChunker (character tokenizer; chunk_size ~ char budget)."""
+    try:
+        from chonkie import RecursiveChunker
+    except ImportError as exc:  # pragma: no cover - guarded by dependency in pyproject
+        raise ImportError(
+            'chonkie is required for chunking_engine="chonkie_recursive" '
+            '(install project dependencies: chonkie, jsonschema).',
+        ) from exc
+    return RecursiveChunker.from_recipe(
+        name=recipe,
+        lang=lang,
+        tokenizer="character",
+        chunk_size=chunk_size,
+        min_characters_per_chunk=min_chars,
+    )
+
+
+def _chunk_section_body_chonkie(  # pylint: disable=too-many-arguments
+    *,
+    section_path: str,
+    block: str,
+    block_start: int,
+    target_tokens: int,
+    global_index_start: int,
+    chonkie_recipe: str,
+    chonkie_lang: str,
+    chonkie_min_chars: int,
+) -> tuple[list[DocumentChunk], int]:
+    """
+    Split one section block using Chonkie RecursiveChunker (markdown recipe).
+
+    Character tokenizer chunk_size is aligned with legacy ``approx_tokens`` budget:
+    ``max(min_chars, target_tokens * 4)`` characters per chunk (see runbook).
+    Overlap between chunks is not injected here; ``overlap_prev`` / ``overlap_next`` stay false.
+    """
+    if not block.strip():
+        return [], global_index_start
+
+    chunk_size = max(chonkie_min_chars, target_tokens * 4)
+    chunker = _cached_chonkie_recursive_chunker(
+        chonkie_recipe.strip() or "markdown",
+        (chonkie_lang or "en").strip() or "en",
+        chunk_size,
+        chonkie_min_chars,
+    )
+    raw = chunker.chunk(block)
+    chunks: list[DocumentChunk] = []
+    global_idx = global_index_start
+
+    if not raw:
+        norm_body = _normalize_for_fingerprint(block)
+        fp = _fingerprint(section_path, norm_body, 0)
+        chunks.append(
+            DocumentChunk(
+                chunk_fingerprint=fp,
+                section_path=section_path,
+                text=block,
+                start_offset=block_start,
+                end_offset=block_start + len(block),
+                overlap_prev=False,
+                overlap_next=False,
+                chunk_index=global_idx,
+                index_in_section=0,
+            ),
+        )
+        return chunks, global_idx + 1
+
+    for idx_in_sec, ch in enumerate(raw):
+        s = int(ch.start_index)
+        e = int(ch.end_index)
+        body = block[s:e]
+        if ch.text != body:
+            body = ch.text
+            pos = block.find(body, 0 if idx_in_sec == 0 else int(raw[idx_in_sec - 1].end_index))
+            if pos < 0:
+                pos = s
+                e = pos + len(body)
+            else:
+                s = pos
+                e = pos + len(body)
+        abs_start = block_start + s
+        abs_end = block_start + e
+        norm_body = _normalize_for_fingerprint(body)
+        fp = _fingerprint(section_path, norm_body, idx_in_sec)
+        chunks.append(
+            DocumentChunk(
+                chunk_fingerprint=fp,
+                section_path=section_path,
+                text=body,
+                start_offset=abs_start,
+                end_offset=abs_end,
+                overlap_prev=False,
+                overlap_next=False,
+                chunk_index=global_idx,
+                index_in_section=idx_in_sec,
+            ),
+        )
+        global_idx += 1
+
+    return chunks, global_idx
+
+
+def _normalize_chunking_engine(engine: str) -> str:
+    key = (engine or DEFAULT_CHUNKING_ENGINE).strip().lower()
+    if key not in _CHUNKING_ENGINES:
+        raise ValueError(
+            f"Unknown chunking engine {engine!r}; expected one of {sorted(_CHUNKING_ENGINES)}",
+        )
+    return key
+
+
 def chunk_document_for_retrieval(
     text: str,
     *,
     target_tokens: int = 1200,
     overlap_tokens: int = 140,
+    engine: str = DEFAULT_CHUNKING_ENGINE,
+    chonkie_recipe: str = "markdown",
+    chonkie_lang: str = "en",
+    chonkie_min_characters_per_chunk: int = 24,
 ) -> list[DocumentChunk]:
     """
     Build section-aware chunks over normalized markdown.
+
+    ``engine``:
+    - ``legacy``: paragraph packing with ``overlap_tokens`` tail overlap.
+    - ``chonkie_recursive``: Chonkie RecursiveChunker per section; ``overlap_tokens`` ignored for now.
     """
     if not text.strip():
         return []
 
+    eng = _normalize_chunking_engine(engine)
     all_chunks: list[DocumentChunk] = []
     global_idx = 0
+
     for section_path, start, _end, block in _heading_sections(text):
-        section_chunks, global_idx = _chunk_section_body(
-            section_path=section_path,
-            block=block,
-            block_start=start,
-            target_tokens=target_tokens,
-            overlap_tokens=overlap_tokens,
-            global_index_start=global_idx,
-        )
+        if eng == "legacy":
+            section_chunks, global_idx = _chunk_section_body(
+                section_path=section_path,
+                block=block,
+                block_start=start,
+                target_tokens=target_tokens,
+                overlap_tokens=overlap_tokens,
+                global_index_start=global_idx,
+            )
+        else:
+            section_chunks, global_idx = _chunk_section_body_chonkie(
+                section_path=section_path,
+                block=block,
+                block_start=start,
+                target_tokens=target_tokens,
+                global_index_start=global_idx,
+                chonkie_recipe=chonkie_recipe,
+                chonkie_lang=chonkie_lang,
+                chonkie_min_chars=chonkie_min_characters_per_chunk,
+            )
         all_chunks.extend(section_chunks)
 
     if not all_chunks and text.strip():
@@ -231,6 +379,19 @@ def chunk_document_for_retrieval(
     for i, ch in enumerate(all_chunks):
         ch.chunk_index = i
     return all_chunks
+
+
+def chunk_document_for_retrieval_from_settings(text: str, settings: "Settings") -> list[DocumentChunk]:
+    """Chunk normalized markdown using ``settings`` chunking fields (single entry for ingest)."""
+    return chunk_document_for_retrieval(
+        text,
+        target_tokens=settings.chunk_target_tokens,
+        overlap_tokens=settings.chunk_overlap_tokens,
+        engine=settings.chunking_engine,
+        chonkie_recipe=settings.chunking_chonkie_recipe,
+        chonkie_lang=settings.chunking_chonkie_lang,
+        chonkie_min_characters_per_chunk=settings.chunking_chonkie_min_characters_per_chunk,
+    )
 
 
 def infer_chunk_kind_from_section_path(section_path: str | None, *, default: str = "body") -> str:

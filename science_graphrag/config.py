@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from dotenv import dotenv_values, load_dotenv
 from pydantic import Field, model_validator
@@ -158,6 +158,24 @@ class Settings(BaseSettings):
     chunk_overlap_tokens: int = Field(
         default=140,
         description="Overlap between adjacent chunks within the same section (~tokens).",
+    )
+    chunking_engine: Literal["legacy", "chonkie_recursive"] = Field(
+        default="chonkie_recursive",
+        description='Chunk boundary engine: "chonkie_recursive" (default) or "legacy".',
+    )
+    chunking_chonkie_recipe: str = Field(
+        default="markdown",
+        description="Chonkie RecursiveChunker.from_recipe name (e.g. markdown).",
+    )
+    chunking_chonkie_lang: str = Field(
+        default="en",
+        description="Chonkie recipe language code (HF hub recipes).",
+    )
+    chunking_chonkie_min_characters_per_chunk: int = Field(
+        default=24,
+        ge=8,
+        le=4096,
+        description="Chonkie min_characters_per_chunk for RecursiveChunker.",
     )
 
     # Stage extraction LLM: markdown -> structured drafts (OpenAI-compatible API).

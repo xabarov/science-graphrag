@@ -26,6 +26,7 @@
 | [architecture/README.md](architecture/README.md) | Индекс архитектурных заметок |
 | [architecture/phase-1-backbone.md](architecture/phase-1-backbone.md) | Phase 1: ingestion MVP и стек |
 | [architecture/chunking-strategy.md](architecture/chunking-strategy.md) | Task-aware slices, section chunks, dedup |
+| [runbooks/chonkie-chunking.md](runbooks/chonkie-chunking.md) | Chonkie vs legacy chunking: baseline, A/B retrieval, rollout (`SCIENCE_GRAPHRAG_CHUNKING_ENGINE`) |
 | [architecture/source-of-truth-v1.md](architecture/source-of-truth-v1.md) | Source of Truth слоя 1 |
 | [architecture/frontend-parallel-track-strategy.md](architecture/frontend-parallel-track-strategy.md) | Стратегия параллельного frontend-трека (Phase 5/6 bridge) |
 | [architecture/frontend-phase6-bridge-backlog.md](architecture/frontend-phase6-bridge-backlog.md) | Backlog: frontend shell + backend bridge endpoints |

@@ -22,6 +22,7 @@ from science_graphrag.ingestion.claims.extractor import (
     extract_claims_llm,
 )
 from science_graphrag.ingestion.claims.stub import extract_claims_stub
+from science_graphrag.ingestion.llm.diagnostics import ClaimsExtractionDiagnostics
 
 
 def extract_claims_production_path(
@@ -36,7 +37,7 @@ def extract_claims_production_path(
     settings = get_settings()
     fp = "benchmark_inline"
     chunks = [{"text": article, "chunk_fingerprint": fp, "section_path": None}]
-    diag: dict[str, Any] = {}
+    diag = ClaimsExtractionDiagnostics()
     drafts = extract_claims_llm(
         chunks,
         "benchmark_eval",
@@ -44,7 +45,7 @@ def extract_claims_production_path(
         force_benchmark=True,
         diagnostics=diag,
     )
-    return claim_drafts_to_predictions(drafts), diag
+    return claim_drafts_to_predictions(drafts), diag.to_dict()
 
 
 def run_claims_case(

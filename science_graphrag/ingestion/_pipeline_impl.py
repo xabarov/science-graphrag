@@ -24,7 +24,7 @@ from science_graphrag.ingestion.artifact_layout import (
     strip_ingest_artifact_header,
 )
 from science_graphrag.ingestion.chunking import (
-    chunk_document_for_retrieval,
+    chunk_document_for_retrieval_from_settings,
     dedupe_chunks_for_embedding,
 )
 from science_graphrag.ingestion.claims.extractor import extract_claims_llm
@@ -1039,11 +1039,7 @@ def ingest_document(
                 publisher=stage_event_publisher,
             ) as st:
                 doc_chunks = dedupe_chunks_for_embedding(
-                    chunk_document_for_retrieval(
-                        normalized,
-                        target_tokens=settings.chunk_target_tokens,
-                        overlap_tokens=settings.chunk_overlap_tokens,
-                    ),
+                    chunk_document_for_retrieval_from_settings(normalized, settings),
                 )
                 st.metric("chunks", len(doc_chunks))
             claim_rows: list[Any] = []

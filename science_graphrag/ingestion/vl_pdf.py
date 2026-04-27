@@ -1,14 +1,16 @@
+"""VL PDF to Markdown ingestion (multimodal OpenAI-compatible API)."""
+
 from __future__ import annotations
 
 import base64
 from io import BytesIO
 from pathlib import Path
 
-import httpx
 from pdf2image import convert_from_path
 from PIL import Image
 
 from science_graphrag.config import Settings
+from science_graphrag.ingestion.llm.raw_openai_transport import post_chat_completions_json
 from science_graphrag.observability.phoenix_tracer import SpanAttributes, llm_span
 
 DEFAULT_VL_PROMPT = (
@@ -25,7 +27,7 @@ CONTINUE_VL_PROMPT = (
 )
 
 
-class VLPDFProcessor:
+class VLPDFProcessor:  # pylint: disable=too-few-public-methods
     """OpenRouter-compatible VL PDF-to-Markdown processor with page-batching support."""
 
     def __init__(self, settings: Settings) -> None:
@@ -59,10 +61,6 @@ class VLPDFProcessor:
             )
         content.append({"type": "text", "text": prompt})
 
-        headers = {
-            "Authorization": f"Bearer {self.settings.vl_api_key}",
-            "Content-Type": "application/json",
-        }
         payload = {
             "model": self.settings.vl_model,
             "messages": [{"role": "user", "content": content}],
@@ -70,18 +68,18 @@ class VLPDFProcessor:
             "max_tokens": self.settings.vl_max_tokens,
         }
 
-        with httpx.Client(timeout=300.0) as client:
-            response = client.post(
-                f"{self.settings.vl_base_url}/chat/completions",
-                headers=headers,
-                json=payload,
-            )
-            response.raise_for_status()
-            data = response.json()
+        key = self.settings.vl_api_key or ""
+        data, usage = post_chat_completions_json(
+            base_url=self.settings.vl_base_url,
+            api_key=key,
+            json_body=payload,
+            timeout_seconds=300.0,
+        )
 
-        return data["choices"][0]["message"]["content"], data.get("usage") or {}
+        return data["choices"][0]["message"]["content"], usage
 
     def pdf_to_markdown(self, path: Path) -> str:
+        """Render ``path`` to Markdown using the configured VL model (page batches)."""
         if not self.settings.vl_api_key:
             raise ValueError("VL API key is not configured")
 
@@ -142,7 +140,10 @@ class VLPDFProcessor:
                 [
                     {
                         "role": "user",
-                        "content": f"<{len(all_pages)} page(s) in {len(batches)} batch(es)> + VL prompt",
+                        "content": (
+                            f"<{len(all_pages)} page(s) in {len(batches)} "
+                            "batch(es)> + VL prompt"
+                        ),
                     }
                 ]
             )

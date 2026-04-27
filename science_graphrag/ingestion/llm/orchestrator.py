@@ -12,6 +12,10 @@ from science_graphrag.domain.models import AuthorshipDraft, ReferenceDraft, Work
 from science_graphrag.ingestion.llm.diagnostics import ExtractionDiagnostics
 from science_graphrag.ingestion.llm.executor import run_extraction
 from science_graphrag.ingestion.llm.extractor import SyncInstructorExtractor
+from science_graphrag.ingestion.llm.extractor_factory import (
+    IngestionExtractorPreset,
+    build_ingestion_extractor,
+)
 from science_graphrag.ingestion.llm.heuristics.authorships import (
     authorships_from_llm,
     llm_authorships_need_fallback,
@@ -125,24 +129,8 @@ def extract_stages_llm_first(
 
     diag.extraction_llm_enabled = True
     diag.extraction_llm_model = settings.extraction_llm_model
-    extractor = SyncInstructorExtractor(
-        api_key=api_key,
-        base_url=settings.extraction_llm_base_url,
-        model=settings.extraction_llm_model,
-        temperature=settings.extraction_llm_temperature,
-        max_tokens=settings.extraction_llm_max_tokens_metadata,
-        timeout_seconds=settings.extraction_llm_timeout_seconds,
-        mode=settings.extraction_llm_mode,
-    )
-    extractor_refs = SyncInstructorExtractor(
-        api_key=api_key,
-        base_url=settings.extraction_llm_base_url,
-        model=settings.extraction_llm_model,
-        temperature=settings.extraction_llm_temperature,
-        max_tokens=settings.extraction_llm_max_tokens_references,
-        timeout_seconds=settings.extraction_llm_timeout_seconds,
-        mode=settings.extraction_llm_mode,
-    )
+    extractor = build_ingestion_extractor(settings, IngestionExtractorPreset.METADATA)
+    extractor_refs = build_ingestion_extractor(settings, IngestionExtractorPreset.REFERENCES)
     meta_source = front_matter_text if front_matter_text is not None else normalized_markdown
     meta_text = truncate_text(meta_source, meta_prompts.MAX_META_CHARS)
 

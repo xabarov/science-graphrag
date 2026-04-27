@@ -2,6 +2,8 @@
 
 > Единый план: продуктовые роадмапы в `docs/analysis/` + структурный долг в `docs/backlog/refactor-*.md`. **Для агента/чата:** не загружайте весь файл — прочитайте §1, §2, §5 и **§10**; остальное — по ссылкам из §9. Индекс папки: [`README.md`](./README.md).
 >
+> **Сводка закрытых треков и фаз (one page):** [`completed-work-snapshot.md`](./completed-work-snapshot.md).
+>
 > **Актуальные даты и merged work:** таблица *Completed* в [`refactor-backend.md`](../backlog/refactor-backend.md) / [`refactor-frontend.md`](../backlog/refactor-frontend.md). Закрытые волны и длинные ретроспективы: [`_archive/completed-rounds-2026-04-25.md`](./_archive/completed-rounds-2026-04-25.md), [`_archive/`](./_archive/).
 
 ## 0. Quick status (2026-04-27)

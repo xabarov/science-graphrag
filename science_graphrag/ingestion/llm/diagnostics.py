@@ -8,7 +8,33 @@ from typing import Any, Literal
 
 
 @dataclass
-class ExtractionDiagnostics:
+class ClaimsExtractionDiagnostics:  # pylint: disable=too-many-instance-attributes
+    """Typed diagnostics for claims LLM extraction (machine-readable + JSON-safe)."""
+
+    stage_name: str = "claims_extraction"
+    source: Literal["llm", "heuristic", "hybrid"] = "llm"
+    dropped_claim_count_too_short: int = 0
+    dropped_claim_count_no_evidence: int = 0
+    dropped_claim_count_quote_rejected: int = 0
+    evidence_quote_strict_count: int = 0
+    evidence_quote_strict_normalized_count: int = 0
+    evidence_quote_fuzzy_count: int = 0
+    evidence_quote_jaccard_count: int = 0
+    raw_claims_from_llm: int = 0
+    llm_error_message: str | None = None
+    llm_raw_response_preview: str | None = None
+    claims_benchmark_compact_schema: bool = False
+    claims_compact_fallback_used: bool = False
+    claims_compact_fallback_reason: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize for benchmark JSON / logging (flat dict, stable keys)."""
+
+        return asdict(self)
+
+
+@dataclass
+class ExtractionDiagnostics:  # pylint: disable=too-many-instance-attributes
     """Serializable ingestion/extraction provenance."""
 
     document_id: str
@@ -35,4 +61,6 @@ class ExtractionDiagnostics:
     vl_batch_count: int | None = None
 
     def to_json(self) -> str:
+        """Return a JSON string suitable for logs and checkpoints."""
+
         return json.dumps(asdict(self), indent=2, ensure_ascii=False)

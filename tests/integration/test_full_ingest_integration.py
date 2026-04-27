@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 from neo4j import GraphDatabase
 from qdrant_client import QdrantClient
+from qdrant_client.models import FieldCondition, Filter, MatchValue
 from sqlalchemy import create_engine, select, text
 from sqlalchemy.orm import sessionmaker
 
@@ -112,6 +113,74 @@ def test_full_ingest_writes_work_node(tmp_path: Path) -> None:
 
     assert isinstance(violations, list)
     assert not violations, f"unexpected Work dedup violations: {violations}"
+
+
+@pytest.mark.integration
+def test_full_ingest_qdrant_chunk_payload_contract(tmp_path: Path) -> None:
+    """Chunk points must carry retrieval/provenance payload keys after ingest."""
+    if not _services_available():
+        pytest.skip("Neo4j or Qdrant not reachable (integration)")
+
+    coll = f"itest-payload-{uuid.uuid4().hex[:12]}"
+    root = tmp_path / "data"
+    settings = Settings(
+        extraction_llm_api_key=None,
+        extraction_llm_enabled=False,
+        artifact_root=root / "artifacts",
+        blob_root=root / "blobs",
+        qdrant_collection=coll,
+        reuse_cached_markdown=False,
+    )
+    md_path = tmp_path / "qdrant_payload.md"
+    md_path.write_text(
+        "\n".join(
+            [
+                "# Qdrant Payload Title",
+                "",
+                "## Abstract",
+                "",
+                "Chunk payload contract check.",
+                "",
+                "## References",
+                "",
+                "[1] B. Author. Example. Science 2021. 10.1000/payload.",
+                "",
+            ],
+        ),
+        encoding="utf-8",
+    )
+
+    doc_id, work_id = ingest_document(md_path, settings=settings, session=None)
+    client = QdrantClient(url=settings.qdrant_url, check_compatibility=False)
+    try:
+        flt = Filter(
+            must=[FieldCondition(key="document_id", match=MatchValue(value=doc_id))],
+        )
+        records, _ = client.scroll(
+            collection_name=coll,
+            scroll_filter=flt,
+            limit=64,
+            with_payload=True,
+            with_vectors=False,
+        )
+        assert records, "expected at least one chunk point in Qdrant"
+        for rec in records:
+            payload = rec.payload or {}
+            fp = payload.get("chunk_fingerprint")
+            assert fp and isinstance(fp, str) and len(fp) == 64
+            assert isinstance(payload.get("section_path"), str)
+            so = payload.get("start_offset")
+            eo = payload.get("end_offset")
+            assert isinstance(so, int) and isinstance(eo, int) and so < eo
+            assert payload.get("chunk_kind")
+            assert payload.get("document_id") == doc_id
+            assert payload.get("work_id") == work_id
+            assert isinstance(payload.get("text"), str) and payload.get("text")
+    finally:
+        try:
+            client.delete_collection(collection_name=coll)
+        except Exception:  # noqa: BLE001
+            pass
 
 
 def _integration_settings(tmp_path: Path, *, qdrant_suffix: str) -> Settings:

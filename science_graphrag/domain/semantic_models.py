@@ -9,6 +9,15 @@ from pydantic import BaseModel, ConfigDict, Field
 RelationTypeV1 = Literal["uses_method", "evaluated_on", "trained_or_tested_on"]
 
 
+class SemanticExtractionLLMDiagnostics(BaseModel):
+    """Structured LLM run metadata for semantic extraction (alongside extraction_notes)."""
+
+    stage_name: str = "semantic_method_dataset"
+    source: Literal["llm", "heuristic"] = "llm"
+    attempt_errors: list[str] = Field(default_factory=list)
+    successful_attempt: str | None = None
+
+
 class SemanticEvidenceV1(BaseModel):
     chunk_id: str | None = None
     section_heading: str | None = None
@@ -65,6 +74,7 @@ class SemanticExtractionV1(BaseModel):
     datasets: list[SemanticDatasetV1] = Field(default_factory=list)
     relations: list[SemanticRelationV1] = Field(default_factory=list)
     extraction_notes: str | None = None
+    llm_diagnostics: SemanticExtractionLLMDiagnostics | None = None
 
     def model_dump_for_graph(self) -> dict[str, Any]:
         return self.model_dump(mode="json", by_alias=True)

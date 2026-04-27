@@ -3,9 +3,15 @@
 from __future__ import annotations
 
 from science_graphrag.config import Settings
-from science_graphrag.domain.semantic_models import SemanticExtractionV1
+from science_graphrag.domain.semantic_models import (
+    SemanticExtractionLLMDiagnostics,
+    SemanticExtractionV1,
+)
 from science_graphrag.ingestion.llm.executor import run_extraction
-from science_graphrag.ingestion.llm.extractor import SyncInstructorExtractor
+from science_graphrag.ingestion.llm.extractor_factory import (
+    IngestionExtractorPreset,
+    build_ingestion_extractor,
+)
 from science_graphrag.ingestion.llm.heuristics.semantic import (
     bundle_to_extraction,
     semantic_early_exit,
@@ -18,7 +24,6 @@ from science_graphrag.ingestion.llm.prompts.semantic import (
     SYSTEM_SEMANTIC,
     SYSTEM_SEMANTIC_COMPACT,
     semantic_body_slice,
-    semantic_prompt_fingerprint,
 )
 from science_graphrag.ingestion.llm.schemas import SemanticMethodDatasetBundleLLM
 from science_graphrag.ingestion.method_consolidation import consolidate_document_methods
@@ -29,20 +34,11 @@ log = get_logger("ingestion.semantic")
 
 
 def _semantic_llm_bundle_attempts(
-    api_key: str,
     settings: Settings,
     normalized_markdown: str,
     document_id: str,
-) -> tuple[SemanticMethodDatasetBundleLLM | None, str | None]:
-    extractor = SyncInstructorExtractor(
-        api_key=api_key,
-        base_url=settings.extraction_llm_base_url,
-        model=settings.extraction_llm_model,
-        temperature=settings.semantic_extraction_temperature,
-        max_tokens=settings.semantic_extraction_max_tokens,
-        timeout_seconds=settings.extraction_llm_timeout_seconds,
-        mode=settings.extraction_llm_mode,
-    )
+) -> tuple[SemanticMethodDatasetBundleLLM | None, str | None, SemanticExtractionLLMDiagnostics]:
+    extractor = build_ingestion_extractor(settings, IngestionExtractorPreset.SEMANTIC)
     bodies = [
         ("primary", SYSTEM_SEMANTIC, semantic_body_slice(normalized_markdown)),
         (
@@ -61,6 +57,7 @@ def _semantic_llm_bundle_attempts(
             semantic_body_slice(normalized_markdown, max_chars=MAX_SEMANTIC_BODY_CHARS_NANO),
         ),
     ]
+    attempt_errors: list[str] = []
     last_err: str | None = None
     for label, system_prompt, body in bodies:
         if not body.strip():
@@ -76,9 +73,16 @@ def _semantic_llm_bundle_attempts(
             retries=0,
         )
         if parsed is not None and not err:
-            return parsed, None
-        last_err = f"{label}:{err or 'llm_empty_result'}"
-    return None, last_err or "llm_empty_result"
+            diag = SemanticExtractionLLMDiagnostics(
+                attempt_errors=list(attempt_errors),
+                successful_attempt=label,
+            )
+            return parsed, None, diag
+        err_s = f"{label}:{err or 'llm_empty_result'}"
+        attempt_errors.append(err_s)
+        last_err = err_s
+    diag = SemanticExtractionLLMDiagnostics(attempt_errors=list(attempt_errors))
+    return None, last_err or "llm_empty_result", diag
 
 
 def extract_semantic_method_dataset(
@@ -96,14 +100,25 @@ def extract_semantic_method_dataset(
     body = semantic_body_slice(normalized_markdown)
     if not body.strip():
         return empty.model_copy(update={"extraction_notes": "empty_body"})
-    api_key = str(settings.extraction_llm_api_key or "").strip()
-    parsed, err = _semantic_llm_bundle_attempts(api_key, settings, normalized_markdown, document_id)
+    parsed, err, llm_diag = _semantic_llm_bundle_attempts(
+        settings, normalized_markdown, document_id
+    )
     if err:
         log.warning("semantic extraction failed for %s: %s", document_id, err)
         add_span_event("semantic_extraction_fallback", {"reason": err})
-        return empty.model_copy(update={"extraction_notes": f"llm_failed: {err}"})
+        return empty.model_copy(
+            update={
+                "extraction_notes": f"llm_failed: {err}",
+                "llm_diagnostics": llm_diag,
+            },
+        )
     if parsed is None:
-        return empty.model_copy(update={"extraction_notes": "llm_empty_result"})
+        return empty.model_copy(
+            update={
+                "extraction_notes": "llm_empty_result",
+                "llm_diagnostics": llm_diag,
+            },
+        )
     out = bundle_to_extraction(parsed, document_id)
     if parsed.extraction_notes and not out.extraction_notes:
         out = out.model_copy(update={"extraction_notes": parsed.extraction_notes})
@@ -117,4 +132,4 @@ def extract_semantic_method_dataset(
                 "extraction_notes": f"{notes}; {merge_note}" if notes else merge_note,
             },
         )
-    return out
+    return out.model_copy(update={"llm_diagnostics": llm_diag})

@@ -7,8 +7,6 @@ import re
 from collections import Counter
 from typing import Any
 
-from pydantic import BaseModel, Field
-
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.claims.models import (
     ClaimDraft,
@@ -24,85 +22,23 @@ from science_graphrag.ingestion.claims.quote_match import (
     normalize_text_for_llm,
     normalize_text_for_match,
 )
-from science_graphrag.ingestion.llm.extractor import SyncInstructorExtractor
+from science_graphrag.ingestion.llm.claims_schemas import (
+    ClaimsLLMResponse,
+    ClaimsLLMResponseBenchmark,
+)
+from science_graphrag.ingestion.llm.diagnostics import ClaimsExtractionDiagnostics
+from science_graphrag.ingestion.llm.executor import (
+    run_claims_extraction_with_compact_fallback,
+    run_extraction,
+)
+from science_graphrag.ingestion.llm.extractor_factory import (
+    IngestionExtractorPreset,
+    build_ingestion_extractor,
+)
+from science_graphrag.ingestion.llm.prompts import claims as claims_prompts
 from science_graphrag.utils.project_logging import get_logger
 
 log = get_logger("ingestion.claims.extractor")
-
-
-class _EvidenceLLM(BaseModel):
-    chunk_fingerprint: str = Field(
-        default="",
-        max_length=512,
-        description="Exact chunk_fingerprint value from the CHUNK header above.",
-    )
-    quote: str = Field(
-        default="",
-        max_length=4000,
-        description="Verbatim substring copied from the chunk text — must match exactly.",
-    )
-    section_path: str | None = Field(default=None, max_length=512)
-
-
-class _ClaimLLM(BaseModel):
-    claim_text: str = Field(
-        default="",
-        max_length=2000,
-        description=(
-            "Required. A concise scientific assertion in plain English "
-            "(15–300 chars). Summarise WHAT the paper claims, not WHERE it says it."
-        ),
-    )
-    claim_type: str = Field(default="mechanism", max_length=64)
-    polarity: str = Field(default="neutral", max_length=32)
-    confidence: float = Field(default=0.7, ge=0.0, le=1.0)
-    evidence: list[_EvidenceLLM] = Field(
-        default_factory=list,
-        description="One or more verbatim quotes from the chunks that support the claim.",
-    )
-
-
-class _ClaimsLLMResponse(BaseModel):
-    claims: list[_ClaimLLM] = Field(default_factory=list)
-
-
-class _EvidenceLLMBenchmark(BaseModel):
-    chunk_fingerprint: str = Field(
-        default="",
-        max_length=512,
-        description="Exact chunk_fingerprint value from the CHUNK header above.",
-    )
-    quote: str = Field(
-        default="",
-        max_length=480,
-        description="Verbatim substring from chunk text; keep ≤480 chars (benchmark cap).",
-    )
-    section_path: str | None = Field(default=None, max_length=512)
-
-
-class _ClaimLLMBenchmark(BaseModel):
-    claim_text: str = Field(
-        default="",
-        max_length=400,
-        description="Concise scientific assertion (benchmark: ≤400 chars).",
-    )
-    claim_type: str = Field(default="mechanism", max_length=64)
-    polarity: str = Field(default="neutral", max_length=32)
-    confidence: float = Field(default=0.7, ge=0.0, le=1.0)
-    evidence: list[_EvidenceLLMBenchmark] = Field(
-        default_factory=list,
-        min_length=1,
-        max_length=1,
-        description="Exactly one evidence row with a verbatim quote.",
-    )
-
-
-class _ClaimsLLMResponseBenchmark(BaseModel):
-    claims: list[_ClaimLLMBenchmark] = Field(
-        default_factory=list,
-        max_length=28,
-        description="At most 28 claims; keeps tool JSON small for eval/BT6.",
-    )
 
 
 def _chunk_lookup(chunks: list[dict[str, Any]]) -> dict[str, str]:
@@ -173,105 +109,26 @@ def _quote_accepted(
     return False, "none"
 
 
-def _build_user_payload(chunks: list[dict[str, Any]], *, max_chars: int = 28_000) -> str:
-    parts: list[str] = []
-    used = 0
-    for i, ch in enumerate(chunks):
-        if not isinstance(ch, dict):
-            continue
-        fp = str(ch.get("chunk_fingerprint") or ch.get("fingerprint") or f"chunk_{i}").strip()
-        sec = str(ch.get("section_path") or "").strip()
-        body = str(ch.get("text") or "")
-        header = f"### CHUNK {i + 1}\nchunk_fingerprint: {fp}\nsection_path: {sec or '—'}\n\n"
-        block = header + body
-        if used + len(block) > max_chars:
-            remain = max_chars - used - len(header) - 20
-            if remain > 200:
-                block = header + body[:remain] + "\n\n[...truncated...]"
-                parts.append(block)
-            break
-        parts.append(block)
-        used += len(block)
-    return "\n\n".join(parts)
-
-
-_SYSTEM = """You extract ALL scientific claims from paper text and return them as JSON.
-
-## What a "claim" is
-A claim is a short, self-contained scientific assertion made by the paper — a statement about
-what was found, built, or proven.  It is NOT a description of the paper's topic.
-
-Good: "The RPN shares convolutional features with the detection network, enabling nearly
-       cost-free region proposals."
-Bad:  "The paper introduces a Region Proposal Network." (meta-commentary, not a claim)
-
-## Key rules for claim_text
-- `claim_text` is REQUIRED — write a concise assertion (15–300 chars) for EVERY significant claim.
-- Preserve key technical phrases verbatim from the source text wherever possible.
-  Example: if the text says "encapsulates all computation in a single network", your
-  claim_text must contain that exact phrase, not a paraphrase.
-- Extract EVERY distinct scientific assertion; do not stop at the first one.
-
-## Output format
-Return ONLY valid JSON in this exact shape:
-{
-  "claims": [
-    {
-      "claim_text": "<concise assertion preserving verbatim key phrases, 15-300 chars, required>",
-      "claim_type": "<one of: performance | method | comparison | mechanism | limitation>",
-      "polarity":   "<one of: positive | negative | neutral>",
-      "confidence": <0.0–1.0>,
-      "evidence": [
-        {
-          "chunk_fingerprint": "<exact value from CHUNK header>",
-          "quote": "<verbatim substring from chunk text, ≥8 chars>",
-          "section_path": null
-        }
-      ]
-    }
-  ]
-}
-
-## Validation rules
-- Each claim must have at least one evidence entry with a non-empty verbatim `quote`.
-- `quote` must be a verbatim substring of the chunk text (copy-paste, no paraphrasing).
-- `chunk_fingerprint` must match the value shown in the ### CHUNK N header.
-- If the excerpt is very short (one paragraph), output at least one claim whose `claim_text`
-  restates the main scientific point and whose `quote` is a contiguous span copied from that paragraph.
-- If no genuine claim can be supported by a verbatim quote, return { "claims": [] }.
-"""
-
-_SYSTEM_BENCHMARK = """You extract scientific claims for an **automated benchmark** (BT6 / eval).
-
-## Hard limits (enforced by the response schema)
-- **At most 28** claims total — emit **as many distinct, supportable claims as the text allows**,
-  up to this cap (typical CV paper excerpts: many claims).
-- **Exactly one** evidence object per claim (one verbatim `quote`).
-- Keep `claim_text` short; keep each `quote` **≤ 480 characters** (copy a contiguous span only).
-- Skip **near-duplicate** assertions and empty meta-lines; do **not** stop after one or two claims
-  when the excerpt clearly supports more (that fails benchmark coverage).
-
-## What counts as a claim
-Same as full extraction: a self-contained scientific assertion supported by a verbatim quote
-from the chunk text — not generic paper description. Include quantitative results, architecture
-choices, dataset names, and comparisons **when each has its own quote**.
-
-## Paraphrase-friendly wording (BT6)
-Some benchmark rows use **permuted or paraphrased** gold phrasing. For each real scientific
-assertion, still attach a **verbatim** `quote`, but the `claim_text` should state the
-underlying claim clearly — you may rephrase the paper *as long as the meaning matches the
-quoted span*. Do **not** invent facts not grounded in the quote.
-
-## Output shape
-Return JSON matching the tool schema: `claims` array of objects with
-`claim_text`, `claim_type`, `polarity`, `confidence`, and `evidence` (length 1).
-
-If the excerpt has no supportable claims, return `"claims": []`.
-"""
-
-_PRODUCTION_BATCH_TRIGGER_CHUNKS = 8
-_PRODUCTION_BATCH_SIZE = 6
-_PRODUCTION_BATCH_MAX_CHARS = 8_000
+def _init_claims_diagnostics(
+    diagnostics: ClaimsExtractionDiagnostics | None,
+    *,
+    force_benchmark: bool,
+) -> None:
+    if diagnostics is None:
+        return
+    diagnostics.dropped_claim_count_too_short = 0
+    diagnostics.dropped_claim_count_no_evidence = 0
+    diagnostics.dropped_claim_count_quote_rejected = 0
+    diagnostics.evidence_quote_strict_count = 0
+    diagnostics.evidence_quote_strict_normalized_count = 0
+    diagnostics.evidence_quote_fuzzy_count = 0
+    diagnostics.evidence_quote_jaccard_count = 0
+    diagnostics.raw_claims_from_llm = 0
+    diagnostics.llm_error_message = None
+    diagnostics.llm_raw_response_preview = None
+    diagnostics.claims_benchmark_compact_schema = bool(force_benchmark)
+    diagnostics.claims_compact_fallback_used = False
+    diagnostics.claims_compact_fallback_reason = None
 
 
 def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too-many-statements,too-many-nested-blocks
@@ -280,7 +137,7 @@ def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too
     settings: Settings,
     *,
     force_benchmark: bool = False,
-    diagnostics: dict[str, Any] | None = None,
+    diagnostics: ClaimsExtractionDiagnostics | None = None,
 ) -> list[ClaimDraft]:
     """
     Extract claims with mandatory evidence quotes.
@@ -288,35 +145,18 @@ def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too
     When ``force_benchmark`` is True, runs even if ``claims_extraction_enabled`` is off
     (used by ``eval/claims`` production lane).
 
-    When ``diagnostics`` is a dict, it is populated with extraction counters and LLM status
+    When ``diagnostics`` is provided, it is populated with extraction counters and LLM status
     (benchmark / observability; safe to omit in production ingest).
     """
 
-    def _diag(**kwargs: Any) -> None:
-        if diagnostics is not None:
-            diagnostics.update(kwargs)
-
-    _diag(
-        dropped_claim_count_too_short=0,
-        dropped_claim_count_no_evidence=0,
-        dropped_claim_count_quote_rejected=0,
-        evidence_quote_strict_count=0,
-        evidence_quote_strict_normalized_count=0,
-        evidence_quote_fuzzy_count=0,
-        evidence_quote_jaccard_count=0,
-        raw_claims_from_llm=0,
-        llm_error_message=None,
-        llm_raw_response_preview=None,
-        claims_benchmark_compact_schema=bool(force_benchmark),
-        claims_compact_fallback_used=False,
-        claims_compact_fallback_reason=None,
-    )
+    _init_claims_diagnostics(diagnostics, force_benchmark=force_benchmark)
 
     if not force_benchmark and not settings.claims_extraction_enabled:
         return []
     if not settings.extraction_llm_api_key:
         log.warning("claims_extraction: skipping (no extraction_llm_api_key)")
-        _diag(llm_error_message="missing extraction_llm_api_key")
+        if diagnostics is not None:
+            diagnostics.llm_error_message = "missing extraction_llm_api_key"
         return []
     if not chunks:
         return []
@@ -329,66 +169,81 @@ def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too
     lookup = _chunk_lookup(chunks_norm)
     payload_max = 26_000 if force_benchmark else 28_000
 
+    preset = (
+        IngestionExtractorPreset.CLAIMS_BENCHMARK
+        if force_benchmark
+        else IngestionExtractorPreset.CLAIMS
+    )
+    ext = build_ingestion_extractor(settings, preset)
+
     def _user_payload(batch_chunks: list[dict[str, Any]], *, max_chars: int) -> str:
-        return (
-            "Work id (opaque): "
-            + str(work_id)
-            + "\n\nExtract claims from the following chunks:\n\n"
-            + _build_user_payload(batch_chunks, max_chars=max_chars)
+        return claims_prompts.build_claims_user_message(
+            str(work_id),
+            batch_chunks,
+            max_chars=max_chars,
         )
 
     def _extract_batch(
         batch_chunks: list[dict[str, Any]],
     ) -> tuple[list[Any], str | None, bool]:
-        user_payload = _user_payload(batch_chunks, max_chars=payload_max)
-        parsed, err = ext.extract_maybe(_ClaimsLLMResponse, system=_SYSTEM, user=user_payload)
-        if err or parsed is None:
-            compact_user = _user_payload(batch_chunks, max_chars=_PRODUCTION_BATCH_MAX_CHARS)
-            fallback_parsed, fallback_err = ext.extract_maybe(
-                _ClaimsLLMResponseBenchmark,
-                system=_SYSTEM_BENCHMARK,
-                user=compact_user,
-            )
-            if fallback_err is None and fallback_parsed is not None:
-                return list(fallback_parsed.claims), str(err or "parsed_none"), True
-            err_parts = [str(err or "parsed_none")]
-            if fallback_err:
-                err_parts.append(f"compact_fallback_failed: {fallback_err}")
-            return [], "; ".join(err_parts), False
-        return list(parsed.claims), None, False
+        user_primary = _user_payload(batch_chunks, max_chars=payload_max)
+        user_compact = _user_payload(
+            batch_chunks,
+            max_chars=claims_prompts.PRODUCTION_BATCH_MAX_CHARS,
+        )
+        rows, primary_err, used_compact = run_claims_extraction_with_compact_fallback(
+            ext,
+            primary_user=user_primary,
+            primary_system=claims_prompts.SYSTEM,
+            primary_schema=ClaimsLLMResponse,
+            compact_user=user_compact,
+            compact_system=claims_prompts.SYSTEM_BENCHMARK,
+            compact_schema=ClaimsLLMResponseBenchmark,
+            document_id=str(work_id),
+            source_name=str(work_id),
+            timeout_seconds=float(settings.extraction_llm_timeout_seconds),
+            retries_primary=0,
+            retries_compact=0,
+        )
+        return rows, primary_err, used_compact
 
-    # Single-chunk BT6 paraphrase runs can exceed 4k completion tokens on verbose models.
-    max_tokens_cap = 16384 if force_benchmark else 8192
-    ext = SyncInstructorExtractor(
-        api_key=settings.extraction_llm_api_key,
-        base_url=settings.extraction_llm_base_url,
-        model=settings.extraction_llm_model,
-        temperature=settings.extraction_llm_temperature,
-        max_tokens=min(int(settings.claims_extraction_max_tokens), max_tokens_cap),
-        timeout_seconds=settings.extraction_llm_timeout_seconds,
-        mode=settings.extraction_llm_mode,
-    )
     parsed_claim_rows: list[Any] = []
     if force_benchmark:
-        parsed, err = ext.extract_maybe(
-            _ClaimsLLMResponseBenchmark,
-            system=_SYSTEM_BENCHMARK,
-            user=_user_payload(chunks_norm, max_chars=payload_max),
+        user_bm = _user_payload(chunks_norm, max_chars=payload_max)
+        parsed, err = run_extraction(
+            ext,
+            user_bm,
+            ClaimsLLMResponseBenchmark,
+            stage_name="claims_benchmark",
+            document_id=str(work_id),
+            source_name=str(work_id),
+            timeout_seconds=float(settings.extraction_llm_timeout_seconds),
+            system_prompt=claims_prompts.SYSTEM_BENCHMARK,
+            retries=0,
         )
-        try:
-            raw_dump = json.dumps(parsed.model_dump(mode="json"), ensure_ascii=False)
-            _diag(llm_raw_response_preview=raw_dump[:2000])
-            parsed_claim_rows = list(parsed.claims)
-            _diag(raw_claims_from_llm=len(parsed_claim_rows))
-        except (TypeError, ValueError, AttributeError):
-            _diag(llm_raw_response_preview="(unserializable response)")
+        if parsed is not None and not err:
+            try:
+                raw_dump = json.dumps(parsed.model_dump(mode="json"), ensure_ascii=False)
+                if diagnostics is not None:
+                    diagnostics.llm_raw_response_preview = raw_dump[:2000]
+                parsed_claim_rows = list(parsed.claims)
+                if diagnostics is not None:
+                    diagnostics.raw_claims_from_llm = len(parsed_claim_rows)
+            except (TypeError, ValueError, AttributeError):
+                if diagnostics is not None:
+                    diagnostics.llm_raw_response_preview = "(unserializable response)"
+        else:
+            if diagnostics is not None:
+                diagnostics.llm_error_message = err or "llm_empty_result"
+                diagnostics.llm_raw_response_preview = None
+            parsed_claim_rows = []
     else:
         chunk_batches = (
             [chunks_norm]
-            if len(chunks_norm) <= _PRODUCTION_BATCH_TRIGGER_CHUNKS
+            if len(chunks_norm) <= claims_prompts.PRODUCTION_BATCH_TRIGGER_CHUNKS
             else [
-                chunks_norm[i : i + _PRODUCTION_BATCH_SIZE]
-                for i in range(0, len(chunks_norm), _PRODUCTION_BATCH_SIZE)
+                chunks_norm[i : i + claims_prompts.PRODUCTION_BATCH_SIZE]
+                for i in range(0, len(chunks_norm), claims_prompts.PRODUCTION_BATCH_SIZE)
             ]
         )
         batch_errors: list[str] = []
@@ -397,19 +252,16 @@ def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too
             batch_rows, batch_err, used_compact = _extract_batch(batch)
             if used_compact:
                 log.warning(
-                    "claims_extraction: full schema failed for work_id=%s batch=%s/%s; using compact fallback",
+                    "claims_extraction: full schema failed for work_id=%s "
+                    "batch=%s/%s; using compact fallback",
                     work_id,
                     idx,
                     len(chunk_batches),
                 )
-                _diag(
-                    claims_compact_fallback_used=True,
-                    claims_compact_fallback_reason=(
-                        str(batch_err or "parsed_none")
-                        if not diagnostics or not diagnostics.get("claims_compact_fallback_reason")
-                        else diagnostics.get("claims_compact_fallback_reason")
-                    ),
-                )
+                if diagnostics is not None:
+                    diagnostics.claims_compact_fallback_used = True
+                    if not diagnostics.claims_compact_fallback_reason:
+                        diagnostics.claims_compact_fallback_reason = str(batch_err or "parsed_none")
             if batch_err and not batch_rows:
                 batch_errors.append(f"batch {idx}/{len(chunk_batches)}: {batch_err}")
             parsed_claim_rows.extend(batch_rows)
@@ -422,26 +274,26 @@ def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too
                     "error": batch_err,
                 }
             )
-        _diag(
-            raw_claims_from_llm=len(parsed_claim_rows),
-            llm_raw_response_preview=json.dumps(raw_preview, ensure_ascii=False)[:2000],
-        )
+        if diagnostics is not None:
+            diagnostics.raw_claims_from_llm = len(parsed_claim_rows)
+            diagnostics.llm_raw_response_preview = json.dumps(raw_preview, ensure_ascii=False)[
+                :2000
+            ]
         if batch_errors and not parsed_claim_rows:
             err = "; ".join(batch_errors)
             log.warning("claims_extraction: LLM failed: %s", err)
-            _diag(llm_error_message=err)
+            if diagnostics is not None:
+                diagnostics.llm_error_message = err
             return []
-        if batch_errors:
-            _diag(llm_error_message="partial_batch_failures: " + "; ".join(batch_errors[:3]))
+        if batch_errors and diagnostics is not None:
+            diagnostics.llm_error_message = "partial_batch_failures: " + "; ".join(batch_errors[:3])
 
     out: list[ClaimDraft] = []
     for row in parsed_claim_rows:
         text = str(row.claim_text or "").strip()
         if len(text) < 10:
             if diagnostics is not None:
-                diagnostics["dropped_claim_count_too_short"] = (
-                    int(diagnostics.get("dropped_claim_count_too_short") or 0) + 1
-                )
+                diagnostics.dropped_claim_count_too_short += 1
             continue
         norm = normalize_claim_text_for_id(text)
         cid = stable_claim_id(work_id, norm)
@@ -457,7 +309,6 @@ def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too
             if fp:
                 accepted, qmode = _quote_accepted(quote, chunk_text)
             if not fp or not accepted:
-                # allow single-chunk articles where model omits fingerprint but quote matches
                 if len(lookup) == 1:
                     only_text = next(iter(lookup.values()))
                     accepted, qmode = _quote_accepted(quote, only_text)
@@ -466,36 +317,21 @@ def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too
                         chunk_text = only_text
                     else:
                         if diagnostics is not None:
-                            diagnostics["dropped_claim_count_quote_rejected"] = (
-                                int(diagnostics.get("dropped_claim_count_quote_rejected") or 0) + 1
-                            )
+                            diagnostics.dropped_claim_count_quote_rejected += 1
                         continue
                 else:
                     if diagnostics is not None:
-                        diagnostics["dropped_claim_count_quote_rejected"] = (
-                            int(diagnostics.get("dropped_claim_count_quote_rejected") or 0) + 1
-                        )
+                        diagnostics.dropped_claim_count_quote_rejected += 1
                     continue
             if diagnostics is not None:
                 if qmode == "strict":
-                    diagnostics["evidence_quote_strict_count"] = (
-                        int(diagnostics.get("evidence_quote_strict_count") or 0) + 1
-                    )
+                    diagnostics.evidence_quote_strict_count += 1
                 elif qmode == "strict_normalized":
-                    diagnostics["evidence_quote_strict_normalized_count"] = (
-                        int(
-                            diagnostics.get("evidence_quote_strict_normalized_count") or 0,
-                        )
-                        + 1
-                    )
+                    diagnostics.evidence_quote_strict_normalized_count += 1
                 elif qmode == "fuzzy_normalized":
-                    diagnostics["evidence_quote_fuzzy_count"] = (
-                        int(diagnostics.get("evidence_quote_fuzzy_count") or 0) + 1
-                    )
+                    diagnostics.evidence_quote_fuzzy_count += 1
                 elif qmode == "jaccard":
-                    diagnostics["evidence_quote_jaccard_count"] = (
-                        int(diagnostics.get("evidence_quote_jaccard_count") or 0) + 1
-                    )
+                    diagnostics.evidence_quote_jaccard_count += 1
             eid = stable_evidence_id(cid, fp, quote)
             ev_out.append(
                 EvidenceDraft(
@@ -509,9 +345,7 @@ def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too
             )
         if not ev_out:
             if diagnostics is not None:
-                diagnostics["dropped_claim_count_no_evidence"] = (
-                    int(diagnostics.get("dropped_claim_count_no_evidence") or 0) + 1
-                )
+                diagnostics.dropped_claim_count_no_evidence += 1
             continue
         conf = float(row.confidence) if row.confidence is not None else 0.7
         out.append(
@@ -526,7 +360,6 @@ def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too
             ),
         )
 
-    # Dedupe by claim_id (LLM may repeat)
     seen: set[str] = set()
     deduped: list[ClaimDraft] = []
     for c in out:

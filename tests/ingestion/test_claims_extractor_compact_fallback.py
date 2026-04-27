@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-# pylint: disable=protected-access
-
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.claims import extractor as claims_extractor
+from science_graphrag.ingestion.llm import claims_schemas
+from science_graphrag.ingestion.llm.diagnostics import ClaimsExtractionDiagnostics
+
+# pylint: disable=protected-access
 
 
 def test_extract_claims_uses_compact_fallback_when_full_schema_fails(monkeypatch) -> None:
@@ -16,7 +18,7 @@ def test_extract_claims_uses_compact_fallback_when_full_schema_fails(monkeypatch
         def extract_maybe(self, response_model, *, system: str, user: str):
             del system, user
             calls.append(response_model.__name__)
-            if response_model is claims_extractor._ClaimsLLMResponse:
+            if response_model is claims_schemas.ClaimsLLMResponse:
                 return None, "full schema failed"
             payload = {
                 "claims": [
@@ -35,15 +37,17 @@ def test_extract_claims_uses_compact_fallback_when_full_schema_fails(monkeypatch
                     }
                 ]
             }
-            return claims_extractor._ClaimsLLMResponseBenchmark.model_validate(payload), None
+            return claims_schemas.ClaimsLLMResponseBenchmark.model_validate(payload), None
 
-    monkeypatch.setattr(claims_extractor, "SyncInstructorExtractor", _FakeExtractor)
+    monkeypatch.setattr(
+        claims_extractor, "build_ingestion_extractor", lambda *_a, **_k: _FakeExtractor()
+    )
     settings = Settings(
         claims_extraction_enabled=True,
         extraction_llm_enabled=True,
         extraction_llm_api_key="test-key",
     )
-    diagnostics: dict[str, object] = {}
+    diagnostics = ClaimsExtractionDiagnostics()
     chunks = [
         {
             "chunk_fingerprint": "fp-1",
@@ -60,7 +64,10 @@ def test_extract_claims_uses_compact_fallback_when_full_schema_fails(monkeypatch
     )
 
     assert len(claims) == 1
-    assert claims[0].normalized_text == "yolo processes images in real-time at 45 frames per second."
-    assert diagnostics["claims_compact_fallback_used"] is True
-    assert diagnostics["claims_compact_fallback_reason"] == "full schema failed"
-    assert calls == ["_ClaimsLLMResponse", "_ClaimsLLMResponseBenchmark"]
+    assert (
+        claims[0].normalized_text == "yolo processes images in real-time at 45 frames per second."
+    )
+    d = diagnostics.to_dict()
+    assert d["claims_compact_fallback_used"] is True
+    assert d["claims_compact_fallback_reason"] == "full schema failed"
+    assert calls == ["ClaimsLLMResponse", "ClaimsLLMResponseBenchmark"]

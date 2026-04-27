@@ -46,7 +46,7 @@ def test_run_vl_pdf() -> None:
 def test_run_chunking(monkeypatch) -> None:
     ctx = _DummyCtx()
     monkeypatch.setattr(
-        "science_graphrag.ingestion.stages.chunking.chunk_document_for_retrieval",
+        "science_graphrag.ingestion.stages.chunking.chunk_document_for_retrieval_from_settings",
         lambda *_args, **_kwargs: [SimpleNamespace(text="a")],
     )
     monkeypatch.setattr(

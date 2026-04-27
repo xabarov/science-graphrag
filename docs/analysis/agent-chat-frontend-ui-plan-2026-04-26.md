@@ -4,7 +4,7 @@
 **Scope:** `ui/` chat experience for agent turns, stream progress, subagent visibility, typed result blocks  
 **Primary context:** `docs/analysis/chat-agent-system-roadmap-2026-04-26.md`, `docs/specs/agent-chat-v1.md`
 
-**Verification follow-up doc:** `docs/analysis/agent-chat-frontend-verification-gaps-next-wave.md` — автотесты волны закрыты; ручной SSE / §12.2 остаются на QA.
+**Verification follow-up doc:** `docs/analysis/agent-chat-frontend-verification-gaps-next-wave.md` — автотесты волны закрыты; ручной SSE / §12.2 остаются на QA. **Shipped UI phases (table):** [`completed-work-snapshot.md`](./completed-work-snapshot.md#agent-chat-frontend-ui).
 
 ## 1. Why this plan exists
 
@@ -739,79 +739,16 @@ For smaller widths:
 
 ## 11. Implementation phases
 
-**Progress (repo, 2026-04-26):** **[DONE] UI-1**, **[DONE] UI-2**, **[DONE] UI-3** (см. примечания к deliver), **[DONE] UI-4** (базовый chrome; без обязательной иконографии), **[OPEN] UI-5** (опциональные backend-события и парсер).
+**Progress (repo, 2026-04-26):** **[DONE] UI-1** … **[OPEN] UI-5** — сводная таблица и якоря: [`completed-work-snapshot.md`](./completed-work-snapshot.md#agent-chat-frontend-ui). Развёрнутые goal/deliver/acceptance для **UI-1–UI-4** сжаты (2026-04-27): продуктовые цели остаются в §2–§10; перечень файлов — в таблице snapshot.
 
-### UI-1. Turn shell and shimmer foundation
+### UI-1 … UI-4 (shipped 2026-04-26)
 
-**Status in repo:** **[DONE]** (2026-04-26)
-
-**Goal:** replace the primitive loading state with a polished agent turn shell.
-
-Deliver:
-
-- `ShimmerLabel.jsx`
-- `AgentRunHeader.jsx`
-- `AgentLiveStatus.jsx`
-- updated pending state in `ChatMessageThread.jsx`
-
-Acceptance:
-
-- pending assistant turn appears immediately;
-- silver shimmer replaces plain text/spinner-only feedback;
-- no regressions in scroll behavior.
-
-### UI-2. Structured run chrome inside `AskAnswerPanel`
-
-**Status in repo:** **[DONE]** (2026-04-26)
-
-**Goal:** separate live progress, final answer, typed blocks, and inspector.
-
-Deliver:
-
-- refactored `AskAnswerPanel.jsx`
-- cleaner spacing hierarchy
-- collapsed "Inspect run" section
-
-Acceptance:
-
-- final answer visually dominates;
-- stream status is visible but compact;
-- tool trace is no longer mixed into the main answer area.
-
-### UI-3. Subagent rail
-
-**Status in repo:** **[DONE]** (2026-04-26) — rail реализован как **`AgentSubagentRail.jsx`** (реэкспорт **`AgentSpecialistRunStack.jsx`**); отдельного файла **`AgentSubagentCard.jsx`** нет (компакт/expand внутри stack). Модель группировки — **`buildSpecialistStreamGroups`** / **`shouldShowSubagentRail`** в `agentRunViewModel.js`.
-
-**Goal:** make routing and specialist work visible in a beautiful compact form.
-
-Deliver:
-
-- `AgentSubagentRail.jsx`
-- `AgentSubagentCard.jsx` *(в репо: поведение «карточки» встроено в `AgentSpecialistRunStack` / группы; отдельный компонент не введён)*
-- derived frontend model from stream events
-
-Acceptance:
-
-- user can tell which specialist was active;
-- compact mode remains low-noise;
-- expanded mode provides useful detail.
-
-### UI-4. Typed block polish
-
-**Status in repo:** **[DONE]** (базовый слой, 2026-04-26) — общий chrome (`TYPED_BLOCK_OUTER_SX`) для quotes / relation trace / idea suggestions; inventory и bibliography уже были в том же духе. Опциональные иконки и доп. affordances — по желанию позже.
-
-**Goal:** make structured outputs feel like first-class answer sections.
-
-Deliver:
-
-- unified block chrome in `ChatTypedBlocks.jsx`
-- better titles, spacing, and action affordances
-- optional iconography only if it remains subtle
-
-Acceptance:
-
-- inventory, quotes, and bibliography look related but not identical;
-- blocks feel integrated into the answer card.
+| ID | What shipped |
+|----|----------------|
+| UI-1 | Turn shell + shimmer: `ShimmerLabel.jsx`, `AgentRunHeader.jsx`, `AgentLiveStatus.jsx`, pending UX in `ChatMessageThread.jsx`. |
+| UI-2 | Run chrome in `AskAnswerPanel.jsx` (live vs final vs collapsed inspector). |
+| UI-3 | Subagent rail: `AgentSubagentRail.jsx` → `AgentSpecialistRunStack.jsx`; grouping in `buildSpecialistStreamGroups` / `shouldShowSubagentRail` (`agentRunViewModel.js`). |
+| UI-4 | Typed blocks: shared chrome `TYPED_BLOCK_OUTER_SX` in `ChatTypedBlocks.jsx` (quotes, relation trace, idea suggestions; inventory/bibliography aligned). |
 
 ### UI-5. Event vocabulary upgrade
 

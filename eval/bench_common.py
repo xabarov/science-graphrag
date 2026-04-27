@@ -10,7 +10,7 @@ from typing import Any
 import typer
 
 from science_graphrag.config import Settings, get_settings
-from science_graphrag.ingestion.llm.semantic_extraction import semantic_prompt_fingerprint
+from science_graphrag.ingestion.llm.prompts.semantic import semantic_prompt_fingerprint
 from science_graphrag.ingestion.llm.stage_extraction import extraction_layer1_prompt_fingerprint
 
 
