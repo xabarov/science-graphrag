@@ -37,20 +37,29 @@ from science_graphrag.storage.qdrant_store.chunk_store import QdrantChunkStore
 app = typer.Typer(add_completion=False, no_args_is_help=True)
 
 
+def _resolve_qdrant_chunks_collection(settings: Any) -> str:
+    """Qdrant chunks collection from Settings (legacy key or ``qdrant_collection``)."""
+    name = getattr(settings, "qdrant_chunks_collection", None) or getattr(
+        settings, "qdrant_collection", None
+    )
+    return str(name or "chunks").strip() or "chunks"
+
+
 def _read_progress_done(path: Path) -> set[str]:
     done: set[str] = set()
     if not path.is_file():
         return done
-    for line in path.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            row = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if str(row.get("status") or "") == "ok" and str(row.get("work_id") or "").strip():
-            done.add(str(row["work_id"]).strip())
+    with path.open(encoding="utf-8") as handle:
+        for raw in handle:
+            line = raw.strip()
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if str(row.get("status") or "") == "ok" and str(row.get("work_id") or "").strip():
+                done.add(str(row["work_id"]).strip())
     return done
 
 
@@ -63,7 +72,8 @@ def _append_progress(path: Path, row: dict[str, Any]) -> None:
 def _list_workspace_work_ids(neo: Neo4jGraphStore, workspace_id: str) -> list[str]:
     with neo.session() as session:
         row = session.run(
-            "MATCH (ws:Workspace {id: $wid})-[:CONTAINS]->(w:Work) RETURN collect(DISTINCT w.id) AS ids",
+            "MATCH (ws:Workspace {id: $wid})-[:CONTAINS]->(w:Work) "
+            "RETURN collect(DISTINCT w.id) AS ids",
             wid=workspace_id.strip(),
         ).single()
     ids = row["ids"] if row else []
@@ -111,15 +121,19 @@ def _chunks_to_dicts(raw_chunks: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 @app.command()
-def main(
+def main(  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     workspace_id: str = typer.Option(..., "--workspace-id", help="Neo4j Workspace.id (UUID)."),
     progress_file: Path | None = typer.Option(
         None,
         "--progress-file",
         help="Append JSONL rows per work_id (status ok|error); use with --resume.",
     ),
-    resume: bool = typer.Option(False, "--resume", help="Skip work_ids with status=ok in progress JSONL."),
-    dry_run: bool = typer.Option(False, "--dry-run", help="List target works only; no LLM / writes."),
+    resume: bool = typer.Option(
+        False, "--resume", help="Skip work_ids with status=ok in progress JSONL."
+    ),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="List target works only; no LLM / writes."
+    ),
     force_all: bool = typer.Option(
         False,
         "--force-all",
@@ -131,6 +145,7 @@ def main(
         help="Skip works with zero Qdrant chunk points.",
     ),
 ) -> None:
+    """Re-extract claims for workspace works and refresh Neo4j + Qdrant claims."""
     settings = get_settings()
     if not settings.extraction_llm_api_key:
         typer.echo("ERROR: extraction_llm_api_key is unset; refusing to run.", err=True)
@@ -158,7 +173,7 @@ def main(
     embedding_model = resolve_embedding_model_label(settings)
     q_chunks = QdrantChunkStore(
         settings.qdrant_url,
-        settings.qdrant_chunks_collection,
+        _resolve_qdrant_chunks_collection(settings),
         vector_dim=embedder.dim,
     )
     q_claims = QdrantClaimsStore(
@@ -220,7 +235,9 @@ def main(
 
             t0 = time.perf_counter()
             try:
-                claim_rows = extract_claims_llm(chunk_dicts, work_id, settings, force_benchmark=False)
+                claim_rows = extract_claims_llm(
+                    chunk_dicts, work_id, settings, force_benchmark=False
+                )
                 neo_w.detach_delete_claims_for_work(work_id)
                 neo_w.upsert_claims_with_evidence(work_id, claim_rows)
                 q_claims.delete_points_by_work_id(work_id=work_id)

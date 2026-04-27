@@ -263,6 +263,39 @@ science-graphrag-chat-agent-roadmap \
 - При отсутствии `ws-pilot-od` в Neo4j выполните `scripts/seed_benchmark_workspaces.py`, затем повторите audit.
 - Один автоматический **retry** кейса при транзиентных 502/503/504/429/timeout от провайдера LLM.
 
+### Rich OD workspace — freeze manifest + claims gap audit (PR A)
+
+План: [`docs/analysis/chat-agent-od-workspace-restoration-and-eval-plan-2026-04-27.md`](../docs/analysis/chat-agent-od-workspace-restoration-and-eval-plan-2026-04-27.md). Эти шаги **не чинят данные**, только фиксируют снимок и классифицируют разрыв по claims.
+
+1. **Task 1 — заморозить manifest** (Neo4j + Qdrant + Postgres `documents` + счётчики claims/methods):
+
+```bash
+.venv/bin/python scripts/chat_agent_od_workspace_manifest.py \
+  --workspace-id "<UUID rich OD workspace>" \
+  --out-json eval/results/od-workspace-manifest-latest.json \
+  --out-md eval/results/od-workspace-manifest-latest.md
+```
+
+2. **Task 2 — root-cause audit** (консервативные классы + явный `classification_reason`; опционально `eval/results/ingest-progress-*.jsonl`):
+
+```bash
+.venv/bin/python scripts/chat_agent_od_claims_gap_audit.py \
+  --manifest eval/results/od-workspace-manifest-latest.json \
+  --ingest-progress eval/results/ingest-progress-<run>.jsonl \
+  --out-json eval/results/od-claims-gap-audit-latest.json \
+  --out-md eval/results/od-claims-gap-audit-latest.md
+```
+
+Либо одним шагом из live DB (manifest в памяти, файл не пишется автоматически):
+
+```bash
+.venv/bin/python scripts/chat_agent_od_claims_gap_audit.py \
+  --workspace-id "<UUID>" \
+  --out-json eval/results/od-claims-gap-audit-latest.json
+```
+
+Код: `eval/chat_agent/od_data_collector.py`, `od_workspace_manifest.py`, `od_claims_gap_audit.py`. Дальше по плану — **PR B** (claims-only backfill + векторы в Qdrant).
+
 ## Compare baseline vs current
 
 Для benchmark-driven цикла используйте comparator (падает при regressions):

@@ -5,9 +5,15 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-import numpy as np
 from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, PointStruct, VectorParams
+from qdrant_client.models import (
+    Distance,
+    FieldCondition,
+    Filter,
+    MatchValue,
+    PointStruct,
+    VectorParams,
+)
 
 from science_graphrag.ingestion.claims.models import ClaimDraft
 from science_graphrag.ingestion.embeddings import EmbeddingProvider
@@ -31,10 +37,19 @@ class QdrantClaimsStore:
                 vectors_config=VectorParams(size=self._vector_dim, distance=Distance.COSINE),
             )
 
-    def delete_points_by_work_id(self, *, work_id: str) -> int:
-        from qdrant_client.models import FieldCondition, Filter, MatchValue
+    def _work_id_filter(self, *, work_id: str) -> Filter:
+        """Qdrant filter: payload.work_id equals ``work_id``."""
+        return Filter(must=[FieldCondition(key="work_id", match=MatchValue(value=work_id))])
 
-        flt = Filter(must=[FieldCondition(key="work_id", match=MatchValue(value=work_id))])
+    def count_points_for_work(self, *, work_id: str) -> int:
+        """Exact count of claim vectors in this collection for ``work_id`` (read-only)."""
+        flt = self._work_id_filter(work_id=work_id)
+        res = self._client.count(collection_name=self._collection, count_filter=flt, exact=True)
+        return int(res.count)
+
+    def delete_points_by_work_id(self, *, work_id: str) -> int:
+        """Delete all claim points for ``work_id``; return count deleted."""
+        flt = self._work_id_filter(work_id=work_id)
         res = self._client.count(collection_name=self._collection, count_filter=flt, exact=True)
         n = int(res.count)
         if n == 0:
@@ -50,6 +65,7 @@ class QdrantClaimsStore:
         embedder: EmbeddingProvider,
         embedding_model: str,
     ) -> None:
+        """Embed claim texts and upsert points into the claims collection."""
         if not claims:
             return
         texts = [c.normalized_text for c in claims]
