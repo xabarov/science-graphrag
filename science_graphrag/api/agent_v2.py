@@ -18,6 +18,7 @@ from science_graphrag.agent.chat_envelope import build_chat_envelope, heuristic_
 from science_graphrag.agent.context.compaction import build_context_compacted_payload
 from science_graphrag.agent.context.post_turn import apply_turn_digest_to_thread
 from science_graphrag.agent.context.session_store import get_session_for_thread
+from science_graphrag.agent.graph.errors import AgentGraphDeadlineExceeded
 from science_graphrag.agent.graph.state import build_initial_agent_state
 from science_graphrag.agent.graph.supervisor import build_retrieval_graph
 from science_graphrag.agent.graph.tracing import collect_tool_trace
@@ -155,7 +156,9 @@ class AgentQueryRequestV2(BaseModel):
     workspace_id: str | None = None
     max_tool_calls: int | None = Field(default=None, ge=1, le=30)
     thread_id: str | None = Field(
-        default=None, description="CH4: stable id for server-side session memory."
+        default=None,
+        max_length=256,
+        description="CH4: stable id for server-side session memory.",
     )
     history_digest: str | list[dict[str, Any]] | None = Field(
         default=None,
@@ -165,6 +168,14 @@ class AgentQueryRequestV2(BaseModel):
         default=None,
         description="Optional hint for answer_class / UI (does not force tool routing).",
     )
+
+    @field_validator("thread_id", mode="before")
+    @classmethod
+    def _normalize_thread_id(cls, v: object) -> str | None:
+        if v is None:
+            return None
+        s = str(v).strip()
+        return s or None
 
     @field_validator("history_digest", mode="before")
     @classmethod
@@ -299,14 +310,46 @@ async def post_agent_query_v2(
             run_metadata={"shortcut": "deferred_topic_clarification"},
         )
     agent = build_agent(settings=settings, stores=stores)
-    out = agent.run(
-        question=body.question,
-        workspace_id=workspace_id,
-        max_tool_calls=max_tool_calls,
-        answer_class_hint=body.answer_class_hint,
-        thread_id=thread_id,
-        history_digest=history_digest,
-    )
+    try:
+        out = agent.run(
+            question=body.question,
+            workspace_id=workspace_id,
+            max_tool_calls=max_tool_calls,
+            answer_class_hint=body.answer_class_hint,
+            thread_id=thread_id,
+            history_digest=history_digest,
+        )
+    except AgentGraphDeadlineExceeded as exc:
+        duration_ms = int((perf_counter() - started) * 1000)
+        logger.warning(
+            "agent v2 sync deadline exceeded timeout=%s",
+            getattr(exc, "timeout_seconds", None),
+        )
+        meta = {
+            "agent_runtime": settings.agent_runtime,
+            "agent_max_tool_calls": max_tool_calls,
+            "extraction_llm_model": settings.extraction_llm_model,
+            "extraction_llm_base_url": settings.extraction_llm_base_url,
+            "agent_turn_deadline_exceeded": True,
+            "agent_step_timeout_seconds": settings.agent_step_timeout_seconds,
+        }
+        if thread_id:
+            meta["thread_id"] = thread_id
+        return AgentQueryResponseV2(
+            answer=(
+                "The assistant run exceeded the server time limit for one turn. "
+                "Try a shorter question or increase SCIENCE_GRAPHRAG_AGENT_STEP_TIMEOUT_SECONDS."
+            ),
+            citations=[],
+            tool_trace=[],
+            duration_ms=duration_ms,
+            phoenix_trace_id=current_otel_trace_id_hex(),
+            run_metadata=meta,
+            thread_id=thread_id,
+            answer_class="synthesis",
+            evidence_summary="deadline exceeded",
+            warnings=["agent_turn_deadline_exceeded"],
+        )
     duration_ms = int((perf_counter() - started) * 1000)
     excerpt: str | None = None
     extra_meta: dict[str, Any] | None = None
@@ -346,6 +389,8 @@ async def _iter_graph_chunks(
     graph: Any,
     initial_state: dict[str, Any],
     config: dict[str, Any],
+    *,
+    deadline_seconds: float | None = None,
 ) -> AsyncIterator[Any]:
     """Yield graph stream chunks (updates dict, or (mode, payload) tuples when supported)."""
     if hasattr(graph, "astream") and callable(graph.astream):
@@ -353,7 +398,23 @@ async def _iter_graph_chunks(
         kwargs: dict[str, Any] = {}
         if "stream_mode" in sig.parameters:
             kwargs["stream_mode"] = ["updates", "values"]
-        async for chunk in graph.astream(initial_state, config=config, **kwargs):
+
+        async def _astream_body() -> AsyncIterator[Any]:
+            async for chunk in graph.astream(initial_state, config=config, **kwargs):
+                yield chunk
+
+        if deadline_seconds and deadline_seconds > 0:
+            try:
+                async with asyncio.timeout(float(deadline_seconds)):
+                    async for item in _astream_body():
+                        yield item
+            except TimeoutError as exc:
+                raise AgentGraphDeadlineExceeded(
+                    timeout_seconds=float(deadline_seconds),
+                ) from exc
+            return
+
+        async for chunk in _astream_body():
             yield chunk
         return
 
@@ -363,7 +424,18 @@ async def _iter_graph_chunks(
             out.append(chunk)
         return out
 
-    chunks = await asyncio.to_thread(_collect_sync_chunks)
+    if deadline_seconds and deadline_seconds > 0:
+        try:
+            chunks = await asyncio.wait_for(
+                asyncio.to_thread(_collect_sync_chunks),
+                timeout=float(deadline_seconds),
+            )
+        except TimeoutError as exc:
+            raise AgentGraphDeadlineExceeded(
+                timeout_seconds=float(deadline_seconds),
+            ) from exc
+    else:
+        chunks = await asyncio.to_thread(_collect_sync_chunks)
     for chunk in chunks:
         yield chunk
 
@@ -499,16 +571,11 @@ async def _stream_agent(
             )
             config = {"recursion_limit": settings.agent_supervisor_recursion_limit}
 
-            hint_class = heuristic_answer_class(question, answer_class_hint)
-            yield {
-                "data": json.dumps(
-                    {
-                        "type": "intent_classified",
-                        "answer_class": hint_class,
-                        "source": "hint" if answer_class_hint else "heuristic",
-                    }
-                )
-            }
+            initial_debug = list(initial_state.get("debug_events") or [])
+            for ev in initial_debug:
+                if isinstance(ev, dict):
+                    yield {"data": json.dumps(ev)}
+            prev_debug_len = len(initial_debug)
 
             if history_digest_invalid:
                 yield {
@@ -521,7 +588,12 @@ async def _stream_agent(
                     )
                 }
 
-            async for chunk in _iter_graph_chunks(graph, initial_state, config):
+            async for chunk in _iter_graph_chunks(
+                graph,
+                initial_state,
+                config,
+                deadline_seconds=float(settings.agent_step_timeout_seconds),
+            ):
                 if isinstance(chunk, tuple) and len(chunk) == 2:
                     mode, payload = chunk
                     if mode == "values" and isinstance(payload, dict):
@@ -575,7 +647,12 @@ async def _stream_agent(
                         dev = list(payload.get("debug_events") or [])
                         if len(dev) > prev_debug_len:
                             for ev in dev[prev_debug_len:]:
-                                if isinstance(ev, dict) and ev.get("type") == "tool_search_result":
+                                if not isinstance(ev, dict):
+                                    continue
+                                et = ev.get("type")
+                                if et in ("tool_search_result", "intent_classified"):
+                                    yield {"data": json.dumps(dict(ev))}
+                                elif et == "warning" and str(ev.get("code") or "").strip():
                                     yield {"data": json.dumps(dict(ev))}
                             prev_debug_len = len(dev)
                     if mode != "updates":
@@ -763,6 +840,34 @@ async def _stream_agent(
             }
             yield {"data": json.dumps({"type": "answer_synthesis_finished"})}
             yield {"data": json.dumps(final_event)}
+            tp0 = (initial_state.get("metadata") or {}).get("turn_policy") or {}
+            logger.info(
+                "agent_query_completed",
+                extra={
+                    "agent_metrics": {
+                        "duration_ms": duration_ms,
+                        "classifier": tp0.get("classifier"),
+                        "tool_policy": tp0.get("tool_policy"),
+                        "conversation_intent": tp0.get("conversation_intent"),
+                        "workspace_id_set": bool(workspace_id),
+                        "thread_id_set": bool(thread_id),
+                    }
+                },
+            )
+    except AgentGraphDeadlineExceeded as exc:
+        logger.warning(
+            "agent v2 stream deadline exceeded timeout=%s",
+            getattr(exc, "timeout_seconds", None),
+        )
+        yield {
+            "data": json.dumps(
+                {
+                    "type": "error",
+                    "detail": str(exc),
+                    "code": "agent_turn_deadline_exceeded",
+                }
+            )
+        }
     except Exception as exc:  # noqa: BLE001
         logger.exception("agent v2 stream error")
         detail = _format_agent_stream_error(exc)

@@ -2,8 +2,8 @@
 """
 Aggregate extraction-oriented metrics from benchmark suite JSONs into report-facing tables.
 
-Reads Layer-1 / Layer-2 / claims-paraphrase suite artifacts (defaults match
-``scripts/benchmark_aggregator/paths.py``) and writes:
+Reads Layer-1 / Layer-2 / claims-paraphrase / concept-topic / references-resolution
+suite artifacts (defaults match ``scripts/benchmark_aggregator/paths.py``) and writes:
   - machine-readable JSON (macro-means over cases, skipping nulls);
   - a Markdown fragment suitable for pasting into the NLP report.
 
@@ -33,8 +33,10 @@ if str(_SCRIPTS_DIR) not in sys.path:
 from benchmark_aggregator.paths import (  # noqa: E402
     DEFAULT_CLAIMS_PARAPHRASE_HOLDOUT,
     DEFAULT_CLAIMS_PARAPHRASE_PILOT,
+    DEFAULT_CONCEPT_TOPIC_MINI_SUITE,
     DEFAULT_LAYER1_NIGHTLY,
     DEFAULT_LAYER2_NIGHTLY,
+    DEFAULT_REFERENCES_RESOLUTION_MINI,
     ROOT,
 )
 
@@ -188,6 +190,53 @@ def build_layer2_aggs(cases: list[dict[str, Any]]) -> list[SlotAgg]:
     return [methods, datasets]
 
 
+def build_concept_topic_aggs(cases: list[dict[str, Any]]) -> list[SlotAgg]:
+    concepts = SlotAgg(
+        "concept_topic_concepts",
+        "Concept-topic mini — concepts ( multiset P/R/F1 )",
+        "prf1",
+    )
+    topics = SlotAgg(
+        "concept_topic_topics",
+        "Concept-topic mini — research topics ( multiset P/R/F1 )",
+        "prf1",
+    )
+    for case in cases:
+        m = case.get("metrics") or {}
+        cp = m.get("concept_precision")
+        cr = m.get("concept_recall")
+        cf = _f1_from_pr(float(cp) if cp is not None else None, float(cr) if cr is not None else None)
+        tp = m.get("topic_precision")
+        tr = m.get("topic_recall")
+        tf = _f1_from_pr(float(tp) if tp is not None else None, float(tr) if tr is not None else None)
+        concepts.add("precision", float(cp) if cp is not None else None)
+        concepts.add("recall", float(cr) if cr is not None else None)
+        concepts.add("f1", cf)
+        topics.add("precision", float(tp) if tp is not None else None)
+        topics.add("recall", float(tr) if tr is not None else None)
+        topics.add("f1", tf)
+    return [concepts, topics]
+
+
+def build_refs_resolution_aggs(cases: list[dict[str, Any]]) -> list[SlotAgg]:
+    slot = SlotAgg(
+        "references_resolution_mini",
+        "References resolution mini — span to canonical key ( P/R/F1 )",
+        "prf1",
+    )
+    for case in cases:
+        m = case.get("metrics") or {}
+        pr = m.get("resolution_precision")
+        rc = m.get("resolution_recall")
+        f1v = _f1_from_pr(
+            float(pr) if pr is not None else None, float(rc) if rc is not None else None
+        )
+        slot.add("precision", float(pr) if pr is not None else None)
+        slot.add("recall", float(rc) if rc is not None else None)
+        slot.add("f1", f1v)
+    return [slot]
+
+
 def build_claims_aggs(cases: list[dict[str, Any]], split_label: str) -> list[SlotAgg]:
     slot = SlotAgg(
         f"claims_paraphrase_{split_label}",
@@ -314,6 +363,18 @@ def main(argv: list[str] | None = None) -> int:
         help="Claims paraphrase holdout suite (e.g. claims_holdout_v1).",
     )
     parser.add_argument(
+        "--concept-topic-json",
+        type=str,
+        default=DEFAULT_CONCEPT_TOPIC_MINI_SUITE,
+        help="Concept / research-topic mini suite JSON.",
+    )
+    parser.add_argument(
+        "--references-resolution-json",
+        type=str,
+        default=DEFAULT_REFERENCES_RESOLUTION_MINI,
+        help="References resolution mini suite JSON.",
+    )
+    parser.add_argument(
         "--out-json",
         type=str,
         default="eval/results/extraction-entity-metrics-for-report.json",
@@ -331,6 +392,8 @@ def main(argv: list[str] | None = None) -> int:
         "layer2": args.layer2_json,
         "claims_pilot": args.claims_pilot_json,
         "claims_holdout": args.claims_holdout_json,
+        "concept_topic": args.concept_topic_json,
+        "references_resolution": args.references_resolution_json,
     }
 
     all_rows: list[dict[str, Any]] = []
@@ -364,6 +427,22 @@ def main(argv: list[str] | None = None) -> int:
     if ch.is_file():
         _, cc = _read_suite_cases(ch)
         for slot in build_claims_aggs(cc, "holdout"):
+            all_rows.append(slot.to_row())
+
+    ct = _resolve_path(repo_root, args.concept_topic_json)
+    if ct.is_file():
+        raw_ct, cases_ct = _read_suite_cases(ct)
+        if not run_meta_primary:
+            run_meta_primary = dict(raw_ct.get("run_metadata") or {})
+        for slot in build_concept_topic_aggs(cases_ct):
+            all_rows.append(slot.to_row())
+
+    rr = _resolve_path(repo_root, args.references_resolution_json)
+    if rr.is_file():
+        raw_rr, cases_rr = _read_suite_cases(rr)
+        if not run_meta_primary:
+            run_meta_primary = dict(raw_rr.get("run_metadata") or {})
+        for slot in build_refs_resolution_aggs(cases_rr):
             all_rows.append(slot.to_row())
 
     payload: dict[str, Any] = {

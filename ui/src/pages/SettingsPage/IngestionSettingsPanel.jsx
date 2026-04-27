@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import FormHelperText from "@mui/material/FormHelperText";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 
@@ -30,6 +32,7 @@ const FIELD_SX = {
 
 function IngestionSettingsPanelForm({
   resolved,
+  claimsExtractionEnabled,
   saving,
   saveError,
   onSave,
@@ -37,13 +40,16 @@ function IngestionSettingsPanelForm({
 }) {
   const { t } = useI18n();
   const [maxMb, setMaxMb] = useState(String(resolved));
+  const [claimsEnabled, setClaimsEnabled] = useState(Boolean(claimsExtractionEnabled));
 
   const parsed = Number(maxMb);
   const inRange = Number.isFinite(parsed) && parsed >= 1 && parsed <= 2048;
 
   const dirty = useMemo(() => {
-    return Number(maxMb) !== Number(resolved);
-  }, [maxMb, resolved]);
+    return (
+      Number(maxMb) !== Number(resolved) || Boolean(claimsEnabled) !== Boolean(claimsExtractionEnabled)
+    );
+  }, [claimsEnabled, claimsExtractionEnabled, maxMb, resolved]);
 
   useEffect(() => {
     onDirtyChange?.(dirty);
@@ -52,7 +58,10 @@ function IngestionSettingsPanelForm({
   async function handleSubmit(event) {
     event.preventDefault();
     if (!inRange) return;
-    await onSave({ max_file_size_mb: Math.floor(parsed) });
+    await onSave({
+      max_file_size_mb: Math.floor(parsed),
+      claims_extraction_enabled: Boolean(claimsEnabled),
+    });
   }
 
   return (
@@ -103,6 +112,38 @@ function IngestionSettingsPanelForm({
         {t("settings.ingestion.rangeHint")}
       </FormHelperText>
 
+      <Box
+        sx={{
+          marginTop: 2.5,
+          padding: 1.5,
+          borderRadius: 1.5,
+          border: "1px solid rgba(255,255,255,0.08)",
+          backgroundColor: "rgba(255,255,255,0.02)",
+        }}
+      >
+        <FormControlLabel
+          control={
+            <Switch
+              checked={claimsEnabled}
+              onChange={(event) => setClaimsEnabled(event.target.checked)}
+              color="default"
+            />
+          }
+          label={t("settings.ingestion.claimsToggleLabel")}
+          sx={{
+            alignItems: "flex-start",
+            margin: 0,
+            "& .MuiFormControlLabel-label": {
+              fontSize: "0.8125rem",
+              color: "rgba(255,255,255,0.88)",
+            },
+          }}
+        />
+        <FormHelperText sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.75rem", marginTop: 0.5 }}>
+          {t("settings.ingestion.claimsToggleHint")}
+        </FormHelperText>
+      </Box>
+
       <Box sx={{ marginTop: 2.5, display: "flex", gap: 1.5, flexWrap: "wrap" }}>
         <CursorPrimaryButton type="submit" disabled={saving || !dirty || !inRange}>
           {saving ? t("settings.ingestion.saveSaving") : t("settings.ingestion.saveButton")}
@@ -114,10 +155,15 @@ function IngestionSettingsPanelForm({
 
 export default function IngestionSettingsPanel({ ingestion, saving, saveError, onSave, onDirtyChange }) {
   const resolved = ingestion?.effective?.resolved_max_file_size_mb ?? ingestion?.max_file_size_mb ?? 128;
+  const claimsExtractionEnabled =
+    ingestion?.effective?.resolved_claims_extraction_enabled ??
+    ingestion?.claims_extraction_enabled ??
+    true;
   return (
     <IngestionSettingsPanelForm
-      key={String(resolved)}
+      key={`${String(resolved)}:${String(claimsExtractionEnabled)}`}
       resolved={resolved}
+      claimsExtractionEnabled={claimsExtractionEnabled}
       saving={saving}
       saveError={saveError}
       onSave={onSave}

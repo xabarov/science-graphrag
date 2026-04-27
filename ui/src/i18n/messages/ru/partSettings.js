@@ -46,6 +46,9 @@ export default {
   "settings.ingestion.maxFileSizeLabel": "Максимальный размер файла (МБ)",
   "settings.ingestion.rangeHint":
     "Допустимый диапазон: 1–2048 МБ. Значение из окружения действует, пока вы не сохраните настройку здесь.",
+  "settings.ingestion.claimsToggleLabel": "Извлекать claims во время ingest",
+  "settings.ingestion.claimsToggleHint":
+    "Если включено, каждый новый ingest также записывает Claim/Evidence в граф и claims-векторное хранилище.",
   "settings.ingestion.saveSaving": "Сохранение…",
   "settings.ingestion.saveButton": "Сохранить настройки ingestion",
   "settings.ingestion.saveError": "Не удалось сохранить настройки ingestion.",

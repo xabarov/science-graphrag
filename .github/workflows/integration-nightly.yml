@@ -57,6 +57,9 @@ jobs:
       - name: Integration tests (Neo4j + Qdrant + Postgres)
         run: pytest tests -m integration -q
 
+      - name: Chat agent contract runner (no LLM)
+        run: python -m eval.chat_agent
+
       - name: Retrieval benchmark (merge_safe + strict_pilot, mock answers)
         env:
           SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED: "false"

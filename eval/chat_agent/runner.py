@@ -1,6 +1,9 @@
-"""Minimal chat-agent contract runner (CI-friendly, no LLM).
+"""Chat-agent contract runner (CI-friendly, no LLM).
 
 Run: ``python -m eval.chat_agent`` from repo root (or ``.venv/bin/python -m eval.chat_agent``).
+
+Checks mirror ``eval/results/current-chat-agent-contract.json`` cases; update that file when
+adding invariants here.
 """
 
 from __future__ import annotations
@@ -19,6 +22,7 @@ def _fail(msg: str) -> int:
 
 def main() -> int:
     from science_graphrag.agent.context.compaction import build_context_compacted_payload
+    from science_graphrag.agent.coordination.turn_policy import classify_turn_policy
     from science_graphrag.api.agent_v2 import normalize_history_digest_input
 
     failures: list[str] = []
@@ -48,6 +52,26 @@ def main() -> int:
             json.loads(path.read_text(encoding="utf-8"))
         except json.JSONDecodeError as exc:
             failures.append(f"invalid json {rel}: {exc}")
+
+    gold_path = _REPO / "eval" / "chat_agent" / "coordinator_turn_policy_gold.json"
+    if gold_path.is_file():
+        data = json.loads(gold_path.read_text(encoding="utf-8"))
+        for case in data.get("cases") or []:
+            if not isinstance(case, dict):
+                continue
+            q = str(case.get("question") or "")
+            ws = case.get("workspace_id")
+            pol = classify_turn_policy(question=q, workspace_id=ws)
+            if pol.tool_policy != case.get("expect_tool_policy"):
+                failures.append(
+                    f"coordinator gold {case.get('id')}: tool_policy {pol.tool_policy!r}"
+                )
+            if pol.conversation_intent != case.get("expect_intent"):
+                failures.append(
+                    f"coordinator gold {case.get('id')}: intent {pol.conversation_intent!r}"
+                )
+    else:
+        failures.append("missing coordinator_turn_policy_gold.json")
 
     if failures:
         return _fail("; ".join(failures))

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "description": "Gold expectations for rules_v0 classify_turn_policy (deterministic baseline for hybrid evals).",
+  "cases": [
+    {"id": "small_talk_ru", "question": "привет", "workspace_id": "ws", "expect_tool_policy": "no_tools", "expect_intent": "small_talk"},
+    {"id": "small_talk_en", "question": "thanks!", "workspace_id": null, "expect_tool_policy": "no_tools", "expect_intent": "small_talk"},
+    {"id": "meta_ru", "question": "Что ты умеешь?", "workspace_id": "ws", "expect_tool_policy": "no_tools", "expect_intent": "meta"},
+    {"id": "ambiguous_scope", "question": "Что тут есть?", "workspace_id": "ws", "expect_tool_policy": "clarify", "expect_intent": "ambiguous"},
+    {"id": "inventory", "question": "Какие статьи есть в моём workspace?", "workspace_id": "ws", "expect_tool_policy": "allow_tools", "expect_intent": "research_task"},
+    {"id": "quote", "question": "Приведи цитату про attention из статьи", "workspace_id": "ws", "expect_tool_policy": "allow_tools", "expect_intent": "research_task"},
+    {"id": "relation", "question": "Who cited paper A after 2020?", "workspace_id": "ws", "expect_tool_policy": "allow_tools", "expect_intent": "research_task"},
+    {"id": "bibliography", "question": "Export GOST bibliography for these works", "workspace_id": "ws", "expect_tool_policy": "allow_tools", "expect_intent": "research_task"},
+    {"id": "ideation", "question": "Suggest a new paper idea from corpus gaps", "workspace_id": "ws", "expect_tool_policy": "allow_tools", "expect_intent": "research_task"}
+  ]
+}

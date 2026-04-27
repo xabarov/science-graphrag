@@ -1,0 +1,24 @@
+{
+  "inputs": {
+    "layer2_suite_json": "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/current-llm-layer2-nightly-semantic-suite.json"
+  },
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
+    "semantic_extraction_enabled": true
+  },
+  "source_label": "layer2_suite_extractor_json_metrics (aligned with §4.0; run `science-graphrag-relations-benchmark` for Neo4j read-back on tier `relations_pilot`)",
+  "aggregation": "macro_mean_over_cases",
+  "n_cases": 31,
+  "macro_mean": {
+    "methods_precision": 0.6172043010752688,
+    "methods_recall": 0.6801075268817204,
+    "methods_f1": 0.6011008704557091,
+    "datasets_precision": 0.7897849462365591,
+    "datasets_recall": 0.8790322580645161,
+    "datasets_f1": 0.7920890937019969
+  }
+}

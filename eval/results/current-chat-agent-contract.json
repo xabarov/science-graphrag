@@ -1,0 +1,17 @@
+{
+  "run_metadata": {
+    "suite": "chat_agent_contract",
+    "runtime_mode": "contract_verified",
+    "note": "Advisory artifact for aggregate/trust_signal; keep in sync with python -m eval.chat_agent."
+  },
+  "cases": [
+    {"case_id": "compaction_payload_digest", "metrics": {"passed": true}},
+    {"case_id": "history_digest_normalize", "metrics": {"passed": true}},
+    {"case_id": "fixtures_wave_b_wave_c_present", "metrics": {"passed": true}},
+    {"case_id": "coordinator_gold_rules_v0", "metrics": {"passed": true}}
+  ],
+  "summary": {
+    "all_passed": true,
+    "case_count": 4
+  }
+}

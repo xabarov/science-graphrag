@@ -4,11 +4,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from eval.bench_common import discover_graph_v1_case_dirs, discover_layer1_case_dirs
+from eval.bench_common import (
+    discover_graph_v1_case_dirs,
+    discover_layer1_case_dirs,
+    discover_layer2_case_dirs,
+)
 from science_graphrag.ingestion.pipeline import discover_corpus_files
 
 FIXTURES_LAYER1 = Path(__file__).resolve().parent / "fixtures" / "benchmarks" / "layer1"
 FIXTURES_GRAPH_V1 = Path(__file__).resolve().parent / "fixtures" / "benchmarks" / "graph_v1"
+FIXTURES_LAYER2 = Path(__file__).resolve().parent / "fixtures" / "benchmarks" / "layer2"
 
 
 def test_discover_layer1_case_dirs_finds_known_cases() -> None:
@@ -34,6 +39,12 @@ def test_discover_layer1_merge_safe_tier() -> None:
         "ws_graph_contract",
         "yolov1",
     }
+
+
+def test_discover_layer2_relations_pilot_tier() -> None:
+    cases = discover_layer2_case_dirs(FIXTURES_LAYER2, tier="relations_pilot")
+    ids = {p.name for p in cases}
+    assert ids == {"atss_semantic", "detr_semantic", "yolov1_semantic"}
 
 
 def test_discover_graph_v1_case_dirs_finds_workspace_cites_minimal() -> None:

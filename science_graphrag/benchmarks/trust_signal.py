@@ -24,6 +24,7 @@ RuntimeMode = Literal[
     # Honest infra / contract lanes — excluded from ``PHANTOM_RUNTIME_MODES`` (BT2/BT3).
     "verified_by_sibling_live",
     "infra_skipped",
+    "contract_verified",
 ]
 
 PHANTOM_RUNTIME_MODES: Final[frozenset[str]] = frozenset(
@@ -67,6 +68,7 @@ _GOLD_SUBDIR_BY_MEMBER: Final[dict[str, str | None]] = {
     "agent_tools_mini": "agent_tools_v1",
     "agent_tools_judge": None,
     "contradictions_v1_mini": "contradictions_v1",
+    "chat_agent_contract": None,
 }
 
 
@@ -97,6 +99,9 @@ def detect_runtime_mode(
     member_id: str, block: dict[str, Any], cases: list[dict[str, Any]]
 ) -> RuntimeMode:
     """Infer how trustworthy the suite artifact is (phantom vs live)."""
+
+    if member_id == "chat_agent_contract":
+        return "contract_verified"
 
     if member_id == "workspace_scoped" and block.get("_workspace_scoped_delegated_to_live"):
         return "verified_by_sibling_live"
@@ -385,6 +390,7 @@ def trust_baseline_payload(full_summary: dict[str, Any]) -> dict[str, Any]:
         "references_resolution_family",
         "concept_topic_family",
         "agent_tools_family",
+        "chat_agent_family",
         "contradictions_family",
     ):
         block = full_summary.get(fname)
@@ -409,6 +415,7 @@ def compute_gate_trust_criteria(
     references_resolution_family: dict[str, Any],
     concept_topic_family: dict[str, Any],
     agent_tools_family: dict[str, Any],
+    chat_agent_family: dict[str, Any] | None = None,
     contradictions_family: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Derive phantom counts, phantom member labels, and hard-block family hits."""
@@ -444,6 +451,7 @@ def compute_gate_trust_criteria(
     walk("references_resolution_family", references_resolution_family)
     walk("concept_topic_family", concept_topic_family)
     walk("agent_tools_family", agent_tools_family)
+    walk("chat_agent_family", chat_agent_family or {"role": "advisory"})
     walk("contradictions_family", contradictions_family or {"role": "advisory"})
 
     # Future: claims_production_holdout when artifact exists

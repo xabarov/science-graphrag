@@ -45,6 +45,31 @@ def test_fixture_references():
     assert any(ref.doi for ref in r)
 
 
+def test_extract_references_recovers_titles_without_doi() -> None:
+    text = """## References
+
+[1] J. Redmon and A. Farhadi. Yolo9000: Better, faster, stronger. In *CVPR*, 2017.
+[2] Analogy. Wikipedia, Mar 2018.
+"""
+    refs = extract_references(text)
+    assert refs[0].title == "Yolo9000: Better, faster, stronger"
+    assert refs[1].title == "Analogy"
+
+
+def test_extract_references_stops_at_next_heading() -> None:
+    text = """## References
+
+[1] J. Redmon and A. Farhadi. Yolo9000: Better, faster, stronger. In *CVPR*, 2017.
+
+## Rebuttal
+
+Boxes are stupid anyway though.
+"""
+    refs = extract_references(text)
+    assert len(refs) == 1
+    assert "Boxes are stupid" not in refs[0].raw_reference
+
+
 def test_reference_chunks_split_numbered_entries():
     ref_text = "\n".join(
         [

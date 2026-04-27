@@ -107,4 +107,21 @@ def collect_tool_trace(state: AgentState) -> list[ToolCallTrace]:
                 error=None,
             ),
         )
+    meta = state.get("metadata") or {}
+    tp = meta.get("turn_policy")
+    if isinstance(tp, dict) and str(tp.get("tool_policy") or "").strip():
+        coord_ms = meta.get("coordinator_latency_ms")
+        coord_dur = int(coord_ms) if isinstance(coord_ms, (int, float)) else 0
+        traces.insert(
+            0,
+            ToolCallTrace(
+                step=0,
+                tool="coordinator_gate",
+                args_summary={str(k): str(v)[:200] for k, v in tp.items()},
+                row_count=0,
+                duration_ms=max(0, coord_dur),
+                truncated=False,
+                error=None,
+            ),
+        )
     return traces

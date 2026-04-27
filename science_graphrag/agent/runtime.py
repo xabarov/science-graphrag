@@ -9,6 +9,7 @@ from langchain_core.messages import AIMessage, ToolMessage
 from science_graphrag.agent.chat_envelope import build_chat_envelope, heuristic_answer_class
 from science_graphrag.agent.context.post_turn import apply_turn_digest_to_thread
 from science_graphrag.agent.context.session_store import get_session_for_thread
+from science_graphrag.agent.graph.invoke_timeout import invoke_graph_with_deadline
 from science_graphrag.agent.graph.state import build_initial_agent_state
 from science_graphrag.agent.graph.supervisor import build_retrieval_graph
 from science_graphrag.agent.graph.tracing import collect_tool_trace
@@ -209,9 +210,12 @@ class RetrievalAgent:
             answer_class_hint=answer_class_hint,
         )
         assert self._graph is not None
-        final_state = self._graph.invoke(
+        cfg = {"recursion_limit": self._settings.agent_supervisor_recursion_limit}
+        final_state = invoke_graph_with_deadline(
+            self._graph,
             initial_state,
-            config={"recursion_limit": self._settings.agent_supervisor_recursion_limit},
+            config=cfg,
+            timeout_seconds=float(self._settings.agent_step_timeout_seconds),
         )
         messages = list(final_state.get("messages", []))
         trace = collect_tool_trace(final_state)
@@ -241,7 +245,7 @@ class RetrievalAgent:
 
         return AgentRunOutput(
             answer=answer,
-            citations=list(final_state.get("citations", [])),
+            citations=citations,
             tool_trace=trace,
             answer_class=str(envelope.get("answer_class") or "grounded_explanation"),
             evidence_summary=envelope.get("evidence_summary"),

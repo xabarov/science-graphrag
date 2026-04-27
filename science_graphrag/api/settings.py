@@ -70,9 +70,10 @@ def patch_ingestion_settings(
     actor: str = Depends(require_settings_access),
 ) -> SettingsSnapshotResponse:
     snapshot = _SETTINGS_SERVICE.update_ingestion_settings(
-        base_settings=get_settings(),
-        max_file_size_mb=body.max_file_size_mb,
-        actor=actor,
+        get_settings(),
+        body.max_file_size_mb,
+        body.claims_extraction_enabled,
+        actor,
     )
     return SettingsSnapshotResponse(
         sections=snapshot.sections,

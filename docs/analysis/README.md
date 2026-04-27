@@ -13,6 +13,7 @@
 | [`langgraph-migration-plan-2026-04-25.md`](./langgraph-migration-plan-2026-04-25.md) | Y5/Y6 LangGraph vs smolagents |
 | [`phoenix-tracing-coverage-2026-04-25.md`](./phoenix-tracing-coverage-2026-04-25.md) | Phoenix / OTel gaps + Wave X |
 | [`graph-readability-followup-2026-04-25.md`](./graph-readability-followup-2026-04-25.md) | GR6–GR9 graph UX |
+| [`light-theme-roadmap-2026-04-27.md`](./light-theme-roadmap-2026-04-27.md) | UI appearance system: light theme concept, tokenization, rollout phases |
 | [`workspace-ux-redesign-2026-04-25.md`](./workspace-ux-redesign-2026-04-25.md) | WX1–WX6 |
 | [`reader-ux-and-translation-roadmap-2026-04-25.md`](./reader-ux-and-translation-roadmap-2026-04-25.md) | RX / LX reader + translation |
 | [`instructor-adoption-dual-validate-2026-04-25.md`](./instructor-adoption-dual-validate-2026-04-25.md) | Optional Phase 7 dual_validate + Instructor |

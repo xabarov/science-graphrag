@@ -25,6 +25,21 @@ SYSTEM_PROMPT = (
     "Match the user's language (e.g. Russian question → Russian answer) when specialist_results allow."
 )
 
+DIRECT_SYSTEM_PROMPT = (
+    "You are a helpful research assistant in a scholarly workspace UI. "
+    "The user's message is conversational (greeting, thanks, or small talk) OR asks who you are / "
+    "what you can do. Reply briefly and warmly in the user's language. "
+    "Do NOT invent paper titles, workspace inventory, citations, or graph facts — specialist_results "
+    "below are empty for this turn. Always call final_answer with citations=[] (no fabricated sources)."
+)
+
+CLARIFY_SYSTEM_PROMPT = (
+    "You are a helpful research assistant. The user's request is ambiguous or too short to run tools. "
+    "Ask one short clarifying question in the user's language (e.g. list papers, search ideas, "
+    "graph relations, quotes). Do NOT call workspace or search tools yourself. "
+    "Always call final_answer with citations=[]."
+)
+
 
 def _collect_writer_context(state: AgentState) -> str:
     specialist_results = state.get("specialist_results") or {}
@@ -38,7 +53,28 @@ def _last_user_text(state: AgentState) -> str:
     return ""
 
 
-def _compile_writer_subgraph(tools: list[BaseTool], settings: Settings) -> Any:
+def _writer_mode_from_state(state: AgentState) -> str:
+    meta = state.get("metadata") or {}
+    tp = meta.get("turn_policy")
+    if isinstance(tp, dict):
+        pol = str(tp.get("tool_policy") or "").strip()
+        if pol == "no_tools":
+            return "direct"
+        if pol == "clarify":
+            return "clarify"
+    return "normal"
+
+
+def _system_prompt_for_mode(mode: str) -> str:
+    if mode == "direct":
+        return DIRECT_SYSTEM_PROMPT
+    if mode == "clarify":
+        return CLARIFY_SYSTEM_PROMPT
+    return SYSTEM_PROMPT
+
+
+def _compile_writer_subgraph(tools: list[BaseTool], settings: Settings, *, mode: str) -> Any:
+    system_prompt = _system_prompt_for_mode(mode)
     llm = build_chat_model(settings).bind_tools(tools)
 
     def chat_node(state: AgentState) -> dict:
@@ -46,7 +82,7 @@ def _compile_writer_subgraph(tools: list[BaseTool], settings: Settings) -> Any:
             content=f"specialist_results={_collect_writer_context(state)}"
         )
         base_msgs = [
-            HumanMessage(content=SYSTEM_PROMPT),
+            HumanMessage(content=system_prompt),
             context_message,
             *list(state.get("messages") or []),
         ]
@@ -78,18 +114,19 @@ def _compile_writer_subgraph(tools: list[BaseTool], settings: Settings) -> Any:
 
 def build_writer_agent_node(stores: StoreRegistry, settings: Settings):
     """Build writer specialist callable for supervisor graph."""
-    subgraph_cache: dict[tuple[str, ...], Any] = {}
+    subgraph_cache: dict[tuple[tuple[str, ...], str], Any] = {}
 
-    def _cached_subgraph(tools: list[BaseTool]) -> Any:
-        key = tuple(sorted(getattr(t, "name", "") or "" for t in tools))
+    def _cached_subgraph(tools: list[BaseTool], mode: str) -> Any:
+        key = (tuple(sorted(getattr(t, "name", "") or "" for t in tools)), mode)
         if key not in subgraph_cache:
-            subgraph_cache[key] = _compile_writer_subgraph(tools, settings)
+            subgraph_cache[key] = _compile_writer_subgraph(tools, settings, mode=mode)
         return subgraph_cache[key]
 
     def writer_agent_node(state: AgentState) -> dict:
         all_tools = build_writer_tools(stores)
         question = _last_user_text(state)
         has_ws = bool((state.get("workspace_id") or "").strip())
+        mode = _writer_mode_from_state(state)
         tools, meta = shortlist_tools_for_specialist(
             all_tools,
             question=question,
@@ -97,7 +134,7 @@ def build_writer_agent_node(stores: StoreRegistry, settings: Settings):
             settings=settings,
             has_workspace=has_ws,
         )
-        compiled = _cached_subgraph(tools)
+        compiled = _cached_subgraph(tools, mode)
         next_state = compiled.invoke(state)
         messages = list(next_state.get("messages") or [])
         citations = list(state.get("citations") or [])
@@ -125,6 +162,7 @@ def build_writer_agent_node(stores: StoreRegistry, settings: Settings):
                     "reason": meta.get("reason"),
                     "top_score": meta.get("top_score"),
                     "skipped": bool(meta.get("skipped")),
+                    "writer_mode": mode,
                 }
             ],
         }

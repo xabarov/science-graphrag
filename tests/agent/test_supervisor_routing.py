@@ -130,6 +130,122 @@ def test_agent_state_has_routing_fields() -> None:
     assert "history_digest" in hints
 
 
+def test_supervisor_invalid_router_token_routes_to_writer_not_retrieval(monkeypatch) -> None:
+    """Garbage supervisor output must not default to retrieval_agent (Coordinator Gate hardening)."""
+
+    class _BadRouter:
+        def invoke(self, _messages):
+            return AIMessage(content="I will pick retrieval_agent for you")
+
+    class _FakeSpecialist:
+        def bind_tools(self, _tools):
+            return self
+
+        def invoke(self, _messages):
+            return AIMessage(content="done", tool_calls=[])
+
+    monkeypatch.setattr(
+        "science_graphrag.agent.graph.supervisor.build_chat_model",
+        lambda settings: _BadRouter(),
+    )
+    monkeypatch.setattr(
+        "science_graphrag.agent.graph.nodes.retrieval_agent.build_chat_model",
+        lambda settings: _FakeSpecialist(),
+    )
+    monkeypatch.setattr(
+        "science_graphrag.agent.graph.nodes.graph_agent.build_chat_model",
+        lambda settings: _FakeSpecialist(),
+    )
+    monkeypatch.setattr(
+        "science_graphrag.agent.graph.nodes.writer_agent.build_chat_model",
+        lambda settings: _FakeSpecialist(),
+    )
+
+    from science_graphrag.agent.graph.state import build_initial_agent_state
+    from science_graphrag.agent.graph.supervisor import build_supervisor_graph
+
+    stores = MagicMock()
+    stores.neo4j = MagicMock()
+    stores.qdrant_chunks = MagicMock()
+    stores.qdrant_works = MagicMock()
+
+    settings = MagicMock()
+    settings.agent_max_tool_calls = 8
+    settings.agent_runtime = "langgraph_supervisor_v1"
+    settings.agent_supervisor_recursion_limit = 12
+    settings.agent_semantic_query_fast_route = False
+
+    graph = build_supervisor_graph(stores, settings)
+    state = build_initial_agent_state(
+        question="Explain attention mechanism in transformers briefly",
+        workspace_id="ws-1",
+        max_tool_calls=8,
+        agent_runtime="langgraph_supervisor_v1",
+    )
+    out = graph.invoke(state)
+    routes = list(out.get("routing_log") or [])
+    assert routes
+    assert routes[0].get("to") == "writer_agent"
+
+
+def test_supervisor_coordinator_gate_skips_llm_for_greeting(monkeypatch) -> None:
+    """First-turn no_tools policy must not invoke supervisor routing LLM."""
+
+    def _boom(*_a, **_k):
+        raise AssertionError("supervisor routing LLM must not be called")
+
+    class _FakeSpecialist:
+        def bind_tools(self, _tools):
+            return self
+
+        def invoke(self, _messages):
+            return AIMessage(content="done", tool_calls=[])
+
+    monkeypatch.setattr(
+        "science_graphrag.agent.graph.supervisor.build_chat_model",
+        lambda settings: type("_B", (), {"invoke": staticmethod(_boom)})(),
+    )
+    monkeypatch.setattr(
+        "science_graphrag.agent.graph.nodes.retrieval_agent.build_chat_model",
+        lambda settings: _FakeSpecialist(),
+    )
+    monkeypatch.setattr(
+        "science_graphrag.agent.graph.nodes.graph_agent.build_chat_model",
+        lambda settings: _FakeSpecialist(),
+    )
+    monkeypatch.setattr(
+        "science_graphrag.agent.graph.nodes.writer_agent.build_chat_model",
+        lambda settings: _FakeSpecialist(),
+    )
+
+    from science_graphrag.agent.graph.state import build_initial_agent_state
+    from science_graphrag.agent.graph.supervisor import build_supervisor_graph
+
+    stores = MagicMock()
+    stores.neo4j = MagicMock()
+    stores.qdrant_chunks = MagicMock()
+    stores.qdrant_works = MagicMock()
+
+    settings = MagicMock()
+    settings.agent_max_tool_calls = 8
+    settings.agent_runtime = "langgraph_supervisor_v1"
+    settings.agent_supervisor_recursion_limit = 12
+    settings.agent_semantic_query_fast_route = False
+
+    graph = build_supervisor_graph(stores, settings)
+    state = build_initial_agent_state(
+        question="привет",
+        workspace_id="ws-1",
+        max_tool_calls=8,
+        agent_runtime="langgraph_supervisor_v1",
+    )
+    out = graph.invoke(state)
+    routes = list(out.get("routing_log") or [])
+    assert routes
+    assert routes[0].get("to") == "writer_agent"
+    assert str(routes[0].get("reason") or "").startswith("coordinator_gate:")
+
+
 def test_score_agent_case_specialist_sequence() -> None:
     from eval.agent_tools.metrics import score_agent_case
 

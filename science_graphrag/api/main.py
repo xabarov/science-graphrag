@@ -14,7 +14,10 @@ from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from qdrant_client import QdrantClient
 
-from science_graphrag.agent.context.session_backend import configure_session_memory_backend
+from science_graphrag.agent.context.session_backend import (
+    configure_session_memory_backend,
+    session_memory_backend_kind,
+)
 from science_graphrag.api.admin_access import require_admin_if_configured
 from science_graphrag.api.agent import router as agent_router
 from science_graphrag.api.agent_v2 import router as agent_v2_router
@@ -39,7 +42,7 @@ from science_graphrag.api.works import works_router
 from science_graphrag.api.workspace_dedup import router as workspace_dedup_router
 from science_graphrag.api.workspace_graph import router as workspace_graph_router
 from science_graphrag.api.workspaces import router as workspaces_router
-from science_graphrag.config import get_settings
+from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
 from science_graphrag.observability.phoenix_tracer import init_tracer_provider
 from science_graphrag.storage.qdrant_store import ensure_entity_dedup_collections
@@ -122,8 +125,15 @@ _configure_access_log_filters()
 
 
 @app.get("/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
+def health(settings: Settings = Depends(get_settings)) -> dict[str, Any]:
+    """Liveness plus agent session backend hint (redis vs in-memory fallback)."""
+    return {
+        "status": "ok",
+        "agent_session_memory_backend": session_memory_backend_kind(),
+        "agent_session_memory_configured": (
+            (settings.agent_session_memory_backend or "memory").strip().lower()
+        ),
+    }
 
 
 @app.get("/v1/idea-search")

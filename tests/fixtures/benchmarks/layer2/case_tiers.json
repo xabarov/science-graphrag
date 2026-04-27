@@ -2,6 +2,11 @@
   "description": "Layer-2 semantic benchmarks: merge_safe runs without LLM; nightly_semantic optional with API keys.",
   "smoke": ["no_llm_smoke"],
   "merge_safe": ["no_llm_smoke"],
+  "relations_pilot": [
+    "atss_semantic",
+    "detr_semantic",
+    "yolov1_semantic"
+  ],
   "nightly_semantic": [
     "atss_semantic",
     "cascade_rcnn_semantic",

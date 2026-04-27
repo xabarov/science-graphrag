@@ -43,7 +43,7 @@ All new fields are **optional** for backward compatibility; clients should treat
 | `run_metadata` | object | Runtime flags, model ids, etc.; when `thread_id` is set, may include **`compaction`** (CH5 v1: `kind`, `kinds`, `trigger`, `digest_count`, `boundary`) and **`session_digest_count`** |
 | `answer_class` | string | One of `inventory`, `fact_lookup`, `grounded_explanation`, `relation_tracing`, `quote_extraction`, `ideation`, `bibliography_export`, `synthesis` |
 | `evidence_summary` | string \| null | Short human-readable evidence summary |
-| `warnings` | array of string | e.g. `weak_evidence`, `no_workspace`, `history_digest_invalid` |
+| `warnings` | array of string | e.g. `weak_evidence`, `no_workspace`, `history_digest_invalid`, `agent_turn_deadline_exceeded` |
 | `inventory` | object \| null | Papers/authors/counts when applicable |
 | `relation_trace` | object \| null | Reserved / sparse in Wave A |
 | `quote_candidates` | array \| null | Quote snippets + work/chunk ids |
@@ -56,7 +56,7 @@ Each SSE `data:` line is a JSON object with a `type` field.
 
 | `type` | When | Payload |
 |--------|------|---------|
-| `intent_classified` | Start of run | `answer_class`, `source` (`heuristic` \| `hint`) |
+| `intent_classified` | Start of run | `answer_class`, `source` (e.g. `coordinator_gate_v0` for deterministic rules, `coordinator_gate_llm` / `coordinator_gate_fallback` for hybrid/LLM paths), `conversation_intent`, `tool_policy`, `route_hint`, `reason`, `confidence` (0–1), `classifier` (`deterministic` \| `llm` \| `fallback`), `suggested_answer_class` |
 | `specialist_selected` | After supervisor routing | `from`, `to`, optional `budget_left`, optional `reason` |
 | `subagent_started` | Immediately after `specialist_selected` | `subagent_id` (typically specialist id), optional `from`, optional `summary` (short, product-safe) |
 | `subagent_progress` | Optional, after `tool_call` while a subagent is active | `subagent_id`, `step`, `tool`, `summary` |
@@ -69,13 +69,17 @@ Each SSE `data:` line is a JSON object with a `type` field.
 | `answer_synthesis_finished` | Immediately before `final_answer` | empty payload beyond `type` |
 | `context_compacted` | After turn digest update (CH4) when `thread_id` is set | `thread_id`, `session_summary_excerpt`, **`compaction`**: `{ "kind": "turn_digest", "kinds": string[], "trigger": "post_answer" \| "post_answer_degraded_stream", "digest_count": int, "boundary": { "status": "idle" \| "candidate", ... } }` — `kinds` may include `rolling_memory` (after enough digests) and `workspace_capsule` when a workspace-scoped capsule exists; `post_answer_degraded_stream` when the graph stream did not yield a final `values` chunk |
 | `final_answer` | End | Full envelope fields + legacy `answer`, `citations`, `tool_trace` (includes `session_summary_excerpt` when `thread_id` set) |
-| `warning` | Any time | `code`, `message` |
-| `error` | Fatal | `detail` |
+| `warning` | Any time | `code`, `message` (optional `reason` / `confidence` for coordinator fallback) |
+| `error` | Fatal | `detail`, optional `code` (e.g. `agent_runtime_error`, `agent_turn_deadline_exceeded`) |
 
 ## Compatibility
 
 - Unknown `type` values: clients must ignore forward-compatibly.
 - `final_answer` must remain parseable by legacy UI (at minimum `answer`, `citations`, `tool_trace`).
+
+## Operations
+
+- Runbook: [`docs/runbooks/agent-chat-v2.md`](../runbooks/agent-chat-v2.md) (SSE/proxy, Redis sessions, timeouts, release gate).
 
 ## Related code
 

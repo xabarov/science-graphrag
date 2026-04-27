@@ -43,7 +43,10 @@ def test_health_endpoint() -> None:
     client = _client()
     res = client.get("/health")
     assert res.status_code == 200
-    assert res.json().get("status") == "ok"
+    body = res.json()
+    assert body.get("status") == "ok"
+    assert body.get("agent_session_memory_backend") in ("memory", "redis")
+    assert body.get("agent_session_memory_configured") in ("memory", "redis")
 
 
 def test_root_redirects_to_ui_when_built() -> None:
@@ -135,7 +138,10 @@ def test_settings_ingestion_patch_smoke(tmp_path: Path, monkeypatch: Any) -> Non
     monkeypatch.setattr(settings_api, "_SETTINGS_SERVICE", service)
 
     client = _client()
-    patch_res = client.patch("/v1/settings/ingestion", json={"max_file_size_mb": 96})
+    patch_res = client.patch(
+        "/v1/settings/ingestion",
+        json={"max_file_size_mb": 96, "claims_extraction_enabled": False},
+    )
     assert patch_res.status_code == 200
     body = patch_res.json()
     assert body["ingestion"]["max_file_size_mb"] == 96
@@ -745,16 +751,23 @@ def test_post_query_workspace_payload_miss_fallback(monkeypatch: Any) -> None:
     assert calls[1]["workspace_id"] is None
 
 
-def test_get_idea_search_stub() -> None:
-    """Wave R prep: idea-search returns empty items and stub status."""
+def test_get_idea_search_stub(monkeypatch: Any) -> None:
+    """Idea-search returns empty items without touching uninitialized QdrantChunkStore."""
 
+    from science_graphrag.agent.tools.base import ToolResult
+    from science_graphrag.agent.tools.idea_search import IdeaSearchTool
+
+    def _stub_run(self, **kwargs: Any) -> ToolResult:  # noqa: ARG002
+        return ToolResult(payload={"items": []}, row_count=0, truncated=False)
+
+    monkeypatch.setattr(IdeaSearchTool, "run", _stub_run)
     client = _client()
     res = client.get("/v1/idea-search", params={"q": "test", "kinds": "work,chunk", "top_k": 3})
     assert res.status_code == 200
     body = res.json()
     assert body.get("items") == []
     assert body.get("query") == "test"
-    assert body.get("status") == "stub_wave_r"
+    assert body.get("status") == "ok"
 
 
 def test_post_query_passes_mode_to_answer_query(monkeypatch: Any) -> None:

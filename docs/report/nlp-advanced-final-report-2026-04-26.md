@@ -14,7 +14,7 @@
 
 В проекте разработана система `Science-GraphRAG` для работы с корпусом научных статей. В отличие от обычного RAG над векторным индексом, система строит граф знаний по статьям, хранит структурированные связи между работами и использует агентный конвейер для ответа на вопросы с обязательными цитатами. Цель проекта состояла не только в извлечении информации из статей, но и в построении проверяемого исследовательского инструмента, поддерживающего запросы, которые плохо сводятся к поиску по косинусной близости: например, поиск предшественников метода, цепочек версий работ или противоречий между публикациями.
 
-Эксперименты проведены на корпусе из 35 статей по object detection. Для читателя, интересующегося качеством **извлечения сущностей под GraphRAG**, в §4.0 приведена сводная таблица macro-средних по слотам (F1 по множествам идентификаторов, ROUGE-L для длинных текстовых полей; см. `eval/results/extraction-entity-metrics-for-report.json`). На последнем полном прогоне (`mistralai/mistral-small-3.2-24b-instruct`) методы и датасеты дают macro-F1 порядка `0.64` и `0.73`, а перефразированный эталон утверждений — macro-F1 около `0.19` (пилот, 15 кейсов) и `0.15` (отложенная выборка, 5 кейсов). Retrieval на реальном корпусе стабильно возвращает релевантные фрагменты; многошаговый графовый поиск восстанавливает ключевые цепочки развития методов с recall `0.667`; на цитатном эталоне утверждений `recall=1.0`, что контрастирует с paraphrase-режимом; сквозной агентный режим проходит 10 живых сценариев с `latency_p95=25 983 ms` и средней оценкой судьи `4.8/6`.
+Эксперименты проведены на корпусе из 35 статей по object detection. Для читателя, интересующегося качеством **извлечения сущностей под GraphRAG**, в §4.0 приведена сводная таблица macro-средних по слотам (F1 по множествам идентификаторов, ROUGE-L для длинных текстовых полей; см. `eval/results/extraction-entity-metrics-for-report.json`). На последнем прогоне Layer-2 nightly (`mistralai/mistral-small-3.2-24b-instruct`) методы и датасеты дают macro-F1 порядка `0.60` и `0.79`, а перефразированный эталон утверждений — macro-F1 около `0.19` (пилот, 15 кейсов) и `0.15` (отложенная выборка, 5 кейсов). **Материализация рёбер `CITES` в Neo4j** на suite из 11 layer-1 кейсов с `graph_expectations` даёт macro-F1 по множеству `arxiv_id` на цитируемых работах порядка **`0.82`** (см. `eval/results/graph-cites-for-report.json`). Retrieval на реальном корпусе стабильно возвращает релевантные фрагменты; многошаговый графовый поиск восстанавливает ключевые цепочки развития методов с recall `0.667`; на цитатном эталоне утверждений `recall=1.0`, что контрастирует с paraphrase-режимом; сквозной агентный режим проходит 10 живых сценариев с `latency_p95=25 983 ms` и средней оценкой судьи `4.8/6`.
 
 Главный результат проекта состоит не только в самой системе GraphRAG, но и в дисциплине её оценки. В программу экспериментов встроены механизмы, которые отделяют реальные проверки от служебных и не позволяют удобным тестам скрывать слабые места системы. Благодаря этому отчёт показывает не только сильные стороны системы, но и её реальные ограничения.
 
@@ -322,7 +322,7 @@ ARI применяется для дедупликации: если одна и
 
 ### 4.0 Качество извлечения сущностей для GraphRAG (macro по бенчмарк-кейсам)
 
-Ниже — агрегаты по последним suite-артефактам в `eval/results/`, полученные скриптом `scripts/report_extraction_entity_metrics.py` (macro mean по документам; пропуски метрик в JSON не усредняются). **F1** для имён, аффилиаций и подвыборок ссылок — стандартный F1 по пересечению нормализованных строковых множеств; **ROUGE-L** — для заголовка и сопоставления префикса эталонного abstract с извлечённым текстом (см. `eval/layer1/text_similarity.py`). Для **методов и датасетов** используется мягкое совпадение имён/алиасов по правилам `eval/layer2/metrics.py` (не дословное копирование).
+Ниже — агрегаты по последним suite-артефактам в `eval/results/`. **Слоты L1/L2, claims, concept-topic и references-resolution** собирает `scripts/report_extraction_entity_metrics.py` (macro mean по документам; пропуски метрик в JSON не усредняются). **F1** для имён, аффилиаций и подвыборок ссылок — стандартный F1 по пересечению нормализованных строковых множеств; **ROUGE-L** — для заголовка и сопоставления префикса эталонного abstract с извлечённым текстом (см. `eval/layer1/text_similarity.py`). Для **методов и датасетов** используется мягкое совпадение имён/алиасов по правилам `eval/layer2/metrics.py` (не дословное копирование).
 
 | Слот (сущность / поле) | Метрики (macro) |
 |------------------------|-----------------|
@@ -334,21 +334,26 @@ ARI применяется для дедупликации: если одна и
 | Аффилиации — P / R / F1 | 0.967 / 0.942 / 0.951 |
 | Ссылки: gold sample arXiv — P / R / F1 | 0.949 / 0.967 / 0.957 |
 | Ссылки: gold sample DOI — P / R / F1 | 0.933 / 0.933 / 0.933 |
-| Методы (L2) — P / R / F1 | 0.703 / 0.683 / 0.644 |
-| Датасеты (L2) — P / R / F1 | 0.745 / 0.798 / 0.730 |
+| Методы (L2) — P / R / F1 | 0.617 / 0.680 / 0.601 |
+| Датасеты (L2) — P / R / F1 | 0.790 / 0.879 / 0.792 |
 | Утверждения paraphrase, пилот — P / R / F1 | 0.136 / 0.333 / 0.188 |
 | Утверждения paraphrase, holdout — P / R / F1 | 0.141 / 0.250 / 0.150 |
+| Concept-topic mini, концепты — P / R / F1 | 1.000 / 0.800 / 0.880 |
+| Concept-topic mini, темы — P / R / F1 | 1.000 / 1.000 / 1.000 |
+| References resolution mini — P / R / F1 | 1.000 / 1.000 / 1.000 |
 
 Источник чисел: [`eval/results/extraction-entity-metrics-for-report.json`](../../eval/results/extraction-entity-metrics-for-report.json); человекочитаемый фрагмент — [`eval/results/extraction-entity-metrics-for-report.md`](../../eval/results/extraction-entity-metrics-for-report.md). Модель извлечения: `mistralai/mistral-small-3.2-24b-instruct` (поле `run_metadata` в тех же JSON).
 
-**Графовые рёбра CITES.** В gold Layer-1 для **25 из 30** кейсов задан непустой список `expected_cited_arxiv_ids` как часть контракта, однако **F1 по фактическим рёбрам `CITES` в Neo4j** в этих suite-файлах не считается: для этого предназначен отдельный прогон `science-graphrag-graph-benchmark` (см. `eval/graph_v1/`).
+**Графовые рёбра `CITES` (Neo4j vs gold).** В gold Layer-1 для **25 из 30** nightly-кейсов задан непустой список `expected_cited_arxiv_ids`. Macro **P / R / F1** по фактическим `(:Work)-[:CITES]->(:Work)` для поднабора из **11** кейсов (артефакт `eval/results/graph-suite-api-latest.json`, агрегатор [`eval/results/graph-cites-for-report.json`](../../eval/results/graph-cites-for-report.json)): **0.784 / 0.909 / 0.821**. Полный прогон на всех кейсах с ожиданиями: `science-graphrag-graph-benchmark tests/fixtures/benchmarks/layer1 --suite --tier nightly_heavy --json-out …` (см. `eval/graph_v1/`).
+
+**Семантические рёбра `USES_METHOD` / `EVALUATED_ON`.** Скорер совпадает с Layer-2; при успешной проекции в граф macro по методам/датасетам совпадают с строками L2 в таблице выше. Для **явной** проверки чтения из Neo4j после ingest добавлен CLI `science-graphrag-relations-benchmark` (тир `relations_pilot`, три кейса); агрегат без Neo4j-артефакта — [`eval/results/relations-graph-for-report.json`](../../eval/results/relations-graph-for-report.json).
 
 ### 4.1 Сводная таблица
 
 | Эксперимент | Основной результат | Интерпретация |
 |-------------|--------------------|---------------|
 | **Layer-1 nightly** | см. §4.0; при контракте `reporting_skip_f1_gates` на последнем прогоне **4/30** кейсов с `contract.passed=false` (детали в JSON) | scalar-качество по слотам высокое, но бинарный контракт всё ещё ловит краевые случаи; `eval/results/current-llm-layer1-nightly-heavy-suite.json` |
-| **Layer-2 semantic** | см. §4.0; **9/31** кейсов с `metrics.passed=false` при macro-F1 методов/датасетов **0.64 / 0.73** | мягкий recall по методам/датасетам часто ниже порога gold, хотя средние P/R не катастрофичны; `current-llm-layer2-nightly-semantic-suite.json` |
+| **Layer-2 semantic** | см. §4.0; **9/31** кейсов с `metrics.passed=false` при macro-F1 методов/датасетов **≈0.60 / 0.79** (после пересъёмки suite 2026-04-27) | мягкий recall по методам/датасетам часто ниже порога gold, хотя средние P/R не катастрофичны; `current-llm-layer2-nightly-semantic-suite.json` |
 | **workspace_scoped_live** | `6/6` прошли, `forbidden_violation_count=0` | retrieval соблюдает границы рабочего набора и корректно отказывается от ответа вне области данных |
 | **hybrid_ablation_live** | на каждом кейсе `hit_count=5/5`, верхние scores `0.65–0.74` | релевантные фрагменты стабильно попадают в выдачу |
 | **multihop_v2** | `recall≈0.667` на 3 кейсах, precision низкая | граф находит ключевые цепочки, но вытягивает лишних соседей |
@@ -357,6 +362,7 @@ ARI применяется для дедупликации: если одна и
 | **agent_tools_live** | 10/10 прошли, `latency_p95=25 983 ms`, судья `4.8/6` | система работает сквозным образом, но задержка заметна |
 | **contradictions_v1** | 7/7 материализованы | графовая фиксация противоречий работает |
 | **dedup ×5** | `ARI=0.88–1.00` | данные и словари достаточно согласованы для дедупликации |
+| **Graph CITES (Neo4j)** | macro P/R/F1 **0.784 / 0.909 / 0.821** на 11 кейсах с `graph_expectations` | `eval/results/graph-cites-for-report.json` (suite: `graph-suite-api-latest.json`) |
 
 ### 4.2 Конвейер извлечения
 
@@ -399,6 +405,8 @@ ARI применяется для дедупликации: если одна и
 
 Это один из самых полезных результатов во всём отчёте. Он показывает, что текущий извлекатель действительно умеет находить часть содержательных утверждений, но пока пропускает нетривиально сформулированные случаи и генерирует лишние. Для защиты такой результат лучше, чем искусственная `1.0`: он показывает, что контрольный набор способен различать сильное и слабое поведение.
 
+**Диагностика и калибровка.** Скрипт `scripts/report_claims_paraphrase_diagnostics.py` агрегирует таксономию по кейсам (доли «полный recall / частичный / ноль») и добавляет **отдельную** линию калибровки: lexical overlap между `claim_text_normalized` в gold и текстом предсказаний (порог покрытия токенов gold ≥ 0.35; не эквивалентно `embedding_sim` в BT6). На пилоте 15 кейсов macro recall / precision / F1 по этой калибровке порядка **0.15 / 0.04 / 0.07**, на holdout 5 кейсов — **0.04 / 0.01 / 0.02**, т.е. даже при ослаблении критерия остаётся большой зазор к «удобному» эталону — слабость извлечения не объясняется одним только строгим матчингом. Артефакты: [`eval/results/claims-paraphrase-diagnostics-for-report.json`](../../eval/results/claims-paraphrase-diagnostics-for-report.json), `.md`.
+
 ### 4.5 Сквозной агентный режим
 
 Эксперимент `agent_tools_live` проверяет систему в наиболее близком к пользовательскому режиме сценарии: реальный супервизор, реальный retrieval, реальный граф, финальный ответ с цитатами.
@@ -420,17 +428,17 @@ ARI применяется для дедупликации: если одна и
 
 Эти результаты полезны как подтверждение того, что система работает не только на центральной цепочке «retrieval → ответ», но и на задачах качества данных.
 
-### 4.7 Сравнение моделей извлечения (шаблон)
+### 4.7 Сравнение моделей извлечения
 
-Инфраструктура сравнения: `extraction_llm_model` фиксируется в `run_metadata` каждого JSON-отчёта; попарный diff выполняет `science-graphrag-benchmark-compare`. Для трёх и более моделей в одном прогоне используется `scripts/run_multimodel_benchmark.py` (L1 `nightly_heavy` + L2 `nightly_semantic` + `claims_paraphrase` для обучающего и отложенного уровней), результаты — `eval/results/multimodel/`.
+Инфраструктура сравнения: `extraction_llm_model` фиксируется в `run_metadata` каждого JSON-отчёта; попарный diff выполняет `science-graphrag-benchmark-compare`. Для нескольких моделей в одном прогоне используется `scripts/run_multimodel_benchmark.py` (L1 `nightly_heavy` + L2 `nightly_semantic` + `claims_paraphrase`), результаты — `eval/results/multimodel/`.
 
-| Модель (извлечение) | L1 `failed_count` | L2 `failed_count` | Примечание |
-|---------------------|--------------------|--------------------|------------|
-| `mistralai/mistral-small-3.2-24b-instruct` | 4/30 (последний full run) | 9/31 | scalar-метрики — §4.0 и `extraction-entity-metrics-for-report.json` |
-| *добавить вторую* | *прогнать скрипт* | *прогнать скрипт* | сравнение задержки/стоимости |
-| *добавить третью* | *прогнать скрипт* | *прогнать скрипт* | например, более мощная фронтирная модель |
+| Модель (извлечение) | L1 `failed_count` | L2 `failed_count` | Macro F1 (methods / datasets) | Macro F1 (claims paraphrase pilot / holdout) | Macro F1 graph `CITES` (11 кейсов) | Примечание |
+|---------------------|--------------------|--------------------|--------------------------------|-----------------------------------------------|-----------------------------------|------------|
+| `mistralai/mistral-small-3.2-24b-instruct` | 4/30 | 9/31 | 0.601 / 0.792 | 0.188 / 0.151 | 0.821 | Снимок macro — §4.0 + `graph-cites-for-report.json` |
 
-Сводный артефакт-заготовка: [`eval/results/multimodel/summary.json`](../../eval/results/multimodel/summary.json). После мультимодельного прогона переносите в таблицу §4.0 строки из новых `current-llm-*` suite (или расширьте `report_extraction_entity_metrics.py` входными путями).
+Расширенный снимок для отчёта (включая concept-topic, references-resolution и вложенный блок `claims_paraphrase_diagnostics`) генерируется **`scripts/enrich_multimodel_summary_for_report.py`** → [`eval/results/multimodel/summary-for-report.json`](../../eval/results/multimodel/summary-for-report.json). Базовый список прогонов по-прежнему в [`eval/results/multimodel/summary.json`](../../eval/results/multimodel/summary.json).
+
+**Задержка и стоимость:** в committed JSON они не фиксируются; для Pareto-анализа «качество vs $ vs сек» нужно снимать метрики из Phoenix / биллинга OpenRouter после каждого suite-прогона (в `summary-for-report.json` оставлена текстовая заготовка `latency_cost_note`).
 
 ---
 
@@ -512,6 +520,11 @@ ARI применяется для дедупликации: если одна и
 - человекочитаемая сводка: `eval/results/benchmark-metrics-summary.md`
 - базис доверия: `eval/results/benchmark-trust-baseline.json`
 - сравнение моделей (мультимодельный агрегат): `eval/results/multimodel/summary.json`
+- **снимок для NLP-отчёта (extraction + graph + claims diagnostics):** `eval/results/multimodel/summary-for-report.json`
+- **таблица слотов + concept-topic + references-resolution:** `eval/results/extraction-entity-metrics-for-report.json` / `.md`
+- **Neo4j `CITES` macro:** `eval/results/graph-cites-for-report.json` / `.md` (вход: `eval/results/graph-suite-api-latest.json`)
+- **семантические рёбра (L2 или Neo4j suite):** `eval/results/relations-graph-for-report.json` / `.md`
+- **claims paraphrase диагностика:** `eval/results/claims-paraphrase-diagnostics-for-report.json` / `.md`
 - результаты по каждому модулю: `eval/results/current-*.json`
 - эталонные наборы: `tests/fixtures/benchmarks/`
 

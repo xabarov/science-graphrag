@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Divider from "@mui/material/Divider";
 import Tooltip from "@mui/material/Tooltip";
+import { useTheme } from "@mui/material/styles";
 import { useLocation, Link as RouterLink } from "react-router-dom";
 import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
@@ -19,6 +20,8 @@ import { isAdminModeEnabled } from "../adminVisibility.js";
 import { useWorkspaceContext } from "../useWorkspaceContext.js";
 import { appendWorkspaceQuery } from "../../../utils/workspaceStore.js";
 import { getLastWorkId } from "../../../pages/WorkspacePage/utils/workContext.js";
+import darkLogo from "../../../assets/logo/dark-logo.png";
+import lightLogo from "../../../assets/logo/light-logo.png";
 
 const STORAGE_KEY = "sidebarExpanded";
 
@@ -39,10 +42,12 @@ function itemActive(location, to) {
 
 export default function Drawer({ onNavigate }) {
   const { t } = useI18n();
+  const theme = useTheme();
   const [expanded, setExpanded] = useState(_readExpanded());
   const location = useLocation();
   const adminModeEnabled = isAdminModeEnabled();
   const { activeWorkspaceId, getLastWorkspaceHref } = useWorkspaceContext();
+  const logoSrc = theme.palette.mode === "light" ? lightLogo : darkLogo;
 
   const userMenu = useMemo(() => {
     const wid = activeWorkspaceId || "";
@@ -142,12 +147,31 @@ export default function Drawer({ onNavigate }) {
     >
       <Box sx={{ padding: expanded ? 2 : 1.5 }}>
         {expanded ? (
-          <Typography sx={{ fontWeight: 700 }}>{t("shell.drawer.brand")}</Typography>
+          <Box
+            component="img"
+            src={logoSrc}
+            alt={t("shell.drawer.brand")}
+            sx={{
+              display: "block",
+              width: "100%",
+              maxWidth: 214,
+              height: "auto",
+            }}
+          />
         ) : (
           <Tooltip title={t("shell.drawer.brand")}>
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <FolderOpenOutlinedIcon />
-            </Box>
+            <Box
+              component="img"
+              src={logoSrc}
+              alt={t("shell.drawer.brand")}
+              sx={{
+                display: "block",
+                width: 32,
+                height: 32,
+                objectFit: "contain",
+                objectPosition: "left center",
+              }}
+            />
           </Tooltip>
         )}
       </Box>

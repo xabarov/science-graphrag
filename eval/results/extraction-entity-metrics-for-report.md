@@ -18,5 +18,8 @@
 | Datasets ( soft name/alias match P/R/F1 ) | prf1 | P=0.790 R=0.879 F1=0.792 | n f1=31, precision=31, recall=31 |
 | Claims paraphrase ( pilot ) — claim-level P/R/F1 | prf1 | P=0.136 R=0.333 F1=0.188 | n f1=15, precision=15, recall=15 |
 | Claims paraphrase ( holdout ) — claim-level P/R/F1 | prf1 | P=0.141 R=0.250 F1=0.150 | n f1=5, precision=5, recall=5 |
+| Concept-topic mini — concepts ( multiset P/R/F1 ) | prf1 | P=1.000 R=0.800 F1=0.880 | n f1=5, precision=5, recall=5 |
+| Concept-topic mini — research topics ( multiset P/R/F1 ) | prf1 | P=1.000 R=1.000 F1=1.000 | n f1=5, precision=5, recall=5 |
+| References resolution mini — span to canonical key ( P/R/F1 ) | prf1 | P=1.000 R=1.000 F1=1.000 | n f1=3, precision=3, recall=3 |
 
 **Graph CITES note:** Neo4j-level CITES / cited_arxiv F1 is produced by `science-graphrag-graph-benchmark`, not embedded in layer1 suite JSON. (gold cases with non-empty `expected_cited_arxiv_ids`: 25/30).

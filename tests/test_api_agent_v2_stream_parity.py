@@ -185,6 +185,8 @@ def test_sse_final_tool_trace_matches_collect_tool_trace(monkeypatch) -> None:
         client.app.dependency_overrides.pop(get_stores, None)
 
     types = [e.get("type") for e in events]
+    assert "intent_classified" in types
+    assert types.index("intent_classified") < types.index("specialist_selected")
     assert types.index("specialist_selected") < types.index("subagent_started")
     assert types.index("answer_synthesis_started") < types.index("final_answer")
     assert types.index("answer_synthesis_finished") < types.index("final_answer")
@@ -194,6 +196,7 @@ def test_sse_final_tool_trace_matches_collect_tool_trace(monkeypatch) -> None:
     assert len(finals) == 1
     trace = finals[0].get("tool_trace") or []
     tools = [t.get("tool") for t in trace if isinstance(t, dict)]
+    assert "coordinator_gate" in tools
     assert "route_to_specialist" in tools
     assert "idea_search" in tools
     fa = finals[0]

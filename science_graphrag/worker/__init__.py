@@ -46,7 +46,13 @@ def run_compensation_sweep() -> None:
 
 def run() -> None:
     """Start Dramatiq worker process."""
-    from dramatiq.cli import main as dramatiq_main  # pylint: disable=import-outside-toplevel
+    from dramatiq.cli import (  # pylint: disable=import-outside-toplevel
+        main as dramatiq_main,
+        make_argument_parser,
+    )
 
     run_compensation_sweep()
-    dramatiq_main(["dramatiq", "science_graphrag.worker.actor"])
+    # Dramatiq 2.x: cli.main() expects a Namespace from argparse, not a raw argv list.
+    parser = make_argument_parser()
+    args = parser.parse_args(["science_graphrag.worker.actor"])
+    raise SystemExit(dramatiq_main(args))

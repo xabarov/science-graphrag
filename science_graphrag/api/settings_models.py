@@ -31,6 +31,10 @@ class UpdateIngestionSettingsRequest(BaseModel):
         le=2048,
         description="Per-file limit for POST .../ingest/document (PDF, Markdown, or plain text).",
     )
+    claims_extraction_enabled: bool = Field(
+        ...,
+        description="If true, ingest writes Claim/Evidence rows during the claims stage.",
+    )
 
 
 class UpdateLlmSettingsRequest(BaseModel):

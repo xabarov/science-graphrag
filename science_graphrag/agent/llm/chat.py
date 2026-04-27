@@ -31,6 +31,7 @@ def build_chat_model(
     *,
     temperature: float | None = None,
     max_tokens: int | None = None,
+    timeout_seconds: float | None = None,
 ) -> ChatOpenAI:
     """Build ChatOpenAI client pointing to OpenRouter-compatible endpoint."""
     return ChatOpenAI(
@@ -39,5 +40,9 @@ def build_chat_model(
         base_url=settings.extraction_llm_base_url,
         temperature=temperature if temperature is not None else settings.agent_chat_temperature,
         max_tokens=max_tokens if max_tokens is not None else settings.agent_chat_max_tokens,
-        timeout=settings.extraction_llm_timeout_seconds,
+        timeout=(
+            timeout_seconds
+            if timeout_seconds is not None
+            else settings.extraction_llm_timeout_seconds
+        ),
     )

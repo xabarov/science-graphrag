@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from operator import add
+from time import perf_counter
 from typing import Annotated, Any, TypedDict
 
 from langchain_core.messages import BaseMessage, HumanMessage
@@ -58,12 +59,37 @@ def build_initial_agent_state(
         workspace_capsule=workspace_capsule,
         active_workspace_id=workspace_id,
     )
+    from science_graphrag.agent.coordination.turn_policy import classify_turn_policy
+    from science_graphrag.config import get_settings
+
+    _t0 = perf_counter()
+    turn_policy = classify_turn_policy(
+        question=question,
+        workspace_id=workspace_id,
+        session_summary=session_summary,
+        history_digest=list(history_digest or []),
+        answer_class_hint=answer_class_hint,
+        settings=get_settings(),
+    )
+    coordinator_ms = int((perf_counter() - _t0) * 1000)
     meta: dict[str, Any] = {
         "agent_runtime": agent_runtime,
         "raw_user_question": question,
+        "turn_policy": turn_policy.to_dict(),
+        "coordinator_latency_ms": coordinator_ms,
     }
     if thread_id:
         meta["thread_id"] = thread_id
+    initial_debug = [turn_policy.sse_payload()]
+    if turn_policy.classifier == "fallback":
+        initial_debug.append(
+            {
+                "type": "warning",
+                "code": "coordinator_classifier_fallback",
+                "reason": turn_policy.reason,
+                "confidence": turn_policy.confidence,
+            }
+        )
     return {
         "messages": [HumanMessage(content=user_content)],
         "workspace_id": workspace_id,
@@ -74,9 +100,9 @@ def build_initial_agent_state(
         "specialist_results": {},
         "current_specialist": None,
         "routing_log": [],
-        "debug_events": [],
+        "debug_events": initial_debug,
         "thread_id": (thread_id or "").strip() or None,
         "session_summary": session_summary,
-        "answer_class": answer_class_hint,
+        "answer_class": answer_class_hint or turn_policy.suggested_answer_class,
         "history_digest": list(history_digest or []),
     }

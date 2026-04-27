@@ -48,6 +48,7 @@ from benchmark_aggregator.paths import (  # noqa: E402
     DEFAULT_AGENT_TOOLS_MINI,
     DEFAULT_BASELINE_LAYER1,
     DEFAULT_BASELINE_LAYER2,
+    DEFAULT_CHAT_AGENT_CONTRACT,
     DEFAULT_CLAIMS_CORPUS_V2_MINI_SUITE,
     DEFAULT_CLAIMS_MERGE_CONTRACT,
     DEFAULT_CLAIMS_MINI_SUITE,
@@ -458,6 +459,7 @@ def _strip_suite_cases_from_payload(payload: dict[str, Any]) -> None:
         "references_resolution_family",
         "concept_topic_family",
         "agent_tools_family",
+        "chat_agent_family",
         "contradictions_family",
     ):
         fam = payload.get(fam_key)
@@ -798,6 +800,29 @@ def _md_contradictions_family_section(cf: dict[str, Any]) -> list[str]:
     return lines
 
 
+def _md_chat_agent_family_section(cf: dict[str, Any]) -> list[str]:
+    lines = [
+        "## Chat agent family (advisory)",
+        "",
+        "Contract checks for `POST /v2/agent/query` (see `python -m eval.chat_agent`).",
+        "",
+    ]
+    role = (cf.get("role") or "advisory") if isinstance(cf, dict) else "advisory"
+    lines.append(f"- **role**: `{role}`")
+    lines.append("")
+    block = (cf.get("chat_agent_contract") or {}) if isinstance(cf, dict) else {}
+    lines.append("### chat_agent_contract")
+    lines.append("")
+    if block.get("error"):
+        lines.append(f"- **status**: missing artifact `{block.get('artifact')}`")
+    else:
+        lines.append(f"- artifact: `{block.get('artifact')}`")
+        lines.append(f"- all_passed: **{block.get('all_passed')}**")
+        lines.append(f"- failed_count: **{block.get('failed_count')}**")
+    lines.append("")
+    return lines
+
+
 def _md_agent_tools_family_section(af: dict[str, Any]) -> list[str]:
     lines = [
         "## Agent tools family (advisory)",
@@ -849,6 +874,7 @@ def _render_markdown(payload: dict[str, Any]) -> str:
         ),
         *_md_concept_topic_family_section(payload.get("concept_topic_family") or {}),
         *_md_agent_tools_family_section(payload.get("agent_tools_family") or {}),
+        *_md_chat_agent_family_section(payload.get("chat_agent_family") or {}),
         *_md_contradictions_family_section(payload.get("contradictions_family") or {}),
         *_md_baseline_deltas_section(payload.get("deltas") or {}),
     ]
@@ -993,6 +1019,15 @@ def main() -> int:
         help="Optional Wave R judge JSON from science-graphrag-agent-judge-benchmark.",
     )
     parser.add_argument(
+        "--chat-agent-contract-json",
+        type=str,
+        default=DEFAULT_CHAT_AGENT_CONTRACT,
+        help=(
+            "Optional advisory JSON from chat contract runner invariants "
+            "(``python -m eval.chat_agent`` + committed ``current-chat-agent-contract.json``)."
+        ),
+    )
+    parser.add_argument(
         "--contradictions-v1-json",
         type=str,
         default=DEFAULT_CONTRADICTIONS_V1_MINI_SUITE,
@@ -1060,6 +1095,7 @@ def main() -> int:
             "concept_topic_mini_suite": args.concept_topic_json,
             "agent_tools_mini_suite": args.agent_tools_json,
             "agent_tools_judge_suite": args.agent_judge_json,
+            "chat_agent_contract_suite": args.chat_agent_contract_json,
             "contradictions_v1_mini_suite": args.contradictions_v1_json,
         },
         "reference": reference,
@@ -1121,6 +1157,10 @@ def main() -> int:
             "agent_tools_mini": _summarize_case_metrics_suite(args.agent_tools_json),
             "agent_tools_judge": _summarize_retrieval_judge_suite(args.agent_judge_json),
         },
+        "chat_agent_family": {
+            "role": "advisory",
+            "chat_agent_contract": _summarize_case_metrics_suite(args.chat_agent_contract_json),
+        },
         "contradictions_family": {
             "role": "advisory",
             "contradictions_v1_mini": _summarize_case_metrics_suite(args.contradictions_v1_json),
@@ -1133,6 +1173,7 @@ def main() -> int:
     _finalize_family_trust("references_resolution_family", payload["references_resolution_family"])
     _finalize_family_trust("concept_topic_family", payload["concept_topic_family"])
     _finalize_family_trust("agent_tools_family", payload["agent_tools_family"])
+    _finalize_family_trust("chat_agent_family", payload["chat_agent_family"])
     _finalize_family_trust("contradictions_family", payload["contradictions_family"])
 
     trust_criteria = compute_gate_trust_criteria(
@@ -1142,6 +1183,7 @@ def main() -> int:
         references_resolution_family=payload["references_resolution_family"],
         concept_topic_family=payload["concept_topic_family"],
         agent_tools_family=payload["agent_tools_family"],
+        chat_agent_family=payload["chat_agent_family"],
         contradictions_family=payload["contradictions_family"],
     )
     payload["decision_gate"] = evaluate_decision_gate(

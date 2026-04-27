@@ -199,3 +199,42 @@ def test_bibliography_filtered_merges_warnings_to_top_level() -> None:
     w = env.get("warnings") or []
     assert "some_work_ids_filtered" in w
     assert env.get("bibliography", {}).get("filtered_work_ids") == ["x"]
+
+
+def test_envelope_no_tools_turn_policy_ignores_trace_inventory() -> None:
+    """Conversational turns must not inherit inventory from accidental tool names in trace."""
+    state: AgentState = {
+        "messages": [HumanMessage(content="привет")],
+        "workspace_id": "ws1",
+        "citations": [],
+        "tool_trace": [],
+        "budget_remaining": 8,
+        "metadata": {
+            "raw_user_question": "привет",
+            "turn_policy": {
+                "conversation_intent": "small_talk",
+                "tool_policy": "no_tools",
+                "route_hint": "writer_agent",
+                "reason": "small_talk_pattern",
+                "suggested_answer_class": "chat",
+            },
+        },
+        "specialist_results": {},
+        "current_specialist": None,
+        "routing_log": [],
+        "debug_events": [],
+        "thread_id": None,
+        "session_summary": "",
+        "answer_class": None,
+        "history_digest": [],
+    }
+    trace = [{"step": 1, "tool": "workspace_list_papers", "args_summary": {}, "row_count": 3}]
+    env = build_chat_envelope(
+        state=state,
+        answer="Здравствуйте!",
+        citations=[],
+        tool_trace=trace,  # type: ignore[arg-type]
+        answer_class_hint=None,
+    )
+    assert env.get("answer_class") == "chat"
+    assert env.get("inventory") is None

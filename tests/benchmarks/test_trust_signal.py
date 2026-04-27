@@ -321,6 +321,15 @@ def test_baseline_snapshot_idempotent(tmp_path: Path) -> None:
     assert a == b
 
 
+def test_chat_agent_contract_runtime_mode() -> None:
+    mode = detect_runtime_mode(
+        "chat_agent_contract",
+        {"run_metadata": {}},
+        [{"case_id": "x", "metrics": {"passed": True}}],
+    )
+    assert mode == "contract_verified"
+
+
 def test_unknown_member_fallbacks_to_live_with_warning() -> None:
     """A member_id not in _GOLD_SUBDIR_BY_MEMBER returns 'live' with an unknown_member_fallback_live warning."""
     from science_graphrag.benchmarks.trust_signal import _consistency_warnings
@@ -351,6 +360,7 @@ def test_compute_gate_trust_criteria_wires_judge_hard_block() -> None:
         references_resolution_family=empty,
         concept_topic_family=empty,
         agent_tools_family=empty,
+        chat_agent_family=empty,
         contradictions_family=empty,
     )
     assert "retrieval_judge_pilot" in crit["hard_block_individual_failures"]

@@ -27,6 +27,7 @@ from science_graphrag.agent.llm.chat import build_chat_model, ensure_messages_sa
 from science_graphrag.agent.tools import build_tool_registry
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
+from science_graphrag.observability.spans import add_span_event, chain_span
 
 ROUTE_FINISH = "finish"
 _GRAPH_INTENT_HINTS: tuple[str, ...] = (
@@ -45,6 +46,16 @@ _GRAPH_INTENT_HINTS: tuple[str, ...] = (
     "compare these papers",
     "which paper influenced",
 )
+
+
+def _turn_tool_policy(state: AgentState) -> str:
+    meta = state.get("metadata") or {}
+    tp = meta.get("turn_policy")
+    if isinstance(tp, dict):
+        pol = str(tp.get("tool_policy") or "").strip()
+        if pol in {"no_tools", "clarify", "allow_tools"}:
+            return pol
+    return "allow_tools"
 
 
 def _first_user_plain_question(state: AgentState) -> str:
@@ -96,6 +107,25 @@ def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
 
     def supervisor_node(state: AgentState) -> dict:
         budget = int(state.get("budget_remaining", settings.agent_max_tool_calls))
+        prior = list(state.get("routing_log") or [])
+        tool_policy = _turn_tool_policy(state)
+        if not prior and tool_policy in {"no_tools", "clarify"}:
+            meta = state.get("metadata") or {}
+            tp = meta.get("turn_policy") if isinstance(meta.get("turn_policy"), dict) else {}
+            reason = str(tp.get("reason") or "coordinator_gate")
+            return {
+                "current_specialist": WRITER_SPECIALIST,
+                "routing_log": [
+                    *prior,
+                    {
+                        "from": "supervisor",
+                        "to": WRITER_SPECIALIST,
+                        "reason": f"coordinator_gate:{reason}",
+                        "tool_policy": tool_policy,
+                        "budget_left": budget,
+                    },
+                ],
+            }
         if budget <= 0:
             return {
                 "current_specialist": WRITER_SPECIALIST,
@@ -105,10 +135,9 @@ def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
                 ],
             }
         if settings.agent_semantic_query_fast_route:
-            prior = list(state.get("routing_log") or [])
             if not prior:
                 uq = _first_user_plain_question(state)
-                if uq and not _graph_intent_heuristic(uq):
+                if tool_policy == "allow_tools" and uq and not _graph_intent_heuristic(uq):
                     return {
                         "current_specialist": RETRIEVAL_SPECIALIST,
                         "routing_log": [
@@ -121,10 +150,19 @@ def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
                         ],
                     }
         route_msgs = _build_supervisor_route_messages(state)
-        response = llm.invoke(ensure_messages_safe_for_generation(route_msgs))
+        with chain_span(
+            "agent.supervisor.route_llm",
+            {"agent.budget_remaining": budget},
+        ):
+            response = llm.invoke(ensure_messages_safe_for_generation(route_msgs))
         choice = str(response.content or "").strip().lower()
         if choice not in {RETRIEVAL_SPECIALIST, GRAPH_SPECIALIST, WRITER_SPECIALIST, ROUTE_FINISH}:
-            choice = RETRIEVAL_SPECIALIST
+            # Old unsafe default was retrieval; prefer writer on non-exact route tokens.
+            add_span_event(
+                "agent.supervisor.invalid_route_token",
+                {"token": choice[:80]},
+            )
+            choice = WRITER_SPECIALIST
         return {
             "current_specialist": choice,
             "routing_log": [

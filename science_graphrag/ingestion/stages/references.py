@@ -5,6 +5,7 @@ import re
 from science_graphrag.domain.models import ReferenceDraft
 from science_graphrag.ingestion.arxiv_ids import extract_arxiv_id_from_text, normalize_arxiv_id
 from science_graphrag.ingestion.dedup import normalize_doi
+from science_graphrag.ingestion.document_slices import find_reference_section_spans
 
 _REF_HEAD_RE = re.compile(
     r"^#{0,3}\s*(references|bibliography)\s*$",
@@ -25,6 +26,43 @@ _YEAR_RE = re.compile(r"\((?:19|20)\d{2}\)")
 _PLAIN_AUTHOR_LIST_LINE_RE = re.compile(
     r"^[A-Z][^,\n]{0,120},\s+[A-Z]",
 )
+_TITLE_CLEAN_RE = re.compile(r"^[*\"'\s]+|[*\"'\s]+$")
+_TITLE_TRAILING_PAGE_RE = re.compile(r"(?:\s+\d+(?:\s*,\s*\d+)*)+$")
+_TITLE_MARKDOWN_LINK_RE = re.compile(r"\[(\d+)\]")
+
+
+def _clean_reference_title(text: str | None) -> str | None:
+    s = str(text or "").strip()
+    if not s:
+        return None
+    s = _TITLE_MARKDOWN_LINK_RE.sub("", s)
+    s = _TITLE_TRAILING_PAGE_RE.sub("", s).strip(" .,;:-")
+    s = _TITLE_CLEAN_RE.sub("", s).strip(" .,;:-")
+    if len(s) < 3:
+        return None
+    return s[:400]
+
+
+def _extract_reference_title(raw: str) -> str | None:
+    text = " ".join(str(raw or "").split()).strip()
+    if not text:
+        return None
+    protected = re.sub(r"\b([A-Z])\.", r"\1<prd>", text)
+    protected = re.sub(r"(?<=-)([A-Z])\.", r"\1<prd>", protected)
+    protected = re.sub(r"\bet al\.", "et al<prd>", protected, flags=re.IGNORECASE)
+    segments = [
+        seg.replace("<prd>", ".").strip()
+        for seg in re.split(r"\.\s+", protected)
+        if seg.strip()
+    ]
+    if not segments:
+        return None
+    if len(segments) == 1:
+        return _clean_reference_title(segments[0])
+    first = segments[0]
+    if re.search(r"\b(et al|and|&)\b", first, re.IGNORECASE) or first.count(",") >= 1:
+        return _clean_reference_title(segments[1])
+    return _clean_reference_title(first)
 
 
 def _looks_like_plain_author_list_line(line: str) -> bool:
@@ -64,11 +102,14 @@ def _looks_like_new_reference(line: str) -> bool:
 
 
 def _reference_lines(text: str) -> list[str]:
-    m = _REF_HEAD_RE.search(text)
-    if not m:
+    spans = find_reference_section_spans(text)
+    if not spans:
         return []
-    tail = text[m.end() :]
-    return [ln.strip() for ln in tail.split("\n") if ln.strip()]
+    lines: list[str] = []
+    for start, end in spans:
+        block = text[start:end]
+        lines.extend(ln.strip() for ln in block.split("\n") if ln.strip())
+    return lines
 
 
 def split_reference_entries(text: str) -> list[str]:
@@ -117,9 +158,7 @@ def extract_references(text: str) -> list[ReferenceDraft]:
         arxiv_id = extract_arxiv_id_from_text(raw)
         if not arxiv_id:
             arxiv_id = normalize_arxiv_id(raw)
-        title = None
-        if doi:
-            title = raw.split(doi)[0].strip(" .-")[:400] or None
+        title = _extract_reference_title(raw)
         refs.append(
             ReferenceDraft(
                 raw_reference=raw[:4000],

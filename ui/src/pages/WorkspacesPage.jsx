@@ -2,9 +2,8 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { InlineNotice, useFeedback } from "../components/feedback/index.js";
 import Chip from "@mui/material/Chip";
-import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
+import { InlineNotice, useFeedback } from "../components/feedback/index.js";
 
 import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
 import PostAddOutlinedIcon from "@mui/icons-material/PostAddOutlined";
@@ -12,7 +11,6 @@ import RestoreOutlinedIcon from "@mui/icons-material/RestoreOutlined";
 
 import { CursorIconAction } from "../components/common/index.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
-import WorkIdGlossaryHint from "../components/layout/WorkIdGlossaryHint.jsx";
 import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
 import { useI18n } from "../i18n/useI18n.js";
 import { formatResearchApiError, getWorks } from "../services/researchApi.js";
@@ -31,7 +29,6 @@ import {
 import IndexedWorksBrowser from "./WorkspacesPage/IndexedWorksBrowser.jsx";
 import WorkspaceActionBar from "./WorkspacesPage/WorkspaceActionBar.jsx";
 import WorkspaceCollectionPanel from "./WorkspacesPage/WorkspaceCollectionPanel.jsx";
-import WorkspaceOverviewStats from "./WorkspacesPage/WorkspaceOverviewStats.jsx";
 import WorkspaceRecentPanel from "./WorkspacesPage/WorkspaceRecentPanel.jsx";
 
 const PAGE_SIZE = 40;
@@ -47,7 +44,7 @@ export default function WorkspacesPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [sortBy, setSortBy] = useState("api");
-  const [viewDensity, setViewDensity] = useState("cards");
+  const [viewDensity, setViewDensity] = useState("compact");
   const [semanticFilter, setSemanticFilter] = useState("all");
   const [yearMin, setYearMin] = useState("");
   const [yearMax, setYearMax] = useState("");
@@ -260,40 +257,6 @@ export default function WorkspacesPage() {
 
   const canLoadMore = !loading && items.length < total;
   const tw = targetWorkspaceId;
-  const totalAttachedWorks = useMemo(
-    () => workspaces.reduce((sum, ws) => sum + (Array.isArray(ws.work_ids) ? ws.work_ids.length : 0), 0),
-    [workspaces],
-  );
-  const activeTargetWorkspace = useMemo(
-    () => workspaces.find((ws) => ws.id === targetWorkspaceId) || null,
-    [workspaces, targetWorkspaceId],
-  );
-  const overviewStats = useMemo(
-    () => [
-      {
-        id: "workspaces",
-        kind: "workspaces",
-        label: t("workspaces.overview.workspaces.label"),
-        value: t("workspaces.overview.workspaces.value", { count: workspaces.length }),
-        hint: t("workspaces.overview.workspaces.hint"),
-      },
-      {
-        id: "target",
-        kind: "target",
-        label: t("workspaces.overview.target.label"),
-        value: activeTargetWorkspace ? activeTargetWorkspace.name || activeTargetWorkspace.id : t("workspaces.stats.targetNone"),
-        hint: activeTargetWorkspace ? t("workspaces.overview.target.hintReady") : t("workspaces.overview.target.hintEmpty"),
-      },
-      {
-        id: "recent",
-        kind: "recent",
-        label: t("workspaces.overview.recent.label"),
-        value: t("workspaces.overview.recent.value", { count: recentWorks.length }),
-        hint: continueTarget ? t("workspaces.overview.recent.hintContinue") : t("workspaces.overview.recent.hintEmpty"),
-      },
-    ],
-    [activeTargetWorkspace, continueTarget, recentWorks.length, t, workspaces.length],
-  );
 
   function renderWorkRow(w) {
     const wsUrl = tw ? buildWorkspacePath(w.work_id, "overview", { workspaceId: tw }) : buildWorkspacePath(w.work_id);
@@ -359,9 +322,6 @@ export default function WorkspacesPage() {
           {w.work_id}
         </Typography>
         <Box sx={{ mt: 0.9, display: "flex", flexWrap: "wrap", gap: 0.75 }}>
-          {w.year != null ? (
-            <Chip label={t("workspaces.chip.year", { year: w.year })} size="small" sx={{ height: 22, fontSize: "0.6875rem" }} />
-          ) : null}
           {w.has_semantic_layer ? (
             <Chip label={t("workspaces.chip.semanticReady")} size="small" sx={{ height: 22, fontSize: "0.6875rem" }} />
           ) : null}
@@ -395,23 +355,9 @@ export default function WorkspacesPage() {
         eyebrow={t("workspaces.header.eyebrow")}
         title={t("workspaces.header.title")}
         description={
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            <Typography sx={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.66)", lineHeight: 1.55 }}>
-              {t("workspaces.header.desc")}
-            </Typography>
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
-              <Chip
-                icon={<FolderOpenOutlinedIcon sx={{ fontSize: "0.95rem !important" }} />}
-                label={t("workspaces.header.chipPrimary")}
-                size="small"
-                sx={{ height: 24, fontSize: "0.6875rem" }}
-              />
-              <Chip label={t("workspaces.header.chipSecondary")} size="small" sx={{ height: 24, fontSize: "0.6875rem" }} />
-            </Box>
-            <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.48)", lineHeight: 1.55 }}>
-              <WorkIdGlossaryHint variant="corpus" />
-            </Typography>
-          </Box>
+          <Typography sx={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.62)", lineHeight: 1.55 }}>
+            {t("workspaces.header.desc")}
+          </Typography>
         }
         actions={
           continueTarget ? (
@@ -436,19 +382,15 @@ export default function WorkspacesPage() {
         onCreateWorkspace={handleCreateWorkspace}
         targetWorkspaceId={targetWorkspaceId}
         onTargetWorkspaceChange={setTargetWorkspaceId}
-        totalAttachedWorks={totalAttachedWorks}
         exportWorkspacesJson={exportWorkspacesJson}
         onImportClick={() => document.getElementById("workspace-import-input")?.click()}
       />
 
-      <WorkspaceOverviewStats stats={overviewStats} />
-
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 1.5, mb: 2.5 }}>
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "minmax(0, 1.65fr) minmax(280px, 1fr)" }, gap: 1.5, mb: 2.5 }}>
         <WorkspaceCollectionPanel
           workspaces={workspaces}
           wsLoading={wsLoading}
           targetWorkspaceId={targetWorkspaceId}
-          onTargetWorkspaceChange={setTargetWorkspaceId}
           onRenameWorkspace={handleRenameWorkspace}
           onDeleteWorkspace={handleDeleteWorkspace}
         />

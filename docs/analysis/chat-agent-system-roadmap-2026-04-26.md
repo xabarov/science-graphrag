@@ -755,6 +755,8 @@ Research chat быстро упирается в:
 
 **Остаётся вне этого slice:** полноценный coordinator-triggered compaction, LLM-capsules, full compact boundary как отдельный продуктовый слой; CH6–CH7; отдельный тяжёлый nightly runner уровня `eval/agent_tools` для chat (сейчас — contract runner + live gate).
 
+**Update 2026-04-27 — Coordinator Gate v0 + target direction:** после инцидента «`привет` → список статей» добавлен первый явный coordinator-seam: `TurnPolicy` / `classify_turn_policy` в `science_graphrag/agent/coordination/turn_policy.py`, `coordinator_gate` в `tool_trace`, `intent_classified` в SSE/debug events, `chat` / `clarification` answer classes, no-tools/direct writer path и safe fallback `invalid router output -> writer_agent` вместо `retrieval_agent`. Это **не целевое состояние intent routing**: текущие regex/rule hints считаются временным guardrail v0 для очевидных случаев (greeting/meta/ambiguous short turn), а не попыткой покрыть язык списками фраз. Целевой следующий шаг — сохранить интерфейс `TurnPolicy`, но заменить keyword-heavy реализацию на hybrid/LLM `TurnPolicyClassifier` со structured output, confidence, eval-набором и safe fallback to clarification.
+
 ### Wave CH1 — Contracts and answer classes
 
 **Статус:** **DONE (Wave A, 2026-04-26)**; **дополнено Wave B (2026-04-26)** — см. комментарии ниже.
@@ -867,6 +869,7 @@ Research chat быстро упирается в:
 - `writer_agent`: вызов `shortlist_tools_for_specialist` + `debug_events` с `tool_search_result` (для `writer_agent` — `reason: writer_minimal_set`, один `final_answer`).
 - **Анти-дрейф:** `tests/test_tool_manifest_sync.py` — имена из `build_tool_registry` совпадают с `TOOL_MANIFEST` (14 тулов; обновлён `tests/agent/test_tools_registry.py`).
 - `test_tool_search.py` расширен (writer skip, graph/retrieval edge cases). Магические пороги в `tool_search.py` **не** вынесены в конфиг (остаётся долгом).
+- **Wave C note (2026-04-27):** введён `TurnPolicy` как coordinator-level contract перед specialist routing. Это отдельный уровень от `tool_search`: он решает, можно ли вообще запускать tools на текущем turn (`no_tools` / `clarify` / `allow_tools`). Rule/regex implementation внутри `turn_policy.py` — временный v0 guardrail; не расширять его как основной способ понимания user intent. Следующий этап должен заменить его на hybrid/LLM classifier, сохранив контракт и trace/SSE vocabulary.
 
 **Тесты:** `tests/test_tool_search.py`, `tests/test_tool_manifest_sync.py`.
 
@@ -1019,11 +1022,13 @@ Research chat быстро упирается в:
 3. failure policies and warnings;
 4. nightly smoke on selected researcher queries;
 5. UX polish stream events / warnings / partial answers.
+6. **Coordinator intent evals:** отдельный набор кейсов для `TurnPolicy` / classifier (`small_talk`, `meta`, `ambiguous`, `inventory`, `quote`, `relation`, `bibliography`, `ideation`) с обязательными проверками `tool_policy`, `answer_class`, `route_hint`, отсутствия tool calls на `no_tools` и safe fallback при невалидном structured output.
 
 **Acceptance:**
 1. видно, где agent hallucinated or lacked evidence;
 2. honest downgrade rules работают;
-3. rollout можно включать по feature flag.
+3. rollout можно включать по feature flag;
+4. coordinator gate не деградирует в словарь ключевых фраз: новые языковые варианты закрываются evals + classifier behavior, а не бесконечным расширением regex.
 
 ---
 
@@ -1038,18 +1043,20 @@ Research chat быстро упирается в:
 3. **CH3** tool search
 4. **CH4** multi-turn state
 5. **CH5** compression
-6. **CH6** specialist split
-7. **CH8** bibliography
-8. **CH7** grounded ideation
-9. **CH9** eval hardening
+6. **CH5.5 / Coordinator Gate hybridization**: заменить `TurnPolicy` v0 regex/rules на hybrid/LLM classifier with structured output + evals, сохранив no-tools/direct writer path and safe fallbacks
+7. **CH6** specialist split
+8. **CH8** bibliography
+9. **CH7** grounded ideation
+10. **CH9** eval hardening
 
 Почему так:
 
 1. без CH1-CH3 система останется "чатом вокруг старых tools";
 2. без CH4-CH5 не получится длинный research dialogue;
-3. bibliography легче делать после catalog/retrieval tool layer;
-4. ideation стоит поднимать только когда уже есть grounding and memory;
-5. eval/hardening должны сопровождать всё, но как отдельная closing wave удобно собрать в CH9.
+3. без hybrid coordinator gate новые specialists будут получать те же ложные входы (`small_talk` / `ambiguous` / meta turns) и воспроизводить старый дефект на новом уровне;
+4. bibliography легче делать после catalog/retrieval tool layer;
+5. ideation стоит поднимать только когда уже есть grounding and memory;
+6. eval/hardening должны сопровождать всё, но как отдельная closing wave удобно собрать в CH9.
 
 ---
 
@@ -1113,6 +1120,10 @@ Research chat быстро упирается в:
 
 **Ideation и bibliography должны быть встроены в общий chat runtime**, а не жить полностью отдельно.
 
+### Decision G
+
+**Coordinator — first-class runtime role, но не keyword dictionary.** `TurnPolicy` остаётся стабильным интерфейсом (`conversation_intent`, `answer_class`, `tool_policy`, `route_hint`, `reason/confidence`), а regex/rule implementation допускается только как narrow deterministic guardrail. Целевой coordinator — hybrid: deterministic prefilters for obvious cases, structured LLM classifier for ambiguous/research intent, eval-governed rollout, safe fallback to clarification rather than retrieval.
+
 ---
 
 ## 15. Open questions
@@ -1126,6 +1137,7 @@ Research chat быстро упирается в:
 2. **Контракт thread-aware:** канон — **`thread_id` + опциональный `history_digest`** (клиентский компакт последних тёрнов) + серверный **`session_summary`** из backend store (**Wave B:** in-process; **Wave Next:** опционально Redis при `SCIENCE_GRAPHRAG_AGENT_SESSION_MEMORY_BACKEND=redis`); полная history по-прежнему не шлётся целиком.
 3. **Bibliography:** по-прежнему **детерминированный** GOST + опциональные поля карточки; LLM-fallback не вводился.
 4. **Typed payloads:** в UI и envelope используются **`inventory`, `quote_candidates`, `bibliography`**; **`relation_trace`** в envelope пока не заполняется.
+5. **Coordinator gate:** `TurnPolicy` v0 уже отделил no-tools/clarify/allow-tools от specialist routing, но реализация на regex/rules не должна становиться постоянной. Открыто: structured-output schema, confidence threshold, fallback policy, cost/latency model and eval gates for hybrid/LLM classifier.
 
 ### Can wait until CH4+
 
@@ -1145,5 +1157,6 @@ Research chat быстро упирается в:
 3. ~~tool manifest/tool search;~~ **сделано (Wave A / CH3)**; ~~writer shortlist + manifest sync test~~ **Wave B**
 4. ~~multi-turn + session memory (v1);~~ **сделано (Wave B / CH4 v1 in-process)**; ~~optional Redis persistence~~ **сделано (Wave Next)** — e2e против реального LLM без моков — дальше
 5. ~~CH5 compaction policy v1 (kinds, capsule, boundary hints)~~ **сделано (Wave Next)**; полный CH5 (LLM capsules, boundary audit, coordinator triggers) — **следующий крупный шаг**
+6. **Coordinator Gate hybridization:** `TurnPolicy` v0 уже создал нужный seam, но следующий практический шаг — убрать keyword-heavy intent routing из роли основного механизма: добавить structured-output classifier, confidence, eval runner and rollout flag, сохранив no-tools writer path and safe fallback to clarification.
 
 Это даст работающий research chat evolution path, сохраняя совместимость с уже существующими `LangGraph`, `SSE`, `tool_trace` и текущим UI чата.

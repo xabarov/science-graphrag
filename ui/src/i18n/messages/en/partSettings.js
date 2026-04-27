@@ -46,6 +46,9 @@ export default {
   "settings.ingestion.nginxDirective": "client_max_body_size",
   "settings.ingestion.maxFileSizeLabel": "Max file size (MB)",
   "settings.ingestion.rangeHint": "Allowed range: 1–2048 MB. Default from environment applies until you save here.",
+  "settings.ingestion.claimsToggleLabel": "Extract claims during ingest",
+  "settings.ingestion.claimsToggleHint":
+    "When enabled, each new ingest run also writes Claim/Evidence rows to the graph and claims vector store.",
   "settings.ingestion.saveSaving": "Saving…",
   "settings.ingestion.saveButton": "Save ingestion settings",
   "settings.ingestion.saveError": "Failed to save ingestion settings.",

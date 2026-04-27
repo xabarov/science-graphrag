@@ -191,21 +191,33 @@ class SettingsService:
             persisted_upload_mb = None
         if persisted_upload_mb is not None:
             persisted_upload_mb = max(1, min(2048, persisted_upload_mb))
+        raw_claims_enabled = ingestion_cfg.get("claims_extraction_enabled")
+        if isinstance(raw_claims_enabled, bool):
+            persisted_claims_enabled = raw_claims_enabled
+        else:
+            persisted_claims_enabled = None
         resolved_upload_mb = (
             persisted_upload_mb
             if persisted_upload_mb is not None
             else int(base_settings.workspace_upload_max_file_size_mb)
         )
         resolved_upload_mb = max(1, min(2048, resolved_upload_mb))
+        resolved_claims_enabled = (
+            persisted_claims_enabled
+            if persisted_claims_enabled is not None
+            else bool(base_settings.claims_extraction_enabled)
+        )
 
         ingestion_snapshot = {
             "max_file_size_mb": resolved_upload_mb,
+            "claims_extraction_enabled": resolved_claims_enabled,
             "status": {
                 "last_updated_at": ingestion_meta.get("last_updated_at"),
                 "last_updated_by": ingestion_meta.get("last_updated_by"),
             },
             "effective": {
                 "resolved_max_file_size_mb": resolved_upload_mb,
+                "resolved_claims_extraction_enabled": resolved_claims_enabled,
             },
         }
 
@@ -283,6 +295,7 @@ class SettingsService:
         if "enabled" in llm:
             non_secret_overrides["extraction_llm_enabled"] = bool(llm["enabled"])
         non_secret_overrides["workspace_upload_max_file_size_mb"] = resolved_upload_mb
+        non_secret_overrides["claims_extraction_enabled"] = resolved_claims_enabled
 
         return SettingsSnapshot(
             non_secret_overrides=non_secret_overrides,
@@ -297,7 +310,7 @@ class SettingsService:
     def get_schema(self) -> dict[str, Any]:
         """Return a UI-friendly schema so future sections can extend the page safely."""
         return {
-            "version": 2,
+            "version": 3,
             "sections": [
                 {
                     "id": "llm",
@@ -330,6 +343,11 @@ class SettingsService:
                             "required": True,
                             "min": 1,
                             "max": 2048,
+                        },
+                        {
+                            "id": "claims_extraction_enabled",
+                            "type": "boolean",
+                            "required": True,
                         },
                     ],
                 },
@@ -372,9 +390,9 @@ class SettingsService:
 
     def update_ingestion_settings(
         self,
-        *,
         base_settings: Settings,
         max_file_size_mb: int,
+        claims_extraction_enabled: bool,
         actor: str,
     ) -> SettingsSnapshot:
         """Persist workspace upload size limit (megabytes per file)."""
@@ -385,6 +403,7 @@ class SettingsService:
             ingestion.update(
                 {
                     "max_file_size_mb": bounded,
+                    "claims_extraction_enabled": bool(claims_extraction_enabled),
                     "_meta": {
                         "last_updated_at": _now_iso(),
                         "last_updated_by": actor,

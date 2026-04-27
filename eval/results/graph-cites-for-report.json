@@ -1,0 +1,98 @@
+{
+  "inputs": {
+    "graph_suite_json": "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/graph-suite-api-latest.json"
+  },
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:c5320748bf3712047f1f"
+  },
+  "aggregation": "macro_mean_over_cases_with_has_expectations_true",
+  "n_cases_in_suite": 11,
+  "n_cases_with_graph_expectations": 11,
+  "macro_mean": {
+    "cited_arxiv_precision": 0.7837465564738292,
+    "cited_arxiv_recall": 0.9090909090909091,
+    "cited_arxiv_f1": 0.8212809917355371
+  },
+  "per_case": [
+    {
+      "case_id": "arxiv_refs_heavy",
+      "cited_arxiv_precision": 0.3333333333333333,
+      "cited_arxiv_recall": 1.0,
+      "cited_arxiv_f1": 0.5,
+      "contract_passed": null
+    },
+    {
+      "case_id": "centernet_realpdf",
+      "cited_arxiv_precision": 0.8333333333333334,
+      "cited_arxiv_recall": 1.0,
+      "cited_arxiv_f1": 0.9090909090909091,
+      "contract_passed": null
+    },
+    {
+      "case_id": "detr_realpdf",
+      "cited_arxiv_precision": 0.45454545454545453,
+      "cited_arxiv_recall": 1.0,
+      "cited_arxiv_f1": 0.625,
+      "contract_passed": null
+    },
+    {
+      "case_id": "doi_refs_heavy",
+      "cited_arxiv_precision": 1.0,
+      "cited_arxiv_recall": 1.0,
+      "cited_arxiv_f1": 1.0,
+      "contract_passed": null
+    },
+    {
+      "case_id": "efficientdet_realpdf",
+      "cited_arxiv_precision": 1.0,
+      "cited_arxiv_recall": 1.0,
+      "cited_arxiv_f1": 1.0,
+      "contract_passed": null
+    },
+    {
+      "case_id": "fcos_realpdf",
+      "cited_arxiv_precision": 1.0,
+      "cited_arxiv_recall": 1.0,
+      "cited_arxiv_f1": 1.0,
+      "contract_passed": null
+    },
+    {
+      "case_id": "noisy_layout_stub",
+      "cited_arxiv_precision": 0.0,
+      "cited_arxiv_recall": 0.0,
+      "cited_arxiv_f1": 0.0,
+      "contract_passed": null
+    },
+    {
+      "case_id": "retinanet_focal_realpdf",
+      "cited_arxiv_precision": 1.0,
+      "cited_arxiv_recall": 1.0,
+      "cited_arxiv_f1": 1.0,
+      "contract_passed": null
+    },
+    {
+      "case_id": "ssd_realpdf",
+      "cited_arxiv_precision": 1.0,
+      "cited_arxiv_recall": 1.0,
+      "cited_arxiv_f1": 1.0,
+      "contract_passed": null
+    },
+    {
+      "case_id": "yolov1",
+      "cited_arxiv_precision": 1.0,
+      "cited_arxiv_recall": 1.0,
+      "cited_arxiv_f1": 1.0,
+      "contract_passed": null
+    },
+    {
+      "case_id": "yolov3_realpdf",
+      "cited_arxiv_precision": 1.0,
+      "cited_arxiv_recall": 1.0,
+      "cited_arxiv_f1": 1.0,
+      "contract_passed": null
+    }
+  ]
+}

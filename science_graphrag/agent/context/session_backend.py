@@ -253,6 +253,14 @@ def get_session_memory_backend() -> SessionMemoryBackend:
     return _backend
 
 
+def session_memory_backend_kind() -> str:
+    """Return ``redis`` or ``memory`` for /health and ops (after ``configure_session_memory_backend``)."""
+    be = get_session_memory_backend()
+    if isinstance(be, RedisSessionMemoryBackend):
+        return "redis"
+    return "memory"
+
+
 def set_session_memory_backend(backend: SessionMemoryBackend | None) -> None:
     """Install a custom backend, or reset to a fresh in-memory instance (tests)."""
     global _backend

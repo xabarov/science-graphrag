@@ -168,6 +168,36 @@ science-graphrag-graph-benchmark tests/fixtures/benchmarks/layer1 --suite --tier
 План и контракт `graph_expectations`: [docs/benchmarks/graph-level-eval-v1.md](../docs/benchmarks/graph-level-eval-v1.md).
 Runner возвращает non-zero exit, если `metrics.contract.passed=false`.
 
+**Сводка CITES для NLP-отчёта** (macro P/R/F1 по suite JSON):
+
+```bash
+.venv/bin/python scripts/report_graph_cites_metrics.py
+```
+
+## Relations (Neo4j semantic edges)
+
+После полного ingest сравнивает эталон `semantic_gold.json` с фактическими рёбрами
+`:USES_METHOD` / `:EVALUATED_ON` в Neo4j (тот же скорер, что у layer-2, предсказания
+читаются из графа). Пилотный тир `relations_pilot` (3 кейса) в
+`tests/fixtures/benchmarks/layer2/case_tiers.json`.
+
+```bash
+science-graphrag-relations-benchmark tests/fixtures/benchmarks/layer2 --suite --tier relations_pilot \
+  --json-out eval/results/relations-neo4j-pilot-suite.json
+.venv/bin/python scripts/report_relation_graph_metrics.py --relations-suite-json eval/results/relations-neo4j-pilot-suite.json
+```
+
+Без Neo4j-артефакта `report_relation_graph_metrics.py` усредняет те же поля из layer-2 nightly JSON
+(числа совпадают с §4.0 при успешной проекции в граф).
+
+## Report aggregation (extraction + claims diagnostics)
+
+```bash
+.venv/bin/python scripts/report_extraction_entity_metrics.py
+.venv/bin/python scripts/report_claims_paraphrase_diagnostics.py
+.venv/bin/python scripts/enrich_multimodel_summary_for_report.py
+```
+
 ## Layer-2 semantic (Method / Dataset)
 
 - Код: `eval/layer2/`.

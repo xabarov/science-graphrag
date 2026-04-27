@@ -17,6 +17,8 @@ ANSWER_CLASSES = frozenset(
         "ideation",
         "bibliography_export",
         "synthesis",
+        "chat",
+        "clarification",
     }
 )
 
@@ -174,11 +176,19 @@ def build_chat_envelope(
 ) -> dict[str, Any]:
     """Build optional envelope fields for API v2."""
     question = _last_user_question(state)
+    meta = state.get("metadata") or {}
+    tp = meta.get("turn_policy") if isinstance(meta.get("turn_policy"), dict) else {}
+    tool_policy = str(tp.get("tool_policy") or "allow_tools")
     names = {str(t.get("tool") or "") for t in tool_trace if isinstance(t, dict)}
     names.discard("")
     from_trace = infer_class_from_trace(names)
-    answer_class = from_trace or heuristic_answer_class(question, answer_class_hint)
-    typed = collect_typed_payloads(state)
+    if tool_policy in {"no_tools", "clarify"}:
+        suggested = str(tp.get("suggested_answer_class") or "chat")
+        answer_class = suggested if suggested in ANSWER_CLASSES else "chat"
+        typed: dict[str, Any] = {}
+    else:
+        answer_class = from_trace or heuristic_answer_class(question, answer_class_hint)
+        typed = collect_typed_payloads(state)
     warnings: list[str] = []
     if not (state.get("workspace_id") or "").strip():
         warnings.append("no_workspace")

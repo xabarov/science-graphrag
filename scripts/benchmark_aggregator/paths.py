@@ -15,6 +15,8 @@ DEFAULT_REFERENCE = (
 # Canonical nightly L1 artifact for aggregate + report tooling (full suite JSON).
 DEFAULT_LAYER1_NIGHTLY = "eval/results/current-llm-layer1-nightly-heavy-suite.json"
 DEFAULT_LAYER2_NIGHTLY = "eval/results/current-llm-layer2-nightly-semantic-suite.json"
+# Graph-level suite JSON (Neo4j CITES vs gold); produced by ``science-graphrag-graph-benchmark --suite``.
+DEFAULT_GRAPH_SUITE = "eval/results/graph-suite-api-latest.json"
 DEFAULT_BASELINE_LAYER1 = "eval/results/baseline-llm-layer1-nightly-heavy-suite.json"
 DEFAULT_BASELINE_LAYER2 = "eval/results/baseline-llm-layer2-nightly-semantic-suite.json"
 
@@ -50,6 +52,9 @@ DEFAULT_REFERENCES_RESOLUTION_GRAPH = "eval/results/current-references-resolutio
 DEFAULT_CONCEPT_TOPIC_MINI_SUITE = "eval/results/current-concept-topic-mini.json"
 
 DEFAULT_CONTRADICTIONS_V1_MINI_SUITE = "eval/results/current-contradictions-v1-mini.json"
+
+# Research chat v2 contract (no LLM); produced/maintained alongside ``python -m eval.chat_agent``.
+DEFAULT_CHAT_AGENT_CONTRACT = "eval/results/current-chat-agent-contract.json"
 
 SUPPLEMENTARY_RETESTS = (
     "eval/results/retest-centernet-after-gold-fix.json",

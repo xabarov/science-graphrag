@@ -186,7 +186,7 @@ class Settings(BaseSettings):
         description="Number of reference entries per LLM batch when splitting bibliography extraction.",
     )
     extraction_llm_reference_titles_enabled: bool = Field(
-        default=False,
+        default=True,
         description="If true, ask LLM to extract reference titles and years in addition to DOI/arXiv ids.",
     )
     extraction_llm_references_merge_policy: str = Field(
@@ -263,7 +263,7 @@ class Settings(BaseSettings):
     )
 
     claims_extraction_enabled: bool = Field(
-        default=False,
+        default=True,
         description=(
             "If true, run LLM claims extraction after semantic layer and persist Claim/Evidence "
             "to Neo4j + Qdrant claims collection (Wave O)."
@@ -351,13 +351,45 @@ class Settings(BaseSettings):
             "after validating your scenario mix."
         ),
     )
-    agent_step_timeout_seconds: float = Field(default=30.0, ge=1.0, le=180.0)
+    agent_step_timeout_seconds: float = Field(
+        default=120.0,
+        ge=1.0,
+        le=900.0,
+        description=(
+            "Wall-clock seconds for one full LangGraph agent turn (sync invoke or SSE stream "
+            "collection). Not per-node; see runbook. Default 120s allows multi-tool research turns."
+        ),
+    )
     agent_supervisor_recursion_limit: int = Field(default=32, ge=4, le=128)
     agent_chat_temperature: float = Field(default=0.0, ge=0.0, le=1.0)
     agent_chat_max_tokens: int = Field(default=1024, ge=64, le=8192)
     agent_rule_tool_search_enabled: bool = Field(
         default=True,
         description="Wave A CH3: rule-based shortlist before bind_tools for specialist subgraphs.",
+    )
+    agent_turn_policy_classifier: str = Field(
+        default="rules_v0",
+        description=(
+            "Coordinator TurnPolicy source: `rules_v0` (regex/heuristic only), `hybrid_v1` "
+            "(narrow deterministic + LLM for fuzzy turns when LLM enabled), `llm_v1` "
+            "(LLM for all non-trivial turns except explicit research fast-path)."
+        ),
+    )
+    agent_turn_policy_llm_enabled: bool = Field(
+        default=False,
+        description="When true with hybrid_v1/llm_v1, run structured LLM turn classifier (requires API key).",
+    )
+    agent_turn_policy_confidence_threshold: float = Field(
+        default=0.65,
+        ge=0.0,
+        le=1.0,
+        description="Minimum classifier confidence to accept LLM turn policy over rules_v0 fuzzy branch.",
+    )
+    agent_turn_policy_classifier_timeout_seconds: float = Field(
+        default=12.0,
+        ge=1.0,
+        le=120.0,
+        description="HTTP timeout for coordinator LLM classifier calls.",
     )
     agent_session_memory_backend: str = Field(
         default="memory",
