@@ -27,6 +27,7 @@ export default function BenchmarkLauncherPanel({
   onModelsLoaded,
   onToggleCase,
   onStartRun,
+  startRunDisabled = false,
 }) {
   const tk = useTheme().appTokens;
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -167,7 +168,10 @@ export default function BenchmarkLauncherPanel({
       {pendingSummary ? <BenchmarkRunConfigSummary summary={pendingSummary} title="Pending execution config" /> : null}
 
       <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-        <CursorPrimaryButton disabled={isGraphCatalog || !canRunSelected || validationErrors?.length > 0} onClick={onStartRun}>
+        <CursorPrimaryButton
+          disabled={startRunDisabled || isGraphCatalog || !canRunSelected || validationErrors?.length > 0}
+          onClick={onStartRun}
+        >
           Start {familyPrefs.launcherScope === "selected" ? `selected (${familyPrefs.selectedCaseIds?.length || 0})` : familyPrefs.launcherScope}
         </CursorPrimaryButton>
       </Box>

@@ -46,6 +46,7 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Issue:** The benchmark surface currently mixes launcher, trust gate, results history, compare, cases catalog, and workbench in one implementation-first shell (`layer1/layer2/graph`, trust-first hero). This makes model/method comparison and report-aligned experiment reading harder than necessary.
 - **Proposal:** Reframe the UI around `experiment -> variant -> analysis`: top-level surfaces `Overview / Experiments / Run Lab / Analysis / Cases`; demote trust/go-no-go to secondary diagnostics; add experiment catalog + grouped execution + analysis matrix; keep raw fixtures/JSON as secondary drill-down. Companion analysis: `docs/analysis/benchmark-panel-research-redesign-plan-2026-04-27.md`.
 - **Acceptance:** A user can launch one experiment or a grouped compare session, read benchmark-type-aware metrics, and drill from aggregate deltas to case evidence without navigating through trust/admin-first tabs.
+- **Progress (2026-04-27):** Phase 2 slice landed in UI: `experiment` / `runMode` / `pack` query handoff, catalog CTAs into Run Lab, client-side grouped batch (`benchmarkRunGroup.js` + `useRunTab.js`), `benchmark:lastRunGroup` / recent compare setups in `localStorage`, Analysis handoff via `run` + `runs` query. **Follow-up:** optional backend `run-group` API if frontend orchestration becomes heavy; Phase 3 matrix summaries on Analysis.
 - **Raised:** 2026-04-27
 
 ### [OPEN] Workspace graph — canvas perf for very large payloads (10k+ edges)

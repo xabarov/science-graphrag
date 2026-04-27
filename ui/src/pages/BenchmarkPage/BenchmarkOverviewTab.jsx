@@ -18,7 +18,7 @@ import {
 
 /**
  * @param {object} props
- * @param {(opts: { tabIndex: number, analysisView?: "results"|"compare"|"workbench" }) => void} props.onNavigate
+ * @param {(opts: { tabIndex: number, analysisView?: "results"|"compare"|"workbench", experimentId?: string | null, runMode?: "single"|"grouped", packId?: string | null }) => void} props.onNavigate
  * @param {(runId: string, caseId?: string | null) => void} props.onOpenWorkbench
  */
 export default function BenchmarkOverviewTab({ onNavigate, onOpenWorkbench }) {
@@ -102,15 +102,14 @@ export default function BenchmarkOverviewTab({ onNavigate, onOpenWorkbench }) {
               <Typography sx={{ fontSize: "0.68rem", color: tk.text.muted }}>{t(compareModeLabelKey(exp.recommendedCompareMode))}</Typography>
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.5 }}>
                 {exp.runnableSurface === "ui" && exp.uiFamily ? (
-                  <CursorSmallButton
-                    size="small"
-                    onClick={() => {
-                      onNavigate({ tabIndex: 2 });
-                    }}
-                  >
+                  <CursorSmallButton size="small" onClick={() => onNavigate({ tabIndex: 2, experimentId: exp.id })}>
                     {t("benchmarkPage.overview.openRunLab")}
                   </CursorSmallButton>
-                ) : null}
+                ) : (
+                  <Typography sx={{ fontSize: "0.68rem", color: tk.text.muted }}>
+                    {t("benchmarkPage.experiments.notRunnableFromUi")}
+                  </Typography>
+                )}
                 <CursorSmallButton size="small" onClick={() => onNavigate({ tabIndex: 3, analysisView: "results" })}>
                   {t("benchmarkPage.overview.openAnalysis")}
                 </CursorSmallButton>

@@ -20,7 +20,12 @@ import BenchmarkOverviewTab from "./BenchmarkOverviewTab.jsx";
 import CasesTab from "./CasesTab.jsx";
 import RunTab from "./RunTab.jsx";
 
-import { mergeBenchmarkTabIntoSearchParams, normalizeAnalysisView, parseBenchmarkTabQuery } from "./experimentCatalog.js";
+import {
+  mergeBenchmarkTabIntoSearchParams,
+  mergeRunLabQueryIntoSearchParams,
+  normalizeAnalysisView,
+  parseBenchmarkTabQuery,
+} from "./experimentCatalog.js";
 
 export default function BenchmarkPage() {
   const { t } = useI18n();
@@ -72,14 +77,38 @@ export default function BenchmarkPage() {
         setAnalysisView(nextAv);
       }
       setTabIdx(nextIdx);
-      const merged = mergeBenchmarkTabIntoSearchParams(
+      let merged = mergeBenchmarkTabIntoSearchParams(
         searchParams,
         nextIdx,
         nextIdx === 3 ? nextAv : "results",
       );
+      if ("experimentId" in opts || "runMode" in opts || "packId" in opts) {
+        merged = mergeRunLabQueryIntoSearchParams(merged, {
+          experimentId: "experimentId" in opts ? opts.experimentId : undefined,
+          runMode: "runMode" in opts ? opts.runMode : undefined,
+          packId: "packId" in opts ? opts.packId : undefined,
+        });
+      }
       setSearchParams(merged, { replace: true });
     },
     [analysisView, searchParams, setSearchParams],
+  );
+
+  const handleOpenAnalysisWithGroup = useCallback(
+    (runIds) => {
+      if (!runIds?.length) return;
+      const first = runIds[0];
+      setSelectedRunId(first);
+      window.localStorage.setItem("benchmark:lastRunId", first);
+      setTabIdx(3);
+      setAnalysisView("results");
+      let merged = mergeBenchmarkTabIntoSearchParams(searchParams, 3, "results");
+      merged.set("run", first);
+      if (runIds.length > 1) merged.set("runs", runIds.join(","));
+      else merged.delete("runs");
+      setSearchParams(merged, { replace: true });
+    },
+    [searchParams, setSearchParams],
   );
 
   const openWorkbench = useCallback(
@@ -202,7 +231,12 @@ export default function BenchmarkPage() {
 
       {tabIdx === 0 ? <BenchmarkOverviewTab onNavigate={onNavigate} onOpenWorkbench={openWorkbench} /> : null}
       {tabIdx === 1 ? <BenchmarkExperimentsTab onNavigate={onNavigate} /> : null}
-      {tabIdx === 2 ? <RunTab onSwitchToResults={() => onNavigate({ tabIndex: 3, analysisView: "results" })} /> : null}
+      {tabIdx === 2 ? (
+        <RunTab
+          onSwitchToResults={() => onNavigate({ tabIndex: 3, analysisView: "results" })}
+          onOpenAnalysisWithGroup={handleOpenAnalysisWithGroup}
+        />
+      ) : null}
       {tabIdx === 3 ? (
         <BenchmarkAnalysisTab
           analysisView={analysisView}

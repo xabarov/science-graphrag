@@ -2,7 +2,7 @@
   "case_id": "od_chat_03_method_profile",
   "workspace_id": "2678c5f1-1b31-4aac-92c9-6bd0f4472b23",
   "lane_compatibility": "rich_od",
-  "query": "Explain the method FPN (Feature Pyramid Network) as used in object detection papers in this workspace. Cite specific paper sections or chunk-backed quotes that define it.",
+  "query": "Explain Feature Pyramid Networks (FPN) as used in object-detection papers **in this workspace**. If the string \"FPN\" does not appear in retrieved text, find the closest multi-scale feature fusion treatment you can justify from chunks and state the match criteria. Cite chunk-backed quotes or section pointers.",
   "answer_classes_allowed": ["grounded_explanation"],
   "requires_chunks": true,
   "requires_neo4j_claims": false,

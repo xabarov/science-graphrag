@@ -3,7 +3,7 @@
   "workspace_id": "2678c5f1-1b31-4aac-92c9-6bd0f4472b23",
   "baseline_workspace_id": "ws-pilot-od",
   "lane_compatibility": "both",
-  "query": "Build a GOST-style bibliography for all papers in this workspace that mention 'instance segmentation' in title or abstract metadata. If metadata is incomplete, say so and include what you can verify from chunks.",
+  "query": "Build a GOST-style bibliography for papers in this workspace that match **instance segmentation** (search titles and body text via retrieval tools; do not assume a pre-materialized abstract field). If no papers match, emit an empty typed bibliography with an explicit reason and one retrieval query you tried.",
   "answer_classes_allowed": ["bibliography_export"],
   "requires_chunks": true,
   "requires_neo4j_claims": false,

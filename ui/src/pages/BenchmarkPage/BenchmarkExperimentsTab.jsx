@@ -13,12 +13,14 @@ import {
   benchmarkTypeLabelKey,
   compareModeLabelKey,
   getExperimentById,
+  getLauncherPresetForExperiment,
   runnableSurfaceLabelKey,
+  RUN_MODE_GROUPED,
 } from "./experimentCatalog.js";
 
 /**
  * @param {object} props
- * @param {(opts: { tabIndex: number, analysisView?: "results"|"compare"|"workbench" }) => void} props.onNavigate
+ * @param {(opts: { tabIndex: number, analysisView?: "results"|"compare"|"workbench", experimentId?: string | null, runMode?: "single"|"grouped", packId?: string | null }) => void} props.onNavigate
  */
 export default function BenchmarkExperimentsTab({ onNavigate }) {
   const { t } = useI18n();
@@ -34,9 +36,19 @@ export default function BenchmarkExperimentsTab({ onNavigate }) {
 
       {EXPERIMENT_PACKS.map((pack) => (
         <Box key={pack.id} sx={{ mb: 3 }}>
-          <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", mb: 0.5 }}>
-            {t(pack.titleKey)} <Box component="span" sx={{ color: tk.text.muted, fontWeight: 500 }}>({pack.id})</Box>
-          </Typography>
+          <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 0.75, mb: 0.5 }}>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.875rem" }}>
+              {t(pack.titleKey)} <Box component="span" sx={{ color: tk.text.muted, fontWeight: 500 }}>({pack.id})</Box>
+            </Typography>
+            {pack.experimentIds.some((eid) => getLauncherPresetForExperiment(eid)) ? (
+              <CursorSmallButton
+                size="small"
+                onClick={() => onNavigate({ tabIndex: 2, runMode: RUN_MODE_GROUPED, packId: pack.id })}
+              >
+                {t("benchmarkPage.experiments.ctaPackGrouped")}
+              </CursorSmallButton>
+            ) : null}
+          </Box>
           <Typography sx={{ fontSize: "0.8125rem", color: tk.text.secondary, mb: 1.5 }}>{t(pack.descriptionKey)}</Typography>
           <Divider sx={{ mb: 1.5, borderColor: tk.border.default }} />
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
@@ -69,9 +81,14 @@ export default function BenchmarkExperimentsTab({ onNavigate }) {
                   <Typography sx={{ fontSize: "0.72rem", color: tk.text.secondary, mt: 0.5 }}>
                     {exp.primaryMetricKeys.map((k) => t(k)).join(" · ")}
                   </Typography>
+                  {exp.runnableSurface !== "ui" ? (
+                    <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted, mt: 0.5 }}>
+                      {t("benchmarkPage.experiments.notRunnableFromUi")}
+                    </Typography>
+                  ) : null}
                   <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 1 }}>
                     {exp.runnableSurface === "ui" ? (
-                      <CursorSmallButton size="small" onClick={() => onNavigate({ tabIndex: 2 })}>
+                      <CursorSmallButton size="small" onClick={() => onNavigate({ tabIndex: 2, experimentId: exp.id })}>
                         {t("benchmarkPage.experiments.ctaRunLab")}
                       </CursorSmallButton>
                     ) : null}

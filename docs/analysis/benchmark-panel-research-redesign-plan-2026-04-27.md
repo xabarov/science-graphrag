@@ -30,7 +30,7 @@ The following matches **section 10** (`Phase 0`, `Phase 1`) in this document. Tr
 | Area | Where in code / docs |
 |------|------------------------|
 | Experiment catalog + packs | [`ui/src/pages/BenchmarkPage/experimentCatalog.js`](../../ui/src/pages/BenchmarkPage/experimentCatalog.js) — `EXPERIMENTS`, `EXPERIMENT_PACKS`, report-critical set, `runnableSurface` (`ui` / `cli_only` / `catalog`), metric/scope/compare-mode i18n keys. |
-| Tab routing + legacy deep links | Same file: `parseBenchmarkTabQuery`, `mergeBenchmarkTabIntoSearchParams`, `TAB_CANONICAL`. Legacy `?tab=launch\|workbench\|results\|compare\|cases` and **numeric tab 0–4 (old order)** still resolve. Canonical URLs use `overview`, `experiments`, `run-lab`, `analysis`, `cases` plus `analysisView=results\|compare\|workbench` when on Analysis. |
+| Tab routing + legacy deep links | Same file: `parseBenchmarkTabQuery`, `mergeBenchmarkTabIntoSearchParams`, `TAB_CANONICAL`. Legacy named tabs (`launch`, `workbench`, `results`, `compare`, `cases`) and **numeric tab 0–4 (old order)** still resolve. Canonical URLs use `overview`, `experiments`, `run-lab`, `analysis`, `cases` plus `analysisView` (`results`, `compare`, `workbench`) when on Analysis. |
 | Page shell | [`ui/src/pages/BenchmarkPage/BenchmarkPage.jsx`](../../ui/src/pages/BenchmarkPage/BenchmarkPage.jsx) — tabs Overview / Experiments / Run Lab / Analysis / Cases; URL sync for `run` / `case` only when those query keys exist (avoids wiping `benchmark:lastRunId` on first paint without `run`). |
 | Overview + diagnostics | [`ui/src/pages/BenchmarkPage/BenchmarkOverviewTab.jsx`](../../ui/src/pages/BenchmarkPage/BenchmarkOverviewTab.jsx) — report-critical cards, recent runs (`listBenchmarkRuns`), **TrustSignalPanel** in collapsed diagnostics block (not hero). |
 | Experiments catalog tab | [`ui/src/pages/BenchmarkPage/BenchmarkExperimentsTab.jsx`](../../ui/src/pages/BenchmarkPage/BenchmarkExperimentsTab.jsx). |
@@ -677,12 +677,7 @@ Goal: make the panel understandable before any large rendering refactor.
 
 Deliverables:
 
-1. replace current tab structure with:
-   - Overview
-   - Experiments
-   - Run Lab
-   - Analysis
-   - Cases **Done:** [`BenchmarkPage.jsx`](../../ui/src/pages/BenchmarkPage/BenchmarkPage.jsx) + `BenchmarkOverviewTab` / `BenchmarkExperimentsTab` / `BenchmarkAnalysisTab`; legacy `?tab=` values still parse (see handoff table).
+1. replace current tab structure with Overview, Experiments, Run Lab, Analysis, Cases. **Done:** [`BenchmarkPage.jsx`](../../ui/src/pages/BenchmarkPage/BenchmarkPage.jsx) plus `BenchmarkOverviewTab`, `BenchmarkExperimentsTab`, `BenchmarkAnalysisTab`; legacy `?tab=` values still parse (see handoff table).
 2. move `TrustSignalPanel` into a secondary diagnostics area; **Done:** only on Overview, `defaultExpanded={false}` in [`BenchmarkOverviewTab.jsx`](../../ui/src/pages/BenchmarkPage/BenchmarkOverviewTab.jsx).
 3. add report-critical experiment cards on the landing surface. **Done:** Overview grid from `getReportCriticalExperiments()` plus quick actions and recent runs list.
 
@@ -763,7 +758,7 @@ Exit criteria:
 
 If only one vertical slice should happen first, do this:
 
-1. **Phase 0 + Phase 1**
+1. **Phase 0 + Phase 1** — **done in UI (2026-04-27);** see **Implementation status (agent handoff)** at the top of this doc for paths and caveats.
 2. **Phase 2** for grouped execution
 3. **Phase 3** for model comparison
 4. **Phase 4** for case clarity

@@ -1,76 +1,101 @@
 # SciGraph
 
-GraphRAG-система для помощи исследователю при работе с научной литературой: навигация по корпусу, синтез с цитатами и provenance, поиск пробелов и поддержка генерации гипотез — с привязкой утверждений к источникам.
+SciGraph — scholarly GraphRAG-система для работы с научной литературой: ingest корпуса, библиографический граф, retrieval по чанкам, grounded Q&A с цитатами и traceability до источников.
 
-## North star
+Проект ориентирован на исследователя, который работает с собственной подборкой статей и хочет не просто хранить PDF, а получать навигацию по корпусу, обзор связей, evidence-backed ответы и основу для дальнейшего semantic/ontology слоя.
 
-- Навигация по корпусу и цитированию.
-- Синтез знаний из нескольких работ с явными ссылками на источники.
-- Поиск противоречий и открытых вопросов (после данных и онтологии).
-- Поддержка идей и гипотез как **разложимых** на утверждения и доказательства.
+## Что доступно сейчас
 
-Подробнее: [docs/roadmap.md](docs/roadmap.md) (§1), [docs/idea.md](docs/idea.md).
+- Ingestion pipeline для `pdf` / `md` / `txt` через CLI `science-graphrag`.
+- Локальный стек на `PostgreSQL`, `Neo4j`, `Qdrant`, `Redis`, `Phoenix`.
+- API и UI для workspace, reader, graph, chat/evidence сценариев.
+- VL-first PDF pipeline: при настроенных `SCIENCE_GRAPHRAG_VL_*` PDF сначала превращается в Markdown, иначе используется `pypdf` fallback.
+- Бенчмарки и регрессионные suite для ingestion, graph, retrieval, claims и agent scenarios.
 
-## Пользователи и MVP (доменно-агностично)
+Подробнее про продуктовый контекст: [docs/roadmap.md](docs/roadmap.md), [docs/idea.md](docs/idea.md).
 
-**Пользователь:** исследователь, работающий с подборкой статей в своей области (без фиксации одного узкого домена на этапе MVP).
+## Быстрые ссылки
 
-**Сценарии MVP:**
+- [docs/README.md](docs/README.md) - индекс документации.
+- [docs/architecture/README.md](docs/architecture/README.md) - архитектурный обзор.
+- [docs/runbooks/deploy.md](docs/runbooks/deploy.md) - запуск стека и operational notes.
+- [docs/runbooks/ingest-corpus.md](docs/runbooks/ingest-corpus.md) - corpus ingest, timeout, resume, troubleshooting.
+- [docs/roadmap.md](docs/roadmap.md) - roadmap и фазы проекта.
+- [docs/adr/README.md](docs/adr/README.md) - каталог архитектурных решений.
+- [docs/benchmarks/README.md](docs/benchmarks/README.md) - benchmark/eval documentation.
 
-1. Загрузить корпус работ (PDF / метаданные) и получить связный **scholarly backbone**: работы, авторы, публикация, цитирование, стабильные идентификаторы где возможно.
-2. Просматривать граф библиографических связей и метаданные по корпусу.
-3. Задавать вопросы по литературе с **grounded** ответом: цитаты, ссылки на работы/фрагменты, trace retrieval (после реализации retrieval-слоя).
+## Быстрый старт
 
-**Не в MVP (явные non-goals):**
+### Prerequisites
 
-- «Идеальная» универсальная онтология всей науки.
-- Полная автоматическая разрешённость всех entity-resolution кейсов без человека и без итераций.
-- Продакшен-мультитенантность, софт для редакций журналов, замена менеджера библиографии «на все случаи».
-- Копирование доменного слоя из референсных проектов других предметных областей без перепроектирования.
+- Docker + Docker Compose
+- Python 3.11+
+- Локальный `.venv` в корне репозитория
 
-## Структура репозитория (модули)
-
-| Каталог     | Назначение                                      |
-|------------|--------------------------------------------------|
-| `ingestion`| Приём документов, нормализация, извлечение, enrichment |
-| `graph`    | Модель графа, загрузка в графовое хранилище     |
-| `retrieval`| Поиск: lexical / vector, политики контекста      |
-| `api`      | HTTP/API и контракты query-time                |
-| `ui`       | Клиент: workspace, reader, обзор графа         |
-| `eval`     | Бенчмарки, метрики, регрессии                   |
-| `science_graphrag/` | Реализация Phase 1: ingestion, storage, CLI |
-
-Детали и фазы: [docs/roadmap.md](docs/roadmap.md).
-
-## Phase 1 (текущая реализация)
-
-Реализован runnable ingestion MVP: пакет `science_graphrag`, локальные **PostgreSQL**, **Neo4j**, **Qdrant**, blobs на диске.
-
-Для PDF pipeline теперь работает как **VL-first**:
-
-- если настроены `SCIENCE_GRAPHRAG_VL_*`, PDF сначала конвертируется в `Markdown` через vision-language model;
-- если VL недоступен или не настроен, применяется `pypdf` fallback;
-- extraction stages читают именно артефакт `article.md` из `data/artifacts/ingestion/<document_id>/<slug>/article.md`.
+### 1. Подготовьте окружение
 
 ```bash
-cp .env.example .env   # при необходимости поправьте URL, mailto и SCIENCE_GRAPHRAG_VL_* для VL
-make prod-up           # prod-like compose: Postgres :15432, Neo4j :17474/:17687, Qdrant :16333; UI+API :8787 (nginx→api), прямой API :18787
-python -m venv .venv && .venv/bin/pip install -e ".[dev]"
-.venv/bin/science-graphrag ingest path/to/file.pdf
-# или .txt с полным текстом статьи
-.venv/bin/science-graphrag ingest-corpus path/to/corpus_dir   # рекурсивно .pdf/.md/.txt + аудит дублей Work в Neo4j
+cp .env.example .env
+python -m venv .venv
+.venv/bin/pip install -e ".[dev]"
 ```
 
-### Docker Compose modes
+Минимум перед первым запуском:
 
-- `docker-compose.prod.yml` / `make prod-up` — явный prod-like режим: backend и frontend идут из собранных образов; изменения в коде требуют пересборки.
-- `docker-compose.yml` — совместимый alias того же prod-like стека для старых `docker compose ...` команд и скриптов.
-- `docker-compose.dev.yml` / `make dev-up` — dev-режим без пересборки на каждое изменение кода:
-  - backend запущен как `uvicorn --reload` с bind mount репозитория;
-  - frontend идет через Vite dev server с HMR;
-  - внешний вход тот же: [`http://localhost:8787/`](http://localhost:8787/).
+- проверьте `SCIENCE_GRAPHRAG_OPENALEX_MAILTO`;
+- если у вас нестандартные локальные порты или внешние сервисы, поправьте `SCIENCE_GRAPHRAG_DATABASE_URL`, `SCIENCE_GRAPHRAG_NEO4J_URI`, `SCIENCE_GRAPHRAG_QDRANT_URL`, `SCIENCE_GRAPHRAG_REDIS_URL`;
+- если хотите LLM/VL extraction, задайте `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*` и/или `SCIENCE_GRAPHRAG_VL_*`, либо совместимые `MAIN_LLM_*`.
 
-Базовые команды:
+Быстрая диагностика конфига:
+
+```bash
+.venv/bin/science-graphrag config-check --no-strict
+```
+
+Перед долгим ingest с LLM лучше использовать строгую проверку:
+
+```bash
+.venv/bin/science-graphrag config-check
+```
+
+### 2. Поднимите локальный стек
+
+Есть два режима запуска.
+
+#### Prod-like stack
+
+Использует [`docker-compose.yml`](docker-compose.yml): backend и frontend идут из собранных образов, изменения в коде требуют пересборки.
+
+```bash
+make prod-up
+```
+
+Эквивалент без `make`:
+
+```bash
+docker compose -f docker-compose.yml up -d --build
+```
+
+Точки входа:
+
+- UI: [http://localhost:8787/ui/](http://localhost:8787/ui/)
+- API health: [http://localhost:8787/health](http://localhost:8787/health)
+- API напрямую, минуя nginx: [http://localhost:18787/health](http://localhost:18787/health)
+- Neo4j browser: [http://localhost:17474](http://localhost:17474)
+- Qdrant: [http://localhost:16333](http://localhost:16333)
+- Phoenix UI: [http://localhost:16006](http://localhost:16006)
+
+#### Dev stack
+
+Использует [`docker-compose.dev.yml`](docker-compose.dev.yml): backend работает через `uvicorn --reload`, UI — через Vite dev server с HMR, вход остаётся тем же через nginx.
+
+```bash
+make dev-up
+```
+
+**Чем prod-like отличается от dev:** в prod-like образы собираются из Dockerfile и UI отдаётся как статический build за nginx; в dev репозиторий смонтирован в контейнер API/worker, а UI проксируется с Vite (быстрее итерации, больше движущихся частей).
+
+Полезные команды:
 
 ```bash
 make help
@@ -79,21 +104,190 @@ make prod-down
 make dev-up
 make dev-down
 make dev-logs
+make dev-recreate-api
+make dev-ui-restart
 ```
 
-Архитектура и ADR: [docs/architecture/phase-1-backbone.md](docs/architecture/phase-1-backbone.md), [docs/adr/001-phase1-stack.md](docs/adr/001-phase1-stack.md).
+## Настройка окружения
 
-## Документация
+Полный список и комментарии находятся в [.env.example](.env.example). Для быстрого старта удобнее думать о переменных по группам.
 
-- [docs/README.md](docs/README.md) — индекс документации.
-- [docs/roadmap.md](docs/roadmap.md) — roadmap и фазы 0–7.
-- [docs/idea.md](docs/idea.md) — онтология по слоям, backbone, промпты (черновики).
+| Группа | Что обычно нужно сделать |
+|--------|---------------------------|
+| Обязательно проверить | `SCIENCE_GRAPHRAG_OPENALEX_MAILTO`, storage/connectivity переменные, путь к blobs/artifacts при нестандартном окружении |
+| Часто нужно для реальной работы | `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*`, `SCIENCE_GRAPHRAG_VL_*`, либо fallback `MAIN_LLM_*` |
+| Опционально | embeddings channel, Phoenix, agent runtime, claims extraction, chunking engine |
+| Только для UI | `ui/.env.local`, прежде всего `VITE_API_BASE_URL` если UI открыт не через тот же origin |
+
+### Storage и connectivity
+
+Эти переменные определяют, куда CLI и локальные процессы ходят за данными:
+
+- `SCIENCE_GRAPHRAG_DATABASE_URL`
+- `SCIENCE_GRAPHRAG_NEO4J_URI`
+- `SCIENCE_GRAPHRAG_QDRANT_URL`
+- `SCIENCE_GRAPHRAG_REDIS_URL`
+- `SCIENCE_GRAPHRAG_BLOB_ROOT`
+- `SCIENCE_GRAPHRAG_ARTIFACT_ROOT`
+
+По умолчанию `.env.example` настроен под локальный compose-стек с host-портами `15432`, `17687`, `16333`, `16379`.
+
+### LLM и VL
+
+Для extraction и PDF-to-Markdown доступны два слоя настроек:
+
+- префиксные переменные проекта: `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*`, `SCIENCE_GRAPHRAG_VL_*`;
+- совместимые fallback-переменные: `MAIN_LLM_API_KEY`, `MAIN_LLM_BASE_URL`, `MAIN_LLM_MODEL`, `API_KEY`.
+
+Ключевые сценарии:
+
+- `SCIENCE_GRAPHRAG_VL_*` - vision-language конвертация PDF в Markdown;
+- `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*` - metadata/references/claims extraction;
+- `MAIN_LLM_*` - совместимый fallback, если префиксные переменные не заданы.
+
+Реальные merge-правила и fallback-логика описаны в [science_graphrag/config.py](science_graphrag/config.py).
+
+### UI-конфиг
+
+Для фронтенда используйте `ui/.env.local`, а не корневой `.env`.
+
+Чаще всего нужны:
+
+- `VITE_API_BASE_URL` - если UI обращается не к тому же origin, где доступен `/v1`;
+- `VITE_CLAIMS_UI_ENABLED` - включает Claims panel;
+- `VITE_SYNC_ASK_SESSIONS` - включает default-on sync для Ask sessions.
+
+## Основные рабочие сценарии
+
+### Ingest одного документа
+
+```bash
+.venv/bin/science-graphrag ingest path/to/paper.pdf
+```
+
+Поддерживаются `pdf`, `md`, `txt`.
+
+### Ingest корпуса
+
+Для долгого corpus-wide прогона используйте runbook: [docs/runbooks/ingest-corpus.md](docs/runbooks/ingest-corpus.md).
+
+Базовый пример:
+
+```bash
+.venv/bin/science-graphrag ingest-corpus /path/to/corpus \
+  --continue-on-error \
+  --per-file-timeout-s 900 \
+  --progress-file eval/results/ingest-progress.jsonl
+```
+
+Если ingest был прерван, можно продолжить с `--resume`. Для cutover эмбеддингов и recovery отдельных документов см. соответствующие материалы в [`docs/runbooks/`](docs/runbooks/) и команду `ingest-resume-embed`.
+
+### Проверка API/UI после старта
+
+После поднятия стека удобно проверить:
+
+1. `GET /health`
+2. `GET /v1/works`
+3. UI по адресу `http://localhost:8787/ui/`
+
+Дополнительно:
+
+- `GET /docs` - FastAPI docs
+- `GET /v1/works/{work_id}`
+- `GET /v1/works/{work_id}/chunks`
+- `POST /v1/query`
+
+### Benchmarks и eval
+
+Основные benchmark entrypoints регистрируются через `pyproject.toml`, например:
+
+- `science-graphrag-layer1-benchmark`
+- `science-graphrag-graph-benchmark`
+- `science-graphrag-retrieval-benchmark`
+- `science-graphrag-claims-benchmark`
+- `science-graphrag-agent-benchmark`
+
+Практический обзор и режимы запуска: [eval/README.md](eval/README.md), [docs/benchmarks/README.md](docs/benchmarks/README.md).
+
+## Обзор репозитория
+
+| Путь | Назначение |
+|------|------------|
+| `science_graphrag/` | Основной Python-пакет: ingestion, storage, API, worker, agent runtime, CLI |
+| `ui/` | Vite + React UI: workspace, reader, graph, chat, admin surfaces |
+| `docs/` | Индекс документации, операционные заметки в `docs/runbooks/`, архитектура, ADR, specs, benchmarks |
+| `eval/` | Benchmark runners, metrics, reports |
+| `tests/` | Pytest и fixture-based regression coverage |
+| `scripts/` | Вспомогательные операционные и аналитические скрипты |
+| `data/` | Локальные blobs, artifacts, compose volumes и runtime outputs |
+
+## Навигация по документации
+
+### Обзор системы
+
+- [docs/README.md](docs/README.md)
+- [docs/roadmap.md](docs/roadmap.md)
+- [docs/idea.md](docs/idea.md)
+
+### Архитектура
+
+- [docs/architecture/README.md](docs/architecture/README.md)
+- [docs/architecture/phase-1-backbone.md](docs/architecture/phase-1-backbone.md)
+- [docs/architecture/chunking-strategy.md](docs/architecture/chunking-strategy.md)
+- [docs/adr/README.md](docs/adr/README.md)
+- [docs/adr/001-phase1-stack.md](docs/adr/001-phase1-stack.md)
+
+### Запуск и эксплуатация
+
+- [docs/runbooks/deploy.md](docs/runbooks/deploy.md)
+- [docs/runbooks/ingest-corpus.md](docs/runbooks/ingest-corpus.md)
+- [docs/runbooks/chonkie-chunking.md](docs/runbooks/chonkie-chunking.md)
+- [docs/runbooks/user-journeys-retrieval-v1.md](docs/runbooks/user-journeys-retrieval-v1.md)
+- [docs/runbooks/phase0-bge-m3-qdrant-cutover.md](docs/runbooks/phase0-bge-m3-qdrant-cutover.md)
+
+### Eval и benchmarks
+
+- [eval/README.md](eval/README.md)
+- [docs/benchmarks/README.md](docs/benchmarks/README.md)
+- [docs/runbooks/benchmark-driven-dev-loop.md](docs/runbooks/benchmark-driven-dev-loop.md)
+- [docs/runbooks/benchmark-decision-gate.md](docs/runbooks/benchmark-decision-gate.md)
 
 ## Стратегия разработки
 
-**Greenfield + selective reuse:** новый проект; из референсного проекта `osint-gr` (см. [roadmap §2](docs/roadmap.md)) переносим паттерны docs, ADR, бенчмарков и тестовой дисциплины — не доменный код.
+Проект следует стратегии greenfield + selective reuse: паттерны docs, ADR, eval discipline и часть операционных подходов переиспользуются из референсных проектов, но доменная модель и архитектурные решения фиксируются отдельно внутри SciGraph.
 
-Решение зафиксировано в [docs/adr/000-greenfield-strategy.md](docs/adr/000-greenfield-strategy.md).
+Подробности: [docs/adr/000-greenfield-strategy.md](docs/adr/000-greenfield-strategy.md).
+
+## Как проверить, что quickstart достаточен
+
+Если по одному только этому файлу можно ответить на вопросы ниже, README выполняет роль входной страницы.
+
+1. Как поднять локальный стек? — раздел **Быстрый старт**, `make prod-up` / `make dev-up`.
+2. Какие переменные править в первую очередь? — раздел **Настройка окружения** и ссылка на [.env.example](.env.example).
+3. Чем prod-like отличается от dev? — подсказка под **Dev stack**.
+4. Где UI, где API, где runbook по ingest? — **Точки входа** после старта, [docs/runbooks/ingest-corpus.md](docs/runbooks/ingest-corpus.md).
+5. Где архитектурный обзор и roadmap? — **Навигация по документации** и [docs/roadmap.md](docs/roadmap.md).
+
+Проверка ссылок в этом файле (локальные пути из markdown) выполняется скриптом из корня репозитория:
+
+```bash
+.venv/bin/python - <<'PY'
+from pathlib import Path
+import re
+root = Path(".")
+text = (root / "README.md").read_text(encoding="utf-8")
+links = re.findall(r"\[[^\]]+\]\(([^)]+)\)", text)
+missing = [
+    t
+    for t in links
+    if not (t.startswith("http://") or t.startswith("https://") or t.startswith("#"))
+    and not (root / t).exists()
+]
+print("missing", missing)
+PY
+```
+
+Ожидаемый результат: `missing []`.
 
 ## Лицензия
 

@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-COMPOSE_PROD = docker compose -f docker-compose.prod.yml
+COMPOSE_PROD = docker compose -f docker-compose.yml
 COMPOSE_DEV = docker compose -f docker-compose.dev.yml
 
 .PHONY: help quality prod-up prod-down prod-build prod-logs prod-ps prod-restart dev-up dev-down dev-build dev-logs dev-ps dev-restart dev-recreate-api dev-ui-restart dev-ui-modules-reset
