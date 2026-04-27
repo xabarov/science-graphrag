@@ -33,8 +33,8 @@ export function detectScienceHybridCommunities(nodes, links) {
     }
   }
 
-  /** Neo4j-style relationship types that tie Work ↔ Authorship ↔ Author subgraphs. */
-  const SEMANTIC_EDGE_TYPES = new Set(["HAS_AUTHORSHIP", "OF_AUTHOR"]);
+  /** Relationship types that tie Work ↔ Author (including UI-projected AUTHORED). */
+  const SEMANTIC_EDGE_TYPES = new Set(["HAS_AUTHORSHIP", "OF_AUTHOR", "AUTHORED"]);
 
   links.forEach((l) => {
     const t = l.type == null ? "" : String(l.type);

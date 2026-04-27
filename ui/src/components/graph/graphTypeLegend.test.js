@@ -92,8 +92,8 @@ describe("collectGraphTypeLegendByKind", () => {
     });
     expect(grouped.Work).toEqual(["WorkExternal", "WorkInternal"]);
     expect(grouped.Semantic).toEqual(["Dataset"]);
-    expect(grouped.People).toEqual(["AuthorshipReification"]);
-    expect(grouped.Other).toEqual(["UnknownKind"]);
+    expect(grouped.People).toBeUndefined();
+    expect(grouped.Other).toEqual(["AuthorshipReification", "UnknownKind"]);
   });
 });
 

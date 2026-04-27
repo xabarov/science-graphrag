@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { deriveInspectorDetail } from "./graphInspectorModel.js";
+import { normalizeGraphPayload } from "./graphViewState.js";
 import { capGraphForUi, GRAPH_UI_MAX_EDGES, GRAPH_UI_MAX_NODES } from "./graphUiLimits.js";
 
 describe("graphUiLimits", () => {
@@ -33,6 +35,20 @@ describe("graphUiLimits", () => {
     const { displayGraph, capWarnings } = capGraphForUi(graph);
     expect(displayGraph.edges.length).toBeLessThanOrEqual(GRAPH_UI_MAX_EDGES);
     expect(capWarnings.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("inspector author rows need full graph: cap can drop Work and AUTHORED edges", () => {
+    const full = normalizeGraphPayload({
+      nodes: [
+        { id: "w1", type: "Work", label: "Paper", node_kind: "Work" },
+        { id: "a1", type: "Author", label: "Ann", node_kind: "Author" },
+      ],
+      edges: [{ id: "e1", source: "w1", target: "a1", type: "AUTHORED", properties: { author_position: 1 } }],
+      meta: {},
+    });
+    expect(deriveInspectorDetail(full, "a1", "").authorAuthoredWorks).toHaveLength(1);
+    const { displayGraph } = capGraphForUi({ ...full, nodes: [full.nodes[1]], edges: [] }, "a1");
+    expect(deriveInspectorDetail(displayGraph, "a1", "").authorAuthoredWorks).toHaveLength(0);
   });
 
   it("keeps preferred node id inside the node cap when possible", () => {

@@ -16,6 +16,7 @@ const MOCK_EN = {
   "graph.workProperty.publication_year": "Publication year",
   "graph.edgeType.CITES": "cites",
   "graph.edgeType.HAS_AUTHORSHIP": "authored by",
+  "graph.edgeType.AUTHORED": "wrote",
   "graph.edgeType.EDGE": "edge",
   "graph.edgeType._other": "{{type}}",
   "graph.nodeKind.WorkInternal": "Work (internal)",
@@ -45,6 +46,7 @@ describe("graphLocalize", () => {
   it("localizeEdgeType uses raw type only", () => {
     expect(localizeEdgeType({ type: "CITES", displayType: "WRONG" }, t)).toBe("cites");
     expect(localizeEdgeType({ type: "HAS_AUTHORSHIP" }, t)).toBe("authored by");
+    expect(localizeEdgeType({ type: "AUTHORED" }, t)).toBe("wrote");
   });
 
   it("localizeEdgeType falls back for unknown types", () => {

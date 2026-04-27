@@ -86,6 +86,7 @@ function localizeDirectionHint(hint, t) {
  *   selectedEdge: { id: string, source: string, target: string, type: string, displayType?: string, sourceLabel?: string, targetLabel?: string, summary?: string, raw: object } | null,
  *   relatedEdges: Array<object>,
  *   relatedEdgeRows?: Array<{ edge: object, otherId: string, otherLabel: string, readableLine: string, directionHint: string }>,
+ *   authorAuthoredWorks?: Array<{ workId: string, workLabel: string, authorPosition: unknown, isCorresponding: unknown, rawAffiliation: unknown }>,
  *   selectedEdgeReadable?: string,
  *   graphMeta?: Record<string, unknown>,
  *   onSelectNode?: (nodeId: string) => void,
@@ -101,6 +102,7 @@ export default function GraphDetailPanel({
   selectedEdge,
   relatedEdges = [],
   relatedEdgeRows = [],
+  authorAuthoredWorks = [],
   selectedEdgeReadable = "",
   graphMeta = {},
   onSelectNode,
@@ -297,6 +299,55 @@ export default function GraphDetailPanel({
                     ? t("graph.detailPanel.loading")
                     : t("graph.detailPanel.expandExternal", { count: String(selectedNode.externalCiteCount) })}
                 </CursorSmallButton>
+              </Box>
+            ) : null}
+
+            {selectedNode &&
+            (String(selectedNode.type) === "Author" || String(selectedNode.nodeKind) === "Author") &&
+            authorAuthoredWorks.length > 0 ? (
+              <Box sx={{ mt: 2 }}>
+                <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 0.75, color: tk.text.primary }}>
+                  {t("graph.detailPanel.authorWorks")}
+                </Typography>
+                <List dense sx={{ py: 0, maxHeight: compact ? 200 : 260, overflow: "auto" }}>
+                  {authorAuthoredWorks.map((row) => (
+                    <ListItem
+                      key={row.workId}
+                      sx={{
+                        px: 0,
+                        py: 0.75,
+                        alignItems: "flex-start",
+                        flexDirection: "column",
+                        gap: 0.5,
+                        borderBottom: `1px solid ${tk.border.default}`,
+                      }}
+                    >
+                      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75, width: "100%" }}>
+                        <Typography sx={{ fontSize: "0.8125rem", color: tk.text.primary, flex: 1, minWidth: 0 }}>
+                          {row.workLabel}
+                        </Typography>
+                        <CursorSmallButton type="button" onClick={() => onSelectNode?.(row.workId)}>
+                          {t("graph.detailPanel.authorWorkOpen")}
+                        </CursorSmallButton>
+                      </Box>
+                      {row.authorPosition != null && String(row.authorPosition).trim() !== "" ? (
+                        <Typography sx={{ fontSize: "0.72rem", color: tk.text.secondary }}>
+                          {t("graph.detailPanel.authorPosition", { position: String(row.authorPosition) })}
+                        </Typography>
+                      ) : null}
+                      {row.isCorresponding === true || row.isCorresponding === "true" ? (
+                        <Typography sx={{ fontSize: "0.72rem", color: tk.text.accent }}>
+                          {t("graph.detailPanel.authorCorresponding")}
+                        </Typography>
+                      ) : null}
+                      {row.rawAffiliation != null && String(row.rawAffiliation).trim() !== "" ? (
+                        <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted, lineHeight: 1.4 }}>
+                          {t("graph.detailPanel.authorAffiliation")}: {String(row.rawAffiliation)}
+                        </Typography>
+                      ) : null}
+                    </ListItem>
+                  ))}
+                </List>
               </Box>
             ) : null}
 

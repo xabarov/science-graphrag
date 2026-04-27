@@ -29,7 +29,7 @@ const NODE_KIND_GROUPS = [
   },
   {
     groupKey: "People",
-    kinds: ["Author", "AuthorshipReification", "Authorship"],
+    kinds: ["Author"],
   },
   {
     groupKey: "Context",

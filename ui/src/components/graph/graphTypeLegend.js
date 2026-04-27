@@ -99,7 +99,7 @@ export function sortLegendEdgeTypes(edgeTypes, counts, sortBy) {
 export const NODE_KIND_GROUPS = {
   Work: ["Work", "WorkInternal", "WorkExternal"],
   Semantic: ["Method", "Dataset", "Claim"],
-  People: ["Author", "AuthorshipReification", "Authorship"],
+  People: ["Author"],
   Context: ["Venue", "Institution"],
 };
 

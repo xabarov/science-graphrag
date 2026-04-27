@@ -12,6 +12,7 @@ export default function GraphSidePanel({
   selectedEdge,
   relatedEdges,
   relatedEdgeRows,
+  authorAuthoredWorks = [],
   selectedEdgeReadable,
   graphMeta,
   onSelectNode,
@@ -90,6 +91,7 @@ export default function GraphSidePanel({
           selectedEdge={selectedEdge}
           relatedEdges={relatedEdges}
           relatedEdgeRows={relatedEdgeRows}
+          authorAuthoredWorks={authorAuthoredWorks}
           selectedEdgeReadable={selectedEdgeReadable}
           graphMeta={graphMeta}
           onSelectNode={onSelectNode}

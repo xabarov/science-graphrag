@@ -261,6 +261,7 @@ export default function GraphWorkspacePanel({
               selectedEdge={inspector.selectedEdge}
               relatedEdges={inspector.relatedEdges}
               relatedEdgeRows={inspector.relatedEdgeRows}
+              authorAuthoredWorks={inspector.authorAuthoredWorks}
               selectedEdgeReadable={inspector.selectedEdgeReadable}
               graphMeta={displayGraph.meta}
               onSelectNode={onSelectNode}

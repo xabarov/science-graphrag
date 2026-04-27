@@ -11,6 +11,14 @@ describe("detectScienceHybridCommunities", () => {
     expect(m.get("b")).toBe("sem:b");
   });
 
+  it("merges Work–Author via projected AUTHORED edge", () => {
+    const nodes = [{ id: "w1" }, { id: "auth" }];
+    const links = [{ source: "w1", target: "auth", type: "AUTHORED" }];
+    const m = detectScienceHybridCommunities(nodes, links);
+    const root = m.get("w1");
+    expect(m.get("auth")).toBe(root);
+  });
+
   it("merges Work–Authorship–Author chains via HAS_AUTHORSHIP and OF_AUTHOR", () => {
     const nodes = [{ id: "w1" }, { id: "ash" }, { id: "auth" }];
     const links = [
