@@ -17,7 +17,11 @@ export default function IngestProgressCard({ ingestJob }) {
   const pctRaw =
     typeof ingestJob?.progress_pct === "number" && Number.isFinite(ingestJob.progress_pct)
       ? Math.min(100, Math.max(0, ingestJob.progress_pct * 100))
-      : Math.min(100, Math.max(0, Number(ingestJob?.progress_current) || 0));
+      : (() => {
+          const tot = Number(ingestJob?.progress_total) || 100;
+          const cur = Number(ingestJob?.progress_current) || 0;
+          return tot > 0 ? Math.min(100, Math.max(0, (100 * cur) / tot)) : 0;
+        })();
 
   return (
     <Box sx={{ mt: 1.5 }}>
@@ -27,6 +31,11 @@ export default function IngestProgressCard({ ingestJob }) {
       <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.65)", mt: 0.5 }}>
         {ingestJob.message || t("workspace.upload.dash")}
       </Typography>
+      {ingestJob.detail_message ? (
+        <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.42)", mt: 0.35 }} noWrap>
+          {String(ingestJob.detail_message).slice(0, 160)}
+        </Typography>
+      ) : null}
       <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.42)", mt: 0.75 }}>
         {t("workspace.ingest.progressLabel", { pct: String(Math.round(pctRaw)) })}
       </Typography>

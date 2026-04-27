@@ -24,6 +24,12 @@
 
 Черновые идеи промптов — в [idea.md](../idea.md).
 
+## Ingest / workspace upload
+
+| Документ | Стадия |
+|----------|--------|
+| [ingest-job-progress-api.md](ingest-job-progress-api.md) | Canonical `progress_pct`, `ingest_phase`, SSE `stage_progress` |
+
 ## Agent / Chat
 
 | Документ | Стадия |

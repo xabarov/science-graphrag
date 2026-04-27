@@ -289,7 +289,11 @@ def _read_cached_markdown(
 
 
 def _markdown_from_path(
-    path: Path, settings: Settings, *, document_id: str | None = None
+    path: Path,
+    settings: Settings,
+    *,
+    document_id: str | None = None,
+    on_vl_page_progress: Any | None = None,
 ) -> tuple[str, str, dict]:
     """Return (markdown, extraction_mode, vl_stats) where vl_stats may be empty dict."""
     suf = path.suffix.lower()
@@ -308,7 +312,7 @@ def _markdown_from_path(
         if settings.use_vl_for_pdf:
             try:
                 processor = VLPDFProcessor(settings)
-                markdown = processor.pdf_to_markdown(path)
+                markdown = processor.pdf_to_markdown(path, on_page_progress=on_vl_page_progress)
                 vl_stats = {
                     "vl_pages_total": processor.last_pages_total,
                     "vl_pages_processed": processor.last_pages_processed,
@@ -318,7 +322,13 @@ def _markdown_from_path(
             except Exception as exc:  # noqa: BLE001
                 log.warning("VL PDF failed for %s: %s; falling back to pypdf", path.name, exc)
 
-        return extract_text_from_pdf(path), "pypdf-fallback", {}
+        md = extract_text_from_pdf(path)
+        if on_vl_page_progress is not None:
+            try:
+                on_vl_page_progress(1, 1)
+            except Exception:  # noqa: BLE001
+                pass
+        return md, "pypdf-fallback", {}
 
 
 _ARXIV_PREFIX_RE = re.compile(r"^arxiv:\s*", re.IGNORECASE)
@@ -546,6 +556,7 @@ def run_ingest_pipeline(ctx: IngestRunContext, source: IngestSource) -> IngestRe
         parent_job_id=ctx.parent_job_id,
         stage_session_factory=ctx.stage_session_factory,
         stage_event_publisher=ctx.stage_event_publisher,
+        stage_progress_publisher=ctx.stage_progress_publisher,
     )
     return IngestResult(document_id=doc_id, work_id=work_id)
 
@@ -560,6 +571,7 @@ def run_ingest_from_file(
     parent_job_id: str | None = None,
     stage_session_factory: Any | None = None,
     stage_event_publisher: Any | None = None,
+    stage_progress_publisher: Any | None = None,
 ) -> IngestResult:
     ctx = build_ingest_run_context(
         settings=settings,
@@ -570,6 +582,7 @@ def run_ingest_from_file(
         parent_job_id=parent_job_id,
         stage_session_factory=stage_session_factory,
         stage_event_publisher=stage_event_publisher,
+        stage_progress_publisher=stage_progress_publisher,
     )
     try:
         return run_ingest_pipeline(ctx, IngestSource(path=path))
@@ -587,6 +600,7 @@ def run_ingest_from_job(
     parent_job_id: str | None = None,
     stage_session_factory: Any | None = None,
     stage_event_publisher: Any | None = None,
+    stage_progress_publisher: Any | None = None,
 ) -> IngestResult:
     return run_ingest_from_file(
         path,
@@ -597,6 +611,7 @@ def run_ingest_from_job(
         parent_job_id=parent_job_id,
         stage_session_factory=stage_session_factory,
         stage_event_publisher=stage_event_publisher,
+        stage_progress_publisher=stage_progress_publisher,
     )
 
 
@@ -621,9 +636,21 @@ def run_ingest_embed_qdrant_phase(
 ) -> None:
     """Vectorize chunks + work summary and upsert Qdrant (after Neo4j is closed)."""
 
+    total_steps = 4 if (settings.claims_extraction_enabled and claim_rows) else 3
+    step = 0
+
+    def _embed_bump(detail: str) -> None:
+        nonlocal step
+        step += 1
+        st.metric("subprogress_current", step)
+        st.metric("subprogress_total", total_steps)
+        st.metric("detail_message", detail)
+        st.flush_progress()
+
     embedder = resolve_embedder(settings)
     chunk_texts = [c.text for c in doc_chunks]
     embedding_model = resolve_embedding_model_label(settings)
+    _embed_bump("Embedding body chunks…")
     with embeddings_span(
         "ingest.embed.vectorize_chunks",
         {
@@ -638,6 +665,7 @@ def run_ingest_embed_qdrant_phase(
         ordered_auth = sorted(authorships, key=lambda x: x.author_position or 0)
         first_author = (ordered_auth[0].author_raw_name or "").strip()
     summary_text = f"{draft.title or ''}\n{draft.abstract or ''}\n{first_author}"[:8000]
+    _embed_bump("Embedding work summary…")
     with embeddings_span(
         "ingest.embed.vectorize_work_summary",
         {
@@ -677,6 +705,7 @@ def run_ingest_embed_qdrant_phase(
             removed,
             document_id,
         )
+    _embed_bump("Upserting chunk vectors to Qdrant…")
     with chain_span(
         "ingest.embed.qdrant_chunks",
         {
@@ -699,6 +728,7 @@ def run_ingest_embed_qdrant_phase(
             workspace_ids=ingest_workspace_ids or [],
         )
     if settings.claims_extraction_enabled and claim_rows:
+        _embed_bump("Embedding claims to Qdrant…")
         with chain_span(
             "ingest.embed.qdrant_claims",
             {
@@ -740,6 +770,7 @@ def ingest_document(
     parent_job_id: str | None = None,
     stage_session_factory: Any | None = None,
     stage_event_publisher: Any | None = None,
+    stage_progress_publisher: Any | None = None,
     raw_blob_store: RawBlobStorePort | None = None,
 ) -> tuple[str, str]:
     """
@@ -784,6 +815,7 @@ def ingest_document(
         root_attrs[OpenInferenceAttributes.USER_ID] = str(workspace_id)
         root_attrs["metadata.workspace_id"] = str(workspace_id)
     with chain_span("ingest_document", root_attrs):
+        progress_emit = stage_progress_publisher
         ckpt: dict[str, Any] = default_checkpoint()
         if session is not None and reused_doc:
             prev_doc = session.get(DocumentRecord, doc_id)
@@ -805,9 +837,22 @@ def ingest_document(
             IngestStage.PARSE_PDF,
             session_factory=stage_session_factory,
             publisher=stage_event_publisher,
+            progress_emit=progress_emit,
         ) as st:
+
+            def _on_vl_pages(done: int, tot: int) -> None:
+                st.metric("vl_pages_total", tot)
+                st.metric("vl_pages_processed", done)
+                st.metric("detail_message", f"PDF pages {done}/{tot}")
+                st.metric("subprogress_current", done)
+                st.metric("subprogress_total", tot)
+                st.flush_progress()
+
             markdown_text, extraction_mode, vl_stats = _markdown_from_path(
-                path, settings, document_id=doc_id
+                path,
+                settings,
+                document_id=doc_id,
+                on_vl_page_progress=_on_vl_pages if job_id and stage_session_factory else None,
             )
             set_span_attributes({"metadata.extraction_mode": extraction_mode})
             st.metric("source_suffix", path.suffix.lower())
@@ -843,6 +888,7 @@ def ingest_document(
             IngestStage.EXTRACT_META,
             session_factory=stage_session_factory,
             publisher=stage_event_publisher,
+            progress_emit=progress_emit,
         ) as st:
             with chain_span(
                 "ingest.extract_meta.metadata_and_refs",
@@ -880,6 +926,7 @@ def ingest_document(
             IngestStage.ENRICH_OPENALEX,
             session_factory=stage_session_factory,
             publisher=stage_event_publisher,
+            progress_emit=progress_emit,
         ) as st:
             with chain_span("ingest.enrich_openalex.lookup"):
                 SpanAttributes.set_input({"doi": draft.doi})
@@ -924,6 +971,7 @@ def ingest_document(
                 IngestStage.ENRICH_ROR,
                 session_factory=stage_session_factory,
                 publisher=stage_event_publisher,
+                progress_emit=progress_emit,
             ) as st:
                 inst_nodes = _institution_nodes_from_authorships(authorships, settings)
                 st.metric("institutions", len(inst_nodes))
@@ -933,6 +981,7 @@ def ingest_document(
                 IngestStage.WRITE_GRAPH,
                 session_factory=stage_session_factory,
                 publisher=stage_event_publisher,
+                progress_emit=progress_emit,
             ) as st:
                 if session is not None:
                     try:
@@ -1024,9 +1073,13 @@ def ingest_document(
                 IngestStage.RESOLVE_REFERENCES,
                 session_factory=stage_session_factory,
                 publisher=stage_event_publisher,
+                progress_emit=progress_emit,
             ) as st:
                 linked_refs = 0
+                total_refs = len(references)
+                seen = 0
                 for ref in references:
+                    seen += 1
                     if not (
                         normalize_doi(ref.doi)
                         or _normalize_arxiv_id(ref.arxiv_id)
@@ -1035,9 +1088,25 @@ def ingest_document(
                             and ref.year is not None
                         )
                     ):
+                        if seen % 5 == 0 or seen == total_refs:
+                            st.metric("subprogress_current", seen)
+                            st.metric("subprogress_total", max(total_refs, 1))
+                            st.metric(
+                                "detail_message",
+                                f"References {linked_refs}/{total_refs} linked",
+                            )
+                            st.flush_progress()
                         continue
                     _retry_call(_persist_reference_citation, neo, work_id, ref, settings)
                     linked_refs += 1
+                    if seen % 5 == 0 or seen == total_refs:
+                        st.metric("subprogress_current", seen)
+                        st.metric("subprogress_total", max(total_refs, 1))
+                        st.metric(
+                            "detail_message",
+                            f"References {linked_refs}/{total_refs} linked",
+                        )
+                        st.flush_progress()
                 st.metric("references_total", len(references))
                 st.metric("references_linked", linked_refs)
 
@@ -1048,6 +1117,7 @@ def ingest_document(
                 IngestStage.CHUNK,
                 session_factory=stage_session_factory,
                 publisher=stage_event_publisher,
+                progress_emit=progress_emit,
             ) as st:
                 doc_chunks = dedupe_chunks_for_embedding(
                     chunk_document_for_retrieval_from_settings(normalized, settings),
@@ -1059,6 +1129,7 @@ def ingest_document(
                 IngestStage.EXTRACT_CLAIMS,
                 session_factory=stage_session_factory,
                 publisher=stage_event_publisher,
+                progress_emit=progress_emit,
             ) as st:
                 if settings.claims_extraction_enabled:
                     chunk_dicts = [
@@ -1069,6 +1140,13 @@ def ingest_document(
                         }
                         for c in doc_chunks
                     ]
+
+                    def _claims_batch_progress(idx: int, total_batches: int) -> None:
+                        st.metric("subprogress_current", idx)
+                        st.metric("subprogress_total", max(total_batches, 1))
+                        st.metric("detail_message", f"Claims LLM batch {idx}/{total_batches}")
+                        st.flush_progress()
+
                     with chain_span(
                         "ingest.extract_claims.llm",
                         {"document.id": doc_id, "work.id": work_id, "chunks": len(chunk_dicts)},
@@ -1082,6 +1160,7 @@ def ingest_document(
                                 work_id,
                                 settings,
                                 force_benchmark=False,
+                                on_batch_progress=_claims_batch_progress,
                             )
                     st.metric("claims", len(claim_rows))
                     with chain_span(
@@ -1142,6 +1221,7 @@ def ingest_document(
                 IngestStage.EMBED,
                 session_factory=stage_session_factory,
                 publisher=stage_event_publisher,
+                progress_emit=progress_emit,
             ) as st:
                 run_ingest_embed_qdrant_phase(
                     settings=settings,

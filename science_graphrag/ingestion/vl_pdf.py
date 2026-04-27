@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+from collections.abc import Callable
 from io import BytesIO
 from pathlib import Path
 
@@ -80,7 +81,12 @@ class VLPDFProcessor:  # pylint: disable=too-few-public-methods
 
         return data["choices"][0]["message"]["content"], usage
 
-    def pdf_to_markdown(self, path: Path) -> str:
+    def pdf_to_markdown(
+        self,
+        path: Path,
+        *,
+        on_page_progress: Callable[[int, int], None] | None = None,
+    ) -> str:
         """Render ``path`` to Markdown using the configured VL model (page batches)."""
         if not self.settings.vl_api_key:
             raise ValueError("VL API key is not configured")
@@ -128,6 +134,12 @@ class VLPDFProcessor:  # pylint: disable=too-few-public-methods
 
                 total_prompt_tokens += usage.get("prompt_tokens") or 0
                 total_completion_tokens += usage.get("completion_tokens") or 0
+                if on_page_progress is not None:
+                    done_pages = sum(len(batches[j]) for j in range(batch_idx + 1))
+                    try:
+                        on_page_progress(done_pages, len(all_pages))
+                    except Exception:  # noqa: BLE001
+                        pass
 
             markdown = "\n\n".join(parts)
 

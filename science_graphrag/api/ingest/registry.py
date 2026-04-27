@@ -75,7 +75,7 @@ class IngestJobRegistry:
         stage_rows = list(stages or [])
         progress_current = int(row.progress_current or 0)
         progress_total = int(row.progress_total or 100)
-        if row.kind == "single" and stage_rows:
+        if row.kind in ("single", "batch_child") and stage_rows:
             progress_current, progress_total = IngestJobRegistry._single_job_progress_from_stages(
                 stage_rows,
                 progress_current=progress_current,
@@ -133,6 +133,17 @@ class IngestJobRegistry:
             "metrics": metrics,
             "error": row.error,
         }
+        dm = metrics.get("detail_message")
+        if dm is not None and str(dm).strip():
+            out["detail_message"] = str(dm).strip()[:500]
+        for key in ("subprogress_current", "subprogress_total"):
+            if key in metrics:
+                try:
+                    v = int(metrics[key])
+                    if v >= 0:
+                        out[key] = v
+                except (TypeError, ValueError):
+                    pass
         if expected_duration_ms is not None:
             out["expected_duration_ms"] = int(expected_duration_ms)
         return out

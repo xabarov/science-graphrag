@@ -59,7 +59,7 @@ def _publish_bus_event(
         BUS.publish_threadsafe({"job_id": parent_job_id, "kind": kind, "payload": parent_payload})
 
 
-def _stage_event_publisher(job_id: str, parent_job_id: str | None = None):
+def _stage_event_publisher(job_id: str, parent_job_id: str | None = None) -> tuple[Any, Any]:
     def _publish(
         stage_name: IngestStage, status: str, metrics: dict[str, Any], error: str | None
     ) -> None:
@@ -87,7 +87,18 @@ def _stage_event_publisher(job_id: str, parent_job_id: str | None = None):
             job_id=job_id, parent_job_id=parent_job_id, kind="stage_finished", payload=payload
         )
 
-    return _publish
+    def _progress(stage_name: IngestStage, metrics: dict[str, Any]) -> None:
+        payload: dict[str, Any] = {
+            "job_id": job_id,
+            "stage": stage_name.value,
+            "status": "running",
+            "metrics": dict(metrics or {}),
+        }
+        _publish_bus_event(
+            job_id=job_id, parent_job_id=parent_job_id, kind="stage_progress", payload=payload
+        )
+
+    return _publish, _progress
 
 
 def _execute_single_ingest(job_id: str, temp_path: Path, settings: Settings) -> None:
@@ -99,7 +110,7 @@ def _execute_single_ingest(job_id: str, temp_path: Path, settings: Settings) -> 
     def upd(**kwargs: Any) -> None:
         registry._update(job_id, **kwargs)  # noqa: SLF001
 
-    stage_publisher = _stage_event_publisher(job_id, job.parent_job_id)
+    stage_publisher, stage_progress_publisher = _stage_event_publisher(job_id, job.parent_job_id)
     try:
         upd(status="running", message="Starting ingestion", progress_current=5)
         _append_log(job_id, f"Temp file {temp_path}")
@@ -156,6 +167,7 @@ def _execute_single_ingest(job_id: str, temp_path: Path, settings: Settings) -> 
                         parent_job_id=job.parent_job_id,
                         stage_session_factory=registry._session_factory,  # noqa: SLF001
                         stage_event_publisher=stage_publisher,
+                        stage_progress_publisher=stage_progress_publisher,
                     )
             except SkippedDuplicateIngestError as dup:
                 skipped = True
@@ -196,6 +208,7 @@ def _execute_single_ingest(job_id: str, temp_path: Path, settings: Settings) -> 
                         IngestStage.ATTACH_WORKSPACE,
                         session_factory=registry._session_factory,  # noqa: SLF001
                         publisher=stage_publisher,
+                        progress_emit=stage_progress_publisher,
                     ) as st:
                         st.metric("workspace_id", job.workspace_id)
                         if not store.workspace_add_work(job.workspace_id, str(work_id)):

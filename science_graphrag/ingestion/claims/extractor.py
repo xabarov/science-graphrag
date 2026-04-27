@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 from collections import Counter
+from collections.abc import Callable
 from typing import Any
 
 from science_graphrag.config import Settings
@@ -140,6 +141,7 @@ def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too
     *,
     force_benchmark: bool = False,
     diagnostics: ClaimsExtractionDiagnostics | None = None,
+    on_batch_progress: Callable[[int, int], None] | None = None,
 ) -> list[ClaimDraft]:
     """
     Extract claims with mandatory evidence quotes.
@@ -291,6 +293,8 @@ def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too
                 parsed_claim_rows = list(parsed.claims)
                 if diagnostics is not None:
                     diagnostics.raw_claims_from_llm = len(parsed_claim_rows)
+                if on_batch_progress is not None:
+                    on_batch_progress(1, 1)
             except (TypeError, ValueError, AttributeError):
                 if diagnostics is not None:
                     diagnostics.llm_raw_response_preview = "(unserializable response)"
@@ -339,6 +343,11 @@ def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too
             batch_errors.extend(batch_errs)
             parsed_claim_rows.extend(batch_rows)
             raw_preview["batches"].extend(batch_preview)
+            if on_batch_progress is not None:
+                try:
+                    on_batch_progress(idx, len(chunk_batches))
+                except Exception:  # noqa: BLE001
+                    pass
         if diagnostics is not None:
             diagnostics.raw_claims_from_llm = len(parsed_claim_rows)
             diagnostics.llm_raw_response_preview = json.dumps(raw_preview, ensure_ascii=False)[

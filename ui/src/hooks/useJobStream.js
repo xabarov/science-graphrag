@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
 import { buildApiUrl } from "../services/apiClient.js";
+import { ingestProductPhaseKey } from "../components/ingestion/ingestStripModel.js";
 import { getIngestJob } from "../utils/workspaceStore.js";
 
 function mergeStageEvent(prevJob, payload) {
@@ -16,9 +17,34 @@ function mergeStageEvent(prevJob, payload) {
     metrics: payload.metrics && typeof payload.metrics === "object" ? payload.metrics : {},
     error: payload.error || null,
   };
+  const m = nextStage.metrics || {};
+  if (m.detail_message != null && String(m.detail_message).trim()) {
+    nextStage.detail_message = String(m.detail_message).trim().slice(0, 500);
+  }
+  if (m.subprogress_current != null && Number.isFinite(Number(m.subprogress_current))) {
+    nextStage.subprogress_current = Number(m.subprogress_current);
+  }
+  if (m.subprogress_total != null && Number.isFinite(Number(m.subprogress_total))) {
+    nextStage.subprogress_total = Number(m.subprogress_total);
+  }
   if (idx >= 0) currentStages[idx] = { ...currentStages[idx], ...nextStage };
   else currentStages.push(nextStage);
-  return { ...base, stages: currentStages };
+  const merged = { ...base, stages: currentStages };
+  const sid = String(payload.stage || "").trim();
+  if (sid) {
+    merged.active_stage = sid;
+    merged.ingest_phase = ingestProductPhaseKey(sid);
+  }
+  if (m.detail_message != null && String(m.detail_message).trim()) {
+    merged.detail_message = String(m.detail_message).trim().slice(0, 500);
+  }
+  if (m.subprogress_current != null && Number.isFinite(Number(m.subprogress_current))) {
+    merged.subprogress_current = Number(m.subprogress_current);
+  }
+  if (m.subprogress_total != null && Number.isFinite(Number(m.subprogress_total))) {
+    merged.subprogress_total = Number(m.subprogress_total);
+  }
+  return merged;
 }
 
 export default function useJobStream({
@@ -107,6 +133,7 @@ export default function useJobStream({
     source.addEventListener("stage_started", applyStage);
     source.addEventListener("stage_finished", applyStage);
     source.addEventListener("stage_failed", applyStage);
+    source.addEventListener("stage_progress", applyStage);
 
     source.addEventListener("batch_progress", (evt) => {
       if (disposed) return;

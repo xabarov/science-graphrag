@@ -99,12 +99,23 @@ export default function WorkspaceContextStrip({ t, vm }) {
         })()
       : null;
 
-  const singlePct =
-    vm.ingestJob && typeof vm.ingestJob.progress_pct === "number" && Number.isFinite(vm.ingestJob.progress_pct)
+  const parentServerPct =
+    vm.ingestJob &&
+    String(vm.ingestJob.kind || "") === "batch_parent" &&
+    typeof vm.ingestJob.progress_pct === "number" &&
+    Number.isFinite(vm.ingestJob.progress_pct)
       ? Math.min(100, Math.max(0, vm.ingestJob.progress_pct * 100))
       : null;
 
-  const progressValue = batchPct != null ? batchPct : singlePct;
+  const singlePct =
+    vm.ingestJob &&
+    String(vm.ingestJob.kind || "") !== "batch_parent" &&
+    typeof vm.ingestJob.progress_pct === "number" &&
+    Number.isFinite(vm.ingestJob.progress_pct)
+      ? Math.min(100, Math.max(0, vm.ingestJob.progress_pct * 100))
+      : null;
+
+  const progressValue = parentServerPct != null ? parentServerPct : batchPct != null ? batchPct : singlePct;
 
   const ingestStrip = useMemo(() => {
     if (!hasWs || !ingestBusy) return null;
@@ -112,7 +123,9 @@ export default function WorkspaceContextStrip({ t, vm }) {
     const stages = job && Array.isArray(job.stages) ? job.stages : [];
     const active = pickActiveIngestStage(stages);
     const stageId = ingestStageIdFromRow(active);
-    const phaseKey = ingestProductPhaseKey(stageId);
+    const serverPhase = job?.ingest_phase != null ? String(job.ingest_phase).trim() : "";
+    const phaseKey =
+      serverPhase && INGEST_PHASE_KEYS.includes(serverPhase) ? serverPhase : ingestProductPhaseKey(stageId);
     const statusLower = job ? String(job.status || "").toLowerCase() : "";
     const failed = statusLower === "failed";
     const starting = Boolean(vm.uploadBusy && !job);
@@ -278,16 +291,23 @@ export default function WorkspaceContextStrip({ t, vm }) {
                     </Typography>
                   ) : null}
                 </Stack>
-                {ingestStageSecondary && !ingestStrip.starting && !ingestStrip.failed ? (
-                  <Typography sx={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.38)" }} noWrap title={ingestStrip.stageId}>
-                    {ingestStageSecondary}
-                  </Typography>
-                ) : ingestStrip?.job?.message && !ingestStrip.starting && !ingestStrip.failed ? (
-                  <Typography sx={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.38)" }} noWrap>
-                    {String(ingestStrip.job.message).slice(0, 72)}
-                    {String(ingestStrip.job.message).length > 72 ? "…" : ""}
-                  </Typography>
-                ) : null}
+                {(() => {
+                  if (ingestStrip.starting || ingestStrip.failed) return null;
+                  const j = ingestStrip.job;
+                  const dm = j?.detail_message && String(j.detail_message).trim();
+                  const sc = typeof j?.subprogress_current === "number" ? j.subprogress_current : null;
+                  const st = typeof j?.subprogress_total === "number" ? j.subprogress_total : null;
+                  const subStr =
+                    sc != null && st != null && st > 0 ? `${Math.round(sc)}/${Math.round(st)}` : null;
+                  const core = dm || ingestStageSecondary || (j?.message ? String(j.message).slice(0, 72) : "");
+                  const line = [subStr, core].filter(Boolean).join(" · ");
+                  if (!line) return null;
+                  return (
+                    <Typography sx={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.38)" }} noWrap title={ingestStrip.stageId}>
+                      {line.length > 96 ? `${line.slice(0, 96)}…` : line}
+                    </Typography>
+                  );
+                })()}
                 <LinearProgress
                   variant={progressValue != null ? "determinate" : "indeterminate"}
                   value={progressValue != null ? progressValue : undefined}

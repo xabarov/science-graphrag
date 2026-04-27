@@ -12,6 +12,7 @@ from science_graphrag.config import Settings
 from science_graphrag.storage.ingest_queue_store import build_ingest_queue_store
 
 from .dto import IngestJobRecord, job_record_to_view, now_iso
+from .ingest_progress import apply_batch_parent_aggregates
 from .registry import IngestJobRegistry, _registry
 from .worker import (
     SUPPORTED_SUFFIXES,
@@ -192,4 +193,5 @@ def job_to_dict(rec: IngestJobRecord) -> dict[str, Any]:
             if child:
                 child_jobs.append(job_to_dict(child))
         out["child_jobs"] = child_jobs
+        apply_batch_parent_aggregates(out)
     return out

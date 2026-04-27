@@ -11,6 +11,7 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Iterator
 
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from science_graphrag.observability.phoenix_tracer import chain_span
@@ -42,14 +43,31 @@ class IngestStage(str, Enum):
 class StageHandle:
     stage: IngestStage
     metrics: dict[str, Any] = field(default_factory=dict)
+    job_id: str | None = field(default=None, repr=False)
+    session_factory: Callable[[], Any] | None = field(default=None, repr=False)
+    progress_emit: StageProgressPublisher | None = field(default=None, repr=False)
 
     def metric(self, key: str, value: Any) -> None:
         if not key:
             return
         self.metrics[str(key)] = value
 
+    def flush_progress(self) -> None:
+        """Persist ``metrics`` for the running stage row and emit optional SSE progress."""
+        if not self.job_id or self.session_factory is None:
+            return
+        patch_running_stage_metrics(
+            self.session_factory,
+            job_id=self.job_id,
+            stage_value=self.stage,
+            metrics=dict(self.metrics),
+        )
+        if self.progress_emit is not None:
+            self.progress_emit(self.stage, dict(self.metrics))
+
 
 StageEventPublisher = Callable[[IngestStage, str, dict[str, Any], str | None], None]
+StageProgressPublisher = Callable[[IngestStage, dict[str, Any]], None]
 
 
 @dataclass
@@ -63,6 +81,7 @@ class IngestRunContext:
     parent_job_id: str | None = None
     stage_session_factory: Callable[[], Any] | None = None
     stage_event_publisher: StageEventPublisher | None = None
+    stage_progress_publisher: StageProgressPublisher | None = None
     ingest_workspace_ids: list[str] = field(default_factory=list)
 
     _neo4j_store: Neo4jGraphStore | None = field(default=None, init=False, repr=False)
@@ -103,6 +122,7 @@ class IngestRunContext:
             stage_name,
             session_factory=self.stage_session_factory,
             publisher=self.stage_event_publisher,
+            progress_emit=self.stage_progress_publisher,
         ) as handle:
             yield handle
 
@@ -121,6 +141,7 @@ def build_ingest_run_context(
     parent_job_id: str | None = None,
     stage_session_factory: Callable[[], Any] | None = None,
     stage_event_publisher: StageEventPublisher | None = None,
+    stage_progress_publisher: StageProgressPublisher | None = None,
     ingest_workspace_ids: list[str] | None = None,
 ) -> IngestRunContext:
     return IngestRunContext(
@@ -131,6 +152,7 @@ def build_ingest_run_context(
         parent_job_id=parent_job_id,
         stage_session_factory=stage_session_factory,
         stage_event_publisher=stage_event_publisher,
+        stage_progress_publisher=stage_progress_publisher,
         ingest_workspace_ids=list(ingest_workspace_ids or []),
     )
 
@@ -178,14 +200,44 @@ def _upsert_stage_row(
         session.commit()
 
 
+def patch_running_stage_metrics(
+    session_factory: Callable[[], Any],
+    job_id: str,
+    stage_value: IngestStage,
+    metrics: dict[str, Any],
+) -> None:
+    """Replace ``metrics_json`` for an existing ingest stage row (typically ``status=running``)."""
+
+    metrics_json_str = json.dumps(metrics or {}, ensure_ascii=True, default=str)
+    with session_factory() as session:
+        row = session.execute(
+            select(IngestJobStageOrm)
+            .where(
+                IngestJobStageOrm.job_id == str(job_id).strip(),
+                IngestJobStageOrm.stage == stage_value.value,
+            )
+            .limit(1),
+        ).scalar_one_or_none()
+        if row is None:
+            return
+        row.metrics_json = metrics_json_str
+        session.commit()
+
+
 @contextmanager
 def stage(
     job_id: str | None,
     stage_name: IngestStage,
     session_factory: Callable[[], Any] | None = None,
     publisher: StageEventPublisher | None = None,
+    progress_emit: StageProgressPublisher | None = None,
 ) -> Iterator[StageHandle]:
-    handle = StageHandle(stage=stage_name)
+    handle = StageHandle(
+        stage=stage_name,
+        job_id=str(job_id).strip() if job_id else None,
+        session_factory=session_factory,
+        progress_emit=progress_emit,
+    )
     if not job_id or session_factory is None:
         with chain_span(f"ingest.{stage_name.value}"):
             yield handle

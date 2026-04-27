@@ -81,3 +81,40 @@ def compute_weighted_progress_pct(
     if total <= 0:
         return None
     return max(0.0, min(1.0, done / total))
+
+
+def compute_weighted_progress_pct_with_running_fraction(
+    stages: list[dict[str, Any]],
+    weights: Mapping[str, int],
+    *,
+    running_intra_fraction: float | None,
+) -> float | None:
+    """
+    Like ``compute_weighted_progress_pct``, but the first ``running`` stage uses
+    ``running_intra_fraction`` (0..1) when provided instead of a fixed 0.5 weight.
+    """
+
+    if not stages:
+        return None
+    total = 0.0
+    done = 0.0
+    running_applied = False
+    for row in stages:
+        name = str(row.get("name") or "").strip()
+        status = str(row.get("status") or "").strip().lower()
+        w = float(weights.get(name, DEFAULT_STAGE_WEIGHT_MS))
+        if w <= 0:
+            w = float(DEFAULT_STAGE_WEIGHT_MS)
+        total += w
+        if status == "completed":
+            done += w
+        elif status == "running":
+            if not running_applied and running_intra_fraction is not None:
+                frac = max(0.0, min(1.0, float(running_intra_fraction)))
+                running_applied = True
+            else:
+                frac = 0.5
+            done += frac * w
+    if total <= 0:
+        return None
+    return max(0.0, min(1.0, done / total))

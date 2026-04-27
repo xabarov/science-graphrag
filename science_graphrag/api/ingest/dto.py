@@ -8,6 +8,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from science_graphrag.api.ingest.ingest_progress import canonical_progress_fields_for_job
 from science_graphrag.ingestion.stage_stats import compute_weighted_progress_pct
 
 
@@ -53,6 +54,9 @@ class IngestStageView(BaseModel):
     expected_duration_ms: int | None = None
     metrics: dict[str, Any] = Field(default_factory=dict)
     error: str | None = None
+    detail_message: str | None = None
+    subprogress_current: int | None = None
+    subprogress_total: int | None = None
 
 
 class IngestJobEvent(BaseModel):
@@ -87,9 +91,16 @@ class IngestJobView(BaseModel):
     stages: list[IngestStageView] = Field(default_factory=list)
     phoenix_trace_id: str | None = None
     progress_pct: float | None = None
+    ingest_phase: str = "preparing_document"
+    active_stage: str = ""
+    detail_message: str | None = None
+    subprogress_current: int | None = None
+    subprogress_total: int | None = None
     pending_conflicts: dict[str, int] = Field(
         default_factory=lambda: {"works": 0, "authors": 0, "entities": 0},
-        description="Pending dedup conflicts with origin=ingest for this job's work_id (by queue kind).",
+        description=(
+            "Pending dedup conflicts with origin=ingest for this job's work_id (by queue kind)."
+        ),
     )
     pending_conflicts_count: int = Field(
         default=0,
@@ -108,9 +119,33 @@ def job_record_to_view(rec: IngestJobRecord) -> IngestJobView:
                 weights[name] = max(1000, int(exp))
             except (TypeError, ValueError):
                 pass
-    pct: float | None = None
-    if rec.kind == "single" and stage_rows:
-        pct = compute_weighted_progress_pct(stage_rows, weights)
+    pct_legacy: float | None = None
+    if rec.kind in ("single", "batch_child") and stage_rows:
+        pct_legacy = compute_weighted_progress_pct(stage_rows, weights)
+
+    canon = canonical_progress_fields_for_job(
+        kind=str(rec.kind or "single"),
+        status=rec.status,
+        message=rec.message,
+        progress_current=rec.progress_current,
+        progress_total=rec.progress_total,
+        stages=stage_rows,
+        weights=weights,
+    )
+    pct_final = canon.get("progress_pct")
+    if pct_final is None:
+        pct_final = pct_legacy
+
+    if rec.kind == "batch_parent":
+        pct_final = None
+        canon = {
+            "ingest_phase": "preparing_document",
+            "active_stage": "",
+            "detail_message": None,
+            "subprogress_current": None,
+            "subprogress_total": None,
+        }
+
     return IngestJobView(
         job_id=rec.job_id,
         workspace_id=rec.workspace_id,
@@ -131,7 +166,12 @@ def job_record_to_view(rec: IngestJobRecord) -> IngestJobView:
         child_job_ids=list(rec.child_job_ids),
         stages=[IngestStageView(**stage_row) for stage_row in stage_rows],
         phoenix_trace_id=rec.phoenix_trace_id,
-        progress_pct=pct,
+        progress_pct=pct_final,
+        ingest_phase=str(canon.get("ingest_phase") or "preparing_document"),
+        active_stage=str(canon.get("active_stage") or ""),
+        detail_message=canon.get("detail_message"),
+        subprogress_current=canon.get("subprogress_current"),
+        subprogress_total=canon.get("subprogress_total"),
         pending_conflicts={"works": 0, "authors": 0, "entities": 0},
         pending_conflicts_count=0,
     )
