@@ -1,4 +1,4 @@
-"""Regression: extraction_llm scope keeps ingest LLM/VL/claims, drops agent spans."""
+"""Regression: extraction_llm scope keeps ingest LLM/VL/claims plus allowlisted agent spans."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanE
 
 from science_graphrag.observability import phoenix_tracer
 from science_graphrag.observability import spans as observability_spans
-from science_graphrag.observability.spans.decorators import chain_span, llm_span
+from science_graphrag.observability.spans.decorators import chain_span, llm_span, retriever_span
 
 
 def test_extraction_llm_scope_allows_ingest_llm_and_vl(monkeypatch) -> None:
@@ -21,6 +21,8 @@ def test_extraction_llm_scope_allows_ingest_llm_and_vl(monkeypatch) -> None:
     monkeypatch.setattr(phoenix_tracer, "get_tracer", lambda name="science-graphrag": tracer)
     monkeypatch.setattr(observability_spans, "get_tracer", lambda name="science-graphrag": tracer)
 
+    with chain_span("noise.unrelated_chain"):
+        pass
     with chain_span("agent.query"):
         pass
     with chain_span("ingest_document"):
@@ -28,6 +30,8 @@ def test_extraction_llm_scope_allows_ingest_llm_and_vl(monkeypatch) -> None:
     with llm_span("llm.vl_pdf"):
         pass
     with llm_span("llm.claims_extraction"):
+        pass
+    with llm_span("llm.claims_extraction_compact"):
         pass
     with llm_span("llm.metadata_extraction"):
         pass
@@ -37,13 +41,24 @@ def test_extraction_llm_scope_allows_ingest_llm_and_vl(monkeypatch) -> None:
         pass
     with llm_span("llm.agent.writer"):
         pass
+    with llm_span("llm.unrelated_chat"):
+        pass
+    with retriever_span("retrieval.qdrant.idea_search"):
+        pass
+    with retriever_span("retrieval.elasticsearch.hits"):
+        pass
 
     names = {s.name for s in exporter.get_finished_spans()}
-    assert "agent.query" not in names
+    assert "noise.unrelated_chain" not in names
+    assert "agent.query" in names
     assert "ingest_document" in names
     assert "ingest.extract_claims.llm" in names
     assert "llm.vl_pdf" in names
     assert "llm.claims_extraction" in names
+    assert "llm.claims_extraction_compact" in names
     assert "llm.metadata_extraction" in names
     assert "llm.semantic_method_dataset" in names
-    assert "llm.agent.writer" not in names
+    assert "llm.agent.writer" in names
+    assert "llm.unrelated_chat" not in names
+    assert "retrieval.qdrant.idea_search" in names
+    assert "retrieval.elasticsearch.hits" not in names

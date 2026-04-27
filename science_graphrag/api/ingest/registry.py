@@ -101,6 +101,9 @@ class IngestJobRegistry:
             child_job_ids=row.child_job_ids,
             stages=stage_rows,
             phoenix_trace_id=row.phoenix_trace_id,
+            queued_source_object_key=row.queued_source_object_key,
+            queued_source_size=row.queued_source_size,
+            queued_source_etag=row.queued_source_etag,
         )
 
     @staticmethod

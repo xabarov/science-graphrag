@@ -26,7 +26,10 @@ def test_ingest_run_context_creates_stores(monkeypatch, tmp_path: Path) -> None:
 
     monkeypatch.setattr("science_graphrag.ingestion.stage_context.Neo4jGraphStore", DummyNeo)
     monkeypatch.setattr("science_graphrag.ingestion.stage_context.QdrantChunkStore", DummyQdrant)
-    monkeypatch.setattr("science_graphrag.ingestion.stage_context.BlobStore", DummyBlob)
+    monkeypatch.setattr(
+        "science_graphrag.ingestion.stage_context.build_raw_blob_store",
+        lambda _s: DummyBlob(),
+    )
 
     settings = Settings(
         blob_root=tmp_path / "blobs",

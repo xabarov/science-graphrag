@@ -70,19 +70,18 @@ export function AgentRunInspector({
     typeof import.meta.env?.VITE_PHOENIX_UI_BASE_URL === "string"
       ? import.meta.env.VITE_PHOENIX_UI_BASE_URL.trim()
       : "";
-  const phoenixProjectId =
-    typeof import.meta.env?.VITE_PHOENIX_PROJECT_ID === "string" &&
-    import.meta.env.VITE_PHOENIX_PROJECT_ID.trim()
+  const phoenixProjectIdRaw =
+    typeof import.meta.env?.VITE_PHOENIX_PROJECT_ID === "string"
       ? import.meta.env.VITE_PHOENIX_PROJECT_ID.trim()
-      : "science-graphrag";
+      : "";
   const phoenixTraceId =
     normalized.phoenix_trace_id != null && String(normalized.phoenix_trace_id).trim()
       ? String(normalized.phoenix_trace_id).trim()
       : "";
   const phoenixTraceUrl =
-    phoenixUiBase && phoenixTraceId
+    phoenixUiBase && phoenixTraceId && phoenixProjectIdRaw
       ? `${phoenixUiBase.replace(/\/$/, "")}/projects/${encodeURIComponent(
-          phoenixProjectId,
+          phoenixProjectIdRaw,
         )}/traces/${encodeURIComponent(phoenixTraceId)}`
       : "";
 

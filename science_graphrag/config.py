@@ -86,6 +86,27 @@ class Settings(BaseSettings):
 
     blob_root: Path = Field(default=Path("./data/blobs"))
     artifact_root: Path = Field(default=Path("./data/artifacts"))
+    object_storage_enabled: bool = Field(
+        default=False,
+        description="When true, ingest queue payloads and content-addressed raw blobs use S3/MinIO.",
+    )
+    s3_endpoint_url: str | None = Field(
+        default=None,
+        description="S3 API endpoint (e.g. http://localhost:19000 for MinIO).",
+    )
+    s3_access_key_id: str | None = Field(default=None)
+    s3_secret_access_key: str | None = Field(default=None)
+    s3_bucket: str = Field(
+        default="science-raw", description="Bucket for ingest queue + raw sha blobs."
+    )
+    s3_use_ssl: bool = Field(
+        default=True,
+        description="Set false for plain-http MinIO in dev.",
+    )
+    s3_addressing_style: Literal["path", "virtual"] = Field(
+        default="path",
+        description="MinIO typically needs path-style addressing.",
+    )
     database_url: str = Field(
         default="postgresql+psycopg://science:science@localhost:15432/science_graphrag",
     )
@@ -299,10 +320,14 @@ class Settings(BaseSettings):
         ),
     )
     claims_extraction_max_tokens: int = Field(
-        default=4096,
+        default=8192,
         ge=256,
         le=16384,
-        description="Max completion tokens for claims extraction LLM call (BT6 benchmarks may need 8k–16k).",
+        description=(
+            "Max completion tokens for claims extraction LLM call. "
+            "Truncated JSON / EOF in Phoenix usually means raise this (or cap in extractor_factory); "
+            "dense PDF batches may need 8k–16k."
+        ),
     )
     qdrant_claims_collection: str = Field(
         default="claims",
@@ -493,6 +518,7 @@ class Settings(BaseSettings):
                 ("qdrant_url", "SCIENCE_GRAPHRAG_QDRANT_URL"),
                 ("database_url", "SCIENCE_GRAPHRAG_DATABASE_URL"),
                 ("redis_url", "SCIENCE_GRAPHRAG_REDIS_URL"),
+                ("s3_endpoint_url", "SCIENCE_GRAPHRAG_S3_ENDPOINT_URL"),
             ):
                 val = os.getenv(envar)
                 if val:
@@ -529,6 +555,23 @@ class Settings(BaseSettings):
                 data.pop("embedding_model", None)
 
         return data
+
+    @model_validator(mode="after")
+    def validate_object_storage_config(self) -> "Settings":
+        if self.object_storage_enabled:
+            missing: list[str] = []
+            if not (self.s3_access_key_id or "").strip():
+                missing.append("s3_access_key_id")
+            if not (self.s3_secret_access_key or "").strip():
+                missing.append("s3_secret_access_key")
+            if not (self.s3_bucket or "").strip():
+                missing.append("s3_bucket")
+            if missing:
+                raise ValueError(
+                    "object_storage_enabled requires non-empty "
+                    + ", ".join(f"SCIENCE_GRAPHRAG_{m.upper()}" for m in missing)
+                )
+        return self
 
 
 def get_settings() -> Settings:

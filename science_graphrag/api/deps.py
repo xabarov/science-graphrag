@@ -8,10 +8,10 @@ from fastapi import Depends, Request
 from science_graphrag.artifacts.local_store import LocalFilesystemArtifactStore
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
-from science_graphrag.storage.blobs import BlobStore
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 from science_graphrag.storage.qdrant_claims_store import QdrantClaimsStore
 from science_graphrag.storage.qdrant_store import QdrantChunkStore, QdrantWorkEmbeddingStore
+from science_graphrag.storage.raw_blob_store import RawBlobStorePort, build_raw_blob_store
 
 
 @dataclass
@@ -22,7 +22,7 @@ class StoreRegistry:
     qdrant_chunks: QdrantChunkStore
     qdrant_works: QdrantWorkEmbeddingStore
     qdrant_claims: QdrantClaimsStore
-    blob: BlobStore
+    blob: RawBlobStorePort
     artifacts: LocalFilesystemArtifactStore
 
     def close(self) -> None:
@@ -66,7 +66,7 @@ def init_store_registry(settings: Settings) -> StoreRegistry:
             settings.qdrant_claims_collection,
             vector_dim=dim,
         ),
-        blob=BlobStore(settings.blob_root),
+        blob=build_raw_blob_store(settings),
         artifacts=LocalFilesystemArtifactStore(settings.artifact_root),
     )
     return _registry

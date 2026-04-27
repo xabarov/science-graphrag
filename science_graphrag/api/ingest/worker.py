@@ -14,6 +14,7 @@ from science_graphrag.ingestion.pipeline import SkippedDuplicateIngestError, ing
 from science_graphrag.ingestion.stage_context import IngestStage, stage
 from science_graphrag.observability.phoenix_tracer import chain_span
 from science_graphrag.storage.db import get_engine, init_db, session_factory
+from science_graphrag.storage.ingest_queue_store import build_ingest_queue_store
 from science_graphrag.storage.models_orm import IngestJobRecordOrm
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 
@@ -240,6 +241,12 @@ def _execute_single_ingest(job_id: str, temp_path: Path, settings: Settings) -> 
                 kind="terminal",
                 payload={"job_id": job_id, "status": "completed", "finished_at": now_iso()},
             )
+            qkey = job.queued_source_object_key
+            if qkey:
+                try:
+                    build_ingest_queue_store(settings).delete(qkey)
+                except Exception:  # noqa: BLE001
+                    pass
     except Exception as exc:  # noqa: BLE001
         _append_log(job_id, f"ERROR {exc!r}")
         upd(status="failed", error="ingest_failed", message=str(exc)[:500], finished_at=now_iso())

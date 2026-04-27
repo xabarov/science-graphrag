@@ -26,7 +26,7 @@ def test_build_ingestion_extractor_presets_max_tokens() -> None:
     sem = build_ingestion_extractor(s, IngestionExtractorPreset.SEMANTIC)
     assert sem.max_tokens == 333
     claims = build_ingestion_extractor(s, IngestionExtractorPreset.CLAIMS)
-    assert claims.max_tokens == 8192
+    assert claims.max_tokens == 9000
     bench = build_ingestion_extractor(s, IngestionExtractorPreset.CLAIMS_BENCHMARK)
     assert bench.max_tokens == 9000
 

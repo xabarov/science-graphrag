@@ -8,6 +8,7 @@ from typing import Any
 from langchain_core.messages import AIMessage, ToolMessage
 
 from science_graphrag.agent.graph.state import AgentState
+from science_graphrag.agent.tool_call_normalization import normalize_tool_call_name
 from science_graphrag.agent.trace import ToolCallTrace
 
 
@@ -61,7 +62,7 @@ def _collect_from_messages(messages: list[Any]) -> list[ToolCallTrace]:
             traces.append(
                 ToolCallTrace(
                     step=step,
-                    tool=str(tool_call.get("name") or ""),
+                    tool=normalize_tool_call_name(str(tool_call.get("name") or "")),
                     args_summary={key: str(value)[:200] for key, value in args_dict.items()},
                     row_count=row_count,
                     duration_ms=0,

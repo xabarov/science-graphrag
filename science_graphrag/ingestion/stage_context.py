@@ -14,10 +14,10 @@ from typing import TYPE_CHECKING, Any, Callable, Iterator
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from science_graphrag.observability.phoenix_tracer import chain_span
-from science_graphrag.storage.blobs import BlobStore
 from science_graphrag.storage.models_orm import IngestJobStageOrm
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 from science_graphrag.storage.qdrant_store import QdrantChunkStore
+from science_graphrag.storage.raw_blob_store import RawBlobStorePort, build_raw_blob_store
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -67,7 +67,7 @@ class IngestRunContext:
 
     _neo4j_store: Neo4jGraphStore | None = field(default=None, init=False, repr=False)
     _qdrant_store: QdrantChunkStore | None = field(default=None, init=False, repr=False)
-    _blob_store: BlobStore | None = field(default=None, init=False, repr=False)
+    _blob_store: RawBlobStorePort | None = field(default=None, init=False, repr=False)
     phoenix_tracer: Any | None = None
 
     @property
@@ -91,9 +91,9 @@ class IngestRunContext:
         return self._qdrant_store
 
     @property
-    def blob_store(self) -> BlobStore:
+    def blob_store(self) -> RawBlobStorePort:
         if self._blob_store is None:
-            self._blob_store = BlobStore(self.settings.blob_root)
+            self._blob_store = build_raw_blob_store(self.settings)
         return self._blob_store
 
     @contextmanager

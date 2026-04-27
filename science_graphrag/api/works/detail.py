@@ -7,6 +7,7 @@ from sqlalchemy import select
 
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.artifacts.local_store import LocalFilesystemArtifactStore
+from science_graphrag.artifacts.protocols import ArtifactStorePort
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.artifact_layout import (
     has_extracted_body_store,
@@ -374,11 +375,13 @@ def read_work_extracted_body_dict(
     work_id: str,
     document_id: str,
     max_chars: int,
-    artifact_store: LocalFilesystemArtifactStore | None = None,
+    artifact_store: ArtifactStorePort | None = None,
 ) -> dict[str, Any]:
     """Load canonical / legacy ingest markdown for API responses."""
 
-    store = artifact_store or LocalFilesystemArtifactStore(Path(settings.artifact_root))
+    store: ArtifactStorePort = artifact_store or LocalFilesystemArtifactStore(
+        Path(settings.artifact_root)
+    )
     resolved = resolve_extracted_body_relative(store, document_id)
     if not resolved:
         return {

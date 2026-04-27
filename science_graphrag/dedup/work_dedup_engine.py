@@ -10,11 +10,15 @@ from science_graphrag.config import Settings
 from science_graphrag.dedup.fingerprints import work_pair_fingerprint
 from science_graphrag.dedup.prompts import SYSTEM_SAME_WORK, USER_SAME_WORK_TEMPLATE
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
-from science_graphrag.ingestion.llm.extractor import SyncInstructorExtractor
+from science_graphrag.ingestion.llm.extractor import (
+    EXTRACT_MAYBE_MAX_INNER_ATTEMPTS,
+    SyncInstructorExtractor,
+)
 from science_graphrag.observability.phoenix_tracer import SpanAttributes, llm_span
 from science_graphrag.storage.models_orm import WorkDedupConflict
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 from science_graphrag.storage.qdrant_store import QdrantWorkEmbeddingStore
+from science_graphrag.utils.llm_deadline import MonotonicDeadline
 from science_graphrag.utils.project_logging import get_logger
 
 log = get_logger("dedup.work")
@@ -76,19 +80,29 @@ def _llm_same_work(
         mode=settings.extraction_llm_mode,
     )
     transport_s = float(settings.work_dedup_llm_timeout_s)
+    op_budget = min(120.0, transport_s * float(EXTRACT_MAYBE_MAX_INNER_ATTEMPTS))
+    op_deadline = MonotonicDeadline.from_budget_seconds(op_budget)
     with llm_span(
         "llm.dedup.same_work",
         {
             **SpanAttributes.llm_runtime_policy_attributes(
                 pool_name="dedup",
                 transport_timeout_seconds=transport_s,
-                timeout_contract="transport_only",
+                timeout_contract="transport_with_operation_deadline",
                 retry_extra_budget=0,
+                operation_deadline_seconds=op_budget,
+                transport_max_attempts=EXTRACT_MAYBE_MAX_INNER_ATTEMPTS,
             ),
             "dedup.judgment": "same_work",
         },
     ):
-        parsed, err = ext.extract_maybe(SameWorkJudgment, system=SYSTEM_SAME_WORK, user=user)
+        parsed, err = ext.extract_maybe(
+            SameWorkJudgment,
+            system=SYSTEM_SAME_WORK,
+            user=user,
+            per_attempt_timeout_seconds=transport_s,
+            operation_deadline=op_deadline,
+        )
     if err or parsed is None:
         log.warning("work_dedup_llm: %s", err)
         return None, err

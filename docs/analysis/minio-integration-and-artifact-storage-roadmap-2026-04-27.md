@@ -437,7 +437,7 @@ Acceptance:
 - new code writes through a storage seam, not directly through ad-hoc path strings;
 - docs and runners use the same class vocabulary.
 
-**Implementation note (Phase 0 landed):** taxonomy enums and `ArtifactDescriptor` live in `science_graphrag/artifacts/taxonomy.py`; benchmark default paths + `BenchmarkLogicalId` + `BENCHMARK_REGISTRY` in `science_graphrag/artifacts/benchmark_paths.py` and `benchmark_registry.py` (scripts re-export via `scripts/benchmark_aggregator/paths.py`); deterministic ingest artifacts use `LocalFilesystemArtifactStore` in `science_graphrag/artifacts/local_store.py`, wired as `StoreRegistry.artifacts` in `science_graphrag/api/deps.py` (readers in `api/works/detail.py`, writers in `ingestion/_pipeline_impl.py`); UI run snapshots resolve via `science_graphrag/artifacts/run_layout.py`. Tests: `tests/artifacts/`.
+**Implementation note (Phase 0 landed):** taxonomy enums and `ArtifactDescriptor` live in `science_graphrag/artifacts/taxonomy.py`; benchmark default paths + `BenchmarkLogicalId` + `BENCHMARK_REGISTRY` in `science_graphrag/artifacts/benchmark_paths.py` and `benchmark_registry.py` (scripts re-export via `scripts/benchmark_aggregator/paths.py`); ingest I/O uses `LocalFilesystemArtifactStore` implementing `ArtifactStorePort` in `science_graphrag/artifacts/protocols.py` / `local_store.py`, wired as `StoreRegistry.artifacts` in `science_graphrag/api/deps.py` (readers in `api/works/detail.py`, writers in `ingestion/_pipeline_impl.py`); UI run snapshots resolve via `science_graphrag/artifacts/run_layout.py`. Tests: `tests/artifacts/`.
 
 ### Phase 1 — raw blob and ingest queue cutover
 
@@ -545,6 +545,21 @@ Acceptance:
 - runtime editable settings
 - secrets
 - graph/vector state
+
+### 9.4 Committable JSON policy (Phase 0)
+
+Use one vocabulary (`ArtifactClass`, `StoragePolicy`, `ArtifactDescriptor.committable` in
+`science_graphrag/artifacts/taxonomy.py` and benchmark rows in `benchmark_registry.py`):
+
+- **Committable for git:** small gate inputs, `benchmark-metrics-summary.json`, trust baselines,
+  gold fixtures, sanitized summaries — no absolute host paths, no raw secrets, no full
+  per-case traces when the registry marks the lane `committable=True`.
+- **Runtime / local only:** UI benchmark snapshots under `data/benchmark_runs/`
+  (`StoragePolicy.LOCAL_RUNTIME`); disposable across hosts until Phase 3 moves payloads.
+- **Diagnostic:** retest lanes, infra-skip captures, repair JSONL — commit only when explicitly
+  curated; default follows registry rows.
+- **Not committable without sanitization:** machine-local paths inside JSON, trace-heavy blobs,
+  OD backfill streams — do not add new git paths for these; object storage in later phases.
 
 ---
 

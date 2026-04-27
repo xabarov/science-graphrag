@@ -8,6 +8,7 @@ from science_graphrag.domain.semantic_models import (
     SemanticExtractionV1,
 )
 from science_graphrag.ingestion.llm.executor import run_extraction
+from science_graphrag.ingestion.llm.extractor import EXTRACT_MAYBE_MAX_INNER_ATTEMPTS
 from science_graphrag.ingestion.llm.extractor_factory import (
     IngestionExtractorPreset,
     build_ingestion_extractor,
@@ -28,6 +29,7 @@ from science_graphrag.ingestion.llm.prompts.semantic import (
 from science_graphrag.ingestion.llm.schemas import SemanticMethodDatasetBundleLLM
 from science_graphrag.ingestion.method_consolidation import consolidate_document_methods
 from science_graphrag.observability.phoenix_tracer import add_span_event
+from science_graphrag.utils.llm_deadline import MonotonicDeadline
 from science_graphrag.utils.project_logging import get_logger
 
 log = get_logger("ingestion.semantic")
@@ -39,6 +41,12 @@ def _semantic_llm_bundle_attempts(
     document_id: str,
 ) -> tuple[SemanticMethodDatasetBundleLLM | None, str | None, SemanticExtractionLLMDiagnostics]:
     extractor = build_ingestion_extractor(settings, IngestionExtractorPreset.SEMANTIC)
+    transport = float(settings.extraction_llm_timeout_seconds)
+    bundle_budget = min(
+        900.0,
+        float(transport) * float(EXTRACT_MAYBE_MAX_INNER_ATTEMPTS) * 4.0,
+    )
+    bundle_deadline = MonotonicDeadline.from_budget_seconds(bundle_budget)
     bodies = [
         ("primary", SYSTEM_SEMANTIC, semantic_body_slice(normalized_markdown)),
         (
@@ -71,8 +79,11 @@ def _semantic_llm_bundle_attempts(
             document_id=document_id,
             system_prompt=system_prompt,
             retries=0,
-            transport_timeout_seconds=float(settings.extraction_llm_timeout_seconds),
+            transport_timeout_seconds=transport,
             pool_name="semantic",
+            timeout_contract="transport_with_operation_deadline",
+            operation_deadline_seconds=bundle_budget,
+            operation_deadline=bundle_deadline,
         )
         if parsed is not None and not err:
             diag = SemanticExtractionLLMDiagnostics(

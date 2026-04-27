@@ -49,12 +49,14 @@ export default function BenchmarkRunScopeSelector({
   onToggleCase,
 }) {
   const tk = useTheme().appTokens;
-  const selectedSet = new Set(selectedCaseIds || []);
+  const caseIds = selectedCaseIds || [];
+  const selectedSet = new Set(caseIds);
+  const selectedCount = caseIds.length;
   return (
     <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
       <ScopeCard
         title="Selected cases"
-        subtitle={`${selectedCaseIds.length || 0} selected`}
+        subtitle={`${selectedCount} selected`}
         active={launcherScope === "selected"}
         onClick={() => onScopeChange?.("selected")}
       >

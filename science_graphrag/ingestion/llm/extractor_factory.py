@@ -52,7 +52,8 @@ def build_ingestion_extractor(
         max_tokens = min(int(settings.claims_extraction_max_tokens), cap)
         temperature = float(settings.extraction_llm_temperature)
     else:
-        cap = 8192
+        # Match CLAIMS_BENCHMARK cap so production ingest can use full Settings range up to 16k.
+        cap = 16384
         max_tokens = min(int(settings.claims_extraction_max_tokens), cap)
         temperature = float(settings.extraction_llm_temperature)
 

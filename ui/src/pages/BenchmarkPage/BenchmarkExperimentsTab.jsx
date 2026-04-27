@@ -20,7 +20,7 @@ import {
 
 /**
  * @param {object} props
- * @param {(opts: { tabIndex: number, analysisView?: "results"|"compare"|"workbench", experimentId?: string | null, runMode?: "single"|"grouped", packId?: string | null }) => void} props.onNavigate
+ * @param {(opts: { tabIndex: number, analysisView?: "overview"|"results"|"compare"|"workbench", experimentId?: string | null, runMode?: "single"|"grouped", packId?: string | null }) => void} props.onNavigate
  */
 export default function BenchmarkExperimentsTab({ onNavigate }) {
   const { t } = useI18n();
@@ -92,7 +92,7 @@ export default function BenchmarkExperimentsTab({ onNavigate }) {
                         {t("benchmarkPage.experiments.ctaRunLab")}
                       </CursorSmallButton>
                     ) : null}
-                    <CursorSmallButton size="small" onClick={() => onNavigate({ tabIndex: 3, analysisView: "results" })}>
+                    <CursorSmallButton size="small" onClick={() => onNavigate({ tabIndex: 3 })}>
                       {t("benchmarkPage.experiments.ctaAnalysis")}
                     </CursorSmallButton>
                   </Box>

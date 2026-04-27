@@ -21,39 +21,32 @@
 
 ## Контекст и текущий статус
 
-Сейчас в проекте уже есть базовый `/benchmark`:
+**Обновление 2026-04-28:** страница админского Benchmark Lab (`/admin/benchmarks`) приведена к IA **Overview / Experiments / Run Lab / Analysis / Cases** (см. [`docs/analysis/benchmark-panel-research-redesign-plan-2026-04-27.md`](../analysis/benchmark-panel-research-redesign-plan-2026-04-27.md)). Роут `/benchmark` редиректится на `/admin/benchmarks` с сохранением query.
 
-- UI:
-  - `ui/src/pages/BenchmarkPage/BenchmarkPage.jsx`
-  - `ui/src/pages/BenchmarkPage/RunTab.jsx`
-  - `ui/src/pages/BenchmarkPage/ResultsTab.jsx`
-  - `ui/src/pages/BenchmarkPage/CasesTab.jsx`
-  - `ui/src/pages/BenchmarkPage/CaseDetailDialog.jsx`
-  - `ui/src/pages/BenchmarkPage/ResultsDialog.jsx`
+Сейчас в проекте есть полный срез UI + API для базового workbench и последующих фаз:
+
+- UI (основные узлы):
+  - `ui/src/pages/BenchmarkPage/BenchmarkPage.jsx` — табы, URL (`tab`, `analysisView` включая `overview`, `run`, `case`, Run Lab query).
+  - `ui/src/pages/BenchmarkPage/experimentCatalog.js` — каталог экспериментов, парсинг табов, `LEGACY_ANALYSIS_TOOL_VIEWS` vs matrix `overview`.
+  - `ui/src/pages/BenchmarkPage/RunTab.jsx`, `BenchmarkLauncherPanel.jsx`, `RunLabGroupedExecutionPanel.jsx`, `useRunTab.js`, `useBenchmarkRunGroup.js`
+  - `ui/src/pages/BenchmarkPage/BenchmarkAnalysisTab.jsx`, `BenchmarkAnalysisOverview.jsx`, `BenchmarkVariantMatrix.jsx`, `ResultsTab.jsx`, `CompareTab.jsx`, `BenchmarkWorkbenchTab.jsx`
+  - `ui/src/pages/BenchmarkPage/caseInspector/*`, `CasesTab.jsx`, `CaseDetailDialog.jsx`, `TrustSignalPanel.jsx`
 - API:
   - `science_graphrag/api/benchmark.py`
 - Клиент:
   - `ui/src/services/benchmarkApi.js`
 
-Текущий MVP уже умеет:
+Что уже закрыто относительно раннего MVP (часть пунктов ниже всё ещё актуальна для **диалога** предпросмотра кейса и CLI-only семейств):
 
-- показывать список кейсов;
-- запускать `layer1` и `layer2` прогоны;
-- показывать историю run-ов;
-- открывать детали run-а;
-- отображать basic comparison tables.
+- список кейсов, запуск `layer1` / `layer2` из UI, история прогонов, compare, workbench с benchmark-aware inspector;
+- матрица вариантов на Analysis (`BenchmarkAnalysisOverview`) и вынесенные в меню «legacy» инструменты (полный список прогонов, compare, workbench);
+- выбор модели / профиля в Run Lab; групповой запуск по каталогу.
 
-Но сейчас UX всё ещё ориентирован на dev/QA console, а не на удобный benchmark review workflow:
+Что остаётся зоной улучшений (см. redesign plan, Phase 3 / backend `run-group`):
 
-- кейсы смотрятся как raw `article.md` + pretty-printed JSON;
-- нет удобного разделения по полям, сущностям и mismatch-ам;
-- нельзя выбрать модель для run из UI;
-- нет teacher/student comparison режима;
-- нет удобной навигации по длинному тексту статьи;
-- нет устойчивой истории прогонов с фильтрами;
-- нет dedicated screen для анализа одного кейса и одной модели;
-- нет таблиц агрегированных метрик по suite с drill-down;
-- graph-family остаётся только catalog-only.
+- кейсы в **CaseDetailDialog** по-прежнему ближе к raw JSON-просмотру;
+- graph benchmark — catalog-first, запуск из CLI;
+- нормализованные scorecards с API (не только вывод из summary в UI).
 
 ## Пользовательские сценарии
 

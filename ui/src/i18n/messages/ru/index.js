@@ -6,7 +6,7 @@ import partBenchmarkTabs from "./partBenchmarkTabs.js";
 import partChat from "./partChat.js";
 import partCommon from "./partCommon.js";
 import partEvidenceBody from "./partEvidenceBody.js";
-import partGraphUi from "./partGraphUi.js";
+import { partGraphUi } from "./partGraphUi.js";
 import partPagesCore from "./partPagesCore.js";
 import partReaderBody from "./partReaderBody.js";
 import partReaderShell from "./partReaderShell.js";

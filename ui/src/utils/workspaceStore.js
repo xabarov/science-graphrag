@@ -10,7 +10,9 @@ import {
 } from "../services/apiClient.js";
 import { formatResearchApiError } from "../services/researchApi.js";
 
-const ACTIVE_WORKSPACE_KEY = "science-graphrag:activeWorkspaceId";
+import { getActiveWorkspaceId } from "./activeWorkspacePointer.js";
+
+export { getActiveWorkspaceId, setActiveWorkspaceId } from "./activeWorkspacePointer.js";
 
 /** Default HTTP timeout so a dead API/Neo4j does not leave the UI stuck on “Loading…”. */
 const INGEST_UPLOAD_TIMEOUT_MS = 120_000;
@@ -27,31 +29,6 @@ function workspaceReadConfig(extra = {}) {
 
 function apiUrl(pathWithQuery) {
   return buildApiUrl(pathWithQuery);
-}
-
-/**
- * @returns {string}
- */
-export function getActiveWorkspaceId() {
-  try {
-    const raw = window.localStorage.getItem(ACTIVE_WORKSPACE_KEY);
-    return raw && String(raw).trim() ? String(raw).trim() : "";
-  } catch {
-    return "";
-  }
-}
-
-/**
- * @param {string} id
- */
-export function setActiveWorkspaceId(id) {
-  const v = String(id || "").trim();
-  try {
-    if (!v) window.localStorage.removeItem(ACTIVE_WORKSPACE_KEY);
-    else window.localStorage.setItem(ACTIVE_WORKSPACE_KEY, v);
-  } catch {
-    /* ignore */
-  }
 }
 
 /**

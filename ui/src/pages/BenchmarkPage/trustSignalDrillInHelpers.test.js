@@ -6,6 +6,7 @@ import {
   collectConsistencyWarningLines,
   collectValidationStatusRows,
   decisionChipSx,
+  decisionChipSxDemoted,
 } from "./trustSignalDrillInHelpers.js";
 
 describe("trustSignalDrillInHelpers", () => {
@@ -83,5 +84,11 @@ describe("trustSignalDrillInHelpers", () => {
   it("decisionChipSx marks GO", () => {
     const sx = decisionChipSx("GO");
     expect(sx.color).toContain("129");
+  });
+
+  it("decisionChipSxDemoted uses lighter emphasis than decisionChipSx", () => {
+    const dem = decisionChipSxDemoted("NO-GO");
+    const hero = decisionChipSx("NO-GO");
+    expect(dem.fontWeight).toBeLessThan(hero.fontWeight);
   });
 });

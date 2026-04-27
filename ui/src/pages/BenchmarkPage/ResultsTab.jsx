@@ -18,6 +18,7 @@ import { deleteBenchmarkRun, listBenchmarkRuns } from "../../services/benchmarkA
 import ResultsDialog from "./ResultsDialog.jsx";
 import { CursorButton, CursorDangerButton } from "../../components/common/index.js";
 import BenchmarkRunSummaryCards from "./BenchmarkRunSummaryCards.jsx";
+import { useI18n } from "../../i18n/useI18n.js";
 
 function _statusChip(status) {
   const normalized = (status || "").toLowerCase();
@@ -28,6 +29,7 @@ function _statusChip(status) {
 }
 
 export default function ResultsTab({ onOpenWorkbench }) {
+  const { t } = useI18n();
   const tk = useTheme().appTokens;
   const [runsPayload, setRunsPayload] = useState(null);
   const [error, setError] = useState(null);
@@ -53,14 +55,15 @@ export default function ResultsTab({ onOpenWorkbench }) {
       try {
         await refresh();
       } catch (e) {
-        if (!cancelled) setError(e?.message || "failed_to_load_runs");
+        if (!cancelled) setError(e?.message || t("benchmarkPage.results.loadError"));
       }
     }
     init();
     return () => {
       cancelled = true;
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- initial load; filters via Apply
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- initial mount; filters applied via Apply; refresh closes over latest filter state when invoked
+  }, []);
 
   const items = runsPayload?.items || [];
   const latestRun = items[0] || null;
@@ -68,43 +71,41 @@ export default function ResultsTab({ onOpenWorkbench }) {
   return (
     <Box sx={{ padding: 2 }}>
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
-        <Typography sx={{ fontWeight: 600 }}>Results</Typography>
+        <Typography sx={{ fontWeight: 600 }}>{t("benchmarkPage.results.title")}</Typography>
         <Box sx={{ display: "flex", gap: 1 }}>
-          <CursorButton onClick={() => refresh()}>
-            Refresh
-          </CursorButton>
+          <CursorButton onClick={() => refresh()}>{t("benchmarkPage.results.refresh")}</CursorButton>
         </Box>
       </Box>
 
       {error && (
-        <Typography sx={{ color: "rgba(239, 68, 68, 0.9)", mb: 1 }} role="alert">
+        <Typography sx={{ color: tk.state.dangerFg, mb: 1 }} role="alert">
           {error}
         </Typography>
       )}
 
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "center", mb: 2 }}>
         <FormControl size="small" sx={{ minWidth: 120 }}>
-          <InputLabel id="res-fam">Family</InputLabel>
+          <InputLabel id="res-fam">{t("benchmarkPage.results.familyLabel")}</InputLabel>
           <Select
             labelId="res-fam"
-            label="Family"
+            label={t("benchmarkPage.results.familyLabel")}
             value={familyFilter}
             onChange={(e) => setFamilyFilter(e.target.value)}
           >
-            <MenuItem value="">all</MenuItem>
+            <MenuItem value="">{t("benchmarkPage.results.filterAll")}</MenuItem>
             <MenuItem value="layer1">layer1</MenuItem>
             <MenuItem value="layer2">layer2</MenuItem>
           </Select>
         </FormControl>
         <FormControl size="small" sx={{ minWidth: 140 }}>
-          <InputLabel id="res-st">Status</InputLabel>
+          <InputLabel id="res-st">{t("benchmarkPage.results.statusLabel")}</InputLabel>
           <Select
             labelId="res-st"
-            label="Status"
+            label={t("benchmarkPage.results.statusLabel")}
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
-            <MenuItem value="">all</MenuItem>
+            <MenuItem value="">{t("benchmarkPage.results.filterAll")}</MenuItem>
             <MenuItem value="completed">completed</MenuItem>
             <MenuItem value="running">running</MenuItem>
             <MenuItem value="failed">failed</MenuItem>
@@ -113,18 +114,16 @@ export default function ResultsTab({ onOpenWorkbench }) {
         </FormControl>
         <TextField
           size="small"
-          label="run_id / label"
+          label={t("benchmarkPage.results.queryLabel")}
           value={qFilter}
           onChange={(e) => setQFilter(e.target.value)}
           sx={{ minWidth: 220 }}
         />
-        <CursorButton onClick={() => refresh().catch(() => {})}>Apply filters</CursorButton>
+        <CursorButton onClick={() => refresh().catch(() => {})}>{t("benchmarkPage.results.applyFilters")}</CursorButton>
       </Box>
 
       {items.length === 0 ? (
-        <Typography sx={{ color: tk.text.secondary }}>
-          No runs yet. Go to the Launch tab to start one.
-        </Typography>
+        <Typography sx={{ color: tk.text.secondary }}>{t("benchmarkPage.results.empty")}</Typography>
       ) : (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {latestRun ? <BenchmarkRunSummaryCards run={latestRun} /> : null}
@@ -132,13 +131,13 @@ export default function ResultsTab({ onOpenWorkbench }) {
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell>run_id</TableCell>
-                <TableCell>family</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Progress</TableCell>
-                <TableCell>config</TableCell>
-                <TableCell>metrics</TableCell>
-                <TableCell align="right">Actions</TableCell>
+                <TableCell>{t("benchmarkPage.results.colRunId")}</TableCell>
+                <TableCell>{t("benchmarkPage.results.colFamily")}</TableCell>
+                <TableCell>{t("benchmarkPage.results.colStatus")}</TableCell>
+                <TableCell>{t("benchmarkPage.results.colProgress")}</TableCell>
+                <TableCell>{t("benchmarkPage.results.colConfig")}</TableCell>
+                <TableCell>{t("benchmarkPage.results.colMetrics")}</TableCell>
+                <TableCell align="right">{t("benchmarkPage.results.colActions")}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -170,7 +169,7 @@ export default function ResultsTab({ onOpenWorkbench }) {
                       {r.progress.completed}/{r.progress.total} ({pct.toFixed(1)}%)
                     </TableCell>
                     <TableCell sx={{ fontSize: "0.75rem", color: tk.text.secondary }}>
-                      {configCell || "default"}
+                      {configCell || t("benchmarkPage.results.configDefault")}
                     </TableCell>
                     <TableCell sx={{ fontSize: "0.75rem", color: tk.text.secondary }}>{metricsCell}</TableCell>
                     <TableCell align="right">
@@ -180,10 +179,10 @@ export default function ResultsTab({ onOpenWorkbench }) {
                           setDialogOpen(true);
                         }}
                       >
-                        Open
+                        {t("benchmarkPage.results.openDialog")}
                       </CursorButton>
                       <CursorButton onClick={() => onOpenWorkbench?.(r.run_id, r?.cases?.[0]?.case_id || null)}>
-                        Workbench
+                        {t("benchmarkPage.results.openWorkbench")}
                       </CursorButton>
                       <CursorDangerButton
                         onClick={async () => {
@@ -191,7 +190,7 @@ export default function ResultsTab({ onOpenWorkbench }) {
                           await refresh();
                         }}
                       >
-                        Delete
+                        {t("benchmarkPage.results.deleteRun")}
                       </CursorDangerButton>
                     </TableCell>
                   </TableRow>

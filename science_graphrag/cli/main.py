@@ -462,6 +462,11 @@ def config_check_cmd(
         "--embeddings-preflight/--no-embeddings-preflight",
         help="After printing settings, call embeddings once (fails fast on OpenRouter outages).",
     ),
+    object_storage_preflight: bool = typer.Option(
+        False,
+        "--object-storage-preflight/--no-object-storage-preflight",
+        help="When object_storage_enabled, verify S3/MinIO bucket access (head + list).",
+    ),
 ) -> None:
     """Print non-secret diagnostics for Settings (operator pre-flight)."""
 
@@ -499,6 +504,16 @@ def config_check_cmd(
     except OSError:
         exists = False
     _line("blob_root", f"{br} (exists={exists})")
+    _line("object_storage_enabled", str(bool(s.object_storage_enabled)))
+    if s.object_storage_enabled:
+        _line(
+            "s3_endpoint_url",
+            (s.s3_endpoint_url or "").strip() or "(default virtual-hosted AWS / moto)",
+        )
+        _line("s3_bucket", (s.s3_bucket or "").strip())
+        _line("s3_access_key_id", "SET" if (s.s3_access_key_id or "").strip() else "UNSET")
+        _line("s3_secret_access_key", "SET" if (s.s3_secret_access_key or "").strip() else "UNSET")
+        _line("s3_use_ssl", str(bool(s.s3_use_ssl)))
     if strict and not ex_ok:
         typer.echo("[config-check] FAILED: extraction_llm_api_key UNSET", err=True)
         raise typer.Exit(code=1)
@@ -511,6 +526,20 @@ def config_check_cmd(
         except Exception as exc:  # noqa: BLE001
             typer.echo(f"[config-check] embeddings preflight: FAILED ({exc!s})", err=True)
             raise typer.Exit(code=1) from exc
+    if object_storage_preflight:
+        from science_graphrag.storage.object_storage_preflight import probe_object_storage
+
+        if not s.object_storage_enabled:
+            typer.echo(
+                "[config-check] object storage preflight: skipped (object_storage_enabled=false)"
+            )
+        else:
+            try:
+                probe_object_storage(s)
+                typer.echo("[config-check] object storage preflight: OK")
+            except Exception as exc:  # noqa: BLE001
+                typer.echo(f"[config-check] object storage preflight: FAILED ({exc!s})", err=True)
+                raise typer.Exit(code=1) from exc
 
 
 def main() -> None:

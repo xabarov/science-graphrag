@@ -29,6 +29,7 @@ from science_graphrag.agent.runtime import (
     current_otel_trace_id_hex,
     extract_langgraph_answer,
 )
+from science_graphrag.agent.tool_call_normalization import normalize_tool_call_name
 from science_graphrag.api.deps import StoreRegistry, get_stores
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.observability.spans import (
@@ -613,137 +614,167 @@ async def _stream_agent(
                             "type": "warning",
                             "code": "history_digest_invalid",
                             "message": (
-                                "history_digest was not a JSON array of objects; " "it was ignored"
+                                "history_digest was not a JSON array of objects; it was ignored"
                             ),
                         }
                     )
                 }
 
-            async for chunk in _iter_graph_chunks(
-                graph,
-                initial_state,
-                config,
-                deadline_seconds=float(settings.agent_step_timeout_seconds),
-            ):
-                if isinstance(chunk, tuple) and len(chunk) == 2:
-                    mode, payload = chunk
-                    if mode == "values" and isinstance(payload, dict):
-                        latest_full_state = payload
-                        routes = list(payload.get("routing_log") or [])
-                        if len(routes) > prev_route_len:
-                            for entry in routes[prev_route_len:]:
-                                if active_subagent_id:
+            try:
+                async for chunk in _iter_graph_chunks(
+                    graph,
+                    initial_state,
+                    config,
+                    deadline_seconds=float(settings.agent_step_timeout_seconds),
+                ):
+                    if isinstance(chunk, tuple) and len(chunk) == 2:
+                        mode, payload = chunk
+                        if mode == "values" and isinstance(payload, dict):
+                            latest_full_state = payload
+                            routes = list(payload.get("routing_log") or [])
+                            if len(routes) > prev_route_len:
+                                for entry in routes[prev_route_len:]:
+                                    if active_subagent_id:
+                                        yield {
+                                            "data": json.dumps(
+                                                {
+                                                    "type": "subagent_finished",
+                                                    "subagent_id": active_subagent_id,
+                                                }
+                                            )
+                                        }
+                                        active_subagent_id = None
                                     yield {
                                         "data": json.dumps(
                                             {
-                                                "type": "subagent_finished",
-                                                "subagent_id": active_subagent_id,
+                                                "type": "specialist_selected",
+                                                "from": entry.get("from"),
+                                                "to": entry.get("to"),
+                                                "budget_left": entry.get("budget_left"),
+                                                "reason": entry.get("reason"),
                                             }
                                         )
                                     }
-                                    active_subagent_id = None
-                                yield {
-                                    "data": json.dumps(
-                                        {
-                                            "type": "specialist_selected",
-                                            "from": entry.get("from"),
-                                            "to": entry.get("to"),
-                                            "budget_left": entry.get("budget_left"),
-                                            "reason": entry.get("reason"),
-                                        }
+                                    to_raw = entry.get("to")
+                                    to_id = str(to_raw).strip() if to_raw is not None else ""
+                                    if not to_id:
+                                        to_id = "specialist"
+                                    reason_txt = entry.get("reason")
+                                    summary = (
+                                        str(reason_txt)[:200]
+                                        if reason_txt is not None and str(reason_txt).strip()
+                                        else None
                                     )
-                                }
-                                to_raw = entry.get("to")
-                                to_id = str(to_raw).strip() if to_raw is not None else ""
-                                if not to_id:
-                                    to_id = "specialist"
-                                reason_txt = entry.get("reason")
-                                summary = (
-                                    str(reason_txt)[:200]
-                                    if reason_txt is not None and str(reason_txt).strip()
-                                    else None
-                                )
-                                yield {
-                                    "data": json.dumps(
-                                        {
-                                            "type": "subagent_started",
-                                            "subagent_id": to_id,
-                                            "from": entry.get("from"),
-                                            "summary": summary,
-                                        }
-                                    )
-                                }
-                                active_subagent_id = to_id
-                            prev_route_len = len(routes)
-                        dev = list(payload.get("debug_events") or [])
-                        if len(dev) > prev_debug_len:
-                            for ev in dev[prev_debug_len:]:
-                                if not isinstance(ev, dict):
-                                    continue
-                                et = ev.get("type")
-                                if et in ("tool_search_result", "intent_classified"):
-                                    yield {"data": json.dumps(dict(ev))}
-                                elif et == "warning" and str(ev.get("code") or "").strip():
-                                    yield {"data": json.dumps(dict(ev))}
-                            prev_debug_len = len(dev)
-                    if mode != "updates":
-                        continue
-                    chunk = payload
-
-                for node_state in _iter_update_node_states(chunk):
-                    if not isinstance(node_state, dict):
-                        continue
-                    for msg in node_state.get("messages") or []:
-                        marker = id(msg)
-                        if marker in seen_messages:
+                                    yield {
+                                        "data": json.dumps(
+                                            {
+                                                "type": "subagent_started",
+                                                "subagent_id": to_id,
+                                                "from": entry.get("from"),
+                                                "summary": summary,
+                                            }
+                                        )
+                                    }
+                                    active_subagent_id = to_id
+                                prev_route_len = len(routes)
+                            dev = list(payload.get("debug_events") or [])
+                            if len(dev) > prev_debug_len:
+                                for ev in dev[prev_debug_len:]:
+                                    if not isinstance(ev, dict):
+                                        continue
+                                    et = ev.get("type")
+                                    if et in ("tool_search_result", "intent_classified"):
+                                        yield {"data": json.dumps(dict(ev))}
+                                    elif et == "warning" and str(ev.get("code") or "").strip():
+                                        yield {"data": json.dumps(dict(ev))}
+                                prev_debug_len = len(dev)
+                        if mode != "updates":
                             continue
-                        seen_messages.add(marker)
-                        if isinstance(msg, AIMessage) and getattr(msg, "tool_calls", None):
-                            for tc in msg.tool_calls:
-                                step += 1
-                                args = tc.get("args") if isinstance(tc, dict) else {}
-                                args_dict = args if isinstance(args, dict) else {}
-                                event_data = {
-                                    "type": "tool_call",
-                                    "step": step,
-                                    "tool": str(tc.get("name") or ""),
-                                    "args_summary": {k: str(v)[:200] for k, v in args_dict.items()},
-                                }
-                                yield {"data": json.dumps(event_data)}
-                                if active_subagent_id:
-                                    yield {
-                                        "data": json.dumps(
-                                            {
-                                                "type": "subagent_progress",
-                                                "subagent_id": active_subagent_id,
-                                                "step": step,
-                                                "tool": str(tc.get("name") or ""),
-                                                "summary": str(tc.get("name") or ""),
-                                            }
-                                        )
+                        chunk = payload
+
+                    for node_state in _iter_update_node_states(chunk):
+                        if not isinstance(node_state, dict):
+                            continue
+                        for msg in node_state.get("messages") or []:
+                            marker = id(msg)
+                            if marker in seen_messages:
+                                continue
+                            seen_messages.add(marker)
+                            if isinstance(msg, AIMessage) and getattr(msg, "tool_calls", None):
+                                for tc in msg.tool_calls:
+                                    step += 1
+                                    args = tc.get("args") if isinstance(tc, dict) else {}
+                                    args_dict = args if isinstance(args, dict) else {}
+                                    tool_name = normalize_tool_call_name(str(tc.get("name") or ""))
+                                    event_data = {
+                                        "type": "tool_call",
+                                        "step": step,
+                                        "tool": tool_name,
+                                        "args_summary": {
+                                            k: str(v)[:200] for k, v in args_dict.items()
+                                        },
                                     }
-                        elif isinstance(msg, ToolMessage):
-                            result_payload: dict[str, Any] = {}
-                            error: str | None = None
-                            try:
-                                parsed = json.loads(str(msg.content or ""))
-                                if isinstance(parsed, dict):
-                                    result_payload = parsed
-                            except Exception:  # noqa: BLE001
-                                error = str(msg.content or "")[:200]
-                            result_event = {
-                                "type": "tool_result",
-                                "step": step,
-                                "tool": str(getattr(msg, "name", "") or ""),
-                                "row_count": result_payload.get("row_count"),
-                                "error": error,
-                            }
-                            yield {"data": json.dumps(result_event)}
-                        elif isinstance(msg, AIMessage) and not getattr(msg, "tool_calls", None):
-                            final_answer = str(msg.content or "")
-                    citations_chunk = node_state.get("citations")
-                    if citations_chunk:
-                        citations = list(citations_chunk)
+                                    yield {"data": json.dumps(event_data)}
+                                    if active_subagent_id:
+                                        yield {
+                                            "data": json.dumps(
+                                                {
+                                                    "type": "subagent_progress",
+                                                    "subagent_id": active_subagent_id,
+                                                    "step": step,
+                                                    "tool": tool_name,
+                                                    "summary": tool_name,
+                                                }
+                                            )
+                                        }
+                            elif isinstance(msg, ToolMessage):
+                                result_payload: dict[str, Any] = {}
+                                error: str | None = None
+                                try:
+                                    parsed = json.loads(str(msg.content or ""))
+                                    if isinstance(parsed, dict):
+                                        result_payload = parsed
+                                except Exception:  # noqa: BLE001
+                                    error = str(msg.content or "")[:200]
+                                result_event = {
+                                    "type": "tool_result",
+                                    "step": step,
+                                    "tool": str(getattr(msg, "name", "") or ""),
+                                    "row_count": result_payload.get("row_count"),
+                                    "error": error,
+                                }
+                                yield {"data": json.dumps(result_event)}
+                            elif isinstance(msg, AIMessage) and not getattr(
+                                msg, "tool_calls", None
+                            ):
+                                final_answer = str(msg.content or "")
+                        citations_chunk = node_state.get("citations")
+                        if citations_chunk:
+                            citations = list(citations_chunk)
+
+            except AgentGraphDeadlineExceeded as exc:
+                logger.warning(
+                    "agent v2 stream deadline exceeded timeout=%s",
+                    getattr(exc, "timeout_seconds", None),
+                )
+                add_span_event(
+                    "agent.response_deadline_exceeded",
+                    {
+                        "timeout_seconds": float(getattr(exc, "timeout_seconds", 0) or 0),
+                        "worker_may_continue": True,
+                        "deadline_kind": "response_only",
+                    },
+                )
+                yield {
+                    "data": json.dumps(
+                        {
+                            "type": "error",
+                            "detail": str(exc),
+                            "code": "agent_turn_deadline_exceeded",
+                        }
+                    )
+                }
+                return
 
             duration_ms = int((perf_counter() - started) * 1000)
 
@@ -885,28 +916,6 @@ async def _stream_agent(
                     }
                 },
             )
-    except AgentGraphDeadlineExceeded as exc:
-        logger.warning(
-            "agent v2 stream deadline exceeded timeout=%s",
-            getattr(exc, "timeout_seconds", None),
-        )
-        add_span_event(
-            "agent.response_deadline_exceeded",
-            {
-                "timeout_seconds": float(getattr(exc, "timeout_seconds", 0) or 0),
-                "worker_may_continue": True,
-                "deadline_kind": "response_only",
-            },
-        )
-        yield {
-            "data": json.dumps(
-                {
-                    "type": "error",
-                    "detail": str(exc),
-                    "code": "agent_turn_deadline_exceeded",
-                }
-            )
-        }
     except Exception as exc:  # noqa: BLE001
         logger.exception("agent v2 stream error")
         detail = _format_agent_stream_error(exc)

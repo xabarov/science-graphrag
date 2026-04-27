@@ -8,7 +8,11 @@ from pydantic import BaseModel, Field
 
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.llm.executor import run_extraction
-from science_graphrag.ingestion.llm.extractor import SyncInstructorExtractor
+from science_graphrag.ingestion.llm.extractor import (
+    EXTRACT_MAYBE_MAX_INNER_ATTEMPTS,
+    SyncInstructorExtractor,
+)
+from science_graphrag.utils.llm_deadline import MonotonicDeadline
 from science_graphrag.utils.project_logging import get_logger
 
 log = get_logger("dedup.method_ingest_adjudicate")
@@ -73,6 +77,8 @@ def adjudicate_method_pair_llm(
         mode=settings.extraction_llm_mode,
     )
     transport_s = min(45.0, float(settings.extraction_llm_timeout_seconds))
+    op_budget = min(180.0, transport_s * float(EXTRACT_MAYBE_MAX_INNER_ATTEMPTS))
+    op_deadline = MonotonicDeadline.from_budget_seconds(op_budget)
     parsed, err = run_extraction(
         extractor,
         user,
@@ -84,6 +90,9 @@ def adjudicate_method_pair_llm(
         timeout_seconds=transport_s,
         transport_timeout_seconds=transport_s,
         pool_name="dedup",
+        timeout_contract="transport_with_operation_deadline",
+        operation_deadline_seconds=op_budget,
+        operation_deadline=op_deadline,
     )
     if err or parsed is None:
         log.warning("method ingest adjudication failed: %s", err)

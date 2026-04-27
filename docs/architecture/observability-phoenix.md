@@ -22,7 +22,16 @@
 - Specialist ReAct LLM calls: `llm.agent.retrieval_specialist`, `llm.agent.graph_specialist` (LLM)
 - Writer LLM: `llm.agent.writer` (LLM)
 
-**Scope:** agent audit requires `PHOENIX_TRACE_SCOPE=full`. `extraction_llm` keeps allowlisted ingest CHAIN/LLM spans (see `science_graphrag/observability/scope.py`); live eval harness forces `full` for chat roadmap runs.
+**Scope:** `PHOENIX_TRACE_SCOPE=full` records everything. `extraction_llm` records allowlisted ingest CHAIN/LLM spans **and** product-agent spans whose names start with `agent.`, `llm.agent.`, or `retrieval.qdrant.` (see `science_graphrag/observability/spans/decorators.py`), so `/v2/agent/query` can still emit a non-empty `phoenix_trace_id` while noisy non-agent spans stay suppressed. The live eval harness may still force `full` for historical harness parity; regression coverage lives in `tests/observability/test_extraction_llm_scope.py`.
+
+### Verification order (research chat + Benchmark Lab)
+
+When validating chat traceability after changes:
+
+1. **Runtime:** padded tool names still execute (`tests/agent/test_tool_call_normalization.py`).
+2. **Traceability:** with `PHOENIX_TRACE_SCOPE=extraction_llm`, `chain_span("agent.query")` is recorded (same test module as above + `test_extraction_llm_scope`).
+3. **UI:** Inspect run — set `VITE_PHOENIX_UI_BASE_URL` and **`VITE_PHOENIX_PROJECT_ID`** (Phoenix UI project id / GlobalID, e.g. from the browser URL) for a working “Open in Phoenix” link; otherwise the UI shows a trace id hint only.
+4. **Docs:** keep analysis docs aligned with this contract (`docs/analysis/benchmark-panel-research-redesign-plan-2026-04-27.md` shared path).
 
 ## Manual vs automatic instrumentation (LangChain / LangGraph)
 
@@ -35,7 +44,7 @@
 
 - REST: `GET /v1/projects/{project_identifier}/spans?trace_id=…` and/or `GET /v1/projects/{project_identifier}/traces?include_spans=true` (see `eval/chat_agent/phoenix_export.py`).
 - Project id: `PHOENIX_PROJECT_ID` or `PHOENIX_PROJECT_NAME` (default **`science-graphrag`**, aligned with `init_tracer_provider`).
-- UI deep link: `/projects/{project}/traces/{traceId}` with `PHOENIX_UI_BASE_URL` (eval harness) / `VITE_PHOENIX_UI_BASE_URL` + `VITE_PHOENIX_PROJECT_ID` (web UI).
+- UI deep link: `/projects/{project}/traces/{traceId}` with `PHOENIX_UI_BASE_URL` (eval harness) / `VITE_PHOENIX_UI_BASE_URL` + **`VITE_PHOENIX_PROJECT_ID`** (web UI). Do not assume the OTLP project **name** (`science-graphrag`) is a valid Phoenix UI route segment; many installs need the UI’s **project id** (GlobalID from the URL). Without `VITE_PHOENIX_PROJECT_ID`, the product UI intentionally avoids a broken deep link and shows a trace id hint instead.
 
 ## Required attributes
 
@@ -72,18 +81,19 @@ Production LLM spans SHOULD include the following **runtime policy** attributes 
 |-----------|---------|
 | `llm.pool_name` | Logical concurrency pool / traffic class (e.g. `metadata`, `references`, `claims`, `semantic`, `dedup`, `agent_classifier`, `agent_chat`, `query_answer`, `idea_assist`, `vl_pdf`). Present even before real semaphore wiring. |
 | `llm.transport_timeout_seconds` | Per-request HTTP / client timeout for a single provider call. |
-| `llm.operation_deadline_seconds` | Wall-clock budget for the whole logical step **only when** a real outer deadline exists and is enforced (Phase 1+). Omit if N/A. |
+| `llm.operation_deadline_seconds` | Wall-clock budget for the whole logical step when enforced (ingestion ``run_extraction``, shared claims fallback, semantic bundle, etc.). Omit if N/A. |
 | `llm.response_deadline_seconds` | User-visible wait cap that may return without cancelling upstream work (agent graph invoke / SSE). Omit on pure ingestion LLM calls. |
 | `llm.retry_budget` | Extra attempts allowed by the **caller-owned** outer retry loop (e.g. `run_extraction(retries=…)`), not inner transport retries inside `SyncInstructorExtractor`. |
-| `llm.transport_max_attempts` | Optional: max attempts for a dedicated HTTP helper (e.g. VL `post_chat_completions_json`). |
-| `llm.timeout_contract` | One of: `transport_only`, `transport_plus_deadline`, `response_deadline_only`, `unknown`. |
+| `llm.transport_max_attempts` | Optional: max inner HTTP attempts in ``SyncInstructorExtractor.extract_maybe``, or max attempts for a dedicated HTTP helper (e.g. VL `post_chat_completions_json`). |
+| `llm.timeout_contract` | One of: `transport_only`, `transport_with_operation_deadline`, `transport_plus_deadline` (legacy alias), `response_deadline_only`, `unknown`. |
+| `llm.per_attempt_transport_timeout_seconds` | Optional: enforced HTTP timeout for the current attempt (may be below `llm.transport_timeout_seconds` when an operation deadline caps remaining time). |
 
 **Semantics:**
 
 - **Transport timeout** bounds a single outbound request; retries can still extend wall time unless an operation deadline exists.
 - **Response deadline** (`response_deadline_only`): the API stops waiting for the user turn; the LangGraph worker thread or provider may still run (see `science_graphrag/agent/graph/invoke_timeout.py` and `docs/runbooks/agent-chat-v2.md`). This is **not** full cancellation.
 
-Ingest spans may keep legacy `extraction.timeout_seconds`; it MUST match the real transport timeout for that call (same numeric value as `llm.transport_timeout_seconds` when both are set).
+Ingest spans may keep legacy `extraction.timeout_seconds`; it MUST match the **enforced** per-attempt HTTP timeout for that span (same numeric value as `llm.per_attempt_transport_timeout_seconds` when present; may be lower than configured `llm.transport_timeout_seconds` under an active operation deadline).
 
 ### DB/HTTP spans
 

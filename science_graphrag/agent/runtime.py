@@ -14,6 +14,7 @@ from science_graphrag.agent.graph.invoke_timeout import invoke_graph_with_deadli
 from science_graphrag.agent.graph.state import build_initial_agent_state
 from science_graphrag.agent.graph.supervisor import build_retrieval_graph
 from science_graphrag.agent.graph.tracing import collect_tool_trace
+from science_graphrag.agent.tool_call_normalization import normalize_tool_call_name
 from science_graphrag.agent.trace import ToolCallTrace
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
@@ -59,7 +60,7 @@ def extract_langgraph_answer(messages: list[Any]) -> tuple[str, list[dict[str, A
         if not isinstance(msg, AIMessage):
             continue
         for tc in getattr(msg, "tool_calls", None) or []:
-            if str(tc.get("name") or "") != "final_answer":
+            if normalize_tool_call_name(str(tc.get("name") or "")) != "final_answer":
                 continue
             args = tc.get("args")
             args_dict = args if isinstance(args, dict) else {}

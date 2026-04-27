@@ -115,8 +115,10 @@ export default {
   "benchmark.workbench.noDiff": "Для этого кейса пока нет строк diff.",
   "benchmark.workbench.loadMoreTpl": "Загрузить ещё ({{loaded}} / {{total}})",
 
-  "benchmark.cases.preview": "Просмотр",
-  "benchmark.cases.openInspector": "Открыть инспектор",
+  "benchmark.cases.preview": "Диалог фикстуры (быстро)",
+  "benchmark.cases.openInspector": "Верстак анализа",
+  "benchmark.cases.actionPairHint":
+    "Диалог фикстуры — быстрый структурированный просмотр. Верстак анализа — инспектор на вкладке «Анализ».",
 
   "benchmark.inspector.title": "Инспектор кейса",
   "benchmark.inspector.loading": "Загрузка кейса…",

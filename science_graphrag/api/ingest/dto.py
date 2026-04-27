@@ -37,6 +37,9 @@ class IngestJobRecord:
     stages: list[dict[str, Any]] = field(default_factory=list)
     phoenix_trace_id: str | None = None
     progress_pct: float | None = None
+    queued_source_object_key: str | None = None
+    queued_source_size: int | None = None
+    queued_source_etag: str | None = None
 
 
 class IngestStageView(BaseModel):

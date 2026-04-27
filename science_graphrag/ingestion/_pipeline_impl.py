@@ -82,7 +82,6 @@ from science_graphrag.observability.phoenix_tracer import (
     llm_span,
     set_span_attributes,
 )
-from science_graphrag.storage.blobs import BlobStore
 from science_graphrag.storage.db import get_engine, init_db, session_factory
 from science_graphrag.storage.models_orm import (
     DocumentRecord,
@@ -92,6 +91,7 @@ from science_graphrag.storage.models_orm import (
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 from science_graphrag.storage.qdrant_claims_store import QdrantClaimsStore
 from science_graphrag.storage.qdrant_store import QdrantChunkStore, QdrantWorkEmbeddingStore
+from science_graphrag.storage.raw_blob_store import RawBlobStorePort, build_raw_blob_store
 from science_graphrag.utils.project_logging import configure_logging, get_logger
 
 log = get_logger("ingestion.pipeline")
@@ -502,16 +502,17 @@ def _write_markdown_artifact(
     source_path: Path,
     markdown: str,
     extraction_mode: str,
+    artifact_store: LocalFilesystemArtifactStore | None = None,
 ) -> Path:
     """Write canonical ``ingestion/{document_id}/article.md`` plus legacy slug paths."""
-    artifact_store = LocalFilesystemArtifactStore(Path(settings.artifact_root))
+    store = artifact_store or LocalFilesystemArtifactStore(Path(settings.artifact_root))
     slug = _article_slug(source_path)
     legacy_rel = Path("ingestion") / document_id / slug / "article.md"
     header = f"<!-- source={source_path.name} extraction_mode={extraction_mode} -->\n\n"
     body = header + markdown
-    artifact_store.write_text(canonical_article_md_rel(document_id), body)
-    artifact_store.write_text(_canonical_article_rel(source_path), body)
-    return artifact_store.write_text(legacy_rel, body)
+    store.write_text(canonical_article_md_rel(document_id), body)
+    store.write_text(_canonical_article_rel(source_path), body)
+    return store.write_text(legacy_rel, body)
 
 
 def _write_extraction_diagnostics_json(
@@ -520,12 +521,13 @@ def _write_extraction_diagnostics_json(
     document_id: str,
     source_path: Path,
     diagnostics_json: str,
+    artifact_store: LocalFilesystemArtifactStore | None = None,
 ) -> Path:
-    artifact_store = LocalFilesystemArtifactStore(Path(settings.artifact_root))
+    store = artifact_store or LocalFilesystemArtifactStore(Path(settings.artifact_root))
     slug = _article_slug(source_path)
     artifact_rel = Path("ingestion") / document_id / slug / "extraction_diagnostics.json"
-    artifact_store.write_text(_canonical_diagnostics_rel(source_path), diagnostics_json)
-    return artifact_store.write_text(artifact_rel, diagnostics_json)
+    store.write_text(_canonical_diagnostics_rel(source_path), diagnostics_json)
+    return store.write_text(artifact_rel, diagnostics_json)
 
 
 def run_ingest_pipeline(ctx: IngestRunContext, source: IngestSource) -> IngestResult:
@@ -734,6 +736,7 @@ def ingest_document(
     parent_job_id: str | None = None,
     stage_session_factory: Any | None = None,
     stage_event_publisher: Any | None = None,
+    raw_blob_store: RawBlobStorePort | None = None,
 ) -> tuple[str, str]:
     """
     Ingest one PDF or text file. Returns (document_id, work_id).
@@ -745,7 +748,7 @@ def ingest_document(
     """
     configure_logging()
     settings = settings or get_settings()
-    blob_store = BlobStore(settings.blob_root)
+    blob_store = raw_blob_store or build_raw_blob_store(settings)
     sha, _stored = blob_store.store_file(path)
     if session is None:
         doc_id, reused_doc = str(uuid.uuid4()), False
@@ -805,17 +808,19 @@ def ingest_document(
             set_span_attributes({"metadata.extraction_mode": extraction_mode})
             st.metric("source_suffix", path.suffix.lower())
             st.metric("extraction_mode", extraction_mode)
+        ingest_artifact_store = LocalFilesystemArtifactStore(Path(settings.artifact_root))
         _artifact_path = _write_markdown_artifact(
             settings=settings,
             document_id=doc_id,
             source_path=path,
             markdown=markdown_text,
             extraction_mode=extraction_mode,
+            artifact_store=ingest_artifact_store,
         )
         normalized = strip_repeated_boilerplate(
             normalize_text(strip_whole_document_markdown_fence(markdown_text))
         )
-        LocalFilesystemArtifactStore(Path(settings.artifact_root)).write_text(
+        ingest_artifact_store.write_text(
             canonical_normalized_md_rel(doc_id),
             normalized,
         )
@@ -862,6 +867,7 @@ def ingest_document(
             document_id=doc_id,
             source_path=path,
             diagnostics_json=ext_diag.to_json(),
+            artifact_store=ingest_artifact_store,
         )
 
         oa_raw: dict[str, Any] | None = None

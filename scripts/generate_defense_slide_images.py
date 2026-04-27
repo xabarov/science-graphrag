@@ -194,23 +194,48 @@ Avoid neon gradients, futuristic holograms, generic AI dashboard aesthetics, glo
             filename_base="slide-02-plan-motif",
             prompt=(
                 """
-Create a minimal 16:9 academic motif image for a thesis defense slide about GraphRAG.
+Create a striking 16:9 hero illustration for a thesis defense slide titled "defense plan" — it must feel memorable and premium, not like a thin wireframe tutorial.
 
-The image should be decorative and thematic, not explanatory and not text-heavy.
-No slide title inside the image.
-No labels if possible.
-No fake UI.
-No fake charts.
-No readable paragraphs.
+Concept to convey (visually, not as a labeled diagram): scientific papers -> knowledge graph -> retrieval path -> grounded answer with citations.
 
-Use a calm editorial composition:
-- a few paper/document cards
-- a compact graph / node-link cluster
-- subtle directional flow toward a small answer card
-- maybe a small citation hint or grounded-answer cue
+Make it interesting through art direction, not through more text:
+- strong focal lighting and depth (soft vignette, gentle spotlight, layered paper planes)
+- one bold graph motif as the centerpiece: fewer nodes but larger, sculptural, with confident edges and warm terracotta + cool slate accents
+- implied motion: papers drifting into the graph, a luminous trail toward an answer card or parchment strip with tiny citation markers (ticks or brackets), not a fake app screenshot
+- subtle texture: deckle edges, grain, or print-like noise at low opacity
+- asymmetry and overlap: staggered cards, partial crops, overlapping shapes so the frame feels designed, not empty
 
-The image should feel elegant, spacious, quiet, and abstract.
-It should suggest GraphRAG, retrieval, knowledge graph, and grounded answers without looking like a dashboard or a tutorial diagram.
+Hard constraints:
+- no slide title inside the image
+- no readable paragraphs, no dashboard UI, no fake metrics, no neon sci-fi
+- if any micro-labels appear, at most 3-4 tiny English words total (optional); prefer zero text
+
+Avoid a flat schematic clipart look: do not use ultra-thin uniform connector lines across the whole canvas like a textbook diagram.
+"""
+                + "\n\n"
+                + base_suffix
+            ).strip(),
+        ),
+        ImageJob(
+            slug="slide-03-goal-visual",
+            filename_base="slide-03-goal-visual",
+            prompt=(
+                """
+Create a bold, visually dominant 16:9 academic illustration for a thesis defense slide about the goal and tasks of a scientific GraphRAG system.
+
+The composition should read left-to-right as a clear story:
+papers / corpus -> knowledge graph (node-link cluster) -> retrieval / query path -> compact answer card with citation markers.
+
+Make the graph and flow the main focal point. Use large shapes, strong hierarchy, and generous negative space, but avoid empty canvas feeling by filling the frame with meaningful structure.
+
+Constraints:
+- no slide title inside the image
+- minimal text, preferably no text at all
+- if any labels are needed, use at most a few tiny English words like Papers, Graph, Query, Answer, Citations
+- no fake numbers, no fake charts, no fake UI screenshots
+- no neon, no glossy 3D, no startup dashboard look
+
+The image should feel premium, editorial, and abstract, but still clearly about GraphRAG and grounded scientific answers.
 """
                 + "\n\n"
                 + base_suffix

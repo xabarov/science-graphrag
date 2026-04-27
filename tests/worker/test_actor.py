@@ -13,6 +13,7 @@ def test_ingest_document_actor_skips_completed_job() -> None:
     mock_job = MagicMock()
     mock_job.kind = "single"
     mock_job.status = "completed"
+    mock_job.queued_source_object_key = None
 
     with patch("science_graphrag.worker.actor.get_settings") as mock_settings:
         mock_settings.return_value = SimpleNamespace(blob_root=Path("/tmp"))

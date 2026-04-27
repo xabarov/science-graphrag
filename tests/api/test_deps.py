@@ -48,7 +48,7 @@ def test_init_close_cycle(monkeypatch: Any) -> None:
     monkeypatch.setattr(deps, "QdrantChunkStore", lambda *_a, **_k: _FakeQdrant())
     monkeypatch.setattr(deps, "QdrantWorkEmbeddingStore", lambda *_a, **_k: _FakeQdrant())
     monkeypatch.setattr(deps, "QdrantClaimsStore", lambda *_a, **_k: _FakeQdrant())
-    monkeypatch.setattr(deps, "BlobStore", lambda *_a, **_k: _FakeBlob())
+    monkeypatch.setattr(deps, "build_raw_blob_store", lambda *_a, **_k: _FakeBlob())
     monkeypatch.setattr(deps, "LocalFilesystemArtifactStore", lambda *_a, **_k: _FakeBlob())
     monkeypatch.setattr(deps, "resolve_embedding_dim", lambda **_k: 64)
 

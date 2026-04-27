@@ -115,8 +115,10 @@ export default {
   "benchmark.workbench.noDiff": "No diff rows for this case yet.",
   "benchmark.workbench.loadMoreTpl": "Load more ({{loaded}} / {{total}})",
 
-  "benchmark.cases.preview": "Preview",
-  "benchmark.cases.openInspector": "Open inspector",
+  "benchmark.cases.preview": "Fixture dialog (quick)",
+  "benchmark.cases.openInspector": "Analysis workbench",
+  "benchmark.cases.actionPairHint":
+    "Fixture dialog: quick structured preview. Analysis workbench: benchmark-aware inspector on the Analysis tab.",
 
   "benchmark.inspector.title": "Case inspector",
   "benchmark.inspector.loading": "Loading case…",

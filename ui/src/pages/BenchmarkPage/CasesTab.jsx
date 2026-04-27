@@ -115,6 +115,10 @@ export default function CasesTab({ onOpenCaseInWorkbench }) {
         </Typography>
       )}
 
+      <Typography sx={{ color: tk.text.secondary, fontSize: "0.75rem", mb: 1, maxWidth: 720, lineHeight: 1.5 }}>
+        {t("benchmark.cases.actionPairHint")}
+      </Typography>
+
       <Typography sx={{ color: tk.text.secondary, mb: 1 }}>
         Total: {total}
       </Typography>

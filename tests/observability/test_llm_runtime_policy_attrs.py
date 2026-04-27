@@ -53,6 +53,8 @@ class _FakeExtractor:
         *,
         system: str,
         user: str,
+        per_attempt_timeout_seconds: float | None = None,
+        operation_deadline: object | None = None,
     ) -> tuple[Any, str | None]:
         return _DummySchema(), None
 
@@ -74,6 +76,7 @@ def test_run_extraction_span_uses_extractor_transport_timeout(monkeypatch) -> No
         document_id="doc-1",
         pool_name="metadata",
         timeout_seconds=60.0,
+        transport_timeout_seconds=200.0,
         retries=0,
     )
     assert parsed is not None and err is None
@@ -86,3 +89,4 @@ def test_run_extraction_span_uses_extractor_transport_timeout(monkeypatch) -> No
     assert attrs.get("llm.pool_name") == "metadata"
     assert attrs.get("llm.timeout_contract") == "transport_only"
     assert attrs.get("llm.retry_budget") == 0
+    assert attrs.get("llm.transport_max_attempts") == 3

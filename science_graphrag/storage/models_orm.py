@@ -67,6 +67,9 @@ class IngestJobRecordOrm(Base):
         default=lambda: datetime.now(UTC),
     )
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    queued_source_object_key: Mapped[str | None] = mapped_column(Text, nullable=True)
+    queued_source_size: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    queued_source_etag: Mapped[str | None] = mapped_column(String(128), nullable=True)
 
     @property
     def child_job_ids(self) -> list[str]:

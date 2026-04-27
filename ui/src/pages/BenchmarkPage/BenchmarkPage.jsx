@@ -33,7 +33,7 @@ export default function BenchmarkPage() {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [tabIdx, setTabIdx] = useState(0);
-  const [analysisView, setAnalysisView] = useState(/** @type {"results"|"compare"|"workbench"} */ ("results"));
+  const [analysisView, setAnalysisView] = useState(/** @type {"overview"|"results"|"compare"|"workbench"} */ ("overview"));
   const [selectedRunId, setSelectedRunId] = useState(() => window.localStorage.getItem("benchmark:lastRunId") || null);
   const [selectedCaseId, setSelectedCaseId] = useState(null);
   const canonicalAdminPath = useMemo(() => {
@@ -76,17 +76,17 @@ export default function BenchmarkPage() {
   const onNavigate = useCallback(
     (opts) => {
       const nextIdx = opts.tabIndex;
-      let nextAv = /** @type {"results"|"compare"|"workbench"} */ ("results");
+      let nextAv = /** @type {"overview"|"results"|"compare"|"workbench"} */ ("overview");
       if (nextIdx === 3) {
         nextAv =
-          opts.analysisView != null ? normalizeAnalysisView(opts.analysisView) : normalizeAnalysisView(analysisView);
+          opts.analysisView != null ? normalizeAnalysisView(opts.analysisView) : "overview";
         setAnalysisView(nextAv);
       }
       setTabIdx(nextIdx);
       let merged = mergeBenchmarkTabIntoSearchParams(
         searchParams,
         nextIdx,
-        nextIdx === 3 ? nextAv : "results",
+        nextIdx === 3 ? nextAv : "overview",
       );
       if ("experimentId" in opts || "runMode" in opts || "packId" in opts) {
         merged = mergeRunLabQueryIntoSearchParams(merged, {
@@ -97,7 +97,7 @@ export default function BenchmarkPage() {
       }
       setSearchParams(merged, { replace: true });
     },
-    [analysisView, searchParams, setSearchParams],
+    [searchParams, setSearchParams],
   );
 
   const handleOpenAnalysisWithGroup = useCallback(

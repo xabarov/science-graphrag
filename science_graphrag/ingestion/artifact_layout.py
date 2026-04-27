@@ -8,6 +8,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from science_graphrag.artifacts.local_store import LocalFilesystemArtifactStore
+from science_graphrag.artifacts.protocols import ArtifactStorePort
 
 
 def canonical_article_md_rel(document_id: str) -> Path:
@@ -29,7 +30,7 @@ def strip_ingest_artifact_header(text: str) -> str:
 
 
 def resolve_extracted_body_relative(
-    store: LocalFilesystemArtifactStore,
+    store: ArtifactStorePort,
     document_id: str,
 ) -> tuple[Path, str] | None:
     """
@@ -71,9 +72,11 @@ def resolve_extracted_body_file(artifact_root: Path, document_id: str) -> tuple[
     return store.absolute(rel), label
 
 
-def has_extracted_body_store(store: LocalFilesystemArtifactStore, document_id: str) -> bool:
+def has_extracted_body_store(store: ArtifactStorePort, document_id: str) -> bool:
+    """True if ``document_id`` has a resolvable extracted body via ``store``."""
     return resolve_extracted_body_relative(store, document_id) is not None
 
 
 def has_extracted_body_file(artifact_root: Path, document_id: str) -> bool:
+    """True if a body file exists under ``artifact_root`` for ``document_id``."""
     return resolve_extracted_body_file(artifact_root, document_id) is not None

@@ -4,6 +4,7 @@ import {
   getLauncherPresetForExperiment,
   mergeBenchmarkTabIntoSearchParams,
   mergeRunLabQueryIntoSearchParams,
+  normalizeAnalysisView,
   normalizeRunMode,
   parseBenchmarkTabQuery,
   parseRunLabQueryFromSearchParams,
@@ -13,12 +14,13 @@ import {
 
 describe("experimentCatalog tab routing", () => {
   it("parses canonical tab names", () => {
-    expect(parseBenchmarkTabQuery("overview", null)).toEqual({ tabIndex: 0, analysisView: "results" });
-    expect(parseBenchmarkTabQuery("experiments", null)).toEqual({ tabIndex: 1, analysisView: "results" });
-    expect(parseBenchmarkTabQuery("run-lab", null)).toEqual({ tabIndex: 2, analysisView: "results" });
+    expect(parseBenchmarkTabQuery("overview", null)).toEqual({ tabIndex: 0, analysisView: "overview" });
+    expect(parseBenchmarkTabQuery("experiments", null)).toEqual({ tabIndex: 1, analysisView: "overview" });
+    expect(parseBenchmarkTabQuery("run-lab", null)).toEqual({ tabIndex: 2, analysisView: "overview" });
     expect(parseBenchmarkTabQuery("analysis", "compare")).toEqual({ tabIndex: 3, analysisView: "compare" });
-    expect(parseBenchmarkTabQuery("analysis", null)).toEqual({ tabIndex: 3, analysisView: "results" });
-    expect(parseBenchmarkTabQuery("cases", null)).toEqual({ tabIndex: 4, analysisView: "results" });
+    expect(parseBenchmarkTabQuery("analysis", null)).toEqual({ tabIndex: 3, analysisView: "overview" });
+    expect(parseBenchmarkTabQuery("analysis", "overview")).toEqual({ tabIndex: 3, analysisView: "overview" });
+    expect(parseBenchmarkTabQuery("cases", null)).toEqual({ tabIndex: 4, analysisView: "overview" });
   });
 
   it("maps legacy named tabs to new IA", () => {
@@ -26,7 +28,7 @@ describe("experimentCatalog tab routing", () => {
     expect(parseBenchmarkTabQuery("workbench", null)).toEqual({ tabIndex: 3, analysisView: "workbench" });
     expect(parseBenchmarkTabQuery("results", null)).toEqual({ tabIndex: 3, analysisView: "results" });
     expect(parseBenchmarkTabQuery("compare", null)).toEqual({ tabIndex: 3, analysisView: "compare" });
-    expect(parseBenchmarkTabQuery("cases", null)).toEqual({ tabIndex: 4, analysisView: "results" });
+    expect(parseBenchmarkTabQuery("cases", null)).toEqual({ tabIndex: 4, analysisView: "overview" });
   });
 
   it("maps legacy numeric tab indices (old shell order)", () => {
@@ -34,7 +36,7 @@ describe("experimentCatalog tab routing", () => {
     expect(parseBenchmarkTabQuery("1", null)).toEqual({ tabIndex: 3, analysisView: "workbench" });
     expect(parseBenchmarkTabQuery("2", null)).toEqual({ tabIndex: 3, analysisView: "results" });
     expect(parseBenchmarkTabQuery("3", null)).toEqual({ tabIndex: 3, analysisView: "compare" });
-    expect(parseBenchmarkTabQuery("4", null)).toEqual({ tabIndex: 4, analysisView: "results" });
+    expect(parseBenchmarkTabQuery("4", null)).toEqual({ tabIndex: 4, analysisView: "overview" });
   });
 
   it("merges canonical tab into params and preserves unrelated keys", () => {
@@ -45,6 +47,18 @@ describe("experimentCatalog tab routing", () => {
     expect(next.get("run")).toBe("abc");
     expect(next.get("case")).toBe("c1");
     expect(next.get("foo")).toBe("bar");
+  });
+
+  it("merges analysis overview into URL", () => {
+    const next = mergeBenchmarkTabIntoSearchParams(new URLSearchParams(), 3, "overview");
+    expect(next.get("tab")).toBe(TAB_CANONICAL.analysis);
+    expect(next.get("analysisView")).toBe("overview");
+  });
+
+  it("normalizeAnalysisView maps unknown values to overview", () => {
+    expect(normalizeAnalysisView(null)).toBe("overview");
+    expect(normalizeAnalysisView("")).toBe("overview");
+    expect(normalizeAnalysisView("nope")).toBe("overview");
   });
 
   it("drops analysisView when leaving analysis tab", () => {

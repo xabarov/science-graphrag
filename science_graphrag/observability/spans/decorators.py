@@ -14,6 +14,19 @@ from science_graphrag.observability.scope import (
     is_extraction_llm_scope,
 )
 
+
+def _chain_span_allowed_under_extraction_scope(name: str) -> bool:
+    return name in _EXTRACTION_LLM_CHAIN_NAMES or name.startswith("agent.")
+
+
+def _llm_span_allowed_under_extraction_scope(name: str) -> bool:
+    return name in _EXTRACTION_LLM_MANUAL_LLM_NAMES or name.startswith("llm.agent.")
+
+
+def _retriever_span_allowed_under_extraction_scope(name: str) -> bool:
+    return name in _EXTRACTION_LLM_CHAIN_NAMES or name.startswith("retrieval.qdrant.")
+
+
 MIME_TYPE_TEXT = "text/plain"
 MIME_TYPE_JSON = "application/json"
 DEFAULT_SPAN_PAYLOAD_LIMIT = 4000
@@ -85,7 +98,7 @@ def get_tracer(name: str = "science-graphrag") -> Tracer:
 
 @contextmanager
 def chain_span(name: str, attributes: dict[str, Any] | None = None):
-    if is_extraction_llm_scope() and name not in _EXTRACTION_LLM_CHAIN_NAMES:
+    if is_extraction_llm_scope() and not _chain_span_allowed_under_extraction_scope(name):
         with _noop_span_context():
             yield None
         return
@@ -103,7 +116,7 @@ def chain_span(name: str, attributes: dict[str, Any] | None = None):
 
 @contextmanager
 def llm_span(name: str, attributes: dict[str, Any] | None = None):
-    if is_extraction_llm_scope() and name not in _EXTRACTION_LLM_MANUAL_LLM_NAMES:
+    if is_extraction_llm_scope() and not _llm_span_allowed_under_extraction_scope(name):
         with _noop_span_context():
             yield None
         return
@@ -137,7 +150,7 @@ def embeddings_span(name: str, attributes: dict[str, Any] | None = None):
 def retriever_span(name: str, attributes: dict[str, Any] | None = None):
     """OpenInference RETRIEVER span for vector/lexical retrieval (e.g. Qdrant)."""
 
-    if is_extraction_llm_scope() and name not in _EXTRACTION_LLM_CHAIN_NAMES:
+    if is_extraction_llm_scope() and not _retriever_span_allowed_under_extraction_scope(name):
         with _noop_span_context():
             yield None
         return

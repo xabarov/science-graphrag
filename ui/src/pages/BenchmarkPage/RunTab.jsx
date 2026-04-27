@@ -73,23 +73,33 @@ export default function RunTab({ onSwitchToResults, onOpenAnalysisWithGroup }) {
     linkedExperimentId,
   } = tab;
 
-  const title = isGraphCatalog
-    ? t("benchmark.run.titleGraph")
-    : benchmarkFamily === "layer2"
-      ? t("benchmark.run.titleLayer2")
-      : t("benchmark.run.titleLayer1");
-
   const experimentMeta = linkedExperimentId?.trim() ? getExperimentById(linkedExperimentId.trim()) : null;
+
+  const familyLabelKey =
+    benchmarkFamily === "layer2"
+      ? "benchmarkPage.runLab.familyApi.layer2"
+      : benchmarkFamily === "graph"
+        ? "benchmarkPage.runLab.familyApi.graph"
+        : "benchmarkPage.runLab.familyApi.layer1";
+
+  const mainTitle = experimentMeta
+    ? t(experimentMeta.titleKey)
+    : isGraphCatalog
+      ? t("benchmark.run.titleGraph")
+      : benchmarkFamily === "layer2"
+        ? t("benchmark.run.titleLayer2")
+        : t("benchmark.run.titleLayer1");
 
   const showGroupProgress = executionMode === RUN_MODE_GROUPED && groupChildren.length > 0;
 
   return (
     <Box sx={{ padding: 2 }}>
-      <Typography sx={{ fontWeight: 600, mb: 1 }}>{title}</Typography>
+      <Typography sx={{ fontWeight: 600, mb: 0.5 }}>{mainTitle}</Typography>
 
       {experimentMeta ? (
         <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary, mb: 1.5 }}>
-          {t("benchmarkPage.runLab.fromExperiment", { id: experimentMeta.id, title: t(experimentMeta.titleKey) })}
+          {t("benchmarkPage.runLab.catalogEntry", { id: experimentMeta.id })} ·{" "}
+          {t("benchmarkPage.runLab.implementationLine", { label: t(familyLabelKey), apiId: benchmarkFamily })}
         </Typography>
       ) : null}
 

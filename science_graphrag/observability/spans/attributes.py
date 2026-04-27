@@ -34,6 +34,9 @@ class SpanAttributes:
         ``retry_extra_budget`` is the number of *additional* attempts allowed by the
         caller-owned outer retry loop (e.g. ``run_extraction(retries=...)``), not inner
         transport retries inside ``SyncInstructorExtractor.extract_maybe``.
+
+        ``transport_max_attempts`` may describe inner HTTP attempts inside
+        ``extract_maybe`` when set on ``run_extraction`` spans (Phase 1 alignment).
         """
 
         out: dict[str, Any] = {

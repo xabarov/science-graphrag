@@ -6,7 +6,6 @@ from typing import Literal
 
 from langchain_core.messages import HumanMessage
 from langgraph.graph import END, StateGraph
-from langgraph.prebuilt import ToolNode
 
 from science_graphrag.agent.coordination.deterministic import _graph_intent_heuristic
 from science_graphrag.agent.graph.nodes.graph_agent import SPECIALIST_NAME as GRAPH_SPECIALIST
@@ -25,9 +24,11 @@ from science_graphrag.agent.graph.nodes.writer_agent import (
 )
 from science_graphrag.agent.graph.state import AgentState
 from science_graphrag.agent.llm.chat import build_chat_model, ensure_messages_safe_for_generation
+from science_graphrag.agent.tool_call_normalization import build_normalized_tool_node_executor
 from science_graphrag.agent.tools import build_tool_registry
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
+from science_graphrag.ingestion.llm.extractor import EXTRACT_MAYBE_MAX_INNER_ATTEMPTS
 from science_graphrag.observability.spans import (
     SpanAttributes,
     add_span_event,
@@ -199,8 +200,14 @@ def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
                     **SpanAttributes.llm_runtime_policy_attributes(
                         pool_name="agent_chat",
                         transport_timeout_seconds=float(settings.extraction_llm_timeout_seconds),
-                        timeout_contract="transport_only",
+                        timeout_contract="transport_with_operation_deadline",
                         retry_extra_budget=0,
+                        operation_deadline_seconds=min(
+                            900.0,
+                            float(settings.extraction_llm_timeout_seconds)
+                            * float(EXTRACT_MAYBE_MAX_INNER_ATTEMPTS),
+                        ),
+                        transport_max_attempts=EXTRACT_MAYBE_MAX_INNER_ATTEMPTS,
                     ),
                     "llm.invocation_name": "agent_supervisor_route",
                 },
@@ -278,11 +285,17 @@ def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
             "llm.agent.react_turn",
             {"llm.invocation_name": "agent_single_react"},
         ):
+            transport = float(settings.extraction_llm_timeout_seconds)
             SpanAttributes.set_llm_runtime_policy(
                 pool_name="agent_chat",
-                transport_timeout_seconds=float(settings.extraction_llm_timeout_seconds),
-                timeout_contract="transport_only",
+                transport_timeout_seconds=transport,
+                timeout_contract="transport_with_operation_deadline",
                 retry_extra_budget=0,
+                operation_deadline_seconds=min(
+                    900.0,
+                    transport * float(EXTRACT_MAYBE_MAX_INNER_ATTEMPTS),
+                ),
+                transport_max_attempts=EXTRACT_MAYBE_MAX_INNER_ATTEMPTS,
             )
             response = llm.invoke(ensure_messages_safe_for_generation(state["messages"]))
         return {"messages": [response]}
@@ -306,7 +319,7 @@ def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
     graph = StateGraph(AgentState)
     graph.add_node("chat", chat_node)
     graph.add_node("budget", budget_node)
-    graph.add_node("tools", ToolNode(tool_registry))
+    graph.add_node("tools", build_normalized_tool_node_executor(tool_registry))
     graph.set_entry_point("chat")
     graph.add_edge("chat", "budget")
     graph.add_conditional_edges("budget", should_continue, {"tools": "tools", END: END})

@@ -62,6 +62,40 @@ export function decisionChipSx(decision, tk = APP_TOKENS_FALLBACK_DARK) {
 }
 
 /**
+ * Softer chip for diagnostics surfaces (Benchmark Lab overview): readable but not hero status.
+ * @param {string} decision
+ * @param {import("../../theme/appTokensTypes.js").AppTokens} [tk]
+ */
+export function decisionChipSxDemoted(decision, tk = APP_TOKENS_FALLBACK_DARK) {
+  const d = String(decision || "").toUpperCase();
+  const base = {
+    fontWeight: 500,
+    fontSize: "0.7rem",
+    height: 22,
+    backgroundColor: tk.surface.subtle,
+    border: `1px solid ${tk.border.default}`,
+    color: tk.text.secondary,
+  };
+  if (d.includes("NO-GO")) {
+    return {
+      ...base,
+      border: `1px solid ${tk.state.dangerBorder}`,
+      color: tk.state.dangerFg,
+      backgroundColor: tk.state.dangerBg,
+      opacity: 0.92,
+    };
+  }
+  if (d.includes("CONDITIONAL")) {
+    return {
+      ...base,
+      border: `1px solid ${tk.border.strong}`,
+      color: tk.text.secondary,
+    };
+  }
+  return base;
+}
+
+/**
  * @param {Record<string, { members?: Record<string, object> }>} trustByFamily
  * @returns {string[]}
  */

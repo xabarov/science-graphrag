@@ -31,11 +31,13 @@ from science_graphrag.ingestion.llm.executor import (
     run_claims_extraction_with_compact_fallback,
     run_extraction,
 )
+from science_graphrag.ingestion.llm.extractor import EXTRACT_MAYBE_MAX_INNER_ATTEMPTS
 from science_graphrag.ingestion.llm.extractor_factory import (
     IngestionExtractorPreset,
     build_ingestion_extractor,
 )
 from science_graphrag.ingestion.llm.prompts import claims as claims_prompts
+from science_graphrag.utils.llm_deadline import MonotonicDeadline
 from science_graphrag.utils.project_logging import get_logger
 
 log = get_logger("ingestion.claims.extractor")
@@ -175,6 +177,16 @@ def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too
         else IngestionExtractorPreset.CLAIMS
     )
     ext = build_ingestion_extractor(settings, preset)
+    transport = float(settings.extraction_llm_timeout_seconds)
+    # One budget for all batches, split retries, and compact fallback (Phase 1).
+    work_budget = min(
+        1200.0,
+        max(
+            transport * 4.0,
+            transport * float(EXTRACT_MAYBE_MAX_INNER_ATTEMPTS) * 4.0,
+        ),
+    )
+    work_deadline = MonotonicDeadline.from_budget_seconds(work_budget)
 
     def _user_payload(batch_chunks: list[dict[str, Any]], *, max_chars: int) -> str:
         return claims_prompts.build_claims_user_message(
@@ -201,7 +213,10 @@ def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too
             compact_schema=ClaimsLLMResponseBenchmark,
             document_id=str(work_id),
             source_name=str(work_id),
-            timeout_seconds=float(settings.extraction_llm_timeout_seconds),
+            timeout_seconds=transport,
+            transport_timeout_seconds=transport,
+            operation_deadline_seconds=work_budget,
+            operation_deadline=work_deadline,
             retries_primary=0,
             retries_compact=0,
         )
@@ -257,9 +272,12 @@ def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too
             stage_name="claims_benchmark",
             document_id=str(work_id),
             source_name=str(work_id),
-            timeout_seconds=float(settings.extraction_llm_timeout_seconds),
-            transport_timeout_seconds=float(settings.extraction_llm_timeout_seconds),
+            timeout_seconds=transport,
+            transport_timeout_seconds=transport,
             pool_name="claims",
+            timeout_contract="transport_with_operation_deadline",
+            operation_deadline_seconds=work_budget,
+            operation_deadline=work_deadline,
             system_prompt=claims_prompts.SYSTEM_BENCHMARK,
             retries=0,
         )

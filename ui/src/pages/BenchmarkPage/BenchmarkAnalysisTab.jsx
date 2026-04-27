@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Box from "@mui/material/Box";
-import Tab from "@mui/material/Tab";
-import Tabs from "@mui/material/Tabs";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
+import { CursorButton } from "../../components/common/index.js";
 import { useI18n } from "../../i18n/useI18n.js";
 import { compareBenchmarkRuns } from "../../services/benchmarkApi.js";
 import { formatResearchApiError } from "../../services/researchApi.js";
@@ -14,12 +16,12 @@ import CompareTab from "./CompareTab.jsx";
 import ResultsTab from "./ResultsTab.jsx";
 import { useBenchmarkAnalysisSession } from "./useBenchmarkAnalysisSession.js";
 
-import { ANALYSIS_VIEWS, normalizeAnalysisView } from "./experimentCatalog.js";
+import { LEGACY_ANALYSIS_TOOL_VIEWS, normalizeAnalysisView } from "./experimentCatalog.js";
 
 /**
  * @param {object} props
- * @param {"results"|"compare"|"workbench"} props.analysisView
- * @param {(view: "results"|"compare"|"workbench") => void} props.onAnalysisViewChange
+ * @param {"overview"|"results"|"compare"|"workbench"} props.analysisView
+ * @param {(view: "overview"|"results"|"compare"|"workbench") => void} props.onAnalysisViewChange
  * @param {(runId: string, caseId?: string | null, opts?: { caseFamily?: string | null, compareBaselineRunId?: string | null, compareMetric?: string | null }) => void} props.onOpenWorkbench
  * @param {string | null} props.selectedRunId
  * @param {string | null} props.selectedCaseId
@@ -46,6 +48,10 @@ export default function BenchmarkAnalysisTab({
   const [compareResult, setCompareResult] = useState(null);
   const [compareError, setCompareError] = useState(null);
   const [compareLoading, setCompareLoading] = useState(false);
+  const [toolsMenuAnchor, setToolsMenuAnchor] = useState(null);
+  const toolsMenuOpen = Boolean(toolsMenuAnchor);
+
+  const legacyToolOpen = LEGACY_ANALYSIS_TOOL_VIEWS.includes(view);
 
   useEffect(() => {
     if (!session?.rows?.length) {
@@ -137,6 +143,11 @@ export default function BenchmarkAnalysisTab({
     };
   }, [comparePair]);
 
+  function pickLegacyTool(next) {
+    onAnalysisViewChange(next);
+    setToolsMenuAnchor(null);
+  }
+
   return (
     <Box>
       <BenchmarkAnalysisOverview
@@ -164,45 +175,66 @@ export default function BenchmarkAnalysisTab({
         onOpenCompare={() => onAnalysisViewChange("compare")}
         onOpenResults={() => onAnalysisViewChange("results")}
       />
-      <Box sx={{ px: 2, pt: 1.5, borderBottom: `1px solid ${tk.border.default}` }}>
-        <Box sx={{ mb: 0.75 }}>
-          <Box
-            component="span"
-            sx={{
-              display: "inline-flex",
-              alignItems: "center",
-              border: `1px solid ${tk.border.default}`,
-              borderRadius: 999,
-              px: 1,
-              py: 0.35,
-              color: tk.text.secondary,
-              fontSize: "0.75rem",
-              backgroundColor: tk.surface.subtle,
-            }}
+      <Box
+        sx={{
+          px: 2,
+          pt: 1.5,
+          pb: 1.25,
+          borderBottom: `1px solid ${tk.border.default}`,
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 1,
+        }}
+      >
+        <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary, maxWidth: 720, lineHeight: 1.5 }}>
+          {t("benchmarkPage.analysis.toolsHint")}
+        </Typography>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "center" }}>
+          {legacyToolOpen ? (
+            <CursorButton size="small" onClick={() => onAnalysisViewChange("overview")}>
+              {t("benchmarkPage.analysis.backToOverview")}
+            </CursorButton>
+          ) : null}
+          <CursorButton
+            size="small"
+            id="benchmark-analysis-tools-button"
+            aria-controls={toolsMenuOpen ? "benchmark-analysis-tools-menu" : undefined}
+            aria-haspopup="true"
+            aria-expanded={toolsMenuOpen ? "true" : undefined}
+            title={t("benchmarkPage.analysis.toolsMenu.ariaLabel")}
+            onClick={(e) => setToolsMenuAnchor(e.currentTarget)}
           >
-            {t("benchmarkPage.analysis.legacyTabsHint")}
-          </Box>
+            {t("benchmarkPage.analysis.toolsMenu.button")}
+          </CursorButton>
+          <Menu
+            id="benchmark-analysis-tools-menu"
+            anchorEl={toolsMenuAnchor}
+            open={toolsMenuOpen}
+            onClose={() => setToolsMenuAnchor(null)}
+            MenuListProps={{ "aria-labelledby": "benchmark-analysis-tools-button" }}
+          >
+            <MenuItem
+              onClick={() => pickLegacyTool("results")}
+              selected={view === "results"}
+            >
+              {t("benchmarkPage.analysis.toolsMenu.results")}
+            </MenuItem>
+            <MenuItem
+              onClick={() => pickLegacyTool("compare")}
+              selected={view === "compare"}
+            >
+              {t("benchmarkPage.analysis.toolsMenu.compare")}
+            </MenuItem>
+            <MenuItem
+              onClick={() => pickLegacyTool("workbench")}
+              selected={view === "workbench"}
+            >
+              {t("benchmarkPage.analysis.toolsMenu.workbench")}
+            </MenuItem>
+          </Menu>
         </Box>
-        <Tabs
-          value={view}
-          onChange={(e, v) => {
-            if (ANALYSIS_VIEWS.includes(v)) onAnalysisViewChange(/** @type {"results"|"compare"|"workbench"} */ (v));
-          }}
-          aria-label={t("benchmarkPage.tab.analysis")}
-          textColor="inherit"
-          indicatorColor="secondary"
-          variant="scrollable"
-          sx={{
-            "& .MuiTab-root:focus-visible": {
-              outline: `2px solid ${tk.accent.fg}`,
-              outlineOffset: 2,
-            },
-          }}
-        >
-          <Tab value="results" label={t("benchmarkPage.analysis.results")} />
-          <Tab value="compare" label={t("benchmarkPage.analysis.compare")} />
-          <Tab value="workbench" label={t("benchmarkPage.analysis.workbench")} />
-        </Tabs>
       </Box>
       {view === "results" ? <ResultsTab onOpenWorkbench={onOpenWorkbench} /> : null}
       {view === "compare" ? (

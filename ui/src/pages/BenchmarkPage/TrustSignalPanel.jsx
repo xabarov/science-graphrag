@@ -14,9 +14,9 @@ import { useBenchmarkSummary } from "../../hooks/useBenchmarkSummary.js";
 import { formatResearchApiError } from "../../services/researchApi.js";
 
 import TrustSignalDrillIn from "./TrustSignalDrillIn.jsx";
-import { buildTrustRows, decisionChipSx } from "./trustSignalDrillInHelpers.js";
+import { buildTrustRows, decisionChipSx, decisionChipSxDemoted } from "./trustSignalDrillInHelpers.js";
 
-export { buildTrustRows, decisionChipSx };
+export { buildTrustRows, decisionChipSx, decisionChipSxDemoted };
 
 /**
  * @param {object} [props]
@@ -75,8 +75,11 @@ export default function TrustSignalPanel({ defaultExpanded = true } = {}) {
         py: 1,
       }}
     >
+      <Typography sx={{ mb: 0.75, color: tk.text.muted, fontSize: "0.68rem", lineHeight: 1.45 }}>
+        {t("benchmarkPage.trustSignal.operationalCaption")}
+      </Typography>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-        <Chip label={data.decision} size="small" sx={decisionChipSx(data.decision, tk)} />
+        <Chip label={data.decision} size="small" sx={decisionChipSxDemoted(data.decision, tk)} />
         <Typography sx={{ flex: 1, minWidth: 0, color: tk.text.secondary, fontSize: "0.75rem" }}>
           {data.reason}
         </Typography>

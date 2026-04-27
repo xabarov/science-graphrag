@@ -58,13 +58,13 @@
     .deck {
       width: 100vw;
       height: 100vh;
-      padding: 28px 24px;
+      padding: 18px 16px;
       display: flex;
-      gap: 24px;
+      gap: 16px;
       overflow-x: auto;
       overflow-y: hidden;
       scroll-snap-type: x mandatory;
-      scroll-padding-inline: 24px;
+      scroll-padding-inline: 16px;
       overscroll-behavior-x: contain;
       overscroll-behavior-y: none;
     }
@@ -87,10 +87,10 @@
     .deck-nav {
       display: inline-flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
       max-width: min(96vw, 1100px);
-      padding: 12px 16px;
+      padding: 10px 14px;
       border: 1px solid rgba(22, 27, 34, 0.08);
       border-radius: 999px;
       background: rgba(251, 248, 242, 0.9);
@@ -101,11 +101,11 @@
 
     .deck-nav a {
       text-decoration: none;
-      font-size: 12px;
+      font-size: 14px;
       letter-spacing: 0.08em;
       text-transform: uppercase;
       color: var(--ink-soft);
-      padding: 7px 12px;
+      padding: 8px 14px;
       border-radius: 999px;
       transition: background-color 0.18s ease, color 0.18s ease;
     }
@@ -117,17 +117,17 @@
 
     .slide {
       position: relative;
-      flex: 0 0 calc(100vw - 48px);
-      width: calc(100vw - 48px);
-      height: calc(100vh - 56px);
-      padding: 52px 58px;
+      flex: 0 0 calc(100vw - 32px);
+      width: calc(100vw - 32px);
+      height: calc(100vh - 36px);
+      padding: 36px 42px;
       background: linear-gradient(180deg, var(--paper-strong), var(--paper));
       border: 1px solid rgba(22, 27, 34, 0.08);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       overflow: auto;
       display: grid;
-      gap: 28px;
+      gap: 18px;
       scroll-snap-align: start;
       scroll-snap-stop: always;
     }
@@ -148,7 +148,7 @@
     }
 
     .slide-tag {
-      font-size: 13px;
+      font-size: 15px;
       letter-spacing: 0.16em;
       text-transform: uppercase;
       color: var(--accent);
@@ -166,36 +166,36 @@
     }
 
     h1 {
-      font-size: clamp(62px, 6.3vw, 102px);
+      font-size: clamp(66px, 6.5vw, 108px);
       max-width: 1060px;
     }
 
     h2 {
-      font-size: clamp(38px, 4vw, 58px);
+      font-size: clamp(44px, 4.2vw, 66px);
     }
 
     h3 {
-      font-size: 24px;
+      font-size: 28px;
     }
 
     p {
       margin: 0;
-      font-size: 22px;
-      line-height: 1.42;
+      font-size: 25px;
+      line-height: 1.38;
       color: var(--ink-soft);
     }
 
     ul,
     ol {
       margin: 0;
-      padding-left: 24px;
+      padding-left: 26px;
       color: var(--ink);
-      font-size: 23px;
-      line-height: 1.42;
+      font-size: 26px;
+      line-height: 1.38;
     }
 
     li + li {
-      margin-top: 10px;
+      margin-top: 8px;
     }
 
     .muted {
@@ -203,21 +203,22 @@
     }
 
     .lead {
-      font-size: 26px;
+      font-size: 30px;
       max-width: 980px;
       color: #273242;
     }
 
     .sublead {
       max-width: 900px;
-      font-size: 20px;
+      font-size: 24px;
+      line-height: 1.38;
     }
 
     .meta-line {
       display: flex;
       flex-wrap: wrap;
       gap: 18px;
-      font-size: 18px;
+      font-size: 21px;
       color: var(--ink-soft);
     }
 
@@ -231,16 +232,16 @@
     .title-layout {
       display: grid;
       grid-template-columns: 1.45fr 1.1fr;
-      gap: 34px;
+      gap: 26px;
       align-items: center;
-      min-height: calc(100% - 220px);
+      min-height: calc(100% - 200px);
     }
 
     .title-panel {
       display: grid;
-      gap: 22px;
+      gap: 16px;
       align-content: center;
-      padding-right: 24px;
+      padding-right: 16px;
     }
 
     .side-note,
@@ -258,31 +259,31 @@
     }
 
     .side-note {
-      min-height: 240px;
-      padding: 34px 36px;
+      min-height: 220px;
+      padding: 26px 28px;
       align-self: center;
       display: grid;
-      gap: 18px;
+      gap: 14px;
       align-content: center;
       background:
         linear-gradient(180deg, rgba(255, 250, 240, 0.95), rgba(252, 246, 237, 0.95));
     }
 
     .side-note p {
-      font-size: 24px;
-      line-height: 1.4;
+      font-size: 27px;
+      line-height: 1.36;
     }
 
     .title-strip {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 22px;
+      gap: 16px;
       align-self: end;
     }
 
     .title-chip {
-      min-height: 184px;
-      padding: 30px 32px;
+      min-height: 168px;
+      padding: 22px 24px;
       border-radius: 22px;
       border: 1px solid rgba(22, 27, 34, 0.08);
       background: rgba(255, 255, 255, 0.76);
@@ -292,7 +293,7 @@
     }
 
     .title-chip .chip-label {
-      font-size: 14px;
+      font-size: 15px;
       letter-spacing: 0.14em;
       text-transform: uppercase;
       color: var(--accent);
@@ -300,9 +301,9 @@
     }
 
     .title-chip p {
-      font-size: 24px;
+      font-size: 27px;
       color: #2a394b;
-      line-height: 1.35;
+      line-height: 1.32;
     }
 
     .plan-layout,
@@ -312,44 +313,44 @@
     .artifact-grid,
     .footer-grid {
       display: grid;
-      gap: 22px;
+      gap: 16px;
     }
 
     .plan-layout {
-      grid-template-columns: 0.95fr 1.05fr;
+      grid-template-columns: 0.74fr 1.26fr;
       align-items: stretch;
     }
 
     .plan-list {
       display: grid;
-      gap: 14px;
+      gap: 12px;
       align-content: start;
     }
 
     .plan-item {
       display: grid;
       grid-template-columns: 72px 1fr;
-      gap: 14px;
+      gap: 12px;
       align-items: center;
-      padding: 18px 22px;
+      padding: 16px 20px;
       border-radius: 22px;
       border: 1px solid rgba(22, 27, 34, 0.08);
       background: rgba(255, 255, 255, 0.7);
     }
 
     .plan-item strong {
-      font-size: 30px;
+      font-size: 34px;
       font-family: "Palatino Linotype", "Book Antiqua", Palatino, "URW Palladio L", serif;
       color: var(--accent);
     }
 
     .plan-item span {
-      font-size: 24px;
+      font-size: 27px;
       line-height: 1.25;
     }
 
     .callout {
-      padding: 26px 28px;
+      padding: 20px 24px;
       background:
         linear-gradient(180deg, rgba(142, 59, 46, 0.09), rgba(142, 59, 46, 0.04)),
         rgba(255, 255, 255, 0.8);
@@ -359,7 +360,7 @@
     }
 
     .callout .eyebrow {
-      font-size: 13px;
+      font-size: 15px;
       letter-spacing: 0.16em;
       text-transform: uppercase;
       color: var(--accent);
@@ -367,8 +368,9 @@
     }
 
     .callout p {
-      font-size: 22px;
+      font-size: 25px;
       color: #213041;
+      line-height: 1.36;
     }
 
     .two-col {
@@ -381,14 +383,15 @@
     }
 
     .paper-card {
-      padding: 24px 26px;
+      padding: 20px 22px;
       display: grid;
-      gap: 14px;
+      gap: 12px;
     }
 
     .paper-card p,
     .paper-card li {
-      font-size: 20px;
+      font-size: 23px;
+      line-height: 1.36;
     }
 
     .inline-flow {
@@ -398,11 +401,11 @@
     }
 
     .flow-chip {
-      padding: 10px 14px;
+      padding: 11px 16px;
       border-radius: 999px;
       background: rgba(22, 27, 34, 0.05);
       border: 1px solid rgba(22, 27, 34, 0.1);
-      font-size: 15px;
+      font-size: 17px;
       letter-spacing: 0.04em;
       color: #273242;
     }
@@ -414,19 +417,20 @@
     }
 
     .tech-card {
-      padding: 20px;
+      padding: 22px;
       display: grid;
-      gap: 12px;
+      gap: 10px;
       align-content: start;
     }
 
     .tech-card h3 {
-      font-size: 22px;
+      font-size: 25px;
     }
 
     .tech-card ul {
-      padding-left: 18px;
-      font-size: 18px;
+      padding-left: 20px;
+      font-size: 21px;
+      line-height: 1.36;
     }
 
     .placeholder {
@@ -456,7 +460,7 @@
     }
 
     .placeholder .label {
-      font-size: 13px;
+      font-size: 15px;
       letter-spacing: 0.18em;
       text-transform: uppercase;
       color: var(--accent);
@@ -464,7 +468,7 @@
     }
 
     .placeholder strong {
-      font-size: 30px;
+      font-size: 34px;
       line-height: 1.06;
       max-width: 720px;
       font-family: "Palatino Linotype", "Book Antiqua", Palatino, "URW Palladio L", serif;
@@ -472,12 +476,13 @@
 
     .placeholder p,
     .placeholder li {
-      font-size: 18px;
+      font-size: 21px;
+      line-height: 1.36;
       color: #314155;
     }
 
     .results-grid {
-      grid-template-columns: 1.1fr 0.9fr;
+      grid-template-columns: 1.42fr 0.58fr;
       align-items: start;
     }
 
@@ -494,7 +499,7 @@
     }
 
     .metric-card .metric-label {
-      font-size: 13px;
+      font-size: 15px;
       letter-spacing: 0.14em;
       text-transform: uppercase;
       color: var(--accent);
@@ -502,13 +507,14 @@
     }
 
     .metric-card .metric-value {
-      font-size: 42px;
+      font-size: 48px;
       line-height: 0.98;
       font-family: "Palatino Linotype", "Book Antiqua", Palatino, "URW Palladio L", serif;
     }
 
     .metric-card p {
-      font-size: 18px;
+      font-size: 21px;
+      line-height: 1.36;
     }
 
     .artifact-grid {
@@ -516,9 +522,9 @@
     }
 
     .artifact-card {
-      padding: 22px 24px;
+      padding: 20px 22px;
       display: grid;
-      gap: 12px;
+      gap: 10px;
     }
 
     .artifact-card code,
@@ -528,7 +534,7 @@
       padding: 4px 8px;
       border-radius: 999px;
       background: rgba(22, 27, 34, 0.05);
-      font-size: 15px;
+      font-size: 17px;
       color: #253143;
     }
 
@@ -538,7 +544,7 @@
     }
 
     .artifact-list div {
-      font-size: 19px;
+      font-size: 22px;
       color: #273242;
     }
 
@@ -564,7 +570,7 @@
     }
 
     .phase-card .phase-label {
-      font-size: 12px;
+      font-size: 14px;
       letter-spacing: 0.14em;
       text-transform: uppercase;
       color: var(--accent);
@@ -572,23 +578,29 @@
     }
 
     .phase-card p {
-      font-size: 18px;
+      font-size: 21px;
+      line-height: 1.36;
       color: #2d3d50;
     }
 
     .summary-box {
-      padding: 20px 22px;
+      padding: 18px 22px;
       display: grid;
-      gap: 12px;
+      gap: 10px;
     }
 
     .summary-box p,
     .summary-box li {
-      font-size: 19px;
+      font-size: 23px;
+      line-height: 1.36;
+    }
+
+    .summary-box h3 {
+      font-size: 30px;
     }
 
     .visual-frame {
-      padding: 18px;
+      padding: 6px 8px;
       border-radius: 24px;
       border: 1px solid rgba(22, 27, 34, 0.09);
       background: rgba(255, 255, 255, 0.76);
@@ -596,13 +608,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 280px;
+      min-height: 400px;
     }
 
     .visual-frame img {
       display: block;
       width: 100%;
-      max-height: 100%;
+      max-height: min(86vh, 960px);
       object-fit: contain;
       border-radius: 18px;
       border: 1px solid rgba(22, 27, 34, 0.08);
@@ -624,12 +636,13 @@
     }
 
     .artifact-block h3 {
-      font-size: 22px;
+      font-size: 26px;
     }
 
     .artifact-block p,
     .artifact-block li {
-      font-size: 18px;
+      font-size: 21px;
+      line-height: 1.36;
       color: #29384a;
     }
 
@@ -659,12 +672,13 @@
 
     .demo-card p,
     .demo-card li {
-      font-size: 18px;
+      font-size: 21px;
+      line-height: 1.36;
       color: #29384a;
     }
 
     .demo-query {
-      font-size: 24px;
+      font-size: 28px;
       line-height: 1.3;
       color: #1f2c3d;
       font-family: "Palatino Linotype", "Book Antiqua", Palatino, "URW Palladio L", serif;
@@ -673,7 +687,7 @@
     .demo-layout {
       display: grid;
       grid-template-columns: 1.15fr 0.85fr;
-      gap: 22px;
+      gap: 16px;
       align-items: stretch;
     }
 
@@ -681,12 +695,90 @@
       min-height: 390px;
     }
 
+    .defense-video-slot {
+      width: 100%;
+      min-height: min(52vh, 480px);
+      border-radius: 20px;
+      border: 1px solid rgba(22, 27, 34, 0.1);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(248, 244, 238, 0.75));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    }
+
+    video.defense-demo-video {
+      display: block;
+      width: 100%;
+      max-height: min(52vh, 520px);
+      border-radius: 16px;
+      border: 1px solid rgba(22, 27, 34, 0.1);
+      background: #0f1218;
+    }
+
+    .defense-metrics-tables {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .defense-table-wrap {
+      min-width: 0;
+    }
+
+    table.defense-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 16px;
+      line-height: 1.32;
+      background: rgba(255, 255, 255, 0.82);
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(22, 27, 34, 0.09);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    }
+
+    table.defense-table caption {
+      caption-side: top;
+      text-align: left;
+      padding: 10px 14px 8px;
+      font-weight: 700;
+      font-size: 17px;
+      color: #161b22;
+    }
+
+    table.defense-table thead th {
+      font-size: 12px;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--accent);
+      text-align: left;
+      padding: 8px 12px;
+      background: rgba(142, 59, 46, 0.08);
+      border-bottom: 1px solid rgba(22, 27, 34, 0.1);
+    }
+
+    table.defense-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(22, 27, 34, 0.06);
+      vertical-align: top;
+      color: #243041;
+    }
+
+    table.defense-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    table.defense-table code {
+      font-size: 0.86em;
+      word-break: break-word;
+    }
+
     .quote {
-      padding: 18px 20px;
+      padding: 16px 22px;
       border-left: 4px solid var(--accent);
       background: rgba(142, 59, 46, 0.05);
-      font-size: 20px;
-      line-height: 1.42;
+      font-size: 24px;
+      line-height: 1.36;
       color: #223245;
     }
 
@@ -695,7 +787,7 @@
     }
 
     .footer-card {
-      padding: 24px;
+      padding: 20px 22px;
       border-radius: 24px;
       border: 1px solid rgba(22, 27, 34, 0.08);
       background: rgba(255, 255, 255, 0.72);
@@ -704,23 +796,24 @@
     }
 
     .footer-card h3 {
-      font-size: 28px;
+      font-size: 32px;
     }
 
     .footer-card ul {
-      font-size: 20px;
+      font-size: 23px;
+      line-height: 1.36;
     }
 
     .footer-mini {
-      font-size: 18px;
+      font-size: 21px;
       color: var(--ink-soft);
     }
 
     #slide-2 .plan-layout,
-    #slide-3 .two-col,
-    #slide-6 .artifact-grid,
-    #slide-8 .demo-layout,
-    #slide-9 .footer-grid {
+    #slide-3 .goal-layout,
+    #slide-6 .demo-layout,
+    #slide-8 .two-col,
+    #slide-8 .footer-grid {
       align-items: stretch;
     }
 
@@ -738,118 +831,313 @@
     }
 
     #slide-2 .visual-frame {
-      min-height: 420px;
+      min-height: 500px;
+      padding: 4px 6px;
+    }
+
+    #slide-2 .visual-frame img {
+      max-height: min(88vh, 980px);
     }
 
     #slide-2 .quote {
-      min-height: 136px;
+      min-height: 120px;
       display: grid;
       align-content: center;
-      font-size: 23px;
+      font-size: 26px;
     }
 
-    #slide-3 .paper-card {
-      min-height: 300px;
-      padding: 30px 32px;
+    #slide-3.slide {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
     }
 
-    #slide-3 .paper-card h3 {
-      font-size: 28px;
+    #slide-3 .goal-layout {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 0.66fr 1.34fr;
+      gap: 14px;
+      min-height: 480px;
+      align-items: stretch;
     }
 
-    #slide-3 .paper-card p,
-    #slide-3 .paper-card li {
-      font-size: 22px;
-      line-height: 1.42;
+    #slide-3 .goal-left {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 12px;
+      min-height: 0;
+      min-width: 0;
     }
 
-    #slide-3 .flow-chip {
-      padding: 12px 16px;
+    #slide-3 .goal-hero {
+      padding: 18px 22px;
+      border-radius: 24px;
+      border: 1px solid rgba(22, 27, 34, 0.09);
+      background: rgba(255, 255, 255, 0.78);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+      display: grid;
+      gap: 10px;
+    }
+
+    #slide-3 .goal-hero-line {
+      margin: 0;
+      font-family: "Palatino Linotype", "Book Antiqua", Palatino, "URW Palladio L", serif;
+      font-weight: 700;
+      font-size: clamp(30px, 3.1vw, 40px);
+      line-height: 1.2;
+      color: #161b22;
+    }
+
+    #slide-3 .goal-pipeline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    #slide-3 .goal-pipeline .flow-chip {
+      padding: 11px 16px;
       font-size: 16px;
     }
 
+    #slide-3 .task-grid {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    #slide-3 .task-row {
+      display: grid;
+      grid-template-columns: 48px 1fr;
+      gap: 12px;
+      align-items: center;
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(22, 27, 34, 0.08);
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    #slide-3 .task-row .task-num {
+      font-family: "Palatino Linotype", "Book Antiqua", Palatino, "URW Palladio L", serif;
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+      text-align: center;
+    }
+
+    #slide-3 .task-row p {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.34;
+      color: #2a394b;
+    }
+
+    #slide-3 .goal-visual {
+      min-height: 100%;
+      align-self: stretch;
+    }
+
+    #slide-3 .goal-visual img {
+      max-height: min(88vh, 980px);
+      width: 100%;
+      object-fit: contain;
+    }
+
     #slide-3 .callout {
-      min-height: 180px;
-      padding: 34px 36px;
+      min-height: auto;
+      padding: 18px 22px;
     }
 
     #slide-3 .callout p {
       font-size: 24px;
     }
 
-    #slide-6 .artifact-block {
-      min-height: 190px;
-      padding: 26px 28px;
+    #slide-4 .two-col {
+      grid-template-columns: 0.64fr 1.36fr;
+      gap: 12px;
+      align-items: stretch;
     }
 
-    #slide-6 .artifact-block h3 {
-      font-size: 26px;
+    #slide-4 .summary-box {
+      padding: 14px 16px;
+      gap: 8px;
     }
 
-    #slide-6 .artifact-block p,
-    #slide-6 .artifact-block li {
-      font-size: 20px;
-      line-height: 1.4;
+    #slide-4 .summary-box h3 {
+      font-size: 32px;
     }
 
-    #slide-6 .callout {
-      min-height: 140px;
-      padding: 30px 34px;
+    #slide-4 .summary-box p,
+    #slide-4 .summary-box li {
+      font-size: 24px;
+      line-height: 1.34;
     }
 
-    #slide-6 .callout p {
-      font-size: 23px;
+    #slide-4 .visual-frame {
+      min-height: 480px;
+      padding: 4px 6px;
     }
 
-    #slide-8 .demo-card,
-    #slide-8 .paper-card {
-      min-height: 220px;
-      padding: 28px 30px;
+    #slide-4 .visual-frame img {
+      max-height: min(88vh, 980px);
     }
 
-    #slide-8 .video-frame {
-      min-height: 320px;
+    #slide-4 .quote {
+      font-size: 25px;
+      padding: 14px 20px;
     }
 
-    #slide-8 .paper-card h3 {
-      font-size: 28px;
+    #slide-5 .two-col {
+      grid-template-columns: 1.36fr 0.64fr;
+      gap: 12px;
+      align-items: stretch;
     }
 
-    #slide-8 .paper-card p,
-    #slide-8 .paper-card li {
-      font-size: 21px;
+    #slide-5 .summary-box {
+      padding: 14px 16px;
+      gap: 8px;
     }
 
-    #slide-8 .quote {
-      min-height: 120px;
+    #slide-5 .visual-frame {
+      min-height: 480px;
+      padding: 4px 6px;
+    }
+
+    #slide-5 .visual-frame img {
+      max-height: min(88vh, 980px);
+    }
+
+    #slide-5 .summary-box h3 {
+      font-size: 32px;
+    }
+
+    #slide-5 .summary-box li {
+      font-size: 24px;
+      line-height: 1.34;
+    }
+
+    #slide-5 .quote {
+      font-size: 25px;
+      padding: 14px 20px;
+    }
+
+    #slide-7 .results-grid {
+      gap: 12px;
+    }
+
+    #slide-7 .visual-frame {
+      min-height: 240px;
+      padding: 4px 6px;
+    }
+
+    #slide-7 .visual-frame img {
+      max-height: min(34vh, 380px);
+    }
+
+    #slide-7 .defense-metrics-tables {
+      gap: 12px;
+    }
+
+    #slide-7 table.defense-table {
+      font-size: 15px;
+    }
+
+    #slide-7 table.defense-table caption {
+      font-size: 16px;
+      padding-bottom: 6px;
+    }
+
+    #slide-7.slide {
+      gap: 12px;
+    }
+
+    #slide-7 .results-grid > .summary-box {
+      padding: 14px 16px;
+      gap: 8px;
+    }
+
+    #slide-7 .summary-box h3 {
+      font-size: 32px;
+    }
+
+    #slide-7 .summary-box p,
+    #slide-7 .summary-box li {
+      font-size: 24px;
+      line-height: 1.34;
+    }
+
+    #slide-6 .demo-layout {
+      grid-template-columns: 1fr;
+    }
+
+    #slide-6 .demo-card {
+      min-height: 200px;
+      padding: 22px 26px;
+    }
+
+    #slide-6 .video-frame {
+      min-height: min(54vh, 520px);
+    }
+
+    #slide-6 .quote {
+      min-height: 100px;
       display: grid;
       align-content: center;
-      font-size: 22px;
+      font-size: 25px;
     }
 
-    #slide-9 .footer-card,
-    #slide-9 .summary-box {
-      min-height: 240px;
-      padding: 30px 32px;
+    #slide-8 .two-col {
+      gap: 14px;
+      align-items: stretch;
     }
 
-    #slide-9 .footer-card h3,
-    #slide-9 .summary-box h3 {
+    #slide-8 .summary-box {
+      padding: 18px 22px;
+      gap: 10px;
+    }
+
+    #slide-8 .summary-box h3 {
+      font-size: 32px;
+    }
+
+    #slide-8 .summary-box p,
+    #slide-8 .summary-box li {
+      font-size: 24px;
+      line-height: 1.34;
+    }
+
+    #slide-8 .footer-card {
+      min-height: 0;
+      padding: 20px 22px;
+    }
+
+    #slide-8 .footer-card h3 {
       font-size: 30px;
     }
 
-    #slide-9 .footer-card ul,
-    #slide-9 .summary-box ul,
-    #slide-9 .summary-box p {
-      font-size: 21px;
-      line-height: 1.42;
+    #slide-8 .footer-card ul {
+      font-size: 22px;
+      line-height: 1.34;
+    }
+
+    #slide-8 .quote {
+      min-height: 0;
+      display: grid;
+      align-content: center;
+      font-size: 24px;
+      line-height: 1.36;
+      padding: 14px 20px;
+    }
+
+    #slide-8.slide {
+      gap: 14px;
     }
 
     .slide-number {
       position: absolute;
       right: 30px;
       bottom: 20px;
-      font-size: 15px;
+      font-size: 17px;
       letter-spacing: 0.18em;
       text-transform: uppercase;
       color: rgba(22, 27, 34, 0.42);
@@ -879,13 +1167,15 @@
       .title-layout,
       .plan-layout,
       .two-col,
+      #slide-3 .goal-layout,
       .results-grid,
       .artifact-grid,
       .demo-layout,
       .footer-grid,
       .split-note,
       .phase-grid,
-      .title-strip {
+      .title-strip,
+      .defense-metrics-tables {
         grid-template-columns: 1fr;
       }
 
@@ -920,7 +1210,7 @@
       p,
       ul,
       ol {
-        font-size: 18px;
+        font-size: 21px;
       }
     }
 
@@ -968,7 +1258,6 @@
         <a href="#slide-6">06</a>
         <a href="#slide-7">07</a>
         <a href="#slide-8">08</a>
-        <a href="#slide-9">09</a>
       </nav>
     </div>
 
@@ -1031,24 +1320,24 @@
           </div>
           <div class="plan-item">
             <strong>03</strong>
-            <span>Что получилось: архитектура, продукт, результаты, демо</span>
+            <span>Архитектура; демонстрация системы; основные результаты и выводы</span>
           </div>
           <div class="plan-item">
             <strong>04</strong>
-            <span>Выводы и ограничения</span>
+            <span>Выводы, ограничения, итоги и направления развития</span>
           </div>
           <div class="plan-item">
             <strong>05</strong>
-            <span>Вопросы и дальнейшее развитие</span>
+            <span>Вопросы</span>
           </div>
         </div>
         <div class="visual-frame">
-          <img src="assets/defense/slide-02-plan-motif.jpg" alt="Декоративный visual в теме GraphRAG для слайда с планом защиты" />
+          <img src="assets/defense/slide-02-plan-motif.png" alt="Декоративный visual в теме GraphRAG для слайда с планом защиты" />
         </div>
       </div>
       <div class="quote">
-        Центральная часть защиты: показать не только идею, но и то, что система
-        существует как рабочий инженерный объект с архитектурой, результатами и демо.
+        Центральная часть защиты: не только идея, но и рабочий объект — архитектура,
+        короткая демонстрация, метрики и честные выводы.
       </div>
       <div class="slide-number">02</div>
     </section>
@@ -1056,39 +1345,54 @@
     <section class="slide" id="slide-3">
       <div class="slide-tag">Постановка задачи</div>
       <h2>Цель и задачи проекта</h2>
-      <div class="two-col">
-        <div class="paper-card">
-          <h3>Цель</h3>
-          <p>
-            Построить сквозную систему для исследователя, работающего с
-            ограниченным, но содержательно связанным корпусом научных статей,
-            которая не только ищет релевантные фрагменты, но и использует
-            структуру графа знаний.
-          </p>
-          <div class="inline-flow" aria-label="Ключевая цепочка проекта">
-            <div class="flow-chip">ingest</div>
-            <div class="flow-chip">graph</div>
-            <div class="flow-chip">retrieval</div>
-            <div class="flow-chip">answer with citations</div>
-            <div class="flow-chip">evaluation</div>
+      <div class="goal-layout">
+        <div class="goal-left">
+          <div class="goal-hero">
+            <p class="goal-hero-line">
+              Сквозная GraphRAG-система для исследователя над связным корпусом статей:
+              структура знаний, retrieval и ответы с цитатами.
+            </p>
+            <div class="goal-pipeline inline-flow" aria-label="Ключевая цепочка проекта">
+              <div class="flow-chip">articles</div>
+              <div class="flow-chip">graph</div>
+              <div class="flow-chip">retrieval</div>
+              <div class="flow-chip">cited answer</div>
+            </div>
+          </div>
+          <div class="task-grid">
+            <div class="task-row">
+              <span class="task-num" aria-hidden="true">1</span>
+              <p>Нормализовать статьи и извлечь структуру для графа.</p>
+            </div>
+            <div class="task-row">
+              <span class="task-num" aria-hidden="true">2</span>
+              <p>Построить граф знаний и векторный retrieval.</p>
+            </div>
+            <div class="task-row">
+              <span class="task-num" aria-hidden="true">3</span>
+              <p>Агентный runtime: supervisor и специализированные агенты.</p>
+            </div>
+            <div class="task-row">
+              <span class="task-num" aria-hidden="true">4</span>
+              <p>Ответы с обязательными цитатами по источникам.</p>
+            </div>
+            <div class="task-row">
+              <span class="task-num" aria-hidden="true">5</span>
+              <p>Честная оценка через benchmark-метрики.</p>
+            </div>
           </div>
         </div>
-        <div class="paper-card">
-          <h3>Задачи</h3>
-          <ol>
-            <li>Преобразовать статьи в структурированное представление.</li>
-            <li>Извлекать сущности и связи для графа знаний.</li>
-            <li>Поддержать и обычный retrieval, и графовые запросы.</li>
-            <li>Синтезировать ответы с обязательными цитатами.</li>
-            <li>Оценивать систему так, чтобы метрики отражали реальное качество.</li>
-          </ol>
+        <div class="visual-frame goal-visual">
+          <img
+            src="assets/defense/slide-03-goal-visual.jpg"
+            alt="Визуальная схема: статьи, граф знаний, retrieval и ответ с цитатами"
+          />
         </div>
       </div>
       <div class="callout">
         <div class="eyebrow">Ключевой тезис</div>
         <p>
-          Проект решает не одну задачу поиска, а целую цепочку:
-          от ingest и построения графа до ответа с цитатами и системы честной оценки.
+          Не отдельный поиск, а полная цепочка: ingest → graph → ответ с цитатами → evaluation.
         </p>
       </div>
       <div class="slide-number">03</div>
@@ -1152,118 +1456,11 @@
     </section>
 
     <section class="slide" id="slide-6">
-      <div class="slide-tag">Реализация</div>
-      <h2>Что реализовано в проекте</h2>
-      <div class="artifact-grid">
-        <div class="artifact-stack">
-          <div class="artifact-block">
-            <h3>Core runtime</h3>
-            <p>Supervisor и специализированные узлы агентного контура.</p>
-            <div class="artifact-path-list">
-              <code>science_graphrag/agent/graph/supervisor.py</code>
-              <code>science_graphrag/agent/graph/nodes/</code>
-            </div>
-          </div>
-          <div class="artifact-block">
-            <h3>Data и ingestion</h3>
-            <p>Конвейер подготовки корпуса и слой графового хранения.</p>
-            <div class="artifact-path-list">
-              <code>science_graphrag/ingestion/</code>
-              <code>science_graphrag/storage/neo4j/</code>
-            </div>
-          </div>
-          <div class="artifact-block">
-            <h3>Evaluation tooling</h3>
-            <p>Benchmark-инфраструктура и decision gate для честной оценки.</p>
-            <div class="artifact-path-list">
-              <code>science_graphrag/benchmarks/decision_gate.py</code>
-              <code>eval/agent_tools/</code>
-              <code>eval/retrieval/</code>
-              <code>eval/claims/</code>
-            </div>
-          </div>
-        </div>
-        <div class="artifact-stack">
-          <div class="artifact-block">
-            <h3>Архитектурные документы</h3>
-            <div class="artifact-path-list">
-              <code>docs/architecture/phase-1-backbone.md</code>
-              <code>docs/architecture/observability-phoenix.md</code>
-              <code>docs/adr/020-langgraph-supervisor-multiagent.md</code>
-            </div>
-          </div>
-          <div class="artifact-block">
-            <h3>Что важно показать</h3>
-            <ul>
-              <li>Это полноценный software project, а не один ноутбук с экспериментами.</li>
-              <li>Есть отдельные runtime, ingestion, storage и evaluation слои.</li>
-              <li>Есть документация архитектурных решений, а не только код.</li>
-              <li>Проект поддерживает воспроизводимые benchmark-артефакты.</li>
-            </ul>
-          </div>
-          <div class="artifact-block">
-            <h3>Что можно показать устно</h3>
-            <ul>
-              <li>Supervisor и agent routing.</li>
-              <li>Neo4j / Qdrant / Postgres как разные роли хранения.</li>
-              <li>Контур оценки и benchmark-артефакты.</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-      <div class="callout">
-        <div class="eyebrow">Что важно донести устно</div>
-        <p>
-          Это не одна notebook-эксперименталка, а полноценный software project:
-          ingest, graph storage, supervisor, benchmark-инфраструктура, UI и API.
-        </p>
-      </div>
-      <div class="slide-number">06</div>
-    </section>
-
-    <section class="slide" id="slide-7">
-      <div class="slide-tag">Главные цифры</div>
-      <h2>Основные результаты</h2>
-      <div class="results-grid">
-        <div class="visual-frame">
-          <img src="assets/defense/slide-07-metrics.jpg" alt="Сводный визуал по ключевым метрикам проекта" />
-        </div>
-        <div class="summary-box">
-          <h3>Как это интерпретировать</h3>
-          <ul>
-            <li>Система умеет извлекать структуру для GraphRAG.</li>
-            <li>Retrieval стабильно работает на реальном корпусе.</li>
-            <li>Граф помогает восстанавливать цепочки развития методов.</li>
-            <li>Полный агентный контур уже работает как единая система.</li>
-          </ul>
-          <div class="quote">
-            Важно: слабые результаты по <strong>claims paraphrase</strong> здесь не скрываются.
-            Это не минус презентации, а показатель честной оценки.
-          </div>
-        </div>
-      </div>
-      <div class="split-note">
-        <div class="summary-box">
-          <h3>Ещё две цифры, которые можно озвучить</h3>
-          <ul>
-            <li><strong>multihop recall ≈ 0.667</strong></li>
-            <li><strong>latency p95 ≈ 25 983 ms</strong></li>
-          </ul>
-        </div>
-        <div class="summary-box">
-          <h3>Почему это убедительно</h3>
-          <p>
-            Важно, что слабые результаты по <strong>claims paraphrase</strong> тоже остаются в отчёте.
-            Это показывает, что benchmark отделяет простые случаи от сложных и не маскирует ограничения.
-          </p>
-        </div>
-      </div>
-      <div class="slide-number">07</div>
-    </section>
-
-    <section class="slide" id="slide-8">
       <div class="slide-tag">Практическая демонстрация</div>
       <h2>Демонстрация системы</h2>
+      <p class="sublead">
+        Исследовательский вопрос по корпусу → маршрут supervisor и агентов → ответ с цитатами.
+      </p>
       <div class="demo-layout">
         <div class="demo-stage">
           <div class="demo-card">
@@ -1273,45 +1470,158 @@
             </div>
           </div>
           <div class="demo-card video-frame">
-            <div class="slide-tag">Записанное demo</div>
-            <p>
-              Здесь будет короткое видео на 60-90 секунд или stop-frame из записи:
-              <strong>вопрос → retrieval / graph traversal → answer with citations</strong>.
-            </p>
-            <div class="inline-flow">
+            <div class="slide-tag">Запись</div>
+            <div class="defense-video-slot" aria-label="Видеозапись демонстрации системы"></div>
+            <div class="inline-flow" aria-label="Этапы сценария">
               <div class="flow-chip">query</div>
               <div class="flow-chip">retrieval</div>
               <div class="flow-chip">graph</div>
               <div class="flow-chip">citations</div>
-              <div class="flow-chip">final answer</div>
+              <div class="flow-chip">answer</div>
             </div>
           </div>
         </div>
-        <div class="paper-card">
-          <h3>Что показать в демо</h3>
-          <ol>
-            <li>Пользователь задаёт исследовательский вопрос по корпусу статей.</li>
-            <li>Supervisor выбирает retrieval и/или graph traversal по типу запроса.</li>
-            <li>Система возвращает ответ с цитатами и опорой на найденные источники.</li>
-            <li>При необходимости показывается trace или структура маршрута.</li>
-          </ol>
-          <h3>Почему этот слайд важен</h3>
-          <p>
-            Он связывает архитектуру и метрики с реальным пользовательским сценарием
-            и доказывает, что проект работает не только на бумаге.
-          </p>
-        </div>
       </div>
       <div class="quote">
-        Здесь желательно показывать не весь продукт, а один убедительный сценарий:
-        так защита останется сфокусированной, а демо не превратится в экскурсию по интерфейсу.
+        Цель демо — связать архитектуру с живым сценарием: система отвечает не «в общем»,
+        а по корпусу с проверяемой опорой на статьи.
       </div>
-      <div class="slide-number">08</div>
+      <div class="slide-number">06</div>
     </section>
 
-    <section class="slide" id="slide-9">
-      <div class="slide-tag">Финальный слайд</div>
-      <h2>Выводы</h2>
+    <section class="slide" id="slide-7">
+      <div class="slide-tag">Результаты и выводы</div>
+      <h2>Основные результаты и выводы</h2>
+      <p class="sublead">
+        Сводка по extraction, графу, retrieval и end-to-end агенту. Таблицы — те же агрегаты, что в итоговом отчёте
+        (§4.1 и §4.0, 2026-04-26).
+      </p>
+      <div class="results-grid">
+        <div class="visual-frame">
+          <img src="assets/defense/slide-07-metrics.jpg" alt="Сводный визуал по ключевым метрикам проекта" />
+        </div>
+        <div class="summary-box">
+          <h3>Интерпретация</h3>
+          <ul>
+            <li>Macro по слотам извлечения и по рёбрам <strong>CITES</strong> в Neo4j — в правой таблице; модель извлечения в отчёте: <code>mistralai/mistral-small-3.2-24b-instruct</code>.</li>
+            <li>Сводные прогоны retrieval, графа и агента — в левой таблице; детали и артефакты — в §4.1 отчёта.</li>
+            <li>Слабое место — <strong>claims paraphrase</strong>; сильные — scoped retrieval, hybrid hits и macro по CITES.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="defense-metrics-tables">
+        <div class="defense-table-wrap">
+          <table class="defense-table">
+            <caption>Сводная по ключевым прогонам (§4.1)</caption>
+            <thead>
+              <tr>
+                <th>Эксперимент</th>
+                <th>Основной результат</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>workspace_scoped_live</code></td>
+                <td>6/6, <code>forbidden_violation_count</code> = 0</td>
+              </tr>
+              <tr>
+                <td><code>hybrid_ablation_live</code></td>
+                <td><code>hit_count</code> = 5/5 на каждом кейсе; верхние scores 0.65–0.74</td>
+              </tr>
+              <tr>
+                <td><code>multihop_v2</code></td>
+                <td><code>recall</code> ≈ 0.667 (3 кейса), precision низкая</td>
+              </tr>
+              <tr>
+                <td><code>claims_paraphrase</code></td>
+                <td>
+                  pilot 15: macro P/R/F1 <strong>0.136 / 0.333 / 0.188</strong>; holdout 5:
+                  <strong>0.141 / 0.250 / 0.150</strong>
+                </td>
+              </tr>
+              <tr>
+                <td><code>agent_tools_live</code></td>
+                <td>10/10; <code>latency_p95</code> = 25 983 ms; судья <strong>4.8/6</strong></td>
+              </tr>
+              <tr>
+                <td>Graph <strong>CITES</strong> (Neo4j)</td>
+                <td>macro P/R/F1 <strong>0.784 / 0.909 / 0.821</strong> (11 кейсов с <code>graph_expectations</code>)</td>
+              </tr>
+              <tr>
+                <td><code>Layer-2 semantic</code></td>
+                <td>9/31 с <code>metrics.passed=false</code>; macro F1 методов / датасетов <strong>≈0.60 / 0.79</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="defense-table-wrap">
+          <table class="defense-table">
+            <caption>Извлечение для GraphRAG, macro по слотам (§4.0)</caption>
+            <thead>
+              <tr>
+                <th>Слот / поле</th>
+                <th>Метрики (macro)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Методы (L2) — P / R / F1</td>
+                <td>0.617 / 0.680 / 0.601</td>
+              </tr>
+              <tr>
+                <td>Датасеты (L2) — P / R / F1</td>
+                <td>0.790 / 0.879 / 0.792</td>
+              </tr>
+              <tr>
+                <td>Ссылки: gold arXiv — P / R / F1</td>
+                <td>0.949 / 0.967 / 0.957</td>
+              </tr>
+              <tr>
+                <td>Имена авторов — P / R / F1</td>
+                <td>0.981 / 0.981 / 0.981</td>
+              </tr>
+              <tr>
+                <td>Утверждения paraphrase, пилот — P / R / F1</td>
+                <td>0.136 / 0.333 / 0.188</td>
+              </tr>
+              <tr>
+                <td>Утверждения paraphrase, holdout — P / R / F1</td>
+                <td>0.141 / 0.250 / 0.150</td>
+              </tr>
+              <tr>
+                <td>Рёбра <strong>CITES</strong> в Neo4j — P / R / F1</td>
+                <td>0.784 / 0.909 / 0.821</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="slide-number">07</div>
+    </section>
+
+    <section class="slide" id="slide-8">
+      <div class="slide-tag">Итоги</div>
+      <h2>Выводы и ограничения</h2>
+      <div class="two-col">
+        <div class="summary-box">
+          <h3>Ключевые выводы</h3>
+          <ul>
+            <li>Построен сквозной контур GraphRAG поверх реального корпуса статей.</li>
+            <li>Граф и гибридный retrieval дают интерпретируемые цепочки и цитаты.</li>
+            <li>Агентный runtime с supervisor согласован с архитектурой хранилищ.</li>
+            <li>Benchmark-оценка разделяет сильные стороны и слабые места (например claims).</li>
+          </ul>
+        </div>
+        <div class="summary-box">
+          <h3>Ограничения и честность оценки</h3>
+          <ul>
+            <li>Claims / paraphrase остаются сложным слоем — метрики не «для галочки».</li>
+            <li>Latency end-to-end пока высокий для интерактивного UX.</li>
+            <li>Корпус и домен ограничены — обобщение за пределами набора статей осторожно.</li>
+            <li>Многошаговый graph retrieval: recall есть, precision требует улучшений.</li>
+          </ul>
+        </div>
+      </div>
       <div class="footer-grid">
         <div class="footer-card">
           <h3>Что удалось</h3>
@@ -1332,30 +1642,11 @@
           </ul>
         </div>
       </div>
-      <div class="footer-grid">
-        <div class="summary-box">
-          <h3>Личная рефлексия — заполнить перед финальной версией</h3>
-          <ul>
-            <li>Сколько времени занял проект.</li>
-            <li>Насколько полезным он оказался по шкале 1-10.</li>
-            <li>Что далось легче всего.</li>
-            <li>Что было самым трудным.</li>
-          </ul>
-        </div>
-        <div class="summary-box">
-          <h3>Финальный тезис</h3>
-          <p>
-            Проект ценен не только тем, что в нём реализован GraphRAG-конвейер,
-            но и тем, что он показывает зрелый подход к оценке качества:
-            сильные результаты видны, а ограничения не прячутся.
-          </p>
-          <p class="footer-mini">
-            После заполнения личной рефлексии этот слайд уже можно использовать как
-            финальный closing slide на защите.
-          </p>
-        </div>
+      <div class="quote">
+        Проект ценен не только реализованным GraphRAG-конвейером, но и прозрачной оценкой качества:
+        сильные результаты видны, ограничения не прячутся — это же задаёт направления для следующих итераций.
       </div>
-      <div class="slide-number">09</div>
+      <div class="slide-number">08</div>
     </section>
   </div>
   <script>
@@ -1363,7 +1654,7 @@
       const deck = document.querySelector('.deck');
       if (!deck) return;
 
-      const slideWidth = () => window.innerWidth - 48;
+      const slideWidth = () => window.innerWidth - 32;
 
       deck.addEventListener(
         'wheel',

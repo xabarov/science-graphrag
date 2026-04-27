@@ -20,13 +20,20 @@ _EXTRACTION_LLM_MANUAL_LLM_NAMES = frozenset(
         "llm.references_extraction",
         "llm.semantic_method_dataset",
         "llm.claims_extraction",
+        "llm.claims_extraction_compact",
         "llm.vl_pdf",
     }
 )
 
 
 def phoenix_trace_scope() -> str:
-    """OTel/Phoenix verbosity: ``full`` (default) or ``extraction_llm``."""
+    """OTel/Phoenix verbosity: ``full`` (default) or ``extraction_llm``.
+
+    With ``extraction_llm``, ingest allowlisted CHAIN/LLM spans are recorded, and **product
+    agent** spans whose names start with ``agent.`` / ``llm.agent.`` / ``retrieval.qdrant.``
+    are also recorded so ``phoenix_trace_id`` stays usable for ``/v2/agent/query`` without
+    switching the whole process to ``full``.
+    """
 
     return os.getenv("PHOENIX_TRACE_SCOPE", _PHOENIX_TRACE_SCOPE_FULL).strip().lower()
 

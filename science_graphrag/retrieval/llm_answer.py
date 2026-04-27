@@ -60,8 +60,9 @@ def _try_query_answer_llm(
                 **SpanAttributes.llm_runtime_policy_attributes(
                     pool_name="query_answer",
                     transport_timeout_seconds=float(timeout),
-                    timeout_contract="transport_only",
+                    timeout_contract="transport_with_operation_deadline",
                     retry_extra_budget=0,
+                    operation_deadline_seconds=float(timeout),
                 ),
             },
         ):
@@ -78,6 +79,7 @@ def _try_query_answer_llm(
                     {"role": "system", "content": system},
                     {"role": "user", "content": user},
                 ],
+                timeout=timeout,
             )
         text = (resp.choices[0].message.content or "").strip()
         if not text:

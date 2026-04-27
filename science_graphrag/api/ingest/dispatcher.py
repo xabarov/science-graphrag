@@ -9,9 +9,10 @@ from fastapi import HTTPException
 
 from science_graphrag.api.ingest_event_bus import BUS
 from science_graphrag.config import Settings
+from science_graphrag.storage.ingest_queue_store import build_ingest_queue_store
 
 from .dto import IngestJobRecord, job_record_to_view, now_iso
-from .registry import _registry
+from .registry import IngestJobRegistry, _registry
 from .worker import (
     SUPPORTED_SUFFIXES,
     _append_log,
@@ -39,6 +40,24 @@ class IngestDispatcher:
 def _queued_blob_path(*, settings: Settings, job_id: str, filename: str) -> Path:
     suffix = Path(filename or "upload").suffix.lower()
     return Path(settings.blob_root) / "_ingest_queue" / f"{job_id}{suffix}"
+
+
+def _persist_queued_payload(
+    registry: IngestJobRegistry,
+    settings: Settings,
+    *,
+    job_id: str,
+    filename: str,
+    data: bytes,
+) -> str:
+    store = build_ingest_queue_store(settings)
+    key = store.put(job_id, filename, data)
+    registry._update(  # noqa: SLF001
+        job_id,
+        queued_source_object_key=key,
+        queued_source_size=len(data),
+    )
+    return key
 
 
 def enqueue_ingest_job(job_id: str) -> None:
@@ -85,13 +104,18 @@ def start_batch_ingest_job(
             kind="batch_child",
             parent_job_id=parent.job_id,
         )
-        queued_path = _queued_blob_path(
-            settings=settings, job_id=child.job_id, filename=name or "upload"
+        key = _persist_queued_payload(
+            registry,
+            settings,
+            job_id=child.job_id,
+            filename=name or "upload",
+            data=data,
         )
-        queued_path.parent.mkdir(parents=True, exist_ok=True)
-        queued_path.write_bytes(data)
         child_ids.append(child.job_id)
-        _append_log(child.job_id, f"Part of batch {parent.job_id}")
+        _append_log(
+            child.job_id,
+            f"Part of batch {parent.job_id}; queued key={key}",
+        )
     if not child_ids:
         registry._update(  # noqa: SLF001
             parent.job_id,
@@ -130,11 +154,16 @@ def start_ingest_job(
             detail=f"unsupported_type_allowed:{','.join(sorted(SUPPORTED_SUFFIXES))}",
         )
     BUS.cleanup_old_events(ttl_hours=24)
-    rec = _registry(settings).create_job(workspace_id, filename)
-    queued_path = _queued_blob_path(settings=settings, job_id=rec.job_id, filename=filename)
-    queued_path.parent.mkdir(parents=True, exist_ok=True)
-    queued_path.write_bytes(file_bytes)
-    _append_log(rec.job_id, f"Saved {len(file_bytes)} bytes → {queued_path.name}")
+    registry = _registry(settings)
+    rec = registry.create_job(workspace_id, filename)
+    key = _persist_queued_payload(
+        registry,
+        settings,
+        job_id=rec.job_id,
+        filename=filename,
+        data=file_bytes,
+    )
+    _append_log(rec.job_id, f"Saved {len(file_bytes)} bytes → {key}")
     enqueue_ingest_job(rec.job_id)
     return rec
 

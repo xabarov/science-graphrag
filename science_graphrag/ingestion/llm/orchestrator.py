@@ -10,8 +10,11 @@ from typing import Any
 from science_graphrag.config import Settings
 from science_graphrag.domain.models import AuthorshipDraft, ReferenceDraft, WorkDraft
 from science_graphrag.ingestion.llm.diagnostics import ExtractionDiagnostics
-from science_graphrag.ingestion.llm.executor import run_extraction
-from science_graphrag.ingestion.llm.extractor import SyncInstructorExtractor
+from science_graphrag.ingestion.llm.executor import MAX_RETRIES, run_extraction
+from science_graphrag.ingestion.llm.extractor import (
+    EXTRACT_MAYBE_MAX_INNER_ATTEMPTS,
+    SyncInstructorExtractor,
+)
 from science_graphrag.ingestion.llm.extractor_factory import (
     IngestionExtractorPreset,
     build_ingestion_extractor,
@@ -43,9 +46,37 @@ from science_graphrag.ingestion.stages.authorships import extract_authorships
 from science_graphrag.ingestion.stages.metadata import extract_metadata
 from science_graphrag.ingestion.stages.references import extract_references
 from science_graphrag.observability.phoenix_tracer import add_span_event, chain_span
+from science_graphrag.utils.llm_deadline import MonotonicDeadline
 from science_graphrag.utils.project_logging import get_logger
 
 log = get_logger("ingestion.extract")
+
+
+def _ingest_stage_deadline_seconds(transport: float, retries: int) -> float:
+    outers = max(1, int(retries) + 1)
+    return min(
+        900.0,
+        float(transport) * float(outers) * float(EXTRACT_MAYBE_MAX_INNER_ATTEMPTS),
+    )
+
+
+def _references_stage_deadline_seconds(
+    transport: float,
+    chunk_count: int,
+    max_concurrency: int,
+) -> float:
+    """Wall-clock cap for the whole references stage (parallel chunks share one budget)."""
+
+    if chunk_count <= 0:
+        return float(transport) * float(EXTRACT_MAYBE_MAX_INNER_ATTEMPTS)
+    if max_concurrency <= 1:
+        return min(
+            900.0,
+            float(transport) * float(EXTRACT_MAYBE_MAX_INNER_ATTEMPTS) * float(chunk_count),
+        )
+    return min(900.0, float(transport) * float(EXTRACT_MAYBE_MAX_INNER_ATTEMPTS) * 2.5)
+
+
 _REF_HEAD_RE = re.compile(r"^#{0,3}\s*(references|bibliography)\s*$", re.IGNORECASE | re.MULTILINE)
 
 
@@ -70,6 +101,8 @@ def _extract_references_chunk(
     source_name: str,
     titles_enabled: bool,
     transport_timeout_s: float,
+    operation_deadline: MonotonicDeadline | None,
+    operation_deadline_seconds: float,
 ) -> tuple[list[Any], dict[str, Any], str | None]:
     response_model = ReferencesLLM if titles_enabled else ReferenceIdsOnlyLLM
     parsed, err = run_extraction(
@@ -83,6 +116,9 @@ def _extract_references_chunk(
         retries=0,
         transport_timeout_seconds=transport_timeout_s,
         pool_name="references",
+        timeout_contract="transport_with_operation_deadline",
+        operation_deadline_seconds=operation_deadline_seconds,
+        operation_deadline=operation_deadline,
     )
     detail: dict[str, Any] = {
         "chunk_index": chunk_idx,
@@ -143,6 +179,9 @@ def extract_stages_llm_first(
         f"that section only.\n\n---\n{meta_text}"
     )
     meta_t0 = perf_counter()
+    transport = float(settings.extraction_llm_timeout_seconds)
+    meta_budget = _ingest_stage_deadline_seconds(transport, MAX_RETRIES)
+    meta_deadline = MonotonicDeadline.from_budget_seconds(meta_budget)
     parsed_meta, err_meta = run_extraction(
         extractor,
         meta_user,
@@ -153,8 +192,11 @@ def extract_stages_llm_first(
         system_prompt=meta_prompts.SYSTEM_FENCE
         + " Focus on title/abstract/venue/year/DOI/arXiv."
         + meta_prompts.SYSTEM_META_NORMALIZE,
-        transport_timeout_seconds=float(settings.extraction_llm_timeout_seconds),
+        transport_timeout_seconds=transport,
         pool_name="metadata",
+        timeout_contract="transport_with_operation_deadline",
+        operation_deadline_seconds=meta_budget,
+        operation_deadline=meta_deadline,
     )
     diag.metadata_extraction_seconds = perf_counter() - meta_t0
     draft = work_from_llm(parsed_meta) if parsed_meta else None
@@ -167,6 +209,8 @@ def extract_stages_llm_first(
         diag.metadata_source = "llm"
 
     auth_t0 = perf_counter()
+    auth_budget = _ingest_stage_deadline_seconds(transport, MAX_RETRIES)
+    auth_deadline = MonotonicDeadline.from_budget_seconds(auth_budget)
     parsed_auth, err_auth = run_extraction(
         extractor,
         auth_prompts.USER_PROMPT_TEMPLATE.format(meta_text=meta_text),
@@ -175,8 +219,11 @@ def extract_stages_llm_first(
         document_id=document_id,
         source_name=source_name,
         system_prompt=meta_prompts.SYSTEM_FENCE + auth_prompts.SYSTEM_SUFFIX,
-        transport_timeout_seconds=float(settings.extraction_llm_timeout_seconds),
+        transport_timeout_seconds=transport,
         pool_name="metadata",
+        timeout_contract="transport_with_operation_deadline",
+        operation_deadline_seconds=auth_budget,
+        operation_deadline=auth_deadline,
     )
     diag.authorships_extraction_seconds = perf_counter() - auth_t0
     authorships = authorships_from_llm(parsed_auth) if parsed_auth else []
@@ -207,6 +254,12 @@ def extract_stages_llm_first(
     refs_t0 = perf_counter()
     items: list[Any] = []
     errors: list[str] = []
+    refs_budget = _references_stage_deadline_seconds(
+        transport,
+        len(chunks),
+        int(settings.extraction_llm_references_max_concurrency),
+    )
+    refs_deadline = MonotonicDeadline.from_budget_seconds(refs_budget)
     if settings.extraction_llm_references_max_concurrency <= 1:
         for idx, (chunk, group) in enumerate(zip(chunks, entry_groups, strict=False), start=1):
             got, detail, err = _extract_references_chunk(
@@ -219,7 +272,9 @@ def extract_stages_llm_first(
                 document_id=document_id,
                 source_name=source_name,
                 titles_enabled=settings.extraction_llm_reference_titles_enabled,
-                transport_timeout_s=float(settings.extraction_llm_timeout_seconds),
+                transport_timeout_s=transport,
+                operation_deadline=refs_deadline,
+                operation_deadline_seconds=refs_budget,
             )
             diag.reference_chunk_details.append(detail)
             items.extend(got)
@@ -241,7 +296,9 @@ def extract_stages_llm_first(
                     document_id=document_id,
                     source_name=source_name,
                     titles_enabled=settings.extraction_llm_reference_titles_enabled,
-                    transport_timeout_s=float(settings.extraction_llm_timeout_seconds),
+                    transport_timeout_s=transport,
+                    operation_deadline=refs_deadline,
+                    operation_deadline_seconds=refs_budget,
                 ): i
                 for i, (chunk, group) in enumerate(zip(chunks, entry_groups, strict=False), start=1)
             }

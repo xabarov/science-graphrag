@@ -1,5 +1,5 @@
 import { buildWorkspacePath, getLastWorkId, LAST_WORK_ID_KEY } from "../WorkspacePage/utils/workContext.js";
-import { getActiveWorkspaceId } from "../../utils/workspaceStore.js";
+import { getActiveWorkspaceId } from "../../utils/activeWorkspacePointer.js";
 
 export const RECENT_WORKS_KEY = "science-graphrag:recentWorks";
 

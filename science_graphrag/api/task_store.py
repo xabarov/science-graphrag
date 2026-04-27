@@ -1,5 +1,8 @@
 """In-memory task store for benchmark runs.
 
+Persisted run JSON paths match ``science_graphrag.artifacts.run_layout`` /
+``RUN_HISTORY_DESCRIPTOR`` (``data/benchmark_runs``, legacy ``data/benchmark_run_history``).
+
 This module provides a minimal background execution layer for the UI:
 - create a run (set of case_ids)
 - execute cases concurrently in a ThreadPoolExecutor
@@ -310,6 +313,7 @@ class BenchmarkTaskStore:
         return default_benchmark_runs_dir()
 
     def _legacy_history_dir(self) -> Path:
+        """Legacy on-disk run history directory (read / migrate only)."""
         return default_benchmark_run_history_legacy_dir()
 
     def _load_persisted_runs(self) -> None:

@@ -12,6 +12,7 @@ from langchain_core.messages import HumanMessage
 from science_graphrag.agent.chat_envelope import ANSWER_CLASSES
 from science_graphrag.agent.llm.chat import build_chat_model
 from science_graphrag.config import Settings
+from science_graphrag.ingestion.llm.extractor import EXTRACT_MAYBE_MAX_INNER_ATTEMPTS
 from science_graphrag.observability.spans import (
     SpanAttributes,
     add_span_event,
@@ -168,11 +169,12 @@ def llm_classify_turn_policy(  # pylint: disable=too-many-locals
     ]
 
     try:
+        classifier_timeout = float(settings.agent_turn_policy_classifier_timeout_seconds)
         llm = build_chat_model(
             settings,
             temperature=0.0,
             max_tokens=min(384, settings.agent_chat_max_tokens),
-            timeout_seconds=settings.agent_turn_policy_classifier_timeout_seconds,
+            timeout_seconds=classifier_timeout,
         )
         with chain_span(
             "agent.turn_policy",
@@ -185,11 +187,14 @@ def llm_classify_turn_policy(  # pylint: disable=too-many-locals
                 {
                     **SpanAttributes.llm_runtime_policy_attributes(
                         pool_name="agent_classifier",
-                        transport_timeout_seconds=float(
-                            settings.agent_turn_policy_classifier_timeout_seconds
-                        ),
-                        timeout_contract="transport_only",
+                        transport_timeout_seconds=classifier_timeout,
+                        timeout_contract="transport_with_operation_deadline",
                         retry_extra_budget=0,
+                        operation_deadline_seconds=min(
+                            120.0,
+                            classifier_timeout * float(EXTRACT_MAYBE_MAX_INNER_ATTEMPTS),
+                        ),
+                        transport_max_attempts=EXTRACT_MAYBE_MAX_INNER_ATTEMPTS,
                     ),
                     "llm.invocation_name": "agent_turn_policy_classifier",
                 },

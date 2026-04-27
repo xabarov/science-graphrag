@@ -1,5 +1,5 @@
 /** @type {Record<string, string>} */
-export default {
+export const partGraphUi = {
   "graphShell.loading": "Загрузка графа…",
 
   "graph.workspacePanel.emptyHint":

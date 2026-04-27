@@ -8,14 +8,15 @@ from typing import Any, Literal
 from langchain_core.messages import HumanMessage, ToolMessage
 from langchain_core.tools import BaseTool
 from langgraph.graph import END, StateGraph
-from langgraph.prebuilt import ToolNode
 
 from science_graphrag.agent.graph.state import AgentState
 from science_graphrag.agent.llm.chat import build_chat_model, ensure_messages_safe_for_generation
+from science_graphrag.agent.tool_call_normalization import build_normalized_tool_node_executor
 from science_graphrag.agent.tool_search import shortlist_tools_for_specialist
 from science_graphrag.agent.tools import build_writer_tools
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
+from science_graphrag.ingestion.llm.extractor import EXTRACT_MAYBE_MAX_INNER_ATTEMPTS
 from science_graphrag.observability.spans import SpanAttributes, llm_span
 
 SPECIALIST_NAME = "writer_agent"
@@ -91,11 +92,17 @@ def _compile_writer_subgraph(tools: list[BaseTool], settings: Settings, *, mode:
             "llm.agent.writer",
             {"llm.invocation_name": "agent_writer_specialist"},
         ):
+            transport = float(settings.extraction_llm_timeout_seconds)
             SpanAttributes.set_llm_runtime_policy(
                 pool_name="agent_chat",
-                transport_timeout_seconds=float(settings.extraction_llm_timeout_seconds),
-                timeout_contract="transport_only",
+                transport_timeout_seconds=transport,
+                timeout_contract="transport_with_operation_deadline",
                 retry_extra_budget=0,
+                operation_deadline_seconds=min(
+                    900.0,
+                    transport * float(EXTRACT_MAYBE_MAX_INNER_ATTEMPTS),
+                ),
+                transport_max_attempts=EXTRACT_MAYBE_MAX_INNER_ATTEMPTS,
             )
             response = llm.invoke(ensure_messages_safe_for_generation(base_msgs))
         return {"messages": [response]}
@@ -115,7 +122,7 @@ def _compile_writer_subgraph(tools: list[BaseTool], settings: Settings, *, mode:
     subgraph = StateGraph(AgentState)
     subgraph.add_node("chat", chat_node)
     subgraph.add_node("budget", budget_node)
-    subgraph.add_node("tools", ToolNode(tools))
+    subgraph.add_node("tools", build_normalized_tool_node_executor(tools))
     subgraph.set_entry_point("chat")
     subgraph.add_edge("chat", "budget")
     subgraph.add_conditional_edges("budget", route_node, {"tools": "tools", END: END})
