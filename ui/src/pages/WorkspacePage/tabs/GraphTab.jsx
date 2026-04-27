@@ -8,6 +8,7 @@ import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
 import OpenInNewOutlinedIcon from "@mui/icons-material/OpenInNewOutlined";
 
 import { CursorIconAction } from "../../../components/common/index.js";
+import { useWorkspaceContext } from "../../../components/layout/useWorkspaceContext.js";
 import WorkIdGlossaryHint from "../../../components/layout/WorkIdGlossaryHint.jsx";
 import GraphWorkspacePanel from "../../../components/graph/GraphWorkspacePanel.jsx";
 import { GraphMissingWorkInline } from "../../../components/graph/graphShellStates.jsx";
@@ -27,6 +28,8 @@ import { useI18n } from "../../../i18n/useI18n.js";
  */
 export default function GraphTab({ workId }) {
   const { t } = useI18n();
+  const { activeWorkspaceId } = useWorkspaceContext();
+  const workspaceIdForGraph = String(activeWorkspaceId || "").trim();
   const [searchParams] = useSearchParams();
   const traceRouter = useMemo(() => readTraceabilityState(searchParams), [searchParams]);
   const hashSel = useHashTraceabilityGraphSelection();
@@ -132,6 +135,7 @@ export default function GraphTab({ workId }) {
 
       <GraphWorkspacePanel
         workId={workId}
+        workspaceId={workspaceIdForGraph}
         selectedNodeId={selectedNodeId}
         onSelectNode={handleSelectNode}
         selectedEdgeId={selectedEdgeId}

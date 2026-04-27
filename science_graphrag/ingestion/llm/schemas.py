@@ -202,6 +202,17 @@ class SemanticMethodLLM(BaseModel):
     name: str = Field(..., description="Canonical surface form from text")
     aliases: list[str] = Field(default_factory=list)
     description_short: str | None = Field(default=None, description="One sentence max in v1")
+    description_markdown: str | None = Field(
+        default=None,
+        description="Optional Markdown/LaTeX-rich summary grounded in evidence quotes",
+    )
+    description_plaintext: str | None = Field(
+        default=None,
+        description="Optional plain-text normalization for search/embeddings",
+    )
+    method_kind: str | None = Field(default=None, description="architecture | loss | training_regime | …")
+    description_source: str | None = Field(default=None, description="llm_extracted | unknown | …")
+    description_confidence: float | None = Field(default=None, ge=0.0, le=1.0)
     confidence: float = Field(default=0.5, ge=0.0, le=1.0)
     evidence: list[SemanticEvidenceLLM] = Field(default_factory=list)
 

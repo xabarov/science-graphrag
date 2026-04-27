@@ -27,6 +27,12 @@ review APIs and support one UI page with type tabs.
 5. For Method and Dataset conflicts, default merge action is alias-merge
    (`aliases[]` update) without destructive node merge.
 
+**Addendum (2026-04-27):** For **Method**, human-approved merges and **scan auto-merge**
+at `sim >= 0.95` use **destructive canonical merge** (`merge_method_into_canonical`) —
+rewire `USES_METHOD` / `TRAINED_OR_TESTED_ON` / `HAS_EVIDENCE` and **delete** the
+duplicate `:Method` node. **Dataset** remains alias-merge-only unless a future ADR
+changes it. See [ADR 023](023-method-ontology-v2-rich-description-and-canonicalization.md).
+
 ## Consequences
 
 - Unified API paths for entity review (`/v1/dedup/entity/*`) become possible.

@@ -318,21 +318,24 @@ Query params:
 | Param | Default | Notes |
 |-------|---------|--------|
 | `mode` | `inner_only` | `inner_only` \| `union_1hop` \| `semantic_layer` \| `full` |
-| `depth` | `1` | `1` or `2` (capped server-side) |
 | `include_external` | `false` | When `true`, may include cited `:Work` nodes outside the workspace |
-| `node_types` | *(all)* | Comma-separated: `Work`, `Author`, `Method`, `Dataset`, `Venue`, `Institution`, `Authorship` |
-| `prioritize` | `Method,Dataset,Work` | CSV list of preferred kinds for truncation-aware neighbor selection. |
-| `neighbor_limit` | `200` | Clamped with global cap (300 for multi-hop) |
+| `prioritize` | `Method,Dataset,Work` | CSV list of preferred kinds (ordering / display hints where applicable). |
 | `external_min_internal_citers` | `0` | When &gt; 0 and `include_external=true`, keep external works only if at least N distinct internal works cite them |
+| `view` | `reader` | `reader` \| `raw` |
+| `include_claims` | `false` | Optional claim slice; `claims_per_work` / `claims_max_total` omit for uncapped |
+
+**Removed (2026-04-27):** `depth`, `neighbor_limit`, `node_types` — the server always returns the **full union of 1-hop** incident edges for every internal work in the workspace (see ADR 012 addendum). **Node-type visibility** is **client-only** (`graphVisibilityFilter`).
 
 Response matches work graph shape (`work_id`, `nodes`, `edges`, `meta`). Each node may include:
 
 - `workspace_membership`: `internal` \| `external` (for `:Work`, membership in the workspace collection; for other labels, adjacency to internal works).
 - `internal_cite_count` / `external_cite_count` on `:Work` (outgoing `CITES` targets split by membership).
 
-**`mode=full`:** same hop depth as `inner_only` / depth-2 paths, but **ignores** the `node_types` query filter so every 1-hop (or 2-hop) neighbor label reachable from internal `:Work` nodes is eligible (still respects `include_external` for non-member `:Work` nodes). Use when you need Methods/Datasets/Authors even after narrowing `node_types` in the UI.
+**`:Method` node `properties` (ADR 023, when present on Neo4j):** `aliases`, `description_short`, `description_markdown`, `description_plaintext`, `method_kind`, `description_source`, `description_confidence` — surfaced for the graph inspector; rich Markdown is rendered client-side (`GraphDetailPanel` + `MarkdownViewCore`).
 
-`meta.graph_scope` is `workspace_v2` (or `workspace_union_1hop` inside legacy union mode until merged into v2 meta). `meta` also includes `gds_runtime_available`, `gds_used`, `cap_applied`, `source_work_ids`, `internal_node_count`, `external_node_count`.
+**`mode=full`:** full semantic adjacency from internal works (same **1-hop union** engine as other modes, with semantic edge filter disabled); still respects `include_external` / `external_min_internal_citers`.
+
+`meta.graph_scope` is `workspace_v2` (or `workspace_union_1hop` inside legacy union mode until merged into v2 meta). `meta` may include projection diagnostics (`gds_runtime_available`, `gds_used`, `cap_applied`, `source_work_ids`, `internal_node_count`, `external_node_count`) where relevant; **`gds_used`** is not used for the main workspace canvas path after 2026-04-27.
 
 ### `GET /v1/workspaces/{workspace_id}/graph/stats`
 
@@ -340,10 +343,11 @@ Lightweight counts: `works_count`, `authors_count`, `internal_citations`, `exter
 
 ### `GET /v1/workspaces/{workspace_id}/graph/neighbors`
 
-Query: `node_id` (required), `depth` (1–2), `limit` (1–200). Returns a subgraph slice for lazy UI merge.
-Optional: `prioritize=Method,Dataset,Work` (same semantics as workspace root graph endpoint).
+Query: `node_id` (**required**). Returns **all** relationships incident to that node for lazy UI merge (**1 hop**, no `limit` / `depth` query contract).
 
-Implementation: [`science_graphrag/api/workspace_graph.py`](../../science_graphrag/api/workspace_graph.py), routes in [`science_graphrag/api/workspaces.py`](../../science_graphrag/api/workspaces.py). ADR: [`docs/adr/012-workspace-graph-projection.md`](../adr/012-workspace-graph-projection.md).
+Optional: `prioritize=Method,Dataset,Work` (same CSV shape as workspace root graph).
+
+Implementation: [`science_graphrag/api/workspace_graph/router.py`](../../science_graphrag/api/workspace_graph/router.py) (included from [`science_graphrag/api/main.py`](../../science_graphrag/api/main.py)). ADR: [`docs/adr/012-workspace-graph-projection.md`](../adr/012-workspace-graph-projection.md) + addendum (2026-04-27).
 
 ## 6) Benchmark console API (implemented, layer-1 + layer-2 + graph catalog)
 

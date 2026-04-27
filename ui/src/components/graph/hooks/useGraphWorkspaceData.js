@@ -18,8 +18,7 @@ import { normalizeGraphPayload } from "../graphViewState.js";
 
 export { graphVisibilityLocalStorageKey } from "../graphWorkspaceVisibilityLs.js";
 
-export function useGraphWorkspaceData(workspaceId, workId, options = {}) {
-  void options;
+export function useGraphWorkspaceData(workspaceId, workId) {
   const wsId = String(workspaceId || "").trim();
   const workIdNorm = String(workId || "").trim();
   const [graph, setGraph] = useState(() => normalizeGraphPayload(null));
@@ -89,7 +88,6 @@ export function useGraphWorkspaceData(workspaceId, workId, options = {}) {
         if (ws) {
           raw = await getWorkspaceGraph(ws, {
             mode: "full",
-            depth: 2,
             includeExternal: true,
             externalMinInternalCiters: 0,
             includeClaims: true,
@@ -97,10 +95,8 @@ export function useGraphWorkspaceData(workspaceId, workId, options = {}) {
         } else {
           setNeighborCache(new Set());
           const res = await getWorkGraph(w, {
-            depth: 3,
             view: "reader",
             includeClaims: true,
-            claimsLimit: 120,
           });
           raw = res.data;
         }
@@ -146,7 +142,7 @@ export function useGraphWorkspaceData(workspaceId, workId, options = {}) {
       setExpandNeighborsBusy(true);
       graphTelemetryEmit("fetchWorkspaceNeighbors", { workspaceId: wsId, nodeId: nid });
       try {
-        const extra = await getWorkspaceGraphNeighbors(wsId, nid, { limit: 80 });
+        const extra = await getWorkspaceGraphNeighbors(wsId, nid);
         const merged = mergeWorkspaceRawGraph(workspaceGraphRaw, extra);
         const mergedPrefetched = await prefetchAuthorAggregatorExpansions(merged, authorAggregatorExpandSeenRef.current);
         setWorkspaceGraphRaw(mergedPrefetched);

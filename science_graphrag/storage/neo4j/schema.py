@@ -24,6 +24,10 @@ def ensure_schema(client: _Neo4jClient) -> None:
         ),
         "CREATE CONSTRAINT venue_id_unique IF NOT EXISTS FOR (v:Venue) REQUIRE v.id IS UNIQUE",
         "CREATE CONSTRAINT method_id_unique IF NOT EXISTS FOR (m:Method) REQUIRE m.id IS UNIQUE",
+        (
+            "CREATE CONSTRAINT method_evidence_id_unique IF NOT EXISTS "
+            "FOR (e:MethodEvidence) REQUIRE e.id IS UNIQUE"
+        ),
         "CREATE CONSTRAINT dataset_id_unique IF NOT EXISTS FOR (d:Dataset) REQUIRE d.id IS UNIQUE",
         (
             "CREATE CONSTRAINT workspace_id_unique IF NOT EXISTS "

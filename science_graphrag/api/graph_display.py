@@ -157,9 +157,19 @@ def compute_node_display(
         subtitle = (
             f"Venue · {venue_type}" if venue_type else (f"Venue · {issn}" if issn else "Venue")
         )
-    elif node_type in {"Method", "Dataset"}:
-        display_label = display_label or f"Unnamed {node_type.lower()}"
-        subtitle = node_type
+    elif node_type == "Method":
+        display_label = display_label or "Unnamed method"
+        mk = _clean_label(str(p.get("method_kind") or ""))
+        ds = _clean_label(str(p.get("description_short") or ""))
+        if mk:
+            subtitle = f"Method · {mk}"[:200]
+        elif ds:
+            subtitle = (ds[:120] + ("…" if len(ds) > 120 else "")) or "Method"
+        else:
+            subtitle = "Method"
+    elif node_type == "Dataset":
+        display_label = display_label or "Unnamed dataset"
+        subtitle = "Dataset"
     elif node_type == "Claim":
         body = _clean_label(str(p.get("normalized_text") or p.get("text") or raw_label or ""))
         display_label = (body[:180] if body else "") or "Claim"

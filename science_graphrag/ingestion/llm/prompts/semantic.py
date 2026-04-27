@@ -20,7 +20,10 @@ SYSTEM_SEMANTIC = (
     "serialize as one JSON tool call (no repetition, no huge lists). "
     "Hard caps: **at most 4 methods** and **at most 5 datasets**. "
     "Prefer the paper's own method names. Do not add baseline methods unless the paper "
-    "claims them as contributions. Evidence.quote should be <=120 chars."
+    "claims them as contributions. Evidence.quote should be <=120 chars. "
+    "For methods, when the paper clearly describes the technique, optionally fill "
+    "`description_markdown` (short Markdown, may include inline LaTeX) and `method_kind` "
+    "(e.g. architecture, loss, training_regime); keep it grounded in `evidence` quotes."
 )
 
 SYSTEM_SEMANTIC_COMPACT = (

@@ -82,6 +82,22 @@
 - Инкремент **`schema_version`** при breaking changes в форме объекта.
 - Версия промпта / модели — в `run_metadata` отчёта (как для layer-1), см. [strategy-v1.md](../../benchmarks/strategy-v1.md).
 
+## Extension — Method v2 (Neo4j + extraction; ADR 023)
+
+Экстрактор и доменная модель могут дополнять каждый элемент `methods[]` **опциональными** полями (старый `schema_version: 1` JSON без них остаётся валидным):
+
+| Поле | Назначение |
+|------|------------|
+| `description_markdown` | Rich-текст для inspector (Markdown/LaTeX; grounded в `evidence`) |
+| `description_plaintext` | Нормализованный plain text для search/embeddings (может генерироваться детерминированно из markdown) |
+| `method_kind` | Грубая категория: `architecture`, `loss`, `training_regime`, `decoder`, `post_processing`, `other`, … |
+| `description_source` | `llm_extracted` \| `synthesized` \| `human_curated` \| `unknown` |
+| `description_confidence` | \([0,1]\) уверенность в rich/short описании |
+
+**Neo4j `:Method`** хранит те же ключи на узле; `:MethodEvidence` — отдельные узлы с цитатами и `chunk_id` (см. ADR 023).
+
+**Intra-document:** перед записью в граф список методов может быть **сжат** (один кандидат на близкие surface forms в рамках одной статьи).
+
 ## Измеримый exit criteria (Phase 3 ↔ Phase 4)
 
 Для сопоставимости прогонов и gate по [runbooks/benchmark-decision-gate.md](../../runbooks/benchmark-decision-gate.md) каждый значимый отчёт layer-2 должен содержать **`benchmark_run_metadata`** (или эквивалент верхнего уровня) с полями:

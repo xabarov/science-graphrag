@@ -986,10 +986,24 @@ def ingest_document(
                             neo=neo,
                             workspace_id=workspace_id,
                             new_work_id=work_id,
+                            settings=settings,
                         )
                         st.metric(
                             "ingest_entity_dedup_conflicts_enqueued",
-                            int(sum(int(v) for v in ent_dedup.values())),
+                            int(
+                                sum(
+                                    int(ent_dedup.get(k, 0))
+                                    for k in ("institution", "venue", "method", "dataset")
+                                )
+                            ),
+                        )
+                        st.metric(
+                            "ingest_method_dedup_auto_merged",
+                            int(ent_dedup.get("method_ingest_auto_merged", 0)),
+                        )
+                        st.metric(
+                            "ingest_method_dedup_llm_merged",
+                            int(ent_dedup.get("method_ingest_llm_merged", 0)),
                         )
                     except Exception as exc:  # noqa: BLE001
                         log.warning("ingest_entity_dedup_conflict_check_failed: %s", exc)

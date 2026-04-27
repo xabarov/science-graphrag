@@ -29,7 +29,7 @@ def run_method_dedup(
         entities=entities,
         embed_text=embed_text,
         db_session=db_session,
-        merge_pair=lambda a, b: neo4j.add_method_alias(a, b),
+        merge_pair=lambda a, b: neo4j.merge_method_into_canonical(a, b),
         workspace_id=workspace_id,
         limit=limit,
     )

@@ -261,6 +261,13 @@ class Settings(BaseSettings):
         le=1.0,
         description="Min confidence to write Method/Dataset nodes and edges to Neo4j.",
     )
+    method_ingest_llm_adjudicate: bool = Field(
+        default=False,
+        description=(
+            "If true, run LLM adjudication for method pairs with 0.80<=sim<0.95 during ingest "
+            "(ADR 023); otherwise queue for human review only."
+        ),
+    )
 
     claims_extraction_enabled: bool = Field(
         default=True,

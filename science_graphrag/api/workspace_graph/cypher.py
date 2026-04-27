@@ -5,14 +5,11 @@ from typing import Any
 from science_graphrag.api import works as works_api
 from science_graphrag.api.graph_display import enrich_authorship_nodes
 from science_graphrag.api.workspace_graph._cypher_gds import (
-    cypher_append_authorships,
-    gds_internal_workspace_work_graph,
     gds_runtime_available,
     semantic_any,
 )
 from science_graphrag.api.workspace_graph._cypher_projection import (
     build_from_depth1_rows,
-    build_from_depth2_rows,
     run_projection_rows,
 )
 from science_graphrag.api.workspace_graph.claims_projection import build_claim_graph_slice_for_workspace
@@ -42,7 +39,7 @@ def legacy_workspace_graph_union(
     settings: Settings,
     workspace_id: str,
     *,
-    neighbor_limit: int = 160,
+    neighbor_limit: int | None = None,
 ) -> dict[str, Any] | None:
     with neo4j_store.session() as session:
         row = session.run(
@@ -70,7 +67,10 @@ def legacy_workspace_graph_union(
                 "source_work_ids": [],
             },
         }
-    per_lim = max(30, min(neighbor_limit, 800 // max(1, len(work_ids))))
+    if neighbor_limit is None:
+        per_lim = 500_000
+    else:
+        per_lim = max(1, int(neighbor_limit))
     payloads: list[dict[str, Any]] = []
     for wid in work_ids:
         graph = works_api.work_graph_neighborhood(settings, wid, neighbor_limit=per_lim, depth=1)
@@ -100,8 +100,15 @@ def project_workspace_graph(
     claims_max_total: int | None = None,
 ) -> dict[str, Any] | None:
     mode_norm = (mode or "inner_only").strip().lower()
-    depth_eff = 2 if int(depth) >= 2 else 1
-    cap = None if neighbor_limit is None else max(1, int(neighbor_limit))
+    # Full workspace graph: always uncapped 1-hop from internal works (see ADR-011 / graph-ui-plan).
+    cap: int | None = None
+    ignored_query_params: list[str] = []
+    if int(depth) != 1:
+        ignored_query_params.append("depth")
+    if neighbor_limit is not None:
+        ignored_query_params.append("neighbor_limit")
+    if node_types is not None and str(node_types).strip():
+        ignored_query_params.append("node_types")
     types_list = parse_node_types_csv(node_types)
     claims_slice_meta: dict[str, Any] = {
         "include_claims": bool(include_claims),
@@ -120,7 +127,7 @@ def project_workspace_graph(
         gds_avail = gds_runtime_available(session)
         if mode_norm == "union_1hop":
             out = legacy_workspace_graph_union(
-                neo4j_store, settings, workspace_id, neighbor_limit=neighbor_limit
+                neo4j_store, settings, workspace_id, neighbor_limit=None
             )
             if out is None:
                 return None
@@ -147,11 +154,12 @@ def project_workspace_graph(
                 "internal_node_count": inc,
                 "external_node_count": exc,
                 "edge_count": len(edges),
-                "cap_applied": cap,
+                "cap_applied": None,
                 "workspace_id": workspace_id,
                 "source_work_ids": internal_ids,
                 "gds_used": False,
                 "gds_runtime_available": gds_avail,
+                "deprecated_ignored_query_params": ignored_query_params or None,
                 **claims_slice_meta,
             }
             return out
@@ -165,80 +173,38 @@ def project_workspace_graph(
                     "graph_scope": "workspace_v2",
                     "mode": mode_norm,
                     "graph_depth_requested": int(depth),
-                    "graph_depth_effective": depth_eff,
+                    "graph_depth_effective": 1,
                     "include_external": include_external,
                     "node_types_filter": types_list or [],
                     "internal_node_count": 0,
                     "external_node_count": 0,
                     "edge_count": 0,
                     "is_truncated": False,
-                    "cap_applied": cap,
+                    "cap_applied": None,
                     "workspace_id": workspace_id,
                     "source_work_ids": [],
                     "available_expansions": ["add_works"],
                     "gds_used": False,
                     "gds_runtime_available": gds_avail,
+                    "deprecated_ignored_query_params": ignored_query_params or None,
                     **claims_slice_meta,
                 },
             }
         semantic_only = mode_norm == "semantic_layer"
-        ignore_node_type_filter = mode_norm == "full"
-        if depth_eff == 1:
-            nodes, edges, truncated = build_from_depth1_rows(
-                session,
-                workspace_id=workspace_id,
-                include_external=include_external,
-                node_types=types_list,
-                semantic_only=semantic_only,
-                cap=cap,
-                prioritize=prioritize,
-                ignore_node_type_filter=ignore_node_type_filter,
-                semantic_rel_types=SEMANTIC_REL_TYPES_LIST,
-            )
-            gds_used = False
-        else:
-            gds_pack = None
-            if (
-                settings.gds_enabled
-                and gds_avail
-                and not include_external
-                and not semantic_only
-                and not ignore_node_type_filter
-                and len(internal_ids) > 50
-                and (types_list is None or "Work" in types_list)
-            ):
-                gds_pack = gds_internal_workspace_work_graph(
-                    session,
-                    settings=settings,
-                    workspace_id=workspace_id,
-                    internal_ids=internal_ids,
-                    cap=cap,
-                )
-            if gds_pack is not None:
-                nodes, edges, truncated = gds_pack
-                gds_used = True
-                if types_list is None or "Author" in types_list or "Authorship" in types_list:
-                    an, ae, atr = cypher_append_authorships(
-                        session,
-                        workspace_id=workspace_id,
-                        internal_ids=internal_ids,
-                    cap=max(30, (cap or max(30, len(internal_ids) * 4)) // 2),
-                    )
-                    nodes, edges = merge_nodes_edges_lists(nodes, edges, an, ae)
-                    truncated = truncated or atr
-            else:
-                nodes, edges, truncated = build_from_depth2_rows(
-                    session,
-                    workspace_id=workspace_id,
-                    include_external=include_external,
-                    node_types=types_list,
-                    semantic_only=semantic_only,
-                    cap=cap,
-                    prioritize=prioritize,
-                    ignore_node_type_filter=ignore_node_type_filter,
-                    semantic_rel_types=SEMANTIC_REL_TYPES_LIST,
-                )
-                gds_used = False
+        # Node-type filtering is a client concern; server returns full incident subgraph (mode gates).
+        ignore_node_type_filter = True
+        nodes, edges, truncated = build_from_depth1_rows(
+            session,
+            workspace_id=workspace_id,
+            include_external=include_external,
+            node_types=types_list,
+            semantic_only=semantic_only,
+            cap=cap,
+            prioritize=prioritize,
+            ignore_node_type_filter=ignore_node_type_filter,
+            semantic_rel_types=SEMANTIC_REL_TYPES_LIST,
+        )
+        gds_used = False
         sem = semantic_any(session, internal_ids)
         if external_min_internal_citers > 0 and include_external:
             nodes, edges = filter_external_works_by_min_citers(
@@ -270,8 +236,7 @@ def project_workspace_graph(
     expansions: list[str] = []
     if truncated:
         expansions.append("increase_neighbor_limit")
-    if depth_eff == 1:
-        expansions.extend(["depth_2", "include_external", "expand_node"])
+    expansions.extend(["include_external", "expand_node"])
     return {
         "work_id": "",
         "nodes": nodes,
@@ -281,7 +246,7 @@ def project_workspace_graph(
             "graph_scope": "workspace_v2",
             "mode": mode_norm,
             "graph_depth_requested": int(depth),
-            "graph_depth_effective": depth_eff,
+            "graph_depth_effective": 1,
             "include_external": include_external,
             "node_types_filter": types_list or [],
             "internal_node_count": inc_n,
@@ -294,6 +259,7 @@ def project_workspace_graph(
             "available_expansions": expansions,
             "gds_used": gds_used,
             "gds_runtime_available": gds_avail,
+            "deprecated_ignored_query_params": ignored_query_params or None,
             **claims_slice_meta,
         },
     }
@@ -358,16 +324,18 @@ def workspace_graph_neighbors(
     node_id: str,
     *,
     depth: int = 1,
-    limit: int = 80,
+    limit: int | None = None,
     prioritize: str | None = None,
 ) -> dict[str, Any] | None:
     nid = (node_id or "").strip()
     if not nid:
         return None
-    lim = max(1, int(limit))
-    depth_req = max(1, min(int(depth), 2))
-    hop1_lim = lim if depth_req <= 1 else max(1, lim // 2)
-    hop2_lim = max(1, lim - hop1_lim) if depth_req >= 2 else 0
+    ignored: list[str] = []
+    if int(depth) != 1:
+        ignored.append("depth")
+    if limit is not None:
+        ignored.append("limit")
+    cap: int | None = None
     with neo4j_store.session() as session:
         ws_row = session.run(
             "MATCH (ws:Workspace {id: $wid}) RETURN ws.id AS wid", wid=workspace_id
@@ -381,9 +349,9 @@ def workspace_graph_neighbors(
             "WHERE (($preferPriority AND any(l IN labels(m) WHERE l IN $priorityTypes)) "
             "OR ((NOT $preferPriority) AND NOT any(l IN labels(m) WHERE l IN $priorityTypes))) "
             "AND ($excludeEmpty OR NOT coalesce(m.id, toString(elementId(m))) IN $excludeIds) "
-            "RETURN n, r, m LIMIT $lim"
+            "RETURN n, r, m"
         )
-        for rec in run_projection_rows(session, q_h1, {"nid": nid}, hop1_lim, prioritize, "m"):
+        for rec in run_projection_rows(session, q_h1, {"nid": nid}, cap, prioritize, "m"):
             n, rel_obj, m = rec["n"], rec["r"], rec["m"]
             nn, nm = node_dict_from_neo(n), node_dict_from_neo(m)
             if nn:
@@ -393,26 +361,6 @@ def workspace_graph_neighbors(
             if n is not None and m is not None and rel_obj is not None:
                 edge = edge_dict_from_rel(n, m, rel_obj, len(edges_by_key))
                 edges_by_key[edge_key(edge["source"], edge["type"], edge["target"])] = edge
-        if depth_req >= 2 and hop2_lim > 0:
-            q_h2 = (
-                "MATCH (n {id: $nid}) MATCH (n)-[r1]-(m1)-[r2]-(m2) "
-                "WHERE (($preferPriority AND any(l IN labels(m2) WHERE l IN $priorityTypes)) "
-                "OR ((NOT $preferPriority) AND NOT any(l IN labels(m2) WHERE l IN $priorityTypes))) "
-                "AND ($excludeEmpty OR NOT coalesce(m2.id, toString(elementId(m2))) IN $excludeIds) "
-                "RETURN n, r1, m1, r2, m2 LIMIT $lim"
-            )
-            for rec in run_projection_rows(session, q_h2, {"nid": nid}, hop2_lim, prioritize, "m2"):
-                n, r1, m1, r2, m2 = rec["n"], rec["r1"], rec["m1"], rec["r2"], rec["m2"]
-                for node in (n, m1, m2):
-                    nd = node_dict_from_neo(node)
-                    if nd:
-                        nodes_by_id[nd["id"]] = nd
-                if n is not None and m1 is not None and r1 is not None:
-                    e1 = edge_dict_from_rel(n, m1, r1, len(edges_by_key))
-                    edges_by_key[edge_key(e1["source"], e1["type"], e1["target"])] = e1
-                if m1 is not None and m2 is not None and r2 is not None:
-                    e2 = edge_dict_from_rel(m1, m2, r2, len(edges_by_key))
-                    edges_by_key[edge_key(e2["source"], e2["type"], e2["target"])] = e2
         nodes = list(nodes_by_id.values())
         edges = list(edges_by_key.values())
         enrich_authorship_nodes(session, nodes)
@@ -428,8 +376,12 @@ def workspace_graph_neighbors(
         "workspace_id": workspace_id,
         "center_id": nid,
         "depth_requested": int(depth),
-        "depth_effective": depth_req,
+        "depth_effective": 1,
         "nodes": nodes,
         "edges": edges,
-        "meta": {"graph_scope": "workspace_neighbors", "neighbor_limit_applied": lim},
+        "meta": {
+            "graph_scope": "workspace_neighbors",
+            "neighbor_limit_applied": None,
+            "deprecated_ignored_query_params": ignored or None,
+        },
     }

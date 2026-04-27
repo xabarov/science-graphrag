@@ -19,6 +19,18 @@ class SemanticMethodV1(BaseModel):
     name: str
     aliases: list[str] = Field(default_factory=list)
     description_short: str | None = None
+    # Method v2 (ADR 023): optional rich fields; persisted when present.
+    description_markdown: str | None = None
+    description_plaintext: str | None = None
+    method_kind: str | None = Field(
+        default=None,
+        description="Coarse category: architecture, loss, training_regime, decoder, other, …",
+    )
+    description_source: str | None = Field(
+        default=None,
+        description="llm_extracted | synthesized | human_curated | unknown",
+    )
+    description_confidence: float | None = Field(default=None, ge=0.0, le=1.0)
     confidence: float = Field(ge=0.0, le=1.0)
     evidence: list[SemanticEvidenceV1] = Field(default_factory=list)
 

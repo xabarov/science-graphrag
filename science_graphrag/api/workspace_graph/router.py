@@ -5,6 +5,9 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from science_graphrag.api.deps import StoreRegistry, get_stores
+from science_graphrag.api.workspace_graph.contradiction_detail import (
+    fetch_workspace_contradiction_detail,
+)
 from science_graphrag.api.workspace_graph.cypher import (
     project_workspace_graph,
     workspace_graph_neighbors,
@@ -22,23 +25,15 @@ def get_workspace_graph(
         default="inner_only",
         description="inner_only | union_1hop | semantic_layer | full",
     ),
-    depth: int = Query(default=1, ge=1, le=2),
     include_external: bool = Query(default=False),
     external_min_internal_citers: int = Query(default=0, ge=0, le=50),
-    node_types: str | None = Query(
-        default=None,
-        description="Comma-separated: Work,Author,Method,Dataset,Venue,Institution,Authorship,Claim",
-    ),
     prioritize: str | None = Query(default="Method,Dataset,Work"),
     view: str = Query(default="reader", description="reader | raw"),
-    neighbor_limit: int | None = Query(
-        default=None,
-        ge=1,
-        description="Optional projection cap; omit for uncapped workspace graph.",
-    ),
     include_claims: bool = Query(
         default=False,
-        description="Attach capped Claim nodes + Work-[:HAS_CLAIM]->Claim (ignored in union_1hop mode).",
+        description=(
+            "Attach capped Claim nodes + Work-[:HAS_CLAIM]->Claim " "(ignored in union_1hop mode)."
+        ),
     ),
     claims_per_work: int | None = Query(
         default=None,
@@ -58,10 +53,10 @@ def get_workspace_graph(
         settings,
         workspace_id,
         mode=mode,
-        depth=depth,
+        depth=1,
         include_external=include_external,
-        node_types=node_types,
-        neighbor_limit=neighbor_limit,
+        node_types=None,
+        neighbor_limit=None,
         external_min_internal_citers=external_min_internal_citers,
         prioritize=prioritize,
         view=view,
@@ -72,6 +67,24 @@ def get_workspace_graph(
     if graph is None:
         raise HTTPException(status_code=404, detail="workspace_not_found")
     return graph
+
+
+@router.get("/{workspace_id}/graph/contradiction-detail")
+def get_workspace_contradiction_detail(
+    workspace_id: str,
+    work_id_a: str = Query(..., min_length=1, description="Work.id (one endpoint of CONTRADICTS)"),
+    work_id_b: str = Query(..., min_length=1, description="Work.id (other endpoint)"),
+    stores: StoreRegistry = Depends(get_stores),
+) -> dict[str, Any]:
+    """Full article-grounded payload for a Work–Work CONTRADICTS edge inside a workspace."""
+    wa = str(work_id_a or "").strip()
+    wb = str(work_id_b or "").strip()
+    if not wa or not wb or wa == wb:
+        raise HTTPException(status_code=400, detail="invalid_work_pair")
+    payload = fetch_workspace_contradiction_detail(stores.neo4j, workspace_id, wa, wb)
+    if payload is None:
+        raise HTTPException(status_code=404, detail="contradiction_not_found")
+    return payload
 
 
 @router.get("/{workspace_id}/graph/stats")
@@ -89,8 +102,6 @@ def get_workspace_graph_stats(
 def get_workspace_graph_neighbors(
     workspace_id: str,
     node_id: str = Query(..., min_length=1, description="Neo4j node id (e.g. Work.id)"),
-    depth: int = Query(default=1, ge=1, le=2),
-    limit: int = Query(default=80, ge=1, le=200),
     prioritize: str | None = Query(default="Method,Dataset,Work"),
     stores: StoreRegistry = Depends(get_stores),
 ) -> dict[str, Any]:
@@ -98,8 +109,8 @@ def get_workspace_graph_neighbors(
         stores.neo4j,
         workspace_id,
         node_id,
-        depth=depth,
-        limit=limit,
+        depth=1,
+        limit=None,
         prioritize=prioritize,
     )
     if graph is None:
@@ -111,7 +122,6 @@ def get_workspace_graph_neighbors(
 def expand_workspace_aggregator(
     workspace_id: str,
     aggregator_id: str = Query(..., min_length=6),
-    limit: int = Query(default=50, ge=1, le=300),
     stores: StoreRegistry = Depends(get_stores),
 ) -> dict[str, Any]:
     raw = str(aggregator_id or "").strip()
@@ -126,8 +136,8 @@ def expand_workspace_aggregator(
         stores.neo4j,
         workspace_id,
         owner_id,
-        depth=2,
-        limit=max(80, int(limit) * 3),
+        depth=1,
+        limit=None,
         prioritize="Method,Dataset,Work,Author,Authorship,Institution,Venue",
     )
     if payload is None:
@@ -154,8 +164,6 @@ def expand_workspace_aggregator(
             continue
         picked_edges.append(edge)
         picked_nodes.append(node)
-        if len(picked_nodes) >= int(limit):
-            break
     uniq_nodes = {owner_id: node_by_id.get(owner_id)}
     for node in picked_nodes:
         uniq_nodes[str(node.get("id") or "")] = node

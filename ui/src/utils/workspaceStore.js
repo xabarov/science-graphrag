@@ -166,11 +166,8 @@ export async function mergeWorkspacesApi(keepWorkspaceId, dropWorkspaceId) {
 /**
  * @param {string} workspaceId
  * @param {{
- *   neighborLimit?: number,
  *   mode?: string,
- *   depth?: number,
  *   includeExternal?: boolean,
- *   nodeTypes?: string,
  *   externalMinInternalCiters?: number,
  *   prioritize?: string,
  *   includeClaims?: boolean,
@@ -178,23 +175,35 @@ export async function mergeWorkspacesApi(keepWorkspaceId, dropWorkspaceId) {
  *   claimsMaxTotal?: number,
  * }} [opts]
  */
+/**
+ * @param {string} workspaceId
+ * @param {string} workIdA
+ * @param {string} workIdB
+ * @returns {Promise<Record<string, unknown>>}
+ */
+export async function getWorkspaceContradictionDetail(workspaceId, workIdA, workIdB) {
+  const wid = encodeURIComponent(String(workspaceId || "").trim());
+  const a = encodeURIComponent(String(workIdA || "").trim());
+  const b = encodeURIComponent(String(workIdB || "").trim());
+  const params = new URLSearchParams();
+  params.set("work_id_a", a);
+  params.set("work_id_b", b);
+  const q = params.toString();
+  const { data } = await apiClient.get(
+    apiUrl(`/v1/workspaces/${wid}/graph/contradiction-detail?${q}`),
+    workspaceReadConfig(),
+  );
+  return data;
+}
+
 export async function getWorkspaceGraph(workspaceId, opts = {}) {
   const wid = encodeURIComponent(String(workspaceId || "").trim());
   const params = new URLSearchParams();
-  if (opts.neighborLimit != null && Number.isFinite(Number(opts.neighborLimit))) {
-    params.set("neighbor_limit", String(Math.max(1, Math.floor(Number(opts.neighborLimit)))));
-  }
   if (opts.mode != null && String(opts.mode).trim()) {
     params.set("mode", String(opts.mode).trim());
   }
-  if (opts.depth != null && Number.isFinite(Number(opts.depth))) {
-    params.set("depth", String(Math.min(2, Math.max(1, Math.floor(Number(opts.depth))))));
-  }
   if (opts.includeExternal === true) {
     params.set("include_external", "true");
-  }
-  if (opts.nodeTypes != null && String(opts.nodeTypes).trim()) {
-    params.set("node_types", String(opts.nodeTypes).trim());
   }
   if (opts.externalMinInternalCiters != null && Number.isFinite(Number(opts.externalMinInternalCiters))) {
     const v = Math.min(50, Math.max(0, Math.floor(Number(opts.externalMinInternalCiters))));
@@ -235,18 +244,12 @@ export async function getWorkspaceGraphStats(workspaceId) {
 /**
  * @param {string} workspaceId
  * @param {string} nodeId
- * @param {{ depth?: number, limit?: number, prioritize?: string }} [opts]
+ * @param {{ prioritize?: string }} [opts]
  */
 export async function getWorkspaceGraphNeighbors(workspaceId, nodeId, opts = {}) {
   const wid = encodeURIComponent(String(workspaceId || "").trim());
   const params = new URLSearchParams();
   params.set("node_id", String(nodeId || "").trim());
-  if (opts.depth != null && Number.isFinite(Number(opts.depth))) {
-    params.set("depth", String(Math.min(2, Math.max(1, Math.floor(Number(opts.depth))))));
-  }
-  if (opts.limit != null && Number.isFinite(Number(opts.limit))) {
-    params.set("limit", String(Math.min(200, Math.max(1, Math.floor(Number(opts.limit))))));
-  }
   if (opts.prioritize != null && String(opts.prioritize).trim()) {
     params.set("prioritize", String(opts.prioritize).trim());
   }

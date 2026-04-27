@@ -9,6 +9,10 @@ from science_graphrag.api.graph_display import (
     edge_display_type,
     resolve_node_kind,
 )
+from science_graphrag.ontology.article_contradictions import (
+    build_edge_contradiction_preview,
+    extract_contradiction_rel_api_props,
+)
 
 ALLOWED_NODE_TYPES = frozenset(
     {"Work", "Author", "Method", "Dataset", "Venue", "Institution", "Authorship", "Claim"}
@@ -103,7 +107,35 @@ def node_dict_from_neo(node: Any) -> dict[str, Any] | None:
         center_props["venue_type"] = str(props["venue_type"]).strip()[:120]
     if props.get("issn"):
         center_props["issn"] = str(props["issn"]).strip()[:64]
-    if ntype == "Claim":
+    if ntype == "Method":
+        als = props.get("aliases")
+        if isinstance(als, list) and als:
+            center_props["aliases"] = als
+        ds = str(props.get("description_short") or "").strip()
+        if ds:
+            center_props["description_short"] = ds[:2000]
+        dm = str(props.get("description_markdown") or "").strip()
+        if dm:
+            center_props["description_markdown"] = dm[:12000]
+        dpt = str(props.get("description_plaintext") or "").strip()
+        if dpt:
+            center_props["description_plaintext"] = dpt[:8000]
+        mk = str(props.get("method_kind") or "").strip()
+        if mk:
+            center_props["method_kind"] = mk[:128]
+        dsrc = str(props.get("description_source") or "").strip()
+        if dsrc:
+            center_props["description_source"] = dsrc[:64]
+        if props.get("description_confidence") is not None:
+            center_props["description_confidence"] = props["description_confidence"]
+    elif ntype == "Dataset":
+        als = props.get("aliases")
+        if isinstance(als, list) and als:
+            center_props["aliases"] = als
+        dsd = str(props.get("description_short") or "").strip()
+        if dsd:
+            center_props["description_short"] = dsd[:2000]
+    elif ntype == "Claim":
         nt = str(props.get("normalized_text") or "").strip()
         tx = str(props.get("text") or "").strip()
         if nt:
@@ -144,7 +176,16 @@ def edge_dict_from_rel(a: Any, b: Any, rel: Any, seq: int) -> dict[str, Any]:
     tgt = str(dict(b).get("id") or b.element_id)
     payload = f"{src}\0{rt}\0{tgt}\0{seq}".encode()
     eid = "e_" + hashlib.sha256(payload).hexdigest()[:22]
-    return {"id": eid, "source": src, "target": tgt, "type": rt}
+    out: dict[str, Any] = {"id": eid, "source": src, "target": tgt, "type": rt}
+    if rt == "CONTRADICTS" and rel is not None:
+        try:
+            raw_props = dict(rel)
+        except (TypeError, ValueError):
+            raw_props = {}
+        safe = extract_contradiction_rel_api_props(raw_props, for_graph_list=True)
+        if safe:
+            out["properties"] = safe
+    return out
 
 
 def edge_dict_from_ids(src: str, tgt: str, rt: str, seq: int) -> dict[str, Any]:
@@ -167,7 +208,15 @@ def enrich_edges_workspace(nodes: list[dict[str, Any]], edges: list[dict[str, An
         edge["display_type"] = disp_t
         edge["source_label"] = sl
         edge["target_label"] = tl
-        edge["summary"] = f"{sl} —[{disp_t}]→ {tl}"
+        summary = f"{sl} —[{disp_t}]→ {tl}"
+        if rt == "CONTRADICTS":
+            pr = edge.get("properties")
+            if isinstance(pr, dict) and pr:
+                st = str(pr.get("subtype") or "").strip()
+                if st:
+                    summary = f"{sl} —[contradicts: {st}]→ {tl}"
+                edge["contradiction_preview"] = build_edge_contradiction_preview(pr)
+        edge["summary"] = summary
         edge["direction"] = "lateral"
 
 

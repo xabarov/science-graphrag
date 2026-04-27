@@ -69,7 +69,26 @@ def run_contradiction_case(
     err: str | None = None
     try:
         if materialize:
-            neo.merge_work_contradicts(wa, wb, subtype=spec["subtype"])
+            gold = spec.get("raw") or {}
+            ca = gold.get("claim_a") or {}
+            cb = gold.get("claim_b") or {}
+            if not isinstance(ca, dict):
+                ca = {}
+            if not isinstance(cb, dict):
+                cb = {}
+            neo.merge_work_contradicts(
+                wa,
+                wb,
+                subtype=spec["subtype"],
+                severity=str(gold.get("severity") or "nuanced"),
+                rationale_short=str(gold.get("rationale") or ""),
+                provenance="benchmark_materialize",
+                claim_pair_fingerprint=str(gold.get("pair_id") or ""),
+                claim_a_text=str(ca.get("claim_text") or ""),
+                claim_b_text=str(cb.get("claim_text") or ""),
+                quote_a=str(ca.get("evidence_quote") or ""),
+                quote_b=str(cb.get("evidence_quote") or ""),
+            )
         lo, hi = (wa, wb) if wa < wb else (wb, wa)
         with neo.session() as session:
             row = session.run(

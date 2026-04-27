@@ -167,7 +167,7 @@ def decide_entity_conflict(
         elif row.entity_type == "venue":
             merged = stores.neo4j.merge_venue_into_canonical(keep, drop)
         elif row.entity_type == "method":
-            merged = stores.neo4j.add_method_alias(keep, drop)
+            merged = stores.neo4j.merge_method_into_canonical(keep, drop)
         elif row.entity_type == "dataset":
             merged = stores.neo4j.add_dataset_alias(keep, drop)
 

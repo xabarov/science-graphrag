@@ -46,8 +46,11 @@ class Neo4jGraphStoreDelegates:
         work_id_b: str,
         *,
         subtype: str = "unspecified",
+        **kwargs: Any,
     ) -> None:
-        contradictions.merge_work_contradicts(self._client, work_id_a, work_id_b, subtype=subtype)
+        contradictions.merge_work_contradicts(
+            self._client, work_id_a, work_id_b, subtype=subtype, **kwargs
+        )
 
     def work_has_incoming_cites(self, work_id: str) -> bool:
         return reads.work_has_incoming_cites(self._client, work_id)
@@ -198,6 +201,9 @@ class Neo4jGraphStoreDelegates:
 
     def add_method_alias(self, method_id: str, alias: str) -> bool:
         return semantic.add_method_alias(self._client, method_id, alias)
+
+    def merge_method_into_canonical(self, keep_id: str, drop_id: str) -> bool:
+        return semantic.merge_method_into_canonical(self._client, keep_id, drop_id)
 
     def add_dataset_alias(self, dataset_id: str, alias: str) -> bool:
         return semantic.add_dataset_alias(self._client, dataset_id, alias)

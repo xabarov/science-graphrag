@@ -36,5 +36,6 @@
 | [020](020-langgraph-supervisor-multiagent.md) | LangGraph supervisor multi-agent |
 | [021](021-openrouter-bge-m3-embeddings.md) | OpenRouter `baai/bge-m3` as canonical remote embeddings (Qdrant + dedup) |
 | [022](022-reader-extracted-body-vs-qdrant-chunks.md) | Reader: canonical ingest artifacts for full text; Qdrant chunks for retrieval only |
+| [023](023-method-ontology-v2-rich-description-and-canonicalization.md) | Method v2: rich description, MethodEvidence, ingest canonicalization, graph merge |
 
 Новые ADR нумеровать по порядку (`001-...`, `002-...`); при отмене пометить как Superseded и сослаться на замену.

@@ -33,3 +33,5 @@ No merge-blocking runner until a `tests/fixtures/benchmarks/**` case defines exp
 **Implemented (advisory v1):** benchmark family spec and fixtures — [`ontology-claims-benchmark-v1.md`](../benchmarks/ontology-claims-benchmark-v1.md), `eval/claims/`, `tests/fixtures/benchmarks/claims/`. Optional `claim_match_mode=claim_id_or_normalized_text` supports extractor-agnostic scoring (see that doc).
 
 **Extraction contract (Wave O):** [extraction/claims-extraction-v1.md](extraction/claims-extraction-v1.md).
+
+**See also (Work–Work contradictions + article grounding):** [contradictions-article-grounded-v1.md](./contradictions-article-grounded-v1.md).

@@ -185,8 +185,24 @@ export default {
   "graph.detailPanel.direction.lateral": "Сопутствующая",
   "graph.detailPanel.direction.lateralHint":
     "Связь в той же окрестности графа, но без явного «входа/выхода» относительно выбранного узла в смысле API (например, общий контекст соседей).",
+  "graph.detailPanel.contradictionHeading": "Противоречие (из статей)",
+  "graph.detailPanel.contradictionSubtype": "Тип",
+  "graph.detailPanel.contradictionSeverity": "Жёсткость",
+  "graph.detailPanel.contradictionProvenance": "Источник",
+  "graph.detailPanel.contradictionUnderspecified":
+    "Связь недостаточно определена: нет двух привязанных цитат, рационала или текста утверждений. Используйте как навигацию, а не как доказательство.",
+  "graph.detailPanel.contradictionNoWorkspace":
+    "Откройте граф рабочей области с активным workspace, чтобы подтянуть полные цитаты и рационал для этого ребра.",
+  "graph.detailPanel.contradictionLoading": "Загрузка деталей противоречия…",
+  "graph.detailPanel.contradictionDetailError": "Не удалось загрузить детали противоречия с API.",
+  "graph.detailPanel.contradictionClaimA": "Утверждение (статья A)",
+  "graph.detailPanel.contradictionClaimB": "Утверждение (статья B)",
+  "graph.detailPanel.contradictionQuoteA": "Цитата-доказательство (статья A)",
+  "graph.detailPanel.contradictionQuoteB": "Цитата-доказательство (статья B)",
+  "graph.detailPanel.contradictionRationale": "Обоснование",
   "graph.detailPanel.claimBody": "Текст утверждения",
   "graph.detailPanel.claimMetadataTitle": "Метаданные утверждения (структура)",
+  "graph.detailPanel.methodDescription": "Описание метода",
 
   "graph.claimProperty.normalized_text": "Нормализованный текст",
   "graph.claimProperty.text": "Текст",
@@ -205,6 +221,14 @@ export default {
   "graph.workProperty.fingerprint": "Отпечаток",
   "graph.workProperty.language": "Язык",
   "graph.workProperty.year": "Год",
+
+  "graph.methodProperty.aliases": "Синонимы",
+  "graph.methodProperty.description_short": "Краткое описание",
+  "graph.methodProperty.description_markdown": "Развёрнутое описание (Markdown)",
+  "graph.methodProperty.description_plaintext": "Простой текст (поиск)",
+  "graph.methodProperty.method_kind": "Тип метода",
+  "graph.methodProperty.description_source": "Источник описания",
+  "graph.methodProperty.description_confidence": "Уверенность в описании",
 
   "graph.canvas.regionAria": "Холст графа. Двойной щелчок по холсту — вписать вид в выбранный узел.",
   "graph.canvas.empty": "Нет узлов для отображения на холсте.",

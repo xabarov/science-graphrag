@@ -184,8 +184,24 @@ export default {
   "graph.detailPanel.direction.lateral": "In context",
   "graph.detailPanel.direction.lateralHint":
     "Shown in the same neighborhood; this edge is not strictly incoming or outgoing from the selected node in the API sense.",
+  "graph.detailPanel.contradictionHeading": "Contradiction (from articles)",
+  "graph.detailPanel.contradictionSubtype": "Type",
+  "graph.detailPanel.contradictionSeverity": "Severity",
+  "graph.detailPanel.contradictionProvenance": "Source",
+  "graph.detailPanel.contradictionUnderspecified":
+    "This link is underspecified: missing two anchored quotes, rationale, or claim text. Treat it as navigation, not proof.",
+  "graph.detailPanel.contradictionNoWorkspace":
+    "Open the workspace graph with an active workspace to load full quotes and rationale for this edge.",
+  "graph.detailPanel.contradictionLoading": "Loading contradiction detail…",
+  "graph.detailPanel.contradictionDetailError": "Could not load contradiction detail from the API.",
+  "graph.detailPanel.contradictionClaimA": "Claim (paper A)",
+  "graph.detailPanel.contradictionClaimB": "Claim (paper B)",
+  "graph.detailPanel.contradictionQuoteA": "Evidence quote (paper A)",
+  "graph.detailPanel.contradictionQuoteB": "Evidence quote (paper B)",
+  "graph.detailPanel.contradictionRationale": "Rationale",
   "graph.detailPanel.claimBody": "Claim text",
   "graph.detailPanel.claimMetadataTitle": "Claim metadata (structured)",
+  "graph.detailPanel.methodDescription": "Method description",
 
   "graph.claimProperty.normalized_text": "Normalized text",
   "graph.claimProperty.text": "Text",
@@ -204,6 +220,14 @@ export default {
   "graph.workProperty.fingerprint": "Fingerprint",
   "graph.workProperty.language": "Language",
   "graph.workProperty.year": "Year",
+
+  "graph.methodProperty.aliases": "Aliases",
+  "graph.methodProperty.description_short": "Short description",
+  "graph.methodProperty.description_markdown": "Rich description (Markdown)",
+  "graph.methodProperty.description_plaintext": "Plain text (search)",
+  "graph.methodProperty.method_kind": "Kind",
+  "graph.methodProperty.description_source": "Description source",
+  "graph.methodProperty.description_confidence": "Description confidence",
 
   "graph.canvas.regionAria": "Graph canvas. Double-click the canvas to zoom the view to the selected node.",
   "graph.canvas.empty": "No nodes to draw on canvas.",

@@ -367,7 +367,12 @@ def list_work_methods(client: _Neo4jClient, work_id: str) -> list[dict[str, Any]
            coalesce(m.name, '') AS name,
            coalesce(m.normalized_name, m.name, '') AS normalized_name,
            coalesce(m.aliases, []) AS aliases,
-           coalesce(m.description_short, '') AS description_short
+           coalesce(m.description_short, '') AS description_short,
+           coalesce(m.description_markdown, '') AS description_markdown,
+           coalesce(m.description_plaintext, '') AS description_plaintext,
+           coalesce(m.method_kind, '') AS method_kind,
+           coalesce(m.description_source, '') AS description_source,
+           m.description_confidence AS description_confidence
     """
     with client.session() as session:
         return [dict(r) for r in session.run(q, wid=str(work_id or "").strip())]
@@ -417,7 +422,12 @@ def list_workspace_methods(client: _Neo4jClient, workspace_id: str) -> list[dict
            coalesce(m.name, '') AS name,
            coalesce(m.normalized_name, m.name, '') AS normalized_name,
            coalesce(m.aliases, []) AS aliases,
-           coalesce(m.description_short, '') AS description_short
+           coalesce(m.description_short, '') AS description_short,
+           coalesce(m.description_markdown, '') AS description_markdown,
+           coalesce(m.description_plaintext, '') AS description_plaintext,
+           coalesce(m.method_kind, '') AS method_kind,
+           coalesce(m.description_source, '') AS description_source,
+           m.description_confidence AS description_confidence
     """
     with client.session() as session:
         return [dict(r) for r in session.run(q, ws=workspace_id)]

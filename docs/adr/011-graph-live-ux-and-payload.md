@@ -59,3 +59,20 @@ The graph UI was inspection-first: **Cards** defaulted ahead of **Canvas**, circ
   `_`-separated Neo4j relation names.
 - Added prioritized LIMIT: neighbors sorted by `node_kind_priority` before
   truncation. `meta.skipped_by_kind` reports dropped counts per kind.
+
+## Addendum: Workspace graph = full 1-hop union (2026-04-27)
+
+**Scope:** `GET /v1/workspaces/{workspace_id}/graph` and related **`/graph/neighbors`**, **`/graph/expand`** — not the per-work `GET /v1/works/{work_id}/graph` neighborhood (that endpoint **still** documents `neighbor_limit` / `depth` in ADR 011 §Decision).
+
+**Decision:**
+
+1. **Main workspace graph** is always built as the **union of all incident edges** for every internal work in the workspace (same logical shape as the historical **`depth=1`** / `build_from_depth1_rows` path). The **`depth=2`** / `build_from_depth2_rows` branch and optional **GDS** path for workspace canvas are **removed**.
+2. **Removed** from the workspace graph HTTP contract: query params **`depth`**, **`neighbor_limit`**, **`node_types`**. Clients must not rely on the server to «thin» the graph by type; use **client-side** visibility ([`graphVisibilityFilter.js`](../../ui/src/components/graph/graphVisibilityFilter.js)).
+3. **Neighbors / expand:** no default **row cap** or extra hop via query params; behavior is **1-hop** from the requested node. Very high degree remains an operational concern (documented in `graph-ui-plan.md`).
+
+**Consequences:**
+
+- **Breaking** for any client that appended `depth=` / `neighbor_limit=` / `node_types=` to workspace graph URLs (params are dropped from OpenAPI; unknown params may still be ignored by FastAPI but should be deleted from clients).
+- **Reduced ambiguity:** UI «missing methods» / «missing citations» bugs caused by **depth‑2** projection are addressed at the API layer; remaining gaps are ingestion, stubs, or **UI caps** / **hidden types**.
+
+**References:** [`docs/adr/012-workspace-graph-projection.md`](012-workspace-graph-projection.md) addendum, [`docs/specs/graph-ui-plan.md`](../specs/graph-ui-plan.md) §Workspace graph v2, [`docs/analysis/workspace-graph-methods-citations-root-cause-2026-04-27.md`](../analysis/workspace-graph-methods-citations-root-cause-2026-04-27.md).

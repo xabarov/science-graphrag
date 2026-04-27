@@ -229,17 +229,19 @@ flowchart TB
 
 **Endpoints:** `GET /v1/workspaces/{id}/graph`, `/graph/stats`, `/graph/neighbors` — see [`frontend-ui-api-contracts-v1.md`](./frontend-ui-api-contracts-v1.md) §5b and ADR [`docs/adr/012-workspace-graph-projection.md`](../adr/012-workspace-graph-projection.md).
 
+**Server contract (2026-04-27):** The main canvas payload is the **union of every incident relationship** for each `(:Workspace)-[:CONTAINS]->(:Work)` anchor — equivalent to the former **`depth=1`** projection, **without** server-side `depth`, `neighbor_limit`, or `node_types` query parameters. **Which labels render** is a **client** concern: [`graphVisibilityFilter.js`](../../ui/src/components/graph/graphVisibilityFilter.js) and [`GraphNodesVisibilityMenu.jsx`](../../ui/src/components/graph/toolbar/GraphNodesVisibilityMenu.jsx). **Rendering limits** remain `GRAPH_UI_MAX_NODES` / `GRAPH_UI_MAX_EDGES` in [`graphUiLimits.js`](../../ui/src/components/graph/graphUiLimits.js). See ADR 011 addendum and ADR 012 addendum.
+
 **UI:**
 
-- [`WorkspaceGraphToolbar.jsx`](../../ui/src/components/graph/WorkspaceGraphToolbar.jsx) — `mode`, `depth`, `include external`, multi-select node types, stats line; per-workspace persistence (`workspaceGraphMode:*`, `workspaceGraphDepth:*`, …).
+- [`WorkspaceGraphToolbar.jsx`](../../ui/src/components/graph/WorkspaceGraphToolbar.jsx) — `mode`, `include external`, **nodes visibility** (client filter), stats line; per-workspace persistence (`workspaceGraphMode:*`, node visibility keys, …). **No** workspace «graph depth 1°/2°» product control (removed).
 - [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx) — wires toolbar + `getWorkspaceGraph` / stats / neighbors merge for lazy **Expand external**.
 - **Palette:** `workspace_membership` (`internal` | `external`) in [`graphCanvasStyle.js`](../../ui/src/components/graph/graphCanvasStyle.js) + dashed edges when an endpoint is external.
 - **Force layout:** internal works join a `ws-internal` cluster hint in [`scienceHybridCommunities.js`](../../ui/src/components/graph/physics/scienceHybridCommunities.js).
-- **`mode=full`:** server ignores the `node_types` CSV filter for the projection (still honors `include_external` for non-member `:Work` nodes) so every neighbor label attached to internal works can appear — useful when the toolbar filters to `Work` only but you still need Methods/Authors in one shot.
+- **`mode=full`:** full semantic adjacency from internal works (subject to `include_external` / `external_min_internal_citers`); type toggles in the toolbar affect **display only**, not the fetched payload.
 
-**Lazy expand:** selecting a work with external cite count uses `/graph/neighbors` to merge more nodes without reloading the full workspace graph. `depth=2` on neighbors walks an extra hop (bounded `limit`, split budget vs depth-1 rows).
+**Lazy expand:** selecting a work with external cite count uses `/graph/neighbors` to merge nodes without reloading the full workspace graph. Neighbors are **single hop** from the given `node_id`, **no** query `limit` / `depth` on the HTTP contract.
 
-**GDS:** optional server path for large `depth=2` projections when `SCIENCE_GRAPHRAG_GDS_ENABLED` and the GDS plugin respond to `gds.version()`; otherwise Cypher-only with caps.
+**GDS:** The workspace **main graph** no longer uses a **`depth=2` / GDS** fast path; large workspaces rely on Cypher **1-hop union** (operational risk: a single hub with extreme degree — monitor; optional future `Settings` soft cap if product requires it).
 
 ## Phased delivery (mirror master plan)
 

@@ -6,6 +6,7 @@ import GraphDetailPanel from "./GraphDetailPanel.jsx";
 import { clampGraphDetailColumnPx } from "./graphDetailColumnWidth.js";
 
 export default function GraphSidePanel({
+  workspaceId = "",
   standalone,
   visible,
   selectedNode,
@@ -87,6 +88,7 @@ export default function GraphSidePanel({
       ) : null}
       <Box sx={{ minWidth: 0, minHeight: standalone ? 0 : { xs: 220, md: 400 }, display: "flex", flexDirection: "column" }}>
         <GraphDetailPanel
+          workspaceId={workspaceId}
           selectedNode={selectedNode}
           selectedEdge={selectedEdge}
           relatedEdges={relatedEdges}

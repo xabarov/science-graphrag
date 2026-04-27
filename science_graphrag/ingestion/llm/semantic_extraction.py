@@ -21,6 +21,7 @@ from science_graphrag.ingestion.llm.prompts.semantic import (
     semantic_prompt_fingerprint,
 )
 from science_graphrag.ingestion.llm.schemas import SemanticMethodDatasetBundleLLM
+from science_graphrag.ingestion.method_consolidation import consolidate_document_methods
 from science_graphrag.observability.phoenix_tracer import add_span_event
 from science_graphrag.utils.project_logging import get_logger
 
@@ -106,4 +107,14 @@ def extract_semantic_method_dataset(
     out = bundle_to_extraction(parsed, document_id)
     if parsed.extraction_notes and not out.extraction_notes:
         out = out.model_copy(update={"extraction_notes": parsed.extraction_notes})
+    consolidated = consolidate_document_methods(out.methods)
+    if len(consolidated) != len(out.methods):
+        notes = (out.extraction_notes or "").strip()
+        merge_note = f"methods_consolidated:{len(out.methods)}->{len(consolidated)}"
+        out = out.model_copy(
+            update={
+                "methods": consolidated,
+                "extraction_notes": f"{notes}; {merge_note}" if notes else merge_note,
+            },
+        )
     return out

@@ -127,9 +127,8 @@ def test_workspace_graph_inner_only_two_works_cites_and_full_ignores_type_filter
             node_types="Work",
         )
         assert g_work_only is not None
-        assert not any(
-            str(n.get("type") or "") == "Method" for n in (g_work_only.get("nodes") or [])
-        )
+        # Server no longer filters by node_types; client filters Work-only views.
+        assert any(str(n.get("type") or "") == "Method" for n in (g_work_only.get("nodes") or []))
 
         g_full = project_workspace_graph(
             neo_store,
@@ -143,13 +142,15 @@ def test_workspace_graph_inner_only_two_works_cites_and_full_ignores_type_filter
         assert g_full is not None
         assert any(str(n.get("id") or "") == mid for n in (g_full.get("nodes") or []))
 
-        nb = workspace_graph_neighbors(neo_store, ws_id, w1, depth=2, limit=50)
+        nb = workspace_graph_neighbors(neo_store, ws_id, w1, depth=1, limit=None)
         assert nb is not None
-        assert int(nb["depth_requested"]) == 2
-        assert int(nb["depth_effective"]) == 2
+        assert int(nb["depth_effective"]) == 1
         nb_by_id = {n["id"]: n for n in nb.get("nodes") or []}
-        assert nb_by_id[a1].get("display_label") == "Wei Liu"
-        assert nb_by_id[a2].get("display_label") == "Jia Deng"
+        # One-hop from Paper A includes Authorship nodes; Author is a second hop via OF_AUTHOR.
+        assert ash1 in nb_by_id
+        assert "Wei Liu" in str(nb_by_id[ash1].get("display_label") or "")
+        assert ash2 in nb_by_id
+        assert "Jia Deng" in str(nb_by_id[ash2].get("display_label") or "")
     finally:
         if neo_store is not None:
             try:

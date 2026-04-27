@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 
 import { graphTelemetryEmit } from "../graphTelemetry.js";
 import { buildSimulationState } from "../graphSimulationAdapter.js";
@@ -6,12 +6,15 @@ import { buildSimulationState } from "../graphSimulationAdapter.js";
 /**
  * Re-seed force simulation strictly when topology changes (signature-driven).
  *
- * IMPORTANT: deps must NOT include `applyFit`, `graph`, or `layoutMode`. They
- * are read via refs so that re-seeding never fires from incidental identity
- * changes (e.g. ResizeObserver bumping `hostSize` and rebuilding the
- * `applyFit` callback) or from `layoutMode` flips on click in circle mode.
- * Re-seeding is destructive (clears pins, resets stability, refits camera)
- * and must be reserved for actual topology mutations.
+ * IMPORTANT: the topology reseed effect must NOT list `applyFit`, `graph`, or
+ * `layoutMode` as deps (avoids re-seeding on incidental callback identity or
+ * circle/force toggles). Those values are read via refs.
+ *
+ * Refs are synced in a **preceding** `useLayoutEffect` (not `useEffect`) so
+ * they match the current render before the signature-driven reseed runs.
+ * Otherwise `topologySignature` can change in the same commit as a new
+ * `graph`, but `graphRef` would still hold the previous graph until after
+ * paint — leaving new nodes without simulation positions until full reload.
  *
  * @param {{
  *   topologySignature: string,
@@ -47,11 +50,11 @@ export function useGraphCanvasTopologyReseed({
   const graphRef = useRef(graph);
   const applyFitRef = useRef(applyFit);
   const layoutModeRef = useRef(layoutMode);
-  useEffect(() => {
+  useLayoutEffect(() => {
     graphRef.current = graph;
     applyFitRef.current = applyFit;
     layoutModeRef.current = layoutMode;
-  });
+  }, [graph, layoutMode, applyFit]);
 
   useLayoutEffect(() => {
     const currentGraph = graphRef.current;

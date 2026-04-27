@@ -23,3 +23,15 @@ Workspace-scoped graph must show **cross-paper** structure (citations, authorshi
 
 - UI can style `workspace_membership` (`internal` | `external`) and show cite badges computed server-side.
 - Benchmark `graph_expectations.workspace` can be compared when snapshots include `workspace_projection` metrics (see `graph_snapshot_diff.py`).
+
+## Addendum (2026-04-27): Full incident subgraph, no depth-2 / no server type slice
+
+**Supersedes** parts of §Decision items **1**, **3**, **4**, **5** above for the **interactive** workspace graph:
+
+1. **Primary projection:** always **1-hop union** over all workspace internal works (`build_from_depth1_rows`, `cap=None`). No **`depth=2`** Cypher pattern and **no GDS** branch for this endpoint.
+2. **HTTP:** `GET .../graph` no longer accepts **`depth`**, **`neighbor_limit`**, or **`node_types`**. **`MAX_NEIGHBORS_CAP`**-style merging with `neighbor_limit` applies only to **legacy internal** helpers if any remain — not the main workspace canvas contract.
+3. **`GET .../graph/neighbors`** (and expand): **uncapped** relationship stream for **one hop** from `node_id`; removed **`limit`** / **`depth`** query contract.
+
+**Rationale:** Depth‑2 and server-side type filters caused **false negatives** (e.g. leaf `USES_METHOD`, single-hop `CITES` to stubs) vs Neo4j. Product visibility belongs in the UI layer; server returns the **full** slice for the workspace anchors.
+
+**Consequences:** Larger payloads on dense workspaces; rely on **client** `GRAPH_UI_MAX_*` and optional future **Settings** soft caps if operational limits are needed.

@@ -193,6 +193,25 @@ export function localizeWorkPropertyKey(rawKey, t) {
 }
 
 /**
+ * @param {string} rawKey
+ * @param {GraphTranslateFn} t
+ * @returns {string}
+ */
+export function localizeMethodPropertyKey(rawKey, t) {
+  const k = String(rawKey || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+  if (!k) return String(rawKey || "");
+  const i18nKey = `graph.methodProperty.${k}`;
+  const out = t(i18nKey);
+  if (out !== i18nKey) return out;
+  return String(rawKey)
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/**
  * Optional longer explanation for edge direction hint (e.g. "lateral" in neighborhood lists).
  *
  * @param {string} hint

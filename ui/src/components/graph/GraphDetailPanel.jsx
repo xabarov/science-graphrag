@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import List from "@mui/material/List";
@@ -14,13 +15,16 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useTheme } from "@mui/material/styles";
 
 import { useI18n } from "../../i18n/useI18n.js";
+import { getWorkspaceContradictionDetail } from "../../utils/workspaceStore.js";
 import { CursorSmallButton } from "../common/index.js";
+import MarkdownViewCore from "../work/MarkdownViewCore.jsx";
 import {
   localizeAggregatorSubtitle,
   localizeAggregatorTitle,
   localizeClaimPropertyKey,
   localizeDirectionHintTooltip,
   localizeEdgeType,
+  localizeMethodPropertyKey,
   localizeNodeKind,
   localizeWorkPropertyKey,
 } from "./graphLocalize.js";
@@ -68,6 +72,17 @@ function formatClaimMetadataBlock(meta) {
 /** Claim fields rendered in dedicated blocks; rest stays in the key table with i18n labels. */
 const CLAIM_DETAIL_KEYS_IN_TABLE = new Set(["normalized_text", "text", "claim_metadata"]);
 
+/** Method rich fields rendered above the key table (ADR 023). */
+const METHOD_DETAIL_KEYS_IN_TABLE = new Set([
+  "aliases",
+  "description_short",
+  "description_markdown",
+  "description_plaintext",
+  "method_kind",
+  "description_source",
+  "description_confidence",
+]);
+
 /**
  * @param {string} hint
  * @param {(k: string) => string} t
@@ -95,9 +110,11 @@ function localizeDirectionHint(hint, t) {
  *   onAggregatorExpand?: (node: object, expandEndpoint: string) => void | Promise<void>,
  *   expandWorkspaceNeighborsBusy?: boolean,
  *   mode?: "embedded" | "standalone",
+ *   workspaceId?: string,
  * }} props
  */
 export default function GraphDetailPanel({
+  workspaceId = "",
   selectedNode,
   selectedEdge,
   relatedEdges = [],
@@ -116,7 +133,57 @@ export default function GraphDetailPanel({
   const tk = useTheme().appTokens;
   const compact = mode === "embedded" || mode === "standalone";
   const [rawOpen, setRawOpen] = useState(false);
+  const [contradictionPayload, setContradictionPayload] = useState(/** @type {Record<string, unknown> | null} */ (null));
+  const [contradictionBusy, setContradictionBusy] = useState(false);
+  const [contradictionError, setContradictionError] = useState("");
   const rows = relatedEdgeRows.length > 0 ? relatedEdgeRows : [];
+
+  const effectiveWorkspaceId = String(workspaceId || "").trim() || String(graphMeta?.workspace_id || "").trim();
+  const isContradictsEdge =
+    Boolean(selectedEdge) && String(selectedEdge?.type || "").toUpperCase() === "CONTRADICTS";
+
+  /* eslint-disable react-hooks/exhaustive-deps -- use stable edge id/source/target; full selectedEdge changes identity each graph normalize */
+  useEffect(() => {
+    if (!isContradictsEdge || !effectiveWorkspaceId || !selectedEdge) {
+      setContradictionPayload(null);
+      setContradictionError("");
+      setContradictionBusy(false);
+      return;
+    }
+    const src = String(selectedEdge.source || "").trim();
+    const tgt = String(selectedEdge.target || "").trim();
+    if (!src || !tgt) {
+      setContradictionPayload(null);
+      return;
+    }
+    let cancelled = false;
+    setContradictionBusy(true);
+    setContradictionError("");
+    (async () => {
+      try {
+        const data = await getWorkspaceContradictionDetail(effectiveWorkspaceId, src, tgt);
+        if (!cancelled) setContradictionPayload(data && typeof data === "object" ? data : null);
+      } catch {
+        if (!cancelled) {
+          setContradictionPayload(null);
+          setContradictionError(t("graph.detailPanel.contradictionDetailError"));
+        }
+      } finally {
+        if (!cancelled) setContradictionBusy(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    effectiveWorkspaceId,
+    isContradictsEdge,
+    selectedEdge?.id,
+    selectedEdge?.source,
+    selectedEdge?.target,
+    t,
+  ]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   const claimNode = isClaimSelectedNode(selectedNode);
   const claimProps =
@@ -125,9 +192,24 @@ export default function GraphDetailPanel({
       : null;
   const claimBody = claimProps ? claimBodyFromProperties(claimProps) : "";
   const claimMetadataFormatted = claimProps ? formatClaimMetadataBlock(claimProps.claim_metadata) : "";
-  const claimPropertyEntries = claimNode
-    ? Object.entries(selectedNode?.properties || {}).filter(([k]) => !CLAIM_DETAIL_KEYS_IN_TABLE.has(k))
-    : Object.entries(selectedNode?.properties || {});
+  const isMethodNode = Boolean(selectedNode && String(selectedNode.type) === "Method");
+  const methodProps =
+    isMethodNode && selectedNode?.properties && typeof selectedNode.properties === "object"
+      ? /** @type {Record<string, unknown>} */ (selectedNode.properties)
+      : null;
+  const methodMarkdownForViewer = methodProps
+    ? String(methodProps.description_markdown || "").trim() ||
+      String(methodProps.description_plaintext || "").trim() ||
+      String(methodProps.description_short || "").trim()
+    : "";
+  const excludedDetailKeys = claimNode
+    ? CLAIM_DETAIL_KEYS_IN_TABLE
+    : isMethodNode
+      ? METHOD_DETAIL_KEYS_IN_TABLE
+      : new Set();
+  const detailPropertyEntries = Object.entries(selectedNode?.properties || {}).filter(
+    ([k]) => !excludedDetailKeys.has(k),
+  );
 
   const truncated = Boolean(graphMeta?.is_truncated);
   const neighborLimit = graphMeta?.neighbor_limit_applied;
@@ -210,6 +292,152 @@ export default function GraphDetailPanel({
             <Typography sx={{ fontSize: "0.7rem", color: tk.text.faint, fontFamily: "monospace", wordBreak: "break-all" }}>
               id: {selectedEdge.id}
             </Typography>
+            {isContradictsEdge ? (
+              <Box sx={{ mt: 1.5 }}>
+                <Typography sx={{ fontWeight: 600, fontSize: "0.75rem", mb: 0.75, color: tk.text.secondary }}>
+                  {t("graph.detailPanel.contradictionHeading")}
+                </Typography>
+                {(() => {
+                  const edgeRaw =
+                    selectedEdge?.raw && typeof selectedEdge.raw === "object"
+                      ? /** @type {Record<string, unknown>} */ (selectedEdge.raw)
+                      : {};
+                  const edgeProps =
+                    edgeRaw.properties && typeof edgeRaw.properties === "object"
+                      ? /** @type {Record<string, unknown>} */ (edgeRaw.properties)
+                      : {};
+                  const pv =
+                    edgeRaw.contradiction_preview && typeof edgeRaw.contradiction_preview === "object"
+                      ? /** @type {Record<string, unknown>} */ (edgeRaw.contradiction_preview)
+                      : {};
+                  const rel =
+                    contradictionPayload?.relationship && typeof contradictionPayload.relationship === "object"
+                      ? /** @type {Record<string, unknown>} */ (contradictionPayload.relationship)
+                      : {};
+                  const underspecified = Boolean(pv.underspecified ?? rel.underspecified ?? edgeProps.underspecified);
+                  const subtype = String(pv.subtype || rel.subtype || edgeProps.subtype || "").trim();
+                  const severity = String(pv.severity || rel.severity || edgeProps.severity || "").trim();
+                  const provenance = String(pv.provenance || rel.provenance || edgeProps.provenance || "").trim();
+                  const quoteADisplay = String(rel.quote_a || edgeProps.quote_a_preview || "").trim();
+                  const quoteBDisplay = String(rel.quote_b || edgeProps.quote_b_preview || "").trim();
+                  const claimAText = String(rel.claim_a_text || edgeProps.claim_a_text || "").trim();
+                  const claimBText = String(rel.claim_b_text || edgeProps.claim_b_text || "").trim();
+                  return (
+                    <>
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1 }}>
+                        {subtype ? (
+                          <Chip size="small" label={`${t("graph.detailPanel.contradictionSubtype")}: ${subtype}`} />
+                        ) : null}
+                        {severity ? (
+                          <Chip size="small" label={`${t("graph.detailPanel.contradictionSeverity")}: ${severity}`} />
+                        ) : null}
+                        {provenance ? (
+                          <Chip size="small" label={`${t("graph.detailPanel.contradictionProvenance")}: ${provenance}`} />
+                        ) : null}
+                      </Box>
+                      {underspecified ? (
+                        <Alert severity="warning" sx={{ mb: 1, py: 0.5 }}>
+                          {t("graph.detailPanel.contradictionUnderspecified")}
+                        </Alert>
+                      ) : null}
+                      {!effectiveWorkspaceId ? (
+                        <Alert severity="info" sx={{ mb: 1, py: 0.5 }}>
+                          {t("graph.detailPanel.contradictionNoWorkspace")}
+                        </Alert>
+                      ) : null}
+                      {contradictionBusy ? (
+                        <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted }}>{t("graph.detailPanel.contradictionLoading")}</Typography>
+                      ) : null}
+                      {contradictionError ? (
+                        <Alert severity="error" sx={{ mt: 0.75, py: 0.5 }}>
+                          {contradictionError}
+                        </Alert>
+                      ) : null}
+                      {claimAText || claimBText ? (
+                        <Box sx={{ mt: 1 }}>
+                          {claimAText ? (
+                            <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted, mb: 0.25 }}>
+                              {t("graph.detailPanel.contradictionClaimA")}
+                            </Typography>
+                          ) : null}
+                          {claimAText ? (
+                            <Typography sx={{ fontSize: "0.78rem", color: tk.text.primary, mb: 1, lineHeight: 1.45 }}>
+                              {claimAText}
+                            </Typography>
+                          ) : null}
+                          {claimBText ? (
+                            <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted, mb: 0.25 }}>
+                              {t("graph.detailPanel.contradictionClaimB")}
+                            </Typography>
+                          ) : null}
+                          {claimBText ? (
+                            <Typography sx={{ fontSize: "0.78rem", color: tk.text.primary, mb: 1, lineHeight: 1.45 }}>
+                              {claimBText}
+                            </Typography>
+                          ) : null}
+                        </Box>
+                      ) : null}
+                      {quoteADisplay || quoteBDisplay ? (
+                        <Box sx={{ mt: 0.5 }}>
+                          {quoteADisplay ? (
+                            <>
+                              <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted, mb: 0.25 }}>
+                                {t("graph.detailPanel.contradictionQuoteA")}
+                              </Typography>
+                              <Typography
+                                component="div"
+                                sx={{
+                                  fontSize: "0.75rem",
+                                  color: tk.text.primary,
+                                  mb: 1,
+                                  lineHeight: 1.45,
+                                  whiteSpace: "pre-wrap",
+                                  borderLeft: `2px solid ${tk.border.strong}`,
+                                  pl: 1,
+                                }}
+                              >
+                                {quoteADisplay}
+                              </Typography>
+                            </>
+                          ) : null}
+                          {quoteBDisplay ? (
+                            <>
+                              <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted, mb: 0.25 }}>
+                                {t("graph.detailPanel.contradictionQuoteB")}
+                              </Typography>
+                              <Typography
+                                component="div"
+                                sx={{
+                                  fontSize: "0.75rem",
+                                  color: tk.text.primary,
+                                  mb: 0.5,
+                                  lineHeight: 1.45,
+                                  whiteSpace: "pre-wrap",
+                                  borderLeft: `2px solid ${tk.border.strong}`,
+                                  pl: 1,
+                                }}
+                              >
+                                {quoteBDisplay}
+                              </Typography>
+                            </>
+                          ) : null}
+                        </Box>
+                      ) : null}
+                      {rel.rationale_short || edgeProps.rationale_short ? (
+                        <Box sx={{ mt: 0.5 }}>
+                          <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted, mb: 0.25 }}>
+                            {t("graph.detailPanel.contradictionRationale")}
+                          </Typography>
+                          <Typography sx={{ fontSize: "0.78rem", color: tk.text.primary, lineHeight: 1.45 }}>
+                            {String(rel.rationale_short || edgeProps.rationale_short || "")}
+                          </Typography>
+                        </Box>
+                      ) : null}
+                    </>
+                  );
+                })()}
+              </Box>
+            ) : null}
           </>
         ) : null}
 
@@ -377,15 +605,39 @@ export default function GraphDetailPanel({
               </Box>
             ) : null}
 
+            {isMethodNode && methodMarkdownForViewer ? (
+              <Box sx={{ mt: 2, mb: 1 }}>
+                <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 0.5, color: tk.text.primary }}>
+                  {t("graph.detailPanel.methodDescription")}
+                </Typography>
+                <Box
+                  sx={{
+                    p: 1,
+                    borderRadius: "6px",
+                    border: `1px solid ${tk.border.default}`,
+                    backgroundColor: tk.surface.sidebar,
+                    maxHeight: compact ? 260 : 360,
+                    overflow: "auto",
+                  }}
+                >
+                  <MarkdownViewCore markdown={methodMarkdownForViewer} data-testid="graph-method-markdown" />
+                </Box>
+              </Box>
+            ) : null}
+
             <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 2, mb: 0.75, color: tk.text.primary }}>
               {t("graph.detailPanel.keyProperties")}
             </Typography>
-            {claimPropertyEntries.length > 0 ? (
+            {detailPropertyEntries.length > 0 ? (
               <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 1 }}>
-                {claimPropertyEntries.map(([k, v]) => (
+                {detailPropertyEntries.map(([k, v]) => (
                   <Box key={k} sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, alignItems: "baseline" }}>
                     <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted, minWidth: "7rem" }}>
-                      {claimNode ? localizeClaimPropertyKey(k, t) : localizeWorkPropertyKey(k, t)}
+                      {claimNode
+                        ? localizeClaimPropertyKey(k, t)
+                        : isMethodNode
+                          ? localizeMethodPropertyKey(k, t)
+                          : localizeWorkPropertyKey(k, t)}
                     </Typography>
                     <Typography sx={{ fontSize: "0.8125rem", color: tk.text.primary, flex: 1, wordBreak: "break-word" }}>
                       {formatPropertyValue(v)}

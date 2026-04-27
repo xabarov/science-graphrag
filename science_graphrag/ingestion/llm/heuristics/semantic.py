@@ -72,6 +72,13 @@ def bundle_to_extraction(
             name=(item.name or "").strip()[:500],
             aliases=[a.strip() for a in item.aliases if a and str(a).strip()][:20],
             description_short=(item.description_short or "").strip()[:500] or None,
+            description_markdown=(item.description_markdown or "").strip()[:8000] or None,
+            description_plaintext=(item.description_plaintext or "").strip()[:8000] or None,
+            method_kind=(item.method_kind or "").strip()[:64] or None,
+            description_source=(item.description_source or "").strip()[:64] or None,
+            description_confidence=float(item.description_confidence)
+            if item.description_confidence is not None
+            else None,
             confidence=float(item.confidence),
             evidence=[
                 SemanticEvidenceV1(

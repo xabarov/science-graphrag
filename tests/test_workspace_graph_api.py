@@ -49,7 +49,7 @@ def test_get_workspace_graph_v2_smoke(monkeypatch: Any) -> None:
 
     monkeypatch.setattr(graph_router_module, "project_workspace_graph", _fake_project)
     client = _client()
-    res = client.get("/v1/workspaces/ws-x/graph?mode=inner_only&depth=1&include_external=false")
+    res = client.get("/v1/workspaces/ws-x/graph?mode=inner_only&include_external=false")
     assert res.status_code == 200
     body = res.json()
     assert body["meta"]["graph_scope"] == "workspace_v2"

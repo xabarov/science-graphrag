@@ -72,7 +72,6 @@ export default function GraphWorkspacePanel({
   labMode = false,
   focusLayout = false,
   compactLayout = false,
-  standaloneWorkGraphDepth = 1,
 }) {
   const { t } = useI18n();
   const tk = useTheme().appTokens;
@@ -88,7 +87,7 @@ export default function GraphWorkspacePanel({
     fetchNeighbors,
     expandNeighborsBusy,
     expandAggregatorNode,
-  } = useGraphWorkspaceData(workspaceId, workId, { standaloneWorkGraphDepth });
+  } = useGraphWorkspaceData(workspaceId, workId);
 
   const [vizMode, setVizMode] = useState(() => (standalone ? "canvas" : readLsMode()));
   const [canvasLayoutMode, setCanvasLayoutMode] = useState(() => (standalone ? "force" : readLsLayout()));
@@ -256,6 +255,7 @@ export default function GraphWorkspacePanel({
               )}
             </Box>
             <GraphSidePanel
+              workspaceId={wsId}
               standalone={standalone}
               visible={detailsVisible}
               selectedNode={inspector.selectedNode}

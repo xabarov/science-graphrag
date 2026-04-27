@@ -4,6 +4,8 @@
 
 **Conclusion up front:** This is **primarily a projection + depth contract mismatch between the UI and Neo4j**, compounded by **reference ingestion creating minimal `:Work` stubs** without a resolvable title. It is **not** «workspace was loaded wrong» (membership is fine) and **not** intentional benchmark fraud — nightly metrics use **different** artifacts (layer1 `gold.json`, graph fixtures) than this **interactive** workspace graph API.
 
+**Update (2026-04-27, implemented):** The workspace graph contract is **fixed**: `GET /v1/workspaces/{id}/graph` always returns the **union of all incident edges** for every internal `Work` in the workspace (same shape as the former **`depth=1`** path, `build_from_depth1_rows`), with **no** server-side `depth`, `neighbor_limit`, or `node_types` query slicing for the main canvas. Neighbors/expand endpoints no longer apply hop/limit caps. **Node visibility** is **client-only** (`graphVisibilityFilter.js`, toolbar «Nodes»). Sections below that describe **`depth: 2`** and `build_from_depth2_rows` remain the **historical root-cause** explanation for the symptoms users saw before this change.
+
 ### Measured snapshot (Neo4j, workspace `2678c5f1-1b31-4aac-92c9-6bd0f4472b23`)
 
 | Metric | Value |
@@ -14,7 +16,7 @@
 | `CITES` edges **internal → external** (1-hop, target not in workspace) | **280** |
 | Of those external targets, edges where cited `Work` has **empty / null `title`** | **191** |
 
-So the UI observation «~16 edges / mostly Untitled» is **inconsistent with Neo4j 1-hop reality** unless the client uses a **restricted graph slice** (here: **`depth: 2`** projection — see §1–2).
+So the UI observation «~16 edges / mostly Untitled» was **inconsistent with Neo4j 1-hop reality** when the client used a **restricted graph slice** (historically: **`depth: 2`** projection — see §1–2). With the **full 1-hop** contract, citation and method counts in the UI should align with **1-hop** Neo4j counts modulo **UI rendering caps** (`GRAPH_UI_MAX_*`) and optional **client type hiding**.
 
 ---
 
@@ -24,18 +26,18 @@ So the UI observation «~16 edges / mostly Untitled» is **inconsistent with Neo
 
 Prior audit ([`od-corpus-claims-methods-trust-audit-2026-04-27.md`](./od-corpus-claims-methods-trust-audit-2026-04-27.md)): for workspace **Object Detection (clean ingested + claims)** every internal `Work` had **at least one** `[:USES_METHOD]->(:Method)` edge. So the graph **database layer** is not empty for methods.
 
-### 1.2 What the frontend requests
+### 1.2 What the frontend requested (before the contract fix)
 
-[`ui/src/components/graph/hooks/useGraphWorkspaceData.js`](../../ui/src/components/graph/hooks/useGraphWorkspaceData.js) loads the workspace graph with:
+[`useGraphWorkspaceData.js`](../../ui/src/components/graph/hooks/useGraphWorkspaceData.js) **used to** load the workspace graph with:
 
 - `mode: "full"`
-- **`depth: 2`**
+- **`depth: 2`** (removed from the API contract; the client no longer sends depth)
 - `includeExternal: true`
 - `includeClaims: true`
 
-### 1.3 What the backend does for `depth >= 2`
+### 1.3 What the backend did for `depth >= 2` (historical)
 
-[`science_graphrag/api/workspace_graph/cypher.py`](../../science_graphrag/api/workspace_graph/cypher.py) sets `depth_eff = 2` when `depth >= 2`. For 31 internal works, GDS fast-path is **not** used (`len(internal_ids) > 50` is false — see [`_cypher_gds.py`](../../science_graphrag/api/workspace_graph/_cypher_gds.py)), so the payload is built with **`build_from_depth2_rows`**.
+[`cypher.py`](../../science_graphrag/api/workspace_graph/cypher.py) **previously** set `depth_eff = 2` when `depth >= 2`. For 31 internal works, GDS fast-path was often **not** used (`len(internal_ids) > 50` is false — see [`_cypher_gds.py`](../../science_graphrag/api/workspace_graph/_cypher_gds.py)), so the payload was built with **`build_from_depth2_rows`** (this path has been **removed** for the main workspace graph; projection is always **depth‑1 union** now).
 
 That query is structurally:
 
@@ -65,8 +67,8 @@ That matches the screenshots:
 |----------|--------|
 | Broken ontology for those papers? | **Unlikely** as sole explanation; Neo4j had `USES_METHOD` for all audited internal works. |
 | Wrong workspace membership? | **No.** |
-| UI bug? | **Partially:** UI forces **`depth: 2`**, which is **incompatible** with «show every direct semantic neighbor» for Methods. |
-| Fix surface | **Frontend** (`depth: 1` or configurable), and/or **backend** (union of depth‑1 semantic edges with depth‑2 skeleton), and/or **document** that «methods mode» is «methods reachable in 2-hop reader graph». |
+| UI bug? | **Was partially:** UI forced **`depth: 2`**, which was **incompatible** with «show every direct semantic neighbor» for Methods. |
+| Fix surface | **Shipped:** full **1-hop union** on the server + **client-only** type visibility; see ADR 011 addendum and `graph-ui-plan.md` workspace section. |
 
 ---
 
@@ -121,7 +123,7 @@ Same **depth‑2** issue as for methods:
 | Workspace load error? | **No** — `CONTAINS` and chunk payloads were healthy in the OD audit. |
 | Ingestion incomplete vs PDF? | **Yes** — many refs never linked (gate above); linked stubs may lack title → **Untitled**. |
 | Metrics «lying»? | **Different measurement object:** layer1 / graph benchmarks use **fixture `gold.json`** and/or **separate** expectations, not this interactive subgraph. Pipeline metrics expose `references_total` vs `references_linked` — that is **honest partial linking**, not the same as «all bibliography rows». |
-| UI-only artifact? | **Partly** — depth‑2 projection **suppresses** many valid `CITES` edges that exist as **single** hops. |
+| UI-only artifact? | **Was partly** — depth‑2 projection **suppressed** many valid `CITES` edges that exist as **single** hops (resolved by full 1-hop contract). |
 
 ---
 
@@ -129,20 +131,18 @@ Same **depth‑2** issue as for methods:
 
 | Symptom | Main cause | Secondary |
 |---------|------------|-------------|
-| Many papers without green Method nodes | **Depth‑2 projection** omits 1‑hop `USES_METHOD` leaves | Aggregator / caps (lower priority here) |
-| ~16 citation-like edges for 31 papers | **Depth‑2** + **stub cited works** without 2nd hop | Fewer `CITES` in DB than PDF refs (reference gate) |
+| Many papers without green Method nodes | **Was:** depth‑2 projection omitted 1‑hop `USES_METHOD` leaves | Aggregator; now also check **client** type filter |
+| ~16 citation-like edges for 31 papers | **Was:** depth‑2 + stub cited works without 2nd hop | Fewer `CITES` in DB than PDF refs (reference gate) |
 | «Untitled work» | **`w.title` missing** on merged cited `Work` | UUID / empty string label cleanup → fallback string |
 
 ---
 
 ## 4. Action plan (prioritized)
 
-### P0 — Make the graph truthful for «methods mode» and citations
+### P0 — Make the graph truthful for «methods mode» and citations — **[DONE]**
 
-1. **Either** change workspace graph fetch to **`depth: 1`** in [`useGraphWorkspaceData.js`](../../ui/src/components/graph/hooks/useGraphWorkspaceData.js) (simplest), **or** add a dedicated query flag e.g. `semantic_1hop=1` that **unions**:
-   - current depth‑2 skeleton (for context), **with**
-   - explicit `MATCH (w:Work)-[r:USES_METHOD|CITES]->(x) WHERE w.id IN $internal` (subject to caps and visibility).
-2. Document in UI copy that **«reader graph» depth** is not «full Neo4j degree‑1 neighborhood».
+1. **Implemented:** Workspace graph is always the **full union of 1-hop** rows (`build_from_depth1_rows`); query params **`depth`**, **`neighbor_limit`**, **`node_types`** removed from `GET .../graph` (no server-side slice for canvas). Neighbors/expand: **uncapped** 1-hop. UI: **no** workspace depth toggle; visibility via **`graphVisibilityFilter`** only.
+2. **Docs:** `graph-ui-plan.md` (Workspace graph v2), ADR **011** addendum (workspace), ADR **012** addendum (projection).
 
 ### P1 — Reduce «Untitled work»
 
@@ -157,7 +157,7 @@ Same **depth‑2** issue as for methods:
 ### P3 — Benchmarks / trust
 
 1. Add a sentence to trust / eval docs: **workspace graph API ≠** citation recall benchmark surface.
-2. If a future benchmark claims «graph citations visible in UI», pin **`depth`**, **`include_external`**, and **node_types** in the spec.
+2. If a future benchmark claims «graph citations visible in UI», pin **`include_external`**, **`mode`**, and **client visibility defaults** in the spec (workspace graph no longer exposes server **`depth`** / **`node_types`**).
 
 ---
 
@@ -181,7 +181,7 @@ WHERE a.id IN I AND NOT b.id IN I
 RETURN count(*) AS cites_to_external;
 ```
 
-If `cites_to_external` is large but the UI shows almost nothing, **depth‑2 projection** is confirmed in practice.
+If `cites_to_external` is large but the UI shows almost nothing **after** the 2026-04-27 contract fix, check **client caps** (`GRAPH_UI_MAX_*`), **hidden node types**, and ingestion/linking — not server depth (removed).
 
 ---
 
@@ -190,3 +190,4 @@ If `cites_to_external` is large but the UI shows almost nothing, **depth‑2 pro
 | Date | Action |
 |------|--------|
 | 2026-04-27 | Initial root-cause analysis from code paths + prior OD DB audit. |
+| 2026-04-27 | Contract fix: full 1-hop workspace graph; P0 marked done; sections 1.2–1.3 labeled historical. |
