@@ -219,6 +219,7 @@ def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too
             operation_deadline=work_deadline,
             retries_primary=0,
             retries_compact=0,
+            settings=settings,
         )
         return rows, primary_err, used_compact
 
@@ -280,6 +281,7 @@ def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too
             operation_deadline=work_deadline,
             system_prompt=claims_prompts.SYSTEM_BENCHMARK,
             retries=0,
+            settings=settings,
         )
         if parsed is not None and not err:
             try:

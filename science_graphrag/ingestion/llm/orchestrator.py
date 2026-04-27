@@ -92,6 +92,7 @@ def _references_tail_for_prompt(normalized: str) -> str:
 def _extract_references_chunk(
     extractor: SyncInstructorExtractor,
     *,
+    settings: Settings,
     chunk_idx: int,
     chunk_total: int,
     ref_chunk: str,
@@ -119,6 +120,7 @@ def _extract_references_chunk(
         timeout_contract="transport_with_operation_deadline",
         operation_deadline_seconds=operation_deadline_seconds,
         operation_deadline=operation_deadline,
+        settings=settings,
     )
     detail: dict[str, Any] = {
         "chunk_index": chunk_idx,
@@ -197,6 +199,7 @@ def extract_stages_llm_first(
         timeout_contract="transport_with_operation_deadline",
         operation_deadline_seconds=meta_budget,
         operation_deadline=meta_deadline,
+        settings=settings,
     )
     diag.metadata_extraction_seconds = perf_counter() - meta_t0
     draft = work_from_llm(parsed_meta) if parsed_meta else None
@@ -224,6 +227,7 @@ def extract_stages_llm_first(
         timeout_contract="transport_with_operation_deadline",
         operation_deadline_seconds=auth_budget,
         operation_deadline=auth_deadline,
+        settings=settings,
     )
     diag.authorships_extraction_seconds = perf_counter() - auth_t0
     authorships = authorships_from_llm(parsed_auth) if parsed_auth else []
@@ -254,16 +258,18 @@ def extract_stages_llm_first(
     refs_t0 = perf_counter()
     items: list[Any] = []
     errors: list[str] = []
+    ref_conc = int(settings.llm_concurrency_extraction_references)
     refs_budget = _references_stage_deadline_seconds(
         transport,
         len(chunks),
-        int(settings.extraction_llm_references_max_concurrency),
+        ref_conc,
     )
     refs_deadline = MonotonicDeadline.from_budget_seconds(refs_budget)
-    if settings.extraction_llm_references_max_concurrency <= 1:
+    if ref_conc <= 1:
         for idx, (chunk, group) in enumerate(zip(chunks, entry_groups, strict=False), start=1):
             got, detail, err = _extract_references_chunk(
                 extractor_refs,
+                settings=settings,
                 chunk_idx=idx,
                 chunk_total=len(chunks),
                 ref_chunk=chunk,
@@ -282,12 +288,13 @@ def extract_stages_llm_first(
                 errors.append(f"chunk_{idx}:{err}")
     else:
         with ThreadPoolExecutor(
-            max_workers=min(settings.extraction_llm_references_max_concurrency, max(len(chunks), 1))
+            max_workers=min(ref_conc, max(len(chunks), 1)),
         ) as pool:
             futs = {
                 pool.submit(
                     _extract_references_chunk,
                     extractor_refs,
+                    settings,
                     chunk_idx=i,
                     chunk_total=len(chunks),
                     ref_chunk=chunk,

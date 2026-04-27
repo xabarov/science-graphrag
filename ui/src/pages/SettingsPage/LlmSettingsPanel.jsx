@@ -34,6 +34,9 @@ function providerSummary(llm, t) {
   if (llm?.effective?.resolved_model) {
     bits.push(t("llm.summary.model", { model: llm.effective.resolved_model }));
   }
+  if (llm?.effective?.resolved_chat_model) {
+    bits.push(t("llm.summary.chatModel", { model: llm.effective.resolved_chat_model }));
+  }
   if (llm?.effective?.resolved_base_url) {
     bits.push(llm.effective.resolved_base_url);
   }
@@ -88,6 +91,7 @@ export default function LlmSettingsPanel({
 
   const [baseUrl, setBaseUrl] = useState(llm?.base_url || "");
   const [model, setModel] = useState(llm?.model || "");
+  const [chatModel, setChatModel] = useState(llm?.chat_model || "");
   const [temperature, setTemperature] = useState(String(llm?.temperature ?? 0));
   const [timeoutSeconds, setTimeoutSeconds] = useState(String(llm?.effective?.resolved_timeout_seconds ?? 180));
   const [apiKey, setApiKey] = useState("");
@@ -97,16 +101,21 @@ export default function LlmSettingsPanel({
   const hasSavedSecret = Boolean(llm?.status?.has_saved_secret);
   const secretSource = llm?.status?.secret_source;
 
+  React.useEffect(() => {
+    setChatModel(llm?.chat_model || "");
+  }, [llm?.chat_model]);
+
   const dirty = useMemo(() => {
     return (
       baseUrl !== (llm?.base_url || "") ||
       model !== (llm?.model || "") ||
+      chatModel !== (llm?.chat_model || "") ||
       Number(temperature) !== Number(llm?.temperature ?? 0) ||
       Number(timeoutSeconds) !== Number(llm?.effective?.resolved_timeout_seconds ?? 180) ||
       Boolean(apiKey) ||
       replaceKey
     );
-  }, [apiKey, baseUrl, llm, model, replaceKey, temperature, timeoutSeconds]);
+  }, [apiKey, baseUrl, chatModel, llm, model, replaceKey, temperature, timeoutSeconds]);
 
   React.useEffect(() => {
     onDirtyChange?.(dirty);
@@ -116,6 +125,7 @@ export default function LlmSettingsPanel({
     onSave({
       base_url: baseUrl,
       model,
+      chat_model: chatModel.trim(),
       temperature: Number(temperature),
       timeout_seconds: Number(timeoutSeconds),
       ...(replaceKey && apiKey ? { api_key: apiKey } : {}),
@@ -192,6 +202,15 @@ export default function LlmSettingsPanel({
             onChange={(e) => setModel(e.target.value)}
             sx={fieldSx}
             fullWidth
+          />
+          <TextField
+            label={t("llm.field.chatModel")}
+            size="small"
+            value={chatModel}
+            onChange={(e) => setChatModel(e.target.value)}
+            sx={fieldSx}
+            fullWidth
+            helperText={t("llm.hint.chatModelFallback")}
           />
           <TextField
             label={t("llm.field.temperature")}

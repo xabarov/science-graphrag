@@ -115,6 +115,16 @@ export function AgentRunInspector({
             ))}
           </Box>
 
+          {normalized?.product_path ? (
+            <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.45)", mb: 0.5 }}>
+              {t("chat.run.inspectProductPath", { path: String(normalized.product_path) })}
+            </Typography>
+          ) : null}
+          <FlagChips
+            label={t("chat.run.inspectProductMarkers")}
+            items={Array.isArray(normalized?.product_markers) ? normalized.product_markers.map(String) : []}
+          />
+
           <AgentStreamEventLines t={t} events={streamEvents} />
 
           {retrievalMode === "agent" ? <AgentToolTrace toolTrace={agentToolTrace} /> : null}

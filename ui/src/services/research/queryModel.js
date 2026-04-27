@@ -168,5 +168,7 @@ export function normalizeQueryResponse(raw) {
           : null,
     phoenix_trace_id: raw.phoenix_trace_id == null || raw.phoenix_trace_id === "" ? null : String(raw.phoenix_trace_id),
     run_metadata: raw.run_metadata && typeof raw.run_metadata === "object" ? raw.run_metadata : null,
+    product_path: raw.product_path == null || String(raw.product_path).trim() === "" ? null : String(raw.product_path),
+    product_markers: Array.isArray(raw.product_markers) ? raw.product_markers.map(String) : [],
   };
 }

@@ -11,6 +11,7 @@ from langgraph.graph import END, StateGraph
 
 from science_graphrag.agent.graph.state import AgentState
 from science_graphrag.agent.llm.chat import build_chat_model, ensure_messages_safe_for_generation
+from science_graphrag.llm.concurrency import invoke_chat_gated
 from science_graphrag.agent.tool_call_normalization import build_normalized_tool_node_executor
 from science_graphrag.agent.tool_search import shortlist_tools_for_specialist
 from science_graphrag.agent.tools import build_retrieval_tools
@@ -77,10 +78,13 @@ def _compile_react_subgraph(tools: list[BaseTool], settings: Settings, system_pr
                 ),
                 transport_max_attempts=EXTRACT_MAYBE_MAX_INNER_ATTEMPTS,
             )
-            response = llm.invoke(
+            response = invoke_chat_gated(
+                llm,
                 ensure_messages_safe_for_generation(
                     [HumanMessage(content=system_prompt), *list(state.get("messages") or [])]
-                )
+                ),
+                pool_name="agent_chat",
+                settings=settings,
             )
         return {"messages": [response]}
 

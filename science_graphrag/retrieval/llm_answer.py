@@ -7,6 +7,7 @@ from typing import Any
 from openai import OpenAI
 
 from science_graphrag.config import Settings
+from science_graphrag.llm.concurrency import llm_pool_slot
 from science_graphrag.observability.phoenix_tracer import SpanAttributes, llm_span
 
 
@@ -66,24 +67,25 @@ def _try_query_answer_llm(
                 ),
             },
         ):
-            client = OpenAI(
-                api_key=api_key,
-                base_url=settings.extraction_llm_base_url,
-                timeout=timeout,
-            )
-            resp = client.chat.completions.create(
-                model=settings.extraction_llm_model,
-                temperature=float(settings.query_answer_llm_temperature),
-                max_tokens=int(settings.query_answer_llm_max_tokens),
-                messages=[
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": user},
-                ],
-                timeout=timeout,
-            )
-        text = (resp.choices[0].message.content or "").strip()
-        if not text:
-            return None, {"error": "empty_llm_response"}
-        return text, {"model": settings.extraction_llm_model}
+            with llm_pool_slot("query_answer", settings):
+                client = OpenAI(
+                    api_key=api_key,
+                    base_url=settings.extraction_llm_base_url,
+                    timeout=timeout,
+                )
+                resp = client.chat.completions.create(
+                    model=settings.extraction_llm_model,
+                    temperature=float(settings.query_answer_llm_temperature),
+                    max_tokens=int(settings.query_answer_llm_max_tokens),
+                    messages=[
+                        {"role": "system", "content": system},
+                        {"role": "user", "content": user},
+                    ],
+                    timeout=timeout,
+                )
+            text = (resp.choices[0].message.content or "").strip()
+            if not text:
+                return None, {"error": "empty_llm_response"}
+            return text, {"model": settings.extraction_llm_model}
     except Exception as exc:  # noqa: BLE001
         return None, {"error": f"{type(exc).__name__}: {exc}"}

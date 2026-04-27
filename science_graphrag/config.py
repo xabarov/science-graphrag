@@ -32,6 +32,7 @@ if _skip_host_dotenv:
         "SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY",
         "SCIENCE_GRAPHRAG_EXTRACTION_LLM_BASE_URL",
         "SCIENCE_GRAPHRAG_EXTRACTION_LLM_MODEL",
+        "SCIENCE_GRAPHRAG_CHAT_LLM_MODEL",
         "SCIENCE_GRAPHRAG_VL_API_KEY",
         "SCIENCE_GRAPHRAG_VL_BASE_URL",
         "SCIENCE_GRAPHRAG_VL_MODEL",
@@ -88,7 +89,10 @@ class Settings(BaseSettings):
     artifact_root: Path = Field(default=Path("./data/artifacts"))
     object_storage_enabled: bool = Field(
         default=False,
-        description="When true, ingest queue payloads and content-addressed raw blobs use S3/MinIO.",
+        description=(
+            "When true, ingest queue payloads, content-addressed raw blobs, and ingest "
+            "markdown/diagnostics artifacts use S3/MinIO (see s3_artifact_key_prefix)."
+        ),
     )
     s3_endpoint_url: str | None = Field(
         default=None,
@@ -106,6 +110,13 @@ class Settings(BaseSettings):
     s3_addressing_style: Literal["path", "virtual"] = Field(
         default="path",
         description="MinIO typically needs path-style addressing.",
+    )
+    s3_artifact_key_prefix: str = Field(
+        default="science-artifacts",
+        description=(
+            "Object key prefix inside s3_bucket for ingest artifacts (article.md, normalized.md, "
+            "diagnostics). Same bucket as Phase 1 raw/queue; distinct prefix per roadmap §7.2."
+        ),
     )
     database_url: str = Field(
         default="postgresql+psycopg://science:science@localhost:15432/science_graphrag",
@@ -214,6 +225,13 @@ class Settings(BaseSettings):
         default="mistralai/mistral-small-3.2-24b-instruct",
         description="Text LLM for structured extraction (not necessarily vision)",
     )
+    chat_llm_model: str | None = Field(
+        default=None,
+        description=(
+            "Optional OpenRouter-compatible model id for research agent chat. "
+            "When unset, ``extraction_llm_model`` is used."
+        ),
+    )
     extraction_llm_temperature: float = Field(default=0.0)
     extraction_llm_max_tokens_metadata: int = Field(default=4096)
     extraction_llm_max_tokens_references: int = Field(default=8192)
@@ -257,7 +275,7 @@ class Settings(BaseSettings):
         default=4,
         ge=1,
         le=32,
-        description="LX1: default async cap for generic LLM bursts (see utils/llm_semaphore.py).",
+        description="LX1/Phase2: cap for metadata/vl_pdf/ingestion pool (see science_graphrag/llm/concurrency.py).",
     )
     llm_concurrency_translation: int = Field(
         default=2,
@@ -282,6 +300,36 @@ class Settings(BaseSettings):
         ge=1,
         le=12,
         description="LX1: cap concurrent workspace summary / hypothesis LLM calls.",
+    )
+    llm_concurrency_semantic: int = Field(
+        default=4,
+        ge=1,
+        le=12,
+        description="Phase 2: cap concurrent semantic (Method/Dataset) extraction LLM calls per process.",
+    )
+    llm_concurrency_dedup: int = Field(
+        default=4,
+        ge=1,
+        le=12,
+        description="Phase 2: cap concurrent dedup / adjudication LLM judgments per process.",
+    )
+    llm_concurrency_agent_chat: int = Field(
+        default=8,
+        ge=1,
+        le=32,
+        description="Phase 2: cap concurrent agent chat / supervisor LangChain invokes per process.",
+    )
+    llm_concurrency_agent_classifier: int = Field(
+        default=8,
+        ge=1,
+        le=16,
+        description="Phase 2: cap concurrent turn-policy classifier LLM calls per process.",
+    )
+    llm_concurrency_query_answer: int = Field(
+        default=6,
+        ge=1,
+        le=12,
+        description="Phase 2: cap concurrent grounded query-answer LLM calls per process.",
     )
 
     # Optional: separate credentials for benchmark teacher gold generation (OpenRouter, etc.).
@@ -394,7 +442,13 @@ class Settings(BaseSettings):
         default=True,
         description="BT10: when false, responses still succeed but run_metadata marks harness/offline.",
     )
-    agent_runtime: str = Field(default="langgraph_supervisor_v1")
+    agent_runtime: str = Field(
+        default="langgraph_research_v1",
+        description=(
+            "LangGraph agent wiring: ``langgraph_research_v1`` (single-agent ReAct + tools, default), "
+            "``langgraph_supervisor_v1`` (legacy multi-specialist), or ``retrieval_v1`` (legacy non-graph harness)."
+        ),
+    )
     agent_max_tool_calls: int = Field(default=8, ge=1, le=30)
     agent_semantic_query_fast_route: bool = Field(
         default=False,

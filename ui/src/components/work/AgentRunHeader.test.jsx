@@ -17,7 +17,7 @@ function renderHeader(runState) {
         answerClass={null}
         citationCount={0}
         durationMs={null}
-        streamEventCount={0}
+        progressHint=""
       />
     </ThemeProvider>,
   );

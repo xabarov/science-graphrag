@@ -24,6 +24,7 @@ from science_graphrag.agent.graph.errors import AgentGraphDeadlineExceeded
 from science_graphrag.agent.graph.state import build_initial_agent_state
 from science_graphrag.agent.graph.supervisor import build_retrieval_graph
 from science_graphrag.agent.graph.tracing import collect_tool_trace
+from science_graphrag.agent.llm.chat import effective_chat_llm_model
 from science_graphrag.agent.runtime import (
     build_agent,
     current_otel_trace_id_hex,
@@ -41,6 +42,41 @@ from science_graphrag.observability.spans import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+_META_TOOL_NAMES = frozenset(
+    {"session_init", "route_to_specialist", "coordinator_gate", "final_answer"}
+)
+
+
+def _agent_chat_llm_run_metadata(settings: Settings) -> dict[str, Any]:
+    """LLM fields attached to agent run_metadata (extraction vs chat model split)."""
+    return {
+        "extraction_llm_model": settings.extraction_llm_model,
+        "extraction_llm_base_url": settings.extraction_llm_base_url,
+        "chat_llm_model": settings.chat_llm_model,
+        "resolved_chat_llm_model": effective_chat_llm_model(settings),
+    }
+
+
+def _product_step_code_for_tool(tool_name: str) -> str | None:
+    """Map normalized tool name to a short product_step code for SSE/UI."""
+    mapping: dict[str, str] = {
+        "idea_search": "searching_literature",
+        "summarize_workspace": "summarizing_workspace",
+        "cypher_query": "exploring_graph",
+        "entity_search": "exploring_graph",
+        "edge_search": "exploring_graph",
+        "workspace_overview": "summarizing_workspace",
+        "workspace_list_papers": "listing_papers",
+        "paper_lookup": "paper_lookup",
+        "paper_metadata": "paper_metadata",
+        "paper_authors": "paper_authors",
+        "paper_counts": "paper_counts",
+        "paper_quote_search": "finding_quotes",
+        "format_bibliography_gost": "formatting_bibliography",
+        "final_answer": "composing_answer",
+    }
+    return mapping.get(tool_name)
 
 
 def _format_agent_stream_error(exc: BaseException) -> str:
@@ -137,8 +173,7 @@ def _shortcut_response(
     meta = {
         "agent_runtime": settings.agent_runtime,
         "agent_max_tool_calls": max_tool_calls,
-        "extraction_llm_model": settings.extraction_llm_model,
-        "extraction_llm_base_url": settings.extraction_llm_base_url,
+        **_agent_chat_llm_run_metadata(settings),
     }
     if run_metadata:
         meta.update(run_metadata)
@@ -213,6 +248,8 @@ class AgentQueryResponseV2(BaseModel):
     quote_candidates: list[dict[str, Any]] | None = None
     idea_suggestions: list[dict[str, Any]] | None = None
     bibliography: dict[str, Any] | None = None
+    product_path: str | None = None
+    product_markers: list[str] = Field(default_factory=list)
 
 
 def _response_from_run(
@@ -229,8 +266,7 @@ def _response_from_run(
     run_metadata = {
         "agent_runtime": settings.agent_runtime,
         "agent_max_tool_calls": max_tool_calls,
-        "extraction_llm_model": settings.extraction_llm_model,
-        "extraction_llm_base_url": settings.extraction_llm_base_url,
+        **_agent_chat_llm_run_metadata(settings),
     }
     if extra_run_metadata:
         run_metadata.update(extra_run_metadata)
@@ -261,6 +297,8 @@ def _response_from_run(
         quote_candidates=getattr(out, "quote_candidates", None),
         idea_suggestions=getattr(out, "idea_suggestions", None),
         bibliography=getattr(out, "bibliography", None),
+        product_path=getattr(out, "product_path", None),
+        product_markers=list(getattr(out, "product_markers", None) or []),
     )
 
 
@@ -346,8 +384,7 @@ async def post_agent_query_v2(
         meta = {
             "agent_runtime": settings.agent_runtime,
             "agent_max_tool_calls": max_tool_calls,
-            "extraction_llm_model": settings.extraction_llm_model,
-            "extraction_llm_base_url": settings.extraction_llm_base_url,
+            **_agent_chat_llm_run_metadata(settings),
             "agent_turn_deadline_exceeded": True,
             "agent_step_timeout_seconds": settings.agent_step_timeout_seconds,
             "agent_response_deadline_seconds": float(settings.agent_step_timeout_seconds),
@@ -528,8 +565,7 @@ async def _stream_shortcut_answer(
                 "run_metadata": {
                     "agent_runtime": settings.agent_runtime,
                     "agent_max_tool_calls": max_tool_calls,
-                    "extraction_llm_model": settings.extraction_llm_model,
-                    "extraction_llm_base_url": settings.extraction_llm_base_url,
+                    **_agent_chat_llm_run_metadata(settings),
                     "shortcut": reason,
                 },
                 "answer_class": "synthesis",
@@ -715,6 +751,18 @@ async def _stream_agent(
                                         },
                                     }
                                     yield {"data": json.dumps(event_data)}
+                                    if settings.agent_runtime == "langgraph_research_v1":
+                                        psc = _product_step_code_for_tool(tool_name)
+                                        if psc and tool_name not in _META_TOOL_NAMES:
+                                            yield {
+                                                "data": json.dumps(
+                                                    {
+                                                        "type": "product_step",
+                                                        "code": psc,
+                                                        "tool": tool_name,
+                                                    }
+                                                )
+                                            }
                                     if active_subagent_id:
                                         yield {
                                             "data": json.dumps(
@@ -855,8 +903,9 @@ async def _stream_agent(
             run_meta: dict[str, Any] = {
                 "agent_runtime": settings.agent_runtime,
                 "agent_max_tool_calls": max_tool_calls,
-                "extraction_llm_model": settings.extraction_llm_model,
-                "extraction_llm_base_url": settings.extraction_llm_base_url,
+                **_agent_chat_llm_run_metadata(settings),
+                "product_path": envelope.get("product_path"),
+                "product_markers": envelope.get("product_markers"),
                 "debug_events": (
                     (latest_full_state or {}).get("debug_events", [])[-50:]
                     if isinstance(latest_full_state, dict)
@@ -894,6 +943,8 @@ async def _stream_agent(
                 "answer_class": envelope.get("answer_class"),
                 "evidence_summary": envelope.get("evidence_summary"),
                 "warnings": final_warnings,
+                "product_path": envelope.get("product_path"),
+                "product_markers": envelope.get("product_markers"),
                 "inventory": envelope.get("inventory"),
                 "relation_trace": envelope.get("relation_trace"),
                 "quote_candidates": envelope.get("quote_candidates"),

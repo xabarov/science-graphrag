@@ -11,6 +11,7 @@ from PIL import Image
 
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.llm.raw_openai_transport import post_chat_completions_json
+from science_graphrag.llm.concurrency import llm_pool_slot
 from science_graphrag.observability.phoenix_tracer import SpanAttributes, llm_span
 
 DEFAULT_VL_PROMPT = (
@@ -69,12 +70,13 @@ class VLPDFProcessor:  # pylint: disable=too-few-public-methods
         }
 
         key = self.settings.vl_api_key or ""
-        data, usage = post_chat_completions_json(
-            base_url=self.settings.vl_base_url,
-            api_key=key,
-            json_body=payload,
-            timeout_seconds=300.0,
-        )
+        with llm_pool_slot("vl_pdf", self.settings):
+            data, usage = post_chat_completions_json(
+                base_url=self.settings.vl_base_url,
+                api_key=key,
+                json_body=payload,
+                timeout_seconds=300.0,
+            )
 
         return data["choices"][0]["message"]["content"], usage
 

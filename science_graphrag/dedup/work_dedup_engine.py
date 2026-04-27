@@ -14,6 +14,7 @@ from science_graphrag.ingestion.llm.extractor import (
     EXTRACT_MAYBE_MAX_INNER_ATTEMPTS,
     SyncInstructorExtractor,
 )
+from science_graphrag.llm.concurrency import llm_pool_slot
 from science_graphrag.observability.phoenix_tracer import SpanAttributes, llm_span
 from science_graphrag.storage.models_orm import WorkDedupConflict
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
@@ -96,13 +97,14 @@ def _llm_same_work(
             "dedup.judgment": "same_work",
         },
     ):
-        parsed, err = ext.extract_maybe(
-            SameWorkJudgment,
-            system=SYSTEM_SAME_WORK,
-            user=user,
-            per_attempt_timeout_seconds=transport_s,
-            operation_deadline=op_deadline,
-        )
+        with llm_pool_slot("dedup", settings):
+            parsed, err = ext.extract_maybe(
+                SameWorkJudgment,
+                system=SYSTEM_SAME_WORK,
+                user=user,
+                per_attempt_timeout_seconds=transport_s,
+                operation_deadline=op_deadline,
+            )
     if err or parsed is None:
         log.warning("work_dedup_llm: %s", err)
         return None, err

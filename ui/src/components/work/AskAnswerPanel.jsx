@@ -17,7 +17,7 @@ import {
   QuoteCandidatesBlock,
   RelationTraceBlock,
 } from "./ChatTypedBlocks.jsx";
-import { deriveRunState, shouldShowSubagentRail } from "./agentRunViewModel.js";
+import { deriveProgressHint, deriveRunState, shouldShowSubagentRail } from "./agentRunViewModel.js";
 import { AgentRunHeader } from "./AgentRunHeader.jsx";
 import { AgentLiveStatus } from "./AgentLiveStatus.jsx";
 import { AgentRunInspector } from "./AgentRunInspector.jsx";
@@ -90,7 +90,7 @@ export function AskAnswerPanel({
         answerClass={normalized.answer_class}
         citationCount={citations.length}
         durationMs={normalized.duration_ms}
-        streamEventCount={Array.isArray(streamEvents) ? streamEvents.length : 0}
+        progressHint={deriveProgressHint(t, streamEvents, isRunActive)}
       />
 
       {retrievalMode === "agent" && shouldShowSubagentRail(streamEvents) ? (

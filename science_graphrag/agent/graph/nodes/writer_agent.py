@@ -11,6 +11,7 @@ from langgraph.graph import END, StateGraph
 
 from science_graphrag.agent.graph.state import AgentState
 from science_graphrag.agent.llm.chat import build_chat_model, ensure_messages_safe_for_generation
+from science_graphrag.llm.concurrency import invoke_chat_gated
 from science_graphrag.agent.tool_call_normalization import build_normalized_tool_node_executor
 from science_graphrag.agent.tool_search import shortlist_tools_for_specialist
 from science_graphrag.agent.tools import build_writer_tools
@@ -104,7 +105,12 @@ def _compile_writer_subgraph(tools: list[BaseTool], settings: Settings, *, mode:
                 ),
                 transport_max_attempts=EXTRACT_MAYBE_MAX_INNER_ATTEMPTS,
             )
-            response = llm.invoke(ensure_messages_safe_for_generation(base_msgs))
+            response = invoke_chat_gated(
+                llm,
+                ensure_messages_safe_for_generation(base_msgs),
+                pool_name="agent_chat",
+                settings=settings,
+            )
         return {"messages": [response]}
 
     def budget_node(state: AgentState) -> dict:

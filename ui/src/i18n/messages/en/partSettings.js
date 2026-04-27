@@ -64,10 +64,13 @@ export default {
   "llm.summary.hasCredential": "API key: configured",
   "llm.summary.noCredential": "No API key",
   "llm.summary.model": "Model {{model}}",
+  "llm.summary.chatModel": "Chat model {{model}}",
 
   "llm.panel.title": "LLM settings",
   "llm.field.baseUrl": "Base URL",
   "llm.field.model": "Model",
+  "llm.field.chatModel": "Chat model (research agent)",
+  "llm.hint.chatModelFallback": "Leave empty to use the extraction model (or SCIENCE_GRAPHRAG_CHAT_LLM_MODEL from env).",
   "llm.field.temperature": "Temperature",
   "llm.field.timeout": "Timeout",
   "llm.field.secondsSuffix": "s",

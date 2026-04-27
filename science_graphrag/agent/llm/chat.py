@@ -9,6 +9,15 @@ from langchain_openai import ChatOpenAI
 
 from science_graphrag.config import Settings
 
+
+def effective_chat_llm_model(settings: Settings) -> str:
+    """Model id for research chat; optional ``chat_llm_model`` overrides extraction default."""
+    override = (getattr(settings, "chat_llm_model", None) or "").strip()
+    if override:
+        return override
+    return (settings.extraction_llm_model or "").strip()
+
+
 # Some OpenRouter / vLLM backends reject requests where the final chat turn is an
 # assistant message while the client sets add_generation_prompt=True (default in
 # LangChain). Nudge with a user turn when subgraphs concatenate full history.
@@ -35,7 +44,7 @@ def build_chat_model(
 ) -> ChatOpenAI:
     """Build ChatOpenAI client pointing to OpenRouter-compatible endpoint."""
     return ChatOpenAI(
-        model=settings.extraction_llm_model,
+        model=effective_chat_llm_model(settings),
         api_key=settings.extraction_llm_api_key,
         base_url=settings.extraction_llm_base_url,
         temperature=temperature if temperature is not None else settings.agent_chat_temperature,

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from fastapi import APIRouter, Depends
 
@@ -45,15 +46,19 @@ def patch_llm_settings(
     body: UpdateLlmSettingsRequest,
     actor: str = Depends(require_settings_access),
 ) -> SettingsSnapshotResponse:
-    snapshot = _SETTINGS_SERVICE.update_llm_settings(
-        base_settings=get_settings(),
-        base_url=str(body.base_url),
-        model=body.model,
-        temperature=body.temperature,
-        timeout_seconds=body.timeout_seconds,
-        actor=actor,
-        api_key=body.api_key,
-    )
+    raw = body.model_dump(exclude_unset=True)
+    kwargs: dict[str, Any] = {
+        "base_settings": get_settings(),
+        "base_url": str(body.base_url),
+        "model": body.model,
+        "temperature": body.temperature,
+        "timeout_seconds": body.timeout_seconds,
+        "actor": actor,
+        "api_key": body.api_key,
+    }
+    if "chat_model" in raw:
+        kwargs["chat_model"] = body.chat_model
+    snapshot = _SETTINGS_SERVICE.update_llm_settings(**kwargs)
     return SettingsSnapshotResponse(
         sections=snapshot.sections,
         llm=snapshot.llm,

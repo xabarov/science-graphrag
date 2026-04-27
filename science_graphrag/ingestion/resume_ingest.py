@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import re
 from datetime import UTC, datetime
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy.orm import Session
@@ -25,6 +24,7 @@ from science_graphrag.ingestion.chunking import (
 )
 from science_graphrag.ingestion.stage_context import IngestStage, stage
 from science_graphrag.storage.models_orm import DocumentRecord, IngestionRunRecord
+from science_graphrag.storage.s3_artifact_store import build_artifact_store
 from science_graphrag.utils.project_logging import get_logger
 
 if TYPE_CHECKING:
@@ -54,6 +54,17 @@ def minimal_work_draft_from_normalized_markdown(normalized: str) -> WorkDraft:
     return WorkDraft(title=title, abstract=abstract)
 
 
+def _load_normalized_markdown_for_resume(*, document_id: str, settings: "Settings") -> str:
+    """Return ``normalized.md`` text or raise ``FileNotFoundError`` if missing (local or S3)."""
+    store = build_artifact_store(settings)
+    norm_rel = canonical_normalized_md_rel(document_id)
+    if not store.exists(norm_rel):
+        raise FileNotFoundError(
+            f"missing normalized artifact: {norm_rel.as_posix()} (under {store.root})"
+        )
+    return store.read_text(norm_rel, encoding="utf-8")
+
+
 def resume_document_embed_phase(
     *,
     document_id: str,
@@ -67,7 +78,7 @@ def resume_document_embed_phase(
     """
     Re-run chunking + embeddings + Qdrant upsert for an existing ``document_id``.
 
-    Expects ``normalized.md`` under ``settings.artifact_root`` and ``DocumentRecord.work_id``.
+    Expects ``normalized.md`` via the configured artifact store and ``DocumentRecord.work_id``.
     Updates ``ingest_checkpoint_json`` and appends an ``IngestionRunRecord`` on success/failure.
     """
 
@@ -78,10 +89,7 @@ def resume_document_embed_phase(
     if not work_id:
         raise ValueError(f"document {document_id} has no work_id; run full ingest first")
 
-    norm_path = Path(settings.artifact_root) / canonical_normalized_md_rel(document_id)
-    if not norm_path.is_file():
-        raise FileNotFoundError(f"missing normalized artifact: {norm_path}")
-    normalized = norm_path.read_text(encoding="utf-8")
+    normalized = _load_normalized_markdown_for_resume(document_id=document_id, settings=settings)
 
     doc_chunks = dedupe_chunks_for_embedding(
         chunk_document_for_retrieval_from_settings(normalized, settings),

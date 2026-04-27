@@ -154,7 +154,9 @@ def test_sse_final_tool_trace_matches_collect_tool_trace(monkeypatch) -> None:
 
     monkeypatch.setattr(agent_v2_api, "build_retrieval_graph", lambda *_a, **_k: _FakeGraph())
     client = TestClient(_app())
-    client.app.dependency_overrides[get_settings] = lambda: Settings()
+    client.app.dependency_overrides[get_settings] = lambda: Settings(
+        agent_runtime="langgraph_supervisor_v1"
+    )
     client.app.dependency_overrides[get_stores] = lambda: type(
         "_S",
         (),
@@ -206,6 +208,7 @@ def test_sse_final_tool_trace_matches_collect_tool_trace(monkeypatch) -> None:
     rm = fa.get("run_metadata") or {}
     assert "agent_runtime" in rm
     assert "extraction_llm_model" in rm
+    assert "resolved_chat_llm_model" in rm
 
 
 def test_sse_final_answer_uses_structured_final_answer_tool(monkeypatch) -> None:
@@ -216,7 +219,9 @@ def test_sse_final_answer_uses_structured_final_answer_tool(monkeypatch) -> None
         agent_v2_api, "build_retrieval_graph", lambda *_a, **_k: _FakeGraphFinalAnswerToolOnly()
     )
     client = TestClient(_app())
-    client.app.dependency_overrides[get_settings] = lambda: Settings()
+    client.app.dependency_overrides[get_settings] = lambda: Settings(
+        agent_runtime="langgraph_supervisor_v1"
+    )
     client.app.dependency_overrides[get_stores] = lambda: type(
         "_S",
         (),
@@ -259,7 +264,9 @@ def test_sse_context_compacted_and_session_init_with_thread(monkeypatch) -> None
         clear_session_store_for_tests()
         monkeypatch.setattr(agent_v2_api, "build_retrieval_graph", lambda *_a, **_k: _FakeGraph())
         client = TestClient(_app())
-        client.app.dependency_overrides[get_settings] = lambda: Settings()
+        client.app.dependency_overrides[get_settings] = lambda: Settings(
+            agent_runtime="langgraph_supervisor_v1"
+        )
         client.app.dependency_overrides[get_stores] = lambda: type(
             "_S",
             (),
@@ -314,7 +321,9 @@ def test_sse_history_digest_invalid_warning_and_final(monkeypatch) -> None:
         clear_session_store_for_tests()
         monkeypatch.setattr(agent_v2_api, "build_retrieval_graph", lambda *_a, **_k: _FakeGraph())
         client = TestClient(_app())
-        client.app.dependency_overrides[get_settings] = lambda: Settings()
+        client.app.dependency_overrides[get_settings] = lambda: Settings(
+            agent_runtime="langgraph_supervisor_v1"
+        )
         client.app.dependency_overrides[get_stores] = lambda: type(
             "_S",
             (),
@@ -376,7 +385,9 @@ def test_sse_context_compacted_degraded_trigger_without_values(monkeypatch) -> N
             agent_v2_api, "build_retrieval_graph", lambda *_a, **_k: _FakeGraphUpdatesOnly()
         )
         client = TestClient(_app())
-        client.app.dependency_overrides[get_settings] = lambda: Settings()
+        client.app.dependency_overrides[get_settings] = lambda: Settings(
+            agent_runtime="langgraph_supervisor_v1"
+        )
         client.app.dependency_overrides[get_stores] = lambda: type(
             "_S",
             (),

@@ -15,6 +15,7 @@ const MEANINGFUL_STREAM_TYPES = new Set([
   "subagent_finished",
   "answer_synthesis_started",
   "answer_synthesis_finished",
+  "product_step",
 ]);
 
 /**
@@ -102,7 +103,29 @@ export function formatStreamEventOneLine(t, event) {
   if (type === "answer_synthesis_finished") {
     return t("chat.stream.answerSynthesisFinished");
   }
+  if (type === "product_step") {
+    const code = String(event.code || "");
+    const key = `chat.run.productStep.${code}`;
+    const out = t(key);
+    return out === key ? code : out;
+  }
   return "";
+}
+
+/**
+ * Short user-facing line for the run header while streaming (meaningful steps only).
+ *
+ * @param {(key: string, vars?: Record<string, string>) => string} t
+ * @param {unknown[]} streamEvents
+ * @param {boolean} isRunActive
+ * @returns {string}
+ */
+export function deriveProgressHint(t, streamEvents, isRunActive) {
+  if (!isRunActive) return "";
+  const ev = pickLastMeaningfulStreamEvent(streamEvents);
+  const line = formatStreamEventOneLine(t, ev);
+  if (line) return line;
+  return t("chat.run.progressWorking");
 }
 
 /**

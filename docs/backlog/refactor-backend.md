@@ -19,7 +19,8 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 | 2026-04-27 | **BT12 — contradictions benchmark in trust rollup:** committed `eval/results/current-contradictions-v1-mini.json` (``python -m eval.contradictions.runner …/contradictions_v1 --suite --materialize`` against a graph with corpus works); `scripts/aggregate_benchmark_metrics.py` + `contradictions_family` / `trust_signal` member `contradictions_v1_mini` (`detect_runtime_mode` → `live`). Ingest-time auto-write of `:CONTRADICTS` remains a separate product decision. |
 | 2026-04-27 | **BT8 slice — `agent_tools_judge` artifact:** committed `eval/results/current-agent-tools-judge-pilot.json` (heuristic `science-graphrag-agent-judge-benchmark` over `current-agent-tools-mini.json`); `.github/workflows/integration-nightly.yml` regenerates before aggregate; `benchmark-trust-baseline.json` refreshed (`advisory_phantom_count` −1 vs missing_file). |
 | 2026-04-27 | **Wave X3 (Dramatiq OTel — producer inject):** `science_graphrag/worker/trace_options.py` (`propagate.inject` → Dramatiq message `options`); `enqueue_ingest_job` + compensation sweep use `send_with_options` when carrier non-empty; tests `tests/observability/test_worker_trace_propagation.py` (incl. `test_dramatiq_otel_options_injects_traceparent_under_span`). |
-| 2026-04-27 | **LX1 (partial — settings only):** `Settings.merge_runtime_env_overrides` mirrors `extraction_llm_references_max_concurrency` ↔ `llm_concurrency_extraction_references`; test `tests/test_llm_concurrency_config.py`. **Not done:** wiring `build_llm_semaphore_map` into translation/claims paths — остаётся OPEN item ниже. |
+| 2026-04-27 | **LX1 (partial — settings only):** `Settings.merge_runtime_env_overrides` mirrors `extraction_llm_references_max_concurrency` ↔ `llm_concurrency_extraction_references`; test `tests/test_llm_concurrency_config.py`. |
+| 2026-04-27 | **Phase 2 LLM pools:** `science_graphrag/llm/concurrency.py` (threading gates + `run_extraction(settings=…)`), new `llm_concurrency_*` fields; translation SSE uses cached `get_llm_async_semaphore_map`; tests `tests/llm/test_pool_concurrency.py`. |
 | 2026-04-27 | **ADR-021 config bridge (pre–drop/recreate):** hub-style value in `embedding_model` (`org/model`) promoted to `openrouter_embedding_model` in merge validator so `resolve_embedder` can pick OpenRouter without mis-typing the sentence-transformers slot; test `tests/test_embedding_model_promotion.py`. **Does not** replace Qdrant recreate + corpus re-ingest — см. OPEN «Switch Qdrant…». |
 | 2026-04-27 | **BT6 trust_signal slice (pre–barrier 2 gold):** `eval/claims/paraphrase_runner.py` emits per-case `runtime_mode`; `science_graphrag/benchmarks/trust_signal.py` prefers homogeneous explicit `runtime_mode` on `claims_paraphrase_*` cases; test `tests/benchmarks/test_trust_signal.py::test_detect_runtime_mode_claims_paraphrase_explicit_live`. |
 | 2026-04-26 | **Reader full text vs Qdrant (ADR 022):** canonical artifacts `ingestion/{document_id}/article.md` + `normalized.md`; removed orphan `blob_store.write_text("extracted.txt")`; API `GET /v1/works/{id}/extracted-body`, `ingestion.has_extracted_body` / `work_provenance`, `sources.markdown` + `indexed_chunks`; optional `DocumentRecord.extracted_body_path` deferred. |
@@ -300,13 +301,8 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Acceptance:** `science-graphrag config-check` выводит полную диагностику; exit code 1 при пустом extraction_llm_api_key; правило обновлено на эту команду вместо throwaway-питона.
 - **Raised:** 2026-04-26 (постмортем Wave 4 env-var footgun).
 
-### [OPEN] LX1 integration: wire build_llm_semaphore_map into translation SSE handler
-- **Area:** [`science_graphrag/utils/llm_semaphore.py`](../../science_graphrag/utils/llm_semaphore.py), translation worker/endpoint (LX2 dependency)
-- **Issue:** `build_llm_semaphore_map` создан как фундамент LX1, но ни один production-путь его пока не вызывает. Конкурентность translation/claims/summary LLM-вызовов не ограничена.
-- **Proposal:** В translation SSE endpoint/worker (будущий LX2) передавать `semaphore_map["translation"]` как `asyncio.Semaphore`; аналогично для claims и summary в соответствующих точках.
-- **Acceptance:** При параллельных translation-запросах система соблюдает `llm_concurrency_translation`; integration-тест или нагрузочный smoke-check.
-- **Synergy:** LX2 → LX1 → интеграция.
-- **Raised:** 2026-04-26
+### [DONE] LX1 integration: translation SSE + ingest/agent threading pools (2026-04-27)
+- **Note:** Translation stub SSE gates on cached `get_llm_async_semaphore_map`; ingest/agent/query/dedup/VL use `llm_pool_slot` / `run_extraction(settings=…)` in `science_graphrag/llm/concurrency.py`. Further LX2 real streaming can reuse the same semaphore entry.
 
 <!-- Example:
 ### [OPEN] Example — tighten retrieval module boundaries

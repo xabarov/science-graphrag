@@ -17,7 +17,7 @@ def test_extract_claims_uses_compact_fallback_when_full_schema_fails(monkeypatch
         def __init__(self, **_kwargs) -> None:
             pass
 
-        def extract_maybe(self, response_model, *, system: str, user: str):
+        def extract_maybe(self, response_model, *, system: str, user: str, **_kwargs):
             del system, user
             calls.append(response_model.__name__)
             if response_model is claims_schemas.ClaimsLLMResponse:
@@ -97,6 +97,7 @@ def test_extract_claims_splits_failed_multi_chunk_batches(monkeypatch) -> None:
         timeout_seconds: float = 60.0,
         retries_primary: int = 0,
         retries_compact: int = 0,
+        **_kwargs,
     ):
         del (
             extractor,

@@ -29,3 +29,13 @@ def test_resolve_extracted_body_uses_store(tmp_path: Path) -> None:
     rel, label = hit
     assert label == "normalized"
     assert rel == canonical_normalized_md_rel(doc_id)
+
+
+def test_glob_under_entries_legacy_article(tmp_path: Path) -> None:
+    store = LocalFilesystemArtifactStore(tmp_path)
+    doc_id = "doc-y"
+    legacy = Path("ingestion") / doc_id / "slug-a" / "article.md"
+    store.write_text(legacy, "x")
+    entries = store.glob_under_entries(f"ingestion/{doc_id}/*/article.md")
+    assert len(entries) == 1
+    assert entries[0][0] == legacy

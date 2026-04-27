@@ -5,13 +5,14 @@ from typing import Any
 
 from fastapi import Depends, Request
 
-from science_graphrag.artifacts.local_store import LocalFilesystemArtifactStore
+from science_graphrag.artifacts.protocols import ArtifactStorePort
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 from science_graphrag.storage.qdrant_claims_store import QdrantClaimsStore
 from science_graphrag.storage.qdrant_store import QdrantChunkStore, QdrantWorkEmbeddingStore
 from science_graphrag.storage.raw_blob_store import RawBlobStorePort, build_raw_blob_store
+from science_graphrag.storage.s3_artifact_store import build_artifact_store
 
 
 @dataclass
@@ -23,7 +24,7 @@ class StoreRegistry:
     qdrant_works: QdrantWorkEmbeddingStore
     qdrant_claims: QdrantClaimsStore
     blob: RawBlobStorePort
-    artifacts: LocalFilesystemArtifactStore
+    artifacts: ArtifactStorePort
 
     def close(self) -> None:
         for store in (
@@ -67,7 +68,7 @@ def init_store_registry(settings: Settings) -> StoreRegistry:
             vector_dim=dim,
         ),
         blob=build_raw_blob_store(settings),
-        artifacts=LocalFilesystemArtifactStore(settings.artifact_root),
+        artifacts=build_artifact_store(settings),
     )
     return _registry
 

@@ -28,7 +28,8 @@ def test_resolve_extracted_body_prefers_normalized(tmp_path: Path) -> None:
         "<!-- source=x.pdf extraction_mode=vl -->\n\narticle-body",
         encoding="utf-8",
     )
-    hit = resolve_extracted_body_file(tmp_path, doc_id)
+    settings = Settings().model_copy(update={"artifact_root": tmp_path})
+    hit = resolve_extracted_body_file(settings, doc_id)
     assert hit is not None
     path, label = hit
     assert label == "normalized"
@@ -42,7 +43,8 @@ def test_resolve_extracted_body_legacy_slug(tmp_path: Path) -> None:
     legacy.write_text(
         "<!-- source=x extraction_mode=pypdf-fallback -->\n\nlegacy", encoding="utf-8"
     )
-    hit = resolve_extracted_body_file(tmp_path, doc_id)
+    settings = Settings().model_copy(update={"artifact_root": tmp_path})
+    hit = resolve_extracted_body_file(settings, doc_id)
     assert hit is not None
     _path, label = hit
     assert label == "article_legacy"

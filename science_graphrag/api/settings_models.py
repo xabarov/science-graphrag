@@ -40,6 +40,11 @@ class UpdateIngestionSettingsRequest(BaseModel):
 class UpdateLlmSettingsRequest(BaseModel):
     base_url: HttpUrl
     model: str = Field(..., min_length=1, max_length=256)
+    chat_model: str | None = Field(
+        default=None,
+        max_length=256,
+        description="Optional research chat model; empty string clears persisted override.",
+    )
     temperature: float = Field(default=0.0, ge=0.0, le=2.0)
     timeout_seconds: float = Field(default=180.0, ge=1.0, le=900.0)
     api_key: str | None = Field(default=None, min_length=1, max_length=4096)

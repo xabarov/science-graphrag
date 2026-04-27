@@ -84,6 +84,7 @@ def _semantic_llm_bundle_attempts(
             timeout_contract="transport_with_operation_deadline",
             operation_deadline_seconds=bundle_budget,
             operation_deadline=bundle_deadline,
+            settings=settings,
         )
         if parsed is not None and not err:
             diag = SemanticExtractionLLMDiagnostics(

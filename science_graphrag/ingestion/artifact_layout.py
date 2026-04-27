@@ -7,8 +7,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from science_graphrag.artifacts.local_store import LocalFilesystemArtifactStore
 from science_graphrag.artifacts.protocols import ArtifactStorePort
+from science_graphrag.config import Settings
+from science_graphrag.storage.s3_artifact_store import build_artifact_store
 
 
 def canonical_article_md_rel(document_id: str) -> Path:
@@ -46,25 +47,25 @@ def resolve_extracted_body_relative(
     art = canonical_article_md_rel(document_id)
     if store.exists(art):
         return art, "article"
-    legacy_hits = sorted(
-        store.glob_under(f"ingestion/{document_id}/*/article.md"),
-        key=lambda p: p.stat().st_mtime,
+    legacy_entries = sorted(
+        store.glob_under_entries(f"ingestion/{document_id}/*/article.md"),
+        key=lambda t: t[1],
         reverse=True,
     )
-    if legacy_hits:
-        rel = legacy_hits[0].relative_to(store.root)
+    if legacy_entries:
+        rel = legacy_entries[0][0]
         return rel, "article_legacy"
     return None
 
 
-def resolve_extracted_body_file(artifact_root: Path, document_id: str) -> tuple[Path, str] | None:
+def resolve_extracted_body_file(settings: Settings, document_id: str) -> tuple[Path, str] | None:
     """
     Return ``(absolute_path, source_label)`` for the best body file, or None.
 
     Preference: ``normalized.md`` > ``article.md`` (canonical) > legacy slug path.
     ``source_label`` is ``normalized`` | ``article`` | ``article_legacy``.
     """
-    store = LocalFilesystemArtifactStore(Path(artifact_root))
+    store = build_artifact_store(settings)
     hit = resolve_extracted_body_relative(store, document_id)
     if hit is None:
         return None
@@ -77,6 +78,6 @@ def has_extracted_body_store(store: ArtifactStorePort, document_id: str) -> bool
     return resolve_extracted_body_relative(store, document_id) is not None
 
 
-def has_extracted_body_file(artifact_root: Path, document_id: str) -> bool:
-    """True if a body file exists under ``artifact_root`` for ``document_id``."""
-    return resolve_extracted_body_file(artifact_root, document_id) is not None
+def has_extracted_body_file(settings: Settings, document_id: str) -> bool:
+    """True if a body file exists for ``document_id`` (local or S3 per settings)."""
+    return resolve_extracted_body_file(settings, document_id) is not None

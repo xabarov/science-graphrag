@@ -20,6 +20,7 @@ from science_graphrag.ingestion.llm.extractor import (
     EXTRACT_MAYBE_MAX_INNER_ATTEMPTS,
     SyncInstructorExtractor,
 )
+from science_graphrag.llm.concurrency import llm_pool_slot
 from science_graphrag.observability.phoenix_tracer import SpanAttributes, llm_span
 from science_graphrag.utils.llm_deadline import MonotonicDeadline
 
@@ -303,13 +304,14 @@ class IdeaOrchestrator:
                 ),
             },
         ):
-            parsed, err = extractor.extract_maybe(
-                _IdeaAssistLLMResponse,
-                system=_IDEA_ASSIST_SYSTEM,
-                user=user,
-                per_attempt_timeout_seconds=transport_s,
-                operation_deadline=op_deadline,
-            )
+            with llm_pool_slot("idea_assist", self._settings):
+                parsed, err = extractor.extract_maybe(
+                    _IdeaAssistLLMResponse,
+                    system=_IDEA_ASSIST_SYSTEM,
+                    user=user,
+                    per_attempt_timeout_seconds=transport_s,
+                    operation_deadline=op_deadline,
+                )
         if err or parsed is None:
             return _IdeaAssistLLMResponse()
         return parsed

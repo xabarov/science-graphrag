@@ -93,6 +93,7 @@ def adjudicate_method_pair_llm(
         timeout_contract="transport_with_operation_deadline",
         operation_deadline_seconds=op_budget,
         operation_deadline=op_deadline,
+        settings=settings,
     )
     if err or parsed is None:
         log.warning("method ingest adjudication failed: %s", err)

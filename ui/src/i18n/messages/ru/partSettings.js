@@ -64,10 +64,13 @@ export default {
   "llm.summary.hasCredential": "API-ключ: задан",
   "llm.summary.noCredential": "Нет API-ключа",
   "llm.summary.model": "Модель {{model}}",
+  "llm.summary.chatModel": "Чат-модель {{model}}",
 
   "llm.panel.title": "Настройки LLM",
   "llm.field.baseUrl": "Base URL",
   "llm.field.model": "Модель",
+  "llm.field.chatModel": "Модель чата (research agent)",
+  "llm.hint.chatModelFallback": "Пусто = модель извлечения (или SCIENCE_GRAPHRAG_CHAT_LLM_MODEL из окружения).",
   "llm.field.temperature": "Температура",
   "llm.field.timeout": "Таймаут",
   "llm.field.secondsSuffix": "с",

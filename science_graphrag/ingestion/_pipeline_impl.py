@@ -15,13 +15,29 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from tenacity import Retrying, retry, stop_after_attempt, wait_exponential
 
+from science_graphrag.artifacts.protocols import ArtifactStorePort
 from science_graphrag.config import Settings, get_settings
+from science_graphrag.dedup.entity_ingest_conflict_check import (
+    enqueue_entity_near_duplicate_conflicts_on_ingest,
+)
+from science_graphrag.dedup.ingest_conflict_check import (
+    enqueue_author_near_duplicate_conflicts_on_ingest,
+    enqueue_work_near_duplicate_conflicts_on_ingest,
+)
 from science_graphrag.domain.models import ReferenceDraft, WorkDraft
 from science_graphrag.embeddings import resolve_embedder, resolve_embedding_model_label
+from science_graphrag.embeddings.errors import EmbeddingCallError, EmbeddingNonRetryableHttpError
 from science_graphrag.ingestion.artifact_layout import (
     canonical_article_md_rel,
     canonical_normalized_md_rel,
     strip_ingest_artifact_header,
+)
+from science_graphrag.ingestion.checkpoint import (
+    default_checkpoint,
+    mark_stage_completed,
+    mark_stage_failed,
+    parse_checkpoint,
+    serialize_checkpoint,
 )
 from science_graphrag.ingestion.chunking import (
     chunk_document_for_retrieval_from_settings,
@@ -43,25 +59,6 @@ from science_graphrag.ingestion.enrichment.ror import lookup_ror_id_optional
 from science_graphrag.ingestion.llm.semantic_extraction import extract_semantic_method_dataset
 from science_graphrag.ingestion.llm.stage_extraction import extract_stages_llm_first
 from science_graphrag.ingestion.markdown_fence import strip_whole_document_markdown_fence
-
-# Backward-compatible name for ``science_graphrag.ingestion.pipeline`` facade re-exports.
-_strip_artifact_header = strip_ingest_artifact_header
-from science_graphrag.artifacts.local_store import LocalFilesystemArtifactStore
-from science_graphrag.dedup.entity_ingest_conflict_check import (
-    enqueue_entity_near_duplicate_conflicts_on_ingest,
-)
-from science_graphrag.dedup.ingest_conflict_check import (
-    enqueue_author_near_duplicate_conflicts_on_ingest,
-    enqueue_work_near_duplicate_conflicts_on_ingest,
-)
-from science_graphrag.embeddings.errors import EmbeddingCallError, EmbeddingNonRetryableHttpError
-from science_graphrag.ingestion.checkpoint import (
-    default_checkpoint,
-    mark_stage_completed,
-    mark_stage_failed,
-    parse_checkpoint,
-    serialize_checkpoint,
-)
 from science_graphrag.ingestion.normalize import normalize_text
 from science_graphrag.ingestion.pdf import extract_text_from_pdf
 from science_graphrag.ingestion.stage_context import (
@@ -92,7 +89,11 @@ from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 from science_graphrag.storage.qdrant_claims_store import QdrantClaimsStore
 from science_graphrag.storage.qdrant_store import QdrantChunkStore, QdrantWorkEmbeddingStore
 from science_graphrag.storage.raw_blob_store import RawBlobStorePort, build_raw_blob_store
+from science_graphrag.storage.s3_artifact_store import build_artifact_store
 from science_graphrag.utils.project_logging import configure_logging, get_logger
+
+# Backward-compatible name for ``science_graphrag.ingestion.pipeline`` facade re-exports.
+_strip_artifact_header = strip_ingest_artifact_header
 
 log = get_logger("ingestion.pipeline")
 
@@ -250,36 +251,39 @@ def _canonical_diagnostics_rel(source_path: Path) -> Path:
 def _read_cached_markdown(
     settings: Settings, source_path: Path, *, document_id: str | None = None
 ) -> tuple[str, str] | None:
-    store = LocalFilesystemArtifactStore(Path(settings.artifact_root))
-    candidates: list[Path] = []
+    store = build_artifact_store(settings)
+    candidate_rels: list[Path] = []
     if document_id:
-        candidates.append(store.absolute(canonical_article_md_rel(document_id)))
-        candidates.append(store.absolute(canonical_normalized_md_rel(document_id)))
-    canonical = store.absolute(_canonical_article_rel(source_path))
-    candidates.append(canonical)
-    legacy = sorted(
-        store.glob_under(f"ingestion/*/{_article_slug(source_path)}/article.md"),
-        key=lambda p: p.stat().st_mtime,
+        candidate_rels.append(canonical_article_md_rel(document_id))
+        candidate_rels.append(canonical_normalized_md_rel(document_id))
+    candidate_rels.append(_canonical_article_rel(source_path))
+    legacy_sorted = sorted(
+        store.glob_under_entries(f"ingestion/*/{_article_slug(source_path)}/article.md"),
+        key=lambda t: t[1],
         reverse=True,
     )
-    candidates.extend(legacy)
+    candidate_rels.extend(rel for rel, _ in legacy_sorted)
     seen: set[str] = set()
-    for candidate in candidates:
-        key = str(candidate.resolve())
+    for rel in candidate_rels:
+        key = rel.as_posix()
         if key in seen:
             continue
         seen.add(key)
-        if not candidate.exists():
+        if not store.exists(rel):
             continue
-        text = candidate.read_text(encoding="utf-8")
+        text = store.read_text(rel, encoding="utf-8")
         first_line = text.splitlines()[0] if text.splitlines() else ""
         mode = "cached-markdown"
         mode_match = re.search(r"extraction_mode=([a-zA-Z0-9\\-]+)", first_line)
         if mode_match:
             mode = mode_match.group(1)
-        elif candidate.name == "normalized.md":
+        elif rel.name == "normalized.md":
             mode = "cached-normalized"
-        log.info("Reusing cached article markdown for %s from %s", source_path.name, candidate)
+        log.info(
+            "Reusing cached article markdown for %s from %s",
+            source_path.name,
+            store.absolute(rel),
+        )
         return strip_ingest_artifact_header(text), mode
     return None
 
@@ -502,10 +506,10 @@ def _write_markdown_artifact(
     source_path: Path,
     markdown: str,
     extraction_mode: str,
-    artifact_store: LocalFilesystemArtifactStore | None = None,
+    artifact_store: ArtifactStorePort | None = None,
 ) -> Path:
     """Write canonical ``ingestion/{document_id}/article.md`` plus legacy slug paths."""
-    store = artifact_store or LocalFilesystemArtifactStore(Path(settings.artifact_root))
+    store = artifact_store or build_artifact_store(settings)
     slug = _article_slug(source_path)
     legacy_rel = Path("ingestion") / document_id / slug / "article.md"
     header = f"<!-- source={source_path.name} extraction_mode={extraction_mode} -->\n\n"
@@ -521,9 +525,9 @@ def _write_extraction_diagnostics_json(
     document_id: str,
     source_path: Path,
     diagnostics_json: str,
-    artifact_store: LocalFilesystemArtifactStore | None = None,
+    artifact_store: ArtifactStorePort | None = None,
 ) -> Path:
-    store = artifact_store or LocalFilesystemArtifactStore(Path(settings.artifact_root))
+    store = artifact_store or build_artifact_store(settings)
     slug = _article_slug(source_path)
     artifact_rel = Path("ingestion") / document_id / slug / "extraction_diagnostics.json"
     store.write_text(_canonical_diagnostics_rel(source_path), diagnostics_json)
@@ -808,7 +812,7 @@ def ingest_document(
             set_span_attributes({"metadata.extraction_mode": extraction_mode})
             st.metric("source_suffix", path.suffix.lower())
             st.metric("extraction_mode", extraction_mode)
-        ingest_artifact_store = LocalFilesystemArtifactStore(Path(settings.artifact_root))
+        ingest_artifact_store = build_artifact_store(settings)
         _artifact_path = _write_markdown_artifact(
             settings=settings,
             document_id=doc_id,

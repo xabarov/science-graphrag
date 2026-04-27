@@ -11,6 +11,7 @@ from langchain_core.messages import HumanMessage
 
 from science_graphrag.agent.chat_envelope import ANSWER_CLASSES
 from science_graphrag.agent.llm.chat import build_chat_model
+from science_graphrag.llm.concurrency import invoke_chat_gated
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.llm.extractor import EXTRACT_MAYBE_MAX_INNER_ATTEMPTS
 from science_graphrag.observability.spans import (
@@ -199,7 +200,12 @@ def llm_classify_turn_policy(  # pylint: disable=too-many-locals
                     "llm.invocation_name": "agent_turn_policy_classifier",
                 },
             ):
-                resp = llm.invoke(messages)
+                resp = invoke_chat_gated(
+                    llm,
+                    messages,
+                    pool_name="agent_classifier",
+                    settings=settings,
+                )
         content = str(getattr(resp, "content", "") or "")
         parsed = _extract_json_object(content)
         if not parsed:

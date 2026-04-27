@@ -49,6 +49,15 @@ class LocalFilesystemArtifactStore:
         """Return ``st_size`` for a relative file path."""
         return int(self.absolute(relative).stat().st_size)
 
+    def glob_under_entries(self, pattern: str) -> list[tuple[Path, float]]:
+        """Return ``(relative_to_root, mtime)`` for each matching file."""
+        out: list[tuple[Path, float]] = []
+        for path in self.root.glob(pattern):
+            if path.is_file():
+                rel = path.relative_to(self.root)
+                out.append((rel, path.stat().st_mtime))
+        return out
+
     def glob_under(self, pattern: str) -> list[Path]:
         """Glob under ``root``; returns absolute paths (sort in caller if needed)."""
-        return list(self.root.glob(pattern))
+        return [self.absolute(rel) for rel, _ in self.glob_under_entries(pattern)]

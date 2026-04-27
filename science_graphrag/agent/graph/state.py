@@ -6,7 +6,7 @@ from operator import add
 from time import perf_counter
 from typing import Annotated, Any, TypedDict
 
-from langchain_core.messages import BaseMessage, HumanMessage
+from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langgraph.graph.message import add_messages
 
 
@@ -59,6 +59,45 @@ def build_initial_agent_state(
         workspace_capsule=workspace_capsule,
         active_workspace_id=workspace_id,
     )
+    rt = (agent_runtime or "").strip()
+    if rt == "langgraph_research_v1":
+        from science_graphrag.agent.chat_envelope import heuristic_answer_class
+        from science_graphrag.agent.prompts.research_chat_system import RESEARCH_CHAT_SYSTEM_PROMPT
+
+        meta = {
+            "agent_runtime": agent_runtime,
+            "raw_user_question": question,
+            "turn_policy": {
+                "tool_policy": "allow_tools",
+                "classifier": "single_agent_research_v1",
+                "suggested_answer_class": heuristic_answer_class(question, answer_class_hint),
+            },
+            "coordinator_latency_ms": 0,
+        }
+        if thread_id:
+            meta["thread_id"] = thread_id
+        initial_debug: list[dict[str, Any]] = []
+        ac = answer_class_hint or heuristic_answer_class(question, None)
+        return {
+            "messages": [
+                SystemMessage(content=RESEARCH_CHAT_SYSTEM_PROMPT),
+                HumanMessage(content=user_content),
+            ],
+            "workspace_id": workspace_id,
+            "citations": [],
+            "tool_trace": [],
+            "budget_remaining": max_tool_calls,
+            "metadata": meta,
+            "specialist_results": {},
+            "current_specialist": None,
+            "routing_log": [],
+            "debug_events": initial_debug,
+            "thread_id": (thread_id or "").strip() or None,
+            "session_summary": session_summary,
+            "answer_class": ac,
+            "history_digest": list(history_digest or []),
+        }
+
     from science_graphrag.agent.coordination.turn_policy import classify_turn_policy
     from science_graphrag.config import get_settings
 
@@ -72,7 +111,7 @@ def build_initial_agent_state(
         settings=get_settings(),
     )
     coordinator_ms = int((perf_counter() - _t0) * 1000)
-    meta: dict[str, Any] = {
+    meta = {
         "agent_runtime": agent_runtime,
         "raw_user_question": question,
         "turn_policy": turn_policy.to_dict(),

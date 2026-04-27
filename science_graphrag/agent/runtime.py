@@ -26,6 +26,13 @@ from science_graphrag.observability.spans import (
 from science_graphrag.observability.spans.decorators import MIME_TYPE_JSON
 
 
+def _coerce_optional_str(value: object) -> str | None:
+    if not isinstance(value, str):
+        return None
+    s = value.strip()
+    return s or None
+
+
 def _agent_query_output_summary(
     *,
     answer_class: str,
@@ -125,6 +132,8 @@ class AgentRunOutput:
     citations: list[dict[str, Any]]
     tool_trace: list[ToolCallTrace]
     answer_class: str = "grounded_explanation"
+    product_path: str | None = None
+    product_markers: list[str] = field(default_factory=list)
     evidence_summary: str | None = None
     warnings: list[str] = field(default_factory=list)
     inventory: dict[str, Any] | None = None
@@ -296,13 +305,17 @@ class RetrievalAgent:
         )
 
         SpanAttributes.set_output(
-            _agent_query_output_summary(
-                answer_class=ac,
-                tool_trace=trace,
-                warnings=list(envelope.get("warnings") or []),
-                citations=citations,
-                routing_log=routing_log,
-            ),
+            {
+                **_agent_query_output_summary(
+                    answer_class=ac,
+                    tool_trace=trace,
+                    warnings=list(envelope.get("warnings") or []),
+                    citations=citations,
+                    routing_log=routing_log,
+                ),
+                "product_path": envelope.get("product_path"),
+                "product_markers": list(envelope.get("product_markers") or []),
+            },
             mime_type=MIME_TYPE_JSON,
         )
 
@@ -311,6 +324,10 @@ class RetrievalAgent:
             citations=citations,
             tool_trace=trace,
             answer_class=ac,
+            product_path=_coerce_optional_str(envelope.get("product_path")),
+            product_markers=[
+                str(x) for x in (envelope.get("product_markers") or []) if str(x).strip()
+            ],
             evidence_summary=envelope.get("evidence_summary"),
             warnings=list(envelope.get("warnings") or []),
             inventory=envelope.get("inventory"),

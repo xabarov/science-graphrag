@@ -22,8 +22,11 @@ if TYPE_CHECKING:
     from science_graphrag.config import Settings
 
 _LLM_SECRET_KEY = "llm.api_key"
+_UNSET_CHAT_MODEL = object()
 
-_LLM_ENV_KEY_HINT = "SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY (and related SCIENCE_GRAPHRAG_EXTRACTION_LLM_* vars)"
+_LLM_ENV_KEY_HINT = (
+    "SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY (and related SCIENCE_GRAPHRAG_EXTRACTION_LLM_* vars)"
+)
 
 
 def _settings_auth_required() -> bool:
@@ -158,10 +161,15 @@ class SettingsService:
         if timeout_seconds is None:
             timeout_seconds = base_settings.extraction_llm_timeout_seconds
 
+        persisted_chat = str(llm.get("chat_model") or "").strip()
+        env_chat = str(base_settings.chat_llm_model or "").strip()
+        resolved_chat_model = persisted_chat or env_chat or base_settings.extraction_llm_model
+
         llm_snapshot = {
             "provider_mode": "openai_compatible",
             "base_url": llm.get("base_url") or base_settings.extraction_llm_base_url,
             "model": llm.get("model") or base_settings.extraction_llm_model,
+            "chat_model": persisted_chat,
             "temperature": llm.get("temperature", base_settings.extraction_llm_temperature),
             "timeout_seconds": timeout_seconds,
             "status": {
@@ -176,6 +184,7 @@ class SettingsService:
             "effective": {
                 "resolved_base_url": llm.get("base_url") or base_settings.extraction_llm_base_url,
                 "resolved_model": llm.get("model") or base_settings.extraction_llm_model,
+                "resolved_chat_model": resolved_chat_model,
                 "resolved_timeout_seconds": timeout_seconds,
                 "resolved_temperature": llm.get(
                     "temperature", base_settings.extraction_llm_temperature
@@ -294,6 +303,9 @@ class SettingsService:
         }
         if "enabled" in llm:
             non_secret_overrides["extraction_llm_enabled"] = bool(llm["enabled"])
+        chat_override = persisted_chat or env_chat
+        if chat_override:
+            non_secret_overrides["chat_llm_model"] = chat_override
         non_secret_overrides["workspace_upload_max_file_size_mb"] = resolved_upload_mb
         non_secret_overrides["claims_extraction_enabled"] = resolved_claims_enabled
 
@@ -317,6 +329,12 @@ class SettingsService:
                     "fields": [
                         {"id": "base_url", "type": "url", "required": True},
                         {"id": "model", "type": "string", "required": True},
+                        {
+                            "id": "chat_model",
+                            "type": "string",
+                            "required": False,
+                            "description": "Research chat model override; empty uses env SCIENCE_GRAPHRAG_CHAT_LLM_MODEL or extraction model.",
+                        },
                         {
                             "id": "temperature",
                             "type": "number",
@@ -364,6 +382,7 @@ class SettingsService:
         timeout_seconds: float,
         actor: str,
         api_key: str | None = None,
+        chat_model: Any = _UNSET_CHAT_MODEL,
     ) -> SettingsSnapshot:
         """Persist editable LLM config and optionally replace the managed secret."""
         with self._lock:
@@ -382,6 +401,12 @@ class SettingsService:
                     },
                 }
             )
+            if chat_model is not _UNSET_CHAT_MODEL:
+                cm = str(chat_model or "").strip()
+                if cm:
+                    llm["chat_model"] = cm
+                else:
+                    llm.pop("chat_model", None)
             payload["llm"] = llm
             self._repository.save(payload)
             if api_key is not None:

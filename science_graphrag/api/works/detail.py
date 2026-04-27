@@ -6,7 +6,6 @@ from typing import Any
 from sqlalchemy import select
 
 from science_graphrag.api.deps import StoreRegistry
-from science_graphrag.artifacts.local_store import LocalFilesystemArtifactStore
 from science_graphrag.artifacts.protocols import ArtifactStorePort
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.artifact_layout import (
@@ -17,6 +16,7 @@ from science_graphrag.ingestion.artifact_layout import (
 from science_graphrag.ingestion.markdown_fence import strip_whole_document_markdown_fence
 from science_graphrag.storage.db import get_engine, init_db, session_factory
 from science_graphrag.storage.models_orm import DocumentRecord
+from science_graphrag.storage.s3_artifact_store import build_artifact_store
 
 # Hard cap for JSON extracted-body responses (chars after optional header strip).
 _MAX_EXTRACTED_BODY_RESPONSE_CHARS = 1_500_000
@@ -379,9 +379,7 @@ def read_work_extracted_body_dict(
 ) -> dict[str, Any]:
     """Load canonical / legacy ingest markdown for API responses."""
 
-    store: ArtifactStorePort = artifact_store or LocalFilesystemArtifactStore(
-        Path(settings.artifact_root)
-    )
+    store: ArtifactStorePort = artifact_store or build_artifact_store(settings)
     resolved = resolve_extracted_body_relative(store, document_id)
     if not resolved:
         return {

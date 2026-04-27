@@ -24,6 +24,7 @@ from science_graphrag.agent.graph.nodes.writer_agent import (
 )
 from science_graphrag.agent.graph.state import AgentState
 from science_graphrag.agent.llm.chat import build_chat_model, ensure_messages_safe_for_generation
+from science_graphrag.llm.concurrency import invoke_chat_gated
 from science_graphrag.agent.tool_call_normalization import build_normalized_tool_node_executor
 from science_graphrag.agent.tools import build_tool_registry
 from science_graphrag.api.deps import StoreRegistry
@@ -212,7 +213,12 @@ def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
                     "llm.invocation_name": "agent_supervisor_route",
                 },
             ):
-                response = llm.invoke(ensure_messages_safe_for_generation(route_msgs))
+                response = invoke_chat_gated(
+                    llm,
+                    ensure_messages_safe_for_generation(route_msgs),
+                    pool_name="agent_chat",
+                    settings=settings,
+                )
         choice = str(response.content or "").strip().lower()
         if choice not in {RETRIEVAL_SPECIALIST, GRAPH_SPECIALIST, WRITER_SPECIALIST, ROUTE_FINISH}:
             # Old unsafe default was retrieval; prefer writer on non-exact route tokens.
@@ -269,9 +275,9 @@ def build_retrieval_graph(stores: StoreRegistry, settings: Settings):
     """Build retrieval graph alias with runtime switch."""
     if settings.agent_runtime == "langgraph_supervisor_v1":
         return build_supervisor_graph(stores, settings)
-    if settings.agent_runtime == "retrieval_v1":
+    if settings.agent_runtime in ("retrieval_v1", "langgraph_research_v1"):
         return _build_single_agent_graph(stores, settings)
-    # Any non-legacy runtime defaults to the supervisor graph.
+    # Unknown runtime id: keep supervisor graph for backward compatibility.
     return build_supervisor_graph(stores, settings)
 
 
@@ -297,7 +303,12 @@ def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
                 ),
                 transport_max_attempts=EXTRACT_MAYBE_MAX_INNER_ATTEMPTS,
             )
-            response = llm.invoke(ensure_messages_safe_for_generation(state["messages"]))
+            response = invoke_chat_gated(
+                llm,
+                ensure_messages_safe_for_generation(state["messages"]),
+                pool_name="agent_chat",
+                settings=settings,
+            )
         return {"messages": [response]}
 
     def budget_node(state: AgentState) -> dict:

@@ -9,10 +9,12 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from pydantic import BaseModel
 
 from science_graphrag.ingestion.llm.extractor import EXTRACT_MAYBE_MAX_INNER_ATTEMPTS
+from science_graphrag.llm.concurrency import llm_pool_slot
 from science_graphrag.observability.phoenix_tracer import SpanAttributes, llm_span
 from science_graphrag.utils.llm_deadline import MonotonicDeadline
 
 if TYPE_CHECKING:
+    from science_graphrag.config import Settings
     from science_graphrag.ingestion.llm.extractor import SyncInstructorExtractor
 
 T = TypeVar("T", bound=BaseModel)
@@ -68,6 +70,7 @@ def run_extraction(  # pylint: disable=too-many-arguments,too-many-locals
     response_deadline_seconds: float | None = None,
     system_prompt: str = "",
     retries: int = MAX_RETRIES,
+    settings: "Settings | None" = None,
 ) -> tuple[T | None, str | None]:
     """Execute one extraction call with bounded retries.
 
@@ -97,48 +100,49 @@ def run_extraction(  # pylint: disable=too-many-arguments,too-many-locals
 
     attempts = max(1, retries + 1)
     last_err: str | None = None
-    for attempt in range(1, attempts + 1):
-        if op_deadline is not None and op_deadline.exhausted():
-            return None, "operation_deadline_exceeded"
-        rem = op_deadline.remaining() if op_deadline is not None else math.inf
-        per_attempt = min(t_transport, rem) if math.isfinite(rem) else t_transport
-        if per_attempt <= 0:
-            return None, "operation_deadline_exceeded"
+    with llm_pool_slot(pool_name, settings):
+        for attempt in range(1, attempts + 1):
+            if op_deadline is not None and op_deadline.exhausted():
+                return None, "operation_deadline_exceeded"
+            rem = op_deadline.remaining() if op_deadline is not None else math.inf
+            per_attempt = min(t_transport, rem) if math.isfinite(rem) else t_transport
+            if per_attempt <= 0:
+                return None, "operation_deadline_exceeded"
 
-        policy = SpanAttributes.llm_runtime_policy_attributes(
-            pool_name=pool_name,
-            transport_timeout_seconds=t_transport,
-            timeout_contract=effective_contract,
-            retry_extra_budget=max(0, int(retries)),
-            operation_deadline_seconds=operation_deadline_seconds,
-            response_deadline_seconds=response_deadline_seconds,
-            transport_max_attempts=EXTRACT_MAYBE_MAX_INNER_ATTEMPTS,
-        )
-        attrs = {
-            **policy,
-            "document.id": document_id,
-            "document.source_name": source_name,
-            "extraction.stage": stage_name,
-            "extraction.attempt": attempt,
-            "extraction.timeout_seconds": per_attempt,
-            "llm.per_attempt_transport_timeout_seconds": float(per_attempt),
-        }
-        with llm_span(f"llm.{stage_name}", attrs):
-            parsed, err = extractor.extract_maybe(
-                schema,
-                system=system_prompt,
-                user=prompt,
-                per_attempt_timeout_seconds=per_attempt,
-                operation_deadline=op_deadline,
+            policy = SpanAttributes.llm_runtime_policy_attributes(
+                pool_name=pool_name,
+                transport_timeout_seconds=t_transport,
+                timeout_contract=effective_contract,
+                retry_extra_budget=max(0, int(retries)),
+                operation_deadline_seconds=operation_deadline_seconds,
+                response_deadline_seconds=response_deadline_seconds,
+                transport_max_attempts=EXTRACT_MAYBE_MAX_INNER_ATTEMPTS,
             )
-        if not err and parsed is not None:
-            return parsed, None
-        if err:
-            last_err = err
-            if err == "operation_deadline_exceeded":
-                return None, last_err
-            continue
-        last_err = "llm_empty_result"
+            attrs = {
+                **policy,
+                "document.id": document_id,
+                "document.source_name": source_name,
+                "extraction.stage": stage_name,
+                "extraction.attempt": attempt,
+                "extraction.timeout_seconds": per_attempt,
+                "llm.per_attempt_transport_timeout_seconds": float(per_attempt),
+            }
+            with llm_span(f"llm.{stage_name}", attrs):
+                parsed, err = extractor.extract_maybe(
+                    schema,
+                    system=system_prompt,
+                    user=prompt,
+                    per_attempt_timeout_seconds=per_attempt,
+                    operation_deadline=op_deadline,
+                )
+            if not err and parsed is not None:
+                return parsed, None
+            if err:
+                last_err = err
+                if err == "operation_deadline_exceeded":
+                    return None, last_err
+                continue
+            last_err = "llm_empty_result"
     return None, last_err
 
 
@@ -159,6 +163,7 @@ def run_claims_extraction_with_compact_fallback(  # pylint: disable=too-many-arg
     operation_deadline: MonotonicDeadline | None = None,
     retries_primary: int = 0,
     retries_compact: int = 0,
+    settings: "Settings | None" = None,
 ) -> tuple[list[Any], str | None, bool]:
     """
     Try primary claims schema via ``run_extraction``; on failure try compact benchmark schema.
@@ -197,6 +202,7 @@ def run_claims_extraction_with_compact_fallback(  # pylint: disable=too-many-arg
         operation_deadline=shared,
         system_prompt=primary_system,
         retries=retries_primary,
+        settings=settings,
     )
     if parsed_primary is not None and not err_primary:
         return list(parsed_primary.claims), None, False
@@ -216,6 +222,7 @@ def run_claims_extraction_with_compact_fallback(  # pylint: disable=too-many-arg
         operation_deadline=shared,
         system_prompt=compact_system,
         retries=retries_compact,
+        settings=settings,
     )
     if parsed_compact is not None and not err_compact:
         return list(parsed_compact.claims), str(err_primary or "parsed_none"), True

@@ -200,6 +200,10 @@ def build_chat_envelope(
     tool_policy = str(tp.get("tool_policy") or "allow_tools")
     names = {str(t.get("tool") or "") for t in tool_trace if isinstance(t, dict)}
     names.discard("")
+    _meta_tools = frozenset(
+        {"session_init", "route_to_specialist", "coordinator_gate", "final_answer"}
+    )
+    core_tools = {n for n in names if n and n not in _meta_tools}
     from_trace = infer_class_from_trace(names)
     if tool_policy in {"no_tools", "clarify"}:
         suggested = str(tp.get("suggested_answer_class") or "chat")
@@ -208,6 +212,18 @@ def build_chat_envelope(
     else:
         answer_class = from_trace or heuristic_answer_class(question, answer_class_hint)
         typed = collect_typed_payloads(state)
+    answer_stripped = (answer or "").strip()
+    if not answer_stripped:
+        product_path = "empty"
+    elif core_tools:
+        product_path = "tool_assisted"
+    else:
+        product_path = "direct"
+    product_markers: list[str] = []
+    if product_path == "tool_assisted":
+        product_markers.append("answered_with_tools")
+    elif product_path == "direct" and answer_stripped:
+        product_markers.append("answered_directly")
     warnings: list[str] = []
     if not (state.get("workspace_id") or "").strip():
         warnings.append("no_workspace")
@@ -226,6 +242,24 @@ def build_chat_envelope(
                 warnings.append(w.strip())
         if bib_obj.get("filtered_work_ids") and "some_work_ids_filtered" not in warnings:
             warnings.append("some_work_ids_filtered")
+    if not answer_stripped:
+        warnings.append("no_final_answer")
+    if (
+        answer_stripped
+        and not citations
+        and answer_class
+        in (
+            "grounded_explanation",
+            "synthesis",
+            "relation_tracing",
+            "quote_extraction",
+            "ideation",
+        )
+        and product_path == "tool_assisted"
+    ):
+        warnings.append("no_citations")
+    if "weak_evidence" in warnings and "insufficient_evidence" not in warnings:
+        warnings.append("insufficient_evidence")
     evidence_parts: list[str] = []
     if citations:
         evidence_parts.append(f"{len(citations)} citation(s)")
@@ -238,6 +272,8 @@ def build_chat_envelope(
         "answer_class": answer_class,
         "evidence_summary": evidence_summary,
         "warnings": list(dict.fromkeys(warnings)),
+        "product_path": product_path,
+        "product_markers": list(dict.fromkeys(product_markers)),
     }
     out.update(typed)
     return out

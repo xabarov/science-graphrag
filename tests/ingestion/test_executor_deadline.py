@@ -118,6 +118,7 @@ def test_run_claims_compact_skipped_when_deadline_already_exhausted() -> None:
         transport_timeout_seconds=30.0,
         operation_deadline=shared,
         operation_deadline_seconds=0.08,
+        settings=None,
     )
     assert rows == []
     assert used is False

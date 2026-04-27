@@ -17,6 +17,7 @@ import { CursorIconAction } from "../common/index.js";
 import { useFeedback } from "../feedback/index.js";
 import { AskAnswerPanel } from "./AskAnswerPanel.jsx";
 import { AgentAssistantTurnShell } from "./AgentAssistantTurnShell.jsx";
+import { deriveProgressHint } from "./agentRunViewModel.js";
 import { AgentRunHeader } from "./AgentRunHeader.jsx";
 import { AgentLiveStatus } from "./AgentLiveStatus.jsx";
 import MarkdownView from "./MarkdownView.jsx";
@@ -430,7 +431,7 @@ export function ChatMessageThread({
                     answerClass={null}
                     citationCount={0}
                     durationMs={null}
-                    streamEventCount={Array.isArray(streamEvents) ? streamEvents.length : 0}
+                    progressHint={deriveProgressHint(t, streamEvents, true)}
                   />
                   <AgentLiveStatus t={t} streamEvents={streamEvents} isActive />
                 </AgentAssistantTurnShell>

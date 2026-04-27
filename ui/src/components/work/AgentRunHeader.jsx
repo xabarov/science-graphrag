@@ -10,10 +10,17 @@ import Typography from "@mui/material/Typography";
  *   answerClass?: string | null,
  *   citationCount?: number,
  *   durationMs?: number | null,
- *   streamEventCount?: number,
+ *   progressHint?: string,
  * }} props
  */
-export function AgentRunHeader({ t, runState, answerClass = null, citationCount = 0, durationMs = null, streamEventCount = 0 }) {
+export function AgentRunHeader({
+  t,
+  runState,
+  answerClass = null,
+  citationCount = 0,
+  durationMs = null,
+  progressHint = "",
+}) {
   const stateKey =
     runState === "running"
       ? "chat.run.state.running"
@@ -93,8 +100,10 @@ export function AgentRunHeader({ t, runState, answerClass = null, citationCount 
         ) : null}
       </Box>
       <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1, justifyContent: "flex-end" }}>
-        {runState === "running" && streamEventCount > 0 ? (
-          <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.38)" }}>{t("chat.run.eventsCount", { n: String(streamEventCount) })}</Typography>
+        {runState === "running" && progressHint ? (
+          <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.38)", maxWidth: 420 }} noWrap title={progressHint}>
+            {progressHint}
+          </Typography>
         ) : null}
         {dur ? (
           <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.38)" }}>{dur}</Typography>
