@@ -18,6 +18,7 @@ import { CursorSmallButton } from "../common/index.js";
 import {
   localizeAggregatorSubtitle,
   localizeAggregatorTitle,
+  localizeClaimPropertyKey,
   localizeDirectionHintTooltip,
   localizeEdgeType,
   localizeNodeKind,
@@ -32,6 +33,40 @@ function formatPropertyValue(v) {
   if (typeof v === "object") return JSON.stringify(v);
   return String(v);
 }
+
+/** @param {{ type?: string } | null | undefined} node */
+function isClaimSelectedNode(node) {
+  return Boolean(node && String(node.type) === "Claim");
+}
+
+/** @param {Record<string, unknown>} props */
+function claimBodyFromProperties(props) {
+  const norm = props?.normalized_text;
+  const raw = props?.text;
+  const n = typeof norm === "string" ? norm.trim() : norm != null ? String(norm).trim() : "";
+  if (n) return n;
+  const t = typeof raw === "string" ? raw.trim() : raw != null ? String(raw).trim() : "";
+  return t || "";
+}
+
+/** @param {unknown} meta */
+function formatClaimMetadataBlock(meta) {
+  if (meta == null || meta === "") return "";
+  if (typeof meta === "string") {
+    const s = meta.trim();
+    if (!s) return "";
+    try {
+      return JSON.stringify(JSON.parse(s), null, 2);
+    } catch {
+      return s;
+    }
+  }
+  if (typeof meta === "object") return JSON.stringify(meta, null, 2);
+  return String(meta);
+}
+
+/** Claim fields rendered in dedicated blocks; rest stays in the key table with i18n labels. */
+const CLAIM_DETAIL_KEYS_IN_TABLE = new Set(["normalized_text", "text", "claim_metadata"]);
 
 /**
  * @param {string} hint
@@ -80,6 +115,17 @@ export default function GraphDetailPanel({
   const compact = mode === "embedded" || mode === "standalone";
   const [rawOpen, setRawOpen] = useState(false);
   const rows = relatedEdgeRows.length > 0 ? relatedEdgeRows : [];
+
+  const claimNode = isClaimSelectedNode(selectedNode);
+  const claimProps =
+    claimNode && selectedNode?.properties && typeof selectedNode.properties === "object"
+      ? /** @type {Record<string, unknown>} */ (selectedNode.properties)
+      : null;
+  const claimBody = claimProps ? claimBodyFromProperties(claimProps) : "";
+  const claimMetadataFormatted = claimProps ? formatClaimMetadataBlock(claimProps.claim_metadata) : "";
+  const claimPropertyEntries = claimNode
+    ? Object.entries(selectedNode?.properties || {}).filter(([k]) => !CLAIM_DETAIL_KEYS_IN_TABLE.has(k))
+    : Object.entries(selectedNode?.properties || {});
 
   const truncated = Boolean(graphMeta?.is_truncated);
   const neighborLimit = graphMeta?.neighbor_limit_applied;
@@ -254,15 +300,41 @@ export default function GraphDetailPanel({
               </Box>
             ) : null}
 
+            {claimNode && claimBody ? (
+              <Box sx={{ mt: 2, mb: 1 }}>
+                <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 0.5, color: tk.text.primary }}>
+                  {t("graph.detailPanel.claimBody")}
+                </Typography>
+                <Typography
+                  component="div"
+                  sx={{
+                    fontSize: "0.8125rem",
+                    color: tk.text.primary,
+                    lineHeight: 1.45,
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
+                    p: 1,
+                    borderRadius: "6px",
+                    border: `1px solid ${tk.border.default}`,
+                    backgroundColor: tk.surface.sidebar,
+                    maxHeight: compact ? 220 : 320,
+                    overflow: "auto",
+                  }}
+                >
+                  {claimBody}
+                </Typography>
+              </Box>
+            ) : null}
+
             <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 2, mb: 0.75, color: tk.text.primary }}>
               {t("graph.detailPanel.keyProperties")}
             </Typography>
-            {selectedNode.properties && Object.keys(selectedNode.properties).length > 0 ? (
+            {claimPropertyEntries.length > 0 ? (
               <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, mb: 1 }}>
-                {Object.entries(selectedNode.properties).map(([k, v]) => (
+                {claimPropertyEntries.map(([k, v]) => (
                   <Box key={k} sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, alignItems: "baseline" }}>
                     <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted, minWidth: "7rem" }}>
-                      {localizeWorkPropertyKey(k, t)}
+                      {claimNode ? localizeClaimPropertyKey(k, t) : localizeWorkPropertyKey(k, t)}
                     </Typography>
                     <Typography sx={{ fontSize: "0.8125rem", color: tk.text.primary, flex: 1, wordBreak: "break-word" }}>
                       {formatPropertyValue(v)}
@@ -275,6 +347,46 @@ export default function GraphDetailPanel({
                 {t("graph.detailPanel.noProperties")}
               </Typography>
             )}
+
+            {claimNode && claimMetadataFormatted ? (
+              <Accordion
+                disableGutters
+                elevation={0}
+                sx={{
+                  mb: 1,
+                  backgroundColor: "transparent",
+                  border: `1px solid ${tk.border.default}`,
+                  borderRadius: "6px",
+                  "&:before": { display: "none" },
+                }}
+              >
+                <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ fontSize: "1rem", color: tk.text.muted }} />}>
+                  <Typography sx={{ fontSize: "0.75rem", fontWeight: 600, color: tk.text.secondary }}>
+                    {t("graph.detailPanel.claimMetadataTitle")}
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails sx={{ pt: 0 }}>
+                  <Typography
+                    component="pre"
+                    sx={{
+                      m: 0,
+                      p: 1.25,
+                      borderRadius: "6px",
+                      backgroundColor: tk.surface.code,
+                      border: `1px solid ${tk.border.default}`,
+                      fontSize: "0.72rem",
+                      color: tk.text.secondary,
+                      overflow: "auto",
+                      maxHeight: compact ? 200 : 280,
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-word",
+                    }}
+                  >
+                    {claimMetadataFormatted}
+                  </Typography>
+                </AccordionDetails>
+              </Accordion>
+            ) : null}
 
             <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 1.5, mb: 0.75, color: tk.text.primary }}>
               {t("graph.detailPanel.connections")}

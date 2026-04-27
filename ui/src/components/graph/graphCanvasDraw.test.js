@@ -6,6 +6,7 @@ import {
   drawNodes,
   hitTestClosestEdgeId,
   hitTestNode,
+  hitTestNodeScreen,
   shouldDrawCanvasEdgeLabel,
 } from "./graphCanvasDraw.js";
 
@@ -15,7 +16,37 @@ describe("graphCanvasDraw", () => {
     expect(typeof drawNodes).toBe("function");
     expect(typeof drawLabels).toBe("function");
     expect(typeof hitTestNode).toBe("function");
+    expect(typeof hitTestNodeScreen).toBe("function");
     expect(typeof hitTestClosestEdgeId).toBe("function");
+  });
+});
+
+describe("hitTestNodeScreen", () => {
+  const transform = { scale: 1, tx: 0, ty: 0 };
+
+  it("hits node circle in screen space", () => {
+    const nodes = [{ id: "a", label: "A" }];
+    const positions = new Map([["a", { x: 100, y: 50 }]]);
+    expect(hitTestNodeScreen(100, 50, nodes, positions, transform, null)).toBe("a");
+    expect(hitTestNodeScreen(111, 50, nodes, positions, transform, null)).toBe("a");
+    expect(hitTestNodeScreen(113, 50, nodes, positions, transform, null)).toBe("");
+  });
+
+  it("prefers top-most overlapping node", () => {
+    const nodes = [{ id: "a", label: "A" }, { id: "b", label: "B" }];
+    const positions = new Map([
+      ["a", { x: 0, y: 0 }],
+      ["b", { x: 0, y: 0 }],
+    ]);
+    expect(hitTestNodeScreen(0, 0, nodes, positions, transform, null)).toBe("b");
+  });
+
+  it("hits label box below node", () => {
+    const nodes = [{ id: "n1", label: "Short" }];
+    const positions = new Map([["n1", { x: 0, y: 0 }]]);
+    const lx = 0;
+    const ly = 12 + 4 + 10;
+    expect(hitTestNodeScreen(lx, ly, nodes, positions, transform, null)).toBe("n1");
   });
 });
 

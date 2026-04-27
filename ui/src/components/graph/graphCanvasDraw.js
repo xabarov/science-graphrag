@@ -253,6 +253,49 @@ export function hitTestNode(worldX, worldY, nodeMap, positions) {
   return null;
 }
 
+/**
+ * Pick topmost node at canvas CSS pixel (lx, ly): node disc + label box (matches drawNodes/drawLabels).
+ *
+ * @param {number} lx
+ * @param {number} ly
+ * @param {Iterable<object>} nodes
+ * @param {Map<string, { x: number, y: number }>} positions
+ * @param {{ scale: number, tx: number, ty: number }} transform
+ * @param {(node: object) => string | null | undefined} [resolveNodeLabel]
+ * @returns {string} node id or ""
+ */
+export function hitTestNodeScreen(lx, ly, nodes, positions, transform, resolveNodeLabel) {
+  const { scale, tx, ty } = transform;
+  const list = Array.isArray(nodes) ? [...nodes] : [...nodes];
+  const resolveNode = typeof resolveNodeLabel === "function" ? resolveNodeLabel : null;
+  for (let i = list.length - 1; i >= 0; i -= 1) {
+    const node = list[i];
+    const pw = positions.get(node.id);
+    if (!pw) continue;
+    const p = worldToScreen(pw.x, pw.y, scale, tx, ty);
+    const cdx = lx - p.x;
+    const cdy = ly - p.y;
+    if (cdx * cdx + cdy * cdy <= NODE_RADIUS * NODE_RADIUS) return String(node.id);
+    const resolvedNode = resolveNode ? resolveNode(node) : null;
+    const rawLabel =
+      resolvedNode != null && String(resolvedNode).trim()
+        ? String(resolvedNode)
+        : node.displayLabel != null && String(node.displayLabel).trim()
+          ? node.displayLabel
+          : node.label != null && String(node.label).trim()
+            ? node.label
+            : node.id;
+    const text = truncateCanvasLabel(rawLabel);
+    const estChar = 6.2;
+    const boxW = Math.min(240, Math.max(36, text.length * estChar + 12));
+    const boxH = 20;
+    const boxTop = p.y + NODE_RADIUS + 4;
+    const boxLeft = p.x - boxW / 2;
+    if (lx >= boxLeft && lx <= boxLeft + boxW && ly >= boxTop && ly <= boxTop + boxH) return String(node.id);
+  }
+  return "";
+}
+
 export function hitTestClosestEdgeId(screenX, screenY, edges, positions, transform) {
   const { scale, tx, ty } = transform;
   let best = "";

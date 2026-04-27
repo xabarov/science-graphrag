@@ -157,6 +157,15 @@ export default {
   "graph.detailPanel.direction.lateral": "Сопутствующая",
   "graph.detailPanel.direction.lateralHint":
     "Связь в той же окрестности графа, но без явного «входа/выхода» относительно выбранного узла в смысле API (например, общий контекст соседей).",
+  "graph.detailPanel.claimBody": "Текст утверждения",
+  "graph.detailPanel.claimMetadataTitle": "Метаданные утверждения (структура)",
+
+  "graph.claimProperty.normalized_text": "Нормализованный текст",
+  "graph.claimProperty.text": "Текст",
+  "graph.claimProperty.claim_type": "Тип утверждения",
+  "graph.claimProperty.polarity": "Полярность",
+  "graph.claimProperty.confidence": "Уверенность",
+  "graph.claimProperty.claim_metadata": "Метаданные",
 
   "graph.workProperty.publication_year": "Год публикации",
   "graph.workProperty.arxiv_id": "Идентификатор arXiv",

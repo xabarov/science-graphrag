@@ -64,6 +64,50 @@ export function edgeOtherEndpoint(edge, selfNodeId) {
 }
 
 /**
+ * Work rows for an Author from projected `AUTHORED` edges (authorship metadata on edge.raw.properties).
+ *
+ * @param {{ nodes?: Array<object>, edges?: Array<object> }} graph
+ * @param {object | null} authorNode
+ * @returns {Array<{ workId: string, workLabel: string, authorPosition: unknown, isCorresponding: unknown, rawAffiliation: unknown }>}
+ */
+export function collectAuthorAuthoredWorkRows(graph, authorNode) {
+  if (!authorNode || typeof authorNode !== "object") return [];
+  const nk = String(authorNode.nodeKind || authorNode.type || "").trim();
+  if (nk !== "Author") return [];
+  const aid = String(authorNode.id || "").trim();
+  if (!aid) return [];
+  const lookup = buildNodeLookup(graph.nodes || []);
+  /** @type {Array<{ workId: string, workLabel: string, authorPosition: unknown, isCorresponding: unknown, rawAffiliation: unknown }>} */
+  const rows = [];
+  for (const e of graph.edges || []) {
+    if (!e || typeof e !== "object") continue;
+    const edge = /** @type {{ type?: string, source: string, target: string, raw?: object }} */ (e);
+    if (String(edge.type || "").toUpperCase() !== "AUTHORED") continue;
+    if (edge.target !== aid) continue;
+    const wid = String(edge.source || "").trim();
+    if (!wid) continue;
+    const w = lookup.get(wid);
+    const workLabel = w?.displayLabel || w?.label || wid;
+    const raw = edge.raw && typeof edge.raw === "object" ? /** @type {Record<string, unknown>} */ (edge.raw) : {};
+    const props = raw.properties && typeof raw.properties === "object" && !Array.isArray(raw.properties) ? raw.properties : {};
+    const pr = /** @type {Record<string, unknown>} */ (props);
+    rows.push({
+      workId: wid,
+      workLabel: String(workLabel),
+      authorPosition: pr.author_position ?? pr.authorPosition,
+      isCorresponding: pr.is_corresponding ?? pr.isCorresponding,
+      rawAffiliation: pr.raw_affiliation ?? pr.rawAffiliation,
+    });
+  }
+  rows.sort((a, b) => {
+    const pa = typeof a.authorPosition === "number" ? a.authorPosition : Number(a.authorPosition) || 999;
+    const pb = typeof b.authorPosition === "number" ? b.authorPosition : Number(b.authorPosition) || 999;
+    return pa - pb;
+  });
+  return rows;
+}
+
+/**
  * @param {{ nodes: Array<object>, edges: Array<object> }} graph normalized graph (often display-capped)
  * @param {string} selectedNodeId
  * @param {string} [selectedEdgeId]
@@ -73,6 +117,7 @@ export function edgeOtherEndpoint(edge, selfNodeId) {
  *   selectedEdge: object | null,
  *   relatedEdges: Array<object>,
  *   relatedEdgeRows: Array<{ edge: object, otherId: string, otherLabel: string, readableLine: string, directionHint: string }>,
+ *   authorAuthoredWorks: Array<{ workId: string, workLabel: string, authorPosition: unknown, isCorresponding: unknown, rawAffiliation: unknown }>,
  * }}
  */
 export function deriveInspectorDetail(graph, selectedNodeId, selectedEdgeId = "", options = {}) {
@@ -89,6 +134,7 @@ export function deriveInspectorDetail(graph, selectedNodeId, selectedEdgeId = ""
       relatedEdges: [],
       relatedEdgeRows: [],
       selectedEdgeReadable: readableLine,
+      authorAuthoredWorks: [],
     };
   }
 
@@ -106,11 +152,14 @@ export function deriveInspectorDetail(graph, selectedNodeId, selectedEdgeId = ""
     };
   });
 
+  const authorAuthoredWorks = collectAuthorAuthoredWorkRows(graph, base.selectedNode);
+
   return {
     selectedNode: base.selectedNode,
     selectedEdge: null,
     relatedEdges: base.relatedEdges,
     relatedEdgeRows,
     selectedEdgeReadable: "",
+    authorAuthoredWorks,
   };
 }

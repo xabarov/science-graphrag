@@ -96,6 +96,37 @@ describe("graphViewState", () => {
     expect(graph.warnings.some((w) => w.includes("Dropped 1 edge"))).toBe(true);
   });
 
+  it("removes Workspace nodes and incident edges without orphan-edge warnings", () => {
+    const graph = normalizeGraphPayload({
+      work_id: "w1",
+      nodes: [
+        { id: "ws1", type: "Workspace", label: "My workspace" },
+        { id: "n1", type: "Work", label: "Paper" },
+        { id: "n2", type: "Work", label: "Other" },
+      ],
+      edges: [
+        { id: "e0", source: "ws1", target: "n1", type: "CONTAINS" },
+        { id: "e1", source: "n1", target: "n2", type: "CITES" },
+      ],
+      meta: {},
+    });
+    expect(graph.nodes.map((n) => n.id)).toEqual(["n1", "n2"]);
+    expect(graph.nodeCount).toBe(2);
+    expect(graph.edges).toHaveLength(1);
+    expect(graph.edges[0].id).toBe("e1");
+    expect(graph.warnings).toHaveLength(0);
+  });
+
+  it("hides Workspace when only node_kind is Workspace", () => {
+    const graph = normalizeGraphPayload({
+      nodes: [{ id: "ws1", type: "Node", node_kind: "Workspace", label: "WS" }, { id: "n1", type: "Work", label: "A" }],
+      edges: [{ id: "e0", source: "ws1", target: "n1", type: "CONTAINS" }],
+      meta: {},
+    });
+    expect(graph.nodes.map((n) => n.id)).toEqual(["n1"]);
+    expect(graph.warnings).toHaveLength(0);
+  });
+
   it("reassigns duplicate node ids and keeps edges on first occurrence id", () => {
     const graph = normalizeGraphPayload({
       nodes: [

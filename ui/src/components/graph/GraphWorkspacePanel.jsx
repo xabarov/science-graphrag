@@ -14,6 +14,7 @@ import GraphTypeLegend from "./GraphTypeLegend.jsx";
 import GraphViewModeSwitch from "./GraphViewModeSwitch.jsx";
 import GraphVisualization from "./GraphVisualization.jsx";
 import { GraphErrorAlert, GraphLoadingInline, GraphMissingWorkInline } from "./graphShellStates.jsx";
+import { projectAuthorSemanticGraph } from "./authorSemanticProjection.js";
 import { deriveInspectorDetail } from "./graphInspectorModel.js";
 import { localizeEdgeType } from "./graphLocalize.js";
 import { filterNodeIdsBySearchSubstring, firstMatchingNodeIdInOrder } from "./graphNodeSearch.js";
@@ -128,16 +129,23 @@ export default function GraphWorkspacePanel({
 
   const effectiveVizMode = standalone ? "canvas" : vizMode;
   const effectiveCanvasLayout = standalone ? "force" : canvasLayoutMode;
-  const resolvedSelectedEdgeId = useMemo(() => resolveSelectedEdgeId(graph, normalizeGraphEdgeId(selectedEdgeId)), [graph, selectedEdgeId]);
+  const projectedGraph = useMemo(() => projectAuthorSemanticGraph(graph), [graph]);
+  const resolvedSelectedEdgeId = useMemo(
+    () => resolveSelectedEdgeId(projectedGraph, normalizeGraphEdgeId(selectedEdgeId)),
+    [projectedGraph, selectedEdgeId],
+  );
   const resolvedSelectedNodeId = useMemo(() => {
     if (resolvedSelectedEdgeId) return "";
-    return resolveSelectedNodeId(graph, normalizeGraphNodeId(selectedNodeId));
-  }, [graph, selectedNodeId, resolvedSelectedEdgeId]);
-  const { displayGraph, capWarnings } = useMemo(() => capGraphForUi(graph, resolvedSelectedNodeId), [graph, resolvedSelectedNodeId]);
+    return resolveSelectedNodeId(projectedGraph, normalizeGraphNodeId(selectedNodeId));
+  }, [projectedGraph, selectedNodeId, resolvedSelectedEdgeId]);
+  const { displayGraph, capWarnings } = useMemo(
+    () => capGraphForUi(projectedGraph, resolvedSelectedNodeId),
+    [projectedGraph, resolvedSelectedNodeId],
+  );
   const edgeTypeLabel = useCallback((e) => localizeEdgeType(e, t), [t]);
   const inspector = useMemo(
-    () => deriveInspectorDetail(displayGraph, resolvedSelectedNodeId, resolvedSelectedEdgeId, { edgeTypeLabel }),
-    [displayGraph, edgeTypeLabel, resolvedSelectedNodeId, resolvedSelectedEdgeId],
+    () => deriveInspectorDetail(projectedGraph, resolvedSelectedNodeId, resolvedSelectedEdgeId, { edgeTypeLabel }),
+    [projectedGraph, edgeTypeLabel, resolvedSelectedNodeId, resolvedSelectedEdgeId],
   );
   const nodeSearchMatchIds = useMemo(
     () => filterNodeIdsBySearchSubstring(displayGraph.nodes, localFindQuery),
@@ -202,7 +210,7 @@ export default function GraphWorkspacePanel({
             labMode={labMode}
           />
           {!standalone ? <GraphViewModeSwitch mode={vizMode} onChange={setVizMode} compact={compactLayout} /> : null}
-          {graph.warnings.length > 0 ? <Alert severity="info" sx={{ mb: 1 }}>Graph data was normalized</Alert> : null}
+          {projectedGraph.warnings.length > 0 ? <Alert severity="info" sx={{ mb: 1 }}>Graph data was normalized</Alert> : null}
           {capWarnings.length > 0 ? <Alert severity="info" sx={{ mb: 1 }}>Large graph - UI cap is active</Alert> : null}
           <Collapse in={legendOpen}>
             <GraphTypeLegend graph={displayGraph} />
@@ -269,23 +277,23 @@ export default function GraphWorkspacePanel({
             />
           </Box>
           <Box sx={{ mt: 1, display: "flex", gap: 1 }}>
-            <Typography sx={{ fontSize: "0.75rem", color: tk.text.muted }}>nodes: {graph.nodeCount}</Typography>
-            <Typography sx={{ fontSize: "0.75rem", color: tk.text.muted }}>edges: {graph.edgeCount}</Typography>
+            <Typography sx={{ fontSize: "0.75rem", color: tk.text.muted }}>nodes: {projectedGraph.nodeCount}</Typography>
+            <Typography sx={{ fontSize: "0.75rem", color: tk.text.muted }}>edges: {projectedGraph.edgeCount}</Typography>
           </Box>
           {traceSummary.length > 0 ? <Alert severity="info" sx={{ mt: 1 }}>Opened from traceability context: {traceSummary.join(" · ")}</Alert> : null}
-          {graph.nodeCount === 0 ? <Alert severity="info" sx={{ mt: 1 }}>This response has no nodes yet.</Alert> : null}
+          {projectedGraph.nodeCount === 0 ? <Alert severity="info" sx={{ mt: 1 }}>This response has no nodes yet.</Alert> : null}
           <Box sx={{ mt: 1 }}>
             <GraphDebugInspector
               visible={labMode || diagnosticsOpen}
               maxHeight={standalone ? 200 : isEmbedded ? 180 : 240}
               payload={{
-                work_id: graph.workId,
-                meta: graph.meta,
+                work_id: projectedGraph.workId,
+                meta: projectedGraph.meta,
                 selected_node_id: resolvedSelectedNodeId,
                 selected_edge_id: resolvedSelectedEdgeId,
-                node_count: graph.nodeCount,
-                edge_count: graph.edgeCount,
-                warnings: graph.warnings,
+                node_count: projectedGraph.nodeCount,
+                edge_count: projectedGraph.edgeCount,
+                warnings: projectedGraph.warnings,
                 ui_cap_warnings: capWarnings,
               }}
             />

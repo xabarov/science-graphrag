@@ -159,6 +159,25 @@ export function localizeEdgeTypeKey(edgeType, t) {
  * @param {GraphTranslateFn} t
  * @returns {string}
  */
+/**
+ * Labels for Claim node `properties` (graph payload). Extend `graph.claimProperty.*` in i18n when adding Neo4j fields.
+ *
+ * @param {string} rawKey
+ * @param {GraphTranslateFn} t
+ * @returns {string}
+ */
+export function localizeClaimPropertyKey(rawKey, t) {
+  const k = String(rawKey || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+  if (!k) return String(rawKey || "");
+  const i18nKey = `graph.claimProperty.${k}`;
+  let out = t(i18nKey);
+  if (out !== i18nKey) return out;
+  return localizeWorkPropertyKey(rawKey, t);
+}
+
 export function localizeWorkPropertyKey(rawKey, t) {
   const k = String(rawKey || "")
     .trim()

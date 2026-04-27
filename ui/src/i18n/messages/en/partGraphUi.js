@@ -157,6 +157,15 @@ export default {
   "graph.detailPanel.direction.lateral": "In context",
   "graph.detailPanel.direction.lateralHint":
     "Shown in the same neighborhood; this edge is not strictly incoming or outgoing from the selected node in the API sense.",
+  "graph.detailPanel.claimBody": "Claim text",
+  "graph.detailPanel.claimMetadataTitle": "Claim metadata (structured)",
+
+  "graph.claimProperty.normalized_text": "Normalized text",
+  "graph.claimProperty.text": "Text",
+  "graph.claimProperty.claim_type": "Claim type",
+  "graph.claimProperty.polarity": "Polarity",
+  "graph.claimProperty.confidence": "Confidence",
+  "graph.claimProperty.claim_metadata": "Metadata",
 
   "graph.workProperty.publication_year": "Publication year",
   "graph.workProperty.arxiv_id": "arXiv id",

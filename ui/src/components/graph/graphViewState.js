@@ -47,6 +47,19 @@ function pickPropertiesObject(v) {
 }
 
 /**
+ * Workspace container exists in Neo4j and API payloads but is redundant in the graph UI
+ * (every work already belongs to the current workspace context).
+ *
+ * @param {{ type: string, nodeKind: string }} node Normalized node from {@link normalizeGraphPayload} mapping step
+ * @returns {boolean}
+ */
+function isUiHiddenWorkspaceNode(node) {
+  const t = String(node.type || "").trim().toLowerCase();
+  const k = String(node.nodeKind || "").trim().toLowerCase();
+  return t === "workspace" || k === "workspace";
+}
+
+/**
  * @param {unknown} raw
  * @returns {{
  *   workId: string,
@@ -67,7 +80,7 @@ export function normalizeGraphPayload(raw) {
   const meta = payload.meta && typeof payload.meta === "object" ? payload.meta : {};
 
   const idUsage = new Map();
-  const nodes = rawNodes.map((node, index) => {
+  const mappedNodes = rawNodes.map((node, index) => {
     const baseId = node?.id == null ? `node-${index}` : String(node.id);
     const seen = idUsage.get(baseId) ?? 0;
     idUsage.set(baseId, seen + 1);
@@ -108,6 +121,11 @@ export function normalizeGraphPayload(raw) {
     };
   });
 
+  const hiddenWorkspaceIds = new Set(
+    mappedNodes.filter(isUiHiddenWorkspaceNode).map((n) => n.id),
+  );
+  const nodes = mappedNodes.filter((n) => !isUiHiddenWorkspaceNode(n));
+
   const nodeIdSet = new Set(nodes.map((n) => n.id));
 
   const normalizedEdges = rawEdges.map((edge, index) => {
@@ -138,6 +156,9 @@ export function normalizeGraphPayload(raw) {
   const edges = [];
   let orphanCount = 0;
   for (const edge of normalizedEdges) {
+    if (hiddenWorkspaceIds.has(edge.source) || hiddenWorkspaceIds.has(edge.target)) {
+      continue;
+    }
     const srcOk = nodeIdSet.has(edge.source);
     const tgtOk = nodeIdSet.has(edge.target);
     if (srcOk && tgtOk) {

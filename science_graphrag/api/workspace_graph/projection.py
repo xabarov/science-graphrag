@@ -104,9 +104,21 @@ def node_dict_from_neo(node: Any) -> dict[str, Any] | None:
     if props.get("issn"):
         center_props["issn"] = str(props["issn"]).strip()[:64]
     if ntype == "Claim":
+        nt = str(props.get("normalized_text") or "").strip()
+        tx = str(props.get("text") or "").strip()
+        if nt:
+            center_props["normalized_text"] = nt
+        if tx:
+            center_props["text"] = tx
         for key in ("claim_type", "polarity", "confidence"):
             if props.get(key) is not None:
                 center_props[key] = props[key]
+        # Optional JSON / structured extension (future Neo4j fields); surfaced as-is for graph UI.
+        for ext_key in ("claim_metadata", "metadata_json", "extension"):
+            raw_ext = props.get(ext_key)
+            if raw_ext is not None and raw_ext != "":
+                center_props["claim_metadata"] = raw_ext
+                break
     rendered = compute_node_display(ntype, raw_title, center_props)
     label = str(rendered["display_label"])
     subtitle = str(rendered["subtitle"])

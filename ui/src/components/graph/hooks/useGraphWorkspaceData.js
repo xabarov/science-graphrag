@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { expandAggregator, formatResearchApiError, getWorkGraph } from "../../../services/researchApi.js";
+import { collectAuthorAggregatorExpandEndpoints } from "../authorSemanticProjection.js";
 import {
   getWorkspaceGraph,
   getWorkspaceGraphNeighbors,
@@ -32,6 +33,34 @@ function mergeWorkspaceRawGraph(base, extra) {
     edges: [...emap.values()],
     meta: { ...(typeof base.meta === "object" ? base.meta : {}), ...(typeof extra.meta === "object" ? extra.meta : {}) },
   };
+}
+
+/**
+ * Prefetch author-related aggregator expansions so the UI can collapse authorship without
+ * exposing placeholder Aggregator nodes (workspace + standalone work graphs).
+ *
+ * @param {object} initialRaw
+ * @param {Set<string>} [persistentSeen] when set, endpoints are recorded here to avoid duplicate fetches across calls
+ * @returns {Promise<object>}
+ */
+async function prefetchAuthorAggregatorExpansions(initialRaw, persistentSeen) {
+  let merged = initialRaw;
+  const done = persistentSeen ?? new Set();
+  for (let round = 0; round < 6; round += 1) {
+    const normalized = normalizeGraphPayload(merged);
+    const endpoints = collectAuthorAggregatorExpandEndpoints(normalized).filter((ep) => !done.has(ep));
+    if (endpoints.length === 0) break;
+    for (const ep of endpoints) {
+      done.add(ep);
+      try {
+        const res = await expandAggregator(ep);
+        merged = mergeWorkspaceRawGraph(merged, res.data || {});
+      } catch {
+        /* keep graph usable if expand fails (e.g. offline); Aggregator may remain until retry */
+      }
+    }
+  }
+  return merged;
 }
 
 function readWsGraphOptsFromLs(workspaceId, workId = "") {
@@ -85,11 +114,13 @@ export function useGraphWorkspaceData(workspaceId, workId, options = {}) {
   const [workspaceGraphRaw, setWorkspaceGraphRaw] = useState(null);
   const [expandNeighborsBusy, setExpandNeighborsBusy] = useState(false);
   const [neighborCache, setNeighborCache] = useState(() => new Set());
+  const authorAggregatorExpandSeenRef = useRef(new Set());
 
   useEffect(() => {
     setWsGraphOpts(readWsGraphOptsFromLs(wsId, workIdNorm));
     setWorkspaceGraphRaw(null);
     setNeighborCache(new Set());
+    authorAggregatorExpandSeenRef.current = new Set();
   }, [wsId, workIdNorm]);
 
   useEffect(() => {
@@ -137,8 +168,10 @@ export function useGraphWorkspaceData(workspaceId, workId, options = {}) {
             includeClaims: Boolean(wsGraphOpts.includeClaims),
           });
           if (cancelled) return;
-          setWorkspaceGraphRaw(raw);
-          normalized = normalizeGraphPayload(raw);
+          const mergedRaw = await prefetchAuthorAggregatorExpansions(raw, authorAggregatorExpandSeenRef.current);
+          if (cancelled) return;
+          setWorkspaceGraphRaw(mergedRaw);
+          normalized = normalizeGraphPayload(mergedRaw);
         } else {
           setNeighborCache(new Set());
           const depth = options.standaloneWorkGraphDepth === 2 ? 2 : 1;
@@ -148,8 +181,10 @@ export function useGraphWorkspaceData(workspaceId, workId, options = {}) {
             includeClaims: Boolean(wsGraphOpts.includeClaims),
           });
           if (cancelled) return;
-          setWorkspaceGraphRaw(raw.data);
-          normalized = normalizeGraphPayload(raw.data);
+          const mergedRaw = await prefetchAuthorAggregatorExpansions(raw.data, authorAggregatorExpandSeenRef.current);
+          if (cancelled) return;
+          setWorkspaceGraphRaw(mergedRaw);
+          normalized = normalizeGraphPayload(mergedRaw);
         }
         if (!cancelled) setGraph(normalized);
       } catch (err) {
@@ -174,8 +209,9 @@ export function useGraphWorkspaceData(workspaceId, workId, options = {}) {
       try {
         const extra = await getWorkspaceGraphNeighbors(wsId, nid, { limit: 80 });
         const merged = mergeWorkspaceRawGraph(workspaceGraphRaw, extra);
-        setWorkspaceGraphRaw(merged);
-        setGraph(normalizeGraphPayload(merged));
+        const mergedPrefetched = await prefetchAuthorAggregatorExpansions(merged, authorAggregatorExpandSeenRef.current);
+        setWorkspaceGraphRaw(mergedPrefetched);
+        setGraph(normalizeGraphPayload(mergedPrefetched));
         setNeighborCache((prev) => new Set([...prev, nid]));
       } catch (err) {
         setError(formatResearchApiError(err));
@@ -190,12 +226,14 @@ export function useGraphWorkspaceData(workspaceId, workId, options = {}) {
     async (expandEndpoint) => {
       const endpoint = String(expandEndpoint || "").trim();
       if (!endpoint || !workspaceGraphRaw) return;
+      authorAggregatorExpandSeenRef.current.add(endpoint);
       setExpandNeighborsBusy(true);
       try {
         const extra = await expandAggregator(endpoint);
         const merged = mergeWorkspaceRawGraph(workspaceGraphRaw, extra.data || {});
-        setWorkspaceGraphRaw(merged);
-        setGraph(normalizeGraphPayload(merged));
+        const mergedPrefetched = await prefetchAuthorAggregatorExpansions(merged, authorAggregatorExpandSeenRef.current);
+        setWorkspaceGraphRaw(mergedPrefetched);
+        setGraph(normalizeGraphPayload(mergedPrefetched));
       } catch (err) {
         setError(formatResearchApiError(err));
       } finally {

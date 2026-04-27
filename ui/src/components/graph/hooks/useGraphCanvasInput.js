@@ -1,13 +1,12 @@
 import { useCallback, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { screenToWorld } from "../graphCanvasTransform.js";
-import { hitTestClosestEdgeId, hitTestNode } from "../graphCanvasDraw.js";
+import { hitTestClosestEdgeId, hitTestNodeScreen } from "../graphCanvasDraw.js";
 
 const DRAG_THRESHOLD_PX = 5;
 export default function useGraphCanvasInput({
   canvasRef,
   graph,
-  nodeById,
   transformRef,
   setTransform,
   onNodeClick,
@@ -24,6 +23,7 @@ export default function useGraphCanvasInput({
   draggedNodePositionRef,
   fixedNodesRef,
   setPinnedNodeCount,
+  resolveNodeCanvasLabel,
 }) {
   const [hoveredNodeId, setHoveredNodeId] = useState("");
   const [hoveredEdgeId, setHoveredEdgeId] = useState("");
@@ -47,9 +47,9 @@ export default function useGraphCanvasInput({
         const rect = canvas.getBoundingClientRect();
         const lx = hoverClientRef.current.x - rect.left;
         const ly = hoverClientRef.current.y - rect.top;
-        const world = screenToWorld(lx, ly, transformRef.current.scale, transformRef.current.tx, transformRef.current.ty);
         const posMap = getPositionsForFrame();
-        const nodeId = hitTestNode(world.x, world.y, nodeById, posMap) ?? "";
+        const nodeId =
+          hitTestNodeScreen(lx, ly, graph.nodes, posMap, transformRef.current, resolveNodeCanvasLabel) || "";
         if (nodeId) {
           setHoveredNodeId((prev) => (prev === nodeId ? prev : nodeId));
           setHoveredEdgeId("");
@@ -62,7 +62,7 @@ export default function useGraphCanvasInput({
         setCanvasCursor(edgeId ? "pointer" : "grab");
       });
     },
-    [canvasRef, getPositionsForFrame, graph.edges, nodeById, transformRef],
+    [canvasRef, getPositionsForFrame, graph.edges, graph.nodes, resolveNodeCanvasLabel, transformRef],
   );
 
   const handlePointerDown = useCallback(
@@ -75,11 +75,11 @@ export default function useGraphCanvasInput({
       const y = ev.clientY - rect.top;
       const { scale, tx, ty } = transformRef.current;
       if (simNodes.length > 0) {
-        const world = screenToWorld(x, y, scale, tx, ty);
         const posMap = getPositionsForFrame();
-        const nodeId = hitTestNode(world.x, world.y, nodeById, posMap);
+        const nodeId = hitTestNodeScreen(x, y, graph.nodes, posMap, transformRef.current, resolveNodeCanvasLabel);
         if (nodeId) {
           if (layoutMode === "circle" && onCanvasLayoutModeChange) flushSync(() => onCanvasLayoutModeChange("force"));
+          const world = screenToWorld(x, y, scale, tx, ty);
           canvas.setPointerCapture(ev.pointerId);
           nodeDragRef.current = { active: true, moved: false, nodeId, startX: x, startY: y, pointerId: ev.pointerId };
           draggedNodePositionRef.current = { id: nodeId, x: world.x, y: world.y };
@@ -94,9 +94,10 @@ export default function useGraphCanvasInput({
       canvasRef,
       draggedNodePositionRef,
       getPositionsForFrame,
+      graph.nodes,
       layoutMode,
-      nodeById,
       onCanvasLayoutModeChange,
+      resolveNodeCanvasLabel,
       setSimNodes,
       simNodes.length,
       transformRef,
@@ -196,9 +197,8 @@ export default function useGraphCanvasInput({
         const rect = canvas.getBoundingClientRect();
         const x = ev.clientX - rect.left;
         const y = ev.clientY - rect.top;
-        const world = screenToWorld(x, y, transformRef.current.scale, transformRef.current.tx, transformRef.current.ty);
         const posMap = getPositionsForFrame();
-        const nodeId = hitTestNode(world.x, world.y, nodeById, posMap);
+        const nodeId = hitTestNodeScreen(x, y, graph.nodes, posMap, transformRef.current, resolveNodeCanvasLabel);
         if (nodeId) {
           onNodeClick?.(nodeId);
           return;
@@ -220,12 +220,13 @@ export default function useGraphCanvasInput({
       fixedNodesRef,
       getPositionsForFrame,
       graph.edges,
+      graph.nodes,
       isSimulationStable,
-      nodeById,
       onCanvasClick,
       onEdgeClick,
       onNodeClick,
       queueHoverPick,
+      resolveNodeCanvasLabel,
       setIsSimulationStable,
       setPinnedNodeCount,
       transformRef,

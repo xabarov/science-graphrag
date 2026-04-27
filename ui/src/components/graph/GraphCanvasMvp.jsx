@@ -171,7 +171,6 @@ export default function GraphCanvasMvp({
   const input = useGraphCanvasInput({
     canvasRef,
     graph,
-    nodeById,
     transformRef,
     setTransform,
     onNodeClick,
@@ -194,6 +193,7 @@ export default function GraphCanvasMvp({
     draggedNodePositionRef,
     fixedNodesRef,
     setPinnedNodeCount,
+    resolveNodeCanvasLabel,
   });
 
   useScienceGraphForceSimulation(
