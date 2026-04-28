@@ -1,5 +1,8 @@
 # Frontend edge: Vite production build + nginx reverse proxy to the API service.
 # Rebuild only this image when UI changes: docker compose build web
+#
+# `npm ci` installs exactly what is pinned in ui/package-lock.json (must be committed
+# alongside ui/package.json whenever dependencies change, e.g. simple-icons for settings UI).
 FROM node:20-bookworm-slim AS ui_build
 WORKDIR /build/ui
 COPY ui/package.json ui/package-lock.json ./

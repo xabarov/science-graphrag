@@ -15,7 +15,7 @@ fi
 # Self-heal broken/partial installs (empty dirs / interrupted npm ci), and
 # refresh when a new dependency was added but the named volume still has an old tree
 # (hash-only detection can miss that if .deps_hash was copied or the volume predates the dep).
-critical_deps="react-markdown react-pdf remark-breaks"
+critical_deps="react-markdown react-pdf remark-breaks simple-icons"
 for pkg in $critical_deps; do
   if [ ! -f "node_modules/$pkg/package.json" ]; then
     need_ci=true
@@ -24,6 +24,13 @@ for pkg in $critical_deps; do
 done
 if [ "$need_ci" = true ]; then
   # Volume mount is the node_modules dir itself — rm the tree contents, not the mount.
+  rm -rf node_modules/* node_modules/.[!.]* node_modules/..?* 2>/dev/null || true
+  npm ci
+  echo "$HASH" > node_modules/.deps_hash
+fi
+# Stale named volumes can miss new deps even when .deps_hash matches; reconcile with package.json.
+if ! node scripts/check-node-modules.mjs; then
+  echo "docker-entrypoint-dev: reinstalling node_modules (check-node-modules failed)"
   rm -rf node_modules/* node_modules/.[!.]* node_modules/..?* 2>/dev/null || true
   npm ci
   echo "$HASH" > node_modules/.deps_hash

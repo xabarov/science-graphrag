@@ -1,4 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
+import Accordion from "@mui/material/Accordion";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import AccordionSummary from "@mui/material/AccordionSummary";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Checkbox from "@mui/material/Checkbox";
@@ -11,10 +16,13 @@ import Switch from "@mui/material/Switch";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
+import { siMinio, siNeo4j, siPostgresql, siQdrant, siRedis } from "simple-icons";
 
 import { CursorPrimaryButton } from "../../components/common/index.js";
 import { useI18n } from "../../i18n/useI18n.js";
 import { outlinedAppTextFieldSx, settingsAlertMutedSx, settingsCardSx } from "../../theme/settingsFormSx.js";
+
+import BrandSvgIcon from "./BrandSvgIcon.jsx";
 
 function strEff(storage, path) {
   const [a, b, c] = path.split(".");
@@ -36,12 +44,59 @@ function boolEff(storage, path) {
   }
 }
 
+/**
+ * @param {{
+ *   defaultExpanded?: boolean;
+ *   summaryStart: React.ReactNode;
+ *   title: string;
+ *   subtitle: string;
+ *   accordionSx: object;
+ *   tk: import("../../theme/appTokensTypes.js").AppTokens;
+ *   children: React.ReactNode;
+ * }} props
+ */
+function StorageSectionAccordion({ defaultExpanded = true, summaryStart, title, subtitle, accordionSx, tk, children }) {
+  return (
+    <Accordion
+      defaultExpanded={defaultExpanded}
+      disableGutters
+      elevation={0}
+      sx={{
+        ...accordionSx,
+        "&:before": { display: "none" },
+        "&.Mui-expanded": { margin: 0 },
+      }}
+    >
+      <AccordionSummary
+        expandIcon={<ExpandMoreIcon sx={{ color: tk.text.muted }} />}
+        sx={{
+          minHeight: 48,
+          px: 1.5,
+          "& .MuiAccordionSummary-content": {
+            alignItems: "center",
+            gap: 1.25,
+            marginY: 1,
+          },
+        }}
+      >
+        <Box sx={{ color: tk.text.secondary, display: "flex", alignItems: "center" }}>{summaryStart}</Box>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.25, minWidth: 0 }}>
+          <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: tk.text.primary }}>{title}</Typography>
+          <Typography sx={{ fontSize: "0.75rem", color: tk.text.muted, lineHeight: 1.45 }}>{subtitle}</Typography>
+        </Box>
+      </AccordionSummary>
+      <AccordionDetails sx={{ px: 2, pb: 2, pt: 0, display: "flex", flexDirection: "column" }}>{children}</AccordionDetails>
+    </Accordion>
+  );
+}
+
 export default function StorageSettingsPanel({ storage, saving, saveError, onSave, onDirtyChange }) {
   const { t } = useI18n();
   const tk = useTheme().appTokens;
   const fieldSx = useMemo(() => outlinedAppTextFieldSx(tk), [tk]);
   const cardSx = useMemo(() => settingsCardSx(tk), [tk]);
   const alertMutedSx = useMemo(() => settingsAlertMutedSx(tk), [tk]);
+  const storageAccordionSx = useMemo(() => ({ ...cardSx, boxShadow: "none", overflow: "hidden" }), [cardSx]);
 
   const [neo4jUri, setNeo4jUri] = useState("");
   const [neo4jUser, setNeo4jUser] = useState("");
@@ -270,11 +325,15 @@ export default function StorageSettingsPanel({ storage, saving, saveError, onSav
         </Alert>
       ) : null}
 
-      <Box sx={cardSx}>
-        <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: tk.text.primary }}>
-          {t("settings.storage.neo4j.title")}
-        </Typography>
-        <Typography sx={{ marginTop: 1, fontSize: "0.75rem", color: tk.text.muted }}>
+      <StorageSectionAccordion
+        defaultExpanded
+        accordionSx={storageAccordionSx}
+        tk={tk}
+        summaryStart={<BrandSvgIcon icon={siNeo4j} />}
+        title={t("settings.storage.neo4j.title")}
+        subtitle={t("settings.storage.neo4j.subtitle")}
+      >
+        <Typography sx={{ marginBottom: 1, fontSize: "0.75rem", color: tk.text.muted }}>
           {t("settings.storage.envHint", { keys: "SCIENCE_GRAPHRAG_NEO4J_URI, …" })}
         </Typography>
         <TextField
@@ -319,12 +378,16 @@ export default function StorageSettingsPanel({ storage, saving, saveError, onSav
           }
           label={<Typography sx={{ fontSize: "0.8125rem" }}>{t("settings.storage.secret.clearUseEnv")}</Typography>}
         />
-      </Box>
+      </StorageSectionAccordion>
 
-      <Box sx={cardSx}>
-        <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: tk.text.primary }}>
-          {t("settings.storage.qdrant.title")}
-        </Typography>
+      <StorageSectionAccordion
+        defaultExpanded
+        accordionSx={storageAccordionSx}
+        tk={tk}
+        summaryStart={<BrandSvgIcon icon={siQdrant} />}
+        title={t("settings.storage.qdrant.title")}
+        subtitle={t("settings.storage.qdrant.subtitle")}
+      >
         <TextField
           margin="normal"
           fullWidth
@@ -370,12 +433,16 @@ export default function StorageSettingsPanel({ storage, saving, saveError, onSav
           sx={fieldSx}
           size="small"
         />
-      </Box>
+      </StorageSectionAccordion>
 
-      <Box sx={cardSx}>
-        <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: tk.text.primary }}>
-          {t("settings.storage.postgres.title")}
-        </Typography>
+      <StorageSectionAccordion
+        defaultExpanded
+        accordionSx={storageAccordionSx}
+        tk={tk}
+        summaryStart={<BrandSvgIcon icon={siPostgresql} />}
+        title={t("settings.storage.postgres.title")}
+        subtitle={t("settings.storage.postgres.subtitle")}
+      >
         <TextField
           margin="normal"
           fullWidth
@@ -400,12 +467,16 @@ export default function StorageSettingsPanel({ storage, saving, saveError, onSav
           }
           label={<Typography sx={{ fontSize: "0.8125rem" }}>{t("settings.storage.secret.clearUseEnv")}</Typography>}
         />
-      </Box>
+      </StorageSectionAccordion>
 
-      <Box sx={cardSx}>
-        <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: tk.text.primary }}>
-          {t("settings.storage.redis.title")}
-        </Typography>
+      <StorageSectionAccordion
+        defaultExpanded
+        accordionSx={storageAccordionSx}
+        tk={tk}
+        summaryStart={<BrandSvgIcon icon={siRedis} />}
+        title={t("settings.storage.redis.title")}
+        subtitle={t("settings.storage.redis.subtitle")}
+      >
         <TextField
           margin="normal"
           fullWidth
@@ -415,12 +486,16 @@ export default function StorageSettingsPanel({ storage, saving, saveError, onSav
           sx={fieldSx}
           size="small"
         />
-      </Box>
+      </StorageSectionAccordion>
 
-      <Box sx={cardSx}>
-        <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: tk.text.primary }}>
-          {t("settings.storage.paths.title")}
-        </Typography>
+      <StorageSectionAccordion
+        defaultExpanded
+        accordionSx={storageAccordionSx}
+        tk={tk}
+        summaryStart={<FolderOutlinedIcon sx={{ fontSize: 22 }} />}
+        title={t("settings.storage.paths.title")}
+        subtitle={t("settings.storage.paths.subtitle")}
+      >
         <TextField
           margin="normal"
           fullWidth
@@ -439,12 +514,16 @@ export default function StorageSettingsPanel({ storage, saving, saveError, onSav
           sx={fieldSx}
           size="small"
         />
-      </Box>
+      </StorageSectionAccordion>
 
-      <Box sx={cardSx}>
-        <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: tk.text.primary }}>
-          {t("settings.storage.s3.title")}
-        </Typography>
+      <StorageSectionAccordion
+        defaultExpanded={false}
+        accordionSx={storageAccordionSx}
+        tk={tk}
+        summaryStart={<BrandSvgIcon icon={siMinio} />}
+        title={t("settings.storage.s3.title")}
+        subtitle={t("settings.storage.s3.subtitle")}
+      >
         <FormControlLabel
           control={<Switch checked={objectStorageEnabled} onChange={(e) => setObjectStorageEnabled(e.target.checked)} />}
           label={<Typography sx={{ fontSize: "0.8125rem" }}>{t("settings.storage.s3.objectStorageEnabled")}</Typography>}
@@ -557,7 +636,7 @@ export default function StorageSettingsPanel({ storage, saving, saveError, onSav
           sx={fieldSx}
           size="small"
         />
-      </Box>
+      </StorageSectionAccordion>
 
       <Box>
         <CursorPrimaryButton type="submit" disabled={saving || !dirty}>

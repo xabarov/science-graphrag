@@ -32,7 +32,7 @@ prod-restart: ## Restart prod-like stack with rebuild
 	$(COMPOSE_PROD) down
 	$(COMPOSE_PROD) up -d --build
 
-dev-up: ## Start dev stack with backend/frontend hot reload (after ui deps/entrypoint: make dev-ui-restart)
+dev-up: ## Start dev stack (hot reload). If ui was already running and you pulled new npm deps: make dev-ui-restart once
 	$(COMPOSE_DEV) up -d --build
 
 dev-down: ## Stop dev stack
