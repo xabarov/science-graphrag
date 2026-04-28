@@ -10,8 +10,15 @@ import { edgeTypeCanvasLabelFromEdge, truncateCanvasLabel } from "./graphCanvasS
  * @typedef {{ resolveEdgeLabel?: (edge: object) => string }} BuildReactFlowEdgesOptions
  */
 
+const SIGNATURE_SORT_OPTS = { sensitivity: "base", numeric: true };
+
+function compareSignatureIds(a, b) {
+  return String(a).localeCompare(String(b), undefined, SIGNATURE_SORT_OPTS);
+}
+
 /**
  * Stable string for topology-only changes (node ids + edge ids and endpoints).
+ * Nodes and edges are sorted by id so the same graph yields the same key regardless of array order.
  * Use to run React Flow `fitView` when the graph structure changes, not when selection changes.
  *
  * @param {{ nodes?: Array<{ id: string }>, edges?: Array<{ id: string, source: string, target: string }> }} graph
@@ -20,8 +27,14 @@ import { edgeTypeCanvasLabelFromEdge, truncateCanvasLabel } from "./graphCanvasS
 export function getGraphLayoutSignature(graph) {
   const nodes = Array.isArray(graph?.nodes) ? graph.nodes : [];
   const edges = Array.isArray(graph?.edges) ? graph.edges : [];
-  const nodePart = nodes.map((n) => n.id).join("\0");
-  const edgePart = edges.map((e) => `${e.id}:${e.source}->${e.target}`).join("\0");
+  const nodePart = [...nodes]
+    .sort((a, b) => compareSignatureIds(a.id, b.id))
+    .map((n) => n.id)
+    .join("\0");
+  const edgePart = [...edges]
+    .sort((a, b) => compareSignatureIds(a.id, b.id))
+    .map((e) => `${e.id}:${e.source}->${e.target}`)
+    .join("\0");
   return `${nodePart}|${edgePart}`;
 }
 

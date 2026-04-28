@@ -126,9 +126,13 @@ export default function GraphCanvasMvp({
   const [pinnedNodeCount, setPinnedNodeCount] = useState(0);
 
   const topologySignature = useMemo(() => getGraphLayoutSignature({ nodes: graph.nodes, edges: graph.edges }), [graph.nodes, graph.edges]);
+  const physicsEpoch = useMemo(
+    () => `${forceSimRunNonce}|${physicsReheatNonce}`,
+    [forceSimRunNonce, physicsReheatNonce],
+  );
   const simulationSignature = useMemo(
-    () => `${topologySignature}|${forceSimRunNonce}|${physicsReheatNonce}`,
-    [topologySignature, forceSimRunNonce, physicsReheatNonce],
+    () => `${topologySignature}|${physicsEpoch}`,
+    [topologySignature, physicsEpoch],
   );
   const repulsionStrength = useMemo(() => percentToRepulsion(repulsionPercent), [repulsionPercent]);
   const layoutWorldRadius = useMemo(() => worldRadiusForNodeCount(graph.nodes.length), [graph.nodes.length]);
@@ -241,6 +245,8 @@ export default function GraphCanvasMvp({
     fixedNodesRef,
     draggedNodePositionRef,
     canvasSize,
+    topologySignature,
+    physicsEpoch,
     simulationSignature,
     physicsPointerBus,
   );

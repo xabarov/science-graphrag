@@ -5,6 +5,7 @@ import { getScienceDesiredDistance } from "../../components/graph/physics/desire
 import { getNodeCluster } from "../../components/graph/physics/structuralCommunities.js";
 import { detectScienceHybridCommunities } from "../../components/graph/physics/scienceHybridCommunities.js";
 import {
+  BARNES_HUT_THETA,
   CANVAS_MARGIN,
   CLUSTER_ATTRACTION_STRENGTH,
   COOLING_DECAY_RATE,
@@ -13,6 +14,7 @@ import {
   COOLING_UPDATE_INTERVAL,
   MAX_VELOCITY,
   MAX_VELOCITY_SCALED,
+  PHYSICS_REACT_COMMIT_INTERVAL,
   STABLE_ITERATIONS,
   STABILITY_THRESHOLD,
   USE_COMMUNITY_DETECTION,
@@ -33,7 +35,9 @@ import { fastInvSqrt, fastSqrt, getRepulsionMultiplier } from "../../components/
  * @param {React.MutableRefObject<Set<string>>} fixedNodesRef
  * @param {React.MutableRefObject<{ id: string, x: number, y: number } | null>} draggedNodePositionRef
  * @param {{ width: number, height: number }} canvasSize
- * @param {string} simulationSignature topology + optional run id (restarts) so cooling/communities reset without graph change
+ * @param {string} topologySignature Canonical topology key (recompute communities when this changes).
+ * @param {string} physicsEpoch Force-run / reheat identity; bumps reset cooling without redoing community detection if topology unchanged.
+ * @param {string} simulationSignature Combined key for pause policy (`topology|physicsEpoch`); must change whenever topology or physicsEpoch changes.
  * @param {EventTarget} [pointerEventTarget] Optional bus for canvas pointer pause events (defaults to `window` via useGraphPhysicsPolicy).
  */
 export function useScienceGraphForceSimulation(
@@ -47,6 +51,8 @@ export function useScienceGraphForceSimulation(
   fixedNodesRef,
   draggedNodePositionRef,
   canvasSize,
+  topologySignature,
+  physicsEpoch,
   simulationSignature,
   pointerEventTarget,
 ) {
@@ -55,7 +61,8 @@ export function useScienceGraphForceSimulation(
   const coolingTemperatureRef = useRef(COOLING_INITIAL_TEMPERATURE);
   const iterationCountRef = useRef(0);
   const communitiesRef = useRef(null);
-  const prevSimSigRef = useRef("");
+  const prevTopologySigRef = useRef("");
+  const prevPhysicsEpochRef = useRef("");
   /** Latest stable flag for the physics integrator (avoids stale closure while RAF runs). */
   const isSimStableRef = useRef(isSimulationStable);
   isSimStableRef.current = isSimulationStable;
@@ -85,17 +92,25 @@ export function useScienceGraphForceSimulation(
       setIsSimulationStable(false);
     }
 
-    if (prevSimSigRef.current !== simulationSignature) {
-      prevSimSigRef.current = simulationSignature;
+    if (prevTopologySigRef.current !== topologySignature) {
+      prevTopologySigRef.current = topologySignature;
+      prevPhysicsEpochRef.current = physicsEpoch;
       boundsRef.current = null;
       coolingTemperatureRef.current = COOLING_INITIAL_TEMPERATURE;
       iterationCountRef.current = 0;
+      isSimStableRef.current = false;
       setIsSimulationStable(false);
       if (USE_COMMUNITY_DETECTION && nodes.length > 5) {
         communitiesRef.current = detectScienceHybridCommunities(nodes, links);
       } else {
         communitiesRef.current = null;
       }
+    } else if (prevPhysicsEpochRef.current !== physicsEpoch) {
+      prevPhysicsEpochRef.current = physicsEpoch;
+      coolingTemperatureRef.current = COOLING_INITIAL_TEMPERATURE;
+      iterationCountRef.current = 0;
+      isSimStableRef.current = false;
+      setIsSimulationStable(false);
     }
 
     const stableCountRef = { current: 0 };
@@ -107,7 +122,6 @@ export function useScienceGraphForceSimulation(
     const calculateWorldBounds = (nodeList) => {
       if (!nodeList || nodeList.length === 0) {
         const halfSpan = MIN_WORLD_SPAN / 2 + CANVAS_MARGIN * 2;
-        // World-space bounds must not use screen pixel centers (nodes live in world coords).
         return {
           minX: -halfSpan,
           maxX: halfSpan,
@@ -170,252 +184,270 @@ export function useScienceGraphForceSimulation(
         }
         communityMap.get(communityId).push(nodeId);
       });
+      communityMap.forEach((ids) => {
+        ids.sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: "base" }));
+      });
     }
 
     const nodeMap = new Map();
 
-    const simulate = () => {
-      setNodes((prevNodes) => {
-        const newNodes = prevNodes.map((node) => ({ ...node }));
-        let totalVelocity = 0;
-        let activeNodes = 0;
+    /**
+     * One integrator step mutating `newNodes` in place.
+     * @returns {boolean} true if layout reached stable halt this step
+     */
+    const runOnePhysicsTick = (newNodes) => {
+      let totalVelocity = 0;
+      let activeNodes = 0;
 
-        const draggedPos = draggedNodePositionRef.current;
+      const draggedPos = draggedNodePositionRef.current;
 
-        const targetBounds = calculateWorldBounds(newNodes);
-        const prevBounds = boundsRef.current;
-        const effectiveBounds = {
-          minX: lerp(prevBounds.minX, targetBounds.minX, SMOOTHING),
-          minY: lerp(prevBounds.minY, targetBounds.minY, SMOOTHING),
-          maxX: lerp(prevBounds.maxX, targetBounds.maxX, SMOOTHING),
-          maxY: lerp(prevBounds.maxY, targetBounds.maxY, SMOOTHING),
-        };
-        effectiveBounds.width = effectiveBounds.maxX - effectiveBounds.minX;
-        effectiveBounds.height = effectiveBounds.maxY - effectiveBounds.minY;
-        boundsRef.current = effectiveBounds;
+      const targetBounds = calculateWorldBounds(newNodes);
+      const prevBounds = boundsRef.current ?? targetBounds;
+      const effectiveBounds = {
+        minX: lerp(prevBounds.minX, targetBounds.minX, SMOOTHING),
+        minY: lerp(prevBounds.minY, targetBounds.minY, SMOOTHING),
+        maxX: lerp(prevBounds.maxX, targetBounds.maxX, SMOOTHING),
+        maxY: lerp(prevBounds.maxY, targetBounds.maxY, SMOOTHING),
+      };
+      effectiveBounds.width = effectiveBounds.maxX - effectiveBounds.minX;
+      effectiveBounds.height = effectiveBounds.maxY - effectiveBounds.minY;
+      boundsRef.current = effectiveBounds;
 
-        nodeMap.clear();
-        newNodes.forEach((node) => {
-          nodeMap.set(node.id, node);
+      nodeMap.clear();
+      newNodes.forEach((node) => {
+        nodeMap.set(node.id, node);
+      });
+
+      let quadtree = null;
+      if (newNodes.length > 10) {
+        const margin = 100;
+        quadtree = new QuadTree({
+          x: effectiveBounds.minX - margin,
+          y: effectiveBounds.minY - margin,
+          width: effectiveBounds.width + 2 * margin,
+          height: effectiveBounds.height + 2 * margin,
         });
 
-        let quadtree = null;
-        if (newNodes.length > 10) {
-          const margin = 100;
-          quadtree = new QuadTree({
-            x: effectiveBounds.minX - margin,
-            y: effectiveBounds.minY - margin,
-            width: effectiveBounds.width + 2 * margin,
-            height: effectiveBounds.height + 2 * margin,
-          });
+        newNodes.forEach((node) => {
+          if (draggedPos && draggedPos.id === node.id) return;
+          quadtree.insert({ x: node.x, y: node.y, id: node.id });
+        });
+      }
 
-          newNodes.forEach((node) => {
-            if (draggedPos && draggedPos.id === node.id) return;
-            quadtree.insert({ x: node.x, y: node.y, id: node.id });
+      newNodes.forEach((node) => {
+        if (draggedPos && draggedPos.id === node.id) {
+          node.x = draggedPos.x;
+          node.y = draggedPos.y;
+          node.vx = 0;
+          node.vy = 0;
+          return;
+        }
+
+        if (fixedNodesRef.current.has(node.id)) {
+          if (node.fx !== undefined && node.fy !== undefined) {
+            node.x = node.fx;
+            node.y = node.fy;
+          }
+          node.vx = 0;
+          node.vy = 0;
+          return;
+        }
+
+        let fx = 0;
+        let fy = 0;
+        const nodeType = nodeTypeMap.get(node.id);
+        const isHighRepulsion = repulsionStrength > 20000;
+
+        if (quadtree && newNodes.length > 10) {
+          const repulsion = quadtree.calculateRepulsion(
+            node.x,
+            node.y,
+            node.id,
+            nodeType,
+            undefined,
+            nodeTypeMap,
+            repulsionStrength,
+            draggedPos,
+            BARNES_HUT_THETA,
+          );
+          fx += repulsion.fx;
+          fy += repulsion.fy;
+        } else {
+          newNodes.forEach((other) => {
+            if (node.id === other.id) return;
+
+            let otherX = other.x;
+            let otherY = other.y;
+            if (draggedPos && draggedPos.id === other.id) {
+              otherX = draggedPos.x;
+              otherY = draggedPos.y;
+            }
+
+            const dx = node.x - otherX;
+            const dy = node.y - otherY;
+            const distSq = dx * dx + dy * dy + 1;
+            const invDist = fastInvSqrt(distSq);
+
+            const otherType = nodeTypeMap.get(other.id);
+            const repulsionMultiplier = getRepulsionMultiplier(nodeType, otherType, undefined, undefined);
+
+            const forceScale = repulsionStrength > 20000 ? 1.5 : 1.0;
+            const force = repulsionStrength * repulsionMultiplier * forceScale * invDist * invDist;
+            fx += dx * invDist * force;
+            fy += dy * invDist * force;
           });
         }
 
-        newNodes.forEach((node) => {
-          if (draggedPos && draggedPos.id === node.id) {
-            node.x = draggedPos.x;
-            node.y = draggedPos.y;
-            node.vx = 0;
-            node.vy = 0;
-            return;
-          }
+        const nodeLinks = linkMap.get(node.id) || [];
+        nodeLinks.forEach((linkData) => {
+          const target = nodeMap.get(linkData.target);
+          if (!target) return;
 
-          if (fixedNodesRef.current.has(node.id)) {
-            if (node.fx !== undefined && node.fy !== undefined) {
-              node.x = node.fx;
-              node.y = node.fy;
+          let targetX = draggedPos && draggedPos.id === target.id ? draggedPos.x : target.x;
+          let targetY = draggedPos && draggedPos.id === target.id ? draggedPos.y : target.y;
+          const dx = targetX - node.x;
+          const dy = targetY - node.y;
+          const distSq = dx * dx + dy * dy;
+
+          if (distSq > 0) {
+            const dist = fastSqrt(distSq);
+            const desiredDist = getScienceDesiredDistance(linkData.type);
+
+            let stiffness = 0.015;
+            if (isHighRepulsion) {
+              stiffness *= 0.5;
             }
-            node.vx = 0;
-            node.vy = 0;
-            return;
-          }
 
-          let fx = 0;
-          let fy = 0;
-          const nodeType = nodeTypeMap.get(node.id);
-          const isHighRepulsion = repulsionStrength > 20000;
-
-          if (quadtree && newNodes.length > 10) {
-            const repulsion = quadtree.calculateRepulsion(
-              node.x,
-              node.y,
-              node.id,
-              nodeType,
-              undefined,
-              nodeTypeMap,
-              repulsionStrength,
-              draggedPos,
-            );
-            fx += repulsion.fx;
-            fy += repulsion.fy;
-          } else {
-            newNodes.forEach((other) => {
-              if (node.id === other.id) return;
-
-              let otherX = other.x;
-              let otherY = other.y;
-              if (draggedPos && draggedPos.id === other.id) {
-                otherX = draggedPos.x;
-                otherY = draggedPos.y;
-              }
-
-              const dx = node.x - otherX;
-              const dy = node.y - otherY;
-              const distSq = dx * dx + dy * dy + 1;
-              const invDist = fastInvSqrt(distSq);
-
-              const otherType = nodeTypeMap.get(other.id);
-              const repulsionMultiplier = getRepulsionMultiplier(nodeType, otherType, undefined, undefined);
-
-              const forceScale = repulsionStrength > 20000 ? 1.5 : 1.0;
-              const force = repulsionStrength * repulsionMultiplier * forceScale * invDist * invDist;
-              fx += dx * invDist * force;
-              fy += dy * invDist * force;
-            });
-          }
-
-          const nodeLinks = linkMap.get(node.id) || [];
-          nodeLinks.forEach((linkData) => {
-            const target = nodeMap.get(linkData.target);
-            if (!target) return;
-
-            let targetX = draggedPos && draggedPos.id === target.id ? draggedPos.x : target.x;
-            let targetY = draggedPos && draggedPos.id === target.id ? draggedPos.y : target.y;
-            const dx = targetX - node.x;
-            const dy = targetY - node.y;
-            const distSq = dx * dx + dy * dy;
-
-            if (distSq > 0) {
-              const dist = fastSqrt(distSq);
-              const desiredDist = getScienceDesiredDistance(linkData.type);
-
-              let stiffness = 0.015;
-              if (isHighRepulsion) {
-                stiffness *= 0.5;
-              }
-
-              const force = (dist - desiredDist) * stiffness;
-              const invDist = 1 / dist;
-              fx += dx * invDist * force;
-              fy += dy * invDist * force;
-            }
-          });
-
-          if (communitiesRef.current && communityMap.size > 0) {
-            const nodeCluster = getNodeCluster(node.id, communitiesRef.current);
-            if (nodeCluster) {
-              const clusterNodes = communityMap.get(nodeCluster) || [];
-              clusterNodes.forEach((otherId) => {
-                if (otherId === node.id) return;
-                if (draggedPos && draggedPos.id === otherId) return;
-
-                const other = nodeMap.get(otherId);
-                if (!other) return;
-
-                const dx = other.x - node.x;
-                const dy = other.y - node.y;
-                const distSq = dx * dx + dy * dy + 1;
-                const dist = fastSqrt(distSq);
-
-                const communityForce = dist * CLUSTER_ATTRACTION_STRENGTH * coolingTemperatureRef.current;
-                const invDist = 1 / dist;
-                fx += dx * invDist * communityForce;
-                fy += dy * invDist * communityForce;
-              });
-            }
-          }
-
-          const coolingFactor = coolingTemperatureRef.current;
-
-          const stable = isSimStableRef.current;
-          const baseDamping = stable && draggedPos ? 0.65 : stable ? 0.55 : 0.8;
-          const baseVelocityMultiplier = stable && draggedPos ? 0.25 : stable ? 0.35 : 0.6;
-
-          const dampingFactor = isHighRepulsion ? Math.max(0.7, baseDamping) : baseDamping;
-          let velocityMultiplier = isHighRepulsion ? Math.min(1.0, baseVelocityMultiplier * 1.5) : baseVelocityMultiplier;
-
-          velocityMultiplier *= coolingFactor;
-
-          node.vx = (node.vx + fx * velocityMultiplier) * dampingFactor;
-          node.vy = (node.vy + fy * velocityMultiplier) * dampingFactor;
-
-          const maxVel = isHighRepulsion ? MAX_VELOCITY_SCALED : MAX_VELOCITY;
-          const velocitySq = node.vx * node.vx + node.vy * node.vy;
-          let velocity = 0;
-          if (velocitySq > maxVel * maxVel) {
-            velocity = fastSqrt(velocitySq);
-            node.vx = (node.vx / velocity) * maxVel;
-            node.vy = (node.vy / velocity) * maxVel;
-            velocity = maxVel;
-          } else {
-            velocity = fastSqrt(velocitySq);
-          }
-
-          if (!draggedPos) {
-            totalVelocity += velocity;
-            activeNodes += 1;
-          }
-
-          node.x += node.vx;
-          node.y += node.vy;
-
-          const minX = effectiveBounds.minX + CANVAS_MARGIN;
-          const maxX = effectiveBounds.maxX - CANVAS_MARGIN;
-          const minY = effectiveBounds.minY + CANVAS_MARGIN;
-          const maxY = effectiveBounds.maxY - CANVAS_MARGIN;
-
-          if (node.x < minX) {
-            node.x = minX;
-            node.vx *= -0.2;
-          } else if (node.x > maxX) {
-            node.x = maxX;
-            node.vx *= -0.2;
-          }
-          if (node.y < minY) {
-            node.y = minY;
-            node.vy *= -0.2;
-          } else if (node.y > maxY) {
-            node.y = maxY;
-            node.vy *= -0.2;
+            const force = (dist - desiredDist) * stiffness;
+            const invDist = 1 / dist;
+            fx += dx * invDist * force;
+            fy += dy * invDist * force;
           }
         });
 
-        iterationCountRef.current += 1;
-        if (iterationCountRef.current % COOLING_UPDATE_INTERVAL === 0) {
-          if (coolingTemperatureRef.current > COOLING_MIN_TEMPERATURE) {
-            coolingTemperatureRef.current = Math.max(
-              COOLING_MIN_TEMPERATURE,
-              coolingTemperatureRef.current * COOLING_DECAY_RATE,
-            );
+        if (communitiesRef.current && communityMap.size > 0) {
+          const nodeCluster = getNodeCluster(node.id, communitiesRef.current);
+          if (nodeCluster) {
+            const clusterNodes = communityMap.get(nodeCluster) || [];
+            clusterNodes.forEach((otherId) => {
+              if (otherId === node.id) return;
+              if (draggedPos && draggedPos.id === otherId) return;
+
+              const other = nodeMap.get(otherId);
+              if (!other) return;
+
+              const dx = other.x - node.x;
+              const dy = other.y - node.y;
+              const distSq = dx * dx + dy * dy + 1;
+              const dist = fastSqrt(distSq);
+
+              const communityForce = dist * CLUSTER_ATTRACTION_STRENGTH * coolingTemperatureRef.current;
+              const invDist = 1 / dist;
+              fx += dx * invDist * communityForce;
+              fy += dy * invDist * communityForce;
+            });
           }
+        }
+
+        const coolingFactor = coolingTemperatureRef.current;
+
+        const stable = isSimStableRef.current;
+        const baseDamping = stable && draggedPos ? 0.65 : stable ? 0.55 : 0.8;
+        const baseVelocityMultiplier = stable && draggedPos ? 0.25 : stable ? 0.35 : 0.6;
+
+        const dampingFactor = isHighRepulsion ? Math.max(0.7, baseDamping) : baseDamping;
+        let velocityMultiplier = isHighRepulsion ? Math.min(1.0, baseVelocityMultiplier * 1.5) : baseVelocityMultiplier;
+
+        velocityMultiplier *= coolingFactor;
+
+        node.vx = (node.vx + fx * velocityMultiplier) * dampingFactor;
+        node.vy = (node.vy + fy * velocityMultiplier) * dampingFactor;
+
+        const maxVel = isHighRepulsion ? MAX_VELOCITY_SCALED : MAX_VELOCITY;
+        const velocitySq = node.vx * node.vx + node.vy * node.vy;
+        let velocity = 0;
+        if (velocitySq > maxVel * maxVel) {
+          velocity = fastSqrt(velocitySq);
+          node.vx = (node.vx / velocity) * maxVel;
+          node.vy = (node.vy / velocity) * maxVel;
+          velocity = maxVel;
+        } else {
+          velocity = fastSqrt(velocitySq);
         }
 
         if (!draggedPos) {
-          const avgVelocity = activeNodes > 0 ? totalVelocity / activeNodes : 0;
-          const effectiveThreshold = STABILITY_THRESHOLD * (1 + (1 - coolingTemperatureRef.current) * 0.5);
-
-          if (avgVelocity < effectiveThreshold) {
-            stableCountRef.current += 1;
-            if (stableCountRef.current >= STABLE_ITERATIONS) {
-              newNodes.forEach((node) => {
-                node.vx = 0;
-                node.vy = 0;
-              });
-              if (!isSimStableRef.current) {
-                isSimStableRef.current = true;
-                setIsSimulationStable(true);
-              }
-              return newNodes;
-            }
-          } else {
-            stableCountRef.current = 0;
-          }
+          totalVelocity += velocity;
+          activeNodes += 1;
         }
 
+        node.x += node.vx;
+        node.y += node.vy;
+
+        const minX = effectiveBounds.minX + CANVAS_MARGIN;
+        const maxX = effectiveBounds.maxX - CANVAS_MARGIN;
+        const minY = effectiveBounds.minY + CANVAS_MARGIN;
+        const maxY = effectiveBounds.maxY - CANVAS_MARGIN;
+
+        if (node.x < minX) {
+          node.x = minX;
+          node.vx *= -0.2;
+        } else if (node.x > maxX) {
+          node.x = maxX;
+          node.vx *= -0.2;
+        }
+        if (node.y < minY) {
+          node.y = minY;
+          node.vy *= -0.2;
+        } else if (node.y > maxY) {
+          node.y = maxY;
+          node.vy *= -0.2;
+        }
+      });
+
+      iterationCountRef.current += 1;
+      if (iterationCountRef.current % COOLING_UPDATE_INTERVAL === 0) {
+        if (coolingTemperatureRef.current > COOLING_MIN_TEMPERATURE) {
+          coolingTemperatureRef.current = Math.max(
+            COOLING_MIN_TEMPERATURE,
+            coolingTemperatureRef.current * COOLING_DECAY_RATE,
+          );
+        }
+      }
+
+      if (!draggedPos) {
+        const avgVelocity = activeNodes > 0 ? totalVelocity / activeNodes : 0;
+        const effectiveThreshold = STABILITY_THRESHOLD * (1 + (1 - coolingTemperatureRef.current) * 0.5);
+
+        if (avgVelocity < effectiveThreshold) {
+          stableCountRef.current += 1;
+          if (stableCountRef.current >= STABLE_ITERATIONS) {
+            newNodes.forEach((node) => {
+              node.vx = 0;
+              node.vy = 0;
+            });
+            if (!isSimStableRef.current) {
+              isSimStableRef.current = true;
+              setIsSimulationStable(true);
+            }
+            return true;
+          }
+        } else {
+          stableCountRef.current = 0;
+        }
+      }
+
+      return false;
+    };
+
+    const commitInterval = Math.max(1, Math.floor(PHYSICS_REACT_COMMIT_INTERVAL));
+
+    const simulate = () => {
+      setNodes((prevNodes) => {
+        const newNodes = prevNodes.map((node) => ({ ...node }));
+        for (let s = 0; s < commitInterval; s++) {
+          const stableHalt = runOnePhysicsTick(newNodes);
+          if (stableHalt) break;
+        }
         return newNodes;
       });
 
@@ -431,11 +463,13 @@ export function useScienceGraphForceSimulation(
         cancelAnimationFrame(animationRef.current);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- simulation uses setNodes(prev=>...); full `nodes` would restart every frame
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- simulation uses setNodes(prev=>...); full `nodes` would restart every frame; `simulationSignature` is only for useGraphPhysicsPolicy above
   }, [
     enabled,
     integrationBlocked,
     simulationSignature,
+    topologySignature,
+    physicsEpoch,
     pointerEventTarget,
     links,
     repulsionStrength,

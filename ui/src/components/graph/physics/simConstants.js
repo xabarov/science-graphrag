@@ -13,6 +13,18 @@ export const COOLING_MIN_TEMPERATURE = 0.1;
 export const COOLING_DECAY_RATE = 0.95;
 export const COOLING_UPDATE_INTERVAL = 10;
 
+/**
+ * Barnes–Hut opening angle for quadtree repulsion (see QuadTree.calculateRepulsion).
+ * Lower = more accurate (more tree visits), higher = faster coarser approximation. Typical range 0.5–0.9.
+ */
+export const BARNES_HUT_THETA = 0.5;
+
+/**
+ * Integrator substeps committed per React setNodes call (1 = one physics tick per frame, legacy behavior).
+ * Values 2–4 reduce React reconciliation frequency; cooling/stability advance once per substep.
+ */
+export const PHYSICS_REACT_COMMIT_INTERVAL = 1;
+
 export const USE_COMMUNITY_DETECTION = true;
 export const CLUSTER_ATTRACTION_STRENGTH = 0.0003;
 

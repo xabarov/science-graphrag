@@ -24,6 +24,24 @@ describe("getGraphLayoutSignature", () => {
     };
     expect(getGraphLayoutSignature(g1)).not.toBe(getGraphLayoutSignature(g3));
   });
+
+  it("is stable when node and edge array order permutes (canonical sort by id)", () => {
+    const gOrdered = {
+      nodes: [{ id: "a" }, { id: "b" }, { id: "c" }],
+      edges: [
+        { id: "e1", source: "a", target: "b" },
+        { id: "e2", source: "b", target: "c" },
+      ],
+    };
+    const gShuffled = {
+      nodes: [{ id: "c" }, { id: "a" }, { id: "b" }],
+      edges: [
+        { id: "e2", source: "b", target: "c" },
+        { id: "e1", source: "a", target: "b" },
+      ],
+    };
+    expect(getGraphLayoutSignature(gOrdered)).toBe(getGraphLayoutSignature(gShuffled));
+  });
 });
 
 describe("getGraphCommunityDetectionSignature", () => {
