@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from science_graphrag.api.graph_display import enrich_authorship_nodes
+from science_graphrag.api.graph_reader_projection.authorship_enrich import enrich_authorship_nodes
 from science_graphrag.api.workspace_graph.projection import apply_workspace_node_kind
 
 

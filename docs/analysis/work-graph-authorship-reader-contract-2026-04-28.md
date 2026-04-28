@@ -151,7 +151,7 @@ then remove `Authorship` as today.
 ### Phase 3 — Hardening — **DONE** (2026-04-28)
 
 - [x] **Contract test matrix** — [`tests/test_works_graph_authorship_integration.py`](../../tests/test_works_graph_authorship_integration.py): workspace 1-hop slice vs reader work graph (non-truncated parity), no-`OF_AUTHOR` / `va:` parity, truncation invariant on center `authors_count`, five-author aggregator + `expand_work_aggregator` round-trip. Comparison rules: [`docs/architecture/work-graph-reader-authorship.md`](../architecture/work-graph-reader-authorship.md) § «Parity tests»; helpers: [`tests/fixtures/work_graph_workspace_authorship_parity.py`](../../tests/fixtures/work_graph_workspace_authorship_parity.py).
-- [x] **Observability** — `GET /v1/works/{work_id}/graph?include_authorship_debug=true` → `meta.authorship_projection` ∈ {`native`,`synthesized`,`mixed`,`none`} (post-collapse, pre-aggregator). Implementation: [`science_graphrag/api/works/graph_neighborhood.py`](../../science_graphrag/api/works/graph_neighborhood.py) (`compute_authorship_projection_meta`), router query param in [`science_graphrag/api/works/router.py`](../../science_graphrag/api/works/router.py).
+- [x] **Observability** — `GET /v1/works/{work_id}/graph?include_authorship_debug=true` → `meta.authorship_projection` ∈ {`native`,`synthesized`,`mixed`,`none`} (post-collapse, pre-aggregator). Implementation: [`science_graphrag/api/graph_reader_projection/authorship_meta.py`](../../science_graphrag/api/graph_reader_projection/authorship_meta.py) (`compute_authorship_projection_meta`), called from [`graph_neighborhood.py`](../../science_graphrag/api/works/graph_neighborhood.py); router query param in [`science_graphrag/api/works/router.py`](../../science_graphrag/api/works/router.py).
 - [x] **Phase 2 tail (HTTP expand)** — smoke: [`tests/api/test_work_graph_expand_http.py`](../../tests/api/test_work_graph_expand_http.py).
 
 ---
@@ -171,8 +171,9 @@ then remove `Authorship` as today.
 
 | Area | Path |
 |------|------|
-| Work graph payload | `science_graphrag/api/works/graph_neighborhood.py` (`_work_graph_neighbors_rows`, `_append_neighbor_edge`, `_work_graph_neighborhood_payload`, `collapse_authorship_for_reader_view`, `_strip_reader_only_authorship_properties`) |
-| Authorship enrich (Phase 1) | `science_graphrag/api/graph_display.py` (`enrich_authorship_nodes`, `compute_node_display`) |
+| Work graph payload | `science_graphrag/api/works/graph_neighborhood.py` (`_work_graph_neighbors_rows`, `_append_neighbor_edge`, `_work_graph_neighborhood_payload`; calls projection package for collapse / strip / meta) |
+| Reader authorship collapse + strip + projection meta | `science_graphrag/api/graph_reader_projection/` (`authorship_collapse`, `authorship_meta`, `stable_edge_id`) |
+| Authorship enrich (Phase 1) | `science_graphrag/api/graph_display.py` (`enrich_authorship_nodes`, `compute_node_display`); **call sites** `graph_reader_projection.authorship_enrich` + `graph_neighborhood` |
 | HTTP surface | `science_graphrag/api/works/router.py` (`get_work_graph`) |
 | Workspace projection | `science_graphrag/api/workspace_graph/cypher.py`, `_cypher_projection.py` |
 | Client author projection | `ui/src/components/graph/authorSemanticProjection.js` |

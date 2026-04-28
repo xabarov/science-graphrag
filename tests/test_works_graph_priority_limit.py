@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from science_graphrag.api.graph_reader_meta import GRAPH_CONTRACT_VERSION
 from science_graphrag.api.works.graph_neighborhood import _work_graph_neighborhood_payload
 
 
@@ -101,7 +102,7 @@ def test_work_graph_priority_limit_keeps_priority_nodes() -> None:
     m = payload["meta"]
     assert m["is_truncated"] is True
     assert m["skipped_by_kind"]["Author"] == 45
-    assert m.get("graph_contract_version") == 1
+    assert m.get("graph_contract_version") == GRAPH_CONTRACT_VERSION
     assert m.get("graph_mode") == "work_capped"
     assert m.get("neighbor_limit") == 10
     assert m.get("prioritize") == "Method,Dataset,Work"

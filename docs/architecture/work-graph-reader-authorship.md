@@ -6,12 +6,12 @@
 
 ## Pipeline order (contractual)
 
-Implemented in [`science_graphrag/api/works/graph_neighborhood.py`](../../science_graphrag/api/works/graph_neighborhood.py) (`_work_graph_neighborhood_payload`):
+Orchestrated in [`science_graphrag/api/works/graph_neighborhood.py`](../../science_graphrag/api/works/graph_neighborhood.py) (`_work_graph_neighborhood_payload`); reader authorship projection lives in [`science_graphrag/api/graph_reader_projection/`](../../science_graphrag/api/graph_reader_projection/).
 
 1. Build center `Work` and 1-hop neighbors (optional claims slice merged before authorship enrich).
-2. **`enrich_authorship_nodes`** ([`science_graphrag/api/graph_display.py`](../../science_graphrag/api/graph_display.py)) — loads display fields and, when Neo4j has `(Authorship)-[:OF_AUTHOR]->(Author)`, sets **`properties.author_entity_id`** on `Authorship` nodes for collapse.
-3. **`view=raw`:** strip **`author_entity_id`** from `Authorship.properties` (topology-oriented API); **no** collapse, **no** neighbor aggregation.
-4. **`view=reader`:** **`collapse_authorship_for_reader_view`** — removes `Authorship` / `HAS_AUTHORSHIP` from the reader-facing graph; adds **`AUTHORED`** edges from the center work to **`Author`** targets.
+2. **`enrich_authorship_nodes`** via [`authorship_enrich.py`](../../science_graphrag/api/graph_reader_projection/authorship_enrich.py) (implementation in [`graph_display.py`](../../science_graphrag/api/graph_display.py)) — loads display fields and, when Neo4j has `(Authorship)-[:OF_AUTHOR]->(Author)`, sets **`properties.author_entity_id`** on `Authorship` nodes for collapse.
+3. **`view=raw`:** **`strip_reader_only_authorship_properties`** — strip **`author_entity_id`** from `Authorship.properties` (topology-oriented API); **no** collapse, **no** neighbor aggregation.
+4. **`view=reader`:** **`collapse_authorship_for_reader_view`** ([`authorship_collapse.py`](../../science_graphrag/api/graph_reader_projection/authorship_collapse.py)) — removes `Authorship` / `HAS_AUTHORSHIP` from the reader-facing graph; adds **`AUTHORED`** edges from the center work to **`Author`** targets.
 5. **`_enrich_edges_with_display`** — stable edge ids, `display_type`, summaries.
 6. **`view=reader` only:** **`_apply_aggregators`** — dense same-kind neighborhoods may collapse into an **`Aggregator`** node (expand via `GET /v1/works/{work_id}/graph/expand`).
 
@@ -51,9 +51,12 @@ Automated checks compare **logical author slots** for the same `Work` id, not id
 
 | Piece | Location |
 |-------|----------|
-| Neighborhood + collapse + aggregators | `science_graphrag/api/works/graph_neighborhood.py` |
+| Neighborhood + aggregators | `science_graphrag/api/works/graph_neighborhood.py` |
+| Reader authorship collapse + synthetic `va:` / `via` | `science_graphrag/api/graph_reader_projection/authorship_collapse.py` |
+| Authorship projection meta (`include_authorship_debug`) | `science_graphrag/api/graph_reader_projection/authorship_meta.py` |
+| Stable edge ids (collapse + aggregators + display pass) | `science_graphrag/api/graph_reader_projection/stable_edge_id.py` |
 | Aggregator expand (incl. author / `AUTHORED`) | `expand_work_aggregator` in `science_graphrag/api/works/graph_neighborhood.py` |
-| Authorship batch enrich | `science_graphrag/api/graph_display.py` — `enrich_authorship_nodes` |
+| Authorship batch enrich (call sites use seam) | `science_graphrag/api/graph_reader_projection/authorship_enrich.py` → `graph_display.enrich_authorship_nodes` |
 | HTTP query params | `science_graphrag/api/works/router.py` — `get_work_graph`, `expand_aggregator` |
 | API spec (tables) | `docs/specs/frontend-ui-api-contracts-v1.md` §4 |
 | Manual QA checklist | `docs/runbooks/work-graph-authorship-qa.md` |

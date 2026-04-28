@@ -1722,10 +1722,6 @@
             Не просто RAG над документами, а исследовательская система, где важны
             структура знаний, цитаты, трассируемость и честная оценка качества.
           </p>
-          <p class="muted">
-            Основной narrative: <strong>система реализована</strong>,
-            <strong>GraphRAG здесь оправдан</strong>, <strong>метрики не декоративны</strong>.
-          </p>
         </aside>
       </div>
       <div class="title-strip">
@@ -1776,8 +1772,7 @@
         </div>
       </div>
       <div class="quote">
-        Центральная часть защиты: не только идея, но и рабочий объект — архитектура,
-        короткая демонстрация, метрики и честные выводы.
+        Рабочий объект: архитектура, демонстрация по корпусу, метрики и выводы по ограничениям.
       </div>
       <div class="slide-number">02</div>
     </section>
@@ -1878,8 +1873,8 @@
             alt="Две фазы: offline ingest и online Agent Runtime — один research-агент (ReAct) с набором тулов к Postgres, Neo4j, Qdrant"
           />
           <p class="defense-visual-note">
-            На схеме Phase 2 подписан как <strong>Agent Runtime</strong>: один агент и <strong>tools</strong> к трём хранилищам (не три
-            отдельных субагента). Детальный каталог тулов и промпт — <strong>слайд 06</strong>. Опционально в конфиге доступен
+            Phase 2 на схеме — <strong>Agent Runtime</strong>: один research-агент и <strong>tools</strong> к PostgreSQL,
+            Neo4j и Qdrant (не три независимых субагента). В конфиге опционально доступен
             <code>langgraph_supervisor_v1</code> с нодами-специалистами.
           </p>
         </div>
@@ -2063,7 +2058,7 @@
 <span class="py-doc">        work_id: Optional filter to one paper's chunks.</span>
 <span class="py-doc">        top_k: Max hits (clamped 1–16 in the real tool).</span>
 <span class="py-doc">    """</span>
-    <span class="py-punct">...</span>  <span class="py-comment"># embedding → vector search → structured payload</span></code></pre>
+    <span class="py-punct">...</span></code></pre>
 
         <pre class="defense-python-snippet" aria-label="Иллюстрация cypher_query"><code><span class="py-kw">def</span> <span class="py-def">cypher_query</span><span class="py-punct">(</span>
     <span class="py-param">query</span><span class="py-punct">: </span><span class="py-type">str</span><span class="py-punct">,</span>
@@ -2078,7 +2073,7 @@
 <span class="py-doc">        query: Cypher text (MATCH … RETURN …; no writes).</span>
 <span class="py-doc">        params: Optional map of parameters for $ placeholders.</span>
 <span class="py-doc">    """</span>
-    <span class="py-punct">...</span>  <span class="py-comment"># validate → session.run → list[dict] rows</span></code></pre>
+    <span class="py-punct">...</span></code></pre>
 
         <pre class="defense-python-snippet" aria-label="Иллюстрация find_works"><code><span class="py-kw">def</span> <span class="py-def">find_works</span><span class="py-punct">(</span>
     <span class="py-param">query</span><span class="py-punct">: </span><span class="py-type">str</span><span class="py-punct">,</span>
@@ -2095,7 +2090,7 @@
 <span class="py-doc">        workspace_id: Restrict hits to works linked to this workspace, if set.</span>
 <span class="py-doc">        limit: Maximum matches (bounded in the real tool).</span>
 <span class="py-doc">    """</span>
-    <span class="py-punct">...</span>  <span class="py-comment"># Neo4j full-text index → ranked work rows</span></code></pre>
+    <span class="py-punct">...</span></code></pre>
       </div>
       <div class="slide-number">07</div>
     </section>
@@ -2128,8 +2123,7 @@
         </div>
       </div>
       <div class="quote">
-        Цель демо — связать архитектуру с живым сценарием: система отвечает не «в общем»,
-        а по корпусу с проверяемой опорой на статьи.
+        Ответ строится по корпусу: evidence из retrieval и графа, цитаты на статьи, трассировка шагов в UI.
       </div>
       <div class="slide-number">08</div>
     </section>
@@ -2172,10 +2166,9 @@
                 <td>Сквозной агент с инструментами</td>
                 <td class="defense-cell-stack">
                   <div>
-                    <strong>Формальные проверки suite:</strong> 10 из 10 кейсов — автоматический чеклист сценария без
-                    провалов (ни один кейс не «падает» на порогах).
+                    <strong>Сквозной сценарий:</strong> 10 из 10 кейсов прошли формальные проверки suite.
                   </div>
-                  <div><strong>p95 задержка ответа:</strong> ≈26 с (<code>latency_p95</code> в отчёте).</div>
+                  <div><strong>p95 задержка ответа:</strong> ≈26 с (<code>latency_p95</code> по агрегату того же прогона).</div>
                   <div><strong>LLM-судья ответа:</strong> в среднем <strong>4.8</strong> из 6.</div>
                 </td>
               </tr>
@@ -2278,12 +2271,12 @@
             </li>
             <li>
               <strong>Каркас статьи</strong> (заголовок, абстракт, авторы, выборка идентификаторов в библиографии):
-              отдельные текстовые и множественные метрики сравнения с эталоном; детали — в отчёте и в коде, на слайде
-              не зачитывать.
+              отдельные текстовые и множественные метрики сравнения с эталоном; подробности — в отчёте и в коде
+              <code>eval/</code>.
             </li>
             <li>
               <strong>Утверждения, концепты и темы</strong> — полнота и точность (P/R) с несколькими режимами
-              сопоставления с эталоном; строгий перефраз задаётся в gold кейса, не «втихую».
+              сопоставления с эталоном; параметры перефраза и пороги задаются в эталоне кейса.
             </li>
             <li>
               <strong>Методы и датасеты для графа</strong> — мягкое совпадение нормализованных имён и алиасов с порогом
@@ -2294,10 +2287,6 @@
               при LLM — дозаполнение по чанкам к уже собранному скелету, не генерация «с нуля одним промптом»; отдельно
               идёт bench по секции References (границы секции, overlap записей). Эталон и прогоны тянут качество через
               провальные кейсы, не только через среднее.
-            </li>
-            <li>
-              В отчёте важно называть <strong>режим сравнения и пороги</strong>, плюс честно показывать и сильные стороны,
-              и «неудобные» цифры — лучше число и смысл провала, чем зелёный индикатор без контекста.
             </li>
           </ul>
         </div>
@@ -2323,14 +2312,12 @@
               куда он ходил, не вызвал ли лишнего и не оборвал ли сценарий до конца.
             </li>
             <li>
-              Трассировка для нас не «лог ради лога», а способ ответить на вопрос: задача решена аккуратно или система
-              споткнулась на полпути. По потоку событий в UI проще разбирать спорные прогоны, чем по одной финальной
-              строке.
+              Трассировка показывает, завершён ли сценарий аккуратно или обрывается на полпути; по потоку событий в UI
+              проще разобрать спорный прогон, чем по одной финальной строке ответа.
             </li>
             <li>
-              Недавно всплывали краевые случаи вокруг обязательного финального шага ответа: контракт «закончить ход
-              правильно» оказался хрупким местом при смене промпта и графа. Такие вещи ловит бенчмарк, но их нужно
-              держать в голове при каждом релизе.
+              Обязательный финальный шаг ответа (<code>final_answer</code>) чувствителен к смене промпта и графа;
+              сквозной бенчмарк агента фиксирует такие регрессии.
             </li>
             <li>
               Отрисовка большого графа в браузере упирается в другое: даже корректные данные в базе не гарантируют

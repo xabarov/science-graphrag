@@ -19,6 +19,7 @@
 | [`agent-chat-frontend-ui-plan-2026-04-26.md`](./agent-chat-frontend-ui-plan-2026-04-26.md) | Agent chat UI/UX (`ui/` run chrome, rail, typed blocks) |
 | [`chat-agent-roadmap-trace-audit-2026-04-27.md`](./chat-agent-roadmap-trace-audit-2026-04-27.md) | Chat-agent eval harness + Phoenix trace audit (`ws-pilot-od`) |
 | [`agent-chat-tools-work-plan-2026-04-28.md`](./agent-chat-tools-work-plan-2026-04-28.md) | **План работ по тулзам** чат-агента: фазы A–D (final_answer, граф/edge_search, данные paper_profile, Cypher, fan-out, tool_search, E2E-CI) |
+| [`agent-heavy-live-trace-audit-and-remediation-2026-04-28.md`](./agent-heavy-live-trace-audit-and-remediation-2026-04-28.md) | **Live heavy E2E + Phoenix:** 3 сложных кейса, артефакты, ссылки на трейсы, план P0–P3 (graph_only / final_answer / шум спанов) |
 | [`chat-agent-od-workspace-restoration-and-eval-plan-2026-04-27.md`](./chat-agent-od-workspace-restoration-and-eval-plan-2026-04-27.md) | OD chat-agent proving ground: workspace restoration + trusted eval scenarios |
 | [`graph-readability-followup-2026-04-25.md`](./graph-readability-followup-2026-04-25.md) | GR6–GR9 graph UX |
 | [`light-theme-roadmap-2026-04-27.md`](./light-theme-roadmap-2026-04-27.md) | UI appearance system: light theme concept, tokenization, rollout phases |

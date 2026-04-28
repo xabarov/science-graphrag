@@ -118,7 +118,7 @@ export default function WorkspacePaperRow({
           <CursorIconAction component={Link} to={workReaderUrl(workId)} title={t("workspace.tooltip.reader")}>
             <MenuBookIcon sx={{ fontSize: "1rem" }} />
           </CursorIconAction>
-          <CursorIconAction component={Link} to={workGraphUrl(workId, null)} title={t("workspace.tooltip.workGraph")}>
+          <CursorIconAction component={Link} to={workGraphUrl(workId, workspaceId)} title={t("workspace.tooltip.workGraph")}>
             <AccountTreeIcon sx={{ fontSize: "1rem" }} />
           </CursorIconAction>
           <CursorIconAction component={Link} to={workChatUrl(workId, workspaceId)} title={t("workspace.tooltip.chatPaper")}>

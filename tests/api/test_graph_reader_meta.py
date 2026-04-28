@@ -83,3 +83,19 @@ def test_enrich_graph_mode_override() -> None:
         graph_mode="work_expand_aggregator",
     )
     assert meta["graph_mode"] == "work_expand_aggregator"
+
+
+def test_enrich_work_workspace_context_graph_mode() -> None:
+    """Phase 2: optional workspace context uses explicit ``work_workspace_context`` mode."""
+    meta = {"graph_scope": "work_1hop", "is_truncated": False}
+    enrich_reader_graph_meta(
+        meta,
+        neighbor_limit=80,
+        prioritize="Method,Dataset,Work",
+        view="reader",
+        workspace_id="ws-phase2",
+        graph_mode="work_workspace_context",
+    )
+    assert meta["graph_mode"] == "work_workspace_context"
+    assert meta["workspace_id"] == "ws-phase2"
+    assert meta["graph_contract_version"] == GRAPH_CONTRACT_VERSION

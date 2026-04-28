@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 # Bump when neighbor caps, membership rules, or reader collapse semantics change contractually.
-GRAPH_CONTRACT_VERSION: int = 1
+GRAPH_CONTRACT_VERSION: int = 2
 
 
 def graph_mode_from_meta(meta: dict[str, Any]) -> str:
@@ -26,6 +26,11 @@ def _normalize_workspace_id(workspace_id: str | None) -> str | None:
         return None
     stripped = str(workspace_id).strip()
     return stripped or None
+
+
+def normalize_workspace_id_query_param(workspace_id: str | None) -> str | None:
+    """Normalize optional ``workspace_id`` from HTTP query (empty → ``None``)."""
+    return _normalize_workspace_id(workspace_id)
 
 
 def enrich_reader_graph_meta(

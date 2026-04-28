@@ -25,10 +25,15 @@ def test_work_graph_expand_http_returns_meta(monkeypatch: pytest.MonkeyPatch) ->
         aggregator_id: str,
         *,
         limit: int = 50,
+        workspace_id: str | None = None,
+        workspace_internal_work_ids: set[str] | None = None,
+        **_: Any,
     ) -> dict[str, Any] | None:
         assert work_id == wid
         assert aggregator_id == agg
         assert limit == 10
+        assert workspace_id is None
+        assert workspace_internal_work_ids is None
         return {
             "nodes": [{"id": wid, "type": "Work", "node_kind": "Work"}],
             "edges": [],
@@ -37,8 +42,27 @@ def test_work_graph_expand_http_returns_meta(monkeypatch: pytest.MonkeyPatch) ->
 
     monkeypatch.setattr(works_router, "expand_work_aggregator", _fake_expand)
 
+    class _MemSession:
+        def __enter__(self) -> "_MemSession":
+            return self
+
+        def __exit__(self, *_exc: Any) -> None:
+            return None
+
+        def run(self, query: str, **_kwargs: Any) -> Any:
+            class _R:
+                @staticmethod
+                def single() -> dict[str, str] | None:
+                    if "MATCH (w:Work" in query:
+                        return {"wid": wid}
+                    return None
+
+            return _R()
+
     client = TestClient(api_main.app)
-    client.app.dependency_overrides[app_get_stores] = lambda: SimpleNamespace(neo4j=object())
+    client.app.dependency_overrides[app_get_stores] = lambda: SimpleNamespace(
+        neo4j=SimpleNamespace(session=lambda: _MemSession())
+    )
     try:
         res = client.get(
             "/v1/works/http-expand-work-1/graph/expand",

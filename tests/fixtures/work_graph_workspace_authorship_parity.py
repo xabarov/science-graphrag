@@ -90,3 +90,16 @@ def workspace_one_hop_subgraph(
         if src in nids and tgt in nids:
             sub_edges.append(e)
     return sub_nodes, sub_edges
+
+
+def work_graph_workspace_membership_by_work_id(payload: dict[str, Any]) -> dict[str, str]:
+    """``Work.id`` → ``workspace_membership`` for nodes that carry the field (Phase 2)."""
+    out: dict[str, str] = {}
+    for n in payload.get("nodes") or []:
+        if str(n.get("type") or "") != "Work":
+            continue
+        wid = str(n.get("id") or "")
+        wm = str(n.get("workspace_membership") or "").strip()
+        if wid and wm:
+            out[wid] = wm
+    return out

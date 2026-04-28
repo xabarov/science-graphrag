@@ -35,11 +35,11 @@ This document phases **contract clarification**, **shared projection module (DRY
 
 ## 3. Design principles (acceptance anchors)
 
-1. **Explicit modes:** Any response that applies caps or different hop rules must declare them in **`meta`** (already partially done: `is_truncated`, `neighbor_limit`, `prioritize`). Extend with **`graph_mode`** or equivalent enum: `work_capped` | `workspace_union` | `work_workspace_context` (name TBD) so clients do not guess.
+1. **Explicit modes:** Any response that applies caps or different hop rules must declare them in **`meta`** (already partially done: `is_truncated`, `neighbor_limit`, `prioritize`). Extend with **`graph_mode`** or equivalent enum: `work_capped` | `workspace_union` | `work_workspace_context` (name TBD) so clients do not guess. **Phase 0 (done):** `meta.graph_mode` + `meta.graph_contract_version` via [`science_graphrag/api/graph_reader_meta.py`](../../science_graphrag/api/graph_reader_meta.py) (`work_capped`, `workspace_union`, `workspace_v2`, `workspace_neighbors`, expand-only modes). **`work_workspace_context`:** **Phase 2 done (2026-04-28)** when work graph is requested with validated optional `workspace_id`.
 
 2. **Single source of truth for reader authorship shape:** After refactor, **either** the server always emits reader-safe authorship for both surfaces **or** the UI projection is deleted in favor of server normalization — not both with overlapping logic.
 
-3. **DRY boundary:** Introduce a **`science_graphrag/api/graph_reader_projection/`** (package name TBD) that owns:
+3. **DRY boundary:** **`science_graphrag/api/graph_reader_projection/`** (Phase 1, 2026-04-28) owns:
    - pure functions: collapse / virtual author ids / `via` metadata (moved from ad-hoc `graph_neighborhood` + `graph_display` chunks);
    - optional **“annotate membership”** pass when `(work_id, workspace_id)` is known;
    - shared helpers consumed by **`graph_neighborhood`** and **`workspace_graph`** orchestrators (they keep Cypher assembly; projection owns JSON-level reader rules).
@@ -54,8 +54,9 @@ This document phases **contract clarification**, **shared projection module (DRY
 
 | Concern | Primary modules |
 |----------|------------------|
-| Work neighborhood + reader collapse + aggregators | `science_graphrag/api/works/graph_neighborhood.py` |
-| Authorship batch enrich | `science_graphrag/api/graph_display.py` (`enrich_authorship_nodes`) |
+| Work neighborhood + aggregators | `science_graphrag/api/works/graph_neighborhood.py` |
+| Reader authorship collapse / meta / enrich seam | `science_graphrag/api/graph_reader_projection/` |
+| Authorship batch enrich (implementation) | `science_graphrag/api/graph_display.py` (`enrich_authorship_nodes`; call sites use `graph_reader_projection.authorship_enrich`) |
 | Workspace graph projection | `science_graphrag/api/workspace_graph/` (orchestration + normalization) |
 | UI author semantics | `ui/src/components/graph/authorSemanticProjection.js` |
 | ADR | `docs/adr/011-*.md`, `012-*.md` (workspace vs work semantics) |
@@ -66,21 +67,28 @@ This document phases **contract clarification**, **shared projection module (DRY
 
 ## 5. Phased remediation plan
 
-### Phase 0 — Contract inventory and `meta` truthfulness (short)
+### Phase 0 — Contract inventory and `meta` truthfulness (short) — **[DONE 2026-04-28]**
 
 **Goal:** Stop silent confusion without large refactors.
 
 **Tasks:**
 
 - Add **`meta.graph_contract_version`** (integer or semver string) to work graph + workspace reader responses; bump when neighbor or membership rules change.
+  - **Done:** integer constant **`GRAPH_CONTRACT_VERSION`** in [`science_graphrag/api/graph_reader_meta.py`](../../science_graphrag/api/graph_reader_meta.py) (**`1`** at Phase 0 ship; **`2`** from Phase 2 when work-graph optional `workspace_id` membership shipped, 2026-04-28); written on work graph ([`graph_neighborhood.py`](../../science_graphrag/api/works/graph_neighborhood.py)), all workspace graph branches + [`workspace_graph_neighbors`](../../science_graphrag/api/workspace_graph/cypher.py), and expand endpoints (work [`expand_work_aggregator`](../../science_graphrag/api/works/graph_neighborhood.py), workspace [`router.py` expand](../../science_graphrag/api/workspace_graph/router.py)).
 - Ensure **`meta`** always includes: `neighbor_limit`, `prioritize`, `is_truncated`, `view`, and explicit **`workspace_id`** when the handler received it (even if null).
+  - **Done:** shared **`enrich_reader_graph_meta()`** adds `graph_contract_version`, `neighbor_limit` (requested int on work graph; **`null`** on workspace root — full 1-hop union per ADR-012), `prioritize`, `view`, `workspace_id` ( **`null`** on standalone work graph until Phase 2 query param; whitespace-only ids normalized to **`null`**), **`graph_mode`**, and **`neighbor_limit_applied`** when absent (**`null`** on workspace / neighbors / expand). Existing **`neighbor_limit_applied`** on work graph preserved. **`legacy_workspace_graph_union`** now receives `prioritize` / `view` for consistent meta after merge.
 - Docs: one table in `frontend-ui-api-contracts-v1.md` — “When is `workspace_membership` present?”
+  - **Done:** Phase 0 `meta` subsection, updated JSON example, workspace `meta` paragraph, and membership table in [`docs/specs/frontend-ui-api-contracts-v1.md`](../specs/frontend-ui-api-contracts-v1.md).
 
 **Acceptance:** UI can show a one-line subtitle (“Capped neighborhood · limit 40”) from `meta` alone; no new graph queries.
 
+- **Done:** [`ui/src/components/graph/graphContractSubtitle.js`](../../ui/src/components/graph/graphContractSubtitle.js) + wiring in [`GraphDetailPanel.jsx`](../../ui/src/components/graph/GraphDetailPanel.jsx); i18n **`graph.contractSubtitle.*`** in `ui/src/i18n/messages/en|ru/partGraphUi.js`.
+
+**Tests:** [`tests/api/test_graph_reader_meta.py`](../../tests/api/test_graph_reader_meta.py) (helper + normalize); [`tests/test_works_graph_priority_limit.py`](../../tests/test_works_graph_priority_limit.py) asserts Phase 0 keys on work graph meta.
+
 ---
 
-### Phase 1 — DRY package: reader projection extraction (backend)
+### Phase 1 — DRY package: reader projection extraction (backend) — **[DONE 2026-04-28]**
 
 **Goal:** Remove duplicated **stringly** logic between `graph_neighborhood.py` / `graph_display.py` / workspace normalization.
 
@@ -95,9 +103,17 @@ This document phases **contract clarification**, **shared projection module (DRY
 
 **Acceptance:** `rg collapse_authorship_for_reader_view` shows a single definition; pylint/module boundaries clean; existing tests green.
 
+**Done (implementation notes):**
+
+- **Package:** [`science_graphrag/api/graph_reader_projection/`](../../science_graphrag/api/graph_reader_projection/) — `authorship_collapse.py` (single `def collapse_authorship_for_reader_view`), `authorship_meta.py` (planned `meta_builders.py` role: `compute_authorship_projection_meta`, `strip_reader_only_authorship_properties`), `authorship_enrich.py` (re-export of enrich), `stable_edge_id.py` (`stable_graph_edge_id` shared with work-graph aggregators / `_enrich_edges_with_display`), `constants.py` (`READER_SYNTHETIC_AUTHOR_ID_PREFIX`, hash salt marker for `va:` ids).
+- **Orchestration:** [`graph_neighborhood.py`](../../science_graphrag/api/works/graph_neighborhood.py) imports projection + enrich seam only; no second definition of collapse.
+- **Workspace graph:** [`workspace_graph/cypher.py`](../../science_graphrag/api/workspace_graph/cypher.py) uses `authorship_enrich` for `enrich_authorship_nodes` (workspace still does not run server-side collapse — client `authorSemanticProjection.js` unchanged; **Phase 4**).
+- **Tests:** imports updated in [`tests/api/test_collapse_authorship_reader_view.py`](../../tests/api/test_collapse_authorship_reader_view.py), [`tests/api/test_work_graph_authorship_projection_meta.py`](../../tests/api/test_work_graph_authorship_projection_meta.py), [`tests/test_workspace_graph_display.py`](../../tests/test_workspace_graph_display.py); behavior covered by existing integration tests.
+- **Docs:** [`docs/architecture/work-graph-reader-authorship.md`](../architecture/work-graph-reader-authorship.md) table + pipeline pointers updated.
+
 ---
 
-### Phase 2 — Membership and “external” semantics on work graph (optional `workspace_id`)
+### Phase 2 — Membership and “external” semantics on work graph (optional `workspace_id`) — **[DONE 2026-04-28]**
 
 **Goal:** When the client knows **`workspace_id`**, the work graph response can annotate neighbor works with **`workspace_membership`** (or a documented subset) **without** switching to the full workspace union URL.
 
@@ -108,6 +124,15 @@ This document phases **contract clarification**, **shared projection module (DRY
 - UI: when opening from workspace context, pass **`workspace_id`** query param (if not already); keep `workGraphUrl` as default from paper list without workspace.
 
 **Acceptance:** Integration test: seeded workspace + external work + `CITES`; with `workspace_id` param, neighbor shows expected membership flags; without param, filter disabled or labeled “N/A outside workspace context.”
+
+**Done (implementation notes):**
+
+- **API:** [`science_graphrag/api/works/router.py`](../../science_graphrag/api/works/router.py) — optional `workspace_id` on **`GET /{work_id}/graph`** and **`GET /{work_id}/graph/expand`**; validates workspace exists (**404** `workspace_not_found`) and center work ∈ workspace (**422** `work_not_in_workspace`); loads internal work ids once per request.
+- **Annotation:** [`science_graphrag/api/works/graph_neighborhood.py`](../../science_graphrag/api/works/graph_neighborhood.py) — reuses **`annotate_membership_and_cites`** + **`apply_workspace_node_kind`** from [`workspace_graph/projection.py`](../../science_graphrag/api/workspace_graph/projection.py) after aggregators; **`meta.graph_mode`** = **`work_workspace_context`** when context active; **`GRAPH_CONTRACT_VERSION`** bumped to **2** in [`graph_reader_meta.py`](../../science_graphrag/api/graph_reader_meta.py).
+- **Expand URLs:** Aggregator **`expand_endpoint`** appends **`workspace_id`** when the graph was loaded with workspace context so expand keeps membership.
+- **UI:** [`useGraphWorkspaceData.js`](../../ui/src/components/graph/hooks/useGraphWorkspaceData.js) — if **`work_id`** is set, always **`getWorkGraph`** (passes `workspaceId` from URL/shell when present); workspace union only when work scope is empty. [`workspacePageUrls.js`](../../ui/src/pages/WorkspacePage/workspacePageUrls.js) unchanged API; [`WorkspacePaperRow.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePaperRow.jsx) passes **`workspaceId`** into **`workGraphUrl`**. [`graph.js`](../../ui/src/services/research/graph.js) sends **`workspace_id`** query.
+- **Tests:** [`tests/test_work_graph_workspace_membership_integration.py`](../../tests/test_work_graph_workspace_membership_integration.py), helper [`work_graph_workspace_membership_by_work_id`](../../tests/fixtures/work_graph_workspace_authorship_parity.py), [`test_graph_reader_meta.py`](../../tests/api/test_graph_reader_meta.py) enrich case for **`work_workspace_context`**; expand HTTP mock updated for Neo4j preflight session.
+- **Docs:** [`frontend-ui-api-contracts-v1.md`](../specs/frontend-ui-api-contracts-v1.md) — work graph / expand / membership table + **`/graph`** URL semantics (**work_id** → capped API always).
 
 ---
 
@@ -176,7 +201,7 @@ This document phases **contract clarification**, **shared projection module (DRY
 
 ## 8. Completion definition (“architecturally closed”)
 
-- **DRY:** Reader authorship projection and related **`va:` / `via`** rules live in **one Python package**; UI projection reduced to presentation or removed.
+- **DRY:** Reader authorship projection and related **`va:` / `via`** rules live in **one Python package** (`graph_reader_projection` — **Phase 1 done, 2026-04-28**); UI projection (`authorSemanticProjection.js`) still overlaps until **Phase 4**.
 - **Honest asymmetry:** ADR, API spec, and UI strings agree; `meta` exposes mode and limits.
 - **Workspace context:** Optional `workspace_id` on work graph enables **membership-aware** filters without misusing the workspace union endpoint.
 - **2-hop policy:** Institution (and venue when data exists) governed by **explicit** flags / ADR, not accidental 1-hop shape.

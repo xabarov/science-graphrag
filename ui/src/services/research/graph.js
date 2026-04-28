@@ -9,6 +9,7 @@ import { apiClient, buildApiUrl } from "../apiClient.js";
  *   view?: "reader" | "raw",
  *   includeClaims?: boolean,
  *   claimsLimit?: number,
+ *   workspaceId?: string | null,
  * }} [options]
  */
 export async function getWorkGraph(workId, options = {}) {
@@ -35,6 +36,8 @@ export async function getWorkGraph(workId, options = {}) {
     const v = Math.min(120, Math.max(1, Math.floor(Number(options.claimsLimit))));
     params.set("claims_limit", String(v));
   }
+  const ws = options.workspaceId != null ? String(options.workspaceId).trim() : "";
+  if (ws) params.set("workspace_id", ws);
   const q = params.toString();
   return apiClient.get(buildApiUrl(`/v1/works/${id}/graph${q ? `?${q}` : ""}`));
 }

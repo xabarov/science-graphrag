@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from science_graphrag.api.works.graph_neighborhood import collapse_authorship_for_reader_view
+from science_graphrag.api.graph_reader_projection.authorship_collapse import (
+    collapse_authorship_for_reader_view,
+)
 
 
 def test_collapse_authorship_replaces_with_authored_edge() -> None:

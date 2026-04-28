@@ -222,7 +222,8 @@ def enrich_authorship_nodes(session: Neo4jSession, nodes: list[dict[str, Any]]) 
     """Hydrate Authorship display fields from related Author/Institution nodes.
 
     When ``OF_AUTHOR`` resolves, ``properties.author_entity_id`` is set for
-    ``collapse_authorship_for_reader_view``. Work-graph ``view=raw`` strips that
+    ``graph_reader_projection.authorship_collapse.collapse_authorship_for_reader_view``.
+    Work-graph ``view=raw`` strips that
     key after enrich so the raw payload stays topology-oriented.
     """
     ids = [str(n.get("id") or "") for n in nodes if str(n.get("type") or "") == "Authorship"]

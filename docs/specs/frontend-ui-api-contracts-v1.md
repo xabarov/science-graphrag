@@ -223,10 +223,15 @@ Optional query (server contract):
 | `aggregator_threshold` | Optional int **2–200**. Global override for per-kind neighbor aggregation thresholds (GR8). |
 | `aggregator_disabled_kinds` | Optional CSV of neighbor kinds to skip aggregating (e.g. **`Author`**, **`Institution`**). |
 | `include_authorship_debug` | Boolean (default **false**). When **true** and `view=reader`, response **`meta.authorship_projection`** is set to one of **`native`**, **`synthesized`**, **`mixed`**, **`none`** — classifies post-collapse `AUTHORED` targets from the center (no PII). See [`docs/architecture/work-graph-reader-authorship.md`](../architecture/work-graph-reader-authorship.md). |
+| `workspace_id` | Optional string (Phase 2, 2026-04-28). When set, the center work must be **`CONTAINS`**-ed by that workspace; response nodes get **`workspace_membership`** / cite split fields using the same rules as workspace graph projection. **`404`** `workspace_not_found` if the workspace does not exist; **`422`** `work_not_in_workspace` if the work is not in the collection. **`meta.graph_mode`** is **`work_workspace_context`** (still capped neighborhood, not union). |
 
 **Neighbor aggregation (reader only):** Dense groups of same-type neighbors attached to the center `Work` may be replaced by an **`Aggregator`** node (e.g. many authors). Default per-kind thresholds live in server code (`KIND_AGG_THRESHOLDS`, e.g. **author: 4**).
 
-**Reader graph `meta` contract (Phase 0, 2026-04-28):** Responses include **`meta.graph_contract_version`** (integer, currently **`1`**). Bump it when neighbor caps, membership annotation rules, or reader authorship collapse semantics change in a contract-visible way. **`meta.graph_mode`** is a short product-facing enum derived from `graph_scope` / workspace `mode`: **`work_capped`**, **`workspace_union`**, **`workspace_v2`**, **`workspace_neighbors`**, plus expand-only values **`work_expand_aggregator`** / **`workspace_expand_aggregator`**. Always present on root graph responses: **`neighbor_limit`** (requested query value for work graph; **`null`** for workspace root graph — full 1-hop union per ADR-012), **`neighbor_limit_applied`** (integer cap used for work neighborhood; **`null`** on workspace / neighbors / expand where the cap does not apply), **`prioritize`**, **`view`**, **`is_truncated`**, **`workspace_id`** (**`null`** on standalone work graph until an optional `workspace_id` query exists).
+**Reader graph `meta` contract (Phase 0–2):** Responses include **`meta.graph_contract_version`** (integer, currently **`2`** — bumped when optional work-graph **`workspace_id`** membership shipped). Bump it when neighbor caps, membership annotation rules, or reader authorship collapse semantics change in a contract-visible way.
+
+**`meta.graph_mode`** (product-facing): derived from `graph_scope` / workspace `mode`, or overridden explicitly: **`work_capped`** (standalone neighborhood), **`work_workspace_context`** (neighborhood + optional `workspace_id` membership pass), **`workspace_union`**, **`workspace_v2`**, **`workspace_neighbors`**, plus expand-only **`work_expand_aggregator`** / **`workspace_expand_aggregator`**.
+
+Always present on root graph responses: **`neighbor_limit`** (requested int on work graph; **`null`** on workspace root — full 1-hop union per ADR-012), **`neighbor_limit_applied`**, **`prioritize`**, **`view`**, **`is_truncated`**, **`workspace_id`** (normalized query value when provided, else **`null`**).
 
 ### `GET /v1/works/{work_id}/graph/expand`
 
@@ -234,6 +239,7 @@ Optional query (server contract):
 |-------|---------|
 | `aggregator_id` | **Required.** Stable id emitted on the `Aggregator` node (`aggregation_hints` / `expand_endpoint`). |
 | `limit` | Integer **1–300** (default **50**). Caps how many neighbor nodes are returned for that bucket. |
+| `workspace_id` | Optional (Phase 2). Same validation and membership annotation as **`GET .../graph`** when expanding from a workspace-scoped work graph; echoed in **`meta.workspace_id`**. **`meta.graph_mode`** stays **`work_expand_aggregator`**. |
 
 **Behavior:** Recomputes an enlarged neighborhood and returns the center work plus the neighbors that were folded into the given aggregator. **Author** buckets (edges of type **`AUTHORED`** in reader mode) are expanded using an internal **`view=reader`** fetch with **`aggregator_disabled_kinds=Author`**, because the raw topology uses **`HAS_AUTHORSHIP`** to `:Authorship` rather than **`AUTHORED`**.
 
@@ -267,7 +273,7 @@ Response (backward compatible: `id`, `type`, `label` on nodes and `source`, `tar
     }
   ],
   "meta": {
-    "graph_contract_version": 1,
+    "graph_contract_version": 2,
     "graph_mode": "work_capped",
     "semantic_available": true,
     "graph_scope": "work_1hop",
@@ -300,7 +306,8 @@ The standalone graph page is implemented in [`ui/src/pages/GraphPage.jsx`](../..
 
 | Query | Meaning |
 |-------|---------|
-| `work_id` | Required to load a graph; persisted client-side when set. |
+| `work_id` | When set, loads **capped** work neighborhood via **`GET /v1/works/{work_id}/graph`** (not the workspace union). Persisted client-side when set. |
+| `workspace_id` | Optional. When **`work_id`** is set, passed to the work graph API for **`workspace_membership`** on neighbor works. When **`work_id`** is omitted, the page loads **`GET /v1/workspaces/{workspace_id}/graph`** (full union). |
 | `lab=1` | Graph Lab: diagnostics JSON expanded by default. |
 | `compact=1` | Denser standalone layout: compact panel defaults (e.g. Graph/canvas mode), collapsed chrome-friendly defaults. |
 | `focus=1` | **Max canvas:** implies compact panel behavior and starts with page chrome collapsed, workspace links collapsed, and panel secondary blocks (title block, legend, alerts, details) hidden until the user expands them. Preserved on **Load** with `compact` / `lab`. |
@@ -361,7 +368,7 @@ Response matches work graph shape (`work_id`, `nodes`, `edges`, `meta`). Each no
 |-----|------------|--------|
 | `GET /v1/workspaces/{workspace_id}/graph` | **Yes** (when projection runs) | Set by server membership pass on `Work` and related nodes; values **`internal`** \| **`external`**. |
 | `GET /v1/workspaces/{workspace_id}/graph/neighbors` | **Yes** | Same annotation rules for the lazy neighbor slice. |
-| `GET /v1/works/{work_id}/graph` | **No** (current) | Standalone work neighborhood has no workspace collection context; UI must not treat missing membership as “internal”. Optional query `workspace_id` (future phase) may enable annotation. |
+| `GET /v1/works/{work_id}/graph` | **Yes** iff query **`workspace_id`** is set and valid (center work ∈ workspace) | Same **`internal`** / **`external`** rules as workspace projection (`annotate_membership_and_cites`). Without **`workspace_id`**, omit membership fields — UI must not treat missing membership as “internal”. |
 
 - `workspace_membership`: `internal` \| `external` (for `:Work`, membership in the workspace collection; for other labels, adjacency to internal works).
 - `internal_cite_count` / `external_cite_count` on `:Work` (outgoing `CITES` targets split by membership).

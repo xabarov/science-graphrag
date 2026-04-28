@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from science_graphrag.api.works.graph_neighborhood import compute_authorship_projection_meta
+from science_graphrag.api.graph_reader_projection.authorship_meta import (
+    compute_authorship_projection_meta,
+)
 
 
 def test_authorship_projection_native() -> None:

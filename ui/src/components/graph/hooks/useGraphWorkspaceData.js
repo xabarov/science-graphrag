@@ -85,20 +85,21 @@ export function useGraphWorkspaceData(workspaceId, workId) {
       graphTelemetryEmit("fetchWorkspaceGraphStart", { workspaceId: ws, workId: w });
       try {
         let raw;
-        if (ws) {
+        if (w) {
+          setNeighborCache(new Set());
+          const res = await getWorkGraph(w, {
+            view: "reader",
+            includeClaims: true,
+            workspaceId: ws || undefined,
+          });
+          raw = res.data;
+        } else {
           raw = await getWorkspaceGraph(ws, {
             mode: "full",
             includeExternal: true,
             externalMinInternalCiters: 0,
             includeClaims: true,
           });
-        } else {
-          setNeighborCache(new Set());
-          const res = await getWorkGraph(w, {
-            view: "reader",
-            includeClaims: true,
-          });
-          raw = res.data;
         }
         if (cancelled) return;
         setWorkspaceGraphRaw(raw);

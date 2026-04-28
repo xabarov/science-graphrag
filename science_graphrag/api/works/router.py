@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import Response, StreamingResponse
 
 from science_graphrag.api.deps import StoreRegistry, get_stores
+from science_graphrag.api.graph_reader_meta import normalize_workspace_id_query_param
 from science_graphrag.api.settings import get_settings
 from science_graphrag.api.works.chunks import work_chunks
 from science_graphrag.api.works.detail import (
@@ -28,6 +29,7 @@ from science_graphrag.api.works.dto import (
 )
 from science_graphrag.api.works.graph_neighborhood import (
     expand_work_aggregator,
+    load_work_graph_workspace_internal_ids,
     work_graph_neighborhood,
 )
 from science_graphrag.config import Settings
@@ -179,8 +181,32 @@ def get_work_graph(  # pylint: disable=R0917
             "(native|synthesized|mixed|none)."
         ),
     ),
+    workspace_id: str | None = Query(
+        default=None,
+        description=(
+            "Optional workspace collection id: when set, neighbor Works include "
+            "workspace_membership (internal|external) relative to this workspace. "
+            "Center work must be contained in the workspace."
+        ),
+    ),
     stores: StoreRegistry = Depends(get_stores),
 ) -> dict[str, Any]:
+    ws_norm = normalize_workspace_id_query_param(workspace_id)
+    workspace_internal_ids: set[str] | None = None
+    with stores.neo4j.session() as session:
+        if not session.run(
+            "MATCH (w:Work {id: $id}) RETURN w.id AS wid", id=str(work_id).strip()
+        ).single():
+            raise HTTPException(status_code=404, detail="work_not_found")
+        if ws_norm:
+            workspace_internal_ids, err = load_work_graph_workspace_internal_ids(
+                session, workspace_id=ws_norm, center_work_id=str(work_id).strip()
+            )
+            if err == "workspace_not_found":
+                raise HTTPException(status_code=404, detail="workspace_not_found")
+            if err == "work_not_in_workspace":
+                raise HTTPException(status_code=422, detail="work_not_in_workspace")
+
     g = work_graph_neighborhood(
         stores,
         work_id,
@@ -188,6 +214,8 @@ def get_work_graph(  # pylint: disable=R0917
         depth=depth,
         prioritize=prioritize,
         view=view,
+        workspace_id=ws_norm,
+        workspace_internal_work_ids=workspace_internal_ids,
         aggregator_threshold=aggregator_threshold,
         aggregator_disabled_kinds=aggregator_disabled_kinds,
         include_claims=include_claims,
@@ -204,9 +232,36 @@ def expand_aggregator(
     work_id: str,
     aggregator_id: str = Query(..., min_length=6),
     limit: int = Query(default=50, ge=1, le=300),
+    workspace_id: str | None = Query(
+        default=None,
+        description="Optional workspace id for membership fields (same rules as GET .../graph).",
+    ),
     stores: StoreRegistry = Depends(get_stores),
 ) -> dict[str, Any]:
-    payload = expand_work_aggregator(stores, work_id, aggregator_id, limit=limit)
+    ws_norm = normalize_workspace_id_query_param(workspace_id)
+    workspace_internal_ids: set[str] | None = None
+    with stores.neo4j.session() as session:
+        if not session.run(
+            "MATCH (w:Work {id: $id}) RETURN w.id AS wid", id=str(work_id).strip()
+        ).single():
+            raise HTTPException(status_code=404, detail="work_not_found")
+        if ws_norm:
+            workspace_internal_ids, err = load_work_graph_workspace_internal_ids(
+                session, workspace_id=ws_norm, center_work_id=str(work_id).strip()
+            )
+            if err == "workspace_not_found":
+                raise HTTPException(status_code=404, detail="workspace_not_found")
+            if err == "work_not_in_workspace":
+                raise HTTPException(status_code=422, detail="work_not_in_workspace")
+
+    payload = expand_work_aggregator(
+        stores,
+        work_id,
+        aggregator_id,
+        limit=limit,
+        workspace_id=ws_norm,
+        workspace_internal_work_ids=workspace_internal_ids,
+    )
     if payload is None:
         raise HTTPException(status_code=404, detail="work_not_found")
     return payload
