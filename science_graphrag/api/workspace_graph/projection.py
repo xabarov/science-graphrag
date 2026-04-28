@@ -356,6 +356,11 @@ def apply_workspace_aggregators(
     *,
     threshold: int = AGGREGATOR_THRESHOLD,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """GR8-style workspace bucketing (legacy).
+
+    **Not** called from ``project_workspace_graph`` (aggregation disabled 2026-04-28). Kept for
+    reuse in tests or if product re-enables server-side dense-neighbor compression.
+    """
     node_by_id = {str(n.get("id") or ""): n for n in nodes}
     # Do not bucket dense Author / Authorship neighborhoods: reader collapse runs on the server
     # before this step (Phase 4); aggregating those kinds would drop real nodes the UI still needs.

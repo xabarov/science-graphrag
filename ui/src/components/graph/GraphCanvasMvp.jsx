@@ -167,13 +167,24 @@ export default function GraphCanvasMvp({
   }, [graph.nodes, layoutMode, layoutWorldRadius, simNodes]);
 
   const applyFit = useCallback(
-    (mode = "auto") => {
+    /**
+     * @param {"auto" | "force" | "circle"} [mode]
+     * @param {Map<string, { x: number, y: number }> | null} [seedPositions] When set (topology re-seed / force restart),
+     *   fit to these coords; otherwise force mode reads simNodesRef, which may lag one commit behind setSimNodes.
+     */
+    (mode = "auto", seedPositions = null) => {
       if (graph.nodes.length === 0) return;
       const { w, h } = getViewportDims();
-      const useForce = (mode === "force" || (mode === "auto" && layoutMode === "force")) && simNodesRef.current.length > 0;
-      const positions = useForce
-        ? new Map(simNodesRef.current.map((n) => [n.id, { x: n.x, y: n.y }]))
-        : computeWorldLayout(graph.nodes, layoutWorldRadius);
+      let positions;
+      if (seedPositions instanceof Map && seedPositions.size > 0) {
+        positions = seedPositions;
+      } else {
+        const useForce =
+          (mode === "force" || (mode === "auto" && layoutMode === "force")) && simNodesRef.current.length > 0;
+        positions = useForce
+          ? new Map(simNodesRef.current.map((n) => [n.id, { x: n.x, y: n.y }]))
+          : computeWorldLayout(graph.nodes, layoutWorldRadius);
+      }
       positionsRef.current = positions;
       const next = clampFitTransform(computeFitTransform(positions, w, h, NODE_RADIUS, FIT_PADDING));
       transformRef.current = next;
@@ -475,8 +486,9 @@ export default function GraphCanvasMvp({
     setForceSimRunNonce((n) => n + 1);
     setPhysicsReheatNonce(0);
     setIsSimulationStable(false);
-    positionsRef.current = new Map(built.nodes.map((n) => [n.id, { x: n.x, y: n.y }]));
-    applyFit("force");
+    const seed = new Map(built.nodes.map((n) => [n.id, { x: n.x, y: n.y }]));
+    positionsRef.current = seed;
+    applyFit("force", seed);
   };
   const handleUnpinAll = () => {
     fixedNodesRef.current.clear();

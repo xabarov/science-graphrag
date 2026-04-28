@@ -273,6 +273,11 @@ def _apply_aggregators(
     workspace_id_for_expand: str | None = None,
     include_institutions_for_expand: bool = False,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """GR8 dense-neighbor bucketing (legacy).
+
+    **Not** invoked from ``_work_graph_neighborhood_payload`` (aggregation disabled 2026-04-28).
+    Kept for ``tests/storage/test_graph_aggregators.py`` and optional future re-enable.
+    """
     node_by_id = {str(n.get("id") or ""): n for n in nodes}
     groups: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
     for edge in edges:
@@ -563,6 +568,8 @@ def _work_graph_neighborhood_payload(
     include_authorship_debug: bool = False,
     include_institutions: bool = False,
 ) -> dict[str, Any] | None:
+    # Query params kept for API stability; neighbor bucketing (GR8) is permanently off.
+    _ = (aggregator_threshold, aggregator_disabled_kinds)
     row = session.run(
         """
         MATCH (w:Work {id: $id})
@@ -750,23 +757,9 @@ def _work_graph_neighborhood_payload(
     reader_authorship_projection = (
         compute_authorship_projection_meta(center_id, edges) if vnorm == "reader" else None
     )
-    disabled = _parse_aggregator_disabled_kinds(aggregator_disabled_kinds)
     _enrich_edges_with_display(center_id, nodes, edges)
-    if vnorm != "raw":
-        ws_for_expand = (
-            (str(workspace_id or "").strip() or None)
-            if workspace_internal_work_ids is not None
-            else None
-        )
-        nodes, edges = _apply_aggregators(
-            work_id,
-            nodes,
-            edges,
-            global_threshold=aggregator_threshold,
-            disabled_kind_keys=disabled,
-            workspace_id_for_expand=ws_for_expand,
-            include_institutions_for_expand=bool(include_institutions),
-        )
+    # GR8 neighbor aggregation disabled (2026-04-28): return concrete nodes within neighbor caps;
+    # ``aggregator_threshold`` / ``aggregator_disabled_kinds`` query params are accepted but ignored.
     if workspace_internal_work_ids is not None and str(workspace_id or "").strip():
         annotate_membership_and_cites(nodes, edges, workspace_internal_work_ids)
         apply_workspace_node_kind(nodes)
@@ -775,6 +768,7 @@ def _work_graph_neighborhood_payload(
     if depth_req > effective_depth:
         expansions.append("multi_hop_depth")
     meta: dict[str, Any] = {
+        "neighbor_aggregation": "none",
         "semantic_available": bool(row["has_semantic"]),
         "graph_scope": "work_2hop" if effective_depth >= 2 else "work_1hop",
         "graph_depth_requested": int(depth),

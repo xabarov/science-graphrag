@@ -20,7 +20,7 @@ import { buildSimulationState } from "../graphSimulationAdapter.js";
  *   topologySignature: string,
  *   layoutMode: string,
  *   graph: { nodes: unknown[], edges: unknown[] },
- *   applyFit: (mode?: string) => void,
+ *   applyFit: (mode?: string, seedPositions?: Map<string, { x: number, y: number }> | null) => void,
  *   setSimNodes: import("react").Dispatch<import("react").SetStateAction<unknown[]>>,
  *   setSimLinks: import("react").Dispatch<import("react").SetStateAction<unknown[]>>,
  *   setPinnedNodeCount: import("react").Dispatch<import("react").SetStateAction<number>>,
@@ -74,9 +74,11 @@ export function useGraphCanvasTopologyReseed({
     setIsSimulationStable(false);
     setForceSimRunNonce(0);
     setPhysicsReheatNonce(0);
-    positionsRef.current = new Map(built.nodes.map((n) => [n.id, { x: n.x, y: n.y }]));
+    const seed = new Map(built.nodes.map((n) => [n.id, { x: n.x, y: n.y }]));
+    positionsRef.current = seed;
     if (layoutModeRef.current === "force" && built.nodes.length > 0) {
-      applyFitRef.current?.("force");
+      // simNodesRef is still stale until React commits setSimNodes; fit from the same seed positions as the new sim.
+      applyFitRef.current?.("force", seed);
     }
     // Strict dep: re-seed ONLY when topology signature changes. graph/layoutMode/applyFit are accessed via refs.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional, see hook docstring

@@ -83,4 +83,5 @@ describe("applyGraphVisibilityFilter", () => {
     expect(isExternalWorkNode({ type: "Work", nodeKind: "Work", workspaceMembership: "external" })).toBe(true);
     expect(isExternalWorkNode({ type: "Work", nodeKind: "Work", workspaceMembership: "internal" })).toBe(false);
   });
+
 });

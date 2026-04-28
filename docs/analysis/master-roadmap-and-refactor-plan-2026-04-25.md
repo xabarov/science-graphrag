@@ -336,7 +336,7 @@
 
 - [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md) — **slim:** текущий single-graph runtime, отложенный multi-specialist split, будущие `tool_search` + compaction; полная предыстория: [`_archive/chat-agent-system-roadmap-full-2026-04-26.md`](./_archive/chat-agent-system-roadmap-full-2026-04-26.md)
 - [`agent-chat-frontend-ui-plan-2026-04-26.md`](./agent-chat-frontend-ui-plan-2026-04-26.md) — UI/UX run chrome, rail, typed blocks
-- [`chat-agent-roadmap-trace-audit-2026-04-27.md`](./chat-agent-roadmap-trace-audit-2026-04-27.md) — eval harness + Phoenix checklist (`ws-pilot-od`)
+- [`agent-chat-tools-and-trace-audit-master-2026-04-28.md`](./agent-chat-tools-and-trace-audit-master-2026-04-28.md) — eval harness + live E2E + Phoenix checklist + план A–D / P0–P3 (замена трёх объединённых analysis-доков)
 - [`chat-agent-od-workspace-restoration-and-eval-plan-2026-04-27.md`](./chat-agent-od-workspace-restoration-and-eval-plan-2026-04-27.md) — OD proving ground
 - [`agent-chat-prod-rollout-2026-04-27.md`](./agent-chat-prod-rollout-2026-04-27.md) — флаги coordinator / semantic fast-route / legacy runtime
 - [`docs/specs/agent-chat-v1.md`](../specs/agent-chat-v1.md) — HTTP/SSE контракт

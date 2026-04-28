@@ -93,6 +93,106 @@ function CommunityTypesLegendCollapse({ tk, t, children }) {
 }
 
 /**
+ * Collapsible "Communities" cluster list in the legend (starts collapsed).
+ * Only mounted while `colorBy === "community"` so toggling away resets to collapsed.
+ * @param {{
+ *   tk: object,
+ *   t: (k: string, v?: object) => string,
+ *   totalCommunityCount: number,
+ *   communityRows: Array<object>,
+ *   communityColorStyleMap: Map<string, { fill?: string, stroke?: string }>,
+ *   communityLegendMoreCount: number,
+ * }} props
+ */
+function CommunityClusterLegendCollapse({
+  tk,
+  t,
+  totalCommunityCount,
+  communityRows,
+  communityColorStyleMap,
+  communityLegendMoreCount,
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Box sx={{ mt: 0.75, pt: 0.65, borderTop: `1px solid ${tk.border.default}` }}>
+      <Box
+        onClick={() => setOpen((v) => !v)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setOpen((v) => !v);
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-expanded={open}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 0.35,
+          cursor: "pointer",
+          userSelect: "none",
+          mb: open ? 0.5 : 0,
+        }}
+      >
+        <ExpandMoreIcon
+          sx={{
+            fontSize: "1.1rem",
+            color: tk.text.muted,
+            transform: open ? "rotate(180deg)" : "rotate(0deg)",
+            transition: "transform 0.18s ease",
+          }}
+        />
+        <Typography sx={{ fontSize: "0.7rem", color: tk.text.muted, fontWeight: 600 }}>
+          {t("graph.community.legendTitle", { count: totalCommunityCount })}
+        </Typography>
+      </Box>
+      <Collapse in={open}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.45 }}>
+          <Typography sx={{ fontSize: "0.62rem", color: tk.text.faint, lineHeight: 1.42, mb: 0.1 }}>
+            {t("graph.community.legendClusterListHint", { topN: COMMUNITY_LEGEND_TOP_N })}
+          </Typography>
+          {communityRows.map((row) => {
+            const cs = communityColorStyleMap.get(row.communityId) || {};
+            const previews = row.previews.map((p) => truncateCanvasLabel(p, 22)).join(t("graph.community.legendPreviewSep"));
+            return (
+              <Box
+                key={`c-${row.communityId}`}
+                sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.5, rowGap: 0.25 }}
+              >
+                <Box
+                  aria-hidden
+                  sx={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: "50%",
+                    flexShrink: 0,
+                    backgroundColor: cs.fill || "rgba(148,163,184,0.35)",
+                    border: `1px solid ${cs.stroke || tk.border.strong}`,
+                  }}
+                />
+                <Typography sx={{ fontSize: "0.68rem", color: tk.text.secondary, lineHeight: 1.35 }}>
+                  {t("graph.community.legendItem.withRank", {
+                    rank: row.rankOneBased,
+                    count: row.count,
+                    previews,
+                  })}
+                </Typography>
+              </Box>
+            );
+          })}
+          {communityLegendMoreCount > 0 ? (
+            <Typography sx={{ fontSize: "0.65rem", color: tk.text.faint, fontStyle: "italic", mt: 0.15, lineHeight: 1.45 }}>
+              {t("graph.community.legendMoreRows", { count: communityLegendMoreCount, topN: COMMUNITY_LEGEND_TOP_N })}
+            </Typography>
+          ) : null}
+        </Box>
+      </Collapse>
+    </Box>
+  );
+}
+
+/**
  * Compact legend of node and edge types in the current display graph.
  * @param {{
  *   graph: { nodes: Array<object>, edges: Array<object> },
@@ -106,7 +206,6 @@ export default function GraphTypeLegend({ graph, colorBy = "type", nodeCommunity
   const tk = theme.appTokens;
   const appearance = theme.palette.mode === "light" ? "light" : "dark";
   const [chipSort, setChipSort] = useState(/** @type {"frequency" | "alphabet"} */ ("frequency"));
-  const [communityLegendOpen, setCommunityLegendOpen] = useState(true);
   const composition = useMemo(() => collectGraphComposition(graph), [graph]);
   const { nodeTypes, edgeTypes } = useMemo(() => collectGraphTypeLegend(graph), [graph]);
   const { nodeKindCounts, edgeTypeCounts, totalNodes, totalEdges } = composition;
@@ -319,81 +418,14 @@ export default function GraphTypeLegend({ graph, colorBy = "type", nodeCommunity
         typeAndEdgeChips
       )}
       {colorBy === "community" && totalCommunityCount > 0 ? (
-        <Box sx={{ mt: 0.75, pt: 0.65, borderTop: `1px solid ${tk.border.default}` }}>
-          <Box
-            onClick={() => setCommunityLegendOpen((v) => !v)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                setCommunityLegendOpen((v) => !v);
-              }
-            }}
-            role="button"
-            tabIndex={0}
-            aria-expanded={communityLegendOpen}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 0.35,
-              cursor: "pointer",
-              userSelect: "none",
-              mb: communityLegendOpen ? 0.5 : 0,
-            }}
-          >
-            <ExpandMoreIcon
-              sx={{
-                fontSize: "1.1rem",
-                color: tk.text.muted,
-                transform: communityLegendOpen ? "rotate(180deg)" : "rotate(0deg)",
-                transition: "transform 0.18s ease",
-              }}
-            />
-            <Typography sx={{ fontSize: "0.7rem", color: tk.text.muted, fontWeight: 600 }}>
-              {t("graph.community.legendTitle", { count: totalCommunityCount })}
-            </Typography>
-          </Box>
-          <Collapse in={communityLegendOpen}>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.45 }}>
-              <Typography sx={{ fontSize: "0.62rem", color: tk.text.faint, lineHeight: 1.42, mb: 0.1 }}>
-                {t("graph.community.legendClusterListHint", { topN: COMMUNITY_LEGEND_TOP_N })}
-              </Typography>
-              {communityRows.map((row) => {
-                const cs = communityColorStyleMap.get(row.communityId) || {};
-                const previews = row.previews.map((p) => truncateCanvasLabel(p, 22)).join(t("graph.community.legendPreviewSep"));
-                return (
-                  <Box
-                    key={`c-${row.communityId}`}
-                    sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.5, rowGap: 0.25 }}
-                  >
-                    <Box
-                      aria-hidden
-                      sx={{
-                        width: 10,
-                        height: 10,
-                        borderRadius: "50%",
-                        flexShrink: 0,
-                        backgroundColor: cs.fill || "rgba(148,163,184,0.35)",
-                        border: `1px solid ${cs.stroke || tk.border.strong}`,
-                      }}
-                    />
-                    <Typography sx={{ fontSize: "0.68rem", color: tk.text.secondary, lineHeight: 1.35 }}>
-                      {t("graph.community.legendItem.withRank", {
-                        rank: row.rankOneBased,
-                        count: row.count,
-                        previews,
-                      })}
-                    </Typography>
-                  </Box>
-                );
-              })}
-              {communityLegendMoreCount > 0 ? (
-                <Typography sx={{ fontSize: "0.65rem", color: tk.text.faint, fontStyle: "italic", mt: 0.15, lineHeight: 1.45 }}>
-                  {t("graph.community.legendMoreRows", { count: communityLegendMoreCount, topN: COMMUNITY_LEGEND_TOP_N })}
-                </Typography>
-              ) : null}
-            </Box>
-          </Collapse>
-        </Box>
+        <CommunityClusterLegendCollapse
+          tk={tk}
+          t={t}
+          totalCommunityCount={totalCommunityCount}
+          communityRows={communityRows}
+          communityColorStyleMap={communityColorStyleMap}
+          communityLegendMoreCount={communityLegendMoreCount}
+        />
       ) : null}
     </Box>
   );

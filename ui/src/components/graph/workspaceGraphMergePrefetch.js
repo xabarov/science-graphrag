@@ -1,8 +1,3 @@
-import { expandAggregator } from "../../services/researchApi.js";
-import { collectAuthorAggregatorExpandEndpoints } from "./authorSemanticProjection.js";
-import { graphTelemetryEmit } from "./graphTelemetry.js";
-import { normalizeGraphPayload } from "./graphViewState.js";
-
 /**
  * @param {object | null | undefined} base
  * @param {object | null | undefined} extra
@@ -35,30 +30,14 @@ export function mergeWorkspaceRawGraph(base, extra) {
 }
 
 /**
- * Prefetch author-related aggregator expansions so the UI can collapse authorship without
- * exposing placeholder Aggregator nodes (workspace + standalone work graphs).
+ * Legacy hook: server neighbor aggregation (GR8) is disabled — no Aggregator placeholders to resolve.
+ * Kept as a stable import for {@link useGraphWorkspaceData}.
  *
  * @param {object} initialRaw
- * @param {Set<string>} [persistentSeen] when set, endpoints are recorded here to avoid duplicate fetches across calls
+ * @param {Set<string>} [persistentSeen]
  * @returns {Promise<object>}
  */
 export async function prefetchAuthorAggregatorExpansions(initialRaw, persistentSeen) {
-  let merged = initialRaw;
-  const done = persistentSeen ?? new Set();
-  for (let round = 0; round < 6; round += 1) {
-    const normalized = normalizeGraphPayload(merged);
-    const endpoints = collectAuthorAggregatorExpandEndpoints(normalized).filter((ep) => !done.has(ep));
-    if (endpoints.length === 0) break;
-    graphTelemetryEmit("prefetchAggregatorRound", { round, count: endpoints.length });
-    for (const ep of endpoints) {
-      done.add(ep);
-      try {
-        const res = await expandAggregator(ep);
-        merged = mergeWorkspaceRawGraph(merged, res.data || {});
-      } catch {
-        /* keep graph usable if expand fails (e.g. offline); Aggregator may remain until retry */
-      }
-    }
-  }
-  return merged;
+  void persistentSeen;
+  return initialRaw;
 }

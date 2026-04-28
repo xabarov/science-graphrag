@@ -5,7 +5,7 @@
 
 **Полная историческая версия** (детальные CH-волны, шесть отдельных specialist subgraphs, длинная taxonomy) перенесена в архив, чтобы не путать читателя с текущим курсом: [`_archive/chat-agent-system-roadmap-full-2026-04-26.md`](./_archive/chat-agent-system-roadmap-full-2026-04-26.md).
 
-**Companion (UI):** [`agent-chat-frontend-ui-plan-2026-04-26.md`](./agent-chat-frontend-ui-plan-2026-04-26.md) · **Rollout / флаги:** [`agent-chat-prod-rollout-2026-04-27.md`](./agent-chat-prod-rollout-2026-04-27.md) · **Eval + Phoenix:** [`chat-agent-roadmap-trace-audit-2026-04-27.md`](./chat-agent-roadmap-trace-audit-2026-04-27.md) · **OD proving ground:** [`chat-agent-od-workspace-restoration-and-eval-plan-2026-04-27.md`](./chat-agent-od-workspace-restoration-and-eval-plan-2026-04-27.md).
+**Companion (UI):** [`agent-chat-frontend-ui-plan-2026-04-26.md`](./agent-chat-frontend-ui-plan-2026-04-26.md) · **Rollout / флаги:** [`agent-chat-prod-rollout-2026-04-27.md`](./agent-chat-prod-rollout-2026-04-27.md) · **Eval + Phoenix + live E2E:** [`agent-chat-tools-and-trace-audit-master-2026-04-28.md`](./agent-chat-tools-and-trace-audit-master-2026-04-28.md) · **OD proving ground:** [`chat-agent-od-workspace-restoration-and-eval-plan-2026-04-27.md`](./chat-agent-od-workspace-restoration-and-eval-plan-2026-04-27.md).
 
 ---
 
@@ -78,7 +78,7 @@
 
 Кратко (без дублирования чеклистов):
 
-- **Многослойные тесты:** unit/view-model/API parity (`tests/test_api_agent_v2_stream_parity.py`), roadmap harness [`chat-agent-roadmap-trace-audit-2026-04-27.md`](./chat-agent-roadmap-trace-audit-2026-04-27.md), опционально live `tests/live/` при `AGENT_LIVE_BASE`.
+- **Многослойные тесты:** unit/view-model/API parity (`tests/test_api_agent_v2_stream_parity.py`), roadmap harness + live E2E — см. [`agent-chat-tools-and-trace-audit-master-2026-04-28.md`](./agent-chat-tools-and-trace-audit-master-2026-04-28.md), опционально live `tests/live/` при `AGENT_LIVE_BASE`.
 - **Phoenix:** корреляция `phoenix_trace_id` ↔ `tool_trace`; закрытие span gaps — см. [`phoenix-tracing-coverage-2026-04-25.md`](./phoenix-tracing-coverage-2026-04-25.md) и trace-audit doc.
 
 ---

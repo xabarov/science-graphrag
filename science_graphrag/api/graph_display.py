@@ -7,6 +7,8 @@ from typing import Any
 
 from neo4j import Session as Neo4jSession
 
+from science_graphrag.ingestion.arxiv_ids import normalize_arxiv_id
+
 UUID_RE = re.compile(
     r"^[0-9a-fA-F]{8}-"
     r"[0-9a-fA-F]{4}-"
@@ -70,6 +72,20 @@ def _is_uuid_like(value: str) -> bool:
 
 def _clean_label(value: str) -> str:
     return (value or "").strip()[:200]
+
+
+def _work_label_without_title(props: dict[str, Any]) -> str:
+    """Fallback when Work has no title: canonical arXiv id, raw arxiv string, or DOI."""
+    raw_arx = _clean_label(str(props.get("arxiv_id") or ""))
+    if raw_arx:
+        canon = normalize_arxiv_id(raw_arx)
+        if canon:
+            return canon[:200]
+        return raw_arx[:200]
+    raw_doi = _clean_label(str(props.get("doi") or ""))
+    if raw_doi:
+        return raw_doi[:200]
+    return ""
 
 
 def edge_display_type(rel_type: str, *, view: str = "raw") -> str:
@@ -141,7 +157,7 @@ def compute_node_display(
 
     if node_type == "Work":
         year = p.get("publication_year")
-        display_label = display_label or "Untitled work"
+        display_label = display_label or _work_label_without_title(p) or "Untitled work"
         subtitle = f"Work · {int(year)}" if year is not None else "Work"
     elif node_type == "Author":
         display_label = display_label or "Unnamed author"

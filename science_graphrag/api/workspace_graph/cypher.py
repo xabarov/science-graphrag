@@ -24,7 +24,6 @@ from science_graphrag.api.workspace_graph.claims_projection import (
 )
 from science_graphrag.api.workspace_graph.projection import (
     annotate_membership_and_cites,
-    apply_workspace_aggregators,
     apply_workspace_node_kind,
     edge_dict_from_rel,
     edge_key,
@@ -296,17 +295,13 @@ def project_workspace_graph(
     enrich_edges_workspace(nodes, edges)
     inc_n, exc_n = annotate_membership_and_cites(nodes, edges, iws)
     apply_workspace_node_kind(nodes)
-    if str(view or "reader").strip().lower() != "raw":
-        nodes, edges = apply_workspace_aggregators(
-            workspace_id,
-            nodes,
-            edges,
-        )
+    # Workspace neighbor aggregation disabled (2026-04-28); UI filters cap visibility instead.
     expansions: list[str] = []
     if truncated:
         expansions.append("increase_neighbor_limit")
     expansions.extend(["include_external", "expand_node"])
     main_meta: dict[str, Any] = {
+        "neighbor_aggregation": "none",
         "semantic_available": sem,
         "graph_scope": "workspace_v2",
         "mode": mode_norm,

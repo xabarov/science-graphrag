@@ -10,9 +10,8 @@ Use after changes to [`science_graphrag/api/works/graph_neighborhood.py`](../../
 ## Steps
 
 1. Open **`GET /v1/works/{work_id}/graph?neighbor_limit=200&include_claims=true&view=reader`** (defaults match UI if query params omitted except `include_claims` when testing claims).
-2. In the UI: **`/graph?work_id=…`** — enable **Author** in the type filter / legend; confirm author nodes or an **Aggregator** (“N authors”) appear (not an empty author layer).
-3. **Aggregator expectation:** default per-kind threshold for authors is **4** (`KIND_AGG_THRESHOLDS["author"]` in `graph_neighborhood.py`). With ≥7 authors, you may see **one Aggregator** instead of seven separate nodes — that is expected; use **expand** on the aggregator to list individuals.
-4. Optional: `**GET /v1/works/{work_id}/graph?view=raw**` — confirm `Authorship` and `HAS_AUTHORSHIP` remain; **`author_entity_id`** must not appear on `Authorship.properties` (see integration tests).
+2. In the UI: **`/graph?work_id=…`** — enable **Author** in the type filter / legend; confirm **individual `Author` nodes** (or as many as fit under **`neighbor_limit`**) — not an empty author layer. **Server-side neighbor aggregation is off** (2026-04-28): there is no “N authors” `Aggregator` placeholder from the API.
+3. Optional: **`GET /v1/works/{work_id}/graph?view=raw`** — confirm `Authorship` and `HAS_AUTHORSHIP` remain; **`author_entity_id`** must not appear on `Authorship.properties` (see integration tests).
 
 ## References
 

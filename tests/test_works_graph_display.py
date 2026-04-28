@@ -31,6 +31,30 @@ def test_compute_node_display_humanized_fallbacks() -> None:
     assert dataset["display_label"] == "Unnamed dataset"
 
 
+def test_compute_node_display_work_prefers_arxiv_when_title_missing() -> None:
+    work = compute_node_display(
+        "Work",
+        "",
+        {"arxiv_id": "1512.04143", "publication_year": 2015},
+    )
+    assert work["display_label"] == "1512.04143"
+    assert work["subtitle"] == "Work · 2015"
+
+
+def test_compute_node_display_work_arxiv_from_url_or_prefix() -> None:
+    work = compute_node_display(
+        "Work",
+        "",
+        {"arxiv_id": "https://arxiv.org/abs/1512.04143"},
+    )
+    assert work["display_label"] == "1512.04143"
+
+
+def test_compute_node_display_work_falls_back_to_doi_without_title_or_arxiv() -> None:
+    work = compute_node_display("Work", "", {"doi": "10.1000/182"})
+    assert work["display_label"] == "10.1000/182"
+
+
 def test_compute_node_display_institution_and_venue_subtitles_from_props() -> None:
     institution = compute_node_display("Institution", "MIT", {"country": "US"})
     assert institution["display_label"] == "MIT"

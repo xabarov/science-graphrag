@@ -21,7 +21,7 @@ AGENT_LIVE_BASE=http://127.0.0.1:18787 AGENT_LIVE_TIMEOUT_SEC=600 \
   --write-report eval/results/live-heavy-p1-verify.jsonl
 ```
 
-Use **`--skip-phoenix`** when validating only HTTP `tool_trace` / answer shape (Phoenix REST is optional for that). If **`graph_ego_methods`** hits **`agent_turn_deadline_exceeded`**, raise **`SCIENCE_GRAPHRAG_AGENT_STEP_TIMEOUT_SECONDS`** and/or **`AGENT_LIVE_TIMEOUT_SEC`** and re-run — that case is graph-heavy and sensitive to wall-clock under load (see `docs/analysis/agent-heavy-live-trace-audit-and-remediation-2026-04-28.md` §6).
+Use **`--skip-phoenix`** when validating only HTTP `tool_trace` / answer shape (Phoenix REST is optional for that). If **`graph_ego_methods`** hits **`agent_turn_deadline_exceeded`**, raise **`SCIENCE_GRAPHRAG_AGENT_STEP_TIMEOUT_SECONDS`** and/or **`AGENT_LIVE_TIMEOUT_SEC`** and re-run — that case is graph-heavy and sensitive to wall-clock under load (see `docs/analysis/agent-chat-tools-and-trace-audit-master-2026-04-28.md` §5).
 
 ## Minimal environment
 

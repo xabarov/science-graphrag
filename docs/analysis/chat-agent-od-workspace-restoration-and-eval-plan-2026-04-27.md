@@ -7,7 +7,7 @@
 **This document ties together:**
 
 - chat runtime direction: [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md)
-- current live harness and baseline workspace: [`chat-agent-roadmap-trace-audit-2026-04-27.md`](./chat-agent-roadmap-trace-audit-2026-04-27.md)
+- current live harness and baseline workspace: [`agent-chat-tools-and-trace-audit-master-2026-04-28.md`](./agent-chat-tools-and-trace-audit-master-2026-04-28.md)
 - Phoenix observability contract: [`phoenix-tracing-coverage-2026-04-25.md`](./phoenix-tracing-coverage-2026-04-25.md)
 - large OD workspace audit and missing claims facts: [`od-corpus-claims-methods-trust-audit-2026-04-27.md`](./od-corpus-claims-methods-trust-audit-2026-04-27.md)
 - corpus and benchmark source material: [`corpus-gold-pack-v1-2026-04-25.md`](./corpus-gold-pack-v1-2026-04-25.md)
@@ -469,7 +469,7 @@ This plan is succeeding when all of the following are true:
 ## 10. Recommended immediate next steps
 
 1. Treat [`od-corpus-claims-methods-trust-audit-2026-04-27.md`](./od-corpus-claims-methods-trust-audit-2026-04-27.md) as the factual starting point for restoring the rich OD workspace.
-2. Keep [`chat-agent-roadmap-trace-audit-2026-04-27.md`](./chat-agent-roadmap-trace-audit-2026-04-27.md) as the seed harness, but extend it from “baseline trace capture” to “two-lane OD scenario program”.
+2. Keep the roadmap harness + OD live flow documented in [`agent-chat-tools-and-trace-audit-master-2026-04-28.md`](./agent-chat-tools-and-trace-audit-master-2026-04-28.md) as the seed, but extend it from “baseline trace capture” to “two-lane OD scenario program”.
 3. Do **not** expand contradiction-heavy or claim-semantic chat cases until claims and claim vectors are restored.
 4. Author the first scenario set against the answer classes already defined in [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md), rather than inventing a new taxonomy.
 5. Use Phoenix review as a formal part of the eval loop, not only as debugging support.

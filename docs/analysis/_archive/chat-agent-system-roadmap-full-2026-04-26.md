@@ -767,7 +767,7 @@ Research chat быстро упирается в:
 
 Перед live suite: **workspace readiness audit** (наличие `Work`, авторов, исходящих `CITES`, чанков в Qdrant и `workspace_ids` на чанках). Реализация: `scripts/chat_agent_workspace_readiness_audit.py` / `eval/chat_agent/workspace_audit.py`.
 
-Roadmap-aligned кейсы и артефакты прогона: `science-graphrag-chat-agent-roadmap` (см. [`eval/README.md`](../../eval/README.md), [`chat-agent-roadmap-trace-audit-2026-04-27.md`](../chat-agent-roadmap-trace-audit-2026-04-27.md)).
+Roadmap-aligned кейсы и артефакты прогона: `science-graphrag-chat-agent-roadmap` (см. [`eval/README.md`](../../eval/README.md), [`agent-chat-tools-and-trace-audit-master-2026-04-28.md`](../agent-chat-tools-and-trace-audit-master-2026-04-28.md)).
 
 ### 10.5 Phoenix agent tracing status
 
@@ -792,7 +792,7 @@ Roadmap-aligned кейсы и артефакты прогона: `science-graphr
 
 **Wave A (2026-04-26):** реализованы **CH1 + CH2 + CH3** одним пластом. Канон контракта: [`docs/specs/agent-chat-v1.md`](../specs/agent-chat-v1.md). Стартовые фикстуры: `tests/fixtures/benchmarks/chat_wave_a/`. Рефакторинг крупного `workspace_paper_tools.py` — в `docs/backlog/refactor-backend.md`.
 
-**Wave B (2026-04-26):** **CH4 v1** (in-memory session по `thread_id`, `history_digest`, `build_initial_agent_state`, digest после тёрна, SSE `context_compacted`, `session_init` в `tool_trace`) + закрытие части долгов Wave A: расширенные `warnings` в `chat_envelope`, typed-блоки в `AskAnswerPanel` / `ChatTypedBlocks.jsx`, wire `threadId`/`historyDigest` из `AskPanel`/`useAskSubmit`, GOST `event`/`pages`, `filtered_work_ids` + warnings у библиографии, `qdrant_unavailable` у quote-tool, writer + `tool_search` (skip с meta), `tests/test_tool_manifest_sync.py`, расширение `test_tool_search`, smoke фикстуры в CI (`tests/eval/test_chat_wave_a_inventory.py`), `phoenix_trace_id` из активного OTel span. **Не в Wave B:** полный CH5 (capsules, full compact), CH6, CH7. **Update 2026-04-27:** добавлен отдельный roadmap harness `science_graphrag-chat-agent-roadmap` (`eval/chat_agent/roadmap_runner.py`), эталонная область **`ws-pilot-od`**, pre-flight audit Neo4j+Qdrant (`eval/chat_agent/workspace_audit.py`, `scripts/chat_agent_workspace_readiness_audit.py`), per-case артефакты и отчёт [`docs/analysis/chat-agent-roadmap-trace-audit-2026-04-27.md`](./chat-agent-roadmap-trace-audit-2026-04-27.md).
+**Wave B (2026-04-26):** **CH4 v1** (in-memory session по `thread_id`, `history_digest`, `build_initial_agent_state`, digest после тёрна, SSE `context_compacted`, `session_init` в `tool_trace`) + закрытие части долгов Wave A: расширенные `warnings` в `chat_envelope`, typed-блоки в `AskAnswerPanel` / `ChatTypedBlocks.jsx`, wire `threadId`/`historyDigest` из `AskPanel`/`useAskSubmit`, GOST `event`/`pages`, `filtered_work_ids` + warnings у библиографии, `qdrant_unavailable` у quote-tool, writer + `tool_search` (skip с meta), `tests/test_tool_manifest_sync.py`, расширение `test_tool_search`, smoke фикстуры в CI (`tests/eval/test_chat_wave_a_inventory.py`), `phoenix_trace_id` из активного OTel span. **Не в Wave B:** полный CH5 (capsules, full compact), CH6, CH7. **Update 2026-04-27:** добавлен отдельный roadmap harness `science_graphrag-chat-agent-roadmap` (`eval/chat_agent/roadmap_runner.py`), эталонная область **`ws-pilot-od`**, pre-flight audit Neo4j+Qdrant (`eval/chat_agent/workspace_audit.py`, `scripts/chat_agent_workspace_readiness_audit.py`), per-case артефакты и отчёт [`agent-chat-tools-and-trace-audit-master-2026-04-28.md`](../agent-chat-tools-and-trace-audit-master-2026-04-28.md).
 
 **Wave Next — Agent Chat Hardening + CH5 v1 (2026-04-26, реализовано):**
 1. **Аудит качества:** CH1–CH4 v1 подтверждены in-process тестами; главные риски закрывались persistence, политикой CH5 и live/eval gate — зафиксировано в этом roadmap и в спеке.
@@ -1065,7 +1065,7 @@ Roadmap-aligned кейсы и артефакты прогона: `science-graphr
 **Goal:** сделать систему управляемой, честной и release-ready.
 
 **Сделано (2026-04-27, v0):**
-- Эталонная область + pre-flight audit + roadmap harness с сохранением `tool_trace` / `phoenix_trace_id` и suite summary — см. §10.4 и [`chat-agent-roadmap-trace-audit-2026-04-27.md`](../chat-agent-roadmap-trace-audit-2026-04-27.md).
+- Эталонная область + pre-flight audit + roadmap harness с сохранением `tool_trace` / `phoenix_trace_id` и suite summary — см. §10.4 и [`agent-chat-tools-and-trace-audit-master-2026-04-28.md`](../agent-chat-tools-and-trace-audit-master-2026-04-28.md).
 - Root `agent.query` + `phoenix_trace_id` уже дают корреляцию live case → Phoenix; это baseline observability, не финальное качество span tree.
 
 **Сделать:**

@@ -46,7 +46,7 @@ Standalone **work graph** responses under `view=reader` **used to drop** all aut
 4. If `view=raw`: strip `author_entity_id` from `Authorship.properties` (`_strip_reader_only_authorship_properties`) so raw stays topology-oriented; **no** collapse.
 5. If `view=reader`: **`collapse_authorship_for_reader_view`** — resolves each `HAS_AUTHORSHIP` to an `Author` target: native `OF_AUTHOR` edges in payload if present; else `author_entity_id`; else stable `va:…` + injected `Author` node with `distance: 1`.
 6. `_enrich_edges_with_display(center_id, nodes, edges)`.
-7. If not raw: **`_apply_aggregators`** (dense neighbor kinds, including `Author` when count ≥ per-kind threshold).
+7. **~~If not raw: `_apply_aggregators`~~** — removed from the production pipeline (2026-04-28). **`meta.neighbor_aggregation`** is **`none`**; see [`docs/architecture/work-graph-reader-authorship.md`](../architecture/work-graph-reader-authorship.md).
 
 **Historical bug payload (pre–Phase 1, e.g. work with 7 authors):** edge types include `HAS_AUTHORSHIP`; **`OF_AUTHOR` count = 0** in `edges`. Old `collapse_authorship_for_reader_view` had **empty `author_by_ash`**, created **no** virtual `AUTHORED` edges, and **removed** all `Authorship` nodes from `nodes`.
 
@@ -134,9 +134,9 @@ then remove `Authorship` as today.
 ### Phase 1 — Fix reader collapse contract (core) — **DONE** (2026-04-28)
 
 - [x] **Option B** — [`science_graphrag/api/works/graph_neighborhood.py`](../../science_graphrag/api/works/graph_neighborhood.py): helpers `_reader_view_authored_target`, `_reader_synthetic_author_entity_id` (`va:` + SHA-256), `_author_label_from_authorship_node` (strip trailing `(#N)` like UI intent), `_authorship_props_for_authored_edge`; bidirectional parse of `HAS_AUTHORSHIP` / `OF_AUTHOR`; inject missing `Author` nodes with `distance: 1`; `via` is `["HAS_AUTHORSHIP","OF_AUTHOR"]` or `["HAS_AUTHORSHIP","enriched_authorship"]`. Collapse unit coverage: [`tests/api/test_collapse_authorship_reader_view.py`](../../tests/api/test_collapse_authorship_reader_view.py).
-- [x] **Pipeline order** — Unchanged: `enrich_authorship_nodes` → (raw strip if `view=raw`) → `collapse_authorship_for_reader_view` (reader only) → `_enrich_edges_with_display` → `_apply_aggregators` (non-raw).
+- [x] **Pipeline order** — `enrich_authorship_nodes` → (raw strip if `view=raw`) → `collapse_authorship_for_reader_view` (reader only) → `_enrich_edges_with_display`. **`_apply_aggregators` is not called** (aggregation disabled 2026-04-28).
 - [x] **`enrich_authorship_nodes`** — [`science_graphrag/api/graph_display.py`](../../science_graphrag/api/graph_display.py): Cypher returns `author_entity_id` (`coalesce(au.id,'')`); merged into `Authorship.properties` for collapse; documented in function docstring.
-- [x] **Manual / product check:** procedure captured in [`docs/runbooks/work-graph-authorship-qa.md`](../runbooks/work-graph-authorship-qa.md) — work with **many** citations + **≥7** authors, `neighbor_limit=200`, `include_claims=true` — expect authors visible; note that **`KIND_AGG_THRESHOLDS["author"]` (default 4)** may fold many `AUTHORED`/`Author` neighbors into one **Aggregator** (pre-existing behavior, not introduced by Phase 1). Operators run the checklist against a live environment when validating a release.
+- [x] **Manual / product check:** procedure captured in [`docs/runbooks/work-graph-authorship-qa.md`](../runbooks/work-graph-authorship-qa.md) — work with **many** citations + **≥7** authors, `neighbor_limit=200`, `include_claims=true` — expect authors visible as **concrete nodes** within the neighbor cap (no server-side **Aggregator** since 2026-04-28).
 
 **Note:** `xfail` markers were removed in the same change set as the collapse fix (avoids `strict=True` XPASS failures).
 
@@ -144,7 +144,7 @@ then remove `Authorship` as today.
 
 - [x] **Docs:** [`docs/architecture/work-graph-reader-authorship.md`](../architecture/work-graph-reader-authorship.md) + cross-links from [`docs/specs/graph-ui-plan.md`](../specs/graph-ui-plan.md) and [`docs/specs/frontend-ui-api-contracts-v1.md`](../specs/frontend-ui-api-contracts-v1.md) §4.
 - [x] **Option A:** emit real `OF_AUTHOR` + `Author` in work graph neighbor expansion when Neo4j has `(Authorship)-[:OF_AUTHOR]->(Author)` (both views); see architecture note.
-- [x] **Expand-aggregator:** author buckets keyed on `AUTHORED` expand via reader re-fetch with `aggregator_disabled_kinds=Author` (see `expand_work_aggregator`).
+- [x] **Expand-aggregator (legacy):** `expand_work_aggregator` remains for API compatibility; main graph no longer emits `Aggregator` nodes (aggregation disabled 2026-04-28).
 - [x] **Product link (revised 2026-04-28):** passing **`workspace_id` together with `work_id`** on `/graph` makes [`useGraphWorkspaceData`](../../ui/src/components/graph/hooks/useGraphWorkspaceData.js) call **`getWorkspaceGraph`** (full workspace union) — there is **no** server-side “ego subgraph for one work inside workspace” today, so the paper-row graph icon would show the **entire workspace**, not a paper-scoped neighborhood. **Current behavior:** [`WorkspacePaperRow.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePaperRow.jsx) uses **`workGraphUrl(workId, null)`** so `/graph?work_id=…` loads **`GET /v1/works/{id}/graph`** (work neighborhood; authors fixed in Phase 1). Full workspace graph remains available from the workspace shell (e.g. [`WorkspaceContextStrip`](../../ui/src/pages/WorkspacePage/WorkspaceContextStrip.jsx) `workGraphUrl("", workspaceId)`). *Future optional backlog:* true “workspace + focus work” would need either a focused API slice or client-side filtering — do not re-enable `workspace_id` on the paper graph link until that exists.*
 - [x] **HTTP expand smoke** (Phase 2 tail, closed with Phase 3): [`tests/api/test_work_graph_expand_http.py`](../../tests/api/test_work_graph_expand_http.py).
 

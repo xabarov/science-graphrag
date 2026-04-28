@@ -163,11 +163,11 @@ def get_work_graph(  # pylint: disable=R0917
         default=None,
         ge=2,
         le=200,
-        description="Optional global override for GR8 neighbor aggregation threshold.",
+        description="Ignored: neighbor aggregation (GR8) is disabled; param kept for API compatibility.",
     ),
     aggregator_disabled_kinds: str | None = Query(
         default=None,
-        description="CSV of neighbor kinds to skip aggregating (e.g. Author,Institution).",
+        description="Ignored: neighbor aggregation is disabled; param kept for API compatibility.",
     ),
     include_claims: bool = Query(
         default=False,
