@@ -184,8 +184,11 @@ def _append_evidence_warnings(
     were merged into the envelope; correlate with ``paper_quote_search`` payload ``empty_reason``
     in tool traces when debugging thin corpora. When ``idea_search`` already returned chunk hits
     before an empty ``paper_quote_search``, emit a narrower warning for operators.
+
+    When ``final_answer`` already attached structured ``citations``, skip these flags — the model
+    grounded the reply without ``quote_candidates`` payloads (common for LLM-composed quotes).
     """
-    if answer_class == "quote_extraction" and not quote_candidates:
+    if answer_class == "quote_extraction" and not quote_candidates and not citations:
         if _trace_suggests_quote_miss_after_idea_hits(tool_trace):
             warnings.append("no_quote_found_after_idea_hits")
         else:

@@ -21,6 +21,7 @@ import { AgentRunHeader } from "./AgentRunHeader.jsx";
 import { AgentLiveStatus } from "./AgentLiveStatus.jsx";
 import { deriveHeaderProgressHint } from "./agentRunViewModel.js";
 import MarkdownView from "./MarkdownView.jsx";
+import { extractTokenCountsFromRunMetadata } from "./runMetadataUsage.js";
 
 const SCROLL_BOTTOM_THRESHOLD_PX = 80;
 
@@ -47,16 +48,28 @@ function extractTurnMetadata(entry) {
   const details = entry?.details && typeof entry.details === "object" ? entry.details : {};
   const runMeta = details.run_metadata && typeof details.run_metadata === "object" ? details.run_metadata : {};
   const usage = runMeta.usage && typeof runMeta.usage === "object" ? runMeta.usage : {};
-  const promptTokens = pickNumber(usage.prompt_tokens, usage.input_tokens, runMeta.prompt_tokens);
-  const completionTokens = pickNumber(usage.completion_tokens, usage.output_tokens, runMeta.completion_tokens);
+  const { totalTokens: ttFromRm, promptTokens: ptFromRm, completionTokens: ctFromRm } =
+    extractTokenCountsFromRunMetadata(runMeta);
+  const promptTokens = pickNumber(ptFromRm, usage.prompt_tokens, usage.input_tokens, runMeta.prompt_tokens);
+  const completionTokens = pickNumber(ctFromRm, usage.completion_tokens, usage.output_tokens, runMeta.completion_tokens);
   const totalTokens = pickNumber(
+    ttFromRm,
     usage.total_tokens,
     runMeta.total_tokens,
     runMeta.token_count,
     promptTokens != null && completionTokens != null ? promptTokens + completionTokens : null,
   );
   const durationMs = pickNumber(details.duration_ms, runMeta.duration_ms);
-  const tokensPerSecond = pickNumber(usage.tokens_per_second, usage.tps, runMeta.tokens_per_second, runMeta.tps);
+  let tokensPerSecond = pickNumber(usage.tokens_per_second, usage.tps, runMeta.tokens_per_second, runMeta.tps);
+  if (
+    tokensPerSecond == null &&
+    durationMs != null &&
+    durationMs > 0 &&
+    totalTokens != null &&
+    totalTokens > 0
+  ) {
+    tokensPerSecond = (totalTokens * 1000) / durationMs;
+  }
   const costUsd = pickNumber(usage.cost_usd, usage.usd_cost, runMeta.cost_usd, runMeta.usd_cost);
   const eventsCount = Array.isArray(details.stream_events) ? details.stream_events.length : 0;
   const citationCount = Array.isArray(details.citations) ? details.citations.length : pickNumber(entry?.citationCount) || 0;

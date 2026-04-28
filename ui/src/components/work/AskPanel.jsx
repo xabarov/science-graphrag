@@ -1,9 +1,7 @@
 import React from "react";
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 
-import { CursorButton, CursorDangerButton } from "../common/index.js";
-import { FeedbackShell, useFeedback } from "../feedback/index.js";
+import { useFeedback } from "../feedback/index.js";
 import { ChatComposer } from "./ChatComposer.jsx";
 import { ChatMessageThread } from "./ChatMessageThread.jsx";
 import { ChatSessionSidebar } from "./ChatSessionSidebar.jsx";
@@ -86,7 +84,7 @@ export default function AskPanel({
             t={o.t}
             scopeEyebrow={o.scopeEyebrow}
             error={o.error}
-            onClearChatClick={showPageChrome ? undefined : o.openClearChatDialog}
+            onClearChatClick={showPageChrome ? undefined : () => void o.onClearChat()}
             clearChatDisabled={o.isLoading}
           />
           <ChatMessageThread
@@ -136,28 +134,6 @@ export default function AskPanel({
           />
         </Box>
       </Box>
-
-      <FeedbackShell
-        open={o.clearChatDialogOpen}
-        onClose={() => o.setClearChatDialogOpen(false)}
-        title={o.t("chat.clear.dialogTitle")}
-        titleId="chat-clear-dialog-title"
-        aria-describedby="chat-clear-dialog-desc"
-        actions={
-          <>
-            <CursorButton type="button" size="small" onClick={() => o.setClearChatDialogOpen(false)} sx={{ color: "rgba(255,255,255,0.7)" }}>
-              {o.t("chat.clear.cancel")}
-            </CursorButton>
-            <CursorDangerButton type="button" size="small" disabled={o.isLoading} onClick={() => void o.onClearChat()}>
-              {o.t("chat.clear.confirm")}
-            </CursorDangerButton>
-          </>
-        }
-      >
-        <Typography id="chat-clear-dialog-desc" component="span" sx={{ display: "block" }}>
-          {o.t("chat.clear.dialogBody")}
-        </Typography>
-      </FeedbackShell>
     </Box>
   );
 }

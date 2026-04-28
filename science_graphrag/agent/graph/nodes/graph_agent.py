@@ -113,7 +113,7 @@ def _compile_graph_subgraph(tools: list[BaseTool], settings: Settings, system_pr
     subgraph.add_conditional_edges(
         "chat",
         route_react_chat_to_tools,
-        {"tools": "tools", END: END},
+        {"tools": "tools", "final_answer_nudge": END, END: END},
     )
     subgraph.add_edge("tools", "after_tools")
     subgraph.add_conditional_edges(

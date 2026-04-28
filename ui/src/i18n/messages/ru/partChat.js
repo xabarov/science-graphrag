@@ -139,6 +139,7 @@ export default {
   "chat.run.state.degraded": "Ограничено",
   "chat.run.state.failed": "Ошибка",
   "chat.run.durationMs": "{{ms}} мс",
+  "chat.run.tokensTotal": "Токенов: {{n}}",
   "chat.run.citationsCount": "Цитат: {{n}}",
   "chat.run.eventsCount": "Событий: {{n}}",
   "chat.run.progressWorking": "Обрабатываю вопрос…",
@@ -217,5 +218,7 @@ export default {
   "chat.warnings.insufficient_evidence": "Недостаточно доказательств для выбранного класса ответа.",
   "chat.warnings.agent_turn_deadline_exceeded": "Достигнут серверный лимит времени на ход; поток мог оборваться раньше.",
   "chat.warnings.partial_after_deadline": "Ответ восстановлен после дедлайна — проверьте цитаты и при необходимости уточните вопрос.",
+  "chat.warnings.answer_salvaged_from_quote_candidates":
+    "Текст ответа собран из кандидатов цитат: вызов final_answer был пустым или отсутствовал. Проверьте выдержки в Reader/evidence.",
   "chat.warnings.agent_response_budget_cutoff": "Ассистент не запускал следующий шаг модели: почти исчерпан лимит времени на ход.",
 };

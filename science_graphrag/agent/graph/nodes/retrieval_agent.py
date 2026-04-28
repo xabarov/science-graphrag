@@ -119,7 +119,9 @@ def _compile_react_subgraph(tools: list[BaseTool], settings: Settings, system_pr
     graph.add_conditional_edges(
         "chat",
         route_react_chat_to_tools,
-        {"tools": "tools", END: END},
+        # Retrieval tools do not include ``final_answer``; end the subgraph if the model
+        # would have been nudged (plain text after catalog tools).
+        {"tools": "tools", "final_answer_nudge": END, END: END},
     )
     graph.add_edge("tools", "after_tools")
     graph.add_conditional_edges(

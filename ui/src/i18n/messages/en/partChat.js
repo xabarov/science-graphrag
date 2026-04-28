@@ -139,6 +139,7 @@ export default {
   "chat.run.state.degraded": "Degraded",
   "chat.run.state.failed": "Failed",
   "chat.run.durationMs": "{{ms}} ms",
+  "chat.run.tokensTotal": "{{n}} tokens",
   "chat.run.citationsCount": "{{n}} citations",
   "chat.run.eventsCount": "{{n}} events",
   "chat.run.progressWorking": "Working on your question…",
@@ -217,5 +218,7 @@ export default {
   "chat.warnings.insufficient_evidence": "Evidence looks thin for this answer class.",
   "chat.warnings.agent_turn_deadline_exceeded": "This turn hit the server time limit; the stream may have stopped early.",
   "chat.warnings.partial_after_deadline": "Answer was salvaged after a deadline — verify citations and follow up if needed.",
+  "chat.warnings.answer_salvaged_from_quote_candidates":
+    "Answer text was assembled from quote candidates because ``final_answer`` was missing or empty — verify passages in Reader/evidence.",
   "chat.warnings.agent_response_budget_cutoff": "The assistant skipped a further model step because the per-turn time budget was almost exhausted.",
 };

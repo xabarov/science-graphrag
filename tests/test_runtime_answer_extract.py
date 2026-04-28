@@ -6,7 +6,10 @@ import json
 
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
-from science_graphrag.agent.runtime import extract_langgraph_answer
+from science_graphrag.agent.runtime import (
+    extract_langgraph_answer,
+    salvage_markdown_from_quote_candidates,
+)
 
 
 def test_extract_prefers_final_answer_tool_payload() -> None:
@@ -101,3 +104,17 @@ def test_extract_salvages_from_cypher_tool_when_no_bare_ai() -> None:
     assert salvage is True
     assert "Cypher returned" in answer
     assert cites is None
+
+
+def test_salvage_markdown_from_quote_candidates() -> None:
+    state = {
+        "specialist_results": {
+            "retrieval_agent": [
+                {"quote_candidates": [{"quote_text": "line1\nline2", "work_id": "w-1"}]},
+            ],
+        },
+    }
+    out = salvage_markdown_from_quote_candidates(state)
+    assert "w-1" in out
+    assert "> line1" in out
+    assert "> line2" in out

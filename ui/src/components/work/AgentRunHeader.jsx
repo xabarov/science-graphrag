@@ -10,6 +10,7 @@ import Typography from "@mui/material/Typography";
  *   answerClass?: string | null,
  *   citationCount?: number,
  *   durationMs?: number | null,
+ *   totalTokens?: number | null,
  *   progressHint?: string,
  * }} props
  */
@@ -19,6 +20,7 @@ export function AgentRunHeader({
   answerClass = null,
   citationCount = 0,
   durationMs = null,
+  totalTokens = null,
   progressHint = "",
 }) {
   const stateKey =
@@ -55,6 +57,11 @@ export function AgentRunHeader({
   const dur =
     durationMs != null && Number.isFinite(Number(durationMs)) && Number(durationMs) > 0
       ? t("chat.run.durationMs", { ms: String(Math.round(Number(durationMs))) })
+      : null;
+
+  const tok =
+    totalTokens != null && Number.isFinite(Number(totalTokens)) && Number(totalTokens) >= 0
+      ? t("chat.run.tokensTotal", { n: String(Math.round(Number(totalTokens))) })
       : null;
 
   return (
@@ -107,6 +114,9 @@ export function AgentRunHeader({
         ) : null}
         {dur ? (
           <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.38)" }}>{dur}</Typography>
+        ) : null}
+        {runState !== "running" && tok ? (
+          <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.38)" }}>{tok}</Typography>
         ) : null}
         {runState !== "running" ? (
           <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.38)" }}>

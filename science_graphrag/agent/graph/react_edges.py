@@ -6,13 +6,30 @@ import json
 from time import perf_counter
 from typing import Any, Literal
 
-from langchain_core.messages import AIMessage, ToolMessage
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langgraph.graph import END
 
 from science_graphrag.agent.final_answer_policy import needs_final_answer_nudge
 from science_graphrag.agent.graph.state import AgentState
 from science_graphrag.agent.tool_call_normalization import normalize_tool_call_name
 from science_graphrag.config import Settings
+
+# Shared with supervisor + specialist subgraphs that can call ``final_answer`` (writer only).
+FINAL_ANSWER_NUDGE_TEXT = (
+    "You must finish this turn by calling the ``final_answer`` tool exactly once. "
+    "Put your user-facing summary into ``final_answer.answer`` (and citations if any); "
+    "do not call other research tools unless you must fix a factual gap."
+)
+
+
+def final_answer_nudge_state_update(state: AgentState) -> dict[str, Any]:
+    """Append the standard reminder and mark ``final_answer_nudge_used`` (P0 contract)."""
+    meta = dict(state.get("metadata") or {})
+    meta["final_answer_nudge_used"] = True
+    return {
+        "messages": [HumanMessage(content=FINAL_ANSWER_NUDGE_TEXT)],
+        "metadata": meta,
+    }
 
 
 def _tool_call_entry_name(tc: Any) -> str:

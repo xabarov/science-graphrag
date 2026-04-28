@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import { ThemeProvider } from "@mui/material/styles";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 
@@ -209,7 +209,7 @@ describe("AskAnswerPanel", () => {
     expect(screen.getByTestId("post-run-stream-summary").textContent).toContain("Searching works");
   });
 
-  it("shows server session memory when excerpt present after run", () => {
+  it("does not show server session memory excerpt in the answer panel", () => {
     const normalized = normalizeQueryResponse({
       answer: "A",
       citations: [],
@@ -239,10 +239,9 @@ describe("AskAnswerPanel", () => {
         </ThemeProvider>
       </MemoryRouter>,
     );
-    expect(screen.getByText("chat.sessionMemory.title")).toBeTruthy();
-    expect(screen.getByText(/Q: prior/)).toBeTruthy();
-    expect(screen.getByText(/turn_digest/)).toBeTruthy();
-    expect(screen.getByText(/rolling_memory/)).toBeTruthy();
+    expect(screen.queryByText("chat.sessionMemory.title")).toBeNull();
+    expect(screen.queryByText(/Q: prior/)).toBeNull();
+    expect(screen.queryByRole("button", { name: "chat.run.inspectToggleShowAria" })).toBeNull();
   });
 
   it("renders composed final answer with typed blocks and citations", async () => {
@@ -261,7 +260,7 @@ describe("AskAnswerPanel", () => {
       retrieval_trace: {},
       inventory: { work_count: 2 },
       quote_candidates: [{ text: "Quoted passage", work_id: "work-1" }],
-      answer_class: "quote_extraction",
+      answer_class: "grounded_explanation",
     });
     render(
       <MemoryRouter>
@@ -293,6 +292,101 @@ describe("AskAnswerPanel", () => {
     expect(root.getByText("chat.typed.quotesTitle")).toBeTruthy();
     expect(root.getByText("askPanel.citations.title")).toBeTruthy();
     expect(root.getByText(/Unique excerpt for composed test/)).toBeTruthy();
+  });
+
+  it("hides structured citations block for quote_extraction", () => {
+    const normalized = normalizeQueryResponse({
+      answer: "Quoted in body",
+      citations: [{ work_id: "work-1", chunk_fingerprint: "fp" }],
+      graph_context: {},
+      retrieval_trace: {},
+      answer_class: "quote_extraction",
+    });
+    render(
+      <MemoryRouter>
+        <ThemeProvider theme={theme}>
+          <AskAnswerPanel
+            t={(k) => k}
+            normalized={normalized}
+            locked={false}
+            inWorkspace={false}
+            workId=""
+            workspaceWorkId={null}
+            retrievalMode="agent"
+            agentToolTrace={[]}
+            retrievalJsonOpen={false}
+            onToggleRetrievalJson={() => {}}
+            streamEvents={[]}
+            isRunActive={false}
+          />
+        </ThemeProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.queryByText("askPanel.citations.title")).toBeNull();
+  });
+
+  it("expands a long citation passage in the panel", () => {
+    const longBody = "Z".repeat(320);
+    const normalized = normalizeQueryResponse({
+      answer: "ok",
+      citations: [{ work_id: "work-long", excerpt: longBody, chunk_fingerprint: "fp-z" }],
+      graph_context: {},
+      retrieval_trace: {},
+    });
+    render(
+      <MemoryRouter>
+        <ThemeProvider theme={theme}>
+          <AskAnswerPanel
+            t={(k) => k}
+            normalized={normalized}
+            locked={false}
+            inWorkspace={false}
+            workId=""
+            workspaceWorkId={null}
+            retrievalMode="agent"
+            agentToolTrace={[]}
+            retrievalJsonOpen={false}
+            onToggleRetrievalJson={() => {}}
+            streamEvents={[]}
+            isRunActive={false}
+          />
+        </ThemeProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole("button", { name: "askPanel.citation.expandShow" })).toBeTruthy();
+    expect(screen.queryByText(longBody)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "askPanel.citation.expandShow" }));
+    expect(screen.getByText(longBody)).toBeTruthy();
+  });
+
+  it("shows noSnippet when citation omits passage fields", () => {
+    const normalized = normalizeQueryResponse({
+      answer: "ok",
+      citations: [{ work_id: "w-empty", chunk_fingerprint: "fp" }],
+      graph_context: {},
+      retrieval_trace: {},
+    });
+    render(
+      <MemoryRouter>
+        <ThemeProvider theme={theme}>
+          <AskAnswerPanel
+            t={(k) => k}
+            normalized={normalized}
+            locked={false}
+            inWorkspace={false}
+            workId=""
+            workspaceWorkId={null}
+            retrievalMode="agent"
+            agentToolTrace={[]}
+            retrievalJsonOpen={false}
+            onToggleRetrievalJson={() => {}}
+            streamEvents={[]}
+            isRunActive={false}
+          />
+        </ThemeProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.getByText("askPanel.citation.noSnippet")).toBeTruthy();
   });
 
   it("renders normalized warnings", () => {

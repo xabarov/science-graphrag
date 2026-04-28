@@ -82,7 +82,6 @@ export function useAskPanelOrchestration({
   const [pendingUserQuery, setPendingUserQuery] = useState("");
   /** While a run is in flight: scope + session the submit belongs to (survives sidebar switches). */
   const [streamingTarget, setStreamingTarget] = useState(null);
-  const [clearChatDialogOpen, setClearChatDialogOpen] = useState(false);
   const skipHydrateWorkRef = useRef(false);
   const streamFailureRef = useRef("");
 
@@ -118,10 +117,6 @@ export function useAskPanelOrchestration({
     },
     [showToast, t],
   );
-
-  const openClearChatDialog = useCallback(() => {
-    setClearChatDialogOpen(true);
-  }, []);
 
   const scopeKey = useMemo(() => deriveAskScopeKey({ locked, scopedWorkId, workspaceId }), [locked, scopedWorkId, workspaceId]);
   /**
@@ -580,7 +575,6 @@ export function useAskPanelOrchestration({
 
   const onClearChat = useCallback(async () => {
     abort();
-    setClearChatDialogOpen(false);
     const sk = scopeKeyRef.current;
     const oldId = String(readAskSessionUi(sk).activeId || "");
     try {
@@ -762,9 +756,6 @@ export function useAskPanelOrchestration({
     onNewSession,
     onRestartFromTurn,
     onClearChat,
-    openClearChatDialog,
-    clearChatDialogOpen,
-    setClearChatDialogOpen,
     onDeleteSession,
     onDeleteTurn,
     onCopyUserText,

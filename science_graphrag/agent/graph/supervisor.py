@@ -24,6 +24,7 @@ from science_graphrag.agent.graph.nodes.writer_agent import (
     build_writer_agent_node,
 )
 from science_graphrag.agent.graph.react_edges import (
+    final_answer_nudge_state_update,
     react_after_tools_decrement_budget,
     react_chat_response_budget_cutoff,
     route_react_chat_to_tools,
@@ -361,20 +362,9 @@ def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
             )
         return {"messages": [response]}
 
-    _FINAL_ANSWER_NUDGE_TEXT = (
-        "You must finish this turn by calling the ``final_answer`` tool exactly once. "
-        "Put your user-facing summary into ``final_answer.answer`` (and citations if any); "
-        "do not call other research tools unless you must fix a factual gap."
-    )
-
     def final_answer_nudge_node(state: AgentState) -> dict:
-        meta = dict(state.get("metadata") or {})
-        meta["final_answer_nudge_used"] = True
         add_span_event("agent.final_answer_nudge", {})
-        return {
-            "messages": [HumanMessage(content=_FINAL_ANSWER_NUDGE_TEXT)],
-            "metadata": meta,
-        }
+        return final_answer_nudge_state_update(state)
 
     graph = StateGraph(AgentState)
     graph.add_node("chat", chat_node)

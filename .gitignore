@@ -74,6 +74,9 @@ instance/
 # Sphinx documentation
 docs/_build/
 
+# Local report artifacts (slides, media exports; regenerate as needed)
+docs/report/
+
 # PyBuilder
 .pybuilder/
 target/

@@ -25,9 +25,10 @@ import {
 } from "./agentRunViewModel.js";
 import { AgentRunHeader } from "./AgentRunHeader.jsx";
 import { AgentLiveStatus } from "./AgentLiveStatus.jsx";
-import { AgentRunInspector } from "./AgentRunInspector.jsx";
 import { AgentSubagentRail } from "./AgentSubagentRail.jsx";
 import MarkdownView from "./MarkdownView.jsx";
+import { CitationBodyExpandable } from "./CitationBodyExpandable.jsx";
+import { extractTokenCountsFromRunMetadata } from "./runMetadataUsage.js";
 
 function formatAgentWarning(t, code) {
   const c = String(code || "").trim();
@@ -35,25 +36,6 @@ function formatAgentWarning(t, code) {
   const key = `chat.warnings.${c}`;
   const out = t(key);
   return out === key ? c : out;
-}
-
-/**
- * @param {(key: string, vars?: Record<string, string>) => string} t
- * @param {string[]} kinds
- * @returns {string}
- */
-function formatCompactionKindsLine(t, kinds) {
-  if (!Array.isArray(kinds) || kinds.length === 0) return "";
-  return kinds
-    .map((raw) => {
-      const k = String(raw || "").trim();
-      if (!k) return "";
-      const key = `chat.sessionMemory.compactionKind.${k}`;
-      const out = t(key);
-      return out === key ? k : out;
-    })
-    .filter(Boolean)
-    .join(", ");
 }
 
 /**
@@ -88,11 +70,20 @@ export function AskAnswerPanel({
   streamEvents = [],
   isRunActive = false,
 }) {
+  void locked;
+  void workId;
+  void agentToolTrace;
+  void retrievalJsonOpen;
+  void onToggleRetrievalJson;
+
   const tk = useTheme().appTokens;
   if (!normalized) return null;
 
   const { runState } = deriveRunState({ normalized, isRunActive, streamEvents });
   const citations = Array.isArray(normalized.citations) ? normalized.citations : [];
+  const answerClass = normalized.answer_class != null ? String(normalized.answer_class).trim() : "";
+  /** Quote-style turns surface evidence in the answer + quote_candidates; structured citations are redundant. */
+  const hideStructuredCitations = answerClass === "quote_extraction";
   const warningsList = Array.isArray(normalized.warnings) ? normalized.warnings : [];
   const hasWeakEvidence = warningsList.includes("weak_evidence");
   const answerText = String(normalized.answer || "").trim();
@@ -100,6 +91,7 @@ export function AskAnswerPanel({
     (Array.isArray(normalized?.retrieval_trace?.degraded) && normalized.retrieval_trace.degraded.length > 0) ||
     (Array.isArray(normalized?.graph_context?.degraded) && normalized.graph_context.degraded.length > 0);
   const wsForTrace = String(workspaceId || "").trim();
+  const { totalTokens: headerTotalTokens } = extractTokenCountsFromRunMetadata(normalized.run_metadata);
 
   function citationTraceExtras(chunkFingerprint, sectionPath, citationIndex) {
     const base = { chunkFingerprint, section: sectionPath, citation: citationIndex };
@@ -114,6 +106,7 @@ export function AskAnswerPanel({
         answerClass={normalized.answer_class}
         citationCount={citations.length}
         durationMs={normalized.duration_ms}
+        totalTokens={headerTotalTokens}
         progressHint={deriveHeaderProgressHint(t, streamEvents, isRunActive)}
       />
 
@@ -244,7 +237,7 @@ export function AskAnswerPanel({
         </>
       ) : null}
 
-      {!isRunActive || citations.length > 0 ? (
+      {!hideStructuredCitations && (!isRunActive || citations.length > 0) ? (
         <>
           <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 2, mb: 0.5, color: tk.text.primary }}>
             {t("askPanel.citations.title")}
@@ -334,54 +327,13 @@ export function AskAnswerPanel({
                   )}
                 </Box>
               ) : null}
-              <Box component="span" sx={{ display: "block", color: tk.text.secondary, mt: 0.25 }}>
-                {String(c.excerpt ?? "").slice(0, 280)}
-                {String(c.excerpt ?? "").length > 280 ? "…" : ""}
-              </Box>
+              <CitationBodyExpandable t={t} citation={c} />
             </Box>
           );
             })
           )}
         </>
       ) : null}
-
-      {!isRunActive && normalized.session_summary_excerpt ? (
-        <Box
-          sx={{
-            mt: 1.5,
-            mb: 1.25,
-            p: 1,
-            borderRadius: "6px",
-            border: `1px solid ${tk.border.default}`,
-            backgroundColor: tk.surface.subtle,
-          }}
-        >
-          <Typography sx={{ fontSize: "0.68rem", fontWeight: 600, color: tk.text.muted, mb: 0.5, letterSpacing: "0.02em" }}>
-            {t("chat.sessionMemory.title")}
-          </Typography>
-          <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary, whiteSpace: "pre-wrap" }}>
-            {String(normalized.session_summary_excerpt)}
-          </Typography>
-          {normalized.run_metadata?.compaction?.kinds?.length ? (
-            <Typography sx={{ fontSize: "0.65rem", color: tk.text.faint, mt: 0.75 }}>
-              {t("chat.sessionMemory.compactionKinds")}: {formatCompactionKindsLine(t, normalized.run_metadata.compaction.kinds)}
-            </Typography>
-          ) : null}
-        </Box>
-      ) : null}
-
-      <AgentRunInspector
-        t={t}
-        normalized={normalized}
-        locked={locked}
-        inWorkspace={inWorkspace}
-        workId={workId}
-        retrievalMode={retrievalMode}
-        agentToolTrace={agentToolTrace}
-        streamEvents={streamEvents}
-        retrievalJsonOpen={retrievalJsonOpen}
-        onToggleRetrievalJson={onToggleRetrievalJson}
-      />
     </Box>
   );
 }

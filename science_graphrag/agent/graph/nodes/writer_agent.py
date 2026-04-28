@@ -10,6 +10,7 @@ from langchain_core.tools import BaseTool
 from langgraph.graph import END, StateGraph
 
 from science_graphrag.agent.graph.react_edges import (
+    final_answer_nudge_state_update,
     react_after_tools_decrement_budget,
     react_chat_response_budget_cutoff,
     route_react_chat_to_tools,
@@ -134,16 +135,24 @@ def _compile_writer_subgraph(tools: list[BaseTool], settings: Settings, *, mode:
             )
         return {"messages": [response]}
 
+    def final_answer_nudge_node(state: AgentState) -> dict:
+        add_span_event(
+            "agent.final_answer_nudge", {"specialist": SPECIALIST_NAME, "writer_mode": mode}
+        )
+        return final_answer_nudge_state_update(state)
+
     subgraph = StateGraph(AgentState)
     subgraph.add_node("chat", chat_node)
+    subgraph.add_node("final_answer_nudge", final_answer_nudge_node)
     subgraph.add_node("tools", build_normalized_tool_node_executor(tools))
     subgraph.add_node("after_tools", react_after_tools_decrement_budget)
     subgraph.set_entry_point("chat")
     subgraph.add_conditional_edges(
         "chat",
         route_react_chat_to_tools,
-        {"tools": "tools", END: END},
+        {"tools": "tools", "final_answer_nudge": "final_answer_nudge", END: END},
     )
+    subgraph.add_edge("final_answer_nudge", "chat")
     subgraph.add_edge("tools", "after_tools")
     subgraph.add_conditional_edges(
         "after_tools",

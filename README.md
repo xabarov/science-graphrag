@@ -1,5 +1,7 @@
 # SciGraph
 
+![Короткое демо интерфейса SciGraph](docs/readme-assets/scigraph2.gif)
+
 SciGraph — scholarly GraphRAG-система для работы с научной литературой: ingest корпуса, библиографический граф, retrieval по чанкам, grounded Q&A с цитатами и traceability до источников.
 
 Проект ориентирован на исследователя, который работает с собственной подборкой статей и хочет не просто хранить PDF, а получать навигацию по корпусу, обзор связей, evidence-backed ответы и основу для дальнейшего semantic/ontology слоя.

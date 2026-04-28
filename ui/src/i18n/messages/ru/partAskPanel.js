@@ -55,6 +55,12 @@ export default {
   "askPanel.citations.title": "Цитаты",
   "askPanel.citations.none": "Для этого ответа цитаты не вернулись.",
   "askPanel.citation.line": "Цитата #{{rank}} · score {{score}} · {{work}}",
+  "askPanel.citation.noSnippet":
+    "Текст отрывка в ответе не передан — откройте чтение или просмотр чанков по ссылкам выше.",
+  "askPanel.citation.expandShow": "Показать полностью",
+  "askPanel.citation.expandHide": "Свернуть",
+  "askPanel.citation.copy": "Копировать отрывок",
+  "askPanel.citation.copied": "Скопировано",
   "askPanel.citation.noWork": "нет контекста статьи",
   "askPanel.chunkLabel": "чанк",
   "askPanel.openReader": "Открыть чтение",

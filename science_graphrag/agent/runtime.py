@@ -7,7 +7,11 @@ from typing import Any
 
 from langchain_core.messages import AIMessage, ToolMessage
 
-from science_graphrag.agent.chat_envelope import build_chat_envelope, heuristic_answer_class
+from science_graphrag.agent.chat_envelope import (
+    build_chat_envelope,
+    collect_typed_payloads,
+    heuristic_answer_class,
+)
 from science_graphrag.agent.context.post_turn import apply_turn_digest_to_thread
 from science_graphrag.agent.context.session_store import get_session_for_thread
 from science_graphrag.agent.graph.invoke_timeout import invoke_graph_with_deadline
@@ -181,6 +185,104 @@ def extract_langgraph_answer(
     return "", None, False
 
 
+def salvage_markdown_from_quote_candidates(state: dict[str, Any]) -> str:
+    """When ``final_answer`` is missing, surface merged quote candidates as markdown blockquotes."""
+    typed = collect_typed_payloads(state)
+    rows = typed.get("quote_candidates") or []
+    if not isinstance(rows, list) or not rows:
+        return ""
+    chunks: list[str] = []
+    for raw in rows[:8]:
+        if not isinstance(raw, dict):
+            continue
+        text = str(raw.get("quote_text") or raw.get("text") or raw.get("snippet") or "").strip()
+        if not text:
+            continue
+        wid = str(raw.get("work_id") or "").strip()
+        head = f"**{wid}**\n\n" if wid else ""
+        quoted = "\n".join(f"> {line}" for line in text.splitlines())
+        chunks.append(f"{head}{quoted}".strip())
+    return "\n\n---\n\n".join(chunks).strip()
+
+
+def _coerce_non_negative_int(value: object) -> int | None:
+    if value is None:
+        return None
+    try:
+        n = int(value)
+    except (TypeError, ValueError):
+        return None
+    if n < 0:
+        return None
+    return n
+
+
+def _token_triple_from_ai_message(msg: AIMessage) -> tuple[int | None, int | None, int | None]:
+    """Return (prompt_tokens, completion_tokens, total_tokens) from LangChain message metadata."""
+
+    prompt = completion = total = None
+    usage_meta = getattr(msg, "usage_metadata", None)
+    if isinstance(usage_meta, dict):
+        prompt = _coerce_non_negative_int(usage_meta.get("input_tokens"))
+        if prompt is None:
+            prompt = _coerce_non_negative_int(usage_meta.get("prompt_tokens"))
+        completion = _coerce_non_negative_int(usage_meta.get("output_tokens"))
+        if completion is None:
+            completion = _coerce_non_negative_int(usage_meta.get("completion_tokens"))
+        total = _coerce_non_negative_int(usage_meta.get("total_tokens"))
+    elif usage_meta is not None:
+        prompt = _coerce_non_negative_int(getattr(usage_meta, "input_tokens", None))
+        if prompt is None:
+            prompt = _coerce_non_negative_int(getattr(usage_meta, "prompt_tokens", None))
+        completion = _coerce_non_negative_int(getattr(usage_meta, "output_tokens", None))
+        if completion is None:
+            completion = _coerce_non_negative_int(getattr(usage_meta, "completion_tokens", None))
+        total = _coerce_non_negative_int(getattr(usage_meta, "total_tokens", None))
+    if prompt is None and completion is None and total is None:
+        resp_meta = getattr(msg, "response_metadata", None)
+        if isinstance(resp_meta, dict):
+            token_usage = resp_meta.get("token_usage")
+            if isinstance(token_usage, dict):
+                prompt = _coerce_non_negative_int(token_usage.get("prompt_tokens"))
+                completion = _coerce_non_negative_int(token_usage.get("completion_tokens"))
+                total = _coerce_non_negative_int(token_usage.get("total_tokens"))
+    return prompt, completion, total
+
+
+def aggregate_agent_llm_usage(messages: list[Any]) -> dict[str, int] | None:
+    """Sum token usage across ``AIMessage`` nodes (LangGraph state messages).
+
+    OpenAI-shaped keys are included for API clients; ``input_tokens`` / ``output_tokens`` mirror
+    LangChain ``usage_metadata`` naming for the UI extractor.
+    """
+
+    prompt_sum = 0
+    completion_sum = 0
+    total_only_sum = 0
+    for msg in messages:
+        if not isinstance(msg, AIMessage):
+            continue
+        pt, ct, tt = _token_triple_from_ai_message(msg)
+        if pt is None and ct is None and tt is None:
+            continue
+        parts = int(pt or 0) + int(ct or 0)
+        if parts > 0:
+            prompt_sum += int(pt or 0)
+            completion_sum += int(ct or 0)
+        elif tt is not None:
+            total_only_sum += int(tt)
+    if prompt_sum == 0 and completion_sum == 0 and total_only_sum == 0:
+        return None
+    combined_total = prompt_sum + completion_sum + total_only_sum
+    return {
+        "prompt_tokens": prompt_sum,
+        "completion_tokens": completion_sum,
+        "total_tokens": combined_total,
+        "input_tokens": prompt_sum,
+        "output_tokens": completion_sum,
+    }
+
+
 def current_otel_trace_id_hex() -> str | None:
     try:
         from opentelemetry import trace as trace_api
@@ -207,6 +309,7 @@ class AgentRunOutput:
     quote_candidates: list[dict[str, Any]] | None = None
     idea_suggestions: list[dict[str, Any]] | None = None
     bibliography: dict[str, Any] | None = None
+    llm_usage: dict[str, int] | None = None
     debug_events: list[dict[str, Any]] = field(default_factory=list)
     phoenix_trace_id: str | None = None
     thread_id: str | None = None
@@ -340,17 +443,32 @@ class RetrievalAgent:
             settings=self._settings,
         )
         messages = list(final_state.get("messages", []))
+        llm_usage = aggregate_agent_llm_usage(messages)
         trace = collect_tool_trace(final_state)
         answer, fa_citations, graph_salvage = extract_langgraph_answer(messages)
+        quote_salvage = False
+        if not (answer or "").strip():
+            salv = salvage_markdown_from_quote_candidates(final_state)
+            if salv:
+                answer = salv
+                quote_salvage = True
         citations = list(final_state.get("citations", []))
         if fa_citations is not None:
             citations = fa_citations
-        extra_warn: list[str] | None = (
-            ["answer_salvaged_from_graph_tool"] if graph_salvage else None
-        )
+        extra_warn_list: list[str] = []
+        if graph_salvage:
+            extra_warn_list.append("answer_salvaged_from_graph_tool")
+        if quote_salvage:
+            extra_warn_list.append("answer_salvaged_from_quote_candidates")
+        extra_warn: list[str] | None = extra_warn_list or None
         if graph_salvage:
             add_span_event(
                 "agent.graph_tool_answer_salvage",
+                {"answer_chars": len(answer or "")},
+            )
+        if quote_salvage:
+            add_span_event(
+                "agent.quote_candidate_answer_salvage",
                 {"answer_chars": len(answer or "")},
             )
         envelope = build_chat_envelope(
@@ -411,6 +529,7 @@ class RetrievalAgent:
             quote_candidates=envelope.get("quote_candidates"),
             idea_suggestions=envelope.get("idea_suggestions"),
             bibliography=envelope.get("bibliography"),
+            llm_usage=llm_usage,
             debug_events=list(final_state.get("debug_events") or []),
             phoenix_trace_id=current_otel_trace_id_hex(),
             thread_id=thread_id,

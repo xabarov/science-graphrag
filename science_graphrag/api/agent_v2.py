@@ -26,6 +26,7 @@ from science_graphrag.agent.graph.supervisor import build_retrieval_graph
 from science_graphrag.agent.graph.tracing import collect_tool_trace
 from science_graphrag.agent.llm.chat import effective_chat_llm_model
 from science_graphrag.agent.runtime import (
+    aggregate_agent_llm_usage,
     build_agent,
     current_otel_trace_id_hex,
     extract_langgraph_answer,
@@ -265,6 +266,9 @@ def _response_from_run(
     }
     if extra_run_metadata:
         run_metadata.update(extra_run_metadata)
+    llm_usage = getattr(out, "llm_usage", None)
+    if isinstance(llm_usage, dict) and llm_usage:
+        run_metadata["usage"] = dict(llm_usage)
     if getattr(out, "debug_events", None):
         run_metadata["debug_events"] = list(out.debug_events)[-50:]
     tid = getattr(out, "thread_id", None)
@@ -847,8 +851,8 @@ async def _stream_agent(
                             "type": "warning",
                             "code": "agent_turn_deadline_exceeded",
                             "message": (
-                                "The assistant hit the per-turn time limit after producing an answer; "
-                                "treat this turn as partially finalized."
+                                "The assistant hit the per-turn time limit after producing "
+                                "an answer; treat this turn as partially finalized."
                             ),
                         }
                     )
@@ -945,6 +949,10 @@ async def _stream_agent(
                 yield {"data": json.dumps(compact_payload)}
 
             phx = current_otel_trace_id_hex()
+            stream_usage: dict[str, int] | None = None
+            if latest_full_state is not None:
+                msgs_for_usage = list(latest_full_state.get("messages") or [])
+                stream_usage = aggregate_agent_llm_usage(msgs_for_usage)
             run_meta: dict[str, Any] = {
                 "agent_runtime": settings.agent_runtime,
                 "agent_max_tool_calls": max_tool_calls,
@@ -957,6 +965,8 @@ async def _stream_agent(
                     else []
                 ),
             }
+            if stream_usage:
+                run_meta["usage"] = stream_usage
             if salvaged_after_deadline:
                 run_meta["salvaged_after_deadline"] = True
             if thread_id:

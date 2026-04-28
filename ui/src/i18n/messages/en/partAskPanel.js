@@ -56,6 +56,12 @@ export default {
   "askPanel.citations.title": "Citations",
   "askPanel.citations.none": "No supporting citations were returned for this answer.",
   "askPanel.citation.line": "Citation #{{rank}} · score {{score}} · {{work}}",
+  "askPanel.citation.noSnippet":
+    "No passage text in the payload — open Reader or chunk inspection via the links above.",
+  "askPanel.citation.expandShow": "Show full passage",
+  "askPanel.citation.expandHide": "Collapse",
+  "askPanel.citation.copy": "Copy passage",
+  "askPanel.citation.copied": "Copied",
   "askPanel.citation.noWork": "no work context",
   "askPanel.chunkLabel": "chunk",
   "askPanel.openReader": "Open Reader",

@@ -95,6 +95,34 @@ def test_no_quote_found_for_quote_class_without_payload() -> None:
     assert "no_quote_found" in (env.get("warnings") or [])
 
 
+def test_no_quote_found_suppressed_when_citations_present() -> None:
+    state: AgentState = {
+        "messages": [],
+        "workspace_id": "w1",
+        "citations": [],
+        "tool_trace": [],
+        "budget_remaining": 5,
+        "metadata": {"raw_user_question": "цитат"},
+        "specialist_results": {},
+        "current_specialist": None,
+        "routing_log": [],
+        "debug_events": [],
+        "thread_id": None,
+        "session_summary": "",
+        "answer_class": None,
+        "history_digest": [],
+    }
+    env = build_chat_envelope(
+        state=state,
+        answer="Grounded answer with quote in body",
+        citations=[{"work_id": "paper-1", "chunk_fingerprint": "fp1"}],
+        tool_trace=[{"tool": "paper_quote_search", "row_count": 0}, {"tool": "final_answer", "row_count": 1}],
+        answer_class_hint="quote_extraction",
+    )
+    assert "no_quote_found" not in (env.get("warnings") or [])
+    assert "no_quote_found_after_idea_hits" not in (env.get("warnings") or [])
+
+
 def test_no_quote_found_after_idea_hits_when_trace_order_matches() -> None:
     state: AgentState = {
         "messages": [],
