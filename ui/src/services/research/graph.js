@@ -10,6 +10,7 @@ import { apiClient, buildApiUrl } from "../apiClient.js";
  *   includeClaims?: boolean,
  *   claimsLimit?: number,
  *   workspaceId?: string | null,
+ *   includeInstitutions?: boolean,
  * }} [options]
  */
 export async function getWorkGraph(workId, options = {}) {
@@ -38,6 +39,9 @@ export async function getWorkGraph(workId, options = {}) {
   }
   const ws = options.workspaceId != null ? String(options.workspaceId).trim() : "";
   if (ws) params.set("workspace_id", ws);
+  if (options.includeInstitutions === true) {
+    params.set("include_institutions", "true");
+  }
   const q = params.toString();
   return apiClient.get(buildApiUrl(`/v1/works/${id}/graph${q ? `?${q}` : ""}`));
 }

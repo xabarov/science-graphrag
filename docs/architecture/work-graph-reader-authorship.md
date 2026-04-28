@@ -12,8 +12,9 @@ Orchestrated in [`science_graphrag/api/works/graph_neighborhood.py`](../../scien
 2. **`enrich_authorship_nodes`** via [`authorship_enrich.py`](../../science_graphrag/api/graph_reader_projection/authorship_enrich.py) (implementation in [`graph_display.py`](../../science_graphrag/api/graph_display.py)) — loads display fields and, when Neo4j has `(Authorship)-[:OF_AUTHOR]->(Author)`, sets **`properties.author_entity_id`** on `Authorship` nodes for collapse.
 3. **`view=raw`:** **`strip_reader_only_authorship_properties`** — strip **`author_entity_id`** from `Authorship.properties` (topology-oriented API); **no** collapse, **no** neighbor aggregation.
 4. **`view=reader`:** **`collapse_authorship_for_reader_view`** ([`authorship_collapse.py`](../../science_graphrag/api/graph_reader_projection/authorship_collapse.py)) — removes `Authorship` / `HAS_AUTHORSHIP` from the reader-facing graph; adds **`AUTHORED`** edges from the center work to **`Author`** targets.
-5. **`_enrich_edges_with_display`** — stable edge ids, `display_type`, summaries.
-6. **`view=reader` only:** **`_apply_aggregators`** — dense same-kind neighborhoods may collapse into an **`Aggregator`** node (expand via `GET /v1/works/{work_id}/graph/expand`).
+5. **Optional `include_institutions` (Phase 3):** When the query flag is true, the server loads center-work `(Authorship)-[:AFFILIATED_WITH]->(Institution)` rows (capped) and merges them into the JSON: **`view=reader`** → **`Author–AFFILIATED_WITH–Institution`** after collapse (mapping via **`build_authorship_to_reader_author_map`**, same author resolution as collapse); **`view=raw`** → **`Authorship–AFFILIATED_WITH–Institution`** after the strip step. See ADR 011 addendum and `meta.reader_extra_hops` / `meta.institutions`.
+6. **`_enrich_edges_with_display`** — stable edge ids, `display_type`, summaries.
+7. **`view=reader` only:** **`_apply_aggregators`** — dense same-kind neighborhoods may collapse into an **`Aggregator`** node (expand via `GET /v1/works/{work_id}/graph/expand`).
 
 ## Virtual authors and `via`
 
@@ -52,7 +53,7 @@ Automated checks compare **logical author slots** for the same `Work` id, not id
 | Piece | Location |
 |-------|----------|
 | Neighborhood + aggregators | `science_graphrag/api/works/graph_neighborhood.py` |
-| Reader authorship collapse + synthetic `va:` / `via` | `science_graphrag/api/graph_reader_projection/authorship_collapse.py` |
+| Reader authorship collapse + synthetic `va:` / `via` + ash→reader author map (institutions) | `science_graphrag/api/graph_reader_projection/authorship_collapse.py` |
 | Authorship projection meta (`include_authorship_debug`) | `science_graphrag/api/graph_reader_projection/authorship_meta.py` |
 | Stable edge ids (collapse + aggregators + display pass) | `science_graphrag/api/graph_reader_projection/stable_edge_id.py` |
 | Aggregator expand (incl. author / `AUTHORED`) | `expand_work_aggregator` in `science_graphrag/api/works/graph_neighborhood.py` |

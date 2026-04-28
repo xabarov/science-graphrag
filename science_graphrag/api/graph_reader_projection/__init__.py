@@ -1,6 +1,8 @@
 """Shared reader-facing graph projection (authorship collapse, stable ids, enrich seam)."""
 
 from science_graphrag.api.graph_reader_projection.authorship_collapse import (
+    build_authorship_to_reader_author_map,
+    collapse_authorship_for_reader_multicenter,
     collapse_authorship_for_reader_view,
 )
 from science_graphrag.api.graph_reader_projection.authorship_enrich import enrich_authorship_nodes
@@ -17,6 +19,8 @@ from science_graphrag.api.graph_reader_projection.stable_edge_id import stable_g
 __all__ = [
     "READER_SYNTHETIC_AUTHOR_HASH_MARKER",
     "READER_SYNTHETIC_AUTHOR_ID_PREFIX",
+    "build_authorship_to_reader_author_map",
+    "collapse_authorship_for_reader_multicenter",
     "collapse_authorship_for_reader_view",
     "compute_authorship_projection_meta",
     "enrich_authorship_nodes",

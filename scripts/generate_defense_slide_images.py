@@ -188,6 +188,21 @@ If labels are necessary, keep them extremely short and prefer simple English wor
 Avoid neon gradients, futuristic holograms, generic AI dashboard aesthetics, glossy 3D objects, clutter, and fake startup visuals.
 """.strip()
 
+    # Last slides: intentionally more saturated and illustrative than ``base_suffix`` (still no text).
+    vibrant_no_text_suffix = """
+
+16:9 presentation art for a technical thesis defense. Mood: confident, warm, lively — NOT washed-out gray, NOT a thin wireframe schematic, NOT a fake dashboard.
+
+Use rich but tasteful color: deep teal, coral/amber, soft violet accents, warm ivory/cream base, clear focal lighting and depth (volumetric glow, soft vignette, layered planes).
+
+Hard constraints:
+- Absolutely NO readable text: no letters, words, numbers, axis labels, metric names, logos, or UI strings anywhere in the image.
+- No bar charts pretending to show data, no fake precision/recall numbers.
+- Avoid flat all-pastel mush; keep strong hue contrast and at least one vivid accent area.
+
+The image must work as a decorative hero next to real HTML slide text (text lives outside the image).
+""".strip()
+
     return [
         ImageJob(
             slug="slide-02-plan-motif",
@@ -397,6 +412,47 @@ If there is any caption text, keep it minimal.
                 + base_suffix
             ).strip(),
         ),
+        ImageJob(
+            slug="slide-10-benchmark-conclusions",
+            filename_base="slide-10-benchmark-conclusions",
+            prompt=(
+                """
+Create a bold, painterly-edged 16:9 illustration for a "Conclusions" slide about scientific PDF pipelines,
+benchmarks, evaluation, and honest metrics — convey the IDEA only through abstract composition.
+
+Suggested visual language (pick what fits best, merge creatively):
+- stacked translucent layers or paper decks suggesting PDFs / manuscripts transforming into structured flow
+- two or three overlapping translucent disks or lenses suggesting set overlap, thresholds, and fuzzy matching (NOT labeled)
+- a luminous "pipeline" ribbon or channel moving left-to-right with glowing particles (data in motion), ending in a calm focal glow (grounded output) — still abstract, not a UI
+- subtle graph motif: a few large nodes with thick confident edges in saturated teal and coral (few nodes, not a hairball)
+
+The piece should feel optimistic and rigorous: "we measure carefully" without showing any metrics as text.
+"""
+                + "\n\n"
+                + vibrant_no_text_suffix
+            ).strip(),
+        ),
+        ImageJob(
+            slug="slide-12-plans-roadmap",
+            filename_base="slide-12-plans-roadmap",
+            prompt=(
+                """
+Create an uplifting 16:9 illustration for a final "Roadmap / future work" slide about scaling a GraphRAG research system:
+multi-agent tooling, long-context handling, evaluation discipline, graph engine feel, ingestion pipelines, deduplication — all as pure visual metaphor (no text).
+
+Suggested metaphors (no text):
+- an ascending path: stepping stones, bridge, or rising terraces moving upward into brighter light (sunrise / horizon glow)
+- a growing network: glowing nodes and bold curved links suggesting a knowledge graph expanding with energy
+- subtle parallel "lanes" or layered ribbons suggesting pipeline + agent runtime + product track merging upward
+- depth cues: foreground rocks or paper planes, midground bridge/path, background sky with warm gradient (amber to teal)
+
+Convey forward momentum and "shipping" energy without clocks, Gantt charts, arrows with labels, or roadmap words.
+Keep the composition asymmetric and interesting; avoid a bland 4-box flowchart silhouette.
+"""
+                + "\n\n"
+                + vibrant_no_text_suffix
+            ).strip(),
+        ),
     ]
 
 
@@ -445,16 +501,18 @@ def main() -> int:
     load_dotenv_if_available(dotenv_path)
 
     selected = set(args.only or [])
-    jobs = build_jobs()
+    all_jobs = build_jobs()
+    jobs = all_jobs
     if selected:
-        jobs = [job for job in jobs if job.slug in selected]
+        jobs = [job for job in all_jobs if job.slug in selected]
         if not jobs:
             print(f"No jobs matched --only={sorted(selected)}", file=sys.stderr)
             return 2
 
     out_dir = (repo_root / args.out_dir).resolve()
     ensure_directory(out_dir)
-    write_manifest(out_dir, jobs, MODEL_NAME)
+    # Always record the full job catalog (partial runs with --only should not shrink manifest).
+    write_manifest(out_dir, all_jobs, MODEL_NAME)
 
     failures: List[Tuple[str, str]] = []
     for index, job in enumerate(jobs, start=1):

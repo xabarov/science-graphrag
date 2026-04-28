@@ -7,6 +7,7 @@ from typing import Literal
 from langchain_core.messages import HumanMessage
 from langgraph.graph import END, StateGraph
 
+from science_graphrag.agent.chat_envelope import heuristic_answer_class
 from science_graphrag.agent.coordination.deterministic import _graph_intent_heuristic
 from science_graphrag.agent.graph.nodes.graph_agent import SPECIALIST_NAME as GRAPH_SPECIALIST
 from science_graphrag.agent.graph.nodes.graph_agent import (
@@ -94,6 +95,10 @@ Available specialists:
 If the user needs to find papers by title, author name fragment, or keywords without a known work id,
 prefer retrieval_agent (find_works). Use graph_agent when the question is about relations, paths,
 or patterns between known entities.
+
+When the question requires mixed corpus evidence (semantic chunks plus verbatim quotes), keep routing
+to retrieval_agent until idea_search / paper_quote_search have been tried unless specialist_results
+already show those paths failed.
 
 Given the user question and accumulated specialist_results, decide the next specialist.
 Respond with exactly one token:
@@ -317,12 +322,14 @@ def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
         answer_class_hint = (
             str(hint).strip() if isinstance(hint, str) and str(hint).strip() else None
         )
+        question = _first_user_plain_question(state)
+        effective_ac = answer_class_hint or heuristic_answer_class(question, None)
         bound_tools, _ts_meta = shortlist_tools_for_single_agent(
             tool_registry,
-            question=_first_user_plain_question(state),
+            question=question,
             settings=settings,
             has_workspace=bool((state.get("workspace_id") or "").strip()),
-            answer_class=answer_class_hint,
+            answer_class=effective_ac,
         )
         llm_turn = build_chat_model(settings).bind_tools(bound_tools)
         with llm_span(
@@ -354,16 +361,33 @@ def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
             )
         return {"messages": [response]}
 
+    _FINAL_ANSWER_NUDGE_TEXT = (
+        "You must finish this turn by calling the ``final_answer`` tool exactly once. "
+        "Put your user-facing summary into ``final_answer.answer`` (and citations if any); "
+        "do not call other research tools unless you must fix a factual gap."
+    )
+
+    def final_answer_nudge_node(state: AgentState) -> dict:
+        meta = dict(state.get("metadata") or {})
+        meta["final_answer_nudge_used"] = True
+        add_span_event("agent.final_answer_nudge", {})
+        return {
+            "messages": [HumanMessage(content=_FINAL_ANSWER_NUDGE_TEXT)],
+            "metadata": meta,
+        }
+
     graph = StateGraph(AgentState)
     graph.add_node("chat", chat_node)
+    graph.add_node("final_answer_nudge", final_answer_nudge_node)
     graph.add_node("tools", build_normalized_tool_node_executor(tool_registry))
     graph.add_node("after_tools", react_after_tools_decrement_budget)
     graph.set_entry_point("chat")
     graph.add_conditional_edges(
         "chat",
         route_react_chat_to_tools,
-        {"tools": "tools", END: END},
+        {"tools": "tools", "final_answer_nudge": "final_answer_nudge", END: END},
     )
+    graph.add_edge("final_answer_nudge", "chat")
     graph.add_edge("tools", "after_tools")
     graph.add_conditional_edges(
         "after_tools",

@@ -10,6 +10,8 @@ from science_graphrag.api.graph_reader_projection.constants import READER_SYNTHE
 def compute_authorship_projection_meta(
     center_work_id: str,
     edges: list[dict[str, Any]],
+    *,
+    workspace_scope: bool = False,
 ) -> str:
     """Classify reader-view authorship targets linked from the center work.
 
@@ -20,7 +22,31 @@ def compute_authorship_projection_meta(
     non-surrogate (does not use the synthetic author id prefix). ``synthesized`` means at
     least one synthetic target and no other native ids on those edges. ``mixed``
     is both. ``none`` is no ``AUTHORED`` edges from the center.
+
+    When ``workspace_scope`` is True, classifies **all** ``AUTHORED`` edges (expects
+    ``Work`` → ``Author`` topology after server-side collapse).
     """
+    if workspace_scope:
+        has_native = False
+        has_synth = False
+        for edge in edges or []:
+            if str(edge.get("type") or "").upper() != "AUTHORED":
+                continue
+            aid = str(edge.get("target") or "")
+            if not aid:
+                continue
+            if aid.startswith(READER_SYNTHETIC_AUTHOR_ID_PREFIX):
+                has_synth = True
+            else:
+                has_native = True
+        if has_native and has_synth:
+            return "mixed"
+        if has_native:
+            return "native"
+        if has_synth:
+            return "synthesized"
+        return "none"
+
     has_native = False
     has_synth = False
     for edge in edges or []:

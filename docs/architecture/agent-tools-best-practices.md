@@ -2,7 +2,7 @@
 
 Краткое руководство для следующих итераций: как проектировать и менять LangChain tools так, чтобы модель реже ошибалась в аргументах, а ревью и CI ловили регрессии до продакшена.
 
-**См. также:** [agent-chat-tools.md](agent-chat-tools.md) (каталог и карта кода), [`scripts/prompt_audit/`](../../scripts/prompt_audit/), системный промпт [`research_chat_system.py`](../../science_graphrag/agent/prompts/research_chat_system.py).
+**См. также:** [agent-chat-tools.md](agent-chat-tools.md) (каталог и карта кода), [`scripts/prompt_audit/`](../../scripts/prompt_audit/), системный промпт [`research_chat_system.py`](../../science_graphrag/agent/prompts/research_chat_system.py), контракт ответа [`agent-chat-v1.md`](../specs/agent-chat-v1.md), Phoenix [observability-phoenix.md](observability-phoenix.md), §9 ниже.
 
 ---
 
@@ -94,3 +94,15 @@
 6. При смене состава реестра — обновлены манифест/UI/тесты ожиданий eval.
 
 Этот чеклист можно копировать в описание PR для агентских изменений.
+
+---
+
+## 9. Аудит `tool_trace`, envelope и Phoenix (без смены тулза)
+
+Правила §1–§8 и чеклист §8 относятся к изменениям **инструментов LangChain**, промптов и реестра. Отдельный класс работ — **наблюдаемость и контракт ответа** (`tool_trace`, `warnings`, сопоставление со спанами Phoenix). Для них:
+
+- **Контракт API / envelope:** при добавлении или изменении смысла кодов вроде `graph_only`, `text_only`, правил `final_answer` — обновлять [`docs/specs/agent-chat-v1.md`](../specs/agent-chat-v1.md) и тесты [`tests/test_chat_envelope.py`](../../tests/test_chat_envelope.py) (согласованность с [`chat_envelope.py`](../../science_graphrag/agent/chat_envelope.py); см. §6).
+- **Live E2E и Phoenix:** сравнение имён спанов с `tool_trace` делается через trace-scoped извлечение — [`extract_span_names_for_trace`](../../eval/chat_agent/phoenix_export.py) и [`scripts/live_check/agent_od_workspace_e2e_audit.py`](../../scripts/live_check/agent_od_workspace_e2e_audit.py); контекст переменных окружения и collector — [`observability-phoenix.md`](observability-phoenix.md), тяжёлый suite — [`scripts/live_check/README.md`](../../scripts/live_check/README.md).
+- **Регрессия промпта тулов:** если в рамках того же PR всё же менялись тулзы или системный промпт — по-прежнему `build_research_chat_prompt_bundle.py --evaluate` (§5).
+
+Таким образом изменения «только harness / envelope / observability» остаются в рамках спеки и тестов envelope + live-check, **без** расширения §8 на каждый нерелевантный файл.

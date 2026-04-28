@@ -181,6 +181,9 @@ def _make_idea_search_tool(
 
         Pass workspace_id when the user cares about this workspace only; omit for corpus-wide
         semantic exploration. Use chunk-heavy kinds for broad scan; include work when comparing papers.
+
+        When the question requires **citations, verbatim quotes, or chunk-level evidence**, follow
+        with ``paper_quote_search`` (not repeated ``paper_profile`` alone).
         """
         result = run_tool_result_with_span(
             tool_name="idea_search",

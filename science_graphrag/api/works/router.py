@@ -189,6 +189,14 @@ def get_work_graph(  # pylint: disable=R0917
             "Center work must be contained in the workspace."
         ),
     ),
+    include_institutions: bool = Query(
+        default=False,
+        description=(
+            "When true, attach Institution nodes for center-work authorship affiliations "
+            "(reader: Author–AFFILIATED_WITH–Institution after collapse; raw: Authorship–Institution). "
+            "Capped per request; see meta.institutions and meta.reader_extra_hops."
+        ),
+    ),
     stores: StoreRegistry = Depends(get_stores),
 ) -> dict[str, Any]:
     ws_norm = normalize_workspace_id_query_param(workspace_id)
@@ -221,6 +229,7 @@ def get_work_graph(  # pylint: disable=R0917
         include_claims=include_claims,
         claims_limit=claims_limit,
         include_authorship_debug=include_authorship_debug,
+        include_institutions=include_institutions,
     )
     if not g:
         raise HTTPException(status_code=404, detail="work_not_found")
@@ -235,6 +244,10 @@ def expand_aggregator(
     workspace_id: str | None = Query(
         default=None,
         description="Optional workspace id for membership fields (same rules as GET .../graph).",
+    ),
+    include_institutions: bool = Query(
+        default=False,
+        description="Same as GET .../graph: optional Institution hop for the underlying neighborhood.",
     ),
     stores: StoreRegistry = Depends(get_stores),
 ) -> dict[str, Any]:
@@ -261,6 +274,7 @@ def expand_aggregator(
         limit=limit,
         workspace_id=ws_norm,
         workspace_internal_work_ids=workspace_internal_ids,
+        include_institutions=include_institutions,
     )
     if payload is None:
         raise HTTPException(status_code=404, detail="work_not_found")

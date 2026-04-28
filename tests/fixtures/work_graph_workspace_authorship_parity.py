@@ -1,4 +1,4 @@
-"""Helpers for Phase 3 parity tests: work graph reader vs workspace graph payload.
+"""Helpers for parity tests: work graph reader vs workspace graph payload (+ Phase 3 institutions).
 
 Comparison rules are documented in ``docs/architecture/work-graph-reader-authorship.md``.
 """
@@ -37,11 +37,23 @@ def surfaced_author_count_reader_work_graph(payload: dict[str, Any], center_id: 
 
 
 def logical_author_slots_workspace_payload(center_work_id: str, edges: list[dict[str, Any]]) -> int:
-    """Logical author slots from a workspace graph payload (pre UI author projection).
+    """Logical author slots from a workspace graph payload (server reader collapse, Phase 4+).
 
-    Counts each ``Authorship`` via ``HAS_AUTHORSHIP`` from the work; merges ``OF_AUTHOR`` targets.
-    Authorship rows without ``OF_AUTHOR`` each count as one slot (like ``va:`` on work graph).
+    Prefers post-collapse ``AUTHORED`` from the center work. Falls back to legacy ``HAS_AUTHORSHIP``
+    + ``OF_AUTHOR`` when the payload still carries ``Authorship`` nodes (raw / older clients).
     """
+    authored: set[str] = set()
+    for edge in edges or []:
+        if str(edge.get("type") or "").upper() != "AUTHORED":
+            continue
+        src, tgt = str(edge.get("source") or ""), str(edge.get("target") or "")
+        if src == center_work_id and tgt:
+            authored.add(tgt)
+        elif tgt == center_work_id and src:
+            authored.add(src)
+    if authored:
+        return len(authored)
+
     ash_from_work: set[str] = set()
     for edge in edges or []:
         rt = str(edge.get("type") or "").upper()
@@ -90,6 +102,11 @@ def workspace_one_hop_subgraph(
         if src in nids and tgt in nids:
             sub_edges.append(e)
     return sub_nodes, sub_edges
+
+
+def institution_nodes_in_reader_payload(payload: dict[str, Any]) -> int:
+    """Count ``Institution`` nodes (Phase 3 optional ``include_institutions``)."""
+    return sum(1 for n in (payload.get("nodes") or []) if str(n.get("type") or "") == "Institution")
 
 
 def work_graph_workspace_membership_by_work_id(payload: dict[str, Any]) -> dict[str, str]:

@@ -4,7 +4,13 @@ from typing import Any
 
 from science_graphrag.api import works as works_api
 from science_graphrag.api.graph_reader_meta import enrich_reader_graph_meta
+from science_graphrag.api.graph_reader_projection.authorship_collapse import (
+    collapse_authorship_for_reader_multicenter,
+)
 from science_graphrag.api.graph_reader_projection.authorship_enrich import enrich_authorship_nodes
+from science_graphrag.api.graph_reader_projection.authorship_meta import (
+    compute_authorship_projection_meta,
+)
 from science_graphrag.api.workspace_graph._cypher_gds import (
     gds_runtime_available,
     semantic_any,
@@ -118,6 +124,7 @@ def project_workspace_graph(
     include_claims: bool = False,
     claims_per_work: int | None = None,
     claims_max_total: int | None = None,
+    include_authorship_debug: bool = False,
 ) -> dict[str, Any] | None:
     mode_norm = (mode or "inner_only").strip().lower()
     # Full workspace graph: always uncapped 1-hop from internal works (see ADR-011 / graph-ui-plan).
@@ -134,6 +141,7 @@ def project_workspace_graph(
         "include_claims": bool(include_claims),
         "claims_included": False,
     }
+    reader_authorship_projection: str | None = None
     with neo4j_store.session() as session:
         row = session.run(
             "MATCH (ws:Workspace {id: $wid}) OPTIONAL MATCH (ws)-[:CONTAINS]->(w:Work) "
@@ -159,6 +167,14 @@ def project_workspace_graph(
             nodes = list(out.get("nodes") or [])
             edges = list(out.get("edges") or [])
             enrich_authorship_nodes(session, nodes)
+            if str(view or "reader").strip().lower() == "reader":
+                nodes, edges = collapse_authorship_for_reader_multicenter(
+                    nodes, edges, focal_work_id=None
+                )
+                if include_authorship_debug:
+                    reader_authorship_projection = compute_authorship_projection_meta(
+                        "", edges, workspace_scope=True
+                    )
             enrich_edges_workspace(nodes, edges)
             inc, exc = annotate_membership_and_cites(nodes, edges, iws)
             apply_workspace_node_kind(nodes)
@@ -194,6 +210,8 @@ def project_workspace_graph(
                 view=view,
                 workspace_id=workspace_id,
             )
+            if reader_authorship_projection is not None:
+                out["meta"]["authorship_projection"] = reader_authorship_projection
             return out
         if not internal_ids:
             empty_ws_meta: dict[str, Any] = {
@@ -267,6 +285,14 @@ def project_workspace_graph(
                 **cmeta,
             }
         enrich_authorship_nodes(session, nodes)
+        if str(view or "reader").strip().lower() == "reader":
+            nodes, edges = collapse_authorship_for_reader_multicenter(
+                nodes, edges, focal_work_id=None
+            )
+            if include_authorship_debug:
+                reader_authorship_projection = compute_authorship_projection_meta(
+                    "", edges, workspace_scope=True
+                )
     enrich_edges_workspace(nodes, edges)
     inc_n, exc_n = annotate_membership_and_cites(nodes, edges, iws)
     apply_workspace_node_kind(nodes)
@@ -308,6 +334,8 @@ def project_workspace_graph(
         view=view,
         workspace_id=workspace_id,
     )
+    if reader_authorship_projection is not None:
+        main_meta["authorship_projection"] = reader_authorship_projection
     return {
         "work_id": "",
         "nodes": nodes,
@@ -415,6 +443,7 @@ def workspace_graph_neighbors(
         nodes = list(nodes_by_id.values())
         edges = list(edges_by_key.values())
         enrich_authorship_nodes(session, nodes)
+        nodes, edges = collapse_authorship_for_reader_multicenter(nodes, edges, focal_work_id=None)
         row_ids = session.run(
             "MATCH (ws:Workspace {id: $wid})-[:CONTAINS]->(w:Work) RETURN collect(DISTINCT w.id) AS I",
             wid=workspace_id,

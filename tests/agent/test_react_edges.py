@@ -107,6 +107,55 @@ def test_route_react_chat_to_tools_no_tool_calls() -> None:
     assert route_react_chat_to_tools(state) == END
 
 
+def test_route_react_chat_to_tools_final_answer_nudge_after_catalog_tools() -> None:
+    """P0: plain assistant text after a catalog tool must route to nudge, not END."""
+    state = {
+        "messages": [
+            HumanMessage(content="q"),
+            AIMessage(
+                content="",
+                tool_calls=[
+                    {"name": "find_works", "args": {"query": "x"}, "id": "a", "type": "tool_call"},
+                ],
+            ),
+            ToolMessage(content="{}", tool_call_id="a", name="find_works"),
+            AIMessage(content="Summary without final_answer tool."),
+        ],
+        "budget_remaining": 3,
+        "workspace_id": "ws1",
+        "metadata": {"raw_user_question": "q", "turn_policy": {"tool_policy": "allow_tools"}},
+        "routing_log": [],
+        "thread_id": None,
+    }
+    assert route_react_chat_to_tools(state) == "final_answer_nudge"
+
+
+def test_route_react_chat_to_tools_nudge_suppressed_after_flag() -> None:
+    state = {
+        "messages": [
+            HumanMessage(content="q"),
+            AIMessage(
+                content="",
+                tool_calls=[
+                    {"name": "find_works", "args": {"query": "x"}, "id": "a", "type": "tool_call"},
+                ],
+            ),
+            ToolMessage(content="{}", tool_call_id="a", name="find_works"),
+            AIMessage(content="Still no tools after nudge."),
+        ],
+        "budget_remaining": 3,
+        "workspace_id": "ws1",
+        "metadata": {
+            "raw_user_question": "q",
+            "turn_policy": {"tool_policy": "allow_tools"},
+            "final_answer_nudge_used": True,
+        },
+        "routing_log": [],
+        "thread_id": None,
+    }
+    assert route_react_chat_to_tools(state) == END
+
+
 def test_react_after_tools_decrement_budget() -> None:
     out = react_after_tools_decrement_budget({"budget_remaining": 2})
     assert out["budget_remaining"] == 1

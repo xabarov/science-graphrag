@@ -34,6 +34,14 @@ The **arize-phoenix-otel** package may still print a short startup line or banne
 
 **Scope:** `PHOENIX_TRACE_SCOPE=full` records everything. `extraction_llm` records allowlisted ingest CHAIN/LLM spans **and** product-agent spans whose names start with `agent.`, `llm.agent.`, or `retrieval.qdrant.` (see `science_graphrag/observability/spans/decorators.py`), so `/v2/agent/query` can still emit a non-empty `phoenix_trace_id` while noisy non-agent spans stay suppressed. The live eval harness may still force `full` for historical harness parity; regression coverage lives in `tests/observability/test_extraction_llm_scope.py`.
 
+### Agent vs ingest in one Phoenix project
+
+Ingest and agent chat both export OTLP into the **same** Phoenix project (name from `PHOENIX_PROJECT_NAME` / id from `PHOENIX_PROJECT_ID`). Operators should expect:
+
+- **UI / trace list:** With `PHOENIX_TRACE_SCOPE=extraction_llm`, the trace list still shows agent turns (`agent.query` and children); ingest-heavy spans outside the allowlist are not attached to those traces by the exporter, but unrelated jobs can appear as **separate** traces in the same project. With `full`, every instrumented span is recorded — more noise, easier deep debugging.
+- **API process:** **`PHOENIX_COLLECTOR_ENDPOINT`** must point at the Phoenix OTLP HTTP ingest URL reachable from the API container (not the browser UI port alone). In dev compose this is wired on the API service — see [`docker-compose.dev.yml`](../../docker-compose.dev.yml) (`PHOENIX_COLLECTOR_ENDPOINT`, typically `http://phoenix:6006/v1/traces`). If the collector is wrong or unreachable, `phoenix_trace_id` may still be generated client-side while Phoenix shows no matching trace — check collector connectivity before blaming `PHOENIX_TRACE_SCOPE`.
+- **Live E2E Phoenix REST:** [`scripts/live_check/agent_od_workspace_e2e_audit.py`](../../scripts/live_check/agent_od_workspace_e2e_audit.py) uses `eval.chat_agent.phoenix_export.try_fetch_phoenix_spans` and **`extract_span_names_for_trace`**: span names are taken only from structured span lists **scoped to the response’s `phoenix_trace_id`**, so Markdown / JSONL audits do not pick up unrelated `name` fields from nested JSON (see `docs/analysis/agent-heavy-live-trace-audit-and-remediation-2026-04-28.md` §4.3). For HTTP-only gates without Phoenix, use `--skip-phoenix` — [scripts/live_check/README.md](../../scripts/live_check/README.md) (Heavy suite).
+
 ### Verification order (research chat + Benchmark Lab)
 
 When validating chat traceability after changes:

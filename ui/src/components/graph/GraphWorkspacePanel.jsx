@@ -102,6 +102,8 @@ export default function GraphWorkspacePanel({
     fetchNeighbors,
     expandNeighborsBusy,
     expandAggregatorNode,
+    includeInstitutions,
+    setIncludeInstitutions,
   } = useGraphWorkspaceData(workspaceId, workId);
 
   const [vizMode, setVizMode] = useState(() => (standalone ? "canvas" : readLsMode()));
@@ -267,6 +269,8 @@ export default function GraphWorkspacePanel({
             onToggleLegend={() => setLegendOpen((v) => !v)}
             onToggleDiagnostics={() => setDiagnosticsOpen((v) => !v)}
             labMode={labMode}
+            workGraphIncludeInstitutions={Boolean(includeInstitutions)}
+            onToggleWorkGraphIncludeInstitutions={() => setIncludeInstitutions((v) => !v)}
           />
           {!standalone ? <GraphViewModeSwitch mode={vizMode} onChange={setVizMode} compact={compactLayout} /> : null}
           {projectedGraph.warnings.length > 0 ? <Alert severity="info" sx={{ mb: 1 }}>Graph data was normalized</Alert> : null}

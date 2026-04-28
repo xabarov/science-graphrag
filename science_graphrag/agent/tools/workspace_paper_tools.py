@@ -130,6 +130,10 @@ def build_workspace_paper_langchain_tools(
 
         Requires a real work_id from find_works, workspace_inspect with mode=papers or blurb
         (not stats), or graph tools. Do not guess ids.
+
+        For questions that need **verbatim chunk evidence**, trade-off arguments grounded in text,
+        or user-mandated **paper_quote_search**: use this for metadata context only—do not use
+        repeated profiles as a substitute for ``paper_quote_search``.
         """
         r = run_tool_result_with_span(
             tool_name="paper_profile",
@@ -184,6 +188,10 @@ def build_workspace_paper_langchain_tools(
         Resolution chain for quotes: narrow with ``find_works`` / ``paper_profile`` / a short
         ``idea_search`` when needed, then call this tool. Prefer ``work_id`` when evidence must
         come from one paper; pass ``workspace_id`` for workspace-local questions.
+
+        When the user asks for **evidence**, **support**, or **trade-offs** backed by corpus text,
+        call this after a tight ``idea_search`` or once ``work_id`` is known—then **final_answer**,
+        citing ``empty_reason`` from the payload if no quotes were found.
 
         When ``row_count`` is 0, the payload may include ``empty_reason``: ``empty_query``;
         scoped ``no_hits_workspace_scoped`` / ``no_hits_for_work`` / ``no_hits_corpus_wide``;

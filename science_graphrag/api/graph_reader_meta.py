@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 # Bump when neighbor caps, membership rules, or reader collapse semantics change contractually.
-GRAPH_CONTRACT_VERSION: int = 2
+GRAPH_CONTRACT_VERSION: int = 4
 
 
 def graph_mode_from_meta(meta: dict[str, Any]) -> str:

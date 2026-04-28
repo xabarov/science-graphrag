@@ -65,7 +65,17 @@ def merge_graph_payloads(payloads: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def _primary_label(labels: list[Any]) -> str:
-    order = ["Work", "Author", "Method", "Dataset", "Venue", "Institution", "Authorship", "Claim", "Evidence"]
+    order = [
+        "Work",
+        "Author",
+        "Method",
+        "Dataset",
+        "Venue",
+        "Institution",
+        "Authorship",
+        "Claim",
+        "Evidence",
+    ]
     labs = [str(x) for x in (labels or [])]
     for item in order:
         if item in labs:
@@ -347,8 +357,8 @@ def apply_workspace_aggregators(
     threshold: int = AGGREGATOR_THRESHOLD,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     node_by_id = {str(n.get("id") or ""): n for n in nodes}
-    # Keep authorship structures explicit in the backend payload: the frontend reader projection
-    # collapses them into Work->Author edges and would otherwise leave orphan Author nodes.
+    # Do not bucket dense Author / Authorship neighborhoods: reader collapse runs on the server
+    # before this step (Phase 4); aggregating those kinds would drop real nodes the UI still needs.
     non_aggregated_kinds = {"Author", "Authorship", "AuthorshipReification"}
     groups: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
     for edge in edges:
@@ -405,7 +415,9 @@ def apply_workspace_aggregators(
                     "aggregator_kind": f"{kind.lower()}_of_work",
                     "count": len(uniq_neighbors),
                     "preview_labels": preview,
-                    "expand_endpoint": f"/v1/workspaces/{workspace_id}/graph/expand?aggregator_id={agg_id}",
+                    "expand_endpoint": (
+                        f"/v1/workspaces/{workspace_id}/graph/expand?aggregator_id={agg_id}"
+                    ),
                 },
             }
         )

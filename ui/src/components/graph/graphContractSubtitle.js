@@ -28,6 +28,9 @@ export function graphContractSubtitle(meta, t) {
   if (mode === "work_capped") {
     return t("graph.contractSubtitle.workCapped", { limit: lim || "—" });
   }
+  if (mode === "work_workspace_context") {
+    return t("graph.contractSubtitle.workWorkspaceContext", { limit: lim || "—" });
+  }
   if (mode === "workspace_union") {
     return t("graph.contractSubtitle.workspaceUnion");
   }

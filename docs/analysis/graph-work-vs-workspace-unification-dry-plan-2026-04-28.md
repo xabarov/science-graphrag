@@ -136,7 +136,7 @@ This document phases **contract clarification**, **shared projection module (DRY
 
 ---
 
-### Phase 3 — 2-hop reader policy (Institution; Venue when present)
+### Phase 3 — 2-hop reader policy (Institution; Venue when present) — **[DONE 2026-04-28]**
 
 **Goal:** Align **“authors + affiliations”** with a **declared** hop budget, not accidental 1-hop omission.
 
@@ -149,32 +149,44 @@ This document phases **contract clarification**, **shared projection module (DRY
 
 **Acceptance:** Fixture or integration test proves institution nodes/edges present under flag; default unchanged for API stability.
 
+**Product choice:** **3A** shipped as the primary contract; **3B** not required (expand can still reuse the same neighborhood when `include_institutions` is passed on expand).
+
+**Done (implementation notes):**
+
+- **API:** Query flag **`include_institutions`** on **`GET /v1/works/{work_id}/graph`** and **`GET /v1/works/{work_id}/graph/expand`** ([`router.py`](../../science_graphrag/api/works/router.py)); default **false** — no contract change for existing clients.
+- **Backend:** [`graph_neighborhood.py`](../../science_graphrag/api/works/graph_neighborhood.py) — batched Cypher for center-work authorship→institution rows (**cap `INSTITUTION_ATTACH_CAP` = 32**); **`view=reader`:** post-**`collapse_authorship_for_reader_view`**, attach **`Author–AFFILIATED_WITH–Institution`** using **`build_authorship_to_reader_author_map`** ([`authorship_collapse.py`](../../science_graphrag/api/graph_reader_projection/authorship_collapse.py)); **`view=raw`:** **`Authorship–AFFILIATED_WITH–Institution`** after strip. Aggregator **`expand_endpoint`** appends **`include_institutions=1`** when the graph was loaded with the flag.
+- **`meta`:** **`include_institutions`** (bool), **`reader_extra_hops`: `["institution"]`** when active, **`institutions`: `{ cap, returned }`**; **`GRAPH_CONTRACT_VERSION` = 3** ([`graph_reader_meta.py`](../../science_graphrag/api/graph_reader_meta.py)).
+- **ADR / spec / architecture:** ADR-011 addendum ([`011-graph-live-ux-and-payload.md`](../adr/011-graph-live-ux-and-payload.md)), [`frontend-ui-api-contracts-v1.md`](../specs/frontend-ui-api-contracts-v1.md) §4, [`work-graph-reader-authorship.md`](../architecture/work-graph-reader-authorship.md) pipeline step 5.
+- **Venue:** Documented in ADR: **`Venue`** appears only when a **1-hop** Neo4j edge exists (e.g. **`PUBLISHED_IN`**); no new hop flag for venue-only-on-properties (ingest backlog remains separate).
+- **UI:** [`graph.js`](../../ui/src/services/research/graph.js) sends **`include_institutions`**; toolbar chip + LS preference per work ([`useGraphWorkspaceData.js`](../../ui/src/components/graph/hooks/useGraphWorkspaceData.js), [`WorkspaceGraphToolbar.jsx`](../../ui/src/components/graph/WorkspaceGraphToolbar.jsx), [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx)); i18n **`graph.wsToolbar.chipInstitutions*`**.
+- **Tests:** [`tests/api/test_collapse_authorship_reader_view.py`](../../tests/api/test_collapse_authorship_reader_view.py) (`build_authorship_to_reader_author_map`); [`tests/test_works_graph_authorship_integration.py`](../../tests/test_works_graph_authorship_integration.py) `test_work_graph_include_institutions_phase3_reader_and_raw`; helper **`institution_nodes_in_reader_payload`** in [`work_graph_workspace_authorship_parity.py`](../../tests/fixtures/work_graph_workspace_authorship_parity.py).
+
 ---
 
-### Phase 4 — Frontend DRY: delete or narrow `authorSemanticProjection.js`
+### Phase 4 — Frontend DRY: delete or narrow `authorSemanticProjection.js` — **[DONE 2026-04-28]**
 
 **Goal:** UI does not re-implement server reader semantics.
 
-**Tasks:**
+**Done (implementation notes):**
 
-- After Phase 1–2, classify workspace graph payloads: if server always delivers **the same reader edge/node shapes** as work graph, **remove** redundant projection branches from `authorSemanticProjection.js`.
-- If a thin client normalizer remains (ids, dedup), document it as **presentation-only**, not authorship contract.
-
-**Acceptance:** `npm run lint` + graph smoke tests; fewer branches in projection file; no regression on workspace graph page.
+- **Multicenter collapse:** [`collapse_authorship_for_reader_multicenter`](../../science_graphrag/api/graph_reader_projection/authorship_collapse.py) — `va:` ids hash per owning `Work` from `HAS_AUTHORSHIP`; rewrites **`Authorship–AFFILIATED_WITH–Institution`** → **`Author–AFFILIATED_WITH–Institution`**. [`collapse_authorship_for_reader_view`](../../science_graphrag/api/graph_reader_projection/authorship_collapse.py) wraps it with `focal_work_id` for edge `direction`.
+- **Workspace pipeline:** [`cypher.py`](../../science_graphrag/api/workspace_graph/cypher.py) — after `enrich_authorship_nodes`, **`view=reader`:** collapse → `enrich_edges_workspace` → membership → aggregators; **`union_1hop`** same after merge; [`workspace_graph_neighbors`](../../science_graphrag/api/workspace_graph/cypher.py) collapses before edge enrichment. Optional **`include_authorship_debug`** → **`meta.authorship_projection`** via [`compute_authorship_projection_meta(..., workspace_scope=True)`](../../science_graphrag/api/graph_reader_projection/authorship_meta.py). Router: [`workspace_graph/router.py`](../../science_graphrag/api/workspace_graph/router.py) query param.
+- **`GRAPH_CONTRACT_VERSION = 4`** ([`graph_reader_meta.py`](../../science_graphrag/api/graph_reader_meta.py)) — workspace reader payload shape aligned with work graph GR9.
+- **UI:** [`authorSemanticProjection.js`](../../ui/src/components/graph/authorSemanticProjection.js) — **`projectAuthorSemanticGraph`** is pass-through; kept **`collectAuthorAggregatorExpandEndpoints`** / aggregator helpers for prefetch.
+- **Tests:** [`test_collapse_authorship_reader_view.py`](../../tests/api/test_collapse_authorship_reader_view.py) (multicenter + institution bridge); [`test_workspace_graph_integration.py`](../../tests/test_workspace_graph_integration.py); [`logical_author_slots_workspace_payload`](../../tests/fixtures/work_graph_workspace_authorship_parity.py) prefers **`AUTHORED`**; [`test_work_graph_authorship_projection_meta.py`](../../tests/api/test_work_graph_authorship_projection_meta.py) (`workspace_scope`).
 
 ---
 
-### Phase 5 — Product copy and navigation (close the UX loop)
+### Phase 5 — Product copy and navigation (close the UX loop) — **[DONE 2026-04-28]**
 
 **Goal:** Match ADR truth to UI strings.
 
-**Tasks:**
+**Done (implementation notes):**
 
-- Workspace graph entry: label as **“All papers in workspace (1-hop)”** or similar.
-- Work graph: **“This paper’s neighborhood (capped)”** + show limit from `meta`.
-- Link from paper row: remain **work-centric** unless user explicitly opens workspace graph (sidebar / menu).
-
-**Acceptance:** i18n keys updated EN/RU; no user-facing claim of identity between the two modes.
+- **i18n EN/RU:** [`partGraphUi.js`](../../ui/src/i18n/messages/en/partGraphUi.js), [`ru/partGraphUi.js`](../../ui/src/i18n/messages/ru/partGraphUi.js) — workspace title / union scope copy; **`graph.contractSubtitle.workWorkspaceContext`**; tightened **`workCapped`** / **`workspaceUnion`** subtitles.
+- **Subtitle:** [`graphContractSubtitle.js`](../../ui/src/components/graph/graphContractSubtitle.js) — **`work_workspace_context`** branch.
+- **Spec:** [`frontend-ui-api-contracts-v1.md`](../specs/frontend-ui-api-contracts-v1.md) §5b workspace reader + `include_authorship_debug`, contract version **4**.
+- **Navigation:** unchanged (paper row → capped work graph; full workspace graph separate) — copy only.
 
 ---
 
@@ -182,10 +194,10 @@ This document phases **contract clarification**, **shared projection module (DRY
 
 | Layer | What to add / keep |
 |-------|---------------------|
-| Unit | Projection package tests (collapse, `va:` stability, `via` ordering). |
-| Integration | Membership annotation with `workspace_id`; optional institution flag. |
-| Parity | Extend parity helpers beyond authorship: **membership counts**, **institution presence** when contract says so. |
-| Manual | Runbook row: “open same work in workspace vs work graph — read `meta.graph_mode` / limits.” |
+| Unit | Projection package tests (collapse, `va:` stability, `via` ordering). **Done:** + `build_authorship_to_reader_author_map` (Phase 3). **Done (Phase 4):** multicenter + institution bridge + `workspace_scope` meta. |
+| Integration | Membership annotation with `workspace_id`; optional institution flag. **Done:** Phase 3 institutions integration test + Phase 2 membership tests kept. **Done (Phase 4):** workspace graph reader collapse + `include_authorship_debug` / `authorship_projection==native` smoke in [`test_workspace_graph_integration.py`](../../tests/test_workspace_graph_integration.py). |
+| Parity | Extend parity helpers beyond authorship: **membership counts**, **institution presence** when contract says so. **Done:** `institution_nodes_in_reader_payload` helper (Phase 3). **Done (Phase 4):** `logical_author_slots_workspace_payload` uses **`AUTHORED`** when present. |
+| Manual | **Checklist (Phase 4–5):** open the same internal work from the workspace list (`work_id` + `workspace_id`) vs the workspace union graph (`workspace_id` only); confirm **`meta.graph_mode`** is **`work_workspace_context`** or **`workspace_v2`** / **`workspace_union`** respectively and that **`meta.neighbor_limit`** / subtitles match (no claim the two are the same graph). |
 
 ---
 
@@ -201,10 +213,10 @@ This document phases **contract clarification**, **shared projection module (DRY
 
 ## 8. Completion definition (“architecturally closed”)
 
-- **DRY:** Reader authorship projection and related **`va:` / `via`** rules live in **one Python package** (`graph_reader_projection` — **Phase 1 done, 2026-04-28**); UI projection (`authorSemanticProjection.js`) still overlaps until **Phase 4**.
+- **DRY:** Reader authorship projection and related **`va:` / `via`** rules live in **one Python package** (`graph_reader_projection` — **Phase 1 done, 2026-04-28**); UI **`projectAuthorSemanticGraph`** is **pass-through** (**Phase 4 done, 2026-04-28**); aggregator-only helpers remain for prefetch.
 - **Honest asymmetry:** ADR, API spec, and UI strings agree; `meta` exposes mode and limits.
 - **Workspace context:** Optional `workspace_id` on work graph enables **membership-aware** filters without misusing the workspace union endpoint.
-- **2-hop policy:** Institution (and venue when data exists) governed by **explicit** flags / ADR, not accidental 1-hop shape.
+- **2-hop policy:** **Institution** governed by **explicit** query flag + ADR (**Phase 3 done, 2026-04-28**). **Venue:** 1-hop when Neo4j has an incident relationship (e.g. `PUBLISHED_IN`); missing venue on `Work` properties alone is an ingest/product doc issue, not this graph hop.
 - **Tests:** Parity + integration cover the above contracts.
 
 ---
@@ -215,4 +227,4 @@ This document phases **contract clarification**, **shared projection module (DRY
 - [`docs/architecture/work-graph-reader-authorship.md`](../architecture/work-graph-reader-authorship.md)  
 - [`docs/specs/frontend-ui-api-contracts-v1.md`](../specs/frontend-ui-api-contracts-v1.md)  
 - ADR-011 / ADR-012 under `docs/adr/`  
-- Backlog: `docs/backlog/refactor-backend.md` — **Graph work vs workspace — single projection seam + parity** (execution tracker for Phase 1–3).
+- Backlog: `docs/backlog/refactor-backend.md` — graph DRY item **closed 2026-04-28** (Phases 0–5).

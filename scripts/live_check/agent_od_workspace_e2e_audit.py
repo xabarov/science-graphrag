@@ -7,7 +7,7 @@ Loads repo ``.env`` (override=True) like other ``live_check`` scripts. Uses:
 - ``AGENT_LIVE_BASE``, ``AGENT_LIVE_AUTHORIZATION``, ``AGENT_LIVE_ADMIN_KEY``, timeouts
 - ``SCIENCE_GRAPHRAG_CHAT_LLM_MODEL`` (via Settings) for reporting
 - ``PHOENIX_UI_BASE_URL`` / ``PHOENIX_PROJECT_NAME`` for REST span fetch
-  (``eval.chat_agent.phoenix_export``)
+  (``eval.chat_agent.phoenix_export``); span names are **trace-scoped** (no recursive ``name`` walk).
 - ``AGENT_E2E_PHOENIX_SPAN_CAP`` (optional): max span names stored per case when ``--trace-audit``
   (default ``400``)
 
@@ -84,24 +84,6 @@ def _tool_steps(trace: list[dict[str, Any]]) -> tuple[list[str], int]:
             names.append(str(t))
     non_session = [n for n in names if n != "session_init"]
     return names, len(non_session)
-
-
-def _extract_span_names(payload: Any) -> list[str]:
-    names: list[str] = []
-
-    def walk(obj: Any) -> None:
-        if isinstance(obj, dict):
-            n = obj.get("name")
-            if isinstance(n, str) and n.strip():
-                names.append(n.strip())
-            for v in obj.values():
-                walk(v)
-        elif isinstance(obj, list):
-            for v in obj:
-                walk(v)
-
-    walk(payload)
-    return names
 
 
 def _question_suite(suite: str) -> list[tuple[str, str]]:
@@ -247,6 +229,7 @@ def _run_single_query(  # pylint: disable=too-many-arguments,too-many-locals
     phoenix_span_cap: int,
     phoenix_ui_trace_url: Callable[..., str],
     try_fetch_phoenix_spans: Callable[..., dict[str, Any]],
+    extract_span_names_for_trace_fn: Callable[[Any, str], list[str]],
 ) -> tuple[dict[str, Any], bool]:
     """Return (case_report, case_ok_for_aggregate)."""
     _ensure_paths()
@@ -316,7 +299,7 @@ def _run_single_query(  # pylint: disable=too-many-arguments,too-many-locals
 
     if not skip_phoenix and tid:
         snap = try_fetch_phoenix_spans(tid, timeout_s=20.0)
-        span_names = _extract_span_names(snap.get("payload"))
+        span_names = extract_span_names_for_trace_fn(snap.get("payload"), tid)
         phx: dict[str, Any] = {
             "ok": snap.get("ok"),
             "payload_kind": snap.get("payload_kind"),
@@ -474,6 +457,7 @@ def main() -> int:  # pylint: disable=too-many-locals,too-many-statements
     load_dotenv_or_warn(args.env_file)
 
     from eval.chat_agent.phoenix_export import (  # pylint: disable=import-outside-toplevel
+        extract_span_names_for_trace,
         phoenix_ui_trace_url,
         try_fetch_phoenix_spans,
     )
@@ -580,6 +564,7 @@ def main() -> int:  # pylint: disable=too-many-locals,too-many-statements
                 phoenix_span_cap=phoenix_span_cap,
                 phoenix_ui_trace_url=phoenix_ui_trace_url,
                 try_fetch_phoenix_spans=try_fetch_phoenix_spans,
+                extract_span_names_for_trace_fn=extract_span_names_for_trace,
             )
             if args.trace_audit:
                 case_report["trace_audit"] = build_tool_trace_audit(case_report)

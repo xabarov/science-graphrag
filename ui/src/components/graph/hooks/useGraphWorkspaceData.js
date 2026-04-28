@@ -18,6 +18,28 @@ import { normalizeGraphPayload } from "../graphViewState.js";
 
 export { graphVisibilityLocalStorageKey } from "../graphWorkspaceVisibilityLs.js";
 
+const LS_WORK_GRAPH_INCLUDE_INST = "graphWorkIncludeInstitutions:";
+
+function readWorkGraphIncludeInstitutionsLs(workId) {
+  const w = String(workId || "").trim();
+  if (!w || typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(`${LS_WORK_GRAPH_INCLUDE_INST}${w}`) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeWorkGraphIncludeInstitutionsLs(workId, value) {
+  const w = String(workId || "").trim();
+  if (!w || typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(`${LS_WORK_GRAPH_INCLUDE_INST}${w}`, value ? "1" : "0");
+  } catch {
+    /* ignore */
+  }
+}
+
 export function useGraphWorkspaceData(workspaceId, workId) {
   const wsId = String(workspaceId || "").trim();
   const workIdNorm = String(workId || "").trim();
@@ -30,6 +52,24 @@ export function useGraphWorkspaceData(workspaceId, workId) {
   const [expandNeighborsBusy, setExpandNeighborsBusy] = useState(false);
   const [neighborCache, setNeighborCache] = useState(() => new Set());
   const authorAggregatorExpandSeenRef = useRef(new Set());
+  const [includeInstitutions, setIncludeInstitutionsState] = useState(() =>
+    readWorkGraphIncludeInstitutionsLs(workIdNorm),
+  );
+
+  useEffect(() => {
+    setIncludeInstitutionsState(readWorkGraphIncludeInstitutionsLs(workIdNorm));
+  }, [workIdNorm]);
+
+  const setIncludeInstitutions = useCallback(
+    (next) => {
+      setIncludeInstitutionsState((prev) => {
+        const resolved = typeof next === "function" ? Boolean(next(prev)) : Boolean(next);
+        writeWorkGraphIncludeInstitutionsLs(workIdNorm, resolved);
+        return resolved;
+      });
+    },
+    [workIdNorm],
+  );
 
   const setGraphVisibility = useCallback(
     (next) => {
@@ -91,6 +131,7 @@ export function useGraphWorkspaceData(workspaceId, workId) {
             view: "reader",
             includeClaims: true,
             workspaceId: ws || undefined,
+            includeInstitutions: Boolean(includeInstitutions),
           });
           raw = res.data;
         } else {
@@ -134,7 +175,7 @@ export function useGraphWorkspaceData(workspaceId, workId) {
     return () => {
       cancelled = true;
     };
-  }, [workIdNorm, workspaceId]);
+  }, [workIdNorm, workspaceId, includeInstitutions]);
 
   const fetchNeighbors = useCallback(
     async (nodeId) => {
@@ -191,5 +232,7 @@ export function useGraphWorkspaceData(workspaceId, workId) {
     expandNeighborsBusy,
     fetchNeighbors,
     expandAggregatorNode,
+    includeInstitutions,
+    setIncludeInstitutions,
   };
 }

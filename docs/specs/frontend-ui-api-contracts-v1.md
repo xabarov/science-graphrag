@@ -224,10 +224,11 @@ Optional query (server contract):
 | `aggregator_disabled_kinds` | Optional CSV of neighbor kinds to skip aggregating (e.g. **`Author`**, **`Institution`**). |
 | `include_authorship_debug` | Boolean (default **false**). When **true** and `view=reader`, response **`meta.authorship_projection`** is set to one of **`native`**, **`synthesized`**, **`mixed`**, **`none`** — classifies post-collapse `AUTHORED` targets from the center (no PII). See [`docs/architecture/work-graph-reader-authorship.md`](../architecture/work-graph-reader-authorship.md). |
 | `workspace_id` | Optional string (Phase 2, 2026-04-28). When set, the center work must be **`CONTAINS`**-ed by that workspace; response nodes get **`workspace_membership`** / cite split fields using the same rules as workspace graph projection. **`404`** `workspace_not_found` if the workspace does not exist; **`422`** `work_not_in_workspace` if the work is not in the collection. **`meta.graph_mode`** is **`work_workspace_context`** (still capped neighborhood, not union). |
+| `include_institutions` | Boolean (default **false**, Phase 3). When **true**, attaches **`Institution`** nodes for affiliations linked from the center work’s **Authorship** rows in Neo4j (capped per request). **`view=reader`:** after authorship collapse, edges are **`Author–AFFILIATED_WITH–Institution`** (reader projection; Neo4j may only store `Authorship–Institution`). **`view=raw`:** **`Authorship–AFFILIATED_WITH–Institution`** after reader-only property strip. See **`meta.include_institutions`**, **`meta.reader_extra_hops`**, **`meta.institutions`**. |
 
 **Neighbor aggregation (reader only):** Dense groups of same-type neighbors attached to the center `Work` may be replaced by an **`Aggregator`** node (e.g. many authors). Default per-kind thresholds live in server code (`KIND_AGG_THRESHOLDS`, e.g. **author: 4**).
 
-**Reader graph `meta` contract (Phase 0–2):** Responses include **`meta.graph_contract_version`** (integer, currently **`2`** — bumped when optional work-graph **`workspace_id`** membership shipped). Bump it when neighbor caps, membership annotation rules, or reader authorship collapse semantics change in a contract-visible way.
+**Reader graph `meta` contract (Phase 0–4):** Responses include **`meta.graph_contract_version`** (integer, currently **`4`** — bumped 2026-04-28 when workspace **`view=reader`** payloads adopted the same server-side authorship collapse as the work graph). Bump it when neighbor caps, membership annotation rules, reader authorship collapse semantics, workspace reader shape, or optional institution hop behavior change in a contract-visible way.
 
 **`meta.graph_mode`** (product-facing): derived from `graph_scope` / workspace `mode`, or overridden explicitly: **`work_capped`** (standalone neighborhood), **`work_workspace_context`** (neighborhood + optional `workspace_id` membership pass), **`workspace_union`**, **`workspace_v2`**, **`workspace_neighbors`**, plus expand-only **`work_expand_aggregator`** / **`workspace_expand_aggregator`**.
 
@@ -240,6 +241,7 @@ Always present on root graph responses: **`neighbor_limit`** (requested int on w
 | `aggregator_id` | **Required.** Stable id emitted on the `Aggregator` node (`aggregation_hints` / `expand_endpoint`). |
 | `limit` | Integer **1–300** (default **50**). Caps how many neighbor nodes are returned for that bucket. |
 | `workspace_id` | Optional (Phase 2). Same validation and membership annotation as **`GET .../graph`** when expanding from a workspace-scoped work graph; echoed in **`meta.workspace_id`**. **`meta.graph_mode`** stays **`work_expand_aggregator`**. |
+| `include_institutions` | Optional boolean (Phase 3). Same semantics as **`GET .../graph`** — forwarded to the underlying neighborhood rebuild so expand URLs from aggregators can preserve the flag (`&include_institutions=1`). |
 
 **Behavior:** Recomputes an enlarged neighborhood and returns the center work plus the neighbors that were folded into the given aggregator. **Author** buckets (edges of type **`AUTHORED`** in reader mode) are expanded using an internal **`view=reader`** fetch with **`aggregator_disabled_kinds=Author`**, because the raw topology uses **`HAS_AUTHORSHIP`** to `:Authorship` rather than **`AUTHORED`**.
 
@@ -273,7 +275,7 @@ Response (backward compatible: `id`, `type`, `label` on nodes and `source`, `tar
     }
   ],
   "meta": {
-    "graph_contract_version": 2,
+    "graph_contract_version": 4,
     "graph_mode": "work_capped",
     "semantic_available": true,
     "graph_scope": "work_1hop",
@@ -357,8 +359,11 @@ Query params:
 | `external_min_internal_citers` | `0` | When &gt; 0 and `include_external=true`, keep external works only if at least N distinct internal works cite them |
 | `view` | `reader` | `reader` \| `raw` |
 | `include_claims` | `false` | Optional claim slice; `claims_per_work` / `claims_max_total` omit for uncapped |
+| `include_authorship_debug` | `false` | When **true** and `view=reader`, **`meta.authorship_projection`** ∈ {`native`,`synthesized`,`mixed`,`none`} classifies **all** `AUTHORED` edge targets in the payload (workspace-wide; same helper family as work graph). |
 
 **Removed (2026-04-27):** `depth`, `neighbor_limit`, `node_types` — the server always returns the **full union of 1-hop** incident edges for every internal work in the workspace (see ADR 012 addendum). **Node-type visibility** is **client-only** (`graphVisibilityFilter`).
+
+**Workspace reader (Phase 4):** For `view=reader`, the server applies **`collapse_authorship_for_reader_multicenter`** after `enrich_authorship_nodes` and before edge display enrichment / aggregators — same GR9 contract as `GET /v1/works/{id}/graph`: **no `:Authorship` nodes** in the JSON; **`Work–AUTHORED–Author`** with `via` metadata; **`Authorship–AFFILIATED_WITH–Institution`** rewritten to **`Author–AFFILIATED_WITH–Institution`** when institutions are present. **`view=raw`** keeps authorship-shaped nodes and skips collapse.
 
 Response matches work graph shape (`work_id`, `nodes`, `edges`, `meta`). Each node may include:
 
@@ -424,7 +429,7 @@ Implementation: [`science_graphrag/api/workspace_graph/router.py`](../../science
 
 - `Workspace`: `GET /v1/works`
 - `Reader`: `GET /v1/works/{work_id}` + `GET /v1/works/{work_id}/chunks`
-- `Graph`: `GET /v1/works/{work_id}/graph` or workspace mode `GET /v1/workspaces/{workspace_id}/graph` (§5b)
+- `Graph`: capped neighborhood `GET /v1/works/{work_id}/graph` (optional `workspace_id` for membership, §4); full union `GET /v1/workspaces/{workspace_id}/graph` when no work scope (§5b)
 - `Ask`: `POST /v1/query`
 - `Evidence`: query citations + chunks lookup by `chunk_fingerprint`
 - `Benchmarks`: `/v1/benchmark/*` (см. §6)

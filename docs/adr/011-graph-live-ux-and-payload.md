@@ -76,3 +76,16 @@ The graph UI was inspection-first: **Cards** defaulted ahead of **Canvas**, circ
 - **Reduced ambiguity:** UI «missing methods» / «missing citations» bugs caused by **depth‑2** projection are addressed at the API layer; remaining gaps are ingestion, stubs, or **UI caps** / **hidden types**.
 
 **References:** [`docs/adr/012-workspace-graph-projection.md`](012-workspace-graph-projection.md) addendum, [`docs/specs/graph-ui-plan.md`](../specs/graph-ui-plan.md) §Workspace graph v2, [`docs/analysis/workspace-graph-methods-citations-root-cause-2026-04-27.md`](../analysis/workspace-graph-methods-citations-root-cause-2026-04-27.md).
+
+## Addendum: Optional 2-hop institutions on work graph (2026-04-28, Phase 3)
+
+**Decision (3A):** `GET /v1/works/{work_id}/graph` accepts optional query flag **`include_institutions`** (default `false`). When `true`, the server adds **`Institution`** nodes and **`AFFILIATED_WITH`** edges for affiliations linked from the center work’s **Authorship** rows in Neo4j, subject to a **small fixed cap** per request. `meta.reader_extra_hops` documents when this hop is active; `graph_contract_version` bumps with the contract.
+
+**Reader vs raw `view`:**
+
+- **`view=reader`:** Authorship reification is still collapsed into `Work–AUTHORED→Author` first; institution edges are **materialized in the JSON payload** as **`Author–AFFILIATED_WITH→Institution`** (reader projection). Neo4j may only store `Authorship–AFFILIATED_WITH→Institution`; the reader response uses this virtual Author–Institution shape for a stable graph after collapse.
+- **`view=raw`:** With `include_institutions=true`, the server adds **`Authorship–AFFILIATED_WITH→Institution`** without collapsing authorship (raw reification preserved).
+
+**Venue:** A separate **`Venue`** node appears in the 1-hop neighborhood only when Neo4j has an incident edge (e.g. `PUBLISHED_IN`); there is **no** implied 2-hop venue from work properties alone in this endpoint.
+
+**Non-goal:** Ingest completeness for missing venue/year remains outside this ADR (see backlog / paper profile).

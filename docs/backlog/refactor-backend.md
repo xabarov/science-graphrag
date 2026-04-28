@@ -14,6 +14,7 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 
 | When | Theme |
 |------|--------|
+| 2026-04-28 | **Graph work vs workspace DRY (Phases 0–5):** `collapse_authorship_for_reader_multicenter` + workspace pipeline in `workspace_graph/cypher.py`; `GRAPH_CONTRACT_VERSION=4`; workspace `include_authorship_debug`; `Authorship–AFFILIATED_WITH–Institution` → `Author–…` in collapse; UI `projectAuthorSemanticGraph` pass-through; i18n + `work_workspace_context` subtitle; spec §5b. Plan: [`docs/analysis/graph-work-vs-workspace-unification-dry-plan-2026-04-28.md`](../analysis/graph-work-vs-workspace-unification-dry-plan-2026-04-28.md). |
 | 2026-04-26 | **Wave 6 — benchmarks quality closure:** `decision_gate` **GO** with ≤2 design-only phantom families (`merge_safe_contract_mock`, `strict_pilot_mock`); agent LLM `ensure_messages_safe_for_generation` (OpenRouter `add_generation_prompt` fix); `agent_tools` metrics (subsequence match, ignore `route_to_specialist`); multihop_v2 pilot gold thresholds + `current-retrieval-multihop-mini.json` refresh; `eval/results/benchmark-trust-baseline.json` via `scripts/refresh_benchmark_metrics.sh`. Write-up: [`docs/analysis/_archive/wave6-benchmarks-quality-2026-04-26.md`](../analysis/_archive/wave6-benchmarks-quality-2026-04-26.md). |
 | 2026-04-26 | **ADR-021 Phase 0 (ops slice):** runbook [`docs/runbooks/phase0-bge-m3-qdrant-cutover.md`](../runbooks/phase0-bge-m3-qdrant-cutover.md); `science-graphrag qdrant-recreate-embedding-collections --dry-run`; `describe_embedding_collections_cutover` / `qdrant_embedding_collection_names` in `recreate_embedding_collections.py`. **Operator:** `qdrant-recreate-embedding-collections` (1024) + **`ingest-corpus` завершён** (`ingest-progress-phase0-bge-m3.jsonl`). Дальше: см. OPEN «Switch Qdrant…» — BT2/BT4/BT5 + baseline. |
 | 2026-04-27 | **BT12 — contradictions benchmark in trust rollup:** committed `eval/results/current-contradictions-v1-mini.json` (``python -m eval.contradictions.runner …/contradictions_v1 --suite --materialize`` against a graph with corpus works); `scripts/aggregate_benchmark_metrics.py` + `contradictions_family` / `trust_signal` member `contradictions_v1_mini` (`detect_runtime_mode` → `live`). Ingest-time auto-write of `:CONTRADICTS` remains a separate product decision. |
@@ -42,14 +43,6 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 ## Queue
 
 Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies here).
-
-### [OPEN] Graph work vs workspace — single reader projection seam + parity (DRY)
-- **Area:** `science_graphrag/api/works/graph_neighborhood.py`, `science_graphrag/api/graph_display.py`, `science_graphrag/api/workspace_graph/`, `science_graphrag/api/graph_reader_projection/`, `ui/src/components/graph/authorSemanticProjection.js`
-- **Issue:** Two graph surfaces duplicate reader semantics (collapse, enrich, display); work graph lacks workspace `membership` context unless URL forces full workspace union; 2-hop reader entities (e.g. institution) are policy-opaque. Violates DRY and confuses product expectations.
-- **Proposal:** Execute phased plan in [`docs/analysis/graph-work-vs-workspace-unification-dry-plan-2026-04-28.md`](../analysis/graph-work-vs-workspace-unification-dry-plan-2026-04-28.md): Phase 0 `meta` contract, Phase 1 extract shared projection package, Phase 2 optional `workspace_id` on work graph for membership annotation, Phase 3 explicit institution hop flag, Phase 4 slim UI projection, Phase 5 i18n/mode labels.
-- **Progress:** **Phase 1 (2026-04-28):** backend package `graph_reader_projection` — single definition of `collapse_authorship_for_reader_view`, shared `stable_graph_edge_id`, `authorship_enrich` seam for work + workspace graph Cypher paths; `compute_authorship_projection_meta` / `strip_reader_only_authorship_properties` moved out of `graph_neighborhood.py`.
-- **Acceptance (remaining):** ~~Documented when `workspace_membership` appears (Phase 2+); integration + parity tests for membership~~ **Phase 2 done (2026-04-28):** work graph + `workspace_id`, tests in `tests/test_work_graph_workspace_membership_integration.py`. Still open: optional institution flag (Phase 3); UI projection reduced or presentation-only (Phase 4).
-- **Raised:** 2026-04-28 (graph architecture closure)
 
 ### [OPEN] paper_profile year/venue — OD null-rate closure (ingest + graph)
 - **Area:** `science_graphrag/ingestion/_pipeline_impl.py`, Neo4j writers / OpenAlex merge, `workspace_catalog_tools.py` (`paper_profile`)

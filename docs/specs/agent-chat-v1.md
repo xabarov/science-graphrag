@@ -50,12 +50,21 @@ All new fields are **optional** for backward compatibility; clients should treat
 | `run_metadata` | object | Runtime flags, model ids, etc.; when `thread_id` is set, may include **`compaction`** (CH5 v1: `kind`, `kinds`, `trigger`, `digest_count`, `boundary`) and **`session_digest_count`** |
 | `answer_class` | string | One of `inventory`, `fact_lookup`, `grounded_explanation`, `relation_tracing`, `quote_extraction`, `ideation`, `bibliography_export`, `synthesis` |
 | `evidence_summary` | string \| null | Short human-readable evidence summary |
-| `warnings` | array of string | e.g. `weak_evidence`, `no_workspace`, `no_quote_found`, `no_quote_found_after_idea_hits`, `history_digest_invalid`, `agent_turn_deadline_exceeded`, `agent_finished_without_final_answer_tool` (tools were used and the model returned text, but the last executed catalog tool was not `final_answer` — `tool_trace` stays honest; use for monitoring/UI) |
+| `warnings` | array of string | e.g. `weak_evidence`, `no_workspace`, `graph_only`, `text_only`, `no_quote_found`, `no_quote_found_after_idea_hits`, `history_digest_invalid`, `agent_turn_deadline_exceeded`, `answer_salvaged_from_graph_tool`, `agent_finished_without_final_answer_tool` (tools were used and the model returned text, but the last executed catalog tool was not `final_answer` — suppressed when `answer_salvaged_from_graph_tool` is present; `tool_trace` stays honest; use for monitoring/UI) |
 | `inventory` | object \| null | Papers/authors/counts when applicable |
 | `relation_trace` | object \| null | Reserved / sparse in Wave A |
 | `quote_candidates` | array \| null | Quote snippets + work/chunk ids |
 | `idea_suggestions` | array \| null | Reserved for CH7 |
 | `bibliography` | object \| null | `{ "format": "gost", "entries": [...] }`; may include `filtered_work_ids` and in-object `warnings` |
+
+### Evidence-mix warnings (`graph_only` / `text_only`)
+
+**Product decision (2026-04-28):** these codes stay **only** in the top-level `warnings` array. They are **not** duplicated into `product_markers` (`answered_with_tools`, `answered_directly`, …). Rationale: they describe retrieval **shape** for operators and analytics, not completion of a product journey; keeping a single source avoids drift between `warnings` and markers.
+
+- **`graph_only`:** After stripping session/routing tools, the turn’s catalog tools include Neo4j graph tools (`cypher_query`, `edge_search`) and **no** vector-ish tools (`idea_search`, `paper_quote_search`). Does **not** imply failure; pair with `answer_class` / `tool_trace` for context (e.g. graph-heavy questions).
+- **`text_only`:** Dual pattern for `relation_tracing` when vector tools ran but no graph tools — similarly informational.
+
+Implementation: `science_graphrag/agent/chat_envelope.py` (`_append_evidence_warnings`).
 
 ## SSE event vocabulary v1
 

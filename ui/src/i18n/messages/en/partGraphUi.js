@@ -35,7 +35,7 @@ export const partGraphUi = {
   "graph.wsToolbar.nodesExtraExtShort": "ext",
   "graph.wsToolbar.nodesExtraClaimsShort": "claims",
 
-  "graph.wsToolbar.title": "Workspace graph",
+  "graph.wsToolbar.title": "All papers in workspace (1-hop graph)",
   "graph.wsToolbar.modeInner": "Inner",
   "graph.wsToolbar.modeUnion1hop": "Union 1-hop",
   "graph.wsToolbar.modeSemantic": "Semantic",
@@ -46,7 +46,8 @@ export const partGraphUi = {
   "graph.wsToolbar.scopeMenuAria": "Choose graph neighborhood scope",
   "graph.wsToolbar.scopeTriggerTooltip": "How far to expand links and neighbors from workspace works",
   "graph.wsToolbar.scopeDesc.inner_only": "Only papers added to this workspace",
-  "graph.wsToolbar.scopeDesc.union_1hop": "Internal works plus their direct links (authors, citations, methods)",
+  "graph.wsToolbar.scopeDesc.union_1hop":
+    "Every paper in the workspace merged with its direct links (authors, cites, methods) — not the same as one paper's capped neighborhood",
   "graph.wsToolbar.scopeDesc.semantic_layer": "Also pulls methods, datasets, and venues",
   "graph.wsToolbar.scopeDesc.full": "All node types within depth — ignores the Nodes filter",
   "graph.wsToolbar.depthLabel": "Depth",
@@ -76,6 +77,10 @@ export const partGraphUi = {
   "graph.wsToolbar.viewChipDetails": "Details",
   "graph.wsToolbar.viewChipLegend": "Legend",
   "graph.wsToolbar.viewChipDiagnostics": "Diagnostics",
+  "graph.wsToolbar.chipInstitutions": "Institutions",
+  "graph.wsToolbar.chipInstitutionsTooltip":
+    "Load affiliation institutions for this paper’s authors (an extra hop; slightly larger payload). Preference is saved per work.",
+  "graph.wsToolbar.chipInstitutionsAria": "Toggle loading institution nodes on work graph",
   "graph.standaloneDepth.depth1Aria": "Single-hop neighborhood",
   "graph.standaloneDepth.depth2Aria": "Two-hop neighborhood (citations)",
   "graph.wsToolbar.external": "External",
@@ -151,8 +156,10 @@ export const partGraphUi = {
   "graph.localFind.focusFirstTooltip": "Select the first matching node and center the canvas on it",
   "graph.localFind.clearAria": "Clear filter",
 
-  "graph.contractSubtitle.workCapped": "Paper neighborhood (capped) · limit {{limit}}",
-  "graph.contractSubtitle.workspaceUnion": "Workspace graph · 1-hop union across papers",
+  "graph.contractSubtitle.workCapped": "This paper's neighborhood (capped) · limit {{limit}}",
+  "graph.contractSubtitle.workWorkspaceContext":
+    "This paper's neighborhood · workspace membership · limit {{limit}}",
+  "graph.contractSubtitle.workspaceUnion": "All workspace papers · 1-hop union (merged)",
   "graph.contractSubtitle.workspaceV2": "Workspace graph · mode {{mode}}",
   "graph.contractSubtitle.workspaceNeighbors": "Workspace · single-node neighborhood (1 hop)",
   "graph.contractSubtitle.expandWork": "Paper graph · expanded bucket",

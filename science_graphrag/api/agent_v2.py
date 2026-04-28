@@ -823,7 +823,7 @@ async def _stream_agent(
                 salvaged = False
                 if latest_full_state is not None:
                     msgs = list(latest_full_state.get("messages") or [])
-                    state_answer, fa_citations = extract_langgraph_answer(msgs)
+                    state_answer, fa_citations, _graph_salv = extract_langgraph_answer(msgs)
                     if (state_answer or "").strip():
                         salvaged = True
                         final_answer = str(state_answer).strip()
@@ -857,9 +857,10 @@ async def _stream_agent(
             duration_ms = int((perf_counter() - started) * 1000)
 
             trace_for_run: list[Any] = []
+            graph_salvage_stream = False
             if latest_full_state is not None:
                 trace_for_run = collect_tool_trace(latest_full_state)  # type: ignore[arg-type]
-                state_answer, fa_citations = extract_langgraph_answer(
+                state_answer, fa_citations, graph_salvage_stream = extract_langgraph_answer(
                     list(latest_full_state.get("messages") or [])
                 )
                 if state_answer:
@@ -877,12 +878,19 @@ async def _stream_agent(
                     "tool_trace": trace_for_run,
                     "answer_class_hint": answer_class_hint,
                 }
+                extra_stream_warnings: list[str] = []
+                if graph_salvage_stream:
+                    extra_stream_warnings.append("answer_salvaged_from_graph_tool")
                 if salvaged_after_deadline:
-                    env_kw["extra_warnings"] = [
-                        "agent_turn_deadline_exceeded",
-                        "partial_after_deadline",
-                    ]
+                    extra_stream_warnings.extend(
+                        [
+                            "agent_turn_deadline_exceeded",
+                            "partial_after_deadline",
+                        ]
+                    )
                     env_kw["extra_product_markers"] = ["partial_after_deadline"]
+                if extra_stream_warnings:
+                    env_kw["extra_warnings"] = extra_stream_warnings
                 envelope = build_chat_envelope(**env_kw)  # type: ignore[arg-type]
             else:
                 envelope = {

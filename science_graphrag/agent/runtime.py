@@ -21,6 +21,7 @@ from science_graphrag.config import Settings
 from science_graphrag.observability.spans import (
     OpenInferenceAttributes,
     SpanAttributes,
+    add_span_event,
     chain_span,
 )
 from science_graphrag.observability.spans.decorators import MIME_TYPE_JSON
@@ -55,11 +56,70 @@ def _agent_query_output_summary(
     }
 
 
-def extract_langgraph_answer(messages: list[Any]) -> tuple[str, list[dict[str, Any]] | None]:
-    """Prefer ``final_answer`` tool JSON over a bare assistant string (avoids losing structured output).
+_GRAPH_TOOL_SALVAGE_PREFIX = (
+    "[Graph tool output; call final_answer to complete the turn for the user.]\n"
+)
 
-    Returns ``(answer, citations_or_none)``. When ``citations_or_none`` is ``None``, keep graph state
-    citations; when a list (possibly empty), it replaces citations from ``final_answer`` payload.
+
+def _tool_message_payload_dict(msg: ToolMessage) -> dict[str, Any] | None:
+    raw = msg.content
+    if not isinstance(raw, str):
+        return None
+    try:
+        parsed = json.loads(raw)
+    except Exception:  # noqa: BLE001
+        return None
+    return parsed if isinstance(parsed, dict) else None
+
+
+def _salvage_answer_from_last_graph_tool(messages: list[Any], *, max_chars: int = 4000) -> str:
+    """Build a short user-visible string from the latest ``cypher_query`` / ``edge_search`` JSON."""
+    for msg in reversed(messages):
+        if not isinstance(msg, ToolMessage):
+            continue
+        name = normalize_tool_call_name(str(getattr(msg, "name", "") or ""))
+        if name not in {"cypher_query", "edge_search"}:
+            continue
+        data = _tool_message_payload_dict(msg)
+        if data is None:
+            continue
+        if name == "cypher_query":
+            err = data.get("error")
+            if isinstance(err, str) and err.strip():
+                return f"{_GRAPH_TOOL_SALVAGE_PREFIX}Cypher error: {err.strip()[:800]}"
+            rows = data.get("rows")
+            if not isinstance(rows, list) or not rows:
+                continue
+            snippet = json.dumps(rows, ensure_ascii=False, default=str)[:max_chars]
+            if not snippet.strip():
+                continue
+            nrows = data.get("row_count", len(rows))
+            return (
+                f"{_GRAPH_TOOL_SALVAGE_PREFIX}Cypher returned {nrows} row(s). Preview:\n{snippet}"
+            )
+        items = data.get("items")
+        if not isinstance(items, list) or not items:
+            continue
+        snippet = json.dumps(items, ensure_ascii=False, default=str)[:max_chars]
+        if not snippet.strip():
+            continue
+        return (
+            f"{_GRAPH_TOOL_SALVAGE_PREFIX}edge_search returned {len(items)} edge(s). "
+            f"Preview:\n{snippet}"
+        )
+    return ""
+
+
+def extract_langgraph_answer(
+    messages: list[Any],
+) -> tuple[str, list[dict[str, Any]] | None, bool]:
+    # pylint: disable=too-many-locals,too-many-branches
+    """Prefer ``final_answer`` tool JSON over a bare assistant string.
+
+    Returns ``(answer, citations_or_none, graph_tool_salvage_used)``. ``citations_or_none`` is
+    ``None`` when citations should come from graph state; otherwise it replaces envelope
+    citations from the ``final_answer`` payload. The third flag is True when ``answer`` was built
+    from the latest ``cypher_query`` / ``edge_search`` tool JSON (no bare AI / final_answer text).
     """
     fallback_tool_args: tuple[str, list[dict[str, Any]] | None] | None = None
     for i in range(len(messages) - 1, -1, -1):
@@ -105,14 +165,20 @@ def extract_langgraph_answer(messages: list[Any]) -> tuple[str, list[dict[str, A
                 if isinstance(ans, str) and ans.strip():
                     cites = data.get("citations")
                     if isinstance(cites, list):
-                        return ans.strip(), [c for c in cites if isinstance(c, dict)]
-                    return ans.strip(), []
+                        return ans.strip(), [c for c in cites if isinstance(c, dict)], False
+                    return ans.strip(), [], False
     if fallback_tool_args is not None:
-        return fallback_tool_args
+        ans0, cites0 = fallback_tool_args
+        return ans0, cites0, False
     for msg in reversed(messages):
         if isinstance(msg, AIMessage) and not getattr(msg, "tool_calls", None):
-            return str(msg.content or ""), None
-    return "", None
+            text = str(msg.content or "").strip()
+            if text:
+                return text, None, False
+    salvaged = _salvage_answer_from_last_graph_tool(messages)
+    if salvaged.strip():
+        return salvaged.strip(), None, True
+    return "", None, False
 
 
 def current_otel_trace_id_hex() -> str | None:
@@ -239,7 +305,7 @@ class RetrievalAgent:
                 history_digest=history_digest,
             )
 
-    def _run_langgraph(
+    def _run_langgraph(  # pylint: disable=too-many-locals
         self,
         *,
         question: str,
@@ -275,16 +341,25 @@ class RetrievalAgent:
         )
         messages = list(final_state.get("messages", []))
         trace = collect_tool_trace(final_state)
-        answer, fa_citations = extract_langgraph_answer(messages)
+        answer, fa_citations, graph_salvage = extract_langgraph_answer(messages)
         citations = list(final_state.get("citations", []))
         if fa_citations is not None:
             citations = fa_citations
+        extra_warn: list[str] | None = (
+            ["answer_salvaged_from_graph_tool"] if graph_salvage else None
+        )
+        if graph_salvage:
+            add_span_event(
+                "agent.graph_tool_answer_salvage",
+                {"answer_chars": len(answer or "")},
+            )
         envelope = build_chat_envelope(
             state=final_state,
             answer=answer,
             citations=citations,
             tool_trace=trace,
             answer_class_hint=answer_class_hint,
+            extra_warnings=extra_warn,
         )
         raw_q = (final_state.get("metadata") or {}).get("raw_user_question")
         if not isinstance(raw_q, str) or not raw_q.strip():

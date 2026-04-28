@@ -15,6 +15,7 @@ from science_graphrag.api.graph_display import (
 )
 from science_graphrag.api.graph_reader_meta import enrich_reader_graph_meta
 from science_graphrag.api.graph_reader_projection.authorship_collapse import (
+    build_authorship_to_reader_author_map,
     collapse_authorship_for_reader_view,
 )
 from science_graphrag.api.graph_reader_projection.authorship_enrich import enrich_authorship_nodes
@@ -32,6 +33,135 @@ from science_graphrag.api.workspace_graph.projection import (
 
 MAX_WORK_GRAPH_NEIGHBORS = 300
 AGGREGATOR_THRESHOLD = 8
+# Phase 3: optional Authorship–Institution hop merged into work graph JSON (ADR 011 addendum).
+INSTITUTION_ATTACH_CAP = 32
+
+
+def _fetch_work_authorship_institutions(
+    session: Neo4jSession, work_id: str, cap: int
+) -> list[dict[str, Any]]:
+    lim = max(1, min(int(cap), 200))
+    recs = session.run(
+        """
+        MATCH (w:Work {id: $wid})-[:HAS_AUTHORSHIP]->(ash:Authorship)-[:AFFILIATED_WITH]->(i:Institution)
+        RETURN coalesce(ash.id, toString(elementId(ash))) AS ash_id,
+               coalesce(i.id, toString(elementId(i))) AS inst_id,
+               coalesce(i.name, '') AS inst_name,
+               coalesce(i.country, '') AS inst_country
+        LIMIT $lim
+        """,
+        wid=str(work_id).strip(),
+        lim=lim,
+    )
+    return [dict(r) for r in recs]
+
+
+def _attach_institutions_raw(
+    nodes: list[dict[str, Any]],
+    edges: list[dict[str, Any]],
+    rows: list[dict[str, Any]],
+) -> int:
+    """Attach ``Authorship–AFFILIATED_WITH–Institution`` for ``view=raw`` (Neo4j-shaped)."""
+    node_ids = {str(n.get("id") or "") for n in nodes}
+    node_ids.discard("")
+    pair_seen: set[tuple[str, str]] = set()
+    attached = 0
+    seq = len(edges)
+    for rec in rows:
+        ash = str(rec.get("ash_id") or "").strip()
+        iid = str(rec.get("inst_id") or "").strip()
+        if not ash or not iid or ash not in node_ids:
+            continue
+        key = (ash, iid)
+        if key in pair_seen:
+            continue
+        pair_seen.add(key)
+        if iid not in node_ids:
+            name = str(rec.get("inst_name") or "").strip()
+            country = str(rec.get("inst_country") or "").strip()
+            props: dict[str, Any] = {}
+            if country:
+                props["country"] = country
+            rendered = compute_node_display("Institution", name, props)
+            nodes.append(
+                {
+                    "id": iid,
+                    "type": "Institution",
+                    "label": str(rendered["display_label"]),
+                    "display_label": str(rendered["display_label"]),
+                    "subtitle": str(rendered["subtitle"]),
+                    "node_kind": resolve_node_kind("Institution"),
+                    "properties": dict(rendered["properties"]),
+                    "distance": 2,
+                }
+            )
+            node_ids.add(iid)
+        edges.append(
+            {
+                "id": stable_graph_edge_id(ash, "AFFILIATED_WITH", iid, seq),
+                "source": ash,
+                "target": iid,
+                "type": "AFFILIATED_WITH",
+            }
+        )
+        seq += 1
+        attached += 1
+    return attached
+
+
+def _attach_institutions_reader(
+    nodes: list[dict[str, Any]],
+    edges: list[dict[str, Any]],
+    rows: list[dict[str, Any]],
+    ash_author_map: dict[str, str],
+) -> int:
+    """Attach ``Author–AFFILIATED_WITH–Institution`` after authorship collapse (reader projection)."""
+    node_ids = {str(n.get("id") or "") for n in nodes}
+    node_ids.discard("")
+    pair_seen: set[tuple[str, str]] = set()
+    attached = 0
+    seq = len(edges)
+    for rec in rows:
+        ash = str(rec.get("ash_id") or "").strip()
+        iid = str(rec.get("inst_id") or "").strip()
+        author_id = str(ash_author_map.get(ash) or "").strip()
+        if not author_id or not iid or author_id not in node_ids:
+            continue
+        key = (author_id, iid)
+        if key in pair_seen:
+            continue
+        pair_seen.add(key)
+        if iid not in node_ids:
+            name = str(rec.get("inst_name") or "").strip()
+            country = str(rec.get("inst_country") or "").strip()
+            props: dict[str, Any] = {}
+            if country:
+                props["country"] = country
+            rendered = compute_node_display("Institution", name, props)
+            nodes.append(
+                {
+                    "id": iid,
+                    "type": "Institution",
+                    "label": str(rendered["display_label"]),
+                    "display_label": str(rendered["display_label"]),
+                    "subtitle": str(rendered["subtitle"]),
+                    "node_kind": resolve_node_kind("Institution"),
+                    "properties": dict(rendered["properties"]),
+                    "distance": 2,
+                }
+            )
+            node_ids.add(iid)
+        edges.append(
+            {
+                "id": stable_graph_edge_id(author_id, "AFFILIATED_WITH", iid, seq),
+                "source": author_id,
+                "target": iid,
+                "type": "AFFILIATED_WITH",
+            }
+        )
+        seq += 1
+        attached += 1
+    return attached
 
 
 def load_work_graph_workspace_internal_ids(
@@ -141,6 +271,7 @@ def _apply_aggregators(
     global_threshold: int | None = None,
     disabled_kind_keys: frozenset[str] | None = None,
     workspace_id_for_expand: str | None = None,
+    include_institutions_for_expand: bool = False,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     node_by_id = {str(n.get("id") or ""): n for n in nodes}
     groups: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
@@ -190,6 +321,8 @@ def _apply_aggregators(
         ws_for_ex = str(workspace_id_for_expand or "").strip()
         if ws_for_ex:
             expand_ep += f"&workspace_id={quote(ws_for_ex, safe='')}"
+        if include_institutions_for_expand:
+            expand_ep += "&include_institutions=1"
         add_nodes.append(
             {
                 "id": aggregator_id,
@@ -428,6 +561,7 @@ def _work_graph_neighborhood_payload(
     include_claims: bool = False,
     claims_limit: int = 24,
     include_authorship_debug: bool = False,
+    include_institutions: bool = False,
 ) -> dict[str, Any] | None:
     row = session.run(
         """
@@ -598,10 +732,21 @@ def _work_graph_neighborhood_payload(
         claims_meta = {"include_claims": True, "claims_included": True, **cm}
     enrich_authorship_nodes(session, nodes)
     vnorm = str(view or "reader").strip().lower()
+    inst_rows: list[dict[str, Any]] = []
+    if include_institutions:
+        inst_rows = _fetch_work_authorship_institutions(session, work_id, INSTITUTION_ATTACH_CAP)
+    ash_author_map: dict[str, str] = {}
+    if include_institutions and vnorm == "reader":
+        ash_author_map = build_authorship_to_reader_author_map(nodes, edges, center_id)
+    institutions_attached = 0
     if vnorm == "raw":
         strip_reader_only_authorship_properties(nodes)
+    if include_institutions and vnorm == "raw":
+        institutions_attached = _attach_institutions_raw(nodes, edges, inst_rows)
     if vnorm == "reader":
         nodes, edges = collapse_authorship_for_reader_view(nodes, edges, center_id)
+    if include_institutions and vnorm == "reader":
+        institutions_attached = _attach_institutions_reader(nodes, edges, inst_rows, ash_author_map)
     reader_authorship_projection = (
         compute_authorship_projection_meta(center_id, edges) if vnorm == "reader" else None
     )
@@ -620,6 +765,7 @@ def _work_graph_neighborhood_payload(
             global_threshold=aggregator_threshold,
             disabled_kind_keys=disabled,
             workspace_id_for_expand=ws_for_expand,
+            include_institutions_for_expand=bool(include_institutions),
         )
     if workspace_internal_work_ids is not None and str(workspace_id or "").strip():
         annotate_membership_and_cites(nodes, edges, workspace_internal_work_ids)
@@ -640,8 +786,15 @@ def _work_graph_neighborhood_payload(
         "is_truncated": truncated,
         "skipped_by_kind": skipped_by_kind if skipped_by_kind else {},
         "available_expansions": expansions,
+        "include_institutions": bool(include_institutions),
         **claims_meta,
     }
+    if include_institutions:
+        meta["reader_extra_hops"] = ["institution"]
+        meta["institutions"] = {
+            "cap": INSTITUTION_ATTACH_CAP,
+            "returned": int(institutions_attached),
+        }
     _ws_ctx = workspace_internal_work_ids is not None and bool(str(workspace_id or "").strip())
     enrich_reader_graph_meta(
         meta,
@@ -676,6 +829,7 @@ def work_graph_neighborhood(
     include_claims: bool = False,
     claims_limit: int = 24,
     include_authorship_debug: bool = False,
+    include_institutions: bool = False,
 ) -> dict[str, Any] | None:
     # Backward compatibility: older callers pass Settings instead of StoreRegistry.
     if not hasattr(stores, "neo4j"):
@@ -698,6 +852,7 @@ def work_graph_neighborhood(
                     include_claims=include_claims,
                     claims_limit=claims_limit,
                     include_authorship_debug=include_authorship_debug,
+                    include_institutions=include_institutions,
                 )
         finally:
             temp.close()
@@ -716,6 +871,7 @@ def work_graph_neighborhood(
             include_claims=include_claims,
             claims_limit=claims_limit,
             include_authorship_debug=include_authorship_debug,
+            include_institutions=include_institutions,
         )
 
 
@@ -727,6 +883,7 @@ def expand_work_aggregator(
     limit: int = 50,
     workspace_id: str | None = None,
     workspace_internal_work_ids: set[str] | None = None,
+    include_institutions: bool = False,
 ) -> dict[str, Any] | None:
     owner_id, node_kind, edge_type = parse_aggregator_id(aggregator_id)
     # Reader collapse uses virtual Work—[AUTHORED]→Author edges; raw payload has
@@ -747,6 +904,7 @@ def expand_work_aggregator(
         workspace_id=workspace_id,
         workspace_internal_work_ids=workspace_internal_work_ids,
         aggregator_disabled_kinds="Author" if use_reader_authored else None,
+        include_institutions=include_institutions,
     )
     if not payload:
         return None
@@ -796,6 +954,13 @@ def expand_work_aggregator(
         workspace_id=_ws_norm,
         graph_mode="work_expand_aggregator",
     )
+    pm = payload.get("meta") or {}
+    expand_meta["include_institutions"] = bool(include_institutions)
+    if include_institutions:
+        if pm.get("reader_extra_hops"):
+            expand_meta["reader_extra_hops"] = list(pm["reader_extra_hops"])
+        if pm.get("institutions"):
+            expand_meta["institutions"] = dict(pm["institutions"])
     return {
         "nodes": final_nodes,
         "edges": final_edges,

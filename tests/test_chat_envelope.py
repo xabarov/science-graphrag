@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from langchain_core.messages import HumanMessage
 
-from science_graphrag.agent.chat_envelope import build_chat_envelope
+from science_graphrag.agent.chat_envelope import build_chat_envelope, heuristic_answer_class
 from science_graphrag.agent.graph.state import AgentState
 
 
@@ -191,6 +191,7 @@ def test_graph_only_trace() -> None:
         answer_class_hint="grounded_explanation",
     )
     assert "graph_only" in (env.get("warnings") or [])
+    assert "graph_only" not in (env.get("product_markers") or [])
 
 
 def test_bibliography_filtered_merges_warnings_to_top_level() -> None:
@@ -365,6 +366,38 @@ def test_build_chat_envelope_extra_warnings_and_markers() -> None:
     assert "partial_after_deadline" in markers
 
 
+def test_build_chat_envelope_graph_salvage_skips_agent_finished_without_final_answer() -> None:
+    state: AgentState = {
+        "messages": [HumanMessage(content="q")],
+        "workspace_id": "ws1",
+        "citations": [],
+        "tool_trace": [],
+        "budget_remaining": 0,
+        "metadata": {"raw_user_question": "q", "turn_policy": {"tool_policy": "allow_tools"}},
+        "specialist_results": {},
+        "current_specialist": None,
+        "routing_log": [],
+        "debug_events": [],
+        "thread_id": None,
+        "session_summary": "",
+        "answer_class": None,
+        "history_digest": [],
+    }
+    trace = [
+        {"step": 1, "tool": "cypher_query", "args_summary": {}, "row_count": 1},
+    ]
+    env = build_chat_envelope(
+        state=state,
+        answer="Salvaged graph preview text",
+        citations=[],
+        tool_trace=trace,  # type: ignore[arg-type]
+        answer_class_hint=None,
+        extra_warnings=["answer_salvaged_from_graph_tool"],
+    )
+    assert "answer_salvaged_from_graph_tool" in (env.get("warnings") or [])
+    assert "agent_finished_without_final_answer_tool" not in (env.get("warnings") or [])
+
+
 def test_build_chat_envelope_warns_agent_finished_without_final_answer_tool() -> None:
     state: AgentState = {
         "messages": [HumanMessage(content="q")],
@@ -425,3 +458,19 @@ def test_build_chat_envelope_no_warn_when_last_tool_is_final_answer() -> None:
         answer_class_hint=None,
     )
     assert "agent_finished_without_final_answer_tool" not in (env.get("warnings") or [])
+
+
+def test_heuristic_answer_class_evidence_tradeoff_is_quote_extraction() -> None:
+    q = (
+        "What trade-offs between speed and accuracy for real-time object detection does this "
+        "workspace support with evidence? Use at least two distinct retrieval paths."
+    )
+    assert heuristic_answer_class(q, None) == "quote_extraction"
+
+
+def test_heuristic_answer_class_hint_overrides_question() -> None:
+    q = (
+        "What trade-offs between speed and accuracy for real-time object detection does this "
+        "workspace support with evidence?"
+    )
+    assert heuristic_answer_class(q, "inventory") == "inventory"

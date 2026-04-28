@@ -1,7 +1,9 @@
 import React, { useMemo } from "react";
+import BusinessOutlinedIcon from "@mui/icons-material/BusinessOutlined";
 import ClearIcon from "@mui/icons-material/Clear";
 import MyLocationOutlinedIcon from "@mui/icons-material/MyLocationOutlined";
 import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
@@ -37,6 +39,8 @@ import GraphViewChips from "./toolbar/GraphViewChips.jsx";
  *   onToggleLegend?: () => void,
  *   onToggleDiagnostics?: () => void,
  *   labMode?: boolean,
+ *   workGraphIncludeInstitutions?: boolean,
+ *   onToggleWorkGraphIncludeInstitutions?: () => void,
  * }} props
  */
 export default function WorkspaceGraphToolbar({
@@ -58,6 +62,8 @@ export default function WorkspaceGraphToolbar({
   onToggleLegend = () => {},
   onToggleDiagnostics = () => {},
   labMode = false,
+  workGraphIncludeInstitutions = false,
+  onToggleWorkGraphIncludeInstitutions,
 }) {
   const { t } = useI18n();
   const tk = useTheme().appTokens;
@@ -95,6 +101,24 @@ export default function WorkspaceGraphToolbar({
     }
     return out;
   }, [filtersEnabled, stats, t]);
+
+  const institutionChipSx = useMemo(
+    () => (active) => ({
+      height: 26,
+      fontSize: "0.72rem",
+      fontWeight: 500,
+      textTransform: "none",
+      borderColor: active ? tk.accent.emphasisHoverBorder : tk.border.strong,
+      color: active ? tk.accent.fg : tk.text.secondary,
+      backgroundColor: active ? tk.accent.chipReadyBg : "transparent",
+      "& .MuiChip-icon": { color: "inherit" },
+      "&:hover": {
+        borderColor: active ? tk.accent.emphasisHoverBorder : tk.control.outlinedBorderHover,
+        backgroundColor: active ? tk.accent.emphasisHoverBg : tk.control.outlinedBgHover,
+      },
+    }),
+    [tk],
+  );
 
   const localFindFieldSx = useMemo(() => {
     const field = outlinedAppTextFieldSx(tk);
@@ -190,6 +214,23 @@ export default function WorkspaceGraphToolbar({
           showDiagnosticsChip={!labMode}
           t={t}
         />
+        {ctxWork && onToggleWorkGraphIncludeInstitutions ? (
+          <>
+            <Divider orientation="vertical" flexItem sx={{ borderColor: tk.border.default, alignSelf: "stretch", minHeight: 28 }} />
+            <Tooltip title={t("graph.wsToolbar.chipInstitutionsTooltip")}>
+              <Chip
+                size="small"
+                variant="outlined"
+                icon={<BusinessOutlinedIcon sx={{ fontSize: "1rem !important" }} />}
+                label={t("graph.wsToolbar.chipInstitutions")}
+                onClick={onToggleWorkGraphIncludeInstitutions}
+                aria-pressed={workGraphIncludeInstitutions}
+                aria-label={t("graph.wsToolbar.chipInstitutionsAria")}
+                sx={institutionChipSx(workGraphIncludeInstitutions)}
+              />
+            </Tooltip>
+          </>
+        ) : null}
 
         {statsFragments.length > 0 ? (
           <Typography

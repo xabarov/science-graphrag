@@ -36,7 +36,7 @@ export const partGraphUi = {
   "graph.wsToolbar.nodesExtraExtShort": "внеш.",
   "graph.wsToolbar.nodesExtraClaimsShort": "утв.",
 
-  "graph.wsToolbar.title": "Граф рабочей области",
+  "graph.wsToolbar.title": "Все статьи области (граф 1-hop)",
   "graph.wsToolbar.modeInner": "Внутренний",
   "graph.wsToolbar.modeUnion1hop": "Объединение +1",
   "graph.wsToolbar.modeSemantic": "Семантика",
@@ -47,7 +47,8 @@ export const partGraphUi = {
   "graph.wsToolbar.scopeMenuAria": "Выбор окрестности графа",
   "graph.wsToolbar.scopeTriggerTooltip": "Как далеко от работ области тянуть связи и соседей",
   "graph.wsToolbar.scopeDesc.inner_only": "Только статьи, добавленные в эту область",
-  "graph.wsToolbar.scopeDesc.union_1hop": "Внутренние работы и их прямые связи (авторы, цитирования, методы)",
+  "graph.wsToolbar.scopeDesc.union_1hop":
+    "Каждая статья области с прямыми связями (авторы, цитирования, методы), объединённые в один граф — это не окрестность одной статьи с лимитом",
   "graph.wsToolbar.scopeDesc.semantic_layer": "Дополнительно подтягивает методы, датасеты и площадки",
   "graph.wsToolbar.scopeDesc.full": "Все типы узлов в радиусе глубины — игнорирует фильтр «Узлы»",
   "graph.wsToolbar.depthLabel": "Глубина",
@@ -77,6 +78,10 @@ export const partGraphUi = {
   "graph.wsToolbar.viewChipDetails": "Детали",
   "graph.wsToolbar.viewChipLegend": "Легенда",
   "graph.wsToolbar.viewChipDiagnostics": "Диагностика",
+  "graph.wsToolbar.chipInstitutions": "Организации",
+  "graph.wsToolbar.chipInstitutionsTooltip":
+    "Подгружать учреждения-аффилиации авторов этой статьи (дополнительный шаг; чуть больше ответ). Настройка сохраняется для каждой работы.",
+  "graph.wsToolbar.chipInstitutionsAria": "Переключить загрузку узлов Institution на графе работы",
   "graph.standaloneDepth.depth1Aria": "Окрестность в один шаг",
   "graph.standaloneDepth.depth2Aria": "Два шага по связям цитирования",
   "graph.wsToolbar.external": "Внешние",
@@ -152,8 +157,10 @@ export const partGraphUi = {
   "graph.localFind.focusFirstTooltip": "Выбрать первый подходящий узел и центрировать холст на нём",
   "graph.localFind.clearAria": "Сбросить фильтр",
 
-  "graph.contractSubtitle.workCapped": "Окрестность статьи (с лимитом) · лимит {{limit}}",
-  "graph.contractSubtitle.workspaceUnion": "Граф области · объединение 1-hop по статьям",
+  "graph.contractSubtitle.workCapped": "Окрестность одной статьи (с лимитом) · лимит {{limit}}",
+  "graph.contractSubtitle.workWorkspaceContext":
+    "Окрестность статьи · членство в области · лимит {{limit}}",
+  "graph.contractSubtitle.workspaceUnion": "Все статьи области · объединение 1-hop (слияние)",
   "graph.contractSubtitle.workspaceV2": "Граф области · режим {{mode}}",
   "graph.contractSubtitle.workspaceNeighbors": "Область · окрестность одного узла (1 hop)",
   "graph.contractSubtitle.expandWork": "Граф статьи · развёрнутая группа",

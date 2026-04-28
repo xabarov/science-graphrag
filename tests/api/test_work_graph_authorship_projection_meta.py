@@ -52,3 +52,19 @@ def test_authorship_projection_incoming_edge() -> None:
         {"source": "author-z", "target": wid, "type": "AUTHORED"},
     ]
     assert compute_authorship_projection_meta(wid, edges) == "native"
+
+
+def test_authorship_projection_workspace_scope_native() -> None:
+    edges = [
+        {"source": "w-a", "target": "author-1", "type": "AUTHORED"},
+        {"source": "w-b", "target": "author-2", "type": "AUTHORED"},
+    ]
+    assert compute_authorship_projection_meta("", edges, workspace_scope=True) == "native"
+
+
+def test_authorship_projection_workspace_scope_mixed() -> None:
+    edges = [
+        {"source": "w-a", "target": "author-1", "type": "AUTHORED"},
+        {"source": "w-b", "target": "va:" + "c" * 20, "type": "AUTHORED"},
+    ]
+    assert compute_authorship_projection_meta("", edges, workspace_scope=True) == "mixed"

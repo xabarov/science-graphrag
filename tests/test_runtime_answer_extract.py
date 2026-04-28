@@ -23,9 +23,10 @@ def test_extract_prefers_final_answer_tool_payload() -> None:
             tool_call_id="c1",
         ),
     ]
-    answer, cites = extract_langgraph_answer(msgs)
+    answer, cites, salvage = extract_langgraph_answer(msgs)
     assert answer == "Structured reply"
     assert cites == [{"work_id": "w1"}]
+    assert salvage is False
 
 
 def test_extract_uses_final_answer_tool_args_when_tool_message_missing() -> None:
@@ -42,9 +43,10 @@ def test_extract_uses_final_answer_tool_args_when_tool_message_missing() -> None
             ],
         ),
     ]
-    answer, cites = extract_langgraph_answer(msgs)
+    answer, cites, salvage = extract_langgraph_answer(msgs)
     assert answer == "Structured reply from args"
     assert cites == []
+    assert salvage is False
 
 
 def test_extract_falls_back_to_plain_assistant() -> None:
@@ -52,6 +54,50 @@ def test_extract_falls_back_to_plain_assistant() -> None:
         HumanMessage(content="q"),
         AIMessage(content="Plain reply without tools"),
     ]
-    answer, cites = extract_langgraph_answer(msgs)
+    answer, cites, salvage = extract_langgraph_answer(msgs)
     assert answer == "Plain reply without tools"
+    assert cites is None
+    assert salvage is False
+
+
+def test_extract_salvages_from_cypher_error_payload() -> None:
+    msgs = [
+        HumanMessage(content="q"),
+        AIMessage(
+            content="",
+            tool_calls=[
+                {"name": "cypher_query", "id": "c1", "args": {"query": "RETURN 1"}},
+            ],
+        ),
+        ToolMessage(
+            content=json.dumps({"error": "Label X not allowed", "rows": []}),
+            tool_call_id="c1",
+            name="cypher_query",
+        ),
+    ]
+    answer, cites, salvage = extract_langgraph_answer(msgs)
+    assert salvage is True
+    assert "Cypher error" in answer
+    assert "Label X not allowed" in answer
+    assert cites is None
+
+
+def test_extract_salvages_from_cypher_tool_when_no_bare_ai() -> None:
+    msgs = [
+        HumanMessage(content="q"),
+        AIMessage(
+            content="",
+            tool_calls=[
+                {"name": "cypher_query", "id": "c1", "args": {"query": "RETURN 1 AS n"}},
+            ],
+        ),
+        ToolMessage(
+            content=json.dumps({"rows": [{"n": 1}], "row_count": 1}),
+            tool_call_id="c1",
+            name="cypher_query",
+        ),
+    ]
+    answer, cites, salvage = extract_langgraph_answer(msgs)
+    assert salvage is True
+    assert "Cypher returned" in answer
     assert cites is None

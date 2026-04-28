@@ -98,13 +98,33 @@ def test_workspace_graph_inner_only_two_works_cites_and_full_ignores_type_filter
             node_types=None,
         )
         assert g is not None
+        g_dbg = project_workspace_graph(
+            neo_store,
+            settings,
+            ws_id,
+            mode="inner_only",
+            depth=1,
+            include_external=False,
+            node_types=None,
+            include_authorship_debug=True,
+        )
+        assert g_dbg is not None
+        assert g_dbg["meta"].get("authorship_projection") == "native"
         by_id = {n["id"]: n for n in g.get("nodes") or []}
         assert w1 in by_id and w2 in by_id
         assert by_id[w1].get("workspace_membership") == "internal"
         assert by_id[w2].get("workspace_membership") == "internal"
-        assert by_id[ash1].get("display_label") == "Wei Liu (#1)"
-        assert by_id[ash1].get("subtitle") == "Author #1 · IBM Research"
-        assert by_id[ash2].get("display_label") == "Jia Deng (#2)"
+        assert ash1 not in by_id and ash2 not in by_id
+        assert a1 in by_id and a2 in by_id
+        assert str(by_id[a1].get("type") or "") == "Author"
+        assert "Wei Liu" in str(by_id[a1].get("display_label") or by_id[a1].get("label") or "")
+        assert "Jia Deng" in str(by_id[a2].get("display_label") or by_id[a2].get("label") or "")
+        authored = [
+            e
+            for e in (g.get("edges") or [])
+            if str(e.get("type") or "").upper() == "AUTHORED" and str(e.get("source") or "") == w1
+        ]
+        assert len(authored) >= 2
         for node in by_id.values():
             assert ":ash:" not in str(node.get("display_label") or "")
             assert ":ash:" not in str(node.get("subtitle") or "")
@@ -146,11 +166,10 @@ def test_workspace_graph_inner_only_two_works_cites_and_full_ignores_type_filter
         assert nb is not None
         assert int(nb["depth_effective"]) == 1
         nb_by_id = {n["id"]: n for n in nb.get("nodes") or []}
-        # One-hop from Paper A includes Authorship nodes; Author is a second hop via OF_AUTHOR.
-        assert ash1 in nb_by_id
-        assert "Wei Liu" in str(nb_by_id[ash1].get("display_label") or "")
-        assert ash2 in nb_by_id
-        assert "Jia Deng" in str(nb_by_id[ash2].get("display_label") or "")
+        assert ash1 not in nb_by_id and ash2 not in nb_by_id
+        assert a1 in nb_by_id and a2 in nb_by_id
+        assert "Wei Liu" in str(nb_by_id[a1].get("display_label") or nb_by_id[a1].get("label") or "")
+        assert "Jia Deng" in str(nb_by_id[a2].get("display_label") or nb_by_id[a2].get("label") or "")
     finally:
         if neo_store is not None:
             try:

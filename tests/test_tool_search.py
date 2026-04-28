@@ -197,6 +197,36 @@ def test_shortlist_tools_for_single_agent_includes_final_answer() -> None:
     assert len(out) < len(tools)
 
 
+def test_shortlist_tools_for_single_agent_includes_paper_quote_search_for_evidence_tradeoff() -> (
+    None
+):
+    """Heavy-suite style question should keep chunk-quote tool in the shortlist."""
+    from science_graphrag.agent.tools import build_tool_registry
+
+    stores = MagicMock()
+    stores.neo4j = MagicMock()
+    stores.qdrant_chunks = MagicMock()
+    stores.qdrant_works = MagicMock()
+    settings = Settings(agent_rule_tool_search_enabled=True)
+    tools = build_tool_registry(stores)
+    question = (
+        "What trade-offs between speed and accuracy for real-time object detection does this "
+        "workspace support with evidence? Use at least two distinct retrieval paths among "
+        "idea_search, paper_quote_search, and workspace_inspect (blurb or papers). "
+        "Cite at least two different work_ids from tool outputs. Finish with final_answer."
+    )
+    out, meta = shortlist_tools_for_single_agent(
+        tools,
+        question=question,
+        settings=settings,
+        has_workspace=True,
+        answer_class=None,
+    )
+    names = {getattr(t, "name", "") for t in out}
+    assert "paper_quote_search" in names, meta
+    assert meta.get("reason") == "rules"
+
+
 def test_shortlist_tools_for_single_agent_disabled_returns_full() -> None:
     from science_graphrag.agent.tools import build_tool_registry
 

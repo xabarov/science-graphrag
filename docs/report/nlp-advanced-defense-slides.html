@@ -830,11 +830,94 @@
     #slide-6 .defense-agent-stack,
     #slide-7 .defense-python-stack,
     #slide-8 .demo-layout,
-    #slide-12 .conclusion-plans-copy {
+    #slide-11 .plans-pillars {
       display: grid;
       gap: 12px;
       align-content: start;
       min-height: 0;
+    }
+
+    /* Slide 11 — roadmap: three thematic pillars */
+    #slide-11 {
+      --pillar-agents: #2a6f7c;
+      --pillar-bench: #5c4d8a;
+      --pillar-product: #8e3b2e;
+    }
+
+    #slide-11 .plans-slide-sub {
+      margin: -6px 0 4px;
+      max-width: 62ch;
+      font-size: 20px;
+      line-height: 1.38;
+      color: var(--ink-soft);
+    }
+
+    #slide-11 .plans-pillar {
+      position: relative;
+      padding: 14px 16px 14px 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(22, 27, 34, 0.09);
+      background: linear-gradient(165deg, rgba(255, 255, 255, 0.95), rgba(251, 248, 242, 0.88));
+      box-shadow: 0 10px 28px rgba(33, 32, 28, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      display: grid;
+      gap: 8px;
+      min-height: 0;
+    }
+
+    #slide-11 .plans-pillar::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 12px;
+      bottom: 12px;
+      width: 5px;
+      border-radius: 0 4px 4px 0;
+      background: var(--pillar-accent, var(--accent));
+    }
+
+    #slide-11 .plans-pillar--agents {
+      --pillar-accent: var(--pillar-agents);
+    }
+
+    #slide-11 .plans-pillar--bench {
+      --pillar-accent: var(--pillar-bench);
+    }
+
+    #slide-11 .plans-pillar--product {
+      --pillar-accent: var(--pillar-product);
+    }
+
+    #slide-11 .plans-pillar-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--pillar-accent, var(--accent));
+      opacity: 0.92;
+    }
+
+    #slide-11 .plans-pillar h3 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.22;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+
+    #slide-11 .plans-pillar-list {
+      margin: 0;
+      padding-left: 1.15em;
+      font-size: 17px;
+      line-height: 1.36;
+      color: #2a3544;
+    }
+
+    #slide-11 .plans-pillar-list li {
+      margin-bottom: 0.28em;
+    }
+
+    #slide-11 .plans-pillar-list li:last-child {
+      margin-bottom: 0;
     }
 
     #slide-2 .plan-item {
@@ -1486,70 +1569,58 @@
     }
 
     #slide-10 .two-col,
-    #slide-11 .two-col,
-    #slide-12 .two-col {
+    #slide-11 .two-col {
       gap: 14px;
       align-items: stretch;
     }
 
-    #slide-10 .summary-box,
-    #slide-11 .summary-box {
+    #slide-10 .summary-box {
       padding: 18px 22px;
       gap: 10px;
     }
 
-    #slide-10 .summary-box h3,
-    #slide-11 .summary-box h3 {
-      font-size: 32px;
+    #slide-10 .summary-box h3 {
+      font-size: 30px;
     }
 
     #slide-10 .summary-box p,
-    #slide-10 .summary-box li,
-    #slide-11 .summary-box p,
-    #slide-11 .summary-box li {
-      font-size: 24px;
+    #slide-10 .summary-box li {
+      font-size: 22px;
       line-height: 1.34;
     }
 
-    #slide-12 .footer-card {
-      min-height: 0;
-      padding: 18px 20px;
-    }
-
-    #slide-12 .footer-card h3 {
-      font-size: 28px;
-    }
-
-    #slide-12 .footer-card ul {
-      font-size: 21px;
-      line-height: 1.34;
-    }
-
-    #slide-10 .visual-frame,
-    #slide-11 .visual-frame,
-    #slide-12 .visual-frame {
+    #slide-10 .visual-frame {
       min-height: 420px;
       padding: 4px 6px;
     }
 
+    #slide-11 .visual-frame {
+      min-height: 420px;
+      padding: 4px 6px;
+      border-radius: 22px;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.5), rgba(248, 244, 238, 0.65));
+      border: 1px solid rgba(22, 27, 34, 0.07);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    }
+
     #slide-10 .visual-frame img,
-    #slide-11 .visual-frame img,
-    #slide-12 .visual-frame img {
+    #slide-11 .visual-frame img {
       max-height: min(72vh, 720px);
     }
 
-    #slide-12 .quote {
+    #slide-11 .quote {
       min-height: 0;
       display: grid;
       align-content: center;
-      font-size: 24px;
-      line-height: 1.36;
+      font-size: 22px;
+      line-height: 1.38;
       padding: 14px 20px;
+      border-left-width: 5px;
+      background: linear-gradient(90deg, rgba(42, 111, 124, 0.07), rgba(142, 59, 46, 0.04));
     }
 
     #slide-10.slide,
-    #slide-11.slide,
-    #slide-12.slide {
+    #slide-11.slide {
       gap: 14px;
     }
 
@@ -1697,7 +1768,6 @@
         <a href="#slide-9">09</a>
         <a href="#slide-10">10</a>
         <a href="#slide-11">11</a>
-        <a href="#slide-12">12</a>
       </nav>
     </div>
 
@@ -1874,8 +1944,8 @@
           />
           <p class="defense-visual-note">
             Phase 2 на схеме — <strong>Agent Runtime</strong>: один research-агент и <strong>tools</strong> к PostgreSQL,
-            Neo4j и Qdrant (не три независимых субагента). В конфиге опционально доступен
-            <code>langgraph_supervisor_v1</code> с нодами-специалистами.
+            Neo4j и Qdrant (не три независимых субагента). При необходимости — надсистемный режим с несколькими
+            специализированными шагами и общей трассировкой.
           </p>
         </div>
         <div class="summary-box">
@@ -1886,9 +1956,9 @@
             <li><strong>Neo4j</strong> — граф знаний и структурные запросы.</li>
             <li><strong>Qdrant</strong> — семантический поиск по чанкам.</li>
             <li>
-              <strong>По умолчанию</strong> чат — <code>langgraph_research_v1</code>: один контур LLM с привязанным
-              набором инструментов, цикл ReAct (вызов тулза → результат в контекст → снова LLM), финал через
-              <code>final_answer</code>.
+              <strong>По умолчанию</strong> — один исследовательский контур LLM с привязанным набором инструментов,
+              цикл «вызов инструмента → результат в контекст → снова модель», финал через явный шаг ответа с
+              цитатами.
             </li>
             <li><strong>Authorship</strong> в графе вынесен в отдельный узел (модель данных ingest-слоя).</li>
           </ul>
@@ -1905,7 +1975,7 @@
       <div class="slide-tag">Agent runtime</div>
       <h2>Инструменты агента и системный промпт</h2>
       <p class="sublead">
-        Реестр инструментов для режима <code>langgraph_research_v1</code>. Модель получает имена тулзов, краткие
+        Реестр инструментов для основного исследовательского режима агента. Модель получает имена тулзов, краткие
         описания и машиночитаемую схему параметров (структурированная валидация, по смыслу как в Pydantic).
       </p>
       <div class="defense-agent-stack">
@@ -2255,45 +2325,45 @@
 
     <section class="slide" id="slide-10">
       <div class="slide-tag">Итоги</div>
-      <h2>Выводы по бенчмаркам</h2>
+      <h2>Выводы</h2>
       <div class="two-col">
         <div class="summary-box">
-          <h3>Чему нас научили бенчмарки</h3>
+          <h3>Бенчмарки и датасет</h3>
           <ul>
             <li>
-              <strong>Оценка не сводится к одной галочке</strong> «совпало / нет» для всего извлечения сразу.
+              Одних <strong>P/R/F1</strong> и <strong>ROUGE-L</strong> мало для конвейера с PDF: шум разметки, дефисы,
+              ссылки и список литературы ломают «красивую» цифру без договорённости, <em>как</em> сравниваем с эталоном.
             </li>
             <li>
-              Для заголовка, абстракта, авторов, ссылок, утверждений и других слоёв <strong>скрипты бенчмарков</strong>
-              (модули оценки в репозитории, каталог <code>eval/</code>) считают <strong>разные численные показатели
-              относительно эталона</strong> — полнота, точность, меры текстового сходства, пересечение множеств
-              идентификаторов и т.п.; набор метрик задаётся постановкой поля, а не одним общим «пройден / не пройден».
+              В скриптах оценки к метрикам добавляются <strong>нормализация текста</strong> и
+              <strong>эвристики под поле</strong> (множества DOI/arXiv, IoU строк для секции References, fuzzy для
+              методов/датасетов, режимы перефраза в эталоне) — иначе бенчмарк не отражает постановку.
             </li>
             <li>
-              <strong>Каркас статьи</strong> (заголовок, абстракт, авторы, выборка идентификаторов в библиографии):
-              отдельные текстовые и множественные метрики сравнения с эталоном; подробности — в отчёте и в коде
-              <code>eval/</code>.
+              Параллельно с прогонами нужно <strong>периодически смотреть датасет и провальные кейсы</strong>, иначе зелёные
+              агрегаты отъезжают от реальности.
             </li>
             <li>
-              <strong>Утверждения, концепты и темы</strong> — полнота и точность (P/R) с несколькими режимами
-              сопоставления с эталоном; параметры перефраза и пороги задаются в эталоне кейса.
+              <strong>На старте</strong> черновой эталон разумно <strong>генерировать сильной LLM по PDF/MD</strong>, затем
+              сужать и править вручную — так быстрее выйти на первый покрывающий набор кейсов.
+            </li>
+          </ul>
+          <h3>Агент, трассировка, UI</h3>
+          <ul>
+            <li>
+              Ответ смотреть вместе с <strong>трасой шагов</strong>; обязательный финальный шаг ответа —
+              типичное хрупкое место при смене промпта или графа (ловит сквозной контрольный прогон).
             </li>
             <li>
-              <strong>Методы и датасеты для графа</strong> — мягкое совпадение нормализованных имён и алиасов с порогом
-              уверенности модели; для длинных названий допускается сходство по словам с эталоном.
-            </li>
-            <li>
-              <strong>Список литературы</strong> — самый шумный слой (PDF, форматы): в конвейере эвристики и правила,
-              при LLM — дозаполнение по чанкам к уже собранному скелету, не генерация «с нуля одним промптом»; отдельно
-              идёт bench по секции References (границы секции, overlap записей). Эталон и прогоны тянут качество через
-              провальные кейсы, не только через среднее.
+              <strong>Граф на экране</strong> — отдельная задача (масштаб, читаемость), не только корректность данных в
+              Neo4j.
             </li>
           </ul>
         </div>
         <div class="visual-frame">
           <img
             src="assets/defense/slide-10-benchmark-conclusions.png"
-            alt="Схема: метрики bench каркаса статьи, утверждений, методов и датасетов, списка литературы; шум PDF"
+            alt="Схема: метрики извлечения, шум PDF, нормализация и эвристики оценки"
           />
         </div>
       </div>
@@ -2302,85 +2372,79 @@
 
     <section class="slide" id="slide-11">
       <div class="slide-tag">Итоги</div>
-      <h2>Агент, трассировка, интерфейс</h2>
-      <div class="two-col">
-        <div class="summary-box">
-          <h3>Что важно в прогоне</h3>
-          <ul>
-            <li>
-              Оценка агента без цепочки шагов почти бессмысленна: ответ может звучать правдоподобно, пока не увидишь,
-              куда он ходил, не вызвал ли лишнего и не оборвал ли сценарий до конца.
-            </li>
-            <li>
-              Трассировка показывает, завершён ли сценарий аккуратно или обрывается на полпути; по потоку событий в UI
-              проще разобрать спорный прогон, чем по одной финальной строке ответа.
-            </li>
-            <li>
-              Обязательный финальный шаг ответа (<code>final_answer</code>) чувствителен к смене промпта и графа;
-              сквозной бенчмарк агента фиксирует такие регрессии.
-            </li>
-            <li>
-              Отрисовка большого графа в браузере упирается в другое: даже корректные данные в базе не гарантируют
-              плавную и читаемую картинку — нужны отдельные решения по масштабу, подсветке и сокращению визуального
-              шума.
-            </li>
-          </ul>
-        </div>
-        <div class="visual-frame">
-          <img
-            src="assets/defense/slide-11-agent-tracing-ui.png"
-            alt="Схема: цепочка шагов агента, поток событий трассировки, плотный граф на экране"
-          />
-        </div>
-      </div>
-      <div class="slide-number">11</div>
-    </section>
-
-    <section class="slide" id="slide-12">
-      <div class="slide-tag">Итоги</div>
       <h2>Накопленное и дальнейшие планы</h2>
+      <p class="plans-slide-sub">
+        Фокус дорожной карты: <strong>агентный runtime</strong> (инструменты и субагенты), <strong>контекст и бенчмарки</strong>,
+        <strong>продукт</strong> — граф в UI, ingestion и дедупликация сущностей.
+      </p>
       <div class="two-col">
-        <div class="conclusion-plans-copy">
-          <div class="footer-card">
-            <h3>Что уже есть по сути</h3>
-            <ul>
-              <li>Сквозной путь от корпуса статей до ответа с опорой на источники и на граф.</li>
-              <li>Разделение сигналов: отдельно качество извлечения, отдельно поиск и граф, отдельно «как агент вёл себя
-                в почти боевом сценарии».</li>
-              <li>Связка «что показали пользователю» и «что произошло под капотом» — опора для честной диагностики, а не
-                украшение.</li>
-            </ul>
-          </div>
-          <div class="footer-card">
-            <h3>Куда двигаемся дальше</h3>
-            <ul>
+        <div class="plans-pillars" aria-label="Три направления развития">
+          <article class="plans-pillar plans-pillar--agents">
+            <span class="plans-pillar-eyebrow">Runtime</span>
+            <h3>Агенты, субагенты и тулзы</h3>
+            <ul class="plans-pillar-list">
               <li>
-                <strong>Подбор инструментов по смыслу</strong> (отдельный шаг «tool search»): меньше лишних вызовов,
-                дешевле типовой вопрос, проще сопровождать рост каталога тулзов.
+                База: один исследовательский агент с явным каталогом инструментов к реляционному хранилищу, графу и
+                векторному поиску — без «трёх независимых экспертов» по умолчанию.
               </li>
               <li>
-                <strong>Суммаризация и уплотнение контекста</strong> для длинных бесед: реже упираться в лимиты окна,
-                не терять важное из ранней части диалога, аккуратнее нести в модель только релевантное.
+                При усложнении сценариев — маршрутизатор с подзадачами и специализированными шагами при единой
+                трассировке.
               </li>
-              <li>Подтянуть слой утверждений и перефраза, precision многошагового обхода графа, задержку до комфортного
-                интерактива.</li>
-              <li>Расширить корпус и домены; отдельно — инженерия графа на экране: стабильность, читаемость, работа с
-                большими подграфами.</li>
+              <li>
+                <strong>Tool search</strong> по смыслу запроса: меньше лишних вызовов, проще сопровождать рост числа
+                инструментов.
+              </li>
             </ul>
-          </div>
+          </article>
+          <article class="plans-pillar plans-pillar--bench">
+            <span class="plans-pillar-eyebrow">Контекст · оценка</span>
+            <h3>Суммаризация контекста и бенчмарки</h3>
+            <ul class="plans-pillar-list">
+              <li>
+                Уплотнение и суммаризация длинных диалогов: укладываться в окно модели, не терять ранние решения и
+                evidence.
+              </li>
+              <li>
+                Развитие регрессионных наборов и бенчмарков: слои извлечения, сквозной агент, проверки при смене
+                промпта, графа и инструментов — метрики как «договор качества», а не разовый отчёт.
+              </li>
+              <li>
+                Теснее связать прогоны бенчмарков с трассами в UI и провальными кейсами в датасете.
+              </li>
+            </ul>
+          </article>
+          <article class="plans-pillar plans-pillar--product">
+            <span class="plans-pillar-eyebrow">Продукт</span>
+            <h3>Граф, ingestion, дедупликация</h3>
+            <ul class="plans-pillar-list">
+              <li>
+                <strong>Движок графа в UI</strong>: производительность, подсветка, навигация по большим подграфам без
+                потери читаемости.
+              </li>
+              <li>
+                <strong>Ingestion</strong>: устойчивость пайплайна (ошибки PDF, таймауты LLM), возобновляемость и
+                прозрачность стадий до записи в хранилища.
+              </li>
+              <li>
+                <strong>Дедупликация</strong> похожих работ, авторов и извлечённых сущностей — меньше дублей и коллизий
+                в Neo4j и в ответах агента.
+              </li>
+            </ul>
+          </article>
         </div>
         <div class="visual-frame">
           <img
-            src="assets/defense/slide-12-plans-roadmap.png"
-            alt="Дорожная карта: tool search, уплотнение контекста, точность графа, масштаб корпуса и UI графа"
+            src="assets/defense/slide-12-plans-roadmap.jpg"
+            alt="Абстрактная иллюстрация дорожной карты: рост системы, граф, путь вперёд"
           />
         </div>
       </div>
       <div class="quote">
-        Итог ценен не только собранным конвейером, но и тем, что мы показали реальные трудности — валидации, литературы,
-        агента и визуализации — и зафиксировали планы, которые эти трудности не заметают, а адресуют.
+        Развитие сосредоточено на трёх направлениях: умнее маршрутизировать агента и инструменты, устойчивее вести
+        контекст и бенчмарки, надёжнее строить граф — от загрузки корпуса до экрана.
       </div>
-      <div class="slide-number">12</div>
+      <div class="slide-number">11</div>
     </section>
   </div>
   <script>

@@ -3,6 +3,7 @@ from __future__ import annotations
 from eval.chat_agent.phoenix_export import (
     _classify_phoenix_json_payload,
     _normalize_otel_trace_id_hex,
+    extract_span_names_for_trace,
     phoenix_ui_trace_url,
 )
 
@@ -33,6 +34,80 @@ def test_phoenix_ui_trace_url_project_aware(monkeypatch) -> None:
     monkeypatch.delenv("PHOENIX_PROJECT_ID", raising=False)
     u2 = phoenix_ui_trace_url(trace_id="x", base_url="http://h", project_identifier="p")
     assert u2 == "http://h/projects/p/traces/x"
+
+
+def test_extract_span_names_trace_list_filters_by_trace_id() -> None:
+    want = "aa" * 16
+    other = "bb" * 16
+    payload = {
+        "data": [
+            {
+                "trace_id": other,
+                "spans": [{"name": "ingest_document"}, {"name": "tool.bad"}],
+            },
+            {
+                "trace_id": want,
+                "spans": [
+                    {"name": "agent.query"},
+                    {"name": "tool.idea_search", "metadata": {"name": "ingest_document"}},
+                ],
+            },
+        ],
+    }
+    names = extract_span_names_for_trace(payload, want)
+    assert names == ["agent.query", "tool.idea_search"]
+    assert "ingest_document" not in names
+
+
+def test_extract_span_names_span_list_no_trace_id_includes_all() -> None:
+    want = "cc" * 16
+    payload = {
+        "data": [
+            {"name": "llm.agent.react_turn", "span_id": "1"},
+            {"name": "tool.final_answer", "span_id": "2", "parent_id": "0"},
+        ],
+    }
+    names = extract_span_names_for_trace(payload, want)
+    assert names == ["llm.agent.react_turn", "tool.final_answer"]
+
+
+def test_classify_and_extract_span_list_name_only_rows() -> None:
+    """REST may return span rows with ``name`` but no span_id (trace from query string)."""
+
+    want = "cafe" * 8
+    payload = {
+        "data": [
+            {"name": "agent.query", "start_time": "2024-01-01T00:00:00Z"},
+            {"name": "tool.idea_search"},
+        ],
+    }
+    valid, kind = _classify_phoenix_json_payload(payload)
+    assert valid is True
+    assert kind == "span_list"
+    assert extract_span_names_for_trace(payload, want) == ["agent.query", "tool.idea_search"]
+
+
+def test_extract_span_names_span_list_skips_unlabeled_when_mismatch() -> None:
+    want = "dd" * 16
+    foreign = "ee" * 16
+    payload = {
+        "data": [
+            {"name": "orphan", "trace_id": foreign},
+            {"name": "should_skip_unlabeled"},
+        ],
+    }
+    names = extract_span_names_for_trace(payload, want)
+    assert names == []
+
+
+def test_extract_span_names_unknown_payload_empty() -> None:
+    assert extract_span_names_for_trace({"foo": [{"name": "ingest_document"}]}, "ab" * 16) == []
+
+
+def test_extract_span_names_embedded_root_trace_mismatch() -> None:
+    want = "ff" * 16
+    payload = {"trace_id": "00" * 16, "spans": [{"name": "agent.query"}]}
+    assert extract_span_names_for_trace(payload, want) == []
 
 
 def test_phoenix_project_identifier_default(monkeypatch) -> None:

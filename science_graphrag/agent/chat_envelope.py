@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from science_graphrag.agent.final_answer_policy import last_executed_catalog_tool_name
 from science_graphrag.agent.trace import ToolCallTrace
 
 if TYPE_CHECKING:
@@ -38,31 +39,16 @@ def _last_user_question(state: AgentState | dict[str, Any]) -> str:
     return ""
 
 
-_TRACE_META_TOOLS = frozenset(
-    {"session_init", "route_to_specialist", "coordinator_gate"},
-)
-
-
-def _last_executed_catalog_tool_name(tool_trace: list[Any]) -> str | None:
-    """Last tool in trace that represents an actual agent tool call (not routing meta)."""
-    last: str | None = None
-    for entry in tool_trace:
-        name = getattr(entry, "tool", None) if not isinstance(entry, dict) else entry.get("tool")
-        if not name or not str(name).strip():
-            continue
-        s = str(name).strip()
-        if s in _TRACE_META_TOOLS:
-            continue
-        last = s
-    return last
-
-
 def heuristic_answer_class(question: str, hint: str | None) -> str:
     if hint and hint in ANSWER_CLASSES:
         return hint
     q = (question or "").lower()
     if any(x in q for x in ("гост", "gost", "bibliograph", "список литературы", "literature list")):
         return "bibliography_export"
+    if "evidence" in q and any(
+        x in q for x in ("trade-off", "tradeoff", "trade-offs", "verbatim", "passage", "snippet")
+    ):
+        return "quote_extraction"
     if any(x in q for x in ("цитат", "quote", "passage", "snippet", "где написано")):
         return "quote_extraction"
     if any(
@@ -295,13 +281,17 @@ def build_chat_envelope(
             warnings.append("some_work_ids_filtered")
     if not answer_stripped:
         warnings.append("no_final_answer")
-    last_exec = _last_executed_catalog_tool_name(tool_trace)
+    last_exec = last_executed_catalog_tool_name(tool_trace)
+    graph_salvage = "answer_salvaged_from_graph_tool" in (
+        list(extra_warnings or []) if extra_warnings else []
+    )
     if (
         tool_policy == "allow_tools"
         and answer_stripped
         and last_exec
         and last_exec != "final_answer"
         and product_path == "tool_assisted"
+        and not graph_salvage
     ):
         warnings.append("agent_finished_without_final_answer_tool")
     if (

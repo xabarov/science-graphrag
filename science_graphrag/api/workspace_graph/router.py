@@ -46,6 +46,13 @@ def get_workspace_graph(
         ge=1,
         description="Optional total claims cap; omit for uncapped claim slices.",
     ),
+    include_authorship_debug: bool = Query(
+        default=False,
+        description=(
+            "If true and view=reader, meta.authorship_projection classifies AUTHORED targets "
+            "(native / synthesized / mixed / none)."
+        ),
+    ),
     settings: Settings = Depends(get_settings),
     stores: StoreRegistry = Depends(get_stores),
 ) -> dict[str, Any]:
@@ -64,6 +71,7 @@ def get_workspace_graph(
         include_claims=include_claims,
         claims_per_work=claims_per_work,
         claims_max_total=claims_max_total,
+        include_authorship_debug=include_authorship_debug,
     )
     if graph is None:
         raise HTTPException(status_code=404, detail="workspace_not_found")

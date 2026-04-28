@@ -103,55 +103,116 @@ The stack **already encodes** “prefer `final_answer` tool JSON” in [`science
 
 ### 4.3 Phoenix span lists and E2E “flat walk”
 
-[`scripts/live_check/agent_od_workspace_e2e_audit.py`](../../scripts/live_check/agent_od_workspace_e2e_audit.py) `_extract_span_names` recursively collects **every** JSON **`name`** field under the Phoenix payload. [`eval/chat_agent/phoenix_export.py`](../../eval/chat_agent/phoenix_export.py) `try_fetch_phoenix_spans` may return rich nested JSON.
+**Historical (pre–P2.1):** the E2E script used a recursive walk that collected **every** JSON **`name`** field under the Phoenix payload while [`eval/chat_agent/phoenix_export.py`](../../eval/chat_agent/phoenix_export.py) `try_fetch_phoenix_spans` could return rich nested JSON.
 
-**Observed risk:** span names from **other workflows** (e.g. ingest / `llm.vl_pdf` / unrelated `tool.cypher_query`) appeared in the same `span_names_full_cap200` slice as the chat trace for `multi_compare_bibliography`. Possible causes:
+**Observed risk:** span names from **other workflows** (e.g. ingest / `llm.vl_pdf` / unrelated `tool.cypher_query`) appeared in the same `span_names_full_cap200` slice as the chat trace for `multi_compare_bibliography`. Likely drivers: (1) REST shape / version, (2) **recursive walk** pulling `name` from nested metadata, (3) project-wide noise.
 
-1. Phoenix REST returns **more than** the requested trace’s spans for the queried `trace_id` (backend / version behavior).
-2. **Recursive walk** pulls `name` fields from nested metadata unrelated to span nodes.
-3. **Project-wide noise** under the same project identifier (less likely if `trace_id` filter is strict).
-
-**Implication:** use **structured span lists** (with `trace_id` per span) for audits, or filter names to a **known prefix allowlist** (`llm.agent.*`, `tool.*`, `retrieval.*`, `embedding.*` for agent subtree) and drop ingest-prefixed spans when parent trace does not match.
+**Remediation (P2.1):** [`extract_span_names_for_trace`](../../eval/chat_agent/phoenix_export.py) reads only structured span lists and filters by **`trace_id`** (with conservative rules when spans omit `trace_id`); the live harness calls it from [`scripts/live_check/agent_od_workspace_e2e_audit.py`](../../scripts/live_check/agent_od_workspace_e2e_audit.py). See §6.3 for acceptance.
 
 ---
 
 ## 5. Remediation plan (ordered)
 
-### P0 — User-visible correctness
+### P0 — User-visible correctness (**shipped 2026-04-28**)
 
 | ID | Action | Owner files / notes |
 |----|--------|---------------------|
-| **P0.1** | **Guarantee non-empty user answer** for `allow_tools` when the model stops after a catalog tool (especially `cypher_query` / `edge_search`) but there is a **last non-empty `AIMessage`**. Today `extract_langgraph_answer` may return `""` if the model never emitted a bare assistant message. Options: (a) **supervisor** injects a final “compose answer” turn; (b) **bounded repair** call that maps last tool JSON to a short summary + **`final_answer`**; (c) **reject** incomplete trace and auto-retry with a system nudge. | [`science_graphrag/agent/runtime.py`](../../science_graphrag/agent/runtime.py), graph supervisor / ReAct loop |
-| **P0.2** | **Hard requirement:** last catalog tool **`final_answer`** before returning HTTP 200 for agent v2 (or explicit **4xx/structured incomplete** if product chooses “fail closed”). Aligns with E2E gate and removes **`agent_finished_without_final_answer_tool`** for successful HTTP paths. | [`science_graphrag/api/agent_v2.py`](../../science_graphrag/api/agent_v2.py), LangGraph edges |
+| **P0.1** | **Guarantee non-empty user answer** when the graph ends after `cypher_query` / `edge_search` without a bare assistant message: **`extract_langgraph_answer`** third-phase **graph JSON salvage** (preview rows/items, warning `answer_salvaged_from_graph_tool`, span event `agent.graph_tool_answer_salvage`). | [`science_graphrag/agent/runtime.py`](../../science_graphrag/agent/runtime.py) |
+| **P0.1b** | **One-shot `final_answer` nudge** in single-agent ReAct: if the model returns an `AIMessage` **without** `tool_calls` but the trace already has a catalog tool and the last one is **not** `final_answer`, route **`chat` → `final_answer_nudge` → `chat`** once (`metadata.final_answer_nudge_used`). | [`science_graphrag/agent/graph/react_edges.py`](../../science_graphrag/agent/graph/react_edges.py), [`science_graphrag/agent/graph/supervisor.py`](../../science_graphrag/agent/graph/supervisor.py), policy in [`science_graphrag/agent/final_answer_policy.py`](../../science_graphrag/agent/final_answer_policy.py) |
+| **P0.2** | **Envelope:** `last_executed_catalog_tool_name` centralized in `final_answer_policy`; suppress **`agent_finished_without_final_answer_tool`** when `extra_warnings` contains **`answer_salvaged_from_graph_tool`**. Sync + SSE pass **`extra_warnings`** from salvage flag. | [`science_graphrag/agent/chat_envelope.py`](../../science_graphrag/agent/chat_envelope.py), [`science_graphrag/api/agent_v2.py`](../../science_graphrag/api/agent_v2.py) |
+| **P0.3** | **Import cycle fix:** `science_graphrag.agent.graph` package `__init__` no longer imports **`build_retrieval_graph`** (import **`build_retrieval_graph` from `…graph.supervisor`** explicitly). | [`science_graphrag/agent/graph/__init__.py`](../../science_graphrag/agent/graph/__init__.py) |
 
-### P1 — Instruction adherence and tool mix
-
-| ID | Action | Owner files / notes |
-|----|--------|---------------------|
-| **P1.1** | Strengthen **system / turn** instructions: if the user lists mandatory tool **categories**, the model must call them or **`final_answer`** stating **capability gap** with `empty_reason`-style honesty. | [`science_graphrag/agent/prompts/research_chat_system.py`](../../science_graphrag/agent/prompts/research_chat_system.py), tool docstrings |
-| **P1.2** | Reduce **`paper_profile`** churn when the task is **quote/evidence**: promote **`paper_quote_search`** in the shortlist or add a **router hint** for “evidence / trade-off” questions. | [`science_graphrag/agent/tool_manifest.py`](../../science_graphrag/agent/tool_manifest.py), supervisor routing |
-| **P1.3** | Re-run **`--suite heavy`** after changes; optionally add a **CI nightly** with `AGENT_LIVE_BASE` (see [`scripts/live_check/README.md`](../../scripts/live_check/README.md)). | CI / runbook |
-
-### P2 — Observability fidelity
+### P1 — Instruction adherence and tool mix (**[DONE] 2026-04-28**)
 
 | ID | Action | Owner files / notes |
 |----|--------|---------------------|
-| **P2.1** | Replace flat `_extract_span_names` with **span-aware extraction**: only `name` fields on objects that include **matching `trace_id`** (when present), or walk only `data[].spans[]`. | [`scripts/live_check/agent_od_workspace_e2e_audit.py`](../../scripts/live_check/agent_od_workspace_e2e_audit.py), optionally [`eval/chat_agent/phoenix_export.py`](../../eval/chat_agent/phoenix_export.py) |
-| **P2.2** | Document **Phoenix scope** (`PHOENIX_TRACE_SCOPE`) and collector URL in [`docs/architecture/observability-phoenix.md`](../../docs/architecture/observability-phoenix.md) if not already aligned with agent+ingest coexistence. | Docs |
+| **P1.1** | ~~Strengthen **system / turn** instructions~~ — **Done:** mandatory enumerated tool paths + capability-gap rule in system prompt; docstrings for `paper_profile`, `paper_quote_search`, `idea_search`. | [`science_graphrag/agent/prompts/research_chat_system.py`](../../science_graphrag/agent/prompts/research_chat_system.py), [`science_graphrag/agent/tools/workspace_paper_tools.py`](../../science_graphrag/agent/tools/workspace_paper_tools.py), [`science_graphrag/agent/tools/idea_search.py`](../../science_graphrag/agent/tools/idea_search.py) |
+| **P1.2** | ~~Reduce **`paper_profile`** churn~~ — **Done:** `paper_quote_search` in retrieval baseline merge; keyword scoring + manifest tags; `heuristic_answer_class` for evidence+trade-off → `quote_extraction`; single-agent shortlist uses `answer_class_hint or heuristic_answer_class(q, None)`; supervisor `ROUTING_PROMPT` mixed-evidence line; tests in `tests/test_tool_search.py`, `tests/test_chat_envelope.py`. | [`science_graphrag/agent/tool_search.py`](../../science_graphrag/agent/tool_search.py), [`science_graphrag/agent/tool_manifest.py`](../../science_graphrag/agent/tool_manifest.py), [`science_graphrag/agent/chat_envelope.py`](../../science_graphrag/agent/chat_envelope.py), [`science_graphrag/agent/graph/supervisor.py`](../../science_graphrag/agent/graph/supervisor.py) |
+| **P1.3** | ~~Re-run **`--suite heavy`**~~ — **Done:** local verify [`eval/results/live-heavy-p1-verify-20260428.md`](../../eval/results/live-heavy-p1-verify-20260428.md) + [`eval/results/live-heavy-p1-verify.jsonl`](../../eval/results/live-heavy-p1-verify.jsonl) (`--skip-phoenix`, `AGENT_LIVE_TIMEOUT_SEC=600`). `multi_evidence_speed_accuracy` **PASS** (`paper_quote_search` in trace); `graph_ego_methods` **deadline flake** (same class as §6 post-P0). **CI nightly:** deferred — runbook extended in [`scripts/live_check/README.md`](../../scripts/live_check/README.md) §Heavy suite. | Runbook |
 
-### P3 — Envelope semantics (optional product decision)
+### P2 — Observability fidelity (**[DONE] 2026-04-28**)
+
+| ID | Action | Owner files / notes |
+|----|--------|---------------------|
+| **P2.1** | ~~Replace flat `_extract_span_names` with **span-aware extraction**~~ — **Done:** `extract_span_names_for_trace` in [`eval/chat_agent/phoenix_export.py`](../../eval/chat_agent/phoenix_export.py); E2E uses it from [`scripts/live_check/agent_od_workspace_e2e_audit.py`](../../scripts/live_check/agent_od_workspace_e2e_audit.py); tests in [`tests/eval/test_phoenix_export.py`](../../tests/eval/test_phoenix_export.py). | |
+| **P2.2** | ~~Document **Phoenix scope** / collector / E2E sampling~~ — **Done:** subsection *Agent vs ingest in one Phoenix project* in [`docs/architecture/observability-phoenix.md`](../../docs/architecture/observability-phoenix.md); trace-scoped span note in [`scripts/live_check/README.md`](../../scripts/live_check/README.md). | |
+
+### P3 — Envelope semantics (**[DONE] 2026-04-28**)
 
 | ID | Action | Notes |
 |----|--------|-------|
-| **P3.1** | Decide whether **`graph_only`** should remain a **warning** only, or trigger a **product marker** / different `answer_class` for analytics. | [`science_graphrag/agent/chat_envelope.py`](../../science_graphrag/agent/chat_envelope.py) |
+| **P3.1** | ~~**`graph_only`** product shape~~ — **Done (variant A):** remains **warnings-only**; documented in [`docs/specs/agent-chat-v1.md`](../../docs/specs/agent-chat-v1.md) (*Evidence-mix warnings*); contract assertion in [`tests/test_chat_envelope.py`](../../tests/test_chat_envelope.py) (`graph_only` ∉ `product_markers`). | [`science_graphrag/agent/chat_envelope.py`](../../science_graphrag/agent/chat_envelope.py) unchanged for markers |
 
 ---
 
-## 6. Acceptance criteria (next verification)
+## 6. Acceptance criteria (verification)
 
 1. **`graph_ego_methods`:** HTTP 200, **`answer_len` ≥ 40**, last catalog tool **`final_answer`**, no `no_final_answer` unless product explicitly allows empty with a different status code.
 2. **`multi_evidence_speed_accuracy`:** `tool_trace` includes **`paper_quote_search`** **or** `final_answer` text explicitly states that quotes are unavailable **and** last tool is **`final_answer`**; no `agent_finished_without_final_answer_tool` on success path.
 3. **Phoenix audit:** span sample for chat traces does **not** include ingest-only roots (`ingest_document`, `llm.vl_pdf`, …) unless they are provably children of the same agent trace (verified by `trace_id` / parent id).
+
+### Post–P0 live heavy run (2026-04-28)
+
+Command (same as §2.1) with artifacts:
+
+- [`eval/results/live-heavy-p0-verify-20260428.md`](../../eval/results/live-heavy-p0-verify-20260428.md)
+- [`eval/results/live-heavy-p0-verify.jsonl`](../../eval/results/live-heavy-p0-verify.jsonl)
+
+| Case | Result | Notes |
+|------|--------|--------|
+| `multi_compare_bibliography` | **PASS** | Unchanged quality path. |
+| `multi_evidence_speed_accuracy` | **PASS** | Ends with **`paper_quote_search` → `final_answer`**; `no_quote_found` warning only (corpus/thin quote merge). |
+| `graph_ego_methods` | **FAIL (flake)** | **`agent_turn_deadline_exceeded`**, empty `tool_trace` in response, `missing_phoenix_trace_id` — run hit wall-clock limit before tools completed; **not** a regression of the P0 nudge/salvage path. Re-run with higher `SCIENCE_GRAPHRAG_AGENT_STEP_TIMEOUT_SECONDS` / `AGENT_LIVE_TIMEOUT_SEC` to validate graph-ego under load. |
+
+### Post–P1 live heavy run (2026-04-28)
+
+Artifacts: [`eval/results/live-heavy-p1-verify-20260428.md`](../../eval/results/live-heavy-p1-verify-20260428.md), [`eval/results/live-heavy-p1-verify.jsonl`](../../eval/results/live-heavy-p1-verify.jsonl). Flags: `--skip-phoenix`, `AGENT_LIVE_TIMEOUT_SEC=600`.
+
+| Case | Result | Notes |
+|------|--------|-------|
+| `multi_compare_bibliography` | **PASS** | |
+| `multi_evidence_speed_accuracy` | **PASS** | `idea_search` → `paper_quote_search` → `final_answer`; `no_quote_found` only. |
+| `graph_ego_methods` | **FAIL (flake)** | `agent_turn_deadline_exceeded`, empty `tool_trace` in JSON — same timeout class as post-P0; not attributed to P1 prompt/shortlist changes. |
+
+### Post–closure full verify (`--suite full`, Phoenix on) — 2026-04-28
+
+After P0–P3 and doc closure, re-ran **all six** OD scenarios (default + heavy) with **`--trace-audit`**, `AGENT_LIVE_TIMEOUT_SEC=600`, API `http://127.0.0.1:18787`, Phoenix `http://127.0.0.1:16006`. Runtime ≈ **77 s** total.
+
+**Artifacts:** [`eval/results/live-full-verify-2026-04-28.md`](../../eval/results/live-full-verify-2026-04-28.md), [`eval/results/live-full-verify-2026-04-28.jsonl`](../../eval/results/live-full-verify-2026-04-28.jsonl), [`eval/results/live-full-verify-2026-04-28.log`](../../eval/results/live-full-verify-2026-04-28.log).
+
+| `case_id` | Strict gate | `final_answer` last? | Notable warnings / trace_audit |
+|-----------|-------------|----------------------|----------------------------------|
+| `catalog_resolution` | PASS | Yes | `phoenix_structure_audit`: duplicate `find_works` hint (expected: title + refine). |
+| `workspace_stats` | PASS | Yes | Clean. |
+| `grounded_quote` | PASS | Yes | `no_quote_found` (envelope / quote merge — corpus or merge path). |
+| `multi_compare_bibliography` | PASS | Yes | Duplicate `find_works`/`paper_profile` hint (expected for two families). |
+| `graph_ego_methods` | PASS | Yes | **`graph_only`** (graph tools without vector retrieval — informational). Sequence: `workspace_inspect` → `cypher_query` → **`final_answer`** (P0 nudge/contract satisfied). |
+| `multi_evidence_speed_accuracy` | PASS | Yes | **`paper_quote_search`** present; `no_quote_found`; duplicate `paper_profile` hint (acceptable churn vs prior run without `paper_quote_search`). |
+
+**Phoenix deep links (this run):**
+
+| `case_id` | Trace id (hex) |
+|-----------|----------------|
+| `catalog_resolution` | `9c8df5163f4309bee1da019ac4b9b06f` |
+| `workspace_stats` | `75f72d87b1fd74c9a714474ff5e3025e` |
+| `grounded_quote` | `068a0402c1879f49b4c4269b9fa696aa` |
+| `multi_compare_bibliography` | `b62708c752aeb15bed41d274449f268c` |
+| `graph_ego_methods` | `4e1e18a47dde9c44a6ae0e4f2f6aaff2` |
+| `multi_evidence_speed_accuracy` | `e73fa3b18a65bd7c25114a722aa8e89a` |
+
+UI: `http://127.0.0.1:16006/projects/science-graphrag/traces/<trace_id>`.
+
+**Conclusion vs “не хуже / лучше”:** on this run the agent is **strictly not worse** (6/6 E2E gate) and **better** on the two previously failing heavy paths: **`graph_ego_methods`** now completes with **`final_answer`** and long grounded text; **`multi_evidence_speed_accuracy`** uses **`paper_quote_search`** and ends with **`final_answer`**. Remaining signals are **warnings** (`no_quote_found`, `graph_only`) and **heuristic** duplicate-tool hints — not gate failures.
+
+**Sequence / tooling / prompts (audit):**
+
+- **Optimality:** Heavy paths are lean (4–7 catalog steps). `multi_evidence` order `workspace_inspect` → `idea_search` → `paper_quote_search` → `paper_profile` ×2 → `final_answer` is reasonable (inventory → semantic → quotes → metadata → close).
+- **Tools:** No `cypher_query_error_count` / edge zero-row streaks in summary; no Phoenix `phoenix_structure_audit.issues` on this sample.
+- **Prompts / product:** `no_quote_found` still appears where quote extraction is thin — correlate with `paper_quote_search` `empty_reason` in tool payloads when debugging corpus. `graph_only` is expected for pure-graph ego tasks until product policy changes (see §4.2 / P3).
+
+## 6b. `langgraph_supervisor_v1` (deferred)
+
+The **`final_answer_nudge`** edge and salvage logic apply to **`langgraph_research_v1`** (single-agent ReAct) only. **`langgraph_supervisor_v1`** ends the user turn from **`writer_agent`** without this ReAct router; if the same contract issues appear there, add an analogous **writer-side completion** check or route back to a tool-capable specialist (separate small plan).
 
 ---
 
@@ -169,3 +230,7 @@ The stack **already encodes** “prefer `final_answer` tool JSON” in [`science
 | Date | Change |
 |------|--------|
 | 2026-04-28 | Initial document from live `--suite heavy` run, artifact paths, Phoenix trace IDs, and remediation plan. |
+| 2026-04-28 | P0 implemented: `final_answer_policy`, ReAct `final_answer_nudge`, graph-tool salvage in `extract_langgraph_answer`, envelope + SSE sync; post-P0 heavy verify artifacts (`live-heavy-p0-verify-*`); §6b supervisor v1 deferred. |
+| 2026-04-28 | **P1 done:** mandatory-tool-path system prompt + tool docstrings; `tool_search` baseline/scoring + `heuristic_answer_class` evidence/trade-off + single-agent `effective_ac` shortlist; supervisor routing hint; post-P1 heavy verify (`live-heavy-p1-verify-*`, `--skip-phoenix`); §5 P1 table marked done; README heavy-suite runbook. |
+| 2026-04-28 | **P2 done:** `extract_span_names_for_trace` (trace-scoped Phoenix span names for live E2E); observability-phoenix *Agent vs ingest* + README trace-scoped note. **P3 done:** `graph_only` / `text_only` spec (warnings-only, no `product_markers`); envelope test extended. §5 P2/P3 marked done. |
+| 2026-04-28 | **Post-closure verify:** `--suite full` + Phoenix, 6/6 PASS; artifacts `eval/results/live-full-verify-2026-04-28.*`; §6c narrative + trace id table. |

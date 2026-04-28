@@ -76,9 +76,157 @@ def _classify_phoenix_json_payload(payload: Any) -> tuple[bool, str]:
             has_ids = "trace_id" in first or "span_id" in first or "parent_id" in first
             if "name" in first and has_ids:
                 return True, "span_list"
+            # Some Phoenix REST builds return flat span rows with ``name`` only (trace_id is the
+            # query param, not repeated on each row).
+            if (
+                isinstance(first.get("name"), str)
+                and str(first.get("name")).strip()
+                and not isinstance(first.get("spans"), list)
+                and all(
+                    isinstance(x, dict)
+                    and isinstance(x.get("name"), str)
+                    and str(x.get("name") or "").strip()
+                    and not isinstance(x.get("spans"), list)
+                    for x in data
+                )
+            ):
+                return True, "span_list"
     if isinstance(payload.get("spans"), list):
         return True, "embedded_spans"
     return False, "unknown_json"
+
+
+def _span_dict_name(span: Any) -> str | None:
+    if not isinstance(span, dict):
+        return None
+    raw = span.get("name")
+    if isinstance(raw, str) and raw.strip():
+        return raw.strip()
+    return None
+
+
+def _norm_trace_id_field(raw: Any) -> str | None:
+    s = str(raw or "").strip()
+    if not s:
+        return None
+    return _normalize_otel_trace_id_hex(s)
+
+
+def extract_span_names_for_trace(payload: Any, trace_id_hex: str) -> list[str]:
+    """Collect span ``name`` strings for a single OpenTelemetry trace (no recursive JSON walk).
+
+    Phoenix REST payloads may embed unrelated ``name`` keys under metadata; this function only
+    reads ``name`` from known span list shapes and filters by ``trace_id`` when present.
+
+    For ``unknown_json`` / unclassified payloads returns an empty list (no legacy flat walk).
+
+    When the REST response is a flat ``span_list`` with no per-span ``trace_id`` (typical for
+    ``GET .../spans?trace_id=``), span rows are treated as belonging to ``trace_id_hex``. Rows
+    may include only ``name`` (no ``span_id``); ``_classify_phoenix_json_payload`` still labels
+    those payloads as ``span_list`` when every ``data`` element is a non-empty named span row.
+    """
+
+    want = _normalize_otel_trace_id_hex(trace_id_hex)
+    if not want:
+        return []
+    valid, kind = _classify_phoenix_json_payload(payload)
+    if not valid:
+        return []
+    if kind == "empty_data":
+        return []
+    if not isinstance(payload, dict):
+        return []
+
+    names: list[str] = []
+
+    if kind == "embedded_spans":
+        root_tid = _norm_trace_id_field(payload.get("trace_id"))
+        if root_tid is not None and root_tid != want:
+            return []
+        spans = payload.get("spans")
+        if not isinstance(spans, list):
+            return []
+        emb_mismatch = False
+        for sp in spans:
+            if not isinstance(sp, dict):
+                continue
+            u = _norm_trace_id_field(sp.get("trace_id"))
+            if u is not None and u != want:
+                emb_mismatch = True
+                break
+        for sp in spans:
+            if not isinstance(sp, dict):
+                continue
+            st = _norm_trace_id_field(sp.get("trace_id"))
+            if st is not None and st != want:
+                continue
+            if st is None and emb_mismatch:
+                continue
+            nm = _span_dict_name(sp)
+            if nm:
+                names.append(nm)
+        return names
+
+    data = payload.get("data")
+    if not isinstance(data, list):
+        return []
+
+    if kind == "trace_list":
+        for block in data:
+            if not isinstance(block, dict):
+                continue
+            btid = _norm_trace_id_field(block.get("trace_id"))
+            if btid is not None and btid != want:
+                continue
+            if btid is None and len(data) != 1:
+                continue
+            spans = block.get("spans")
+            if not isinstance(spans, list):
+                continue
+            block_mismatch = False
+            for sp in spans:
+                if not isinstance(sp, dict):
+                    continue
+                st0 = _norm_trace_id_field(sp.get("trace_id"))
+                if st0 is not None and st0 != want:
+                    block_mismatch = True
+                    break
+            for sp in spans:
+                if not isinstance(sp, dict):
+                    continue
+                st = _norm_trace_id_field(sp.get("trace_id"))
+                if st is not None and st != want:
+                    continue
+                if st is None and block_mismatch:
+                    continue
+                nm = _span_dict_name(sp)
+                if nm:
+                    names.append(nm)
+        return names
+
+    if kind == "span_list":
+        list_mismatch = False
+        for row in data:
+            if not isinstance(row, dict):
+                continue
+            t0 = _norm_trace_id_field(row.get("trace_id"))
+            if t0 is not None and t0 != want:
+                list_mismatch = True
+                break
+        for row in data:
+            if not isinstance(row, dict):
+                continue
+            st = _norm_trace_id_field(row.get("trace_id"))
+            if st is not None and st != want:
+                continue
+            if st is None and list_mismatch:
+                continue
+            nm = _span_dict_name(row)
+            if nm:
+                names.append(nm)
+        return names
+
+    return []
 
 
 def _find_trace_payload_in_list(
@@ -239,6 +387,7 @@ def try_fetch_phoenix_spans(
 
 
 __all__ = [
+    "extract_span_names_for_trace",
     "phoenix_project_identifier",
     "phoenix_ui_trace_url",
     "try_fetch_phoenix_spans",

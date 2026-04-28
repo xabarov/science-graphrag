@@ -9,6 +9,7 @@ from typing import Any, Literal
 from langchain_core.messages import AIMessage, ToolMessage
 from langgraph.graph import END
 
+from science_graphrag.agent.final_answer_policy import needs_final_answer_nudge
 from science_graphrag.agent.graph.state import AgentState
 from science_graphrag.agent.tool_call_normalization import normalize_tool_call_name
 from science_graphrag.config import Settings
@@ -32,7 +33,9 @@ def tool_calls_batch_is_only_final_answer(tool_calls: list[Any] | None) -> bool:
     return True
 
 
-def route_react_chat_to_tools(state: AgentState) -> Literal["tools", "__end__"]:
+def route_react_chat_to_tools(
+    state: AgentState,
+) -> Literal["tools", "final_answer_nudge", "__end__"]:
     """After chat LLM: route to ToolNode without pre-decrementing budget.
 
     Historically budget was decremented *before* tools ran, so the last model step could emit
@@ -43,6 +46,8 @@ def route_react_chat_to_tools(state: AgentState) -> Literal["tools", "__end__"]:
     Routing rules:
     - ``budget_remaining >= 0``: allow the pending tool batch (includes the last slot at 0).
     - ``budget_remaining < 0``: allow at most one more batch if it is ``final_answer`` only.
+    - If the model returns text without ``tool_calls`` but catalog tools already ran without a
+      terminal ``final_answer``, route once to ``final_answer_nudge`` (see P0 contract).
     """
     messages = state.get("messages") or []
     if not messages:
@@ -50,6 +55,8 @@ def route_react_chat_to_tools(state: AgentState) -> Literal["tools", "__end__"]:
     last = messages[-1]
     tool_calls = getattr(last, "tool_calls", None) or []
     if not tool_calls:
+        if needs_final_answer_nudge(state):
+            return "final_answer_nudge"
         return END
     budget = int(state.get("budget_remaining", 0))
     if budget >= 0:

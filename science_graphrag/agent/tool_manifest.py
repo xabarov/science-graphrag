@@ -62,7 +62,7 @@ TOOL_MANIFEST: tuple[ToolManifestEntry, ...] = (
     ToolManifestEntry(
         "paper_quote_search",
         "evidence",
-        ("quote", "chunk", "passage", "semantic", "evidence"),
+        ("quote", "chunk", "passage", "semantic", "evidence", "tradeoff", "accuracy", "speed"),
         "medium",
         "corpus",
         "retrieval_agent",

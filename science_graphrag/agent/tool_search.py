@@ -55,7 +55,7 @@ def _ensure_final_answer_in_picked(picked: list[BaseTool], tools: list[BaseTool]
 
 def _merge_retrieval_catalog_baseline(picked: list[BaseTool], tools: list[BaseTool]) -> None:
     have = {getattr(t, "name", "") for t in picked}
-    for extra in ("idea_search",) + _RETRIEVAL_CORE_CATALOG:
+    for extra in ("idea_search", "paper_quote_search") + _RETRIEVAL_CORE_CATALOG:
         if extra not in have:
             hit = next((t for t in tools if getattr(t, "name", "") == extra), None)
             if hit is not None:
@@ -169,10 +169,15 @@ def _score_tool(
     )
     if meta.name == "workspace_inspect" and any(x in q for x in _wi_hints):
         score += 4.0
-    if meta.name == "paper_quote_search" and any(
-        x in q for x in ("quote", "цитат", "passage", "snippet", "where")
-    ):
-        score += 4.0
+    if meta.name == "paper_quote_search":
+        if any(x in q for x in ("quote", "цитат", "passage", "snippet", "where")):
+            score += 4.0
+        if any(x in q for x in ("trade-off", "tradeoff", "trade-offs")):
+            score += 3.5
+        if "evidence" in q:
+            score += 2.5
+        if "verbatim" in q:
+            score += 2.5
     if meta.name == "idea_search" and any(
         x in q for x in ("idea", "similar", "related", "semantic", "chunk")
     ):

@@ -26,6 +26,7 @@ from science_graphrag.api.workspace_graph.cypher import (
 from science_graphrag.config import get_settings
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 from tests.fixtures.work_graph_workspace_authorship_parity import (
+    institution_nodes_in_reader_payload,
     logical_author_slots_workspace_payload,
     surfaced_author_count_reader_work_graph,
     workspace_one_hop_subgraph,
@@ -536,5 +537,94 @@ def test_work_graph_five_authors_aggregator_expand_roundtrip() -> None:
             session.run(
                 "MATCH (n) WHERE n.id IN $ids DETACH DELETE n",
                 ids=[ws_id, w_id, *author_ids, *ash_ids],
+            )
+        driver.close()
+
+
+@pytest.mark.integration
+def test_work_graph_include_institutions_phase3_reader_and_raw() -> None:
+    """Optional ``include_institutions`` adds Institution nodes (reader + raw semantics)."""
+    if not _neo4j_available():
+        pytest.skip("Neo4j not reachable (integration)")
+
+    settings = get_settings()
+    ws_id = f"it-ws-inst-{uuid.uuid4().hex[:12]}"
+    w_id = f"it-w-inst-{uuid.uuid4().hex[:10]}"
+    a1 = f"it-a-inst-{uuid.uuid4().hex[:12]}-1"
+    a2 = f"it-a-inst-{uuid.uuid4().hex[:12]}-2"
+
+    driver = GraphDatabase.driver(
+        settings.neo4j_uri, auth=(settings.neo4j_user, settings.neo4j_password)
+    )
+    neo_store: Neo4jGraphStore | None = None
+    ash1 = ash2 = inst1 = ""
+    try:
+        ash1, ash2, inst1 = _seed_work_with_two_authors(driver, ws_id, w_id, author_ids=(a1, a2))
+        neo_store = Neo4jGraphStore(
+            settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password
+        )
+        off = work_graph_neighborhood(
+            _StoresStub(neo_store),
+            w_id,
+            neighbor_limit=200,
+            depth=1,
+            view="reader",
+            include_institutions=False,
+        )
+        assert off is not None
+        assert institution_nodes_in_reader_payload(off) == 0
+        assert (off.get("meta") or {}).get("include_institutions") is False
+
+        on = work_graph_neighborhood(
+            _StoresStub(neo_store),
+            w_id,
+            neighbor_limit=200,
+            depth=1,
+            view="reader",
+            include_institutions=True,
+        )
+        assert on is not None
+        meta = on.get("meta") or {}
+        assert meta.get("include_institutions") is True
+        assert meta.get("reader_extra_hops") == ["institution"]
+        assert int((meta.get("institutions") or {}).get("returned") or 0) >= 1
+        assert institution_nodes_in_reader_payload(on) >= 1
+        inst_ids = {str(n.get("id") or "") for n in on.get("nodes") or []}
+        assert inst1 in inst_ids
+        aff = [
+            e
+            for e in (on.get("edges") or [])
+            if str(e.get("type") or "").upper() == "AFFILIATED_WITH"
+            and (str(e.get("target") or "") == inst1 or str(e.get("source") or "") == inst1)
+        ]
+        assert aff, "expected Author–AFFILIATED_WITH–Institution in reader payload"
+        assert any(str(e.get("source") or "") == a1 for e in aff)
+
+        raw_on = work_graph_neighborhood(
+            _StoresStub(neo_store),
+            w_id,
+            neighbor_limit=200,
+            depth=1,
+            view="raw",
+            include_institutions=True,
+        )
+        assert raw_on is not None
+        raw_edges = [
+            e
+            for e in (raw_on.get("edges") or [])
+            if str(e.get("type") or "").upper() == "AFFILIATED_WITH"
+            and ash1 in (str(e.get("source") or ""), str(e.get("target") or ""))
+        ]
+        assert raw_edges, "expected Authorship–AFFILIATED_WITH–Institution in raw payload"
+    finally:
+        if neo_store is not None:
+            try:
+                neo_store.close()
+            except Exception:  # noqa: BLE001
+                pass
+        with driver.session() as session:
+            session.run(
+                "MATCH (n) WHERE n.id IN $ids DETACH DELETE n",
+                ids=[ws_id, w_id, a1, a2, ash1, ash2, inst1],
             )
         driver.close()
