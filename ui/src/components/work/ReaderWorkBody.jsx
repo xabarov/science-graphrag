@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
+import { useTheme } from "@mui/material/styles";
 
 import { workPdfUrl } from "../../services/researchApi.js";
 import { describeTraceabilityState } from "./traceabilityState.js";
@@ -43,6 +44,7 @@ export default function ReaderWorkBody({
   onWorkMetaChange,
 }) {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
   const claimsUi = import.meta.env?.VITE_CLAIMS_ENABLED === "true";
   const { detail, chunks, extractedBodyPayload, loading, error, pdfAvailable, viewMode, setViewMode } =
     useReaderWorkData(workId);
@@ -144,8 +146,8 @@ export default function ReaderWorkBody({
     <Box sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
       {loading ? (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 2 }}>
-          <CircularProgress size={22} sx={{ color: "rgba(129,140,248,0.9)" }} />
-          <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>{t("readerBody.loading")}</Typography>
+          <CircularProgress size={22} sx={{ color: tk.accent.fg }} />
+          <Typography sx={{ fontSize: "0.8125rem", color: tk.text.muted }}>{t("readerBody.loading")}</Typography>
         </Box>
       ) : null}
       {error ? (
@@ -172,7 +174,7 @@ export default function ReaderWorkBody({
             fallback={
               <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 2 }}>
                 <CircularProgress size={22} />
-                <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>{t("readerBody.pdfLoading")}</Typography>
+                <Typography sx={{ fontSize: "0.8125rem", color: tk.text.muted }}>{t("readerBody.pdfLoading")}</Typography>
               </Box>
             }
           >

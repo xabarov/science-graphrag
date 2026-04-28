@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useMemo } from "react";
 import Box from "@mui/material/Box";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Tooltip from "@mui/material/Tooltip";
+import { useTheme } from "@mui/material/styles";
 import DocumentScannerOutlinedIcon from "@mui/icons-material/DocumentScannerOutlined";
 import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
 
@@ -15,6 +16,33 @@ import { useI18n } from "../../i18n/useI18n.js";
  */
 export default function ReaderPdfModeToggle({ viewMode, onViewModeChange }) {
   const { t } = useI18n();
+  const tk = useTheme().appTokens;
+  const groupSx = useMemo(
+    () => ({
+      "& .MuiToggleButton-root": {
+        px: 1.15,
+        py: 0.65,
+        border: `1px solid ${tk.border.strong}`,
+        color: tk.text.secondary,
+        "&:hover": {
+          backgroundColor: tk.control.outlinedBgHover,
+          borderColor: tk.control.outlinedBorderHover,
+        },
+      },
+      "& .MuiToggleButtonGroup-grouped": {
+        borderColor: tk.border.strong,
+      },
+      "& .Mui-selected": {
+        backgroundColor: `${tk.accent.softBg} !important`,
+        color: tk.accent.fg,
+        borderColor: tk.accent.softBorder,
+        "&:hover": {
+          backgroundColor: `${tk.accent.emphasisHoverBg} !important`,
+        },
+      },
+    }),
+    [tk],
+  );
 
   return (
     <Box sx={{ mb: 1.5, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }}>
@@ -25,29 +53,7 @@ export default function ReaderPdfModeToggle({ viewMode, onViewModeChange }) {
         onChange={(_e, v) => {
           if (v) onViewModeChange(v);
         }}
-        sx={{
-          "& .MuiToggleButton-root": {
-            px: 1.15,
-            py: 0.65,
-            border: "1px solid rgba(255,255,255,0.12)",
-            color: "rgba(255,255,255,0.55)",
-            "&:hover": {
-              backgroundColor: "rgba(255,255,255,0.05)",
-              borderColor: "rgba(255,255,255,0.18)",
-            },
-          },
-          "& .MuiToggleButtonGroup-grouped": {
-            borderColor: "rgba(255,255,255,0.12)",
-          },
-          "& .Mui-selected": {
-            backgroundColor: "rgba(99,102,241,0.15)",
-            color: "rgba(129,140,248,0.95)",
-            borderColor: "rgba(99,102,241,0.35)",
-            "&:hover": {
-              backgroundColor: "rgba(99,102,241,0.2)",
-            },
-          },
-        }}
+        sx={groupSx}
       >
         <Tooltip title={t("readerBody.viewOcrTooltip")} enterDelay={400}>
           <ToggleButton value="ocr" aria-label={t("readerBody.viewOcrTooltip")}>

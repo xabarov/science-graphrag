@@ -1,10 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
-import { SHELL_NAVIGATION_INTENT_EVENT } from "../../components/layout/shellNavigationEvents.js";
-import {
-  GRAPH_CANVAS_POINTER_DOWN_EVENT,
-  GRAPH_CANVAS_POINTER_UP_EVENT,
-} from "../../components/graph/graphCanvasPointerEvents.js";
+import { useGraphPhysicsPolicy } from "./useGraphPhysicsPolicy.js";
 import { getScienceDesiredDistance } from "../../components/graph/physics/desiredLinkDistance.js";
 import { getNodeCluster } from "../../components/graph/physics/structuralCommunities.js";
 import { detectScienceHybridCommunities } from "../../components/graph/physics/scienceHybridCommunities.js";
@@ -38,6 +34,7 @@ import { fastInvSqrt, fastSqrt, getRepulsionMultiplier } from "../../components/
  * @param {React.MutableRefObject<{ id: string, x: number, y: number } | null>} draggedNodePositionRef
  * @param {{ width: number, height: number }} canvasSize
  * @param {string} simulationSignature topology + optional run id (restarts) so cooling/communities reset without graph change
+ * @param {EventTarget} [pointerEventTarget] Optional bus for canvas pointer pause events (defaults to `window` via useGraphPhysicsPolicy).
  */
 export function useScienceGraphForceSimulation(
   enabled,
@@ -51,6 +48,7 @@ export function useScienceGraphForceSimulation(
   draggedNodePositionRef,
   canvasSize,
   simulationSignature,
+  pointerEventTarget,
 ) {
   const animationRef = useRef(null);
   const boundsRef = useRef(null);
@@ -62,88 +60,16 @@ export function useScienceGraphForceSimulation(
   const isSimStableRef = useRef(isSimulationStable);
   isSimStableRef.current = isSimulationStable;
   const prevRepulsionRef = useRef(repulsionStrength);
-  const shellNavigationResumeRef = useRef(null);
-  const canvasPointerResumeRef = useRef(null);
-  const [pausedForShellNavigation, setPausedForShellNavigation] = useState(false);
-  const [pausedForGraphCanvasPointer, setPausedForGraphCanvasPointer] = useState(false);
+
+  const { integrationBlocked } = useGraphPhysicsPolicy({
+    enabled,
+    simulationSignature,
+    animationFrameRef: animationRef,
+    pointerEventTarget,
+  });
 
   useEffect(() => {
-    if (shellNavigationResumeRef.current) {
-      window.clearTimeout(shellNavigationResumeRef.current);
-      shellNavigationResumeRef.current = null;
-    }
-    if (canvasPointerResumeRef.current) {
-      window.clearTimeout(canvasPointerResumeRef.current);
-      canvasPointerResumeRef.current = null;
-    }
-    setPausedForShellNavigation(false);
-    setPausedForGraphCanvasPointer(false);
-  }, [enabled, simulationSignature]);
-
-  useEffect(() => {
-    if (!enabled) return undefined;
-    const handleShellNavigationIntent = () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-        animationRef.current = null;
-      }
-      setPausedForShellNavigation(true);
-      if (shellNavigationResumeRef.current) window.clearTimeout(shellNavigationResumeRef.current);
-      // The drawer click needs a quiet frame to commit routing. If navigation is blocked or aborted,
-      // resume quickly so the graph remains interactive.
-      shellNavigationResumeRef.current = window.setTimeout(() => {
-        shellNavigationResumeRef.current = null;
-        setPausedForShellNavigation(false);
-      }, 250);
-    };
-    window.addEventListener(SHELL_NAVIGATION_INTENT_EVENT, handleShellNavigationIntent);
-    return () => {
-      if (shellNavigationResumeRef.current) {
-        window.clearTimeout(shellNavigationResumeRef.current);
-        shellNavigationResumeRef.current = null;
-      }
-      window.removeEventListener(SHELL_NAVIGATION_INTENT_EVENT, handleShellNavigationIntent);
-    };
-  }, [enabled]);
-
-  useEffect(() => {
-    if (!enabled) return undefined;
-    const handleCanvasPointerDown = () => {
-      if (canvasPointerResumeRef.current) {
-        window.clearTimeout(canvasPointerResumeRef.current);
-        canvasPointerResumeRef.current = null;
-      }
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-        animationRef.current = null;
-      }
-      setPausedForGraphCanvasPointer(true);
-    };
-    const handleCanvasPointerUp = () => {
-      if (canvasPointerResumeRef.current) {
-        window.clearTimeout(canvasPointerResumeRef.current);
-        canvasPointerResumeRef.current = null;
-      }
-      // Let pointer-up handlers (e.g. node selection) run before physics resumes.
-      canvasPointerResumeRef.current = window.setTimeout(() => {
-        canvasPointerResumeRef.current = null;
-        setPausedForGraphCanvasPointer(false);
-      }, 0);
-    };
-    window.addEventListener(GRAPH_CANVAS_POINTER_DOWN_EVENT, handleCanvasPointerDown);
-    window.addEventListener(GRAPH_CANVAS_POINTER_UP_EVENT, handleCanvasPointerUp);
-    return () => {
-      if (canvasPointerResumeRef.current) {
-        window.clearTimeout(canvasPointerResumeRef.current);
-        canvasPointerResumeRef.current = null;
-      }
-      window.removeEventListener(GRAPH_CANVAS_POINTER_DOWN_EVENT, handleCanvasPointerDown);
-      window.removeEventListener(GRAPH_CANVAS_POINTER_UP_EVENT, handleCanvasPointerUp);
-    };
-  }, [enabled]);
-
-  useEffect(() => {
-    if (!enabled || pausedForShellNavigation || pausedForGraphCanvasPointer || nodes.length === 0) {
+    if (!enabled || integrationBlocked || nodes.length === 0) {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
         animationRef.current = null;
@@ -508,9 +434,9 @@ export function useScienceGraphForceSimulation(
     // eslint-disable-next-line react-hooks/exhaustive-deps -- simulation uses setNodes(prev=>...); full `nodes` would restart every frame
   }, [
     enabled,
-    pausedForShellNavigation,
-    pausedForGraphCanvasPointer,
+    integrationBlocked,
     simulationSignature,
+    pointerEventTarget,
     links,
     repulsionStrength,
     isSimulationStable,

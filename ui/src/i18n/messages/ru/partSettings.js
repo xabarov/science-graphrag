@@ -96,15 +96,15 @@ export default {
   "settings.storage.redis.title": "Redis",
   "settings.storage.redis.subtitle": "Кэш, блокировки и при необходимости брокер задач.",
   "settings.storage.redis.url": "URL Redis",
-  "settings.storage.paths.title": "Локальные пути",
-  "settings.storage.paths.subtitle": "Каталоги на диске для blob и артефактов сборки.",
+  "settings.storage.paths.title": "Пути на диске (кэш и зеркало)",
+  "settings.storage.paths.subtitle":
+    "Каталоги на хосте только для зеркала и кэша blob/артефактов. Очередь ingest, raw blobs и объекты артефактов хранятся в бакете MinIO/S3.",
   "settings.storage.paths.blobRoot": "Корень blob",
   "settings.storage.paths.artifactRoot": "Корень артефактов",
-  "settings.storage.s3.title": "S3 / объектное хранилище",
-  "settings.storage.s3.subtitle": "Обязательный S3-совместимый API (например MinIO) для блобов ingest, артефактов, benchmark и диагностики.",
-  "settings.storage.s3.mandatoryNotice":
-    "Объектное хранилище всегда включено: очередь ingest, сырые блобы, артефакты извлечения, полные JSON benchmark и диагностические дампы пишутся в настроенный бакет и префиксы.",
-  "settings.storage.s3.objectStorageEnabled": "Объектное хранилище включено",
+  "settings.storage.s3.title": "MinIO / S3",
+  "settings.storage.s3.subtitle":
+    "Очередь ingest, raw blobs, артефакты извлечения, полные JSON benchmark и diagnostics используют этот S3-совместимый бакет.",
+  "settings.storage.s3.envHint": "Имена переменных для переопределения — в .env.example: {{keys}}",
   "settings.storage.s3.endpoint": "URL endpoint S3",
   "settings.storage.s3.bucket": "Бакет",
   "settings.storage.s3.useSsl": "TLS для S3",
@@ -112,8 +112,6 @@ export default {
   "settings.storage.s3.artifactPrefix": "Префикс ключей артефактов",
   "settings.storage.s3.accessKeyId": "Access key ID",
   "settings.storage.s3.secretKey": "Secret access key (опциональное обновление)",
-  "settings.storage.s3.benchmarkRunsObjectStorage": "Хранить JSON прогонов benchmark в S3",
-  "settings.storage.s3.diagnosticsObjectStorage": "Хранить диагностические дампы в S3",
   "settings.storage.s3.benchmarkPrefix": "Префикс ключей benchmark",
   "settings.storage.s3.diagnosticsPrefix": "Префикс ключей diagnostics",
 

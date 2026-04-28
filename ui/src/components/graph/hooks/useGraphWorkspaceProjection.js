@@ -48,8 +48,14 @@ export function useGraphWorkspaceProjection({
   );
   const resolvedSelectedNodeId = useMemo(() => {
     if (resolvedSelectedEdgeId) return "";
-    return resolveSelectedNodeId(visibleGraph, projectedResolvedNodeId);
-  }, [visibleGraph, projectedResolvedNodeId, resolvedSelectedEdgeId]);
+    const pref = normalizeGraphNodeId(projectedResolvedNodeId);
+    if (!pref) return resolveSelectedNodeId(visibleGraph, "");
+    if (visibleGraph.nodes.some((n) => n.id === pref)) return pref;
+    // Keep URL selection when the node exists in the loaded graph but is hidden by the type filter
+    // (detail panel uses projected graph; otherwise reconcile would snap the URL to another node).
+    if (projectedGraph.nodes.some((n) => n.id === pref)) return pref;
+    return resolveSelectedNodeId(visibleGraph, "");
+  }, [visibleGraph, projectedGraph, projectedResolvedNodeId, resolvedSelectedEdgeId]);
   const { displayGraph, capWarnings } = useMemo(
     () => capGraphForUi(visibleGraph, resolvedSelectedNodeId),
     [visibleGraph, resolvedSelectedNodeId],

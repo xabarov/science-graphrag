@@ -6,13 +6,15 @@ import { useTheme } from "@mui/material/styles";
 import GraphCanvasViewToolbar from "./GraphCanvasViewToolbar.jsx";
 import { useI18n } from "../../i18n/useI18n.js";
 import { computeFitTransformForNodeSubset } from "./graphCanvasCamera.js";
-import { computeFitTransform, computeWorldLayout, screenToWorld, worldRadiusForNodeCount } from "./graphCanvasTransform.js";
+import { computeWorldLayout, screenToWorld, worldRadiusForNodeCount } from "./graphCanvasTransform.js";
 import { localizeAggregatorTitle, localizeEdgeType } from "./graphLocalize.js";
 import { drawCommunityHulls } from "./graphCanvasDrawCommunityHulls.js";
 import { drawEdges, drawLabels, drawNodes } from "./graphCanvasDraw.js";
 import { getGraphLayoutSignature } from "./graphFlowAdapter.js";
 import { buildSimulationState } from "./graphSimulationAdapter.js";
+import { useGraphPhysicsPointerBridge } from "./GraphPhysicsPointerBridgeContext.jsx";
 import useGraphCanvasInput from "./hooks/useGraphCanvasInput.js";
+import useGraphCanvasViewport from "./hooks/useGraphCanvasViewport.js";
 import { useGraphCanvasTopologyReseed } from "./hooks/useGraphCanvasTopologyReseed.js";
 import { useScienceGraphForceSimulation } from "../../hooks/graph/useScienceGraphForceSimulation.js";
 import { percentToRepulsion, REPULSION_DEFAULT_PERCENT } from "./physics/simConstants.js";
@@ -29,6 +31,14 @@ const MIN_SCALE = 0.06;
 const MAX_SCALE = 8;
 
 const EMPTY_COMMUNITY_MAP = new Map();
+
+/*
+ * Force-layout interaction contract (canvas MVP):
+ * - In "force" mode, hit-testing for clicks/drags reads live node positions from simNodes via getPositionsForFrame().
+ *   If the physics integrator mutates those positions between pointerdown and pointerup, the released click can miss
+ *   the intended node; integration is therefore paused for primary pointer sessions on the canvas (see useGraphPhysicsPolicy).
+ * - Shell drawer navigation dispatches a short navigation-intent pause so the router can commit before rAF-heavy work resumes.
+ */
 
 /** @returns {"all" | "interaction" | "adaptive"} */
 function readEdgeLabelModeStored() {
@@ -96,18 +106,16 @@ export default function GraphCanvasMvp({
     [t],
   );
 
+  const physicsPointerBridge = useGraphPhysicsPointerBridge();
+  const physicsPointerBus = physicsPointerBridge?.pointerBus;
+
   const canvasRef = useRef(null);
   const wrapRef = useRef(null);
-  const canvasHostRef = useRef(null);
   const positionsRef = useRef(new Map());
-  const transformRef = useRef({ scale: 1, tx: 0, ty: 0 });
   const fixedNodesRef = useRef(new Set());
   const draggedNodePositionRef = useRef(null);
   const simNodesRef = useRef([]);
-  const prevLayoutModeRef = useRef(layoutMode);
 
-  const [transform, setTransform] = useState({ scale: 1, tx: 0, ty: 0 });
-  const [hostSize, setHostSize] = useState({ width: 0, height: 0 });
   const [simNodes, setSimNodes] = useState([]);
   const [simLinks, setSimLinks] = useState([]);
   const [isSimulationStable, setIsSimulationStable] = useState(false);
@@ -145,53 +153,38 @@ export default function GraphCanvasMvp({
     return m;
   }, [nodeCommunityMap]);
 
-  const canvasSize = useMemo(
-    () => ({ width: Math.max(1, hostSize.width || 1), height: Math.max(MIN_CANVAS_HEIGHT, hostSize.height || MIN_CANVAS_HEIGHT) }),
-    [hostSize.height, hostSize.width],
-  );
   useEffect(() => {
     simNodesRef.current = simNodes;
   }, [simNodes]);
-
-  const getViewportDims = useCallback(() => {
-    const host = canvasHostRef.current;
-    return {
-      w: Math.max(1, hostSize.width || host?.clientWidth || 1),
-      h: Math.max(MIN_CANVAS_HEIGHT, hostSize.height || host?.clientHeight || MIN_CANVAS_HEIGHT),
-    };
-  }, [hostSize.height, hostSize.width]);
 
   const getPositionsForFrame = useCallback(() => {
     if (simNodes.length > 0 && layoutMode === "force") return new Map(simNodes.map((n) => [n.id, { x: n.x, y: n.y }]));
     return computeWorldLayout(graph.nodes, layoutWorldRadius);
   }, [graph.nodes, layoutMode, layoutWorldRadius, simNodes]);
 
-  const applyFit = useCallback(
-    /**
-     * @param {"auto" | "force" | "circle"} [mode]
-     * @param {Map<string, { x: number, y: number }> | null} [seedPositions] When set (topology re-seed / force restart),
-     *   fit to these coords; otherwise force mode reads simNodesRef, which may lag one commit behind setSimNodes.
-     */
-    (mode = "auto", seedPositions = null) => {
-      if (graph.nodes.length === 0) return;
-      const { w, h } = getViewportDims();
-      let positions;
-      if (seedPositions instanceof Map && seedPositions.size > 0) {
-        positions = seedPositions;
-      } else {
-        const useForce =
-          (mode === "force" || (mode === "auto" && layoutMode === "force")) && simNodesRef.current.length > 0;
-        positions = useForce
-          ? new Map(simNodesRef.current.map((n) => [n.id, { x: n.x, y: n.y }]))
-          : computeWorldLayout(graph.nodes, layoutWorldRadius);
-      }
-      positionsRef.current = positions;
-      const next = clampFitTransform(computeFitTransform(positions, w, h, NODE_RADIUS, FIT_PADDING));
-      transformRef.current = next;
-      setTransform(next);
-    },
-    [getViewportDims, graph.nodes, layoutMode, layoutWorldRadius],
-  );
+  const viewport = useGraphCanvasViewport({
+    graph,
+    layoutMode,
+    layoutWorldRadius,
+    simNodesRef,
+    positionsRef,
+    topologySignature,
+    getPositionsForFrame,
+    centerRequestNonce,
+    centerRequestNodeId,
+  });
+
+  const {
+    canvasHostRef,
+    canvasSize,
+    transform,
+    setTransform,
+    transformRef,
+    getViewportDims,
+    applyFit,
+    centerViewportOnNode,
+    handleToolbarResetZoom,
+  } = viewport;
 
   const onNodeClick = useCallback(
     (nodeId) => {
@@ -249,6 +242,7 @@ export default function GraphCanvasMvp({
     draggedNodePositionRef,
     canvasSize,
     simulationSignature,
+    physicsPointerBus,
   );
 
   useGraphCanvasTopologyReseed({
@@ -267,46 +261,6 @@ export default function GraphCanvasMvp({
     positionsRef,
   });
 
-  const applyFitRef = useRef(applyFit);
-  useEffect(() => {
-    applyFitRef.current = applyFit;
-  });
-
-  useEffect(() => {
-    const prev = prevLayoutModeRef.current;
-    prevLayoutModeRef.current = layoutMode;
-    if (prev === layoutMode) return;
-    if (prev === "force" && layoutMode === "circle") {
-      requestAnimationFrame(() => applyFitRef.current?.("circle"));
-    } else if (prev === "circle" && layoutMode === "force") {
-      requestAnimationFrame(() => applyFitRef.current?.("force"));
-    }
-  }, [layoutMode]);
-
-  useEffect(() => {
-    transformRef.current = transform;
-  }, [transform]);
-
-  // Re-fit camera in non-force layouts strictly when topology changes (not when
-  // applyFit identity is rebuilt by a viewport resize / details panel toggle).
-  useEffect(() => {
-    if (layoutMode !== "force") {
-      requestAnimationFrame(() => applyFitRef.current?.("circle"));
-    }
-  }, [topologySignature, layoutMode]);
-
-  useEffect(() => {
-    const host = canvasHostRef.current;
-    if (!host) return undefined;
-    const ro = new ResizeObserver((entries) => {
-      const cr = entries[0]?.contentRect;
-      if (!cr) return;
-      setHostSize({ width: Math.max(1, Math.floor(cr.width)), height: Math.max(MIN_CANVAS_HEIGHT, Math.floor(cr.height)) });
-    });
-    ro.observe(host);
-    return () => ro.disconnect();
-  }, []);
-
   useEffect(() => {
     try {
       window.localStorage.setItem(LS_GRAPH_CANVAS_REPULSION, String(repulsionPercent));
@@ -322,34 +276,6 @@ export default function GraphCanvasMvp({
       /* ignore */
     }
   }, [edgeLabelMode]);
-
-  const centerViewportOnNode = useCallback(
-    (nodeId) => {
-      if (!nodeId) return;
-      const positions = getPositionsForFrame();
-      const pw = positions.get(nodeId);
-      if (!pw) return;
-      const { w, h } = getViewportDims();
-      const scale = transformRef.current.scale;
-      const next = { scale, tx: w / 2 - pw.x * scale, ty: h / 2 - pw.y * scale };
-      transformRef.current = next;
-      setTransform(next);
-    },
-    [getPositionsForFrame, getViewportDims],
-  );
-
-  const handleToolbarResetZoom = useCallback(() => {
-    const { w, h } = getViewportDims();
-    const world = screenToWorld(w / 2, h / 2, transformRef.current.scale, transformRef.current.tx, transformRef.current.ty);
-    const next = { scale: 1, tx: w / 2 - world.x, ty: h / 2 - world.y };
-    transformRef.current = next;
-    setTransform(next);
-  }, [getViewportDims]);
-
-  useEffect(() => {
-    if (!centerRequestNonce || !centerRequestNodeId) return;
-    centerViewportOnNode(centerRequestNodeId);
-  }, [centerRequestNonce, centerRequestNodeId, centerViewportOnNode]);
 
   useEffect(() => {
     const el = canvasRef.current;
@@ -369,6 +295,8 @@ export default function GraphCanvasMvp({
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
+    // Mount once: wheel handler reads latest transform via transformRef.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable canvas + ref indirection
   }, []);
 
   useEffect(() => {
@@ -450,6 +378,8 @@ export default function GraphCanvasMvp({
     selectedEdgeId,
     selectedNodeId,
     transform,
+    canvasHostRef,
+    transformRef,
   ]);
 
   const handleCanvasDoubleClick = useCallback(
@@ -464,7 +394,7 @@ export default function GraphCanvasMvp({
       transformRef.current = next;
       setTransform(next);
     },
-    [getPositionsForFrame, getViewportDims, graph.nodes.length, selectedNodeId, setTransform],
+    [getPositionsForFrame, getViewportDims, graph.nodes.length, selectedNodeId, setTransform, transformRef],
   );
 
   if (graph.nodes.length === 0) {

@@ -309,6 +309,115 @@ export default function StorageSettingsPanel({ storage, saving, saveError, onSav
         defaultExpanded
         accordionSx={storageAccordionSx}
         tk={tk}
+        summaryStart={<BrandSvgIcon icon={siMinio} />}
+        title={t("settings.storage.s3.title")}
+        subtitle={t("settings.storage.s3.subtitle")}
+      >
+        <Typography sx={{ marginBottom: 1, fontSize: "0.75rem", color: tk.text.muted }}>
+          {t("settings.storage.s3.envHint", {
+            keys: "SCIENCE_GRAPHRAG_S3_ENDPOINT_URL, SCIENCE_GRAPHRAG_S3_ACCESS_KEY_ID, SCIENCE_GRAPHRAG_S3_SECRET_ACCESS_KEY, SCIENCE_GRAPHRAG_S3_BUCKET, …",
+          })}
+        </Typography>
+        <TextField
+          margin="normal"
+          fullWidth
+          label={t("settings.storage.s3.endpoint")}
+          value={s3EndpointUrl}
+          onChange={(e) => setS3EndpointUrl(e.target.value)}
+          sx={fieldSx}
+          size="small"
+        />
+        <TextField
+          margin="normal"
+          fullWidth
+          label={t("settings.storage.s3.bucket")}
+          value={s3Bucket}
+          onChange={(e) => setS3Bucket(e.target.value)}
+          sx={fieldSx}
+          size="small"
+        />
+        <FormControlLabel
+          control={<Switch checked={s3UseSsl} onChange={(e) => setS3UseSsl(e.target.checked)} />}
+          label={<Typography sx={{ fontSize: "0.8125rem" }}>{t("settings.storage.s3.useSsl")}</Typography>}
+        />
+        <FormControl margin="normal" fullWidth size="small" sx={fieldSx}>
+          <InputLabel id="s3-addressing-style">{t("settings.storage.s3.addressingStyle")}</InputLabel>
+          <Select
+            labelId="s3-addressing-style"
+            label={t("settings.storage.s3.addressingStyle")}
+            value={s3AddressingStyle}
+            onChange={(e) => setS3AddressingStyle(e.target.value)}
+          >
+            <MenuItem value="path">path</MenuItem>
+            <MenuItem value="virtual">virtual</MenuItem>
+          </Select>
+        </FormControl>
+        <TextField
+          margin="normal"
+          fullWidth
+          label={t("settings.storage.s3.artifactPrefix")}
+          value={s3ArtifactKeyPrefix}
+          onChange={(e) => setS3ArtifactKeyPrefix(e.target.value)}
+          sx={fieldSx}
+          size="small"
+        />
+        <TextField
+          margin="normal"
+          fullWidth
+          label={t("settings.storage.s3.accessKeyId")}
+          value={s3AccessKeyId}
+          onChange={(e) => setS3AccessKeyId(e.target.value)}
+          sx={fieldSx}
+          size="small"
+        />
+        <TextField
+          margin="normal"
+          fullWidth
+          type="password"
+          label={t("settings.storage.s3.secretKey")}
+          helperText={storage?.s3?.fields?.s3_secret_access_key?.masked || ""}
+          value={s3SecretAccessKey}
+          onChange={(e) => setS3SecretAccessKey(e.target.value)}
+          sx={fieldSx}
+          size="small"
+        />
+        <FormControlLabel
+          control={
+            <Checkbox
+              size="small"
+              checked={clearS3Secret}
+              onChange={(e) => {
+                setClearS3Secret(e.target.checked);
+                if (e.target.checked) setS3SecretAccessKey("");
+              }}
+            />
+          }
+          label={<Typography sx={{ fontSize: "0.8125rem" }}>{t("settings.storage.secret.clearUseEnv")}</Typography>}
+        />
+        <TextField
+          margin="normal"
+          fullWidth
+          label={t("settings.storage.s3.benchmarkPrefix")}
+          value={s3BenchmarkRunsKeyPrefix}
+          onChange={(e) => setS3BenchmarkRunsKeyPrefix(e.target.value)}
+          sx={fieldSx}
+          size="small"
+        />
+        <TextField
+          margin="normal"
+          fullWidth
+          label={t("settings.storage.s3.diagnosticsPrefix")}
+          value={s3DiagnosticsKeyPrefix}
+          onChange={(e) => setS3DiagnosticsKeyPrefix(e.target.value)}
+          sx={fieldSx}
+          size="small"
+        />
+      </StorageSectionAccordion>
+
+      <StorageSectionAccordion
+        defaultExpanded
+        accordionSx={storageAccordionSx}
+        tk={tk}
         summaryStart={<BrandSvgIcon icon={siNeo4j} />}
         title={t("settings.storage.neo4j.title")}
         subtitle={t("settings.storage.neo4j.subtitle")}
@@ -491,113 +600,6 @@ export default function StorageSettingsPanel({ storage, saving, saveError, onSav
           label={t("settings.storage.paths.artifactRoot")}
           value={artifactRoot}
           onChange={(e) => setArtifactRoot(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-      </StorageSectionAccordion>
-
-      <StorageSectionAccordion
-        defaultExpanded={false}
-        accordionSx={storageAccordionSx}
-        tk={tk}
-        summaryStart={<BrandSvgIcon icon={siMinio} />}
-        title={t("settings.storage.s3.title")}
-        subtitle={t("settings.storage.s3.subtitle")}
-      >
-        <Alert severity="info" sx={alertMutedSx}>
-          <Typography sx={{ fontSize: "0.8125rem", lineHeight: 1.6 }}>{t("settings.storage.s3.mandatoryNotice")}</Typography>
-        </Alert>
-        <TextField
-          margin="normal"
-          fullWidth
-          label={t("settings.storage.s3.endpoint")}
-          value={s3EndpointUrl}
-          onChange={(e) => setS3EndpointUrl(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-        <TextField
-          margin="normal"
-          fullWidth
-          label={t("settings.storage.s3.bucket")}
-          value={s3Bucket}
-          onChange={(e) => setS3Bucket(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-        <FormControlLabel
-          control={<Switch checked={s3UseSsl} onChange={(e) => setS3UseSsl(e.target.checked)} />}
-          label={<Typography sx={{ fontSize: "0.8125rem" }}>{t("settings.storage.s3.useSsl")}</Typography>}
-        />
-        <FormControl margin="normal" fullWidth size="small" sx={fieldSx}>
-          <InputLabel id="s3-addressing-style">{t("settings.storage.s3.addressingStyle")}</InputLabel>
-          <Select
-            labelId="s3-addressing-style"
-            label={t("settings.storage.s3.addressingStyle")}
-            value={s3AddressingStyle}
-            onChange={(e) => setS3AddressingStyle(e.target.value)}
-          >
-            <MenuItem value="path">path</MenuItem>
-            <MenuItem value="virtual">virtual</MenuItem>
-          </Select>
-        </FormControl>
-        <TextField
-          margin="normal"
-          fullWidth
-          label={t("settings.storage.s3.artifactPrefix")}
-          value={s3ArtifactKeyPrefix}
-          onChange={(e) => setS3ArtifactKeyPrefix(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-        <TextField
-          margin="normal"
-          fullWidth
-          label={t("settings.storage.s3.accessKeyId")}
-          value={s3AccessKeyId}
-          onChange={(e) => setS3AccessKeyId(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-        <TextField
-          margin="normal"
-          fullWidth
-          type="password"
-          label={t("settings.storage.s3.secretKey")}
-          helperText={storage?.s3?.fields?.s3_secret_access_key?.masked || ""}
-          value={s3SecretAccessKey}
-          onChange={(e) => setS3SecretAccessKey(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-        <FormControlLabel
-          control={
-            <Checkbox
-              size="small"
-              checked={clearS3Secret}
-              onChange={(e) => {
-                setClearS3Secret(e.target.checked);
-                if (e.target.checked) setS3SecretAccessKey("");
-              }}
-            />
-          }
-          label={<Typography sx={{ fontSize: "0.8125rem" }}>{t("settings.storage.secret.clearUseEnv")}</Typography>}
-        />
-        <TextField
-          margin="normal"
-          fullWidth
-          label={t("settings.storage.s3.benchmarkPrefix")}
-          value={s3BenchmarkRunsKeyPrefix}
-          onChange={(e) => setS3BenchmarkRunsKeyPrefix(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-        <TextField
-          margin="normal"
-          fullWidth
-          label={t("settings.storage.s3.diagnosticsPrefix")}
-          value={s3DiagnosticsKeyPrefix}
-          onChange={(e) => setS3DiagnosticsKeyPrefix(e.target.value)}
           sx={fieldSx}
           size="small"
         />

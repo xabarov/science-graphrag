@@ -7,6 +7,7 @@ import { useTheme } from "@mui/material/styles";
 import { useI18n } from "../../i18n/useI18n.js";
 import { describeTraceabilityState } from "../work/traceabilityState.js";
 import GraphCanvasMvp from "./GraphCanvasMvp.jsx";
+import { GraphPhysicsPointerBridgeProvider } from "./GraphPhysicsPointerBridgeContext.jsx";
 import GraphDebugInspector from "./GraphDebugInspector.jsx";
 import GraphFlowView from "./GraphFlowView.jsx";
 import GraphSidePanel from "./GraphSidePanel.jsx";
@@ -301,25 +302,27 @@ export default function GraphWorkspacePanel({
                   onSelectEdge={handleSelectEdge}
                 />
               ) : (
-                <GraphCanvasMvp
-                  graph={displayGraph}
-                  layoutMode={effectiveCanvasLayout}
-                  onCanvasLayoutModeChange={standalone ? undefined : setCanvasLayoutMode}
-                  selectedNodeId={resolvedSelectedNodeId}
-                  selectedEdgeId={resolvedSelectedEdgeId}
-                  onSelectNode={handleSelectNode}
-                  onSelectEdge={handleSelectEdge}
-                  onAggregatorExpand={(_, expandEndpoint) => expandAggregatorNode(expandEndpoint)}
-                  searchQuery={localFindQuery}
-                  searchMatchIds={nodeSearchMatchIds}
-                  centerRequestNonce={centerCanvasNonce}
-                  centerRequestNodeId={centerCanvasNodeId}
-                  graphColorBy={graphColorBy}
-                  onGraphColorByChange={handleGraphColorByChange}
-                  graphCommunityHulls={graphCommunityHulls}
-                  onGraphCommunityHullsChange={setGraphCommunityHulls}
-                  nodeCommunityMap={nodeCommunityMap}
-                />
+                <GraphPhysicsPointerBridgeProvider>
+                  <GraphCanvasMvp
+                    graph={displayGraph}
+                    layoutMode={effectiveCanvasLayout}
+                    onCanvasLayoutModeChange={standalone ? undefined : setCanvasLayoutMode}
+                    selectedNodeId={resolvedSelectedNodeId}
+                    selectedEdgeId={resolvedSelectedEdgeId}
+                    onSelectNode={handleSelectNode}
+                    onSelectEdge={handleSelectEdge}
+                    onAggregatorExpand={(_, expandEndpoint) => expandAggregatorNode(expandEndpoint)}
+                    searchQuery={localFindQuery}
+                    searchMatchIds={nodeSearchMatchIds}
+                    centerRequestNonce={centerCanvasNonce}
+                    centerRequestNodeId={centerCanvasNodeId}
+                    graphColorBy={graphColorBy}
+                    onGraphColorByChange={handleGraphColorByChange}
+                    graphCommunityHulls={graphCommunityHulls}
+                    onGraphCommunityHullsChange={setGraphCommunityHulls}
+                    nodeCommunityMap={nodeCommunityMap}
+                  />
+                </GraphPhysicsPointerBridgeProvider>
               )}
             </Box>
             <GraphSidePanel
@@ -333,11 +336,11 @@ export default function GraphWorkspacePanel({
               authorAuthoredWorks={inspector.authorAuthoredWorks}
               selectedEdgeReadable={inspector.selectedEdgeReadable}
               graphMeta={displayGraph.meta}
-              onSelectNode={onSelectNode}
-              onSelectEdge={onSelectEdge}
+              onSelectNode={handleSelectNode}
+              onSelectEdge={handleSelectEdge}
               onExpandWorkspaceNeighbors={wsId ? () => fetchNeighbors(resolvedSelectedNodeId) : undefined}
               onAggregatorExpand={(node, expandEndpoint) => {
-                onSelectNode?.(node?.id || "");
+                handleSelectNode(node?.id || "");
                 expandAggregatorNode(expandEndpoint);
               }}
               expandWorkspaceNeighborsBusy={expandNeighborsBusy}

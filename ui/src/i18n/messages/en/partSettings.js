@@ -96,15 +96,15 @@ export default {
   "settings.storage.redis.title": "Redis",
   "settings.storage.redis.subtitle": "Cache, locks, and optional job broker.",
   "settings.storage.redis.url": "Redis URL",
-  "settings.storage.paths.title": "Local paths",
-  "settings.storage.paths.subtitle": "On-disk roots for blobs and build artifacts.",
+  "settings.storage.paths.title": "Disk paths (cache & mirror)",
+  "settings.storage.paths.subtitle":
+    "Host paths for blob and artifact mirror/cache only. Canonical queue, raw, and artifact bytes are stored in the MinIO/S3 bucket.",
   "settings.storage.paths.blobRoot": "Blob root",
   "settings.storage.paths.artifactRoot": "Artifact root",
-  "settings.storage.s3.title": "S3 / object storage",
-  "settings.storage.s3.subtitle": "Required S3-compatible API (e.g. MinIO) for ingest blobs, artifacts, benchmarks, and diagnostics.",
-  "settings.storage.s3.mandatoryNotice":
-    "Object storage is always on: queue payloads, raw blobs, ingest artifacts, full benchmark JSON, and diagnostic dumps use the configured bucket and prefixes.",
-  "settings.storage.s3.objectStorageEnabled": "Object storage enabled",
+  "settings.storage.s3.title": "MinIO / S3",
+  "settings.storage.s3.subtitle":
+    "Queue payloads, raw blobs, ingest artifacts, benchmark full JSON, and diagnostics use this S3-compatible bucket.",
+  "settings.storage.s3.envHint": "Override names in .env.example: {{keys}}",
   "settings.storage.s3.endpoint": "S3 endpoint URL",
   "settings.storage.s3.bucket": "Bucket",
   "settings.storage.s3.useSsl": "Use TLS for S3",
@@ -112,8 +112,6 @@ export default {
   "settings.storage.s3.artifactPrefix": "Artifact key prefix",
   "settings.storage.s3.accessKeyId": "Access key ID",
   "settings.storage.s3.secretKey": "Secret access key (optional update)",
-  "settings.storage.s3.benchmarkRunsObjectStorage": "Store benchmark run JSON in S3",
-  "settings.storage.s3.diagnosticsObjectStorage": "Store diagnostics payloads in S3",
   "settings.storage.s3.benchmarkPrefix": "Benchmark runs key prefix",
   "settings.storage.s3.diagnosticsPrefix": "Diagnostics key prefix",
 

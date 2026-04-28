@@ -171,7 +171,8 @@ export default {
   "settings.snapshot.ingestion.label": "Загрузка и обработка документов",
   "settings.snapshot.ingestion.description": "PDF, front-matter, ссылки и настройка пайплайна извлечения.",
   "settings.snapshot.storage.label": "Хранилище и интеграции",
-  "settings.snapshot.storage.description": "Neo4j, Qdrant, Postgres, Redis, S3 и локальные пути данных.",
+  "settings.snapshot.storage.description":
+    "Neo4j, Qdrant, Postgres, Redis, обязательный MinIO/S3 и локальные пути-зеркало для blob/артефактов.",
   "settings.snapshot.benchmark.label": "Бенчмарк",
   "settings.snapshot.benchmark.description": "Настройки teacher/student и параметры запуска бенчмарков.",
   "settings.snapshot.security.label": "Безопасность и доступ",

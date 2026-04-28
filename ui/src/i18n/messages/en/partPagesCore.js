@@ -172,7 +172,8 @@ export default {
   "settings.snapshot.ingestion.label": "Ingestion",
   "settings.snapshot.ingestion.description": "PDF, front-matter, references, and extraction pipeline tuning.",
   "settings.snapshot.storage.label": "Storage & Integrations",
-  "settings.snapshot.storage.description": "Neo4j, Qdrant, Postgres, Redis, S3, and local data paths.",
+  "settings.snapshot.storage.description":
+    "Neo4j, Qdrant, Postgres, Redis, mandatory MinIO/S3, and local mirror paths for blobs/artifacts.",
   "settings.snapshot.benchmark.label": "Benchmark",
   "settings.snapshot.benchmark.description": "Teacher/student defaults and benchmark-specific execution knobs.",
   "settings.snapshot.security.label": "Security & Access",

@@ -45,6 +45,13 @@ Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-co
 
 Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies here).
 
+### [OPEN] Graph canvas — physics vs pointer policy (follow-up)
+- **Area:** [`ui/src/hooks/graph/useGraphPhysicsPolicy.js`](../../ui/src/hooks/graph/useGraphPhysicsPolicy.js), [`useScienceGraphForceSimulation.js`](../../ui/src/hooks/graph/useScienceGraphForceSimulation.js), [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx), [`GraphPhysicsPointerBridgeContext.jsx`](../../ui/src/components/graph/GraphPhysicsPointerBridgeContext.jsx), [`useGraphCanvasViewport.js`](../../ui/src/components/graph/hooks/useGraphCanvasViewport.js)
+- **Issue:** Pause reasons for force simulation were historically split across rAF, window events, and hit-test timing; easy to regress clicks or drawer navigation when changing the integrator.
+- **Proposal:** Extend vitest when adding new pause sources (e.g. modals); consider splitting `GraphCanvasMvp` further (draw loop vs chrome) if it grows again.
+- **Acceptance:** All integration-pause reasons flow through `useGraphPhysicsPolicy` (or documented successor); vitest covers pointer session vs `integrationBlocked`; shell + canvas smoke stay green.
+- **Raised:** 2026-04-29 (graph physics interaction cleanup plan)
+
 ### [OPEN] Graph reader DRY — slim `authorSemanticProjection` after server parity
 - **Area:** [`ui/src/components/graph/authorSemanticProjection.js`](../../ui/src/components/graph/authorSemanticProjection.js), [`useGraphWorkspaceData.js`](../../ui/src/components/graph/hooks/useGraphWorkspaceData.js), graph visibility / external-work filters
 - **Issue:** Client mirrors server reader authorship semantics for workspace payloads; risks drift vs `collapse_authorship_for_reader_view` (already fixed server-side for work graph). Optional work-graph `workspace_id` (backend plan) needs UI to pass context without reopening full workspace union URL.

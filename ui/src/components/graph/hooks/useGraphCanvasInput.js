@@ -3,6 +3,7 @@ import { flushSync } from "react-dom";
 import { screenToWorld } from "../graphCanvasTransform.js";
 import { hitTestClosestEdgeId, hitTestNodeScreen } from "../graphCanvasDraw.js";
 import { dispatchGraphCanvasPointerDown, dispatchGraphCanvasPointerUp } from "../graphCanvasPointerEvents.js";
+import { useGraphPhysicsPointerBridge } from "../GraphPhysicsPointerBridgeContext.jsx";
 
 const DRAG_THRESHOLD_PX = 5;
 export default function useGraphCanvasInput({
@@ -33,6 +34,9 @@ export default function useGraphCanvasInput({
   const [hoveredNodeId, setHoveredNodeId] = useState("");
   const [hoveredEdgeId, setHoveredEdgeId] = useState("");
   const [canvasCursor, setCanvasCursor] = useState("grab");
+  const physicsPointerBridge = useGraphPhysicsPointerBridge();
+  const pointerBus = physicsPointerBridge?.pointerBus;
+
   const hoverPickPendingRef = useRef(false);
   const hoverClientRef = useRef({ x: 0, y: 0 });
   const dragRef = useRef({ active: false, moved: false, startX: 0, startY: 0, startTx: 0, startTy: 0, pointerId: null });
@@ -94,7 +98,7 @@ export default function useGraphCanvasInput({
       if (ev.button !== 0) return;
       const canvas = canvasRef.current;
       if (!canvas) return;
-      dispatchGraphCanvasPointerDown();
+      dispatchGraphCanvasPointerDown(pointerBus);
       const rect = canvas.getBoundingClientRect();
       const x = ev.clientX - rect.left;
       const y = ev.clientY - rect.top;
@@ -138,6 +142,7 @@ export default function useGraphCanvasInput({
       setSimNodes,
       simNodes.length,
       transformRef,
+      pointerBus,
     ],
   );
 
@@ -258,7 +263,7 @@ export default function useGraphCanvasInput({
           queueHoverPick(ev.clientX, ev.clientY);
         }
       } finally {
-        dispatchGraphCanvasPointerUp();
+        dispatchGraphCanvasPointerUp(pointerBus);
       }
     },
     [
@@ -283,6 +288,7 @@ export default function useGraphCanvasInput({
       setIsSimulationStable,
       setPinnedNodeCount,
       transformRef,
+      pointerBus,
     ],
   );
 

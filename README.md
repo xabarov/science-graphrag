@@ -43,10 +43,12 @@ make prod-up
 cp .env.example .env
 python -m venv .venv
 .venv/bin/pip install -e ".[dev]"
-.venv/bin/science-graphrag config-check --no-strict
+.venv/bin/science-graphrag config-check
 ```
 
-В `.env` задайте **`SCIENCE_GRAPHRAG_OPENALEX_MAILTO`** — contact email для OpenAlex metadata enrichment (не секрет; то же значение можно задать в **Настройки → Общие** и сохранить в `data/settings/runtime_settings.json`). Для нормальной практической работы обычно достаточно одного ключа **`SCIENCE_GRAPHRAG_API_KEY`** (OpenAI-compatible, например OpenRouter): он используется для extraction, embeddings по пути OpenRouter и для VL PDF→Markdown. Без ключа стек поднимется, но extraction и качество обработки PDF будут заметно ограничены.
+В `.env` скопируйте блок **`SCIENCE_GRAPHRAG_S3_*`** из `.env.example` (для MinIO на хосте обычно `http://localhost:19000` и те же логин/пароль, что у сервиса `minio` в compose). Без непустых **access key / secret / bucket** `Settings()` на хосте не соберётся — это обязательное объектное хранилище для очереди ingest, raw blobs, артефактов и benchmark.
+
+Далее задайте **`SCIENCE_GRAPHRAG_OPENALEX_MAILTO`** — contact email для OpenAlex (не секрет; можно в **Настройки → Общие**). Для extraction и VL обычно нужен **`SCIENCE_GRAPHRAG_API_KEY`** (OpenRouter и т.п.); без него `config-check` завершится с кодом 1, пока не передать `--no-strict`.
 
 Для prod-like режима:
 
