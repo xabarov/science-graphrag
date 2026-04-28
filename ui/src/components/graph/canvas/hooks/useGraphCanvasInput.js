@@ -12,7 +12,7 @@ const DRAG_THRESHOLD_PX = 5;
  * Canvas pointer wiring for {@link GraphCanvasMvp}.
  *
  * @param {object} opts
- * @param {import("react").MutableRefObject<import("../graphSimulationAdapter.js").SimNode[]>} opts.simNodesRef Live sim buffer for force mode (mutated on drag).
+ * @param {import("react").MutableRefObject<import("../../model/graphSimulationAdapter.js").SimNode[]>} opts.simNodesRef Live sim buffer for force mode (mutated on drag).
  * @param {() => void} opts.invokeCanvasRedraw Repaint canvas without waiting for React (physics rAF + drag moves).
  */
 export default function useGraphCanvasInput({

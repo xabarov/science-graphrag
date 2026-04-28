@@ -18,7 +18,7 @@ function clampFitTransform(fit) {
  * @param {{ nodes: unknown[], edges: unknown[] }} opts.graph
  * @param {"circle" | "force"} opts.layoutMode
  * @param {number} opts.layoutWorldRadius
- * @param {React.MutableRefObject<import("../graphSimulationAdapter.js").SimNode[]>} opts.simNodesRef
+ * @param {React.MutableRefObject<import("../../model/graphSimulationAdapter.js").SimNode[]>} opts.simNodesRef
  * @param {React.MutableRefObject<Map<string, { x: number, y: number }>>} opts.positionsRef
  * @param {string} opts.topologySignature
  * @param {() => Map<string, { x: number, y: number }>} opts.getPositionsForFrame

@@ -1,6 +1,6 @@
 import { useLayoutEffect } from "react";
 
-import { reconcileGraphWorkspaceSelection } from "../graphSelectionPolicy.js";
+import { reconcileGraphWorkspaceSelection } from "../model/graphSelectionPolicy.js";
 
 /**
  * Applies {@link reconcileGraphWorkspaceSelection} once per paint when props disagree

@@ -2,7 +2,7 @@
  * Builds force-simulation state from a normalized, UI-capped graph.
  */
 
-import { computeWorldLayout, worldRadiusForNodeCount } from "./graphCanvasTransform.js";
+import { computeWorldLayout, worldRadiusForNodeCount } from "../canvas/graphCanvasTransform.js";
 
 /**
  * @typedef {{ id: string, x: number, y: number, vx: number, vy: number, type: string, label: string, workspaceMembership?: string }} SimNode

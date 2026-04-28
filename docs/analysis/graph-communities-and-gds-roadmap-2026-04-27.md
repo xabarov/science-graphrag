@@ -31,7 +31,7 @@
 
 ### 1.1 Текущая «кластеризация» на фронте — это union-find на одном edge-type, не community detection
 
-```9:58:ui/src/components/graph/physics/scienceHybridCommunities.js
+```9:58:ui/src/components/graph/canvas/physics/scienceHybridCommunities.js
 export function detectScienceHybridCommunities(nodes, links) {
   ...
   const SEMANTIC_EDGE_TYPES = new Set(["HAS_AUTHORSHIP", "OF_AUTHOR", "AUTHORED"]);
@@ -45,7 +45,7 @@ export function detectScienceHybridCommunities(nodes, links) {
 
 То есть «семантический кластер» в нашем смысле — это **связная компонента по рёбрам авторства**, без учёта `USES_METHOD`, `EVALUATED_ON`, `CITES`, `PUBLISHED_IN`. Кластеры выходят слишком крупные и не отражают тематические сообщества (а только «соавторские когорты»).
 
-LPA в [`structuralCommunities.js`](../../ui/src/components/graph/physics/structuralCommunities.js) реализован, но **нигде не вызывается** (`grep detectCommunities` по `ui/` находит только сам файл и его тест). Это мёртвый код.
+LPA в [`structuralCommunities.js`](../../ui/src/components/graph/canvas/physics/structuralCommunities.js) реализован, но **нигде не вызывается** (`grep detectCommunities` по `ui/` находит только сам файл и его тест). Это мёртвый код.
 
 ### 1.2 Кластеры влияют только на физику, нигде не визуализируются
 
@@ -61,7 +61,7 @@ if (communitiesRef.current && communityMap.size > 0) {
       const communityForce = dist * CLUSTER_ATTRACTION_STRENGTH * coolingTemperatureRef.current;
 ```
 
-`CLUSTER_ATTRACTION_STRENGTH = 0.0003` ([`simConstants.js`](../../ui/src/components/graph/physics/simConstants.js)). Никакого цвета по кластеру, никакой подписи, никакой обводки. Юзер видит «магнитное» поведение, но не понимает, **что за кластер**.
+`CLUSTER_ATTRACTION_STRENGTH = 0.0003` ([`simConstants.js`](../../ui/src/components/graph/canvas/physics/simConstants.js)). Никакого цвета по кластеру, никакой подписи, никакой обводки. Юзер видит «магнитное» поведение, но не понимает, **что за кластер**.
 
 ### 1.3 Backend GDS-обвязка есть, но без алгоритмов
 
@@ -90,7 +90,7 @@ Aggregator есть только локально: per-Work и при ≥ 8 со
 
 ### 1.6 Layout — только force/circle
 
-В canvas-режиме два layout-mode: `force` и `circle` ([`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx)). Нет:
+В canvas-режиме два layout-mode: `force` и `circle` ([`GraphCanvasMvp.jsx`](../../ui/src/components/graph/canvas/GraphCanvasMvp.jsx)). Нет:
 - layout по эмбеддингам узлов (FastRP/Node2Vec → UMAP/t-SNE → 2D),
 - иерархического (radial / Sugiyama) для деревьев цитирований,
 - layout «по сообществам» (узлы одного community собраны в локальный force-блок, блоки — в общий force).
@@ -115,18 +115,18 @@ Aggregator есть только локально: per-Work и при ≥ 8 со
 
 ### 2.1 Чеклист (frontend)
 
-- [ ] **Активировать LPA** в [`useScienceGraphForceSimulation.js`](../../ui/src/hooks/graph/useScienceGraphForceSimulation.js): новая функция `detectCommunitiesForUi(nodes, links, options)` в [`physics/structuralCommunities.js`](../../ui/src/components/graph/physics/structuralCommunities.js) → принимает hybrid-кластеры (для тяжёлой связности через авторство) **и** LPA-кластеры (для тематической связности через `USES_METHOD`, `EVALUATED_ON`, `CITES`, `PUBLISHED_IN`), мерджит: hybrid имеет приоритет, LPA дробит крупные hybrid-кластеры внутри себя на подкластеры если LPA-метка отличается у > 30% узлов.
-- [ ] **Цветовая палитра по communityId** — новый модуль [`physics/communityPalette.js`](../../ui/src/components/graph/physics/communityPalette.js) с детерминированным `colorForCommunity(communityId, appearance)`: HSL по hash(id) с фиксированной saturation/lightness под темную/светлую тему, чтобы цвета были стабильны между прогонами. Палитра ограничена ~16 цветами — большие community-id маппятся в общий нейтральный «прочее».
-- [ ] **Режим раскраски `colorBy`** — новый prop `colorBy: "type" | "community"` для [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx) с persist в LS (`graphCanvasColorBy`). По умолчанию — `type` (не ломаем существующее поведение).
-- [ ] **Drawing path** — в [`graphCanvasDraw.js drawNodes`](../../ui/src/components/graph/graphCanvasDraw.js) принимать `colorBy` и `nodeCommunityMap`. Для `colorBy=community`: fill = `colorForCommunity(communityId)`, обводка = текущий цвет по типу (с alpha 0.5), форма = текущая (по типу). Это даёт ровно нужный продукт: «цвет = тема, форма = роль узла».
-- [ ] **Hulls (опционально, behind toggle)** — модуль [`graphCanvasDrawCommunityHulls.js`](../../ui/src/components/graph/graphCanvasDrawCommunityHulls.js): для каждого community с ≥ 3 узлами строим convex hull через [d3-polygon](https://github.com/d3/d3-polygon) (~6KB gzipped, новая зависимость), рендерим полупрозрачным fill (`alpha=0.06`) с pad 24 world-units и тонким stroke (`alpha=0.25`). Подпись `Cluster #N · k узлов` рисуется в центре hull. Включается отдельным toggle в `GraphCanvasViewToolbar`.
-- [ ] **Toolbar UI** — в [`GraphCanvasViewToolbar.jsx`](../../ui/src/components/graph/GraphCanvasViewToolbar.jsx) добавить группу «Раскраска»: `<ToggleButtonGroup value={colorBy}>` с пунктами «по типу» / «по сообществу». Отдельный switch «Контуры сообществ» (только активен, когда `colorBy=community`).
-- [ ] **Легенда** — в [`GraphTypeLegend.jsx`](../../ui/src/components/graph/GraphTypeLegend.jsx) добавить вторую сворачиваемую секцию «Сообщества (N)»: список топ-N (по размеру) сообществ с цветным кружком, счетчиком узлов и preview из 2–3 представительных меток (можно взять `displayLabel` 3 случайных / самых-цитируемых-в-топологии узлов). Activates когда `colorBy=community`.
+- [ ] **Активировать LPA** в [`useScienceGraphForceSimulation.js`](../../ui/src/hooks/graph/useScienceGraphForceSimulation.js): новая функция `detectCommunitiesForUi(nodes, links, options)` в [`physics/structuralCommunities.js`](../../ui/src/components/graph/canvas/physics/structuralCommunities.js) → принимает hybrid-кластеры (для тяжёлой связности через авторство) **и** LPA-кластеры (для тематической связности через `USES_METHOD`, `EVALUATED_ON`, `CITES`, `PUBLISHED_IN`), мерджит: hybrid имеет приоритет, LPA дробит крупные hybrid-кластеры внутри себя на подкластеры если LPA-метка отличается у > 30% узлов.
+- [ ] **Цветовая палитра по communityId** — новый модуль [`physics/communityPalette.js`](../../ui/src/components/graph/canvas/physics/communityPalette.js) с детерминированным `colorForCommunity(communityId, appearance)`: HSL по hash(id) с фиксированной saturation/lightness под темную/светлую тему, чтобы цвета были стабильны между прогонами. Палитра ограничена ~16 цветами — большие community-id маппятся в общий нейтральный «прочее».
+- [ ] **Режим раскраски `colorBy`** — новый prop `colorBy: "type" | "community"` для [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/canvas/GraphCanvasMvp.jsx) с persist в LS (`graphCanvasColorBy`). По умолчанию — `type` (не ломаем существующее поведение).
+- [ ] **Drawing path** — в [`graphCanvasDraw.js drawNodes`](../../ui/src/components/graph/canvas/graphCanvasDraw.js) принимать `colorBy` и `nodeCommunityMap`. Для `colorBy=community`: fill = `colorForCommunity(communityId)`, обводка = текущий цвет по типу (с alpha 0.5), форма = текущая (по типу). Это даёт ровно нужный продукт: «цвет = тема, форма = роль узла».
+- [ ] **Hulls (опционально, behind toggle)** — модуль [`graphCanvasDrawCommunityHulls.js`](../../ui/src/components/graph/canvas/graphCanvasDrawCommunityHulls.js): для каждого community с ≥ 3 узлами строим convex hull через [d3-polygon](https://github.com/d3/d3-polygon) (~6KB gzipped, новая зависимость), рендерим полупрозрачным fill (`alpha=0.06`) с pad 24 world-units и тонким stroke (`alpha=0.25`). Подпись `Cluster #N · k узлов` рисуется в центре hull. Включается отдельным toggle в `GraphCanvasViewToolbar`.
+- [ ] **Toolbar UI** — в [`GraphCanvasViewToolbar.jsx`](../../ui/src/components/graph/canvas/GraphCanvasViewToolbar.jsx) добавить группу «Раскраска»: `<ToggleButtonGroup value={colorBy}>` с пунктами «по типу» / «по сообществу». Отдельный switch «Контуры сообществ» (только активен, когда `colorBy=community`).
+- [ ] **Легенда** — в [`GraphTypeLegend.jsx`](../../ui/src/components/graph/shell/GraphTypeLegend.jsx) добавить вторую сворачиваемую секцию «Сообщества (N)»: список топ-N (по размеру) сообществ с цветным кружком, счетчиком узлов и preview из 2–3 представительных меток (можно взять `displayLabel` 3 случайных / самых-цитируемых-в-топологии узлов). Activates когда `colorBy=community`.
 - [ ] **i18n** — ключи `graph.community.colorByType` / `graph.community.colorByCluster` / `graph.community.toggleHulls` / `graph.community.legendTitle` / `graph.community.legendItem.label` (с `{{count}}`) в EN+RU `partGraphUi.js`.
 - [ ] **Тесты:**
-  - `tests/components/graph/physics/communityPalette.test.js` — детерминированность цветов, симметрия light/dark.
-  - `tests/components/graph/physics/structuralCommunities.test.js` — расширить под новый `detectCommunitiesForUi`.
-  - `tests/components/graph/graphCanvasDraw.test.js` — рендер с `colorBy=community` использует палитру.
+  - `src/components/graph/canvas/physics/communityPalette.test.js` — детерминированность цветов, симметрия light/dark.
+  - `src/components/graph/canvas/physics/structuralCommunities.test.js` — расширить под новый `detectCommunitiesForUi`.
+  - `ui/src/components/graph/canvas/graphCanvasDraw.test.js` — рендер с `colorBy=community` использует палитру.
 
 ### 2.2 Acceptance
 
@@ -229,19 +229,19 @@ meta["communities"] = {
 
 #### 3.2.1 Размер узла по PageRank
 
-- В [`graphSimulationAdapter.js buildSimulationState`](../../ui/src/components/graph/graphSimulationAdapter.js) пробрасывать `page_rank` в `SimNode`.
-- В [`graphCanvasDraw.js drawNodes`](../../ui/src/components/graph/graphCanvasDraw.js): `radius = NODE_RADIUS * (1 + PR_BOOST * normalize(pageRank))`, где `normalize` — min-max по текущему displayGraph, `PR_BOOST = 1.2` (clamp в [10, 32]).
+- В [`graphSimulationAdapter.js buildSimulationState`](../../ui/src/components/graph/model/graphSimulationAdapter.js) пробрасывать `page_rank` в `SimNode`.
+- В [`graphCanvasDraw.js drawNodes`](../../ui/src/components/graph/canvas/graphCanvasDraw.js): `radius = NODE_RADIUS * (1 + PR_BOOST * normalize(pageRank))`, где `normalize` — min-max по текущему displayGraph, `PR_BOOST = 1.2` (clamp в [10, 32]).
 - Toggle «Размер по важности» в `GraphCanvasViewToolbar` (persist `graphCanvasSizeByPageRank`).
 
 #### 3.2.2 Server-side communityId с graceful fallback
 
-- В [`graphViewState.js normalizeGraphPayload`](../../ui/src/components/graph/graphViewState.js) — нормализовать `properties.community_id` → `node.communityId`, `properties.community_path` → `node.communityPath`, `properties.page_rank` → `node.pageRank`.
+- В [`graphViewState.js normalizeGraphPayload`](../../ui/src/components/graph/model/graphViewState.js) — нормализовать `properties.community_id` → `node.communityId`, `properties.community_path` → `node.communityPath`, `properties.page_rank` → `node.pageRank`.
 - В `useScienceGraphForceSimulation`: если у ≥ 80% узлов есть `communityId` от сервера — **использовать его** вместо LPA. Иначе — Wave 1 LPA fallback. Логировать в `meta.communities_source: "server" | "client_lpa"`.
 - В `GraphTypeLegend` секция «Сообщества» при `server`-источнике показывает дополнительный бейдж «modularity {value}» из `meta.communities.modularity`.
 
 #### 3.2.3 Фильтр по сообществу
 
-- В [`WorkspaceGraphToolbar.jsx`](../../ui/src/components/graph/WorkspaceGraphToolbar.jsx) (или новой обёртке `GraphTopBar` из GR10) — `<Select>` «Сообщество: Все / #1 (32 узла) / #2 (24 узла) / …». При выборе один — фильтр в [`graphVisibilityFilter.js`](../../ui/src/components/graph/graphVisibilityFilter.js) скрывает все, кроме выбранного community и его 1-hop окрестности.
+- В [`WorkspaceGraphToolbar.jsx`](../../ui/src/components/graph/workspace/WorkspaceGraphToolbar.jsx) (или новой обёртке `GraphTopBar` из GR10) — `<Select>` «Сообщество: Все / #1 (32 узла) / #2 (24 узла) / …». При выборе один — фильтр в [`graphVisibilityFilter.js`](../../ui/src/components/graph/model/graphVisibilityFilter.js) скрывает все, кроме выбранного community и его 1-hop окрестности.
 
 #### 3.2.4 Hulls с серверной стабильностью
 
@@ -251,8 +251,8 @@ meta["communities"] = {
 
 #### 3.2.5 Тесты
 
-- `tests/components/graph/graphSimulationAdapter.test.js` — `buildSimulationState` пробрасывает `pageRank` / `communityId`.
-- `tests/components/graph/graphViewState.test.js` — `normalizeGraphPayload` сохраняет `community_id`.
+- `ui/src/components/graph/model/graphSimulationAdapter.test.js` — `buildSimulationState` пробрасывает `pageRank` / `communityId`.
+- `ui/src/components/graph/model/graphViewState.test.js` — `normalizeGraphPayload` сохраняет `community_id`.
 - `tests/hooks/graph/useScienceGraphForceSimulation.test.js` (новый) — выбор source `server` vs `client_lpa`.
 
 ### 3.3 Acceptance (Wave GR-COM-2)
@@ -460,12 +460,12 @@ meta["communities"] = {
 
 ```markdown
 ### [OPEN] Graph communities UI — Wave GR-COM-1 color-by-community + hulls (frontend-only)
-- **Area:** `ui/src/components/graph/physics/structuralCommunities.js` (расширить),
-  новый `ui/src/components/graph/physics/communityPalette.js`,
-  новый `ui/src/components/graph/graphCanvasDrawCommunityHulls.js`,
-  правки `ui/src/components/graph/graphCanvasDraw.js`,
-  `ui/src/components/graph/GraphCanvasViewToolbar.jsx`,
-  `ui/src/components/graph/GraphTypeLegend.jsx`,
+- **Area:** `ui/src/components/graph/canvas/physics/structuralCommunities.js` (расширить),
+  новый `ui/src/components/graph/canvas/physics/communityPalette.js`,
+  новый `ui/src/components/graph/canvas/graphCanvasDrawCommunityHulls.js`,
+  правки `ui/src/components/graph/canvas/graphCanvasDraw.js`,
+  `ui/src/components/graph/canvas/GraphCanvasViewToolbar.jsx`,
+  `ui/src/components/graph/shell/GraphTypeLegend.jsx`,
   `ui/src/hooks/graph/useScienceGraphForceSimulation.js`,
   i18n `partGraphUi.js`. Возможна новая зависимость `d3-polygon` (~6KB).
 - **Issue:** Сейчас кластеры детектируются (union-find по `HAS_AUTHORSHIP`-рёбрам), но влияют
@@ -482,12 +482,12 @@ meta["communities"] = {
 - **Independent of GR-COM-2 backend** — даёт первичный UX-эффект уже сейчас.
 
 ### [OPEN] Graph communities UI — Wave GR-COM-2 server-side ids + size-by-PageRank + filter
-- **Area:** `ui/src/components/graph/graphViewState.js` (нормализация community/pageRank),
-  `ui/src/components/graph/graphSimulationAdapter.js`,
-  `ui/src/components/graph/graphCanvasDraw.js` (size scaling),
+- **Area:** `ui/src/components/graph/model/graphViewState.js` (нормализация community/pageRank),
+  `ui/src/components/graph/model/graphSimulationAdapter.js`,
+  `ui/src/components/graph/canvas/graphCanvasDraw.js` (size scaling),
   `ui/src/hooks/graph/useScienceGraphForceSimulation.js` (server vs client source),
-  `ui/src/components/graph/WorkspaceGraphToolbar.jsx` (Select community filter),
-  `ui/src/components/graph/graphVisibilityFilter.js`.
+  `ui/src/components/graph/workspace/WorkspaceGraphToolbar.jsx` (Select community filter),
+  `ui/src/components/graph/model/graphVisibilityFilter.js`.
 - **Issue:** Когда GR-COM-2 backend рендерит community/pageRank в payload, фронт должен это
   использовать (а не LPA fallback из GR-COM-1).
 - **Proposal:** нормализовать `community_id`/`community_path`/`page_rank` в нормализаторе;
@@ -500,10 +500,10 @@ meta["communities"] = {
 - **Blocked by:** GR-COM-2 backend (payload-контракт с `community_id`).
 
 ### [OPEN] Graph communities UI — Wave GR-COM-3 semantic zoom + supernodes + semantic layout
-- **Area:** `ui/src/components/graph/GraphCanvasMvp.jsx` (zoom level binding),
+- **Area:** `ui/src/components/graph/canvas/GraphCanvasMvp.jsx` (zoom level binding),
   новый `ui/src/components/graph/GraphMiniMap.jsx`,
-  `ui/src/components/graph/graphCanvasDraw.js` (edge bundling),
-  правки `ui/src/components/graph/hooks/useGraphWorkspaceData.js` (zoom_level fetch).
+  `ui/src/components/graph/canvas/graphCanvasDraw.js` (edge bundling),
+  правки `ui/src/components/graph/workspace/hooks/useGraphWorkspaceData.js` (zoom_level fetch).
 - **Issue:** Граф плоский — на больших workspace всё равно «паутина». Нет multi-level
   navigation, mini-map, edge bundling, semantic layout.
 - **Proposal:** при scale < 0.3 — fetch `?zoom_level=L0` (supernodes); smooth transitions

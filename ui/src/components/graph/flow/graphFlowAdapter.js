@@ -3,8 +3,8 @@
  * Layout matches circle world coords from {@link graphCanvasTransform} for parity with Canvas.
  */
 
-import { computeWorldLayout, worldRadiusForNodeCount } from "./graphCanvasTransform.js";
-import { edgeTypeCanvasLabelFromEdge, truncateCanvasLabel } from "./graphCanvasStyle.js";
+import { computeWorldLayout, worldRadiusForNodeCount } from "../canvas/graphCanvasTransform.js";
+import { edgeTypeCanvasLabelFromEdge, truncateCanvasLabel } from "../canvas/graphCanvasStyle.js";
 
 /**
  * @typedef {{ resolveEdgeLabel?: (edge: object) => string }} BuildReactFlowEdgesOptions

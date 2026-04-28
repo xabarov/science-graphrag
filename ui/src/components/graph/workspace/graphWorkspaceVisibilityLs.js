@@ -1,7 +1,7 @@
 import {
   defaultGraphVisibility,
   normalizeGraphVisibilityValue,
-} from "./graphVisibilityFilter.js";
+} from "../model/graphVisibilityFilter.js";
 
 /** @param {string} workspaceId @param {string} workId */
 export function graphVisibilityLocalStorageKey(workspaceId = "", workId = "") {
@@ -57,7 +57,7 @@ export function readGraphVisibilityFromLs(workspaceId, workId = "") {
 /**
  * @param {string} workspaceId
  * @param {string} workId
- * @param {import("./graphVisibilityFilter.js").GraphVisibilityValue} value
+ * @param {import("../model/graphVisibilityFilter.js").GraphVisibilityValue} value
  */
 export function writeGraphVisibilityToLs(workspaceId, workId, value) {
   if (typeof window === "undefined") return;

@@ -9,10 +9,10 @@ import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
-import { useI18n } from "../../i18n/useI18n.js";
+import { useI18n } from "../../../i18n/useI18n.js";
 import { buildCommunityLegendRows } from "./graphCommunityLegend.js";
-import { buildCommunityColorStyleMap, sortedCommunitiesByCount } from "./physics/communityPalette.js";
-import { getScienceGraphLegendNodeChipSx, getScienceGraphNodeTypeIcon, truncateCanvasLabel } from "./graphCanvasStyle.js";
+import { buildCommunityColorStyleMap, sortedCommunitiesByCount } from "../canvas/physics/communityPalette.js";
+import { getScienceGraphLegendNodeChipSx, getScienceGraphNodeTypeIcon, truncateCanvasLabel } from "../canvas/graphCanvasStyle.js";
 import {
   collectGraphComposition,
   collectGraphTypeLegend,
@@ -20,7 +20,7 @@ import {
   sortLegendEdgeTypes,
   sortLegendKinds,
 } from "./graphTypeLegend.js";
-import { localizeEdgeTypeKey, localizeNodeKind } from "./graphLocalize.js";
+import { localizeEdgeTypeKey, localizeNodeKind } from "../model/graphLocalize.js";
 
 const COMMUNITY_LEGEND_TOP_N = 12;
 

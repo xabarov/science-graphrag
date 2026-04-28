@@ -156,7 +156,7 @@ Foundation LangGraph/LangChain добавлен без изменения runtim
 - [x] `npm run lint` + `npm run test` (ui), `pytest` (backend) зелёные.
 - [x] GDS: только при флаге + порогах; иначе Cypher fallback (`meta.gds_used` / `gds_runtime_available`).
 
-**Статус реализации (2026-04-24, доп. 2026-04-25):** backend [`workspace_graph.py`](../../science_graphrag/api/workspace_graph.py) + роуты в [`workspaces.py`](../../science_graphrag/api/workspaces.py); UI toolbar/panel/store; доки §5b contracts + ADR 012 + этот runbook; фикстура graph_v1; опциональный GDS-путь для крупных workspace при `depth=2`; интеграционный тест на две работы с `CITES` + unit на `ws-internal` в [`scienceHybridCommunities.test.js`](../../ui/src/components/graph/physics/scienceHybridCommunities.test.js).
+**Статус реализации (2026-04-24, доп. 2026-04-25):** backend [`workspace_graph.py`](../../science_graphrag/api/workspace_graph.py) + роуты в [`workspaces.py`](../../science_graphrag/api/workspaces.py); UI toolbar/panel/store; доки §5b contracts + ADR 012 + этот runbook; фикстура graph_v1; опциональный GDS-путь для крупных workspace при `depth=2`; интеграционный тест на две работы с `CITES` + unit на `ws-internal` в [`scienceHybridCommunities.test.js`](../../ui/src/components/graph/canvas/physics/scienceHybridCommunities.test.js).
 
 ---
 

@@ -1,22 +1,22 @@
 import { useCallback, useMemo } from "react";
 
-import { projectAuthorSemanticGraph } from "../authorSemanticProjection.js";
-import { applyGraphVisibilityFilter } from "../graphVisibilityFilter.js";
-import { deriveInspectorDetail } from "../graphInspectorModel.js";
-import { localizeEdgeType } from "../graphLocalize.js";
-import { filterNodeIdsBySearchSubstring } from "../graphNodeSearch.js";
-import { capGraphForUi } from "../graphUiLimits.js";
+import { projectAuthorSemanticGraph } from "../../model/authorSemanticProjection.js";
+import { applyGraphVisibilityFilter } from "../../model/graphVisibilityFilter.js";
+import { deriveInspectorDetail } from "../../model/graphInspectorModel.js";
+import { localizeEdgeType } from "../../model/graphLocalize.js";
+import { filterNodeIdsBySearchSubstring } from "../../model/graphNodeSearch.js";
+import { capGraphForUi } from "../../model/graphUiLimits.js";
 import {
   normalizeGraphEdgeId,
   normalizeGraphNodeId,
   resolveSelectedEdgeId,
   resolveSelectedNodeId,
-} from "../graphViewState.js";
+} from "../../model/graphViewState.js";
 
 /**
  * @param {{
  *   graph: object,
- *   graphVisibility: import("../graphVisibilityFilter.js").GraphVisibilityValue,
+ *   graphVisibility: import("../../model/graphVisibilityFilter.js").GraphVisibilityValue,
  *   selectedNodeId: string,
  *   selectedEdgeId: string,
  *   localFindQuery: string,

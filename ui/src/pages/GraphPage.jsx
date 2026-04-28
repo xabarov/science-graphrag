@@ -16,8 +16,8 @@ import VpnKeyOutlinedIcon from "@mui/icons-material/VpnKeyOutlined";
 import { CursorIconAction, CursorIconButton } from "../components/common/index.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
 import { useWorkspaceContext } from "../components/layout/useWorkspaceContext.js";
-import GraphWorkspacePanel from "../components/graph/GraphWorkspacePanel.jsx";
-import { GraphMissingWorkCallout } from "../components/graph/graphShellStates.jsx";
+import GraphWorkspacePanel from "../components/graph/workspace/GraphWorkspacePanel.jsx";
+import { GraphMissingWorkCallout } from "../components/graph/shell/graphShellStates.jsx";
 import { persistWorkId } from "./WorkspacePage/utils/workContext.js";
 import {
   GRAPH_PAGE_QUERY_KEYS,

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { computeWorldLayout, worldRadiusForNodeCount } from "./graphCanvasTransform.js";
+import { computeWorldLayout, worldRadiusForNodeCount } from "../canvas/graphCanvasTransform.js";
 import { buildSimulationState } from "./graphSimulationAdapter.js";
 
 describe("buildSimulationState", () => {

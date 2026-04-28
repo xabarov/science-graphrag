@@ -1,4 +1,4 @@
-import { getWorkGraph } from "../../services/researchApi.js";
+import { getWorkGraph } from "../../../services/researchApi.js";
 import { normalizeGraphPayload } from "./graphViewState.js";
 
 /**

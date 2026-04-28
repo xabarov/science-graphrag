@@ -37,9 +37,9 @@
 
 `science_graphrag/api/graph_display.py` — словарь `EDGE_DISPLAY_TYPE_RAW` корректно отображает `HAS_AUTHORSHIP → "authored by"`, `OF_AUTHOR → "is author of"`, `CITES → "cites"`, и т. д. Этот `display_type` уезжает в payload (`_enrich_edges_with_display` в `science_graphrag/api/works/graph_neighborhood.py` и аналог в `science_graphrag/api/workspace_graph/projection.py`).
 
-Frontend-нормализатор `ui/src/components/graph/graphViewState.js` правильно достаёт его в `edge.displayType`:
+Frontend-нормализатор `ui/src/components/graph/model/graphViewState.js` правильно достаёт его в `edge.displayType`:
 
-```113:120:ui/src/components/graph/graphViewState.js
+```113:120:ui/src/components/graph/model/graphViewState.js
   const normalizedEdges = rawEdges.map((edge, index) => {
     const e = edge && typeof edge === "object" ? /** @type {Record<string, unknown>} */ (edge) : {};
     const src = e.source == null ? "" : String(e.source);
@@ -51,14 +51,14 @@ Frontend-нормализатор `ui/src/components/graph/graphViewState.js` п
 
 Боковая панель и React Flow адаптер используют `displayType`:
 
-```285:290:ui/src/components/graph/GraphDetailPanel.jsx
+```285:290:ui/src/components/graph/shell/GraphDetailPanel.jsx
               {(relatedEdges || []).map((edge) => {
                 const otherId = edge.source === selectedNode.id ? edge.target : edge.source;
                 const other = nodeMap.get(otherId);
                 const dispType = edge.displayType || String(edge.type || "").replace(/_/g, " ");
 ```
 
-```60:66:ui/src/components/graph/graphFlowAdapter.js
+```60:66:ui/src/components/graph/flow/graphFlowAdapter.js
   return rawEdges.map((e) => ({
     id: e.id,
     source: e.source,
@@ -68,7 +68,7 @@ Frontend-нормализатор `ui/src/components/graph/graphViewState.js` п
 
 **Но канвас — нет:**
 
-```106:128:ui/src/components/graph/graphCanvasDraw.js
+```106:128:ui/src/components/graph/canvas/graphCanvasDraw.js
   for (const edge of edges) {
     const p0w = positions.get(edge.source);
     const p1w = positions.get(edge.target);
@@ -84,7 +84,7 @@ Frontend-нормализатор `ui/src/components/graph/graphViewState.js` п
 
 Строка 112 `edgeTypeCanvasLabel(edge.type)` подаёт raw Neo4j-тип (`HAS_AUTHORSHIP`), и `edgeTypeCanvasLabel` ничего не делает кроме truncation:
 
-```135:141:ui/src/components/graph/graphCanvasStyle.js
+```135:141:ui/src/components/graph/canvas/graphCanvasStyle.js
 export function edgeTypeCanvasLabel(edgeType) {
   return truncateCanvasLabel(edgeType == null ? "" : String(edgeType).trim(), EDGE_LABEL_MAX);
 }
@@ -170,7 +170,7 @@ def _apply_aggregators(
 
 **Конкретные пробелы (по коду):**
 
-1. **Дублирующиеся «панели типов» с разными ролями.** В `ui/src/components/graph/WorkspaceGraphToolbar.jsx:201-227` чипы — это **серверный фильтр** (`nodeTypesCsv` уезжает в API). В `ui/src/components/graph/GraphTypeLegend.jsx:81-114` чипы — **информационный список** того, что фактически есть в payload. Визуально это «два ряда чипов с иконками», пользователь не различает.
+1. **Дублирующиеся «панели типов» с разными ролями.** В `ui/src/components/graph/workspace/WorkspaceGraphToolbar.jsx:201-227` чипы — это **серверный фильтр** (`nodeTypesCsv` уезжает в API). В `ui/src/components/graph/shell/GraphTypeLegend.jsx:81-114` чипы — **информационный список** того, что фактически есть в payload. Визуально это «два ряда чипов с иконками», пользователь не различает.
 2. **MUI `ToggleButton` с дефолтным uppercase.** `WorkspaceGraphToolbar.jsx:163-179` использует `<ToggleButton>` без `textTransform: 'none'` — отсюда `ВНУТРЕННИЙ`/`ОБЪЕДИНЕНИЕ +1`. Это нарушает Cursor-стиль (`.cursorrules`: «❌ textTransform: 'uppercase'») и расходится с `GraphViewModeSwitch.jsx`, где уже используются `CursorSmallButton`.
 3. **Нет tooltips ни на одном элементе тулбара.** `mode`-кнопки, `depth`, switch «Внешние», чипы — без подсказок. Mode «Объединение +1» / «Семантика» без расшифровки непрозрачен даже автору.
 4. **Полоса иконок занимает отдельную строку.** `GraphWorkspacePanel.jsx:167-220` рисует `Sidebar`/`Layers`/`Bug` отдельным `<Box>`, при этом `Layers` показан только в `standalone` режиме, а `Bug` — только когда `!labMode`. Эти 1–3 иконки логичнее встроить в правый край тулбара.
@@ -191,9 +191,9 @@ def _apply_aggregators(
 - У Dataset «News Crawl» подзаголовок `Dataset` дублирует тип `Dataset`.
 - Toggle Raw JSON у узла — кнопка, у ребра — `<Accordion>`. Несогласованно.
 
-**Конкретные пробелы (по коду `ui/src/components/graph/GraphDetailPanel.jsx` и `graphInspectorModel.js`):**
+**Конкретные пробелы (по коду `ui/src/components/graph/shell/GraphDetailPanel.jsx` и `graphInspectorModel.js`):**
 
-1. **Иконки/цвета типов не используются.** В `ui/src/components/graph/graphCanvasStyle.js:31-42` уже есть готовый `NODE_TYPE_ICON_MAP` (`ArticleOutlinedIcon` для `Work`, `PersonOutlinedIcon` для `Author`, `StorageOutlinedIcon` для `Dataset`, `PsychologyOutlinedIcon` для `Method`, `MenuBookOutlinedIcon` для `Venue`, `AccountBalanceOutlinedIcon` для `Institution`, `LinkOutlinedIcon` для `Authorship`, `OpenInNewOutlinedIcon` для `WorkExternal`) и `NODE_TYPE_STYLES` с цветами. Их использует только `GraphTypeLegend.jsx` и канвас. `GraphDetailPanel.jsx:184-186` рендерит лишь `<Typography>{selectedNode.nodeKind || selectedNode.type}</Typography>` синим цветом — без иконки и без цветового ключа.
+1. **Иконки/цвета типов не используются.** В `ui/src/components/graph/canvas/graphCanvasStyle.js:31-42` уже есть готовый `NODE_TYPE_ICON_MAP` (`ArticleOutlinedIcon` для `Work`, `PersonOutlinedIcon` для `Author`, `StorageOutlinedIcon` для `Dataset`, `PsychologyOutlinedIcon` для `Method`, `MenuBookOutlinedIcon` для `Venue`, `AccountBalanceOutlinedIcon` для `Institution`, `LinkOutlinedIcon` для `Authorship`, `OpenInNewOutlinedIcon` для `WorkExternal`) и `NODE_TYPE_STYLES` с цветами. Их использует только `GraphTypeLegend.jsx` и канвас. `GraphDetailPanel.jsx:184-186` рендерит лишь `<Typography>{selectedNode.nodeKind || selectedNode.type}</Typography>` синим цветом — без иконки и без цветового ключа.
 
 2. **`WorkInternal` рендерится как camelCase-жаргон.** Backend отдаёт `node_kind = "WorkInternal"` для удобства типизации; UI должен показывать `[icon Article] Work · internal` (тип + бейдж membership), не как одно слово. Аналогично `WorkExternal`, `AuthorshipReification`.
 
@@ -281,9 +281,9 @@ def _apply_aggregators(
 
 **Чеклист (frontend):**
 
-- [ ] [`ui/src/components/graph/graphCanvasDraw.js`](../../ui/src/components/graph/graphCanvasDraw.js) line 112: `edgeTypeCanvasLabel(edge.type)` → `edgeTypeCanvasLabel(edge.displayType || edge.type)`. Эта же правка снимает дубли «raw vs side-panel» — поведение Flow и Canvas сравняется.
-- [ ] [`ui/src/components/graph/graphCanvasStyle.js`](../../ui/src/components/graph/graphCanvasStyle.js): расширить `edgeTypeCanvasLabel(edgeType, opts?)` так, чтобы вход — уже готовая `displayType` (без преобразований), но при пустоте — fallback на raw `type` с замены `_` на пробел.
-- [ ] Обновить unit-тесты: [`graphCanvasDraw.test.js`](../../ui/src/components/graph/graphCanvasDraw.test.js) — добавить кейс «edge с displayType=`authored by` → bbox-метрика рисуется».
+- [ ] [`ui/src/components/graph/canvas/graphCanvasDraw.js`](../../ui/src/components/graph/canvas/graphCanvasDraw.js) line 112: `edgeTypeCanvasLabel(edge.type)` → `edgeTypeCanvasLabel(edge.displayType || edge.type)`. Эта же правка снимает дубли «raw vs side-panel» — поведение Flow и Canvas сравняется.
+- [ ] [`ui/src/components/graph/canvas/graphCanvasStyle.js`](../../ui/src/components/graph/canvas/graphCanvasStyle.js): расширить `edgeTypeCanvasLabel(edgeType, opts?)` так, чтобы вход — уже готовая `displayType` (без преобразований), но при пустоте — fallback на raw `type` с замены `_` на пробел.
+- [ ] Обновить unit-тесты: [`graphCanvasDraw.test.js`](../../ui/src/components/graph/canvas/graphCanvasDraw.test.js) — добавить кейс «edge с displayType=`authored by` → bbox-метрика рисуется».
 - [ ] Verify: `cd ui && npm run lint && npm test`.
 
 **Acceptance:**
@@ -314,11 +314,11 @@ def _apply_aggregators(
   - `graph.edgeType.HAS_AUTHORSHIP` / `graph.edgeType.OF_AUTHOR` / `graph.edgeType.AFFILIATED_WITH` / `graph.edgeType.CITES` / `graph.edgeType.PUBLISHED_IN` / `graph.edgeType.USES_METHOD` / `graph.edgeType.EVALUATED_ON` / `graph.edgeType.TRAINED_OR_TESTED_ON` / `graph.edgeType.SUPPORTS` / `graph.edgeType.CONTRADICTS` / `graph.edgeType.MENTIONS` / `graph.edgeType.AGGREGATED`.
   - `graph.nodeKind.AuthorshipReification` / `graph.nodeKind.WorkInternal` / `graph.nodeKind.WorkExternal` / `graph.nodeKind.Aggregator`.
   - `graph.aggregator.label.authors_of_work`, `graph.aggregator.label.cites_external` (с `{{count}}`).
-- [ ] Создать [`ui/src/components/graph/graphLocalize.js`](../../ui/src/components/graph/graphLocalize.js) с функциями `localizeEdgeType(edge, t)`, `localizeNodeKind(node, t)`, `localizeAggregatorLabel(node, t)` — единая точка локализации для канваса, Flow и боковой панели.
-- [ ] Поправить [`graphCanvasDraw.js`](../../ui/src/components/graph/graphCanvasDraw.js): вместо `edgeTypeCanvasLabel(edge.type)` → `edgeTypeCanvasLabel(localizeEdgeType(edge, t))`. Поскольку модуль не реактовский, передавать `t` через props в `<GraphCanvasMvp>` и пробрасывать в `drawLabels`.
-- [ ] Тоже самое в [`graphFlowAdapter.js`](../../ui/src/components/graph/graphFlowAdapter.js) и [`GraphDetailPanel.jsx`](../../ui/src/components/graph/GraphDetailPanel.jsx) — заменить inline-формирование label на `localizeEdgeType` / `localizeNodeKind`.
-- [ ] Обновить легенду [`GraphTypeLegend.jsx`](../../ui/src/components/graph/GraphTypeLegend.jsx) — показывать локализованные имена типов рёбер при hover/expand.
-- [ ] Тесты: `tests/components/graph/graphLocalize.test.js` (или совместно в `graphCanvasDraw.test.js`).
+- [ ] Создать [`ui/src/components/graph/graphLocalize.js`](../../ui/src/components/graph/model/graphLocalize.js) с функциями `localizeEdgeType(edge, t)`, `localizeNodeKind(node, t)`, `localizeAggregatorLabel(node, t)` — единая точка локализации для канваса, Flow и боковой панели.
+- [ ] Поправить [`graphCanvasDraw.js`](../../ui/src/components/graph/canvas/graphCanvasDraw.js): вместо `edgeTypeCanvasLabel(edge.type)` → `edgeTypeCanvasLabel(localizeEdgeType(edge, t))`. Поскольку модуль не реактовский, передавать `t` через props в `<GraphCanvasMvp>` и пробрасывать в `drawLabels`.
+- [ ] Тоже самое в [`graphFlowAdapter.js`](../../ui/src/components/graph/flow/graphFlowAdapter.js) и [`GraphDetailPanel.jsx`](../../ui/src/components/graph/shell/GraphDetailPanel.jsx) — заменить inline-формирование label на `localizeEdgeType` / `localizeNodeKind`.
+- [ ] Обновить легенду [`GraphTypeLegend.jsx`](../../ui/src/components/graph/shell/GraphTypeLegend.jsx) — показывать локализованные имена типов рёбер при hover/expand.
+- [ ] Тесты: `ui/src/components/graph/model/graphLocalize.test.js` (или совместно в `ui/src/components/graph/canvas/graphCanvasDraw.test.js`).
 
 #### 2.2.3 Чеклист (backend, опциональная фаза B — только если будем расширять словарь)
 
@@ -367,8 +367,8 @@ def _apply_aggregators(
 
 **Чеклист (frontend):**
 
-- [ ] [`graphCanvasDraw.js`](../../ui/src/components/graph/graphCanvasDraw.js): улучшить визуал агрегатора — больший радиус (`NODE_RADIUS * 1.4`), пунктирный stroke (уже есть), цифра `+N` уже рисуется. Добавить hover-tooltip «Click to expand».
-- [ ] [`GraphDetailPanel.jsx`](../../ui/src/components/graph/GraphDetailPanel.jsx): показывать список preview labels из `aggregation_hints.preview_labels` (уже частично сделано) и кнопку `t("graph.aggregator.expand")`.
+- [ ] [`graphCanvasDraw.js`](../../ui/src/components/graph/canvas/graphCanvasDraw.js): улучшить визуал агрегатора — больший радиус (`NODE_RADIUS * 1.4`), пунктирный stroke (уже есть), цифра `+N` уже рисуется. Добавить hover-tooltip «Click to expand».
+- [ ] [`GraphDetailPanel.jsx`](../../ui/src/components/graph/shell/GraphDetailPanel.jsx): показывать список preview labels из `aggregation_hints.preview_labels` (уже частично сделано) и кнопку `t("graph.aggregator.expand")`.
 
 **Acceptance:**
 
@@ -390,8 +390,8 @@ def _apply_aggregators(
   - `/v1/works/{id}/graph?view=raw` — для `science_graphrag/api/graph_snapshot_diff.py` и benchmark `graph_v1`.
 - [ ] **Совместимость с GR8.** Reader-view → `:Authorship` отсутствует → агрегатор работает уже по `Author` (per-kind threshold = 4, см. GR8).
 - [ ] **Контракт ребра `AUTHORED`:** `via: ["HAS_AUTHORSHIP","OF_AUTHOR"]`, `properties: { author_position, is_corresponding, raw_affiliation, institution_id? }`.
-- [ ] **Edge-инспектор:** [`GraphDetailPanel.jsx`](../../ui/src/components/graph/GraphDetailPanel.jsx) — секция «Trace via» при `via.length > 0`.
-- [ ] **Toggle в UI:** [`WorkspaceGraphToolbar.jsx`](../../ui/src/components/graph/WorkspaceGraphToolbar.jsx) — `Authorship details: collapsed | shown` (persist `localStorage.graphAuthorshipDetailMode`).
+- [ ] **Edge-инспектор:** [`GraphDetailPanel.jsx`](../../ui/src/components/graph/shell/GraphDetailPanel.jsx) — секция «Trace via» при `via.length > 0`.
+- [ ] **Toggle в UI:** [`WorkspaceGraphToolbar.jsx`](../../ui/src/components/graph/workspace/WorkspaceGraphToolbar.jsx) — `Authorship details: collapsed | shown` (persist `localStorage.graphAuthorshipDetailMode`).
 - [ ] Тесты: `tests/api/test_graph_view_reader.py` — симметрия `Work` и `Author` множества между raw и reader, разница только в рёбрах/`Authorship`-узлах.
 
 **Acceptance:** см. оригинальный пункт. Дополнительно — `node_kind: "AuthorshipReification"` отсутствует в payload при `view=reader`.
@@ -567,7 +567,7 @@ def _apply_aggregators(
 
 #### 2.7.2 Цвет/иконка по типу — единая таблица
 
-Используем уже существующие `NODE_TYPE_ICON_MAP` и `NODE_TYPE_STYLES` из `ui/src/components/graph/graphCanvasStyle.js`. Дополняем мини-словарём для edge-типов (новый `EDGE_TYPE_ICON_MAP`):
+Используем уже существующие `NODE_TYPE_ICON_MAP` и `NODE_TYPE_STYLES` из `ui/src/components/graph/canvas/graphCanvasStyle.js`. Дополняем мини-словарём для edge-типов (новый `EDGE_TYPE_ICON_MAP`):
 
 | node_kind / edge_type | icon (MUI) | base color (источник `NODE_TYPE_STYLES`) |
 |----------------------|------------|------------------------------------------|
@@ -756,7 +756,7 @@ def _apply_aggregators(
 - [ ] `tests/components/graph/detail/GraphDetailEdgeMap.test.jsx` — рендер «карты ребра» для разных `edge.type`.
 - [ ] `tests/components/graph/detail/GraphDetailRawJson.test.jsx` — accordion раскрывается; copy кнопка вызывает `navigator.clipboard.writeText`.
 - [ ] `tests/components/graph/detail/useGraphDetailHistory.test.js` — push/back/forward инвариантa.
-- [ ] Расширить `tests/components/graph/graphInspectorModel.test.js` — `relatedEdgeRows` теперь пробрасывает `otherSubtitle` (новое поле).
+- [ ] Расширить `ui/src/components/graph/model/graphInspectorModel.test.js` — `relatedEdgeRows` теперь пробрасывает `otherSubtitle` (новое поле).
 - [ ] Visual regression (если есть playwright story) — снимки правой панели для `Work`, `Author`, `Dataset`, `Aggregator`, `Edge`.
 
 #### 2.7.7 PR breakdown
@@ -900,8 +900,8 @@ def _apply_aggregators(
 
 ```markdown
 ### [OPEN] Graph UI — Wave GR6 use displayType on canvas (Wave GR2 follow-up)
-- **Area:** `ui/src/components/graph/graphCanvasDraw.js`, `ui/src/components/graph/graphCanvasStyle.js`,
-  `ui/src/components/graph/graphCanvasDraw.test.js`
+- **Area:** `ui/src/components/graph/canvas/graphCanvasDraw.js`, `ui/src/components/graph/canvas/graphCanvasStyle.js`,
+  `ui/src/components/graph/canvas/graphCanvasDraw.test.js`
 - **Issue:** Канвас рисует raw `edge.type` (`HAS_AUTHORSHIP`), игнорируя `edge.displayType` от backend.
 - **Proposal:** `edgeTypeCanvasLabel(edge.displayType || edge.type)`; sync с поведением Flow и боковой панели.
 - **Acceptance:** ребра подписаны человеческими типами; unit-тест `graphCanvasDraw.test.js` покрывает displayType.
@@ -936,7 +936,7 @@ def _apply_aggregators(
 - **Raised:** 2026-04-25 (см. graph-readability-followup-2026-04-25.md §2.5)
 
 ### [OPEN] Graph UI — Wave GR11 toolbar/legend localization (extension of GR7)
-- **Area:** `ui/src/components/graph/GraphTypeLegend.jsx`,
+- **Area:** `ui/src/components/graph/shell/GraphTypeLegend.jsx`,
   `ui/src/i18n/messages/en/partGraphUi.js`, `ui/src/i18n/messages/ru/partGraphUi.js`
 - **Issue:** GR7 фаза A покрывает рёбра в подписях, но `GraphTypeLegend` всё ещё хардкодит
   EN-заголовки `Types in view`, `Nodes`, `Edges`, групповые `Works/Semantic/People/Context`,
@@ -949,7 +949,7 @@ def _apply_aggregators(
 - **Raised:** 2026-04-25 (см. graph-readability-followup-2026-04-25.md §2.6)
 
 ### [OPEN] Graph UI — Wave GR12 right detail panel UX overhaul (icons, sub-panels, grouping, edge map, history)
-- **Area:** разбить `ui/src/components/graph/GraphDetailPanel.jsx` (412 строк, нарушает порог
+- **Area:** разбить `ui/src/components/graph/shell/GraphDetailPanel.jsx` (412 строк, нарушает порог
   `~400+` из `refactor-rhythm-and-backlog.mdc`) на новый каталог `ui/src/components/graph/detail/`:
   `GraphDetailHeader.jsx`, `GraphDetailNodePlate.jsx`, `GraphDetailStats.jsx`,
   `GraphDetailProperties.jsx`, `GraphDetailConnections.jsx`, `GraphDetailEdgeMap.jsx`,

@@ -17,12 +17,12 @@ import {
 
 import "@xyflow/react/dist/style.css";
 
-import { CursorSmallButton } from "../common/index.js";
-import { useI18n } from "../../i18n/useI18n.js";
-import { getScienceGraphNodeStyle } from "./graphCanvasStyle.js";
+import { CursorSmallButton } from "../../common/index.js";
+import { useI18n } from "../../../i18n/useI18n.js";
+import { getScienceGraphNodeStyle } from "../canvas/graphCanvasStyle.js";
 import { buildReactFlowEdges, buildReactFlowNodes, getGraphLayoutSignature } from "./graphFlowAdapter.js";
-import { graphTelemetryEmit } from "./graphTelemetry.js";
-import { localizeEdgeType } from "./graphLocalize.js";
+import { graphTelemetryEmit } from "../model/graphTelemetry.js";
+import { localizeEdgeType } from "../model/graphLocalize.js";
 
 const MIN_VIEW_HEIGHT = 280;
 const LS_GRAPH_FLOW_MINIMAP = "graphFlowMinimap";

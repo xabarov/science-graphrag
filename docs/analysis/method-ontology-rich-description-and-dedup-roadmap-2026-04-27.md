@@ -72,7 +72,7 @@ This design is acceptable for v1 extraction, but it explains why duplicate suppr
 Graph display helpers already transport node properties, and the side panel can list them. However:
 
 - `science_graphrag/api/graph_display.py` renders `Method` as `display_label + subtitle`;
-- `ui/src/components/graph/GraphDetailPanel.jsx` shows generic key/value properties, not a rich description card;
+- `ui/src/components/graph/shell/GraphDetailPanel.jsx` shows generic key/value properties, not a rich description card;
 - `ui/src/components/work/MarkdownViewCore.jsx` already supports Markdown + KaTeX, but the graph detail panel does **not** reuse that rendering path for method descriptions.
 
 So the current product gap is not just "the UI forgot to show text". The deeper issue is:
@@ -567,7 +567,7 @@ Acceptance:
 | `docs/adr/019-entity-dedup-pipeline.md` | current dedup policy and thresholds |
 | `tests/fixtures/benchmarks/dedup/methods_v1/README.md` | current method dedup gold pack |
 | `eval/layer2/spec.py` | current semantic gold spec (name-centric) |
-| `ui/src/components/graph/GraphDetailPanel.jsx` | current node inspector UX |
+| `ui/src/components/graph/shell/GraphDetailPanel.jsx` | current node inspector UX |
 | `ui/src/components/work/MarkdownViewCore.jsx` | existing Markdown + KaTeX renderer reusable for method descriptions |
 
 ---

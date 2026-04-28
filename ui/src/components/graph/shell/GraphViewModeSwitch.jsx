@@ -1,7 +1,7 @@
 import React from "react";
 import Box from "@mui/material/Box";
 
-import { CursorSmallButton } from "../common/index.js";
+import { CursorSmallButton } from "../../common/index.js";
 
 const ACTIVE_SX = {
   backgroundColor: "rgba(99, 102, 241, 0.15)",

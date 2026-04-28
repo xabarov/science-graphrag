@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   GRAPH_CANVAS_POINTER_DOWN_EVENT,
   GRAPH_CANVAS_POINTER_UP_EVENT,
-} from "../../components/graph/graphCanvasPointerEvents.js";
+} from "../../components/graph/canvas/graphCanvasPointerEvents.js";
 import { SHELL_NAVIGATION_INTENT_EVENT } from "../../components/layout/shellNavigationEvents.js";
 import { useGraphPhysicsPolicy } from "./useGraphPhysicsPolicy.js";
 

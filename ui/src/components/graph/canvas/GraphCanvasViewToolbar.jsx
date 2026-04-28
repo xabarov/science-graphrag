@@ -16,7 +16,7 @@ import LinkOffOutlinedIcon from "@mui/icons-material/LinkOffOutlined";
 import RestartAltOutlinedIcon from "@mui/icons-material/RestartAltOutlined";
 import ZoomOutMapOutlinedIcon from "@mui/icons-material/ZoomOutMapOutlined";
 
-import { CursorIconButton } from "../common/index.js";
+import { CursorIconButton } from "../../common/index.js";
 
 /**
  * @typedef {(key: string, vars?: Record<string, string | number>) => string} TranslateFn

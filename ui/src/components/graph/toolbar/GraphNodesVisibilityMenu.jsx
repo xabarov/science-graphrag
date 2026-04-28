@@ -11,8 +11,8 @@ import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
 import { CursorButton } from "../../common/index.js";
-import { getScienceGraphNodeTypeIcon } from "../graphCanvasStyle.js";
-import { GRAPH_VISIBILITY_DOMAIN_TYPES } from "../graphVisibilityFilter.js";
+import { getScienceGraphNodeTypeIcon } from "../canvas/graphCanvasStyle.js";
+import { GRAPH_VISIBILITY_DOMAIN_TYPES } from "../model/graphVisibilityFilter.js";
 
 const MENU_TYPE_TOTAL = GRAPH_VISIBILITY_DOMAIN_TYPES.length + 1;
 
@@ -23,8 +23,8 @@ const DOMAIN_TYPE_ICONS = Object.fromEntries(
 
 /**
  * @param {{
- *   visibility: import("../graphVisibilityFilter.js").GraphVisibilityValue,
- *   onChange: (patch: Partial<import("../graphVisibilityFilter.js").GraphVisibilityValue>) => void,
+ *   visibility: import("../model/graphVisibilityFilter.js").GraphVisibilityValue,
+ *   onChange: (patch: Partial<import("../model/graphVisibilityFilter.js").GraphVisibilityValue>) => void,
  *   t: (key: string, vars?: Record<string, string>) => string,
  * }} props
  */

@@ -4,7 +4,7 @@ import { SHELL_NAVIGATION_INTENT_EVENT } from "../../components/layout/shellNavi
 import {
   GRAPH_CANVAS_POINTER_DOWN_EVENT,
   GRAPH_CANVAS_POINTER_UP_EVENT,
-} from "../../components/graph/graphCanvasPointerEvents.js";
+} from "../../components/graph/canvas/graphCanvasPointerEvents.js";
 
 const SHELL_NAVIGATION_RESUME_MS = 250;
 

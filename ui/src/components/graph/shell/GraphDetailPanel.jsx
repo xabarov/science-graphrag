@@ -14,10 +14,10 @@ import Typography from "@mui/material/Typography";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useTheme } from "@mui/material/styles";
 
-import { useI18n } from "../../i18n/useI18n.js";
-import { getWorkspaceContradictionDetail } from "../../utils/workspaceStore.js";
-import { CursorSmallButton } from "../common/index.js";
-import MarkdownViewCore from "../work/MarkdownViewCore.jsx";
+import { useI18n } from "../../../i18n/useI18n.js";
+import { getWorkspaceContradictionDetail } from "../../../utils/workspaceStore.js";
+import { CursorSmallButton } from "../../common/index.js";
+import MarkdownViewCore from "../../work/MarkdownViewCore.jsx";
 import {
   localizeAggregatorSubtitle,
   localizeAggregatorTitle,
@@ -27,7 +27,7 @@ import {
   localizeMethodPropertyKey,
   localizeNodeKind,
   localizeWorkPropertyKey,
-} from "./graphLocalize.js";
+} from "../model/graphLocalize.js";
 import { graphContractSubtitle } from "./graphContractSubtitle.js";
 
 /**

@@ -318,7 +318,7 @@ The standalone graph page is implemented in [`ui/src/pages/GraphPage.jsx`](../..
 
 Implementation helpers: [`ui/src/routing/graphPageQuery.js`](../../ui/src/routing/graphPageQuery.js).
 
-**Client-only layout (not in URL):** The standalone graph/detail **split width** is stored in `localStorage` under key `graphStandaloneDetailMinPx` (pixel width of the detail column track, clamped **260–480**). The toolbar slider and the **`md+` drag gutter** between graph and detail update the same value; see [`graphDetailColumnWidth.js`](../../ui/src/components/graph/graphDetailColumnWidth.js) and *Wave 7* in [`graph-ui-plan.md`](./graph-ui-plan.md). No backend or URL contract.
+**Client-only layout (not in URL):** The standalone graph/detail **split width** is stored in `localStorage` under key `graphStandaloneDetailMinPx` (pixel width of the detail column track, clamped **260–480**). The toolbar slider and the **`md+` drag gutter** between graph and detail update the same value; see [`graphDetailColumnWidth.js`](../../ui/src/components/graph/model/graphDetailColumnWidth.js) and *Wave 7* in [`graph-ui-plan.md`](./graph-ui-plan.md). No backend or URL contract.
 
 ## 5) Chunks/evidence (implemented)
 

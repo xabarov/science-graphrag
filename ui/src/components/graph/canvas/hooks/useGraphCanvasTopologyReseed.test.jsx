@@ -3,7 +3,7 @@ import React, { useRef, useState } from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { getGraphLayoutSignature } from "../graphFlowAdapter.js";
+import { getGraphLayoutSignature } from "../../flow/graphFlowAdapter.js";
 import { useGraphCanvasTopologyReseed } from "./useGraphCanvasTopologyReseed.js";
 
 /**

@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef } from "react";
 
-import { graphTelemetryEmit } from "../graphTelemetry.js";
-import { buildSimulationState } from "../graphSimulationAdapter.js";
+import { graphTelemetryEmit } from "../../model/graphTelemetry.js";
+import { buildSimulationState } from "../../model/graphSimulationAdapter.js";
 
 /**
  * Re-seed force simulation strictly when topology changes (signature-driven).

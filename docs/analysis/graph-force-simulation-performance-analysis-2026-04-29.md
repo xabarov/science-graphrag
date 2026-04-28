@@ -23,8 +23,8 @@ This note records **asymptotic cost per tick**, **concrete code locations**, a *
 | Concern | Location |
 |--------|----------|
 | Simulation loop, cooling, stability, bounds | [`ui/src/hooks/graph/useScienceGraphForceSimulation.js`](../../ui/src/hooks/graph/useScienceGraphForceSimulation.js) |
-| Barnes–Hut quadtree + `calculateRepulsion` | [`ui/src/components/graph/physics/quadTree.js`](../../ui/src/components/graph/physics/quadTree.js) |
-| Constants (cooling, thresholds, community flag) | [`ui/src/components/graph/physics/simConstants.js`](../../ui/src/components/graph/physics/simConstants.js) |
+| Barnes–Hut quadtree + `calculateRepulsion` | [`ui/src/components/graph/canvas/physics/quadTree.js`](../../ui/src/components/graph/canvas/physics/quadTree.js) |
+| Constants (cooling, thresholds, community flag) | [`ui/src/components/graph/canvas/physics/simConstants.js`](../../ui/src/components/graph/canvas/physics/simConstants.js) |
 | When integration runs (shell / canvas pause) | [`ui/src/hooks/graph/useGraphPhysicsPolicy.js`](../../ui/src/hooks/graph/useGraphPhysicsPolicy.js) |
 
 Behavioral summary:
@@ -65,8 +65,8 @@ Stages are ordered by **typical effort vs risk**. Items in later stages may supe
 
 **Stage A — delivery notes (implemented in `ui/`, 2026-04-29):**
 
-1. **Barnes–Hut `theta`** — `BARNES_HUT_THETA` in [`ui/src/components/graph/physics/simConstants.js`](../../ui/src/components/graph/physics/simConstants.js) (default `0.5`, same as legacy implicit default); passed into [`QuadTree.calculateRepulsion`](../../ui/src/components/graph/physics/quadTree.js) from [`useScienceGraphForceSimulation`](../../ui/src/hooks/graph/useScienceGraphForceSimulation.js). Raise toward ~0.65–0.75 only after profiling if repulsion is still hot.
-2. **Warm start / fewer cold restarts** — [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx) passes `topologySignature` and `physicsEpoch` separately; physics-only bumps reset cooling/stability **without** re-running `detectScienceHybridCommunities`. [`getGraphLayoutSignature`](../../ui/src/components/graph/graphFlowAdapter.js) uses **canonical sort** of node/edge ids so reorder-only API payloads do not retrigger topology reseed. Follow-ups: `isSimStableRef` sync on reset, `simulationSignature` in effect deps for policy alignment, deterministic cluster id lists (small quality pass).
+1. **Barnes–Hut `theta`** — `BARNES_HUT_THETA` in [`ui/src/components/graph/canvas/physics/simConstants.js`](../../ui/src/components/graph/canvas/physics/simConstants.js) (default `0.5`, same as legacy implicit default); passed into [`QuadTree.calculateRepulsion`](../../ui/src/components/graph/canvas/physics/quadTree.js) from [`useScienceGraphForceSimulation`](../../ui/src/hooks/graph/useScienceGraphForceSimulation.js). Raise toward ~0.65–0.75 only after profiling if repulsion is still hot.
+2. **Warm start / fewer cold restarts** — [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/canvas/GraphCanvasMvp.jsx) passes `topologySignature` and `physicsEpoch` separately; physics-only bumps reset cooling/stability **without** re-running `detectScienceHybridCommunities`. [`getGraphLayoutSignature`](../../ui/src/components/graph/flow/graphFlowAdapter.js) uses **canonical sort** of node/edge ids so reorder-only API payloads do not retrigger topology reseed. Follow-ups: `isSimStableRef` sync on reset, `simulationSignature` in effect deps for policy alignment, deterministic cluster id lists (small quality pass).
 3. **Throttle / batched commits** — `PHYSICS_REACT_COMMIT_INTERVAL` in `simConstants.js` (default **1** = one physics tick per React commit, unchanged UX). Values **2–4** run multiple `runOnePhysicsTick` substeps per `setNodes` to trade motion smoothness for fewer reconciles; validate per graph size.
 
 **Suggested sequencing:** complete **A** before large refactors; run **B** community + React integration fixes in parallel only if staffed — both touch `useScienceGraphForceSimulation.js` and should land with tests/regression checks. **C** and **D** are optional forks depending on target `n` and UX (interactive drag vs static overview).

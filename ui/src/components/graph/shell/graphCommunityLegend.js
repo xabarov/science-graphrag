@@ -2,7 +2,7 @@
  * Legend rows and preview labels for UI communities (Wave GR-COM-1).
  */
 
-import { sortedCommunitiesByCount } from "./physics/communityPalette.js";
+import { sortedCommunitiesByCount } from "../canvas/physics/communityPalette.js";
 
 /**
  * @param {{ nodes?: Array<{ id: string }>, edges?: Array<{ source: string, target: string }> }} graph

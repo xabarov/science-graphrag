@@ -2,7 +2,7 @@
 
 **Status:** draft — **LT0 (visual contract + inventory) complete as of §10**  
 **Scope:** `ui/` application shell, shared components, page surfaces, graph/reader/chat, settings entry point for theme preference  
-**Primary context:** `ui/src/main.jsx`, `ui/src/styles.css`, `ui/src/components/common/index.jsx`, `ui/src/components/layout/DashboardLayout/Drawer.jsx`, `ui/src/components/layout/DashboardLayout/DashboardLayout.jsx`, `ui/src/components/work/MarkdownViewCore.jsx`, `ui/src/components/work/PdfViewer.jsx`, `ui/src/components/graph/graphCanvasStyle.js`
+**Primary context:** `ui/src/main.jsx`, `ui/src/styles.css`, `ui/src/components/common/index.jsx`, `ui/src/components/layout/DashboardLayout/Drawer.jsx`, `ui/src/components/layout/DashboardLayout/DashboardLayout.jsx`, `ui/src/components/work/MarkdownViewCore.jsx`, `ui/src/components/work/PdfViewer.jsx`, `ui/src/components/graph/canvas/graphCanvasStyle.js`
 
 ## 1. Why this roadmap exists
 
@@ -13,7 +13,7 @@ The product already has a coherent dark visual language: compact spacing, subdue
 - shared primitives such as `ui/src/components/common/index.jsx` encode white-on-dark defaults directly;
 - shell/page components such as `ui/src/components/layout/DashboardLayout/Drawer.jsx`, `ui/src/components/layout/DashboardLayout/DashboardLayout.jsx`, `ui/src/pages/SettingsPage/SettingsLayout.jsx`, and `ui/src/components/layout/PageHeader.jsx` use hard-coded dark surfaces and borders;
 - content renderers such as `ui/src/components/work/MarkdownViewCore.jsx` and `ui/src/components/work/PdfViewer.jsx` assume dark backgrounds;
-- graph rendering in `ui/src/components/graph/graphCanvasStyle.js` relies on light strokes over dark canvas assumptions.
+- graph rendering in `ui/src/components/graph/canvas/graphCanvasStyle.js` relies on light strokes over dark canvas assumptions.
 
 This means that adding a light theme is not a matter of flipping one MUI switch. We need a small visual system refactor first, then a staged migration of high-value surfaces.
 

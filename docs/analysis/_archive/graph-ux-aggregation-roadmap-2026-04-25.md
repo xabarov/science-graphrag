@@ -38,7 +38,7 @@ b240ca79-6dc1-49ec-90c7-acce907439d1:ash:1
 3. **Узлы-«хабы» без сжатия.** В кадре видны несколько `:Authorship` рядом с одной `:Work` (по числу авторов), несколько `:Author` рядом с одним `:Work`, и потенциально много одинаковых `:Institution` — это типичный «звёздный» паттерн, который полезен для запросов, но в визуальном представлении маскирует структуру.
 4. **`_OF_AUTHOR`, `HAS_AUTHORSHIP`, `AFFILIATED_WITH` как первичные подписи рёбер.** Это **названия типов рёбер из канона** ([ADR 002](../adr/002-layer1-graph-model.md)) — корректно для запросов, но не нужно показывать как «продукт» неподготовленному пользователю. У нас уже есть `display_type` (snake_case → space), но он по-прежнему совпадает один-в-один с типом.
 5. **Внешние/слабые контекстные узлы наравне с целевыми.** `:Venue`, `:Institution`, второстепенные `:Author` рендерятся теми же дисками, что и `:Work` / `:Method` / `:Dataset` — они оттягивают взгляд от того, что и есть «знание».
-6. **Workspace-граф визуально не отличает корпус от внешних цитирований.** Палитра уже знает `workspace_membership: internal/external` (см. [`graphCanvasStyle.js`](../../ui/src/components/graph/graphCanvasStyle.js), Wave J), но **в боковой панели** до сих пор «голая» карточка узла без бейджа корпус/внешний и без счётчика связности.
+6. **Workspace-граф визуально не отличает корпус от внешних цитирований.** Палитра уже знает `workspace_membership: internal/external` (см. [`graphCanvasStyle.js`](../../ui/src/components/graph/canvas/graphCanvasStyle.js), Wave J), но **в боковой панели** до сих пор «голая» карточка узла без бейджа корпус/внешний и без счётчика связности.
 7. **Ребро без агрегации: рёбра в одну и ту же группу не пакетируются.** Если `:Work` цитирует 30 работ, на канвасе появляется 30 рёбер `CITES`. Force-симуляция справляется, но визуально это «куст», в котором не видно структуры (по году, по теме, по venue).
 
 Проблема №1 (`Authorship` с сырым UUID) — самая громкая и сама по себе тривиально лечится на бэкенде; всё остальное — системный класс задач, который требует разделить онтологию и проекцию для UI.
@@ -88,7 +88,7 @@ b240ca79-6dc1-49ec-90c7-acce907439d1:ash:1
 - **Adaptive labelling по zoom**: на zoom-out показывать только подписи `:Work`; при приближении — подписи `Method`/`Dataset`; всегда последними — `Author`/`Institution`/`Venue`.
 - **Бандлинг рёбер**: смежные `CITES` от одной `Work` к группе работ можно рендерить как curved bundle (визуально, без изменения данных).
 - **Сворачивание «куста» по узлу-владельцу**: один клик «collapse authorship» в инспекторе схлопывает все исходящие `HAS_AUTHORSHIP` от выбранного `:Work` в один служебный диск с числом `N авторов` и списком в боковой панели.
-- **Cluster hint по типу/году/workspace_membership**: уже частично сделано через [`scienceHybridCommunities.js`](../../ui/src/components/graph/physics/scienceHybridCommunities.js); расширяем явно (см. §5 Wave GR3).
+- **Cluster hint по типу/году/workspace_membership**: уже частично сделано через [`scienceHybridCommunities.js`](../../ui/src/components/graph/canvas/physics/scienceHybridCommunities.js); расширяем явно (см. §5 Wave GR3).
 
 ---
 
@@ -188,7 +188,7 @@ b240ca79-6dc1-49ec-90c7-acce907439d1:ash:1
 ### 4.4 Согласование с тестами и snapshot-диффом
 
 - [`graph_snapshot_diff.py`](../../science_graphrag/api/graph_snapshot_diff.py) и `graph_v1` бенчмарк-семья **должны работать на `view=raw`**, чтобы не зависеть от UX-эвристик; UI работает на `view=reader`.
-- Нормализатор payload-а на UI ([`graphViewState.js`](../../ui/src/components/graph/graphViewState.js)) — проверить, что неизвестные поля (`aggregation_hints`, `via`, `node_kind`) проходят без warn-spam (он уже добавляет в `warnings` только содержательное).
+- Нормализатор payload-а на UI ([`graphViewState.js`](../../ui/src/components/graph/model/graphViewState.js)) — проверить, что неизвестные поля (`aggregation_hints`, `via`, `node_kind`) проходят без warn-spam (он уже добавляет в `warnings` только содержательное).
 
 ---
 
@@ -215,7 +215,7 @@ Wave «GR» = Graph Readability (отдельный индекс, чтобы н�
 - [x] То же самое для `_node_dict_from_neo` в [`workspace_graph.py`](../../science_graphrag/api/workspace_graph.py).
 - [x] Новые pytest-кейсы: `tests/test_works_graph_display.py`, проверка `display_label` ≠ UUID для каждого типа.
 - [x] Снимок benchmark `graph_v1` пересобрать, убедиться что diff содержит **только** `display_label`/`subtitle` (структура графа неизменна). *(n/a: `graph_v1` проверяет структурные метрики, не `display_*` поля)*.
-- [x] UI smoke в [`GraphDetailPanel.jsx`](../../ui/src/components/graph/GraphDetailPanel.jsx): `display_label` отрисовывается, fallback `label` уже работает.
+- [x] UI smoke в [`GraphDetailPanel.jsx`](../../ui/src/components/graph/shell/GraphDetailPanel.jsx): `display_label` отрисовывается, fallback `label` уже работает.
 
 **Acceptance:** На `/graph?work_id=…` ни один отображаемый узел в боковой панели и на канвасе не имеет в качестве заголовка UUID; технический `id` по-прежнему виден в Advanced JSON.
 

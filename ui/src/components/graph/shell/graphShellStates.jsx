@@ -5,7 +5,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
-import { useI18n } from "../../i18n/useI18n.js";
+import { useI18n } from "../../../i18n/useI18n.js";
 
 /**
  * Loading row used by GraphWorkspacePanel (and keeps typography aligned with the rest of the graph UI).

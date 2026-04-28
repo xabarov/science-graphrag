@@ -13,18 +13,18 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
-import { CursorIconButton } from "../common/index.js";
-import { useI18n } from "../../i18n/useI18n.js";
-import { outlinedAppTextFieldSx } from "../../theme/settingsFormSx.js";
-import GraphNodesVisibilityMenu from "./toolbar/GraphNodesVisibilityMenu.jsx";
-import GraphViewChips from "./toolbar/GraphViewChips.jsx";
+import { CursorIconButton } from "../../common/index.js";
+import { useI18n } from "../../../i18n/useI18n.js";
+import { outlinedAppTextFieldSx } from "../../../theme/settingsFormSx.js";
+import GraphNodesVisibilityMenu from "../toolbar/GraphNodesVisibilityMenu.jsx";
+import GraphViewChips from "../toolbar/GraphViewChips.jsx";
 
 /**
  * @param {{
  *   workspaceId?: string,
  *   stats: { works_count?: number, authors_count?: number, external_citations?: number } | null,
- *   visibility: import("./graphVisibilityFilter.js").GraphVisibilityValue,
- *   onVisibilityChange: (patch: Partial<import("./graphVisibilityFilter.js").GraphVisibilityValue>) => void,
+ *   visibility: import("../model/graphVisibilityFilter.js").GraphVisibilityValue,
+ *   onVisibilityChange: (patch: Partial<import("../model/graphVisibilityFilter.js").GraphVisibilityValue>) => void,
  *   contextWorkId?: string,
  *   canvasMode?: boolean,
  *   localFindQuery?: string,

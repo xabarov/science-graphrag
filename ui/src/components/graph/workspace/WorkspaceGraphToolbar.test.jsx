@@ -3,9 +3,9 @@ import { renderToString } from "react-dom/server";
 import { ThemeProvider } from "@mui/material/styles";
 import { describe, expect, it } from "vitest";
 
-import { I18nProvider } from "../../i18n/I18nContext.jsx";
-import { buildAppTheme } from "../../theme/buildAppTheme.js";
-import { defaultGraphVisibility } from "./graphVisibilityFilter.js";
+import { I18nProvider } from "../../../i18n/I18nContext.jsx";
+import { buildAppTheme } from "../../../theme/buildAppTheme.js";
+import { defaultGraphVisibility } from "../model/graphVisibilityFilter.js";
 import { graphVisibilityLocalStorageKey } from "./hooks/useGraphWorkspaceData.js";
 import WorkspaceGraphToolbar from "./WorkspaceGraphToolbar.jsx";
 

@@ -30,9 +30,9 @@ The graph UI was inspection-first: **Cards** defaulted ahead of **Canvas**, circ
 
 2. **Frontend defaults** — Persist `graphVizMode` defaulting to **canvas**; persist `graphCanvasLayoutMode` defaulting to **force**. Cards/Flow remain secondary.
 
-3. **Inspector** — New [`graphInspectorModel.js`](../../ui/src/components/graph/graphInspectorModel.js) builds readable edge rows; [`GraphDetailPanel.jsx`](../../ui/src/components/graph/GraphDetailPanel.jsx) shows overview + properties + clickable connections; raw JSON under Advanced.
+3. **Inspector** — New [`graphInspectorModel.js`](../../ui/src/components/graph/model/graphInspectorModel.js) builds readable edge rows; [`GraphDetailPanel.jsx`](../../ui/src/components/graph/shell/GraphDetailPanel.jsx) shows overview + properties + clickable connections; raw JSON under Advanced.
 
-4. **Canvas fit** — Clamp post-fit scale with `MIN_FIT_SCALE` in [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx) so dense 1-hop graphs do not shrink to invisible dots.
+4. **Canvas fit** — Clamp post-fit scale with `MIN_FIT_SCALE` in [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/canvas/GraphCanvasMvp.jsx) so dense 1-hop graphs do not shrink to invisible dots.
 
 5. **Detail vs canvas consistency** — `deriveInspectorDetail` runs on **`displayGraph`** (post-`capGraphForUi`) so the panel matches what the canvas can show.
 
@@ -67,7 +67,7 @@ The graph UI was inspection-first: **Cards** defaulted ahead of **Canvas**, circ
 **Decision:**
 
 1. **Main workspace graph** is always built as the **union of all incident edges** for every internal work in the workspace (same logical shape as the historical **`depth=1`** / `build_from_depth1_rows` path). The **`depth=2`** / `build_from_depth2_rows` branch and optional **GDS** path for workspace canvas are **removed**.
-2. **Removed** from the workspace graph HTTP contract: query params **`depth`**, **`neighbor_limit`**, **`node_types`**. Clients must not rely on the server to «thin» the graph by type; use **client-side** visibility ([`graphVisibilityFilter.js`](../../ui/src/components/graph/graphVisibilityFilter.js)).
+2. **Removed** from the workspace graph HTTP contract: query params **`depth`**, **`neighbor_limit`**, **`node_types`**. Clients must not rely on the server to «thin» the graph by type; use **client-side** visibility ([`graphVisibilityFilter.js`](../../ui/src/components/graph/model/graphVisibilityFilter.js)).
 3. **Neighbors / expand:** no default **row cap** or extra hop via query params; behavior is **1-hop** from the requested node. Very high degree remains an operational concern (documented in `graph-ui-plan.md`).
 
 **Consequences:**

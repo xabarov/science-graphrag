@@ -630,11 +630,11 @@ Checklist:
 
 Заметки по реализации (текущий код):
 
-- Нормализация ответа API: [`graphAdapter.js`](../../ui/src/components/graph/graphAdapter.js), [`graphViewState.js`](../../ui/src/components/graph/graphViewState.js) — дубликаты id, сироты рёбер, `warnings`.
-- Оболочка: [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx) — загрузка, переключатель Cards/Graph, легенда, алерты, сворачиваемые diagnostics / `lab=1`, сетка + детали.
-- Общие состояния графа: [`graphShellStates.jsx`](../../ui/src/components/graph/graphShellStates.jsx) — empty/loading/error для страницы, вкладки и панели.
-- Визуализация: [`GraphVisualization.jsx`](../../ui/src/components/graph/GraphVisualization.jsx), [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx) + [`graphCanvasTransform.js`](../../ui/src/components/graph/graphCanvasTransform.js), [`graphUiLimits.js`](../../ui/src/components/graph/graphUiLimits.js).
-- Детали: [`GraphDetailPanel.jsx`](../../ui/src/components/graph/GraphDetailPanel.jsx) — полный граф для `deriveGraphDetail`.
+- Нормализация ответа API: [`graphAdapter.js`](../../ui/src/components/graph/model/graphAdapter.js), [`graphViewState.js`](../../ui/src/components/graph/model/graphViewState.js) — дубликаты id, сироты рёбер, `warnings`.
+- Оболочка: [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/workspace/GraphWorkspacePanel.jsx) — загрузка, переключатель Cards/Graph, легенда, алерты, сворачиваемые diagnostics / `lab=1`, сетка + детали.
+- Общие состояния графа: [`graphShellStates.jsx`](../../ui/src/components/graph/shell/graphShellStates.jsx) — empty/loading/error для страницы, вкладки и панели.
+- Визуализация: [`GraphVisualization.jsx`](../../ui/src/components/graph/shell/GraphVisualization.jsx), [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/canvas/GraphCanvasMvp.jsx) + [`graphCanvasTransform.js`](../../ui/src/components/graph/canvas/graphCanvasTransform.js), [`graphUiLimits.js`](../../ui/src/components/graph/model/graphUiLimits.js).
+- Детали: [`GraphDetailPanel.jsx`](../../ui/src/components/graph/shell/GraphDetailPanel.jsx) — полный граф для `deriveGraphDetail`.
 - Точки входа: вкладка Graph в Workspace, [`GraphPage.jsx`](../../ui/src/pages/GraphPage.jsx).
 
 Цель:
@@ -649,7 +649,7 @@ Checklist:
 
 - Зафиксировать целевую модель для рендера: `nodes[]`, `edges[]`, идентификаторы для выбора и deep link (уже близко к `normalizeGraphPayload`).
 - Покрыть краевые случаи: пустой граф, дубликаты id, крупный ответ API — лимиты/предупреждение в UI (без падения).
-- Расширить тесты [`graphViewState.test.js`](../../ui/src/components/graph/graphViewState.test.js) при изменении контракта.
+- Расширить тесты [`graphViewState.test.js`](../../ui/src/components/graph/model/graphViewState.test.js) при изменении контракта.
 - **Референс (модель и подготовка к симуляции):** `../../../osint-gr/frontend/src/components/features/graphVisualization/hooks/useGraphData.js` — как из доменной структуры получают узлы/рёбра и размер канваса.
 
 #### Phase 4.2 — Canvas MVP (рёбра на плоскости)
@@ -673,7 +673,7 @@ Checklist:
 
 #### Phase 4.4 — Полировка и Graph Lab
 
-- **Сделано в UI:** [`graphShellStates.jsx`](../../ui/src/components/graph/graphShellStates.jsx), [`GraphTypeLegend.jsx`](../../ui/src/components/graph/GraphTypeLegend.jsx), флаг **`lab=1`** (диagnostics развёрнуты), иначе disclosure; позиционирование канваса централизовано в [`graphCanvasTransform.js`](../../ui/src/components/graph/graphCanvasTransform.js).
+- **Сделано в UI:** [`graphShellStates.jsx`](../../ui/src/components/graph/shell/graphShellStates.jsx), [`GraphTypeLegend.jsx`](../../ui/src/components/graph/shell/GraphTypeLegend.jsx), флаг **`lab=1`** (диagnostics развёрнуты), иначе disclosure; позиционирование канваса централизовано в [`graphCanvasTransform.js`](../../ui/src/components/graph/canvas/graphCanvasTransform.js).
 - Дальше (опционально): отдельный маршрут `/graph/lab`, клавиатурная навигация по узлам, выравнивание empty states с глобальным Phase 7 audit.
 - **Референс:** `../../../osint-gr/frontend/src/pages/KnowledgeGraphPage.jsx`.
 

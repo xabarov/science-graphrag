@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import { useTheme } from "@mui/material/styles";
 
 import GraphDetailPanel from "./GraphDetailPanel.jsx";
-import { clampGraphDetailColumnPx } from "./graphDetailColumnWidth.js";
+import { clampGraphDetailColumnPx } from "../model/graphDetailColumnWidth.js";
 
 export default function GraphSidePanel({
   workspaceId = "",

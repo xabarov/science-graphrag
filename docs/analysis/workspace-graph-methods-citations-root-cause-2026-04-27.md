@@ -30,7 +30,7 @@ Prior audit ([`od-corpus-claims-methods-trust-audit-2026-04-27.md`](./od-corpus-
 
 ### 1.2 What the frontend requested (before the contract fix)
 
-[`useGraphWorkspaceData.js`](../../ui/src/components/graph/hooks/useGraphWorkspaceData.js) **used to** load the workspace graph with:
+[`useGraphWorkspaceData.js`](../../ui/src/components/graph/workspace/hooks/useGraphWorkspaceData.js) **used to** load the workspace graph with:
 
 - `mode: "full"`
 - **`depth: 2`** (removed from the API contract; the client no longer sends depth)

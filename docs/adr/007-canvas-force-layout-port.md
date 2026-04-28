@@ -18,7 +18,7 @@ ADR 006 recorded the **React Flow** POC and left **force-directed** physics as o
 
 ## Consequences
 
-- New modules under `ui/src/components/graph/physics/` and `graphSimulationAdapter.js`; `GraphCanvasMvp` accepts `layoutMode: "circle" | "force"`.
+- New modules under `ui/src/components/graph/canvas/physics/` and [`graphSimulationAdapter.js`](../../ui/src/components/graph/model/graphSimulationAdapter.js); `GraphCanvasMvp` accepts `layoutMode: "circle" | "force"`.
 - **No API change** — still `normalizeGraphPayload` + `capGraphForUi`; selection, URL trace, `GraphDetailPanel` unchanged.
 - Flow mode remains **non–force-directed** (out of scope for this ADR).
 

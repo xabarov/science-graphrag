@@ -47,7 +47,7 @@ North star из [roadmap §1.2](../roadmap.md): **рабочее место уч
 | Workspaces list | [`pages/WorkspacesPage.jsx`](../../ui/src/pages/WorkspacesPage.jsx) | CRUD workspace + поиск глобального индекса works | Возврат на список «съедает» текущий контекст (см. §3.1) |
 | Workspace detail | [`pages/WorkspacePage/WorkspacePage.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx) | Загрузка одного файла, список карточек works (`maxWidth: 720`), DeduplicationPanel | Узкая колонка; нет folder upload; нет видимого summary корпуса |
 | Reader | [`components/work/ReaderWorkBody.jsx`](../../ui/src/components/work/ReaderWorkBody.jsx) | Title/abstract + concat chunks (truncate 120k) | **Нет PDF**; формулы/таблицы теряются |
-| Graph | [`pages/GraphPage.jsx`](../../ui/src/pages/GraphPage.jsx) + [`components/graph/GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx) | При `?workspace_id=…` тянет workspace graph (union 1-hop), иначе single-work | UI готов к workspace-графу; **бэкенд слабый** (см. §3.4) |
+| Graph | [`pages/GraphPage.jsx`](../../ui/src/pages/GraphPage.jsx) + [`components/graph/workspace/GraphWorkspacePanel.jsx`](../../ui/src/components/graph/workspace/GraphWorkspacePanel.jsx) | При `?workspace_id=…` тянет workspace graph (union 1-hop), иначе single-work | UI готов к workspace-графу; **бэкенд слабый** (см. §3.4) |
 | Ask | [`pages/AskPage.jsx`](../../ui/src/pages/AskPage.jsx) + [`components/work/AskPanel.jsx`](../../ui/src/components/work/AskPanel.jsx) | `?work_id=` или global; **не передаёт workspace_id** | Нет workspace-scope (см. §3.5) |
 | Evidence | [`pages/EvidencePage.jsx`](../../ui/src/pages/EvidencePage.jsx) | Только `?work_id=` | Нет workspace-scope |
 | Dedup | [`components/graph/DeduplicationPanel.jsx`](../../ui/src/components/graph/DeduplicationPanel.jsx) | Кластеры по DOI / arXiv / OpenAlex / fingerprint | **Только rule/ID**, без LLM/embedding |
@@ -269,7 +269,7 @@ flowchart TB
   - `depth = 1 | 2`,
   - `include_external = true | false` (рендерить ли цитируемые работы вне workspace),
   - `node_types` filter (`Work`, `Method`, `Dataset`, `Author`, `Venue`).
-- UI: новый `WorkspaceGraphPanel` поверх существующего [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx) — добавляет тулбар с режимами и фильтром по типам, palette для разделения internal vs external нодов.
+- UI: новый `WorkspaceGraphPanel` поверх существующего [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/workspace/GraphWorkspacePanel.jsx) — добавляет тулбар с режимами и фильтром по типам, palette для разделения internal vs external нодов.
 
 ### 4.4 Dedup pipeline (отдельный спек после ADR)
 
@@ -424,7 +424,7 @@ Wave I — обязательное предусловие: без global worksp
 **Фронт:**
 
 1. `WorkspaceGraphToolbar` (новый): chips для `mode`, depth, type filter; persist в `localStorage`.
-2. Расширение [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/GraphCanvasMvp.jsx) / `graphCanvasStyle.js`: разная палитра для `internal` vs `external`; разный размер/обводка.
+2. Расширение [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/canvas/GraphCanvasMvp.jsx) / `graphCanvasStyle.js`: разная палитра для `internal` vs `external`; разный размер/обводка.
 3. Force-mode community hint: workspace-internal works получают `clusterId = "ws-internal"` (используем уже port'ed osint pattern из ADR 007).
 4. Workspace summary (см. Wave I §4.2): `GET /v1/workspaces/{id}/graph/stats` для счётчиков.
 

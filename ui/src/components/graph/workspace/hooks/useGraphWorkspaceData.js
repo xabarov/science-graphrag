@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { expandAggregator, formatResearchApiError, getWorkGraph } from "../../../services/researchApi.js";
-import { normalizeGraphVisibilityValue } from "../graphVisibilityFilter.js";
-import { graphTelemetryEmit } from "../graphTelemetry.js";
+import { expandAggregator, formatResearchApiError, getWorkGraph } from "../../../../services/researchApi.js";
+import { normalizeGraphVisibilityValue } from "../../model/graphVisibilityFilter.js";
+import { graphTelemetryEmit } from "../../model/graphTelemetry.js";
 import { scheduleDeferredGraphPrefetch } from "../graphWorkspaceDeferred.js";
 import { readGraphVisibilityFromLs, writeGraphVisibilityToLs } from "../graphWorkspaceVisibilityLs.js";
 import {
@@ -13,8 +13,8 @@ import {
   getWorkspaceGraph,
   getWorkspaceGraphNeighbors,
   getWorkspaceGraphStats,
-} from "../../../utils/workspaceStore.js";
-import { normalizeGraphPayload } from "../graphViewState.js";
+} from "../../../../utils/workspaceStore.js";
+import { normalizeGraphPayload } from "../../model/graphViewState.js";
 
 export { graphVisibilityLocalStorageKey } from "../graphWorkspaceVisibilityLs.js";
 

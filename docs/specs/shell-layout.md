@@ -37,7 +37,7 @@ flowchart TB
 
 ## Graph surface (planned evolution)
 
-- Сейчас: вкладка **Graph** и [`GraphPage`](../../ui/src/pages/GraphPage.jsx) используют [`GraphWorkspacePanel`](../../ui/src/components/graph/GraphWorkspacePanel.jsx) (сетка узлов + detail panel).
+- Сейчас: вкладка **Graph** и [`GraphPage`](../../ui/src/pages/GraphPage.jsx) используют [`GraphWorkspacePanel`](../../ui/src/components/graph/workspace/GraphWorkspacePanel.jsx) (сетка узлов + detail panel).
 - Целевое состояние, контракт данных и **подфазы 4.1–4.4**: [graph-ui-plan.md](./graph-ui-plan.md) и [Phase 4 в ui-ux-master-plan.md](./ui-ux-master-plan.md#phase-4-graph-ux-modernization).
 - Референсная реализация (osint-gr): canvas + force layout — `GraphVisualization.jsx` и `graphVisualization/` под `osint-gr/frontend/src/components/features/`.
 

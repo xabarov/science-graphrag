@@ -1,13 +1,13 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 
 import { useGraphPhysicsPolicy } from "./useGraphPhysicsPolicy.js";
-import { getScienceDesiredDistance } from "../../components/graph/physics/desiredLinkDistance.js";
-import { getNodeCluster } from "../../components/graph/physics/structuralCommunities.js";
-import { detectScienceHybridCommunities } from "../../components/graph/physics/scienceHybridCommunities.js";
+import { getScienceDesiredDistance } from "../../components/graph/canvas/physics/desiredLinkDistance.js";
+import { getNodeCluster } from "../../components/graph/canvas/physics/structuralCommunities.js";
+import { detectScienceHybridCommunities } from "../../components/graph/canvas/physics/scienceHybridCommunities.js";
 import {
   buildClusterPositionStats,
   centroidCommunityForce,
-} from "../../components/graph/physics/communityCentroidAttraction.js";
+} from "../../components/graph/canvas/physics/communityCentroidAttraction.js";
 import {
   BARNES_HUT_THETA,
   CANVAS_MARGIN,
@@ -22,17 +22,17 @@ import {
   STABLE_ITERATIONS,
   STABILITY_THRESHOLD,
   USE_COMMUNITY_DETECTION,
-} from "../../components/graph/physics/simConstants.js";
-import { QuadTree } from "../../components/graph/physics/quadTree.js";
-import { fastInvSqrt, fastSqrt, getRepulsionMultiplier } from "../../components/graph/physics/forceUtils.js";
+} from "../../components/graph/canvas/physics/simConstants.js";
+import { QuadTree } from "../../components/graph/canvas/physics/quadTree.js";
+import { fastInvSqrt, fastSqrt, getRepulsionMultiplier } from "../../components/graph/canvas/physics/forceUtils.js";
 
 /**
  * Force-directed simulation (fork of osint-gr useForceSimulation; no OSINT domain).
  *
  * @param {boolean} enabled
- * @param {import("../../components/graph/graphSimulationAdapter.js").SimNode[]} nodes
- * @param {React.Dispatch<React.SetStateAction<import("../../components/graph/graphSimulationAdapter.js").SimNode[]>>} setNodes
- * @param {import("../../components/graph/graphSimulationAdapter.js").SimLink[]} links
+ * @param {import("../../components/graph/model/graphSimulationAdapter.js").SimNode[]} nodes
+ * @param {React.Dispatch<React.SetStateAction<import("../../components/graph/model/graphSimulationAdapter.js").SimNode[]>>} setNodes
+ * @param {import("../../components/graph/model/graphSimulationAdapter.js").SimLink[]} links
  * @param {number} repulsionStrength
  * @param {boolean} isSimulationStable
  * @param {(v: boolean) => void} setIsSimulationStable
@@ -43,7 +43,7 @@ import { fastInvSqrt, fastSqrt, getRepulsionMultiplier } from "../../components/
  * @param {string} physicsEpoch Force-run / reheat identity; bumps reset cooling without redoing community detection if topology unchanged.
  * @param {string} simulationSignature Combined key for pause policy (`topology|physicsEpoch`); must change whenever topology or physicsEpoch changes.
  * @param {EventTarget} [pointerEventTarget] Optional bus for canvas pointer pause events (defaults to `window` via useGraphPhysicsPolicy).
- * @param {React.MutableRefObject<import("../../components/graph/graphSimulationAdapter.js").SimNode[]>} simNodesRef Live sim buffer (mutated in place); must match seeded React state after topology/restart.
+ * @param {React.MutableRefObject<import("../../components/graph/model/graphSimulationAdapter.js").SimNode[]>} simNodesRef Live sim buffer (mutated in place); must match seeded React state after topology/restart.
  * @param {() => void} onPhysicsVisualTick Called after each integrator commit so canvas can repaint without setState per frame.
  */
 export function useScienceGraphForceSimulation(
