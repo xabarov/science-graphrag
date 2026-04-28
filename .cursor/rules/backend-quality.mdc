@@ -29,6 +29,16 @@ globs: ["**/*.py", "science_graphrag/**", "tests/**"]
 - Глобальные отключения в конфиге — только там, где это осознанный компромисс проекта (например, порядок импортов отдаётся **isort**). Новые отключения согласовывать с минимальным охватом: лучше узкий `disable` на конкретной строке с кратким комментарием «почему», чем выключить целое правило для модуля.
 - Ориентир: после правок по возможности **снижать** шум pylint за счёт кода, а не за счёт выключения проверок.
 
+## Logging conventions (stdlib `logging`)
+
+- **Do not** add new `configure_logging()` calls outside established entrypoints (FastAPI lifespan, worker import, CLI, tests). Extra calls are redundant; the helper is idempotent but spreads noise.
+- **Two allowed patterns** (do not mix styles inside one module without reason):
+  - **Ingest / orchestration / long-running pipeline code:** `from science_graphrag.utils.project_logging import get_logger` then `log = get_logger("subsystem.alias")` — short hierarchical names (e.g. `ingestion.pipeline`). Ensures `configure_logging()` ran and matches the logging improvement plan “Pattern A”.
+  - **Everything else (API routes, storage, agent, one-off modules):** `import logging` then `logger = logging.getLogger(__name__)` — “Pattern B”; still under the `science_graphrag` tree, inherits the project handler from the parent logger.
+- Use the variable name **`logger`** consistently (not `log`) for new or touched code.
+- Correlation: prefer `ingest_log_context` / `extra=` keys `job_id`, `workspace_id`, `stage` (see `science_graphrag/utils/log_context.py`); never log corpus text or secrets (see `security-sensitive.mdc`).
+- Product-facing text log tail for ingest jobs is **`ingest_jobs.logs`**, not stdlib logging — see `docs/runbooks/logging-and-troubleshooting.md`.
+
 ## Рефакторинг в конце итерации
 
 - Если к концу серии изменений видно, что качество структуры просело, **завершить итерацию рефакторингом** (в том же PR/сессии или отдельным последовательным шагом), а не оставлять «как есть».

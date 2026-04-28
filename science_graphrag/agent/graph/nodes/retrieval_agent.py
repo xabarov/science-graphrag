@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Literal
+from typing import Any
 
 from langchain_core.messages import HumanMessage, ToolMessage
 from langchain_core.tools import BaseTool
 from langgraph.graph import END, StateGraph
 
 from science_graphrag.agent.graph.react_edges import (
+    react_after_tools_decrement_budget,
     react_chat_response_budget_cutoff,
+    route_react_chat_to_tools,
     route_react_tools_next,
 )
 from science_graphrag.agent.graph.state import AgentState
@@ -29,15 +31,17 @@ from science_graphrag.observability.spans import SpanAttributes, add_span_event,
 
 SPECIALIST_NAME = "retrieval_agent"
 SYSTEM_PROMPT = (
-    "You are a retrieval specialist for a research workspace. Tools include: "
-    "workspace_overview, workspace_list_papers, paper_lookup, paper_metadata, paper_authors, "
-    "paper_counts, paper_quote_search (semantic quote/snippet search), format_bibliography_gost, "
-    "idea_search (semantic chunk/work search), summarize_workspace. "
-    "When <active_workspace_id> appears in the user message, use that exact UUID as workspace_id "
-    "for workspace_overview, workspace_list_papers, paper_counts, and paper_lookup. "
-    "Prefer catalog tools for paper lists, metadata, authors, and bibliography; use idea_search "
-    "for open semantic discovery; use paper_quote_search when the user needs grounded excerpts. "
-    "Return findings through tool outputs only. Do not call final_answer."
+    "You are a retrieval specialist for a research workspace. Callable tools: "
+    "workspace_inspect (mode=stats|papers|blurb — stats for counts, papers for title list, blurb for "
+    "short summary + sample work ids), find_works (full-text work search; pass workspace_id when the "
+    "user means this workspace, omit for corpus-wide search), paper_profile (metadata + authors for "
+    "one work_id), paper_quote_search (semantic chunk quotes), format_bibliography_gost, idea_search. "
+    "When <active_workspace_id> appears in the user message, use that exact UUID as workspace_id for "
+    "workspace_inspect and for find_works whenever the question is scoped to this workspace. "
+    "Use find_works (without workspace_id) only for global title search. Call paper_profile only "
+    "when you have a real work_id (from find_works, workspace_inspect mode=papers or blurb—not "
+    "stats alone). Use idea_search for open semantic discovery; use paper_quote_search for "
+    "verbatim evidence. Return findings through tool outputs only. Do not call final_answer."
 )
 
 
@@ -107,30 +111,19 @@ def _compile_react_subgraph(tools: list[BaseTool], settings: Settings, system_pr
             )
         return {"messages": [response]}
 
-    def budget_node(state: AgentState) -> dict:
-        budget = int(state.get("budget_remaining", settings.agent_max_tool_calls))
-        return {"budget_remaining": budget - 1}
-
-    def route_node(state: AgentState) -> Literal["tools", "__end__"]:
-        messages = state.get("messages") or []
-        if not messages:
-            return END
-        if int(state.get("budget_remaining", 0)) <= 0:
-            return END
-        last = messages[-1]
-        if getattr(last, "tool_calls", None):
-            return "tools"
-        return END
-
     graph = StateGraph(AgentState)
     graph.add_node("chat", chat_node)
-    graph.add_node("budget", budget_node)
     graph.add_node("tools", build_normalized_tool_node_executor(tools))
+    graph.add_node("after_tools", react_after_tools_decrement_budget)
     graph.set_entry_point("chat")
-    graph.add_edge("chat", "budget")
-    graph.add_conditional_edges("budget", route_node, {"tools": "tools", END: END})
     graph.add_conditional_edges(
-        "tools",
+        "chat",
+        route_react_chat_to_tools,
+        {"tools": "tools", END: END},
+    )
+    graph.add_edge("tools", "after_tools")
+    graph.add_conditional_edges(
+        "after_tools",
         route_react_tools_next,
         {"chat": "chat", END: END},
     )

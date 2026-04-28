@@ -3,8 +3,7 @@
   "question": "How many papers are in this workspace?",
   "notes": "Starter gold for future chat_inventory_v1 runner; not executed by CI yet.",
   "expected_tool_sequence_any": [
-    "paper_counts",
-    "workspace_overview",
-    "workspace_list_papers"
+    "workspace_inspect",
+    "find_works"
   ]
 }

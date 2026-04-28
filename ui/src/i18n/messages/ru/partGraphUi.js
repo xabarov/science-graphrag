@@ -152,6 +152,13 @@ export const partGraphUi = {
   "graph.localFind.focusFirstTooltip": "Выбрать первый подходящий узел и центрировать холст на нём",
   "graph.localFind.clearAria": "Сбросить фильтр",
 
+  "graph.contractSubtitle.workCapped": "Окрестность статьи (с лимитом) · лимит {{limit}}",
+  "graph.contractSubtitle.workspaceUnion": "Граф области · объединение 1-hop по статьям",
+  "graph.contractSubtitle.workspaceV2": "Граф области · режим {{mode}}",
+  "graph.contractSubtitle.workspaceNeighbors": "Область · окрестность одного узла (1 hop)",
+  "graph.contractSubtitle.expandWork": "Граф статьи · развёрнутая группа",
+  "graph.contractSubtitle.expandWorkspace": "Граф области · развёрнутая группа",
+
   "graph.detailPanel.title": "Детали",
   "graph.detailPanel.relationship": "Связь",
   "graph.detailPanel.openSource": "Открыть источник",

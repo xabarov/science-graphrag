@@ -54,6 +54,39 @@ def pick_active_stage_row(stages: list[dict[str, Any]]) -> dict[str, Any] | None
     return stages[-1]
 
 
+def _progress_indeterminate(active: dict[str, Any] | None, *, job_status: str) -> bool:  # pylint: disable=too-many-return-statements
+    """True when a single VL batch is in flight (no meaningful page fraction until HTTP returns)."""
+    if str(job_status or "").strip().lower() != "running":
+        return False
+    if not active:
+        return False
+    if str(active.get("name") or "").strip() != IngestStage.PARSE_PDF.value:
+        return False
+    if str(active.get("status") or "").strip().lower() != "running":
+        return False
+    met = active.get("metrics") if isinstance(active.get("metrics"), dict) else {}
+    try:
+        batch_total = int(met.get("vl_batch_total") or 0)
+    except (TypeError, ValueError):
+        batch_total = 0
+    if batch_total != 1:
+        return False
+    try:
+        cur = (
+            int(active.get("subprogress_current"))
+            if active.get("subprogress_current") is not None
+            else -1
+        )
+        tot = (
+            int(active.get("subprogress_total"))
+            if active.get("subprogress_total") is not None
+            else 0
+        )
+    except (TypeError, ValueError):
+        return False
+    return tot > 0 and 0 <= cur < tot
+
+
 def _running_intra_fraction(active: dict[str, Any] | None) -> float | None:
     if not active:
         return None
@@ -146,6 +179,7 @@ def canonical_progress_fields_for_job(
         "detail_message": detail_message,
         "subprogress_current": sub_c,
         "subprogress_total": sub_t,
+        "progress_indeterminate": _progress_indeterminate(active, job_status=str(status or "")),
     }
     if pct is not None:
         out["progress_pct"] = float(pct)

@@ -39,7 +39,7 @@ def test_v2_sync_json(monkeypatch) -> None:
     class _FakeOut:
         answer = "Test answer"
         citations = [{"work_id": "w1", "title": "Test Work"}]
-        tool_trace = [{"step": 1, "tool": "entity_search", "args_summary": {"query": "test"}}]
+        tool_trace = [{"step": 1, "tool": "edge_search", "args_summary": {"node_id": "w1"}}]
 
     class _FakeAgent:
         def run(self, **_kwargs):

@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 from langchain_core.tools import tool
 
 from science_graphrag.agent.tool_search import (
+    shortlist_tools_for_single_agent,
     shortlist_tools_for_specialist,
     strip_tool_search_context_wrappers,
 )
@@ -63,7 +64,7 @@ def test_shortlist_bibliography_boosts_gost_with_memory_prefix() -> None:
 
 
 def test_shortlist_disabled_returns_full() -> None:
-    tools = [_named_tool("idea_search"), _named_tool("workspace_overview")]
+    tools = [_named_tool("idea_search"), _named_tool("workspace_inspect")]
     settings = Settings(agent_rule_tool_search_enabled=False)
     out, meta = shortlist_tools_for_specialist(
         tools,
@@ -149,14 +150,7 @@ def test_retrieval_shortlist_always_includes_core_catalog_when_rules() -> None:
     )
     assert meta.get("reason") == "rules"
     names = {getattr(t, "name", "") for t in out}
-    for core in (
-        "workspace_overview",
-        "workspace_list_papers",
-        "paper_lookup",
-        "paper_metadata",
-        "paper_authors",
-        "paper_counts",
-    ):
+    for core in ("workspace_inspect", "paper_profile", "find_works"):
         assert core in names, f"missing {core}"
 
 
@@ -178,3 +172,45 @@ def test_retrieval_low_signal_returns_full() -> None:
     )
     # Very short / low-signal questions fall back to full tool set
     assert meta.get("reason") in ("low_signal", "fallback_full") or len(out) == len(tools)
+
+
+def test_shortlist_tools_for_single_agent_includes_final_answer() -> None:
+    from science_graphrag.agent.tools import build_tool_registry
+
+    stores = MagicMock()
+    stores.neo4j = MagicMock()
+    stores.qdrant_chunks = MagicMock()
+    stores.qdrant_works = MagicMock()
+    settings = Settings(agent_rule_tool_search_enabled=True)
+    tools = build_tool_registry(stores)
+    out, meta = shortlist_tools_for_single_agent(
+        tools,
+        question="Show cypher graph cites path between works",
+        settings=settings,
+        has_workspace=True,
+        answer_class="relation_tracing",
+    )
+    names = [getattr(t, "name", "") for t in out]
+    assert "final_answer" in names
+    assert meta.get("reason") == "rules"
+    assert len(out) <= len(tools)
+    assert len(out) < len(tools)
+
+
+def test_shortlist_tools_for_single_agent_disabled_returns_full() -> None:
+    from science_graphrag.agent.tools import build_tool_registry
+
+    stores = MagicMock()
+    stores.neo4j = MagicMock()
+    stores.qdrant_chunks = MagicMock()
+    stores.qdrant_works = MagicMock()
+    settings = Settings(agent_rule_tool_search_enabled=False)
+    tools = build_tool_registry(stores)
+    out, meta = shortlist_tools_for_single_agent(
+        tools,
+        question="anything",
+        settings=settings,
+        has_workspace=True,
+    )
+    assert len(out) == len(tools)
+    assert meta.get("skipped") is True

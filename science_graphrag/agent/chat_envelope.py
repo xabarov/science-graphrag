@@ -38,6 +38,25 @@ def _last_user_question(state: AgentState | dict[str, Any]) -> str:
     return ""
 
 
+_TRACE_META_TOOLS = frozenset(
+    {"session_init", "route_to_specialist", "coordinator_gate"},
+)
+
+
+def _last_executed_catalog_tool_name(tool_trace: list[Any]) -> str | None:
+    """Last tool in trace that represents an actual agent tool call (not routing meta)."""
+    last: str | None = None
+    for entry in tool_trace:
+        name = getattr(entry, "tool", None) if not isinstance(entry, dict) else entry.get("tool")
+        if not name or not str(name).strip():
+            continue
+        s = str(name).strip()
+        if s in _TRACE_META_TOOLS:
+            continue
+        last = s
+    return last
+
+
 def heuristic_answer_class(question: str, hint: str | None) -> str:
     if hint and hint in ANSWER_CLASSES:
         return hint
@@ -130,18 +149,38 @@ def collect_typed_payloads(state: AgentState | dict[str, Any]) -> dict[str, Any]
 
 
 def infer_class_from_trace(tool_names: set[str]) -> str | None:
+    """Map a set of tool names from a turn to a coarse answer_class hint."""
     if "format_bibliography_gost" in tool_names:
         return "bibliography_export"
     if "paper_quote_search" in tool_names:
         return "quote_extraction"
-    # Relation tracing has higher precedence than inventory/fact_lookup when graph tools are present.
-    if {"entity_search", "edge_search", "cypher_query"} & tool_names:
+    # Relation tracing beats inventory/fact_lookup when graph tools appear in the trace.
+    if {"edge_search", "cypher_query"} & tool_names:
         return "relation_tracing"
-    if {"workspace_overview", "workspace_list_papers", "paper_counts"} & tool_names:
+    if "workspace_inspect" in tool_names:
         return "inventory"
-    if "paper_authors" in tool_names or "paper_metadata" in tool_names:
+    if "paper_profile" in tool_names or "find_works" in tool_names:
         return "fact_lookup"
     return None
+
+
+def _trace_suggests_quote_miss_after_idea_hits(tool_trace: list[Any] | None) -> bool:
+    """True when ``idea_search`` had rows before a zero-row ``paper_quote_search`` (trace order)."""
+
+    if not isinstance(tool_trace, list) or not tool_trace:
+        return False
+    idea_hits = False
+    for entry in tool_trace:
+        if not isinstance(entry, dict):
+            continue
+        name = str(entry.get("tool") or "").strip()
+        rc = entry.get("row_count")
+        n = int(rc) if isinstance(rc, int) else 0
+        if name == "idea_search" and n > 0:
+            idea_hits = True
+        elif name == "paper_quote_search" and n == 0 and idea_hits:
+            return True
+    return False
 
 
 def _append_evidence_warnings(
@@ -151,10 +190,20 @@ def _append_evidence_warnings(
     tool_names: set[str],
     quote_candidates: list[dict[str, Any]],
     warnings: list[str],
+    tool_trace: list[Any] | None = None,
 ) -> None:
-    """Best-effort evidence sufficiency flags (B-5, aligned with spec)."""
+    """Best-effort evidence sufficiency flags (B-5, aligned with spec).
+
+    ``no_quote_found`` is raised when the trace suggests quote extraction but no quote payloads
+    were merged into the envelope; correlate with ``paper_quote_search`` payload ``empty_reason``
+    in tool traces when debugging thin corpora. When ``idea_search`` already returned chunk hits
+    before an empty ``paper_quote_search``, emit a narrower warning for operators.
+    """
     if answer_class == "quote_extraction" and not quote_candidates:
-        warnings.append("no_quote_found")
+        if _trace_suggests_quote_miss_after_idea_hits(tool_trace):
+            warnings.append("no_quote_found_after_idea_hits")
+        else:
+            warnings.append("no_quote_found")
     if len(citations) < 1 and answer_class in (
         "grounded_explanation",
         "synthesis",
@@ -172,10 +221,9 @@ def _append_evidence_warnings(
             "final_answer",
         )
     }
-    graph_tools = core & {"cypher_query", "entity_search", "edge_search"}
+    graph_tools = core & {"cypher_query", "edge_search"}
     vectorish = core & {
         "idea_search",
-        "summarize_workspace",
         "paper_quote_search",
     }
     if graph_tools and not vectorish:
@@ -236,6 +284,7 @@ def build_chat_envelope(
         tool_names=names,
         quote_candidates=quote_cands,
         warnings=warnings,
+        tool_trace=tool_trace,
     )
     bib_obj = typed.get("bibliography")
     if isinstance(bib_obj, dict):
@@ -246,6 +295,15 @@ def build_chat_envelope(
             warnings.append("some_work_ids_filtered")
     if not answer_stripped:
         warnings.append("no_final_answer")
+    last_exec = _last_executed_catalog_tool_name(tool_trace)
+    if (
+        tool_policy == "allow_tools"
+        and answer_stripped
+        and last_exec
+        and last_exec != "final_answer"
+        and product_path == "tool_assisted"
+    ):
+        warnings.append("agent_finished_without_final_answer_tool")
     if (
         answer_stripped
         and not citations

@@ -9,9 +9,10 @@ from pathlib import Path
 from typing import Any
 
 import uvicorn
-from fastapi import Depends, FastAPI, Query
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from qdrant_client import QdrantClient
 
 from science_graphrag.agent.context.session_backend import (
@@ -47,10 +48,13 @@ from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
 from science_graphrag.observability.phoenix_tracer import init_tracer_provider
 from science_graphrag.storage.qdrant_store import ensure_entity_dedup_collections
+from science_graphrag.utils.project_logging import configure_logging
 
 
 @asynccontextmanager
 async def _app_lifespan(app: FastAPI):
+    # Before Phoenix / HTTP clients: app log format + httpx/httpcore/urllib3 levels.
+    configure_logging()
     init_tracer_provider()
     BUS.attach_loop(asyncio.get_running_loop())
     settings = get_settings()
@@ -107,23 +111,39 @@ app.include_router(retrieval_router, prefix="/v1")
 app.include_router(works_router)
 
 
+def _uvicorn_access_allow_record(record: logging.LogRecord) -> bool:
+    """Return True to keep the uvicorn access line; False to drop ingest poll 200 noise."""
+    msg = record.getMessage()
+    if record.levelno != logging.INFO:
+        return True
+    if "/v1/ingest/jobs/" not in msg or '" 200' not in msg:
+        return True
+    low = msg.lower()
+    if "debug=1" in low or "debug=true" in low:
+        return True
+    return False
+
+
 def _configure_access_log_filters() -> None:
     class _SuppressIngestPolling(logging.Filter):
         def filter(self, record: logging.LogRecord) -> bool:  # noqa: A003
-            msg = record.getMessage()
-            if record.levelno != logging.INFO:
-                return True
-            return "/v1/ingest/jobs/" not in msg or '" 200' not in msg
+            return _uvicorn_access_allow_record(record)
 
     access_logger = logging.getLogger("uvicorn.access")
-    if any(
-        type(existing).__name__ == "_SuppressIngestPolling" for existing in access_logger.filters
-    ):
+    if any(type(f).__name__ == "_SuppressIngestPolling" for f in access_logger.filters):
         return
     access_logger.addFilter(_SuppressIngestPolling())
 
 
 _configure_access_log_filters()
+
+
+@app.get("/metrics")
+def prometheus_metrics(settings: Settings = Depends(get_settings)) -> Response:
+    """Prometheus text exposition (disabled unless ``SCIENCE_GRAPHRAG_METRICS_ENABLED``)."""
+    if not settings.metrics_enabled:
+        raise HTTPException(status_code=404, detail="metrics disabled")
+    return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 @app.get("/health")
@@ -175,10 +195,11 @@ def idea_search(
 def root_page() -> RedirectResponse | HTMLResponse:
     if _UI_DIR.is_dir():
         return RedirectResponse(url="/ui/", status_code=307)
-    return HTMLResponse(
-        content="<p>UI missing; open science_graphrag/api/static/ui/index.html after building the frontend.</p>",
-        status_code=200,
+    msg = (
+        "<p>UI missing; open science_graphrag/api/static/ui/index.html "
+        "after building the frontend.</p>"
     )
+    return HTMLResponse(content=msg, status_code=200)
 
 
 @app.get("/legacy/retrieval-mvp", response_class=HTMLResponse, response_model=None)
@@ -186,10 +207,10 @@ def legacy_retrieval_mvp_page() -> FileResponse | HTMLResponse:
     index = _STATIC_DIR / "index.html"
     if index.is_file():
         return FileResponse(index)
-    return HTMLResponse(
-        content="<p>Legacy retrieval MVP missing; open science_graphrag/api/static/index.html in repo.</p>",
-        status_code=200,
+    msg = (
+        "<p>Legacy retrieval MVP missing; open science_graphrag/api/static/index.html in repo.</p>"
     )
+    return HTMLResponse(content=msg, status_code=200)
 
 
 def main() -> None:

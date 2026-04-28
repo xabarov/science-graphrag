@@ -1,10 +1,25 @@
 {
   "model": "google/gemini-3.1-flash-image-preview",
-  "generated_at_epoch": 1777315720,
+  "generated_at_epoch": 1777374474,
   "jobs": [
     {
-      "slug": "slide-02-plan-motif",
-      "filename_base": "slide-02-plan-motif"
+      "slug": "slide-05-architecture",
+      "filename_base": "slide-05-architecture"
+    },
+    {
+      "slug": "slide-10-benchmark-conclusions",
+      "filename_base": "slide-10-benchmark-conclusions",
+      "generator": "docs/report/scripts/generate_defense_conclusion_visuals.py"
+    },
+    {
+      "slug": "slide-11-agent-tracing-ui",
+      "filename_base": "slide-11-agent-tracing-ui",
+      "generator": "docs/report/scripts/generate_defense_conclusion_visuals.py"
+    },
+    {
+      "slug": "slide-12-plans-roadmap",
+      "filename_base": "slide-12-plans-roadmap",
+      "generator": "docs/report/scripts/generate_defense_conclusion_visuals.py"
     }
   ]
 }

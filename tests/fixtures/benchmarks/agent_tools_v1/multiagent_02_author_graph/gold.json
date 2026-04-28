@@ -5,11 +5,12 @@
   "min_tool_call_correctness": 0.6,
   "min_specialist_sequence_match": 0.5,
   "expected_specialist_sequence": [
+    "retrieval_agent",
     "graph_agent",
     "writer_agent"
   ],
   "expected_tool_sequence": [
-    "entity_search",
+    "find_works",
     "edge_search",
     "final_answer"
   ]

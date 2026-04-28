@@ -37,13 +37,25 @@ class CypherNotAllowedError(ValueError):
     pass
 
 
+def _forbidden_token_present(query: str, token: str) -> bool:
+    """Match Cypher keywords as whole words (labels like ``Dataset`` must not trip ``SET``)."""
+
+    if token == "LOAD CSV":
+        return re.search(r"\bLOAD\s+CSV\b", query, flags=re.IGNORECASE) is not None
+    if token == "CALL DBMS":
+        return re.search(r"\bCALL\s+DBMS\b", query, flags=re.IGNORECASE) is not None
+    if "." in token:
+        return re.search(rf"\b{re.escape(token)}\b", query, flags=re.IGNORECASE) is not None
+    return re.search(rf"\b{re.escape(token)}\b", query, flags=re.IGNORECASE) is not None
+
+
 def validate_readonly_cypher(query: str, *, max_limit: int = 200) -> None:
     raw = (query or "").strip()
     if not raw:
         raise CypherNotAllowedError("empty_query")
     upper = raw.upper()
     for token in FORBIDDEN_TOKENS:
-        if token in upper:
+        if _forbidden_token_present(raw, token):
             raise CypherNotAllowedError(f"forbidden_token:{token}")
 
     # Strip relationship patterns in square brackets so `:REL_TYPE`

@@ -45,11 +45,12 @@
           "question": "Find all coauthors of the paper 'Attention is All You Need' in our corpus.",
           "workspace_id": null,
           "expected_specialist_sequence": [
+            "retrieval_agent",
             "graph_agent",
             "writer_agent"
           ],
           "expected_tool_sequence": [
-            "entity_search",
+            "find_works",
             "edge_search",
             "final_answer"
           ],

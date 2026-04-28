@@ -621,6 +621,22 @@
       background: white;
     }
 
+    .visual-frame.visual-frame--stacked {
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+      gap: 8px;
+    }
+
+    .defense-visual-note {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.35;
+      color: var(--ink-soft);
+      text-align: center;
+      padding: 0 4px 2px;
+    }
+
     .artifact-stack {
       display: grid;
       gap: 16px;
@@ -811,10 +827,14 @@
 
     #slide-2 .plan-layout,
     #slide-3 .goal-layout,
-    #slide-6 .demo-layout,
-    #slide-8 .two-col,
-    #slide-8 .footer-grid {
-      align-items: stretch;
+    #slide-6 .defense-agent-stack,
+    #slide-7 .defense-python-stack,
+    #slide-8 .demo-layout,
+    #slide-12 .conclusion-plans-copy {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+      min-height: 0;
     }
 
     #slide-2 .plan-item {
@@ -1021,7 +1041,253 @@
       padding: 14px 20px;
     }
 
-    #slide-7.slide {
+    #slide-6.defense-agent-slide {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow: hidden;
+    }
+
+    #slide-6.defense-agent-slide h2 {
+      font-size: clamp(34px, 3.2vw, 48px);
+      line-height: 1.05;
+    }
+
+    #slide-6 .defense-agent-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: stretch;
+      min-height: 0;
+      flex: 1;
+    }
+
+    #slide-6 .defense-tools-scroll {
+      align-self: flex-start;
+      width: 100%;
+      flex: 0 1 auto;
+      min-height: 0;
+      max-height: min(48vh, 520px);
+      overflow: auto;
+      border-radius: 18px;
+      border: 1px solid rgba(22, 27, 34, 0.09);
+      background: rgba(255, 255, 255, 0.78);
+    }
+
+    #slide-6 table.defense-tool-catalog {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 18px;
+      line-height: 1.42;
+    }
+
+    #slide-6 table.defense-tool-catalog caption {
+      caption-side: top;
+      text-align: left;
+      font-weight: 700;
+      font-size: 20px;
+      padding: 8px 12px 6px;
+      color: #161b22;
+    }
+
+    #slide-6 table.defense-tool-catalog th,
+    #slide-6 table.defense-tool-catalog td {
+      border-bottom: 1px solid rgba(22, 27, 34, 0.08);
+      padding: 10px 12px;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    #slide-6 table.defense-tool-catalog th {
+      font-size: 13px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(142, 59, 46, 0.07);
+    }
+
+    #slide-6 table.defense-tool-catalog td:first-child {
+      font-weight: 600;
+      white-space: nowrap;
+      font-family: "SFMono-Regular", "Menlo", "Consolas", monospace;
+      font-size: 16px;
+    }
+
+    #slide-6 .defense-prompt-box {
+      font-size: 14px;
+      line-height: 1.4;
+      color: var(--ink-soft);
+      padding: 12px 15px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(22, 27, 34, 0.09);
+      background: rgba(255, 252, 248, 0.95);
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: auto;
+    }
+
+    #slide-6 .defense-prompt-section {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(22, 27, 34, 0.07);
+    }
+
+    #slide-6 .defense-prompt-section:first-of-type {
+      margin-top: 4px;
+      padding-top: 0;
+      border-top: none;
+    }
+
+    #slide-6 .defense-prompt-section h4 {
+      margin: 0 0 4px;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    #slide-6 .defense-prompt-section p {
+      margin: 0;
+    }
+
+    #slide-6 ul.defense-prompt-tight {
+      margin: 0;
+      padding-left: 1.1em;
+    }
+
+    #slide-6 ul.defense-prompt-tight li {
+      margin-bottom: 5px;
+    }
+
+    #slide-6 ul.defense-prompt-tight li:last-child {
+      margin-bottom: 0;
+    }
+
+    #slide-6 .defense-prompt-callout {
+      margin-top: 10px;
+      padding: 8px 11px 9px;
+      border-radius: 10px;
+      border: 1px solid rgba(142, 59, 46, 0.18);
+      background: rgba(142, 59, 46, 0.06);
+      border-left-width: 3px;
+      border-left-color: rgba(142, 59, 46, 0.55);
+    }
+
+    #slide-6 .defense-prompt-callout h4 {
+      color: #6b2e24;
+    }
+
+    #slide-6 .defense-prompt-callout p {
+      color: rgba(22, 27, 34, 0.82);
+    }
+
+    #slide-7.defense-python-slide {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow: hidden;
+    }
+
+    #slide-7.defense-python-slide h2 {
+      font-size: clamp(30px, 2.8vw, 42px);
+      line-height: 1.06;
+    }
+
+    #slide-7 .defense-python-stack {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      padding: 2px 2px 6px 0;
+    }
+
+    #slide-7 pre.defense-python-snippet {
+      margin: 0;
+      padding: 11px 14px 12px;
+      font-size: clamp(12.5px, 1.05vw, 14.5px);
+      line-height: 1.42;
+      font-family: "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono", monospace;
+      background: #f6f8fa;
+      border-radius: 12px;
+      border: 1px solid rgba(22, 27, 34, 0.1);
+      overflow-x: auto;
+      white-space: pre;
+      color: #24292f;
+    }
+
+    #slide-7 pre.defense-python-snippet code {
+      font: inherit;
+      background: transparent;
+      padding: 0;
+    }
+
+    #slide-7 .py-kw {
+      color: #cf222e;
+      font-weight: 650;
+    }
+
+    #slide-7 .py-def {
+      color: #0550ae;
+      font-weight: 700;
+    }
+
+    #slide-7 .py-param {
+      color: #24292f;
+      font-weight: 600;
+    }
+
+    #slide-7 .py-type {
+      color: #953800;
+    }
+
+    #slide-7 .py-builtin {
+      color: #0550ae;
+    }
+
+    #slide-7 .py-str {
+      color: #0a3069;
+    }
+
+    #slide-7 .py-doc {
+      color: #57606a;
+    }
+
+    #slide-7 .py-comment {
+      color: #6e7781;
+      font-style: italic;
+    }
+
+    #slide-7 .py-punct {
+      color: #57606a;
+    }
+
+    #slide-7 .py-lit {
+      color: #0550ae;
+      font-weight: 650;
+    }
+
+    #slide-6 .defense-prompt-box h3 {
+      margin: 0 0 6px;
+      font-size: clamp(20px, 1.85vw, 24px);
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+
+    #slide-6 .defense-prompt-box > ul:not(.defense-prompt-tight) {
+      margin: 0;
+      padding-left: 1.15em;
+    }
+
+    #slide-6 .defense-prompt-box > ul:not(.defense-prompt-tight) li {
+      margin-bottom: 4px;
+    }
+
+    #slide-9.slide {
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -1030,25 +1296,25 @@
       max-width: 100%;
     }
 
-    #slide-7 .defense-metrics-tables > .defense-table-wrap {
+    #slide-9 .defense-metrics-tables > .defense-table-wrap {
       min-height: 0;
       min-width: 0;
       max-width: 100%;
     }
 
-    #slide-7 h2 {
+    #slide-9 h2 {
       font-size: clamp(34px, 3.4vw, 48px);
       line-height: 1.02;
     }
 
-    #slide-7 .sublead,
-    #slide-7 .defense-slide7-sublead {
+    #slide-9 .sublead,
+    #slide-9 .defense-slide7-sublead {
       font-size: clamp(16px, 1.15vw, 18px);
       line-height: 1.3;
       max-width: 100%;
     }
 
-    #slide-7 .defense-metrics-hero {
+    #slide-9 .defense-metrics-hero {
       flex: 1;
       min-height: 0;
       min-width: 0;
@@ -1057,7 +1323,7 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      padding: 10px 12px 8px;
+      padding: 6px 8px 6px;
       border-radius: 22px;
       border: 1px solid rgba(22, 27, 34, 0.08);
       background:
@@ -1068,17 +1334,17 @@
         0 22px 48px rgba(33, 32, 28, 0.07);
     }
 
-    #slide-7 .defense-metrics-tables {
+    #slide-9 .defense-metrics-tables {
       flex: 1;
       min-height: 0;
       min-width: 0;
       width: 100%;
-      gap: 10px;
+      gap: 12px;
       align-items: start;
       overflow: hidden;
     }
 
-    #slide-7 .defense-table-wrap {
+    #slide-9 .defense-table-wrap {
       align-items: flex-start;
       align-self: start;
       min-height: 0;
@@ -1088,14 +1354,14 @@
       overflow-y: visible;
     }
 
-    #slide-7 table.defense-table {
+    #slide-9 table.defense-table {
       table-layout: fixed;
       width: 100%;
       max-width: 100%;
       height: auto;
       align-self: flex-start;
-      font-size: clamp(17px, min(1.38vw, 1.85vh), 21px);
-      line-height: 1.34;
+      font-size: clamp(18px, min(1.52vw, 2.05vh), 24px);
+      line-height: 1.4;
       border: 1px solid rgba(22, 27, 34, 0.1);
       border-radius: 20px;
       box-shadow:
@@ -1104,182 +1370,175 @@
       border-left: 3px solid rgba(142, 59, 46, 0.55);
     }
 
-    #slide-7 table.defense-table caption {
+    #slide-9 table.defense-table caption {
       font-family: "Palatino Linotype", "Book Antiqua", Palatino, "URW Palladio L", serif;
-      font-size: clamp(17px, 1.22vw, 21px);
+      font-size: clamp(18px, 1.28vw, 22px);
       font-weight: 700;
       letter-spacing: -0.02em;
       line-height: 1.22;
       color: #121820;
-      padding: 6px 11px 5px;
+      padding: 11px 14px 9px;
       margin: 0;
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(255, 252, 248, 0.5));
       border-bottom: 1px solid rgba(22, 27, 34, 0.07);
     }
 
-    #slide-7 table.defense-table thead th {
-      font-size: clamp(11px, 0.95vw, 13px);
+    #slide-9 table.defense-table thead th {
+      font-size: clamp(12px, 1vw, 14px);
       letter-spacing: 0.05em;
-      padding: 5px 9px;
-      line-height: 1.22;
+      padding: 11px 12px 12px;
+      line-height: 1.28;
       background: linear-gradient(180deg, rgba(142, 59, 46, 0.11), rgba(142, 59, 46, 0.06));
     }
 
-    #slide-7 .defense-table-wrap:first-child table.defense-table thead th:first-child {
+    #slide-9 .defense-table-wrap:first-child table.defense-table thead th:first-child {
       width: 32%;
     }
 
-    #slide-7 .defense-table-wrap:first-child table.defense-table thead th:last-child {
+    #slide-9 .defense-table-wrap:first-child table.defense-table thead th:last-child {
       width: 68%;
     }
 
-    #slide-7 .defense-table-wrap:last-child table.defense-table thead th:first-child {
+    #slide-9 .defense-table-wrap:last-child table.defense-table thead th:first-child {
       width: 58%;
     }
 
-    #slide-7 .defense-table-wrap:last-child table.defense-table thead th:last-child {
+    #slide-9 .defense-table-wrap:last-child table.defense-table thead th:last-child {
       width: 42%;
     }
 
-    #slide-7 table.defense-table th,
-    #slide-7 table.defense-table td {
+    #slide-9 table.defense-table th,
+    #slide-9 table.defense-table td {
       overflow-wrap: anywhere;
       word-break: break-word;
       hyphens: auto;
     }
 
-    #slide-7 table.defense-table td {
-      padding: 5px 9px 6px;
+    #slide-9 table.defense-table td {
+      padding: 13px 14px 14px;
       vertical-align: top;
       border-bottom: 1px solid rgba(22, 27, 34, 0.055);
     }
 
-    #slide-7 table.defense-table code {
+    #slide-9 table.defense-table code {
       padding: 0.06em 0.32em;
       border-radius: 5px;
       font-size: 0.96em;
       word-break: break-word;
     }
 
-    #slide-7 .defense-cell-stack {
+    #slide-9 .defense-cell-stack {
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 8px;
       text-align: left;
     }
 
-    #slide-7 .defense-cell-stack > div {
+    #slide-9 .defense-cell-stack > div {
       margin: 0;
     }
 
-    #slide-7 table.defense-table td:first-child {
+    #slide-9 table.defense-table td:first-child {
       font-weight: 600;
       color: #1a2433;
       background: rgba(255, 255, 255, 0.55);
     }
 
-    #slide-7 table.defense-table td:last-child {
+    #slide-9 table.defense-table td:last-child {
       font-variant-numeric: tabular-nums;
       color: #243041;
     }
 
-    #slide-7 table.defense-table tbody tr:nth-child(even) td {
+    #slide-9 table.defense-table tbody tr:nth-child(even) td {
       background: rgba(142, 59, 46, 0.035);
     }
 
-    #slide-7 table.defense-table tbody tr:nth-child(even) td:first-child {
+    #slide-9 table.defense-table tbody tr:nth-child(even) td:first-child {
       background: rgba(255, 255, 255, 0.65);
     }
 
-    #slide-7 table.defense-table tbody tr:hover td {
+    #slide-9 table.defense-table tbody tr:hover td {
       background: rgba(20, 46, 85, 0.04);
     }
 
-    #slide-7 table.defense-table tbody tr:hover td:first-child {
+    #slide-9 table.defense-table tbody tr:hover td:first-child {
       background: rgba(20, 46, 85, 0.05);
     }
 
-    #slide-7 .defense-metrics-glossary {
-      flex-shrink: 0;
-      margin-top: 4px;
-      padding-top: 7px;
-      border-top: 1px solid rgba(22, 27, 34, 0.09);
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 4px 14px;
-      font-size: clamp(12.5px, 1.02vw, 15px);
-      line-height: 1.32;
-      color: #3a4a5d;
-    }
-
-    #slide-7 .defense-metrics-glossary p {
-      margin: 0;
-    }
-
-    #slide-7 .defense-metrics-glossary p:first-child {
-      grid-column: 1 / -1;
-    }
-
-    #slide-7 .defense-metrics-glossary code {
-      font-size: 0.93em;
-      padding: 0.04em 0.28em;
-    }
-
-    #slide-6 .demo-layout {
+    #slide-8 .demo-layout {
       grid-template-columns: 1fr;
     }
 
-    #slide-6 .demo-card {
+    #slide-8 .demo-card {
       min-height: 200px;
       padding: 22px 26px;
     }
 
-    #slide-6 .video-frame {
+    #slide-8 .video-frame {
       min-height: min(54vh, 520px);
     }
 
-    #slide-6 .quote {
+    #slide-8 .quote {
       min-height: 100px;
       display: grid;
       align-content: center;
       font-size: 25px;
     }
 
-    #slide-8 .two-col {
+    #slide-10 .two-col,
+    #slide-11 .two-col,
+    #slide-12 .two-col {
       gap: 14px;
       align-items: stretch;
     }
 
-    #slide-8 .summary-box {
+    #slide-10 .summary-box,
+    #slide-11 .summary-box {
       padding: 18px 22px;
       gap: 10px;
     }
 
-    #slide-8 .summary-box h3 {
+    #slide-10 .summary-box h3,
+    #slide-11 .summary-box h3 {
       font-size: 32px;
     }
 
-    #slide-8 .summary-box p,
-    #slide-8 .summary-box li {
+    #slide-10 .summary-box p,
+    #slide-10 .summary-box li,
+    #slide-11 .summary-box p,
+    #slide-11 .summary-box li {
       font-size: 24px;
       line-height: 1.34;
     }
 
-    #slide-8 .footer-card {
+    #slide-12 .footer-card {
       min-height: 0;
-      padding: 20px 22px;
+      padding: 18px 20px;
     }
 
-    #slide-8 .footer-card h3 {
-      font-size: 30px;
+    #slide-12 .footer-card h3 {
+      font-size: 28px;
     }
 
-    #slide-8 .footer-card ul {
-      font-size: 22px;
+    #slide-12 .footer-card ul {
+      font-size: 21px;
       line-height: 1.34;
     }
 
-    #slide-8 .quote {
+    #slide-10 .visual-frame,
+    #slide-11 .visual-frame,
+    #slide-12 .visual-frame {
+      min-height: 420px;
+      padding: 4px 6px;
+    }
+
+    #slide-10 .visual-frame img,
+    #slide-11 .visual-frame img,
+    #slide-12 .visual-frame img {
+      max-height: min(72vh, 720px);
+    }
+
+    #slide-12 .quote {
       min-height: 0;
       display: grid;
       align-content: center;
@@ -1288,7 +1547,9 @@
       padding: 14px 20px;
     }
 
-    #slide-8.slide {
+    #slide-10.slide,
+    #slide-11.slide,
+    #slide-12.slide {
       gap: 14px;
     }
 
@@ -1334,19 +1595,23 @@
       .split-note,
       .phase-grid,
       .title-strip,
-      .defense-metrics-tables {
-        grid-template-columns: 1fr;
+      .defense-metrics-tables,
+      #slide-6 .defense-tools-scroll {
+        max-height: none;
+        min-height: 0;
+        flex: 0 1 auto;
+        align-self: stretch;
       }
 
-      #slide-7 .defense-metrics-hero {
-        padding: 18px 20px;
+      #slide-6 .defense-prompt-box {
+        flex: 1 1 auto;
       }
 
-      #slide-7 .defense-metrics-glossary {
-        grid-template-columns: 1fr;
+      #slide-9 .defense-metrics-hero {
+        padding: 12px 14px;
       }
 
-      #slide-7.slide {
+      #slide-9.slide {
         overflow: visible;
       }
 
@@ -1429,6 +1694,10 @@
         <a href="#slide-6">06</a>
         <a href="#slide-7">07</a>
         <a href="#slide-8">08</a>
+        <a href="#slide-9">09</a>
+        <a href="#slide-10">10</a>
+        <a href="#slide-11">11</a>
+        <a href="#slide-12">12</a>
       </nav>
     </div>
 
@@ -1444,7 +1713,7 @@
           <div class="meta-line">
             <span>Роман</span>
             <span>Итоговый проект</span>
-            <span>Репозиторий: <strong><code>science-graphrag</code></strong></span>
+            <span>Проект: <strong>Science GraphRAG</strong></span>
           </div>
         </div>
         <aside class="side-note">
@@ -1466,7 +1735,7 @@
         </div>
         <div class="title-chip">
           <div class="chip-label">System</div>
-          <p>Corpus ingestion, knowledge graph, retrieval, supervisor-based runtime и проверяемые ответы.</p>
+          <p>Corpus ingestion, knowledge graph, retrieval, agent runtime (ReAct + tools) и проверяемые ответы.</p>
         </div>
         <div class="title-chip">
           <div class="chip-label">Result</div>
@@ -1541,7 +1810,7 @@
             </div>
             <div class="task-row">
               <span class="task-num" aria-hidden="true">3</span>
-              <p>Агентный runtime: supervisor и специализированные агенты.</p>
+              <p>Агентный runtime: один research-агент (ReAct) и набор domain-tools к графу и retrieval.</p>
             </div>
             <div class="task-row">
               <span class="task-num" aria-hidden="true">4</span>
@@ -1574,14 +1843,14 @@
       <h2>Какие технологии использовались</h2>
       <p class="sublead">
         Стек выбран не ради сложности: каждая технология закрывает отдельный слой системы.
-        Именно сочетание <strong>PostgreSQL + Neo4j + Qdrant + supervisor</strong> делает
+        Именно сочетание <strong>PostgreSQL + Neo4j + Qdrant</strong> и агентного runtime поверх графа делает
         проект GraphRAG-системой, а не обычным RAG-приложением.
       </p>
       <div class="two-col">
         <div class="summary-box">
           <h3>Ключевые слои системы</h3>
           <ul>
-            <li><strong>Backend и runtime:</strong> Python, FastAPI, orchestration / supervisor.</li>
+            <li><strong>Backend и runtime:</strong> Python, FastAPI, LangGraph, агент с инструментами.</li>
             <li><strong>Хранилища:</strong> PostgreSQL, Neo4j, Qdrant.</li>
             <li><strong>NLP pipeline:</strong> extraction, embeddings, retrieval, graph query, answer generation.</li>
             <li><strong>UI и наблюдаемость:</strong> React UI, traces, logs, metrics.</li>
@@ -1594,7 +1863,7 @@
       </div>
       <div class="quote">
         Ключевая инженерная идея здесь не в одной библиотеке, а в сочетании трёх хранилищ,
-        extraction pipeline и supervisor-based runtime поверх уже подготовленных данных.
+        extraction pipeline и agent runtime поверх уже подготовленных данных.
       </div>
       <div class="slide-number">04</div>
     </section>
@@ -1603,19 +1872,30 @@
       <div class="slide-tag">Главный инженерный результат</div>
       <h2>Архитектура системы</h2>
       <div class="two-col">
-        <div class="visual-frame">
-          <img src="assets/defense/slide-05-architecture.jpg" alt="Архитектурная схема с разделением offline ingest и online chat runtime" />
+        <div class="visual-frame visual-frame--stacked">
+          <img
+            src="assets/defense/slide-05-architecture.jpg"
+            alt="Две фазы: offline ingest и online Agent Runtime — один research-агент (ReAct) с набором тулов к Postgres, Neo4j, Qdrant"
+          />
+          <p class="defense-visual-note">
+            На схеме Phase 2 подписан как <strong>Agent Runtime</strong>: один агент и <strong>tools</strong> к трём хранилищам (не три
+            отдельных субагента). Детальный каталог тулов и промпт — <strong>слайд 06</strong>. Опционально в конфиге доступен
+            <code>langgraph_supervisor_v1</code> с нодами-специалистами.
+          </p>
         </div>
         <div class="summary-box">
           <h3>Почему архитектура устроена именно так</h3>
           <ul>
-            <li><strong>Ingest</strong> и <strong>chat runtime</strong> разделены по времени и по смыслу.</li>
+            <li><strong>Ingest</strong> и <strong>agent runtime</strong> разделены по времени и по смыслу.</li>
             <li><strong>PostgreSQL</strong> хранит операционное состояние и артефакты конвейера.</li>
-            <li><strong>Neo4j</strong> нужен для графа знаний и структурных запросов.</li>
-            <li><strong>Qdrant</strong> отвечает за семантический поиск по фрагментам.</li>
-            <li><strong>Supervisor</strong> работает только в runtime и маршрутизирует запрос между агентами.</li>
-            <li>Агенты не общаются напрямую друг с другом, а работают через supervisor.</li>
-            <li><strong>Authorship</strong> выделен в отдельный узел для корректной модели авторства.</li>
+            <li><strong>Neo4j</strong> — граф знаний и структурные запросы.</li>
+            <li><strong>Qdrant</strong> — семантический поиск по чанкам.</li>
+            <li>
+              <strong>По умолчанию</strong> чат — <code>langgraph_research_v1</code>: один контур LLM с привязанным
+              набором инструментов, цикл ReAct (вызов тулза → результат в контекст → снова LLM), финал через
+              <code>final_answer</code>.
+            </li>
+            <li><strong>Authorship</strong> в графе вынесен в отдельный узел (модель данных ingest-слоя).</li>
           </ul>
         </div>
       </div>
@@ -1626,11 +1906,205 @@
       <div class="slide-number">05</div>
     </section>
 
-    <section class="slide" id="slide-6">
+    <section class="slide defense-agent-slide" id="slide-6">
+      <div class="slide-tag">Agent runtime</div>
+      <h2>Инструменты агента и системный промпт</h2>
+      <p class="sublead">
+        Реестр инструментов для режима <code>langgraph_research_v1</code>. Модель получает имена тулзов, краткие
+        описания и машиночитаемую схему параметров (структурированная валидация, по смыслу как в Pydantic).
+      </p>
+      <div class="defense-agent-stack">
+        <div class="defense-tools-scroll">
+          <table class="defense-tool-catalog">
+            <caption>Каталог тулзов (9 шт.)</caption>
+            <thead>
+              <tr>
+                <th>Имя</th>
+                <th>Назначение</th>
+                <th>Слой</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>cypher_query</code></td>
+                <td>Read-only Cypher; строки результата для структурных вопросов.</td>
+                <td>graph</td>
+              </tr>
+              <tr>
+                <td><code>edge_search</code></td>
+                <td>Поиск рёбер / соседей по известному <code>work_id</code> (узел графа).</td>
+                <td>graph</td>
+              </tr>
+              <tr>
+                <td><code>workspace_inspect</code></td>
+                <td>Статистика workspace, список работ или краткий blurb + sample <code>work_id</code>.</td>
+                <td>catalog</td>
+              </tr>
+              <tr>
+                <td><code>paper_profile</code></td>
+                <td>Метаданные и авторы одной работы по реальному <code>work_id</code>.</td>
+                <td>catalog</td>
+              </tr>
+              <tr>
+                <td><code>find_works</code></td>
+                <td>Полнотекстовый поиск работ; с <code>workspace_id</code> или по всему корпусу.</td>
+                <td>catalog</td>
+              </tr>
+              <tr>
+                <td><code>paper_quote_search</code></td>
+                <td>Семантика по чанкам; <code>quote_candidates</code> для цитирования.</td>
+                <td>evidence</td>
+              </tr>
+              <tr>
+                <td><code>format_bibliography_gost</code></td>
+                <td>Библиография по списку <code>work_ids</code> в рамках workspace.</td>
+                <td>catalog</td>
+              </tr>
+              <tr>
+                <td><code>idea_search</code></td>
+                <td>Эмбеддинг-поиск идей по чанкам/работам в Qdrant.</td>
+                <td>retrieval</td>
+              </tr>
+              <tr>
+                <td><code>final_answer</code></td>
+                <td>Обязательное завершение хода: markdown + список <code>citations</code>.</td>
+                <td>writer</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="defense-prompt-box">
+          <h3>Системный промпт: логика вызова</h3>
+
+          <div class="defense-prompt-section">
+            <h4>Контракт (Scope)</h4>
+            <p>
+              Утверждения — только на evidence из workspace (чанки, граф, выводы тулзов). Вопрос вне корпуса —
+              сказать прямо; не выдумывать DOI, метрики, названия. Перед цитированием — сначала найти evidence
+              тулзами.
+            </p>
+          </div>
+
+          <div class="defense-prompt-section">
+            <h4>Маршрутизация (decision table)</h4>
+            <ul class="defense-prompt-tight">
+              <li>
+                <strong>Инвентарь / обзор</strong> — <code>workspace_inspect</code> (<code>stats</code> ·
+                <code>papers</code> · <code>blurb</code>); не заменяет полнотекст по названиям.
+              </li>
+              <li>
+                <strong>Полнотекст работ</strong> — <code>find_works</code>; для «в этом workspace» —
+                тот же <code>workspace_id</code>, что в сообщении; глобальный поиск — без ограничения.
+              </li>
+              <li>
+                <strong>Карточка работы</strong> — <code>paper_profile</code> только при реальном
+                <code>work_id</code> из <code>find_works</code>, <code>papers</code>/<code>blurb</code> или графа;
+                <code>mode=stats</code> id не отдаёт.
+              </li>
+              <li>
+                <strong>Граф</strong> — <code>edge_search</code> / <code>cypher_query</code>; для
+                <code>edge_search</code> нужен внутренний <code>work_id</code> — заголовки сначала через
+                <code>find_works</code>.
+              </li>
+              <li>
+                <strong>Семантика</strong> — <code>idea_search</code> (при необходимости с
+                <code>workspace_id</code>); <code>paper_quote_search</code> — дословные цитаты из чанков.
+              </li>
+              <li>
+                <strong>Библиография</strong> — <code>format_bibliography_gost</code> только когда уже есть
+                конкретные <code>work_ids</code> в workspace.
+              </li>
+            </ul>
+          </div>
+
+          <div class="defense-prompt-section defense-prompt-callout">
+            <h4>Фан-аут и завершение хода</h4>
+            <p>
+              Широкие обзоры: один узкий <code>idea_search</code> или <code>blurb</code> → короткий shortlist работ
+              → один батч <code>paper_profile</code> / <code>paper_quote_search</code> по этим id (без «рваного»
+              фан-аута по многим несвязанным вызовам в одном ходу). Завершение —
+              <strong>один</strong> вызов <code>final_answer</code> (markdown + <code>citations</code>; пустой
+              список — только с явным объяснением).
+            </p>
+          </div>
+
+          <div class="defense-prompt-section">
+            <h4>Когда тулзы не нужны</h4>
+            <p>Приветствия, мета о возможностях, чисто редакторский ответ без фактов по корпусу.</p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-number">06</div>
+    </section>
+
+    <section class="slide defense-python-slide" id="slide-7">
+      <div class="slide-tag">Agent runtime</div>
+      <h2>Те же тулзы как Python-функции</h2>
+      <p class="sublead">
+        Иллюстрация: как выглядел бы сигнатурный «инструмент» в стиле
+        <a href="https://github.com/huggingface/smolagents">smolagents</a> — сигнатура + docstring задают имя, параметры и
+        текст для модели; в реализации — стандартный контракт tool-calling и схема аргументов (в духе Pydantic).
+      </p>
+      <div class="defense-python-stack">
+        <pre class="defense-python-snippet" aria-label="Иллюстрация paper_quote_search"><code><span class="py-kw">def</span> <span class="py-def">paper_quote_search</span><span class="py-punct">(</span>
+    <span class="py-param">query</span><span class="py-punct">: </span><span class="py-type">str</span><span class="py-punct">,</span>
+    <span class="py-param">workspace_id</span><span class="py-punct">: </span><span class="py-type">str</span><span class="py-punct"> | </span><span class="py-builtin">None</span><span class="py-punct"> = </span><span class="py-builtin">None</span><span class="py-punct">,</span>
+    <span class="py-param">work_id</span><span class="py-punct">: </span><span class="py-type">str</span><span class="py-punct"> | </span><span class="py-builtin">None</span><span class="py-punct"> = </span><span class="py-builtin">None</span><span class="py-punct">,</span>
+    <span class="py-param">top_k</span><span class="py-punct">: </span><span class="py-type">int</span><span class="py-punct"> = </span><span class="py-lit">5</span><span class="py-punct">,</span>
+<span class="py-punct">) -&gt; </span><span class="py-type">dict</span><span class="py-punct">:</span>
+<span class="py-doc">    """Semantic search over document chunks; returns items and quote_candidates.</span>
+
+<span class="py-doc">    Embeds the query, retrieves nearest chunks (Qdrant), optionally scoped by</span>
+<span class="py-doc">    workspace or a single work when work_id is already known.</span>
+
+<span class="py-doc">    Args:</span>
+<span class="py-doc">        query: Natural-language query aligned with the passage to locate.</span>
+<span class="py-doc">        workspace_id: Optional filter to chunks linked to this workspace.</span>
+<span class="py-doc">        work_id: Optional filter to one paper's chunks.</span>
+<span class="py-doc">        top_k: Max hits (clamped 1–16 in the real tool).</span>
+<span class="py-doc">    """</span>
+    <span class="py-punct">...</span>  <span class="py-comment"># embedding → vector search → structured payload</span></code></pre>
+
+        <pre class="defense-python-snippet" aria-label="Иллюстрация cypher_query"><code><span class="py-kw">def</span> <span class="py-def">cypher_query</span><span class="py-punct">(</span>
+    <span class="py-param">query</span><span class="py-punct">: </span><span class="py-type">str</span><span class="py-punct">,</span>
+    <span class="py-param">params</span><span class="py-punct">: </span><span class="py-type">dict</span><span class="py-punct">[</span><span class="py-type">str</span><span class="py-punct">, </span><span class="py-type">Any</span><span class="py-punct">] | </span><span class="py-builtin">None</span><span class="py-punct"> = </span><span class="py-builtin">None</span><span class="py-punct">,</span>
+<span class="py-punct">) -&gt; </span><span class="py-type">dict</span><span class="py-punct">:</span>
+<span class="py-doc">    """Read-only Cypher against Neo4j; returns rows for structural questions.</span>
+
+<span class="py-doc">    Validated as read-only with a row cap; use bound parameters ($id) when needed.</span>
+<span class="py-doc">    Prefer edge_search when you only need neighbors of one known work_id.</span>
+
+<span class="py-doc">    Args:</span>
+<span class="py-doc">        query: Cypher text (MATCH … RETURN …; no writes).</span>
+<span class="py-doc">        params: Optional map of parameters for $ placeholders.</span>
+<span class="py-doc">    """</span>
+    <span class="py-punct">...</span>  <span class="py-comment"># validate → session.run → list[dict] rows</span></code></pre>
+
+        <pre class="defense-python-snippet" aria-label="Иллюстрация find_works"><code><span class="py-kw">def</span> <span class="py-def">find_works</span><span class="py-punct">(</span>
+    <span class="py-param">query</span><span class="py-punct">: </span><span class="py-type">str</span><span class="py-punct">,</span>
+    <span class="py-param">workspace_id</span><span class="py-punct">: </span><span class="py-type">str</span><span class="py-punct"> | </span><span class="py-builtin">None</span><span class="py-punct"> = </span><span class="py-builtin">None</span><span class="py-punct">,</span>
+    <span class="py-param">limit</span><span class="py-punct">: </span><span class="py-type">int</span><span class="py-punct"> = </span><span class="py-lit">10</span><span class="py-punct">,</span>
+<span class="py-punct">) -&gt; </span><span class="py-type">dict</span><span class="py-punct">:</span>
+<span class="py-doc">    """Full-text search over indexed work titles/metadata in Neo4j.</span>
+
+<span class="py-doc">    Pass workspace_id when the user asks about papers in this workspace; omit it</span>
+<span class="py-doc">    for a corpus-wide lookup. Returns matches with work_id, score, title, year.</span>
+
+<span class="py-doc">    Args:</span>
+<span class="py-doc">        query: Full-text query string.</span>
+<span class="py-doc">        workspace_id: Restrict hits to works linked to this workspace, if set.</span>
+<span class="py-doc">        limit: Maximum matches (bounded in the real tool).</span>
+<span class="py-doc">    """</span>
+    <span class="py-punct">...</span>  <span class="py-comment"># Neo4j full-text index → ranked work rows</span></code></pre>
+      </div>
+      <div class="slide-number">07</div>
+    </section>
+
+    <section class="slide" id="slide-8">
       <div class="slide-tag">Практическая демонстрация</div>
       <h2>Демонстрация системы</h2>
       <p class="sublead">
-        Исследовательский вопрос по корпусу → маршрут supervisor и агентов → ответ с цитатами.
+        Вопрос по корпусу → агент вызывает тулзы (retrieval / graph) → ответ с цитатами и трассой в UI.
       </p>
       <div class="demo-layout">
         <div class="demo-stage">
@@ -1657,21 +2131,21 @@
         Цель демо — связать архитектуру с живым сценарием: система отвечает не «в общем»,
         а по корпусу с проверяемой опорой на статьи.
       </div>
-      <div class="slide-number">06</div>
+      <div class="slide-number">08</div>
     </section>
 
-    <section class="slide" id="slide-7">
+    <section class="slide" id="slide-9">
       <div class="slide-tag">Результаты и выводы</div>
       <h2>Основные результаты и выводы</h2>
       <p class="sublead defense-slide7-sublead">
-        Сводка по итоговому отчёту: <strong>§4.1</strong> (прогоны) и <strong>§4.0</strong> (macro по слотам), 2026-04-26.
-        Модель извлечения слоёв: <code>mistralai/mistral-small-3.2-24b-instruct</code>. Расшифровка метрик — блок под таблицами.
+        Срез по итоговому отчёту на <strong>2026-04-26</strong>: ключевые прогоны бенчмарка и macro-метрики по слотам
+        извлечения для GraphRAG. Модель извлечения слоёв: <code>mistralai/mistral-small-3.2-24b-instruct</code>.
       </p>
       <div class="defense-metrics-hero">
       <div class="defense-metrics-tables">
         <div class="defense-table-wrap">
           <table class="defense-table">
-            <caption>Сводная по ключевым прогонам (§4.1)</caption>
+            <caption>Сводная по ключевым прогонам</caption>
             <thead>
               <tr>
                 <th>Эксперимент</th>
@@ -1680,22 +2154,22 @@
             </thead>
             <tbody>
               <tr>
-                <td><code>hybrid_ablation_live</code></td>
+                <td>Гибридный retrieval (абляция на корпусе)</td>
                 <td><code>hit_count</code> = 5/5 на каждом кейсе; верхние scores 0.65–0.74</td>
               </tr>
               <tr>
-                <td><code>multihop_v2</code></td>
+                <td>Многошаговый обход графа (цепочки работ)</td>
                 <td><code>recall</code> ≈ 0.667 (3 кейса), precision низкая</td>
               </tr>
               <tr>
-                <td><code>claims_paraphrase</code></td>
+                <td>Утверждения по перефразированному эталону</td>
                 <td>
                   pilot 15: macro P/R/F1 <strong>0.136 / 0.333 / 0.188</strong>; holdout 5:
                   <strong>0.141 / 0.250 / 0.150</strong>
                 </td>
               </tr>
               <tr>
-                <td><code>agent_tools_live</code></td>
+                <td>Сквозной агент с инструментами</td>
                 <td class="defense-cell-stack">
                   <div>
                     <strong>Формальные проверки suite:</strong> 10 из 10 кейсов — автоматический чеклист сценария без
@@ -1706,11 +2180,11 @@
                 </td>
               </tr>
               <tr>
-                <td>Graph <strong>CITES</strong> (Neo4j)</td>
+                <td>Рёбра цитирования <strong>CITES</strong> в Neo4j</td>
                 <td>macro P/R/F1 <strong>0.784 / 0.909 / 0.821</strong> (11 кейсов с <code>graph_expectations</code>)</td>
               </tr>
               <tr>
-                <td><code>Layer-2 semantic</code></td>
+                <td>Методы и датасеты (ночной семантический bench)</td>
                 <td>9/31 с <code>metrics.passed=false</code>; macro F1 методов / датасетов <strong>≈0.60 / 0.79</strong></td>
               </tr>
             </tbody>
@@ -1718,7 +2192,7 @@
         </div>
         <div class="defense-table-wrap">
           <table class="defense-table">
-            <caption>Извлечение для GraphRAG, macro по слотам (§4.0)</caption>
+            <caption>Извлечение для GraphRAG, macro по слотам</caption>
             <thead>
               <tr>
                 <th>Слот / поле</th>
@@ -1743,16 +2217,28 @@
                 <td>0.926</td>
               </tr>
               <tr>
-                <td>Методы (L2) — P / R / F1</td>
+                <td>Имена авторов — P / R / F1</td>
+                <td>0.981 / 0.981 / 0.981</td>
+              </tr>
+              <tr>
+                <td>Аффилиации — P / R / F1</td>
+                <td>0.967 / 0.942 / 0.951</td>
+              </tr>
+              <tr>
+                <td>Ссылки: gold sample arXiv — P / R / F1</td>
+                <td>0.949 / 0.967 / 0.957</td>
+              </tr>
+              <tr>
+                <td>Ссылки: gold sample DOI — P / R / F1</td>
+                <td>0.933 / 0.933 / 0.933</td>
+              </tr>
+              <tr>
+                <td>Методы (bench семантики для графа) — P / R / F1</td>
                 <td>0.617 / 0.680 / 0.601</td>
               </tr>
               <tr>
-                <td>Датасеты (L2) — P / R / F1</td>
+                <td>Датасеты (bench семантики для графа) — P / R / F1</td>
                 <td>0.790 / 0.879 / 0.792</td>
-              </tr>
-              <tr>
-                <td>Ссылки: gold arXiv — P / R / F1</td>
-                <td>0.949 / 0.967 / 0.957</td>
               </tr>
               <tr>
                 <td>Утверждения paraphrase, пилот — P / R / F1</td>
@@ -1770,113 +2256,144 @@
           </table>
         </div>
       </div>
-      <div class="defense-metrics-glossary" aria-label="Краткие определения метрик">
-        <p>
-          Справа <strong>P / R / F1</strong> — precision / recall / F1 по множествам (для L2 — мягкое совпадение).
-          <strong>ROUGE-L</strong> — согласованность через longest common subsequence с эталоном (заголовок, префикс abstract);
-          <strong>containment</strong> — доля токенов эталонного префикса, покрытых извлечённым abstract; с тройкой P/R/F1 не
-          смешиваем.
-        </p>
-        <p>
-          <code>hit_count</code> (например <strong>5/5</strong>) — сколько ожидаемых работ из эталона оказалось в топ-<code>K</code>
-          выдачи retrieval по кейсу.
-        </p>
-        <p>
-          <code>latency_p95</code> — 95-й перцентиль времени ответа по кейсам; для <code>agent_tools_live</code> в отчёте ≈
-          <strong>26 с</strong>.
-        </p>
-        <p>
-          LLM-as-judge — автоматическая оценка ответа по шкале <strong>1–6</strong>; для <code>agent_tools_live</code> среднее
-          <strong>4.8</strong>.
-        </p>
-        <p>
-          <code>metrics.passed=false</code> — у кейса не выполнен бинарный порог suite (отдельно от macro F1 по слотам).
-        </p>
-        <p>
-          <code>graph_expectations</code> — в Layer-1 задан эталон рёбер <strong>CITES</strong>; по 11 таким кейсам
-          считается macro P/R/F1 материализации в Neo4j.
-        </p>
-        <p>
-          Имена, аффилиации, DOI-ссылки и др. слоты из §4.0 на слайде сокращены; полная таблица — в отчёте и
-          <code>extraction-entity-metrics-for-report.json</code>.
-        </p>
       </div>
-      </div>
-      <div class="slide-number">07</div>
+      <div class="slide-number">09</div>
     </section>
 
-    <section class="slide" id="slide-8">
+    <section class="slide" id="slide-10">
       <div class="slide-tag">Итоги</div>
-      <h2>Выводы и ограничения</h2>
+      <h2>Выводы по бенчмаркам</h2>
       <div class="two-col">
         <div class="summary-box">
-          <h3>Ключевые выводы</h3>
+          <h3>Чему нас научили бенчмарки</h3>
           <ul>
-            <li>Построен сквозной контур GraphRAG поверх реального корпуса статей.</li>
-            <li>Граф и гибридный retrieval дают интерпретируемые цепочки и цитаты.</li>
             <li>
-              Агентный runtime согласован с хранилищами: в проде по умолчанию — один ReAct-агент с инструментами
-              (<code>langgraph_research_v1</code>); multi-specialist supervisor (retrieval / graph / writer) остаётся
-              отдельным режимом (<code>langgraph_supervisor_v1</code>).
+              <strong>Оценка не сводится к одной галочке</strong> «совпало / нет» для всего извлечения сразу.
             </li>
-            <li>Benchmark-оценка разделяет сильные стороны и слабые места (например claims).</li>
+            <li>
+              Для заголовка, абстракта, авторов, ссылок, утверждений и других слоёв <strong>скрипты бенчмарков</strong>
+              (модули оценки в репозитории, каталог <code>eval/</code>) считают <strong>разные численные показатели
+              относительно эталона</strong> — полнота, точность, меры текстового сходства, пересечение множеств
+              идентификаторов и т.п.; набор метрик задаётся постановкой поля, а не одним общим «пройден / не пройден».
+            </li>
+            <li>
+              <strong>Каркас статьи</strong> (заголовок, абстракт, авторы, выборка идентификаторов в библиографии):
+              отдельные текстовые и множественные метрики сравнения с эталоном; детали — в отчёте и в коде, на слайде
+              не зачитывать.
+            </li>
+            <li>
+              <strong>Утверждения, концепты и темы</strong> — полнота и точность (P/R) с несколькими режимами
+              сопоставления с эталоном; строгий перефраз задаётся в gold кейса, не «втихую».
+            </li>
+            <li>
+              <strong>Методы и датасеты для графа</strong> — мягкое совпадение нормализованных имён и алиасов с порогом
+              уверенности модели; для длинных названий допускается сходство по словам с эталоном.
+            </li>
+            <li>
+              <strong>Список литературы</strong> — самый шумный слой (PDF, форматы): в конвейере эвристики и правила,
+              при LLM — дозаполнение по чанкам к уже собранному скелету, не генерация «с нуля одним промптом»; отдельно
+              идёт bench по секции References (границы секции, overlap записей). Эталон и прогоны тянут качество через
+              провальные кейсы, не только через среднее.
+            </li>
+            <li>
+              В отчёте важно называть <strong>режим сравнения и пороги</strong>, плюс честно показывать и сильные стороны,
+              и «неудобные» цифры — лучше число и смысл провала, чем зелёный индикатор без контекста.
+            </li>
           </ul>
         </div>
-        <div class="summary-box">
-          <h3>Ограничения и честность оценки</h3>
-          <ul>
-            <li>Claims / paraphrase остаются сложным слоем — метрики не «для галочки».</li>
-            <li>Latency end-to-end пока высокий для интерактивного UX.</li>
-            <li>Корпус и домен ограничены — обобщение за пределами набора статей осторожно.</li>
-            <li>Многошаговый graph retrieval: recall есть, precision требует улучшений.</li>
-            <li>
-              Чат в проде по умолчанию — <strong>single-agent ReAct</strong> с общим набором инструментов
-              (<code>langgraph_research_v1</code> в <code>Settings</code>). Режим
-              <strong>supervisor → субагенты</strong> retrieval / graph / writer (<code>langgraph_supervisor_v1</code>,
-              токены маршрута, <code>routing_log</code>) сохранён, но это не основной путь.
-            </li>
-            <li>
-              Ранний акцент на мультиагентной политике и отдельных специалистах частично сменён упрощением ради
-              стабильности и стоимости шага — расхождение с изначальной подачей нужно явно закладывать в roadmap и в
-              расширение бенчмарка под оба runtime.
-            </li>
-          </ul>
+        <div class="visual-frame">
+          <img
+            src="assets/defense/slide-10-benchmark-conclusions.png"
+            alt="Схема: метрики bench каркаса статьи, утверждений, методов и датасетов, списка литературы; шум PDF"
+          />
         </div>
       </div>
-      <div class="footer-grid">
-        <div class="footer-card">
-          <h3>Что удалось</h3>
+      <div class="slide-number">10</div>
+    </section>
+
+    <section class="slide" id="slide-11">
+      <div class="slide-tag">Итоги</div>
+      <h2>Агент, трассировка, интерфейс</h2>
+      <div class="two-col">
+        <div class="summary-box">
+          <h3>Что важно в прогоне</h3>
           <ul>
-            <li>Построена рабочая GraphRAG-система для научного корпуса.</li>
-            <li>Показана польза графа и специализированных агентов.</li>
-            <li>Получены измеримые результаты на реальном корпусе статей.</li>
-            <li>Выстроена честная benchmark-оценка, не скрывающая слабые места.</li>
+            <li>
+              Оценка агента без цепочки шагов почти бессмысленна: ответ может звучать правдоподобно, пока не увидишь,
+              куда он ходил, не вызвал ли лишнего и не оборвал ли сценарий до конца.
+            </li>
+            <li>
+              Трассировка для нас не «лог ради лога», а способ ответить на вопрос: задача решена аккуратно или система
+              споткнулась на полпути. По потоку событий в UI проще разбирать спорные прогоны, чем по одной финальной
+              строке.
+            </li>
+            <li>
+              Недавно всплывали краевые случаи вокруг обязательного финального шага ответа: контракт «закончить ход
+              правильно» оказался хрупким местом при смене промпта и графа. Такие вещи ловит бенчмарк, но их нужно
+              держать в голове при каждом релизе.
+            </li>
+            <li>
+              Отрисовка большого графа в браузере упирается в другое: даже корректные данные в базе не гарантируют
+              плавную и читаемую картинку — нужны отдельные решения по масштабу, подсветке и сокращению визуального
+              шума.
+            </li>
           </ul>
         </div>
-        <div class="footer-card">
-          <h3>Что дальше</h3>
-          <ul>
-            <li>Улучшить claims extraction на строгом эталоне.</li>
-            <li>Поднять precision многошагового graph retrieval.</li>
-            <li>Снизить latency для пользовательского интерфейса.</li>
-            <li>
-              Расширить benchmark: больше кейсов, сценариев и регрессионных прогонов (в т.ч. под разные
-              <code>agent_runtime</code>).
-            </li>
-            <li>
-              Исследовать архитектуру агентской системы: когда снова нужен supervisor с политикой субагентов, а когда
-              достаточно single-agent ReAct; формализовать критерии переключения и наблюдаемость
-              (<code>routing_log</code>, SSE-события).
-            </li>
-            <li>Расширить корпус и домены за пределы текущего набора (в т.ч. за object detection).</li>
-          </ul>
+        <div class="visual-frame">
+          <img
+            src="assets/defense/slide-11-agent-tracing-ui.png"
+            alt="Схема: цепочка шагов агента, поток событий трассировки, плотный граф на экране"
+          />
+        </div>
+      </div>
+      <div class="slide-number">11</div>
+    </section>
+
+    <section class="slide" id="slide-12">
+      <div class="slide-tag">Итоги</div>
+      <h2>Накопленное и дальнейшие планы</h2>
+      <div class="two-col">
+        <div class="conclusion-plans-copy">
+          <div class="footer-card">
+            <h3>Что уже есть по сути</h3>
+            <ul>
+              <li>Сквозной путь от корпуса статей до ответа с опорой на источники и на граф.</li>
+              <li>Разделение сигналов: отдельно качество извлечения, отдельно поиск и граф, отдельно «как агент вёл себя
+                в почти боевом сценарии».</li>
+              <li>Связка «что показали пользователю» и «что произошло под капотом» — опора для честной диагностики, а не
+                украшение.</li>
+            </ul>
+          </div>
+          <div class="footer-card">
+            <h3>Куда двигаемся дальше</h3>
+            <ul>
+              <li>
+                <strong>Подбор инструментов по смыслу</strong> (отдельный шаг «tool search»): меньше лишних вызовов,
+                дешевле типовой вопрос, проще сопровождать рост каталога тулзов.
+              </li>
+              <li>
+                <strong>Суммаризация и уплотнение контекста</strong> для длинных бесед: реже упираться в лимиты окна,
+                не терять важное из ранней части диалога, аккуратнее нести в модель только релевантное.
+              </li>
+              <li>Подтянуть слой утверждений и перефраза, precision многошагового обхода графа, задержку до комфортного
+                интерактива.</li>
+              <li>Расширить корпус и домены; отдельно — инженерия графа на экране: стабильность, читаемость, работа с
+                большими подграфами.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="visual-frame">
+          <img
+            src="assets/defense/slide-12-plans-roadmap.png"
+            alt="Дорожная карта: tool search, уплотнение контекста, точность графа, масштаб корпуса и UI графа"
+          />
         </div>
       </div>
       <div class="quote">
-        Проект ценен не только реализованным GraphRAG-конвейером, но и прозрачной оценкой качества:
-        сильные результаты видны, ограничения не прячутся — это же задаёт направления для следующих итераций.
+        Итог ценен не только собранным конвейером, но и тем, что мы показали реальные трудности — валидации, литературы,
+        агента и визуализации — и зафиксировали планы, которые эти трудности не заметают, а адресуют.
       </div>
-      <div class="slide-number">08</div>
+      <div class="slide-number">12</div>
     </section>
   </div>
   <script>

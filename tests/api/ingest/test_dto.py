@@ -108,3 +108,47 @@ def test_batch_parent_aggregate_progress_from_children() -> None:
     assert abs(float(parent["progress_pct"]) - 0.75) < 1e-9
     assert parent["ingest_phase"] == "preparing_document"
     assert parent["active_stage"] == "parse_pdf"
+
+
+def test_progress_indeterminate_true_for_single_vl_batch_waiting() -> None:
+    record = IngestJobRecord(
+        job_id="j-vl",
+        workspace_id="ws",
+        filename="x.pdf",
+        status="running",
+        stages=[
+            {
+                "name": "parse_pdf",
+                "status": "running",
+                "expected_duration_ms": 1000,
+                "subprogress_current": 0,
+                "subprogress_total": 5,
+                "metrics": {"vl_batch_total": 1},
+            },
+        ],
+    )
+    view = job_record_to_view(record)
+    assert view.progress_indeterminate is True
+    assert view.progress_pct is not None
+    assert float(view.progress_pct) < 0.01
+
+
+def test_progress_indeterminate_false_for_multi_vl_batch() -> None:
+    record = IngestJobRecord(
+        job_id="j-vl2",
+        workspace_id="ws",
+        filename="x.pdf",
+        status="running",
+        stages=[
+            {
+                "name": "parse_pdf",
+                "status": "running",
+                "expected_duration_ms": 1000,
+                "subprogress_current": 2,
+                "subprogress_total": 10,
+                "metrics": {"vl_batch_total": 3},
+            },
+        ],
+    )
+    view = job_record_to_view(record)
+    assert view.progress_indeterminate is False

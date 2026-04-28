@@ -9,7 +9,7 @@
   "requires_qdrant_claim_vectors": true,
   "requires_methods": true,
   "requires_contradictions": true,
-  "tools_any_of": ["idea_search", "cypher_query", "edge_search", "paper_quote_search", "paper_lookup", "entity_search"],
+  "tools_any_of": ["idea_search", "cypher_query", "edge_search", "paper_quote_search", "find_works"],
   "tools_must_not_use": [],
   "min_citation_count": 2,
   "typed_payload_expected": ["citations", "quote_candidates", "relation_trace"],
@@ -26,7 +26,7 @@
   "expect": {
     "answer_classes_allowed": ["synthesis", "quote_extraction"],
     "strict_answer_class": false,
-    "tools_any_of": ["idea_search", "cypher_query", "edge_search", "paper_quote_search", "paper_lookup", "entity_search"],
+    "tools_any_of": ["idea_search", "cypher_query", "edge_search", "paper_quote_search", "find_works"],
     "require_graph_tool": true,
     "require_phoenix_trace_id": true,
     "require_tool_trace": true,

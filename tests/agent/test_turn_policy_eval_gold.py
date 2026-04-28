@@ -7,7 +7,12 @@ from pathlib import Path
 
 from science_graphrag.agent.coordination.turn_policy import classify_turn_policy
 
-_GOLD = Path(__file__).resolve().parents[2] / "eval" / "chat_agent" / "coordinator_turn_policy_gold.json"
+_GOLD = (
+    Path(__file__).resolve().parents[2]
+    / "eval"
+    / "chat_agent"
+    / "coordinator_turn_policy_gold.json"
+)
 
 
 def test_coordinator_turn_policy_gold_json_cases() -> None:

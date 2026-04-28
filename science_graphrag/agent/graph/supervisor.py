@@ -23,7 +23,9 @@ from science_graphrag.agent.graph.nodes.writer_agent import (
     build_writer_agent_node,
 )
 from science_graphrag.agent.graph.react_edges import (
+    react_after_tools_decrement_budget,
     react_chat_response_budget_cutoff,
+    route_react_chat_to_tools,
     route_react_tools_next,
 )
 from science_graphrag.agent.graph.state import AgentState
@@ -33,6 +35,8 @@ from science_graphrag.agent.llm.chat import (
     ensure_messages_safe_for_generation,
 )
 from science_graphrag.agent.tool_call_normalization import build_normalized_tool_node_executor
+from science_graphrag.agent.tool_message_compact import maybe_compact_agent_messages_for_react
+from science_graphrag.agent.tool_search import shortlist_tools_for_single_agent
 from science_graphrag.agent.tools import build_tool_registry
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
@@ -82,9 +86,14 @@ def _build_supervisor_route_messages(state: AgentState) -> list[HumanMessage]:
 
 ROUTING_PROMPT = """You are a supervisor for scholarly research agents.
 Available specialists:
-- retrieval_agent: semantic search in papers and workspace summaries
-- graph_agent: structural queries, entity lookup and graph traversal
+- retrieval_agent: workspace inventory (workspace_inspect), full-text work search (find_works),
+  paper profiles, semantic idea_search / paper_quote_search, bibliography formatting
+- graph_agent: structural graph only — edge neighborhoods and read-only Cypher (no full-text work search)
 - writer_agent: synthesize final answer with citations
+
+If the user needs to find papers by title, author name fragment, or keywords without a known work id,
+prefer retrieval_agent (find_works). Use graph_agent when the question is about relations, paths,
+or patterns between known entities.
 
 Given the user question and accumulated specialist_results, decide the next specialist.
 Respond with exactly one token:
@@ -291,7 +300,6 @@ def build_retrieval_graph(stores: StoreRegistry, settings: Settings):
 def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
     """Wave Y2 fallback: single-agent ReAct graph."""
     tool_registry = build_tool_registry(stores)
-    llm = build_chat_model(settings).bind_tools(tool_registry)
 
     def chat_node(state: AgentState) -> dict:
         cutoff = react_chat_response_budget_cutoff(state, settings=settings)
@@ -304,6 +312,19 @@ def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
                 },
             )
             return cutoff
+        meta = state.get("metadata") or {}
+        hint = meta.get("answer_class_hint")
+        answer_class_hint = (
+            str(hint).strip() if isinstance(hint, str) and str(hint).strip() else None
+        )
+        bound_tools, _ts_meta = shortlist_tools_for_single_agent(
+            tool_registry,
+            question=_first_user_plain_question(state),
+            settings=settings,
+            has_workspace=bool((state.get("workspace_id") or "").strip()),
+            answer_class=answer_class_hint,
+        )
+        llm_turn = build_chat_model(settings).bind_tools(bound_tools)
         with llm_span(
             "llm.agent.react_turn",
             {"llm.invocation_name": "agent_single_react"},
@@ -321,39 +342,31 @@ def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
                 ),
                 transport_max_attempts=max_attempts,
             )
+            react_msgs = maybe_compact_agent_messages_for_react(
+                state["messages"],
+                settings=settings,
+            )
             response = invoke_chat_gated(
-                llm,
-                ensure_messages_safe_for_generation(state["messages"]),
+                llm_turn,
+                ensure_messages_safe_for_generation(react_msgs),
                 pool_name="agent_chat",
                 settings=settings,
             )
         return {"messages": [response]}
 
-    def budget_node(state: AgentState) -> dict:
-        budget = int(state.get("budget_remaining", settings.agent_max_tool_calls))
-        return {"budget_remaining": budget - 1}
-
-    def should_continue(state: AgentState) -> Literal["tools", "__end__"]:
-        messages = state.get("messages") or []
-        if not messages:
-            return END
-        last = messages[-1]
-        budget = int(state.get("budget_remaining", 0))
-        if budget <= 0:
-            return END
-        if getattr(last, "tool_calls", None):
-            return "tools"
-        return END
-
     graph = StateGraph(AgentState)
     graph.add_node("chat", chat_node)
-    graph.add_node("budget", budget_node)
     graph.add_node("tools", build_normalized_tool_node_executor(tool_registry))
+    graph.add_node("after_tools", react_after_tools_decrement_budget)
     graph.set_entry_point("chat")
-    graph.add_edge("chat", "budget")
-    graph.add_conditional_edges("budget", should_continue, {"tools": "tools", END: END})
     graph.add_conditional_edges(
-        "tools",
+        "chat",
+        route_react_chat_to_tools,
+        {"tools": "tools", END: END},
+    )
+    graph.add_edge("tools", "after_tools")
+    graph.add_conditional_edges(
+        "after_tools",
         route_react_tools_next,
         {"chat": "chat", END: END},
     )

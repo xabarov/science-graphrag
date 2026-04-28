@@ -10,6 +10,19 @@
 | [frontend-parallel-track-strategy.md](frontend-parallel-track-strategy.md) | Strategy: параллельный запуск frontend до полного закрытия Phase 5 |
 | [frontend-phase6-bridge-backlog.md](frontend-phase6-bridge-backlog.md) | Work backlog: frontend shell и backend bridge API |
 
+## Agent chat
+
+| Документ | Описание |
+|----------|----------|
+| [agent-chat-tools.md](agent-chat-tools.md) | Каталог LangChain tools для research chat: runtime modes, что видит модель, карта реализации в коде, планы `tool_search` и compaction |
+| [agent-tools-best-practices.md](agent-tools-best-practices.md) | Практики проектирования тулзов, согласованность промптов/схем, аудит бандла (`scripts/prompt_audit`), чеклист перед мержем |
+
+## Graph / works API
+
+| Документ | Описание |
+|----------|----------|
+| [work-graph-reader-authorship.md](work-graph-reader-authorship.md) | Контракт `view=reader` vs `view=raw` для authorship на `GET /v1/works/{id}/graph`, пайплайн collapse / агрегаторы, ссылки на полный анализ |
+
 ## Общее
 
 - Логические диаграммы верхнего уровня: [roadmap §3](../roadmap.md).

@@ -17,7 +17,7 @@ import { CopyIdButton, CursorIconAction } from "../../components/common/index.js
 import {
   INGEST_PHASE_KEYS,
   fallbackHumanIngestStageLabel,
-  ingestProductPhaseKey,
+  ingestPhaseFromJob,
   ingestStageIdFromRow,
   ingestStageMessageKey,
   pickActiveIngestStage,
@@ -117,15 +117,18 @@ export default function WorkspaceContextStrip({ t, vm }) {
 
   const progressValue = parentServerPct != null ? parentServerPct : batchPct != null ? batchPct : singlePct;
 
+  const ingestIndeterminate = useMemo(
+    () => Boolean(vm.ingestJob && vm.ingestJob.progress_indeterminate),
+    [vm.ingestJob],
+  );
+
   const ingestStrip = useMemo(() => {
     if (!hasWs || !ingestBusy) return null;
     const job = vm.ingestJob && typeof vm.ingestJob === "object" ? vm.ingestJob : null;
     const stages = job && Array.isArray(job.stages) ? job.stages : [];
     const active = pickActiveIngestStage(stages);
     const stageId = ingestStageIdFromRow(active);
-    const serverPhase = job?.ingest_phase != null ? String(job.ingest_phase).trim() : "";
-    const phaseKey =
-      serverPhase && INGEST_PHASE_KEYS.includes(serverPhase) ? serverPhase : ingestProductPhaseKey(stageId);
+    const phaseKey = ingestPhaseFromJob(job, stageId);
     const statusLower = job ? String(job.status || "").toLowerCase() : "";
     const failed = statusLower === "failed";
     const starting = Boolean(vm.uploadBusy && !job);
@@ -267,7 +270,18 @@ export default function WorkspaceContextStrip({ t, vm }) {
 
         {hasWs && ingestBusy ? (
           <Box sx={{ width: { xs: "100%", md: 260 }, flexShrink: 0, minWidth: 0 }}>
-            <Tooltip title={t("workspace.strip.ingestProgressTip")}>
+            <Tooltip
+              title={
+                <Stack spacing={0.75} sx={{ maxWidth: 280 }}>
+                  <Typography sx={{ fontSize: "0.75rem", fontWeight: 600, color: "rgba(255,255,255,0.92)" }}>
+                    {t("workspace.strip.ingestProgressTip")}
+                  </Typography>
+                  <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.65)", lineHeight: 1.45 }}>
+                    {t("workspace.strip.ingestProgressTwoScalesHint")}
+                  </Typography>
+                </Stack>
+              }
+            >
               <Stack spacing={0.35}>
                 <Stack direction="row" alignItems="center" justifyContent="space-between" gap={0.5}>
                   <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -285,7 +299,7 @@ export default function WorkspaceContextStrip({ t, vm }) {
                       </ShimmerLabel>
                     )}
                   </Box>
-                  {progressValue != null ? (
+                  {!ingestIndeterminate && progressValue != null ? (
                     <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.42)", flexShrink: 0 }}>
                       {`${Math.round(progressValue)}%`}
                     </Typography>
@@ -309,8 +323,14 @@ export default function WorkspaceContextStrip({ t, vm }) {
                   );
                 })()}
                 <LinearProgress
-                  variant={progressValue != null ? "determinate" : "indeterminate"}
-                  value={progressValue != null ? progressValue : undefined}
+                  variant={
+                    ingestIndeterminate
+                      ? "indeterminate"
+                      : progressValue != null
+                        ? "determinate"
+                        : "indeterminate"
+                  }
+                  value={!ingestIndeterminate && progressValue != null ? progressValue : undefined}
                   sx={{
                     height: 4,
                     borderRadius: 2,

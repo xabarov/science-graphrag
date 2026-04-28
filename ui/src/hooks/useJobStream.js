@@ -1,21 +1,40 @@
 import { useEffect } from "react";
 
 import { buildApiUrl } from "../services/apiClient.js";
-import { ingestProductPhaseKey } from "../components/ingestion/ingestStripModel.js";
+import { ingestPhaseFromJob } from "../components/ingestion/ingestStripModel.js";
 import { getIngestJob } from "../utils/workspaceStore.js";
 
-function mergeStageEvent(prevJob, payload) {
+/**
+ * Merge a single stage_* SSE payload into a job snapshot (stages + job-level detail fields).
+ * Exported for unit tests.
+ *
+ * @param {Record<string, unknown> | null | undefined} prevJob
+ * @param {Record<string, unknown>} payload
+ * @returns {Record<string, unknown>}
+ */
+export function mergeIngestJobStageEvent(prevJob, payload) {
   const base = prevJob && typeof prevJob === "object" ? prevJob : {};
   const currentStages = Array.isArray(base.stages) ? [...base.stages] : [];
   const idx = currentStages.findIndex((item) => String(item?.name || "") === String(payload.stage || ""));
+  const prevRow = idx >= 0 ? currentStages[idx] : null;
+  const prevM =
+    prevRow?.metrics && typeof prevRow.metrics === "object" && !Array.isArray(prevRow.metrics)
+      ? { ...prevRow.metrics }
+      : {};
+  const incM =
+    payload.metrics && typeof payload.metrics === "object" && !Array.isArray(payload.metrics)
+      ? payload.metrics
+      : {};
+  const mergedMetrics = { ...prevM, ...incM };
   const nextStage = {
     name: String(payload.stage || ""),
     status: String(payload.status || "running"),
-    started_at: payload.started_at || null,
-    finished_at: payload.finished_at || null,
-    duration_ms: payload.duration_ms ?? null,
-    metrics: payload.metrics && typeof payload.metrics === "object" ? payload.metrics : {},
-    error: payload.error || null,
+    started_at: payload.started_at ?? prevRow?.started_at ?? null,
+    finished_at: payload.finished_at !== undefined ? payload.finished_at : (prevRow?.finished_at ?? null),
+    duration_ms: payload.duration_ms !== undefined ? payload.duration_ms : (prevRow?.duration_ms ?? null),
+    expected_duration_ms: prevRow?.expected_duration_ms,
+    metrics: mergedMetrics,
+    error: payload.error !== undefined ? payload.error : (prevRow?.error ?? null),
   };
   const m = nextStage.metrics || {};
   if (m.detail_message != null && String(m.detail_message).trim()) {
@@ -33,7 +52,7 @@ function mergeStageEvent(prevJob, payload) {
   const sid = String(payload.stage || "").trim();
   if (sid) {
     merged.active_stage = sid;
-    merged.ingest_phase = ingestProductPhaseKey(sid);
+    merged.ingest_phase = ingestPhaseFromJob(merged, sid);
   }
   if (m.detail_message != null && String(m.detail_message).trim()) {
     merged.detail_message = String(m.detail_message).trim().slice(0, 500);
@@ -43,6 +62,28 @@ function mergeStageEvent(prevJob, payload) {
   }
   if (m.subprogress_total != null && Number.isFinite(Number(m.subprogress_total))) {
     merged.subprogress_total = Number(m.subprogress_total);
+  }
+  if (typeof payload.progress_pct === "number" && Number.isFinite(payload.progress_pct)) {
+    merged.progress_pct = payload.progress_pct;
+  }
+  if (payload.ingest_phase != null && String(payload.ingest_phase).trim()) {
+    merged.ingest_phase = String(payload.ingest_phase).trim();
+  }
+  if (payload.active_stage !== undefined) {
+    merged.active_stage = String(payload.active_stage || "").trim();
+  }
+  if (payload.detail_message !== undefined) {
+    merged.detail_message =
+      payload.detail_message != null ? String(payload.detail_message).trim().slice(0, 500) : null;
+  }
+  if (payload.subprogress_current != null && Number.isFinite(Number(payload.subprogress_current))) {
+    merged.subprogress_current = Number(payload.subprogress_current);
+  }
+  if (payload.subprogress_total != null && Number.isFinite(Number(payload.subprogress_total))) {
+    merged.subprogress_total = Number(payload.subprogress_total);
+  }
+  if (Object.prototype.hasOwnProperty.call(payload, "progress_indeterminate")) {
+    merged.progress_indeterminate = Boolean(payload.progress_indeterminate);
   }
   return merged;
 }
@@ -124,7 +165,7 @@ export default function useJobStream({
       failCount = 0;
       try {
         const payload = JSON.parse(evt.data || "{}");
-        currentJob = mergeStageEvent(currentJob, payload);
+        currentJob = mergeIngestJobStageEvent(currentJob, payload);
         onUpdate?.(currentJob);
       } catch {
         /* ignore malformed payload */

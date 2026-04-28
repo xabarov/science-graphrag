@@ -7,6 +7,11 @@ from langchain_core.tools import BaseTool, tool
 from pydantic import BaseModel, Field
 
 from science_graphrag.agent.tools.base import BaseAgentTool, ToolResult
+from science_graphrag.agent.tools.chunk_retrieval_defaults import (
+    DEFAULT_AGENT_CHUNK_TOP_K,
+    MAX_AGENT_CHUNK_TOP_K,
+    normalize_agent_retrieval_query,
+)
 from science_graphrag.agent.tools.trace_wrappers import run_tool_result_with_span
 from science_graphrag.config import Settings
 from science_graphrag.embeddings import resolve_embedder, resolve_embedding_model_label
@@ -41,9 +46,15 @@ class IdeaSearchTool(BaseAgentTool):
         q: str,
         kinds: list[str] | None = None,
         workspace_id: str | None = None,
-        top_k: int = 5,
+        top_k: int = DEFAULT_AGENT_CHUNK_TOP_K,
     ) -> ToolResult:
-        k = max(1, min(int(top_k), 24))
+        k = max(1, min(int(top_k), MAX_AGENT_CHUNK_TOP_K))
+        qn = normalize_agent_retrieval_query(q)
+        if not qn:
+            return ToolResult(
+                payload={"items": [], "row_count": 0, "empty_reason": "empty_query"},
+                row_count=0,
+            )
         req_kinds = {str(x).strip().lower() for x in (kinds or ["chunk"])}
         dim = resolve_embedding_dim(settings=self._settings)
 
@@ -53,7 +64,7 @@ class IdeaSearchTool(BaseAgentTool):
                 dim=dim,
                 input_count=1,
             )
-            qv = self._embedder.embed([q])
+            qv = self._embedder.embed([qn])
         if isinstance(qv, np.ndarray):
             vector = qv[0].tolist()
         else:
@@ -67,7 +78,7 @@ class IdeaSearchTool(BaseAgentTool):
                 collection_name=self._settings.qdrant_collection,
                 top_k=k,
                 workspace_id=workspace_id or None,
-                query_preview=q,
+                query_preview=qn,
             )
             try:
                 if "chunk" in req_kinds:
@@ -132,12 +143,23 @@ class IdeaSearchTool(BaseAgentTool):
 
 
 class IdeaSearchArgs(BaseModel):
-    query: str = Field(..., description="Natural-language search query.")
+    query: str = Field(
+        ...,
+        description=(
+            "Natural-language search query; trimmed and internal whitespace collapsed "
+            "(same normalization as paper_quote_search) before embedding."
+        ),
+    )
     kinds: list[str] = Field(
         default_factory=lambda: ["chunk"], description="Result kinds: chunk/work."
     )
     workspace_id: str | None = Field(default=None, description="Workspace scope.")
-    top_k: int = Field(default=5, ge=1, le=24, description="Max items to return.")
+    top_k: int = Field(
+        default=DEFAULT_AGENT_CHUNK_TOP_K,
+        ge=1,
+        le=MAX_AGENT_CHUNK_TOP_K,
+        description="Max items to return.",
+    )
 
 
 def _make_idea_search_tool(
@@ -153,9 +175,13 @@ def _make_idea_search_tool(
         query: str,
         kinds: list[str] | None = None,
         workspace_id: str | None = None,
-        top_k: int = 5,
+        top_k: int = DEFAULT_AGENT_CHUNK_TOP_K,
     ) -> dict[str, Any]:
-        """Search similar chunks and works using embedding retrieval."""
+        """Embedding retrieval over chunks and/or work-level vectors (see kinds).
+
+        Pass workspace_id when the user cares about this workspace only; omit for corpus-wide
+        semantic exploration. Use chunk-heavy kinds for broad scan; include work when comparing papers.
+        """
         result = run_tool_result_with_span(
             tool_name="idea_search",
             tool_parameters={

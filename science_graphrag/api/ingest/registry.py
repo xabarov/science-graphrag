@@ -298,6 +298,35 @@ class IngestJobRegistry:
                     for row in rows
                 ]
 
+    def reset_stale_running_jobs_to_queued(self, *, before: datetime) -> list[str]:
+        """Turn orphan ``running`` rows into ``queued`` so the worker can claim them again.
+
+        If the Dramatiq message was dropped (AgeLimit, OOM) or the process died, the DB can
+        stay ``running`` while ``ingest_document_actor`` refuses to touch ``running`` jobs.
+        """
+        job_ids: list[str] = []
+        with self.lock:
+            with self._session_factory() as session:
+                rows = (
+                    session.execute(
+                        select(IngestJobRecordOrm).where(
+                            IngestJobRecordOrm.status == "running",
+                            IngestJobRecordOrm.created_at < before,
+                        )
+                    )
+                    .scalars()
+                    .all()
+                )
+                for row in rows:
+                    row.status = "queued"
+                    row.message = "Re-queued after stale running recovery (worker restart)"
+                    row.error = None
+                    row.finished_at = None
+                    job_ids.append(str(row.job_id))
+                if job_ids:
+                    session.commit()
+        return job_ids
+
     def list_stale_queued_jobs(self, *, before: datetime) -> list[IngestJobRecord]:
         with self.lock:
             with self._session_factory() as session:

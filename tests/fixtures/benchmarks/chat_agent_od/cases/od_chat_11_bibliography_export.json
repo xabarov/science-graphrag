@@ -10,7 +10,7 @@
   "requires_qdrant_claim_vectors": false,
   "requires_methods": false,
   "requires_contradictions": false,
-  "tools_any_of": ["workspace_list_papers", "paper_lookup", "format_bibliography_gost", "idea_search"],
+  "tools_any_of": ["workspace_inspect", "find_works", "format_bibliography_gost", "idea_search"],
   "tools_must_not_use": [],
   "min_citation_count": 0,
   "typed_payload_expected": ["bibliography", "citations"],
@@ -26,7 +26,7 @@
   "expect": {
     "answer_classes_allowed": ["bibliography_export"],
     "strict_answer_class": false,
-    "tools_any_of": ["workspace_list_papers", "paper_lookup", "format_bibliography_gost", "idea_search"],
+    "tools_any_of": ["workspace_inspect", "find_works", "format_bibliography_gost", "idea_search"],
     "require_typed_bibliography": true,
     "require_phoenix_trace_id": true,
     "require_tool_trace": true,

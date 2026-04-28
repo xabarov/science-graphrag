@@ -93,14 +93,14 @@ def test_supervisor_router_prompt_excludes_tool_transcript(monkeypatch) -> None:
                 content="",
                 tool_calls=[
                     {
-                        "name": "entity_search",
-                        "args": {"query": "paper A"},
+                        "name": "edge_search",
+                        "args": {"node_id": "paper-a"},
                         "id": "call_1",
                         "type": "tool_call",
                     }
                 ],
             ),
-            ToolMessage(content='{"row_count": 1}', tool_call_id="call_1", name="entity_search"),
+            ToolMessage(content='{"row_count": 1}', tool_call_id="call_1", name="edge_search"),
         ],
         "metadata": {"raw_user_question": "How is paper A related to paper B?"},
         "specialist_results": {"graph_agent": [{"path_count": 1}]},

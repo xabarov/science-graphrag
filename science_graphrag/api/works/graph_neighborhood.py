@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import re
 from typing import Any
 
 from neo4j import Session as Neo4jSession
@@ -14,6 +15,7 @@ from science_graphrag.api.graph_display import (
     parse_priority_csv,
     resolve_node_kind,
 )
+from science_graphrag.api.graph_reader_meta import enrich_reader_graph_meta
 from science_graphrag.api.workspace_graph.claims_projection import build_claim_graph_slice_for_work
 from science_graphrag.api.workspace_graph.projection import merge_nodes_edges_lists
 
@@ -58,12 +60,130 @@ def _agg_threshold_for_neighbor(neighbor_kind: str, *, global_override: int | No
     return AGGREGATOR_THRESHOLD
 
 
+def _reader_synthetic_author_entity_id(center_work_id: str, ash_id: str) -> str:
+    """Stable surrogate ``Author.id`` when the graph payload has no ``OF_AUTHOR`` edges.
+
+    The ``va:`` prefix avoids collisions with canonical UUID ``Author`` ids from Neo4j.
+    """
+    payload = f"{center_work_id}\0{ash_id}\0reader_synth_author".encode()
+    return "va:" + hashlib.sha256(payload).hexdigest()[:22]
+
+
+def _author_label_from_authorship_node(n_ash: dict[str, Any] | None) -> str:
+    """Human label for a virtual Author node (aligned with UI author projection)."""
+    if not n_ash:
+        return "Unknown author"
+    dl = str(n_ash.get("display_label") or n_ash.get("label") or "").strip()
+    dl = re.sub(r"\s*\(#\d+\)\s*$", "", dl).strip()
+    if dl:
+        return dl[:200]
+    rawp = n_ash.get("properties") or {}
+    pos = rawp.get("author_position")
+    if pos is not None:
+        try:
+            return f"Author #{int(pos)}"
+        except (TypeError, ValueError):
+            return "Unknown author"
+    return "Unknown author"
+
+
+def _authorship_props_for_authored_edge(n_ash: dict[str, Any] | None) -> dict[str, Any]:
+    """Copy display-oriented fields onto virtual ``AUTHORED`` edges (not ``author_entity_id``)."""
+    if not n_ash:
+        return {}
+    rawp = n_ash.get("properties") or {}
+    props: dict[str, Any] = {}
+    for key in ("author_position", "is_corresponding", "raw_affiliation", "institution_name"):
+        if key in rawp and rawp[key] is not None:
+            props[key] = rawp[key]
+    return props
+
+
+def compute_authorship_projection_meta(
+    center_work_id: str,
+    edges: list[dict[str, Any]],
+) -> str:
+    """Classify reader-view authorship targets linked from the center work.
+
+    Used for optional debug ``meta`` on ``GET /v1/works/{id}/graph`` (no PII).
+
+    Returns one of: ``native``, ``synthesized``, ``mixed``, ``none``.
+    ``native`` means every resolved target id from center ``AUTHORED`` edges is
+    non-surrogate (does not use the ``va:`` prefix). ``synthesized`` means at
+    least one ``va:`` target and no other native ids on those edges. ``mixed``
+    is both. ``none`` is no ``AUTHORED`` edges from the center.
+    """
+    has_native = False
+    has_synth = False
+    for edge in edges or []:
+        if str(edge.get("type") or "").upper() != "AUTHORED":
+            continue
+        src_id = str(edge.get("source") or "")
+        tgt_id = str(edge.get("target") or "")
+        if src_id == center_work_id:
+            aid = tgt_id
+        elif tgt_id == center_work_id:
+            aid = src_id
+        else:
+            continue
+        if not aid:
+            continue
+        if aid.startswith("va:"):
+            has_synth = True
+        else:
+            has_native = True
+    if has_native and has_synth:
+        return "mixed"
+    if has_native:
+        return "native"
+    if has_synth:
+        return "synthesized"
+    return "none"
+
+
+def _strip_reader_only_authorship_properties(nodes: list[dict[str, Any]]) -> None:
+    """Drop reader-collapse-only keys from Authorship so ``view=raw`` stays topology-shaped."""
+    for n in nodes:
+        if str(n.get("type") or "") != "Authorship":
+            continue
+        props = n.get("properties")
+        if not isinstance(props, dict) or "author_entity_id" not in props:
+            continue
+        n["properties"] = {k: v for k, v in props.items() if k != "author_entity_id"}
+
+
+def _reader_view_authored_target(
+    ash_id: str,
+    author_by_ash: dict[str, str],
+    n_ash: dict[str, Any] | None,
+    center_work_id: str,
+) -> tuple[str, list[str], bool]:
+    """Resolve ``Author`` id, ``via`` trace, and whether the id is a reader-only surrogate."""
+    aid = str(author_by_ash.get(ash_id) or "").strip()
+    if aid:
+        return aid, ["HAS_AUTHORSHIP", "OF_AUTHOR"], False
+    rawp = (n_ash or {}).get("properties") or {}
+    aid = str(rawp.get("author_entity_id") or "").strip()
+    if aid:
+        return aid, ["HAS_AUTHORSHIP", "enriched_authorship"], False
+    return (
+        _reader_synthetic_author_entity_id(center_work_id, ash_id),
+        ["HAS_AUTHORSHIP", "enriched_authorship"],
+        True,
+    )
+
+
 def collapse_authorship_for_reader_view(
     nodes: list[dict[str, Any]],
     edges: list[dict[str, Any]],
     center_work_id: str,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    """GR9: drop :Authorship reification; add virtual Work–[AUTHORED]→ Author edges with ``via`` trace."""
+    """GR9: drop :Authorship reification; add virtual Work–[AUTHORED]→ Author.
+
+    ``via`` records how each edge was derived. Without ``OF_AUTHOR`` in the payload
+    (standalone work graph), uses ``author_entity_id`` from ``enrich_authorship_nodes``
+    or a stable ``va:…`` surrogate so reader view never drops authorship silently.
+    """
 
     authorship_ids = {
         str(n.get("id") or "")
@@ -81,32 +201,68 @@ def collapse_authorship_for_reader_view(
         rt = str(edge.get("type") or "").upper()
         src_id = str(edge.get("source") or "")
         tgt_id = str(edge.get("target") or "")
-        if rt == "HAS_AUTHORSHIP" and tgt_id in authorship_ids:
-            work_by_ash[tgt_id] = src_id
-        elif rt == "OF_AUTHOR" and src_id in authorship_ids:
-            author_by_ash[src_id] = tgt_id
+        if rt == "HAS_AUTHORSHIP":
+            if tgt_id in authorship_ids:
+                work_by_ash[tgt_id] = src_id
+            elif src_id in authorship_ids:
+                work_by_ash[src_id] = tgt_id
+        elif rt == "OF_AUTHOR":
+            if src_id in authorship_ids:
+                author_by_ash[src_id] = tgt_id
+            elif tgt_id in authorship_ids:
+                author_by_ash[tgt_id] = src_id
 
     virtual_edges: list[dict[str, Any]] = []
+    author_nodes_to_add: list[dict[str, Any]] = []
+    author_ids_with_node: set[str] = {
+        str(n.get("id") or "")
+        for n in nodes
+        if str(n.get("type") or "") == "Author" or str(n.get("node_kind") or "") == "Author"
+    }
+    author_ids_with_node.discard("")
+
     node_by_id = {str(n.get("id") or ""): n for n in nodes}
     seq = 0
+
+    def ensure_author_node(aid: str, n_ash: dict[str, Any] | None, *, synthetic: bool) -> None:
+        if not aid or aid in author_ids_with_node:
+            return
+        label = _author_label_from_authorship_node(n_ash)
+        node: dict[str, Any] = {
+            "id": aid,
+            "type": "Author",
+            "node_kind": "Author",
+            "label": label,
+            "display_label": label,
+            "subtitle": "Author",
+            "properties": {},
+            "distance": 1,
+        }
+        if synthetic:
+            node["raw"] = {
+                "type": "Author",
+                "node_kind": "Author",
+                "synthesized_from": "Authorship",
+            }
+        author_nodes_to_add.append(node)
+        author_ids_with_node.add(aid)
+
     for ash_id, wid in work_by_ash.items():
-        aid = author_by_ash.get(ash_id)
-        if not aid or not wid:
+        if not wid:
             continue
         n_ash = node_by_id.get(ash_id)
-        props: dict[str, Any] = {}
-        if n_ash:
-            rawp = n_ash.get("properties") or {}
-            for key in ("author_position", "is_corresponding", "raw_affiliation"):
-                if key in rawp and rawp[key] is not None:
-                    props[key] = rawp[key]
+        props = _authorship_props_for_authored_edge(n_ash)
+        aid, via, synthetic = _reader_view_authored_target(
+            ash_id, author_by_ash, n_ash, center_work_id
+        )
+        ensure_author_node(aid, n_ash, synthetic=synthetic)
         virtual_edges.append(
             {
                 "id": _stable_edge_id(wid, "AUTHORED", aid, seq),
                 "source": wid,
                 "target": aid,
                 "type": "AUTHORED",
-                "via": ["HAS_AUTHORSHIP", "OF_AUTHOR"],
+                "via": via,
                 "properties": props,
                 "direction": "outgoing" if wid == center_work_id else "lateral",
             }
@@ -114,6 +270,7 @@ def collapse_authorship_for_reader_view(
         seq += 1
 
     new_nodes = [n for n in nodes if str(n.get("id") or "") not in authorship_ids]
+    new_nodes.extend(author_nodes_to_add)
     new_edges = [
         e
         for e in edges
@@ -223,7 +380,9 @@ def _apply_aggregators(
                     "aggregator_kind": f"{node_kind.lower()}_of_work",
                     "count": len(uniq_neighbors),
                     "preview_labels": preview_labels,
-                    "expand_endpoint": f"/v1/works/{work_id}/graph/expand?aggregator_id={aggregator_id}",
+                    "expand_endpoint": (
+                        f"/v1/works/{work_id}/graph/expand" f"?aggregator_id={aggregator_id}"
+                    ),
                 },
             }
         )
@@ -319,6 +478,52 @@ def _append_neighbor_edge(
         str(rec.get("tgt_id") or "").strip(),
     )
     edges.append({"source": src_id, "target": tgt_id, "type": rec["rt"] or ""})
+    _append_of_author_topology_from_row(nodes, edges, ntype=ntype, authorship_id=nid, rec=rec)
+
+
+def _append_of_author_topology_from_row(
+    nodes: list[dict[str, Any]],
+    edges: list[dict[str, Any]],
+    *,
+    ntype: str,
+    authorship_id: str,
+    rec: Any,
+) -> None:
+    """Materialize ``(Authorship)-[:OF_AUTHOR]->(Author)`` when Neo4j has the link (Option A)."""
+    if str(ntype or "") != "Authorship":
+        return
+    author_id = str(rec.get("n_auth_id") or "").strip()
+    if not author_id:
+        return
+    if not any(str(n.get("id") or "") == author_id for n in nodes):
+        name = str(rec.get("n_ash_author") or "").strip()
+        rendered = compute_node_display("Author", name, {})
+        nodes.append(
+            {
+                "id": author_id,
+                "type": "Author",
+                "label": str(rendered["display_label"]),
+                "display_label": str(rendered["display_label"]),
+                "subtitle": str(rendered["subtitle"]),
+                "node_kind": resolve_node_kind("Author"),
+                "properties": dict(rendered["properties"]),
+            }
+        )
+    for e in edges:
+        if str(e.get("type") or "").upper() == "OF_AUTHOR" and str(e.get("source") or "") == str(
+            authorship_id
+        ):
+            if str(e.get("target") or "") == str(author_id):
+                return
+    seq = len(edges)
+    edges.append(
+        {
+            "source": authorship_id,
+            "target": author_id,
+            "type": "OF_AUTHOR",
+            "id": _stable_edge_id(authorship_id, "OF_AUTHOR", author_id, seq),
+        }
+    )
 
 
 def _enrich_edges_with_display(
@@ -370,7 +575,8 @@ def _work_neighbors_rows(
                coalesce(n.venue_type, '') AS n_venue_type, coalesce(n.issn, '') AS n_issn,
                n.author_position AS n_ash_pos, coalesce(n.raw_affiliation, '') AS n_ash_aff,
                n.is_corresponding AS n_ash_corr, coalesce(auth.full_name, '') AS n_ash_author,
-               coalesce(inst.name, '') AS n_ash_inst
+               coalesce(inst.name, '') AS n_ash_inst,
+               coalesce(auth.id, '') AS n_auth_id
         LIMIT $lim
     """
     params: dict[str, Any] = {
@@ -392,10 +598,12 @@ def _work_graph_neighborhood_payload(
     depth: int = 1,
     prioritize: str | None = None,
     view: str = "reader",
+    workspace_id: str | None = None,
     aggregator_threshold: int | None = None,
     aggregator_disabled_kinds: str | None = None,
     include_claims: bool = False,
     claims_limit: int = 24,
+    include_authorship_debug: bool = False,
 ) -> dict[str, Any] | None:
     row = session.run(
         """
@@ -506,12 +714,14 @@ def _work_graph_neighborhood_payload(
                 UNWIND $h1 AS wid
                 MATCH (w:Work {id: wid})-[r:CITES]-(n:Work)
                 WHERE n.id <> $center AND NOT n.id IN $h1set
-                RETURN coalesce(n.id, toString(elementId(n))) AS nid, labels(n) AS labs, type(r) AS rt,
+                RETURN coalesce(n.id, toString(elementId(n))) AS nid,
+                       labels(n) AS labs, type(r) AS rt,
                        coalesce(n.name, n.full_name, n.title, '') AS nlabel,
                        coalesce(startNode(r).id, toString(elementId(startNode(r)))) AS src_id,
                        coalesce(endNode(r).id, toString(elementId(endNode(r)))) AS tgt_id,
                        n.publication_year AS n_pub_year, coalesce(n.doi, '') AS n_doi,
-                       coalesce(n.arxiv_id, '') AS n_arxiv, coalesce(n.venue_name, '') AS n_venue
+                       coalesce(n.arxiv_id, '') AS n_arxiv,
+                       coalesce(n.venue_name, '') AS n_venue
                 LIMIT $lim2
                 """,
                 h1=hop1_work_ids,
@@ -564,8 +774,13 @@ def _work_graph_neighborhood_payload(
         claims_meta = {"include_claims": True, "claims_included": True, **cm}
     enrich_authorship_nodes(session, nodes)
     vnorm = str(view or "reader").strip().lower()
+    if vnorm == "raw":
+        _strip_reader_only_authorship_properties(nodes)
     if vnorm == "reader":
         nodes, edges = collapse_authorship_for_reader_view(nodes, edges, center_id)
+    reader_authorship_projection = (
+        compute_authorship_projection_meta(center_id, edges) if vnorm == "reader" else None
+    )
     disabled = _parse_aggregator_disabled_kinds(aggregator_disabled_kinds)
     _enrich_edges_with_display(center_id, nodes, edges)
     if vnorm != "raw":
@@ -580,24 +795,34 @@ def _work_graph_neighborhood_payload(
     expansions = ["increase_neighbor_limit"] if truncated else []
     if depth_req > effective_depth:
         expansions.append("multi_hop_depth")
+    meta: dict[str, Any] = {
+        "semantic_available": bool(row["has_semantic"]),
+        "graph_scope": "work_2hop" if effective_depth >= 2 else "work_1hop",
+        "graph_depth_requested": int(depth),
+        "graph_depth_effective": effective_depth,
+        "neighbor_match_count": total_neighbors,
+        "neighbor_limit_applied": hop1_lim + (hop2_lim if effective_depth >= 2 else 0),
+        "nodes_returned": len(nodes),
+        "edges_returned": len(edges),
+        "is_truncated": truncated,
+        "skipped_by_kind": skipped_by_kind if skipped_by_kind else {},
+        "available_expansions": expansions,
+        **claims_meta,
+    }
+    enrich_reader_graph_meta(
+        meta,
+        neighbor_limit=int(neighbor_limit),
+        prioritize=prioritize,
+        view=view,
+        workspace_id=workspace_id,
+    )
+    if include_authorship_debug and reader_authorship_projection is not None:
+        meta["authorship_projection"] = reader_authorship_projection
     return {
         "work_id": work_id,
         "nodes": nodes,
         "edges": edges,
-        "meta": {
-            "semantic_available": bool(row["has_semantic"]),
-            "graph_scope": "work_2hop" if effective_depth >= 2 else "work_1hop",
-            "graph_depth_requested": int(depth),
-            "graph_depth_effective": effective_depth,
-            "neighbor_match_count": total_neighbors,
-            "neighbor_limit_applied": hop1_lim + (hop2_lim if effective_depth >= 2 else 0),
-            "nodes_returned": len(nodes),
-            "edges_returned": len(edges),
-            "is_truncated": truncated,
-            "skipped_by_kind": skipped_by_kind if skipped_by_kind else {},
-            "available_expansions": expansions,
-            **claims_meta,
-        },
+        "meta": meta,
     }
 
 
@@ -609,10 +834,12 @@ def work_graph_neighborhood(
     depth: int = 1,
     prioritize: str | None = None,
     view: str = "reader",
+    workspace_id: str | None = None,
     aggregator_threshold: int | None = None,
     aggregator_disabled_kinds: str | None = None,
     include_claims: bool = False,
     claims_limit: int = 24,
+    include_authorship_debug: bool = False,
 ) -> dict[str, Any] | None:
     # Backward compatibility: older callers pass Settings instead of StoreRegistry.
     if not hasattr(stores, "neo4j"):
@@ -628,10 +855,12 @@ def work_graph_neighborhood(
                     depth=depth,
                     prioritize=prioritize,
                     view=view,
+                    workspace_id=workspace_id,
                     aggregator_threshold=aggregator_threshold,
                     aggregator_disabled_kinds=aggregator_disabled_kinds,
                     include_claims=include_claims,
                     claims_limit=claims_limit,
+                    include_authorship_debug=include_authorship_debug,
                 )
         finally:
             temp.close()
@@ -643,10 +872,12 @@ def work_graph_neighborhood(
             depth=depth,
             prioritize=prioritize,
             view=view,
+            workspace_id=workspace_id,
             aggregator_threshold=aggregator_threshold,
             aggregator_disabled_kinds=aggregator_disabled_kinds,
             include_claims=include_claims,
             claims_limit=claims_limit,
+            include_authorship_debug=include_authorship_debug,
         )
 
 
@@ -658,13 +889,22 @@ def expand_work_aggregator(
     limit: int = 50,
 ) -> dict[str, Any] | None:
     owner_id, node_kind, edge_type = parse_aggregator_id(aggregator_id)
+    # Reader collapse uses virtual Work—[AUTHORED]→Author edges; raw payload has
+    # HAS_AUTHORSHIP→Authorship instead. Re-fetch reader with author aggregation disabled
+    # so expand returns the same logical neighbors as the pre-aggregation graph.
+    use_reader_authored = (
+        str(edge_type or "").upper() == "AUTHORED"
+        and str(node_kind or "").lower() == "author"
+        and str(owner_id or "").strip() == str(work_id or "").strip()
+    )
     payload = work_graph_neighborhood(
         stores,
         work_id,
         neighbor_limit=max(200, limit * 4),
         depth=1,
         prioritize="Method,Dataset,Work,Author,Authorship,Institution,Venue",
-        view="raw",
+        view="reader" if use_reader_authored else "raw",
+        aggregator_disabled_kinds="Author" if use_reader_authored else None,
     )
     if not payload:
         return None
@@ -704,8 +944,17 @@ def expand_work_aggregator(
         for e in picked_edges
         if str(e.get("source") or "") in kept_ids and str(e.get("target") or "") in kept_ids
     ]
+    expand_meta: dict[str, Any] = {"expanded_aggregator_id": aggregator_id}
+    enrich_reader_graph_meta(
+        expand_meta,
+        neighbor_limit=max(200, limit * 4),
+        prioritize="Method,Dataset,Work,Author,Authorship,Institution,Venue",
+        view="reader" if use_reader_authored else "raw",
+        workspace_id=None,
+        graph_mode="work_expand_aggregator",
+    )
     return {
         "nodes": final_nodes,
         "edges": final_edges,
-        "meta": {"expanded_aggregator_id": aggregator_id},
+        "meta": expand_meta,
     }

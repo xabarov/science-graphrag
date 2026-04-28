@@ -5,6 +5,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from science_graphrag.api.deps import StoreRegistry, get_stores
+from science_graphrag.api.graph_reader_meta import enrich_reader_graph_meta
 from science_graphrag.api.workspace_graph.contradiction_detail import (
     fetch_workspace_contradiction_detail,
 )
@@ -153,7 +154,12 @@ def expand_workspace_aggregator(
         rt = str(edge.get("type") or "").upper()
         if rt != edge_type.upper():
             continue
-        other = tgt if src == owner_id else src if tgt == owner_id else ""
+        if src == owner_id:
+            other = tgt
+        elif tgt == owner_id:
+            other = src
+        else:
+            other = ""
         if not other:
             continue
         node = node_by_id.get(other)
@@ -174,8 +180,17 @@ def expand_workspace_aggregator(
         for e in picked_edges
         if str(e.get("source") or "") in kept_ids and str(e.get("target") or "") in kept_ids
     ]
+    expand_meta: dict[str, Any] = {"expanded_aggregator_id": aggregator_id}
+    enrich_reader_graph_meta(
+        expand_meta,
+        neighbor_limit=None,
+        prioritize="Method,Dataset,Work,Author,Authorship,Institution,Venue",
+        view="reader",
+        workspace_id=workspace_id,
+        graph_mode="workspace_expand_aggregator",
+    )
     return {
         "nodes": out_nodes,
         "edges": out_edges,
-        "meta": {"expanded_aggregator_id": aggregator_id},
+        "meta": expand_meta,
     }

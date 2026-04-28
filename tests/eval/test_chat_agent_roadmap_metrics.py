@@ -28,12 +28,12 @@ def test_discover_cases() -> None:
 
 def test_score_tools_any_of_pass() -> None:
     report = {
-        "tool_trace": [{"tool": "paper_authors"}, {"tool": "final_answer"}],
+        "tool_trace": [{"tool": "paper_profile"}, {"tool": "final_answer"}],
         "final_output": {"answer_class": "fact_lookup", "phoenix_trace_id": "a" * 32},
     }
     gold = {
         "expect": {
-            "tools_any_of": ["paper_authors"],
+            "tools_any_of": ["paper_profile"],
             "require_phoenix_trace_id": True,
             "require_tool_trace": True,
             "min_non_final_tool_calls": 1,
@@ -48,21 +48,21 @@ def test_score_tools_any_of_fail() -> None:
         "tool_trace": [{"tool": "idea_search"}, {"tool": "final_answer"}],
         "final_output": {"answer_class": "ideation", "phoenix_trace_id": "b" * 32},
     }
-    gold = {"expect": {"tools_any_of": ["paper_authors"]}}
+    gold = {"expect": {"tools_any_of": ["paper_profile"]}}
     m = score_roadmap_case(report, gold)
     assert m["passed"] is False
 
 
 def test_score_soft_answer_class() -> None:
     report = {
-        "tool_trace": [{"tool": "workspace_list_papers"}, {"tool": "final_answer"}],
+        "tool_trace": [{"tool": "workspace_inspect"}, {"tool": "final_answer"}],
         "final_output": {"answer_class": "grounded_explanation", "phoenix_trace_id": "c" * 32},
     }
     gold = {
         "expect": {
             "answer_classes_allowed": ["inventory"],
             "strict_answer_class": False,
-            "tools_any_of": ["workspace_list_papers"],
+            "tools_any_of": ["workspace_inspect"],
             "require_phoenix_trace_id": True,
         }
     }
@@ -73,7 +73,7 @@ def test_score_soft_answer_class() -> None:
 
 def test_score_require_graph_tool() -> None:
     report = {
-        "tool_trace": [{"tool": "paper_lookup"}, {"tool": "final_answer"}],
+        "tool_trace": [{"tool": "find_works"}, {"tool": "final_answer"}],
         "final_output": {"answer_class": "relation_tracing", "phoenix_trace_id": "e" * 32},
     }
     gold = {
@@ -130,7 +130,7 @@ def test_transient_llm_failure_detection() -> None:
 def test_require_observability_match_only_when_reliable() -> None:
     gold = {"expect": {"require_observability_match": True, "require_phoenix_trace_id": True}}
     base = {
-        "tool_trace": [{"tool": "workspace_list_papers"}, {"tool": "final_answer"}],
+        "tool_trace": [{"tool": "workspace_inspect"}, {"tool": "final_answer"}],
         "final_output": {"phoenix_trace_id": "a" * 32, "answer_class": "inventory"},
     }
     unreliable = {

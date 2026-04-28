@@ -10,7 +10,9 @@ Companion to **Phase 4** in [`ui-ux-master-plan.md`](./ui-ux-master-plan.md). Th
 ## Backend contract
 
 **Endpoint:** `GET /v1/works/{work_id}/graph`  
-**Implementation:** [`science_graphrag/api/works.py`](../../science_graphrag/api/works.py) — `work_graph_neighborhood`.
+**Implementation:** [`science_graphrag/api/works/graph_neighborhood.py`](../../science_graphrag/api/works/graph_neighborhood.py) (`work_graph_neighborhood`), router [`science_graphrag/api/works/router.py`](../../science_graphrag/api/works/router.py).
+
+**`view` query:** default **`reader`** — authorship is projected as `Work —[AUTHORED]→ Author` (including stable synthetic author ids when Neo4j has no `OF_AUTHOR` edge in the JSON slice). **`raw`** keeps `HAS_AUTHORSHIP` / `:Authorship` topology for snapshots and expand-aggregator internals where topology is required. See [`docs/architecture/work-graph-reader-authorship.md`](../architecture/work-graph-reader-authorship.md) and the deep dive [`docs/analysis/work-graph-authorship-reader-contract-2026-04-28.md`](../analysis/work-graph-authorship-reader-contract-2026-04-28.md).
 
 Response shape (conceptual):
 

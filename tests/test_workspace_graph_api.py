@@ -65,7 +65,9 @@ def test_get_workspace_graph_passes_include_claims(monkeypatch: Any) -> None:
 
     monkeypatch.setattr(graph_router_module, "project_workspace_graph", _fake_project)
     client = _client()
-    res = client.get("/v1/workspaces/ws-x/graph?include_claims=true&claims_per_work=8&claims_max_total=40")
+    res = client.get(
+        "/v1/workspaces/ws-x/graph?include_claims=true&claims_per_work=8&claims_max_total=40"
+    )
     assert res.status_code == 200
     assert captured.get("include_claims") is True
     assert captured.get("claims_per_work") == 8

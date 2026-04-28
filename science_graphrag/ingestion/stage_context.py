@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import logging
+import time
 import uuid
 from contextlib import contextmanager
 from dataclasses import dataclass, field
@@ -14,11 +16,17 @@ from typing import TYPE_CHECKING, Any, Callable, Iterator
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
+from science_graphrag.config import get_settings
+from science_graphrag.observability.ingest_metrics import observe_ingest_stage_finished
 from science_graphrag.observability.phoenix_tracer import chain_span
 from science_graphrag.storage.models_orm import IngestJobStageOrm
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 from science_graphrag.storage.qdrant_store import QdrantChunkStore
 from science_graphrag.storage.raw_blob_store import RawBlobStorePort, build_raw_blob_store
+from science_graphrag.utils.ingest_pipeline_log_heartbeat import (
+    maybe_log_ingest_pipeline_progress_throttled,
+    maybe_log_ingest_pipeline_stage_entry,
+)
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -64,6 +72,10 @@ class StageHandle:
         )
         if self.progress_emit is not None:
             self.progress_emit(self.stage, dict(self.metrics))
+        maybe_log_ingest_pipeline_progress_throttled(
+            logging.getLogger("science_graphrag.ingestion.pipeline"),
+            stage_name=self.stage.value,
+        )
 
 
 StageEventPublisher = Callable[[IngestStage, str, dict[str, Any], str | None], None]
@@ -123,6 +135,7 @@ class IngestRunContext:
             session_factory=self.stage_session_factory,
             publisher=self.stage_event_publisher,
             progress_emit=self.stage_progress_publisher,
+            settings=self.settings,
         ) as handle:
             yield handle
 
@@ -224,6 +237,32 @@ def patch_running_stage_metrics(
         session.commit()
 
 
+def _observe_stage_wall(
+    settings: "Settings | None",
+    stage_value: str,
+    status: str,
+    started_mono: float,
+) -> None:
+    """Emit stage duration histogram when metrics are enabled (never raises)."""
+    if settings is not None and not getattr(settings, "metrics_enabled", False):
+        return
+    try:
+        s = settings or get_settings()
+        observe_ingest_stage_finished(
+            s,
+            stage=stage_value,
+            status=status,
+            duration_seconds=time.monotonic() - started_mono,
+        )
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        logging.getLogger(__name__).warning(
+            "ingest_stage_metrics_observe_failed stage=%s status=%s: %s",
+            stage_value,
+            status,
+            exc,
+        )
+
+
 @contextmanager
 def stage(
     job_id: str | None,
@@ -231,16 +270,35 @@ def stage(
     session_factory: Callable[[], Any] | None = None,
     publisher: StageEventPublisher | None = None,
     progress_emit: StageProgressPublisher | None = None,
+    settings: "Settings | None" = None,
 ) -> Iterator[StageHandle]:
+    """Run one ingest stage with DB rows, optional SSE, Phoenix span, and Prometheus timing."""
     handle = StageHandle(
         stage=stage_name,
         job_id=str(job_id).strip() if job_id else None,
         session_factory=session_factory,
         progress_emit=progress_emit,
     )
+    started_mono = time.monotonic()
     if not job_id or session_factory is None:
-        with chain_span(f"ingest.{stage_name.value}"):
-            yield handle
+        stage_ok = True
+        try:
+            with chain_span(f"ingest.{stage_name.value}"):
+                maybe_log_ingest_pipeline_stage_entry(
+                    logging.getLogger("science_graphrag.ingestion.pipeline"),
+                    stage_name=stage_name.value,
+                )
+                yield handle
+        except BaseException:
+            stage_ok = False
+            raise
+        finally:
+            _observe_stage_wall(
+                settings,
+                stage_name.value,
+                "completed" if stage_ok else "failed",
+                started_mono,
+            )
         return
 
     _upsert_stage_row(
@@ -252,29 +310,44 @@ def stage(
     if publisher is not None:
         publisher(stage_name, "running", {}, None)
     with chain_span(f"ingest.{stage_name.value}"):
+        stage_ok = True
         try:
+            maybe_log_ingest_pipeline_stage_entry(
+                logging.getLogger("science_graphrag.ingestion.pipeline"),
+                stage_name=stage_name.value,
+            )
             yield handle
-        except Exception as exc:
-            error_text = str(exc)
+        except BaseException as exc:
+            stage_ok = False
+            if isinstance(exc, Exception):
+                error_text = str(exc)
+                _upsert_stage_row(
+                    session_factory=session_factory,
+                    job_id=job_id,
+                    stage_value=stage_name,
+                    status="failed",
+                    finished_at=datetime.now(UTC),
+                    metrics=handle.metrics,
+                    error=error_text,
+                )
+                if publisher is not None:
+                    publisher(stage_name, "failed", dict(handle.metrics), error_text)
+            raise
+        finally:
+            _observe_stage_wall(
+                settings,
+                stage_name.value,
+                "completed" if stage_ok else "failed",
+                started_mono,
+            )
+        if stage_ok:
             _upsert_stage_row(
                 session_factory=session_factory,
                 job_id=job_id,
                 stage_value=stage_name,
-                status="failed",
+                status="completed",
                 finished_at=datetime.now(UTC),
                 metrics=handle.metrics,
-                error=error_text,
             )
             if publisher is not None:
-                publisher(stage_name, "failed", dict(handle.metrics), error_text)
-            raise
-        _upsert_stage_row(
-            session_factory=session_factory,
-            job_id=job_id,
-            stage_value=stage_name,
-            status="completed",
-            finished_at=datetime.now(UTC),
-            metrics=handle.metrics,
-        )
-        if publisher is not None:
-            publisher(stage_name, "completed", dict(handle.metrics), None)
+                publisher(stage_name, "completed", dict(handle.metrics), None)

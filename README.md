@@ -18,6 +18,7 @@ SciGraph — scholarly GraphRAG-система для работы с научн
 
 - [docs/README.md](docs/README.md) - индекс документации.
 - [docs/architecture/README.md](docs/architecture/README.md) - архитектурный обзор.
+- [docs/architecture/agent-chat-tools.md](docs/architecture/agent-chat-tools.md) — каталог инструментов чат-агента (контракты, ссылки на код, планы `tool_search` и compaction).
 - [docs/runbooks/deploy.md](docs/runbooks/deploy.md) - запуск стека и operational notes.
 - [docs/runbooks/ingest-corpus.md](docs/runbooks/ingest-corpus.md) - corpus ingest, timeout, resume, troubleshooting.
 - [docs/roadmap.md](docs/roadmap.md) - roadmap и фазы проекта.

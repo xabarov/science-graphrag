@@ -17,7 +17,9 @@ FIXTURE = (
 
 
 def test_normalize_history_digest_input_valid_list() -> None:
-    rows, invalid = normalize_history_digest_input([{"user": "a", "assistant": "b"}, "skip", {"x": 1}])
+    rows, invalid = normalize_history_digest_input(
+        [{"user": "a", "assistant": "b"}, "skip", {"x": 1}]
+    )
     assert invalid is False
     assert len(rows) == 2
     assert rows[0]["user"] == "a"

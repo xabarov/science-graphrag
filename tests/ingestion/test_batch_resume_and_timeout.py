@@ -43,7 +43,6 @@ class _DummyNeo:
 
 
 def _stub_common(monkeypatch):
-    monkeypatch.setattr(pipeline_impl, "configure_logging", lambda: None)
     monkeypatch.setattr(pipeline_impl, "init_tracer_provider", lambda: None)
     monkeypatch.setattr(
         pipeline_impl,

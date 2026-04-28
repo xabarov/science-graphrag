@@ -57,6 +57,19 @@ export function ingestProductPhaseKey(stageId) {
 }
 
 /**
+ * Prefer server-provided `ingest_phase` (canonical API); fallback to stage id map.
+ *
+ * @param {unknown} job
+ * @param {string} stageIdFallback
+ * @returns {string}
+ */
+export function ingestPhaseFromJob(job, stageIdFallback) {
+  const p = job && typeof job === "object" && job.ingest_phase != null ? String(job.ingest_phase).trim() : "";
+  if (p && INGEST_PHASE_KEYS.includes(p)) return p;
+  return ingestProductPhaseKey(stageIdFallback);
+}
+
+/**
  * i18n key under `workspace.strip.ingestStage.<stageId>` for human secondary line.
  *
  * @param {string} stageId

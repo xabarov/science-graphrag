@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   INGEST_PHASE_KEYS,
   fallbackHumanIngestStageLabel,
+  ingestPhaseFromJob,
   ingestProductPhaseKey,
   ingestStageIdFromRow,
   ingestStageMessageKey,
@@ -19,6 +20,20 @@ describe("ingestStageIdFromRow", () => {
 
   it("returns empty for invalid", () => {
     expect(ingestStageIdFromRow(null)).toBe("");
+  });
+});
+
+describe("ingestPhaseFromJob", () => {
+  it("prefers canonical ingest_phase from API when valid", () => {
+    expect(ingestPhaseFromJob({ ingest_phase: "preparing_search" }, "parse_pdf")).toBe("preparing_search");
+  });
+
+  it("ignores invalid phase string and falls back to stage map", () => {
+    expect(ingestPhaseFromJob({ ingest_phase: "not_a_phase" }, "embed")).toBe("preparing_search");
+  });
+
+  it("falls back to stage id when phase missing", () => {
+    expect(ingestPhaseFromJob({}, "write_graph")).toBe("building_graph");
   });
 });
 

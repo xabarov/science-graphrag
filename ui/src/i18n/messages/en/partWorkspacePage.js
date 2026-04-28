@@ -76,6 +76,8 @@ export default {
   "workspace.ingest.stageUnknown": "stage",
   "workspace.ingest.stageEtaSeconds": "~{{sec}}s",
   "workspace.ingest.detailsLogs": "Details / logs",
+  "workspace.ingest.logsTailHint":
+    "Rolling job log from the server (stored on the job row). For full host logs or log aggregation, use Docker / process stderr — not this panel.",
 
   "workspace.advanced.accordion": "Advanced: add existing work_id",
   "workspace.advanced.workIdLabel": "work_id",
@@ -96,6 +98,8 @@ export default {
   "workspace.strip.statsExternal": "{{count}} ext. cites",
   "workspace.strip.statsExternalTip": "External citations",
   "workspace.strip.ingestProgressTip": "Ingest in progress",
+  "workspace.strip.ingestProgressTwoScalesHint":
+    "The percentage is weighted pipeline progress (all technical stages). The four segments below are product phases (document → graph → search → finalize), not page-level PDF progress.",
   "workspace.strip.ingestStarting": "Starting upload…",
   "workspace.strip.ingestFailed": "Ingest failed",
   "workspace.strip.ingestPhase.preparing_document": "Preparing document",

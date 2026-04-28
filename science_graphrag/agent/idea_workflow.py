@@ -12,8 +12,8 @@ from science_graphrag.agent.tools import (
     EdgeSearchTool,
     FinalAnswerTool,
     IdeaSearchTool,
-    SummarizeWorkspaceTool,
 )
+from science_graphrag.agent.tools.workspace_catalog_tools import WorkspaceInspectTool
 from science_graphrag.agent.trace import ToolCallTrace
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.llm.extractor import (
@@ -89,14 +89,14 @@ class IdeaOrchestrator:
         idea_search: IdeaSearchTool,
         cypher_query: CypherQueryTool,
         edge_search: EdgeSearchTool,
-        summarize_workspace: SummarizeWorkspaceTool,
+        workspace_inspect: WorkspaceInspectTool,
         final_answer: FinalAnswerTool,
     ) -> None:
         self._settings = settings
         self._idea_search = idea_search
         self._cypher_query = cypher_query
         self._edge_search = edge_search
-        self._summarize_workspace = summarize_workspace
+        self._workspace_inspect = workspace_inspect
         self._final_answer = final_answer
 
     def run(
@@ -114,12 +114,12 @@ class IdeaOrchestrator:
 
         seed = str(seed_topic or "").strip()
         if not seed:
-            ws = self._summarize_workspace.run_with_trace(
+            ws = self._workspace_inspect.run_with_trace(
                 step=step,
                 trace=trace,
-                args_summary={"workspace_id": workspace_id, "top_n_works": 8},
+                args_summary={"workspace_id": workspace_id, "mode": "blurb"},
                 workspace_id=workspace_id,
-                top_n_works=8,
+                mode="blurb",
             )
             step += 1
             seed = str(ws.payload.get("summary") or "").strip()

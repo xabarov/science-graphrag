@@ -96,6 +96,10 @@ class IngestJobView(BaseModel):
     detail_message: str | None = None
     subprogress_current: int | None = None
     subprogress_total: int | None = None
+    progress_indeterminate: bool = Field(
+        default=False,
+        description="True when overall percent is not meaningful (e.g. single VL batch in flight).",
+    )
     pending_conflicts: dict[str, int] = Field(
         default_factory=lambda: {"works": 0, "authors": 0, "entities": 0},
         description=(
@@ -144,6 +148,7 @@ def job_record_to_view(rec: IngestJobRecord) -> IngestJobView:
             "detail_message": None,
             "subprogress_current": None,
             "subprogress_total": None,
+            "progress_indeterminate": False,
         }
 
     return IngestJobView(
@@ -172,6 +177,7 @@ def job_record_to_view(rec: IngestJobRecord) -> IngestJobView:
         detail_message=canon.get("detail_message"),
         subprogress_current=canon.get("subprogress_current"),
         subprogress_total=canon.get("subprogress_total"),
+        progress_indeterminate=bool(canon.get("progress_indeterminate")),
         pending_conflicts={"works": 0, "authors": 0, "entities": 0},
         pending_conflicts_count=0,
     )

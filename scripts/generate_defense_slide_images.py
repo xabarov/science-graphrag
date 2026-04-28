@@ -285,33 +285,33 @@ Do not display fake latency values, fake precision/recall numbers, or fake dashb
             filename_base="slide-05-architecture",
             prompt=(
                 """
-Create a high-end architecture diagram for a GraphRAG scientific research system, designed for a thesis defense slide in 16:9 format.
+Create a high-end architecture diagram for a GraphRAG scientific research system, thesis defense slide, 16:9.
 
-Show two separate phases of the system, not one continuous pipeline.
+Two phases only — visually separated (e.g. horizontal band split or two stacked panels).
 
-Phase 1: offline ingest
-documents (PDF / Markdown / Text) ->
-normalization into article markdown ->
-LLM extraction pipeline ->
-three storage systems (PostgreSQL, Neo4j, Qdrant).
+Phase 1 title text (short English): "PHASE 1: INGESTION (OFFLINE)"
+Flow left to right:
+Input (PDF / MD / TXT) -> Normalize -> Article Markdown -> Extract (LLM pipeline) ->
+three stores under a small "STORAGE LAYER" label: PostgreSQL (metadata), Neo4j (structure), Qdrant (embeddings).
 
-Phase 2: online chat runtime
-user query ->
-supervisor / orchestrator ->
-three specialized agents (retrieval agent, graph agent, writer agent) ->
-read from PostgreSQL, Neo4j, Qdrant ->
-final answer with citations.
+Phase 2 title text (short English): "PHASE 2: AGENT RUNTIME (ONLINE)" — NOT "RAG RUNTIME".
 
-Emphasize that:
-- ingestion happens offline before chat
-- chat runtime does not perform ingestion
-- the specialized agents do not communicate directly with each other
-- there must be no direct arrows between retrieval agent, graph agent, and writer agent
-- all routing goes through the supervisor only
+Phase 2 must show a **single** central box labeled "RESEARCH AGENT (ReAct + tools)" (or "AGENT + TOOLS").
+User query arrow enters this single agent.
 
-If the diagram contains labels, keep them very short and preferably in English.
-Examples of acceptable labels:
-Input, Normalize, Extract, Postgres, Neo4j, Qdrant, Supervisor, Retrieval, Graph, Writer, Citations.
+From that ONE agent, show **multiple small tool chips or a compact "TOOLS" strip** (not separate agent personas):
+examples of tiny labels: catalog, find_works, quotes, graph query, bibliography, final_answer.
+Arrows from the agent/tools area **down** to the same three stores (Postgres, Neo4j, Qdrant) — read/write semantics implied as read-mostly.
+
+Then arrow to a final box "ANSWER WITH CITATIONS".
+
+Critical constraints:
+- Do **NOT** draw a supervisor orchestrator.
+- Do **NOT** draw three separate specialist agents (no Retrieval Agent / Graph Agent / Writer Agent as three peer boxes).
+- Do **NOT** add arrows between hypothetical sub-agents — there is only one agent node.
+- Ingest is offline only; runtime does not re-ingest.
+
+Labels: short English only; no Russian; no slide title inside the image; no fake metrics.
 """
                 + "\n\n"
                 + base_suffix

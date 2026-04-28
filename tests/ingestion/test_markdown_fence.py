@@ -44,5 +44,7 @@ def test_inner_empty_returns_source() -> None:
 
 def test_pipeline_order_strip_then_normalize_like_ingest() -> None:
     raw = "```markdown\n# T\n\n**x**\n```"
-    normalized = strip_repeated_boilerplate(normalize_text(strip_whole_document_markdown_fence(raw)))
+    normalized = strip_repeated_boilerplate(
+        normalize_text(strip_whole_document_markdown_fence(raw))
+    )
     assert normalized == "# T\n\n**x**"

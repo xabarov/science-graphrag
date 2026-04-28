@@ -111,6 +111,7 @@ def resume_document_embed_phase(
             IngestStage.EMBED,
             session_factory=stage_session_factory,
             publisher=stage_event_publisher,
+            settings=settings,
         ) as st:
             run_ingest_embed_qdrant_phase(
                 settings=settings,

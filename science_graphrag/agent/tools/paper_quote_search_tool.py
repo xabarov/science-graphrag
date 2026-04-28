@@ -8,6 +8,11 @@ import numpy as np
 from pydantic import BaseModel, Field
 
 from science_graphrag.agent.tools.base import BaseAgentTool, ToolResult
+from science_graphrag.agent.tools.chunk_retrieval_defaults import (
+    DEFAULT_AGENT_CHUNK_TOP_K,
+    MAX_AGENT_CHUNK_TOP_K,
+    normalize_agent_retrieval_query,
+)
 from science_graphrag.config import Settings
 from science_graphrag.embeddings import resolve_embedder, resolve_embedding_model_label
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
@@ -36,13 +41,18 @@ class PaperQuoteSearchTool(BaseAgentTool):
         work_id: str | None = None,
         top_k: int = 5,
     ) -> ToolResult:
-        q = (query or "").strip()
+        q = normalize_agent_retrieval_query(query or "")
         if not q:
             return ToolResult(
-                payload={"items": [], "quote_candidates": [], "row_count": 0},
+                payload={
+                    "items": [],
+                    "quote_candidates": [],
+                    "row_count": 0,
+                    "empty_reason": "empty_query",
+                },
                 row_count=0,
             )
-        k = max(1, min(int(top_k), 16))
+        k = max(1, min(int(top_k), MAX_AGENT_CHUNK_TOP_K))
         dim = resolve_embedding_dim(settings=self._settings)
         ws = (workspace_id or "").strip() or None
         wid = (work_id or "").strip() or None
@@ -84,6 +94,7 @@ class PaperQuoteSearchTool(BaseAgentTool):
                         "items": [],
                         "quote_candidates": [],
                         "row_count": 0,
+                        "empty_reason": "qdrant_unavailable",
                     },
                     row_count=0,
                 )
@@ -103,6 +114,23 @@ class PaperQuoteSearchTool(BaseAgentTool):
                     }
                 )
             SpanAttributes.set_retrieval_documents(doc_rows)
+
+        if not hits:
+            if (wid or "").strip():
+                empty_reason = "no_hits_for_work"
+            elif (ws or "").strip():
+                empty_reason = "no_hits_workspace_scoped"
+            else:
+                empty_reason = "no_hits_corpus_wide"
+            return ToolResult(
+                payload={
+                    "items": [],
+                    "quote_candidates": [],
+                    "row_count": 0,
+                    "empty_reason": empty_reason,
+                },
+                row_count=0,
+            )
 
         items: list[dict[str, Any]] = []
         quote_candidates: list[dict[str, Any]] = []
@@ -139,7 +167,33 @@ class PaperQuoteSearchTool(BaseAgentTool):
 
 
 class PaperQuoteArgs(BaseModel):
-    query: str = Field(..., min_length=1)
-    workspace_id: str | None = None
-    work_id: str | None = None
-    top_k: int = Field(default=5, ge=1, le=16)
+    query: str = Field(
+        ...,
+        min_length=1,
+        description=(
+            "Natural-language query for the passage to locate; keep focused. Query text is "
+            "normalized the same way as idea_search (trim + collapse whitespace) before "
+            "embedding. After a short idea_search, reuse wording from returned chunk snippets "
+            "when possible."
+        ),
+    )
+    workspace_id: str | None = Field(
+        default=None,
+        description=(
+            "When the user cares about this workspace only, pass the same workspace_id as in the "
+            "user message (scopes Qdrant chunk filters)."
+        ),
+    )
+    work_id: str | None = Field(
+        default=None,
+        description=(
+            "Internal Work id from find_works, paper_profile, or graph tools—restricts retrieval "
+            "to that paper's chunks when already known."
+        ),
+    )
+    top_k: int = Field(
+        default=DEFAULT_AGENT_CHUNK_TOP_K,
+        ge=1,
+        le=MAX_AGENT_CHUNK_TOP_K,
+        description="Max chunk hits (aligned with idea_search chunk retrieval).",
+    )

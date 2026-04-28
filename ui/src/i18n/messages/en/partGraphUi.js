@@ -151,6 +151,13 @@ export const partGraphUi = {
   "graph.localFind.focusFirstTooltip": "Select the first matching node and center the canvas on it",
   "graph.localFind.clearAria": "Clear filter",
 
+  "graph.contractSubtitle.workCapped": "Paper neighborhood (capped) · limit {{limit}}",
+  "graph.contractSubtitle.workspaceUnion": "Workspace graph · 1-hop union across papers",
+  "graph.contractSubtitle.workspaceV2": "Workspace graph · mode {{mode}}",
+  "graph.contractSubtitle.workspaceNeighbors": "Workspace · single-node neighborhood (1 hop)",
+  "graph.contractSubtitle.expandWork": "Paper graph · expanded bucket",
+  "graph.contractSubtitle.expandWorkspace": "Workspace graph · expanded bucket",
+
   "graph.detailPanel.title": "Details",
   "graph.detailPanel.relationship": "Relationship",
   "graph.detailPanel.openSource": "Open source",

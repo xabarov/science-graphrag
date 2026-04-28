@@ -81,13 +81,19 @@ class VLPDFProcessor:  # pylint: disable=too-few-public-methods
 
         return data["choices"][0]["message"]["content"], usage
 
-    def pdf_to_markdown(
+    def pdf_to_markdown(  # pylint: disable=too-many-locals
         self,
         path: Path,
         *,
         on_page_progress: Callable[[int, int], None] | None = None,
+        on_batches_ready: Callable[[int, int, int], None] | None = None,
     ) -> str:
-        """Render ``path`` to Markdown using the configured VL model (page batches)."""
+        """Render ``path`` to Markdown using the configured VL model (page batches).
+
+        ``on_batches_ready(batch_count, page_count, batch_size)`` runs once after batching.
+        ``on_page_progress(pages_done, page_total)`` runs before each VL HTTP call (pages from
+        prior batches only) and again after each batch completes.
+        """
         if not self.settings.vl_api_key:
             raise ValueError("VL API key is not configured")
 
@@ -103,6 +109,12 @@ class VLPDFProcessor:  # pylint: disable=too-few-public-methods
         self.last_pages_total = len(all_pages)
         self.last_pages_processed = len(all_pages)
         self.last_batch_count = len(batches)
+
+        if on_batches_ready is not None:
+            try:
+                on_batches_ready(len(batches), len(all_pages), int(batch_size))
+            except Exception:  # noqa: BLE001
+                pass
 
         parts: list[str] = []
         total_prompt_tokens = 0
@@ -129,6 +141,12 @@ class VLPDFProcessor:  # pylint: disable=too-few-public-methods
         ):
             for batch_idx, batch in enumerate(batches):
                 prompt = DEFAULT_VL_PROMPT if batch_idx == 0 else CONTINUE_VL_PROMPT
+                pages_done_before = sum(len(batches[j]) for j in range(batch_idx))
+                if on_page_progress is not None:
+                    try:
+                        on_page_progress(pages_done_before, len(all_pages))
+                    except Exception:  # noqa: BLE001
+                        pass
                 markdown_part, usage = self._call_vl_api(batch, prompt)
                 parts.append(markdown_part)
 

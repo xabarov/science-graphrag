@@ -100,9 +100,7 @@ def test_select_task4_work_ids_unions_gap_audit_and_task3_progress() -> None:
         ]
     }
     gap_audit = {
-        "work_reports": [
-            {"work_id": "w-gap", "claims_gap_classification": "claims_embed_missing"}
-        ]
+        "work_reports": [{"work_id": "w-gap", "claims_gap_classification": "claims_embed_missing"}]
     }
     progress_rows = [
         {"work_id": "w-progress", "status": "ok"},

@@ -1,5 +1,15 @@
 # Phoenix Observability Contract
 
+**See also (text logs, not spans):** runbook [`docs/runbooks/logging-and-troubleshooting.md`](../runbooks/logging-and-troubleshooting.md) (`SCIENCE_GRAPHRAG_LOG_LEVEL`, `SCIENCE_GRAPHRAG_HTTP_LOG_LEVEL`, ingest poll filter, `ingest_jobs.logs`, Dramatiq/Phoenix knobs). Implementation details: [`science_graphrag/utils/project_logging.py`](../../science_graphrag/utils/project_logging.py). Background: [`docs/analysis/logging-system-deep-dive-and-improvement-plan-2026-04-28.md`](../analysis/logging-system-deep-dive-and-improvement-plan-2026-04-28.md). **Code style:** which `getLogger` pattern to use in new modules — section *Logging conventions* in [`.cursor/rules/backend-quality.mdc`](../../.cursor/rules/backend-quality.mdc).
+
+## Python stderr during `phoenix.otel.register()`
+
+`init_tracer_provider()` in [`science_graphrag/observability/init.py`](../../science_graphrag/observability/init.py) calls `register(..., verbose=phoenix_verbose)`. **`PHOENIX_OTEL_VERBOSE`:** when set to `1` / `true` / `yes` / `on`, `verbose` is forced on. When **unset**, `verbose` is **false** for `ENV` in `dev`, `local`, `test` (quieter local Docker and pytest); in other environments it defaults to **true** unless you set `PHOENIX_OTEL_VERBOSE=0`.
+
+The **arize-phoenix-otel** package may still print a short startup line or banner depending on version; that is upstream behavior, not controlled entirely by `verbose`. After **uvicorn `--reload`**, the app process restarts and `init_tracer_provider` runs again (the `@lru_cache` is per process, so each reload re-registers in the new interpreter). Expect **one** registration block per process start, not zero, unless upstream changes.
+
+**OTLP logs:** deferred; see [ADR 026](../adr/026-otlp-logs-defer.md).
+
 ## Span naming
 
 - Root ingest span: `ingest_document`
@@ -16,7 +26,7 @@
 - Supervisor routing: `agent.supervisor.route` (CHAIN), optional child `llm.agent.supervisor_route` (LLM)
 - Specialist subgraphs (optional): `agent.specialist.<name>` (CHAIN), e.g. `retrieval`, `graph`, `writer`
 - Finalize / summary: `agent.finalize` (CHAIN) — short output summary only (no full answer text)
-- Domain tools: `tool.<tool_name>` (TOOL), e.g. `tool.idea_search`, `tool.workspace_list_papers`
+- Domain tools: `tool.<tool_name>` (TOOL), e.g. `tool.idea_search`, `tool.workspace_inspect`
 - Query embedding inside tools: `embedding.agent.<tool_name>` (EMBEDDING)
 - Vector search (Qdrant hits): `retrieval.qdrant.<tool_name>` (RETRIEVER)
 - Specialist ReAct LLM calls: `llm.agent.retrieval_specialist`, `llm.agent.graph_specialist` (LLM)

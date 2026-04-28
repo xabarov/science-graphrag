@@ -4,7 +4,7 @@
 **HTTP:** `POST /v2/agent/query`  
 **Modes:** JSON (`Accept: application/json`) or SSE (`Accept: text/event-stream`)
 
-**Product architecture (where this spec sits):** research chat stays on the **simplified** single LangGraph run (supervisor → retrieval / graph → writer). Roadmap for goals, deferred work, and future **`tool_search`** plus **context-window summarization / compaction**: [`docs/analysis/chat-agent-system-roadmap-2026-04-26.md`](../analysis/chat-agent-system-roadmap-2026-04-26.md). In this document, **CH\*** labels denote **delivery waves / features**, not separate shipped microservices.
+**Product architecture (where this spec sits):** research chat stays on the **simplified** single LangGraph run (supervisor → retrieval / graph → writer). Roadmap for goals, deferred work, and future **`tool_search`** plus **context-window summarization / compaction**: [`docs/analysis/chat-agent-system-roadmap-2026-04-26.md`](../analysis/chat-agent-system-roadmap-2026-04-26.md). **Каталог инструментов (имена, схемы, карта кода):** [`docs/architecture/agent-chat-tools.md`](../architecture/agent-chat-tools.md). In this document, **CH\*** labels denote **delivery waves / features**, not separate shipped microservices.
 
 ## Client contract (what to read where)
 
@@ -50,7 +50,7 @@ All new fields are **optional** for backward compatibility; clients should treat
 | `run_metadata` | object | Runtime flags, model ids, etc.; when `thread_id` is set, may include **`compaction`** (CH5 v1: `kind`, `kinds`, `trigger`, `digest_count`, `boundary`) and **`session_digest_count`** |
 | `answer_class` | string | One of `inventory`, `fact_lookup`, `grounded_explanation`, `relation_tracing`, `quote_extraction`, `ideation`, `bibliography_export`, `synthesis` |
 | `evidence_summary` | string \| null | Short human-readable evidence summary |
-| `warnings` | array of string | e.g. `weak_evidence`, `no_workspace`, `history_digest_invalid`, `agent_turn_deadline_exceeded` |
+| `warnings` | array of string | e.g. `weak_evidence`, `no_workspace`, `no_quote_found`, `no_quote_found_after_idea_hits`, `history_digest_invalid`, `agent_turn_deadline_exceeded`, `agent_finished_without_final_answer_tool` (tools were used and the model returned text, but the last executed catalog tool was not `final_answer` — `tool_trace` stays honest; use for monitoring/UI) |
 | `inventory` | object \| null | Papers/authors/counts when applicable |
 | `relation_trace` | object \| null | Reserved / sparse in Wave A |
 | `quote_candidates` | array \| null | Quote snippets + work/chunk ids |

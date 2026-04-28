@@ -24,58 +24,40 @@ class ToolManifestEntry:
 # Names must match LangChain @tool function names.
 TOOL_MANIFEST: tuple[ToolManifestEntry, ...] = (
     ToolManifestEntry(
-        "workspace_overview",
+        "workspace_inspect",
         "catalog",
-        ("workspace", "inventory", "count"),
+        ("workspace", "inventory", "count", "list", "summary", "overview"),
         "low",
         "workspace",
         "retrieval_agent",
         True,
     ),
     ToolManifestEntry(
-        "workspace_list_papers",
-        "catalog",
-        ("workspace", "papers", "inventory", "list"),
+        "workspace_graph_reltypes",
+        "graph",
+        ("workspace", "graph", "neo4j", "relationship", "rel_type", "edge", "schema"),
         "low",
         "workspace",
         "retrieval_agent",
         True,
     ),
     ToolManifestEntry(
-        "paper_lookup",
+        "paper_profile",
         "catalog",
-        ("workspace", "search", "paper", "title"),
-        "low",
-        "workspace",
-        "retrieval_agent",
-        True,
-    ),
-    ToolManifestEntry(
-        "paper_metadata",
-        "catalog",
-        ("paper", "metadata", "doi", "year"),
+        ("paper", "metadata", "doi", "year", "authors", "authorship"),
         "low",
         "workspace",
         "retrieval_agent",
         False,
     ),
     ToolManifestEntry(
-        "paper_authors",
+        "find_works",
         "catalog",
-        ("paper", "authors", "authorship"),
+        ("workspace", "search", "paper", "title", "entity", "fulltext", "work"),
         "low",
-        "workspace",
+        "corpus",
         "retrieval_agent",
         False,
-    ),
-    ToolManifestEntry(
-        "paper_counts",
-        "catalog",
-        ("workspace", "count", "how_many"),
-        "low",
-        "workspace",
-        "retrieval_agent",
-        True,
     ),
     ToolManifestEntry(
         "paper_quote_search",
@@ -105,28 +87,10 @@ TOOL_MANIFEST: tuple[ToolManifestEntry, ...] = (
         False,
     ),
     ToolManifestEntry(
-        "summarize_workspace",
-        "retrieval",
-        ("workspace", "summary", "overview"),
-        "low",
-        "workspace",
-        "retrieval_agent",
-        True,
-    ),
-    ToolManifestEntry(
         "cypher_query",
         "graph",
         ("cypher", "graph", "advanced", "neo4j"),
         "high",
-        "graph",
-        "graph_agent",
-        False,
-    ),
-    ToolManifestEntry(
-        "entity_search",
-        "graph",
-        ("entity", "graph", "lookup"),
-        "medium",
         "graph",
         "graph_agent",
         False,
@@ -153,4 +117,5 @@ TOOL_MANIFEST: tuple[ToolManifestEntry, ...] = (
 
 
 def manifest_by_name() -> dict[str, ToolManifestEntry]:
+    """Return tool manifest entries keyed by tool name."""
     return {e.name: e for e in TOOL_MANIFEST}

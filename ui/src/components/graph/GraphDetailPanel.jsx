@@ -28,6 +28,7 @@ import {
   localizeNodeKind,
   localizeWorkPropertyKey,
 } from "./graphLocalize.js";
+import { graphContractSubtitle } from "./graphContractSubtitle.js";
 
 /**
  * @param {unknown} v
@@ -216,6 +217,7 @@ export default function GraphDetailPanel({
   const neighborCount = graphMeta?.neighbor_match_count;
   const truncatedLimitClause =
     neighborLimit != null ? t("graph.detailPanel.truncatedLimitClause", { neighborLimit: String(neighborLimit) }) : "";
+  const contractLine = graphContractSubtitle(graphMeta, t);
 
   return (
     <Box
@@ -234,9 +236,31 @@ export default function GraphDetailPanel({
         overflow: "hidden",
       }}
     >
-      <Typography component="h2" sx={{ fontWeight: 600, fontSize: "0.8125rem", mb: 1, flexShrink: 0, color: tk.text.primary }}>
+      <Typography
+        component="h2"
+        sx={{
+          fontWeight: 600,
+          fontSize: "0.8125rem",
+          mb: contractLine ? 0.5 : 1,
+          flexShrink: 0,
+          color: tk.text.primary,
+        }}
+      >
         {t("graph.detailPanel.title")}
       </Typography>
+      {contractLine ? (
+        <Typography
+          sx={{
+            fontSize: "0.75rem",
+            color: tk.text.secondary,
+            lineHeight: 1.45,
+            mb: 1,
+            flexShrink: 0,
+          }}
+        >
+          {contractLine}
+        </Typography>
+      ) : null}
 
       {truncated ? (
         <Box

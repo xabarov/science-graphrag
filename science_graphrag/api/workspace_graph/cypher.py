@@ -4,6 +4,7 @@ from typing import Any
 
 from science_graphrag.api import works as works_api
 from science_graphrag.api.graph_display import enrich_authorship_nodes
+from science_graphrag.api.graph_reader_meta import enrich_reader_graph_meta
 from science_graphrag.api.workspace_graph._cypher_gds import (
     gds_runtime_available,
     semantic_any,
@@ -12,7 +13,9 @@ from science_graphrag.api.workspace_graph._cypher_projection import (
     build_from_depth1_rows,
     run_projection_rows,
 )
-from science_graphrag.api.workspace_graph.claims_projection import build_claim_graph_slice_for_workspace
+from science_graphrag.api.workspace_graph.claims_projection import (
+    build_claim_graph_slice_for_workspace,
+)
 from science_graphrag.api.workspace_graph.projection import (
     annotate_membership_and_cites,
     apply_workspace_aggregators,
@@ -40,6 +43,8 @@ def legacy_workspace_graph_union(
     workspace_id: str,
     *,
     neighbor_limit: int | None = None,
+    prioritize: str | None = None,
+    view: str = "reader",
 ) -> dict[str, Any] | None:
     with neo4j_store.session() as session:
         row = session.run(
@@ -51,21 +56,29 @@ def legacy_workspace_graph_union(
         return None
     work_ids = [str(x) for x in (row["wids"] or []) if x]
     if not work_ids:
+        empty_meta: dict[str, Any] = {
+            "semantic_available": False,
+            "graph_scope": "workspace_union_1hop",
+            "graph_depth_effective": 1,
+            "workspace_node_count": 0,
+            "workspace_edge_count": 0,
+            "is_truncated": False,
+            "available_expansions": [],
+            "workspace_id": workspace_id,
+            "source_work_ids": [],
+        }
+        enrich_reader_graph_meta(
+            empty_meta,
+            neighbor_limit=None,
+            prioritize=prioritize,
+            view=view,
+            workspace_id=workspace_id,
+        )
         return {
             "work_id": "",
             "nodes": [],
             "edges": [],
-            "meta": {
-                "semantic_available": False,
-                "graph_scope": "workspace_union_1hop",
-                "graph_depth_effective": 1,
-                "workspace_node_count": 0,
-                "workspace_edge_count": 0,
-                "is_truncated": False,
-                "available_expansions": [],
-                "workspace_id": workspace_id,
-                "source_work_ids": [],
-            },
+            "meta": empty_meta,
         }
     if neighbor_limit is None:
         per_lim = 500_000
@@ -79,6 +92,13 @@ def legacy_workspace_graph_union(
     merged = merge_graph_payloads(payloads)
     merged["meta"]["workspace_id"] = workspace_id
     merged["meta"]["source_work_ids"] = work_ids
+    enrich_reader_graph_meta(
+        merged["meta"],
+        neighbor_limit=None,
+        prioritize=prioritize,
+        view=view,
+        workspace_id=workspace_id,
+    )
     return merged
 
 
@@ -127,7 +147,12 @@ def project_workspace_graph(
         gds_avail = gds_runtime_available(session)
         if mode_norm == "union_1hop":
             out = legacy_workspace_graph_union(
-                neo4j_store, settings, workspace_id, neighbor_limit=None
+                neo4j_store,
+                settings,
+                workspace_id,
+                neighbor_limit=None,
+                prioritize=prioritize,
+                view=view,
             )
             if out is None:
                 return None
@@ -162,36 +187,52 @@ def project_workspace_graph(
                 "deprecated_ignored_query_params": ignored_query_params or None,
                 **claims_slice_meta,
             }
+            enrich_reader_graph_meta(
+                out["meta"],
+                neighbor_limit=None,
+                prioritize=prioritize,
+                view=view,
+                workspace_id=workspace_id,
+            )
             return out
         if not internal_ids:
+            empty_ws_meta: dict[str, Any] = {
+                "semantic_available": False,
+                "graph_scope": "workspace_v2",
+                "mode": mode_norm,
+                "graph_depth_requested": int(depth),
+                "graph_depth_effective": 1,
+                "include_external": include_external,
+                "node_types_filter": types_list or [],
+                "internal_node_count": 0,
+                "external_node_count": 0,
+                "edge_count": 0,
+                "is_truncated": False,
+                "cap_applied": None,
+                "workspace_id": workspace_id,
+                "source_work_ids": [],
+                "available_expansions": ["add_works"],
+                "gds_used": False,
+                "gds_runtime_available": gds_avail,
+                "deprecated_ignored_query_params": ignored_query_params or None,
+                **claims_slice_meta,
+            }
+            enrich_reader_graph_meta(
+                empty_ws_meta,
+                neighbor_limit=None,
+                prioritize=prioritize,
+                view=view,
+                workspace_id=workspace_id,
+            )
             return {
                 "work_id": "",
                 "nodes": [],
                 "edges": [],
-                "meta": {
-                    "semantic_available": False,
-                    "graph_scope": "workspace_v2",
-                    "mode": mode_norm,
-                    "graph_depth_requested": int(depth),
-                    "graph_depth_effective": 1,
-                    "include_external": include_external,
-                    "node_types_filter": types_list or [],
-                    "internal_node_count": 0,
-                    "external_node_count": 0,
-                    "edge_count": 0,
-                    "is_truncated": False,
-                    "cap_applied": None,
-                    "workspace_id": workspace_id,
-                    "source_work_ids": [],
-                    "available_expansions": ["add_works"],
-                    "gds_used": False,
-                    "gds_runtime_available": gds_avail,
-                    "deprecated_ignored_query_params": ignored_query_params or None,
-                    **claims_slice_meta,
-                },
+                "meta": empty_ws_meta,
             }
         semantic_only = mode_norm == "semantic_layer"
-        # Node-type filtering is a client concern; server returns full incident subgraph (mode gates).
+        # Node-type filtering is a client concern; server returns full incident subgraph (mode
+        # gates).
         ignore_node_type_filter = True
         nodes, edges, truncated = build_from_depth1_rows(
             session,
@@ -215,7 +256,9 @@ def project_workspace_graph(
                 session,
                 workspace_id,
                 claims_per_work=None if claims_per_work is None else max(1, int(claims_per_work)),
-                max_claims_total=None if claims_max_total is None else max(1, int(claims_max_total)),
+                max_claims_total=(
+                    None if claims_max_total is None else max(1, int(claims_max_total))
+                ),
             )
             nodes, edges = merge_nodes_edges_lists(nodes, edges, cn, ce)
             claims_slice_meta = {
@@ -237,31 +280,39 @@ def project_workspace_graph(
     if truncated:
         expansions.append("increase_neighbor_limit")
     expansions.extend(["include_external", "expand_node"])
+    main_meta: dict[str, Any] = {
+        "semantic_available": sem,
+        "graph_scope": "workspace_v2",
+        "mode": mode_norm,
+        "graph_depth_requested": int(depth),
+        "graph_depth_effective": 1,
+        "include_external": include_external,
+        "node_types_filter": types_list or [],
+        "internal_node_count": inc_n,
+        "external_node_count": exc_n,
+        "edge_count": len(edges),
+        "is_truncated": truncated,
+        "cap_applied": cap,
+        "workspace_id": workspace_id,
+        "source_work_ids": internal_ids,
+        "available_expansions": expansions,
+        "gds_used": gds_used,
+        "gds_runtime_available": gds_avail,
+        "deprecated_ignored_query_params": ignored_query_params or None,
+        **claims_slice_meta,
+    }
+    enrich_reader_graph_meta(
+        main_meta,
+        neighbor_limit=None,
+        prioritize=prioritize,
+        view=view,
+        workspace_id=workspace_id,
+    )
     return {
         "work_id": "",
         "nodes": nodes,
         "edges": edges,
-        "meta": {
-            "semantic_available": sem,
-            "graph_scope": "workspace_v2",
-            "mode": mode_norm,
-            "graph_depth_requested": int(depth),
-            "graph_depth_effective": 1,
-            "include_external": include_external,
-            "node_types_filter": types_list or [],
-            "internal_node_count": inc_n,
-            "external_node_count": exc_n,
-            "edge_count": len(edges),
-            "is_truncated": truncated,
-            "cap_applied": cap,
-            "workspace_id": workspace_id,
-            "source_work_ids": internal_ids,
-            "available_expansions": expansions,
-            "gds_used": gds_used,
-            "gds_runtime_available": gds_avail,
-            "deprecated_ignored_query_params": ignored_query_params or None,
-            **claims_slice_meta,
-        },
+        "meta": main_meta,
     }
 
 
@@ -372,6 +423,19 @@ def workspace_graph_neighbors(
     enrich_edges_workspace(nodes, edges)
     annotate_membership_and_cites(nodes, edges, iws)
     apply_workspace_node_kind(nodes)
+    neigh_meta: dict[str, Any] = {
+        "graph_scope": "workspace_neighbors",
+        "neighbor_limit_applied": None,
+        "deprecated_ignored_query_params": ignored or None,
+        "is_truncated": False,
+    }
+    enrich_reader_graph_meta(
+        neigh_meta,
+        neighbor_limit=None,
+        prioritize=prioritize,
+        view="reader",
+        workspace_id=workspace_id,
+    )
     return {
         "workspace_id": workspace_id,
         "center_id": nid,
@@ -379,9 +443,5 @@ def workspace_graph_neighbors(
         "depth_effective": 1,
         "nodes": nodes,
         "edges": edges,
-        "meta": {
-            "graph_scope": "workspace_neighbors",
-            "neighbor_limit_applied": None,
-            "deprecated_ignored_query_params": ignored or None,
-        },
+        "meta": neigh_meta,
     }

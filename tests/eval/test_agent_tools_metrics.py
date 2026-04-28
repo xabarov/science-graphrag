@@ -12,7 +12,7 @@ def test_score_agent_case_subsequence_ignores_routing() -> None:
         "tool_trace": [
             {"tool": "route_to_specialist", "args_summary": {"to": "retrieval_agent"}},
             {"tool": "idea_search", "args_summary": {}},
-            {"tool": "summarize_workspace", "args_summary": {}},
+            {"tool": "workspace_inspect", "args_summary": {}},
             {"tool": "final_answer", "args_summary": {}},
         ],
         "routing_log": [],

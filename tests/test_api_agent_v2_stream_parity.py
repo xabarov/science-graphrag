@@ -152,7 +152,9 @@ class _FakeGraphUnmappedTool:
                         {"name": tool_name, "args": {"q": "x"}, "id": tc_id, "type": "tool"}
                     ],
                 ),
-                ToolMessage(content=json.dumps({"row_count": 0}), tool_call_id=tc_id, name=tool_name),
+                ToolMessage(
+                    content=json.dumps({"row_count": 0}), tool_call_id=tc_id, name=tool_name
+                ),
                 AIMessage(content="done unmapped"),
             ],
             "workspace_id": state.get("workspace_id"),

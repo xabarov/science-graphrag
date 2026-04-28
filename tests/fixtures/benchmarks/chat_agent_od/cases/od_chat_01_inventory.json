@@ -10,7 +10,7 @@
   "requires_qdrant_claim_vectors": false,
   "requires_methods": false,
   "requires_contradictions": false,
-  "tools_any_of": ["workspace_list_papers", "workspace_overview", "paper_counts", "paper_lookup"],
+  "tools_any_of": ["workspace_inspect", "find_works"],
   "tools_must_not_use": [],
   "min_citation_count": 0,
   "typed_payload_expected": ["inventory", "citations"],
@@ -26,7 +26,7 @@
   "expect": {
     "answer_classes_allowed": ["inventory"],
     "strict_answer_class": false,
-    "tools_any_of": ["workspace_list_papers", "workspace_overview", "paper_counts", "paper_lookup"],
+    "tools_any_of": ["workspace_inspect", "find_works"],
     "require_phoenix_trace_id": true,
     "require_tool_trace": true,
     "min_non_final_tool_calls": 1

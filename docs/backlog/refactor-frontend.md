@@ -36,10 +36,18 @@ Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-co
 | 2026-04-27 | **LT1 appearance foundation:** `ui/src/theme/` — `appearanceMode.js`, `buildAppTheme.js` (`appTokens`), `AppearanceProvider.jsx`, inline first-paint в [`ui/index.html`](../../ui/index.html), [`main.jsx`](../../ui/src/main.jsx) без inline `createTheme`; [`styles.css`](../../ui/src/styles.css) по `html[data-color-scheme]`; [`GeneralSettingsPanel.jsx`](../../ui/src/pages/SettingsPage/GeneralSettingsPanel.jsx) + i18n `partSettings` EN/RU; vitest [`appearanceMode.test.js`](../../ui/src/theme/appearanceMode.test.js). Контракт: [`light-theme-roadmap-2026-04-27.md`](../../docs/analysis/light-theme-roadmap-2026-04-27.md) §10. |
 | 2026-04-27 | **Ask:** `AskPanel` → [`useAskPanelOrchestration.js`](../../ui/src/components/work/useAskPanelOrchestration.js) + [`AskPanelChrome.jsx`](../../ui/src/components/work/AskPanelChrome.jsx); shell-only [`AskPanel.jsx`](../../ui/src/components/work/AskPanel.jsx). |
 | 2026-04-26 | **Graph standalone — scope bugfix:** кнопка «Граф» на [`WorkPaperCard`](../../ui/src/pages/WorkspacePage/WorkPaperCard.jsx) ведёт на `/graph?work_id=…` без `workspace_id`; [`GraphPage.jsx`](../../ui/src/pages/GraphPage.jsx) больше не подставляет `activeWorkspaceId` в этом случае — иначе [`useGraphWorkspaceData`](../../ui/src/components/graph/hooks/useGraphWorkspaceData.js) грузил полный workspace graph и игнорировал работу. |
+| 2026-04-28 | **Graph scope regression (workspace paper row):** кратковременно [`WorkspacePaperRow.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePaperRow.jsx) передавал `workspace_id` в `workGraphUrl` → URL с обоими query-параметрами → `getWorkspaceGraph` и **весь** workspace на графе статьи. Возврат к **`workGraphUrl(workId, null)`**; см. [`work-graph-authorship-reader-contract-2026-04-28.md`](../analysis/work-graph-authorship-reader-contract-2026-04-28.md) §7 Phase 2 product link (revised). |
 
 ## Queue
 
 Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies here).
+
+### [OPEN] Graph reader DRY — slim `authorSemanticProjection` after server parity
+- **Area:** [`ui/src/components/graph/authorSemanticProjection.js`](../../ui/src/components/graph/authorSemanticProjection.js), [`useGraphWorkspaceData.js`](../../ui/src/components/graph/hooks/useGraphWorkspaceData.js), graph visibility / external-work filters
+- **Issue:** Client mirrors server reader authorship semantics for workspace payloads; risks drift vs `collapse_authorship_for_reader_view` (already fixed server-side for work graph). Optional work-graph `workspace_id` (backend plan) needs UI to pass context without reopening full workspace union URL.
+- **Proposal:** After backend Phases 1–2 in [`docs/analysis/graph-work-vs-workspace-unification-dry-plan-2026-04-28.md`](../analysis/graph-work-vs-workspace-unification-dry-plan-2026-04-28.md), delete redundant projection branches; keep only presentation-only normalization if any; wire `workspace_id` query on work graph when opened from workspace context if product wants membership filters.
+- **Acceptance:** `authorSemanticProjection.js` documented as presentation-only or removed; vitest/graph smoke green; no regression to workspace graph page or external-work chip behavior.
+- **Raised:** 2026-04-28 (paired with backend backlog «Graph work vs workspace»)
 
 ### [OPEN] Benchmark panel — separate experiment product from trust/admin console
 - **Area:** `ui/src/pages/BenchmarkPage/`, `ui/src/services/benchmarkApi.js`, benchmark page IA and compare/run orchestration

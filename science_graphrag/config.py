@@ -507,6 +507,10 @@ class Settings(BaseSettings):
         default=True,
         description="BT10: when false, responses still succeed but run_metadata marks harness/offline.",
     )
+    metrics_enabled: bool = Field(
+        default=False,
+        description="When true, expose GET /metrics (Prometheus text) on the API.",
+    )
     agent_runtime: str = Field(
         default="langgraph_research_v1",
         description=(
@@ -547,7 +551,29 @@ class Settings(BaseSettings):
     agent_chat_max_tokens: int = Field(default=1024, ge=64, le=8192)
     agent_rule_tool_search_enabled: bool = Field(
         default=True,
-        description="Wave A CH3: rule-based shortlist before bind_tools for specialist subgraphs.",
+        description=(
+            "Wave A CH3: rule-based shortlist before bind_tools for specialist subgraphs; "
+            "when enabled, single-agent ReAct also binds a per-turn shortlist (see tool_search)."
+        ),
+    )
+    agent_tool_history_compact_enabled: bool = Field(
+        default=False,
+        description=(
+            "When true, single-agent ReAct truncates older ToolMessage string payloads before "
+            "each LLM hop (see tool_message_compact)."
+        ),
+    )
+    agent_tool_history_compact_keep_latest_tool_messages: int = Field(
+        default=4,
+        ge=1,
+        le=32,
+        description="How many most recent tool results to leave uncompressed.",
+    )
+    agent_tool_history_compact_max_tool_chars: int = Field(
+        default=6000,
+        ge=400,
+        le=100_000,
+        description="Max characters retained per truncated ToolMessage body.",
     )
     agent_turn_policy_classifier: str = Field(
         default="rules_v0",

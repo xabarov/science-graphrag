@@ -23,6 +23,13 @@ from science_graphrag.storage.qdrant_store import (
 from science_graphrag.storage.qdrant_store.recreate_embedding_collections import (
     describe_embedding_collections_cutover,
 )
+from science_graphrag.utils.project_logging import (
+    configure_logging,
+    describe_dramatiq_log_level_env,
+    describe_http_log_level_env,
+    describe_ingest_log_level_env,
+    describe_log_format_env,
+)
 
 app = typer.Typer(no_args_is_help=True, help="science-graphrag CLI")
 
@@ -30,6 +37,7 @@ app = typer.Typer(no_args_is_help=True, help="science-graphrag CLI")
 @app.callback()
 def _root() -> None:
     """Scholarly GraphRAG — ingestion and graph backbone."""
+    configure_logging()
 
 
 @app.command("neo4j-wipe")
@@ -497,6 +505,13 @@ def config_check_cmd(
     _line("agent_session_memory_backend", str(s.agent_session_memory_backend))
     skip = os.getenv("SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV", "")
     _line("SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV", skip or "(unset)")
+    app_log = os.getenv("SCIENCE_GRAPHRAG_LOG_LEVEL", "INFO")
+    _line("SCIENCE_GRAPHRAG_LOG_LEVEL", app_log)
+    _line("SCIENCE_GRAPHRAG_LOG_LEVEL_INGEST", describe_ingest_log_level_env())
+    _line("SCIENCE_GRAPHRAG_HTTP_LOG_LEVEL", describe_http_log_level_env())
+    _line("SCIENCE_GRAPHRAG_DRAMATIQ_LOG_LEVEL", describe_dramatiq_log_level_env())
+    _line("SCIENCE_GRAPHRAG_LOG_FORMAT", describe_log_format_env())
+    _line("SCIENCE_GRAPHRAG_METRICS_ENABLED", str(bool(s.metrics_enabled)))
     _line("extraction_llm_enabled", str(bool(s.extraction_llm_enabled)))
     br = s.blob_root
     try:

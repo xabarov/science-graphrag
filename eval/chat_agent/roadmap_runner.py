@@ -80,7 +80,7 @@ def _mock_primary_tool(gold: dict[str, Any]) -> str:
     any_of = list(expect.get("tools_any_of") or [])
     if any_of:
         return str(any_of[0])
-    return "workspace_overview"
+    return "workspace_inspect"
 
 
 def _mock_report(

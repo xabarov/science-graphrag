@@ -7,7 +7,7 @@
   "question": "Who are the authors of the paper titled \"Attention Is All You Need\" in this workspace?",
   "expect": {
     "answer_classes_allowed": ["fact_lookup"],
-    "tools_any_of": ["paper_authors", "paper_metadata", "paper_lookup"],
+    "tools_any_of": ["paper_profile", "find_works"],
     "require_phoenix_trace_id": true,
     "require_tool_trace": true,
     "min_non_final_tool_calls": 1,

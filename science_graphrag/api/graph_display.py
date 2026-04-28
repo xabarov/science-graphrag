@@ -219,7 +219,12 @@ def compute_node_display(
 
 
 def enrich_authorship_nodes(session: Neo4jSession, nodes: list[dict[str, Any]]) -> None:
-    """Hydrate Authorship display fields from related Author/Institution nodes."""
+    """Hydrate Authorship display fields from related Author/Institution nodes.
+
+    When ``OF_AUTHOR`` resolves, ``properties.author_entity_id`` is set for
+    ``collapse_authorship_for_reader_view``. Work-graph ``view=raw`` strips that
+    key after enrich so the raw payload stays topology-oriented.
+    """
     ids = [str(n.get("id") or "") for n in nodes if str(n.get("type") or "") == "Authorship"]
     ids = [x for x in ids if x]
     if not ids:
@@ -237,7 +242,8 @@ def enrich_authorship_nodes(session: Neo4jSession, nodes: list[dict[str, Any]]) 
                coalesce(x.raw_affiliation, '') AS raw_aff,
                x.is_corresponding AS corr,
                coalesce(au.full_name, '') AS auth_name,
-               coalesce(i.name, '') AS inst_name
+               coalesce(i.name, '') AS inst_name,
+               coalesce(au.id, '') AS author_entity_id
         """,
         ids=ids,
     )
@@ -261,4 +267,8 @@ def enrich_authorship_nodes(session: Neo4jSession, nodes: list[dict[str, Any]]) 
         node["label"] = rendered["display_label"]
         node["display_label"] = rendered["display_label"]
         node["subtitle"] = rendered["subtitle"]
-        node["properties"] = rendered["properties"]
+        props = dict(rendered["properties"])
+        aeid = str(row.get("author_entity_id") or "").strip()
+        if aeid:
+            props["author_entity_id"] = aeid
+        node["properties"] = props

@@ -59,17 +59,12 @@ KNOWN_AGENT_TOOLS = frozenset(
     {
         "idea_search",
         "edge_search",
-        "summarize_workspace",
         "paper_quote_search",
         "final_answer",
         "cypher_query",
-        "workspace_overview",
-        "workspace_list_papers",
-        "paper_lookup",
-        "paper_metadata",
-        "paper_authors",
-        "paper_counts",
-        "entity_search",
+        "workspace_inspect",
+        "paper_profile",
+        "find_works",
         "format_bibliography_gost",
     }
 )

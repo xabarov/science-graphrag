@@ -4,7 +4,7 @@ import json
 import re
 import signal
 import uuid
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -90,12 +90,18 @@ from science_graphrag.storage.qdrant_claims_store import QdrantClaimsStore
 from science_graphrag.storage.qdrant_store import QdrantChunkStore, QdrantWorkEmbeddingStore
 from science_graphrag.storage.raw_blob_store import RawBlobStorePort, build_raw_blob_store
 from science_graphrag.storage.s3_artifact_store import build_artifact_store
-from science_graphrag.utils.project_logging import configure_logging, get_logger
+from science_graphrag.utils.ingest_pipeline_log_heartbeat import pipeline_log_heartbeat_run
+from science_graphrag.utils.ingest_vl_log_heartbeat import (
+    VlLogHeartbeatState,
+    maybe_log_vl_page_heartbeat,
+    maybe_log_vl_parse_started,
+)
+from science_graphrag.utils.project_logging import get_logger
 
 # Backward-compatible name for ``science_graphrag.ingestion.pipeline`` facade re-exports.
 _strip_artifact_header = strip_ingest_artifact_header
 
-log = get_logger("ingestion.pipeline")
+logger = get_logger("ingestion.pipeline")
 
 CORPUS_SUPPORTED_SUFFIXES = frozenset({".pdf", ".md", ".txt"})
 
@@ -279,7 +285,7 @@ def _read_cached_markdown(
             mode = mode_match.group(1)
         elif rel.name == "normalized.md":
             mode = "cached-normalized"
-        log.info(
+        logger.info(
             "Reusing cached article markdown for %s from %s",
             source_path.name,
             store.absolute(rel),
@@ -294,6 +300,7 @@ def _markdown_from_path(
     *,
     document_id: str | None = None,
     on_vl_page_progress: Any | None = None,
+    on_vl_batches_ready: Any | None = None,
 ) -> tuple[str, str, dict]:
     """Return (markdown, extraction_mode, vl_stats) where vl_stats may be empty dict."""
     suf = path.suffix.lower()
@@ -312,7 +319,11 @@ def _markdown_from_path(
         if settings.use_vl_for_pdf:
             try:
                 processor = VLPDFProcessor(settings)
-                markdown = processor.pdf_to_markdown(path, on_page_progress=on_vl_page_progress)
+                markdown = processor.pdf_to_markdown(
+                    path,
+                    on_page_progress=on_vl_page_progress,
+                    on_batches_ready=on_vl_batches_ready,
+                )
                 vl_stats = {
                     "vl_pages_total": processor.last_pages_total,
                     "vl_pages_processed": processor.last_pages_processed,
@@ -320,7 +331,7 @@ def _markdown_from_path(
                 }
                 return markdown, "vl", vl_stats
             except Exception as exc:  # noqa: BLE001
-                log.warning("VL PDF failed for %s: %s; falling back to pypdf", path.name, exc)
+                logger.warning("VL PDF failed for %s: %s; falling back to pypdf", path.name, exc)
 
         md = extract_text_from_pdf(path)
         if on_vl_page_progress is not None:
@@ -364,7 +375,7 @@ def _persist_reference_citation(
         try:
             oa = _openalex_lookup_with_retry(doi, settings.openalex_mailto)
         except Exception as exc:  # noqa: BLE001
-            log.warning("OpenAlex lookup failed for ref doi=%s: %s", doi, exc)
+            logger.warning("OpenAlex lookup failed for ref doi=%s: %s", doi, exc)
             oa = None
         if oa:
             cd = draft_from_openalex(oa)
@@ -700,7 +711,7 @@ def run_ingest_embed_qdrant_phase(
     )
     removed = _retry_call(q.delete_points_by_document_id, document_id=document_id)
     if removed and reused_doc:
-        log.info(
+        logger.info(
             "qdrant removed %s point(s) before re-ingest document_id=%s",
             removed,
             document_id,
@@ -781,7 +792,6 @@ def ingest_document(
     Use ``skip_existing_sha`` to no-op when the hash exists; ``force_new_document`` for a new row
     every time (no SQL dedup — e.g. benchmarks with ``session is None``).
     """
-    configure_logging()
     settings = settings or get_settings()
     blob_store = raw_blob_store or build_raw_blob_store(settings)
     sha, _stored = blob_store.store_file(path)
@@ -814,7 +824,10 @@ def ingest_document(
     if workspace_id:
         root_attrs[OpenInferenceAttributes.USER_ID] = str(workspace_id)
         root_attrs["metadata.workspace_id"] = str(workspace_id)
-    with chain_span("ingest_document", root_attrs):
+    _pipeline_hb_ctx = (
+        pipeline_log_heartbeat_run() if (job_id and stage_session_factory) else nullcontext()
+    )
+    with chain_span("ingest_document", root_attrs), _pipeline_hb_ctx:
         progress_emit = stage_progress_publisher
         ckpt: dict[str, Any] = default_checkpoint()
         if session is not None and reused_doc:
@@ -838,7 +851,10 @@ def ingest_document(
             session_factory=stage_session_factory,
             publisher=stage_event_publisher,
             progress_emit=progress_emit,
+            settings=settings,
         ) as st:
+
+            _vl_log_hb = VlLogHeartbeatState()
 
             def _on_vl_pages(done: int, tot: int) -> None:
                 st.metric("vl_pages_total", tot)
@@ -847,12 +863,30 @@ def ingest_document(
                 st.metric("subprogress_current", done)
                 st.metric("subprogress_total", tot)
                 st.flush_progress()
+                maybe_log_vl_page_heartbeat(logger, _vl_log_hb, pages_done=done, pages_total=tot)
+
+            def _on_vl_batches_ready(batch_count: int, page_count: int, batch_sz: int) -> None:
+                st.metric("vl_batch_total", int(batch_count))
+                st.metric("vl_batch_size", int(batch_sz))
+                if int(batch_count) == 1:
+                    st.metric("detail_message", "Waiting for vision model response")
+                st.flush_progress()
+                maybe_log_vl_parse_started(
+                    logger,
+                    _vl_log_hb,
+                    batch_count=int(batch_count),
+                    page_total=int(page_count),
+                    batch_size=int(batch_sz),
+                )
 
             markdown_text, extraction_mode, vl_stats = _markdown_from_path(
                 path,
                 settings,
                 document_id=doc_id,
                 on_vl_page_progress=_on_vl_pages if job_id and stage_session_factory else None,
+                on_vl_batches_ready=(
+                    _on_vl_batches_ready if job_id and stage_session_factory else None
+                ),
             )
             set_span_attributes({"metadata.extraction_mode": extraction_mode})
             st.metric("source_suffix", path.suffix.lower())
@@ -889,6 +923,7 @@ def ingest_document(
             session_factory=stage_session_factory,
             publisher=stage_event_publisher,
             progress_emit=progress_emit,
+            settings=settings,
         ) as st:
             with chain_span(
                 "ingest.extract_meta.metadata_and_refs",
@@ -927,6 +962,7 @@ def ingest_document(
             session_factory=stage_session_factory,
             publisher=stage_event_publisher,
             progress_emit=progress_emit,
+            settings=settings,
         ) as st:
             with chain_span("ingest.enrich_openalex.lookup"):
                 SpanAttributes.set_input({"doi": draft.doi})
@@ -957,7 +993,7 @@ def ingest_document(
                             set_span_attributes({"openalex.found": False})
                     except Exception as exc:  # noqa: BLE001
                         set_span_attributes({"openalex.found": False})
-                        log.warning("OpenAlex enrichment failed for doi=%s: %s", draft.doi, exc)
+                        logger.warning("OpenAlex enrichment failed for doi=%s: %s", draft.doi, exc)
             st.metric("has_doi", int(bool(draft.doi)))
             st.metric("enriched", int(bool(oa_raw)))
 
@@ -972,6 +1008,7 @@ def ingest_document(
                 session_factory=stage_session_factory,
                 publisher=stage_event_publisher,
                 progress_emit=progress_emit,
+                settings=settings,
             ) as st:
                 inst_nodes = _institution_nodes_from_authorships(authorships, settings)
                 st.metric("institutions", len(inst_nodes))
@@ -982,6 +1019,7 @@ def ingest_document(
                 session_factory=stage_session_factory,
                 publisher=stage_event_publisher,
                 progress_emit=progress_emit,
+                settings=settings,
             ) as st:
                 if session is not None:
                     try:
@@ -996,7 +1034,7 @@ def ingest_document(
                         )
                         st.metric("ingest_dedup_conflicts_enqueued", n_dedup)
                     except Exception as exc:  # noqa: BLE001
-                        log.warning("ingest_dedup_conflict_check_failed: %s", exc)
+                        logger.warning("ingest_dedup_conflict_check_failed: %s", exc)
                 with chain_span(
                     "ingest.write_graph.upsert_work_layer1",
                     {"db.system": "neo4j", "db.operation": "merge", "writes.count": 1},
@@ -1039,7 +1077,7 @@ def ingest_document(
                         )
                         st.metric("ingest_author_dedup_conflicts_enqueued", n_author_dedup)
                     except Exception as exc:  # noqa: BLE001
-                        log.warning("ingest_author_dedup_conflict_check_failed: %s", exc)
+                        logger.warning("ingest_author_dedup_conflict_check_failed: %s", exc)
                     try:
                         ent_dedup = enqueue_entity_near_duplicate_conflicts_on_ingest(
                             session=session,
@@ -1066,7 +1104,7 @@ def ingest_document(
                             int(ent_dedup.get("method_ingest_llm_merged", 0)),
                         )
                     except Exception as exc:  # noqa: BLE001
-                        log.warning("ingest_entity_dedup_conflict_check_failed: %s", exc)
+                        logger.warning("ingest_entity_dedup_conflict_check_failed: %s", exc)
 
             with stage(
                 job_id,
@@ -1074,6 +1112,7 @@ def ingest_document(
                 session_factory=stage_session_factory,
                 publisher=stage_event_publisher,
                 progress_emit=progress_emit,
+                settings=settings,
             ) as st:
                 linked_refs = 0
                 total_refs = len(references)
@@ -1118,6 +1157,7 @@ def ingest_document(
                 session_factory=stage_session_factory,
                 publisher=stage_event_publisher,
                 progress_emit=progress_emit,
+                settings=settings,
             ) as st:
                 doc_chunks = dedupe_chunks_for_embedding(
                     chunk_document_for_retrieval_from_settings(normalized, settings),
@@ -1130,6 +1170,7 @@ def ingest_document(
                 session_factory=stage_session_factory,
                 publisher=stage_event_publisher,
                 progress_emit=progress_emit,
+                settings=settings,
             ) as st:
                 if settings.claims_extraction_enabled:
                     chunk_dicts = [
@@ -1222,6 +1263,7 @@ def ingest_document(
                 session_factory=stage_session_factory,
                 publisher=stage_event_publisher,
                 progress_emit=progress_emit,
+                settings=settings,
             ) as st:
                 run_ingest_embed_qdrant_phase(
                     settings=settings,
@@ -1290,7 +1332,6 @@ def run_ingest_batch_cli(
     (duplicate clusters by DOI, OpenAlex id, fingerprint, arXiv id).
     """
 
-    configure_logging()
     init_tracer_provider()
     s = settings or get_settings()
     if embeddings_preflight:
@@ -1302,8 +1343,8 @@ def run_ingest_batch_cli(
     factory = session_factory(engine)
     paths = discover_corpus_files(directory)
     if not paths:
-        log.warning("No ingestible files under %s", directory)
-        print("No .pdf/.md/.txt files found.", flush=True)
+        logger.warning("No ingestible files under %s", directory)
+        logger.info("No .pdf/.md/.txt files found.")
         return []
 
     progress_path = progress_file or _default_progress_file()
@@ -1323,7 +1364,7 @@ def run_ingest_batch_cli(
                     "status": "skip",
                 },
             )
-            print(f"SKIP resumed=ok path={path}", flush=True)
+            logger.info("SKIP resumed=ok path=%s", path)
             continue
 
         started_at = datetime.now(UTC)
@@ -1361,9 +1402,9 @@ def run_ingest_batch_cli(
                     "error": None,
                 },
             )
-            print(f"OK path={path} document_id={doc_id} work_id={work_id}", flush=True)
+            logger.info("OK path=%s document_id=%s work_id=%s", path, doc_id, work_id)
         except TimeoutError as exc:
-            log.exception("Ingest timeout for %s", path)
+            logger.exception("Ingest timeout for %s", path)
             finished_at = datetime.now(UTC)
             rows.append(
                 {
@@ -1388,7 +1429,7 @@ def run_ingest_batch_cli(
                     "error": str(exc),
                 },
             )
-            print(f"FAIL_TIMEOUT path={path} error={exc}", flush=True)
+            logger.info("FAIL_TIMEOUT path=%s error=%s", path, exc)
             if not continue_on_error:
                 break
         except SkippedDuplicateIngestError as dup:
@@ -1416,9 +1457,13 @@ def run_ingest_batch_cli(
                     "error": None,
                 },
             )
-            print(f"SKIP duplicate-sha path={path} document_id={dup.document_id}", flush=True)
+            logger.info(
+                "SKIP duplicate-sha path=%s document_id=%s",
+                path,
+                dup.document_id,
+            )
         except Exception as exc:  # noqa: BLE001
-            log.exception("Ingest failed for %s", path)
+            logger.exception("Ingest failed for %s", path)
             finished_at = datetime.now(UTC)
             rows.append(
                 {
@@ -1443,7 +1488,7 @@ def run_ingest_batch_cli(
                     "error": str(exc),
                 },
             )
-            print(f"FAIL path={path} error={exc}", flush=True)
+            logger.info("FAIL path=%s error=%s", path, exc)
             if not continue_on_error:
                 break
 
@@ -1453,18 +1498,19 @@ def run_ingest_batch_cli(
     finally:
         neo.close()
 
-    print("\n--- Work dedup audit (Neo4j) ---", flush=True)
+    logger.info("--- Work dedup audit (Neo4j) ---")
     if not violations:
-        print(
+        logger.info(
             "OK: no duplicate Work clusters by doi / openalex_id / fingerprint / arxiv_id",
-            flush=True,
         )
     else:
-        print(f"Found {len(violations)} duplicate cluster(s):", flush=True)
+        logger.info("Found %s duplicate cluster(s):", len(violations))
         for item in violations:
-            print(
-                f"  [{item['kind']}] key={item['dedup_key']!r} " f"work_ids={item['work_ids']}",
-                flush=True,
+            logger.info(
+                "  [%s] key=%r work_ids=%s",
+                item["kind"],
+                item["dedup_key"],
+                item["work_ids"],
             )
     return rows
 
@@ -1476,7 +1522,6 @@ def run_ingest_cli(
     force_new_document: bool = False,
     embeddings_preflight: bool = False,
 ) -> None:
-    configure_logging()
     init_tracer_provider()
     s = get_settings()
     if embeddings_preflight:
@@ -1495,6 +1540,10 @@ def run_ingest_cli(
                 skip_existing_sha=skip_existing_sha,
                 force_new_document=force_new_document,
             )
-            print(f"document_id={doc_id} work_id={work_id}")
+            logger.info("document_id=%s work_id=%s", doc_id, work_id)
         except SkippedDuplicateIngestError as dup:
-            print(f"SKIP duplicate sha256={dup.sha256} document_id={dup.document_id}")
+            logger.info(
+                "SKIP duplicate sha256=%s document_id=%s",
+                dup.sha256,
+                dup.document_id,
+            )

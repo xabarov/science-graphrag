@@ -38,13 +38,60 @@ def _norm_question(q: str) -> str:
 
 
 _RETRIEVAL_CORE_CATALOG = (
-    "workspace_overview",
-    "workspace_list_papers",
-    "paper_lookup",
-    "paper_metadata",
-    "paper_authors",
-    "paper_counts",
+    "workspace_inspect",
+    "paper_profile",
+    "find_works",
 )
+
+
+def _ensure_final_answer_in_picked(picked: list[BaseTool], tools: list[BaseTool]) -> None:
+    names = {getattr(t, "name", "") for t in picked}
+    if "final_answer" in names:
+        return
+    final_tool = next((t for t in tools if getattr(t, "name", "") == "final_answer"), None)
+    if final_tool is not None:
+        picked.append(final_tool)
+
+
+def _merge_retrieval_catalog_baseline(picked: list[BaseTool], tools: list[BaseTool]) -> None:
+    have = {getattr(t, "name", "") for t in picked}
+    for extra in ("idea_search",) + _RETRIEVAL_CORE_CATALOG:
+        if extra not in have:
+            hit = next((t for t in tools if getattr(t, "name", "") == extra), None)
+            if hit is not None:
+                picked.append(hit)
+                have.add(extra)
+
+
+def _sort_picked_like_registry_order(picked: list[BaseTool], tools: list[BaseTool]) -> None:
+    index_by_name = {getattr(t, "name", ""): i for i, t in enumerate(tools)}
+    picked.sort(key=lambda t: index_by_name.get(getattr(t, "name", ""), 10**9))
+
+
+def _build_scored_tools_for_shortlist(
+    tools: list[BaseTool],
+    *,
+    specialist: str,
+    for_single_agent: bool,
+    q: str,
+    has_workspace: bool,
+    answer_class: str | None,
+) -> list[tuple[float, BaseTool]]:
+    by_meta = manifest_by_name()
+    scored: list[tuple[float, BaseTool]] = []
+    for t in tools:
+        name = getattr(t, "name", "") or ""
+        meta = by_meta.get(name)
+        if meta is None:
+            continue
+        if not for_single_agent and meta.specialist not in (None, specialist):
+            continue
+        s = _score_tool(meta, q, has_workspace=has_workspace, answer_class=answer_class)
+        if s < 0:
+            continue
+        scored.append((s, t))
+    scored.sort(key=lambda x: x[0], reverse=True)
+    return scored
 
 
 def _answer_class_tool_boost(meta: ToolManifestEntry, answer_class: str | None) -> float:
@@ -54,7 +101,7 @@ def _answer_class_tool_boost(meta: ToolManifestEntry, answer_class: str | None) 
     ac = answer_class
     name = meta.name
     boost = 0.0
-    if ac == "fact_lookup" and name in ("paper_authors", "paper_metadata", "paper_lookup"):
+    if ac == "fact_lookup" and name in ("paper_profile", "find_works"):
         boost += 3.5
     if ac == "bibliography_export" and name == "format_bibliography_gost":
         boost += 5.0
@@ -62,9 +109,9 @@ def _answer_class_tool_boost(meta: ToolManifestEntry, answer_class: str | None) 
         boost += 5.0
     if ac == "relation_tracing" and meta.family == "graph":
         boost += 3.5
-    if ac == "inventory" and name in ("workspace_overview", "workspace_list_papers", "paper_counts"):
+    if ac == "inventory" and name == "workspace_inspect":
         boost += 3.5
-    if ac == "ideation" and name in ("idea_search", "summarize_workspace"):
+    if ac == "ideation" and name in ("idea_search", "workspace_inspect"):
         boost += 2.5
     return boost
 
@@ -109,10 +156,18 @@ def _score_tool(
         )
     ):
         score += 1.5
-    if meta.name in ("workspace_overview", "workspace_list_papers", "paper_counts") and any(
-        x in q
-        for x in ("сколько", "how many", "count", "список", "област", "стат", "корпус", "работ")
-    ):
+    _wi_hints = (
+        "сколько",
+        "how many",
+        "count",
+        "список",
+        "област",
+        "стат",
+        "корпус",
+        "работ",
+        "summar",
+    )
+    if meta.name == "workspace_inspect" and any(x in q for x in _wi_hints):
         score += 4.0
     if meta.name == "paper_quote_search" and any(
         x in q for x in ("quote", "цитат", "passage", "snippet", "where")
@@ -122,10 +177,12 @@ def _score_tool(
         x in q for x in ("idea", "similar", "related", "semantic", "chunk")
     ):
         score += 3.0
-    if meta.name == "summarize_workspace" and "summar" in q:
-        score += 3.0
+    if meta.name == "find_works" and any(
+        x in q for x in ("find", "search", "title", "which paper", "кто написал")
+    ):
+        score += 2.0
     if meta.family == "graph" and any(
-        x in q for x in ("cites", "cypher", "graph", "path", "relation", "edge", "entity")
+        x in q for x in ("cites", "cypher", "graph", "path", "relation", "edge")
     ):
         score += 2.5
     if meta.name == "cypher_query" and ("cypher" in q or "neo4j" in q):
@@ -144,6 +201,7 @@ def shortlist_tools_for_specialist(
     settings: Settings,
     has_workspace: bool,
     answer_class: str | None = None,
+    for_single_agent: bool = False,
 ) -> tuple[list[BaseTool], dict[str, Any]]:
     """Return possibly narrowed tool list and debug meta for SSE / run_metadata."""
     if not settings.agent_rule_tool_search_enabled:
@@ -151,20 +209,15 @@ def shortlist_tools_for_specialist(
     if specialist == "writer_agent":
         return tools, {"skipped": True, "reason": "writer_minimal_set"}
 
-    by_meta = manifest_by_name()
     q = _norm_question(strip_tool_search_context_wrappers(question))
-    scored: list[tuple[float, BaseTool]] = []
-    for t in tools:
-        name = getattr(t, "name", "") or ""
-        meta = by_meta.get(name)
-        if meta is None or meta.specialist not in (None, specialist):
-            continue
-        s = _score_tool(meta, q, has_workspace=has_workspace, answer_class=answer_class)
-        if s < 0:
-            continue
-        scored.append((s, t))
-
-    scored.sort(key=lambda x: x[0], reverse=True)
+    scored = _build_scored_tools_for_shortlist(
+        tools,
+        specialist=specialist,
+        for_single_agent=for_single_agent,
+        q=q,
+        has_workspace=has_workspace,
+        answer_class=answer_class,
+    )
     if not scored:
         return tools, {"reason": "fallback_full", "matched": []}
 
@@ -174,25 +227,20 @@ def shortlist_tools_for_specialist(
 
     threshold = max(0.0, top_score - 1.5)
     picked = [t for s, t in scored if s >= threshold and s > 0]
-    if specialist == "retrieval_agent":
-        have = {getattr(t, "name", "") for t in picked}
-        for extra in ("idea_search", "summarize_workspace"):
-            if extra not in have:
-                hit = next((t for t in tools if getattr(t, "name", "") == extra), None)
-                if hit is not None:
-                    picked.append(hit)
-                    have.add(extra)
-        for extra in _RETRIEVAL_CORE_CATALOG:
-            if extra not in have:
-                hit = next((t for t in tools if getattr(t, "name", "") == extra), None)
-                if hit is not None:
-                    picked.append(hit)
-                    have.add(extra)
+    if for_single_agent:
+        _ensure_final_answer_in_picked(picked, tools)
+    if specialist == "retrieval_agent" or for_single_agent:
+        _merge_retrieval_catalog_baseline(picked, tools)
     # Retrieval catalog is large — avoid over-narrow shortlists
     # Keep shortlists only when they still cover a reasonable slice of the catalog.
     if specialist == "retrieval_agent" and len(picked) < 3:
         return tools, {
             "reason": "fallback_full",
+            "matched": [getattr(x, "name", "") for x in picked],
+        }
+    if for_single_agent and len(picked) < 5:
+        return tools, {
+            "reason": "fallback_full_single_agent",
             "matched": [getattr(x, "name", "") for x in picked],
         }
     if specialist == "graph_agent" and len(picked) < 2:
@@ -201,5 +249,30 @@ def shortlist_tools_for_specialist(
             "matched": [getattr(x, "name", "") for x in picked],
         }
 
+    _sort_picked_like_registry_order(picked, tools)
     names = [getattr(t, "name", "") for t in picked]
-    return picked, {"reason": "rules", "matched": names, "top_score": top_score}
+    meta_out: dict[str, Any] = {"reason": "rules", "matched": names, "top_score": top_score}
+    if for_single_agent:
+        meta_out["single_agent"] = True
+    return picked, meta_out
+
+
+def shortlist_tools_for_single_agent(
+    tools: list[BaseTool],
+    *,
+    question: str,
+    settings: Settings,
+    has_workspace: bool,
+    answer_class: str | None = None,
+) -> tuple[list[BaseTool], dict[str, Any]]:
+    """Rule-based shortlist for single-agent ReAct (full registry in one bind_tools surface)."""
+
+    return shortlist_tools_for_specialist(
+        tools,
+        question=question,
+        specialist="retrieval_agent",
+        settings=settings,
+        has_workspace=has_workspace,
+        answer_class=answer_class,
+        for_single_agent=True,
+    )

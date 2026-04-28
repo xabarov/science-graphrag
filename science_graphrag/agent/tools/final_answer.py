@@ -21,8 +21,20 @@ class FinalAnswerTool(BaseAgentTool):
 
 
 class FinalAnswerArgs(BaseModel):
-    answer: str = Field(..., description="Final answer text.")
-    citations: list[dict] = Field(default_factory=list, description="Citation list.")
+    answer: str = Field(
+        ...,
+        description=(
+            "User-facing markdown; must reflect retrieved evidence when tools were used. "
+            "This tool call must be the last in the turn."
+        ),
+    )
+    citations: list[dict] = Field(
+        default_factory=list,
+        description=(
+            "Structured citations (e.g. work_id, chunk id, snippet refs). May be empty only when "
+            "no corpus tools ran or the reply is explicitly non-factual."
+        ),
+    )
 
 
 def _make_final_answer_tool() -> BaseTool:
@@ -30,7 +42,7 @@ def _make_final_answer_tool() -> BaseTool:
 
     @tool("final_answer", args_schema=FinalAnswerArgs, return_direct=True)
     def final_answer_tool(answer: str, citations: list[dict] | None = None) -> dict:
-        """Finalize answer payload for API response."""
+        """Single closing hop: payload keys follow ``FinalAnswerArgs`` (see schema); must be last."""
         result = run_tool_result_with_span(
             tool_name="final_answer",
             tool_parameters={

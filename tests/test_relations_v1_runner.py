@@ -6,9 +6,15 @@ from pathlib import Path
 
 from eval.relations_v1 import runner as relations_runner
 from science_graphrag.config import Settings
-from science_graphrag.domain.semantic_models import SemanticDatasetV1, SemanticExtractionV1, SemanticMethodV1
+from science_graphrag.domain.semantic_models import (
+    SemanticDatasetV1,
+    SemanticExtractionV1,
+    SemanticMethodV1,
+)
 
-FIXTURE_ATSS = Path(__file__).resolve().parent / "fixtures" / "benchmarks" / "layer2" / "atss_semantic"
+FIXTURE_ATSS = (
+    Path(__file__).resolve().parent / "fixtures" / "benchmarks" / "layer2" / "atss_semantic"
+)
 
 
 def test_relations_run_case_smoke(monkeypatch) -> None:

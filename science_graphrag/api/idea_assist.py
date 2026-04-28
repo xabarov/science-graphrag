@@ -15,15 +15,15 @@ from science_graphrag.agent.tools import (
     EdgeSearchTool,
     FinalAnswerTool,
     IdeaSearchTool,
-    SummarizeWorkspaceTool,
 )
+from science_graphrag.agent.tools.workspace_catalog_tools import WorkspaceInspectTool
 from science_graphrag.api.deps import StoreRegistry, get_stores
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.storage.db import get_engine, session_factory
 from science_graphrag.storage.models_orm import WorkspaceHypothesisRecord
 
 router = APIRouter()
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 IdeaAssistMode = Literal["hypotheses", "contradictions", "both"]
 
@@ -90,7 +90,7 @@ def post_idea_assist(
         ),
         cypher_query=CypherQueryTool(stores.neo4j),
         edge_search=EdgeSearchTool(stores.neo4j),
-        summarize_workspace=SummarizeWorkspaceTool(stores.neo4j),
+        workspace_inspect=WorkspaceInspectTool(stores.neo4j),
         final_answer=FinalAnswerTool(),
     )
     out = orchestrator.run(
@@ -121,7 +121,7 @@ def post_idea_assist(
                 )
             session.commit()
     except SQLAlchemyError as exc:
-        log.warning("idea_assist hypothesis persist skipped: %s", exc)
+        logger.warning("idea_assist hypothesis persist skipped: %s", exc)
 
     return IdeaAssistResponse(
         hypotheses=[

@@ -46,11 +46,18 @@ def init_tracer_provider() -> None:
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"
 
+    _verbose_raw = os.getenv("PHOENIX_OTEL_VERBOSE")
+    if _verbose_raw is not None and str(_verbose_raw).strip():
+        phoenix_verbose = str(_verbose_raw).strip().lower() in {"1", "true", "yes", "on"}
+    else:
+        phoenix_verbose = os.getenv("ENV", "dev").lower() not in {"dev", "local", "test"}
+
     register(
         project_name=project_name,
         endpoint=endpoint,
         batch=batch,
         headers=headers or None,
+        verbose=phoenix_verbose,
     )
     setup_langchain_instrumentation()
     _register_optional_openai_instrumentation()

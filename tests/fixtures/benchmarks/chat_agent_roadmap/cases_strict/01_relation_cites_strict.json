@@ -7,7 +7,7 @@
   "question": "What papers in this workspace cite other papers? Describe one citation link you can verify from the graph.",
   "expect": {
     "answer_classes_allowed": ["relation_tracing"],
-    "tools_any_of": ["entity_search", "edge_search", "cypher_query"],
+    "tools_any_of": ["edge_search", "cypher_query", "find_works"],
     "require_graph_tool": true,
     "require_phoenix_trace_id": true,
     "require_tool_trace": true,

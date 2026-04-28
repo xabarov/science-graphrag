@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Literal
+from typing import Any
 
 from langchain_core.messages import HumanMessage, ToolMessage
 from langchain_core.tools import BaseTool
 from langgraph.graph import END, StateGraph
 
 from science_graphrag.agent.graph.react_edges import (
+    react_after_tools_decrement_budget,
     react_chat_response_budget_cutoff,
+    route_react_chat_to_tools,
     route_react_tools_next,
 )
 from science_graphrag.agent.graph.state import AgentState
@@ -132,27 +134,19 @@ def _compile_writer_subgraph(tools: list[BaseTool], settings: Settings, *, mode:
             )
         return {"messages": [response]}
 
-    def budget_node(state: AgentState) -> dict:
-        budget = int(state.get("budget_remaining", settings.agent_max_tool_calls))
-        return {"budget_remaining": budget - 1}
-
-    def route_node(state: AgentState) -> Literal["tools", "__end__"]:
-        messages = state.get("messages") or []
-        if not messages or int(state.get("budget_remaining", 0)) <= 0:
-            return END
-        if getattr(messages[-1], "tool_calls", None):
-            return "tools"
-        return END
-
     subgraph = StateGraph(AgentState)
     subgraph.add_node("chat", chat_node)
-    subgraph.add_node("budget", budget_node)
     subgraph.add_node("tools", build_normalized_tool_node_executor(tools))
+    subgraph.add_node("after_tools", react_after_tools_decrement_budget)
     subgraph.set_entry_point("chat")
-    subgraph.add_edge("chat", "budget")
-    subgraph.add_conditional_edges("budget", route_node, {"tools": "tools", END: END})
     subgraph.add_conditional_edges(
-        "tools",
+        "chat",
+        route_react_chat_to_tools,
+        {"tools": "tools", END: END},
+    )
+    subgraph.add_edge("tools", "after_tools")
+    subgraph.add_conditional_edges(
+        "after_tools",
         route_react_tools_next,
         {"chat": "chat", END: END},
     )

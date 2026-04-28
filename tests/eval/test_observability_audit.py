@@ -5,12 +5,12 @@ from eval.chat_agent.observability_audit import build_observability_trace_audit
 
 def test_observability_no_phoenix_defaults_pass() -> None:
     obs = build_observability_trace_audit(
-        tool_trace=[{"tool": "workspace_overview"}, {"tool": "final_answer"}],
+        tool_trace=[{"tool": "workspace_inspect"}, {"tool": "final_answer"}],
         phoenix_http_snapshot=None,
     )
     assert obs["observability_passed"] is True
     assert obs["tool_trace_vs_phoenix_match"] is None
-    assert "tool.workspace_overview" in obs["expected_span_names"]
+    assert "tool.workspace_inspect" in obs["expected_span_names"]
 
 
 def test_observability_phoenix_missing_tool_span() -> None:

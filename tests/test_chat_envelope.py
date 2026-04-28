@@ -29,7 +29,7 @@ def test_build_chat_envelope_merges_inventory_from_specialist_results() -> None:
         "answer_class": None,
         "history_digest": [],
     }
-    trace = [{"step": 1, "tool": "workspace_list_papers", "args_summary": {}, "row_count": 1}]
+    trace = [{"step": 1, "tool": "workspace_inspect", "args_summary": {}, "row_count": 1}]
     env = build_chat_envelope(
         state=state,
         answer="ok",
@@ -95,6 +95,39 @@ def test_no_quote_found_for_quote_class_without_payload() -> None:
     assert "no_quote_found" in (env.get("warnings") or [])
 
 
+def test_no_quote_found_after_idea_hits_when_trace_order_matches() -> None:
+    state: AgentState = {
+        "messages": [],
+        "workspace_id": "w1",
+        "citations": [],
+        "tool_trace": [],
+        "budget_remaining": 5,
+        "metadata": {"raw_user_question": "цитат"},
+        "specialist_results": {},
+        "current_specialist": None,
+        "routing_log": [],
+        "debug_events": [],
+        "thread_id": None,
+        "session_summary": "",
+        "answer_class": None,
+        "history_digest": [],
+    }
+    trace = [
+        {"tool": "idea_search", "row_count": 3},
+        {"tool": "paper_quote_search", "row_count": 0},
+        {"tool": "final_answer", "row_count": 1},
+    ]
+    env = build_chat_envelope(
+        state=state,
+        answer="x",
+        citations=[],
+        tool_trace=trace,
+        answer_class_hint="quote_extraction",
+    )
+    assert "no_quote_found_after_idea_hits" in (env.get("warnings") or [])
+    assert "no_quote_found" not in (env.get("warnings") or [])
+
+
 def test_weak_evidence_grounded_without_citations() -> None:
     state: AgentState = {
         "messages": [],
@@ -142,7 +175,7 @@ def test_graph_only_trace() -> None:
     tool_trace: list[dict] = [  # type: ignore[assignment]
         {
             "step": 1,
-            "tool": "entity_search",
+            "tool": "edge_search",
             "args_summary": {},
             "row_count": 1,
             "duration_ms": 0,
@@ -228,7 +261,7 @@ def test_envelope_no_tools_turn_policy_ignores_trace_inventory() -> None:
         "answer_class": None,
         "history_digest": [],
     }
-    trace = [{"step": 1, "tool": "workspace_list_papers", "args_summary": {}, "row_count": 3}]
+    trace = [{"step": 1, "tool": "workspace_inspect", "args_summary": {}, "row_count": 3}]
     env = build_chat_envelope(
         state=state,
         answer="Здравствуйте!",
@@ -295,7 +328,7 @@ def test_collect_typed_payloads_merges_relation_trace() -> None:
 def test_infer_class_from_trace_prefers_relation_over_inventory() -> None:
     from science_graphrag.agent.chat_envelope import infer_class_from_trace
 
-    names = {"workspace_overview", "entity_search"}
+    names = {"workspace_inspect", "edge_search"}
     assert infer_class_from_trace(names) == "relation_tracing"
 
 
@@ -330,3 +363,65 @@ def test_build_chat_envelope_extra_warnings_and_markers() -> None:
     assert "partial_after_deadline" in warns
     markers = list(env.get("product_markers") or [])
     assert "partial_after_deadline" in markers
+
+
+def test_build_chat_envelope_warns_agent_finished_without_final_answer_tool() -> None:
+    state: AgentState = {
+        "messages": [HumanMessage(content="q")],
+        "workspace_id": "ws1",
+        "citations": [],
+        "tool_trace": [],
+        "budget_remaining": 0,
+        "metadata": {"raw_user_question": "q", "turn_policy": {"tool_policy": "allow_tools"}},
+        "specialist_results": {},
+        "current_specialist": None,
+        "routing_log": [],
+        "debug_events": [],
+        "thread_id": None,
+        "session_summary": "",
+        "answer_class": None,
+        "history_digest": [],
+    }
+    trace = [
+        {"step": 1, "tool": "workspace_inspect", "args_summary": {}, "row_count": 1},
+        {"step": 2, "tool": "paper_profile", "args_summary": {}, "row_count": 1},
+    ]
+    env = build_chat_envelope(
+        state=state,
+        answer="Some synthesized text",
+        citations=[],
+        tool_trace=trace,  # type: ignore[arg-type]
+        answer_class_hint=None,
+    )
+    assert "agent_finished_without_final_answer_tool" in (env.get("warnings") or [])
+
+
+def test_build_chat_envelope_no_warn_when_last_tool_is_final_answer() -> None:
+    state: AgentState = {
+        "messages": [HumanMessage(content="q")],
+        "workspace_id": "ws1",
+        "citations": [],
+        "tool_trace": [],
+        "budget_remaining": 0,
+        "metadata": {"raw_user_question": "q"},
+        "specialist_results": {},
+        "current_specialist": None,
+        "routing_log": [],
+        "debug_events": [],
+        "thread_id": None,
+        "session_summary": "",
+        "answer_class": None,
+        "history_digest": [],
+    }
+    trace = [
+        {"step": 1, "tool": "workspace_inspect", "args_summary": {}, "row_count": 1},
+        {"step": 2, "tool": "final_answer", "args_summary": {}, "row_count": 0},
+    ]
+    env = build_chat_envelope(
+        state=state,
+        answer="Done",
+        citations=[],
+        tool_trace=trace,  # type: ignore[arg-type]
+        answer_class_hint=None,
+    )
+    assert "agent_finished_without_final_answer_tool" not in (env.get("warnings") or [])

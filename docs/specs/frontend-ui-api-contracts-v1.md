@@ -208,6 +208,8 @@ Returns JSON (not raw `text/markdown` stream in v1):
 
 ### `GET /v1/works/{work_id}/graph`
 
+**Authorship / reader vs raw:** In **`view=reader`** (default), the API **collapses** `:Authorship` reification into reader-facing **`AUTHORED`** edges from the center `Work` to **`Author`** nodes (native ids when linked in Neo4j, otherwise stable synthetic ids with prefix **`va:`**). In **`view=raw`**, topology keeps **`HAS_AUTHORSHIP`** / `:Authorship` as returned from the neighborhood scan; **`author_entity_id`** is **not** exposed on `Authorship.properties` in raw (enrichment is stripped after use). Full rationale and history: [`docs/analysis/work-graph-authorship-reader-contract-2026-04-28.md`](../analysis/work-graph-authorship-reader-contract-2026-04-28.md). Maintainer-oriented pipeline summary: [`docs/architecture/work-graph-reader-authorship.md`](../architecture/work-graph-reader-authorship.md).
+
 Optional query (server contract):
 
 | Query | Meaning |
@@ -215,6 +217,25 @@ Optional query (server contract):
 | `neighbor_limit` | Integer **1–2000** (default **200**). Caps rows from the 1-hop `MATCH (w)-[r]-(n)` scan. |
 | `depth` | Integer **1–3** (default **1**). Reserved for future multi-hop; **effective hop is still 1** until implemented. |
 | `prioritize` | CSV list of preferred neighbor kinds (default **`Method,Dataset,Work`**). Server preserves these kinds first when `neighbor_limit` truncates dense neighborhoods. |
+| `view` | **`reader`** (default) or **`raw`**. Reader applies authorship collapse and neighbor aggregation (see below); raw keeps graph-shaped authorship and skips aggregation. |
+| `include_claims` | Boolean (default **false**). When true, merges a capped slice of `Claim` nodes linked from the center work (`claims_limit` caps the claim query). |
+| `claims_limit` | Integer **1–120** (default **24**). Used only when `include_claims=true`. |
+| `aggregator_threshold` | Optional int **2–200**. Global override for per-kind neighbor aggregation thresholds (GR8). |
+| `aggregator_disabled_kinds` | Optional CSV of neighbor kinds to skip aggregating (e.g. **`Author`**, **`Institution`**). |
+| `include_authorship_debug` | Boolean (default **false**). When **true** and `view=reader`, response **`meta.authorship_projection`** is set to one of **`native`**, **`synthesized`**, **`mixed`**, **`none`** — classifies post-collapse `AUTHORED` targets from the center (no PII). See [`docs/architecture/work-graph-reader-authorship.md`](../architecture/work-graph-reader-authorship.md). |
+
+**Neighbor aggregation (reader only):** Dense groups of same-type neighbors attached to the center `Work` may be replaced by an **`Aggregator`** node (e.g. many authors). Default per-kind thresholds live in server code (`KIND_AGG_THRESHOLDS`, e.g. **author: 4**).
+
+**Reader graph `meta` contract (Phase 0, 2026-04-28):** Responses include **`meta.graph_contract_version`** (integer, currently **`1`**). Bump it when neighbor caps, membership annotation rules, or reader authorship collapse semantics change in a contract-visible way. **`meta.graph_mode`** is a short product-facing enum derived from `graph_scope` / workspace `mode`: **`work_capped`**, **`workspace_union`**, **`workspace_v2`**, **`workspace_neighbors`**, plus expand-only values **`work_expand_aggregator`** / **`workspace_expand_aggregator`**. Always present on root graph responses: **`neighbor_limit`** (requested query value for work graph; **`null`** for workspace root graph — full 1-hop union per ADR-012), **`neighbor_limit_applied`** (integer cap used for work neighborhood; **`null`** on workspace / neighbors / expand where the cap does not apply), **`prioritize`**, **`view`**, **`is_truncated`**, **`workspace_id`** (**`null`** on standalone work graph until an optional `workspace_id` query exists).
+
+### `GET /v1/works/{work_id}/graph/expand`
+
+| Query | Meaning |
+|-------|---------|
+| `aggregator_id` | **Required.** Stable id emitted on the `Aggregator` node (`aggregation_hints` / `expand_endpoint`). |
+| `limit` | Integer **1–300** (default **50**). Caps how many neighbor nodes are returned for that bucket. |
+
+**Behavior:** Recomputes an enlarged neighborhood and returns the center work plus the neighbors that were folded into the given aggregator. **Author** buckets (edges of type **`AUTHORED`** in reader mode) are expanded using an internal **`view=reader`** fetch with **`aggregator_disabled_kinds=Author`**, because the raw topology uses **`HAS_AUTHORSHIP`** to `:Authorship` rather than **`AUTHORED`**.
 
 Response (backward compatible: `id`, `type`, `label` on nodes and `source`, `target`, `type` on edges remain; extra fields are optional for older clients):
 
@@ -246,12 +267,18 @@ Response (backward compatible: `id`, `type`, `label` on nodes and `source`, `tar
     }
   ],
   "meta": {
+    "graph_contract_version": 1,
+    "graph_mode": "work_capped",
     "semantic_available": true,
     "graph_scope": "work_1hop",
     "graph_depth_requested": 1,
     "graph_depth_effective": 1,
     "neighbor_match_count": 42,
+    "neighbor_limit": 200,
     "neighbor_limit_applied": 200,
+    "prioritize": "Method,Dataset,Work",
+    "view": "reader",
+    "workspace_id": null,
     "nodes_returned": 15,
     "edges_returned": 28,
     "is_truncated": false,
@@ -328,6 +355,14 @@ Query params:
 
 Response matches work graph shape (`work_id`, `nodes`, `edges`, `meta`). Each node may include:
 
+**When is `workspace_membership` present?**
+
+| API | Present? | Notes |
+|-----|------------|--------|
+| `GET /v1/workspaces/{workspace_id}/graph` | **Yes** (when projection runs) | Set by server membership pass on `Work` and related nodes; values **`internal`** \| **`external`**. |
+| `GET /v1/workspaces/{workspace_id}/graph/neighbors` | **Yes** | Same annotation rules for the lazy neighbor slice. |
+| `GET /v1/works/{work_id}/graph` | **No** (current) | Standalone work neighborhood has no workspace collection context; UI must not treat missing membership as “internal”. Optional query `workspace_id` (future phase) may enable annotation. |
+
 - `workspace_membership`: `internal` \| `external` (for `:Work`, membership in the workspace collection; for other labels, adjacency to internal works).
 - `internal_cite_count` / `external_cite_count` on `:Work` (outgoing `CITES` targets split by membership).
 
@@ -336,6 +371,8 @@ Response matches work graph shape (`work_id`, `nodes`, `edges`, `meta`). Each no
 **`mode=full`:** full semantic adjacency from internal works (same **1-hop union** engine as other modes, with semantic edge filter disabled); still respects `include_external` / `external_min_internal_citers`.
 
 `meta.graph_scope` is `workspace_v2` (or `workspace_union_1hop` inside legacy union mode until merged into v2 meta). `meta` may include projection diagnostics (`gds_runtime_available`, `gds_used`, `cap_applied`, `source_work_ids`, `internal_node_count`, `external_node_count`) where relevant; **`gds_used`** is not used for the main workspace canvas path after 2026-04-27.
+
+Workspace root graph **`meta`** also includes the same Phase 0 keys as work graph: **`graph_contract_version`**, **`graph_mode`** (typically **`workspace_v2`** or **`workspace_union`** when `mode=union_1hop`), **`neighbor_limit`: `null`**, **`neighbor_limit_applied`: `null`**, **`prioritize`**, **`view`**, **`workspace_id`** (always the path id), **`is_truncated`**.
 
 ### `GET /v1/workspaces/{workspace_id}/graph/stats`
 

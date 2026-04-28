@@ -24,6 +24,7 @@
 | Документ | Описание |
 |----------|----------|
 | [architecture/README.md](architecture/README.md) | Индекс архитектурных заметок |
+| [architecture/agent-chat-tools.md](architecture/agent-chat-tools.md) | Чат-агент: каталог тулов, схемы для LLM, карта кода, планы (`tool_search`, compaction) |
 | [architecture/phase-1-backbone.md](architecture/phase-1-backbone.md) | Phase 1: ingestion MVP и стек |
 | [architecture/chunking-strategy.md](architecture/chunking-strategy.md) | Task-aware slices, section chunks, dedup |
 | [runbooks/chonkie-chunking.md](runbooks/chonkie-chunking.md) | Chonkie vs legacy chunking: baseline, A/B retrieval, rollout (`SCIENCE_GRAPHRAG_CHUNKING_ENGINE`) |

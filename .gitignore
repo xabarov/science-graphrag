@@ -1,3 +1,6 @@
+# Prompt bundle audit artifacts (regenerate locally; see scripts/prompt_audit/README.md)
+scripts/prompt_audit/_artifacts/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

@@ -98,5 +98,13 @@ def test_work_graph_priority_limit_keeps_priority_nodes() -> None:
     nodes = payload["nodes"]
     method_nodes = [n for n in nodes if n.get("type") == "Method"]
     assert len(method_nodes) == 5
-    assert payload["meta"]["is_truncated"] is True
-    assert payload["meta"]["skipped_by_kind"]["Author"] == 45
+    m = payload["meta"]
+    assert m["is_truncated"] is True
+    assert m["skipped_by_kind"]["Author"] == 45
+    assert m.get("graph_contract_version") == 1
+    assert m.get("graph_mode") == "work_capped"
+    assert m.get("neighbor_limit") == 10
+    assert m.get("prioritize") == "Method,Dataset,Work"
+    assert m.get("view") == "reader"
+    assert m.get("workspace_id") is None
+    assert m.get("neighbor_limit_applied") is not None

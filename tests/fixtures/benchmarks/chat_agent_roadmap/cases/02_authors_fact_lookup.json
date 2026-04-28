@@ -7,7 +7,7 @@
   "expect": {
     "answer_classes_allowed": ["fact_lookup", "grounded_explanation"],
     "strict_answer_class": false,
-    "tools_any_of": ["paper_authors", "paper_metadata", "paper_lookup", "workspace_list_papers"],
+    "tools_any_of": ["paper_profile", "find_works", "workspace_inspect"],
     "tools_none_of": [],
     "require_phoenix_trace_id": true,
     "require_tool_trace": true,

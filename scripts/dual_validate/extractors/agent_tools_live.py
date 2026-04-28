@@ -47,7 +47,7 @@ KNOWN_TOOLS = (
     "vector_search",
     "cypher_query",
     "idea_search",
-    "entity_search",
+    "find_works",
     "edge_search",
     "cite_works",
     "final_answer",

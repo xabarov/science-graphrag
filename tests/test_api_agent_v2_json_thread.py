@@ -131,7 +131,11 @@ def test_sync_json_thread_id_session_init_and_session_summary_excerpt(monkeypatc
         )()
         resp = client.post(
             "/v2/agent/query",
-            json={"question": "How many papers?", "workspace_id": "ws1", "thread_id": "thr_sync_json"},
+            json={
+                "question": "How many papers?",
+                "workspace_id": "ws1",
+                "thread_id": "thr_sync_json",
+            },
             headers={"Accept": "application/json"},
         )
     finally:
@@ -235,7 +239,9 @@ def test_sync_json_two_turns_same_thread_accumulates_excerpt(monkeypatch) -> Non
                 "question": "SECOND_TURN_MARKER",
                 "workspace_id": "ws1",
                 "thread_id": tid,
-                "history_digest": [{"user": "FIRST_TURN_MARKER", "assistant": "answer-for-FIRST_TURN"}],
+                "history_digest": [
+                    {"user": "FIRST_TURN_MARKER", "assistant": "answer-for-FIRST_TURN"}
+                ],
             },
             headers={"Accept": "application/json"},
         )

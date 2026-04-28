@@ -19,6 +19,7 @@ function t(key) {
     "workspace.tooltip.chatWorkspace": "Chat",
     "workspace.tooltip.summarize": "Sum",
     "workspace.strip.ingestProgressTip": "Tip",
+    "workspace.strip.ingestProgressTwoScalesHint": "Two scales hint",
     "workspace.strip.ingestPhase.preparing_search": "Search layer",
     "workspace.strip.ingestStage.embed": "Embedding chunks",
     "workspace.strip.addMenuAria": "Add",

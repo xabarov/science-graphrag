@@ -29,6 +29,7 @@ def exit_if_object_storage_disabled(
     Returns ``None`` when OK.
     """
     if not settings.object_storage_enabled:
+        # Intentional print: early CLI exit path; project logging may not be configured yet.
         print(
             "error: SCIENCE_GRAPHRAG_OBJECT_STORAGE_ENABLED=true required",
             file=stream,

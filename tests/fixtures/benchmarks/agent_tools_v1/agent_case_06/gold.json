@@ -1,1 +1,1 @@
-{"schema_version":1,"workspace_id":"ws-pilot-od","max_calls":8,"min_tool_call_correctness":0.7,"expected_tool_sequence":[{"tool":"summarize_workspace"},{"tool":"idea_search"},{"tool":"final_answer"}]}
+{"schema_version":1,"workspace_id":"ws-pilot-od","max_calls":8,"min_tool_call_correctness":0.7,"expected_tool_sequence":[{"tool":"workspace_inspect"},{"tool":"idea_search"},{"tool":"final_answer"}]}

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import Counter
 from typing import Any
 
-_GRAPH_TOOL_NAMES = frozenset({"cypher_query", "entity_search", "edge_search"})
+_GRAPH_TOOL_NAMES = frozenset({"cypher_query", "edge_search"})
 
 
 def _tool_names(trace: list[dict[str, Any]]) -> list[str]:

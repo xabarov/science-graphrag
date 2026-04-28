@@ -52,7 +52,7 @@ def _mock_case_report(case_id: str, question: str, *, workspace_id: str | None) 
         trace.append(
             {
                 "step": step,
-                "tool": "summarize_workspace",
+                "tool": "workspace_inspect",
                 "args_summary": {"workspace_id": workspace_id},
                 "row_count": 2,
                 "duration_ms": 1,

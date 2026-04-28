@@ -14,9 +14,11 @@
 | [`ontology-benchmarks-roadmap-2026-04-24.md`](./ontology-benchmarks-roadmap-2026-04-24.md) | Wave M–T inventory (large); trust-audit is the live BT plan |
 | [`langgraph-migration-plan-2026-04-25.md`](./langgraph-migration-plan-2026-04-25.md) | Y5/Y6 LangGraph vs smolagents |
 | [`phoenix-tracing-coverage-2026-04-25.md`](./phoenix-tracing-coverage-2026-04-25.md) | Phoenix / OTel gaps + Wave X |
+| [`logging-system-deep-dive-and-improvement-plan-2026-04-28.md`](./logging-system-deep-dive-and-improvement-plan-2026-04-28.md) | Stdlib logging vs traces: gaps, env knobs, phased plan (ingest heartbeats, correlation, JSON) |
 | [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md) | **Agent chat (canonical, slim):** текущий single-graph runtime, отложенный multi-specialist split, **будущие** `tool_search` + context compaction — детальная история: [`_archive/chat-agent-system-roadmap-full-2026-04-26.md`](./_archive/chat-agent-system-roadmap-full-2026-04-26.md) |
 | [`agent-chat-frontend-ui-plan-2026-04-26.md`](./agent-chat-frontend-ui-plan-2026-04-26.md) | Agent chat UI/UX (`ui/` run chrome, rail, typed blocks) |
 | [`chat-agent-roadmap-trace-audit-2026-04-27.md`](./chat-agent-roadmap-trace-audit-2026-04-27.md) | Chat-agent eval harness + Phoenix trace audit (`ws-pilot-od`) |
+| [`agent-chat-tools-work-plan-2026-04-28.md`](./agent-chat-tools-work-plan-2026-04-28.md) | **План работ по тулзам** чат-агента: фазы A–D (final_answer, граф/edge_search, данные paper_profile, Cypher, fan-out, tool_search, E2E-CI) |
 | [`chat-agent-od-workspace-restoration-and-eval-plan-2026-04-27.md`](./chat-agent-od-workspace-restoration-and-eval-plan-2026-04-27.md) | OD chat-agent proving ground: workspace restoration + trusted eval scenarios |
 | [`graph-readability-followup-2026-04-25.md`](./graph-readability-followup-2026-04-25.md) | GR6–GR9 graph UX |
 | [`light-theme-roadmap-2026-04-27.md`](./light-theme-roadmap-2026-04-27.md) | UI appearance system: light theme concept, tokenization, rollout phases |

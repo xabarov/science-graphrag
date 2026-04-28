@@ -230,6 +230,9 @@ export default function WorkspaceIngestPanel({
                     {t("workspace.ingest.detailsLogs")}
                   </AccordionSummary>
                   <AccordionDetails sx={{ pt: 0 }}>
+                    <Typography sx={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.38)", mb: 0.75 }}>
+                      {t("workspace.ingest.logsTailHint")}
+                    </Typography>
                     <Box
                       component="pre"
                       sx={{

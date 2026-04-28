@@ -151,7 +151,7 @@ def get_work_extracted_body(
 
 
 @router.get("/{work_id}/graph")
-def get_work_graph(
+def get_work_graph(  # pylint: disable=R0917
     work_id: str,
     neighbor_limit: int = Query(default=200, ge=1, le=2000),
     depth: int = Query(default=1, ge=1, le=3),
@@ -172,6 +172,13 @@ def get_work_graph(
         description="Include capped Claim nodes linked from the center Work (HAS_CLAIM edges).",
     ),
     claims_limit: int = Query(default=24, ge=1, le=120),
+    include_authorship_debug: bool = Query(
+        default=False,
+        description=(
+            "If true, meta.authorship_projection classifies reader AUTHORED targets "
+            "(native|synthesized|mixed|none)."
+        ),
+    ),
     stores: StoreRegistry = Depends(get_stores),
 ) -> dict[str, Any]:
     g = work_graph_neighborhood(
@@ -185,6 +192,7 @@ def get_work_graph(
         aggregator_disabled_kinds=aggregator_disabled_kinds,
         include_claims=include_claims,
         claims_limit=claims_limit,
+        include_authorship_debug=include_authorship_debug,
     )
     if not g:
         raise HTTPException(status_code=404, detail="work_not_found")

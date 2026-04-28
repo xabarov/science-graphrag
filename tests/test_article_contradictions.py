@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from collections import UserDict
 
-from science_graphrag.api.workspace_graph.projection import edge_dict_from_rel, enrich_edges_workspace
+from science_graphrag.api.workspace_graph.projection import (
+    edge_dict_from_rel,
+    enrich_edges_workspace,
+)
 from science_graphrag.ontology.article_contradictions import (
     build_edge_contradiction_preview,
     extract_contradiction_rel_api_props,
@@ -59,7 +62,12 @@ def test_extract_contradiction_short_quotes_not_evidence() -> None:
 
 def test_build_edge_contradiction_preview_subset() -> None:
     pr = extract_contradiction_rel_api_props(
-        {"subtype": "post_processing", "severity": "direct", "provenance": "legacy", "has_evidence": True},
+        {
+            "subtype": "post_processing",
+            "severity": "direct",
+            "provenance": "legacy",
+            "has_evidence": True,
+        },
         for_graph_list=True,
     )
     pv = build_edge_contradiction_preview(pr)

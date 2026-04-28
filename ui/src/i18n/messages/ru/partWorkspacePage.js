@@ -77,6 +77,8 @@ export default {
   "workspace.ingest.stageUnknown": "стадия",
   "workspace.ingest.stageEtaSeconds": "~{{sec}} с",
   "workspace.ingest.detailsLogs": "Подробности / логи",
+  "workspace.ingest.logsTailHint":
+    "Прокручиваемый журнал задания с сервера (хранится в строке задания). Полные логи хоста или агрегация — через Docker / stderr процесса, не эта панель.",
 
   "workspace.advanced.accordion": "Дополнительно: привязать статью по work_id",
   "workspace.advanced.workIdLabel": "work_id",
@@ -97,6 +99,8 @@ export default {
   "workspace.strip.statsExternal": "{{count}} внеш. цит.",
   "workspace.strip.statsExternalTip": "Внешние цитирования",
   "workspace.strip.ingestProgressTip": "Идёт загрузка / индексация",
+  "workspace.strip.ingestProgressTwoScalesHint":
+    "Процент — взвешенный прогресс всего пайплайна (технические стадии). Четыре сегмента ниже — продуктовые фазы (документ → граф → поиск → финал), а не доля страниц PDF.",
   "workspace.strip.ingestStarting": "Запуск загрузки…",
   "workspace.strip.ingestFailed": "Ошибка индексации",
   "workspace.strip.ingestPhase.preparing_document": "Подготовка документа",

@@ -1,1 +1,1 @@
-{"schema_version":1,"max_calls":8,"min_tool_call_correctness":0.7,"expected_tool_sequence":[{"tool":"idea_search"},{"tool":"summarize_workspace"}]}
+{"schema_version":1,"max_calls":8,"min_tool_call_correctness":0.7,"expected_tool_sequence":[{"tool":"idea_search"},{"tool":"workspace_inspect"}]}

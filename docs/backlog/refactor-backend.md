@@ -43,6 +43,20 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 
 Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies here).
 
+### [OPEN] Graph work vs workspace — single reader projection seam + parity (DRY)
+- **Area:** `science_graphrag/api/works/graph_neighborhood.py`, `science_graphrag/api/graph_display.py`, `science_graphrag/api/workspace_graph/`, new package `science_graphrag/api/graph_reader_projection/` (TBD), `ui/src/components/graph/authorSemanticProjection.js`
+- **Issue:** Two graph surfaces duplicate reader semantics (collapse, enrich, display); work graph lacks workspace `membership` context unless URL forces full workspace union; 2-hop reader entities (e.g. institution) are policy-opaque. Violates DRY and confuses product expectations.
+- **Proposal:** Execute phased plan in [`docs/analysis/graph-work-vs-workspace-unification-dry-plan-2026-04-28.md`](../analysis/graph-work-vs-workspace-unification-dry-plan-2026-04-28.md): Phase 0 `meta` contract, Phase 1 extract shared projection package, Phase 2 optional `workspace_id` on work graph for membership annotation, Phase 3 explicit institution hop flag, Phase 4 slim UI projection, Phase 5 i18n/mode labels.
+- **Acceptance:** Single Python definition site for reader authorship collapse + shared enrich import path; documented when `workspace_membership` appears; integration + parity tests for membership and optional institution flag; UI projection reduced or documented as presentation-only.
+- **Raised:** 2026-04-28 (graph architecture closure)
+
+### [OPEN] paper_profile year/venue — OD null-rate closure (ingest + graph)
+- **Area:** `science_graphrag/ingestion/_pipeline_impl.py`, Neo4j writers / OpenAlex merge, `workspace_catalog_tools.py` (`paper_profile`)
+- **Issue:** Phase A3 acceptance («доля null на OD») not closed by tool+prompt alone; `eval/paper_profile_stats.summarize_paper_profile_payloads` can measure saved payloads but pipeline may still omit venue/year.
+- **Proposal:** Run aggregator on OD workspace exports; extend merge/writers for venue/year from OpenAlex or PDF front-matter; re-measure with the same helper.
+- **Acceptance:** Documented null-rate baseline drops or stays stable with explicit «thin corpus» rationale in `docs/architecture/agent-chat-tools.md`.
+- **Raised:** 2026-04-28 (agent tools plan phase A3)
+
 ### [OPEN] Phase 5B — per-model / tenant-fairness quota (post–Redis ZSET v1)
 - **Area:** `science_graphrag/llm/redis_quota.py`, `pool_limits.py`, `config.py`, settings schema
 - **Issue:** Phase 5 v1 enforces one global cap per logical pool; no per-model keys, no tenant/workspace fairness, no lease heartbeat (see `docs/analysis/llm-distributed-quota-phase5b-advanced-scope.md`).

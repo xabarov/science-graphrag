@@ -71,5 +71,15 @@ class FormatBibliographyGostTool(BaseAgentTool):
 
 
 class BibGostArgs(BaseModel):
-    workspace_id: str
-    work_ids: list[str] = Field(..., min_length=1, description="Work ids in the workspace.")
+    workspace_id: str = Field(
+        ...,
+        description="Workspace that owns the bibliography; ids not linked to it are filtered out.",
+    )
+    work_ids: list[str] = Field(
+        ...,
+        min_length=1,
+        description=(
+            "One or more internal Work ids already known to belong to this workspace (from "
+            "workspace_inspect, find_works, paper_profile, etc.). Order is preserved in output."
+        ),
+    )

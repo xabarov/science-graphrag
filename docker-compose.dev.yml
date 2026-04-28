@@ -237,6 +237,8 @@ services:
       - .env
     environment:
       PYTHONPATH: /app
+      # Dramatiq defaults to many processes (noisy boot logs); override here or pass CLI args.
+      SCIENCE_GRAPHRAG_DRAMATIQ_PROCESSES: "1"
       SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV: "1"
       SCIENCE_GRAPHRAG_DATABASE_URL: ${SCIENCE_GRAPHRAG_DATABASE_URL_DOCKER:-postgresql+psycopg://${POSTGRES_USER:-science}:${POSTGRES_PASSWORD:-change-me}@postgres:5432/${POSTGRES_DB:-science_graphrag}}
       SCIENCE_GRAPHRAG_NEO4J_URI: bolt://neo4j:7687

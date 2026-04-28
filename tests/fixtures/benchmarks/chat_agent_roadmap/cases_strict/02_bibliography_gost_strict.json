@@ -7,7 +7,7 @@
   "question": "Составь список литературы по ГОСТ для всех работ в этой рабочей области.",
   "expect": {
     "answer_classes_allowed": ["bibliography_export"],
-    "tools_any_of": ["format_bibliography_gost", "workspace_list_papers"],
+    "tools_any_of": ["format_bibliography_gost", "workspace_inspect"],
     "require_typed_bibliography": true,
     "require_phoenix_trace_id": true,
     "require_tool_trace": true,

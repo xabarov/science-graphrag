@@ -105,11 +105,7 @@ def test_chonkie_recursive_chunk_text_matches_normalized_slice():
 
 def test_chonkie_recursive_section_paths_like_legacy():
     pytest.importorskip("chonkie")
-    md = (
-        "# Title\n\nIntro.\n\n"
-        "## Section A\n\nAlpha.\n\n"
-        "## Section B\n\nBeta.\n\n"
-    )
+    md = "# Title\n\nIntro.\n\n" "## Section A\n\nAlpha.\n\n" "## Section B\n\nBeta.\n\n"
     paths = {
         c.section_path
         for c in chunk_document_for_retrieval(

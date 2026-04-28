@@ -14,6 +14,7 @@
 | `detail_message` | `string \| null` | Short human-oriented status (English), e.g. `PDF pages 3/10`. |
 | `subprogress_current` | `int \| null` | Optional counter inside the active heavy stage. |
 | `subprogress_total` | `int \| null` | Denominator for `subprogress_current`. |
+| `progress_indeterminate` | `boolean` | When `true`, the UI should not treat `progress_pct` as a stable fine-grained value (e.g. a single VL HTTP batch is in flight). |
 
 Legacy fields `progress_current` / `progress_total` remain for backward compatibility (coarse worker checkpoints and batch file counts).
 
@@ -27,7 +28,7 @@ Each stage includes:
 ## SSE events
 
 - `stage_started` / `stage_finished` / `stage_failed` — unchanged semantics.
-- `stage_progress` — emitted while a stage is `running`; payload includes `stage`, `status: "running"`, and `metrics` (including `detail_message` / `subprogress_*` keys). Clients merge it into `stages[]` the same way as `stage_started`.
+- `stage_progress` — emitted while a stage is `running`; payload includes `stage`, `status: "running"`, and `metrics` (including `detail_message` / `subprogress_*` keys). After each flush, the worker attaches **top-level** copies of canonical job fields: `ingest_phase`, `active_stage`, `progress_indeterminate` (always `true` or `false`), plus `progress_pct`, `detail_message`, `subprogress_current`, `subprogress_total` when applicable. Clients MUST merge these into the **root** job object (same shape as `GET /v1/ingest/jobs/{job_id}`) so SSE-only clients stay aligned with polling.
 
 ## Batch parent jobs
 
@@ -35,6 +36,8 @@ For `kind: "batch_parent"`, `child_jobs[]` contains full child job objects. The 
 
 - `progress_pct` — mean of child `progress_pct` when all children expose it; otherwise `done_children / total_children`.
 - `ingest_phase`, `active_stage`, `detail_message`, `subprogress_*` — copied from the first `running` child, else first `queued` child; when all children are finished, `ingest_phase` is `finalizing`.
+
+**Future (not required yet):** enrich `stage_progress` events on the **parent** `job_id` channel with aggregated canonical fields when a child flushes (today only the child job stream receives the enriched payload; parents still rely on polling or child snapshots).
 
 ## Server modules
 
