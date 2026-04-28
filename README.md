@@ -16,26 +16,51 @@
 - **Вопросы к литературе — с evidence** — ответы можно проверить по источникам и фрагментам текста.
 - **Стек поднимается локально** — Docker Compose, привычный цикл «поднял → открыл UI → загрузил PDF».
 
-## За ~5 минут до UI
+## Быстрый старт
 
-Нужны **Docker + Docker Compose** и **Python 3.11+**.
+### Вариант 1. Просто поднять UI и стек
+
+Если вы хотите сначала просто посмотреть систему, достаточно **Docker + Docker Compose** и файла `.env`:
+
+```bash
+cp .env.example .env
+docker compose -f docker-compose.yml up -d --build
+```
+
+Если у вас есть `make`, это эквивалентно:
+
+```bash
+make prod-up
+```
+
+Дальше откройте **[веб-интерфейс](http://localhost:8787/ui/)** — главная точка входа. Для быстрой проверки API: [`/health`](http://localhost:8787/health), интерактивная документация: [`/docs`](http://localhost:8787/docs).
+
+### Вариант 2. Полный setup для CLI, ingest и локальной разработки
+
+Если вы хотите не только поднять UI, но и запускать `science-graphrag` с хоста, делать ingest и пользоваться локальным CLI, нужны ещё **Python 3.11+** и `.venv`:
 
 ```bash
 cp .env.example .env
 python -m venv .venv
 .venv/bin/pip install -e ".[dev]"
+.venv/bin/science-graphrag config-check --no-strict
 ```
 
 В `.env` задайте **`SCIENCE_GRAPHRAG_OPENALEX_MAILTO`** — это не секрет, а ваш contact email для OpenAlex metadata enrichment. Для нормальной практической работы также обычно нужны **`SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY`** и **`SCIENCE_GRAPHRAG_VL_API_KEY`**: без них стек поднимется, но extraction и качество обработки PDF будут заметно ограничены.
 
+Для prod-like режима:
+
 ```bash
-.venv/bin/science-graphrag config-check --no-strict
-make prod-up
+docker compose -f docker-compose.yml up -d --build
 ```
 
-Дальше откройте **[веб-интерфейс](http://localhost:8787/ui/)** — главная точка входа. Для проверки API: [`/health`](http://localhost:8787/health), интерактивная документация: [`/docs`](http://localhost:8787/docs).
+Для локальной разработки удобнее dev-режим:
 
-**Пишете код под проект?** Вместо `make prod-up` используйте **`make dev-up`** (backend с reload, UI через Vite HMR).
+```bash
+docker compose -f docker-compose.dev.yml up -d --build
+```
+
+Если у вас есть `make`, это те же команды через `make prod-up` и `make dev-up`.
 
 ## Один файл — быстрый «ощутимый» результат
 
@@ -43,7 +68,7 @@ make prod-up
 .venv/bin/science-graphrag ingest path/to/paper.pdf
 ```
 
-Форматы: **`pdf`**, **`md`**, **`txt`**. После ingest откройте работу в UI или дерните API — см. Swagger на `/docs`.
+Форматы: **`pdf`**, **`md`**, **`txt`**. Этот шаг требует полного setup из варианта 2. После ingest откройте работу в UI или дерните API — см. Swagger на `/docs`.
 
 ## Корпус целиком
 
