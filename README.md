@@ -26,7 +26,7 @@ python -m venv .venv
 .venv/bin/pip install -e ".[dev]"
 ```
 
-В `.env` обязательно задайте **`SCIENCE_GRAPHRAG_OPENALEX_MAILTO`**. Ключи **`SCIENCE_GRAPHRAG_EXTRACTION_LLM_*`** / **`SCIENCE_GRAPHRAG_VL_*`** — только если хотите сразу полноценный LLM/VL extraction (иначе можно начать с «оболочки» и конфигурации по умолчанию).
+В `.env` задайте **`SCIENCE_GRAPHRAG_OPENALEX_MAILTO`** — это не секрет, а ваш contact email для OpenAlex metadata enrichment. Для нормальной практической работы также обычно нужны **`SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY`** и **`SCIENCE_GRAPHRAG_VL_API_KEY`**: без них стек поднимется, но extraction и качество обработки PDF будут заметно ограничены.
 
 ```bash
 .venv/bin/science-graphrag config-check --no-strict
