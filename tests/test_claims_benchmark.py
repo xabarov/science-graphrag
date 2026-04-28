@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from eval.claims import runner as claims_runner_mod
 from eval.claims.heuristic_extract import extract_claims_anchor_harness
 from eval.claims.metrics import score_claims_extraction
 from eval.claims.runner import (
@@ -14,6 +15,7 @@ from eval.claims.runner import (
     extract_claims_production_path,
     run_claims_case,
 )
+from science_graphrag.config import get_settings
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "benchmarks" / "claims"
 
@@ -23,8 +25,16 @@ def test_production_claims_extractor_matches_ingestion_stub(
 ) -> None:
     """Production lane returns ([], diagnostics) without LLM credentials (CI-safe)."""
 
-    for key in ("SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY",):
+    for key in (
+        "SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY",
+        "SCIENCE_GRAPHRAG_API_KEY",
+    ):
         monkeypatch.delenv(key, raising=False)
+
+    def _settings_without_llm_keys():
+        return get_settings().model_copy(update={"api_key": None, "extraction_llm_api_key": None})
+
+    monkeypatch.setattr(claims_runner_mod, "get_settings", _settings_without_llm_keys)
     raw = extract_claims_production_path("any text", {})
     assert isinstance(raw, tuple)
     preds, diag = raw

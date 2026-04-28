@@ -29,3 +29,7 @@ Heavy runtime artifacts (diagnostics, benchmark full JSON) live in S3/MinIO with
 
 - Ops can expire `science-diagnostics/` and heavy benchmark prefixes via bucket lifecycle and/or GC script.
 - Git noise and secret leaks are reduced by forcing a promote step with caps and redaction defaults.
+
+## Related
+
+- [ADR 025 — Mandatory S3-compatible object storage](025-mandatory-s3-object-storage.md)

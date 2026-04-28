@@ -137,7 +137,6 @@ services:
       SCIENCE_GRAPHRAG_ARTIFACT_ROOT: /data/artifacts
       PHOENIX_COLLECTOR_ENDPOINT: http://phoenix:6006/v1/traces
       # Phase 1: MinIO on compose network (override via .env MINIO_ROOT_* if needed).
-      SCIENCE_GRAPHRAG_OBJECT_STORAGE_ENABLED: "true"
       SCIENCE_GRAPHRAG_S3_ENDPOINT_URL: http://minio:9000
       SCIENCE_GRAPHRAG_S3_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
       SCIENCE_GRAPHRAG_S3_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
@@ -211,7 +210,6 @@ services:
       SCIENCE_GRAPHRAG_BLOB_ROOT: /data/blobs
       SCIENCE_GRAPHRAG_ARTIFACT_ROOT: /data/artifacts
       PHOENIX_COLLECTOR_ENDPOINT: http://phoenix:6006/v1/traces
-      SCIENCE_GRAPHRAG_OBJECT_STORAGE_ENABLED: "true"
       SCIENCE_GRAPHRAG_S3_ENDPOINT_URL: http://minio:9000
       SCIENCE_GRAPHRAG_S3_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
       SCIENCE_GRAPHRAG_S3_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}

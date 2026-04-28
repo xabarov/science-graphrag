@@ -11,9 +11,14 @@ from science_graphrag.ingestion.llm.extractor_factory import (
 )
 
 
+def _s3_kwargs() -> dict:
+    return {"s3_access_key_id": "testing", "s3_secret_access_key": "testing"}
+
+
 def test_build_ingestion_extractor_presets_max_tokens() -> None:
     s = Settings(
         extraction_llm_api_key="k",
+        **_s3_kwargs(),
         extraction_llm_max_tokens_metadata=111,
         extraction_llm_max_tokens_references=222,
         semantic_extraction_max_tokens=333,
@@ -32,6 +37,8 @@ def test_build_ingestion_extractor_presets_max_tokens() -> None:
 
 
 def test_build_ingestion_extractor_requires_api_key(monkeypatch: pytest.MonkeyPatch) -> None:
-    s = Settings(extraction_llm_api_key="")
+    for key in ("SCIENCE_GRAPHRAG_API_KEY", "SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY"):
+        monkeypatch.delenv(key, raising=False)
+    s = Settings(api_key=None, extraction_llm_api_key="", **_s3_kwargs())
     with pytest.raises(ValueError, match="extraction_llm_api_key"):
         build_ingestion_extractor(s, IngestionExtractorPreset.METADATA)

@@ -51,7 +51,6 @@ function buildStorageSnapshot() {
     },
     s3: {
       fields: {
-        object_storage_enabled: { effective: false, source: "environment" },
         s3_endpoint_url: { effective: "", source: "environment" },
         s3_bucket: { effective: "science-raw", source: "environment" },
         s3_use_ssl: { effective: true, source: "environment" },
@@ -59,8 +58,6 @@ function buildStorageSnapshot() {
         s3_artifact_key_prefix: { effective: "science-artifacts", source: "environment" },
         s3_access_key_id: { effective: "", source: "environment" },
         s3_secret_access_key: { secret_source: "none", masked: null },
-        benchmark_runs_object_storage: { effective: false, source: "environment" },
-        diagnostics_object_storage: { effective: false, source: "environment" },
         s3_benchmark_runs_key_prefix: { effective: "science-benchmarks", source: "environment" },
         s3_diagnostics_key_prefix: { effective: "science-diagnostics", source: "environment" },
       },

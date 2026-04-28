@@ -101,7 +101,9 @@ export default {
   "settings.storage.paths.blobRoot": "Корень blob",
   "settings.storage.paths.artifactRoot": "Корень артефактов",
   "settings.storage.s3.title": "S3 / объектное хранилище",
-  "settings.storage.s3.subtitle": "Опционально S3-совместимый API (например MinIO) для артефактов и выгрузок.",
+  "settings.storage.s3.subtitle": "Обязательный S3-совместимый API (например MinIO) для блобов ingest, артефактов, benchmark и диагностики.",
+  "settings.storage.s3.mandatoryNotice":
+    "Объектное хранилище всегда включено: очередь ingest, сырые блобы, артефакты извлечения, полные JSON benchmark и диагностические дампы пишутся в настроенный бакет и префиксы.",
   "settings.storage.s3.objectStorageEnabled": "Объектное хранилище включено",
   "settings.storage.s3.endpoint": "URL endpoint S3",
   "settings.storage.s3.bucket": "Бакет",
@@ -220,4 +222,15 @@ export default {
   "llm.test.model": "Модель: {{model}}",
   "llm.test.latency": "Задержка: {{ms}} мс",
   "llm.test.testedAt": "Проверено: {{at}}",
+
+  "settings.benchmark.title": "Дефолты бенчмарка",
+  "settings.benchmark.desc":
+    "Организационные значения по умолчанию для лаунчера бенчмарка (по семейству API). Выбор кейсов и групповой запуск остаются на странице «Бенчмарки → Запуск».",
+  "settings.benchmark.caseSelectionHint": "Выбор кейсов и старт прогонов — на",
+  "settings.benchmark.openLaunch": "Бенчмарки → Запуск",
+  "settings.benchmark.save": "Сохранить дефолты бенчмарка",
+  "settings.benchmark.saveError": "Не удалось сохранить настройки бенчмарка.",
+  "settings.benchmark.family.layer1": "Layer-1",
+  "settings.benchmark.family.layer2": "Layer-2",
+  "settings.benchmark.family.graph": "Graph",
 };

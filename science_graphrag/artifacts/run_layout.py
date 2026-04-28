@@ -1,7 +1,7 @@
 """Repo-relative layout for UI benchmark run snapshots.
 
-Compact ``*.summary.json`` files stay under ``data/benchmark_runs``; full ``*.json`` may live in
-S3 when ``SCIENCE_GRAPHRAG_BENCHMARK_RUNS_OBJECT_STORAGE`` is enabled (Phase 3).
+Compact ``*.summary.json`` files stay under ``data/benchmark_runs``; full ``*.json`` payloads
+are stored in S3 (mandatory object storage).
 """
 
 from __future__ import annotations

@@ -2,6 +2,12 @@
 
 from __future__ import annotations
 
+import os
+
+# S3/MinIO credentials are mandatory for Settings(); use moto-friendly defaults in CI/local pytest.
+os.environ.setdefault("SCIENCE_GRAPHRAG_S3_ACCESS_KEY_ID", "testing")
+os.environ.setdefault("SCIENCE_GRAPHRAG_S3_SECRET_ACCESS_KEY", "testing")
+
 import pytest
 
 

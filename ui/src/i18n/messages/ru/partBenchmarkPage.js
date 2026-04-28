@@ -134,6 +134,12 @@ export default {
   "benchmarkPage.runLab.singleRunHeading": "Один прогон",
   "benchmarkPage.runLab.implementationLine": "Цель API: {{label}} ({{apiId}})",
   "benchmarkPage.runLab.launcherCardTitle": "Конфигурация запуска",
+  "benchmarkPage.runLab.serverDefaultsHint":
+    "Дефолты модели, gold, порогов и подсказок API задаются в «Админ → Настройки → Бенчмарк».",
+  "benchmarkPage.runLab.serverDefaultsSaved": "Сохранённые на сервере дефолты подмешиваются, если локальная конфигурация совпадает с базовой.",
+  "benchmarkPage.runLab.serverDefaultsEdit": "Открыть в настройках",
+  "benchmarkPage.runLab.serverDefaultsLoadError":
+    "Не удалось загрузить серверные дефолты бенчмарка (используются только локальные настройки).",
   "benchmarkPage.runLab.graphCatalogBody":
     "Graph-бенчмарк по-прежнему в приоритете через CLI. Здесь можно просматривать кейсы; запуск — из CLI.",
   "benchmarkPage.runLab.advancedAccordion": "Дополнительно: цель API (семейство) и окружение",

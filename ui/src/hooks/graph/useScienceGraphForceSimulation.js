@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 
 import { SHELL_NAVIGATION_INTENT_EVENT } from "../../components/layout/shellNavigationEvents.js";
+import {
+  GRAPH_CANVAS_POINTER_DOWN_EVENT,
+  GRAPH_CANVAS_POINTER_UP_EVENT,
+} from "../../components/graph/graphCanvasPointerEvents.js";
 import { getScienceDesiredDistance } from "../../components/graph/physics/desiredLinkDistance.js";
 import { getNodeCluster } from "../../components/graph/physics/structuralCommunities.js";
 import { detectScienceHybridCommunities } from "../../components/graph/physics/scienceHybridCommunities.js";
@@ -58,10 +62,22 @@ export function useScienceGraphForceSimulation(
   const isSimStableRef = useRef(isSimulationStable);
   isSimStableRef.current = isSimulationStable;
   const prevRepulsionRef = useRef(repulsionStrength);
+  const shellNavigationResumeRef = useRef(null);
+  const canvasPointerResumeRef = useRef(null);
   const [pausedForShellNavigation, setPausedForShellNavigation] = useState(false);
+  const [pausedForGraphCanvasPointer, setPausedForGraphCanvasPointer] = useState(false);
 
   useEffect(() => {
+    if (shellNavigationResumeRef.current) {
+      window.clearTimeout(shellNavigationResumeRef.current);
+      shellNavigationResumeRef.current = null;
+    }
+    if (canvasPointerResumeRef.current) {
+      window.clearTimeout(canvasPointerResumeRef.current);
+      canvasPointerResumeRef.current = null;
+    }
     setPausedForShellNavigation(false);
+    setPausedForGraphCanvasPointer(false);
   }, [enabled, simulationSignature]);
 
   useEffect(() => {
@@ -71,18 +87,63 @@ export function useScienceGraphForceSimulation(
         cancelAnimationFrame(animationRef.current);
         animationRef.current = null;
       }
-      isSimStableRef.current = true;
-      setIsSimulationStable(true);
       setPausedForShellNavigation(true);
+      if (shellNavigationResumeRef.current) window.clearTimeout(shellNavigationResumeRef.current);
+      // The drawer click needs a quiet frame to commit routing. If navigation is blocked or aborted,
+      // resume quickly so the graph remains interactive.
+      shellNavigationResumeRef.current = window.setTimeout(() => {
+        shellNavigationResumeRef.current = null;
+        setPausedForShellNavigation(false);
+      }, 250);
     };
     window.addEventListener(SHELL_NAVIGATION_INTENT_EVENT, handleShellNavigationIntent);
     return () => {
+      if (shellNavigationResumeRef.current) {
+        window.clearTimeout(shellNavigationResumeRef.current);
+        shellNavigationResumeRef.current = null;
+      }
       window.removeEventListener(SHELL_NAVIGATION_INTENT_EVENT, handleShellNavigationIntent);
     };
-  }, [enabled, setIsSimulationStable]);
+  }, [enabled]);
 
   useEffect(() => {
-    if (!enabled || pausedForShellNavigation || nodes.length === 0) {
+    if (!enabled) return undefined;
+    const handleCanvasPointerDown = () => {
+      if (canvasPointerResumeRef.current) {
+        window.clearTimeout(canvasPointerResumeRef.current);
+        canvasPointerResumeRef.current = null;
+      }
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
+      setPausedForGraphCanvasPointer(true);
+    };
+    const handleCanvasPointerUp = () => {
+      if (canvasPointerResumeRef.current) {
+        window.clearTimeout(canvasPointerResumeRef.current);
+        canvasPointerResumeRef.current = null;
+      }
+      // Let pointer-up handlers (e.g. node selection) run before physics resumes.
+      canvasPointerResumeRef.current = window.setTimeout(() => {
+        canvasPointerResumeRef.current = null;
+        setPausedForGraphCanvasPointer(false);
+      }, 0);
+    };
+    window.addEventListener(GRAPH_CANVAS_POINTER_DOWN_EVENT, handleCanvasPointerDown);
+    window.addEventListener(GRAPH_CANVAS_POINTER_UP_EVENT, handleCanvasPointerUp);
+    return () => {
+      if (canvasPointerResumeRef.current) {
+        window.clearTimeout(canvasPointerResumeRef.current);
+        canvasPointerResumeRef.current = null;
+      }
+      window.removeEventListener(GRAPH_CANVAS_POINTER_DOWN_EVENT, handleCanvasPointerDown);
+      window.removeEventListener(GRAPH_CANVAS_POINTER_UP_EVENT, handleCanvasPointerUp);
+    };
+  }, [enabled]);
+
+  useEffect(() => {
+    if (!enabled || pausedForShellNavigation || pausedForGraphCanvasPointer || nodes.length === 0) {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
         animationRef.current = null;
@@ -448,6 +509,7 @@ export function useScienceGraphForceSimulation(
   }, [
     enabled,
     pausedForShellNavigation,
+    pausedForGraphCanvasPointer,
     simulationSignature,
     links,
     repulsionStrength,

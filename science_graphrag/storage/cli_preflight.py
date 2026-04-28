@@ -3,36 +3,20 @@
 from __future__ import annotations
 
 import sys
-from typing import TextIO
+
+from pydantic import ValidationError
 
 from science_graphrag.config import Settings
 
 
-def settings_or_exit_for_object_storage_cli() -> tuple[Settings, int | None]:
+def settings_or_exit_for_object_storage_cli() -> tuple[Settings | None, int | None]:
     """
-    Load settings and validate object storage is enabled.
+    Load settings (S3 credentials are mandatory).
 
-    Returns ``(settings, None)`` on success, or ``(settings, 1)`` when the CLI must exit.
+    Returns ``(settings, None)`` on success, or ``(None, 1)`` when Settings validation fails.
     """
-    settings = Settings()
-    return settings, exit_if_object_storage_disabled(settings)
-
-
-def exit_if_object_storage_disabled(
-    settings: Settings,
-    *,
-    stream: TextIO = sys.stderr,
-) -> int | None:
-    """
-    Return ``1`` if object storage is not enabled (caller should ``sys.exit``).
-
-    Returns ``None`` when OK.
-    """
-    if not settings.object_storage_enabled:
-        # Intentional print: early CLI exit path; project logging may not be configured yet.
-        print(
-            "error: SCIENCE_GRAPHRAG_OBJECT_STORAGE_ENABLED=true required",
-            file=stream,
-        )
-        return 1
-    return None
+    try:
+        return Settings(), None
+    except (ValidationError, ValueError, OSError) as exc:
+        print(f"error: invalid settings ({exc})", file=sys.stderr)
+        return None, 1

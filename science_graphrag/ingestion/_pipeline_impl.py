@@ -255,9 +255,13 @@ def _canonical_diagnostics_rel(source_path: Path) -> Path:
 
 
 def _read_cached_markdown(
-    settings: Settings, source_path: Path, *, document_id: str | None = None
+    settings: Settings,
+    source_path: Path,
+    *,
+    document_id: str | None = None,
+    artifact_store: ArtifactStorePort | None = None,
 ) -> tuple[str, str] | None:
-    store = build_artifact_store(settings)
+    store = artifact_store or build_artifact_store(settings)
     candidate_rels: list[Path] = []
     if document_id:
         candidate_rels.append(canonical_article_md_rel(document_id))

@@ -413,6 +413,9 @@ def test_task_store_remote_full_payload_roundtrip_in_memory(tmp_path: Path) -> N
         run_config={"model_profile": "env_default", "gold_source": "curated_gold"},
     )
     _wait_for_terminal(store, run_id)
+    # Ensure the last _persist_run_snapshot finished before we read disk for restore
+    # (ThreadPoolExecutor callback vs. non-atomic summary write).
+    store._executor.shutdown(wait=True)  # pylint: disable=protected-access
     assert not (hist / f"{run_id}.json").is_file()
     summary = json.loads((hist / f"{run_id}.summary.json").read_text(encoding="utf-8"))
     assert summary.get("full_run_object_key")

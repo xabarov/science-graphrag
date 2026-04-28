@@ -7,7 +7,6 @@ Use this to validate **multi-host ingest** and **S3-backed artifacts** against a
 1. **MinIO (or S3)** reachable; bucket exists or API may create it (`ensure_bucket_exists`).
 2. **Environment** (from repo root, see `.env.example`):
 
-   - `SCIENCE_GRAPHRAG_OBJECT_STORAGE_ENABLED=true`
    - `SCIENCE_GRAPHRAG_S3_ENDPOINT_URL` (e.g. `http://localhost:19000` for compose MinIO)
    - `SCIENCE_GRAPHRAG_S3_ACCESS_KEY_ID` / `SCIENCE_GRAPHRAG_S3_SECRET_ACCESS_KEY`
    - `SCIENCE_GRAPHRAG_S3_BUCKET=science-raw` (or your bucket)

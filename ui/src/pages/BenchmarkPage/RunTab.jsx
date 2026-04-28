@@ -71,6 +71,7 @@ export default function RunTab({ onSwitchToResults, onOpenAnalysisWithGroup }) {
     singleStartDisabled,
     RUN_MODE_GROUPED,
     linkedExperimentId,
+    benchmarkServerStatus,
   } = tab;
 
   const experimentMeta = linkedExperimentId?.trim() ? getExperimentById(linkedExperimentId.trim()) : null;
@@ -180,6 +181,7 @@ export default function RunTab({ onSwitchToResults, onOpenAnalysisWithGroup }) {
 
       <BenchmarkLauncherPanel
         benchmarkFamily={benchmarkFamily}
+        benchmarkServerStatus={benchmarkServerStatus}
         familyPrefs={familyPrefs}
         loadingCases={loadingCases}
         mergeSafeCases={mergeSafeCases}

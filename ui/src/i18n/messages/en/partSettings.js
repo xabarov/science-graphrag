@@ -101,7 +101,9 @@ export default {
   "settings.storage.paths.blobRoot": "Blob root",
   "settings.storage.paths.artifactRoot": "Artifact root",
   "settings.storage.s3.title": "S3 / object storage",
-  "settings.storage.s3.subtitle": "Optional S3-compatible API (e.g. MinIO) for artifacts and exports.",
+  "settings.storage.s3.subtitle": "Required S3-compatible API (e.g. MinIO) for ingest blobs, artifacts, benchmarks, and diagnostics.",
+  "settings.storage.s3.mandatoryNotice":
+    "Object storage is always on: queue payloads, raw blobs, ingest artifacts, full benchmark JSON, and diagnostic dumps use the configured bucket and prefixes.",
   "settings.storage.s3.objectStorageEnabled": "Object storage enabled",
   "settings.storage.s3.endpoint": "S3 endpoint URL",
   "settings.storage.s3.bucket": "Bucket",
@@ -217,4 +219,15 @@ export default {
   "llm.test.model": "Model: {{model}}",
   "llm.test.latency": "Latency: {{ms}} ms",
   "llm.test.testedAt": "Tested: {{at}}",
+
+  "settings.benchmark.title": "Benchmark defaults",
+  "settings.benchmark.desc":
+    "Organization-wide defaults for the benchmark launcher (per API family). Case selection and batch scope stay on the Benchmarks → Run tab.",
+  "settings.benchmark.caseSelectionHint": "Select cases and start runs from",
+  "settings.benchmark.openLaunch": "Benchmarks → Run",
+  "settings.benchmark.save": "Save benchmark defaults",
+  "settings.benchmark.saveError": "Could not save benchmark settings.",
+  "settings.benchmark.family.layer1": "Layer-1",
+  "settings.benchmark.family.layer2": "Layer-2",
+  "settings.benchmark.family.graph": "Graph",
 };

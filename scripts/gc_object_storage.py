@@ -5,7 +5,7 @@
 Uses LastModified from list_objects_v2. For benchmark full.json deletions, optionally
 clears ``full_run_object_key`` in local ``*.summary.json`` under ``data/benchmark_runs``.
 
-Requires SCIENCE_GRAPHRAG_OBJECT_STORAGE_ENABLED and credentials. Use ``--dry-run`` first.
+Requires valid ``SCIENCE_GRAPHRAG_S3_*`` credentials. Use ``--dry-run`` first.
 
 Examples::
 
@@ -91,6 +91,7 @@ def main() -> int:
         settings, err = settings_or_exit_for_object_storage_cli()
         if err is not None:
             return err
+        assert settings is not None
 
         client = build_s3_client(settings)
         bucket = (settings.s3_bucket or "").strip()

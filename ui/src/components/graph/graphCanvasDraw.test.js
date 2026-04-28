@@ -120,8 +120,8 @@ describe("hitTestNodeScreen", () => {
     const nodes = [{ id: "a", label: "A" }];
     const positions = new Map([["a", { x: 100, y: 50 }]]);
     expect(hitTestNodeScreen(100, 50, nodes, positions, transform, null)).toBe("a");
-    expect(hitTestNodeScreen(111, 50, nodes, positions, transform, null)).toBe("a");
-    expect(hitTestNodeScreen(113, 50, nodes, positions, transform, null)).toBe("");
+    expect(hitTestNodeScreen(117, 50, nodes, positions, transform, null)).toBe("a");
+    expect(hitTestNodeScreen(119, 50, nodes, positions, transform, null)).toBe("");
   });
 
   it("prefers top-most overlapping node", () => {
@@ -139,6 +139,7 @@ describe("hitTestNodeScreen", () => {
     const lx = 0;
     const ly = 12 + 4 + 10;
     expect(hitTestNodeScreen(lx, ly, nodes, positions, transform, null)).toBe("n1");
+    expect(hitTestNodeScreen(lx, ly + 8, nodes, positions, transform, null)).toBe("n1");
   });
 
   it("skips label hit target in community dense mode unless selected", () => {

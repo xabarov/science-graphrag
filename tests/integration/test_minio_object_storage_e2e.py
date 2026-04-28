@@ -1,12 +1,10 @@
 """Opt-in live MinIO/S3 probe (not moto).
 
-Set ``SCIENCE_GRAPHRAG_MINIO_E2E=1`` and the same S3 env as production
-(``SCIENCE_GRAPHRAG_OBJECT_STORAGE_ENABLED``, endpoint, keys, bucket).
+Set ``SCIENCE_GRAPHRAG_MINIO_E2E=1`` and the same ``SCIENCE_GRAPHRAG_S3_*`` env as production.
 
 Typical local compose::
 
   export SCIENCE_GRAPHRAG_MINIO_E2E=1
-  export SCIENCE_GRAPHRAG_OBJECT_STORAGE_ENABLED=true
   export SCIENCE_GRAPHRAG_S3_ENDPOINT_URL=http://localhost:19000
   export SCIENCE_GRAPHRAG_S3_USE_SSL=false
   .venv/bin/pytest tests/integration/test_minio_object_storage_e2e.py -q
@@ -37,8 +35,6 @@ def test_put_get_delete_ingest_queue_style_key() -> None:
     clear_s3_client_cache()
     try:
         settings = Settings()
-        if not settings.object_storage_enabled:
-            pytest.skip("SCIENCE_GRAPHRAG_OBJECT_STORAGE_ENABLED=false")
         client = build_s3_client(settings)
         bucket = (settings.s3_bucket or "").strip()
         if not bucket:

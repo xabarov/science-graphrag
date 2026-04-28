@@ -9,8 +9,6 @@ from science_graphrag.storage.s3_client import build_s3_client, ensure_bucket_ex
 def probe_object_storage(settings: Settings) -> None:
     """Head bucket + list (MaxKeys=1). Raises on misconfiguration or network errors."""
 
-    if not settings.object_storage_enabled:
-        return
     client = build_s3_client(settings)
     ensure_bucket_exists(settings, client=client)
     name = (settings.s3_bucket or "").strip()

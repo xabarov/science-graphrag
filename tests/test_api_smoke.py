@@ -17,18 +17,43 @@ from science_graphrag.retrieval import GroundedAnswer
 from science_graphrag.storage.qdrant_store import QdrantChunkStore
 
 
-def _client() -> TestClient:
+def _client(*, graph_neo4j_stub: bool = False) -> TestClient:
     client = TestClient(api_main.app)
 
-    class _FakeNeo4j:
-        def session(self) -> Any:
-            raise RuntimeError("neo4j_unavailable")
+    if graph_neo4j_stub:
+
+        class _GraphNeo4jSession:
+            def __enter__(self) -> "_GraphNeo4jSession":
+                return self
+
+            def __exit__(self, *_args: Any) -> None:
+                return None
+
+            def run(self, *_args: Any, **_kwargs: Any) -> Any:
+                class _R:
+                    def single(self) -> dict[str, str]:
+                        return {"wid": "w1"}
+
+                return _R()
+
+        class _FakeNeo4jGraphStub:
+            def session(self) -> _GraphNeo4jSession:
+                return _GraphNeo4jSession()
+
+        neo: Any = _FakeNeo4jGraphStub()
+    else:
+
+        class _FakeNeo4j:
+            def session(self) -> Any:
+                raise RuntimeError("neo4j_unavailable")
+
+        neo = _FakeNeo4j()
 
     fake_stores = type(
         "_FakeStores",
         (),
         {
-            "neo4j": _FakeNeo4j(),
+            "neo4j": neo,
             "qdrant_chunks": object.__new__(QdrantChunkStore),
             "qdrant_works": object(),
         },
@@ -87,7 +112,7 @@ def test_settings_schema_endpoint_smoke() -> None:
     res = client.get("/v1/settings/schema")
     assert res.status_code == 200
     payload = res.json()
-    assert int(payload["version"]) >= 8
+    assert int(payload["version"]) >= 10
     assert payload["sections"][0]["id"] == "general"
     gen = next(s for s in payload["sections"] if s["id"] == "general")
     assert gen["fields"][0]["id"] == "openalex_mailto"
@@ -104,6 +129,7 @@ def test_settings_schema_endpoint_smoke() -> None:
         assert fid in llm_field_ids
     section_ids = {s["id"] for s in payload["sections"]}
     assert "ingestion" in section_ids
+    assert "benchmark" in section_ids
     ingest = next(s for s in payload["sections"] if s["id"] == "ingestion")
     assert ingest["fields"][0]["id"] == "max_file_size_mb"
     storage = next(s for s in payload["sections"] if s["id"] == "storage")
@@ -154,6 +180,39 @@ def test_settings_snapshot_endpoint_smoke() -> None:
     assert "vl_api_key_explicit_env" in st
     assert "resolved_vl_model" in payload["llm"]["effective"]
     assert "resolved_vl_base_url" in payload["llm"]["effective"]
+    assert "benchmark" in payload
+    assert "layer1" in payload["benchmark"]["by_family"]
+    assert payload["benchmark"]["by_family"]["layer1"]["model_profile"]
+
+
+def test_settings_benchmark_patch_smoke(tmp_path: Path, monkeypatch: Any) -> None:
+    """PATCH /v1/settings/benchmark persists defaults for benchmark launcher."""
+    from science_graphrag.api import settings as settings_api
+    from science_graphrag.settings.repository import SettingsRepository
+    from science_graphrag.settings.secrets import SecretStore
+    from science_graphrag.settings.service import SettingsService
+
+    service = SettingsService(
+        repo_root=tmp_path,
+        repository=SettingsRepository(tmp_path),
+        secret_store=SecretStore(tmp_path),
+    )
+    monkeypatch.setattr(settings_api, "_SETTINGS_SERVICE", service)
+    client = _client()
+    res = client.patch(
+        "/v1/settings/benchmark",
+        json={
+            "by_family": {
+                "layer1": {
+                    "gold_source": "teacher_gold",
+                    "threshold_profile": "student_mistral",
+                }
+            }
+        },
+    )
+    assert res.status_code == 200
+    payload = res.json()
+    assert payload["benchmark"]["by_family"]["layer1"]["gold_source"] == "teacher_gold"
 
 
 def test_settings_service_llm_snapshot_env_secret_only(tmp_path: Path) -> None:
@@ -785,7 +844,7 @@ def test_work_detail_graph_chunks_smoke(monkeypatch: Any) -> None:
     monkeypatch.setattr(works_router_mod, "work_chunks", _fake_work_chunks)
     monkeypatch.setattr(works_router_mod, "work_graph_neighborhood", _fake_work_graph_neighborhood)
     monkeypatch.setattr(works_router_mod, "list_work_claims", lambda *_a, **_k: [])
-    client = _client()
+    client = _client(graph_neo4j_stub=True)
 
     detail = client.get("/v1/works/w1")
     assert detail.status_code == 200

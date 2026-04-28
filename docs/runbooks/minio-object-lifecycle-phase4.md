@@ -67,4 +67,4 @@ For selective deletes, tagging filters, or clearing `full_run_object_key` in loc
 
 Prefer **`--dry-run`** first.
 
-Exit codes for `scripts/gc_object_storage.py`: **0** success, **1** misconfiguration (object storage off), **2** S3 reported `delete_objects` errors (see stderr JSON `delete_errors`).
+Exit codes for `scripts/gc_object_storage.py`: **0** success, **1** misconfiguration (invalid Settings / S3), **2** S3 reported `delete_objects` errors (see stderr JSON `delete_errors`).

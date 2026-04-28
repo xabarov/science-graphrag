@@ -1,4 +1,4 @@
-"""Write heavy diagnostic JSON/JSONL to local data dir or S3 (Phase 3 CLI / eval)."""
+"""Write heavy diagnostic JSON/JSONL to S3/MinIO (CLI / eval)."""
 
 from __future__ import annotations
 
@@ -47,9 +47,7 @@ def write_diagnostic_bytes(
     """
     Persist diagnostic payload.
 
-    When ``diagnostics_object_storage`` and ``object_storage_enabled`` are true, uploads to S3
-    under ``s3_diagnostics_key_prefix`` and returns ``{"storage": "s3", "key": ...}``.
-    Otherwise writes to ``local_path`` or ``data/diagnostics/<kind>/<filename>``.
+    Uploads to S3 under ``s3_diagnostics_key_prefix`` and returns ``{"storage": "s3", "key": ...}``.
     """
     name = (
         ((local_path.name if local_path else filename) or "artifact.bin")
@@ -57,35 +55,29 @@ def write_diagnostic_bytes(
         .replace("\\", "/")
         .rsplit("/", maxsplit=1)[-1]
     )
-    if settings.diagnostics_object_storage and settings.object_storage_enabled:
-        from science_graphrag.storage.s3_client import (  # pylint: disable=import-outside-toplevel
-            build_s3_client,
-            ensure_bucket_exists,
-        )
+    from science_graphrag.storage.s3_client import (  # pylint: disable=import-outside-toplevel
+        build_s3_client,
+        ensure_bucket_exists,
+    )
 
-        client = build_s3_client(settings)
-        ensure_bucket_exists(settings, client=client)
-        prefix = (settings.s3_diagnostics_key_prefix or "science-diagnostics").strip()
-        sub = str(kind)
-        key = od_diagnostics_object_key(name, prefix=prefix, subdir=sub)
-        extra: dict[str, Any] = {}
-        if content_type:
-            extra["ContentType"] = content_type
-        hint = getattr(settings, "object_storage_diagnostics_retention_days", 0) or 0
-        extra.update(
-            s3_put_object_retention_kwargs(
-                RetentionClass.EPHEMERAL_DIAGNOSTIC,
-                diagnostic_kind=sub,
-                retention_hint_days=int(hint) if hint > 0 else None,
-            )
+    client = build_s3_client(settings)
+    ensure_bucket_exists(settings, client=client)
+    prefix = (settings.s3_diagnostics_key_prefix or "science-diagnostics").strip()
+    sub = str(kind)
+    key = od_diagnostics_object_key(name, prefix=prefix, subdir=sub)
+    extra: dict[str, Any] = {}
+    if content_type:
+        extra["ContentType"] = content_type
+    hint = getattr(settings, "object_storage_diagnostics_retention_days", 0) or 0
+    extra.update(
+        s3_put_object_retention_kwargs(
+            RetentionClass.EPHEMERAL_DIAGNOSTIC,
+            diagnostic_kind=sub,
+            retention_hint_days=int(hint) if hint > 0 else None,
         )
-        client.put_object(Bucket=settings.s3_bucket, Key=key, Body=data, **extra)
-        return {"storage": "s3", "key": key, "bucket": settings.s3_bucket}
-
-    path = local_path if local_path is not None else default_local_diagnostics_dir(kind) / name
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(data)
-    return {"storage": "local", "path": str(path.resolve())}
+    )
+    client.put_object(Bucket=settings.s3_bucket, Key=key, Body=data, **extra)
+    return {"storage": "s3", "key": key, "bucket": settings.s3_bucket}
 
 
 def write_diagnostic_json(
@@ -155,15 +147,8 @@ def write_diagnostic_jsonl_line(
     append: bool = True,
     local_path: Path | None = None,
 ) -> dict[str, Any]:
-    """Append one JSONL line (local append; S3 rewrites whole object — avoid huge files)."""
+    """Append one JSONL line (S3 read-modify-write — avoid huge files)."""
+    del append  # API compat; S3 path always rewrites merged object
     line = json.dumps(row, default=str) + "\n"
-    if settings.diagnostics_object_storage and settings.object_storage_enabled:
-        leaf = (local_path.name if local_path else filename) or "artifact.jsonl"
-        return _append_diagnostic_jsonl_s3(settings, kind=kind, leaf=leaf, line=line)
-
-    path = local_path if local_path is not None else default_local_diagnostics_dir(kind) / filename
-    path.parent.mkdir(parents=True, exist_ok=True)
-    mode = "a" if append and path.is_file() else "w"
-    with path.open(mode, encoding="utf-8") as fh:
-        fh.write(line)
-    return {"storage": "local", "path": str(path.resolve())}
+    leaf = (local_path.name if local_path else filename) or "artifact.jsonl"
+    return _append_diagnostic_jsonl_s3(settings, kind=kind, leaf=leaf, line=line)

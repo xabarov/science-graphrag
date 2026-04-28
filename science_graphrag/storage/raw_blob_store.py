@@ -88,14 +88,12 @@ class S3RawBlobStore:
 
 
 def build_raw_blob_store(settings: Settings) -> RawBlobStorePort:
-    """Return local ``BlobStore`` wrapper or S3-backed raw store."""
-    if settings.object_storage_enabled:
-        from science_graphrag.storage.s3_client import (  # pylint: disable=import-outside-toplevel
-            build_s3_client,
-            ensure_bucket_exists,
-        )
+    """Return S3-backed raw blob store (legacy on-disk blobs remain readable as migration path)."""
+    from science_graphrag.storage.s3_client import (  # pylint: disable=import-outside-toplevel
+        build_s3_client,
+        ensure_bucket_exists,
+    )
 
-        client = build_s3_client(settings)
-        ensure_bucket_exists(settings, client=client)
-        return S3RawBlobStore(client, settings.s3_bucket, settings.blob_root)
-    return LocalRawBlobStore(settings.blob_root)
+    client = build_s3_client(settings)
+    ensure_bucket_exists(settings, client=client)
+    return S3RawBlobStore(client, settings.s3_bucket, settings.blob_root)

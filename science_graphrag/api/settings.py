@@ -12,17 +12,33 @@ from science_graphrag.api.settings_models import (
     SettingsSchemaResponse,
     SettingsSnapshotResponse,
     TestLlmConnectionRequest,
+    UpdateBenchmarkSettingsRequest,
     UpdateGeneralSettingsRequest,
     UpdateIngestionSettingsRequest,
     UpdateLlmSettingsRequest,
     UpdateStorageSettingsRequest,
 )
 from science_graphrag.config import get_settings
-from science_graphrag.settings.service import LlmTestDraft, SettingsService
+from science_graphrag.settings.service import LlmTestDraft, SettingsService, SettingsSnapshot
 
 router = APIRouter(prefix="/settings", tags=["settings"])
 
 _SETTINGS_SERVICE = SettingsService(repo_root=Path(__file__).resolve().parents[2])
+
+
+def _settings_snapshot_response(snapshot: SettingsSnapshot) -> SettingsSnapshotResponse:
+    """Map service snapshot dataclass to API response (single place for new snapshot fields)."""
+    return SettingsSnapshotResponse(
+        sections=snapshot.sections,
+        llm=snapshot.llm,
+        ingestion=snapshot.ingestion,
+        general=snapshot.general,
+        storage=snapshot.storage,
+        benchmark=snapshot.benchmark,
+        diagnostics=snapshot.diagnostics,
+        security=snapshot.security,
+        work_dedup=snapshot.work_dedup,
+    )
 
 
 @router.get("/schema", response_model=SettingsSchemaResponse)
@@ -33,16 +49,7 @@ def get_settings_schema(_: str = Depends(require_settings_access)) -> SettingsSc
 @router.get("", response_model=SettingsSnapshotResponse)
 def get_settings_snapshot(_: str = Depends(require_settings_access)) -> SettingsSnapshotResponse:
     snapshot = _SETTINGS_SERVICE.get_snapshot(get_settings())
-    return SettingsSnapshotResponse(
-        sections=snapshot.sections,
-        llm=snapshot.llm,
-        ingestion=snapshot.ingestion,
-        general=snapshot.general,
-        storage=snapshot.storage,
-        diagnostics=snapshot.diagnostics,
-        security=snapshot.security,
-        work_dedup=snapshot.work_dedup,
-    )
+    return _settings_snapshot_response(snapshot)
 
 
 @router.patch("/llm", response_model=SettingsSnapshotResponse)
@@ -74,16 +81,7 @@ def patch_llm_settings(
         snapshot = _SETTINGS_SERVICE.update_llm_settings(**kwargs)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    return SettingsSnapshotResponse(
-        sections=snapshot.sections,
-        llm=snapshot.llm,
-        ingestion=snapshot.ingestion,
-        general=snapshot.general,
-        storage=snapshot.storage,
-        diagnostics=snapshot.diagnostics,
-        security=snapshot.security,
-        work_dedup=snapshot.work_dedup,
-    )
+    return _settings_snapshot_response(snapshot)
 
 
 @router.patch("/ingestion", response_model=SettingsSnapshotResponse)
@@ -97,16 +95,7 @@ def patch_ingestion_settings(
         body.claims_extraction_enabled,
         actor,
     )
-    return SettingsSnapshotResponse(
-        sections=snapshot.sections,
-        llm=snapshot.llm,
-        ingestion=snapshot.ingestion,
-        general=snapshot.general,
-        storage=snapshot.storage,
-        diagnostics=snapshot.diagnostics,
-        security=snapshot.security,
-        work_dedup=snapshot.work_dedup,
-    )
+    return _settings_snapshot_response(snapshot)
 
 
 @router.patch("/general", response_model=SettingsSnapshotResponse)
@@ -122,16 +111,7 @@ def patch_general_settings(
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    return SettingsSnapshotResponse(
-        sections=snapshot.sections,
-        llm=snapshot.llm,
-        ingestion=snapshot.ingestion,
-        general=snapshot.general,
-        storage=snapshot.storage,
-        diagnostics=snapshot.diagnostics,
-        security=snapshot.security,
-        work_dedup=snapshot.work_dedup,
-    )
+    return _settings_snapshot_response(snapshot)
 
 
 @router.patch("/storage", response_model=SettingsSnapshotResponse)
@@ -148,32 +128,33 @@ def patch_storage_settings(
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    return SettingsSnapshotResponse(
-        sections=snapshot.sections,
-        llm=snapshot.llm,
-        ingestion=snapshot.ingestion,
-        general=snapshot.general,
-        storage=snapshot.storage,
-        diagnostics=snapshot.diagnostics,
-        security=snapshot.security,
-        work_dedup=snapshot.work_dedup,
-    )
+    return _settings_snapshot_response(snapshot)
+
+
+@router.patch("/benchmark", response_model=SettingsSnapshotResponse)
+def patch_benchmark_settings(
+    body: UpdateBenchmarkSettingsRequest,
+    actor: str = Depends(require_settings_access),
+) -> SettingsSnapshotResponse:
+    by_family: dict[str, dict[str, Any]] = {}
+    for fam_key, prefs in body.by_family.items():
+        by_family[fam_key] = prefs.model_dump(exclude_unset=True)
+    try:
+        snapshot = _SETTINGS_SERVICE.update_benchmark_settings(
+            base_settings=get_settings(),
+            actor=actor,
+            by_family=by_family,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return _settings_snapshot_response(snapshot)
 
 
 @router.delete("/llm/secret", response_model=SettingsSnapshotResponse)
 def delete_llm_secret(actor: str = Depends(require_settings_access)) -> SettingsSnapshotResponse:
     del actor
     snapshot = _SETTINGS_SERVICE.delete_llm_secret(base_settings=get_settings())
-    return SettingsSnapshotResponse(
-        sections=snapshot.sections,
-        llm=snapshot.llm,
-        ingestion=snapshot.ingestion,
-        general=snapshot.general,
-        storage=snapshot.storage,
-        diagnostics=snapshot.diagnostics,
-        security=snapshot.security,
-        work_dedup=snapshot.work_dedup,
-    )
+    return _settings_snapshot_response(snapshot)
 
 
 @router.post("/llm/test")

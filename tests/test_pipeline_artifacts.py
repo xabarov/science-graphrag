@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from science_graphrag.artifacts.local_store import LocalFilesystemArtifactStore
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.pipeline import (
     _canonical_article_rel,
@@ -11,6 +12,7 @@ from science_graphrag.ingestion.pipeline import (
 def test_write_markdown_artifact_also_updates_canonical_article(tmp_path: Path):
     settings = Settings.model_construct(artifact_root=tmp_path)
     source = Path("/tmp/YOLOv1.pdf")
+    store = LocalFilesystemArtifactStore(tmp_path)
 
     run_path = _write_markdown_artifact(
         settings=settings,
@@ -18,6 +20,7 @@ def test_write_markdown_artifact_also_updates_canonical_article(tmp_path: Path):
         source_path=source,
         markdown="# Title\n\nBody",
         extraction_mode="vl",
+        artifact_store=store,
     )
 
     canonical = tmp_path / _canonical_article_rel(source)
@@ -35,7 +38,8 @@ def test_read_cached_markdown_prefers_canonical_article(tmp_path: Path):
         "<!-- source=YOLOv1.pdf extraction_mode=vl -->\n\n# Cached Title\n\nCached body",
         encoding="utf-8",
     )
+    store = LocalFilesystemArtifactStore(tmp_path)
 
-    cached = _read_cached_markdown(settings, source)
+    cached = _read_cached_markdown(settings, source, artifact_store=store)
 
     assert cached == ("# Cached Title\n\nCached body", "vl")

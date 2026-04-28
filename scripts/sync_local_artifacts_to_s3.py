@@ -3,7 +3,7 @@
 Upload an existing local ``artifact_root`` tree into S3/MinIO (Phase 2 ingest artifacts).
 
 Prerequisites:
-  - ``SCIENCE_GRAPHRAG_OBJECT_STORAGE_ENABLED=true`` and valid S3 settings in the environment.
+  - Valid ``SCIENCE_GRAPHRAG_S3_*`` credentials and bucket in the environment.
   - Bucket exists (``science-graphrag`` API lifespan or ``ensure_bucket_exists`` equivalent).
 
 Rollout order (recommended):
@@ -44,12 +44,6 @@ def main() -> int:
     from science_graphrag.storage.s3_client import build_s3_client, ensure_bucket_exists
 
     settings = Settings()
-    if not settings.object_storage_enabled:
-        print(
-            "error: SCIENCE_GRAPHRAG_OBJECT_STORAGE_ENABLED must be true for S3 upload.",
-            file=sys.stderr,
-        )
-        return 1
 
     root = Path(args.artifact_root or settings.artifact_root).resolve()
     if not root.is_dir():

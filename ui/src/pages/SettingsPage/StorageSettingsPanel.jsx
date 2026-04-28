@@ -116,7 +116,6 @@ export default function StorageSettingsPanel({ storage, saving, saveError, onSav
   const [blobRoot, setBlobRoot] = useState("");
   const [artifactRoot, setArtifactRoot] = useState("");
 
-  const [objectStorageEnabled, setObjectStorageEnabled] = useState(false);
   const [s3EndpointUrl, setS3EndpointUrl] = useState("");
   const [s3Bucket, setS3Bucket] = useState("");
   const [s3UseSsl, setS3UseSsl] = useState(true);
@@ -125,8 +124,6 @@ export default function StorageSettingsPanel({ storage, saving, saveError, onSav
   const [s3AccessKeyId, setS3AccessKeyId] = useState("");
   const [s3SecretAccessKey, setS3SecretAccessKey] = useState("");
   const [clearS3Secret, setClearS3Secret] = useState(false);
-  const [benchmarkRunsObjectStorage, setBenchmarkRunsObjectStorage] = useState(false);
-  const [diagnosticsObjectStorage, setDiagnosticsObjectStorage] = useState(false);
   const [s3BenchmarkRunsKeyPrefix, setS3BenchmarkRunsKeyPrefix] = useState("");
   const [s3DiagnosticsKeyPrefix, setS3DiagnosticsKeyPrefix] = useState("");
 
@@ -148,7 +145,6 @@ export default function StorageSettingsPanel({ storage, saving, saveError, onSav
     setRedisUrl(strEff(storage, "redis.redis_url.effective"));
     setBlobRoot(strEff(storage, "paths.blob_root.effective"));
     setArtifactRoot(strEff(storage, "paths.artifact_root.effective"));
-    setObjectStorageEnabled(boolEff(storage, "s3.object_storage_enabled.effective"));
     setS3EndpointUrl(strEff(storage, "s3.s3_endpoint_url.effective"));
     setS3Bucket(strEff(storage, "s3.s3_bucket.effective"));
     setS3UseSsl(boolEff(storage, "s3.s3_use_ssl.effective"));
@@ -158,8 +154,6 @@ export default function StorageSettingsPanel({ storage, saving, saveError, onSav
     setS3AccessKeyId(strEff(storage, "s3.s3_access_key_id.effective"));
     setS3SecretAccessKey("");
     setClearS3Secret(false);
-    setBenchmarkRunsObjectStorage(boolEff(storage, "s3.benchmark_runs_object_storage.effective"));
-    setDiagnosticsObjectStorage(boolEff(storage, "s3.diagnostics_object_storage.effective"));
     setS3BenchmarkRunsKeyPrefix(strEff(storage, "s3.s3_benchmark_runs_key_prefix.effective"));
     setS3DiagnosticsKeyPrefix(strEff(storage, "s3.s3_diagnostics_key_prefix.effective"));
     /* eslint-enable react-hooks/set-state-in-effect */
@@ -178,15 +172,12 @@ export default function StorageSettingsPanel({ storage, saving, saveError, onSav
       redisUrl: strEff(storage, "redis.redis_url.effective"),
       blobRoot: strEff(storage, "paths.blob_root.effective"),
       artifactRoot: strEff(storage, "paths.artifact_root.effective"),
-      objectStorageEnabled: boolEff(storage, "s3.object_storage_enabled.effective"),
       s3EndpointUrl: strEff(storage, "s3.s3_endpoint_url.effective"),
       s3Bucket: strEff(storage, "s3.s3_bucket.effective"),
       s3UseSsl: boolEff(storage, "s3.s3_use_ssl.effective"),
       s3AddressingStyle: strEff(storage, "s3.s3_addressing_style.effective") === "virtual" ? "virtual" : "path",
       s3ArtifactKeyPrefix: strEff(storage, "s3.s3_artifact_key_prefix.effective"),
       s3AccessKeyId: strEff(storage, "s3.s3_access_key_id.effective"),
-      benchmarkRunsObjectStorage: boolEff(storage, "s3.benchmark_runs_object_storage.effective"),
-      diagnosticsObjectStorage: boolEff(storage, "s3.diagnostics_object_storage.effective"),
       s3BenchmarkRunsKeyPrefix: strEff(storage, "s3.s3_benchmark_runs_key_prefix.effective"),
       s3DiagnosticsKeyPrefix: strEff(storage, "s3.s3_diagnostics_key_prefix.effective"),
     };
@@ -205,15 +196,12 @@ export default function StorageSettingsPanel({ storage, saving, saveError, onSav
       redisUrl !== baseline.redisUrl ||
       blobRoot !== baseline.blobRoot ||
       artifactRoot !== baseline.artifactRoot ||
-      objectStorageEnabled !== baseline.objectStorageEnabled ||
       s3EndpointUrl !== baseline.s3EndpointUrl ||
       s3Bucket !== baseline.s3Bucket ||
       s3UseSsl !== baseline.s3UseSsl ||
       s3AddressingStyle !== baseline.s3AddressingStyle ||
       s3ArtifactKeyPrefix !== baseline.s3ArtifactKeyPrefix ||
       s3AccessKeyId !== baseline.s3AccessKeyId ||
-      benchmarkRunsObjectStorage !== baseline.benchmarkRunsObjectStorage ||
-      diagnosticsObjectStorage !== baseline.diagnosticsObjectStorage ||
       s3BenchmarkRunsKeyPrefix !== baseline.s3BenchmarkRunsKeyPrefix ||
       s3DiagnosticsKeyPrefix !== baseline.s3DiagnosticsKeyPrefix;
     const secretDirty =
@@ -240,7 +228,6 @@ export default function StorageSettingsPanel({ storage, saving, saveError, onSav
     redisUrl,
     blobRoot,
     artifactRoot,
-    objectStorageEnabled,
     s3EndpointUrl,
     s3Bucket,
     s3UseSsl,
@@ -249,8 +236,6 @@ export default function StorageSettingsPanel({ storage, saving, saveError, onSav
     s3AccessKeyId,
     s3SecretAccessKey,
     clearS3Secret,
-    benchmarkRunsObjectStorage,
-    diagnosticsObjectStorage,
     s3BenchmarkRunsKeyPrefix,
     s3DiagnosticsKeyPrefix,
   ]);
@@ -285,7 +270,6 @@ export default function StorageSettingsPanel({ storage, saving, saveError, onSav
     if (blobRoot !== baseline.blobRoot) payload.blob_root = blobRoot.trim();
     if (artifactRoot !== baseline.artifactRoot) payload.artifact_root = artifactRoot.trim();
 
-    if (objectStorageEnabled !== baseline.objectStorageEnabled) payload.object_storage_enabled = objectStorageEnabled;
     if (s3EndpointUrl !== baseline.s3EndpointUrl) payload.s3_endpoint_url = s3EndpointUrl.trim();
     if (s3Bucket !== baseline.s3Bucket) payload.s3_bucket = s3Bucket.trim();
     if (s3UseSsl !== baseline.s3UseSsl) payload.s3_use_ssl = s3UseSsl;
@@ -295,10 +279,6 @@ export default function StorageSettingsPanel({ storage, saving, saveError, onSav
     if (clearS3Secret) payload.s3_secret_access_key = "";
     else if (s3SecretAccessKey.trim()) payload.s3_secret_access_key = s3SecretAccessKey.trim();
 
-    if (benchmarkRunsObjectStorage !== baseline.benchmarkRunsObjectStorage)
-      payload.benchmark_runs_object_storage = benchmarkRunsObjectStorage;
-    if (diagnosticsObjectStorage !== baseline.diagnosticsObjectStorage)
-      payload.diagnostics_object_storage = diagnosticsObjectStorage;
     if (s3BenchmarkRunsKeyPrefix !== baseline.s3BenchmarkRunsKeyPrefix)
       payload.s3_benchmark_runs_key_prefix = s3BenchmarkRunsKeyPrefix.trim();
     if (s3DiagnosticsKeyPrefix !== baseline.s3DiagnosticsKeyPrefix)
@@ -524,10 +504,9 @@ export default function StorageSettingsPanel({ storage, saving, saveError, onSav
         title={t("settings.storage.s3.title")}
         subtitle={t("settings.storage.s3.subtitle")}
       >
-        <FormControlLabel
-          control={<Switch checked={objectStorageEnabled} onChange={(e) => setObjectStorageEnabled(e.target.checked)} />}
-          label={<Typography sx={{ fontSize: "0.8125rem" }}>{t("settings.storage.s3.objectStorageEnabled")}</Typography>}
-        />
+        <Alert severity="info" sx={alertMutedSx}>
+          <Typography sx={{ fontSize: "0.8125rem", lineHeight: 1.6 }}>{t("settings.storage.s3.mandatoryNotice")}</Typography>
+        </Alert>
         <TextField
           margin="normal"
           fullWidth
@@ -603,20 +582,6 @@ export default function StorageSettingsPanel({ storage, saving, saveError, onSav
             />
           }
           label={<Typography sx={{ fontSize: "0.8125rem" }}>{t("settings.storage.secret.clearUseEnv")}</Typography>}
-        />
-        <FormControlLabel
-          control={
-            <Switch checked={benchmarkRunsObjectStorage} onChange={(e) => setBenchmarkRunsObjectStorage(e.target.checked)} />
-          }
-          label={
-            <Typography sx={{ fontSize: "0.8125rem" }}>{t("settings.storage.s3.benchmarkRunsObjectStorage")}</Typography>
-          }
-        />
-        <FormControlLabel
-          control={
-            <Switch checked={diagnosticsObjectStorage} onChange={(e) => setDiagnosticsObjectStorage(e.target.checked)} />
-          }
-          label={<Typography sx={{ fontSize: "0.8125rem" }}>{t("settings.storage.s3.diagnosticsObjectStorage")}</Typography>}
         />
         <TextField
           margin="normal"

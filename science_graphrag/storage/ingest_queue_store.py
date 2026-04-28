@@ -87,14 +87,12 @@ class S3IngestQueueStore:
 
 
 def build_ingest_queue_store(settings: Settings) -> IngestQueueStorePort:
-    """Return local or S3-backed ingest queue store from settings."""
-    if settings.object_storage_enabled:
-        from science_graphrag.storage.s3_client import (  # pylint: disable=import-outside-toplevel
-            build_s3_client,
-            ensure_bucket_exists,
-        )
+    """Return S3-backed ingest queue store (MinIO or AWS S3-compatible API)."""
+    from science_graphrag.storage.s3_client import (  # pylint: disable=import-outside-toplevel
+        build_s3_client,
+        ensure_bucket_exists,
+    )
 
-        client = build_s3_client(settings)
-        ensure_bucket_exists(settings, client=client)
-        return S3IngestQueueStore(client, settings.s3_bucket)
-    return LocalIngestQueueStore(settings.blob_root)
+    client = build_s3_client(settings)
+    ensure_bucket_exists(settings, client=client)
+    return S3IngestQueueStore(client, settings.s3_bucket)

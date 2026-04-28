@@ -26,9 +26,12 @@ const LABEL_FONT =
 const EDGE_LABEL_FONT =
   '400 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif';
 const NODE_RADIUS = 12;
+const NODE_HIT_RADIUS = 18;
 const ARROW_HEAD_LEN = 7;
 const ARROW_HEAD_HW = 4;
 const EDGE_HOVER_THRESHOLD_PX = 8;
+const NODE_LABEL_HIT_PADDING_X = 10;
+const NODE_LABEL_HIT_PADDING_Y = 8;
 
 /**
  * When edge count exceeds this or scale is below {@link EDGE_LABEL_ADAPTIVE_MIN_SCALE},
@@ -392,7 +395,7 @@ export function hitTestNodeScreen(lx, ly, nodes, positions, transform, resolveNo
     const p = worldToScreen(pw.x, pw.y, scale, tx, ty);
     const cdx = lx - p.x;
     const cdy = ly - p.y;
-    if (cdx * cdx + cdy * cdy <= NODE_RADIUS * NODE_RADIUS) return String(node.id);
+    if (cdx * cdx + cdy * cdy <= NODE_HIT_RADIUS * NODE_HIT_RADIUS) return String(node.id);
     const sid = String(node.id || "");
     const styleEntry = {
       selected: sid === selectedNodeId,
@@ -427,7 +430,14 @@ export function hitTestNodeScreen(lx, ly, nodes, positions, transform, resolveNo
     const boxH = 20;
     const boxTop = p.y + NODE_RADIUS + 4;
     const boxLeft = p.x - boxW / 2;
-    if (lx >= boxLeft && lx <= boxLeft + boxW && ly >= boxTop && ly <= boxTop + boxH) return String(node.id);
+    if (
+      lx >= boxLeft - NODE_LABEL_HIT_PADDING_X &&
+      lx <= boxLeft + boxW + NODE_LABEL_HIT_PADDING_X &&
+      ly >= boxTop - NODE_LABEL_HIT_PADDING_Y &&
+      ly <= boxTop + boxH + NODE_LABEL_HIT_PADDING_Y
+    ) {
+      return String(node.id);
+    }
   }
   return "";
 }

@@ -33,12 +33,10 @@ from science_graphrag.storage.s3_client import clear_s3_client_cache
 def _os_settings(**kwargs: object) -> Settings:
     """Minimal Settings for moto S3 tests."""
     return Settings(
-        object_storage_enabled=True,
         s3_access_key_id="testing",
         s3_secret_access_key="testing",
         s3_bucket="science-raw",
         s3_endpoint_url=None,
-        diagnostics_object_storage=True,
         object_storage_diagnostics_retention_days=14,
         object_storage_benchmark_full_retention_days=30,
         **kwargs,  # type: ignore[arg-type]

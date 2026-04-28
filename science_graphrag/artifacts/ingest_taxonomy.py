@@ -2,7 +2,7 @@
 
 Document-scoped markdown lives under ``artifact_root`` with deterministic relative segments
 defined by ``canonical_*_md_rel`` helpers. Phase 0 keeps path construction in one module and
-uses ``LocalFilesystemArtifactStore`` for I/O at call sites.
+uses ``ArtifactStorePort`` (S3 with local mirror) for I/O at call sites.
 """
 
 from __future__ import annotations

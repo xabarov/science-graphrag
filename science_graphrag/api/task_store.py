@@ -3,8 +3,7 @@
 Persisted run JSON paths match ``science_graphrag.artifacts.run_layout`` /
 ``RUN_HISTORY_DESCRIPTOR`` (``data/benchmark_runs``, legacy ``data/benchmark_run_history``).
 
-Full run payloads may live in S3 when ``SCIENCE_GRAPHRAG_BENCHMARK_RUNS_OBJECT_STORAGE`` is enabled;
-compact ``*.summary.json`` files remain on local disk.
+Full run payloads are stored in S3; compact ``*.summary.json`` files remain on local disk.
 
 This module provides a minimal background execution layer for the UI:
 - create a run (set of case_ids)
@@ -80,6 +79,7 @@ class BenchmarkTaskStore:
         self._layer1_runner = layer1_runner
         self._layer2_runner = layer2_runner
         hist = self._history_dir()
+        # Avoid S3/network at module import: default local; API lifespan attaches S3 from StoreRegistry.
         self._persistence = persistence or LocalBenchmarkRunPersistence(hist)
         self._load_persisted_runs()
 

@@ -21,6 +21,10 @@ class SettingsSnapshotResponse(BaseModel):
         default_factory=dict,
         description="Neo4j, Qdrant, Postgres, Redis, paths, and S3 integration (masked secrets).",
     )
+    benchmark: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Per-family benchmark launcher defaults (model profile, gold, thresholds, API hints).",
+    )
     diagnostics: dict[str, Any] = Field(default_factory=dict)
     security: dict[str, Any] = Field(default_factory=dict)
     work_dedup: dict[str, Any] = Field(
@@ -117,7 +121,6 @@ class UpdateStorageSettingsRequest(BaseModel):
     redis_url: str | None = Field(default=None, max_length=512)
     blob_root: str | None = Field(default=None, max_length=1024)
     artifact_root: str | None = Field(default=None, max_length=1024)
-    object_storage_enabled: bool | None = None
     s3_endpoint_url: str | None = Field(default=None, max_length=512)
     s3_bucket: str | None = Field(default=None, max_length=256)
     s3_use_ssl: bool | None = None
@@ -125,7 +128,27 @@ class UpdateStorageSettingsRequest(BaseModel):
     s3_artifact_key_prefix: str | None = Field(default=None, max_length=512)
     s3_access_key_id: str | None = Field(default=None, max_length=256)
     s3_secret_access_key: str | None = Field(default=None, max_length=2048)
-    benchmark_runs_object_storage: bool | None = None
-    diagnostics_object_storage: bool | None = None
     s3_benchmark_runs_key_prefix: str | None = Field(default=None, max_length=512)
     s3_diagnostics_key_prefix: str | None = Field(default=None, max_length=512)
+
+
+class BenchmarkFamilyPrefsUpdate(BaseModel):
+    """Partial benchmark defaults for one family; unset fields keep previous persisted values."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    model_profile: str | None = Field(default=None, max_length=256)
+    custom_model_id: str | None = Field(default=None, max_length=256)
+    gold_source: str | None = Field(default=None, max_length=64)
+    threshold_profile: str | None = Field(default=None, max_length=64)
+    base_url_override: str | None = Field(default=None, max_length=512)
+    api_key_env_name: str | None = Field(default=None, max_length=256)
+
+
+class UpdateBenchmarkSettingsRequest(BaseModel):
+    """PATCH body: only include families you want to update."""
+
+    by_family: dict[str, BenchmarkFamilyPrefsUpdate] = Field(
+        default_factory=dict,
+        description="Keys: layer1 | layer2 | graph; values are partial field maps (snake_case).",
+    )

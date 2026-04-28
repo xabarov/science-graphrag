@@ -65,7 +65,6 @@ def test_build_stores_from_settings(tmp_path: Path) -> None:
     boto3.client("s3", region_name="us-east-1").create_bucket(Bucket="science-raw")
     clear_s3_client_cache()
     settings = Settings(
-        object_storage_enabled=True,
         s3_endpoint_url=None,
         s3_access_key_id="testing",
         s3_secret_access_key="testing",
@@ -139,7 +138,6 @@ def test_build_artifact_store_s3_writes_bucket(tmp_path: Path) -> None:
     boto3.client("s3", region_name="us-east-1").create_bucket(Bucket="science-raw")
     clear_s3_client_cache()
     settings = Settings(
-        object_storage_enabled=True,
         s3_endpoint_url=None,
         s3_access_key_id="testing",
         s3_secret_access_key="testing",

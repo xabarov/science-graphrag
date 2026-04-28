@@ -1,1 +1,0 @@
-function o(){const e={};let t="";try{const i=window.localStorage.getItem("science-graphrag:adminApiKey:v1");i&&String(i).trim()&&(t=String(i).trim())}catch{}t&&(e["X-Admin-Key"]=t);const n=window.localStorage.getItem("access_token")||window.localStorage.getItem("token");return n&&(e.Authorization=`Bearer ${n}`),e}export{o as b};

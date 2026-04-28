@@ -3,7 +3,7 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
@@ -15,6 +15,7 @@ import GeneralSettingsPanel from "./SettingsPage/GeneralSettingsPanel.jsx";
 import LlmSettingsPanel from "./SettingsPage/LlmSettingsPanel.jsx";
 import SecuritySettingsPanel from "./SettingsPage/SecuritySettingsPanel.jsx";
 import StorageSettingsPanel from "./SettingsPage/StorageSettingsPanel.jsx";
+import BenchmarkSettingsPanel from "./SettingsPage/BenchmarkSettingsPanel.jsx";
 import SettingsLayout from "./SettingsPage/SettingsLayout.jsx";
 import {
   deleteLlmSecret,
@@ -25,6 +26,7 @@ import {
   updateIngestionSettings,
   updateLlmSettings,
   updateStorageSettings,
+  updateBenchmarkSettings,
 } from "./SettingsPage/settingsApi.js";
 import { formatResearchApiError } from "../services/researchApi.js";
 import { useI18n } from "../i18n/useI18n.js";
@@ -51,6 +53,8 @@ function PlaceholderSection({ title, description }) {
 export default function SettingsPage() {
   const { t } = useI18n();
   const tk = useTheme().appTokens;
+  const [searchParams] = useSearchParams();
+  const settingsUrlSearchKey = searchParams.toString();
   const [snapshot, setSnapshot] = useState(null);
   const [schema, setSchema] = useState(null);
   const [activeSectionId, setActiveSectionId] = useState("llm");
@@ -70,6 +74,9 @@ export default function SettingsPage() {
   const [storageDirty, setStorageDirty] = useState(false);
   const [storageSaveError, setStorageSaveError] = useState("");
   const [storageSaving, setStorageSaving] = useState(false);
+  const [benchmarkDirty, setBenchmarkDirty] = useState(false);
+  const [benchmarkSaveError, setBenchmarkSaveError] = useState("");
+  const [benchmarkSaving, setBenchmarkSaving] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -84,10 +91,13 @@ export default function SettingsPage() {
         if (!mounted) return;
         setSchema(nextSchema);
         setSnapshot(nextSnapshot);
-        const active = nextSnapshot.sections.some((item) => item.id === "llm")
+        const sectionIds = new Set((nextSnapshot.sections || []).map((s) => s.id));
+        const urlSection = (new URLSearchParams(settingsUrlSearchKey).get("section") || "").trim();
+        const fromUrl = urlSection && sectionIds.has(urlSection) ? urlSection : null;
+        const fallback = nextSnapshot.sections.some((item) => item.id === "llm")
           ? "llm"
           : nextSnapshot.sections[0]?.id || "llm";
-        setActiveSectionId(active);
+        setActiveSectionId(fromUrl || fallback);
       } catch (error) {
         if (!mounted) return;
         setLoadError(formatResearchApiError(error) || t("settings.page.loadError"));
@@ -99,7 +109,7 @@ export default function SettingsPage() {
     return () => {
       mounted = false;
     };
-  }, [t]);
+  }, [t, settingsUrlSearchKey]);
 
   const sections = useMemo(() => snapshot?.sections || [], [snapshot]);
   const activeSection = useMemo(
@@ -160,6 +170,21 @@ export default function SettingsPage() {
       setStorageSaveError(formatResearchApiError(error) || t("settings.storage.saveError"));
     } finally {
       setStorageSaving(false);
+    }
+  }
+
+  async function handleSaveBenchmark(payload) {
+    setBenchmarkSaving(true);
+    setBenchmarkSaveError("");
+    try {
+      const next = await updateBenchmarkSettings(payload);
+      setSnapshot(next);
+      setBenchmarkDirty(false);
+    } catch (error) {
+      setBenchmarkSaveError(formatResearchApiError(error) || t("settings.benchmark.saveError"));
+      throw error;
+    } finally {
+      setBenchmarkSaving(false);
     }
   }
 
@@ -251,6 +276,17 @@ export default function SettingsPage() {
     if (activeSection.id === "security") {
       return <SecuritySettingsPanel security={snapshot?.security} />;
     }
+    if (activeSection.id === "benchmark") {
+      return (
+        <BenchmarkSettingsPanel
+          benchmark={snapshot?.benchmark}
+          saving={benchmarkSaving}
+          saveError={benchmarkSaveError}
+          onSave={handleSaveBenchmark}
+          onDirtyChange={setBenchmarkDirty}
+        />
+      );
+    }
     const labelKey = `settings.snapshot.${activeSection.id}.label`;
     const descKey = `settings.snapshot.${activeSection.id}.description`;
     const title = t(labelKey) !== labelKey ? t(labelKey) : activeSection.label;
@@ -291,7 +327,7 @@ export default function SettingsPage() {
       onSelectSection={setActiveSectionId}
       heading={t("settings.page.heading")}
       subheading={`${t("settings.page.subheadingPrefix")}${schema ? t("settings.page.subheadingSchema", { version: schema.version }) : ""}`}
-      dirty={dirtyHint || ingestionDirty || generalDirty || storageDirty}
+      dirty={dirtyHint || ingestionDirty || generalDirty || storageDirty || benchmarkDirty}
     >
       <Box sx={{ mb: 2, display: "flex", flexWrap: "wrap", gap: 0.75 }}>
         <CursorIconAction component={Link} to="/admin" title={t("settings.page.adminHub")}>

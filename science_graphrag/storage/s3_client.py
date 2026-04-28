@@ -39,8 +39,6 @@ def _cached_client(
 def build_s3_client(settings: Settings) -> Any:
     """Return a boto3 S3 client configured from settings (cached)."""
 
-    if not settings.object_storage_enabled:
-        raise RuntimeError("build_s3_client requires object_storage_enabled")
     ep = (settings.s3_endpoint_url or "").strip() or None
     ak = (settings.s3_access_key_id or "").strip()
     sk = (settings.s3_secret_access_key or "").strip()

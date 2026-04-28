@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
@@ -35,6 +36,7 @@ const LAUNCHER_ADVANCED_PANEL_ID = "benchmark-launcher-advanced-panel";
  * @param {(caseId: string) => void} [props.onToggleCase]
  * @param {() => void} [props.onStartRun]
  * @param {boolean} [props.startRunDisabled]
+ * @param {{ loaded: boolean, error: string | null, hasSavedDefaults: boolean }} [props.benchmarkServerStatus]
  */
 export default function BenchmarkLauncherPanel({
   benchmarkFamily,
@@ -52,6 +54,7 @@ export default function BenchmarkLauncherPanel({
   onToggleCase,
   onStartRun,
   startRunDisabled = false,
+  benchmarkServerStatus,
 }) {
   const { t } = useI18n();
   const tk = useTheme().appTokens;
@@ -86,6 +89,27 @@ export default function BenchmarkLauncherPanel({
       }}
     >
       <Typography sx={{ fontWeight: 600 }}>{t("benchmarkPage.runLab.launcherCardTitle")}</Typography>
+
+      {benchmarkServerStatus?.loaded ? (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+          <Box sx={{ fontSize: "0.75rem", color: tk.text.secondary, lineHeight: 1.5 }}>
+            {t("benchmarkPage.runLab.serverDefaultsHint")}{" "}
+            <Typography component={Link} to="/admin/settings?section=benchmark" sx={{ color: tk.accent.fg, fontSize: "0.75rem" }}>
+              {t("benchmarkPage.runLab.serverDefaultsEdit")}
+            </Typography>
+          </Box>
+          {benchmarkServerStatus?.hasSavedDefaults ? (
+            <Typography sx={{ fontSize: "0.68rem", color: tk.text.muted }}>
+              {t("benchmarkPage.runLab.serverDefaultsSaved")}
+            </Typography>
+          ) : null}
+          {benchmarkServerStatus?.error ? (
+            <Typography sx={{ fontSize: "0.68rem", color: tk.state.dangerFg }} role="alert">
+              {t("benchmarkPage.runLab.serverDefaultsLoadError")} ({benchmarkServerStatus.error})
+            </Typography>
+          ) : null}
+        </Box>
+      ) : null}
 
       {isGraphCatalog ? (
         <Typography sx={{ color: tk.text.muted, fontSize: "0.8125rem" }}>{t("benchmarkPage.runLab.graphCatalogBody")}</Typography>

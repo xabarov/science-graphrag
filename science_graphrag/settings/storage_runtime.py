@@ -52,10 +52,7 @@ STORAGE_JSON_SCALAR_KEYS = (
 )
 
 STORAGE_JSON_BOOL_KEYS = (
-    "object_storage_enabled",
     "s3_use_ssl",
-    "benchmark_runs_object_storage",
-    "diagnostics_object_storage",
 )
 
 
@@ -132,16 +129,7 @@ def merge_storage_runtime_fields(
         "redis_url": _pick_str(sk, "redis_url", base_settings.redis_url),
         "blob_root": _pick_path_str(sk, "blob_root", base_settings.blob_root),
         "artifact_root": _pick_path_str(sk, "artifact_root", base_settings.artifact_root),
-        "object_storage_enabled": _pick_bool(
-            sk, "object_storage_enabled", base_settings.object_storage_enabled
-        ),
         "s3_use_ssl": _pick_bool(sk, "s3_use_ssl", base_settings.s3_use_ssl),
-        "benchmark_runs_object_storage": _pick_bool(
-            sk, "benchmark_runs_object_storage", base_settings.benchmark_runs_object_storage
-        ),
-        "diagnostics_object_storage": _pick_bool(
-            sk, "diagnostics_object_storage", base_settings.diagnostics_object_storage
-        ),
     }
 
     ep = sk.get("s3_endpoint_url")
@@ -160,7 +148,7 @@ def merge_storage_runtime_fields(
     if "s3_access_key_id" in sk:
         aid = sk.get("s3_access_key_id")
         if aid is None or (isinstance(aid, str) and not str(aid).strip()):
-            out["s3_access_key_id"] = None
+            out["s3_access_key_id"] = base_settings.s3_access_key_id
         else:
             out["s3_access_key_id"] = str(aid).strip()
     else:
@@ -321,15 +309,12 @@ def build_storage_ui_snapshot(
                         "source": _src(k, sk),
                     }
                     for k in (
-                        "object_storage_enabled",
                         "s3_endpoint_url",
                         "s3_bucket",
                         "s3_use_ssl",
                         "s3_addressing_style",
                         "s3_artifact_key_prefix",
                         "s3_access_key_id",
-                        "benchmark_runs_object_storage",
-                        "diagnostics_object_storage",
                         "s3_benchmark_runs_key_prefix",
                         "s3_diagnostics_key_prefix",
                     )

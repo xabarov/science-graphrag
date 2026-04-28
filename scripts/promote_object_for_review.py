@@ -49,9 +49,6 @@ def _load_json_payload(
         text = Path(local_file).read_text(encoding="utf-8")
         return json.loads(text), f"local:{local_file}", None
 
-    if not settings.object_storage_enabled:
-        raise ValueError("object storage disabled; cannot load from S3")
-
     client = build_s3_client(settings)
     bucket = (settings.s3_bucket or "").strip()
     if run_id is not None:

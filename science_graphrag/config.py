@@ -88,19 +88,16 @@ class Settings(BaseSettings):
 
     blob_root: Path = Field(default=Path("./data/blobs"))
     artifact_root: Path = Field(default=Path("./data/artifacts"))
-    object_storage_enabled: bool = Field(
-        default=False,
-        description=(
-            "When true, ingest queue payloads, content-addressed raw blobs, and ingest "
-            "markdown/diagnostics artifacts use S3/MinIO (see s3_artifact_key_prefix)."
-        ),
-    )
     s3_endpoint_url: str | None = Field(
         default=None,
         description="S3 API endpoint (e.g. http://localhost:19000 for MinIO).",
     )
-    s3_access_key_id: str | None = Field(default=None)
-    s3_secret_access_key: str | None = Field(default=None)
+    s3_access_key_id: str = Field(
+        description="Required. S3/MinIO access key (SCIENCE_GRAPHRAG_S3_ACCESS_KEY_ID).",
+    )
+    s3_secret_access_key: str = Field(
+        description="Required. S3/MinIO secret key (SCIENCE_GRAPHRAG_S3_SECRET_ACCESS_KEY).",
+    )
     s3_bucket: str = Field(
         default="science-raw", description="Bucket for ingest queue + raw sha blobs."
     )
@@ -117,20 +114,6 @@ class Settings(BaseSettings):
         description=(
             "Object key prefix inside s3_bucket for ingest artifacts (article.md, normalized.md, "
             "diagnostics). Same bucket as Phase 1 raw/queue; distinct prefix per roadmap §7.2."
-        ),
-    )
-    benchmark_runs_object_storage: bool = Field(
-        default=False,
-        description=(
-            "Phase 3: persist full UI benchmark run JSON in S3 under s3_benchmark_runs_key_prefix; "
-            "keep compact *.summary.json on local disk. Requires object_storage_enabled."
-        ),
-    )
-    diagnostics_object_storage: bool = Field(
-        default=False,
-        description=(
-            "Phase 3: optional CLI/eval heavy diagnostics (OD, chat-agent traces) upload to S3 "
-            "under s3_diagnostics_key_prefix when object_storage_enabled."
         ),
     )
     s3_benchmark_runs_key_prefix: str = Field(
@@ -764,28 +747,27 @@ class Settings(BaseSettings):
         return ex or None
 
     @model_validator(mode="after")
-    def validate_object_storage_config(self) -> "Settings":
-        """Validate optional S3 / object-storage flags."""
+    def validate_mandatory_s3_credentials(self) -> "Settings":
+        """S3/MinIO credentials and bucket are required for ingest blobs, queue, artifacts, benchmarks."""
 
-        if self.object_storage_enabled:
-            missing: list[str] = []
-            if not (self.s3_access_key_id or "").strip():
-                missing.append("s3_access_key_id")
-            if not (self.s3_secret_access_key or "").strip():
-                missing.append("s3_secret_access_key")
-            if not (self.s3_bucket or "").strip():
-                missing.append("s3_bucket")
-            if missing:
-                raise ValueError(
-                    "object_storage_enabled requires non-empty "
-                    + ", ".join(f"SCIENCE_GRAPHRAG_{m.upper()}" for m in missing)
-                )
-        if self.benchmark_runs_object_storage or self.diagnostics_object_storage:
-            if not self.object_storage_enabled:
-                raise ValueError(
-                    "benchmark_runs_object_storage and diagnostics_object_storage require "
-                    "object_storage_enabled=true with valid S3 credentials"
-                )
+        ak = (self.s3_access_key_id or "").strip()
+        sk = (self.s3_secret_access_key or "").strip()
+        bucket = (self.s3_bucket or "").strip()
+        object.__setattr__(self, "s3_access_key_id", ak)
+        object.__setattr__(self, "s3_secret_access_key", sk)
+        object.__setattr__(self, "s3_bucket", bucket)
+        missing: list[str] = []
+        if not ak:
+            missing.append("s3_access_key_id")
+        if not sk:
+            missing.append("s3_secret_access_key")
+        if not bucket:
+            missing.append("s3_bucket")
+        if missing:
+            raise ValueError(
+                "S3/MinIO is mandatory: set non-empty "
+                + ", ".join(f"SCIENCE_GRAPHRAG_{m.upper()}" for m in missing)
+            )
         return self
 
 

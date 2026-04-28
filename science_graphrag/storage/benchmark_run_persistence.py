@@ -146,27 +146,21 @@ class S3BenchmarkRunPersistence:
 
 
 def build_benchmark_run_persistence(
-    settings: Settings, history_dir: Path
+    settings: Settings, _history_dir: Path
 ) -> BenchmarkRunPersistencePort:
-    """Local persistence by default; S3 when ``benchmark_runs_object_storage`` is enabled."""
+    """Full UI benchmark run JSON always persisted in S3 (``_history_dir`` unused; summaries stay local)."""
+    from science_graphrag.storage.s3_client import (  # pylint: disable=import-outside-toplevel
+        build_s3_client,
+        ensure_bucket_exists,
+    )
 
-    hist = Path(history_dir)
-    if getattr(settings, "benchmark_runs_object_storage", False):
-        from science_graphrag.storage.s3_client import (  # pylint: disable=import-outside-toplevel
-            build_s3_client,
-            ensure_bucket_exists,
-        )
-
-        client = build_s3_client(settings)
-        ensure_bucket_exists(settings, client=client)
-        prefix = (
-            getattr(settings, "s3_benchmark_runs_key_prefix", None) or "science-benchmarks"
-        ).strip()
-        hint = int(getattr(settings, "object_storage_benchmark_full_retention_days", 0) or 0)
-        return S3BenchmarkRunPersistence(
-            client,
-            settings.s3_bucket,
-            prefix,
-            retention_hint_days=hint if hint > 0 else None,
-        )
-    return LocalBenchmarkRunPersistence(hist)
+    client = build_s3_client(settings)
+    ensure_bucket_exists(settings, client=client)
+    prefix = (settings.s3_benchmark_runs_key_prefix or "science-benchmarks").strip()
+    hint = int(settings.object_storage_benchmark_full_retention_days or 0)
+    return S3BenchmarkRunPersistence(
+        client,
+        settings.s3_bucket,
+        prefix,
+        retention_hint_days=hint if hint > 0 else None,
+    )

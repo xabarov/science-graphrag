@@ -15,6 +15,12 @@ from typing import TYPE_CHECKING, Any
 from openai import OpenAI
 from pydantic import BaseModel, ConfigDict, ValidationError
 
+from science_graphrag.settings.benchmark_defaults import (
+    build_benchmark_ui_snapshot,
+    merge_persisted_benchmark_family,
+    normalize_benchmark_family_key,
+    validate_merged_benchmark_family_prefs,
+)
 from science_graphrag.settings.llm_advanced_fields import (
     LLM_ADVANCED_RUNTIME_KEYS,
     advanced_effective_map,
@@ -145,6 +151,7 @@ class SettingsSnapshot:
     ingestion: dict[str, Any]
     general: dict[str, Any]
     storage: dict[str, Any]
+    benchmark: dict[str, Any]
     diagnostics: dict[str, Any]
     security: dict[str, Any]
     sections: list[dict[str, Any]]
@@ -386,6 +393,9 @@ class SettingsService:
             secret_store=self._secret_store,
         )
 
+        benchmark_cfg = dict(persisted.get("benchmark") or {})
+        benchmark_snapshot = build_benchmark_ui_snapshot(benchmark_cfg)
+
         diagnostics_snapshot = _build_diagnostics_snapshot()
         security_snapshot = _build_security_snapshot(base_settings)
 
@@ -446,7 +456,7 @@ class SettingsService:
             {
                 "id": "benchmark",
                 "label": "Benchmark",
-                "status": "coming_soon",
+                "status": "ready",
                 "description": ("Teacher/student defaults and benchmark-specific execution knobs."),
             },
             {
@@ -469,6 +479,7 @@ class SettingsService:
             ingestion=ingestion_snapshot,
             general=general_snapshot,
             storage=storage_snapshot,
+            benchmark=benchmark_snapshot,
             diagnostics=diagnostics_snapshot,
             security=security_snapshot,
             sections=sections,
@@ -569,12 +580,6 @@ class SettingsService:
             {"id": "redis_url", "type": "url", "required": False, "group": "redis"},
             {"id": "blob_root", "type": "string", "required": False, "group": "paths"},
             {"id": "artifact_root", "type": "string", "required": False, "group": "paths"},
-            {
-                "id": "object_storage_enabled",
-                "type": "boolean",
-                "required": False,
-                "group": "s3",
-            },
             {"id": "s3_endpoint_url", "type": "url", "required": False, "group": "s3"},
             {"id": "s3_bucket", "type": "string", "required": False, "group": "s3"},
             {"id": "s3_use_ssl", "type": "boolean", "required": False, "group": "s3"},
@@ -588,18 +593,6 @@ class SettingsService:
             {"id": "s3_access_key_id", "type": "string", "required": False, "group": "s3"},
             {"id": "s3_secret_access_key", "type": "secret", "required": False, "group": "s3"},
             {
-                "id": "benchmark_runs_object_storage",
-                "type": "boolean",
-                "required": False,
-                "group": "s3",
-            },
-            {
-                "id": "diagnostics_object_storage",
-                "type": "boolean",
-                "required": False,
-                "group": "s3",
-            },
-            {
                 "id": "s3_benchmark_runs_key_prefix",
                 "type": "string",
                 "required": False,
@@ -612,8 +605,19 @@ class SettingsService:
                 "group": "s3",
             },
         ]
+        benchmark_fields: list[dict[str, Any]] = [
+            {
+                "id": "by_family",
+                "type": "object",
+                "required": False,
+                "group": "benchmark_defaults",
+                "description": (
+                    "Per-family defaults for benchmark launcher (model profile, gold, thresholds, API hints)."
+                ),
+            },
+        ]
         return {
-            "version": 8,
+            "version": 10,
             "sections": [
                 {
                     "id": "general",
@@ -652,6 +656,7 @@ class SettingsService:
                     ],
                 },
                 {"id": "storage", "fields": storage_fields},
+                {"id": "benchmark", "fields": benchmark_fields},
             ],
         }
 
@@ -865,6 +870,47 @@ class SettingsService:
                 else:
                     self._secret_store.set_secret(_SK_S3_SECRET, str(val).strip())
 
+            self._repository.save(payload)
+        return self.get_snapshot(base_settings)
+
+    def update_benchmark_settings(
+        self,
+        *,
+        base_settings: Settings,
+        actor: str,
+        by_family: dict[str, dict[str, Any]],
+    ) -> SettingsSnapshot:
+        """Persist per-family benchmark launcher defaults (non-secret, UI + launcher merge)."""
+        if not by_family:
+            return self.get_snapshot(base_settings)
+        allowed_keys = (
+            "model_profile",
+            "custom_model_id",
+            "gold_source",
+            "threshold_profile",
+            "base_url_override",
+            "api_key_env_name",
+        )
+        with self._lock:
+            payload = self._repository.load()
+            bench = dict(payload.get("benchmark") or {})
+            by_existing: dict[str, Any] = dict(bench.get("by_family") or {})
+            for fam_key, patch in by_family.items():
+                fam = normalize_benchmark_family_key(fam_key)
+                prev_slice = dict(by_existing.get(fam) or {})
+                merged_input = dict(prev_slice)
+                for key in allowed_keys:
+                    if key in patch:
+                        merged_input[key] = patch[key]
+                merged = merge_persisted_benchmark_family(fam, merged_input)
+                validate_merged_benchmark_family_prefs(fam, merged)
+                by_existing[fam] = merged
+            bench["by_family"] = by_existing
+            bench["_meta"] = {
+                "last_updated_at": _now_iso(),
+                "last_updated_by": actor,
+            }
+            payload["benchmark"] = bench
             self._repository.save(payload)
         return self.get_snapshot(base_settings)
 

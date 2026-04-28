@@ -69,6 +69,7 @@ def main() -> int:
         settings, err = settings_or_exit_for_object_storage_cli()
         if err is not None:
             return err
+        assert settings is not None
 
         keys = [k.strip() for k in args.keys if k and k.strip()]
         if args.keys_file is not None:

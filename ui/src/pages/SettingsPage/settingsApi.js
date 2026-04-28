@@ -41,6 +41,13 @@ export async function updateStorageSettings(payload) {
   return res.data;
 }
 
+export async function updateBenchmarkSettings(payload) {
+  const res = await apiClient.patch(buildApiUrl("/v1/settings/benchmark"), payload, {
+    headers: authHeaders(),
+  });
+  return res.data;
+}
+
 export async function deleteLlmSecret() {
   const res = await apiClient.delete(buildApiUrl("/v1/settings/llm/secret"), {
     headers: authHeaders(),

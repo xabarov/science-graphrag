@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { useI18n } from "../../i18n/useI18n.js";
+import { getSettingsSnapshot } from "../SettingsPage/settingsApi.js";
 import { listBenchmarkCases, getBenchmarkRun, runBenchmark } from "../../services/benchmarkApi.js";
 import { BENCHMARK_TERMINAL_RUN_STATUSES } from "./benchmarkRunGroup.js";
 import {
@@ -15,6 +16,7 @@ import {
   saveLauncherPrefs,
   validateLauncherConfig,
 } from "./benchmarkLauncherConfig.js";
+import { mergeLauncherPrefsWithServer } from "./mergeBenchmarkLauncherPrefs.js";
 import { toggleBenchmarkCaseSelection } from "./runTabCaseToggle.js";
 import {
   getLauncherPresetForExperiment,
@@ -35,6 +37,9 @@ export function useRunTab(opts = {}) {
   const executionMode = runLabQuery.runMode;
 
   const [launcherPrefs, setLauncherPrefs] = useState(() => loadLauncherPrefs());
+  const [serverBenchmarkSnapshot, setServerBenchmarkSnapshot] = useState(/** @type {object | null} */ (null));
+  const [benchmarkSettingsLoadError, setBenchmarkSettingsLoadError] = useState(/** @type {string | null} */ (null));
+  const [serverBenchmarkFetchDone, setServerBenchmarkFetchDone] = useState(false);
   const benchmarkFamily = launcherPrefs.activeFamily || "layer1";
   const [mergeSafeCases, setMergeSafeCases] = useState([]);
   const [nightlyCases, setNightlyCases] = useState([]);
@@ -50,12 +55,18 @@ export function useRunTab(opts = {}) {
   const nightlyTierParam = resolveNightlyScope(benchmarkFamily);
   const nightlyLabel = nightlyTierParam;
   const isGraphCatalog = benchmarkFamily === "graph";
+
+  const mergedLauncherPrefs = useMemo(
+    () => mergeLauncherPrefsWithServer({ rawLocalPrefs: launcherPrefs, serverBenchmark: serverBenchmarkSnapshot }),
+    [launcherPrefs, serverBenchmarkSnapshot],
+  );
+
   const familyPrefs = useMemo(
     () => ({
-      ...(launcherPrefs.byFamily?.[benchmarkFamily] || {}),
+      ...(mergedLauncherPrefs.byFamily?.[benchmarkFamily] || {}),
       selectedCaseIds: launcherPrefs.byFamily?.[benchmarkFamily]?.selectedCaseIds || [],
     }),
-    [benchmarkFamily, launcherPrefs.byFamily],
+    [benchmarkFamily, mergedLauncherPrefs.byFamily, launcherPrefs.byFamily],
   );
   const selectedModelMeta = useMemo(
     () => models.find((item) => item.profile_id === familyPrefs.modelProfile) || null,
@@ -67,7 +78,7 @@ export function useRunTab(opts = {}) {
     setSearchParams,
     executionMode,
     runLabQuery,
-    launcherPrefs,
+    launcherPrefs: mergedLauncherPrefs,
     activeFamilyModelProfile: familyPrefs.modelProfile || "env_default",
     models,
     onOpenAnalysisWithGroup,
@@ -80,6 +91,28 @@ export function useRunTab(opts = {}) {
   useEffect(() => {
     saveLauncherPrefs(launcherPrefs);
   }, [launcherPrefs]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const snap = await getSettingsSnapshot();
+        if (cancelled) return;
+        setServerBenchmarkSnapshot(snap?.benchmark || null);
+        setBenchmarkSettingsLoadError(null);
+      } catch (e) {
+        if (!cancelled) {
+          setServerBenchmarkSnapshot(null);
+          setBenchmarkSettingsLoadError(e?.message || "benchmark_settings_load_failed");
+        }
+      } finally {
+        if (!cancelled) setServerBenchmarkFetchDone(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!runLabQuery.experimentId) {
@@ -346,6 +379,11 @@ export function useRunTab(opts = {}) {
     executionMode,
     singleStartDisabled: executionMode === RUN_MODE_GROUPED,
     linkedExperimentId: runLabQuery.experimentId,
+    benchmarkServerStatus: {
+      loaded: serverBenchmarkFetchDone,
+      error: benchmarkSettingsLoadError,
+      hasSavedDefaults: Boolean(serverBenchmarkSnapshot?.status?.has_saved_defaults),
+    },
     ...runGroup,
   };
 }

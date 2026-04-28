@@ -129,6 +129,11 @@ export default {
   "benchmarkPage.runLab.singleRunHeading": "Single run",
   "benchmarkPage.runLab.implementationLine": "API target: {{label}} ({{apiId}})",
   "benchmarkPage.runLab.launcherCardTitle": "Run configuration",
+  "benchmarkPage.runLab.serverDefaultsHint":
+    "Defaults for model, gold, thresholds, and API hints can be set under Admin → Settings → Benchmark.",
+  "benchmarkPage.runLab.serverDefaultsSaved": "Saved server defaults are applied when they match your local baseline.",
+  "benchmarkPage.runLab.serverDefaultsEdit": "Edit in Settings",
+  "benchmarkPage.runLab.serverDefaultsLoadError": "Could not load server benchmark defaults (using local preferences only).",
   "benchmarkPage.runLab.graphCatalogBody":
     "Graph benchmark execution remains CLI-first. You can browse cases here, but runs must be started from the CLI.",
   "benchmarkPage.runLab.advancedAccordion": "Advanced: implementation target & environment",

@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { screenToWorld } from "../graphCanvasTransform.js";
 import { hitTestClosestEdgeId, hitTestNodeScreen } from "../graphCanvasDraw.js";
+import { dispatchGraphCanvasPointerDown, dispatchGraphCanvasPointerUp } from "../graphCanvasPointerEvents.js";
 
 const DRAG_THRESHOLD_PX = 5;
 export default function useGraphCanvasInput({
@@ -93,6 +94,7 @@ export default function useGraphCanvasInput({
       if (ev.button !== 0) return;
       const canvas = canvasRef.current;
       if (!canvas) return;
+      dispatchGraphCanvasPointerDown();
       const rect = canvas.getBoundingClientRect();
       const x = ev.clientX - rect.left;
       const y = ev.clientY - rect.top;
@@ -196,63 +198,67 @@ export default function useGraphCanvasInput({
 
   const handlePointerUp = useCallback(
     (ev) => {
-      const canvas = canvasRef.current;
-      const nd = nodeDragRef.current;
-      if (nd.active) {
+      try {
+        const canvas = canvasRef.current;
+        const nd = nodeDragRef.current;
+        if (nd.active) {
+          try {
+            canvas?.releasePointerCapture(ev.pointerId);
+          } catch {
+            /* ignore */
+          }
+          const { nodeId, moved } = nd;
+          const pinAfterDrop = moved && isSimulationStable;
+          nodeDragRef.current = { active: false, moved: false, nodeId: "", startX: 0, startY: 0, pointerId: null };
+          draggedNodePositionRef.current = null;
+          if (moved) {
+            setIsSimulationStable(false);
+            bumpPhysicsReheat();
+          }
+          if (pinAfterDrop) {
+            fixedNodesRef.current.add(nodeId);
+            setPinnedNodeCount(fixedNodesRef.current.size);
+          }
+          if (!moved) queueMicrotask(() => onNodeClick?.(nodeId));
+          queueHoverPick(ev.clientX, ev.clientY);
+          return;
+        }
+        const d = dragRef.current;
+        if (!d.active) return;
         try {
           canvas?.releasePointerCapture(ev.pointerId);
         } catch {
           /* ignore */
         }
-        const { nodeId, moved } = nd;
-        const pinAfterDrop = moved && isSimulationStable;
-        nodeDragRef.current = { active: false, moved: false, nodeId: "", startX: 0, startY: 0, pointerId: null };
-        draggedNodePositionRef.current = null;
-        if (moved) {
-          setIsSimulationStable(false);
-          bumpPhysicsReheat();
+        dragRef.current = { ...d, active: false, pointerId: null };
+        if (!d.moved) {
+          const rect = canvas.getBoundingClientRect();
+          const x = ev.clientX - rect.left;
+          const y = ev.clientY - rect.top;
+          const posMap = getPositionsForFrame();
+          const nodeId = hitTestNodeScreen(x, y, graph.nodes, posMap, transformRef.current, resolveNodeCanvasLabel, {
+            colorBy: graphColorBy,
+            nodeCount: graph.nodes.length,
+            searchActive,
+            searchMatchSet: searchMatchSet instanceof Set ? searchMatchSet : null,
+            selectedNodeId,
+            hoveredNodeId,
+          });
+          if (nodeId) {
+            queueMicrotask(() => onNodeClick?.(nodeId));
+            return;
+          }
+          const edgeId = hitTestClosestEdgeId(x, y, graph.edges, posMap, transformRef.current);
+          if (edgeId) {
+            queueMicrotask(() => onEdgeClick?.(edgeId));
+            return;
+          }
+          queueMicrotask(() => onCanvasClick?.());
+        } else {
+          queueHoverPick(ev.clientX, ev.clientY);
         }
-        if (pinAfterDrop) {
-          fixedNodesRef.current.add(nodeId);
-          setPinnedNodeCount(fixedNodesRef.current.size);
-        }
-        if (!moved) queueMicrotask(() => onNodeClick?.(nodeId));
-        queueHoverPick(ev.clientX, ev.clientY);
-        return;
-      }
-      const d = dragRef.current;
-      if (!d.active) return;
-      try {
-        canvas?.releasePointerCapture(ev.pointerId);
-      } catch {
-        /* ignore */
-      }
-      dragRef.current = { ...d, active: false, pointerId: null };
-      if (!d.moved) {
-        const rect = canvas.getBoundingClientRect();
-        const x = ev.clientX - rect.left;
-        const y = ev.clientY - rect.top;
-        const posMap = getPositionsForFrame();
-        const nodeId = hitTestNodeScreen(x, y, graph.nodes, posMap, transformRef.current, resolveNodeCanvasLabel, {
-          colorBy: graphColorBy,
-          nodeCount: graph.nodes.length,
-          searchActive,
-          searchMatchSet: searchMatchSet instanceof Set ? searchMatchSet : null,
-          selectedNodeId,
-          hoveredNodeId,
-        });
-        if (nodeId) {
-          queueMicrotask(() => onNodeClick?.(nodeId));
-          return;
-        }
-        const edgeId = hitTestClosestEdgeId(x, y, graph.edges, posMap, transformRef.current);
-        if (edgeId) {
-          queueMicrotask(() => onEdgeClick?.(edgeId));
-          return;
-        }
-        queueMicrotask(() => onCanvasClick?.());
-      } else {
-        queueHoverPick(ev.clientX, ev.clientY);
+      } finally {
+        dispatchGraphCanvasPointerUp();
       }
     },
     [

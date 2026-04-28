@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """Upload local ``data/benchmark_runs/<run_id>.json`` to S3 and annotate ``*.summary.json``.
 
-Requires ``SCIENCE_GRAPHRAG_OBJECT_STORAGE_ENABLED`` and ``SCIENCE_GRAPHRAG_BENCHMARK_RUNS_OBJECT_STORAGE``
-plus valid S3 credentials (same bucket/prefix as API Phase 3).
+Requires valid ``SCIENCE_GRAPHRAG_S3_*`` credentials (same bucket/prefix as the API).
 
 Dry-run prints planned keys without writing.
 """
@@ -37,13 +36,6 @@ def main() -> int:
     args = parser.parse_args()
 
     settings = Settings()
-    if not settings.object_storage_enabled or not settings.benchmark_runs_object_storage:
-        print(
-            "error: set SCIENCE_GRAPHRAG_OBJECT_STORAGE_ENABLED=true and "
-            "SCIENCE_GRAPHRAG_BENCHMARK_RUNS_OBJECT_STORAGE=true",
-            file=sys.stderr,
-        )
-        return 1
 
     hist = args.history_dir or default_benchmark_runs_dir()
     if not hist.is_dir():

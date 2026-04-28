@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -100,17 +101,67 @@ def test_update_storage_settings_database_url_secret(tmp_path: Path) -> None:
     assert "secretpw" not in masked
 
 
-def test_update_storage_settings_object_storage_validation(tmp_path: Path) -> None:
+def test_update_storage_settings_s3_access_key_roundtrip(tmp_path: Path) -> None:
     service = SettingsService(repo_root=tmp_path)
-    base = Settings(
-        object_storage_enabled=False,
-        s3_access_key_id=None,
-        s3_secret_access_key=None,
-        s3_bucket="science-raw",
+    base = Settings()
+    snap = service.update_storage_settings(
+        base_settings=base,
+        actor="tester",
+        updates={"s3_access_key_id": "persisted-access"},
     )
-    with pytest.raises(ValueError):
-        service.update_storage_settings(
+    assert snap.storage["s3"]["fields"]["s3_access_key_id"]["effective"] == "persisted-access"
+    runtime = service.build_runtime_settings(base)
+    assert runtime.s3_access_key_id == "persisted-access"
+
+
+def _settings_minimal(**kwargs: Any) -> Settings:
+    merged = {
+        "s3_access_key_id": "test-access",
+        "s3_secret_access_key": "test-secret",
+        "s3_bucket": "science-raw",
+        **kwargs,
+    }
+    return Settings(**merged)
+
+
+def test_benchmark_snapshot_has_defaults(tmp_path: Path) -> None:
+    service = SettingsService(repo_root=tmp_path)
+    snap = service.get_snapshot(_settings_minimal(claims_extraction_enabled=True))
+    assert "by_family" in snap.benchmark
+    assert snap.benchmark["by_family"]["layer1"]["model_profile"] == "env_default"
+    assert snap.benchmark["by_family"]["layer1"]["gold_source"] == "curated_gold"
+    assert snap.benchmark["status"]["has_saved_defaults"] is False
+
+
+def test_update_benchmark_settings_persists_layer1(tmp_path: Path) -> None:
+    service = SettingsService(repo_root=tmp_path)
+    base = _settings_minimal(claims_extraction_enabled=True)
+    snap = service.update_benchmark_settings(
+        base_settings=base,
+        actor="admin",
+        by_family={
+            "layer1": {
+                "model_profile": "env_default",
+                "gold_source": "teacher_gold",
+                "threshold_profile": "student_mistral",
+            }
+        },
+    )
+    l1 = snap.benchmark["by_family"]["layer1"]
+    assert l1["gold_source"] == "teacher_gold"
+    assert l1["threshold_profile"] == "student_mistral"
+    assert snap.benchmark["status"]["has_saved_defaults"] is True
+
+    snap2 = service.get_snapshot(base)
+    assert snap2.benchmark["by_family"]["layer1"]["gold_source"] == "teacher_gold"
+
+
+def test_update_benchmark_settings_rejects_custom_without_id(tmp_path: Path) -> None:
+    service = SettingsService(repo_root=tmp_path)
+    base = _settings_minimal(claims_extraction_enabled=True)
+    with pytest.raises(ValueError, match="custom_model_id"):
+        service.update_benchmark_settings(
             base_settings=base,
-            actor="tester",
-            updates={"object_storage_enabled": True},
+            actor="admin",
+            by_family={"layer1": {"model_profile": "custom", "custom_model_id": ""}},
         )

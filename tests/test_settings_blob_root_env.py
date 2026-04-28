@@ -32,6 +32,8 @@ def _minimal_env(**extra: str) -> dict[str, str]:
         "PYTHONPATH": str(_REPO_ROOT),
         "PYTHONNOUSERSITE": "1",
         "LANG": os.environ.get("LANG", "C.UTF-8"),
+        "SCIENCE_GRAPHRAG_S3_ACCESS_KEY_ID": "testing",
+        "SCIENCE_GRAPHRAG_S3_SECRET_ACCESS_KEY": "testing",
     }
     env.update(extra)
     return env

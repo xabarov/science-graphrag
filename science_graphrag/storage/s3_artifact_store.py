@@ -1,4 +1,4 @@
-"""Ingest artifact store: local disk or S3/MinIO with optional mirror under ``artifact_root``."""
+"""Ingest artifact store: S3/MinIO with optional mirror under ``artifact_root``."""
 
 from __future__ import annotations
 
@@ -7,7 +7,6 @@ from typing import Any
 
 from botocore.exceptions import ClientError
 
-from science_graphrag.artifacts.local_store import LocalFilesystemArtifactStore
 from science_graphrag.artifacts.protocols import ArtifactStorePort
 from science_graphrag.config import Settings
 from science_graphrag.storage.object_keys import (
@@ -186,22 +185,20 @@ class S3ArtifactStore:
 
 def build_artifact_store(settings: Settings) -> ArtifactStorePort:
     """
-    Local filesystem or S3-backed ingest artifacts (Phase 2).
+    S3-backed ingest artifacts with optional local mirror under ``artifact_root``.
 
-    Uses the same bucket as Phase 1 raw/queue; artifact keys use ``s3_artifact_key_prefix``.
+    Uses the same bucket as ingest queue/raw blobs; artifact keys use ``s3_artifact_key_prefix``.
     """
-    if settings.object_storage_enabled:
-        from science_graphrag.storage.s3_client import (  # pylint: disable=import-outside-toplevel
-            build_s3_client,
-            ensure_bucket_exists,
-        )
+    from science_graphrag.storage.s3_client import (  # pylint: disable=import-outside-toplevel
+        build_s3_client,
+        ensure_bucket_exists,
+    )
 
-        client = build_s3_client(settings)
-        ensure_bucket_exists(settings, client=client)
-        return S3ArtifactStore(
-            client,
-            settings.s3_bucket,
-            settings.artifact_root,
-            settings.s3_artifact_key_prefix,
-        )
-    return LocalFilesystemArtifactStore(settings.artifact_root)
+    client = build_s3_client(settings)
+    ensure_bucket_exists(settings, client=client)
+    return S3ArtifactStore(
+        client,
+        settings.s3_bucket,
+        settings.artifact_root,
+        settings.s3_artifact_key_prefix,
+    )

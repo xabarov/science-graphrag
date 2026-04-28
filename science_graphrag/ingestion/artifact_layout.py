@@ -58,14 +58,21 @@ def resolve_extracted_body_relative(
     return None
 
 
-def resolve_extracted_body_file(settings: Settings, document_id: str) -> tuple[Path, str] | None:
+def resolve_extracted_body_file(
+    settings: Settings,
+    document_id: str,
+    *,
+    artifact_store: ArtifactStorePort | None = None,
+) -> tuple[Path, str] | None:
     """
     Return ``(absolute_path, source_label)`` for the best body file, or None.
 
     Preference: ``normalized.md`` > ``article.md`` (canonical) > legacy slug path.
     ``source_label`` is ``normalized`` | ``article`` | ``article_legacy``.
+
+    Pass ``artifact_store`` in unit tests to avoid S3 (e.g. ``LocalFilesystemArtifactStore``).
     """
-    store = build_artifact_store(settings)
+    store = artifact_store or build_artifact_store(settings)
     hit = resolve_extracted_body_relative(store, document_id)
     if hit is None:
         return None
@@ -78,6 +85,11 @@ def has_extracted_body_store(store: ArtifactStorePort, document_id: str) -> bool
     return resolve_extracted_body_relative(store, document_id) is not None
 
 
-def has_extracted_body_file(settings: Settings, document_id: str) -> bool:
+def has_extracted_body_file(
+    settings: Settings,
+    document_id: str,
+    *,
+    artifact_store: ArtifactStorePort | None = None,
+) -> bool:
     """True if a body file exists for ``document_id`` (local or S3 per settings)."""
-    return resolve_extracted_body_file(settings, document_id) is not None
+    return resolve_extracted_body_file(settings, document_id, artifact_store=artifact_store) is not None
