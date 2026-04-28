@@ -26,6 +26,10 @@ export const BARNES_HUT_THETA = 0.5;
 export const PHYSICS_REACT_COMMIT_INTERVAL = 1;
 
 export const USE_COMMUNITY_DETECTION = true;
+/**
+ * Centroid community pull (see communityCentroidAttraction.js): magnitude = dist * this * cooling.
+ * Tuned for the O(n) centroid model (replaces legacy pairwise same-cluster springs).
+ */
 export const CLUSTER_ATTRACTION_STRENGTH = 0.0003;
 
 export const REPULSION_MIN = 2000;

@@ -30,6 +30,7 @@ import { buildSimulationState } from "../graphSimulationAdapter.js";
  *   setForceSimRunNonce: import("react").Dispatch<import("react").SetStateAction<number>>,
  *   setPhysicsReheatNonce: import("react").Dispatch<import("react").SetStateAction<number>>,
  *   positionsRef: import("react").MutableRefObject<Map<string, { x: number, y: number }>>,
+ *   simNodesRef: import("react").MutableRefObject<unknown[]>,
  * }} params
  */
 export function useGraphCanvasTopologyReseed({
@@ -46,6 +47,7 @@ export function useGraphCanvasTopologyReseed({
   setForceSimRunNonce,
   setPhysicsReheatNonce,
   positionsRef,
+  simNodesRef,
 }) {
   const graphRef = useRef(graph);
   const applyFitRef = useRef(applyFit);
@@ -64,6 +66,7 @@ export function useGraphCanvasTopologyReseed({
       nodeCount: built.nodes.length,
       edgeCount: built.links.length,
     });
+    simNodesRef.current = built.nodes;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- topology re-seed is intentional
     setSimNodes(built.nodes);
     // eslint-disable-next-line react-hooks/set-state-in-effect -- topology re-seed is intentional

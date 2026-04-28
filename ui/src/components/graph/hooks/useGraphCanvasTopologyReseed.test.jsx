@@ -22,6 +22,7 @@ function TopologyProbe({ graph, topologySignature, applyFit }) {
   const fixedNodesRef = useRef(new Set());
   const draggedNodePositionRef = useRef(null);
   const positionsRef = useRef(new Map());
+  const simNodesRef = useRef([]);
 
   useGraphCanvasTopologyReseed({
     topologySignature,
@@ -37,6 +38,7 @@ function TopologyProbe({ graph, topologySignature, applyFit }) {
     setForceSimRunNonce,
     setPhysicsReheatNonce,
     positionsRef,
+    simNodesRef,
   });
 
   const ids = simNodes

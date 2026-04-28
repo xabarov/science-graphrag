@@ -4,8 +4,17 @@ import { screenToWorld } from "../graphCanvasTransform.js";
 import { hitTestClosestEdgeId, hitTestNodeScreen } from "../graphCanvasDraw.js";
 import { dispatchGraphCanvasPointerDown, dispatchGraphCanvasPointerUp } from "../graphCanvasPointerEvents.js";
 import { useGraphPhysicsPointerBridge } from "../GraphPhysicsPointerBridgeContext.jsx";
+import { writeSimNodeWorldPosition } from "../graphCanvasSimBuffer.js";
 
 const DRAG_THRESHOLD_PX = 5;
+
+/**
+ * Canvas pointer wiring for {@link GraphCanvasMvp}.
+ *
+ * @param {object} opts
+ * @param {import("react").MutableRefObject<import("../graphSimulationAdapter.js").SimNode[]>} opts.simNodesRef Live sim buffer for force mode (mutated on drag).
+ * @param {() => void} opts.invokeCanvasRedraw Repaint canvas without waiting for React (physics rAF + drag moves).
+ */
 export default function useGraphCanvasInput({
   canvasRef,
   graph,
@@ -17,7 +26,6 @@ export default function useGraphCanvasInput({
   getPositionsForFrame,
   layoutMode,
   onCanvasLayoutModeChange,
-  simNodes,
   setSimNodes,
   isSimulationStable,
   setIsSimulationStable,
@@ -30,6 +38,8 @@ export default function useGraphCanvasInput({
   selectedNodeId = "",
   searchActive = false,
   searchMatchSet = null,
+  simNodesRef,
+  invokeCanvasRedraw,
 }) {
   const [hoveredNodeId, setHoveredNodeId] = useState("");
   const [hoveredEdgeId, setHoveredEdgeId] = useState("");
@@ -103,7 +113,7 @@ export default function useGraphCanvasInput({
       const x = ev.clientX - rect.left;
       const y = ev.clientY - rect.top;
       const { scale, tx, ty } = transformRef.current;
-      if (simNodes.length > 0) {
+      if (simNodesRef.current.length > 0) {
         const posMap = getPositionsForFrame();
         const nodeId = hitTestNodeScreen(x, y, graph.nodes, posMap, transformRef.current, resolveNodeCanvasLabel, {
           colorBy: graphColorBy,
@@ -119,7 +129,8 @@ export default function useGraphCanvasInput({
           canvas.setPointerCapture(ev.pointerId);
           nodeDragRef.current = { active: true, moved: false, nodeId, startX: x, startY: y, pointerId: ev.pointerId };
           draggedNodePositionRef.current = { id: nodeId, x: world.x, y: world.y };
-          setSimNodes((prev) => prev.map((n) => (n.id === nodeId ? { ...n, x: world.x, y: world.y, vx: 0, vy: 0 } : n)));
+          writeSimNodeWorldPosition(simNodesRef.current, nodeId, world.x, world.y);
+          invokeCanvasRedraw();
           return;
         }
       }
@@ -139,8 +150,8 @@ export default function useGraphCanvasInput({
       searchActive,
       searchMatchSet,
       selectedNodeId,
-      setSimNodes,
-      simNodes.length,
+      simNodesRef,
+      invokeCanvasRedraw,
       transformRef,
       pointerBus,
     ],
@@ -167,7 +178,8 @@ export default function useGraphCanvasInput({
         }
         const world = screenToWorld(x, y, transformRef.current.scale, transformRef.current.tx, transformRef.current.ty);
         draggedNodePositionRef.current = { id: nd.nodeId, x: world.x, y: world.y };
-        setSimNodes((prev) => prev.map((n) => (n.id === nd.nodeId ? { ...n, x: world.x, y: world.y, vx: 0, vy: 0 } : n)));
+        writeSimNodeWorldPosition(simNodesRef.current, nd.nodeId, world.x, world.y);
+        invokeCanvasRedraw();
         return;
       }
       const d = dragRef.current;
@@ -192,7 +204,17 @@ export default function useGraphCanvasInput({
       }
       queueHoverPick(ev.clientX, ev.clientY);
     },
-    [bumpPhysicsReheat, canvasRef, draggedNodePositionRef, queueHoverPick, setIsSimulationStable, setSimNodes, setTransform, transformRef],
+    [
+      bumpPhysicsReheat,
+      canvasRef,
+      draggedNodePositionRef,
+      queueHoverPick,
+      setIsSimulationStable,
+      setTransform,
+      simNodesRef,
+      invokeCanvasRedraw,
+      transformRef,
+    ],
   );
 
   const handlePointerLeave = useCallback(() => {
@@ -223,6 +245,10 @@ export default function useGraphCanvasInput({
           if (pinAfterDrop) {
             fixedNodesRef.current.add(nodeId);
             setPinnedNodeCount(fixedNodesRef.current.size);
+          }
+          if (moved) {
+            setSimNodes(simNodesRef.current.map((n) => ({ ...n })));
+            invokeCanvasRedraw();
           }
           if (!moved) queueMicrotask(() => onNodeClick?.(nodeId));
           queueHoverPick(ev.clientX, ev.clientY);
@@ -287,6 +313,9 @@ export default function useGraphCanvasInput({
       selectedNodeId,
       setIsSimulationStable,
       setPinnedNodeCount,
+      setSimNodes,
+      simNodesRef,
+      invokeCanvasRedraw,
       transformRef,
       pointerBus,
     ],

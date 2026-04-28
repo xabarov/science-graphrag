@@ -1,9 +1,13 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 import { useGraphPhysicsPolicy } from "./useGraphPhysicsPolicy.js";
 import { getScienceDesiredDistance } from "../../components/graph/physics/desiredLinkDistance.js";
 import { getNodeCluster } from "../../components/graph/physics/structuralCommunities.js";
 import { detectScienceHybridCommunities } from "../../components/graph/physics/scienceHybridCommunities.js";
+import {
+  buildClusterPositionStats,
+  centroidCommunityForce,
+} from "../../components/graph/physics/communityCentroidAttraction.js";
 import {
   BARNES_HUT_THETA,
   CANVAS_MARGIN,
@@ -39,6 +43,8 @@ import { fastInvSqrt, fastSqrt, getRepulsionMultiplier } from "../../components/
  * @param {string} physicsEpoch Force-run / reheat identity; bumps reset cooling without redoing community detection if topology unchanged.
  * @param {string} simulationSignature Combined key for pause policy (`topology|physicsEpoch`); must change whenever topology or physicsEpoch changes.
  * @param {EventTarget} [pointerEventTarget] Optional bus for canvas pointer pause events (defaults to `window` via useGraphPhysicsPolicy).
+ * @param {React.MutableRefObject<import("../../components/graph/graphSimulationAdapter.js").SimNode[]>} simNodesRef Live sim buffer (mutated in place); must match seeded React state after topology/restart.
+ * @param {() => void} onPhysicsVisualTick Called after each integrator commit so canvas can repaint without setState per frame.
  */
 export function useScienceGraphForceSimulation(
   enabled,
@@ -55,6 +61,8 @@ export function useScienceGraphForceSimulation(
   physicsEpoch,
   simulationSignature,
   pointerEventTarget,
+  simNodesRef,
+  onPhysicsVisualTick,
 ) {
   const animationRef = useRef(null);
   const boundsRef = useRef(null);
@@ -67,6 +75,11 @@ export function useScienceGraphForceSimulation(
   const isSimStableRef = useRef(isSimulationStable);
   isSimStableRef.current = isSimulationStable;
   const prevRepulsionRef = useRef(repulsionStrength);
+  const onPhysicsVisualTickRef = useRef(() => {});
+
+  useLayoutEffect(() => {
+    onPhysicsVisualTickRef.current = onPhysicsVisualTick;
+  }, [onPhysicsVisualTick]);
 
   const { integrationBlocked } = useGraphPhysicsPolicy({
     enabled,
@@ -218,6 +231,12 @@ export function useScienceGraphForceSimulation(
         nodeMap.set(node.id, node);
       });
 
+      /** @type {Map<unknown, { sumX: number, sumY: number, count: number, draggedMemberId: string | null }> | null} */
+      let clusterStats = null;
+      if (communitiesRef.current && communityMap.size > 0) {
+        clusterStats = buildClusterPositionStats(communityMap, nodeMap, draggedPos);
+      }
+
       let quadtree = null;
       if (newNodes.length > 10) {
         const margin = 100;
@@ -325,27 +344,21 @@ export function useScienceGraphForceSimulation(
           }
         });
 
-        if (communitiesRef.current && communityMap.size > 0) {
+        if (clusterStats && communitiesRef.current) {
           const nodeCluster = getNodeCluster(node.id, communitiesRef.current);
           if (nodeCluster) {
-            const clusterNodes = communityMap.get(nodeCluster) || [];
-            clusterNodes.forEach((otherId) => {
-              if (otherId === node.id) return;
-              if (draggedPos && draggedPos.id === otherId) return;
-
-              const other = nodeMap.get(otherId);
-              if (!other) return;
-
-              const dx = other.x - node.x;
-              const dy = other.y - node.y;
-              const distSq = dx * dx + dy * dy + 1;
-              const dist = fastSqrt(distSq);
-
-              const communityForce = dist * CLUSTER_ATTRACTION_STRENGTH * coolingTemperatureRef.current;
-              const invDist = 1 / dist;
-              fx += dx * invDist * communityForce;
-              fy += dy * invDist * communityForce;
-            });
+            const c = centroidCommunityForce(
+              node.id,
+              nodeCluster,
+              clusterStats,
+              { x: node.x, y: node.y },
+              draggedPos,
+              CLUSTER_ATTRACTION_STRENGTH,
+              coolingTemperatureRef.current,
+              fastSqrt,
+            );
+            fx += c.fx;
+            fy += c.fy;
           }
         }
 
@@ -442,16 +455,25 @@ export function useScienceGraphForceSimulation(
     const commitInterval = Math.max(1, Math.floor(PHYSICS_REACT_COMMIT_INTERVAL));
 
     const simulate = () => {
-      setNodes((prevNodes) => {
-        const newNodes = prevNodes.map((node) => ({ ...node }));
-        for (let s = 0; s < commitInterval; s++) {
-          const stableHalt = runOnePhysicsTick(newNodes);
-          if (stableHalt) break;
-        }
-        return newNodes;
-      });
+      const buf = simNodesRef.current;
+      if (!buf || buf.length === 0) {
+        animationRef.current = null;
+        return;
+      }
 
-      if (stableCountRef.current < STABLE_ITERATIONS || draggedNodePositionRef.current) {
+      let stableHalt = false;
+      for (let s = 0; s < commitInterval; s++) {
+        stableHalt = runOnePhysicsTick(buf);
+        if (stableHalt) break;
+      }
+
+      onPhysicsVisualTickRef.current?.();
+
+      if (stableHalt) {
+        setNodes(buf.map((n) => ({ ...n })));
+      }
+
+      if (!stableHalt && (stableCountRef.current < STABLE_ITERATIONS || draggedNodePositionRef.current)) {
         animationRef.current = requestAnimationFrame(simulate);
       }
     };
@@ -463,7 +485,7 @@ export function useScienceGraphForceSimulation(
         cancelAnimationFrame(animationRef.current);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- simulation uses setNodes(prev=>...); full `nodes` would restart every frame; `simulationSignature` is only for useGraphPhysicsPolicy above
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- simulation uses simNodesRef; full `nodes` would restart every frame; `simulationSignature` is only for useGraphPhysicsPolicy above
   }, [
     enabled,
     integrationBlocked,
@@ -481,5 +503,6 @@ export function useScienceGraphForceSimulation(
     fixedNodesRef,
     draggedNodePositionRef,
     nodes.length,
+    simNodesRef,
   ]);
 }

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
@@ -19,6 +19,7 @@ import { useGraphCanvasTopologyReseed } from "./hooks/useGraphCanvasTopologyRese
 import { useScienceGraphForceSimulation } from "../../hooks/graph/useScienceGraphForceSimulation.js";
 import { percentToRepulsion, REPULSION_DEFAULT_PERCENT } from "./physics/simConstants.js";
 import { buildCommunityColorStyleMap, sortedCommunitiesByCount } from "./physics/communityPalette.js";
+import { buildWorldPositionsMapFromSimNodes } from "./graphCanvasSimPositions.js";
 
 const NODE_RADIUS = 12;
 const FIT_PADDING = 40;
@@ -34,7 +35,7 @@ const EMPTY_COMMUNITY_MAP = new Map();
 
 /*
  * Force-layout interaction contract (canvas MVP):
- * - In "force" mode, hit-testing for clicks/drags reads live node positions from simNodes via getPositionsForFrame().
+ * - In "force" mode, hit-testing reads live positions from simNodesRef via getPositionsForFrame() (Phase B: ref buffer).
  *   If the physics integrator mutates those positions between pointerdown and pointerup, the released click can miss
  *   the intended node; integration is therefore paused for primary pointer sessions on the canvas (see useGraphPhysicsPolicy).
  * - Shell drawer navigation dispatches a short navigation-intent pause so the router can commit before rAF-heavy work resumes.
@@ -162,9 +163,11 @@ export default function GraphCanvasMvp({
   }, [simNodes]);
 
   const getPositionsForFrame = useCallback(() => {
-    if (simNodes.length > 0 && layoutMode === "force") return new Map(simNodes.map((n) => [n.id, { x: n.x, y: n.y }]));
+    if (layoutMode === "force" && simNodesRef.current.length > 0) {
+      return buildWorldPositionsMapFromSimNodes(simNodesRef.current);
+    }
     return computeWorldLayout(graph.nodes, layoutWorldRadius);
-  }, [graph.nodes, layoutMode, layoutWorldRadius, simNodes]);
+  }, [graph.nodes, layoutMode, layoutWorldRadius]);
 
   const viewport = useGraphCanvasViewport({
     graph,
@@ -203,6 +206,12 @@ export default function GraphCanvasMvp({
     [nodeById, onAggregatorExpand, onSelectNode],
   );
 
+  /** Canvas paint invoked from physics rAF and pointer-drag without waiting on React commit. */
+  const invokeCanvasRedrawRef = useRef(() => {});
+  const invokeCanvasRedraw = useCallback(() => {
+    invokeCanvasRedrawRef.current();
+  }, []);
+
   const input = useGraphCanvasInput({
     canvasRef,
     graph,
@@ -219,7 +228,6 @@ export default function GraphCanvasMvp({
     getPositionsForFrame,
     layoutMode,
     onCanvasLayoutModeChange,
-    simNodes,
     setSimNodes,
     isSimulationStable,
     setIsSimulationStable,
@@ -232,80 +240,11 @@ export default function GraphCanvasMvp({
     selectedNodeId,
     searchActive,
     searchMatchSet,
+    simNodesRef,
+    invokeCanvasRedraw,
   });
 
-  useScienceGraphForceSimulation(
-    layoutMode === "force" && simNodes.length > 0,
-    simNodes,
-    setSimNodes,
-    simLinks,
-    repulsionStrength,
-    isSimulationStable,
-    setIsSimulationStable,
-    fixedNodesRef,
-    draggedNodePositionRef,
-    canvasSize,
-    topologySignature,
-    physicsEpoch,
-    simulationSignature,
-    physicsPointerBus,
-  );
-
-  useGraphCanvasTopologyReseed({
-    topologySignature,
-    layoutMode,
-    graph,
-    applyFit,
-    setSimNodes,
-    setSimLinks,
-    setPinnedNodeCount,
-    fixedNodesRef,
-    draggedNodePositionRef,
-    setIsSimulationStable,
-    setForceSimRunNonce,
-    setPhysicsReheatNonce,
-    positionsRef,
-  });
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(LS_GRAPH_CANVAS_REPULSION, String(repulsionPercent));
-    } catch {
-      /* ignore */
-    }
-  }, [repulsionPercent]);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(LS_GRAPH_CANVAS_EDGE_LABEL_MODE, edgeLabelMode);
-    } catch {
-      /* ignore */
-    }
-  }, [edgeLabelMode]);
-
-  useEffect(() => {
-    const el = canvasRef.current;
-    if (!el) return undefined;
-    const onWheel = (event) => {
-      event.preventDefault();
-      const rect = el.getBoundingClientRect();
-      const mx = event.clientX - rect.left;
-      const my = event.clientY - rect.top;
-      const { scale, tx, ty } = transformRef.current;
-      const world = screenToWorld(mx, my, scale, tx, ty);
-      const factor = event.deltaY > 0 ? 0.92 : 1.08;
-      const newScale = Math.min(Math.max(scale * factor, MIN_SCALE), MAX_SCALE);
-      const next = { scale: newScale, tx: mx - world.x * newScale, ty: my - world.y * newScale };
-      transformRef.current = next;
-      setTransform(next);
-    };
-    el.addEventListener("wheel", onWheel, { passive: false });
-    return () => el.removeEventListener("wheel", onWheel);
-    // Mount once: wheel handler reads latest transform via transformRef.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable canvas + ref indirection
-  }, []);
-
-  useEffect(() => {
+  const paintGraphCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     const host = canvasHostRef.current;
     if (!canvas || !host) return;
@@ -383,10 +322,91 @@ export default function GraphCanvasMvp({
     searchMatchSet,
     selectedEdgeId,
     selectedNodeId,
-    transform,
     canvasHostRef,
     transformRef,
   ]);
+
+  useLayoutEffect(() => {
+    invokeCanvasRedrawRef.current = paintGraphCanvas;
+  }, [paintGraphCanvas]);
+
+  useScienceGraphForceSimulation(
+    layoutMode === "force" && simNodes.length > 0,
+    simNodes,
+    setSimNodes,
+    simLinks,
+    repulsionStrength,
+    isSimulationStable,
+    setIsSimulationStable,
+    fixedNodesRef,
+    draggedNodePositionRef,
+    canvasSize,
+    topologySignature,
+    physicsEpoch,
+    simulationSignature,
+    physicsPointerBus,
+    simNodesRef,
+    invokeCanvasRedraw,
+  );
+
+  useGraphCanvasTopologyReseed({
+    topologySignature,
+    layoutMode,
+    graph,
+    applyFit,
+    setSimNodes,
+    setSimLinks,
+    setPinnedNodeCount,
+    fixedNodesRef,
+    draggedNodePositionRef,
+    setIsSimulationStable,
+    setForceSimRunNonce,
+    setPhysicsReheatNonce,
+    positionsRef,
+    simNodesRef,
+  });
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(LS_GRAPH_CANVAS_REPULSION, String(repulsionPercent));
+    } catch {
+      /* ignore */
+    }
+  }, [repulsionPercent]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(LS_GRAPH_CANVAS_EDGE_LABEL_MODE, edgeLabelMode);
+    } catch {
+      /* ignore */
+    }
+  }, [edgeLabelMode]);
+
+  useEffect(() => {
+    const el = canvasRef.current;
+    if (!el) return undefined;
+    const onWheel = (event) => {
+      event.preventDefault();
+      const rect = el.getBoundingClientRect();
+      const mx = event.clientX - rect.left;
+      const my = event.clientY - rect.top;
+      const { scale, tx, ty } = transformRef.current;
+      const world = screenToWorld(mx, my, scale, tx, ty);
+      const factor = event.deltaY > 0 ? 0.92 : 1.08;
+      const newScale = Math.min(Math.max(scale * factor, MIN_SCALE), MAX_SCALE);
+      const next = { scale: newScale, tx: mx - world.x * newScale, ty: my - world.y * newScale };
+      transformRef.current = next;
+      setTransform(next);
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+    // Mount once: wheel handler reads latest transform via transformRef.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stable canvas + ref indirection
+  }, []);
+
+  useEffect(() => {
+    paintGraphCanvas();
+  }, [paintGraphCanvas, transform]);
 
   const handleCanvasDoubleClick = useCallback(
     (ev) => {
@@ -418,6 +438,7 @@ export default function GraphCanvasMvp({
     setPinnedNodeCount(0);
     const built = buildSimulationState(graph, { jitterWorld: FORCE_RESTART_JITTER_WORLD });
     setSimLinks(built.links);
+    simNodesRef.current = built.nodes;
     setSimNodes(built.nodes);
     setForceSimRunNonce((n) => n + 1);
     setPhysicsReheatNonce(0);
