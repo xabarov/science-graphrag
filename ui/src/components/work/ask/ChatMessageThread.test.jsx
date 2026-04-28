@@ -5,9 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MemoryRouter } from "react-router-dom";
 
-import { normalizeQueryResponse } from "../../services/researchApi.js";
-import { buildAppTheme } from "../../theme/buildAppTheme.js";
-import { FeedbackProvider } from "../feedback/FeedbackProvider.jsx";
+import { normalizeQueryResponse } from "../../../services/researchApi.js";
+import { buildAppTheme } from "../../../theme/buildAppTheme.js";
+import { FeedbackProvider } from "../../feedback/FeedbackProvider.jsx";
 import { ChatMessageThread } from "./ChatMessageThread.jsx";
 
 const theme = buildAppTheme("dark");

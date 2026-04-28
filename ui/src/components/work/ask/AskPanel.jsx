@@ -1,7 +1,7 @@
 import React from "react";
 import Box from "@mui/material/Box";
 
-import { useFeedback } from "../feedback/index.js";
+import { useFeedback } from "../../feedback/index.js";
 import { ChatComposer } from "./ChatComposer.jsx";
 import { ChatMessageThread } from "./ChatMessageThread.jsx";
 import { ChatSessionSidebar } from "./ChatSessionSidebar.jsx";

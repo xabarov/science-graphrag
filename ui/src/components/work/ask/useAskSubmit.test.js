@@ -6,7 +6,7 @@ let lastStreamPayload = null;
 /** @type {"minimal" | "many_events"} */
 let streamScenario = "minimal";
 
-vi.mock("../../hooks/useAgentStream.js", () => ({
+vi.mock("../../../hooks/useAgentStream.js", () => ({
   useAgentStream: vi.fn((opts) => ({
     stream: vi.fn(async (payload) => {
       lastStreamPayload = payload;
@@ -38,7 +38,7 @@ describe("useAskSubmit", () => {
 
   it("passes threadId and historyDigest to streamAgent", async () => {
     const { useAskSubmit } = await import("./useAskSubmit.js");
-    const { useAgentStream } = await import("../../hooks/useAgentStream.js");
+    const { useAgentStream } = await import("../../../hooks/useAgentStream.js");
 
     const onResult = vi.fn();
     const { result } = renderHook(() =>

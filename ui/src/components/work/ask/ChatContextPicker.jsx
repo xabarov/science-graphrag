@@ -10,7 +10,7 @@ import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 
-import { CursorIconAction } from "../common/index.js";
+import { CursorIconAction } from "../../common/index.js";
 import { formatWorkPrimaryLabel, formatWorkSecondaryLine, normalizeWorkListItem } from "./workListLabel.js";
 
 const inputSx = {

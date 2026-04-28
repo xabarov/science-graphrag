@@ -9,11 +9,11 @@ import {
   listAskSessions as listAskSessionsRequest,
   normalizeQueryResponse,
   patchAskSession as patchAskSessionRequest,
-} from "../../services/researchApi.js";
-import { useI18n } from "../../i18n/useI18n.js";
-import { persistWorkId } from "../../pages/WorkspacePage/utils/workContext.js";
-import { CHAT_PATH } from "../../routes/paths.js";
-import { getWorkspace } from "../../utils/workspaceStore.js";
+} from "../../../services/researchApi.js";
+import { useI18n } from "../../../i18n/useI18n.js";
+import { persistWorkId } from "../../../pages/WorkspacePage/utils/workContext.js";
+import { CHAT_PATH } from "../../../routes/paths.js";
+import { getWorkspace } from "../../../utils/workspaceStore.js";
 import { apiSessionsToBundle, entriesToApiTurns, isServerAskSessionId, readAskServerSyncPref } from "./askSessionServerBridge.js";
 import { rememberAskHistory } from "./askHistoryState.js";
 import {
@@ -35,10 +35,10 @@ import {
   setActiveAskSession,
   truncateAskSessionFromTurn,
 } from "./askSessionState.js";
-import { buildStandaloneTracePath } from "./traceabilityState.js";
+import { buildStandaloneTracePath } from "../traceability/traceabilityState.js";
 import { useAskSubmit } from "./useAskSubmit.js";
-import { copyToClipboard } from "../../utils/copyToClipboard.js";
-import { useFeedback } from "../feedback/index.js";
+import { copyToClipboard } from "../../../utils/copyToClipboard.js";
+import { useFeedback } from "../../feedback/index.js";
 import { normalizeWorkListItem } from "./workListLabel.js";
 
 /** Fixed retrieval depth for API compatibility (no UI control). */

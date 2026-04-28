@@ -3,7 +3,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { buildAppTheme } from "../../theme/buildAppTheme.js";
+import { buildAppTheme } from "../../../theme/buildAppTheme.js";
 import { IdeaSuggestionsBlock, QuoteCandidatesBlock, RelationTraceBlock } from "./ChatTypedBlocks.jsx";
 
 const themeDark = buildAppTheme("dark");

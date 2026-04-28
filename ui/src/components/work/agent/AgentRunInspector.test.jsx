@@ -3,8 +3,8 @@ import { ThemeProvider } from "@mui/material/styles";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { normalizeQueryResponse } from "../../services/researchApi.js";
-import { buildAppTheme } from "../../theme/buildAppTheme.js";
+import { normalizeQueryResponse } from "../../../services/researchApi.js";
+import { buildAppTheme } from "../../../theme/buildAppTheme.js";
 import { AgentRunInspector } from "./AgentRunInspector.jsx";
 
 const theme = buildAppTheme("dark");

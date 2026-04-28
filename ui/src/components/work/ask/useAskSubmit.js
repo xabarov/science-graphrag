@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { formatResearchApiError, normalizeQueryResponse, postAgentQueryV2 } from "../../services/researchApi.js";
-import { useAgentStream } from "../../hooks/useAgentStream.js";
+import { formatResearchApiError, normalizeQueryResponse, postAgentQueryV2 } from "../../../services/researchApi.js";
+import { useAgentStream } from "../../../hooks/useAgentStream.js";
 
 /**
  * Orchestrates chat submit: streaming agent only (no vector/hybrid UI path).

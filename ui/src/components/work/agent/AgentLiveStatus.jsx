@@ -4,8 +4,8 @@ import Chip from "@mui/material/Chip";
 import Collapse from "@mui/material/Collapse";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
-import { CursorSmallButton } from "../common/index.js";
-import { ShimmerLabel } from "./ShimmerLabel.jsx";
+import { CursorSmallButton } from "../../common/index.js";
+import { ShimmerLabel } from "../shared/ShimmerLabel.jsx";
 import { buildLiveStatusPresentation } from "./agentRunViewModel.js";
 
 /**

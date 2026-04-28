@@ -4,7 +4,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import { afterEach, describe, expect, it } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 
-import { buildAppTheme } from "../../theme/buildAppTheme.js";
+import { buildAppTheme } from "../../../theme/buildAppTheme.js";
 import { ChatComposer } from "./ChatComposer.jsx";
 
 const theme = buildAppTheme("dark");

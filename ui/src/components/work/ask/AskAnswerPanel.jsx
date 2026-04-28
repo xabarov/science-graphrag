@@ -5,8 +5,8 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
-import { GRAPH_PATH, READER_PATH } from "../../routes/paths.js";
-import { buildStandaloneEvidencePath, buildStandaloneTracePath } from "./traceabilityState.js";
+import { GRAPH_PATH, READER_PATH } from "../../../routes/paths.js";
+import { buildStandaloneEvidencePath, buildStandaloneTracePath } from "../traceability/traceabilityState.js";
 import {
   BibliographyBlock,
   IdeaSuggestionsBlock,
@@ -19,11 +19,11 @@ import {
   deriveHeaderProgressHint,
   deriveRunState,
   shouldShowSubagentRail,
-} from "./agentRunViewModel.js";
-import { AgentRunHeader } from "./AgentRunHeader.jsx";
-import { AgentLiveStatus } from "./AgentLiveStatus.jsx";
-import { AgentSubagentRail } from "./AgentSubagentRail.jsx";
-import MarkdownView from "./MarkdownView.jsx";
+} from "../agent/agentRunViewModel.js";
+import { AgentRunHeader } from "../agent/AgentRunHeader.jsx";
+import { AgentLiveStatus } from "../agent/AgentLiveStatus.jsx";
+import { AgentSubagentRail } from "../agent/AgentSubagentRail.jsx";
+import MarkdownView from "../markdown/MarkdownView.jsx";
 import { CitationBodyExpandable } from "./CitationBodyExpandable.jsx";
 import { extractTokenCountsFromRunMetadata } from "./runMetadataUsage.js";
 

@@ -20,7 +20,7 @@ import { WORKSPACE_PATH } from "../../../routes/paths.js";
  *   Evidence are top-level routes (`/reader`, `/graph`, `/chat`, `/evidence`).
  * - **Legacy:** `tab=reader|graph|ask` in `/workspace` URLs is still recognized by
  *   {@link normalizeWorkspaceTab} and traceability parsing for bookmarks; the app redirects to
- *   standalone routes (see `legacyWorkspaceTabRedirectTarget` in `traceabilityState.js`).
+ *   standalone routes (see `legacyWorkspaceTabRedirectTarget` in `components/work/traceability/traceabilityState.js`).
  */
 
 export const LAST_WORK_ID_KEY = "science-graphrag:lastWorkId";

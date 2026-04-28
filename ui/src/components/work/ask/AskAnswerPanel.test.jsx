@@ -4,8 +4,8 @@ import { cleanup, fireEvent, render, screen, within } from "@testing-library/rea
 import { afterEach, describe, expect, it } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 
-import { normalizeQueryResponse } from "../../services/researchApi.js";
-import { buildAppTheme } from "../../theme/buildAppTheme.js";
+import { normalizeQueryResponse } from "../../../services/researchApi.js";
+import { buildAppTheme } from "../../../theme/buildAppTheme.js";
 import { AskAnswerPanel } from "./AskAnswerPanel.jsx";
 
 const theme = buildAppTheme("dark");

@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render, screen, within } from "@testing-library/rea
 import React from "react";
 import { ThemeProvider } from "@mui/material/styles";
 
-import { buildAppTheme } from "../../theme/buildAppTheme.js";
+import { buildAppTheme } from "../../../theme/buildAppTheme.js";
 import { AgentLiveStatus } from "./AgentLiveStatus.jsx";
 
 const theme = buildAppTheme("dark");

@@ -24,7 +24,7 @@ import {
   pickActiveIngestStage,
 } from "../../components/ingestion/ingestStripModel.js";
 import WorkIdGlossaryHint from "../../components/layout/WorkIdGlossaryHint.jsx";
-import { ShimmerLabel } from "../../components/work/ShimmerLabel.jsx";
+import { ShimmerLabel } from "../../components/work/shared/ShimmerLabel.jsx";
 import { workChatUrl, workGraphUrl } from "./workspacePageUrls.js";
 import WorkspaceIngestMenu from "./WorkspaceIngestMenu.jsx";
 

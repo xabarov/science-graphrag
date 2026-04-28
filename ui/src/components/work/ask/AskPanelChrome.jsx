@@ -4,8 +4,8 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
-import { InlineNotice } from "../feedback/index.js";
-import { CursorSmallButton } from "../common/index.js";
+import { InlineNotice } from "../../feedback/index.js";
+import { CursorSmallButton } from "../../common/index.js";
 
 /**
  * Page chrome (title/body) or compact chat eyebrow + submit/stream errors.

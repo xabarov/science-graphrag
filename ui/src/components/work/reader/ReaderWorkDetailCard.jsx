@@ -5,7 +5,7 @@ import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
-import { useI18n } from "../../i18n/useI18n.js";
+import { useI18n } from "../../../i18n/useI18n.js";
 
 /**
  * Compact work metadata card shown above the article body.

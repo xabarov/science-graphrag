@@ -6,7 +6,7 @@ import DialogActions from "@mui/material/DialogActions";
 import Typography from "@mui/material/Typography";
 
 import { CursorPrimaryButton } from "../../components/common/index.js";
-import HypothesisPanel from "../../components/work/HypothesisPanel.jsx";
+import HypothesisPanel from "../../components/work/hypothesis/HypothesisPanel.jsx";
 
 /**
  * @param {{

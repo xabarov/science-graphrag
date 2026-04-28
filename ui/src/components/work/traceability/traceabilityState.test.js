@@ -3,7 +3,7 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { CHAT_PATH, EVIDENCE_PATH, GRAPH_PATH, READER_PATH, WORKSPACE_PATH } from "../../routes/paths.js";
+import { CHAT_PATH, EVIDENCE_PATH, GRAPH_PATH, READER_PATH, WORKSPACE_PATH } from "../../../routes/paths.js";
 import {
   buildStandaloneEvidencePath,
   buildStandaloneTracePath,

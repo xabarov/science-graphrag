@@ -3,7 +3,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { buildAppTheme } from "../../theme/buildAppTheme.js";
+import { buildAppTheme } from "../../../theme/buildAppTheme.js";
 import { AgentSpecialistRunStack } from "./AgentSpecialistRunStack.jsx";
 
 const theme = buildAppTheme("dark");

@@ -20,10 +20,13 @@ import { useWorkspaceContext } from "../components/layout/useWorkspaceContext.js
 import { isExplicitAdminMode } from "../components/layout/adminVisibility.js";
 import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
 import { useI18n } from "../i18n/useI18n.js";
-import EvidenceWorkBody from "../components/work/EvidenceWorkBody.jsx";
+import EvidenceWorkBody from "../components/work/evidence/EvidenceWorkBody.jsx";
 import { persistWorkId } from "./WorkspacePage/utils/workContext.js";
 import { GRAPH_PATH, READER_PATH } from "../routes/paths.js";
-import { buildStandaloneTracePath, readTraceabilityState } from "../components/work/traceabilityState.js";
+import {
+  buildStandaloneTracePath,
+  readTraceabilityState,
+} from "../components/work/traceability/traceabilityState.js";
 
 export default function EvidencePage() {
   const theme = useTheme();

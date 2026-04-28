@@ -9,7 +9,7 @@ import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
-import { CursorIconAction } from "../common/index.js";
+import { CursorIconAction } from "../../common/index.js";
 
 /**
  * @param {{

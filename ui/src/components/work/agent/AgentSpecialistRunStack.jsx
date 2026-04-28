@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Box from "@mui/material/Box";
 import Collapse from "@mui/material/Collapse";
 import Typography from "@mui/material/Typography";
-import { CursorSmallButton } from "../common/index.js";
+import { CursorSmallButton } from "../../common/index.js";
 import { buildSpecialistStreamGroups, formatStreamEventOneLine } from "./agentRunViewModel.js";
 
 /**

@@ -3,8 +3,8 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ThemeProvider } from "@mui/material/styles";
 
-import { I18nProvider } from "../../i18n/I18nContext.jsx";
-import { buildAppTheme } from "../../theme/buildAppTheme.js";
+import { I18nProvider } from "../../../i18n/I18nContext.jsx";
+import { buildAppTheme } from "../../../theme/buildAppTheme.js";
 
 vi.mock("react-pdf", () => ({
   Document: ({ children, loading }) =>

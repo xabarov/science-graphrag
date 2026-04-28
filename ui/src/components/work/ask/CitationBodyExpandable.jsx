@@ -4,7 +4,7 @@ import Collapse from "@mui/material/Collapse";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
-import { CursorSmallButton } from "../common/index.js";
+import { CursorSmallButton } from "../../common/index.js";
 import { pickCitationBodyText } from "./citationBodyText.js";
 
 const PREVIEW_CHARS = 280;

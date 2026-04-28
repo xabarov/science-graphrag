@@ -5,7 +5,7 @@ import Collapse from "@mui/material/Collapse";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 import { useI18n } from "../../../i18n/useI18n.js";
-import { describeTraceabilityState } from "../../work/traceabilityState.js";
+import { describeTraceabilityState } from "../../work/traceability/traceabilityState.js";
 import GraphCanvasMvp from "../canvas/GraphCanvasMvp.jsx";
 import { GraphPhysicsPointerBridgeProvider } from "../canvas/GraphPhysicsPointerBridgeContext.jsx";
 import GraphDebugInspector from "../shell/GraphDebugInspector.jsx";

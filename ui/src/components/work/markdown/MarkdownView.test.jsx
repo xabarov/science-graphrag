@@ -5,7 +5,7 @@ import { ThemeProvider } from "@mui/material/styles";
 
 import MarkdownViewCore, { preprocessReaderMarkdown } from "./MarkdownViewCore.jsx";
 
-import { buildAppTheme } from "../../theme/buildAppTheme.js";
+import { buildAppTheme } from "../../../theme/buildAppTheme.js";
 
 const theme = buildAppTheme("dark");
 

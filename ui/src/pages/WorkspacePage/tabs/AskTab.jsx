@@ -4,9 +4,12 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
-import AskPanel from "../../../components/work/AskPanel.jsx";
-import { sessionExistsInScope } from "../../../components/work/askSessionState.js";
-import { describeTraceabilityState, readTraceabilityState } from "../../../components/work/traceabilityState.js";
+import AskPanel from "../../../components/work/ask/AskPanel.jsx";
+import { sessionExistsInScope } from "../../../components/work/ask/askSessionState.js";
+import {
+  describeTraceabilityState,
+  readTraceabilityState,
+} from "../../../components/work/traceability/traceabilityState.js";
 import { useI18n } from "../../../i18n/useI18n.js";
 
 /**

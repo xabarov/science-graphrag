@@ -3,8 +3,8 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
-import { CursorSmallButton } from "../common/index.js";
-import { typedBlockOuterSx } from "../../theme/chatTypedBlockSx.js";
+import { CursorSmallButton } from "../../common/index.js";
+import { typedBlockOuterSx } from "../../../theme/chatTypedBlockSx.js";
 
 /**
  * @param {{ t: (key: string, vars?: Record<string, string>) => string, inventory: Record<string, unknown> | null | undefined }}

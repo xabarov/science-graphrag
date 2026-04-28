@@ -4,7 +4,7 @@
  * ## Query contract (GraphPage)
  *
  * **Shared traceability / work context** (see `TRACEABILITY_QUERY_KEYS` in `./queryKeys.js` and
- * `readTraceabilityState` in `components/work/traceabilityState.js`): `work_id`, `workspace_id`,
+ * `readTraceabilityState` in `components/work/traceability/traceabilityState.js`): `work_id`, `workspace_id`,
  * `node`, `edge`, plus optional reader/evidence fields when deep-linking across tools.
  *
  * **Graph-page local chrome** (this module only — do not merge via `mergeTraceabilityParams` unless

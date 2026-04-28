@@ -11,7 +11,7 @@ export const WORKSPACE_SHELL_QUERY_KEYS = {
 
 /**
  * Full traceability / session query schema (workspace + standalone routes).
- * @see ../../components/work/traceabilityState.js for read/build/merge helpers.
+ * @see ../../components/work/traceability/traceabilityState.js for read/build/merge helpers.
  */
 export const TRACEABILITY_QUERY_KEYS = {
   ...WORKSPACE_SHELL_QUERY_KEYS,

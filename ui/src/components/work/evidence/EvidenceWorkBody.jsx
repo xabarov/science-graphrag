@@ -8,11 +8,15 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
 import { Link } from "react-router-dom";
 
-import { formatResearchApiError, getWorkClaims, getWorkChunks } from "../../services/researchApi.js";
-import { CursorSmallButton } from "../common/index.js";
-import { GRAPH_PATH, READER_PATH } from "../../routes/paths.js";
-import { buildStandaloneChatPath, buildStandaloneTracePath, describeTraceabilityState } from "./traceabilityState.js";
-import { useI18n } from "../../i18n/useI18n.js";
+import { formatResearchApiError, getWorkClaims, getWorkChunks } from "../../../services/researchApi.js";
+import { CursorSmallButton } from "../../common/index.js";
+import { GRAPH_PATH, READER_PATH } from "../../../routes/paths.js";
+import {
+  buildStandaloneChatPath,
+  buildStandaloneTracePath,
+  describeTraceabilityState,
+} from "../traceability/traceabilityState.js";
+import { useI18n } from "../../../i18n/useI18n.js";
 
 /**
  * Evidence (chunk fingerprints) for a fixed work_id.

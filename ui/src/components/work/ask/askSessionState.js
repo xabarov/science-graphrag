@@ -1,6 +1,6 @@
-import { translate } from "../../i18n/translate.js";
-import { readStoredLocale } from "../../i18n/readStoredLocale.js";
-import { getRuntimeIntlLocale } from "../../i18n/runtimeIntlLocale.js";
+import { translate } from "../../../i18n/translate.js";
+import { readStoredLocale } from "../../../i18n/readStoredLocale.js";
+import { getRuntimeIntlLocale } from "../../../i18n/runtimeIntlLocale.js";
 import { getAskHistory } from "./askHistoryState.js";
 
 export const ASK_SESSIONS_STORAGE_KEY = "science-graphrag:askSessions:v1";

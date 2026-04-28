@@ -26,7 +26,7 @@ import {
   listEntityDedupConflicts,
 } from "../../utils/workspaceStore.js";
 import { isAdminModeEnabled } from "../../components/layout/adminVisibility.js";
-import { legacyWorkspaceTabRedirectTarget } from "../../components/work/traceabilityState.js";
+import { legacyWorkspaceTabRedirectTarget } from "../../components/work/traceability/traceabilityState.js";
 import { persistWorkId, resolveSelectedWorkId } from "./utils/workContext.js";
 import { useI18n } from "../../i18n/useI18n.js";
 import useJobStream from "../../hooks/useJobStream.js";

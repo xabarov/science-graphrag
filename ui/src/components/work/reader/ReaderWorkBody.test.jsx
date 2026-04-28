@@ -3,8 +3,8 @@ import { ThemeProvider } from "@mui/material/styles";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { I18nProvider } from "../../i18n/I18nContext.jsx";
-import { buildAppTheme } from "../../theme/buildAppTheme.js";
+import { I18nProvider } from "../../../i18n/I18nContext.jsx";
+import { buildAppTheme } from "../../../theme/buildAppTheme.js";
 import ReaderWorkBody from "./ReaderWorkBody.jsx";
 
 const theme = buildAppTheme("dark");

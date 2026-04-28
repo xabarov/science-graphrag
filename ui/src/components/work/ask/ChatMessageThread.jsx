@@ -13,14 +13,14 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
-import { CursorIconAction } from "../common/index.js";
-import { useFeedback } from "../feedback/index.js";
+import { CursorIconAction } from "../../common/index.js";
+import { useFeedback } from "../../feedback/index.js";
 import { AskAnswerPanel } from "./AskAnswerPanel.jsx";
-import { AgentAssistantTurnShell } from "./AgentAssistantTurnShell.jsx";
-import { AgentRunHeader } from "./AgentRunHeader.jsx";
-import { AgentLiveStatus } from "./AgentLiveStatus.jsx";
-import { deriveHeaderProgressHint } from "./agentRunViewModel.js";
-import MarkdownView from "./MarkdownView.jsx";
+import { AgentAssistantTurnShell } from "../agent/AgentAssistantTurnShell.jsx";
+import { AgentRunHeader } from "../agent/AgentRunHeader.jsx";
+import { AgentLiveStatus } from "../agent/AgentLiveStatus.jsx";
+import { deriveHeaderProgressHint } from "../agent/agentRunViewModel.js";
+import MarkdownView from "../markdown/MarkdownView.jsx";
 import { extractTokenCountsFromRunMetadata } from "./runMetadataUsage.js";
 
 const SCROLL_BOTTOM_THRESHOLD_PX = 80;

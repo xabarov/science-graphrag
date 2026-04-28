@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { deriveAskScopeKey } from "./askSessionState.js";
-import { CHAT_PATH, EVIDENCE_PATH } from "../../routes/paths.js";
+import { deriveAskScopeKey } from "../ask/askSessionState.js";
+import { CHAT_PATH, EVIDENCE_PATH } from "../../../routes/paths.js";
 import {
   buildStandaloneChatPath,
   buildStandaloneEvidencePath,
   buildStandaloneTracePath,
   describeTraceabilityState,
 } from "./traceabilityState.js";
-import { buildQueryBody, normalizeQueryResponse } from "../../services/researchApi.js";
+import { buildQueryBody, normalizeQueryResponse } from "../../../services/researchApi.js";
 
 describe("askFlowCompatibility", () => {
   it("keeps standalone ask links free of workspace tab params", () => {

@@ -26,7 +26,7 @@
  * The isolated case passes under jsdom: `Link` navigation after updating graph selection via React Router does not
  * break `HashRouter`. Treat production dead-ends as likely **blocked click handling** (canvas/modal/pointer-events),
  * **stale location in a larger shell**, or **history/base-path** issues until disproven — not generic hash query
- * parsing errors (those are covered by `traceabilityState.test.js`).
+ * parsing errors (those are covered by `components/work/traceability/traceabilityState.test.js`).
  */
 import React from "react";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";

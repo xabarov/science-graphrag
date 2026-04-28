@@ -2,15 +2,15 @@
  * Traceability URL state (read / build / merge / standalone paths).
  * HTTP query key names: `TRACEABILITY_QUERY_KEYS` in `ui/src/routing/queryKeys.js` (re-exported from `routing/index.js`).
  */
-import { normalizeWorkspaceTab } from "../../pages/WorkspacePage/utils/workContext.js";
-import { TRACEABILITY_QUERY_KEYS } from "../../routing/queryKeys.js";
+import { normalizeWorkspaceTab } from "../../../pages/WorkspacePage/utils/workContext.js";
+import { TRACEABILITY_QUERY_KEYS } from "../../../routing/queryKeys.js";
 import {
   CHAT_PATH,
   EVIDENCE_PATH,
   GRAPH_PATH,
   READER_PATH,
   WORKSPACE_PATH,
-} from "../../routes/paths.js";
+} from "../../../routes/paths.js";
 
 function trimOrEmpty(value) {
   if (value == null) return "";

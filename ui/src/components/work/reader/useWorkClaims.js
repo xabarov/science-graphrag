@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { formatResearchApiError, getWorkClaims } from "../../services/researchApi.js";
+import { formatResearchApiError, getWorkClaims } from "../../../services/researchApi.js";
 
 /**
  * @typedef {'immediate' | 'deferred'} WorkClaimsFetchPolicy

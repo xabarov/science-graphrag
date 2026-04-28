@@ -5,9 +5,9 @@ import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 import { useTheme } from "@mui/material/styles";
 
-import { workPdfUrl } from "../../services/researchApi.js";
-import { describeTraceabilityState } from "./traceabilityState.js";
-import { useI18n } from "../../i18n/useI18n.js";
+import { workPdfUrl } from "../../../services/researchApi.js";
+import { describeTraceabilityState } from "../traceability/traceabilityState.js";
+import { useI18n } from "../../../i18n/useI18n.js";
 import ReaderChunkListPanel from "./ReaderChunkListPanel.jsx";
 import ReaderMarkdownSourcePanel from "./ReaderMarkdownSourcePanel.jsx";
 import ReaderPdfModeToggle from "./ReaderPdfModeToggle.jsx";

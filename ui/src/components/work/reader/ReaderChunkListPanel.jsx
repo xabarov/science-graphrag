@@ -4,8 +4,8 @@ import Typography from "@mui/material/Typography";
 import Chip from "@mui/material/Chip";
 import Collapse from "@mui/material/Collapse";
 
-import { CursorSmallButton } from "../common/index.js";
-import { useI18n } from "../../i18n/useI18n.js";
+import { CursorSmallButton } from "../../common/index.js";
+import { useI18n } from "../../../i18n/useI18n.js";
 import { READER_CHUNK_PREVIEW_MAX_CHARS, truncateWithEllipsis } from "./readerFormatters.js";
 
 /**

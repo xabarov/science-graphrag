@@ -3,9 +3,9 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { Link } from "react-router-dom";
 
-import { CursorSmallButton } from "../common/index.js";
-import { buildStandaloneChatPath, buildStandaloneEvidencePath } from "./traceabilityState.js";
-import { useI18n } from "../../i18n/useI18n.js";
+import { CursorSmallButton } from "../../common/index.js";
+import { buildStandaloneChatPath, buildStandaloneEvidencePath } from "../traceability/traceabilityState.js";
+import { useI18n } from "../../../i18n/useI18n.js";
 
 /**
  * @param {{

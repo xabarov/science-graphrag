@@ -19,10 +19,13 @@ import { CursorIconAction } from "../components/common/index.js";
 import { isExplicitAdminMode } from "../components/layout/adminVisibility.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
 import { useI18n } from "../i18n/useI18n.js";
-import ReaderWorkBody from "../components/work/ReaderWorkBody.jsx";
+import ReaderWorkBody from "../components/work/reader/ReaderWorkBody.jsx";
 import { getLastWorkId, persistWorkId } from "./WorkspacePage/utils/workContext.js";
 import { GRAPH_PATH, READER_PATH } from "../routes/paths.js";
-import { buildStandaloneTracePath, readTraceabilityState } from "../components/work/traceabilityState.js";
+import {
+  buildStandaloneTracePath,
+  readTraceabilityState,
+} from "../components/work/traceability/traceabilityState.js";
 
 export default function ReaderPage() {
   const theme = useTheme();

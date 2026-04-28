@@ -8,10 +8,13 @@ import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
 import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
 
 import { CursorIconAction } from "../../../components/common/index.js";
-import ReaderClaimsPanel from "../../../components/work/ReaderClaimsPanel.jsx";
-import ReaderWorkBody from "../../../components/work/ReaderWorkBody.jsx";
+import ReaderClaimsPanel from "../../../components/work/reader/ReaderClaimsPanel.jsx";
+import ReaderWorkBody from "../../../components/work/reader/ReaderWorkBody.jsx";
 import { GRAPH_PATH } from "../../../routes/paths.js";
-import { buildStandaloneTracePath, readTraceabilityState } from "../../../components/work/traceabilityState.js";
+import {
+  buildStandaloneTracePath,
+  readTraceabilityState,
+} from "../../../components/work/traceability/traceabilityState.js";
 import { useI18n } from "../../../i18n/useI18n.js";
 
 /**

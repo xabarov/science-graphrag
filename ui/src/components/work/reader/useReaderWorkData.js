@@ -6,7 +6,7 @@ import {
   getWorkDetail,
   getWorkExtractedBody,
   getWorkSources,
-} from "../../services/researchApi.js";
+} from "../../../services/researchApi.js";
 
 /**
  * Load work detail, chunks, and sources for Reader body.

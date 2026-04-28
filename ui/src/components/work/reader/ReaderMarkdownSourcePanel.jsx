@@ -3,9 +3,9 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
-import { useI18n } from "../../i18n/useI18n.js";
+import { useI18n } from "../../../i18n/useI18n.js";
 import { READER_COMBINED_MARKDOWN_MAX_CHARS, truncateWithEllipsis } from "./readerFormatters.js";
-import MarkdownView from "./MarkdownView.jsx";
+import MarkdownView from "../markdown/MarkdownView.jsx";
 
 /**
  * Reading view for the article body — renders the combined extracted markdown
